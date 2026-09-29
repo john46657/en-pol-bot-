@@ -1,0 +1,687 @@
+// NEXUS – Prisma Schema: Applications-Modul (§63)
+//
+// Alle Tabellen sind Guild-scoped. Jede Query muss den Guild Context
+// berücksichtigen (§113): getById(guildId, id) – niemals getById(id).
+
+generator client {
+  provider      = "prisma-client-js"
+  binaryTargets = ["native", "linux-musl-openssl-3.0.x"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ---------------------------------------------------------------------------
+// Enums
+// ---------------------------------------------------------------------------
+
+enum ApplicationStatus {
+  DRAFT
+  PUBLISHED
+  PAUSED
+  ARCHIVED
+}
+
+enum SubmissionStatus {
+  STARTED
+  IN_PROGRESS
+  PAUSED
+  SUBMITTED
+  UNDER_REVIEW
+  ACCEPTED
+  DENIED
+  EXPIRED
+  CANCELLED
+  ARCHIVED
+}
+
+enum QuestionType {
+  TEXT
+  LONG_TEXT
+  NUMBER
+  DECIMAL
+  DATE
+  TIME
+  DATETIME
+  YES_NO
+  SINGLE_SELECT
+  MULTI_SELECT
+  RATING
+  SLIDER
+  DISCORD_USER
+  DISCORD_ROLE
+  DISCORD_CHANNEL
+  URL
+  EMAIL
+  PHONE
+  USERNAME
+  CONFIRMATION
+  CHECKBOX
+  MULTI_CHECKBOX
+  FILE
+  IMAGE
+  ATTACHMENT
+  PARAGRAPH
+  INFO
+  SEPARATOR
+}
+
+enum ConditionOperator {
+  equals
+  not_equals
+  contains
+  not_contains
+  starts_with
+  ends_with
+  greater_than
+  less_than
+  greater_or_equal
+  less_or_equal
+  is_empty
+  is_not_empty
+  in
+  not_in
+}
+
+enum ConditionCombinator {
+  AND
+  OR
+  NOT
+}
+
+enum RoleMatchMode {
+  HAS_ALL
+  HAS_ANY
+  HAS_NONE
+}
+
+enum RoleRuleType {
+  REQUIRED
+  RESTRICTED
+  ACCEPTED
+  DENIED
+  PENDING
+  PING
+  ACCEPTED_REMOVAL
+  DENIED_REMOVAL
+  SUBMIT_REMOVAL
+}
+
+enum ResubmissionMode {
+  NEVER
+  AFTER_DENIAL
+  AFTER_COOLDOWN
+  AFTER_STAFF_APPROVAL
+  ALWAYS
+}
+
+enum UserLeaveAction {
+  NOTHING
+  CANCEL
+  ARCHIVE
+  DELETE
+  MARK_AS_LEFT
+  DENY
+}
+
+enum ExportFormat {
+  CSV
+  JSON
+  XLSX
+  PDF
+}
+
+enum ExportStatus {
+  PENDING
+  COMPLETED
+  FAILED
+  EXPIRED
+}
+
+enum ReviewerAssignmentType {
+  USER
+  ROLE
+}
+
+enum DMPhase {
+  INTRO
+  QUESTION
+  SUMMARY
+  EDITING
+  CONFIRMED
+  CANCELLED
+  EXPIRED
+}
+
+enum AttachmentStatus {
+  PENDING
+  VERIFIED
+  REJECTED
+  MIRRORED
+}
+
+enum IntegrationType {
+  WEBHOOK
+  DISCORD_WEBHOOK
+  NOTION
+  GOOGLE_SHEETS
+  REST_API
+  ZAPIER
+  MAKE
+}
+
+enum AuditActorType {
+  USER
+  SYSTEM
+  BOT
+  AUTOMATION
+}
+
+// ---------------------------------------------------------------------------
+// Guild
+// ---------------------------------------------------------------------------
+
+/// Ein Discord-Server. Höchste Isolationsebene: alle Daten hängen daran (§113).
+model Guild {
+  id           String   @id /// Discord Guild ID (Snowflake)
+  name         String
+  iconUrl      String?
+  ownerId      String?
+  features     Json?
+  /// Rollen → NEXUS Permissions (§79/§114). Map roleId -> string[].
+  rolePermissions Json?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  applications Application[]
+  panels       ApplicationPanel[]
+  submissions  ApplicationSubmission[]
+  cooldowns    ApplicationCooldown[]
+  templates    ApplicationTemplate[]
+  questionTemplates QuestionTemplate[]
+  exports      ApplicationExport[]
+  automations  ApplicationAutomation[]
+
+  @@map("guilds")
+}
+
+// ---------------------------------------------------------------------------
+// Application + Versioning (§4/§65)
+// ---------------------------------------------------------------------------
+
+/// Eine Bewerbung (Polizei, Medic, Whitelist, …) – use-case-agnostic (§3).
+model Application {
+  id          String   @id @default(cuid())
+  guildId     String
+  name        String
+  slug        String
+  description String?
+  icon        String?
+  image       String?
+  color       String?
+  enabled     Boolean  @default(true)
+  status      ApplicationStatus @default(DRAFT)
+  /// Konfiguration: requirements, messages, embed, stats, review, advanced (§69/§70-75).
+  config      Json
+  createdBy   String
+  updatedBy   String
+  publishedAt DateTime?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  guild       Guild    @relation(fields: [guildId], references: [id], onDelete: Cascade)
+  versions    ApplicationVersion[]
+  questions   ApplicationQuestion[]
+  cooldowns   ApplicationCooldown[]
+  panels      ApplicationPanelApplication[]
+  submissions ApplicationSubmission[]
+  roleRules   ApplicationRoleRule[]
+  automations ApplicationAutomation[]
+  integrations ApplicationIntegration[]
+  analytics   ApplicationAnalyticsDaily[]
+
+  @@unique([guildId, slug])
+  @@index([guildId, status])
+  @@index([guildId, updatedAt])
+  @@map("applications")
+}
+
+/// Versionierung (§65): Submissions referenzieren immer ihre Version.
+model ApplicationVersion {
+  id             String   @id @default(cuid())
+  applicationId  String
+  version        Int      @default(1)
+  /// Vollständiger Snapshot aller Fragen + Conditions zum Veröffentlichungszeitpunkt.
+  questions      Json
+  changelog      String?
+  publishedAt    DateTime @default(now())
+  publishedById  String
+
+  application    Application @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  submissions    ApplicationSubmission[]
+
+  @@unique([applicationId, version])
+  @@map("application_versions")
+}
+
+/// Aktuelle Fragen der unveröffentlichten Version (relational, für den Builder).
+model ApplicationQuestion {
+  id             String   @id @default(cuid())
+  applicationId  String
+  questionId     String /// stabile ID innerhalb der Application
+  type           QuestionType
+  title          String
+  description    String?
+  required       Boolean  @default(false)
+  placeholder    String?
+  defaultValue   String?
+  validation     Json?
+  options        ApplicationQuestionOption[]
+  conditions     ApplicationCondition[]
+  order          Int
+  metadata       Json?
+
+  application    Application @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+
+  @@unique([applicationId, questionId])
+  @@index([applicationId, order])
+  @@map("application_questions")
+}
+
+model ApplicationQuestionOption {
+  id           String  @id @default(cuid())
+  questionId   String
+  label        String
+  value        String
+  description  String?
+  emoji        String?
+  enabled      Boolean @default(true)
+  order        Int
+
+  question     ApplicationQuestion @relation(fields: [questionId], references: [id], onDelete: Cascade)
+
+  @@index([questionId])
+  @@map("application_question_options")
+}
+
+/// Bedingung für die Sichtbarkeit einer Frage (§13).
+model ApplicationCondition {
+  id           String  @id @default(cuid())
+  questionId   String
+  /// Verschachtelte Condition als JSON (AND/OR/NOT, Blätter + Gruppen).
+  node         Json
+  order        Int
+
+  question     ApplicationQuestion @relation(fields: [questionId], references: [id], onDelete: Cascade)
+
+  @@map("application_conditions")
+}
+
+// ---------------------------------------------------------------------------
+// Panels (§40/§41/§42)
+// ---------------------------------------------------------------------------
+
+/// Bewerbungs-Panel im Discord (eine Nachricht, mehrere Applications möglich).
+model ApplicationPanel {
+  id           String   @id @default(cuid())
+  guildId      String
+  channelId    String
+  messageId    String?
+  title        String
+  description  String?
+  embed        Json
+  layout       String   @default("button") /// button | select | button_and_select
+  buttonLabel  String?
+  buttonEmoji  String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  guild        Guild    @relation(fields: [guildId], references: [id], onDelete: Cascade)
+  applications ApplicationPanelApplication[]
+
+  @@index([guildId, channelId])
+  @@map("application_panels")
+}
+
+/// n:m Panel ↔ Application
+model ApplicationPanelApplication {
+  panelId       String
+  applicationId String
+  order         Int
+
+  panel         ApplicationPanel  @relation(fields: [panelId], references: [id], onDelete: Cascade)
+  application   Application      @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+
+  @@id([panelId, applicationId])
+  @@map("application_panel_applications")
+}
+
+// ---------------------------------------------------------------------------
+// Submissions (§25/§62)
+// ---------------------------------------------------------------------------
+
+/// Eine konkrete Bewerbung eines Users.
+model ApplicationSubmission {
+  id              String   @id @default(cuid())
+  guildId         String
+  applicationId   String
+  versionId       String
+  /// Menschenlesbare ID, z. B. SUB-0001
+  submissionNumber String?
+  userId          String
+  /// Snapshot (§25) – historisch nachvollziehbar
+  usernameSnapshot String
+  displayNameSnapshot String
+  avatarSnapshot  String?
+  status          SubmissionStatus @default(STARTED)
+  isTest          Boolean  @default(false) /// TEST-Markierung (§118)
+  startedAt       DateTime @default(now())
+  submittedAt     DateTime?
+  durationSeconds Int?
+  reviewerUserId  String?
+  acceptedAt      DateTime?
+  deniedAt        DateTime?
+  publicReason    String?
+  internalReason  String?
+  submissionMessageId String?
+  submissionChannelId String?
+  threadId        String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  guild           Guild    @relation(fields: [guildId], references: [id], onDelete: Cascade)
+  application     Application @relation(fields: [applicationId], references: [id])
+  version         ApplicationVersion @relation(fields: [versionId], references: [id])
+  answers         ApplicationAnswer[]
+  attachments     ApplicationAttachment[]
+  notes           ApplicationNote[]
+  auditEvents     ApplicationAuditEvent[]
+  reviewers       ApplicationReviewer[]
+  dmState         ApplicationDMState?
+
+  @@unique([guildId, submissionNumber])
+  @@index([guildId, status])
+  @@index([guildId, userId, status])
+  @@index([guildId, applicationId, status])
+  @@index([guildId, reviewerUserId])
+  @@map("application_submissions")
+}
+
+/// Einzelne Antwort (§64: nicht nur Blob, sondern strukturiert pro Frage).
+model ApplicationAnswer {
+  id              String   @id @default(cuid())
+  submissionId    String
+  questionId      String /// stabile Frage-ID
+  questionVersionId String /// Version-Snapshot (§156)
+  value           Json
+  normalizedValue String?
+  metadata        Json?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  submission      ApplicationSubmission @relation(fields: [submissionId], references: [id], onDelete: Cascade)
+
+  @@unique([submissionId, questionId])
+  @@index([submissionId])
+  @@index([normalizedValue])
+  @@map("application_answers")
+}
+
+/// DM-Sitzungszustand (§94: Recovery nach Bot-Restart)
+model ApplicationDMState {
+  submissionId       String  @id
+  userId             String
+  guildId            String
+  phase              DMPhase @default(INTRO)
+  currentQuestionId  String?
+  currentDMMessageId String?
+  introMessageId     String?
+  lastInteractionAt  DateTime @default(now())
+  expiresAt          DateTime?
+
+  submission         ApplicationSubmission @relation(fields: [submissionId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("application_dm_states")
+}
+
+/// Reviewer-Zuweisungen (§36: User/Role, Round-Robin, Workload)
+model ApplicationReviewer {
+  id            String   @id @default(cuid())
+  submissionId  String
+  assigneeType  ReviewerAssignmentType
+  assigneeId    String
+  assignedById  String
+  assignedAt    DateTime @default(now())
+
+  submission    ApplicationSubmission @relation(fields: [submissionId], references: [id], onDelete: Cascade)
+
+  @@index([submissionId])
+  @@index([assigneeId])
+  @@map("application_reviewers")
+}
+
+/// Interne Notizen (§35: nicht für Bewerber, Änderungen protokolliert)
+model ApplicationNote {
+  id           String   @id @default(cuid())
+  submissionId String
+  authorId     String
+  content      String
+  mentions     String[]
+  edits        Json     @default("[]")
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  submission   ApplicationSubmission @relation(fields: [submissionId], references: [id], onDelete: Cascade)
+
+  @@index([submissionId])
+  @@map("application_notes")
+}
+
+/// Audit-Events (§34/§89: unveränderbar – kein updateAt!)
+model ApplicationAuditEvent {
+  id            String   @id @default(cuid())
+  guildId       String
+  submissionId  String?
+  applicationId String?
+  actorType     AuditActorType
+  actorId       String?
+  action        String
+  before        Json?
+  after         Json?
+  metadata      Json?
+  createdAt     DateTime @default(now())
+
+  submission    ApplicationSubmission? @relation(fields: [submissionId], references: [id], onDelete: Cascade)
+
+  @@index([guildId, createdAt])
+  @@index([submissionId, createdAt])
+  @@index([action])
+  @@map("application_audit_events")
+}
+
+/// Cooldown je User/Application (§51)
+model ApplicationCooldown {
+  id            String   @id @default(cuid())
+  guildId       String
+  applicationId String
+  userId        String
+  reason        String /// DENIED | CANCELLED | SUBMITTED | EXPIRED
+  expiresAt     DateTime
+  createdAt     DateTime @default(now())
+
+  guild         Guild       @relation(fields: [guildId], references: [id], onDelete: Cascade)
+  application   Application @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+
+  @@unique([guildId, applicationId, userId, reason])
+  @@index([userId])
+  @@map("application_cooldowns")
+}
+
+/// Attachments (§50)
+model ApplicationAttachment {
+  id            String   @id @default(cuid())
+  submissionId  String
+  questionId    String
+  attachmentId  String
+  filename      String
+  mimeType      String?
+  sizeBytes     BigInt
+  url           String
+  s3Key         String?
+  status        AttachmentStatus @default(PENDING)
+  createdAt     DateTime @default(now())
+
+  submission    ApplicationSubmission @relation(fields: [submissionId], references: [id], onDelete: Cascade)
+
+  @@index([submissionId])
+  @@map("application_attachments")
+}
+
+// ---------------------------------------------------------------------------
+// Rollen & Automation (§38/§39/§57)
+// ---------------------------------------------------------------------------
+
+/// Rollenregeln einer Application (§38)
+model ApplicationRoleRule {
+  id              String   @id @default(cuid())
+  applicationId   String
+  type            RoleRuleType
+  roleId          String
+  matchMode       RoleMatchMode @default(HAS_ALL)
+  additionalRoleIds String[]
+
+  application     Application @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+
+  @@index([applicationId, type])
+  @@map("application_role_rules")
+}
+
+/// Automationen (§57/§58)
+model ApplicationAutomation {
+  id            String   @id @default(cuid())
+  guildId       String
+  applicationId String?
+  enabled       Boolean  @default(true)
+  trigger       String   /// application.submitted, …
+  condition     Json?
+  actions       Json
+  lastRunAt     DateTime?
+  lastRunStatus String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  guild         Guild       @relation(fields: [guildId], references: [id], onDelete: Cascade)
+  application   Application? @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+
+  @@index([guildId, trigger])
+  @@map("application_automations")
+}
+
+/// Integrationen (§103: Secrets verschlüsselt, niemals loggen)
+model ApplicationIntegration {
+  id            String   @id @default(cuid())
+  applicationId String
+  type          IntegrationType
+  name          String
+  /// Verschlüsselter Secret-Blob (verschlüsselt mit INTEGRATION_ENCRYPTION_KEY).
+  secret        Bytes?
+  config        Json
+  enabled       Boolean  @default(true)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  application   Application @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+
+  @@map("application_integrations")
+}
+
+// ---------------------------------------------------------------------------
+// Templates (§43/§44/§100)
+// ---------------------------------------------------------------------------
+
+/// Application-Templates (§43)
+model ApplicationTemplate {
+  id          String   @id @default(cuid())
+  guildId     String?  /// null = system-weit, gesetzt = guild-intern (§100)
+  name        String
+  description String?
+  icon        String?
+  category    String?
+  structure   Json     /// questions, conditions, roleRules, messages
+  isPublic    Boolean  @default(false)
+  version     Int      @default(1)
+  createdBy   String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  guild       Guild?   @relation(fields: [guildId], references: [id], onDelete: Cascade)
+
+  @@index([guildId, isPublic])
+  @@map("application_templates")
+}
+
+/// Wiederverwendbare Fragen (§44)
+model QuestionTemplate {
+  id          String   @id @default(cuid())
+  guildId     String?
+  title       String
+  type        QuestionType
+  description String?
+  validation  Json?
+  options     Json?
+  createdBy   String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  guild       Guild?   @relation(fields: [guildId], references: [id], onDelete: Cascade)
+
+  @@index([guildId])
+  @@map("question_templates")
+}
+
+// ---------------------------------------------------------------------------
+// Export & Analytics (§66/§45)
+// ---------------------------------------------------------------------------
+
+/// Export-Jobs (§66/§122: Permission + ablaufende signierte URL + Audit)
+model ApplicationExport {
+  id           String   @id @default(cuid())
+  guildId      String
+  requestedById String
+  format       ExportFormat
+  status       ExportStatus @default(PENDING)
+  filters      Json
+  rowCount     Int?
+  fileUrl      String?   /// signierte, ablaufende URL
+  expiresAt    DateTime?
+  error        String?
+  createdAt    DateTime @default(now())
+  completedAt  DateTime?
+
+  guild        Guild    @relation(fields: [guildId], references: [id], onDelete: Cascade)
+
+  @@index([guildId, createdAt])
+  @@map("application_exports")
+}
+
+/// Tägliche Analytics-Aggregation (§45)
+model ApplicationAnalyticsDaily {
+  id             String   @id @default(cuid())
+  applicationId  String
+  day            DateTime @db.Date
+  started        Int      @default(0)
+  submitted      Int      @default(0)
+  accepted       Int      @default(0)
+  denied         Int      @default(0)
+  expired        Int      @default(0)
+  cancelled      Int      @default(0)
+  avgDurationSeconds Int?
+
+  application    Application @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+
+  @@unique([applicationId, day])
+  @@map("application_analytics_daily")
+}
