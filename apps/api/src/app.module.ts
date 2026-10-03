@@ -53,6 +53,6 @@ import { OriginMiddleware } from './common/origin.middleware';
 })
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {
-    consumer.apply(RequestIdMiddleware, OriginMiddleware).forRoutes('*');
+    consumer.apply(RequestIdMiddleware, OriginMiddleware).forRoutes('{*splat}');
   }
 }

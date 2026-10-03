@@ -26,6 +26,7 @@ process.env.NODE_ENV = process.env.NODE_ENV || 'production';
 process.env.PORT = process.env.PORT || process.env.SERVER_PORT || '3000';
 process.env.WEB_DIST = process.env.WEB_DIST || path.join(root, 'web');
 
+if (/HIER_/i.test(process.env.DATABASE_URL || '')) die('DATABASE_URL ist noch nicht ausgefüllt (Platzhalter "HIER_…"). Trage die PostgreSQL-Verbindung ein.');
 if (!process.env.DATABASE_URL) die('DATABASE_URL fehlt. Trage die PostgreSQL-Verbindung aus deinem Panel ein (siehe .env.example).');
 if (!/^postgres(ql)?:\/\//.test(process.env.DATABASE_URL)) die('DATABASE_URL muss mit postgresql:// beginnen (es wird PostgreSQL benötigt, kein MySQL).');
 

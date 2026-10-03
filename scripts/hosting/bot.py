@@ -99,12 +99,32 @@ def download_node():
     return node
 
 
+def install_dependencies(node):
+    """Beim ersten Start des kompletten Hosting-Pakets: npm-Pakete installieren (das Paket enthält keine node_modules)."""
+    if os.path.isdir(os.path.join(HERE, "node_modules", "@prisma")):
+        return
+    node_dir = os.path.dirname(node)
+    npm = os.path.join(node_dir, "npm")
+    if not os.path.exists(npm):
+        log("FEHLER: npm nicht gefunden. Bitte im Panel 'npm install' ausführen oder auf Node.js umstellen.")
+        sys.exit(1)
+    log("Erster Start: installiere Pakete (npm install) – das dauert einige Minuten und ca. 400 MB Speicherplatz …")
+    env = dict(os.environ, PATH=node_dir + os.pathsep + os.environ.get("PATH", ""))
+    r = subprocess.run([npm, "install", "--omit=dev", "--no-audit", "--no-fund", "--loglevel=error"], env=env, cwd=HERE)
+    if r.returncode != 0:
+        log(f"FEHLER: npm install ist fehlgeschlagen (Exit {r.returncode}). Häufige Ursachen: zu wenig Speicherplatz/RAM.")
+        sys.exit(1)
+    log("Pakete installiert.")
+
+
 def main():
     entry = os.environ.get("NEXUS_ENTRY") or next((f for f in ("bot.js", "start.js") if os.path.exists(f)), None)
     if not entry:
         log("FEHLER: weder bot.js noch start.js im Ordner gefunden. ZIP vollständig entpackt?")
         sys.exit(1)
     node = find_node() or download_node()
+    if entry == "start.js":
+        install_dependencies(node)
     if os.environ.get("NEXUS_NO_EXEC"):  # nur für Tests
         log(f"(Test) würde starten: {node} {entry}")
         return
