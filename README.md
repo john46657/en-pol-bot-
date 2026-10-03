@@ -1,3 +1,17 @@
+# 🚓 NEU: ENRP NEXUS — Police CAD / MDT / Dispatch + Discord-Bot
+
+Das neue Gesamtsystem (API, Web-Oberfläche, Discord-Bot) liegt im Ordner **[`enrp-nexus/`](enrp-nexus)**.
+
+- 📖 Start & Überblick: [enrp-nexus/README.md](enrp-nexus/README.md)
+- 🧪 Alles testen (`pnpm dev:all`): [enrp-nexus/docs/test-guide.md](enrp-nexus/docs/test-guide.md)
+- 🤖 Discord-Bot einrichten: [enrp-nexus/docs/discord-bot.md](enrp-nexus/docs/discord-bot.md)
+- 🧩 Auf bot-hosting.net hosten: [enrp-nexus/docs/hosting-bot-hosting.md](enrp-nexus/docs/hosting-bot-hosting.md)
+- ⬇️ Fertige Pakete (ZIP): [Releases](../../releases/tag/enrp-nexus-v0.1.0)
+
+Der bisherige Python-Bot (Dateien in diesem Ordner) bleibt unverändert unten beschrieben.
+
+---
+
 # Emden RP Bot
 
 Ein modularer Discord-Bot für den Emden Polizei-Roleplay-Server. Läuft komplett
