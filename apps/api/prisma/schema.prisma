@@ -1,0 +1,581 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ───────────── Identity & RBAC ─────────────
+
+model User {
+  id                 String   @id @default(uuid()) @db.Uuid
+  username           String   @unique
+  displayName        String
+  email              String?  @unique
+  passwordHash       String
+  robloxUserId       String?  @unique
+  robloxUsername     String?
+  robloxStatus       String   @default("UNVERIFIED") // UNVERIFIED | VERIFIED | FAILED | MANUAL
+  robloxVerifiedAt   DateTime?
+  robloxVerifiedById String?  @db.Uuid
+  active             Boolean  @default(true)
+  failedLogins       Int      @default(0)
+  lockedUntil        DateTime?
+  lastLogin          DateTime?
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+  version            Int      @default(1)
+
+  roles        UserRole[]
+  groups       GroupMember[]
+  overrides    UserPermissionOverride[]
+  sessions     Session[]
+  loginHistory LoginHistory[]
+  notifications Notification[]
+  personnel    Personnel?
+  dutySessions DutySession[]
+  settings     UserSettings?
+
+  @@index([robloxUsername])
+}
+
+model Role {
+  id          String   @id @default(uuid()) @db.Uuid
+  name        String   @unique
+  description String?
+  system      Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  users       UserRole[]
+  permissions RolePermission[]
+}
+
+model Permission {
+  key         String  @id // z. B. "dispatch.view"
+  module      String
+  description String?
+  roles       RolePermission[]
+  overrides   UserPermissionOverride[]
+}
+
+model UserRole {
+  userId String @db.Uuid
+  roleId String @db.Uuid
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role   Role   @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  @@id([userId, roleId])
+}
+
+model RolePermission {
+  roleId        String @db.Uuid
+  permissionKey String
+  effect        String @default("ALLOW") // ALLOW | DENY
+  role          Role       @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  permission    Permission @relation(fields: [permissionKey], references: [key], onDelete: Cascade)
+  @@id([roleId, permissionKey])
+}
+
+model Group {
+  id          String   @id @default(uuid()) @db.Uuid
+  name        String   @unique
+  description String?
+  members     GroupMember[]
+  roles       GroupRole[]
+}
+
+model GroupRole {
+  groupId String @db.Uuid
+  roleId  String @db.Uuid
+  group   Group  @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  @@id([groupId, roleId])
+}
+
+model GroupMember {
+  groupId String @db.Uuid
+  userId  String @db.Uuid
+  group   Group  @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  user    User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  @@id([groupId, userId])
+}
+
+model UserPermissionOverride {
+  id            String   @id @default(uuid()) @db.Uuid
+  userId        String   @db.Uuid
+  permissionKey String
+  effect        String // ALLOW | DENY
+  reason        String?
+  createdById   String?  @db.Uuid
+  createdAt     DateTime @default(now())
+  user          User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  permission    Permission @relation(fields: [permissionKey], references: [key], onDelete: Cascade)
+  @@unique([userId, permissionKey])
+}
+
+model Session {
+  id          String   @id @default(uuid()) @db.Uuid
+  userId      String   @db.Uuid
+  tokenHash   String   @unique
+  createdAt   DateTime @default(now())
+  expiresAt   DateTime
+  revokedAt   DateTime?
+  ip          String?
+  userAgent   String?
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  @@index([userId])
+  @@index([expiresAt])
+}
+
+model LoginHistory {
+  id        String   @id @default(uuid()) @db.Uuid
+  userId    String?  @db.Uuid
+  username  String
+  success   Boolean
+  reason    String?
+  ip        String?
+  createdAt DateTime @default(now())
+  user      User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  @@index([userId, createdAt])
+  @@index([username, createdAt])
+}
+
+model UserSettings {
+  userId          String @id @db.Uuid
+  theme           String @default("dark")
+  timezone        String @default("Europe/Berlin")
+  dashboardLayout Json?
+  notifications   Json?
+  user            User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+// ───────────── Records ─────────────
+
+model Person {
+  id             String   @id @default(uuid()) @db.Uuid
+  serverId       String?  @db.Uuid
+  robloxUserId   String?  @unique
+  robloxUsername String
+  aliases        String[] @default([])
+  status         String   @default("ACTIVE") // ACTIVE | ARCHIVED
+  notes          String?
+  custom         Json?    // Werte der in Studio definierten Custom Fields
+  createdById    String?  @db.Uuid
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  version        Int      @default(1)
+
+  vehicles Vehicle[]
+  links    RecordLink[]
+  tickets  Ticket[]
+  @@index([robloxUsername])
+}
+
+model Vehicle {
+  id            String   @id @default(uuid()) @db.Uuid
+  serverId      String?  @db.Uuid
+  plate         String
+  model         String?
+  color         String?
+  ownerId       String?  @db.Uuid
+  status        String   @default("ACTIVE")
+  erlcReference String?
+  notes         String?
+  custom        Json?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  version       Int      @default(1)
+  owner         Person?  @relation(fields: [ownerId], references: [id], onDelete: SetNull)
+  @@unique([serverId, plate])
+  @@index([plate])
+}
+
+/** Generische, dedupe-sichere Verknüpfung Datensatz <-> Person/Fahrzeug. */
+model RecordLink {
+  id         String   @id @default(uuid()) @db.Uuid
+  personId   String?  @db.Uuid
+  vehicleId  String?  @db.Uuid
+  entityType String
+  entityId   String
+  role       String   @default("SUBJECT") // SUBJECT | SUSPECT | WITNESS | VICTIM | ...
+  createdAt  DateTime @default(now())
+  person     Person?  @relation(fields: [personId], references: [id], onDelete: Cascade)
+  @@unique([personId, entityType, entityId, role])
+  @@index([entityType, entityId])
+}
+
+model LegalCode {
+  id            String   @id @default(uuid()) @db.Uuid
+  code          String   @unique
+  title         String
+  description   String?
+  category      String
+  penalty       Json
+  active        Boolean  @default(true)
+  effectiveDate DateTime @default(now())
+  expiresAt     DateTime?
+  tickets       Ticket[]
+}
+
+model Ticket {
+  id          String   @id @default(uuid()) @db.Uuid
+  number      String   @unique
+  personId    String   @db.Uuid
+  officerId   String   @db.Uuid
+  legalCodeId String?  @db.Uuid
+  reason      String
+  amount      Decimal  @default(0) @db.Decimal(12, 2)
+  status      String   @default("ISSUED")
+  notes       String?
+  reportId    String?  @db.Uuid
+  voidReason  String?
+  voidedById  String?  @db.Uuid
+  issuedAt    DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  version     Int      @default(1)
+  person      Person     @relation(fields: [personId], references: [id])
+  legalCode   LegalCode? @relation(fields: [legalCodeId], references: [id])
+  @@index([personId])
+  @@index([officerId])
+}
+
+model Unit {
+  id        String   @id @default(uuid()) @db.Uuid
+  callsign  String   @unique
+  status    String   @default("OFF_DUTY")
+  vehicle   String?
+  notes     String?
+  members   UnitMember[]
+  incidents IncidentUnit[]
+  updatedAt DateTime @updatedAt
+}
+
+model UnitMember {
+  unitId String @db.Uuid
+  userId String @db.Uuid
+  unit   Unit   @relation(fields: [unitId], references: [id], onDelete: Cascade)
+  @@id([unitId, userId])
+}
+
+model Incident {
+  id           String   @id @default(uuid()) @db.Uuid
+  serverId     String?  @db.Uuid
+  number       String   @unique
+  title        String
+  description  String?
+  priority     String   @default("MEDIUM")
+  location     String?
+  source       String   @default("MANUAL") // MANUAL
+  status       String   @default("NEW")
+  dispatcherId String?  @db.Uuid
+  supervisorId String?  @db.Uuid
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  closedAt     DateTime?
+  version      Int      @default(1)
+  units        IncidentUnit[]
+  @@index([status, priority])
+}
+
+model IncidentUnit {
+  incidentId String   @db.Uuid
+  unitId     String   @db.Uuid
+  assignedAt DateTime @default(now())
+  clearedAt  DateTime?
+  incident   Incident @relation(fields: [incidentId], references: [id], onDelete: Cascade)
+  unit       Unit     @relation(fields: [unitId], references: [id], onDelete: Cascade)
+  @@id([incidentId, unitId])
+}
+
+model Report {
+  id          String   @id @default(uuid()) @db.Uuid
+  number      String   @unique
+  type        String
+  title       String
+  status      String   @default("DRAFT")
+  authorId    String   @db.Uuid
+  incidentId  String?  @db.Uuid
+  currentVersion Int   @default(1)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  version     Int      @default(1)
+  versions    ReportVersion[]
+  @@index([status])
+}
+
+model ReportVersion {
+  id            String   @id @default(uuid()) @db.Uuid
+  reportId      String   @db.Uuid
+  version       Int
+  authorId      String   @db.Uuid
+  changeSummary String
+  content       Json
+  contentHash   String
+  createdAt     DateTime @default(now())
+  report        Report   @relation(fields: [reportId], references: [id], onDelete: Cascade)
+  @@unique([reportId, version])
+}
+
+model Complaint {
+  id             String   @id @default(uuid()) @db.Uuid
+  number         String   @unique
+  complainantId  String?  @db.Uuid
+  subjectId      String?  @db.Uuid
+  officerId      String?  @db.Uuid
+  category       String
+  description    String
+  status         String   @default("RECEIVED")
+  investigatorId String?  @db.Uuid
+  findings       String?
+  resolution     String?
+  internalNotes  String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  version        Int      @default(1)
+  @@index([status])
+}
+
+model Investigation {
+  id             String   @id @default(uuid()) @db.Uuid
+  caseNumber     String   @unique
+  title          String
+  description    String?
+  leadId         String?  @db.Uuid
+  status         String   @default("OPEN")
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  version        Int      @default(1)
+}
+
+model WantedRecord {
+  id          String   @id @default(uuid()) @db.Uuid
+  personId    String?  @db.Uuid
+  vehicleId   String?  @db.Uuid
+  reason      String
+  description String?
+  priority    String   @default("MEDIUM")
+  status      String   @default("ACTIVE")
+  createdById String   @db.Uuid
+  createdAt   DateTime @default(now())
+  expiresAt   DateTime?
+  updatedAt   DateTime @updatedAt
+  version     Int      @default(1)
+  @@index([status])
+}
+
+model Evidence {
+  id              String   @id @default(uuid()) @db.Uuid
+  number          String   @unique
+  caseRef         String?
+  type            String
+  description     String
+  source          String?
+  ownerId         String?  @db.Uuid
+  storageLocation String?
+  custodyState    String   @default("COLLECTED")
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  version         Int      @default(1)
+  transfers       EvidenceTransfer[]
+}
+
+model EvidenceTransfer {
+  id         String   @id @default(uuid()) @db.Uuid
+  evidenceId String   @db.Uuid
+  fromUserId String?  @db.Uuid
+  toUserId   String?  @db.Uuid
+  fromState  String
+  toState    String
+  reason     String
+  confirmed  Boolean  @default(false)
+  createdAt  DateTime @default(now())
+  evidence   Evidence @relation(fields: [evidenceId], references: [id], onDelete: Cascade)
+}
+
+// ───────────── Personnel / Dienst ─────────────
+
+model Personnel {
+  id               String   @id @default(uuid()) @db.Uuid
+  userId           String   @unique @db.Uuid
+  rank             String?
+  team             String?
+  callsign         String?  @unique
+  employmentStatus String   @default("ACTIVE")
+  joinDate         DateTime @default(now())
+  qualifications   String[] @default([])
+  user             User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  academyEnrollments AcademyEnrollment[]
+  records          PersonnelRecord[]
+}
+
+/// Beförderungen, Auszeichnungen, Disziplinarmaßnahmen (nur mit personnel.* sichtbar).
+model PersonnelRecord {
+  id          String   @id @default(uuid()) @db.Uuid
+  personnelId String   @db.Uuid
+  type        String   // PROMOTION | AWARD | DISCIPLINE | NOTE
+  summary     String
+  details     String?
+  createdById String   @db.Uuid
+  createdAt   DateTime @default(now())
+  personnel   Personnel @relation(fields: [personnelId], references: [id], onDelete: Cascade)
+  @@index([personnelId, createdAt])
+}
+
+model DutySession {
+  id        String   @id @default(uuid()) @db.Uuid
+  userId    String   @db.Uuid
+  status    String
+  unitId    String?  @db.Uuid
+  callsign  String?
+  startedAt DateTime @default(now())
+  endedAt   DateTime?
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  @@index([userId, endedAt])
+}
+
+model Application {
+  id          String   @id @default(uuid()) @db.Uuid
+  number      String   @unique
+  status      String   @default("SUBMITTED")
+  answers     Json
+  robloxUsername String
+  robloxUserId   String?
+  decidedById String?  @db.Uuid
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  version     Int      @default(1)
+  @@index([status])
+}
+
+model AcademyCourse {
+  id          String   @id @default(uuid()) @db.Uuid
+  title       String
+  description String?
+  passScore   Int      @default(70)
+  instructorId String? @db.Uuid
+  enrollments AcademyEnrollment[]
+}
+
+model AcademyEnrollment {
+  id          String   @id @default(uuid()) @db.Uuid
+  courseId    String   @db.Uuid
+  personnelId String   @db.Uuid
+  createdAt   DateTime @default(now())
+  course      AcademyCourse @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  personnel   Personnel     @relation(fields: [personnelId], references: [id], onDelete: Cascade)
+  results     AcademyResult[]
+  @@unique([courseId, personnelId])
+}
+
+model AcademyResult {
+  id           String   @id @default(uuid()) @db.Uuid
+  enrollmentId String   @db.Uuid
+  score        Int
+  passed       Boolean
+  gradedById   String?  @db.Uuid
+  createdAt    DateTime @default(now())
+  enrollment   AcademyEnrollment @relation(fields: [enrollmentId], references: [id], onDelete: Cascade)
+}
+
+// ───────────── Kommunikation ─────────────
+
+model Conversation {
+  id       String   @id @default(uuid()) @db.Uuid
+  channel  String   // TEAM | DISPATCH | INCIDENT | SUPERVISOR | ANNOUNCEMENT
+  title    String?
+  entityId String?
+  messages Message[]
+}
+
+model Message {
+  id             String   @id @default(uuid()) @db.Uuid
+  conversationId String   @db.Uuid
+  authorId       String   @db.Uuid
+  body           String
+  replyToId      String?  @db.Uuid
+  pinned         Boolean  @default(false)
+  deletedAt      DateTime?
+  createdAt      DateTime @default(now())
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  @@index([conversationId, createdAt])
+}
+
+model Notification {
+  id        String   @id @default(uuid()) @db.Uuid
+  userId    String   @db.Uuid
+  type      String
+  title     String
+  body      String?
+  entityType String?
+  entityId  String?
+  readAt    DateTime?
+  archivedAt DateTime?
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  @@index([userId, readAt])
+}
+
+model Media {
+  id           String   @id @default(uuid()) @db.Uuid
+  originalName String
+  mime         String
+  size         Int
+  hash         String
+  storageKey   String   @unique
+  uploaderId   String   @db.Uuid
+  linkedType   String?
+  linkedId     String?
+  createdAt    DateTime @default(now())
+  @@index([linkedType, linkedId])
+}
+
+// ───────────── Timeline & Audit ─────────────
+
+/** Operative Historie (sichtbar für Fachanwender). */
+model TimelineEvent {
+  id         String   @id @default(uuid()) @db.Uuid
+  entityType String
+  entityId   String
+  action     String
+  summary    String
+  actorId    String?  @db.Uuid
+  createdAt  DateTime @default(now())
+  @@index([entityType, entityId, createdAt])
+}
+
+/** Technische Nachvollziehbarkeit. Append-only; durch DB-Trigger gegen UPDATE/DELETE geschützt. */
+model AuditLog {
+  id               String   @id @default(uuid()) @db.Uuid
+  actorUserId      String?  @db.Uuid
+  actorRobloxUserId String?
+  action           String
+  module           String
+  entityType       String?
+  entityId         String?
+  before           Json?
+  after            Json?
+  reason           String?
+  requestId        String?
+  createdAt        DateTime @default(now())
+  @@index([module, createdAt])
+  @@index([entityType, entityId])
+  @@index([actorUserId, createdAt])
+}
+
+model SecurityEvent {
+  id        String   @id @default(uuid()) @db.Uuid
+  type      String   // LOGIN_FAILURE | PERMISSION_DENIED | WEBHOOK_FAILURE | INVALID_TOKEN | RATE_LIMIT | SUSPICIOUS
+  userId    String?  @db.Uuid
+  ip        String?
+  detail    String?
+  requestId String?
+  createdAt DateTime @default(now())
+  @@index([type, createdAt])
+}
+
+model SystemSetting {
+  key       String   @id
+  value     Json
+  updatedAt DateTime @updatedAt
+}
+
