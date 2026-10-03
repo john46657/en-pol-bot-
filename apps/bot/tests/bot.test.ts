@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 import { BotApiError, HttpApi, type Api } from '../src/api';
 import { byName, COMMANDS, mapError } from '../src/commands';
-import { loadConfig } from '../src/config';
+import { loadConfig, parseDotEnv } from '../src/config';
 import { clip, plain, renderOutbox } from '../src/format';
 import { pollOnce, startOutboxLoop } from '../src/outbox';
 
@@ -297,5 +297,14 @@ describe('extended commands', () => {
     expect(a.calls[0]).toMatchObject({ path: '/communication/channels/DISPATCH/messages', body: { body: 'Einheit 5 verfügbar' } });
     expect(text(await run('funk', { kanal: 'announcement', text: 'x' }, a.api))).toContain('Unbekannter Kanal');
     expect(text(await run('benachrichtigungen', {}, a.api))).toContain('Assigned to I-1');
+  });
+});
+
+describe('.env support', () => {
+  it('parses KEY=VALUE lines, comments and quotes', () => {
+    expect(parseDotEnv('# c\nDISCORD_TOKEN="abc"\nAPI_URL=https://x.y\n  BAD LINE\nOUTBOX_POLL_SECONDS = 7\n')).toEqual({ DISCORD_TOKEN: 'abc', API_URL: 'https://x.y', OUTBOX_POLL_SECONDS: '7' });
+  });
+  it('rejects template placeholders with a clear message instead of a Discord error', () => {
+    expect(() => loadConfig({ DISCORD_TOKEN: 'HIER_BOT_TOKEN_EINFUEGEN', DISCORD_GUILD_ID: 'HIER_SERVER_ID_EINFUEGEN', BOT_API_TOKEN: 'y'.repeat(32) })).toThrow(/DISCORD_TOKEN, DISCORD_GUILD_ID.*HIER_/);
   });
 });

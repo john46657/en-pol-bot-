@@ -2,10 +2,11 @@ import { Client, EmbedBuilder, GatewayIntentBits, MessageFlags, SlashCommandBuil
 import { HttpApi } from './api';
 import { byName, COMMANDS, mapError } from './commands';
 import type { CommandDef } from './commands/types';
-import { loadConfig } from './config';
+import { loadConfig, loadDotEnv } from './config';
 import type { EmbedData, Reply } from './format';
 import { startOutboxLoop } from './outbox';
 
+loadDotEnv();
 const cfg = loadConfig();
 const api = new HttpApi(cfg.API_URL, cfg.BOT_API_TOKEN);
 // Nur Guilds-Intent: Slash-Commands brauchen weder Message-Content noch Member-Intents (keine „privileged intents“).
