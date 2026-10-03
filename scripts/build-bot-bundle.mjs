@@ -46,8 +46,9 @@ writeFileSync(path.join(dir, 'LIES-MICH.txt'), `ENRP NEXUS – Discord-Bot (eige
 Wann brauchst du das? Wenn das System (API + Web) schon irgendwo läuft und du NUR den Bot separat hosten willst.
 (Wenn du das komplette Hosting-Paket benutzt, startet der Bot dort bereits automatisch mit – dieses Paket brauchst du dann nicht.)
 
-1. Dateien in ein Node.js-Panel (Version 22+) hochladen/entpacken. node_modules / npm install sind NICHT nötig.
-2. Startdatei: bot.js   |   Startbefehl: node bot.js
+1. Im Panel muss der Server auf NODE.JS laufen (Docker-Image/Egg "Node.js 22" oder neuer) – NICHT Python!
+   Dateien hochladen und entpacken, sodass bot.js direkt im Hauptordner liegt. node_modules / npm install sind NICHT nötig.
+2. Startdatei: bot.js   |   Startbefehl: node bot.js   (nicht: python3 bot.py)
 3. Umgebungsvariablen setzen (Vorlage: .env.example): DISCORD_TOKEN, BOT_API_TOKEN, API_URL, optional DISCORD_GUILD_ID.
 4. Starten. Erwartet in der Konsole:  "Logged in as …"  und  "… slash commands registered …".
    Der Bot startet AUCH DANN, wenn das System (API) noch nicht läuft – er meldet es nur im Log. Du kannst ihn also zuerst allein starten.
@@ -61,6 +62,7 @@ Quellcode: src/ (TypeScript). Neue Befehle: src/commands/index.ts.
 Das System gibt dem Bot nur Rechte, die der verknüpfte Benutzer selbst hat (Verknüpfung per Einmal-Code im Web).
 `);
 cpSync(path.join(root, 'docs/discord-bot.md'), path.join(dir, 'docs/discord-bot.md'), { recursive: true });
-const z = spawnSync('zip', ['-r', '-q', path.join(out, 'enrp-nexus-bot.zip'), 'enrp-nexus-bot'], { cwd: out, stdio: 'inherit' });
+// flach zippen: bot.js liegt nach dem Entpacken direkt im Hauptordner (kein Unterordner)
+const z = spawnSync('zip', ['-r', '-q', path.join(out, 'enrp-nexus-bot.zip'), '.'], { cwd: dir, stdio: 'inherit' });
 if (z.status !== 0) process.exit(1);
 console.log(`bot.js: ${(statSync(path.join(dir, 'bot.js')).size / 1e6).toFixed(1)} MB, ZIP: ${(statSync(path.join(out, 'enrp-nexus-bot.zip')).size / 1e6).toFixed(1)} MB\n→ ${path.join(out, 'enrp-nexus-bot.zip')}`);
