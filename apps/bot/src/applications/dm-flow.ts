@@ -295,6 +295,50 @@ export async function showSummary(channel: DMChannel, submissionId: string): Pro
   await channel.send({ content: lines.join('\n').slice(0, 1900), components: [row] });
 }
 
+/**
+ * Sendet die aktuelle Frage (Start, Fortsetzen nach Pause, Zurück). Ist noch keine Frage gesetzt, wird die
+ * erste unbeantwortete sichtbare Frage gewählt; gibt es keine mehr, folgt die Zusammenfassung.
+ */
+export async function sendCurrentQuestion(channel: DMChannel, submissionId: string): Promise<void> {
+  const submission = await prisma.applicationSubmission.findFirst({
+    where: { id: submissionId },
+    include: { version: true, dmState: true },
+  });
+  if (!submission?.dmState) return;
+  const ctx = await loadFlowContext(submission);
+  if (!ctx) return;
+
+  const answers = await loadAnswers(submissionId);
+  const visible = computeVisibleQuestions(ctx.versionQuestions, answers);
+  const current =
+    visible.find((q) => q.id === submission.dmState?.currentQuestionId) ??
+    visible.find((q) => answers[q.id] === undefined) ??
+    undefined;
+
+  if (!current) {
+    if (visible.length === 0) {
+      await channel.send({ content: '⚠️ Diese Bewerbung enthält keine Fragen.' });
+      return;
+    }
+    await showSummary(channel, submissionId);
+    return;
+  }
+
+  await prisma.applicationDMState.update({
+    where: { submissionId },
+    data: { currentQuestionId: current.id, lastInteractionAt: new Date() },
+  });
+  await sendQuestion(
+    channel,
+    ctx,
+    submissionId,
+    current,
+    visible.findIndex((q) => q.id === current.id) + 1,
+    visible.length,
+    submission.dmState.expiresAt ?? undefined,
+  );
+}
+
 export async function editAnswer(
   channel: DMChannel,
   submissionId: string,

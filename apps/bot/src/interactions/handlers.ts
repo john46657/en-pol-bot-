@@ -15,6 +15,7 @@ import {
   openDM,
   processAnswer,
   sendIntro,
+  sendCurrentQuestion,
   sendQuestion,
   showSummary,
   editAnswer,
@@ -240,6 +241,17 @@ async function resumeSubmission(
   if (!isValidId(submissionId)) return;
   const submission = await prisma.applicationSubmission.findFirst({ where: { id: submissionId } });
   if (!submission || submission.userId !== interaction.user.id) return;
+  const resumable: SubmissionStatus[] = [
+    SubmissionStatus.STARTED,
+    SubmissionStatus.IN_PROGRESS,
+    SubmissionStatus.PAUSED,
+  ];
+  if (!resumable.includes(submission.status as SubmissionStatus)) {
+    await interaction
+      .reply({ content: 'ℹ️ Diese Bewerbung ist bereits beendet.', ephemeral: true })
+      .catch(() => undefined);
+    return;
+  }
 
   await prisma.applicationSubmission.update({
     where: { id: submissionId },
@@ -253,6 +265,8 @@ async function resumeSubmission(
   await interaction
     .reply({ content: '▶️ Deine Bewerbung wird fortgesetzt.', ephemeral: true })
     .catch(() => undefined);
+  const dm = interaction.channel;
+  if (dm?.isDMBased()) await sendCurrentQuestion(dm as never, submissionId);
 }
 
 async function goBack(
@@ -275,6 +289,8 @@ async function goBack(
   await interaction
     .reply({ content: '⬅️ Zurück zur vorherigen Frage.', ephemeral: true })
     .catch(() => undefined);
+  const dm = interaction.channel;
+  if (previous && dm?.isDMBased()) await sendCurrentQuestion(dm as never, submissionId);
 }
 
 async function startEdit(
