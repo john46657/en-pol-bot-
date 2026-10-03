@@ -11,6 +11,8 @@ import { Guild } from './pages/Guild';
 import { GuildLayout } from './pages/GuildLayout';
 import { Login } from './pages/Login';
 import { Logs } from './pages/Logs';
+import { ProfileEditor, Profiles } from './pages/Profiles';
+import { UserDetail, Users } from './pages/Users';
 import { PanelEditor } from './pages/PanelEditor';
 import { Panels } from './pages/Panels';
 import { Permissions } from './pages/Permissions';
@@ -47,6 +49,10 @@ createRoot(document.getElementById('root')!).render(
                   <Route path="applications/:applicationId" element={<ApplicationBuilder />} />
                   <Route path="panels" element={<Panels />} />
                   <Route path="panels/:panelId" element={<PanelEditor />} />
+                  <Route path="profiles" element={<Profiles />} />
+                  <Route path="profiles/:profileId" element={<ProfileEditor />} />
+                  <Route path="users" element={<Users />} />
+                  <Route path="users/:userId" element={<UserDetail />} />
                   <Route path="permissions" element={<Permissions />} />
                   <Route path="logs" element={<Logs />} />
                 </Route>

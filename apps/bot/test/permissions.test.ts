@@ -15,8 +15,12 @@ vi.mock('@nexus/permissions', async () => {
   const engine = await vi.importActual<
     typeof import('../../../packages/permissions/src/engine.js')
   >('../../../packages/permissions/src/engine.js');
+  const grants = await vi.importActual<
+    typeof import('../../../packages/permissions/src/grants.js')
+  >('../../../packages/permissions/src/grants.js');
   return {
     ...engine,
+    ...grants,
     permissions: {
       can: async (ctx: { guildId: string; roleIds: string[]; bypass: boolean }, k: never) =>
         ctx.bypass || engine.hasPermission((await forRoles(ctx.guildId, ctx.roleIds)) as never, k),
@@ -72,7 +76,9 @@ describe('Bot-Berechtigungen (zentrale Engine)', () => {
       await requireMemberPermission(interaction as never, ['applications.submissions.view']),
     ).toBeNull();
     expect(reply).toHaveBeenCalledWith(
-      expect.objectContaining({ content: expect.stringContaining('Berechtigung') }),
+      expect.objectContaining({
+        content: expect.stringMatching(/Du benötigst: Einreichungen ansehen/),
+      }),
     );
   });
   it('requireMemberPermission liefert das Mitglied bei Erlaubnis', async () => {

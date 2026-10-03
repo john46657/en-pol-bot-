@@ -65,7 +65,7 @@ function authHeader(botToken: string): Record<string, string> {
 async function discordFetch<T>(
   botToken: string,
   endpoint: string,
-  options: { method?: string; body?: unknown } = {},
+  options: { method?: string; body?: unknown; headers?: Record<string, string> } = {},
   botHeader = true,
 ): Promise<T> {
   const response = await fetch(`${API}${endpoint}`, {
@@ -73,6 +73,7 @@ async function discordFetch<T>(
     headers: {
       ...(botHeader ? authHeader(botToken) : {}),
       'Content-Type': 'application/json',
+      ...(options.headers ?? {}),
     },
     ...(options.body ? { body: JSON.stringify(options.body) } : {}),
   });
@@ -240,6 +241,11 @@ export async function getGuildMember(
   return mapMember(data);
 }
 
+/** Discord erwartet den Audit-Log-Grund im Header (URL-kodiert, max. 512 Zeichen). */
+const reasonHeader = (reason?: string): Record<string, string> =>
+  reason ? { 'X-Audit-Log-Reason': encodeURIComponent(reason.slice(0, 400)) } : {};
+
+/** Vergibt eine Rolle. Wirft `DiscordApiError`, wenn Discord die Änderung ablehnt (z. B. 403 Rollenposition). */
 export async function addGuildMemberRole(
   botToken: string,
   guildId: string,
@@ -249,19 +255,11 @@ export async function addGuildMemberRole(
 ): Promise<void> {
   await discordFetch<void>(botToken, `/guilds/${guildId}/members/${userId}/roles/${roleId}`, {
     method: 'PUT',
-  }).catch(async (error: unknown) => {
-    // 403/431 ohne Reason-Header: Discord benötigt X-Audit-Log-Reason
-    if (error instanceof DiscordApiError && reason) {
-      await fetch(`${API}/guilds/${guildId}/members/${userId}/roles/${roleId}`, {
-        method: 'PUT',
-        headers: { ...authHeader(botToken), 'X-Audit-Log-Reason': reason },
-      });
-      return;
-    }
-    throw error;
+    headers: reasonHeader(reason),
   });
 }
 
+/** Entzieht eine Rolle. Wirft `DiscordApiError`, wenn Discord die Änderung ablehnt. */
 export async function removeGuildMemberRole(
   botToken: string,
   guildId: string,
@@ -269,10 +267,24 @@ export async function removeGuildMemberRole(
   roleId: string,
   reason?: string,
 ): Promise<void> {
-  await fetch(`${API}/guilds/${guildId}/members/${userId}/roles/${roleId}`, {
+  await discordFetch<void>(botToken, `/guilds/${guildId}/members/${userId}/roles/${roleId}`, {
     method: 'DELETE',
-    headers: { ...authHeader(botToken), ...(reason ? { 'X-Audit-Log-Reason': reason } : {}) },
+    headers: reasonHeader(reason),
   });
+}
+
+/** Mitglieder eines Servers (Suche nach Namensteil oder erste Seite). Für Übersichten, begrenzt. */
+export async function listGuildMembers(
+  botToken: string,
+  guildId: string,
+  opts: { query?: string; limit?: number } = {},
+): Promise<DiscordMemberSummary[]> {
+  const limit = Math.min(Math.max(opts.limit ?? 50, 1), 1000);
+  const path = opts.query
+    ? `/guilds/${guildId}/members/search?query=${encodeURIComponent(opts.query)}&limit=${Math.min(limit, 100)}`
+    : `/guilds/${guildId}/members?limit=${limit}`;
+  const data = await discordFetch<RawMember[]>(botToken, path);
+  return data.map(mapMember);
 }
 
 // --- Nachrichten -------------------------------------------------------------

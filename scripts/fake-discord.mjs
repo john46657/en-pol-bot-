@@ -59,6 +59,8 @@ const members = {
   '900000000000000010': [], // Besitzer
   '900000000000000020': [], // normales Mitglied
   '900000000000000030': ['900000000000000103'], // Administrator-Rolle
+  '900000000000000040': ['900000000000000100'], // Polizeileitung
+  '900000000000000050': ['900000000000000101'], // Rolle mit Sperre
 };
 const routes = {
   [`/api/v10/guilds/${G}`]: {
@@ -89,6 +91,17 @@ createServer(async (req, res) => {
     res.writeHead(status, { 'Content-Type': 'application/json' });
     res.end(body === undefined ? '' : JSON.stringify(body));
   };
+  const list = url.match(new RegExp(`^/api/v10/guilds/${G}/members(/search)?$`));
+  if (list) {
+    const q = new URL(req.url, 'http://x').searchParams.get('query')?.toLowerCase();
+    const rows = Object.entries(members)
+      .filter(([id]) => !q || ('user' + id).includes(q))
+      .map(([id, roles]) => ({
+        user: { id, username: 'user' + id.slice(-2), global_name: null },
+        roles,
+      }));
+    return json(200, rows);
+  }
   if (url === '/__messages') return json(200, Object.fromEntries(messages)); // nur für Tests
   const msg = url.match(/^\/api\/v10\/channels\/(\d+)\/messages(?:\/(\d+))?$/);
   if (msg) {

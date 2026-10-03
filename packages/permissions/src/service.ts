@@ -1,31 +1,75 @@
 import type { Permission, PermissionSet } from '@nexus/types';
 import { permissionRepository } from '@nexus/database';
-import { hasAllPermissions, hasAnyPermission, hasPermission, isValidPermission } from './engine.js';
 import type { AccessContext } from './engine.js';
+import { decide, effective, stateOf, type Grant, type Resource } from './grants.js';
 
 /**
- * Einheitliche, asynchrone Prüfung gegen die gespeicherte Rollen-Zuordnung.
- * Wird von API-Guard und Bot gleichermaßen genutzt (Quelle: Tabelle `permissions`).
+ * Einheitliche, asynchrone Prüfung gegen die gespeicherten Zuordnungen (direkt je Rolle, über Profile,
+ * benutzerbezogen). Von API-Guard und Bot gleichermaßen genutzt.
  */
+async function load(ctx: Pick<AccessContext, 'guildId' | 'roleIds' | 'userId'>): Promise<Grant[]> {
+  return permissionRepository.loadGrants(ctx.guildId, [...ctx.roleIds], ctx.userId);
+}
+
+const subject = (ctx: AccessContext) => ({ teamIds: ctx.teamIds });
+
 export const permissions = {
-  /** Effektive (direkt zugeordnete) Permissions der angegebenen Rollen. */
-  async forRoles(guildId: string, roleIds: readonly string[]): Promise<PermissionSet> {
-    const keys = await permissionRepository.getKeysForRoles(guildId, [...roleIds]);
-    return new Set(keys.filter(isValidPermission));
+  grants: load,
+
+  /** Serverweit erlaubte Permissions (inkl. der über `<modul>.manage` eingeschlossenen). */
+  async forRoles(
+    guildId: string,
+    roleIds: readonly string[],
+    userId?: string,
+  ): Promise<PermissionSet> {
+    const grants = await load({ guildId, roleIds, userId });
+    return new Set(
+      effective(grants)
+        .filter((e) => e.state === 'allowed')
+        .map((e) => e.key as Permission),
+    );
   },
 
-  async can(ctx: AccessContext, required: Permission): Promise<boolean> {
-    if (ctx.bypass) return true;
-    return hasPermission(await this.forRoles(ctx.guildId, ctx.roleIds), required);
+  /** Alle Schlüssel mit ihrem Zustand (erlaubt / eingeschränkt / gesperrt / keine). */
+  async effective(ctx: AccessContext) {
+    return effective(await load(ctx));
   },
 
-  async canAll(ctx: AccessContext, required: readonly Permission[]): Promise<boolean> {
+  async can(ctx: AccessContext, required: Permission, resource: Resource = {}): Promise<boolean> {
     if (ctx.bypass) return true;
-    return hasAllPermissions(await this.forRoles(ctx.guildId, ctx.roleIds), required);
+    return decide(await load(ctx), required, resource, subject(ctx)).allowed;
   },
 
-  async canAny(ctx: AccessContext, required: readonly Permission[]): Promise<boolean> {
+  async canAll(
+    ctx: AccessContext,
+    required: readonly Permission[],
+    resource: Resource = {},
+  ): Promise<boolean> {
     if (ctx.bypass) return true;
-    return hasAnyPermission(await this.forRoles(ctx.guildId, ctx.roleIds), required);
+    const grants = await load(ctx);
+    return required.every((k) => decide(grants, k, resource, subject(ctx)).allowed);
+  },
+
+  async canAny(
+    ctx: AccessContext,
+    required: readonly Permission[],
+    resource: Resource = {},
+  ): Promise<boolean> {
+    if (ctx.bypass) return true;
+    const grants = await load(ctx);
+    return required.some((k) => decide(grants, k, resource, subject(ctx)).allowed);
+  },
+
+  /** Hat der Nutzer das Recht irgendwo (auch nur eingeschränkt)? Für Menüs/Listen, nicht zur Durchsetzung. */
+  async hasAnyScope(ctx: AccessContext, key: Permission): Promise<boolean> {
+    if (ctx.bypass) return true;
+    const s = stateOf(await load(ctx), key);
+    return s === 'allowed' || s === 'limited';
+  },
+
+  /** Besitzt der Nutzer überhaupt irgendeine Berechtigung? (Dashboard-Zugang) */
+  async hasAnyPermission(ctx: AccessContext): Promise<boolean> {
+    if (ctx.bypass) return true;
+    return effective(await load(ctx)).some((e) => e.state === 'allowed' || e.state === 'limited');
   },
 };

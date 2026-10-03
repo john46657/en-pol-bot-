@@ -1,6 +1,20 @@
-import { BadRequestException, Body, Controller, Get, Param, Put, Query } from '@nestjs/common';
+import {
+  BadRequestException,
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  Post,
+  Put,
+  Query,
+} from '@nestjs/common';
 import { auditRepository } from '@nexus/database';
-import { RequireGuildAdmin } from '../../common/decorators/guild-admin.decorator.js';
+import {
+  RequireDashboardAccess,
+  RequireGuildAdmin,
+} from '../../common/decorators/guild-admin.decorator.js';
+import { AccessService } from './access.service.js';
 import { PermissionsAdminService } from './permissions.service.js';
 import { SetRolePermissionsDto } from './permissions.dto.js';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
@@ -28,11 +42,12 @@ export class GuildController {
     private readonly discord: DiscordService,
     private readonly selections: SelectionsService,
     private readonly permissionsAdmin: PermissionsAdminService,
+    private readonly access: AccessService,
   ) {}
 
   /** Server-Overview + Configuration Health (§4/§36). */
   @Get()
-  @RequirePermissions('applications.view')
+  @RequireDashboardAccess()
   getOverview(@GuildId() guildId: string) {
     return this.guilds.getOverview(guildId);
   }
@@ -97,12 +112,7 @@ export class GuildController {
     @CurrentUser() user?: RequestUser,
   ) {
     if (!/^\d{5,25}$/.test(roleId)) throw new BadRequestException('Ungültige Rollen-ID.');
-    return this.permissionsAdmin.setForRole(
-      guildId,
-      user?.id ?? 'unknown',
-      roleId,
-      body.permissions,
-    );
+    return this.permissionsAdmin.setForRole(guildId, user?.id ?? 'unknown', roleId, body);
   }
 
   /** Audit-Log des Servers, neueste zuerst, seitenweise (`cursor` = ID des letzten Eintrags). Nur Server-Verwalter. */
@@ -122,5 +132,99 @@ export class GuildController {
     });
     const items = rows.slice(0, take);
     return { items, nextCursor: rows.length > take ? (items.at(-1)?.id ?? null) : null };
+  }
+
+  // --- Profile & Vorlagen ----------------------------------------------------
+
+  @Get('permission-profiles')
+  @RequireGuildAdmin()
+  listProfiles(@GuildId() guildId: string) {
+    return this.access.listProfiles(guildId);
+  }
+
+  @Post('permission-profiles')
+  @RequireGuildAdmin()
+  createProfile(
+    @GuildId() guildId: string,
+    @Body() body: unknown,
+    @CurrentUser() user?: RequestUser,
+  ) {
+    return this.access.createProfile(guildId, user?.id ?? 'unknown', body);
+  }
+
+  /** Legt aus einer Standardvorlage ein frei änderbares Profil an. */
+  @Post('permission-profiles/from-template')
+  @RequireGuildAdmin()
+  fromTemplate(
+    @GuildId() guildId: string,
+    @Body() body: { templateKey?: unknown; name?: unknown },
+    @CurrentUser() user?: RequestUser,
+  ) {
+    return this.access.createFromTemplate(guildId, user?.id ?? 'unknown', body);
+  }
+
+  @Put('permission-profiles/:profileId')
+  @RequireGuildAdmin()
+  updateProfile(
+    @GuildId() guildId: string,
+    @Param('profileId') profileId: string,
+    @Body() body: unknown,
+    @CurrentUser() user?: RequestUser,
+  ) {
+    return this.access.updateProfile(guildId, user?.id ?? 'unknown', profileId, body);
+  }
+
+  @Delete('permission-profiles/:profileId')
+  @RequireGuildAdmin()
+  deleteProfile(
+    @GuildId() guildId: string,
+    @Param('profileId') profileId: string,
+    @CurrentUser() user?: RequestUser,
+  ) {
+    return this.access.deleteProfile(guildId, user?.id ?? 'unknown', profileId);
+  }
+
+  // --- Benutzer-Übersicht ----------------------------------------------------
+
+  @Get('members')
+  @RequireGuildAdmin()
+  listMembers(
+    @GuildId() guildId: string,
+    @Query('query') query?: string,
+    @Query('limit') limit?: string,
+  ) {
+    return this.access.listMembers(
+      guildId,
+      query?.trim() || undefined,
+      Math.min(Math.max(Number(limit) || 50, 1), 200),
+    );
+  }
+
+  @Get('members/:userId/access')
+  @RequireGuildAdmin()
+  memberAccess(@GuildId() guildId: string, @Param('userId') userId: string) {
+    return this.access.memberAccess(guildId, userId);
+  }
+
+  @Post('members/:userId/overrides')
+  @RequireGuildAdmin()
+  addOverride(
+    @GuildId() guildId: string,
+    @Param('userId') userId: string,
+    @Body() body: unknown,
+    @CurrentUser() user?: RequestUser,
+  ) {
+    return this.access.addOverride(guildId, user?.id ?? 'unknown', userId, body);
+  }
+
+  @Delete('members/:userId/overrides/:overrideId')
+  @RequireGuildAdmin()
+  removeOverride(
+    @GuildId() guildId: string,
+    @Param('userId') userId: string,
+    @Param('overrideId') overrideId: string,
+    @CurrentUser() user?: RequestUser,
+  ) {
+    return this.access.removeOverride(guildId, user?.id ?? 'unknown', userId, overrideId);
   }
 }

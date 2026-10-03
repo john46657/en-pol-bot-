@@ -172,6 +172,17 @@ enum IntegrationType {
   MAKE
 }
 
+enum PermissionEffect {
+  ALLOW
+  DENY
+}
+
+enum PermissionScope {
+  SERVER
+  TEAM
+  RECORD
+}
+
 enum AuditActorType {
   USER
   SYSTEM
@@ -196,12 +207,14 @@ model Guild {
   /// Bot hat den Server verlassen (Daten bleiben erhalten); null = Bot ist auf dem Server.
   leftAt DateTime?
 
-  settings      GuildSettings?
-  roles         DiscordRole[]
-  channels      DiscordChannel[]
-  permissions   Permission[]
-  auditLogs     AuditLog[]
-  messagePanels Panel[]
+  settings           GuildSettings?
+  roles              DiscordRole[]
+  channels           DiscordChannel[]
+  permissions        Permission[]
+  auditLogs          AuditLog[]
+  messagePanels      Panel[]
+  permissionProfiles PermissionProfile[]
+  userPermissions    UserPermission[]
 
   applications      Application[]
   panels            ApplicationPanel[]
@@ -746,8 +759,9 @@ model DiscordRole {
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
 
-  guild  Guild        @relation(fields: [guildId], references: [id], onDelete: Cascade)
-  grants Permission[]
+  guild    Guild         @relation(fields: [guildId], references: [id], onDelete: Cascade)
+  grants   Permission[]
+  profiles RoleProfile[]
 
   @@unique([guildId, discordId])
   @@index([guildId, position])
@@ -776,18 +790,80 @@ model DiscordChannel {
 
 /// Zuordnung Permission-Key (z. B. "applications.manage") → Discord-Rolle.
 model Permission {
-  id        String   @id @default(cuid())
+  id        String           @id @default(cuid())
   guildId   String
   key       String
   roleId    String
-  createdAt DateTime @default(now())
+  /// ALLOW erlaubt, DENY sperrt ausdrücklich (Sperre schlägt Erlaubnis).
+  effect    PermissionEffect @default(ALLOW)
+  scope     PermissionScope  @default(SERVER)
+  /// Team-/Datensatz-ID bei expliziter Einschränkung; leer = n/a bzw. „eigenes Team“.
+  scopeRef  String           @default("")
+  createdAt DateTime         @default(now())
 
   guild Guild       @relation(fields: [guildId], references: [id], onDelete: Cascade)
   role  DiscordRole @relation(fields: [roleId], references: [id], onDelete: Cascade)
 
-  @@unique([guildId, key, roleId])
+  @@unique([guildId, key, roleId, effect, scope, scopeRef])
   @@index([guildId, key])
   @@map("permissions")
+}
+
+/// Berechtigungsprofil: benannte Menge von Erlaubnissen/Sperren, die Discord-Rollen zugeordnet wird.
+model PermissionProfile {
+  id          String   @id @default(cuid())
+  guildId     String
+  name        String
+  description String?
+  /// [{ key, effect, scope, scopeRef? }]
+  entries     Json
+  /// Vorlage, aus der das Profil erzeugt wurde (nur Herkunft, keine Kopplung).
+  templateKey String?
+  createdBy   String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  guild Guild         @relation(fields: [guildId], references: [id], onDelete: Cascade)
+  roles RoleProfile[]
+
+  @@unique([guildId, name])
+  @@map("permission_profiles")
+}
+
+/// Zuordnung Discord-Rolle ↔ Profil.
+model RoleProfile {
+  id        String   @id @default(cuid())
+  guildId   String
+  roleId    String
+  profileId String
+  createdAt DateTime @default(now())
+
+  role    DiscordRole       @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  profile PermissionProfile @relation(fields: [profileId], references: [id], onDelete: Cascade)
+
+  @@unique([roleId, profileId])
+  @@index([guildId])
+  @@map("role_profiles")
+}
+
+/// Benutzerbezogene Ausnahme (Erlaubnis oder Sperre) – höchste Spezifität.
+model UserPermission {
+  id        String           @id @default(cuid())
+  guildId   String
+  userId    String
+  key       String
+  effect    PermissionEffect
+  scope     PermissionScope  @default(SERVER)
+  scopeRef  String           @default("")
+  note      String?
+  createdBy String?
+  createdAt DateTime         @default(now())
+
+  guild Guild @relation(fields: [guildId], references: [id], onDelete: Cascade)
+
+  @@unique([guildId, userId, key, effect, scope, scopeRef])
+  @@index([guildId, userId])
+  @@map("user_permissions")
 }
 
 /// Allgemeines, nur anhängbares Audit-Log (Bewerbungen haben zusätzlich ApplicationAuditEvent).
@@ -802,6 +878,14 @@ model AuditLog {
   before       Json?
   after        Json?
   metadata     Json?
+  /// Ergebnis der Aktion: success | partial | failed (null = nicht zutreffend).
+  result       String?
+  /// Verwendete Berechtigung (Schlüssel).
+  permission   String?
+  /// Auslösende Automation (Name/ID).
+  automation   String?
+  /// Begründung bzw. Fehlergrund.
+  reason       String?
   createdAt    DateTime       @default(now())
 
   guild Guild @relation(fields: [guildId], references: [id], onDelete: Cascade)

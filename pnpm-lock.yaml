@@ -119,6 +119,9 @@ importers:
       rxjs:
         specifier: ^7.8.2
         version: 7.8.2
+      zod:
+        specifier: ^3.25.76
+        version: 3.25.76
     devDependencies:
       '@types/cookie-parser':
         specifier: ^1.4.9
@@ -250,6 +253,19 @@ importers:
       '@types/node':
         specifier: ^24.0.10
         version: 24.19.0
+
+  packages/automation:
+    dependencies:
+      '@nexus/database':
+        specifier: workspace:*
+        version: link:../database
+      '@nexus/discord':
+        specifier: workspace:*
+        version: link:../discord
+    devDependencies:
+      vitest:
+        specifier: ^3.2.4
+        version: 3.2.7(@types/node@24.19.0)(jiti@2.7.0)(tsx@4.23.15)(yaml@2.9.1)
 
   packages/config: {}
 

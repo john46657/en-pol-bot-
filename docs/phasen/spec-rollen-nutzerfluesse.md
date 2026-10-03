@@ -2,7 +2,7 @@
 
 Eingegangen am 2026-10-04 während Phase 8. Dies ist der Abgleich mit dem Ist-Stand; die Abschnitte selbst gelten als Anforderung.
 
-## Abgleich Rollen-/Berechtigungssystem (61.1–61.13, 76–82) – Phase 6 muss erweitert werden ("Phase 6b")
+## Abgleich Rollen-/Berechtigungssystem (61.1–61.13, 76–82) – umgesetzt in Phase 6b (siehe [phase-6b.md](phase-6b.md)); die Tabelle zeigt den Ausgangsstand
 | Anforderung | Ist-Stand (Phase 6) | Lücke |
 | --- | --- | --- |
 | Discord-Rolle ≠ Berechtigung; Zuordnung nur im Dashboard | Rolle → Permission-Keys (Tabelle `permissions`), Dashboard-Seite vorhanden | ✔ Grundprinzip, aber ohne Profile |

@@ -53,4 +53,8 @@ export interface AccessContext {
   guildId: string;
   roleIds: readonly string[];
   bypass: boolean;
+  /** Discord-ID des Handelnden (für benutzerbezogene Ausnahmen). */
+  userId?: string | undefined;
+  /** Teams des Handelnden (für TEAM-Zuordnungen); leer, solange es keine Teams gibt. */
+  teamIds?: readonly string[] | undefined;
 }

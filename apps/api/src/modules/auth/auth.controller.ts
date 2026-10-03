@@ -1,5 +1,15 @@
-import { BadRequestException, Controller, Get, Param, Post, Query, Req, Res } from '@nestjs/common';
-import { effectivePermissions, permissions } from '@nexus/permissions';
+import {
+  BadRequestException,
+  Controller,
+  ForbiddenException,
+  Get,
+  Param,
+  Post,
+  Query,
+  Req,
+  Res,
+} from '@nestjs/common';
+import { permissions } from '@nexus/permissions';
 import { DiscordRolesService } from './discord-roles.service.js';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import type { Request, Response } from 'express';
@@ -163,16 +173,25 @@ export class AuthController {
   @ApiBearerAuth()
   async myPermissions(@Param('guildId') guildId: string, @CurrentUser() user: RequestUser) {
     if (!/^\d{5,25}$/.test(guildId)) throw new BadRequestException('Ungültige Server-ID.');
-    const roleIds = user.roleIds?.length
-      ? user.roleIds
-      : await this.discordRoles.getMemberRoles(guildId, user.id);
+    let roleIds = user.roleIds;
+    if (!roleIds?.length) {
+      const member = await this.discordRoles.getMember(guildId, user.id);
+      if (!member.isMember)
+        throw new ForbiddenException('Du bist nicht (mehr) Mitglied dieses Servers.');
+      roleIds = member.roleIds;
+    }
     const access = await this.discordRoles.getMemberAccess(guildId, user.id, roleIds);
-    const set = await permissions.forRoles(guildId, roleIds);
+    const ctx = { guildId, roleIds, bypass: access.canManageGuild, userId: user.id };
+    const states = await permissions.effective(ctx);
+    const allowed = (s: string) => s === 'allowed' || s === 'limited';
     return {
       guildAdmin: access.canManageGuild,
+      /** Rechte, die der Nutzer (zumindest eingeschränkt) besitzt – nur für die Oberfläche. */
       permissions: access.canManageGuild
-        ? effectivePermissions(new Set(PERMISSIONS))
-        : effectivePermissions(set),
+        ? [...PERMISSIONS]
+        : states.filter((e) => allowed(e.state)).map((e) => e.key),
+      /** Hat überhaupt Zugang zum Dashboard dieses Servers. */
+      dashboardAccess: access.canManageGuild || states.some((e) => allowed(e.state)),
     };
   }
 }

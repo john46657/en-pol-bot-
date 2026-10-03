@@ -572,3 +572,83 @@ input:focus-visible {
 .qlist .row {
   flex-wrap: wrap;
 }
+.perm-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  padding: 2px 0;
+}
+.perm-row select {
+  padding: 4px;
+  border-radius: 6px;
+  border: 1px solid var(--line);
+  background: var(--bg);
+  color: var(--fg);
+  font: inherit;
+}
+.seg {
+  display: inline-flex;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  overflow: hidden;
+}
+.seg button {
+  padding: 4px 10px;
+  border: 0;
+  background: var(--panel);
+  color: var(--fg);
+  cursor: pointer;
+  font: inherit;
+}
+.seg button + button {
+  border-left: 1px solid var(--line);
+}
+.seg button.on {
+  background: var(--primary);
+  color: #fff;
+}
+.seg button.on.allow {
+  background: #248046;
+}
+.seg button.on.deny {
+  background: #da373c;
+}
+.why {
+  background: none;
+  border: 0;
+  color: var(--fg);
+  font: inherit;
+  cursor: pointer;
+  text-align: left;
+  padding: 2px 0;
+}
+.why-box {
+  margin: 4px 0 8px 28px;
+  padding: 8px 10px;
+  border-left: 3px solid var(--line);
+  display: grid;
+  gap: 6px;
+}
+.state {
+  display: inline-block;
+  width: 20px;
+  text-align: center;
+  font-weight: 700;
+}
+.state.allowed {
+  color: var(--ok);
+}
+.state.limited {
+  color: var(--bad);
+}
+.state.denied {
+  color: var(--err);
+}
+.state.none {
+  color: var(--muted);
+}
+.ok-note {
+  border-color: var(--ok);
+  color: var(--fg);
+}

@@ -1,31 +1,34 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
 import { useParams } from 'react-router';
-import { api } from '../api';
+import { api, type PermissionOverview } from '../api';
+import {
+  fromMatrix,
+  PermissionMatrix,
+  toMatrix,
+  type MatrixState,
+} from '../components/PermissionMatrix';
 import { errorText, QueryState } from '../components/QueryState';
 import { useToast } from '../toast';
 
-interface PermissionsOverview {
-  catalog: { module: string; label: string; permissions: { key: string; label: string }[] }[];
-  roles: { id: string; name: string; color: number; position: number; permissions: string[] }[];
-  orphaned: { roleId: string; permissions: string[] }[];
-}
-
-/** Zuordnung Discord-Rolle → NEXUS-Berechtigungen. Die Prüfung läuft serverseitig; hier wird nur konfiguriert. */
+/**
+ * Zuordnung Discord-Rolle → Rechte: Profile (wiederverwendbare Rechtesätze) und direkte Erlaubnisse/Sperren.
+ * Alles wird serverseitig durchgesetzt; hier wird nur konfiguriert.
+ */
 export function Permissions() {
   const { guildId = '' } = useParams();
   const qc = useQueryClient();
   const toast = useToast();
   const q = useQuery({
     queryKey: ['permissions', guildId],
-    queryFn: () => api<PermissionsOverview>(`/guilds/${guildId}/permissions`),
+    queryFn: () => api<PermissionOverview>(`/guilds/${guildId}/permissions`),
   });
   const [selected, setSelected] = useState<string | null>(null);
   const save = useMutation({
-    mutationFn: (v: { roleId: string; permissions: string[] }) =>
+    mutationFn: (v: { roleId: string; allow: string[]; deny: string[]; profileIds: string[] }) =>
       api(`/guilds/${guildId}/permissions/${v.roleId}`, {
         method: 'PUT',
-        body: { permissions: v.permissions },
+        body: { allow: v.allow, deny: v.deny, profileIds: v.profileIds },
       }),
     onSuccess: () => {
       toast.success('Berechtigungen gespeichert.');
@@ -37,8 +40,9 @@ export function Permissions() {
     <>
       <h1>Berechtigungen</h1>
       <p className="muted">
-        Lege fest, welche Discord-Rolle welche Funktionen nutzen darf. Server-Besitzer,
-        Administratoren und „Server verwalten“ dürfen immer alles.
+        Lege fest, was eine Discord-Rolle darf. Rechte können direkt oder über{' '}
+        <strong>Profile</strong> zugewiesen werden; eine <strong>Sperre</strong> schlägt jede
+        Erlaubnis. Server-Besitzer und Administratoren dürfen immer alles.
       </p>
       <QueryState query={q}>
         {(data) => {
@@ -53,18 +57,21 @@ export function Permissions() {
                       onClick={() => setSelected(r.id)}
                     >
                       <span className="grow">@{r.name}</span>
-                      <small className="muted">{r.permissions.length}</small>
+                      <small className="muted">
+                        {r.allow.length + r.profileIds.length}
+                        {r.deny.length ? ` · ${r.deny.length} gesperrt` : ''}
+                      </small>
                     </button>
                   </li>
                 ))}
               </ul>
               {role && (
                 <RolePanel
-                  key={role.id}
+                  key={role.id + JSON.stringify([role.allow, role.deny, role.profileIds])}
                   role={role}
-                  catalog={data.catalog}
+                  data={data}
                   saving={save.isPending}
-                  onSave={(permissions) => save.mutate({ roleId: role.id, permissions })}
+                  onSave={(v) => save.mutate({ roleId: role.id, ...v })}
                 />
               )}
               {data.orphaned.length > 0 && (
@@ -73,10 +80,12 @@ export function Permissions() {
                     ⚠️ Zuordnungen zu Rollen, die es auf dem Server nicht mehr gibt:
                     {data.orphaned.map((o) => (
                       <div key={o.roleId}>
-                        <code>{o.roleId}</code> ({o.permissions.length}){' '}
+                        {o.name} <code>{o.roleId}</code> ({o.permissions.length + o.deny.length}){' '}
                         <button
                           className="btn"
-                          onClick={() => save.mutate({ roleId: o.roleId, permissions: [] })}
+                          onClick={() =>
+                            save.mutate({ roleId: o.roleId, allow: [], deny: [], profileIds: [] })
+                          }
                         >
                           Entfernen
                         </button>
@@ -93,58 +102,69 @@ export function Permissions() {
   );
 }
 
-function RolePanel(p: {
-  role: PermissionsOverview['roles'][number];
-  catalog: PermissionsOverview['catalog'];
+function RolePanel({
+  role,
+  data,
+  saving,
+  onSave,
+}: {
+  role: PermissionOverview['roles'][number];
+  data: PermissionOverview;
   saving: boolean;
-  onSave: (p: string[]) => void;
+  onSave: (v: { allow: string[]; deny: string[]; profileIds: string[] }) => void;
 }) {
-  const [checked, setChecked] = useState(() => new Set(p.role.permissions));
+  const [matrix, setMatrix] = useState<MatrixState>(() =>
+    toMatrix([
+      ...role.allow.map((key) => ({ key, effect: 'ALLOW' as const, scope: 'SERVER' as const })),
+      ...role.deny.map((key) => ({ key, effect: 'DENY' as const, scope: 'SERVER' as const })),
+    ]),
+  );
+  const [profileIds, setProfileIds] = useState(new Set(role.profileIds));
+  const entries = fromMatrix(matrix);
+  const allow = entries.filter((e) => e.effect === 'ALLOW').map((e) => e.key);
+  const deny = entries.filter((e) => e.effect === 'DENY').map((e) => e.key);
   const dirty =
-    checked.size !== p.role.permissions.length || p.role.permissions.some((x) => !checked.has(x));
-  const toggle = (k: string) =>
-    setChecked((c) => {
-      const n = new Set(c);
-      if (n.has(k)) n.delete(k);
-      else n.add(k);
+    JSON.stringify([[...allow].sort(), [...deny].sort(), [...profileIds].sort()]) !==
+    JSON.stringify([[...role.allow].sort(), [...role.deny].sort(), [...role.profileIds].sort()]);
+  const toggle = (id: string) =>
+    setProfileIds((s) => {
+      const n = new Set(s);
+      if (n.has(id)) n.delete(id);
+      else n.add(id);
       return n;
     });
   return (
     <section className="card">
-      <h3>@{p.role.name}</h3>
-      {p.catalog.map((m) => {
-        const manage = `${m.module}.manage`;
-        return (
-          <fieldset key={m.module} className="perm-group">
-            <legend>{m.label}</legend>
-            <ul className="plain">
-              {m.permissions.map((perm) => {
-                const implied = perm.key !== manage && checked.has(manage);
-                return (
-                  <li key={perm.key}>
-                    <label>
-                      <input
-                        type="checkbox"
-                        checked={checked.has(perm.key) || implied}
-                        disabled={implied}
-                        onChange={() => toggle(perm.key)}
-                      />{' '}
-                      {perm.label} <code>{perm.key}</code>
-                      {implied && <small className="muted"> (durch „Alles“ enthalten)</small>}
-                    </label>
-                  </li>
-                );
-              })}
-            </ul>
-          </fieldset>
-        );
-      })}
+      <h3>@{role.name}</h3>
+      <h4>Profile</h4>
+      {data.profiles.length === 0 ? (
+        <p className="muted">
+          Noch keine Profile – unter „Profile“ anlegen oder eine Vorlage anwenden.
+        </p>
+      ) : (
+        <ul className="plain">
+          {data.profiles.map((p) => (
+            <li key={p.id}>
+              <label>
+                <input
+                  type="checkbox"
+                  checked={profileIds.has(p.id)}
+                  onChange={() => toggle(p.id)}
+                />{' '}
+                {p.name}
+              </label>
+            </li>
+          ))}
+        </ul>
+      )}
+      <h4>Direkte Rechte</h4>
+      <PermissionMatrix catalog={data.catalog} value={matrix} onChange={setMatrix} />
       <button
         className="btn primary"
-        disabled={!dirty || p.saving}
-        onClick={() => p.onSave([...checked])}
+        disabled={!dirty || saving}
+        onClick={() => onSave({ allow, deny, profileIds: [...profileIds] })}
       >
-        {p.saving ? 'Speichere …' : 'Speichern'}
+        {saving ? 'Speichere …' : 'Speichern'}
       </button>
     </section>
   );

@@ -1,7 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { fetchGuildMemberRoles } from '@nexus/auth';
-import { TtlCache, getGuild, getGuildRoles } from '@nexus/discord';
+import { TtlCache, getGuild, getGuildMember, getGuildRoles } from '@nexus/discord';
 import { computeMemberAccess, type MemberAccess } from './member-access.js';
 
 /**
@@ -13,25 +12,39 @@ import { computeMemberAccess, type MemberAccess } from './member-access.js';
  */
 @Injectable()
 export class DiscordRolesService {
-  private readonly cache = new Map<string, { roles: string[]; expiresAt: number }>();
+  private readonly cache = new Map<
+    string,
+    { roles: string[]; isMember: boolean; expiresAt: number }
+  >();
   private readonly discordCache = new TtlCache();
   private readonly ttlMs = 60_000;
 
   constructor(private readonly config: ConfigService) {}
 
-  async getMemberRoles(guildId: string, userId: string): Promise<string[]> {
+  /** Mitgliedschaft + Rollen (60 s gecacht). Ohne Bot-Token: unbekannt → kein Mitglied (fail closed). */
+  async getMember(
+    guildId: string,
+    userId: string,
+  ): Promise<{ isMember: boolean; roleIds: string[] }> {
     const key = `${guildId}:${userId}`;
     const hit = this.cache.get(key);
-    if (hit && hit.expiresAt > Date.now()) return hit.roles;
+    if (hit && hit.expiresAt > Date.now()) return { isMember: hit.isMember, roleIds: hit.roles };
 
     const botToken = this.config.get<string>('DISCORD_TOKEN');
-    // Ohne Bot-Token können keine Rollen bestimmt werden → leere Menge.
-    // Sichere Default: fehlende Rollen führen im Guard zu Forbidden.
-    if (!botToken) return [];
+    if (!botToken) return { isMember: false, roleIds: [] };
 
-    const roles = await fetchGuildMemberRoles({ guildId, userId, botToken });
-    this.cache.set(key, { roles, expiresAt: Date.now() + this.ttlMs });
-    return roles;
+    const member = await getGuildMember(botToken, guildId, userId); // null bei 404 = nicht (mehr) auf dem Server
+    const value = {
+      isMember: member !== null,
+      roles: member?.roles ?? [],
+      expiresAt: Date.now() + this.ttlMs,
+    };
+    this.cache.set(key, value);
+    return { isMember: value.isMember, roleIds: value.roles };
+  }
+
+  async getMemberRoles(guildId: string, userId: string): Promise<string[]> {
+    return (await this.getMember(guildId, userId)).roleIds;
   }
 
   /** Besitzer/Administrator/„Server verwalten“ – ohne Bot-Token oder bei Discord-Fehlern: kein Zugriff (fail closed). */

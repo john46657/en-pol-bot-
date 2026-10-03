@@ -7,3 +7,8 @@ export const GUILD_ADMIN_KEY = 'nexus:guild-admin';
  * Für sensible Konfiguration wie Permission-Zuordnung und Audit-Log – eine NEXUS-Rolle genügt hier nicht.
  */
 export const RequireGuildAdmin = () => SetMetadata(GUILD_ADMIN_KEY, true);
+
+export const DASHBOARD_ACCESS_KEY = 'nexus:dashboard-access';
+
+/** Endpoint für jeden Benutzer mit irgendeiner Berechtigung auf dem Server (Dashboard-Zugang). */
+export const RequireDashboardAccess = () => SetMetadata(DASHBOARD_ACCESS_KEY, true);

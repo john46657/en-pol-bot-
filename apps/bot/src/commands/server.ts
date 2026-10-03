@@ -51,7 +51,8 @@ async function runServerCommand(interaction: ChatInputCommandInteraction): Promi
     )
   ) {
     await interaction.reply({
-      content: '⚠️ Dafür fehlt dir die Berechtigung.',
+      content:
+        '❌ Keine Berechtigung. Du benötigst Server-Verwalter-Rechte. Wende dich an einen Administrator.',
       flags: MessageFlags.Ephemeral,
     });
     return;

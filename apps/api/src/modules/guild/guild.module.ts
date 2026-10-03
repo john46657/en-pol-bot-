@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { GuildController } from './guild.controller.js';
 import { GuildService } from './guild.service.js';
 import { SelectionsService } from './selections.service.js';
+import { AccessService } from './access.service.js';
 import { PermissionsAdminService } from './permissions.service.js';
 import { DiscordService } from './discord.service.js';
 
@@ -11,7 +12,13 @@ import { DiscordService } from './discord.service.js';
  */
 @Module({
   controllers: [GuildController],
-  providers: [GuildService, DiscordService, SelectionsService, PermissionsAdminService],
+  providers: [
+    GuildService,
+    DiscordService,
+    SelectionsService,
+    PermissionsAdminService,
+    AccessService,
+  ],
   exports: [GuildService, DiscordService],
 })
 export class GuildModule {}

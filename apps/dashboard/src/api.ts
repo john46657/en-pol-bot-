@@ -216,3 +216,100 @@ export const QUESTION_TYPE_LABEL: Record<string, string> = {
   PARAGRAPH: 'Anzeige-Text',
   INFO: 'Hinweis',
 };
+
+// --- Berechtigungen (Profile, Sperren, Benutzer) -----------------------------
+export type Effect = 'ALLOW' | 'DENY';
+export type Scope = 'SERVER' | 'TEAM' | 'RECORD';
+export interface CatalogModule {
+  module: string;
+  label: string;
+  permissions: { key: string; label: string; alias: string | null }[];
+}
+export interface ProfileEntry {
+  key: string;
+  effect: Effect;
+  scope: Scope;
+  scopeRef: string;
+}
+export interface PermissionOverview {
+  catalog: CatalogModule[];
+  templates: {
+    key: string;
+    name: string;
+    description: string;
+    allowCount: number;
+    denyCount: number;
+  }[];
+  profiles: { id: string; name: string }[];
+  roles: {
+    id: string;
+    name: string;
+    color: number;
+    position: number;
+    allow: string[];
+    deny: string[];
+    profileIds: string[];
+  }[];
+  orphaned: { roleId: string; name: string; permissions: string[]; deny: string[] }[];
+}
+export interface ProfileRow {
+  id: string;
+  name: string;
+  description: string | null;
+  templateKey: string | null;
+  entries: ProfileEntry[];
+  roles: { id: string; name: string }[];
+}
+export interface MemberRow {
+  id: string;
+  username: string;
+  displayName: string;
+  roles: { id: string; name: string }[];
+  permissionCount: number;
+  permissionTotal: number;
+}
+export interface GrantSourceInfo {
+  kind: 'role' | 'profile' | 'user';
+  roleName?: string;
+  profileName?: string;
+  note?: string;
+}
+export interface MemberAccess {
+  user: { id: string; username: string; displayName: string };
+  guildAdmin: boolean;
+  roles: { id: string; name: string }[];
+  permissions: {
+    key: string;
+    label: string;
+    alias: string | null;
+    module: string;
+    moduleLabel: string;
+    state: 'allowed' | 'limited' | 'denied' | 'none';
+    viaDiscordAdmin: boolean;
+    entries: {
+      effect: Effect;
+      scope: Scope;
+      scopeRef: string;
+      viaManage: boolean;
+      source: GrantSourceInfo;
+    }[];
+  }[];
+  counts: { allowed: number; limited: number; denied: number };
+  overrides: {
+    id: string;
+    key: string;
+    effect: Effect;
+    scope: Scope;
+    scopeRef: string;
+    note: string | null;
+  }[];
+  recentActions: {
+    id: string;
+    action: string;
+    resourceType: string | null;
+    resourceId: string | null;
+    result: string | null;
+    createdAt: string;
+  }[];
+  pending: string[];
+}

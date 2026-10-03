@@ -68,10 +68,12 @@ describe('Engine', () => {
     expect(hasAllPermissions(s, ['shifts.start', 'shifts.end'])).toBe(false);
     expect(hasAnyPermission(s, ['shifts.end', 'training.view'])).toBe(true);
     expect(hasAnyPermission(s, [])).toBe(false);
-    expect(effectivePermissions(set('training.manage')).sort()).toEqual([
-      'training.manage',
-      'training.view',
-    ]);
+    expect(
+      effectivePermissions(set('training.manage')).every((p) => p.startsWith('training.')),
+    ).toBe(true);
+    expect(effectivePermissions(set('training.manage'))).toEqual(
+      expect.arrayContaining(['training.manage', 'training.view', 'training.edit']),
+    );
   });
   it('validiert Schlüssel', () => {
     expect(isValidPermission('sek.view')).toBe(true);

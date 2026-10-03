@@ -21,9 +21,9 @@ await userRepository.upsert({
   globalName: 'Demo Admin',
 });
 await discordSyncRepository.syncRoles(GUILD_ID, [
-  { discordId: '900000000000000100', name: '@Polizeileitung', position: 10 },
-  { discordId: '900000000000000101', name: '@Polizei', position: 5 },
-  { discordId: '900000000000000102', name: '@Bewerbungsteam', position: 6 },
+  { discordId: '900000000000000100', name: 'Polizeileitung', position: 10 },
+  { discordId: '900000000000000101', name: 'Polizei', position: 5 },
+  { discordId: '900000000000000102', name: 'Bewerbungsteam', position: 6 },
 ]);
 await discordSyncRepository.syncChannels(GUILD_ID, [
   { discordId: '900000000000000200', name: 'Büro', type: 4 },

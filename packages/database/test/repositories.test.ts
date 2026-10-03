@@ -225,3 +225,159 @@ describe('Panels', () => {
     expect(await prisma.panel.count({ where: { guildId: G2 } })).toBe(0);
   });
 });
+
+describe('Profile, Sperren und Ausnahmen', () => {
+  const snap = (name: string) => ({ name });
+  const allow = (key: string) => ({
+    key,
+    effect: 'ALLOW' as const,
+    scope: 'SERVER' as const,
+    scopeRef: '',
+  });
+  const deny = (key: string) => ({
+    key,
+    effect: 'DENY' as const,
+    scope: 'SERVER' as const,
+    scopeRef: '',
+  });
+
+  beforeAll(async () => {
+    await guildRepository.upsert({ id: G1, name: 'Eins' });
+    await guildRepository.upsert({ id: G2, name: 'Zwei' });
+  });
+
+  it('speichert direkte Sperren neben Erlaubnissen und trennt sie in getGrants', async () => {
+    await permissionRepository.setPermissionsForRole(
+      G1,
+      'ro1',
+      [allow('promotions.manage'), deny('promotions.approve')],
+      snap('Stv'),
+    );
+    const g = (await permissionRepository.getGrants(G1)).get('ro1')!;
+    expect(g.keys).toEqual(['promotions.manage']);
+    expect(g.deny).toEqual(['promotions.approve']);
+    // Sperren gewähren nichts (getKeysForRoles zählt nur ALLOW)
+    expect(await permissionRepository.getKeysForRoles(G1, ['ro1'])).toEqual(['promotions.manage']);
+  });
+
+  it('Profile: anlegen, Rollen zuordnen, in loadGrants mit Herkunft erscheinen', async () => {
+    const p = await permissionRepository.createProfile(G1, {
+      name: 'Personalverwaltung',
+      entries: [
+        allow('applications.submissions.accept'),
+        { ...allow('team.view'), scope: 'TEAM' },
+        deny('config.edit'),
+      ],
+      templateKey: 'personalabteilung',
+    });
+    await permissionRepository.setProfilesForRole(G1, 'ro2', [p.id], snap('Personalabteilung'));
+    const grants = await permissionRepository.loadGrants(G1, ['ro2']);
+    expect(grants).toHaveLength(3);
+    expect(grants[0]?.source).toMatchObject({
+      kind: 'profile',
+      roleName: 'Personalabteilung',
+      profileName: 'Personalverwaltung',
+    });
+    expect(grants.find((x) => x.key === 'team.view')?.scope).toBe('TEAM');
+    expect(await permissionRepository.loadGrants(G1, ['andere'])).toEqual([]);
+    // Eine Änderung am Profil wirkt sofort für alle zugeordneten Rollen
+    await permissionRepository.updateProfile(G1, p.id, { entries: [allow('team.view')] });
+    expect(await permissionRepository.loadGrants(G1, ['ro2'])).toHaveLength(1);
+    expect((await permissionRepository.listProfiles(G1)).find((x) => x.id === p.id)?.roles).toEqual(
+      [{ id: 'ro2', name: 'Personalabteilung' }],
+    );
+  });
+
+  it('Profile sind guild-isoliert; fremde Profile lassen sich weder lesen, ändern, löschen noch zuordnen', async () => {
+    const p = await permissionRepository.createProfile(G1, { name: 'Geheim', entries: [] });
+    expect(await permissionRepository.getProfile(G2, p.id)).toBeNull();
+    expect(await permissionRepository.updateProfile(G2, p.id, { name: 'Hack' })).toBeNull();
+    expect(await permissionRepository.deleteProfile(G2, p.id)).toBe(false);
+    await expect(
+      permissionRepository.setProfilesForRole(G2, 'rx', [p.id], snap('X')),
+    ).rejects.toThrow(/Profil/);
+    expect(await permissionRepository.listProfiles(G2)).toEqual([]);
+  });
+
+  it('Profilnamen sind je Server eindeutig', async () => {
+    await permissionRepository.createProfile(G1, { name: 'Doppelt', entries: [] });
+    await expect(
+      permissionRepository.createProfile(G1, { name: 'Doppelt', entries: [] }),
+    ).rejects.toThrow();
+    await expect(
+      permissionRepository.createProfile(G2, { name: 'Doppelt', entries: [] }),
+    ).resolves.toBeTruthy();
+  });
+
+  it('Rollenzuordnung ersetzen und entfernen; Löschen eines Profils löst die Zuordnung', async () => {
+    const [a, b] = await Promise.all([
+      permissionRepository.createProfile(G1, { name: 'P-A', entries: [allow('shifts.view')] }),
+      permissionRepository.createProfile(G1, { name: 'P-B', entries: [allow('shifts.manage')] }),
+    ]);
+    await permissionRepository.setProfilesForRole(G1, 'ro3', [a.id, b.id], snap('R3'));
+    expect(await permissionRepository.loadGrants(G1, ['ro3'])).toHaveLength(2);
+    expect((await permissionRepository.setProfilesForRole(G1, 'ro3', [b.id])).after).toEqual([
+      b.id,
+    ]);
+    await permissionRepository.deleteProfile(G1, b.id);
+    expect(await permissionRepository.loadGrants(G1, ['ro3'])).toEqual([]);
+  });
+
+  it('gelöschte Rollen liefern keine Zuordnungen (auch nicht über Profile)', async () => {
+    await discordSyncRepository.syncRoles(G1, []);
+    expect(await permissionRepository.loadGrants(G1, ['ro1', 'ro2', 'ro3'])).toEqual([]);
+  });
+
+  it('Benutzer-Ausnahmen: Erlaubnis und Sperre, nur für diesen Benutzer, idempotent', async () => {
+    await permissionRepository.addUserOverride(G1, {
+      userId: 'u1',
+      key: 'audit.view',
+      effect: 'ALLOW',
+      note: 'Vertretung',
+    });
+    await permissionRepository.addUserOverride(G1, {
+      userId: 'u1',
+      key: 'audit.view',
+      effect: 'ALLOW',
+      note: 'Vertretung 2',
+    });
+    await permissionRepository.addUserOverride(G1, {
+      userId: 'u1',
+      key: 'report.view',
+      effect: 'DENY',
+      scope: 'TEAM',
+      scopeRef: 'sek',
+    });
+    const list = await permissionRepository.listUserOverrides(G1, 'u1');
+    expect(list).toHaveLength(2);
+    const grants = await permissionRepository.loadGrants(G1, [], 'u1');
+    expect(grants.map((x) => `${x.effect}:${x.key}:${x.scope}:${x.scopeRef}`).sort()).toEqual([
+      'ALLOW:audit.view:SERVER:',
+      'DENY:report.view:TEAM:sek',
+    ]);
+    expect(grants.every((x) => x.source.kind === 'user')).toBe(true);
+    expect(await permissionRepository.loadGrants(G1, [], 'u2')).toEqual([]);
+    expect(await permissionRepository.loadGrants(G2, [], 'u1')).toEqual([]);
+    expect(await permissionRepository.removeUserOverride(G2, list[0]!.id)).toBe(false);
+    expect(await permissionRepository.removeUserOverride(G1, list[0]!.id)).toBe(true);
+  });
+
+  it('Audit-Log speichert Ergebnis, Berechtigung, Automation und Grund', async () => {
+    await auditRepository.create({
+      guildId: G1,
+      actorType: 'AUTOMATION',
+      action: 'role.change',
+      result: 'failed',
+      permission: 'promotions.approve',
+      automation: 'promotion-flow',
+      reason: 'Bot-Rolle zu niedrig',
+    });
+    const [row] = await auditRepository.list(G1, { action: 'role.change' });
+    expect(row).toMatchObject({
+      result: 'failed',
+      permission: 'promotions.approve',
+      automation: 'promotion-flow',
+      reason: 'Bot-Rolle zu niedrig',
+    });
+  });
+});

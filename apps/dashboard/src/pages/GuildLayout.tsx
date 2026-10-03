@@ -4,14 +4,16 @@ import { Link, NavLink, Outlet, useLocation, useParams } from 'react-router';
 import { api, guildIcon, type GuildOverview } from '../api';
 import { UserMenu } from '../components/UserMenu';
 
-type Needs = 'view' | 'admin' | 'panels';
+type Needs = 'any' | 'view' | 'admin' | 'panels';
 const NAV: { to: string; label: string; icon: string; end?: boolean; needs: Needs }[] = [
-  { to: '', label: 'Übersicht', icon: '🏠', end: true, needs: 'view' },
+  { to: '', label: 'Übersicht', icon: '🏠', end: true, needs: 'any' },
   { to: 'settings', label: 'Rollen & Kanäle wählen', icon: '⚙️', needs: 'view' },
   { to: 'roles', label: 'Rollen', icon: '🎭', needs: 'view' },
   { to: 'channels', label: 'Kanäle', icon: '#️⃣', needs: 'view' },
   { to: 'applications', label: 'Bewerbungen', icon: '📋', needs: 'view' },
   { to: 'panels', label: 'Panels', icon: '🧩', needs: 'panels' },
+  { to: 'users', label: 'Benutzer', icon: '👥', needs: 'admin' },
+  { to: 'profiles', label: 'Profile', icon: '🧾', needs: 'admin' },
   { to: 'permissions', label: 'Berechtigungen', icon: '🔐', needs: 'admin' },
   { to: 'logs', label: 'Logs', icon: '📜', needs: 'admin' },
 ];
@@ -30,11 +32,14 @@ export function GuildLayout() {
   const me = useQuery({
     queryKey: ['my-permissions', guildId],
     queryFn: () =>
-      api<{ guildAdmin: boolean; permissions: string[] }>(`/auth/me/guilds/${guildId}/permissions`),
+      api<{ guildAdmin: boolean; permissions: string[]; dashboardAccess: boolean }>(
+        `/auth/me/guilds/${guildId}/permissions`,
+      ),
   });
   const allowed = (needs: Needs) =>
     !me.data ||
     me.data.guildAdmin ||
+    needs === 'any' ||
     (needs === 'view' && me.data.permissions.includes('applications.view')) ||
     (needs === 'panels' && me.data.permissions.includes('panels.view'));
   const icon = g.data && guildIcon(g.data.id, g.data.icon);
@@ -78,7 +83,14 @@ export function GuildLayout() {
           <UserMenu />
         </header>
         <div className="content">
-          <Outlet />
+          {me.data && !me.data.dashboardAccess ? (
+            <div className="alert error" role="alert">
+              Du hast keinen Zugriff auf das Dashboard dieses Servers. Wende dich an einen
+              Administrator.
+            </div>
+          ) : (
+            <Outlet />
+          )}
         </div>
       </div>
     </div>

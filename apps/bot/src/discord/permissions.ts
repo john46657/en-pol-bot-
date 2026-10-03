@@ -4,7 +4,7 @@ import {
   type Interaction,
   type MessageComponentInteraction,
 } from 'discord.js';
-import { permissions, type AccessContext } from '@nexus/permissions';
+import { permissionDeniedMessage, permissions, type AccessContext } from '@nexus/permissions';
 import type { Permission } from '@nexus/types';
 import { permissionService } from '../services/permission.service.js';
 
@@ -17,6 +17,7 @@ export function accessOf(member: GuildMember): AccessContext {
     guildId: member.guild.id,
     roleIds: [...member.roles.cache.keys()],
     bypass: permissionService.isDiscordAdmin(member),
+    userId: member.id,
   };
 }
 
@@ -53,7 +54,7 @@ export async function requireMemberPermission(
   if (interaction.isRepliable() && !interaction.replied && !interaction.deferred) {
     await interaction
       .reply({
-        content: '⚠️ Dafür fehlt dir die Berechtigung.',
+        content: `❌ ${permissionDeniedMessage(keys)}`,
         flags: MessageFlags.Ephemeral,
       })
       .catch(() => undefined);

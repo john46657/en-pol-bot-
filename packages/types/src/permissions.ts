@@ -13,6 +13,78 @@
  */
 export const PERMISSION_CATALOG = [
   {
+    module: 'system',
+    label: 'System',
+    permissions: [
+      ['system.view', 'System ansehen', 'SYSTEM_VIEW'],
+      ['system.manage', 'System verwalten', 'SYSTEM_MANAGE'],
+    ],
+  },
+  {
+    module: 'config',
+    label: 'Serverkonfiguration',
+    permissions: [
+      ['config.view', 'Serverkonfiguration ansehen', 'SERVER_CONFIG_VIEW'],
+      ['config.edit', 'Serverkonfiguration ändern', 'SERVER_CONFIG_EDIT'],
+    ],
+  },
+  {
+    module: 'roles',
+    label: 'Rollenzuordnung',
+    permissions: [
+      ['roles.view', 'Rollenzuordnung ansehen', 'ROLE_MAPPING_VIEW'],
+      ['roles.edit', 'Rollenzuordnung ändern', 'ROLE_MAPPING_EDIT'],
+    ],
+  },
+  {
+    module: 'permissions',
+    label: 'Berechtigungen',
+    permissions: [
+      ['permissions.view', 'Berechtigungen ansehen', 'PERMISSION_VIEW'],
+      ['permissions.edit', 'Berechtigungen ändern', 'PERMISSION_EDIT'],
+    ],
+  },
+  {
+    module: 'modules',
+    label: 'Module',
+    permissions: [
+      ['modules.view', 'Module ansehen', 'MODULE_VIEW'],
+      ['modules.manage', 'Module aktivieren/deaktivieren', 'MODULE_MANAGE'],
+    ],
+  },
+  {
+    module: 'audit',
+    label: 'Audit-Log',
+    permissions: [
+      ['audit.view', 'Audit-Log ansehen', 'AUDIT_VIEW'],
+      ['audit.export', 'Audit-Log exportieren', 'AUDIT_EXPORT'],
+    ],
+  },
+  {
+    module: 'backup',
+    label: 'Backup',
+    permissions: [
+      ['backup.create', 'Backup erstellen', 'BACKUP_CREATE'],
+      ['backup.restore', 'Backup wiederherstellen', 'BACKUP_RESTORE'],
+    ],
+  },
+  {
+    module: 'dashboard',
+    label: 'Dashboard',
+    permissions: [['dashboard.manage', 'Dashboard konfigurieren', 'DASHBOARD_MANAGE']],
+  },
+  {
+    module: 'personnel',
+    label: 'Personal',
+    permissions: [
+      ['personnel.view', 'Personalakten ansehen', 'PERSONNEL_VIEW'],
+      ['personnel.create', 'Personalakten anlegen', 'PERSONNEL_CREATE'],
+      ['personnel.edit', 'Personalakten bearbeiten', 'PERSONNEL_EDIT'],
+      ['personnel.archive', 'Personalakten archivieren', 'PERSONNEL_ARCHIVE'],
+      ['personnel.manage', 'Alles im Bereich Personal'],
+    ],
+  },
+  {
     module: 'applications',
     label: 'Bewerbungen',
     permissions: [
@@ -22,10 +94,12 @@ export const PERMISSION_CATALOG = [
       ['applications.delete', 'Formulare löschen'],
       ['applications.publish', 'Formulare veröffentlichen'],
       ['applications.manage', 'Alles im Bereich Bewerbungen'],
-      ['applications.submissions.view', 'Einreichungen ansehen'],
+      ['applications.submissions.view', 'Einreichungen ansehen', 'APPLICATION_VIEW'],
       ['applications.submissions.review', 'Einreichungen prüfen'],
-      ['applications.submissions.accept', 'Einreichungen annehmen'],
-      ['applications.submissions.deny', 'Einreichungen ablehnen'],
+      ['applications.submissions.accept', 'Einreichungen annehmen', 'APPLICATION_ACCEPT'],
+      ['applications.submissions.deny', 'Einreichungen ablehnen', 'APPLICATION_REJECT'],
+      ['applications.submissions.withdraw', 'Einreichungen zurückziehen', 'APPLICATION_WITHDRAW'],
+      ['applications.submissions.reopen', 'Einreichungen wieder öffnen', 'APPLICATION_REOPEN'],
       ['applications.submissions.export', 'Einreichungen exportieren'],
       ['applications.submissions.delete', 'Einreichungen löschen'],
       ['applications.notes.create', 'Notizen schreiben'],
@@ -45,38 +119,108 @@ export const PERMISSION_CATALOG = [
     ],
   },
   {
-    module: 'training',
-    label: 'Ausbildung',
-    permissions: [
-      ['training.view', 'Ausbildungen ansehen'],
-      ['training.manage', 'Ausbildungen verwalten'],
-    ],
-  },
-  {
     module: 'promotions',
     label: 'Beförderungen',
     permissions: [
-      ['promotions.create', 'Beförderungen beantragen'],
-      ['promotions.approve', 'Beförderungen genehmigen'],
+      ['promotions.view', 'Beförderungen ansehen', 'PROMOTION_VIEW'],
+      ['promotions.create', 'Beförderungen beantragen', 'PROMOTION_CREATE'],
+      ['promotions.approve', 'Beförderungen genehmigen', 'PROMOTION_APPROVE'],
+      ['promotions.reject', 'Beförderungen ablehnen', 'PROMOTION_REJECT'],
       ['promotions.manage', 'Alles im Bereich Beförderungen'],
+    ],
+  },
+  {
+    module: 'team',
+    label: 'Teams',
+    permissions: [
+      ['team.view', 'Teams ansehen', 'TEAM_VIEW'],
+      ['team.edit', 'Teams bearbeiten', 'TEAM_EDIT'],
+      ['team.member.view', 'Teammitglieder ansehen', 'TEAM_MEMBER_VIEW'],
+      ['team.member.manage', 'Teammitglieder verwalten', 'TEAM_MEMBER_MANAGE'],
+      ['team.manage', 'Alles im Bereich Teams'],
+    ],
+  },
+  {
+    module: 'training',
+    label: 'Ausbildung',
+    permissions: [
+      ['training.view', 'Ausbildungen ansehen', 'TRAINING_VIEW'],
+      ['training.create', 'Ausbildungen erstellen', 'TRAINING_CREATE'],
+      ['training.edit', 'Ausbildungen bearbeiten', 'TRAINING_EDIT'],
+      ['training.session.manage', 'Ausbildungseinheiten durchführen', 'TRAINING_SESSION_MANAGE'],
+      ['training.trainer.manage', 'Ausbilder zuweisen', 'TRAINER_MANAGE'],
+      ['training.manage', 'Ausbildungen verwalten', 'TRAINING_MANAGE'],
+    ],
+  },
+  {
+    module: 'exam',
+    label: 'Prüfungen',
+    permissions: [
+      ['exam.create', 'Prüfungen erstellen', 'EXAM_CREATE'],
+      ['exam.edit', 'Prüfungen bearbeiten', 'EXAM_EDIT'],
+      ['exam.manage', 'Prüfungen verwalten und bewerten', 'EXAM_MANAGE'],
+    ],
+  },
+  {
+    module: 'qualification',
+    label: 'Qualifikationen',
+    permissions: [
+      ['qualification.view', 'Qualifikationen ansehen', 'QUALIFICATION_VIEW'],
+      ['qualification.manage', 'Qualifikationen vergeben', 'QUALIFICATION_MANAGE'],
+    ],
+  },
+  {
+    module: 'report',
+    label: 'Berichte',
+    permissions: [
+      ['report.view', 'Berichte ansehen', 'REPORT_VIEW'],
+      ['report.manage', 'Berichte verwalten', 'REPORT_MANAGE'],
+    ],
+  },
+  {
+    module: 'absence',
+    label: 'Abwesenheiten',
+    permissions: [
+      ['absence.view', 'Abwesenheiten ansehen', 'ABSENCE_VIEW'],
+      ['absence.manage', 'Abwesenheiten verwalten', 'ABSENCE_MANAGE'],
     ],
   },
   {
     module: 'shifts',
     label: 'Shifts',
     permissions: [
+      ['shifts.view', 'Shifts ansehen', 'SHIFT_VIEW'],
       ['shifts.start', 'Shift starten'],
       ['shifts.pause', 'Shift pausieren'],
       ['shifts.end', 'Shift beenden'],
-      ['shifts.manage', 'Alles im Bereich Shifts'],
+      ['shifts.manage', 'Shifts verwalten', 'SHIFT_MANAGE'],
     ],
   },
   {
     module: 'sek',
     label: 'SEK',
     permissions: [
-      ['sek.view', 'SEK-Bereich ansehen'],
-      ['sek.manage', 'SEK-Bereich verwalten'],
+      ['sek.view', 'SEK-Bereich ansehen', 'SEK_VIEW'],
+      ['sek.member.manage', 'SEK-Mitglieder verwalten', 'SEK_MEMBER_MANAGE'],
+      ['sek.training.view', 'SEK-Ausbildung ansehen', 'SEK_TRAINING_VIEW'],
+      ['sek.training.manage', 'SEK-Ausbildung verwalten', 'SEK_TRAINING_MANAGE'],
+      ['sek.qualification.view', 'SEK-Qualifikationen ansehen', 'SEK_QUALIFICATION_VIEW'],
+      ['sek.qualification.manage', 'SEK-Qualifikationen verwalten', 'SEK_QUALIFICATION_MANAGE'],
+      ['sek.application.view', 'SEK-Bewerbungen ansehen', 'SEK_APPLICATION_VIEW'],
+      ['sek.manage', 'Alles im SEK-Bereich'],
+    ],
+  },
+  {
+    module: 'own',
+    label: 'Eigene Daten',
+    permissions: [
+      ['own.profile.view', 'Eigenes Profil ansehen', 'OWN_PROFILE_VIEW'],
+      ['own.application.view', 'Eigene Bewerbung ansehen', 'OWN_APPLICATION_VIEW'],
+      ['own.training.view', 'Eigene Ausbildungen ansehen', 'OWN_TRAINING_VIEW'],
+      ['own.report.create', 'Eigene Berichte erstellen', 'OWN_REPORT_CREATE'],
+      ['own.shift.view', 'Eigene Dienstzeiten ansehen', 'OWN_SHIFT_VIEW'],
+      ['own.absence.create', 'Abwesenheit beantragen', 'OWN_ABSENCE_CREATE'],
+      ['own.notifications.view', 'Eigene Benachrichtigungen verwalten', 'OWN_NOTIFICATIONS_VIEW'],
     ],
   },
 ] as const;
@@ -89,3 +233,40 @@ export const PERMISSIONS: readonly Permission[] = PERMISSION_CATALOG.flatMap(
 );
 
 export type PermissionSet = ReadonlySet<Permission>;
+
+/** Anzeigename (Beschriftung) eines Schlüssels; unbekannte Schlüssel liefern `undefined`. */
+export function permissionLabel(key: string): string | undefined {
+  for (const m of PERMISSION_CATALOG) {
+    for (const p of m.permissions) if (p[0] === key) return p[1];
+  }
+  return undefined;
+}
+
+/** Alias aus der Spezifikation (z. B. `APPLICATION_ACCEPT`) → Schlüssel und zurück. */
+export function permissionAlias(key: string): string | undefined {
+  for (const m of PERMISSION_CATALOG) {
+    for (const p of m.permissions as readonly (readonly [string, string, string?])[]) {
+      if (p[0] === key) return p[2];
+    }
+  }
+  return undefined;
+}
+export function permissionFromAlias(alias: string): Permission | undefined {
+  for (const m of PERMISSION_CATALOG) {
+    for (const p of m.permissions as readonly (readonly [string, string, string?])[]) {
+      if (p[2] === alias) return p[0] as Permission;
+    }
+  }
+  return undefined;
+}
+
+/** Geltungsbereich einer Zuordnung. SERVER = überall auf dem Server, TEAM = nur Daten des eigenen Teams (oder eines bestimmten Teams), RECORD = ein einzelner Datensatz. */
+export type PermissionScope = 'SERVER' | 'TEAM' | 'RECORD';
+export type PermissionEffect = 'ALLOW' | 'DENY';
+export interface PermissionEntry {
+  key: Permission;
+  effect: PermissionEffect;
+  scope: PermissionScope;
+  /** Team- bzw. Datensatz-ID bei expliziter Einschränkung; leer = „eigenes Team“ (TEAM) bzw. n/a (SERVER). */
+  scopeRef?: string;
+}

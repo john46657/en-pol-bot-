@@ -17,6 +17,7 @@ import { config } from './config.js';
 import { log } from './logger.js';
 import { buildCustomId, CustomIdAction } from './discord/custom-ids.js';
 import { buildPanelEmbed } from './discord/embeds.js';
+import { permissionDeniedMessage } from '@nexus/permissions';
 import { memberCanManage } from './discord/permissions.js';
 import { getCommand, listCommandData } from './commands/registry.js';
 import './commands/server.js';
@@ -139,7 +140,7 @@ async function postPanel(interaction: ChatInputCommandInteraction): Promise<void
     (member.permissions.has(PermissionFlagsBits.ManageGuild) || (await memberCanManage(member)));
   if (!allowed) {
     await interaction.reply({
-      content: '⚠️ Dafür fehlt dir die Berechtigung.',
+      content: `❌ ${permissionDeniedMessage(['applications.panels.manage'])}`,
       flags: MessageFlags.Ephemeral,
     });
     return;
