@@ -21,7 +21,7 @@ Dashboard → `GET /auth/discord` (zufälliges `state` im httpOnly-Cookie, 10 mi
 Praxistest per HTTP (Fake-Discord): Login-Redirect mit state-Cookie, Callback-Fehlerpfade, 401 ohne Session, Logout; Rechte: Besitzer ohne NEXUS-Rolle 200, Admin-Rolle 200, normales Mitglied 403, Nicht-Mitglied 403, Mitglied mit zugeordneter NEXUS-Rolle 200.
 
 ## Live-Abnahme (sobald Zugangsdaten vorliegen)
-Im Developer Portal unter OAuth2 die Redirect-URL `AUTH_CALLBACK_URL` eintragen (Standard `http://localhost:3001/api/auth/callback` in `.env.example` – **die API-Route lautet `http://localhost:3000/api/v1/auth/discord/callback`**, ohne `AUTH_CALLBACK_URL` wird dieser Wert automatisch genutzt). Dann: anmelden → nur verwaltbare Server sichtbar → Abmelden.
+Im Developer Portal unter OAuth2 die Redirect-URL `http://localhost:3000/api/v1/auth/discord/callback` eintragen (= `AUTH_CALLBACK_URL` in `.env.example`; der frühere Standardwert zeigte auf eine nicht existierende Dashboard-Route und ist korrigiert – bestehende `.env`-Dateien anpassen). Dann: anmelden → nur verwaltbare Server sichtbar → Abmelden.
 
 ## Bekannte Grenzen (→ Phase 32)
 - Die Session ist ein signierter JWT (7 Tage) ohne serverseitigen Widerruf; er enthält den Discord-Access-Token. Ein Redis-Session-Store folgt in der Sicherheitsphase.
