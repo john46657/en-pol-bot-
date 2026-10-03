@@ -6,6 +6,7 @@ import {
   checkBotPermissions,
   checkRoleManageable,
   computeBotAccess,
+  isDangerousRole,
   type BlockedReason,
   type ChannelKind,
 } from './bot-access.js';
@@ -27,6 +28,8 @@ export interface DashboardRole {
   /** Kann der Bot diese Rolle verwalten (Rechte + Hierarchie)? */
   manageable: boolean;
   blockedReason?: BlockedReason;
+  /** Hat Rechte wie Administrator/Rollen verwalten – darf nicht per Panel selbst zugewiesen werden. */
+  dangerous: boolean;
 }
 
 /**
@@ -65,6 +68,7 @@ export class DiscordService {
       position: r.position,
       mentionable: r.mentionable,
       ...checkRoleManageable(guildId, r, access),
+      dangerous: isDangerousRole(r.permissions),
     }));
   }
 

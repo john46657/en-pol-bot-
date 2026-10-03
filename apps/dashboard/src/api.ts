@@ -77,6 +77,7 @@ export interface DiscordRole {
   color: number;
   position: number;
   manageable: boolean;
+  dangerous?: boolean;
   blockedReason?: 'missing-manage-roles' | 'managed-role' | 'everyone' | 'hierarchy';
 }
 export interface DiscordChannel {
@@ -105,3 +106,47 @@ export const BLOCK_REASON: Record<string, string> = {
   everyone: '@everyone',
   hierarchy: 'liegt über der Bot-Rolle',
 };
+
+// --- Panels -----------------------------------------------------------------
+export type PanelButtonStyle = 'primary' | 'secondary' | 'success' | 'danger' | 'link';
+export type PanelAction =
+  { type: 'message'; content: string } | { type: 'role-toggle'; roleId: string };
+export interface PanelButton {
+  id: string;
+  label: string;
+  emoji?: string;
+  style: PanelButtonStyle;
+  url?: string;
+  action?: PanelAction;
+}
+export interface PanelOption {
+  id: string;
+  label: string;
+  description?: string;
+  emoji?: string;
+  action: PanelAction;
+}
+export interface PanelConfig {
+  content?: string;
+  embed: {
+    title?: string;
+    description?: string;
+    color?: string;
+    thumbnailUrl?: string;
+    imageUrl?: string;
+    footer?: string;
+    fields?: { name: string; value: string; inline?: boolean }[];
+  };
+  buttons: PanelButton[];
+  select?: { placeholder?: string; options: PanelOption[] };
+}
+export interface PanelRow {
+  id: string;
+  name: string;
+  config: PanelConfig;
+  channelId: string | null;
+  messageId: string | null;
+  lastSentAt: string | null;
+  autoUpdate: boolean;
+  updatedAt: string;
+}

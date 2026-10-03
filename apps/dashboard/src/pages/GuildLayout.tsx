@@ -4,12 +4,13 @@ import { Link, NavLink, Outlet, useLocation, useParams } from 'react-router';
 import { api, guildIcon, type GuildOverview } from '../api';
 import { UserMenu } from '../components/UserMenu';
 
-type Needs = 'view' | 'admin';
+type Needs = 'view' | 'admin' | 'panels';
 const NAV: { to: string; label: string; icon: string; end?: boolean; needs: Needs }[] = [
   { to: '', label: 'Übersicht', icon: '🏠', end: true, needs: 'view' },
   { to: 'settings', label: 'Rollen & Kanäle wählen', icon: '⚙️', needs: 'view' },
   { to: 'roles', label: 'Rollen', icon: '🎭', needs: 'view' },
   { to: 'channels', label: 'Kanäle', icon: '#️⃣', needs: 'view' },
+  { to: 'panels', label: 'Panels', icon: '🧩', needs: 'panels' },
   { to: 'permissions', label: 'Berechtigungen', icon: '🔐', needs: 'admin' },
   { to: 'logs', label: 'Logs', icon: '📜', needs: 'admin' },
 ];
@@ -33,7 +34,8 @@ export function GuildLayout() {
   const allowed = (needs: Needs) =>
     !me.data ||
     me.data.guildAdmin ||
-    (needs === 'view' && me.data.permissions.includes('applications.view'));
+    (needs === 'view' && me.data.permissions.includes('applications.view')) ||
+    (needs === 'panels' && me.data.permissions.includes('panels.view'));
   const icon = g.data && guildIcon(g.data.id, g.data.icon);
   return (
     <div className={`shell ${open ? 'nav-open' : ''}`}>

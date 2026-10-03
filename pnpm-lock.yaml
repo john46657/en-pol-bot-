@@ -150,6 +150,9 @@ importers:
       '@nexus/database':
         specifier: workspace:*
         version: link:../../packages/database
+      '@nexus/discord':
+        specifier: workspace:*
+        version: link:../../packages/discord
       '@nexus/permissions':
         specifier: workspace:*
         version: link:../../packages/permissions
@@ -288,6 +291,9 @@ importers:
       '@types/node':
         specifier: ^24.0.10
         version: 24.19.0
+      vitest:
+        specifier: ^3.2.4
+        version: 3.2.7(@types/node@24.19.0)(jiti@2.7.0)(tsx@4.23.15)(yaml@2.9.1)
 
   packages/permissions:
     dependencies:
@@ -316,6 +322,9 @@ importers:
       '@types/node':
         specifier: ^24.0.10
         version: 24.19.0
+      vitest:
+        specifier: ^3.2.4
+        version: 3.2.7(@types/node@24.19.0)(jiti@2.7.0)(tsx@4.23.15)(yaml@2.9.1)
 
 packages:
 

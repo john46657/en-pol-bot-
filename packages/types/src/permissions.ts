@@ -37,6 +37,14 @@ export const PERMISSION_CATALOG = [
     ],
   },
   {
+    module: 'panels',
+    label: 'Panels',
+    permissions: [
+      ['panels.view', 'Panels ansehen'],
+      ['panels.manage', 'Panels erstellen, bearbeiten und senden'],
+    ],
+  },
+  {
     module: 'training',
     label: 'Ausbildung',
     permissions: [

@@ -29,5 +29,6 @@ export default tseslint.config(
       'no-console': ['warn', { allow: ['warn', 'error'] }],
     },
   },
+  { files: ['**/test/**'], rules: { '@typescript-eslint/no-explicit-any': 'off' } },
   prettier,
 );

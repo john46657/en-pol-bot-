@@ -85,3 +85,16 @@ export function channelKind(type: number): ChannelKind {
   if (type === 4) return 'category';
   return 'other';
 }
+
+/** Rechte, die keine selbst zuweisbare Rolle haben darf (Administrator, Server/Rollen/Kanäle/Webhooks verwalten, Kick, Ban). */
+const DANGEROUS =
+  PERM.ADMINISTRATOR |
+  PERM.MANAGE_ROLES |
+  PERM.MANAGE_CHANNELS |
+  (1n << 5n) |
+  (1n << 1n) |
+  (1n << 2n) |
+  (1n << 29n);
+
+export const isDangerousRole = (permissions: string): boolean =>
+  (BigInt(permissions) & DANGEROUS) !== 0n;

@@ -75,8 +75,39 @@ const routes = {
     roles: ['900000000000000101'],
   },
 };
-createServer((req, res) => {
+const messages = new Map(); // `${channelId}/${messageId}` -> payload
+let nextId = 1000;
+const readBody = (req) =>
+  new Promise((resolve) => {
+    let d = '';
+    req.on('data', (c) => (d += c));
+    req.on('end', () => resolve(d ? JSON.parse(d) : {}));
+  });
+createServer(async (req, res) => {
   const url = req.url.split('?')[0];
+  const json = (status, body) => {
+    res.writeHead(status, { 'Content-Type': 'application/json' });
+    res.end(body === undefined ? '' : JSON.stringify(body));
+  };
+  if (url === '/__messages') return json(200, Object.fromEntries(messages)); // nur für Tests
+  const msg = url.match(/^\/api\/v10\/channels\/(\d+)\/messages(?:\/(\d+))?$/);
+  if (msg) {
+    const [, channel, id] = msg;
+    if (req.method === 'POST' && !id) {
+      const newId = String(nextId++);
+      messages.set(`${channel}/${newId}`, await readBody(req));
+      return json(200, { id: newId });
+    }
+    if (req.method === 'PATCH' && id) {
+      if (!messages.has(`${channel}/${id}`)) return json(404, { message: 'Unknown Message' });
+      messages.set(`${channel}/${id}`, await readBody(req));
+      return json(200, { id });
+    }
+    if (req.method === 'DELETE' && id) {
+      messages.delete(`${channel}/${id}`);
+      return json(204);
+    }
+  }
   const m = url.match(new RegExp(`^/api/v10/guilds/${G}/members/(\\d+)$`));
   const body = m
     ? members[m[1]]

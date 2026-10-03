@@ -66,7 +66,7 @@ export interface DiscordButton {
   type: 2;
   style: 1 | 2 | 3 | 4 | 5;
   label?: string;
-  emoji?: { id?: string; name?: string };
+  emoji?: { id?: string; name?: string; animated?: boolean };
   custom_id?: string;
   url?: string;
   disabled?: boolean;
@@ -78,5 +78,10 @@ export interface DiscordSelectMenu {
   placeholder?: string;
   min_values?: number;
   max_values?: number;
-  options: Array<{ label: string; value: string; description?: string; emoji?: string }>;
+  options: Array<{
+    label: string;
+    value: string;
+    description?: string;
+    emoji?: { id?: string; name?: string; animated?: boolean };
+  }>;
 }

@@ -16,6 +16,7 @@ import { handleDMMessage } from './events/dm-answer.js';
 import { handleMemberRemove } from './events/guild-events.js';
 import { handleAutocomplete, handleCommand, registerCommands } from './commands.js';
 import { syncAllGuilds, syncGuild } from './guilds.js';
+import './panels/panel-handlers.js';
 import { scheduleSync, syncAllGuildResources, syncGuildResources } from './sync/discord-sync.js';
 
 /**

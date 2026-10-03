@@ -185,22 +185,23 @@ enum AuditActorType {
 
 /// Ein Discord-Server. Höchste Isolationsebene: alle Daten hängen daran (§113).
 model Guild {
-  id              String   @id /// Discord Guild ID (Snowflake)
-  name            String
-  iconUrl         String?
-  ownerId         String?
-  features        Json?
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  id        String   @id /// Discord Guild ID (Snowflake)
+  name      String
+  iconUrl   String?
+  ownerId   String?
+  features  Json?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   /// Bot hat den Server verlassen (Daten bleiben erhalten); null = Bot ist auf dem Server.
   leftAt DateTime?
 
-  settings    GuildSettings?
-  roles       DiscordRole[]
-  channels    DiscordChannel[]
-  permissions Permission[]
-  auditLogs   AuditLog[]
+  settings      GuildSettings?
+  roles         DiscordRole[]
+  channels      DiscordChannel[]
+  permissions   Permission[]
+  auditLogs     AuditLog[]
+  messagePanels Panel[]
 
   applications      Application[]
   panels            ApplicationPanel[]
@@ -809,4 +810,26 @@ model AuditLog {
   @@index([guildId, action])
   @@index([guildId, resourceType, resourceId])
   @@map("audit_logs")
+}
+
+/// Universelles Panel: Discord-Nachricht aus Embed + Buttons + Select-Menü. `config` = PanelConfig (@nexus/types).
+model Panel {
+  id         String    @id @default(cuid())
+  guildId    String
+  name       String
+  config     Json
+  /// Kanal/Nachricht des zuletzt gesendeten Panels (null = noch nie gesendet).
+  channelId  String?
+  messageId  String?
+  lastSentAt DateTime?
+  /// Gesendete Nachricht bei jeder Änderung automatisch aktualisieren.
+  autoUpdate Boolean   @default(true)
+  createdBy  String?
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+
+  guild Guild @relation(fields: [guildId], references: [id], onDelete: Cascade)
+
+  @@index([guildId])
+  @@map("panels")
 }

@@ -9,6 +9,8 @@ import { Guild } from './pages/Guild';
 import { GuildLayout } from './pages/GuildLayout';
 import { Login } from './pages/Login';
 import { Logs } from './pages/Logs';
+import { PanelEditor } from './pages/PanelEditor';
+import { Panels } from './pages/Panels';
 import { Permissions } from './pages/Permissions';
 import { RequireAuth } from './pages/RequireAuth';
 import { Roles } from './pages/Roles';
@@ -39,6 +41,8 @@ createRoot(document.getElementById('root')!).render(
                   <Route path="settings" element={<Settings />} />
                   <Route path="roles" element={<Roles />} />
                   <Route path="channels" element={<Channels />} />
+                  <Route path="panels" element={<Panels />} />
+                  <Route path="panels/:panelId" element={<PanelEditor />} />
                   <Route path="permissions" element={<Permissions />} />
                   <Route path="logs" element={<Logs />} />
                 </Route>

@@ -4,6 +4,7 @@ import {
   auditRepository,
   discordSyncRepository,
   guildRepository,
+  panelRepository,
   permissionRepository,
   prisma,
   userRepository,
@@ -192,5 +193,35 @@ describe('Permissions je Rolle & Audit-Paginierung', () => {
     const second = await auditRepository.list(G1, { limit: 2, cursor: first.at(-1)!.id });
     expect(first.map((l) => l.id).filter((id) => second.some((s) => s.id === id))).toEqual([]);
     expect(all).toHaveLength(5);
+  });
+});
+
+describe('Panels', () => {
+  const config = { embed: { title: 'T' }, buttons: [] };
+  it('legt an, liest, ändert und löscht – strikt je Server', async () => {
+    await guildRepository.upsert({ id: G2, name: 'Zwei' });
+    const p = await panelRepository.create(G1, { name: 'Willkommen', config, createdBy: 'u' });
+    expect(p.autoUpdate).toBe(true);
+    expect((await panelRepository.list(G1)).map((x) => x.id)).toContain(p.id);
+    expect(await panelRepository.list(G2)).toEqual([]);
+    // Fremder Server sieht, ändert und löscht nichts
+    expect(await panelRepository.get(G2, p.id)).toBeNull();
+    expect(await panelRepository.update(G2, p.id, { name: 'Hack' })).toBeNull();
+    expect(await panelRepository.markSent(G2, p.id, 'c', 'm')).toBe(false);
+    expect(await panelRepository.delete(G2, p.id)).toBe(false);
+    expect((await panelRepository.get(G1, p.id))?.name).toBe('Willkommen');
+    // Eigener Server
+    expect((await panelRepository.update(G1, p.id, { name: 'Neu' }))?.name).toBe('Neu');
+    expect(await panelRepository.markSent(G1, p.id, 'c1', 'm1')).toBe(true);
+    expect(await panelRepository.get(G1, p.id)).toMatchObject({ channelId: 'c1', messageId: 'm1' });
+    await panelRepository.clearSent(G1, p.id);
+    expect((await panelRepository.get(G1, p.id))?.messageId).toBeNull();
+    expect(await panelRepository.delete(G1, p.id)).toBe(true);
+    await expect(panelRepository.list('')).rejects.toBeInstanceOf(GuildContextError);
+  });
+  it('wird mit dem Server gelöscht (Cascade)', async () => {
+    await panelRepository.create(G2, { name: 'x', config });
+    await prisma.guild.delete({ where: { id: G2 } });
+    expect(await prisma.panel.count({ where: { guildId: G2 } })).toBe(0);
   });
 });

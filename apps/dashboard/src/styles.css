@@ -409,3 +409,143 @@ input:focus-visible {
   font-weight: 600;
   padding: 0 6px;
 }
+.editor {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 340px;
+  gap: 24px;
+  align-items: start;
+}
+.editor-preview {
+  position: sticky;
+  top: 70px;
+}
+.fld {
+  display: grid;
+  gap: 4px;
+  margin: 8px 0;
+}
+.fld > span {
+  font-size: 13px;
+  color: var(--muted);
+}
+.fld input,
+.fld textarea,
+.fld select {
+  padding: 8px;
+  border-radius: 8px;
+  border: 1px solid var(--line);
+  background: var(--bg);
+  color: var(--fg);
+  font: inherit;
+  width: 100%;
+}
+.fld input[type='color'] {
+  padding: 2px;
+  height: 38px;
+}
+.two {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+.comp {
+  display: grid;
+  gap: 4px;
+  margin: 8px 0;
+}
+.check {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin: 8px 0;
+}
+.actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+  margin: 12px 0;
+}
+.dc-msg {
+  background: #313338;
+  color: #dbdee1;
+  border-radius: 8px;
+  padding: 12px;
+  display: grid;
+  gap: 8px;
+  font-size: 14px;
+}
+.dc-content {
+  margin: 0;
+  white-space: pre-wrap;
+}
+.dc-embed {
+  display: flex;
+  gap: 12px;
+  background: #2b2d31;
+  border-left: 4px solid #202225;
+  border-radius: 4px;
+  padding: 10px 12px;
+}
+.dc-embed-main {
+  display: grid;
+  gap: 6px;
+  min-width: 0;
+  flex: 1;
+}
+.dc-embed p {
+  margin: 0;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.dc-fields {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
+.dc-footer {
+  color: #949ba4;
+}
+.dc-thumb {
+  width: 64px;
+  height: 64px;
+  object-fit: cover;
+  border-radius: 4px;
+}
+.dc-img {
+  max-width: 100%;
+  border-radius: 4px;
+}
+.dc-row {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.dc-btn {
+  color: #fff;
+  padding: 6px 14px;
+  border-radius: 4px;
+  font-weight: 500;
+}
+.dc-select {
+  background: #1e1f22;
+  border-radius: 4px;
+  padding: 8px 12px;
+  display: flex;
+  justify-content: space-between;
+  color: #949ba4;
+}
+@media (max-width: 1100px) {
+  .editor {
+    grid-template-columns: 1fr;
+  }
+  .editor-preview {
+    position: static;
+    order: -1;
+  }
+}
+@media (max-width: 520px) {
+  .two {
+    grid-template-columns: 1fr;
+  }
+}

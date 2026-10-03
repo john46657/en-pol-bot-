@@ -4,13 +4,20 @@ import { ConfigModule } from '@nestjs/config';
 import { ApplicationsModule } from './modules/applications/applications.module.js';
 import { AuthModule } from './modules/auth/auth.module.js';
 import { GuildModule } from './modules/guild/guild.module.js';
+import { MessagePanelsModule } from './modules/panels/panels.module.js';
 import { DevUserMiddleware } from './common/middleware/dev-user.middleware.js';
 import { AuthMiddleware } from './common/middleware/auth.middleware.js';
 import { JwtAuthGuard } from './common/guards/jwt-auth.guard.js';
 import { PermissionGuard } from './common/guards/permission.guard.js';
 
 @Module({
-  imports: [ConfigModule.forRoot({ isGlobal: true }), AuthModule, GuildModule, ApplicationsModule],
+  imports: [
+    ConfigModule.forRoot({ isGlobal: true }),
+    AuthModule,
+    GuildModule,
+    ApplicationsModule,
+    MessagePanelsModule,
+  ],
   providers: [
     // Reihenfolge: erst AuthN (JwtAuthGuard), dann AuthZ (PermissionGuard).
     // @RequirePermissions wird so serverseitig erzwungen (§114) –
