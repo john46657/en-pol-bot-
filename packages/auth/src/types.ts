@@ -32,10 +32,14 @@ export interface DiscordTokenSet {
  * `sub` ist die Discord-User-ID. Rollen werden absichtlich NICHT im JWT
  * gespeichert: Rollen ändern sich, und der Guard fordert sie serverseitig
  * autoritativ an (§114) – der JWT bleibt klein und revocable-by-relogin.
+ *
+ * `at` ist der Discord-OAuth2-Access-Token (identify+guilds) – benötigt, um
+ * die Server des Users für die Serverauswahl zu laden (§1/§2).
  */
 export interface NexusSessionPayload {
   sub: string;
   username: string;
   globalName?: string;
   avatar?: string | null;
+  at?: string;
 }

@@ -68,6 +68,9 @@ importers:
       '@nexus/database':
         specifier: workspace:*
         version: link:../../packages/database
+      '@nexus/discord':
+        specifier: workspace:*
+        version: link:../../packages/discord
       '@nexus/permissions':
         specifier: workspace:*
         version: link:../../packages/permissions
@@ -198,6 +201,16 @@ importers:
       prisma:
         specifier: ^6.11.0
         version: 6.19.3(typescript@5.9.3)
+
+  packages/discord:
+    dependencies:
+      '@nexus/types':
+        specifier: workspace:*
+        version: link:../types
+    devDependencies:
+      '@types/node':
+        specifier: ^24.0.10
+        version: 24.19.0
 
   packages/permissions:
     dependencies:

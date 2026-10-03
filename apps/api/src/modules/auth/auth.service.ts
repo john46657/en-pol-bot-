@@ -48,6 +48,7 @@ export class AuthService {
         username: discordUser.username,
         ...(discordUser.globalName ? { globalName: discordUser.globalName } : {}),
         avatar: discordUser.avatar,
+        at: tokens.accessToken,
       },
       {
         secret: this.require('AUTH_SECRET'),

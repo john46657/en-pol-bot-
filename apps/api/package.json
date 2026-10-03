@@ -22,6 +22,7 @@
     "@nexus/core": "workspace:*",
     "@nexus/auth": "workspace:*",
     "@nexus/database": "workspace:*",
+    "@nexus/discord": "workspace:*",
     "@nexus/permissions": "workspace:*",
     "@nexus/types": "workspace:*",
     "@nexus/validation": "workspace:*",

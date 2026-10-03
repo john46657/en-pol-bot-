@@ -30,6 +30,8 @@ async function bootstrap(): Promise<void> {
   app.enableCors({
     origin: (process.env['DASHBOARD_URL'] ?? 'http://localhost:3001').split(','),
     credentials: true,
+    allowedHeaders: ['Authorization', 'Content-Type', 'Cookie'],
+    exposedHeaders: ['Set-Cookie'],
   });
 
   // OpenAPI / Swagger (§1: OpenAPI/Swagger)

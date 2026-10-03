@@ -10,6 +10,8 @@ import { createParamDecorator, ExecutionContext } from '@nestjs/common';
 export interface RequestUser {
   id: string;
   roleIds?: string[];
+  /** Discord-OAuth2-Access-Token (für Guild-Listen, §2). */
+  at?: string;
 }
 
 export const CurrentUser = createParamDecorator(

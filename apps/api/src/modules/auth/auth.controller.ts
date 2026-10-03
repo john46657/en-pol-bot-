@@ -6,6 +6,7 @@ import { CurrentUser } from '../../common/decorators/current-user.decorator.js';
 import type { RequestUser } from '../../common/decorators/current-user.decorator.js';
 import { AuthService } from './auth.service.js';
 import type { LoginResult } from './auth.service.js';
+import { GuildService } from '../guild/guild.service.js';
 import { ConfigService } from '@nestjs/config';
 
 /**
@@ -20,6 +21,7 @@ export class AuthController {
   constructor(
     private readonly authService: AuthService,
     private readonly config: ConfigService,
+    private readonly guilds: GuildService,
   ) {}
 
   /** Startet den Discord-Login (klassische 302 auf die Authorize-URL). */
@@ -60,5 +62,15 @@ export class AuthController {
   @ApiBearerAuth()
   me(@CurrentUser() user: RequestUser): RequestUser {
     return user;
+  }
+
+  /**
+   * Server des Users für die Serverauswahl (§1/§2): nur Gilden, auf denen
+   * der User berechtigt ist. `at` (Discord Access Token) kommt aus der Session.
+   */
+  @Get('me/guilds')
+  @ApiBearerAuth()
+  async myGuilds(@CurrentUser() user: RequestUser) {
+    return this.guilds.listUserGuilds(user.id, user.at ?? '');
   }
 }
