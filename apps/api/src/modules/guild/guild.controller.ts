@@ -1,4 +1,8 @@
-import { Body, Controller, Get, Param, Put, Query } from '@nestjs/common';
+import { BadRequestException, Body, Controller, Get, Param, Put, Query } from '@nestjs/common';
+import { auditRepository } from '@nexus/database';
+import { RequireGuildAdmin } from '../../common/decorators/guild-admin.decorator.js';
+import { PermissionsAdminService } from './permissions.service.js';
+import { SetRolePermissionsDto } from './permissions.dto.js';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { GuildId } from '../../common/decorators/guild-id.decorator.js';
 import { RequirePermissions } from '../../common/decorators/permissions.decorator.js';
@@ -23,6 +27,7 @@ export class GuildController {
     private readonly guilds: GuildService,
     private readonly discord: DiscordService,
     private readonly selections: SelectionsService,
+    private readonly permissionsAdmin: PermissionsAdminService,
   ) {}
 
   /** Server-Overview + Configuration Health (§4/§36). */
@@ -74,5 +79,48 @@ export class GuildController {
     @CurrentUser() user?: RequestUser,
   ) {
     return this.selections.set(guildId, user?.id ?? 'unknown', slot, body.value ?? null);
+  }
+
+  /** Rolle → Permission-Zuordnung (nur Server-Verwalter). */
+  @Get('permissions')
+  @RequireGuildAdmin()
+  permissionsOverview(@GuildId() guildId: string) {
+    return this.permissionsAdmin.overview(guildId);
+  }
+
+  @Put('permissions/:roleId')
+  @RequireGuildAdmin()
+  setRolePermissions(
+    @GuildId() guildId: string,
+    @Param('roleId') roleId: string,
+    @Body() body: SetRolePermissionsDto,
+    @CurrentUser() user?: RequestUser,
+  ) {
+    if (!/^\d{5,25}$/.test(roleId)) throw new BadRequestException('Ungültige Rollen-ID.');
+    return this.permissionsAdmin.setForRole(
+      guildId,
+      user?.id ?? 'unknown',
+      roleId,
+      body.permissions,
+    );
+  }
+
+  /** Audit-Log des Servers, neueste zuerst, seitenweise (`cursor` = ID des letzten Eintrags). Nur Server-Verwalter. */
+  @Get('audit')
+  @RequireGuildAdmin()
+  async audit(
+    @GuildId() guildId: string,
+    @Query('action') action?: string,
+    @Query('limit') limit?: string,
+    @Query('cursor') cursor?: string,
+  ) {
+    const take = Math.min(Math.max(Number(limit) || 50, 1), 100);
+    const rows = await auditRepository.list(guildId, {
+      limit: take + 1,
+      ...(action ? { action } : {}),
+      ...(cursor ? { cursor } : {}),
+    });
+    const items = rows.slice(0, take);
+    return { items, nextCursor: rows.length > take ? (items.at(-1)?.id ?? null) : null };
   }
 }

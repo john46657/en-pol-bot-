@@ -1,14 +1,10 @@
-import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
 import { Navigate, Outlet } from 'react-router';
-import { api, ApiError, userAvatar, type Me } from '../api';
+import { api, ApiError, type Me } from '../api';
+import { errorText } from '../components/QueryState';
 
+/** Schützt alle Unterseiten: ohne Session → Login. */
 export function RequireAuth() {
-  const qc = useQueryClient();
-  const logout = async () => {
-    await api('/auth/logout', { method: 'POST' }).catch(() => undefined);
-    qc.clear();
-    window.location.assign('/login');
-  };
   const me = useQuery({ queryKey: ['me'], queryFn: () => api<Me>('/auth/me') });
   if (me.isLoading)
     return (
@@ -21,26 +17,11 @@ export function RequireAuth() {
   if (me.error || !me.data)
     return (
       <main className="center">
-        <p className="error">{me.error?.message ?? 'Unbekannter Fehler'}</p>
+        <p className="error">{errorText(me.error)}</p>
         <button className="btn" onClick={() => void me.refetch()}>
           Erneut versuchen
         </button>
       </main>
     );
-  const avatar = userAvatar(me.data);
-  return (
-    <>
-      <header className="bar">
-        <strong>NEXUS</strong>
-        <span className="who">
-          {avatar && <img src={avatar} alt="" width={24} height={24} />}
-          {me.data.globalName ?? me.data.username ?? me.data.id}
-          <button className="btn" onClick={() => void logout()}>
-            Abmelden
-          </button>
-        </span>
-      </header>
-      <Outlet />
-    </>
-  );
+  return <Outlet />;
 }

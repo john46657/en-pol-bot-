@@ -60,6 +60,31 @@ export const guildRepository = {
     });
   },
 
+  /** Rolle → Permission-Keys (Guild.rolePermissions). */
+  async getRolePermissions(guildId: string): Promise<Record<string, string[]>> {
+    const row = await prisma.guild.findUnique({
+      where: { id: assertGuildId(guildId) },
+      select: { rolePermissions: true },
+    });
+    return readRolePermissions(row?.rolePermissions);
+  },
+
+  /** Setzt die Permissions einer Rolle (leere Liste entfernt die Zuordnung). Transaktional, damit parallele Änderungen anderer Rollen nicht verloren gehen. */
+  async setRolePermissions(guildId: string, roleId: string, permissions: string[]) {
+    const id = assertGuildId(guildId);
+    return prisma.$transaction(async (tx) => {
+      await tx.$queryRaw`SELECT 1 FROM guilds WHERE id = ${id} FOR UPDATE`;
+      const row = await tx.guild.findUnique({ where: { id }, select: { rolePermissions: true } });
+      if (!row) throw new Error('Server ist nicht in der Datenbank (Bot nicht verbunden).');
+      const map = readRolePermissions(row.rolePermissions);
+      const before = map[roleId] ?? [];
+      if (permissions.length === 0) delete map[roleId];
+      else map[roleId] = [...new Set(permissions)].sort();
+      await tx.guild.update({ where: { id }, data: { rolePermissions: map } });
+      return { before, after: map[roleId] ?? [] };
+    });
+  },
+
   /** Gespeicherte Auswahlen (Slot → Discord-ID) aus `settings.data.selections`. */
   async getSelections(guildId: string): Promise<Record<string, string>> {
     const settings = await this.getSettings(guildId);
@@ -98,4 +123,13 @@ export function readSelections(data: unknown): Record<string, string> {
     string,
     string
   >;
+}
+
+export function readRolePermissions(raw: unknown): Record<string, string[]> {
+  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return {};
+  const out: Record<string, string[]> = {};
+  for (const [roleId, perms] of Object.entries(raw)) {
+    if (Array.isArray(perms)) out[roleId] = perms.filter((p): p is string => typeof p === 'string');
+  }
+  return out;
 }

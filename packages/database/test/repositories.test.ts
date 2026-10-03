@@ -138,3 +138,39 @@ describe('Auswahlen (settings.data.selections)', () => {
     ).toHaveLength(4);
   });
 });
+
+describe('Rollen-Permissions & Audit-Paginierung', () => {
+  it('setzt, überschreibt und entfernt Rollen-Permissions ohne andere Rollen zu verlieren', async () => {
+    await guildRepository.upsert({ id: G1, name: 'Eins' });
+    expect(await guildRepository.setRolePermissions(G1, 'r1', ['b', 'a', 'a'])).toEqual({
+      before: [],
+      after: ['a', 'b'],
+    });
+    await guildRepository.setRolePermissions(G1, 'r2', ['x']);
+    await guildRepository.setRolePermissions(G1, 'r1', []);
+    expect(await guildRepository.getRolePermissions(G1)).toEqual({ r2: ['x'] });
+  });
+  it('verliert bei parallelen Änderungen nichts', async () => {
+    await Promise.all(
+      ['p1', 'p2', 'p3', 'p4'].map((r) => guildRepository.setRolePermissions(G1, r, ['x'])),
+    );
+    const map = await guildRepository.getRolePermissions(G1);
+    expect(['p1', 'p2', 'p3', 'p4'].every((r) => map[r])).toBe(true);
+  });
+  it('lehnt unbekannte Server ab', async () => {
+    await expect(
+      guildRepository.setRolePermissions('test-guild-none', 'r', ['x']),
+    ).rejects.toThrow();
+  });
+  it('blättert das Audit-Log ohne Lücken oder Duplikate', async () => {
+    for (let i = 0; i < 5; i++)
+      await auditRepository.create({ guildId: G1, actorType: 'SYSTEM', action: `page.${i}` });
+    const all = (await auditRepository.list(G1, { limit: 200 })).filter((l) =>
+      l.action.startsWith('page.'),
+    );
+    const first = await auditRepository.list(G1, { limit: 2 });
+    const second = await auditRepository.list(G1, { limit: 2, cursor: first.at(-1)!.id });
+    expect(first.map((l) => l.id).filter((id) => second.some((s) => s.id === id))).toEqual([]);
+    expect(all).toHaveLength(5);
+  });
+});

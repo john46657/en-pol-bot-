@@ -1,5 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Link, useParams } from 'react-router';
+import { useParams } from 'react-router';
+import { useToast } from '../toast';
+import { errorText } from '../components/QueryState';
 import {
   api,
   ApiError,
@@ -14,6 +16,7 @@ import {
 export function Settings() {
   const { guildId = '' } = useParams();
   const qc = useQueryClient();
+  const toast = useToast();
   const base = `/guilds/${guildId}`;
   const slots = useQuery({
     queryKey: ['selections', guildId],
@@ -34,23 +37,18 @@ export function Settings() {
   const save = useMutation({
     mutationFn: (v: { slot: string; value: string | null }) =>
       api(`${base}/selections/${v.slot}`, { method: 'PUT', body: { value: v.value } }),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['selections', guildId] }),
+    onSuccess: () => {
+      toast.success('Gespeichert.');
+      return qc.invalidateQueries({ queryKey: ['selections', guildId] });
+    },
+    onError: (e) => toast.error(errorText(e)),
   });
 
   const error = [slots, roles, channels, bot].map((q) => q.error).find(Boolean) ?? save.error;
   return (
-    <main className="page">
-      <Link to={`/guilds/${guildId}`} className="muted">
-        ← Übersicht
-      </Link>
-      <h1>Rollen & Kanäle</h1>
-      {error && (
-        <p className="error">
-          {error instanceof ApiError && error.status === 403
-            ? 'Dafür fehlt dir die Berechtigung.'
-            : error.message}
-        </p>
-      )}
+    <>
+      <h1>Rollen & Kanäle wählen</h1>
+      {error && <p className="error">{errorText(error)}</p>}
       {(slots.isLoading || roles.isLoading || channels.isLoading) && (
         <p className="muted">Lade aus Discord …</p>
       )}
@@ -80,8 +78,7 @@ export function Settings() {
           />
         ))}
       </div>
-      {save.isSuccess && <p className="muted">Gespeichert.</p>}
-    </main>
+    </>
   );
 }
 

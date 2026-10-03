@@ -228,9 +228,12 @@ export class GuildService {
     const cached = this.cache.get<number>(key);
     if (cached !== undefined) return cached;
 
-    const response = await fetch(`https://discord.com/api/v10/guilds/${guildId}?with_counts=true`, {
-      headers: { Authorization: `Bot ${this.botToken}` },
-    });
+    const response = await fetch(
+      `${process.env['DISCORD_API_BASE'] ?? 'https://discord.com/api/v10'}/guilds/${guildId}?with_counts=true`,
+      {
+        headers: { Authorization: `Bot ${this.botToken}` },
+      },
+    );
     const data = (await response.json().catch(() => null)) as {
       approximate_member_count?: number;
     } | null;

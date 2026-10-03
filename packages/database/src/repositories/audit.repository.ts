@@ -24,9 +24,16 @@ export const auditRepository = {
 
   async list(
     guildId: string,
-    opts: { action?: string; resourceType?: string; resourceId?: string; limit?: number } = {},
+    opts: {
+      action?: string;
+      resourceType?: string;
+      resourceId?: string;
+      limit?: number;
+      /** ID des letzten Eintrags der vorherigen Seite. */
+      cursor?: string;
+    } = {},
   ) {
-    const { action, resourceType, resourceId, limit = 50 } = opts;
+    const { action, resourceType, resourceId, limit = 50, cursor } = opts;
     return prisma.auditLog.findMany({
       where: {
         guildId: assertGuildId(guildId),
@@ -34,8 +41,9 @@ export const auditRepository = {
         ...(resourceType ? { resourceType } : {}),
         ...(resourceId ? { resourceId } : {}),
       },
-      orderBy: { createdAt: 'desc' },
-      take: Math.min(limit, 200),
+      orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
+      take: Math.min(Math.max(limit, 1), 200),
+      ...(cursor ? { cursor: { id: cursor }, skip: 1 } : {}),
     });
   },
 };
