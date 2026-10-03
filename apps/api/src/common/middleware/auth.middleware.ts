@@ -36,7 +36,13 @@ export class AuthMiddleware implements NestMiddleware {
           secret: this.config.get<string>('AUTH_SECRET') ?? '',
           issuer: this.config.get<string>('JWT_ISSUER') ?? '',
         });
-        req.user = { id: payload.sub, ...(payload.at ? { at: payload.at } : {}) };
+        req.user = {
+          id: payload.sub,
+          username: payload.username,
+          ...(payload.globalName ? { globalName: payload.globalName } : {}),
+          avatar: payload.avatar ?? null,
+          ...(payload.at ? { at: payload.at } : {}),
+        };
       } catch {
         // Ungültig/abgelaufen → anonym lassen; Guard erteilt 401.
       }
