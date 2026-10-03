@@ -59,4 +59,43 @@ export const guildRepository = {
       update: input,
     });
   },
+
+  /** Gespeicherte Auswahlen (Slot → Discord-ID) aus `settings.data.selections`. */
+  async getSelections(guildId: string): Promise<Record<string, string>> {
+    const settings = await this.getSettings(guildId);
+    return readSelections(settings?.data);
+  },
+
+  /** Setzt oder löscht (`null`) eine Auswahl. Transaktion, damit parallele Änderungen anderer Slots nicht verloren gehen. */
+  async setSelection(guildId: string, slot: string, value: string | null) {
+    const id = assertGuildId(guildId);
+    return prisma.$transaction(async (tx) => {
+      await tx.$queryRaw`SELECT 1 FROM guild_settings WHERE "guildId" = ${id} FOR UPDATE`;
+      const row = await tx.guildSettings.findUnique({ where: { guildId: id } });
+      const data = (
+        row?.data && typeof row.data === 'object' && !Array.isArray(row.data) ? row.data : {}
+      ) as Record<string, unknown>;
+      const selections = readSelections(row?.data);
+      const before = selections[slot] ?? null;
+      if (value === null) delete selections[slot];
+      else selections[slot] = value;
+      const next = { ...data, selections } as Prisma.InputJsonValue;
+      await tx.guildSettings.upsert({
+        where: { guildId: id },
+        create: { guildId: id, data: next },
+        update: { data: next },
+      });
+      return { before, after: value };
+    });
+  },
 };
+
+export function readSelections(data: unknown): Record<string, string> {
+  const raw =
+    data && typeof data === 'object' ? (data as { selections?: unknown }).selections : undefined;
+  if (!raw || typeof raw !== 'object') return {};
+  return Object.fromEntries(Object.entries(raw).filter(([, v]) => typeof v === 'string')) as Record<
+    string,
+    string
+  >;
+}

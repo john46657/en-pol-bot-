@@ -7,7 +7,7 @@ import {
   type GuildMember,
 } from 'discord.js';
 import { DMPhase, SubmissionStatus } from '@nexus/types';
-import { guildRepository, prisma } from '@nexus/database';
+import { guildRepository, prisma, userRepository } from '@nexus/database';
 import { config } from './config.js';
 import { log } from './logger.js';
 import { connectRedis } from './utils/lock.js';
@@ -16,6 +16,7 @@ import { handleDMMessage } from './events/dm-answer.js';
 import { handleMemberRemove } from './events/guild-events.js';
 import { handleAutocomplete, handleCommand, registerCommands } from './commands.js';
 import { syncAllGuilds, syncGuild } from './guilds.js';
+import { scheduleSync, syncAllGuildResources, syncGuildResources } from './sync/discord-sync.js';
 
 /**
  * NEXUS Discord Bot.
@@ -40,6 +41,7 @@ export function createClient(): Client {
       'NEXUS Bot bereit.',
     );
     await syncAllGuilds(readyClient);
+    await syncAllGuildResources(readyClient);
     await registerCommands(readyClient);
     await recoverActiveApplications(readyClient);
   });

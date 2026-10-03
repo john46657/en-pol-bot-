@@ -1,11 +1,20 @@
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { TtlCache, getBotMember, getGuildChannels, getGuildRoles } from '@nexus/discord';
+import {
+  channelKind,
+  checkBotPermissions,
+  checkRoleManageable,
+  computeBotAccess,
+  type BlockedReason,
+  type ChannelKind,
+} from './bot-access.js';
 
 export interface DashboardChannel {
   id: string;
   name: string;
   type: number;
+  kind: ChannelKind;
   parentId: string | null;
 }
 
@@ -15,13 +24,14 @@ export interface DashboardRole {
   color: number;
   position: number;
   mentionable: boolean;
-  /** Kann der Bot diese Rolle verwalten (§30)? */
+  /** Kann der Bot diese Rolle verwalten (Rechte + Hierarchie)? */
   manageable: boolean;
+  blockedReason?: BlockedReason;
 }
 
 /**
- * Discord-Ressourcen einer Guild (§8/§30): Channels und Roles inklusive
- * Prüfung, ob der Bot sie verwalten kann.
+ * Discord-Ressourcen einer Guild: Kanäle und Rollen (live per Bot-Token, kurz gecacht)
+ * inklusive Prüfung, ob der Bot sie verwalten kann.
  */
 @Injectable()
 export class DiscordService {
@@ -33,44 +43,43 @@ export class DiscordService {
     return this.config.get<string>('DISCORD_TOKEN') ?? '';
   }
 
-  async listChannels(guildId: string): Promise<DashboardChannel[]> {
+  async listChannels(guildId: string, kind?: ChannelKind): Promise<DashboardChannel[]> {
     const channels = await getGuildChannels(this.botToken, guildId, this.cache);
-    return channels.map((c) => ({ id: c.id, name: c.name, type: c.type, parentId: c.parentId }));
+    return channels
+      .map((c) => ({
+        id: c.id,
+        name: c.name,
+        type: c.type,
+        kind: channelKind(c.type),
+        parentId: c.parentId,
+      }))
+      .filter((c) => (kind ? c.kind === kind : c.kind !== 'other'));
   }
 
   async listRoles(guildId: string): Promise<DashboardRole[]> {
-    const [roles, botMember] = await Promise.all([
-      getGuildRoles(this.botToken, guildId, this.cache),
-      getBotMember(this.botToken, guildId, this.cache).catch(() => null),
-    ]);
-
-    const positions = new Map(roles.map((r) => [r.id, r.position]));
-    const botTopRole = botMember?.roles.length
-      ? Math.max(...botMember.roles.map((id) => positions.get(id) ?? 0))
-      : 0;
-
+    const { roles, access } = await this.load(guildId);
     return roles.map((r) => ({
       id: r.id,
       name: r.name,
       color: r.color,
       position: r.position,
       mentionable: r.mentionable,
-      // §30: Rolle liegt unter der höchsten Bot-Rolle + Bot hat Manage Roles.
-      manageable: r.position < botTopRole && this.hasManageRoles(botMember?.roles ?? [], roles),
+      ...checkRoleManageable(guildId, r, access),
     }));
   }
 
-  private hasManageRoles(
-    botRoleIds: string[],
-    roles: Array<{ id: string; permissions: string }>,
-  ): boolean {
-    const roleMap = new Map(roles.map((r) => [r.id, r.permissions]));
-    const ADMINISTRATOR = (1n << 3n).toString();
-    const MANAGE_ROLES = (1n << 28n).toString();
-    return botRoleIds.some((id) => {
-      const perms = roleMap.get(id);
-      if (!perms) return false;
-      return perms === ADMINISTRATOR || perms === MANAGE_ROLES;
-    });
+  /** Prüft, ob der Bot die für NEXUS nötigen Server-Rechte besitzt. */
+  async getBotPermissions(guildId: string) {
+    const { access } = await this.load(guildId);
+    const checks = checkBotPermissions(access);
+    return { ok: checks.every((c) => c.ok), administrator: access.administrator, checks };
+  }
+
+  private async load(guildId: string) {
+    const [roles, botMember] = await Promise.all([
+      getGuildRoles(this.botToken, guildId, this.cache),
+      getBotMember(this.botToken, guildId, this.cache),
+    ]);
+    return { roles, access: computeBotAccess(guildId, roles, botMember.roles) };
   }
 }

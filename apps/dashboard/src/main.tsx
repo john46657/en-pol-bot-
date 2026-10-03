@@ -7,9 +7,12 @@ import { Guild } from './pages/Guild';
 import { Login } from './pages/Login';
 import { RequireAuth } from './pages/RequireAuth';
 import { Servers } from './pages/Servers';
+import { Settings } from './pages/Settings';
 import './styles.css';
 
-const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false, refetchOnWindowFocus: false } } });
+const queryClient = new QueryClient({
+  defaultOptions: { queries: { retry: false, refetchOnWindowFocus: false } },
+});
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
@@ -21,6 +24,7 @@ createRoot(document.getElementById('root')!).render(
           <Route element={<RequireAuth />}>
             <Route path="/servers" element={<Servers />} />
             <Route path="/guilds/:guildId" element={<Guild />} />
+            <Route path="/guilds/:guildId/settings" element={<Settings />} />
           </Route>
           <Route path="*" element={<Navigate to="/servers" replace />} />
         </Routes>

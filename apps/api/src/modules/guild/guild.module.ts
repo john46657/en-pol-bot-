@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { GuildController } from './guild.controller.js';
 import { GuildService } from './guild.service.js';
+import { SelectionsService } from './selections.service.js';
 import { DiscordService } from './discord.service.js';
 
 /**
@@ -9,7 +10,7 @@ import { DiscordService } from './discord.service.js';
  */
 @Module({
   controllers: [GuildController],
-  providers: [GuildService, DiscordService],
+  providers: [GuildService, DiscordService, SelectionsService],
   exports: [GuildService, DiscordService],
 })
 export class GuildModule {}

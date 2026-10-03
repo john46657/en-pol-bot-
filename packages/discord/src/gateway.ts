@@ -14,7 +14,8 @@ import type {
  * Antworten werden kurz (60s) gecacht, um Discord zu schonen.
  */
 
-const API = 'https://discord.com/api/v10';
+// DISCORD_API_BASE: nur für lokale Tests gegen einen Fake-Discord (scripts/fake-discord.mjs).
+const API = process.env['DISCORD_API_BASE'] ?? 'https://discord.com/api/v10';
 
 export class DiscordApiError extends Error {
   constructor(
@@ -79,15 +80,10 @@ async function discordFetch<T>(
   if (response.status === 204) return undefined as T;
 
   const data = (await response.json().catch(() => null)) as
-    | (T & { message?: string; code?: number; retry_after?: number })
-    | null;
+    (T & { message?: string; code?: number; retry_after?: number }) | null;
 
   if (!response.ok) {
-    throw new DiscordApiError(
-      response.status,
-      endpoint,
-      data?.message ?? response.statusText,
-    );
+    throw new DiscordApiError(response.status, endpoint, data?.message ?? response.statusText);
   }
   return data as T;
 }
@@ -205,7 +201,12 @@ interface RawMember {
 }
 
 function mapMember(m: RawMember): DiscordMemberSummary {
-  return { userId: m.user.id, username: m.user.username, globalName: m.user.global_name, roles: m.roles };
+  return {
+    userId: m.user.id,
+    username: m.user.username,
+    globalName: m.user.global_name,
+    roles: m.roles,
+  };
 }
 
 export async function getBotMember(
@@ -246,11 +247,9 @@ export async function addGuildMemberRole(
   roleId: string,
   reason?: string,
 ): Promise<void> {
-  await discordFetch<void>(
-    botToken,
-    `/guilds/${guildId}/members/${userId}/roles/${roleId}`,
-    { method: 'PUT' },
-  ).catch(async (error: unknown) => {
+  await discordFetch<void>(botToken, `/guilds/${guildId}/members/${userId}/roles/${roleId}`, {
+    method: 'PUT',
+  }).catch(async (error: unknown) => {
     // 403/431 ohne Reason-Header: Discord benötigt X-Audit-Log-Reason
     if (error instanceof DiscordApiError && reason) {
       await fetch(`${API}/guilds/${guildId}/members/${userId}/roles/${roleId}`, {
@@ -283,11 +282,10 @@ export async function createChannelMessage(
   channelId: string,
   payload: MessagePayload,
 ): Promise<{ id: string }> {
-  const data = await discordFetch<{ id: string }>(
-    botToken,
-    `/channels/${channelId}/messages`,
-    { method: 'POST', body: payload },
-  );
+  const data = await discordFetch<{ id: string }>(botToken, `/channels/${channelId}/messages`, {
+    method: 'POST',
+    body: payload,
+  });
   return { id: data.id };
 }
 
@@ -297,11 +295,10 @@ export async function editChannelMessage(
   messageId: string,
   payload: MessagePayload,
 ): Promise<void> {
-  await discordFetch<void>(
-    botToken,
-    `/channels/${channelId}/messages/${messageId}`,
-    { method: 'PATCH', body: payload },
-  );
+  await discordFetch<void>(botToken, `/channels/${channelId}/messages/${messageId}`, {
+    method: 'PATCH',
+    body: payload,
+  });
 }
 
 export async function deleteChannelMessage(

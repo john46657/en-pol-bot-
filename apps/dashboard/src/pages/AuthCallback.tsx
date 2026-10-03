@@ -14,5 +14,9 @@ export function AuthCallback() {
     void qc.invalidateQueries({ queryKey: ['me'] });
     nav('/servers', { replace: true });
   }, [nav, qc]);
-  return <main className="center"><p className="muted">Anmeldung wird abgeschlossen …</p></main>;
+  return (
+    <main className="center">
+      <p className="muted">Anmeldung wird abgeschlossen …</p>
+    </main>
+  );
 }

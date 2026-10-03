@@ -106,12 +106,16 @@ export function buildSubmissionEmbed(input: SubmissionEmbedInput): DiscordEmbed 
     if (statsConfig.submittedAt && input.submittedAt) {
       stats.push(`Eingereicht: <t:${Math.floor(input.submittedAt.getTime() / 1000)}:R>`);
     }
-    if (statsConfig.applicationVersion) stats.push(`Application-Version: v${input.applicationVersion}`);
+    if (statsConfig.applicationVersion)
+      stats.push(`Application-Version: v${input.applicationVersion}`);
     if (statsConfig.questionCount) stats.push(`Fragen: ${questions.length}`);
     if (statsConfig.answerCount) stats.push(`Antworten: ${Object.keys(answers).length}`);
 
     if (stats.length > 0) {
-      embed.fields = [...(embed.fields ?? []), { name: 'Submission Stats', value: stats.join('\n'), inline: false }];
+      embed.fields = [
+        ...(embed.fields ?? []),
+        { name: 'Submission Stats', value: stats.join('\n'), inline: false },
+      ];
     }
   }
 
@@ -123,23 +127,66 @@ export function buildSubmissionEmbed(input: SubmissionEmbedInput): DiscordEmbed 
 }
 
 /** Review-Action-Row für eine Submission-Nachricht (§29). */
-export function buildReviewActions(submissionId: string, dashboardUrl?: string): DiscordComponents[] {
+export function buildReviewActions(
+  submissionId: string,
+  dashboardUrl?: string,
+): DiscordComponents[] {
   const rows: DiscordComponents[] = [
     {
       type: 1,
       components: [
-        { type: 2, style: 3, label: 'Accept', emoji: { name: '✅' }, custom_id: `nexus:review:accept:${submissionId}` },
-        { type: 2, style: 4, label: 'Deny', emoji: { name: '✖️' }, custom_id: `nexus:review:deny:${submissionId}` },
-        { type: 2, style: 2, label: 'Accept mit Grund', custom_id: `nexus:review:accept_r:${submissionId}` },
-        { type: 2, style: 2, label: 'Deny mit Grund', custom_id: `nexus:review:deny_r:${submissionId}` },
+        {
+          type: 2,
+          style: 3,
+          label: 'Accept',
+          emoji: { name: '✅' },
+          custom_id: `nexus:review:accept:${submissionId}`,
+        },
+        {
+          type: 2,
+          style: 4,
+          label: 'Deny',
+          emoji: { name: '✖️' },
+          custom_id: `nexus:review:deny:${submissionId}`,
+        },
+        {
+          type: 2,
+          style: 2,
+          label: 'Accept mit Grund',
+          custom_id: `nexus:review:accept_r:${submissionId}`,
+        },
+        {
+          type: 2,
+          style: 2,
+          label: 'Deny mit Grund',
+          custom_id: `nexus:review:deny_r:${submissionId}`,
+        },
       ],
     },
     {
       type: 1,
       components: [
-        { type: 2, style: 2, label: 'History', emoji: { name: '📜' }, custom_id: `nexus:review:history:${submissionId}` },
-        { type: 2, style: 2, label: 'Ticket mit User', emoji: { name: '🎫' }, custom_id: `nexus:review:ticket:${submissionId}` },
-        { type: 2, style: 2, label: 'Notiz', emoji: { name: '📝' }, custom_id: `nexus:review:note:${submissionId}` },
+        {
+          type: 2,
+          style: 2,
+          label: 'History',
+          emoji: { name: '📜' },
+          custom_id: `nexus:review:history:${submissionId}`,
+        },
+        {
+          type: 2,
+          style: 2,
+          label: 'Ticket mit User',
+          emoji: { name: '🎫' },
+          custom_id: `nexus:review:ticket:${submissionId}`,
+        },
+        {
+          type: 2,
+          style: 2,
+          label: 'Notiz',
+          emoji: { name: '📝' },
+          custom_id: `nexus:review:note:${submissionId}`,
+        },
         ...(dashboardUrl
           ? [
               {

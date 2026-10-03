@@ -8,7 +8,8 @@
     "build": "tsc",
     "start": "node dist/main.js",
     "typecheck": "tsc --noEmit",
-    "lint": "eslint src"
+    "lint": "eslint src",
+    "test": "vitest run"
   },
   "dependencies": {
     "@nestjs/common": "^11.1.5",
@@ -39,6 +40,7 @@
     "@types/express": "^5.0.3",
     "@types/node": "^24.0.10",
     "tsx": "^4.20.3",
-    "tsc-watch": "^6.3.1"
+    "tsc-watch": "^6.3.1",
+    "vitest": "^3.2.4"
   }
 }

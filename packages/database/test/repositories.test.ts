@@ -107,3 +107,34 @@ describe('Phase 1 – Abnahme', () => {
     expect(await discordSyncRepository.listRoles(G1)).toHaveLength(1);
   });
 });
+
+describe('Auswahlen (settings.data.selections)', () => {
+  it('speichert, überschreibt und löscht Auswahlen, ohne andere Settings-Daten zu verlieren', async () => {
+    await guildRepository.upsert({ id: G1, name: 'Eins' });
+    await guildRepository.updateSettings(G1, { data: { other: 'bleibt' } });
+    expect(await guildRepository.setSelection(G1, 'log-channel', 'c1')).toEqual({
+      before: null,
+      after: 'c1',
+    });
+    expect(await guildRepository.setSelection(G1, 'log-channel', 'c2')).toEqual({
+      before: 'c1',
+      after: 'c2',
+    });
+    await guildRepository.setSelection(G1, 'office-waiting-voice', 'v1');
+    expect(await guildRepository.getSelections(G1)).toEqual({
+      'log-channel': 'c2',
+      'office-waiting-voice': 'v1',
+    });
+    await guildRepository.setSelection(G1, 'log-channel', null);
+    expect(await guildRepository.getSelections(G1)).toEqual({ 'office-waiting-voice': 'v1' });
+    expect((await guildRepository.getSettings(G1))?.data).toMatchObject({ other: 'bleibt' });
+  });
+  it('verliert bei parallelen Änderungen verschiedener Felder nichts', async () => {
+    await Promise.all(
+      ['a', 'b', 'c', 'd'].map((k) => guildRepository.setSelection(G1, `slot-${k}`, `id-${k}`)),
+    );
+    expect(
+      Object.keys(await guildRepository.getSelections(G1)).filter((k) => k.startsWith('slot-')),
+    ).toHaveLength(4);
+  });
+});

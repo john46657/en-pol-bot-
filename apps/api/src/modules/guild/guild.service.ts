@@ -65,7 +65,9 @@ export class GuildService {
       prisma.guild.findMany({ select: { id: true, rolePermissions: true } }),
     ]);
 
-    const known = new Map(knownGuildIds.map((g) => [g.id, g.rolePermissions as Record<string, Permission[]>]));
+    const known = new Map(
+      knownGuildIds.map((g) => [g.id, g.rolePermissions as Record<string, Permission[]>]),
+    );
 
     const result: GuildSelectionEntry[] = [];
     for (const guild of userGuilds) {
@@ -102,7 +104,9 @@ export class GuildService {
         });
       }
     }
-    return result.sort((a, b) => Number(b.botPresent) - Number(a.botPresent) || a.name.localeCompare(b.name));
+    return result.sort(
+      (a, b) => Number(b.botPresent) - Number(a.botPresent) || a.name.localeCompare(b.name),
+    );
   }
 
   /** Guild-Overview (§4) + Configuration Health (§35/§36). */
@@ -158,7 +162,10 @@ export class GuildService {
       const botRolesMissing = botMember.roles.length === 0;
       overview.health.push(
         botRolesMissing
-          ? { ok: false, message: 'Dem Bot sind keine Rollen zugewiesen – Rollenverwaltung deaktiviert.' }
+          ? {
+              ok: false,
+              message: 'Dem Bot sind keine Rollen zugewiesen – Rollenverwaltung deaktiviert.',
+            }
           : { ok: true, message: 'Bot-Rollen erkannt.' },
       );
     }
@@ -180,13 +187,18 @@ export class GuildService {
           message: `⚠️ ${app.name}: Der konfigurierte Submission-Channel existiert nicht mehr.`,
         });
       }
-      if (app.status === 'PUBLISHED' && !(config.questions && Array.isArray(config.questions) && config.questions.length > 0)) {
+      if (
+        app.status === 'PUBLISHED' &&
+        !(config.questions && Array.isArray(config.questions) && config.questions.length > 0)
+      ) {
         overview.health.push({
           ok: false,
           message: `⚠️ ${app.name}: Veröffentlicht, aber ohne Fragen.`,
         });
       }
-      const roleRules = await prisma.applicationRoleRule.findMany({ where: { applicationId: app.id } });
+      const roleRules = await prisma.applicationRoleRule.findMany({
+        where: { applicationId: app.id },
+      });
       for (const rule of roleRules) {
         const role = roleMap.get(rule.roleId);
         if (!role) {
@@ -219,7 +231,9 @@ export class GuildService {
     const response = await fetch(`https://discord.com/api/v10/guilds/${guildId}?with_counts=true`, {
       headers: { Authorization: `Bot ${this.botToken}` },
     });
-    const data = (await response.json().catch(() => null)) as { approximate_member_count?: number } | null;
+    const data = (await response.json().catch(() => null)) as {
+      approximate_member_count?: number;
+    } | null;
     const count = data?.approximate_member_count ?? 0;
     this.cache.set(key, count);
     return count;
@@ -246,5 +260,11 @@ async function fetchUserGuilds(accessToken: string): Promise<UserGuild[]> {
     owner: boolean;
     permissions: string;
   }>;
-  return data.map((g) => ({ id: g.id, name: g.name, icon: g.icon, owner: g.owner, permissions: g.permissions }));
+  return data.map((g) => ({
+    id: g.id,
+    name: g.name,
+    icon: g.icon,
+    owner: g.owner,
+    permissions: g.permissions,
+  }));
 }
