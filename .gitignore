@@ -13,3 +13,5 @@ playwright-report
 backups
 dist-hosting
 dist-bot
+.DS_Store
+.vite
