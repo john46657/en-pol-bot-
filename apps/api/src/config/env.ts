@@ -5,6 +5,8 @@ const schema = z.object({
   PORT: z.coerce.number().default(3000),
   DATABASE_URL: z.string().min(1),
   SESSION_SECRET: z.string().min(16).default('dev-only-insecure-session-secret'),
+  /** Swagger UI unter /api/docs. Standard: nur in Entwicklung (in Produktion würde es die API-Struktur öffentlich zeigen). */
+  ENABLE_SWAGGER: z.enum(['true', 'false']).optional(),
   LOGIN_RATE_LIMIT: z.coerce.number().int().positive().default(10),
   SESSION_TTL_HOURS: z.coerce.number().positive().default(12),
   WEB_ORIGIN: z.string().default('http://localhost:5173'),

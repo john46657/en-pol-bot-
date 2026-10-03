@@ -10,8 +10,8 @@
 		-Server
 	}
 
-	# API, Swagger und WebSocket gehen an den API-Container. /health und /readiness bleiben intern.
-	@api path /api/* /ws /ws/*
+	# API und WebSocket gehen an den API-Container. /health ist für externes Uptime-Monitoring offen (liefert nur {"status":"ok"}); /readiness bleibt intern.
+	@api path /api/* /ws /ws/* /health
 	handle @api {
 		reverse_proxy api:3000
 	}

@@ -10,3 +10,4 @@ uploads
 test-results
 playwright-report
 .pgdata-e2e
+backups

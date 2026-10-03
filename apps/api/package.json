@@ -51,5 +51,10 @@
     "supertest": "^7.1.4",
     "tsx": "^4.20.0",
     "unplugin-swc": "^1.5.5"
-  }
+  },
+  "files": [
+    "dist",
+    "prisma/schema.prisma",
+    "prisma/migrations"
+  ]
 }

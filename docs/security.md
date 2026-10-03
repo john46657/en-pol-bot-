@@ -25,3 +25,7 @@ Known residual risks (accepted / not yet addressed):
 - `trust proxy` is fixed to 1 hop; deploy behind the provided Caddy (or adjust) so `X-Forwarded-For` cannot be spoofed by clients.
 - Uploaded files are not virus-scanned. No 2FA. Session tokens are not bound to IP/device.
 - Roles with `roles.manage` can grant themselves nothing directly (self-changes blocked) but can still grant other accounts anything; treat that permission as admin-equivalent.
+
+## Production defaults
+- Swagger UI (`/api/docs`) is only served in development (`ENABLE_SWAGGER=true` overrides).
+- Retention runs daily inside the API process in production (first run 1 minute after start); every run is audited as `retention.run` with no user.

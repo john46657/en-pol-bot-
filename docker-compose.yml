@@ -1,7 +1,14 @@
+# Produktion: db + api + web (Caddy, HTTPS) + täglich Datenbank-Backups.
+# Start: docker compose up -d --build   (benötigt .env, siehe .env.example und docs/deployment.md)
+x-logging: &logging
+  driver: json-file
+  options: { max-size: "10m", max-file: "5" }
+
 services:
   db:
     image: postgres:17-alpine
     restart: unless-stopped
+    logging: *logging
     environment:
       POSTGRES_USER: enrp
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env}
@@ -17,13 +24,14 @@ services:
   api:
     build: { context: ., target: api }
     restart: unless-stopped
+    logging: *logging
     depends_on:
       db: { condition: service_healthy }
     environment:
       NODE_ENV: production
       DATABASE_URL: postgresql://enrp:${POSTGRES_PASSWORD}@db:5432/enrp
       SESSION_SECRET: ${SESSION_SECRET:?set SESSION_SECRET in .env}
-      WEB_ORIGIN: https://${DOMAIN:-localhost}
+      WEB_ORIGIN: https://${DOMAIN:?set DOMAIN in .env}
       STORAGE_DIR: /app/uploads
     volumes:
       - uploads:/app/uploads
@@ -31,15 +39,36 @@ services:
   web:
     build: { context: ., target: web }
     restart: unless-stopped
-    depends_on: [api]
+    logging: *logging
+    depends_on:
+      api: { condition: service_healthy }
     environment:
-      DOMAIN: ${DOMAIN:-localhost}
+      DOMAIN: ${DOMAIN:?set DOMAIN in .env}
     ports:
       - "80:80"
       - "443:443"
     volumes:
       - caddy_data:/data
       - caddy_config:/config
+
+  # Tägliche Dumps nach ./backups (14 Tage, 8 Wochen, 6 Monate aufbewahrt)
+  backup:
+    image: prodrigestivill/postgres-backup-local:17
+    restart: unless-stopped
+    logging: *logging
+    depends_on:
+      db: { condition: service_healthy }
+    environment:
+      POSTGRES_HOST: db
+      POSTGRES_DB: enrp
+      POSTGRES_USER: enrp
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      SCHEDULE: "@daily"
+      BACKUP_KEEP_DAYS: "14"
+      BACKUP_KEEP_WEEKS: "8"
+      BACKUP_KEEP_MONTHS: "6"
+    volumes:
+      - ./backups:/backups
 
 volumes:
   pgdata:

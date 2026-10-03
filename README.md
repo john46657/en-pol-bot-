@@ -29,7 +29,7 @@ pnpm e2e         # Playwright (uses installed Google Chrome)
 | Audit (append-only, DB trigger) + Timeline, Exports (CSV/JSON/PDF), Media upload, Settings, Retention | done |
 | WebSockets (authorized rooms) | done |
 | React UI: shell, search, notifications, dashboard (customizable), dispatch board, all record lists/details, admin | done |
-| Docker/Compose/Caddy, backup docs | written, **not run** (Docker unavailable in dev environment) |
+| Hosting on a VPS (Docker Compose + Caddy HTTPS + daily DB backups + setup/update/restore scripts): [docs/deployment.md](docs/deployment.md) | written; production artifact tested locally, **Docker itself not run** |
 | MDT portal, Team dashboard (supervisor actions), one-command dev start with demo data | done |
 | Browser E2E tests (10 specs), public application page `/apply` | done |
 | Studio: custom fields (persons/vehicles), accent theme, application form ([docs/studio.md](docs/studio.md)) | done |
