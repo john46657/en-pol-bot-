@@ -154,9 +154,17 @@ function readRequirements(configJson: unknown): RequirementsConfig {
   return {};
 }
 
+/**
+ * Fragen einer Version. Der Veröffentlichungs-Snapshot enthält die komplette Konfiguration (`{ questions: [...] }`);
+ * ältere Daten können direkt eine Liste sein. Immer nach `order` sortiert.
+ */
 export function readQuestions(versionQuestionsJson: unknown): Question[] {
-  if (!Array.isArray(versionQuestionsJson)) return [];
-  return versionQuestionsJson as Question[];
+  const raw = Array.isArray(versionQuestionsJson)
+    ? versionQuestionsJson
+    : versionQuestionsJson && typeof versionQuestionsJson === 'object'
+      ? (versionQuestionsJson as { questions?: unknown }).questions
+      : undefined;
+  return Array.isArray(raw) ? ([...raw] as Question[]).sort((a, b) => a.order - b.order) : [];
 }
 
 function fail(message: string): StartApplicationResult {

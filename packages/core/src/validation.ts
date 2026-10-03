@@ -286,12 +286,14 @@ function parseDate(input: string): string | null {
   return null;
 }
 
+/** Option per Wert, Beschriftung oder – als Komfort in der DM – 1-basierter Nummer aus der angezeigten Liste. */
 function findOption(question: Question, text: string): { value: string } | null {
   const options = (question.options ?? []).filter((o) => o.enabled);
   const lower = text.trim().toLowerCase();
-  return (
+  const exact =
     options.find((o) => o.value.toLowerCase() === lower) ??
-    options.find((o) => o.label.toLowerCase() === lower) ??
-    null
-  );
+    options.find((o) => o.label.toLowerCase() === lower);
+  if (exact) return exact;
+  if (/^\d{1,3}$/.test(lower)) return options[Number(lower) - 1] ?? null;
+  return null;
 }

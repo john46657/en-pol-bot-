@@ -16,6 +16,9 @@ export const CustomIdAction = {
   DM_BACK: 'dm:back', // dm:back:<submissionId>
   DM_EDIT_ANSWER: 'dm:edit', // dm:edit:<submissionId>:<questionId>
   DM_SUBMIT: 'dm:submit', // dm:submit:<submissionId>
+  DM_SKIP: 'dm:skip', // dm:skip:<submissionId>
+  DM_SUMMARY: 'dm:summary', // dm:summary:<submissionId>
+  DM_EDIT_SELECT: 'dm:editsel', // dm:editsel:<submissionId> (Select, Wert = Frage-ID)
   REVIEW_ACCEPT: 'review:accept', // review:accept:<submissionId>
   REVIEW_DENY: 'review:deny', // review:deny:<submissionId>
   REVIEW_ACCEPT_REASON: 'review:accept_r', // review:accept_r:<submissionId>

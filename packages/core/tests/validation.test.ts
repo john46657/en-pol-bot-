@@ -127,3 +127,25 @@ describe('Antwort-Validierung (§10–§12, §18)', () => {
     expect(validateAnswer(make(QuestionType.SEPARATOR), 'x').value).toBeNull();
   });
 });
+
+describe('Auswahl per Nummer (DM-Komfort)', () => {
+  const opt = (label: string) => ({ id: label, label, value: label.toLowerCase(), enabled: true });
+  const q = (type: 'SINGLE_SELECT' | 'MULTI_SELECT', labels: string[]) =>
+    ({ id: 'q', type, title: 'x', required: true, order: 0, options: labels.map(opt) }) as never;
+  it('akzeptiert 1-basierte Nummern, Beschriftung und Wert', () => {
+    const s = q('SINGLE_SELECT', ['Streife', 'SEK', 'Verkehr']);
+    expect(validateAnswer(s, '2')).toMatchObject({ ok: true, value: 'sek' });
+    expect(validateAnswer(s, 'verkehr')).toMatchObject({ ok: true, value: 'verkehr' });
+    expect(validateAnswer(s, '4').ok).toBe(false);
+    expect(validateAnswer(s, '0').ok).toBe(false);
+  });
+  it('Beschriftung hat Vorrang vor der Nummer (Option „2“)', () => {
+    const s = q('SINGLE_SELECT', ['1', '2', '3']);
+    expect(validateAnswer(s, '2')).toMatchObject({ ok: true, value: '2' });
+  });
+  it('Mehrfachauswahl mit Nummern', () => {
+    const s = q('MULTI_SELECT', ['Funk', 'Erste Hilfe', 'Fahrtraining']);
+    expect(validateAnswer(s, '1, 3')).toMatchObject({ ok: true, value: ['funk', 'fahrtraining'] });
+    expect(validateAnswer(s, '1, 9').ok).toBe(false);
+  });
+});

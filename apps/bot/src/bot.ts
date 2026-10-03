@@ -12,6 +12,7 @@ import { config } from './config.js';
 import { log } from './logger.js';
 import { connectRedis } from './utils/lock.js';
 import { handleInteraction } from './interactions/handlers.js';
+import { presentCurrent } from './applications/dm-flow.js';
 import { handleDMMessage } from './events/dm-answer.js';
 import { handleMemberRemove } from './events/guild-events.js';
 import { handleAutocomplete, handleCommand, registerCommands } from './commands.js';
@@ -113,22 +114,23 @@ export async function recoverActiveApplications(client: Client): Promise<void> {
   for (const state of activeStates) {
     const submission = state.submission;
     if (!submission) continue;
+    // Pausierte Bewerbungen bleiben ruhig – der Bewerber setzt sie selbst fort.
     const stillActive: SubmissionStatus[] = [
       SubmissionStatus.STARTED,
       SubmissionStatus.IN_PROGRESS,
-      SubmissionStatus.PAUSED,
     ];
-    if (!stillActive.includes(submission.status as SubmissionStatus)) {
-      continue;
-    }
+    if (!stillActive.includes(submission.status as SubmissionStatus)) continue;
+    // Noch nicht gestartet (nur Intro verschickt): nichts zu retten.
+    if (state.phase === DMPhase.INTRO && !state.currentQuestionId) continue;
 
     try {
       const dm = await client.users.createDM(state.userId);
-      const hint =
-        state.phase === DMPhase.QUESTION && state.currentQuestionId
-          ? '▶️ Der Bot wurde neu gestartet – deine Bewerbung wird fortgesetzt. Bitte beantworte die letzte Frage erneut, falls deine Antwort nicht ankam.'
-          : '▶️ Der Bot wurde neu gestartet – deine Bewerbung wird fortgesetzt.';
-      await dm.send(hint).catch(() => undefined);
+      await dm
+        .send(
+          '▶️ Der Bot wurde neu gestartet – deine Bewerbung geht genau dort weiter, wo du aufgehört hast. Deine bisherigen Antworten sind gespeichert.',
+        )
+        .catch(() => undefined);
+      await presentCurrent(dm as never, submission.id);
       recovered++;
     } catch (error) {
       log.warn({ userId: state.userId, err: String(error) }, 'Recovery: DM nicht zustellbar.');

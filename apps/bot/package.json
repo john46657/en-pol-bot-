@@ -25,6 +25,7 @@
     "pino": "^9.7.0"
   },
   "devDependencies": {
+    "@prisma/client": "^6.19.3",
     "@types/node": "^24.0.10",
     "tsx": "^4.20.3",
     "vitest": "^3.2.4"

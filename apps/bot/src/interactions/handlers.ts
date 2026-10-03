@@ -5,22 +5,32 @@ import type {
   MessageComponentInteraction,
   ModalSubmitInteraction,
 } from 'discord.js';
-import { ActionRowBuilder, ModalBuilder, TextInputBuilder, TextInputStyle } from 'discord.js';
+import {
+  ActionRowBuilder,
+  ButtonBuilder,
+  ButtonStyle,
+  ModalBuilder,
+  TextInputBuilder,
+  TextInputStyle,
+} from 'discord.js';
 import { parseCustomId, CustomIdAction, isValidId } from '../discord/custom-ids.js';
 import { log } from '../logger.js';
-import { dispatchComponent, dispatchModal } from '../core/interaction-registry.js';
+import { dispatchComponent, dispatchModal, registerSelect } from '../core/interaction-registry.js';
+import { buildCustomId } from '../discord/custom-ids.js';
 import { REVIEW_KEYS, requireMemberPermission } from '../discord/permissions.js';
 import { DMPhase, SubmissionStatus } from '@nexus/types';
 import { prisma } from '@nexus/database';
 import { startApplication } from '../applications/application-service.js';
 import {
+  cancelSubmission as cancelInFlow,
+  editAnswer,
+  goBack as goBackInFlow,
   openDM,
+  presentCurrent,
   processAnswer,
   sendIntro,
-  sendCurrentQuestion,
-  sendQuestion,
   showSummary,
-  editAnswer,
+  submitSubmission,
   type FlowContext,
 } from '../applications/dm-flow.js';
 import {
@@ -76,8 +86,10 @@ async function handleComponent(
       return resumeSubmission(interaction, parsed.args[0] ?? '');
     case CustomIdAction.DM_BACK:
       return goBack(interaction, parsed.args[0] ?? '');
-    case CustomIdAction.DM_EDIT_ANSWER:
-      return startEdit(interaction, parsed.args[0] ?? '', parsed.args[1] ?? '');
+    case CustomIdAction.DM_SKIP:
+      return skipQuestion(client, interaction, parsed.args[0] ?? '');
+    case CustomIdAction.DM_SUMMARY:
+      return backToSummary(interaction, parsed.args[0] ?? '');
     case CustomIdAction.DM_SUBMIT:
       return submitFromSummary(interaction, parsed.args[0] ?? '');
     case CustomIdAction.REVIEW_ACCEPT:
@@ -192,127 +204,29 @@ async function loadFlowContextFor(applicationId: string): Promise<FlowContext | 
 
 // --- DM Steuerung (§21/§22/§24) ---------------------------------------------
 
+/** Entfernt die Schaltflächen der Nachricht, damit abgeschlossene Schritte nicht erneut ausgelöst werden. */
+async function disableComponents(interaction: MessageComponentInteraction): Promise<void> {
+  await interaction.message.edit({ components: [] }).catch(() => undefined);
+}
+
+const reply = (i: MessageComponentInteraction, content: string) =>
+  i.reply({ content, ephemeral: true }).catch(() => undefined);
+
 async function cancelSubmission(
   interaction: MessageComponentInteraction,
   submissionId: string,
 ): Promise<void> {
   if (!isValidId(submissionId)) return;
-  const submission = await prisma.applicationSubmission.findFirst({ where: { id: submissionId } });
-  if (!submission || submission.userId !== interaction.user.id) return;
-
-  await prisma.applicationSubmission.update({
-    where: { id: submissionId },
-    data: { status: SubmissionStatus.CANCELLED },
-  });
-  await prisma.applicationDMState.updateMany({
-    where: { submissionId },
-    data: { phase: DMPhase.CANCELLED },
-  });
-
-  await interaction
-    .reply({ content: '✖️ Deine Bewerbung wurde abgebrochen.', ephemeral: true })
-    .catch(() => undefined);
+  const ok = await cancelInFlow(submissionId, interaction.user.id);
+  if (!ok) return void (await reply(interaction, 'ℹ️ Diese Bewerbung ist bereits beendet.'));
+  await disableComponents(interaction);
+  await reply(
+    interaction,
+    '✖️ Deine Bewerbung wurde abgebrochen. Du kannst jederzeit eine neue starten.',
+  );
 }
 
 async function pauseSubmission(
-  interaction: MessageComponentInteraction,
-  submissionId: string,
-): Promise<void> {
-  if (!isValidId(submissionId)) return;
-  const submission = await prisma.applicationSubmission.findFirst({ where: { id: submissionId } });
-  if (!submission || submission.userId !== interaction.user.id) return;
-
-  await prisma.applicationSubmission.update({
-    where: { id: submissionId },
-    data: { status: SubmissionStatus.PAUSED },
-  });
-  await prisma.applicationDMState.updateMany({
-    where: { submissionId },
-    data: { phase: DMPhase.QUESTION },
-  });
-
-  await interaction
-    .reply({
-      content: '⏸️ Deine Bewerbung wurde pausiert. Klicke Fortsetzen, um sie weiterzuführen.',
-      ephemeral: true,
-    })
-    .catch(() => undefined);
-}
-
-async function resumeSubmission(
-  interaction: MessageComponentInteraction,
-  submissionId: string,
-): Promise<void> {
-  if (!isValidId(submissionId)) return;
-  const submission = await prisma.applicationSubmission.findFirst({ where: { id: submissionId } });
-  if (!submission || submission.userId !== interaction.user.id) return;
-  const resumable: SubmissionStatus[] = [
-    SubmissionStatus.STARTED,
-    SubmissionStatus.IN_PROGRESS,
-    SubmissionStatus.PAUSED,
-  ];
-  if (!resumable.includes(submission.status as SubmissionStatus)) {
-    await interaction
-      .reply({ content: 'ℹ️ Diese Bewerbung ist bereits beendet.', ephemeral: true })
-      .catch(() => undefined);
-    return;
-  }
-
-  await prisma.applicationSubmission.update({
-    where: { id: submissionId },
-    data: { status: SubmissionStatus.IN_PROGRESS },
-  });
-  await prisma.applicationDMState.updateMany({
-    where: { submissionId },
-    data: { phase: DMPhase.QUESTION },
-  });
-
-  await interaction
-    .reply({ content: '▶️ Deine Bewerbung wird fortgesetzt.', ephemeral: true })
-    .catch(() => undefined);
-  const dm = interaction.channel;
-  if (dm?.isDMBased()) await sendCurrentQuestion(dm as never, submissionId);
-}
-
-async function goBack(
-  interaction: MessageComponentInteraction,
-  submissionId: string,
-): Promise<void> {
-  if (!isValidId(submissionId)) return;
-  const state = await prisma.applicationDMState.findUnique({ where: { submissionId } });
-  if (!state || state.userId !== interaction.user.id) return;
-
-  const answers = await prisma.applicationAnswer.findMany({ where: { submissionId } });
-  const answeredIds = answers.map((a) => a.questionId);
-  const previous = answeredIds[answeredIds.length - 1];
-  if (previous) {
-    await prisma.applicationDMState.update({
-      where: { submissionId },
-      data: { currentQuestionId: previous, lastInteractionAt: new Date() },
-    });
-  }
-  await interaction
-    .reply({ content: '⬅️ Zurück zur vorherigen Frage.', ephemeral: true })
-    .catch(() => undefined);
-  const dm = interaction.channel;
-  if (previous && dm?.isDMBased()) await sendCurrentQuestion(dm as never, submissionId);
-}
-
-async function startEdit(
-  interaction: MessageComponentInteraction,
-  submissionId: string,
-  questionId: string,
-): Promise<void> {
-  if (!isValidId(submissionId) || !questionId) return;
-  const dm = interaction.channel;
-  if (!dm || !dm.isDMBased()) return;
-  await editAnswer(dm as never, submissionId, questionId);
-  await interaction
-    .reply({ content: '✏️ Frage gestellt.', ephemeral: true })
-    .catch(() => undefined);
-}
-
-async function submitFromSummary(
   interaction: MessageComponentInteraction,
   submissionId: string,
 ): Promise<void> {
@@ -321,36 +235,168 @@ async function submitFromSummary(
     where: { id: submissionId, userId: interaction.user.id },
   });
   if (!submission) return;
-
-  // §91: Transition verifizieren, Antworten finalisieren
   if (
     submission.status !== SubmissionStatus.IN_PROGRESS &&
-    submission.status !== SubmissionStatus.PAUSED
+    submission.status !== SubmissionStatus.STARTED
   ) {
-    await interaction
-      .reply({ content: '⚠️ Diese Bewerbung kann nicht abgeschickt werden.', ephemeral: true })
-      .catch(() => undefined);
-    return;
+    return void (await reply(interaction, 'ℹ️ Diese Bewerbung kann nicht pausiert werden.'));
   }
-
-  const now = new Date();
   await prisma.applicationSubmission.update({
     where: { id: submissionId },
-    data: {
-      status: SubmissionStatus.SUBMITTED,
-      submittedAt: now,
-      durationSeconds: Math.floor((now.getTime() - submission.startedAt.getTime()) / 1000),
-    },
+    data: { status: SubmissionStatus.PAUSED },
+  });
+  await disableComponents(interaction);
+  await reply(
+    interaction,
+    '⏸️ Deine Bewerbung wurde pausiert und ist gespeichert. Mit „Bewerbung starten/fortsetzen“ geht es weiter – auch nach einer längeren Pause.',
+  );
+  const dm = interaction.channel;
+  if (dm?.isDMBased()) {
+    await (dm as never as { send: (o: unknown) => Promise<unknown> }).send({
+      content: '⏸️ Pausiert. Klicke auf **Fortsetzen**, wenn du weitermachen möchtest.',
+      components: [
+        new ActionRowBuilder<ButtonBuilder>().addComponents(
+          new ButtonBuilder()
+            .setCustomId(buildCustomId(CustomIdAction.DM_RESUME, submissionId))
+            .setLabel('Fortsetzen')
+            .setStyle(ButtonStyle.Primary)
+            .setEmoji('▶️'),
+        ),
+      ],
+    });
+  }
+}
+
+async function resumeSubmission(
+  interaction: MessageComponentInteraction,
+  submissionId: string,
+): Promise<void> {
+  if (!isValidId(submissionId)) return;
+  const submission = await prisma.applicationSubmission.findFirst({
+    where: { id: submissionId, userId: interaction.user.id },
+  });
+  if (!submission) return;
+  const resumable: SubmissionStatus[] = [
+    SubmissionStatus.STARTED,
+    SubmissionStatus.IN_PROGRESS,
+    SubmissionStatus.PAUSED,
+  ];
+  if (!resumable.includes(submission.status as SubmissionStatus)) {
+    return void (await reply(interaction, 'ℹ️ Diese Bewerbung ist bereits beendet.'));
+  }
+  await prisma.applicationSubmission.update({
+    where: { id: submissionId },
+    data: { status: SubmissionStatus.IN_PROGRESS },
   });
   await prisma.applicationDMState.updateMany({
     where: { submissionId },
-    data: { phase: DMPhase.CONFIRMED },
+    data: { phase: DMPhase.QUESTION },
   });
-
-  await interaction
-    .reply({ content: '✅ Deine Bewerbung wurde eingereicht!', ephemeral: true })
-    .catch(() => undefined);
+  await disableComponents(interaction);
+  await reply(interaction, '▶️ Deine Bewerbung wird fortgesetzt.');
+  const dm = interaction.channel;
+  if (dm?.isDMBased()) await presentCurrent(dm as never, submissionId);
 }
+
+async function goBack(
+  interaction: MessageComponentInteraction,
+  submissionId: string,
+): Promise<void> {
+  if (!isValidId(submissionId)) return;
+  const r = await goBackInFlow(submissionId, interaction.user.id);
+  if (!r.moved) {
+    return void (await reply(
+      interaction,
+      r.reason === 'first'
+        ? 'ℹ️ Du bist bereits bei der ersten Frage.'
+        : 'ℹ️ Zurück ist nicht möglich.',
+    ));
+  }
+  await disableComponents(interaction);
+  await reply(interaction, '⬅️ Zurück zur vorherigen Frage.');
+  const dm = interaction.channel;
+  if (dm?.isDMBased()) await presentCurrent(dm as never, submissionId);
+}
+
+/** Überspringt eine optionale Frage (leere Antwort); Pflichtfragen lassen sich nicht überspringen. */
+async function skipQuestion(
+  client: Client,
+  interaction: MessageComponentInteraction,
+  submissionId: string,
+): Promise<void> {
+  if (!isValidId(submissionId)) return;
+  const result = await processAnswer({
+    client,
+    submissionId,
+    userId: interaction.user.id,
+    rawAnswer: '',
+  });
+  if (result.kind === 'invalid')
+    return void (await reply(interaction, `⚠️ ${result.errors.join(' ')}`));
+  if (result.kind !== 'stored')
+    return void (await reply(interaction, 'ℹ️ Überspringen ist gerade nicht möglich.'));
+  await disableComponents(interaction);
+  await reply(interaction, '⏭️ Übersprungen.');
+  const dm = interaction.channel;
+  if (dm?.isDMBased()) await presentCurrent(dm as never, submissionId);
+}
+
+async function backToSummary(
+  interaction: MessageComponentInteraction,
+  submissionId: string,
+): Promise<void> {
+  if (!isValidId(submissionId)) return;
+  const submission = await prisma.applicationSubmission.findFirst({
+    where: { id: submissionId, userId: interaction.user.id },
+  });
+  if (!submission) return;
+  await disableComponents(interaction);
+  await reply(interaction, '📋 Zusammenfassung.');
+  const dm = interaction.channel;
+  if (dm?.isDMBased()) await showSummary(dm as never, submissionId);
+}
+
+async function submitFromSummary(
+  interaction: MessageComponentInteraction,
+  submissionId: string,
+): Promise<void> {
+  if (!isValidId(submissionId)) return;
+  const r = await submitSubmission(submissionId, interaction.user.id);
+  if (!r.ok) {
+    await reply(interaction, `⚠️ ${r.message}`);
+    if (r.missing) {
+      const dm = interaction.channel;
+      if (dm?.isDMBased()) await presentCurrent(dm as never, submissionId);
+    }
+    return;
+  }
+  await disableComponents(interaction);
+  await reply(
+    interaction,
+    '✅ Deine Bewerbung wurde eingereicht! Das Team prüft sie – du erhältst eine Nachricht, sobald es eine Entscheidung gibt.',
+  );
+}
+
+/** Auswahl im Zusammenfassungs-Menü: gezielt eine Antwort ändern. */
+registerSelect(CustomIdAction.DM_EDIT_SELECT, async (interaction, { args }) => {
+  const submissionId = args[0] ?? '';
+  const questionId = interaction.values[0] ?? '';
+  if (!isValidId(submissionId) || !questionId) return;
+  const owner = await prisma.applicationSubmission.findFirst({
+    where: { id: submissionId, userId: interaction.user.id },
+    select: { id: true },
+  });
+  if (!owner) return;
+  const dm = interaction.channel;
+  if (!dm?.isDMBased()) return;
+  const ok = await editAnswer(dm as never, submissionId, questionId);
+  await interaction
+    .reply({
+      content: ok ? '✏️ Frage gestellt.' : 'ℹ️ Diese Frage lässt sich nicht bearbeiten.',
+      ephemeral: true,
+    })
+    .catch(() => undefined);
+});
 
 // --- Review (§29) ------------------------------------------------------------
 
