@@ -9,6 +9,10 @@ const schema = z.object({
   ENABLE_SWAGGER: z.enum(['true', 'false']).optional(),
   /** Gemeinsames Geheimnis zwischen API und Discord-Bot (mind. 32 Zeichen). Leer = Bot-Zugang komplett deaktiviert. */
   BOT_API_TOKEN: z.string().min(32).optional(),
+  /** Session-Cookie nur über HTTPS senden. Standard: an in Produktion. Nur auf `false` setzen, wenn der Dienst ohne HTTPS-Proxy betrieben wird (dann sind Passwörter/Sessions im Klartext unterwegs!). */
+  COOKIE_SECURE: z.enum(['true', 'false']).optional(),
+  /** Verzeichnis mit dem gebauten Web-Frontend; wenn gesetzt, liefert die API es selbst aus (Ein-Prozess-Betrieb). */
+  WEB_DIST: z.string().optional(),
   LOGIN_RATE_LIMIT: z.coerce.number().int().positive().default(10),
   SESSION_TTL_HOURS: z.coerce.number().positive().default(12),
   WEB_ORIGIN: z.string().default('http://localhost:5173'),

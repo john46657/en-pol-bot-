@@ -25,7 +25,7 @@ export class AuthController {
   @HttpCode(200)
   async login(@Body(zodBody(loginSchema)) body: z.infer<typeof loginSchema>, @Req() req: AppRequest, @Res({ passthrough: true }) res: Response) {
     const r = await this.auth.login(body.username, body.password, { ip: req.ip, userAgent: req.headers['user-agent'], requestId: req.requestId });
-    res.cookie(SESSION_COOKIE, r.token, { httpOnly: true, sameSite: 'strict', secure: this.env.NODE_ENV === 'production', expires: r.expiresAt, path: '/' });
+    res.cookie(SESSION_COOKIE, r.token, { httpOnly: true, sameSite: 'strict', secure: this.env.COOKIE_SECURE ? this.env.COOKIE_SECURE === 'true' : this.env.NODE_ENV === 'production', expires: r.expiresAt, path: '/' });
     return r.user;
   }
 

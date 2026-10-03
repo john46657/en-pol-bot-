@@ -186,3 +186,14 @@ describe('health', () => {
     expect(r.body.checks.database).toBe('ok');
   });
 });
+
+describe('same-origin and single-process web serving', () => {
+  it('accepts a mutating request whose Origin equals the Host (same-origin) but still rejects foreign origins', async () => {
+    const { agent } = await login(app, 'officer');
+    const host = 'nexus.example.test:8443';
+    const ok = await agent.post('/api/v1/persons').set('Host', host).set('Origin', `http://${host}`).send({ robloxUsername: 'SameOriginGuy' });
+    expect(ok.status).toBe(201);
+    expect((await agent.post('/api/v1/persons').set('Host', host).set('Origin', 'https://evil.example').send({ robloxUsername: 'x1' })).status).toBe(403);
+    expect((await agent.post('/api/v1/persons').set('Host', host).set('Origin', 'http://nexus.example.test:9999').send({ robloxUsername: 'x2' })).status).toBe(403); // anderer Port = andere Origin
+  });
+});

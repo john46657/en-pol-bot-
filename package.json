@@ -18,7 +18,8 @@
     "db:seed": "pnpm --filter @enrp/api db:seed",
     "e2e": "playwright test",
     "dev:all": "node scripts/dev.mjs",
-    "demo": "node scripts/demo-data.mjs"
+    "demo": "node scripts/demo-data.mjs",
+    "bundle:hosting": "node scripts/build-hosting-bundle.mjs"
   },
   "pnpm": {
     "onlyBuiltDependencies": [

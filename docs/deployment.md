@@ -11,7 +11,7 @@ Ergebnis: `https://nexus.deine-domain.de` läuft 24/7, startet nach Neustarts se
 | Domain | irgendeine, bei der du DNS-Einträge setzen kannst (auch Subdomain, z. B. `nexus.meinedomain.de`) |
 | Zugang | SSH-Zugang zum Server (idealerweise mit SSH-Key statt Passwort) |
 
-Du brauchst **kein** bot-hosting.net o. Ä. – das System besteht aus Datenbank + Node-API + Web und braucht einen echten Server.
+Alternative ohne VPS: Panel-Hosting (z. B. bot-hosting.net) mit einem fertigen ZIP-Paket – siehe [hosting-bot-hosting.md](hosting-bot-hosting.md). Es funktioniert, hat aber Grenzen (RAM, kein HTTPS); für den echten Betrieb ist der VPS die bessere Wahl.
 
 ## 1. DNS
 Beim Domain-Anbieter einen **A-Record** anlegen: `nexus` → *IP-Adresse deines VPS* (bei IPv6 zusätzlich ein AAAA-Record). Warte, bis `ping nexus.deine-domain.de` die Server-IP zeigt. Ohne korrekten DNS-Eintrag bekommt Caddy kein HTTPS-Zertifikat.

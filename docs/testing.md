@@ -9,5 +9,5 @@ API tests (`apps/api/test`) boot the full Nest app against a throw-away PostgreS
 ```bash
 pnpm e2e
 ```
-Starts a throw-away PostgreSQL (:54340), the API (:3100) and Vite (:5174), seeds an admin, and drives the installed **Google Chrome** (`channel: 'chrome'`, no browser download). Specs (`e2e/core.spec.ts`, 11): login/logout, person→ticket, dispatch workflow, permission denial (UI + API), complaint workflow, public application→review, Studio custom field + theme, MDT search/quick action, Team dashboard, Discord link flow.
+Starts a throw-away PostgreSQL (:54340), the API (:3100) and Vite (:5174), seeds an admin, and drives the installed **Google Chrome** (`channel: 'chrome'`, no browser download). Specs (`e2e/core.spec.ts`, 10): login/logout, person→ticket, dispatch workflow, permission denial (UI + API), complaint workflow, public application→review, Studio custom field + theme, MDT search/quick action, Team dashboard, Discord link flow.
 Not covered: load tests, other browsers, mobile viewports.
