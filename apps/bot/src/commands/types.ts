@@ -1,5 +1,6 @@
 import type { Api } from '../api';
 import type { Reply } from '../format';
+import type { LiveKind } from '../live';
 import type { DiscordConfig, Platform } from '../platform';
 
 export type Opts = Record<string, string | number | boolean | undefined>;
@@ -14,8 +15,10 @@ export interface Ctx {
   channelId?: string;
   /** Konfigurierte Channel-/Rollen-IDs aus dem System (/bot/config). */
   config?: () => Promise<DiscordConfig>;
-  /** Nachrichten sofort neu zeichnen (z. B. Gefahrenstatus-Panel). */
-  refreshLive?: (kind: 'danger' | 'teamlist') => Promise<void>;
+  /** Anzeigename des Aufrufers in Discord (z. B. für Ticket-Channel-Namen). */
+  userName?: string;
+  /** Selbst aktualisierende Nachrichten sofort neu zeichnen; mit `channelId` dorthin (um)ziehen. */
+  refreshLive?: (kind: LiveKind, o?: { channelId?: string; force?: boolean }) => Promise<{ channelId: string; messageId?: string } | null>;
   /** Roblox-Namenssuche (öffentliche Roblox-API; in Tests ersetzbar). */
   robloxLookup?: (username: string) => Promise<{ id: number; name: string; displayName: string } | null>;
 }

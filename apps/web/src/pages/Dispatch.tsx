@@ -7,6 +7,7 @@ import { useRealtime } from '../lib/realtime';
 import { Button, Card, EmptyState, ErrorState, PageHeader, PriorityBadge, Select, SkeletonRows, StatusBadge } from '../components/ui';
 import { DISPATCH_TRANSITIONS, UNIT_STATUSES } from '@enrp/shared';
 import { FormModal } from '../components/FormModal';
+import { DangerLevel } from '../components/DangerLevel';
 import { PRIORITIES } from '@enrp/shared';
 
 interface Inc { id: string; number: string; title: string; priority: string; status: string; location: string | null; version: number; units: { unitId: string; clearedAt: string | null; unit: { callsign: string } }[] }
@@ -33,6 +34,7 @@ export function Dispatch() {
   return (
     <>
       <PageHeader title="Dispatch" subtitle="Live board — updates in real time" actions={<>{can('incidents.create') && <Button onClick={() => setCreating(true)}>New incident</Button>}{can('dispatch.manage') && <Button variant="secondary" onClick={() => setUnitForm(true)}>New unit</Button>}</>} />
+      <DangerLevel />
       {err && <div role="alert" className="mb-3 rounded border border-danger/40 bg-danger/10 p-2 text-sm text-danger">{err}</div>}
       <div className="grid gap-4 xl:grid-cols-3">
         <div className="xl:col-span-2">

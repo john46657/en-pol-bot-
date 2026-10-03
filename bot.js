@@ -2410,11 +2410,11 @@ var require_request = __commonJS({
           } else if (typeof val[i] === "object") {
             throw new InvalidArgumentError(`invalid ${key} header`);
           } else {
-            const str2 = `${val[i]}`;
-            if (!isValidHeaderValue(str2)) {
+            const str3 = `${val[i]}`;
+            if (!isValidHeaderValue(str3)) {
               throw new InvalidArgumentError(`invalid ${key} header`);
             }
-            arr.push(str2);
+            arr.push(str3);
           }
         }
         val = arr;
@@ -3979,25 +3979,25 @@ var require_data_url = __commonJS({
     function isHTTPWhiteSpace(char) {
       return char === 13 || char === 10 || char === 9 || char === 32;
     }
-    function removeHTTPWhitespace(str2, leading = true, trailing = true) {
-      return removeChars(str2, leading, trailing, isHTTPWhiteSpace);
+    function removeHTTPWhitespace(str3, leading = true, trailing = true) {
+      return removeChars(str3, leading, trailing, isHTTPWhiteSpace);
     }
     function isASCIIWhitespace(char) {
       return char === 13 || char === 10 || char === 9 || char === 12 || char === 32;
     }
-    function removeASCIIWhitespace(str2, leading = true, trailing = true) {
-      return removeChars(str2, leading, trailing, isASCIIWhitespace);
+    function removeASCIIWhitespace(str3, leading = true, trailing = true) {
+      return removeChars(str3, leading, trailing, isASCIIWhitespace);
     }
-    function removeChars(str2, leading, trailing, predicate) {
+    function removeChars(str3, leading, trailing, predicate) {
       let lead = 0;
-      let trail = str2.length - 1;
+      let trail = str3.length - 1;
       if (leading) {
-        while (lead < str2.length && predicate(str2.charCodeAt(lead))) lead++;
+        while (lead < str3.length && predicate(str3.charCodeAt(lead))) lead++;
       }
       if (trailing) {
-        while (trail > 0 && predicate(str2.charCodeAt(trail))) trail--;
+        while (trail > 0 && predicate(str3.charCodeAt(trail))) trail--;
       }
-      return lead === 0 && trail === str2.length - 1 ? str2 : str2.slice(lead, trail + 1);
+      return lead === 0 && trail === str3.length - 1 ? str3 : str3.slice(lead, trail + 1);
     }
     function isomorphicDecode(input) {
       const length = input.length;
@@ -5916,7 +5916,7 @@ var require_body = __commonJS({
         const boundary = `----formdata-undici-0${`${random(1e11)}`.padStart(11, "0")}`;
         const prefix = `--${boundary}\r
 Content-Disposition: form-data`;
-        const escape2 = (str2) => str2.replace(/\n/g, "%0A").replace(/\r/g, "%0D").replace(/"/g, "%22");
+        const escape2 = (str3) => str3.replace(/\n/g, "%0A").replace(/\r/g, "%0D").replace(/"/g, "%22");
         const normalizeLinefeeds = (value) => value.replace(/\r?\n|\r/g, "\r\n");
         const blobParts = [];
         const rn = new Uint8Array([13, 10]);
@@ -16900,9 +16900,9 @@ var require_cookies = __commonJS({
       webidl.argumentLengthCheck(arguments, 2, "setCookie");
       webidl.brandCheck(headers, Headers, { strict: false });
       cookie = webidl.converters.Cookie(cookie);
-      const str2 = stringify(cookie);
-      if (str2) {
-        headers.append("Set-Cookie", str2);
+      const str3 = stringify(cookie);
+      if (str3) {
+        headers.append("Set-Cookie", str3);
       }
     }
     webidl.converters.DeleteCookieAttributes = webidl.dictionaryConverter([
@@ -20273,36 +20273,36 @@ var require_channel = __commonJS({
       ForumLayoutType2[ForumLayoutType2["ListView"] = 1] = "ListView";
       ForumLayoutType2[ForumLayoutType2["GalleryView"] = 2] = "GalleryView";
     })(ForumLayoutType || (exports2.ForumLayoutType = ForumLayoutType = {}));
-    var ChannelType;
-    (function(ChannelType2) {
-      ChannelType2[ChannelType2["GuildText"] = 0] = "GuildText";
-      ChannelType2[ChannelType2["DM"] = 1] = "DM";
-      ChannelType2[ChannelType2["GuildVoice"] = 2] = "GuildVoice";
-      ChannelType2[ChannelType2["GroupDM"] = 3] = "GroupDM";
-      ChannelType2[ChannelType2["GuildCategory"] = 4] = "GuildCategory";
-      ChannelType2[ChannelType2["GuildAnnouncement"] = 5] = "GuildAnnouncement";
-      ChannelType2[ChannelType2["AnnouncementThread"] = 10] = "AnnouncementThread";
-      ChannelType2[ChannelType2["PublicThread"] = 11] = "PublicThread";
-      ChannelType2[ChannelType2["PrivateThread"] = 12] = "PrivateThread";
-      ChannelType2[ChannelType2["GuildStageVoice"] = 13] = "GuildStageVoice";
-      ChannelType2[ChannelType2["GuildDirectory"] = 14] = "GuildDirectory";
-      ChannelType2[ChannelType2["GuildForum"] = 15] = "GuildForum";
-      ChannelType2[ChannelType2["GuildMedia"] = 16] = "GuildMedia";
-      ChannelType2[ChannelType2["GuildNews"] = 5] = "GuildNews";
-      ChannelType2[ChannelType2["GuildNewsThread"] = 10] = "GuildNewsThread";
-      ChannelType2[ChannelType2["GuildPublicThread"] = 11] = "GuildPublicThread";
-      ChannelType2[ChannelType2["GuildPrivateThread"] = 12] = "GuildPrivateThread";
-    })(ChannelType || (exports2.ChannelType = ChannelType = {}));
+    var ChannelType2;
+    (function(ChannelType3) {
+      ChannelType3[ChannelType3["GuildText"] = 0] = "GuildText";
+      ChannelType3[ChannelType3["DM"] = 1] = "DM";
+      ChannelType3[ChannelType3["GuildVoice"] = 2] = "GuildVoice";
+      ChannelType3[ChannelType3["GroupDM"] = 3] = "GroupDM";
+      ChannelType3[ChannelType3["GuildCategory"] = 4] = "GuildCategory";
+      ChannelType3[ChannelType3["GuildAnnouncement"] = 5] = "GuildAnnouncement";
+      ChannelType3[ChannelType3["AnnouncementThread"] = 10] = "AnnouncementThread";
+      ChannelType3[ChannelType3["PublicThread"] = 11] = "PublicThread";
+      ChannelType3[ChannelType3["PrivateThread"] = 12] = "PrivateThread";
+      ChannelType3[ChannelType3["GuildStageVoice"] = 13] = "GuildStageVoice";
+      ChannelType3[ChannelType3["GuildDirectory"] = 14] = "GuildDirectory";
+      ChannelType3[ChannelType3["GuildForum"] = 15] = "GuildForum";
+      ChannelType3[ChannelType3["GuildMedia"] = 16] = "GuildMedia";
+      ChannelType3[ChannelType3["GuildNews"] = 5] = "GuildNews";
+      ChannelType3[ChannelType3["GuildNewsThread"] = 10] = "GuildNewsThread";
+      ChannelType3[ChannelType3["GuildPublicThread"] = 11] = "GuildPublicThread";
+      ChannelType3[ChannelType3["GuildPrivateThread"] = 12] = "GuildPrivateThread";
+    })(ChannelType2 || (exports2.ChannelType = ChannelType2 = {}));
     var VideoQualityMode;
     (function(VideoQualityMode2) {
       VideoQualityMode2[VideoQualityMode2["Auto"] = 1] = "Auto";
       VideoQualityMode2[VideoQualityMode2["Full"] = 2] = "Full";
     })(VideoQualityMode || (exports2.VideoQualityMode = VideoQualityMode = {}));
-    var OverwriteType;
-    (function(OverwriteType2) {
-      OverwriteType2[OverwriteType2["Role"] = 0] = "Role";
-      OverwriteType2[OverwriteType2["Member"] = 1] = "Member";
-    })(OverwriteType || (exports2.OverwriteType = OverwriteType = {}));
+    var OverwriteType2;
+    (function(OverwriteType3) {
+      OverwriteType3[OverwriteType3["Role"] = 0] = "Role";
+      OverwriteType3[OverwriteType3["Member"] = 1] = "Member";
+    })(OverwriteType2 || (exports2.OverwriteType = OverwriteType2 = {}));
     var ThreadAutoArchiveDuration;
     (function(ThreadAutoArchiveDuration2) {
       ThreadAutoArchiveDuration2[ThreadAutoArchiveDuration2["OneHour"] = 60] = "OneHour";
@@ -20933,20 +20933,20 @@ var require_message = __commonJS({
       ComponentType2[ComponentType2["Checkbox"] = 23] = "Checkbox";
       ComponentType2[ComponentType2["SelectMenu"] = 3] = "SelectMenu";
     })(ComponentType || (exports2.ComponentType = ComponentType = {}));
-    var ButtonStyle;
-    (function(ButtonStyle2) {
-      ButtonStyle2[ButtonStyle2["Primary"] = 1] = "Primary";
-      ButtonStyle2[ButtonStyle2["Secondary"] = 2] = "Secondary";
-      ButtonStyle2[ButtonStyle2["Success"] = 3] = "Success";
-      ButtonStyle2[ButtonStyle2["Danger"] = 4] = "Danger";
-      ButtonStyle2[ButtonStyle2["Link"] = 5] = "Link";
-      ButtonStyle2[ButtonStyle2["Premium"] = 6] = "Premium";
-    })(ButtonStyle || (exports2.ButtonStyle = ButtonStyle = {}));
-    var TextInputStyle;
-    (function(TextInputStyle2) {
-      TextInputStyle2[TextInputStyle2["Short"] = 1] = "Short";
-      TextInputStyle2[TextInputStyle2["Paragraph"] = 2] = "Paragraph";
-    })(TextInputStyle || (exports2.TextInputStyle = TextInputStyle = {}));
+    var ButtonStyle2;
+    (function(ButtonStyle3) {
+      ButtonStyle3[ButtonStyle3["Primary"] = 1] = "Primary";
+      ButtonStyle3[ButtonStyle3["Secondary"] = 2] = "Secondary";
+      ButtonStyle3[ButtonStyle3["Success"] = 3] = "Success";
+      ButtonStyle3[ButtonStyle3["Danger"] = 4] = "Danger";
+      ButtonStyle3[ButtonStyle3["Link"] = 5] = "Link";
+      ButtonStyle3[ButtonStyle3["Premium"] = 6] = "Premium";
+    })(ButtonStyle2 || (exports2.ButtonStyle = ButtonStyle2 = {}));
+    var TextInputStyle2;
+    (function(TextInputStyle3) {
+      TextInputStyle3[TextInputStyle3["Short"] = 1] = "Short";
+      TextInputStyle3[TextInputStyle3["Paragraph"] = 2] = "Paragraph";
+    })(TextInputStyle2 || (exports2.TextInputStyle = TextInputStyle2 = {}));
     var SelectMenuDefaultValueType;
     (function(SelectMenuDefaultValueType2) {
       SelectMenuDefaultValueType2["Channel"] = "channel";
@@ -22358,8 +22358,8 @@ var require_v103 = __commonJS({
        * - POST `/webhooks/{webhook.id}/{webhook.token}/github`
        * - POST `/webhooks/{webhook.id}/{webhook.token}/slack`
        */
-      webhookPlatform(webhookId, webhookToken, platform) {
-        return `/webhooks/${webhookId}/${webhookToken}/${platform}`;
+      webhookPlatform(webhookId, webhookToken, platform2) {
+        return `/webhooks/${webhookId}/${webhookToken}/${platform2}`;
       },
       /**
        * Route for:
@@ -31880,7 +31880,7 @@ var require_ChannelFlagsBitField = __commonJS({
 var require_Constants = __commonJS({
   "node_modules/.pnpm/discord.js@14.27.0/node_modules/discord.js/src/util/Constants.js"(exports2) {
     "use strict";
-    var { ChannelType, MessageType, ComponentType, ImageFormat, StickerFormatType } = require_v106();
+    var { ChannelType: ChannelType2, MessageType, ComponentType, ImageFormat, StickerFormatType } = require_v106();
     exports2.MaxBulkDeletableMessageAge = 12096e5;
     exports2.SweeperKeys = [
       "autoModerationRules",
@@ -31907,18 +31907,18 @@ var require_Constants = __commonJS({
       MessageType.ContextMenuCommand
     ];
     exports2.GuildTextBasedChannelTypes = [
-      ChannelType.GuildText,
-      ChannelType.GuildAnnouncement,
-      ChannelType.AnnouncementThread,
-      ChannelType.PublicThread,
-      ChannelType.PrivateThread,
-      ChannelType.GuildVoice,
-      ChannelType.GuildStageVoice
+      ChannelType2.GuildText,
+      ChannelType2.GuildAnnouncement,
+      ChannelType2.AnnouncementThread,
+      ChannelType2.PublicThread,
+      ChannelType2.PrivateThread,
+      ChannelType2.GuildVoice,
+      ChannelType2.GuildStageVoice
     ];
-    exports2.TextBasedChannelTypes = [...exports2.GuildTextBasedChannelTypes, ChannelType.DM, ChannelType.GroupDM];
-    exports2.SendableChannels = [...exports2.GuildTextBasedChannelTypes, ChannelType.DM];
-    exports2.ThreadChannelTypes = [ChannelType.AnnouncementThread, ChannelType.PublicThread, ChannelType.PrivateThread];
-    exports2.VoiceBasedChannelTypes = [ChannelType.GuildVoice, ChannelType.GuildStageVoice];
+    exports2.TextBasedChannelTypes = [...exports2.GuildTextBasedChannelTypes, ChannelType2.DM, ChannelType2.GroupDM];
+    exports2.SendableChannels = [...exports2.GuildTextBasedChannelTypes, ChannelType2.DM];
+    exports2.ThreadChannelTypes = [ChannelType2.AnnouncementThread, ChannelType2.PublicThread, ChannelType2.PrivateThread];
+    exports2.VoiceBasedChannelTypes = [ChannelType2.GuildVoice, ChannelType2.GuildStageVoice];
     exports2.SelectMenuTypes = [
       ComponentType.StringSelect,
       ComponentType.UserSelect,
@@ -31977,7 +31977,7 @@ var require_BaseChannel = __commonJS({
     "use strict";
     var { channelLink, channelMention } = require_dist7();
     var { DiscordSnowflake } = require_cjs();
-    var { ChannelType, Routes: Routes2 } = require_v106();
+    var { ChannelType: ChannelType2, Routes: Routes2 } = require_v106();
     var Base = require_Base();
     var ChannelFlagsBitField = require_ChannelFlagsBitField();
     var { ThreadChannelTypes } = require_Constants();
@@ -32078,7 +32078,7 @@ var require_BaseChannel = __commonJS({
        * @returns {boolean}
        */
       isDMBased() {
-        return [ChannelType.DM, ChannelType.GroupDM].includes(this.type);
+        return [ChannelType2.DM, ChannelType2.GroupDM].includes(this.type);
       }
       /**
        * Indicates whether this channel is {@link BaseGuildVoiceChannel voice-based}.
@@ -32231,7 +32231,7 @@ var require_CachedManager = __commonJS({
 var require_PermissionsBitField = __commonJS({
   "node_modules/.pnpm/discord.js@14.27.0/node_modules/discord.js/src/util/PermissionsBitField.js"(exports2, module2) {
     "use strict";
-    var { PermissionFlagsBits } = require_v106();
+    var { PermissionFlagsBits: PermissionFlagsBits2 } = require_v106();
     var BitField = require_BitField();
     var PermissionsBitField2 = class extends BitField {
       /**
@@ -32240,13 +32240,13 @@ var require_PermissionsBitField = __commonJS({
        * @memberof PermissionsBitField
        * @see {@link https://discord.com/developers/docs/topics/permissions#permissions-bitwise-permission-flags}
        */
-      static Flags = PermissionFlagsBits;
+      static Flags = PermissionFlagsBits2;
       /**
        * Bitfield representing every permission combined
        * @type {bigint}
        * @memberof PermissionsBitField
        */
-      static All = Object.values(PermissionFlagsBits).reduce((all, p) => all | p, 0n);
+      static All = Object.values(PermissionFlagsBits2).reduce((all, p) => all | p, 0n);
       /**
        * Bitfield representing the default permissions for users
        * @type {bigint}
@@ -32258,7 +32258,7 @@ var require_PermissionsBitField = __commonJS({
        * @type {bigint}
        * @memberof PermissionsBitField
        */
-      static StageModerator = PermissionFlagsBits.ManageChannels | PermissionFlagsBits.MuteMembers | PermissionFlagsBits.MoveMembers;
+      static StageModerator = PermissionFlagsBits2.ManageChannels | PermissionFlagsBits2.MuteMembers | PermissionFlagsBits2.MoveMembers;
       /**
        * @type {bigint}
        * @memberof PermissionsBitField
@@ -32285,7 +32285,7 @@ var require_PermissionsBitField = __commonJS({
        * @returns {string[]}
        */
       missing(bits, checkAdmin = true) {
-        return checkAdmin && this.has(PermissionFlagsBits.Administrator) ? [] : super.missing(bits);
+        return checkAdmin && this.has(PermissionFlagsBits2.Administrator) ? [] : super.missing(bits);
       }
       /**
        * Checks whether the bitfield has a permission, or any of multiple permissions.
@@ -32294,7 +32294,7 @@ var require_PermissionsBitField = __commonJS({
        * @returns {boolean}
        */
       any(permission, checkAdmin = true) {
-        return checkAdmin && super.has(PermissionFlagsBits.Administrator) || super.any(permission);
+        return checkAdmin && super.has(PermissionFlagsBits2.Administrator) || super.any(permission);
       }
       /**
        * Checks whether the bitfield has a permission, or multiple permissions.
@@ -32303,7 +32303,7 @@ var require_PermissionsBitField = __commonJS({
        * @returns {boolean}
        */
       has(permission, checkAdmin = true) {
-        return checkAdmin && super.has(PermissionFlagsBits.Administrator) || super.has(permission);
+        return checkAdmin && super.has(PermissionFlagsBits2.Administrator) || super.has(permission);
       }
       /**
        * Gets an {@link Array} of bitfield names based on the permissions available.
@@ -32341,7 +32341,7 @@ var require_Role = __commonJS({
     "use strict";
     var { roleMention } = require_dist7();
     var { DiscordSnowflake } = require_cjs();
-    var { PermissionFlagsBits } = require_v106();
+    var { PermissionFlagsBits: PermissionFlagsBits2 } = require_v106();
     var Base = require_Base();
     var { DiscordjsError: DiscordjsError2, ErrorCodes: ErrorCodes2 } = require_errors2();
     var PermissionsBitField2 = require_PermissionsBitField();
@@ -32453,7 +32453,7 @@ var require_Role = __commonJS({
       get editable() {
         if (this.managed) return false;
         const clientMember = this.guild.members.resolve(this.client.user);
-        if (!clientMember.permissions.has(PermissionFlagsBits.ManageRoles)) return false;
+        if (!clientMember.permissions.has(PermissionFlagsBits2.ManageRoles)) return false;
         return clientMember.roles.highest.comparePositionTo(this) > 0;
       }
       /**
@@ -32720,7 +32720,7 @@ var require_Role = __commonJS({
 var require_PermissionOverwrites = __commonJS({
   "node_modules/.pnpm/discord.js@14.27.0/node_modules/discord.js/src/structures/PermissionOverwrites.js"(exports2, module2) {
     "use strict";
-    var { OverwriteType } = require_v106();
+    var { OverwriteType: OverwriteType2 } = require_v106();
     var Base = require_Base();
     var { Role } = require_Role();
     var { DiscordjsTypeError: DiscordjsTypeError2, ErrorCodes: ErrorCodes2 } = require_errors2();
@@ -32846,7 +32846,7 @@ var require_PermissionOverwrites = __commonJS({
        */
       static resolve(overwrite, guild) {
         if (overwrite instanceof this) return overwrite.toJSON();
-        if (typeof overwrite.id === "string" && overwrite.type in OverwriteType) {
+        if (typeof overwrite.id === "string" && overwrite.type in OverwriteType2) {
           return {
             id: overwrite.id,
             type: overwrite.type,
@@ -32858,7 +32858,7 @@ var require_PermissionOverwrites = __commonJS({
         if (!userOrRole) {
           throw new DiscordjsTypeError2(ErrorCodes2.InvalidType, "parameter", "cached User or Role");
         }
-        const type = userOrRole instanceof Role ? OverwriteType.Role : OverwriteType.Member;
+        const type = userOrRole instanceof Role ? OverwriteType2.Role : OverwriteType2.Member;
         return {
           id: userOrRole.id,
           type,
@@ -32877,7 +32877,7 @@ var require_PermissionOverwriteManager = __commonJS({
     "use strict";
     var process2 = require("node:process");
     var { Collection: Collection2 } = require_dist6();
-    var { OverwriteType, Routes: Routes2 } = require_v106();
+    var { OverwriteType: OverwriteType2, Routes: Routes2 } = require_v106();
     var CachedManager = require_CachedManager();
     var { DiscordjsTypeError: DiscordjsTypeError2, ErrorCodes: ErrorCodes2 } = require_errors2();
     var PermissionOverwrites = require_PermissionOverwrites();
@@ -32955,7 +32955,7 @@ var require_PermissionOverwriteManager = __commonJS({
         if (typeof type !== "number") {
           userOrRole = this.channel.guild.roles.resolve(userOrRole) ?? this.client.users.resolve(userOrRole);
           if (!userOrRole) throw new DiscordjsTypeError2(ErrorCodes2.InvalidType, "parameter", "User nor a Role");
-          type = userOrRole instanceof Role ? OverwriteType.Role : OverwriteType.Member;
+          type = userOrRole instanceof Role ? OverwriteType2.Role : OverwriteType2.Member;
         }
         const { allow, deny } = PermissionOverwrites.resolveOverwriteOptions(options, existing);
         await this.client.rest.put(Routes2.channelPermission(this.channel.id, userOrRoleId), {
@@ -33023,7 +33023,7 @@ var require_GuildChannel = __commonJS({
   "node_modules/.pnpm/discord.js@14.27.0/node_modules/discord.js/src/structures/GuildChannel.js"(exports2, module2) {
     "use strict";
     var { Snowflake } = require_cjs();
-    var { PermissionFlagsBits, ChannelType } = require_v106();
+    var { PermissionFlagsBits: PermissionFlagsBits2, ChannelType: ChannelType2 } = require_v106();
     var { BaseChannel } = require_BaseChannel();
     var { DiscordjsError: DiscordjsError2, ErrorCodes: ErrorCodes2 } = require_errors2();
     var PermissionOverwriteManager = require_PermissionOverwriteManager();
@@ -33101,7 +33101,7 @@ var require_GuildChannel = __commonJS({
        * @readonly
        */
       get position() {
-        const selfIsCategory = this.type === ChannelType.GuildCategory;
+        const selfIsCategory = this.type === ChannelType2.GuildCategory;
         const types = getSortableGroupTypes(this.type);
         let count = 0;
         for (const channel of this.guild.channels.cache.values()) {
@@ -33164,7 +33164,7 @@ var require_GuildChannel = __commonJS({
         }
         const roles = member.roles.cache;
         const permissions = new PermissionsBitField2(roles.map((role) => role.permissions));
-        if (checkAdmin && permissions.has(PermissionFlagsBits.Administrator)) {
+        if (checkAdmin && permissions.has(PermissionFlagsBits2.Administrator)) {
           return new PermissionsBitField2(PermissionsBitField2.All).freeze();
         }
         const overwrites = this.overwritesFor(member, true, roles);
@@ -33179,7 +33179,7 @@ var require_GuildChannel = __commonJS({
        * @private
        */
       rolePermissions(role, checkAdmin) {
-        if (checkAdmin && role.permissions.has(PermissionFlagsBits.Administrator)) {
+        if (checkAdmin && role.permissions.has(PermissionFlagsBits2.Administrator)) {
           return new PermissionsBitField2(PermissionsBitField2.All).freeze();
         }
         const basePermissions = new PermissionsBitField2([role.permissions, role.guild.roles.everyone.permissions]);
@@ -33205,7 +33205,7 @@ var require_GuildChannel = __commonJS({
        */
       get members() {
         return this.guild.members.cache.filter(
-          (member) => this.permissionsFor(member).has(PermissionFlagsBits.ViewChannel, false)
+          (member) => this.permissionsFor(member).has(PermissionFlagsBits2.ViewChannel, false)
         );
       }
       /**
@@ -33339,10 +33339,10 @@ var require_GuildChannel = __commonJS({
         if (this.client.user.id === this.guild.ownerId) return true;
         const permissions = this.permissionsFor(this.client.user);
         if (!permissions) return false;
-        if (permissions.has(PermissionFlagsBits.Administrator, false)) return true;
+        if (permissions.has(PermissionFlagsBits2.Administrator, false)) return true;
         if (this.guild.members.me.communicationDisabledUntilTimestamp > Date.now()) return false;
-        const baseBitfield = PermissionFlagsBits.ViewChannel | PermissionFlagsBits.ManageChannels;
-        const bitfield = VoiceBasedChannelTypes.includes(this.type) ? baseBitfield | PermissionFlagsBits.Connect : baseBitfield;
+        const baseBitfield = PermissionFlagsBits2.ViewChannel | PermissionFlagsBits2.ManageChannels;
+        const bitfield = VoiceBasedChannelTypes.includes(this.type) ? baseBitfield | PermissionFlagsBits2.Connect : baseBitfield;
         return permissions.has(bitfield, false);
       }
       /**
@@ -33354,7 +33354,7 @@ var require_GuildChannel = __commonJS({
         if (this.client.user.id === this.guild.ownerId) return true;
         const permissions = this.permissionsFor(this.client.user);
         if (!permissions) return false;
-        return permissions.has(PermissionFlagsBits.ViewChannel, false);
+        return permissions.has(PermissionFlagsBits2.ViewChannel, false);
       }
       /**
        * Deletes this channel.
@@ -33421,7 +33421,7 @@ var require_Util = __commonJS({
     var { parse } = require("node:path");
     var process2 = require("node:process");
     var { Collection: Collection2 } = require_dist6();
-    var { ChannelType, RouteBases, Routes: Routes2 } = require_v106();
+    var { ChannelType: ChannelType2, RouteBases, Routes: Routes2 } = require_v106();
     var { fetch: fetch2 } = require_undici();
     var Colors = require_Colors();
     var { DiscordjsError: DiscordjsError2, DiscordjsRangeError: DiscordjsRangeError2, DiscordjsTypeError: DiscordjsTypeError2, ErrorCodes: ErrorCodes2 } = require_errors2();
@@ -33490,24 +33490,24 @@ var require_Util = __commonJS({
       };
     }
     var TextSortableGroupTypes = [
-      ChannelType.GuildText,
-      ChannelType.GuildAnnouncement,
-      ChannelType.GuildForum,
-      ChannelType.GuildMedia
+      ChannelType2.GuildText,
+      ChannelType2.GuildAnnouncement,
+      ChannelType2.GuildForum,
+      ChannelType2.GuildMedia
     ];
-    var VoiceSortableGroupTypes = [ChannelType.GuildVoice, ChannelType.GuildStageVoice];
-    var CategorySortableGroupTypes = [ChannelType.GuildCategory];
+    var VoiceSortableGroupTypes = [ChannelType2.GuildVoice, ChannelType2.GuildStageVoice];
+    var CategorySortableGroupTypes = [ChannelType2.GuildCategory];
     function getSortableGroupTypes(type) {
       switch (type) {
-        case ChannelType.GuildText:
-        case ChannelType.GuildAnnouncement:
-        case ChannelType.GuildForum:
-        case ChannelType.GuildMedia:
+        case ChannelType2.GuildText:
+        case ChannelType2.GuildAnnouncement:
+        case ChannelType2.GuildForum:
+        case ChannelType2.GuildMedia:
           return TextSortableGroupTypes;
-        case ChannelType.GuildVoice:
-        case ChannelType.GuildStageVoice:
+        case ChannelType2.GuildVoice:
+        case ChannelType2.GuildStageVoice:
           return VoiceSortableGroupTypes;
-        case ChannelType.GuildCategory:
+        case ChannelType2.GuildCategory:
           return CategorySortableGroupTypes;
         default:
           return [type];
@@ -33564,8 +33564,8 @@ var require_Util = __commonJS({
       const res = parse(path2);
       return ext && res.ext.startsWith(ext) ? res.name : res.base.split("?")[0];
     }
-    function cleanContent(str2, channel) {
-      return str2.replaceAll(
+    function cleanContent(str3, channel) {
+      return str3.replaceAll(
         /* eslint-disable max-len */
         /<(?:(?<type>@[!&]?|#)|(?:\/(?<commandName>[-_\p{L}\p{N}\p{sc=Deva}\p{sc=Thai} ]+):)|(?:a?:(?<emojiName>[\w]+):))(?<id>\d{17,19})>/gu,
         (match, type, commandName, emojiName, id) => {
@@ -33582,7 +33582,7 @@ var require_Util = __commonJS({
               return user ? `@${user.displayName}` : match;
             }
             case "@&": {
-              if (channel.type === ChannelType.DM) return match;
+              if (channel.type === ChannelType2.DM) return match;
               const role = channel.guild.roles.cache.get(id);
               return role ? `@${role.name}` : match;
             }
@@ -35708,7 +35708,7 @@ var require_InviteGuild = __commonJS({
 var require_Invite = __commonJS({
   "node_modules/.pnpm/discord.js@14.27.0/node_modules/discord.js/src/structures/Invite.js"(exports2, module2) {
     "use strict";
-    var { RouteBases, Routes: Routes2, PermissionFlagsBits } = require_v106();
+    var { RouteBases, Routes: Routes2, PermissionFlagsBits: PermissionFlagsBits2 } = require_v106();
     var Base = require_Base();
     var { GuildScheduledEvent } = require_GuildScheduledEvent();
     var IntegrationApplication = require_IntegrationApplication();
@@ -35842,7 +35842,7 @@ var require_Invite = __commonJS({
         if (!guild || !this.client.guilds.cache.has(guild.id)) return false;
         if (!guild.members.me) throw new DiscordjsError2(ErrorCodes2.GuildUncachedMe);
         return Boolean(
-          this.channel?.permissionsFor(this.client.user).has(PermissionFlagsBits.ManageChannels, false) || guild.members.me.permissions.has(PermissionFlagsBits.ManageGuild)
+          this.channel?.permissionsFor(this.client.user).has(PermissionFlagsBits2.ManageChannels, false) || guild.members.me.permissions.has(PermissionFlagsBits2.ManageGuild)
         );
       }
       /**
@@ -43204,14 +43204,14 @@ var require_dist8 = __commonJS({
     };
     var index_exports = {};
     __export2(index_exports, {
-      ActionRowBuilder: () => ActionRowBuilder,
+      ActionRowBuilder: () => ActionRowBuilder2,
       ApplicationCommandNumericOptionMinMaxValueMixin: () => ApplicationCommandNumericOptionMinMaxValueMixin,
       ApplicationCommandOptionBase: () => ApplicationCommandOptionBase,
       ApplicationCommandOptionChannelTypesMixin: () => ApplicationCommandOptionChannelTypesMixin,
       ApplicationCommandOptionWithAutocompleteMixin: () => ApplicationCommandOptionWithAutocompleteMixin,
       ApplicationCommandOptionWithChoicesMixin: () => ApplicationCommandOptionWithChoicesMixin,
       BaseSelectMenuBuilder: () => BaseSelectMenuBuilder,
-      ButtonBuilder: () => ButtonBuilder,
+      ButtonBuilder: () => ButtonBuilder2,
       ChannelSelectMenuBuilder: () => ChannelSelectMenuBuilder,
       CheckboxAssertions: () => Assertions_exports3,
       CheckboxBuilder: () => CheckboxBuilder,
@@ -43234,7 +43234,7 @@ var require_dist8 = __commonJS({
       MediaGalleryItemBuilder: () => MediaGalleryItemBuilder,
       MentionableSelectMenuBuilder: () => MentionableSelectMenuBuilder,
       ModalAssertions: () => Assertions_exports9,
-      ModalBuilder: () => ModalBuilder,
+      ModalBuilder: () => ModalBuilder2,
       RadioGroupBuilder: () => RadioGroupBuilder,
       RadioGroupOptionBuilder: () => RadioGroupOptionBuilder,
       RoleSelectMenuBuilder: () => RoleSelectMenuBuilder,
@@ -43264,7 +43264,7 @@ var require_dist8 = __commonJS({
       StringSelectMenuOptionBuilder: () => StringSelectMenuOptionBuilder,
       TextDisplayBuilder: () => TextDisplayBuilder,
       TextInputAssertions: () => Assertions_exports5,
-      TextInputBuilder: () => TextInputBuilder,
+      TextInputBuilder: () => TextInputBuilder2,
       ThumbnailBuilder: () => ThumbnailBuilder,
       UserSelectMenuBuilder: () => UserSelectMenuBuilder,
       createComponentBuilder: () => createComponentBuilder,
@@ -43777,7 +43777,7 @@ var require_dist8 = __commonJS({
     };
     var import_v1027 = require_v106();
     var import_v102 = require_v106();
-    var ButtonBuilder = class extends ComponentBuilder {
+    var ButtonBuilder2 = class extends ComponentBuilder {
       static {
         __name(this, "ButtonBuilder");
       }
@@ -45136,7 +45136,7 @@ var require_dist8 = __commonJS({
     var import_util4 = require_dist();
     var import_v1016 = require_v106();
     var import_fast_deep_equal = __toESM2(require_fast_deep_equal());
-    var TextInputBuilder = class extends ComponentBuilder {
+    var TextInputBuilder2 = class extends ComponentBuilder {
       static {
         __name(this, "TextInputBuilder");
       }
@@ -45396,7 +45396,7 @@ var require_dist8 = __commonJS({
        * @param input - A function that returns a component builder or an already built builder
        */
       setTextInputComponent(input) {
-        this.data.component = resolveBuilder(input, TextInputBuilder);
+        this.data.component = resolveBuilder(input, TextInputBuilder2);
         return this;
       }
       /**
@@ -45559,7 +45559,7 @@ var require_dist8 = __commonJS({
     var dividerPredicate = import_shapeshift8.s.boolean();
     var spacingPredicate = import_shapeshift8.s.nativeEnum(import_v1020.SeparatorSpacingSize);
     var textDisplayContentPredicate = import_shapeshift8.s.string().lengthGreaterThanOrEqual(1).lengthLessThanOrEqual(4e3).setValidationEnabled(isValidationEnabled);
-    var accessoryPredicate = import_shapeshift8.s.instance(ButtonBuilder).or(import_shapeshift8.s.instance(ThumbnailBuilder)).setValidationEnabled(isValidationEnabled);
+    var accessoryPredicate = import_shapeshift8.s.instance(ButtonBuilder2).or(import_shapeshift8.s.instance(ThumbnailBuilder)).setValidationEnabled(isValidationEnabled);
     var containerColorPredicate = colorPredicate.nullish();
     function assertReturnOfBuilder(input, ExpectedInstanceOf) {
       import_shapeshift8.s.instance(ExpectedInstanceOf).setValidationEnabled(isValidationEnabled).parse(input);
@@ -45812,7 +45812,7 @@ var require_dist8 = __commonJS({
        */
       addActionRowComponents(...components) {
         this.components.push(
-          ...normalizeArray(components).map((component) => resolveBuilder(component, ActionRowBuilder))
+          ...normalizeArray(components).map((component) => resolveBuilder(component, ActionRowBuilder2))
         );
         return this;
       }
@@ -46134,7 +46134,7 @@ var require_dist8 = __commonJS({
        * @param accessory - The accessory to use
        */
       setButtonAccessory(accessory) {
-        Reflect.set(this, "accessory", accessoryPredicate.parse(resolveBuilder(accessory, ButtonBuilder)));
+        Reflect.set(this, "accessory", accessoryPredicate.parse(resolveBuilder(accessory, ButtonBuilder2)));
         return this;
       }
       /**
@@ -46198,13 +46198,13 @@ var require_dist8 = __commonJS({
       }
       switch (data.type) {
         case import_v1027.ComponentType.ActionRow:
-          return new ActionRowBuilder(data);
+          return new ActionRowBuilder2(data);
         case import_v1027.ComponentType.Button:
-          return new ButtonBuilder(data);
+          return new ButtonBuilder2(data);
         case import_v1027.ComponentType.StringSelect:
           return new StringSelectMenuBuilder(data);
         case import_v1027.ComponentType.TextInput:
-          return new TextInputBuilder(data);
+          return new TextInputBuilder2(data);
         case import_v1027.ComponentType.UserSelect:
           return new UserSelectMenuBuilder(data);
         case import_v1027.ComponentType.RoleSelect:
@@ -46256,7 +46256,7 @@ var require_dist8 = __commonJS({
       return new Constructor(builder);
     }
     __name(resolveBuilder, "resolveBuilder");
-    var ActionRowBuilder = class extends ComponentBuilder {
+    var ActionRowBuilder2 = class extends ComponentBuilder {
       static {
         __name(this, "ActionRowBuilder");
       }
@@ -46339,14 +46339,14 @@ var require_dist8 = __commonJS({
     });
     var import_shapeshift9 = require_cjs3();
     var titleValidator = import_shapeshift9.s.string().lengthGreaterThanOrEqual(1).lengthLessThanOrEqual(45).setValidationEnabled(isValidationEnabled);
-    var componentsValidator = import_shapeshift9.s.union([import_shapeshift9.s.instance(ActionRowBuilder), import_shapeshift9.s.instance(LabelBuilder), import_shapeshift9.s.instance(TextDisplayBuilder)]).array().lengthGreaterThanOrEqual(1).setValidationEnabled(isValidationEnabled);
+    var componentsValidator = import_shapeshift9.s.union([import_shapeshift9.s.instance(ActionRowBuilder2), import_shapeshift9.s.instance(LabelBuilder), import_shapeshift9.s.instance(TextDisplayBuilder)]).array().lengthGreaterThanOrEqual(1).setValidationEnabled(isValidationEnabled);
     function validateRequiredParameters2(customId, title, components) {
       customIdValidator.parse(customId);
       titleValidator.parse(title);
       componentsValidator.parse(components);
     }
     __name(validateRequiredParameters2, "validateRequiredParameters");
-    var ModalBuilder = class {
+    var ModalBuilder2 = class {
       static {
         __name(this, "ModalBuilder");
       }
@@ -46394,15 +46394,15 @@ var require_dist8 = __commonJS({
       addComponents(...components) {
         this.components.push(
           ...normalizeArray(components).map((component, idx) => {
-            if (component instanceof ActionRowBuilder || component instanceof LabelBuilder || component instanceof TextDisplayBuilder) {
+            if (component instanceof ActionRowBuilder2 || component instanceof LabelBuilder || component instanceof TextDisplayBuilder) {
               return component;
             }
-            if (component instanceof TextInputBuilder) {
-              return new ActionRowBuilder().addComponents(component);
+            if (component instanceof TextInputBuilder2) {
+              return new ActionRowBuilder2().addComponents(component);
             }
             if ("type" in component) {
               if (component.type === import_v1029.ComponentType.ActionRow) {
-                return new ActionRowBuilder(component);
+                return new ActionRowBuilder2(component);
               }
               if (component.type === import_v1029.ComponentType.Label) {
                 return new LabelBuilder(component);
@@ -46411,8 +46411,8 @@ var require_dist8 = __commonJS({
                 return new TextDisplayBuilder(component);
               }
               if (component.type === import_v1029.ComponentType.TextInput) {
-                return new ActionRowBuilder().addComponents(
-                  new TextInputBuilder(component)
+                return new ActionRowBuilder2().addComponents(
+                  new TextInputBuilder2(component)
                 );
               }
             }
@@ -46451,7 +46451,7 @@ var require_dist8 = __commonJS({
        */
       addActionRowComponents(...components) {
         const normalized = normalizeArray(components);
-        const resolved = normalized.map((row) => resolveBuilder(row, ActionRowBuilder));
+        const resolved = normalized.map((row) => resolveBuilder(row, ActionRowBuilder2));
         this.components.push(...resolved);
         return this;
       }
@@ -46577,8 +46577,8 @@ var require_dist8 = __commonJS({
     }
     __name(validateRequired, "validateRequired");
     var choicesLengthPredicate = import_shapeshift10.s.number().lessThanOrEqual(25).setValidationEnabled(isValidationEnabled);
-    function validateChoicesLength(amountAdding, choices2) {
-      choicesLengthPredicate.parse((choices2?.length ?? 0) + amountAdding);
+    function validateChoicesLength(amountAdding, choices3) {
+      choicesLengthPredicate.parse((choices3?.length ?? 0) + amountAdding);
     }
     __name(validateChoicesLength, "validateChoicesLength");
     function assertReturnOfBuilder2(input, ExpectedInstanceOf) {
@@ -47029,8 +47029,8 @@ var require_dist8 = __commonJS({
        *
        * @param choices - The choices to add
        */
-      addChoices(...choices2) {
-        const normalizedChoices = normalizeArray(choices2);
+      addChoices(...choices3) {
+        const normalizedChoices = normalizeArray(choices3);
         if (normalizedChoices.length > 0 && "autocomplete" in this && this.autocomplete) {
           throw new RangeError("Autocomplete and choices are mutually exclusive to each other.");
         }
@@ -47054,8 +47054,8 @@ var require_dist8 = __commonJS({
        *
        * @param choices - The choices to set
        */
-      setChoices(...choices2) {
-        const normalizedChoices = normalizeArray(choices2);
+      setChoices(...choices3) {
+        const normalizedChoices = normalizeArray(choices3);
         if (normalizedChoices.length > 0 && "autocomplete" in this && this.autocomplete) {
           throw new RangeError("Autocomplete and choices are mutually exclusive to each other.");
         }
@@ -48629,7 +48629,7 @@ var require_GuildEmojiRoleManager = __commonJS({
 var require_GuildEmoji = __commonJS({
   "node_modules/.pnpm/discord.js@14.27.0/node_modules/discord.js/src/structures/GuildEmoji.js"(exports2, module2) {
     "use strict";
-    var { PermissionFlagsBits } = require_v106();
+    var { PermissionFlagsBits: PermissionFlagsBits2 } = require_v106();
     var BaseGuildEmoji = require_BaseGuildEmoji();
     var { DiscordjsError: DiscordjsError2, ErrorCodes: ErrorCodes2 } = require_errors2();
     var GuildEmojiRoleManager = require_GuildEmojiRoleManager();
@@ -48662,7 +48662,7 @@ var require_GuildEmoji = __commonJS({
        */
       get deletable() {
         if (!this.guild.members.me) throw new DiscordjsError2(ErrorCodes2.GuildUncachedMe);
-        return !this.managed && this.guild.members.me.permissions.has(PermissionFlagsBits.ManageGuildExpressions);
+        return !this.managed && this.guild.members.me.permissions.has(PermissionFlagsBits2.ManageGuildExpressions);
       }
       /**
        * A manager for roles this emoji is active for.
@@ -49109,7 +49109,7 @@ var require_ActionRowBuilder = __commonJS({
     var { isJSONEncodable } = require_dist();
     var { createComponentBuilder } = require_Components();
     var { toSnakeCase } = require_Transformers();
-    var ActionRowBuilder = class extends BuildersActionRow {
+    var ActionRowBuilder2 = class extends BuildersActionRow {
       constructor({ components, ...data } = {}) {
         super({
           ...toSnakeCase(data),
@@ -49125,7 +49125,7 @@ var require_ActionRowBuilder = __commonJS({
         return new this(isJSONEncodable(other) ? other.toJSON() : other);
       }
     };
-    module2.exports = ActionRowBuilder;
+    module2.exports = ActionRowBuilder2;
   }
 });
 
@@ -49137,7 +49137,7 @@ var require_ButtonBuilder = __commonJS({
     var { isJSONEncodable } = require_dist();
     var { toSnakeCase } = require_Transformers();
     var { resolvePartialEmoji } = require_Util();
-    var ButtonBuilder = class extends BuildersButton {
+    var ButtonBuilder2 = class extends BuildersButton {
       constructor({ emoji, ...data } = {}) {
         super(toSnakeCase({ ...data, emoji: emoji && typeof emoji === "string" ? resolvePartialEmoji(emoji) : emoji }));
       }
@@ -49161,7 +49161,7 @@ var require_ButtonBuilder = __commonJS({
         return new this(isJSONEncodable(other) ? other.toJSON() : other);
       }
     };
-    module2.exports = ButtonBuilder;
+    module2.exports = ButtonBuilder2;
   }
 });
 
@@ -49767,7 +49767,7 @@ var require_TextInputBuilder = __commonJS({
     var { TextInputBuilder: BuildersTextInput } = require_dist8();
     var { isJSONEncodable } = require_dist();
     var { toSnakeCase } = require_Transformers();
-    var TextInputBuilder = class extends BuildersTextInput {
+    var TextInputBuilder2 = class extends BuildersTextInput {
       constructor(data) {
         super(toSnakeCase(data));
       }
@@ -49780,7 +49780,7 @@ var require_TextInputBuilder = __commonJS({
         return new this(isJSONEncodable(other) ? other.toJSON() : other);
       }
     };
-    module2.exports = TextInputBuilder;
+    module2.exports = TextInputBuilder2;
   }
 });
 
@@ -49914,8 +49914,8 @@ var require_Components = __commonJS({
     }
     module2.exports = { createComponent, createComponentBuilder, findComponentByCustomId };
     var ActionRow = require_ActionRow();
-    var ActionRowBuilder = require_ActionRowBuilder();
-    var ButtonBuilder = require_ButtonBuilder();
+    var ActionRowBuilder2 = require_ActionRowBuilder();
+    var ButtonBuilder2 = require_ButtonBuilder();
     var ButtonComponent = require_ButtonComponent();
     var ChannelSelectMenuBuilder = require_ChannelSelectMenuBuilder();
     var ChannelSelectMenuComponent = require_ChannelSelectMenuComponent();
@@ -49933,7 +49933,7 @@ var require_Components = __commonJS({
     var StringSelectMenuBuilder = require_StringSelectMenuBuilder();
     var StringSelectMenuComponent = require_StringSelectMenuComponent();
     var TextDisplayComponent = require_TextDisplayComponent();
-    var TextInputBuilder = require_TextInputBuilder();
+    var TextInputBuilder2 = require_TextInputBuilder();
     var TextInputComponent = require_TextInputComponent();
     var ThumbnailComponent = require_ThumbnailComponent();
     var UserSelectMenuBuilder = require_UserSelectMenuBuilder();
@@ -49957,10 +49957,10 @@ var require_Components = __commonJS({
       [ComponentType.Label]: LabelComponent
     };
     var ComponentTypeToBuilder = {
-      [ComponentType.ActionRow]: ActionRowBuilder,
-      [ComponentType.Button]: ButtonBuilder,
+      [ComponentType.ActionRow]: ActionRowBuilder2,
+      [ComponentType.Button]: ButtonBuilder2,
       [ComponentType.StringSelect]: StringSelectMenuBuilder,
-      [ComponentType.TextInput]: TextInputBuilder,
+      [ComponentType.TextInput]: TextInputBuilder2,
       [ComponentType.UserSelect]: UserSelectMenuBuilder,
       [ComponentType.RoleSelect]: RoleSelectMenuBuilder,
       [ComponentType.MentionableSelect]: MentionableSelectMenuBuilder,
@@ -49978,10 +49978,10 @@ var require_Message = __commonJS({
     var { DiscordSnowflake } = require_cjs();
     var {
       InteractionType,
-      ChannelType,
+      ChannelType: ChannelType2,
       MessageType,
       MessageFlags: MessageFlags2,
-      PermissionFlagsBits,
+      PermissionFlagsBits: PermissionFlagsBits2,
       MessageReferenceType
     } = require_v106();
     var Attachment = require_Attachment();
@@ -50437,7 +50437,7 @@ var require_Message = __commonJS({
           if (this.channel.archived) return false;
           if (this.channel.locked) {
             const permissions = this.channel.permissionsFor(this.client.user);
-            if (!permissions?.has(PermissionFlagsBits.ManageThreads, true)) return false;
+            if (!permissions?.has(PermissionFlagsBits2.ManageThreads, true)) return false;
           }
         }
         return precheck;
@@ -50457,8 +50457,8 @@ var require_Message = __commonJS({
         }
         const permissions = this.channel?.permissionsFor(this.client.user);
         if (!permissions) return false;
-        if (permissions.has(PermissionFlagsBits.Administrator, false)) return true;
-        return this.type !== MessageType.AutoModerationAction && this.author.id === this.client.user.id || permissions.has(PermissionFlagsBits.ManageMessages, false) && !this.guild.members.me.isCommunicationDisabled();
+        if (permissions.has(PermissionFlagsBits2.Administrator, false)) return true;
+        return this.type !== MessageType.AutoModerationAction && this.author.id === this.client.user.id || permissions.has(PermissionFlagsBits2.ManageMessages, false) && !this.guild.members.me.isCommunicationDisabled();
       }
       /**
        * Whether the message is bulk deletable by the client user
@@ -50469,7 +50469,7 @@ var require_Message = __commonJS({
        * channel.bulkDelete(messages.filter(message => message.bulkDeletable));
        */
       get bulkDeletable() {
-        return (this.inGuild() && Date.now() - this.createdTimestamp < MaxBulkDeletableMessageAge && this.deletable && this.channel?.permissionsFor(this.client.user).has(PermissionFlagsBits.ManageMessages, false)) ?? false;
+        return (this.inGuild() && Date.now() - this.createdTimestamp < MaxBulkDeletableMessageAge && this.deletable && this.channel?.permissionsFor(this.client.user).has(PermissionFlagsBits2.ManageMessages, false)) ?? false;
       }
       /**
        * Whether the message is pinnable by the client user
@@ -50483,7 +50483,7 @@ var require_Message = __commonJS({
         if (!channel || channel.isVoiceBased() || !channel.viewable) return false;
         const permissions = channel?.permissionsFor(this.client.user);
         if (!permissions) return false;
-        return permissions.has(PermissionFlagsBits.ReadMessageHistory | PermissionFlagsBits.PinMessages);
+        return permissions.has(PermissionFlagsBits2.ReadMessageHistory | PermissionFlagsBits2.PinMessages);
       }
       /**
        * Fetches the Message this crosspost/reply/pin-add references, if available to the client
@@ -50504,10 +50504,10 @@ var require_Message = __commonJS({
        * @readonly
        */
       get crosspostable() {
-        const bitfield = PermissionFlagsBits.SendMessages | (this.author.id === this.client.user.id ? PermissionsBitField2.DefaultBit : PermissionFlagsBits.ManageMessages);
+        const bitfield = PermissionFlagsBits2.SendMessages | (this.author.id === this.client.user.id ? PermissionsBitField2.DefaultBit : PermissionFlagsBits2.ManageMessages);
         const { channel } = this;
         return Boolean(
-          channel?.type === ChannelType.GuildAnnouncement && !this.flags.has(MessageFlags2.Crossposted) && this.reference?.type !== MessageReferenceType.Forward && this.type === MessageType.Default && !this.poll && channel.viewable && channel.permissionsFor(this.client.user)?.has(bitfield, false)
+          channel?.type === ChannelType2.GuildAnnouncement && !this.flags.has(MessageFlags2.Crossposted) && this.reference?.type !== MessageReferenceType.Forward && this.type === MessageType.Default && !this.poll && channel.viewable && channel.permissionsFor(this.client.user)?.has(bitfield, false)
         );
       }
       /**
@@ -50676,7 +50676,7 @@ var require_Message = __commonJS({
        */
       async startThread(options = {}) {
         if (!this.channel) throw new DiscordjsError2(ErrorCodes2.ChannelNotCached);
-        if (![ChannelType.GuildText, ChannelType.GuildAnnouncement].includes(this.channel.type)) {
+        if (![ChannelType2.GuildText, ChannelType2.GuildAnnouncement].includes(this.channel.type)) {
           throw new DiscordjsError2(ErrorCodes2.MessageThreadParent);
         }
         if (this.hasThread) throw new DiscordjsError2(ErrorCodes2.MessageExistingThread);
@@ -51264,7 +51264,7 @@ var require_WebhookClient = __commonJS({
 var require_VoiceState = __commonJS({
   "node_modules/.pnpm/discord.js@14.27.0/node_modules/discord.js/src/structures/VoiceState.js"(exports2, module2) {
     "use strict";
-    var { ChannelType, Routes: Routes2 } = require_v106();
+    var { ChannelType: ChannelType2, Routes: Routes2 } = require_v106();
     var Base = require_Base();
     var { DiscordjsError: DiscordjsError2, DiscordjsTypeError: DiscordjsTypeError2, ErrorCodes: ErrorCodes2 } = require_errors2();
     var VoiceState = class extends Base {
@@ -51408,7 +51408,7 @@ var require_VoiceState = __commonJS({
        * @returns {Promise<VoiceState>}
        */
       async edit(options) {
-        if (this.channel?.type !== ChannelType.GuildStageVoice) throw new DiscordjsError2(ErrorCodes2.VoiceNotStageChannel);
+        if (this.channel?.type !== ChannelType2.GuildStageVoice) throw new DiscordjsError2(ErrorCodes2.VoiceNotStageChannel);
         const target = this.client.user.id === this.id ? "@me" : this.id;
         if (target !== "@me" && options.requestToSpeak !== void 0) {
           throw new DiscordjsError2(ErrorCodes2.VoiceStateNotOwn);
@@ -51697,7 +51697,7 @@ var require_GuildMemberFlagsBitField = __commonJS({
 var require_GuildMember = __commonJS({
   "node_modules/.pnpm/discord.js@14.27.0/node_modules/discord.js/src/structures/GuildMember.js"(exports2) {
     "use strict";
-    var { PermissionFlagsBits } = require_v106();
+    var { PermissionFlagsBits: PermissionFlagsBits2 } = require_v106();
     var Base = require_Base();
     var VoiceState = require_VoiceState();
     var TextBasedChannel = require_TextBasedChannel();
@@ -51949,7 +51949,7 @@ var require_GuildMember = __commonJS({
        */
       get kickable() {
         if (!this.guild.members.me) throw new DiscordjsError2(ErrorCodes2.GuildUncachedMe);
-        return this.manageable && this.guild.members.me.permissions.has(PermissionFlagsBits.KickMembers);
+        return this.manageable && this.guild.members.me.permissions.has(PermissionFlagsBits2.KickMembers);
       }
       /**
        * Whether this member is bannable by the client user
@@ -51958,7 +51958,7 @@ var require_GuildMember = __commonJS({
        */
       get bannable() {
         if (!this.guild.members.me) throw new DiscordjsError2(ErrorCodes2.GuildUncachedMe);
-        return this.manageable && this.guild.members.me.permissions.has(PermissionFlagsBits.BanMembers);
+        return this.manageable && this.guild.members.me.permissions.has(PermissionFlagsBits2.BanMembers);
       }
       /**
        * Whether this member is moderatable by the client user
@@ -51966,7 +51966,7 @@ var require_GuildMember = __commonJS({
        * @readonly
        */
       get moderatable() {
-        return !this.permissions.has(PermissionFlagsBits.Administrator) && this.manageable && (this.guild.members.me?.permissions.has(PermissionFlagsBits.ModerateMembers) ?? false);
+        return !this.permissions.has(PermissionFlagsBits2.Administrator) && this.manageable && (this.guild.members.me?.permissions.has(PermissionFlagsBits2.ModerateMembers) ?? false);
       }
       /**
        * Whether this member is currently timed out
@@ -53765,7 +53765,7 @@ var require_Partials = __commonJS({
 var require_Action = __commonJS({
   "node_modules/.pnpm/discord.js@14.27.0/node_modules/discord.js/src/client/actions/Action.js"(exports2, module2) {
     "use strict";
-    var { ChannelType } = require_v106();
+    var { ChannelType: ChannelType2 } = require_v106();
     var { Poll } = require_Poll();
     var { PollAnswer } = require_PollAnswer();
     var Partials = require_Partials();
@@ -53787,7 +53787,7 @@ var require_Action = __commonJS({
           if (!data.recipients.some((existingRecipient) => recipient.id === existingRecipient.id)) {
             payloadData.recipients = [...data.recipients, recipient];
           }
-        } else if (data.type === ChannelType.DM || data.type === ChannelType.GroupDM) {
+        } else if (data.type === ChannelType2.DM || data.type === ChannelType2.GroupDM) {
           const recipient = data.author ?? data.user ?? { id: data.user_id };
           payloadData.recipients = [recipient];
         }
@@ -54213,7 +54213,7 @@ var require_DMChannel = __commonJS({
   "node_modules/.pnpm/discord.js@14.27.0/node_modules/discord.js/src/structures/DMChannel.js"(exports2, module2) {
     "use strict";
     var { userMention } = require_dist7();
-    var { ChannelType } = require_v106();
+    var { ChannelType: ChannelType2 } = require_v106();
     var { BaseChannel } = require_BaseChannel();
     var TextBasedChannel = require_TextBasedChannel();
     var DMMessageManager = require_DMMessageManager();
@@ -54221,7 +54221,7 @@ var require_DMChannel = __commonJS({
     var DMChannel = class extends BaseChannel {
       constructor(client2, data) {
         super(client2, data);
-        this.type = ChannelType.DM;
+        this.type = ChannelType2.DM;
         this.messages = new DMMessageManager(this);
       }
       _patch(data) {
@@ -54843,7 +54843,7 @@ var require_ThreadChannel = __commonJS({
     "use strict";
     var { DiscordAPIError } = require_dist5();
     var { lazy } = require_dist();
-    var { RESTJSONErrorCodes, ChannelFlags, ChannelType, PermissionFlagsBits, Routes: Routes2 } = require_v106();
+    var { RESTJSONErrorCodes, ChannelFlags, ChannelType: ChannelType2, PermissionFlagsBits: PermissionFlagsBits2, Routes: Routes2 } = require_v106();
     var { BaseChannel } = require_BaseChannel();
     var getThreadOnlyChannel = lazy(() => require_ThreadOnlyChannel());
     var TextBasedChannel = require_TextBasedChannel();
@@ -54877,7 +54877,7 @@ var require_ThreadChannel = __commonJS({
         }
         if ("thread_metadata" in data) {
           this.locked = data.thread_metadata.locked ?? false;
-          this.invitable = this.type === ChannelType.PrivateThread ? data.thread_metadata.invitable ?? false : null;
+          this.invitable = this.type === ChannelType2.PrivateThread ? data.thread_metadata.invitable ?? false : null;
           this.archived = data.thread_metadata.archived;
           this.autoArchiveDuration = data.thread_metadata.auto_archive_duration;
           this.archiveTimestamp = Date.parse(data.thread_metadata.archive_timestamp);
@@ -54891,7 +54891,7 @@ var require_ThreadChannel = __commonJS({
           this.archiveTimestamp ??= null;
           this.invitable ??= null;
         }
-        this._createdTimestamp ??= this.type === ChannelType.PrivateThread ? super.createdTimestamp : null;
+        this._createdTimestamp ??= this.type === ChannelType2.PrivateThread ? super.createdTimestamp : null;
         if ("last_message_id" in data) {
           this.lastMessageId = data.last_message_id;
         } else {
@@ -55064,7 +55064,7 @@ var require_ThreadChannel = __commonJS({
             auto_archive_duration: options.autoArchiveDuration,
             rate_limit_per_user: options.rateLimitPerUser,
             locked: options.locked,
-            invitable: this.type === ChannelType.PrivateThread ? options.invitable : void 0,
+            invitable: this.type === ChannelType2.PrivateThread ? options.invitable : void 0,
             applied_tags: options.appliedTags,
             flags: "flags" in options ? ChannelFlagsBitField.resolve(options.flags) : void 0
           },
@@ -55111,7 +55111,7 @@ var require_ThreadChannel = __commonJS({
        * @returns {Promise<ThreadChannel>}
        */
       async setInvitable(invitable = true, reason) {
-        if (this.type !== ChannelType.PrivateThread) {
+        if (this.type !== ChannelType2.PrivateThread) {
           throw new DiscordjsRangeError2(ErrorCodes2.ThreadInvitableType, this.type);
         }
         return this.edit({ invitable, reason });
@@ -55194,7 +55194,7 @@ var require_ThreadChannel = __commonJS({
        * @readonly
        */
       get editable() {
-        return this.ownerId === this.client.user.id && (this.type !== ChannelType.PrivateThread || this.joined) || this.manageable;
+        return this.ownerId === this.client.user.id && (this.type !== ChannelType2.PrivateThread || this.joined) || this.manageable;
       }
       /**
        * Whether the thread is joinable by the client user
@@ -55203,7 +55203,7 @@ var require_ThreadChannel = __commonJS({
        */
       get joinable() {
         return !this.archived && !this.joined && this.permissionsFor(this.client.user)?.has(
-          this.type === ChannelType.PrivateThread ? PermissionFlagsBits.ManageThreads : PermissionFlagsBits.ViewChannel,
+          this.type === ChannelType2.PrivateThread ? PermissionFlagsBits2.ManageThreads : PermissionFlagsBits2.ViewChannel,
           false
         );
       }
@@ -55215,8 +55215,8 @@ var require_ThreadChannel = __commonJS({
       get manageable() {
         const permissions = this.permissionsFor(this.client.user);
         if (!permissions) return false;
-        if (permissions.has(PermissionFlagsBits.Administrator, false)) return true;
-        return this.guild.members.me.communicationDisabledUntilTimestamp < Date.now() && permissions.has(PermissionFlagsBits.ManageThreads, false);
+        if (permissions.has(PermissionFlagsBits2.Administrator, false)) return true;
+        return this.guild.members.me.communicationDisabledUntilTimestamp < Date.now() && permissions.has(PermissionFlagsBits2.ManageThreads, false);
       }
       /**
        * Whether the thread is viewable by the client user
@@ -55227,7 +55227,7 @@ var require_ThreadChannel = __commonJS({
         if (this.client.user.id === this.guild.ownerId) return true;
         const permissions = this.permissionsFor(this.client.user);
         if (!permissions) return false;
-        return permissions.has(PermissionFlagsBits.ViewChannel, false);
+        return permissions.has(PermissionFlagsBits2.ViewChannel, false);
       }
       /**
        * Whether the client user can send messages in this thread
@@ -55237,8 +55237,8 @@ var require_ThreadChannel = __commonJS({
       get sendable() {
         const permissions = this.permissionsFor(this.client.user);
         if (!permissions) return false;
-        if (permissions.has(PermissionFlagsBits.Administrator, false)) return true;
-        return !(this.archived && this.locked && !this.manageable) && (this.type !== ChannelType.PrivateThread || this.joined || this.manageable) && permissions.has(PermissionFlagsBits.SendMessagesInThreads, false) && this.guild.members.me.communicationDisabledUntilTimestamp < Date.now();
+        if (permissions.has(PermissionFlagsBits2.Administrator, false)) return true;
+        return !(this.archived && this.locked && !this.manageable) && (this.type !== ChannelType2.PrivateThread || this.joined || this.manageable) && permissions.has(PermissionFlagsBits2.SendMessagesInThreads, false) && this.guild.members.me.communicationDisabledUntilTimestamp < Date.now();
       }
       /**
        * Whether the thread is unarchivable by the client user
@@ -55461,7 +55461,7 @@ var require_ThreadManager = __commonJS({
 var require_GuildTextThreadManager = __commonJS({
   "node_modules/.pnpm/discord.js@14.27.0/node_modules/discord.js/src/managers/GuildTextThreadManager.js"(exports2, module2) {
     "use strict";
-    var { ChannelType, Routes: Routes2 } = require_v106();
+    var { ChannelType: ChannelType2, Routes: Routes2 } = require_v106();
     var ThreadManager = require_ThreadManager();
     var { DiscordjsTypeError: DiscordjsTypeError2, ErrorCodes: ErrorCodes2 } = require_errors2();
     var GuildTextThreadManager = class extends ThreadManager {
@@ -55517,12 +55517,12 @@ var require_GuildTextThreadManager = __commonJS({
         reason,
         rateLimitPerUser
       } = {}) {
-        let resolvedType = this.channel.type === ChannelType.GuildAnnouncement ? ChannelType.AnnouncementThread : ChannelType.PublicThread;
+        let resolvedType = this.channel.type === ChannelType2.GuildAnnouncement ? ChannelType2.AnnouncementThread : ChannelType2.PublicThread;
         let startMessageId;
         if (startMessage) {
           startMessageId = this.channel.messages.resolveId(startMessage);
           if (!startMessageId) throw new DiscordjsTypeError2(ErrorCodes2.InvalidType, "startMessage", "MessageResolvable");
-        } else if (this.channel.type !== ChannelType.GuildAnnouncement) {
+        } else if (this.channel.type !== ChannelType2.GuildAnnouncement) {
           resolvedType = type ?? resolvedType;
         }
         const data = await this.client.rest.post(Routes2.threads(this.channel.id, startMessageId), {
@@ -55530,7 +55530,7 @@ var require_GuildTextThreadManager = __commonJS({
             name,
             auto_archive_duration: autoArchiveDuration,
             type: resolvedType,
-            invitable: resolvedType === ChannelType.PrivateThread ? invitable : void 0,
+            invitable: resolvedType === ChannelType2.PrivateThread ? invitable : void 0,
             rate_limit_per_user: rateLimitPerUser
           },
           reason
@@ -55732,7 +55732,7 @@ var require_BaseGuildVoiceChannel = __commonJS({
   "node_modules/.pnpm/discord.js@14.27.0/node_modules/discord.js/src/structures/BaseGuildVoiceChannel.js"(exports2, module2) {
     "use strict";
     var { Collection: Collection2 } = require_dist6();
-    var { PermissionFlagsBits } = require_v106();
+    var { PermissionFlagsBits: PermissionFlagsBits2 } = require_v106();
     var GuildChannel = require_GuildChannel();
     var TextBasedChannel = require_TextBasedChannel();
     var GuildMessageManager = require_GuildMessageManager();
@@ -55803,8 +55803,8 @@ var require_BaseGuildVoiceChannel = __commonJS({
         if (!this.viewable) return false;
         const permissions = this.permissionsFor(this.client.user);
         if (!permissions) return false;
-        if (permissions.has(PermissionFlagsBits.Administrator, false)) return true;
-        return this.guild.members.me.communicationDisabledUntilTimestamp < Date.now() && permissions.has(PermissionFlagsBits.Connect, false);
+        if (permissions.has(PermissionFlagsBits2.Administrator, false)) return true;
+        return this.guild.members.me.communicationDisabledUntilTimestamp < Date.now() && permissions.has(PermissionFlagsBits2.Connect, false);
       }
       /**
        * Creates an invite to this guild channel.
@@ -55988,7 +55988,7 @@ var require_TextChannel = __commonJS({
 var require_VoiceChannel = __commonJS({
   "node_modules/.pnpm/discord.js@14.27.0/node_modules/discord.js/src/structures/VoiceChannel.js"(exports2, module2) {
     "use strict";
-    var { PermissionFlagsBits, Routes: Routes2 } = require_v106();
+    var { PermissionFlagsBits: PermissionFlagsBits2, Routes: Routes2 } = require_v106();
     var BaseGuildVoiceChannel = require_BaseGuildVoiceChannel();
     var VoiceChannel = class extends BaseGuildVoiceChannel {
       /**
@@ -55998,7 +55998,7 @@ var require_VoiceChannel = __commonJS({
        */
       get joinable() {
         if (!super.joinable) return false;
-        if (this.full && !this.permissionsFor(this.client.user).has(PermissionFlagsBits.MoveMembers, false)) return false;
+        if (this.full && !this.permissionsFor(this.client.user).has(PermissionFlagsBits2.MoveMembers, false)) return false;
         return true;
       }
       /**
@@ -56009,8 +56009,8 @@ var require_VoiceChannel = __commonJS({
       get speakable() {
         const permissions = this.permissionsFor(this.client.user);
         if (!permissions) return false;
-        if (permissions.has(PermissionFlagsBits.Administrator, false)) return true;
-        return this.guild.members.me.communicationDisabledUntilTimestamp < Date.now() && permissions.has(PermissionFlagsBits.Speak, false);
+        if (permissions.has(PermissionFlagsBits2.Administrator, false)) return true;
+        return this.guild.members.me.communicationDisabledUntilTimestamp < Date.now() && permissions.has(PermissionFlagsBits2.Speak, false);
       }
       /**
        * @typedef {Object} SendSoundboardSoundOptions
@@ -56194,7 +56194,7 @@ var require_Channels = __commonJS({
   "node_modules/.pnpm/discord.js@14.27.0/node_modules/discord.js/src/util/Channels.js"(exports2, module2) {
     "use strict";
     var { lazy } = require_dist();
-    var { ChannelType } = require_v106();
+    var { ChannelType: ChannelType2 } = require_v106();
     var getCategoryChannel = lazy(() => require_CategoryChannel());
     var getDMChannel = lazy(() => require_DMChannel());
     var getNewsChannel = lazy(() => require_NewsChannel());
@@ -56209,49 +56209,49 @@ var require_Channels = __commonJS({
     function createChannel(client2, data, guild, { allowUnknownGuild } = {}) {
       let channel;
       if (!data.guild_id && !guild) {
-        if (data.recipients && data.type !== ChannelType.GroupDM || data.type === ChannelType.DM) {
+        if (data.recipients && data.type !== ChannelType2.GroupDM || data.type === ChannelType2.DM) {
           channel = new (getDMChannel())(client2, data);
-        } else if (data.type === ChannelType.GroupDM) {
+        } else if (data.type === ChannelType2.GroupDM) {
           channel = new (getPartialGroupDMChannel())(client2, data);
         }
       } else {
         guild ??= client2.guilds.cache.get(data.guild_id);
         if (guild || allowUnknownGuild) {
           switch (data.type) {
-            case ChannelType.GuildText: {
+            case ChannelType2.GuildText: {
               channel = new (getTextChannel())(guild, data, client2);
               break;
             }
-            case ChannelType.GuildVoice: {
+            case ChannelType2.GuildVoice: {
               channel = new (getVoiceChannel())(guild, data, client2);
               break;
             }
-            case ChannelType.GuildCategory: {
+            case ChannelType2.GuildCategory: {
               channel = new (getCategoryChannel())(guild, data, client2);
               break;
             }
-            case ChannelType.GuildAnnouncement: {
+            case ChannelType2.GuildAnnouncement: {
               channel = new (getNewsChannel())(guild, data, client2);
               break;
             }
-            case ChannelType.GuildStageVoice: {
+            case ChannelType2.GuildStageVoice: {
               channel = new (getStageChannel())(guild, data, client2);
               break;
             }
-            case ChannelType.AnnouncementThread:
-            case ChannelType.PublicThread:
-            case ChannelType.PrivateThread: {
+            case ChannelType2.AnnouncementThread:
+            case ChannelType2.PublicThread:
+            case ChannelType2.PrivateThread: {
               channel = new (getThreadChannel())(guild, data, client2);
               if (!allowUnknownGuild) channel.parent?.threads.cache.set(channel.id, channel);
               break;
             }
-            case ChannelType.GuildDirectory:
+            case ChannelType2.GuildDirectory:
               channel = new (getDirectoryChannel())(guild, data, client2);
               break;
-            case ChannelType.GuildForum:
+            case ChannelType2.GuildForum:
               channel = new (getForumChannel())(guild, data, client2);
               break;
-            case ChannelType.GuildMedia:
+            case ChannelType2.GuildMedia:
               channel = new (getMediaChannel())(guild, data, client2);
               break;
           }
@@ -68618,7 +68618,7 @@ var require_GuildChannelManager = __commonJS({
     "use strict";
     var process2 = require("node:process");
     var { Collection: Collection2 } = require_dist6();
-    var { ChannelType, Routes: Routes2 } = require_v106();
+    var { ChannelType: ChannelType2, Routes: Routes2 } = require_v106();
     var CachedManager = require_CachedManager();
     var GuildTextThreadManager = require_GuildTextThreadManager();
     var { DiscordjsError: DiscordjsError2, DiscordjsTypeError: DiscordjsTypeError2, ErrorCodes: ErrorCodes2 } = require_errors2();
@@ -68881,7 +68881,7 @@ var require_GuildChannelManager = __commonJS({
         if (options.lockPermissions) {
           if (parentId) {
             const newParent = this.cache.get(parentId);
-            if (newParent?.type === ChannelType.GuildCategory) {
+            if (newParent?.type === ChannelType2.GuildCategory) {
               permission_overwrites = newParent.permissionOverwrites.cache.map(
                 (overwrite) => PermissionOverwrites.resolve(overwrite, this.guild)
               );
@@ -69087,7 +69087,7 @@ var require_GuildEmojiManager = __commonJS({
   "node_modules/.pnpm/discord.js@14.27.0/node_modules/discord.js/src/managers/GuildEmojiManager.js"(exports2, module2) {
     "use strict";
     var { Collection: Collection2 } = require_dist6();
-    var { Routes: Routes2, PermissionFlagsBits } = require_v106();
+    var { Routes: Routes2, PermissionFlagsBits: PermissionFlagsBits2 } = require_v106();
     var BaseGuildEmojiManager2 = require_BaseGuildEmojiManager();
     var { DiscordjsError: DiscordjsError2, DiscordjsTypeError: DiscordjsTypeError2, ErrorCodes: ErrorCodes2 } = require_errors2();
     var { resolveImage } = require_DataResolver();
@@ -69226,7 +69226,7 @@ var require_GuildEmojiManager = __commonJS({
         }
         const { me } = this.guild.members;
         if (!me) throw new DiscordjsError2(ErrorCodes2.GuildUncachedMe);
-        if (!me.permissions.any(PermissionFlagsBits.CreateGuildExpressions | PermissionFlagsBits.ManageGuildExpressions)) {
+        if (!me.permissions.any(PermissionFlagsBits2.CreateGuildExpressions | PermissionFlagsBits2.ManageGuildExpressions)) {
           throw new DiscordjsError2(ErrorCodes2.MissingManageGuildExpressionsPermission, this.guild);
         }
         const data = await this.client.rest.get(Routes2.guildEmoji(this.guild.id, emoji.id));
@@ -70866,8 +70866,8 @@ var require_Presence = __commonJS({
       smallImageURL(options = {}) {
         if (!this.smallImage) return null;
         if (this.smallImage.includes(":")) {
-          const [platform, id] = this.smallImage.split(":");
-          switch (platform) {
+          const [platform2, id] = this.smallImage.split(":");
+          switch (platform2) {
             case "mp":
               return `https://media.discordapp.net/${id}`;
             default:
@@ -70884,8 +70884,8 @@ var require_Presence = __commonJS({
       largeImageURL(options = {}) {
         if (!this.largeImage) return null;
         if (this.largeImage.includes(":")) {
-          const [platform, id] = this.largeImage.split(":");
-          switch (platform) {
+          const [platform2, id] = this.largeImage.split(":");
+          switch (platform2) {
             case "mp":
               return `https://media.discordapp.net/${id}`;
             case "spotify":
@@ -71581,7 +71581,7 @@ var require_Guild = __commonJS({
     var { Collection: Collection2 } = require_dist6();
     var { makeURLSearchParams: makeURLSearchParams2 } = require_dist5();
     var { DiscordSnowflake } = require_cjs();
-    var { ChannelType, GuildPremiumTier, Routes: Routes2, GuildFeature } = require_v106();
+    var { ChannelType: ChannelType2, GuildPremiumTier, Routes: Routes2, GuildFeature } = require_v106();
     var AnonymousGuild = require_AnonymousGuild();
     var GuildAuditLogs = require_GuildAuditLogs();
     var { GuildOnboarding } = require_GuildOnboarding();
@@ -72717,7 +72717,7 @@ var require_Guild = __commonJS({
        * @private
        */
       _sortedChannels(channel) {
-        const channelIsCategory = channel.type === ChannelType.GuildCategory;
+        const channelIsCategory = channel.type === ChannelType2.GuildCategory;
         const types = getSortableGroupTypes(channel.type);
         return discordSort(
           this.channels.cache.filter(
@@ -73099,7 +73099,7 @@ var require_GuildManager = __commonJS({
 var require_UserManager = __commonJS({
   "node_modules/.pnpm/discord.js@14.27.0/node_modules/discord.js/src/managers/UserManager.js"(exports2, module2) {
     "use strict";
-    var { ChannelType, Routes: Routes2 } = require_v106();
+    var { ChannelType: ChannelType2, Routes: Routes2 } = require_v106();
     var CachedManager = require_CachedManager();
     var { DiscordjsError: DiscordjsError2, ErrorCodes: ErrorCodes2 } = require_errors2();
     var { GuildMember } = require_GuildMember();
@@ -73134,7 +73134,7 @@ var require_UserManager = __commonJS({
       dmChannel(userId) {
         const expectedRecipientIds = [userId, this.client.user.id];
         return this.client.channels.cache.find(
-          (channel) => channel.type === ChannelType.DM && channel.recipientId === userId && channel.recipientIds.every((id) => expectedRecipientIds.includes(id))
+          (channel) => channel.type === ChannelType2.DM && channel.recipientId === userId && channel.recipientIds.every((id) => expectedRecipientIds.includes(id))
         ) ?? null;
       }
       /**
@@ -75354,7 +75354,7 @@ var require_ModalBuilder = __commonJS({
     var { ModalBuilder: BuildersModal, ComponentBuilder } = require_dist8();
     var { isJSONEncodable } = require_dist();
     var { toSnakeCase } = require_Transformers();
-    var ModalBuilder = class extends BuildersModal {
+    var ModalBuilder2 = class extends BuildersModal {
       constructor({ components, ...data } = {}) {
         super({
           ...toSnakeCase(data),
@@ -75372,7 +75372,7 @@ var require_ModalBuilder = __commonJS({
         return new this(isJSONEncodable(other) ? other.toJSON() : other);
       }
     };
-    module2.exports = ModalBuilder;
+    module2.exports = ModalBuilder2;
   }
 });
 
@@ -75870,12 +75870,69 @@ function renderOutbox(type, p) {
 ${clip(plain(p.reason), 3e3)}`, color: PRIORITY_COLOR[String(p.priority)] ?? COLORS.danger, fields: [{ name: "Priorit\xE4t", value: label(p.priority), inline: true }] };
     case "announcement":
       return { title: "\u{1F4E2} Ank\xFCndigung", description: clip(plain(p.body), 4e3), color: COLORS.warning, footer: `von ${clip(p.author, 100)}` };
+    case "danger.changed": {
+      const d = DANGER[String(p.level)] ?? DANGER.GREEN;
+      return { title: `${d.emoji} Gefahrenstatus: ${d.label}`, description: p.reason ? clip(plain(p.reason), 1e3) : void 0, color: d.color, fields: [{ name: "Vorher", value: DANGER[String(p.previous)]?.label ?? "\u2014", inline: true }, { name: "Gesetzt von", value: clip(plain(p.setBy ?? "System"), 200), inline: true }] };
+    }
+    case "application.submitted":
+      return { title: `\u{1F4CB} Neue Bewerbung ${p.number}`, color: COLORS.info, description: "Pr\xFCfung und Entscheidung im System (Bereich *Applications*).", fields: [
+        { name: "Roblox-Name", value: clip(plain(p.robloxUsername), 200), inline: true },
+        { name: "Quelle", value: p.source === "DISCORD" ? "Discord" : "Web", inline: true },
+        ...p.discordId ? [{ name: "Discord", value: `<@${String(p.discordId)}>`, inline: true }] : []
+      ] };
     default:
       return null;
   }
 }
+function applicationDecisionText(p) {
+  return p.status === "ACCEPTED" ? `\u{1F389} Deine Bewerbung **${p.number}** bei EN Polizei wurde **angenommen**! Ein Teammitglied meldet sich bei dir f\xFCr die n\xE4chsten Schritte.` : `Deine Bewerbung **${p.number}** bei EN Polizei wurde diesmal leider **nicht angenommen**. Du kannst dich gerne sp\xE4ter erneut bewerben.`;
+}
+var DANGER = {
+  GREEN: { label: "Gr\xFCn \u2013 Normaler Dienst", emoji: "\u{1F7E2}", color: 3066993 },
+  YELLOW: { label: "Gelb \u2013 Erh\xF6hte Vorsicht", emoji: "\u{1F7E1}", color: 15844367 },
+  RED: { label: "Rot \u2013 Akute Gefahrenlage", emoji: "\u{1F534}", color: 15158332 }
+};
+function dangerEmbed(s) {
+  const d = DANGER[s.level] ?? DANGER.GREEN;
+  return {
+    title: `${d.emoji} Aktueller Gefahrenstatus: ${d.label}`,
+    color: d.color,
+    description: s.reason ? clip(plain(s.reason), 1e3) : void 0,
+    fields: [...s.setByName ? [{ name: "Gesetzt von", value: clip(plain(s.setByName), 200), inline: true }] : [], ...s.at ? [{ name: "Seit", value: `<t:${Math.floor(new Date(s.at).getTime() / 1e3)}:R>`, inline: true }] : []],
+    footer: "Buttons: Status \xE4ndern (nur mit Berechtigung)"
+  };
+}
+var DANGER_BUTTONS = [
+  { id: "danger:set:GREEN", label: "Gr\xFCn", emoji: "\u{1F7E2}", style: "success" },
+  { id: "danger:set:YELLOW", label: "Gelb", emoji: "\u{1F7E1}", style: "primary" },
+  { id: "danger:set:RED", label: "Rot", emoji: "\u{1F534}", style: "danger" }
+];
+var DUTY_EMOJI = { ON_DUTY: "\u{1F7E2}", BREAK: "\u{1F7E1}", TRAINING: "\u{1F535}", ADMINISTRATIVE: "\u{1F535}", OFF_DUTY: "\u26AA" };
+function teamlistEmbed(members, rankOrder) {
+  const rankOf = (m) => m.rank ?? "Ohne Rang";
+  const known = rankOrder.filter((r) => members.some((m) => rankOf(m) === r));
+  const rest = [...new Set(members.map(rankOf))].filter((r) => !rankOrder.includes(r)).sort((a, b) => a.localeCompare(b));
+  const fields = [];
+  for (const rank of [...known, ...rest]) {
+    const people = members.filter((m) => rankOf(m) === rank).sort((a, b) => (a.callsign ?? "~").localeCompare(b.callsign ?? "~"));
+    const lines = people.map((m) => `${DUTY_EMOJI[m.dutyStatus] ?? "\u26AA"} ${m.callsign ? `**${plain(m.callsign)}** ` : ""}${plain(m.name)}${m.unit ? ` \xB7 ${plain(m.unit)}` : ""}`);
+    let chunk = "";
+    let part = 0;
+    for (const l of lines) {
+      if ((chunk + "\n" + l).length > 1e3) {
+        fields.push({ name: part ? `${rank} (Forts.)` : `${rank} (${people.length})`, value: chunk });
+        chunk = "";
+        part++;
+      }
+      chunk += (chunk ? "\n" : "") + l;
+    }
+    if (chunk) fields.push({ name: part ? `${rank} (Forts.)` : `${rank} (${people.length})`, value: chunk });
+  }
+  const onDuty = members.filter((m) => m.dutyStatus === "ON_DUTY").length;
+  return { title: "\u{1F4CB} Teamliste \u2013 EN Polizei", color: COLORS.neutral, fields: fields.slice(0, 25), description: members.length ? void 0 : "Noch keine Personalakten angelegt.", footer: `${members.length} Mitglieder \xB7 ${onDuty} im Dienst \xB7 wird automatisch aktualisiert` };
+}
 
-// apps/bot/src/commands/index.ts
+// apps/bot/src/commands/errors.ts
 function mapError(e) {
   if (!(e instanceof BotApiError)) return errorReply("Unerwarteter Fehler im Bot.");
   const rid = e.requestId ? ` (Request-ID \`${e.requestId}\`)` : "";
@@ -75888,8 +75945,231 @@ function mapError(e) {
   if (e.status === 400 || e.status === 409) return errorReply(`${e.message}${rid}`);
   return errorReply(`Serverfehler.${rid}`);
 }
-var q = (s) => encodeURIComponent(s.trim());
+
+// apps/bot/src/commands/features.ts
 var str = (c, k) => String(c.opts[k] ?? "").trim();
+var choices = (m) => Object.keys(m).map((k) => ({ name: k.replace("_", " "), value: k }));
+var needGuildAdmin = (c) => !c.guildId ? errorReply("Das geht nur auf einem Server, nicht per Direktnachricht.") : !c.isGuildAdmin ? errorReply("Daf\xFCr brauchst du auf diesem Discord-Server das Recht \u201EServer verwalten\u201C.") : null;
+var LEVEL = { gruen: "GREEN", gelb: "YELLOW", rot: "RED" };
+async function setDanger(c, level, reason) {
+  try {
+    const s = await c.api.asUser(c.discordId, "PUT", "/danger-level", { level, ...reason ? { reason } : {} });
+    await c.refreshLive?.("danger").catch(() => void 0);
+    return okReply(`Gefahrenstatus: ${DANGER[s.level]?.emoji ?? ""} **${DANGER[s.level]?.label ?? s.level}**`);
+  } catch (e) {
+    return mapError(e);
+  }
+}
+var MAX_MODAL_FORM_FIELDS = 4;
+var formCache;
+async function applicationForm(c) {
+  if (formCache && Date.now() - formCache.at < 5 * 6e4) return formCache.form;
+  const form = await c.api.service("GET", "/applications/form");
+  formCache = { at: Date.now(), form };
+  return form;
+}
+function modalFieldsFor(form) {
+  const required = form.filter((f) => f.required), optional = form.filter((f) => !f.required);
+  if (required.length > MAX_MODAL_FORM_FIELDS) return null;
+  return [...required, ...optional].slice(0, MAX_MODAL_FORM_FIELDS).map((f) => ({ id: `f_${f.key}`, label: clip(f.label, 45), paragraph: f.maxLength > 200, required: f.required, maxLength: Math.min(f.maxLength, 4e3) }));
+}
+var SUPPORT_PANEL = { title: "\u{1F3AB} Support", color: COLORS.info, description: "Fragen, Probleme oder Anliegen an die Leitung? Klicke auf **Ticket \xF6ffnen** \u2013 es wird ein privater Channel nur f\xFCr dich und das Team angelegt." };
+var SUPPORT_OPEN = { id: "support:open", label: "Ticket \xF6ffnen", emoji: "\u{1F3AB}", style: "primary" };
+var SUPPORT_CLOSE = { id: "support:close", label: "Ticket schlie\xDFen", emoji: "\u{1F512}", style: "danger" };
+var RADIO = { hinzufuegen: "add", entfernen: "remove", pruefen: "check", liste: "list" };
+var FEATURE_COMMANDS = [
+  {
+    name: "gefahrenstatus",
+    description: "Gefahrenstatus anzeigen, setzen oder als Panel posten",
+    options: [
+      { name: "aktion", description: "Was m\xF6chtest du tun? (Standard: anzeigen)", type: "string", choices: [{ name: "anzeigen", value: "anzeigen" }, { name: "setzen", value: "setzen" }, { name: "panel hier posten", value: "panel" }] },
+      { name: "stufe", description: "Neue Stufe (bei \u201Esetzen\u201C)", type: "string", choices: choices(LEVEL) },
+      { name: "grund", description: "Grund (optional, bei \u201Esetzen\u201C)", type: "string", maxLength: 200 }
+    ],
+    async run(c) {
+      const action = str(c, "aktion") || "anzeigen";
+      if (action === "setzen") {
+        const level = LEVEL[str(c, "stufe")];
+        return level ? setDanger(c, level, str(c, "grund") || void 0) : errorReply("Bitte eine Stufe w\xE4hlen (gr\xFCn, gelb, rot).");
+      }
+      if (action === "panel") {
+        const denied = needGuildAdmin(c);
+        if (denied) return denied;
+        if (!c.channelId || !c.refreshLive) return errorReply("Panel kann hier nicht gepostet werden.");
+        try {
+          await c.api.asUser(c.discordId, "GET", "/danger-level");
+          await c.refreshLive("danger", { channelId: c.channelId, force: true });
+          return okReply("Gefahrenstatus-Panel gepostet. Es aktualisiert sich selbst; ein \xE4lteres Panel wird nicht mehr bearbeitet.");
+        } catch (e) {
+          return mapError(e);
+        }
+      }
+      try {
+        return { ephemeral: true, embeds: [dangerEmbed(await c.api.asUser(c.discordId, "GET", "/danger-level"))] };
+      } catch (e) {
+        return mapError(e);
+      }
+    }
+  },
+  {
+    name: "teamliste",
+    description: "Richtet die selbst aktualisierende Teamliste ein bzw. aktualisiert sie sofort",
+    async run(c) {
+      const denied = needGuildAdmin(c);
+      if (denied) return denied;
+      if (!c.refreshLive) return errorReply("Teamliste ist hier nicht verf\xFCgbar.");
+      try {
+        await c.api.asUser(c.discordId, "GET", "/team/overview");
+        const cfg2 = await c.config?.();
+        const p = await c.refreshLive("teamlist", { channelId: cfg2?.teamlist ? void 0 : c.channelId, force: true });
+        return p ? okReply(`Teamliste steht in <#${p.channelId}> und aktualisiert sich automatisch.`) : errorReply("Kein Channel f\xFCr die Teamliste gefunden.");
+      } catch (e) {
+        return mapError(e);
+      }
+    }
+  },
+  {
+    name: "funkfreigabe",
+    description: "Funk-Whitelist verwalten (hinzuf\xFCgen, entfernen, pr\xFCfen, Liste)",
+    options: [
+      { name: "aktion", description: "Aktion", type: "string", required: true, choices: choices(RADIO) },
+      { name: "mitglied", description: "Discord-Mitglied (nicht bei \u201Eliste\u201C)", type: "user" }
+    ],
+    async run(c) {
+      const action = RADIO[str(c, "aktion")];
+      if (!action) return errorReply("Unbekannte Aktion.");
+      try {
+        if (action === "list") {
+          const rows = await c.api.asUser(c.discordId, "GET", "/radio-whitelist");
+          return { ephemeral: true, embeds: [listEmbed(`\u{1F4FB} Funk-Freigabe (${rows.length})`, rows.map((r2) => `\u2022 ${r2.callsign ? `**${plain(r2.callsign)}** ` : ""}${plain(r2.displayName)}`), "Noch niemand freigegeben.")] };
+        }
+        const target = str(c, "mitglied");
+        if (!/^\d{15,25}$/.test(target)) return errorReply("Bitte ein Mitglied angeben.");
+        if (action === "check") {
+          const r2 = await c.api.asUser(c.discordId, "GET", `/radio-whitelist/check?discordId=${target}`);
+          return r2.whitelisted ? okReply(`**${plain(r2.displayName)}** ist f\xFCr den Funk freigegeben.`) : errorReply(`**${plain(r2.displayName)}** ist **nicht** f\xFCr den Funk freigegeben.`);
+        }
+        const r = await c.api.asUser(c.discordId, "POST", action === "add" ? "/radio-whitelist" : "/radio-whitelist/remove", { discordId: target });
+        let note = "";
+        const cfg2 = await c.config?.().catch(() => void 0);
+        if (cfg2?.radioRole && c.guildId && c.platform) {
+          try {
+            await c.platform.setRole(c.guildId, target, cfg2.radioRole, action === "add");
+            note = ` Rolle <@&${cfg2.radioRole}> ${action === "add" ? "vergeben" : "entzogen"}.`;
+          } catch {
+            note = " \u26A0\uFE0F Die Discord-Rolle konnte nicht ge\xE4ndert werden (Bot-Rolle muss \xFCber der Funkrolle stehen und \u201ERollen verwalten\u201C haben).";
+          }
+        }
+        return okReply(`**${plain(r.displayName)}** ${action === "add" ? "ist jetzt f\xFCr den Funk freigegeben" : "wurde von der Funk-Freigabe entfernt"}.${note}`);
+      } catch (e) {
+        if (e instanceof BotApiError && e.status === 404) return errorReply("Dieses Discord-Konto ist mit keinem aktiven Benutzer verkn\xFCpft (oder steht nicht auf der Liste).");
+        return mapError(e);
+      }
+    }
+  },
+  {
+    name: "bewerbung",
+    description: "Bewirb dich bei EN Polizei (Formular)",
+    opensModal: true,
+    async run(c) {
+      try {
+        const fields = modalFieldsFor(await applicationForm(c));
+        if (!fields) return errorReply("Das Bewerbungsformular ist zu lang f\xFCr Discord. Bitte bewirb dich \xFCber das Web-Formular (Seite `/apply`).");
+        return { modal: { id: "bewerbung:submit", title: "Bewerbung \u2013 EN Polizei", fields: [{ id: "roblox", label: "Dein Roblox-Name", required: true, maxLength: 20, placeholder: "z. B. Builderman" }, ...fields] } };
+      } catch (e) {
+        return mapError(e);
+      }
+    }
+  },
+  {
+    name: "supportpanel",
+    description: "Postet das Support-Ticket-Panel in diesen Channel",
+    async run(c) {
+      const denied = needGuildAdmin(c);
+      if (denied) return denied;
+      if (!c.channelId || !c.platform) return errorReply("Panel kann hier nicht gepostet werden.");
+      try {
+        await c.platform.postPanel({ channelId: c.channelId, embed: SUPPORT_PANEL, buttons: [SUPPORT_OPEN] });
+        const cfg2 = await c.config?.().catch(() => void 0);
+        return okReply(`Support-Panel gepostet.${cfg2?.staffRole ? "" : " Tipp: In den Einstellungen eine **Team-Rolle** hinterlegen, damit das Team Tickets sieht."}`);
+      } catch {
+        return errorReply("Panel konnte nicht gepostet werden (fehlen dem Bot Rechte in diesem Channel?).");
+      }
+    }
+  },
+  {
+    name: "roblox",
+    description: "Sucht einen Roblox-Benutzer (Name \u2192 ID)",
+    options: [{ name: "name", description: "Roblox-Benutzername", type: "string", required: true, maxLength: 20 }],
+    async run(c) {
+      if (!c.robloxLookup) return errorReply("Roblox-Suche ist nicht verf\xFCgbar.");
+      const u = await c.robloxLookup(str(c, "name"));
+      if (!u) return errorReply(`Kein Roblox-Benutzer \u201E${plain(str(c, "name"))}\u201C gefunden (oder Roblox ist gerade nicht erreichbar).`);
+      return { ephemeral: true, embeds: [{ title: clip(`\u{1F3AE} ${plain(u.name)}`, 256), color: COLORS.info, fields: [
+        { name: "Roblox-ID", value: String(u.id), inline: true },
+        { name: "Anzeigename", value: clip(plain(u.displayName), 1024), inline: true },
+        { name: "Profil", value: `https://www.roblox.com/users/${u.id}/profile` }
+      ] }] };
+    }
+  }
+];
+var INTERACTIONS = [
+  {
+    prefix: "danger",
+    async run(c) {
+      const level = c.args[0] === "set" ? c.args[1] : void 0;
+      return level && level in DANGER ? setDanger(c, level) : errorReply("Unbekannte Aktion.");
+    }
+  },
+  {
+    prefix: "bewerbung",
+    async run(c) {
+      const f = c.fields ?? {};
+      const robloxUsername = (f.roblox ?? "").trim();
+      if (!robloxUsername) return errorReply("Bitte deinen Roblox-Namen angeben.");
+      const answers = Object.fromEntries(Object.entries(f).filter(([k]) => k.startsWith("f_")).map(([k, v]) => [k.slice(2), v.trim()]));
+      try {
+        const rb = await c.robloxLookup?.(robloxUsername).catch(() => null);
+        const r = await c.api.service("POST", "/bot/application", { robloxUsername: rb?.name ?? robloxUsername, ...rb ? { robloxUserId: String(rb.id) } : {}, discordId: c.discordId, answers });
+        return okReply(`Danke! Deine Bewerbung **${r.number}** ist eingegangen. Die Entscheidung bekommst du per Direktnachricht (bitte DMs von Servermitgliedern erlauben).`);
+      } catch (e) {
+        if (e instanceof BotApiError && e.status === 409) return errorReply("F\xFCr diesen Roblox-Account l\xE4uft bereits eine offene Bewerbung.");
+        return mapError(e);
+      }
+    }
+  },
+  {
+    prefix: "support",
+    async run(c) {
+      if (!c.guildId || !c.platform) return errorReply("Das geht nur auf einem Server.");
+      if (c.args[0] === "close") {
+        if (!c.channelId) return errorReply("Unbekannter Channel.");
+        await c.platform.deleteChannel(c.channelId, 5e3);
+        return okReply("Ticket wird in 5 Sekunden geschlossen.");
+      }
+      if (c.args[0] !== "open") return errorReply("Unbekannte Aktion.");
+      const cfg2 = await c.config?.().catch(() => void 0);
+      try {
+        const t = await c.platform.createTicketChannel({ guildId: c.guildId, userId: c.discordId, userName: c.userName ?? c.discordId, categoryId: cfg2?.tickets, staffRoleId: cfg2?.staffRole });
+        if (t.existing) return okReply(`Du hast schon ein offenes Ticket: <#${t.channelId}>`);
+        await c.platform.postPanel({ channelId: t.channelId, embed: { title: "\u{1F3AB} Ticket ge\xF6ffnet", color: COLORS.info, description: `<@${c.discordId}>, beschreibe dein Anliegen \u2013 das Team meldet sich hier.
+Zum Schlie\xDFen den Button unten nutzen.` }, buttons: [SUPPORT_CLOSE] });
+        return okReply(`Dein Ticket: <#${t.channelId}>`);
+      } catch {
+        return errorReply("Ticket konnte nicht angelegt werden (fehlen dem Bot die Rechte \u201EKan\xE4le verwalten\u201C?).");
+      }
+    }
+  }
+];
+var interactionFor = (customId) => {
+  const [prefix, ...args] = customId.split(":");
+  const def = INTERACTIONS.find((d) => d.prefix === prefix);
+  return def ? { def, args } : void 0;
+};
+
+// apps/bot/src/commands/index.ts
+var q = (s) => encodeURIComponent(s.trim());
+var str2 = (c, k) => String(c.opts[k] ?? "").trim();
 async function resolvePerson(c, term) {
   const page = await c.api.asUser(c.discordId, "GET", `/persons?q=${q(term)}&pageSize=10`);
   const exact = page.items.filter((p) => String(p.robloxUsername).toLowerCase() === term.toLowerCase() || p.robloxUserId === term);
@@ -75901,7 +76181,7 @@ async function resolvePerson(c, term) {
 var DUTY = { an: "ON_DUTY", pause: "BREAK", training: "TRAINING", verwaltung: "ADMINISTRATIVE", aus: "OFF_DUTY" };
 var UNIT = { verfuegbar: "AVAILABLE", beschaeftigt: "BUSY", unterwegs: "EN_ROUTE", vor_ort: "ON_SCENE", nicht_verfuegbar: "UNAVAILABLE", ausser_dienst: "OFF_DUTY" };
 var PRIO = { niedrig: "LOW", mittel: "MEDIUM", hoch: "HIGH", dringend: "URGENT", kritisch: "CRITICAL" };
-var choices = (m) => Object.keys(m).map((k) => ({ name: k.replace("_", " "), value: k }));
+var choices2 = (m) => Object.keys(m).map((k) => ({ name: k.replace("_", " "), value: k }));
 var INC_STATUS = { bestaetigt: "ACKNOWLEDGED", unterwegs: "EN_ROUTE", vor_ort: "ON_SCENE", in_bearbeitung: "PROCESSING", abschluss: "CLEARING", abgebrochen: "CANCELLED", geschlossen: "CLOSED" };
 var REPORT = { patrouille: "PATROL", vorfall: "INCIDENT", verkehr: "TRAFFIC", festnahme: "ARREST", zitation: "CITATION", kollision: "COLLISION", ermittlung: "INVESTIGATION", allgemein: "GENERAL" };
 var CHANNEL = { team: "TEAM", dispatch: "DISPATCH" };
@@ -75917,7 +76197,7 @@ var COMMANDS = [
     options: [{ name: "code", description: "Code aus dem Web (\u201EDiscord verkn\xFCpfen\u201C)", type: "string", required: true, maxLength: 12 }],
     async run(c) {
       try {
-        const r = await c.api.service("POST", "/bot/link", { code: str(c, "code"), discordId: c.discordId });
+        const r = await c.api.service("POST", "/bot/link", { code: str2(c, "code"), discordId: c.discordId });
         return okReply(`Verkn\xFCpft mit **${plain(r.displayName)}** (@${plain(r.username)}). Alle Befehle laufen ab jetzt mit deinen Rechten.`);
       } catch (e) {
         if (e instanceof BotApiError && e.status === 400) return errorReply("Ung\xFCltiger oder abgelaufener Code. Erzeuge im Web einen neuen.");
@@ -75935,6 +76215,8 @@ var COMMANDS = [
         { name: "Abfragen", value: "`/person` `/kennzeichen` `/fahndungen` `/einsaetze` `/einsatzinfo` `/einheiten` `/team`" },
         { name: "Dienst & Leitstelle", value: "`/dienst` `/einheitstatus` `/einsatz` `/einsatzstatus` `/einsatzzuweisen` `/funk`" },
         { name: "Erfassen", value: "`/ticket` `/bericht` `/beschwerde` `/ermittlung` `/fahndung` `/beweis`" },
+        { name: "Leitung & Team", value: "`/gefahrenstatus` `/funkfreigabe` `/teamliste` `/supportpanel` `/roblox`" },
+        { name: "F\xFCr alle", value: "`/bewerbung` (auch ohne Verkn\xFCpfung)" },
         { name: "Hinweis", value: "Alle Befehle laufen mit **deinen** Rechten im System. Antworten sind nur f\xFCr dich sichtbar." }
       ] }] };
     }
@@ -75945,12 +76227,12 @@ var COMMANDS = [
     options: [{ name: "suche", description: "Name oder Roblox-ID", type: "string", required: true, maxLength: 64 }],
     async run(c) {
       try {
-        const page = await c.api.asUser(c.discordId, "GET", `/persons?q=${q(str(c, "suche"))}&pageSize=5`);
+        const page = await c.api.asUser(c.discordId, "GET", `/persons?q=${q(str2(c, "suche"))}&pageSize=5`);
         if (!page.items.length) return errorReply("Keine Person gefunden.");
-        if (page.items.length > 1 && !page.items.some((p) => String(p.robloxUsername).toLowerCase() === str(c, "suche").toLowerCase())) {
+        if (page.items.length > 1 && !page.items.some((p) => String(p.robloxUsername).toLowerCase() === str2(c, "suche").toLowerCase())) {
           return { ephemeral: true, embeds: [listEmbed(`\u{1F465} ${page.total} Treffer`, page.items.map((p) => `\u2022 **${plain(p.robloxUsername)}** (${p.robloxUserId ?? "ohne ID"})`), "")] };
         }
-        const hit = page.items.find((p) => String(p.robloxUsername).toLowerCase() === str(c, "suche").toLowerCase()) ?? page.items[0];
+        const hit = page.items.find((p) => String(p.robloxUsername).toLowerCase() === str2(c, "suche").toLowerCase()) ?? page.items[0];
         const ov = await c.api.asUser(c.discordId, "GET", `/persons/${hit.id}`);
         const wanted = ov.links.some((l) => l.entityType === "Wanted");
         return { ephemeral: true, embeds: [personEmbed(ov.person, { tickets: ov.tickets.length, wanted })] };
@@ -75965,7 +76247,7 @@ var COMMANDS = [
     options: [{ name: "kennzeichen", description: "z. B. LC 1001", type: "string", required: true, maxLength: 16 }],
     async run(c) {
       try {
-        const page = await c.api.asUser(c.discordId, "GET", `/vehicles?q=${q(str(c, "kennzeichen"))}&pageSize=5`);
+        const page = await c.api.asUser(c.discordId, "GET", `/vehicles?q=${q(str2(c, "kennzeichen"))}&pageSize=5`);
         return page.items.length ? { ephemeral: true, embeds: page.items.map(vehicleEmbed) } : errorReply("Kein Fahrzeug gefunden.");
       } catch (e) {
         return mapError(e);
@@ -75987,9 +76269,9 @@ var COMMANDS = [
   {
     name: "dienst",
     description: "Setzt deinen Dienststatus",
-    options: [{ name: "status", description: "Neuer Status", type: "string", required: true, choices: choices(DUTY) }],
+    options: [{ name: "status", description: "Neuer Status", type: "string", required: true, choices: choices2(DUTY) }],
     async run(c) {
-      const status = DUTY[str(c, "status")];
+      const status = DUTY[str2(c, "status")];
       if (!status) return errorReply("Unbekannter Status.");
       try {
         await c.api.asUser(c.discordId, "PUT", "/team/me/status", { status });
@@ -76016,14 +76298,14 @@ var COMMANDS = [
     description: "\xC4ndert den Status einer Einheit",
     options: [
       { name: "rufzeichen", description: "z. B. ADAM-1", type: "string", required: true, maxLength: 16 },
-      { name: "status", description: "Neuer Status", type: "string", required: true, choices: choices(UNIT) }
+      { name: "status", description: "Neuer Status", type: "string", required: true, choices: choices2(UNIT) }
     ],
     async run(c) {
-      const status = UNIT[str(c, "status")];
+      const status = UNIT[str2(c, "status")];
       if (!status) return errorReply("Unbekannter Status.");
       try {
         const units = await c.api.asUser(c.discordId, "GET", "/dispatch/units");
-        const unit = units.find((u) => String(u.callsign).toLowerCase() === str(c, "rufzeichen").toLowerCase());
+        const unit = units.find((u) => String(u.callsign).toLowerCase() === str2(c, "rufzeichen").toLowerCase());
         if (!unit) return errorReply("Einheit nicht gefunden.");
         await c.api.asUser(c.discordId, "PUT", `/dispatch/units/${unit.id}/status`, { status });
         return okReply(`**${plain(unit.callsign)}** \u2192 ${label(status)}`);
@@ -76049,15 +76331,15 @@ var COMMANDS = [
     description: "Legt einen neuen Einsatz an",
     options: [
       { name: "titel", description: "Kurzbeschreibung", type: "string", required: true, maxLength: 200 },
-      { name: "prioritaet", description: "Priorit\xE4t (Standard: mittel)", type: "string", choices: choices(PRIO) },
+      { name: "prioritaet", description: "Priorit\xE4t (Standard: mittel)", type: "string", choices: choices2(PRIO) },
       { name: "ort", description: "Einsatzort", type: "string", maxLength: 200 }
     ],
     async run(c) {
-      const title = str(c, "titel");
+      const title = str2(c, "titel");
       if (title.length < 3) return errorReply("Der Titel ist zu kurz (mindestens 3 Zeichen).");
       try {
-        const prio = PRIO[str(c, "prioritaet")] ?? "MEDIUM";
-        const inc = await c.api.asUser(c.discordId, "POST", "/incidents", { title, priority: prio, location: str(c, "ort") || void 0 });
+        const prio = PRIO[str2(c, "prioritaet")] ?? "MEDIUM";
+        const inc = await c.api.asUser(c.discordId, "POST", "/incidents", { title, priority: prio, location: str2(c, "ort") || void 0 });
         return okReply(`Einsatz **${inc.number}** angelegt (${label(prio)}).`);
       } catch (e) {
         return mapError(e);
@@ -76073,10 +76355,10 @@ var COMMANDS = [
       { name: "betrag", description: "Betrag", type: "number", min: 0, max: 1e6 }
     ],
     async run(c) {
-      const reason = str(c, "grund");
+      const reason = str2(c, "grund");
       if (reason.length < 3) return errorReply("Der Grund ist zu kurz (mindestens 3 Zeichen).");
       try {
-        const { person, reply } = await resolvePerson(c, str(c, "person"));
+        const { person, reply } = await resolvePerson(c, str2(c, "person"));
         if (!person) return reply;
         const amount = typeof c.opts.betrag === "number" ? c.opts.betrag : void 0;
         const t = await c.api.asUser(c.discordId, "POST", "/tickets", { personId: person.id, reason, ...amount !== void 0 ? { amount } : {} });
@@ -76135,7 +76417,7 @@ var COMMANDS = [
     options: [{ name: "nummer", description: "Einsatznummer, z. B. I-2026-ABC123", type: "string", required: true, maxLength: 32 }],
     async run(c) {
       try {
-        const { incident, reply } = await resolveIncident(c, str(c, "nummer"));
+        const { incident, reply } = await resolveIncident(c, str2(c, "nummer"));
         if (!incident) return reply;
         const d = await c.api.asUser(c.discordId, "GET", `/incidents/${incident.id}`);
         const i = d.incident;
@@ -76157,13 +76439,13 @@ var COMMANDS = [
     description: "\xC4ndert den Status eines Einsatzes",
     options: [
       { name: "nummer", description: "Einsatznummer", type: "string", required: true, maxLength: 32 },
-      { name: "status", description: "Neuer Status", type: "string", required: true, choices: choices(INC_STATUS) }
+      { name: "status", description: "Neuer Status", type: "string", required: true, choices: choices2(INC_STATUS) }
     ],
     async run(c) {
-      const status = INC_STATUS[str(c, "status")];
+      const status = INC_STATUS[str2(c, "status")];
       if (!status) return errorReply("Unbekannter Status.");
       try {
-        const { incident, reply } = await resolveIncident(c, str(c, "nummer"));
+        const { incident, reply } = await resolveIncident(c, str2(c, "nummer"));
         if (!incident) return reply;
         if (status === "CLOSED") await c.api.asUser(c.discordId, "POST", `/dispatch/incidents/${incident.id}/close`);
         else await c.api.asUser(c.discordId, "PUT", `/dispatch/incidents/${incident.id}/status`, { status });
@@ -76182,10 +76464,10 @@ var COMMANDS = [
     ],
     async run(c) {
       try {
-        const { incident, reply } = await resolveIncident(c, str(c, "nummer"));
+        const { incident, reply } = await resolveIncident(c, str2(c, "nummer"));
         if (!incident) return reply;
         const units = await c.api.asUser(c.discordId, "GET", "/dispatch/units");
-        const unit = units.find((u) => String(u.callsign).toLowerCase() === str(c, "rufzeichen").toLowerCase());
+        const unit = units.find((u) => String(u.callsign).toLowerCase() === str2(c, "rufzeichen").toLowerCase());
         if (!unit) return errorReply("Einheit nicht gefunden.");
         await c.api.asUser(c.discordId, "POST", `/dispatch/incidents/${incident.id}/assign`, { unitId: unit.id });
         return okReply(`**${plain(unit.callsign)}** wurde **${incident.number}** zugewiesen.`);
@@ -76200,14 +76482,14 @@ var COMMANDS = [
     options: [
       { name: "titel", description: "Titel", type: "string", required: true, maxLength: 200 },
       { name: "text", description: "Berichtstext", type: "string", required: true, maxLength: 4e3 },
-      { name: "typ", description: "Berichtstyp (Standard: allgemein)", type: "string", choices: choices(REPORT) },
+      { name: "typ", description: "Berichtstyp (Standard: allgemein)", type: "string", choices: choices2(REPORT) },
       { name: "einreichen", description: "Direkt zur Pr\xFCfung einreichen", type: "boolean" }
     ],
     async run(c) {
-      if (str(c, "titel").length < 3) return errorReply("Der Titel ist zu kurz (mindestens 3 Zeichen).");
+      if (str2(c, "titel").length < 3) return errorReply("Der Titel ist zu kurz (mindestens 3 Zeichen).");
       try {
-        const type = REPORT[str(c, "typ")] ?? "GENERAL";
-        const r = await c.api.asUser(c.discordId, "POST", "/reports", { type, title: str(c, "titel"), content: { body: str(c, "text") } });
+        const type = REPORT[str2(c, "typ")] ?? "GENERAL";
+        const r = await c.api.asUser(c.discordId, "POST", "/reports", { type, title: str2(c, "titel"), content: { body: str2(c, "text") } });
         if (c.opts.einreichen === true) {
           await c.api.asUser(c.discordId, "POST", `/reports/${r.id}/submit`);
           return okReply(`Bericht **${r.number}** angelegt und **eingereicht**.`);
@@ -76227,16 +76509,16 @@ var COMMANDS = [
       { name: "person", description: "Betroffene Person (Roblox-Name oder -ID)", type: "string", maxLength: 64 }
     ],
     async run(c) {
-      if (str(c, "kategorie").length < 2) return errorReply("Die Kategorie ist zu kurz.");
-      if (str(c, "beschreibung").length < 10) return errorReply("Die Beschreibung ist zu kurz (mindestens 10 Zeichen).");
+      if (str2(c, "kategorie").length < 2) return errorReply("Die Kategorie ist zu kurz.");
+      if (str2(c, "beschreibung").length < 10) return errorReply("Die Beschreibung ist zu kurz (mindestens 10 Zeichen).");
       try {
         let subjectId;
-        if (str(c, "person")) {
-          const r = await resolvePerson(c, str(c, "person"));
+        if (str2(c, "person")) {
+          const r = await resolvePerson(c, str2(c, "person"));
           if (!r.person) return r.reply;
           subjectId = r.person.id;
         }
-        const res = await c.api.asUser(c.discordId, "POST", "/complaints", { category: str(c, "kategorie"), description: str(c, "beschreibung"), ...subjectId ? { subjectId } : {} });
+        const res = await c.api.asUser(c.discordId, "POST", "/complaints", { category: str2(c, "kategorie"), description: str2(c, "beschreibung"), ...subjectId ? { subjectId } : {} });
         return okReply(`Beschwerde **${res.number}** erfasst.`);
       } catch (e) {
         return mapError(e);
@@ -76251,9 +76533,9 @@ var COMMANDS = [
       { name: "beschreibung", description: "Beschreibung", type: "string", maxLength: 4e3 }
     ],
     async run(c) {
-      if (str(c, "titel").length < 3) return errorReply("Der Titel ist zu kurz (mindestens 3 Zeichen).");
+      if (str2(c, "titel").length < 3) return errorReply("Der Titel ist zu kurz (mindestens 3 Zeichen).");
       try {
-        const r = await c.api.asUser(c.discordId, "POST", "/investigations", { title: str(c, "titel"), ...str(c, "beschreibung") ? { description: str(c, "beschreibung") } : {} });
+        const r = await c.api.asUser(c.discordId, "POST", "/investigations", { title: str2(c, "titel"), ...str2(c, "beschreibung") ? { description: str2(c, "beschreibung") } : {} });
         return okReply(`Fall **${r.caseNumber}** er\xF6ffnet.`);
       } catch (e) {
         return mapError(e);
@@ -76266,15 +76548,15 @@ var COMMANDS = [
     options: [
       { name: "person", description: "Roblox-Name oder -ID", type: "string", required: true, maxLength: 64 },
       { name: "grund", description: "Fahndungsgrund", type: "string", required: true, maxLength: 500 },
-      { name: "prioritaet", description: "Priorit\xE4t (Standard: mittel)", type: "string", choices: choices(PRIO) }
+      { name: "prioritaet", description: "Priorit\xE4t (Standard: mittel)", type: "string", choices: choices2(PRIO) }
     ],
     async run(c) {
-      if (str(c, "grund").length < 3) return errorReply("Der Grund ist zu kurz (mindestens 3 Zeichen).");
+      if (str2(c, "grund").length < 3) return errorReply("Der Grund ist zu kurz (mindestens 3 Zeichen).");
       try {
-        const { person, reply } = await resolvePerson(c, str(c, "person"));
+        const { person, reply } = await resolvePerson(c, str2(c, "person"));
         if (!person) return reply;
-        const priority = PRIO[str(c, "prioritaet")] ?? "MEDIUM";
-        await c.api.asUser(c.discordId, "POST", "/wanted", { personId: person.id, reason: str(c, "grund"), priority });
+        const priority = PRIO[str2(c, "prioritaet")] ?? "MEDIUM";
+        await c.api.asUser(c.discordId, "POST", "/wanted", { personId: person.id, reason: str2(c, "grund"), priority });
         return okReply(`**${plain(person.robloxUsername)}** ist zur Fahndung ausgeschrieben (${label(priority)}).`);
       } catch (e) {
         return mapError(e);
@@ -76290,9 +76572,9 @@ var COMMANDS = [
       { name: "fall", description: "Fallnummer, z. B. CASE-2026-ABC123", type: "string", maxLength: 40 }
     ],
     async run(c) {
-      if (str(c, "typ").length < 2 || str(c, "beschreibung").length < 3) return errorReply("Typ oder Beschreibung sind zu kurz.");
+      if (str2(c, "typ").length < 2 || str2(c, "beschreibung").length < 3) return errorReply("Typ oder Beschreibung sind zu kurz.");
       try {
-        const e = await c.api.asUser(c.discordId, "POST", "/evidence", { type: str(c, "typ"), description: str(c, "beschreibung"), ...str(c, "fall") ? { caseRef: str(c, "fall").toUpperCase() } : {} });
+        const e = await c.api.asUser(c.discordId, "POST", "/evidence", { type: str2(c, "typ"), description: str2(c, "beschreibung"), ...str2(c, "fall") ? { caseRef: str2(c, "fall").toUpperCase() } : {} });
         return okReply(`Beweis **${e.number}** erfasst.`);
       } catch (err) {
         return mapError(err);
@@ -76303,14 +76585,14 @@ var COMMANDS = [
     name: "funk",
     description: "Sendet eine Nachricht in einen Systemkanal",
     options: [
-      { name: "kanal", description: "Kanal", type: "string", required: true, choices: choices(CHANNEL) },
+      { name: "kanal", description: "Kanal", type: "string", required: true, choices: choices2(CHANNEL) },
       { name: "text", description: "Nachricht", type: "string", required: true, maxLength: 1500 }
     ],
     async run(c) {
-      const ch = CHANNEL[str(c, "kanal")];
+      const ch = CHANNEL[str2(c, "kanal")];
       if (!ch) return errorReply("Unbekannter Kanal.");
       try {
-        await c.api.asUser(c.discordId, "POST", `/communication/channels/${ch}/messages`, { body: str(c, "text") });
+        await c.api.asUser(c.discordId, "POST", `/communication/channels/${ch}/messages`, { body: str2(c, "text") });
         return okReply(`Nachricht an **${ch}** gesendet.`);
       } catch (e) {
         return mapError(e);
@@ -76328,7 +76610,8 @@ var COMMANDS = [
         return mapError(e);
       }
     }
-  }
+  },
+  ...FEATURE_COMMANDS
 ];
 var byName = (n) => COMMANDS.find((c) => c.name === n);
 
@@ -80384,7 +80667,9 @@ var schema = external_exports.object({
   DISCORD_GUILD_ID: external_exports.string().regex(/^\d{15,25}([\s,;]+\d{15,25})*$/, "one or more server IDs, separated by comma").optional(),
   API_URL: external_exports.string().url().default("http://localhost:3000"),
   BOT_API_TOKEN: external_exports.string().min(32, "BOT_API_TOKEN must be at least 32 characters (same value as in the API)"),
-  OUTBOX_POLL_SECONDS: external_exports.coerce.number().int().min(2).max(60).default(5)
+  OUTBOX_POLL_SECONDS: external_exports.coerce.number().int().min(2).max(60).default(5),
+  /** Wie oft Teamliste und Gefahrenstatus-Panel mit dem System abgeglichen werden (bearbeitet wird nur bei Änderungen). */
+  LIVE_REFRESH_SECONDS: external_exports.coerce.number().int().min(15).max(3600).default(60)
 });
 var guildIds = (cfg2) => [...new Set((cfg2.DISCORD_GUILD_ID ?? "").split(/[\s,;]+/).filter(Boolean))];
 function parseDotEnv(text) {
@@ -80414,11 +80699,81 @@ ${r.error.issues.map((i) => ` - ${i.path.join(".")}: ${i.message}`).join("\n")}`
   return r.data;
 }
 
+// apps/bot/src/live.ts
+var STATE_KEY = { danger: "danger-panel", teamlist: "teamlist" };
+function createLive(api2, platform2, log = console.log) {
+  const lastContent = {};
+  async function render(kind) {
+    if (kind === "danger") {
+      const s = await api2.service("GET", "/bot/danger");
+      return { embed: dangerEmbed(s), buttons: DANGER_BUTTONS };
+    }
+    const t = await api2.service("GET", "/bot/team");
+    return { embed: teamlistEmbed(t.members, t.rankOrder), buttons: void 0 };
+  }
+  async function refresh(kind, o = {}) {
+    const stored = (await api2.service("GET", `/bot/state/${STATE_KEY[kind]}`)).value;
+    let channelId = o.channelId ?? stored?.channelId;
+    if (!o.channelId && kind === "teamlist") channelId = (await api2.service("GET", "/bot/config")).teamlist ?? channelId;
+    if (!channelId) return null;
+    const { embed, buttons } = await render(kind);
+    const content = JSON.stringify(embed);
+    const sameSpot = stored?.channelId === channelId && !!stored.messageId;
+    if (sameSpot && !o.force && lastContent[kind] === content) return stored;
+    const messageId = await platform2.postOrEdit({ channelId, messageId: sameSpot ? stored.messageId : void 0, embed, buttons });
+    lastContent[kind] = content;
+    const placement = { channelId, messageId };
+    if (!sameSpot || stored?.messageId !== messageId) await api2.service("PUT", `/bot/state/${STATE_KEY[kind]}`, { value: placement });
+    return placement;
+  }
+  function start(seconds) {
+    let running = false;
+    let lastError;
+    const tick = async () => {
+      if (running) return;
+      running = true;
+      try {
+        for (const k of ["danger", "teamlist"]) await refresh(k);
+        lastError = void 0;
+      } catch (e) {
+        const msg = e instanceof Error ? e.message : String(e);
+        if (msg !== lastError) {
+          log(`live messages: refresh failed: ${msg} (will keep retrying quietly)`);
+          lastError = msg;
+        }
+      } finally {
+        running = false;
+      }
+    };
+    const timer = setInterval(() => void tick(), seconds * 1e3);
+    void tick();
+    return () => clearInterval(timer);
+  }
+  return { refresh, start };
+}
+
 // apps/bot/src/outbox.ts
-async function pollOnce(api2, send, log = console.log) {
+var DIRECT = { "application.decided": applicationDecisionText };
+async function pollOnce(api2, send, log = console.log, dm) {
   const [channels, items] = await Promise.all([api2.service("GET", "/bot/config"), api2.service("GET", "/bot/outbox?limit=20")]);
   let sent = 0;
   for (const item of items) {
+    const direct = DIRECT[item.type];
+    if (direct) {
+      try {
+        const userId = String(item.payload.discordId ?? "");
+        if (!/^\d{15,25}$/.test(userId)) throw new Error("no Discord user id");
+        if (!dm) throw new Error("direct messages not available");
+        await dm(userId, direct(item.payload));
+        await api2.service("POST", `/bot/outbox/${item.id}/ack`, { ok: true });
+        sent++;
+      } catch (e) {
+        const msg = e instanceof Error ? e.message : "send failed";
+        log(`outbox ${item.id} (${item.type}) direct message failed: ${msg}`);
+        await api2.service("POST", `/bot/outbox/${item.id}/ack`, { ok: false, error: msg }).catch(() => void 0);
+      }
+      continue;
+    }
     const channelIds = (channels[item.channelKey] ?? "").split(/[\s,;]+/).filter(Boolean);
     const embed = renderOutbox(item.type, item.payload);
     try {
@@ -80438,14 +80793,14 @@ async function pollOnce(api2, send, log = console.log) {
   }
   return sent;
 }
-function startOutboxLoop(api2, send, seconds, log = console.log) {
+function startOutboxLoop(api2, send, seconds, log = console.log, dm) {
   let running = false;
   let lastError;
   const tick = async () => {
     if (running) return;
     running = true;
     try {
-      await pollOnce(api2, send, log);
+      await pollOnce(api2, send, log, dm);
       if (lastError) {
         log("outbox: connection to the API restored");
         lastError = void 0;
@@ -80465,6 +80820,25 @@ function startOutboxLoop(api2, send, seconds, log = console.log) {
   return () => clearInterval(timer);
 }
 
+// apps/bot/src/roblox.ts
+async function robloxLookup(username, doFetch = fetch) {
+  if (!/^[A-Za-z0-9_]{3,20}$/.test(username)) return null;
+  try {
+    const res = await doFetch("https://users.roblox.com/v1/usernames/users", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ usernames: [username], excludeBannedUsers: false }),
+      signal: AbortSignal.timeout(6e3)
+    });
+    if (!res.ok) return null;
+    const json = await res.json();
+    const hit = json.data?.[0];
+    return hit ? { id: hit.id, name: hit.name, displayName: hit.displayName } : null;
+  } catch {
+    return null;
+  }
+}
+
 // apps/bot/src/index.ts
 loadDotEnv();
 var cfg = loadConfig();
@@ -80478,6 +80852,81 @@ var toEmbed = (e) => {
   if (e.footer) b.setFooter({ text: e.footer });
   return b;
 };
+var STYLE = { primary: import_discord.ButtonStyle.Primary, secondary: import_discord.ButtonStyle.Secondary, success: import_discord.ButtonStyle.Success, danger: import_discord.ButtonStyle.Danger };
+var toRows = (buttons = []) => {
+  const rows = [];
+  for (let i = 0; i < buttons.length && rows.length < 5; i += 5) {
+    rows.push(new import_discord.ActionRowBuilder().addComponents(buttons.slice(i, i + 5).map((b) => {
+      const x = new import_discord.ButtonBuilder().setCustomId(b.id).setLabel(b.label).setStyle(STYLE[b.style]);
+      if (b.emoji) x.setEmoji(b.emoji);
+      return x;
+    })));
+  }
+  return rows;
+};
+var toModal = (m) => new import_discord.ModalBuilder().setCustomId(m.id).setTitle(m.title.slice(0, 45)).addComponents(m.fields.map((f) => {
+  const input = new import_discord.TextInputBuilder().setCustomId(f.id).setLabel(f.label.slice(0, 45)).setStyle(f.paragraph ? import_discord.TextInputStyle.Paragraph : import_discord.TextInputStyle.Short).setRequired(!!f.required);
+  if (f.maxLength) input.setMaxLength(f.maxLength);
+  if (f.placeholder) input.setPlaceholder(f.placeholder.slice(0, 100));
+  return new import_discord.ActionRowBuilder().addComponents(input);
+}));
+var replyPayload = (r) => ({ content: r.content ?? "", embeds: (r.embeds ?? []).map(toEmbed), components: toRows(r.buttons), allowedMentions: { parse: [] } });
+var TICKET_PREFIX = "ticket-";
+var ticketName = (userName, userId) => `${TICKET_PREFIX}${userName.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 40) || userId}`;
+var platform = {
+  async setRole(guildId, userId, roleId, on) {
+    const member = await (await client.guilds.fetch(guildId)).members.fetch(userId);
+    if (on) await member.roles.add(roleId, "EN Polizei: Funk-Freigabe");
+    else await member.roles.remove(roleId, "EN Polizei: Funk-Freigabe entzogen");
+  },
+  async createTicketChannel({ guildId, userId, userName, categoryId, staffRoleId }) {
+    const guild = await client.guilds.fetch(guildId);
+    const channels = await guild.channels.fetch();
+    const existing = channels.find((c) => c?.type === import_discord.ChannelType.GuildText && c.name.startsWith(TICKET_PREFIX) && c.topic?.includes(`(${userId})`));
+    if (existing) return { channelId: existing.id, existing: true };
+    const view = [import_discord.PermissionFlagsBits.ViewChannel, import_discord.PermissionFlagsBits.SendMessages, import_discord.PermissionFlagsBits.ReadMessageHistory, import_discord.PermissionFlagsBits.AttachFiles];
+    const ch = await guild.channels.create({
+      name: ticketName(userName, userId),
+      type: import_discord.ChannelType.GuildText,
+      topic: `Support-Ticket von ${userName} (${userId})`,
+      ...categoryId && channels.get(categoryId)?.type === import_discord.ChannelType.GuildCategory ? { parent: categoryId } : {},
+      permissionOverwrites: [
+        { id: guild.roles.everyone.id, type: import_discord.OverwriteType.Role, deny: [import_discord.PermissionFlagsBits.ViewChannel] },
+        { id: userId, type: import_discord.OverwriteType.Member, allow: view },
+        { id: client.user.id, type: import_discord.OverwriteType.Member, allow: [...view, import_discord.PermissionFlagsBits.ManageChannels] },
+        ...staffRoleId ? [{ id: staffRoleId, type: import_discord.OverwriteType.Role, allow: view }] : []
+      ]
+    });
+    return { channelId: ch.id, existing: false };
+  },
+  async deleteChannel(channelId, delayMs = 0) {
+    const ch = await client.channels.fetch(channelId);
+    if (!ch || ch.type !== import_discord.ChannelType.GuildText || !ch.name.startsWith(TICKET_PREFIX)) throw new Error("not a ticket channel");
+    setTimeout(() => void ch.delete("Support-Ticket geschlossen").catch((e) => console.error("ticket delete failed:", e instanceof Error ? e.message : e)), delayMs);
+  },
+  async sendDirectMessage(userId, text) {
+    await (await client.users.fetch(userId)).send({ content: text, allowedMentions: { parse: [] } });
+  },
+  async postOrEdit({ channelId, messageId, embed, buttons }) {
+    const ch = await client.channels.fetch(channelId);
+    if (!ch?.isSendable() || !("messages" in ch)) throw new Error(`channel ${channelId} is not a text channel the bot can post in`);
+    const payload = { embeds: [toEmbed(embed)], components: toRows(buttons), allowedMentions: { parse: [] } };
+    if (messageId) {
+      const old = await ch.messages.fetch(messageId).catch(() => null);
+      if (old) {
+        await old.edit(payload);
+        return old.id;
+      }
+    }
+    return (await ch.send(payload)).id;
+  },
+  async postPanel({ channelId, embed, buttons }) {
+    const ch = await client.channels.fetch(channelId);
+    if (!ch?.isSendable()) throw new Error(`channel ${channelId} is not a text channel the bot can post in`);
+    await ch.send({ embeds: [toEmbed(embed)], components: toRows(buttons), allowedMentions: { parse: [] } });
+  }
+};
+var live = createLive(api, platform);
 function toBuilder(def) {
   const b = new import_discord.SlashCommandBuilder().setName(def.name).setDescription(def.description);
   for (const o of def.options ?? []) {
@@ -80498,6 +80947,14 @@ function toBuilder(def) {
       if (o.max !== void 0) x.setMaxValue(o.max);
       return x;
     });
+    else if (o.type === "boolean") b.addBooleanOption((x) => {
+      common(x);
+      return x;
+    });
+    else if (o.type === "user") b.addUserOption((x) => {
+      common(x);
+      return x;
+    });
     else b.addNumberOption((x) => {
       common(x);
       if (o.min !== void 0) x.setMinValue(o.min);
@@ -80507,26 +80964,58 @@ function toBuilder(def) {
   }
   return b.toJSON();
 }
-async function handle(i) {
+function baseCtx(i) {
+  const perms = i.memberPermissions;
+  return {
+    discordId: i.user.id,
+    api,
+    platform,
+    userName: i.user.username,
+    guildId: i.guildId ?? void 0,
+    channelId: i.channelId ?? void 0,
+    isGuildAdmin: !!perms && (perms.has(import_discord.PermissionFlagsBits.ManageGuild) || perms.has(import_discord.PermissionFlagsBits.Administrator)),
+    config: () => api.service("GET", "/bot/config"),
+    refreshLive: (kind, o) => live.refresh(kind, o),
+    robloxLookup: (name) => robloxLookup(name)
+  };
+}
+async function safeRun(label2, fn) {
+  try {
+    return await fn();
+  } catch (e) {
+    console.error(`${label2} failed:`, e instanceof Error ? e.message : e);
+    return mapError(e);
+  }
+}
+async function handleCommand(i) {
   const def = byName(i.commandName);
   if (!def) return;
-  await i.deferReply({ flags: import_discord.MessageFlags.Ephemeral });
-  let reply;
-  try {
-    const opts = {};
-    for (const o of def.options ?? []) {
-      const v = i.options.get(o.name)?.value;
-      opts[o.name] = typeof v === "string" || typeof v === "number" || typeof v === "boolean" ? v : void 0;
-    }
-    reply = await def.run({ discordId: i.user.id, opts, api });
-  } catch (e) {
-    console.error(`command ${def.name} failed:`, e instanceof Error ? e.message : e);
-    reply = mapError(e);
+  const opts = {};
+  for (const o of def.options ?? []) {
+    const v = i.options.get(o.name)?.value;
+    opts[o.name] = typeof v === "string" || typeof v === "number" || typeof v === "boolean" ? v : void 0;
   }
-  await i.editReply({ content: reply.content ?? "", embeds: (reply.embeds ?? []).map(toEmbed), allowedMentions: { parse: [] } });
+  if (def.opensModal) {
+    const reply2 = await safeRun(`command ${def.name}`, () => def.run({ ...baseCtx(i), opts }));
+    if (reply2.modal) await i.showModal(toModal(reply2.modal));
+    else await i.reply({ ...replyPayload(reply2), flags: import_discord.MessageFlags.Ephemeral });
+    return;
+  }
+  await i.deferReply({ flags: import_discord.MessageFlags.Ephemeral });
+  const reply = await safeRun(`command ${def.name}`, () => def.run({ ...baseCtx(i), opts }));
+  await i.editReply(replyPayload(reply));
+}
+async function handleComponent(i) {
+  const hit = interactionFor(i.customId);
+  if (!hit) return;
+  await i.deferReply({ flags: import_discord.MessageFlags.Ephemeral });
+  const fields = i.isModalSubmit() ? Object.fromEntries(i.fields.fields.map((f, id) => [id, "value" in f ? String(f.value) : ""])) : void 0;
+  const reply = await safeRun(`interaction ${i.customId}`, () => hit.def.run({ ...baseCtx(i), opts: {}, args: hit.args, fields }));
+  await i.editReply(replyPayload(reply));
 }
 client.on("interactionCreate", (i) => {
-  if (i.isChatInputCommand()) void handle(i).catch((e) => console.error("interaction failed:", e instanceof Error ? e.message : e));
+  const task = i.isChatInputCommand() ? handleCommand(i) : i.isButton() || i.isModalSubmit() ? handleComponent(i) : void 0;
+  void task?.catch((e) => console.error("interaction failed:", e instanceof Error ? e.message : e));
 });
 async function checkApi() {
   try {
@@ -80558,7 +81047,8 @@ client.once("clientReady", async (c) => {
     const ch = await client.channels.fetch(channelId);
     if (!ch?.isSendable()) throw new Error(`channel ${channelId} is not a text channel the bot can post in`);
     await ch.send({ embeds: [toEmbed(embed)], allowedMentions: { parse: [] } });
-  }, cfg.OUTBOX_POLL_SECONDS);
+  }, cfg.OUTBOX_POLL_SECONDS, console.log, (userId, text) => platform.sendDirectMessage(userId, text));
+  live.start(cfg.LIVE_REFRESH_SECONDS);
 });
 for (const sig of ["SIGINT", "SIGTERM"]) process.on(sig, () => {
   void client.destroy().finally(() => process.exit(0));

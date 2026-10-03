@@ -4,7 +4,7 @@ Der Bot (`apps/bot`, TypeScript, discord.js 14) ist ein **schlanker Client der S
 
 > **Ehrlich vorab:** Der Bot-Code, die API-Seite (Verknüpfung, Bot-Auth, Outbox) und die Befehlslogik sind automatisiert getestet (Befehle/Outbox mit Fake-API, API-Seite mit Integrationstests, Verknüpfung im Browser-E2E). **Gegen den echten Discord-Dienst wurde er nicht getestet** – dafür fehlen mir Bot-Token und Server. Plane beim ersten Start ein paar Minuten für Rechte/Channel-IDs ein und schick mir die Bot-Logs, falls etwas hakt.
 
-## Befehle (24)
+## Befehle (30)
 | Befehl | Zweck | Benötigtes Recht (im System) |
 |---|---|---|
 | `/verknuepfen code` | Discord-Konto mit Benutzer verknüpfen | – |
@@ -31,20 +31,33 @@ Der Bot (`apps/bot`, TypeScript, discord.js 14) ist ein **schlanker Client der S
 | `/fahndung person grund [prioritaet]` | Person zur Fahndung ausschreiben | `wanted.create` |
 | `/beweis typ beschreibung [fall]` | Beweisstück erfassen | `evidence.create` |
 | `/benachrichtigungen` | ungelesene Benachrichtigungen | – |
+| `/bewerbung` | Bewerbungsformular direkt in Discord (auch **ohne** Verknüpfung); Entscheidung kommt per DM | – |
+| `/gefahrenstatus [aktion] [stufe] [grund]` | Gefahrenstatus anzeigen / setzen (grün, gelb, rot) / als Button-Panel in den Channel posten | anzeigen: `dashboard.view` · setzen: `dispatch.manage` · Panel: Discord „Server verwalten“ |
+| `/teamliste` | selbst aktualisierende Teamliste einrichten bzw. sofort aktualisieren | `team.view` + Discord „Server verwalten“ |
+| `/funkfreigabe aktion [mitglied]` | Funk-Whitelist: hinzufuegen, entfernen, pruefen, liste (vergibt/entzieht optional die Funkrolle) | prüfen/liste: `team.view` · ändern: `personnel.edit` |
+| `/supportpanel` | Support-Ticket-Panel posten (Button „Ticket öffnen“ → privater Channel) | Discord „Server verwalten“ |
+| `/roblox name` | Roblox-Benutzer suchen (Name → ID, Profil-Link) | – |
 
 Bewusst **nicht** über Discord möglich: Berichte freigeben/ablehnen, Fahndungen aufheben, Beschwerden bearbeiten, Personal-, Benutzer-, Rollen- und Audit-Funktionen. Das bleibt im Web.
 
 Alle Antworten sind **nur für den Aufrufer sichtbar** (ephemeral). Fehlt ein Recht, sagt der Bot „Dazu hast du keine Berechtigung“.
 
+## Panels, Teamliste und Support-Tickets
+- **Gefahrenstatus-Panel** (`/gefahrenstatus aktion:panel hier posten`): Embed mit Buttons Grün/Gelb/Rot. Wer klickt, ändert den Status **mit seinen eigenen Rechten** (verknüpft + `dispatch.manage`). Das Panel zieht sich selbst nach – auch wenn der Status im Web (Leitstelle) geändert wird. Es gibt immer nur ein aktives Panel; ein neues ersetzt das alte (das alte wird nicht mehr bearbeitet).
+- **Teamliste** (`/teamliste`): steht im Channel aus *Settings → Team list channel ID* (sonst im aktuellen Channel), gruppiert nach Rang (Reihenfolge: *Settings → Team list rank order*), mit Dienststatus. Abgleich alle `LIVE_REFRESH_SECONDS` (Standard 60 s); bearbeitet wird nur bei Änderungen. Gelöschte Nachricht → wird neu gepostet.
+- **Support-Tickets** (`/supportpanel`): Button legt einen privaten Channel `ticket-<name>` an (sichtbar für die Person, das Team aus *Staff role ID* und den Bot), optional in der Kategorie *Support ticket category ID*. Ein offenes Ticket pro Person. „Ticket schließen“ löscht den Channel nach 5 s (der Bot löscht nur `ticket-…`-Channels). *Hinweis:* „Tickets“ im System sind Strafzettel – Support-Tickets leben nur in Discord.
+- **Funk-Freigabe**: maßgeblich ist die Liste im System; ist *Radio role ID* gesetzt, vergibt/entzieht der Bot zusätzlich diese Discord-Rolle (Bot-Rolle muss **über** der Funkrolle stehen).
+- **Bewerbung**: `/bewerbung` zeigt das in *Studio* konfigurierte Formular (Roblox-Name + bis zu 4 Felder, Pflichtfelder zuerst – Discord erlaubt max. 5 Eingaben; hat das Formular mehr als 4 Pflichtfelder, verweist der Bot auf `/apply`). Die Roblox-ID wird über die Roblox-API ergänzt. Bei Annahme/Ablehnung bekommt die Person eine **DM** (ohne internen Grund).
+
 ## Automatische Benachrichtigungen
-Neue/zugewiesene Einsätze (Dispatch-Channel), neue Fahndungen (Wanted-Channel) und Ankündigungen aus dem Kommunikationsmodul (Announcements-Channel). Die API legt sie in eine Outbox; der Bot holt sie alle 5 s ab, postet sie und quittiert. Fällt der Bot aus, bleiben Nachrichten in der Warteschlange und werden nachgeholt (nach 5 Fehlversuchen wird eine Nachricht verworfen und nach 7 Tagen gelöscht). **Ohne konfigurierte Channels wird nichts eingereiht.** Gepostet werden nur Kurzinfos (Nummer, Titel, Priorität, Ort bzw. Fahndungsgrund/-objekt). Pings (`@everyone` etc.) sind immer deaktiviert.
+Neue/zugewiesene Einsätze (Dispatch-Channel), neue Fahndungen (Wanted-Channel), Ankündigungen aus dem Kommunikationsmodul (Announcements-Channel), neue Bewerbungen (Applications-Channel) und Änderungen des Gefahrenstatus (Danger-Channel). Die API legt sie in eine Outbox; der Bot holt sie alle 5 s ab, postet sie und quittiert. Fällt der Bot aus, bleiben Nachrichten in der Warteschlange und werden nachgeholt (nach 5 Fehlversuchen wird eine Nachricht verworfen und nach 7 Tagen gelöscht). **Ohne konfigurierte Channels wird nichts eingereiht.** Gepostet werden nur Kurzinfos (Nummer, Titel, Priorität, Ort bzw. Fahndungsgrund/-objekt). Pings (`@everyone` etc.) sind immer deaktiviert.
 
 ## Einrichtung
 
 ### 1. Discord Developer Portal (https://discord.com/developers/applications)
 1. *New Application* → *Bot* → **Token** kopieren (nur einmal sichtbar).
 2. **Keine** „Privileged Gateway Intents“ nötig (der Bot nutzt nur Slash-Commands).
-3. *OAuth2 → URL Generator*: Scopes `bot` **und** `applications.commands`; Bot-Rechte: *View Channels*, *Send Messages*, *Embed Links*. URL öffnen → Bot auf deinen Server einladen.
+3. *OAuth2 → URL Generator*: Scopes `bot` **und** `applications.commands`; Bot-Rechte: *View Channels*, *Send Messages*, *Embed Links* – für Support-Tickets zusätzlich *Manage Channels*, für die Funkrolle *Manage Roles*. URL öffnen → Bot auf deinen Server einladen.
 4. Discord → Einstellungen → Erweitert → **Entwicklermodus** an. Rechtsklick auf deinen Server → *Server-ID kopieren*; Rechtsklick auf die Ziel-Channels → *Channel-ID kopieren*. Der Bot braucht in diesen Channels die Rechte *Kanal ansehen*, *Nachrichten senden*, *Links einbetten*.
 
 ### 2. Konfiguration

@@ -9,6 +9,8 @@ const schema = z.object({
   API_URL: z.string().url().default('http://localhost:3000'),
   BOT_API_TOKEN: z.string().min(32, 'BOT_API_TOKEN must be at least 32 characters (same value as in the API)'),
   OUTBOX_POLL_SECONDS: z.coerce.number().int().min(2).max(60).default(5),
+  /** Wie oft Teamliste und Gefahrenstatus-Panel mit dem System abgeglichen werden (bearbeitet wird nur bei Änderungen). */
+  LIVE_REFRESH_SECONDS: z.coerce.number().int().min(15).max(3600).default(60),
 });
 export type BotConfig = z.infer<typeof schema>;
 

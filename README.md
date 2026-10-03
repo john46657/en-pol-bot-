@@ -2,7 +2,7 @@
 
 > 🤖 **Bot-Start über GitHub/Panel:** `bot.py` + `bot.js` im Hauptverzeichnis sind der fertig gebaute Discord-Bot (`bot.js` wird aus `apps/bot` mit `pnpm bundle:bot` erzeugt – nicht von Hand ändern). Startbefehl: `python3 bot.py` oder `node bot.js`; Einstellungen in einer `.env` (Vorlage: `apps/bot`-Doku in [docs/discord-bot.md](docs/discord-bot.md)).
 
-> 📦 **Der frühere Python-Bot** (Emden RP Bot: `bot.py`, `database.py`, …) liegt unverändert im Ordner [`archiv-alter-python-bot/`](archiv-alter-python-bot). (`alter-python-bot/bot.py` ist nur eine Weiterleitung auf den neuen Bot, falls ein Panel diesen Pfad fest startet.) Was davon schon im neuen System steckt und was fehlt: [docs/migration-vom-alten-bot.md](docs/migration-vom-alten-bot.md).
+> 📦 **Der frühere Python-Bot** (Emden RP Bot) ist entfernt (Git-Historie); seine Funktionen sind portiert. Übersicht: [docs/migration-vom-alten-bot.md](docs/migration-vom-alten-bot.md).
 
 Police CAD / MDT / Dispatch for Emergency Response: Liberty County (Roblox). Police and dispatch only.
 Stack: NestJS 11 · Prisma 6 · PostgreSQL · React 19 · Vite · Tailwind 4 · TanStack Query · Socket.IO.
@@ -35,7 +35,7 @@ pnpm e2e         # Playwright (uses installed Google Chrome)
 | React UI: shell, search, notifications, dashboard (customizable), dispatch board, all record lists/details, admin | done |
 | Panel hosting package (`pnpm bundle:hosting` → one ZIP with API + web + bot, e.g. for bot-hosting.net): [docs/hosting-bot-hosting.md](docs/hosting-bot-hosting.md) | package simulated locally (install → start → login); **real panel untested** |
 | Hosting on a VPS (Docker Compose + Caddy HTTPS + daily DB backups + setup/update/restore scripts): [docs/deployment.md](docs/deployment.md) | written; production artifact tested locally, **Docker itself not run** |
-| Discord bot (`apps/bot`): 24 slash commands (lookups, duty, dispatch, create ticket/report/complaint/investigation/wanted/evidence) with the linked user's permissions, channel notifications via outbox, one-time-code linking ([docs/discord-bot.md](docs/discord-bot.md)) | done; **not tested against real Discord** |
+| Discord bot (`apps/bot`): 30 slash commands (lookups, duty, dispatch, create ticket/report/complaint/investigation/wanted/evidence, applications via modal + decision DM, danger-level button panel, self-updating team list, radio whitelist, support tickets, Roblox lookup) with the linked user's permissions, channel notifications via outbox, one-time-code linking ([docs/discord-bot.md](docs/discord-bot.md)) | done; **not tested against real Discord** |
 | Standalone bot package (`pnpm bundle:bot` → single self-contained `bot.js` + source) | done; loads without node_modules (verified), **real Discord untested** |
 | MDT portal, Team dashboard (supervisor actions), one-command dev start with demo data | done |
 | Browser E2E tests (10 specs), public application page `/apply` | done |

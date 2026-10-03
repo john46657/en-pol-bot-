@@ -1,17 +1,37 @@
 import type { Api } from './api';
-import { renderOutbox, type EmbedData } from './format';
+import { applicationDecisionText, renderOutbox, type EmbedData } from './format';
 
 interface OutboxItem { id: string; type: string; channelKey: string; payload: Record<string, unknown> }
 export type Sender = (channelId: string, embed: EmbedData) => Promise<void>;
+export type DirectSender = (userId: string, text: string) => Promise<void>;
+/** Benachrichtigungen, die per Direktnachricht an eine Person gehen statt in einen Channel. */
+const DIRECT: Record<string, (p: Record<string, unknown>) => string> = { 'application.decided': applicationDecisionText };
 
 /**
  * Holt offene Benachrichtigungen aus der System-API, postet sie und quittiert.
  * Fehlgeschlagene Sendungen werden gemeldet (die API zählt Versuche und gibt nach 5 Fehlversuchen auf).
  */
-export async function pollOnce(api: Api, send: Sender, log: (m: string) => void = console.log): Promise<number> {
+export async function pollOnce(api: Api, send: Sender, log: (m: string) => void = console.log, dm?: DirectSender): Promise<number> {
   const [channels, items] = await Promise.all([api.service<Record<string, string | undefined>>('GET', '/bot/config'), api.service<OutboxItem[]>('GET', '/bot/outbox?limit=20')]);
   let sent = 0;
   for (const item of items) {
+    const direct = DIRECT[item.type];
+    if (direct) {
+      try {
+        const userId = String(item.payload.discordId ?? '');
+        if (!/^\d{15,25}$/.test(userId)) throw new Error('no Discord user id');
+        if (!dm) throw new Error('direct messages not available');
+        await dm(userId, direct(item.payload));
+        await api.service('POST', `/bot/outbox/${item.id}/ack`, { ok: true });
+        sent++;
+      } catch (e) {
+        // z. B. Nutzer hat DMs deaktiviert oder den Server verlassen
+        const msg = e instanceof Error ? e.message : 'send failed';
+        log(`outbox ${item.id} (${item.type}) direct message failed: ${msg}`);
+        await api.service('POST', `/bot/outbox/${item.id}/ack`, { ok: false, error: msg }).catch(() => undefined);
+      }
+      continue;
+    }
     // pro Art dürfen mehrere Channel-IDs (Komma-getrennt, auch auf mehreren Servern) hinterlegt sein
     const channelIds = (channels[item.channelKey] ?? '').split(/[\s,;]+/).filter(Boolean);
     const embed = renderOutbox(item.type, item.payload);
@@ -35,14 +55,14 @@ export async function pollOnce(api: Api, send: Sender, log: (m: string) => void 
 }
 
 /** Läuft dauerhaft; überlappende Durchläufe werden vermieden, Fehler (z. B. API kurz down) beenden die Schleife nicht. */
-export function startOutboxLoop(api: Api, send: Sender, seconds: number, log: (m: string) => void = console.log) {
+export function startOutboxLoop(api: Api, send: Sender, seconds: number, log: (m: string) => void = console.log, dm?: DirectSender) {
   let running = false;
   let lastError: string | undefined;
   const tick = async () => {
     if (running) return;
     running = true;
     try {
-      await pollOnce(api, send, log);
+      await pollOnce(api, send, log, dm);
       if (lastError) { log('outbox: connection to the API restored'); lastError = undefined; }
     } catch (e) {
       // Nur bei neuer/anderer Störung loggen – nicht alle 5 Sekunden dieselbe Zeile

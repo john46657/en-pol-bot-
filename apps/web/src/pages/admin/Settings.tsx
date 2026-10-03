@@ -6,7 +6,8 @@ import { Button, Card, ErrorState, Field, Input, PageHeader, Select, SkeletonRow
 
 interface S { settings: Record<string, unknown>; allowedKeys: string[] }
 const TEXT = [['org.name', 'Organisation name'], ['org.serverName', 'Server name'], ['org.timezone', 'Timezone (IANA)']] as const;
-const CHANNELS = [['dispatch', 'Dispatch channel ID (new/assigned incidents)'], ['wanted', 'Wanted channel ID (new wanted records)'], ['announcements', 'Announcements channel ID'], ['guildId', 'Server (guild) ID – optional']] as const;
+const CHANNELS = [['dispatch', 'Dispatch channel ID (new/assigned incidents)'], ['wanted', 'Wanted channel ID (new wanted records)'], ['announcements', 'Announcements channel ID'], ['applications', 'Applications channel ID (new applications)'], ['danger', 'Danger level channel ID (level changes)'],
+  ['teamlist', 'Team list channel ID (self-updating list, one channel)'], ['tickets', 'Support ticket category ID (one category)'], ['staffRole', 'Staff role ID (sees support tickets)'], ['radioRole', 'Radio role ID (given with the radio whitelist)'], ['guildId', 'Server (guild) ID – optional']] as const;
 const NUM = [['retention.sessionDays', 'Keep expired sessions (days)'], ['retention.loginHistoryDays', 'Keep login history (days)'], ['retention.readNotificationDays', 'Keep read notifications (days)']] as const;
 
 export function Settings() {
@@ -39,8 +40,12 @@ export function Settings() {
         </Card>
       </div>
       <Card title="Discord bot channels" className="mt-4" actions={manage && <Button disabled={save.isPending} onClick={() => save.mutate({ key: 'discord.channels', value: Object.fromEntries(CHANNELS.map(([k]) => [k, (drafts[`discord.${k}`] ?? String((q.data.settings['discord.channels'] as Record<string, string> | undefined)?.[k] ?? '')).trim()]).filter(([, v]) => v)) })}>Save channels</Button>}>
-        <p className="mb-3 text-xs text-muted">Empty = that notification type is disabled (nothing is queued). Several channels (also on different servers): separate the IDs with a comma. Everyone who can read the Discord channel will see the posts — use staff-only channels. Only summaries are posted (incident number/title/priority/location, wanted reason/subject, announcements).</p>
+        <p className="mb-3 text-xs text-muted">Empty = that notification type is disabled (nothing is queued). Several channels (also on different servers): separate the IDs with a comma. Everyone who can read the Discord channel will see the posts — use staff-only channels. Only summaries are posted (incident number/title/priority/location, wanted reason/subject, announcements, application number/Roblox name, danger level). Team list, ticket category and the two roles take a single ID.</p>
         <div className="grid gap-3 md:grid-cols-2">{CHANNELS.map(([k, label]) => <Field key={k} label={label}>{(id) => <Input id={id} inputMode="numeric" disabled={!manage} value={drafts[`discord.${k}`] ?? String((q.data.settings['discord.channels'] as Record<string, string> | undefined)?.[k] ?? '')} onChange={(e) => setDrafts({ ...drafts, [`discord.${k}`]: e.target.value })} placeholder="123456789012345678, 234567890123456789" />}</Field>)}</div>
+      </Card>
+      <Card title="Team list rank order" className="mt-4" actions={manage && <Button disabled={save.isPending} onClick={() => save.mutate({ key: 'team.rankOrder', value: val('team.rankOrder').split(',').map((r) => r.trim()).filter(Boolean) })}>Save order</Button>}>
+        <p className="mb-3 text-xs text-muted">Ranks in the Discord team list, highest first, separated by commas. Ranks not listed here follow alphabetically.</p>
+        <Input aria-label="Rank order" disabled={!manage} value={drafts['team.rankOrder'] ?? ((q.data.settings['team.rankOrder'] as string[] | undefined) ?? []).join(', ')} onChange={(e) => setDrafts({ ...drafts, 'team.rankOrder': e.target.value })} placeholder="Chief, Captain, Sergeant, Officer" />
       </Card>
     </>
   );
