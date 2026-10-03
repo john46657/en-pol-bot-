@@ -1,7 +1,8 @@
 import type { DiscordTokenSet, DiscordUser } from './types.js';
 
 /** Discord API + OAuth2 Endpoints. */
-const DISCORD_API = 'https://discord.com/api/v10';
+// DISCORD_API_BASE: nur für lokale Tests (scripts/fake-discord.mjs).
+const DISCORD_API = process.env['DISCORD_API_BASE'] ?? 'https://discord.com/api/v10';
 const DISCORD_TOKEN = 'https://discord.com/api/oauth2/token';
 
 /** Discord OAuth2-Scopes: identify für den User, guilds für Server-Mitgliedschaft. */

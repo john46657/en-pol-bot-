@@ -51,6 +51,10 @@ export class PermissionGuard implements CanActivate {
     if (!roleIds || roleIds.length === 0) {
       roleIds = await this.discordRoles.getMemberRoles(guildId, userId);
     }
+    // Besitzer, Administratoren und „Server verwalten“ dürfen immer (Bootstrap + Konsistenz mit der Serverauswahl).
+    const access = await this.discordRoles.getMemberAccess(guildId, userId, roleIds);
+    if (access.canManageGuild) return true;
+
     const guildRow = await prisma.guild.findUnique({
       where: { id: guildId },
       select: { rolePermissions: true },

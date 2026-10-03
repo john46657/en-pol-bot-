@@ -1,9 +1,11 @@
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { fetchGuildMemberRoles } from '@nexus/auth';
+import { TtlCache, getGuild, getGuildRoles } from '@nexus/discord';
+import { computeMemberAccess, type MemberAccess } from './member-access.js';
 
 /**
- * Discord-Rollen eines Users (§114: authoritativ serverseitig).
+ * Discord-Rollen und -Rechte eines Users (§114: authoritativ serverseitig).
  *
  * Der Bot liest die Mitgliedschaft über seinen Token – Frontend-Angaben sind
  * nie vertrauenswürdig. Ergebnisse werden kurz (60s) im Speicher gehalten,
@@ -12,6 +14,7 @@ import { fetchGuildMemberRoles } from '@nexus/auth';
 @Injectable()
 export class DiscordRolesService {
   private readonly cache = new Map<string, { roles: string[]; expiresAt: number }>();
+  private readonly discordCache = new TtlCache();
   private readonly ttlMs = 60_000;
 
   constructor(private readonly config: ConfigService) {}
@@ -29,5 +32,25 @@ export class DiscordRolesService {
     const roles = await fetchGuildMemberRoles({ guildId, userId, botToken });
     this.cache.set(key, { roles, expiresAt: Date.now() + this.ttlMs });
     return roles;
+  }
+
+  /** Besitzer/Administrator/„Server verwalten“ – ohne Bot-Token oder bei Discord-Fehlern: kein Zugriff (fail closed). */
+  async getMemberAccess(
+    guildId: string,
+    userId: string,
+    memberRoleIds: string[],
+  ): Promise<MemberAccess> {
+    const none: MemberAccess = { isOwner: false, isAdmin: false, canManageGuild: false };
+    const botToken = this.config.get<string>('DISCORD_TOKEN');
+    if (!botToken) return none;
+    try {
+      const [guild, roles] = await Promise.all([
+        getGuild(botToken, guildId, this.discordCache),
+        getGuildRoles(botToken, guildId, this.discordCache),
+      ]);
+      return computeMemberAccess({ guildId, ownerId: guild.ownerId, userId, memberRoleIds, roles });
+    } catch {
+      return none;
+    }
   }
 }

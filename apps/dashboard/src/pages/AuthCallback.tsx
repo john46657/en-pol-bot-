@@ -2,10 +2,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router';
 
-/**
- * Die API hängt den Token zusätzlich an die URL (für Nicht-Browser-Clients). Der Browser nutzt das
- * httpOnly-Cookie – der Token wird deshalb sofort aus der Adresszeile/History entfernt und nie gespeichert.
- */
+/** Die Session liegt als httpOnly-Cookie; hier wird nur die Benutzer-Abfrage aufgefrischt und weitergeleitet. */
 export function AuthCallback() {
   const nav = useNavigate();
   const qc = useQueryClient();

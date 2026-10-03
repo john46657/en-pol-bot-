@@ -1,6 +1,13 @@
-import { BadRequestException, Controller, Get, Query, Res } from '@nestjs/common';
+import { BadRequestException, Controller, Get, Post, Query, Req, Res } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
-import type { Response } from 'express';
+import type { Request, Response } from 'express';
+import { userRepository } from '@nexus/database';
+import {
+  OAUTH_STATE_COOKIE,
+  OAUTH_STATE_TTL_MS,
+  generateState,
+  verifyState,
+} from './oauth-state.js';
 import { Public } from '../../common/decorators/public.decorator.js';
 import { CurrentUser } from '../../common/decorators/current-user.decorator.js';
 import type { RequestUser } from '../../common/decorators/current-user.decorator.js';
@@ -24,37 +31,84 @@ export class AuthController {
     private readonly guilds: GuildService,
   ) {}
 
-  /** Startet den Discord-Login (klassische 302 auf die Authorize-URL). */
+  /** Startet den Discord-Login: erzeugt ein zufälliges `state` (Cookie) und leitet zu Discord weiter. */
   @Get('discord')
   @Public()
-  login(@Res() res: Response, @Query('state') state?: string): void {
+  login(@Res() res: Response): void {
+    const state = generateState();
+    res.cookie(OAUTH_STATE_COOKIE, state, {
+      ...this.cookieBase(),
+      maxAge: OAUTH_STATE_TTL_MS,
+      sameSite: 'lax',
+    });
     res.redirect(this.authService.getAuthorizationUrl(state));
   }
 
   /**
-   * OAuth2-Callback: tauscht den Code gegen einen Session-JWT, setzt ihn als
-   * httpOnly-Cookie und leitet ins Dashboard weiter (Token zusätzlich als
-   * Query-Parameter für Nicht-Browser-Clients).
+   * OAuth2-Callback: prüft `state`, tauscht den Code gegen einen Session-JWT, setzt ihn als
+   * httpOnly-Cookie und leitet ins Dashboard. Der Token steht nie in der URL. Fehler und Abbruch
+   * durch den User führen zurück zur Login-Seite des Dashboards.
    */
   @Get('discord/callback')
   @Public()
-  async callback(@Query('code') code: string | undefined, @Res() res: Response): Promise<void> {
-    if (!code) {
-      throw new BadRequestException('Authorization Code fehlt.');
-    }
+  async callback(
+    @Req() req: Request,
+    @Res() res: Response,
+    @Query('code') code?: string,
+    @Query('state') state?: string,
+    @Query('error') error?: string,
+  ): Promise<void> {
+    const dashboardUrl =
+      this.config.get<string>('DASHBOARD_URL')?.split(',')[0] ?? 'http://localhost:3001';
+    const fail = (reason: string): void => res.redirect(`${dashboardUrl}/login?error=${reason}`);
+    const expected: unknown = req.cookies?.[OAUTH_STATE_COOKIE];
+    res.clearCookie(OAUTH_STATE_COOKIE, this.cookieBase());
 
-    const login: LoginResult = await this.authService.handleCallback(code);
-    const dashboardUrl = this.config.get<string>('DASHBOARD_URL') ?? 'http://localhost:3001';
-    const isProd = this.config.get<string>('NODE_ENV') === 'production';
+    if (error) return fail('denied');
+    if (!verifyState(expected, state)) return fail('state');
+    if (!code) return fail('failed');
+
+    let login: LoginResult;
+    try {
+      login = await this.authService.handleCallback(code);
+    } catch {
+      return fail('failed');
+    }
+    await userRepository
+      .upsert({
+        id: login.user.id,
+        username: login.user.username,
+        globalName: login.user.globalName,
+        avatarUrl: login.user.avatar
+          ? `https://cdn.discordapp.com/avatars/${login.user.id}/${login.user.avatar}.png`
+          : null,
+      })
+      .catch(() => undefined);
 
     res.cookie('nexus_session', login.token, {
-      httpOnly: true,
-      secure: isProd,
-      sameSite: isProd ? 'none' : 'lax',
+      ...this.cookieBase(),
       maxAge: 7 * 24 * 60 * 60 * 1000,
     });
+    res.redirect(`${dashboardUrl}/auth/callback`);
+  }
 
-    res.redirect(`${dashboardUrl}/auth/callback?token=${encodeURIComponent(login.token)}`);
+  /** Beendet die Session (Cookie löschen). */
+  @Post('logout')
+  @Public()
+  logout(@Res({ passthrough: true }) res: Response): { ok: true } {
+    res.clearCookie('nexus_session', this.cookieBase());
+    return { ok: true };
+  }
+
+  private cookieBase() {
+    const isProd =
+      (this.config.get<string>('NODE_ENV') ?? process.env['NODE_ENV']) === 'production';
+    return {
+      httpOnly: true,
+      secure: isProd,
+      sameSite: isProd ? ('none' as const) : ('lax' as const),
+      path: '/',
+    };
   }
 
   /** Aktuelle Session – zeigt, wer eingeloggt ist (geschützt). */

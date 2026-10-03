@@ -1,8 +1,14 @@
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Navigate, Outlet } from 'react-router';
 import { api, ApiError, userAvatar, type Me } from '../api';
 
 export function RequireAuth() {
+  const qc = useQueryClient();
+  const logout = async () => {
+    await api('/auth/logout', { method: 'POST' }).catch(() => undefined);
+    qc.clear();
+    window.location.assign('/login');
+  };
   const me = useQuery({ queryKey: ['me'], queryFn: () => api<Me>('/auth/me') });
   if (me.isLoading)
     return (
@@ -29,6 +35,9 @@ export function RequireAuth() {
         <span className="who">
           {avatar && <img src={avatar} alt="" width={24} height={24} />}
           {me.data.globalName ?? me.data.username ?? me.data.id}
+          <button className="btn" onClick={() => void logout()}>
+            Abmelden
+          </button>
         </span>
       </header>
       <Outlet />
