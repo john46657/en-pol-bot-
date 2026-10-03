@@ -2,7 +2,7 @@
 
 > 🤖 **Bot-Start über GitHub/Panel:** `bot.py` + `bot.js` im Hauptverzeichnis sind der fertig gebaute Discord-Bot (`bot.js` wird aus `apps/bot` mit `pnpm bundle:bot` erzeugt – nicht von Hand ändern). Startbefehl: `python3 bot.py` oder `node bot.js`; Einstellungen in einer `.env` (Vorlage: `apps/bot`-Doku in [docs/discord-bot.md](docs/discord-bot.md)).
 
-> 📦 **Der frühere Python-Bot** (Emden RP Bot: `bot.py`, `database.py`, …) liegt unverändert im Ordner [`archiv-alter-python-bot/`](archiv-alter-python-bot). (`alter-python-bot/bot.py` ist nur eine Weiterleitung auf den neuen Bot, falls ein Panel diesen Pfad fest startet.)
+> 📦 **Der frühere Python-Bot** (Emden RP Bot: `bot.py`, `database.py`, …) liegt unverändert im Ordner [`archiv-alter-python-bot/`](archiv-alter-python-bot). (`alter-python-bot/bot.py` ist nur eine Weiterleitung auf den neuen Bot, falls ein Panel diesen Pfad fest startet.) Was davon schon im neuen System steckt und was fehlt: [docs/migration-vom-alten-bot.md](docs/migration-vom-alten-bot.md).
 
 Police CAD / MDT / Dispatch for Emergency Response: Liberty County (Roblox). Police and dispatch only.
 Stack: NestJS 11 · Prisma 6 · PostgreSQL · React 19 · Vite · Tailwind 4 · TanStack Query · Socket.IO.
