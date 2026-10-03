@@ -6,7 +6,7 @@ import type {
   ModalSubmitInteraction,
 } from 'discord.js';
 import { ActionRowBuilder, ModalBuilder, TextInputBuilder, TextInputStyle } from 'discord.js';
-import { parseCustomId, CustomIdAction, isValidSnowflake } from '../discord/custom-ids.js';
+import { parseCustomId, CustomIdAction, isValidId } from '../discord/custom-ids.js';
 import { log } from '../logger.js';
 import { DMPhase, SubmissionStatus } from '@nexus/types';
 import { prisma } from '@nexus/database';
@@ -122,7 +122,7 @@ async function startApplicationFromPanel(
   interaction: MessageComponentInteraction,
   applicationId: string,
 ): Promise<void> {
-  if (!interaction.guild || !isValidSnowflake(applicationId)) {
+  if (!interaction.guild || !isValidId(applicationId)) {
     await interaction
       .reply({ content: '⚠️ Ungültige Bewerbung.', ephemeral: true })
       .catch(() => undefined);
@@ -180,7 +180,7 @@ async function loadFlowContextFor(applicationId: string): Promise<FlowContext | 
     applicationId: application.id,
     applicationName: application.name,
     versionQuestions: [],
-    messages: {},
+    messages: ((application.config as { messages?: Record<string, string> } | null)?.messages) ?? {},
   };
 }
 
@@ -190,7 +190,7 @@ async function cancelSubmission(
   interaction: MessageComponentInteraction,
   submissionId: string,
 ): Promise<void> {
-  if (!isValidSnowflake(submissionId)) return;
+  if (!isValidId(submissionId)) return;
   const submission = await prisma.applicationSubmission.findFirst({ where: { id: submissionId } });
   if (!submission || submission.userId !== interaction.user.id) return;
 
@@ -212,7 +212,7 @@ async function pauseSubmission(
   interaction: MessageComponentInteraction,
   submissionId: string,
 ): Promise<void> {
-  if (!isValidSnowflake(submissionId)) return;
+  if (!isValidId(submissionId)) return;
   const submission = await prisma.applicationSubmission.findFirst({ where: { id: submissionId } });
   if (!submission || submission.userId !== interaction.user.id) return;
 
@@ -237,7 +237,7 @@ async function resumeSubmission(
   interaction: MessageComponentInteraction,
   submissionId: string,
 ): Promise<void> {
-  if (!isValidSnowflake(submissionId)) return;
+  if (!isValidId(submissionId)) return;
   const submission = await prisma.applicationSubmission.findFirst({ where: { id: submissionId } });
   if (!submission || submission.userId !== interaction.user.id) return;
 
@@ -259,7 +259,7 @@ async function goBack(
   interaction: MessageComponentInteraction,
   submissionId: string,
 ): Promise<void> {
-  if (!isValidSnowflake(submissionId)) return;
+  if (!isValidId(submissionId)) return;
   const state = await prisma.applicationDMState.findUnique({ where: { submissionId } });
   if (!state || state.userId !== interaction.user.id) return;
 
@@ -282,7 +282,7 @@ async function startEdit(
   submissionId: string,
   questionId: string,
 ): Promise<void> {
-  if (!isValidSnowflake(submissionId) || !questionId) return;
+  if (!isValidId(submissionId) || !questionId) return;
   const dm = interaction.channel;
   if (!dm || !dm.isDMBased()) return;
   await editAnswer(dm as never, submissionId, questionId);
@@ -295,7 +295,7 @@ async function submitFromSummary(
   interaction: MessageComponentInteraction,
   submissionId: string,
 ): Promise<void> {
-  if (!isValidSnowflake(submissionId)) return;
+  if (!isValidId(submissionId)) return;
   const submission = await prisma.applicationSubmission.findFirst({
     where: { id: submissionId, userId: interaction.user.id },
   });
@@ -339,7 +339,7 @@ async function reviewDecide(
   decision: 'accept' | 'deny',
   reason?: string,
 ): Promise<void> {
-  if (!interaction.guild || !isValidSnowflake(submissionId)) return;
+  if (!interaction.guild || !isValidId(submissionId)) return;
   const member = await interaction.guild.members.fetch(interaction.user.id).catch(() => null);
   if (!member) return;
 
@@ -366,7 +366,7 @@ function reviewDecideWithReasonModal(
   submissionId: string,
   decision: 'accept' | 'deny',
 ): Promise<void> | undefined {
-  if (!interaction.guild || !isValidSnowflake(submissionId)) return undefined;
+  if (!interaction.guild || !isValidId(submissionId)) return undefined;
   const modal = new ModalBuilder()
     .setCustomId(`nexus:review:${decision === 'accept' ? 'accept_r' : 'deny_r'}:${submissionId}`)
     .setTitle(decision === 'accept' ? '✅ Accept mit Grund' : '🔴 Deny mit Grund');
@@ -386,7 +386,7 @@ async function reviewHistory(
   interaction: MessageComponentInteraction,
   submissionId: string,
 ): Promise<void> {
-  if (!interaction.guild || !isValidSnowflake(submissionId)) return;
+  if (!interaction.guild || !isValidId(submissionId)) return;
   const embed = await buildHistoryEmbed(interaction.guild.id, submissionId);
   await interaction.reply({ embeds: [embed], ephemeral: true }).catch(() => undefined);
 }
@@ -395,7 +395,7 @@ function reviewNoteModal(
   interaction: MessageComponentInteraction,
   submissionId: string,
 ): Promise<void> | undefined {
-  if (!interaction.guild || !isValidSnowflake(submissionId)) return undefined;
+  if (!interaction.guild || !isValidId(submissionId)) return undefined;
   const modal = new ModalBuilder()
     .setCustomId(`nexus:review:note:${submissionId}`)
     .setTitle('📝 Interne Notiz');

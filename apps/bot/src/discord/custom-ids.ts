@@ -49,3 +49,10 @@ const SNOWFLAKE_PATTERN = /^\d{17,20}$/;
 export function isValidSnowflake(value: string | undefined): boolean {
   return !!value && SNOWFLAKE_PATTERN.test(value);
 }
+
+/** Datenbank-IDs (cuid) in Custom-IDs – nur Format-Hinweis, die Autorität bleibt die guild-scoped DB-Abfrage (§114). */
+const DB_ID_PATTERN = /^[A-Za-z0-9_-]{10,40}$/;
+
+export function isValidId(value: string | undefined): boolean {
+  return !!value && DB_ID_PATTERN.test(value);
+}
