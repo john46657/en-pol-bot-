@@ -30,6 +30,7 @@ const sharedPkg = json('packages/shared/package.json');
 writeFileSync(path.join(bundle, 'packages/shared/package.json'), JSON.stringify({ name: sharedPkg.name, version: sharedPkg.version, main: sharedPkg.main, module: sharedPkg.module, types: sharedPkg.types, exports: sharedPkg.exports }, null, 2));
 copy('scripts/hosting/start.js', 'start.js');
 copy('scripts/hosting/env.example', '.env.example');
+copy('scripts/hosting/bot.py', 'bot.py'); // Starter für Panels, die nur "python3 bot.py" können
 copy('docs/hosting-bot-hosting.md', 'docs/hosting-bot-hosting.md');
 copy('docs/discord-bot.md', 'docs/discord-bot.md');
 
@@ -47,6 +48,8 @@ writeFileSync(path.join(bundle, 'LIES-MICH.txt'), `ENRP NEXUS – Hosting-Paket
 =========================
 1. Alle Dateien (nicht den Ordner selbst) in dein Panel hochladen und entpacken.
 2. Startdatei:  start.js   |   Startbefehl:  node start.js   (oder: npm start)
+   Falls das Panel nur Python kann ("python3 bot.py"): die mitgelieferte bot.py lädt einmalig Node.js und startet start.js.
+   (Dann muss 'npm install' trotzdem laufen – im Panel unter "Packages"/Shell:  .node/bin/npm install  – oder besser: auf Node.js umstellen.)
 3. Umgebungsvariablen setzen (mindestens DATABASE_URL) – Vorlage: .env.example
 4. Server starten. Beim ersten Start installiert das Panel die Pakete (npm install, kann einige Minuten dauern).
 5. In der Konsole erscheint "Starte API + Web auf Port …" und ggf. das Admin-Passwort (EINMALIG).

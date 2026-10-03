@@ -48,7 +48,9 @@ Wann brauchst du das? Wenn das System (API + Web) schon irgendwo läuft und du N
 
 1. Im Panel muss der Server auf NODE.JS laufen (Docker-Image/Egg "Node.js 22" oder neuer) – NICHT Python!
    Dateien hochladen und entpacken, sodass bot.js direkt im Hauptordner liegt. node_modules / npm install sind NICHT nötig.
-2. Startdatei: bot.js   |   Startbefehl: node bot.js   (nicht: python3 bot.py)
+2. Startdatei: bot.js   |   Startbefehl: node bot.js
+   NOTFALL-WEG: Läuft dein Server nur mit Python (Startbefehl "python3 bot.py"), funktioniert das trotzdem: die mitgelieferte bot.py
+   lädt einmalig Node.js von nodejs.org (geprüft per Prüfsumme) und startet dann bot.js. Dafür muss das Panel Internetzugriff haben.
 3. Umgebungsvariablen setzen (Vorlage: .env.example): DISCORD_TOKEN, BOT_API_TOKEN, API_URL, optional DISCORD_GUILD_ID.
 4. Starten. Erwartet in der Konsole:  "Logged in as …"  und  "… slash commands registered …".
    Der Bot startet AUCH DANN, wenn das System (API) noch nicht läuft – er meldet es nur im Log. Du kannst ihn also zuerst allein starten.
@@ -62,6 +64,7 @@ Quellcode: src/ (TypeScript). Neue Befehle: src/commands/index.ts.
 Das System gibt dem Bot nur Rechte, die der verknüpfte Benutzer selbst hat (Verknüpfung per Einmal-Code im Web).
 `);
 cpSync(path.join(root, 'docs/discord-bot.md'), path.join(dir, 'docs/discord-bot.md'), { recursive: true });
+cpSync(path.join(root, 'scripts/hosting/bot.py'), path.join(dir, 'bot.py')); // Starter für Python-Panels
 // flach zippen: bot.js liegt nach dem Entpacken direkt im Hauptordner (kein Unterordner)
 const z = spawnSync('zip', ['-r', '-q', path.join(out, 'enrp-nexus-bot.zip'), '.'], { cwd: dir, stdio: 'inherit' });
 if (z.status !== 0) process.exit(1);
