@@ -19,7 +19,8 @@
     "e2e": "playwright test",
     "dev:all": "node scripts/dev.mjs",
     "demo": "node scripts/demo-data.mjs",
-    "bundle:hosting": "node scripts/build-hosting-bundle.mjs"
+    "bundle:hosting": "node scripts/build-hosting-bundle.mjs",
+    "bundle:bot": "node scripts/build-bot-bundle.mjs"
   },
   "pnpm": {
     "onlyBuiltDependencies": [
@@ -35,6 +36,7 @@
   "devDependencies": {
     "@playwright/test": "^1.63.0",
     "@types/node": "^22.10.0",
+    "esbuild": "^0.28.2",
     "eslint": "^9.30.0",
     "prettier": "^3.6.2",
     "typescript": "~5.9.3",

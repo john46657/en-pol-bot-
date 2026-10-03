@@ -59,6 +59,9 @@ Jede Person: Web → Chat-Symbol oben rechts („Discord verknüpfen“) → *Co
 - Falsche Tokens erzeugen `INVALID_TOKEN`-Security-Events.
 - Bekannte Grenzen: Wer das `BOT_API_TOKEN` besitzt **und** eine verknüpfte Discord-ID kennt, kann als dieser Benutzer die Allowlist-Routen nutzen – Token wie ein Passwort behandeln (nur in `.env`, Rechte 600). Channel-Inhalte sind für alle sichtbar, die den Channel lesen können.
 
+## Bot allein hosten (eigenständiges Paket)
+`pnpm bundle:bot` erzeugt `dist-bot/enrp-nexus-bot.zip`: eine einzige lauffähige **`bot.js`** (alles inklusive, **kein `npm install`**) plus Quellcode. Startbefehl `node bot.js`; Variablen `DISCORD_TOKEN`, `BOT_API_TOKEN`, `API_URL` (+ optional `DISCORD_GUILD_ID`). Sinnvoll, wenn das System (API + Web) woanders läuft. Im kompletten Hosting-Paket ([hosting-bot-hosting.md](hosting-bot-hosting.md)) ist der Bot bereits enthalten.
+
 ## Neuen Befehl hinzufügen
 1. In `apps/bot/src/commands/index.ts` ein Objekt zu `COMMANDS` hinzufügen (`name`, `description`, `options`, `run`). `run` bekommt `{discordId, opts, api}` und liefert eine `Reply` – nutze `ctx.api.asUser(...)`.
 2. Falls der Befehl eine **neue API-Route** braucht: Route in `BOT_USER_ROUTES` in `apps/api/src/authz/guards.ts` freigeben (bewusst, einzeln!).

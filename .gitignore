@@ -12,3 +12,4 @@ playwright-report
 .pgdata-e2e
 backups
 dist-hosting
+dist-bot
