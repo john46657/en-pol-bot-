@@ -2,7 +2,7 @@ import { Client, EmbedBuilder, GatewayIntentBits, MessageFlags, SlashCommandBuil
 import { HttpApi } from './api';
 import { byName, COMMANDS, mapError } from './commands';
 import type { CommandDef } from './commands/types';
-import { loadConfig, loadDotEnv } from './config';
+import { guildIds, loadConfig, loadDotEnv } from './config';
 import type { EmbedData, Reply } from './format';
 import { startOutboxLoop } from './outbox';
 
@@ -65,9 +65,16 @@ client.once('clientReady', async (c) => {
   console.log(`Logged in as ${c.user.tag}`);
   void checkApi();
   const json = COMMANDS.map(toBuilder);
-  if (cfg.DISCORD_GUILD_ID) await c.application.commands.set(json, cfg.DISCORD_GUILD_ID);
-  else await c.application.commands.set(json);
-  console.log(`${json.length} slash commands registered ${cfg.DISCORD_GUILD_ID ? `for guild ${cfg.DISCORD_GUILD_ID}` : 'globally (can take up to an hour to appear)'}`);
+  const guilds = guildIds(cfg);
+  if (guilds.length) {
+    for (const g of guilds) {
+      try { await c.application.commands.set(json, g); console.log(`${json.length} slash commands registered for guild ${g}`); }
+      catch (e) { console.error(`could not register commands for guild ${g} (is the bot invited there with the applications.commands scope?): ${e instanceof Error ? e.message : e}`); }
+    }
+  } else {
+    await c.application.commands.set(json);
+    console.log(`${json.length} slash commands registered globally (can take up to an hour to appear)`);
+  }
   startOutboxLoop(api, async (channelId, embed) => {
     const ch = await client.channels.fetch(channelId);
     if (!ch?.isSendable()) throw new Error(`channel ${channelId} is not a text channel the bot can post in`);

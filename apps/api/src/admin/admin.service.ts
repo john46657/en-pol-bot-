@@ -8,6 +8,8 @@ import { customFieldsConfig } from '../studio/custom-fields';
 import { ACCENTS } from '../studio/studio.service';
 
 const formField = z.object({ key: z.string().regex(/^[a-zA-Z][\w]{0,40}$/), label: z.string().min(1).max(100), required: z.boolean(), maxLength: z.number().int().min(1).max(5000) });
+/** Eine oder mehrere Discord-IDs, mit Komma getrennt (z. B. Channels auf mehreren Servern). */
+const idList = () => z.string().regex(/^\d{15,25}(\s*,\s*\d{15,25})*$/).optional();
 /** Nur bekannte Settings-Keys mit striktem Schema werden akzeptiert. */
 export const SETTING_SCHEMAS = {
   'org.name': z.string().min(1).max(100),
@@ -20,7 +22,7 @@ export const SETTING_SCHEMAS = {
   'dashboard.defaultLayout': z.array(z.object({ widget: z.string().max(40), visible: z.boolean(), order: z.number().int() })).max(50),
   'studio.customFields': customFieldsConfig,
   'theme.accent': z.enum(ACCENTS),
-  'discord.channels': z.object({ guildId: z.string().regex(/^\d{15,25}$/).optional(), dispatch: z.string().regex(/^\d{15,25}$/).optional(), wanted: z.string().regex(/^\d{15,25}$/).optional(), announcements: z.string().regex(/^\d{15,25}$/).optional() }),
+  'discord.channels': z.object({ guildId: idList(), dispatch: idList(), wanted: idList(), announcements: idList() }),
   'application.form': z.array(formField).min(1).max(30),
 } as const;
 export type SettingKey = keyof typeof SETTING_SCHEMAS;

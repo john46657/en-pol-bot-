@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 import { BotApiError, HttpApi, type Api } from '../src/api';
 import { byName, COMMANDS, mapError } from '../src/commands';
-import { loadConfig, parseDotEnv } from '../src/config';
+import { guildIds, loadConfig, parseDotEnv } from '../src/config';
 import { clip, plain, renderOutbox } from '../src/format';
 import { pollOnce, startOutboxLoop } from '../src/outbox';
 
@@ -155,7 +155,7 @@ describe('outbox poller', () => {
     expect(n).toBe(1);
     expect(sent).toEqual(['C1']);
     expect(acks.map((a) => [a.path, a.body.ok])).toEqual([['/bot/outbox/1/ack', true], ['/bot/outbox/2/ack', false], ['/bot/outbox/3/ack', false]]);
-    expect(acks[1]!.body.error).toBe('Missing Access');
+    expect(acks[1]!.body.error).toBe('C2: Missing Access');
     expect(acks[2]!.body.error).toContain('not configured');
   });
 });
@@ -306,5 +306,33 @@ describe('.env support', () => {
   });
   it('rejects template placeholders with a clear message instead of a Discord error', () => {
     expect(() => loadConfig({ DISCORD_TOKEN: 'HIER_BOT_TOKEN_EINFUEGEN', DISCORD_GUILD_ID: 'HIER_SERVER_ID_EINFUEGEN', BOT_API_TOKEN: 'y'.repeat(32) })).toThrow(/DISCORD_TOKEN, DISCORD_GUILD_ID.*HIER_/);
+  });
+});
+
+describe('multiple servers', () => {
+  it('accepts one or several guild ids (comma/space separated) and de-duplicates', () => {
+    const cfg = loadConfig({ DISCORD_TOKEN: 'x'.repeat(30), BOT_API_TOKEN: 'y'.repeat(32), DISCORD_GUILD_ID: '1213940450260684801, 1213940450260684802;1213940450260684801' });
+    expect(guildIds(cfg)).toEqual(['1213940450260684801', '1213940450260684802']);
+    expect(guildIds(loadConfig({ DISCORD_TOKEN: 'x'.repeat(30), BOT_API_TOKEN: 'y'.repeat(32) }))).toEqual([]);
+    expect(() => loadConfig({ DISCORD_TOKEN: 'x'.repeat(30), BOT_API_TOKEN: 'y'.repeat(32), DISCORD_GUILD_ID: '123,abc' })).toThrow(/DISCORD_GUILD_ID/);
+  });
+  it('outbox posts to every configured channel; succeeds if at least one is reachable; fails (retry) only if none is', async () => {
+    const item = { id: 'o1', type: 'announcement', channelKey: 'announcements', payload: { body: 'hi', author: 'A' } };
+    const acks: boolean[] = [];
+    const api: Api = {
+      async asUser() { throw new Error('unused'); },
+      async service(_m, path, body) {
+        if (path === '/bot/config') return { announcements: '111111111111111111, 222222222222222222' } as never;
+        if (path.startsWith('/bot/outbox?')) return [item] as never;
+        acks.push((body as { ok: boolean }).ok); return undefined as never;
+      },
+    };
+    const sent: string[] = [];
+    expect(await pollOnce(api, async (ch) => { sent.push(ch); }, () => undefined)).toBe(1);
+    expect(sent).toEqual(['111111111111111111', '222222222222222222']);
+    sent.length = 0;
+    expect(await pollOnce(api, async (ch) => { if (ch.startsWith('2')) throw new Error('Missing Access'); sent.push(ch); }, () => undefined)).toBe(1); // ein Channel reicht
+    expect(await pollOnce(api, async () => { throw new Error('Missing Access'); }, () => undefined)).toBe(0);
+    expect(acks).toEqual([true, true, false]);
   });
 });

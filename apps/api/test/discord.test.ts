@@ -138,7 +138,8 @@ describe('outbox', () => {
     expect(await prisma.discordOutbox.count()).toBe(0); // kein Channel → kein Datenanfall
 
     expect((await disp.put('/api/v1/admin/settings/discord.channels').send({ value: { dispatch: 'abc' } })).status).toBe(400); // ungültige ID
-    expect((await disp.put('/api/v1/admin/settings/discord.channels').send({ value: { dispatch: '200000000000000001', wanted: '200000000000000002', announcements: '200000000000000003' } })).status).toBe(200);
+    expect((await disp.put('/api/v1/admin/settings/discord.channels').send({ value: { dispatch: '200000000000000001, abc' } })).status).toBe(400); // eine ungültige in der Liste
+    expect((await disp.put('/api/v1/admin/settings/discord.channels').send({ value: { dispatch: '200000000000000001, 200000000000000009', wanted: '200000000000000002', announcements: '200000000000000003' } })).status).toBe(200);
     const inc = (await disp.post('/api/v1/incidents').send({ title: 'Bank alarm', priority: 'HIGH', location: 'Main St' })).body;
     const unit = (await disp.post('/api/v1/dispatch/units').send({ callsign: 'dc-1' })).body;
     await disp.put(`/api/v1/dispatch/units/${unit.id}/status`).send({ status: 'AVAILABLE' });
@@ -154,7 +155,7 @@ describe('outbox', () => {
     expect(list[2]).toMatchObject({ channelKey: 'wanted', payload: { subject: 'Outbox_Guy', kind: 'person' } });
     expect(JSON.stringify(list)).not.toMatch(/robloxUserId|passwordHash|notes/);
 
-    expect((await http().get('/api/v1/bot/config').set(bot())).body).toMatchObject({ dispatch: '200000000000000001' });
+    expect((await http().get('/api/v1/bot/config').set(bot())).body).toMatchObject({ dispatch: '200000000000000001, 200000000000000009' });
     expect((await http().post(`/api/v1/bot/outbox/${list[0]!.id}/ack`).set(bot()).send({ ok: true })).status).toBe(204);
     expect((await http().post(`/api/v1/bot/outbox/${list[0]!.id}/ack`).set(bot()).send({ ok: true })).status).toBe(404); // schon quittiert
     for (let i = 0; i < 5; i++) expect((await http().post(`/api/v1/bot/outbox/${list[1]!.id}/ack`).set(bot()).send({ ok: false, error: 'Missing Access' })).status).toBe(204);

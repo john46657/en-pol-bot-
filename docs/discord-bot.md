@@ -52,7 +52,7 @@ Gleiches Geheimnis in API **und** Bot (`openssl rand -hex 32`):
 ```
 BOT_API_TOKEN=<64 Hex-Zeichen>      # API + Bot
 DISCORD_TOKEN=<Token aus Schritt 1> # nur Bot
-DISCORD_GUILD_ID=<Server-ID>        # optional, empfohlen: Commands erscheinen sofort
+DISCORD_GUILD_ID=<Server-ID>        # optional, empfohlen: Commands erscheinen sofort. Mehrere Server: IDs mit Komma trennen (111…,222…)
 ```
 - **Lokal testen:** `DISCORD_TOKEN=… DISCORD_GUILD_ID=… pnpm dev:all` startet den Bot automatisch mit (mit einem festen Entwicklungs-Geheimnis; nur lokal verwenden).
 - **Auf dem VPS:** Werte in `.env` eintragen (`BOT_API_TOKEN` erzeugt `setup-server.sh` schon), dann
@@ -64,6 +64,11 @@ DISCORD_GUILD_ID=<Server-ID>        # optional, empfohlen: Commands erscheinen s
 
 ### 3. Konten verknüpfen
 Jede Person: Web → Chat-Symbol oben rechts („Discord verknüpfen“) → *Code erzeugen* → in Discord `/verknuepfen code:ABCD-EFGH` (10 Minuten gültig, einmal verwendbar). Lösen: im selben Dialog, oder ein Admin über `DELETE /api/v1/discord/links/:userId` (Benutzerverwaltung). Deaktivierte Benutzer verlieren sofort den Bot-Zugriff.
+
+## Mehrere Discord-Server
+- **Befehle:** `DISCORD_GUILD_ID=111111111111111111,222222222222222222` – der Bot registriert die Slash-Commands auf jedem genannten Server (er muss auf allen eingeladen sein, mit Scope `applications.commands`). Schlägt einer fehl, steht das im Log, die anderen laufen weiter.
+- **Benachrichtigungen:** Unter *Admin → Settings → Discord bot channels* pro Art (Dispatch/Wanted/Announcements) mehrere Channel-IDs mit Komma eintragen, auch auf verschiedenen Servern. Gesendet wird an alle; die Nachricht gilt als zugestellt, sobald mindestens ein Channel erreicht wurde.
+- Die Verknüpfung (Discord-Konto ↔ Benutzer) ist serverübergreifend: ein Konto, alle Server.
 
 ## Sicherheitsmodell
 - Der Bot authentifiziert sich mit `Authorization: Bot <BOT_API_TOKEN>` (konstante Zeit verglichen). Ohne gesetztes Token ist **jeder** Bot-Zugang in der API deaktiviert.

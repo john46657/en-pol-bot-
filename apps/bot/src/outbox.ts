@@ -12,12 +12,17 @@ export async function pollOnce(api: Api, send: Sender, log: (m: string) => void 
   const [channels, items] = await Promise.all([api.service<Record<string, string | undefined>>('GET', '/bot/config'), api.service<OutboxItem[]>('GET', '/bot/outbox?limit=20')]);
   let sent = 0;
   for (const item of items) {
-    const channelId = channels[item.channelKey];
+    // pro Art dürfen mehrere Channel-IDs (Komma-getrennt, auch auf mehreren Servern) hinterlegt sein
+    const channelIds = (channels[item.channelKey] ?? '').split(/[\s,;]+/).filter(Boolean);
     const embed = renderOutbox(item.type, item.payload);
     try {
-      if (!channelId) throw new Error(`channel "${item.channelKey}" not configured`);
+      if (!channelIds.length) throw new Error(`channel "${item.channelKey}" not configured`);
       if (!embed) throw new Error(`unknown type "${item.type}"`);
-      await send(channelId, embed);
+      const results = await Promise.allSettled(channelIds.map((id) => send(id, embed)));
+      const failed = results.flatMap((r, i) => (r.status === 'rejected' ? [`${channelIds[i]}: ${r.reason instanceof Error ? r.reason.message : r.reason}`] : []));
+      failed.forEach((f) => log(`outbox ${item.id}: send failed for channel ${f}`));
+      // Erfolg, wenn mindestens ein Channel erreicht wurde (sonst Wiederholung – würde die erfolgreichen doppelt beliefern)
+      if (failed.length === channelIds.length) throw new Error(failed[0]);
       await api.service('POST', `/bot/outbox/${item.id}/ack`, { ok: true });
       sent++;
     } catch (e) {
