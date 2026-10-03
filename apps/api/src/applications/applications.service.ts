@@ -3,6 +3,7 @@ import { APPLICATION_TRANSITIONS, ApplicationStatus, isValidRobloxUserId } from 
 import { PrismaService } from '../prisma/prisma.service';
 import { AuditService, Actor } from '../audit/audit.service';
 import { AppError } from '../common/errors';
+import { DiscordService } from '../discord/discord.service';
 import { makeNumber } from '../common/numbering';
 import { nextStatus } from '../common/transition';
 import { PageQuery, pageResult, skipTake } from '../common/pagination';
@@ -13,13 +14,13 @@ export const DEFAULT_FORM: FormField[] = [
   { key: 'availability', label: 'Availability', required: true, maxLength: 500 },
   { key: 'motivation', label: 'Motivation', required: true, maxLength: 3000 },
   { key: 'roleplayKnowledge', label: 'Roleplay Knowledge', required: true, maxLength: 3000 },
-  { key: 'erlcKnowledge', label: 'ER:LC Knowledge', required: true, maxLength: 3000 },
+  { key: 'erlcKnowledge', label: 'ER:LC Knowledge', required: false, maxLength: 3000 },
   { key: 'communication', label: 'Communication', required: false, maxLength: 2000 },
 ];
 
 @Injectable()
 export class ApplicationsService {
-  constructor(private readonly prisma: PrismaService, private readonly audit: AuditService) {}
+  constructor(private readonly prisma: PrismaService, private readonly audit: AuditService, private readonly discord: DiscordService) {}
 
   async form(): Promise<FormField[]> {
     const s = await this.prisma.systemSetting.findUnique({ where: { key: 'application.form' } });
@@ -27,7 +28,7 @@ export class ApplicationsService {
   }
 
   /** Öffentliche Bewerbung (kein Account nötig). Antworten werden strikt gegen das konfigurierte Formular validiert. */
-  async submit(d: { robloxUsername: string; robloxUserId?: string; answers: Record<string, string> }) {
+  async submit(d: { robloxUsername: string; robloxUserId?: string; answers: Record<string, string> }, meta: { discordId?: string } = {}) {
     if (d.robloxUserId && !isValidRobloxUserId(d.robloxUserId)) throw new AppError('VALIDATION_FAILED', 'Invalid Roblox user id.');
     const form = await this.form();
     const answers: Record<string, string> = {};
@@ -40,8 +41,9 @@ export class ApplicationsService {
     if (d.robloxUserId && (await this.prisma.application.count({ where: { robloxUserId: d.robloxUserId, status: { in: ['SUBMITTED', 'SCREENING', 'INTERVIEW', 'PENDING_DECISION'] } } }))) {
       throw new AppError('CONFLICT', 'An open application already exists for this Roblox user.');
     }
-    const a = await this.prisma.application.create({ data: { number: makeNumber('APP'), robloxUsername: d.robloxUsername, robloxUserId: d.robloxUserId, answers } });
-    await this.audit.record({ userId: null }, { action: 'application.submit', module: 'applications', entityType: 'Application', entityId: a.id });
+    const a = await this.prisma.application.create({ data: { number: makeNumber('APP'), robloxUsername: d.robloxUsername, robloxUserId: d.robloxUserId, answers, discordId: meta.discordId, source: meta.discordId ? 'DISCORD' : 'WEB' } });
+    await this.audit.record({ userId: null }, { action: 'application.submit', module: 'applications', entityType: 'Application', entityId: a.id, after: { source: a.source } });
+    await this.discord.enqueue('applications', 'application.submitted', { number: a.number, robloxUsername: a.robloxUsername, discordId: meta.discordId ?? null, source: a.source });
     return { number: a.number, status: a.status };
   }
 
@@ -65,6 +67,10 @@ export class ApplicationsService {
       if ((to === 'ACCEPTED' || to === 'REJECTED') && !reason) throw new AppError('VALIDATION_FAILED', 'A reason is required.');
       const after = await tx.application.update({ where: { id }, data: { status: to, decidedById: to === 'ACCEPTED' || to === 'REJECTED' ? actor.userId : a.decidedById, version: { increment: 1 } } });
       await this.audit.record(actor, { action: `application.${to.toLowerCase()}`, module: 'applications', entityType: 'Application', entityId: id, before: { status: a.status }, after: { status: to }, reason }, tx);
+      return after;
+    }).then(async (after) => {
+      // Entscheidung per Direktnachricht (nur bei Bewerbung über Discord). Der interne Grund wird NICHT mitgeschickt.
+      if (after.discordId && (to === 'ACCEPTED' || to === 'REJECTED')) await this.discord.enqueue('applications', 'application.decided', { discordId: after.discordId, status: to, number: after.number }, { always: true });
       return after;
     });
   }

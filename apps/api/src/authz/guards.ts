@@ -28,6 +28,8 @@ const BOT_USER_ROUTES: [string, RegExp][] = [
   ['POST', /^\/reports\/?$/], ['POST', new RegExp(`^/reports/${UUID}/submit$`)], ['POST', /^\/complaints\/?$/], ['POST', /^\/investigations\/?$/],
   ['POST', /^\/wanted\/?$/], ['POST', /^\/evidence\/?$/],
   ['POST', new RegExp(`^/dispatch/incidents/${UUID}/assign$`)], ['PUT', new RegExp(`^/dispatch/incidents/${UUID}/status$`)], ['POST', new RegExp(`^/dispatch/incidents/${UUID}/close$`)],
+  ['GET', /^\/danger-level$/], ['PUT', /^\/danger-level$/],
+  ['GET', /^\/radio-whitelist(\/check)?$/], ['POST', /^\/radio-whitelist(\/remove)?$/],
   ['POST', /^\/communication\/channels\/(TEAM|DISPATCH)\/messages$/],
 ];
 

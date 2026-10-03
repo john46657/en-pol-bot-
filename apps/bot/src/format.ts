@@ -1,6 +1,9 @@
 /** Discord-unabhängige Nachrichtenmodelle + Formatierung (einfach testbar). */
 export interface EmbedData { title: string; description?: string; color?: number; fields?: { name: string; value: string; inline?: boolean }[]; footer?: string }
-export interface Reply { content?: string; embeds?: EmbedData[]; ephemeral?: boolean }
+export interface ButtonSpec { id: string; label: string; style: 'primary' | 'secondary' | 'success' | 'danger'; emoji?: string }
+export interface ModalField { id: string; label: string; paragraph?: boolean; required?: boolean; maxLength?: number; placeholder?: string }
+export interface ModalSpec { id: string; title: string; fields: ModalField[] }
+export interface Reply { content?: string; embeds?: EmbedData[]; ephemeral?: boolean; buttons?: ButtonSpec[]; modal?: ModalSpec }
 
 export const COLORS = { info: 0x3b82f6, success: 0x22c55e, warning: 0xf59e0b, danger: 0xef4444, neutral: 0x64748b } as const;
 const PRIORITY_COLOR: Record<string, number> = { LOW: COLORS.neutral, MEDIUM: COLORS.info, HIGH: COLORS.warning, URGENT: COLORS.danger, CRITICAL: COLORS.danger };
@@ -55,7 +58,59 @@ export function renderOutbox(type: string, p: Record<string, unknown>): EmbedDat
       return { title: `🔴 Neue Fahndung (${p.kind === 'vehicle' ? 'Fahrzeug' : 'Person'})`, description: `**${clip(plain(p.subject), 200)}**\n${clip(plain(p.reason), 3000)}`, color: PRIORITY_COLOR[String(p.priority)] ?? COLORS.danger, fields: [{ name: 'Priorität', value: label(p.priority), inline: true }] };
     case 'announcement':
       return { title: '📢 Ankündigung', description: clip(plain(p.body), 4000), color: COLORS.warning, footer: `von ${clip(p.author, 100)}` };
+    case 'danger.changed': {
+      const d = DANGER[String(p.level)] ?? DANGER.GREEN!;
+      return { title: `${d.emoji} Gefahrenstatus: ${d.label}`, description: p.reason ? clip(plain(p.reason), 1000) : undefined, color: d.color, fields: [{ name: 'Vorher', value: (DANGER[String(p.previous)]?.label) ?? '—', inline: true }, { name: 'Gesetzt von', value: clip(plain(p.setBy ?? 'System'), 200), inline: true }] };
+    }
+    case 'application.submitted':
+      return { title: `📋 Neue Bewerbung ${p.number}`, color: COLORS.info, description: 'Prüfung und Entscheidung im System (Bereich *Applications*).', fields: [
+        { name: 'Roblox-Name', value: clip(plain(p.robloxUsername), 200), inline: true }, { name: 'Quelle', value: p.source === 'DISCORD' ? 'Discord' : 'Web', inline: true },
+        ...(p.discordId ? [{ name: 'Discord', value: `<@${String(p.discordId)}>`, inline: true }] : [])] };
     default:
       return null;
   }
+}
+
+/** Texte der Entscheidungs-Direktnachricht an Bewerber (ohne internen Grund). */
+export function applicationDecisionText(p: { status?: unknown; number?: unknown }): string {
+  return p.status === 'ACCEPTED'
+    ? `🎉 Deine Bewerbung **${p.number}** bei EN Polizei wurde **angenommen**! Ein Teammitglied meldet sich bei dir für die nächsten Schritte.`
+    : `Deine Bewerbung **${p.number}** bei EN Polizei wurde diesmal leider **nicht angenommen**. Du kannst dich gerne später erneut bewerben.`;
+}
+
+// ---- Gefahrenstatus ----
+export const DANGER: Record<string, { label: string; emoji: string; color: number }> = {
+  GREEN: { label: 'Grün – Normaler Dienst', emoji: '🟢', color: 0x2ecc71 },
+  YELLOW: { label: 'Gelb – Erhöhte Vorsicht', emoji: '🟡', color: 0xf1c40f },
+  RED: { label: 'Rot – Akute Gefahrenlage', emoji: '🔴', color: 0xe74c3c },
+};
+export interface DangerState { level: string; reason?: string | null; setByName?: string | null; at?: string | null }
+export function dangerEmbed(s: DangerState): EmbedData {
+  const d = DANGER[s.level] ?? DANGER.GREEN!;
+  return { title: `${d.emoji} Aktueller Gefahrenstatus: ${d.label}`, color: d.color, description: s.reason ? clip(plain(s.reason), 1000) : undefined,
+    fields: [...(s.setByName ? [{ name: 'Gesetzt von', value: clip(plain(s.setByName), 200), inline: true }] : []), ...(s.at ? [{ name: 'Seit', value: `<t:${Math.floor(new Date(s.at).getTime() / 1000)}:R>`, inline: true }] : [])],
+    footer: 'Buttons: Status ändern (nur mit Berechtigung)' };
+}
+export const DANGER_BUTTONS: ButtonSpec[] = [
+  { id: 'danger:set:GREEN', label: 'Grün', emoji: '🟢', style: 'success' }, { id: 'danger:set:YELLOW', label: 'Gelb', emoji: '🟡', style: 'primary' }, { id: 'danger:set:RED', label: 'Rot', emoji: '🔴', style: 'danger' },
+];
+
+// ---- Teamliste ----
+export interface TeamMember { name: string; rank: string | null; callsign: string | null; team: string | null; dutyStatus: string; unit: string | null }
+const DUTY_EMOJI: Record<string, string> = { ON_DUTY: '🟢', BREAK: '🟡', TRAINING: '🔵', ADMINISTRATIVE: '🔵', OFF_DUTY: '⚪' };
+export function teamlistEmbed(members: TeamMember[], rankOrder: string[]): EmbedData {
+  const rankOf = (m: TeamMember) => m.rank ?? 'Ohne Rang';
+  const known = rankOrder.filter((r) => members.some((m) => rankOf(m) === r));
+  const rest = [...new Set(members.map(rankOf))].filter((r) => !rankOrder.includes(r)).sort((a, b) => a.localeCompare(b));
+  const fields: { name: string; value: string; inline?: boolean }[] = [];
+  for (const rank of [...known, ...rest]) {
+    const people = members.filter((m) => rankOf(m) === rank).sort((a, b) => (a.callsign ?? '~').localeCompare(b.callsign ?? '~'));
+    const lines = people.map((m) => `${DUTY_EMOJI[m.dutyStatus] ?? '⚪'} ${m.callsign ? `**${plain(m.callsign)}** ` : ''}${plain(m.name)}${m.unit ? ` · ${plain(m.unit)}` : ''}`);
+    // Feldwerte sind auf 1024 Zeichen begrenzt → bei Bedarf auf mehrere Felder aufteilen
+    let chunk = ''; let part = 0;
+    for (const l of lines) { if ((chunk + '\n' + l).length > 1000) { fields.push({ name: part ? `${rank} (Forts.)` : `${rank} (${people.length})`, value: chunk }); chunk = ''; part++; } chunk += (chunk ? '\n' : '') + l; }
+    if (chunk) fields.push({ name: part ? `${rank} (Forts.)` : `${rank} (${people.length})`, value: chunk });
+  }
+  const onDuty = members.filter((m) => m.dutyStatus === 'ON_DUTY').length;
+  return { title: '📋 Teamliste – EN Polizei', color: COLORS.neutral, fields: fields.slice(0, 25), description: members.length ? undefined : 'Noch keine Personalakten angelegt.', footer: `${members.length} Mitglieder · ${onDuty} im Dienst · wird automatisch aktualisiert` };
 }

@@ -441,6 +441,8 @@ model Application {
   robloxUsername String
   robloxUserId   String?
   decidedById String?  @db.Uuid
+  discordId   String?  // Bewerber-Discord-ID (bei Bewerbung über den Bot) – für die Entscheidungs-DM
+  source      String   @default("WEB") // WEB | DISCORD
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
   version     Int      @default(1)
@@ -612,4 +614,12 @@ model DiscordOutbox {
   createdAt  DateTime @default(now())
   sentAt     DateTime?
   @@index([sentAt, createdAt])
+}
+
+/// Funk-Freigabe (Whitelist): nur freigegebene Mitglieder gelten als funkberechtigt.
+model RadioWhitelist {
+  id        String   @id @default(uuid()) @db.Uuid
+  userId    String   @unique @db.Uuid
+  addedById String?  @db.Uuid
+  createdAt DateTime @default(now())
 }

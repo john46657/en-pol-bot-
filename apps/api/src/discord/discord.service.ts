@@ -8,9 +8,10 @@ import { AppError } from '../common/errors';
 const ALPHABET = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
 const CODE_TTL_MS = 10 * 60_000;
 const hash = (c: string) => createHash('sha256').update(c.toUpperCase().replace(/[\s-]/g, '')).digest('hex');
-export const CHANNEL_KEYS = ['dispatch', 'wanted', 'announcements'] as const;
+export const CHANNEL_KEYS = ['dispatch', 'wanted', 'announcements', 'applications', 'danger'] as const;
 export type ChannelKey = (typeof CHANNEL_KEYS)[number];
-export interface DiscordChannels { guildId?: string; dispatch?: string; wanted?: string; announcements?: string }
+/** Channel-/Rollen-IDs aus den Einstellungen. Die ersten fünf dürfen Komma-Listen sein (mehrere Channels/Server). */
+export interface DiscordChannels { guildId?: string; dispatch?: string; wanted?: string; announcements?: string; applications?: string; danger?: string; teamlist?: string; tickets?: string; staffRole?: string; radioRole?: string }
 
 @Injectable()
 export class DiscordService {
@@ -79,12 +80,20 @@ export class DiscordService {
   }
 
   /** Nur Einreihen, wenn für den Kanal-Schlüssel ein Channel konfiguriert ist (kein Datenanfall ohne Bot). Fehler dürfen den Fachprozess nie stören. */
-  async enqueue(channelKey: ChannelKey, type: string, payload: Record<string, unknown>) {
+  async enqueue(channelKey: ChannelKey, type: string, payload: Record<string, unknown>, opts: { always?: boolean } = {}) {
     try {
       const ch = await this.channels();
-      if (!ch[channelKey]) return;
+      if (!ch[channelKey] && !opts.always) return; // `always`: z. B. Direktnachrichten brauchen keinen Channel
       await this.prisma.discordOutbox.create({ data: { type, channelKey, payload: payload as Prisma.InputJsonValue } });
     } catch { /* Benachrichtigung ist best effort */ }
+  }
+
+  // ---- Bot-Zustand (z. B. IDs der selbst aktualisierenden Nachrichten) ----
+  async getState(key: string): Promise<unknown> {
+    return (await this.prisma.systemSetting.findUnique({ where: { key: `bot.state.${key}` } }))?.value ?? null;
+  }
+  async setState(key: string, value: unknown) {
+    await this.prisma.systemSetting.upsert({ where: { key: `bot.state.${key}` }, create: { key: `bot.state.${key}`, value: value as Prisma.InputJsonValue }, update: { value: value as Prisma.InputJsonValue } });
   }
 
   pending(limit: number) {

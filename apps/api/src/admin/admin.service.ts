@@ -9,6 +9,7 @@ import { ACCENTS } from '../studio/studio.service';
 
 const formField = z.object({ key: z.string().regex(/^[a-zA-Z][\w]{0,40}$/), label: z.string().min(1).max(100), required: z.boolean(), maxLength: z.number().int().min(1).max(5000) });
 /** Eine oder mehrere Discord-IDs, mit Komma getrennt (z. B. Channels auf mehreren Servern). */
+const singleId = () => z.string().regex(/^\d{15,25}$/).optional();
 const idList = () => z.string().regex(/^\d{15,25}(\s*,\s*\d{15,25})*$/).optional();
 /** Nur bekannte Settings-Keys mit striktem Schema werden akzeptiert. */
 export const SETTING_SCHEMAS = {
@@ -22,7 +23,8 @@ export const SETTING_SCHEMAS = {
   'dashboard.defaultLayout': z.array(z.object({ widget: z.string().max(40), visible: z.boolean(), order: z.number().int() })).max(50),
   'studio.customFields': customFieldsConfig,
   'theme.accent': z.enum(ACCENTS),
-  'discord.channels': z.object({ guildId: idList(), dispatch: idList(), wanted: idList(), announcements: idList() }),
+  'discord.channels': z.object({ guildId: idList(), dispatch: idList(), wanted: idList(), announcements: idList(), applications: idList(), danger: idList(), teamlist: singleId(), tickets: singleId(), staffRole: singleId(), radioRole: singleId() }),
+  'team.rankOrder': z.array(z.string().trim().min(1).max(64)).max(50),
   'application.form': z.array(formField).min(1).max(30),
 } as const;
 export type SettingKey = keyof typeof SETTING_SCHEMAS;
@@ -44,7 +46,7 @@ export class AdminService {
     return this.prisma.$transaction(async (tx) => {
       const before = await tx.systemSetting.findUnique({ where: { key } });
       const row = await tx.systemSetting.upsert({ where: { key }, create: { key, value: parsed.data as Prisma.InputJsonValue }, update: { value: parsed.data as Prisma.InputJsonValue } });
-      await this.audit.record(actor, { action: /^(application|dashboard|studio|theme|discord)\./.test(key) ? 'studio.config.changed' : 'settings.changed', module: 'settings', entityType: 'SystemSetting', entityId: key, before: before?.value, after: row.value }, tx);
+      await this.audit.record(actor, { action: /^(application|dashboard|studio|theme|discord|team)\./.test(key) ? 'studio.config.changed' : 'settings.changed', module: 'settings', entityType: 'SystemSetting', entityId: key, before: before?.value, after: row.value }, tx);
       return { key, value: row.value };
     });
   }
