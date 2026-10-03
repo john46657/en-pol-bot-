@@ -185,24 +185,33 @@ enum AuditActorType {
 
 /// Ein Discord-Server. Höchste Isolationsebene: alle Daten hängen daran (§113).
 model Guild {
-  id           String   @id /// Discord Guild ID (Snowflake)
-  name         String
-  iconUrl      String?
-  ownerId      String?
-  features     Json?
+  id              String   @id /// Discord Guild ID (Snowflake)
+  name            String
+  iconUrl         String?
+  ownerId         String?
+  features        Json?
   /// Rollen → NEXUS Permissions (§79/§114). Map roleId -> string[].
   rolePermissions Json?
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
 
-  applications Application[]
-  panels       ApplicationPanel[]
-  submissions  ApplicationSubmission[]
-  cooldowns    ApplicationCooldown[]
-  templates    ApplicationTemplate[]
+  /// Bot hat den Server verlassen (Daten bleiben erhalten); null = Bot ist auf dem Server.
+  leftAt DateTime?
+
+  settings    GuildSettings?
+  roles       DiscordRole[]
+  channels    DiscordChannel[]
+  permissions Permission[]
+  auditLogs   AuditLog[]
+
+  applications      Application[]
+  panels            ApplicationPanel[]
+  submissions       ApplicationSubmission[]
+  cooldowns         ApplicationCooldown[]
+  templates         ApplicationTemplate[]
   questionTemplates QuestionTemplate[]
-  exports      ApplicationExport[]
-  automations  ApplicationAutomation[]
+  exports           ApplicationExport[]
+  automations       ApplicationAutomation[]
 
   @@map("guilds")
 }
@@ -213,7 +222,7 @@ model Guild {
 
 /// Eine Bewerbung (Polizei, Medic, Whitelist, …) – use-case-agnostic (§3).
 model Application {
-  id          String   @id @default(cuid())
+  id          String            @id @default(cuid())
   guildId     String
   name        String
   slug        String
@@ -221,26 +230,26 @@ model Application {
   icon        String?
   image       String?
   color       String?
-  enabled     Boolean  @default(true)
+  enabled     Boolean           @default(true)
   status      ApplicationStatus @default(DRAFT)
   /// Konfiguration: requirements, messages, embed, stats, review, advanced (§69/§70-75).
   config      Json
   createdBy   String
   updatedBy   String
   publishedAt DateTime?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
 
-  guild       Guild    @relation(fields: [guildId], references: [id], onDelete: Cascade)
-  versions    ApplicationVersion[]
-  questions   ApplicationQuestion[]
-  cooldowns   ApplicationCooldown[]
-  panels      ApplicationPanelApplication[]
-  submissions ApplicationSubmission[]
-  roleRules   ApplicationRoleRule[]
-  automations ApplicationAutomation[]
+  guild        Guild                         @relation(fields: [guildId], references: [id], onDelete: Cascade)
+  versions     ApplicationVersion[]
+  questions    ApplicationQuestion[]
+  cooldowns    ApplicationCooldown[]
+  panels       ApplicationPanelApplication[]
+  submissions  ApplicationSubmission[]
+  roleRules    ApplicationRoleRule[]
+  automations  ApplicationAutomation[]
   integrations ApplicationIntegration[]
-  analytics   ApplicationAnalyticsDaily[]
+  analytics    ApplicationAnalyticsDaily[]
 
   @@unique([guildId, slug])
   @@index([guildId, status])
@@ -250,17 +259,17 @@ model Application {
 
 /// Versionierung (§65): Submissions referenzieren immer ihre Version.
 model ApplicationVersion {
-  id             String   @id @default(cuid())
-  applicationId  String
-  version        Int      @default(1)
+  id            String   @id @default(cuid())
+  applicationId String
+  version       Int      @default(1)
   /// Vollständiger Snapshot aller Fragen + Conditions zum Veröffentlichungszeitpunkt.
-  questions      Json
-  changelog      String?
-  publishedAt    DateTime @default(now())
-  publishedById  String
+  questions     Json
+  changelog     String?
+  publishedAt   DateTime @default(now())
+  publishedById String
 
-  application    Application @relation(fields: [applicationId], references: [id], onDelete: Cascade)
-  submissions    ApplicationSubmission[]
+  application Application             @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  submissions ApplicationSubmission[]
 
   @@unique([applicationId, version])
   @@map("application_versions")
@@ -268,22 +277,22 @@ model ApplicationVersion {
 
 /// Aktuelle Fragen der unveröffentlichten Version (relational, für den Builder).
 model ApplicationQuestion {
-  id             String   @id @default(cuid())
-  applicationId  String
-  questionId     String /// stabile ID innerhalb der Application
-  type           QuestionType
-  title          String
-  description    String?
-  required       Boolean  @default(false)
-  placeholder    String?
-  defaultValue   String?
-  validation     Json?
-  options        ApplicationQuestionOption[]
-  conditions     ApplicationCondition[]
-  order          Int
-  metadata       Json?
+  id            String                      @id @default(cuid())
+  applicationId String
+  questionId    String /// stabile ID innerhalb der Application
+  type          QuestionType
+  title         String
+  description   String?
+  required      Boolean                     @default(false)
+  placeholder   String?
+  defaultValue  String?
+  validation    Json?
+  options       ApplicationQuestionOption[]
+  conditions    ApplicationCondition[]
+  order         Int
+  metadata      Json?
 
-  application    Application @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  application Application @relation(fields: [applicationId], references: [id], onDelete: Cascade)
 
   @@unique([applicationId, questionId])
   @@index([applicationId, order])
@@ -291,16 +300,16 @@ model ApplicationQuestion {
 }
 
 model ApplicationQuestionOption {
-  id           String  @id @default(cuid())
-  questionId   String
-  label        String
-  value        String
-  description  String?
-  emoji        String?
-  enabled      Boolean @default(true)
-  order        Int
+  id          String  @id @default(cuid())
+  questionId  String
+  label       String
+  value       String
+  description String?
+  emoji       String?
+  enabled     Boolean @default(true)
+  order       Int
 
-  question     ApplicationQuestion @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  question ApplicationQuestion @relation(fields: [questionId], references: [id], onDelete: Cascade)
 
   @@index([questionId])
   @@map("application_question_options")
@@ -308,13 +317,13 @@ model ApplicationQuestionOption {
 
 /// Bedingung für die Sichtbarkeit einer Frage (§13).
 model ApplicationCondition {
-  id           String  @id @default(cuid())
-  questionId   String
+  id         String @id @default(cuid())
+  questionId String
   /// Verschachtelte Condition als JSON (AND/OR/NOT, Blätter + Gruppen).
-  node         Json
-  order        Int
+  node       Json
+  order      Int
 
-  question     ApplicationQuestion @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  question ApplicationQuestion @relation(fields: [questionId], references: [id], onDelete: Cascade)
 
   @@map("application_conditions")
 }
@@ -325,20 +334,20 @@ model ApplicationCondition {
 
 /// Bewerbungs-Panel im Discord (eine Nachricht, mehrere Applications möglich).
 model ApplicationPanel {
-  id           String   @id @default(cuid())
-  guildId      String
-  channelId    String
-  messageId    String?
-  title        String
-  description  String?
-  embed        Json
-  layout       String   @default("button") /// button | select | button_and_select
-  buttonLabel  String?
-  buttonEmoji  String?
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  id          String   @id @default(cuid())
+  guildId     String
+  channelId   String
+  messageId   String?
+  title       String
+  description String?
+  embed       Json
+  layout      String   @default("button") /// button | select | button_and_select
+  buttonLabel String?
+  buttonEmoji String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 
-  guild        Guild    @relation(fields: [guildId], references: [id], onDelete: Cascade)
+  guild        Guild                         @relation(fields: [guildId], references: [id], onDelete: Cascade)
   applications ApplicationPanelApplication[]
 
   @@index([guildId, channelId])
@@ -351,8 +360,8 @@ model ApplicationPanelApplication {
   applicationId String
   order         Int
 
-  panel         ApplicationPanel  @relation(fields: [panelId], references: [id], onDelete: Cascade)
-  application   Application      @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  panel       ApplicationPanel @relation(fields: [panelId], references: [id], onDelete: Cascade)
+  application Application      @relation(fields: [applicationId], references: [id], onDelete: Cascade)
 
   @@id([panelId, applicationId])
   @@map("application_panel_applications")
@@ -364,42 +373,42 @@ model ApplicationPanelApplication {
 
 /// Eine konkrete Bewerbung eines Users.
 model ApplicationSubmission {
-  id              String   @id @default(cuid())
-  guildId         String
-  applicationId   String
-  versionId       String
+  id                  String           @id @default(cuid())
+  guildId             String
+  applicationId       String
+  versionId           String
   /// Menschenlesbare ID, z. B. SUB-0001
-  submissionNumber String?
-  userId          String
+  submissionNumber    String?
+  userId              String
   /// Snapshot (§25) – historisch nachvollziehbar
-  usernameSnapshot String
+  usernameSnapshot    String
   displayNameSnapshot String
-  avatarSnapshot  String?
-  status          SubmissionStatus @default(STARTED)
-  isTest          Boolean  @default(false) /// TEST-Markierung (§118)
-  startedAt       DateTime @default(now())
-  submittedAt     DateTime?
-  durationSeconds Int?
-  reviewerUserId  String?
-  acceptedAt      DateTime?
-  deniedAt        DateTime?
-  publicReason    String?
-  internalReason  String?
+  avatarSnapshot      String?
+  status              SubmissionStatus @default(STARTED)
+  isTest              Boolean          @default(false) /// TEST-Markierung (§118)
+  startedAt           DateTime         @default(now())
+  submittedAt         DateTime?
+  durationSeconds     Int?
+  reviewerUserId      String?
+  acceptedAt          DateTime?
+  deniedAt            DateTime?
+  publicReason        String?
+  internalReason      String?
   submissionMessageId String?
   submissionChannelId String?
-  threadId        String?
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  threadId            String?
+  createdAt           DateTime         @default(now())
+  updatedAt           DateTime         @updatedAt
 
-  guild           Guild    @relation(fields: [guildId], references: [id], onDelete: Cascade)
-  application     Application @relation(fields: [applicationId], references: [id])
-  version         ApplicationVersion @relation(fields: [versionId], references: [id])
-  answers         ApplicationAnswer[]
-  attachments     ApplicationAttachment[]
-  notes           ApplicationNote[]
-  auditEvents     ApplicationAuditEvent[]
-  reviewers       ApplicationReviewer[]
-  dmState         ApplicationDMState?
+  guild       Guild                   @relation(fields: [guildId], references: [id], onDelete: Cascade)
+  application Application             @relation(fields: [applicationId], references: [id])
+  version     ApplicationVersion      @relation(fields: [versionId], references: [id])
+  answers     ApplicationAnswer[]
+  attachments ApplicationAttachment[]
+  notes       ApplicationNote[]
+  auditEvents ApplicationAuditEvent[]
+  reviewers   ApplicationReviewer[]
+  dmState     ApplicationDMState?
 
   @@unique([guildId, submissionNumber])
   @@index([guildId, status])
@@ -411,17 +420,17 @@ model ApplicationSubmission {
 
 /// Einzelne Antwort (§64: nicht nur Blob, sondern strukturiert pro Frage).
 model ApplicationAnswer {
-  id              String   @id @default(cuid())
-  submissionId    String
-  questionId      String /// stabile Frage-ID
+  id                String   @id @default(cuid())
+  submissionId      String
+  questionId        String /// stabile Frage-ID
   questionVersionId String /// Version-Snapshot (§156)
-  value           Json
-  normalizedValue String?
-  metadata        Json?
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  value             Json
+  normalizedValue   String?
+  metadata          Json?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
 
-  submission      ApplicationSubmission @relation(fields: [submissionId], references: [id], onDelete: Cascade)
+  submission ApplicationSubmission @relation(fields: [submissionId], references: [id], onDelete: Cascade)
 
   @@unique([submissionId, questionId])
   @@index([submissionId])
@@ -431,17 +440,17 @@ model ApplicationAnswer {
 
 /// DM-Sitzungszustand (§94: Recovery nach Bot-Restart)
 model ApplicationDMState {
-  submissionId       String  @id
+  submissionId       String    @id
   userId             String
   guildId            String
-  phase              DMPhase @default(INTRO)
+  phase              DMPhase   @default(INTRO)
   currentQuestionId  String?
   currentDMMessageId String?
   introMessageId     String?
-  lastInteractionAt  DateTime @default(now())
+  lastInteractionAt  DateTime  @default(now())
   expiresAt          DateTime?
 
-  submission         ApplicationSubmission @relation(fields: [submissionId], references: [id], onDelete: Cascade)
+  submission ApplicationSubmission @relation(fields: [submissionId], references: [id], onDelete: Cascade)
 
   @@index([userId])
   @@map("application_dm_states")
@@ -449,14 +458,14 @@ model ApplicationDMState {
 
 /// Reviewer-Zuweisungen (§36: User/Role, Round-Robin, Workload)
 model ApplicationReviewer {
-  id            String   @id @default(cuid())
-  submissionId  String
-  assigneeType  ReviewerAssignmentType
-  assigneeId    String
-  assignedById  String
-  assignedAt    DateTime @default(now())
+  id           String                 @id @default(cuid())
+  submissionId String
+  assigneeType ReviewerAssignmentType
+  assigneeId   String
+  assignedById String
+  assignedAt   DateTime               @default(now())
 
-  submission    ApplicationSubmission @relation(fields: [submissionId], references: [id], onDelete: Cascade)
+  submission ApplicationSubmission @relation(fields: [submissionId], references: [id], onDelete: Cascade)
 
   @@index([submissionId])
   @@index([assigneeId])
@@ -474,7 +483,7 @@ model ApplicationNote {
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
-  submission   ApplicationSubmission @relation(fields: [submissionId], references: [id], onDelete: Cascade)
+  submission ApplicationSubmission @relation(fields: [submissionId], references: [id], onDelete: Cascade)
 
   @@index([submissionId])
   @@map("application_notes")
@@ -482,7 +491,7 @@ model ApplicationNote {
 
 /// Audit-Events (§34/§89: unveränderbar – kein updateAt!)
 model ApplicationAuditEvent {
-  id            String   @id @default(cuid())
+  id            String         @id @default(cuid())
   guildId       String
   submissionId  String?
   applicationId String?
@@ -492,9 +501,9 @@ model ApplicationAuditEvent {
   before        Json?
   after         Json?
   metadata      Json?
-  createdAt     DateTime @default(now())
+  createdAt     DateTime       @default(now())
 
-  submission    ApplicationSubmission? @relation(fields: [submissionId], references: [id], onDelete: Cascade)
+  submission ApplicationSubmission? @relation(fields: [submissionId], references: [id], onDelete: Cascade)
 
   @@index([guildId, createdAt])
   @@index([submissionId, createdAt])
@@ -512,8 +521,8 @@ model ApplicationCooldown {
   expiresAt     DateTime
   createdAt     DateTime @default(now())
 
-  guild         Guild       @relation(fields: [guildId], references: [id], onDelete: Cascade)
-  application   Application @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  guild       Guild       @relation(fields: [guildId], references: [id], onDelete: Cascade)
+  application Application @relation(fields: [applicationId], references: [id], onDelete: Cascade)
 
   @@unique([guildId, applicationId, userId, reason])
   @@index([userId])
@@ -522,19 +531,19 @@ model ApplicationCooldown {
 
 /// Attachments (§50)
 model ApplicationAttachment {
-  id            String   @id @default(cuid())
-  submissionId  String
-  questionId    String
-  attachmentId  String
-  filename      String
-  mimeType      String?
-  sizeBytes     BigInt
-  url           String
-  s3Key         String?
-  status        AttachmentStatus @default(PENDING)
-  createdAt     DateTime @default(now())
+  id           String           @id @default(cuid())
+  submissionId String
+  questionId   String
+  attachmentId String
+  filename     String
+  mimeType     String?
+  sizeBytes    BigInt
+  url          String
+  s3Key        String?
+  status       AttachmentStatus @default(PENDING)
+  createdAt    DateTime         @default(now())
 
-  submission    ApplicationSubmission @relation(fields: [submissionId], references: [id], onDelete: Cascade)
+  submission ApplicationSubmission @relation(fields: [submissionId], references: [id], onDelete: Cascade)
 
   @@index([submissionId])
   @@map("application_attachments")
@@ -546,14 +555,14 @@ model ApplicationAttachment {
 
 /// Rollenregeln einer Application (§38)
 model ApplicationRoleRule {
-  id              String   @id @default(cuid())
-  applicationId   String
-  type            RoleRuleType
-  roleId          String
-  matchMode       RoleMatchMode @default(HAS_ALL)
+  id                String        @id @default(cuid())
+  applicationId     String
+  type              RoleRuleType
+  roleId            String
+  matchMode         RoleMatchMode @default(HAS_ALL)
   additionalRoleIds String[]
 
-  application     Application @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  application Application @relation(fields: [applicationId], references: [id], onDelete: Cascade)
 
   @@index([applicationId, type])
   @@map("application_role_rules")
@@ -561,20 +570,20 @@ model ApplicationRoleRule {
 
 /// Automationen (§57/§58)
 model ApplicationAutomation {
-  id            String   @id @default(cuid())
+  id            String    @id @default(cuid())
   guildId       String
   applicationId String?
-  enabled       Boolean  @default(true)
-  trigger       String   /// application.submitted, …
+  enabled       Boolean   @default(true)
+  trigger       String /// application.submitted, …
   condition     Json?
   actions       Json
   lastRunAt     DateTime?
   lastRunStatus String?
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
 
-  guild         Guild       @relation(fields: [guildId], references: [id], onDelete: Cascade)
-  application   Application? @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  guild       Guild        @relation(fields: [guildId], references: [id], onDelete: Cascade)
+  application Application? @relation(fields: [applicationId], references: [id], onDelete: Cascade)
 
   @@index([guildId, trigger])
   @@map("application_automations")
@@ -582,18 +591,18 @@ model ApplicationAutomation {
 
 /// Integrationen (§103: Secrets verschlüsselt, niemals loggen)
 model ApplicationIntegration {
-  id            String   @id @default(cuid())
+  id            String          @id @default(cuid())
   applicationId String
   type          IntegrationType
   name          String
   /// Verschlüsselter Secret-Blob (verschlüsselt mit INTEGRATION_ENCRYPTION_KEY).
   secret        Bytes?
   config        Json
-  enabled       Boolean  @default(true)
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  enabled       Boolean         @default(true)
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
 
-  application   Application @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  application Application @relation(fields: [applicationId], references: [id], onDelete: Cascade)
 
   @@map("application_integrations")
 }
@@ -605,19 +614,19 @@ model ApplicationIntegration {
 /// Application-Templates (§43)
 model ApplicationTemplate {
   id          String   @id @default(cuid())
-  guildId     String?  /// null = system-weit, gesetzt = guild-intern (§100)
+  guildId     String? /// null = system-weit, gesetzt = guild-intern (§100)
   name        String
   description String?
   icon        String?
   category    String?
-  structure   Json     /// questions, conditions, roleRules, messages
+  structure   Json /// questions, conditions, roleRules, messages
   isPublic    Boolean  @default(false)
   version     Int      @default(1)
   createdBy   String?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
-  guild       Guild?   @relation(fields: [guildId], references: [id], onDelete: Cascade)
+  guild Guild? @relation(fields: [guildId], references: [id], onDelete: Cascade)
 
   @@index([guildId, isPublic])
   @@map("application_templates")
@@ -625,7 +634,7 @@ model ApplicationTemplate {
 
 /// Wiederverwendbare Fragen (§44)
 model QuestionTemplate {
-  id          String   @id @default(cuid())
+  id          String       @id @default(cuid())
   guildId     String?
   title       String
   type        QuestionType
@@ -633,10 +642,10 @@ model QuestionTemplate {
   validation  Json?
   options     Json?
   createdBy   String?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
 
-  guild       Guild?   @relation(fields: [guildId], references: [id], onDelete: Cascade)
+  guild Guild? @relation(fields: [guildId], references: [id], onDelete: Cascade)
 
   @@index([guildId])
   @@map("question_templates")
@@ -648,20 +657,20 @@ model QuestionTemplate {
 
 /// Export-Jobs (§66/§122: Permission + ablaufende signierte URL + Audit)
 model ApplicationExport {
-  id           String   @id @default(cuid())
-  guildId      String
+  id            String       @id @default(cuid())
+  guildId       String
   requestedById String
-  format       ExportFormat
-  status       ExportStatus @default(PENDING)
-  filters      Json
-  rowCount     Int?
-  fileUrl      String?   /// signierte, ablaufende URL
-  expiresAt    DateTime?
-  error        String?
-  createdAt    DateTime @default(now())
-  completedAt  DateTime?
+  format        ExportFormat
+  status        ExportStatus @default(PENDING)
+  filters       Json
+  rowCount      Int?
+  fileUrl       String? /// signierte, ablaufende URL
+  expiresAt     DateTime?
+  error         String?
+  createdAt     DateTime     @default(now())
+  completedAt   DateTime?
 
-  guild        Guild    @relation(fields: [guildId], references: [id], onDelete: Cascade)
+  guild Guild @relation(fields: [guildId], references: [id], onDelete: Cascade)
 
   @@index([guildId, createdAt])
   @@map("application_exports")
@@ -669,19 +678,137 @@ model ApplicationExport {
 
 /// Tägliche Analytics-Aggregation (§45)
 model ApplicationAnalyticsDaily {
-  id             String   @id @default(cuid())
-  applicationId  String
-  day            DateTime @db.Date
-  started        Int      @default(0)
-  submitted      Int      @default(0)
-  accepted       Int      @default(0)
-  denied         Int      @default(0)
-  expired        Int      @default(0)
-  cancelled      Int      @default(0)
+  id                 String   @id @default(cuid())
+  applicationId      String
+  day                DateTime @db.Date
+  started            Int      @default(0)
+  submitted          Int      @default(0)
+  accepted           Int      @default(0)
+  denied             Int      @default(0)
+  expired            Int      @default(0)
+  cancelled          Int      @default(0)
   avgDurationSeconds Int?
 
-  application    Application @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  application Application @relation(fields: [applicationId], references: [id], onDelete: Cascade)
 
   @@unique([applicationId, day])
   @@map("application_analytics_daily")
+}
+
+// ---------------------------------------------------------------------------
+// Phase 1: Grundmodelle (Einstellungen, Benutzer, Rollen, Kanäle, Permissions, Audit)
+// ---------------------------------------------------------------------------
+
+/// Servereinstellungen (1:1 zur Guild). `data` nimmt modulspezifische Werte auf.
+model GuildSettings {
+  guildId      String   @id
+  locale       String   @default("de")
+  timezone     String   @default("Europe/Berlin")
+  /// Kanal für Bot-/Audit-Meldungen (Discord-Kanal-ID).
+  logChannelId String?
+  data         Json     @default("{}")
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  guild Guild @relation(fields: [guildId], references: [id], onDelete: Cascade)
+
+  @@map("guild_settings")
+}
+
+/// Discord-Benutzer (global, nicht guild-scoped). `id` = Discord-User-ID.
+model User {
+  id         String    @id
+  username   String
+  globalName String?
+  avatarUrl  String?
+  bot        Boolean   @default(false)
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+  lastSeenAt DateTime?
+
+  @@map("users")
+}
+
+/// Gespiegelte Discord-Rolle. `discordId` ist nur je Guild eindeutig.
+model DiscordRole {
+  id          String    @id @default(cuid())
+  guildId     String
+  discordId   String
+  name        String
+  color       Int       @default(0)
+  position    Int       @default(0)
+  /// Discord-Permission-Bitfeld als Dezimalstring (BigInt-sicher).
+  permissions String    @default("0")
+  managed     Boolean   @default(false)
+  mentionable Boolean   @default(false)
+  hoist       Boolean   @default(false)
+  /// Auf Discord gelöscht (Soft Delete, damit Permission-Zuordnungen nachvollziehbar bleiben).
+  deletedAt   DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  guild  Guild        @relation(fields: [guildId], references: [id], onDelete: Cascade)
+  grants Permission[]
+
+  @@unique([guildId, discordId])
+  @@index([guildId, position])
+  @@map("discord_roles")
+}
+
+/// Gespiegelter Discord-Kanal (Text, Voice, Kategorie, …). `type` = Discord ChannelType.
+model DiscordChannel {
+  id        String    @id @default(cuid())
+  guildId   String
+  discordId String
+  name      String
+  type      Int
+  parentId  String?
+  position  Int       @default(0)
+  deletedAt DateTime?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  guild Guild @relation(fields: [guildId], references: [id], onDelete: Cascade)
+
+  @@unique([guildId, discordId])
+  @@index([guildId, type])
+  @@map("discord_channels")
+}
+
+/// Zuordnung Permission-Key (z. B. "applications.manage") → Discord-Rolle.
+model Permission {
+  id        String   @id @default(cuid())
+  guildId   String
+  key       String
+  roleId    String
+  createdAt DateTime @default(now())
+
+  guild Guild       @relation(fields: [guildId], references: [id], onDelete: Cascade)
+  role  DiscordRole @relation(fields: [roleId], references: [id], onDelete: Cascade)
+
+  @@unique([guildId, key, roleId])
+  @@index([guildId, key])
+  @@map("permissions")
+}
+
+/// Allgemeines, nur anhängbares Audit-Log (Bewerbungen haben zusätzlich ApplicationAuditEvent).
+model AuditLog {
+  id           String         @id @default(cuid())
+  guildId      String
+  actorType    AuditActorType
+  actorId      String?
+  action       String
+  resourceType String?
+  resourceId   String?
+  before       Json?
+  after        Json?
+  metadata     Json?
+  createdAt    DateTime       @default(now())
+
+  guild Guild @relation(fields: [guildId], references: [id], onDelete: Cascade)
+
+  @@index([guildId, createdAt])
+  @@index([guildId, action])
+  @@index([guildId, resourceType, resourceId])
+  @@map("audit_logs")
 }
