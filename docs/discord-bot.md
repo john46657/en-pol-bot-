@@ -4,20 +4,35 @@ Der Bot (`apps/bot`, TypeScript, discord.js 14) ist ein **schlanker Client der S
 
 > **Ehrlich vorab:** Der Bot-Code, die API-Seite (Verknüpfung, Bot-Auth, Outbox) und die Befehlslogik sind automatisiert getestet (Befehle/Outbox mit Fake-API, API-Seite mit Integrationstests, Verknüpfung im Browser-E2E). **Gegen den echten Discord-Dienst wurde er nicht getestet** – dafür fehlen mir Bot-Token und Server. Plane beim ersten Start ein paar Minuten für Rechte/Channel-IDs ein und schick mir die Bot-Logs, falls etwas hakt.
 
-## Befehle
+## Befehle (24)
 | Befehl | Zweck | Benötigtes Recht (im System) |
 |---|---|---|
 | `/verknuepfen code` | Discord-Konto mit Benutzer verknüpfen | – |
+| `/entverknuepfen` | Verknüpfung lösen | – |
+| `/profil` | eigenes Konto, Rollen, Anzahl Berechtigungen | – |
+| `/hilfe` | Befehlsübersicht | – |
 | `/person suche` | Person nach Roblox-Name/-ID | `persons.view` |
 | `/kennzeichen kennzeichen` | Fahrzeug nach Kennzeichen | `vehicles.view` |
 | `/fahndungen` | aktive Fahndungen | `wanted.view` |
-| `/dienst status` | Dienststatus: an, pause, training, verwaltung, aus | `team.view` |
-| `/einheiten` | Einheiten + Status | `dispatch.view` |
-| `/einheitstatus rufzeichen status` | Einheitenstatus ändern | `dispatch.edit` |
 | `/einsaetze` | offene Einsätze | `incidents.view` |
+| `/einsatzinfo nummer` | Details, Einheiten, Verlauf eines Einsatzes | `incidents.view` |
+| `/einheiten` | Einheiten + Status | `dispatch.view` |
+| `/team` | wer ist im Dienst (Einheit, Einsatz) | `team.view` |
+| `/dienst status` | eigener Dienststatus: an, pause, training, verwaltung, aus | `team.view` |
+| `/einheitstatus rufzeichen status` | Einheitenstatus ändern | `dispatch.edit` |
 | `/einsatz titel [prioritaet] [ort]` | Einsatz anlegen | `incidents.create` |
+| `/einsatzstatus nummer status` | Status: bestaetigt, unterwegs, vor_ort, in_bearbeitung, abschluss, abgebrochen, geschlossen | `dispatch.edit` (`geschlossen`: `dispatch.close`) |
+| `/einsatzzuweisen nummer rufzeichen` | Einheit einem Einsatz zuweisen | `dispatch.assign` |
+| `/funk kanal text` | Nachricht in Systemkanal team/dispatch | `communication.send` |
 | `/ticket person grund [betrag]` | Ticket ausstellen (Person muss eindeutig sein) | `tickets.create` |
-| `/hilfe` | Befehlsübersicht | – |
+| `/bericht titel text [typ] [einreichen]` | Bericht als Entwurf oder direkt einreichen | `reports.create` (+ `reports.submit`) |
+| `/beschwerde kategorie beschreibung [person]` | Beschwerde erfassen | `complaints.create` |
+| `/ermittlung titel [beschreibung]` | Ermittlungsfall eröffnen | `investigations.create` |
+| `/fahndung person grund [prioritaet]` | Person zur Fahndung ausschreiben | `wanted.create` |
+| `/beweis typ beschreibung [fall]` | Beweisstück erfassen | `evidence.create` |
+| `/benachrichtigungen` | ungelesene Benachrichtigungen | – |
+
+Bewusst **nicht** über Discord möglich: Berichte freigeben/ablehnen, Fahndungen aufheben, Beschwerden bearbeiten, Personal-, Benutzer-, Rollen- und Audit-Funktionen. Das bleibt im Web.
 
 Alle Antworten sind **nur für den Aufrufer sichtbar** (ephemeral). Fehlt ein Recht, sagt der Bot „Dazu hast du keine Berechtigung“.
 
@@ -52,7 +67,7 @@ Jede Person: Web → Chat-Symbol oben rechts („Discord verknüpfen“) → *Co
 
 ## Sicherheitsmodell
 - Der Bot authentifiziert sich mit `Authorization: Bot <BOT_API_TOKEN>` (konstante Zeit verglichen). Ohne gesetztes Token ist **jeder** Bot-Zugang in der API deaktiviert.
-- Im Namen eines Benutzers (`X-Discord-User`) darf der Bot nur eine **feste Allowlist** an Routen aufrufen (Personen/Fahrzeuge lesen, Fahndungen, Einsätze, Tickets, eigener Dienststatus, Einheiten). Alles andere (Benutzer, Rollen, Audit, Einstellungen, Personal …) liefert `403`, auch für Admins.
+- Im Namen eines Benutzers (`X-Discord-User`) darf der Bot nur eine **feste Allowlist** an Routen aufrufen (`BOT_USER_ROUTES` in `apps/api/src/authz/guards.ts`: lesen von Personen/Fahrzeugen/Fahndungen/Einsätzen/Team, Anlegen von Einsätzen/Tickets/Berichten/Beschwerden/Ermittlungen/Fahndungen/Beweisen, Einsatzsteuerung, eigener Dienststatus/Profil). Alles andere (Benutzer, Rollen, Audit, Einstellungen, Personal …) liefert `403`, auch für Admins.
 - Die normalen Permission-Prüfungen gelten unverändert; Audit-Einträge zeigen den verknüpften Benutzer als Akteur.
 - Bot-Dienstrouten (`/bot/*`) akzeptieren **nur** das Bot-Token, nie eine Browser-Session.
 - Verknüpfungscodes: 8 Zeichen, nur der Hash wird gespeichert, 10 Minuten, einmalig, Rate-Limit. Ein Discord-Konto ↔ ein Benutzer.

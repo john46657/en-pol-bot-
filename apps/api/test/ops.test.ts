@@ -39,7 +39,8 @@ describe('dispatch & incidents', () => {
     expect((await prisma.unit.findUniqueOrThrow({ where: { id: unit.id } })).status).toBe('BUSY');
 
     // illegal jump
-    expect((await disp.put(`/api/v1/dispatch/incidents/${inc.id}/status`).send({ status: 'CLOSED' })).status).toBe(409);
+    expect((await disp.put(`/api/v1/dispatch/incidents/${inc.id}/status`).send({ status: 'CLOSED' })).status).toBe(400); // CLOSED nur über /close (dispatch.close)
+    expect((await disp.post(`/api/v1/dispatch/incidents/${inc.id}/close`)).status).toBe(409); // und nur aus CLEARING
     for (const s of ['EN_ROUTE', 'ON_SCENE', 'CLEARING']) expect((await disp.put(`/api/v1/dispatch/incidents/${inc.id}/status`).send({ status: s })).status).toBe(200);
     const closed = await disp.post(`/api/v1/dispatch/incidents/${inc.id}/close`);
     expect(closed.body.status).toBe('CLOSED');

@@ -31,7 +31,7 @@ pnpm e2e         # Playwright (uses installed Google Chrome)
 | React UI: shell, search, notifications, dashboard (customizable), dispatch board, all record lists/details, admin | done |
 | Panel hosting package (`pnpm bundle:hosting` → one ZIP with API + web + bot, e.g. for bot-hosting.net): [docs/hosting-bot-hosting.md](docs/hosting-bot-hosting.md) | package simulated locally (install → start → login); **real panel untested** |
 | Hosting on a VPS (Docker Compose + Caddy HTTPS + daily DB backups + setup/update/restore scripts): [docs/deployment.md](docs/deployment.md) | written; production artifact tested locally, **Docker itself not run** |
-| Discord bot (`apps/bot`): slash commands with the linked user's permissions, channel notifications via outbox, one-time-code linking ([docs/discord-bot.md](docs/discord-bot.md)) | done; **not tested against real Discord** |
+| Discord bot (`apps/bot`): 24 slash commands (lookups, duty, dispatch, create ticket/report/complaint/investigation/wanted/evidence) with the linked user's permissions, channel notifications via outbox, one-time-code linking ([docs/discord-bot.md](docs/discord-bot.md)) | done; **not tested against real Discord** |
 | Standalone bot package (`pnpm bundle:bot` → single self-contained `bot.js` + source) | done; loads without node_modules (verified), **real Discord untested** |
 | MDT portal, Team dashboard (supervisor actions), one-command dev start with demo data | done |
 | Browser E2E tests (10 specs), public application page `/apply` | done |

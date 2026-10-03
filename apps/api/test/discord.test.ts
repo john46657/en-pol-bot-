@@ -83,7 +83,7 @@ describe('bot authentication & authorization', () => {
     await prisma.user.update({ where: { username: 'd_off' }, data: { active: true } });
   });
   it('only allowlisted routes are reachable through the bot', async () => {
-    for (const [m, p] of [['get', '/api/v1/users'], ['get', '/api/v1/audit'], ['get', '/api/v1/auth/me'], ['put', '/api/v1/users/00000000-0000-4000-8000-000000000000/roles'], ['post', '/api/v1/wanted'], ['get', '/api/v1/admin/settings'], ['get', '/api/v1/personnel']] as const) {
+    for (const [m, p] of [['get', '/api/v1/users'], ['get', '/api/v1/audit'], ['post', '/api/v1/auth/logout'], ['put', '/api/v1/users/00000000-0000-4000-8000-000000000000/roles'], ['post', '/api/v1/roles'], ['put', '/api/v1/admin/settings/org.name'], ['get', '/api/v1/admin/settings'], ['get', '/api/v1/personnel'], ['post', '/api/v1/communication/channels/ANNOUNCEMENT/messages'], ['delete', '/api/v1/users/00000000-0000-4000-8000-000000000000/overrides/audit.view']] as const) {
       const r = await http()[m](p).set(bot(D1)).send({});
       expect(r.status, `${m} ${p}`).toBe(403);
       expect(r.body.message).toMatch(/not available to the bot/);
@@ -101,6 +101,23 @@ describe('bot authentication & authorization', () => {
     expect((await http().post('/api/v1/incidents').set(bot(D2)).send({ title: 'Nope nope' })).status).toBe(403);
     // Dienststatus über den Bot
     expect((await http().put('/api/v1/team/me/status').set(bot(D1)).send({ status: 'ON_DUTY' })).status).toBe(200);
+  });
+  it('new allowlisted write routes still enforce the user\u2019s own permissions', async () => {
+    const adm = (await login(app, 'd_admin')).agent;
+    const person = (await adm.post('/api/v1/persons').send({ robloxUsername: 'Bot_Perm_Target' })).body.person;
+    // d_off (Police Member): Bericht ja, Fahndung/Ermittlung/Beweis nein?  -> Police Member hat reports.create + evidence.create + complaints.create
+    expect((await http().post('/api/v1/reports').set(bot(D1)).send({ type: 'PATROL', title: 'Via Discord', content: { body: 'text' } })).status).toBe(201);
+    expect((await http().post('/api/v1/complaints').set(bot(D1)).send({ category: 'Conduct', description: 'Filed through the Discord bot.' })).status).toBe(201);
+    expect((await http().post('/api/v1/evidence').set(bot(D1)).send({ type: 'Photo', description: 'Scene photo' })).status).toBe(201);
+    expect((await http().post('/api/v1/wanted').set(bot(D1)).send({ personId: person.id, reason: 'Nope' })).status).toBe(403); // wanted.create fehlt
+    expect((await http().post('/api/v1/investigations').set(bot(D1)).send({ title: 'Nope nope' })).status).toBe(403); // investigations.create fehlt
+    expect((await http().get('/api/v1/auth/me').set(bot(D1))).body.username).toBe('d_off');
+    // Unlink über den Bot (eigene Verknüpfung)
+    const d4 = '100000000000000004';
+    await makeUser(prisma, 'd_tmp', ['Police Member']);
+    await link('d_tmp', d4);
+    expect((await http().delete('/api/v1/discord/link').set(bot(d4))).status).toBe(204);
+    expect((await http().get('/api/v1/auth/me').set(bot(d4))).status).toBe(401);
   });
   it('bot access is fully disabled when BOT_API_TOKEN is not configured', async () => {
     const saved = process.env.BOT_API_TOKEN; delete process.env.BOT_API_TOKEN;

@@ -25,7 +25,7 @@ export function Dispatch() {
   const done = () => { setErr(undefined); void qc.invalidateQueries({ queryKey: ['dispatch-incidents'] }); void qc.invalidateQueries({ queryKey: ['dispatch-units'] }); };
   const onError = (e: unknown) => setErr(e instanceof ApiError ? `${e.message}${e.requestId ? ` (Request ID ${e.requestId})` : ''}` : 'Request failed');
   const assign = useMutation({ mutationFn: (v: { id: string; unitId: string }) => api(`/dispatch/incidents/${v.id}/assign`, { body: { unitId: v.unitId } }), onSuccess: done, onError });
-  const setStatus = useMutation({ mutationFn: (v: { id: string; status: string }) => api(`/dispatch/incidents/${v.id}/status`, { method: 'PUT', body: { status: v.status } }), onSuccess: done, onError });
+  const setStatus = useMutation({ mutationFn: (v: { id: string; status: string }) => (v.status === 'CLOSED' ? api(`/dispatch/incidents/${v.id}/close`, { method: 'POST' }) : api(`/dispatch/incidents/${v.id}/status`, { method: 'PUT', body: { status: v.status } })), onSuccess: done, onError });
   const unitStatus = useMutation({ mutationFn: (v: { id: string; status: string }) => api(`/dispatch/units/${v.id}/status`, { method: 'PUT', body: { status: v.status } }), onSuccess: done, onError });
   const canAssign = can('dispatch.assign'), canEdit = can('dispatch.edit');
   const available = units.data?.filter((u) => u.status === 'AVAILABLE') ?? [];
@@ -51,7 +51,7 @@ export function Dispatch() {
                       <p className="text-xs text-muted">{i.location ?? 'No location'} · Units: {assigned.length ? assigned.map((u) => u.unit.callsign).join(', ') : 'none'}</p>
                       <div className="flex flex-wrap gap-2">
                         {canAssign && available.length > 0 && <Select aria-label={`Assign unit to ${i.number}`} className="w-auto py-1 text-xs" value="" onChange={(e) => e.target.value && assign.mutate({ id: i.id, unitId: e.target.value })}><option value="">Assign unit…</option>{available.map((u) => <option key={u.id} value={u.id}>{u.callsign}</option>)}</Select>}
-                        {canEdit && next.filter((n) => n !== 'CANCELLED' && n !== 'ASSIGNED').map((n) => <Button key={n} size="sm" variant="secondary" disabled={setStatus.isPending} onClick={() => setStatus.mutate({ id: i.id, status: n })}>→ {n.replace('_', ' ')}</Button>)}
+                        {canEdit && next.filter((n) => n !== 'CANCELLED' && n !== 'ASSIGNED' && (n !== 'CLOSED' || can('dispatch.close'))).map((n) => <Button key={n} size="sm" variant="secondary" disabled={setStatus.isPending} onClick={() => setStatus.mutate({ id: i.id, status: n })}>→ {n.replace('_', ' ')}</Button>)}
                       </div>
                     </li>
                   );
