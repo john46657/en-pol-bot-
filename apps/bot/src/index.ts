@@ -21,3 +21,12 @@ process.on('SIGTERM', () => {
   log.info('SIGTERM – NEXUS Bot wird beendet.');
   process.exit(0);
 });
+
+// Nicht abgefangene Fehler loggen; unhandled rejections beenden den Bot nicht.
+process.on('unhandledRejection', (reason) =>
+  log.error({ err: String(reason) }, 'Unhandled Rejection.'),
+);
+process.on('uncaughtException', (error) => {
+  log.fatal({ err: String(error) }, 'Uncaught Exception – Bot wird beendet.');
+  process.exit(1);
+});

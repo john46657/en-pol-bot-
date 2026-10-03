@@ -37,11 +37,28 @@ export interface ParsedCustomId {
   args: string[];
 }
 
-export function parseCustomId(customId: string | undefined): ParsedCustomId | null {
-  if (!customId) return null;
-  const parts = customId.split(':');
-  if (parts[0] !== PREFIX || parts.length < 2) return null;
-  return { action: parts[1] as CustomIdAction, args: parts.slice(2) };
+/**
+ * Aktionen enthalten selbst Doppelpunkte (`panel:start`). Daher wird gegen die bekannten Aktionen
+ * (längste zuerst) geprüft; `extraActions` erlaubt Modulen eigene Aktionen (Registry).
+ */
+export function parseCustomId(
+  customId: string | undefined,
+  extraActions: Iterable<string> = [],
+): ParsedCustomId | null {
+  if (!customId || !customId.startsWith(`${PREFIX}:`)) return null;
+  const rest = customId.slice(PREFIX.length + 1);
+  if (!rest) return null;
+  const known = [...Object.values(CustomIdAction), ...extraActions].sort(
+    (a, b) => b.length - a.length,
+  );
+  for (const action of known) {
+    if (rest === action) return { action: action as CustomIdAction, args: [] };
+    if (rest.startsWith(`${action}:`)) {
+      return { action: action as CustomIdAction, args: rest.slice(action.length + 1).split(':') };
+    }
+  }
+  const parts = rest.split(':');
+  return { action: parts[0] as CustomIdAction, args: parts.slice(1) };
 }
 
 const SNOWFLAKE_PATTERN = /^\d{17,20}$/;

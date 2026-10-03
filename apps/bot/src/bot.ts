@@ -1,6 +1,13 @@
-import { Client, Events, GatewayIntentBits, MessageFlags, Partials, type GuildMember } from 'discord.js';
+import {
+  Client,
+  Events,
+  GatewayIntentBits,
+  MessageFlags,
+  Partials,
+  type GuildMember,
+} from 'discord.js';
 import { DMPhase, SubmissionStatus } from '@nexus/types';
-import { prisma } from '@nexus/database';
+import { guildRepository, prisma } from '@nexus/database';
 import { config } from './config.js';
 import { log } from './logger.js';
 import { connectRedis } from './utils/lock.js';
@@ -37,8 +44,28 @@ export function createClient(): Client {
     await recoverActiveApplications(readyClient);
   });
 
-  client.on(Events.GuildCreate, (guild) => void syncGuild(guild).catch((e) => log.error({ err: String(e) }, 'Guild-Sync fehlgeschlagen.')));
-  client.on(Events.GuildUpdate, (_old, guild) => void syncGuild(guild).catch((e) => log.error({ err: String(e) }, 'Guild-Sync fehlgeschlagen.')));
+  client.on(
+    Events.GuildCreate,
+    (guild) =>
+      void syncGuild(guild).catch((e) =>
+        log.error({ err: String(e) }, 'Guild-Sync fehlgeschlagen.'),
+      ),
+  );
+  client.on(
+    Events.GuildUpdate,
+    (_old, guild) =>
+      void syncGuild(guild).catch((e) =>
+        log.error({ err: String(e) }, 'Guild-Sync fehlgeschlagen.'),
+      ),
+  );
+  client.on(Events.GuildDelete, (guild) => {
+    // `available === false` = Discord-Ausfall, nicht Verlassen.
+    if (!guild.available) return;
+    guildRepository
+      .markLeft(guild.id)
+      .then(() => log.info({ guildId: guild.id }, 'Bot hat den Server verlassen.'))
+      .catch((e) => log.error({ err: String(e) }, 'Verlassen-Markierung fehlgeschlagen.'));
+  });
   client.on(Events.InteractionCreate, (interaction) => {
     const run = async (): Promise<void> => {
       if (interaction.isChatInputCommand()) await handleCommand(interaction);
@@ -48,12 +75,17 @@ export function createClient(): Client {
     run().catch((error) => {
       log.error({ err: String(error) }, 'Interaction fehlgeschlagen.');
       if (interaction.isRepliable() && !interaction.replied && !interaction.deferred) {
-        void interaction.reply({ content: '⚠️ Es ist ein Fehler aufgetreten.', flags: MessageFlags.Ephemeral }).catch(() => undefined);
+        void interaction
+          .reply({ content: '⚠️ Es ist ein Fehler aufgetreten.', flags: MessageFlags.Ephemeral })
+          .catch(() => undefined);
       }
     });
   });
   client.on(Events.MessageCreate, (message) => handleDMMessage(client, message));
   client.on(Events.GuildMemberRemove, (member) => handleMemberRemove(member as GuildMember));
+  client.on(Events.Warn, (message) => log.warn({ message }, 'Client-Warnung.'));
+  client.on(Events.ShardDisconnect, (_e, id) => log.warn({ shard: id }, 'Shard getrennt.'));
+  client.on(Events.ShardReconnecting, (id) => log.info({ shard: id }, 'Shard verbindet neu.'));
   client.on(Events.Error, (error) => log.error({ err: String(error) }, 'Client-Fehler.'));
 
   return client;
@@ -109,13 +141,17 @@ export async function startBot(): Promise<void> {
   try {
     await connectRedis();
   } catch (error) {
-    throw new Error(`Redis nicht erreichbar unter ${config.redis.url} (${String(error)}). Läuft Redis? (REDIS_URL prüfen)`);
+    throw new Error(
+      `Redis nicht erreichbar unter ${config.redis.url} (${String(error)}). Läuft Redis? (REDIS_URL prüfen)`,
+    );
   }
   try {
     await prisma.$connect();
     await prisma.guild.count(); // schlägt fehl, wenn das Schema noch nicht angelegt wurde
   } catch (error) {
-    throw new Error(`Datenbank nicht bereit (${String(error).split('\n')[0]}). DATABASE_URL prüfen und einmal "pnpm --filter @nexus/database prisma:push" ausführen.`);
+    throw new Error(
+      `Datenbank nicht bereit (${String(error).split('\n')[0]}). DATABASE_URL prüfen und einmal "pnpm --filter @nexus/database prisma:push" ausführen.`,
+    );
   }
   const client = createClient();
   try {

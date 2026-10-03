@@ -8,6 +8,7 @@ import type {
 import { ActionRowBuilder, ModalBuilder, TextInputBuilder, TextInputStyle } from 'discord.js';
 import { parseCustomId, CustomIdAction, isValidId } from '../discord/custom-ids.js';
 import { log } from '../logger.js';
+import { dispatchComponent, dispatchModal } from '../core/interaction-registry.js';
 import { DMPhase, SubmissionStatus } from '@nexus/types';
 import { prisma } from '@nexus/database';
 import { startApplication } from '../applications/application-service.js';
@@ -59,6 +60,7 @@ async function handleComponent(
   client: Client,
   interaction: MessageComponentInteraction,
 ): Promise<void> {
+  if (await dispatchComponent(client, interaction)) return;
   const parsed = parseCustomId(interaction.customId);
   if (!parsed) return;
 
@@ -94,7 +96,8 @@ async function handleComponent(
   }
 }
 
-async function handleModal(_client: Client, interaction: ModalSubmitInteraction): Promise<void> {
+async function handleModal(client: Client, interaction: ModalSubmitInteraction): Promise<void> {
+  if (await dispatchModal(client, interaction)) return;
   const parsed = parseCustomId(interaction.customId);
   if (!parsed) return;
 
@@ -181,7 +184,7 @@ async function loadFlowContextFor(applicationId: string): Promise<FlowContext | 
     applicationId: application.id,
     applicationName: application.name,
     versionQuestions: [],
-    messages: ((application.config as { messages?: Record<string, string> } | null)?.messages) ?? {},
+    messages: (application.config as { messages?: Record<string, string> } | null)?.messages ?? {},
   };
 }
 
