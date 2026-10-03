@@ -1,4 +1,4 @@
-# 🚀 ENRP NEXUS dauerhaft hosten (VPS + Domain, ohne localhost)
+# 🚀 EN Polizei dauerhaft hosten (VPS + Domain, ohne localhost)
 
 Ergebnis: `https://nexus.deine-domain.de` läuft 24/7, startet nach Neustarts selbst, hat automatisches HTTPS und tägliche Datenbank-Backups.
 

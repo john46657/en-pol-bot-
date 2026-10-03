@@ -49,7 +49,7 @@ async function resolveIncident(c: Ctx, number: string): Promise<{ incident?: Row
 
 export const COMMANDS: CommandDef[] = [
   {
-    name: 'verknuepfen', description: 'Verknüpft dein Discord-Konto mit deinem ENRP-NEXUS-Benutzer',
+    name: 'verknuepfen', description: 'Verknüpft dein Discord-Konto mit deinem EN-Polizei-Benutzer',
     options: [{ name: 'code', description: 'Code aus dem Web („Discord verknüpfen“)', type: 'string', required: true, maxLength: 12 }],
     async run(c) {
       try {
@@ -65,7 +65,7 @@ export const COMMANDS: CommandDef[] = [
   {
     name: 'hilfe', description: 'Zeigt alle Befehle',
     async run() {
-      return { ephemeral: true, embeds: [{ title: 'ENRP NEXUS — Befehle', color: COLORS.info, fields: [
+      return { ephemeral: true, embeds: [{ title: 'EN Polizei — Befehle', color: COLORS.info, fields: [
         { name: 'Konto', value: '`/verknuepfen` `/entverknuepfen` `/profil` `/benachrichtigungen`' },
         { name: 'Abfragen', value: '`/person` `/kennzeichen` `/fahndungen` `/einsaetze` `/einsatzinfo` `/einheiten` `/team`' },
         { name: 'Dienst & Leitstelle', value: '`/dienst` `/einheitstatus` `/einsatz` `/einsatzstatus` `/einsatzzuweisen` `/funk`' },

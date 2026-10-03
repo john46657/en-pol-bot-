@@ -28,7 +28,7 @@ export function configureApp(app: INestApplication) {
   }
   app.enableCors({ origin: env.WEB_ORIGIN.split(','), credentials: true });
   if (env.ENABLE_SWAGGER ? env.ENABLE_SWAGGER === 'true' : env.NODE_ENV === 'development') {
-    const doc = SwaggerModule.createDocument(app, new DocumentBuilder().setTitle('ENRP NEXUS API').setVersion('0.1.0').addCookieAuth('enrp_session').build());
+    const doc = SwaggerModule.createDocument(app, new DocumentBuilder().setTitle('EN Polizei API').setVersion('0.1.0').addCookieAuth('enrp_session').build());
     SwaggerModule.setup('api/docs', app, doc);
   }
   app.enableShutdownHooks();

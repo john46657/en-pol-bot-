@@ -2,7 +2,7 @@
   "name": "enrp-nexus",
   "private": true,
   "version": "0.1.0",
-  "description": "ENRP NEXUS \u2014 Police CAD / MDT / Dispatch for Emergency Response: Liberty County",
+  "description": "EN Polizei \u2014 Police CAD / MDT / Dispatch for Emergency Response: Liberty County",
   "packageManager": "pnpm@10.34.6",
   "engines": {
     "node": ">=22"

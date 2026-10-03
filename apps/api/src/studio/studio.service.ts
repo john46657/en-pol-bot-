@@ -17,7 +17,7 @@ export class StudioService {
     const [customFields, accent, name] = await Promise.all([
       this.setting<CustomFieldsConfig>('studio.customFields', { persons: [], vehicles: [] }),
       this.setting<string>('theme.accent', 'blue'),
-      this.setting<string>('org.name', 'ENRP NEXUS'),
+      this.setting<string>('org.name', 'EN Polizei'),
     ]);
     return { org: { name }, theme: { accent }, customFields };
   }

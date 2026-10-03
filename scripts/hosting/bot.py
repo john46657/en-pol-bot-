@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-ENRP NEXUS – Python-Starter für Panels, die nur "python3 bot.py" starten können.
+EN Polizei – Python-Starter für Panels, die nur "python3 bot.py" starten können.
 
 Das Projekt läuft mit Node.js. Dieses Skript
   1. nutzt ein vorhandenes Node.js (>= 22), sonst

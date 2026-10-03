@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Baut ein eigenständiges Bot-Paket:  pnpm bundle:bot  →  dist-bot/enrp-nexus-bot.zip
+ * Baut ein eigenständiges Bot-Paket:  pnpm bundle:bot  →  dist-bot/en-polizei-bot.zip
  *  - bot.js          : EINE Datei mit allem (inkl. discord.js) – läuft ohne `npm install`  (node bot.js)
  *  - src/            : kompletter TypeScript-Quellcode des Bots
  *  - package.json    : für Hoster, die Pakete installieren wollen (Start: node dist/index.js bzw. bot.js)
@@ -12,7 +12,7 @@ import path from 'node:path';
 
 const root = path.resolve(import.meta.dirname, '..');
 const out = path.join(root, 'dist-bot');
-const dir = path.join(out, 'enrp-nexus-bot');
+const dir = path.join(out, 'en-polizei-bot');
 rmSync(out, { recursive: true, force: true });
 mkdirSync(dir, { recursive: true });
 
@@ -24,16 +24,16 @@ await build({
 cpSync(path.join(root, 'apps/bot/src'), path.join(dir, 'src'), { recursive: true });
 const pkg = JSON.parse(readFileSync(path.join(root, 'apps/bot/package.json'), 'utf8'));
 writeFileSync(path.join(dir, 'package.json'), JSON.stringify({
-  name: 'enrp-nexus-bot', version: pkg.version, private: true, main: 'bot.js', engines: { node: '>=22' },
+  name: 'en-polizei-bot', version: pkg.version, private: true, main: 'bot.js', engines: { node: '>=22' },
   scripts: { start: 'node bot.js' }, dependencies: {},
 }, null, 2) + '\n');
-writeFileSync(path.join(dir, '.env.example'), `# ENRP NEXUS Discord-Bot – Einstellungen (als Umgebungsvariablen im Panel setzen)
+writeFileSync(path.join(dir, '.env.example'), `# EN Polizei Discord-Bot – Einstellungen (als Umgebungsvariablen im Panel setzen)
 
 # Bot-Token aus dem Discord Developer Portal (Application → Bot → Token)
 DISCORD_TOKEN=
 # Server-ID (Entwicklermodus an → Rechtsklick auf den Server → ID kopieren). Mit Wert erscheinen die /-Befehle sofort.
 DISCORD_GUILD_ID=
-# Adresse deines ENRP-NEXUS-Systems (muss vom Bot aus erreichbar sein), ohne "/" am Ende:
+# Adresse deines EN-Polizei-Systems (muss vom Bot aus erreichbar sein), ohne "/" am Ende:
 API_URL=http://DEINE-IP-ODER-DOMAIN:PORT
 # Gemeinsames Geheimnis – MUSS EXAKT dem BOT_API_TOKEN des Systems entsprechen (mind. 32 Zeichen).
 # Im Hosting-Paket des Systems steht es in der Datei data/bot-api-token; auf dem VPS in der .env.
@@ -41,7 +41,7 @@ BOT_API_TOKEN=
 # Wie oft (Sekunden) neue Benachrichtigungen abgeholt werden
 OUTBOX_POLL_SECONDS=5
 `);
-writeFileSync(path.join(dir, 'LIES-MICH.txt'), `ENRP NEXUS – Discord-Bot (eigenständig)
+writeFileSync(path.join(dir, 'LIES-MICH.txt'), `EN Polizei – Discord-Bot (eigenständig)
 ======================================
 Wann brauchst du das? Wenn das System (API + Web) schon irgendwo läuft und du NUR den Bot separat hosten willst.
 (Wenn du das komplette Hosting-Paket benutzt, startet der Bot dort bereits automatisch mit – dieses Paket brauchst du dann nicht.)
@@ -66,6 +66,6 @@ Das System gibt dem Bot nur Rechte, die der verknüpfte Benutzer selbst hat (Ver
 cpSync(path.join(root, 'docs/discord-bot.md'), path.join(dir, 'docs/discord-bot.md'), { recursive: true });
 cpSync(path.join(root, 'scripts/hosting/bot.py'), path.join(dir, 'bot.py')); // Starter für Python-Panels
 // flach zippen: bot.js liegt nach dem Entpacken direkt im Hauptordner (kein Unterordner)
-const z = spawnSync('zip', ['-r', '-q', path.join(out, 'enrp-nexus-bot.zip'), '.'], { cwd: dir, stdio: 'inherit' });
+const z = spawnSync('zip', ['-r', '-q', path.join(out, 'en-polizei-bot.zip'), '.'], { cwd: dir, stdio: 'inherit' });
 if (z.status !== 0) process.exit(1);
-console.log(`bot.js: ${(statSync(path.join(dir, 'bot.js')).size / 1e6).toFixed(1)} MB, ZIP: ${(statSync(path.join(out, 'enrp-nexus-bot.zip')).size / 1e6).toFixed(1)} MB\n→ ${path.join(out, 'enrp-nexus-bot.zip')}`);
+console.log(`bot.js: ${(statSync(path.join(dir, 'bot.js')).size / 1e6).toFixed(1)} MB, ZIP: ${(statSync(path.join(out, 'en-polizei-bot.zip')).size / 1e6).toFixed(1)} MB\n→ ${path.join(out, 'en-polizei-bot.zip')}`);

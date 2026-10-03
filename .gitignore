@@ -15,3 +15,5 @@ dist-hosting
 dist-bot
 .DS_Store
 .vite
+__pycache__
+*.pyc

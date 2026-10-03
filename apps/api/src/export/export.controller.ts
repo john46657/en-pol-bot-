@@ -52,7 +52,7 @@ export class ExportController {
     const doc = new PDFDocument({ margin: 36, size: 'A4', layout: 'landscape' });
     res.type('application/pdf');
     doc.pipe(res);
-    doc.fontSize(14).text(`ENRP NEXUS — ${entity} export`, { underline: true }).moveDown(0.5);
+    doc.fontSize(14).text(`EN Polizei — ${entity} export`, { underline: true }).moveDown(0.5);
     doc.fontSize(8).text(`Generated ${new Date().toISOString()} • ${rows.length} rows • exported by ${actor.userId}`).moveDown();
     for (const r of rows) doc.text(Object.values(r).map((v) => (v ?? '—')).join('  |  '), { lineGap: 1 });
     doc.end();

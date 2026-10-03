@@ -37,7 +37,7 @@ export class CommunicationService {
     const msg = await this.prisma.message.create({ data: { conversationId: c.id, authorId: uid, body: d.body, replyToId: d.replyToId } });
     if (channel === 'ANNOUNCEMENT') {
       const author = await this.prisma.user.findUnique({ where: { id: uid }, select: { displayName: true } });
-      void this.discord.enqueue('announcements', 'announcement', { body: d.body.slice(0, 1500), author: author?.displayName ?? 'Command' });
+      await this.discord.enqueue('announcements', 'announcement', { body: d.body.slice(0, 1500), author: author?.displayName ?? 'Command' });
     }
     return msg;
   }

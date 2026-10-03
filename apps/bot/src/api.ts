@@ -37,7 +37,7 @@ export class HttpApi implements Api {
       return json as T;
     } catch (e) {
       if (e instanceof BotApiError) throw e;
-      throw new BotApiError(0, 'UNREACHABLE', 'The ENRP NEXUS API is not reachable.');
+      throw new BotApiError(0, 'UNREACHABLE', 'The EN Polizei API is not reachable.');
     } finally { clearTimeout(timer); }
   }
 

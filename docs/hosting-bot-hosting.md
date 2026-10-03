@@ -1,6 +1,6 @@
 # 🧩 Alles auf bot-hosting.net (Panel-Hosting)
 
-Ziel: **ein einziges Paket** (`enrp-nexus-hosting.zip`) enthält API, Web-Oberfläche und Discord-Bot. Du lädst es in dein Panel, trägst die Datenbank ein, startest – fertig.
+Ziel: **ein einziges Paket** (`en-polizei-hosting.zip`) enthält API, Web-Oberfläche und Discord-Bot. Du lädst es in dein Panel, trägst die Datenbank ein, startest – fertig.
 
 ## ⚠️ Ehrliche Einordnung (bitte zuerst lesen)
 | Thema | Stand |
@@ -16,7 +16,7 @@ Ziel: **ein einziges Paket** (`enrp-nexus-hosting.zip`) enthält API, Web-Oberfl
 ```bash
 cd enrp-nexus
 pnpm install
-pnpm bundle:hosting      # → dist-hosting/enrp-nexus-hosting.zip  (ca. 0,5 MB)
+pnpm bundle:hosting      # → dist-hosting/en-polizei-hosting.zip  (ca. 0,5 MB)
 ```
 Die ZIP enthält vorkompilierten Code, **keine** `node_modules` (die haben Mac-Binaries; das Panel installiert die passenden für Linux).
 

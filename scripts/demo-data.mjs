@@ -104,7 +104,7 @@ const inv = await post(det, '/investigations', { title: 'Liberty Bank robbery ri
 await post(det, '/evidence', { type: 'Weapon', description: 'Pistol recovered near Main St', caseRef: inv.caseNumber, storageLocation: 'Locker 4', personIds: [P.Cody_Crook] });
 await post(sup, '/wanted', { personId: P.Cody_Crook, reason: 'Armed robbery — Liberty Bank', priority: 'URGENT', description: 'Armed and dangerous' });
 await post(det, '/communication/channels/TEAM/messages', { body: 'Briefing at 20:00 — focus on the bank robbery case.' }).catch(() => undefined);
-await post(admin, '/communication/channels/ANNOUNCEMENT/messages', { body: 'Welcome to ENRP NEXUS! This is demo data.' });
+await post(admin, '/communication/channels/ANNOUNCEMENT/messages', { body: 'Welcome to EN Polizei! This is demo data.' });
 await post(admin, '/communication/channels/TEAM/messages', { body: 'Patrol assignments are posted in Dispatch.' });
 await fetch(`${API}/api/v1/applications`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ robloxUsername: 'Nina_Newbie', robloxUserId: '8000001', answers: { experience: '2 years RP', availability: 'Evenings', motivation: 'I like structured roleplay.', roleplayKnowledge: 'Familiar with FRP/NITRP.', erlcKnowledge: 'Good' } }) });
 void adminId;

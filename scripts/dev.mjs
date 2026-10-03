@@ -39,7 +39,7 @@ const waitPort = (port, ms = 90_000) => new Promise((res, rej) => {
 function shutdown(code = 0) { for (const c of children) c.kill('SIGTERM'); setTimeout(() => process.exit(code), 500); }
 process.on('SIGINT', () => shutdown(0)); process.on('SIGTERM', () => shutdown(0));
 
-console.log('ENRP NEXUS — local dev environment');
+console.log('EN Polizei — local dev environment');
 if (!existsSync(path.join(root, 'node_modules'))) runSync('pnpm', ['install'], 'setup');
 writeFileSync(path.join(root, 'apps/api/.env'), `DATABASE_URL=${env.DATABASE_URL}\n`);
 runSync('pnpm', ['--filter', '@enrp/shared', 'build'], 'build');

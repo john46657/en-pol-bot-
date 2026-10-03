@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Baut ein ZIP für Panel-Hosting (bot-hosting.net o. Ä.):  pnpm bundle:hosting  →  dist-hosting/enrp-nexus-hosting.zip
+ * Baut ein ZIP für Panel-Hosting (bot-hosting.net o. Ä.):  pnpm bundle:hosting  →  dist-hosting/en-polizei-hosting.zip
  * Enthält vorkompilierte API, Web-Oberfläche und Bot. node_modules kommen NICHT mit (Linux-Binaries!) – das Panel führt `npm install` aus.
  */
 import { cpSync, existsSync, mkdirSync, readFileSync, readdirSync, rmSync, statSync, writeFileSync } from 'node:fs';
@@ -38,13 +38,13 @@ const api = json('apps/api/package.json'), bot = json('apps/bot/package.json');
 const deps = { ...bot.dependencies, ...api.dependencies, '@enrp/shared': 'file:./packages/shared' };
 const prisma = deps.prisma;
 writeFileSync(path.join(bundle, 'package.json'), JSON.stringify({
-  name: 'enrp-nexus-hosting', version: json('package.json').version, private: true, main: 'start.js', engines: { node: '>=22' },
+  name: 'en-polizei-hosting', version: json('package.json').version, private: true, main: 'start.js', engines: { node: '>=22' },
   scripts: { start: 'node start.js', postinstall: `prisma generate --schema api/prisma/schema.prisma` },
   dependencies: Object.fromEntries(Object.entries(deps).sort(([a], [b]) => a.localeCompare(b))),
 }, null, 2) + '\n');
 void prisma;
 
-writeFileSync(path.join(bundle, 'LIES-MICH.txt'), `ENRP NEXUS – Hosting-Paket
+writeFileSync(path.join(bundle, 'LIES-MICH.txt'), `EN Polizei – Hosting-Paket
 =========================
 1. Alle Dateien (nicht den Ordner selbst) in dein Panel hochladen und entpacken.
 2. Startdatei:  start.js   |   Startbefehl:  node start.js   (oder: npm start)
@@ -59,7 +59,7 @@ Komplette Anleitung: docs/hosting-bot-hosting.md (liegt in diesem Paket). Discor
 
 // Größe + ZIP
 const size = (d) => readdirSync(d, { withFileTypes: true }).reduce((n, e) => n + (e.isDirectory() ? size(path.join(d, e.name)) : statSync(path.join(d, e.name)).size), 0);
-sh('zip', ['-r', '-q', path.join(out, 'enrp-nexus-hosting.zip'), '.'], bundle);
-console.log(`\nBundle: ${(size(bundle) / 1e6).toFixed(1)} MB unkomprimiert, ZIP: ${(statSync(path.join(out, 'enrp-nexus-hosting.zip')).size / 1e6).toFixed(1)} MB`);
-console.log(`→ ${path.join(out, 'enrp-nexus-hosting.zip')}`);
+sh('zip', ['-r', '-q', path.join(out, 'en-polizei-hosting.zip'), '.'], bundle);
+console.log(`\nBundle: ${(size(bundle) / 1e6).toFixed(1)} MB unkomprimiert, ZIP: ${(statSync(path.join(out, 'en-polizei-hosting.zip')).size / 1e6).toFixed(1)} MB`);
+console.log(`→ ${path.join(out, 'en-polizei-hosting.zip')}`);
 if (!existsSync(path.join(bundle, 'api/dist/main.js'))) { console.error('api/dist/main.js fehlt'); process.exit(1); }

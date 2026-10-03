@@ -13,7 +13,7 @@ export function AppShell() {
   const { user, can, logout } = useAuth();
   const [open, setOpen] = useState(false);
   const studio = useStudio();
-  const orgName = studio.data?.org?.name ?? 'ENRP NEXUS';
+  const orgName = studio.data?.org?.name ?? 'EN Polizei';
   useEffect(() => { // Akzentfarbe aus der Studio-Konfiguration; nur Werte aus der festen Palette
     document.documentElement.style.setProperty('--color-primary', ACCENTS[studio.data?.theme?.accent ?? 'blue'] ?? ACCENTS.blue!);
     document.title = orgName;

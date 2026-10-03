@@ -49,7 +49,7 @@ export class WantedService {
       return w;
     }).then(async (w) => {
       const subject = w.personId ? (await this.prisma.person.findUnique({ where: { id: w.personId } }))?.robloxUsername : (await this.prisma.vehicle.findUnique({ where: { id: w.vehicleId! } }))?.plate;
-      void this.discord.enqueue('wanted', 'wanted.created', { reason: w.reason, priority: w.priority, subject: subject ?? 'unknown', kind: w.personId ? 'person' : 'vehicle' });
+      await this.discord.enqueue('wanted', 'wanted.created', { reason: w.reason, priority: w.priority, subject: subject ?? 'unknown', kind: w.personId ? 'person' : 'vehicle' });
       return w;
     });
   }

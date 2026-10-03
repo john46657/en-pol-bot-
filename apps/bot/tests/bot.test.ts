@@ -192,7 +192,7 @@ describe('outbox loop log noise', () => {
     let up = false;
     const api: Api = {
       async asUser() { throw new Error('unused'); },
-      async service(_m, path) { if (!up) throw new BotApiError(0, 'UNREACHABLE', 'The ENRP NEXUS API is not reachable.'); return (path === '/bot/config' ? {} : []) as never; },
+      async service(_m, path) { if (!up) throw new BotApiError(0, 'UNREACHABLE', 'The EN Polizei API is not reachable.'); return (path === '/bot/config' ? {} : []) as never; },
     };
     const lines: string[] = [];
     const stop = startOutboxLoop(api, async () => undefined, 5, (m) => lines.push(m));

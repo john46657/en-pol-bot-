@@ -22,7 +22,7 @@ export function Login() {
   return (
     <div className="grid min-h-full place-items-center p-4">
       <form onSubmit={submit} className="w-full max-w-sm space-y-4 rounded-lg border border-line bg-panel p-6" aria-label="Sign in">
-        <div className="flex items-center gap-2 text-lg font-semibold"><Shield className="text-primary" aria-hidden />ENRP NEXUS</div>
+        <div className="flex items-center gap-2 text-lg font-semibold"><Shield className="text-primary" aria-hidden />EN Polizei</div>
         <p className="text-sm text-muted">Police CAD / MDT — authorised personnel only.</p>
         <Field label="Username">{(id) => <Input id={id} name="username" autoComplete="username" required autoFocus />}</Field>
         <Field label="Password" error={err}>{(id) => <Input id={id} name="password" type="password" autoComplete="current-password" required />}</Field>

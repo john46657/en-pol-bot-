@@ -1,6 +1,6 @@
 'use strict';
 /**
- * ENRP NEXUS – Start für Panel-Hosting (z. B. bot-hosting.net): ein Prozess-Start für API + Web-Oberfläche (+ Discord-Bot).
+ * EN Polizei – Start für Panel-Hosting (z. B. bot-hosting.net): ein Prozess-Start für API + Web-Oberfläche (+ Discord-Bot).
  *   1) liest .env (falls vorhanden)  2) erzeugt/merkt sich Geheimnisse  3) Datenbank-Migrationen  4) erster Admin  5) startet API (+ Bot)
  */
 const { spawn, spawnSync } = require('node:child_process');

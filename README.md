@@ -1,4 +1,4 @@
-# ENRP NEXUS
+# EN Polizei
 
 > 📦 **Der frühere Python-Bot** (Emden RP Bot: `bot.py`, `database.py`, …) liegt unverändert im Ordner [`alter-python-bot/`](alter-python-bot).
 
