@@ -1,0 +1,100 @@
+import { Injectable } from '@nestjs/common';
+import { createHash, randomInt } from 'node:crypto';
+import { Prisma } from '@prisma/client';
+import { PrismaService } from '../prisma/prisma.service';
+import { AuditService, Actor } from '../audit/audit.service';
+import { AppError } from '../common/errors';
+
+const ALPHABET = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+const CODE_TTL_MS = 10 * 60_000;
+const hash = (c: string) => createHash('sha256').update(c.toUpperCase().replace(/[\s-]/g, '')).digest('hex');
+export const CHANNEL_KEYS = ['dispatch', 'wanted', 'announcements'] as const;
+export type ChannelKey = (typeof CHANNEL_KEYS)[number];
+export interface DiscordChannels { guildId?: string; dispatch?: string; wanted?: string; announcements?: string }
+
+@Injectable()
+export class DiscordService {
+  constructor(private readonly prisma: PrismaService, private readonly audit: AuditService) {}
+
+  // ---- Verknüpfung (Web-Benutzer erzeugt Code, Bot löst ihn ein) ----
+  async createLinkCode(actor: Actor) {
+    const userId = actor.userId!;
+    if (await this.prisma.discordLink.findUnique({ where: { userId } })) throw new AppError('CONFLICT', 'Your account is already linked to Discord. Unlink it first.');
+    let raw = '';
+    for (let i = 0; i < 8; i++) raw += ALPHABET[randomInt(ALPHABET.length)];
+    const expiresAt = new Date(Date.now() + CODE_TTL_MS);
+    await this.prisma.$transaction(async (tx) => {
+      await tx.discordLinkCode.deleteMany({ where: { userId, usedAt: null } }); // nur ein offener Code pro Benutzer
+      await tx.discordLinkCode.create({ data: { userId, codeHash: hash(raw), expiresAt } });
+      await this.audit.record(actor, { action: 'discord.link.code_created', module: 'discord', entityType: 'User', entityId: userId }, tx);
+    });
+    return { code: `${raw.slice(0, 4)}-${raw.slice(4)}`, expiresAt };
+  }
+
+  /** Vom Bot aufgerufen. Einmalig, zeitlich begrenzt; ein Discord-Konto kann nur mit einem Benutzer verknüpft sein. */
+  async redeem(code: string, discordId: string) {
+    const row = await this.prisma.discordLinkCode.findUnique({ where: { codeHash: hash(code) }, });
+    if (!row || row.usedAt || row.expiresAt < new Date()) throw new AppError('VALIDATION_FAILED', 'Invalid or expired code.');
+    const user = await this.prisma.user.findUnique({ where: { id: row.userId } });
+    if (!user?.active) throw new AppError('VALIDATION_FAILED', 'Invalid or expired code.');
+    try {
+      await this.prisma.$transaction(async (tx) => {
+        const claimed = await tx.discordLinkCode.updateMany({ where: { id: row.id, usedAt: null }, data: { usedAt: new Date() } });
+        if (claimed.count === 0) throw new AppError('VALIDATION_FAILED', 'Invalid or expired code.');
+        await tx.discordLink.create({ data: { userId: row.userId, discordId } });
+        await this.audit.record({ userId: row.userId, robloxUserId: user.robloxUserId }, { action: 'discord.link', module: 'discord', entityType: 'User', entityId: row.userId, after: { discordId } }, tx);
+      });
+    } catch (e) {
+      if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === 'P2002') throw new AppError('CONFLICT', 'This Discord account or user is already linked.');
+      throw e;
+    }
+    return { displayName: user.displayName, username: user.username };
+  }
+
+  async unlink(actor: Actor, userId: string) {
+    const link = await this.prisma.discordLink.findUnique({ where: { userId } });
+    if (!link) throw new AppError('NOT_FOUND', 'No Discord link.');
+    await this.prisma.$transaction(async (tx) => {
+      await tx.discordLink.delete({ where: { userId } });
+      await this.audit.record(actor, { action: 'discord.unlink', module: 'discord', entityType: 'User', entityId: userId, before: { discordId: link.discordId } }, tx);
+    });
+  }
+
+  async status(userId: string) {
+    const link = await this.prisma.discordLink.findUnique({ where: { userId } });
+    return { linked: !!link, discordId: link?.discordId ?? null, linkedAt: link?.linkedAt ?? null };
+  }
+
+  /** Auflösung Discord-ID → aktiver Benutzer (für die Bot-Authentifizierung). */
+  async resolveUser(discordId: string) {
+    const link = await this.prisma.discordLink.findUnique({ where: { discordId } });
+    if (!link) return null;
+    const user = await this.prisma.user.findUnique({ where: { id: link.userId } });
+    return user?.active ? user : null;
+  }
+
+  // ---- Ausgangs-Warteschlange ----
+  async channels(): Promise<DiscordChannels> {
+    return ((await this.prisma.systemSetting.findUnique({ where: { key: 'discord.channels' } }))?.value as DiscordChannels | undefined) ?? {};
+  }
+
+  /** Nur Einreihen, wenn für den Kanal-Schlüssel ein Channel konfiguriert ist (kein Datenanfall ohne Bot). Fehler dürfen den Fachprozess nie stören. */
+  async enqueue(channelKey: ChannelKey, type: string, payload: Record<string, unknown>) {
+    try {
+      const ch = await this.channels();
+      if (!ch[channelKey]) return;
+      await this.prisma.discordOutbox.create({ data: { type, channelKey, payload: payload as Prisma.InputJsonValue } });
+    } catch { /* Benachrichtigung ist best effort */ }
+  }
+
+  pending(limit: number) {
+    return this.prisma.discordOutbox.findMany({ where: { sentAt: null, attempts: { lt: 5 } }, orderBy: { createdAt: 'asc' }, take: limit });
+  }
+
+  async ack(id: string, ok: boolean, error?: string) {
+    const r = ok
+      ? await this.prisma.discordOutbox.updateMany({ where: { id, sentAt: null }, data: { sentAt: new Date() } })
+      : await this.prisma.discordOutbox.updateMany({ where: { id, sentAt: null }, data: { attempts: { increment: 1 }, lastError: (error ?? 'failed').slice(0, 300) } });
+    if (r.count === 0) throw new AppError('NOT_FOUND', 'Outbox entry not found.');
+  }
+}

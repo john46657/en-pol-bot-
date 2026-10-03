@@ -1,0 +1,92 @@
+# Produktion: db + api + web (Caddy, HTTPS) + täglich Datenbank-Backups.
+# Start: docker compose up -d --build   (benötigt .env, siehe .env.example und docs/deployment.md)
+x-logging: &logging
+  driver: json-file
+  options: { max-size: "10m", max-file: "5" }
+
+services:
+  db:
+    image: postgres:17-alpine
+    restart: unless-stopped
+    logging: *logging
+    environment:
+      POSTGRES_USER: enrp
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env}
+      POSTGRES_DB: enrp
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U enrp -d enrp"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  api:
+    build: { context: ., target: api }
+    restart: unless-stopped
+    logging: *logging
+    depends_on:
+      db: { condition: service_healthy }
+    environment:
+      NODE_ENV: production
+      DATABASE_URL: postgresql://enrp:${POSTGRES_PASSWORD}@db:5432/enrp
+      SESSION_SECRET: ${SESSION_SECRET:?set SESSION_SECRET in .env}
+      WEB_ORIGIN: https://${DOMAIN:?set DOMAIN in .env}
+      STORAGE_DIR: /app/uploads
+      BOT_API_TOKEN: ${BOT_API_TOKEN:-}
+    volumes:
+      - uploads:/app/uploads
+
+  web:
+    build: { context: ., target: web }
+    restart: unless-stopped
+    logging: *logging
+    depends_on:
+      api: { condition: service_healthy }
+    environment:
+      DOMAIN: ${DOMAIN:?set DOMAIN in .env}
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - caddy_data:/data
+      - caddy_config:/config
+
+  # Discord-Bot (optional): docker compose --profile bot up -d --build   (benötigt DISCORD_TOKEN + BOT_API_TOKEN in .env)
+  bot:
+    profiles: ["bot"]
+    build: { context: ., target: bot }
+    restart: unless-stopped
+    logging: *logging
+    depends_on:
+      api: { condition: service_healthy }
+    environment:
+      DISCORD_TOKEN: ${DISCORD_TOKEN:?set DISCORD_TOKEN in .env}
+      DISCORD_GUILD_ID: ${DISCORD_GUILD_ID:-}
+      BOT_API_TOKEN: ${BOT_API_TOKEN:?set BOT_API_TOKEN in .env}
+      API_URL: http://api:3000
+
+  # Tägliche Dumps nach ./backups (14 Tage, 8 Wochen, 6 Monate aufbewahrt)
+  backup:
+    image: prodrigestivill/postgres-backup-local:17
+    restart: unless-stopped
+    logging: *logging
+    depends_on:
+      db: { condition: service_healthy }
+    environment:
+      POSTGRES_HOST: db
+      POSTGRES_DB: enrp
+      POSTGRES_USER: enrp
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      SCHEDULE: "@daily"
+      BACKUP_KEEP_DAYS: "14"
+      BACKUP_KEEP_WEEKS: "8"
+      BACKUP_KEEP_MONTHS: "6"
+    volumes:
+      - ./backups:/backups
+
+volumes:
+  pgdata:
+  uploads:
+  caddy_data:
+  caddy_config:

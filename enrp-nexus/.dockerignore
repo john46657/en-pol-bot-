@@ -1,0 +1,9 @@
+**/node_modules
+**/dist
+**/.pgdata
+**/.pgdata-test
+.git
+.env
+**/.env
+**/uploads
+coverage

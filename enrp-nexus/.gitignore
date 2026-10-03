@@ -1,0 +1,15 @@
+node_modules
+dist
+.env
+.env.*
+!.env.example
+.pgdata
+coverage
+*.log
+uploads
+test-results
+playwright-report
+.pgdata-e2e
+backups
+dist-hosting
+dist-bot
