@@ -23,6 +23,8 @@ export function computeVisibleQuestions(questions: Question[], answers: AnswerMa
   const visible: Question[] = [];
 
   for (const question of sorted) {
+    // Deaktivierte Fragen werden nie gestellt.
+    if (question.enabled === false) continue;
     // Optional configuration. `visibleIf === undefined` ⇒ immer sichtbar.
     if (question.visibleIf && !evaluateCondition(question.visibleIf, (id) => answers[id])) {
       continue;

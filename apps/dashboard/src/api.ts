@@ -150,3 +150,69 @@ export interface PanelRow {
   autoUpdate: boolean;
   updatedAt: string;
 }
+
+// --- Bewerbungen / Fragen-Builder -------------------------------------------
+export interface ApplicationRow {
+  id: string;
+  name: string;
+  slug: string;
+  status: string;
+  enabled: boolean;
+  updatedAt: string;
+  _count?: { submissions: number };
+}
+export interface QuestionOption {
+  id: string;
+  label: string;
+  value: string;
+  enabled: boolean;
+}
+export interface QuestionValidation {
+  minLength?: number;
+  maxLength?: number;
+  min?: number;
+  max?: number;
+  minSelections?: number;
+  maxSelections?: number;
+}
+export interface BuilderQuestion {
+  id: string;
+  type: string;
+  title: string;
+  description?: string;
+  required: boolean;
+  enabled?: boolean;
+  placeholder?: string;
+  options?: QuestionOption[];
+  validation?: QuestionValidation;
+  order: number;
+  visibleIf?: unknown;
+}
+export interface QuestionsResponse {
+  questions: BuilderQuestion[];
+  types: string[];
+  publishedVersion: number | null;
+  unpublishedChanges: boolean;
+}
+export const QUESTION_TYPE_LABEL: Record<string, string> = {
+  TEXT: 'Text (kurz)',
+  LONG_TEXT: 'Langtext',
+  NUMBER: 'Zahl (ganz)',
+  DECIMAL: 'Zahl (Dezimal)',
+  YES_NO: 'Ja / Nein',
+  SINGLE_SELECT: 'Auswahl',
+  MULTI_SELECT: 'Mehrfachauswahl',
+  DATE: 'Datum',
+  TIME: 'Uhrzeit',
+  DATETIME: 'Datum & Uhrzeit',
+  RATING: 'Bewertung',
+  SLIDER: 'Schieberegler',
+  URL: 'Link',
+  EMAIL: 'E-Mail',
+  PHONE: 'Telefon',
+  USERNAME: 'Discord-Name',
+  DISCORD_USER: 'Discord-Benutzer',
+  CONFIRMATION: 'Bestätigung',
+  PARAGRAPH: 'Anzeige-Text',
+  INFO: 'Hinweis',
+};

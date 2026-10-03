@@ -1,6 +1,8 @@
 import { Module } from '@nestjs/common';
 import { ApplicationsController } from './controllers/applications.controller.js';
 import { SubmissionsController } from './controllers/submissions.controller.js';
+import { QuestionsController } from './controllers/questions.controller.js';
+import { QuestionsService } from './services/questions.service.js';
 import { PanelsController } from './controllers/panels.controller.js';
 import { AnalyticsController } from './controllers/analytics.controller.js';
 import { ApplicationsService } from './services/applications.service.js';
@@ -13,9 +15,16 @@ import { ApplicationAnalyticsService } from './services/analytics.service.js';
     ApplicationsController,
     SubmissionsController,
     PanelsController,
+    QuestionsController,
     AnalyticsController,
   ],
-  providers: [ApplicationsService, SubmissionsService, PanelsService, ApplicationAnalyticsService],
+  providers: [
+    QuestionsService,
+    ApplicationsService,
+    SubmissionsService,
+    PanelsService,
+    ApplicationAnalyticsService,
+  ],
   exports: [ApplicationsService, SubmissionsService],
 })
 export class ApplicationsModule {}

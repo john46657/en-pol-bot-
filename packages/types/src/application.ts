@@ -73,6 +73,8 @@ export interface Question {
   title: string;
   description?: string;
   required: boolean;
+  /** Deaktivierte Fragen bleiben im Builder erhalten, werden aber nicht gestellt. Fehlt das Feld ⇒ aktiv. */
+  enabled?: boolean;
   placeholder?: string;
   defaultValue?: string;
   validation?: QuestionValidation;

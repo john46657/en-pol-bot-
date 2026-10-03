@@ -80,6 +80,7 @@ export const questionSchema = z.object({
   title: z.string().min(1).max(200),
   description: z.string().max(2000).optional(),
   required: z.boolean().default(false),
+  enabled: z.boolean().default(true),
   placeholder: z.string().max(200).optional(),
   defaultValue: z.string().max(10000).optional(),
   validation: questionValidationSchema.optional(),

@@ -3,6 +3,8 @@ import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router';
 import { ErrorBoundary } from './components/QueryState';
+import { ApplicationBuilder } from './pages/ApplicationBuilder';
+import { Applications } from './pages/Applications';
 import { AuthCallback } from './pages/AuthCallback';
 import { Channels } from './pages/Channels';
 import { Guild } from './pages/Guild';
@@ -41,6 +43,8 @@ createRoot(document.getElementById('root')!).render(
                   <Route path="settings" element={<Settings />} />
                   <Route path="roles" element={<Roles />} />
                   <Route path="channels" element={<Channels />} />
+                  <Route path="applications" element={<Applications />} />
+                  <Route path="applications/:applicationId" element={<ApplicationBuilder />} />
                   <Route path="panels" element={<Panels />} />
                   <Route path="panels/:panelId" element={<PanelEditor />} />
                   <Route path="permissions" element={<Permissions />} />

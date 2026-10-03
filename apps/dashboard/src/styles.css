@@ -549,3 +549,26 @@ input:focus-visible {
     grid-template-columns: 1fr;
   }
 }
+.qlist {
+  list-style: none;
+  padding: 0;
+  display: grid;
+  gap: 8px;
+  margin: 12px 0;
+}
+.row.off {
+  opacity: 0.55;
+}
+.inline-input {
+  padding: 8px;
+  border-radius: 8px;
+  border: 1px solid var(--line);
+  background: var(--bg);
+  color: var(--fg);
+  font: inherit;
+  flex: 1;
+  min-width: 160px;
+}
+.qlist .row {
+  flex-wrap: wrap;
+}

@@ -10,6 +10,7 @@ const NAV: { to: string; label: string; icon: string; end?: boolean; needs: Need
   { to: 'settings', label: 'Rollen & Kanäle wählen', icon: '⚙️', needs: 'view' },
   { to: 'roles', label: 'Rollen', icon: '🎭', needs: 'view' },
   { to: 'channels', label: 'Kanäle', icon: '#️⃣', needs: 'view' },
+  { to: 'applications', label: 'Bewerbungen', icon: '📋', needs: 'view' },
   { to: 'panels', label: 'Panels', icon: '🧩', needs: 'panels' },
   { to: 'permissions', label: 'Berechtigungen', icon: '🔐', needs: 'admin' },
   { to: 'logs', label: 'Logs', icon: '📜', needs: 'admin' },

@@ -1,7 +1,17 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  ConflictException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { ApplicationStatus } from '@nexus/types';
 import { prisma, assertGuildId, Prisma } from '@nexus/database';
-import { validateApplicationPublish } from '@nexus/validation';
+import {
+  applicationConfigSchema,
+  checkQuestionsForPublish,
+  validateApplicationPublish,
+} from '@nexus/validation';
+import type { Question } from '@nexus/types';
 import { jsonInput } from '../../../common/utils/json.js';
 import type { CreateApplicationDto, UpdateApplicationDto } from '../dto/applications.dto.js';
 
@@ -71,6 +81,18 @@ export class ApplicationsService {
 
   async create(guildId: string, dto: CreateApplicationDto, userId: string) {
     const slug = dto.slug ?? slugify(dto.name);
+    if (!slug)
+      throw new BadRequestException(
+        'Aus dem Namen lässt sich kein gültiger Slug bilden – bitte einen angeben.',
+      );
+    if (
+      await prisma.application.findFirst({
+        where: { guildId: assertGuildId(guildId), slug },
+        select: { id: true },
+      })
+    ) {
+      throw new ConflictException(`Die Kurzbezeichnung „${slug}“ ist schon vergeben.`);
+    }
     return prisma.application.create({
       data: {
         guildId: assertGuildId(guildId),
@@ -100,12 +122,28 @@ export class ApplicationsService {
   async update(guildId: string, applicationId: string, dto: UpdateApplicationDto, userId: string) {
     const existing = await this.getById(guildId, applicationId);
     const { config, ...rest } = dto;
+    let nextConfig: Record<string, unknown> | undefined;
+    if (config) {
+      // Fragen werden ausschließlich über den Fragen-Builder geändert (dort validiert, gesperrt, auditiert).
+      const { questions: _ignored, ...incoming } = config as Record<string, unknown>;
+      const parsed = applicationConfigSchema
+        .omit({ questions: true })
+        .partial()
+        .safeParse(incoming);
+      if (!parsed.success) {
+        throw new BadRequestException(
+          parsed.error.issues.slice(0, 5).map((i) => `${i.path.join('.')}: ${i.message}`),
+        );
+      }
+      const current = (existing.config ?? {}) as Record<string, unknown>;
+      nextConfig = { ...current, ...parsed.data, questions: current['questions'] ?? [] };
+    }
     return prisma.application.update({
       where: { id: existing.id },
       data: {
         ...rest,
         updatedBy: userId,
-        ...(config ? { config: jsonInput(config) } : {}),
+        ...(nextConfig ? { config: jsonInput(nextConfig) } : {}),
       } as Prisma.ApplicationUpdateInput,
     });
   }
@@ -145,8 +183,12 @@ export class ApplicationsService {
       questions: config.questions ?? [],
       ...(config.review !== undefined ? { review: config.review } : {}),
     });
-    if (!check.ok) {
-      return { ok: false as const, errors: check.errors };
+    const errors = [
+      ...check.errors,
+      ...checkQuestionsForPublish((config.questions ?? []) as unknown as Question[]),
+    ];
+    if (errors.length > 0) {
+      return { ok: false as const, errors };
     }
 
     const nextVersion = (application.versions[0]?.version ?? 0) + 1;
@@ -195,7 +237,17 @@ export class ApplicationsService {
   /** Duplicate (§99): kopiert alles außer Submissions/Audit/Cooldowns. */
   async duplicate(guildId: string, applicationId: string, userId: string) {
     const application = await this.getById(guildId, applicationId);
-    const slug = `${application.slug}-kopie`;
+    let slug = `${application.slug}-kopie`.slice(0, 60);
+    for (
+      let n = 2;
+      await prisma.application.findFirst({
+        where: { guildId: assertGuildId(guildId), slug },
+        select: { id: true },
+      });
+      n++
+    ) {
+      slug = `${application.slug.slice(0, 50)}-kopie-${n}`;
+    }
     return prisma.application.create({
       data: {
         guildId: assertGuildId(guildId),

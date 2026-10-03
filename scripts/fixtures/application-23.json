@@ -1,0 +1,236 @@
+[
+  {
+    "id": "info",
+    "type": "INFO",
+    "title": "Willkommen zur Bewerbung"
+  },
+  {
+    "id": "rpname",
+    "type": "TEXT",
+    "title": "RP-Name",
+    "required": true,
+    "validation": {
+      "minLength": 3,
+      "maxLength": 40,
+      "pattern": "^[a-zäöüß ]+$"
+    }
+  },
+  {
+    "id": "discord",
+    "type": "USERNAME",
+    "title": "Discord-Name",
+    "required": true
+  },
+  {
+    "id": "alter",
+    "type": "NUMBER",
+    "title": "Alter",
+    "required": true,
+    "validation": {
+      "min": 16,
+      "max": 99
+    }
+  },
+  {
+    "id": "geburt",
+    "type": "DATE",
+    "title": "Geburtsdatum (RP)",
+    "required": true
+  },
+  {
+    "id": "erfahrung",
+    "type": "YES_NO",
+    "title": "Hast du RP-Erfahrung?",
+    "required": true
+  },
+  {
+    "id": "erfahrung-wo",
+    "type": "LONG_TEXT",
+    "title": "Wo und wie lange?",
+    "required": true,
+    "validation": {
+      "minLength": 20,
+      "maxLength": 1500
+    },
+    "visibleIf": {
+      "type": "leaf",
+      "questionId": "erfahrung",
+      "operator": "equals",
+      "value": "true"
+    }
+  },
+  {
+    "id": "abteilung",
+    "type": "SINGLE_SELECT",
+    "title": "Wunsch-Abteilung",
+    "required": true,
+    "options": [
+      {
+        "id": "streife",
+        "label": "Streife",
+        "value": "streife",
+        "enabled": true
+      },
+      {
+        "id": "leitstelle",
+        "label": "Leitstelle",
+        "value": "leitstelle",
+        "enabled": true
+      },
+      {
+        "id": "sek",
+        "label": "SEK",
+        "value": "sek",
+        "enabled": true
+      },
+      {
+        "id": "verkehr",
+        "label": "Verkehr",
+        "value": "verkehr",
+        "enabled": true
+      }
+    ]
+  },
+  {
+    "id": "sek-grund",
+    "type": "LONG_TEXT",
+    "title": "Warum SEK?",
+    "required": true,
+    "visibleIf": {
+      "type": "leaf",
+      "questionId": "abteilung",
+      "operator": "equals",
+      "value": "sek"
+    }
+  },
+  {
+    "id": "faehigkeiten",
+    "type": "MULTI_SELECT",
+    "title": "Fähigkeiten",
+    "options": [
+      {
+        "id": "funk",
+        "label": "Funk",
+        "value": "funk",
+        "enabled": true
+      },
+      {
+        "id": "verhandlung",
+        "label": "Verhandlung",
+        "value": "verhandlung",
+        "enabled": true
+      },
+      {
+        "id": "erste hilfe",
+        "label": "Erste Hilfe",
+        "value": "erste hilfe",
+        "enabled": true
+      },
+      {
+        "id": "fahrtraining",
+        "label": "Fahrtraining",
+        "value": "fahrtraining",
+        "enabled": true
+      }
+    ],
+    "validation": {
+      "minSelections": 1,
+      "maxSelections": 3
+    }
+  },
+  {
+    "id": "verfuegbar",
+    "type": "TIME",
+    "title": "Ab wann bist du abends online?"
+  },
+  {
+    "id": "start",
+    "type": "DATETIME",
+    "title": "Wunsch-Starttermin"
+  },
+  {
+    "id": "motivation",
+    "type": "LONG_TEXT",
+    "title": "Warum möchtest du zur Polizei?",
+    "required": true,
+    "validation": {
+      "minLength": 50,
+      "maxLength": 2000
+    }
+  },
+  {
+    "id": "stunden",
+    "type": "DECIMAL",
+    "title": "Stunden pro Woche",
+    "required": true,
+    "validation": {
+      "min": 1,
+      "max": 80
+    }
+  },
+  {
+    "id": "fahrzeug",
+    "type": "SINGLE_SELECT",
+    "title": "Eigenes Fahrzeug im RP?",
+    "options": [
+      {
+        "id": "ja",
+        "label": "Ja",
+        "value": "ja",
+        "enabled": true
+      },
+      {
+        "id": "nein",
+        "label": "Nein",
+        "value": "nein",
+        "enabled": true
+      }
+    ]
+  },
+  {
+    "id": "regelwerk",
+    "type": "RATING",
+    "title": "Wie gut kennst du das Regelwerk?",
+    "required": true
+  },
+  {
+    "id": "teamarbeit",
+    "type": "SLIDER",
+    "title": "Teamarbeit vs. Alleingang",
+    "validation": {
+      "min": 1,
+      "max": 10
+    }
+  },
+  {
+    "id": "lebenslauf",
+    "type": "URL",
+    "title": "Link zu deinem Lebenslauf"
+  },
+  {
+    "id": "mail",
+    "type": "EMAIL",
+    "title": "E-Mail für Rückfragen"
+  },
+  {
+    "id": "tel",
+    "type": "PHONE",
+    "title": "Telefon (optional)"
+  },
+  {
+    "id": "bewerter",
+    "type": "DISCORD_USER",
+    "title": "Wer hat dich geworben?"
+  },
+  {
+    "id": "hinweis",
+    "type": "PARAGRAPH",
+    "title": "Bitte antworte ehrlich."
+  },
+  {
+    "id": "regeln",
+    "type": "CONFIRMATION",
+    "title": "Ich habe die Regeln gelesen und akzeptiert",
+    "required": true
+  }
+]
