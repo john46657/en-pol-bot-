@@ -42,4 +42,68 @@ export const permissionRepository = {
     });
     return rows.map((r) => r.key);
   },
+
+  /** Alle Zuordnungen eines Servers: Rolle (Discord-ID) → Permission-Keys, inkl. Rollen, die es auf Discord nicht mehr gibt. */
+  async getGrants(guildId: string) {
+    const rows = await prisma.permission.findMany({
+      where: { guildId: assertGuildId(guildId) },
+      select: { key: true, role: { select: { discordId: true, name: true, deletedAt: true } } },
+    });
+    const grants = new Map<string, { keys: string[]; name: string; deleted: boolean }>();
+    for (const r of rows) {
+      const g = grants.get(r.role.discordId) ?? {
+        keys: [],
+        name: r.role.name,
+        deleted: r.role.deletedAt !== null,
+      };
+      g.keys.push(r.key);
+      grants.set(r.role.discordId, g);
+    }
+    for (const g of grants.values()) g.keys.sort();
+    return grants;
+  },
+
+  /**
+   * Ersetzt die Permissions einer Rolle (leere Liste entfernt alle). Legt die Rolle bei Bedarf an
+   * (`snapshot` = aktueller Discord-Stand). Transaktional und je Rolle serialisiert.
+   */
+  async setPermissionsForRole(
+    guildId: string,
+    roleDiscordId: string,
+    keys: string[],
+    snapshot?: { name: string; position?: number; color?: number },
+  ) {
+    const gid = assertGuildId(guildId);
+    const unique = [...new Set(keys)].sort();
+    return prisma.$transaction(async (tx) => {
+      const existing = await tx.discordRole.findUnique({
+        where: { guildId_discordId: { guildId: gid, discordId: roleDiscordId } },
+      });
+      if (!existing && unique.length === 0)
+        return { before: [] as string[], after: [] as string[] };
+      if (!existing && !snapshot) throw new Error('Rolle ist nicht gespiegelt.');
+      const role =
+        existing ??
+        (await tx.discordRole.create({
+          data: { guildId: gid, discordId: roleDiscordId, ...snapshot! },
+        }));
+      // Zeile sperren, damit parallele Änderungen derselben Rolle nacheinander laufen.
+      await tx.$queryRaw`SELECT 1 FROM discord_roles WHERE id = ${role.id} FOR UPDATE`;
+      const before = (
+        await tx.permission.findMany({
+          where: { guildId: gid, roleId: role.id },
+          select: { key: true },
+        })
+      )
+        .map((p) => p.key)
+        .sort();
+      await tx.permission.deleteMany({ where: { guildId: gid, roleId: role.id } });
+      if (unique.length > 0) {
+        await tx.permission.createMany({
+          data: unique.map((key) => ({ guildId: gid, key, roleId: role.id })),
+        });
+      }
+      return { before, after: unique };
+    });
+  },
 };

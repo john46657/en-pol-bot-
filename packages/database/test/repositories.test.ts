@@ -139,27 +139,47 @@ describe('Auswahlen (settings.data.selections)', () => {
   });
 });
 
-describe('Rollen-Permissions & Audit-Paginierung', () => {
-  it('setzt, überschreibt und entfernt Rollen-Permissions ohne andere Rollen zu verlieren', async () => {
+describe('Permissions je Rolle & Audit-Paginierung', () => {
+  const snap = (name: string) => ({ name });
+  it('setzt, überschreibt und entfernt Permissions; legt unbekannte Rollen aus dem Snapshot an', async () => {
     await guildRepository.upsert({ id: G1, name: 'Eins' });
-    expect(await guildRepository.setRolePermissions(G1, 'r1', ['b', 'a', 'a'])).toEqual({
-      before: [],
-      after: ['a', 'b'],
+    expect(
+      await permissionRepository.setPermissionsForRole(G1, 'pr1', ['b', 'a', 'a'], snap('R1')),
+    ).toEqual({ before: [], after: ['a', 'b'] });
+    await permissionRepository.setPermissionsForRole(G1, 'pr2', ['x'], snap('R2'));
+    expect(await permissionRepository.setPermissionsForRole(G1, 'pr1', [])).toEqual({
+      before: ['a', 'b'],
+      after: [],
     });
-    await guildRepository.setRolePermissions(G1, 'r2', ['x']);
-    await guildRepository.setRolePermissions(G1, 'r1', []);
-    expect(await guildRepository.getRolePermissions(G1)).toEqual({ r2: ['x'] });
+    const grants = await permissionRepository.getGrants(G1);
+    expect(grants.has('pr1')).toBe(false);
+    expect(grants.get('pr2')).toMatchObject({ keys: ['x'], name: 'R2', deleted: false });
   });
-  it('verliert bei parallelen Änderungen nichts', async () => {
+  it('verlangt einen Snapshot für unbekannte Rollen, ignoriert aber leere Listen für unbekannte Rollen', async () => {
+    await expect(permissionRepository.setPermissionsForRole(G1, 'neu', ['x'])).rejects.toThrow();
+    expect(await permissionRepository.setPermissionsForRole(G1, 'neu', [])).toEqual({
+      before: [],
+      after: [],
+    });
+  });
+  it('verliert bei parallelen Änderungen verschiedener Rollen nichts', async () => {
     await Promise.all(
-      ['p1', 'p2', 'p3', 'p4'].map((r) => guildRepository.setRolePermissions(G1, r, ['x'])),
+      ['p1', 'p2', 'p3', 'p4'].map((r) =>
+        permissionRepository.setPermissionsForRole(G1, r, ['x'], snap(r)),
+      ),
     );
-    const map = await guildRepository.getRolePermissions(G1);
-    expect(['p1', 'p2', 'p3', 'p4'].every((r) => map[r])).toBe(true);
+    const grants = await permissionRepository.getGrants(G1);
+    expect(['p1', 'p2', 'p3', 'p4'].every((r) => grants.get(r)?.keys.length === 1)).toBe(true);
+  });
+  it('markiert Zuordnungen gelöschter Rollen und ist guild-isoliert', async () => {
+    await discordSyncRepository.syncRoles(G1, []); // alle Rollen auf Discord weg
+    expect((await permissionRepository.getGrants(G1)).get('p1')?.deleted).toBe(true);
+    expect((await permissionRepository.getGrants(G2)).size).toBe(0);
+    expect(await permissionRepository.getKeysForRoles(G1, ['p1'])).toEqual([]); // gelöschte Rollen gewähren nichts
   });
   it('lehnt unbekannte Server ab', async () => {
     await expect(
-      guildRepository.setRolePermissions('test-guild-none', 'r', ['x']),
+      permissionRepository.setPermissionsForRole('test-guild-none', 'r', ['x'], snap('x')),
     ).rejects.toThrow();
   });
   it('blättert das Audit-Log ohne Lücken oder Duplikate', async () => {

@@ -6,7 +6,7 @@ import { errorText, QueryState } from '../components/QueryState';
 import { useToast } from '../toast';
 
 interface PermissionsOverview {
-  available: string[];
+  catalog: { module: string; label: string; permissions: { key: string; label: string }[] }[];
   roles: { id: string; name: string; color: number; position: number; permissions: string[] }[];
   orphaned: { roleId: string; permissions: string[] }[];
 }
@@ -62,7 +62,7 @@ export function Permissions() {
                 <RolePanel
                   key={role.id}
                   role={role}
-                  available={data.available}
+                  catalog={data.catalog}
                   saving={save.isPending}
                   onSave={(permissions) => save.mutate({ roleId: role.id, permissions })}
                 />
@@ -95,7 +95,7 @@ export function Permissions() {
 
 function RolePanel(p: {
   role: PermissionsOverview['roles'][number];
-  available: string[];
+  catalog: PermissionsOverview['catalog'];
   saving: boolean;
   onSave: (p: string[]) => void;
 }) {
@@ -112,16 +112,33 @@ function RolePanel(p: {
   return (
     <section className="card">
       <h3>@{p.role.name}</h3>
-      <ul className="plain">
-        {p.available.map((k) => (
-          <li key={k}>
-            <label>
-              <input type="checkbox" checked={checked.has(k)} onChange={() => toggle(k)} />{' '}
-              <code>{k}</code>
-            </label>
-          </li>
-        ))}
-      </ul>
+      {p.catalog.map((m) => {
+        const manage = `${m.module}.manage`;
+        return (
+          <fieldset key={m.module} className="perm-group">
+            <legend>{m.label}</legend>
+            <ul className="plain">
+              {m.permissions.map((perm) => {
+                const implied = perm.key !== manage && checked.has(manage);
+                return (
+                  <li key={perm.key}>
+                    <label>
+                      <input
+                        type="checkbox"
+                        checked={checked.has(perm.key) || implied}
+                        disabled={implied}
+                        onChange={() => toggle(perm.key)}
+                      />{' '}
+                      {perm.label} <code>{perm.key}</code>
+                      {implied && <small className="muted"> (durch „Alles“ enthalten)</small>}
+                    </label>
+                  </li>
+                );
+              })}
+            </ul>
+          </fieldset>
+        );
+      })}
       <button
         className="btn primary"
         disabled={!dirty || p.saving}

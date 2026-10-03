@@ -1,7 +1,10 @@
-import { BadRequestException, Controller, Get, Post, Query, Req, Res } from '@nestjs/common';
+import { BadRequestException, Controller, Get, Param, Post, Query, Req, Res } from '@nestjs/common';
+import { effectivePermissions, permissions } from '@nexus/permissions';
+import { DiscordRolesService } from './discord-roles.service.js';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import type { Request, Response } from 'express';
 import { userRepository } from '@nexus/database';
+import { PERMISSIONS } from '@nexus/types';
 import {
   OAUTH_STATE_COOKIE,
   OAUTH_STATE_TTL_MS,
@@ -29,6 +32,7 @@ export class AuthController {
     private readonly authService: AuthService,
     private readonly config: ConfigService,
     private readonly guilds: GuildService,
+    private readonly discordRoles: DiscordRolesService,
   ) {}
 
   /** Startet den Discord-Login: erzeugt ein zufälliges `state` (Cookie) und leitet zu Discord weiter. */
@@ -149,5 +153,26 @@ export class AuthController {
   @ApiBearerAuth()
   async myGuilds(@CurrentUser() user: RequestUser) {
     return this.guilds.listUserGuilds(user.id, user.at ?? '');
+  }
+
+  /**
+   * Effektive Berechtigungen des Users auf einem Server – für die Oberfläche (Menü ausblenden).
+   * Rein informativ: durchgesetzt wird immer serverseitig in jedem Endpunkt.
+   */
+  @Get('me/guilds/:guildId/permissions')
+  @ApiBearerAuth()
+  async myPermissions(@Param('guildId') guildId: string, @CurrentUser() user: RequestUser) {
+    if (!/^\d{5,25}$/.test(guildId)) throw new BadRequestException('Ungültige Server-ID.');
+    const roleIds = user.roleIds?.length
+      ? user.roleIds
+      : await this.discordRoles.getMemberRoles(guildId, user.id);
+    const access = await this.discordRoles.getMemberAccess(guildId, user.id, roleIds);
+    const set = await permissions.forRoles(guildId, roleIds);
+    return {
+      guildAdmin: access.canManageGuild,
+      permissions: access.canManageGuild
+        ? effectivePermissions(new Set(PERMISSIONS))
+        : effectivePermissions(set),
+    };
   }
 }

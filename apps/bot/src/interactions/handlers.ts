@@ -9,6 +9,7 @@ import { ActionRowBuilder, ModalBuilder, TextInputBuilder, TextInputStyle } from
 import { parseCustomId, CustomIdAction, isValidId } from '../discord/custom-ids.js';
 import { log } from '../logger.js';
 import { dispatchComponent, dispatchModal } from '../core/interaction-registry.js';
+import { REVIEW_KEYS, requireMemberPermission } from '../discord/permissions.js';
 import { DMPhase, SubmissionStatus } from '@nexus/types';
 import { prisma } from '@nexus/database';
 import { startApplication } from '../applications/application-service.js';
@@ -108,6 +109,7 @@ async function handleModal(client: Client, interaction: ModalSubmitInteraction):
     const reason = interaction.fields.getTextInputValue('reason');
     await reviewDecide(interaction, parsed.args[0] ?? '', 'deny', reason);
   } else if (parsed.action === CustomIdAction.REVIEW_NOTE) {
+    if (!(await requireMemberPermission(interaction, ['applications.notes.create']))) return;
     const content = interaction.fields.getTextInputValue('content');
     const result = await addNote({
       guildId: interaction.guildId ?? '',
@@ -359,18 +361,14 @@ async function reviewDecide(
   reason?: string,
 ): Promise<void> {
   if (!interaction.guild || !isValidId(submissionId)) return;
-  const member = await interaction.guild.members.fetch(interaction.user.id).catch(() => null);
-  if (!member) return;
-
-  // Permission serverseitig (§114)
-  const permissions = await readMemberPermissionsSimple(interaction.guild, interaction.user.id);
+  // Permission serverseitig (§114): zentrale Engine
+  if (!(await requireMemberPermission(interaction, REVIEW_KEYS))) return;
   const decide = decision === 'accept' ? acceptSubmission : denySubmission;
   const decisionInput: Parameters<typeof decide>[0] = {
     client: interaction.client,
     guildId: interaction.guild.id,
     submissionId,
     reviewerId: interaction.user.id,
-    reviewerRolePermissions: permissions,
   };
   if (reason !== undefined) decisionInput.publicReason = reason;
   const result = await decide(decisionInput);
@@ -380,12 +378,13 @@ async function reviewDecide(
     .catch(() => undefined);
 }
 
-function reviewDecideWithReasonModal(
+async function reviewDecideWithReasonModal(
   interaction: MessageComponentInteraction,
   submissionId: string,
   decision: 'accept' | 'deny',
-): Promise<void> | undefined {
-  if (!interaction.guild || !isValidId(submissionId)) return undefined;
+): Promise<void> {
+  if (!interaction.guild || !isValidId(submissionId)) return;
+  if (!(await requireMemberPermission(interaction, REVIEW_KEYS))) return;
   const modal = new ModalBuilder()
     .setCustomId(`nexus:review:${decision === 'accept' ? 'accept_r' : 'deny_r'}:${submissionId}`)
     .setTitle(decision === 'accept' ? '✅ Accept mit Grund' : '🔴 Deny mit Grund');
@@ -398,7 +397,7 @@ function reviewDecideWithReasonModal(
     .setMaxLength(2000);
 
   modal.addComponents(new ActionRowBuilder<TextInputBuilder>().addComponents(reasonInput));
-  return interaction.showModal(modal).catch(() => undefined);
+  await interaction.showModal(modal).catch(() => undefined);
 }
 
 async function reviewHistory(
@@ -406,15 +405,17 @@ async function reviewHistory(
   submissionId: string,
 ): Promise<void> {
   if (!interaction.guild || !isValidId(submissionId)) return;
+  if (!(await requireMemberPermission(interaction, ['applications.submissions.view']))) return;
   const embed = await buildHistoryEmbed(interaction.guild.id, submissionId);
   await interaction.reply({ embeds: [embed], ephemeral: true }).catch(() => undefined);
 }
 
-function reviewNoteModal(
+async function reviewNoteModal(
   interaction: MessageComponentInteraction,
   submissionId: string,
-): Promise<void> | undefined {
-  if (!interaction.guild || !isValidId(submissionId)) return undefined;
+): Promise<void> {
+  if (!interaction.guild || !isValidId(submissionId)) return;
+  if (!(await requireMemberPermission(interaction, ['applications.notes.create']))) return;
   const modal = new ModalBuilder()
     .setCustomId(`nexus:review:note:${submissionId}`)
     .setTitle('📝 Interne Notiz');
@@ -425,27 +426,5 @@ function reviewNoteModal(
     .setRequired(true)
     .setMaxLength(4000);
   modal.addComponents(new ActionRowBuilder<TextInputBuilder>().addComponents(content));
-  return interaction.showModal(modal).catch(() => undefined);
-}
-
-/**
- * Permission-Set des Members: nur die Permissions der Rollen,
- * die das Mitglied tatsächlich besitzt (§38/§114).
- */
-async function readMemberPermissionsSimple(guild: Guild, memberId: string): Promise<Set<string>> {
-  const guildRow = await prisma.guild.findUnique({
-    where: { id: guild.id },
-    select: { rolePermissions: true },
-  });
-  const raw = (guildRow?.rolePermissions ?? {}) as Record<string, string[]>;
-  const member = await guild.members.fetch(memberId).catch(() => null);
-  if (!member) return new Set();
-
-  const permissions = new Set<string>();
-  for (const roleId of member.roles.cache.keys()) {
-    for (const p of raw[roleId] ?? []) {
-      if (typeof p === 'string') permissions.add(p);
-    }
-  }
-  return permissions;
+  await interaction.showModal(modal).catch(() => undefined);
 }

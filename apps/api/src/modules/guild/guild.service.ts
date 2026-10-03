@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { prisma } from '@nexus/database';
-import { resolvePermissions } from '@nexus/permissions';
+import { effectivePermissions, permissions } from '@nexus/permissions';
 import type { Permission } from '@nexus/types';
 import {
   TtlCache,
@@ -62,12 +62,9 @@ export class GuildService {
   async listUserGuilds(userId: string, accessToken: string): Promise<GuildSelectionEntry[]> {
     const [userGuilds, knownGuildIds] = await Promise.all([
       fetchUserGuilds(accessToken),
-      prisma.guild.findMany({ select: { id: true, rolePermissions: true } }),
+      prisma.guild.findMany({ where: { leftAt: null }, select: { id: true } }),
     ]);
-
-    const known = new Map(
-      knownGuildIds.map((g) => [g.id, g.rolePermissions as Record<string, Permission[]>]),
-    );
+    const known = new Set(knownGuildIds.map((g) => g.id));
 
     const result: GuildSelectionEntry[] = [];
     for (const guild of userGuilds) {
@@ -75,23 +72,14 @@ export class GuildService {
       const isOwner = guild.owner ?? false;
       const hasDiscordPerms = (permissionsBit & BigInt(MANAGE_GUILD | ADMINISTRATOR)) !== 0n;
 
-      // NEXUS-Permissions über die Rollen des Users in dieser Guild.
+      // NEXUS-Permissions über die Rollen des Users in dieser Guild (zentrale Engine).
       let nexusPermissions: ReadonlySet<Permission> = new Set<Permission>();
-      if (known.has(guild.id)) {
+      if (known.has(guild.id) && !(isOwner || hasDiscordPerms)) {
         const member = await getGuildMember(this.botToken, guild.id, userId);
-        const rolePermissions = new Map<string, readonly Permission[]>();
-        const raw = (known.get(guild.id) ?? {}) as Record<string, Permission[]>;
-        for (const [roleId, perms] of Object.entries(raw)) {
-          if (Array.isArray(perms)) rolePermissions.set(roleId, perms);
-        }
-        nexusPermissions = resolvePermissions(
-          rolePermissions,
-          (member?.roles ?? []).filter((r) => rolePermissions.has(r)),
-        );
+        nexusPermissions = await permissions.forRoles(guild.id, member?.roles ?? []);
       }
 
-      const canManage =
-        isOwner || hasDiscordPerms || nexusPermissions.has('applications.manage' as Permission);
+      const canManage = isOwner || hasDiscordPerms || nexusPermissions.has('applications.manage');
 
       if (canManage || nexusPermissions.size > 0) {
         result.push({
@@ -100,7 +88,7 @@ export class GuildService {
           icon: guild.icon,
           botPresent: known.has(guild.id),
           canManage,
-          permissions: [...nexusPermissions],
+          permissions: effectivePermissions(nexusPermissions),
         });
       }
     }

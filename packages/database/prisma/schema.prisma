@@ -190,8 +190,6 @@ model Guild {
   iconUrl         String?
   ownerId         String?
   features        Json?
-  /// Rollen → NEXUS Permissions (§79/§114). Map roleId -> string[].
-  rolePermissions Json?
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 

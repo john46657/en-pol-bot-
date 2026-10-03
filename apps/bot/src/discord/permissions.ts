@@ -1,71 +1,62 @@
-import type { Guild, GuildMember } from 'discord.js';
-import { PERMISSIONS } from '@nexus/types';
-import type { Permission, PermissionSet } from '@nexus/types';
 import {
-  canManageApplications,
-  canReviewSubmissions,
-  canViewSubmissions,
-  resolvePermissions,
-} from '@nexus/permissions';
-import { prisma } from '@nexus/database';
+  MessageFlags,
+  type GuildMember,
+  type Interaction,
+  type MessageComponentInteraction,
+} from 'discord.js';
+import { permissions, type AccessContext } from '@nexus/permissions';
+import type { Permission } from '@nexus/types';
+import { permissionService } from '../services/permission.service.js';
 
 /**
- * Permission-Auflösung aus Discord-Rollen (§79/§114).
- *
- * Die Zuordnung Rolle→Permissions liegt pro Guild in der Datenbank
- * (Guild.rolePermissions). Frontend-Permissions sind nur UI – hier wird
- * serverseitig geprüft.
+ * Berechtigungen im Bot – dieselbe zentrale Engine wie in der API (`@nexus/permissions`).
+ * Discord-Administratoren/Besitzer dürfen immer; sonst zählen die dem Server zugeordneten Rollen.
  */
-export async function readRolePermissions(
-  guild: Guild,
-): Promise<Map<string, readonly Permission[]>> {
-  const map = new Map<string, readonly Permission[]>();
-  const guildRow = await prisma.guild.findUnique({
-    where: { id: guild.id },
-    select: { rolePermissions: true },
-  });
-  const raw = guildRow?.rolePermissions;
-  if (raw && typeof raw === 'object') {
-    for (const [roleId, perms] of Object.entries(raw as Record<string, unknown>)) {
-      if (!Array.isArray(perms)) continue;
-      const valid = perms.filter(
-        (p): p is Permission =>
-          typeof p === 'string' && (PERMISSIONS as readonly string[]).includes(p),
-      );
-      if (valid.length > 0) map.set(roleId, valid);
-    }
+export function accessOf(member: GuildMember): AccessContext {
+  return {
+    guildId: member.guild.id,
+    roleIds: [...member.roles.cache.keys()],
+    bypass: permissionService.isDiscordAdmin(member),
+  };
+}
+
+export const memberCan = (member: GuildMember, key: Permission): Promise<boolean> =>
+  permissions.can(accessOf(member), key);
+
+export const memberCanAny = (member: GuildMember, keys: readonly Permission[]): Promise<boolean> =>
+  permissions.canAny(accessOf(member), keys);
+
+export const REVIEW_KEYS: readonly Permission[] = [
+  'applications.submissions.accept',
+  'applications.submissions.deny',
+  'applications.submissions.review',
+];
+
+export const memberCanManage = (m: GuildMember): Promise<boolean> =>
+  memberCan(m, 'applications.manage');
+export const memberCanReview = (m: GuildMember): Promise<boolean> => memberCanAny(m, REVIEW_KEYS);
+export const memberCanViewSubmissions = (m: GuildMember): Promise<boolean> =>
+  memberCan(m, 'applications.submissions.view');
+
+/**
+ * Prüft die Berechtigung des auslösenden Mitglieds serverseitig und antwortet bei Ablehnung ephemeral.
+ * @returns das Mitglied, wenn erlaubt – sonst `null` (Antwort ist bereits gesendet).
+ */
+export async function requireMemberPermission(
+  interaction: Interaction | MessageComponentInteraction,
+  keys: readonly Permission[],
+): Promise<GuildMember | null> {
+  const member = interaction.guild
+    ? await interaction.guild.members.fetch(interaction.user.id).catch(() => null)
+    : null;
+  if (member && (await memberCanAny(member, keys))) return member;
+  if (interaction.isRepliable() && !interaction.replied && !interaction.deferred) {
+    await interaction
+      .reply({
+        content: '⚠️ Dafür fehlt dir die Berechtigung.',
+        flags: MessageFlags.Ephemeral,
+      })
+      .catch(() => undefined);
   }
-  return map;
-}
-
-export function resolveMemberPermissions(
-  rolePermissions: ReadonlyMap<string, readonly Permission[]>,
-  member: GuildMember,
-): PermissionSet {
-  return resolvePermissions(rolePermissions, [...member.roles.cache.keys()]);
-}
-
-export function memberCanReview(
-  rolePermissions: ReadonlyMap<string, readonly Permission[]>,
-  member: GuildMember,
-): boolean {
-  return canReviewSubmissions(resolveMemberPermissions(rolePermissions, member));
-}
-
-export function memberCanViewSubmissions(
-  rolePermissions: ReadonlyMap<string, readonly Permission[]>,
-  member: GuildMember,
-): boolean {
-  return canViewSubmissions(resolveMemberPermissions(rolePermissions, member));
-}
-
-export function memberCanManage(
-  rolePermissions: ReadonlyMap<string, readonly Permission[]>,
-  member: GuildMember,
-): boolean {
-  return canManageApplications(resolveMemberPermissions(rolePermissions, member));
-}
-
-export function isValidPermissionString(value: string): value is Permission {
-  return (PERMISSIONS as readonly string[]).includes(value);
+  return null;
 }

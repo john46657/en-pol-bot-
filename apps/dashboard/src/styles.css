@@ -399,3 +399,13 @@ input:focus-visible {
     grid-template-columns: 1fr;
   }
 }
+.perm-group {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  margin: 0 0 12px;
+  padding: 4px 12px 8px;
+}
+.perm-group legend {
+  font-weight: 600;
+  padding: 0 6px;
+}

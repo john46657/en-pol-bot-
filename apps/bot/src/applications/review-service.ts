@@ -24,19 +24,11 @@ export interface ReviewDecisionInput {
   guildId: string;
   submissionId: string;
   reviewerId: string;
-  reviewerRolePermissions: ReadonlySet<string>;
   publicReason?: string;
   internalReason?: string;
 }
 
 export type ReviewResult = { ok: true; status: SubmissionStatus } | { ok: false; message: string };
-
-const REVIEW_PERMISSIONS = new Set([
-  'applications.submissions.accept',
-  'applications.submissions.deny',
-  'applications.submissions.review',
-  'applications.manage',
-]);
 
 export async function acceptSubmission(input: ReviewDecisionInput): Promise<ReviewResult> {
   return decide(input, SubmissionStatus.ACCEPTED);
@@ -47,12 +39,7 @@ export async function denySubmission(input: ReviewDecisionInput): Promise<Review
 }
 
 async function decide(input: ReviewDecisionInput, target: SubmissionStatus): Promise<ReviewResult> {
-  // 1) Permission Check (§78/§114: serverseitig)
-  const hasPermission = [...input.reviewerRolePermissions].some((p) => REVIEW_PERMISSIONS.has(p));
-  if (!hasPermission) {
-    return { ok: false, message: 'Du darfst diese Bewerbung nicht bewerten.' };
-  }
-
+  // 1) Die Berechtigung (REVIEW_KEYS) prüft der Aufrufer vor dem Aufruf serverseitig (Interaction-Handler).
   // 2) Submission laden + State Machine (§62)
   const submission = await prisma.applicationSubmission.findFirst({
     where: { id: input.submissionId, guildId: input.guildId },

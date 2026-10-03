@@ -9,8 +9,7 @@ import { Reflector } from '@nestjs/core';
 import { PERMISSIONS_KEY } from '../decorators/permissions.decorator.js';
 import { GUILD_ADMIN_KEY } from '../decorators/guild-admin.decorator.js';
 import type { RequestUser } from '../decorators/current-user.decorator.js';
-import { resolvePermissions } from '@nexus/permissions';
-import { prisma } from '@nexus/database';
+import { permissions } from '@nexus/permissions';
 import { DiscordRolesService } from '../../modules/auth/discord-roles.service.js';
 import type { Permission } from '@nexus/types';
 
@@ -56,30 +55,21 @@ export class PermissionGuard implements CanActivate {
     if (!roleIds || roleIds.length === 0) {
       roleIds = await this.discordRoles.getMemberRoles(guildId, userId);
     }
+
     // Besitzer, Administratoren und „Server verwalten“ dürfen immer (Bootstrap + Konsistenz mit der Serverauswahl).
     const access = await this.discordRoles.getMemberAccess(guildId, userId, roleIds);
-    if (access.canManageGuild) return true;
-    if (adminOnly) {
+    if (adminOnly && !access.canManageGuild) {
       throw new ForbiddenException(
         'Dafür sind Server-Verwalter-Rechte (Besitzer/Administrator) nötig.',
       );
     }
 
-    const guildRow = await prisma.guild.findUnique({
-      where: { id: guildId },
-      select: { rolePermissions: true },
-    });
-    const rolePermissions = new Map<string, readonly Permission[]>();
-    const raw = (guildRow?.rolePermissions ?? {}) as Record<string, Permission[]>;
-    for (const [roleId, perms] of Object.entries(raw)) {
-      if (Array.isArray(perms)) rolePermissions.set(roleId, perms);
-    }
-
-    const userPermissions = resolvePermissions(rolePermissions, roleIds);
-    const hasAll = (required ?? []).every(
-      (p) => userPermissions.has(p) || userPermissions.has('applications.manage' as Permission),
+    // Zentrale Permission-Engine (dieselbe Prüfung wie im Bot).
+    const allowed = await permissions.canAll(
+      { guildId, roleIds, bypass: access.canManageGuild },
+      required ?? [],
     );
-    if (!hasAll) {
+    if (!allowed) {
       throw new ForbiddenException(
         'Dir fehlen die erforderlichen Berechtigungen für diese Aktion.',
       );

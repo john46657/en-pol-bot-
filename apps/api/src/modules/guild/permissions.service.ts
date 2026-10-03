@@ -1,6 +1,6 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
-import { auditRepository, guildRepository, prisma } from '@nexus/database';
-import { PERMISSIONS } from '@nexus/types';
+import { auditRepository, guildRepository, permissionRepository } from '@nexus/database';
+import { PERMISSION_CATALOG, PERMISSIONS } from '@nexus/types';
 import { DiscordService } from './discord.service.js';
 
 /** Verwaltung der Zuordnung Discord-Rolle → NEXUS-Permissions (serverseitig validiert, auditiert). */
@@ -9,13 +9,17 @@ export class PermissionsAdminService {
   constructor(private readonly discord: DiscordService) {}
 
   async overview(guildId: string) {
-    const [mapping, roles] = await Promise.all([
-      guildRepository.getRolePermissions(guildId),
+    const [grants, roles] = await Promise.all([
+      permissionRepository.getGrants(guildId),
       this.discord.listRoles(guildId),
     ]);
     const known = new Set(roles.map((r) => r.id));
     return {
-      available: PERMISSIONS,
+      catalog: PERMISSION_CATALOG.map((m) => ({
+        module: m.module,
+        label: m.label,
+        permissions: m.permissions.map(([key, label]) => ({ key, label })),
+      })),
       roles: roles
         .filter((r) => r.blockedReason !== 'everyone')
         .map((r) => ({
@@ -23,33 +27,37 @@ export class PermissionsAdminService {
           name: r.name,
           color: r.color,
           position: r.position,
-          permissions: mapping[r.id] ?? [],
+          permissions: grants.get(r.id)?.keys ?? [],
         })),
       /** Zuordnungen zu Rollen, die auf Discord nicht mehr existieren. */
-      orphaned: Object.entries(mapping)
+      orphaned: [...grants.entries()]
         .filter(([id]) => !known.has(id))
-        .map(([roleId, permissions]) => ({ roleId, permissions })),
+        .map(([roleId, g]) => ({ roleId, name: g.name, permissions: g.keys })),
     };
   }
 
   async setForRole(guildId: string, actorId: string, roleId: string, permissions: string[]) {
     const invalid = permissions.filter((p) => !(PERMISSIONS as readonly string[]).includes(p));
-    if (invalid.length > 0)
+    if (invalid.length > 0) {
       throw new BadRequestException(`Unbekannte Permission: ${invalid.join(', ')}`);
-    if (!(await prisma.guild.findUnique({ where: { id: guildId }, select: { id: true } }))) {
+    }
+    if (!(await guildRepository.get(guildId))) {
       throw new NotFoundException('Der Bot ist mit diesem Server nicht verbunden.');
     }
     // Verwaiste Zuordnungen dürfen gelöscht (leere Liste), neue nur für existierende Rollen angelegt werden.
+    let snapshot: { name: string; position: number; color: number } | undefined;
     if (permissions.length > 0) {
-      const roles = await this.discord.listRoles(guildId);
-      if (!roles.some((r) => r.id === roleId && r.blockedReason !== 'everyone')) {
-        throw new BadRequestException('Diese Rolle existiert auf dem Server nicht.');
-      }
+      const role = (await this.discord.listRoles(guildId)).find(
+        (r) => r.id === roleId && r.blockedReason !== 'everyone',
+      );
+      if (!role) throw new BadRequestException('Diese Rolle existiert auf dem Server nicht.');
+      snapshot = { name: role.name, position: role.position, color: role.color };
     }
-    const { before, after } = await guildRepository.setRolePermissions(
+    const { before, after } = await permissionRepository.setPermissionsForRole(
       guildId,
       roleId,
       permissions,
+      snapshot,
     );
     await auditRepository.create({
       guildId,

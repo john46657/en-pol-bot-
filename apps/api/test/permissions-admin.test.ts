@@ -1,22 +1,32 @@
 import { BadRequestException, ForbiddenException, NotFoundException } from '@nestjs/common';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-const setRolePermissions = vi.fn(async (_g: string, _r: string, p: string[]) => ({
+const setPermissionsForRole = vi.fn(async (_g: string, _r: string, p: string[], _s?: unknown) => ({
   before: ['applications.view'],
   after: p,
 }));
-const getRolePermissions = vi.fn(async () => ({
-  '111111': ['applications.view'],
-  '999999': ['applications.manage'],
-}));
+const getGrants = vi.fn(
+  async () =>
+    new Map([
+      ['111111', { keys: ['applications.view'], name: 'Polizei', deleted: false }],
+      ['999999', { keys: ['applications.manage'], name: 'Weg', deleted: true }],
+    ]),
+);
 const audit = vi.fn(async () => ({}));
 const findGuild = vi.fn(async () => ({ id: 'G' }));
 vi.mock('@nexus/database', () => ({
-  guildRepository: { setRolePermissions, getRolePermissions },
+  guildRepository: { get: findGuild },
+  permissionRepository: { setPermissionsForRole, getGrants },
   auditRepository: { create: audit },
-  prisma: { guild: { findUnique: findGuild } },
 }));
-
+vi.mock('@nexus/permissions', () => ({
+  permissions: {
+    canAll: vi.fn(
+      async (ctx: { bypass: boolean; roleIds: string[] }, req: string[]) =>
+        ctx.bypass || (ctx.roleIds.includes('ok') && req.length > 0),
+    ),
+  },
+}));
 const { PermissionsAdminService } = await import('../src/modules/guild/permissions.service.js');
 const { PermissionGuard } = await import('../src/common/guards/permission.guard.js');
 const { GUILD_ADMIN_KEY } = await import('../src/common/decorators/guild-admin.decorator.js');
@@ -43,12 +53,21 @@ describe('PermissionsAdminService', () => {
     const o = await service.overview('G');
     expect(o.roles.map((r) => r.id)).toEqual(['111111', '222222']);
     expect(o.roles[0]?.permissions).toEqual(['applications.view']);
-    expect(o.orphaned).toEqual([{ roleId: '999999', permissions: ['applications.manage'] }]);
-    expect(o.available).toContain('applications.manage');
+    expect(o.orphaned).toEqual([
+      { roleId: '999999', name: 'Weg', permissions: ['applications.manage'] },
+    ]);
+    expect(o.catalog.map((m) => m.module)).toContain('shifts');
+    expect(o.catalog.flatMap((m) => m.permissions.map((p) => p.key))).toContain(
+      'applications.manage',
+    );
   });
   it('speichert gültige Permissions und schreibt Audit mit alt/neu', async () => {
     await service.setForRole('G', 'u1', '222222', ['applications.manage']);
-    expect(setRolePermissions).toHaveBeenCalledWith('G', '222222', ['applications.manage']);
+    expect(setPermissionsForRole).toHaveBeenCalledWith('G', '222222', ['applications.manage'], {
+      name: 'Leitung',
+      position: 4,
+      color: 0,
+    });
     expect(audit).toHaveBeenCalledWith(
       expect.objectContaining({
         action: 'permissions.role.set',
@@ -67,11 +86,11 @@ describe('PermissionsAdminService', () => {
     await expect(service.setForRole('G', 'u', 'G', ['applications.view'])).rejects.toBeInstanceOf(
       BadRequestException,
     );
-    expect(setRolePermissions).not.toHaveBeenCalled();
+    expect(setPermissionsForRole).not.toHaveBeenCalled();
   });
   it('erlaubt das Entfernen der Zuordnung einer verwaisten Rolle', async () => {
     await service.setForRole('G', 'u', '999999', []);
-    expect(setRolePermissions).toHaveBeenCalledWith('G', '999999', []);
+    expect(setPermissionsForRole).toHaveBeenCalledWith('G', '999999', [], undefined);
   });
   it('verlangt einen verbundenen Server', async () => {
     findGuild.mockResolvedValueOnce(null as never);
@@ -96,7 +115,10 @@ describe('PermissionGuard – nur Server-Verwalter', () => {
   const make = (canManageGuild: boolean) =>
     new PermissionGuard(
       reflector as never,
-      { getMemberAccess: async () => ({ canManageGuild }) } as never,
+      {
+        getMemberAccess: async () => ({ canManageGuild }),
+        getMemberRoles: async () => [],
+      } as never,
     );
 
   it('lässt Verwalter durch', async () => {
@@ -104,5 +126,40 @@ describe('PermissionGuard – nur Server-Verwalter', () => {
   });
   it('weist alle anderen ab – auch mit NEXUS-Rolle „applications.manage“', async () => {
     await expect(make(false).canActivate(ctx('b'))).rejects.toBeInstanceOf(ForbiddenException);
+  });
+});
+
+describe('PermissionGuard – zentrale Engine', () => {
+  const reflector = (req: string[] | undefined) => ({
+    getAllAndOverride: (key: string) => (key === 'nexus:permissions' ? req : undefined),
+  });
+  const ctx = (roleIds: string[]) =>
+    ({
+      getHandler: () => 'h',
+      getClass: () => 'c',
+      switchToHttp: () => ({
+        getRequest: () => ({ user: { id: 'u', roleIds }, params: { guildId: 'G' } }),
+      }),
+    }) as never;
+  const make = (req: string[] | undefined, canManageGuild = false) =>
+    new PermissionGuard(
+      reflector(req) as never,
+      {
+        getMemberAccess: async () => ({ canManageGuild }),
+        getMemberRoles: async () => [],
+      } as never,
+    );
+
+  it('lässt Endpunkte ohne Anforderung offen', async () => {
+    expect(await make(undefined).canActivate(ctx([]))).toBe(true);
+  });
+  it('erlaubt mit passender Rolle, verweigert ohne', async () => {
+    expect(await make(['shifts.start']).canActivate(ctx(['ok']))).toBe(true);
+    await expect(make(['shifts.start']).canActivate(ctx(['nein']))).rejects.toBeInstanceOf(
+      ForbiddenException,
+    );
+  });
+  it('Server-Verwalter umgehen die Zuordnung', async () => {
+    expect(await make(['shifts.start'], true).canActivate(ctx([]))).toBe(true);
   });
 });

@@ -17,7 +17,7 @@ import { config } from './config.js';
 import { log } from './logger.js';
 import { buildCustomId, CustomIdAction } from './discord/custom-ids.js';
 import { buildPanelEmbed } from './discord/embeds.js';
-import { memberCanManage, readRolePermissions } from './discord/permissions.js';
+import { memberCanManage } from './discord/permissions.js';
 import { getCommand, listCommandData } from './commands/registry.js';
 import './commands/server.js';
 import './commands/diagnose.js';
@@ -136,8 +136,7 @@ async function postPanel(interaction: ChatInputCommandInteraction): Promise<void
   const member = await guild.members.fetch(interaction.user.id).catch(() => null);
   const allowed =
     !!member &&
-    (member.permissions.has(PermissionFlagsBits.ManageGuild) ||
-      memberCanManage(await readRolePermissions(guild), member));
+    (member.permissions.has(PermissionFlagsBits.ManageGuild) || (await memberCanManage(member)));
   if (!allowed) {
     await interaction.reply({
       content: '⚠️ Dafür fehlt dir die Berechtigung.',

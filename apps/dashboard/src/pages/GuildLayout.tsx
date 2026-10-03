@@ -4,13 +4,14 @@ import { Link, NavLink, Outlet, useLocation, useParams } from 'react-router';
 import { api, guildIcon, type GuildOverview } from '../api';
 import { UserMenu } from '../components/UserMenu';
 
-const NAV = [
-  { to: '', label: 'Übersicht', icon: '🏠', end: true },
-  { to: 'settings', label: 'Rollen & Kanäle wählen', icon: '⚙️' },
-  { to: 'roles', label: 'Rollen', icon: '🎭' },
-  { to: 'channels', label: 'Kanäle', icon: '#️⃣' },
-  { to: 'permissions', label: 'Berechtigungen', icon: '🔐' },
-  { to: 'logs', label: 'Logs', icon: '📜' },
+type Needs = 'view' | 'admin';
+const NAV: { to: string; label: string; icon: string; end?: boolean; needs: Needs }[] = [
+  { to: '', label: 'Übersicht', icon: '🏠', end: true, needs: 'view' },
+  { to: 'settings', label: 'Rollen & Kanäle wählen', icon: '⚙️', needs: 'view' },
+  { to: 'roles', label: 'Rollen', icon: '🎭', needs: 'view' },
+  { to: 'channels', label: 'Kanäle', icon: '#️⃣', needs: 'view' },
+  { to: 'permissions', label: 'Berechtigungen', icon: '🔐', needs: 'admin' },
+  { to: 'logs', label: 'Logs', icon: '📜', needs: 'admin' },
 ];
 
 /** Rahmen für alle Server-Seiten: Sidebar (mobil einklappbar), Kopfzeile mit Serverwechsel. */
@@ -23,13 +24,23 @@ export function GuildLayout() {
     queryKey: ['guild', guildId],
     queryFn: () => api<GuildOverview>(`/guilds/${guildId}`),
   });
+  // Nur Komfort: ausgeblendete Einträge sind serverseitig ohnehin gesperrt.
+  const me = useQuery({
+    queryKey: ['my-permissions', guildId],
+    queryFn: () =>
+      api<{ guildAdmin: boolean; permissions: string[] }>(`/auth/me/guilds/${guildId}/permissions`),
+  });
+  const allowed = (needs: Needs) =>
+    !me.data ||
+    me.data.guildAdmin ||
+    (needs === 'view' && me.data.permissions.includes('applications.view'));
   const icon = g.data && guildIcon(g.data.id, g.data.icon);
   return (
     <div className={`shell ${open ? 'nav-open' : ''}`}>
       <aside className="sidebar" aria-label="Navigation">
         <div className="brand">NEXUS</div>
         <nav>
-          {NAV.map((n) => (
+          {NAV.filter((n) => allowed(n.needs)).map((n) => (
             <NavLink
               key={n.to}
               to={`/guilds/${guildId}/${n.to}`}
