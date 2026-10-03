@@ -37,7 +37,7 @@ export function loadDotEnv(env: NodeJS.ProcessEnv = process.env): void {
 }
 
 /** Platzhalter aus der Vorlage (HIER_…) sind keine Werte – klare Fehlermeldung statt kryptischem Discord-Fehler. */
-const isPlaceholder = (v: string) => /^HIER_/i.test(v);
+const isPlaceholder = (v: string) => /HIER_/i.test(v);
 
 export function loadConfig(env: NodeJS.ProcessEnv = process.env): BotConfig {
   const todo = Object.entries(env).filter(([k, v]) => /^(DISCORD_TOKEN|DISCORD_GUILD_ID|BOT_API_TOKEN|API_URL)$/.test(k) && v && isPlaceholder(v)).map(([k]) => k);

@@ -336,3 +336,9 @@ describe('multiple servers', () => {
     expect(acks).toEqual([true, true, false]);
   });
 });
+
+describe('placeholders inside a list', () => {
+  it('flags a leftover HIER_ placeholder even when it is not at the start of the value', () => {
+    expect(() => loadConfig({ DISCORD_TOKEN: 'x'.repeat(30), BOT_API_TOKEN: 'y'.repeat(32), DISCORD_GUILD_ID: '1213940450260684801,HIER_ZWEITE_SERVER_ID_EINFUEGEN' })).toThrow(/noch ausfüllen: DISCORD_GUILD_ID/);
+  });
+});
