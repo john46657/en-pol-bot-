@@ -36,6 +36,9 @@ Follow an existing small module as template — **vehicles** (`apps/api/src/vehi
 
 **Realtime** (optional): `this.rt.publish('room', 'event', {id})` after the transaction commits; add the room + required permission to `ROOM_PERMISSION` in `realtime/realtime.service.ts`; subscribe in the page with `useRealtime`.
 
+## Add a Discord bot command
+See the last section of [discord-bot.md](discord-bot.md) (new entry in `COMMANDS`; new API route only via the explicit bot allowlist).
+
 ## Conventions worth keeping
 Permissions checked in the backend first; no secrets in code; Zod on all input; German or English UI text is fine but keep one language per screen; keep docs in `docs/` in sync with the code (they describe what exists, including what does not).
 

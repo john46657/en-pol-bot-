@@ -4,7 +4,7 @@ import { DiscoveryService, Reflector } from '@nestjs/core';
 import { PATH_METADATA, METHOD_METADATA } from '@nestjs/common/constants';
 import { createTestApp, login, makeUser } from './helpers';
 import type { PrismaService } from '../src/prisma/prisma.service';
-import { PERMISSION_KEY, PUBLIC_KEY } from '../src/authz/decorators';
+import { BOT_SERVICE_KEY, PERMISSION_KEY, PUBLIC_KEY } from '../src/authz/decorators';
 
 let app: INestApplication; let prisma: PrismaService;
 beforeAll(async () => {
@@ -20,7 +20,7 @@ afterAll(async () => { await app.close(); });
 const AUTH_ONLY_ALLOWLIST = new Set([
   'AuthController.logout', 'AuthController.me',
   'NotificationsController.list', 'NotificationsController.readAll', 'NotificationsController.read', 'NotificationsController.archive', // immer per userId gefiltert
-  'SearchController.search', 'StudioController.config', 'AnalyticsController.overview', // pro Entität/Kennzahl geprüft
+  'SearchController.search', 'StudioController.config', 'DiscordController.link', 'DiscordController.linkCode', 'DiscordController.unlinkSelf', 'AnalyticsController.overview', // pro Entität/Kennzahl geprüft
   'ExportController.export', 'MediaController.upload', 'MediaController.list', 'MediaController.download', // Service-Ebene
 ]);
 
@@ -35,9 +35,10 @@ describe('route authorization coverage', () => {
         if (name === 'constructor' || typeof handler !== 'function' || Reflect.getMetadata(METHOD_METADATA, handler) === undefined) continue;
         void PATH_METADATA;
         const perms = reflector.getAllAndOverride<string[]>(PERMISSION_KEY, [handler, w.metatype!]);
+        const bot = reflector.getAllAndOverride<boolean>(BOT_SERVICE_KEY, [handler, w.metatype!]);
         const pub = reflector.getAllAndOverride<boolean>(PUBLIC_KEY, [handler, w.metatype!]);
         const key = `${w.metatype!.name}.${name}`;
-        if (!perms?.length && !pub && !AUTH_ONLY_ALLOWLIST.has(key)) missing.push(key);
+        if (!perms?.length && !pub && !bot && !AUTH_ONLY_ALLOWLIST.has(key)) missing.push(key);
       }
     }
     expect(missing).toEqual([]);

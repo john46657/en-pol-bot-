@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { DISPATCH_TRANSITIONS, DispatchStatus, UnitStatus } from '@enrp/shared';
 import { RealtimeService } from '../realtime/realtime.service';
+import { DiscordService } from '../discord/discord.service';
 import { PrismaService, Tx } from '../prisma/prisma.service';
 import { AuditService, Actor } from '../audit/audit.service';
 import { TimelineService } from '../timeline/timeline.service';
@@ -14,7 +15,7 @@ const OPEN = ['CLOSED', 'CANCELLED'];
 
 @Injectable()
 export class DispatchService {
-  constructor(private readonly prisma: PrismaService, private readonly audit: AuditService, private readonly timeline: TimelineService, private readonly rt: RealtimeService) {}
+  constructor(private readonly prisma: PrismaService, private readonly audit: AuditService, private readonly timeline: TimelineService, private readonly rt: RealtimeService, private readonly discord: DiscordService) {}
 
   // ---- Units ----
   listUnits() { return this.prisma.unit.findMany({ include: { members: true }, orderBy: { callsign: 'asc' } }); }
@@ -79,7 +80,7 @@ export class DispatchService {
       await this.timeline.add(tx, { entityType: 'Incident', entityId: inc.id, action: 'incident.created', summary: `Incident ${inc.number} created`, actorId: actor.userId });
       await this.audit.record(actor, { action: 'incident.create', module: 'incidents', entityType: 'Incident', entityId: inc.id, after: inc }, tx);
       return inc;
-    }).then((inc) => { this.rt.publish('incidents', 'incident.created', { id: inc.id, number: inc.number }); this.rt.publish('dispatch', 'queue.changed', { id: inc.id }); return inc; });
+    }).then((inc) => { this.rt.publish('incidents', 'incident.created', { id: inc.id, number: inc.number }); this.rt.publish('dispatch', 'queue.changed', { id: inc.id }); void this.discord.enqueue('dispatch', 'incident.created', { number: inc.number, title: inc.title, priority: inc.priority, location: inc.location }); return inc; });
   }
 
   async attach(tx: Tx, incidentId: string, personIds: string[] = [], vehicleIds: string[] = [], actor: Actor) {
@@ -147,6 +148,11 @@ export class DispatchService {
       await this.audit.record(actor, { action: 'incident.assign', module: 'dispatch', entityType: 'Incident', entityId: id, after: { unitId, callsign: unit.callsign } }, tx);
       if (unit.members.length) await tx.notification.createMany({ data: unit.members.map((m) => ({ userId: m.userId, type: 'INCIDENT_ASSIGNMENT', title: `Assigned to ${inc.number}`, entityType: 'Incident', entityId: id })) });
       return tx.incident.findUniqueOrThrow({ where: { id }, include: { units: true } });
-    }).then((r) => { this.rt.publish('dispatch', 'unit.assigned', { incidentId: id, unitId }); return r; });
+    }).then(async (r) => {
+      this.rt.publish('dispatch', 'unit.assigned', { incidentId: id, unitId });
+      const [inc, unit] = await Promise.all([this.prisma.incident.findUnique({ where: { id } }), this.prisma.unit.findUnique({ where: { id: unitId } })]);
+      if (inc && unit) void this.discord.enqueue('dispatch', 'incident.assigned', { number: inc.number, title: inc.title, priority: inc.priority, callsign: unit.callsign, location: inc.location });
+      return r;
+    });
   }
 }

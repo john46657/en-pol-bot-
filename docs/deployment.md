@@ -88,6 +88,7 @@ Die API räumt täglich alte Sessions, Login-Historie und gelesene Benachrichtig
 | Vergessenes Admin-Passwort | Anderen Admin nutzen; sonst Passwort per DB-Skript zurücksetzen (sag Bescheid, ich schreibe es dir). |
 
 ## Technische Hinweise
+- Discord-Bot optional: `docker compose --profile bot up -d --build` (siehe discord-bot.md).
 - `docker-compose.yml`: `db` (PostgreSQL 17), `api` (Migrationen beim Start, läuft als Nicht-Root), `web` (Caddy: statische Dateien, Reverse Proxy, Auto-HTTPS, Sicherheits-Header), `backup`.
 - `/readiness` und Swagger (`/api/docs`) sind von außen **nicht** erreichbar; `/health` schon (für Monitoring).
 - Umgebungsvariablen: siehe `.env.example`. Nie `prisma db push` oder `migrate reset` in Produktion verwenden.

@@ -4,12 +4,13 @@ import { PrismaService } from '../prisma/prisma.service';
 import { AuditService, Actor } from '../audit/audit.service';
 import { TimelineService } from '../timeline/timeline.service';
 import { AppError } from '../common/errors';
+import { DiscordService } from '../discord/discord.service';
 import { nextStatus } from '../common/transition';
 import { PageQuery, pageResult, skipTake } from '../common/pagination';
 
 @Injectable()
 export class WantedService {
-  constructor(private readonly prisma: PrismaService, private readonly audit: AuditService, private readonly timeline: TimelineService) {}
+  constructor(private readonly prisma: PrismaService, private readonly audit: AuditService, private readonly timeline: TimelineService, private readonly discord: DiscordService) {}
 
   /** Abgelaufene aktive Fahndungen werden beim Lesen/Schreiben konsistent auf EXPIRED gesetzt. */
   async expireDue() {
@@ -45,6 +46,10 @@ export class WantedService {
       }
       await this.timeline.add(tx, { entityType: 'Wanted', entityId: w.id, action: 'wanted.created', summary: 'Wanted record activated', actorId: actor.userId });
       await this.audit.record(actor, { action: 'wanted.create', module: 'wanted', entityType: 'Wanted', entityId: w.id, after: w }, tx);
+      return w;
+    }).then(async (w) => {
+      const subject = w.personId ? (await this.prisma.person.findUnique({ where: { id: w.personId } }))?.robloxUsername : (await this.prisma.vehicle.findUnique({ where: { id: w.vehicleId! } }))?.plate;
+      void this.discord.enqueue('wanted', 'wanted.created', { reason: w.reason, priority: w.priority, subject: subject ?? 'unknown', kind: w.personId ? 'person' : 'vehicle' });
       return w;
     });
   }

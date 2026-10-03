@@ -6,7 +6,10 @@ import type { Actor } from '../audit/audit.service';
 
 export const PUBLIC_KEY = 'isPublic';
 export const PERMISSION_KEY = 'requiredPermissions';
+export const BOT_SERVICE_KEY = 'botService';
 export const Public = () => SetMetadata(PUBLIC_KEY, true);
+/** Route nur für den Discord-Bot-Dienst (Bot-Token, kein Benutzerkontext). */
+export const BotService = () => SetMetadata(BOT_SERVICE_KEY, true);
 /** Alle genannten Permissions werden benötigt. */
 export const RequirePermission = (...p: PermissionKey[]) => SetMetadata(PERMISSION_KEY, p);
 

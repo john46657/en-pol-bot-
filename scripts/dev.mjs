@@ -12,9 +12,11 @@ import path from 'node:path';
 const root = path.resolve(import.meta.dirname, '..');
 const DB_PORT = 54329, API_PORT = 3000, WEB_PORT = 5173;
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD ?? 'Admin-Demo-123456';
-const env = { ...process.env, DATABASE_URL: `postgresql://enrp:enrp@localhost:${DB_PORT}/enrp`, ADMIN_PASSWORD, WEB_ORIGIN: `http://localhost:${WEB_PORT}`, NODE_ENV: 'development', LOGIN_RATE_LIMIT: '200' };
+const botEnabled = !!process.env.DISCORD_TOKEN; // Bot nur starten, wenn ein Discord-Token vorhanden ist
+const BOT_API_TOKEN = process.env.BOT_API_TOKEN ?? 'dev-only-bot-token-0123456789abcdefghij';
+const env = { ...process.env, ...(botEnabled ? { BOT_API_TOKEN, API_URL: `http://localhost:${API_PORT}` } : {}), DATABASE_URL: `postgresql://enrp:enrp@localhost:${DB_PORT}/enrp`, ADMIN_PASSWORD, WEB_ORIGIN: `http://localhost:${WEB_PORT}`, NODE_ENV: 'development', LOGIN_RATE_LIMIT: '200' };
 const children = [];
-const color = { db: 36, api: 32, web: 35 };
+const color = { db: 36, api: 32, web: 35, bot: 34 };
 
 function run(cmd, args, label, opts = {}) {
   const p = spawn(cmd, args, { cwd: root, env, stdio: ['ignore', 'pipe', 'pipe'], ...opts });
@@ -48,9 +50,11 @@ runSync('pnpm', ['--filter', '@enrp/api', 'exec', 'prisma', 'migrate', 'deploy']
 runSync('pnpm', ['--filter', '@enrp/api', 'db:seed'], 'seed');
 run('pnpm', ['--filter', '@enrp/api', 'dev'], 'api');
 run('pnpm', ['--filter', '@enrp/web', 'dev'], 'web');
+if (botEnabled) run('pnpm', ['--filter', '@enrp/bot', 'dev'], 'bot');
 await waitPort(API_PORT); await waitPort(WEB_PORT);
 await new Promise((r) => setTimeout(r, 1500));
 
 const demo = spawnSync('node', ['scripts/demo-data.mjs'], { cwd: root, env: { ...env, API_URL: `http://localhost:${API_PORT}` }, encoding: 'utf8' });
 console.log((demo.stdout || '').trim() || (demo.stderr || '').trim());
+console.log(botEnabled ? '  Discord bot: started (DISCORD_TOKEN found)' : '  Discord bot: not started (set DISCORD_TOKEN to enable, see docs/discord-bot.md)');
 console.log(`\n  Web:     http://localhost:${WEB_PORT}\n  API:     http://localhost:${API_PORT}/api/docs\n  Login:   see table above (admin / ${ADMIN_PASSWORD})\n  Stop:    Ctrl+C\n`);

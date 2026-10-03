@@ -3,6 +3,7 @@ import { PermissionService } from '../authz/permission.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { AuditService, Actor } from '../audit/audit.service';
 import { AppError } from '../common/errors';
+import { DiscordService } from '../discord/discord.service';
 
 export const CHANNELS = ['TEAM', 'DISPATCH', 'INCIDENT', 'SUPERVISOR', 'ANNOUNCEMENT'] as const;
 export type Channel = (typeof CHANNELS)[number];
@@ -12,7 +13,7 @@ const WRITE: Record<Channel, string> = { TEAM: 'communication.send', DISPATCH: '
 
 @Injectable()
 export class CommunicationService {
-  constructor(private readonly prisma: PrismaService, private readonly perms: PermissionService, private readonly audit: AuditService) {}
+  constructor(private readonly prisma: PrismaService, private readonly perms: PermissionService, private readonly audit: AuditService, private readonly discord: DiscordService) {}
 
   /** Berechtigung wird serverseitig geprüft – auch für spätere WebSocket-Subscriptions (gleiche Methode). */
   async canRead(userId: string, channel: Channel) { return (await this.perms.has(userId, 'communication.view')) && (await this.perms.has(userId, READ[channel])); }
@@ -33,7 +34,12 @@ export class CommunicationService {
     if (!(await this.canRead(uid, channel)) || !(await this.perms.has(uid, WRITE[channel]))) throw new AppError('PERMISSION_DENIED', 'You do not have permission to perform this action.');
     const c = await this.conversation(channel, d.entityId);
     if (d.replyToId && !(await this.prisma.message.findFirst({ where: { id: d.replyToId, conversationId: c.id } }))) throw new AppError('NOT_FOUND', 'Reply target not found.');
-    return this.prisma.message.create({ data: { conversationId: c.id, authorId: uid, body: d.body, replyToId: d.replyToId } });
+    const msg = await this.prisma.message.create({ data: { conversationId: c.id, authorId: uid, body: d.body, replyToId: d.replyToId } });
+    if (channel === 'ANNOUNCEMENT') {
+      const author = await this.prisma.user.findUnique({ where: { id: uid }, select: { displayName: true } });
+      void this.discord.enqueue('announcements', 'announcement', { body: d.body.slice(0, 1500), author: author?.displayName ?? 'Command' });
+    }
+    return msg;
   }
 
   async moderate(actor: Actor, id: string, action: 'pin' | 'unpin' | 'delete') {

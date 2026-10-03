@@ -29,6 +29,7 @@ if [ ! -f .env ]; then
 DOMAIN=$DOMAIN
 POSTGRES_PASSWORD=$(openssl rand -hex 24)
 SESSION_SECRET=$(openssl rand -hex 32)
+BOT_API_TOKEN=$(openssl rand -hex 32)
 ENVEOF
 else
   echo "==> .env existiert bereits – wird nicht überschrieben"
@@ -51,5 +52,6 @@ cat <<DONE
 Fertig. Öffne https://$DOMAIN  (das HTTPS-Zertifikat holt sich Caddy beim ersten Aufruf automatisch;
 das klappt nur, wenn der DNS-A-Record auf diese Server-IP zeigt und Port 80/443 erreichbar sind).
 Das oben angezeigte Admin-Passwort wird NUR EINMAL gezeigt – sofort ändern/speichern.
+Discord-Bot (optional): DISCORD_TOKEN in .env eintragen, dann  docker compose --profile bot up -d --build  (siehe docs/discord-bot.md)
 Logs ansehen:   docker compose logs -f api
 DONE

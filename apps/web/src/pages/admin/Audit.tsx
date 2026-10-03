@@ -7,7 +7,7 @@ import { DataTable } from '../../components/DataTable';
 
 interface A { id: string; createdAt: string; actorUserId: string | null; action: string; module: string; entityType: string | null; entityId: string | null; reason: string | null; requestId: string | null }
 interface S { id: string; type: string; ip: string | null; detail: string | null; createdAt: string }
-const MODULES = ['auth', 'users', 'permissions', 'roles', 'persons', 'vehicles', 'tickets', 'dispatch', 'incidents', 'reports', 'complaints', 'investigations', 'wanted', 'evidence', 'personnel', 'applications', 'academy', 'settings', 'export', 'media'];
+const MODULES = ['auth', 'users', 'permissions', 'roles', 'persons', 'vehicles', 'tickets', 'dispatch', 'incidents', 'reports', 'complaints', 'investigations', 'wanted', 'evidence', 'personnel', 'applications', 'academy', 'settings', 'export', 'media', 'discord'];
 
 export function Audit() {
   const { can } = useAuth();

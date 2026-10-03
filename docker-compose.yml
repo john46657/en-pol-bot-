@@ -33,6 +33,7 @@ services:
       SESSION_SECRET: ${SESSION_SECRET:?set SESSION_SECRET in .env}
       WEB_ORIGIN: https://${DOMAIN:?set DOMAIN in .env}
       STORAGE_DIR: /app/uploads
+      BOT_API_TOKEN: ${BOT_API_TOKEN:-}
     volumes:
       - uploads:/app/uploads
 
@@ -50,6 +51,20 @@ services:
     volumes:
       - caddy_data:/data
       - caddy_config:/config
+
+  # Discord-Bot (optional): docker compose --profile bot up -d --build   (benötigt DISCORD_TOKEN + BOT_API_TOKEN in .env)
+  bot:
+    profiles: ["bot"]
+    build: { context: ., target: bot }
+    restart: unless-stopped
+    logging: *logging
+    depends_on:
+      api: { condition: service_healthy }
+    environment:
+      DISCORD_TOKEN: ${DISCORD_TOKEN:?set DISCORD_TOKEN in .env}
+      DISCORD_GUILD_ID: ${DISCORD_GUILD_ID:-}
+      BOT_API_TOKEN: ${BOT_API_TOKEN:?set BOT_API_TOKEN in .env}
+      API_URL: http://api:3000
 
   # Tägliche Dumps nach ./backups (14 Tage, 8 Wochen, 6 Monate aufbewahrt)
   backup:

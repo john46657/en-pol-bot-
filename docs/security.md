@@ -29,3 +29,6 @@ Known residual risks (accepted / not yet addressed):
 ## Production defaults
 - Swagger UI (`/api/docs`) is only served in development (`ENABLE_SWAGGER=true` overrides).
 - Retention runs daily inside the API process in production (first run 1 minute after start); every run is audited as `retention.run` with no user.
+
+## Discord bot
+Token-authenticated service client; acts only as a linked, active user and only on an explicit route allowlist (`BOT_USER_ROUTES`). Details and limits: [discord-bot.md](discord-bot.md). Covered by `test/discord.test.ts` (token checks, unlinked/disabled users, allowlist, attribution in audit, outbox, code single-use/expiry).

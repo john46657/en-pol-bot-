@@ -28,6 +28,7 @@ import { AdminModule } from './admin/admin.module';
 import { ExportModule } from './export/export.module';
 import { MediaModule } from './media/media.module';
 import { StudioModule } from './studio/studio.module';
+import { DiscordModule } from './discord/discord.module';
 import { AuditController } from './audit/audit.controller';
 import { HealthController } from './health/health.controller';
 import { AuthGuard, PermissionGuard } from './authz/guards';
@@ -40,7 +41,7 @@ import { OriginMiddleware } from './common/origin.middleware';
     ThrottlerModule.forRoot([{ ttl: 60_000, limit: process.env.NODE_ENV === 'test' ? 10_000 : 300 }]),
     DiscoveryModule, PrismaModule, AuthzModule, AuditModule, AuthModule, UsersModule, PersonsModule, VehiclesModule, TicketsModule,
     DispatchModule, ReportsModule, ComplaintsModule, InvestigationsModule, WantedModule, EvidenceModule,
-    PersonnelModule, DutyModule, ApplicationsModule, AcademyModule, NotificationsModule, SearchModule, CommunicationModule, AnalyticsModule, RealtimeModule, AdminModule, ExportModule, MediaModule, StudioModule,
+    PersonnelModule, DutyModule, ApplicationsModule, AcademyModule, NotificationsModule, SearchModule, CommunicationModule, AnalyticsModule, RealtimeModule, AdminModule, ExportModule, MediaModule, StudioModule, DiscordModule,
   ],
   controllers: [HealthController, AuditController],
   providers: [

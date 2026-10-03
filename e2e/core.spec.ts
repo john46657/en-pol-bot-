@@ -184,3 +184,28 @@ test('Team dashboard: supervisor sets duty status of an officer', async ({ page 
   await expect(row).toContainText('ON DUTY');
   await expect(page.getByText('On duty', { exact: true }).first()).toBeVisible();
 });
+
+test('Discord: link code from the UI is redeemed by the bot API, then unlinked', async ({ page, request }) => {
+  const BOT = { Authorization: 'Bot e2e-bot-token-0123456789-abcdefghijklmnop' };
+  await uiLogin(page, 'admin', ADMIN_PASSWORD);
+  await page.getByRole('button', { name: 'Link Discord' }).click();
+  await page.getByRole('button', { name: 'Code erzeugen' }).click();
+  const text = await page.getByTestId('link-code').innerText();
+  const code = text.split('code:')[1]!.trim();
+  expect(code).toMatch(/^[A-Z2-9]{4}-[A-Z2-9]{4}$/);
+  const res = await request.post('http://localhost:3100/api/v1/bot/link', { headers: BOT, data: { code, discordId: '300000000000000001' } });
+  expect(res.status()).toBe(200);
+  // erneut öffnen: Status „verknüpft“
+  await page.reload();
+  await page.getByRole('button', { name: 'Link Discord' }).click();
+  await expect(page.getByText('verknüpft', { exact: true })).toBeVisible();
+  // Der Bot darf jetzt im Namen des Admins lesen, aber keine Admin-Routen nutzen
+  const ok = await request.get('http://localhost:3100/api/v1/persons', { headers: { ...BOT, 'X-Discord-User': '300000000000000001' } });
+  expect(ok.status()).toBe(200);
+  const blocked = await request.get('http://localhost:3100/api/v1/users', { headers: { ...BOT, 'X-Discord-User': '300000000000000001' } });
+  expect(blocked.status()).toBe(403);
+  await page.getByRole('button', { name: 'Verknüpfung lösen' }).click();
+  await expect(page.getByRole('button', { name: 'Code erzeugen' })).toBeVisible();
+  const after = await request.get('http://localhost:3100/api/v1/persons', { headers: { ...BOT, 'X-Discord-User': '300000000000000001' } });
+  expect(after.status()).toBe(401);
+});

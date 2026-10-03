@@ -3,7 +3,7 @@
 Police CAD / MDT / Dispatch for Emergency Response: Liberty County (Roblox). Police and dispatch only.
 Stack: NestJS 11 · Prisma 6 · PostgreSQL · React 19 · Vite · Tailwind 4 · TanStack Query · Socket.IO.
 
-> **Not included (removed on purpose, for now):** the ER:LC API connector/webhooks and Galaxy AI. The code is archived in `../enrp-nexus-removed-erlc-galaxy.tar.gz`; see [docs/extending.md](docs/extending.md#re-adding-integrations). Docs: [docs/](docs).
+> **Not included (removed on purpose, for now):** the ER:LC API connector/webhooks and Galaxy AI. The Discord bot *is* included. The code is archived in `../enrp-nexus-removed-erlc-galaxy.tar.gz`; see [docs/extending.md](docs/extending.md#re-adding-integrations). Docs: [docs/](docs).
 
 ## Quick start (test everything with one command)
 ```bash
@@ -30,7 +30,8 @@ pnpm e2e         # Playwright (uses installed Google Chrome)
 | WebSockets (authorized rooms) | done |
 | React UI: shell, search, notifications, dashboard (customizable), dispatch board, all record lists/details, admin | done |
 | Hosting on a VPS (Docker Compose + Caddy HTTPS + daily DB backups + setup/update/restore scripts): [docs/deployment.md](docs/deployment.md) | written; production artifact tested locally, **Docker itself not run** |
+| Discord bot (`apps/bot`): slash commands with the linked user's permissions, channel notifications via outbox, one-time-code linking ([docs/discord-bot.md](docs/discord-bot.md)) | done; **not tested against real Discord** |
 | MDT portal, Team dashboard (supervisor actions), one-command dev start with demo data | done |
-| Browser E2E tests (10 specs), public application page `/apply` | done |
+| Browser E2E tests (11 specs), public application page `/apply` | done |
 | Studio: custom fields (persons/vehicles), accent theme, application form ([docs/studio.md](docs/studio.md)) | done |
 | Studio workflows, configurable priorities, virtualized tables, record locking, 2FA | **not implemented** |

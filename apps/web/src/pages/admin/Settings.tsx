@@ -6,6 +6,7 @@ import { Button, Card, ErrorState, Field, Input, PageHeader, Select, SkeletonRow
 
 interface S { settings: Record<string, unknown>; allowedKeys: string[] }
 const TEXT = [['org.name', 'Organisation name'], ['org.serverName', 'Server name'], ['org.timezone', 'Timezone (IANA)']] as const;
+const CHANNELS = [['dispatch', 'Dispatch channel ID (new/assigned incidents)'], ['wanted', 'Wanted channel ID (new wanted records)'], ['announcements', 'Announcements channel ID'], ['guildId', 'Server (guild) ID – optional']] as const;
 const NUM = [['retention.sessionDays', 'Keep expired sessions (days)'], ['retention.loginHistoryDays', 'Keep login history (days)'], ['retention.readNotificationDays', 'Keep read notifications (days)']] as const;
 
 export function Settings() {
@@ -37,6 +38,10 @@ export function Settings() {
           <div className="space-y-3">{NUM.map(([k, label]) => <Field key={k} label={label}>{(id) => <div className="flex gap-2"><Input id={id} type="number" value={val(k)} disabled={!manage} onChange={(e) => setDrafts({ ...drafts, [k]: e.target.value })} /><Button disabled={!manage || save.isPending} onClick={() => save.mutate({ key: k, value: Number(val(k)) })}>Save</Button></div>}</Field>)}</div>
         </Card>
       </div>
+      <Card title="Discord bot channels" className="mt-4" actions={manage && <Button disabled={save.isPending} onClick={() => save.mutate({ key: 'discord.channels', value: Object.fromEntries(CHANNELS.map(([k]) => [k, (drafts[`discord.${k}`] ?? String((q.data.settings['discord.channels'] as Record<string, string> | undefined)?.[k] ?? '')).trim()]).filter(([, v]) => v)) })}>Save channels</Button>}>
+        <p className="mb-3 text-xs text-muted">Empty = that notification type is disabled (nothing is queued). Everyone who can read the Discord channel will see the posts — use staff-only channels. Only summaries are posted (incident number/title/priority/location, wanted reason/subject, announcements).</p>
+        <div className="grid gap-3 md:grid-cols-2">{CHANNELS.map(([k, label]) => <Field key={k} label={label}>{(id) => <Input id={id} inputMode="numeric" disabled={!manage} value={drafts[`discord.${k}`] ?? String((q.data.settings['discord.channels'] as Record<string, string> | undefined)?.[k] ?? '')} onChange={(e) => setDrafts({ ...drafts, [`discord.${k}`]: e.target.value })} placeholder="e.g. 123456789012345678" />}</Field>)}</div>
+      </Card>
     </>
   );
 }

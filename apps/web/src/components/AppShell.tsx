@@ -4,6 +4,7 @@ import { LogOut, Menu, Shield } from 'lucide-react';
 import { useAuth } from '../lib/auth';
 import { ACCENTS, useStudio } from '../lib/studio';
 import { GROUPS, NAV } from '../nav';
+import { DiscordLink } from './DiscordLink';
 import { GlobalSearch } from './GlobalSearch';
 import { NotificationCenter } from './NotificationCenter';
 import { Button } from './ui';
@@ -48,6 +49,7 @@ export function AppShell() {
           <Button variant="ghost" className="lg:hidden" aria-label="Open menu" onClick={() => setOpen(true)}><Menu size={18} /></Button>
           <GlobalSearch />
           <div className="ml-auto flex items-center gap-2">
+            <DiscordLink />
             <NotificationCenter />
             <div className="hidden text-right text-xs sm:block"><p className="font-medium">{user?.displayName}</p><p className="text-muted">{user?.roles.join(', ') || 'No role'}</p></div>
             <Button variant="ghost" aria-label="Log out" onClick={() => void logout()}><LogOut size={16} /></Button>

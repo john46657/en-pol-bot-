@@ -20,6 +20,7 @@ export const SETTING_SCHEMAS = {
   'dashboard.defaultLayout': z.array(z.object({ widget: z.string().max(40), visible: z.boolean(), order: z.number().int() })).max(50),
   'studio.customFields': customFieldsConfig,
   'theme.accent': z.enum(ACCENTS),
+  'discord.channels': z.object({ guildId: z.string().regex(/^\d{15,25}$/).optional(), dispatch: z.string().regex(/^\d{15,25}$/).optional(), wanted: z.string().regex(/^\d{15,25}$/).optional(), announcements: z.string().regex(/^\d{15,25}$/).optional() }),
   'application.form': z.array(formField).min(1).max(30),
 } as const;
 export type SettingKey = keyof typeof SETTING_SCHEMAS;
@@ -41,7 +42,7 @@ export class AdminService {
     return this.prisma.$transaction(async (tx) => {
       const before = await tx.systemSetting.findUnique({ where: { key } });
       const row = await tx.systemSetting.upsert({ where: { key }, create: { key, value: parsed.data as Prisma.InputJsonValue }, update: { value: parsed.data as Prisma.InputJsonValue } });
-      await this.audit.record(actor, { action: /^(application|dashboard|studio|theme)\./.test(key) ? 'studio.config.changed' : 'settings.changed', module: 'settings', entityType: 'SystemSetting', entityId: key, before: before?.value, after: row.value }, tx);
+      await this.audit.record(actor, { action: /^(application|dashboard|studio|theme|discord)\./.test(key) ? 'studio.config.changed' : 'settings.changed', module: 'settings', entityType: 'SystemSetting', entityId: key, before: before?.value, after: row.value }, tx);
       return { key, value: row.value };
     });
   }
@@ -70,6 +71,7 @@ export class AdminService {
     return this.prisma.$transaction(async (tx) => {
       const sessions = await tx.session.deleteMany({ where: { OR: [{ expiresAt: { lt: days(sess) } }, { revokedAt: { lt: days(sess) } }] } });
       const logins = await tx.loginHistory.deleteMany({ where: { createdAt: { lt: days(hist) } } });
+      await tx.discordOutbox.deleteMany({ where: { OR: [{ sentAt: { lt: days(7) } }, { attempts: { gte: 5 }, createdAt: { lt: days(7) } }] } });
       const notifications = await tx.notification.deleteMany({ where: { OR: [{ readAt: { lt: days(notif) } }, { archivedAt: { lt: days(notif) } }] } });
       const result = { sessions: sessions.count, loginHistory: logins.count, notifications: notifications.count };
       await this.audit.record(actor, { action: 'retention.run', module: 'settings', after: result }, tx);
