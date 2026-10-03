@@ -31,7 +31,7 @@ Known residual risks (accepted / not yet addressed):
 - Retention runs daily inside the API process in production (first run 1 minute after start); every run is audited as `retention.run` with no user.
 
 ## Discord bot
-Token-authenticated service client; acts only as a linked, active user and only on an explicit route allowlist (`BOT_USER_ROUTES`). Details and limits: [discord-bot.md](discord-bot.md). Covered by `test/discord.test.ts` (token checks, unlinked/disabled users, allowlist, attribution in audit, outbox, code single-use/expiry).
+Token-authenticated service client; acts only as a linked, active user and only on an explicit route allowlist (`BOT_USER_ROUTES`, writes limited to creating records and dispatch control). Details and limits: [discord-bot.md](discord-bot.md). Covered by `test/discord.test.ts` (token checks, unlinked/disabled users, allowlist, attribution in audit, outbox, code single-use/expiry).
 
 ## Single-process / panel hosting
 - `COOKIE_SECURE` (default: on in production). Without HTTPS the launcher sets it to `false` and prints a loud warning; CSP `upgrade-insecure-requests` and HSTS are then disabled so the site loads over http. Credentials are unencrypted in that mode.

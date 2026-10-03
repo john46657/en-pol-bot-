@@ -24,6 +24,11 @@ const BOT_USER_ROUTES: [string, RegExp][] = [
   ['GET', /^\/team\/(overview|me)$/], ['PUT', /^\/team\/me\/status$/],
   ['GET', /^\/dispatch\/units\/?$/], ['PUT', new RegExp(`^/dispatch/units/${UUID}/status$`)],
   ['POST', /^\/tickets\/?$/],
+  ['GET', /^\/auth\/me$/], ['DELETE', /^\/discord\/link$/], ['GET', /^\/notifications\/?$/],
+  ['POST', /^\/reports\/?$/], ['POST', new RegExp(`^/reports/${UUID}/submit$`)], ['POST', /^\/complaints\/?$/], ['POST', /^\/investigations\/?$/],
+  ['POST', /^\/wanted\/?$/], ['POST', /^\/evidence\/?$/],
+  ['POST', new RegExp(`^/dispatch/incidents/${UUID}/assign$`)], ['PUT', new RegExp(`^/dispatch/incidents/${UUID}/status$`)], ['POST', new RegExp(`^/dispatch/incidents/${UUID}/close$`)],
+  ['POST', /^\/communication\/channels\/(TEAM|DISPATCH)\/messages$/],
 ];
 
 @Injectable()

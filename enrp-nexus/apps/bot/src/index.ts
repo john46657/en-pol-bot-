@@ -38,8 +38,8 @@ async function handle(i: ChatInputCommandInteraction) {
   await i.deferReply({ flags: MessageFlags.Ephemeral });
   let reply: Reply;
   try {
-    const opts: Record<string, string | number | undefined> = {};
-    for (const o of def.options ?? []) { const v = i.options.get(o.name)?.value; opts[o.name] = typeof v === 'string' || typeof v === 'number' ? v : undefined; }
+    const opts: Record<string, string | number | boolean | undefined> = {};
+    for (const o of def.options ?? []) { const v = i.options.get(o.name)?.value; opts[o.name] = typeof v === 'string' || typeof v === 'number' || typeof v === 'boolean' ? v : undefined; }
     reply = await def.run({ discordId: i.user.id, opts, api });
   } catch (e) {
     console.error(`command ${def.name} failed:`, e instanceof Error ? e.message : e);

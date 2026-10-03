@@ -11,7 +11,7 @@ import { pageQuery } from '../common/pagination';
 const prio = z.enum(PRIORITIES);
 const create = z.object({ title: z.string().trim().min(3).max(200), description: z.string().max(5000).optional(), priority: prio.optional(), location: z.string().max(200).optional(), personIds: z.array(z.string().uuid()).max(50).optional(), vehicleIds: z.array(z.string().uuid()).max(50).optional() });
 const update = z.object({ version: z.number().int(), title: z.string().trim().min(3).max(200).optional(), description: z.string().max(5000).optional(), priority: prio.optional(), location: z.string().max(200).optional(), supervisorId: z.string().uuid().nullable().optional() });
-const status = z.object({ status: z.enum(DISPATCH_STATUSES), note: z.string().max(500).optional() });
+const status = z.object({ status: z.enum(DISPATCH_STATUSES).refine((s) => s !== 'CLOSED', 'Use POST /dispatch/incidents/:id/close (requires dispatch.close).'), note: z.string().max(500).optional() });
 const listQ = pageQuery.extend({ status: z.enum(DISPATCH_STATUSES).optional(), active: z.coerce.boolean().optional() });
 const attach = z.object({ personIds: z.array(z.string().uuid()).optional(), vehicleIds: z.array(z.string().uuid()).optional() });
 const unit = z.object({ callsign: z.string().trim().min(2).max(16), vehicle: z.string().max(64).optional(), notes: z.string().max(1000).optional(), memberIds: z.array(z.string().uuid()).optional() });
