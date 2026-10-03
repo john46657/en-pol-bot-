@@ -66,6 +66,10 @@ Das System gibt dem Bot nur Rechte, die der verknüpfte Benutzer selbst hat (Ver
 cpSync(path.join(root, 'docs/discord-bot.md'), path.join(dir, 'docs/discord-bot.md'), { recursive: true });
 cpSync(path.join(root, 'scripts/hosting/bot.py'), path.join(dir, 'bot.py')); // Starter für Python-Panels
 // flach zippen: bot.js liegt nach dem Entpacken direkt im Hauptordner (kein Unterordner)
+// Zusätzlich ins Repo-Hauptverzeichnis legen, damit Panels, die das Repo von GitHub ziehen, direkt `python3 bot.py` starten können.
+// (bot.js ist ein GENERIERTES Artefakt aus apps/bot – nicht von Hand ändern, sondern `pnpm bundle:bot` ausführen.)
+cpSync(path.join(dir, 'bot.js'), path.join(root, 'bot.js'));
+cpSync(path.join(dir, 'bot.py'), path.join(root, 'bot.py'));
 const z = spawnSync('zip', ['-r', '-q', path.join(out, 'en-polizei-bot.zip'), '.'], { cwd: dir, stdio: 'inherit' });
 if (z.status !== 0) process.exit(1);
 console.log(`bot.js: ${(statSync(path.join(dir, 'bot.js')).size / 1e6).toFixed(1)} MB, ZIP: ${(statSync(path.join(out, 'en-polizei-bot.zip')).size / 1e6).toFixed(1)} MB\n→ ${path.join(out, 'en-polizei-bot.zip')}`);
