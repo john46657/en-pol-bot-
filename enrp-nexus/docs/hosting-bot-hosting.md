@@ -42,6 +42,16 @@ Die ZIP enthält vorkompilierten Code, **keine** `node_modules` (die haben Mac-B
 
 > Fehlt `ADMIN_PASSWORD`, wird ein zufälliges Passwort erzeugt und **nur einmal** in der Konsole angezeigt. Schau sofort in die Logs.
 
+### 2a. Wenn dein Panel eine Domain mit HTTPS bereitstellt (z. B. `https://xxxx.apps.bot-hosting.cloud`)
+Dann hast du HTTPS – setze zusätzlich:
+```
+COOKIE_SECURE=true
+WEB_ORIGIN=https://xxxx.apps.bot-hosting.cloud
+```
+- Die Domain wird vom Panel auf **einen Port deines Servers** geleitet (im Panel unter Netzwerk/Domains/Allocations zu sehen). Die App lauscht automatisch auf `SERVER_PORT`; stelle sicher, dass die Domain genau auf **diesen** Port zeigt.
+- **502 Bad Gateway** im Browser heißt: Der Proxy des Panels läuft, aber dahinter antwortet deine App nicht → Server ist nicht gestartet, noch beim `npm install`/Start, abgestürzt (Konsole lesen) oder die Domain zeigt auf einen anderen Port.
+- Test: `https://xxxx.apps.bot-hosting.cloud/health` muss `{"status":"ok"}` liefern.
+
 ## 3. Erste Schritte in der App
 Eigenen Admin-Benutzer anlegen, Rollen/Rechte anpassen, Legal Codes eintragen, Benutzer + Personalakten anlegen – wie in [deployment.md](deployment.md) Abschnitt 4. Die Bewerbungsseite ist unter `/apply` erreichbar.
 
@@ -75,6 +85,7 @@ Solange du ohne HTTPS arbeitest: nur Testdaten verwenden, keine echten Passwört
 ## 8. Fehlersuche
 | Meldung / Problem | Ursache → Lösung |
 |---|---|
+| **502 Bad Gateway** | Panel-Proxy ok, App antwortet nicht: Server nicht gestartet / noch in der Installation / abgestürzt, oder Domain zeigt auf falschen Port (siehe 2a). Konsole prüfen. |
 | `DATABASE_URL fehlt` / `muss mit postgresql:// beginnen` | Variable fehlt oder MySQL-URL. Es muss PostgreSQL sein. |
 | `prisma migrate deploy ist fehlgeschlagen` | Zugangsdaten/Host falsch, Datenbank nicht erreichbar, oder der DB-Benutzer darf keine Tabellen/Trigger anlegen (Rechte des Datenbankbesitzers nötig). Meldung darüber in der Konsole lesen. |
 | Server startet nicht / wird beendet („killed“, „out of memory“) | Zu wenig RAM → größeren Tarif nehmen. Notfalls `NODE_OPTIONS=--max-old-space-size=200` setzen. |
