@@ -44,8 +44,8 @@ describe('Engine', () => {
       ['r2', ['training.view']],
     ]);
     expect([...resolvePermissions(grants, ['r1', 'r2', 'x'])].sort()).toEqual([
-      'training.view',
       'shifts.start',
+      'training.view',
     ]);
     expect(resolvePermissions(grants, []).size).toBe(0);
   });
