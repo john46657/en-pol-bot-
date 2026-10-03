@@ -50,6 +50,11 @@ Wann brauchst du das? Wenn das System (API + Web) schon irgendwo läuft und du N
 2. Startdatei: bot.js   |   Startbefehl: node bot.js
 3. Umgebungsvariablen setzen (Vorlage: .env.example): DISCORD_TOKEN, BOT_API_TOKEN, API_URL, optional DISCORD_GUILD_ID.
 4. Starten. Erwartet in der Konsole:  "Logged in as …"  und  "… slash commands registered …".
+   Der Bot startet AUCH DANN, wenn das System (API) noch nicht läuft – er meldet es nur im Log. Du kannst ihn also zuerst allein starten.
+   Erwartete Konsole:
+     Logged in as DeinBot#1234
+     10 slash commands registered for guild …
+     API reachable at …            (oder: API NOT reachable … → System läuft noch nicht, Bot ist trotzdem online)
 5. Bot muss mit dem Scope "applications.commands" eingeladen sein. Details: docs/discord-bot.md im Projekt.
 
 Quellcode: src/ (TypeScript). Neue Befehle: src/commands/index.ts.

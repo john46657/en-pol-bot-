@@ -32,10 +32,18 @@ export async function pollOnce(api: Api, send: Sender, log: (m: string) => void 
 /** Läuft dauerhaft; überlappende Durchläufe werden vermieden, Fehler (z. B. API kurz down) beenden die Schleife nicht. */
 export function startOutboxLoop(api: Api, send: Sender, seconds: number, log: (m: string) => void = console.log) {
   let running = false;
+  let lastError: string | undefined;
   const tick = async () => {
     if (running) return;
     running = true;
-    try { await pollOnce(api, send, log); } catch (e) { log(`outbox poll failed: ${e instanceof Error ? e.message : e}`); } finally { running = false; }
+    try {
+      await pollOnce(api, send, log);
+      if (lastError) { log('outbox: connection to the API restored'); lastError = undefined; }
+    } catch (e) {
+      // Nur bei neuer/anderer Störung loggen – nicht alle 5 Sekunden dieselbe Zeile
+      const msg = e instanceof Error ? e.message : String(e);
+      if (msg !== lastError) { log(`outbox poll failed: ${msg} (will keep retrying quietly)`); lastError = msg; }
+    } finally { running = false; }
   };
   const timer = setInterval(() => void tick(), seconds * 1000);
   void tick();

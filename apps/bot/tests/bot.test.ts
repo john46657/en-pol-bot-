@@ -3,7 +3,7 @@ import { BotApiError, HttpApi, type Api } from '../src/api';
 import { byName, COMMANDS, mapError } from '../src/commands';
 import { loadConfig } from '../src/config';
 import { clip, plain, renderOutbox } from '../src/format';
-import { pollOnce } from '../src/outbox';
+import { pollOnce, startOutboxLoop } from '../src/outbox';
 
 type Call = { kind: 'user' | 'service'; discordId?: string; method: string; path: string; body?: unknown };
 /** Fake-API: antwortet anhand (Methode Pfad-Präfix) und protokolliert Aufrufe. */
@@ -183,5 +183,25 @@ describe('config', () => {
     const c = loadConfig({ DISCORD_TOKEN: 'x'.repeat(30), BOT_API_TOKEN: 'y'.repeat(32) });
     expect(c.API_URL).toBe('http://localhost:3000');
     expect(c.DISCORD_GUILD_ID).toBeUndefined();
+  });
+});
+
+describe('outbox loop log noise', () => {
+  it('logs an API outage once and the recovery once, not on every poll', async () => {
+    vi.useFakeTimers();
+    let up = false;
+    const api: Api = {
+      async asUser() { throw new Error('unused'); },
+      async service(_m, path) { if (!up) throw new BotApiError(0, 'UNREACHABLE', 'The ENRP NEXUS API is not reachable.'); return (path === '/bot/config' ? {} : []) as never; },
+    };
+    const lines: string[] = [];
+    const stop = startOutboxLoop(api, async () => undefined, 5, (m) => lines.push(m));
+    await vi.advanceTimersByTimeAsync(5000 * 6); // 7 Durchläufe, alle fehlgeschlagen
+    expect(lines.filter((l) => l.includes('failed'))).toHaveLength(1);
+    up = true;
+    await vi.advanceTimersByTimeAsync(5000);
+    expect(lines.filter((l) => l.includes('restored'))).toHaveLength(1);
+    stop();
+    vi.useRealTimers();
   });
 });

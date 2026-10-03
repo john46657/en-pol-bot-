@@ -50,8 +50,19 @@ async function handle(i: ChatInputCommandInteraction) {
 
 client.on('interactionCreate', (i) => { if (i.isChatInputCommand()) void handle(i).catch((e) => console.error('interaction failed:', e instanceof Error ? e.message : e)); });
 
+/** Beim Start prüfen, ob das System erreichbar ist (nur Hinweis – der Bot läuft auch ohne API weiter). */
+async function checkApi() {
+  try {
+    const res = await fetch(`${cfg.API_URL}/health`, { signal: AbortSignal.timeout(8000) });
+    console.log(res.ok ? `API reachable at ${cfg.API_URL}` : `API answered HTTP ${res.status} at ${cfg.API_URL}/health — commands will fail until the system is running (502 = app behind the proxy is not running)`);
+  } catch {
+    console.log(`API NOT reachable at ${cfg.API_URL} — the bot runs, but commands will say "system not reachable" until the system is up`);
+  }
+}
+
 client.once('clientReady', async (c) => {
   console.log(`Logged in as ${c.user.tag}`);
+  void checkApi();
   const json = COMMANDS.map(toBuilder);
   if (cfg.DISCORD_GUILD_ID) await c.application.commands.set(json, cfg.DISCORD_GUILD_ID);
   else await c.application.commands.set(json);
