@@ -40,3 +40,4 @@ pnpm-debug.log*
 # Sensitive runtime state
 *.pem
 *.key
+.dev

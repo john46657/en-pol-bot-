@@ -8,7 +8,7 @@
     "build": "tsc",
     "start": "node dist/main.js",
     "typecheck": "tsc --noEmit",
-    "lint": "echo no-lint-yet"
+    "lint": "eslint src"
   },
   "dependencies": {
     "@nestjs/common": "^11.1.5",

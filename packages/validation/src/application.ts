@@ -25,7 +25,7 @@ export const conditionLeafSchema = z.object({
   operator: conditionOperatorSchema,
   value: z.union([z.string(), z.array(z.string())]).optional(),
 });
-export interface ConditionLeaf extends z.infer<typeof conditionLeafSchema> {}
+export type ConditionLeaf = z.infer<typeof conditionLeafSchema>;
 
 export interface ConditionGroup {
   type: 'group';
