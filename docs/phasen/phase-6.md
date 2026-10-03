@@ -3,7 +3,7 @@
 **Stand:** abgeschlossen (2026-10-04) – Engine, API, Bot, Dashboard, Migration, Tests und HTTP-Praxistest. **Der Bot-Teil ist nur mit Attrappen getestet** (kein Discord-Token).
 
 ## Modell
-- **Katalog** (`@nexus/types`, `PERMISSION_CATALOG`): einzige Quelle für Schlüssel und Beschriftungen. Module: `applications` (18 Schlüssel), `training`, `promotions`, `shifts`, `dispatch`, `sek` – u. a. `training.view/manage`, `promotions.create/approve`, `shifts.start/pause/end`, `dispatch.view/manage`, `sek.view/manage`.
+- **Katalog** (`@nexus/types`, `PERMISSION_CATALOG`): einzige Quelle für Schlüssel und Beschriftungen. Module: `applications` (18 Schlüssel), `training`, `promotions`, `shifts`, `sek` – u. a. `training.view/manage`, `promotions.create/approve`, `shifts.start/pause/end`, `sek.view/manage`.
 - **Regel:** `<modul>.manage` schließt alle Schlüssel **desselben** Moduls ein. (Vorher implizierte `applications.manage` fest *alles* – eine Superuser-Lücke, sobald weitere Module existieren.)
 - **Speicherung:** nur noch Tabelle `permissions` (Rolle ↔ Schlüssel, n:m). `guilds.rolePermissions` (JSON) entfällt.
 - **Engine** (`@nexus/permissions`): `engine.ts` (reine Logik: `hasPermission`, `effectivePermissions` …) und `service.ts` (`permissions.can/canAll/canAny/forRoles` gegen die Datenbank). API-Guard **und** Bot verwenden dieselbe Prüfung. Server-Besitzer/Administratoren/„Server verwalten“ umgehen die Zuordnung (`bypass`); gelöschte Rollen gewähren nichts; unbekannte Schlüssel in der DB werden ignoriert (fail closed).
@@ -32,3 +32,5 @@ Berechtigungen nach Modulen gruppiert mit lesbaren Namen; durch „Alles im Bere
 - Für die späteren Module existieren erst die Schlüssel; durchgesetzt werden sie, sobald die Endpunkte entstehen (jede neue Route muss `@RequirePermissions` setzen).
 - Pro Prüfung eine Datenbankabfrage (Cache folgt in Phase 34).
 - Kein Verweigern-Recht (nur Gewähren) und keine benutzerbezogenen Ausnahmen – bewusst einfach gehalten.
+
+> Nachtrag 2026-10-04: Der Bereich `dispatch` (Leitstelle) wurde auf Entscheidung des Nutzers aus dem Katalog entfernt.

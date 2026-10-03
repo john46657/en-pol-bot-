@@ -35,6 +35,6 @@ Neue Berechtigungs-Module, die erst mit ihren Phasen entstehen: `system`, `serve
 | 83, 84 | Automatische Rollenänderung mit Protokoll (vorher/nachher/Auslöser/Automation/Zeit); bei Discord-Fehler „teilweise fehlgeschlagen“, nie fälschlich Erfolg melden | übergreifend (Rollen-Service ab Phase 10) |
 | 85 | Auditierbarkeit: WER/WAS/WARUM/WANN/DATENSATZ/BERECHTIGUNG/AUTOMATION/ERGEBNIS | Phase 29, Audit-Felder ab sofort ergänzen |
 
-## Festlegungen / offene Punkte
-- **Leitstelle:** „bleibt ausdrücklich außerhalb dieses Systems“. Der Plan enthält die Leitstelle (Phasen 14–17) und der Katalog die Schlüssel `dispatch.*`. Annahme: Leitstelle wird **nicht** in die Rollenvorlagen/Profile aufgenommen und separat behandelt – **zu bestätigen**, ob Phasen 14–17 weiterhin gebaut werden sollen und wie die Leitstelle abgesichert wird.
+## Festlegungen
+- **Leitstelle komplett entfernt (Entscheidung 2026-10-04):** Phase 15 (Leitstelle) entfällt vollständig; der Berechtigungsbereich `dispatch.*` wurde aus dem Katalog gestrichen. Es gibt keine Leitstellen-Vorlagen, -Profile oder -Oberflächen. Die übrigen Plan-Phasen (z. B. 14 Dienst & Streifen, 16 Funk, 17 Einsatzsystem) bleiben bestehen, werden aber **ohne Bezug zur Leitstelle** gebaut (keine Einheiten-Disposition, kein Leitstellen-Funk); wo ein Plan-Punkt die Leitstelle nennt, entfällt dieser Teil.
 - Rechte-Schlüsselschema `modul.aktion` bleibt; die großgeschriebenen Namen der Spezifikation dienen als Alias/Anzeigename.

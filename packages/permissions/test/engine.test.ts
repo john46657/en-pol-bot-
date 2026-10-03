@@ -24,8 +24,6 @@ describe('Katalog', () => {
       'shifts.start',
       'shifts.pause',
       'shifts.end',
-      'dispatch.view',
-      'dispatch.manage',
       'sek.view',
       'sek.manage',
     ]) {
@@ -43,10 +41,10 @@ describe('Engine', () => {
   it('löst Permissions über mehrere Rollen auf und ignoriert unbekannte Rollen', () => {
     const grants = new Map<string, Permission[]>([
       ['r1', ['shifts.start']],
-      ['r2', ['dispatch.view']],
+      ['r2', ['training.view']],
     ]);
     expect([...resolvePermissions(grants, ['r1', 'r2', 'x'])].sort()).toEqual([
-      'dispatch.view',
+      'training.view',
       'shifts.start',
     ]);
     expect(resolvePermissions(grants, []).size).toBe(0);
@@ -58,11 +56,11 @@ describe('Engine', () => {
   it('<modul>.manage schließt das ganze Modul ein – aber nur dieses', () => {
     expect(hasPermission(set('training.manage'), 'training.view')).toBe(true);
     expect(hasPermission(set('applications.manage'), 'applications.submissions.accept')).toBe(true);
-    expect(hasPermission(set('applications.manage'), 'dispatch.view')).toBe(false); // früher: Superuser-Lücke
-    expect(hasPermission(set('sek.manage'), 'dispatch.manage')).toBe(false);
+    expect(hasPermission(set('applications.manage'), 'training.view')).toBe(false); // früher: Superuser-Lücke
+    expect(hasPermission(set('sek.manage'), 'shifts.manage')).toBe(false);
   });
   it('view/Einzelrechte implizieren kein manage', () => {
-    expect(hasPermission(set('dispatch.view'), 'dispatch.manage')).toBe(false);
+    expect(hasPermission(set('training.view'), 'shifts.manage')).toBe(false);
   });
   it('all/any und effektive Liste', () => {
     const s = set('shifts.start', 'training.manage');

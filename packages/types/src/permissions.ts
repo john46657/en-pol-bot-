@@ -72,14 +72,6 @@ export const PERMISSION_CATALOG = [
     ],
   },
   {
-    module: 'dispatch',
-    label: 'Leitstelle',
-    permissions: [
-      ['dispatch.view', 'Leitstelle ansehen'],
-      ['dispatch.manage', 'Leitstelle verwalten'],
-    ],
-  },
-  {
     module: 'sek',
     label: 'SEK',
     permissions: [
