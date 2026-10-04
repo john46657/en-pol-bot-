@@ -18,6 +18,7 @@ beforeEach(async () => {
   await prisma.guild.deleteMany({ where: { id: G } });
   await prisma.sekConfig.deleteMany({ where: { guildId: G } });
   await prisma.operationCounter.deleteMany({ where: { guildId: G } });
+  await prisma.trainingCounter.deleteMany({ where: { guildId: G } });
   await prisma.guild.create({ data: { id: G, name: 'SEK', settings: { create: {} } } });
   const rank = await saveRank(G, { name: 'Beamter', order: 1, isEntry: true }, 'x');
   for (const [u, n] of [[A, 'Anna'], [B, 'Bert'], [C, 'Carla']] as const) await createRecord({ guildId: G, userId: u, rpName: n, actorId: 'x', rankId: rank.id });

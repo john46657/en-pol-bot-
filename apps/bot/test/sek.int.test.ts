@@ -14,6 +14,7 @@ beforeEach(async () => {
   await prisma.guild.deleteMany({ where: { id: G } });
   await prisma.sekConfig.deleteMany({ where: { guildId: G } });
   await prisma.operationCounter.deleteMany({ where: { guildId: G } });
+  await prisma.trainingCounter.deleteMany({ where: { guildId: G } });
   await prisma.guild.create({ data: { id: G, name: 'SEK', settings: { create: {} } } });
   const e = (key: string) => ({ key, effect: 'ALLOW' as const, scope: 'SERVER' as const, scopeRef: '' });
   await permissionRepository.setPermissionsForRole(G, 'role-lead', ['sek.view', 'sek.member.manage', 'sek.training.manage', 'sek.training.view'].map(e), { name: 'SEK-Leitung' });
@@ -27,6 +28,7 @@ beforeEach(async () => {
   await saveConfig(G, { teamId: team.id, qualificationId: qual.id, shiftTypeId: type.id, courseIds: [course.id] }, 'x');
 });
 afterAll(async () => {
+  await prisma.trainingCounter.deleteMany({ where: { guildId: G } });
   await prisma.sekConfig.deleteMany({ where: { guildId: G } });
   await prisma.operationCounter.deleteMany({ where: { guildId: G } });
   await prisma.guild.deleteMany({ where: { id: G } });
