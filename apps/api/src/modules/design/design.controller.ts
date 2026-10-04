@@ -9,6 +9,7 @@ import {
   exportTheme,
   getDesign,
   getEffective,
+  getWidgetData,
   getTheme,
   importTheme,
   listVersions,
@@ -21,6 +22,9 @@ import {
   setOverrides,
   updateTheme,
 } from '@nexus/design';
+import { permissions } from '@nexus/permissions';
+import type { Permission } from '@nexus/types';
+import { Access, type RequestAccess } from '../../common/decorators/scope.decorator.js';
 import { CurrentUser, type RequestUser } from '../../common/decorators/current-user.decorator.js';
 import { GuildId } from '../../common/decorators/guild-id.decorator.js';
 import { RequireDashboardAccess } from '../../common/decorators/guild-admin.decorator.js';
@@ -47,6 +51,19 @@ export class DesignController {
   async effective(@GuildId() guildId: string) {
     const e = await getEffective(guildId);
     return { config: e.config, themeName: e.themeName, source: e.source };
+  }
+
+  /**
+   * Daten für die Widgets. Jeder Bereich kommt nur, wenn der Benutzer das passende Recht hat (sonst `null`);
+   * die Prüfung geschieht hier, nicht in der Oberfläche.
+   */
+  @Get('widget-data')
+  @RequireDashboardAccess()
+  widgetData(@GuildId() guildId: string, @Access() access: RequestAccess) {
+    return getWidgetData(
+      guildId,
+      async (p) => access.bypass || (await permissions.can(access, p as Permission)),
+    );
   }
 
   /** Rollen des Servers für die Menü-Sichtbarkeit (nur Name/Farbe, ohne Verwaltbarkeits-Details). */

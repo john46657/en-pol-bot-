@@ -3,6 +3,10 @@
  * `normalizeConfig` wirft nie: ungültige oder fehlende Werte fallen einzeln auf den Standard zurück,
  * damit eine beschädigte Konfiguration das Dashboard nie unbenutzbar macht (Spezifikation 47).
  */
+import { normalizeLayout, defaultLayout, type LayoutConfig } from './widgets.js';
+import { isObj, color, num, bool, oneOf, text, safeUrl } from './primitives.js';
+export { color, num, bool, oneOf, text, safeUrl, isObj };
+
 export type Mode = 'dark' | 'light' | 'system';
 export type Palette = Record<(typeof COLOR_KEYS)[number], string>;
 export const COLOR_KEYS = [
@@ -92,6 +96,7 @@ export interface DesignConfig {
   glass: { enabled: boolean; opacity: number; blur: number; border: number; borderOpacity: number };
   shadow: { preset: 'none' | 'small' | 'medium' | 'large' | 'custom'; custom: string };
   navigation: { groups: NavGroup[]; items: NavItem[] };
+  layout: LayoutConfig;
   sidebar: {
     enabled: boolean;
     width: number;
@@ -199,6 +204,7 @@ export const DEFAULT_CONFIG: DesignConfig = {
   glass: { enabled: false, opacity: 70, blur: 20, border: 1, borderOpacity: 15 },
   shadow: { preset: 'small', custom: '' },
   navigation: { groups: [], items: [] },
+  layout: defaultLayout(),
   sidebar: { enabled: true, width: 260, position: 'left', style: 'solid', border: 1, radius: 0 },
   header: {
     height: 56,
@@ -229,36 +235,6 @@ export const DEFAULT_CONFIG: DesignConfig = {
 /** Schriftarten, die ohne externen Download verfügbar sind oder über das Dashboard geladen werden dürfen. */
 export const FONTS = ['system', 'Inter', 'Roboto', 'Poppins', 'Open Sans'] as const;
 
-// --- Wert-Prüfer ---------------------------------------------------------------------------------
-const isObj = (v: unknown): v is Record<string, unknown> =>
-  typeof v === 'object' && v !== null && !Array.isArray(v);
-const HEX = /^#(?:[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$/;
-export const color = (v: unknown, d: string) =>
-  typeof v === 'string' && HEX.test(v) ? v.toUpperCase() : d;
-export const num = (v: unknown, min: number, max: number, d: number) =>
-  typeof v === 'number' && Number.isFinite(v) ? Math.min(max, Math.max(min, v)) : d;
-export const bool = (v: unknown, d: boolean) => (typeof v === 'boolean' ? v : d);
-export const oneOf = <T extends string>(v: unknown, list: readonly T[], d: T): T =>
-  list.includes(v as T) ? (v as T) : d;
-export const text = (v: unknown, max: number, d: string) =>
-  typeof v === 'string'
-    ? [...v]
-        .filter((ch) => ch.charCodeAt(0) > 31 && ch.charCodeAt(0) !== 127)
-        .join('')
-        .slice(0, max)
-    : d;
-/** Nur https-URLs oder lokale Uploads – nie javascript:, data:, Protokoll-relative oder fremde Schemata. */
-export function safeUrl(v: unknown, d = ''): string {
-  if (typeof v !== 'string' || v.length > 500) return d;
-  if (v === '') return '';
-  if (/^\/uploads\/[A-Za-z0-9._\-/]+$/.test(v) && !v.includes('..')) return v;
-  try {
-    const u = new URL(v);
-    return u.protocol === 'https:' && !u.username && !u.password ? u.toString() : d;
-  } catch {
-    return d;
-  }
-}
 export const MAX_NAV_GROUPS = 12;
 export const MAX_NAV_ITEMS = 80;
 export const NAV_ID = /^[a-z0-9-]{1,24}$/;
@@ -418,6 +394,7 @@ export function normalizeConfig(raw: unknown, base: DesignConfig = DEFAULT_CONFI
       custom: shadowCss(sh['custom']),
     },
     navigation: { groups: navG, items: navItems(nv['items'], navG) },
+    layout: normalizeLayout(r['layout'], b.layout),
     sidebar: {
       enabled: bool(sb['enabled'], b.sidebar.enabled),
       width: num(sb['width'], 180, 400, b.sidebar.width),
@@ -539,6 +516,7 @@ export function findIssues(raw: unknown): string[] {
 export const SECTION_LABEL: Record<string, string> = {
   general: 'Allgemein',
   navigation: 'Navigation',
+  layout: 'Widgets',
   mode: 'Modus',
   colors: 'Farben',
   typography: 'Typografie',

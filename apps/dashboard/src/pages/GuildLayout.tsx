@@ -6,7 +6,7 @@ import { HealthBadge } from '../components/HealthBadge';
 import { UserMenu } from '../components/UserMenu';
 import { useLive } from '../live';
 import { resolveNavigation } from '@nexus/design/client';
-import { DesignBackground, useDesign } from '../design/useDesign';
+import { DesignBackground, DesignCtx, useDesign } from '../design/useDesign';
 
 type Needs =
   | 'any'
@@ -261,7 +261,9 @@ export function GuildLayout() {
               Administrator.
             </div>
           ) : (
-            <Outlet />
+            <DesignCtx.Provider value={cfg}>
+              <Outlet />
+            </DesignCtx.Provider>
           )}
         </div>
       </div>

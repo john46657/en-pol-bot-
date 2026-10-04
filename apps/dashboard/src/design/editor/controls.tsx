@@ -4,9 +4,12 @@ import {
   parseHslText,
   parseRgbText,
   rgbToHsl,
+  safeUrl,
   toHex,
 } from '@nexus/design/client';
+import { useQuery } from '@tanstack/react-query';
 import { useId, useState, type ReactNode } from 'react';
+import { api } from '../../api';
 import { defaultAt, getIn, isDefault, useEditor } from './state';
 
 /** Beschriftung + Steuerelement + „↩ Zurücksetzen“, sobald der Wert vom Standard abweicht. */
@@ -150,14 +153,30 @@ export function Txt({
   max = 60,
   placeholder,
   hint,
+  url,
 }: {
   path: string;
   label: string;
   max?: number;
   placeholder?: string;
   hint?: string;
+  /** https-Adresse: Zwischeneingaben bleiben lokal, übernommen wird nur Gültiges */
+  url?: boolean;
 }) {
   const { draft, set, disabled } = useEditor();
+  if (url) {
+    return (
+      <Field path={path} label="" {...(hint ? { hint } : {})}>
+        <UrlText
+          label={label}
+          value={String(getIn(draft, path) ?? '')}
+          disabled={disabled}
+          {...(placeholder ? { placeholder } : {})}
+          onCommit={(v) => set(path, v)}
+        />
+      </Field>
+    );
+  }
   return (
     <Field path={path} label={label} {...(hint ? { hint } : {})}>
       <input
@@ -315,5 +334,148 @@ export function ContrastHint({ fg, bg, label }: { fg: string; bg: string; label:
       {c >= 4.5 ? '✓' : '⚠️'} {label}: Kontrast {c}:1{' '}
       {c >= 4.5 ? '(gut lesbar)' : '(schwer lesbar – mindestens 4,5:1 empfohlen)'}
     </p>
+  );
+}
+
+/** Optionale Farbe: leer = Standard. */
+export function ColorOpt({
+  label,
+  value,
+  disabled,
+  onChange,
+}: {
+  label: string;
+  value: string;
+  disabled: boolean;
+  onChange: (v: string) => void;
+}) {
+  return (
+    <label className="fld">
+      <span>{label}</span>
+      <span className="dz-seg">
+        <input
+          type="color"
+          value={value ? `#${value.slice(1, 7)}` : '#888888'}
+          disabled={disabled}
+          aria-label={label}
+          onChange={(e) => onChange(e.target.value.toUpperCase())}
+        />
+        <button
+          type="button"
+          className="btn"
+          disabled={disabled || !value}
+          onClick={() => onChange('')}
+        >
+          Standard
+        </button>
+      </span>
+    </label>
+  );
+}
+
+interface Role {
+  id: string;
+  name: string;
+  color: number;
+  position: number;
+}
+/** Auswahl von Discord-Rollen (Menü-/Widget-Sichtbarkeit). Blendet nur aus; der Zugriff selbst hängt an den Rechten. */
+export function RolePicker({
+  value,
+  onChange,
+  disabled,
+}: {
+  value: string[];
+  onChange: (roles: string[]) => void;
+  disabled: boolean;
+}) {
+  const { guildId } = useEditor();
+  const roles = useQuery({
+    queryKey: ['design-roles', guildId],
+    queryFn: () => api<Role[]>(`/guilds/${guildId}/design/roles`),
+    staleTime: 60_000,
+  });
+  return (
+    <fieldset className="perm-group" disabled={disabled}>
+      <legend>Nur für diese Rollen anzeigen</legend>
+      <small className="muted">
+        Ohne Auswahl sehen alle den Eintrag, die die Seite öffnen dürfen. Das blendet nur aus; der
+        Zugriff selbst hängt an den Rechten. Server-Verwalter sehen immer alles.
+      </small>
+      {roles.isLoading && <p className="muted">Lade Rollen …</p>}
+      {roles.error && <p className="error">Rollen konnten nicht geladen werden.</p>}
+      {roles.data?.map((r) => (
+        <label key={r.id} className="check">
+          <input
+            type="checkbox"
+            checked={value.includes(r.id)}
+            onChange={(e) =>
+              onChange(
+                e.target.checked ? [...value, r.id].slice(0, 10) : value.filter((x) => x !== r.id),
+              )
+            }
+          />{' '}
+          {r.name}
+        </label>
+      ))}
+    </fieldset>
+  );
+}
+
+/**
+ * Adressfeld für https-Adressen. Zwischeneingaben (z. B. „http“) werden lokal gehalten und erst übernommen, wenn die
+ * Adresse gültig ist – so lässt sich eine URL Zeichen für Zeichen tippen, nicht nur einfügen.
+ */
+export function UrlText({
+  value,
+  onCommit,
+  label,
+  disabled,
+  placeholder = 'https://…',
+  allowEmpty = true,
+  hint,
+}: {
+  value: string;
+  onCommit: (v: string) => void;
+  label: string;
+  disabled: boolean;
+  placeholder?: string;
+  allowEmpty?: boolean;
+  hint?: string;
+}) {
+  const [typed, setTyped] = useState<{ text: string; base: string } | null>(null);
+  const shown = typed && typed.base === value ? typed.text : value;
+  const invalid = typed !== null && typed.base === value && typed.text !== '';
+  const change = (text: string) => {
+    const t = text.trim();
+    if (t === '' && allowEmpty) {
+      setTyped(null);
+      onCommit('');
+      return;
+    }
+    const ok = t !== '' && safeUrl(t, '') !== '';
+    if (ok) {
+      setTyped(null);
+      onCommit(safeUrl(t, ''));
+    } else setTyped({ text, base: value });
+  };
+  return (
+    <label className="fld">
+      <span>{label}</span>
+      <input
+        type="text"
+        className={invalid ? 'dz-bad' : ''}
+        value={shown}
+        maxLength={500}
+        placeholder={placeholder}
+        disabled={disabled}
+        aria-invalid={invalid}
+        onChange={(e) => change(e.target.value)}
+      />
+      {invalid && (
+        <small className="dz-warn">Nur vollständige https-Adressen werden übernommen.</small>
+      )}
+      {hint && !invalid && <small className="muted">{hint}</small>}
+    </label>
   );
 }

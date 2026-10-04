@@ -1,6 +1,7 @@
 import { COLOR_KEYS, FONTS, type Background } from '@nexus/design/client';
-import { NAV } from '../../pages/GuildLayout';
+import { PAGE_OPTIONS } from './pageOptions';
 import { NavEditor } from './NavEditor';
+import { WidgetEditor } from './WidgetEditor';
 import { ColorField, ContrastHint, Inherit, Num, Pick, Toggle, Txt, Field } from './controls';
 import { getIn, useEditor } from './state';
 import { useState } from 'react';
@@ -63,6 +64,7 @@ export function General() {
       {draft.general.logo.mode === 'upload' && (
         <Txt
           path="general.logo.url"
+          url
           label="Bild-Adresse"
           max={500}
           placeholder="https://…"
@@ -124,6 +126,7 @@ function BackgroundFields({ base }: { base: string }) {
         <>
           <Txt
             path={`${base}.imageUrl`}
+            url
             label="Bild-Adresse"
             max={500}
             placeholder="https://…"
@@ -170,11 +173,6 @@ function BackgroundFields({ base }: { base: string }) {
     </>
   );
 }
-
-export const PAGE_OPTIONS: readonly (readonly [string, string])[] = [
-  ['overview', 'Übersicht'],
-  ...NAV.filter((n) => n.to !== '').map((n) => [n.to, n.label] as const),
-];
 
 export function BackgroundTab() {
   const { draft, set, disabled } = useEditor();
@@ -517,4 +515,8 @@ export function ModesTab() {
       </p>
     </>
   );
+}
+
+export function WidgetsTab() {
+  return <WidgetEditor page="overview" />;
 }

@@ -7,7 +7,7 @@ import {
   normalizeConfig,
   type DesignConfig,
 } from '@nexus/design/client';
-import { useEffect } from 'react';
+import { createContext, useContext, useEffect } from 'react';
 import { api } from '../api';
 import { setServerThemeDefault, useTheme } from '../theme';
 import { loadFont } from './fonts';
@@ -84,3 +84,7 @@ export function DesignBackground({ config, page }: { config: DesignConfig; page:
     </>
   );
 }
+
+/** Die wirksame Konfiguration für Seiten unterhalb des Layouts (das Layout wendet sie an; Seiten lesen sie nur). */
+export const DesignCtx = createContext<DesignConfig>(DEFAULT_CONFIG);
+export const useDesignConfig = (): DesignConfig => useContext(DesignCtx);

@@ -10,31 +10,18 @@ import {
   type NavGroup,
   type NavItem,
 } from '@nexus/design/client';
-import { useQuery } from '@tanstack/react-query';
 import { useRef, useState } from 'react';
-import { api } from '../../api';
 import { BUILTIN_NAV } from '../../pages/GuildLayout';
-import { Field } from './controls';
+import { ColorOpt, Field, RolePicker, UrlText } from './controls';
 import { useEditor } from './state';
 
-interface Role {
-  id: string;
-  name: string;
-  color: number;
-  position: number;
-}
 const label = (key: string) => BUILTIN_NAV.find((b) => b.key === key);
 
 /** Sidebar-Einträge und -Gruppen: Reihenfolge per Drag & Drop oder Pfeiltasten, Titel, Icon, Rollen, Badge, Farben. */
 export function NavEditor() {
-  const { draft, set, disabled, guildId } = useEditor();
+  const { draft, set, disabled } = useEditor();
   const nav = draft.navigation;
   const items = materializeItems(BUILTIN_NAV, nav);
-  const roles = useQuery({
-    queryKey: ['design-roles', guildId],
-    queryFn: () => api<Role[]>(`/guilds/${guildId}/design/roles`),
-    staleTime: 60_000,
-  });
   const [open, setOpen] = useState<string | null>(null);
   const [dragFrom, setDragFrom] = useState<number | null>(null);
   const dragRef = useRef<number | null>(null);
@@ -321,42 +308,19 @@ export function NavEditor() {
                     />
                   </div>
                   {isLinkKey(it.key) && (
-                    <label className="fld">
-                      <span>Adresse (https)</span>
-                      <input
-                        value={it.href}
-                        maxLength={500}
-                        disabled={disabled}
-                        onChange={(e) => setItem(it.key, { href: e.target.value })}
-                      />
-                    </label>
+                    <UrlText
+                      label="Adresse (https)"
+                      value={it.href}
+                      disabled={disabled}
+                      allowEmpty={false}
+                      onCommit={(v) => setItem(it.key, { href: v })}
+                    />
                   )}
-                  <fieldset className="perm-group" disabled={disabled}>
-                    <legend>Nur für diese Rollen anzeigen</legend>
-                    <small className="muted">
-                      Ohne Auswahl sehen alle den Eintrag, die die Seite öffnen dürfen. Das blendet
-                      nur im Menü aus; der Zugriff selbst hängt an den Rechten. Server-Verwalter
-                      sehen immer alles.
-                    </small>
-                    {roles.isLoading && <p className="muted">Lade Rollen …</p>}
-                    {roles.error && <p className="error">Rollen konnten nicht geladen werden.</p>}
-                    {roles.data?.map((r) => (
-                      <label key={r.id} className="check">
-                        <input
-                          type="checkbox"
-                          checked={it.roles.includes(r.id)}
-                          onChange={(e) =>
-                            setItem(it.key, {
-                              roles: e.target.checked
-                                ? [...it.roles, r.id].slice(0, 10)
-                                : it.roles.filter((x) => x !== r.id),
-                            })
-                          }
-                        />{' '}
-                        {r.name}
-                      </label>
-                    ))}
-                  </fieldset>
+                  <RolePicker
+                    value={it.roles}
+                    onChange={(roles) => setItem(it.key, { roles })}
+                    disabled={disabled}
+                  />
                   {isLinkKey(it.key) && (
                     <button
                       type="button"
@@ -430,40 +394,5 @@ export function NavEditor() {
         <span />
       </Field>
     </>
-  );
-}
-
-function ColorOpt({
-  label,
-  value,
-  disabled,
-  onChange,
-}: {
-  label: string;
-  value: string;
-  disabled: boolean;
-  onChange: (v: string) => void;
-}) {
-  return (
-    <label className="fld">
-      <span>{label}</span>
-      <span className="dz-seg">
-        <input
-          type="color"
-          value={value ? `#${value.slice(1, 7)}` : '#888888'}
-          disabled={disabled}
-          aria-label={label}
-          onChange={(e) => onChange(e.target.value.toUpperCase())}
-        />
-        <button
-          type="button"
-          className="btn"
-          disabled={disabled || !value}
-          onClick={() => onChange('')}
-        >
-          Standard
-        </button>
-      </span>
-    </label>
   );
 }
