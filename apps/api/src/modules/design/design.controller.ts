@@ -1,0 +1,185 @@
+import { Body, Controller, Delete, Get, Param, Post, Put, UseFilters } from '@nestjs/common';
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
+import {
+  activateTheme,
+  createTheme,
+  deleteTheme,
+  DesignError,
+  duplicateTheme,
+  exportTheme,
+  getDesign,
+  getEffective,
+  getTheme,
+  importTheme,
+  listVersions,
+  normalizeConfig,
+  previewImport,
+  resetAll,
+  resetPath,
+  restoreVersion,
+  setAutosave,
+  setOverrides,
+  updateTheme,
+} from '@nexus/design';
+import { CurrentUser, type RequestUser } from '../../common/decorators/current-user.decorator.js';
+import { GuildId } from '../../common/decorators/guild-id.decorator.js';
+import { RequireDashboardAccess } from '../../common/decorators/guild-admin.decorator.js';
+import { RequirePermissions } from '../../common/decorators/permissions.decorator.js';
+import { DesignErrorFilter } from './design-error.filter.js';
+
+type Body_ = Record<string, unknown>;
+const str = (v: unknown): string | undefined => (typeof v === 'string' ? v : undefined);
+
+/**
+ * Dashboard-Design je Server. Lesen der wirksamen Konfiguration darf jeder mit Dashboard-Zugang (sonst ließe sich
+ * das Design nicht anwenden); Ansehen aller Themes braucht `design.view`, Ändern `design.edit` – serverseitig geprüft.
+ */
+@ApiTags('Design')
+@ApiBearerAuth()
+@UseFilters(DesignErrorFilter)
+@Controller('guilds/:guildId/design')
+export class DesignController {
+  @Get('effective')
+  @RequireDashboardAccess()
+  async effective(@GuildId() guildId: string) {
+    const e = await getEffective(guildId);
+    return { config: e.config, themeName: e.themeName, source: e.source };
+  }
+
+  @Get()
+  @RequirePermissions('design.view')
+  overview(@GuildId() guildId: string) {
+    return getDesign(guildId);
+  }
+
+  @Get('themes/:id')
+  @RequirePermissions('design.view')
+  async theme(@GuildId() guildId: string, @Param('id') id: string) {
+    const t = await getTheme(guildId, id);
+    return {
+      id: t.id,
+      name: t.name,
+      description: t.description,
+      version: t.version,
+      builtin: t.builtin,
+      config: normalizeConfig(t.config),
+    };
+  }
+
+  @Get('themes/:id/versions')
+  @RequirePermissions('design.view')
+  versions(@GuildId() guildId: string, @Param('id') id: string) {
+    return listVersions(guildId, id);
+  }
+
+  @Get('themes/:id/export')
+  @RequirePermissions('design.view')
+  export(@GuildId() guildId: string, @Param('id') id: string) {
+    return exportTheme(guildId, id);
+  }
+
+  @Post('themes')
+  @RequirePermissions('design.edit')
+  create(@GuildId() guildId: string, @Body() b: Body_, @CurrentUser() user: RequestUser) {
+    return createTheme({
+      guildId,
+      actorId: user.id,
+      name: str(b['name']) ?? '',
+      description: str(b['description']),
+      config: b['config'],
+    });
+  }
+
+  @Post('themes/:id/duplicate')
+  @RequirePermissions('design.edit')
+  duplicate(@GuildId() guildId: string, @Param('id') id: string, @CurrentUser() user: RequestUser) {
+    return duplicateTheme(guildId, id, user.id);
+  }
+
+  @Put('themes/:id')
+  @RequirePermissions('design.edit')
+  update(
+    @GuildId() guildId: string,
+    @Param('id') id: string,
+    @Body() b: Body_,
+    @CurrentUser() user: RequestUser,
+  ) {
+    return updateTheme({
+      guildId,
+      themeId: id,
+      actorId: user.id,
+      name: str(b['name']),
+      description: str(b['description']),
+      config: b['config'],
+    });
+  }
+
+  @Delete('themes/:id')
+  @RequirePermissions('design.edit')
+  async remove(
+    @GuildId() guildId: string,
+    @Param('id') id: string,
+    @CurrentUser() user: RequestUser,
+  ) {
+    await deleteTheme(guildId, id, user.id);
+    return { ok: true };
+  }
+
+  @Post('themes/:id/activate')
+  @RequirePermissions('design.edit')
+  activate(@GuildId() guildId: string, @Param('id') id: string, @CurrentUser() user: RequestUser) {
+    return activateTheme(guildId, id, user.id);
+  }
+
+  @Post('themes/:id/restore/:version')
+  @RequirePermissions('design.edit')
+  restore(
+    @GuildId() guildId: string,
+    @Param('id') id: string,
+    @Param('version') version: string,
+    @CurrentUser() user: RequestUser,
+  ) {
+    const n = Number(version);
+    if (!Number.isInteger(n) || n < 1)
+      throw new DesignError('invalid', 'Ungültige Versionsnummer.');
+    return restoreVersion(guildId, id, n, user.id);
+  }
+
+  @Put('overrides')
+  @RequirePermissions('design.edit')
+  overrides(@GuildId() guildId: string, @Body() b: Body_, @CurrentUser() user: RequestUser) {
+    return setOverrides({ guildId, actorId: user.id, overrides: b['overrides'] ?? null });
+  }
+
+  @Post('reset')
+  @RequirePermissions('design.edit')
+  reset(@GuildId() guildId: string, @Body() b: Body_, @CurrentUser() user: RequestUser) {
+    // Ein einzelner Wert (path) oder – nur mit ausdrücklicher Bestätigung – das gesamte Design
+    const path = str(b['path']);
+    if (path) return resetPath(guildId, path, user.id);
+    if (b['confirm'] !== true)
+      throw new DesignError(
+        'invalid',
+        'Zum Zurücksetzen des gesamten Designs ist eine Bestätigung nötig.',
+      );
+    return resetAll(guildId, user.id);
+  }
+
+  @Put('autosave')
+  @RequirePermissions('design.edit')
+  async autosave(@GuildId() guildId: string, @Body() b: Body_, @CurrentUser() user: RequestUser) {
+    return { autosave: await setAutosave(guildId, b['autosave'] === true, user.id) };
+  }
+
+  @Post('import/preview')
+  @RequirePermissions('design.edit')
+  importPreview(@Body() b: Body_) {
+    return previewImport(b['data']);
+  }
+
+  @Post('import')
+  @RequirePermissions('design.edit')
+  import(@GuildId() guildId: string, @Body() b: Body_, @CurrentUser() user: RequestUser) {
+    return importTheme({ guildId, actorId: user.id, data: b['data'], name: str(b['name']) });
+  }
+}

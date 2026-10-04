@@ -11,6 +11,7 @@ import { HealthModule } from './modules/health/health.module.js';
 import { AuditModule } from './modules/audit/audit.module.js';
 import { OfficeModule } from './modules/office/office.module.js';
 import { ReportsModule } from './modules/reports/reports.module.js';
+import { DesignModule } from './modules/design/design.module.js';
 import { AbsencesModule } from './modules/absences/absences.module.js';
 import { TicketsModule } from './modules/tickets/tickets.module.js';
 import { SekModule } from './modules/sek/sek.module.js';
@@ -50,6 +51,7 @@ import { PermissionGuard } from './common/guards/permission.guard.js';
     SekModule,
     TicketsModule,
     AbsencesModule,
+    DesignModule,
     ReportsModule,
     OfficeModule,
     AuditModule,

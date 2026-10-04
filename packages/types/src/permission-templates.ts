@@ -30,6 +30,8 @@ export const PERMISSION_TEMPLATES: readonly PermissionTemplate[] = [
       'Höchster Verwaltungszugriff: System, Konfiguration, Rollen, Berechtigungen, Module, Audit, Backup, Dashboard.',
     allow: [
       'system.manage',
+      'design.view',
+      'design.edit',
       'config.view',
       'config.edit',
       'roles.view',
@@ -57,6 +59,7 @@ export const PERMISSION_TEMPLATES: readonly PermissionTemplate[] = [
     description:
       'Verwaltet den Polizeibereich: Personal, Bewerbungen, Beförderungen, Teams, Ausbildung, Berichte.',
     allow: [
+      'design.view',
       'personnel.view',
       'personnel.edit',
       'personnel.archive',

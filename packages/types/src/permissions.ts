@@ -188,6 +188,14 @@ export const PERMISSION_CATALOG = [
     ],
   },
   {
+    module: 'design',
+    label: 'Dashboard-Design',
+    permissions: [
+      ['design.view', 'Dashboard-Design ansehen', 'DESIGN_VIEW'],
+      ['design.edit', 'Dashboard-Design bearbeiten', 'DESIGN_EDIT'],
+    ],
+  },
+  {
     module: 'absence',
     label: 'Abwesenheiten',
     permissions: [

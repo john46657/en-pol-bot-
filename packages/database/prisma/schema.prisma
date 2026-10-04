@@ -317,6 +317,61 @@ enum AuditActorType {
 // ---------------------------------------------------------------------------
 
 /// Ein Discord-Server. Höchste Isolationsebene: alle Daten hängen daran (§113).
+/// Dashboard-Design je Server (Phase 37): aktives Theme + serverweite Einzel-Überschreibungen.
+model DashboardSettings {
+  guildId       String   @id
+  activeThemeId String?
+  /// Teilkonfiguration, die über dem Theme liegt (Custom > Theme > Standard)
+  overrides     Json     @default("{}")
+  /// Zuletzt fehlerfrei geladene, vollständige Konfiguration (Fallback)
+  lastGood      Json?
+  autosave      Boolean  @default(false)
+  updatedBy     String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  guild Guild @relation(fields: [guildId], references: [id], onDelete: Cascade)
+
+  @@map("dashboard_settings")
+}
+
+model DashboardTheme {
+  id          String   @id @default(cuid())
+  guildId     String
+  name        String
+  description String   @default("")
+  /// Aktuelle Versionsnummer (siehe DashboardThemeVersion)
+  version     Int      @default(1)
+  config      Json
+  /// Mitgelieferte Vorlage (Standard, Midnight, …) – nicht löschbar
+  builtin     Boolean  @default(false)
+  createdBy   String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  guild    Guild                   @relation(fields: [guildId], references: [id], onDelete: Cascade)
+  versions DashboardThemeVersion[]
+
+  @@unique([guildId, name])
+  @@index([guildId])
+  @@map("dashboard_themes")
+}
+
+model DashboardThemeVersion {
+  id            String   @id @default(cuid())
+  themeId       String
+  version       Int
+  config        Json
+  changeSummary String
+  createdBy     String?
+  createdAt     DateTime @default(now())
+
+  theme DashboardTheme @relation(fields: [themeId], references: [id], onDelete: Cascade)
+
+  @@unique([themeId, version])
+  @@map("dashboard_theme_versions")
+}
+
 model Guild {
   id        String   @id /// Discord Guild ID (Snowflake)
   name      String
@@ -363,6 +418,8 @@ model Guild {
   reports            Report[]
   notifications      Notification[]
   statSnapshots      StatSnapshot[]
+  dashboardSettings  DashboardSettings?
+  dashboardThemes    DashboardTheme[]
 
   applications      Application[]
   panels            ApplicationPanel[]

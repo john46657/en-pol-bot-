@@ -23,6 +23,12 @@ async function setup(): Promise<void> {
     stdio: 'pipe',
     env: { ...process.env, DATABASE_URL: url.toString() },
   });
+  // Der Server-Datensatz entsteht sonst beim Beitritt des Bots – für den Test legen wir ihn an.
+  const seed = new PrismaClient({ datasourceUrl: url.toString() });
+  await seed.guild.create({
+    data: { id: '900000000000000001', name: 'NEXUS Demo-Server', settings: { create: {} } },
+  });
+  await seed.$disconnect();
 }
 
 await setup();

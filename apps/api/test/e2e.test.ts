@@ -340,3 +340,64 @@ describe('Ticket-Einstellungen & Transcript (Dashboard)', () => {
     expect(await dl.text()).toContain('<b>Hi</b>');
   });
 });
+
+describe('Dashboard-Design (Phase 37)', () => {
+  const d = (p = '') => `/guilds/${G}/design${p}`;
+  let themeId = '';
+
+  it('wirksames Design: Dashboard-Zugang genügt, ohne Rechte nicht; Verwalter sieht alle Themes', async () => {
+    expect((await call('GET', d('/effective'), NOBODY)).status).toBe(403);
+    const eff = await call('GET', d('/effective'), OFFICER);
+    expect(eff.status).toBe(200);
+    expect(eff.data.config.colors.dark.primary).toBe('#5865F2');
+    const all = await call('GET', d(), ADMIN);
+    expect(all.status).toBe(200);
+    expect(all.data.themes.map((t: { name: string }) => t.name)).toContain('Midnight');
+    themeId = all.data.themes.find((t: { name: string }) => t.name === 'Purple').id;
+  });
+
+  it('Rechte werden serverseitig geprüft: ansehen ≠ bearbeiten', async () => {
+    expect((await call('GET', d(), OFFICER)).status).toBe(403);
+    const grant = (p: string[]) => call('PUT', `/guilds/${G}/permissions/${ROLE_ENTRY}`, ADMIN, { permissions: ['applications.view', 'operations.view', ...p] });
+    expect((await grant(['design.view'])).status).toBe(200);
+    expect((await call('GET', d(), OFFICER)).status).toBe(200);
+    expect((await call('POST', d('/themes'), OFFICER, { name: 'Verboten' })).status).toBe(403);
+    expect((await call('PUT', d('/overrides'), OFFICER, { overrides: { radius: 4 } })).status).toBe(403);
+    expect((await grant(['design.view', 'design.edit'])).status).toBe(200);
+    expect((await call('POST', d('/themes'), OFFICER, { name: 'Erlaubt' })).status).toBe(201);
+  });
+
+  it('Theme duplizieren, bearbeiten, aktivieren; Fehler kommen als 400/404/409 mit Details', async () => {
+    const dup = await call('POST', d(`/themes/${themeId}/duplicate`), ADMIN);
+    expect(dup.status).toBe(201);
+    expect(dup.data.name).toBe('Purple Copy');
+    const bad = await call('PUT', d(`/themes/${dup.data.id}`), ADMIN, { config: { colors: { dark: { primary: 'blau' } } } });
+    expect(bad.status).toBe(400);
+    expect(bad.data.details).toEqual(['colors.dark.primary']);
+    expect((await call('PUT', d(`/themes/${dup.data.id}`), ADMIN, { config: { radius: 6 } })).data.version).toBe(2);
+    expect((await call('PUT', d(`/themes/${themeId}`), ADMIN, { config: { radius: 6 } })).status).toBe(409); // Vorlage
+    expect((await call('POST', d('/themes/gibts-nicht/activate'), ADMIN)).status).toBe(404);
+    const act = await call('POST', d(`/themes/${dup.data.id}/activate`), ADMIN);
+    expect(act.data.config.radius).toBe(6);
+    expect((await call('GET', d('/effective'), OFFICER)).data.themeName).toBe('Purple Copy');
+    expect((await call('DELETE', d(`/themes/${dup.data.id}`), ADMIN)).status).toBe(409); // aktiv
+    expect((await call('GET', d(`/themes/${dup.data.id}/versions`), ADMIN)).data).toHaveLength(2);
+  });
+
+  it('Gesamtes Design zurücksetzen verlangt Bestätigung; Export enthält keine Kennungen', async () => {
+    expect((await call('POST', d('/reset'), ADMIN, {})).status).toBe(400);
+    expect((await call('POST', d('/reset'), ADMIN, { confirm: true })).data.themeName).toBe('Standard');
+    const out = await call('GET', d(`/themes/${themeId}/export`), ADMIN);
+    expect(JSON.stringify(out.data)).not.toContain(G);
+    const prev = await call('POST', d('/import/preview'), ADMIN, { data: out.data });
+    expect(prev.data.name).toBe('Purple');
+    expect((await call('POST', d('/import'), ADMIN, { data: { format: 'x' } })).status).toBe(400);
+    expect((await call('POST', d('/import'), ADMIN, { data: out.data })).data.name).toBe('Purple (2)');
+  });
+
+  it('Änderungen stehen im Audit-Log', async () => {
+    const audit = await call('GET', `/guilds/${G}/audit?limit=100`, ADMIN);
+    const actions = audit.data.items.map((i: { action: string }) => i.action);
+    expect(actions).toEqual(expect.arrayContaining(['design.theme.created', 'design.theme.updated', 'design.theme.activated', 'design.reset']));
+  });
+});
