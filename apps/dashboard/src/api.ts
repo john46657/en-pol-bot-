@@ -649,7 +649,9 @@ export type RequirementRow =
   | { type: 'QUALIFICATION'; qualificationId: string }
   | { type: 'RANK'; rankId: string }
   | { type: 'SERVICE_DAYS'; days: number }
-  | { type: 'SHIFT_HOURS'; hours: number };
+  | { type: 'SHIFT_HOURS'; hours: number }
+  | { type: 'RANK_DAYS'; days: number }
+  | { type: 'NO_DISCIPLINE'; days: number };
 export interface QualificationRow {
   id: string;
   name: string;
@@ -663,4 +665,34 @@ export interface QualificationRow {
 export interface QualificationCheck {
   eligible: boolean;
   checks: { label: string; met: boolean; detail: string }[];
+}
+
+export interface PromotionRow {
+  id: string;
+  number: number;
+  userId: string;
+  fromRankName: string | null;
+  toRankId: string;
+  toRankName: string;
+  status: 'PENDING' | 'APPROVED' | 'REJECTED' | 'WITHDRAWN';
+  requestedBy: string;
+  reason: string | null;
+  override: boolean;
+  decidedBy: string | null;
+  decisionReason: string | null;
+  roleResult: string | null;
+  checks: { label: string; met: boolean; detail: string }[] | null;
+}
+export interface PromotionCandidate {
+  userId: string;
+  rpName: string;
+  fromRank: string | null;
+  toRankId: string;
+  toRank: string;
+  hasOpenRequest: boolean;
+}
+export interface PromotionRuleRow {
+  id: string;
+  rankId: string;
+  requirements: RequirementRow[];
 }

@@ -33,6 +33,7 @@ import './commands/fahrzeug.js';
 import './commands/strafe.js';
 import './commands/ausbildung.js';
 import './commands/qualifikation.js';
+import './commands/befoerderung.js';
 
 const panelCommand = new SlashCommandBuilder()
   .setName('panel')

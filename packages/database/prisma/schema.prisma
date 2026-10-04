@@ -273,6 +273,13 @@ enum ParticipantStatus {
   REMOVED
 }
 
+enum PromotionStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  WITHDRAWN
+}
+
 enum PermissionEffect {
   ALLOW
   DENY
@@ -332,6 +339,8 @@ model Guild {
   trainingCourses    TrainingCourse[]
   trainings          Training[]
   qualifications     Qualification[]
+  promotionRules     PromotionRule[]
+  promotions         PromotionRequest[]
 
   applications      Application[]
   panels            ApplicationPanel[]
@@ -1841,4 +1850,64 @@ model QualificationAward {
   @@unique([qualificationId, userId, activeKey])
   @@index([guildId, userId])
   @@map("qualification_awards")
+}
+
+// ---------------------------------------------------------------------------
+// Phase 23: Beförderungssystem
+// ---------------------------------------------------------------------------
+
+/// Voraussetzungen für einen Ziel-Dienstgrad (gleiche Bausteine wie Qualifikationen, automatisch prüfbar).
+model PromotionRule {
+  id           String   @id @default(cuid())
+  guildId      String
+  rankId       String
+  requirements Json     @default("[]")
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  guild Guild @relation(fields: [guildId], references: [id], onDelete: Cascade)
+
+  @@unique([guildId, rankId])
+  @@map("promotion_rules")
+}
+
+model PromotionCounter {
+  guildId String @id
+  last    Int    @default(0)
+
+  @@map("promotion_counters")
+}
+
+/// Beförderungsantrag. `pendingKey` = 'pending' solange offen: je Mitglied nur ein offener Antrag.
+model PromotionRequest {
+  id             String          @id @default(cuid())
+  guildId        String
+  number         Int
+  userId         String
+  recordId       String
+  fromRankId     String?
+  fromRankName   String?
+  toRankId       String
+  toRankName     String
+  status         PromotionStatus @default(PENDING)
+  pendingKey     String?
+  requestedBy    String
+  reason         String?
+  /// Ergebnis der Voraussetzungsprüfung beim Antrag.
+  checks         Json?
+  /// Voraussetzungen wurden bewusst übergangen.
+  override       Boolean         @default(false)
+  decidedBy      String?
+  decidedAt      DateTime?
+  decisionReason String?
+  roleResult     String?
+  createdAt      DateTime        @default(now())
+
+  guild Guild @relation(fields: [guildId], references: [id], onDelete: Cascade)
+
+  @@unique([guildId, number])
+  @@unique([guildId, userId, pendingKey])
+  @@index([guildId, status])
+  @@index([guildId, userId])
+  @@map("promotion_requests")
 }

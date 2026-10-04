@@ -24,7 +24,11 @@ export type Requirement =
   | { type: 'QUALIFICATION'; qualificationId: string }
   | { type: 'RANK'; rankId: string }
   | { type: 'SERVICE_DAYS'; days: number }
-  | { type: 'SHIFT_HOURS'; hours: number };
+  | { type: 'SHIFT_HOURS'; hours: number }
+  /** Mindestzeit im aktuellen Dienstgrad (seit der letzten Rangänderung bzw. dem Eintritt). */
+  | { type: 'RANK_DAYS'; days: number }
+  /** Keine aktive Disziplinarmaßnahme in den letzten N Tagen. */
+  | { type: 'NO_DISCIPLINE'; days: number };
 
 export interface RequirementCheck {
   requirement: Requirement;
@@ -63,14 +67,17 @@ async function parseRequirements(guildId: string, raw: unknown, selfId?: string)
       const rankId = String(r['rankId'] ?? '');
       if (!(await prisma.rank.count({ where: { id: rankId, guildId } }))) throw new QualificationError('invalid', 'Ein verlangter Dienstgrad existiert nicht.');
       out.push({ type, rankId });
-    } else if (type === 'SERVICE_DAYS' || type === 'SHIFT_HOURS') {
-      const v = Number(r[type === 'SERVICE_DAYS' ? 'days' : 'hours']);
+    } else if (type === 'SERVICE_DAYS' || type === 'SHIFT_HOURS' || type === 'RANK_DAYS' || type === 'NO_DISCIPLINE') {
+      const v = Number(r[type === 'SHIFT_HOURS' ? 'hours' : 'days']);
       if (!Number.isInteger(v) || v < 1 || v > 100_000) throw new QualificationError('invalid', 'Tage bzw. Stunden müssen eine ganze Zahl ab 1 sein.');
-      out.push(type === 'SERVICE_DAYS' ? { type, days: v } : { type, hours: v });
+      out.push(type === 'SHIFT_HOURS' ? { type, hours: v } : { type, days: v });
     } else throw new QualificationError('invalid', 'Unbekannte Voraussetzung.');
   }
   return out;
 }
+
+/** Prüft und bereinigt eine Liste von Voraussetzungen (auch für Beförderungsregeln); wirft `QualificationError`. */
+export const validateRequirements = (guildId: string, raw: unknown): Promise<Requirement[]> => parseRequirements(assertGuildId(guildId), raw);
 
 /** Zyklen verhindern: A verlangt B verlangt A. */
 async function assertNoCycle(guildId: string, id: string, reqs: Requirement[]) {
@@ -159,6 +166,14 @@ export async function checkEligibility(guildId: string, userId: string, qualific
     } else if (r.type === 'SERVICE_DAYS') {
       const days = record ? Math.floor((now.getTime() - record.joinedAt.getTime()) / DAY) : 0;
       checks.push({ requirement: r, label: `Mindestens ${r.days} Tage im Dienst`, met: !!record && days >= r.days, detail: record ? `${days} Tage` : 'keine Personalakte' });
+    } else if (r.type === 'RANK_DAYS') {
+      const last = record ? await prisma.personnelEvent.findFirst({ where: { guildId: gid, recordId: record.id, type: 'rank.changed' }, orderBy: { createdAt: 'desc' } }) : null;
+      const since = last?.createdAt ?? record?.joinedAt;
+      const days = since ? Math.floor((now.getTime() - since.getTime()) / DAY) : 0;
+      checks.push({ requirement: r, label: `Mindestens ${r.days} Tage im aktuellen Dienstgrad`, met: !!record && days >= r.days, detail: record ? `${days} Tage` : 'keine Personalakte' });
+    } else if (r.type === 'NO_DISCIPLINE') {
+      const n = record ? await prisma.personnelEntry.count({ where: { recordId: record.id, kind: 'DISCIPLINE', revokedAt: null, occurredAt: { gte: new Date(now.getTime() - r.days * DAY) } } }) : 0;
+      checks.push({ requirement: r, label: `Keine Disziplinarmaßnahme in den letzten ${r.days} Tagen`, met: !!record && n === 0, detail: record ? (n === 0 ? 'keine' : `${n} aktive`) : 'keine Personalakte' });
     } else {
       const sum = await prisma.shift.aggregate({ where: { guildId: gid, userId, status: 'ENDED' }, _sum: { durationSeconds: true } });
       const hours = Math.floor((sum._sum.durationSeconds ?? 0) / 3600);

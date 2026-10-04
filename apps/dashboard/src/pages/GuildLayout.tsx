@@ -4,7 +4,7 @@ import { Link, NavLink, Outlet, useLocation, useParams } from 'react-router';
 import { api, guildIcon, type GuildOverview } from '../api';
 import { UserMenu } from '../components/UserMenu';
 
-type Needs = 'any' | 'view' | 'admin' | 'panels' | 'submissions' | 'personnel' | 'structure' | 'shifts' | 'duty' | 'radio' | 'operations' | 'danger' | 'wanted' | 'fleet' | 'penalties' | 'training' | 'qualifications';
+type Needs = 'any' | 'view' | 'admin' | 'panels' | 'submissions' | 'personnel' | 'structure' | 'shifts' | 'duty' | 'radio' | 'operations' | 'danger' | 'wanted' | 'fleet' | 'penalties' | 'training' | 'qualifications' | 'promotions';
 const NAV: { to: string; label: string; icon: string; end?: boolean; needs: Needs }[] = [
   { to: '', label: 'Übersicht', icon: '🏠', end: true, needs: 'any' },
   { to: 'settings', label: 'Rollen & Kanäle wählen', icon: '⚙️', needs: 'view' },
@@ -24,6 +24,7 @@ const NAV: { to: string; label: string; icon: string; end?: boolean; needs: Need
   { to: 'penalties', label: 'Strafen', icon: '⚖️', needs: 'penalties' },
   { to: 'training', label: 'Ausbildung', icon: '🎓', needs: 'training' },
   { to: 'qualifications', label: 'Qualifikationen', icon: '🏅', needs: 'qualifications' },
+  { to: 'promotions', label: 'Beförderungen', icon: '📈', needs: 'promotions' },
   { to: 'panels', label: 'Panels', icon: '🧩', needs: 'panels' },
   { to: 'users', label: 'Benutzer', icon: '👥', needs: 'admin' },
   { to: 'profiles', label: 'Profile', icon: '🧾', needs: 'admin' },
@@ -58,6 +59,7 @@ export function GuildLayout() {
     (needs === 'submissions' && me.data.permissions.includes('applications.submissions.view')) ||
     (needs === 'personnel' &&
       ['personnel.view', 'own.profile.view'].some((k) => me.data.permissions.includes(k))) ||
+    (needs === 'promotions' && me.data.permissions.includes('promotions.view')) ||
     (needs === 'qualifications' && me.data.permissions.includes('qualification.view')) ||
     (needs === 'training' && me.data.permissions.includes('training.view')) ||
     (needs === 'fleet' && me.data.permissions.includes('fleet.view')) ||

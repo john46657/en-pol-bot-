@@ -32,11 +32,11 @@ export function Qualifications() {
   const [why, setWhy] = useState<Record<string, string>>({});
   const [check, setCheck] = useState<{ id: string; data: QualificationCheck } | null>(null);
   const label = (r: RequirementRow) =>
-    r.type === 'COURSE' ? `Ausbildung: ${courses.data?.find((c) => c.id === r.courseId)?.name ?? r.courseId}` : r.type === 'QUALIFICATION' ? `Qualifikation: ${list.data?.find((q) => q.id === r.qualificationId)?.name ?? r.qualificationId}` : r.type === 'RANK' ? `Mind. Dienstgrad: ${ranks.data?.find((x) => x.id === r.rankId)?.name ?? r.rankId}` : r.type === 'SERVICE_DAYS' ? `${r.days} Tage im Dienst` : `${r.hours} Dienststunden`;
+    r.type === 'COURSE' ? `Ausbildung: ${courses.data?.find((c) => c.id === r.courseId)?.name ?? r.courseId}` : r.type === 'QUALIFICATION' ? `Qualifikation: ${list.data?.find((q) => q.id === r.qualificationId)?.name ?? r.qualificationId}` : r.type === 'RANK' ? `Mind. Dienstgrad: ${ranks.data?.find((x) => x.id === r.rankId)?.name ?? r.rankId}` : r.type === 'SERVICE_DAYS' ? `${r.days} Tage im Dienst` : r.type === 'RANK_DAYS' ? `${r.days} Tage im Dienstgrad` : r.type === 'NO_DISCIPLINE' ? `keine Disziplin seit ${r.days} Tagen` : `${r.hours} Dienststunden`;
   const addReq = () => {
     const v = newReq.value;
     if (!v) return;
-    const r: RequirementRow = newReq.type === 'COURSE' ? { type: 'COURSE', courseId: v } : newReq.type === 'QUALIFICATION' ? { type: 'QUALIFICATION', qualificationId: v } : newReq.type === 'RANK' ? { type: 'RANK', rankId: v } : newReq.type === 'SERVICE_DAYS' ? { type: 'SERVICE_DAYS', days: Number(v) } : { type: 'SHIFT_HOURS', hours: Number(v) };
+    const r: RequirementRow = newReq.type === 'COURSE' ? { type: 'COURSE', courseId: v } : newReq.type === 'QUALIFICATION' ? { type: 'QUALIFICATION', qualificationId: v } : newReq.type === 'RANK' ? { type: 'RANK', rankId: v } : newReq.type === 'SERVICE_DAYS' ? { type: 'SERVICE_DAYS', days: Number(v) } : newReq.type === 'RANK_DAYS' ? { type: 'RANK_DAYS', days: Number(v) } : newReq.type === 'NO_DISCIPLINE' ? { type: 'NO_DISCIPLINE', days: Number(v) } : { type: 'SHIFT_HOURS', hours: Number(v) };
     setReqs([...reqs, r]);
     setNewReq({ ...newReq, value: '' });
   };
@@ -88,7 +88,7 @@ export function Qualifications() {
         <ul className="plain">{reqs.map((r, i) => <li key={i}>{label(r)} <button className="btn" onClick={() => setReqs(reqs.filter((_, j) => j !== i))}>✕</button></li>)}{reqs.length === 0 && <li className="muted">keine</li>}</ul>
         <div className="actions">
           <select value={newReq.type} onChange={(e) => setNewReq({ type: e.target.value, value: '' })} aria-label="Art">
-            <option value="COURSE">Ausbildung bestanden</option><option value="QUALIFICATION">Andere Qualifikation</option><option value="RANK">Mindest-Dienstgrad</option><option value="SERVICE_DAYS">Dienstzeit (Tage)</option><option value="SHIFT_HOURS">Dienststunden</option>
+            <option value="COURSE">Ausbildung bestanden</option><option value="QUALIFICATION">Andere Qualifikation</option><option value="RANK">Mindest-Dienstgrad</option><option value="SERVICE_DAYS">Dienstzeit (Tage)</option><option value="SHIFT_HOURS">Dienststunden</option><option value="RANK_DAYS">Tage im aktuellen Dienstgrad</option><option value="NO_DISCIPLINE">Keine Disziplin (Tage)</option>
           </select>
           {options ? (
             <select value={newReq.value} onChange={(e) => setNewReq({ ...newReq, value: e.target.value })} aria-label="Wert"><option value="">Wählen …</option>{options.map(([id, n]) => <option key={id} value={id}>{n}</option>)}</select>
