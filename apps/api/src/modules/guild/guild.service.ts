@@ -241,7 +241,7 @@ interface UserGuild {
 }
 
 async function fetchUserGuilds(accessToken: string): Promise<UserGuild[]> {
-  const response = await fetch('https://discord.com/api/v10/users/@me/guilds', {
+  const response = await fetch(`${process.env['DISCORD_API_BASE'] ?? 'https://discord.com/api/v10'}/users/@me/guilds`, {
     headers: { Authorization: `Bearer ${accessToken}` },
   });
   if (!response.ok) return [];

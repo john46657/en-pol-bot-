@@ -32,6 +32,7 @@ export function Tickets() {
       toast.success(m);
       void qc.invalidateQueries({ queryKey: ['tickets', guildId] });
       void qc.invalidateQueries({ queryKey: ['ticket-cats', guildId] });
+      void qc.invalidateQueries({ queryKey: ['ticket-loads', guildId] });
     },
     onError: (e) => toast.error(errorText(e)),
   });

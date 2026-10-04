@@ -65,6 +65,8 @@ const members = {
   '900000000000000070': [], // Bewerber mit gesperrten DMs
 };
 const routes = {
+  // Serverauswahl im Dashboard: der „angemeldete“ Benutzer ist Besitzer des Demo-Servers
+  '/api/v10/users/@me/guilds': [{ id: G, name: 'NEXUS Demo-Server', icon: null, owner: true, permissions: String(1n << 3n) }],
   [`/api/v10/guilds/${G}`]: {
     id: G,
     name: 'NEXUS Demo-Server',
