@@ -1,5 +1,5 @@
 import type { DiscordPort } from '@nexus/automation';
-import { assertGuildId, prisma, type Prisma } from '@nexus/database';
+import { assertGuildId, auditRepository, prisma, type Prisma } from '@nexus/database';
 import { addEntry, getRecordByUser, setRank } from '@nexus/personnel';
 import { checkEligibility, validateRequirements, type RequirementCheck } from '@nexus/qualifications';
 
@@ -89,6 +89,7 @@ export async function requestPromotion(i: RequestInput, now = new Date()) {
       const c = await tx.promotionCounter.upsert({ where: { guildId: gid }, create: { guildId: gid, last: 1 }, update: { last: { increment: 1 } } });
       return tx.promotionRequest.create({ data: { guildId: gid, number: c.last, userId: i.userId, recordId: record.id, fromRankId: from?.id ?? null, fromRankName: from?.name ?? null, toRankId: to.id, toRankName: to.name, pendingKey: 'pending', requestedBy: i.requestedBy, reason, checks: elig.checks as unknown as Json, override: !elig.eligible } });
     });
+    await auditRepository.log({ guildId: gid, actorId: i.requestedBy, action: 'promotion.requested', resource: ['PromotionRequest', req.id], after: { userId: i.userId, from: from?.name ?? null, to: to.name, override: !elig.eligible } as Json, reason, permission: 'promotions.create' });
     return req;
   } catch (e) {
     if (e instanceof Error && /Unique constraint/i.test(e.message)) {
@@ -148,6 +149,7 @@ export async function withdraw(guildId: string, requestId: string, actorId: stri
   if (req.status !== 'PENDING') throw new PromotionError('conflict', 'Dieser Antrag ist bereits entschieden oder zurückgezogen.');
   if (!manage && req.requestedBy !== actorId) throw new PromotionError('forbidden', 'Nur der Antragsteller kann den Antrag zurückziehen.');
   await prisma.promotionRequest.update({ where: { id: req.id }, data: { status: 'WITHDRAWN', pendingKey: null, decidedBy: actorId, decidedAt: new Date() } });
+  await auditRepository.log({ guildId: gid, actorId, action: 'promotion.withdrawn', resource: ['PromotionRequest', req.id], after: { userId: req.userId, to: req.toRankName } as Json });
   return getRequest(gid, req.id);
 }
 

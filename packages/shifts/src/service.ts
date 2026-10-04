@@ -1,5 +1,5 @@
 import type { DiscordPort } from '@nexus/automation';
-import { assertGuildId, guildRepository, prisma, type Prisma } from '@nexus/database';
+import { assertGuildId, auditRepository, guildRepository, prisma, type Prisma } from '@nexus/database';
 import { ShiftError } from './errors.js';
 import { leaveUnit } from './units.js';
 import { aggregate, computeDuration, formatSeconds, isOverlong, validateCorrection } from './time.js';
@@ -15,6 +15,8 @@ const OPEN = ['ACTIVE', 'PAUSED'] as const;
 
 async function event(shiftId: string, guildId: string, type: string, actorId: string | null, data?: unknown, at = new Date()) {
   await prisma.shiftEvent.create({ data: { shiftId, guildId, type, actorId, at, ...(data !== undefined ? { data: data as Json } : {}) } });
+  // Ins zentrale Audit-Log spiegeln; Korrekturen/Markierungen haben eigene, ausführlichere Einträge.
+  if (type !== 'correct' && type !== 'flag') await auditRepository.mirrorEvent({ guildId, area: 'shift', resourceType: 'Shift', resourceId: shiftId, type: ({ start: 'started', pause: 'paused', resume: 'resumed', end: 'ended' } as Record<string, string>)[type] ?? type, actorId, data });
 }
 
 // --- Typen ---------------------------------------------------------------------------

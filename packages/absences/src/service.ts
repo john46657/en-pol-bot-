@@ -1,5 +1,5 @@
 import type { DiscordPort } from '@nexus/automation';
-import { assertGuildId, guildRepository, prisma, type Prisma } from '@nexus/database';
+import { assertGuildId, auditRepository, guildRepository, prisma, type Prisma } from '@nexus/database';
 import { addEntry, getRecordByUser, revokeEntry } from '@nexus/personnel';
 
 /**
@@ -76,6 +76,7 @@ export async function requestAbsence(i: RequestInput, now = new Date()) {
     const c = await tx.absenceCounter.upsert({ where: { guildId: gid }, create: { guildId: gid, last: 1 }, update: { last: { increment: 1 } } });
     return tx.absence.create({ data: { guildId: gid, number: c.last, userId: i.userId, startDate: i.start, endDate: i.end, category: i.category, reason } });
   });
+  await auditRepository.log({ guildId: gid, actorId: i.userId, action: 'absence.requested', resource: ['Absence', a.id], after: { number: a.number, start: fmtDay(a.startDate), end: fmtDay(a.endDate), category: a.category } as Prisma.InputJsonValue, permission: 'own.absence.create' });
   if (i.port) await announce(i.port, gid, a).catch(() => undefined);
   return a;
 }

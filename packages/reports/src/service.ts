@@ -1,5 +1,5 @@
 import type { DiscordPort } from '@nexus/automation';
-import { assertGuildId, guildRepository, prisma, type Prisma } from '@nexus/database';
+import { assertGuildId, auditRepository, guildRepository, prisma, type Prisma } from '@nexus/database';
 import { leaderboard, periodRange } from '@nexus/shifts';
 
 /**
@@ -109,6 +109,7 @@ export async function generate(guildId: string, kind: ReportKind, on: Date = new
   const gid = assertGuildId(guildId);
   const data = await buildReport(gid, kind, on);
   const periodStart = new Date(data.from);
+  await auditRepository.log({ guildId: gid, actorId: generatedBy, action: 'report.generated', resource: ['Report', `${kind}:${periodStart.toISOString()}`], after: { kind, from: data.from, to: data.to } as Json, ...(generatedBy ? { permission: 'report.manage' } : { automation: 'report-schedule' }) });
   return prisma.report.upsert({
     where: { guildId_kind_periodStart: { guildId: gid, kind, periodStart } },
     create: { guildId: gid, kind, periodStart, periodEnd: new Date(data.to), data: data as unknown as Json, generatedBy },

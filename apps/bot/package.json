@@ -13,6 +13,7 @@
   },
   "dependencies": {
     "@nexus/absences": "workspace:*",
+    "@nexus/audit": "workspace:*",
     "@nexus/automation": "workspace:*",
     "@nexus/config": "workspace:*",
     "@nexus/core": "workspace:*",

@@ -1,5 +1,5 @@
 import { applyRoleChanges, type DiscordPort } from '@nexus/automation';
-import { assertGuildId, prisma, type Prisma } from '@nexus/database';
+import { assertGuildId, auditRepository, prisma, type Prisma } from '@nexus/database';
 import { addEntry, getRecordByUser, revokeEntry } from '@nexus/personnel';
 import { TrainingError } from './errors.js';
 import { PARTS, PART_LABEL, activeParts, evaluate, maxOf, type Part } from './rules.js';
@@ -33,6 +33,7 @@ const txt = (v: string | undefined | null, max: number, label: string) => {
 };
 async function event(trainingId: string, guildId: string, type: string, actorId: string | null, data?: unknown) {
   await prisma.trainingEvent.create({ data: { trainingId, guildId, type, actorId, ...(data !== undefined ? { data: data as Json } : {}) } });
+  if (type !== 'cancelled') await auditRepository.mirrorEvent({ guildId, area: 'training', resourceType: 'Training', resourceId: trainingId, type, actorId, data }); // Absage hat einen eigenen Eintrag
 }
 const ids = (list: string[] | undefined, label: string, max = 20) => {
   const u = [...new Set(list ?? [])];

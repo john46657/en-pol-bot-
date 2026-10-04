@@ -1,5 +1,5 @@
 import { ChannelPerm, createChannelMessage, createGuildTextChannel, deleteChannel, getCurrentBotUserId, listChannelMessages, sendDirectMessage, setChannelMemberAccess, type MessagePayload } from '@nexus/discord';
-import { assertGuildId, guildRepository, prisma, type Prisma } from '@nexus/database';
+import { assertGuildId, auditRepository, guildRepository, prisma, type Prisma } from '@nexus/database';
 
 /**
  * Ticket-System: Kategorien, Erstellung (privater Kanal), Übernahme durch einen Bearbeiter, Priorität, Mitglieder
@@ -71,6 +71,7 @@ export function restTicketDiscord(botToken: string): TicketDiscord {
 
 async function event(guildId: string, ticketId: string, type: string, actorId: string | null, data?: unknown) {
   await prisma.ticketEvent.create({ data: { guildId, ticketId, type, actorId, ...(data !== undefined ? { data: data as Json } : {}) } });
+  if (type !== 'closed') await auditRepository.mirrorEvent({ guildId, area: 'ticket', resourceType: 'Ticket', resourceId: ticketId, type, actorId, data }); // Schließen hat einen eigenen Eintrag
 }
 
 // --- Kategorien ---------------------------------------------------------------------------------------

@@ -1,4 +1,4 @@
-import { assertGuildId, prisma, type Prisma } from '@nexus/database';
+import { assertGuildId, auditRepository, prisma, type Prisma } from '@nexus/database';
 import { addEntry, getRecordByUser } from '@nexus/personnel';
 import { OperationError } from './errors.js';
 import { PRIORITIES, STATUSES, canTransition, formatNumber, isOpen, type OpPriority, type OpStatus } from './status.js';
@@ -19,6 +19,8 @@ const text = (v: string | undefined, max: number) => {
 
 async function event(operationId: string, guildId: string, type: string, actorId: string | null, data?: unknown) {
   await prisma.operationEvent.create({ data: { operationId, guildId, type, actorId, ...(data !== undefined ? { data: data as Json } : {}) } });
+  // Abbruch hat einen eigenen Audit-Eintrag (mit Grund und Berechtigung)
+  if (!(type === 'status' && (data as { to?: string } | undefined)?.to === 'CANCELLED')) await auditRepository.mirrorEvent({ guildId, area: 'operation', resourceType: 'Operation', resourceId: operationId, type, actorId, data });
 }
 
 const include = { units: { where: { activeKey: 'active' as const }, orderBy: { assignedAt: 'asc' as const } }, participants: true } satisfies Prisma.OperationInclude;

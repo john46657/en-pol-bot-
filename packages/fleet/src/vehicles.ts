@@ -1,4 +1,4 @@
-import { assertGuildId, prisma, type Prisma } from '@nexus/database';
+import { assertGuildId, auditRepository, prisma, type Prisma } from '@nexus/database';
 import { FleetError, normalizePlate, text } from './errors.js';
 
 /**
@@ -15,6 +15,7 @@ export const SEVERITY_LABEL = { MINOR: 'Leicht', MAJOR: 'Schwer', TOTAL: 'Totals
 
 async function event(guildId: string, vehicleId: string, type: string, actorId: string | null, data?: unknown) {
   await prisma.vehicleEvent.create({ data: { guildId, vehicleId, type, actorId, ...(data !== undefined ? { data: data as Json } : {}) } });
+  await auditRepository.mirrorEvent({ guildId, area: 'vehicle', resourceType: 'Vehicle', resourceId: vehicleId, type: type === 'retired' ? 'retired.event' : type, actorId, data });
 }
 
 export async function addVehicle(i: { guildId: string; plate: string; type: string; notes?: string | undefined; actorId: string }) {

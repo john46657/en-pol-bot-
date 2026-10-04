@@ -1,0 +1,40 @@
+{
+  "name": "@nexus/audit",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "build": "tsc"
+  },
+  "dependencies": {
+    "@nexus/database": "workspace:*"
+  },
+  "devDependencies": {
+    "@nexus/shifts": "workspace:*",
+    "@nexus/operations": "workspace:*",
+    "@nexus/wanted": "workspace:*",
+    "@nexus/tickets": "workspace:*",
+    "@nexus/absences": "workspace:*",
+    "@nexus/fleet": "workspace:*",
+    "@nexus/training": "workspace:*",
+    "@nexus/promotions": "workspace:*",
+    "@nexus/personnel": "workspace:*",
+    "@nexus/danger": "workspace:*",
+    "@nexus/radio": "workspace:*",
+    "@nexus/qualifications": "workspace:*",
+    "@nexus/sek": "workspace:*",
+    "@prisma/client": "^6.11.0",
+    "vitest": "^3.2.4",
+    "@nexus/reports": "workspace:*"
+  }
+}

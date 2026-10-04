@@ -1,4 +1,4 @@
-import { assertGuildId, prisma, type Prisma } from '@nexus/database';
+import { assertGuildId, auditRepository, prisma, type Prisma } from '@nexus/database';
 
 /**
  * Fahndungen: Personen und Fahrzeuge getrennt behandelt (eigene Pflichtfelder, eigene Suche), mit fortlaufender
@@ -50,6 +50,7 @@ export interface NoticeInput {
 
 async function event(guildId: string, noticeId: string, type: string, actorId: string | null, data?: unknown) {
   await prisma.wantedEvent.create({ data: { guildId, noticeId, type, actorId, ...(data !== undefined ? { data: data as Json } : {}) } });
+  if (type !== 'revoked') await auditRepository.mirrorEvent({ guildId, area: 'wanted', resourceType: 'WantedNotice', resourceId: noticeId, type, actorId, data }); // Aufheben hat einen eigenen Eintrag
 }
 
 function fields(i: Omit<NoticeInput, 'guildId' | 'actorId' | 'kind'>, kind: Kind) {

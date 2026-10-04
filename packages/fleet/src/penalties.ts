@@ -1,4 +1,4 @@
-import { assertGuildId, prisma, type Prisma } from '@nexus/database';
+import { assertGuildId, auditRepository, prisma, type Prisma } from '@nexus/database';
 import { addEntry, getRecordByUser, revokeEntry } from '@nexus/personnel';
 import { FleetError, normalizeName, normalizePlate, text } from './errors.js';
 
@@ -71,6 +71,7 @@ export async function issuePenalty(i: PenaltyInput, now = new Date()) {
     const entry = await addEntry(guildId, record.id, { kind: 'PENALTY', title: `Strafe ${formatNumber(penalty.number)}: ${KIND_LABEL[kind]} – ${name}`.slice(0, 200), body: [detail, `Grund: ${reason}`].filter(Boolean).join('\n'), occurredAt: now, data: { penaltyId: penalty.id, number: penalty.number, kind } }, i.issuedBy);
     await prisma.penalty.update({ where: { id: penalty.id }, data: { personnelEntryId: entry.id } });
   }
+  await auditRepository.log({ guildId, actorId: i.issuedBy, action: 'penalty.issued', resource: ['Penalty', penalty.id], after: { number: penalty.number, kind, subject: name, amount: data.amount ?? null, points: data.points ?? null, durationDays: data.durationDays ?? null, until: data.until ? new Date(data.until as Date).toISOString() : null, plate: data.plate ?? null } as unknown as Json, reason, permission: 'penalties.issue' });
   return prisma.penalty.findUniqueOrThrow({ where: { id: penalty.id } });
 }
 

@@ -1,4 +1,4 @@
-import { assertGuildId, prisma, type Prisma } from '@nexus/database';
+import { assertGuildId, auditRepository, prisma, type Prisma } from '@nexus/database';
 import { ShiftError } from './errors.js';
 
 /**
@@ -14,6 +14,8 @@ const STATUSES = Object.keys(UNIT_STATUS_LABEL) as UnitStatusKey[];
 
 async function log(unitId: string, guildId: string, type: string, actorId: string | null, data?: unknown) {
   await prisma.unitEvent.create({ data: { unitId, guildId, type, actorId, ...(data !== undefined ? { data: data as Json } : {}) } });
+  // Manuelles Auflösen hat einen eigenen Audit-Eintrag mit Berechtigung
+  if (!(type === 'disbanded' && (data as { reason?: string } | undefined)?.reason === 'manual')) await auditRepository.mirrorEvent({ guildId, area: 'unit', resourceType: 'Unit', resourceId: unitId, type, actorId, data });
 }
 
 const unitInclude = { members: { where: { openKey: 'open' }, orderBy: { joinedAt: 'asc' } } } as const;
