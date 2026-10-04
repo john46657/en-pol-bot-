@@ -5,6 +5,7 @@ import { ApplicationsModule } from './modules/applications/applications.module.j
 import { AuthModule } from './modules/auth/auth.module.js';
 import { GuildModule } from './modules/guild/guild.module.js';
 import { PersonnelModule } from './modules/personnel/personnel.module.js';
+import { OfficeModule } from './modules/office/office.module.js';
 import { ReportsModule } from './modules/reports/reports.module.js';
 import { AbsencesModule } from './modules/absences/absences.module.js';
 import { TicketsModule } from './modules/tickets/tickets.module.js';
@@ -45,6 +46,7 @@ import { PermissionGuard } from './common/guards/permission.guard.js';
     TicketsModule,
     AbsencesModule,
     ReportsModule,
+    OfficeModule,
   ],
   providers: [
     // Reihenfolge: erst AuthN (JwtAuthGuard), dann AuthZ (PermissionGuard).

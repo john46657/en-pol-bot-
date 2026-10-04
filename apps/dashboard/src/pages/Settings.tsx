@@ -66,6 +66,8 @@ export function Settings() {
         </ul>
       )}
 
+      <OfficeStatus guildId={guildId} />
+
       <div className="list">
         {slots.data?.map((slot) => (
           <Field
@@ -79,6 +81,17 @@ export function Settings() {
         ))}
       </div>
     </>
+  );
+}
+
+/** Zustand des Büro-Warteraums (nur Anzeige – der Bot verschiebt oder trennt dort niemanden). */
+function OfficeStatus({ guildId }: { guildId: string }) {
+  const q = useQuery({ queryKey: ['office', guildId], queryFn: () => api<{ state: string; name: string | null; message: string }>(`/guilds/${guildId}/office`) });
+  if (!q.data) return null;
+  return (
+    <p className={`badge ${q.data.state === 'ok' ? 'ok' : 'no'}`}>
+      {q.data.state === 'ok' ? '🟢' : '🔴'} Büro-Warteraum{q.data.name ? ` „${q.data.name}“` : ''}: {q.data.message}
+    </p>
   );
 }
 

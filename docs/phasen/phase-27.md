@@ -15,7 +15,7 @@
 `reports.test.ts` legt bekannte Schichten, Einsätze, Fahndungen, Strafen, Tickets, Ausbildungen, Beförderungen und Abmeldungen über mehrere Tage/Wochen an (inkl. laufender Schicht, aufgehobener Strafe, Vorwoche, Berlin-Tagesgrenzen) und prüft jede Kennzahl einzeln, außerdem leere Tage, Idempotenz und die Darstellung.
 
 ## Rechte und Oberflächen
-`report.view` (ansehen), `report.manage` (erzeugen, veröffentlichen; Polizeileitung, Teamleitung hat `report.view/manage` nur im eigenen Team-Geltungsbereich der Vorlage). Bot: `/bericht tag|woche [datum] [veroeffentlichen]`, `/bericht liste`. API: `/guilds/:id/reports[/:id|:id/publish]`. Dashboard: Berichte berechnen (Datum frei wählbar), ansehen, veröffentlichen.
+`report.view` (ansehen), `report.manage` (erzeugen, veröffentlichen). Polizeileitung hat beide; die Teamleitung-Vorlage ist team-beschränkt und reicht für diese serverweiten Berichte **nicht** aus. Bot: `/bericht tag|woche [datum] [veroeffentlichen]`, `/bericht liste`. API: `/guilds/:id/reports[/:id|:id/publish]`. Dashboard: Berichte berechnen (Datum frei wählbar), ansehen, veröffentlichen.
 
 ## Tests
 `reports.test.ts` (7), Bot `bericht.int.test.ts` (2).

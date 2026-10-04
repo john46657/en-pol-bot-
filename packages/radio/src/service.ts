@@ -1,4 +1,4 @@
-import { assertGuildId, prisma, type Prisma } from '@nexus/database';
+import { assertGuildId, guildRepository, prisma, type Prisma } from '@nexus/database';
 import { decideAccess, type Access, type Area, type Level, type Reason } from './access.js';
 import { RadioError } from './errors.js';
 
@@ -93,6 +93,7 @@ export async function saveChannel(guildId: string, input: { channelId: string; n
   const name = input.name.trim();
   if (!name || name.length > 50) throw new RadioError('invalid', 'Der Name fehlt oder ist zu lang (max. 50 Zeichen).');
   if (input.area && input.area !== 'GENERAL' && input.area !== 'SPECIAL') throw new RadioError('invalid', 'Unbekannter Funkbereich.');
+  if ((await guildRepository.getSelections(gid))['office-waiting-voice'] === input.channelId) throw new RadioError('conflict', 'Dieser Kanal ist als Büro-Warteraum festgelegt – dort darf kein Funk durchgesetzt werden (Mitglieder würden getrennt).');
   const area = (input.area ?? 'GENERAL') as Area;
   const data = { name, area, requiresDuty: input.requiresDuty ?? false, active: input.active ?? true };
   const before = await prisma.radioChannel.findUnique({ where: { guildId_channelId: { guildId: gid, channelId: input.channelId } } });

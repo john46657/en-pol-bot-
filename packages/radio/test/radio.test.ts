@@ -1,4 +1,4 @@
-import { prisma } from '@nexus/database';
+import { guildRepository, prisma } from '@nexus/database';
 import { afterAll, beforeEach, describe, expect, it } from 'vitest';
 import { RadioError, accessHistory, checkChannel, checkMember, decideAccess, listAccess, removeAccess, removeChannel, saveChannel, setAccess } from '../src/index.js';
 
@@ -88,5 +88,13 @@ describe('Prüfung gegen Kanäle (Abnahme: nur Berechtigte nutzen den jeweiligen
     await removeChannel(G, CH.general, 'x');
     await err(removeChannel(G, CH.general, 'x'), 'not-found');
     expect(await checkChannel(G, A, CH.general)).toBeNull();
+  });
+});
+
+describe('Büro-Warteraum ist kein Funkkanal', () => {
+  it('wird abgelehnt', async () => {
+    await guildRepository.setSelection(G, 'office-waiting-voice', '800000000000000077');
+    await err(saveChannel(G, { channelId: '800000000000000077', name: 'Warteraum' }, 'x'), 'conflict');
+    await saveChannel(G, { channelId: '800000000000000078', name: 'Anderer' }, 'x'); // andere Kanäle gehen
   });
 });
