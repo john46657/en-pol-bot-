@@ -45,3 +45,5 @@ pnpm-debug.log*
 # Produktion
 .env.production
 backups/
+test-results/
+playwright-report/

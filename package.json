@@ -23,12 +23,14 @@
     "db:studio": "pnpm --filter @nexus/database prisma:studio",
     "prepare": "husky",
     "dev:stop": "node scripts/dev-stop.mjs",
-    "dev:setup": "node scripts/dev-setup.mjs"
+    "dev:setup": "node scripts/dev-setup.mjs",
+    "e2e": "playwright test"
   },
   "devDependencies": {
     "@commitlint/cli": "^19.8.1",
     "@commitlint/config-conventional": "^19.8.1",
     "@eslint/js": "^10.0.1",
+    "@playwright/test": "^1.63.0",
     "@types/node": "^24.0.10",
     "eslint": "^9.30.1",
     "eslint-config-prettier": "^10.1.8",
