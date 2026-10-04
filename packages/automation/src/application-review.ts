@@ -341,6 +341,8 @@ async function refreshReviewMessage(
         submittedAt: s.submittedAt,
         answerCount: Object.keys(answers).length,
         isTest: s.isTest,
+        number: s.submissionNumber,
+        assigneeId: s.assigneeUserId,
         decision,
         dashboardUrl,
       }) as never,
@@ -415,6 +417,8 @@ export async function postSubmissionToReview(
         submittedAt: s.submittedAt,
         answerCount: Object.keys(answers).length,
         isTest: s.isTest,
+        number: s.submissionNumber,
+        assigneeId: s.assigneeUserId,
         pingRoleIds: targets.roleIds,
         dashboardUrl: opts.dashboardUrl,
       }) as never,
@@ -457,6 +461,82 @@ async function takeUnderReview(s: Submission, reviewerId: string): Promise<void>
       after: { status: SubmissionStatus.UNDER_REVIEW },
     });
   }
+}
+
+const assignedElsewhere = (id: string) => `Diese Bewerbung wird bereits von <@${id}> bearbeitet.`;
+
+/**
+ * Übernehmen / Freigeben / Zuweisen. Genau ein Bearbeiter: eine bereits übernommene Bewerbung kann nur eine Führungskraft
+ * (`canReassign`) übernehmen oder neu zuweisen; freigeben dürfen der Bearbeiter selbst oder eine Führungskraft.
+ * `assigneeId = null` gibt frei.
+ */
+export async function assignSubmission(
+  port: DiscordPort,
+  input: { submissionId: string; guildId: string; actorId: string; assigneeId: string | null; canReassign?: boolean | undefined },
+): Promise<{ ok: true; assigneeId: string | null } | { ok: false; message: string }> {
+  const s = await load(input.submissionId, input.guildId);
+  if (!s) return { ok: false, message: 'Bewerbung nicht gefunden.' };
+  if (isFinal(s.status))
+    return { ok: false, message: `Diese Bewerbung ist bereits abgeschlossen (${STATUS_LABEL[s.status]}).` };
+  const current = s.assigneeUserId;
+  const next = input.assigneeId;
+  if (next === current) return { ok: false, message: next ? 'Diese Person bearbeitet die Bewerbung bereits.' : 'Die Bewerbung ist niemandem zugewiesen.' };
+  if (next === null) {
+    if (current !== input.actorId && !input.canReassign)
+      return { ok: false, message: 'Nur der Bearbeiter oder eine Führungskraft kann die Bewerbung freigeben.' };
+  } else {
+    if (current && current !== input.actorId && !input.canReassign) return { ok: false, message: assignedElsewhere(current) };
+    if (next !== input.actorId && !input.canReassign)
+      return { ok: false, message: 'Nur Führungskräfte können Bewerbungen anderen zuweisen.' };
+    if (next !== input.actorId && !/^\d{5,25}$/.test(next)) return { ok: false, message: 'Ungültige Discord-ID.' };
+  }
+  const r = await prisma.applicationSubmission.updateMany({
+    where: { id: s.id, assigneeUserId: current, status: { in: [SubmissionStatus.SUBMITTED, SubmissionStatus.UNDER_REVIEW] } },
+    data: { assigneeUserId: next, assignedAt: next ? new Date() : null },
+  });
+  if (r.count === 0) return { ok: false, message: 'Die Bewerbung wurde gerade geändert – bitte erneut versuchen.' };
+  if (next) await takeUnderReview(s, input.actorId);
+  await audit(s.guildId, s.id, s.applicationId, input.actorId, next ? 'submission.assigned' : 'submission.released', {
+    before: { assigneeId: current },
+    after: { assigneeId: next },
+  });
+  const fresh = (await load(s.id)) ?? s;
+  await refreshReviewMessage(port, fresh, fresh.status);
+  return { ok: true, assigneeId: next };
+}
+
+/**
+ * Bewerbung durch das Team zurücknehmen (Status WITHDRAWN). Grund ist Pflicht; Bearbeiter und Grund werden protokolliert,
+ * der Bewerber erhält eine Nachricht. Nur solange noch nicht entschieden wurde.
+ */
+export async function withdrawByStaff(
+  port: DiscordPort,
+  input: { submissionId: string; guildId: string; actorId: string; reason: string | undefined },
+): Promise<{ ok: true } | { ok: false; message: string }> {
+  const reason = input.reason?.trim();
+  if (!reason || reason.length < 3) return { ok: false, message: 'Bitte einen Grund für das Zurücknehmen angeben.' };
+  if (reason.length > 1000) return { ok: false, message: 'Der Grund ist zu lang (max. 1000 Zeichen).' };
+  const s = await load(input.submissionId, input.guildId);
+  if (!s) return { ok: false, message: 'Bewerbung nicht gefunden.' };
+  try {
+    assertTransition(s.status, SubmissionStatus.WITHDRAWN);
+  } catch {
+    return { ok: false, message: `Diese Bewerbung lässt sich nicht mehr zurücknehmen (${STATUS_LABEL[s.status] ?? s.status}).` };
+  }
+  const r = await prisma.applicationSubmission.updateMany({
+    where: { id: s.id, status: { in: [SubmissionStatus.SUBMITTED, SubmissionStatus.UNDER_REVIEW] } },
+    data: { status: SubmissionStatus.WITHDRAWN, internalReason: reason, reviewerUserId: input.actorId },
+  });
+  if (r.count === 0) return { ok: false, message: 'Die Bewerbung wurde in der Zwischenzeit entschieden.' };
+  await audit(s.guildId, s.id, s.applicationId, input.actorId, 'submission.withdrawn_by_staff', {
+    before: { status: s.status },
+    after: { status: SubmissionStatus.WITHDRAWN, reason },
+  });
+  await refreshReviewMessage(port, s, SubmissionStatus.WITHDRAWN, { by: input.actorId, reason });
+  await port
+    .sendDm(s.userId, { content: `↩️ Deine Bewerbung **${s.application.name}** wurde vom Team zurückgenommen.\n\nGrund: ${reason}` })
+    .catch(() => undefined);
+  return { ok: true };
 }
 
 export async function startReview(
@@ -602,6 +682,8 @@ export interface DecisionInput {
   note?: string | undefined;
   internalReason?: string | undefined;
   dashboardUrl?: string | undefined;
+  /** Darf trotz Zuweisung an eine andere Person entscheiden (Führungskraft, Recht „Zuständigkeit ändern“). */
+  bypassAssignee?: boolean | undefined;
 }
 
 export type DecisionResult =
@@ -631,6 +713,8 @@ export async function decideSubmission(
   } catch {
     return denied(s.status);
   }
+  if (s.assigneeUserId && s.assigneeUserId !== input.reviewerId && !input.bypassAssignee)
+    return { ok: false, message: assignedElsewhere(s.assigneeUserId) };
 
   // Ablehnungsgrund auflösen
   let publicReason: string | undefined;

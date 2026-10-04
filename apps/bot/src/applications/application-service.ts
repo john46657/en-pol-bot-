@@ -30,6 +30,24 @@ export interface StartApplicationResult {
   message: string;
 }
 
+const OPEN_STATUS_LABEL: Record<string, string> = {
+  STARTED: 'GESTARTET',
+  IN_PROGRESS: 'WIRD AUSGEFÜLLT',
+  PAUSED: 'PAUSIERT',
+  SUBMITTED: 'EINGEREICHT',
+  UNDER_REVIEW: 'IN REVIEW',
+};
+/** „Du hast bereits eine offene Bewerbung.“ mit dem aktuellen Status (und der ID, falls schon eingereicht). */
+async function openMessage(guildId: string, userId: string, applicationId?: string): Promise<string> {
+  const open = await prisma.applicationSubmission.findFirst({
+    where: { guildId, userId, ...(applicationId ? { applicationId } : {}), isTest: false, status: { in: [SubmissionStatus.STARTED, SubmissionStatus.IN_PROGRESS, SubmissionStatus.PAUSED, SubmissionStatus.SUBMITTED, SubmissionStatus.UNDER_REVIEW] } },
+    orderBy: { createdAt: 'desc' },
+    select: { status: true, submissionNumber: true },
+  });
+  const status = open ? (OPEN_STATUS_LABEL[open.status] ?? open.status) : null;
+  return `⚠️ Du hast bereits eine offene Bewerbung.${status ? `\n\n**Status:** ${status}` : ''}${open?.submissionNumber ? `\n**ID:** #${open.submissionNumber}` : ''}`;
+}
+
 export async function startApplication(
   input: StartApplicationInput,
 ): Promise<StartApplicationResult> {
@@ -82,7 +100,7 @@ export async function startApplication(
   });
   const mode = requirements.multipleActiveSubmissions ?? 'per_application';
   if (mode === 'none' && activeCount > 0) {
-    return fail('Du hast bereits eine laufende Bewerbung.');
+    return fail(await openMessage(guildId, userId));
   }
   if (activeCount >= config.limits.maxActiveSubmissionsPerUser) {
     return fail('Du hast das Maximum an gleichzeitigen Bewerbungen erreicht.');
@@ -105,7 +123,7 @@ export async function startApplication(
       },
     });
     if (sameApp > 0) {
-      return fail('Du hast diese Bewerbung bereits eingereicht oder sie läuft noch.');
+      return fail(await openMessage(guildId, userId, applicationId));
     }
     // Resubmission-Regel (§53)
     const lastDecision = await prisma.applicationSubmission.findFirst({

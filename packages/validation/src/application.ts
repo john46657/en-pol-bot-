@@ -62,6 +62,7 @@ export const questionValidationSchema = z.object({
   min: z.number().optional(),
   max: z.number().optional(),
   pattern: z.string().max(500).optional(),
+  errorMessage: z.string().max(300).optional(),
   allowedCharacters: z.string().max(500).optional(),
   caseSensitive: z.boolean().optional(),
   trim: z.boolean().optional(),

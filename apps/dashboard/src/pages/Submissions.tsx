@@ -1,11 +1,13 @@
 import { useQuery } from '@tanstack/react-query';
 import { useState } from 'react';
 import { Link, useParams } from 'react-router';
-import { api, STATUS_TEXT, type SubmissionRow } from '../api';
-import { QueryState } from '../components/QueryState';
+import { api, API_URL, STATUS_TEXT, type SubmissionRow } from '../api';
+import { errorText, QueryState } from '../components/QueryState';
+import { useToast } from '../toast';
 
 export function Submissions() {
   const { guildId = '' } = useParams();
+  const toast = useToast();
   const [status, setStatus] = useState('');
   const [search, setSearch] = useState('');
   const [term, setTerm] = useState('');
@@ -18,6 +20,22 @@ export function Submissions() {
     queryKey: ['submissions', guildId, status, term],
     queryFn: () => api<{ items: SubmissionRow[] }>(`/guilds/${guildId}/submissions?${qs}`),
   });
+  /** Export der (gefilterten) Bewerbungen als CSV oder JSON – serverseitig mit Recht „Einreichungen exportieren“ geprüft. */
+  async function download(format: 'csv' | 'json') {
+    try {
+      const params = new URLSearchParams({ format, ...(status ? { status } : {}) });
+      const res = await fetch(`${API_URL}/api/v1/guilds/${guildId}/submissions/export?${params}`, { credentials: 'include', headers: { 'X-Requested-With': 'nexus' } });
+      if (!res.ok) throw new Error(res.status === 403 ? 'Dafür fehlt dir die Berechtigung (Einreichungen exportieren).' : `Export fehlgeschlagen (HTTP ${res.status}).`);
+      const url = URL.createObjectURL(await res.blob());
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `bewerbungen.${format}`;
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch (e) {
+      toast.error(errorText(e));
+    }
+  }
   return (
     <>
       <h1>Einreichungen</h1>
@@ -43,6 +61,8 @@ export function Submissions() {
           onChange={(e) => setSearch(e.target.value)}
         />
         <button className="btn">Suchen</button>
+        <button type="button" className="btn" onClick={() => void download('csv')}>⬇ CSV</button>
+        <button type="button" className="btn" onClick={() => void download('json')}>⬇ JSON</button>
       </form>
       <QueryState query={q}>
         {(d) =>
@@ -54,7 +74,7 @@ export function Submissions() {
                 <li key={s.id} className="row">
                   <span className="grow">
                     <Link to={`/guilds/${guildId}/submissions/${s.id}`}>
-                      <strong>{s.displayNameSnapshot}</strong>
+                      <strong>{s.submissionNumber ? `#${s.submissionNumber} · ` : ''}{s.displayNameSnapshot}</strong>
                     </Link>{' '}
                     <small className="muted">
                       {s.application.name}
@@ -65,6 +85,8 @@ export function Submissions() {
                       {s.submittedAt
                         ? `Eingereicht ${new Date(s.submittedAt).toLocaleString('de-DE')}`
                         : `Gestartet ${new Date(s.createdAt).toLocaleString('de-DE')}`}
+                      {' · Bearbeiter: '}
+                      {s.assigneeUserId ? <code>{s.assigneeUserId}</code> : 'noch nicht zugewiesen'}
                     </small>
                   </span>
                   <span className={`pill s-${s.status}`}>{STATUS_TEXT[s.status] ?? s.status}</span>

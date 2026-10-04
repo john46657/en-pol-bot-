@@ -594,3 +594,18 @@ describe('Bewerbungssperre (Phase 47)', () => {
     expect((await tryStart(USER)).ok).toBe(true);
   });
 });
+
+describe('Offene Bewerbung (Phase 54)', () => {
+  it('zweiter Start nennt den Status der offenen Bewerbung', async () => {
+    const first = await startApplication({ guildId: G, applicationId: appId, userId: USER, memberRoleIds: [], username: 'max', displayName: 'Max' });
+    expect(first.ok).toBe(true);
+    const again = await startApplication({ guildId: G, applicationId: appId, userId: USER, memberRoleIds: [], username: 'max', displayName: 'Max' });
+    expect(again.ok).toBe(false);
+    expect(again.message).toContain('bereits eine offene Bewerbung');
+    expect(again.message).toContain('Status');
+    await prisma.applicationSubmission.update({ where: { id: first.submissionId! }, data: { status: 'UNDER_REVIEW', submissionNumber: 'POL-00152' } });
+    const review = await startApplication({ guildId: G, applicationId: appId, userId: USER, memberRoleIds: [], username: 'max', displayName: 'Max' });
+    expect(review.message).toContain('IN REVIEW');
+    expect(review.message).toContain('#POL-00152');
+  });
+});

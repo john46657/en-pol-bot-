@@ -168,6 +168,10 @@ export interface QuestionOption {
   enabled: boolean;
 }
 export interface QuestionValidation {
+  /** Regex-Quelltext (wird serverseitig geprüft). */
+  pattern?: string;
+  /** Eigene Fehlermeldung bei ungültiger Antwort. */
+  errorMessage?: string;
   minLength?: number;
   maxLength?: number;
   min?: number;
@@ -317,6 +321,9 @@ export interface MemberAccess {
 // --- Einreichungen ------------------------------------------------------------
 export interface SubmissionRow {
   id: string;
+  /** Menschenlesbare ID, z. B. POL-00152 (ab dem Einreichen). */
+  submissionNumber: string | null;
+  assigneeUserId: string | null;
   status: string;
   userId: string;
   usernameSnapshot: string;

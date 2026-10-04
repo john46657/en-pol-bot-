@@ -149,3 +149,20 @@ describe('Auswahl per Nummer (DM-Komfort)', () => {
     expect(validateAnswer(s, '1, 9').ok).toBe(false);
   });
 });
+
+describe('Eigene Fehlermeldung je Frage (Phase 54)', () => {
+  const q = make(QuestionType.TEXT, { validation: { pattern: '^[a-z]+$', minLength: 3, errorMessage: 'Bitte nur Kleinbuchstaben, mindestens 3.' } });
+  it('ersetzt die Standardmeldungen bei ungültiger Antwort', () => {
+    const r = validateAnswer(q, 'AB1');
+    expect(r.ok).toBe(false);
+    expect(r.errors).toEqual(['Bitte nur Kleinbuchstaben, mindestens 3.']);
+  });
+  it('gültige Antworten bleiben gültig; Pflicht-Hinweis bleibt unverändert; ohne eigene Meldung gelten die Standardtexte', () => {
+    expect(validateAnswer(q, 'abc').ok).toBe(true);
+    expect(validateAnswer(q, '').errors[0]).toContain('verpflichtend');
+    const plain = validateAnswer(make(QuestionType.TEXT, { validation: { minLength: 5 } }), 'ab');
+    expect(plain.errors[0]).toContain('Mindestens 5');
+    const num = validateAnswer(make(QuestionType.NUMBER, { validation: { min: 18, errorMessage: 'Du musst mindestens 18 sein.' } }), '12');
+    expect(num.errors).toEqual(['Du musst mindestens 18 sein.']);
+  });
+});

@@ -2,7 +2,7 @@ import type { Client, DMChannel, TextChannel } from 'discord.js';
 import { ActionRowBuilder, ButtonBuilder, ButtonStyle, StringSelectMenuBuilder } from 'discord.js';
 import { DMPhase, SubmissionStatus } from '@nexus/types';
 import type { AnswerMap, Question } from '@nexus/types';
-import { Prisma, prisma } from '@nexus/database';
+import { Prisma, assignSubmissionNumber, prisma } from '@nexus/database';
 import {
   areRequiredQuestionsAnswered,
   computeVisibleQuestions,
@@ -501,7 +501,7 @@ export async function editAnswer(
 // ---------------------------------------------------------------------------
 
 export type SubmitResult =
-  { ok: true; submittedAt: Date } | { ok: false; message: string; missing?: string[] };
+  { ok: true; submittedAt: Date; number: string | null } | { ok: false; message: string; missing?: string[] };
 
 export async function submitSubmission(
   submissionId: string,
@@ -555,6 +555,7 @@ export async function submitSubmission(
           ),
         },
       });
+      const number = await assignSubmissionNumber(submissionId);
       await prisma.applicationDMState.updateMany({
         where: { submissionId },
         data: { phase: DMPhase.CONFIRMED, currentQuestionId: null },
@@ -570,7 +571,7 @@ export async function submitSubmission(
           after: { answers: Object.keys(pruned.answers).length, versionId: submission.versionId },
         },
       });
-      return { ok: true, submittedAt: now };
+      return { ok: true, submittedAt: now, number };
     });
   } catch {
     return {

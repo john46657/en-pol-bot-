@@ -58,6 +58,12 @@ export class UpdateApplicationDto {
   @MaxLength(2000)
   description?: string;
 
+  /** Präfix der Bewerbungs-ID (1–8 Buchstaben/Ziffern, z. B. POL → POL-00152); leer = Standard „SUB“. */
+  @IsOptional()
+  @IsString()
+  @Matches(/^([A-Za-z0-9]{1,8})?$/, { message: 'Das ID-Präfix darf 1–8 Buchstaben oder Ziffern enthalten.' })
+  idPrefix?: string;
+
   @IsOptional()
   @IsString()
   icon?: string;

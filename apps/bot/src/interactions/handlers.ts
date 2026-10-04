@@ -337,7 +337,7 @@ async function submitFromSummary(
   await disableComponents(interaction);
   await reply(
     interaction,
-    '✅ Deine Bewerbung wurde eingereicht! Das Team prüft sie – du erhältst eine Nachricht, sobald es eine Entscheidung gibt.',
+    `✅ **Bewerbung erfolgreich eingereicht!**\n\n${r.number ? `**Bewerbungs-ID:** \`#${r.number}\`\n` : ''}**Status:** 🟡 In Bearbeitung\n\nBitte warte auf die Entscheidung des Teams – du erhältst eine Nachricht, sobald es eine gibt.`,
   );
   // Bearbeitungsteam benachrichtigen (Review-Nachricht mit Schaltflächen)
   const posted = await postSubmissionToReview(reviewPort(), submissionId, {

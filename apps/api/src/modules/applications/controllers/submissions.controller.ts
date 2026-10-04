@@ -1,9 +1,12 @@
-import { Body, Controller, Get, Param, Post, Query } from '@nestjs/common';
+import { BadRequestException, Body, Controller, Get, Param, Post, Query, Res, StreamableFile } from '@nestjs/common';
+import type { Response } from 'express';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { GuildId } from '../../../common/decorators/guild-id.decorator.js';
 import { CurrentUser } from '../../../common/decorators/current-user.decorator.js';
 import type { RequestUser } from '../../../common/decorators/current-user.decorator.js';
 import { RequirePermissions } from '../../../common/decorators/permissions.decorator.js';
+import { Access, type RequestAccess } from '../../../common/decorators/scope.decorator.js';
+import { permissions } from '@nexus/permissions';
 import { SubmissionsService } from '../services/submissions.service.js';
 import {
   AcceptSubmissionDto,
@@ -36,6 +39,29 @@ export class SubmissionsController {
     return this.submissions.reviewOptions();
   }
 
+  /** Export als CSV oder JSON (`?format=csv|json&applicationId&status&from&to`) – nur mit „Einreichungen exportieren“. */
+  @Get('export')
+  @RequirePermissions('applications.submissions.export')
+  async export(
+    @GuildId() guildId: string,
+    @Query() q: Record<string, string | undefined>,
+    @CurrentUser() user: RequestUser,
+    @Res({ passthrough: true }) res: Response,
+  ) {
+    const r = await this.submissions.export(guildId, user.id, q);
+    res.setHeader('Content-Type', r.contentType);
+    res.setHeader('Content-Disposition', `attachment; filename="${r.filename}"`);
+    return new StreamableFile(Buffer.from(r.body, 'utf8'));
+  }
+
+  /** Bisherige Bewerbungen eines Discord-Benutzers (Bewerbungshistorie). */
+  @Get('by-user/:userId')
+  @RequirePermissions('applications.submissions.view')
+  byUser(@GuildId() guildId: string, @Param('userId') userId: string) {
+    if (!/^\d{5,25}$/.test(userId)) throw new BadRequestException('Ungültige Discord-ID.');
+    return this.submissions.byUser(guildId, userId);
+  }
+
   @Get(':submissionId')
   @RequirePermissions('applications.submissions.view')
   getById(@GuildId() guildId: string, @Param('submissionId') submissionId: string) {
@@ -45,24 +71,58 @@ export class SubmissionsController {
   /** Accept (§30) – inkl. public/internal Reason für Transparenz. */
   @Post(':submissionId/accept')
   @RequirePermissions('applications.submissions.accept')
-  accept(
+  async accept(
     @GuildId() guildId: string,
     @Param('submissionId') submissionId: string,
     @Body() dto: AcceptSubmissionDto,
     @CurrentUser() user: RequestUser,
+    @Access() access: RequestAccess,
   ) {
-    return this.submissions.accept(guildId, submissionId, user.id, dto);
+    return this.submissions.accept(guildId, submissionId, user.id, dto, await this.canReassign(access));
   }
 
   @Post(':submissionId/deny')
   @RequirePermissions('applications.submissions.deny')
-  deny(
+  async deny(
     @GuildId() guildId: string,
     @Param('submissionId') submissionId: string,
     @Body() dto: DenySubmissionDto,
     @CurrentUser() user: RequestUser,
+    @Access() access: RequestAccess,
   ) {
-    return this.submissions.deny(guildId, submissionId, user.id, dto);
+    return this.submissions.deny(guildId, submissionId, user.id, dto, await this.canReassign(access));
+  }
+
+  /** Bewerbung übernehmen; wer sie schon bearbeitet, wird angezeigt, Führungskräfte dürfen übernehmen. */
+  @Post(':submissionId/claim')
+  @RequirePermissions('applications.submissions.review')
+  async claim(@GuildId() guildId: string, @Param('submissionId') submissionId: string, @CurrentUser() user: RequestUser, @Access() access: RequestAccess) {
+    return this.submissions.assign(guildId, submissionId, user.id, user.id, await this.canReassign(access));
+  }
+
+  @Post(':submissionId/release')
+  @RequirePermissions('applications.submissions.review')
+  async release(@GuildId() guildId: string, @Param('submissionId') submissionId: string, @CurrentUser() user: RequestUser, @Access() access: RequestAccess) {
+    return this.submissions.assign(guildId, submissionId, user.id, null, await this.canReassign(access));
+  }
+
+  /** Zuständigkeit ändern: einer anderen Person zuweisen (nur mit „Zuständigkeit ändern“). */
+  @Post(':submissionId/assign')
+  @RequirePermissions('applications.submissions.reassign')
+  async assign(@GuildId() guildId: string, @Param('submissionId') submissionId: string, @Body() body: { assigneeId?: unknown }, @CurrentUser() user: RequestUser) {
+    if (typeof body.assigneeId !== 'string') throw new BadRequestException('Bitte die Discord-ID des Bearbeiters angeben.');
+    return this.submissions.assign(guildId, submissionId, user.id, body.assigneeId, true);
+  }
+
+  /** Bewerbung durch das Team zurücknehmen (WITHDRAWN) – Grund Pflicht. */
+  @Post(':submissionId/withdraw')
+  @RequirePermissions('applications.submissions.withdraw')
+  withdraw(@GuildId() guildId: string, @Param('submissionId') submissionId: string, @Body() body: { reason?: unknown }, @CurrentUser() user: RequestUser) {
+    return this.submissions.withdraw(guildId, submissionId, user.id, typeof body.reason === 'string' ? body.reason : undefined);
+  }
+
+  private canReassign(access: RequestAccess): Promise<boolean> {
+    return access.bypass ? Promise.resolve(true) : permissions.can(access, 'applications.submissions.reassign');
   }
 
   /** Interne Notiz (§35): nur für Staff, Änderungen werden protokolliert. */

@@ -39,6 +39,16 @@ export function SubmissionDetail() {
         `${base}/history`,
       ),
   });
+  const userId = q.data?.userId;
+  const past = useQuery({
+    queryKey: ['submission-user-history', guildId, userId],
+    enabled: !!userId,
+    queryFn: () =>
+      api<{ id: string; submissionNumber: string | null; status: string; submittedAt: string | null; createdAt: string; publicReason: string | null; application: { name: string } }[]>(
+        `/guilds/${guildId}/submissions/by-user/${userId}`,
+      ),
+  });
+  const [assignee, setAssignee] = useState('');
   const [note, setNote] = useState('');
   const [reasonId, setReasonId] = useState('');
   const [text, setText] = useState('');
@@ -80,6 +90,16 @@ export function SubmissionDetail() {
     },
     onError: (e) => toast.error(errorText(e)),
   });
+  const flow = useMutation({
+    mutationFn: (v: { path: string; body?: unknown; msg: string }) =>
+      api(`${base}/${v.path}`, { method: 'POST', body: v.body }).then(() => v.msg),
+    onSuccess: (m) => {
+      toast.success(m);
+      setAssignee('');
+      void refresh();
+    },
+    onError: (e) => toast.error(errorText(e)),
+  });
   const start = useMutation({
     mutationFn: () => api(`${base}/review/start`, { method: 'POST' }),
     onSuccess: () => void refresh(),
@@ -106,6 +126,7 @@ export function SubmissionDetail() {
           return (
             <>
               <h1>
+                {s.submissionNumber ? `#${s.submissionNumber} · ` : ''}
                 {s.displayNameSnapshot}{' '}
                 <small className="muted">
                   {s.application.name} · v{s.version.version}
@@ -117,6 +138,10 @@ export function SubmissionDetail() {
                 <small className="muted">Discord-ID {s.userId}</small>
               </p>
               {s.publicReason && <p className="muted">Begründung/Nachricht: {s.publicReason}</p>}
+              <p aria-label="Bearbeiter">
+                <strong>Bearbeiter:</strong>{' '}
+                {s.assigneeUserId ? <code>{s.assigneeUserId}</code> : <span className="muted">Noch nicht zugewiesen</span>}
+              </p>
 
               {result && (
                 <div
@@ -157,6 +182,30 @@ export function SubmissionDetail() {
               {open && (
                 <>
                   <h2>Bearbeitung</h2>
+                  <div className="actions">
+                    {s.assigneeUserId ? (
+                      <button className="btn" disabled={flow.isPending} onClick={() => flow.mutate({ path: 'release', msg: 'Freigegeben.' })}>
+                        ↩️ Freigeben
+                      </button>
+                    ) : null}
+                    <button className="btn primary" disabled={flow.isPending} onClick={() => flow.mutate({ path: 'claim', msg: 'Übernommen.' })}>
+                      👤 Bewerbung übernehmen
+                    </button>
+                    <input className="inline-input" placeholder="Discord-ID zuweisen (Führungskraft)" aria-label="Bearbeiter zuweisen" value={assignee} onChange={(e) => setAssignee(e.target.value)} />
+                    <button className="btn" disabled={!/^\d{5,25}$/.test(assignee.trim()) || flow.isPending} onClick={() => flow.mutate({ path: 'assign', body: { assigneeId: assignee.trim() }, msg: 'Zugewiesen.' })}>
+                      Zuweisen
+                    </button>
+                    <button
+                      className="btn"
+                      disabled={flow.isPending}
+                      onClick={() => {
+                        const reason = window.prompt('Grund für das Zurücknehmen (Pflicht)');
+                        if (reason) flow.mutate({ path: 'withdraw', body: { reason }, msg: 'Bewerbung zurückgenommen.' });
+                      }}
+                    >
+                      ↩ Zurücknehmen
+                    </button>
+                  </div>
                   {s.status === 'SUBMITTED' && (
                     <button
                       className="btn"
@@ -239,6 +288,24 @@ export function SubmissionDetail() {
                     </div>
                   </div>
                 </>
+              )}
+
+              <h2>Bewerbungshistorie dieses Benutzers</h2>
+              {past.data && past.data.length > 0 ? (
+                <ul className="plain" aria-label="Bewerbungshistorie">
+                  {past.data.map((p) => (
+                    <li key={p.id} className="card">
+                      <Link to={`/guilds/${guildId}/submissions/${p.id}`}>
+                        <strong>{p.submissionNumber ? `#${p.submissionNumber}` : 'Entwurf'}</strong>
+                      </Link>{' '}
+                      {p.application.name} · <span className={`pill s-${p.status}`}>{STATUS_TEXT[p.status] ?? p.status}</span>{' '}
+                      <small className="muted">{new Date(p.submittedAt ?? p.createdAt).toLocaleDateString('de-DE')}</small>
+                      {p.id === s.id && <small className="muted"> (diese)</small>}
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <p className="muted">Keine weiteren Bewerbungen.</p>
               )}
 
               <h2>Notizen</h2>

@@ -1136,4 +1136,108 @@ describe('Dashboard-Design (Phase 37)', () => {
       (await call('GET', `/guilds/${G}/personnel/team-overview`, OFFICER)).status,
     ).toBeLessThan(500);
   });
+  it('Bewerbungen: ID-Präfix, Übernehmen/Freigeben/Zuweisen, Zurücknehmen mit Grund, Verlauf je Benutzer', async () => {
+    const app = await call('POST', `/guilds/${G}/applications`, ADMIN, {
+      name: 'Phase54',
+      slug: 'phase54',
+    });
+    expect(app.status).toBe(201);
+    const appId = app.data.id;
+    expect(
+      (await call('PATCH', `/guilds/${G}/applications/${appId}`, ADMIN, { idPrefix: 'zu-lang-!' }))
+        .status,
+    ).toBe(400);
+    const pf = await call('PATCH', `/guilds/${G}/applications/${appId}`, ADMIN, {
+      idPrefix: 'pol',
+    });
+    expect(pf.data.idPrefix).toBe('POL');
+    const version = await prisma.applicationVersion.create({
+      data: { applicationId: appId, version: 1, questions: [], publishedById: ADMIN },
+    });
+    const mk = (status: 'SUBMITTED' | 'DENIED', userId = APPLICANT) =>
+      prisma.applicationSubmission.create({
+        data: {
+          guildId: G,
+          applicationId: appId,
+          versionId: version.id,
+          userId,
+          usernameSnapshot: 'b',
+          displayNameSnapshot: 'Bewerber',
+          status,
+          submittedAt: new Date(),
+        },
+      });
+    const s1 = await mk('SUBMITTED');
+    const old = await mk('DENIED');
+    const sub = (id: string, p: string) => `/guilds/${G}/submissions/${id}${p}`;
+    // Rechte
+    expect((await call('POST', sub(s1.id, '/claim'), NOBODY, {})).status).toBe(403);
+    expect(
+      (await call('POST', sub(s1.id, '/assign'), OFFICER, { assigneeId: OFFICER })).status,
+    ).toBe(403); // nur „Zuständigkeit ändern“
+    // Übernehmen: ADMIN (Verwalter = Führungskraft)
+    const claimed = await call('POST', sub(s1.id, '/claim'), ADMIN, {});
+    expect(claimed.status).toBe(201);
+    expect(claimed.data.assigneeId).toBe(ADMIN);
+    expect((await call('GET', sub(s1.id, ''), ADMIN)).data).toMatchObject({
+      assigneeUserId: ADMIN,
+      status: 'UNDER_REVIEW',
+    });
+    expect((await call('POST', sub(s1.id, '/claim'), ADMIN, {})).status).toBe(409); // schon er selbst
+    expect((await call('POST', sub(s1.id, '/assign'), ADMIN, { assigneeId: 'abc' })).status).toBe(
+      409,
+    );
+    expect(
+      (await call('POST', sub(s1.id, '/assign'), ADMIN, { assigneeId: '900000000000330099' })).data
+        .assigneeId,
+    ).toBe('900000000000330099');
+    expect((await call('POST', sub(s1.id, '/release'), ADMIN, {})).data.assigneeId).toBeNull(); // Führungskraft darf freigeben
+    expect((await call('POST', sub(s1.id, '/release'), ADMIN, {})).status).toBe(409);
+    // Zurücknehmen
+    expect((await call('POST', sub(s1.id, '/withdraw'), ADMIN, {})).status).toBe(409); // Grund fehlt
+    expect(
+      (await call('POST', sub(s1.id, '/withdraw'), OFFICER, { reason: 'Grund hier' })).status,
+    ).toBe(403);
+    expect(
+      (await call('POST', sub(s1.id, '/withdraw'), ADMIN, { reason: 'Doppelt eingereicht' }))
+        .status,
+    ).toBe(201);
+    expect((await call('GET', sub(s1.id, ''), ADMIN)).data.status).toBe('WITHDRAWN');
+    expect((await call('POST', sub(s1.id, '/withdraw'), ADMIN, { reason: 'nochmal' })).status).toBe(
+      409,
+    );
+    // Export: nur mit Recht, CSV/JSON, wird protokolliert
+    const ex = (q: string, u = ADMIN) => call('GET', `/guilds/${G}/submissions/export${q}`, u);
+    expect((await ex('', NOBODY)).status).toBe(403);
+    expect((await ex('', OFFICER)).status).toBe(403);
+    expect((await ex('?format=xml')).status).toBe(400);
+    expect((await ex('?status=BOESE')).status).toBe(400);
+    expect((await ex('?from=morgen')).status).toBe(400);
+    const csv = await fetch(
+      `${base}/api/v1/guilds/${G}/submissions/export?format=csv&applicationId=${appId}`,
+      { headers: as(ADMIN) },
+    );
+    expect(csv.status).toBe(200);
+    expect(csv.headers.get('content-type')).toContain('text/csv');
+    expect(csv.headers.get('content-disposition')).toContain('bewerbungen-');
+    expect(await csv.text()).toContain('Bewerber');
+    const js = await fetch(
+      `${base}/api/v1/guilds/${G}/submissions/export?format=json&applicationId=${appId}`,
+      { headers: as(ADMIN) },
+    );
+    expect(js.headers.get('content-type')).toContain('application/json');
+    expect(Array.isArray(JSON.parse(await js.text()))).toBe(true);
+    expect(
+      await prisma.auditLog.count({ where: { guildId: G, action: 'submissions.exported' } }),
+    ).toBeGreaterThanOrEqual(2);
+    // Verlauf je Benutzer
+    const hist = await call('GET', `/guilds/${G}/submissions/by-user/${APPLICANT}`, ADMIN);
+    expect(hist.status).toBe(200);
+    const ids = hist.data.map((x: { id: string }) => x.id);
+    expect(ids).toEqual(expect.arrayContaining([s1.id, old.id]));
+    expect((await call('GET', `/guilds/${G}/submissions/by-user/abc`, ADMIN)).status).toBe(400);
+    expect(
+      (await call('GET', `/guilds/${G}/submissions/by-user/${APPLICANT}`, NOBODY)).status,
+    ).toBe(403);
+  });
 });

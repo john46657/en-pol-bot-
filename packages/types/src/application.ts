@@ -37,6 +37,8 @@ export interface QuestionValidation {
   trim?: boolean;
   /** z. B. 'upper' | 'lower' | 'capitalize' – Normalisierung vor der Validierung. */
   autoCase?: 'upper' | 'lower' | 'capitalize';
+  /** Eigene Fehlermeldung, die der Bewerber bei ungültiger Antwort sieht (ersetzt die Standardmeldungen). */
+  errorMessage?: string;
   minSelections?: number;
   maxSelections?: number;
   /** Liste erlaubter Werte (zusätzlich zu Optionen). */

@@ -33,9 +33,20 @@ export function ApplicationBuilder() {
   const q = useQuery({ queryKey: key, queryFn: () => api<QuestionsResponse>(`${base}/questions`) });
   const app = useQuery({
     queryKey: ['application', applicationId],
-    queryFn: () => api<{ name: string; status: string }>(base),
+    queryFn: () => api<{ name: string; status: string; idPrefix: string | null }>(base),
+  });
+  const [prefix, setPrefix] = useState<string | null>(null);
+  const savePrefix = useMutation({
+    mutationFn: (v: string) => api(base, { method: 'PATCH', body: { idPrefix: v } }),
+    onSuccess: () => {
+      toast.success('ID-Präfix gespeichert.');
+      setPrefix(null);
+      void qc.invalidateQueries({ queryKey: ['application', applicationId] });
+    },
+    onError: (e) => toast.error(errorText(e)),
   });
   const [editing, setEditing] = useState<BuilderQuestion | null>(null);
+  const [dragId, setDragId] = useState<string | null>(null);
   const [isNew, setIsNew] = useState(false);
   const [publishErrors, setPublishErrors] = useState<string[]>([]);
 
@@ -109,6 +120,20 @@ export function ApplicationBuilder() {
           {publish.isPending ? 'Prüfe …' : 'Veröffentlichen'}
         </button>
       </div>
+      <div className="actions">
+        <label className="fld">
+          <span>Präfix der Bewerbungs-ID (z. B. POL → #POL-00152; leer = SUB)</span>
+          <input
+            aria-label="ID-Präfix"
+            value={prefix ?? app.data?.idPrefix ?? ''}
+            maxLength={8}
+            onChange={(e) => setPrefix(e.target.value.replace(/[^A-Za-z0-9]/g, '').toUpperCase())}
+          />
+        </label>
+        <button className="btn" disabled={prefix === null || savePrefix.isPending} onClick={() => savePrefix.mutate(prefix ?? '')}>
+          Präfix speichern
+        </button>
+      </div>
       {publishErrors.length > 0 && (
         <div className="alert error" role="alert">
           <div>
@@ -135,7 +160,26 @@ export function ApplicationBuilder() {
             </p>
             <ol className="qlist">
               {d.questions.map((qq, i) => (
-                <li key={qq.id} className={`row ${qq.enabled === false ? 'off' : ''}`}>
+                <li
+                  key={qq.id}
+                  className={`row ${qq.enabled === false ? 'off' : ''}`}
+                  draggable
+                  aria-label={`Frage ${i + 1}: ${qq.title}`}
+                  onDragStart={(e) => {
+                    setDragId(qq.id);
+                    e.dataTransfer.effectAllowed = 'move';
+                    e.dataTransfer.setData('text/plain', qq.id);
+                  }}
+                  onDragOver={(e) => dragId && dragId !== qq.id && e.preventDefault()}
+                  onDrop={(e) => {
+                    e.preventDefault();
+                    if (dragId && dragId !== qq.id) move.mutate({ id: dragId, toIndex: i });
+                    setDragId(null);
+                  }}
+                  onDragEnd={() => setDragId(null)}
+                  style={dragId === qq.id ? { opacity: 0.5 } : undefined}
+                >
+                  <span className="muted" title="Zum Sortieren ziehen" aria-hidden="true" style={{ cursor: 'grab' }}>⠿</span>
                   <span className="muted">{i + 1}.</span>
                   <span className="grow">
                     <strong>{qq.title}</strong>
@@ -329,6 +373,26 @@ function QuestionForm({
             />
           </label>
         </div>
+      )}
+      {['TEXT', 'USERNAME'].includes(v.type) && (
+        <label className="fld">
+          <span>Regex-Validierung (optional, z. B. ^[A-Za-zÄÖÜäöüß ]+$)</span>
+          <input
+            value={v.validation?.pattern ?? ''}
+            maxLength={500}
+            onChange={(e) => setVal({ pattern: e.target.value || undefined })}
+          />
+        </label>
+      )}
+      {!DISPLAY.includes(v.type) && (
+        <label className="fld">
+          <span>Eigene Fehlermeldung bei ungültiger Antwort (optional)</span>
+          <input
+            value={v.validation?.errorMessage ?? ''}
+            maxLength={300}
+            onChange={(e) => setVal({ errorMessage: e.target.value || undefined })}
+          />
+        </label>
       )}
       {['NUMBER', 'DECIMAL', 'RATING', 'SLIDER'].includes(v.type) && (
         <div className="two">

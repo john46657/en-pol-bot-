@@ -1,7 +1,7 @@
 import { DiscordApiError } from '@nexus/discord';
 import { guildRepository, permissionRepository, prisma } from '@nexus/database';
 import { addQuestion } from '@nexus/validation';
-import { decideSubmission } from '@nexus/automation';
+import { assignSubmission, decideSubmission, withdrawByStaff } from '@nexus/automation';
 import type { Question } from '@nexus/types';
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import { startApplication } from '../src/applications/application-service.js';
@@ -20,7 +20,7 @@ import { connectRedis, redis } from '../src/utils/lock.js';
 const G = 'revtest-guild';
 const APPLICANT = 'revtest-applicant';
 const OWNER = 'revtest-owner';
-const ROLE = { accept: 'r-accept', deny: 'r-deny', viewer: 'r-viewer', review: 'r-review' };
+const ROLE = { accept: 'r-accept', deny: 'r-deny', viewer: 'r-viewer', review: 'r-review', lead: 'r-lead' };
 const U = {
   acceptor: 'u-acceptor',
   denier: 'u-denier',
@@ -99,6 +99,7 @@ function interaction(
   const i: any = {
     customId,
     user: { id: o.userId },
+    member,
     guildId: o.dm ? null : G,
     replied: false,
     deferred: false,
@@ -115,7 +116,11 @@ function interaction(
     isRepliable: () => true,
     reply: vi.fn(async (x: any) => {
       i.replied = true;
-      out.replies.push(typeof x === 'string' ? x : String(x.content ?? ''));
+      out.replies.push(typeof x === 'string' ? x : String(x.content ?? '') + (x.embeds ? JSON.stringify(x.embeds) : ''));
+    }),
+    update: vi.fn(async (x: any) => {
+      i.replied = true;
+      out.replies.push(typeof x === 'string' ? x : String(x.content ?? '') + (x.embeds ? JSON.stringify(x.embeds) : ''));
     }),
     deferReply: vi.fn(async () => {
       i.deferred = true;
@@ -223,6 +228,12 @@ async function setup(config: Record<string, unknown> = {}) {
       'applications.notes.create',
     ],
     snap('Prüfer'),
+  );
+  await permissionRepository.setPermissionsForRole(
+    G,
+    ROLE.lead,
+    ['applications.submissions.review', 'applications.submissions.view', 'applications.submissions.accept', 'applications.submissions.deny', 'applications.submissions.reassign'],
+    snap('Leitung'),
   );
   await guildRepository.setSelection(G, 'application-review-channel', CH);
   await guildRepository.setSelection(G, 'application-review-role', 'ping-role');
@@ -363,7 +374,7 @@ describe('Bewerbung geht beim Team ein (nach dem Absenden)', () => {
     const ids = main.payload.components.flatMap((r: any) =>
       r.components.map((c: any) => c.custom_id).filter(Boolean),
     );
-    for (const a of ['view', 'accept_r', 'deny', 'ask', 'interview', 'history', 'note'])
+    for (const a of ['view', 'accept', 'deny', 'ask', 'interview', 'claim', 'history', 'note'])
       expect(
         ids.some((x: string) => x.startsWith(`nexus:review:${a}:`)),
         a,
@@ -375,6 +386,8 @@ describe('Bewerbung geht beim Team ein (nach dem Absenden)', () => {
     const row = await prisma.applicationSubmission.findUniqueOrThrow({
       where: { id: started.submissionId! },
     });
+    expect(row.submissionNumber).toMatch(/^SUB-\d{5}$/); // ID wird beim Absenden vergeben
+    expect(JSON.stringify(main.payload.embeds[0])).toContain(`#${row.submissionNumber}`);
     expect(row).toMatchObject({
       status: 'SUBMITTED',
       submissionChannelId: CH,
@@ -681,21 +694,29 @@ describe('Annehmen (Pipeline)', () => {
 });
 
 describe('Ablehnen', () => {
-  it('Deny sofort: abgelehnt, Standardtext an den Bewerber, keine Rolle/Akte/Dienstnummer; Knöpfe verschwinden', async () => {
+  it('Ablehnen verlangt einen Grund: Auswahl → abgelehnt mit Standardtext an den Bewerber, keine Rolle/Akte/Dienstnummer; ohne Recht geht nichts', async () => {
     const f = fakePort();
     setReviewPort(f.port as never);
     const id = await submitted({ f });
     const click = interaction('button', cid('review:deny', id), { userId: U.denier, roleIds: [ROLE.deny] });
     await handleInteraction(client(), click);
-    const out = text(click);
-    expect(out).toContain('Abgelehnt');
-    expect(out).not.toContain('Personalakte');
+    expect(text(click)).toContain('Ablehnungsgrund');
+    expect(await status(id)).toBe('SUBMITTED'); // der Klick allein lehnt nicht ab
+    const pick = interaction('select', cid('review:denysel', id), { userId: U.denier, roleIds: [ROLE.deny], values: ['quality'] });
+    await handleInteraction(client(), pick);
+    expect(text(pick)).toContain('Abgelehnt');
     expect(await status(id)).toBe('DENIED');
     expect(f.dms.find((d) => d.userId === APPLICANT)!.content).toContain('abgelehnt');
     expect(f.roles.get(APPLICANT)).toBeUndefined();
+    // „Eigener Text“ öffnet das Pflicht-Formular
+    const id3 = await submitted({ f });
+    const custom = interaction('select', cid('review:denysel', id3), { userId: U.denier, roleIds: [ROLE.deny], values: ['__custom'] });
+    await handleInteraction(client(), custom);
+    expect(custom.out.shown[0].title).toBe('Ablehnungstext');
+    expect(await status(id3)).toBe('SUBMITTED');
     // ohne Recht geht es nicht
     const id2 = await submitted({ f });
-    const nope = interaction('button', cid('review:deny', id2), { userId: U.acceptor, roleIds: [ROLE.accept] });
+    const nope = interaction('select', cid('review:denysel', id2), { userId: U.acceptor, roleIds: [ROLE.accept], values: ['quality'] });
     await handleInteraction(client(), nope);
     expect(await status(id2)).toBe('SUBMITTED');
   });
@@ -718,17 +739,26 @@ describe('Ablehnen', () => {
     expect(row.reviewerUserId).toBe(U.denier);
   });
 
-  it('Accept sofort und Accept mit Grund (Pflichtfeld „Provide a reason for accepting“)', async () => {
+  it('Annehmen mit Bestätigungsfenster (Bestätigen/Abbrechen) und Accept mit Grund (Pflichtfeld „Provide a reason for accepting“)', async () => {
     const f = fakePort();
     setReviewPort(f.port as never);
     const id = await submitted({ f });
     const reasonless = await viaModal('review:accept_r', id, ...ACCEPT, { note: '' });
     expect(reasonless.click.out.shown[0].title).toBe('Provide a reason for accepting');
     expect(await status(id)).toBe('SUBMITTED');
-    const direct = interaction('button', cid('review:accept', id), { userId: ACCEPT[0], roleIds: ACCEPT[1] });
-    await handleInteraction(client(), direct);
-    expect(text(direct)).toContain('Angenommen');
+    const ask = interaction('button', cid('review:accept', id), { userId: ACCEPT[0], roleIds: ACCEPT[1] });
+    await handleInteraction(client(), ask);
+    expect(text(ask)).toContain('Bewerbung annehmen?');
+    expect(await status(id)).toBe('SUBMITTED'); // erst nach „Bestätigen“
+    await handleInteraction(client(), interaction('button', cid('review:cancel', id), { userId: ACCEPT[0], roleIds: ACCEPT[1] }));
+    expect(await status(id)).toBe('SUBMITTED');
+    const ok = interaction('button', cid('review:accept_ok', id), { userId: ACCEPT[0], roleIds: ACCEPT[1] });
+    await handleInteraction(client(), ok);
+    expect(text(ok)).toContain('Angenommen');
     expect(await status(id)).toBe('ACCEPTED');
+    const nope = interaction('button', cid('review:accept', id), { userId: U.denier, roleIds: [ROLE.deny] }); // ohne Annahme-Recht
+    await handleInteraction(client(), nope);
+    expect(text(nope)).not.toContain('Bewerbung annehmen?');
     const id2 = await submitted({ f });
     await viaModal('review:accept_r', id2, ...ACCEPT, { note: 'Starke Bewerbung.' });
     expect((await prisma.applicationSubmission.findUniqueOrThrow({ where: { id: id2 } })).publicReason).toBe('Starke Bewerbung.');
@@ -816,5 +846,106 @@ describe('Zurückziehen durch den Bewerber', () => {
     await handleInteraction(client(), own);
     expect(text(own)).toContain('nicht mehr zurückziehen');
     expect(await status(id)).toBe('ACCEPTED');
+  });
+});
+
+describe('Bewerbungs-ID, Übernehmen und Zurücknehmen (Phase 54)', () => {
+  const press = (action: string, id: string, userId: string, roleIds: string[]) => {
+    const i = interaction('button', cid(`review:${action}`, id), { userId, roleIds });
+    return handleInteraction(client(), i).then(() => i);
+  };
+  const assignee = async (id: string) => (await prisma.applicationSubmission.findUniqueOrThrow({ where: { id } })).assigneeUserId;
+
+  it('ID je Bewerbungsart: Präfix, fortlaufend, einmalig; Testbewerbungen getrennt; Standard SUB', async () => {
+    const { assignSubmissionNumber } = await import('@nexus/database');
+    const a = await submitted();
+    const b = await submitted();
+    expect(await assignSubmissionNumber(a)).toBe('SUB-00001');
+    expect(await assignSubmissionNumber(a)).toBe('SUB-00001'); // einmalig
+    await prisma.application.update({ where: { id: appId }, data: { idPrefix: 'pol' } });
+    expect(await assignSubmissionNumber(b)).toBe('POL-00001');
+    const c = await submitted();
+    expect(await assignSubmissionNumber(c)).toBe('POL-00002');
+    const t = await submitted({ isTest: true });
+    expect(await assignSubmissionNumber(t)).toBe('TPOL-00001');
+    await prisma.application.update({ where: { id: appId }, data: { idPrefix: '../x' } }); // ungültig → Standard
+    expect(await assignSubmissionNumber(await submitted())).toBe('SUB-00002');
+  });
+
+  it('Review-Nachricht zeigt ID und Bearbeiter („Noch nicht zugewiesen“), danach den Bearbeiter', async () => {
+    const f = fakePort();
+    setReviewPort(f.port as never);
+    const { assignSubmissionNumber } = await import('@nexus/database');
+    const id = await submitted();
+    await assignSubmissionNumber(id);
+    const { postSubmissionToReview } = await import('@nexus/automation');
+    await postSubmissionToReview(f.port as never, id);
+    const fields = JSON.stringify(f.posts[0]!.payload.embeds[0]);
+    expect(fields).toContain('#SUB-');
+    expect(fields).toContain('Noch nicht zugewiesen');
+    await press('claim', id, ...REVIEW);
+    expect(JSON.stringify(f.edits?.at(-1) ?? f.posts.at(-1))).toContain(U.reviewer);
+  });
+
+  it('Übernehmen: genau ein Bearbeiter; andere sehen „wird bereits bearbeitet“; Leitung darf übernehmen; Freigeben durch Bearbeiter/Leitung', async () => {
+    const f = fakePort();
+    setReviewPort(f.port as never);
+    const id = await submitted({ f });
+    const mine = await press('claim', id, ...REVIEW);
+    expect(text(mine)).toContain('Du bearbeitest diese Bewerbung jetzt');
+    expect(await assignee(id)).toBe(U.reviewer);
+    expect(await status(id)).toBe('UNDER_REVIEW');
+    const other = await press('claim', id, 'u-review2', [ROLE.review]);
+    expect(text(other)).toContain(`wird bereits von <@${U.reviewer}> bearbeitet`);
+    expect(await assignee(id)).toBe(U.reviewer);
+    const lead = await press('claim', id, 'u-lead', [ROLE.lead]);
+    expect(text(lead)).toContain('Du bearbeitest diese Bewerbung jetzt');
+    expect(await assignee(id)).toBe('u-lead');
+    const back = await press('claim', id, 'u-lead', [ROLE.lead]); // Umschalter: freigeben
+    expect(text(back)).toContain('freigegeben');
+    expect(await assignee(id)).toBeNull();
+    const noRight = await press('claim', id, U.nobody, []);
+    expect(await assignee(id)).toBeNull();
+    expect(text(noRight)).not.toContain('Du bearbeitest');
+    expect(await events(id)).toEqual(expect.arrayContaining(['submission.assigned', 'submission.released']));
+    // Zuweisen: nur Führungskräfte
+    expect(await assignSubmission(f.port as never, { submissionId: id, guildId: G, actorId: U.reviewer, assigneeId: '900000000000555001', canReassign: false })).toMatchObject({ ok: false });
+    expect(await assignSubmission(f.port as never, { submissionId: id, guildId: G, actorId: 'u-lead', assigneeId: '900000000000555001', canReassign: true })).toMatchObject({ ok: true, assigneeId: '900000000000555001' });
+    expect(await assignSubmission(f.port as never, { submissionId: id, guildId: G, actorId: 'u-lead', assigneeId: 'abc', canReassign: true })).toMatchObject({ ok: false });
+  });
+
+  it('Entscheiden: bei Zuweisung nur der Bearbeiter oder eine Führungskraft; ohne Zuweisung jeder Berechtigte', async () => {
+    const f = fakePort();
+    setReviewPort(f.port as never);
+    const id = await submitted({ f });
+    await press('claim', id, ...REVIEW);
+    const blocked = interaction('button', cid('review:accept_ok', id), { userId: ACCEPT[0], roleIds: ACCEPT[1] });
+    await handleInteraction(client(), blocked);
+    expect(text(blocked)).toContain(`wird bereits von <@${U.reviewer}> bearbeitet`);
+    expect(await status(id)).toBe('UNDER_REVIEW');
+    const lead = interaction('button', cid('review:accept_ok', id), { userId: 'u-lead', roleIds: [ROLE.lead] });
+    await handleInteraction(client(), lead);
+    expect(text(lead)).toContain('Angenommen');
+    expect(await status(id)).toBe('ACCEPTED');
+    const free = await submitted({ f });
+    const open = interaction('button', cid('review:accept_ok', free), { userId: ACCEPT[0], roleIds: ACCEPT[1] });
+    await handleInteraction(client(), open);
+    expect(await status(free)).toBe('ACCEPTED');
+  });
+
+  it('Zurücknehmen durch das Team: Grund Pflicht, Status WITHDRAWN, Bearbeiter protokolliert, Bewerber informiert; entschiedene nicht', async () => {
+    const f = fakePort();
+    const id = await submitted({ f });
+    expect(await withdrawByStaff(f.port as never, { submissionId: id, guildId: G, actorId: 'u-lead', reason: ' ' })).toMatchObject({ ok: false });
+    expect(await withdrawByStaff(f.port as never, { submissionId: id, guildId: 'anderer-server', actorId: 'u-lead', reason: 'Grund hier' })).toMatchObject({ ok: false });
+    expect(await withdrawByStaff(f.port as never, { submissionId: id, guildId: G, actorId: 'u-lead', reason: 'Bewerbung doppelt eingereicht' })).toEqual({ ok: true });
+    const row = await prisma.applicationSubmission.findUniqueOrThrow({ where: { id: id } });
+    expect(row).toMatchObject({ status: 'WITHDRAWN', internalReason: 'Bewerbung doppelt eingereicht', reviewerUserId: 'u-lead' });
+    expect(f.dms.find((d) => d.userId === APPLICANT)!.content).toContain('zurückgenommen');
+    expect(await events(id)).toContain('submission.withdrawn_by_staff');
+    expect(await withdrawByStaff(f.port as never, { submissionId: id, guildId: G, actorId: 'u-lead', reason: 'nochmal' })).toMatchObject({ ok: false });
+    const done = await submitted({ f });
+    await decideSubmission(f.port as never, { submissionId: done, guildId: G, reviewerId: 'u-lead', decision: 'DENIED', reasonId: 'quality' });
+    expect(await withdrawByStaff(f.port as never, { submissionId: done, guildId: G, actorId: 'u-lead', reason: 'zu spät' })).toMatchObject({ ok: false });
   });
 });

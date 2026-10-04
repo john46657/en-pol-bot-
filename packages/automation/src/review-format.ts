@@ -78,6 +78,10 @@ export interface ReviewMessageInput {
   dashboardUrl?: string | undefined;
   /** Rollen, die über die neue Bewerbung informiert werden. */
   pingRoleIds?: string[] | undefined;
+  /** Menschenlesbare ID (z. B. POL-00152). */
+  number?: string | null | undefined;
+  /** Bearbeiter, der die Bewerbung übernommen hat. */
+  assigneeId?: string | null | undefined;
 }
 
 const COLOR: Record<string, number> = {
@@ -93,6 +97,7 @@ export function reviewMessage(
   i: ReviewMessageInput,
 ): MessagePayload & { allowed_mentions?: unknown } {
   const fields: DiscordEmbed['fields'] = [
+    ...(i.number ? [{ name: 'ID', value: `#${i.number}`, inline: true }] : []),
     { name: 'Bewerber', value: `<@${i.applicantId}> (\`${i.applicantId}\`)`, inline: true },
     { name: 'Bewerbung', value: `${i.applicationName} · v${i.version}`, inline: true },
     { name: 'Antworten', value: String(i.answerCount), inline: true },
@@ -103,6 +108,7 @@ export function reviewMessage(
       value: `<t:${Math.floor(i.submittedAt.getTime() / 1000)}:R>`,
       inline: true,
     });
+  fields.push({ name: 'Bearbeiter', value: i.assigneeId ? `<@${i.assigneeId}>` : 'Noch nicht zugewiesen', inline: true });
   if (i.decision) {
     fields.push({ name: 'Entschieden von', value: `<@${i.decision.by}>`, inline: true });
     if (i.decision.reason) fields.push({ name: 'Grund', value: cut(i.decision.reason, 1000) });
@@ -110,7 +116,7 @@ export function reviewMessage(
       fields.push({ name: 'Nachricht an den Bewerber', value: cut(i.decision.note, 1000) });
   }
   const embed: DiscordEmbed = {
-    title: `📋 ${cut(i.applicantName, 120)} – ${cut(i.applicationName, 100)}${i.isTest ? ' (TEST)' : ''}`,
+    title: `📋 ${i.number ? `#${i.number} · ` : ''}${cut(i.applicantName, 120)} – ${cut(i.applicationName, 100)}${i.isTest ? ' (TEST)' : ''}`,
     description: STATUS_LABEL[i.status] ?? i.status,
     color: COLOR[i.status] ?? 0x5865f2,
     fields,
@@ -131,6 +137,7 @@ export function reviewMessage(
 export function reviewButtons(submissionId: string, dashboardUrl?: string): DiscordComponents[] {
   const id = (a: string) => `nexus:review:${a}:${submissionId}`;
   const second: DiscordComponents['components'] = [
+    { type: 2, style: 1, label: 'Übernehmen', emoji: { name: '👤' }, custom_id: id('claim') },
     { type: 2, style: 2, label: 'Verlauf', emoji: { name: '📜' }, custom_id: id('history') },
     { type: 2, style: 2, label: 'Notiz', emoji: { name: '📝' }, custom_id: id('note') },
   ];
@@ -140,7 +147,7 @@ export function reviewButtons(submissionId: string, dashboardUrl?: string): Disc
       type: 1,
       components: [
         { type: 2, style: 2, label: 'Ansehen', emoji: { name: '📖' }, custom_id: id('view') },
-        { type: 2, style: 3, label: 'Annehmen', emoji: { name: '🟢' }, custom_id: id('accept_r') },
+        { type: 2, style: 3, label: 'Annehmen', emoji: { name: '🟢' }, custom_id: id('accept') },
         { type: 2, style: 4, label: 'Ablehnen', emoji: { name: '🔴' }, custom_id: id('deny') },
         { type: 2, style: 1, label: 'Rückfrage', emoji: { name: '🟡' }, custom_id: id('ask') },
         { type: 2, style: 1, label: 'Gespräch', emoji: { name: '🎙️' }, custom_id: id('interview') },

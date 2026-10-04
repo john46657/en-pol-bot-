@@ -468,6 +468,7 @@ model Guild {
 
   @@map("guilds")
   restrictions Restriction[]
+  applicationNumberCounters ApplicationNumberCounter[]
 }
 
 // ---------------------------------------------------------------------------
@@ -484,6 +485,8 @@ model Application {
   icon        String?
   image       String?
   color       String?
+  /// Präfix der Bewerbungs-ID (z. B. POL → POL-00152); ohne Angabe SUB.
+  idPrefix    String?
   enabled     Boolean           @default(true)
   status      ApplicationStatus @default(DRAFT)
   /// Konfiguration: requirements, messages, embed, stats, review, advanced (§69/§70-75).
@@ -631,7 +634,7 @@ model ApplicationSubmission {
   guildId             String
   applicationId       String
   versionId           String
-  /// Menschenlesbare ID, z. B. SUB-0001
+  /// Menschenlesbare ID, z. B. POL-00152 (wird beim Einreichen vergeben)
   submissionNumber    String?
   userId              String
   /// Snapshot (§25) – historisch nachvollziehbar
@@ -644,6 +647,9 @@ model ApplicationSubmission {
   submittedAt         DateTime?
   durationSeconds     Int?
   reviewerUserId      String?
+  /// Bearbeiter, der die Bewerbung übernommen hat (nicht dasselbe wie der Entscheider `reviewerUserId`).
+  assigneeUserId      String?
+  assignedAt          DateTime?
   acceptedAt          DateTime?
   deniedAt            DateTime?
   publicReason        String?
@@ -2430,4 +2436,16 @@ model Restriction {
   @@index([guildId, userId, type, status])
   @@index([status, endsAt])
   @@map("restrictions")
+}
+
+/// Fortlaufender Zähler der Bewerbungs-IDs je Server und Präfix (z. B. POL-00152).
+model ApplicationNumberCounter {
+  guildId String
+  prefix  String
+  last    Int    @default(0)
+
+  guild Guild @relation(fields: [guildId], references: [id], onDelete: Cascade)
+
+  @@id([guildId, prefix])
+  @@map("application_number_counters")
 }

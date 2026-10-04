@@ -110,6 +110,7 @@ export const PERMISSION_CATALOG = [
       ['applications.submissions.accept', 'Einreichungen annehmen', 'APPLICATION_ACCEPT'],
       ['applications.submissions.deny', 'Einreichungen ablehnen', 'APPLICATION_REJECT'],
       ['applications.submissions.withdraw', 'Einreichungen zurückziehen', 'APPLICATION_WITHDRAW'],
+      ['applications.submissions.reassign', 'Zuständigkeit ändern (Bewerbungen anderer übernehmen/zuweisen, trotz Zuweisung entscheiden)'],
       ['applications.submissions.reopen', 'Einreichungen wieder öffnen', 'APPLICATION_REOPEN'],
       ['applications.submissions.export', 'Einreichungen exportieren'],
       ['applications.submissions.delete', 'Einreichungen löschen'],

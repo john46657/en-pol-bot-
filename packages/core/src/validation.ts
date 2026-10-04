@@ -23,7 +23,18 @@ const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 const TIME_PATTERN = /^([01]\d|2[0-3]):([0-5]\d)$/;
 const DATE_FORMATS = [/^(\d{4})-(\d{2})-(\d{2})$/, /^(\d{2})\.(\d{2})\.(\d{4})$/];
 
+/**
+ * Antwort prüfen. Hat die Frage eine eigene Fehlermeldung (`validation.errorMessage`), ersetzt sie bei ungültigen
+ * Antworten die Standardmeldungen; der Hinweis „Pflichtfrage“ bleibt unverändert.
+ */
 export function validateAnswer(question: Question, raw: AnswerValue): AnswerValidationResult {
+  const r = validateAnswerInner(question, raw);
+  const custom = question.validation?.errorMessage?.trim();
+  if (r.ok || !custom || r.errors[0]?.startsWith('Diese Frage ist verpflichtend')) return r;
+  return { ...r, errors: [custom] };
+}
+
+function validateAnswerInner(question: Question, raw: AnswerValue): AnswerValidationResult {
   const errors: string[] = [];
 
   // Display-only Fragen speichern keine Antwort.

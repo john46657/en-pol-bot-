@@ -121,7 +121,7 @@ export class ApplicationsService {
 
   async update(guildId: string, applicationId: string, dto: UpdateApplicationDto, userId: string) {
     const existing = await this.getById(guildId, applicationId);
-    const { config, ...rest } = dto;
+    const { config, idPrefix, ...rest } = dto;
     let nextConfig: Record<string, unknown> | undefined;
     if (config) {
       // Fragen werden ausschließlich über den Fragen-Builder geändert (dort validiert, gesperrt, auditiert).
@@ -142,6 +142,7 @@ export class ApplicationsService {
       where: { id: existing.id },
       data: {
         ...rest,
+        ...(idPrefix !== undefined ? { idPrefix: idPrefix.trim().toUpperCase() || null } : {}),
         updatedBy: userId,
         ...(nextConfig ? { config: jsonInput(nextConfig) } : {}),
       } as Prisma.ApplicationUpdateInput,
