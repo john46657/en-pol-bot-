@@ -3,6 +3,7 @@ import { afterAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import { runAkte } from '../src/commands/akte.js';
 import { runPersonal } from '../src/commands/personal.js';
 import { runSperre } from '../src/commands/sperre.js';
+import { runTeam } from '../src/commands/team.js';
 
 const G = 'personal-sperre-guild';
 const [LEAD, COP, TARGET, OTHER] = ['900000000000400001', '900000000000400002', '900000000000400003', '900000000000400004'];
@@ -88,5 +89,22 @@ describe('/sperre', () => {
     expect(await sperre(LEAD, ['role-lead'], 'verhaengen', { ...o, str: { art: 'TICKET', grund: 'x' } })).toContain('Grund');
     const open = await sperre(LEAD, ['role-lead'], 'verhaengen', { ...o, str: { art: 'RADIO', grund: 'Funkdisziplin' } });
     expect(open).toContain('unbefristet');
+  });
+});
+
+describe('/team', () => {
+  it('zeigt die Teamliste mit Dienstgrad und Zustand; ohne Recht abgelehnt; Filter nach Teamname', async () => {
+    const rank = await prisma.rank.create({ data: { guildId: G, name: 'Kommissar', order: 5, icon: '🔷' } });
+    const team = await prisma.team.create({ data: { guildId: G, name: 'Streife' } });
+    await prisma.personnelRecord.update({ where: { guildId_userId: { guildId: G, userId: TARGET } }, data: { rankId: rank.id, teamId: team.id, teamState: 'PAUSE' } });
+    const out = await run(runTeam, LEAD, ['role-lead'], '', {});
+    expect(out).toContain('Streife (1)');
+    expect(out).toContain('Kommissar');
+    expect(out).toContain('Tim Ziel');
+    expect(out).toContain('🟡'); // Pause
+    expect(await run(runTeam, LEAD, ['role-lead'], '', { str: { team: 'flug' } })).toContain('Keine Teams');
+    expect(await run(runTeam, OTHER, [], '', {})).toContain('Du benötigst');
+    await prisma.personnelRecord.update({ where: { guildId_userId: { guildId: G, userId: TARGET } }, data: { status: 'ARCHIVED' } });
+    expect(await run(runTeam, LEAD, ['role-lead'], '', {})).not.toContain('Tim Ziel'); // geschlossene Akten fehlen
   });
 });

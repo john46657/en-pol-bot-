@@ -1122,4 +1122,18 @@ describe('Dashboard-Design (Phase 37)', () => {
       expect(JSON.stringify(r.data)).toContain('nicht (mehr) Mitglied');
     }
   });
+  it('Teamliste: Rechte, Gruppierung, Servertrennung', async () => {
+    const t = (u: string) => call('GET', `/guilds/${G}/personnel/team-overview`, u);
+    expect((await t(NOBODY)).status).toBe(403);
+    const all = await t(ADMIN);
+    expect(all.status).toBe(200);
+    expect(Array.isArray(all.data)).toBe(true);
+    const names = JSON.stringify(all.data);
+    expect(names).toContain('Olaf Offizier'); // Beispielakte dieses Servers
+    for (const g of all.data)
+      for (const m of g.members) expect(m).not.toHaveProperty('discordRoleId');
+    expect(
+      (await call('GET', `/guilds/${G}/personnel/team-overview`, OFFICER)).status,
+    ).toBeLessThan(500);
+  });
 });

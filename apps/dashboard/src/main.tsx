@@ -24,6 +24,7 @@ import { Sek } from './pages/Sek';
 import { Promotions } from './pages/Promotions';
 import { Qualifications } from './pages/Qualifications';
 import { Training } from './pages/Training';
+import { Team } from './pages/Team';
 import { Restrictions } from './pages/Restrictions';
 import { Wanted } from './pages/Wanted';
 import { Design } from './pages/Design';
@@ -73,6 +74,7 @@ createRoot(document.getElementById('root')!).render(
                   <Route path="applications/:applicationId" element={<ApplicationBuilder />} />
                   <Route path="submissions" element={<Submissions />} />
                   <Route path="submissions/:submissionId" element={<SubmissionDetail />} />
+                  <Route path="team" element={<Team />} />
                   <Route path="personnel" element={<Personnel />} />
                   <Route path="personnel/:recordId" element={<PersonnelDetail />} />
                   <Route path="personnel-structure" element={<PersonnelStructure />} />

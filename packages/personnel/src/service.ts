@@ -920,3 +920,50 @@ export async function entryRank(guildId: string, preferredId?: string) {
     return prisma.rank.findFirst({ where: { id: preferredId, guildId, active: true } });
   return prisma.rank.findFirst({ where: { guildId, isEntry: true, active: true } });
 }
+
+export interface TeamOverviewMember {
+  userId: string;
+  rpName: string;
+  serviceNumber: string | null;
+  teamState: string;
+  rank: { name: string; icon: string | null; color: string | null; order: number } | null;
+}
+export interface TeamOverviewGroup {
+  teamId: string | null;
+  name: string;
+  members: TeamOverviewMember[];
+}
+
+/**
+ * Teamliste: aktive Akten (geschlossene fehlen), gruppiert nach Team, innerhalb des Teams nach Dienstgrad (höchster zuerst),
+ * dann nach Name. Mitglieder ohne Team stehen in „Ohne Team“. Leere Teams werden mit angezeigt (Struktur sichtbar).
+ * `restrictToTeams`: nur diese Teams (TEAM-Bereich); `null` = alle.
+ */
+export async function teamOverview(guildId: string, restrictToTeams: string[] | null): Promise<TeamOverviewGroup[]> {
+  const gid = assertGuildId(guildId);
+  const [teams, records] = await Promise.all([
+    prisma.team.findMany({ where: { guildId: gid, active: true, ...(restrictToTeams ? { id: { in: restrictToTeams } } : {}) }, orderBy: { name: 'asc' } }),
+    prisma.personnelRecord.findMany({
+      where: { guildId: gid, status: 'ACTIVE', ...(restrictToTeams ? { teamId: { in: restrictToTeams } } : {}) },
+      include: { rank: true },
+    }),
+  ]);
+  const member = (r: (typeof records)[number]): TeamOverviewMember => ({
+    userId: r.userId,
+    rpName: r.rpName,
+    serviceNumber: r.serviceNumber,
+    teamState: r.teamState,
+    rank: r.rank ? { name: r.rank.name, icon: r.rank.icon, color: r.rank.color, order: r.rank.order } : null,
+  });
+  const sorted = (rs: typeof records) =>
+    rs
+      .map(member)
+      .sort((a, b) => (b.rank?.order ?? -1) - (a.rank?.order ?? -1) || a.rpName.localeCompare(b.rpName, 'de'));
+  const groups: TeamOverviewGroup[] = teams.map((t) => ({ teamId: t.id, name: t.name, members: sorted(records.filter((r) => r.teamId === t.id)) }));
+  if (!restrictToTeams) {
+    const known = new Set(teams.map((t) => t.id));
+    const none = records.filter((r) => !r.teamId || !known.has(r.teamId));
+    if (none.length) groups.push({ teamId: null, name: 'Ohne Team', members: sorted(none) });
+  }
+  return groups;
+}

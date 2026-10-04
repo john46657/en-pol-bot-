@@ -3,6 +3,7 @@ import { DiscordApiError } from '@nexus/discord';
 import { permissionRepository, prisma } from '@nexus/database';
 import { afterAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import {
+  teamOverview,
   assignNumberAfterTraining,
   effectiveState,
   setTeamState,
@@ -800,3 +801,33 @@ describe('Annahme: Personalakte, Dienstnummer, Dienstgrad, Team, Probezeit', () 
 });
 
 void PersonnelError;
+
+describe('Teamliste (Phase 53)', () => {
+  it('gruppiert nach Team, Dienstgrad absteigend, dann Name; geschlossene fehlen; leere Teams und „Ohne Team“; Teambeschränkung', async () => {
+    const low = await saveRank(G, { name: 'Anwärter', order: 1 }, ACTOR);
+    const high = await saveRank(G, { name: 'Hauptkommissar', order: 6, icon: '⭐', color: '#3366CC' }, ACTOR);
+    const a = await saveTeam(G, { name: 'Streife' }, ACTOR);
+    const b = await saveTeam(G, { name: 'Flugstaffel' }, ACTOR);
+    await saveTeam(G, { name: 'Leer' }, ACTOR);
+    const mk = (n: number, name: string, rankId: string | null, teamId: string | null) =>
+      createRecord({ guildId: G, userId: U(300 + n), rpName: name, actorId: ACTOR, ...(rankId ? { rankId } : {}), ...(teamId ? { teamId } : {}) });
+    await mk(1, 'Zora Zett', low.id, a.id);
+    await mk(2, 'Anna Alpha', low.id, a.id);
+    await mk(3, 'Max Chef', high.id, a.id);
+    await mk(4, 'Pia Pilot', high.id, b.id);
+    await mk(5, 'Ohne Team', null, null);
+    const gone = await mk(6, 'Ausgetreten', high.id, a.id);
+    await archiveRecord(G, gone.id, 'Austritt', ACTOR);
+    await setTeamState(G, (await getRecordByUser(G, U(303)))!.id, 'PAUSE', undefined, ACTOR);
+    const all = await teamOverview(G, null);
+    expect(all.map((g) => g.name)).toEqual(['Flugstaffel', 'Leer', 'Streife', 'Ohne Team']);
+    const streife = all.find((g) => g.name === 'Streife')!;
+    expect(streife.members.map((m) => m.rpName)).toEqual(['Max Chef', 'Anna Alpha', 'Zora Zett']); // Rang, dann Name
+    expect(streife.members[0]).toMatchObject({ teamState: 'PAUSE', rank: { name: 'Hauptkommissar', icon: '⭐', color: '#3366CC' } });
+    expect(all.find((g) => g.name === 'Leer')!.members).toEqual([]);
+    expect(JSON.stringify(all)).not.toContain('Ausgetreten');
+    const only = await teamOverview(G, [b.id]); // TEAM-Bereich: nur das eigene Team, kein „Ohne Team“
+    expect(only.map((g) => g.name)).toEqual(['Flugstaffel']);
+    expect(await teamOverview(G, [])).toEqual([]);
+  });
+});

@@ -19,6 +19,7 @@ type Needs =
   | 'panels'
   | 'submissions'
   | 'personnel'
+  | 'team'
   | 'structure'
   | 'shifts'
   | 'duty'
@@ -45,6 +46,7 @@ export const NAV: { to: string; label: string; icon: string; end?: boolean; need
   { to: 'channels', label: 'Kanäle', icon: '#️⃣', needs: 'view' },
   { to: 'applications', label: 'Bewerbungen', icon: '📋', needs: 'view' },
   { to: 'submissions', label: 'Einreichungen', icon: '📥', needs: 'submissions' },
+  { to: 'team', label: 'Team', icon: '👥', needs: 'team' },
   { to: 'personnel', label: 'Personal', icon: '👮', needs: 'personnel' },
   { to: 'personnel-structure', label: 'Dienstgrade & Teams', icon: '🏷️', needs: 'structure' },
   { to: 'shifts', label: 'Schichten', icon: '🕒', needs: 'shifts' },
@@ -120,6 +122,7 @@ export function GuildLayout() {
     (needs === 'submissions' && me.data.permissions.includes('applications.submissions.view')) ||
     (needs === 'personnel' &&
       ['personnel.view', 'own.profile.view'].some((k) => me.data.permissions.includes(k))) ||
+    (needs === 'team' && me.data.permissions.includes('personnel.view')) ||
     (needs === 'reports' && me.data.permissions.includes('report.view')) ||
     (needs === 'absences' &&
       ['absence.view', 'own.absence.create'].some((k) => me.data.permissions.includes(k))) ||

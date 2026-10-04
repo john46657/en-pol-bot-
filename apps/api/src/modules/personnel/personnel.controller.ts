@@ -21,6 +21,7 @@ import {
   addEntry,
   archiveRecord,
   setTeamState,
+  teamOverview,
   buildActor,
   canOn,
   createRecord,
@@ -125,6 +126,14 @@ export class PersonnelController {
       cursor: cursor || undefined,
       limit: Number(limit) || 50,
     });
+  }
+
+  /** Teamliste: aktive Mitglieder je Team, nach Dienstgrad sortiert (nur sichtbare Teams). */
+  @Get('team-overview')
+  @RequireAnyScope('personnel.view')
+  async teamList(@GuildId() guildId: string, @Access() access: RequestAccess) {
+    const scope = await scopeFor(await this.actor(access), 'personnel.view');
+    return teamOverview(guildId, scope.all ? null : scope.teamIds);
   }
 
   /** Mitgliedersuche für „Neue Akte“ (ohne manuelle IDs). */

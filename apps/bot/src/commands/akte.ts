@@ -65,7 +65,7 @@ export async function runAkte(interaction: ChatInputCommandInteraction): Promise
   const active = (kind: string) => data.entries.filter((e) => e.kind === kind && !e.revokedAt);
   const fields: { name: string; value: string; inline?: boolean }[] = [
     { name: 'Dienstnummer', value: record.serviceNumber ?? '–', inline: true },
-    { name: 'Dienstgrad', value: record.rank?.name ?? '–', inline: true },
+    { name: 'Dienstgrad', value: record.rank ? `${record.rank.icon ? `${record.rank.icon} ` : ''}${record.rank.name}` : '–', inline: true },
     { name: 'Team', value: record.team?.name ?? '–', inline: true },
     { name: 'Eintritt', value: date(record.joinedAt), inline: true },
     { name: 'Status', value: TEAM_STATE_LABEL[effectiveState(record)], inline: true },
