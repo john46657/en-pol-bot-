@@ -76170,11 +76170,24 @@ var interactionFor = (customId) => {
 // apps/bot/src/commands/index.ts
 var q = (s) => encodeURIComponent(s.trim());
 var str2 = (c, k) => String(c.opts[k] ?? "").trim();
-async function resolvePerson(c, term) {
+async function resolvePerson(c, term, opts = {}) {
   const page = await c.api.asUser(c.discordId, "GET", `/persons?q=${q(term)}&pageSize=10`);
   const exact = page.items.filter((p) => String(p.robloxUsername).toLowerCase() === term.toLowerCase() || p.robloxUserId === term);
   if (exact.length === 1) return { person: exact[0] };
-  if (exact.length === 0 && page.items.length === 0) return { reply: errorReply(`Keine Person zu \u201E${plain(term)}\u201C gefunden.`) };
+  if (exact.length === 0 && page.items.length === 0) {
+    if (opts.create && c.robloxLookup) {
+      const u = await c.robloxLookup(term);
+      if (!u) return { reply: errorReply(`Keine Person zu \u201E${plain(term)}\u201C gefunden \u2013 und bei Roblox gibt es keinen Benutzer mit diesem Namen (oder Roblox ist gerade nicht erreichbar).`) };
+      try {
+        const created = await c.api.asUser(c.discordId, "POST", "/persons", { robloxUsername: u.name, robloxUserId: String(u.id) });
+        return { person: created, created: true };
+      } catch (e) {
+        if (e instanceof BotApiError && e.status === 403) return { reply: errorReply(`\u201E${plain(u.name)}\u201C ist noch nicht im System, und dir fehlt das Recht, Personen anzulegen. Bitte lass die Person von jemandem mit Berechtigung anlegen.`) };
+        throw e;
+      }
+    }
+    return { reply: errorReply(`Keine Person zu \u201E${plain(term)}\u201C gefunden.`) };
+  }
   const names = (exact.length ? exact : page.items).slice(0, 8).map((p) => `${plain(p.robloxUsername)} (${p.robloxUserId ?? "ohne ID"})`).join(", ");
   return { reply: errorReply(`Nicht eindeutig. Treffer: ${names}. Bitte exakten Namen oder die Roblox-ID angeben.`) };
 }
@@ -76358,11 +76371,11 @@ var COMMANDS = [
       const reason = str2(c, "grund");
       if (reason.length < 3) return errorReply("Der Grund ist zu kurz (mindestens 3 Zeichen).");
       try {
-        const { person, reply } = await resolvePerson(c, str2(c, "person"));
+        const { person, reply, created } = await resolvePerson(c, str2(c, "person"), { create: true });
         if (!person) return reply;
         const amount = typeof c.opts.betrag === "number" ? c.opts.betrag : void 0;
         const t = await c.api.asUser(c.discordId, "POST", "/tickets", { personId: person.id, reason, ...amount !== void 0 ? { amount } : {} });
-        return okReply(`Ticket **${t.number}** f\xFCr **${plain(person.robloxUsername)}** ausgestellt.`);
+        return okReply(`Ticket **${t.number}** f\xFCr **${plain(person.robloxUsername)}** ausgestellt.${created ? " Die Person war noch nicht im System und wurde nach Roblox-Pr\xFCfung neu angelegt." : ""}`);
       } catch (e) {
         return mapError(e);
       }
@@ -81031,6 +81044,11 @@ client.once("clientReady", async (c) => {
   const json = COMMANDS.map(toBuilder);
   const guilds = guildIds(cfg);
   if (guilds.length) {
+    try {
+      await c.application.commands.set([]);
+    } catch (e) {
+      console.error(`could not clear global commands: ${e instanceof Error ? e.message : e}`);
+    }
     for (const g of guilds) {
       try {
         await c.application.commands.set(json, g);
@@ -81042,6 +81060,12 @@ client.once("clientReady", async (c) => {
   } else {
     await c.application.commands.set(json);
     console.log(`${json.length} slash commands registered globally (can take up to an hour to appear)`);
+    for (const g of c.guilds.cache.keys()) {
+      try {
+        await c.application.commands.set([], g);
+      } catch {
+      }
+    }
   }
   startOutboxLoop(api, async (channelId, embed) => {
     const ch = await client.channels.fetch(channelId);

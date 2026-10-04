@@ -185,6 +185,8 @@ client.once('clientReady', async (c) => {
   const json = COMMANDS.map(toBuilder);
   const guilds = guildIds(cfg);
   if (guilds.length) {
+    // Frühere globale Registrierung entfernen – sonst erscheinen alle Befehle doppelt (global + Server)
+    try { await c.application.commands.set([]); } catch (e) { console.error(`could not clear global commands: ${e instanceof Error ? e.message : e}`); }
     for (const g of guilds) {
       try { await c.application.commands.set(json, g); console.log(`${json.length} slash commands registered for guild ${g}`); }
       catch (e) { console.error(`could not register commands for guild ${g} (is the bot invited there with the applications.commands scope?): ${e instanceof Error ? e.message : e}`); }
@@ -192,6 +194,10 @@ client.once('clientReady', async (c) => {
   } else {
     await c.application.commands.set(json);
     console.log(`${json.length} slash commands registered globally (can take up to an hour to appear)`);
+    // Frühere Server-Registrierungen entfernen – sonst erscheinen alle Befehle doppelt
+    for (const g of c.guilds.cache.keys()) {
+      try { await c.application.commands.set([], g); } catch { /* Server ohne Befehle/Zugriff: egal */ }
+    }
   }
   startOutboxLoop(api, async (channelId, embed) => {
     const ch = await client.channels.fetch(channelId);
