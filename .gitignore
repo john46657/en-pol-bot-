@@ -50,3 +50,4 @@ playwright-report/
 
 # Laufzeitdaten (hochgeladene Bilder)
 data/
+dist-hosting/
