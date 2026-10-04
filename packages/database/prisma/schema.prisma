@@ -456,6 +456,7 @@ model Guild {
   automations       ApplicationAutomation[]
 
   @@map("guilds")
+  restrictions Restriction[]
 }
 
 // ---------------------------------------------------------------------------
@@ -2366,4 +2367,48 @@ model JobRun {
 
   @@index([name, startedAt])
   @@map("job_runs")
+}
+
+// ---------------------------------------------------------------------------
+// Phase 47: Sperren
+// ---------------------------------------------------------------------------
+
+enum RestrictionType {
+  APPLICATION
+  TICKET
+  FACTION
+  RADIO
+}
+
+enum RestrictionStatus {
+  ACTIVE
+  EXPIRED
+  REVOKED
+}
+
+/// Sperre eines Benutzers (Bewerbung, Ticket, Fraktion, Funk). Wirksam, solange ACTIVE, Start erreicht und Ende (falls gesetzt) nicht erreicht.
+model Restriction {
+  id           String            @id @default(cuid())
+  guildId      String
+  userId       String
+  type         RestrictionType
+  reason       String
+  note         String?
+  status       RestrictionStatus @default(ACTIVE)
+  startsAt     DateTime          @default(now())
+  /// null = unbefristet.
+  endsAt       DateTime?
+  createdBy    String
+  revokedBy    String?
+  revokeReason String?
+  revokedAt    DateTime?
+  expiredAt    DateTime?
+  createdAt    DateTime          @default(now())
+  updatedAt    DateTime          @updatedAt
+
+  guild Guild @relation(fields: [guildId], references: [id], onDelete: Cascade)
+
+  @@index([guildId, userId, type, status])
+  @@index([status, endsAt])
+  @@map("restrictions")
 }

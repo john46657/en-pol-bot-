@@ -1,5 +1,5 @@
 {
-  "name": "@nexus/tickets",
+  "name": "@nexus/restrictions",
   "version": "0.1.0",
   "private": true,
   "type": "module",
@@ -17,9 +17,7 @@
     "build": "tsc"
   },
   "dependencies": {
-    "@nexus/restrictions": "workspace:*",
     "@nexus/database": "workspace:*",
-    "@nexus/discord": "workspace:*",
     "@nexus/types": "workspace:*"
   },
   "devDependencies": {

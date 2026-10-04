@@ -1,3 +1,4 @@
+import { blockedMessage, getActive } from '@nexus/restrictions';
 import { ApplicationStatus, ResubmissionMode, SubmissionStatus } from '@nexus/types';
 import type { Question } from '@nexus/types';
 import { prisma, getActiveCooldown } from '@nexus/database';
@@ -49,6 +50,10 @@ export async function startApplication(
   // 3) Fragen der aktuellen Version (Snapshot, §65)
   const currentVersion = application.versions[0];
   if (!currentVersion) return fail('Diese Bewerbung hat keine veröffentlichte Version.');
+
+  // 3b) Bewerbungssperre (Sperren-System)
+  const ban = await getActive(guildId, userId, 'APPLICATION');
+  if (ban) return fail(blockedMessage(ban));
 
   // 4) Cooldown (§51)
   const cooldownRow = await getActiveCooldown(guildId, applicationId, userId);

@@ -1,5 +1,6 @@
 import { guildRepository, prisma } from '@nexus/database';
 import { afterAll, beforeEach, describe, expect, it } from 'vitest';
+import { createRestriction } from '@nexus/restrictions';
 import { RadioError, accessHistory, checkChannel, checkMember, decideAccess, listAccess, removeAccess, removeChannel, saveChannel, setAccess } from '../src/index.js';
 
 const G = 'radiotest-guild';
@@ -96,5 +97,19 @@ describe('Büro-Warteraum ist kein Funkkanal', () => {
     await guildRepository.setSelection(G, 'office-waiting-voice', '800000000000000077');
     await err(saveChannel(G, { channelId: '800000000000000077', name: 'Warteraum' }, 'x'), 'conflict');
     await saveChannel(G, { channelId: '800000000000000078', name: 'Anderer' }, 'x'); // andere Kanäle gehen
+  });
+});
+
+describe('Funksperre (Phase 47)', () => {
+  it('gesperrtes Mitglied hat trotz Whitelist keinen Zugriff; andere nicht betroffen', async () => {
+    await setAccess({ guildId: G, userId: A, level: 'SPEAK', actorId: 'b' });
+    await setAccess({ guildId: G, userId: B, level: 'SPEAK', actorId: 'b' });
+    expect((await checkChannel(G, A, CH.general))?.access).toBe('speak');
+    const r = await createRestriction({ guildId: G, userId: A, type: 'RADIO', reason: 'Funkdisziplin', actorId: 'b' });
+    expect(await checkChannel(G, A, CH.general)).toMatchObject({ access: 'none', reason: 'restricted' });
+    expect((await checkMember(G, A)).channels.every((c) => c.access === 'none' && c.reason === 'restricted')).toBe(true);
+    expect((await checkChannel(G, B, CH.general))?.access).toBe('speak');
+    await prisma.restriction.update({ where: { id: r.id }, data: { endsAt: new Date(Date.now() - 1000) } });
+    expect((await checkChannel(G, A, CH.general))?.access).toBe('speak');
   });
 });

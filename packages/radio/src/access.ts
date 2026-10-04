@@ -9,7 +9,7 @@
 export type Level = 'LISTEN' | 'SPEAK' | 'FULL';
 export type Area = 'GENERAL' | 'SPECIAL';
 export type Access = 'none' | 'listen' | 'speak';
-export type Reason = 'ok' | 'not-whitelisted' | 'level' | 'special-required' | 'off-duty' | 'inactive';
+export type Reason = 'ok' | 'not-whitelisted' | 'level' | 'special-required' | 'off-duty' | 'inactive' | 'restricted';
 
 export const LEVEL_LABEL: Record<Level, string> = { LISTEN: 'Mithören', SPEAK: 'Sprechen', FULL: 'Vollzugriff' };
 export const AREA_LABEL: Record<Area, string> = { GENERAL: 'Allgemeinfunk', SPECIAL: 'Spezialfunk' };
@@ -39,4 +39,5 @@ export const REASON_TEXT: Record<Reason, string> = {
   'special-required': 'Für Spezialfunk brauchst du eine Spezial-Freigabe oder Vollzugriff.',
   'off-duty': 'Dieser Funkkanal ist nur im Dienst nutzbar – starte zuerst eine Schicht.',
   inactive: 'Dieser Funkkanal ist deaktiviert.',
+  restricted: 'Du bist für den Funk gesperrt.',
 };

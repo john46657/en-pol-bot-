@@ -17,6 +17,7 @@
     "build": "tsc"
   },
   "dependencies": {
+    "@nexus/restrictions": "workspace:*",
     "@nexus/database": "workspace:*",
     "@nexus/types": "workspace:*"
   },

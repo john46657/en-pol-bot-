@@ -54,7 +54,7 @@ export async function runFunk(interaction: ChatInputCommandInteraction): Promise
     }
     // anzeigen / prüfen
     const [entry, check] = await Promise.all([getAccess(guild.id, target.id), checkMember(guild.id, target.id)]);
-    const lines = check.channels.map((c) => `${ICON[c.access]} **${c.name}** (${AREA_LABEL[c.area]})${c.access === 'none' && entry ? ` – ${({ 'special-required': 'Spezial-Freigabe fehlt', 'off-duty': 'nur im Dienst', inactive: 'deaktiviert', 'not-whitelisted': 'nicht auf der Whitelist', level: 'Stufe zu niedrig', ok: '' })[c.reason]}` : ''}`);
+    const lines = check.channels.map((c) => `${ICON[c.access]} **${c.name}** (${AREA_LABEL[c.area]})${c.access === 'none' && entry ? ` – ${({ 'special-required': 'Spezial-Freigabe fehlt', 'off-duty': 'nur im Dienst', inactive: 'deaktiviert', restricted: 'Funk gesperrt', 'not-whitelisted': 'nicht auf der Whitelist', level: 'Stufe zu niedrig', ok: '' })[c.reason]}` : ''}`);
     const history = !own && sub === 'anzeigen' ? await accessHistory(guild.id, target.id) : [];
     const fields = [{ name: 'Funkstufe', value: entry ? lvl(entry.level, entry.special) : 'Nicht auf der Whitelist', inline: true }, { name: 'Kanäle', value: lines.join('\n') || 'Keine Funkkanäle eingerichtet.' }];
     if (history.length) fields.push({ name: 'Verlauf', value: history.slice(0, 5).map((e) => `<t:${Math.floor(e.at.getTime() / 1000)}:d> ${e.type}`).join('\n') });

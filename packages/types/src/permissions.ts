@@ -252,6 +252,15 @@ export const PERMISSION_CATALOG = [
     ],
   },
   {
+    module: 'restrictions',
+    label: 'Sperren',
+    permissions: [
+      ['restrictions.view', 'Sperren ansehen'],
+      ['restrictions.create', 'Sperren verhängen'],
+      ['restrictions.revoke', 'Sperren aufheben'],
+    ],
+  },
+  {
     module: 'fleet',
     label: 'Fahrzeuge',
     permissions: [

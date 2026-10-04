@@ -1,5 +1,6 @@
 import { assertGuildId, auditRepository, guildRepository, prisma, type Prisma } from '@nexus/database';
 import { decideAccess, type Access, type Area, type Level, type Reason } from './access.js';
+import { getActive } from '@nexus/restrictions';
 import { RadioError } from './errors.js';
 
 type Json = Prisma.InputJsonValue;
@@ -128,10 +129,10 @@ export interface ChannelCheck {
 /** Zugriff eines Mitglieds auf alle eingerichteten Funkkanäle. */
 export async function checkMember(guildId: string, userId: string): Promise<{ entry: { level: Level; special: boolean } | null; channels: ChannelCheck[] }> {
   const gid = assertGuildId(guildId);
-  const [entry, channels, onDuty] = await Promise.all([getAccess(gid, userId), listChannels(gid), isOnDuty(gid, userId)]);
+  const [entry, channels, onDuty, ban] = await Promise.all([getAccess(gid, userId), listChannels(gid), isOnDuty(gid, userId), getActive(gid, userId, 'RADIO')]);
   return {
     entry: entry ? { level: entry.level, special: entry.special } : null,
-    channels: channels.map((c) => ({ channelId: c.channelId, name: c.name, area: c.area, ...decideAccess(entry, c, onDuty) })),
+    channels: channels.map((c) => ({ channelId: c.channelId, name: c.name, area: c.area, ...(ban ? { access: 'none' as const, reason: 'restricted' as const } : decideAccess(entry, c, onDuty)) })),
   };
 }
 
@@ -140,6 +141,6 @@ export async function checkChannel(guildId: string, userId: string, discordChann
   const gid = assertGuildId(guildId);
   const channel = await prisma.radioChannel.findUnique({ where: { guildId_channelId: { guildId: gid, channelId: discordChannelId } } });
   if (!channel) return null;
-  const [entry, onDuty] = await Promise.all([getAccess(gid, userId), isOnDuty(gid, userId)]);
-  return { channelId: channel.channelId, name: channel.name, area: channel.area, onDuty, ...decideAccess(entry, channel, onDuty) };
+  const [entry, onDuty, ban] = await Promise.all([getAccess(gid, userId), isOnDuty(gid, userId), getActive(gid, userId, 'RADIO')]);
+  return { channelId: channel.channelId, name: channel.name, area: channel.area, onDuty, ...(ban ? { access: 'none' as const, reason: 'restricted' as const } : decideAccess(entry, channel, onDuty)) };
 }

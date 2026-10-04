@@ -980,4 +980,63 @@ describe('Dashboard-Design (Phase 37)', () => {
     await prisma.wantedNotice.deleteMany({ where: { guildId: G } });
     await call('PUT', w('/settings'), ADMIN, { defaultMinutes: 20 });
   });
+  it('Sperren: Rechte, verhängen, Servertrennung, aufheben, Ablauf', async () => {
+    const r = (p = '') => `/guilds/${G}/restrictions${p}`;
+    const target = '900000000000330099';
+    expect((await call('GET', r(), NOBODY)).status).toBe(403);
+    expect(
+      (await call('POST', r(), OFFICER, { userId: target, type: 'TICKET', reason: 'Missbrauch' }))
+        .status,
+    ).toBe(403);
+    expect(
+      (await call('POST', r(), ADMIN, { userId: 'abc', type: 'TICKET', reason: 'Missbrauch' }))
+        .status,
+    ).toBe(400);
+    expect(
+      (
+        await call('POST', r(), ADMIN, {
+          userId: target,
+          type: 'TICKET',
+          reason: 'Missbrauch',
+          endsAt: '2001-01-01T00:00:00Z',
+        })
+      ).status,
+    ).toBe(400);
+    const made = await call('POST', r(), ADMIN, {
+      userId: target,
+      type: 'TICKET',
+      reason: 'Missbrauch',
+      endsAt: new Date(Date.now() + 3600_000).toISOString(),
+    });
+    expect(made.status).toBe(201);
+    expect(made.data.status).toBe('ACTIVE');
+    const list = await call('GET', r('?status=ACTIVE&type=TICKET'), ADMIN);
+    expect(list.data.map((x: { id: string }) => x.id)).toContain(made.data.id);
+    expect(
+      (await call('POST', r(`/${made.data.id}/revoke`), OFFICER, { reason: 'Irrtum' })).status,
+    ).toBe(403);
+    expect((await call('POST', r(`/${made.data.id}/revoke`), ADMIN, {})).status).toBe(400);
+    // Ablauf ohne Worker-Lauf
+    await prisma.restriction.update({
+      where: { id: made.data.id },
+      data: { endsAt: new Date(Date.now() - 1000) },
+    });
+    expect(
+      (await call('GET', r('?status=ACTIVE'), ADMIN)).data.map((x: { id: string }) => x.id),
+    ).not.toContain(made.data.id);
+    expect(
+      (await call('GET', r('?status=EXPIRED'), ADMIN)).data.map((x: { id: string }) => x.id),
+    ).toContain(made.data.id);
+    expect(
+      (await call('POST', r(`/${made.data.id}/revoke`), ADMIN, { reason: 'zu spät' })).status,
+    ).toBe(409);
+    const second = await call('POST', r(), ADMIN, {
+      userId: target,
+      type: 'RADIO',
+      reason: 'Funkdisziplin',
+    });
+    const lifted = await call('POST', r(`/${second.data.id}/revoke`), ADMIN, { reason: 'Gnade' });
+    expect(lifted.data.status).toBe('REVOKED');
+    await prisma.restriction.deleteMany({ where: { guildId: G } });
+  });
 });

@@ -141,6 +141,9 @@ importers:
       '@nexus/reports':
         specifier: workspace:*
         version: link:../../packages/reports
+      '@nexus/restrictions':
+        specifier: workspace:*
+        version: link:../../packages/restrictions
       '@nexus/sek':
         specifier: workspace:*
         version: link:../../packages/sek
@@ -292,6 +295,9 @@ importers:
       '@nexus/reports':
         specifier: workspace:*
         version: link:../../packages/reports
+      '@nexus/restrictions':
+        specifier: workspace:*
+        version: link:../../packages/restrictions
       '@nexus/sek':
         specifier: workspace:*
         version: link:../../packages/sek
@@ -399,6 +405,9 @@ importers:
       '@nexus/realtime':
         specifier: workspace:*
         version: link:../../packages/realtime
+      '@nexus/restrictions':
+        specifier: workspace:*
+        version: link:../../packages/restrictions
       '@nexus/shifts':
         specifier: workspace:*
         version: link:../../packages/shifts
@@ -828,6 +837,9 @@ importers:
       '@nexus/database':
         specifier: workspace:*
         version: link:../database
+      '@nexus/restrictions':
+        specifier: workspace:*
+        version: link:../restrictions
       '@nexus/types':
         specifier: workspace:*
         version: link:../types
@@ -907,6 +919,22 @@ importers:
         specifier: ^4.1.11
         version: 4.1.11(@types/node@24.19.0)(vite@7.3.6(@types/node@24.19.0)(jiti@2.7.0)(tsx@4.23.15)(yaml@2.9.1))
 
+  packages/restrictions:
+    dependencies:
+      '@nexus/database':
+        specifier: workspace:*
+        version: link:../database
+      '@nexus/types':
+        specifier: workspace:*
+        version: link:../types
+    devDependencies:
+      '@prisma/client':
+        specifier: ^6.11.0
+        version: 6.19.3(prisma@6.19.3(typescript@5.9.3))(typescript@5.9.3)
+      vitest:
+        specifier: ^4.1.11
+        version: 4.1.11(@types/node@24.19.0)(vite@7.3.6(@types/node@24.19.0)(jiti@2.7.0)(tsx@4.23.15)(yaml@2.9.1))
+
   packages/sek:
     dependencies:
       '@nexus/automation':
@@ -977,6 +1005,9 @@ importers:
       '@nexus/discord':
         specifier: workspace:*
         version: link:../discord
+      '@nexus/restrictions':
+        specifier: workspace:*
+        version: link:../restrictions
       '@nexus/types':
         specifier: workspace:*
         version: link:../types

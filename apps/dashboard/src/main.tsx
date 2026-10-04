@@ -24,6 +24,7 @@ import { Sek } from './pages/Sek';
 import { Promotions } from './pages/Promotions';
 import { Qualifications } from './pages/Qualifications';
 import { Training } from './pages/Training';
+import { Restrictions } from './pages/Restrictions';
 import { Wanted } from './pages/Wanted';
 import { Design } from './pages/Design';
 import { CustomPage } from './pages/CustomPage';
@@ -91,6 +92,7 @@ createRoot(document.getElementById('root')!).render(
                   <Route path="automation" element={<Automation />} />
                   <Route path="fleet" element={<Fleet />} />
                   <Route path="penalties" element={<Penalties />} />
+                  <Route path="restrictions" element={<Restrictions />} />
                   <Route path="panels" element={<Panels />} />
                   <Route path="panels/:panelId" element={<PanelEditor />} />
                   <Route path="profiles" element={<Profiles />} />

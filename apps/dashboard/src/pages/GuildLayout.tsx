@@ -28,6 +28,7 @@ type Needs =
   | 'wanted'
   | 'fleet'
   | 'penalties'
+  | 'restrictions'
   | 'training'
   | 'qualifications'
   | 'promotions'
@@ -54,6 +55,7 @@ export const NAV: { to: string; label: string; icon: string; end?: boolean; need
   { to: 'wanted', label: 'Fahndungen', icon: '📣', needs: 'wanted' },
   { to: 'fleet', label: 'Fuhrpark', icon: '🚓', needs: 'fleet' },
   { to: 'penalties', label: 'Strafen', icon: '⚖️', needs: 'penalties' },
+  { to: 'restrictions', label: 'Sperren', icon: '⛔', needs: 'restrictions' },
   { to: 'training', label: 'Ausbildung', icon: '🎓', needs: 'training' },
   { to: 'qualifications', label: 'Qualifikationen', icon: '🏅', needs: 'qualifications' },
   { to: 'promotions', label: 'Beförderungen', icon: '📈', needs: 'promotions' },
@@ -129,6 +131,7 @@ export function GuildLayout() {
     (needs === 'training' && me.data.permissions.includes('training.view')) ||
     (needs === 'fleet' && me.data.permissions.includes('fleet.view')) ||
     (needs === 'penalties' && me.data.permissions.includes('penalties.view')) ||
+    (needs === 'restrictions' && me.data.permissions.includes('restrictions.view')) ||
     (needs === 'wanted' && me.data.permissions.includes('wanted.view')) ||
     (needs === 'danger' && me.data.permissions.includes('danger.view')) ||
     (needs === 'operations' && me.data.permissions.includes('operations.view')) ||

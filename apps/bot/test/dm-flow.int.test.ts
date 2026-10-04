@@ -578,3 +578,19 @@ describe('Abnahme Phase 9 – komplette DM-Bewerbung mit 23 Fragen', () => {
     expect((await answers(submissionId))['rpname']).toBe('Max Mustermann');
   });
 });
+
+describe('Bewerbungssperre (Phase 47)', () => {
+  const tryStart = (userId: string) => startApplication({ guildId: G, applicationId: appId, userId, memberRoleIds: [], username: 'max', displayName: 'Max' });
+  it('gesperrter Benutzer kann keine Bewerbung starten – verständliche Meldung, nichts angelegt; nach Ablauf wieder möglich', async () => {
+    const r = await prisma.restriction.create({ data: { guildId: G, userId: USER, type: 'APPLICATION', reason: 'Trollbewerbung', createdBy: 'admin' } }); // Test-Benutzer-ID ist keine echte Discord-ID
+    const before = await prisma.applicationSubmission.count({ where: { guildId: G } });
+    const res = await tryStart(USER);
+    expect(res.ok).toBe(false);
+    expect(res.message).toContain('für Bewerbungen gesperrt');
+    expect(res.message).toContain('Trollbewerbung');
+    expect(await prisma.applicationSubmission.count({ where: { guildId: G } })).toBe(before);
+    expect((await tryStart('900000000000999999')).ok).toBe(true); // andere Person
+    await prisma.restriction.update({ where: { id: r.id }, data: { endsAt: new Date(Date.now() - 1000) } });
+    expect((await tryStart(USER)).ok).toBe(true);
+  });
+});

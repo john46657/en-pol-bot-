@@ -1,5 +1,6 @@
 import { guildRepository, prisma } from '@nexus/database';
 import { afterAll, beforeEach, describe, expect, it, vi } from 'vitest';
+import { createRestriction, revokeRestriction } from '@nexus/restrictions';
 import { saveSettings } from '../src/index.js';
 import { TicketError, claim, closeTicket, deleteCategory, formatNumber, getByChannel, getByNumber, listTickets, openTicket, release, renderTranscript, saveCategory, setParticipant, setPriority, stats, ticketHistory, type Actor, type TicketDiscord, type TranscriptMessage } from '../src/index.js';
 
@@ -177,5 +178,20 @@ describe('Schließen, Transkript, Archiv', () => {
     expect((await getByNumber(G, 2)).id).toBe(b.id);
     await err(getByNumber(G, 99), 'not-found');
     expect(await stats(G)).toMatchObject({ byStatus: { CLOSED: 1, OPEN: 1 } });
+  });
+});
+
+describe('Ticketsperre (Phase 47)', () => {
+  it('gesperrter Benutzer kann kein Ticket öffnen (verständliche Meldung); Team-Eröffnung und andere Benutzer nicht betroffen; nach Aufheben frei', async () => {
+    const r = await createRestriction({ guildId: G, userId: U1, type: 'TICKET', reason: 'Missbrauch des Supports', actorId: ADMIN });
+    await expect(openTicket({ guildId: G, userId: U1, username: 'Max', categoryId: cat, subject: 'Hilfe' }, fake())).rejects.toSatisfy((e) => e instanceof TicketError && e.code === 'forbidden' && e.message.includes('Missbrauch des Supports') && e.message.includes('für Tickets gesperrt'));
+    expect(await prisma.ticket.count({ where: { guildId: G } })).toBe(0);
+    await openTicket({ guildId: G, userId: U2, username: 'Eva', categoryId: cat, subject: 'Hilfe' }, fake()); // anderer Benutzer
+    await openTicket({ guildId: G, userId: U1, username: 'Max', categoryId: cat, subject: 'Gespräch', openedBy: STAFF }, fake()); // vom Team eröffnet
+    await prisma.restriction.update({ where: { id: r.id }, data: { endsAt: new Date(Date.now() - 1000) } }); // abgelaufen
+    await openTicket({ guildId: G, userId: U1, username: 'Max', categoryId: cat, subject: 'Wieder frei' }, fake());
+    const r2 = await createRestriction({ guildId: G, userId: U2, type: 'TICKET', reason: 'Zweite Sperre', actorId: ADMIN });
+    await revokeRestriction(G, r2.id, 'Irrtum', ADMIN);
+    await openTicket({ guildId: G, userId: U2, username: 'Eva', categoryId: cat, subject: 'Nach Aufheben' }, fake());
   });
 });

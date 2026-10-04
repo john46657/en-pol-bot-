@@ -19,6 +19,7 @@ export const formatNumber = (n: number) => `#${String(n).padStart(4, '0')}`;
 
 export { TicketError } from './errors.js';
 import { TicketError } from './errors.js';
+import { blockedMessage, getActive } from '@nexus/restrictions';
 
 export interface TranscriptMessage {
   id: string;
@@ -220,6 +221,11 @@ const teamRoles = (cat: { staffRoleIds: string[] }, admin: string[]) => [...new 
 
 export async function openTicket(i: OpenInput, discord: TicketDiscord) {
   const gid = assertGuildId(i.guildId);
+  // Ticketsperre (nicht, wenn das Team das Ticket für jemanden eröffnet, z. B. Bewerbungsgespräch)
+  if (!i.openedBy) {
+    const ban = await getActive(gid, i.userId, 'TICKET');
+    if (ban) throw new TicketError('forbidden', blockedMessage(ban));
+  }
   const cat = await prisma.ticketCategory.findFirst({ where: { id: i.categoryId, guildId: gid } });
   if (!cat || !cat.active) throw new TicketError('not-found', 'Diese Ticket-Kategorie gibt es nicht oder sie ist deaktiviert.');
   const settings = await getSettings(gid);
