@@ -45,7 +45,7 @@ export async function saveType(guildId: string, input: ShiftTypeInput, actorId: 
   const data = { name, description: input.description?.trim() || null, emoji: input.emoji?.trim() || null, requiredRoleIds: roles, maxDurationMinutes: max, active: input.active ?? true };
   try {
     const type = input.id ? await prisma.shiftType.update({ where: { id: input.id, guildId: gid }, data }) : await prisma.shiftType.create({ data: { ...data, guildId: gid } });
-    await prisma.auditLog.create({ data: { guildId: gid, actorType: 'USER', actorId, action: input.id ? 'shift.type.updated' : 'shift.type.created', resourceType: 'ShiftType', resourceId: type.id, after: data as Json, permission: 'shifts.manage', result: 'success' } });
+    await auditRepository.createRaw({ data: { guildId: gid, actorType: 'USER', actorId, action: input.id ? 'shift.type.updated' : 'shift.type.created', resourceType: 'ShiftType', resourceId: type.id, after: data as Json, permission: 'shifts.manage', result: 'success' } });
     return type;
   } catch (e) {
     if (e instanceof Error && /Unique constraint/i.test(e.message)) throw new ShiftError('conflict', 'Einen Shift-Typ mit diesem Namen gibt es schon.');
@@ -60,7 +60,7 @@ export async function deleteType(guildId: string, id: string, actorId: string) {
   if (!type) throw new ShiftError('not-found', 'Shift-Typ nicht gefunden.');
   if (type._count.shifts > 0) throw new ShiftError('conflict', `Zu diesem Typ gibt es ${type._count.shifts} Schicht(en) – bitte deaktivieren statt löschen.`);
   await prisma.shiftType.delete({ where: { id } });
-  await prisma.auditLog.create({ data: { guildId: gid, actorType: 'USER', actorId, action: 'shift.type.deleted', resourceType: 'ShiftType', resourceId: id, before: { name: type.name } as Json, permission: 'shifts.manage', result: 'success' } });
+  await auditRepository.createRaw({ data: { guildId: gid, actorType: 'USER', actorId, action: 'shift.type.deleted', resourceType: 'ShiftType', resourceId: id, before: { name: type.name } as Json, permission: 'shifts.manage', result: 'success' } });
 }
 
 /** Typen, die dieses Mitglied nutzen darf (Rollenanforderung erfüllt). */
@@ -167,7 +167,7 @@ export async function endShift(guildId: string, shiftId: string, o: EndOptions, 
   await event(shift.id, gid, 'end', o.actorId, { netSeconds: d.netSeconds, pausedSeconds: d.pausedSeconds, ...(reason ? { reason } : {}), ...(o.endedAt ? { requestedEnd: o.endedAt.toISOString() } : {}) }, now);
   await leaveUnit(gid, shift.userId, o.actorId, 'shift-ended');
   if (foreign || o.endedAt) {
-    await prisma.auditLog.create({
+    await auditRepository.createRaw({
       data: { guildId: gid, actorType: 'USER', actorId: o.actorId, action: 'shift.ended_by_supervisor', resourceType: 'Shift', resourceId: shift.id, before: { status: shift.status, userId: shift.userId } as Json, after: { endedAt: endedAt.toISOString(), netSeconds: d.netSeconds } as Json, reason: reason ?? null, result: 'success', ...(o.permission ? { permission: o.permission } : {}) },
     });
   }
@@ -200,7 +200,7 @@ export async function correctShift(
   const after = { startedAt: next.startedAt.toISOString(), endedAt: next.endedAt.toISOString(), pausedSeconds: next.pausedSeconds, netSeconds: d.netSeconds };
   await prisma.shift.update({ where: { id: shift.id }, data: { startedAt: next.startedAt, endedAt: next.endedAt, pausedSeconds: next.pausedSeconds, durationSeconds: d.netSeconds, endReason: 'corrected' } });
   await event(shift.id, gid, 'correct', actorId, { before, after, reason: why }, now);
-  await prisma.auditLog.create({ data: { guildId: gid, actorType: 'USER', actorId, action: 'shift.corrected', resourceType: 'Shift', resourceId: shift.id, before: before as Json, after: after as Json, reason: why, result: 'success', ...(permission ? { permission } : {}) } });
+  await auditRepository.createRaw({ data: { guildId: gid, actorType: 'USER', actorId, action: 'shift.corrected', resourceType: 'Shift', resourceId: shift.id, before: before as Json, after: after as Json, reason: why, result: 'success', ...(permission ? { permission } : {}) } });
   return getShift(gid, shift.id);
 }
 
@@ -313,7 +313,7 @@ export async function watchOverlongShifts(port: DiscordPort, now = new Date(), d
     const dmDelivered = await port
       .sendDm(s.userId, { content: `⏰ Deine Schicht „${s.type.name}“ läuft seit ${formatSeconds(d.grossSeconds)}. Hast du vergessen, dich auszutragen? Beende sie mit \`/schicht ende\`.` })
       .then(() => true, () => false);
-    await prisma.auditLog.create({ data: { guildId: s.guildId, actorType: 'AUTOMATION', action: 'shift.flagged_overlong', resourceType: 'Shift', resourceId: s.id, after: { userId: s.userId, grossSeconds: d.grossSeconds, notified, dmDelivered } as Json, automation: 'shift-watch', result: notified || dmDelivered ? 'success' : 'failed', reason: notified ? null : 'Kein Schicht-Hinweis-Kanal konfiguriert oder nicht erreichbar.' } });
+    await auditRepository.createRaw({ data: { guildId: s.guildId, actorType: 'AUTOMATION', action: 'shift.flagged_overlong', resourceType: 'Shift', resourceId: s.id, after: { userId: s.userId, grossSeconds: d.grossSeconds, notified, dmDelivered } as Json, automation: 'shift-watch', result: notified || dmDelivered ? 'success' : 'failed', reason: notified ? null : 'Kein Schicht-Hinweis-Kanal konfiguriert oder nicht erreichbar.' } });
     result.flagged.push({ shiftId: s.id, userId: s.userId, notified, dmDelivered });
   }
   return result;

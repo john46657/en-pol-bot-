@@ -191,7 +191,7 @@ export async function changeStatus(i: StatusInput, now = new Date()) {
   }
   if (to === 'COMPLETED') transferred = await transferToPersonnel(gid, op.id, i.actorId);
   if (to === 'CANCELLED') {
-    await prisma.auditLog.create({ data: { guildId: gid, actorType: 'USER', actorId: i.actorId, action: 'operation.cancelled', resourceType: 'Operation', resourceId: op.id, after: { number: op.number } as Json, reason: report ?? null, result: 'success', ...(i.permission ? { permission: i.permission } : {}) } });
+    await auditRepository.createRaw({ data: { guildId: gid, actorType: 'USER', actorId: i.actorId, action: 'operation.cancelled', resourceType: 'Operation', resourceId: op.id, after: { number: op.number } as Json, reason: report ?? null, result: 'success', ...(i.permission ? { permission: i.permission } : {}) } });
   }
   return { operation: await getOperation(gid, op.id), transferred };
 }

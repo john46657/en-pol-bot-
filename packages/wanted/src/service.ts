@@ -149,7 +149,7 @@ export async function revokeNotice(guildId: string, id: string, reason: string |
   const r = await prisma.wantedNotice.updateMany({ where: { id, status: 'ACTIVE' }, data: { status: 'REVOKED', activeKey: null, revokedBy: actorId, revokeReason: why, revokedAt: new Date() } });
   if (r.count === 0) throw new WantedError('conflict', 'Diese Fahndung ist bereits aufgehoben.');
   await event(gid, id, 'revoked', actorId, { reason: why });
-  await prisma.auditLog.create({ data: { guildId: gid, actorType: 'USER', actorId, action: 'wanted.revoked', resourceType: 'WantedNotice', resourceId: id, before: { number: n.number, status: 'ACTIVE' } as Json, after: { status: 'REVOKED' } as Json, reason: why, permission, result: 'success' } });
+  await auditRepository.createRaw({ data: { guildId: gid, actorType: 'USER', actorId, action: 'wanted.revoked', resourceType: 'WantedNotice', resourceId: id, before: { number: n.number, status: 'ACTIVE' } as Json, after: { status: 'REVOKED' } as Json, reason: why, permission, result: 'success' } });
   return getNotice(gid, id);
 }
 

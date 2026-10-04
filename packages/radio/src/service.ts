@@ -1,4 +1,4 @@
-import { assertGuildId, guildRepository, prisma, type Prisma } from '@nexus/database';
+import { assertGuildId, auditRepository, guildRepository, prisma, type Prisma } from '@nexus/database';
 import { decideAccess, type Access, type Area, type Level, type Reason } from './access.js';
 import { RadioError } from './errors.js';
 
@@ -10,7 +10,7 @@ async function event(guildId: string, userId: string, type: string, actorId: str
   await prisma.radioEvent.create({ data: { guildId, userId, type, actorId, ...(data !== undefined ? { data: data as Json } : {}) } });
 }
 async function audit(guildId: string, actorId: string, action: string, resourceId: string, before: unknown, after: unknown, permission: string, reason?: string | null) {
-  await prisma.auditLog.create({ data: { guildId, actorType: 'USER', actorId, action, resourceType: 'RadioAccess', resourceId, before: before as Json, after: after as Json, permission, result: 'success', reason: reason ?? null } });
+  await auditRepository.createRaw({ data: { guildId, actorType: 'USER', actorId, action, resourceType: 'RadioAccess', resourceId, before: before as Json, after: after as Json, permission, result: 'success', reason: reason ?? null } });
 }
 
 // --- Whitelist -------------------------------------------------------------------------------
@@ -98,7 +98,7 @@ export async function saveChannel(guildId: string, input: { channelId: string; n
   const data = { name, area, requiresDuty: input.requiresDuty ?? false, active: input.active ?? true };
   const before = await prisma.radioChannel.findUnique({ where: { guildId_channelId: { guildId: gid, channelId: input.channelId } } });
   const row = await prisma.radioChannel.upsert({ where: { guildId_channelId: { guildId: gid, channelId: input.channelId } }, create: { guildId: gid, channelId: input.channelId, ...data }, update: data });
-  await prisma.auditLog.create({ data: { guildId: gid, actorType: 'USER', actorId, action: before ? 'radio.channel.updated' : 'radio.channel.added', resourceType: 'RadioChannel', resourceId: row.id, ...(before ? { before: { name: before.name, area: before.area, requiresDuty: before.requiresDuty, active: before.active } as Json } : {}), after: data as Json, permission: 'radio.channel.manage', result: 'success' } });
+  await auditRepository.createRaw({ data: { guildId: gid, actorType: 'USER', actorId, action: before ? 'radio.channel.updated' : 'radio.channel.added', resourceType: 'RadioChannel', resourceId: row.id, ...(before ? { before: { name: before.name, area: before.area, requiresDuty: before.requiresDuty, active: before.active } as Json } : {}), after: data as Json, permission: 'radio.channel.manage', result: 'success' } });
   return row;
 }
 
@@ -107,7 +107,7 @@ export async function removeChannel(guildId: string, channelId: string, actorId:
   const row = await prisma.radioChannel.findUnique({ where: { guildId_channelId: { guildId: gid, channelId } } });
   if (!row) throw new RadioError('not-found', 'Dieser Funkkanal ist nicht eingerichtet.');
   await prisma.radioChannel.delete({ where: { id: row.id } });
-  await prisma.auditLog.create({ data: { guildId: gid, actorType: 'USER', actorId, action: 'radio.channel.removed', resourceType: 'RadioChannel', resourceId: row.id, before: { name: row.name } as Json, permission: 'radio.channel.manage', result: 'success' } });
+  await auditRepository.createRaw({ data: { guildId: gid, actorType: 'USER', actorId, action: 'radio.channel.removed', resourceType: 'RadioChannel', resourceId: row.id, before: { name: row.name } as Json, permission: 'radio.channel.manage', result: 'success' } });
 }
 
 // --- Prüfung ----------------------------------------------------------------------------------

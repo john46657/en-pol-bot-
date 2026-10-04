@@ -127,7 +127,7 @@ export async function approve(i: DecideInput, now = new Date()) {
     entryId = e.id;
   }
   const saved = await prisma.absence.update({ where: { id: a.id }, data: { entryId } });
-  await prisma.auditLog.create({ data: { guildId: gid, actorType: 'USER', actorId: i.actorId, action: 'absence.approved', resourceType: 'Absence', resourceId: a.id, after: { userId: a.userId, start: fmtDay(a.startDate), end: fmtDay(a.endDate) } as Json, reason: i.reason?.trim() ?? null, permission: 'absence.manage', result: 'success' } });
+  await auditRepository.createRaw({ data: { guildId: gid, actorType: 'USER', actorId: i.actorId, action: 'absence.approved', resourceType: 'Absence', resourceId: a.id, after: { userId: a.userId, start: fmtDay(a.startDate), end: fmtDay(a.endDate) } as Json, reason: i.reason?.trim() ?? null, permission: 'absence.manage', result: 'success' } });
   await notify(i.port, a.userId, `✅ Deine Abmeldung ${formatNumber(a.number)} (${fmtDay(a.startDate)} – ${fmtDay(a.endDate)}) wurde genehmigt.`);
   return saved;
 }
@@ -141,7 +141,7 @@ export async function reject(i: DecideInput, now = new Date()) {
   if (!why || why.length < 3) throw new AbsenceError('invalid', 'Bitte einen Ablehnungsgrund angeben (das Mitglied sieht ihn).');
   const r = await prisma.absence.updateMany({ where: { id: a.id, status: 'PENDING' }, data: { status: 'REJECTED', decidedBy: i.actorId, decidedAt: now, decisionReason: why } });
   if (r.count === 0) throw new AbsenceError('conflict', 'Die Abmeldung wurde gerade entschieden.');
-  await prisma.auditLog.create({ data: { guildId: gid, actorType: 'USER', actorId: i.actorId, action: 'absence.rejected', resourceType: 'Absence', resourceId: a.id, after: { userId: a.userId } as Json, reason: why, permission: 'absence.manage', result: 'success' } });
+  await auditRepository.createRaw({ data: { guildId: gid, actorType: 'USER', actorId: i.actorId, action: 'absence.rejected', resourceType: 'Absence', resourceId: a.id, after: { userId: a.userId } as Json, reason: why, permission: 'absence.manage', result: 'success' } });
   await notify(i.port, a.userId, `❌ Deine Abmeldung ${formatNumber(a.number)} wurde abgelehnt: ${why}`);
   return getAbsence(gid, a.id);
 }
@@ -158,7 +158,7 @@ export async function withdraw(guildId: string, absenceId: string, actorId: stri
     await prisma.absence.update({ where: { id: a.id }, data: { status: 'WITHDRAWN' } });
     if (a.entryId) await revokeEntry(gid, a.entryId, 'Abmeldung zurückgezogen', actorId).catch(() => undefined);
   } else throw new AbsenceError('conflict', 'Diese Abmeldung ist bereits beendet oder abgelehnt.');
-  await prisma.auditLog.create({ data: { guildId: gid, actorType: 'USER', actorId, action: 'absence.withdrawn', resourceType: 'Absence', resourceId: a.id, before: { status: a.status } as Json, ...(a.userId !== actorId ? { permission: 'absence.manage' } : {}), result: 'success' } });
+  await auditRepository.createRaw({ data: { guildId: gid, actorType: 'USER', actorId, action: 'absence.withdrawn', resourceType: 'Absence', resourceId: a.id, before: { status: a.status } as Json, ...(a.userId !== actorId ? { permission: 'absence.manage' } : {}), result: 'success' } });
   return getAbsence(gid, a.id);
 }
 
@@ -170,7 +170,7 @@ export async function endEarly(guildId: string, absenceId: string, actorId: stri
   const today = berlinToday(now);
   if (a.status !== 'APPROVED' || a.startDate > today || a.endDate < today) throw new AbsenceError('conflict', 'Nur eine laufende, genehmigte Abmeldung lässt sich vorzeitig beenden.');
   await prisma.absence.update({ where: { id: a.id }, data: { status: 'ENDED', endedAt: now } });
-  await prisma.auditLog.create({ data: { guildId: gid, actorType: 'USER', actorId, action: 'absence.ended_early', resourceType: 'Absence', resourceId: a.id, after: { end: fmtDay(today) } as Json, ...(a.userId !== actorId ? { permission: 'absence.manage' } : {}), result: 'success' } });
+  await auditRepository.createRaw({ data: { guildId: gid, actorType: 'USER', actorId, action: 'absence.ended_early', resourceType: 'Absence', resourceId: a.id, after: { end: fmtDay(today) } as Json, ...(a.userId !== actorId ? { permission: 'absence.manage' } : {}), result: 'success' } });
   return getAbsence(gid, a.id);
 }
 

@@ -1,10 +1,12 @@
-import { assertConfig } from './config.js';
+import { startPublisher } from '@nexus/realtime';
+import { assertConfig, config } from './config.js';
 import { log } from './logger.js';
 import { startBot } from './bot.js';
 
 async function main(): Promise<void> {
   assertConfig();
   log.info('NEXUS Bot startet …');
+  startPublisher(config.redis.url); // Aktionen des Bots live ans Dashboard (best effort)
   await startBot();
 }
 

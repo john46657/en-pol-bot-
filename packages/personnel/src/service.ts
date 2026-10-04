@@ -1,5 +1,5 @@
 import { applyRoleChanges, type DiscordPort } from '@nexus/automation';
-import { assertGuildId, prisma, type Prisma } from '@nexus/database';
+import { assertGuildId, auditRepository, prisma, type Prisma } from '@nexus/database';
 import { PersonnelError } from './errors.js';
 
 /**
@@ -34,7 +34,7 @@ async function log(
   await prisma.personnelEvent.create({
     data: { guildId, recordId, type, actorId, ...before, ...after },
   });
-  await prisma.auditLog.create({
+  await auditRepository.createRaw({
     data: {
       guildId,
       actorType: actorId ? 'USER' : 'AUTOMATION',
@@ -727,7 +727,7 @@ export async function deleteRank(guildId: string, id: string, actorId: string) {
       `Der Dienstgrad wird von ${rank._count.records} Akte(n) verwendet – bitte deaktivieren statt löschen.`,
     );
   await prisma.rank.delete({ where: { id } });
-  await prisma.auditLog.create({
+  await auditRepository.createRaw({
     data: {
       guildId: gid,
       actorType: 'USER',
@@ -781,7 +781,7 @@ export async function saveTeam(
     const team = input.id
       ? await prisma.team.update({ where: { id: input.id, guildId: gid }, data })
       : await prisma.team.create({ data: { ...data, guildId: gid } });
-    await prisma.auditLog.create({
+    await auditRepository.createRaw({
       data: {
         guildId: gid,
         actorType: 'USER',
@@ -817,7 +817,7 @@ export async function deleteTeam(guildId: string, id: string, actorId: string) {
       `Das Team hat noch ${team._count.records} Mitglied(er) – bitte zuerst versetzen oder deaktivieren.`,
     );
   await prisma.team.delete({ where: { id } });
-  await prisma.auditLog.create({
+  await auditRepository.createRaw({
     data: {
       guildId: gid,
       actorType: 'USER',

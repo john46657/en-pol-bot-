@@ -1,5 +1,5 @@
 import { applyRoleChanges, type DiscordPort } from '@nexus/automation';
-import { assertGuildId, prisma, type Prisma } from '@nexus/database';
+import { assertGuildId, auditRepository, prisma, type Prisma } from '@nexus/database';
 import { addEntry, getRecordByUser, revokeEntry } from '@nexus/personnel';
 import { hasPassed, registerPassHook } from '@nexus/training';
 
@@ -107,7 +107,7 @@ export async function saveQualification(guildId: string, i: QualificationInput, 
   const data = { name, description: i.description?.trim() || null, active: i.active ?? true, requirements: requirements as unknown as Json, grantRoleId: i.grantRoleId || null, autoGrant: i.autoGrant ?? false, validDays: i.validDays ?? null };
   try {
     const row = i.id ? await prisma.qualification.update({ where: { id: i.id, guildId: gid }, data }) : await prisma.qualification.create({ data: { ...data, guildId: gid } });
-    await prisma.auditLog.create({ data: { guildId: gid, actorType: 'USER', actorId, action: i.id ? 'qualification.updated' : 'qualification.created', resourceType: 'Qualification', resourceId: row.id, after: { ...data, requirements } as Json, permission: 'qualification.manage', result: 'success' } });
+    await auditRepository.createRaw({ data: { guildId: gid, actorType: 'USER', actorId, action: i.id ? 'qualification.updated' : 'qualification.created', resourceType: 'Qualification', resourceId: row.id, after: { ...data, requirements } as Json, permission: 'qualification.manage', result: 'success' } });
     return row;
   } catch (e) {
     if (e instanceof Error && /Unique constraint/i.test(e.message)) throw new QualificationError('conflict', 'Eine Qualifikation mit diesem Namen gibt es schon.');
@@ -124,7 +124,7 @@ export async function deleteQualification(guildId: string, id: string, actorId: 
   const used = (await prisma.qualification.findMany({ where: { guildId: gid, id: { not: id } } })).find((o) => ((o.requirements as unknown as Requirement[]) ?? []).some((r) => r.type === 'QUALIFICATION' && r.qualificationId === id));
   if (used) throw new QualificationError('conflict', `„${used.name}“ setzt diese Qualifikation voraus.`);
   await prisma.qualification.delete({ where: { id } });
-  await prisma.auditLog.create({ data: { guildId: gid, actorType: 'USER', actorId, action: 'qualification.deleted', resourceType: 'Qualification', resourceId: id, before: { name: q.name } as Json, permission: 'qualification.manage', result: 'success' } });
+  await auditRepository.createRaw({ data: { guildId: gid, actorType: 'USER', actorId, action: 'qualification.deleted', resourceType: 'Qualification', resourceId: id, before: { name: q.name } as Json, permission: 'qualification.manage', result: 'success' } });
 }
 
 export const listQualifications = (guildId: string, onlyActive = false) => prisma.qualification.findMany({ where: { guildId: assertGuildId(guildId), ...(onlyActive ? { active: true } : {}) }, orderBy: { name: 'asc' } });
@@ -228,7 +228,7 @@ export async function award(i: AwardInput, now = new Date()) {
     roleResult = `add:${r.status}`;
   }
   const saved = await prisma.qualificationAward.update({ where: { id: row.id }, data: { entryId, roleResult } });
-  await prisma.auditLog.create({ data: { guildId: gid, actorType: i.actorId ? 'USER' : 'AUTOMATION', actorId: i.actorId, action: 'qualification.awarded', resourceType: 'QualificationAward', resourceId: row.id, after: { qualification: q.name, userId: i.userId, override, roleResult } as Json, reason: override ? i.reason!.trim() : null, ...(i.actorId ? { permission: 'qualification.manage' } : { automation: 'qualification-auto' }), result: 'success' } });
+  await auditRepository.createRaw({ data: { guildId: gid, actorType: i.actorId ? 'USER' : 'AUTOMATION', actorId: i.actorId, action: 'qualification.awarded', resourceType: 'QualificationAward', resourceId: row.id, after: { qualification: q.name, userId: i.userId, override, roleResult } as Json, reason: override ? i.reason!.trim() : null, ...(i.actorId ? { permission: 'qualification.manage' } : { automation: 'qualification-auto' }), result: 'success' } });
   return { award: saved, eligibility: elig };
 }
 
@@ -249,7 +249,7 @@ export async function revoke(guildId: string, awardId: string, reason: string | 
       roleResult = `remove:${res.status}`;
     }
   }
-  await prisma.auditLog.create({ data: { guildId: gid, actorType: 'USER', actorId, action: 'qualification.revoked', resourceType: 'QualificationAward', resourceId: awardId, before: { qualification: a.qualification.name, userId: a.userId } as Json, reason: why, permission: 'qualification.manage', result: 'success' } });
+  await auditRepository.createRaw({ data: { guildId: gid, actorType: 'USER', actorId, action: 'qualification.revoked', resourceType: 'QualificationAward', resourceId: awardId, before: { qualification: a.qualification.name, userId: a.userId } as Json, reason: why, permission: 'qualification.manage', result: 'success' } });
   return { roleResult };
 }
 

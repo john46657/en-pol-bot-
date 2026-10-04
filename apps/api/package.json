@@ -34,6 +34,7 @@
     "@nexus/promotions": "workspace:*",
     "@nexus/qualifications": "workspace:*",
     "@nexus/radio": "workspace:*",
+    "@nexus/realtime": "workspace:*",
     "@nexus/reports": "workspace:*",
     "@nexus/sek": "workspace:*",
     "@nexus/shifts": "workspace:*",
@@ -51,12 +52,14 @@
     "pino-http": "^10.5.0",
     "reflect-metadata": "^0.2.2",
     "rxjs": "^7.8.2",
+    "ws": "^8.18.0",
     "zod": "^3.25.76"
   },
   "devDependencies": {
     "@types/cookie-parser": "^1.4.9",
     "@types/express": "^5.0.3",
     "@types/node": "^24.0.10",
+    "@types/ws": "^8.18.1",
     "tsc-watch": "^6.3.1",
     "tsx": "^4.20.3",
     "vitest": "^3.2.4"

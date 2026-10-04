@@ -104,7 +104,7 @@ export async function saveCategory(guildId: string, i: CategoryInput, actorId: s
   const data = { name, description: i.description?.trim() || null, emoji: i.emoji?.trim() || null, discordCategoryId: i.discordCategoryId || null, staffRoleIds: roles, defaultPriority: i.defaultPriority ?? 'NORMAL', maxOpenPerUser: max, active: i.active ?? true };
   try {
     const row = i.id ? await prisma.ticketCategory.update({ where: { id: i.id, guildId: gid }, data }) : await prisma.ticketCategory.create({ data: { ...data, guildId: gid } });
-    await prisma.auditLog.create({ data: { guildId: gid, actorType: 'USER', actorId, action: i.id ? 'ticket.category.updated' : 'ticket.category.created', resourceType: 'TicketCategory', resourceId: row.id, after: data as Json, permission: 'tickets.manage', result: 'success' } });
+    await auditRepository.createRaw({ data: { guildId: gid, actorType: 'USER', actorId, action: i.id ? 'ticket.category.updated' : 'ticket.category.created', resourceType: 'TicketCategory', resourceId: row.id, after: data as Json, permission: 'tickets.manage', result: 'success' } });
     return row;
   } catch (e) {
     if (e instanceof Error && /Unique constraint/i.test(e.message)) throw new TicketError('conflict', 'Eine Kategorie mit diesem Namen gibt es schon.');
@@ -119,7 +119,7 @@ export async function deleteCategory(guildId: string, id: string, actorId: strin
   if (!c) throw new TicketError('not-found', 'Kategorie nicht gefunden.');
   if (c._count.tickets > 0) throw new TicketError('conflict', `Zu dieser Kategorie gibt es ${c._count.tickets} Ticket(s) – bitte deaktivieren statt löschen.`);
   await prisma.ticketCategory.delete({ where: { id } });
-  await prisma.auditLog.create({ data: { guildId: gid, actorType: 'USER', actorId, action: 'ticket.category.deleted', resourceType: 'TicketCategory', resourceId: id, before: { name: c.name } as Json, permission: 'tickets.manage', result: 'success' } });
+  await auditRepository.createRaw({ data: { guildId: gid, actorType: 'USER', actorId, action: 'ticket.category.deleted', resourceType: 'TicketCategory', resourceId: id, before: { name: c.name } as Json, permission: 'tickets.manage', result: 'success' } });
 }
 
 // --- Tickets ------------------------------------------------------------------------------------------------
@@ -289,7 +289,7 @@ export async function closeTicket(guildId: string, id: string, reason: string | 
   const r = await prisma.ticket.updateMany({ where: { id, status: { not: 'CLOSED' } }, data: { status: 'CLOSED', closedBy: actor.userId, closedAt: now, closeReason: why, transcript: messages as unknown as Json, transcriptContent: contentAvailable } });
   if (r.count === 0) throw new TicketError('conflict', 'Das Ticket wurde gerade geschlossen.');
   await event(gid, id, 'closed', actor.userId, { reason: why, messages: messages.length, contentAvailable });
-  await prisma.auditLog.create({ data: { guildId: gid, actorType: 'USER', actorId: actor.userId, action: 'ticket.closed', resourceType: 'Ticket', resourceId: id, before: { number: t.number, status: t.status } as Json, after: { status: 'CLOSED', messages: messages.length } as Json, reason: why, permission: isStaff(t, actor) ? 'tickets.handle' : 'tickets.create', result: 'success' } });
+  await auditRepository.createRaw({ data: { guildId: gid, actorType: 'USER', actorId: actor.userId, action: 'ticket.closed', resourceType: 'Ticket', resourceId: id, before: { number: t.number, status: t.status } as Json, after: { status: 'CLOSED', messages: messages.length } as Json, reason: why, permission: isStaff(t, actor) ? 'tickets.handle' : 'tickets.create', result: 'success' } });
   const summary: MessagePayload = { embeds: [{ title: `🔒 Ticket ${formatNumber(t.number)} geschlossen – ${t.subject}`, color: 0x6b7280, fields: [{ name: 'Kategorie', value: t.category.name, inline: true }, { name: 'Ersteller', value: `<@${t.userId}>`, inline: true }, { name: 'Bearbeiter', value: t.claimedBy ? `<@${t.claimedBy}>` : '–', inline: true }, { name: 'Geschlossen von', value: `<@${actor.userId}>`, inline: true }, { name: 'Nachrichten', value: String(messages.length), inline: true }, ...(why ? [{ name: 'Grund', value: why }] : []), ...(contentAvailable ? [] : [{ name: 'Hinweis', value: 'Nachrichteninhalte waren nicht lesbar (Message-Content-Intent im Developer-Portal aktivieren).' }])] }], allowed_mentions: { parse: [] } } as never;
   let logged = false;
   const logChannel = (await guildRepository.getSelections(gid))['ticket-log-channel'];

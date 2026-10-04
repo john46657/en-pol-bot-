@@ -1,5 +1,5 @@
 import type { DiscordPort } from '@nexus/automation';
-import { assertGuildId, prisma, type Prisma } from '@nexus/database';
+import { assertGuildId, auditRepository, prisma, type Prisma } from '@nexus/database';
 import { createOperation, getOperation, type CreateInput } from '@nexus/operations';
 import { getRecordByUser, setTeam } from '@nexus/personnel';
 import { activeAwards, award, revoke } from '@nexus/qualifications';
@@ -54,7 +54,7 @@ export async function saveConfig(guildId: string, input: SekConfigInput, actorId
   const before = await getConfig(gid);
   const data = { teamId: input.teamId ?? null, qualificationId: input.qualificationId ?? null, shiftTypeId: input.shiftTypeId ?? null, applicationId: input.applicationId ?? null, courseIds };
   const row = await prisma.sekConfig.upsert({ where: { guildId: gid }, create: { guildId: gid, ...data }, update: data });
-  await prisma.auditLog.create({ data: { guildId: gid, actorType: 'USER', actorId, action: 'sek.config.saved', resourceType: 'SekConfig', resourceId: gid, ...(before ? { before: before as unknown as Json } : {}), after: data as Json, permission: 'sek.manage', result: 'success' } });
+  await auditRepository.createRaw({ data: { guildId: gid, actorType: 'USER', actorId, action: 'sek.config.saved', resourceType: 'SekConfig', resourceId: gid, ...(before ? { before: before as unknown as Json } : {}), after: data as Json, permission: 'sek.manage', result: 'success' } });
   return row;
 }
 
@@ -105,7 +105,7 @@ export async function addMember(i: { guildId: string; userId: string; actorId: s
     awarded = true;
   }
   if (record.teamId !== cfg.teamId) await setTeam(gid, record.id, cfg.teamId, i.actorId, { permission: 'sek.member.manage', ...(i.port ? { port: i.port } : {}) });
-  await prisma.auditLog.create({ data: { guildId: gid, actorType: 'USER', actorId: i.actorId, action: 'sek.member.added', resourceType: 'PersonnelRecord', resourceId: record.id, after: { userId: i.userId, qualificationAwarded: awarded } as Json, reason: i.reason ?? null, permission: 'sek.member.manage', result: 'success' } });
+  await auditRepository.createRaw({ data: { guildId: gid, actorType: 'USER', actorId: i.actorId, action: 'sek.member.added', resourceType: 'PersonnelRecord', resourceId: record.id, after: { userId: i.userId, qualificationAwarded: awarded } as Json, reason: i.reason ?? null, permission: 'sek.member.manage', result: 'success' } });
   return { awarded };
 }
 
@@ -119,7 +119,7 @@ export async function removeMember(i: { guildId: string; userId: string; actorId
   if (a) await revoke(gid, a.id, i.reason, i.actorId, i.port);
   await setTeam(gid, record.id, null, i.actorId, { permission: 'sek.member.manage', ...(i.port ? { port: i.port } : {}) });
   await prisma.sekSquadMember.deleteMany({ where: { guildId: gid, userId: i.userId } });
-  await prisma.auditLog.create({ data: { guildId: gid, actorType: 'USER', actorId: i.actorId, action: 'sek.member.removed', resourceType: 'PersonnelRecord', resourceId: record.id, after: { userId: i.userId } as Json, reason: i.reason.trim(), permission: 'sek.member.manage', result: 'success' } });
+  await auditRepository.createRaw({ data: { guildId: gid, actorType: 'USER', actorId: i.actorId, action: 'sek.member.removed', resourceType: 'PersonnelRecord', resourceId: record.id, after: { userId: i.userId } as Json, reason: i.reason.trim(), permission: 'sek.member.manage', result: 'success' } });
 }
 
 // --- Einsatzteams (Trupps) ---------------------------------------------------------------------------------
@@ -136,7 +136,7 @@ export async function saveSquad(guildId: string, input: { id?: string | undefine
   try {
     const data = { name, leaderId: input.leaderId ?? null, active: input.active ?? true };
     const row = input.id ? await prisma.sekSquad.update({ where: { id: input.id, guildId: gid }, data, include: squadInclude }) : await prisma.sekSquad.create({ data: { ...data, guildId: gid }, include: squadInclude });
-    await prisma.auditLog.create({ data: { guildId: gid, actorType: 'USER', actorId, action: input.id ? 'sek.squad.updated' : 'sek.squad.created', resourceType: 'SekSquad', resourceId: row.id, after: data as Json, permission: 'sek.member.manage', result: 'success' } });
+    await auditRepository.createRaw({ data: { guildId: gid, actorType: 'USER', actorId, action: input.id ? 'sek.squad.updated' : 'sek.squad.created', resourceType: 'SekSquad', resourceId: row.id, after: data as Json, permission: 'sek.member.manage', result: 'success' } });
     return row;
   } catch (e) {
     if (e instanceof Error && /Unique constraint/i.test(e.message)) throw new SekError('conflict', 'Ein Einsatzteam mit diesem Namen gibt es schon.');
@@ -161,7 +161,7 @@ export async function setSquadMember(guildId: string, squadId: string, userId: s
   const r = role?.trim() || 'Operator';
   if (r.length > 40) throw new SekError('invalid', 'Die Funktion ist zu lang (max. 40 Zeichen).');
   await prisma.sekSquadMember.upsert({ where: { squadId_userId: { squadId, userId } }, create: { guildId: gid, squadId, userId, role: r }, update: { role: r } });
-  await prisma.auditLog.create({ data: { guildId: gid, actorType: 'USER', actorId, action: 'sek.squad.member', resourceType: 'SekSquad', resourceId: squadId, after: { userId, role: r } as Json, permission: 'sek.member.manage', result: 'success' } });
+  await auditRepository.createRaw({ data: { guildId: gid, actorType: 'USER', actorId, action: 'sek.squad.member', resourceType: 'SekSquad', resourceId: squadId, after: { userId, role: r } as Json, permission: 'sek.member.manage', result: 'success' } });
   return assertSquad(gid, squadId);
 }
 
@@ -170,7 +170,7 @@ export async function removeSquadMember(guildId: string, squadId: string, userId
   await assertSquad(gid, squadId);
   const r = await prisma.sekSquadMember.deleteMany({ where: { squadId, userId } });
   if (r.count === 0) throw new SekError('not-found', 'Das Mitglied gehört nicht zu diesem Einsatzteam.');
-  await prisma.auditLog.create({ data: { guildId: gid, actorType: 'USER', actorId, action: 'sek.squad.member.removed', resourceType: 'SekSquad', resourceId: squadId, after: { userId } as Json, permission: 'sek.member.manage', result: 'success' } });
+  await auditRepository.createRaw({ data: { guildId: gid, actorType: 'USER', actorId, action: 'sek.squad.member.removed', resourceType: 'SekSquad', resourceId: squadId, after: { userId } as Json, permission: 'sek.member.manage', result: 'success' } });
   return assertSquad(gid, squadId);
 }
 

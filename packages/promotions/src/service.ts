@@ -31,7 +31,7 @@ export async function saveRule(guildId: string, rankId: string, requirements: un
     throw new PromotionError('invalid', e instanceof Error ? e.message : 'Ungültige Voraussetzungen.');
   });
   const row = await prisma.promotionRule.upsert({ where: { guildId_rankId: { guildId: gid, rankId } }, create: { guildId: gid, rankId, requirements: clean as Json }, update: { requirements: clean as Json } });
-  await prisma.auditLog.create({ data: { guildId: gid, actorType: 'USER', actorId, action: 'promotion.rule.saved', resourceType: 'PromotionRule', resourceId: row.id, after: { rank: rank.name, requirements: clean } as Json, permission: 'promotions.manage', result: 'success' } });
+  await auditRepository.createRaw({ data: { guildId: gid, actorType: 'USER', actorId, action: 'promotion.rule.saved', resourceType: 'PromotionRule', resourceId: row.id, after: { rank: rank.name, requirements: clean } as Json, permission: 'promotions.manage', result: 'success' } });
   return row;
 }
 
@@ -127,7 +127,7 @@ export async function approve(i: DecideInput, now = new Date()) {
   await addEntry(gid, record.id, { kind: 'PROMOTION', title: `Beförderung: ${req.fromRankName ?? 'ohne Dienstgrad'} → ${req.toRankName}`, body: [`Antrag ${formatNumber(req.number)}`, req.reason ? `Begründung: ${req.reason}` : '', req.override ? 'Voraussetzungen als Ausnahme übergangen.' : ''].filter(Boolean).join('\n'), occurredAt: now, data: { requestId: req.id, number: req.number, from: req.fromRankId, to: req.toRankId } }, i.actorId);
   const roleResult = roleChange ? roleChange.status : null;
   const saved = await prisma.promotionRequest.update({ where: { id: req.id }, data: { roleResult } });
-  await prisma.auditLog.create({ data: { guildId: gid, actorType: 'USER', actorId: i.actorId, action: 'promotion.approved', resourceType: 'PromotionRequest', resourceId: req.id, before: { rank: req.fromRankName } as Json, after: { rank: req.toRankName, userId: req.userId, roleResult } as Json, reason: i.reason?.trim() ?? null, permission: 'promotions.approve', result: 'success' } });
+  await auditRepository.createRaw({ data: { guildId: gid, actorType: 'USER', actorId: i.actorId, action: 'promotion.approved', resourceType: 'PromotionRequest', resourceId: req.id, before: { rank: req.fromRankName } as Json, after: { rank: req.toRankName, userId: req.userId, roleResult } as Json, reason: i.reason?.trim() ?? null, permission: 'promotions.approve', result: 'success' } });
   return { request: saved, roleChange };
 }
 
@@ -139,7 +139,7 @@ export async function reject(i: DecideInput, now = new Date()) {
   if (!why || why.length < 3) throw new PromotionError('invalid', 'Bitte einen Ablehnungsgrund angeben (das Mitglied sieht ihn).');
   const r = await prisma.promotionRequest.updateMany({ where: { id: req.id, status: 'PENDING' }, data: { status: 'REJECTED', pendingKey: null, decidedBy: i.actorId, decidedAt: now, decisionReason: why } });
   if (r.count === 0) throw new PromotionError('conflict', 'Der Antrag wurde gerade entschieden.');
-  await prisma.auditLog.create({ data: { guildId: gid, actorType: 'USER', actorId: i.actorId, action: 'promotion.rejected', resourceType: 'PromotionRequest', resourceId: req.id, after: { userId: req.userId, rank: req.toRankName } as Json, reason: why, permission: 'promotions.reject', result: 'success' } });
+  await auditRepository.createRaw({ data: { guildId: gid, actorType: 'USER', actorId: i.actorId, action: 'promotion.rejected', resourceType: 'PromotionRequest', resourceId: req.id, after: { userId: req.userId, rank: req.toRankName } as Json, reason: why, permission: 'promotions.reject', result: 'success' } });
   return getRequest(gid, req.id);
 }
 

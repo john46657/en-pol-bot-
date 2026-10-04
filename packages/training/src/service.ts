@@ -80,7 +80,7 @@ export async function saveCourse(guildId: string, i: CourseInput, actorId: strin
   const data = { name, description: txt(i.description, 500, 'Die Beschreibung'), active: i.active ?? true, theoryMax, practiceMax, examMax, passPercent, grantRoleId: i.grantRoleId || null, requiredRoleIds: ids(i.requiredRoleIds, 'Rollen'), maxParticipants };
   try {
     const row = i.id ? await prisma.trainingCourse.update({ where: { id: i.id, guildId: gid }, data }) : await prisma.trainingCourse.create({ data: { ...data, guildId: gid } });
-    await prisma.auditLog.create({ data: { guildId: gid, actorType: 'USER', actorId, action: i.id ? 'training.course.updated' : 'training.course.created', resourceType: 'TrainingCourse', resourceId: row.id, after: data as Json, permission: i.id ? 'training.edit' : 'training.create', result: 'success' } });
+    await auditRepository.createRaw({ data: { guildId: gid, actorType: 'USER', actorId, action: i.id ? 'training.course.updated' : 'training.course.created', resourceType: 'TrainingCourse', resourceId: row.id, after: data as Json, permission: i.id ? 'training.edit' : 'training.create', result: 'success' } });
     return row;
   } catch (e) {
     if (e instanceof Error && /Unique constraint/i.test(e.message)) throw new TrainingError('conflict', 'Eine Ausbildung mit diesem Namen gibt es schon.');
@@ -95,7 +95,7 @@ export async function deleteCourse(guildId: string, id: string, actorId: string)
   if (!c) throw new TrainingError('not-found', 'Ausbildung nicht gefunden.');
   if (c._count.trainings > 0) throw new TrainingError('conflict', `Zu dieser Ausbildung gibt es ${c._count.trainings} Durchführung(en) – bitte deaktivieren statt löschen.`);
   await prisma.trainingCourse.delete({ where: { id } });
-  await prisma.auditLog.create({ data: { guildId: gid, actorType: 'USER', actorId, action: 'training.course.deleted', resourceType: 'TrainingCourse', resourceId: id, before: { name: c.name } as Json, permission: 'training.edit', result: 'success' } });
+  await auditRepository.createRaw({ data: { guildId: gid, actorType: 'USER', actorId, action: 'training.course.deleted', resourceType: 'TrainingCourse', resourceId: id, before: { name: c.name } as Json, permission: 'training.edit', result: 'success' } });
 }
 
 // --- Durchführungen ------------------------------------------------------------------------------
@@ -316,7 +316,7 @@ export async function cancelTraining(guildId: string, trainingId: string, reason
   if (!reason || reason.trim().length < 3) throw new TrainingError('invalid', 'Bitte einen Grund angeben.');
   await prisma.training.update({ where: { id: trainingId }, data: { status: 'CANCELLED', finishedAt: new Date() } });
   await event(trainingId, gid, 'cancelled', actorId, { reason: reason.trim() });
-  await prisma.auditLog.create({ data: { guildId: gid, actorType: 'USER', actorId, action: 'training.cancelled', resourceType: 'Training', resourceId: trainingId, before: { number: t.number, status: t.status } as Json, reason: reason.trim(), permission: 'training.session.manage', result: 'success' } });
+  await auditRepository.createRaw({ data: { guildId: gid, actorType: 'USER', actorId, action: 'training.cancelled', resourceType: 'Training', resourceId: trainingId, before: { number: t.number, status: t.status } as Json, reason: reason.trim(), permission: 'training.session.manage', result: 'success' } });
   return getTraining(gid, trainingId);
 }
 

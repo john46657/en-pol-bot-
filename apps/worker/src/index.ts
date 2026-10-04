@@ -3,6 +3,7 @@ import { Queue, Worker } from 'bullmq';
 import { Redis } from 'ioredis';
 import { pino } from 'pino';
 import { restDiscordPort } from '@nexus/automation';
+import { startPublisher } from '@nexus/realtime';
 import { watchOverlongShifts } from '@nexus/shifts';
 
 /**
@@ -15,6 +16,7 @@ const connection = new Redis(process.env['REDIS_URL'] ?? 'redis://localhost:6379
   maxRetriesPerRequest: null,
 });
 
+startPublisher(process.env['REDIS_URL'] ?? 'redis://localhost:6379'); // Aktionen des Workers live ans Dashboard (best effort)
 const queue = new Queue('system', { connection, prefix });
 const worker = new Worker(
   'system',

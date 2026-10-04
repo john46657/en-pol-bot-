@@ -12,6 +12,7 @@
   },
   "dependencies": {
     "@nexus/automation": "workspace:*",
+    "@nexus/realtime": "workspace:*",
     "@nexus/shifts": "workspace:*",
     "bullmq": "^5.56.0",
     "dotenv": "^17.2.0",

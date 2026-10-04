@@ -22,12 +22,49 @@ export interface AuditInput {
   reason?: string;
 }
 
+export interface AuditEvent {
+  guildId: string;
+  action: string;
+  resourceType: string | null;
+  resourceId: string | null;
+  actorId: string | null;
+  createdAt: Date;
+}
+type Listener = (e: AuditEvent) => void | Promise<void>;
+const listeners = new Set<Listener>();
+
+/** Benachrichtigt Beobachter (z. B. Live-Dashboard). Fehler der Beobachter brechen nie die Aktion ab. */
+function emit(row: AuditEvent): void {
+  for (const l of listeners) {
+    try {
+      void Promise.resolve(l(row)).catch(() => undefined);
+    } catch {
+      /* Beobachter dürfen die fachliche Aktion nicht stören */
+    }
+  }
+}
+
 /** Audit-Logs werden nur angehängt – es gibt bewusst weder update noch delete. */
 export const auditRepository = {
+  /** Registriert einen Beobachter für jeden neuen Audit-Eintrag; liefert die Abmeldefunktion. */
+  onLog(listener: Listener): () => void {
+    listeners.add(listener);
+    return () => void listeners.delete(listener);
+  },
+
+  /** Wie `prisma.auditLog.create`, benachrichtigt aber zusätzlich die Beobachter (Live-Dashboard). */
+  async createRaw(args: Prisma.AuditLogCreateArgs) {
+    const row = await prisma.auditLog.create(args);
+    emit(row);
+    return row;
+  },
+
   async create(input: AuditInput) {
-    return prisma.auditLog.create({
+    const row = await prisma.auditLog.create({
       data: { ...input, guildId: assertGuildId(input.guildId) },
     });
+    emit(row);
+    return row;
   },
 
   /**
@@ -47,7 +84,7 @@ export const auditRepository = {
     result?: string;
     metadata?: Prisma.InputJsonValue;
   }) {
-    return prisma.auditLog.create({
+    const row = await prisma.auditLog.create({
       data: {
         guildId: assertGuildId(e.guildId),
         actorType: e.actorId ? 'USER' : 'AUTOMATION',
@@ -63,6 +100,8 @@ export const auditRepository = {
         result: e.result ?? 'success',
       },
     });
+    emit(row);
+    return row;
   },
 
   /**

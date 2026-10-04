@@ -1,5 +1,5 @@
 import type { DiscordPort } from '@nexus/automation';
-import { assertGuildId, guildRepository, prisma, type Prisma } from '@nexus/database';
+import { assertGuildId, auditRepository, guildRepository, prisma, type Prisma } from '@nexus/database';
 
 /**
  * Gefahrenstatus: konfigurierbare Stufen (Standard 0–5 mit Name, Farbe, Emoji, Beschreibung, berechtigten Rollen),
@@ -75,7 +75,7 @@ export async function saveLevel(guildId: string, input: LevelInput, actorId: str
   const data = validate(input);
   const before = await prisma.dangerLevel.findUnique({ where: { guildId_level: { guildId: gid, level: input.level } } });
   const row = await prisma.dangerLevel.upsert({ where: { guildId_level: { guildId: gid, level: input.level } }, create: { guildId: gid, level: input.level, ...data }, update: data });
-  await prisma.auditLog.create({ data: { guildId: gid, actorType: 'USER', actorId, action: before ? 'danger.level.updated' : 'danger.level.created', resourceType: 'DangerLevel', resourceId: row.id, ...(before ? { before: { level: before.level, name: before.name, color: before.color, emoji: before.emoji, description: before.description, allowedRoleIds: before.allowedRoleIds } as Json } : {}), after: { level: row.level, ...data } as Json, permission: 'danger.manage', result: 'success' } });
+  await auditRepository.createRaw({ data: { guildId: gid, actorType: 'USER', actorId, action: before ? 'danger.level.updated' : 'danger.level.created', resourceType: 'DangerLevel', resourceId: row.id, ...(before ? { before: { level: before.level, name: before.name, color: before.color, emoji: before.emoji, description: before.description, allowedRoleIds: before.allowedRoleIds } as Json } : {}), after: { level: row.level, ...data } as Json, permission: 'danger.manage', result: 'success' } });
   return row;
 }
 
@@ -87,7 +87,7 @@ export async function deleteLevel(guildId: string, level: number, actorId: strin
   if ((state?.level ?? 0) === level) throw new DangerError('conflict', 'Die aktuell gesetzte Stufe lässt sich nicht löschen.');
   if ((await prisma.dangerLevel.count({ where: { guildId: gid } })) <= 2) throw new DangerError('conflict', 'Es müssen mindestens zwei Stufen bestehen bleiben.');
   await prisma.dangerLevel.delete({ where: { id: row.id } });
-  await prisma.auditLog.create({ data: { guildId: gid, actorType: 'USER', actorId, action: 'danger.level.deleted', resourceType: 'DangerLevel', resourceId: row.id, before: { level: row.level, name: row.name } as Json, permission: 'danger.manage', result: 'success' } });
+  await auditRepository.createRaw({ data: { guildId: gid, actorType: 'USER', actorId, action: 'danger.level.deleted', resourceType: 'DangerLevel', resourceId: row.id, before: { level: row.level, name: row.name } as Json, permission: 'danger.manage', result: 'success' } });
 }
 
 export interface SetLevelInput {
@@ -121,7 +121,7 @@ export async function setLevel(i: SetLevelInput): Promise<SetLevelResult> {
   if (current.level === target.level) throw new DangerError('conflict', `Die Stufe „${target.name}“ ist bereits aktiv.`);
   const row = await prisma.dangerState.upsert({ where: { guildId: gid }, create: { guildId: gid, level: target.level, setBy: i.actorId, reason }, update: { level: target.level, setBy: i.actorId, reason, setAt: new Date() } });
   await prisma.dangerEvent.create({ data: { guildId: gid, fromLevel: current.level, toLevel: target.level, actorId: i.actorId, reason } });
-  await prisma.auditLog.create({ data: { guildId: gid, actorType: 'USER', actorId: i.actorId, action: 'danger.level.set', resourceType: 'DangerState', resourceId: gid, before: { level: current.level, name: current.name } as Json, after: { level: target.level, name: target.name } as Json, reason, permission: 'danger.set', result: 'success' } });
+  await auditRepository.createRaw({ data: { guildId: gid, actorType: 'USER', actorId: i.actorId, action: 'danger.level.set', resourceType: 'DangerState', resourceId: gid, before: { level: current.level, name: current.name } as Json, after: { level: target.level, name: target.name } as Json, reason, permission: 'danger.set', result: 'success' } });
   const published = i.port ? await publish(i.port, gid, target, row, i.actorId) : 'none';
   return { level: target, from: current.level, published };
 }

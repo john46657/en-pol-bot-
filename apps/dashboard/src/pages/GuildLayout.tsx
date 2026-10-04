@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 import { Link, NavLink, Outlet, useLocation, useParams } from 'react-router';
 import { api, guildIcon, type GuildOverview } from '../api';
 import { UserMenu } from '../components/UserMenu';
+import { useLive } from '../live';
 
 type Needs = 'any' | 'view' | 'admin' | 'panels' | 'submissions' | 'personnel' | 'structure' | 'shifts' | 'duty' | 'radio' | 'operations' | 'danger' | 'wanted' | 'fleet' | 'penalties' | 'training' | 'qualifications' | 'promotions' | 'sek' | 'tickets' | 'absences' | 'reports';
 const NAV: { to: string; label: string; icon: string; end?: boolean; needs: Needs }[] = [
@@ -41,6 +42,7 @@ export function GuildLayout() {
   const { guildId = '' } = useParams();
   const [open, setOpen] = useState(false);
   const { pathname } = useLocation();
+  const live = useLive(guildId);
   useEffect(() => setOpen(false), [pathname]);
   const g = useQuery({
     queryKey: ['guild', guildId],
@@ -114,6 +116,7 @@ export function GuildLayout() {
             </button>
             {icon && <img className="icon" src={icon} alt="" width={28} height={28} />}
             <strong>{g.data?.name ?? 'Server'}</strong>
+            <span className={`badge ${live === 'live' ? 'ok' : 'no'}`} title={live === 'live' ? 'Live-Aktualisierung aktiv' : live === 'connecting' ? 'Verbinde …' : 'Live-Aktualisierung getrennt – Daten werden beim Öffnen geladen'}>{live === 'live' ? '● Live' : live === 'connecting' ? '○ …' : '○ offline'}</span>
             <Link to="/servers" className="muted hide-sm">
               Server wechseln
             </Link>

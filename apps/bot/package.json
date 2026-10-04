@@ -28,6 +28,7 @@
     "@nexus/promotions": "workspace:*",
     "@nexus/qualifications": "workspace:*",
     "@nexus/radio": "workspace:*",
+    "@nexus/realtime": "workspace:*",
     "@nexus/reports": "workspace:*",
     "@nexus/sek": "workspace:*",
     "@nexus/shifts": "workspace:*",

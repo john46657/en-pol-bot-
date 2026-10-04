@@ -154,7 +154,7 @@ export async function disbandUnit(guildId: string, unitId: string, actorId: stri
   const now = new Date();
   await prisma.unitMember.updateMany({ where: { unitId, openKey: 'open' }, data: { openKey: null, leftAt: now } });
   await disband(unitId, gid, actorId, 'manual');
-  await prisma.auditLog.create({ data: { guildId: gid, actorType: 'USER', actorId, action: 'unit.disbanded', resourceType: 'Unit', resourceId: unitId, before: { callsign: unit.callsign } as Json, permission: 'duty.unit.manage', result: 'success' } });
+  await auditRepository.createRaw({ data: { guildId: gid, actorType: 'USER', actorId, action: 'unit.disbanded', resourceType: 'Unit', resourceId: unitId, before: { callsign: unit.callsign } as Json, permission: 'duty.unit.manage', result: 'success' } });
 }
 
 // --- Übersicht -----------------------------------------------------------------------------------

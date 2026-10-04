@@ -104,7 +104,7 @@ export async function revokePenalty(guildId: string, id: string, reason: string 
   const r = await prisma.penalty.updateMany({ where: { id, status: 'ACTIVE' }, data: { status: 'REVOKED', revokedBy: actorId, revokeReason: why, revokedAt: new Date() } });
   if (r.count === 0) throw new FleetError('conflict', 'Diese Strafe ist bereits aufgehoben.');
   if (p.personnelEntryId) await revokeEntry(gid, p.personnelEntryId, `Strafe aufgehoben: ${why}`, actorId).catch(() => undefined);
-  await prisma.auditLog.create({ data: { guildId: gid, actorType: 'USER', actorId, action: 'penalty.revoked', resourceType: 'Penalty', resourceId: id, before: { number: p.number, kind: p.kind } as Json, after: { status: 'REVOKED' } as Json, reason: why, permission, result: 'success' } });
+  await auditRepository.createRaw({ data: { guildId: gid, actorType: 'USER', actorId, action: 'penalty.revoked', resourceType: 'Penalty', resourceId: id, before: { number: p.number, kind: p.kind } as Json, after: { status: 'REVOKED' } as Json, reason: why, permission, result: 'success' } });
   return getPenalty(gid, id);
 }
 

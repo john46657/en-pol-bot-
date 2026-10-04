@@ -160,7 +160,7 @@ export async function retireVehicle(guildId: string, id: string, actorId: string
   if (v.retiredAt) throw new FleetError('conflict', 'Das Fahrzeug ist bereits ausgemustert.');
   await prisma.vehicle.update({ where: { id }, data: { activeKey: null, retiredAt: new Date(), status: 'OUT_OF_SERVICE', unitId: null, driverId: null } });
   await event(gid, id, 'retired', actorId);
-  await prisma.auditLog.create({ data: { guildId: gid, actorType: 'USER', actorId, action: 'vehicle.retired', resourceType: 'Vehicle', resourceId: id, before: { plate: v.plate } as Json, permission: 'fleet.manage', result: 'success' } });
+  await auditRepository.createRaw({ data: { guildId: gid, actorType: 'USER', actorId, action: 'vehicle.retired', resourceType: 'Vehicle', resourceId: id, before: { plate: v.plate } as Json, permission: 'fleet.manage', result: 'success' } });
 }
 
 export const vehicleHistory = (guildId: string, id: string) => prisma.vehicleEvent.findMany({ where: { guildId: assertGuildId(guildId), vehicleId: id }, orderBy: { at: 'asc' } });
