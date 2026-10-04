@@ -39,6 +39,8 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
 let stopping = false;
 const children = new Map();
+// Signale sofort annehmen: auch ein Stopp während des Hochfahrens beendet bereits gestartete Dienste (keine Waisenprozesse)
+for (const s of ['SIGTERM', 'SIGINT']) process.on(s, () => void shutdown());
 
 /** Dienst starten und bei Absturz mit wachsender Wartezeit neu starten. */
 function run(svc, attempt = 0) {
@@ -108,6 +110,7 @@ if (local) {
     cmd: path.join(pgBin, 'postgres'),
     args: ['-D', pgData, '-p', String(pgPort), '-c', 'listen_addresses=127.0.0.1', '-c', `unix_socket_directories=${runDir}`, '-c', 'shared_buffers=128MB', '-c', 'max_connections=60', '-c', 'fsync=on'],
     cwd: home,
+    env: { LC_ALL: 'C', LANG: 'C' }, // feste Locale: vermeidet Mehr-Thread-Start des Postmasters (macOS) und fehlende Locales im Container
   });
   run({
     name: 'redis',
@@ -162,5 +165,4 @@ async function shutdown() {
   await stop(['postgres'], 'SIGINT');
   process.exit(0);
 }
-for (const s of ['SIGTERM', 'SIGINT']) process.on(s, () => void shutdown());
 log('start', `NEXUS läuft: API auf Port ${process.env.API_PORT ?? 3000}${process.env.DASHBOARD_STATIC_DIR ? ' (Dashboard eingebaut)' : ''}, Worker, Bot${local ? ', PostgreSQL und Redis im Container' : ''}.`);
