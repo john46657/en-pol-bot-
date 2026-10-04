@@ -14,6 +14,7 @@ import { Logs } from './pages/Logs';
 import { Personnel } from './pages/Personnel';
 import { PersonnelDetail } from './pages/PersonnelDetail';
 import { PersonnelStructure } from './pages/PersonnelStructure';
+import { Danger } from './pages/Danger';
 import { Duty } from './pages/Duty';
 import { Operations } from './pages/Operations';
 import { Radio } from './pages/Radio';
@@ -65,6 +66,7 @@ createRoot(document.getElementById('root')!).render(
                   <Route path="duty" element={<Duty />} />
                   <Route path="radio" element={<Radio />} />
                   <Route path="operations" element={<Operations />} />
+                  <Route path="danger" element={<Danger />} />
                   <Route path="panels" element={<Panels />} />
                   <Route path="panels/:panelId" element={<PanelEditor />} />
                   <Route path="profiles" element={<Profiles />} />

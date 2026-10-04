@@ -546,3 +546,18 @@ export interface OperationRow {
   units: { id: string; unitId: string; callsign: string }[];
   participants: { userId: string; isLeader: boolean; callsign: string | null }[];
 }
+
+export interface DangerLevelRow {
+  id: string;
+  level: number;
+  name: string;
+  color: string;
+  emoji: string | null;
+  description: string | null;
+  allowedRoleIds: string[];
+}
+export interface DangerCurrent {
+  level: DangerLevelRow;
+  levels: DangerLevelRow[];
+  state: { setBy: string; reason: string | null; setAt: string } | null;
+}

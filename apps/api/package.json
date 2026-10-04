@@ -21,6 +21,7 @@
     "@nexus/automation": "workspace:*",
     "@nexus/config": "workspace:*",
     "@nexus/core": "workspace:*",
+    "@nexus/danger": "workspace:*",
     "@nexus/database": "workspace:*",
     "@nexus/discord": "workspace:*",
     "@nexus/operations": "workspace:*",

@@ -225,6 +225,15 @@ export const PERMISSION_CATALOG = [
     ],
   },
   {
+    module: 'danger',
+    label: 'Gefahrenstatus',
+    permissions: [
+      ['danger.view', 'Gefahrenstatus ansehen'],
+      ['danger.set', 'Gefahrenstufe setzen'],
+      ['danger.manage', 'Gefahrenstufen konfigurieren (Name, Farbe, Rollen)'],
+    ],
+  },
+  {
     module: 'radio',
     label: 'Funk',
     permissions: [

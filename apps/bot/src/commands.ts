@@ -27,6 +27,7 @@ import './commands/schicht.js';
 import './commands/streife.js';
 import './commands/funk.js';
 import './commands/einsatz.js';
+import './commands/gefahr.js';
 
 const panelCommand = new SlashCommandBuilder()
   .setName('panel')

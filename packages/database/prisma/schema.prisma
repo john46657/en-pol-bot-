@@ -274,6 +274,7 @@ model Guild {
   radioChannels      RadioChannel[]
   radioAccess        RadioAccess[]
   operations         Operation[]
+  dangerLevels       DangerLevel[]
 
   applications      Application[]
   panels            ApplicationPanel[]
@@ -1396,4 +1397,55 @@ model OperationEvent {
 
   @@index([operationId, at])
   @@map("operation_events")
+}
+
+// ---------------------------------------------------------------------------
+// Phase 18: Gefahrenstatus
+// ---------------------------------------------------------------------------
+
+/// Konfigurierbare Gefahrenstufe (Standard 0–5, werden beim ersten Zugriff angelegt).
+model DangerLevel {
+  id             String   @id @default(cuid())
+  guildId        String
+  level          Int
+  name           String
+  color          String   @default("#808080")
+  emoji          String?
+  description    String?
+  /// Wer diese Stufe setzen darf (leer = jeder mit dem Recht `danger.set`).
+  allowedRoleIds String[]
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  guild Guild @relation(fields: [guildId], references: [id], onDelete: Cascade)
+
+  @@unique([guildId, level])
+  @@map("danger_levels")
+}
+
+/// Aktuelle Stufe je Server (ohne Zeile: Stufe 0).
+model DangerState {
+  guildId   String   @id
+  level     Int
+  setBy     String
+  reason    String?
+  setAt     DateTime @default(now())
+  /// Zuletzt veröffentlichte Statusmeldung (wird bei Änderungen aktualisiert).
+  channelId String?
+  messageId String?
+
+  @@map("danger_state")
+}
+
+model DangerEvent {
+  id        String   @id @default(cuid())
+  guildId   String
+  fromLevel Int?
+  toLevel   Int
+  actorId   String
+  reason    String?
+  at        DateTime @default(now())
+
+  @@index([guildId, at])
+  @@map("danger_events")
 }
