@@ -11,6 +11,9 @@ import { Guild } from './pages/Guild';
 import { GuildLayout } from './pages/GuildLayout';
 import { Login } from './pages/Login';
 import { Logs } from './pages/Logs';
+import { Personnel } from './pages/Personnel';
+import { PersonnelDetail } from './pages/PersonnelDetail';
+import { PersonnelStructure } from './pages/PersonnelStructure';
 import { ProfileEditor, Profiles } from './pages/Profiles';
 import { SubmissionDetail } from './pages/SubmissionDetail';
 import { Submissions } from './pages/Submissions';
@@ -51,6 +54,9 @@ createRoot(document.getElementById('root')!).render(
                   <Route path="applications/:applicationId" element={<ApplicationBuilder />} />
                   <Route path="submissions" element={<Submissions />} />
                   <Route path="submissions/:submissionId" element={<SubmissionDetail />} />
+                  <Route path="personnel" element={<Personnel />} />
+                  <Route path="personnel/:recordId" element={<PersonnelDetail />} />
+                  <Route path="personnel-structure" element={<PersonnelStructure />} />
                   <Route path="panels" element={<Panels />} />
                   <Route path="panels/:panelId" element={<PanelEditor />} />
                   <Route path="profiles" element={<Profiles />} />

@@ -60,6 +60,7 @@ export const DEFAULT_DENY_REASONS: readonly DenyReason[] = [
 ];
 
 interface ReviewConfig {
+  onboarding?: OnboardingConfig;
   submissionChannelId?: string;
   reviewRoleIds?: string[];
   acceptPipeline?: Record<string, boolean>;
@@ -104,12 +105,29 @@ export interface PipelineContext {
   reviewChannelId?: string | undefined;
   reviewMessageId?: string | undefined;
   roleActions: { add: string[]; remove: string[] };
+  /** Einstellungen für neue Mitarbeiter aus der Bewerbung (`config.review.onboarding`). */
+  onboarding: OnboardingConfig;
+  /** Antworten des Bewerbers (Frage-ID → Wert), z. B. für den RP-Namen. */
+  answers: Record<string, unknown>;
+  displayName: string;
   messages: Record<string, string>;
   selections: Record<string, string>;
   /** Variablen für Textvorlagen. */
   variables: Record<string, unknown>;
 }
-export type StepHandler = (ctx: PipelineContext) => Promise<{ detail?: string } | void>;
+/** Ein Schritt kann sich selbst als „übersprungen“ melden (z. B. keine Probezeit konfiguriert). */
+export type StepHandler = (
+  ctx: PipelineContext,
+) => Promise<{ detail?: string; skipped?: boolean } | void>;
+
+export interface OnboardingConfig {
+  /** Einstiegsdienstgrad (sonst der als „Einstieg“ markierte). */
+  rankId?: string | undefined;
+  teamId?: string | undefined;
+  probationDays?: number | undefined;
+  /** Frage, deren Antwort der RP-Name ist (sonst der Discord-Anzeigename). */
+  rpNameQuestionId?: string | undefined;
+}
 
 /** Reihenfolge laut Ablauf „Bewerbung angenommen“. */
 export const ACCEPT_STEPS: readonly { key: string; label: string }[] = [
@@ -208,7 +226,7 @@ async function runPipeline(
     }
     try {
       const r = await handler(ctx);
-      out.push({ ...step, status: 'done', detail: r?.detail });
+      out.push({ ...step, status: r?.skipped ? 'skipped' : 'done', detail: r?.detail });
     } catch (error) {
       out.push({
         ...step,
@@ -690,6 +708,9 @@ export async function decideSubmission(
     reviewChannelId: s.submissionChannelId ?? targets.channelId,
     reviewMessageId: s.submissionMessageId ?? undefined,
     roleActions: { add, remove },
+    onboarding: cfg.review.onboarding ?? {},
+    answers: await answersOf(s.id),
+    displayName: s.displayNameSnapshot,
     messages: cfg.messages,
     selections: targets.selections,
     variables: vars(s, { reviewer: `<@${input.reviewerId}>`, reason: publicReason ?? '' }),

@@ -373,3 +373,81 @@ export const STATUS_TEXT: Record<string, string> = {
   CANCELLED: 'Abgebrochen',
   ARCHIVED: 'Archiviert',
 };
+
+// --- Personal ---------------------------------------------------------------------
+export interface RankRow {
+  id: string;
+  name: string;
+  shortName: string | null;
+  order: number;
+  isEntry: boolean;
+  discordRoleId: string | null;
+  active: boolean;
+  _count?: { records: number };
+}
+export interface TeamRow {
+  id: string;
+  name: string;
+  description: string | null;
+  discordRoleId: string | null;
+  leaderUserId: string | null;
+  active: boolean;
+  _count?: { records: number };
+}
+export interface PersonnelRow {
+  id: string;
+  userId: string;
+  rpName: string;
+  serviceNumber: string | null;
+  status: 'ACTIVE' | 'ARCHIVED';
+  joinedAt: string;
+  probationEndsAt: string | null;
+  archivedReason: string | null;
+  rank: RankRow | null;
+  team: TeamRow | null;
+}
+export interface PersonnelEntryRow {
+  id: string;
+  kind: string;
+  title: string;
+  body: string | null;
+  occurredAt: string;
+  createdBy: string | null;
+  revokedAt: string | null;
+  revokeReason: string | null;
+}
+export interface PersonnelEventRow {
+  id: string;
+  type: string;
+  actorId: string | null;
+  before: unknown;
+  after: unknown;
+  createdAt: string;
+}
+export interface PersonnelView {
+  record: PersonnelRow;
+  sections: string[];
+  entries: PersonnelEntryRow[];
+  events: PersonnelEventRow[];
+  can: {
+    edit: boolean;
+    rank: boolean;
+    team: boolean;
+    number: boolean;
+    archive: boolean;
+    award: boolean;
+    discipline: boolean;
+    note: boolean;
+  };
+}
+export interface MemberHit {
+  id: string;
+  username: string;
+  displayName: string;
+  hasRecord: boolean;
+}
+export interface NumberFormat {
+  prefix: string;
+  digits: number;
+  next: number;
+}

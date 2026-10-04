@@ -24,6 +24,7 @@
     "@nexus/database": "workspace:*",
     "@nexus/discord": "workspace:*",
     "@nexus/permissions": "workspace:*",
+    "@nexus/personnel": "workspace:*",
     "@nexus/types": "workspace:*",
     "@nexus/validation": "workspace:*",
     "class-transformer": "^0.5.1",

@@ -12,6 +12,7 @@ import { DiscordRolesService } from '../../modules/auth/discord-roles.service.js
 import { DASHBOARD_ACCESS_KEY, GUILD_ADMIN_KEY } from '../decorators/guild-admin.decorator.js';
 import type { RequestUser } from '../decorators/current-user.decorator.js';
 import { PERMISSIONS_KEY } from '../decorators/permissions.decorator.js';
+import { ANY_SCOPE_KEY, type RequestAccess } from '../decorators/scope.decorator.js';
 
 /**
  * Permission Guard (§78/§114): serverseitiger Permission Check.
@@ -42,11 +43,17 @@ export class PermissionGuard implements CanActivate {
       context.getHandler(),
       context.getClass(),
     ]);
-    if ((!required || required.length === 0) && !adminOnly && !dashboard) return true;
+    const anyScope = this.reflector.getAllAndOverride<Permission[]>(ANY_SCOPE_KEY, [
+      context.getHandler(),
+      context.getClass(),
+    ]);
+    if ((!required || required.length === 0) && !adminOnly && !dashboard && !anyScope?.length)
+      return true;
 
     const request = context.switchToHttp().getRequest<{
       user?: RequestUser;
       params: { guildId?: string };
+      access?: RequestAccess;
     }>();
     const userId = request.user?.['id'];
     const guildId = request.params['guildId'];
@@ -73,6 +80,16 @@ export class PermissionGuard implements CanActivate {
     }
 
     const ctx = { guildId, roleIds, bypass: access.canManageGuild, userId };
+    request.access = { guildId, userId, roleIds, bypass: access.canManageGuild };
+    if (anyScope?.length && !required?.length && !adminOnly) {
+      for (const key of anyScope) if (await permissions.hasAnyScope(ctx, key)) return true;
+      if (!(await permissions.hasAnyPermission(ctx))) {
+        throw new ForbiddenException(
+          'Du hast keinen Zugriff auf das Dashboard dieses Servers. Wende dich an einen Administrator.',
+        );
+      }
+      throw new ForbiddenException(permissionDeniedMessage(anyScope));
+    }
     if (dashboard && !required?.length && !adminOnly) {
       if (await permissions.hasAnyPermission(ctx)) return true;
       throw new ForbiddenException(

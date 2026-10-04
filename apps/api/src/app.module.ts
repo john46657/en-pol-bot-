@@ -4,6 +4,7 @@ import { ConfigModule } from '@nestjs/config';
 import { ApplicationsModule } from './modules/applications/applications.module.js';
 import { AuthModule } from './modules/auth/auth.module.js';
 import { GuildModule } from './modules/guild/guild.module.js';
+import { PersonnelModule } from './modules/personnel/personnel.module.js';
 import { MessagePanelsModule } from './modules/panels/panels.module.js';
 import { DevUserMiddleware } from './common/middleware/dev-user.middleware.js';
 import { AuthMiddleware } from './common/middleware/auth.middleware.js';
@@ -17,6 +18,7 @@ import { PermissionGuard } from './common/guards/permission.guard.js';
     GuildModule,
     ApplicationsModule,
     MessagePanelsModule,
+    PersonnelModule,
   ],
   providers: [
     // Reihenfolge: erst AuthN (JwtAuthGuard), dann AuthZ (PermissionGuard).

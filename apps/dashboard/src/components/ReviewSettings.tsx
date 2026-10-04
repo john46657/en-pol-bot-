@@ -1,14 +1,28 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
-import { api, type DenyReason, type ReviewOptions } from '../api';
+import {
+  api,
+  type DenyReason,
+  type QuestionsResponse,
+  type RankRow,
+  type ReviewOptions,
+  type TeamRow,
+} from '../api';
 import { errorText } from './QueryState';
 import { useToast } from '../toast';
 
+interface Onboarding {
+  rankId?: string;
+  teamId?: string;
+  probationDays?: number;
+  rpNameQuestionId?: string;
+}
 interface AppDetail {
   config: {
     review?: Record<string, unknown> & {
       acceptPipeline?: Record<string, boolean>;
       denyReasons?: DenyReason[];
+      onboarding?: Onboarding;
     };
   } | null;
 }
@@ -38,6 +52,19 @@ export function ReviewSettings({
     queryKey: ['review-options', guildId],
     queryFn: () => api<ReviewOptions>(`/guilds/${guildId}/submissions/options/review`),
   });
+  const guildBase = `/guilds/${guildId}`;
+  const ranks = useQuery({
+    queryKey: ['ranks', guildId],
+    queryFn: () => api<RankRow[]>(`${guildBase}/personnel-structure/ranks`),
+  });
+  const teams = useQuery({
+    queryKey: ['teams', guildId],
+    queryFn: () => api<TeamRow[]>(`${guildBase}/personnel-structure/teams`),
+  });
+  const questions = useQuery({
+    queryKey: ['questions', applicationId],
+    queryFn: () => api<QuestionsResponse>(`${base}/questions`),
+  });
   if (!app.data || !options.data) return <p className="muted">Lade Einstellungen …</p>;
   return (
     <Form
@@ -45,6 +72,11 @@ export function ReviewSettings({
       app={app.data}
       options={options.data}
       base={base}
+      ranks={ranks.data ?? []}
+      teams={teams.data ?? []}
+      textQuestions={(questions.data?.questions ?? []).filter(
+        (q) => q.type === 'TEXT' || q.type === 'USERNAME',
+      )}
       onSaved={() => {
         toast.success('Gespeichert.');
         void qc.invalidateQueries({ queryKey: ['application-config', applicationId] });
@@ -58,23 +90,41 @@ function Form({
   app,
   options,
   base,
+  ranks,
+  teams,
+  textQuestions,
   onSaved,
   onError,
 }: {
   app: AppDetail;
   options: ReviewOptions;
   base: string;
+  ranks: RankRow[];
+  teams: TeamRow[];
+  textQuestions: { id: string; title: string }[];
   onSaved: () => void;
   onError: (e: unknown) => void;
 }) {
   const review = app.config?.review ?? {};
   const [steps, setSteps] = useState<Record<string, boolean>>(review.acceptPipeline ?? {});
   const [reasons, setReasons] = useState<DenyReason[]>(review.denyReasons ?? []);
+  const [onb, setOnb] = useState<Onboarding>(review.onboarding ?? {});
+  const setO = (p: Partial<Onboarding>) =>
+    setOnb(
+      (o) =>
+        Object.fromEntries(
+          Object.entries({ ...o, ...p }).filter(([, v]) => v !== '' && v !== undefined),
+        ) as Onboarding,
+    );
   const save = useMutation({
     mutationFn: () =>
       api(base, {
         method: 'PATCH',
-        body: { config: { review: { ...review, acceptPipeline: steps, denyReasons: reasons } } },
+        body: {
+          config: {
+            review: { ...review, acceptPipeline: steps, denyReasons: reasons, onboarding: onb },
+          },
+        },
       }),
     onSuccess: onSaved,
     onError,
@@ -105,6 +155,61 @@ function Form({
           </li>
         ))}
       </ul>
+      <h4>Neue Mitarbeiter (bei Annahme)</h4>
+      <div className="two">
+        <label className="fld">
+          <span>Einstiegsdienstgrad</span>
+          <select value={onb.rankId ?? ''} onChange={(e) => setO({ rankId: e.target.value })}>
+            <option value="">– der als „Einstieg“ markierte –</option>
+            {ranks
+              .filter((r) => r.active)
+              .map((r) => (
+                <option key={r.id} value={r.id}>
+                  {r.name}
+                </option>
+              ))}
+          </select>
+        </label>
+        <label className="fld">
+          <span>Team</span>
+          <select value={onb.teamId ?? ''} onChange={(e) => setO({ teamId: e.target.value })}>
+            <option value="">– kein Team –</option>
+            {teams
+              .filter((t) => t.active)
+              .map((t) => (
+                <option key={t.id} value={t.id}>
+                  {t.name}
+                </option>
+              ))}
+          </select>
+        </label>
+      </div>
+      <div className="two">
+        <label className="fld">
+          <span>Probezeit (Tage, 0 = keine)</span>
+          <input
+            type="number"
+            min={0}
+            max={365}
+            value={onb.probationDays ?? 0}
+            onChange={(e) => setO({ probationDays: Number(e.target.value) || undefined })}
+          />
+        </label>
+        <label className="fld">
+          <span>Frage mit dem RP-Namen</span>
+          <select
+            value={onb.rpNameQuestionId ?? ''}
+            onChange={(e) => setO({ rpNameQuestionId: e.target.value })}
+          >
+            <option value="">– Discord-Anzeigename verwenden –</option>
+            {textQuestions.map((q) => (
+              <option key={q.id} value={q.id}>
+                {q.title}
+              </option>
+            ))}
+          </select>
+        </label>
+      </div>
       <h4>Ablehnungsgründe</h4>
       <p className="muted">
         {reasons.length === 0

@@ -173,6 +173,11 @@ enum IntegrationType {
   MAKE
 }
 
+enum PersonnelStatus {
+  ACTIVE
+  ARCHIVED
+}
+
 enum PermissionEffect {
   ALLOW
   DENY
@@ -216,6 +221,9 @@ model Guild {
   messagePanels      Panel[]
   permissionProfiles PermissionProfile[]
   userPermissions    UserPermission[]
+  ranks              Rank[]
+  teams              Team[]
+  personnelRecords   PersonnelRecord[]
 
   applications      Application[]
   panels            ApplicationPanel[]
@@ -917,4 +925,128 @@ model Panel {
 
   @@index([guildId])
   @@map("panels")
+}
+
+// ---------------------------------------------------------------------------
+// Phase 11: Personalakten
+// ---------------------------------------------------------------------------
+
+/// Dienstgrad. `order` bestimmt die Hierarchie (größer = höher).
+model Rank {
+  id            String   @id @default(cuid())
+  guildId       String
+  name          String
+  shortName     String?
+  order         Int
+  /// Einstiegsdienstgrad für neu angenommene Mitarbeiter.
+  isEntry       Boolean  @default(false)
+  /// Optionale Discord-Rolle, die mit dem Dienstgrad verbunden ist.
+  discordRoleId String?
+  active        Boolean  @default(true)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  guild   Guild             @relation(fields: [guildId], references: [id], onDelete: Cascade)
+  records PersonnelRecord[]
+
+  @@unique([guildId, name])
+  @@index([guildId, order])
+  @@map("ranks")
+}
+
+/// Team/Abteilung. Grundlage für den TEAM-Geltungsbereich der Berechtigungen.
+model Team {
+  id            String   @id @default(cuid())
+  guildId       String
+  name          String
+  description   String?
+  /// Optionale Discord-Teamrolle.
+  discordRoleId String?
+  /// Teamleitung (Discord-User-ID): gilt für den TEAM-Bereich als „eigenes Team“.
+  leaderUserId  String?
+  active        Boolean  @default(true)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  guild   Guild             @relation(fields: [guildId], references: [id], onDelete: Cascade)
+  records PersonnelRecord[]
+
+  @@unique([guildId, name])
+  @@index([guildId])
+  @@map("teams")
+}
+
+/// Zentrale Personalakte. Alle späteren Module (Ausbildung, Beförderung, Shifts, Abwesenheit …) hängen hier an.
+model PersonnelRecord {
+  id                 String          @id @default(cuid())
+  guildId            String
+  /// Discord-User-ID (je Server höchstens eine Akte).
+  userId             String
+  rpName             String
+  serviceNumber      String?
+  rankId             String?
+  teamId             String?
+  status             PersonnelStatus @default(ACTIVE)
+  joinedAt           DateTime        @default(now())
+  probationEndsAt    DateTime?
+  archivedAt         DateTime?
+  archivedReason     String?
+  /// Bewerbung, aus der die Akte entstand (nur Herkunft).
+  sourceSubmissionId String?
+  createdBy          String?
+  createdAt          DateTime        @default(now())
+  updatedAt          DateTime        @updatedAt
+
+  guild   Guild            @relation(fields: [guildId], references: [id], onDelete: Cascade)
+  rank    Rank?            @relation(fields: [rankId], references: [id], onDelete: SetNull)
+  team    Team?            @relation(fields: [teamId], references: [id], onDelete: SetNull)
+  entries PersonnelEntry[]
+  events  PersonnelEvent[]
+
+  @@unique([guildId, userId])
+  @@unique([guildId, serviceNumber])
+  @@index([guildId, status])
+  @@index([guildId, teamId])
+  @@map("personnel_records")
+}
+
+/// Eintrag in der Akte. `kind` ist erweiterbar: AWARD, DISCIPLINE, NOTE (Phase 11) sowie später TRAINING,
+/// QUALIFICATION, PROMOTION, ABSENCE, SHIFT, OPERATION … durch die jeweiligen Module.
+model PersonnelEntry {
+  id           String    @id @default(cuid())
+  guildId      String
+  recordId     String
+  kind         String
+  title        String
+  body         String?
+  data         Json?
+  occurredAt   DateTime  @default(now())
+  createdBy    String?
+  revokedAt    DateTime?
+  revokedBy    String?
+  revokeReason String?
+  createdAt    DateTime  @default(now())
+
+  record PersonnelRecord @relation(fields: [recordId], references: [id], onDelete: Cascade)
+
+  @@index([recordId, kind])
+  @@index([guildId, kind])
+  @@map("personnel_entries")
+}
+
+/// Verlauf der Akte (wer hat wann was geändert).
+model PersonnelEvent {
+  id        String   @id @default(cuid())
+  guildId   String
+  recordId  String
+  type      String
+  actorId   String?
+  before    Json?
+  after     Json?
+  createdAt DateTime @default(now())
+
+  record PersonnelRecord @relation(fields: [recordId], references: [id], onDelete: Cascade)
+
+  @@index([recordId, createdAt])
+  @@map("personnel_events")
 }

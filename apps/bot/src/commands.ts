@@ -22,6 +22,7 @@ import { memberCanManage } from './discord/permissions.js';
 import { getCommand, listCommandData } from './commands/registry.js';
 import './commands/server.js';
 import './commands/diagnose.js';
+import './commands/akte.js';
 
 const panelCommand = new SlashCommandBuilder()
   .setName('panel')

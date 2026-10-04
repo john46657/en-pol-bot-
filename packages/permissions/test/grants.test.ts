@@ -239,3 +239,33 @@ describe('Vorlagen (Daten statt Code)', () => {
     expect(permissionFromAlias('NOPE')).toBeUndefined();
   });
 });
+
+describe('Vorlagen und Personalakten (Phase 11)', () => {
+  it('Teamleitung darf Personalakten nur im eigenen Team sehen, Polizeileitung/Personal serverweit', () => {
+    const grants = (key: string) =>
+      resolveTemplate(key)!.allow.map((a) => g(a.key, 'ALLOW', a.scope ?? 'SERVER'));
+    const lead = grants('teamleitung');
+    expect(
+      decide(lead, 'personnel.view', { teamId: 'streife' }, { teamIds: ['streife'] }).allowed,
+    ).toBe(true);
+    expect(
+      decide(lead, 'personnel.view', { teamId: 'sek' }, { teamIds: ['streife'] }).allowed,
+    ).toBe(false);
+    expect(
+      decide(lead, 'personnel.discipline.view', { teamId: 'streife' }, { teamIds: ['streife'] })
+        .allowed,
+    ).toBe(false);
+    expect(
+      decide(lead, 'personnel.archive', { teamId: 'streife' }, { teamIds: ['streife'] }).allowed,
+    ).toBe(false);
+    for (const t of ['polizeileitung', 'personalabteilung']) {
+      expect(decide(grants(t), 'personnel.view', { teamId: 'beliebig' }).allowed, t).toBe(true);
+      expect(decide(grants(t), 'personnel.number.edit', { teamId: 'beliebig' }).allowed, t).toBe(
+        true,
+      );
+    }
+    expect(decide(grants('polizeileitung'), 'personnel.discipline.manage').allowed).toBe(true);
+    expect(decide(grants('personalabteilung'), 'personnel.discipline.view').allowed).toBe(false);
+    expect(decide(grants('beamter'), 'personnel.view').allowed).toBe(false);
+  });
+});

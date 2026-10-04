@@ -170,6 +170,15 @@ export const reviewConfigSchema = z.object({
     .or(z.enum(['manual']))
     .optional(),
   reviewerRoleIds: z.array(z.string()).max(20).optional(),
+  /** Einstellungen für neue Mitarbeiter (Personalakte). */
+  onboarding: z
+    .object({
+      rankId: z.string().max(40).optional(),
+      teamId: z.string().max(40).optional(),
+      probationDays: z.number().int().min(0).max(365).optional(),
+      rpNameQuestionId: z.string().max(40).optional(),
+    })
+    .optional(),
   /** Annahme-Schritte einzeln schaltbar (Schlüssel → aktiv); fehlend = aktiv. */
   acceptPipeline: z.record(z.string().max(40), z.boolean()).optional(),
   /** Auswählbare Ablehnungsgründe (leer = Standardgründe). */

@@ -23,3 +23,18 @@ describe('Bot-Ereignisse sind angebunden', () => {
     expect(client.listenerCount(event)).toBeGreaterThan(0);
   });
 });
+
+describe('Personal-Schritte der Annahme-Pipeline', () => {
+  it('sind im Bot aktiv (nicht mehr „nicht verfügbar“)', async () => {
+    const { describeAcceptPipeline } = await import('@nexus/automation');
+    const steps = Object.fromEntries(describeAcceptPipeline().map((s) => [s.key, s.available]));
+    expect(steps).toMatchObject({
+      personnelRecord: true,
+      serviceNumber: true,
+      startRank: true,
+      team: true,
+      probation: true,
+      roles: true,
+    });
+  });
+});
