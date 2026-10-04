@@ -1,8 +1,9 @@
-import { Body, Controller, Delete, Get, Param, Post, Put, Query, UseFilters } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Post, Put, Query, Res, UseFilters } from '@nestjs/common';
+import type { Response } from 'express';
 import { ConfigService } from '@nestjs/config';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { permissions } from '@nexus/permissions';
-import { claim, closeTicket, deleteCategory, getTicket, listCategories, listTickets, release, renderTranscript, restTicketDiscord, saveCategory, setParticipant, setPriority, stats, ticketHistory, type Actor } from '@nexus/tickets';
+import { TicketError, getSettings, loads, postPanel, saveSettings, transcriptFileName, claim, closeTicket, deleteCategory, getTicket, listCategories, listTickets, release, renderTranscript, restTicketDiscord, saveCategory, setParticipant, setPriority, stats, ticketHistory, type Actor } from '@nexus/tickets';
 import { CurrentUser, type RequestUser } from '../../common/decorators/current-user.decorator.js';
 import { GuildId } from '../../common/decorators/guild-id.decorator.js';
 import { RequirePermissions } from '../../common/decorators/permissions.decorator.js';
@@ -38,6 +39,35 @@ export class TicketsController {
     return stats(guildId);
   }
 
+  /** Server-Einstellungen des Ticket-Systems (Texte, Kanäle, Rollen, Verhalten). */
+  @Get('settings')
+  @RequirePermissions('tickets.view')
+  settings(@GuildId() guildId: string) {
+    return getSettings(guildId);
+  }
+
+  @Put('settings')
+  @RequirePermissions('tickets.manage')
+  saveSettings(@GuildId() guildId: string, @Body() b: Body_, @CurrentUser() user: RequestUser) {
+    return saveSettings(guildId, b, user.id);
+  }
+
+  /** Auslastung je Kategorie (wie im Panel). */
+  @Get('loads')
+  @RequirePermissions('tickets.view')
+  loads(@GuildId() guildId: string) {
+    return loads(guildId);
+  }
+
+  /** Panel im konfigurierten (oder angegebenen) Kanal veröffentlichen. */
+  @Post('panel')
+  @RequirePermissions('tickets.manage')
+  async panel(@GuildId() guildId: string, @Body() b: Body_) {
+    const channelId = str(b['channelId']) ?? (await getSettings(guildId)).panelChannelId;
+    if (!channelId || !/^\d{5,25}$/.test(channelId)) throw new TicketError('invalid', 'Bitte zuerst einen Panel-Kanal wählen.');
+    return { messageId: await postPanel(guildId, channelId, this.discord()) };
+  }
+
   @Get('categories')
   @RequirePermissions('tickets.view')
   categories(@GuildId() guildId: string) {
@@ -48,7 +78,7 @@ export class TicketsController {
   @RequirePermissions('tickets.manage')
   saveCategory(@GuildId() guildId: string, @Body() b: Body_, @CurrentUser() user: RequestUser) {
     const roles = b['staffRoleIds'];
-    return saveCategory(guildId, { id: str(b['id']), name: str(b['name']) ?? '', description: str(b['description']), emoji: str(b['emoji']), discordCategoryId: str(b['discordCategoryId']), staffRoleIds: Array.isArray(roles) ? roles.filter((r): r is string => typeof r === 'string') : undefined, defaultPriority: str(b['defaultPriority']), maxOpenPerUser: typeof b['maxOpenPerUser'] === 'number' ? b['maxOpenPerUser'] : undefined, active: typeof b['active'] === 'boolean' ? b['active'] : undefined }, user.id);
+    return saveCategory(guildId, { id: str(b['id']), name: str(b['name']) ?? '', description: str(b['description']), emoji: str(b['emoji']), discordCategoryId: str(b['discordCategoryId']), staffRoleIds: Array.isArray(roles) ? roles.filter((r): r is string => typeof r === 'string') : undefined, defaultPriority: str(b['defaultPriority']), maxOpenPerUser: typeof b['maxOpenPerUser'] === 'number' ? b['maxOpenPerUser'] : undefined, active: typeof b['active'] === 'boolean' ? b['active'] : undefined, color: typeof b['color'] === 'number' ? b['color'] : b['color'] === null ? null : undefined, maxOpenTotal: typeof b['maxOpenTotal'] === 'number' ? b['maxOpenTotal'] : undefined, requiredRoleIds: Array.isArray(b['requiredRoleIds']) ? b['requiredRoleIds'].filter((r): r is string => typeof r === 'string') : undefined, nameTemplate: typeof b['nameTemplate'] === 'string' ? b['nameTemplate'] : b['nameTemplate'] === null ? null : undefined, formFields: Array.isArray(b['formFields']) ? (b['formFields'] as never) : b['formFields'] === null ? null : undefined, transcriptEnabled: typeof b['transcriptEnabled'] === 'boolean' ? b['transcriptEnabled'] : b['transcriptEnabled'] === null ? null : undefined }, user.id);
   }
 
   @Delete('categories/:id')
@@ -56,6 +86,18 @@ export class TicketsController {
   async deleteCategory(@GuildId() guildId: string, @Param('id') id: string, @CurrentUser() user: RequestUser) {
     await deleteCategory(guildId, id, user.id);
     return { ok: true };
+  }
+
+  /** Gespeichertes HTML-Transcript als Download (nie inline: Inhalte stammen von Nutzern). */
+  @Get(':id/transcript.html')
+  @RequirePermissions('tickets.view')
+  async transcript(@GuildId() guildId: string, @Param('id') id: string, @Res() res: Response) {
+    const t = await getTicket(guildId, id);
+    if (!t.transcriptHtml) throw new TicketError('not-found', 'Für dieses Ticket gibt es kein HTML-Transcript.');
+    res.setHeader('Content-Type', 'text/html; charset=utf-8');
+    res.setHeader('Content-Disposition', `attachment; filename="${transcriptFileName(t, t.userId)}"`);
+    res.setHeader('Content-Security-Policy', "default-src 'none'; img-src https: data:; style-src 'unsafe-inline'; sandbox");
+    res.send(t.transcriptHtml);
   }
 
   @Get(':id')

@@ -1,5 +1,5 @@
 import { permissionRepository, prisma } from '@nexus/database';
-import { saveCategory, type TicketDiscord } from '@nexus/tickets';
+import { saveCategory, saveSettings, type TicketDiscord } from '@nexus/tickets';
 import { afterAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import { runTicket } from '../src/commands/ticket.js';
 import { openFromModal } from '../src/tickets/ticket-handlers.js';
@@ -17,6 +17,10 @@ const discord: TicketDiscord = {
   send: vi.fn(async () => {}),
   sendDm: vi.fn(async () => {}),
   setMemberAccess: vi.fn(async () => {}),
+  post: vi.fn(async () => 'm1'),
+  edit: vi.fn(async () => {}),
+  sendFile: vi.fn(async () => {}),
+  sendDmFile: vi.fn(async () => {}),
 };
 
 beforeEach(async () => {
@@ -28,6 +32,7 @@ beforeEach(async () => {
   await permissionRepository.setPermissionsForRole(G, 'role-user', [e('tickets.create')], { name: 'Mitglied' });
   await permissionRepository.setPermissionsForRole(G, 'role-staff', ['tickets.create', 'tickets.view', 'tickets.handle'].map(e), { name: 'Support' });
   await permissionRepository.setPermissionsForRole(G, 'role-admin', ['tickets.manage', 'tickets.view'].map(e), { name: 'Leitung' });
+  await saveSettings(G, { deleteAfterMinutes: 0 }, 'x'); // Kanal sofort löschen (Standard: 10 Minuten)
   cat = (await saveCategory(G, { name: 'Support', staffRoleIds: [ROLE] }, 'x')).id;
 });
 afterAll(async () => {
@@ -70,7 +75,7 @@ describe('/ticket', () => {
   });
   it('Fehler verständlich: Limit, fremdes Ticket, unbekannte Kategorie', async () => {
     await call(USER, ['role-user'], 'neu', { str: { kategorie: 'Support', betreff: 'Eins eins' } });
-    expect(await call(USER, ['role-user'], 'neu', { str: { kategorie: 'Support', betreff: 'Zwei zwei' } })).toContain('bereits 1 offene');
+    expect(await call(USER, ['role-user'], 'neu', { str: { kategorie: 'Support', betreff: 'Zwei zwei' } })).toContain('bereits ein offenes Ticket');
     expect(await call(USER, ['role-user'], 'neu', { str: { kategorie: 'Nix', betreff: 'Hallo du' } })).toContain('gibt es nicht');
     expect(await call('900000000000220009', ['role-user'], 'info', { str: { nummer: '1' } })).toContain('Du benötigst'); // fremdes Ticket
     expect(await call(USER, ['role-user'], 'info', { str: { nummer: '1' } })).toContain('Eins eins'); // eigenes

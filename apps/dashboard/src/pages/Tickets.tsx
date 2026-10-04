@@ -1,14 +1,16 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
 import { useParams } from 'react-router';
-import { api, type DiscordChannel, type DiscordRole, type TicketCategoryRow, type TicketRow } from '../api';
+import { API_URL, api, type DiscordChannel, type DiscordRole, type TicketCategoryRow, type TicketRow } from '../api';
 import { errorText, QueryState } from '../components/QueryState';
+import { TicketSettings } from '../components/TicketSettings';
 import { useToast } from '../toast';
 
 const ST = { OPEN: '🟢 offen', CLAIMED: '🔵 in Bearbeitung', CLOSED: '🔒 geschlossen' } as const;
 const PRIO = { LOW: 'Niedrig', NORMAL: 'Normal', HIGH: 'Hoch', URGENT: 'Dringend' } as const;
 const num = (n: number) => `#${String(n).padStart(4, '0')}`;
-const emptyCat = { id: '', name: '', description: '', emoji: '', discordCategoryId: '', staffRoleIds: [] as string[], defaultPriority: 'NORMAL', maxOpenPerUser: 1, active: true };
+type FormRow = { id: string; label: string; style: 'short' | 'paragraph'; required: boolean };
+const emptyCat = { id: '', name: '', description: '', emoji: '', discordCategoryId: '', staffRoleIds: [] as string[], defaultPriority: 'NORMAL', maxOpenPerUser: 1, active: true, color: null as number | null, maxOpenTotal: 20, requiredRoleIds: [] as string[], nameTemplate: '' as string | null, formFields: [] as FormRow[] | null, transcriptEnabled: null as boolean | null };
 
 /** Tickets: offene Tickets bearbeiten, Archiv mit Transkript, Kategorien. */
 export function Tickets() {
@@ -64,7 +66,7 @@ export function Tickets() {
                         <button className="btn danger" onClick={() => confirm(`Ticket ${num(t.number)} schließen? Der Kanal wird nach dem Sichern des Transkripts gelöscht.`) && call.mutate({ method: 'POST', path: `/${t.id}/close`, body: { reason: why[t.id] }, msg: 'Ticket geschlossen.' })}>Schließen</button>
                       </div>
                     )}
-                    {t.status === 'CLOSED' && <div><button className="btn" onClick={() => setOpen(open === t.id ? null : t.id)}>{open === t.id ? 'Transkript ausblenden' : 'Transkript anzeigen'}</button></div>}
+                    {t.status === 'CLOSED' && <div><button className="btn" onClick={() => setOpen(open === t.id ? null : t.id)}>{open === t.id ? 'Transkript ausblenden' : 'Transkript anzeigen'}</button> <a className="btn" href={`${API_URL}/api/v1${base}/${t.id}/transcript.html`}>📄 HTML-Transcript</a></div>}
                     {open === t.id && (
                       <QueryState query={detail}>
                         {(x) => <pre style={{ whiteSpace: 'pre-wrap', maxHeight: 400, overflow: 'auto' }}>{x.transcriptText}</pre>}
@@ -107,14 +109,38 @@ export function Tickets() {
         <label className="fld"><span>Bearbeiter-Rollen</span>
           <select multiple size={5} value={c.staffRoleIds} onChange={(e) => setC({ ...c, staffRoleIds: [...e.target.selectedOptions].map((o) => o.value) })}>{roles.data?.filter((r) => r.blockedReason !== 'everyone').map((r) => <option key={r.id} value={r.id}>{r.name}</option>)}</select>
         </label>
+        <div className="two">
+          <label className="fld"><span>Kapazität (offene Tickets gesamt – Basis der Auslastung)</span><input type="number" min={1} max={1000} value={c.maxOpenTotal} onChange={(e) => setC({ ...c, maxOpenTotal: Number(e.target.value) })} /></label>
+          <label className="fld"><span>Farbe</span><input type="color" value={`#${(c.color ?? 0x5865f2).toString(16).padStart(6, '0')}`} onChange={(e) => setC({ ...c, color: parseInt(e.target.value.slice(1), 16) })} /></label>
+        </div>
+        <label className="fld"><span>Benötigte Rollen zum Eröffnen (leer = alle)</span>
+          <select multiple size={4} value={c.requiredRoleIds} onChange={(e) => setC({ ...c, requiredRoleIds: [...e.target.selectedOptions].map((o) => o.value) })}>{roles.data?.filter((r) => r.blockedReason !== 'everyone').map((r) => <option key={r.id} value={r.id}>{r.name}</option>)}</select>
+        </label>
+        <div className="two">
+          <label className="fld"><span>Kanalname-Vorlage (leer = Standard des Servers)</span><input value={c.nameTemplate ?? ''} placeholder="support-{user}" onChange={(e) => setC({ ...c, nameTemplate: e.target.value })} /></label>
+          <label className="fld"><span>Transcript</span>
+            <select value={c.transcriptEnabled === null ? '' : String(c.transcriptEnabled)} onChange={(e) => setC({ ...c, transcriptEnabled: e.target.value === '' ? null : e.target.value === 'true' })}><option value="">Einstellung des Servers</option><option value="true">Immer</option><option value="false">Nie</option></select>
+          </label>
+        </div>
+        <fieldset className="fld"><legend>Formular beim Eröffnen (optional, max. 5 Felder)</legend>
+          {(c.formFields ?? []).map((f, i) => (
+            <div key={i} className="actions">
+              <input value={f.label} maxLength={45} placeholder="Frage" onChange={(e) => setC({ ...c, formFields: (c.formFields ?? []).map((x, j) => (j === i ? { ...x, label: e.target.value } : x)) })} />
+              <select value={f.style} onChange={(e) => setC({ ...c, formFields: (c.formFields ?? []).map((x, j) => (j === i ? { ...x, style: e.target.value as FormRow['style'] } : x)) })}><option value="short">Kurz</option><option value="paragraph">Lang</option></select>
+              <label><input type="checkbox" checked={f.required} onChange={(e) => setC({ ...c, formFields: (c.formFields ?? []).map((x, j) => (j === i ? { ...x, required: e.target.checked } : x)) })} /> Pflicht</label>
+              <button className="btn" onClick={() => setC({ ...c, formFields: (c.formFields ?? []).filter((_, j) => j !== i) })}>Entfernen</button>
+            </div>
+          ))}
+          {(c.formFields ?? []).length < 5 && <button className="btn" onClick={() => setC({ ...c, formFields: [...(c.formFields ?? []), { id: `f${(c.formFields ?? []).length}`, label: '', style: 'short', required: true }] })}>+ Feld</button>}
+        </fieldset>
         <div className="actions">
           <select value={c.defaultPriority} onChange={(e) => setC({ ...c, defaultPriority: e.target.value })} aria-label="Standard-Priorität">{Object.entries(PRIO).map(([k, v]) => <option key={k} value={k}>{v}</option>)}</select>
           <label><input type="checkbox" checked={c.active} onChange={(e) => setC({ ...c, active: e.target.checked })} /> aktiv</label>
-          <button className="btn primary" disabled={!c.name.trim()} onClick={() => call.mutate({ method: 'PUT', path: '/categories', body: { ...c, id: c.id || undefined, discordCategoryId: c.discordCategoryId || undefined, description: c.description || undefined, emoji: c.emoji || undefined }, msg: 'Gespeichert.' }, { onSuccess: () => setC(emptyCat) })}>Speichern</button>
+          <button className="btn primary" disabled={!c.name.trim()} onClick={() => call.mutate({ method: 'PUT', path: '/categories', body: { ...c, nameTemplate: c.nameTemplate || null, formFields: (c.formFields ?? []).filter((f) => f.label.trim()), id: c.id || undefined, discordCategoryId: c.discordCategoryId || undefined, description: c.description || undefined, emoji: c.emoji || undefined }, msg: 'Gespeichert.' }, { onSuccess: () => setC(emptyCat) })}>Speichern</button>
           {c.id && <button className="btn" onClick={() => setC(emptyCat)}>Neu</button>}
         </div>
-        <small className="muted">Das Panel zum Eröffnen postest du im Bot mit <code>/ticket panel</code>.</small>
       </div>
+      <TicketSettings guildId={guildId} categories={cats.data ?? []} />
     </>
   );
 }

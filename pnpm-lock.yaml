@@ -374,6 +374,9 @@ importers:
       '@nexus/shifts':
         specifier: workspace:*
         version: link:../../packages/shifts
+      '@nexus/tickets':
+        specifier: workspace:*
+        version: link:../../packages/tickets
       bullmq:
         specifier: ^5.56.0
         version: 5.81.5
@@ -543,7 +546,7 @@ importers:
   packages/database:
     dependencies:
       '@prisma/client':
-        specifier: ^6.11.0
+        specifier: ^6.19.3
         version: 6.19.3(prisma@6.19.3(typescript@5.9.3))(typescript@5.9.3)
     devDependencies:
       prisma:

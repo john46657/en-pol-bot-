@@ -18,6 +18,7 @@ import {
 import { startHeartbeat } from '@nexus/health';
 import { startPublisher } from '@nexus/realtime';
 import { watchOverlongShifts } from '@nexus/shifts';
+import { deleteDueChannels, refreshAllPanels, restTicketDiscord } from '@nexus/tickets';
 
 /**
  * NEXUS Worker: betreibt die Hintergrund-Jobs (Phase 31) über BullMQ – Benachrichtigungen, Bewerbungs-Timeouts,
@@ -47,6 +48,11 @@ const HANDLERS: Record<string, () => Promise<unknown>> = {
   'discord-sync': async () => {
     if (!token) throw new Error('DISCORD_TOKEN fehlt');
     return syncAllGuilds(token);
+  },
+  'ticket-cleanup': async () => {
+    if (!token) throw new Error('DISCORD_TOKEN fehlt');
+    const discord = restTicketDiscord(token);
+    return { ...(await deleteDueChannels(discord)), panelsUpdated: await refreshAllPanels(discord) };
   },
   'shift-watch': () => watchOverlongShifts(port(), new Date(), process.env['DASHBOARD_URL']),
 };

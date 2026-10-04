@@ -357,6 +357,7 @@ model Guild {
   promotions         PromotionRequest[]
   sekSquads          SekSquad[]
   ticketCategories   TicketCategory[]
+  ticketSettings     TicketSettings?
   tickets            Ticket[]
   absences           Absence[]
   reports            Report[]
@@ -2030,6 +2031,18 @@ model TicketCategory {
   /// Wie viele offene Tickets ein Mitglied je Kategorie haben darf.
   maxOpenPerUser    Int      @default(1)
   active            Boolean  @default(true)
+  /// Embed-Farbe (RGB als Zahl); leer = Standardfarbe des Servers.
+  color             Int?
+  /// Gesamtkapazität: so viele offene Tickets sind gleichzeitig möglich (Basis der Auslastungsanzeige).
+  maxOpenTotal      Int      @default(20)
+  /// Wer ein Ticket dieser Kategorie eröffnen darf (leer = alle).
+  requiredRoleIds   String[]
+  /// Kanalname-Vorlage dieser Kategorie (leer = Vorlage des Servers).
+  nameTemplate      String?
+  /// Optionales Formular: [{ id, label, style: 'short'|'paragraph', required, placeholder? }] (max. 5).
+  formFields        Json?
+  /// null = Einstellung des Servers
+  transcriptEnabled Boolean?
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt
 
@@ -2038,6 +2051,44 @@ model TicketCategory {
 
   @@unique([guildId, name])
   @@map("ticket_categories")
+}
+
+/// Server-Einstellungen des Ticket-Systems (Texte, Kanäle, Rollen, Verhalten).
+model TicketSettings {
+  guildId               String   @id
+  panelChannelId        String?
+  panelMessageId        String?
+  transcriptChannelId   String?
+  /// Kategorie für „Ticket mit Bewerber“ (leer = erste aktive Kategorie).
+  applicationCategoryId String?
+  /// Administratoren: dürfen in jedem Ticket alles (zusätzlich zu den Teamrollen der Kategorie).
+  adminRoleIds          String[]
+  /// Platzhalter: {number} {user} {category}
+  nameTemplate          String   @default("ticket-{number}-{user}")
+  /// Minuten bis zum Löschen des Kanals nach dem Schließen (0 = sofort).
+  deleteAfterMinutes    Int      @default(10)
+  transcriptEnabled     Boolean  @default(true)
+  dmTranscript          Boolean  @default(false)
+  claimEnabled          Boolean  @default(true)
+  /// Übernommene Tickets dürfen nur vom Bearbeiter (oder Admins) geschlossen/verändert werden.
+  claimExclusive        Boolean  @default(false)
+  closeWithReason       Boolean  @default(true)
+  confirmClose          Boolean  @default(true)
+  loadEnabled           Boolean  @default(true)
+  hideFullCategories    Boolean  @default(false)
+  color                 Int      @default(5793266)
+  panelTitle            String   @default("🔷 Ticket-Support")
+  panelDescription      String   @default("Wähle unten die passende Kategorie, um ein Ticket zu eröffnen.")
+  selectPlaceholder     String   @default("🔽 Wähle eine Kategorie ...")
+  loadTitle             String   @default("📊 Ticket Auslastung")
+  loadText              String   @default("Hier siehst du die aktuelle Auslastung unserer Tickets. Bei einer höheren Auslastung kann es zu längeren Bearbeitungszeiten kommen. Ein Ticket kannst du jedoch jederzeit eröffnen, unabhängig von der Auslastung.")
+  openTitle             String   @default("🎫 Ticket geöffnet")
+  openText              String   @default("Hallo {user},\nvielen Dank, dass du den Support kontaktiert hast.\nBeschreibe dein Anliegen möglichst genau.\nEin Teammitglied wird sich schnellstmöglich um dein Anliegen kümmern.")
+  updatedAt             DateTime @updatedAt
+
+  guild Guild @relation(fields: [guildId], references: [id], onDelete: Cascade)
+
+  @@map("ticket_settings")
 }
 
 model TicketCounter {
@@ -2070,6 +2121,16 @@ model Ticket {
   /// Transkript (Nachrichten als JSON, beim Schließen festgehalten).
   transcript        Json?
   transcriptContent Boolean      @default(true)
+  /// Fertiges HTML-Transcript (beim Schließen erzeugt und gespeichert).
+  transcriptHtml    String?
+  /// Antworten des Kategorie-Formulars: [{ label, value }]
+  formAnswers       Json?
+  /// Zugehörige Bewerbung, wenn das Ticket aus einer Bewerbung heraus eröffnet wurde.
+  submissionId      String?
+  /// Ab wann der Kanal eines geschlossenen Tickets gelöscht wird.
+  deleteAt          DateTime?
+  channelDeletedAt  DateTime?
+  lastPingAt        DateTime?
   createdAt         DateTime     @default(now())
   updatedAt         DateTime     @updatedAt
 

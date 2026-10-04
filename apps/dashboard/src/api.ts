@@ -736,6 +736,45 @@ export interface TicketCategoryRow {
   defaultPriority: string;
   maxOpenPerUser: number;
   active: boolean;
+  color: number | null;
+  maxOpenTotal: number;
+  requiredRoleIds: string[];
+  nameTemplate: string | null;
+  formFields: { id: string; label: string; style: 'short' | 'paragraph'; required: boolean }[] | null;
+  transcriptEnabled: boolean | null;
+}
+export interface TicketLoad {
+  id: string;
+  name: string;
+  emoji: string | null;
+  open: number;
+  max: number;
+  percent: number;
+  level: 'low' | 'medium' | 'high' | 'full';
+}
+export interface TicketSettingsRow {
+  panelChannelId: string | null;
+  transcriptChannelId: string | null;
+  applicationCategoryId: string | null;
+  adminRoleIds: string[];
+  nameTemplate: string;
+  deleteAfterMinutes: number;
+  color: number;
+  panelTitle: string;
+  panelDescription: string;
+  selectPlaceholder: string;
+  loadTitle: string;
+  loadText: string;
+  openTitle: string;
+  openText: string;
+  transcriptEnabled: boolean;
+  dmTranscript: boolean;
+  claimEnabled: boolean;
+  claimExclusive: boolean;
+  closeWithReason: boolean;
+  confirmClose: boolean;
+  loadEnabled: boolean;
+  hideFullCategories: boolean;
 }
 export interface TicketRow {
   id: string;
@@ -748,6 +787,8 @@ export interface TicketRow {
   channelId: string | null;
   closeReason: string | null;
   transcriptContent: boolean;
+  submissionId?: string | null;
+  deleteAt?: string | null;
   createdAt: string;
   closedAt: string | null;
   category: TicketCategoryRow;

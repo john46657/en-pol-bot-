@@ -1,5 +1,6 @@
 import { guildRepository, prisma } from '@nexus/database';
 import { afterAll, beforeEach, describe, expect, it, vi } from 'vitest';
+import { saveSettings } from '../src/index.js';
 import { TicketError, claim, closeTicket, deleteCategory, formatNumber, getByChannel, getByNumber, listTickets, openTicket, release, renderTranscript, saveCategory, setParticipant, setPriority, stats, ticketHistory, type Actor, type TicketDiscord, type TranscriptMessage } from '../src/index.js';
 
 const G = 'tickettest-guild';
@@ -28,6 +29,10 @@ function fake(opts: { messages?: TranscriptMessage[]; failCreate?: boolean; fail
     send: vi.fn(async (channel, payload) => void sent.push({ channel, payload })),
     sendDm: vi.fn(async () => { if (opts.failDm) throw new Error('DM zu'); }),
     setMemberAccess: vi.fn(async (c, u, a) => void d.access.push([c, u, a])),
+    post: vi.fn(async (channel, payload) => { sent.push({ channel, payload }); return 'msg1'; }),
+    edit: vi.fn(async () => undefined),
+    sendFile: vi.fn(async (channel, payload, file) => void sent.push({ channel, payload: { ...payload, file } })),
+    sendDmFile: vi.fn(async () => undefined),
   };
   return d;
 }
@@ -67,7 +72,8 @@ describe('Ticket eröffnen', () => {
     expect(t).toMatchObject({ number: 1, status: 'OPEN', priority: 'NORMAL', userId: U1 });
     expect(d.created[0]).toMatchObject({ userIds: [U1], roleIds: [ROLE], name: 'ticket-0001-max-muller' });
     expect(t.channelId).toBeTruthy();
-    expect(d.sent[0]!.payload.embeds[0].title).toContain('#0001');
+    expect(d.sent[0]!.payload.embeds[0].title).toBe('🎫 Ticket geöffnet');
+    expect(d.sent[0]!.payload.embeds[0].fields.map((f: any) => f.value)).toContain('#0001');
     expect(JSON.stringify(d.sent[0]!.payload.components)).toContain('ticket:claim');
     expect((await getByChannel(G, t.channelId!))?.id).toBe(t.id);
   });
@@ -126,6 +132,7 @@ describe('Bearbeiten', () => {
 describe('Schließen, Transkript, Archiv', () => {
   it('Transkript + Log-Kanal + DM + Kanal gelöscht; danach nichts mehr änderbar', async () => {
     await guildRepository.setSelection(G, 'ticket-log-channel', LOG);
+    await saveSettings(G, { deleteAfterMinutes: 0 }, 'b'); // sofort löschen (Standard: 10 Minuten, siehe Ticket-v2-Tests)
     const d = fake({ messages: [msg(U1, 'Hallo, ich brauche Hilfe'), msg(STAFF, 'Gerne!'), msg('bot', 'Willkommen', true)] });
     const t = await openTicket({ guildId: G, userId: U1, username: 'Max', categoryId: cat, subject: 'Hilfe bitte' }, d);
     await claim(G, t.id, staff, d);

@@ -310,3 +310,33 @@ describe('Schicht, Einsatz und Beförderung', () => {
     expect(events).toContain('submission.accepted');
   });
 });
+
+describe('Ticket-Einstellungen & Transcript (Dashboard)', () => {
+  it('Einstellungen lesen/ändern (nur mit Recht), Validierung → 400, Kategorie mit Kapazität/Farbe/Formular, Auslastung, HTML-Transcript als Download', async () => {
+    expect((await call('GET', `/guilds/${G}/tickets/settings`, NOBODY)).status).toBe(403);
+    const s = await call('GET', `/guilds/${G}/tickets/settings`, ADMIN);
+    expect(s.status).toBe(200);
+    expect(s.data).toMatchObject({ claimEnabled: true, deleteAfterMinutes: 10 });
+    expect((await call('PUT', `/guilds/${G}/tickets/settings`, ADMIN, { deleteAfterMinutes: -5 })).status).toBe(400);
+    expect((await call('PUT', `/guilds/${G}/tickets/settings`, ADMIN, { unbekannt: 1 })).status).toBe(400);
+    const saved = await call('PUT', `/guilds/${G}/tickets/settings`, ADMIN, { panelTitle: '🔷 PrinceArmy Ticket-Support', claimExclusive: true, deleteAfterMinutes: 0 });
+    expect(saved.data).toMatchObject({ panelTitle: '🔷 PrinceArmy Ticket-Support', claimExclusive: true });
+
+    const cat = await call('PUT', `/guilds/${G}/tickets/categories`, ADMIN, { name: '💻 Technik', description: 'Probleme mit Bot, Website oder Server.', emoji: '💻', color: 0x5865f2, maxOpenTotal: 20, requiredRoleIds: [], formFields: [{ id: 'f0', label: 'Worum geht es?', style: 'paragraph', required: true }] });
+    expect(cat.status, JSON.stringify(cat.data)).toBe(200);
+    expect(cat.data).toMatchObject({ color: 0x5865f2, maxOpenTotal: 20 });
+    expect((await call('PUT', `/guilds/${G}/tickets/categories`, ADMIN, { name: 'X', maxOpenTotal: 0 })).status).toBe(400);
+    const loads = await call('GET', `/guilds/${G}/tickets/loads`, ADMIN);
+    expect(loads.data.find((l: { id: string }) => l.id === cat.data.id)).toMatchObject({ open: 0, max: 20, percent: 0, level: 'low' });
+    // Panel braucht einen Kanal
+    expect((await call('POST', `/guilds/${G}/tickets/panel`, ADMIN, {})).status).toBe(400);
+
+    const t = await prisma.ticket.create({ data: { guildId: G, number: 9001, categoryId: cat.data.id, userId: OFFICER, subject: 'x', status: 'CLOSED', closedAt: new Date(), transcriptHtml: '<!doctype html><title>t</title><b>Hi</b>' } });
+    expect((await call('GET', `/guilds/${G}/tickets/${t.id}/transcript.html`, NOBODY)).status).toBe(403);
+    const dl = await fetch(`${base}/api/v1/guilds/${G}/tickets/${t.id}/transcript.html`, { headers: as(ADMIN) });
+    expect(dl.status).toBe(200);
+    expect(dl.headers.get('content-disposition')).toContain('attachment');
+    expect(dl.headers.get('content-security-policy')).toContain('sandbox');
+    expect(await dl.text()).toContain('<b>Hi</b>');
+  });
+});

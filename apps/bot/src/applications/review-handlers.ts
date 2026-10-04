@@ -2,7 +2,6 @@ import {
   ActionRowBuilder,
   MessageFlags,
   ModalBuilder,
-  StringSelectMenuBuilder,
   TextInputBuilder,
   TextInputStyle,
   type ButtonInteraction,
@@ -12,7 +11,6 @@ import {
 import {
   askClarification,
   decideSubmission,
-  denyReasonsOf,
   inviteToInterview,
   restDiscordPort,
   startReview,
@@ -22,11 +20,14 @@ import {
 } from '@nexus/automation';
 import { prisma } from '@nexus/database';
 import type { Permission } from '@nexus/types';
-import { registerButton, registerModal, registerSelect } from '../core/interaction-registry.js';
+import { registerButton, registerModal } from '../core/interaction-registry.js';
 import { config } from '../config.js';
 import { buildCustomId, isValidId } from '../discord/custom-ids.js';
 import { requireMemberPermission } from '../discord/permissions.js';
 import { addNote, buildHistoryEmbed } from './review-service.js';
+import { getSettings, listCategories, openTicket } from '@nexus/tickets';
+import { log } from '../logger.js';
+import { ticketDiscord } from '../tickets/ticket-core.js';
 
 /**
  * Bearbeitung durch das Team (Phase 10): Ansehen · Annehmen · Ablehnen · Rückfrage · Gespräch · Notiz · Verlauf
@@ -47,10 +48,11 @@ export const dashboardLink = (submissionId?: string): string | undefined => {
 
 const A = {
   view: 'review:view',
-  accept: 'review:accept_r',
+  accept: 'review:accept',
+  acceptReason: 'review:accept_r',
   deny: 'review:deny',
-  denySelect: 'review:denysel',
-  denyModal: 'review:deny_r',
+  denyReason: 'review:deny_r',
+  ticket: 'review:ticket',
   ask: 'review:ask',
   interview: 'review:interview',
   history: 'review:history',
@@ -107,107 +109,87 @@ registerButton(A.view, async (i, { args }) => {
     await i.followUp({ content: slice(block), flags: ephemeral, allowedMentions: { parse: [] } });
 });
 
-// --- Annehmen: Bestätigung per Modal (optionale Nachricht) ---------------------
+// --- Entscheiden ---------------------------------------------------------------------------------------------
+// Accept / Deny: sofort (mit den konfigurierten Standardtexten). Accept/Deny mit Grund: Modal mit Pflichtfeld.
 
-registerButton(A.accept, async (i, { args }) => {
-  const submissionId = args[0] ?? '';
-  if (!isValidId(submissionId) || !(await need(i, 'applications.submissions.accept'))) return;
-  await i.showModal(
-    textModal(
-      id(A.accept, submissionId),
-      'Bewerbung annehmen',
-      'note',
-      'Nachricht an den Bewerber (optional)',
-      false,
-    ),
-  );
-});
-
-registerModal(A.accept, async (i, { args }) => {
-  const submissionId = args[0] ?? '';
-  if (!isValidId(submissionId) || !(await need(i, 'applications.submissions.accept'))) return;
-  await i.deferReply({ flags: ephemeral });
-  const note = i.fields.getTextInputValue('note').trim() || undefined;
+async function decide(
+  i: ButtonInteraction | ModalSubmitInteraction,
+  submissionId: string,
+  decision: 'ACCEPTED' | 'DENIED',
+  note: string | undefined,
+): Promise<void> {
   const r = await decideSubmission(reviewPort(), {
     submissionId,
     guildId: guildOf(i),
     reviewerId: i.user.id,
-    decision: 'ACCEPTED',
+    decision,
     note,
+    // „mit Grund“ speichert den Grund auch intern (Verlauf/Dashboard), nicht nur für den Bewerber
+    ...(note ? { internalReason: note } : {}),
     dashboardUrl: dashboardLink(submissionId),
   });
-  await i.editReply({
-    content: slice(r.ok ? r.message : `⚠️ ${r.message}`),
-    allowedMentions: { parse: [] },
+  await i.editReply({ content: slice(r.ok ? r.message : `⚠️ ${r.message}`), allowedMentions: { parse: [] } });
+  // Entscheidung sichtbar machen: Knöpfe der Bewerbung entfernen (nur wenn tatsächlich entschieden)
+  if (r.ok && i.isButton()) await i.message.edit({ components: [] }).catch(() => undefined);
+}
+
+for (const [action, decision, perm] of [
+  [A.accept, 'ACCEPTED', 'applications.submissions.accept'],
+  [A.deny, 'DENIED', 'applications.submissions.deny'],
+] as const) {
+  registerButton(action, async (i, { args }) => {
+    const submissionId = args[0] ?? '';
+    if (!isValidId(submissionId) || !(await need(i, perm))) return;
+    await i.deferReply({ flags: ephemeral });
+    await decide(i, submissionId, decision, undefined);
   });
-});
+}
 
-// --- Ablehnen: Grund wählen → optionale Nachricht ------------------------------
+for (const [action, decision, perm, title, label] of [
+  [A.acceptReason, 'ACCEPTED', 'applications.submissions.accept', 'Provide a reason for accepting', 'Provide a reason for accepting'],
+  [A.denyReason, 'DENIED', 'applications.submissions.deny', 'Provide a reason for denying', 'Provide a reason for denying'],
+] as const) {
+  const modalId = action;
+  registerButton(action, async (i, { args }) => {
+    const submissionId = args[0] ?? '';
+    if (!isValidId(submissionId) || !(await need(i, perm))) return;
+    await i.showModal(textModal(id(modalId, submissionId), title, 'note', label, true, 1000));
+  });
+  registerModal(modalId, async (i, { args }) => {
+    const submissionId = args[0] ?? '';
+    if (!isValidId(submissionId) || !(await need(i, perm))) return;
+    const reason = i.fields.getTextInputValue('note').trim();
+    if (!reason) return void (await i.reply({ content: '⚠️ Bitte gib einen Grund an.', flags: ephemeral }));
+    await i.deferReply({ flags: ephemeral });
+    await decide(i, submissionId, decision, reason);
+  });
+}
 
-registerButton(A.deny, async (i, { args }) => {
+// --- Ticket mit dem Bewerber eröffnen ----------------------------------------------------------------------------------
+
+registerButton(A.ticket, async (i, { args }) => {
   const submissionId = args[0] ?? '';
-  if (!isValidId(submissionId) || !(await need(i, 'applications.submissions.deny'))) return;
-  const s = await prisma.applicationSubmission.findFirst({
-    where: { id: submissionId, guildId: guildOf(i) },
-    include: { application: true },
-  });
-  if (!s)
-    return void (await i.reply({ content: '⚠️ Bewerbung nicht gefunden.', flags: ephemeral }));
-  const reasons = denyReasonsOf(s.application.config).slice(0, 25);
-  await i.reply({
-    content: '🔴 **Ablehnungsgrund wählen**',
-    flags: ephemeral,
-    components: [
-      new ActionRowBuilder<StringSelectMenuBuilder>().addComponents(
-        new StringSelectMenuBuilder()
-          .setCustomId(id(A.denySelect, submissionId))
-          .setPlaceholder('Grund …')
-          .addOptions(
-            reasons.map((r) => ({
-              label: r.label.slice(0, 100),
-              value: r.id,
-              ...(r.text ? { description: r.text.slice(0, 100) } : {}),
-            })),
-          ),
-      ),
-    ],
-  });
-});
-
-registerSelect(A.denySelect, async (i, { args }) => {
-  const submissionId = args[0] ?? '';
-  const reasonId = i.values[0] ?? '';
-  if (!isValidId(submissionId) || !reasonId || !(await need(i, 'applications.submissions.deny')))
-    return;
-  await i.showModal(
-    textModal(
-      id(A.denyModal, submissionId, reasonId),
-      'Bewerbung ablehnen',
-      'note',
-      'Zusätzliche Nachricht (optional)',
-      false,
-    ),
-  );
-});
-
-registerModal(A.denyModal, async (i, { args }) => {
-  const [submissionId = '', reasonId = ''] = args;
-  if (!isValidId(submissionId) || !(await need(i, 'applications.submissions.deny'))) return;
+  const member = await need(i, 'tickets.handle', 'tickets.manage');
+  if (!isValidId(submissionId) || !member || !i.guild) return;
   await i.deferReply({ flags: ephemeral });
-  const note = i.fields.getTextInputValue('note').trim() || undefined;
-  const r = await decideSubmission(reviewPort(), {
-    submissionId,
-    guildId: guildOf(i),
-    reviewerId: i.user.id,
-    decision: 'DENIED',
-    reasonId,
-    note,
-    dashboardUrl: dashboardLink(submissionId),
-  });
-  await i.editReply({
-    content: slice(r.ok ? r.message : `⚠️ ${r.message}`),
-    allowedMentions: { parse: [] },
-  });
+  try {
+    const s = await prisma.applicationSubmission.findFirst({ where: { id: submissionId, guildId: i.guild.id }, include: { application: true } });
+    if (!s) return void (await i.editReply('⚠️ Bewerbung nicht gefunden.'));
+    const applicant = await i.guild.members.fetch(s.userId).catch(() => null);
+    if (!applicant) return void (await i.editReply('⚠️ Der Bewerber ist nicht (mehr) auf dem Server.'));
+    // Bereits ein offenes Gespräch zu dieser Bewerbung? Dann nicht doppelt anlegen.
+    const existing = await prisma.ticket.findFirst({ where: { guildId: i.guild.id, submissionId, status: { not: 'CLOSED' } } });
+    if (existing?.channelId) return void (await i.editReply(`ℹ️ Es gibt bereits ein Gespräch zu dieser Bewerbung: <#${existing.channelId}>`));
+    const categories = await listCategories(i.guild.id, true);
+    const configured = (await getSettings(i.guild.id)).applicationCategoryId;
+    const cat = categories.find((c) => c.id === configured) ?? categories[0];
+    if (!cat) return void (await i.editReply('⚠️ Es gibt keine aktive Ticket-Kategorie. Lege im Dashboard eine an.'));
+    const t = await openTicket({ guildId: i.guild.id, userId: s.userId, username: applicant.displayName, categoryId: cat.id, subject: `Bewerbungsgespräch – ${s.application.name}`.slice(0, 100), roleIds: [...applicant.roles.cache.keys()], submission: { id: s.id, name: s.application.name }, openedBy: i.user.id }, ticketDiscord());
+    await i.editReply(`🎫 Gespräch eröffnet: <#${t.channelId}>`);
+  } catch (e) {
+    log.error({ err: e instanceof Error ? (e.stack ?? e.message) : String(e), submissionId }, 'Ticket mit Bewerber fehlgeschlagen.');
+    await i.editReply(e instanceof Error && e.name === 'TicketError' ? `❌ ${e.message}` : '❌ Ein Fehler ist aufgetreten. Bitte versuche es erneut oder wende dich an den Support.').catch(() => undefined);
+  }
 });
 
 // --- Rückfrage / Gespräch ---------------------------------------------------------

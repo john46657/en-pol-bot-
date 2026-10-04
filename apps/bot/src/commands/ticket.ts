@@ -1,6 +1,6 @@
-import { ActionRowBuilder, MessageFlags, SlashCommandBuilder, StringSelectMenuBuilder, type AutocompleteInteraction, type ChatInputCommandInteraction, type GuildMember, type TextChannel } from 'discord.js';
+import { MessageFlags, SlashCommandBuilder, type AutocompleteInteraction, type ChatInputCommandInteraction, type GuildMember, type TextChannel } from 'discord.js';
 import { permissionDeniedMessage } from '@nexus/permissions';
-import { PRIORITIES, PRIORITY_LABEL, TicketError, claim, closeTicket, formatNumber, getByChannel, getByNumber, listCategories, listTickets, openTicket, release, renderTranscript, setParticipant, setPriority, stats } from '@nexus/tickets';
+import { getSettings, postPanel, PRIORITIES, PRIORITY_LABEL, TicketError, claim, closeTicket, formatNumber, getByChannel, getByNumber, listCategories, listTickets, openTicket, release, renderTranscript, setParticipant, setPriority, stats } from '@nexus/tickets';
 import type { Permission } from '@nexus/types';
 import { embeds } from '../core/embed-builder.js';
 import { memberCan } from '../discord/permissions.js';
@@ -40,11 +40,11 @@ export async function runTicket(interaction: ChatInputCommandInteraction): Promi
     if (sub === 'panel') {
       const cats = await listCategories(guild.id, true);
       if (cats.length === 0) return void (await reply(interaction, '❌ Lege zuerst im Dashboard Ticket-Kategorien an.'));
-      const channel = (o.getChannel('kanal') ?? interaction.channel) as TextChannel | null;
+      const settings = await getSettings(guild.id);
+      const channel = (o.getChannel('kanal') ?? (settings.panelChannelId ? await guild.channels.fetch(settings.panelChannelId).catch(() => null) : null) ?? interaction.channel) as TextChannel | null;
       if (!channel || !('send' in channel)) return void (await reply(interaction, '❌ Bitte einen Textkanal wählen.'));
-      const select = new StringSelectMenuBuilder().setCustomId('nexus:ticket:pick').setPlaceholder('Wähle eine Kategorie …').addOptions(cats.slice(0, 25).map((c) => ({ label: c.name, value: c.id, ...(c.description ? { description: c.description.slice(0, 100) } : {}), ...(c.emoji ? { emoji: c.emoji } : {}) })));
-      await channel.send({ embeds: [embeds.info({ title: '🎫 Support & Anliegen', description: o.getString('text') ?? 'Wähle unten die passende Kategorie, um ein Ticket zu eröffnen. Es entsteht ein privater Kanal nur für dich und das Team.' })], components: [new ActionRowBuilder<StringSelectMenuBuilder>().addComponents(select)] });
-      return void (await reply(interaction, `✅ Ticket-Panel in <#${channel.id}> gepostet.`));
+      await postPanel(guild.id, channel.id, discord);
+      return void (await reply(interaction, `✅ Ticket-Panel in <#${channel.id}> gepostet. Die Auslastung aktualisiert sich automatisch. Texte, Farben und Kategorien änderst du im Dashboard.`));
     }
     if (sub === 'liste' || sub === 'archiv') {
       const { items } = await listTickets({ guildId: guild.id, open: sub === 'liste', closed: sub === 'archiv', query: o.getString('suche') ?? undefined, limit: 15 });

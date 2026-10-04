@@ -1,6 +1,7 @@
 import { DiscordApiError } from '@nexus/discord';
 import { guildRepository, permissionRepository, prisma } from '@nexus/database';
 import { addQuestion } from '@nexus/validation';
+import { decideSubmission } from '@nexus/automation';
 import type { Question } from '@nexus/types';
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import { startApplication } from '../src/applications/application-service.js';
@@ -449,7 +450,7 @@ describe('Berechtigungen im Bearbeitungs-Panel (serverseitig)', () => {
     const f = fakePort();
     setReviewPort(f.port as never);
     const id = await submitted();
-    const { submit } = await viaModal('review:accept_r', id, OWNER, []);
+    const { submit } = await viaModal('review:accept_r', id, OWNER, [], { note: 'Owner-Entscheidung.' });
     expect(text(submit)).toContain('Angenommen');
     expect(await status(id)).toBe('ACCEPTED');
   });
@@ -584,7 +585,7 @@ describe('Annehmen (Pipeline)', () => {
     setReviewPort(f.port as never);
     f.roles.set(APPLICANT, ['pending-role']);
     const id = await submitted();
-    await viaModal('review:accept_r', id, ...ACCEPT);
+    await viaModal('review:accept_r', id, ...ACCEPT, { note: 'Willkommen im Team.' });
     expect(f.roles.get(APPLICANT)).toEqual(['recruit-role']);
   });
 
@@ -601,7 +602,7 @@ describe('Annehmen (Pipeline)', () => {
     const f = fakePort();
     setReviewPort(f.port as never);
     const id = await submitted();
-    const { submit } = await viaModal('review:accept_r', id, ...ACCEPT);
+    const { submit } = await viaModal('review:accept_r', id, ...ACCEPT, { note: 'Willkommen im Team.' });
     expect(text(submit)).toContain('⏭️ Einstiegsrolle vergeben');
     expect(text(submit)).toContain('⏭️ Leitung informieren');
     expect(f.roles.get(APPLICANT)).toBeUndefined();
@@ -612,7 +613,7 @@ describe('Annehmen (Pipeline)', () => {
     const f = fakePort({ rejectRoles: { 'entry-role': 403 } });
     setReviewPort(f.port as never);
     const id = await submitted();
-    const { submit } = await viaModal('review:accept_r', id, ...ACCEPT);
+    const { submit } = await viaModal('review:accept_r', id, ...ACCEPT, { note: 'Willkommen im Team.' });
     const out = text(submit);
     expect(out).toContain('teilweise fehlgeschlagen');
     expect(out).toContain('❌ Einstiegsrolle vergeben');
@@ -639,7 +640,7 @@ describe('Annehmen (Pipeline)', () => {
     const f = fakePort({ dmFails: [APPLICANT] });
     setReviewPort(f.port as never);
     const id = await submitted({ f });
-    const { submit } = await viaModal('review:accept_r', id, ...ACCEPT);
+    const { submit } = await viaModal('review:accept_r', id, ...ACCEPT, { note: 'Willkommen im Team.' });
     expect(text(submit)).toContain('❌ Bewerber informieren');
     expect(await status(id)).toBe('ACCEPTED');
   });
@@ -648,7 +649,7 @@ describe('Annehmen (Pipeline)', () => {
     const f = fakePort();
     setReviewPort(f.port as never);
     const id = await submitted({ isTest: true });
-    await viaModal('review:accept_r', id, ...ACCEPT);
+    await viaModal('review:accept_r', id, ...ACCEPT, { note: 'Willkommen im Team.' });
     expect(f.roles.get(APPLICANT)).toBeUndefined();
     expect(await status(id)).toBe('ACCEPTED');
   });
@@ -664,8 +665,8 @@ describe('Annehmen (Pipeline)', () => {
       fields: Record<string, string>,
     ) => viaModal(button, id, userId, roleIds, fields);
     const [a, b] = await Promise.all([
-      run(U.acceptor, [ROLE.accept], 'review:accept_r', {}),
-      run(OWNER, [], 'review:accept_r', {}),
+      run(U.acceptor, [ROLE.accept], 'review:accept_r', { note: 'A' }),
+      run(OWNER, [], 'review:accept_r', { note: 'B' }),
     ]);
     const results = [text(a.submit), text(b.submit)];
     expect(results.filter((r) => r.startsWith('✅ Angenommen')).length).toBe(1);
@@ -680,89 +681,65 @@ describe('Annehmen (Pipeline)', () => {
 });
 
 describe('Ablehnen', () => {
-  it('Grund wählen → Nachricht → abgelehnt: Bewerber erfährt den Grund, es entsteht keine Rolle/Akte/Dienstnummer', async () => {
+  it('Deny sofort: abgelehnt, Standardtext an den Bewerber, keine Rolle/Akte/Dienstnummer; Knöpfe verschwinden', async () => {
     const f = fakePort();
     setReviewPort(f.port as never);
     const id = await submitted({ f });
-    const start = interaction('button', cid('review:deny', id), {
-      userId: U.denier,
-      roleIds: [ROLE.deny],
-    });
-    await handleInteraction(client(), start);
-    expect(start.out.replies[0]).toContain('Ablehnungsgrund');
-    expect(start.reply.mock.calls[0]![0].components).toHaveLength(1);
-    // Auswahl → Modal
-    const sel = interaction('select', cid('review:denysel', id), {
-      userId: U.denier,
-      roleIds: [ROLE.deny],
-      values: ['quality'],
-    });
-    await handleInteraction(client(), sel);
-    const modalId = sel.out.shown[0].custom_id as string;
-    expect(modalId).toContain(':quality');
-    const submit = interaction('modal', modalId, {
-      userId: U.denier,
-      roleIds: [ROLE.deny],
-      fields: { note: 'Bitte ausführlicher antworten.' },
-    });
-    await handleInteraction(client(), submit);
-    const out = text(submit);
+    const click = interaction('button', cid('review:deny', id), { userId: U.denier, roleIds: [ROLE.deny] });
+    await handleInteraction(client(), click);
+    const out = text(click);
     expect(out).toContain('Abgelehnt');
     expect(out).not.toContain('Personalakte');
     expect(await status(id)).toBe('DENIED');
-    const dm = f.dms.find((d) => d.userId === APPLICANT)!.content;
-    expect(dm).toContain('abgelehnt');
-    expect(dm).toContain('Qualität der Antworten');
-    expect(dm).toContain('Bitte ausführlicher antworten.');
+    expect(f.dms.find((d) => d.userId === APPLICANT)!.content).toContain('abgelehnt');
     expect(f.roles.get(APPLICANT)).toBeUndefined();
-    const row = await prisma.applicationSubmission.findUniqueOrThrow({ where: { id } });
-    expect(row.publicReason).toContain('Qualität');
-    const pipeline = (
-      await prisma.applicationAuditEvent.findFirstOrThrow({
-        where: { submissionId: id, action: 'submission.pipeline' },
-      })
-    ).metadata as any;
-    expect(pipeline.steps.map((s: any) => s.key)).not.toEqual(
-      expect.arrayContaining([
-        'personnelRecord',
-        'serviceNumber',
-        'startRank',
-        'team',
-        'probation',
-      ]),
-    );
-    expect(f.edits.at(-1)!.payload.embeds[0].fields.map((x: any) => x.name)).toContain('Grund');
+    // ohne Recht geht es nicht
+    const id2 = await submitted({ f });
+    const nope = interaction('button', cid('review:deny', id2), { userId: U.acceptor, roleIds: [ROLE.accept] });
+    await handleInteraction(client(), nope);
+    expect(await status(id2)).toBe('SUBMITTED');
   });
 
-  it('konfigurierte Ablehnungsgründe werden angeboten; unbekannter Grund wird abgelehnt', async () => {
-    await prisma.application.update({
-      where: { id: appId },
-      data: {
-        config: {
-          review: {
-            denyReasons: [{ id: 'alter', label: 'Zu jung', text: 'Du bist leider zu jung.' }],
-          },
-          questions,
-        } as never,
-      },
-    });
+  it('Deny mit Grund: Modal mit Pflichtfeld – ohne Text passiert nichts; mit Text steht der Grund in DM, Verlauf und Datenbank', async () => {
+    const f = fakePort();
+    setReviewPort(f.port as never);
+    const id = await submitted({ f });
+    const empty = await viaModal('review:deny_r', id, U.denier, [ROLE.deny], { note: '   ' });
+    expect(empty.click.out.shown[0].title).toBe('Provide a reason for denying');
+    expect(text(empty.submit)).toContain('Bitte gib einen Grund an');
+    expect(await status(id)).toBe('SUBMITTED');
+    const { submit } = await viaModal('review:deny_r', id, U.denier, [ROLE.deny], { note: 'Bitte ausführlicher antworten.' });
+    expect(text(submit)).toContain('Abgelehnt');
+    expect(await status(id)).toBe('DENIED');
+    expect(f.dms.find((d) => d.userId === APPLICANT)!.content).toContain('Bitte ausführlicher antworten.');
+    const row = await prisma.applicationSubmission.findUniqueOrThrow({ where: { id } });
+    expect(row.publicReason).toContain('ausführlicher');
+    expect(row.internalReason).toContain('ausführlicher');
+    expect(row.reviewerUserId).toBe(U.denier);
+  });
+
+  it('Accept sofort und Accept mit Grund (Pflichtfeld „Provide a reason for accepting“)', async () => {
+    const f = fakePort();
+    setReviewPort(f.port as never);
+    const id = await submitted({ f });
+    const reasonless = await viaModal('review:accept_r', id, ...ACCEPT, { note: '' });
+    expect(reasonless.click.out.shown[0].title).toBe('Provide a reason for accepting');
+    expect(await status(id)).toBe('SUBMITTED');
+    const direct = interaction('button', cid('review:accept', id), { userId: ACCEPT[0], roleIds: ACCEPT[1] });
+    await handleInteraction(client(), direct);
+    expect(text(direct)).toContain('Angenommen');
+    expect(await status(id)).toBe('ACCEPTED');
+    const id2 = await submitted({ f });
+    await viaModal('review:accept_r', id2, ...ACCEPT, { note: 'Starke Bewerbung.' });
+    expect((await prisma.applicationSubmission.findUniqueOrThrow({ where: { id: id2 } })).publicReason).toBe('Starke Bewerbung.');
+  });
+
+  it('unbekannter Ablehnungsgrund (z. B. aus dem Dashboard) wird abgelehnt', async () => {
     const f = fakePort();
     setReviewPort(f.port as never);
     const id = await submitted();
-    const start = interaction('button', cid('review:deny', id), {
-      userId: U.denier,
-      roleIds: [ROLE.deny],
-    });
-    await handleInteraction(client(), start);
-    const opts = JSON.stringify(start.reply.mock.calls[0]![0].components);
-    expect(opts).toContain('Zu jung');
-    expect(opts).not.toContain('Qualität');
-    const forged = interaction('modal', cid('review:deny_r', id, 'gibt-es-nicht'), {
-      userId: U.denier,
-      roleIds: [ROLE.deny],
-    });
-    await handleInteraction(client(), forged);
-    expect(text(forged)).toContain('Unbekannter Ablehnungsgrund');
+    const r = await decideSubmission(f.port as never, { submissionId: id, guildId: G, reviewerId: U.denier, decision: 'DENIED', reasonId: 'gibt-es-nicht' });
+    expect(r).toMatchObject({ ok: false, message: expect.stringContaining('Unbekannter Ablehnungsgrund') });
     expect(await status(id)).toBe('SUBMITTED');
   });
 
@@ -770,13 +747,9 @@ describe('Ablehnen', () => {
     const f = fakePort();
     setReviewPort(f.port as never);
     const id = await submitted();
-    await viaModal('review:accept_r', id, ...ACCEPT);
-    const again = interaction('modal', cid('review:deny_r', id, 'quality'), {
-      userId: U.denier,
-      roleIds: [ROLE.deny],
-    });
-    await handleInteraction(client(), again);
-    expect(text(again)).toContain('nicht mehr entschieden werden');
+    await viaModal('review:accept_r', id, ...ACCEPT, { note: 'Willkommen im Team.' });
+    const again = await viaModal('review:deny_r', id, U.denier, [ROLE.deny], { note: 'zu spät' });
+    expect(text(again.submit)).toContain('nicht mehr entschieden werden');
     expect(await status(id)).toBe('ACCEPTED');
   });
 });
@@ -810,7 +783,7 @@ describe('Zurückziehen durch den Bewerber', () => {
     expect(f.posts.at(-1)!.payload.content).toContain('Habe mich anders entschieden.');
     expect(f.edits.at(-1)!.payload.components).toEqual([]);
     expect(await events(id)).toContain('submission.withdrawn');
-    const late = await viaModal('review:accept_r', id, ...ACCEPT);
+    const late = await viaModal('review:accept_r', id, ...ACCEPT, { note: 'Willkommen im Team.' });
     expect(text(late.submit)).toContain('nicht mehr entschieden werden');
     expect(await status(id)).toBe('WITHDRAWN');
     expect(f.roles.get(APPLICANT)).toBeUndefined();
@@ -834,7 +807,7 @@ describe('Zurückziehen durch den Bewerber', () => {
     await handleInteraction(client(), forged);
     expect(await status(id)).toBe('SUBMITTED');
 
-    await viaModal('review:accept_r', id, ...ACCEPT);
+    await viaModal('review:accept_r', id, ...ACCEPT, { note: 'Willkommen im Team.' });
     const own = interaction('modal', cid('dm:withdraw', id), {
       userId: APPLICANT,
       dm: { isDMBased: () => true },

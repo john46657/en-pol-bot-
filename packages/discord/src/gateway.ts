@@ -81,7 +81,7 @@ export function rateLimitBucket(method: string, endpoint: string): string {
 async function discordFetch<T>(
   botToken: string,
   endpoint: string,
-  options: { method?: string; body?: unknown; headers?: Record<string, string> } = {},
+  options: { method?: string; body?: unknown; form?: FormData; headers?: Record<string, string> } = {},
   botHeader = true,
 ): Promise<T> {
   const method = options.method ?? 'GET';
@@ -100,7 +100,7 @@ async function discordFetch<T>(
 async function send<T>(
   botToken: string,
   endpoint: string,
-  options: { method?: string; body?: unknown; headers?: Record<string, string> },
+  options: { method?: string; body?: unknown; form?: FormData; headers?: Record<string, string> },
   botHeader: boolean,
 ): Promise<T> {
   const method = options.method ?? 'GET';
@@ -115,10 +115,10 @@ async function send<T>(
       method,
       headers: {
         ...(botHeader ? authHeader(botToken) : {}),
-        'Content-Type': 'application/json',
+        ...(options.form ? {} : { 'Content-Type': 'application/json' }),
         ...(options.headers ?? {}),
       },
-      ...(options.body ? { body: JSON.stringify(options.body) } : {}),
+      ...(options.form ? { body: options.form } : options.body ? { body: JSON.stringify(options.body) } : {}),
     });
 
     if (response.status === 204) return undefined as T;
@@ -404,6 +404,30 @@ export async function sendDirectMessage(
   await createChannelMessage(botToken, channel.id, payload);
 }
 
+export interface FileUpload {
+  name: string;
+  content: string | Uint8Array;
+  contentType: string;
+}
+
+const formOf = (payload: MessagePayload, file: FileUpload): FormData => {
+  const form = new FormData();
+  form.append('payload_json', JSON.stringify({ ...payload, attachments: [{ id: 0, filename: file.name }] }));
+  form.append('files[0]', new Blob([file.content as never], { type: file.contentType }), file.name);
+  return form;
+};
+
+/** Nachricht mit einer Datei im Anhang (z. B. HTML-Transcript). */
+export async function createChannelMessageWithFile(botToken: string, channelId: string, payload: MessagePayload, file: FileUpload): Promise<{ id: string }> {
+  const data = await discordFetch<{ id: string }>(botToken, `/channels/${channelId}/messages`, { method: 'POST', form: formOf(payload, file) });
+  return { id: data.id };
+}
+
+export async function sendDirectMessageWithFile(botToken: string, userId: string, payload: MessagePayload, file: FileUpload): Promise<void> {
+  const channel = await discordFetch<{ id: string }>(botToken, '/users/@me/channels', { method: 'POST', body: { recipient_id: userId } });
+  await createChannelMessageWithFile(botToken, channel.id, payload, file);
+}
+
 // --- Kanäle anlegen/löschen, Nachrichten lesen (Ticket-System) ------------------------------------------
 
 export interface PermissionOverwrite {
@@ -421,6 +445,7 @@ export const ChannelPerm = {
   EMBED: 1n << 14n,
   ATTACH: 1n << 15n,
   HISTORY: 1n << 16n,
+  MANAGE_MESSAGES: 1n << 13n,
 } as const;
 
 const toOverwrite = (o: PermissionOverwrite) => ({ id: o.id, type: o.type === 'role' ? 0 : 1, allow: String(o.allow ?? 0n), deny: String(o.deny ?? 0n) });
@@ -454,9 +479,10 @@ export interface RawChannelMessage {
   id: string;
   content: string;
   timestamp: string;
-  author: { id: string; username: string; global_name?: string | null; bot?: boolean };
-  attachments: { filename: string; url: string }[];
+  author: { id: string; username: string; global_name?: string | null; bot?: boolean; avatar?: string | null };
+  attachments: { filename: string; url: string; content_type?: string }[];
   embeds: unknown[];
+  message_reference?: { message_id?: string };
 }
 
 /** Alle Nachrichten eines Kanals (älteste zuerst), seitenweise geladen (max. `limit`). Inhalte erfordern den Message-Content-Intent. */

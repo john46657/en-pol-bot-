@@ -16,6 +16,7 @@
     "@nexus/jobs": "workspace:*",
     "@nexus/realtime": "workspace:*",
     "@nexus/shifts": "workspace:*",
+    "@nexus/tickets": "workspace:*",
     "bullmq": "^5.56.0",
     "dotenv": "^17.2.0",
     "ioredis": "^5.6.1",
