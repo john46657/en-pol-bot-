@@ -113,6 +113,9 @@ importers:
       '@nexus/radio':
         specifier: workspace:*
         version: link:../../packages/radio
+      '@nexus/reports':
+        specifier: workspace:*
+        version: link:../../packages/reports
       '@nexus/sek':
         specifier: workspace:*
         version: link:../../packages/sek
@@ -228,6 +231,9 @@ importers:
       '@nexus/radio':
         specifier: workspace:*
         version: link:../../packages/radio
+      '@nexus/reports':
+        specifier: workspace:*
+        version: link:../../packages/reports
       '@nexus/sek':
         specifier: workspace:*
         version: link:../../packages/sek
@@ -604,6 +610,52 @@ importers:
         specifier: workspace:*
         version: link:../types
     devDependencies:
+      '@prisma/client':
+        specifier: ^6.11.0
+        version: 6.19.3(prisma@6.19.3(typescript@5.9.3))(typescript@5.9.3)
+      vitest:
+        specifier: ^3.2.4
+        version: 3.2.7(@types/node@24.19.0)(jiti@2.7.0)(tsx@4.23.15)(yaml@2.9.1)
+
+  packages/reports:
+    dependencies:
+      '@nexus/automation':
+        specifier: workspace:*
+        version: link:../automation
+      '@nexus/database':
+        specifier: workspace:*
+        version: link:../database
+      '@nexus/shifts':
+        specifier: workspace:*
+        version: link:../shifts
+      '@nexus/types':
+        specifier: workspace:*
+        version: link:../types
+    devDependencies:
+      '@nexus/fleet':
+        specifier: workspace:*
+        version: link:../fleet
+      '@nexus/operations':
+        specifier: workspace:*
+        version: link:../operations
+      '@nexus/personnel':
+        specifier: workspace:*
+        version: link:../personnel
+      '@nexus/promotions':
+        specifier: workspace:*
+        version: link:../promotions
+      '@nexus/qualifications':
+        specifier: workspace:*
+        version: link:../qualifications
+      '@nexus/tickets':
+        specifier: workspace:*
+        version: link:../tickets
+      '@nexus/training':
+        specifier: workspace:*
+        version: link:../training
+      '@nexus/wanted':
+        specifier: workspace:*
+        version: link:../wanted
       '@prisma/client':
         specifier: ^6.11.0
         version: 6.19.3(prisma@6.19.3(typescript@5.9.3))(typescript@5.9.3)

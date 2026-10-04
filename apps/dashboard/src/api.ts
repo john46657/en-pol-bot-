@@ -764,3 +764,12 @@ export interface AbsenceRow {
   status: 'PENDING' | 'APPROVED' | 'REJECTED' | 'WITHDRAWN' | 'ENDED';
   decisionReason: string | null;
 }
+
+export interface ReportRow {
+  id: string;
+  kind: 'DAY' | 'WEEK';
+  periodStart: string;
+  periodEnd: string;
+  messageId: string | null;
+  data: Record<string, unknown>;
+}

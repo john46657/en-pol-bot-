@@ -76,6 +76,12 @@ export const SELECTION_SLOTS: readonly SelectionSlot[] = [
     label: 'Abmeldungen',
     description: 'Hier meldet der Bot neue Abmeldungs-Anträge für die Führung.',
   },
+  {
+    key: 'report-channel',
+    kind: 'text',
+    label: 'Berichte',
+    description: 'Hier veröffentlicht der Bot Tages- und Wochenberichte.',
+  },
 ];
 
 export const getSlot = (key: string): SelectionSlot | undefined =>

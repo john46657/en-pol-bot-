@@ -37,6 +37,7 @@ import './commands/befoerderung.js';
 import './commands/sek.js';
 import './commands/ticket.js';
 import './commands/abmeldung.js';
+import './commands/bericht.js';
 
 const panelCommand = new SlashCommandBuilder()
   .setName('panel')

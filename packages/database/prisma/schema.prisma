@@ -359,6 +359,7 @@ model Guild {
   ticketCategories   TicketCategory[]
   tickets            Ticket[]
   absences           Absence[]
+  reports            Report[]
 
   applications      Application[]
   panels            ApplicationPanel[]
@@ -2134,4 +2135,30 @@ model Absence {
   @@index([guildId, userId, status])
   @@index([guildId, status, startDate])
   @@map("absences")
+}
+
+// ---------------------------------------------------------------------------
+// Phase 27: Tages- und Wochenberichte
+// ---------------------------------------------------------------------------
+
+/// Bericht (DAY/WEEK) mit festgehaltenen Zahlen. Je Server, Art und Zeitraum genau einer (Neuberechnung überschreibt).
+model Report {
+  id          String   @id @default(cuid())
+  guildId     String
+  kind        String
+  /// Beginn des Zeitraums (Berlin-Mitternacht, als UTC-Zeitpunkt)
+  periodStart DateTime
+  periodEnd   DateTime
+  data        Json
+  channelId   String?
+  messageId   String?
+  generatedBy String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  guild Guild @relation(fields: [guildId], references: [id], onDelete: Cascade)
+
+  @@unique([guildId, kind, periodStart])
+  @@index([guildId, kind, periodStart])
+  @@map("reports")
 }

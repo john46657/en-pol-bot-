@@ -80,6 +80,8 @@ export const PERMISSION_TEMPLATES: readonly PermissionTemplate[] = [
       'promotions.reject',
       'tickets.view',
       'tickets.handle',
+      'report.view',
+      'report.manage',
       'team.view',
       'team.edit',
       'team.member.manage',
