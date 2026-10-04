@@ -86,6 +86,10 @@ export async function startShift(input: { guildId: string; userId: string; typeI
   if (type.requiredRoleIds.length > 0 && !type.requiredRoleIds.some((r) => input.memberRoleIds.includes(r))) {
     throw new ShiftError('forbidden', `Für „${type.name}“ fehlt dir die nötige Rolle.`);
   }
+  // Wer abgemeldet ist, startet keine Schicht (Abmeldungen, Phase 26) – vorzeitig zurückmelden hebt die Sperre auf.
+  const today = new Date(`${new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Berlin', year: 'numeric', month: '2-digit', day: '2-digit' }).format(now)}T00:00:00.000Z`);
+  const absent = await prisma.absence.findFirst({ where: { guildId, userId: input.userId, status: 'APPROVED', startDate: { lte: today }, endDate: { gte: today } } });
+  if (absent) throw new ShiftError('conflict', `Du bist bis ${absent.endDate.toLocaleDateString('de-DE', { timeZone: 'UTC' })} abgemeldet (${`A-${String(absent.number).padStart(4, '0')}`}). Melde dich mit \`/abmeldung zurueck\` zurück, um in den Dienst zu gehen.`);
   const record = await prisma.personnelRecord.findUnique({ where: { guildId_userId: { guildId, userId: input.userId } }, select: { id: true, status: true } });
   try {
     const shift = await prisma.shift.create({

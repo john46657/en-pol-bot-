@@ -752,3 +752,15 @@ export interface TicketRow {
   closedAt: string | null;
   category: TicketCategoryRow;
 }
+
+export interface AbsenceRow {
+  id: string;
+  number: number;
+  userId: string;
+  startDate: string;
+  endDate: string;
+  category: string;
+  reason: string;
+  status: 'PENDING' | 'APPROVED' | 'REJECTED' | 'WITHDRAWN' | 'ENDED';
+  decisionReason: string | null;
+}

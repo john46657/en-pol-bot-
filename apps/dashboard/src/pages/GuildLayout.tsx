@@ -4,7 +4,7 @@ import { Link, NavLink, Outlet, useLocation, useParams } from 'react-router';
 import { api, guildIcon, type GuildOverview } from '../api';
 import { UserMenu } from '../components/UserMenu';
 
-type Needs = 'any' | 'view' | 'admin' | 'panels' | 'submissions' | 'personnel' | 'structure' | 'shifts' | 'duty' | 'radio' | 'operations' | 'danger' | 'wanted' | 'fleet' | 'penalties' | 'training' | 'qualifications' | 'promotions' | 'sek' | 'tickets';
+type Needs = 'any' | 'view' | 'admin' | 'panels' | 'submissions' | 'personnel' | 'structure' | 'shifts' | 'duty' | 'radio' | 'operations' | 'danger' | 'wanted' | 'fleet' | 'penalties' | 'training' | 'qualifications' | 'promotions' | 'sek' | 'tickets' | 'absences';
 const NAV: { to: string; label: string; icon: string; end?: boolean; needs: Needs }[] = [
   { to: '', label: 'Übersicht', icon: '🏠', end: true, needs: 'any' },
   { to: 'settings', label: 'Rollen & Kanäle wählen', icon: '⚙️', needs: 'view' },
@@ -27,6 +27,7 @@ const NAV: { to: string; label: string; icon: string; end?: boolean; needs: Need
   { to: 'promotions', label: 'Beförderungen', icon: '📈', needs: 'promotions' },
   { to: 'sek', label: 'SEK', icon: '🛡️', needs: 'sek' },
   { to: 'tickets', label: 'Tickets', icon: '🎫', needs: 'tickets' },
+  { to: 'absences', label: 'Abmeldungen', icon: '🏖️', needs: 'absences' },
   { to: 'panels', label: 'Panels', icon: '🧩', needs: 'panels' },
   { to: 'users', label: 'Benutzer', icon: '👥', needs: 'admin' },
   { to: 'profiles', label: 'Profile', icon: '🧾', needs: 'admin' },
@@ -61,6 +62,7 @@ export function GuildLayout() {
     (needs === 'submissions' && me.data.permissions.includes('applications.submissions.view')) ||
     (needs === 'personnel' &&
       ['personnel.view', 'own.profile.view'].some((k) => me.data.permissions.includes(k))) ||
+    (needs === 'absences' && ['absence.view', 'own.absence.create'].some((k) => me.data.permissions.includes(k))) ||
     (needs === 'tickets' && ['tickets.view', 'tickets.manage'].some((k) => me.data.permissions.includes(k))) ||
     (needs === 'sek' && ['sek.view', 'sek.manage'].some((k) => me.data.permissions.includes(k))) ||
     (needs === 'promotions' && me.data.permissions.includes('promotions.view')) ||

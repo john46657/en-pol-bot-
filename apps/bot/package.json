@@ -12,6 +12,7 @@
     "test": "vitest run"
   },
   "dependencies": {
+    "@nexus/absences": "workspace:*",
     "@nexus/automation": "workspace:*",
     "@nexus/config": "workspace:*",
     "@nexus/core": "workspace:*",

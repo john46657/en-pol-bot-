@@ -70,6 +70,12 @@ export const SELECTION_SLOTS: readonly SelectionSlot[] = [
     label: 'Ticket-Protokoll',
     description: 'Hier erscheint eine Zusammenfassung jedes geschlossenen Tickets.',
   },
+  {
+    key: 'absence-channel',
+    kind: 'text',
+    label: 'Abmeldungen',
+    description: 'Hier meldet der Bot neue Abmeldungs-Anträge für die Führung.',
+  },
 ];
 
 export const getSlot = (key: string): SelectionSlot | undefined =>

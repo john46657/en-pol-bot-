@@ -68,6 +68,9 @@ importers:
       '@nestjs/swagger':
         specifier: ^11.2.0
         version: 11.4.7(@nestjs/common@11.2.6(class-transformer@0.5.1)(class-validator@0.14.4)(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/core@11.2.6)(class-transformer@0.5.1)(class-validator@0.14.4)(reflect-metadata@0.2.2)
+      '@nexus/absences':
+        specifier: workspace:*
+        version: link:../../packages/absences
       '@nexus/auth':
         specifier: workspace:*
         version: link:../../packages/auth
@@ -183,6 +186,9 @@ importers:
 
   apps/bot:
     dependencies:
+      '@nexus/absences':
+        specifier: workspace:*
+        version: link:../../packages/absences
       '@nexus/automation':
         specifier: workspace:*
         version: link:../../packages/automation
@@ -327,6 +333,28 @@ importers:
       tsx:
         specifier: ^4.20.3
         version: 4.23.15
+
+  packages/absences:
+    dependencies:
+      '@nexus/automation':
+        specifier: workspace:*
+        version: link:../automation
+      '@nexus/database':
+        specifier: workspace:*
+        version: link:../database
+      '@nexus/personnel':
+        specifier: workspace:*
+        version: link:../personnel
+      '@nexus/types':
+        specifier: workspace:*
+        version: link:../types
+    devDependencies:
+      '@prisma/client':
+        specifier: ^6.11.0
+        version: 6.19.3(prisma@6.19.3(typescript@5.9.3))(typescript@5.9.3)
+      vitest:
+        specifier: ^3.2.4
+        version: 3.2.7(@types/node@24.19.0)(jiti@2.7.0)(tsx@4.23.15)(yaml@2.9.1)
 
   packages/auth:
     dependencies:

@@ -220,3 +220,18 @@ describe('Überlange Schichten', () => {
     expect(r.flagged).toHaveLength(1);
   });
 });
+
+describe('Abmeldung sperrt den Dienstbeginn', () => {
+  it('genehmigte laufende Abmeldung verhindert den Start; danach/ohne nicht', async () => {
+    const now = new Date('2026-10-07T10:00:00Z');
+    await prisma.absence.create({ data: { guildId: G, number: 1, userId: U1, startDate: new Date('2026-10-06T00:00:00Z'), endDate: new Date('2026-10-09T00:00:00Z'), category: 'URLAUB', reason: 'Urlaub', status: 'APPROVED' } });
+    await expectErr(startShift({ guildId: G, userId: U1, typeId, memberRoleIds: [] }, now), 'conflict');
+    await expect(startShift({ guildId: G, userId: U1, typeId, memberRoleIds: [] }, now)).rejects.toThrow(/abgemeldet/);
+    await startShift({ guildId: G, userId: U1, typeId, memberRoleIds: [] }, new Date('2026-10-10T10:00:00Z')); // nach Ende
+    await startShift({ guildId: G, userId: U2, typeId, memberRoleIds: [] }, now); // andere Person
+  });
+  it('offene (nicht genehmigte) Abmeldung sperrt nicht', async () => {
+    await prisma.absence.create({ data: { guildId: G, number: 2, userId: U1, startDate: new Date('2026-10-06T00:00:00Z'), endDate: new Date('2026-10-09T00:00:00Z'), category: 'URLAUB', reason: 'Urlaub', status: 'PENDING' } });
+    await startShift({ guildId: G, userId: U1, typeId, memberRoleIds: [] }, new Date('2026-10-07T10:00:00Z'));
+  });
+});

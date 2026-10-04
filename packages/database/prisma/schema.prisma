@@ -286,6 +286,14 @@ enum TicketStatus {
   CLOSED
 }
 
+enum AbsenceStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  WITHDRAWN
+  ENDED
+}
+
 enum PermissionEffect {
   ALLOW
   DENY
@@ -350,6 +358,7 @@ model Guild {
   sekSquads          SekSquad[]
   ticketCategories   TicketCategory[]
   tickets            Ticket[]
+  absences           Absence[]
 
   applications      Application[]
   panels            ApplicationPanel[]
@@ -2084,4 +2093,45 @@ model TicketEvent {
 
   @@index([ticketId, at])
   @@map("ticket_events")
+}
+
+// ---------------------------------------------------------------------------
+// Phase 26: Abmeldungen
+// ---------------------------------------------------------------------------
+
+model AbsenceCounter {
+  guildId String @id
+  last    Int    @default(0)
+
+  @@map("absence_counters")
+}
+
+/// Abmeldung (Abwesenheit) mit Zeitraum (inklusive Start- und Endtag, Berlin-Kalender).
+model Absence {
+  id             String        @id @default(cuid())
+  guildId        String
+  number         Int
+  userId         String
+  startDate      DateTime      @db.Date
+  endDate        DateTime      @db.Date
+  /// URLAUB | KRANK | BERUFLICH | SONSTIGES
+  category       String
+  /// Begründung des Antragstellers
+  reason         String
+  status         AbsenceStatus @default(PENDING)
+  decidedBy      String?
+  decidedAt      DateTime?
+  decisionReason String?
+  /// Vorzeitig beendet (zurückgemeldet) am …
+  endedAt        DateTime?
+  /// Eintrag „ABSENCE“ in der Personalakte (nach Genehmigung).
+  entryId        String?
+  createdAt      DateTime      @default(now())
+
+  guild Guild @relation(fields: [guildId], references: [id], onDelete: Cascade)
+
+  @@unique([guildId, number])
+  @@index([guildId, userId, status])
+  @@index([guildId, status, startDate])
+  @@map("absences")
 }
