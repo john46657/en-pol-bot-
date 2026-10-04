@@ -479,3 +479,13 @@ export interface ShiftStatsRow {
   averageSeconds: number;
   running: number;
 }
+export interface ShiftPeriodRow extends ShiftStatsRow {
+  period: 'day' | 'week' | 'month' | 'all';
+}
+export interface LeaderboardRow {
+  rank: number;
+  userId: string;
+  count: number;
+  totalSeconds: number;
+  averageSeconds: number;
+}

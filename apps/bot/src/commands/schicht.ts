@@ -13,9 +13,13 @@ import {
   endShift,
   formatSeconds,
   getOpenShift,
+  leaderboard,
+  overview,
+  rankOf,
+  PERIODS,
+  type Period,
   pauseShift,
   resumeShift,
-  shiftStats,
   startShift,
   usableTypes,
 } from '@nexus/shifts';
@@ -28,6 +32,7 @@ import { defineCommand } from './registry.js';
  * `/schicht start|pause|weiter|ende|status` – eigene Schicht. Rechte (`shifts.start/pause/end`, `own.shift.view`)
  * und Rollenanforderung des Typs werden serverseitig geprüft; fachliche Fehler kommen als verständliche Meldung.
  */
+const PERIOD_LABEL: Record<Period, string> = { day: 'Heute', week: 'Diese Woche', month: 'Dieser Monat', all: 'Gesamt' };
 const ts = (d: Date) => `<t:${Math.floor(d.getTime() / 1000)}:t>`;
 const reply = (i: ChatInputCommandInteraction, content: string) =>
   i.reply({ content, flags: MessageFlags.Ephemeral, allowedMentions: { parse: [] } });
@@ -55,7 +60,9 @@ export async function runSchicht(interaction: ChatInputCommandInteraction): Prom
         ? 'shifts.pause'
         : sub === 'ende'
           ? 'shifts.end'
-          : 'own.shift.view';
+          : sub === 'rangliste'
+            ? 'shifts.view'
+            : 'own.shift.view';
   if (!(await allowed(member, need)))
     return void (await reply(interaction, `❌ ${permissionDeniedMessage([need])}`));
   try {
@@ -81,15 +88,25 @@ export async function runSchicht(interaction: ChatInputCommandInteraction): Prom
         flags: MessageFlags.Ephemeral,
       }));
     }
+    if (sub === 'rangliste') {
+      const period = (interaction.options.getString('zeitraum') ?? 'week') as Period;
+      const scope = { guildId: guild.id, restrictToTeams: null };
+      const top = await leaderboard({ ...scope, period, limit: 10 });
+      const medal = (n: number) => ['🥇', '🥈', '🥉'][n - 1] ?? `**${n}.**`;
+      const body = top.map((e) => `${medal(e.rank)} <@${e.userId}> – ${formatSeconds(e.totalSeconds)} (${e.count} Schichten, Ø ${formatSeconds(e.averageSeconds)})`).join('\n');
+      return void (await interaction.reply({ embeds: [embeds.info({ title: `🏆 Rangliste – ${PERIOD_LABEL[period]}`, description: body || 'Noch keine beendeten Schichten in diesem Zeitraum.' })], flags: MessageFlags.Ephemeral, allowedMentions: { parse: [] } }));
+    }
     // status
     const open = await getOpenShift(guild.id, member.id);
-    const stats = await shiftStats({ guildId: guild.id, userId: member.id, restrictToTeams: null, from: new Date(Date.now() - 30 * 86_400_000) });
+    const ov = await overview({ guildId: guild.id, restrictToTeams: null }, member.id);
+    const rank = await rankOf({ guildId: guild.id, restrictToTeams: null, period: 'week' }, member.id);
     const lines: string[] = [];
     if (open) {
       const d = computeDuration(open);
       lines.push(`${open.status === 'PAUSED' ? '⏸️ Pausiert' : '🟢 Im Dienst'}: **${open.type.name}** seit ${ts(open.startedAt)} (netto ${formatSeconds(d.netSeconds)})`);
     } else lines.push('Keine laufende Schicht.');
-    lines.push(`Letzte 30 Tage: **${stats.count}** Schichten, **${formatSeconds(stats.totalSeconds)}** gesamt.`);
+    for (const p of ov) lines.push(`${PERIOD_LABEL[p.period]}: **${formatSeconds(p.totalSeconds)}** in ${p.count} Schichten${p.count ? ` (Ø ${formatSeconds(p.averageSeconds)})` : ''}`);
+    if (rank) lines.push(`Platz diese Woche: **${rank}**`);
     await interaction.reply({ embeds: [embeds.info({ title: '🕒 Dienstzeit', description: lines.join('\n') })], flags: MessageFlags.Ephemeral });
   } catch (e) {
     if (e instanceof ShiftError) return void (await reply(interaction, `❌ ${e.message}`));
@@ -122,6 +139,16 @@ export const schichtCommand = defineCommand({
     .addSubcommand((s) => s.setName('pause').setDescription('Pause beginnen'))
     .addSubcommand((s) => s.setName('weiter').setDescription('Nach der Pause weitermachen'))
     .addSubcommand((s) => s.setName('ende').setDescription('Schicht beenden'))
+    .addSubcommand((s) =>
+      s
+        .setName('rangliste')
+        .setDescription('Rangliste nach Dienstzeit')
+        .addStringOption((o) =>
+          o.setName('zeitraum').setDescription('Zeitraum (Standard: Woche)').addChoices(
+            ...PERIODS.map((p) => ({ name: PERIOD_LABEL[p], value: p })),
+          ),
+        ),
+    )
     .addSubcommand((s) => s.setName('status').setDescription('Aktuelle Schicht und Dienstzeit'))
     .toJSON(),
   execute: runSchicht,

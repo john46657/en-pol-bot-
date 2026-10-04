@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
 import { useParams } from 'react-router';
-import { api, type DiscordRole, type ShiftRow, type ShiftStatsRow, type ShiftTypeRow } from '../api';
+import { api, type DiscordRole, type LeaderboardRow, type ShiftPeriodRow, type ShiftRow, type ShiftStatsRow, type ShiftTypeRow } from '../api';
 import { errorText, QueryState } from '../components/QueryState';
 import { useToast } from '../toast';
 
@@ -41,10 +41,13 @@ export function Shifts() {
   }).toString();
   const list = useQuery({ queryKey: ['shifts', guildId, qs], queryFn: () => api<{ items: ShiftRow[] }>(`${base}?${qs}`) });
   const stats = useQuery({ queryKey: ['shift-stats', guildId, qs], queryFn: () => api<ShiftStatsRow>(`${base}/stats?${qs}`) });
+  const [period, setPeriod] = useState('week');
+  const overview = useQuery({ queryKey: ['shift-overview', guildId], queryFn: () => api<ShiftPeriodRow[]>(`${base}/overview`) });
+  const board = useQuery({ queryKey: ['shift-board', guildId, period], queryFn: () => api<{ items: LeaderboardRow[] }>(`${base}/leaderboard?period=${period}&limit=10`) });
   const types = useQuery({ queryKey: ['shift-types', guildId], queryFn: () => api<ShiftTypeRow[]>(`${base}/types`) });
   const roles = useQuery({ queryKey: ['roles', guildId], queryFn: () => api<DiscordRole[]>(`/guilds/${guildId}/discord/roles`) });
   const refresh = () => {
-    for (const k of ['shifts', 'shift-stats', 'shift-types']) void qc.invalidateQueries({ queryKey: [k, guildId] });
+    for (const k of ['shifts', 'shift-stats', 'shift-types', 'shift-overview', 'shift-board']) void qc.invalidateQueries({ queryKey: [k, guildId] });
   };
 
   const [edit, setEdit] = useState<{ shift: ShiftRow; mode: 'end' | 'correct' } | null>(null);
@@ -103,6 +106,45 @@ export function Shifts() {
       <h1>Schichten</h1>
       <p className="muted">Gestartet und beendet wird im Bot mit <code>/schicht</code>. Hier siehst du den Verlauf und kannst vergessene Schichten mit Begründung korrigieren.</p>
 
+      <h2>Auswertung</h2>
+      <QueryState query={overview}>
+        {(rows) => (
+          <div className="two">
+            {rows.map((p) => (
+              <div key={p.period} className="card comp">
+                <strong>{{ day: 'Heute', week: 'Diese Woche', month: 'Dieser Monat', all: 'Gesamt' }[p.period]}</strong>
+                <div>{fmtDur(p.totalSeconds)}</div>
+                <small className="muted">{p.count} Schichten · Ø {fmtDur(p.averageSeconds)}</small>
+              </div>
+            ))}
+          </div>
+        )}
+      </QueryState>
+      <h3>🏆 Rangliste</h3>
+      <select value={period} onChange={(e) => setPeriod(e.target.value)} aria-label="Zeitraum">
+        <option value="day">Heute</option>
+        <option value="week">Diese Woche</option>
+        <option value="month">Dieser Monat</option>
+        <option value="all">Gesamt</option>
+      </select>
+      <QueryState query={board}>
+        {(d) =>
+          d.items.length === 0 ? (
+            <p className="muted">Noch keine beendeten Schichten in diesem Zeitraum.</p>
+          ) : (
+            <ol className="list">
+              {d.items.map((e) => (
+                <li key={e.userId} className="row">
+                  <span className="grow"><strong>{e.rank}.</strong> <code>{e.userId}</code></span>
+                  <span>{fmtDur(e.totalSeconds)} · {e.count} Schichten · Ø {fmtDur(e.averageSeconds)}</span>
+                </li>
+              ))}
+            </ol>
+          )
+        }
+      </QueryState>
+
+      <h2>Verlauf</h2>
       <form className="actions" onSubmit={(e) => e.preventDefault()}>
         <select value={status} onChange={(e) => setStatus(e.target.value)} aria-label="Status">
           <option value="">Alle Status</option>

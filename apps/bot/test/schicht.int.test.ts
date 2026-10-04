@@ -11,6 +11,7 @@ async function setup() {
   await prisma.guild.create({ data: { id: G, name: 'Schicht', settings: { create: {} } } });
   const e = (key: string) => ({ key, effect: 'ALLOW' as const, scope: 'SERVER' as const, scopeRef: '' });
   await permissionRepository.setPermissionsForRole(G, 'role-ok', ['shifts.start', 'shifts.pause', 'shifts.end', 'own.shift.view'].map(e), { name: 'Beamter' });
+  await permissionRepository.setPermissionsForRole(G, 'role-board', [e('shifts.view')], { name: 'Auswertung' });
   await permissionRepository.setPermissionsForRole(G, 'role-view', [e('own.shift.view')], { name: 'Nur Ansicht' });
   return saveType(G, { name: 'Streife', requiredRoleIds: [] }, 'x');
 }
@@ -46,6 +47,16 @@ describe('/schicht', () => {
     expect(await call('ende', ['role-ok'])).toContain('Schicht beendet');
     expect(await call('ende', ['role-ok'])).toContain('keine laufende Schicht');
     expect(await call('status', ['role-ok'])).toContain('1');
+  });
+
+  it('Rangliste und Status zeigen Zeiträume; Rangliste braucht shifts.view', async () => {
+    await call('start', ['role-ok'], typeId);
+    await call('ende', ['role-ok']);
+    const st = await call('status', ['role-ok']);
+    expect(st).toContain('Heute');
+    expect(st).toContain('Platz diese Woche');
+    expect(await call('rangliste', ['role-ok'])).toContain('Du benötigst');
+    expect(await call('rangliste', ['role-board'])).toContain('Rangliste');
   });
 
   it('ohne Recht: verständliche Meldung, nichts wird gestartet', async () => {

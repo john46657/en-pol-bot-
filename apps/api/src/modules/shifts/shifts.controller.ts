@@ -8,7 +8,12 @@ import {
   deleteType,
   endShift,
   getOpenShift,
+  PERIODS,
   getShift,
+  leaderboard,
+  overview,
+  rankOf,
+  type Period,
   listShifts,
   listTypes,
   rawData,
@@ -80,12 +85,38 @@ export class ShiftsController {
     return shiftStats(await this.filter(guildId, access, q));
   }
 
+  private async scope(guildId: string, access: RequestAccess, q: Record<string, string | undefined>) {
+    const scope = await scopeFor(await this.actor(access), 'shifts.view');
+    return { guildId, typeId: q['typeId'] || undefined, restrictToTeams: scope.all ? null : scope.teamIds };
+  }
+
+  /** Heute / Woche / Monat / Gesamt (Anzahl, Gesamtzeit, Durchschnitt) für alle sichtbaren Schichten oder ein Mitglied. */
+  @Get('overview')
+  @RequireAnyScope('shifts.view')
+  async overview(@GuildId() guildId: string, @Access() access: RequestAccess, @Query() q: Record<string, string | undefined>) {
+    return overview(await this.scope(guildId, access, q), q['userId'] || undefined);
+  }
+
+  @Get('leaderboard')
+  @RequireAnyScope('shifts.view')
+  async leaderboard(@GuildId() guildId: string, @Access() access: RequestAccess, @Query() q: Record<string, string | undefined>) {
+    const period = (PERIODS as readonly string[]).includes(q['period'] ?? '') ? (q['period'] as Period) : 'week';
+    return { period, items: await leaderboard({ ...(await this.scope(guildId, access, q)), period, limit: Number(q['limit']) || 10 }) };
+  }
+
   /** Eigene Dienstzeiten (Eigenzugriff). */
   @Get('me')
   @RequireAnyScope('own.shift.view')
   async mine(@GuildId() guildId: string, @Access() access: RequestAccess) {
     const f: ShiftFilter = { guildId, userId: access.userId, restrictToTeams: null };
-    return { open: await getOpenShift(guildId, access.userId), stats: await shiftStats(f), items: (await listShifts({ ...f, limit: 50 })).items };
+    const week = { guildId, restrictToTeams: null, period: 'week' as const };
+    return {
+      open: await getOpenShift(guildId, access.userId),
+      stats: await shiftStats(f),
+      overview: await overview({ guildId, restrictToTeams: null }, access.userId),
+      weekRank: await rankOf(week, access.userId),
+      items: (await listShifts({ ...f, limit: 50 })).items,
+    };
   }
 
   /** Rohdaten als CSV-Text (nur Führung; Team-Bereich beachtet). */
