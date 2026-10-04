@@ -2,6 +2,10 @@ import { useQueryClient, type QueryClient } from '@tanstack/react-query';
 import { useEffect, useState } from 'react';
 import { API_URL } from './api';
 
+/** WebSocket-Basisadresse: bei leerer API-Adresse (Dashboard und API unter einer Domain) die der aktuellen Seite. */
+export const wsBase = (api: string = API_URL, loc: Pick<Location, 'protocol' | 'host'> = window.location): string =>
+  api ? api.replace(/^http/, 'ws') : `${loc.protocol === 'https:' ? 'wss:' : 'ws:'}//${loc.host}`;
+
 /**
  * Live-Aktualisierung: eine WebSocket-Verbindung je Server. Ereignisse enthalten nur „Bereich + Aktion + ID“;
  * betroffene Abfragen werden gezielt neu geladen (nicht die ganze Seite, nicht alles). Mehrere Ereignisse kurz
@@ -47,7 +51,7 @@ export function useLive(guildId: string): LiveState {
     let flush: ReturnType<typeof setTimeout> | undefined;
     const connect = () => {
       setState('connecting');
-      ws = new WebSocket(`${API_URL.replace(/^http/, 'ws')}/api/v1/live?guildId=${encodeURIComponent(guildId)}`);
+      ws = new WebSocket(`${wsBase()}/api/v1/live?guildId=${encodeURIComponent(guildId)}`);
       ws.onmessage = (m) => {
         try {
           const d = JSON.parse(String(m.data)) as { type: string; area?: string };

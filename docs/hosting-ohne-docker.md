@@ -5,6 +5,13 @@ Für Server ohne Docker. **Nicht auf einem echten Linux-Server ausprobiert** –
 ## Passt NEXUS auf das Panel bot-hosting.net?
 **Nein.** Das bisherige Panel („all in one bot“) hat ca. 32 MB RAM und 192 MB Speicher. Gemessen (Produktionsmodus, leere Datenbank): **API ≈ 190 MB, Worker ≈ 70 MB RAM**, dazu der Bot (nicht gemessen, mit Discord-Verbindung) sowie PostgreSQL und Redis. Realistisch ist ein Server mit **mindestens 2 GB RAM** (1 GB wird eng) und ca. 2 GB Platz. Das Panel kann höchstens den *Bot* betreiben, wenn API und Datenbank woanders laufen; für NEXUS lohnt sich ein kleiner VPS.
 
+## Nur eine Domain: Dashboard und API unter derselben Adresse
+Die API kann das Dashboard selbst ausliefern – dann genügen **eine Adresse und ein Prozess** (kein Proxy, keine zweite Domain nötig, solange der Anbieter TLS vor die Adresse setzt, wie es Panels wie bot-hosting.net tun).
+1. Dashboard mit **leerer** API-Adresse bauen: `VITE_API_URL= pnpm --filter @nexus/dashboard build` (es spricht dann die Adresse an, von der es geladen wurde, auch für die Live-Verbindung).
+2. In der Umgebung `DASHBOARD_STATIC_DIR=/opt/nexus/apps/dashboard/dist` setzen.
+3. Alle Adressen sind dieselbe Domain, z. B. `https://meine-domain.example`: `DASHBOARD_URL=https://meine-domain.example`, `API_URL=https://meine-domain.example`, `AUTH_CALLBACK_URL=https://meine-domain.example/api/v1/auth/discord/callback` (im Discord Developer Portal als Redirect-URI eintragen).
+Die API liefert `index.html` für alle Dashboard-Adressen (nie für `/api`, `/uploads`, `/docs`, `/health`), mit Sicherheits-Headern; Dateien aus `assets/` werden ein Jahr zwischengespeichert. Geprüft: Unit-Tests, echter Start im Produktionsmodus, Seite im Browser geladen (`/login`, Aufrufe relativ an dieselbe Herkunft, Login-Knopf zeigt auf dieselbe Adresse). **Nicht geprüft:** der komplette Discord-Login (kein Test-Token).
+
 ## Voraussetzungen
 Node.js 24, pnpm (`corepack enable`), PostgreSQL 17, Redis 8, ein Reverse-Proxy mit TLS (Caddy/nginx; Vorlage `deploy/nginx-dashboard.conf`), zwei Adressen mit https (API und Dashboard).
 

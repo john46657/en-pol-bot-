@@ -9,6 +9,7 @@ import { AppModule } from './app.module.js';
 import { HttpExceptionFilter } from './common/filters/http-exception.filter.js';
 import { storageDir } from '@nexus/design';
 import { uploadsMiddleware } from './modules/design/uploads.js';
+import { dashboardStatic } from './dashboard-static.js';
 import { checkSecurityConfig } from './common/security/config-check.js';
 
 async function bootstrap(): Promise<void> {
@@ -29,6 +30,8 @@ async function bootstrap(): Promise<void> {
   // Hochgeladene Design-Bilder (vor den übrigen Routen; nur geprüfte, neu kodierte Dateien)
   app.use('/uploads', uploadsMiddleware(storageDir()));
   app.use(cookieParser());
+  // Optional: Dashboard aus derselben Adresse ausliefern (eine Domain genügt)
+  if (process.env['DASHBOARD_STATIC_DIR']) for (const h of dashboardStatic(process.env['DASHBOARD_STATIC_DIR'])) app.use(h);
   app.useLogger(new Logger());
   app.setGlobalPrefix('api/v1');
   // Kurzadresse für Überwachungswerkzeuge: /health → /api/v1/health
