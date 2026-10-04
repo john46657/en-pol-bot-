@@ -5,6 +5,8 @@ import { api, type MemberHit, type PersonnelRow, type RankRow, type TeamRow } fr
 import { errorText, QueryState } from '../components/QueryState';
 import { useToast } from '../toast';
 
+const STATE = { ACTIVE: '🟢 Aktiv', PAUSE: '🟡 Pause', OFF_DUTY: '🔴 Außer Dienst', SUSPENDED: '⚫ Suspendiert', CLOSED: '⚪ Geschlossen' } as const;
+
 export function Personnel() {
   const { guildId = '' } = useParams();
   const nav = useNavigate();
@@ -114,7 +116,7 @@ export function Personnel() {
                     <br />
                     <small className="muted">
                       {p.rank?.name ?? 'kein Dienstgrad'} · {p.team?.name ?? 'kein Team'}
-                      {p.status === 'ARCHIVED' ? ' · archiviert' : ''}
+                      {' · '}{STATE[p.status === 'ARCHIVED' ? 'CLOSED' : p.teamState]}
                     </small>
                   </span>
                 </li>

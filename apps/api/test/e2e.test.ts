@@ -1039,4 +1039,40 @@ describe('Dashboard-Design (Phase 37)', () => {
     expect(lifted.data.status).toBe('REVOKED');
     await prisma.restriction.deleteMany({ where: { guildId: G } });
   });
+  it('Teamzustände: Rechte, Wechsel, Suspendierung braucht Grund, Schließen verlangt Grund', async () => {
+    const rec = await prisma.personnelRecord.findFirstOrThrow({
+      where: { guildId: G, userId: OFFICER },
+    });
+    const st = (b: unknown, u = ADMIN) =>
+      call('POST', `/guilds/${G}/personnel/${rec.id}/state`, u, b);
+    expect((await st({ state: 'PAUSE' }, NOBODY)).status).toBe(403);
+    expect((await st({ state: 'PAUSE' }, OFFICER)).status).toBe(403);
+    expect((await st({ state: 'CLOSED' })).status).toBe(400);
+    expect((await st({ state: 'SUSPENDED' })).status).toBe(400);
+    const p = await st({ state: 'PAUSE' });
+    expect(p.status).toBe(201);
+    expect(p.data.teamState).toBe('PAUSE');
+    expect((await st({ state: 'PAUSE' })).status).toBe(409);
+    expect((await st({ state: 'SUSPENDED', reason: 'Dienstvergehen' })).data.teamState).toBe(
+      'SUSPENDED',
+    );
+    const view = await call('GET', `/guilds/${G}/personnel/${rec.id}`, ADMIN);
+    expect(view.data.can.state).toBe(true);
+    expect(view.data.record.teamState).toBe('SUSPENDED');
+    expect((await call('POST', `/guilds/${G}/personnel/${rec.id}/archive`, ADMIN, {})).status).toBe(
+      400,
+    ); // Grund fehlt
+    const closed = await call('POST', `/guilds/${G}/personnel/${rec.id}/archive`, ADMIN, {
+      reason: 'Austritt',
+    });
+    expect(closed.data).toMatchObject({
+      status: 'ARCHIVED',
+      archivedReason: 'Austritt',
+      archivedBy: ADMIN,
+    });
+    expect((await st({ state: 'ACTIVE' })).status).toBe(409); // geschlossen
+    expect(
+      (await call('POST', `/guilds/${G}/personnel/${rec.id}/restore`, ADMIN)).data.teamState,
+    ).toBe('ACTIVE');
+  });
 });

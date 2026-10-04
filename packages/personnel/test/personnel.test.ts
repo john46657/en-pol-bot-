@@ -3,6 +3,8 @@ import { DiscordApiError } from '@nexus/discord';
 import { permissionRepository, prisma } from '@nexus/database';
 import { afterAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import {
+  effectiveState,
+  setTeamState,
   PersonnelError,
   addEntry,
   archiveRecord,
@@ -133,12 +135,48 @@ describe('Personalakte anlegen und ändern', () => {
   it('archivieren/wiederherstellen mit Grund; doppelt wird abgelehnt', async () => {
     const r = await rec(1);
     const a = await archiveRecord(G, r.id, 'Ausgetreten', ACTOR);
-    expect(a).toMatchObject({ status: 'ARCHIVED', archivedReason: 'Ausgetreten' });
+    expect(a).toMatchObject({ status: 'ARCHIVED', archivedReason: 'Ausgetreten', archivedBy: ACTOR });
+    expect(a.archivedAt).not.toBeNull();
     await expect(archiveRecord(G, r.id, undefined, ACTOR)).rejects.toMatchObject({
       code: 'conflict',
     });
     expect((await restoreRecord(G, r.id, ACTOR)).status).toBe('ACTIVE');
     await expect(restoreRecord(G, r.id, ACTOR)).rejects.toMatchObject({ code: 'conflict' });
+  });
+
+  it('Schließen (CLOSED) verlangt einen Grund; Akte bleibt erhalten', async () => {
+    const r = await rec(1);
+    await expect(archiveRecord(G, r.id, undefined, ACTOR)).rejects.toMatchObject({ code: 'invalid' });
+    await expect(archiveRecord(G, r.id, '  ', ACTOR)).rejects.toMatchObject({ code: 'invalid' });
+    await expect(archiveRecord(G, r.id, 'x'.repeat(301), ACTOR)).rejects.toMatchObject({ code: 'invalid' });
+    expect((await prisma.personnelRecord.findUniqueOrThrow({ where: { id: r.id } })).status).toBe('ACTIVE');
+    await archiveRecord(G, r.id, 'Austritt aus dem Polizeidienst', ACTOR);
+    expect(await prisma.personnelRecord.count({ where: { id: r.id } })).toBe(1);
+    expect(await prisma.personnelEvent.count({ where: { recordId: r.id, type: 'archived' } })).toBe(1);
+  });
+
+  it('Teamzustände: wechseln, Suspendierung braucht Grund, geschlossen gesperrt, Wiederherstellen setzt auf aktiv', async () => {
+    const r = await rec(1);
+    expect(effectiveState(r)).toBe('ACTIVE');
+    const p = await setTeamState(G, r.id, 'PAUSE', undefined, ACTOR);
+    expect(p).toMatchObject({ teamState: 'PAUSE', teamStateBy: ACTOR });
+    expect(effectiveState(p)).toBe('PAUSE');
+    await expect(setTeamState(G, r.id, 'PAUSE', undefined, ACTOR)).rejects.toMatchObject({ code: 'conflict' });
+    await expect(setTeamState(G, r.id, 'SUSPENDED', undefined, ACTOR)).rejects.toMatchObject({ code: 'invalid' });
+    await expect(setTeamState(G, r.id, 'CLOSED', 'x', ACTOR)).rejects.toMatchObject({ code: 'invalid' }); // nur über Schließen
+    await expect(setTeamState(G, r.id, 'BOOT', 'xxx', ACTOR)).rejects.toMatchObject({ code: 'invalid' });
+    const s = await setTeamState(G, r.id, 'SUSPENDED', 'Dienstvergehen', ACTOR);
+    expect(s.teamStateReason).toBe('Dienstvergehen');
+    const a = await setTeamState(G, r.id, 'ACTIVE', 'Zurück', ACTOR);
+    expect(a.teamStateReason).toBeNull();
+    const ev = await prisma.personnelEvent.findMany({ where: { recordId: r.id, type: 'state.changed' }, orderBy: { createdAt: 'asc' } });
+    expect(ev).toHaveLength(3);
+    await setTeamState(G, r.id, 'OFF_DUTY', undefined, ACTOR);
+    const closed = await archiveRecord(G, r.id, 'Austritt', ACTOR);
+    expect(effectiveState(closed)).toBe('CLOSED');
+    await expect(setTeamState(G, r.id, 'ACTIVE', undefined, ACTOR)).rejects.toMatchObject({ code: 'conflict' });
+    const back = await restoreRecord(G, r.id, ACTOR);
+    expect(back).toMatchObject({ status: 'ACTIVE', teamState: 'ACTIVE', archivedBy: null });
   });
 
   it('Akten anderer Server sind unerreichbar', async () => {
@@ -351,7 +389,7 @@ describe('Liste und Suche', () => {
     await rec(1, { rpName: 'Max Mustermann', teamId: t1.id });
     await rec(2, { rpName: 'Erika Beispiel', teamId: t2.id });
     const c = await rec(3, { rpName: 'Karl Ohne-Team' });
-    await archiveRecord(G, c.id, 'x', ACTOR);
+    await archiveRecord(G, c.id, 'Ausgetreten', ACTOR);
     const names = async (i: object) =>
       (await listRecords({ guildId: G, restrictToTeams: null, ...i })).items.map((x) => x.rpName);
     expect(await names({})).toHaveLength(3);

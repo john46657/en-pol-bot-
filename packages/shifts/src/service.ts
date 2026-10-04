@@ -92,7 +92,9 @@ export async function startShift(input: { guildId: string; userId: string; typeI
   const today = new Date(`${new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Berlin', year: 'numeric', month: '2-digit', day: '2-digit' }).format(now)}T00:00:00.000Z`);
   const absent = await prisma.absence.findFirst({ where: { guildId, userId: input.userId, status: 'APPROVED', startDate: { lte: today }, endDate: { gte: today } } });
   if (absent) throw new ShiftError('conflict', `Du bist bis ${absent.endDate.toLocaleDateString('de-DE', { timeZone: 'UTC' })} abgemeldet (${`A-${String(absent.number).padStart(4, '0')}`}). Melde dich mit \`/abmeldung zurueck\` zurück, um in den Dienst zu gehen.`);
-  const record = await prisma.personnelRecord.findUnique({ where: { guildId_userId: { guildId, userId: input.userId } }, select: { id: true, status: true } });
+  const record = await prisma.personnelRecord.findUnique({ where: { guildId_userId: { guildId, userId: input.userId } }, select: { id: true, status: true, teamState: true } });
+  if (record && record.status === 'ACTIVE' && record.teamState === 'SUSPENDED') throw new ShiftError('conflict', 'Du bist suspendiert und kannst keine Schicht starten.');
+  if (record?.status === 'ARCHIVED') throw new ShiftError('conflict', 'Deine Akte ist geschlossen – du kannst keine Schicht starten.');
   try {
     const shift = await prisma.shift.create({
       data: { guildId, userId: input.userId, typeId: type.id, recordId: record?.status === 'ACTIVE' ? record.id : null, status: 'ACTIVE', openKey: 'open', startedAt: now },

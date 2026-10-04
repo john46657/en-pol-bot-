@@ -81,6 +81,7 @@ export const PERMISSION_CATALOG = [
       ['personnel.create', 'Personalakten anlegen', 'PERSONNEL_CREATE'],
       ['personnel.edit', 'Personalakten bearbeiten', 'PERSONNEL_EDIT'],
       ['personnel.archive', 'Personalakten archivieren', 'PERSONNEL_ARCHIVE'],
+      ['personnel.state.edit', 'Teamstatus ändern (Pause, außer Dienst, suspendiert)'],
       ['personnel.rank.edit', 'Dienstgrad in der Akte ändern'],
       ['personnel.team.edit', 'Team in der Akte ändern'],
       ['personnel.number.edit', 'Dienstnummer vergeben'],

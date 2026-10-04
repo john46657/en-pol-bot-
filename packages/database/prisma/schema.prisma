@@ -173,6 +173,14 @@ enum IntegrationType {
   MAKE
 }
 
+/// Zustand eines Teammitglieds (Spezifikation: ACTIVE, PAUSE, OFF_DUTY, SUSPENDED; „CLOSED“ = Akte archiviert).
+enum TeamState {
+  ACTIVE
+  PAUSE
+  OFF_DUTY
+  SUSPENDED
+}
+
 enum PersonnelStatus {
   ACTIVE
   ARCHIVED
@@ -1213,6 +1221,11 @@ model PersonnelRecord {
   probationEndsAt    DateTime?
   archivedAt         DateTime?
   archivedReason     String?
+  archivedBy         String?
+  teamState          TeamState       @default(ACTIVE)
+  teamStateReason    String?
+  teamStateAt        DateTime?
+  teamStateBy        String?
   /// Bewerbung, aus der die Akte entstand (nur Herkunft).
   sourceSubmissionId String?
   createdBy          String?

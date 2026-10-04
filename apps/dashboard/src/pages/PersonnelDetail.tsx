@@ -19,11 +19,13 @@ const EVENT: Record<string, string> = {
   'team.changed': 'Team geändert',
   'number.assigned': 'Dienstnummer vergeben',
   'probation.set': 'Probezeit gesetzt',
-  archived: 'Archiviert',
+  archived: 'Geschlossen (archiviert)',
+  'state.changed': 'Teamstatus geändert',
   restored: 'Wiederhergestellt',
   'entry.added': 'Eintrag hinzugefügt',
   'entry.revoked': 'Eintrag widerrufen',
 };
+const STATE = { ACTIVE: '🟢 Aktiv', PAUSE: '🟡 Pause', OFF_DUTY: '🔴 Außer Dienst', SUSPENDED: '⚫ Suspendiert', CLOSED: '⚪ Geschlossen' } as const;
 const day = (s: string) => new Date(s).toLocaleDateString('de-DE');
 
 export function PersonnelDetail() {
@@ -117,12 +119,13 @@ function Body({
   return (
     <>
       <h1>
-        {r.rpName} {r.status === 'ARCHIVED' && <span className="pill">archiviert</span>}
+        {r.rpName} <span className="pill">{STATE[r.status === 'ARCHIVED' ? 'CLOSED' : r.teamState]}</span>
       </h1>
       <p className="muted">
         Discord-ID {r.userId} · Eintritt {day(r.joinedAt)}
         {r.probationEndsAt ? ` · Probezeit bis ${day(r.probationEndsAt)}` : ''}
-        {r.archivedReason ? ` · Grund: ${r.archivedReason}` : ''}
+        {r.status === 'ARCHIVED' && r.archivedReason ? ` · Schließungsgrund: ${r.archivedReason}${r.archivedBy ? ` (von ${r.archivedBy}${r.archivedAt ? `, ${day(r.archivedAt)}` : ''})` : ''}` : ''}
+        {r.status === 'ACTIVE' && r.teamState !== 'ACTIVE' && r.teamStateReason ? ` · Grund: ${r.teamStateReason}` : ''}
       </p>
 
       <h2>Stammdaten</h2>
@@ -248,6 +251,28 @@ function Body({
         </>
       )}
 
+      {v.can.state && r.status === 'ACTIVE' && (
+        <div className="actions">
+          <label className="fld">
+            <span>Teamstatus</span>
+            <select
+              value={r.teamState}
+              disabled={busy}
+              aria-label="Teamstatus"
+              onChange={(e) => {
+                const state = e.target.value;
+                const reason = window.prompt(state === 'SUSPENDED' ? 'Grund der Suspendierung (Pflicht)' : 'Grund (optional)');
+                if (reason !== null) act('/state', { state, reason });
+              }}
+            >
+              <option value="ACTIVE">🟢 Aktiv</option>
+              <option value="PAUSE">🟡 Pause</option>
+              <option value="OFF_DUTY">🔴 Außer Dienst</option>
+              <option value="SUSPENDED">⚫ Suspendiert</option>
+            </select>
+          </label>
+        </div>
+      )}
       <div className="actions">
         {v.can.archive &&
           (r.status === 'ACTIVE' ? (
@@ -255,11 +280,11 @@ function Body({
               className="btn"
               disabled={busy}
               onClick={() => {
-                const reason = window.prompt('Grund der Archivierung (optional)');
+                const reason = window.prompt('Schließungsgrund (Pflicht)');
                 if (reason !== null) act('/archive', { reason });
               }}
             >
-              Akte archivieren
+              Akte schließen
             </button>
           ) : (
             <button className="btn" disabled={busy} onClick={() => act('/restore')}>

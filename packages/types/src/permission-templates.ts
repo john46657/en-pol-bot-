@@ -118,6 +118,7 @@ export const PERMISSION_TEMPLATES: readonly PermissionTemplate[] = [
       'personnel.create',
       'personnel.edit',
       'personnel.archive',
+      'personnel.state.edit',
       'personnel.number.edit',
       'personnel.rank.edit',
       'personnel.team.edit',

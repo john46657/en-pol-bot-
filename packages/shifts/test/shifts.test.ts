@@ -235,3 +235,19 @@ describe('Abmeldung sperrt den Dienstbeginn', () => {
     await startShift({ guildId: G, userId: U1, typeId, memberRoleIds: [] }, new Date('2026-10-07T10:00:00Z'));
   });
 });
+
+describe('Teamzustand und Schichtstart (Phase 48)', () => {
+  const start = (u = U1) => startShift({ guildId: G, userId: u, typeId, memberRoleIds: [] }, new Date('2026-10-07T10:00:00Z'));
+  it('suspendiert oder geschlossen: keine Schicht; Pause/außer Dienst/aktiv: möglich', async () => {
+    const rec = await prisma.personnelRecord.create({ data: { guildId: G, userId: U1, rpName: 'Eins' } });
+    await prisma.personnelRecord.update({ where: { id: rec.id }, data: { teamState: 'SUSPENDED' } });
+    await expect(start()).rejects.toMatchObject({ code: 'conflict' });
+    await prisma.personnelRecord.update({ where: { id: rec.id }, data: { teamState: 'ACTIVE', status: 'ARCHIVED' } });
+    await expect(start()).rejects.toMatchObject({ code: 'conflict' });
+    expect(await prisma.shift.count({ where: { guildId: G } })).toBe(0);
+    await prisma.personnelRecord.update({ where: { id: rec.id }, data: { status: 'ACTIVE', teamState: 'PAUSE' } });
+    const s = await start();
+    await endShift(G, s.id, { actorId: U1 }, new Date('2026-10-07T11:00:00Z'));
+    await start(U2); // ohne Akte weiterhin möglich
+  });
+});

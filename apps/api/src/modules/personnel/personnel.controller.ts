@@ -20,6 +20,7 @@ import {
   PersonnelError,
   addEntry,
   archiveRecord,
+  setTeamState,
   buildActor,
   canOn,
   createRecord,
@@ -188,6 +189,7 @@ export class PersonnelController {
         team: await can('personnel.team.edit'),
         number: await can('personnel.number.edit'),
         archive: await can('personnel.archive'),
+        state: await can('personnel.state.edit'),
         award: await can('personnel.award.manage'),
         discipline: await can('personnel.discipline.manage'),
         note: await can('personnel.note.create'),
@@ -319,6 +321,21 @@ export class PersonnelController {
     );
     return setServiceNumber(guildId, id, str(body['number']) ?? 'auto', user.id, {
       permission: 'personnel.number.edit',
+    });
+  }
+
+  @Post(':id/state')
+  @RequireAnyScope('personnel.state.edit')
+  async state(
+    @GuildId() guildId: string,
+    @Param('id') id: string,
+    @Access() access: RequestAccess,
+    @Body() body: Body_,
+    @CurrentUser() user: RequestUser,
+  ) {
+    await this.require(await this.actor(access), 'personnel.state.edit', await getRecord(guildId, id));
+    return setTeamState(guildId, id, str(body['state']) ?? '', str(body['reason']), user.id, {
+      permission: 'personnel.state.edit',
     });
   }
 

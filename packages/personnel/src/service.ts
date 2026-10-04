@@ -443,6 +443,10 @@ export async function setProbation(
   return record;
 }
 
+/**
+ * „CLOSED“ der Spezifikation: Das Teammitglied ist nicht mehr aktiv, bleibt aber mit Akte und Historie erhalten.
+ * Der Schließungsgrund ist Pflicht; wer und wann werden gespeichert.
+ */
 export async function archiveRecord(
   guildId: string,
   id: string,
@@ -452,13 +456,17 @@ export async function archiveRecord(
 ) {
   const before = await load(guildId, id);
   if (before.status === 'ARCHIVED')
-    throw new PersonnelError('conflict', 'Die Akte ist bereits archiviert.');
+    throw new PersonnelError('conflict', 'Die Akte ist bereits geschlossen (archiviert).');
+  const why = reason?.trim();
+  if (!why || why.length < 3)
+    throw new PersonnelError('invalid', 'Bitte einen Schließungsgrund angeben.');
+  if (why.length > 300) throw new PersonnelError('invalid', 'Der Grund ist zu lang (max. 300 Zeichen).');
   const record = await prisma.personnelRecord.update({
     where: { id },
-    data: { status: 'ARCHIVED', archivedAt: new Date(), archivedReason: reason?.trim() || null },
+    data: { status: 'ARCHIVED', archivedAt: new Date(), archivedReason: why, archivedBy: actorId },
     include: { rank: true, team: true },
   });
-  await log(guildId, id, 'archived', actorId, { after: { reason: reason ?? null } }, opts);
+  await log(guildId, id, 'archived', actorId, { before: { teamState: before.teamState }, after: { reason: why } }, opts);
   return record;
 }
 
@@ -473,10 +481,52 @@ export async function restoreRecord(
     throw new PersonnelError('conflict', 'Die Akte ist nicht archiviert.');
   const record = await prisma.personnelRecord.update({
     where: { id },
-    data: { status: 'ACTIVE', archivedAt: null, archivedReason: null },
+    data: { status: 'ACTIVE', archivedAt: null, archivedReason: null, archivedBy: null, teamState: 'ACTIVE', teamStateReason: null, teamStateAt: null, teamStateBy: null },
     include: { rank: true, team: true },
   });
   await log(guildId, id, 'restored', actorId, { before: { reason: before.archivedReason } }, opts);
+  return record;
+}
+
+export const TEAM_STATES = ['ACTIVE', 'PAUSE', 'OFF_DUTY', 'SUSPENDED'] as const;
+export type TeamStateKey = (typeof TEAM_STATES)[number];
+export const TEAM_STATE_LABEL: Record<TeamStateKey | 'CLOSED', string> = {
+  ACTIVE: '🟢 Aktiv',
+  PAUSE: '🟡 Pause',
+  OFF_DUTY: '🔴 Außer Dienst',
+  SUSPENDED: '⚫ Suspendiert',
+  CLOSED: '⚪ Geschlossen',
+};
+/** Angezeigter Zustand: eine geschlossene (archivierte) Akte ist immer CLOSED. */
+export const effectiveState = (r: { status: string; teamState: string }): TeamStateKey | 'CLOSED' =>
+  r.status === 'ARCHIVED' ? 'CLOSED' : (r.teamState as TeamStateKey);
+
+/** Teamzustand ändern (Pause, außer Dienst, suspendiert, wieder aktiv). Suspendieren braucht einen Grund; geschlossene Akten nicht. */
+export async function setTeamState(
+  guildId: string,
+  id: string,
+  state: string,
+  reason: string | undefined,
+  actorId: string,
+  opts: ServiceOptions = {},
+) {
+  if (!(TEAM_STATES as readonly string[]).includes(state))
+    throw new PersonnelError('invalid', 'Unbekannter Zustand (aktiv, Pause, außer Dienst, suspendiert).');
+  const before = await load(guildId, id);
+  if (before.status === 'ARCHIVED')
+    throw new PersonnelError('conflict', 'Die Akte ist geschlossen. Stelle sie zuerst wieder her.');
+  if (before.teamState === state)
+    throw new PersonnelError('conflict', 'Das Mitglied hat bereits diesen Zustand.');
+  const why = reason?.trim() || null;
+  if (why && why.length > 300) throw new PersonnelError('invalid', 'Der Grund ist zu lang (max. 300 Zeichen).');
+  if (state === 'SUSPENDED' && (!why || why.length < 3))
+    throw new PersonnelError('invalid', 'Für eine Suspendierung ist ein Grund nötig.');
+  const record = await prisma.personnelRecord.update({
+    where: { id },
+    data: { teamState: state as TeamStateKey, teamStateReason: state === 'ACTIVE' ? null : why, teamStateAt: new Date(), teamStateBy: actorId },
+    include: { rank: true, team: true },
+  });
+  await log(guildId, id, 'state.changed', actorId, { before: { teamState: before.teamState }, after: { teamState: state, reason: why } }, opts);
   return record;
 }
 

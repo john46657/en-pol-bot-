@@ -400,6 +400,10 @@ export interface PersonnelRow {
   rpName: string;
   serviceNumber: string | null;
   status: 'ACTIVE' | 'ARCHIVED';
+  teamState: 'ACTIVE' | 'PAUSE' | 'OFF_DUTY' | 'SUSPENDED';
+  teamStateReason: string | null;
+  archivedBy: string | null;
+  archivedAt: string | null;
   joinedAt: string;
   probationEndsAt: string | null;
   archivedReason: string | null;
@@ -435,6 +439,7 @@ export interface PersonnelView {
     team: boolean;
     number: boolean;
     archive: boolean;
+    state: boolean;
     award: boolean;
     discipline: boolean;
     note: boolean;
