@@ -57,7 +57,7 @@ export async function collect(guildId: string, from: Date, to: Date): Promise<Om
     prisma.penalty.count({ where: { guildId: gid, revokedAt: range } }),
     prisma.ticket.count({ where: { guildId: gid, createdAt: range } }),
     prisma.ticket.count({ where: { guildId: gid, closedAt: range } }),
-    prisma.ticket.count({ where: { guildId: gid, status: { in: ['OPEN', 'CLAIMED'] } } }),
+    prisma.ticket.count({ where: { guildId: gid, status: { in: ['OPEN', 'IN_PROGRESS', 'WAITING'] } } }),
     prisma.training.findMany({ where: { guildId: gid, status: 'FINISHED', finishedAt: range }, include: { participants: true } }),
   ]);
   const ended = shifts.filter((s) => s.status === 'ENDED');

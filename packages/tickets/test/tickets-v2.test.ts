@@ -165,7 +165,7 @@ describe('Claim, Benachrichtigung', () => {
     await saveSettings(G, { claimExclusive: true, adminRoleIds: [ADMROLE] }, 'b');
     const other: Actor = { userId: BOSS, roleIds: [ROLE], manage: false, handle: true };
     await err(closeTicket(G, t.id, 'x', other, d), 'forbidden');
-    expect((await closeTicket(G, t.id, 'ok', adminViaRole, d)).ticket.status).toBe('CLOSED');
+    expect((await closeTicket(G, t.id, 'erledigt', adminViaRole, d)).ticket.status).toBe('CLOSED');
     await saveSettings(G, { claimEnabled: false }, 'b');
     const t2 = await openTicket({ guildId: G, userId: U2, username: 'b', categoryId: cat }, d);
     await err(claim(G, t2.id, staff, d), 'conflict');
@@ -215,11 +215,11 @@ describe('Schließen & Transcript', () => {
     await saveSettings(G, { transcriptChannelId: TR, dmTranscript: true }, 'b');
     const d = fake([msg(U1, 'x')]);
     const t = await openTicket({ guildId: G, userId: U1, username: 'a', categoryId: cat }, d);
-    await closeTicket(G, t.id, undefined, staff, d);
+    await closeTicket(G, t.id, 'Problem gelöst', staff, d);
     expect(d.dms[0].file.name).toMatch(/\.html$/);
     await saveSettings(G, { transcriptEnabled: false }, 'b');
     const t2 = await openTicket({ guildId: G, userId: U2, username: 'b', categoryId: cat }, d);
-    await closeTicket(G, t2.id, undefined, staff, d);
+    await closeTicket(G, t2.id, 'Problem gelöst', staff, d);
     expect((await prisma.ticket.findUniqueOrThrow({ where: { id: t2.id } })).transcriptHtml).toBeNull();
     const { DiscordApiError } = await import('@nexus/discord');
     const bad = fake();

@@ -173,7 +173,7 @@ function Body({
             <li key={t.number}>
               <b>#{t.number}</b> {t.subject}{' '}
               <small className="muted">
-                · {t.status === 'CLAIMED' ? 'übernommen' : 'offen'} · {when(t.createdAt)}
+                · {t.status === 'IN_PROGRESS' ? 'in Bearbeitung' : t.status === 'WAITING' ? 'wartet' : 'offen'} · {when(t.createdAt)}
               </small>
             </li>
           ))}

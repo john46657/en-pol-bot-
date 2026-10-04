@@ -12,6 +12,10 @@ import { getSettings } from './settings.js';
  */
 type Json = Prisma.InputJsonValue;
 const ID = /^\d{5,25}$/;
+/** Status, in denen ein Ticket als „offen“ zählt. */
+export const OPEN_STATES = ['OPEN', 'IN_PROGRESS', 'WAITING'] as const;
+/** Vorschläge für den Schließungsgrund (frei erweiterbar durch eigenen Text). */
+export const CLOSE_REASONS = ['Problem gelöst', 'Anfrage erledigt', 'Bewerbung bearbeitet', 'Kein weiterer Kontakt', 'Doppelt', 'Sonstiger Grund'] as const;
 export const PRIORITIES = ['LOW', 'NORMAL', 'HIGH', 'URGENT'] as const;
 export type TicketPriority = (typeof PRIORITIES)[number];
 export const PRIORITY_LABEL: Record<TicketPriority, string> = { LOW: 'Niedrig', NORMAL: 'Normal', HIGH: 'Hoch', URGENT: 'Dringend' };
@@ -238,7 +242,7 @@ export async function openTicket(i: OpenInput, discord: TicketDiscord) {
   const ticket = await prisma.$transaction(async (tx) => {
     // Kapazität unter Sperre prüfen, damit gleichzeitige Eröffnungen die Grenze nicht überschreiten
     await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtext(${'ticket-cap:' + cat.id}))`;
-    const total = await tx.ticket.count({ where: { guildId: gid, categoryId: cat.id, status: { in: ['OPEN', 'CLAIMED'] } } });
+    const total = await tx.ticket.count({ where: { guildId: gid, categoryId: cat.id, status: { in: ['OPEN', 'IN_PROGRESS', 'WAITING'] } } });
     if (total >= cat.maxOpenTotal) throw new TicketError('conflict', `„${cat.name}“ ist aktuell voll (${total}/${cat.maxOpenTotal}). Bitte versuche es später erneut.`);
     const c = await tx.ticketCounter.upsert({ where: { guildId: gid }, create: { guildId: gid, last: 1 }, update: { last: { increment: 1 } } });
     return tx.ticket.create({ data: { guildId: gid, number: c.last, categoryId: cat.id, userId: i.userId, subject, description: i.description?.trim() || null, priority: cat.defaultPriority, ...(i.formAnswers?.length ? { formAnswers: i.formAnswers as never } : {}), ...(i.submission ? { submissionId: i.submission.id } : {}) }, include });
@@ -325,7 +329,7 @@ export async function claim(guildId: string, id: string, rawActor: Actor, discor
   if (!isStaff(t, actor)) throw new TicketError('forbidden', 'Nur Bearbeiter dieser Kategorie können Tickets übernehmen.');
   if (t.claimedBy === actor.userId) throw new TicketError('conflict', 'Du bearbeitest dieses Ticket bereits.');
   if (t.claimedBy && !actor.manage) throw new TicketError('conflict', `Das Ticket wird bereits von <@${t.claimedBy}> bearbeitet.`);
-  const r = await prisma.ticket.updateMany({ where: { id, status: { not: 'CLOSED' }, claimedBy: t.claimedBy }, data: { status: 'CLAIMED', claimedBy: actor.userId, claimedAt: now } });
+  const r = await prisma.ticket.updateMany({ where: { id, status: { not: 'CLOSED' }, claimedBy: t.claimedBy }, data: { status: 'IN_PROGRESS', claimedBy: actor.userId, claimedAt: now } });
   if (r.count === 0) throw new TicketError('conflict', 'Das Ticket wurde gerade geändert – bitte erneut versuchen.');
   await event(gid, id, 'claimed', actor.userId, { previous: t.claimedBy });
   if (t.channelId && discord)
@@ -344,6 +348,29 @@ export async function release(guildId: string, id: string, rawActor: Actor, disc
   await prisma.ticket.update({ where: { id }, data: { status: 'OPEN', claimedBy: null, claimedAt: null } });
   await event(gid, id, 'released', actor.userId, { previous: t.claimedBy });
   if (t.channelId && discord) await discord.send(t.channelId, { content: `↩️ <@${t.claimedBy}> hat das Ticket freigegeben.`, allowed_mentions: { parse: [] } } as never).catch(() => undefined);
+  return getTicket(gid, id);
+}
+
+/**
+ * Wartet auf Rückmeldung (`waiting = true`, Status WAITING) bzw. weiter in Bearbeitung (zurück zu IN_PROGRESS bzw. OPEN,
+ * wenn niemand das Ticket übernommen hat). Nur Bearbeiter der Kategorie.
+ */
+export async function setWaiting(guildId: string, id: string, waiting: boolean, rawActor: Actor, discord?: TicketDiscord) {
+  const gid = assertGuildId(guildId);
+  const { actor, settings } = await withAdmin(gid, rawActor);
+  const t = await openTicketOf(gid, id);
+  if (!isStaff(t, actor)) throw new TicketError('forbidden', 'Nur Bearbeiter können den Status ändern.');
+  assertExclusive(t, actor, settings);
+  if (waiting && t.status === 'WAITING') throw new TicketError('conflict', 'Das Ticket wartet bereits auf Rückmeldung.');
+  if (!waiting && t.status !== 'WAITING') throw new TicketError('conflict', 'Das Ticket wartet nicht auf Rückmeldung.');
+  const next = waiting ? 'WAITING' : t.claimedBy ? 'IN_PROGRESS' : 'OPEN';
+  const r = await prisma.ticket.updateMany({ where: { id, status: t.status }, data: { status: next } });
+  if (r.count === 0) throw new TicketError('conflict', 'Das Ticket wurde gerade geändert – bitte erneut versuchen.');
+  await event(gid, id, waiting ? 'waiting' : 'resumed', actor.userId, { from: t.status, to: next });
+  if (t.channelId && discord)
+    await discord
+      .send(t.channelId, { content: waiting ? `🟡 <@${actor.userId}> wartet auf eine Rückmeldung von <@${t.userId}>.` : `🔵 <@${actor.userId}> bearbeitet das Ticket weiter.`, allowed_mentions: { users: waiting ? [t.userId] : [] } } as never)
+      .catch(() => undefined);
   return getTicket(gid, id);
 }
 
@@ -429,7 +456,8 @@ export async function closeTicket(
   if (!isStaff(t, actor) && !isCreator) throw new TicketError('forbidden', 'Nur der Ersteller oder ein Bearbeiter kann das Ticket schließen.');
   if (!isCreator) assertExclusive(t, actor, settings);
   const why = reason?.trim() || null;
-  if (why && why.length > 300) throw new TicketError('invalid', 'Der Grund ist zu lang (max. 300 Zeichen).');
+  if (!why || why.length < 3) throw new TicketError('invalid', 'Bitte einen Schließungsgrund angeben (z. B. „Problem gelöst“).');
+  if (why.length > 300) throw new TicketError('invalid', 'Der Grund ist zu lang (max. 300 Zeichen).');
   const now = opts.now ?? new Date();
   let messages: TranscriptMessage[] = [];
   if (t.channelId) messages = await discord.fetchMessages(t.channelId).catch(() => []);
@@ -442,7 +470,7 @@ export async function closeTicket(
 
   const guild = await prisma.guild.findUnique({ where: { id: gid }, select: { name: true, iconUrl: true } });
   const creatorName = opts.names?.[t.userId] ?? messages.find((m) => m.authorId === t.userId)?.author ?? t.userId;
-  const events = await prisma.ticketEvent.findMany({ where: { ticketId: id, type: { in: ['claimed', 'released', 'priority', 'participant.added', 'participant.removed'] } }, orderBy: { at: 'asc' } });
+  const events = await prisma.ticketEvent.findMany({ where: { ticketId: id, type: { in: ['claimed', 'released', 'waiting', 'resumed', 'priority', 'participant.added', 'participant.removed'] } }, orderBy: { at: 'asc' } });
   const sysText = (e: (typeof events)[number]) => {
     const who = opts.names?.[e.actorId ?? ''] ?? e.actorId ?? 'System';
     return e.type === 'claimed' ? `${who} hat das Ticket übernommen` : e.type === 'released' ? `${who} hat das Ticket freigegeben` : e.type === 'priority' ? `${who} änderte die Priorität` : e.type === 'participant.added' ? `${who} fügte ein Mitglied hinzu` : `${who} entfernte ein Mitglied`;
@@ -540,7 +568,7 @@ export async function listTickets(f: TicketFilter) {
   const rows = await prisma.ticket.findMany({
     where: {
       guildId: assertGuildId(f.guildId),
-      ...(f.open ? { status: { in: ['OPEN', 'CLAIMED'] as ('OPEN' | 'CLAIMED')[] } } : f.closed ? { status: 'CLOSED' } : ['OPEN', 'CLAIMED', 'CLOSED'].includes(f.status ?? '') ? { status: f.status as 'OPEN' } : {}),
+      ...(f.open ? { status: { in: [...OPEN_STATES] } } : f.closed ? { status: 'CLOSED' } : ['OPEN', 'IN_PROGRESS', 'WAITING', 'CLOSED'].includes(f.status ?? '') ? { status: f.status as 'OPEN' } : {}),
       ...(f.categoryId ? { categoryId: f.categoryId } : {}),
       ...(f.userId ? { userId: f.userId } : {}),
       ...(f.claimedBy ? { claimedBy: f.claimedBy } : {}),

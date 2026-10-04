@@ -6,7 +6,7 @@ import { errorText, QueryState } from '../components/QueryState';
 import { TicketSettings } from '../components/TicketSettings';
 import { useToast } from '../toast';
 
-const ST = { OPEN: '🟢 offen', CLAIMED: '🔵 in Bearbeitung', CLOSED: '🔒 geschlossen' } as const;
+const ST = { OPEN: '🟢 offen', IN_PROGRESS: '🔵 in Bearbeitung', WAITING: '🟡 wartet auf Rückmeldung', CLOSED: '🔒 geschlossen' } as const;
 const PRIO = { LOW: 'Niedrig', NORMAL: 'Normal', HIGH: 'Hoch', URGENT: 'Dringend' } as const;
 const num = (n: number) => `#${String(n).padStart(4, '0')}`;
 type FormRow = { id: string; label: string; style: 'short' | 'paragraph'; required: boolean };
@@ -50,6 +50,7 @@ export function Tickets() {
           <input className="inline-input" placeholder="Betreff oder #Nummer …" value={input} onChange={(e) => setInput(e.target.value)} /><button className="btn">Suchen</button>
         </form>
       </div>
+      <datalist id="close-reasons">{['Problem gelöst', 'Anfrage erledigt', 'Bewerbung bearbeitet', 'Kein weiterer Kontakt', 'Doppelt', 'Sonstiger Grund'].map((r) => <option key={r} value={r} />)}</datalist>
       <QueryState query={list}>
         {(d) =>
           d.items.length === 0 ? <p className="muted">Keine Tickets.</p> : (
@@ -63,8 +64,9 @@ export function Tickets() {
                       <div>
                         {t.claimedBy ? <button className="btn" onClick={() => call.mutate({ method: 'POST', path: `/${t.id}/release`, msg: 'Freigegeben.' })}>Freigeben</button> : <button className="btn primary" onClick={() => call.mutate({ method: 'POST', path: `/${t.id}/claim`, msg: 'Übernommen.' })}>Übernehmen</button>}
                         <select value={t.priority} aria-label="Priorität" onChange={(e) => call.mutate({ method: 'POST', path: `/${t.id}/priority`, body: { priority: e.target.value }, msg: 'Priorität geändert.' })}>{Object.entries(PRIO).map(([k, v]) => <option key={k} value={k}>{v}</option>)}</select>
-                        <input className="inline-input" placeholder="Grund zum Schließen (optional)" value={why[t.id] ?? ''} onChange={(e) => setWhy({ ...why, [t.id]: e.target.value })} />
-                        <button className="btn danger" onClick={() => confirm(`Ticket ${num(t.number)} schließen? Der Kanal wird nach dem Sichern des Transkripts gelöscht.`) && call.mutate({ method: 'POST', path: `/${t.id}/close`, body: { reason: why[t.id] }, msg: 'Ticket geschlossen.' })}>Schließen</button>
+                        {t.status === 'WAITING' ? <button className="btn" onClick={() => call.mutate({ method: 'POST', path: `/${t.id}/waiting`, body: { waiting: false }, msg: 'Weiter in Bearbeitung.' })}>Weiter bearbeiten</button> : <button className="btn" onClick={() => call.mutate({ method: 'POST', path: `/${t.id}/waiting`, body: { waiting: true }, msg: 'Wartet auf Rückmeldung.' })}>Wartet auf Rückmeldung</button>}
+                        <input className="inline-input" list="close-reasons" placeholder="Schließungsgrund (Pflicht)" aria-label="Schließungsgrund" value={why[t.id] ?? ''} onChange={(e) => setWhy({ ...why, [t.id]: e.target.value })} />
+                        <button className="btn danger" disabled={(why[t.id] ?? '').trim().length < 3} onClick={() => confirm(`Ticket ${num(t.number)} schließen? Der Kanal wird nach dem Sichern des Transkripts gelöscht.`) && call.mutate({ method: 'POST', path: `/${t.id}/close`, body: { reason: why[t.id] }, msg: 'Ticket geschlossen.' })}>Schließen</button>
                       </div>
                     )}
                     {t.status === 'CLOSED' && <div><button className="btn" onClick={() => setOpen(open === t.id ? null : t.id)}>{open === t.id ? 'Transkript ausblenden' : 'Transkript anzeigen'}</button> <a className="btn" href={`${API_URL}/api/v1${base}/${t.id}/transcript.html`}>📄 HTML-Transcript</a></div>}

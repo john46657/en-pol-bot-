@@ -139,16 +139,16 @@ describe('Im Ticket', () => {
     expect(text(await press('button', `nexus:ticket:ping:${id}`, USER, ['role-user']))).toContain('Bitte warte');
   });
 
-  it('Schließen: Bestätigung („Ticket schließen?“) → Abbrechen lässt es offen → „Ja, schließen“ schließt, Transcript landet im Transcript-Kanal', async () => {
+  it('Schließen: Der Button öffnet das Pflicht-Formular (zugleich Bestätigung); ohne Grund bleibt das Ticket offen, mit Grund wird es geschlossen und das Transcript landet im Transcript-Kanal', async () => {
     const ask = await press('button', `nexus:ticket:close:${id}`, USER, ['role-user']);
-    expect(ask.out.replies[0].embeds[0]).toMatchObject({ title: 'Ticket schließen?', description: 'Willst du dieses Ticket wirklich schließen?' });
-    const labels = ask.out.replies[0].components[0].components.map((c: any) => c.data.label);
-    expect(labels).toEqual(['Ja, schließen', 'Abbrechen']);
-    await press('button', `nexus:ticket:closex:${id}`, USER, ['role-user']);
+    expect(ask.out.shown[0].title).toBe('Ticket schließen');
+    expect(ask.out.shown[0].components[0].components[0]).toMatchObject({ required: true });
+    const refused = await press('modal', `nexus:ticket:closem:${id}`, USER, ['role-user'], { fields: { reason: ' ' } });
+    expect(text(refused)).toContain('Schließungsgrund');
     expect((await prisma.ticket.findUniqueOrThrow({ where: { id } })).status).toBe('OPEN');
-    const yes = await press('button', `nexus:ticket:closey:${id}`, USER, ['role-user']);
+    const yes = await press('modal', `nexus:ticket:closem:${id}`, USER, ['role-user'], { fields: { reason: 'Problem gelöst' } });
     expect(text(yes)).toContain('Ticket geschlossen');
-    expect((await prisma.ticket.findUniqueOrThrow({ where: { id } })).status).toBe('CLOSED');
+    expect(await prisma.ticket.findUniqueOrThrow({ where: { id } })).toMatchObject({ status: 'CLOSED', closeReason: 'Problem gelöst' });
     expect(discord.files[0].name).toMatch(/^ticket-0001-.*\.html$/);
     expect(discord.deleteChannel).toHaveBeenCalled();
   });
@@ -164,10 +164,10 @@ describe('Im Ticket', () => {
     expect(t.transcriptHtml).toContain('Problem wurde gelöst.');
   });
 
-  it('Schließen ohne Bestätigung, wenn abgeschaltet; ungültige IDs werden abgewiesen', async () => {
-    await saveSettings(G, { confirmClose: false }, 'x');
-    expect(text(await press('button', `nexus:ticket:close:${id}`, USER, ['role-user']))).toContain('Ticket geschlossen');
+  it('Schließen: ungültige IDs werden abgewiesen, ein geschlossenes Ticket lässt sich nicht erneut schließen', async () => {
     expect(text(await press('button', 'nexus:ticket:close:../../etc', USER, ['role-user']))).toContain('Das geht hier nicht');
+    await press('modal', `nexus:ticket:closem:${id}`, USER, ['role-user'], { fields: { reason: 'Doppelt' } });
+    expect(text(await press('button', `nexus:ticket:close:${id}`, USER, ['role-user']))).toContain('bereits geschlossen');
   });
 });
 

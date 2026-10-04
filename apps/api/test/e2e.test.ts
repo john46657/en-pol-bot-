@@ -1075,4 +1075,38 @@ describe('Dashboard-Design (Phase 37)', () => {
       (await call('POST', `/guilds/${G}/personnel/${rec.id}/restore`, ADMIN)).data.teamState,
     ).toBe('ACTIVE');
   });
+  it('Ticket-Status: Wartet auf Rückmeldung, Pflicht-Schließungsgrund, Vorschläge', async () => {
+    const cat = await prisma.ticketCategory.create({
+      data: { guildId: G, name: 'Statustest', staffRoleIds: [ROLE_ADMIN] },
+    });
+    const t = await prisma.ticket.create({
+      data: {
+        guildId: G,
+        number: 9101,
+        categoryId: cat.id,
+        userId: OFFICER,
+        subject: 'Statusfrage',
+      },
+    });
+    const tk = (p: string) => `/guilds/${G}/tickets${p}`;
+    expect((await call('GET', tk('/close-reasons'), ADMIN)).data).toContain('Problem gelöst');
+    expect((await call('POST', tk(`/${t.id}/waiting`), NOBODY, {})).status).toBe(403);
+    expect((await call('POST', tk(`/${t.id}/waiting`), ADMIN, { waiting: false })).status).toBe(
+      409,
+    ); // wartet nicht
+    const w = await call('POST', tk(`/${t.id}/waiting`), ADMIN, { waiting: true });
+    expect(w.status).toBe(201);
+    expect(w.data.status).toBe('WAITING');
+    expect(
+      (await call('GET', tk('?status=WAITING'), ADMIN)).data.items.map((x: { id: string }) => x.id),
+    ).toContain(t.id);
+    expect(
+      (await call('POST', tk(`/${t.id}/waiting`), ADMIN, { waiting: false })).data.status,
+    ).toBe('OPEN');
+    expect((await call('POST', tk(`/${t.id}/close`), ADMIN, {})).status).toBe(400); // Grund fehlt
+    expect((await call('POST', tk(`/${t.id}/close`), ADMIN, { reason: 'ab' })).status).toBe(400);
+    expect((await prisma.ticket.findUniqueOrThrow({ where: { id: t.id } })).status).toBe('OPEN');
+    await prisma.ticket.delete({ where: { id: t.id } });
+    await prisma.ticketCategory.delete({ where: { id: cat.id } });
+  });
 });

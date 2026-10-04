@@ -29,7 +29,7 @@ export async function loads(guildId: string): Promise<CategoryLoad[]> {
   const gid = assertGuildId(guildId);
   const [cats, groups] = await Promise.all([
     prisma.ticketCategory.findMany({ where: { guildId: gid, active: true }, orderBy: [{ createdAt: 'asc' }, { name: 'asc' }] }),
-    prisma.ticket.groupBy({ by: ['categoryId'], where: { guildId: gid, status: { in: ['OPEN', 'CLAIMED'] } }, _count: { _all: true } }),
+    prisma.ticket.groupBy({ by: ['categoryId'], where: { guildId: gid, status: { in: ['OPEN', 'IN_PROGRESS', 'WAITING'] } }, _count: { _all: true } }),
   ]);
   const open = new Map(groups.map((g) => [g.categoryId, g._count._all]));
   return cats.map((c) => {

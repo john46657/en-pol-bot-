@@ -293,7 +293,10 @@ enum PromotionStatus {
 
 enum TicketStatus {
   OPEN
-  CLAIMED
+  /// In Bearbeitung (Ticket übernommen).
+  IN_PROGRESS
+  /// Wartet auf Rückmeldung des Erstellers.
+  WAITING
   CLOSED
 }
 

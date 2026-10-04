@@ -140,7 +140,7 @@ registerButton('ticket:ping', (i, { args }) =>
   }),
 );
 
-const ST = { OPEN: '🟢 Offen', CLAIMED: '🔵 In Bearbeitung', CLOSED: '🔒 Geschlossen' } as const;
+const ST = { OPEN: '🟢 Offen', IN_PROGRESS: '🔵 In Bearbeitung', WAITING: '🟡 Wartet auf Rückmeldung', CLOSED: '🔒 Geschlossen' } as const;
 registerButton('ticket:info', (i, { args }) =>
   ticketButton(i, args, async (id, member) => {
     const t = await getTicket(i.guild!.id, id);
@@ -189,25 +189,11 @@ async function doClose(i: Any, id: string, member: GuildMember, reason: string |
 }
 
 registerButton('ticket:close', (i, { args }) =>
-  ticketButton(i, args, async (id, member) => {
+  ticketButton(i, args, async (id) => {
     const t = await getTicket(i.guild!.id, id);
-    if ((await getSettings(i.guild!.id)).confirmClose) {
-      if (t.status === 'CLOSED') throw new TicketError('conflict', 'Dieses Ticket ist bereits geschlossen.');
-      return void (await i.reply({
-        flags: E,
-        embeds: [{ title: 'Ticket schließen?', description: 'Willst du dieses Ticket wirklich schließen?', color: 0xed4245 }],
-        components: [new ActionRowBuilder<ButtonBuilder>().addComponents(new ButtonBuilder().setCustomId(`nexus:ticket:closey:${id}`).setLabel('Ja, schließen').setStyle(ButtonStyle.Danger), new ButtonBuilder().setCustomId(`nexus:ticket:closex:${id}`).setLabel('Abbrechen').setStyle(ButtonStyle.Secondary))],
-      }));
-    }
-    await i.deferReply({ flags: E });
-    await doClose(i, id, member, undefined);
-  }),
-);
-
-registerButton('ticket:closey', (i, { args }) =>
-  ticketButton(i, args, async (id, member) => {
-    await i.update({ embeds: [{ title: 'Ticket wird geschlossen …', color: 0x6b7280 }], components: [] });
-    await doClose(i, id, member, undefined);
+    if (t.status === 'CLOSED') throw new TicketError('conflict', 'Dieses Ticket ist bereits geschlossen.');
+    // Der Schließungsgrund ist Pflicht: das Formular fragt ihn ab und dient zugleich als Bestätigung
+    await i.showModal(new ModalBuilder().setCustomId(`nexus:ticket:closem:${id}`).setTitle('Ticket schließen').addComponents(input('reason', 'Grund (z. B. Problem gelöst)', TextInputStyle.Paragraph, true, 300)));
   }),
 );
 

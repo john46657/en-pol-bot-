@@ -787,7 +787,7 @@ export interface TicketRow {
   number: number;
   userId: string;
   subject: string;
-  status: 'OPEN' | 'CLAIMED' | 'CLOSED';
+  status: 'OPEN' | 'IN_PROGRESS' | 'WAITING' | 'CLOSED';
   priority: 'LOW' | 'NORMAL' | 'HIGH' | 'URGENT';
   claimedBy: string | null;
   channelId: string | null;

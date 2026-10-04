@@ -2,7 +2,7 @@ import { guildRepository, prisma } from '@nexus/database';
 import { afterAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import { createRestriction, revokeRestriction } from '@nexus/restrictions';
 import { saveSettings } from '../src/index.js';
-import { TicketError, claim, closeTicket, deleteCategory, formatNumber, getByChannel, getByNumber, listTickets, openTicket, release, renderTranscript, saveCategory, setParticipant, setPriority, stats, ticketHistory, type Actor, type TicketDiscord, type TranscriptMessage } from '../src/index.js';
+import { CLOSE_REASONS, TicketError, claim, setWaiting, closeTicket, deleteCategory, formatNumber, getByChannel, getByNumber, listTickets, openTicket, release, renderTranscript, saveCategory, setParticipant, setPriority, stats, ticketHistory, type Actor, type TicketDiscord, type TranscriptMessage } from '../src/index.js';
 
 const G = 'tickettest-guild';
 const [U1, U2, STAFF, ADMIN, OTHER] = ['900000000000210001', '900000000000210002', '900000000000210003', '900000000000210004', '900000000000210005'];
@@ -103,7 +103,7 @@ describe('Bearbeiten', () => {
     await err(claim(G, ticketId, user(U1), d), 'forbidden');
     await err(claim(G, ticketId, outsider, d), 'forbidden'); // falsche Rolle
     const c = await claim(G, ticketId, staff, d);
-    expect(c).toMatchObject({ status: 'CLAIMED', claimedBy: STAFF });
+    expect(c).toMatchObject({ status: 'IN_PROGRESS', claimedBy: STAFF });
     await err(claim(G, ticketId, staff, d), 'conflict'); // schon selbst
     await err(claim(G, ticketId, { ...staff, userId: 'x2' }, d), 'conflict'); // fremd übernommen
     expect((await claim(G, ticketId, admin, d)).claimedBy).toBe(ADMIN); // Verwaltung darf übernehmen
@@ -156,7 +156,7 @@ describe('Schließen, Transkript, Archiv', () => {
   it('Ersteller darf schließen; fehlende Inhalte (kein Message-Content-Intent) werden ehrlich festgehalten; DM/Log-Fehler brechen nichts ab', async () => {
     const d = fake({ messages: [msg(U1, ''), msg(STAFF, '')], failDm: true });
     const t = await openTicket({ guildId: G, userId: U1, username: 'Max', categoryId: cat, subject: 'Frage' }, d);
-    const r = await closeTicket(G, t.id, undefined, user(U1), d);
+    const r = await closeTicket(G, t.id, 'Anfrage erledigt', user(U1), d);
     expect(r).toMatchObject({ contentAvailable: false, logged: false, dmDelivered: false });
     expect(r.ticket.transcriptContent).toBe(false);
     expect(renderTranscript(r.ticket)).toContain('Message-Content-Intent');
@@ -193,5 +193,51 @@ describe('Ticketsperre (Phase 47)', () => {
     const r2 = await createRestriction({ guildId: G, userId: U2, type: 'TICKET', reason: 'Zweite Sperre', actorId: ADMIN });
     await revokeRestriction(G, r2.id, 'Irrtum', ADMIN);
     await openTicket({ guildId: G, userId: U2, username: 'Eva', categoryId: cat, subject: 'Nach Aufheben' }, fake());
+  });
+});
+
+describe('Status IN_PROGRESS / WAITING und Pflicht-Schließungsgrund (Phase 49)', () => {
+  it('OPEN → IN_PROGRESS → WAITING → IN_PROGRESS; wartend zählt als offen; nur Bearbeiter; Ereignisse', async () => {
+    const d = fake();
+    const t = await openTicket({ guildId: G, userId: U1, username: 'Max', categoryId: cat, subject: 'Frage' }, d);
+    expect(t.status).toBe('OPEN');
+    await err(setWaiting(G, t.id, false, staff, d), 'conflict'); // wartet nicht
+    await err(setWaiting(G, t.id, true, user(U1), d), 'forbidden'); // Ersteller ist kein Bearbeiter
+    expect((await claim(G, t.id, staff, d)).status).toBe('IN_PROGRESS');
+    const w = await setWaiting(G, t.id, true, staff, d);
+    expect(w.status).toBe('WAITING');
+    expect(w.claimedBy).toBe(STAFF);
+    await err(setWaiting(G, t.id, true, staff, d), 'conflict');
+    expect((await listTickets({ guildId: G, open: true })).items.map((x) => x.id)).toContain(t.id);
+    expect((await listTickets({ guildId: G, status: 'WAITING' })).items).toHaveLength(1);
+    expect(d.sent.some((m) => JSON.stringify(m.payload).includes('wartet auf eine Rückmeldung'))).toBe(true);
+    expect((await setWaiting(G, t.id, false, staff, d)).status).toBe('IN_PROGRESS');
+    const types = (await prisma.ticketEvent.findMany({ where: { ticketId: t.id }, orderBy: { at: 'asc' } })).map((e) => e.type);
+    expect(types).toEqual(expect.arrayContaining(['claimed', 'waiting', 'resumed']));
+    await setWaiting(G, t.id, true, staff, d);
+    expect((await closeTicket(G, t.id, 'Problem gelöst', staff, d)).ticket.status).toBe('CLOSED'); // wartend lässt sich schließen
+    await err(setWaiting(G, t.id, true, staff, d), 'conflict'); // geschlossen
+  });
+
+  it('ohne Übernahme: wartend → zurück auf OPEN; Freigeben aus WAITING', async () => {
+    const d = fake();
+    const t = await openTicket({ guildId: G, userId: U1, username: 'Max', categoryId: cat, subject: 'Frage' }, d);
+    expect((await setWaiting(G, t.id, true, staff, d)).status).toBe('WAITING');
+    expect((await setWaiting(G, t.id, false, staff, d)).status).toBe('OPEN');
+    await claim(G, t.id, staff, d);
+    await setWaiting(G, t.id, true, staff, d);
+    expect((await release(G, t.id, staff, d)).status).toBe('OPEN');
+  });
+
+  it('Schließen verlangt einen Grund; Ticket bleibt sonst unverändert; Vorschläge vorhanden', async () => {
+    const d = fake();
+    const t = await openTicket({ guildId: G, userId: U1, username: 'Max', categoryId: cat, subject: 'Frage' }, d);
+    for (const bad of [undefined, '', '  ', 'ab']) await err(closeTicket(G, t.id, bad, staff, d), 'invalid');
+    await err(closeTicket(G, t.id, 'x'.repeat(301), staff, d), 'invalid');
+    expect((await prisma.ticket.findUniqueOrThrow({ where: { id: t.id } })).status).toBe('OPEN');
+    expect(CLOSE_REASONS).toContain('Problem gelöst');
+    const r = await closeTicket(G, t.id, 'Sonstiger Grund: Test', staff, d);
+    expect(r.ticket).toMatchObject({ status: 'CLOSED', closeReason: 'Sonstiger Grund: Test', closedBy: STAFF });
+    expect(r.ticket.closedAt).not.toBeNull();
   });
 });

@@ -65,7 +65,7 @@ export async function searchAll(
       id: t.id,
       title: `#${t.number} ${t.subject}`.slice(0, 120),
       subtitle:
-        t.status === 'CLOSED' ? 'geschlossen' : t.status === 'CLAIMED' ? 'übernommen' : 'offen',
+        t.status === 'CLOSED' ? 'geschlossen' : t.status === 'IN_PROGRESS' ? 'in Bearbeitung' : t.status === 'WAITING' ? 'wartet' : 'offen',
       path: '/tickets',
     });
     groups.push({

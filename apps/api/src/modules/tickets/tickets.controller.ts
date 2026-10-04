@@ -3,7 +3,7 @@ import type { Response } from 'express';
 import { ConfigService } from '@nestjs/config';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { permissions } from '@nexus/permissions';
-import { TicketError, getSettings, loads, postPanel, saveSettings, transcriptFileName, claim, closeTicket, deleteCategory, getTicket, listCategories, listTickets, release, renderTranscript, restTicketDiscord, saveCategory, setParticipant, setPriority, stats, ticketHistory, type Actor } from '@nexus/tickets';
+import { TicketError, getSettings, loads, postPanel, saveSettings, transcriptFileName, claim, closeTicket, setWaiting, CLOSE_REASONS, deleteCategory, getTicket, listCategories, listTickets, release, renderTranscript, restTicketDiscord, saveCategory, setParticipant, setPriority, stats, ticketHistory, type Actor } from '@nexus/tickets';
 import { CurrentUser, type RequestUser } from '../../common/decorators/current-user.decorator.js';
 import { GuildId } from '../../common/decorators/guild-id.decorator.js';
 import { RequirePermissions } from '../../common/decorators/permissions.decorator.js';
@@ -100,6 +100,12 @@ export class TicketsController {
     res.send(t.transcriptHtml);
   }
 
+  @Get('close-reasons')
+  @RequirePermissions('tickets.view')
+  closeReasons() {
+    return CLOSE_REASONS;
+  }
+
   @Get(':id')
   @RequirePermissions('tickets.view')
   async view(@GuildId() guildId: string, @Param('id') id: string) {
@@ -117,6 +123,12 @@ export class TicketsController {
   @RequirePermissions('tickets.handle')
   async release(@GuildId() guildId: string, @Param('id') id: string, @Access() access: RequestAccess, @CurrentUser() user: RequestUser) {
     return release(guildId, id, await this.actor(access, user), this.discord());
+  }
+
+  @Post(':id/waiting')
+  @RequirePermissions('tickets.handle')
+  async waiting(@GuildId() guildId: string, @Param('id') id: string, @Body() b: Body_, @Access() access: RequestAccess, @CurrentUser() user: RequestUser) {
+    return setWaiting(guildId, id, b['waiting'] !== false, await this.actor(access, user), this.discord());
   }
 
   @Post(':id/priority')

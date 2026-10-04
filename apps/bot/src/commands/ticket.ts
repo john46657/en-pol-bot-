@@ -1,6 +1,6 @@
 import { MessageFlags, SlashCommandBuilder, type AutocompleteInteraction, type ChatInputCommandInteraction, type GuildMember, type TextChannel } from 'discord.js';
 import { permissionDeniedMessage } from '@nexus/permissions';
-import { getSettings, postPanel, PRIORITIES, PRIORITY_LABEL, TicketError, claim, closeTicket, formatNumber, getByChannel, getByNumber, listCategories, listTickets, openTicket, release, renderTranscript, setParticipant, setPriority, stats } from '@nexus/tickets';
+import { getSettings, postPanel, PRIORITIES, PRIORITY_LABEL, TicketError, claim, closeTicket, formatNumber, getByChannel, getByNumber, listCategories, listTickets, openTicket, release, renderTranscript, setParticipant, setPriority, setWaiting, stats } from '@nexus/tickets';
 import type { Permission } from '@nexus/types';
 import { embeds } from '../core/embed-builder.js';
 import { memberCan } from '../discord/permissions.js';
@@ -9,12 +9,12 @@ import '../tickets/ticket-handlers.js';
 import { defineCommand } from './registry.js';
 
 /**
- * `/ticket neu|liste|info|uebernehmen|freigeben|prioritaet|hinzufuegen|entfernen|schliessen|transkript|archiv|panel|statistik`.
+ * `/ticket neu|liste|info|uebernehmen|freigeben|wartet|prioritaet|hinzufuegen|entfernen|schliessen|transkript|archiv|panel|statistik`.
  * Im Ticket-Kanal gilt „dieses Ticket“; sonst wird die Nummer angegeben.
  */
 const reply = (i: ChatInputCommandInteraction, content: string) => i.reply({ content, flags: MessageFlags.Ephemeral, allowedMentions: { parse: [] } });
 const nr = (s: string) => Number(s.replace(/^#/, ''));
-const ST = { OPEN: '🟢 offen', CLAIMED: '🔵 in Bearbeitung', CLOSED: '🔒 geschlossen' } as const;
+const ST = { OPEN: '🟢 offen', IN_PROGRESS: '🔵 in Bearbeitung', WAITING: '🟡 wartet auf Rückmeldung', CLOSED: '🔒 geschlossen' } as const;
 type T = Awaited<ReturnType<typeof getByNumber>>;
 const line = (t: T) => `**${formatNumber(t.number)}** ${t.category.emoji ?? ''} ${t.subject} · <@${t.userId}> · ${ST[t.status]}${t.claimedBy ? ` (<@${t.claimedBy}>)` : ''} · ${PRIORITY_LABEL[t.priority as keyof typeof PRIORITY_LABEL] ?? t.priority}`;
 
@@ -52,7 +52,7 @@ export async function runTicket(interaction: ChatInputCommandInteraction): Promi
     }
     if (sub === 'statistik') {
       const s = await stats(guild.id);
-      return void (await reply(interaction, `🎫 Offen: **${s.byStatus['OPEN'] ?? 0}** · In Bearbeitung: **${s.byStatus['CLAIMED'] ?? 0}** · Geschlossen: **${s.byStatus['CLOSED'] ?? 0}**`));
+      return void (await reply(interaction, `🎫 Offen: **${s.byStatus['OPEN'] ?? 0}** · In Bearbeitung: **${s.byStatus['IN_PROGRESS'] ?? 0}** · Wartend: **${s.byStatus['WAITING'] ?? 0}** · Geschlossen: **${s.byStatus['CLOSED'] ?? 0}**`));
     }
     // Tickets mit Nummer oder (im Kanal) „dieses“
     const given = o.getString('nummer');
@@ -69,6 +69,7 @@ export async function runTicket(interaction: ChatInputCommandInteraction): Promi
     }
     if (sub === 'uebernehmen') return void (await reply(interaction, `✅ ${line(await claim(guild.id, t.id, actor, discord))}`));
     if (sub === 'freigeben') return void (await reply(interaction, `✅ ${line(await release(guild.id, t.id, actor, discord))}`));
+    if (sub === 'wartet') return void (await reply(interaction, `✅ ${line(await setWaiting(guild.id, t.id, o.getBoolean('wartet') ?? true, actor, discord))}`));
     if (sub === 'prioritaet') return void (await reply(interaction, `✅ ${line(await setPriority(guild.id, t.id, o.getString('stufe', true), actor))}`));
     if (sub === 'hinzufuegen' || sub === 'entfernen') {
       const user = o.getUser('mitglied', true);
@@ -105,10 +106,11 @@ export const ticketCommand = defineCommand({
     .addSubcommand((s) => nummer(s.setName('info').setDescription('Ticket anzeigen')))
     .addSubcommand((s) => nummer(s.setName('uebernehmen').setDescription('Ticket übernehmen')))
     .addSubcommand((s) => nummer(s.setName('freigeben').setDescription('Ticket freigeben')))
+    .addSubcommand((s) => nummer(s.setName('wartet').setDescription('Ticket wartet auf Rückmeldung (oder wieder in Bearbeitung)')).addBooleanOption((o) => o.setName('wartet').setDescription('Ja = wartet auf Rückmeldung, Nein = weiter in Bearbeitung (Standard: Ja)')))
     .addSubcommand((s) => nummer(s.setName('prioritaet').setDescription('Priorität setzen')).addStringOption((o) => o.setName('stufe').setDescription('Priorität').setRequired(true).addChoices(...PRIORITIES.map((p) => ({ name: PRIORITY_LABEL[p], value: p })))))
     .addSubcommand((s) => nummer(s.setName('hinzufuegen').setDescription('Mitglied zum Ticket hinzufügen')).addUserOption((o) => o.setName('mitglied').setDescription('Mitglied').setRequired(true)))
     .addSubcommand((s) => nummer(s.setName('entfernen').setDescription('Mitglied aus dem Ticket entfernen')).addUserOption((o) => o.setName('mitglied').setDescription('Mitglied').setRequired(true)))
-    .addSubcommand((s) => nummer(s.setName('schliessen').setDescription('Ticket schließen (Transkript wird gesichert)')).addStringOption((o) => o.setName('grund').setDescription('Grund').setMaxLength(300)))
+    .addSubcommand((s) => nummer(s.setName('schliessen').setDescription('Ticket schließen (Transkript wird gesichert)')).addStringOption((o) => o.setName('grund').setDescription('Schließungsgrund (Pflicht), z. B. Problem gelöst').setMaxLength(300)))
     .addSubcommand((s) => nummer(s.setName('transkript').setDescription('Transkript eines geschlossenen Tickets')))
     .addSubcommand((s) => s.setName('archiv').setDescription('Geschlossene Tickets durchsuchen').addStringOption((o) => o.setName('suche').setDescription('Betreff/Nummer')))
     .addSubcommand((s) => s.setName('panel').setDescription('Ticket-Panel in einen Kanal posten').addChannelOption((o) => o.setName('kanal').setDescription('Zielkanal (Standard: aktueller)')).addStringOption((o) => o.setName('text').setDescription('Panel-Text').setMaxLength(1000)))

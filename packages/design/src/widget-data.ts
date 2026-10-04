@@ -19,7 +19,7 @@ export interface WidgetData {
   activity: { action: string; actorId: string | null; createdAt: Date }[] | null;
 }
 
-const OPEN_TICKET = ['OPEN', 'CLAIMED'] as const;
+const OPEN_TICKET = ['OPEN', 'IN_PROGRESS', 'WAITING'] as const;
 const PENDING_SUB = ['SUBMITTED', 'UNDER_REVIEW'] as const;
 const ON_DUTY = ['ACTIVE', 'PAUSED'] as const;
 const RUNNING_OP = ['REQUESTED', 'EN_ROUTE', 'ACTIVE'] as const;
