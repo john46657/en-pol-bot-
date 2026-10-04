@@ -6,6 +6,7 @@ import {
   type DesignConfig,
 } from '@nexus/design/client';
 import { useEffect, type CSSProperties } from 'react';
+import { assetUrl } from '../assetUrl';
 import { loadFont } from '../fonts';
 import { navWithPages } from '../../pages/GuildLayout';
 
@@ -41,7 +42,11 @@ export function Preview({
   const mobile = device === 'mobile';
   const nav = mobile ? config.responsive.mobileNav : 'side';
   const vars = designVars(config, mode) as CSSProperties;
-  const bg = backgroundStyle(backgroundFor(config, 'overview'), config.colors.dark.background);
+  const bg = backgroundStyle(
+    backgroundFor(config, 'overview'),
+    config.colors.dark.background,
+    assetUrl,
+  );
   const g = config.general;
   const name = g.nameMode === 'custom' && g.customName ? g.customName : serverName;
   const side = config.sidebar.enabled && !mobile;
@@ -119,7 +124,7 @@ export function Preview({
                     }}
                   >
                     {g.logo.mode === 'upload' && g.logo.url ? (
-                      <img src={g.logo.url} alt="" />
+                      <img src={assetUrl(g.logo.url)} alt="" />
                     ) : (
                       name.slice(0, 1)
                     )}

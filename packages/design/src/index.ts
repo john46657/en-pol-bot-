@@ -5,3 +5,4 @@ export * from './navigation.js';
 export * from './widgets.js';
 export * from './widget-data.js';
 export * from './pages.js';
+export * from './assets.js';

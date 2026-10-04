@@ -10,6 +10,7 @@ import {
 import { createContext, useContext, useEffect } from 'react';
 import { api } from '../api';
 import { setServerThemeDefault, useTheme } from '../theme';
+import { assetUrl } from './assetUrl';
 import { loadFont } from './fonts';
 
 interface EffectiveDesign {
@@ -76,7 +77,7 @@ export function useDesign(guildId: string) {
 /** Hintergrundebene (und Overlay) der aktuellen Seite: eigener Hintergrund, sonst der globale. */
 export function DesignBackground({ config, page }: { config: DesignConfig; page: string }) {
   const bg = backgroundFor(config, page);
-  const { layer, overlay } = backgroundStyle(bg, config.colors.dark.background);
+  const { layer, overlay } = backgroundStyle(bg, config.colors.dark.background, assetUrl);
   return (
     <>
       <div className="design-bg" style={layer} aria-hidden data-page={page} />

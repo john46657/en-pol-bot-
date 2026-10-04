@@ -2,6 +2,7 @@ import { execFileSync } from 'node:child_process';
 import { readFileSync } from 'node:fs';
 import { createRequire } from 'node:module';
 import net from 'node:net';
+import { rm } from 'node:fs/promises';
 
 const { PrismaClient } = createRequire(`${process.cwd()}/packages/database/package.json`)(
   '@prisma/client',
@@ -53,5 +54,6 @@ async function flushRedis(): Promise<void> {
   });
 }
 
+await rm(`${process.cwd()}/test-results/uploads`, { recursive: true, force: true }); // Bilder früherer Läufe
 await setup();
 await flushRedis();

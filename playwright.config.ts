@@ -37,6 +37,7 @@ export default defineConfig({
       env: {
         DATABASE_URL: db.toString(),
         AUTH_SECRET: E2E.authSecret,
+        STORAGE_DIR: `${process.cwd()}/test-results/uploads`, // hochgeladene Bilder des Tests (gitignored, vor jedem Lauf geleert)
         JWT_ISSUER: E2E.issuer,
         REDIS_URL: `${fromEnv('REDIS_URL').replace(/\/\d+$/, '')}/15`, // eigene Redis-Datenbank, vor jedem Lauf geleert (prepare-db)
         DASHBOARD_URL: 'http://localhost:3101',

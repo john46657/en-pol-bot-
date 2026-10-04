@@ -2,7 +2,8 @@ import { MAX_BANNERS, emptyBanner, moveItem, type BannerCfg } from '@nexus/desig
 import { useState } from 'react';
 import { useParams } from 'react-router';
 import { BannerView } from '../widgets/BannerBar';
-import { ColorOpt, RolePicker, UrlText } from './controls';
+import { ColorOpt, RolePicker } from './controls';
+import { ImageField } from './ImageField';
 import { pageOptions } from './pageOptions';
 import { useEditor } from './state';
 import { CtaEditor } from './WidgetEditor';
@@ -127,8 +128,8 @@ export function BannersEditor() {
             />
             <small className="muted">**fett** · *kursiv* · [Link](https://…)</small>
           </label>
-          <UrlText
-            label="Bild (https)"
+          <ImageField
+            label="Bild"
             value={sel.image}
             disabled={disabled}
             onCommit={(v) => patch(sel.id, { image: v })}

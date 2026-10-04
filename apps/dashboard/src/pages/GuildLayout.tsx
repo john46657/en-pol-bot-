@@ -7,6 +7,7 @@ import { UserMenu } from '../components/UserMenu';
 import { useLive } from '../live';
 import { resolveNavigation } from '@nexus/design/client';
 import { DesignBackground, DesignCtx, useDesign } from '../design/useDesign';
+import { assetUrl } from '../design/assetUrl';
 import { BannerBar } from '../design/widgets/BannerBar';
 
 type Needs =
@@ -150,7 +151,11 @@ export function GuildLayout() {
   const discordIcon = g.data && guildIcon(g.data.id, g.data.icon);
   const logo = cfg.general.logo;
   const icon =
-    logo.mode === 'none' ? null : logo.mode === 'upload' && logo.url ? logo.url : discordIcon;
+    logo.mode === 'none'
+      ? null
+      : logo.mode === 'upload' && logo.url
+        ? assetUrl(logo.url)
+        : discordIcon;
   const serverName =
     cfg.general.nameMode === 'custom' && cfg.general.customName
       ? cfg.general.customName

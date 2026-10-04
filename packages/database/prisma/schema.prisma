@@ -357,6 +357,27 @@ model DashboardTheme {
   @@map("dashboard_themes")
 }
 
+/// Hochgeladenes Bild für das Dashboard-Design (Logo, Hintergrund, Widget-Bilder). Datei liegt im Speicherordner.
+model DashboardAsset {
+  id           String   @id
+  guildId      String
+  /// Dateiname im Speicher (zufällige ID + Endung)
+  file         String
+  mime         String
+  bytes        Int
+  width        Int
+  height       Int
+  /// Ursprünglicher Dateiname (nur zur Anzeige, bereinigt)
+  originalName String
+  createdBy    String?
+  createdAt    DateTime @default(now())
+
+  guild Guild @relation(fields: [guildId], references: [id], onDelete: Cascade)
+
+  @@index([guildId, createdAt])
+  @@map("dashboard_assets")
+}
+
 model DashboardThemeVersion {
   id            String   @id @default(cuid())
   themeId       String
@@ -420,6 +441,7 @@ model Guild {
   statSnapshots      StatSnapshot[]
   dashboardSettings  DashboardSettings?
   dashboardThemes    DashboardTheme[]
+  dashboardAssets    DashboardAsset[]
 
   applications      Application[]
   panels            ApplicationPanel[]

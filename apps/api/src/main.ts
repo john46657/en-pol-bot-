@@ -7,6 +7,8 @@ import { Logger, ValidationPipe } from '@nestjs/common';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { AppModule } from './app.module.js';
 import { HttpExceptionFilter } from './common/filters/http-exception.filter.js';
+import { storageDir } from '@nexus/design';
+import { uploadsMiddleware } from './modules/design/uploads.js';
 import { checkSecurityConfig } from './common/security/config-check.js';
 
 async function bootstrap(): Promise<void> {
@@ -24,6 +26,8 @@ async function bootstrap(): Promise<void> {
   app.useBodyParser('json', { limit: '256kb' });
   app.useBodyParser('urlencoded', { limit: '64kb', extended: false });
 
+  // Hochgeladene Design-Bilder (vor den übrigen Routen; nur geprüfte, neu kodierte Dateien)
+  app.use('/uploads', uploadsMiddleware(storageDir()));
   app.use(cookieParser());
   app.useLogger(new Logger());
   app.setGlobalPrefix('api/v1');
@@ -44,7 +48,7 @@ async function bootstrap(): Promise<void> {
   app.enableCors({
     origin: (process.env['DASHBOARD_URL'] ?? 'http://localhost:3001').split(','),
     credentials: true,
-    allowedHeaders: ['Authorization', 'Content-Type', 'Cookie', 'X-Requested-With'],
+    allowedHeaders: ['Authorization', 'Content-Type', 'Cookie', 'X-Requested-With', 'X-Filename'],
     exposedHeaders: ['Set-Cookie'],
   });
 

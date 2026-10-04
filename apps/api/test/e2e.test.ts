@@ -10,6 +10,9 @@ import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
  * Nur Discord ist ersetzt: OAuth2/REST-Aufrufe (fetch) und der Rollen-Port. Reihenfolge = Nutzerweg im Dashboard.
  */
 process.env['NODE_ENV'] = 'test';
+process.env['STORAGE_DIR'] = (await import('node:fs')).mkdtempSync(
+  (await import('node:path')).join((await import('node:os')).tmpdir(), 'nexus-e2e-uploads-'),
+);
 process.env['AUTH_SECRET'] = 'e2e-secret-e2e-secret-e2e-secret-e2e-secret';
 process.env['JWT_ISSUER'] = 'nexus-e2e';
 process.env['DISCORD_CLIENT_ID'] = '100000000000000001';
@@ -733,6 +736,59 @@ describe('Dashboard-Design (Phase 37)', () => {
     ])
       expect(raw, secret).not.toContain(secret);
     await call('POST', d('/reset'), ADMIN, { confirm: true });
+  });
+
+  it('Bilder: hochladen (geprüft, neu kodiert), auflisten, löschen – mit Rechten und Servertrennung', async () => {
+    const sharp = (await import('sharp')).default;
+    const png = await sharp({
+      create: {
+        width: 64,
+        height: 48,
+        channels: 4,
+        background: { r: 10, g: 120, b: 220, alpha: 1 },
+      },
+    })
+      .png()
+      .toBuffer();
+    const up = (user: string | null, body: Buffer, name = 'logo.png') =>
+      fetch(`${base}/api/v1${d('/assets')}`, {
+        method: 'POST',
+        headers: {
+          ...(user ? { 'x-dev-user-id': user } : {}),
+          'content-type': 'application/octet-stream',
+          'x-filename': encodeURIComponent(name),
+        },
+        body: new Uint8Array(body),
+      }).then(async (r) => ({ status: r.status, data: await r.json().catch(() => undefined) }));
+    expect((await up(NOBODY, png)).status).toBe(403);
+    const ok = await up(ADMIN, png, 'Mein Logo.png');
+    expect(ok.status, JSON.stringify(ok.data)).toBe(201);
+    expect(ok.data.url).toMatch(new RegExp(`^/uploads/${G}/[0-9a-f]{24}\\.webp$`)); // zu WebP neu kodiert
+    expect(ok.data).toMatchObject({
+      mime: 'image/webp',
+      width: 64,
+      height: 48,
+      originalName: 'Mein Logo.png',
+    });
+    // Falscher Inhalt trotz Bild-Endung: abgelehnt
+    const svg = await up(
+      ADMIN,
+      Buffer.from('<svg xmlns="http://www.w3.org/2000/svg"><script>alert(1)</script></svg>'),
+      'bild.png',
+    );
+    expect(svg.status).toBe(400);
+    expect(svg.data.message).toContain('Nur Bilder');
+    // Zu groß: schon am Header abgelehnt
+    expect((await up(ADMIN, Buffer.alloc(6 * 1024 * 1024, 1))).status).toBe(400);
+    // Liste: ansehen genügt; nur eigener Server
+    const list = await call('GET', d('/assets'), ADMIN);
+    expect(list.data.assets.map((a: { id: string }) => a.id)).toContain(ok.data.id);
+    expect(list.data.usedBytes).toBeGreaterThan(0);
+    // Löschen
+    expect((await call('DELETE', d(`/assets/${ok.data.id}`), NOBODY)).status).toBe(403);
+    expect((await call('DELETE', d(`/assets/${ok.data.id}`), ADMIN)).status).toBe(200);
+    expect((await call('DELETE', d(`/assets/${ok.data.id}`), ADMIN)).status).toBe(404);
+    expect((await call('GET', d('/assets'), ADMIN)).data.assets).toEqual([]);
   });
 
   it('Navigation: Rollenliste für den Editor (ohne @everyone) und eigene Rollen für die Menü-Sichtbarkeit', async () => {

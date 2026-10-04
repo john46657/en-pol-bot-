@@ -1315,3 +1315,35 @@ dialog.dz-dialog::backdrop {
   max-height: 90px;
   border-radius: var(--radius-card, 10px);
 }
+/* Bildfeld */
+.img-thumb {
+  max-height: 40px;
+  border-radius: 6px;
+  border: 1px solid var(--line);
+}
+.img-grid {
+  list-style: none;
+  margin: 8px 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  gap: 10px;
+}
+.img-grid li {
+  display: grid;
+  gap: 4px;
+}
+.img-pick {
+  padding: 0;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--bg);
+  cursor: pointer;
+  overflow: hidden;
+}
+.img-pick img {
+  display: block;
+  width: 100%;
+  height: 80px;
+  object-fit: cover;
+}

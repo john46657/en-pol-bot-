@@ -15,6 +15,7 @@ import {
 import { useEffect, useState, type CSSProperties } from 'react';
 import { Link } from 'react-router';
 import { api, type GuildOverview } from '../../api';
+import { assetUrl } from '../assetUrl';
 import { RichText } from './RichText';
 
 export interface WidgetData {
@@ -248,7 +249,7 @@ function Body({
       const img = src ? (
         <img
           className="wg-img"
-          src={src}
+          src={assetUrl(src)}
           alt={p['alt'] as string}
           loading="lazy"
           style={{ objectFit: p['fit'] as 'cover' | 'contain' }}
@@ -272,7 +273,9 @@ function Body({
       if (isExpired(p['expires'] as string)) return null;
       return (
         <div className="wg-banner">
-          {(p['image'] as string) && <img src={p['image'] as string} alt="" loading="lazy" />}
+          {(p['image'] as string) && (
+            <img src={assetUrl(p['image'] as string)} alt="" loading="lazy" />
+          )}
           <div>
             {(p['body'] as string) && <RichText source={p['body'] as string} />}
             <CtaButton cta={p['cta'] as Cta} guildId={guildId} />

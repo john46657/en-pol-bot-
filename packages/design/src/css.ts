@@ -89,6 +89,8 @@ export function designVars(c: DesignConfig, mode: 'dark' | 'light'): Record<stri
 export function backgroundStyle(
   b: Background,
   followColor?: string,
+  /** z. B. lokale Upload-Adressen (`/uploads/…`) auf die Adresse der API abbilden */
+  resolveUrl: (url: string) => string = (u) => u,
 ): {
   layer: Record<string, string>;
   overlay: Record<string, string> | null;
@@ -107,7 +109,8 @@ export function backgroundStyle(
   else {
     layer['backgroundColor'] = b.color;
     if (b.imageUrl) {
-      layer['backgroundImage'] = `url("${b.imageUrl.replace(/["\\()\s]/g, encodeURIComponent)}")`;
+      layer['backgroundImage'] =
+        `url("${resolveUrl(b.imageUrl).replace(/["\\()\s]/g, encodeURIComponent)}")`;
       layer['backgroundPosition'] = b.position;
       layer['backgroundSize'] = b.size;
       layer['backgroundRepeat'] = 'no-repeat';

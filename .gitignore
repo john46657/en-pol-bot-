@@ -47,3 +47,6 @@ pnpm-debug.log*
 backups/
 test-results/
 playwright-report/
+
+# Laufzeitdaten (hochgeladene Bilder)
+data/

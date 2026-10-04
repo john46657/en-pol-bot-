@@ -56,6 +56,12 @@ services:
     <<: *app
     build: { context: ., target: api }
     ports: ['127.0.0.1:3000:3000']
+    environment:
+      DATABASE_URL: postgresql://nexus:${POSTGRES_PASSWORD}@postgres:5432/nexus?schema=public
+      REDIS_URL: redis://redis:6379
+      STORAGE_DIR: /data/uploads # hochgeladene Design-Bilder (Volume nexus-uploads)
+    volumes:
+      - nexus-uploads:/data/uploads
 
   bot:
     <<: *app
@@ -81,3 +87,4 @@ services:
 volumes:
   nexus-postgres:
   nexus-redis:
+  nexus-uploads:

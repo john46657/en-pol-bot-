@@ -1,4 +1,16 @@
-import { Body, Controller, Delete, Get, Param, Post, Put, UseFilters } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Headers,
+  Param,
+  Post,
+  Put,
+  Req,
+  UseFilters,
+} from '@nestjs/common';
+import type { Request } from 'express';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import {
   activateTheme,
@@ -8,7 +20,10 @@ import {
   duplicateTheme,
   exportTheme,
   getDesign,
+  deleteAsset,
   filterForViewer,
+  listAssets,
+  saveAsset,
   getEffective,
   getWidgetData,
   getTheme,
@@ -31,6 +46,7 @@ import { GuildId } from '../../common/decorators/guild-id.decorator.js';
 import { RequireDashboardAccess } from '../../common/decorators/guild-admin.decorator.js';
 import { RequirePermissions } from '../../common/decorators/permissions.decorator.js';
 import { DiscordService } from '../guild/discord.service.js';
+import { readBody } from './uploads.js';
 import { DesignErrorFilter } from './design-error.filter.js';
 
 type Body_ = Record<string, unknown>;
@@ -203,6 +219,47 @@ export class DesignController {
   @RequirePermissions('design.edit')
   async autosave(@GuildId() guildId: string, @Body() b: Body_, @CurrentUser() user: RequestUser) {
     return { autosave: await setAutosave(guildId, b['autosave'] === true, user.id) };
+  }
+
+  /** Bilder-Bibliothek des Servers (Logo, Hintergründe, Widget-Bilder). */
+  @Get('assets')
+  @RequirePermissions('design.view')
+  assets(@GuildId() guildId: string) {
+    return listAssets(guildId);
+  }
+
+  /**
+   * Bild hochladen: der Körper ist die Datei selbst (`application/octet-stream`), der Dateiname steht (URL-kodiert) in
+   * `X-Filename`. Das Format wird am Dateikopf geprüft, das Bild neu kodiert (WebP/GIF), Größe und Speicher sind begrenzt.
+   */
+  @Post('assets')
+  @RequirePermissions('design.edit')
+  async upload(
+    @GuildId() guildId: string,
+    @Req() req: Request,
+    @Headers('x-filename') filename: string | undefined,
+    @CurrentUser() user: RequestUser,
+  ) {
+    const bytes = await readBody(req);
+    const name = (() => {
+      try {
+        return decodeURIComponent(filename ?? '');
+      } catch {
+        return ''; // ungültig kodierter Name: egal, der Name dient nur der Anzeige
+      }
+    })();
+    return saveAsset({ guildId, actorId: user.id, bytes, originalName: name });
+  }
+
+  @Delete('assets/:id')
+  @RequirePermissions('design.edit')
+  async deleteAsset(
+    @GuildId() guildId: string,
+    @Param('id') id: string,
+    @CurrentUser() user: RequestUser,
+  ) {
+    await deleteAsset(guildId, id, user.id);
+    return { ok: true };
   }
 
   @Post('import/preview')

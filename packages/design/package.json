@@ -22,7 +22,8 @@
   },
   "dependencies": {
     "@nexus/database": "workspace:*",
-    "@nexus/types": "workspace:*"
+    "@nexus/types": "workspace:*",
+    "sharp": "^0.35.5"
   },
   "devDependencies": {
     "@prisma/client": "^6.11.0",

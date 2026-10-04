@@ -1,5 +1,6 @@
 import { COLOR_KEYS, FONTS, type Background } from '@nexus/design/client';
 import { pageOptions } from './pageOptions';
+import { ImagePath } from './ImageField';
 import { NavEditor } from './NavEditor';
 import { PagesEditor } from './PagesEditor';
 import { BannersEditor } from './BannersEditor';
@@ -63,13 +64,10 @@ export function General() {
         ]}
       />
       {draft.general.logo.mode === 'upload' && (
-        <Txt
+        <ImagePath
           path="general.logo.url"
-          url
-          label="Bild-Adresse"
-          max={500}
-          placeholder="https://…"
-          hint="Nur https-Adressen. Ein Upload direkt im Dashboard folgt später."
+          label="Logo-Bild"
+          hint="Hochladen, aus der Bibliothek wählen oder eine https-Adresse eintragen."
         />
       )}
       <Num path="general.logo.width" label="Breite" min={16} max={200} unit=" px" />
@@ -125,13 +123,10 @@ function BackgroundFields({ base }: { base: string }) {
       )}
       {(t === 'image' || t === 'gif') && (
         <>
-          <Txt
+          <ImagePath
             path={`${base}.imageUrl`}
-            url
-            label="Bild-Adresse"
-            max={500}
-            placeholder="https://…"
-            hint="Nur https-Adressen (kein Upload-Pfad vorhanden – folgt später)."
+            label="Bild"
+            hint="Hochladen, aus der Bibliothek wählen oder eine https-Adresse eintragen."
           />
           <Pick
             path={`${base}.position`}

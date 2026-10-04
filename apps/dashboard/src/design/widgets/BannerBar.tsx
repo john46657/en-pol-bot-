@@ -1,5 +1,6 @@
 import { bannersFor, isExpired, type BannerCfg, type DesignConfig } from '@nexus/design/client';
 import type { CSSProperties } from 'react';
+import { assetUrl } from '../assetUrl';
 import { CtaButton } from './WidgetGrid';
 import { RichText } from './RichText';
 
@@ -25,7 +26,7 @@ export function BannerView({ banner: b, guildId }: { banner: BannerCfg; guildId:
         {b.body && <RichText source={b.body} />}
         <CtaButton cta={b.cta} guildId={guildId} />
       </div>
-      {b.image && <img src={b.image} alt="" loading="lazy" />}
+      {b.image && <img src={assetUrl(b.image)} alt="" loading="lazy" />}
     </aside>
   );
 }

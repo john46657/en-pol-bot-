@@ -75,6 +75,27 @@ describe('CSS-Variablen', () => {
       ],
     ).toBe('none'); // Karte überschreibt global
   });
+  it('Upload-Adressen werden über resolveUrl auf die API-Adresse abgebildet', () => {
+    const c = normalizeConfig({
+      background: {
+        global: {
+          type: 'image',
+          imageUrl: '/uploads/900000000000000001/aaaaaaaaaaaaaaaaaaaaaaaa.webp',
+        },
+      },
+    });
+    const l = backgroundStyle(
+      c.background.global,
+      undefined,
+      (u) => `https://api.example${u}`,
+    ).layer;
+    expect(l['backgroundImage']).toBe(
+      'url("https://api.example/uploads/900000000000000001/aaaaaaaaaaaaaaaaaaaaaaaa.webp")',
+    );
+    expect(backgroundStyle(c.background.global).layer['backgroundImage']).toContain(
+      'url("/uploads/',
+    );
+  });
   it('Hintergründe: Typen, Overlay, seitenspezifisch mit Rückfall auf global', () => {
     const c = normalizeConfig({
       background: {

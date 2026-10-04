@@ -66,6 +66,7 @@
     "@types/express": "^5.0.3",
     "@types/node": "^24.0.10",
     "@types/ws": "^8.18.1",
+    "sharp": "^0.35.5",
     "tsc-watch": "^6.3.1",
     "tsx": "^4.20.3",
     "unplugin-swc": "^2.0.0",

@@ -21,6 +21,7 @@ import {
 } from '@nexus/design/client';
 import { useRef, useState } from 'react';
 import { ColorOpt, RolePicker, UrlText } from './controls';
+import { ImageField } from './ImageField';
 import { pageOptions } from './pageOptions';
 import { useEditor } from './state';
 
@@ -637,11 +638,10 @@ function Props({
     case 'image':
       return (
         <>
-          <UrlText
-            label="Bild-Adresse (https)"
+          <ImageField
+            label="Bild"
             value={String(p['src'])}
             disabled={disabled}
-            hint="Ein Upload direkt im Dashboard folgt später."
             onCommit={(v) => patchProps({ src: v })}
           />
           {txt('alt', 'Beschreibung (für Screenreader)', 120)}
@@ -678,8 +678,8 @@ function Props({
               onChange={(e) => patchProps({ body: e.target.value })}
             />
           </label>
-          <UrlText
-            label="Bild (https)"
+          <ImageField
+            label="Bild"
             value={String(p['image'])}
             disabled={disabled}
             onCommit={(v) => patchProps({ image: v })}
