@@ -1,0 +1,11 @@
+EN Polizei – Hosting-Paket
+=========================
+1. Alle Dateien (nicht den Ordner selbst) in dein Panel hochladen und entpacken.
+2. Startdatei:  start.js   |   Startbefehl:  node start.js   (oder: npm start)
+   Falls das Panel nur Python kann ("python3 bot.py"): die mitgelieferte bot.py lädt einmalig Node.js und startet start.js.
+   (Dann muss 'npm install' trotzdem laufen – im Panel unter "Packages"/Shell:  .node/bin/npm install  – oder besser: auf Node.js umstellen.)
+3. Umgebungsvariablen setzen (mindestens DATABASE_URL) – Vorlage: .env.example
+4. Server starten. Beim ersten Start installiert das Panel die Pakete (npm install, kann einige Minuten dauern).
+5. In der Konsole erscheint "Starte API + Web auf Port …" und ggf. das Admin-Passwort (EINMALIG).
+6. Seite öffnen: http://<deine-IP>:<dein-Port>   → Anmeldung als "admin".
+Komplette Anleitung: docs/hosting-bot-hosting.md (liegt in diesem Paket). Discord-Bot: docs/discord-bot.md.

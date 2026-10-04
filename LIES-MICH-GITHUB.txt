@@ -1,0 +1,6 @@
+Branch "hosting": fertig gebautes Paket (API + Web + Discord-Bot), erzeugt mit `pnpm bundle:hosting` aus dem Branch "main".
+Nicht von Hand ändern – bei Code-Änderungen im Branch "main" neu bauen und diesen Branch ersetzen.
+
+Panel (z. B. bot-hosting.net): GitHub-Repo mit Branch "hosting" verbinden, Startdatei bot.py (oder Startbefehl "node start.js").
+Variablen (Env): DATABASE_URL, ADMIN_PASSWORD, DISCORD_TOKEN, COOKIE_SECURE=true, WEB_ORIGIN=https://<deine-domain>
+Details: LIES-MICH.txt und docs/hosting-bot-hosting.md
