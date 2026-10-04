@@ -170,6 +170,7 @@ function Editor({ guildId, overview }: { guildId: string; overview: Overview }) 
   const api_ = useMemo(
     () =>
       draft && {
+        guildId,
         draft,
         disabled: !theme || theme.builtin,
         set: (path: string, v: unknown) =>
@@ -177,7 +178,7 @@ function Editor({ guildId, overview }: { guildId: string; overview: Overview }) 
         reset: (path: string) =>
           setDraft((d) => (d ? normalizeConfig(setIn(d, path, defaultAt(path))) : d)),
       },
-    [draft, theme],
+    [draft, theme, guildId],
   );
 
   const Body = TABS.find(([k]) => k === tab)?.[2];

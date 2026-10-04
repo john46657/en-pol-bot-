@@ -1019,3 +1019,92 @@ dialog.dz-dialog::backdrop {
 .content:has(.page-wide) {
   max-width: 1500px;
 }
+.sidebar a {
+  color: var(--nav-color, var(--fg));
+}
+.sidebar a:hover {
+  color: var(--nav-hover, var(--nav-color, var(--fg)));
+}
+.sidebar a.active {
+  color: #fff;
+}
+.nav-section + .nav-section {
+  margin-top: 10px;
+}
+.nav-group {
+  padding: 4px 10px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.nav-badge {
+  margin-left: 6px;
+  padding: 0 6px;
+  border-radius: 999px;
+  font-size: 11px;
+  background: var(--primary);
+  color: #fff;
+}
+.sidebar a.active .nav-badge {
+  background: #fff;
+  color: var(--primary);
+}
+.sidebar nav {
+  display: grid;
+}
+.nav-section {
+  display: grid;
+  gap: 2px;
+}
+.nv-list {
+  display: grid;
+  gap: 6px;
+}
+.nv-item.dragging {
+  opacity: 0.4;
+}
+.nv-handle {
+  cursor: grab;
+  user-select: none;
+  color: var(--muted);
+}
+.nv-edit {
+  margin: 4px 0 0 24px;
+}
+.nv-icon {
+  width: 56px;
+}
+.pv-sec {
+  display: grid;
+  gap: 2px;
+  margin-bottom: 6px;
+}
+.pv-group {
+  padding: 2px 8px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.pv-side em {
+  font-style: normal;
+}
+.pv-sec {
+  display: grid;
+  gap: 2px;
+  margin-bottom: 6px;
+}
+.pv-group {
+  padding: 2px 8px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.pv-side em {
+  font-style: normal;
+}

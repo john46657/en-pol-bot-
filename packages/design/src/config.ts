@@ -37,6 +37,30 @@ export interface Background {
   brightness: number;
   overlay: { enabled: boolean; color: string; opacity: number };
 }
+export interface NavGroup {
+  id: string;
+  name: string;
+  icon: string;
+  visible: boolean;
+}
+export interface NavItem {
+  /** Seitenschlüssel (`tickets`, `overview`, …) oder `link-<id>` für einen eigenen Link */
+  key: string;
+  /** Leer = Standardtitel */
+  title: string;
+  /** Leer = Standard-Icon */
+  icon: string;
+  visible: boolean;
+  /** Gruppen-ID oder leer (ohne Gruppe) */
+  group: string;
+  color: string;
+  hoverColor: string;
+  badge: string;
+  /** Discord-Rollen-IDs; leer = für alle mit Zugriff. Nur Sichtbarkeit im Menü – der Zugriff wird serverseitig durch die Rechte geprüft. */
+  roles: string[];
+  /** Nur bei Link-Einträgen: https-Adresse */
+  href: string;
+}
 export interface Typo {
   size: number;
   weight: number;
@@ -67,6 +91,7 @@ export interface DesignConfig {
   radius: number;
   glass: { enabled: boolean; opacity: number; blur: number; border: number; borderOpacity: number };
   shadow: { preset: 'none' | 'small' | 'medium' | 'large' | 'custom'; custom: string };
+  navigation: { groups: NavGroup[]; items: NavItem[] };
   sidebar: {
     enabled: boolean;
     width: number;
@@ -173,6 +198,7 @@ export const DEFAULT_CONFIG: DesignConfig = {
   radius: 12,
   glass: { enabled: false, opacity: 70, blur: 20, border: 1, borderOpacity: 15 },
   shadow: { preset: 'small', custom: '' },
+  navigation: { groups: [], items: [] },
   sidebar: { enabled: true, width: 260, position: 'left', style: 'solid', border: 1, radius: 0 },
   header: {
     height: 56,
@@ -233,6 +259,54 @@ export function safeUrl(v: unknown, d = ''): string {
     return d;
   }
 }
+export const MAX_NAV_GROUPS = 12;
+export const MAX_NAV_ITEMS = 80;
+export const NAV_ID = /^[a-z0-9-]{1,24}$/;
+export const NAV_KEY = /^(?:[a-z0-9-]{1,40}|link-[a-z0-9]{1,16})$/;
+const ROLE_ID = /^\d{5,25}$/;
+export const isLinkKey = (key: string) => key.startsWith('link-');
+
+function navGroups(v: unknown): NavGroup[] {
+  const out: NavGroup[] = [];
+  for (const g of Array.isArray(v) ? v.slice(0, MAX_NAV_GROUPS) : []) {
+    const o = isObj(g) ? g : {};
+    const id = typeof o['id'] === 'string' && NAV_ID.test(o['id']) ? o['id'] : '';
+    const name = text(o['name'], 30, '').trim();
+    if (!id || !name || out.some((x) => x.id === id)) continue;
+    out.push({ id, name, icon: text(o['icon'], 8, ''), visible: bool(o['visible'], true) });
+  }
+  return out;
+}
+function navItems(v: unknown, groups: NavGroup[]): NavItem[] {
+  const out: NavItem[] = [];
+  for (const i of Array.isArray(v) ? v.slice(0, MAX_NAV_ITEMS) : []) {
+    const o = isObj(i) ? i : {};
+    const key = typeof o['key'] === 'string' && NAV_KEY.test(o['key']) ? o['key'] : '';
+    if (!key || out.some((x) => x.key === key)) continue;
+    const group =
+      typeof o['group'] === 'string' && groups.some((g) => g.id === o['group']) ? o['group'] : '';
+    const col = (x: unknown) => (x === '' || x === undefined || x === null ? '' : color(x, ''));
+    const roles = (Array.isArray(o['roles']) ? o['roles'] : []).filter(
+      (r): r is string => typeof r === 'string' && ROLE_ID.test(r),
+    );
+    const href = isLinkKey(key) ? safeUrl(o['href'], '') : '';
+    if (isLinkKey(key) && !href) continue; // Link ohne gültige Adresse ist nutzlos
+    out.push({
+      key,
+      title: text(o['title'], 40, '').trim(),
+      icon: text(o['icon'], 8, ''),
+      visible: bool(o['visible'], true),
+      group,
+      color: col(o['color']),
+      hoverColor: col(o['hoverColor']),
+      badge: text(o['badge'], 12, '').trim(),
+      roles: [...new Set(roles)].slice(0, 10),
+      href,
+    });
+  }
+  return out;
+}
+
 const nullable = <T>(v: unknown, f: (x: unknown) => T): T | null =>
   v === null || v === undefined ? null : f(v);
 
@@ -284,6 +358,8 @@ export function normalizeConfig(raw: unknown, base: DesignConfig = DEFAULT_CONFI
   const pagesRaw = isObj(bgs['pages']) ? bgs['pages'] : {};
   const gl = isObj(r['glass']) ? r['glass'] : {};
   const sh = isObj(r['shadow']) ? r['shadow'] : {};
+  const nv = isObj(r['navigation']) ? r['navigation'] : {};
+  const navG = navGroups(nv['groups']);
   const sb = isObj(r['sidebar']) ? r['sidebar'] : {};
   const hd = isObj(r['header']) ? r['header'] : {};
   const cd = isObj(r['cards']) ? r['cards'] : {};
@@ -341,6 +417,7 @@ export function normalizeConfig(raw: unknown, base: DesignConfig = DEFAULT_CONFI
       preset: oneOf(sh['preset'], SHADOWS, b.shadow.preset),
       custom: shadowCss(sh['custom']),
     },
+    navigation: { groups: navG, items: navItems(nv['items'], navG) },
     sidebar: {
       enabled: bool(sb['enabled'], b.sidebar.enabled),
       width: num(sb['width'], 180, 400, b.sidebar.width),
@@ -423,6 +500,13 @@ export function pruneToModel(raw: unknown, model: unknown = DEFAULT_CONFIG, dept
 }
 
 // --- Vergleich ------------------------------------------------------------------------------------
+/** JSON mit sortierten Schlüsseln – damit die Reihenfolge von Objektschlüsseln keinen Unterschied macht. */
+export const stable = (v: unknown): string =>
+  JSON.stringify(v, (_k, x: unknown) =>
+    x && typeof x === 'object' && !Array.isArray(x)
+      ? Object.fromEntries(Object.entries(x).sort(([a], [b]) => a.localeCompare(b)))
+      : x,
+  );
 export function leaves(v: unknown, path = ''): Map<string, unknown> {
   const m = new Map<string, unknown>();
   if (isObj(v))
@@ -436,7 +520,7 @@ export function changedPaths(a: unknown, b: unknown): string[] {
   const la = leaves(a),
     lb = leaves(b);
   const keys = new Set([...la.keys(), ...lb.keys()]);
-  return [...keys].filter((k) => JSON.stringify(la.get(k)) !== JSON.stringify(lb.get(k))).sort();
+  return [...keys].filter((k) => stable(la.get(k)) !== stable(lb.get(k))).sort();
 }
 /** Eingabewerte, die beim Normalisieren verworfen oder geändert würden (für verständliche Fehlermeldungen). */
 export function findIssues(raw: unknown): string[] {
@@ -447,13 +531,14 @@ export function findIssues(raw: unknown): string[] {
     if (p === '') continue;
     const n = leaves(norm).get(p);
     if (n === undefined && p.startsWith('background.pages.')) continue;
-    if (JSON.stringify(n) !== JSON.stringify(v)) out.push(p);
+    if (stable(n) !== stable(v)) out.push(p);
   }
   return out;
 }
 
 export const SECTION_LABEL: Record<string, string> = {
   general: 'Allgemein',
+  navigation: 'Navigation',
   mode: 'Modus',
   colors: 'Farben',
   typography: 'Typografie',

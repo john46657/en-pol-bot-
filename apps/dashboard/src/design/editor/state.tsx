@@ -23,6 +23,7 @@ export function setIn<T>(o: T, path: string, value: unknown): T {
 }
 
 export interface EditorApi {
+  guildId: string;
   draft: DesignConfig;
   /** Nur lesen (Vorlage aktiv) */
   disabled: boolean;

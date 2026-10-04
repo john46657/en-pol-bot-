@@ -1,10 +1,11 @@
 import { useQuery } from '@tanstack/react-query';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState, type CSSProperties } from 'react';
 import { Link, NavLink, Outlet, useLocation, useParams } from 'react-router';
 import { api, guildIcon, type GuildOverview } from '../api';
 import { HealthBadge } from '../components/HealthBadge';
 import { UserMenu } from '../components/UserMenu';
 import { useLive } from '../live';
+import { resolveNavigation } from '@nexus/design/client';
 import { DesignBackground, useDesign } from '../design/useDesign';
 
 type Needs =
@@ -65,6 +66,11 @@ export const NAV: { to: string; label: string; icon: string; end?: boolean; need
   { to: 'logs', label: 'Logs', icon: '📜', needs: 'admin' },
 ];
 
+/** Schlüssel eines Menüpunkts (Übersicht = `overview`) – so heißt er auch in der Design-Konfiguration. */
+export const navKey = (to: string) => to || 'overview';
+/** Eingebaute Menüpunkte in der Form, die das Design-Paket kennt. */
+export const BUILTIN_NAV = NAV.map((n) => ({ key: navKey(n.to), label: n.label, icon: n.icon }));
+
 /** Rahmen für alle Server-Seiten: Sidebar (mobil einklappbar), Kopfzeile mit Serverwechsel. */
 export function GuildLayout() {
   const { guildId = '' } = useParams();
@@ -82,9 +88,12 @@ export function GuildLayout() {
   const me = useQuery({
     queryKey: ['my-permissions', guildId],
     queryFn: () =>
-      api<{ guildAdmin: boolean; permissions: string[]; dashboardAccess: boolean }>(
-        `/auth/me/guilds/${guildId}/permissions`,
-      ),
+      api<{
+        guildAdmin: boolean;
+        roleIds?: string[];
+        permissions: string[];
+        dashboardAccess: boolean;
+      }>(`/auth/me/guilds/${guildId}/permissions`),
   });
   const allowed = (needs: Needs) =>
     !me.data ||
@@ -115,6 +124,18 @@ export function GuildLayout() {
     (needs === 'shifts' &&
       ['shifts.view', 'shifts.manage'].some((k) => me.data.permissions.includes(k))) ||
     (needs === 'structure' && me.data.permissions.includes('personnel.structure.manage'));
+  const needsByKey = useMemo(() => new Map(NAV.map((n) => [navKey(n.to), n.needs])), []);
+  const sections = useMemo(
+    () =>
+      resolveNavigation(BUILTIN_NAV, cfg.navigation, {
+        isAdmin: me.data?.guildAdmin ?? false,
+        roleIds: me.data?.roleIds ?? [],
+        allowed: (key) => allowed(needsByKey.get(key) ?? 'admin'),
+        pinned: ['design'], // wer das Design bearbeiten darf, kann sich nicht aus dem Menü aussperren
+      }),
+    // eslint-disable-next-line
+    [cfg.navigation, me.data, needsByKey],
+  );
   const discordIcon = g.data && guildIcon(g.data.id, g.data.icon);
   const logo = cfg.general.logo;
   const icon =
@@ -140,15 +161,48 @@ export function GuildLayout() {
         <aside className="sidebar" aria-label="Navigation">
           <div className="brand">NEXUS</div>
           <nav>
-            {NAV.filter((n) => allowed(n.needs)).map((n) => (
-              <NavLink
-                key={n.to}
-                to={`/guilds/${guildId}/${n.to}`}
-                end={n.end ?? false}
-                className={({ isActive }) => (isActive ? 'active' : '')}
-              >
-                <span aria-hidden>{n.icon}</span> {n.label}
-              </NavLink>
+            {sections.map((sec) => (
+              <div key={sec.group?.id ?? 'loose'} className="nav-section">
+                {sec.group && (
+                  <div className="nav-group">
+                    {sec.group.icon && <span aria-hidden>{sec.group.icon} </span>}
+                    {sec.group.name}
+                  </div>
+                )}
+                {sec.items.map((n) => {
+                  const style = {
+                    ...(n.color ? { '--nav-color': n.color } : {}),
+                    ...(n.hoverColor ? { '--nav-hover': n.hoverColor } : {}),
+                  } as CSSProperties;
+                  const body = (
+                    <>
+                      <span aria-hidden>{n.icon}</span> {n.title}
+                      {n.badge && <span className="nav-badge">{n.badge}</span>}
+                    </>
+                  );
+                  return n.href ? (
+                    <a
+                      key={n.key}
+                      href={n.href}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      style={style}
+                    >
+                      {body}
+                    </a>
+                  ) : (
+                    <NavLink
+                      key={n.key}
+                      to={`/guilds/${guildId}/${n.key === 'overview' ? '' : n.key}`}
+                      end={n.key === 'overview'}
+                      className={({ isActive }) => (isActive ? 'active' : '')}
+                      style={style}
+                    >
+                      {body}
+                    </NavLink>
+                  );
+                })}
+              </div>
             ))}
           </nav>
           <HealthBadge />

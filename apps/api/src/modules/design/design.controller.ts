@@ -25,6 +25,7 @@ import { CurrentUser, type RequestUser } from '../../common/decorators/current-u
 import { GuildId } from '../../common/decorators/guild-id.decorator.js';
 import { RequireDashboardAccess } from '../../common/decorators/guild-admin.decorator.js';
 import { RequirePermissions } from '../../common/decorators/permissions.decorator.js';
+import { DiscordService } from '../guild/discord.service.js';
 import { DesignErrorFilter } from './design-error.filter.js';
 
 type Body_ = Record<string, unknown>;
@@ -39,11 +40,24 @@ const str = (v: unknown): string | undefined => (typeof v === 'string' ? v : und
 @UseFilters(DesignErrorFilter)
 @Controller('guilds/:guildId/design')
 export class DesignController {
+  constructor(private readonly discord: DiscordService) {}
+
   @Get('effective')
   @RequireDashboardAccess()
   async effective(@GuildId() guildId: string) {
     const e = await getEffective(guildId);
     return { config: e.config, themeName: e.themeName, source: e.source };
+  }
+
+  /** Rollen des Servers für die Menü-Sichtbarkeit (nur Name/Farbe, ohne Verwaltbarkeits-Details). */
+  @Get('roles')
+  @RequirePermissions('design.view')
+  async roles(@GuildId() guildId: string) {
+    const roles = await this.discord.listRoles(guildId);
+    return roles
+      .filter((r) => r.id !== guildId)
+      .map((r) => ({ id: r.id, name: r.name, color: r.color, position: r.position }))
+      .sort((a, b) => b.position - a.position);
   }
 
   @Get()

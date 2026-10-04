@@ -1,4 +1,5 @@
 import {
+  resolveNavigation,
   backgroundFor,
   backgroundStyle,
   designVars,
@@ -6,6 +7,7 @@ import {
 } from '@nexus/design/client';
 import { useEffect, type CSSProperties } from 'react';
 import { loadFont } from '../fonts';
+import { BUILTIN_NAV } from '../../pages/GuildLayout';
 
 export type Device = 'desktop' | 'laptop' | 'tablet' | 'mobile';
 export const DEVICES: readonly { id: Device; label: string; icon: string; width: number | null }[] =
@@ -43,7 +45,13 @@ export function Preview({
   const g = config.general;
   const name = g.nameMode === 'custom' && g.customName ? g.customName : serverName;
   const side = config.sidebar.enabled && !mobile;
-  const items = ['🏠 Übersicht', '🎫 Tickets', '📋 Bewerbungen', '👮 Team'];
+  // Das Menü, wie es ein Server-Verwalter sieht (alle Einträge, die nicht ausgeblendet sind)
+  const sections = resolveNavigation(BUILTIN_NAV, config.navigation, {
+    isAdmin: true,
+    roleIds: [],
+    allowed: () => true,
+  });
+  const flat = sections.flatMap((x) => x.items);
   const stack = mobile && config.responsive.stackCards;
   return (
     <div className="pv-wrap">
@@ -70,10 +78,24 @@ export function Preview({
                 style={{ width: Math.min(config.sidebar.width, 260) * 0.8 }}
               >
                 <b>NEXUS</b>
-                {items.map((i, n) => (
-                  <span key={i} className={n === 0 ? 'on' : ''}>
-                    {i}
-                  </span>
+                {sections.map((sec) => (
+                  <div key={sec.group?.id ?? 'loose'} className="pv-sec">
+                    {sec.group && (
+                      <small className="pv-group">
+                        {sec.group.icon} {sec.group.name}
+                      </small>
+                    )}
+                    {sec.items.slice(0, 9).map((i) => (
+                      <span
+                        key={i.key}
+                        className={i.key === 'overview' ? 'on' : ''}
+                        style={i.color ? { color: i.color } : undefined}
+                      >
+                        {i.icon} {i.title}
+                        {i.badge && <em className="nav-badge">{i.badge}</em>}
+                      </span>
+                    ))}
+                  </div>
                 ))}
               </aside>
             )}
@@ -152,8 +174,8 @@ export function Preview({
               </div>
               {mobile && nav === 'bottom' && (
                 <footer className="pv-bottom">
-                  {items.map((i) => (
-                    <span key={i}>{i.split(' ')[0]}</span>
+                  {flat.slice(0, 6).map((i) => (
+                    <span key={i.key}>{i.icon}</span>
                   ))}
                 </footer>
               )}

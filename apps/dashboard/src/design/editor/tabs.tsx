@@ -1,5 +1,6 @@
 import { COLOR_KEYS, FONTS, type Background } from '@nexus/design/client';
 import { NAV } from '../../pages/GuildLayout';
+import { NavEditor } from './NavEditor';
 import { ColorField, ContrastHint, Inherit, Num, Pick, Toggle, Txt, Field } from './controls';
 import { getIn, useEditor } from './state';
 import { useState } from 'react';
@@ -323,9 +324,7 @@ export function NavigationTab() {
           <Num path="sidebar.radius" label="Rundung" min={0} max={48} unit=" px" />
         </>
       )}
-      <p className="muted">
-        Eigene Einträge, Reihenfolge per Drag &amp; Drop und Gruppen folgen in der nächsten Phase.
-      </p>
+      <NavEditor />
       <h3>Header</h3>
       <Num path="header.height" label="Höhe" min={40} max={120} unit=" px" />
       <Num path="header.opacity" label="Deckkraft" min={0} max={100} unit=" %" />

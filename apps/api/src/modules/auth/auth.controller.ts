@@ -186,6 +186,8 @@ export class AuthController {
     const allowed = (s: string) => s === 'allowed' || s === 'limited';
     return {
       guildAdmin: access.canManageGuild,
+      /** Discord-Rollen des Nutzers – nur für die Sichtbarkeit von Menüpunkten (der Zugriff wird per Recht geprüft). */
+      roleIds,
       /** Rechte, die der Nutzer (zumindest eingeschränkt) besitzt – nur für die Oberfläche. */
       permissions: access.canManageGuild
         ? [...PERMISSIONS]

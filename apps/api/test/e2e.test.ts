@@ -395,6 +395,27 @@ describe('Dashboard-Design (Phase 37)', () => {
     expect((await call('POST', d('/import'), ADMIN, { data: out.data })).data.name).toBe('Purple (2)');
   });
 
+  it('Navigation: Rollenliste für den Editor (ohne @everyone) und eigene Rollen für die Menü-Sichtbarkeit', async () => {
+    const roles = await call('GET', d('/roles'), ADMIN);
+    expect(roles.status).toBe(200);
+    expect(roles.data.map((r: { name: string }) => r.name)).toEqual(['Admin', 'Oberkommissar', 'Anwärter']); // nach Rang, ohne @everyone
+    for (const internal of ['dangerous', 'manageable', 'blockedReason', 'mentionable']) expect(roles.data[0]).not.toHaveProperty(internal); // keine Verwaltbarkeits-Details
+    expect((await call('GET', d('/roles'), NOBODY)).status).toBe(403);
+    const me = await call('GET', `/auth/me/guilds/${G}/permissions`, OFFICER);
+    expect(me.data.roleIds).toEqual([ROLE_ENTRY]);
+  });
+
+  it('Navigation wird mit dem Theme gespeichert, bereinigt und ungültige Links abgelehnt', async () => {
+    const t = await call('POST', d('/themes'), ADMIN, { name: 'Nav-Test' });
+    const good = { groups: [{ id: 'support', name: 'SUPPORT', icon: '🎫', visible: true }], items: [{ key: 'tickets', title: 'Support-Tickets', icon: '', visible: true, group: 'support', color: '', hoverColor: '', badge: 'neu', roles: [ROLE_ENTRY], href: '' }] };
+    const ok = await call('PUT', d(`/themes/${t.data.id}`), ADMIN, { config: { navigation: good } });
+    expect(ok.status, JSON.stringify(ok.data)).toBe(200);
+    const read = await call('GET', d(`/themes/${t.data.id}`), ADMIN);
+    expect(read.data.config.navigation.items[0]).toMatchObject({ key: 'tickets', title: 'Support-Tickets', group: 'support', badge: 'neu' });
+    const bad = await call('PUT', d(`/themes/${t.data.id}`), ADMIN, { config: { navigation: { groups: [], items: [{ key: 'link-abc', title: 'X', href: 'javascript:alert(1)' }] } } });
+    expect(bad.status).toBe(400);
+  });
+
   it('Änderungen stehen im Audit-Log', async () => {
     const audit = await call('GET', `/guilds/${G}/audit?limit=100`, ADMIN);
     const actions = audit.data.items.map((i: { action: string }) => i.action);

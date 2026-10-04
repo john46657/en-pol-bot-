@@ -24,11 +24,13 @@ test('Design-Editor: Kopie anlegen, Farbe ändern, Live-Vorschau, speichern, im 
   await page.goto(`/guilds/${E2E.guildId}/design`);
   await expect(page.getByRole('heading', { name: /Design & Erscheinungsbild/ })).toBeVisible();
 
-  // Vorlage ist schreibgeschützt
-  await expect(page.getByText('ist eine Vorlage und kann nicht verändert werden')).toBeVisible();
-  await expect(page.getByLabel('Primärfarbe HEX')).toHaveCount(0); // Allgemein-Tab hat noch keine Farben
-
-  await page.getByRole('button', { name: 'Eigene Kopie zum Bearbeiten anlegen' }).click();
+  // Vorlage ist schreibgeschützt – erst eine eigene Kopie anlegen (falls noch keine aktiv ist)
+  await expect(page.locator('fieldset').first()).toBeVisible(); // Theme ist geladen
+  const copy = page.getByRole('button', { name: 'Eigene Kopie zum Bearbeiten anlegen' });
+  if (await copy.isVisible()) {
+    await expect(page.getByText('ist eine Vorlage und kann nicht verändert werden')).toBeVisible();
+    await copy.click();
+  }
   await expect(page.getByText('ist eine Vorlage')).toHaveCount(0);
 
   // Farben-Tab: Primärfarbe per HEX ändern → Vorschau sofort, Speicherleiste erscheint

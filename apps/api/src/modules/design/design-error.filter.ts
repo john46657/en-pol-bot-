@@ -11,15 +11,11 @@ export class DesignErrorFilter implements ExceptionFilter {
       'not-found': HttpStatus.NOT_FOUND,
       conflict: HttpStatus.CONFLICT,
     }[error.code];
-    host
-      .switchToHttp()
-      .getResponse<Response>()
-      .status(status)
-      .json({
-        statusCode: status,
-        message: error.message,
-        error: error.code,
-        details: error.details,
-      });
+    host.switchToHttp().getResponse<Response>().status(status).json({
+      statusCode: status,
+      message: error.message,
+      error: error.code,
+      details: error.details,
+    });
   }
 }
