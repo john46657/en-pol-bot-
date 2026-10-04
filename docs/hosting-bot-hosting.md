@@ -92,5 +92,6 @@ Solange du ohne HTTPS arbeitest: nur Testdaten verwenden, keine echten Passwört
 | `npm install` bricht ab / „no space left“ | Zu wenig Speicherplatz (Paket braucht ca. 370 MB nach Installation). |
 | Seite nicht erreichbar | Port nicht öffentlich freigegeben, falsche IP, oder `http://` statt `https://` (ohne HTTPS-Schicht nur `http://`). |
 | Login klappt, aber sofort wieder abgemeldet | `COOKIE_SECURE=true` gesetzt, aber Seite über `http://` geöffnet. Entweder HTTPS einrichten oder `COOKIE_SECURE` leer lassen. |
+| Domain zeigt **502**, aber der Bot ist online | Es läuft nur der Bot, keine API. `bot.py` startet seit dieser Version `start.js` (komplettes Paket), auch wenn `bot.js` daneben liegt. Mit älterem Stand: Variable `NEXUS_ENTRY=start.js` setzen oder `bot.js` löschen. Die Konsole muss „Starte API + Web auf Port …“ zeigen; `PORT` darf nicht auf einen anderen Wert als den Server-Port gesetzt sein. |
 | Bot: `Invalid bot configuration` | `DISCORD_TOKEN` fehlt/ungültig. (`BOT_API_TOKEN` wird automatisch erzeugt.) |
 | Bot online, aber keine `/`-Befehle | Beim Einladen fehlte der Scope `applications.commands`, oder ohne `DISCORD_GUILD_ID` dauert die Registrierung bis zu 1 h. |

@@ -6,7 +6,7 @@ Das Projekt läuft mit Node.js. Dieses Skript
   1. nutzt ein vorhandenes Node.js (>= 22), sonst
   2. lädt die offizielle Node.js-Version von nodejs.org (Prüfsumme wird gegen SHASUMS256.txt von nodejs.org geprüft)
      einmalig nach ./.node und
-  3. startet dann bot.js (eigenständiger Discord-Bot) bzw. start.js (komplettes Hosting-Paket).
+  3. startet dann start.js (komplettes Hosting-Paket, hat Vorrang) bzw. bot.js (eigenständiger Discord-Bot).
 
 Besser (falls im Panel möglich): Server auf Node.js umstellen und direkt "node bot.js" starten – dann wird dieses Skript nicht gebraucht.
 """
@@ -118,10 +118,20 @@ def install_dependencies(node):
 
 
 def main():
-    entry = os.environ.get("NEXUS_ENTRY") or next((f for f in ("bot.js", "start.js") if os.path.exists(f)), None)
+    # start.js = komplettes Paket (API + Web + Bot) und hat Vorrang vor bot.js (nur der Bot). Wären beide da und wir nähmen
+    # bot.js, liefe zwar der Bot, aber keine API – die Domain gäbe dann „502“. NEXUS_ENTRY=bot.js erzwingt bewusst nur den Bot.
+    forced = os.environ.get("NEXUS_ENTRY")
+    entry = forced or next((f for f in ("start.js", "bot.js") if os.path.exists(f)), None)
     if not entry:
-        log("FEHLER: weder bot.js noch start.js im Ordner gefunden. ZIP vollständig entpackt?")
+        log("FEHLER: weder start.js noch bot.js im Ordner gefunden. ZIP vollständig entpackt?")
         sys.exit(1)
+    if not os.path.exists(entry):
+        log(f"FEHLER: {entry} (NEXUS_ENTRY) gibt es im Ordner nicht.")
+        sys.exit(1)
+    if entry == "bot.js":
+        log("Hinweis: Es startet nur der Discord-Bot, keine API/Web-Oberfläche (start.js fehlt oder NEXUS_ENTRY=bot.js ist gesetzt).")
+    elif os.path.exists("bot.js"):
+        log("Hinweis: bot.js liegt zusätzlich im Ordner und wird ignoriert – start.js startet den Bot selbst mit.")
     node = find_node() or download_node()
     if entry == "start.js":
         install_dependencies(node)
