@@ -100,3 +100,32 @@ test('Extras: Webfont, Modal-Button, Overlay, Seiten-Adresse, Protokoll', async 
   await expect(log).toContainText('Bild hochgeladen');
   await expect(log).toContainText(E2E.ownerId);
 });
+
+/** Praxistest Phase 45: serverweite Überschreibungen sichtbar, einzeln und gesammelt zurücksetzbar. */
+test('Überschreibungen: anzeigen, einzeln und alle entfernen', async ({
+  page,
+  context,
+  request,
+}) => {
+  test.setTimeout(60_000);
+  const jwt = await session();
+  await context.addCookies([{ name: 'nexus_session', value: jwt, domain: 'localhost', path: '/' }]);
+  const API = `http://localhost:3000/api/v1`;
+  const put = await request.put(`${API}/guilds/${E2E.guildId}/design/overrides`, {
+    headers: { Authorization: `Bearer ${jwt}` },
+    data: { overrides: { radius: 4, colors: { dark: { primary: '#FF0000' } } } },
+  });
+  expect(put.ok(), await put.text()).toBe(true);
+  await page.goto(`/guilds/${E2E.guildId}/design`);
+  await page.getByRole('tab', { name: /Themes/ }).click();
+  const list = page.getByRole('list', { name: 'Überschreibungen' });
+  await expect(list).toContainText('colors.dark.primary');
+  await list
+    .getByRole('listitem')
+    .filter({ hasText: 'colors.dark.primary' })
+    .getByRole('button', { name: 'Zurücksetzen' })
+    .click();
+  await expect(list).not.toContainText('colors.dark.primary');
+  await page.getByRole('button', { name: 'Alle Überschreibungen entfernen' }).click();
+  await expect(page.getByText('Keine Überschreibungen aktiv.')).toBeVisible();
+});

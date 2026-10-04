@@ -27,6 +27,7 @@ import { useToast } from '../toast';
 interface Overview {
   activeThemeId: string | null;
   autosave: boolean;
+  overrides: unknown;
   themes: ThemeRow[];
 }
 interface ThemeFull {
@@ -240,6 +241,7 @@ function Editor({ guildId, overview }: { guildId: string; overview: Overview }) 
               themes={overview.themes}
               activeId={activeId}
               dirty={dirty}
+              overrides={overview.overrides}
               onChanged={() => setDraft(null)}
             />
           ) : themeQ.isLoading || !api_ ? (

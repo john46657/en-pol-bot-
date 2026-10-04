@@ -27,12 +27,14 @@ export function ThemesTab({
   themes,
   activeId,
   dirty,
+  overrides,
   onChanged,
 }: {
   guildId: string;
   themes: ThemeRow[];
   activeId: string | null;
   dirty: boolean;
+  overrides: unknown;
   onChanged: () => void;
 }) {
   const toast = useToast();
@@ -204,6 +206,7 @@ export function ThemesTab({
           onRestored={() => done('Version wiederhergestellt')}
         />
       )}
+      <Overrides guildId={guildId} overrides={overrides} onDone={done} onError={fail} />
       <History guildId={guildId} />
       <h3>Alles zurücksetzen</h3>
       <p className="muted">
@@ -458,6 +461,82 @@ function Versions({
           </li>
         ))}
       </ul>
+    </>
+  );
+}
+
+/** Alle Blattwerte eines verschachtelten Objekts als Pfad → Wert (`colors.dark.primary`). */
+export function flattenOverrides(o: unknown, path = ''): Array<[string, string]> {
+  if (o !== null && typeof o === 'object' && !Array.isArray(o)) {
+    const entries = Object.entries(o as Record<string, unknown>);
+    return entries.flatMap(([k, v]) => flattenOverrides(v, path ? `${path}.${k}` : k));
+  }
+  const text = typeof o === 'string' ? o : JSON.stringify(o);
+  return path ? [[path, text.length > 60 ? `${text.slice(0, 57)}…` : text]] : [];
+}
+
+/** Serverweite Überschreibungen (Vorrang vor dem Theme): einzeln oder gesammelt zurücksetzen. */
+function Overrides({
+  guildId,
+  overrides,
+  onDone,
+  onError,
+}: {
+  guildId: string;
+  overrides: unknown;
+  onDone: (msg: string) => void;
+  onError: (e: unknown) => void;
+}) {
+  const base = `/guilds/${guildId}/design`;
+  const rows = flattenOverrides(overrides);
+  const one = useMutation({
+    mutationFn: (path: string) => api(`${base}/reset`, { method: 'POST', body: { path } }),
+    onSuccess: () => onDone('Überschreibung entfernt'),
+    onError,
+  });
+  const all = useMutation({
+    mutationFn: () => api(`${base}/overrides`, { method: 'PUT', body: { overrides: null } }),
+    onSuccess: () => onDone('Alle Überschreibungen entfernt'),
+    onError,
+  });
+  return (
+    <>
+      <h3>Serverweite Überschreibungen</h3>
+      <p className="muted">
+        Einzelne Werte, die das Theme übersteuern (Reihenfolge: Standard ← Theme ← Überschreibung).
+      </p>
+      {rows.length === 0 ? (
+        <p className="muted">Keine Überschreibungen aktiv.</p>
+      ) : (
+        <>
+          <ul className="list" aria-label="Überschreibungen">
+            {rows.map(([path, value]) => (
+              <li key={path} className="card">
+                <div className="row-head">
+                  <code>{path}</code>
+                  <span className="muted">{value}</span>
+                  <button
+                    type="button"
+                    className="btn"
+                    disabled={one.isPending}
+                    onClick={() => one.mutate(path)}
+                  >
+                    Zurücksetzen
+                  </button>
+                </div>
+              </li>
+            ))}
+          </ul>
+          <button
+            type="button"
+            className="btn"
+            disabled={all.isPending}
+            onClick={() => all.mutate()}
+          >
+            Alle Überschreibungen entfernen
+          </button>
+        </>
+      )}
     </>
   );
 }
