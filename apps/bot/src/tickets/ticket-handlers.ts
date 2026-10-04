@@ -1,6 +1,6 @@
-import { ActionRowBuilder, ButtonBuilder, ButtonStyle, MessageFlags, ModalBuilder, TextInputBuilder, TextInputStyle, type ButtonInteraction, type GuildMember, type ModalSubmitInteraction, type StringSelectMenuInteraction } from 'discord.js';
+import { ActionRowBuilder, MessageFlags, ModalBuilder, TextInputBuilder, TextInputStyle, type ButtonInteraction, type GuildMember, type ModalSubmitInteraction, type StringSelectMenuInteraction } from 'discord.js';
 import { prisma } from '@nexus/database';
-import { TicketError, claim, closeTicket, formatNumber, getSettings, getTicket, loads, openTicket, parseFormFields, fieldPlaceholder, validateAnswer, pingStaff, release, PRIORITY_LABEL, type PRIORITIES } from '@nexus/tickets';
+import { TicketError, claim, closeTicket, formatNumber, getTicket, loads, openTicket, parseFormFields, fieldPlaceholder, validateAnswer, pingStaff, release, PRIORITY_LABEL, type PRIORITIES } from '@nexus/tickets';
 import { viewSubmission } from '@nexus/automation';
 import { log } from '../logger.js';
 import { memberCan, requireMemberPermission } from '../discord/permissions.js';
