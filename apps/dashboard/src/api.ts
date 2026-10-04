@@ -489,3 +489,23 @@ export interface LeaderboardRow {
   totalSeconds: number;
   averageSeconds: number;
 }
+
+export type UnitStatusKey = 'AVAILABLE' | 'BUSY' | 'BREAK' | 'UNAVAILABLE';
+export interface UnitRow {
+  id: string;
+  callsign: string;
+  kind: string;
+  status: UnitStatusKey;
+  availability: UnitStatusKey;
+  statusSince: string;
+  vehicle: string | null;
+  location: string | null;
+  note: string | null;
+  staffing: { active: number; paused: number; total: number };
+  members: { userId: string; role: 'LEADER' | 'MEMBER'; onBreak: boolean }[];
+}
+export interface DutyOverviewData {
+  units: UnitRow[];
+  unassigned: { userId: string; type: string; since: string; paused: boolean }[];
+  counts: { onDuty: number; onBreak: number; units: number; available: number; busy: number; unavailable: number };
+}

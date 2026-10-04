@@ -1,6 +1,7 @@
 import type { DiscordPort } from '@nexus/automation';
 import { assertGuildId, guildRepository, prisma, type Prisma } from '@nexus/database';
 import { ShiftError } from './errors.js';
+import { leaveUnit } from './units.js';
 import { aggregate, computeDuration, formatSeconds, isOverlong, validateCorrection } from './time.js';
 
 /**
@@ -158,6 +159,7 @@ export async function endShift(guildId: string, shiftId: string, o: EndOptions, 
   });
   if (r.count === 0) throw new ShiftError('conflict', 'Die Schicht wurde gerade geändert oder beendet.');
   await event(shift.id, gid, 'end', o.actorId, { netSeconds: d.netSeconds, pausedSeconds: d.pausedSeconds, ...(reason ? { reason } : {}), ...(o.endedAt ? { requestedEnd: o.endedAt.toISOString() } : {}) }, now);
+  await leaveUnit(gid, shift.userId, o.actorId, 'shift-ended');
   if (foreign || o.endedAt) {
     await prisma.auditLog.create({
       data: { guildId: gid, actorType: 'USER', actorId: o.actorId, action: 'shift.ended_by_supervisor', resourceType: 'Shift', resourceId: shift.id, before: { status: shift.status, userId: shift.userId } as Json, after: { endedAt: endedAt.toISOString(), netSeconds: d.netSeconds } as Json, reason: reason ?? null, result: 'success', ...(o.permission ? { permission: o.permission } : {}) },

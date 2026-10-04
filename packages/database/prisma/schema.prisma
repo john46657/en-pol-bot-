@@ -184,6 +184,18 @@ enum ShiftStatus {
   ENDED
 }
 
+enum UnitStatus {
+  AVAILABLE
+  BUSY
+  BREAK
+  UNAVAILABLE
+}
+
+enum UnitRole {
+  LEADER
+  MEMBER
+}
+
 enum PermissionEffect {
   ALLOW
   DENY
@@ -232,6 +244,7 @@ model Guild {
   personnelRecords   PersonnelRecord[]
   shiftTypes         ShiftType[]
   shifts             Shift[]
+  units              Unit[]
 
   applications      Application[]
   panels            ApplicationPanel[]
@@ -1138,4 +1151,69 @@ model ShiftEvent {
 
   @@index([shiftId, at])
   @@map("shift_events")
+}
+
+// ---------------------------------------------------------------------------
+// Phase 14: Dienst & Streifen
+// ---------------------------------------------------------------------------
+
+/// Einheit/Streife. `activeKey` = 'active' solange sie besteht (NULL nach Auflösung): Rufname je Server nur einmal aktiv.
+model Unit {
+  id          String     @id @default(cuid())
+  guildId     String
+  callsign    String
+  kind        String     @default("Streife")
+  status      UnitStatus @default(AVAILABLE)
+  statusSince DateTime   @default(now())
+  vehicle     String?
+  /// Aktueller Standort (optional, Freitext).
+  location    String?
+  note        String?
+  activeKey   String?
+  createdBy   String
+  disbandedAt DateTime?
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+
+  guild   Guild         @relation(fields: [guildId], references: [id], onDelete: Cascade)
+  members UnitMember[]
+  events  UnitEvent[]
+
+  @@unique([guildId, callsign, activeKey])
+  @@index([guildId, activeKey])
+  @@map("units")
+}
+
+/// Mitglied einer Einheit, gebunden an eine laufende Schicht. `openKey` = 'open' solange aktiv: höchstens eine Einheit je Mitglied.
+model UnitMember {
+  id       String    @id @default(cuid())
+  guildId  String
+  unitId   String
+  userId   String
+  shiftId  String
+  role     UnitRole  @default(MEMBER)
+  openKey  String?
+  joinedAt DateTime  @default(now())
+  leftAt   DateTime?
+
+  unit Unit @relation(fields: [unitId], references: [id], onDelete: Cascade)
+
+  @@unique([guildId, userId, openKey])
+  @@index([unitId])
+  @@map("unit_members")
+}
+
+model UnitEvent {
+  id      String   @id @default(cuid())
+  guildId String
+  unitId  String
+  type    String
+  at      DateTime @default(now())
+  actorId String?
+  data    Json?
+
+  unit Unit @relation(fields: [unitId], references: [id], onDelete: Cascade)
+
+  @@index([unitId, at])
+  @@map("unit_events")
 }

@@ -207,6 +207,15 @@ export const PERMISSION_CATALOG = [
     ],
   },
   {
+    module: 'duty',
+    label: 'Dienst & Streifen',
+    permissions: [
+      ['duty.view', 'Dienstübersicht ansehen (Einheiten, Besetzung, Verfügbarkeit)'],
+      ['duty.unit.join', 'Streife bilden, beitreten und eigenen Status setzen'],
+      ['duty.unit.manage', 'Einheiten verwalten (zuteilen, Status ändern, auflösen)'],
+    ],
+  },
+  {
     module: 'sek',
     label: 'SEK',
     permissions: [
