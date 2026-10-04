@@ -28,6 +28,7 @@ import './commands/streife.js';
 import './commands/funk.js';
 import './commands/einsatz.js';
 import './commands/gefahr.js';
+import './commands/fahndung.js';
 
 const panelCommand = new SlashCommandBuilder()
   .setName('panel')

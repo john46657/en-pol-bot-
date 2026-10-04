@@ -110,6 +110,9 @@ importers:
       '@nexus/validation':
         specifier: workspace:*
         version: link:../../packages/validation
+      '@nexus/wanted':
+        specifier: workspace:*
+        version: link:../../packages/wanted
       class-transformer:
         specifier: ^0.5.1
         version: 0.5.1
@@ -201,6 +204,9 @@ importers:
       '@nexus/validation':
         specifier: workspace:*
         version: link:../../packages/validation
+      '@nexus/wanted':
+        specifier: workspace:*
+        version: link:../../packages/wanted
       discord.js:
         specifier: ^14.21.0
         version: 14.27.0
@@ -499,6 +505,22 @@ importers:
       '@types/node':
         specifier: ^24.0.10
         version: 24.19.0
+      vitest:
+        specifier: ^3.2.4
+        version: 3.2.7(@types/node@24.19.0)(jiti@2.7.0)(tsx@4.23.15)(yaml@2.9.1)
+
+  packages/wanted:
+    dependencies:
+      '@nexus/database':
+        specifier: workspace:*
+        version: link:../database
+      '@nexus/types':
+        specifier: workspace:*
+        version: link:../types
+    devDependencies:
+      '@prisma/client':
+        specifier: ^6.11.0
+        version: 6.19.3(prisma@6.19.3(typescript@5.9.3))(typescript@5.9.3)
       vitest:
         specifier: ^3.2.4
         version: 3.2.7(@types/node@24.19.0)(jiti@2.7.0)(tsx@4.23.15)(yaml@2.9.1)

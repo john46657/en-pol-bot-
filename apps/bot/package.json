@@ -25,6 +25,7 @@
     "@nexus/shifts": "workspace:*",
     "@nexus/types": "workspace:*",
     "@nexus/validation": "workspace:*",
+    "@nexus/wanted": "workspace:*",
     "discord.js": "^14.21.0",
     "dotenv": "^17.2.0",
     "ioredis": "^5.6.1",

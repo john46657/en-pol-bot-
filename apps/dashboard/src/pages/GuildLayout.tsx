@@ -4,7 +4,7 @@ import { Link, NavLink, Outlet, useLocation, useParams } from 'react-router';
 import { api, guildIcon, type GuildOverview } from '../api';
 import { UserMenu } from '../components/UserMenu';
 
-type Needs = 'any' | 'view' | 'admin' | 'panels' | 'submissions' | 'personnel' | 'structure' | 'shifts' | 'duty' | 'radio' | 'operations' | 'danger';
+type Needs = 'any' | 'view' | 'admin' | 'panels' | 'submissions' | 'personnel' | 'structure' | 'shifts' | 'duty' | 'radio' | 'operations' | 'danger' | 'wanted';
 const NAV: { to: string; label: string; icon: string; end?: boolean; needs: Needs }[] = [
   { to: '', label: 'Übersicht', icon: '🏠', end: true, needs: 'any' },
   { to: 'settings', label: 'Rollen & Kanäle wählen', icon: '⚙️', needs: 'view' },
@@ -19,6 +19,7 @@ const NAV: { to: string; label: string; icon: string; end?: boolean; needs: Need
   { to: 'radio', label: 'Funk', icon: '📻', needs: 'radio' },
   { to: 'operations', label: 'Einsätze', icon: '🚨', needs: 'operations' },
   { to: 'danger', label: 'Gefahrenstatus', icon: '⚠️', needs: 'danger' },
+  { to: 'wanted', label: 'Fahndungen', icon: '📣', needs: 'wanted' },
   { to: 'panels', label: 'Panels', icon: '🧩', needs: 'panels' },
   { to: 'users', label: 'Benutzer', icon: '👥', needs: 'admin' },
   { to: 'profiles', label: 'Profile', icon: '🧾', needs: 'admin' },
@@ -53,6 +54,7 @@ export function GuildLayout() {
     (needs === 'submissions' && me.data.permissions.includes('applications.submissions.view')) ||
     (needs === 'personnel' &&
       ['personnel.view', 'own.profile.view'].some((k) => me.data.permissions.includes(k))) ||
+    (needs === 'wanted' && me.data.permissions.includes('wanted.view')) ||
     (needs === 'danger' && me.data.permissions.includes('danger.view')) ||
     (needs === 'operations' && me.data.permissions.includes('operations.view')) ||
     (needs === 'radio' && me.data.permissions.includes('radio.view')) ||

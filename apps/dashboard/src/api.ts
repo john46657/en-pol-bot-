@@ -561,3 +561,23 @@ export interface DangerCurrent {
   levels: DangerLevelRow[];
   state: { setBy: string; reason: string | null; setAt: string } | null;
 }
+
+export interface WantedRow {
+  id: string;
+  number: number;
+  kind: 'PERSON' | 'VEHICLE';
+  status: 'ACTIVE' | 'REVOKED';
+  subjectName: string | null;
+  appearance: string | null;
+  plate: string | null;
+  vehicleModel: string | null;
+  vehicleColor: string | null;
+  ownerName: string | null;
+  reason: string;
+  priority: 'LOW' | 'NORMAL' | 'HIGH' | 'URGENT';
+  lastSeen: string | null;
+  notes: string | null;
+  createdBy: string;
+  revokeReason: string | null;
+  createdAt: string;
+}

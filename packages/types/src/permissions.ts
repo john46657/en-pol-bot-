@@ -234,6 +234,16 @@ export const PERMISSION_CATALOG = [
     ],
   },
   {
+    module: 'wanted',
+    label: 'Fahndungen',
+    permissions: [
+      ['wanted.view', 'Fahndungen ansehen und suchen'],
+      ['wanted.create', 'Fahndungen erstellen'],
+      ['wanted.edit', 'Fahndungen bearbeiten'],
+      ['wanted.revoke', 'Fahndungen aufheben'],
+    ],
+  },
+  {
     module: 'radio',
     label: 'Funk',
     permissions: [

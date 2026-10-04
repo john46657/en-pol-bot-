@@ -222,6 +222,16 @@ enum OperationPriority {
   URGENT
 }
 
+enum WantedKind {
+  PERSON
+  VEHICLE
+}
+
+enum WantedStatus {
+  ACTIVE
+  REVOKED
+}
+
 enum PermissionEffect {
   ALLOW
   DENY
@@ -275,6 +285,7 @@ model Guild {
   radioAccess        RadioAccess[]
   operations         Operation[]
   dangerLevels       DangerLevel[]
+  wantedNotices      WantedNotice[]
 
   applications      Application[]
   panels            ApplicationPanel[]
@@ -1448,4 +1459,72 @@ model DangerEvent {
 
   @@index([guildId, at])
   @@map("danger_events")
+}
+
+// ---------------------------------------------------------------------------
+// Phase 19: Fahndungssystem
+// ---------------------------------------------------------------------------
+
+model WantedCounter {
+  guildId String @id
+  last    Int    @default(0)
+
+  @@map("wanted_counters")
+}
+
+/// Fahndung nach einer Person oder einem Fahrzeug (getrennte Pflichtfelder je Art).
+/// `activeKey` = 'active' solange aktiv: dieselbe Person/dasselbe Kennzeichen kann nicht doppelt aktiv gesucht werden.
+model WantedNotice {
+  id            String       @id @default(cuid())
+  guildId       String
+  number        Int
+  kind          WantedKind
+  status        WantedStatus @default(ACTIVE)
+  /// Normalisierter Suchschlüssel (Name klein / Kennzeichen groß ohne Leerzeichen).
+  subjectKey    String
+  // Person
+  subjectName   String?
+  /// Optional: Discord-ID, falls die gesuchte Person ein Mitglied ist.
+  subjectUserId String?
+  appearance    String?
+  // Fahrzeug
+  plate         String?
+  vehicleModel  String?
+  vehicleColor  String?
+  ownerName     String?
+  // gemeinsam
+  reason        String
+  priority      String       @default("NORMAL")
+  lastSeen      String?
+  notes         String?
+  activeKey     String?
+  createdBy     String
+  revokedBy     String?
+  revokeReason  String?
+  revokedAt     DateTime?
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+
+  guild  Guild         @relation(fields: [guildId], references: [id], onDelete: Cascade)
+  events WantedEvent[]
+
+  @@unique([guildId, number])
+  @@unique([guildId, kind, subjectKey, activeKey])
+  @@index([guildId, kind, status])
+  @@map("wanted_notices")
+}
+
+model WantedEvent {
+  id       String   @id @default(cuid())
+  guildId  String
+  noticeId String
+  type     String
+  at       DateTime @default(now())
+  actorId  String?
+  data     Json?
+
+  notice WantedNotice @relation(fields: [noticeId], references: [id], onDelete: Cascade)
+
+  @@index([noticeId, at])
+  @@map("wanted_events")
 }
