@@ -9,7 +9,8 @@ import { useToast } from '../toast';
 const ST = { OPEN: '🟢 offen', IN_PROGRESS: '🔵 in Bearbeitung', WAITING: '🟡 wartet auf Rückmeldung', CLOSED: '🔒 geschlossen' } as const;
 const PRIO = { LOW: 'Niedrig', NORMAL: 'Normal', HIGH: 'Hoch', URGENT: 'Dringend' } as const;
 const num = (n: number) => `#${String(n).padStart(4, '0')}`;
-type FormRow = { id: string; label: string; style: 'short' | 'paragraph'; required: boolean };
+type FormRow = { id: string; label: string; style: 'short' | 'paragraph'; type?: string | undefined; options?: string[] | undefined; required: boolean };
+const FIELD_TYPE = { text: 'Kurzer Text', paragraph: 'Langer Text', number: 'Zahl', date: 'Datum', yesno: 'Ja/Nein', choice: 'Auswahl', multichoice: 'Mehrfachauswahl', user: 'Discord-Benutzer' } as const;
 const emptyCat = { id: '', name: '', description: '', emoji: '', discordCategoryId: '', staffRoleIds: [] as string[], defaultPriority: 'NORMAL', maxOpenPerUser: 1, active: true, color: null as number | null, maxOpenTotal: 20, requiredRoleIds: [] as string[], nameTemplate: '' as string | null, formFields: [] as FormRow[] | null, transcriptEnabled: null as boolean | null };
 
 /** Tickets: offene Tickets bearbeiten, Archiv mit Transkript, Kategorien. */
@@ -129,7 +130,8 @@ export function Tickets() {
           {(c.formFields ?? []).map((f, i) => (
             <div key={i} className="actions">
               <input value={f.label} maxLength={45} placeholder="Frage" onChange={(e) => setC({ ...c, formFields: (c.formFields ?? []).map((x, j) => (j === i ? { ...x, label: e.target.value } : x)) })} />
-              <select value={f.style} onChange={(e) => setC({ ...c, formFields: (c.formFields ?? []).map((x, j) => (j === i ? { ...x, style: e.target.value as FormRow['style'] } : x)) })}><option value="short">Kurz</option><option value="paragraph">Lang</option></select>
+              <select aria-label="Fragetyp" value={f.type ?? (f.style === 'paragraph' ? 'paragraph' : 'text')} onChange={(e) => setC({ ...c, formFields: (c.formFields ?? []).map((x, j) => (j === i ? { ...x, type: e.target.value, style: e.target.value === 'paragraph' ? 'paragraph' : 'short' } : x)) })}>{Object.entries(FIELD_TYPE).map(([k, v]) => <option key={k} value={k}>{v}</option>)}</select>
+              {(f.type === 'choice' || f.type === 'multichoice') && <input aria-label="Antwortoptionen" placeholder="Optionen, getrennt durch Komma" value={(f.options ?? []).join(', ')} onChange={(e) => setC({ ...c, formFields: (c.formFields ?? []).map((x, j) => (j === i ? { ...x, options: e.target.value.split(',').map((o) => o.trim()) } : x)) })} />}
               <label><input type="checkbox" checked={f.required} onChange={(e) => setC({ ...c, formFields: (c.formFields ?? []).map((x, j) => (j === i ? { ...x, required: e.target.checked } : x)) })} /> Pflicht</label>
               <button className="btn" onClick={() => setC({ ...c, formFields: (c.formFields ?? []).filter((_, j) => j !== i) })}>Entfernen</button>
             </div>

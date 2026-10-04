@@ -70,10 +70,14 @@ export async function getRecordByUser(guildId: string, userId: string) {
 
 // --- Dienstnummern ------------------------------------------------------------
 
+/** Wann die Dienstnummer automatisch vergeben wird: nach der ersten bestandenen Ausbildung (Standard), bei Annahme der Bewerbung, oder nie (nur manuell). */
+export const ASSIGN_MODES = ['TRAINING', 'ACCEPT', 'OFF'] as const;
+export type AssignMode = (typeof ASSIGN_MODES)[number];
 export interface NumberFormat {
   prefix: string;
   digits: number;
   next: number;
+  assign: AssignMode;
 }
 
 const readFormat = (data: unknown): NumberFormat => {
@@ -85,6 +89,7 @@ const readFormat = (data: unknown): NumberFormat => {
     prefix: typeof p.prefix === 'string' ? p.prefix : '',
     digits: Number.isInteger(p.digits) ? Math.min(Math.max(p.digits!, 1), 10) : 3,
     next: Number.isInteger(p.next) && p.next! > 0 ? p.next! : 1,
+    assign: (ASSIGN_MODES as readonly string[]).includes(p.assign as string) ? (p.assign as AssignMode) : 'TRAINING',
   };
 };
 
@@ -95,7 +100,7 @@ export async function getNumberFormat(guildId: string): Promise<NumberFormat> {
 
 export async function setNumberFormat(
   guildId: string,
-  f: { prefix?: string | undefined; digits?: number | undefined; next?: number | undefined },
+  f: { prefix?: string | undefined; digits?: number | undefined; next?: number | undefined; assign?: string | undefined },
   actorId: string,
 ): Promise<NumberFormat> {
   const gid = assertGuildId(guildId);
@@ -106,6 +111,8 @@ export async function setNumberFormat(
     );
   if (f.digits !== undefined && !(Number.isInteger(f.digits) && f.digits >= 1 && f.digits <= 10))
     throw new PersonnelError('invalid', 'Die Stellenzahl muss zwischen 1 und 10 liegen.');
+  if (f.assign !== undefined && !(ASSIGN_MODES as readonly string[]).includes(f.assign))
+    throw new PersonnelError('invalid', 'Unbekannte Vergabe-Art (nach Ausbildung, bei Annahme oder manuell).');
   if (f.next !== undefined && !(Number.isInteger(f.next) && f.next >= 1))
     throw new PersonnelError('invalid', 'Die nächste Nummer muss mindestens 1 sein.');
   return prisma.$transaction(async (tx) => {
@@ -174,6 +181,23 @@ export async function generateServiceNumber(guildId: string): Promise<string> {
     }
     throw new PersonnelError('conflict', 'Es ist keine freie Dienstnummer mehr verfügbar.');
   });
+}
+
+/**
+ * Dienstnummer nach der ersten bestandenen Ausbildung: nur im Modus „TRAINING“, nur für aktive Akten ohne Nummer.
+ * Mehrfaches Aufrufen vergibt nie eine zweite Nummer. Gibt die vergebene Nummer zurück oder `null`.
+ */
+export async function assignNumberAfterTraining(guildId: string, userId: string, actorId: string | null, opts: ServiceOptions = {}): Promise<string | null> {
+  const gid = assertGuildId(guildId);
+  if ((await getNumberFormat(gid)).assign !== 'TRAINING') return null;
+  const record = await prisma.personnelRecord.findUnique({ where: { guildId_userId: { guildId: gid, userId } }, select: { id: true, status: true, serviceNumber: true } });
+  if (!record || record.status !== 'ACTIVE' || record.serviceNumber) return null;
+  try {
+    return (await setServiceNumber(gid, record.id, 'auto', actorId, opts)).serviceNumber;
+  } catch (e) {
+    if (e instanceof PersonnelError && e.code === 'conflict') return null; // parallel bereits vergeben
+    throw e;
+  }
 }
 
 // --- Akte anlegen / ändern -----------------------------------------------------
@@ -710,12 +734,18 @@ export async function saveRank(
     order: number;
     isEntry?: boolean | undefined;
     discordRoleId?: string | null | undefined;
+    icon?: string | null | undefined;
+    color?: string | null | undefined;
     active?: boolean | undefined;
   },
   actorId: string,
 ) {
   const gid = assertGuildId(guildId);
   const name = input.name.trim();
+  const icon = input.icon?.trim() || null;
+  if (icon && [...icon].length > 8) throw new PersonnelError('invalid', 'Das Symbol ist zu lang (max. 8 Zeichen, z. B. ein Emoji).');
+  const color = input.color?.trim() || null;
+  if (color && !/^#[0-9A-Fa-f]{6}$/.test(color)) throw new PersonnelError('invalid', 'Die Farbe muss als #RRGGBB angegeben werden.');
   if (!name || name.length > 60)
     throw new PersonnelError('invalid', 'Der Name des Dienstgrads fehlt oder ist zu lang.');
   if (!Number.isInteger(input.order) || input.order < 0 || input.order > 1000)
@@ -730,6 +760,8 @@ export async function saveRank(
         order: input.order,
         isEntry: input.isEntry ?? false,
         discordRoleId: input.discordRoleId ?? null,
+        icon,
+        color: color ? color.toUpperCase() : null,
         active: input.active ?? true,
       };
       const rank = input.id

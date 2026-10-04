@@ -111,6 +111,21 @@ describe('Panel → Ticket', () => {
     expect(text(sub)).toContain('Dein Ticket wurde eröffnet');
     expect((await prisma.ticket.findFirstOrThrow({ where: { guildId: G, categoryId: f } })).formAnswers).toEqual([{ label: 'Was passiert?', value: 'Shader flackert' }]);
   });
+
+  it('Fragetypen: ungültige Angaben werden mit Hinweis abgelehnt (kein Ticket), gültige normalisiert gespeichert', async () => {
+    const f = (await saveCategory(G, { name: 'Personal', formFields: [{ id: 'f0', label: 'Dienstnummer', type: 'number', required: true }, { id: 'f1', label: 'Anliegen', type: 'choice', options: ['Urlaub', 'Beförderung'], required: true }, { id: 'f2', label: 'Seit wann?', type: 'date', required: false }] }, 'x')).id;
+    const pick = await press('select', 'nexus:ticket:pick', USER, ['role-user'], { values: [f] });
+    const comps = pick.out.shown[0].components.map((r: any) => r.components[0]);
+    expect(comps.map((c: any) => c.placeholder)).toEqual(['Zahl, z. B. 42', 'Eine von: Urlaub, Beförderung', 'TT.MM.JJJJ']);
+    const bad = await press('modal', pick.out.shown[0].custom_id, USER, ['role-user'], { fields: { f0: 'abc', f1: 'Kündigung', f2: '31.02.2026' } });
+    expect(text(bad)).toContain('Dienstnummer');
+    expect(text(bad)).toContain('Anliegen');
+    expect(text(bad)).toContain('Das Datum gibt es nicht');
+    expect(await prisma.ticket.count({ where: { guildId: G, categoryId: f } })).toBe(0);
+    const good = await press('modal', pick.out.shown[0].custom_id, USER, ['role-user'], { fields: { f0: '12,5', f1: 'beförderung', f2: '' } });
+    expect(text(good)).toContain('Dein Ticket wurde eröffnet');
+    expect((await prisma.ticket.findFirstOrThrow({ where: { guildId: G, categoryId: f } })).formAnswers).toEqual([{ label: 'Dienstnummer', value: '12.5' }, { label: 'Anliegen', value: 'Beförderung' }]);
+  });
 });
 
 describe('Im Ticket', () => {

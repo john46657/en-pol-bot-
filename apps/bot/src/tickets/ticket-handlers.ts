@@ -1,6 +1,6 @@
 import { ActionRowBuilder, ButtonBuilder, ButtonStyle, MessageFlags, ModalBuilder, TextInputBuilder, TextInputStyle, type ButtonInteraction, type GuildMember, type ModalSubmitInteraction, type StringSelectMenuInteraction } from 'discord.js';
 import { prisma } from '@nexus/database';
-import { TicketError, claim, closeTicket, formatNumber, getSettings, getTicket, loads, openTicket, parseFormFields, pingStaff, release, PRIORITY_LABEL, type PRIORITIES } from '@nexus/tickets';
+import { TicketError, claim, closeTicket, formatNumber, getSettings, getTicket, loads, openTicket, parseFormFields, fieldPlaceholder, validateAnswer, pingStaff, release, PRIORITY_LABEL, type PRIORITIES } from '@nexus/tickets';
 import { viewSubmission } from '@nexus/automation';
 import { log } from '../logger.js';
 import { memberCan, requireMemberPermission } from '../discord/permissions.js';
@@ -81,7 +81,7 @@ registerSelect('ticket:pick', async (i) => {
     if (open >= cat.maxOpenPerUser) throw new TicketError('conflict', 'Du hast bereits ein offenes Ticket.');
     const full = (await loads(i.guild.id)).find((l) => l.id === categoryId)?.level === 'full';
     if (full) throw new TicketError('conflict', `„${cat.name}“ ist aktuell voll. Bitte versuche es später erneut.`);
-    await i.showModal(new ModalBuilder().setCustomId(`nexus:ticket:new:${categoryId}`).setTitle(cat.name.slice(0, 45)).addComponents(...fields.map((f) => input(f.id, f.label, f.style === 'paragraph' ? TextInputStyle.Paragraph : TextInputStyle.Short, f.required, f.style === 'paragraph' ? 1000 : 300, f.placeholder))));
+    await i.showModal(new ModalBuilder().setCustomId(`nexus:ticket:new:${categoryId}`).setTitle(cat.name.slice(0, 45)).addComponents(...fields.map((f) => input(f.id, f.label, f.style === 'paragraph' ? TextInputStyle.Paragraph : TextInputStyle.Short, f.required, f.style === 'paragraph' ? 1000 : 300, fieldPlaceholder(f)))));
   } catch (e) {
     await fail(i, e);
   }
@@ -93,7 +93,10 @@ registerModal('ticket:new', async (i, { args }) => {
   const cat = await prisma.ticketCategory.findFirst({ where: { id: categoryId, guildId: i.guild.id } });
   const fields = parseFormFields(cat?.formFields);
   if (fields.length === 0) return await openFromModal(i, categoryId); // Rückfall: klassisches Betreff/Beschreibung-Formular
-  await create(i, categoryId, fields.map((f) => ({ label: f.label, value: i.fields.getTextInputValue(f.id).trim() })).filter((a) => a.value));
+  const checked = fields.map((f) => ({ f, r: validateAnswer(f, i.fields.getTextInputValue(f.id)) }));
+  const errors = checked.flatMap((c) => (c.r.ok ? [] : [c.r.error]));
+  if (errors.length > 0) return void (await i.reply({ content: `⚠️ Bitte korrigiere deine Angaben und öffne das Formular erneut:\n${errors.map((e) => `• ${e}`).join('\n')}`, flags: E, allowedMentions: { parse: [] } }));
+  await create(i, categoryId, checked.flatMap((c) => (c.r.ok && c.r.value ? [{ label: c.f.label, value: c.r.value }] : [])));
 });
 
 // --- Im Ticket: Claim, Benachrichtigung, Informationen, Bewerbung ---------------------------------------------------------

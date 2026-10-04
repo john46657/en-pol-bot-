@@ -382,6 +382,8 @@ export interface RankRow {
   order: number;
   isEntry: boolean;
   discordRoleId: string | null;
+  icon: string | null;
+  color: string | null;
   active: boolean;
   _count?: { records: number };
 }
@@ -455,6 +457,7 @@ export interface NumberFormat {
   prefix: string;
   digits: number;
   next: number;
+  assign: 'TRAINING' | 'ACCEPT' | 'OFF';
 }
 
 export interface ShiftTypeRow {
@@ -746,7 +749,7 @@ export interface TicketCategoryRow {
   maxOpenTotal: number;
   requiredRoleIds: string[];
   nameTemplate: string | null;
-  formFields: { id: string; label: string; style: 'short' | 'paragraph'; required: boolean }[] | null;
+  formFields: { id: string; label: string; style: 'short' | 'paragraph'; type?: string; options?: string[]; required: boolean }[] | null;
   transcriptEnabled: boolean | null;
 }
 export interface TicketLoad {

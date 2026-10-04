@@ -7,6 +7,7 @@ import {
   restoreRecord,
   setProbation,
   setRank,
+  getNumberFormat,
   setServiceNumber,
   setTeam,
 } from './service.js';
@@ -70,6 +71,9 @@ registerAcceptStep('serviceNumber', async (ctx) => {
   const record = await recordOf(ctx);
   if (record.serviceNumber)
     return { detail: `Dienstnummer ${record.serviceNumber} war bereits vergeben.` };
+  const mode = (await getNumberFormat(ctx.guildId)).assign;
+  if (mode !== 'ACCEPT')
+    return { skipped: true, detail: mode === 'TRAINING' ? 'Die Dienstnummer wird nach der ersten bestandenen Ausbildung vergeben.' : 'Die Dienstnummer wird manuell vergeben.' };
   const updated = await setServiceNumber(ctx.guildId, record.id, 'auto', ctx.reviewerId, opts(ctx));
   return { detail: `Dienstnummer ${updated.serviceNumber} vergeben.` };
 });

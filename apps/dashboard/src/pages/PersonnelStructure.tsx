@@ -45,7 +45,21 @@ export function PersonnelStructure() {
   const roleOptions = (roles.data ?? []).filter((r) => r.blockedReason !== 'everyone');
   const roleName = (id: string | null) => roleOptions.find((r) => r.id === id)?.name;
 
-  const [rank, setRank] = useState({ name: '', order: 1, isEntry: false, discordRoleId: '' });
+  const emptyRank = { name: '', shortName: '', order: 1, isEntry: false, discordRoleId: '', icon: '', color: '' };
+  const [rank, setRank] = useState(emptyRank);
+  const [editId, setEditId] = useState<string | null>(null);
+  /** Vollständiger Datensatz eines Dienstgrads für PUT – nichts darf beim Umschalten verloren gehen. */
+  const rankBody = (r: RankRow, patch: Partial<{ isEntry: boolean; active: boolean }> = {}) => ({
+    name: r.name,
+    shortName: r.shortName ?? undefined,
+    order: r.order,
+    isEntry: r.isEntry,
+    discordRoleId: r.discordRoleId,
+    icon: r.icon ?? undefined,
+    color: r.color ?? undefined,
+    active: r.active,
+    ...patch,
+  });
   const [team, setTeam] = useState({ name: '', discordRoleId: '', leaderUserId: '' });
   const [fmt, setFmt] = useState<NumberFormat | null>(null);
   const f = fmt ?? format.data;
@@ -88,6 +102,18 @@ export function PersonnelStructure() {
                   onChange={(e) => setFmt({ ...f, next: Number(e.target.value) })}
                 />
               </label>
+              <label className="fld">
+                <span>Automatische Vergabe</span>
+                <select
+                  value={f.assign}
+                  aria-label="Automatische Vergabe"
+                  onChange={(e) => setFmt({ ...f, assign: e.target.value as NumberFormat['assign'] })}
+                >
+                  <option value="TRAINING">Nach der ersten bestandenen Ausbildung</option>
+                  <option value="ACCEPT">Bei Annahme der Bewerbung</option>
+                  <option value="OFF">Nie automatisch (nur manuell)</option>
+                </select>
+              </label>
               <p className="muted">
                 Beispiel:{' '}
                 <code>
@@ -123,7 +149,10 @@ export function PersonnelStructure() {
             {rs.map((r) => (
               <li key={r.id} className={`row ${r.active ? '' : 'off'}`}>
                 <span className="grow">
-                  <strong>{r.name}</strong>{' '}
+                  <strong style={r.color ? { color: r.color } : undefined}>
+                    {r.icon ? `${r.icon} ` : ''}
+                    {r.name}
+                  </strong>{' '}
                   <small className="muted">
                     Rang {r.order}
                     {r.isEntry ? ' · Einstieg' : ''}
@@ -138,13 +167,7 @@ export function PersonnelStructure() {
                     call.mutate({
                       method: 'PUT',
                       path: `/ranks/${r.id}`,
-                      body: {
-                        name: r.name,
-                        order: r.order,
-                        isEntry: !r.isEntry,
-                        discordRoleId: r.discordRoleId,
-                        active: r.active,
-                      },
+                      body: rankBody(r, { isEntry: !r.isEntry }),
                       msg: 'Gespeichert.',
                     })
                   }
@@ -158,18 +181,21 @@ export function PersonnelStructure() {
                     call.mutate({
                       method: 'PUT',
                       path: `/ranks/${r.id}`,
-                      body: {
-                        name: r.name,
-                        order: r.order,
-                        isEntry: r.isEntry,
-                        discordRoleId: r.discordRoleId,
-                        active: !r.active,
-                      },
+                      body: rankBody(r, { active: !r.active }),
                       msg: 'Gespeichert.',
                     })
                   }
                 >
                   {r.active ? 'Deaktivieren' : 'Aktivieren'}
+                </button>
+                <button
+                  className="btn"
+                  onClick={() => {
+                    setEditId(r.id);
+                    setRank({ name: r.name, shortName: r.shortName ?? '', order: r.order, isEntry: r.isEntry, discordRoleId: r.discordRoleId ?? '', icon: r.icon ?? '', color: r.color ?? '' });
+                  }}
+                >
+                  Bearbeiten
                 </button>
                 <button
                   className="btn"
@@ -190,13 +216,15 @@ export function PersonnelStructure() {
         className="card comp"
         onSubmit={(e) => {
           e.preventDefault();
+          const active = editId ? ranks.data?.find((x) => x.id === editId)?.active : true;
           call.mutate({
-            method: 'POST',
-            path: '/ranks',
-            body: { ...rank, discordRoleId: rank.discordRoleId || undefined },
-            msg: 'Dienstgrad angelegt.',
+            method: editId ? 'PUT' : 'POST',
+            path: editId ? `/ranks/${editId}` : '/ranks',
+            body: { ...rank, discordRoleId: rank.discordRoleId || undefined, active: active ?? true },
+            msg: editId ? 'Dienstgrad gespeichert.' : 'Dienstgrad angelegt.',
           });
-          setRank({ name: '', order: 1, isEntry: false, discordRoleId: '' });
+          setRank(emptyRank);
+          setEditId(null);
         }}
       >
         <div className="two">
@@ -217,6 +245,16 @@ export function PersonnelStructure() {
               value={rank.order}
               onChange={(e) => setRank({ ...rank, order: Number(e.target.value) })}
             />
+          </label>
+        </div>
+        <div className="two">
+          <label className="fld">
+            <span>Symbol (z. B. ⭐)</span>
+            <input value={rank.icon} maxLength={8} onChange={(e) => setRank({ ...rank, icon: e.target.value })} />
+          </label>
+          <label className="fld">
+            <span>Farbe</span>
+            <input type="color" aria-label="Farbe des Dienstgrads" value={rank.color || '#5865f2'} onChange={(e) => setRank({ ...rank, color: e.target.value })} />
           </label>
         </div>
         <label className="fld">
@@ -243,8 +281,13 @@ export function PersonnelStructure() {
         </label>
         <div>
           <button className="btn primary" disabled={!rank.name.trim() || call.isPending}>
-            Dienstgrad anlegen
+            {editId ? 'Dienstgrad speichern' : 'Dienstgrad anlegen'}
           </button>
+          {editId && (
+            <button type="button" className="btn" onClick={() => { setEditId(null); setRank(emptyRank); }}>
+              Abbrechen
+            </button>
+          )}
         </div>
       </form>
 

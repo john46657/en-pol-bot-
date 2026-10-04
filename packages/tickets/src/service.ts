@@ -113,19 +113,82 @@ export interface CategoryInput {
 }
 
 /** Ein Feld des optionalen Ticket-Formulars (Discord erlaubt höchstens 5 Felder je Formular). */
+export const FIELD_TYPES = ['text', 'paragraph', 'number', 'date', 'yesno', 'choice', 'multichoice', 'user'] as const;
+export type FieldType = (typeof FIELD_TYPES)[number];
 export interface FormField {
   id: string;
   label: string;
   style: 'short' | 'paragraph';
+  /** Fragetyp; Discord-Formulare kennen nur Textfelder, die Antwort wird je Typ geprüft. Ohne Angabe: text bzw. paragraph. */
+  type: FieldType;
   required: boolean;
   placeholder?: string | undefined;
+  /** Nur choice/multichoice: erlaubte Antworten (höchstens 10). */
+  options?: string[] | undefined;
 }
 export function parseFormFields(raw: unknown): FormField[] {
   if (!Array.isArray(raw)) return [];
   return raw.flatMap((f, n) => {
     const o = f as Partial<FormField> | null;
-    return o && typeof o.label === 'string' && o.label ? [{ id: typeof o.id === 'string' && o.id ? o.id : `f${n}`, label: o.label.slice(0, 45), style: o.style === 'paragraph' ? ('paragraph' as const) : ('short' as const), required: o.required !== false, ...(typeof o.placeholder === 'string' && o.placeholder ? { placeholder: o.placeholder.slice(0, 100) } : {}) }] : [];
+    if (!o || typeof o.label !== 'string' || !o.label) return [];
+    const style = o.style === 'paragraph' || o.type === 'paragraph' ? ('paragraph' as const) : ('short' as const);
+    const type: FieldType = (FIELD_TYPES as readonly string[]).includes(o.type as string) ? (o.type as FieldType) : style === 'paragraph' ? 'paragraph' : 'text';
+    const options = Array.isArray(o.options) ? [...new Set(o.options.filter((x): x is string => typeof x === 'string').map((x) => x.trim().slice(0, 40)).filter(Boolean))].slice(0, 10) : [];
+    if ((type === 'choice' || type === 'multichoice') && options.length < 2) return []; // Auswahl ohne Optionen ist unbrauchbar
+    return [{ id: typeof o.id === 'string' && o.id ? o.id : `f${n}`, label: o.label.slice(0, 45), style: type === 'paragraph' ? 'paragraph' as const : 'short' as const, type, required: o.required !== false, ...(typeof o.placeholder === 'string' && o.placeholder ? { placeholder: o.placeholder.slice(0, 100) } : {}), ...(type === 'choice' || type === 'multichoice' ? { options } : {}) }];
   }).slice(0, 5);
+}
+
+/** Platzhalter, der im Formular den erwarteten Antwortaufbau zeigt. */
+export function fieldPlaceholder(f: FormField): string {
+  const hint: Partial<Record<FieldType, string>> = { number: 'Zahl, z. B. 42', date: 'TT.MM.JJJJ', yesno: 'Ja oder Nein', user: '@Erwähnung oder Discord-ID' };
+  if (f.type === 'choice') return `Eine von: ${(f.options ?? []).join(', ')}`;
+  if (f.type === 'multichoice') return `Mehrere, getrennt durch Komma: ${(f.options ?? []).join(', ')}`;
+  return f.placeholder ?? hint[f.type] ?? '';
+}
+
+/** Prüft und normalisiert eine Antwort je Fragetyp. Leere optionale Antworten sind gültig (Wert ''). */
+export function validateAnswer(f: FormField, raw: string): { ok: true; value: string } | { ok: false; error: string } {
+  const v = raw.trim();
+  const bad = (error: string) => ({ ok: false as const, error: `„${f.label}“: ${error}` });
+  if (!v) return f.required ? bad('Bitte beantworten.') : { ok: true, value: '' };
+  switch (f.type) {
+    case 'number':
+      return /^-?\d{1,15}([.,]\d{1,6})?$/.test(v) ? { ok: true, value: v.replace(',', '.') } : bad('Bitte eine Zahl eingeben.');
+    case 'date': {
+      const m = /^(\d{1,2})\.(\d{1,2})\.(\d{4})$/.exec(v) ?? /^(\d{4})-(\d{1,2})-(\d{1,2})$/.exec(v);
+      if (!m) return bad('Bitte ein Datum als TT.MM.JJJJ eingeben.');
+      const [d, mo, y] = m[1]!.length === 4 ? [Number(m[3]), Number(m[2]), Number(m[1])] : [Number(m[1]), Number(m[2]), Number(m[3])];
+      const dt = new Date(Date.UTC(y!, mo! - 1, d));
+      if (dt.getUTCFullYear() !== y || dt.getUTCMonth() !== mo! - 1 || dt.getUTCDate() !== d) return bad('Das Datum gibt es nicht.');
+      return { ok: true, value: `${String(d).padStart(2, '0')}.${String(mo).padStart(2, '0')}.${y}` };
+    }
+    case 'yesno': {
+      const l = v.toLowerCase();
+      if (['ja', 'j', 'yes', 'y'].includes(l)) return { ok: true, value: 'Ja' };
+      if (['nein', 'n', 'no'].includes(l)) return { ok: true, value: 'Nein' };
+      return bad('Bitte mit Ja oder Nein antworten.');
+    }
+    case 'user': {
+      const id = /^<@!?(\d{5,25})>$/.exec(v)?.[1] ?? (/^\d{5,25}$/.test(v) ? v : null);
+      return id ? { ok: true, value: `<@${id}>` } : bad('Bitte eine @Erwähnung oder Discord-ID eingeben.');
+    }
+    case 'choice': {
+      const hit = (f.options ?? []).find((o) => o.toLowerCase() === v.toLowerCase());
+      return hit ? { ok: true, value: hit } : bad(`Bitte eine dieser Antworten wählen: ${(f.options ?? []).join(', ')}.`);
+    }
+    case 'multichoice': {
+      const picked: string[] = [];
+      for (const part of v.split(/[,;]/).map((x) => x.trim()).filter(Boolean)) {
+        const hit = (f.options ?? []).find((o) => o.toLowerCase() === part.toLowerCase());
+        if (!hit) return bad(`„${part.slice(0, 40)}“ ist keine gültige Antwort. Erlaubt: ${(f.options ?? []).join(', ')}.`);
+        if (!picked.includes(hit)) picked.push(hit);
+      }
+      return picked.length ? { ok: true, value: picked.join(', ') } : bad('Bitte mindestens eine Antwort wählen.');
+    }
+    default:
+      return { ok: true, value: v };
+  }
 }
 
 export const listCategories = (guildId: string, onlyActive = false) => prisma.ticketCategory.findMany({ where: { guildId: assertGuildId(guildId), ...(onlyActive ? { active: true } : {}) }, orderBy: { name: 'asc' } });

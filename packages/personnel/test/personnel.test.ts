@@ -3,6 +3,7 @@ import { DiscordApiError } from '@nexus/discord';
 import { permissionRepository, prisma } from '@nexus/database';
 import { afterAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import {
+  assignNumberAfterTraining,
   effectiveState,
   setTeamState,
   PersonnelError,
@@ -191,7 +192,7 @@ describe('Personalakte anlegen und ändern', () => {
 describe('Dienstnummern', () => {
   it('Format wird gespeichert; automatische Nummern zählen hoch und überspringen vergebene', async () => {
     await setNumberFormat(G, { prefix: 'EN-', digits: 3, next: 5 }, ACTOR);
-    expect(await getNumberFormat(G)).toEqual({ prefix: 'EN-', digits: 3, next: 5 });
+    expect(await getNumberFormat(G)).toEqual({ prefix: 'EN-', digits: 3, next: 5, assign: 'TRAINING' });
     const a = await rec(1);
     await setServiceNumber(G, a.id, 'EN-006', ACTOR); // manuell die „übernächste“
     const first = await generateServiceNumber(G);
@@ -533,6 +534,48 @@ describe('Zugriff (Team-Bereich, Eigenzugriff, Sperren)', () => {
 
 // --- Annahme-Pipeline ---------------------------------------------------------------
 
+describe('Dienstgrad: Symbol und Farbe (Phase 51)', () => {
+  it('speichert Symbol und Farbe (Farbe normalisiert), lehnt Ungültiges ab, Änderung bleibt beim Bearbeiten erhalten', async () => {
+    const r = await saveRank(G, { name: 'Hauptkommissar', order: 6, icon: '⭐', color: '#3366cc' }, ACTOR);
+    expect(r).toMatchObject({ icon: '⭐', color: '#3366CC' });
+    await expect(saveRank(G, { name: 'X1', order: 1, color: 'blau' }, ACTOR)).rejects.toMatchObject({ code: 'invalid' });
+    await expect(saveRank(G, { name: 'X2', order: 1, color: '#12345' }, ACTOR)).rejects.toMatchObject({ code: 'invalid' });
+    await expect(saveRank(G, { name: 'X3', order: 1, icon: 'zu lang!!!' }, ACTOR)).rejects.toMatchObject({ code: 'invalid' });
+    const upd = await saveRank(G, { id: r.id, name: 'Hauptkommissar', order: 7, icon: '⭐', color: '#3366CC' }, ACTOR);
+    expect(upd).toMatchObject({ order: 7, icon: '⭐', color: '#3366CC' });
+    const cleared = await saveRank(G, { id: r.id, name: 'Hauptkommissar', order: 7 }, ACTOR);
+    expect(cleared).toMatchObject({ icon: null, color: null });
+  });
+});
+
+describe('Dienstnummer nach der ersten Ausbildung (Phase 51)', () => {
+  it('Standard: nach Ausbildung; Annahme vergibt nichts; Vergabe nur einmal, nur für aktive Akten ohne Nummer', async () => {
+    expect((await getNumberFormat(G)).assign).toBe('TRAINING');
+    await setNumberFormat(G, { prefix: 'P-', digits: 3, next: 1 }, ACTOR);
+    const a = await rec(1);
+    expect(a.serviceNumber).toBeNull();
+    expect(await assignNumberAfterTraining(G, a.userId, ACTOR)).toBe('P-001');
+    expect(await assignNumberAfterTraining(G, a.userId, ACTOR)).toBeNull(); // zweite bestandene Ausbildung: keine zweite Nummer
+    expect((await getRecordByUser(G, a.userId))?.serviceNumber).toBe('P-001');
+    const b = await rec(2);
+    expect(await assignNumberAfterTraining(G, b.userId, ACTOR)).toBe('P-002'); // nie doppelt
+    expect(await assignNumberAfterTraining(G, '900000000000999888', ACTOR)).toBeNull(); // keine Akte
+    const c = await rec(3);
+    await archiveRecord(G, c.id, 'Ausgetreten', ACTOR);
+    expect(await assignNumberAfterTraining(G, c.userId, ACTOR)).toBeNull(); // geschlossene Akte
+  });
+
+  it('Modus „nie“ und „bei Annahme“: nach Ausbildung keine automatische Nummer; ungültiger Modus abgelehnt; manuell bleibt möglich', async () => {
+    await expect(setNumberFormat(G, { assign: 'IRGENDWANN' }, ACTOR)).rejects.toMatchObject({ code: 'invalid' });
+    const a = await rec(1);
+    for (const mode of ['OFF', 'ACCEPT']) {
+      await setNumberFormat(G, { assign: mode }, ACTOR);
+      expect(await assignNumberAfterTraining(G, a.userId, ACTOR)).toBeNull();
+    }
+    expect((await setServiceNumber(G, a.id, 'MAN-1', ACTOR)).serviceNumber).toBe('MAN-1'); // manuelle Korrektur
+  });
+});
+
 describe('Annahme: Personalakte, Dienstnummer, Dienstgrad, Team, Probezeit', () => {
   const APPLICANT = U(50);
   async function submission(
@@ -596,7 +639,7 @@ describe('Annahme: Personalakte, Dienstnummer, Dienstgrad, Team, Probezeit', () 
 
   it('legt Akte (RP-Name aus der Antwort), Dienstnummer, Einstiegsdienstgrad, Team und Probezeit an', async () => {
     const f = fakePort();
-    await setNumberFormat(G, { prefix: 'EN-', digits: 3, next: 1 }, ACTOR);
+    await setNumberFormat(G, { prefix: 'EN-', digits: 3, next: 1, assign: 'ACCEPT' }, ACTOR);
     const entry = await saveRank(
       G,
       { name: 'Polizeianwärter', order: 1, isEntry: true, discordRoleId: '555555' },
@@ -651,6 +694,7 @@ describe('Annahme: Personalakte, Dienstnummer, Dienstgrad, Team, Probezeit', () 
   });
 
   it('fehlt der Einstiegsdienstgrad, meldet der Schritt den Fehler ehrlich – Akte und Nummer bleiben', async () => {
+    await setNumberFormat(G, { assign: 'ACCEPT' }, ACTOR);
     const f = fakePort();
     const id = await submission({});
     const r: any = await accept(f.port, id);

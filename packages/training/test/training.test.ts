@@ -124,6 +124,7 @@ describe('Durchführung', () => {
     expect(r.roleResult).toBe('add:success');
     expect(roles.get(A)?.has(ROLE)).toBe(true);
     const rec = await prisma.personnelRecord.findFirstOrThrow({ where: { guildId: G, userId: A } });
+    expect(rec.serviceNumber).toBe('001'); // erste bestandene Ausbildung → Dienstnummer (Spezifikation 33)
     const entry = await prisma.personnelEntry.findFirstOrThrow({ where: { recordId: rec.id, kind: 'TRAINING' } });
     expect(entry.title).toContain('Grundausbildung');
     expect(entry.title).toContain('70');

@@ -1175,6 +1175,9 @@ model Rank {
   isEntry       Boolean  @default(false)
   /// Optionale Discord-Rolle, die mit dem Dienstgrad verbunden ist.
   discordRoleId String?
+  /// Anzeige: Symbol (Emoji) und Farbe (#RRGGBB).
+  icon          String?
+  color         String?
   active        Boolean  @default(true)
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt

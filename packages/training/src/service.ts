@@ -1,6 +1,6 @@
 import { applyRoleChanges, type DiscordPort } from '@nexus/automation';
 import { assertGuildId, auditRepository, prisma, type Prisma } from '@nexus/database';
-import { addEntry, getRecordByUser, revokeEntry } from '@nexus/personnel';
+import { addEntry, assignNumberAfterTraining, getRecordByUser, revokeEntry } from '@nexus/personnel';
 import { TrainingError } from './errors.js';
 import { PARTS, PART_LABEL, activeParts, evaluate, maxOf, type Part } from './rules.js';
 
@@ -288,6 +288,7 @@ async function settle(t: Awaited<ReturnType<typeof getTraining>>, p: Prisma.Trai
     }
   }
   const saved = await prisma.trainingParticipant.update({ where: { id: p.id }, data: { status, percent: ev.percent, finalizedAt: p.finalizedAt ?? new Date(), entryId, roleResult } });
+  if (status === 'PASSED') await assignNumberAfterTraining(gid, p.userId, actorId).catch(() => undefined); // erste bestandene Ausbildung → Dienstnummer
   if (status === 'PASSED') for (const hook of passHooks) await hook({ guildId: gid, userId: p.userId, courseId: t.courseId, trainingId: t.id, actorId, port }).catch(() => undefined);
   if (changed) await event(t.id, gid, status === 'PASSED' ? 'passed' : 'failed', actorId, { userId: p.userId, percent: ev.percent, roleResult });
   return { participant: saved, evaluation: ev, roleResult };

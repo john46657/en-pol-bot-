@@ -2,7 +2,7 @@ import { guildRepository, prisma } from '@nexus/database';
 import { afterAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import { createRestriction, revokeRestriction } from '@nexus/restrictions';
 import { saveSettings } from '../src/index.js';
-import { CLOSE_REASONS, TicketError, claim, setWaiting, closeTicket, deleteCategory, formatNumber, getByChannel, getByNumber, listTickets, openTicket, release, renderTranscript, saveCategory, setParticipant, setPriority, stats, ticketHistory, type Actor, type TicketDiscord, type TranscriptMessage } from '../src/index.js';
+import { CLOSE_REASONS, fieldPlaceholder, parseFormFields, validateAnswer, TicketError, claim, setWaiting, closeTicket, deleteCategory, formatNumber, getByChannel, getByNumber, listTickets, openTicket, release, renderTranscript, saveCategory, setParticipant, setPriority, stats, ticketHistory, type Actor, type TicketDiscord, type TranscriptMessage } from '../src/index.js';
 
 const G = 'tickettest-guild';
 const [U1, U2, STAFF, ADMIN, OTHER] = ['900000000000210001', '900000000000210002', '900000000000210003', '900000000000210004', '900000000000210005'];
@@ -239,5 +239,43 @@ describe('Status IN_PROGRESS / WAITING und Pflicht-Schließungsgrund (Phase 49)'
     const r = await closeTicket(G, t.id, 'Sonstiger Grund: Test', staff, d);
     expect(r.ticket).toMatchObject({ status: 'CLOSED', closeReason: 'Sonstiger Grund: Test', closedBy: STAFF });
     expect(r.ticket.closedAt).not.toBeNull();
+  });
+});
+
+describe('Fragetypen im Ticket-Formular (Phase 51)', () => {
+  const f = (type: string, extra = {}) => parseFormFields([{ id: 'a', label: 'Frage', type, required: true, ...extra }])[0]!;
+  const ok = (field: ReturnType<typeof f>, raw: string) => { const r = validateAnswer(field, raw); expect(r.ok, raw).toBe(true); return (r as { value: string }).value; };
+  const no = (field: ReturnType<typeof f>, raw: string) => expect(validateAnswer(field, raw).ok, raw).toBe(false);
+
+  it('alte Felder (nur style) bleiben text/paragraph; Auswahl ohne Optionen wird verworfen; höchstens 10 Optionen, 5 Felder', () => {
+    expect(parseFormFields([{ label: 'A', style: 'paragraph' }, { label: 'B' }]).map((x) => x.type)).toEqual(['paragraph', 'text']);
+    expect(parseFormFields([{ label: 'C', type: 'choice', options: ['nur eine'] }])).toEqual([]);
+    expect(f('choice', { options: Array.from({ length: 15 }, (_, i) => `o${i}`) }).options).toHaveLength(10);
+    expect(parseFormFields(Array.from({ length: 8 }, (_, i) => ({ label: `F${i}` })))).toHaveLength(5);
+    expect(f('unbekannt').type).toBe('text');
+  });
+  it('Zahl, Datum, Ja/Nein, Benutzer', () => {
+    expect(ok(f('number'), '12,5')).toBe('12.5');
+    ['abc', '1e5', '12,'].forEach((x) => no(f('number'), x));
+    expect(ok(f('date'), '4.10.2026')).toBe('04.10.2026');
+    expect(ok(f('date'), '2026-10-04')).toBe('04.10.2026');
+    ['31.02.2026', '4.13.2026', 'morgen'].forEach((x) => no(f('date'), x));
+    expect([ok(f('yesno'), 'ja'), ok(f('yesno'), 'N'), ok(f('yesno'), 'Yes')]).toEqual(['Ja', 'Nein', 'Ja']);
+    no(f('yesno'), 'vielleicht');
+    expect(ok(f('user'), '<@!123456789012>')).toBe('<@123456789012>');
+    expect(ok(f('user'), '123456789012')).toBe('<@123456789012>');
+    ['@jemand', '12'].forEach((x) => no(f('user'), x));
+  });
+  it('Auswahl und Mehrfachauswahl nur aus den Optionen (Groß/Klein egal), Pflicht und optional', () => {
+    const c = f('choice', { options: ['Support', 'Beschwerde'] });
+    expect(ok(c, 'beschwerde')).toBe('Beschwerde');
+    no(c, 'Sonstiges');
+    const m = f('multichoice', { options: ['A', 'B', 'C'] });
+    expect(ok(m, 'a, c; A')).toBe('A, C');
+    no(m, 'A, D');
+    no(f('text'), '  ');
+    expect(ok(f('number', { required: false }), '')).toBe('');
+    expect(fieldPlaceholder(c)).toContain('Support, Beschwerde');
+    expect(fieldPlaceholder(f('date'))).toBe('TT.MM.JJJJ');
   });
 });

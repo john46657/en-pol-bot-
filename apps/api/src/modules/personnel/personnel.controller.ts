@@ -518,7 +518,7 @@ export class PersonnelStructureController {
     const num = (v: unknown) => (typeof v === 'number' ? v : undefined);
     return setNumberFormat(
       guildId,
-      { prefix: str(body['prefix']), digits: num(body['digits']), next: num(body['next']) },
+      { prefix: str(body['prefix']), digits: num(body['digits']), next: num(body['next']), assign: str(body['assign']) },
       user.id,
     );
   }
@@ -530,6 +530,8 @@ export class PersonnelStructureController {
       order: typeof b['order'] === 'number' ? b['order'] : Number.NaN,
       isEntry: b['isEntry'] === true,
       discordRoleId: str(b['discordRoleId']) || null,
+      icon: str(b['icon']) || null,
+      color: str(b['color']) || null,
       active: b['active'] !== false,
     };
   }
