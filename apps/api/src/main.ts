@@ -10,7 +10,8 @@ async function bootstrap() {
   const env = loadEnv();
   const app = await NestFactory.create(AppModule, { rawBody: true });
   configureApp(app);
-  await app.listen(env.PORT);
+  await app.listen(env.PORT, env.HOST);
+  new Logger('Bootstrap').log(`API lauscht auf ${env.HOST}:${env.PORT} (GET /health)`);
   if (env.NODE_ENV === 'production') {
     // Tägliche Aufbewahrungsregeln (Sessions, Login-Historie, gelesene Benachrichtigungen). Audit-Logs bleiben unberührt.
     const log = new Logger('Retention');

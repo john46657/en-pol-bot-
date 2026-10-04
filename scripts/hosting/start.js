@@ -23,7 +23,12 @@ if (fs.existsSync(envFile)) {
 for (const [k, v] of Object.entries(process.env)) if (v === '') delete process.env[k];
 
 process.env.NODE_ENV = process.env.NODE_ENV || 'production';
-process.env.PORT = process.env.PORT || process.env.SERVER_PORT || '3000';
+// Der vom Panel zugewiesene Port (SERVER_PORT) gewinnt vor einem evtl. alten PORT – sonst lauscht die API woanders als die Domain hinzeigt (502).
+if (process.env.SERVER_PORT && process.env.PORT && process.env.SERVER_PORT !== process.env.PORT) {
+  log(`WARNUNG: PORT=${process.env.PORT} und SERVER_PORT=${process.env.SERVER_PORT} sind verschieden – es gilt SERVER_PORT (der Port deines Servers im Panel). Entferne die Variable PORT.`);
+}
+process.env.PORT = process.env.SERVER_PORT || process.env.PORT || '3000';
+process.env.HOST = process.env.HOST || '0.0.0.0';
 process.env.WEB_DIST = process.env.WEB_DIST || path.join(root, 'web');
 
 if (/HIER_/i.test(process.env.DATABASE_URL || '')) die('DATABASE_URL ist noch nicht ausgefüllt (Platzhalter "HIER_…"). Trage die PostgreSQL-Verbindung ein.');
@@ -81,11 +86,33 @@ function shutdown(code = 0) {
 process.on('SIGTERM', () => shutdown(0));
 process.on('SIGINT', () => shutdown(0));
 
-log(`Starte API + Web auf Port ${process.env.PORT} …`);
+log(`Starte API + Web auf ${process.env.HOST}:${process.env.PORT} …`);
 start('API', 'api/dist/main.js', {}, false);
+
+// Diagnose: antwortet die API wirklich auf dem Port? (Hilft bei „502“ – die Konsole zeigt dann Ursache statt Schweigen.)
+function checkHealth(attempt = 1) {
+  const req = require('node:http').get({ host: '127.0.0.1', port: Number(process.env.PORT), path: '/health', timeout: 3000 }, (res) => {
+    res.resume();
+    if (res.statusCode === 200) log(`API ist erreichbar: http://127.0.0.1:${process.env.PORT}/health → 200. Öffentlich: deine Panel-Domain muss auf Port ${process.env.PORT} zeigen.`);
+    else retry(`HTTP ${res.statusCode}`);
+  });
+  req.on('error', (e) => retry(e.code || e.message));
+  req.on('timeout', () => req.destroy());
+  function retry(why) {
+    if (stopping) return;
+    if (attempt >= 60) log(`WARNUNG: /health antwortet nach 60 s nicht (${why}). Prüfe die Konsole oben auf Fehler (Datenbank? Speicher?).`);
+    else setTimeout(() => checkHealth(attempt + 1), 1000).unref();
+  }
+}
+setTimeout(() => checkHealth(), 1000).unref();
+
 if (process.env.DISCORD_TOKEN) {
+  // Der Bot spricht im gemeinsamen Betrieb immer mit der lokalen API im selben Prozess-Verbund. Eine gesetzte öffentliche
+  // API_URL (z. B. die Panel-Domain) würde bei jedem Panel-Problem den Bot mit abschalten und ist hier unnötig.
+  const botApi = process.env.NEXUS_BOT_API_URL || `http://127.0.0.1:${process.env.PORT}`;
+  if (process.env.API_URL && process.env.API_URL !== botApi) log(`Hinweis: API_URL=${process.env.API_URL} wird für den Bot ignoriert, er nutzt ${botApi} (zum Überschreiben NEXUS_BOT_API_URL setzen).`);
   log('Starte Discord-Bot …');
-  start('Bot', 'bot/dist/index.js', { API_URL: process.env.API_URL || `http://127.0.0.1:${process.env.PORT}` }, true);
+  start('Bot', 'bot/dist/index.js', { API_URL: botApi }, true);
 } else {
   log('Discord-Bot nicht gestartet (DISCORD_TOKEN nicht gesetzt).');
 }

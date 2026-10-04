@@ -2,7 +2,11 @@ import { z } from 'zod';
 
 const schema = z.object({
   NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
-  PORT: z.coerce.number().default(3000),
+  PORT: z.coerce.number().int().min(1).max(65535).default(3000),
+  /** Vom Hosting-Panel zugewiesener Port (z. B. bot-hosting.net). Hat Vorrang vor `PORT`, damit ein altes `PORT=3000` die Domain nicht ins Leere zeigen lässt. */
+  SERVER_PORT: z.coerce.number().int().min(1).max(65535).optional(),
+  /** Adresse, auf der die API lauscht. `0.0.0.0` = von außen erreichbar (nötig hinter dem Panel-Proxy); nie nur 127.0.0.1. */
+  HOST: z.string().min(1).default('0.0.0.0'),
   DATABASE_URL: z.string().min(1),
   SESSION_SECRET: z.string().min(16).default('dev-only-insecure-session-secret'),
   /** Swagger UI unter /api/docs. Standard: nur in Entwicklung (in Produktion würde es die API-Struktur öffentlich zeigen). */
@@ -27,5 +31,6 @@ export function loadEnv(source: NodeJS.ProcessEnv = process.env): Env {
   if (env.NODE_ENV === 'production' && env.SESSION_SECRET === 'dev-only-insecure-session-secret') {
     throw new Error('SESSION_SECRET must be set in production');
   }
-  return env;
+  // Der Port des Panels gewinnt; danach gilt überall nur noch `env.PORT`
+  return { ...env, PORT: env.SERVER_PORT ?? env.PORT };
 }
