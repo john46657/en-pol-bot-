@@ -382,9 +382,16 @@ function History({ guildId }: { guildId: string }) {
   const q = useQuery({
     queryKey: ['design-history', guildId],
     queryFn: () =>
-      api<{ id: string; at: string; actorId: string | null; icon: string; text: string }[]>(
-        `/guilds/${guildId}/design/history`,
-      ),
+      api<
+        {
+          id: string;
+          at: string;
+          actorId: string | null;
+          actorName: string | null;
+          icon: string;
+          text: string;
+        }[]
+      >(`/guilds/${guildId}/design/history`),
   });
   if (!q.data?.length) return null;
   return (
@@ -400,7 +407,7 @@ function History({ guildId }: { guildId: string }) {
               <br />
               <small className="muted">
                 {new Date(e.at).toLocaleString('de-DE')}
-                {e.actorId ? ` · Benutzer ${e.actorId}` : ' · automatisch'}
+                {e.actorId ? ` · ${e.actorName ?? `Benutzer ${e.actorId}`}` : ' · automatisch'}
               </small>
             </span>
           </li>

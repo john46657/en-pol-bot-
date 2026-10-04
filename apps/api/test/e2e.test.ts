@@ -866,6 +866,16 @@ describe('Dashboard-Design (Phase 37)', () => {
       /Theme „.+“ (erstellt|aktiviert)/,
     );
     expect(h.data.every((e: { icon: string; at: string }) => e.icon && e.at)).toBe(true);
+    // Benutzername statt nur ID, sobald der Benutzer bekannt ist; sonst bleibt es bei der ID
+    await prisma.user.upsert({
+      where: { id: ADMIN },
+      update: { username: 'admin-test', globalName: 'Admin Test' },
+      create: { id: ADMIN, username: 'admin-test', globalName: 'Admin Test' },
+    });
+    const named = await call('GET', d('/history'), ADMIN);
+    expect(
+      named.data.some((e: { actorId: string; actorName: string }) => e.actorName === 'Admin Test'),
+    ).toBe(true);
   });
 
   it('Navigation: Rollenliste für den Editor (ohne @everyone) und eigene Rollen für die Menü-Sichtbarkeit', async () => {

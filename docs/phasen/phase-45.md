@@ -14,3 +14,7 @@
 ## Grenzen
 - Überschreibungen werden hier nur angezeigt und entfernt, nicht neu angelegt (das geschieht über den Editor bzw. die API).
 - Modus „Custom“ (Punkt 29) bleibt offen: Dark und Light sind unabhängig konfigurierbar, ein dritter Modus ist nicht spezifiziert genug.
+
+## Zusatz: Benutzername im Änderungsprotokoll
+- `GET design/history` liefert zusätzlich `actorName` (Anzeigename, sonst Benutzername aus der Benutzertabelle). Das Dashboard zeigt den Namen; ist der Benutzer nicht bekannt, bleibt es bei „Benutzer <ID>“.
+- Test: API-E2E (Name erscheint, sobald der Benutzer bekannt ist). Der Browser-Test prüft weiter die ID, weil der Test-Besitzer keine Benutzerzeile hat (Rückfall).

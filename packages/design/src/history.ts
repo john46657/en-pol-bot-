@@ -4,6 +4,7 @@ export interface HistoryEntry {
   id: string;
   at: Date;
   actorId: string | null;
+  actorName: string | null;
   icon: string;
   text: string;
 }
@@ -38,6 +39,14 @@ export async function getDesignHistory(guildId: string): Promise<HistoryEntry[]>
     take: 50,
     select: { id: true, action: true, actorId: true, createdAt: true, after: true, before: true },
   });
+  const ids = [...new Set(rows.map((r) => r.actorId).filter((x): x is string => !!x))];
+  const users = ids.length
+    ? await prisma.user.findMany({
+        where: { id: { in: ids } },
+        select: { id: true, username: true, globalName: true },
+      })
+    : [];
+  const names = new Map(users.map((u) => [u.id, u.globalName ?? u.username]));
   return rows.map((r) => {
     const after =
       typeof r.after === 'object' && r.after !== null && !Array.isArray(r.after)
@@ -61,6 +70,7 @@ export async function getDesignHistory(guildId: string): Promise<HistoryEntry[]>
       id: r.id,
       at: r.createdAt,
       actorId: r.actorId,
+      actorName: r.actorId ? (names.get(r.actorId) ?? null) : null,
       icon: ICON[r.action] ?? '🎨',
       text: text.slice(0, 300),
     };
