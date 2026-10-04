@@ -618,3 +618,28 @@ export interface PenaltyRegister {
   seizedPlates: string[];
   penalties: PenaltyRow[];
 }
+
+export interface CourseRow {
+  id: string;
+  name: string;
+  description: string | null;
+  active: boolean;
+  theoryMax: number;
+  practiceMax: number;
+  examMax: number;
+  passPercent: number;
+  grantRoleId: string | null;
+  requiredRoleIds: string[];
+  maxParticipants: number;
+}
+export interface TrainingRow {
+  id: string;
+  number: number;
+  status: 'PLANNED' | 'RUNNING' | 'FINISHED' | 'CANCELLED';
+  scheduledAt: string;
+  location: string | null;
+  trainerIds: string[];
+  maxParticipants: number;
+  course: CourseRow;
+  participants: { id: string; userId: string; status: 'ENROLLED' | 'PASSED' | 'FAILED' | 'WITHDRAWN' | 'REMOVED'; theoryPoints: number | null; practicePoints: number | null; examPoints: number | null; percent: number | null; roleResult: string | null }[];
+}

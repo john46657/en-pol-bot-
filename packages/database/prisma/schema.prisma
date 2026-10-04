@@ -258,6 +258,21 @@ enum PenaltyStatus {
   REVOKED
 }
 
+enum TrainingStatus {
+  PLANNED
+  RUNNING
+  FINISHED
+  CANCELLED
+}
+
+enum ParticipantStatus {
+  ENROLLED
+  PASSED
+  FAILED
+  WITHDRAWN
+  REMOVED
+}
+
 enum PermissionEffect {
   ALLOW
   DENY
@@ -314,6 +329,8 @@ model Guild {
   wantedNotices      WantedNotice[]
   vehicles           Vehicle[]
   penalties          Penalty[]
+  trainingCourses    TrainingCourse[]
+  trainings          Training[]
 
   applications      Application[]
   panels            ApplicationPanel[]
@@ -1662,4 +1679,110 @@ model Penalty {
   @@index([guildId, subjectKey])
   @@index([guildId, issuedBy])
   @@map("penalties")
+}
+
+// ---------------------------------------------------------------------------
+// Phase 21: Ausbildungssystem
+// ---------------------------------------------------------------------------
+
+/// Ausbildung (Vorlage): Theorie, Praxis und Prüfung mit je maximalen Punkten (0 = Teil entfällt), Bestehensgrenze, automatische Rolle.
+model TrainingCourse {
+  id              String   @id @default(cuid())
+  guildId         String
+  name            String
+  description     String?
+  active          Boolean  @default(true)
+  theoryMax       Int      @default(0)
+  practiceMax     Int      @default(0)
+  examMax         Int      @default(0)
+  /// Bestehensgrenze in Prozent der Gesamtpunkte (die Prüfung muss zusätzlich für sich bestanden sein).
+  passPercent     Int      @default(60)
+  /// Rolle, die bei Bestehen automatisch vergeben wird.
+  grantRoleId     String?
+  /// Wer sich anmelden darf (mind. eine dieser Rollen; leer = jeder).
+  requiredRoleIds String[]
+  maxParticipants Int      @default(10)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  guild     Guild      @relation(fields: [guildId], references: [id], onDelete: Cascade)
+  trainings Training[]
+
+  @@unique([guildId, name])
+  @@map("training_courses")
+}
+
+model TrainingCounter {
+  guildId String @id
+  last    Int    @default(0)
+
+  @@map("training_counters")
+}
+
+/// Eine Durchführung einer Ausbildung (Termin) mit Ausbildern und Teilnehmern.
+model Training {
+  id              String         @id @default(cuid())
+  guildId         String
+  number          Int
+  courseId        String
+  status          TrainingStatus @default(PLANNED)
+  scheduledAt     DateTime
+  location        String?
+  notes           String?
+  trainerIds      String[]
+  maxParticipants Int
+  createdBy       String
+  startedAt       DateTime?
+  finishedAt      DateTime?
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+
+  guild        Guild                 @relation(fields: [guildId], references: [id], onDelete: Cascade)
+  course       TrainingCourse        @relation(fields: [courseId], references: [id])
+  participants TrainingParticipant[]
+  events       TrainingEvent[]
+
+  @@unique([guildId, number])
+  @@index([guildId, status, scheduledAt])
+  @@map("trainings")
+}
+
+model TrainingParticipant {
+  id             String            @id @default(cuid())
+  guildId        String
+  trainingId     String
+  userId         String
+  status         ParticipantStatus @default(ENROLLED)
+  theoryPoints   Int?
+  practicePoints Int?
+  examPoints     Int?
+  /// Ergebnis in Prozent (erst, wenn alle Teile bewertet sind).
+  percent        Float?
+  gradedBy       String?
+  finalizedAt    DateTime?
+  /// Eintrag „TRAINING“ in der Personalakte (bei Bestehen).
+  entryId        String?
+  roleResult     String?
+  joinedAt       DateTime          @default(now())
+
+  training Training @relation(fields: [trainingId], references: [id], onDelete: Cascade)
+
+  @@unique([trainingId, userId])
+  @@index([guildId, userId])
+  @@map("training_participants")
+}
+
+model TrainingEvent {
+  id         String   @id @default(cuid())
+  guildId    String
+  trainingId String
+  type       String
+  at         DateTime @default(now())
+  actorId    String?
+  data       Json?
+
+  training Training @relation(fields: [trainingId], references: [id], onDelete: Cascade)
+
+  @@index([trainingId, at])
+  @@map("training_events")
 }
