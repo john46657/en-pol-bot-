@@ -19,6 +19,7 @@
     "@nexus/discord": "workspace:*",
     "@nexus/permissions": "workspace:*",
     "@nexus/personnel": "workspace:*",
+    "@nexus/shifts": "workspace:*",
     "@nexus/types": "workspace:*",
     "@nexus/validation": "workspace:*",
     "discord.js": "^14.21.0",

@@ -52,6 +52,12 @@ export const SELECTION_SLOTS: readonly SelectionSlot[] = [
     label: 'Büro-Warteraum',
     description: 'Voice-Channel, der als Warteraum gilt.',
   },
+  {
+    key: 'shift-alert-channel',
+    kind: 'text',
+    label: 'Schicht-Hinweise',
+    description: 'Hier meldet der Bot Schichten, die ungewöhnlich lange laufen (vergessenes Dienstende).',
+  },
 ];
 
 export const getSlot = (key: string): SelectionSlot | undefined =>

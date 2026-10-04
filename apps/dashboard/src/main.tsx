@@ -14,6 +14,7 @@ import { Logs } from './pages/Logs';
 import { Personnel } from './pages/Personnel';
 import { PersonnelDetail } from './pages/PersonnelDetail';
 import { PersonnelStructure } from './pages/PersonnelStructure';
+import { Shifts } from './pages/Shifts';
 import { ProfileEditor, Profiles } from './pages/Profiles';
 import { SubmissionDetail } from './pages/SubmissionDetail';
 import { Submissions } from './pages/Submissions';
@@ -57,6 +58,7 @@ createRoot(document.getElementById('root')!).render(
                   <Route path="personnel" element={<Personnel />} />
                   <Route path="personnel/:recordId" element={<PersonnelDetail />} />
                   <Route path="personnel-structure" element={<PersonnelStructure />} />
+                  <Route path="shifts" element={<Shifts />} />
                   <Route path="panels" element={<Panels />} />
                   <Route path="panels/:panelId" element={<PanelEditor />} />
                   <Route path="profiles" element={<Profiles />} />

@@ -178,6 +178,12 @@ enum PersonnelStatus {
   ARCHIVED
 }
 
+enum ShiftStatus {
+  ACTIVE
+  PAUSED
+  ENDED
+}
+
 enum PermissionEffect {
   ALLOW
   DENY
@@ -224,6 +230,8 @@ model Guild {
   ranks              Rank[]
   teams              Team[]
   personnelRecords   PersonnelRecord[]
+  shiftTypes         ShiftType[]
+  shifts             Shift[]
 
   applications      Application[]
   panels            ApplicationPanel[]
@@ -1049,4 +1057,85 @@ model PersonnelEvent {
 
   @@index([recordId, createdAt])
   @@map("personnel_events")
+}
+
+// ---------------------------------------------------------------------------
+// Phase 12: Shifts
+// ---------------------------------------------------------------------------
+
+/// Shift-Typ (Streife, SEK, Ausbildung, Führung …) mit konfigurierbarer Rollenanforderung.
+model ShiftType {
+  id                 String   @id @default(cuid())
+  guildId            String
+  name               String
+  description        String?
+  emoji              String?
+  /// Mindestens eine dieser Discord-Rollen ist nötig (leer = keine Anforderung).
+  requiredRoleIds    String[]
+  /// Schichten, die länger laufen, gelten als ungewöhnlich lang (Benachrichtigung).
+  maxDurationMinutes Int      @default(480)
+  active             Boolean  @default(true)
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  guild  Guild   @relation(fields: [guildId], references: [id], onDelete: Cascade)
+  shifts Shift[]
+
+  @@unique([guildId, name])
+  @@index([guildId])
+  @@map("shift_types")
+}
+
+/// Eine Schicht. `openKey` = 'open' solange sie läuft (NULL danach): die Unique-Bedingung erlaubt je Mitglied und
+/// Server höchstens eine offene Schicht – auch bei gleichzeitigen Starts.
+model Shift {
+  id              String      @id @default(cuid())
+  guildId         String
+  userId          String
+  typeId          String
+  /// Verknüpfte Personalakte (falls vorhanden).
+  recordId        String?
+  status          ShiftStatus @default(ACTIVE)
+  openKey         String?
+  startedAt       DateTime    @default(now())
+  endedAt         DateTime?
+  /// Beginn der aktuellen Pause (nur im Status PAUSED).
+  pausedAt        DateTime?
+  /// Summe aller beendeten Pausen in Sekunden.
+  pausedSeconds   Int         @default(0)
+  /// Nettodauer in Sekunden (nur beendete Schichten).
+  durationSeconds Int?
+  endedBy         String?
+  /// manual | supervisor | corrected
+  endReason       String?
+  /// Wann die Benachrichtigung „ungewöhnlich lang“ gesendet wurde.
+  flaggedLongAt   DateTime?
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+
+  guild  Guild        @relation(fields: [guildId], references: [id], onDelete: Cascade)
+  type   ShiftType    @relation(fields: [typeId], references: [id])
+  events ShiftEvent[]
+
+  @@unique([guildId, userId, openKey])
+  @@index([guildId, userId, startedAt])
+  @@index([guildId, status])
+  @@index([guildId, typeId, startedAt])
+  @@map("shifts")
+}
+
+/// Rohdaten: jedes Ereignis einer Schicht (start, pause, resume, end, correct, flag …).
+model ShiftEvent {
+  id      String   @id @default(cuid())
+  guildId String
+  shiftId String
+  type    String
+  at      DateTime @default(now())
+  actorId String?
+  data    Json?
+
+  shift Shift @relation(fields: [shiftId], references: [id], onDelete: Cascade)
+
+  @@index([shiftId, at])
+  @@map("shift_events")
 }

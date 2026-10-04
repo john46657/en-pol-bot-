@@ -451,3 +451,31 @@ export interface NumberFormat {
   digits: number;
   next: number;
 }
+
+export interface ShiftTypeRow {
+  id: string;
+  name: string;
+  description: string | null;
+  emoji: string | null;
+  requiredRoleIds: string[];
+  maxDurationMinutes: number;
+  active: boolean;
+}
+export interface ShiftRow {
+  id: string;
+  userId: string;
+  status: 'ACTIVE' | 'PAUSED' | 'ENDED';
+  startedAt: string;
+  endedAt: string | null;
+  pausedSeconds: number;
+  durationSeconds: number | null;
+  endReason: string | null;
+  flaggedLongAt: string | null;
+  type: ShiftTypeRow;
+}
+export interface ShiftStatsRow {
+  count: number;
+  totalSeconds: number;
+  averageSeconds: number;
+  running: number;
+}

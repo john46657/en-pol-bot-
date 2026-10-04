@@ -2,6 +2,8 @@ import 'dotenv/config';
 import { Queue, Worker } from 'bullmq';
 import { Redis } from 'ioredis';
 import { pino } from 'pino';
+import { restDiscordPort } from '@nexus/automation';
+import { watchOverlongShifts } from '@nexus/shifts';
 
 /**
  * NEXUS Worker (Phase 0): verbindet sich mit Redis und betreibt die System-Queue.
@@ -17,6 +19,16 @@ const queue = new Queue('system', { connection, prefix });
 const worker = new Worker(
   'system',
   async (job) => {
+    if (job.name === 'shift-watch') {
+      const token = process.env['DISCORD_TOKEN'];
+      if (!token) {
+        log.warn('shift-watch übersprungen: DISCORD_TOKEN fehlt');
+        return { skipped: true };
+      }
+      const r = await watchOverlongShifts(restDiscordPort(token), new Date(), process.env['DASHBOARD_URL']);
+      if (r.flagged.length) log.info({ flagged: r.flagged.length }, 'ungewöhnlich lange Schichten gemeldet');
+      return { checked: r.checked, flagged: r.flagged.length };
+    }
     log.debug({ jobId: job.id, name: job.name }, 'job verarbeitet');
     return { at: new Date().toISOString() };
   },
@@ -26,6 +38,7 @@ const worker = new Worker(
 worker.on('failed', (job, err) => log.error({ jobId: job?.id, err }, 'job fehlgeschlagen'));
 
 await queue.upsertJobScheduler('heartbeat', { every: 60_000 }, { name: 'heartbeat' });
+await queue.upsertJobScheduler('shift-watch', { every: 5 * 60_000 }, { name: 'shift-watch' });
 log.info('Worker gestartet');
 
 async function shutdown(signal: string): Promise<void> {

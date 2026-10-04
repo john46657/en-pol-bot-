@@ -23,6 +23,7 @@ import { getCommand, listCommandData } from './commands/registry.js';
 import './commands/server.js';
 import './commands/diagnose.js';
 import './commands/akte.js';
+import './commands/schicht.js';
 
 const panelCommand = new SlashCommandBuilder()
   .setName('panel')
