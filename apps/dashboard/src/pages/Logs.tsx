@@ -58,7 +58,7 @@ export function Logs() {
 
   async function download() {
     try {
-      const res = await fetch(`${API_URL}/api/v1/guilds/${guildId}/audit-log/export?${params()}`, { credentials: 'include' });
+      const res = await fetch(`${API_URL}/api/v1/guilds/${guildId}/audit-log/export?${params()}`, { credentials: 'include', headers: { 'X-Requested-With': 'nexus' } });
       if (!res.ok) throw new Error(res.status === 403 ? 'Dafür fehlt dir die Berechtigung (Audit exportieren).' : `Export fehlgeschlagen (HTTP ${res.status}).`);
       const url = URL.createObjectURL(await res.blob());
       const a = document.createElement('a');

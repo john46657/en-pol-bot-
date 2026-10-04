@@ -23,6 +23,7 @@ import { OperationsModule } from './modules/operations/operations.module.js';
 import { RadioModule } from './modules/radio/radio.module.js';
 import { ShiftsModule } from './modules/shifts/shifts.module.js';
 import { MessagePanelsModule } from './modules/panels/panels.module.js';
+import { CsrfMiddleware, RateLimitMiddleware, SecurityHeadersMiddleware } from './common/security/security.middleware.js';
 import { DevUserMiddleware } from './common/middleware/dev-user.middleware.js';
 import { AuthMiddleware } from './common/middleware/auth.middleware.js';
 import { JwtAuthGuard } from './common/guards/jwt-auth.guard.js';
@@ -67,6 +68,9 @@ export class AppModule implements NestModule {
     // request.user setzen:
     //   1. DevUserMiddleware (dev-only, Header) – gewinnt vorrangig,
     //   2. AuthMiddleware (Session-JWT aus Bearer/Cookie).
+    consumer.apply(SecurityHeadersMiddleware, CsrfMiddleware).forRoutes('*');
     consumer.apply(DevUserMiddleware, AuthMiddleware).forRoutes('*');
+    // Rate Limit nach der Anmeldung (je Benutzer, sonst je IP)
+    consumer.apply(RateLimitMiddleware).forRoutes('*');
   }
 }

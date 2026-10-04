@@ -23,7 +23,7 @@ export async function api<T>(
       ...(init
         ? {
             method: init.method,
-            headers: { 'Content-Type': 'application/json' },
+            headers: { 'Content-Type': 'application/json', 'X-Requested-With': 'nexus' },
             body: JSON.stringify(init.body ?? {}),
           }
         : {}),
