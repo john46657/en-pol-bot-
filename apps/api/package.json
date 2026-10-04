@@ -27,6 +27,7 @@
     "@nexus/database": "workspace:*",
     "@nexus/discord": "workspace:*",
     "@nexus/fleet": "workspace:*",
+    "@nexus/health": "workspace:*",
     "@nexus/jobs": "workspace:*",
     "@nexus/office": "workspace:*",
     "@nexus/operations": "workspace:*",

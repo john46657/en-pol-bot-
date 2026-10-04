@@ -2,6 +2,7 @@ import { useQuery } from '@tanstack/react-query';
 import { useEffect, useState } from 'react';
 import { Link, NavLink, Outlet, useLocation, useParams } from 'react-router';
 import { api, guildIcon, type GuildOverview } from '../api';
+import { HealthBadge } from '../components/HealthBadge';
 import { UserMenu } from '../components/UserMenu';
 import { useLive } from '../live';
 
@@ -100,6 +101,7 @@ export function GuildLayout() {
             </NavLink>
           ))}
         </nav>
+        <HealthBadge />
       </aside>
       {open && (
         <button className="scrim" aria-label="Menü schließen" onClick={() => setOpen(false)} />

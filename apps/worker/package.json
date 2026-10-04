@@ -12,6 +12,7 @@
   },
   "dependencies": {
     "@nexus/automation": "workspace:*",
+    "@nexus/health": "workspace:*",
     "@nexus/jobs": "workspace:*",
     "@nexus/realtime": "workspace:*",
     "@nexus/shifts": "workspace:*",

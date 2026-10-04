@@ -167,6 +167,18 @@ describe('Dashboard-Login & Serverauswahl', () => {
   });
 });
 
+describe('Health', () => {
+  it('/health ist öffentlich, zeigt jede Komponente und enthält keine Geheimnisse; /live antwortet ohne Abhängigkeiten', async () => {
+    const r = await call('GET', '/health', null);
+    expect(r.status).toBe(200); // Datenbank erreichbar (ohne Redis/Bot/Worker nur „eingeschränkt“)
+    expect(Object.keys(r.data.components).sort()).toEqual(['api', 'bot', 'database', 'discord', 'redis', 'workers']);
+    expect(r.data.components.database.state).toBe('up');
+    expect(['up', 'degraded']).toContain(r.data.status);
+    expect(JSON.stringify(r.data)).not.toMatch(/postgres|password|e2e-secret|e2e-bot-token/i);
+    expect((await call('GET', '/health/live', null)).data).toEqual({ ok: true });
+  });
+});
+
 describe('Server-Zugriff & Rollenauswahl', () => {
   it('Nicht-Mitglied und Mitglied ohne Rechte werden serverseitig abgewiesen', async () => {
     expect((await call('GET', `/guilds/${G}/applications`, APPLICANT)).status).toBe(403);

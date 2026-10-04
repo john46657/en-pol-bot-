@@ -25,7 +25,7 @@
     "test:watch": "vitest"
   },
   "dependencies": {
-    "@prisma/client": "^6.11.0"
+    "@prisma/client": "^6.19.3"
   },
   "devDependencies": {
     "prisma": "^6.11.0",

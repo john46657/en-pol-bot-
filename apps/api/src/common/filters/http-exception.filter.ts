@@ -1,4 +1,4 @@
-import { ArgumentsHost, Catch, ExceptionFilter, HttpException, HttpStatus } from '@nestjs/common';
+import { ArgumentsHost, Catch, ExceptionFilter, HttpException, HttpStatus, Logger } from '@nestjs/common';
 import type { Response } from 'express';
 
 /**
@@ -7,6 +7,8 @@ import type { Response } from 'express';
  */
 @Catch()
 export class HttpExceptionFilter implements ExceptionFilter {
+  private readonly log = new Logger('Fehler');
+
   catch(exception: unknown, host: ArgumentsHost): void {
     const ctx = host.switchToHttp();
     const response = ctx.getResponse<Response>();
@@ -26,6 +28,9 @@ export class HttpExceptionFilter implements ExceptionFilter {
     }
 
     const message = exception instanceof Error ? exception.message : 'Unbekannter Fehler.';
+    // Unerwartete Fehler (5xx) mit Ort und Stacktrace protokollieren – ohne Anfrage-Inhalt, Header oder Cookies
+    const req = ctx.getRequest<{ method?: string; originalUrl?: string }>();
+    this.log.error(`${req.method ?? '?'} ${(req.originalUrl ?? '').split('?')[0]} → ${message}`, exception instanceof Error ? exception.stack : undefined);
     response.status(HttpStatus.INTERNAL_SERVER_ERROR).json({
       statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
       message,

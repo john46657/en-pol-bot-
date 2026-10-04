@@ -9,6 +9,7 @@ import {
 import { DMPhase, SubmissionStatus } from '@nexus/types';
 import { guildRepository, prisma, userRepository } from '@nexus/database';
 import { config } from './config.js';
+import { startHeartbeat } from '@nexus/health';
 import { log } from './logger.js';
 import { connectRedis } from './utils/lock.js';
 import { handleInteraction } from './interactions/handlers.js';
@@ -51,6 +52,8 @@ export function createClient(): Client {
   client.once(Events.ClientReady, async (readyClient) => {
     // Funk: Kontrolle aller Mitglieder in Funkkanälen (Schichtende, geänderte Whitelist)
     setInterval(() => void sweepRadio(readyClient), 60_000).unref();
+    // Lebenszeichen für `/health`, API und Überwachung (Redis, best effort)
+    startHeartbeat(config.redis.url, 'bot', () => ({ ready: readyClient.isReady(), ping: Math.max(0, Math.round(readyClient.ws.ping)), guilds: readyClient.guilds.cache.size }));
     log.info(
       { user: readyClient.user.tag, guilds: readyClient.guilds.cache.size },
       'NEXUS Bot bereit.',

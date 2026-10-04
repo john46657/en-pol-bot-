@@ -12,6 +12,7 @@
     "test": "vitest run"
   },
   "dependencies": {
+    "@nexus/health": "workspace:*",
     "@nexus/absences": "workspace:*",
     "@nexus/audit": "workspace:*",
     "@nexus/automation": "workspace:*",

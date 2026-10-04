@@ -41,3 +41,7 @@ pnpm-debug.log*
 *.pem
 *.key
 .dev
+
+# Produktion
+.env.production
+backups/

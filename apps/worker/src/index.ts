@@ -15,6 +15,7 @@ import {
   syncAllGuilds,
   trainingReminders,
 } from '@nexus/jobs';
+import { startHeartbeat } from '@nexus/health';
 import { startPublisher } from '@nexus/realtime';
 import { watchOverlongShifts } from '@nexus/shifts';
 
@@ -28,6 +29,7 @@ const prefix = process.env['QUEUE_PREFIX'] ?? 'nexus';
 const redisUrl = process.env['REDIS_URL'] ?? 'redis://localhost:6379';
 const connection = new Redis(redisUrl, { maxRetriesPerRequest: null });
 startPublisher(redisUrl); // Aktionen des Workers live ans Dashboard (best effort)
+const stopHeartbeat = startHeartbeat(redisUrl, 'worker', () => ({ discord: !!process.env['DISCORD_TOKEN'] }), prefix);
 
 const token = process.env['DISCORD_TOKEN'];
 const port = (): DiscordPort => {
@@ -67,6 +69,12 @@ const worker = new Worker(
 );
 
 worker.on('failed', (job, err) => log.error({ jobId: job?.id, err }, 'job fehlgeschlagen'));
+// Prozessweite Fehler protokollieren; ein verlorener Promise darf den Worker nicht stillschweigend beenden
+process.on('unhandledRejection', (reason) => log.error({ err: String(reason) }, 'Unhandled Rejection.'));
+process.on('uncaughtException', (error) => {
+  log.fatal({ err: String(error) }, 'Uncaught Exception – Worker wird beendet.');
+  process.exit(1);
+});
 
 await queue.upsertJobScheduler('heartbeat', { every: 60_000 }, { name: 'heartbeat' });
 for (const j of JOBS) await queue.upsertJobScheduler(j.name, { every: j.everyMs }, { name: j.name });
@@ -75,6 +83,7 @@ if (!token) log.warn('DISCORD_TOKEN fehlt – Jobs mit Discord-Zugriff schlagen 
 
 async function shutdown(signal: string): Promise<void> {
   log.info({ signal }, 'Worker fährt herunter');
+  stopHeartbeat();
   await worker.close();
   await queue.close();
   connection.disconnect();

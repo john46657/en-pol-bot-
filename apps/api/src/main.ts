@@ -27,6 +27,8 @@ async function bootstrap(): Promise<void> {
   app.use(cookieParser());
   app.useLogger(new Logger());
   app.setGlobalPrefix('api/v1');
+  // Kurzadresse für Überwachungswerkzeuge: /health → /api/v1/health
+  app.use('/health', (_req: unknown, res: { redirect(code: number, url: string): void }) => res.redirect(307, '/api/v1/health'));
 
   // Validierung: globale Pipeline → DTOs werden überall geprüft (§78)
   app.useGlobalPipes(
