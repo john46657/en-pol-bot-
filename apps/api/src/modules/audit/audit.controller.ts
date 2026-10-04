@@ -43,6 +43,6 @@ export class AuditController {
     const r = await exportCsv(filter);
     // Auch der Export ist nachvollziehbar
     await auditRepository.log({ guildId, actorId: user.id, action: 'audit.exported', resource: ['AuditLog', 'export'], after: { rows: r.rows, truncated: r.truncated, filter: { ...q } } as never, permission: 'audit.export' });
-    return new StreamableFile(Buffer.from(`﻿${r.csv}`, 'utf8'));
+    return new StreamableFile(Buffer.from(`${r.csv}`, 'utf8'));
   }
 }
