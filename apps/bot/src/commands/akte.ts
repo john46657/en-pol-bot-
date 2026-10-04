@@ -5,7 +5,7 @@ import {
   type GuildMember,
 } from 'discord.js';
 import { permissionDeniedMessage } from '@nexus/permissions';
-import { buildActor, getRecordByUser, recordSections, visibleSections } from '@nexus/personnel';
+import { TEAM_STATE_LABEL, buildActor, effectiveState, getRecordByUser, recordSections, visibleSections } from '@nexus/personnel';
 import { embeds } from '../core/embed-builder.js';
 import { permissionService } from '../services/permission.service.js';
 import { defineCommand } from './registry.js';
@@ -68,11 +68,7 @@ export async function runAkte(interaction: ChatInputCommandInteraction): Promise
     { name: 'Dienstgrad', value: record.rank?.name ?? '–', inline: true },
     { name: 'Team', value: record.team?.name ?? '–', inline: true },
     { name: 'Eintritt', value: date(record.joinedAt), inline: true },
-    {
-      name: 'Status',
-      value: record.status === 'ARCHIVED' ? '🗄️ Archiviert' : '🟢 Aktiv',
-      inline: true,
-    },
+    { name: 'Status', value: TEAM_STATE_LABEL[effectiveState(record)], inline: true },
   ];
   if (record.probationEndsAt && record.probationEndsAt.getTime() > Date.now()) {
     fields.push({

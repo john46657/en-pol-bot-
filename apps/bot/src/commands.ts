@@ -30,6 +30,8 @@ import './commands/funk.js';
 import './commands/einsatz.js';
 import './commands/gefahr.js';
 import './commands/fahndung.js';
+import './commands/personal.js';
+import './commands/sperre.js';
 import './commands/fahrzeug.js';
 import './commands/strafe.js';
 import './commands/ausbildung.js';
