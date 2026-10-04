@@ -528,3 +528,21 @@ export interface RadioChannelRow {
   requiresDuty: boolean;
   active: boolean;
 }
+
+export type OpStatusKey = 'REQUESTED' | 'EN_ROUTE' | 'ACTIVE' | 'COMPLETED' | 'CANCELLED';
+export interface OperationRow {
+  id: string;
+  number: number;
+  kind: string;
+  location: string;
+  priority: 'LOW' | 'NORMAL' | 'HIGH' | 'URGENT';
+  description: string | null;
+  status: OpStatusKey;
+  leaderId: string | null;
+  report: string | null;
+  outcome: string | null;
+  createdAt: string;
+  completedAt: string | null;
+  units: { id: string; unitId: string; callsign: string }[];
+  participants: { userId: string; isLeader: boolean; callsign: string | null }[];
+}

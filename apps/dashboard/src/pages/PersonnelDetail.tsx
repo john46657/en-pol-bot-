@@ -234,6 +234,20 @@ function Body({
           />
         ))}
 
+      {v.entries.some((e) => e.kind === 'OPERATION') && (
+        <>
+          <h2>Einsätze</h2>
+          <ul className="plain">
+            {v.entries.filter((e) => e.kind === 'OPERATION').slice(0, 20).map((e) => (
+              <li key={e.id} className="card">
+                <strong>{e.title}</strong> <small className="muted">{day(e.occurredAt)}</small>
+                {e.body && <div style={{ whiteSpace: 'pre-line' }}>{e.body}</div>}
+              </li>
+            ))}
+          </ul>
+        </>
+      )}
+
       <div className="actions">
         {v.can.archive &&
           (r.status === 'ACTIVE' ? (

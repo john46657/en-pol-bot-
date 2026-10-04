@@ -17,6 +17,7 @@
     "@nexus/core": "workspace:*",
     "@nexus/database": "workspace:*",
     "@nexus/discord": "workspace:*",
+    "@nexus/operations": "workspace:*",
     "@nexus/permissions": "workspace:*",
     "@nexus/personnel": "workspace:*",
     "@nexus/radio": "workspace:*",

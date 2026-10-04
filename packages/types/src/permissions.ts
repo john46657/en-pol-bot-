@@ -216,6 +216,15 @@ export const PERMISSION_CATALOG = [
     ],
   },
   {
+    module: 'operations',
+    label: 'Einsätze',
+    permissions: [
+      ['operations.view', 'Einsätze ansehen'],
+      ['operations.create', 'Einsätze anlegen (anfordern)'],
+      ['operations.manage', 'Einsätze verwalten (Einheiten zuweisen, Status, Abschluss)'],
+    ],
+  },
+  {
     module: 'radio',
     label: 'Funk',
     permissions: [

@@ -207,6 +207,21 @@ enum RadioArea {
   SPECIAL
 }
 
+enum OperationStatus {
+  REQUESTED
+  EN_ROUTE
+  ACTIVE
+  COMPLETED
+  CANCELLED
+}
+
+enum OperationPriority {
+  LOW
+  NORMAL
+  HIGH
+  URGENT
+}
+
 enum PermissionEffect {
   ALLOW
   DENY
@@ -258,6 +273,7 @@ model Guild {
   units              Unit[]
   radioChannels      RadioChannel[]
   radioAccess        RadioAccess[]
+  operations         Operation[]
 
   applications      Application[]
   panels            ApplicationPanel[]
@@ -1188,7 +1204,7 @@ model Unit {
   createdAt   DateTime   @default(now())
   updatedAt   DateTime   @updatedAt
 
-  guild   Guild         @relation(fields: [guildId], references: [id], onDelete: Cascade)
+  guild   Guild        @relation(fields: [guildId], references: [id], onDelete: Cascade)
   members UnitMember[]
   events  UnitEvent[]
 
@@ -1285,4 +1301,99 @@ model RadioEvent {
 
   @@index([guildId, userId, at])
   @@map("radio_events")
+}
+
+// ---------------------------------------------------------------------------
+// Phase 17: Einsatzsystem
+// ---------------------------------------------------------------------------
+
+/// Fortlaufende Einsatznummer je Server (atomar hochgezählt).
+model OperationCounter {
+  guildId String @id
+  last    Int    @default(0)
+
+  @@map("operation_counters")
+}
+
+model Operation {
+  id          String            @id @default(cuid())
+  guildId     String
+  number      Int
+  kind        String
+  location    String
+  priority    OperationPriority @default(NORMAL)
+  description String?
+  status      OperationStatus   @default(REQUESTED)
+  /// Einsatzleiter (Discord-ID).
+  leaderId    String?
+  createdBy   String
+  startedAt   DateTime?
+  completedAt DateTime?
+  /// Abschlussbericht (Pflicht beim Abschließen) bzw. Abbruchgrund.
+  report      String?
+  outcome     String?
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+
+  guild        Guild                  @relation(fields: [guildId], references: [id], onDelete: Cascade)
+  units        OperationUnit[]
+  participants OperationParticipant[]
+  events       OperationEvent[]
+
+  @@unique([guildId, number])
+  @@index([guildId, status])
+  @@index([guildId, createdAt])
+  @@map("operations")
+}
+
+/// Zugewiesene Einheit. `activeKey` = 'active' solange zugewiesen: eine Einheit ist höchstens in einem Einsatz.
+model OperationUnit {
+  id          String    @id @default(cuid())
+  guildId     String
+  operationId String
+  unitId      String
+  callsign    String
+  activeKey   String?
+  /// Status der Einheit vor der Zuweisung (wird danach wiederhergestellt).
+  prevStatus  String?
+  assignedAt  DateTime  @default(now())
+  releasedAt  DateTime?
+
+  operation Operation @relation(fields: [operationId], references: [id], onDelete: Cascade)
+
+  @@unique([unitId, activeKey])
+  @@index([operationId])
+  @@map("operation_units")
+}
+
+/// Beteiligte Beamte (festgehalten bei Zuweisung und beim Abschluss) – Grundlage für die Personalakten-Einträge.
+model OperationParticipant {
+  id            String  @id @default(cuid())
+  guildId       String
+  operationId   String
+  userId        String
+  callsign      String?
+  isLeader      Boolean @default(false)
+  /// Personalakten-Eintrag, der aus diesem Einsatz entstanden ist (Doppelübernahme ausgeschlossen).
+  recordEntryId String?
+
+  operation Operation @relation(fields: [operationId], references: [id], onDelete: Cascade)
+
+  @@unique([operationId, userId])
+  @@map("operation_participants")
+}
+
+model OperationEvent {
+  id          String   @id @default(cuid())
+  guildId     String
+  operationId String
+  type        String
+  at          DateTime @default(now())
+  actorId     String?
+  data        Json?
+
+  operation Operation @relation(fields: [operationId], references: [id], onDelete: Cascade)
+
+  @@index([operationId, at])
+  @@map("operation_events")
 }

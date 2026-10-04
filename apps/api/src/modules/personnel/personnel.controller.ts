@@ -173,6 +173,7 @@ export class PersonnelController {
       discipline: sections.has('discipline'),
       notes: sections.has('notes'),
       history: sections.has('history'),
+      operations: true, // wer die Akte sehen darf, sieht die (nicht sensiblen) Einsatzbeteiligungen
     });
     const can = async (k: Permission) => canOn(actor, k, record);
     return {

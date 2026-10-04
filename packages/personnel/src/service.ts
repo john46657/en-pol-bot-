@@ -616,12 +616,13 @@ export async function listRecords(i: ListInput) {
 export async function recordSections(
   guildId: string,
   recordId: string,
-  sections: { awards: boolean; discipline: boolean; notes: boolean; history: boolean },
+  sections: { awards: boolean; discipline: boolean; notes: boolean; history: boolean; operations?: boolean },
 ) {
   const kinds = [
     ...(sections.awards ? ['AWARD'] : []),
     ...(sections.discipline ? ['DISCIPLINE'] : []),
     ...(sections.notes ? ['NOTE'] : []),
+    ...(sections.operations ? ['OPERATION'] : []),
   ];
   const [entries, events] = await Promise.all([
     prisma.personnelEntry.findMany({
