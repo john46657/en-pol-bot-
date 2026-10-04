@@ -216,6 +216,15 @@ export const PERMISSION_CATALOG = [
     ],
   },
   {
+    module: 'radio',
+    label: 'Funk',
+    permissions: [
+      ['radio.view', 'Funk-Whitelist und Funkkanäle ansehen'],
+      ['radio.whitelist.manage', 'Funk-Whitelist verwalten (hinzufügen, ändern, entfernen)'],
+      ['radio.channel.manage', 'Funkkanäle einrichten'],
+    ],
+  },
+  {
     module: 'sek',
     label: 'SEK',
     permissions: [

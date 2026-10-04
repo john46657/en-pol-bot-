@@ -15,6 +15,8 @@ import { handleInteraction } from './interactions/handlers.js';
 import { presentCurrent } from './applications/dm-flow.js';
 import { handleDMMessage } from './events/dm-answer.js';
 import { handleMemberRemove } from './events/guild-events.js';
+import { enforceMember } from './radio/enforce.js';
+import { prisma as radioPrisma } from '@nexus/database';
 import { handleAutocomplete, handleCommand, registerCommands } from './commands.js';
 import { syncAllGuilds, syncGuild } from './guilds.js';
 import '@nexus/personnel'; // registriert die Personal-Schritte der Annahme-Pipeline
@@ -33,13 +35,22 @@ export function createClient(): Client {
     intents: [
       GatewayIntentBits.Guilds,
       GatewayIntentBits.GuildMembers,
+      GatewayIntentBits.GuildVoiceStates,
       GatewayIntentBits.DirectMessages,
       GatewayIntentBits.DirectMessageReactions,
     ],
     partials: [Partials.Channel, Partials.Message, Partials.Reaction],
   });
 
+  // Funk: beim Betreten/Wechseln eines Sprachkanals sofort prüfen
+  client.on(Events.VoiceStateUpdate, (_old, state) => {
+    if (state.member && !state.member.user.bot)
+      void enforceMember(state.member).catch((e) => log.warn({ err: String(e) }, 'Funk-Prüfung fehlgeschlagen.'));
+  });
+
   client.once(Events.ClientReady, async (readyClient) => {
+    // Funk: Kontrolle aller Mitglieder in Funkkanälen (Schichtende, geänderte Whitelist)
+    setInterval(() => void sweepRadio(readyClient), 60_000).unref();
     log.info(
       { user: readyClient.user.tag, guilds: readyClient.guilds.cache.size },
       'NEXUS Bot bereit.',
@@ -193,5 +204,19 @@ export async function startBot(): Promise<void> {
         ? ' → DISCORD_TOKEN ist ungültig.'
         : '';
     throw new Error(`Discord-Login fehlgeschlagen: ${String(error)}${hint}`);
+  }
+}
+
+/** Prüft alle Mitglieder in eingerichteten Funkkanälen erneut. */
+export async function sweepRadio(client: Client): Promise<void> {
+  try {
+    const channels = await radioPrisma.radioChannel.findMany({ where: { active: true }, select: { guildId: true, channelId: true } });
+    for (const c of channels) {
+      const channel = client.guilds.cache.get(c.guildId)?.channels.cache.get(c.channelId);
+      if (!channel?.isVoiceBased()) continue;
+      for (const member of channel.members.values()) if (!member.user.bot) await enforceMember(member);
+    }
+  } catch (e) {
+    log.warn({ err: String(e) }, 'Funk-Kontrolle fehlgeschlagen.');
   }
 }

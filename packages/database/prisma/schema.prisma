@@ -196,6 +196,17 @@ enum UnitRole {
   MEMBER
 }
 
+enum RadioLevel {
+  LISTEN
+  SPEAK
+  FULL
+}
+
+enum RadioArea {
+  GENERAL
+  SPECIAL
+}
+
 enum PermissionEffect {
   ALLOW
   DENY
@@ -245,6 +256,8 @@ model Guild {
   shiftTypes         ShiftType[]
   shifts             Shift[]
   units              Unit[]
+  radioChannels      RadioChannel[]
+  radioAccess        RadioAccess[]
 
   applications      Application[]
   panels            ApplicationPanel[]
@@ -1216,4 +1229,60 @@ model UnitEvent {
 
   @@index([unitId, at])
   @@map("unit_events")
+}
+
+// ---------------------------------------------------------------------------
+// Phase 16: Funk & Funk-Whitelist
+// ---------------------------------------------------------------------------
+
+/// Funk-Sprachkanal. `area` SPECIAL = Spezialfunk; `requiresDuty` = nur mit laufender Schicht nutzbar.
+model RadioChannel {
+  id           String    @id @default(cuid())
+  guildId      String
+  channelId    String
+  name         String
+  area         RadioArea @default(GENERAL)
+  requiresDuty Boolean   @default(false)
+  active       Boolean   @default(true)
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  guild Guild @relation(fields: [guildId], references: [id], onDelete: Cascade)
+
+  @@unique([guildId, channelId])
+  @@map("radio_channels")
+}
+
+/// Whitelist-Eintrag: höchstens einer je Mitglied und Server.
+model RadioAccess {
+  id        String     @id @default(cuid())
+  guildId   String
+  userId    String
+  level     RadioLevel @default(SPEAK)
+  /// Darf zusätzlich Spezialfunk nutzen (Vollzugriff hat ihn immer).
+  special   Boolean    @default(false)
+  reason    String?
+  grantedBy String
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+
+  guild Guild @relation(fields: [guildId], references: [id], onDelete: Cascade)
+
+  @@unique([guildId, userId])
+  @@index([guildId, level])
+  @@map("radio_access")
+}
+
+/// Verlauf der Whitelist (hinzugefügt, geändert, entfernt) – bleibt auch nach dem Entfernen erhalten.
+model RadioEvent {
+  id      String   @id @default(cuid())
+  guildId String
+  userId  String
+  type    String
+  at      DateTime @default(now())
+  actorId String?
+  data    Json?
+
+  @@index([guildId, userId, at])
+  @@map("radio_events")
 }

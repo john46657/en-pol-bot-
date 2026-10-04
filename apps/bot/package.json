@@ -19,6 +19,7 @@
     "@nexus/discord": "workspace:*",
     "@nexus/permissions": "workspace:*",
     "@nexus/personnel": "workspace:*",
+    "@nexus/radio": "workspace:*",
     "@nexus/shifts": "workspace:*",
     "@nexus/types": "workspace:*",
     "@nexus/validation": "workspace:*",

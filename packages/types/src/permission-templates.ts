@@ -43,6 +43,8 @@ export const PERMISSION_TEMPLATES: readonly PermissionTemplate[] = [
       'backup.restore',
       'dashboard.manage',
       'panels.manage',
+      'radio.view',
+      'radio.channel.manage',
     ],
   },
   {
@@ -117,6 +119,8 @@ export const PERMISSION_TEMPLATES: readonly PermissionTemplate[] = [
       'absence.manage',
       'duty.view',
       'duty.unit.manage',
+      'radio.view',
+      'radio.whitelist.manage',
     ],
     deny: ['config.edit', 'permissions.edit', 'roles.edit'],
   },

@@ -25,6 +25,7 @@ import './commands/diagnose.js';
 import './commands/akte.js';
 import './commands/schicht.js';
 import './commands/streife.js';
+import './commands/funk.js';
 
 const panelCommand = new SlashCommandBuilder()
   .setName('panel')

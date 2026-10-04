@@ -92,6 +92,9 @@ importers:
       '@nexus/personnel':
         specifier: workspace:*
         version: link:../../packages/personnel
+      '@nexus/radio':
+        specifier: workspace:*
+        version: link:../../packages/radio
       '@nexus/shifts':
         specifier: workspace:*
         version: link:../../packages/shifts
@@ -174,6 +177,9 @@ importers:
       '@nexus/personnel':
         specifier: workspace:*
         version: link:../../packages/personnel
+      '@nexus/radio':
+        specifier: workspace:*
+        version: link:../../packages/radio
       '@nexus/shifts':
         specifier: workspace:*
         version: link:../../packages/shifts
@@ -375,6 +381,22 @@ importers:
       '@nexus/discord':
         specifier: workspace:*
         version: link:../discord
+      '@prisma/client':
+        specifier: ^6.11.0
+        version: 6.19.3(prisma@6.19.3(typescript@5.9.3))(typescript@5.9.3)
+      vitest:
+        specifier: ^3.2.4
+        version: 3.2.7(@types/node@24.19.0)(jiti@2.7.0)(tsx@4.23.15)(yaml@2.9.1)
+
+  packages/radio:
+    dependencies:
+      '@nexus/database':
+        specifier: workspace:*
+        version: link:../database
+      '@nexus/types':
+        specifier: workspace:*
+        version: link:../types
+    devDependencies:
       '@prisma/client':
         specifier: ^6.11.0
         version: 6.19.3(prisma@6.19.3(typescript@5.9.3))(typescript@5.9.3)

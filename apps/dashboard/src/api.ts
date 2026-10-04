@@ -509,3 +509,22 @@ export interface DutyOverviewData {
   unassigned: { userId: string; type: string; since: string; paused: boolean }[];
   counts: { onDuty: number; onBreak: number; units: number; available: number; busy: number; unavailable: number };
 }
+
+export type RadioLevelKey = 'LISTEN' | 'SPEAK' | 'FULL';
+export interface RadioAccessRow {
+  id: string;
+  userId: string;
+  level: RadioLevelKey;
+  special: boolean;
+  reason: string | null;
+  grantedBy: string;
+  createdAt: string;
+}
+export interface RadioChannelRow {
+  id: string;
+  channelId: string;
+  name: string;
+  area: 'GENERAL' | 'SPECIAL';
+  requiresDuty: boolean;
+  active: boolean;
+}

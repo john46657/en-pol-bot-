@@ -5,6 +5,7 @@ import { ApplicationsModule } from './modules/applications/applications.module.j
 import { AuthModule } from './modules/auth/auth.module.js';
 import { GuildModule } from './modules/guild/guild.module.js';
 import { PersonnelModule } from './modules/personnel/personnel.module.js';
+import { RadioModule } from './modules/radio/radio.module.js';
 import { ShiftsModule } from './modules/shifts/shifts.module.js';
 import { MessagePanelsModule } from './modules/panels/panels.module.js';
 import { DevUserMiddleware } from './common/middleware/dev-user.middleware.js';
@@ -21,6 +22,7 @@ import { PermissionGuard } from './common/guards/permission.guard.js';
     MessagePanelsModule,
     PersonnelModule,
     ShiftsModule,
+    RadioModule,
   ],
   providers: [
     // Reihenfolge: erst AuthN (JwtAuthGuard), dann AuthZ (PermissionGuard).

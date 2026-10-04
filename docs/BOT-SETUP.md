@@ -29,3 +29,6 @@ Beim Start meldet der Bot „NEXUS Bot bereit“, gleicht alle Server mit der Da
 
 Ablauf: Button → Bewerbung per DM → Antworten als Nachrichten → Zusammenfassung → Einreichung → Review-Buttons im Review-Channel.
 Bewerbungen werden im Dashboard angelegt und veröffentlicht (Verwaltungs-UI folgt).
+
+## Funk (ab Phase 16)
+Der Bot nutzt den Gateway-Intent *Guild Voice States* (nicht privilegiert) und braucht auf den Funk-Sprachkanälen bzw. serverweit die Rechte **Mitglieder verschieben** (trennen) und **Mitglieder stummschalten** (Stufe „Mithören“). Ohne diese Rechte meldet der Bot eine Warnung im Log und kann die Whitelist nicht durchsetzen.
