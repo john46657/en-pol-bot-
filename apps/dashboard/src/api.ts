@@ -581,3 +581,40 @@ export interface WantedRow {
   revokeReason: string | null;
   createdAt: string;
 }
+
+export type VehicleStatusKey = 'AVAILABLE' | 'IN_USE' | 'MAINTENANCE' | 'OUT_OF_SERVICE';
+export interface VehicleRow {
+  id: string;
+  plate: string;
+  type: string;
+  status: VehicleStatusKey;
+  unitId: string | null;
+  driverId: string | null;
+  notes: string | null;
+  damages: { id: string; description: string; severity: 'MINOR' | 'MAJOR' | 'TOTAL'; createdAt: string }[];
+}
+export interface PenaltyRow {
+  id: string;
+  number: number;
+  kind: 'FINE' | 'WARNING' | 'POINTS' | 'LICENSE_REVOCATION' | 'VEHICLE_SEIZURE';
+  status: 'ACTIVE' | 'REVOKED';
+  subjectName: string;
+  amount: number | null;
+  points: number | null;
+  durationDays: number | null;
+  plate: string | null;
+  reason: string;
+  issuedBy: string;
+  revokeReason: string | null;
+  createdAt: string;
+}
+export interface PenaltyRegister {
+  subjectName: string;
+  finesTotal: number;
+  warnings: number;
+  points: number;
+  pointsLimitReached: boolean;
+  licenseRevokedUntil: string | null;
+  seizedPlates: string[];
+  penalties: PenaltyRow[];
+}

@@ -234,13 +234,13 @@ function Body({
           />
         ))}
 
-      {v.entries.some((e) => e.kind === 'OPERATION') && (
+      {v.entries.some((e) => e.kind === 'OPERATION' || e.kind === 'PENALTY') && (
         <>
-          <h2>Einsätze</h2>
+          <h2>Einsätze & Strafen</h2>
           <ul className="plain">
-            {v.entries.filter((e) => e.kind === 'OPERATION').slice(0, 20).map((e) => (
+            {v.entries.filter((e) => e.kind === 'OPERATION' || e.kind === 'PENALTY').slice(0, 30).map((e) => (
               <li key={e.id} className="card">
-                <strong>{e.title}</strong> <small className="muted">{day(e.occurredAt)}</small>
+                <strong>{e.title}</strong> <small className="muted">{day(e.occurredAt)}{e.revokedAt ? ' · aufgehoben' : ''}</small>
                 {e.body && <div style={{ whiteSpace: 'pre-line' }}>{e.body}</div>}
               </li>
             ))}

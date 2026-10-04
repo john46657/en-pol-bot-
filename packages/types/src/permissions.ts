@@ -244,6 +244,24 @@ export const PERMISSION_CATALOG = [
     ],
   },
   {
+    module: 'fleet',
+    label: 'Fahrzeuge',
+    permissions: [
+      ['fleet.view', 'Fuhrpark ansehen'],
+      ['fleet.report', 'Fahrzeugschäden melden'],
+      ['fleet.manage', 'Fuhrpark verwalten (anlegen, zuweisen, Status, Reparatur, ausmustern)'],
+    ],
+  },
+  {
+    module: 'penalties',
+    label: 'Strafen',
+    permissions: [
+      ['penalties.view', 'Strafen und Strafenregister ansehen'],
+      ['penalties.issue', 'Strafen ausstellen'],
+      ['penalties.revoke', 'Strafen aufheben'],
+    ],
+  },
+  {
     module: 'radio',
     label: 'Funk',
     permissions: [

@@ -14,6 +14,8 @@ import { Logs } from './pages/Logs';
 import { Personnel } from './pages/Personnel';
 import { PersonnelDetail } from './pages/PersonnelDetail';
 import { PersonnelStructure } from './pages/PersonnelStructure';
+import { Fleet } from './pages/Fleet';
+import { Penalties } from './pages/Penalties';
 import { Wanted } from './pages/Wanted';
 import { Danger } from './pages/Danger';
 import { Duty } from './pages/Duty';
@@ -69,6 +71,8 @@ createRoot(document.getElementById('root')!).render(
                   <Route path="operations" element={<Operations />} />
                   <Route path="danger" element={<Danger />} />
                   <Route path="wanted" element={<Wanted />} />
+                  <Route path="fleet" element={<Fleet />} />
+                  <Route path="penalties" element={<Penalties />} />
                   <Route path="panels" element={<Panels />} />
                   <Route path="panels/:panelId" element={<PanelEditor />} />
                   <Route path="profiles" element={<Profiles />} />
