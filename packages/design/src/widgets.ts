@@ -162,7 +162,7 @@ export function ctaTarget(cta: Cta, guildId: string): { href: string; external: 
     case 'page':
       return cta.target
         ? {
-            href: `/guilds/${guildId}/${cta.target === 'overview' ? '' : cta.target}`,
+            href: `/guilds/${guildId}/${cta.target === 'overview' ? '' : cta.target.startsWith('page-') ? `p/${cta.target.slice(5)}` : cta.target}`,
             external: false,
           }
         : null;
@@ -205,9 +205,6 @@ export interface Widget {
 }
 export interface PageLayout {
   widgets: Widget[];
-}
-export interface LayoutConfig {
-  pages: Record<string, PageLayout>;
 }
 
 /** Größen wie in der Spezifikation (1x1 … 4x2); eine Einheit = 3 von 12 Spalten, 2 Zeilen. */
@@ -457,19 +454,8 @@ export function normalizePage(raw: unknown): PageLayout {
   }
   return { widgets: resolveOverlaps(widgets) };
 }
-export function normalizeLayout(raw: unknown, base: LayoutConfig = defaultLayout()): LayoutConfig {
-  const o = isObj(raw) ? raw : {};
-  const pagesRaw = isObj(o['pages']) ? o['pages'] : {};
-  const pages: LayoutConfig['pages'] = {};
-  for (const [k, v] of Object.entries(pagesRaw).slice(0, MAX_LAYOUT_PAGES))
-    if (PAGE_KEY_RE.test(k)) pages[k] = normalizePage(v);
-  // Die Übersicht gibt es immer (Standard-Widgets), solange sie nicht ausdrücklich angepasst wurde
-  if (!pages['overview'] && base.pages['overview'])
-    pages['overview'] = structuredClone(base.pages['overview']);
-  return { pages };
-}
-
-const mk = (
+/** Widget mit Standardwerten für Typ und Größe (Vorlagen, Standard-Übersicht). */
+export const buildWidget = (
   id: string,
   type: WidgetType,
   x: number,
@@ -489,25 +475,6 @@ const mk = (
   style: emptyStyle(),
   props: { ...defaultProps(type), ...props },
 });
-/** Standard-Übersicht: dieselben Informationen wie vor dem Widget-System. */
-export function defaultLayout(): LayoutConfig {
-  return {
-    pages: {
-      overview: {
-        widgets: [
-          mk('stat0001', 'stat', 1, 1, { metric: 'openTickets' }),
-          mk('stat0002', 'stat', 4, 1, { metric: 'pendingSubmissions' }),
-          mk('stat0003', 'stat', 7, 1, { metric: 'onDuty' }),
-          mk('stat0004', 'stat', 10, 1, { metric: 'activeOperations' }),
-          mk('list0001', 'tickets', 1, 3, {}),
-          mk('list0002', 'applications', 7, 3, {}),
-          mk('health01', 'health', 1, 8, {}),
-        ],
-      },
-    },
-  };
-}
-
 // --- Einfache, sichere Text-Formatierung ---------------------------------------------------------
 export type Inline =
   | { t: 'text'; s: string }

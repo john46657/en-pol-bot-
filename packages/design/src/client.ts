@@ -5,3 +5,4 @@ export * from './css.js';
 export * from './colors.js';
 export * from './navigation.js';
 export * from './widgets.js';
+export * from './pages.js';

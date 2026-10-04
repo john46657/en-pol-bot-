@@ -15,7 +15,8 @@ import {
   General,
   LayoutTab,
   ModesTab,
-  WidgetsTab,
+  PagesTab,
+  BannersTab,
   NavigationTab,
   ResponsiveTab,
   TypographyTab,
@@ -42,7 +43,8 @@ const TABS = [
   ['colors', '🎨 Farben', ColorsTab],
   ['typography', '🔤 Typografie', TypographyTab],
   ['navigation', '🧭 Navigation', NavigationTab],
-  ['widgets', '📊 Widgets', WidgetsTab],
+  ['widgets', '📊 Seiten & Widgets', PagesTab],
+  ['banners', '📢 Banner', BannersTab],
   ['cards', '📦 Karten & Buttons', CardsButtonsTab],
   ['layout', '📐 Layout', LayoutTab],
   ['animation', '✨ Animationen', AnimationTab],
@@ -229,7 +231,7 @@ function Editor({ guildId, overview }: { guildId: string; overview: Overview }) 
           💾 Themes
         </button>
       </div>
-      <div className={`dz ${tab === 'widgets' ? 'dz-wide' : ''}`}>
+      <div className={`dz ${tab === 'widgets' || tab === 'banners' ? 'dz-wide' : ''}`}>
         <div className="dz-panel card">
           {tab === 'themes' ? (
             <ThemesTab
@@ -267,7 +269,7 @@ function Editor({ guildId, overview }: { guildId: string; overview: Overview }) 
             Auch dann bleibt jede Änderung als eigene Version im Verlauf.
           </small>
         </div>
-        <div hidden={tab === 'widgets'}>
+        <div hidden={tab === 'widgets' || tab === 'banners'}>
           <div className="dz-seg" role="group" aria-label="Vorschau-Gerät">
             {DEVICES.map((d) => (
               <button

@@ -72,9 +72,11 @@ describe('Normalisierung', () => {
     expect(n.x + n.w - 1).toBeLessThanOrEqual(GRID_COLS);
   });
   it('Seiten: doppelte IDs entfallen, Überlappungen werden aufgelöst, Begrenzung der Anzahl', () => {
+    const custom = [{ key: 'page-t', name: 'T' }];
     const page = normalizeLayout({
+      custom,
       pages: {
-        tickets: {
+        'page-t': {
           widgets: [
             { id: 'aaaa11', type: 'text', x: 1, y: 1 },
             { id: 'aaaa11', type: 'text' },
@@ -82,7 +84,7 @@ describe('Normalisierung', () => {
           ],
         },
       },
-    }).pages['tickets']!;
+    }).pages['page-t']!;
     expect(page.widgets).toHaveLength(2);
     expect(noOverlap(page.widgets)).toBe(true);
     const many = Array.from({ length: 100 }, (_, i) => ({
@@ -90,14 +92,15 @@ describe('Normalisierung', () => {
       type: 'text',
       y: i + 1,
     }));
-    expect(normalizeLayout({ pages: { x: { widgets: many } } }).pages['x']!.widgets).toHaveLength(
-      MAX_WIDGETS,
-    );
+    expect(
+      normalizeLayout({ custom, pages: { 'page-t': { widgets: many } } }).pages['page-t']!.widgets,
+    ).toHaveLength(MAX_WIDGETS);
+    // Nur die Übersicht und eigene Seiten haben ein Layout; fremde Schlüssel entfallen
     expect(
       Object.keys(
-        normalizeLayout({ pages: { '../x': { widgets: [] }, ok: { widgets: [] } } }).pages,
-      ),
-    ).toEqual(['ok', 'overview']);
+        normalizeLayout({ custom, pages: { '../x': { widgets: [] }, ok: { widgets: [] } } }).pages,
+      ).sort(),
+    ).toEqual(['overview', 'page-t']);
   });
   it('vollständige Widgets gelten nicht als „ungültig“', () => {
     const full = defaultLayout();

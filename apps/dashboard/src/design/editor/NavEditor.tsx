@@ -11,17 +11,17 @@ import {
   type NavItem,
 } from '@nexus/design/client';
 import { useRef, useState } from 'react';
-import { BUILTIN_NAV } from '../../pages/GuildLayout';
+import { navWithPages } from '../../pages/GuildLayout';
 import { ColorOpt, Field, RolePicker, UrlText } from './controls';
 import { useEditor } from './state';
-
-const label = (key: string) => BUILTIN_NAV.find((b) => b.key === key);
 
 /** Sidebar-Einträge und -Gruppen: Reihenfolge per Drag & Drop oder Pfeiltasten, Titel, Icon, Rollen, Badge, Farben. */
 export function NavEditor() {
   const { draft, set, disabled } = useEditor();
   const nav = draft.navigation;
-  const items = materializeItems(BUILTIN_NAV, nav);
+  const builtins = navWithPages(draft.layout.custom);
+  const label = (key: string) => builtins.find((b) => b.key === key);
+  const items = materializeItems(builtins, nav);
   const [open, setOpen] = useState<string | null>(null);
   const [dragFrom, setDragFrom] = useState<number | null>(null);
   const dragRef = useRef<number | null>(null);

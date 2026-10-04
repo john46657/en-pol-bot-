@@ -26,6 +26,7 @@ import { Qualifications } from './pages/Qualifications';
 import { Training } from './pages/Training';
 import { Wanted } from './pages/Wanted';
 import { Design } from './pages/Design';
+import { CustomPage } from './pages/CustomPage';
 import { Danger } from './pages/Danger';
 import { Duty } from './pages/Duty';
 import { Operations } from './pages/Operations';
@@ -98,6 +99,7 @@ createRoot(document.getElementById('root')!).render(
                   <Route path="users/:userId" element={<UserDetail />} />
                   <Route path="permissions" element={<Permissions />} />
                   <Route path="design" element={<Design />} />
+                  <Route path="p/:slug" element={<CustomPage />} />
                   <Route path="logs" element={<Logs />} />
                 </Route>
               </Route>

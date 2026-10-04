@@ -8,6 +8,7 @@ import {
   duplicateTheme,
   exportTheme,
   getDesign,
+  filterForViewer,
   getEffective,
   getWidgetData,
   getTheme,
@@ -48,9 +49,11 @@ export class DesignController {
 
   @Get('effective')
   @RequireDashboardAccess()
-  async effective(@GuildId() guildId: string) {
+  async effective(@GuildId() guildId: string, @Access() access: RequestAccess) {
     const e = await getEffective(guildId);
-    return { config: e.config, themeName: e.themeName, source: e.source };
+    // Seiten, Widgets, Banner und Menüeinträge mit Rollen-Einschränkung verlassen den Server nur für Berechtigte
+    const config = filterForViewer(e.config, { isAdmin: access.bypass, roleIds: access.roleIds });
+    return { config, themeName: e.themeName, source: e.source };
   }
 
   /**

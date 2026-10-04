@@ -1,7 +1,8 @@
 import { COLOR_KEYS, FONTS, type Background } from '@nexus/design/client';
-import { PAGE_OPTIONS } from './pageOptions';
+import { pageOptions } from './pageOptions';
 import { NavEditor } from './NavEditor';
-import { WidgetEditor } from './WidgetEditor';
+import { PagesEditor } from './PagesEditor';
+import { BannersEditor } from './BannersEditor';
 import { ColorField, ContrastHint, Inherit, Num, Pick, Toggle, Txt, Field } from './controls';
 import { getIn, useEditor } from './state';
 import { useState } from 'react';
@@ -188,7 +189,7 @@ export function BackgroundTab() {
         <span>Seite</span>
         <select value={page} onChange={(e) => setPage(e.target.value)}>
           <option value="">– Seite wählen –</option>
-          {PAGE_OPTIONS.map(([k, l]) => (
+          {pageOptions(draft.layout.custom).map(([k, l]) => (
             <option key={k} value={k}>
               {l}
               {draft.background.pages[k] ? ' ✓ eigener Hintergrund' : ''}
@@ -517,6 +518,9 @@ export function ModesTab() {
   );
 }
 
-export function WidgetsTab() {
-  return <WidgetEditor page="overview" />;
+export function PagesTab() {
+  return <PagesEditor />;
+}
+export function BannersTab() {
+  return <BannersEditor />;
 }

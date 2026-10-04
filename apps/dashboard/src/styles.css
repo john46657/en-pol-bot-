@@ -1210,7 +1210,11 @@ dialog.dz-dialog::backdrop {
   padding: 6px;
   border: 1px dashed var(--line);
   border-radius: 10px;
-  background-image: linear-gradient(to right, color-mix(in srgb, var(--line) 40%, transparent) 1px, transparent 1px);
+  background-image: linear-gradient(
+    to right,
+    color-mix(in srgb, var(--line) 40%, transparent) 1px,
+    transparent 1px
+  );
   background-size: calc((100% + 8px) / 12) 100%;
   position: relative;
 }
@@ -1280,4 +1284,34 @@ dialog.dz-dialog::backdrop {
 }
 .content:has(.wg-grid) {
   max-width: 1500px;
+}
+/* Banner */
+.banners {
+  display: grid;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+.banner {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-card, 10px);
+  background: var(--card-bg, var(--panel));
+}
+.banner-icon {
+  font-size: 24px;
+}
+.banner-large .banner-icon {
+  font-size: 34px;
+}
+.banner-body {
+  flex: 1;
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+}
+.banner img {
+  max-height: 90px;
+  border-radius: var(--radius-card, 10px);
 }

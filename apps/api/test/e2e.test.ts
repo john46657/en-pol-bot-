@@ -685,6 +685,56 @@ describe('Dashboard-Design (Phase 37)', () => {
     expect(officer.data.activity).toBeNull();
   });
 
+  it('Rollen-Einschränkungen werden serverseitig durchgesetzt: eingeschränkte Seiten/Widgets/Banner/Menüeinträge verlassen den Server nicht', async () => {
+    const t = await call('POST', d('/themes'), ADMIN, { name: 'Rollen-Test' });
+    const config = {
+      layout: {
+        custom: [
+          { key: 'page-intern', name: 'Geheime Leitungsseite', roles: [ROLE_HIGHER] },
+          { key: 'page-offen', name: 'Offene Seite' },
+        ],
+        pages: {
+          'page-intern': {
+            widgets: [{ id: 'geheim01', type: 'text', props: { body: 'Nur für die Leitung' } }],
+          },
+          'page-offen': { widgets: [] },
+        },
+        banners: [
+          { id: 'ban001', title: 'Für Anwärter', pages: ['*'], roles: [ROLE_ENTRY] },
+          { id: 'ban002', title: 'Nur Leitung', pages: ['*'], roles: [ROLE_HIGHER] },
+        ],
+      },
+      navigation: {
+        groups: [],
+        items: [{ key: 'page-intern', roles: [ROLE_HIGHER] }, { key: 'page-offen' }],
+      },
+    };
+    expect((await call('PUT', d(`/themes/${t.data.id}`), ADMIN, { config })).status).toBe(200);
+    await call('POST', d(`/themes/${t.data.id}/activate`), ADMIN);
+    const admin = await call('GET', d('/effective'), ADMIN);
+    expect(admin.data.config.layout.custom.map((p: { key: string }) => p.key)).toEqual([
+      'page-intern',
+      'page-offen',
+    ]);
+    const officer = await call('GET', d('/effective'), OFFICER); // hat nur die Rolle „Anwärter“
+    expect(officer.data.config.layout.custom.map((p: { key: string }) => p.key)).toEqual([
+      'page-offen',
+    ]);
+    expect(officer.data.config.layout.banners.map((b: { id: string }) => b.id)).toEqual(['ban001']);
+    expect(officer.data.config.navigation.items.map((i: { key: string }) => i.key)).toEqual([
+      'page-offen',
+    ]);
+    const raw = JSON.stringify(officer.data);
+    for (const secret of [
+      'Geheime Leitungsseite',
+      'geheim01',
+      'Nur für die Leitung',
+      'Nur Leitung',
+    ])
+      expect(raw, secret).not.toContain(secret);
+    await call('POST', d('/reset'), ADMIN, { confirm: true });
+  });
+
   it('Navigation: Rollenliste für den Editor (ohne @everyone) und eigene Rollen für die Menü-Sichtbarkeit', async () => {
     const roles = await call('GET', d('/roles'), ADMIN);
     expect(roles.status).toBe(200);

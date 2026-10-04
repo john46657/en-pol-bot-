@@ -36,6 +36,14 @@ const SHADOW = {
   large: '0 12px 32px #00000066',
 } as const;
 
+/** Titel eines Widgets: eigener Titel, sonst die Kennzahl bzw. Datenquelle, sonst der Typname. */
+export function defaultTitle(w: Widget): string {
+  if (w.title) return w.title;
+  if (w.type === 'stat') return METRICS[w.props['metric'] as MetricKey].label;
+  if (w.type === 'chart') return CHART_SOURCES[w.props['source'] as ChartSource].label;
+  return WIDGET_LABEL[w.type].label;
+}
+
 /** Wer sieht das Widget? (Nur Sichtbarkeit – die Daten selbst liefert der Server nach Recht.) */
 export function widgetVisibleFor(
   w: Widget,
@@ -352,16 +360,11 @@ export function WidgetGrid({
             gridRow: `${w.y} / span ${w.h}`,
             ...widgetStyle(w),
           }}
-          aria-label={
-            w.title ||
-            (w.type === 'stat'
-              ? METRICS[w.props['metric'] as MetricKey].label
-              : WIDGET_LABEL[w.type].label)
-          }
+          aria-label={defaultTitle(w)}
         >
           {w.type !== 'stat' && (
             <h3 className="wg-title">
-              {w.icon || WIDGET_LABEL[w.type].icon} {w.title || WIDGET_LABEL[w.type].label}
+              {w.icon || WIDGET_LABEL[w.type].icon} {defaultTitle(w)}
             </h3>
           )}
           <Body

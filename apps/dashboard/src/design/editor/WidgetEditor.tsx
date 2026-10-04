@@ -21,7 +21,7 @@ import {
 } from '@nexus/design/client';
 import { useRef, useState } from 'react';
 import { ColorOpt, RolePicker, UrlText } from './controls';
-import { PAGE_OPTIONS } from './pageOptions';
+import { pageOptions } from './pageOptions';
 import { useEditor } from './state';
 
 const ROW = 36;
@@ -710,7 +710,7 @@ function Props({
 }
 
 /** Button-Builder: Text, Icon, Aktion, Farben, Hover, Rundung, Rahmen, Schatten. */
-function CtaEditor({
+export function CtaEditor({
   cta: raw,
   disabled,
   onChange,
@@ -721,6 +721,7 @@ function CtaEditor({
   onChange: (c: Cta) => void;
   noText?: boolean;
 }) {
+  const { draft } = useEditor();
   const cta = normalizeCta(raw);
   const set = (p: Partial<Cta>) => onChange({ ...cta, ...p });
   return (
@@ -744,7 +745,7 @@ function CtaEditor({
           <span>Seite</span>
           <select value={cta.target} onChange={(e) => set({ target: e.target.value })}>
             <option value="">– wählen –</option>
-            {PAGE_OPTIONS.map(([k, l]) => (
+            {pageOptions(draft.layout.custom).map(([k, l]) => (
               <option key={k} value={k}>
                 {l}
               </option>

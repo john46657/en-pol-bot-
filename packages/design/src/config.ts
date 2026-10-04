@@ -3,7 +3,7 @@
  * `normalizeConfig` wirft nie: ungültige oder fehlende Werte fallen einzeln auf den Standard zurück,
  * damit eine beschädigte Konfiguration das Dashboard nie unbenutzbar macht (Spezifikation 47).
  */
-import { normalizeLayout, defaultLayout, type LayoutConfig } from './widgets.js';
+import { normalizeLayout, defaultLayout, type LayoutConfig } from './pages.js';
 import { isObj, color, num, bool, oneOf, text, safeUrl } from './primitives.js';
 export { color, num, bool, oneOf, text, safeUrl, isObj };
 
@@ -504,12 +504,31 @@ export function findIssues(raw: unknown): string[] {
   const pruned = pruneToModel(raw);
   const norm = normalizeConfig(pruned);
   const out: string[] = [];
-  for (const [p, v] of leaves(pruned)) {
-    if (p === '') continue;
-    const n = leaves(norm).get(p);
-    if (n === undefined && p.startsWith('background.pages.')) continue;
-    if (stable(n) !== stable(v)) out.push(p);
-  }
+  /** Nur was angegeben wurde und beim Bereinigen verworfen oder verändert würde; ergänzte Standardfelder zählen nicht. */
+  const walk = (given: unknown, got: unknown, path: string) => {
+    if (Array.isArray(given)) {
+      if (!Array.isArray(got) || got.length !== given.length) {
+        out.push(path);
+        return;
+      }
+      given.forEach((g, i) => walk(g, got[i], `${path}.${i}`));
+      return;
+    }
+    if (isObj(given)) {
+      if (!isObj(got)) {
+        out.push(path);
+        return;
+      }
+      for (const [k, v] of Object.entries(given)) {
+        const p = path ? `${path}.${k}` : k;
+        if (got[k] === undefined && p.startsWith('background.pages.')) continue;
+        walk(v, got[k], p);
+      }
+      return;
+    }
+    if (stable(given) !== stable(got)) out.push(path);
+  };
+  walk(pruned, norm, '');
   return out;
 }
 

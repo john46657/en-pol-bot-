@@ -7,6 +7,7 @@ import { UserMenu } from '../components/UserMenu';
 import { useLive } from '../live';
 import { resolveNavigation } from '@nexus/design/client';
 import { DesignBackground, DesignCtx, useDesign } from '../design/useDesign';
+import { BannerBar } from '../design/widgets/BannerBar';
 
 type Needs =
   | 'any'
@@ -68,8 +69,16 @@ export const NAV: { to: string; label: string; icon: string; end?: boolean; need
 
 /** Schlüssel eines Menüpunkts (Übersicht = `overview`) – so heißt er auch in der Design-Konfiguration. */
 export const navKey = (to: string) => to || 'overview';
+/** Menüziel eines Schlüssels: Übersicht = Wurzel, eigene Seite = `p/<adresse>`, sonst der Schlüssel selbst. */
+export const navPath = (key: string) =>
+  key === 'overview' ? '' : key.startsWith('page-') ? `p/${key.slice(5)}` : key;
 /** Eingebaute Menüpunkte in der Form, die das Design-Paket kennt. */
 export const BUILTIN_NAV = NAV.map((n) => ({ key: navKey(n.to), label: n.label, icon: n.icon }));
+/** Eingebaute Menüpunkte plus die eigenen Seiten (Page Builder). */
+export const navWithPages = (custom: readonly { key: string; name: string; icon: string }[]) => [
+  ...BUILTIN_NAV,
+  ...custom.map((c) => ({ key: c.key, label: c.name, icon: c.icon || '📄' })),
+];
 
 /** Rahmen für alle Server-Seiten: Sidebar (mobil einklappbar), Kopfzeile mit Serverwechsel. */
 export function GuildLayout() {
@@ -78,7 +87,8 @@ export function GuildLayout() {
   const { pathname } = useLocation();
   const live = useLive(guildId);
   const { config: cfg } = useDesign(guildId);
-  const page = pathname.split('/')[3] || 'overview';
+  const seg = pathname.split('/');
+  const page = seg[3] === 'p' ? `page-${seg[4] ?? ''}` : seg[3] || 'overview'; // Schlüssel für Hintergründe und Banner
   useEffect(() => setOpen(false), [pathname]);
   const g = useQuery({
     queryKey: ['guild', guildId],
@@ -127,14 +137,15 @@ export function GuildLayout() {
   const needsByKey = useMemo(() => new Map(NAV.map((n) => [navKey(n.to), n.needs])), []);
   const sections = useMemo(
     () =>
-      resolveNavigation(BUILTIN_NAV, cfg.navigation, {
+      resolveNavigation(navWithPages(cfg.layout.custom), cfg.navigation, {
         isAdmin: me.data?.guildAdmin ?? false,
         roleIds: me.data?.roleIds ?? [],
-        allowed: (key) => allowed(needsByKey.get(key) ?? 'admin'),
+        allowed: (key) =>
+          key.startsWith('page-') ? true : allowed(needsByKey.get(key) ?? 'admin'),
         pinned: ['design'], // wer das Design bearbeiten darf, kann sich nicht aus dem Menü aussperren
       }),
     // eslint-disable-next-line
-    [cfg.navigation, me.data, needsByKey],
+    [cfg.navigation, cfg.layout.custom, me.data, needsByKey],
   );
   const discordIcon = g.data && guildIcon(g.data.id, g.data.icon);
   const logo = cfg.general.logo;
@@ -193,7 +204,7 @@ export function GuildLayout() {
                   ) : (
                     <NavLink
                       key={n.key}
-                      to={`/guilds/${guildId}/${n.key === 'overview' ? '' : n.key}`}
+                      to={`/guilds/${guildId}/${navPath(n.key)}`}
                       end={n.key === 'overview'}
                       className={({ isActive }) => (isActive ? 'active' : '')}
                       style={style}
@@ -262,6 +273,7 @@ export function GuildLayout() {
             </div>
           ) : (
             <DesignCtx.Provider value={cfg}>
+              <BannerBar config={cfg} page={page} guildId={guildId} />
               <Outlet />
             </DesignCtx.Provider>
           )}

@@ -7,7 +7,7 @@ import {
 } from '@nexus/design/client';
 import { useEffect, type CSSProperties } from 'react';
 import { loadFont } from '../fonts';
-import { BUILTIN_NAV } from '../../pages/GuildLayout';
+import { navWithPages } from '../../pages/GuildLayout';
 
 export type Device = 'desktop' | 'laptop' | 'tablet' | 'mobile';
 export const DEVICES: readonly { id: Device; label: string; icon: string; width: number | null }[] =
@@ -46,7 +46,7 @@ export function Preview({
   const name = g.nameMode === 'custom' && g.customName ? g.customName : serverName;
   const side = config.sidebar.enabled && !mobile;
   // Das Menü, wie es ein Server-Verwalter sieht (alle Einträge, die nicht ausgeblendet sind)
-  const sections = resolveNavigation(BUILTIN_NAV, config.navigation, {
+  const sections = resolveNavigation(navWithPages(config.layout.custom), config.navigation, {
     isAdmin: true,
     roleIds: [],
     allowed: () => true,
