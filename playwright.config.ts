@@ -24,8 +24,9 @@ export default defineConfig({
   fullyParallel: false,
   workers: 1,
   timeout: 60_000,
+  expect: { timeout: 10_000 },
   reporter: [['list']],
-  use: { baseURL: 'http://localhost:3001', channel: 'chrome', trace: 'retain-on-failure' },
+  use: { baseURL: 'http://localhost:3101', channel: 'chrome', trace: 'retain-on-failure' },
   webServer: [
     { command: 'node scripts/fake-discord.mjs', port: 4010, reuseExistingServer: true },
     {
@@ -37,8 +38,8 @@ export default defineConfig({
         DATABASE_URL: db.toString(),
         AUTH_SECRET: E2E.authSecret,
         JWT_ISSUER: E2E.issuer,
-        REDIS_URL: fromEnv('REDIS_URL'),
-        DASHBOARD_URL: 'http://localhost:3001',
+        REDIS_URL: `${fromEnv('REDIS_URL').replace(/\/\d+$/, '')}/15`, // eigene Redis-Datenbank, vor jedem Lauf geleert (prepare-db)
+        DASHBOARD_URL: 'http://localhost:3101',
         DISCORD_API_BASE: 'http://localhost:4010/api/v10',
         DISCORD_TOKEN: 'fake',
         DISCORD_CLIENT_ID: '1',
@@ -47,9 +48,9 @@ export default defineConfig({
       },
     },
     {
-      command: 'pnpm --filter @nexus/dashboard dev',
-      port: 3001,
-      reuseExistingServer: true,
+      command: 'pnpm --filter @nexus/dashboard exec vite --port 3101 --strictPort',
+      port: 3101,
+      reuseExistingServer: false,
       timeout: 60_000,
     },
   ],

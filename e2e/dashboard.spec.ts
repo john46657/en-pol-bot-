@@ -24,6 +24,7 @@ test.describe('angemeldet als Server-Besitzer', () => {
   });
 
   test('Serverauswahl → alle Menüseiten laden ohne Fehler', async ({ page }) => {
+    test.setTimeout(180_000); // 30 Seiten nacheinander
     const problems: string[] = [];
     page.on('pageerror', (e) => problems.push(`pageerror: ${e.message}`));
     page.on('console', (m) => {

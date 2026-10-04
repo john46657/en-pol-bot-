@@ -1,6 +1,7 @@
 import { execFileSync } from 'node:child_process';
 import { readFileSync } from 'node:fs';
 import { createRequire } from 'node:module';
+import net from 'node:net';
 
 const { PrismaClient } = createRequire(`${process.cwd()}/packages/database/package.json`)(
   '@prisma/client',
@@ -31,4 +32,26 @@ async function setup(): Promise<void> {
   await seed.$disconnect();
 }
 
+/** Leert Redis-Datenbank 15 (Ratenbegrenzung, Live-Zustand früherer Läufe) – per Roh-Protokoll, ohne zusätzliche Abhängigkeit. */
+async function flushRedis(): Promise<void> {
+  const base =
+    /^REDIS_URL="?([^"\n]*)"?/m.exec(readFileSync('.env', 'utf8'))?.[1] ?? 'redis://localhost:6379';
+  const u = new URL(base);
+  await new Promise<void>((resolve, reject) => {
+    const s = net.connect({ host: u.hostname, port: Number(u.port || 6379) }, () =>
+      s.write('SELECT 15\r\nFLUSHDB\r\n'),
+    );
+    let n = 0;
+    s.on('data', (d) => {
+      n += d.toString().split('\r\n').filter(Boolean).length;
+      if (n >= 2) {
+        s.end();
+        resolve();
+      }
+    });
+    s.on('error', reject);
+  });
+}
+
 await setup();
+await flushRedis();

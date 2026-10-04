@@ -5,9 +5,34 @@ import { api, guildIcon, type GuildOverview } from '../api';
 import { HealthBadge } from '../components/HealthBadge';
 import { UserMenu } from '../components/UserMenu';
 import { useLive } from '../live';
+import { DesignBackground, useDesign } from '../design/useDesign';
 
-type Needs = 'any' | 'view' | 'admin' | 'panels' | 'submissions' | 'personnel' | 'structure' | 'shifts' | 'duty' | 'radio' | 'operations' | 'danger' | 'wanted' | 'fleet' | 'penalties' | 'training' | 'qualifications' | 'promotions' | 'sek' | 'tickets' | 'absences' | 'reports' | 'automation';
-const NAV: { to: string; label: string; icon: string; end?: boolean; needs: Needs }[] = [
+type Needs =
+  | 'any'
+  | 'view'
+  | 'admin'
+  | 'panels'
+  | 'submissions'
+  | 'personnel'
+  | 'structure'
+  | 'shifts'
+  | 'duty'
+  | 'radio'
+  | 'operations'
+  | 'danger'
+  | 'wanted'
+  | 'fleet'
+  | 'penalties'
+  | 'training'
+  | 'qualifications'
+  | 'promotions'
+  | 'sek'
+  | 'tickets'
+  | 'absences'
+  | 'reports'
+  | 'automation'
+  | 'design';
+export const NAV: { to: string; label: string; icon: string; end?: boolean; needs: Needs }[] = [
   { to: '', label: 'Übersicht', icon: '🏠', end: true, needs: 'any' },
   { to: 'settings', label: 'Rollen & Kanäle wählen', icon: '⚙️', needs: 'view' },
   { to: 'roles', label: 'Rollen', icon: '🎭', needs: 'view' },
@@ -31,6 +56,7 @@ const NAV: { to: string; label: string; icon: string; end?: boolean; needs: Need
   { to: 'tickets', label: 'Tickets', icon: '🎫', needs: 'tickets' },
   { to: 'absences', label: 'Abmeldungen', icon: '🏖️', needs: 'absences' },
   { to: 'reports', label: 'Berichte', icon: '📊', needs: 'reports' },
+  { to: 'design', label: 'Design & Erscheinungsbild', icon: '🎨', needs: 'design' },
   { to: 'panels', label: 'Panels', icon: '🧩', needs: 'panels' },
   { to: 'users', label: 'Benutzer', icon: '👥', needs: 'admin' },
   { to: 'profiles', label: 'Profile', icon: '🧾', needs: 'admin' },
@@ -45,6 +71,8 @@ export function GuildLayout() {
   const [open, setOpen] = useState(false);
   const { pathname } = useLocation();
   const live = useLive(guildId);
+  const { config: cfg } = useDesign(guildId);
+  const page = pathname.split('/')[3] || 'overview';
   useEffect(() => setOpen(false), [pathname]);
   const g = useQuery({
     queryKey: ['guild', guildId],
@@ -63,13 +91,16 @@ export function GuildLayout() {
     me.data.guildAdmin ||
     needs === 'any' ||
     (needs === 'view' && me.data.permissions.includes('applications.view')) ||
+    (needs === 'design' && me.data.permissions.includes('design.view')) ||
     (needs === 'panels' && me.data.permissions.includes('panels.view')) ||
     (needs === 'submissions' && me.data.permissions.includes('applications.submissions.view')) ||
     (needs === 'personnel' &&
       ['personnel.view', 'own.profile.view'].some((k) => me.data.permissions.includes(k))) ||
     (needs === 'reports' && me.data.permissions.includes('report.view')) ||
-    (needs === 'absences' && ['absence.view', 'own.absence.create'].some((k) => me.data.permissions.includes(k))) ||
-    (needs === 'tickets' && ['tickets.view', 'tickets.manage'].some((k) => me.data.permissions.includes(k))) ||
+    (needs === 'absences' &&
+      ['absence.view', 'own.absence.create'].some((k) => me.data.permissions.includes(k))) ||
+    (needs === 'tickets' &&
+      ['tickets.view', 'tickets.manage'].some((k) => me.data.permissions.includes(k))) ||
     (needs === 'sek' && ['sek.view', 'sek.manage'].some((k) => me.data.permissions.includes(k))) ||
     (needs === 'promotions' && me.data.permissions.includes('promotions.view')) ||
     (needs === 'qualifications' && me.data.permissions.includes('qualification.view')) ||
@@ -84,25 +115,45 @@ export function GuildLayout() {
     (needs === 'shifts' &&
       ['shifts.view', 'shifts.manage'].some((k) => me.data.permissions.includes(k))) ||
     (needs === 'structure' && me.data.permissions.includes('personnel.structure.manage'));
-  const icon = g.data && guildIcon(g.data.id, g.data.icon);
+  const discordIcon = g.data && guildIcon(g.data.id, g.data.icon);
+  const logo = cfg.general.logo;
+  const icon =
+    logo.mode === 'none' ? null : logo.mode === 'upload' && logo.url ? logo.url : discordIcon;
+  const serverName =
+    cfg.general.nameMode === 'custom' && cfg.general.customName
+      ? cfg.general.customName
+      : (g.data?.name ?? 'Server');
+  const shellClass = [
+    'shell',
+    open ? 'nav-open' : '',
+    !cfg.sidebar.enabled ? 'no-sidebar' : '',
+    cfg.sidebar.position === 'right' ? 'sb-right' : '',
+    cfg.responsive.mobileNav === 'bottom' ? 'mob-bottom' : '',
+    cfg.responsive.mobileNav === 'hidden' ? 'mob-hidden' : '',
+  ]
+    .filter(Boolean)
+    .join(' ');
   return (
-    <div className={`shell ${open ? 'nav-open' : ''}`}>
-      <aside className="sidebar" aria-label="Navigation">
-        <div className="brand">NEXUS</div>
-        <nav>
-          {NAV.filter((n) => allowed(n.needs)).map((n) => (
-            <NavLink
-              key={n.to}
-              to={`/guilds/${guildId}/${n.to}`}
-              end={n.end ?? false}
-              className={({ isActive }) => (isActive ? 'active' : '')}
-            >
-              <span aria-hidden>{n.icon}</span> {n.label}
-            </NavLink>
-          ))}
-        </nav>
-        <HealthBadge />
-      </aside>
+    <div className={shellClass}>
+      <DesignBackground config={cfg} page={page} />
+      {cfg.sidebar.enabled && (
+        <aside className="sidebar" aria-label="Navigation">
+          <div className="brand">NEXUS</div>
+          <nav>
+            {NAV.filter((n) => allowed(n.needs)).map((n) => (
+              <NavLink
+                key={n.to}
+                to={`/guilds/${guildId}/${n.to}`}
+                end={n.end ?? false}
+                className={({ isActive }) => (isActive ? 'active' : '')}
+              >
+                <span aria-hidden>{n.icon}</span> {n.label}
+              </NavLink>
+            ))}
+          </nav>
+          <HealthBadge />
+        </aside>
+      )}
       {open && (
         <button className="scrim" aria-label="Menü schließen" onClick={() => setOpen(false)} />
       )}
@@ -117,14 +168,37 @@ export function GuildLayout() {
             >
               ☰
             </button>
-            {icon && <img className="icon" src={icon} alt="" width={28} height={28} />}
-            <strong>{g.data?.name ?? 'Server'}</strong>
-            <span className={`badge ${live === 'live' ? 'ok' : 'no'}`} title={live === 'live' ? 'Live-Aktualisierung aktiv' : live === 'connecting' ? 'Verbinde …' : 'Live-Aktualisierung getrennt – Daten werden beim Öffnen geladen'}>{live === 'live' ? '● Live' : live === 'connecting' ? '○ …' : '○ offline'}</span>
+            {cfg.header.showLogo && icon && (
+              <img
+                className="icon logo-img"
+                src={icon}
+                alt=""
+                width={logo.width}
+                height={logo.height}
+                style={{
+                  borderRadius: logo.radius,
+                  marginLeft: logo.position === 'right' ? 'auto' : undefined,
+                }}
+              />
+            )}
+            {cfg.header.showName && <strong>{serverName}</strong>}
+            <span
+              className={`badge ${live === 'live' ? 'ok' : 'no'}`}
+              title={
+                live === 'live'
+                  ? 'Live-Aktualisierung aktiv'
+                  : live === 'connecting'
+                    ? 'Verbinde …'
+                    : 'Live-Aktualisierung getrennt – Daten werden beim Öffnen geladen'
+              }
+            >
+              {live === 'live' ? '● Live' : live === 'connecting' ? '○ …' : '○ offline'}
+            </span>
             <Link to="/servers" className="muted hide-sm">
               Server wechseln
             </Link>
           </span>
-          <UserMenu />
+          {cfg.header.showProfile && <UserMenu />}
         </header>
         <div className="content">
           {me.data && !me.data.dashboardAccess ? (

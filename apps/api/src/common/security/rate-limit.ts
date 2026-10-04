@@ -19,7 +19,8 @@ export class MemoryStore implements RateStore {
     if (!e || e.resetAt <= t) {
       e = { count: 0, resetAt: t + windowMs };
       this.map.set(key, e);
-      if (this.map.size > 50_000) for (const [k, v] of this.map) if (v.resetAt <= t) this.map.delete(k); // Aufräumen
+      if (this.map.size > 50_000)
+        for (const [k, v] of this.map) if (v.resetAt <= t) this.map.delete(k); // Aufräumen
     }
     e.count++;
     return { count: e.count, resetMs: e.resetAt - t };
@@ -59,9 +60,27 @@ export interface Rule {
 const MIN = 60_000;
 /** Regeln: spezifische zuerst (alle zutreffenden zählen, die strengste entscheidet). */
 export const RULES: readonly Rule[] = [
-  { name: 'auth', limit: 30, windowMs: MIN, by: 'ip', match: (_m, p) => p.startsWith('/api/v1/auth/') },
-  { name: 'export', limit: 10, windowMs: 10 * MIN, by: 'user', match: (_m, p) => p.endsWith('/export') },
-  { name: 'write', limit: 120, windowMs: MIN, by: 'user', match: (m) => m !== 'GET' && m !== 'HEAD' && m !== 'OPTIONS' },
+  {
+    name: 'auth',
+    limit: 30,
+    windowMs: MIN,
+    by: 'ip',
+    match: (_m, p) => p.startsWith('/api/v1/auth/') && !p.startsWith('/api/v1/auth/me'),
+  }, // Anmeldung/Callback streng; „wer bin ich“ fragt jede Seite ab (fällt unter „all“)
+  {
+    name: 'export',
+    limit: 10,
+    windowMs: 10 * MIN,
+    by: 'user',
+    match: (_m, p) => p.endsWith('/export'),
+  },
+  {
+    name: 'write',
+    limit: 120,
+    windowMs: MIN,
+    by: 'user',
+    match: (m) => m !== 'GET' && m !== 'HEAD' && m !== 'OPTIONS',
+  },
   { name: 'all', limit: 600, windowMs: MIN, by: 'user', match: () => true },
 ];
 
@@ -74,14 +93,29 @@ export interface Decision {
   retryAfterSec: number;
 }
 
-export async function decide(store: RateStore, req: { method: string; path: string; ip: string; userId?: string | undefined }): Promise<Decision> {
-  let worst: Decision = { allowed: true, rule: 'all', limit: Infinity, remaining: Infinity, retryAfterSec: 0 };
+export async function decide(
+  store: RateStore,
+  req: { method: string; path: string; ip: string; userId?: string | undefined },
+): Promise<Decision> {
+  let worst: Decision = {
+    allowed: true,
+    rule: 'all',
+    limit: Infinity,
+    remaining: Infinity,
+    retryAfterSec: 0,
+  };
   for (const rule of RULES) {
     if (!rule.match(req.method.toUpperCase(), req.path)) continue;
     const id = rule.by === 'user' && req.userId ? `u:${req.userId}` : `ip:${req.ip}`;
     const { count, resetMs } = await store.hit(`${rule.name}:${id}`, rule.windowMs);
     const remaining = Math.max(0, rule.limit - count);
-    const d: Decision = { allowed: count <= rule.limit, rule: rule.name, limit: rule.limit, remaining, retryAfterSec: Math.ceil(resetMs / 1000) };
+    const d: Decision = {
+      allowed: count <= rule.limit,
+      rule: rule.name,
+      limit: rule.limit,
+      remaining,
+      retryAfterSec: Math.ceil(resetMs / 1000),
+    };
     if (!d.allowed || remaining < worst.remaining) worst = d;
     if (!d.allowed) return d;
   }

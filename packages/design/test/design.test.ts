@@ -336,3 +336,12 @@ describe('Export / Import', () => {
     expect(() => previewImport('text')).toThrow(DesignError);
   });
 });
+
+describe('Gleichzeitige Erstaufrufe', () => {
+  it('parallele Aufrufe legen die Vorlagen genau einmal an', async () => {
+    const results = await Promise.all(Array.from({ length: 6 }, () => getDesign(A)));
+    expect(results.every((r) => r.themes.length === 5)).toBe(true);
+    expect(await prisma.dashboardTheme.count({ where: { guildId: A } })).toBe(5);
+    expect(await prisma.dashboardSettings.count({ where: { guildId: A } })).toBe(1);
+  });
+});

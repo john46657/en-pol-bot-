@@ -62,6 +62,12 @@ export async function ensureDefaults(guildId: string) {
   const exists = await prisma.guild.findUnique({ where: { id: gid }, select: { id: true } });
   if (!exists) throw new DesignError('not-found', 'Server nicht gefunden.');
   await prisma.$transaction(async (tx) => {
+    // Gleichzeitige erste Aufrufe (Dashboard fragt mehrere Endpunkte parallel) nacheinander abarbeiten
+    await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtext(${'design:' + gid}))`;
+    if (
+      await tx.dashboardSettings.findUnique({ where: { guildId: gid }, select: { guildId: true } })
+    )
+      return;
     const created: Record<string, string> = {};
     for (const p of PRESETS) {
       const t = await tx.dashboardTheme.create({
@@ -82,10 +88,8 @@ export async function ensureDefaults(guildId: string) {
       });
       created[p.name] = t.id;
     }
-    await tx.dashboardSettings.upsert({
-      where: { guildId: gid },
-      update: {},
-      create: { guildId: gid, activeThemeId: created[DEFAULT_THEME_NAME] ?? null },
+    await tx.dashboardSettings.create({
+      data: { guildId: gid, activeThemeId: created[DEFAULT_THEME_NAME] ?? null },
     });
   });
   settings = await prisma.dashboardSettings.findUniqueOrThrow({ where: { guildId: gid } });
@@ -96,9 +100,7 @@ export async function ensureDefaults(guildId: string) {
  * Wirksame Konfiguration eines Servers. Fallback-Kette (Spezifikation 47): Theme + Überschreibungen →
  * zuletzt fehlerfreie Konfiguration → Standard. Wirft nur, wenn der Server nicht existiert.
  */
-export async function getEffective(
-  guildId: string,
-): Promise<{
+export async function getEffective(guildId: string): Promise<{
   config: DesignConfig;
   themeId: string | null;
   themeName: string;

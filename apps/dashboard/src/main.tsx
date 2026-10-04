@@ -25,6 +25,7 @@ import { Promotions } from './pages/Promotions';
 import { Qualifications } from './pages/Qualifications';
 import { Training } from './pages/Training';
 import { Wanted } from './pages/Wanted';
+import { Design } from './pages/Design';
 import { Danger } from './pages/Danger';
 import { Duty } from './pages/Duty';
 import { Operations } from './pages/Operations';
@@ -96,6 +97,7 @@ createRoot(document.getElementById('root')!).render(
                   <Route path="users" element={<Users />} />
                   <Route path="users/:userId" element={<UserDetail />} />
                   <Route path="permissions" element={<Permissions />} />
+                  <Route path="design" element={<Design />} />
                   <Route path="logs" element={<Logs />} />
                 </Route>
               </Route>
