@@ -30,6 +30,37 @@ async function setup(): Promise<void> {
   await seed.guild.create({
     data: { id: '900000000000000001', name: 'NEXUS Demo-Server', settings: { create: {} } },
   });
+  // Testdaten für Suche und Benachrichtigungen: ein Ticket (mit Ereignis „Neues Ticket“) und ein Teammitglied
+  const cat = await seed.ticketCategory.create({
+    data: { guildId: '900000000000000001', name: 'Support' },
+  });
+  const ticket = await seed.ticket.create({
+    data: {
+      guildId: '900000000000000001',
+      number: 4711,
+      categoryId: cat.id,
+      userId: '900000000000000020',
+      subject: 'Einzigartiger Suchbegriff Zebra',
+      status: 'OPEN',
+    },
+  });
+  await seed.auditLog.create({
+    data: {
+      guildId: '900000000000000001',
+      actorType: 'USER',
+      action: 'ticket.opened',
+      resourceType: 'Ticket',
+      resourceId: ticket.id,
+    },
+  });
+  await seed.personnelRecord.create({
+    data: {
+      guildId: '900000000000000001',
+      userId: '900000000000000030',
+      rpName: 'Hans Beispiel',
+      serviceNumber: 'P-4242',
+    },
+  });
   await seed.$disconnect();
 }
 

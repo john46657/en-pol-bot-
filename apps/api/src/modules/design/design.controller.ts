@@ -2,11 +2,13 @@ import {
   Body,
   Controller,
   Delete,
+  ForbiddenException,
   Get,
   Headers,
   Param,
   Post,
   Put,
+  Query,
   Req,
   UseFilters,
 } from '@nestjs/common';
@@ -25,6 +27,8 @@ import {
   listAssets,
   saveAsset,
   getEffective,
+  getNotifications,
+  searchAll,
   getWidgetData,
   getTheme,
   importTheme,
@@ -70,6 +74,41 @@ export class DesignController {
     // Seiten, Widgets, Banner und Menüeinträge mit Rollen-Einschränkung verlassen den Server nur für Berechtigte
     const config = filterForViewer(e.config, { isAdmin: access.bypass, roleIds: access.roleIds });
     return { config, themeName: e.themeName, source: e.source };
+  }
+
+  /**
+   * Globale Suche (Tickets, Transcripts, Bewerbungen, Teammitglieder). Jede Gruppe nur mit dem passenden Recht; die
+   * Suche selbst lässt sich im Design ausschalten – dann antwortet der Server mit 403, nicht nur die Oberfläche.
+   */
+  @Get('search')
+  @RequireDashboardAccess()
+  async search(
+    @GuildId() guildId: string,
+    @Query('q') q: string | undefined,
+    @Access() access: RequestAccess,
+  ) {
+    const { config } = await getEffective(guildId);
+    if (!config.header.showSearch)
+      throw new ForbiddenException('Die globale Suche ist für diesen Server deaktiviert.');
+    return searchAll(
+      guildId,
+      typeof q === 'string' ? q : '',
+      async (p) => access.bypass || (await permissions.can(access, p as Permission)),
+    );
+  }
+
+  /** Benachrichtigungen für die Glocke: nur die im Design gewählten Arten, nur mit passendem Recht. */
+  @Get('notifications')
+  @RequireDashboardAccess()
+  async notifications(@GuildId() guildId: string, @Access() access: RequestAccess) {
+    const { config } = await getEffective(guildId);
+    if (!config.header.showNotifications) return { items: [] };
+    const items = await getNotifications(
+      guildId,
+      config.header.notificationTypes,
+      async (p) => access.bypass || (await permissions.can(access, p as Permission)),
+    );
+    return { items };
   }
 
   /**

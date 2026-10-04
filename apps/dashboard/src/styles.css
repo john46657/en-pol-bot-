@@ -1347,3 +1347,107 @@ dialog.dz-dialog::backdrop {
   height: 80px;
   object-fit: cover;
 }
+/* Suche und Benachrichtigungen im Header */
+.hs,
+.nb {
+  position: relative;
+}
+.hs-input {
+  width: min(260px, 40vw);
+  padding: 6px 10px;
+  border-radius: var(--radius-btn, 8px);
+  border: 1px solid var(--line);
+  background: var(--bg);
+  color: var(--fg);
+  font: inherit;
+}
+.hs-panel,
+.nb-panel {
+  position: absolute;
+  z-index: 30;
+  top: calc(100% + 6px);
+  right: 0;
+  width: min(380px, 92vw);
+  max-height: 70vh;
+  overflow: auto;
+  padding: 6px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-card, 10px);
+  background: var(--panel);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+}
+.hs-panel {
+  left: 0;
+  right: auto;
+}
+html[data-anim-notification='on'] .nb-panel,
+html[data-anim-notification='on'] .hs-panel {
+  animation: page-in var(--dur, 0ms) ease-out;
+}
+.hs-group {
+  padding: 6px 8px 2px;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--muted);
+}
+.hs-item,
+.nb-item {
+  display: flex;
+  gap: 8px;
+  width: 100%;
+  align-items: baseline;
+  justify-content: space-between;
+  padding: 7px 8px;
+  border: 0;
+  border-radius: var(--radius-btn, 8px);
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.hs-item.on,
+.hs-item:hover,
+.nb-item:hover {
+  background: var(--panel-hover, var(--bg));
+}
+.nb-item {
+  align-items: flex-start;
+}
+.nb-item.new {
+  border-left: 3px solid var(--primary);
+}
+.hs-note,
+.nb-note {
+  padding: 6px 8px;
+  margin: 0;
+}
+.nb-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 4px 6px 8px;
+}
+.nb-list {
+  display: grid;
+  gap: 2px;
+  margin: 0;
+}
+.nb-btn {
+  position: relative;
+}
+.nb-badge {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  min-width: 16px;
+  padding: 0 4px;
+  border-radius: 999px;
+  background: var(--err);
+  color: #fff;
+  font-size: 10px;
+  line-height: 16px;
+  text-align: center;
+}

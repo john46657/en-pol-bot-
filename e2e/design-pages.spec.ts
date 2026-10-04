@@ -81,7 +81,7 @@ test('Seiten & Banner: Seite aus Vorlage erstellen, Banner anlegen → Menü, Se
   await expect(page).toHaveURL(new RegExp(`/guilds/${E2E.guildId}/p/fortbildung$`));
   await expect(main.getByRole('heading', { name: /Fortbildung/ })).toBeVisible();
   await expect(main.getByText('Fortbildungsübersicht')).toBeVisible();
-  await expect(main.getByRole('region', { name: 'Offene Tickets' })).toContainText('0');
+  await expect(main.getByRole('region', { name: 'Offene Tickets' })).toContainText('1'); // das Testticket (Seed)
   await expect(main.getByRole('region', { name: 'Im Dienst' })).toBeVisible();
   await expect(main.getByRole('region', { name: 'Bewerbungen nach Status' })).toBeVisible();
   await expect(main.getByRole('complementary', { name: 'Wichtige Information' })).toBeVisible(); // Banner auch hier

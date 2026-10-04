@@ -6,3 +6,5 @@ export * from './widgets.js';
 export * from './widget-data.js';
 export * from './pages.js';
 export * from './assets.js';
+export * from './notify.js';
+export * from './search.js';

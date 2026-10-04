@@ -23,10 +23,10 @@ test('Widgets: Standard-Übersicht, Editor (Text, Link, Ziehen, Duplizieren, Ent
   // 1) Standard-Übersicht: echte Zahlen (Besitzer sieht alles), Konfigurations-Check
   await page.goto(`/guilds/${E2E.guildId}`);
   const main = page.locator('.content');
-  await expect(main.getByRole('region', { name: 'Offene Tickets' })).toContainText('0');
+  await expect(main.getByRole('region', { name: 'Offene Tickets' })).toContainText('1'); // das Testticket (Seed)
   await expect(main.getByRole('region', { name: 'Konfigurations-Check' })).toBeVisible();
   await expect(main.getByRole('region', { name: 'Tickets', exact: true })).toContainText(
-    'Keine offenen Tickets',
+    '#4711 Einzigartiger Suchbegriff Zebra',
   );
 
   // 2) Editor

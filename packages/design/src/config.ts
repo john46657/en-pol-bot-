@@ -3,6 +3,7 @@
  * `normalizeConfig` wirft nie: ungültige oder fehlende Werte fallen einzeln auf den Standard zurück,
  * damit eine beschädigte Konfiguration das Dashboard nie unbenutzbar macht (Spezifikation 47).
  */
+import { NOTIFICATION_KEYS } from './notify.js';
 import { normalizeLayout, defaultLayout, type LayoutConfig } from './pages.js';
 import { isObj, color, num, bool, oneOf, text, safeUrl } from './primitives.js';
 export { color, num, bool, oneOf, text, safeUrl, isObj };
@@ -114,6 +115,8 @@ export interface DesignConfig {
     showName: boolean;
     showSearch: boolean;
     showNotifications: boolean;
+    /** Welche Benachrichtigungs-Arten die Glocke zeigt (`NOTIFICATION_KEYS`) */
+    notificationTypes: string[];
     showProfile: boolean;
   };
   cards: {
@@ -215,6 +218,7 @@ export const DEFAULT_CONFIG: DesignConfig = {
     showName: true,
     showSearch: true,
     showNotifications: true,
+    notificationTypes: [...NOTIFICATION_KEYS],
     showProfile: true,
   },
   cards: { radius: null, shadow: null, glass: null, border: 1 },
@@ -412,6 +416,9 @@ export function normalizeConfig(raw: unknown, base: DesignConfig = DEFAULT_CONFI
       showName: bool(hd['showName'], b.header.showName),
       showSearch: bool(hd['showSearch'], b.header.showSearch),
       showNotifications: bool(hd['showNotifications'], b.header.showNotifications),
+      notificationTypes: Array.isArray(hd['notificationTypes'])
+        ? NOTIFICATION_KEYS.filter((k) => (hd['notificationTypes'] as unknown[]).includes(k)) // Reihenfolge fest, Unbekanntes entfällt
+        : [...b.header.notificationTypes],
       showProfile: bool(hd['showProfile'], b.header.showProfile),
     },
     cards: {

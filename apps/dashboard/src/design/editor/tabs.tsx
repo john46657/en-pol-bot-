@@ -2,6 +2,7 @@ import { COLOR_KEYS, FONTS, type Background } from '@nexus/design/client';
 import { pageOptions } from './pageOptions';
 import { ImagePath } from './ImageField';
 import { NavEditor } from './NavEditor';
+import { NotificationTypes } from './NotificationTypes';
 import { PagesEditor } from './PagesEditor';
 import { BannersEditor } from './BannersEditor';
 import { ColorField, ContrastHint, Inherit, Num, Pick, Toggle, Txt, Field } from './controls';
@@ -326,6 +327,13 @@ export function NavigationTab() {
       <Num path="header.border" label="Rahmen" min={0} max={4} unit=" px" />
       <Toggle path="header.showLogo" label="Logo anzeigen" />
       <Toggle path="header.showName" label="Servername anzeigen" />
+      <Toggle
+        path="header.showSearch"
+        label="Globale Suche aktivieren"
+        hint="Tickets, Transcripts, Bewerbungen, Teammitglieder und Seiten – jeder sieht nur Treffer, für die er das Recht hat. Ausgeschaltet antwortet auch der Server nicht mehr."
+      />
+      <Toggle path="header.showNotifications" label="Benachrichtigungen (Glocke) anzeigen" />
+      {draft.header.showNotifications && <NotificationTypes />}
       <Toggle
         path="header.showProfile"
         label="Benutzerprofil (Abmelden, Hell/Dunkel) anzeigen"

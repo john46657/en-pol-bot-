@@ -791,6 +791,72 @@ describe('Dashboard-Design (Phase 37)', () => {
     expect((await call('GET', d('/assets'), ADMIN)).data.assets).toEqual([]);
   });
 
+  it('Suche und Benachrichtigungen: serverseitig nach Recht, Server und Einstellungen', async () => {
+    // Daten des Servers: ein Ticket
+    const cat = await prisma.ticketCategory.create({ data: { guildId: G, name: 'Suchtest' } });
+    const ticket = await prisma.ticket.create({
+      data: {
+        guildId: G,
+        number: 4711,
+        categoryId: cat.id,
+        userId: '900000000000330099',
+        subject: 'Einzigartiger Suchbegriff Zebra',
+        status: 'OPEN',
+      },
+    });
+    await prisma.auditLog.create({
+      data: {
+        guildId: G,
+        actorType: 'USER',
+        action: 'ticket.opened',
+        resourceType: 'Ticket',
+        resourceId: ticket.id,
+      },
+    });
+    expect((await call('GET', d('/search?q=zebra'), NOBODY)).status).toBe(403); // kein Dashboard-Zugang
+    const admin = await call('GET', d('/search?q=zebra'), ADMIN);
+    expect(admin.status).toBe(200);
+    expect(admin.data.groups[0]).toMatchObject({
+      kind: 'tickets',
+      items: [expect.objectContaining({ title: '#4711 Einzigartiger Suchbegriff Zebra' })],
+    });
+    // OFFICER hat keine Ticket-Rechte → weder Treffer noch Hinweis darauf
+    const officer = await call('GET', d('/search?q=zebra'), OFFICER);
+    expect(officer.status).toBe(200);
+    expect(JSON.stringify(officer.data)).not.toContain('Zebra');
+    expect(officer.data.groups).toEqual([]);
+    expect((await call('GET', d('/search?q=z'), ADMIN)).data.groups).toEqual([]); // zu kurz
+    expect((await call('GET', d('/search'), ADMIN)).data.groups).toEqual([]);
+    // Glocke
+    const bell = await call('GET', d('/notifications'), ADMIN);
+    expect(bell.data.items[0]).toMatchObject({
+      type: 'ticketNew',
+      title: 'Neues Ticket',
+      text: '#4711 Einzigartiger Suchbegriff Zebra',
+      path: '/tickets',
+    });
+    expect(JSON.stringify((await call('GET', d('/notifications'), OFFICER)).data)).not.toContain(
+      'Zebra',
+    );
+    // Der Administrator schaltet Arten bzw. die Funktionen im Design aus – der Server hält sich daran
+    const t = await call('POST', d('/themes'), ADMIN, { name: 'Ohne Suche' });
+    await call('PUT', d(`/themes/${t.data.id}`), ADMIN, {
+      config: { header: { showSearch: false, notificationTypes: ['teamChange'] } },
+    });
+    await call('POST', d(`/themes/${t.data.id}/activate`), ADMIN);
+    expect((await call('GET', d('/search?q=zebra'), ADMIN)).status).toBe(403);
+    const only = (await call('GET', d('/notifications'), ADMIN)).data.items as { type: string }[];
+    expect(only.every((i) => i.type === 'teamChange')).toBe(true); // nur die gewählte Art
+    expect(JSON.stringify(only)).not.toContain('Zebra'); // „Neues Ticket“ ist abgewählt
+    await call('PUT', d(`/themes/${t.data.id}`), ADMIN, {
+      config: { header: { showNotifications: false } },
+    });
+    expect((await call('GET', d('/notifications'), ADMIN)).data.items).toEqual([]);
+    await call('POST', d('/reset'), ADMIN, { confirm: true });
+    await prisma.ticket.delete({ where: { id: ticket.id } });
+    await prisma.ticketCategory.delete({ where: { id: cat.id } });
+  });
+
   it('Navigation: Rollenliste für den Editor (ohne @everyone) und eigene Rollen für die Menü-Sichtbarkeit', async () => {
     const roles = await call('GET', d('/roles'), ADMIN);
     expect(roles.status).toBe(200);

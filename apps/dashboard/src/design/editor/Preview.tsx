@@ -131,7 +131,11 @@ export function Preview({
                   </span>
                 )}
                 {config.header.showName && <strong>{name}</strong>}
-                {config.header.showProfile && <span className="pv-me">👤</span>}
+                <span className="pv-me">
+                  {config.header.showSearch && <span title="Suche">🔍 </span>}
+                  {config.header.showNotifications && <span title="Benachrichtigungen">🔔 </span>}
+                  {config.header.showProfile && '👤'}
+                </span>
               </header>
               <div className="pv-content">
                 <h1>Übersicht</h1>

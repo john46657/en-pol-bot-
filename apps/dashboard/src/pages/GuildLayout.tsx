@@ -9,6 +9,8 @@ import { resolveNavigation } from '@nexus/design/client';
 import { DesignBackground, DesignCtx, useDesign } from '../design/useDesign';
 import { assetUrl } from '../design/assetUrl';
 import { BannerBar } from '../design/widgets/BannerBar';
+import { HeaderSearch } from '../design/header/HeaderSearch';
+import { NotificationBell } from '../design/header/NotificationBell';
 
 type Needs =
   | 'any'
@@ -268,7 +270,25 @@ export function GuildLayout() {
               Server wechseln
             </Link>
           </span>
-          {cfg.header.showProfile && <UserMenu />}
+          <span className="who">
+            {cfg.header.showSearch && (
+              <HeaderSearch
+                guildId={guildId}
+                pages={sections.flatMap((sec) =>
+                  sec.items
+                    .filter((i) => !i.href)
+                    .map((i) => ({
+                      key: i.key,
+                      title: i.title,
+                      icon: i.icon,
+                      path: `/${navPath(i.key)}`,
+                    })),
+                )}
+              />
+            )}
+            {cfg.header.showNotifications && <NotificationBell guildId={guildId} />}
+            {cfg.header.showProfile && <UserMenu />}
+          </span>
         </header>
         <div className="content">
           {me.data && !me.data.dashboardAccess ? (
