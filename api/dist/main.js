@@ -11,7 +11,8 @@ async function bootstrap() {
     const env = (0, env_1.loadEnv)();
     const app = await core_1.NestFactory.create(app_module_1.AppModule, { rawBody: true });
     (0, setup_app_1.configureApp)(app);
-    await app.listen(env.PORT);
+    await app.listen(env.PORT, env.HOST);
+    new common_1.Logger('Bootstrap').log(`API lauscht auf ${env.HOST}:${env.PORT} (GET /health)`);
     if (env.NODE_ENV === 'production') {
         // Tägliche Aufbewahrungsregeln (Sessions, Login-Historie, gelesene Benachrichtigungen). Audit-Logs bleiben unberührt.
         const log = new common_1.Logger('Retention');
