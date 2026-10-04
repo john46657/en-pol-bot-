@@ -16,7 +16,7 @@
 - Führung: zuteilen (Mitglied muss im Dienst sein), entfernen, Status ändern, auflösen (Audit-Log).
 
 ## Rechte (neu, Bereich „Dienst & Streifen“)
-`duty.view`, `duty.unit.join` (Beamte-Vorlage), `duty.unit.manage` (Polizeileitung, Teamleitung). Geprüft in API und Bot.
+`duty.view`, `duty.unit.join` (Beamte-Vorlage), `duty.unit.manage` (Polizeileitung; Teamleitung hat bewusst keines, da Einheiten teamübergreifend sind). Geprüft in API und Bot.
 
 ## Oberflächen
 Bot: `/streife bilden|beitreten|verlassen|status|info|übersicht`. API: `GET /guilds/:id/duty`, `PATCH/DELETE units/:id`, `units/:id/assign|remove|history`. Dashboard: Seite mit Zählern, Einheitenliste, „ohne Einheit“, Aktualisierung alle 15 s (Live-Push folgt in Phase 30).

@@ -164,8 +164,6 @@ export const PERMISSION_TEMPLATES: readonly PermissionTemplate[] = [
       T('personnel.note.create'),
       T('shifts.view'),
       T('shifts.manage'),
-      'duty.view',
-      'duty.unit.manage',
       T('report.view'),
       T('report.manage'),
       T('training.view'),
