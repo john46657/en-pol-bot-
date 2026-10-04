@@ -58,3 +58,21 @@ describe('Submission State Machine (§62)', () => {
     expect(isReviewable(SubmissionStatus.ACCEPTED)).toBe(false);
   });
 });
+
+describe('Entscheidung und Zurückziehen (Phase 10)', () => {
+  it('Entscheidung ist direkt nach dem Absenden möglich', () => {
+    expect(canTransition(SubmissionStatus.SUBMITTED, SubmissionStatus.ACCEPTED)).toBe(true);
+    expect(canTransition(SubmissionStatus.SUBMITTED, SubmissionStatus.DENIED)).toBe(true);
+  });
+  it('Bewerber kann zurückziehen, solange nicht entschieden ist', () => {
+    expect(canTransition(SubmissionStatus.SUBMITTED, SubmissionStatus.WITHDRAWN)).toBe(true);
+    expect(canTransition(SubmissionStatus.UNDER_REVIEW, SubmissionStatus.WITHDRAWN)).toBe(true);
+    expect(canTransition(SubmissionStatus.ACCEPTED, SubmissionStatus.WITHDRAWN)).toBe(false);
+    expect(canTransition(SubmissionStatus.DENIED, SubmissionStatus.WITHDRAWN)).toBe(false);
+    expect(canTransition(SubmissionStatus.IN_PROGRESS, SubmissionStatus.WITHDRAWN)).toBe(false);
+  });
+  it('zurückgezogen ist endgültig; eine Entscheidung nach dem Zurückziehen ist unmöglich', () => {
+    expect(canTransition(SubmissionStatus.WITHDRAWN, SubmissionStatus.ACCEPTED)).toBe(false);
+    expect(canTransition(SubmissionStatus.WITHDRAWN, SubmissionStatus.UNDER_REVIEW)).toBe(false);
+  });
+});

@@ -19,6 +19,7 @@ export const STATUS_LABEL: Record<SubmissionStatus, string> = {
   DENIED: '🔴 Abgelehnt',
   EXPIRED: '⚫ Abgelaufen',
   CANCELLED: '✖️ Abgebrochen',
+  WITHDRAWN: '↩️ Zurückgezogen',
   ARCHIVED: '🗄️ Archiviert',
 };
 

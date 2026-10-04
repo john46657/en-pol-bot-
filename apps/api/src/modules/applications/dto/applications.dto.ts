@@ -90,10 +90,16 @@ export class ListApplicationsQueryDto {
   limit?: number;
 }
 
+/** Annahme: optionale Nachricht an den Bewerber (`publicReason` bleibt als Alias erhalten). */
 export class AcceptSubmissionDto {
   @IsOptional()
   @IsString()
-  @MaxLength(2000)
+  @MaxLength(1000)
+  note?: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(1000)
   publicReason?: string;
 
   @IsOptional()
@@ -102,16 +108,34 @@ export class AcceptSubmissionDto {
   internalReason?: string;
 }
 
+/** Ablehnung: Grund aus der Konfiguration (`reasonId`) plus optionale Nachricht. */
 export class DenySubmissionDto {
   @IsOptional()
   @IsString()
-  @MaxLength(2000)
+  @MaxLength(30)
+  reasonId?: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(1000)
+  note?: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(1000)
   publicReason?: string;
 
   @IsOptional()
   @IsString()
   @MaxLength(2000)
   internalReason?: string;
+}
+
+export class ContactApplicantDto {
+  @IsString()
+  @MinLength(1)
+  @MaxLength(1500)
+  text!: string;
 }
 
 export class CreateNoteDto {

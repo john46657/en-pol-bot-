@@ -170,6 +170,19 @@ export const reviewConfigSchema = z.object({
     .or(z.enum(['manual']))
     .optional(),
   reviewerRoleIds: z.array(z.string()).max(20).optional(),
+  /** Annahme-Schritte einzeln schaltbar (Schlüssel → aktiv); fehlend = aktiv. */
+  acceptPipeline: z.record(z.string().max(40), z.boolean()).optional(),
+  /** Auswählbare Ablehnungsgründe (leer = Standardgründe). */
+  denyReasons: z
+    .array(
+      z.object({
+        id: z.string().regex(/^[a-z0-9_-]{1,30}$/, 'Ungültige Grund-ID.'),
+        label: z.string().trim().min(1).max(100),
+        text: z.string().trim().max(1000).optional(),
+      }),
+    )
+    .max(25)
+    .optional(),
 });
 
 export const requirementsSchema = z.object({

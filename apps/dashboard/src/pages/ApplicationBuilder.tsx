@@ -9,6 +9,7 @@ import {
   type QuestionsResponse,
 } from '../api';
 import { errorText, QueryState } from '../components/QueryState';
+import { ReviewSettings } from '../components/ReviewSettings';
 import { useToast } from '../toast';
 
 const SELECTS = ['SINGLE_SELECT', 'MULTI_SELECT'];
@@ -211,6 +212,8 @@ export function ApplicationBuilder() {
           isNew={isNew}
         />
       )}
+      <h2>Bearbeitung</h2>
+      <ReviewSettings guildId={guildId} applicationId={applicationId} />
     </>
   );
 }

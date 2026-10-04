@@ -25,6 +25,11 @@ export const CustomIdAction = {
   REVIEW_DENY_REASON: 'review:deny_r', // review:deny_r:<submissionId>
   REVIEW_HISTORY: 'review:history', // review:history:<submissionId>
   REVIEW_NOTE: 'review:note', // review:note:<submissionId>
+  REVIEW_VIEW: 'review:view', // review:view:<submissionId>
+  REVIEW_ASK: 'review:ask', // review:ask:<submissionId>
+  REVIEW_INTERVIEW: 'review:interview', // review:interview:<submissionId>
+  REVIEW_DENY_SELECT: 'review:denysel', // review:denysel:<submissionId> (Select, Wert = Grund-ID)
+  DM_WITHDRAW: 'dm:withdraw', // dm:withdraw:<submissionId>
   REVIEW_TICKET: 'review:ticket', // review:ticket:<submissionId>
   REVIEW_DASHBOARD: 'review:dashboard', // review:dashboard:<submissionId>
 } as const;

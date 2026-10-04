@@ -18,6 +18,7 @@ import { handleMemberRemove } from './events/guild-events.js';
 import { handleAutocomplete, handleCommand, registerCommands } from './commands.js';
 import { syncAllGuilds, syncGuild } from './guilds.js';
 import './panels/panel-handlers.js';
+import './applications/review-handlers.js';
 import { scheduleSync, syncAllGuildResources, syncGuildResources } from './sync/discord-sync.js';
 
 /**
@@ -51,9 +52,32 @@ export function createClient(): Client {
   client.on(
     Events.GuildCreate,
     (guild) =>
-      void syncGuild(guild).catch((e) =>
-        log.error({ err: String(e) }, 'Guild-Sync fehlgeschlagen.'),
-      ),
+      void syncGuild(guild)
+        .then(() => syncGuildResources(guild))
+        .catch((e) => log.error({ err: String(e) }, 'Guild-Sync fehlgeschlagen.')),
+  );
+  // Rollen/Kanäle/Mitglieder laufend nachziehen (gebündelt, damit Massenänderungen nur einen Sync auslösen)
+  client.on(Events.GuildRoleCreate, (role) => scheduleSync(role.guild, 'roles'));
+  client.on(Events.GuildRoleUpdate, (_old, role) => scheduleSync(role.guild, 'roles'));
+  client.on(Events.GuildRoleDelete, (role) => scheduleSync(role.guild, 'roles'));
+  client.on(Events.ChannelCreate, (channel) => scheduleSync(channel.guild, 'channels'));
+  client.on(Events.ChannelUpdate, (_old, channel) => {
+    if ('guild' in channel) scheduleSync(channel.guild, 'channels');
+  });
+  client.on(Events.ChannelDelete, (channel) => {
+    if ('guild' in channel) scheduleSync(channel.guild, 'channels');
+  });
+  client.on(
+    Events.GuildMemberAdd,
+    (member) =>
+      void userRepository
+        .upsert({
+          id: member.id,
+          username: member.user.username,
+          globalName: member.user.globalName,
+          bot: member.user.bot,
+        })
+        .catch((e) => log.warn({ err: String(e) }, 'Benutzer-Sync fehlgeschlagen.')),
   );
   client.on(
     Events.GuildUpdate,

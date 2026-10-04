@@ -71,6 +71,9 @@ importers:
       '@nexus/auth':
         specifier: workspace:*
         version: link:../../packages/auth
+      '@nexus/automation':
+        specifier: workspace:*
+        version: link:../../packages/automation
       '@nexus/config':
         specifier: workspace:*
         version: link:../../packages/config
@@ -144,6 +147,9 @@ importers:
 
   apps/bot:
     dependencies:
+      '@nexus/automation':
+        specifier: workspace:*
+        version: link:../../packages/automation
       '@nexus/config':
         specifier: workspace:*
         version: link:../../packages/config
@@ -259,12 +265,18 @@ importers:
 
   packages/automation:
     dependencies:
+      '@nexus/core':
+        specifier: workspace:*
+        version: link:../core
       '@nexus/database':
         specifier: workspace:*
         version: link:../database
       '@nexus/discord':
         specifier: workspace:*
         version: link:../discord
+      '@nexus/types':
+        specifier: workspace:*
+        version: link:../types
     devDependencies:
       vitest:
         specifier: ^3.2.4

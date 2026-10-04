@@ -4,13 +4,14 @@ import { Link, NavLink, Outlet, useLocation, useParams } from 'react-router';
 import { api, guildIcon, type GuildOverview } from '../api';
 import { UserMenu } from '../components/UserMenu';
 
-type Needs = 'any' | 'view' | 'admin' | 'panels';
+type Needs = 'any' | 'view' | 'admin' | 'panels' | 'submissions';
 const NAV: { to: string; label: string; icon: string; end?: boolean; needs: Needs }[] = [
   { to: '', label: 'Übersicht', icon: '🏠', end: true, needs: 'any' },
   { to: 'settings', label: 'Rollen & Kanäle wählen', icon: '⚙️', needs: 'view' },
   { to: 'roles', label: 'Rollen', icon: '🎭', needs: 'view' },
   { to: 'channels', label: 'Kanäle', icon: '#️⃣', needs: 'view' },
   { to: 'applications', label: 'Bewerbungen', icon: '📋', needs: 'view' },
+  { to: 'submissions', label: 'Einreichungen', icon: '📥', needs: 'submissions' },
   { to: 'panels', label: 'Panels', icon: '🧩', needs: 'panels' },
   { to: 'users', label: 'Benutzer', icon: '👥', needs: 'admin' },
   { to: 'profiles', label: 'Profile', icon: '🧾', needs: 'admin' },
@@ -41,7 +42,8 @@ export function GuildLayout() {
     me.data.guildAdmin ||
     needs === 'any' ||
     (needs === 'view' && me.data.permissions.includes('applications.view')) ||
-    (needs === 'panels' && me.data.permissions.includes('panels.view'));
+    (needs === 'panels' && me.data.permissions.includes('panels.view')) ||
+    (needs === 'submissions' && me.data.permissions.includes('applications.submissions.view'));
   const icon = g.data && guildIcon(g.data.id, g.data.icon);
   return (
     <div className={`shell ${open ? 'nav-open' : ''}`}>

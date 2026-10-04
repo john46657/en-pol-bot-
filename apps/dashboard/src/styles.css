@@ -652,3 +652,30 @@ input:focus-visible {
   border-color: var(--ok);
   color: var(--fg);
 }
+.pill {
+  display: inline-block;
+  padding: 2px 10px;
+  border-radius: 999px;
+  font-size: 13px;
+  background: var(--line);
+}
+.pill.s-ACCEPTED {
+  background: #248046;
+  color: #fff;
+}
+.pill.s-DENIED {
+  background: #da373c;
+  color: #fff;
+}
+.pill.s-SUBMITTED {
+  background: #fee75c;
+  color: #000;
+}
+.pill.s-UNDER_REVIEW {
+  background: #5865f2;
+  color: #fff;
+}
+.pill.s-WITHDRAWN {
+  background: #6b7280;
+  color: #fff;
+}

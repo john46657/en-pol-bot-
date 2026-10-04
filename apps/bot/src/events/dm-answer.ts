@@ -1,7 +1,9 @@
 import type { Client, Message } from 'discord.js';
 import { prisma } from '@nexus/database';
 import { DMPhase, SubmissionStatus } from '@nexus/types';
+import { recordClarificationReply } from '@nexus/automation';
 import { presentCurrent, processAnswer } from '../applications/dm-flow.js';
+import { reviewPort } from '../applications/review-handlers.js';
 
 /**
  * Eingehende DM-Nachrichten → Antwort-Verarbeitung (§18).
@@ -26,7 +28,21 @@ export async function handleDMMessage(client: Client, message: Message): Promise
     orderBy: { lastInteractionAt: 'desc' },
     include: { submission: true },
   });
-  if (!state?.submission) return;
+  if (!state?.submission) {
+    // Keine laufende Bewerbung: vielleicht die Antwort auf eine Rückfrage des Teams
+    if (message.content.trim()) {
+      const r = await recordClarificationReply(reviewPort(), {
+        userId: message.author.id,
+        text: message.content,
+      }).catch(() => ({ handled: false }));
+      if (r.handled) {
+        await message
+          .reply('✅ Deine Antwort wurde an das Team weitergeleitet.')
+          .catch(() => undefined);
+      }
+    }
+    return;
+  }
   const say = (content: string) => message.reply(content).catch(() => undefined);
 
   if (state.submission.status === SubmissionStatus.PAUSED) {

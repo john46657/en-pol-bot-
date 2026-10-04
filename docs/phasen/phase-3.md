@@ -31,3 +31,5 @@ Beim Speichern wird **serverseitig** gegen Discord geprüft: Rolle/Kanal existie
 - Bot-Rechte werden auf Server-Ebene geprüft; Kanal-spezifische Overrides (Rechte pro Kanal) nicht.
 - Dashboard-UI wurde kompiliert und typgeprüft, aber nicht im Browser bedient (Login braucht echtes Discord-OAuth).
 - Die Permission-Prüfung nutzt noch die Bewerbungs-Permissions (`applications.view/manage`); das zentrale System folgt in Phase 6.
+
+> **Korrektur (Phase 10):** Die beschriebene ereignisgesteuerte Nachsynchronisierung (Rollen-/Kanal-/Mitglieder-Events) war zunächst **nicht** im Bot angebunden – nur der Sync beim Start lief. Das wurde in Phase 10 nachgeholt und mit einem Test abgesichert (`apps/bot/test/bot-events.test.ts`).

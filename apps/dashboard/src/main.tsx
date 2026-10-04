@@ -12,6 +12,8 @@ import { GuildLayout } from './pages/GuildLayout';
 import { Login } from './pages/Login';
 import { Logs } from './pages/Logs';
 import { ProfileEditor, Profiles } from './pages/Profiles';
+import { SubmissionDetail } from './pages/SubmissionDetail';
+import { Submissions } from './pages/Submissions';
 import { UserDetail, Users } from './pages/Users';
 import { PanelEditor } from './pages/PanelEditor';
 import { Panels } from './pages/Panels';
@@ -47,6 +49,8 @@ createRoot(document.getElementById('root')!).render(
                   <Route path="channels" element={<Channels />} />
                   <Route path="applications" element={<Applications />} />
                   <Route path="applications/:applicationId" element={<ApplicationBuilder />} />
+                  <Route path="submissions" element={<Submissions />} />
+                  <Route path="submissions/:submissionId" element={<SubmissionDetail />} />
                   <Route path="panels" element={<Panels />} />
                   <Route path="panels/:panelId" element={<PanelEditor />} />
                   <Route path="profiles" element={<Profiles />} />

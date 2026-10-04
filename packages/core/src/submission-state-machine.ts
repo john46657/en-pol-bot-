@@ -22,12 +22,26 @@ export const SUBMISSION_TRANSITIONS: Readonly<Record<SubmissionStatus, Submissio
     SubmissionStatus.EXPIRED,
   ],
   PAUSED: [SubmissionStatus.IN_PROGRESS, SubmissionStatus.CANCELLED, SubmissionStatus.EXPIRED],
-  SUBMITTED: [SubmissionStatus.UNDER_REVIEW, SubmissionStatus.ARCHIVED],
-  UNDER_REVIEW: [SubmissionStatus.ACCEPTED, SubmissionStatus.DENIED, SubmissionStatus.ARCHIVED],
+  // Eine Entscheidung ist direkt nach dem Absenden möglich; UNDER_REVIEW kennzeichnet „wird bearbeitet“
+  // (Ansehen, Rückfrage, Gespräch).
+  SUBMITTED: [
+    SubmissionStatus.UNDER_REVIEW,
+    SubmissionStatus.ACCEPTED,
+    SubmissionStatus.DENIED,
+    SubmissionStatus.WITHDRAWN,
+    SubmissionStatus.ARCHIVED,
+  ],
+  UNDER_REVIEW: [
+    SubmissionStatus.ACCEPTED,
+    SubmissionStatus.DENIED,
+    SubmissionStatus.WITHDRAWN,
+    SubmissionStatus.ARCHIVED,
+  ],
   ACCEPTED: [SubmissionStatus.ARCHIVED],
   DENIED: [SubmissionStatus.UNDER_REVIEW, SubmissionStatus.ARCHIVED],
   EXPIRED: [SubmissionStatus.CANCELLED, SubmissionStatus.ARCHIVED],
   CANCELLED: [SubmissionStatus.ARCHIVED],
+  WITHDRAWN: [SubmissionStatus.ARCHIVED],
   ARCHIVED: [],
 };
 
@@ -37,6 +51,7 @@ export const TERMINAL_SUBMISSION_STATUSES: ReadonlySet<SubmissionStatus> = new S
   SubmissionStatus.DENIED,
   SubmissionStatus.EXPIRED,
   SubmissionStatus.CANCELLED,
+  SubmissionStatus.WITHDRAWN,
   SubmissionStatus.ARCHIVED,
 ]);
 

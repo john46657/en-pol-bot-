@@ -17,10 +17,11 @@ import { parseCustomId, CustomIdAction, isValidId } from '../discord/custom-ids.
 import { log } from '../logger.js';
 import { dispatchComponent, dispatchModal, registerSelect } from '../core/interaction-registry.js';
 import { buildCustomId } from '../discord/custom-ids.js';
-import { REVIEW_KEYS, requireMemberPermission } from '../discord/permissions.js';
 import { DMPhase, SubmissionStatus } from '@nexus/types';
 import { prisma } from '@nexus/database';
+import { postSubmissionToReview } from '@nexus/automation';
 import { startApplication } from '../applications/application-service.js';
+import { dashboardLink, reviewPort } from '../applications/review-handlers.js';
 import {
   cancelSubmission as cancelInFlow,
   editAnswer,
@@ -33,12 +34,6 @@ import {
   submitSubmission,
   type FlowContext,
 } from '../applications/dm-flow.js';
-import {
-  acceptSubmission,
-  addNote,
-  buildHistoryEmbed,
-  denySubmission,
-} from '../applications/review-service.js';
 
 /**
  * Zentraler Interaction-Router (§135: Custom-IDs werden serverseitig validiert).
@@ -92,45 +87,14 @@ async function handleComponent(
       return backToSummary(interaction, parsed.args[0] ?? '');
     case CustomIdAction.DM_SUBMIT:
       return submitFromSummary(interaction, parsed.args[0] ?? '');
-    case CustomIdAction.REVIEW_ACCEPT:
-      return reviewDecide(interaction, parsed.args[0] ?? '', 'accept');
-    case CustomIdAction.REVIEW_DENY:
-      return reviewDecide(interaction, parsed.args[0] ?? '', 'deny');
-    case CustomIdAction.REVIEW_ACCEPT_REASON:
-      return reviewDecideWithReasonModal(interaction, parsed.args[0] ?? '', 'accept');
-    case CustomIdAction.REVIEW_DENY_REASON:
-      return reviewDecideWithReasonModal(interaction, parsed.args[0] ?? '', 'deny');
-    case CustomIdAction.REVIEW_HISTORY:
-      return reviewHistory(interaction, parsed.args[0] ?? '');
-    case CustomIdAction.REVIEW_NOTE:
-      return reviewNoteModal(interaction, parsed.args[0] ?? '');
     default:
       log.debug({ customId: interaction.customId }, 'Unbehandelte Interaction.');
   }
 }
 
 async function handleModal(client: Client, interaction: ModalSubmitInteraction): Promise<void> {
-  if (await dispatchModal(client, interaction)) return;
-  const parsed = parseCustomId(interaction.customId);
-  if (!parsed) return;
-
-  if (parsed.action === CustomIdAction.REVIEW_ACCEPT_REASON) {
-    const reason = interaction.fields.getTextInputValue('reason');
-    await reviewDecide(interaction, parsed.args[0] ?? '', 'accept', reason);
-  } else if (parsed.action === CustomIdAction.REVIEW_DENY_REASON) {
-    const reason = interaction.fields.getTextInputValue('reason');
-    await reviewDecide(interaction, parsed.args[0] ?? '', 'deny', reason);
-  } else if (parsed.action === CustomIdAction.REVIEW_NOTE) {
-    if (!(await requireMemberPermission(interaction, ['applications.notes.create']))) return;
-    const content = interaction.fields.getTextInputValue('content');
-    const result = await addNote({
-      guildId: interaction.guildId ?? '',
-      submissionId: parsed.args[0] ?? '',
-      authorId: interaction.user.id,
-      content,
-    });
-    await interaction.reply({ content: result.message, ephemeral: true }).catch(() => undefined);
-  }
+  // Alle Modals werden über die Registry bedient (siehe applications/review-handlers.ts).
+  await dispatchModal(client, interaction);
 }
 
 // --- Panel → Start (§15) ----------------------------------------------------
@@ -375,6 +339,34 @@ async function submitFromSummary(
     interaction,
     '✅ Deine Bewerbung wurde eingereicht! Das Team prüft sie – du erhältst eine Nachricht, sobald es eine Entscheidung gibt.',
   );
+  // Bearbeitungsteam benachrichtigen (Review-Nachricht mit Schaltflächen)
+  const posted = await postSubmissionToReview(reviewPort(), submissionId, {
+    dashboardUrl: dashboardLink(submissionId),
+  }).catch((error: unknown) => ({ ok: false as const, reason: String(error) }));
+  if (!posted.ok)
+    log.error(
+      { submissionId, reason: posted.reason },
+      'Bearbeitungsteam konnte nicht benachrichtigt werden.',
+    );
+  // Bewerber: Zurückziehen bis zur Entscheidung
+  const dm = interaction.channel;
+  if (dm?.isDMBased()) {
+    await (dm as never as { send: (o: unknown) => Promise<unknown> })
+      .send({
+        content:
+          '📨 Deine Bewerbung ist eingegangen. Falls du es dir anders überlegst, kannst du sie bis zur Entscheidung zurückziehen.',
+        components: [
+          new ActionRowBuilder<ButtonBuilder>().addComponents(
+            new ButtonBuilder()
+              .setCustomId(buildCustomId(CustomIdAction.DM_WITHDRAW, submissionId))
+              .setLabel('Bewerbung zurückziehen')
+              .setStyle(ButtonStyle.Secondary)
+              .setEmoji('↩️'),
+          ),
+        ],
+      })
+      .catch(() => undefined);
+  }
 }
 
 /** Auswahl im Zusammenfassungs-Menü: gezielt eine Antwort ändern. */
@@ -397,80 +389,3 @@ registerSelect(CustomIdAction.DM_EDIT_SELECT, async (interaction, { args }) => {
     })
     .catch(() => undefined);
 });
-
-// --- Review (§29) ------------------------------------------------------------
-
-async function reviewDecide(
-  interaction: MessageComponentInteraction | ModalSubmitInteraction,
-  submissionId: string,
-  decision: 'accept' | 'deny',
-  reason?: string,
-): Promise<void> {
-  if (!interaction.guild || !isValidId(submissionId)) return;
-  // Permission serverseitig (§114): zentrale Engine
-  if (!(await requireMemberPermission(interaction, REVIEW_KEYS))) return;
-  const decide = decision === 'accept' ? acceptSubmission : denySubmission;
-  const decisionInput: Parameters<typeof decide>[0] = {
-    client: interaction.client,
-    guildId: interaction.guild.id,
-    submissionId,
-    reviewerId: interaction.user.id,
-  };
-  if (reason !== undefined) decisionInput.publicReason = reason;
-  const result = await decide(decisionInput);
-
-  await interaction
-    .reply({ content: result.ok ? '✅ Erledigt.' : `⚠️ ${result.message}`, ephemeral: true })
-    .catch(() => undefined);
-}
-
-async function reviewDecideWithReasonModal(
-  interaction: MessageComponentInteraction,
-  submissionId: string,
-  decision: 'accept' | 'deny',
-): Promise<void> {
-  if (!interaction.guild || !isValidId(submissionId)) return;
-  if (!(await requireMemberPermission(interaction, REVIEW_KEYS))) return;
-  const modal = new ModalBuilder()
-    .setCustomId(`nexus:review:${decision === 'accept' ? 'accept_r' : 'deny_r'}:${submissionId}`)
-    .setTitle(decision === 'accept' ? '✅ Accept mit Grund' : '🔴 Deny mit Grund');
-
-  const reasonInput = new TextInputBuilder()
-    .setCustomId('reason')
-    .setLabel('Grund (öffentlich an den Bewerber)')
-    .setStyle(TextInputStyle.Paragraph)
-    .setRequired(false)
-    .setMaxLength(2000);
-
-  modal.addComponents(new ActionRowBuilder<TextInputBuilder>().addComponents(reasonInput));
-  await interaction.showModal(modal).catch(() => undefined);
-}
-
-async function reviewHistory(
-  interaction: MessageComponentInteraction,
-  submissionId: string,
-): Promise<void> {
-  if (!interaction.guild || !isValidId(submissionId)) return;
-  if (!(await requireMemberPermission(interaction, ['applications.submissions.view']))) return;
-  const embed = await buildHistoryEmbed(interaction.guild.id, submissionId);
-  await interaction.reply({ embeds: [embed], ephemeral: true }).catch(() => undefined);
-}
-
-async function reviewNoteModal(
-  interaction: MessageComponentInteraction,
-  submissionId: string,
-): Promise<void> {
-  if (!interaction.guild || !isValidId(submissionId)) return;
-  if (!(await requireMemberPermission(interaction, ['applications.notes.create']))) return;
-  const modal = new ModalBuilder()
-    .setCustomId(`nexus:review:note:${submissionId}`)
-    .setTitle('📝 Interne Notiz');
-  const content = new TextInputBuilder()
-    .setCustomId('content')
-    .setLabel('Notiz (nur für Staff sichtbar)')
-    .setStyle(TextInputStyle.Paragraph)
-    .setRequired(true)
-    .setMaxLength(4000);
-  modal.addComponents(new ActionRowBuilder<TextInputBuilder>().addComponents(content));
-  await interaction.showModal(modal).catch(() => undefined);
-}

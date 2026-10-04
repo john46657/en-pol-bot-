@@ -14,7 +14,7 @@ export class ApiError extends Error {
 /** Die Session liegt als httpOnly-Cookie (von der API gesetzt) – daher `credentials: include`. */
 export async function api<T>(
   path: string,
-  init?: { method: 'PUT' | 'POST' | 'DELETE'; body?: unknown },
+  init?: { method: 'PUT' | 'POST' | 'PATCH' | 'DELETE'; body?: unknown },
 ): Promise<T> {
   let res: Response;
   try {
@@ -313,3 +313,63 @@ export interface MemberAccess {
   }[];
   pending: string[];
 }
+
+// --- Einreichungen ------------------------------------------------------------
+export interface SubmissionRow {
+  id: string;
+  status: string;
+  userId: string;
+  usernameSnapshot: string;
+  displayNameSnapshot: string;
+  submittedAt: string | null;
+  createdAt: string;
+  isTest: boolean;
+  application: { id: string; name: string };
+}
+export interface StepResult {
+  key: string;
+  label: string;
+  status: 'done' | 'skipped' | 'failed' | 'unavailable';
+  detail?: string;
+}
+export interface DecisionResponse {
+  ok: boolean;
+  status: string;
+  overall: 'success' | 'partial' | 'failed';
+  message: string;
+  steps: StepResult[];
+}
+export interface DenyReason {
+  id: string;
+  label: string;
+  text?: string;
+}
+export interface SubmissionDetail extends SubmissionRow {
+  publicReason: string | null;
+  reviewerUserId: string | null;
+  application: {
+    id: string;
+    name: string;
+    config: { review?: { denyReasons?: DenyReason[] } } | null;
+  };
+  version: { version: number; questions: { questions?: BuilderQuestion[] } | BuilderQuestion[] };
+  answers: { questionId: string; value: unknown }[];
+  notes: { id: string; authorId: string; content: string; createdAt: string }[];
+}
+export interface ReviewOptions {
+  steps: { key: string; label: string; available: boolean; enabled: boolean }[];
+  defaultDenyReasons: DenyReason[];
+}
+export const STATUS_TEXT: Record<string, string> = {
+  STARTED: 'Gestartet',
+  IN_PROGRESS: 'In Bearbeitung',
+  PAUSED: 'Pausiert',
+  SUBMITTED: 'Offen',
+  UNDER_REVIEW: 'In Prüfung',
+  ACCEPTED: 'Angenommen',
+  DENIED: 'Abgelehnt',
+  WITHDRAWN: 'Zurückgezogen',
+  EXPIRED: 'Abgelaufen',
+  CANCELLED: 'Abgebrochen',
+  ARCHIVED: 'Archiviert',
+};

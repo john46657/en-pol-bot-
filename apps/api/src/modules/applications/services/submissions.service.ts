@@ -1,4 +1,19 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  ConflictException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
+import {
+  DEFAULT_DENY_REASONS,
+  askClarification,
+  decideSubmission,
+  describeAcceptPipeline,
+  inviteToInterview,
+  restDiscordPort,
+  startReview,
+} from '@nexus/automation';
 import { SubmissionStatus } from '@nexus/types';
 import { prisma, assertGuildId } from '@nexus/database';
 import type {
@@ -12,6 +27,8 @@ import type {
  */
 @Injectable()
 export class SubmissionsService {
+  constructor(private readonly config: ConfigService) {}
+
   async list(
     guildId: string,
     options: {
@@ -68,57 +85,93 @@ export class SubmissionsService {
     return submission;
   }
 
-  /** Accept (§30) – Statusmaschine wird über den Bot/Worker ausgeführt;
-   *  die API erlaubt die Decision mit Gründen. */
+  /** Fachliche Ablehnungen: unbekannter Grund → 400, bereits entschieden → 409. */
+  private decisionError(message: string) {
+    return message.startsWith('Unbekannter')
+      ? new BadRequestException(message)
+      : new ConflictException(message);
+  }
+
+  private port() {
+    return restDiscordPort(this.config.get<string>('DISCORD_TOKEN') ?? '');
+  }
+
+  private dashboardUrl(): string | undefined {
+    return this.config.get<string>('DASHBOARD_URL')?.split(',')[0];
+  }
+
+  /**
+   * Annehmen (§30): dieselbe Logik wie im Bot (`@nexus/automation`) – Statusmaschine, atomarer Wechsel,
+   * Annahme-Pipeline (Rollen, Benachrichtigungen …), Audit. Ergebnis enthält jeden Schritt einzeln.
+   */
   async accept(
     guildId: string,
     submissionId: string,
     reviewerId: string,
     dto: AcceptSubmissionDto,
   ) {
-    const submission = await this.getById(guildId, submissionId);
-    if (submission.status === SubmissionStatus.ACCEPTED) {
-      return { ok: false, message: 'Diese Bewerbung wurde bereits angenommen.' };
-    }
-    return this.decide(submission.id, SubmissionStatus.ACCEPTED, reviewerId, dto);
+    await this.getById(guildId, submissionId);
+    const note = dto.note ?? dto.publicReason;
+    const r = await decideSubmission(this.port(), {
+      submissionId,
+      guildId,
+      reviewerId,
+      decision: 'ACCEPTED',
+      note,
+      internalReason: dto.internalReason,
+      dashboardUrl: this.dashboardUrl(),
+    });
+    if (!r.ok) throw new ConflictException(r.message);
+    return r;
   }
 
   async deny(guildId: string, submissionId: string, reviewerId: string, dto: DenySubmissionDto) {
-    const submission = await this.getById(guildId, submissionId);
-    if (submission.status === SubmissionStatus.DENIED) {
-      return { ok: false, message: 'Diese Bewerbung wurde bereits abgelehnt.' };
-    }
-    return this.decide(submission.id, SubmissionStatus.DENIED, reviewerId, dto);
+    await this.getById(guildId, submissionId);
+    const r = await decideSubmission(this.port(), {
+      submissionId,
+      guildId,
+      reviewerId,
+      decision: 'DENIED',
+      reasonId: dto.reasonId,
+      note: dto.note ?? dto.publicReason,
+      internalReason: dto.internalReason,
+      dashboardUrl: this.dashboardUrl(),
+    });
+    if (!r.ok) throw this.decisionError(r.message);
+    return r;
   }
 
-  private async decide(
-    submissionId: string,
-    status: Extract<SubmissionStatus, 'ACCEPTED' | 'DENIED'>,
-    reviewerId: string,
-    dto: { publicReason?: string; internalReason?: string },
-  ) {
-    const now = new Date();
-    const updated = await prisma.applicationSubmission.update({
-      where: { id: submissionId },
-      data: {
-        status,
-        reviewerUserId: reviewerId,
-        ...(status === SubmissionStatus.ACCEPTED ? { acceptedAt: now } : { deniedAt: now }),
-        ...(dto.publicReason !== undefined ? { publicReason: dto.publicReason } : {}),
-        ...(dto.internalReason !== undefined ? { internalReason: dto.internalReason } : {}),
-      },
+  async startReview(guildId: string, submissionId: string, reviewerId: string) {
+    const r = await startReview(this.port(), { submissionId, guildId, reviewerId });
+    if (!r.ok) throw new ConflictException(r.message);
+    return r;
+  }
+
+  async clarify(guildId: string, submissionId: string, reviewerId: string, text: string) {
+    const r = await askClarification(this.port(), {
+      submissionId,
+      guildId,
+      reviewerId,
+      question: text,
     });
-    await prisma.applicationAuditEvent.create({
-      data: {
-        guildId: updated.guildId,
-        submissionId: updated.id,
-        actorType: 'USER',
-        actorId: reviewerId,
-        action: status === SubmissionStatus.ACCEPTED ? 'submission.accepted' : 'submission.denied',
-        after: { publicReason: dto.publicReason, internalReason: dto.internalReason },
-      },
+    if (!r.ok) throw new ConflictException(r.message);
+    return r;
+  }
+
+  async interview(guildId: string, submissionId: string, reviewerId: string, text: string) {
+    const r = await inviteToInterview(this.port(), {
+      submissionId,
+      guildId,
+      reviewerId,
+      message: text,
     });
-    return { ok: true, submission: updated };
+    if (!r.ok) throw new ConflictException(r.message);
+    return r;
+  }
+
+  /** Annahme-Schritte (mit Verfügbarkeit) und Standard-Ablehnungsgründe für die Einstellungen. */
+  reviewOptions() {
+    return { steps: describeAcceptPipeline(), defaultDenyReasons: DEFAULT_DENY_REASONS };
   }
 
   async createNote(guildId: string, submissionId: string, authorId: string, dto: CreateNoteDto) {

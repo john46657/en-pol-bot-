@@ -1,0 +1,886 @@
+import { renderTemplate, assertTransition, roleActionsForTransition } from '@nexus/core';
+import { guildRepository, prisma } from '@nexus/database';
+import type { Prisma } from '@nexus/database';
+import { SubmissionStatus } from '@nexus/types';
+import type { Question } from '@nexus/types';
+import type { DiscordPort } from './discord-port.js';
+import {
+  answerBlocks,
+  answerMessages,
+  isFinal,
+  reviewMessage,
+  STATUS_LABEL,
+} from './review-format.js';
+import { applyRoleChanges } from './role-changes.js';
+
+/**
+ * Bearbeitung von Bewerbungen (Phase 10) – eine gemeinsame Logik für Bot **und** Dashboard.
+ *
+ * Grundsätze:
+ *  - Statuswechsel sind atomar (`updateMany` mit Statusbedingung): doppelte/gleichzeitige Entscheidungen
+ *    und Entscheidungen nach dem Zurückziehen sind unmöglich.
+ *  - Annahme = Pipeline aus einzeln schaltbaren Schritten; jeder Schritt meldet ehrlich `done`, `skipped`,
+ *    `failed` oder `unavailable` (Modul noch nicht vorhanden) – nie ein vorgetäuschter Erfolg.
+ *  - Ablehnung erzeugt keine Personalakte, keine Dienstnummer, keine Einstiegsrolle.
+ *  - Jede Aktion landet im Audit-Log (wer, was, wann, Datensatz, Ergebnis).
+ */
+
+// ---------------------------------------------------------------------------
+// Konfiguration
+// ---------------------------------------------------------------------------
+
+export interface DenyReason {
+  id: string;
+  label: string;
+  text?: string;
+}
+
+export const DEFAULT_DENY_REASONS: readonly DenyReason[] = [
+  {
+    id: 'incomplete',
+    label: 'Unvollständige Bewerbung',
+    text: 'Deine Bewerbung war leider nicht vollständig genug.',
+  },
+  {
+    id: 'requirements',
+    label: 'Voraussetzungen nicht erfüllt',
+    text: 'Du erfüllst die Voraussetzungen aktuell noch nicht.',
+  },
+  {
+    id: 'quality',
+    label: 'Qualität der Antworten',
+    text: 'Die Qualität der Antworten hat uns nicht überzeugt.',
+  },
+  {
+    id: 'capacity',
+    label: 'Aktuell keine Kapazität',
+    text: 'Aktuell können wir leider keine weiteren Bewerber aufnehmen.',
+  },
+  { id: 'other', label: 'Sonstiger Grund' },
+];
+
+interface ReviewConfig {
+  submissionChannelId?: string;
+  reviewRoleIds?: string[];
+  acceptPipeline?: Record<string, boolean>;
+  denyReasons?: DenyReason[];
+}
+
+const readConfig = (json: unknown): { review: ReviewConfig; messages: Record<string, string> } => {
+  const c = (json && typeof json === 'object' ? json : {}) as {
+    review?: ReviewConfig;
+    messages?: Record<string, string>;
+  };
+  return { review: c.review ?? {}, messages: c.messages ?? {} };
+};
+
+export const denyReasonsOf = (configJson: unknown): DenyReason[] => {
+  const custom = readConfig(configJson).review.denyReasons;
+  return custom?.length ? custom : [...DEFAULT_DENY_REASONS];
+};
+
+// ---------------------------------------------------------------------------
+// Annahme-Pipeline
+// ---------------------------------------------------------------------------
+
+export type StepStatus = 'done' | 'skipped' | 'failed' | 'unavailable';
+export interface StepResult {
+  key: string;
+  label: string;
+  status: StepStatus;
+  detail?: string | undefined;
+}
+
+export interface PipelineContext {
+  port: DiscordPort;
+  guildId: string;
+  submissionId: string;
+  applicantId: string;
+  applicationName: string;
+  isTest: boolean;
+  reviewerId: string;
+  publicReason?: string | undefined;
+  note?: string | undefined;
+  reviewChannelId?: string | undefined;
+  reviewMessageId?: string | undefined;
+  roleActions: { add: string[]; remove: string[] };
+  messages: Record<string, string>;
+  selections: Record<string, string>;
+  /** Variablen für Textvorlagen. */
+  variables: Record<string, unknown>;
+}
+export type StepHandler = (ctx: PipelineContext) => Promise<{ detail?: string } | void>;
+
+/** Reihenfolge laut Ablauf „Bewerbung angenommen“. */
+export const ACCEPT_STEPS: readonly { key: string; label: string }[] = [
+  { key: 'personnelRecord', label: 'Personalakte prüfen/erstellen' },
+  { key: 'serviceNumber', label: 'Dienstnummer vergeben' },
+  { key: 'startRank', label: 'Einstiegsdienstgrad setzen' },
+  { key: 'roles', label: 'Einstiegsrolle vergeben' },
+  { key: 'team', label: 'Team übernehmen/zuweisen' },
+  { key: 'probation', label: 'Probezeit starten' },
+  { key: 'notifyApplicant', label: 'Bewerber informieren' },
+  { key: 'notifyLeadership', label: 'Leitung informieren' },
+];
+
+const handlers = new Map<string, StepHandler>();
+
+/** Spätere Module (Personalakte, Dienstnummern, Teams …) hängen hier ihre Schritte ein. */
+export function registerAcceptStep(key: string, handler: StepHandler): void {
+  handlers.set(key, handler);
+}
+
+/** Schritte mit Verfügbarkeit – für Dashboard-Einstellungen und Berichte. */
+export function describeAcceptPipeline(config?: Record<string, boolean>) {
+  return ACCEPT_STEPS.map((s) => ({
+    ...s,
+    available: handlers.has(s.key),
+    enabled: config?.[s.key] ?? true,
+  }));
+}
+
+const textOr = (template: string | undefined, fallback: string, vars: Record<string, unknown>) =>
+  renderTemplate(template ?? fallback, vars);
+
+registerAcceptStep('roles', async (ctx) => {
+  const { add, remove } = ctx.roleActions;
+  if (add.length + remove.length === 0) return { detail: 'Keine Rollenregel konfiguriert.' };
+  if (ctx.isTest) return { detail: 'Test-Bewerbung: Rollen unverändert.' };
+  const result = await applyRoleChanges(
+    {
+      guildId: ctx.guildId,
+      userId: ctx.applicantId,
+      add,
+      remove,
+      trigger: 'Bewerbung angenommen',
+      automation: 'application-accept',
+      actorId: ctx.reviewerId,
+      resourceType: 'ApplicationSubmission',
+      resourceId: ctx.submissionId,
+      permission: 'applications.submissions.accept',
+    },
+    ctx.port.roleDriver(ctx.guildId),
+  );
+  if (result.status !== 'success') throw new Error(result.message);
+  return { detail: `${add.length} vergeben, ${remove.length} entzogen.` };
+});
+
+registerAcceptStep('notifyApplicant', async (ctx) => {
+  const text = textOr(
+    ctx.messages['accepted'],
+    '🎉 Deine Bewerbung für **{applicationName}** wurde **angenommen**! Willkommen im Team.',
+    ctx.variables,
+  );
+  await ctx.port.sendDm(ctx.applicantId, {
+    content: [text, ctx.note ? `\n**Nachricht vom Team:** ${ctx.note}` : '']
+      .join('')
+      .slice(0, 1900),
+  });
+});
+
+registerAcceptStep('notifyLeadership', async (ctx) => {
+  if (!ctx.reviewChannelId) throw new Error('Kein Bearbeitungskanal konfiguriert.');
+  await ctx.port.postMessage(ctx.reviewChannelId, {
+    content: `🟢 Bewerbung von <@${ctx.applicantId}> (**${ctx.applicationName}**) wurde von <@${ctx.reviewerId}> angenommen.`,
+    allowed_mentions: { parse: [] },
+  } as never);
+});
+
+async function runPipeline(
+  keys: readonly { key: string; label: string }[],
+  ctx: PipelineContext,
+  enabled: Record<string, boolean> | undefined,
+): Promise<StepResult[]> {
+  const out: StepResult[] = [];
+  for (const step of keys) {
+    if (enabled?.[step.key] === false) {
+      out.push({ ...step, status: 'skipped', detail: 'Schritt ist deaktiviert.' });
+      continue;
+    }
+    const handler = handlers.get(step.key);
+    if (!handler) {
+      out.push({
+        ...step,
+        status: 'unavailable',
+        detail: 'Dafür fehlt das zugehörige Modul (noch nicht verfügbar).',
+      });
+      continue;
+    }
+    try {
+      const r = await handler(ctx);
+      out.push({ ...step, status: 'done', detail: r?.detail });
+    } catch (error) {
+      out.push({
+        ...step,
+        status: 'failed',
+        detail: error instanceof Error ? error.message : 'Unerwarteter Fehler.',
+      });
+    }
+  }
+  return out;
+}
+
+export const overallOf = (steps: StepResult[]): 'success' | 'partial' | 'failed' => {
+  const failed = steps.filter((s) => s.status === 'failed').length;
+  if (failed === 0) return 'success';
+  return steps.some((s) => s.status === 'done') ? 'partial' : 'failed';
+};
+
+const ICON: Record<StepStatus, string> = {
+  done: '✅',
+  skipped: '⏭️',
+  failed: '❌',
+  unavailable: '⏳',
+};
+export const formatSteps = (steps: StepResult[]): string =>
+  steps.map((s) => `${ICON[s.status]} ${s.label}${s.detail ? ` – ${s.detail}` : ''}`).join('\n');
+
+// ---------------------------------------------------------------------------
+// Hilfen
+// ---------------------------------------------------------------------------
+
+type Json = Prisma.InputJsonValue;
+const audit = (
+  guildId: string,
+  submissionId: string,
+  applicationId: string,
+  actorId: string | null,
+  action: string,
+  data: { before?: unknown; after?: unknown; metadata?: unknown } = {},
+  actorType: 'USER' | 'SYSTEM' | 'BOT' | 'AUTOMATION' = 'USER',
+) =>
+  prisma.applicationAuditEvent.create({
+    data: {
+      guildId,
+      submissionId,
+      applicationId,
+      actorType,
+      ...(actorId ? { actorId } : {}),
+      action,
+      ...(data.before !== undefined ? { before: data.before as Json } : {}),
+      ...(data.after !== undefined ? { after: data.after as Json } : {}),
+      ...(data.metadata !== undefined ? { metadata: data.metadata as Json } : {}),
+    },
+  });
+
+async function load(submissionId: string, guildId?: string) {
+  return prisma.applicationSubmission.findFirst({
+    where: { id: submissionId, ...(guildId ? { guildId } : {}) },
+    include: { application: { include: { roleRules: true } }, version: true },
+  });
+}
+type Submission = NonNullable<Awaited<ReturnType<typeof load>>>;
+
+const questionsOf = (json: unknown): Question[] => {
+  const raw = Array.isArray(json) ? json : (json as { questions?: unknown } | null)?.questions;
+  return Array.isArray(raw) ? (raw as Question[]) : [];
+};
+
+async function answersOf(submissionId: string): Promise<Record<string, unknown>> {
+  const rows = await prisma.applicationAnswer.findMany({ where: { submissionId } });
+  return Object.fromEntries(rows.map((r) => [r.questionId, r.value]));
+}
+
+/** Kanal und Rollen für die Bearbeitung: Bewerbungs-Konfiguration vor Server-Auswahl (Dashboard). */
+async function reviewTargets(s: Submission) {
+  const cfg = readConfig(s.application.config).review;
+  const selections = await guildRepository.getSelections(s.guildId);
+  const roleIds = cfg.reviewRoleIds?.length
+    ? cfg.reviewRoleIds
+    : selections['application-review-role']
+      ? [selections['application-review-role']]
+      : [];
+  return {
+    channelId:
+      s.submissionChannelId ?? cfg.submissionChannelId ?? selections['application-review-channel'],
+    roleIds,
+    selections,
+  };
+}
+
+async function refreshReviewMessage(
+  port: DiscordPort,
+  s: Submission,
+  status: string,
+  decision?: { by: string; reason?: string | null; note?: string | null },
+  dashboardUrl?: string,
+): Promise<boolean> {
+  const channelId = s.submissionChannelId;
+  const messageId = s.submissionMessageId;
+  if (!channelId || !messageId) return false;
+  const answers = await answersOf(s.id);
+  try {
+    await port.editMessage(
+      channelId,
+      messageId,
+      reviewMessage({
+        submissionId: s.id,
+        applicantId: s.userId,
+        applicantName: s.displayNameSnapshot,
+        applicationName: s.application.name,
+        version: s.version.version,
+        status,
+        submittedAt: s.submittedAt,
+        answerCount: Object.keys(answers).length,
+        isTest: s.isTest,
+        decision,
+        dashboardUrl,
+      }) as never,
+    );
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+const vars = (s: Submission, extra: Record<string, unknown> = {}) => ({
+  applicationId: s.applicationId,
+  submissionId: s.id,
+  applicationName: s.application.name,
+  userId: s.userId,
+  username: s.usernameSnapshot,
+  displayName: s.displayNameSnapshot,
+  userMention: `<@${s.userId}>`,
+  guildId: s.guildId,
+  ...extra,
+});
+
+// ---------------------------------------------------------------------------
+// Nach dem Absenden: Bearbeiter benachrichtigen (Ablauf: SUBMITTED → Bearbeiter erhält Benachrichtigung)
+// ---------------------------------------------------------------------------
+
+export async function postSubmissionToReview(
+  port: DiscordPort,
+  submissionId: string,
+  opts: { dashboardUrl?: string | undefined } = {},
+): Promise<{
+  ok: boolean;
+  channelId?: string | undefined;
+  messageId?: string | undefined;
+  reason?: string | undefined;
+}> {
+  const s = await load(submissionId);
+  if (!s) return { ok: false, reason: 'Bewerbung nicht gefunden.' };
+  if (s.submissionMessageId)
+    return {
+      ok: true,
+      channelId: s.submissionChannelId ?? undefined,
+      messageId: s.submissionMessageId,
+    };
+  const targets = await reviewTargets(s);
+  const fail = async (reason: string) => {
+    await audit(
+      s.guildId,
+      s.id,
+      s.applicationId,
+      null,
+      'review.notification_failed',
+      { metadata: { reason } },
+      'SYSTEM',
+    );
+    return { ok: false, reason };
+  };
+  if (!targets.channelId)
+    return fail('Kein Bearbeitungskanal konfiguriert (Dashboard → Rollen & Kanäle).');
+  const questions = questionsOf(s.version.questions);
+  const answers = await answersOf(s.id);
+  try {
+    const main = await port.postMessage(
+      targets.channelId,
+      reviewMessage({
+        submissionId: s.id,
+        applicantId: s.userId,
+        applicantName: s.displayNameSnapshot,
+        applicationName: s.application.name,
+        version: s.version.version,
+        status: s.status,
+        submittedAt: s.submittedAt,
+        answerCount: Object.keys(answers).length,
+        isTest: s.isTest,
+        pingRoleIds: targets.roleIds,
+        dashboardUrl: opts.dashboardUrl,
+      }) as never,
+    );
+    await prisma.applicationSubmission.update({
+      where: { id: s.id },
+      data: { submissionChannelId: targets.channelId, submissionMessageId: main.id },
+    });
+    for (const m of answerMessages(questions, answers))
+      await port.postMessage(targets.channelId, m);
+    await audit(
+      s.guildId,
+      s.id,
+      s.applicationId,
+      null,
+      'review.posted',
+      { after: { channelId: targets.channelId, messageId: main.id } },
+      'BOT',
+    );
+    return { ok: true, channelId: targets.channelId, messageId: main.id };
+  } catch {
+    return fail('Der Bot konnte nicht in den Bearbeitungskanal schreiben (Rechte prüfen).');
+  }
+}
+
+// ---------------------------------------------------------------------------
+// In Prüfung nehmen / Rückfrage / Gespräch
+// ---------------------------------------------------------------------------
+
+/** SUBMITTED → UNDER_REVIEW (atomar); bereits in Prüfung ist kein Fehler. */
+async function takeUnderReview(s: Submission, reviewerId: string): Promise<void> {
+  if (s.status !== SubmissionStatus.SUBMITTED) return;
+  const r = await prisma.applicationSubmission.updateMany({
+    where: { id: s.id, status: SubmissionStatus.SUBMITTED },
+    data: { status: SubmissionStatus.UNDER_REVIEW, reviewerUserId: s.reviewerUserId ?? reviewerId },
+  });
+  if (r.count > 0) {
+    await audit(s.guildId, s.id, s.applicationId, reviewerId, 'submission.under_review', {
+      before: { status: s.status },
+      after: { status: SubmissionStatus.UNDER_REVIEW },
+    });
+  }
+}
+
+export async function startReview(
+  port: DiscordPort,
+  input: { submissionId: string; guildId: string; reviewerId: string },
+) {
+  const s = await load(input.submissionId, input.guildId);
+  if (!s) return { ok: false as const, message: 'Bewerbung nicht gefunden.' };
+  if (isFinal(s.status))
+    return {
+      ok: false as const,
+      message: `Diese Bewerbung ist bereits abgeschlossen (${STATUS_LABEL[s.status]}).`,
+    };
+  await takeUnderReview(s, input.reviewerId);
+  const fresh = (await load(s.id)) ?? s;
+  await refreshReviewMessage(port, fresh, fresh.status);
+  return { ok: true as const, status: fresh.status };
+}
+
+async function contact(
+  kind: 'clarification' | 'interview',
+  port: DiscordPort,
+  input: { submissionId: string; guildId: string; reviewerId: string; text: string },
+) {
+  const s = await load(input.submissionId, input.guildId);
+  if (!s) return { ok: false as const, message: 'Bewerbung nicht gefunden.' };
+  if (isFinal(s.status)) {
+    return {
+      ok: false as const,
+      message: `Diese Bewerbung ist bereits abgeschlossen (${STATUS_LABEL[s.status]}).`,
+    };
+  }
+  await takeUnderReview(s, input.reviewerId);
+  let delivered = true;
+  try {
+    await port.sendDm(s.userId, {
+      content:
+        kind === 'clarification'
+          ? `🟡 **Rückfrage zu deiner Bewerbung „${s.application.name}“**\n\n${input.text}\n\n_Antworte einfach auf diese Nachricht – deine Antwort geht direkt an das Team._`
+          : `🎙️ **Gespräch zu deiner Bewerbung „${s.application.name}“**\n\n${input.text}`,
+    });
+  } catch {
+    delivered = false;
+  }
+  await prisma.applicationNote.create({
+    data: {
+      submissionId: s.id,
+      authorId: input.reviewerId,
+      content:
+        `${kind === 'clarification' ? 'Rückfrage' : 'Gesprächseinladung'}: ${input.text}${delivered ? '' : ' (DM nicht zustellbar)'}`.slice(
+          0,
+          4000,
+        ),
+      mentions: [],
+    },
+  });
+  await audit(
+    s.guildId,
+    s.id,
+    s.applicationId,
+    input.reviewerId,
+    kind === 'clarification' ? 'clarification.asked' : 'interview.invited',
+    {
+      after: { text: input.text.slice(0, 500), delivered },
+    },
+  );
+  const fresh = (await load(s.id)) ?? s;
+  await refreshReviewMessage(port, fresh, fresh.status);
+  return {
+    ok: true as const,
+    delivered,
+    message: delivered
+      ? 'Nachricht an den Bewerber gesendet.'
+      : '⚠️ Der Bewerber hat Direktnachrichten deaktiviert – die Nachricht konnte nicht zugestellt werden (als Notiz gespeichert).',
+  };
+}
+
+export const askClarification = (
+  port: DiscordPort,
+  input: { submissionId: string; guildId: string; reviewerId: string; question: string },
+) => contact('clarification', port, { ...input, text: input.question });
+export const inviteToInterview = (
+  port: DiscordPort,
+  input: { submissionId: string; guildId: string; reviewerId: string; message: string },
+) => contact('interview', port, { ...input, text: input.message });
+
+/** Antwort des Bewerbers auf eine offene Rückfrage (per DM) → Notiz + Hinweis an das Team. */
+export async function recordClarificationReply(
+  port: DiscordPort,
+  input: { userId: string; text: string },
+): Promise<{ handled: boolean; submissionId?: string }> {
+  const candidates = await prisma.applicationSubmission.findMany({
+    where: { userId: input.userId, status: SubmissionStatus.UNDER_REVIEW },
+    orderBy: { updatedAt: 'desc' },
+    include: { application: { include: { roleRules: true } }, version: true },
+  });
+  for (const s of candidates) {
+    const events = await prisma.applicationAuditEvent.findMany({
+      where: {
+        submissionId: s.id,
+        action: { in: ['clarification.asked', 'clarification.answered'] },
+      },
+      orderBy: { createdAt: 'desc' },
+      take: 1,
+    });
+    if (events[0]?.action !== 'clarification.asked') continue; // keine offene Rückfrage
+    await prisma.applicationNote.create({
+      data: {
+        submissionId: s.id,
+        authorId: input.userId,
+        content: `Antwort des Bewerbers auf die Rückfrage: ${input.text}`.slice(0, 4000),
+        mentions: [],
+      },
+    });
+    await audit(s.guildId, s.id, s.applicationId, input.userId, 'clarification.answered', {
+      after: { text: input.text.slice(0, 500) },
+    });
+    if (s.submissionChannelId) {
+      await port
+        .postMessage(s.submissionChannelId, {
+          content: `💬 Antwort von <@${s.userId}> auf die Rückfrage (**${s.application.name}**):\n>>> ${input.text.slice(0, 1500)}`,
+          allowed_mentions: { parse: [] },
+        } as never)
+        .catch(() => undefined);
+    }
+    return { handled: true, submissionId: s.id };
+  }
+  return { handled: false };
+}
+
+// ---------------------------------------------------------------------------
+// Entscheidung (Annehmen / Ablehnen)
+// ---------------------------------------------------------------------------
+
+export interface DecisionInput {
+  submissionId: string;
+  guildId: string;
+  reviewerId: string;
+  decision: 'ACCEPTED' | 'DENIED';
+  /** ID eines Ablehnungsgrunds aus der Konfiguration (nur Ablehnung). */
+  reasonId?: string | undefined;
+  /** Zusätzliche Nachricht an den Bewerber. */
+  note?: string | undefined;
+  internalReason?: string | undefined;
+  dashboardUrl?: string | undefined;
+}
+
+export type DecisionResult =
+  | {
+      ok: true;
+      status: 'ACCEPTED' | 'DENIED';
+      steps: StepResult[];
+      overall: 'success' | 'partial' | 'failed';
+      message: string;
+    }
+  | { ok: false; message: string };
+
+export async function decideSubmission(
+  port: DiscordPort,
+  input: DecisionInput,
+): Promise<DecisionResult> {
+  const s = await load(input.submissionId, input.guildId);
+  if (!s) return { ok: false, message: 'Bewerbung nicht gefunden.' };
+  const target =
+    input.decision === 'ACCEPTED' ? SubmissionStatus.ACCEPTED : SubmissionStatus.DENIED;
+  const denied = (current: string) => ({
+    ok: false as const,
+    message: `Diese Bewerbung kann nicht mehr entschieden werden – Status: ${STATUS_LABEL[current] ?? current}.`,
+  });
+  try {
+    assertTransition(s.status, target);
+  } catch {
+    return denied(s.status);
+  }
+
+  // Ablehnungsgrund auflösen
+  let publicReason: string | undefined;
+  let reasonLabel: string | undefined;
+  if (target === SubmissionStatus.DENIED) {
+    const reason = denyReasonsOf(s.application.config).find((r) => r.id === input.reasonId);
+    if (input.reasonId && !reason) return { ok: false, message: 'Unbekannter Ablehnungsgrund.' };
+    reasonLabel = reason?.label;
+    publicReason = [reason?.text, input.note].filter(Boolean).join('\n\n') || undefined;
+  } else {
+    publicReason = input.note;
+  }
+
+  // Atomarer Statuswechsel – nur genau eine Entscheidung gewinnt
+  const now = new Date();
+  const claimed = await prisma.applicationSubmission.updateMany({
+    where: {
+      id: s.id,
+      guildId: s.guildId,
+      status: { in: [SubmissionStatus.SUBMITTED, SubmissionStatus.UNDER_REVIEW] },
+    },
+    data: {
+      status: target,
+      reviewerUserId: input.reviewerId,
+      ...(target === SubmissionStatus.ACCEPTED ? { acceptedAt: now } : { deniedAt: now }),
+      ...(publicReason !== undefined ? { publicReason } : {}),
+      ...(input.internalReason !== undefined ? { internalReason: input.internalReason } : {}),
+    },
+  });
+  if (claimed.count === 0) {
+    const current = (await load(s.id))?.status ?? s.status;
+    return denied(current);
+  }
+  await audit(
+    s.guildId,
+    s.id,
+    s.applicationId,
+    input.reviewerId,
+    target === SubmissionStatus.ACCEPTED ? 'submission.accepted' : 'submission.denied',
+    {
+      before: { status: s.status },
+      after: {
+        status: target,
+        reason: reasonLabel,
+        publicReason,
+        internalReason: input.internalReason,
+      },
+    },
+  );
+
+  // Schritte
+  const cfg = readConfig(s.application.config);
+  const targets = await reviewTargets(s);
+  const ruleActions = roleActionsForTransition(s.status, target, s.application.roleRules);
+  const add = ruleActions.filter((a) => a.type === 'ADD').map((a) => a.roleId);
+  const remove = ruleActions.filter((a) => a.type === 'REMOVE').map((a) => a.roleId);
+  // Rückfall: kein Annahme-Regel konfiguriert → Rolle aus den Server-Einstellungen (Dashboard)
+  if (
+    target === SubmissionStatus.ACCEPTED &&
+    add.length === 0 &&
+    targets.selections['application-accepted-role']
+  ) {
+    add.push(targets.selections['application-accepted-role']);
+  }
+  const ctx: PipelineContext = {
+    port,
+    guildId: s.guildId,
+    submissionId: s.id,
+    applicantId: s.userId,
+    applicationName: s.application.name,
+    isTest: s.isTest,
+    reviewerId: input.reviewerId,
+    publicReason,
+    note: input.note,
+    reviewChannelId: s.submissionChannelId ?? targets.channelId,
+    reviewMessageId: s.submissionMessageId ?? undefined,
+    roleActions: { add, remove },
+    messages: cfg.messages,
+    selections: targets.selections,
+    variables: vars(s, { reviewer: `<@${input.reviewerId}>`, reason: publicReason ?? '' }),
+  };
+
+  let steps: StepResult[];
+  if (target === SubmissionStatus.ACCEPTED) {
+    steps = await runPipeline(ACCEPT_STEPS, ctx, cfg.review.acceptPipeline);
+  } else {
+    // Ablehnung: nur Rollen-Regeln für „abgelehnt“ (z. B. Wartende-Rolle entfernen) und Information – keine Personalakte,
+    // keine Dienstnummer, keine Einstiegsrolle.
+    steps = [];
+    const denyRoles = await rolesStepForDenial(ctx);
+    steps.push(denyRoles);
+    try {
+      await port.sendDm(s.userId, {
+        content: textOr(
+          cfg.messages['denied'],
+          '🔴 Deine Bewerbung für **{applicationName}** wurde leider **abgelehnt**.',
+          ctx.variables,
+        )
+          .concat(
+            reasonLabel ? `\n\n**Grund:** ${reasonLabel}` : '',
+            publicReason ? `\n${publicReason}` : '',
+          )
+          .slice(0, 1900),
+      });
+      steps.push({ key: 'notifyApplicant', label: 'Bewerber informieren', status: 'done' });
+    } catch {
+      steps.push({
+        key: 'notifyApplicant',
+        label: 'Bewerber informieren',
+        status: 'failed',
+        detail: 'Direktnachricht nicht zustellbar (DMs deaktiviert?).',
+      });
+    }
+  }
+  const overall = overallOf(steps);
+  await audit(
+    s.guildId,
+    s.id,
+    s.applicationId,
+    input.reviewerId,
+    'submission.pipeline',
+    { metadata: { decision: target, overall, steps } },
+    'AUTOMATION',
+  );
+
+  const fresh = (await load(s.id)) ?? s;
+  await refreshReviewMessage(
+    port,
+    fresh,
+    target,
+    { by: input.reviewerId, reason: reasonLabel ?? null, note: input.note ?? null },
+    input.dashboardUrl,
+  );
+  if (overall !== 'success' && ctx.reviewChannelId) {
+    await port
+      .postMessage(ctx.reviewChannelId, {
+        content: `⚠️ Entscheidung für <@${s.userId}> gespeichert, aber nicht alle Schritte sind gelungen:\n${formatSteps(steps.filter((x) => x.status === 'failed'))}`,
+        allowed_mentions: { parse: [] },
+      } as never)
+      .catch(() => undefined);
+  }
+
+  return {
+    ok: true,
+    status: target,
+    steps,
+    overall,
+    message:
+      `${target === SubmissionStatus.ACCEPTED ? '✅ Angenommen' : '🔴 Abgelehnt'}${overall === 'success' ? '.' : overall === 'partial' ? ' – teilweise fehlgeschlagen.' : ' – Folgeschritte fehlgeschlagen.'}\n` +
+      formatSteps(steps),
+  };
+}
+
+async function rolesStepForDenial(ctx: PipelineContext): Promise<StepResult> {
+  const base = { key: 'roles', label: 'Rollen anpassen' };
+  const { add, remove } = ctx.roleActions;
+  if (add.length + remove.length === 0)
+    return { ...base, status: 'skipped', detail: 'Keine Rollenregel für Ablehnung.' };
+  if (ctx.isTest) return { ...base, status: 'skipped', detail: 'Test-Bewerbung.' };
+  const r = await applyRoleChanges(
+    {
+      guildId: ctx.guildId,
+      userId: ctx.applicantId,
+      add,
+      remove,
+      trigger: 'Bewerbung abgelehnt',
+      automation: 'application-deny',
+      actorId: ctx.reviewerId,
+      resourceType: 'ApplicationSubmission',
+      resourceId: ctx.submissionId,
+      permission: 'applications.submissions.deny',
+    },
+    ctx.port.roleDriver(ctx.guildId),
+  );
+  return r.status === 'success'
+    ? { ...base, status: 'done' }
+    : { ...base, status: 'failed', detail: r.message };
+}
+
+// ---------------------------------------------------------------------------
+// Zurückziehen durch den Bewerber
+// ---------------------------------------------------------------------------
+
+export async function withdrawSubmission(
+  port: DiscordPort,
+  input: { submissionId: string; userId: string; reason?: string | undefined },
+): Promise<{ ok: true } | { ok: false; message: string }> {
+  const s = await load(input.submissionId);
+  if (!s || s.userId !== input.userId) return { ok: false, message: 'Bewerbung nicht gefunden.' };
+  try {
+    assertTransition(s.status, SubmissionStatus.WITHDRAWN);
+  } catch {
+    return {
+      ok: false,
+      message: `Diese Bewerbung lässt sich nicht mehr zurückziehen (${STATUS_LABEL[s.status] ?? s.status}).`,
+    };
+  }
+  const r = await prisma.applicationSubmission.updateMany({
+    where: {
+      id: s.id,
+      status: { in: [SubmissionStatus.SUBMITTED, SubmissionStatus.UNDER_REVIEW] },
+    },
+    data: {
+      status: SubmissionStatus.WITHDRAWN,
+      ...(input.reason ? { publicReason: input.reason } : {}),
+    },
+  });
+  if (r.count === 0)
+    return {
+      ok: false,
+      message:
+        'Die Bewerbung wurde in der Zwischenzeit entschieden und kann nicht mehr zurückgezogen werden.',
+    };
+  await audit(s.guildId, s.id, s.applicationId, input.userId, 'submission.withdrawn', {
+    before: { status: s.status },
+    after: { status: SubmissionStatus.WITHDRAWN, reason: input.reason },
+  });
+  await refreshReviewMessage(port, s, SubmissionStatus.WITHDRAWN, undefined);
+  if (s.submissionChannelId) {
+    await port
+      .postMessage(s.submissionChannelId, {
+        content: `↩️ <@${s.userId}> hat die Bewerbung **${s.application.name}** zurückgezogen.${input.reason ? `\nGrund: ${input.reason.slice(0, 1000)}` : ''}`,
+        allowed_mentions: { parse: [] },
+      } as never)
+      .catch(() => undefined);
+  }
+  return { ok: true };
+}
+
+// ---------------------------------------------------------------------------
+// Ansicht für das Team („Ansehen“)
+// ---------------------------------------------------------------------------
+
+/** Antworten einer Bewerbung als Textblöcke (≤ 1900 Zeichen je Nachricht) – setzt sie auf „In Prüfung“, wenn sie offen ist. */
+export async function viewSubmission(
+  port: DiscordPort,
+  input: { submissionId: string; guildId: string; reviewerId: string },
+): Promise<
+  { ok: true; title: string; blocks: string[]; status: string } | { ok: false; message: string }
+> {
+  const s = await load(input.submissionId, input.guildId);
+  if (!s) return { ok: false, message: 'Bewerbung nicht gefunden.' };
+  if (!isFinal(s.status)) {
+    await takeUnderReview(s, input.reviewerId);
+    const fresh = (await load(s.id)) ?? s;
+    await refreshReviewMessage(port, fresh, fresh.status);
+  }
+  const fresh = (await load(s.id)) ?? s;
+  const answers = await answersOf(s.id);
+  const notes = await prisma.applicationNote.findMany({
+    where: { submissionId: s.id },
+    orderBy: { createdAt: 'asc' },
+    take: 20,
+  });
+  const blocks = answerBlocks(questionsOf(s.version.questions), answers, 1800);
+  if (notes.length) {
+    blocks.push(
+      '**Notizen**\n' +
+        notes
+          .map((n) => `• <@${n.authorId}>: ${n.content.slice(0, 300)}`)
+          .join('\n')
+          .slice(0, 1700),
+    );
+  }
+  return {
+    ok: true,
+    title: `📖 ${s.displayNameSnapshot} – ${s.application.name} (${STATUS_LABEL[fresh.status] ?? fresh.status})`,
+    blocks: blocks.length ? blocks : ['Keine Antworten vorhanden.'],
+    status: fresh.status,
+  };
+}

@@ -61,6 +61,8 @@ const members = {
   '900000000000000030': ['900000000000000103'], // Administrator-Rolle
   '900000000000000040': ['900000000000000100'], // Polizeileitung
   '900000000000000050': ['900000000000000101'], // Rolle mit Sperre
+  '900000000000000060': [], // Bewerber (Rollenvergabe testbar)
+  '900000000000000070': [], // Bewerber mit gesperrten DMs
 };
 const routes = {
   [`/api/v10/guilds/${G}`]: {
@@ -103,7 +105,26 @@ createServer(async (req, res) => {
     return json(200, rows);
   }
   if (url === '/__messages') return json(200, Object.fromEntries(messages)); // nur für Tests
-  const msg = url.match(/^\/api\/v10\/channels\/(\d+)\/messages(?:\/(\d+))?$/);
+  const dmCh = url === '/api/v10/users/@me/channels' && req.method === 'POST';
+  if (dmCh) {
+    const body = await readBody(req);
+    if (String(body.recipient_id).endsWith('070'))
+      return json(403, { message: 'Cannot send messages to this user' });
+    return json(200, { id: `dm-${body.recipient_id}` });
+  }
+  const roleRoute = url.match(new RegExp(`^/api/v10/guilds/${G}/members/(\\d+)/roles/(\\d+)$`));
+  if (roleRoute && (req.method === 'PUT' || req.method === 'DELETE')) {
+    const [, uid, rid] = roleRoute;
+    if (!members[uid]) return json(404, { message: 'Unknown Member' });
+    if (rid === '900000000000000102') return json(403, { message: 'Missing Permissions' });
+    members[uid] =
+      req.method === 'PUT'
+        ? [...new Set([...members[uid], rid])]
+        : members[uid].filter((r) => r !== rid);
+    return json(204);
+  }
+  if (url === '/__members') return json(200, members);
+  const msg = url.match(/^\/api\/v10\/channels\/([\w-]+)\/messages(?:\/(\d+))?$/);
   if (msg) {
     const [, channel, id] = msg;
     if (req.method === 'POST' && !id) {

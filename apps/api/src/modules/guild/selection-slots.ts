@@ -22,6 +22,12 @@ export const SELECTION_SLOTS: readonly SelectionSlot[] = [
     description: 'Hier schreibt der Bot Protokoll-Meldungen.',
   },
   {
+    key: 'application-review-channel',
+    kind: 'text',
+    label: 'Bewerbungs-Eingang',
+    description: 'Hier erscheinen neue Bewerbungen für das Team (mit Annehmen/Ablehnen).',
+  },
+  {
     key: 'application-category',
     kind: 'category',
     label: 'Bewerbungs-Kategorie',

@@ -17,8 +17,10 @@
     "build": "tsc"
   },
   "dependencies": {
+    "@nexus/core": "workspace:*",
     "@nexus/database": "workspace:*",
-    "@nexus/discord": "workspace:*"
+    "@nexus/discord": "workspace:*",
+    "@nexus/types": "workspace:*"
   },
   "devDependencies": {
     "vitest": "^3.2.4"

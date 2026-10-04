@@ -37,6 +37,8 @@ export const SubmissionStatus = {
   DENIED: 'DENIED',
   EXPIRED: 'EXPIRED',
   CANCELLED: 'CANCELLED',
+  /** Vom Bewerber nach dem Absenden zurückgezogen. */
+  WITHDRAWN: 'WITHDRAWN',
   ARCHIVED: 'ARCHIVED',
 } as const;
 export type SubmissionStatus = (typeof SubmissionStatus)[keyof typeof SubmissionStatus];

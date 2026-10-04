@@ -7,6 +7,7 @@ import { RequirePermissions } from '../../../common/decorators/permissions.decor
 import { SubmissionsService } from '../services/submissions.service.js';
 import {
   AcceptSubmissionDto,
+  ContactApplicantDto,
   CreateNoteDto,
   DenySubmissionDto,
   ListSubmissionsQueryDto,
@@ -26,6 +27,13 @@ export class SubmissionsController {
   @RequirePermissions('applications.submissions.view')
   list(@GuildId() guildId: string, @Query() query: ListSubmissionsQueryDto) {
     return this.submissions.list(guildId, query);
+  }
+
+  /** Annahme-Schritte (mit Verfügbarkeit) und Standard-Ablehnungsgründe. */
+  @Get('options/review')
+  @RequirePermissions('applications.submissions.view')
+  reviewOptions() {
+    return this.submissions.reviewOptions();
   }
 
   @Get(':submissionId')
@@ -74,5 +82,40 @@ export class SubmissionsController {
   @RequirePermissions('applications.submissions.view')
   history(@GuildId() guildId: string, @Param('submissionId') submissionId: string) {
     return this.submissions.history(guildId, submissionId);
+  }
+
+  /** In Prüfung nehmen (Ansehen). */
+  @Post(':submissionId/review/start')
+  @RequirePermissions('applications.submissions.review')
+  startReview(
+    @GuildId() guildId: string,
+    @Param('submissionId') submissionId: string,
+    @CurrentUser() user: RequestUser,
+  ) {
+    return this.submissions.startReview(guildId, submissionId, user.id);
+  }
+
+  /** Rückfrage an den Bewerber (per DM). */
+  @Post(':submissionId/clarify')
+  @RequirePermissions('applications.submissions.review')
+  clarify(
+    @GuildId() guildId: string,
+    @Param('submissionId') submissionId: string,
+    @Body() dto: ContactApplicantDto,
+    @CurrentUser() user: RequestUser,
+  ) {
+    return this.submissions.clarify(guildId, submissionId, user.id, dto.text);
+  }
+
+  /** Gesprächseinladung an den Bewerber (per DM). */
+  @Post(':submissionId/interview')
+  @RequirePermissions('applications.submissions.review')
+  interview(
+    @GuildId() guildId: string,
+    @Param('submissionId') submissionId: string,
+    @Body() dto: ContactApplicantDto,
+    @CurrentUser() user: RequestUser,
+  ) {
+    return this.submissions.interview(guildId, submissionId, user.id, dto.text);
   }
 }

@@ -19,6 +19,7 @@ export const STATUS_LABEL: Record<SubmissionStatus, string> = {
   DENIED: '🔴 Abgelehnt',
   EXPIRED: '⚫ Abgelaufen',
   CANCELLED: '✖️ Abgebrochen',
+  WITHDRAWN: '↩️ Zurückgezogen',
   ARCHIVED: '🗄️ Archiviert',
 };
 
@@ -135,54 +136,6 @@ export function buildSubmissionEmbed(input: {
     embed.setTimestamp(input.submittedAt ?? new Date());
   }
   return embed;
-}
-
-export function buildReviewActions(submissionId: string): ActionRowBuilder<ButtonBuilder>[] {
-  const primary = new ActionRowBuilder<ButtonBuilder>().addComponents(
-    new ButtonBuilder()
-      .setCustomId(`nexus:review:accept:${submissionId}`)
-      .setLabel('Accept')
-      .setStyle(ButtonStyle.Success)
-      .setEmoji('✅'),
-    new ButtonBuilder()
-      .setCustomId(`nexus:review:deny:${submissionId}`)
-      .setLabel('Deny')
-      .setStyle(ButtonStyle.Danger)
-      .setEmoji('✖️'),
-    new ButtonBuilder()
-      .setCustomId(`nexus:review:accept_r:${submissionId}`)
-      .setLabel('Accept mit Grund')
-      .setStyle(ButtonStyle.Secondary),
-    new ButtonBuilder()
-      .setCustomId(`nexus:review:deny_r:${submissionId}`)
-      .setLabel('Deny mit Grund')
-      .setStyle(ButtonStyle.Secondary),
-  );
-
-  const secondary = new ActionRowBuilder<ButtonBuilder>().addComponents(
-    new ButtonBuilder()
-      .setCustomId(`nexus:review:history:${submissionId}`)
-      .setLabel('History')
-      .setStyle(ButtonStyle.Secondary)
-      .setEmoji('📜'),
-    new ButtonBuilder()
-      .setCustomId(`nexus:review:ticket:${submissionId}`)
-      .setLabel('Ticket mit User')
-      .setStyle(ButtonStyle.Secondary)
-      .setEmoji('🎫'),
-    new ButtonBuilder()
-      .setCustomId(`nexus:review:note:${submissionId}`)
-      .setLabel('Notiz')
-      .setStyle(ButtonStyle.Secondary)
-      .setEmoji('📝'),
-    new ButtonBuilder()
-      .setCustomId(`nexus:review:dashboard:${submissionId}`)
-      .setLabel('Im Dashboard öffnen')
-      .setStyle(ButtonStyle.Link)
-      .setURL(process.env['DASHBOARD_URL'] ?? 'http://localhost:3001'),
-  );
-
-  return [primary, secondary];
 }
 
 function formatAnswer(value: unknown, truncate: number, anonymize?: boolean): string {
