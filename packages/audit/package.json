@@ -34,7 +34,7 @@
     "@nexus/qualifications": "workspace:*",
     "@nexus/sek": "workspace:*",
     "@prisma/client": "^6.11.0",
-    "vitest": "^3.2.4",
+    "vitest": "^4.1.11",
     "@nexus/reports": "workspace:*"
   }
 }

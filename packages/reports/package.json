@@ -32,6 +32,6 @@
     "@nexus/promotions": "workspace:*",
     "@nexus/qualifications": "workspace:*",
     "@prisma/client": "^6.11.0",
-    "vitest": "^3.2.4"
+    "vitest": "^4.1.11"
   }
 }
