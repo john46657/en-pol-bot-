@@ -17,6 +17,8 @@
 5. Discord Developer Portal: Redirect-URI = `AUTH_CALLBACK_URL`, „Server Members Intent“ aktivieren.
 6. Kontrolle: `curl https://api.example.org/api/v1/health` und `/health` im Discord.
 
+> Ohne Docker: siehe `docs/hosting-ohne-docker.md`.
+
 ## Updates
 `git pull` → `run --rm migrate` → `up -d --build`. Migrationen sind vorwärtsgerichtet; vor jedem Update eine Sicherung ziehen.
 
