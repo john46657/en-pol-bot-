@@ -1,0 +1,31 @@
+{
+  "name": "@nexus/design",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./client": {
+      "types": "./dist/client.d.ts",
+      "import": "./dist/client.js"
+    }
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "build": "tsc"
+  },
+  "dependencies": {
+    "@nexus/database": "workspace:*",
+    "@nexus/types": "workspace:*"
+  },
+  "devDependencies": {
+    "@prisma/client": "^6.11.0",
+    "vitest": "^4.1.11"
+  }
+}

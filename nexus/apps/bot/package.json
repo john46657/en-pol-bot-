@@ -1,0 +1,52 @@
+{
+  "name": "@nexus/bot",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch src/index.ts",
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint src",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@nexus/health": "workspace:*",
+    "@nexus/absences": "workspace:*",
+    "@nexus/audit": "workspace:*",
+    "@nexus/automation": "workspace:*",
+    "@nexus/config": "workspace:*",
+    "@nexus/core": "workspace:*",
+    "@nexus/danger": "workspace:*",
+    "@nexus/database": "workspace:*",
+    "@nexus/discord": "workspace:*",
+    "@nexus/fleet": "workspace:*",
+    "@nexus/office": "workspace:*",
+    "@nexus/operations": "workspace:*",
+    "@nexus/permissions": "workspace:*",
+    "@nexus/personnel": "workspace:*",
+    "@nexus/promotions": "workspace:*",
+    "@nexus/qualifications": "workspace:*",
+    "@nexus/radio": "workspace:*",
+    "@nexus/realtime": "workspace:*",
+    "@nexus/reports": "workspace:*",
+    "@nexus/sek": "workspace:*",
+    "@nexus/shifts": "workspace:*",
+    "@nexus/tickets": "workspace:*",
+    "@nexus/training": "workspace:*",
+    "@nexus/types": "workspace:*",
+    "@nexus/validation": "workspace:*",
+    "@nexus/wanted": "workspace:*",
+    "discord.js": "^14.21.0",
+    "dotenv": "^17.2.0",
+    "ioredis": "^5.6.1",
+    "pino": "^9.7.0"
+  },
+  "devDependencies": {
+    "@prisma/client": "^6.19.3",
+    "@types/node": "^24.0.10",
+    "tsx": "^4.20.3",
+    "vitest": "^4.1.11"
+  }
+}

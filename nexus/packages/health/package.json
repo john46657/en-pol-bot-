@@ -1,0 +1,26 @@
+{
+  "name": "@nexus/health",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "build": "tsc"
+  },
+  "dependencies": {
+    "@nexus/database": "workspace:*",
+    "ioredis": "^5.6.1"
+  },
+  "devDependencies": {
+    "vitest": "^4.1.11"
+  }
+}

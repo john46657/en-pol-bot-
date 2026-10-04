@@ -1,0 +1,83 @@
+# NEXUS – Produktion (ein Server). Start:
+#   cp .env.production.example .env.production   # und ausfüllen
+#   docker compose -f docker-compose.prod.yml --env-file .env.production run --rm migrate
+#   docker compose -f docker-compose.prod.yml --env-file .env.production up -d
+# TLS/Reverse-Proxy (z. B. Caddy/nginx/Traefik) vor api:3000 und dashboard:8080 schalten – siehe docs/production.md.
+
+x-app: &app
+  restart: unless-stopped
+  env_file: .env.production
+  environment:
+    DATABASE_URL: postgresql://nexus:${POSTGRES_PASSWORD}@postgres:5432/nexus?schema=public
+    REDIS_URL: redis://redis:6379
+  logging:
+    driver: json-file
+    options: { max-size: '10m', max-file: '5' }
+  depends_on:
+    postgres: { condition: service_healthy }
+    redis: { condition: service_healthy }
+
+services:
+  postgres:
+    image: postgres:17-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: nexus
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD fehlt}
+      POSTGRES_DB: nexus
+    volumes:
+      - nexus-postgres:/var/lib/postgresql/data
+      - ./backups:/backups
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U nexus -d nexus']
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  redis:
+    image: redis:8-alpine
+    restart: unless-stopped
+    command: ['redis-server', '--appendonly', 'yes']
+    volumes:
+      - nexus-redis:/data
+    healthcheck:
+      test: ['CMD', 'redis-cli', 'ping']
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  migrate:
+    <<: *app
+    restart: 'no'
+    build: { context: ., target: migrate }
+    profiles: ['tools']
+
+  api:
+    <<: *app
+    build: { context: ., target: api }
+    ports: ['127.0.0.1:3000:3000']
+
+  bot:
+    <<: *app
+    build: { context: ., target: bot }
+    depends_on:
+      api: { condition: service_healthy }
+
+  worker:
+    <<: *app
+    build: { context: ., target: worker }
+    depends_on:
+      api: { condition: service_healthy }
+
+  dashboard:
+    restart: unless-stopped
+    build:
+      context: .
+      target: dashboard
+      args:
+        VITE_API_URL: ${API_URL:?API_URL fehlt}
+    ports: ['127.0.0.1:8080:8080']
+
+volumes:
+  nexus-postgres:
+  nexus-redis:

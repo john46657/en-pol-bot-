@@ -1,0 +1,916 @@
+
+
+<pasted_content id="4256">
+Implementierungsphasen
+Das Projekt muss strikt phasenweise entwickelt werden.
+Wichtig:
+
+* Nicht mehrere große Phasen gleichzeitig implementieren.
+* Jede Phase muss vollständig funktionsfähig sein, bevor die nächste beginnt.
+* Nach jeder Phase müssen Tests durchgeführt werden.
+* Bestehende Funktionen dürfen durch neue Phasen nicht beschädigt werden.
+* Keine Platzhalter-Funktionen als „fertig“ markieren.
+* Jede Phase muss mit einer kurzen technischen Dokumentation abgeschlossen werden.
+
+PHASE 0 – Projektgrundlage
+Ziel
+Ein sauberes, startbares Monorepo erstellen.
+Aufgaben
+
+* pnpm Workspace einrichten
+* TypeScript konfigurieren
+* ESLint einrichten
+* Prettier einrichten
+* Turbo konfigurieren
+* Docker Compose erstellen
+* PostgreSQL einrichten
+* Redis einrichten
+* Environment-System erstellen
+* `.env.example` erstellen
+* grundlegende README erstellen
+* gemeinsame Packages einrichten
+
+Ergebnis
+Folgende Komponenten müssen startbar sein:
+
+* Bot
+* API
+* Dashboard
+* PostgreSQL
+* Redis
+
+Abnahme
+
+```
+pnpm install
+pnpm dev
+```
+
+muss die komplette Entwicklungsumgebung starten können.
+PHASE 1 – Datenbank & Grundarchitektur
+Ziel
+Die zentrale Datenstruktur erstellen.
+Aufgaben
+Prisma einrichten und erste Modelle erstellen:
+
+* Guild
+* GuildSettings
+* User
+* DiscordRole
+* DiscordChannel
+* Permission
+* AuditLog
+
+Zusätzlich:
+
+* Migrationen
+* Seed-System
+* Database Service
+* Repository/Service-Struktur
+
+Abnahme
+Es muss möglich sein:
+
+1. einen Server zu speichern
+2. einen Benutzer zu speichern
+3. Rollen/Kanäle zu speichern
+4. Einstellungen zu speichern
+5. Audit-Logs zu erstellen
+
+PHASE 2 – Discord Bot Core
+Ziel
+Eine stabile Discord-Basis schaffen.
+Aufgaben
+discord.js integrieren.
+Implementieren:
+
+* Bot Login
+* Gateway Events
+* Guild Join
+* Guild Leave
+* Ready Event
+* Fehlerbehandlung
+* globale Interaktionsbehandlung
+* Slash-Command-Grundstruktur
+* Button Handler
+* Select Handler
+* Modal Handler
+
+Zusätzlich:
+
+* Discord API Service
+* Role Service
+* Channel Service
+* Member Service
+* Embed Builder
+* Permission Service
+
+Abnahme
+Der Bot kann:
+
+* einem Server beitreten
+* Serverinformationen auslesen
+* Rollen auslesen
+* Kanäle auslesen
+* Mitglieder auslesen
+* Buttons verarbeiten
+* Select-Menüs verarbeiten
+* Modals verarbeiten
+
+PHASE 3 – Discord-Synchronisierung
+Ziel
+Das Dashboard soll direkt mit dem Discord-Server verbunden sein.
+Aufgaben
+Synchronisieren:
+
+* Rollen
+* Benutzer
+* Textkanäle
+* Voice-Channels
+* Kategorien
+
+Das Dashboard soll beispielsweise anzeigen:
+
+```
+Rolle auswählen
+
+[ @Polizeileitung ▼ ]
+```
+
+Dabei stammen die Rollen direkt aus Discord.
+Zusätzlich
+Rollenhierarchie prüfen:
+
+```
+🟢 Bot kann Rolle verwalten
+
+oder
+
+🔴 Bot kann Rolle nicht verwalten
+```
+
+Auch Bot-Berechtigungen müssen geprüft werden.
+Abnahme
+Ein Administrator kann ohne manuelle IDs:
+
+* Rolle auswählen
+* Textkanal auswählen
+* Voice-Channel auswählen
+* Kategorie auswählen
+
+und diese Auswahl speichern.
+PHASE 4 – Discord OAuth2 & Dashboard Auth
+Ziel
+Sichere Anmeldung am Dashboard.
+Aufgaben
+Discord OAuth2 implementieren.
+Login-Ablauf:
+
+```
+Dashboard
+↓
+Discord Login
+↓
+OAuth2
+↓
+Discord Benutzer
+↓
+Guilds prüfen
+↓
+Berechtigungen prüfen
+↓
+Dashboard
+```
+
+Nur berechtigte Benutzer dürfen einen Server verwalten.
+Abnahme
+Ein Benutzer kann sich mit Discord anmelden und sieht nur Server, die er verwalten darf.
+PHASE 5 – Dashboard-Grundsystem
+Ziel
+Das endgültige Dashboard-Grundgerüst erstellen.
+Aufgaben
+Erstellen:
+
+* Sidebar
+* Header
+* Server-Auswahl
+* Dashboard Home
+* Settings
+* Rollenverwaltung
+* Kanalverwaltung
+* Permission-Verwaltung
+* Logs
+* Dark Mode
+* responsive Layout
+* Loading States
+* Error States
+* Toast Notifications
+
+Dashboard Home
+Anzeigen:
+
+* Mitglieder
+* Beamte
+* aktive Shifts
+* offene Einsätze
+* offene Bewerbungen
+* aktive Fahndungen
+* Tickets
+* aktuelle Gefahrenstufe
+
+Abnahme
+Der Administrator kann den kompletten Server grundlegend konfigurieren.
+PHASE 6 – Zentrales Permission-System
+Ziel
+Alle Module bekommen ein einheitliches Berechtigungssystem.
+Aufgaben
+Permission Engine erstellen.
+Beispiel:
+
+```
+applications.view
+applications.manage
+
+training.view
+training.manage
+
+promotions.create
+promotions.approve
+
+shifts.start
+shifts.pause
+shifts.end
+
+dispatch.view
+dispatch.manage
+
+sek.view
+sek.manage
+```
+
+Jede Permission kann mit einer oder mehreren Discord-Rollen verbunden werden.
+Wichtig
+Permissions müssen immer serverseitig geprüft werden.
+Nicht nur im Frontend.
+Abnahme
+Ein Benutzer kann nur Funktionen ausführen, für die er tatsächlich berechtigt ist.
+PHASE 7 – Panel-System
+Ziel
+Ein universelles Discord-Panel-System bauen.
+Aufgaben
+Panel Builder:
+
+* Embed
+* Titel
+* Beschreibung
+* Farbe
+* Thumbnail
+* Footer
+* Buttons
+* Emojis
+* Select-Menüs
+* Kanal
+* automatische Aktualisierung
+
+Panel-Konfiguration wird in der Datenbank gespeichert.
+Abnahme
+Der Administrator kann ein Panel erstellen, konfigurieren und in einen Discord-Kanal senden.
+PHASE 8 – Bewerbungs-Framework
+Ziel
+Das flexible Bewerbungssystem entwickeln.
+Aufgaben
+Datenmodelle:
+
+* ApplicationTemplate
+* ApplicationQuestion
+* ApplicationOption
+* ApplicationSubmission
+* ApplicationAnswer
+* ApplicationReview
+
+Unterstützen:
+
+* Text
+* Long Text
+* Number
+* Yes/No
+* Select
+* Multi Select
+* Date
+* Rating
+
+Fragen müssen:
+
+* erstellt
+* bearbeitet
+* gelöscht
+* verschoben
+* aktiviert/deaktiviert
+* als Pflicht/optional markiert
+
+werden können.
+Abnahme
+Eine Bewerbung mit mindestens 23 unterschiedlichen Fragen kann vollständig erstellt werden.
+PHASE 9 – DM-Bewerbung
+Ziel
+Die Bewerbung tatsächlich über Discord-DMs durchführen.
+Aufgaben
+Implementieren:
+
+* Bewerbung starten
+* Session erstellen
+* Frage senden
+* Antwort speichern
+* nächste Frage
+* vorherige Frage
+* Abbrechen
+* Fortsetzen
+* Review
+* Absenden
+
+Bewerbungen müssen auch nach einer Unterbrechung fortgesetzt werden können.
+Abnahme
+Ein Testbenutzer kann eine komplette Bewerbung mit 23+ Fragen per DM durchführen.
+PHASE 10 – Bewerbungsbearbeitung & Rollen
+Ziel
+Bewerbungen für das Bewerbungsteam verwalten.
+Aufgaben
+Panel:
+
+```
+📋 Bewerbung
+
+[📖 Ansehen]
+[🟢 Annehmen]
+[🔴 Ablehnen]
+[🟡 Rückfragen]
+[🎙️ Gespräch]
+```
+
+Implementieren:
+
+* Annahme
+* Ablehnung
+* Ablehnungsgrund
+* Rückfragen
+* automatische Rollenvergabe
+* Logs
+* Status
+
+Abnahme
+Eine angenommene Bewerbung kann automatisch die konfigurierte Discord-Rolle vergeben.
+PHASE 11 – Personalakten
+Ziel
+Die zentrale Personalverwaltung erstellen.
+Aufgaben
+Personalakte:
+
+* RP-Name
+* Discord
+* Dienstgrad
+* Eintritt
+* Dienststunden
+* Shifts
+* Ausbildungen
+* Qualifikationen
+* Beförderungen
+* Verwarnungen
+* Einsätze
+* Abmeldungen
+* Notizen
+
+Abnahme
+Alle späteren Systeme können auf dieselbe Personalakte zugreifen.
+PHASE 12 – Shift-System
+Ziel
+Das vollständige Shift-System implementieren.
+Aufgaben
+Shift-Typen erstellen.
+Beispiele:
+
+* Leitstelle
+* Streife
+* SEK
+* Ausbildung
+* Führung
+
+Funktionen:
+
+* Start
+* Pause
+* Ende
+* Shift Count
+* Total Duration
+* Average Duration
+* Historie
+* Leaderboard
+* Raw Data
+
+Rollenanforderungen müssen konfigurierbar sein.
+Abnahme
+Ein Benutzer kann einen Shift starten, pausieren und beenden.
+Die Zeit wird korrekt gespeichert.
+PHASE 13 – Shift Leaderboards & Statistiken
+Ziel
+Statistiken aufbauen.
+Aufgaben
+
+* Leaderboard
+* Tagesstatistik
+* Wochenstatistik
+* Monatsstatistik
+* All-Time-Statistik
+* Durchschnitt
+* Gesamtzeit
+
+Abnahme
+Die Werte stimmen mit den gespeicherten Shifts überein.
+PHASE 14 – Dienst & Streifen
+Ziel
+Das Dienstsystem mit Shifts verbinden.
+Aufgaben
+
+* Dienststatus
+* Streifenstatus
+* Einheiten
+* Besetzung
+* Fahrzeuge
+* aktueller Standort optional
+* Verfügbarkeit
+
+Abnahme
+Die Leitstelle kann sehen, welche Einheiten verfügbar oder im Einsatz sind.
+PHASE 15 – Leitstelle
+Ziel
+Die Leitstelle als zentrale Schaltstelle erstellen.
+Aufgaben
+Leitstellen-Panel:
+
+* aktive Beamte
+* Einheiten
+* Einsätze
+* Fahndungen
+* Gefahrenstatus
+
+Funktionen:
+
+* Einsatz erstellen
+* Einheit zuweisen
+* Einsatz bearbeiten
+* Einsatz abschließen
+* Einheit verwalten
+
+Abnahme
+Ein kompletter Einsatz kann von der Leitstelle erstellt und einer Einheit zugewiesen werden.
+PHASE 16 – Funk & Funk-Whitelist
+Ziel
+Das Funkmanagement entwickeln.
+Aufgaben
+Whitelist:
+
+* hinzufügen
+* entfernen
+* suchen
+* anzeigen
+* Berechtigungsstufen
+
+Berechtigungen:
+
+* Mithören
+* Sprechen
+* Vollzugriff
+* Leitstellen-Funk
+* Spezialfunk
+
+Optional Dienststatus prüfen.
+Abnahme
+Nur berechtigte Personen können den jeweiligen Funkbereich benutzen.
+PHASE 17 – Einsatzsystem
+Ziel
+Das vollständige Einsatzmanagement.
+Aufgaben
+
+* Einsatznummer
+* Ort
+* Priorität
+* Art
+* Beschreibung
+* Einheiten
+* Einsatzleiter
+* Status
+* Abschlussbericht
+
+Status:
+
+* angefordert
+* angefahren
+* aktiv
+* abgeschlossen
+* abgebrochen
+
+Abnahme
+Einsatzdaten werden automatisch in Personal- und Berichtssysteme übernommen.
+PHASE 18 – Gefahrenstatus
+Ziel
+Gefahrenstufen verwalten.
+Aufgaben
+Konfigurierbare Stufen.
+Standard:
+0–5.
+Jede Stufe kann besitzen:
+
+* Name
+* Farbe
+* Emoji
+* Beschreibung
+* Berechtigte Rollen
+
+Alle Änderungen werden geloggt.
+PHASE 19 – Fahndungssystem
+Ziel
+Personen- und Fahrzeugfahndungen.
+Aufgaben
+
+* erstellen
+* bearbeiten
+* suchen
+* anzeigen
+* aufheben
+* Historie
+
+Personen und Fahrzeuge getrennt behandeln.
+PHASE 20 – Fahrzeuge & Strafen
+Ziel
+Fahrzeugverwaltung und RP-Strafen.
+Fahrzeuge
+
+* Kennzeichen
+* Typ
+* Einheit
+* Fahrer
+* Status
+* Schäden
+
+Strafen
+
+* Bußgeld
+* Verwarnung
+* Strafpunkte
+* Führerscheinentzug
+* Fahrzeugbeschlagnahmung
+
+Alles mit Personalakten verbinden.
+PHASE 21 – Ausbildungssystem
+Ziel
+Ausbildungen vollständig verwalten.
+Aufgaben
+
+* Ausbildung erstellen
+* Teilnehmer
+* Ausbilder
+* Theorie
+* Praxis
+* Prüfung
+* Punkte
+* bestanden/nicht bestanden
+* automatische Rolle
+
+PHASE 22 – Qualifikationssystem
+Ziel
+Qualifikationen auf Basis des Ausbildungssystems.
+Beispiele:
+
+* SEK
+* Flugstaffel
+* Ausbilder
+* Ermittler
+* Leitstelle
+* Verkehrseinheit
+
+Voraussetzungen können frei definiert werden.
+PHASE 23 – Beförderungssystem
+Ziel
+Automatisierte Beförderungslogik.
+Aufgaben
+
+* Dienstgrade
+* Voraussetzungen
+* Anträge
+* Genehmigung
+* Ablehnung
+* Rollenwechsel
+* Historie
+
+Voraussetzungen können automatisch geprüft werden.
+PHASE 24 – SEK-System
+Ziel
+Separates SEK-Modul.
+Aufgaben
+
+* SEK-Personal
+* SEK-Shifts
+* SEK-Einsätze
+* Einsatzteams
+* SEK-Ausbildungen
+* SEK-Funk
+* SEK-Statistiken
+
+Mit Leitstelle und Einsatzsystem verbinden.
+PHASE 25 – Ticket-System
+Ziel
+Ticketverwaltung.
+Aufgaben
+
+* Kategorien
+* Erstellung
+* Übernahme
+* Priorität
+* Bearbeiter
+* Schließen
+* Transkript
+* Archiv
+
+PHASE 26 – Abmeldungen
+Ziel
+Abwesenheitsverwaltung.
+Aufgaben
+
+* Antrag
+* Zeitraum
+* Grund
+* Begründung
+* Genehmigung
+* Ablehnung
+* Historie
+
+Abmeldungen sollen automatisch in der Personalakte erscheinen.
+PHASE 27 – Tages- und Wochenberichte
+Ziel
+Automatische Berichte.
+Tagesbericht
+Zusammenführen:
+
+* Shifts
+* Dienstzeit
+* Einsätze
+* Fahndungen
+* Strafen
+* Tickets
+* Ausbildungen
+
+Wochenbericht
+Zusätzlich:
+
+* aktivste Beamte
+* Gesamtstunden
+* Einsätze
+* Ausbildungen
+* Beförderungen
+* Statistiken
+
+PHASE 28 – Büro-Warteraum
+Ziel
+Voice-Channel-Konfiguration.
+Der Administrator kann einen vorhandenen Voice-Channel auswählen.
+Beispiel:
+🔊 Büro-Warteraum
+Der Bot soll diesen Voice-Channel lediglich als konfigurierten Büro-Warteraum behandeln.
+PHASE 29 – Logging & Audit
+Ziel
+Alle wichtigen Aktionen nachvollziehbar machen.
+Logs für:
+
+* Bewerbungen
+* Rollenänderungen
+* Beförderungen
+* Ausbildungen
+* Shifts
+* Einsätze
+* Fahndungen
+* Gefahrenstatus
+* Tickets
+* Abmeldungen
+* SEK
+* Konfigurationsänderungen
+
+Jeder Log muss möglichst enthalten:
+
+* Benutzer
+* Aktion
+* Zeitpunkt
+* Server
+* betroffene Ressource
+* alte Daten
+* neue Daten
+
+PHASE 30 – Dashboard-Live-System
+Ziel
+Live-Aktualisierung.
+WebSockets für:
+
+* aktive Shifts
+* Leitstelle
+* Einsätze
+* Gefahrenstatus
+* Tickets
+* Bewerbungen
+* SEK
+* Statistiken
+
+Das Dashboard darf nicht für jede kleine Änderung komplett neu geladen werden müssen.
+PHASE 31 – Automatisierung
+Ziel
+Background Worker vollständig aktivieren.
+BullMQ Jobs für:
+
+* Bewerbungs-Timeouts
+* Erinnerungen
+* Tagesberichte
+* Wochenberichte
+* automatische Statistiken
+* Leaderboard-Berechnung
+* Discord-Synchronisierung
+* Benachrichtigungen
+
+PHASE 32 – Sicherheit
+Ziel
+Das komplette System absichern.
+Prüfen:
+
+* OAuth2
+* Sessions
+* Permissions
+* Rate Limits
+* CSRF
+* Input Validation
+* SQL Injection Schutz
+* Discord Permission Checks
+* Rollen-Hierarchie
+* Audit Logs
+* Secrets
+
+Besonders wichtig:
+Das Frontend darf niemals als einzige Sicherheitsinstanz dienen.
+Jede kritische Aktion muss serverseitig geprüft werden.
+PHASE 33 – Tests
+Ziel
+Das gesamte System testen.
+Unit Tests für:
+
+* Permissions
+* Shifts
+* Bewerbungen
+* Zeitberechnung
+* Beförderungen
+* Ausbildungen
+* Fahndungen
+* Einsätze
+
+Integration Tests für:
+
+* Datenbank
+* Discord Services
+* API
+* Permission System
+
+End-to-End Tests für:
+
+* Dashboard Login
+* Serverauswahl
+* Rollenauswahl
+* Bewerbung erstellen
+* Bewerbung abschließen
+* Shift starten
+* Einsatz erstellen
+* Beförderung genehmigen
+
+PHASE 34 – Performance & Stabilität
+Ziel
+Das System für größere Server vorbereiten.
+Prüfen:
+
+* Datenbankindizes
+* Redis Caching
+* API Performance
+* Discord Rate Limits
+* Queue-Verarbeitung
+* WebSocket-Verbindungen
+* große Bewerbungen
+* viele gleichzeitige Shifts
+* viele Server
+
+Keine unnötigen Discord-API-Aufrufe durchführen.
+PHASE 35 – Produktionsrelease
+Ziel
+Das fertige System produktionsbereit machen.
+Erstellen:
+
+* Production Docker Images
+* Production Environment
+* Datenbank Migrationen
+* Backup-Konzept
+* Monitoring
+* Error Logging
+* Health Checks
+* API Health Endpoint
+* Bot Health Status
+* Dashboard Health Status
+
+Beispiel:
+
+```
+/health
+```
+
+soll anzeigen:
+
+```
+API       🟢
+Database  🟢
+Redis     🟢
+Discord   🟢
+Workers   🟢
+```
+
+PHASE 36 – Abschlussprüfung
+Vor dem Release muss geprüft werden:
+Discord
+
+* Bot funktioniert
+* Rollen werden korrekt geladen
+* Kanäle werden korrekt geladen
+* Rollenhierarchie funktioniert
+* Permissions funktionieren
+
+Dashboard
+
+* Login funktioniert
+* Serverauswahl funktioniert
+* alle Module erreichbar
+* Konfigurationen werden gespeichert
+* Änderungen werden live übernommen
+
+Bewerbungen
+
+* dynamische Fragen
+* 23+ Fragen
+* DM-System
+* Speichern/Fortsetzen
+* Rückfragen
+* Annahme/Ablehnung
+* Rollenvergabe
+
+Shifts
+
+* Start
+* Pause
+* Ende
+* Zeitberechnung
+* Leaderboard
+* Statistiken
+
+Polizei-System
+
+* Personal
+* Ausbildung
+* Qualifikationen
+* Beförderungen
+* Leitstelle
+* Funk
+* Einsätze
+* Gefahrenstatus
+* Fahndungen
+* Fahrzeuge
+* Strafen
+* Tickets
+* Berichte
+* Abmeldungen
+* SEK
+
+Sicherheit
+
+* Permissions
+* OAuth2
+* Rollenprüfung
+* Audit Logs
+* Rate Limits
+* Secrets
+
+ENTWICKLUNGSREGEL
+Die Phasen müssen in dieser Reihenfolge bearbeitet werden.
+Eine Phase gilt erst als abgeschlossen, wenn:
+
+1. die Funktion implementiert ist,
+2. die Datenbank angepasst wurde,
+3. API und Bot integriert sind,
+4. das Dashboard integriert ist, sofern erforderlich,
+5. Berechtigungen funktionieren,
+6. Fehlerbehandlung vorhanden ist,
+7. Tests vorhanden sind,
+8. die Funktion praktisch getestet wurde,
+9. die Dokumentation aktualisiert wurde.
+
+Erst danach darf mit der nächsten Phase begonnen werden.
+Keine Phase darf einfach als „fertig“ markiert werden, wenn nur ein UI-Mockup oder eine nicht funktionierende Platzhalterfunktion existiert.
+Das Ziel ist ein tatsächlich funktionierender, produktionsfähiger Discord Polizei-RP Bot und kein reines Demo-Projekt.
+</pasted_content id="4256">

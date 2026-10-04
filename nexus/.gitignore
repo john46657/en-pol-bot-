@@ -1,0 +1,49 @@
+# Dependencies
+node_modules
+.pnp
+.pnp.js
+.pnpm-store
+
+# Build outputs
+dist
+build
+.next
+out
+.turbo
+*.tsbuildinfo
+
+# Testing
+coverage
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# Prisma
+prisma/migrations/dev.db
+*.db
+*.db-journal
+
+# Logs
+*.log
+npm-debug.log*
+pnpm-debug.log*
+
+# Editor / OS
+.DS_Store
+.idea
+.vscode/*
+!.vscode/settings.json
+!.vscode/extensions.json
+
+# Sensitive runtime state
+*.pem
+*.key
+.dev
+
+# Produktion
+.env.production
+backups/
+test-results/
+playwright-report/
