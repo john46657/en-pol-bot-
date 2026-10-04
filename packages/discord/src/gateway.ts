@@ -62,31 +62,83 @@ function authHeader(botToken: string): Record<string, string> {
   return { Authorization: `Bot ${botToken}` };
 }
 
+/** Rate-Limit-Verhalten (Discord: 429 + `retry_after`). Eine Anfrage wird höchstens {@link MAX_RATE_RETRIES}-mal wiederholt. */
+const MAX_RATE_RETRIES = 2;
+const MAX_WAIT_MS = 10_000;
+/** Bis wann ein Rate-Limit-Bereich (Methode + Route mit Haupt-ID) pausiert ist – verhindert sinnloses Weiterfragen. */
+const pausedUntil = new Map<string, number>();
+/** Laufende identische GET-Anfragen: parallele Aufrufer teilen sich eine Discord-Anfrage. */
+const inflight = new Map<string, Promise<unknown>>();
+
+const sleep = (ms: number): Promise<void> => new Promise((resolve) => setTimeout(resolve, ms));
+
+/** `GET /guilds/123/members/456` → `GET /guilds/123/members/:id` (erste ID = Hauptparameter bleibt erhalten). */
+export function rateLimitBucket(method: string, endpoint: string): string {
+  let first = true;
+  return `${method} ${endpoint.split('?')[0]!.replace(/\/\d{5,}/g, (m) => (first ? ((first = false), m) : '/:id'))}`;
+}
+
 async function discordFetch<T>(
   botToken: string,
   endpoint: string,
   options: { method?: string; body?: unknown; headers?: Record<string, string> } = {},
   botHeader = true,
 ): Promise<T> {
-  const response = await fetch(`${API}${endpoint}`, {
-    method: options.method ?? 'GET',
-    headers: {
-      ...(botHeader ? authHeader(botToken) : {}),
-      'Content-Type': 'application/json',
-      ...(options.headers ?? {}),
-    },
-    ...(options.body ? { body: JSON.stringify(options.body) } : {}),
-  });
-
-  if (response.status === 204) return undefined as T;
-
-  const data = (await response.json().catch(() => null)) as
-    (T & { message?: string; code?: number; retry_after?: number }) | null;
-
-  if (!response.ok) {
-    throw new DiscordApiError(response.status, endpoint, data?.message ?? response.statusText);
+  const method = options.method ?? 'GET';
+  // Lesezugriffe zusammenfassen (z. B. 50 gleichzeitige Dashboard-Aufrufe → 1 Discord-Anfrage)
+  if (method === 'GET') {
+    const key = `${botHeader ? botToken : options.headers?.['Authorization'] ?? ''}|${endpoint}`;
+    const running = inflight.get(key) as Promise<T> | undefined;
+    if (running) return running;
+    const p = send<T>(botToken, endpoint, options, botHeader).finally(() => inflight.delete(key));
+    inflight.set(key, p);
+    return p;
   }
-  return data as T;
+  return send<T>(botToken, endpoint, options, botHeader);
+}
+
+async function send<T>(
+  botToken: string,
+  endpoint: string,
+  options: { method?: string; body?: unknown; headers?: Record<string, string> },
+  botHeader: boolean,
+): Promise<T> {
+  const method = options.method ?? 'GET';
+  const bucket = rateLimitBucket(method, endpoint);
+  for (let attempt = 0; ; attempt++) {
+    const wait = (pausedUntil.get(bucket) ?? 0) - Date.now();
+    if (wait > 0) {
+      if (wait > MAX_WAIT_MS) throw new DiscordApiError(429, endpoint, `Discord-Rate-Limit: bitte in ${Math.ceil(wait / 1000)} s erneut versuchen.`);
+      await sleep(wait);
+    }
+    const response = await fetch(`${API}${endpoint}`, {
+      method,
+      headers: {
+        ...(botHeader ? authHeader(botToken) : {}),
+        'Content-Type': 'application/json',
+        ...(options.headers ?? {}),
+      },
+      ...(options.body ? { body: JSON.stringify(options.body) } : {}),
+    });
+
+    if (response.status === 204) return undefined as T;
+
+    const data = (await response.json().catch(() => null)) as
+      (T & { message?: string; code?: number; retry_after?: number }) | null;
+
+    if (response.status === 429) {
+      // 429 = nicht verarbeitet → Wiederholen ist auch bei Schreibzugriffen sicher
+      const seconds = Number(response.headers.get('retry-after') ?? data?.retry_after ?? 1);
+      const ms = Math.min(Math.max(Number.isFinite(seconds) ? seconds : 1, 0) * 1000, 60_000);
+      pausedUntil.set(bucket, Date.now() + ms);
+      if (attempt >= MAX_RATE_RETRIES || ms > MAX_WAIT_MS) throw new DiscordApiError(429, endpoint, data?.message ?? 'Discord-Rate-Limit erreicht.');
+      continue;
+    }
+    if (!response.ok) {
+      throw new DiscordApiError(response.status, endpoint, data?.message ?? response.statusText);
+    }
+    return data as T;
+  }
 }
 
 // --- Guilds ------------------------------------------------------------------
@@ -229,7 +281,19 @@ export async function getGuildMember(
   botToken: string,
   guildId: string,
   userId: string,
+  cache?: TtlCache,
 ): Promise<DiscordMemberSummary | null> {
+  const key = `member:${guildId}:${userId}`;
+  if (cache) {
+    const hit = cache.get<{ member: DiscordMemberSummary | null }>(key);
+    if (hit) return hit.member;
+  }
+  const member = await fetchGuildMember(botToken, guildId, userId);
+  cache?.set(key, { member }, 60_000);
+  return member;
+}
+
+async function fetchGuildMember(botToken: string, guildId: string, userId: string): Promise<DiscordMemberSummary | null> {
   const data = await discordFetch<RawMember | { message?: string }>(
     botToken,
     `/guilds/${guildId}/members/${userId}`,

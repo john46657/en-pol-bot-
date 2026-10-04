@@ -96,19 +96,26 @@ export interface LiveClient {
 /** Hält die verbundenen Dashboards je Server und verteilt Ereignisse nur an berechtigte. */
 export class LiveHub {
   private readonly byGuild = new Map<string, Set<LiveClient>>();
-  constructor(private readonly maxPerUser = 8) {}
+  private total = 0;
+  constructor(
+    private readonly maxPerUser = 8,
+    /** Obergrenze aller Verbindungen dieser API-Instanz (Speicher/Dateideskriptoren schützen). */
+    private readonly maxTotal = 5000,
+  ) {}
 
   add(c: LiveClient): boolean {
+    if (this.total >= this.maxTotal) return false;
     const set = this.byGuild.get(c.guildId) ?? new Set<LiveClient>();
     if ([...set].filter((x) => x.userId === c.userId).length >= this.maxPerUser) return false;
     set.add(c);
+    this.total++;
     this.byGuild.set(c.guildId, set);
     return true;
   }
 
   remove(c: LiveClient): void {
     const set = this.byGuild.get(c.guildId);
-    set?.delete(c);
+    if (set?.delete(c)) this.total--;
     if (set?.size === 0) this.byGuild.delete(c.guildId);
   }
 
@@ -127,6 +134,6 @@ export class LiveHub {
   }
 
   get size(): number {
-    return [...this.byGuild.values()].reduce((a, s) => a + s.size, 0);
+    return this.total;
   }
 }

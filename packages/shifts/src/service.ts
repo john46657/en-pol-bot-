@@ -2,7 +2,7 @@ import type { DiscordPort } from '@nexus/automation';
 import { assertGuildId, auditRepository, guildRepository, prisma, type Prisma } from '@nexus/database';
 import { ShiftError } from './errors.js';
 import { leaveUnit } from './units.js';
-import { aggregate, computeDuration, formatSeconds, isOverlong, validateCorrection } from './time.js';
+import { computeDuration, fromSums, formatSeconds, isOverlong, validateCorrection } from './time.js';
 
 /**
  * Shift-System: Typen mit Rollenanforderung, Start/Pause/Fortsetzen/Ende, Korrekturen, Historie, Rohdaten und
@@ -248,8 +248,8 @@ export async function listShifts(f: ShiftFilter & { limit?: number; cursor?: str
 
 /** Anzahl, Gesamtdauer und Durchschnitt (beendete Schichten, Nettodauer) für den Filter. */
 export async function shiftStats(f: ShiftFilter) {
-  const rows = await prisma.shift.findMany({ where: { ...(await whereOf(f)), status: 'ENDED', durationSeconds: { not: null } }, select: { durationSeconds: true } });
-  const stats = aggregate(rows.map((r) => r.durationSeconds ?? 0));
+  const sum = await prisma.shift.aggregate({ where: { ...(await whereOf(f)), status: 'ENDED', durationSeconds: { not: null } }, _count: { _all: true }, _sum: { durationSeconds: true } });
+  const stats = fromSums(sum._count._all, sum._sum.durationSeconds ?? 0);
   const running = await prisma.shift.count({ where: { ...(await whereOf(f)), status: { in: [...OPEN] } } });
   return { ...stats, running };
 }

@@ -66,32 +66,33 @@ export class GuildService {
     ]);
     const known = new Set(knownGuildIds.map((g) => g.id));
 
-    const result: GuildSelectionEntry[] = [];
-    for (const guild of userGuilds) {
-      const permissionsBit = BigInt(guild.permissions ?? '0');
-      const isOwner = guild.owner ?? false;
-      const hasDiscordPerms = (permissionsBit & BigInt(MANAGE_GUILD | ADMINISTRATOR)) !== 0n;
+    // Mitglieder-Abfragen parallel und gecacht (statt nacheinander je Server bei jedem Seitenaufruf)
+    const entries = await Promise.all(
+      userGuilds.map(async (guild): Promise<GuildSelectionEntry | null> => {
+        const permissionsBit = BigInt(guild.permissions ?? '0');
+        const isOwner = guild.owner ?? false;
+        const hasDiscordPerms = (permissionsBit & BigInt(MANAGE_GUILD | ADMINISTRATOR)) !== 0n;
 
-      // NEXUS-Permissions über die Rollen des Users in dieser Guild (zentrale Engine).
-      let nexusPermissions: ReadonlySet<Permission> = new Set<Permission>();
-      if (known.has(guild.id) && !(isOwner || hasDiscordPerms)) {
-        const member = await getGuildMember(this.botToken, guild.id, userId);
-        nexusPermissions = await permissions.forRoles(guild.id, member?.roles ?? []);
-      }
+        // NEXUS-Permissions über die Rollen des Users in dieser Guild (zentrale Engine).
+        let nexusPermissions: ReadonlySet<Permission> = new Set<Permission>();
+        if (known.has(guild.id) && !(isOwner || hasDiscordPerms)) {
+          const member = await getGuildMember(this.botToken, guild.id, userId, this.cache);
+          nexusPermissions = await permissions.forRoles(guild.id, member?.roles ?? []);
+        }
 
-      const canManage = isOwner || hasDiscordPerms || nexusPermissions.has('applications.manage');
-
-      if (canManage || nexusPermissions.size > 0) {
-        result.push({
+        const canManage = isOwner || hasDiscordPerms || nexusPermissions.has('applications.manage');
+        if (!canManage && nexusPermissions.size === 0) return null;
+        return {
           id: guild.id,
           name: guild.name,
           icon: guild.icon,
           botPresent: known.has(guild.id),
           canManage,
           permissions: effectivePermissions(nexusPermissions),
-        });
-      }
-    }
+        };
+      }),
+    );
+    const result = entries.filter((e): e is GuildSelectionEntry => e !== null);
     return result.sort(
       (a, b) => Number(b.botPresent) - Number(a.botPresent) || a.name.localeCompare(b.name),
     );

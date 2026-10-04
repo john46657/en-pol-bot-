@@ -45,6 +45,11 @@ export function aggregate(durations: readonly number[]): ShiftStats {
   };
 }
 
+/** Wie {@link aggregate}, aber aus bereits berechneter Anzahl und Summe (z. B. aus einer Datenbank-Aggregation). */
+export function fromSums(count: number, totalSeconds: number): ShiftStats {
+  return { count, totalSeconds, averageSeconds: count ? Math.round(totalSeconds / count) : 0 };
+}
+
 export function formatSeconds(total: number): string {
   const s = Math.max(0, Math.round(total));
   const h = Math.floor(s / 3600);

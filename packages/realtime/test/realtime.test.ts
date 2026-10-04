@@ -100,6 +100,17 @@ describe('Berechtigungen und Verteiler', () => {
     hub.dispatch(ev('shifts'));
     expect(hub.size).toBe(3);
   });
+  it('begrenzt die Gesamtzahl der Verbindungen; Abmelden gibt Platz frei, doppeltes Entfernen zählt nicht doppelt', () => {
+    const hub = new LiveHub(8, 3);
+    const cs = [1, 2, 3].map((i) => client('g' + i, 'u' + i, ['shifts']));
+    cs.forEach((c) => expect(hub.add(c)).toBe(true));
+    expect(hub.add(client('g9', 'u9', ['shifts']))).toBe(false);
+    hub.remove(cs[0]!);
+    hub.remove(cs[0]!);
+    expect(hub.size).toBe(2);
+    expect(hub.add(client('g9', 'u9', ['shifts']))).toBe(true);
+    expect(hub.size).toBe(3);
+  });
   it('eventOf ordnet Aktionen Bereichen zu', () => {
     expect(eventOf({ guildId: 'g', action: 'operation.status', resourceType: 'Operation', resourceId: 'o', actorId: 'u', createdAt: new Date('2026-01-01T00:00:00Z') })).toMatchObject({ area: 'operations', at: '2026-01-01T00:00:00.000Z' });
   });

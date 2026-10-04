@@ -1,5 +1,5 @@
 import { assertGuildId, prisma, type Prisma } from '@nexus/database';
-import { aggregate, type ShiftStats } from './time.js';
+import { fromSums, type ShiftStats } from './time.js';
 
 /**
  * Statistik und Leaderboard. Gerechnet wird aus den gespeicherten, **beendeten** Schichten (Nettodauer). Eine Schicht
@@ -68,9 +68,10 @@ export interface PeriodOverview extends ShiftStats {
 export async function overview(s: StatsScope, userId?: string): Promise<PeriodOverview[]> {
   const out: PeriodOverview[] = [];
   for (const period of PERIODS) {
-    const rows = await prisma.shift.findMany({ where: await where(s, period, userId), select: { durationSeconds: true } });
+    // Summe/Anzahl in der Datenbank statt alle Zeilen zu laden (bei 100 000 Schichten sonst Speicher und Zeit)
+    const sum = await prisma.shift.aggregate({ where: await where(s, period, userId), _count: { _all: true }, _sum: { durationSeconds: true } });
     const { from, to } = periodRange(period, s.now, s.tz);
-    out.push({ period, from: from?.toISOString() ?? null, to: to?.toISOString() ?? null, ...aggregate(rows.map((r) => r.durationSeconds ?? 0)) });
+    out.push({ period, from: from?.toISOString() ?? null, to: to?.toISOString() ?? null, ...fromSums(sum._count._all, sum._sum.durationSeconds ?? 0) });
   }
   return out;
 }
