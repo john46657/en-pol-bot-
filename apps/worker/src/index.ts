@@ -2,46 +2,76 @@ import 'dotenv/config';
 import { Queue, Worker } from 'bullmq';
 import { Redis } from 'ioredis';
 import { pino } from 'pino';
-import { restDiscordPort } from '@nexus/automation';
+import { restDiscordPort, type DiscordPort } from '@nexus/automation';
+import {
+  JOBS,
+  absenceEndReminders,
+  applicationReminders,
+  computeSnapshots,
+  deliver,
+  dueReports,
+  expireStaleApplications,
+  runJob,
+  syncAllGuilds,
+  trainingReminders,
+} from '@nexus/jobs';
 import { startPublisher } from '@nexus/realtime';
 import { watchOverlongShifts } from '@nexus/shifts';
 
 /**
- * NEXUS Worker (Phase 0): verbindet sich mit Redis und betreibt die System-Queue.
- * Fachliche Jobs (Timeouts, Berichte, Sync …) kommen in Phase 31 dazu.
+ * NEXUS Worker: betreibt die Hintergrund-Jobs (Phase 31) über BullMQ – Benachrichtigungen, Bewerbungs-Timeouts,
+ * Erinnerungen, Tages-/Wochenberichte, Statistik-Snapshots, Discord-Synchronisierung, Schichtwächter. Jeder Lauf wird
+ * in `job_runs` protokolliert (Dashboard „Automatisierung“); ein fehlgeschlagener Job beeinflusst die anderen nicht.
  */
 const log = pino({ level: process.env['LOG_LEVEL'] ?? 'info' });
 const prefix = process.env['QUEUE_PREFIX'] ?? 'nexus';
-const connection = new Redis(process.env['REDIS_URL'] ?? 'redis://localhost:6379', {
-  maxRetriesPerRequest: null,
-});
+const redisUrl = process.env['REDIS_URL'] ?? 'redis://localhost:6379';
+const connection = new Redis(redisUrl, { maxRetriesPerRequest: null });
+startPublisher(redisUrl); // Aktionen des Workers live ans Dashboard (best effort)
 
-startPublisher(process.env['REDIS_URL'] ?? 'redis://localhost:6379'); // Aktionen des Workers live ans Dashboard (best effort)
+const token = process.env['DISCORD_TOKEN'];
+const port = (): DiscordPort => {
+  if (!token) throw new Error('DISCORD_TOKEN fehlt');
+  return restDiscordPort(token);
+};
+
+/** Was jeder Job tut. */
+const HANDLERS: Record<string, () => Promise<unknown>> = {
+  notifications: () => deliver(port()),
+  'application-timeouts': () => expireStaleApplications(),
+  reminders: async () => ({ applications: await applicationReminders(), training: await trainingReminders(), absences: await absenceEndReminders() }),
+  reports: () => dueReports(port()),
+  'stat-snapshots': () => computeSnapshots(),
+  'discord-sync': async () => {
+    if (!token) throw new Error('DISCORD_TOKEN fehlt');
+    return syncAllGuilds(token);
+  },
+  'shift-watch': () => watchOverlongShifts(port(), new Date(), process.env['DASHBOARD_URL']),
+};
+
 const queue = new Queue('system', { connection, prefix });
 const worker = new Worker(
   'system',
   async (job) => {
-    if (job.name === 'shift-watch') {
-      const token = process.env['DISCORD_TOKEN'];
-      if (!token) {
-        log.warn('shift-watch übersprungen: DISCORD_TOKEN fehlt');
-        return { skipped: true };
-      }
-      const r = await watchOverlongShifts(restDiscordPort(token), new Date(), process.env['DASHBOARD_URL']);
-      if (r.flagged.length) log.info({ flagged: r.flagged.length }, 'ungewöhnlich lange Schichten gemeldet');
-      return { checked: r.checked, flagged: r.flagged.length };
+    const handler = HANDLERS[job.name];
+    if (!handler) {
+      log.debug({ jobId: job.id, name: job.name }, 'job verarbeitet');
+      return { at: new Date().toISOString() };
     }
-    log.debug({ jobId: job.id, name: job.name }, 'job verarbeitet');
-    return { at: new Date().toISOString() };
+    const r = await runJob(job.name, handler);
+    if (!r.ok) log.error({ job: job.name, error: r.error }, 'Job fehlgeschlagen');
+    else log.debug({ job: job.name, result: r.result }, 'Job ok');
+    return r.ok ? { ok: true } : { ok: false, error: r.error };
   },
-  { connection, prefix },
+  { connection, prefix, concurrency: 2 },
 );
 
 worker.on('failed', (job, err) => log.error({ jobId: job?.id, err }, 'job fehlgeschlagen'));
 
 await queue.upsertJobScheduler('heartbeat', { every: 60_000 }, { name: 'heartbeat' });
-await queue.upsertJobScheduler('shift-watch', { every: 5 * 60_000 }, { name: 'shift-watch' });
-log.info('Worker gestartet');
+for (const j of JOBS) await queue.upsertJobScheduler(j.name, { every: j.everyMs }, { name: j.name });
+log.info({ jobs: JOBS.map((j) => j.name), discord: !!token }, 'Worker gestartet');
+if (!token) log.warn('DISCORD_TOKEN fehlt – Jobs mit Discord-Zugriff schlagen fehl und werden protokolliert (Benachrichtigungen bleiben in der Warteschlange).');
 
 async function shutdown(signal: string): Promise<void> {
   log.info({ signal }, 'Worker fährt herunter');

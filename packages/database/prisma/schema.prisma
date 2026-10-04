@@ -360,6 +360,8 @@ model Guild {
   tickets            Ticket[]
   absences           Absence[]
   reports            Report[]
+  notifications      Notification[]
+  statSnapshots      StatSnapshot[]
 
   applications      Application[]
   panels            ApplicationPanel[]
@@ -2161,4 +2163,60 @@ model Report {
   @@unique([guildId, kind, periodStart])
   @@index([guildId, kind, periodStart])
   @@map("reports")
+}
+
+// ---------------------------------------------------------------------------
+// Phase 31: Automatisierung
+// ---------------------------------------------------------------------------
+
+/// Ausgehende Benachrichtigung (DM oder Kanalnachricht) mit Wiederholungen. `dedupeKey` verhindert Doppelversand.
+model Notification {
+  id            String    @id @default(cuid())
+  guildId       String
+  /// USER (DM) | CHANNEL
+  targetKind    String
+  targetId      String
+  kind          String
+  dedupeKey     String
+  payload       Json
+  /// PENDING | SENT | FAILED
+  status        String    @default("PENDING")
+  attempts      Int       @default(0)
+  lastError     String?
+  nextAttemptAt DateTime  @default(now())
+  sentAt        DateTime?
+  createdAt     DateTime  @default(now())
+
+  guild Guild @relation(fields: [guildId], references: [id], onDelete: Cascade)
+
+  @@unique([guildId, dedupeKey])
+  @@index([status, nextAttemptAt])
+  @@map("notifications")
+}
+
+/// Vorberechnete Statistik (z. B. Ranglisten je Zeitraum), regelmäßig vom Worker aktualisiert.
+model StatSnapshot {
+  guildId    String
+  key        String
+  data       Json
+  computedAt DateTime @default(now())
+
+  guild Guild @relation(fields: [guildId], references: [id], onDelete: Cascade)
+
+  @@id([guildId, key])
+  @@map("stat_snapshots")
+}
+
+/// Protokoll der Hintergrund-Jobs (die letzten Läufe je Job).
+model JobRun {
+  id         String    @id @default(cuid())
+  name       String
+  startedAt  DateTime  @default(now())
+  finishedAt DateTime?
+  ok         Boolean   @default(false)
+  summary    Json?
+  error      String?
+
+  @@index([name, startedAt])
+  @@map("job_runs")
 }

@@ -5,7 +5,7 @@ import { api, guildIcon, type GuildOverview } from '../api';
 import { UserMenu } from '../components/UserMenu';
 import { useLive } from '../live';
 
-type Needs = 'any' | 'view' | 'admin' | 'panels' | 'submissions' | 'personnel' | 'structure' | 'shifts' | 'duty' | 'radio' | 'operations' | 'danger' | 'wanted' | 'fleet' | 'penalties' | 'training' | 'qualifications' | 'promotions' | 'sek' | 'tickets' | 'absences' | 'reports';
+type Needs = 'any' | 'view' | 'admin' | 'panels' | 'submissions' | 'personnel' | 'structure' | 'shifts' | 'duty' | 'radio' | 'operations' | 'danger' | 'wanted' | 'fleet' | 'penalties' | 'training' | 'qualifications' | 'promotions' | 'sek' | 'tickets' | 'absences' | 'reports' | 'automation';
 const NAV: { to: string; label: string; icon: string; end?: boolean; needs: Needs }[] = [
   { to: '', label: 'Übersicht', icon: '🏠', end: true, needs: 'any' },
   { to: 'settings', label: 'Rollen & Kanäle wählen', icon: '⚙️', needs: 'view' },
@@ -34,6 +34,7 @@ const NAV: { to: string; label: string; icon: string; end?: boolean; needs: Need
   { to: 'users', label: 'Benutzer', icon: '👥', needs: 'admin' },
   { to: 'profiles', label: 'Profile', icon: '🧾', needs: 'admin' },
   { to: 'permissions', label: 'Berechtigungen', icon: '🔐', needs: 'admin' },
+  { to: 'automation', label: 'Automatisierung', icon: '🤖', needs: 'admin' },
   { to: 'logs', label: 'Logs', icon: '📜', needs: 'admin' },
 ];
 

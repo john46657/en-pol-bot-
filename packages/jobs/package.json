@@ -1,0 +1,33 @@
+{
+  "name": "@nexus/jobs",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "build": "tsc"
+  },
+  "dependencies": {
+    "@nexus/automation": "workspace:*",
+    "@nexus/core": "workspace:*",
+    "@nexus/database": "workspace:*",
+    "@nexus/discord": "workspace:*",
+    "@nexus/reports": "workspace:*",
+    "@nexus/shifts": "workspace:*",
+    "@nexus/types": "workspace:*",
+    "@nexus/absences": "workspace:*"
+  },
+  "devDependencies": {
+    "@prisma/client": "^6.11.0",
+    "vitest": "^3.2.4"
+  }
+}

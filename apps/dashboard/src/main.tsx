@@ -16,6 +16,7 @@ import { PersonnelDetail } from './pages/PersonnelDetail';
 import { PersonnelStructure } from './pages/PersonnelStructure';
 import { Fleet } from './pages/Fleet';
 import { Penalties } from './pages/Penalties';
+import { Automation } from './pages/Automation';
 import { Reports } from './pages/Reports';
 import { Absences } from './pages/Absences';
 import { Tickets } from './pages/Tickets';
@@ -85,6 +86,7 @@ createRoot(document.getElementById('root')!).render(
                   <Route path="tickets" element={<Tickets />} />
                   <Route path="absences" element={<Absences />} />
                   <Route path="reports" element={<Reports />} />
+                  <Route path="automation" element={<Automation />} />
                   <Route path="fleet" element={<Fleet />} />
                   <Route path="penalties" element={<Penalties />} />
                   <Route path="panels" element={<Panels />} />
