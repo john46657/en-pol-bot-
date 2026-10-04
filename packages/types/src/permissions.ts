@@ -262,6 +262,16 @@ export const PERMISSION_CATALOG = [
     ],
   },
   {
+    module: 'tickets',
+    label: 'Tickets',
+    permissions: [
+      ['tickets.create', 'Tickets eröffnen'],
+      ['tickets.view', 'Alle Tickets und das Archiv ansehen'],
+      ['tickets.handle', 'Tickets bearbeiten (übernehmen, Priorität, schließen)'],
+      ['tickets.manage', 'Ticket-System verwalten (Kategorien, Panels, jedes Ticket)'],
+    ],
+  },
+  {
     module: 'radio',
     label: 'Funk',
     permissions: [

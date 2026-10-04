@@ -32,3 +32,6 @@ Bewerbungen werden im Dashboard angelegt und veröffentlicht (Verwaltungs-UI fol
 
 ## Funk (ab Phase 16)
 Der Bot nutzt den Gateway-Intent *Guild Voice States* (nicht privilegiert) und braucht auf den Funk-Sprachkanälen bzw. serverweit die Rechte **Mitglieder verschieben** (trennen) und **Mitglieder stummschalten** (Stufe „Mithören“). Ohne diese Rechte meldet der Bot eine Warnung im Log und kann die Whitelist nicht durchsetzen.
+
+## Tickets (ab Phase 25)
+Der Bot braucht **Kanäle verwalten** (Ticket-Kanäle anlegen/löschen und Mitgliederrechte setzen) und im Developer-Portal den privilegierten **Message Content Intent**, damit das Transkript beim Schließen die Nachrichteninhalte enthält. Ohne diesen Intent bleibt das Transkript auf Autor, Zeit und Anhänge beschränkt; das Ticket wird dann als „Inhalte nicht lesbar“ markiert (nicht verschwiegen). Das Ticket-Protokoll geht in den Kanal „Ticket-Protokoll“ (Einstellungen → Rollen & Kanäle wählen).

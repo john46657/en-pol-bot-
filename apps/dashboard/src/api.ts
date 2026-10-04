@@ -725,3 +725,30 @@ export interface SekStats {
   operations: Record<string, number>;
   trainings: { total: number; passed: number };
 }
+
+export interface TicketCategoryRow {
+  id: string;
+  name: string;
+  description: string | null;
+  emoji: string | null;
+  discordCategoryId: string | null;
+  staffRoleIds: string[];
+  defaultPriority: string;
+  maxOpenPerUser: number;
+  active: boolean;
+}
+export interface TicketRow {
+  id: string;
+  number: number;
+  userId: string;
+  subject: string;
+  status: 'OPEN' | 'CLAIMED' | 'CLOSED';
+  priority: 'LOW' | 'NORMAL' | 'HIGH' | 'URGENT';
+  claimedBy: string | null;
+  channelId: string | null;
+  closeReason: string | null;
+  transcriptContent: boolean;
+  createdAt: string;
+  closedAt: string | null;
+  category: TicketCategoryRow;
+}

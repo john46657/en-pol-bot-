@@ -33,6 +33,7 @@
     "@nexus/radio": "workspace:*",
     "@nexus/sek": "workspace:*",
     "@nexus/shifts": "workspace:*",
+    "@nexus/tickets": "workspace:*",
     "@nexus/training": "workspace:*",
     "@nexus/types": "workspace:*",
     "@nexus/validation": "workspace:*",

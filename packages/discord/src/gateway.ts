@@ -339,3 +339,76 @@ export async function sendDirectMessage(
   });
   await createChannelMessage(botToken, channel.id, payload);
 }
+
+// --- Kanäle anlegen/löschen, Nachrichten lesen (Ticket-System) ------------------------------------------
+
+export interface PermissionOverwrite {
+  /** Rollen- oder Benutzer-ID (@everyone = Server-ID). */
+  id: string;
+  type: 'role' | 'member';
+  allow?: bigint;
+  deny?: bigint;
+}
+
+/** Häufige Kanalrechte (Bitmasken). */
+export const ChannelPerm = {
+  VIEW: 1n << 10n,
+  SEND: 1n << 11n,
+  EMBED: 1n << 14n,
+  ATTACH: 1n << 15n,
+  HISTORY: 1n << 16n,
+} as const;
+
+const toOverwrite = (o: PermissionOverwrite) => ({ id: o.id, type: o.type === 'role' ? 0 : 1, allow: String(o.allow ?? 0n), deny: String(o.deny ?? 0n) });
+
+export async function createGuildTextChannel(
+  botToken: string,
+  guildId: string,
+  opts: { name: string; parentId?: string | null; topic?: string; overwrites?: PermissionOverwrite[] },
+): Promise<{ id: string; name: string }> {
+  const data = await discordFetch<{ id: string; name: string }>(botToken, `/guilds/${guildId}/channels`, {
+    method: 'POST',
+    body: { name: opts.name, type: 0, ...(opts.parentId ? { parent_id: opts.parentId } : {}), ...(opts.topic ? { topic: opts.topic } : {}), permission_overwrites: (opts.overwrites ?? []).map(toOverwrite) },
+  });
+  return { id: data.id, name: data.name };
+}
+
+export async function deleteChannel(botToken: string, channelId: string): Promise<void> {
+  await discordFetch<void>(botToken, `/channels/${channelId}`, { method: 'DELETE' });
+}
+
+/** Setzt (oder entfernt mit `null`) das Recht eines Mitglieds in einem Kanal. */
+export async function setChannelMemberAccess(botToken: string, channelId: string, userId: string, access: { allow: bigint; deny?: bigint } | null): Promise<void> {
+  if (access === null) {
+    await discordFetch<void>(botToken, `/channels/${channelId}/permissions/${userId}`, { method: 'DELETE' });
+    return;
+  }
+  await discordFetch<void>(botToken, `/channels/${channelId}/permissions/${userId}`, { method: 'PUT', body: { type: 1, allow: String(access.allow), deny: String(access.deny ?? 0n) } });
+}
+
+export interface RawChannelMessage {
+  id: string;
+  content: string;
+  timestamp: string;
+  author: { id: string; username: string; global_name?: string | null; bot?: boolean };
+  attachments: { filename: string; url: string }[];
+  embeds: unknown[];
+}
+
+/** Alle Nachrichten eines Kanals (älteste zuerst), seitenweise geladen (max. `limit`). Inhalte erfordern den Message-Content-Intent. */
+export async function listChannelMessages(botToken: string, channelId: string, limit = 1000): Promise<RawChannelMessage[]> {
+  const out: RawChannelMessage[] = [];
+  let before: string | undefined;
+  while (out.length < limit) {
+    const page = await discordFetch<RawChannelMessage[]>(botToken, `/channels/${channelId}/messages?limit=100${before ? `&before=${before}` : ''}`);
+    if (!page.length) break;
+    out.push(...page);
+    before = page[page.length - 1]!.id;
+    if (page.length < 100) break;
+  }
+  return out.slice(0, limit).reverse();
+}
+
+export async function getCurrentBotUserId(botToken: string): Promise<string> {
+  return (await discordFetch<{ id: string }>(botToken, '/users/@me')).id;
+}

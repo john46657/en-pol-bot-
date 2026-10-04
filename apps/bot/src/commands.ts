@@ -35,6 +35,7 @@ import './commands/ausbildung.js';
 import './commands/qualifikation.js';
 import './commands/befoerderung.js';
 import './commands/sek.js';
+import './commands/ticket.js';
 
 const panelCommand = new SlashCommandBuilder()
   .setName('panel')

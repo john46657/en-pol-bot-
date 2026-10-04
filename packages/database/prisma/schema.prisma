@@ -280,6 +280,12 @@ enum PromotionStatus {
   WITHDRAWN
 }
 
+enum TicketStatus {
+  OPEN
+  CLAIMED
+  CLOSED
+}
+
 enum PermissionEffect {
   ALLOW
   DENY
@@ -342,6 +348,8 @@ model Guild {
   promotionRules     PromotionRule[]
   promotions         PromotionRequest[]
   sekSquads          SekSquad[]
+  ticketCategories   TicketCategory[]
+  tickets            Ticket[]
 
   applications      Application[]
   panels            ApplicationPanel[]
@@ -1990,4 +1998,90 @@ model SekOperationSquad {
 
   @@unique([operationId, squadId])
   @@map("sek_operation_squads")
+}
+
+// ---------------------------------------------------------------------------
+// Phase 25: Ticket-System
+// ---------------------------------------------------------------------------
+
+model TicketCategory {
+  id                String   @id @default(cuid())
+  guildId           String
+  name              String
+  description       String?
+  emoji             String?
+  /// Discord-Kategorie, unter der die Ticket-Kanäle angelegt werden.
+  discordCategoryId String?
+  /// Rollen, die Tickets dieser Kategorie sehen und übernehmen dürfen.
+  staffRoleIds      String[]
+  defaultPriority   String   @default("NORMAL")
+  /// Wie viele offene Tickets ein Mitglied je Kategorie haben darf.
+  maxOpenPerUser    Int      @default(1)
+  active            Boolean  @default(true)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  guild   Guild    @relation(fields: [guildId], references: [id], onDelete: Cascade)
+  tickets Ticket[]
+
+  @@unique([guildId, name])
+  @@map("ticket_categories")
+}
+
+model TicketCounter {
+  guildId String @id
+  last    Int    @default(0)
+
+  @@map("ticket_counters")
+}
+
+model Ticket {
+  id                String       @id @default(cuid())
+  guildId           String
+  number            Int
+  categoryId        String
+  /// Ersteller (Discord-ID)
+  userId            String
+  subject           String
+  description       String?
+  status            TicketStatus @default(OPEN)
+  priority          String       @default("NORMAL")
+  /// Bearbeiter (Übernahme)
+  claimedBy         String?
+  claimedAt         DateTime?
+  channelId         String?
+  /// Zusätzlich hinzugefügte Mitglieder.
+  participantIds    String[]
+  closedBy          String?
+  closedAt          DateTime?
+  closeReason       String?
+  /// Transkript (Nachrichten als JSON, beim Schließen festgehalten).
+  transcript        Json?
+  transcriptContent Boolean      @default(true)
+  createdAt         DateTime     @default(now())
+  updatedAt         DateTime     @updatedAt
+
+  guild    Guild          @relation(fields: [guildId], references: [id], onDelete: Cascade)
+  category TicketCategory @relation(fields: [categoryId], references: [id])
+  events   TicketEvent[]
+
+  @@unique([guildId, number])
+  @@index([guildId, status])
+  @@index([guildId, userId])
+  @@map("tickets")
+}
+
+model TicketEvent {
+  id       String   @id @default(cuid())
+  guildId  String
+  ticketId String
+  type     String
+  at       DateTime @default(now())
+  actorId  String?
+  data     Json?
+
+  ticket Ticket @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+
+  @@index([ticketId, at])
+  @@map("ticket_events")
 }

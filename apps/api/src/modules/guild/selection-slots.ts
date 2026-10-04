@@ -64,6 +64,12 @@ export const SELECTION_SLOTS: readonly SelectionSlot[] = [
     label: 'Gefahrenstatus-Kanal',
     description: 'Hier hält der Bot die aktuelle Gefahrenstufe als Statusmeldung aktuell.',
   },
+  {
+    key: 'ticket-log-channel',
+    kind: 'text',
+    label: 'Ticket-Protokoll',
+    description: 'Hier erscheint eine Zusammenfassung jedes geschlossenen Tickets.',
+  },
 ];
 
 export const getSlot = (key: string): SelectionSlot | undefined =>
