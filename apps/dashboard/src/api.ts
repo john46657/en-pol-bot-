@@ -696,3 +696,32 @@ export interface PromotionRuleRow {
   rankId: string;
   requirements: RequirementRow[];
 }
+
+export interface SekConfigRow {
+  teamId: string | null;
+  qualificationId: string | null;
+  shiftTypeId: string | null;
+  courseIds: string[];
+  applicationId: string | null;
+}
+export interface SekMemberRow {
+  userId: string;
+  rpName: string;
+  rank: string | null;
+  hasQualification: boolean;
+  onDuty: 'ON' | 'PAUSED' | 'OFF';
+  squads: string[];
+}
+export interface SekSquadRow {
+  id: string;
+  name: string;
+  leaderId: string | null;
+  active: boolean;
+  members: { userId: string; role: string }[];
+}
+export interface SekStats {
+  members: { total: number; qualified: number; onDuty: number };
+  shifts: { leaderboard: { rank: number; userId: string; totalSeconds: number; count: number }[] } | null;
+  operations: Record<string, number>;
+  trainings: { total: number; passed: number };
+}

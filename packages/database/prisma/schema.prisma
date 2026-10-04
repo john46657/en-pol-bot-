@@ -341,6 +341,7 @@ model Guild {
   qualifications     Qualification[]
   promotionRules     PromotionRule[]
   promotions         PromotionRequest[]
+  sekSquads          SekSquad[]
 
   applications      Application[]
   panels            ApplicationPanel[]
@@ -1910,4 +1911,83 @@ model PromotionRequest {
   @@index([guildId, status])
   @@index([guildId, userId])
   @@map("promotion_requests")
+}
+
+// ---------------------------------------------------------------------------
+// Phase 24: SEK-Modul
+// ---------------------------------------------------------------------------
+
+/// Verknüpft das SEK mit den allgemeinen Systemen (je Server eine Konfiguration).
+model SekConfig {
+  guildId         String   @id
+  /// Team in der Personalverwaltung (SEK-Personal).
+  teamId          String?
+  /// Qualifikation „SEK“ (Voraussetzung für die Mitgliedschaft).
+  qualificationId String?
+  /// Shift-Typ für SEK-Dienst.
+  shiftTypeId     String?
+  /// SEK-Ausbildungen.
+  courseIds       String[]
+  /// Bewerbung für den SEK (Einreichungen sichtbar mit sek.application.view).
+  applicationId   String?
+  updatedAt       DateTime @updatedAt
+
+  @@map("sek_config")
+}
+
+/// Einsatzteam (Gruppe/Trupp), z. B. „Alpha“.
+model SekSquad {
+  id        String   @id @default(cuid())
+  guildId   String
+  name      String
+  leaderId  String?
+  active    Boolean  @default(true)
+  createdAt DateTime @default(now())
+
+  guild      Guild               @relation(fields: [guildId], references: [id], onDelete: Cascade)
+  members    SekSquadMember[]
+  operations SekOperationSquad[]
+
+  @@unique([guildId, name])
+  @@map("sek_squads")
+}
+
+model SekSquadMember {
+  id      String @id @default(cuid())
+  guildId String
+  squadId String
+  userId  String
+  /// Funktion im Team (Einsatzleiter, Scharfschütze, Einsatzsanitäter …).
+  role    String @default("Operator")
+
+  squad SekSquad @relation(fields: [squadId], references: [id], onDelete: Cascade)
+
+  @@unique([squadId, userId])
+  @@index([guildId, userId])
+  @@map("sek_squad_members")
+}
+
+/// Kennzeichnet einen Einsatz als SEK-Einsatz.
+model SekOperation {
+  operationId String   @id
+  guildId     String
+  createdBy   String
+  createdAt   DateTime @default(now())
+
+  squads SekOperationSquad[]
+
+  @@index([guildId])
+  @@map("sek_operations")
+}
+
+model SekOperationSquad {
+  id          String @id @default(cuid())
+  operationId String
+  squadId     String
+
+  operation SekOperation @relation(fields: [operationId], references: [operationId], onDelete: Cascade)
+  squad     SekSquad     @relation(fields: [squadId], references: [id], onDelete: Cascade)
+
+  @@unique([operationId, squadId])
+  @@map("sek_operation_squads")
 }

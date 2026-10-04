@@ -47,6 +47,7 @@ export const PERMISSION_TEMPLATES: readonly PermissionTemplate[] = [
       'radio.channel.manage',
       'danger.view',
       'danger.manage',
+      'sek.manage',
     ],
   },
   {

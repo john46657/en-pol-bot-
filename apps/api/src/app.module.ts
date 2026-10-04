@@ -5,6 +5,7 @@ import { ApplicationsModule } from './modules/applications/applications.module.j
 import { AuthModule } from './modules/auth/auth.module.js';
 import { GuildModule } from './modules/guild/guild.module.js';
 import { PersonnelModule } from './modules/personnel/personnel.module.js';
+import { SekModule } from './modules/sek/sek.module.js';
 import { PromotionsModule } from './modules/promotions/promotions.module.js';
 import { QualificationsModule } from './modules/qualifications/qualifications.module.js';
 import { TrainingModule } from './modules/training/training.module.js';
@@ -37,6 +38,7 @@ import { PermissionGuard } from './common/guards/permission.guard.js';
     TrainingModule,
     QualificationsModule,
     PromotionsModule,
+    SekModule,
   ],
   providers: [
     // Reihenfolge: erst AuthN (JwtAuthGuard), dann AuthZ (PermissionGuard).
