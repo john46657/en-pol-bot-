@@ -170,7 +170,17 @@ describe('Benachrichtigungen', () => {
     expect(notificationTypeOf('settings.selection.set')).toBe('settingsChanged');
     expect(notificationTypeOf('design.theme.activated')).toBe('settingsChanged');
     expect(notificationTypeOf('design.asset.uploaded')).toBeNull(); // Upload ist keine Systemeinstellung
-    expect(notificationTypeOf('ticket.closed')).toBeNull();
+    expect(notificationTypeOf('ticket.closed')).toBe('ticketClosed');
+    expect(notificationTypeOf('ticket.claimed')).toBe('ticketAssigned');
+    expect(notificationTypeOf('ticket.waiting')).toBe('ticketWaiting');
+    expect(notificationTypeOf('training.created')).toBe('trainingNew');
+    expect(notificationTypeOf('training.finished')).toBe('trainingCompleted');
+    expect(notificationTypeOf('wanted.created')).toBe('wantedNew');
+    expect(notificationTypeOf('restriction.created')).toBe('restrictionCreated');
+    expect(notificationTypeOf('restriction.expired')).toBe('restrictionExpired');
+    expect(notificationTypeOf('role.change')).toBe('roleChange');
+    expect(notificationTypeOf('promotion.approved')).toBe('teamChange');
+    expect(notificationTypeOf('ticket.priority')).toBeNull(); // nicht jede Änderung ist eine Benachrichtigung
   });
   it('liefert Ereignisse mit Nummer/Betreff, nur dieser Server, neueste zuerst', async () => {
     const { sub } = await seed(A, 'Alpha');
@@ -240,6 +250,19 @@ describe('Benachrichtigungen', () => {
     expect(await getNotifications(A, ['gibts-nicht', '__proto__'], all)).toEqual([]);
     const cfg = (await getNotifications(A, NOTIFICATION_KEYS, only('config.view')))[0]!;
     expect(cfg).toMatchObject({ type: 'settingsChanged', text: 'Einstellungen wurden geändert.' });
+  });
+  it('Spezifikation 53: Sperren, Ausbildung, Fahndung, Ticket, Rollen, Verlassen – je nur mit passendem Recht', async () => {
+    await seed(A, 'Alpha');
+    const mk = (action: string, resourceType: string) => prisma.auditLog.create({ data: { guildId: A, actorType: 'USER', action, resourceType, resourceId: 'x' } });
+    for (const [a, r] of [['restriction.created', 'Restriction'], ['restriction.expired', 'Restriction'], ['training.created', 'Training'], ['training.finished', 'Training'], ['wanted.created', 'WantedNotice'], ['role.change', 'User'], ['member.left', 'User']] as const) await mk(a, r);
+    const full = await getNotifications(A, NOTIFICATION_KEYS, all);
+    expect(full.map((x) => x.type).sort()).toEqual(['memberLeft', 'restrictionCreated', 'restrictionExpired', 'roleChange', 'trainingCompleted', 'trainingNew', 'wantedNew']);
+    expect(full.find((x) => x.type === 'restrictionCreated')).toMatchObject({ path: '/restrictions', text: 'Eine Sperre wurde verhängt.' });
+    expect(full.find((x) => x.type === 'wantedNew')?.path).toBe('/wanted');
+    const onlyRestrictions = await getNotifications(A, NOTIFICATION_KEYS, async (p) => p === 'restrictions.view');
+    expect(onlyRestrictions.map((x) => x.type).sort()).toEqual(['restrictionCreated', 'restrictionExpired']);
+    expect(await getNotifications(A, NOTIFICATION_KEYS, async () => false)).toEqual([]);
+    expect((await getNotifications(A, ['wantedNew'], all)).map((x) => x.type)).toEqual(['wantedNew']); // Auswahl im Design
   });
   it('nur die letzten 14 Tage, höchstens 30', async () => {
     await prisma.auditLog.create({

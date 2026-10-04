@@ -1,6 +1,6 @@
 import type { GuildMember } from 'discord.js';
 import { UserLeaveAction } from '@nexus/types';
-import { prisma } from '@nexus/database';
+import { auditRepository, prisma } from '@nexus/database';
 import { SubmissionStatus } from '@nexus/types';
 import { log } from '../logger.js';
 
@@ -11,6 +11,7 @@ import { log } from '../logger.js';
  * Bewerbungen passiert. Default: Nothing.
  */
 export async function handleMemberRemove(member: GuildMember): Promise<void> {
+  await recordMemberLeft(member).catch((e) => log.warn({ err: String(e) }, 'Server-Verlassen konnte nicht vermerkt werden.'));
   const submissions = await prisma.applicationSubmission.findMany({
     where: {
       guildId: member.guild.id,
@@ -39,6 +40,28 @@ export async function handleMemberRemove(member: GuildMember): Promise<void> {
       'Bewerber hat den Server verlassen.',
     );
   }
+}
+
+/**
+ * Verlässt ein Mitglied den Server, ist der Dashboard-Zugriff sofort weg (die API fragt die Mitgliedschaft live bei
+ * Discord ab, Antworten werden höchstens 60 Sekunden zwischengespeichert). Hier wird das Ereignis festgehalten: Audit-Log
+ * (löst die Benachrichtigung „Mitglied hat den Server verlassen“ aus) und – falls vorhanden – Verlauf der Personalakte.
+ * Die Akte selbst wird nicht automatisch geschlossen; das entscheidet ein berechtigter Mensch.
+ */
+export async function recordMemberLeft(member: Pick<GuildMember, 'id' | 'guild'>): Promise<void> {
+  const guildId = member.guild.id;
+  const record = await prisma.personnelRecord.findUnique({ where: { guildId_userId: { guildId, userId: member.id } }, select: { id: true, status: true } });
+  await auditRepository.log({
+    guildId,
+    actorId: null,
+    action: 'member.left',
+    resource: record ? ['PersonnelRecord', record.id] : ['User', member.id],
+    after: { userId: member.id, hadRecord: !!record },
+    automation: 'member-left',
+    reason: 'Mitglied hat den Discord-Server verlassen',
+  });
+  if (record && record.status === 'ACTIVE')
+    await prisma.personnelEvent.create({ data: { guildId, recordId: record.id, type: 'member.left', actorId: null, after: { note: 'Hat den Discord-Server verlassen – Dashboard-Zugriff entfällt.' } } });
 }
 
 function readLeaveAction(configJson: unknown): UserLeaveAction {

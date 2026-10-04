@@ -21,6 +21,7 @@ const EVENT: Record<string, string> = {
   'probation.set': 'Probezeit gesetzt',
   archived: 'Geschlossen (archiviert)',
   'state.changed': 'Teamstatus geändert',
+  'member.left': 'Hat den Discord-Server verlassen',
   restored: 'Wiederhergestellt',
   'entry.added': 'Eintrag hinzugefügt',
   'entry.revoked': 'Eintrag widerrufen',

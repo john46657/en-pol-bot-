@@ -1109,4 +1109,17 @@ describe('Dashboard-Design (Phase 37)', () => {
     await prisma.ticket.delete({ where: { id: t.id } });
     await prisma.ticketCategory.delete({ where: { id: cat.id } });
   });
+  it('Kein Zugriff nach Verlassen des Servers: Nicht-Mitglieder erhalten 403 mit verständlicher Meldung, ohne Daten', async () => {
+    for (const path of [
+      `/guilds/${G}/wanted`,
+      `/guilds/${G}/restrictions`,
+      `/guilds/${G}/tickets`,
+      `/guilds/${G}/design/notifications`,
+      `/guilds/${G}/personnel`,
+    ]) {
+      const r = await call('GET', path, APPLICANT);
+      expect(r.status, path).toBe(403);
+      expect(JSON.stringify(r.data)).toContain('nicht (mehr) Mitglied');
+    }
+  });
 });

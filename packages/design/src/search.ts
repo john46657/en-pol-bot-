@@ -4,6 +4,8 @@ import {
   NOTIFICATION_KEYS,
   NOTIFICATION_TYPES,
   notificationTypeOf,
+  NOTIFICATION_PATH,
+  NOTIFICATION_TEXT,
   type NotificationType,
 } from './notify.js';
 
@@ -223,8 +225,8 @@ export async function getNotifications(
         : type === 'settingsChanged'
           ? 'Einstellungen wurden geändert.'
           : type === 'teamChange'
-            ? 'Die Personalakte oder Rolle eines Mitglieds wurde geändert.'
-            : '';
+            ? 'Die Personalakte oder der Teamzustand eines Mitglieds wurde geändert.'
+            : (NOTIFICATION_TEXT[type] ?? '');
     const path = t
       ? '/tickets'
       : s
@@ -235,7 +237,7 @@ export async function getNotifications(
             ? r.action.startsWith('design.')
               ? '/design'
               : '/logs'
-            : '/';
+            : (NOTIFICATION_PATH[type] ?? '/');
     out.push({
       id: r.id,
       type,

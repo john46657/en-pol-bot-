@@ -49,4 +49,11 @@ test('Sperren: verhängen, ansehen, aufheben', async ({ page, context }) => {
   await expect(page.getByRole('list', { name: 'Sperren' })).toContainText(
     'aufgehoben: Test beendet',
   );
+
+  // Spezifikation 53: „Sperre erstellt“ erscheint in der Glocke
+  await page.reload();
+  await page.getByRole('button', { name: /^Benachrichtigungen/ }).click();
+  await expect(page.getByRole('region', { name: 'Benachrichtigungen' })).toContainText(
+    'Sperre erstellt',
+  );
 });
