@@ -9,13 +9,29 @@ const format_1 = require("../format");
 const q = (s) => encodeURIComponent(s.trim());
 const str = (c, k) => String(c.opts[k] ?? '').trim();
 /** Findet genau eine Person per Roblox-Name (exakt, ohne Groß-/Kleinschreibung) oder Roblox-ID. */
-async function resolvePerson(c, term) {
+async function resolvePerson(c, term, opts = {}) {
     const page = await c.api.asUser(c.discordId, 'GET', `/persons?q=${q(term)}&pageSize=10`);
     const exact = page.items.filter((p) => String(p.robloxUsername).toLowerCase() === term.toLowerCase() || p.robloxUserId === term);
     if (exact.length === 1)
         return { person: exact[0] };
-    if (exact.length === 0 && page.items.length === 0)
+    if (exact.length === 0 && page.items.length === 0) {
+        // Unbekannte Person: bei Bedarf nach Roblox-Prüfung selbst anlegen (nur mit dem Recht dazu; Tippfehler fängt Roblox ab)
+        if (opts.create && c.robloxLookup) {
+            const u = await c.robloxLookup(term);
+            if (!u)
+                return { reply: (0, format_1.errorReply)(`Keine Person zu „${(0, format_1.plain)(term)}“ gefunden – und bei Roblox gibt es keinen Benutzer mit diesem Namen (oder Roblox ist gerade nicht erreichbar).`) };
+            try {
+                const created = await c.api.asUser(c.discordId, 'POST', '/persons', { robloxUsername: u.name, robloxUserId: String(u.id) });
+                return { person: created, created: true };
+            }
+            catch (e) {
+                if (e instanceof api_1.BotApiError && e.status === 403)
+                    return { reply: (0, format_1.errorReply)(`„${(0, format_1.plain)(u.name)}“ ist noch nicht im System, und dir fehlt das Recht, Personen anzulegen. Bitte lass die Person von jemandem mit Berechtigung anlegen.`) };
+                throw e;
+            }
+        }
         return { reply: (0, format_1.errorReply)(`Keine Person zu „${(0, format_1.plain)(term)}“ gefunden.`) };
+    }
     const names = (exact.length ? exact : page.items).slice(0, 8).map((p) => `${(0, format_1.plain)(p.robloxUsername)} (${p.robloxUserId ?? 'ohne ID'})`).join(', ');
     return { reply: (0, format_1.errorReply)(`Nicht eindeutig. Treffer: ${names}. Bitte exakten Namen oder die Roblox-ID angeben.`) };
 }
@@ -206,12 +222,12 @@ exports.COMMANDS = [
             if (reason.length < 3)
                 return (0, format_1.errorReply)('Der Grund ist zu kurz (mindestens 3 Zeichen).');
             try {
-                const { person, reply } = await resolvePerson(c, str(c, 'person'));
+                const { person, reply, created } = await resolvePerson(c, str(c, 'person'), { create: true });
                 if (!person)
                     return reply;
                 const amount = typeof c.opts.betrag === 'number' ? c.opts.betrag : undefined;
                 const t = await c.api.asUser(c.discordId, 'POST', '/tickets', { personId: person.id, reason, ...(amount !== undefined ? { amount } : {}) });
-                return (0, format_1.okReply)(`Ticket **${t.number}** für **${(0, format_1.plain)(person.robloxUsername)}** ausgestellt.`);
+                return (0, format_1.okReply)(`Ticket **${t.number}** für **${(0, format_1.plain)(person.robloxUsername)}** ausgestellt.${created ? ' Die Person war noch nicht im System und wurde nach Roblox-Prüfung neu angelegt.' : ''}`);
             }
             catch (e) {
                 return (0, errors_1.mapError)(e);

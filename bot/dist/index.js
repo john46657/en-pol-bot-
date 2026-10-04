@@ -207,6 +207,13 @@ client.once('clientReady', async (c) => {
     const json = commands_1.COMMANDS.map(toBuilder);
     const guilds = (0, config_1.guildIds)(cfg);
     if (guilds.length) {
+        // Frühere globale Registrierung entfernen – sonst erscheinen alle Befehle doppelt (global + Server)
+        try {
+            await c.application.commands.set([]);
+        }
+        catch (e) {
+            console.error(`could not clear global commands: ${e instanceof Error ? e.message : e}`);
+        }
         for (const g of guilds) {
             try {
                 await c.application.commands.set(json, g);
@@ -220,6 +227,13 @@ client.once('clientReady', async (c) => {
     else {
         await c.application.commands.set(json);
         console.log(`${json.length} slash commands registered globally (can take up to an hour to appear)`);
+        // Frühere Server-Registrierungen entfernen – sonst erscheinen alle Befehle doppelt
+        for (const g of c.guilds.cache.keys()) {
+            try {
+                await c.application.commands.set([], g);
+            }
+            catch { /* Server ohne Befehle/Zugriff: egal */ }
+        }
     }
     (0, outbox_1.startOutboxLoop)(api, async (channelId, embed) => {
         const ch = await client.channels.fetch(channelId);
