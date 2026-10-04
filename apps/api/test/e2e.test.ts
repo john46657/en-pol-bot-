@@ -857,6 +857,17 @@ describe('Dashboard-Design (Phase 37)', () => {
     await prisma.ticketCategory.delete({ where: { id: cat.id } });
   });
 
+  it('Änderungsprotokoll: lesbare Einträge, nur mit design.view', async () => {
+    expect((await call('GET', d('/history'), NOBODY)).status).toBe(403);
+    const h = await call('GET', d('/history'), ADMIN);
+    expect(h.status).toBe(200);
+    expect(h.data.length).toBeGreaterThan(0);
+    expect(h.data.map((e: { text: string }) => e.text).join('|')).toMatch(
+      /Theme „.+“ (erstellt|aktiviert)/,
+    );
+    expect(h.data.every((e: { icon: string; at: string }) => e.icon && e.at)).toBe(true);
+  });
+
   it('Navigation: Rollenliste für den Editor (ohne @everyone) und eigene Rollen für die Menü-Sichtbarkeit', async () => {
     const roles = await call('GET', d('/roles'), ADMIN);
     expect(roles.status).toBe(200);

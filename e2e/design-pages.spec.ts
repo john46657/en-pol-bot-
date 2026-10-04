@@ -38,6 +38,12 @@ test('Seiten & Banner: Seite aus Vorlage erstellen, Banner anlegen → Menü, Se
   await expect(page.getByLabel('Seite wählen')).toHaveValue('page-fortbildung');
   await expect(page.getByLabel('Widget-Leinwand').locator('.we-item')).toHaveCount(6);
 
+  // Regression: Ein Widget hinzufügen darf die eigene Seite (und später das Banner) nicht aus dem Entwurf löschen
+  await page.getByRole('button', { name: 'Text hinzufügen' }).click();
+  await expect(page.getByLabel('Seite wählen')).toHaveValue('page-fortbildung');
+  await expect(page.getByLabel('Seite wählen')).toContainText('Fortbildung'); // die Seite ist noch da (und weitere aus anderen Tests)
+  await expect(page.getByLabel('Widget-Leinwand').locator('.we-item')).toHaveCount(7);
+
   // --- Banner ---
   await page.getByRole('tab', { name: /^📢 Banner/ }).click();
   await page.getByRole('button', { name: '+ Banner erstellen' }).click();

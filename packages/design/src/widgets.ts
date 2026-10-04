@@ -80,7 +80,15 @@ export const LIST_PERMISSION = {
 } as const;
 
 // --- Aktions-Button ("Button-Builder") ------------------------------------------------------------
-export const CTA_KINDS = ['none', 'page', 'url', 'discord', 'ticket', 'application'] as const;
+export const CTA_KINDS = [
+  'none',
+  'page',
+  'url',
+  'discord',
+  'ticket',
+  'application',
+  'modal',
+] as const;
 export type CtaKind = (typeof CTA_KINDS)[number];
 export const CTA_LABEL: Record<CtaKind, string> = {
   none: 'Kein Button',
@@ -89,6 +97,7 @@ export const CTA_LABEL: Record<CtaKind, string> = {
   discord: 'Discord-Link',
   ticket: 'Tickets öffnen',
   application: 'Bewerbungen öffnen',
+  modal: 'Fenster mit Text öffnen',
 };
 const SHADOW = ['none', 'small', 'medium', 'large'] as const;
 export type ShadowPreset = (typeof SHADOW)[number];
@@ -98,6 +107,9 @@ export interface Cta {
   kind: CtaKind;
   /** page: Seitenschlüssel · url/discord: https-Adresse */
   target: string;
+  /** Nur bei „Fenster öffnen“: Titel und Text (einfache Formatierung) */
+  modalTitle: string;
+  modalBody: string;
   color: string;
   hoverColor: string;
   textColor: string;
@@ -110,6 +122,8 @@ export const emptyCta = (): Cta => ({
   icon: '',
   kind: 'none',
   target: '',
+  modalTitle: '',
+  modalBody: '',
   color: '',
   hoverColor: '',
   textColor: '',
@@ -148,6 +162,8 @@ export function normalizeCta(raw: unknown): Cta {
     icon: text(o['icon'], 8, ''),
     kind,
     target,
+    modalTitle: kind === 'modal' ? text(o['modalTitle'], 80, '').trim() : '',
+    modalBody: kind === 'modal' ? longText(o['modalBody'], 1500, '') : '',
     color: optColor(o['color']),
     hoverColor: optColor(o['hoverColor']),
     textColor: optColor(o['textColor']),
@@ -250,7 +266,14 @@ export function defaultProps(type: WidgetType): Record<string, unknown> {
     case 'link':
       return { description: '', cta: { ...emptyCta(), text: 'Öffnen', kind: 'none' } };
     case 'image':
-      return { src: '', alt: '', fit: 'cover', cta: emptyCta() };
+      return {
+        src: '',
+        alt: '',
+        fit: 'cover',
+        overlayColor: '#000000',
+        overlayOpacity: 0,
+        cta: emptyCta(),
+      };
     case 'banner':
       return { body: '', image: '', cta: emptyCta(), expires: '' };
     case 'health':
@@ -285,6 +308,8 @@ function normalizeProps(type: WidgetType, raw: unknown): Record<string, unknown>
         src: safeUrl(o['src'], ''),
         alt: text(o['alt'], 120, ''),
         fit: oneOf(o['fit'], ['cover', 'contain'] as const, 'cover'),
+        overlayColor: color(o['overlayColor'], '#000000'),
+        overlayOpacity: Math.round(num(o['overlayOpacity'], 0, 100, 0)),
         cta: normalizeCta(o['cta']),
       };
     case 'banner':

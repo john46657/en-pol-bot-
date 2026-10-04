@@ -11,6 +11,7 @@ import { createContext, useContext, useEffect } from 'react';
 import { api } from '../api';
 import { setServerThemeDefault, useTheme } from '../theme';
 import { assetUrl } from './assetUrl';
+import { applyCustomFont } from './customFont';
 import { loadFont } from './fonts';
 
 interface EffectiveDesign {
@@ -63,7 +64,12 @@ export function useDesign(guildId: string) {
   useEffect(() => {
     void loadFont(config.typography.fontMain);
     void loadFont(config.typography.fontHeading);
-    return applyDesign(config, mode);
+    const removeFont = applyCustomFont(config, 'nexus-custom-font');
+    const removeDesign = applyDesign(config, mode);
+    return () => {
+      removeDesign();
+      removeFont();
+    };
   }, [config, mode]);
   return {
     config,

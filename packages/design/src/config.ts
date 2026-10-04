@@ -88,6 +88,8 @@ export interface DesignConfig {
   typography: {
     fontMain: string;
     fontHeading: string;
+    /** Eigene Webfont (https-Adresse zu woff2/woff/ttf) – wird nur geladen, wenn „Eigene Schrift“ gewählt ist */
+    customFont: { name: string; url: string };
     h1: Typo;
     h2: Typo;
     body: Typo & { lineHeight: number; letterSpacing: number };
@@ -198,6 +200,7 @@ export const DEFAULT_CONFIG: DesignConfig = {
   typography: {
     fontMain: 'system',
     fontHeading: 'system',
+    customFont: { name: '', url: '' },
     h1: { size: 32, weight: 700 },
     h2: { size: 24, weight: 600 },
     body: { size: 15, weight: 400, lineHeight: 1.5, letterSpacing: 0 },
@@ -237,7 +240,9 @@ export const DEFAULT_CONFIG: DesignConfig = {
 };
 
 /** Schriftarten, die ohne externen Download verfügbar sind oder über das Dashboard geladen werden dürfen. */
-export const FONTS = ['system', 'Inter', 'Roboto', 'Poppins', 'Open Sans'] as const;
+export const FONTS = ['system', 'Inter', 'Roboto', 'Poppins', 'Open Sans', 'custom'] as const;
+/** Familienname einer eigenen Schrift: nur Buchstaben, Ziffern, Leerzeichen, Bindestrich, Unterstrich (geht unverändert in CSS). */
+export const FONT_NAME = /^[A-Za-z0-9][A-Za-z0-9 _-]{0,39}$/;
 
 export const MAX_NAV_GROUPS = 12;
 export const MAX_NAV_ITEMS = 80;
@@ -376,6 +381,14 @@ export function normalizeConfig(raw: unknown, base: DesignConfig = DEFAULT_CONFI
         FONTS,
         b.typography.fontHeading as (typeof FONTS)[number],
       ),
+      customFont: {
+        name:
+          typeof (isObj(ty['customFont']) ? ty['customFont']['name'] : undefined) === 'string' &&
+          FONT_NAME.test((ty['customFont'] as Record<string, string>)['name']!)
+            ? (ty['customFont'] as Record<string, string>)['name']!
+            : '',
+        url: safeUrl(isObj(ty['customFont']) ? ty['customFont']['url'] : '', ''),
+      },
       h1: typo(ty['h1'], b.typography.h1),
       h2: typo(ty['h2'], b.typography.h2),
       body: {

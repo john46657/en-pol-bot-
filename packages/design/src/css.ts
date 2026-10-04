@@ -19,6 +19,27 @@ const FONT_STACK: Record<string, string> = {
 };
 const SPEED = { slow: 400, normal: 200, fast: 100 } as const;
 
+/** Eigene Schrift nur, wenn Name und Adresse gültig sind; sonst Systemschrift (nie eine kaputte Schrift-Angabe). */
+export function fontStack(c: DesignConfig, key: string): string {
+  if (key === 'custom') {
+    const f = c.typography.customFont;
+    return f.name && f.url ? `"${f.name}", ${FONT_STACK['system']!}` : FONT_STACK['system']!;
+  }
+  return FONT_STACK[key] ?? FONT_STACK['system']!;
+}
+/** `@font-face` für die eigene Schrift (Name und Adresse sind vorher geprüft; Anführungszeichen/Klammern ausgeschlossen). */
+export function customFontCss(c: DesignConfig): string {
+  const f = c.typography.customFont;
+  if (
+    !f.name ||
+    !f.url ||
+    (c.typography.fontMain !== 'custom' && c.typography.fontHeading !== 'custom')
+  )
+    return '';
+  const url = f.url.replace(/["'()\\\s]/g, encodeURIComponent);
+  return `@font-face{font-family:"${f.name}";src:url("${url}");font-display:swap;}`;
+}
+
 export function designVars(c: DesignConfig, mode: 'dark' | 'light'): Record<string, string> {
   const p = c.colors[mode];
   const glass = c.glass.enabled;
@@ -41,8 +62,8 @@ export function designVars(c: DesignConfig, mode: 'dark' | 'light'): Record<stri
     '--bad': p.warning,
     '--err': p.danger,
     '--info': p.info,
-    '--font-main': FONT_STACK[c.typography.fontMain] ?? FONT_STACK['system']!,
-    '--font-heading': FONT_STACK[c.typography.fontHeading] ?? FONT_STACK['system']!,
+    '--font-main': fontStack(c, c.typography.fontMain),
+    '--font-heading': fontStack(c, c.typography.fontHeading),
     '--h1-size': `${c.typography.h1.size}px`,
     '--h1-weight': String(c.typography.h1.weight),
     '--h2-size': `${c.typography.h2.size}px`,

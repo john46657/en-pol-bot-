@@ -74,6 +74,6 @@ test('Design-Editor: Kopie anlegen, Farbe ändern, Live-Vorschau, speichern, im 
   await page.goto(`/guilds/${E2E.guildId}/design`);
   await page.getByRole('tab', { name: /Themes/ }).click();
   await expect(page.getByText(/Versionsverlauf von/)).toBeVisible();
-  await expect(page.getByText('Farben: ')).toBeVisible();
+  await expect(page.getByText('Farben: ').first()).toBeVisible(); // Verlauf und Protokoll nennen es mehrfach
   expect(problems).toEqual([]);
 });

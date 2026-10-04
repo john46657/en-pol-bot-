@@ -108,6 +108,7 @@ function Editor({ guildId, overview }: { guildId: string; overview: Overview }) 
     void qc.invalidateQueries({ queryKey: ['design', guildId] });
     void qc.invalidateQueries({ queryKey: ['design-theme', guildId] });
     void qc.invalidateQueries({ queryKey: ['design-effective', guildId] });
+    void qc.invalidateQueries({ queryKey: ['design-history', guildId] });
   }, [qc, guildId]);
   const save = useMutation({
     mutationFn: (config: DesignConfig) =>

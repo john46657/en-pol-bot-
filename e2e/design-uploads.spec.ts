@@ -70,7 +70,7 @@ test('Uploads: Logo hochladen, SVG abgelehnt, Bibliothek, Auslieferung, wirksam 
     .first()
     .click();
   const lib = page.getByRole('dialog', { name: 'Bilder-Bibliothek' });
-  await expect(lib.getByText('1 / 100 Bilder')).toBeVisible();
+  await expect(lib.getByText(/\d+ \/ 100 Bilder/)).toBeVisible(); // andere Tests haben ggf. auch Bilder hochgeladen
   await expect(lib.getByRole('button', { name: 'Mein Logo.png verwenden' })).toBeVisible();
   await lib.getByRole('button', { name: 'Schließen' }).click();
 
@@ -109,6 +109,6 @@ test('Uploads: Logo hochladen, SVG abgelehnt, Bibliothek, Auslieferung, wirksam 
     .click();
   const lib2 = page.getByRole('dialog', { name: 'Bilder-Bibliothek' });
   await lib2.getByRole('button', { name: 'Mein Logo.png löschen' }).click();
-  await expect(lib2.getByText('Noch keine Bilder hochgeladen.')).toBeVisible();
+  await expect(lib2.getByRole('button', { name: 'Mein Logo.png löschen' })).toHaveCount(0); // genau dieses Bild ist weg
   expect((await request.get(src)).status()).toBe(404); // Datei ist weg
 });

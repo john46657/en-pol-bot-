@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   DEFAULT_CONFIG,
+  customFontCss,
   backgroundFor,
   backgroundStyle,
   contrast,
@@ -126,5 +127,35 @@ describe('CSS-Variablen', () => {
     );
     expect(img.layer['backgroundImage']).toBe('url("https://x.de/a%20b.png")');
     expect(img.layer['filter']).toBe('blur(5px) brightness(80%)');
+  });
+});
+
+describe('Eigene Schrift', () => {
+  const cfg = (f: unknown, main = 'custom') =>
+    normalizeConfig({ typography: { fontMain: main, customFont: f } });
+  it('gültig: Name + https-Adresse → Schriftfamilie und @font-face', () => {
+    const c = cfg({ name: 'Meine Schrift-2', url: 'https://example.org/fonts/a b.woff2' });
+    expect(c.typography.customFont.name).toBe('Meine Schrift-2');
+    expect(designVars(c, 'dark')['--font-main']).toContain('"Meine Schrift-2"');
+    expect(customFontCss(c)).toBe(
+      '@font-face{font-family:"Meine Schrift-2";src:url("https://example.org/fonts/a%20b.woff2");font-display:swap;}',
+    );
+  });
+  it('ungültige Namen/Adressen: Systemschrift, kein CSS (keine Einschleusung)', () => {
+    for (const bad of [
+      { name: 'a";}body{display:none', url: 'https://example.org/f.woff2' },
+      { name: 'ok', url: 'javascript:alert(1)' },
+      { name: '', url: 'https://example.org/f.woff2' },
+      { name: 'x', url: 'http://example.org/f.woff2' },
+    ]) {
+      const c = cfg(bad);
+      expect(customFontCss(c), JSON.stringify(bad)).toBe('');
+      expect(designVars(c, 'dark')['--font-main']).toBe(
+        designVars(cfg({}, 'system'), 'dark')['--font-main'],
+      ); // genau die Systemschrift
+    }
+  });
+  it('@font-face nur, wenn „Eigene Schrift“ gewählt ist (Leistung: nichts laden)', () => {
+    expect(customFontCss(cfg({ name: 'X', url: 'https://example.org/f.woff2' }, 'Inter'))).toBe('');
   });
 });

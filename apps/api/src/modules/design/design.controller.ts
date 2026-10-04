@@ -26,6 +26,7 @@ import {
   filterForViewer,
   listAssets,
   saveAsset,
+  getDesignHistory,
   getEffective,
   getNotifications,
   searchAll,
@@ -139,6 +140,13 @@ export class DesignController {
   @RequirePermissions('design.view')
   overview(@GuildId() guildId: string) {
     return getDesign(guildId);
+  }
+
+  /** Änderungsprotokoll des Designs (wer, wann, was) aus dem Audit-Log. */
+  @Get('history')
+  @RequirePermissions('design.view')
+  history(@GuildId() guildId: string) {
+    return getDesignHistory(guildId);
   }
 
   @Get('themes/:id')

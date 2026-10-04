@@ -53,7 +53,7 @@ export function WidgetEditor({ page = 'overview' }: { page?: string }) {
   const sel = widgets.find((w) => w.id === selected) ?? null;
 
   const save = (list: Widget[]) =>
-    set('layout', { pages: { ...draft.layout.pages, [page]: { widgets: list } } });
+    set('layout', { ...draft.layout, pages: { ...draft.layout.pages, [page]: { widgets: list } } });
   const patch = (id: string, p: Partial<Widget>) =>
     save(widgets.map((w) => (w.id === id ? { ...w, ...p } : w)));
   const patchProps = (id: string, p: Record<string, unknown>) =>
@@ -103,6 +103,7 @@ export function WidgetEditor({ page = 'overview' }: { page?: string }) {
     d.last = key;
     // Immer vom Stand beim Start aus rechnen: wer zurückzieht, bringt die verdrängten Widgets mit zurück
     set('layout', {
+      ...draft.layout,
       pages: { ...draft.layout.pages, [page]: { widgets: placeWidget(d.start, d.id, rect) } },
     });
   };
@@ -656,6 +657,22 @@ function Props({
               <option value="contain">Einpassen</option>
             </select>
           </label>
+          <div className="two">
+            <ColorOpt
+              label="Überlagerung (Overlay)"
+              value={String(p['overlayColor'])}
+              disabled={disabled}
+              onChange={(v) => patchProps({ overlayColor: v || '#000000' })}
+            />
+            <Nm
+              label="Overlay-Deckkraft (0 = aus)"
+              value={Number(p['overlayOpacity'])}
+              min={0}
+              max={100}
+              disabled={disabled}
+              onChange={(v) => patchProps({ overlayOpacity: v })}
+            />
+          </div>
           <p className="muted">Optional: Bild als Link</p>
           <CtaEditor
             cta={p['cta'] as Cta}
@@ -752,6 +769,30 @@ export function CtaEditor({
             ))}
           </select>
         </label>
+      )}
+      {cta.kind === 'modal' && (
+        <>
+          <label className="fld">
+            <span>Titel des Fensters</span>
+            <input
+              value={cta.modalTitle}
+              maxLength={80}
+              onChange={(e) => set({ modalTitle: e.target.value })}
+            />
+          </label>
+          <label className="fld">
+            <span>Text des Fensters</span>
+            <textarea
+              rows={5}
+              maxLength={1500}
+              value={cta.modalBody}
+              onChange={(e) => set({ modalBody: e.target.value })}
+            />
+            <small className="muted">
+              # Überschrift · **fett** · *kursiv* · - Liste · [Link](https://…)
+            </small>
+          </label>
+        </>
       )}
       {(cta.kind === 'url' || cta.kind === 'discord') && (
         <UrlText

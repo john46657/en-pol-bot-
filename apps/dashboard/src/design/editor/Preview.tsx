@@ -7,6 +7,7 @@ import {
 } from '@nexus/design/client';
 import { useEffect, type CSSProperties } from 'react';
 import { assetUrl } from '../assetUrl';
+import { applyCustomFont } from '../customFont';
 import { loadFont } from '../fonts';
 import { navWithPages } from '../../pages/GuildLayout';
 
@@ -37,7 +38,8 @@ export function Preview({
   useEffect(() => {
     void loadFont(config.typography.fontMain);
     void loadFont(config.typography.fontHeading);
-  }, [config.typography.fontMain, config.typography.fontHeading]);
+    return applyCustomFont(config, 'nexus-preview-font');
+  }, [config]);
   const width = DEVICES.find((d) => d.id === device)?.width ?? null;
   const mobile = device === 'mobile';
   const nav = mobile ? config.responsive.mobileNav : 'side';

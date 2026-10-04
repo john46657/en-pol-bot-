@@ -16,6 +16,7 @@ import { useEffect, useState, type CSSProperties } from 'react';
 import { Link } from 'react-router';
 import { api, type GuildOverview } from '../../api';
 import { assetUrl } from '../assetUrl';
+import { Dialog } from '../../components/Dialog';
 import { RichText } from './RichText';
 
 export interface WidgetData {
@@ -73,7 +74,9 @@ export function CtaButton({ cta: raw, guildId }: { cta: Cta; guildId: string }) 
   const cta = normalizeCta(raw); // nie ungeprüfte Ziele rendern
   const target = ctaTarget(cta, guildId);
   const [hover, setHover] = useState(false);
-  if (!target || !(cta.text || cta.icon)) return null;
+  const [modal, setModal] = useState(false);
+  const isModal = cta.kind === 'modal' && (cta.modalTitle || cta.modalBody);
+  if ((!target && !isModal) || !(cta.text || cta.icon)) return null;
   const style: CSSProperties = {
     ...(cta.color
       ? { background: hover && cta.hoverColor ? cta.hoverColor : cta.color, borderColor: cta.color }
@@ -97,6 +100,23 @@ export function CtaButton({ cta: raw, guildId }: { cta: Cta; guildId: string }) 
     onMouseEnter: () => setHover(true),
     onMouseLeave: () => setHover(false),
   };
+  if (isModal)
+    return (
+      <>
+        <button type="button" {...common} aria-haspopup="dialog" onClick={() => setModal(true)}>
+          {body}
+        </button>
+        <Dialog open={modal} title={cta.modalTitle || cta.text} onClose={() => setModal(false)}>
+          <RichText source={cta.modalBody} />
+          <div className="dz-seg">
+            <button type="button" className="btn" onClick={() => setModal(false)}>
+              Schließen
+            </button>
+          </div>
+        </Dialog>
+      </>
+    );
+  if (!target) return null;
   return target.external ? (
     <a href={target.href} target="_blank" rel="noopener noreferrer" {...common}>
       {body}
@@ -246,14 +266,24 @@ function Body({
       const src = p['src'] as string;
       const cta = normalizeCta(p['cta']);
       const t = ctaTarget(cta, guildId);
+      const overlay = Number(p['overlayOpacity']);
       const img = src ? (
-        <img
-          className="wg-img"
-          src={assetUrl(src)}
-          alt={p['alt'] as string}
-          loading="lazy"
-          style={{ objectFit: p['fit'] as 'cover' | 'contain' }}
-        />
+        <span className="wg-imgwrap">
+          <img
+            className="wg-img"
+            src={assetUrl(src)}
+            alt={p['alt'] as string}
+            loading="lazy"
+            style={{ objectFit: p['fit'] as 'cover' | 'contain' }}
+          />
+          {overlay > 0 && (
+            <span
+              className="wg-overlay"
+              aria-hidden
+              style={{ background: p['overlayColor'] as string, opacity: overlay / 100 }}
+            />
+          )}
+        </span>
       ) : (
         <p className="muted">Kein Bild gewählt</p>
       );

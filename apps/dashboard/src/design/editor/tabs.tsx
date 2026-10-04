@@ -258,7 +258,16 @@ const WEIGHTS = [
   ['800', '800 – Extrafett'],
 ] as const;
 export function TypographyTab() {
-  const fonts = FONTS.map((f) => [f, f === 'system' ? 'System' : f] as const);
+  const { draft } = useEditor();
+  const fonts = FONTS.map(
+    (f) =>
+      [
+        f,
+        f === 'system' ? 'System' : f === 'custom' ? 'Eigene Schrift (Webfont-Adresse)' : f,
+      ] as const,
+  );
+  const custom =
+    draft.typography.fontMain === 'custom' || draft.typography.fontHeading === 'custom';
   return (
     <>
       <Pick
@@ -268,6 +277,23 @@ export function TypographyTab() {
         hint="Wird nur geladen, wenn gewählt."
       />
       <Pick path="typography.fontHeading" label="Überschriften" options={fonts} />
+      {custom && (
+        <>
+          <Txt
+            path="typography.customFont.name"
+            label="Name der eigenen Schrift"
+            max={40}
+            placeholder="MeineSchrift"
+            hint="Buchstaben, Ziffern, Leerzeichen, - und _."
+          />
+          <Txt
+            path="typography.customFont.url"
+            url
+            label="Adresse der Schriftdatei (https, woff2/woff/ttf)"
+            hint="Achtung: Die Schrift wird von dieser Adresse geladen – der Betreiber dieser Adresse sieht die IP-Adressen deiner Besucher. Ohne gültigen Namen und Adresse gilt die Systemschrift."
+          />
+        </>
+      )}
       <h3>Überschrift 1</h3>
       <Num path="typography.h1.size" label="Größe" min={16} max={64} unit=" px" />
       <Pick path="typography.h1.weight" label="Gewicht" options={WEIGHTS} />

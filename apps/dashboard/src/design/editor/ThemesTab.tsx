@@ -52,6 +52,7 @@ export function ThemesTab({
     setDialog(null);
     void qc.invalidateQueries({ queryKey: ['design', guildId] });
     void qc.invalidateQueries({ queryKey: ['design-effective', guildId] });
+    void qc.invalidateQueries({ queryKey: ['design-history', guildId] });
     void qc.invalidateQueries({ queryKey: ['design-theme', guildId] });
     onChanged();
   };
@@ -203,6 +204,7 @@ export function ThemesTab({
           onRestored={() => done('Version wiederhergestellt')}
         />
       )}
+      <History guildId={guildId} />
       <h3>Alles zurücksetzen</h3>
       <p className="muted">
         Entfernt alle serverweiten Überschreibungen und aktiviert wieder das Theme „Standard“. Deine
@@ -369,6 +371,38 @@ export function ThemesTab({
           </>
         )}
       </Dialog>
+    </>
+  );
+}
+
+function History({ guildId }: { guildId: string }) {
+  const q = useQuery({
+    queryKey: ['design-history', guildId],
+    queryFn: () =>
+      api<{ id: string; at: string; actorId: string | null; icon: string; text: string }[]>(
+        `/guilds/${guildId}/design/history`,
+      ),
+  });
+  if (!q.data?.length) return null;
+  return (
+    <>
+      <h3>Änderungsprotokoll</h3>
+      <p className="muted">Wer hat wann was am Design geändert (die letzten 50 Einträge).</p>
+      <ul className="plain" aria-label="Änderungsprotokoll">
+        {q.data.map((e) => (
+          <li key={e.id} className="row">
+            <span aria-hidden>{e.icon}</span>
+            <span className="grow">
+              {e.text}
+              <br />
+              <small className="muted">
+                {new Date(e.at).toLocaleString('de-DE')}
+                {e.actorId ? ` · Benutzer ${e.actorId}` : ' · automatisch'}
+              </small>
+            </span>
+          </li>
+        ))}
+      </ul>
     </>
   );
 }

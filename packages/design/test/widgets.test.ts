@@ -153,7 +153,7 @@ describe('Aktions-Buttons', () => {
     expect(normalizeCta({ kind: 'page', target: 'tickets' }).kind).toBe('page');
     expect(normalizeCta({ kind: 'page', target: '../etc' }).target).toBe('');
     expect(normalizeCta({ kind: 'ticket', target: 'https://x.de' }).target).toBe('');
-    expect(normalizeCta({ kind: 'modal' }).kind).toBe('none');
+    expect(normalizeCta({ kind: 'popup' }).kind).toBe('none');
     // Ungültiges Ziel → kein Button, aber die gewählte Art bleibt (Tippen im Editor)
     expect(ctaTarget(normalizeCta({ kind: 'url', target: 'javascript:alert(1)' }), '1')).toBeNull();
     expect(normalizeCta({ kind: 'url', target: 'h' }).kind).toBe('url');
@@ -293,5 +293,46 @@ describe('Banner-Ablauf', () => {
     expect(isExpired('', new Date('2026-10-04T10:00:00Z'))).toBe(false);
     expect(isExpired('2026-10-04', new Date('2026-10-04T21:00:00Z'))).toBe(false);
     expect(isExpired('2026-10-04', new Date('2026-10-04T22:30:00Z'))).toBe(true); // 05.10. 00:30 in Berlin
+  });
+});
+
+describe('Erweiterungen (Phase 44)', () => {
+  it('Button „Fenster öffnen“: Titel/Text nur bei dieser Art, Zeilenumbrüche bleiben, kein Link-Ziel', () => {
+    const c = normalizeCta({
+      kind: 'modal',
+      text: 'Regeln',
+      modalTitle: ' Regeln ',
+      modalBody: '# Regeln\n- eins\n- zwei',
+      target: 'https://x.de',
+    });
+    expect(c).toMatchObject({
+      kind: 'modal',
+      modalTitle: 'Regeln',
+      modalBody: '# Regeln\n- eins\n- zwei',
+      target: '',
+    });
+    expect(
+      normalizeCta({ kind: 'url', target: 'https://example.org', modalBody: 'weg' }).modalBody,
+    ).toBe('');
+    expect(ctaTarget(c, '1')).toBeNull(); // kein Link – die Oberfläche öffnet ein Fenster
+    expect(normalizeCta({ kind: 'modal', modalBody: 'x'.repeat(5000) }).modalBody.length).toBe(
+      1500,
+    );
+  });
+  it('Bild-Overlay: Farbe und Deckkraft werden geprüft', () => {
+    const w = normalizeWidget({
+      id: 'img001',
+      type: 'image',
+      props: { overlayColor: 'rot', overlayOpacity: 500 },
+    })!;
+    expect(w.props).toMatchObject({ overlayColor: '#000000', overlayOpacity: 100 });
+    expect(
+      normalizeWidget({
+        id: 'img001',
+        type: 'image',
+        props: { overlayColor: '#112233', overlayOpacity: 40 },
+      })!.props,
+    ).toMatchObject({ overlayColor: '#112233', overlayOpacity: 40 });
+    expect(normalizeWidget({ id: 'img001', type: 'image' })!.props['overlayOpacity']).toBe(0);
   });
 });

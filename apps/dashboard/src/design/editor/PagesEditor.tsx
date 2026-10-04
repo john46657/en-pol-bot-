@@ -29,6 +29,7 @@ export function PagesEditor() {
     icon: '',
     description: '',
     template: 'empty' as PageTemplate,
+    slug: '',
   });
   const current = custom.find((c) => c.key === page) ?? null;
   const layout = (patch: Partial<typeof draft.layout>) =>
@@ -36,8 +37,13 @@ export function PagesEditor() {
   const patchPage = (p: Partial<CustomPage>) =>
     layout({ custom: custom.map((c) => (c.key === page ? { ...c, ...p } : c)) });
 
+  const taken = custom.map((c) => c.key);
+  const slugOk = /^[a-z0-9-]{1,30}$/.test(form.slug);
+  const slugTaken = slugOk && taken.includes(`page-${form.slug}`);
+  // Eigene Adresse, wenn gültig und frei; sonst aus dem Namen erzeugt
+  const chosenKey = slugOk && !slugTaken ? `page-${form.slug}` : newPageKey(form.name, taken);
   const create = () => {
-    const key = newPageKey(form.name, [...custom.map((c) => c.key), 'page-overview']);
+    const key = chosenKey;
     layout({
       custom: [
         ...custom,
@@ -81,7 +87,7 @@ export function PagesEditor() {
           className="btn primary"
           disabled={disabled || custom.length >= MAX_CUSTOM_PAGES}
           onClick={() => {
-            setForm({ name: '', icon: '', description: '', template: 'empty' });
+            setForm({ name: '', icon: '', description: '', template: 'empty', slug: '' });
             setDialog('new');
           }}
         >
@@ -191,18 +197,22 @@ export function PagesEditor() {
             {TEMPLATE_LABEL[form.template].hint} Danach lässt sich alles anpassen.
           </small>
         </label>
-        <p className="muted">
-          Adresse:{' '}
-          <code>
-            …/p/
-            {slugOf(
-              newPageKey(
-                form.name,
-                custom.map((c) => c.key),
-              ),
-            )}
-          </code>
-        </p>
+        <label className="fld">
+          <span>Adresse (URL, optional)</span>
+          <input
+            value={form.slug}
+            maxLength={30}
+            placeholder={slugOf(newPageKey(form.name, taken))}
+            onChange={(e) =>
+              setForm({ ...form, slug: e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, '') })
+            }
+          />
+          <small className={slugTaken ? 'dz-warn' : 'muted'}>
+            {slugTaken
+              ? 'Diese Adresse ist schon vergeben – es wird eine freie erzeugt.'
+              : `Die Seite liegt unter …/p/${slugOf(chosenKey)} (nur a–z, 0–9 und -).`}
+          </small>
+        </label>
         <div className="dz-seg">
           <button type="button" className="btn" onClick={() => setDialog(null)}>
             Abbrechen

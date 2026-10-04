@@ -8,3 +8,4 @@ export * from './pages.js';
 export * from './assets.js';
 export * from './notify.js';
 export * from './search.js';
+export * from './history.js';

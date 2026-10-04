@@ -274,3 +274,31 @@ describe('Benachrichtigungen', () => {
     ).toEqual([...NOTIFICATION_KEYS]);
   });
 });
+
+describe('Design-Änderungsprotokoll', () => {
+  it('liest nur design.*-Einträge dieses Servers, neueste zuerst, mit lesbarem Text', async () => {
+    const { createTheme, activateTheme, getDesignHistory, updateTheme } =
+      await import('../src/index.js');
+    const t = await createTheme({ guildId: A, actorId: U, name: 'Protokoll' });
+    await updateTheme({
+      guildId: A,
+      themeId: t.id,
+      actorId: U,
+      config: { colors: { dark: { primary: '#123456' } } },
+    });
+    await activateTheme(A, t.id, U);
+    await createTheme({ guildId: B, actorId: U, name: 'Fremd' });
+    await prisma.auditLog.create({
+      data: { guildId: A, actorType: 'USER', action: 'ticket.opened' },
+    });
+    const h = await getDesignHistory(A);
+    expect(h.map((e) => e.text)).toEqual([
+      'Theme aktiviert: Theme „Protokoll“ aktiviert'.replace('Theme aktiviert: ', ''),
+      expect.stringContaining('Farben'),
+      'Theme „Protokoll“ erstellt',
+    ]);
+    expect(h.every((e) => e.actorId === U)).toBe(true);
+    expect(JSON.stringify(h)).not.toContain('Fremd');
+    expect(h[0]!.icon).toBe('✅');
+  });
+});
