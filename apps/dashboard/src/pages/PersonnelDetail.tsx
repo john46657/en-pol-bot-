@@ -234,11 +234,11 @@ function Body({
           />
         ))}
 
-      {v.entries.some((e) => ['OPERATION', 'PENALTY', 'TRAINING'].includes(e.kind)) && (
+      {v.entries.some((e) => ['OPERATION', 'PENALTY', 'TRAINING', 'QUALIFICATION'].includes(e.kind)) && (
         <>
-          <h2>Einsätze, Strafen & Ausbildungen</h2>
+          <h2>Einsätze, Strafen, Ausbildungen & Qualifikationen</h2>
           <ul className="plain">
-            {v.entries.filter((e) => ['OPERATION', 'PENALTY', 'TRAINING'].includes(e.kind)).slice(0, 30).map((e) => (
+            {v.entries.filter((e) => ['OPERATION', 'PENALTY', 'TRAINING', 'QUALIFICATION'].includes(e.kind)).slice(0, 30).map((e) => (
               <li key={e.id} className="card">
                 <strong>{e.title}</strong> <small className="muted">{day(e.occurredAt)}{e.revokedAt ? ' · aufgehoben' : ''}</small>
                 {e.body && <div style={{ whiteSpace: 'pre-line' }}>{e.body}</div>}

@@ -12,6 +12,20 @@ type Json = Prisma.InputJsonValue;
 const ID = /^\d{5,25}$/;
 export const formatNumber = (n: number) => `T-${String(n).padStart(4, '0')}`;
 
+/** Hooks, die nach einem bestandenen Ergebnis laufen (z. B. automatische Qualifikationen). Fehler brechen die Bewertung nicht ab. */
+export interface PassContext {
+  guildId: string;
+  userId: string;
+  courseId: string;
+  trainingId: string;
+  actorId: string;
+  port?: DiscordPort | undefined;
+}
+const passHooks: ((ctx: PassContext) => Promise<void>)[] = [];
+export function registerPassHook(hook: (ctx: PassContext) => Promise<void>): void {
+  passHooks.push(hook);
+}
+
 const txt = (v: string | undefined | null, max: number, label: string) => {
   const t = v?.trim();
   if (t && t.length > max) throw new TrainingError('invalid', `${label} ist zu lang (max. ${max} Zeichen).`);
@@ -273,6 +287,7 @@ async function settle(t: Awaited<ReturnType<typeof getTraining>>, p: Prisma.Trai
     }
   }
   const saved = await prisma.trainingParticipant.update({ where: { id: p.id }, data: { status, percent: ev.percent, finalizedAt: p.finalizedAt ?? new Date(), entryId, roleResult } });
+  if (status === 'PASSED') for (const hook of passHooks) await hook({ guildId: gid, userId: p.userId, courseId: t.courseId, trainingId: t.id, actorId, port }).catch(() => undefined);
   if (changed) await event(t.id, gid, status === 'PASSED' ? 'passed' : 'failed', actorId, { userId: p.userId, percent: ev.percent, roleResult });
   return { participant: saved, evaluation: ev, roleResult };
 }

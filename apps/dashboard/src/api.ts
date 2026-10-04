@@ -643,3 +643,24 @@ export interface TrainingRow {
   course: CourseRow;
   participants: { id: string; userId: string; status: 'ENROLLED' | 'PASSED' | 'FAILED' | 'WITHDRAWN' | 'REMOVED'; theoryPoints: number | null; practicePoints: number | null; examPoints: number | null; percent: number | null; roleResult: string | null }[];
 }
+
+export type RequirementRow =
+  | { type: 'COURSE'; courseId: string }
+  | { type: 'QUALIFICATION'; qualificationId: string }
+  | { type: 'RANK'; rankId: string }
+  | { type: 'SERVICE_DAYS'; days: number }
+  | { type: 'SHIFT_HOURS'; hours: number };
+export interface QualificationRow {
+  id: string;
+  name: string;
+  description: string | null;
+  active: boolean;
+  requirements: RequirementRow[];
+  grantRoleId: string | null;
+  autoGrant: boolean;
+  validDays: number | null;
+}
+export interface QualificationCheck {
+  eligible: boolean;
+  checks: { label: string; met: boolean; detail: string }[];
+}

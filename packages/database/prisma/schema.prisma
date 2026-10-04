@@ -331,6 +331,7 @@ model Guild {
   penalties          Penalty[]
   trainingCourses    TrainingCourse[]
   trainings          Training[]
+  qualifications     Qualification[]
 
   applications      Application[]
   panels            ApplicationPanel[]
@@ -1785,4 +1786,59 @@ model TrainingEvent {
 
   @@index([trainingId, at])
   @@map("training_events")
+}
+
+// ---------------------------------------------------------------------------
+// Phase 22: Qualifikationssystem
+// ---------------------------------------------------------------------------
+
+/// Qualifikation (SEK, Flugstaffel, Ausbilder, Ermittler, Verkehrseinheit …) mit frei definierbaren Voraussetzungen.
+model Qualification {
+  id           String   @id @default(cuid())
+  guildId      String
+  name         String
+  description  String?
+  active       Boolean  @default(true)
+  /// Voraussetzungen als Liste: { type: COURSE|QUALIFICATION|RANK|SERVICE_DAYS|SHIFT_HOURS, … }
+  requirements Json     @default("[]")
+  grantRoleId  String?
+  /// Wird automatisch vergeben, sobald alle Voraussetzungen erfüllt sind (nach bestandener Ausbildung).
+  autoGrant    Boolean  @default(false)
+  /// Gültigkeit in Tagen (leer = unbegrenzt).
+  validDays    Int?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  guild  Guild                @relation(fields: [guildId], references: [id], onDelete: Cascade)
+  awards QualificationAward[]
+
+  @@unique([guildId, name])
+  @@map("qualifications")
+}
+
+/// Vergabe. `activeKey` = 'active' solange nicht entzogen: je Mitglied und Qualifikation höchstens eine aktive.
+model QualificationAward {
+  id              String    @id @default(cuid())
+  guildId         String
+  qualificationId String
+  userId          String
+  activeKey       String?
+  /// null = automatisch vergeben
+  awardedBy       String?
+  awardedAt       DateTime  @default(now())
+  expiresAt       DateTime?
+  /// Voraussetzungen wurden bewusst übergangen (mit Begründung).
+  override        Boolean   @default(false)
+  overrideReason  String?
+  revokedAt       DateTime?
+  revokedBy       String?
+  revokeReason    String?
+  entryId         String?
+  roleResult      String?
+
+  qualification Qualification @relation(fields: [qualificationId], references: [id], onDelete: Cascade)
+
+  @@unique([qualificationId, userId, activeKey])
+  @@index([guildId, userId])
+  @@map("qualification_awards")
 }

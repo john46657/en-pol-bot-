@@ -5,6 +5,7 @@ import { ApplicationsModule } from './modules/applications/applications.module.j
 import { AuthModule } from './modules/auth/auth.module.js';
 import { GuildModule } from './modules/guild/guild.module.js';
 import { PersonnelModule } from './modules/personnel/personnel.module.js';
+import { QualificationsModule } from './modules/qualifications/qualifications.module.js';
 import { TrainingModule } from './modules/training/training.module.js';
 import { FleetModule } from './modules/fleet/fleet.module.js';
 import { WantedModule } from './modules/wanted/wanted.module.js';
@@ -33,6 +34,7 @@ import { PermissionGuard } from './common/guards/permission.guard.js';
     WantedModule,
     FleetModule,
     TrainingModule,
+    QualificationsModule,
   ],
   providers: [
     // Reihenfolge: erst AuthN (JwtAuthGuard), dann AuthZ (PermissionGuard).

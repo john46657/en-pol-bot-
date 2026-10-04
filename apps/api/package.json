@@ -28,6 +28,7 @@
     "@nexus/operations": "workspace:*",
     "@nexus/permissions": "workspace:*",
     "@nexus/personnel": "workspace:*",
+    "@nexus/qualifications": "workspace:*",
     "@nexus/radio": "workspace:*",
     "@nexus/shifts": "workspace:*",
     "@nexus/training": "workspace:*",

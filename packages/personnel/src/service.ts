@@ -622,7 +622,7 @@ export async function recordSections(
     ...(sections.awards ? ['AWARD'] : []),
     ...(sections.discipline ? ['DISCIPLINE'] : []),
     ...(sections.notes ? ['NOTE'] : []),
-    ...(sections.operations ? ['OPERATION', 'PENALTY', 'TRAINING'] : []),
+    ...(sections.operations ? ['OPERATION', 'PENALTY', 'TRAINING', 'QUALIFICATION'] : []),
   ];
   const [entries, events] = await Promise.all([
     prisma.personnelEntry.findMany({

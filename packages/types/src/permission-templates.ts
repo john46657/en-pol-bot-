@@ -238,6 +238,7 @@ export const PERMISSION_TEMPLATES: readonly PermissionTemplate[] = [
       'wanted.view',
       'wanted.create',
       'wanted.edit',
+      'qualification.view',
       'fleet.view',
       'fleet.report',
       'penalties.view',
