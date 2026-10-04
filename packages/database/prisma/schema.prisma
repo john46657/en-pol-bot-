@@ -229,7 +229,10 @@ enum WantedKind {
 
 enum WantedStatus {
   ACTIVE
+  /// Aufgehoben (entspricht „CANCELLED“ der Spezifikation).
   REVOKED
+  /// Automatisch abgelaufen.
+  EXPIRED
 }
 
 enum VehicleStatus {
@@ -1658,6 +1661,9 @@ model WantedNotice {
   revokedBy     String?
   revokeReason  String?
   revokedAt     DateTime?
+  /// Ende der Laufzeit; null = läuft nicht ab.
+  expiresAt     DateTime?
+  expiredAt     DateTime?
   createdAt     DateTime     @default(now())
   updatedAt     DateTime     @updatedAt
 
@@ -1667,6 +1673,7 @@ model WantedNotice {
   @@unique([guildId, number])
   @@unique([guildId, kind, subjectKey, activeKey])
   @@index([guildId, kind, status])
+  @@index([status, expiresAt])
   @@map("wanted_notices")
 }
 

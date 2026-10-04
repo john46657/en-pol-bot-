@@ -7,7 +7,7 @@ import { useToast } from '../toast';
 
 const PRIO = { LOW: '⚪ Niedrig', NORMAL: '🔵 Normal', HIGH: '🟠 Hoch', URGENT: '🔴 Dringend' } as const;
 const num = (n: number) => `F-${String(n).padStart(4, '0')}`;
-const empty = { name: '', plate: '', reason: '', priority: 'NORMAL', appearance: '', vehicleModel: '', vehicleColor: '', ownerName: '', lastSeen: '' };
+const empty = { duration: '', name: '', plate: '', reason: '', priority: 'NORMAL', appearance: '', vehicleModel: '', vehicleColor: '', ownerName: '', lastSeen: '' };
 
 /** Fahndungen: Personen und Fahrzeuge in getrennten Reitern; suchen, anlegen, Letzten Standort ändern, aufheben. */
 export function Wanted() {
@@ -33,6 +33,18 @@ export function Wanted() {
   const [revoke, setRevoke] = useState<Record<string, string>>({});
   const [seen, setSeen] = useState<Record<string, string>>({});
   const person = kind === 'PERSON';
+  const dur = f.duration.trim() === '' ? {} : { durationMinutes: Number(f.duration) };
+  const settings = useQuery({ queryKey: ['wanted-settings', guildId], queryFn: () => api<{ defaultMinutes: number; maxMinutes: number }>(`${base}/settings`) });
+  const [defaultInput, setDefaultInput] = useState('');
+  const saveDefault = useMutation({
+    mutationFn: () => api(`${base}/settings`, { method: 'PUT', body: { defaultMinutes: Number(defaultInput) } }),
+    onSuccess: () => {
+      toast.success('Standarddauer gespeichert.');
+      setDefaultInput('');
+      void qc.invalidateQueries({ queryKey: ['wanted-settings', guildId] });
+    },
+    onError: (e) => toast.error(errorText(e)),
+  });
   return (
     <>
       <h1>Fahndungen</h1>
@@ -43,7 +55,7 @@ export function Wanted() {
       <form className="actions" onSubmit={(e) => { e.preventDefault(); setQuery(input.trim()); }}>
         <input className="inline-input" placeholder={person ? 'Name, Nummer, Grund …' : 'Kennzeichen, Modell, Halter …'} value={input} onChange={(e) => setInput(e.target.value)} />
         <select value={status} onChange={(e) => setStatus(e.target.value)} aria-label="Status">
-          <option value="ACTIVE">Aktiv</option><option value="REVOKED">Aufgehoben</option><option value="">Alle</option>
+          <option value="ACTIVE">Aktiv</option><option value="REVOKED">Aufgehoben</option><option value="EXPIRED">Abgelaufen</option><option value="">Alle</option>
         </select>
         <button className="btn">Suchen</button>
       </form>
@@ -52,10 +64,12 @@ export function Wanted() {
           d.items.length === 0 ? <p className="muted">Keine Fahndungen gefunden.</p> : (
             <ul className="list">
               {d.items.map((n) => (
-                <li key={n.id} className="row" style={{ opacity: n.status === 'REVOKED' ? 0.6 : 1 }}>
+                <li key={n.id} className="row" style={{ opacity: n.status === 'ACTIVE' ? 1 : 0.6 }}>
                   <span className="grow">
                     <strong>{num(n.number)} · {person ? n.subjectName : `${n.plate}${n.vehicleModel ? ` (${n.vehicleModel}${n.vehicleColor ? `, ${n.vehicleColor}` : ''})` : ''}`}</strong> · {PRIO[n.priority]}
                     {n.status === 'REVOKED' && <em> · aufgehoben: {n.revokeReason}</em>}
+                    {n.status === 'EXPIRED' && <em> · automatisch abgelaufen</em>}
+                    {n.status === 'ACTIVE' && <small className="muted"> · {n.expiresAt ? `läuft ab um ${new Date(n.expiresAt).toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' })} Uhr` : 'läuft nicht ab'}</small>}
                     <br /><small className="muted">{n.reason}{n.appearance ? ` · ${n.appearance}` : ''}{n.ownerName ? ` · Halter: ${n.ownerName}` : ''}{n.lastSeen ? ` · zuletzt: ${n.lastSeen}` : ''}</small>
                     {n.status === 'ACTIVE' && (
                       <>
@@ -73,6 +87,12 @@ export function Wanted() {
           )
         }
       </QueryState>
+      <div className="card comp">
+        <h3>Standarddauer</h3>
+        <p className="muted">Neue Fahndungen laufen nach {settings.data?.defaultMinutes === 0 ? 'unbegrenzter Zeit (nie)' : `${settings.data?.defaultMinutes ?? 20} Minuten`} automatisch ab. Ändern darf das, wer das System verwalten darf.</p>
+        <label className="fld"><span>Neue Standarddauer in Minuten (0 = nie)</span><input type="number" min={0} max={settings.data?.maxMinutes ?? 10080} value={defaultInput} onChange={(e) => setDefaultInput(e.target.value)} /></label>
+        <button className="btn" disabled={defaultInput.trim() === '' || saveDefault.isPending} onClick={() => saveDefault.mutate()}>Speichern</button>
+      </div>
       <div className="card comp">
         <h3>{person ? 'Personenfahndung erstellen' : 'Fahrzeugfahndung erstellen'}</h3>
         <div className="two">
@@ -96,8 +116,9 @@ export function Wanted() {
         )}
         {!person && <label className="fld"><span>Halter</span><input value={f.ownerName} maxLength={80} onChange={(e) => setF({ ...f, ownerName: e.target.value })} /></label>}
         <label className="fld"><span>Zuletzt gesehen</span><input value={f.lastSeen} maxLength={150} onChange={(e) => setF({ ...f, lastSeen: e.target.value })} /></label>
+        <label className="fld"><span>Laufzeit in Minuten (leer = Standarddauer {settings.data?.defaultMinutes ?? 20}, 0 = läuft nicht ab)</span><input type="number" min={0} max={settings.data?.maxMinutes ?? 10080} value={f.duration} onChange={(e) => setF({ ...f, duration: e.target.value })} /></label>
         <button className="btn primary" disabled={call.isPending || f.reason.trim().length < 3 || !(person ? f.name.trim() : f.plate.trim())}
-          onClick={() => call.mutate({ method: 'POST', path: person ? '/persons' : '/vehicles', body: person ? { subjectName: f.name, reason: f.reason, priority: f.priority, appearance: f.appearance, lastSeen: f.lastSeen } : { plate: f.plate, reason: f.reason, priority: f.priority, vehicleModel: f.vehicleModel, vehicleColor: f.vehicleColor, ownerName: f.ownerName, lastSeen: f.lastSeen }, msg: 'Fahndung erstellt.' }, { onSuccess: () => setF(empty) })}>Erstellen</button>
+          onClick={() => call.mutate({ method: 'POST', path: person ? '/persons' : '/vehicles', body: person ? { subjectName: f.name, reason: f.reason, priority: f.priority, appearance: f.appearance, lastSeen: f.lastSeen, ...dur } : { plate: f.plate, reason: f.reason, priority: f.priority, vehicleModel: f.vehicleModel, vehicleColor: f.vehicleColor, ownerName: f.ownerName, lastSeen: f.lastSeen, ...dur }, msg: 'Fahndung erstellt.' }, { onSuccess: () => setF(empty) })}>Erstellen</button>
       </div>
     </>
   );

@@ -566,7 +566,8 @@ export interface WantedRow {
   id: string;
   number: number;
   kind: 'PERSON' | 'VEHICLE';
-  status: 'ACTIVE' | 'REVOKED';
+  status: 'ACTIVE' | 'REVOKED' | 'EXPIRED';
+  expiresAt: string | null;
   subjectName: string | null;
   appearance: string | null;
   plate: string | null;

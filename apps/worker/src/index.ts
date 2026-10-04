@@ -18,6 +18,7 @@ import {
 import { startHeartbeat } from '@nexus/health';
 import { startPublisher } from '@nexus/realtime';
 import { watchOverlongShifts } from '@nexus/shifts';
+import { expireDueNotices } from '@nexus/wanted';
 import { deleteDueChannels, refreshAllPanels, restTicketDiscord } from '@nexus/tickets';
 
 /**
@@ -54,6 +55,7 @@ const HANDLERS: Record<string, () => Promise<unknown>> = {
     const discord = restTicketDiscord(token);
     return { ...(await deleteDueChannels(discord)), panelsUpdated: await refreshAllPanels(discord) };
   },
+  'wanted-expiry': () => expireDueNotices(),
   'shift-watch': () => watchOverlongShifts(port(), new Date(), process.env['DASHBOARD_URL']),
 };
 

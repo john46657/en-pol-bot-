@@ -1,6 +1,6 @@
 import { prisma } from '@nexus/database';
 import { afterAll, beforeEach, describe, expect, it } from 'vitest';
-import { WantedError, checkSubject, createNotice, formatNumber, getByNumber, history, normalizePlate, revokeNotice, searchNotices, updateNotice } from '../src/index.js';
+import { DEFAULT_DURATION_MINUTES, WantedError, checkSubject, expireDueNotices, getDefaultDuration, setDefaultDuration, createNotice, formatNumber, getByNumber, history, normalizePlate, revokeNotice, searchNotices, updateNotice } from '../src/index.js';
 
 const G = 'wantedtest-guild';
 const err = (p: Promise<unknown>, code: string) => expect(p).rejects.toSatisfy((e) => e instanceof WantedError && e.code === code);
@@ -103,5 +103,74 @@ describe('Suchen', () => {
     const page = await searchNotices({ guildId: G, limit: 2 });
     expect(page.items).toHaveLength(2);
     expect(page.nextCursor).not.toBeNull();
+  });
+});
+
+describe('Automatisches Ablaufen (Phase 46)', () => {
+  const minutesLeft = (n: { expiresAt: Date | null }) => Math.round((n.expiresAt!.getTime() - Date.now()) / 60_000);
+
+  it('Standard 20 Minuten; eigene Dauer; 0 = läuft nicht ab; ungültige Dauer abgelehnt', async () => {
+    expect(await getDefaultDuration(G)).toBe(DEFAULT_DURATION_MINUTES);
+    expect(minutesLeft(await person('A A'))).toBe(20);
+    expect(minutesLeft(await person('B B', { durationMinutes: 90 }))).toBe(90);
+    expect((await person('C C', { durationMinutes: 0 })).expiresAt).toBeNull();
+    await err(person('D D', { durationMinutes: -1 }), 'invalid');
+    await err(person('E E', { durationMinutes: 1.5 }), 'invalid');
+    await err(person('F F', { durationMinutes: 999_999 }), 'invalid');
+  });
+
+  it('Server-Standarddauer ändern wirkt auf neue Fahndungen und wird protokolliert', async () => {
+    await setDefaultDuration(G, 45, 'admin');
+    expect(await getDefaultDuration(G)).toBe(45);
+    expect(minutesLeft(await person('A A'))).toBe(45);
+    await setDefaultDuration(G, 0, 'admin');
+    expect((await person('B B')).expiresAt).toBeNull();
+    await err(setDefaultDuration(G, 99999, 'admin'), 'invalid');
+    expect(await prisma.auditLog.count({ where: { guildId: G, action: 'wanted.settings.updated' } })).toBe(2);
+  });
+
+  it('abgelaufene Fahndung: Status EXPIRED, nicht mehr aktiv, Historie, nicht mehr bearbeitbar', async () => {
+    const a = await person('Ablauf Test');
+    const keep = await person('Bleibt Aktiv', { durationMinutes: 0 });
+    const later = new Date(Date.now() + 21 * 60_000);
+    expect(await expireDueNotices(G, later)).toEqual({ expired: 1 });
+    expect(await expireDueNotices(G, later)).toEqual({ expired: 0 }); // nichts doppelt
+    const n = await getByNumber(G, a.number);
+    expect(n.status).toBe('EXPIRED');
+    expect(n.activeKey).toBeNull();
+    expect(n.expiredAt).not.toBeNull();
+    expect((await getByNumber(G, keep.number)).status).toBe('ACTIVE');
+    const ev = await history(G, a.id);
+    expect(ev.map((e) => e.type)).toEqual(['created', 'expired']);
+    expect(ev[1]!.actorId).toBeNull();
+    await err(updateNotice(G, a.id, { reason: 'neuer Grund' }, 'c'), 'conflict');
+    await err(revokeNotice(G, a.id, 'zu spät', 'c'), 'conflict');
+  });
+
+  it('nie als aktiv sichtbar, auch ohne Worker-Lauf; danach neue Fahndung zur selben Person möglich', async () => {
+    const a = await person('Max Mustermann');
+    await prisma.wantedNotice.update({ where: { id: a.id }, data: { expiresAt: new Date(Date.now() - 1000) } }); // abgelaufen, Worker noch nicht gelaufen
+    expect(await checkSubject(G, 'PERSON', 'max mustermann')).toBeNull();
+    expect((await searchNotices({ guildId: G, status: 'ACTIVE' })).items).toHaveLength(0);
+    expect((await searchNotices({ guildId: G, status: 'EXPIRED' })).items.map((n) => n.number)).toEqual([a.number]);
+    const again = await person('Max Mustermann');
+    expect(again.status).toBe('ACTIVE');
+  });
+
+  it('Server getrennt: der Ablauf betrifft nur den eigenen Server, ohne Angabe alle', async () => {
+    const other = 'wantedtest-guild-2';
+    await prisma.guild.deleteMany({ where: { id: other } });
+    await prisma.guild.create({ data: { id: other, name: 'Zwei', settings: { create: {} } } });
+    try {
+      await person('A A');
+      await createNotice({ guildId: other, kind: 'PERSON', actorId: 'c', reason: 'Grund hier', subjectName: 'B B' });
+      const later = new Date(Date.now() + 25 * 60_000);
+      expect(await expireDueNotices(G, later)).toEqual({ expired: 1 });
+      expect((await prisma.wantedNotice.findMany({ where: { guildId: other } }))[0]!.status).toBe('ACTIVE');
+      expect((await expireDueNotices(undefined, later)).expired).toBeGreaterThanOrEqual(1);
+    } finally {
+      await prisma.wantedCounter.deleteMany({ where: { guildId: other } });
+      await prisma.guild.deleteMany({ where: { id: other } });
+    }
   });
 });

@@ -6,6 +6,7 @@ import {
   PRIORITIES,
   PRIORITY_LABEL,
   WantedError,
+  MAX_DURATION_MINUTES,
   createNotice,
   formatNumber,
   getByNumber,
@@ -26,7 +27,7 @@ type Notice = Awaited<ReturnType<typeof getByNumber>>;
 
 const headline = (n: Notice) => (n.kind === 'PERSON' ? `👤 ${n.subjectName}` : `🚗 ${n.plate}${n.vehicleModel ? ` (${n.vehicleModel}${n.vehicleColor ? `, ${n.vehicleColor}` : ''})` : ''}`);
 const card = (n: Notice) => ({
-  title: `${PRIO_ICON[n.priority as keyof typeof PRIO_ICON] ?? '🔵'} ${formatNumber(n.number)} – ${KIND_LABEL[n.kind]}${n.status === 'REVOKED' ? ' (aufgehoben)' : ''}`,
+  title: `${PRIO_ICON[n.priority as keyof typeof PRIO_ICON] ?? '🔵'} ${formatNumber(n.number)} – ${KIND_LABEL[n.kind]}${n.status === 'REVOKED' ? ' (aufgehoben)' : n.status === 'EXPIRED' ? ' (abgelaufen)' : ''}`,
   description: `**${headline(n)}**\n${n.reason}`,
   fields: [
     ...(n.appearance ? [{ name: 'Beschreibung', value: n.appearance }] : []),
@@ -34,6 +35,8 @@ const card = (n: Notice) => ({
     ...(n.lastSeen ? [{ name: 'Zuletzt gesehen', value: n.lastSeen, inline: true }] : []),
     { name: 'Priorität', value: PRIORITY_LABEL[n.priority as keyof typeof PRIORITY_LABEL] ?? n.priority, inline: true },
     ...(n.notes ? [{ name: 'Notiz', value: n.notes }] : []),
+    ...(n.status === 'ACTIVE' && n.expiresAt ? [{ name: 'Läuft ab', value: `<t:${Math.floor(n.expiresAt.getTime() / 1000)}:R>`, inline: true }] : []),
+    ...(n.status === 'EXPIRED' ? [{ name: 'Beendet', value: 'Automatisch abgelaufen' }] : []),
     ...(n.status === 'REVOKED' ? [{ name: 'Aufgehoben', value: `${n.revokeReason ?? ''} (<@${n.revokedBy}>)` }] : []),
   ],
 });
@@ -52,19 +55,19 @@ export async function runFahndung(interaction: ChatInputCommandInteraction): Pro
   if (sub === 'aufheben' && !(await can('wanted.view'))) return void (await deny('wanted.view'));
   try {
     if (sub === 'person' || sub === 'fahrzeug') {
-      const n = await createNotice({ guildId: guild.id, kind: sub === 'person' ? 'PERSON' : 'VEHICLE', actorId: member.id, reason: o.getString('grund', true), priority: o.getString('prioritaet') ?? undefined, lastSeen: o.getString('zuletzt') ?? undefined, notes: o.getString('notiz') ?? undefined, subjectName: o.getString('name') ?? undefined, appearance: o.getString('beschreibung') ?? undefined, plate: o.getString('kennzeichen') ?? undefined, vehicleModel: o.getString('modell') ?? undefined, vehicleColor: o.getString('farbe') ?? undefined, ownerName: o.getString('halter') ?? undefined });
+      const n = await createNotice({ guildId: guild.id, kind: sub === 'person' ? 'PERSON' : 'VEHICLE', actorId: member.id, reason: o.getString('grund', true), priority: o.getString('prioritaet') ?? undefined, lastSeen: o.getString('zuletzt') ?? undefined, notes: o.getString('notiz') ?? undefined, subjectName: o.getString('name') ?? undefined, appearance: o.getString('beschreibung') ?? undefined, plate: o.getString('kennzeichen') ?? undefined, vehicleModel: o.getString('modell') ?? undefined, vehicleColor: o.getString('farbe') ?? undefined, ownerName: o.getString('halter') ?? undefined, durationMinutes: o.getInteger('dauer') ?? undefined });
       return void (await interaction.reply({ content: `✅ Fahndung **${formatNumber(n.number)}** erstellt.`, embeds: [embeds.warning(card(n))], flags: MessageFlags.Ephemeral, allowedMentions: { parse: [] } }));
     }
     if (sub === 'suchen' || sub === 'liste') {
       const { items } = await searchNotices({ guildId: guild.id, query: o.getString('suche') ?? undefined, kind: o.getString('art') ?? undefined, status: sub === 'liste' && !o.getBoolean('alle') ? 'ACTIVE' : undefined, limit: 15 });
-      const body = items.map((n) => `${n.status === 'REVOKED' ? '~~' : ''}${PRIO_ICON[n.priority as keyof typeof PRIO_ICON] ?? ''} **${formatNumber(n.number)}** ${headline(n)} – ${n.reason.slice(0, 60)}${n.status === 'REVOKED' ? '~~ (aufgehoben)' : ''}`).join('\n');
+      const body = items.map((n) => `${n.status !== 'ACTIVE' ? '~~' : ''}${PRIO_ICON[n.priority as keyof typeof PRIO_ICON] ?? ''} **${formatNumber(n.number)}** ${headline(n)} – ${n.reason.slice(0, 60)}${n.status === 'REVOKED' ? '~~ (aufgehoben)' : n.status === 'EXPIRED' ? '~~ (abgelaufen)' : ''}`).join('\n');
       return void (await interaction.reply({ embeds: [embeds.info({ title: sub === 'suchen' ? '🔎 Fahndungssuche' : '📣 Aktive Fahndungen', description: body || 'Keine Fahndungen gefunden.' })], flags: MessageFlags.Ephemeral }));
     }
     const n = await getByNumber(guild.id, nr(o.getString('nummer', true)));
     if (sub === 'anzeigen') return void (await interaction.reply({ embeds: [embeds.info(card(n))], flags: MessageFlags.Ephemeral, allowedMentions: { parse: [] } }));
     if (sub === 'historie') {
       const ev = await history(guild.id, n.id);
-      const text = ev.map((e) => `<t:${Math.floor(e.at.getTime() / 1000)}:f> **${e.type}** <@${e.actorId}>${e.data && e.type !== 'created' ? ` – ${JSON.stringify(e.data).slice(0, 150)}` : ''}`).join('\n');
+      const text = ev.map((e) => `<t:${Math.floor(e.at.getTime() / 1000)}:f> **${e.type}** ${e.actorId ? `<@${e.actorId}>` : 'automatisch'}${e.data && e.type !== 'created' ? ` – ${JSON.stringify(e.data).slice(0, 150)}` : ''}`).join('\n');
       return void (await interaction.reply({ embeds: [embeds.info({ title: `📜 ${formatNumber(n.number)} – Historie`, description: text.slice(0, 3900) })], flags: MessageFlags.Ephemeral, allowedMentions: { parse: [] } }));
     }
     if (sub === 'aufheben') {
@@ -90,6 +93,7 @@ export async function autocompleteFahndung(interaction: AutocompleteInteraction)
 }
 
 const prio = (o: import('discord.js').SlashCommandStringOption) => o.setName('prioritaet').setDescription('Priorität').addChoices(...PRIORITIES.map((p) => ({ name: PRIORITY_LABEL[p], value: p })));
+const dauer = (o: import('discord.js').SlashCommandIntegerOption) => o.setName('dauer').setDescription('Laufzeit in Minuten (0 = läuft nicht ab; sonst Standarddauer des Servers)').setMinValue(0).setMaxValue(MAX_DURATION_MINUTES);
 const nummer = (s: import('discord.js').SlashCommandSubcommandBuilder) => s.addStringOption((o) => o.setName('nummer').setDescription('Fahndungsnummer').setRequired(true).setAutocomplete(true));
 
 export const fahndungCommand = defineCommand({
@@ -104,7 +108,8 @@ export const fahndungCommand = defineCommand({
         .addStringOption((o) => o.setName('beschreibung').setDescription('Aussehen/Merkmale').setMaxLength(500))
         .addStringOption(prio)
         .addStringOption((o) => o.setName('zuletzt').setDescription('Zuletzt gesehen').setMaxLength(150))
-        .addStringOption((o) => o.setName('notiz').setDescription('Notiz').setMaxLength(1000)),
+        .addStringOption((o) => o.setName('notiz').setDescription('Notiz').setMaxLength(1000))
+        .addIntegerOption(dauer),
     )
     .addSubcommand((s) =>
       s.setName('fahrzeug').setDescription('Fahrzeugfahndung erstellen')
@@ -115,7 +120,8 @@ export const fahndungCommand = defineCommand({
         .addStringOption((o) => o.setName('halter').setDescription('Halter').setMaxLength(80))
         .addStringOption(prio)
         .addStringOption((o) => o.setName('zuletzt').setDescription('Zuletzt gesehen').setMaxLength(150))
-        .addStringOption((o) => o.setName('notiz').setDescription('Notiz').setMaxLength(1000)),
+        .addStringOption((o) => o.setName('notiz').setDescription('Notiz').setMaxLength(1000))
+        .addIntegerOption(dauer),
     )
     .addSubcommand((s) =>
       s.setName('suchen').setDescription('Fahndungen durchsuchen (Name, Kennzeichen, Modell, Nummer …)')
@@ -125,7 +131,7 @@ export const fahndungCommand = defineCommand({
     .addSubcommand((s) =>
       s.setName('liste').setDescription('Aktive Fahndungen')
         .addStringOption((o) => o.setName('art').setDescription('Nur Personen oder Fahrzeuge').addChoices({ name: 'Personen', value: 'PERSON' }, { name: 'Fahrzeuge', value: 'VEHICLE' }))
-        .addBooleanOption((o) => o.setName('alle').setDescription('Auch aufgehobene')),
+        .addBooleanOption((o) => o.setName('alle').setDescription('Auch aufgehobene und abgelaufene')),
     )
     .addSubcommand((s) => nummer(s.setName('anzeigen').setDescription('Fahndung anzeigen')))
     .addSubcommand((s) =>

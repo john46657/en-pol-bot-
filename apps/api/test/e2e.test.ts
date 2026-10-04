@@ -946,4 +946,38 @@ describe('Dashboard-Design (Phase 37)', () => {
       ]),
     );
   });
+  it('Fahndungen: Standarddauer 20 Minuten, ändern nur mit system.manage, eigene Dauer, Ablauf', async () => {
+    const w = (p = '') => `/guilds/${G}/wanted${p}`;
+    expect((await call('GET', w('/settings'), NOBODY)).status).toBe(403);
+    expect((await call('GET', w('/settings'), ADMIN)).data.defaultMinutes).toBe(20);
+    expect((await call('PUT', w('/settings'), OFFICER, { defaultMinutes: 5 })).status).toBe(403);
+    expect((await call('PUT', w('/settings'), ADMIN, { defaultMinutes: -3 })).status).toBe(400);
+    expect((await call('PUT', w('/settings'), ADMIN, { defaultMinutes: 'x' })).status).toBe(400);
+    expect(
+      (await call('PUT', w('/settings'), ADMIN, { defaultMinutes: 30 })).data.defaultMinutes,
+    ).toBe(30);
+    const a = await call('POST', w('/persons'), ADMIN, {
+      subjectName: 'Ablauf Person',
+      reason: 'Testgrund',
+    });
+    expect(a.status).toBe(201);
+    expect(Math.round((new Date(a.data.expiresAt).getTime() - Date.now()) / 60_000)).toBe(30);
+    const b = await call('POST', w('/vehicles'), ADMIN, {
+      plate: 'AB 1',
+      reason: 'Testgrund',
+      durationMinutes: 0,
+    });
+    expect(b.data.expiresAt).toBeNull();
+    // abgelaufen (Worker-Lauf noch nicht erfolgt): erscheint nicht mehr als aktiv
+    await prisma.wantedNotice.update({
+      where: { id: a.data.id },
+      data: { expiresAt: new Date(Date.now() - 1000) },
+    });
+    const active = await call('GET', w('?status=ACTIVE'), ADMIN);
+    expect(active.data.items.map((n: { id: string }) => n.id)).not.toContain(a.data.id);
+    const expired = await call('GET', w('?status=EXPIRED'), ADMIN);
+    expect(expired.data.items.map((n: { id: string }) => n.id)).toContain(a.data.id);
+    await prisma.wantedNotice.deleteMany({ where: { guildId: G } });
+    await call('PUT', w('/settings'), ADMIN, { defaultMinutes: 20 });
+  });
 });

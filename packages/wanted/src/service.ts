@@ -46,6 +46,49 @@ export interface NoticeInput {
   vehicleModel?: string | undefined;
   vehicleColor?: string | undefined;
   ownerName?: string | undefined;
+  /** Laufzeit in Minuten; 0 = läuft nicht ab; ohne Angabe gilt die Standarddauer des Servers. */
+  durationMinutes?: number | undefined;
+}
+
+export const DEFAULT_DURATION_MINUTES = 20;
+export const MAX_DURATION_MINUTES = 7 * 24 * 60;
+const checkMinutes = (m: number) => {
+  if (!Number.isInteger(m) || m < 0 || m > MAX_DURATION_MINUTES) throw new WantedError('invalid', `Die Dauer muss zwischen 0 (läuft nicht ab) und ${MAX_DURATION_MINUTES} Minuten liegen.`);
+  return m;
+};
+
+/** Standarddauer neuer Fahndungen (Server-Einstellung, sonst 20 Minuten). */
+export async function getDefaultDuration(guildId: string): Promise<number> {
+  const s = await prisma.guildSettings.findUnique({ where: { guildId: assertGuildId(guildId) }, select: { data: true } });
+  const v = ((s?.data ?? {}) as { wanted?: { defaultMinutes?: unknown } }).wanted?.defaultMinutes;
+  return typeof v === 'number' && Number.isInteger(v) && v >= 0 && v <= MAX_DURATION_MINUTES ? v : DEFAULT_DURATION_MINUTES;
+}
+export async function setDefaultDuration(guildId: string, minutes: number, actorId: string): Promise<number> {
+  const gid = assertGuildId(guildId);
+  checkMinutes(minutes);
+  const row = await prisma.guildSettings.upsert({ where: { guildId: gid }, create: { guildId: gid }, update: {} });
+  const data = (row.data ?? {}) as Record<string, unknown>;
+  const was = await getDefaultDuration(gid);
+  await prisma.guildSettings.update({ where: { guildId: gid }, data: { data: { ...data, wanted: { ...((data['wanted'] as object | undefined) ?? {}), defaultMinutes: minutes } } as Json } });
+  await auditRepository.createRaw({ data: { guildId: gid, actorType: 'USER', actorId, action: 'wanted.settings.updated', resourceType: 'GuildSettings', resourceId: 'wanted', before: { defaultMinutes: was } as Json, after: { defaultMinutes: minutes } as Json, result: 'success' } });
+  return minutes;
+}
+
+/**
+ * Lässt abgelaufene Fahndungen enden (Status EXPIRED, nicht mehr aktiv, Historie „Automatisch abgelaufen“).
+ * Wird vom Worker regelmäßig ausgeführt und vor jeder Suche/Änderung des Servers, damit eine abgelaufene Fahndung
+ * nie als aktiv erscheint – auch nicht zwischen zwei Läufen.
+ */
+export async function expireDueNotices(guildId?: string, now = new Date()): Promise<{ expired: number }> {
+  const due = await prisma.wantedNotice.findMany({ where: { status: 'ACTIVE', expiresAt: { lte: now }, ...(guildId ? { guildId: assertGuildId(guildId) } : {}) }, select: { id: true, guildId: true, number: true } });
+  let expired = 0;
+  for (const n of due) {
+    const r = await prisma.wantedNotice.updateMany({ where: { id: n.id, status: 'ACTIVE' }, data: { status: 'EXPIRED', activeKey: null, expiredAt: now } });
+    if (r.count === 0) continue;
+    await event(n.guildId, n.id, 'expired', null, { reason: 'Automatisch abgelaufen', number: n.number });
+    expired++;
+  }
+  return { expired };
 }
 
 async function event(guildId: string, noticeId: string, type: string, actorId: string | null, data?: unknown) {
@@ -80,12 +123,15 @@ export async function createNotice(i: NoticeInput) {
   const guildId = assertGuildId(i.guildId);
   const kind = kindOf(i.kind);
   const data = fields(i, kind);
+  const minutes = i.durationMinutes !== undefined ? checkMinutes(i.durationMinutes) : await getDefaultDuration(guildId);
+  const expiresAt = minutes > 0 ? new Date(Date.now() + minutes * 60_000) : null;
+  await expireDueNotices(guildId); // eine abgelaufene, noch nicht eingetragene Fahndung darf kein Duplikat vortäuschen
   try {
     const n = await prisma.$transaction(async (tx) => {
       const c = await tx.wantedCounter.upsert({ where: { guildId }, create: { guildId, last: 1 }, update: { last: { increment: 1 } } });
-      return tx.wantedNotice.create({ data: { guildId, number: c.last, kind, activeKey: 'active', createdBy: i.actorId, ...data } });
+      return tx.wantedNotice.create({ data: { guildId, number: c.last, kind, activeKey: 'active', createdBy: i.actorId, expiresAt, ...data } });
     });
-    await event(guildId, n.id, 'created', i.actorId, { number: n.number, kind });
+    await event(guildId, n.id, 'created', i.actorId, { number: n.number, kind, expiresAt });
     return n;
   } catch (e) {
     if (e instanceof Error && /Unique constraint/i.test(e.message)) {
@@ -97,11 +143,13 @@ export async function createNotice(i: NoticeInput) {
 }
 
 export async function getNotice(guildId: string, id: string) {
+  await expireDueNotices(guildId);
   const n = await prisma.wantedNotice.findFirst({ where: { id, guildId: assertGuildId(guildId) } });
   if (!n) throw new WantedError('not-found', 'Fahndung nicht gefunden.');
   return n;
 }
 export async function getByNumber(guildId: string, number: number) {
+  await expireDueNotices(guildId);
   const n = await prisma.wantedNotice.findUnique({ where: { guildId_number: { guildId: assertGuildId(guildId), number } } });
   if (!n) throw new WantedError('not-found', `Fahndung ${formatNumber(number)} nicht gefunden.`);
   return n;
@@ -115,7 +163,7 @@ const TRACKED = ['reason', 'priority', 'lastSeen', 'notes', 'subjectName', 'subj
 export async function updateNotice(guildId: string, id: string, patch: NoticePatch, actorId: string) {
   const gid = assertGuildId(guildId);
   const n = await getNotice(gid, id);
-  if (n.status !== 'ACTIVE') throw new WantedError('conflict', 'Eine aufgehobene Fahndung lässt sich nicht bearbeiten – ggf. neu anlegen.');
+  if (n.status !== 'ACTIVE') throw new WantedError('conflict', 'Eine beendete (aufgehobene oder abgelaufene) Fahndung lässt sich nicht bearbeiten – ggf. neu anlegen.');
   const merged = { reason: n.reason, priority: n.priority, lastSeen: n.lastSeen ?? undefined, notes: n.notes ?? undefined, subjectName: n.subjectName ?? undefined, subjectUserId: n.subjectUserId ?? undefined, appearance: n.appearance ?? undefined, plate: n.plate ?? undefined, vehicleModel: n.vehicleModel ?? undefined, vehicleColor: n.vehicleColor ?? undefined, ownerName: n.ownerName ?? undefined, ...Object.fromEntries(Object.entries(patch).filter(([, v]) => v !== undefined)) } as Patchable;
   const data = fields(merged, n.kind);
   const before: Record<string, unknown> = {};
@@ -166,6 +214,7 @@ export interface SearchFilter {
 
 export async function searchNotices(f: SearchFilter) {
   const guildId = assertGuildId(f.guildId);
+  await expireDueNotices(guildId);
   const limit = Math.min(Math.max(f.limit ?? 50, 1), 200);
   const q = f.query?.trim();
   const num = q && /^(?:F-?)?(\d{1,6})$/i.exec(q);
@@ -185,7 +234,7 @@ export async function searchNotices(f: SearchFilter) {
     where: {
       guildId,
       ...(f.kind === 'PERSON' || f.kind === 'VEHICLE' ? { kind: f.kind } : {}),
-      ...(f.status === 'ACTIVE' || f.status === 'REVOKED' ? { status: f.status } : {}),
+      ...(f.status === 'ACTIVE' || f.status === 'REVOKED' || f.status === 'EXPIRED' ? { status: f.status } : {}),
       ...(f.priority ? { priority: f.priority } : {}),
       ...(or.length ? { OR: or } : {}),
     },
@@ -199,6 +248,7 @@ export async function searchNotices(f: SearchFilter) {
 
 /** Schnellprüfung: wird diese Person/dieses Kennzeichen aktuell gesucht? */
 export async function checkSubject(guildId: string, kind: Kind, value: string) {
+  await expireDueNotices(guildId);
   return prisma.wantedNotice.findFirst({ where: { guildId: assertGuildId(guildId), kind, status: 'ACTIVE', subjectKey: kind === 'PERSON' ? normalizeName(value) : normalizePlate(value) } });
 }
 

@@ -405,6 +405,9 @@ importers:
       '@nexus/tickets':
         specifier: workspace:*
         version: link:../../packages/tickets
+      '@nexus/wanted':
+        specifier: workspace:*
+        version: link:../../packages/wanted
       bullmq:
         specifier: ^5.56.0
         version: 5.81.5

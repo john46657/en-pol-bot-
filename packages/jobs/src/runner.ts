@@ -33,5 +33,6 @@ export const JOBS: readonly JobDef[] = [
   { name: 'stat-snapshots', everyMs: 15 * 60_000, label: 'Statistiken und Leaderboards berechnen' },
   { name: 'discord-sync', everyMs: 30 * 60_000, label: 'Discord-Synchronisierung' },
   { name: 'ticket-cleanup', everyMs: 2 * 60_000, label: 'Geschlossene Ticket-Kanäle löschen, Panels aktualisieren' },
+  { name: 'wanted-expiry', everyMs: 60_000, label: 'Abgelaufene Fahndungen beenden' },
   { name: 'shift-watch', everyMs: 5 * 60_000, label: 'Zu lange Schichten melden' },
 ];

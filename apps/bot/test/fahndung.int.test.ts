@@ -19,13 +19,13 @@ afterAll(async () => {
   await prisma.$disconnect();
 });
 
-function call(userId: string, roles: string[], sub: string, str: Record<string, string> = {}, bool?: boolean) {
+function call(userId: string, roles: string[], sub: string, str: Record<string, string> = {}, bool?: boolean, int: Record<string, number> = {}) {
   const replies: any[] = [];
   const i: any = {
     guild: { id: G },
     member: { id: userId, guild: { id: G, ownerId: 'x' }, roles: { cache: new Map(roles.map((r) => [r, {}])) }, permissions: { has: () => false } },
     user: { id: userId },
-    options: { getSubcommand: () => sub, getString: (n: string, req?: boolean) => str[n] ?? (req ? (() => { throw new Error('fehlt'); })() : null), getBoolean: () => bool ?? null },
+    options: { getSubcommand: () => sub, getString: (n: string, req?: boolean) => str[n] ?? (req ? (() => { throw new Error('fehlt'); })() : null), getBoolean: () => bool ?? null, getInteger: (n: string) => int[n] ?? null },
     reply: vi.fn(async (o: any) => void replies.push(o)),
     replies,
   };
@@ -48,6 +48,16 @@ describe('/fahndung', () => {
     expect(await call(B, ['role-cop'], 'liste')).toContain('Keine Fahndungen');
     expect(await call(B, ['role-cop'], 'liste', {}, true)).toContain('Mustermann');
     expect(await call(B, ['role-cop'], 'anzeigen', { nummer: 'F-0099' })).toContain('nicht gefunden');
+  });
+  it('Laufzeit: Standard 20 Minuten, eigene Dauer, abgelaufene Fahndung erscheint als abgelaufen', async () => {
+    expect(await call(A, ['role-cop'], 'person', { name: 'Kurz Gesucht', grund: 'Testgrund' })).toContain('Läuft ab');
+    const n = await prisma.wantedNotice.findFirstOrThrow({ where: { guildId: G, subjectName: 'Kurz Gesucht' } });
+    expect(Math.round((n.expiresAt!.getTime() - Date.now()) / 60_000)).toBe(20);
+    await call(A, ['role-cop'], 'person', { name: 'Lang Gesucht', grund: 'Testgrund' }, undefined, { dauer: 0 });
+    expect((await prisma.wantedNotice.findFirstOrThrow({ where: { guildId: G, subjectName: 'Lang Gesucht' } })).expiresAt).toBeNull();
+    await prisma.wantedNotice.update({ where: { id: n.id }, data: { expiresAt: new Date(Date.now() - 1000) } });
+    expect(await call(B, ['role-cop'], 'liste')).not.toContain('Kurz Gesucht');
+    expect(await call(B, ['role-cop'], 'anzeigen', { nummer: String(n.number) })).toContain('abgelaufen');
   });
   it('ohne Recht', async () => {
     expect(await call(B, [], 'liste')).toContain('Du benötigst');
