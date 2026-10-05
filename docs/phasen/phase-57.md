@@ -35,3 +35,6 @@
 - Kategorie-spezifische Rechte laufen weiter über Bearbeiter-Rollen je Kategorie.
 - Dashboard-Rollen: Mitglieder-Zuordnung in der Übersicht „Benutzer“ (Rechte-Erklärung „Warum?“) zeigt die Quelle als Rolle, nicht als Dashboard-Rolle; Discord-Rollen werden nicht automatisch angelegt/gespiegelt; Seite im Browser nicht geklickt.
 - Die Rechteübersicht je Discord-Rolle (`loadGrantIndex`) kennt Dashboard-Rollen nicht.
+
+## Browser-Test (57e)
+`e2e/nexus-roles.spec.ts` (Playwright, Fake-Discord, echte API): Dashboard-Rolle anlegen → Beschreibung/Farbe/Priorität speichern → Mitglied befristet hinzufügen → duplizieren (Kopie deaktiviert) → löschen; Profil mit Farbe/Priorität speichern und duplizieren; Ticket schließen → wieder öffnen → erneut schließen → Transkript und Ticket löschen. Gesamte Suite: 23 Tests grün. Damit sind die Seiten „Rollen & Rechte“, Profile und Tickets praktisch geprüft; nicht geprüft: Rechte-Matrix-Klicks im Rollen-Editor, Benutzerausnahme mit Ablauf in der Oberfläche.
