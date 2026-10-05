@@ -1,5 +1,7 @@
+import { renderPdf, type PdfLine } from './pdf.js';
+
 /**
- * Export von Bewerbungen (CSV/JSON): eine Zeile je Bewerbung mit Stammdaten und je Frage eine Spalte.
+ * Export von Bewerbungen (CSV/JSON/PDF): eine Zeile je Bewerbung mit Stammdaten und je Frage eine Spalte.
  * CSV ist gegen Formel-Einschleusung in Tabellenprogrammen geschützt (Zellen, die mit = + - @ beginnen, erhalten ein ').
  */
 export const EXPORT_LIMIT = 5000;
@@ -16,6 +18,8 @@ export interface ExportRow {
   publicReason: string | null;
   assigneeUserId: string | null;
   isTest: boolean;
+  /** Interne Bewertung: Gesamtwert in Prozent (null = nicht bewertet). */
+  rating?: number | null | undefined;
   questions: { id: string; title: string; type: string; options?: { value: string; label: string }[] }[];
   answers: Record<string, unknown>;
 }
@@ -46,7 +50,7 @@ const cell = (v: unknown): string => {
 
 export function toExportCsv(rows: ExportRow[]): string {
   const cols = questionColumns(rows);
-  const head = ['ID', 'Bewerbung', 'Bewerber', 'Discord-ID', 'Status', 'Eingereicht', 'Entschieden', 'Begründung', 'Bearbeiter', 'Test', ...cols.map((c) => c.title)];
+  const head = ['ID', 'Bewerbung', 'Bewerber', 'Discord-ID', 'Status', 'Eingereicht', 'Entschieden', 'Begründung', 'Bearbeiter', 'Test', 'Bewertung (%)', ...cols.map((c) => c.title)];
   const lines = rows.map((r) =>
     [
       r.submissionNumber ?? r.id,
@@ -59,6 +63,7 @@ export function toExportCsv(rows: ExportRow[]): string {
       r.publicReason ?? '',
       r.assigneeUserId ?? '',
       r.isTest ? 'ja' : '',
+      r.rating ?? '',
       ...cols.map((c) => {
         const q = r.questions.find((x) => x.id === c.key);
         const a = r.answers[c.key];
@@ -84,6 +89,7 @@ export function toExportJson(rows: ExportRow[]): string {
       reason: r.publicReason,
       assignee: r.assigneeUserId,
       test: r.isTest,
+      rating: r.rating ?? null,
       answers: r.questions
         .filter((q) => !SKIP.has(q.type) && r.answers[q.id] !== undefined && r.answers[q.id] !== null)
         .map((q) => ({ question: q.title, answer: label(q, r.answers[q.id]) })),
@@ -91,4 +97,27 @@ export function toExportJson(rows: ExportRow[]): string {
     null,
     2,
   );
+}
+
+const de = (d: Date | null) => (d ? d.toLocaleString('de-DE', { timeZone: 'Europe/Berlin', dateStyle: 'short', timeStyle: 'short' }) : '–');
+
+/** PDF: je Bewerbung Kopf (ID, Art, Status), Stammdaten und alle Antworten. */
+export function toExportPdf(rows: ExportRow[], meta: { guildName?: string | undefined; statusText?: (status: string) => string } = {}): Buffer {
+  const lines: PdfLine[] = [
+    { text: `Bewerbungen – Export${meta.guildName ? ` (${meta.guildName})` : ''}`, style: 'title' },
+    { text: `Erstellt am ${de(new Date())} · ${rows.length} Bewerbung${rows.length === 1 ? '' : 'en'}`, style: 'small' },
+  ];
+  for (const r of rows) {
+    lines.push({ text: `#${r.submissionNumber ?? r.id} · ${r.applicationName} · ${meta.statusText?.(r.status) ?? r.status}`, style: 'bold', gap: 14 });
+    lines.push({ text: `Bewerber: ${r.applicantName} (${r.userId}) · Eingereicht: ${de(r.submittedAt)} · Entschieden: ${de(r.decidedAt)}`, style: 'small' });
+    if (r.assigneeUserId || r.rating !== undefined) lines.push({ text: `Bearbeiter: ${r.assigneeUserId ?? '–'}${r.rating !== undefined ? ` · Bewertung: ${r.rating === null ? '–' : `${r.rating} %`}` : ''}`, style: 'small' });
+    if (r.publicReason) lines.push({ text: `Begründung: ${r.publicReason}`, style: 'small' });
+    for (const q of r.questions) {
+      if (SKIP.has(q.type)) continue;
+      const a = r.answers[q.id];
+      lines.push({ text: q.title, style: 'bold', gap: 4 });
+      lines.push({ text: a === undefined || a === null || a === '' ? '–' : label(q, a) });
+    }
+  }
+  return renderPdf(lines, { title: 'Bewerbungen' });
 }

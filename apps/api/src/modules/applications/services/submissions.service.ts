@@ -21,12 +21,25 @@ import {
 } from '@nexus/automation';
 import { SubmissionStatus } from '@nexus/types';
 import { auditRepository, prisma, assertGuildId } from '@nexus/database';
-import { EXPORT_LIMIT, toExportCsv, toExportJson, type ExportRow } from './submissions-export.js';
+import { EXPORT_LIMIT, toExportCsv, toExportJson, toExportPdf, type ExportRow } from './submissions-export.js';
+import { ratingFieldsOf } from './ratings.service.js';
 import type {
   AcceptSubmissionDto,
   DenySubmissionDto,
   CreateNoteDto,
 } from '../dto/applications.dto.js';
+
+const STATUS_DE: Record<string, string> = { SUBMITTED: 'Eingereicht', UNDER_REVIEW: 'In Prüfung', ON_HOLD: 'Zurückgestellt', ACCEPTED: 'Angenommen', DENIED: 'Abgelehnt', WITHDRAWN: 'Zurückgezogen', EXPIRED: 'Abgelaufen', CANCELLED: 'Abgebrochen', ARCHIVED: 'Archiviert' };
+
+/** Gesamtbewertung in Prozent (Mittel der je Feld normierten Mittelwerte); ohne Felder `undefined`, ohne Bewertung `null`. */
+function overallRating(fields: { id: string; max: number }[], ratings: { fieldId: string; value: number }[]): number | null | undefined {
+  if (fields.length === 0) return undefined;
+  const pct = fields.flatMap((f) => {
+    const vs = ratings.filter((r) => r.fieldId === f.id).map((r) => r.value);
+    return vs.length ? [(vs.reduce((a, b) => a + b, 0) / vs.length / f.max) * 100] : [];
+  });
+  return pct.length ? Math.round((pct.reduce((a, b) => a + b, 0) / pct.length) * 100) / 100 : null;
+}
 
 /**
  * SubmissionsService – Guild- scoped (§113) mit Cursor-Pagination (§107).
@@ -198,10 +211,10 @@ export class SubmissionsService {
     guildId: string,
     userId: string,
     q: { format?: string; applicationId?: string; status?: string; from?: string; to?: string },
-  ): Promise<{ filename: string; contentType: string; body: string }> {
+  ): Promise<{ filename: string; contentType: string; body: string | Buffer }> {
     const gid = assertGuildId(guildId);
-    const format = q.format === 'json' ? 'json' : q.format === 'csv' || !q.format ? 'csv' : null;
-    if (!format) throw new BadRequestException('Format: csv oder json.');
+    const format = q.format === 'json' ? 'json' : q.format === 'pdf' ? 'pdf' : q.format === 'csv' || !q.format ? 'csv' : null;
+    if (!format) throw new BadRequestException('Format: csv, json oder pdf.');
     const date = (v: string | undefined) => {
       if (!v) return undefined;
       const d = new Date(v);
@@ -222,7 +235,7 @@ export class SubmissionsService {
       },
       orderBy: { submittedAt: 'desc' },
       take: EXPORT_LIMIT,
-      include: { application: { select: { name: true } }, version: { select: { questions: true } }, answers: true },
+      include: { application: { select: { name: true, config: true } }, version: { select: { questions: true } }, answers: true, ratings: true },
     });
     const rows: ExportRow[] = subs.map((s) => {
       const raw = s.version.questions as unknown;
@@ -241,6 +254,7 @@ export class SubmissionsService {
         isTest: s.isTest,
         questions,
         answers: Object.fromEntries(s.answers.map((a) => [a.questionId, a.value])),
+        rating: overallRating(ratingFieldsOf(s.application.config), s.ratings),
       };
     });
     await auditRepository.log({
@@ -252,6 +266,10 @@ export class SubmissionsService {
       permission: 'applications.submissions.export',
     });
     const stamp = new Date().toISOString().slice(0, 10);
+    if (format === 'pdf') {
+      const guild = await prisma.guild.findUnique({ where: { id: gid }, select: { name: true } });
+      return { filename: `bewerbungen-${stamp}.pdf`, contentType: 'application/pdf', body: toExportPdf(rows, { guildName: guild?.name, statusText: (st) => STATUS_DE[st] ?? st }) };
+    }
     return format === 'json'
       ? { filename: `bewerbungen-${stamp}.json`, contentType: 'application/json; charset=utf-8', body: toExportJson(rows) }
       : { filename: `bewerbungen-${stamp}.csv`, contentType: 'text/csv; charset=utf-8', body: toExportCsv(rows) };

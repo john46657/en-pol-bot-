@@ -22,6 +22,13 @@ export class AnalyticsController {
     return this.analytics.overview(guildId, applicationId);
   }
 
+  /** Team-Chance-Auswertung: gesamt und je Bewerbungsart (heute/Woche/Monat, offen, Quoten, Ø Bearbeitungszeit). */
+  @Get('team-chance')
+  @RequirePermissions('applications.analytics.view')
+  teamChance(@GuildId() guildId: string) {
+    return this.analytics.teamChance(guildId);
+  }
+
   /** Zeitreihe pro Tag einer Application (§45). */
   @Get('applications/:applicationId/daily')
   @RequirePermissions('applications.analytics.view')

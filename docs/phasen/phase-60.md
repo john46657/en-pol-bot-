@@ -20,8 +20,8 @@
 | 16 Cooldown | ✅ **60e** je Bewerbungsart: kein, 1/3/7/14/30 Tage oder individuell (vorher wirkungslos, s. o.). |
 | 17 Automatische Rollen | ✅ Rollenaktionen bei Einreichung/Annahme/Ablehnung. |
 | 18 Benachrichtigungen | ◐ DM-/Review-Texte konfigurierbar; je Ereignis eigene Embeds/Kanal/Buttons/Erwähnungen ❌. |
-| 19 Auswertung | ◐ Analytics vorhanden (täglich, je Art); Kennzahlen im Detail zu prüfen. |
-| 20 Export | ✅ CSV, JSON (Rechte `…export`); ❌ PDF. |
+| 19 Auswertung | ✅ **60h**: Kennzahlen gesamt und je Bewerbungsart im Dashboard (Bewerbungen). |
+| 20 Export | ✅ CSV, JSON, **PDF (60h)**, Recht `…export`; Bewertung in allen drei Formaten. |
 | 21 Anpassbarkeit | ✅ weitgehend; Lücken wie oben. |
 
 ## 60a – getrennte Rechte „mit Grund“
@@ -36,7 +36,7 @@
 - **Auswertung:** Mittelwert je Feld, Gesamtwert = Mittel der auf Prozent normierten Feld-Mittelwerte; Einzelbewertungen aufklappbar.
 - **Rechte:** `applications.ratings.view` (nur Team, nie für Bewerber), `applications.ratings.edit`; `applications.manage` schließt beides ein. Die Standard-Vorlagen enthalten sie bewusst **nicht** (ausdrücklich vergeben).
 - **Tests:** `apps/api/test/ratings.test.ts` (Felder, Mittelwerte, Prüfung der Werte, Entfernen, Verlauf, nur eingereicht, Mandantentrennung), Browser `e2e/ratings.spec.ts` (Felder einrichten, Sterne setzen, Mittelwert, 403 ohne Recht).
-- **Grenze:** Keine Bewertung im Discord (nur Dashboard); Bewertungen werden im CSV/JSON-Export noch nicht ausgegeben.
+- **Grenze:** Keine Bewertung im Discord (nur Dashboard). (Export der Bewertung: seit 60h.)
 
 ## 60b – Bewertungssystem (Punkt 13)
 - **Konfiguration:** `Application.config.rating.fields[]` (`id`, `label`, `max` 2–10, höchstens 20 Felder); ohne Felder ist die Bewertung aus. Dashboard: Bewerbungsart bearbeiten → „Interne Bewertung“.
@@ -44,7 +44,7 @@
 - **Auswertung:** Mittelwert je Feld, Gesamtwert = Mittel der auf Prozent normierten Feld-Mittelwerte; Einzelbewertungen aufklappbar.
 - **Rechte:** `applications.ratings.view` (nur Team, nie für Bewerber), `applications.ratings.edit`; `applications.manage` schließt beides ein. Die Standard-Vorlagen enthalten sie bewusst **nicht** (ausdrücklich vergeben).
 - **Tests:** `apps/api/test/ratings.test.ts` (Felder, Mittelwerte, Prüfung der Werte, Entfernen, Verlauf, nur eingereicht, Mandantentrennung), Browser `e2e/ratings.spec.ts` (Felder einrichten, Sterne setzen, Mittelwert, 403 ohne Recht).
-- **Grenze:** Keine Bewertung im Discord (nur Dashboard); Bewertungen werden im CSV/JSON-Export noch nicht ausgegeben.
+- **Grenze:** Keine Bewertung im Discord (nur Dashboard). (Export der Bewertung: seit 60h.)
 
 ## 60c – Zurückstellen (Punkt 6/7)
 - **Neuer Status `ON_HOLD` („🟠 Zurückgestellt“)** (Migration `20261005090000_submission_on_hold`). Übergänge: eingereicht/in Prüfung → zurückgestellt → fortsetzen (in Prüfung) **oder direkt** annehmen/ablehnen/zurücknehmen.
@@ -87,3 +87,10 @@
 - **Verlauf:** `submission.reviewer_added/removed`, `submission.forwarded` (mit Notiz).
 - **Tests:** Bot (Festlegen nur durch Hauptbearbeiter, Doppel, Anzeige, Entscheidung durch weiteren Bearbeiter, Weiterleiten inkl. Notiz/DM/Führungskraft), Browser `e2e/teamchance.spec.ts`.
 - **Grenze:** Weitere Bearbeiter lassen sich nur im Dashboard (nicht per Discord-Knopf) festlegen.
+
+## 60h – Auswertung und PDF-Export (Punkte 19, 20)
+- **Auswertung** (`GET analytics/team-chance`, Recht `applications.analytics.view`): je Bewerbungsart und gesamt – Bewerbungen insgesamt (eingereicht), heute/diese Woche/diesen Monat (deutsche Zeit, Woche ab Montag, Sommer-/Winterzeit), offen (davon zurückgestellt), angenommen, abgelehnt, abgebrochen, abgelaufen, zurückgezogen, Ø Bearbeitungszeit (Einreichen → Entscheidung), Annahme- und Ablehnungsquote (bezogen auf Entscheidungen); ohne Testbewerbungen. Dashboard: Seite „Bewerbungen“ → „Auswertung“ mit Auswahl der Bewerbungsart.
+- **PDF-Export** (`?format=pdf`, Knopf „⬇ PDF“ in der Einreichungsliste): eigener kleiner PDF-Schreiber (PDF 1.4, A4, Helvetica, WinAnsi – Umlaute, €, Gedankenstriche; Emojis werden durch „?“ ersetzt), Zeilenumbruch, mehrere Seiten mit Seitenzahl; je Bewerbung Kopf, Stammdaten, Bewertung, Begründung und alle Antworten. Mit macOS Quick Look gerendert und geprüft.
+- **Bewertung im Export:** Spalte „Bewertung (%)“ (CSV), Feld `rating` (JSON), Zeile im PDF.
+- **Tests:** `apps/api/test/team-chance-stats.test.ts` (Zeitgrenzen inkl. Winterzeit, Kennzahlen, leer), `submissions-export.test.ts` (PDF-Aufbau inkl. Querverweis-Positionen, Maskierung, Umlaute, mehrere Seiten, Bewertung in allen Formaten), Browser `e2e/teamchance.spec.ts` (Auswertung je Art, PDF-Download).
+- **Grenze:** Der PDF-Export enthält keine Bilder/Anhänge und keine Emojis.

@@ -1,5 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { prisma, assertGuildId } from '@nexus/database';
+import { computeStats } from './team-chance-stats.js';
 
 /**
  * Analytics (§45): nur aggregierte Daten, keine sensiblen Antworten
@@ -42,6 +43,20 @@ export class ApplicationAnalyticsService {
       acceptanceRate: submitted > 0 ? accepted / submitted : 0,
       denialRate: submitted > 0 ? denied / submitted : 0,
       reviewRate: submitted > 0 ? reviewed / submitted : 0,
+    };
+  }
+
+  /** Team-Chance-Auswertung: Kennzahlen gesamt und je Bewerbungsart (ohne Testbewerbungen). */
+  async teamChance(guildId: string) {
+    const g = assertGuildId(guildId);
+    const [rows, apps] = await Promise.all([
+      prisma.applicationSubmission.findMany({ where: { guildId: g, isTest: false }, select: { applicationId: true, status: true, startedAt: true, submittedAt: true, acceptedAt: true, deniedAt: true } }),
+      prisma.application.findMany({ where: { guildId: g }, select: { id: true, name: true, icon: true }, orderBy: { name: 'asc' } }),
+    ]);
+    const now = new Date();
+    return {
+      total: computeStats(rows, now),
+      perApplication: apps.map((a) => ({ applicationId: a.id, name: a.name, icon: a.icon, ...computeStats(rows.filter((r) => r.applicationId === a.id), now) })),
     };
   }
 

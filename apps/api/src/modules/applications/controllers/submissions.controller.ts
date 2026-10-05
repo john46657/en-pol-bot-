@@ -49,7 +49,7 @@ export class SubmissionsController {
     return this.submissions.reviewOptions();
   }
 
-  /** Export als CSV oder JSON (`?format=csv|json&applicationId&status&from&to`) – nur mit „Einreichungen exportieren“. */
+  /** Export als CSV, JSON oder PDF (`?format=csv|json|pdf&applicationId&status&from&to`) – nur mit „Einreichungen exportieren“. */
   @Get('export')
   @RequirePermissions('applications.submissions.export')
   async export(
@@ -61,7 +61,7 @@ export class SubmissionsController {
     const r = await this.submissions.export(guildId, user.id, q);
     res.setHeader('Content-Type', r.contentType);
     res.setHeader('Content-Disposition', `attachment; filename="${r.filename}"`);
-    return new StreamableFile(Buffer.from(r.body, 'utf8'));
+    return new StreamableFile(typeof r.body === 'string' ? Buffer.from(r.body, 'utf8') : r.body);
   }
 
   /** Bisherige Bewerbungen eines Discord-Benutzers (Bewerbungshistorie). */

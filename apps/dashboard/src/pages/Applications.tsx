@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router';
 import { api, type ApplicationRow } from '../api';
 import { errorText, QueryState } from '../components/QueryState';
+import { TeamChanceStats } from '../components/TeamChanceStats';
 import { useToast } from '../toast';
 
 const STATUS: Record<string, string> = {
@@ -34,6 +35,7 @@ export function Applications() {
   return (
     <>
       <h1>Bewerbungen</h1>
+      <TeamChanceStats guildId={guildId} />
       <form
         className="actions"
         onSubmit={(e) => {

@@ -20,8 +20,8 @@ export function Submissions() {
     queryKey: ['submissions', guildId, status, term],
     queryFn: () => api<{ items: SubmissionRow[] }>(`/guilds/${guildId}/submissions?${qs}`),
   });
-  /** Export der (gefilterten) Bewerbungen als CSV oder JSON – serverseitig mit Recht „Einreichungen exportieren“ geprüft. */
-  async function download(format: 'csv' | 'json') {
+  /** Export der (gefilterten) Bewerbungen als CSV, JSON oder PDF – serverseitig mit Recht „Einreichungen exportieren“ geprüft. */
+  async function download(format: 'csv' | 'json' | 'pdf') {
     try {
       const params = new URLSearchParams({ format, ...(status ? { status } : {}) });
       const res = await fetch(`${API_URL}/api/v1/guilds/${guildId}/submissions/export?${params}`, { credentials: 'include', headers: { 'X-Requested-With': 'nexus' } });
@@ -63,6 +63,7 @@ export function Submissions() {
         <button className="btn">Suchen</button>
         <button type="button" className="btn" onClick={() => void download('csv')}>⬇ CSV</button>
         <button type="button" className="btn" onClick={() => void download('json')}>⬇ JSON</button>
+        <button type="button" className="btn" onClick={() => void download('pdf')}>⬇ PDF</button>
       </form>
       <QueryState query={q}>
         {(d) =>

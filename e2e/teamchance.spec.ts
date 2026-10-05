@@ -82,4 +82,21 @@ test('Team-Chance: Bewerbung zurückstellen und fortsetzen', async ({ page, cont
   await page.getByRole('button', { name: '📨 Weiterleiten' }).click();
   await expect(page.getByText('Bewerbung weitergeleitet.')).toBeVisible();
   expect((await (await request.get(`${g}/submissions/${id}`, { headers })).json()).assigneeUserId).toBe('900000000000000030');
+
+  // Auswertung je Bewerbungsart (Seed: eine abgelehnte, eine offene Bewerbung)
+  await page.goto(`/guilds/${E2E.guildId}/applications`);
+  const stats = page.getByRole('region', { name: 'Auswertung' });
+  await expect(stats).toBeVisible();
+  await stats.getByLabel('Auswertung für').selectOption({ label: 'Moderation (Team-Chance)' });
+  await expect(stats.locator('div').filter({ hasText: /^Bewerbungen insgesamt2$/ })).toBeVisible();
+  await expect(stats.locator('div').filter({ hasText: /^Abgelehnt1$/ })).toBeVisible();
+  await expect(stats.locator('div').filter({ hasText: /^Ablehnungsquote100 %$/ })).toBeVisible();
+
+  // PDF-Export
+  const pdf = await request.get(`${g}/submissions/export?format=pdf&applicationId=${app.id}`, { headers });
+  expect(pdf.status()).toBe(200);
+  expect(pdf.headers()['content-type']).toContain('application/pdf');
+  const body = await pdf.body();
+  expect(body.subarray(0, 8).toString('latin1')).toBe('%PDF-1.4');
+  expect(body.toString('latin1')).toContain('Moderation \\(Team-Chance\\)');
 });

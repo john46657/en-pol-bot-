@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
+  toExportPdf,
   toExportCsv,
   toExportJson,
   type ExportRow,
@@ -47,7 +48,7 @@ describe('Bewerbungs-Export (Spezifikation 23)', () => {
     expect(csv.charCodeAt(0)).toBe(0xfeff);
     const [head, line] = csv.slice(1).split('\r\n');
     expect(head).toBe(
-      'ID,Bewerbung,Bewerber,Discord-ID,Status,Eingereicht,Entschieden,Begründung,Bearbeiter,Test,Wie heißt du?,Abteilung,Ausbildungen',
+      'ID,Bewerbung,Bewerber,Discord-ID,Status,Eingereicht,Entschieden,Begründung,Bearbeiter,Test,Bewertung (%),Wie heißt du?,Abteilung,Ausbildungen',
     );
     expect(line).toContain('POL-00152');
     expect(line).toContain('"Max ""Maxi"" Muster"'); // Anführungszeichen verdoppelt
@@ -92,5 +93,39 @@ describe('Bewerbungs-Export (Spezifikation 23)', () => {
       { question: 'Abteilung', answer: 'Streifendienst' },
       { question: 'Ausbildungen', answer: 'Funk, Erste Hilfe' },
     ]);
+  });
+});
+
+describe('PDF-Export (Team-Chance Punkt 20)', () => {
+  const pdfText = (b: Buffer) => b.toString('latin1');
+  it('gültiger Aufbau: Kopf, Objekte, Querverweistabelle mit korrekten Positionen, Ende', async () => {
+    const { renderPdf } = await import('../src/modules/applications/services/pdf.js');
+    const b = renderPdf([{ text: 'Titel', style: 'title' }, { text: 'Hallo (Welt) \\ äöüß €' }], { title: 'Test' });
+    const t = pdfText(b);
+    expect(t.startsWith('%PDF-1.4')).toBe(true);
+    expect(t.trimEnd().endsWith('%%EOF')).toBe(true);
+    const start = Number(/startxref\n(\d+)/.exec(t)![1]);
+    expect(t.slice(start, start + 4)).toBe('xref');
+    const offsets = [...t.slice(start).matchAll(/^(\d{10}) 00000 n $/gm)].map((m) => Number(m[1]));
+    offsets.forEach((o, i) => expect(t.slice(o, o + `${i + 1} 0 obj`.length)).toBe(`${i + 1} 0 obj`));
+    expect(t).toContain('(Hallo \\(Welt\\) \\\\ \\344\\366\\374\\337 \\200) Tj'); // Klammern/Backslash maskiert, Umlaute und € in WinAnsi
+  });
+  it('lange Exporte gehen auf mehrere Seiten; Emojis werden ersetzt; Seitenzahl im Fuß', async () => {
+    const many = Array.from({ length: 40 }, (_, i) => row({ id: `id-${i}`, submissionNumber: `POL-${String(i).padStart(5, '0')}` }));
+    const t = pdfText(toExportPdf(many, { guildName: 'Testserver 🚓', statusText: () => 'Angenommen' }));
+    const pages = Number(/\/Count (\d+)/.exec(t)![1]);
+    expect(pages).toBeGreaterThan(1);
+    expect(t).toContain(`Seite ${pages} von ${pages}`);
+    expect(t).toContain('Testserver ?');
+    expect(t).toContain('#POL-00039');
+    expect(t).toContain('Angenommen');
+    expect(t).toContain('Streifendienst'); // Antworten mit Beschriftung
+    expect(t).not.toContain('ignoriert'); // Hinweisfelder nicht
+  });
+  it('Bewertung in CSV, JSON und PDF', () => {
+    const r = row({ rating: 75 });
+    expect(toExportCsv([r]).split('\r\n')[1]).toContain(',75,');
+    expect(JSON.parse(toExportJson([r]))[0].rating).toBe(75);
+    expect(pdfText(toExportPdf([r]))).toContain('Bewertung: 75 %');
   });
 });
