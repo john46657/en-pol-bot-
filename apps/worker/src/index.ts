@@ -13,6 +13,7 @@ import {
   expireStaleApplications,
   runJob,
   syncAllGuilds,
+  forwardAuditLogs,
   trainingReminders,
 } from '@nexus/jobs';
 import { startHeartbeat } from '@nexus/health';
@@ -58,6 +59,7 @@ const HANDLERS: Record<string, () => Promise<unknown>> = {
   },
   'restriction-expiry': () => expireDueRestrictions(),
   'wanted-expiry': () => expireDueNotices(),
+  'log-forward': () => forwardAuditLogs(),
   'shift-watch': () => watchOverlongShifts(port(), new Date(), process.env['DASHBOARD_URL']),
 };
 

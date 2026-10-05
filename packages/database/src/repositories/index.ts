@@ -5,3 +5,4 @@ export * from './permission.repository.js';
 export * from './audit.repository.js';
 export * from './panel.repository.js';
 export * from './nexus-role.repository.js';
+export * from './log-forward.repository.js';

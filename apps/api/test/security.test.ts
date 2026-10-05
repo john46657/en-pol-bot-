@@ -126,6 +126,24 @@ describe('Rate Limits', () => {
     t += 61_000;
     expect((await hit('u1')).allowed).toBe(true); // neues Fenster
   });
+  it('RATE_LIMIT_FACTOR vervielfacht die Grenzen (nur Tests); ungültige Werte gelten nicht', async () => {
+    const run = async (factor: string | undefined) => {
+      if (factor === undefined) delete process.env['RATE_LIMIT_FACTOR'];
+      else process.env['RATE_LIMIT_FACTOR'] = factor;
+      const store = new MemoryStore(() => 0);
+      let last = await decide(store, { method: 'POST', path: '/x', ip: '1.1.1.1', userId: 'u' });
+      for (let i = 0; i < 130; i++) last = await decide(store, { method: 'POST', path: '/x', ip: '1.1.1.1', userId: 'u' });
+      return last;
+    };
+    try {
+      expect(await run(undefined)).toMatchObject({ allowed: false, limit: 120 });
+      expect(await run('0')).toMatchObject({ allowed: false, limit: 120 });
+      expect(await run('abc')).toMatchObject({ allowed: false, limit: 120 });
+      expect(await run('10')).toMatchObject({ allowed: true, limit: 1200 });
+    } finally {
+      delete process.env['RATE_LIMIT_FACTOR'];
+    }
+  });
   it('Auth-Routen sind je IP streng (30/min), Export je Benutzer (10/10 min)', async () => {
     const store = new MemoryStore(() => 0);
     let last;

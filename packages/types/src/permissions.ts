@@ -83,6 +83,14 @@ export const PERMISSION_CATALOG = [
     ],
   },
   {
+    module: 'logs',
+    label: 'Logs',
+    permissions: [
+      ['logs.view', 'Logs ansehen (Audit-Log, Weiterleitungen)'],
+      ['logs.manage', 'Log-Weiterleitung in Discord-Kanäle konfigurieren'],
+    ],
+  },
+  {
     module: 'bot',
     label: 'Bot',
     permissions: [['bot.settings', 'Bot-Einstellungen ansehen (nur lesen; ändern mit „Serverkonfiguration ändern“)']],
@@ -381,7 +389,8 @@ export const PERMISSION_IMPLIED_BY: Readonly<Record<string, readonly string[]>> 
   'tickets.view': ['dashboard.tickets'],
   'applications.view': ['dashboard.applications'],
   'applications.submissions.view': ['dashboard.applications'],
-  'audit.view': ['dashboard.logs'],
+  'audit.view': ['dashboard.logs', 'logs.view', 'logs.manage'],
+  'logs.view': ['dashboard.logs', 'audit.view'],
   'radio.view': ['dashboard.radio'],
   'permissions.view': ['dashboard.roles'],
   'roles.view': ['dashboard.roles'],

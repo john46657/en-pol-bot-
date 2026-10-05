@@ -1,7 +1,7 @@
-import { useInfiniteQuery, useQuery } from '@tanstack/react-query';
+import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
 import { useParams } from 'react-router';
-import { api, API_URL } from '../api';
+import { api, API_URL, type DiscordChannel } from '../api';
 import { errorText } from '../components/QueryState';
 import { useToast } from '../toast';
 
@@ -88,6 +88,7 @@ export function Logs() {
         <button className="btn">Filtern</button>
         <button type="button" className="btn" onClick={() => void download()}>CSV-Export</button>
       </form>
+      <Forwarding guildId={guildId} />
       {q.isLoading && <div className="skeleton">Lade …</div>}
       {q.error && (
         <div className="alert error" role="alert">
@@ -124,5 +125,55 @@ export function Logs() {
         </button>
       )}
     </>
+  );
+}
+
+interface Forwards {
+  areas: { key: string; label: string }[];
+  forwards: { area: string; channelId: string; enabled: boolean }[];
+}
+
+/** Weiterleitung des Audit-Logs in Discord-Kanäle: je Bereich ein Kanal, an/aus. */
+function Forwarding({ guildId }: { guildId: string }) {
+  const toast = useToast();
+  const qc = useQueryClient();
+  const q = useQuery({ queryKey: ['log-forwards', guildId], queryFn: () => api<Forwards>(`/guilds/${guildId}/log-forwards`), retry: false });
+  const channels = useQuery({ queryKey: ['channels', guildId], queryFn: () => api<DiscordChannel[]>(`/guilds/${guildId}/discord/channels`), retry: false });
+  const [draft, setDraft] = useState<Record<string, { channelId: string; enabled: boolean }> | null>(null);
+  const current = draft ?? Object.fromEntries((q.data?.forwards ?? []).map((f) => [f.area, { channelId: f.channelId, enabled: f.enabled }]));
+  const save = useMutation({
+    mutationFn: () => api(`/guilds/${guildId}/log-forwards`, { method: 'PUT', body: { forwards: Object.entries(current).filter(([, v]) => v.channelId).map(([area, v]) => ({ area, ...v })) } }),
+    onSuccess: () => {
+      toast.success('Weiterleitung gespeichert (gilt ab jetzt für neue Einträge).');
+      setDraft(null);
+      void qc.invalidateQueries({ queryKey: ['log-forwards', guildId] });
+    },
+    onError: (e) => toast.error(errorText(e)),
+  });
+  if (q.isError || !q.data) return null; // ohne Recht „Logs ansehen“ nichts anzeigen
+  const text = (channels.data ?? []).filter((c) => c.kind === 'text');
+  const set = (area: string, v: Partial<{ channelId: string; enabled: boolean }>) => setDraft({ ...current, [area]: { channelId: current[area]?.channelId ?? '', enabled: current[area]?.enabled ?? true, ...v } });
+  return (
+    <details className="card">
+      <summary>Weiterleitung in Discord-Kanäle</summary>
+      <p className="muted">Neue Log-Einträge eines Bereichs werden als Nachricht in den gewählten Kanal gesendet (nur Eckdaten, keine Vorher/Nachher-Inhalte). Ändern darf nur, wer „Log-Weiterleitung konfigurieren“ hat.</p>
+      <ul className="list">
+        {q.data.areas.map((a) => (
+          <li key={a.key} className="row">
+            <span className="grow">{a.label}</span>
+            <select value={current[a.key]?.channelId ?? ''} aria-label={`Kanal für ${a.label}`} onChange={(e) => set(a.key, { channelId: e.target.value })}>
+              <option value="">– keine Weiterleitung –</option>
+              {text.map((c) => <option key={c.id} value={c.id}>#{c.name}</option>)}
+            </select>
+            <label>
+              <input type="checkbox" checked={current[a.key]?.enabled ?? true} disabled={!current[a.key]?.channelId} onChange={(e) => set(a.key, { enabled: e.target.checked })} /> aktiv
+            </label>
+          </li>
+        ))}
+      </ul>
+      <div className="actions">
+        <button className="btn primary" disabled={!draft || save.isPending} onClick={() => save.mutate()}>{save.isPending ? 'Speichere …' : 'Weiterleitung speichern'}</button>
+      </div>
+    </details>
   );
 }

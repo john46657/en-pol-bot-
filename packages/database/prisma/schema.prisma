@@ -428,6 +428,7 @@ model Guild {
   permissionProfiles PermissionProfile[]
   userPermissions    UserPermission[]
   nexusRoles         NexusRole[]
+  logForwards        LogForward[]
   ranks              Rank[]
   teams              Team[]
   personnelRecords   PersonnelRecord[]
@@ -2504,4 +2505,30 @@ model NexusRoleMember {
   @@index([guildId, userId])
   @@index([expiresAt])
   @@map("nexus_role_members")
+}
+
+/// Weiterleitung des Audit-Logs in einen Discord-Kanal: je Bereich (siehe @nexus/audit AREAS, `*` = alle) ein Kanal.
+model LogForward {
+  id        String   @id @default(cuid())
+  guildId   String
+  area      String
+  channelId String
+  enabled   Boolean  @default(true)
+  createdBy String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  guild Guild @relation(fields: [guildId], references: [id], onDelete: Cascade)
+
+  @@unique([guildId, area])
+  @@map("log_forwards")
+}
+
+/// Bis wohin das Audit-Log eines Servers bereits weitergeleitet wurde (Zeit + ID als stabiler Cursor).
+model LogForwardCursor {
+  guildId String   @id
+  lastAt  DateTime
+  lastId  String   @default("")
+
+  @@map("log_forward_cursors")
 }

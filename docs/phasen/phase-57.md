@@ -42,4 +42,4 @@
 ## Seitenrechte (57f)
 - Menü: Verwaltungsseiten (Benutzer, Rollen & Rechte, Profile, Berechtigungen, Logs) waren bisher nur für Discord-Verwalter sichtbar, obwohl die API seit Phase 56 `permissions.view`/`audit.view` genügen lässt – jetzt richtet sich das Menü nach diesen Rechten.
 - Fehlerbehebung: Die Serverauswahl berechnete Rechte ohne Benutzer-ID, Dashboard-Rollen (Mitgliedschaft) und Benutzerausnahmen zählten dort nicht.
-- Tests: `grants.test.ts` (Sammelrechte, Sperre schlägt Freigabe), `e2e/dashboard-rights.spec.ts` (Mitglied mit nur `dashboard.tickets`: Tickets lesen 200, Einstellungen/Schließen/Rechte/Audit 403, Menü zeigt nur Tickets). Suite: 24 Browser-Tests.
+- Tests: `grants.test.ts` (Sammelrechte, Sperre schlägt Freigabe), `e2e/rights-dashboard.spec.ts` (Mitglied mit nur `dashboard.tickets`: Tickets lesen 200, Einstellungen/Schließen/Rechte/Audit 403, Menü zeigt nur Tickets). Suite: 24 Browser-Tests.

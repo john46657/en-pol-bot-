@@ -9,7 +9,8 @@ import {
   Put,
   Query,
 } from '@nestjs/common';
-import { auditRepository } from '@nexus/database';
+import { auditRepository, logForwardRepository } from '@nexus/database';
+import { AREAS } from '@nexus/audit';
 import { resolveTemplate } from '@nexus/types';
 import {
   RequireDashboardAccess,
@@ -212,6 +213,35 @@ export class GuildController {
   ) {
     await this.rights.forProfileChange(guildId, access, profileId);
     return this.access.deleteProfile(guildId, user?.id ?? 'unknown', profileId);
+  }
+
+  // --- Log-Weiterleitung (Audit-Log → Discord-Kanäle) -------------------------
+
+  @Get('log-forwards')
+  @RequirePermissions('logs.view')
+  async logForwards(@GuildId() guildId: string) {
+    return { areas: [{ key: '*', label: 'Alle Bereiche' }, ...AREAS.map((a) => ({ key: a.key, label: a.label })), { key: 'other', label: 'Sonstiges' }], forwards: (await logForwardRepository.list(guildId)).map((f) => ({ area: f.area, channelId: f.channelId, enabled: f.enabled })) };
+  }
+
+  @Put('log-forwards')
+  @RequirePermissions('logs.manage')
+  async setLogForwards(@GuildId() guildId: string, @Body() body: { forwards?: unknown }, @CurrentUser() user?: RequestUser) {
+    const valid = new Set(['*', 'other', ...AREAS.map((a) => a.key)]);
+    const raw = Array.isArray(body?.forwards) ? (body.forwards as { area?: unknown; channelId?: unknown; enabled?: unknown }[]) : null;
+    if (!raw || raw.length > 40) throw new BadRequestException('Ungültige Weiterleitungen.');
+    const channels = new Set((await this.discord.listChannels(guildId, 'text')).map((c) => c.id));
+    const seen = new Set<string>();
+    const rows = raw.map((r) => {
+      if (typeof r.area !== 'string' || !valid.has(r.area)) throw new BadRequestException('Unbekannter Bereich.');
+      if (seen.has(r.area)) throw new BadRequestException('Jeder Bereich darf nur einmal vorkommen.');
+      seen.add(r.area);
+      if (typeof r.channelId !== 'string' || !channels.has(r.channelId)) throw new BadRequestException('Der Kanal gehört nicht zu diesem Server oder ist kein Textkanal.');
+      return { area: r.area, channelId: r.channelId, enabled: r.enabled !== false };
+    });
+    const { before, after } = await logForwardRepository.replace(guildId, rows, user?.id ?? 'unknown');
+    const sum = (l: { area: string; channelId: string; enabled: boolean }[]) => l.map((f) => `${f.area}→${f.channelId}${f.enabled ? '' : ' (aus)'}`).sort();
+    await auditRepository.create({ guildId, actorType: 'USER', actorId: user?.id ?? 'unknown', action: 'config.logs.forward.update', resourceType: 'LogForward', resourceId: guildId, permission: 'logs.manage', result: 'success', before: sum(before) as never, after: sum(after) as never });
+    return { forwards: after.map((f) => ({ area: f.area, channelId: f.channelId, enabled: f.enabled })) };
   }
 
   // --- Dashboard-Rollen (eigene Rollen, optional an Discord gekoppelt) ---------

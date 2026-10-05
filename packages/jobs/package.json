@@ -17,6 +17,7 @@
     "build": "tsc"
   },
   "dependencies": {
+    "@nexus/audit": "workspace:*",
     "@nexus/automation": "workspace:*",
     "@nexus/core": "workspace:*",
     "@nexus/database": "workspace:*",

@@ -93,6 +93,15 @@ export interface Decision {
   retryAfterSec: number;
 }
 
+/**
+ * Faktor für alle Grenzen (`RATE_LIMIT_FACTOR`, Standard 1, höchstens 100). Nur für Test-/Lastläufe gedacht – die
+ * Browser-Tests laufen als ein Benutzer in wenigen Minuten und würden sonst an die Grenze „alle Anfragen“ stoßen.
+ */
+const factor = (): number => {
+  const f = Number(process.env['RATE_LIMIT_FACTOR']);
+  return Number.isFinite(f) && f >= 1 ? Math.min(f, 100) : 1;
+};
+
 export async function decide(
   store: RateStore,
   req: { method: string; path: string; ip: string; userId?: string | undefined },
@@ -108,11 +117,12 @@ export async function decide(
     if (!rule.match(req.method.toUpperCase(), req.path)) continue;
     const id = rule.by === 'user' && req.userId ? `u:${req.userId}` : `ip:${req.ip}`;
     const { count, resetMs } = await store.hit(`${rule.name}:${id}`, rule.windowMs);
-    const remaining = Math.max(0, rule.limit - count);
+    const max = rule.limit * factor();
+    const remaining = Math.max(0, max - count);
     const d: Decision = {
-      allowed: count <= rule.limit,
+      allowed: count <= max,
       rule: rule.name,
-      limit: rule.limit,
+      limit: max,
       remaining,
       retryAfterSec: Math.ceil(resetMs / 1000),
     };

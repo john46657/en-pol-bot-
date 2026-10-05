@@ -45,6 +45,7 @@ export default defineConfig({
         DISCORD_TOKEN: 'fake',
         DISCORD_CLIENT_ID: '1',
         DISCORD_CLIENT_SECRET: 'fake',
+        RATE_LIMIT_FACTOR: '10', // ein Benutzer, viele Seiten in wenigen Minuten: sonst stößt die Suite zufällig an 600/min
         NODE_ENV: 'development',
       },
     },
