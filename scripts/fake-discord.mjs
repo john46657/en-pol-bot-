@@ -63,6 +63,11 @@ const members = {
   '900000000000000050': ['900000000000000101'], // Rolle mit Sperre
   '900000000000000060': [], // Bewerber (Rollenvergabe testbar)
   '900000000000000070': [], // Bewerber mit gesperrten DMs
+  // Moderations-Browsertests (werden dort verwarnt, stummgeschaltet, gekickt, gebannt)
+  '900000000000000080': [],
+  '900000000000000081': [],
+  '900000000000000082': [],
+  '900000000000000083': [],
 };
 const routes = {
   // Serverauswahl im Dashboard: der „angemeldete“ Benutzer ist Besitzer des Demo-Servers
@@ -81,6 +86,9 @@ const routes = {
     roles: ['900000000000000101'],
   },
 };
+const bans = new Set(); // Moderation: gebannte Benutzer (nur für Tests sichtbar)
+const timeouts = new Map(); // userId -> ISO-Ende oder null
+const kicked = [];
 const messages = new Map(); // `${channelId}/${messageId}` -> payload
 let nextId = 1000;
 const readBody = (req) =>
@@ -126,6 +134,35 @@ createServer(async (req, res) => {
     return json(204);
   }
   if (url === '/__members') return json(200, members);
+  if (url === '/__moderation') return json(200, { bans: [...bans], timeouts: Object.fromEntries(timeouts), kicked });
+  if (url === '/api/v10/users/@me') return json(200, { id: '1', username: 'nexus-bot' });
+  const memberRoute = url.match(new RegExp(`^/api/v10/guilds/${G}/members/(\\d+)$`));
+  if (memberRoute && req.method === 'PATCH') {
+    const [, uid] = memberRoute;
+    if (!members[uid]) return json(404, { message: 'Unknown Member' });
+    if (members[uid].includes('900000000000000103')) return json(403, { message: 'Missing Permissions' }); // Admin-Rolle: Discord verbietet es
+    timeouts.set(uid, (await readBody(req)).communication_disabled_until ?? null);
+    return json(200, { user: { id: uid }, roles: members[uid] });
+  }
+  if (memberRoute && req.method === 'DELETE') {
+    const [, uid] = memberRoute;
+    if (!members[uid]) return json(404, { message: 'Unknown Member' });
+    delete members[uid];
+    kicked.push(uid);
+    return json(204);
+  }
+  const banRoute = url.match(new RegExp(`^/api/v10/guilds/${G}/bans/(\\d+)$`));
+  if (banRoute && (req.method === 'PUT' || req.method === 'DELETE')) {
+    const [, uid] = banRoute;
+    if (req.method === 'PUT') {
+      await readBody(req);
+      bans.add(uid);
+      delete members[uid];
+      return json(204);
+    }
+    if (!bans.delete(uid)) return json(404, { message: 'Unknown Ban' });
+    return json(204);
+  }
   const msg = url.match(/^\/api\/v10\/channels\/([\w-]+)\/messages(?:\/(\d+))?$/);
   if (msg) {
     const [, channel, id] = msg;

@@ -20,6 +20,7 @@ import { QualificationsModule } from './modules/qualifications/qualifications.mo
 import { TrainingModule } from './modules/training/training.module.js';
 import { FleetModule } from './modules/fleet/fleet.module.js';
 import { RestrictionsModule } from './modules/restrictions/restrictions.module.js';
+import { ModerationModule } from './modules/moderation/moderation.module.js';
 import { WantedModule } from './modules/wanted/wanted.module.js';
 import { DangerModule } from './modules/danger/danger.module.js';
 import { OperationsModule } from './modules/operations/operations.module.js';
@@ -46,6 +47,7 @@ import { PermissionGuard } from './common/guards/permission.guard.js';
     DangerModule,
     WantedModule,
     RestrictionsModule,
+    ModerationModule,
     FleetModule,
     TrainingModule,
     QualificationsModule,

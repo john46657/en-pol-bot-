@@ -12,6 +12,7 @@
     "test": "vitest run"
   },
   "dependencies": {
+    "@nexus/moderation": "workspace:*",
     "@nexus/restrictions": "workspace:*",
     "@nestjs/common": "^11.1.5",
     "@nestjs/config": "^4.0.2",

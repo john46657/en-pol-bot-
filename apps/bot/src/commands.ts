@@ -33,6 +33,7 @@ import './commands/fahndung.js';
 import './commands/personal.js';
 import './commands/team.js';
 import './commands/sperre.js';
+import './commands/mod.js';
 import './commands/fahrzeug.js';
 import './commands/strafe.js';
 import './commands/ausbildung.js';

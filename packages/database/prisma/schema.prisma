@@ -429,6 +429,7 @@ model Guild {
   userPermissions    UserPermission[]
   nexusRoles         NexusRole[]
   logForwards        LogForward[]
+  moderationCases    ModerationCase[]
   ranks              Rank[]
   teams              Team[]
   personnelRecords   PersonnelRecord[]
@@ -2531,4 +2532,35 @@ model LogForwardCursor {
   lastId  String   @default("")
 
   @@map("log_forward_cursors")
+}
+
+/// Moderationsfall: Verwarnung, Timeout, Kick oder Bann (Discord-Aktion + Nachweis). `type`: WARN | TIMEOUT | KICK | BAN;
+/// `status`: ACTIVE | EXPIRED | REVOKED (Kick ist sofort abgeschlossen: DONE).
+model ModerationCase {
+  id             String    @id @default(cuid())
+  guildId        String
+  /// Fortlaufende Fallnummer je Server.
+  number         Int
+  type           String
+  userId         String
+  moderatorId    String
+  reason         String
+  /// Dauer eines Timeouts in Minuten.
+  durationMin    Int?
+  /// Ende eines Timeouts.
+  expiresAt      DateTime?
+  status         String    @default("ACTIVE")
+  revokedBy      String?
+  revokeReason   String?
+  revokedAt      DateTime?
+  /// Wurde das Mitglied per DM informiert?
+  dmDelivered    Boolean   @default(false)
+  createdAt      DateTime  @default(now())
+
+  guild Guild @relation(fields: [guildId], references: [id], onDelete: Cascade)
+
+  @@unique([guildId, number])
+  @@index([guildId, userId, createdAt])
+  @@index([guildId, type, status])
+  @@map("moderation_cases")
 }

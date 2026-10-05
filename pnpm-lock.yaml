@@ -114,6 +114,9 @@ importers:
       '@nexus/jobs':
         specifier: workspace:*
         version: link:../../packages/jobs
+      '@nexus/moderation':
+        specifier: workspace:*
+        version: link:../../packages/moderation
       '@nexus/office':
         specifier: workspace:*
         version: link:../../packages/office
@@ -268,6 +271,9 @@ importers:
       '@nexus/health':
         specifier: workspace:*
         version: link:../../packages/health
+      '@nexus/moderation':
+        specifier: workspace:*
+        version: link:../../packages/moderation
       '@nexus/office':
         specifier: workspace:*
         version: link:../../packages/office
@@ -692,6 +698,25 @@ importers:
       '@nexus/shifts':
         specifier: workspace:*
         version: link:../shifts
+      '@nexus/types':
+        specifier: workspace:*
+        version: link:../types
+    devDependencies:
+      '@prisma/client':
+        specifier: ^6.11.0
+        version: 6.19.3(prisma@6.19.3(typescript@5.9.3))(typescript@5.9.3)
+      vitest:
+        specifier: ^4.1.11
+        version: 4.1.11(@types/node@24.19.0)(vite@7.3.6(@types/node@24.19.0)(jiti@2.7.0)(tsx@4.23.15)(yaml@2.9.1))
+
+  packages/moderation:
+    dependencies:
+      '@nexus/database':
+        specifier: workspace:*
+        version: link:../database
+      '@nexus/discord':
+        specifier: workspace:*
+        version: link:../discord
       '@nexus/types':
         specifier: workspace:*
         version: link:../types

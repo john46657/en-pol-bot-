@@ -337,6 +337,37 @@ export async function removeGuildMemberRole(
   });
 }
 
+/** Timeout (Kommunikation sperren) bis zum Zeitpunkt; `null` hebt ihn auf. Discord erlaubt höchstens 28 Tage. */
+export async function timeoutGuildMember(botToken: string, guildId: string, userId: string, until: Date | null, reason?: string): Promise<void> {
+  await discordFetch<void>(botToken, `/guilds/${guildId}/members/${userId}`, {
+    method: 'PATCH',
+    headers: reasonHeader(reason),
+    body: { communication_disabled_until: until ? until.toISOString() : null },
+  });
+}
+
+/** Wirft ein Mitglied vom Server (kann mit Einladung zurückkehren). */
+export async function kickGuildMember(botToken: string, guildId: string, userId: string, reason?: string): Promise<void> {
+  await discordFetch<void>(botToken, `/guilds/${guildId}/members/${userId}`, { method: 'DELETE', headers: reasonHeader(reason) });
+}
+
+/** Bannt einen Benutzer (auch ohne Mitgliedschaft); `deleteMessageSeconds` löscht seine letzten Nachrichten (0–604800). */
+export async function banGuildMember(botToken: string, guildId: string, userId: string, reason?: string, deleteMessageSeconds = 0): Promise<void> {
+  await discordFetch<void>(botToken, `/guilds/${guildId}/bans/${userId}`, {
+    method: 'PUT',
+    headers: reasonHeader(reason),
+    body: { delete_message_seconds: Math.min(Math.max(Math.trunc(deleteMessageSeconds), 0), 604_800) },
+  });
+}
+
+/** Hebt einen Bann auf (bereits aufgehoben = 404 → kein Fehler). */
+export async function unbanGuildMember(botToken: string, guildId: string, userId: string, reason?: string): Promise<void> {
+  await discordFetch<void>(botToken, `/guilds/${guildId}/bans/${userId}`, { method: 'DELETE', headers: reasonHeader(reason) }).catch((e: unknown) => {
+    if (e instanceof DiscordApiError && e.status === 404) return;
+    throw e;
+  });
+}
+
 /** Mitglieder eines Servers (Suche nach Namensteil oder erste Seite). Für Übersichten, begrenzt. */
 export async function listGuildMembers(
   botToken: string,

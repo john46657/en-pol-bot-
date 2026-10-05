@@ -26,6 +26,7 @@ import { Qualifications } from './pages/Qualifications';
 import { Training } from './pages/Training';
 import { Team } from './pages/Team';
 import { Restrictions } from './pages/Restrictions';
+import { Moderation } from './pages/Moderation';
 import { Wanted } from './pages/Wanted';
 import { Design } from './pages/Design';
 import { CustomPage } from './pages/CustomPage';
@@ -96,6 +97,7 @@ createRoot(document.getElementById('root')!).render(
                   <Route path="fleet" element={<Fleet />} />
                   <Route path="penalties" element={<Penalties />} />
                   <Route path="restrictions" element={<Restrictions />} />
+                  <Route path="moderation" element={<Moderation />} />
                   <Route path="panels" element={<Panels />} />
                   <Route path="panels/:panelId" element={<PanelEditor />} />
                   <Route path="nexus-roles" element={<NexusRoles />} />
