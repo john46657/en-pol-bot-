@@ -9,7 +9,7 @@
 | 3 Start (Buttons/Select) | ✅ Panels (Button, Select, beides). |
 | 4 Fragen | ✅ 28 Fragetypen (alle genannten inkl. Zahl, Discord-Benutzer, Datum, Mehrfachauswahl; Roblox-Name über Benutzername/Text mit Regex), Pflicht/optional, verschieben (Drag & Drop), Bedingungen. |
 | 5 Ablauf | ✅ DM Frage für Frage, „Frage x von y“, Abbrechen; Thread-Option. |
-| 6 Status anpassbar | ✅ Status vorhanden; ❌ Statusnamen/-farben **nicht** konfigurierbar. ✅ **60c** „Zurückgestellt“ (`ON_HOLD`). |
+| 6 Status anpassbar | ✅ **60d** eigene Statusnamen/-farben je Bewerbungsart; ✅ **60c** „Zurückgestellt“ (`ON_HOLD`). |
 | 7 Prüf-Nachricht | ✅ Annehmen, Ablehnen, Übernehmen, Ansehen, Verlauf, Dashboard-Link, **Zurückstellen/Fortsetzen (60c)**; ❌ „Ticket öffnen“ als Knopf. |
 | 8–10 Annehmen/Ablehnen (mit Grund) | ✅ Bestätigung, Gründe, DM, Rollen, Archiv. **Neu (60a):** getrennte Rechte `…accept_reason` / `…deny_reason` (siehe unten). ❌ Wartezeit nach Ablehnung **getrennt** vom allgemeinen Cooldown. |
 | 11 Historie | ✅ Verlauf je Bewerbung und je Benutzer, Audit-Ereignisse. |
@@ -54,3 +54,10 @@
 - **Verlauf:** `submission.on_hold` / `submission.resumed` (mit Grund).
 - **Tests:** Zustandsautomat (2), Bot (Rechte, Umschalter, Knopfbeschriftung, Entscheidung aus „zurückgestellt“, fremd zugewiesen), Browser `e2e/teamchance.spec.ts`.
 - **Grenze:** Keine DM an den Bewerber beim Zurückstellen (gehört zu den konfigurierbaren Benachrichtigungen, Punkt 18).
+
+## 60d – Eigene Statusnamen und Farben (Punkt 6)
+- `Application.config.statusLabels` (je Status optional `label` bis 40 Zeichen, `color` als #RRGGBB; unbekannte Status werden abgewiesen). Dashboard: Bewerbungsart → „Statusnamen und Farben“ (leer = Standard, „Standard“ setzt die Farbe zurück).
+- Wirkt in der **Discord-Prüf-Nachricht** (Text und Embed-Farbe, auch nach Statuswechseln), im Bot-Hinweis **„Du hast bereits eine offene Bewerbung“** und im **Dashboard** (Liste, Detail, Bewerbungshistorie des Benutzers).
+- `statusLabelsOf`/`statusDisplay` in `@nexus/automation` lesen die Konfiguration tolerant (ungültige Einträge = Standard).
+- **Tests:** `packages/automation/test/status-labels.test.ts` (4), Bot (Prüf-Nachricht vor/nach Zurückstellen, Hinweis „offene Bewerbung“), Browser `e2e/teamchance.spec.ts` (Name setzen, in Detail und Liste sichtbar).
+- **Grenze:** Die frei formulierbaren DM-Texte (Annahme/Ablehnung) nennen den Status nicht automatisch; interne Fehlermeldungen („bereits abgeschlossen (…)“) nutzen weiterhin die Standardnamen.

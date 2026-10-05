@@ -3,6 +3,7 @@ import { ApplicationStatus, ResubmissionMode, SubmissionStatus } from '@nexus/ty
 import type { Question } from '@nexus/types';
 import { prisma, getActiveCooldown } from '@nexus/database';
 import { checkCooldown, checkRoleRequirements } from '@nexus/core';
+import { statusLabelsOf } from '@nexus/automation';
 import { config } from '../config.js';
 import { log } from '../logger.js';
 
@@ -43,9 +44,9 @@ async function openMessage(guildId: string, userId: string, applicationId?: stri
   const open = await prisma.applicationSubmission.findFirst({
     where: { guildId, userId, ...(applicationId ? { applicationId } : {}), isTest: false, status: { in: [SubmissionStatus.STARTED, SubmissionStatus.IN_PROGRESS, SubmissionStatus.PAUSED, SubmissionStatus.SUBMITTED, SubmissionStatus.UNDER_REVIEW, SubmissionStatus.ON_HOLD] } },
     orderBy: { createdAt: 'desc' },
-    select: { status: true, submissionNumber: true },
+    select: { status: true, submissionNumber: true, application: { select: { config: true } } },
   });
-  const status = open ? (OPEN_STATUS_LABEL[open.status] ?? open.status) : null;
+  const status = open ? (statusLabelsOf(open.application.config)[open.status]?.label ?? OPEN_STATUS_LABEL[open.status] ?? open.status) : null;
   return `⚠️ Du hast bereits eine offene Bewerbung.${status ? `\n\n**Status:** ${status}` : ''}${open?.submissionNumber ? `\n**ID:** #${open.submissionNumber}` : ''}`;
 }
 

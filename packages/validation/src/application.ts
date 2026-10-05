@@ -245,6 +245,17 @@ export const ratingConfigSchema = z.object({
     }),
 });
 
+/** Eigene Statusnamen/-farben je Bewerbungsart (z. B. „🟣 Wird geprüft“); fehlende Einträge = Standard. */
+export const STATUS_LABEL_KEYS = ['STARTED', 'IN_PROGRESS', 'PAUSED', 'SUBMITTED', 'UNDER_REVIEW', 'ON_HOLD', 'ACCEPTED', 'DENIED', 'EXPIRED', 'CANCELLED', 'WITHDRAWN', 'ARCHIVED'] as const;
+export const statusLabelsSchema = z
+  .record(
+    z.enum(STATUS_LABEL_KEYS),
+    z.object({
+      label: z.string().trim().min(1, 'Name fehlt.').max(40).optional(),
+      color: z.string().regex(/^#[0-9a-fA-F]{6}$/, 'Die Farbe muss als #RRGGBB angegeben werden.').optional(),
+    }),
+  );
+
 /** Komplettes Application-Config-Objekt (versioniert, §65). */
 export const applicationConfigSchema = z.object({
   requirements: requirementsSchema,
@@ -255,6 +266,7 @@ export const applicationConfigSchema = z.object({
   advanced: advancedSettingsSchema,
   roleRules: z.array(roleRuleSchema).max(100).default([]),
   rating: ratingConfigSchema.optional(),
+  statusLabels: statusLabelsSchema.optional(),
   questions: z.array(questionSchema).max(500).default([]),
 });
 

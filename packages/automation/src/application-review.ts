@@ -10,6 +10,7 @@ import {
   isFinal,
   reviewMessage,
   STATUS_LABEL,
+  statusLabelsOf,
 } from './review-format.js';
 import { applyRoleChanges } from './role-changes.js';
 
@@ -342,6 +343,7 @@ async function refreshReviewMessage(
         answerCount: Object.keys(answers).length,
         isTest: s.isTest,
         number: s.submissionNumber,
+        statusLabels: statusLabelsOf(s.application.config),
         assigneeId: s.assigneeUserId,
         decision,
         dashboardUrl,
@@ -418,6 +420,7 @@ export async function postSubmissionToReview(
         answerCount: Object.keys(answers).length,
         isTest: s.isTest,
         number: s.submissionNumber,
+        statusLabels: statusLabelsOf(s.application.config),
         assigneeId: s.assigneeUserId,
         pingRoleIds: targets.roleIds,
         dashboardUrl: opts.dashboardUrl,

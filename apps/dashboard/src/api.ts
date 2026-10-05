@@ -346,7 +346,7 @@ export interface SubmissionRow {
   submittedAt: string | null;
   createdAt: string;
   isTest: boolean;
-  application: { id: string; name: string };
+  application: { id: string; name: string; config?: { statusLabels?: StatusLabels } | null };
 }
 export interface StepResult {
   key: string;
@@ -372,7 +372,7 @@ export interface SubmissionDetail extends SubmissionRow {
   application: {
     id: string;
     name: string;
-    config: { review?: { denyReasons?: DenyReason[] } } | null;
+    config: { review?: { denyReasons?: DenyReason[] }; statusLabels?: StatusLabels } | null;
   };
   version: { version: number; questions: { questions?: BuilderQuestion[] } | BuilderQuestion[] };
   answers: { questionId: string; value: unknown }[];
@@ -395,6 +395,16 @@ export const STATUS_TEXT: Record<string, string> = {
   EXPIRED: 'Abgelaufen',
   CANCELLED: 'Abgebrochen',
   ARCHIVED: 'Archiviert',
+};
+/** Eigene Statusnamen/-farben einer Bewerbungsart (Team-Chance). */
+export type StatusLabels = Partial<Record<string, { label?: string; color?: string }>>;
+/** Name eines Status: eigener Name der Bewerbungsart, sonst Standard. */
+export const statusText = (status: string, config?: { statusLabels?: StatusLabels } | null) =>
+  config?.statusLabels?.[status]?.label ?? STATUS_TEXT[status] ?? status;
+/** Eigene Farbe als Inline-Stil (Standardfarben kommen aus dem CSS). */
+export const statusStyle = (status: string, config?: { statusLabels?: StatusLabels } | null) => {
+  const c = config?.statusLabels?.[status]?.color;
+  return c ? { background: c, color: '#fff' } : undefined;
 };
 
 // --- Personal ---------------------------------------------------------------------

@@ -607,5 +607,15 @@ describe('Offene Bewerbung (Phase 54)', () => {
     const review = await startApplication({ guildId: G, applicationId: appId, userId: USER, memberRoleIds: [], username: 'max', displayName: 'Max' });
     expect(review.message).toContain('IN REVIEW');
     expect(review.message).toContain('#POL-00152');
+    // eigener Statusname der Bewerbungsart (Team-Chance)
+    const app = await prisma.application.findUniqueOrThrow({ where: { id: appId } });
+    const config = (app.config ?? {}) as Record<string, unknown>;
+    await prisma.application.update({ where: { id: appId }, data: { config: { ...config, statusLabels: { UNDER_REVIEW: { label: '🟣 Wird geprüft' } } } as never } });
+    try {
+      const own = await startApplication({ guildId: G, applicationId: appId, userId: USER, memberRoleIds: [], username: 'max', displayName: 'Max' });
+      expect(own.message).toContain('🟣 Wird geprüft');
+    } finally {
+      await prisma.application.update({ where: { id: appId }, data: { config: config as never } });
+    }
   });
 });

@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { useState } from 'react';
 import { Link, useParams } from 'react-router';
-import { api, API_URL, STATUS_TEXT, type SubmissionRow } from '../api';
+import { api, API_URL, STATUS_TEXT, statusStyle, statusText, type SubmissionRow } from '../api';
 import { errorText, QueryState } from '../components/QueryState';
 import { useToast } from '../toast';
 
@@ -89,7 +89,7 @@ export function Submissions() {
                       {s.assigneeUserId ? <code>{s.assigneeUserId}</code> : 'noch nicht zugewiesen'}
                     </small>
                   </span>
-                  <span className={`pill s-${s.status}`}>{STATUS_TEXT[s.status] ?? s.status}</span>
+                  <span className={`pill s-${s.status}`} style={statusStyle(s.status, s.application.config)}>{statusText(s.status, s.application.config)}</span>
                 </li>
               ))}
             </ul>

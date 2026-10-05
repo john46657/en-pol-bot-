@@ -1007,3 +1007,23 @@ describe('Zurückstellen / Fortsetzen', () => {
     expect(await status(id)).toBe('SUBMITTED');
   });
 });
+
+describe('Eigene Statusnamen (Team-Chance)', () => {
+  it('Prüf-Nachricht im Discord und Hinweis „offene Bewerbung“ nutzen die Namen der Bewerbungsart', async () => {
+    const app = await prisma.application.findUniqueOrThrow({ where: { id: appId } });
+    const config = (app.config ?? {}) as Record<string, unknown>;
+    await prisma.application.update({ where: { id: appId }, data: { config: { ...config, statusLabels: { SUBMITTED: { label: '📨 Eingegangen', color: '#123456' }, ON_HOLD: { label: '⏸️ Später' } } } as never } });
+    try {
+      const f = fakePort();
+      setReviewPort(f.port as never);
+      const id = await submitted({ f });
+      expect(f.posts[0]!.payload.embeds[0].description).toBe('📨 Eingegangen');
+      expect(f.posts[0]!.payload.embeds[0].color).toBe(0x123456);
+      const hold = interaction('button', cid('review:hold', id), { userId: U.reviewer, roleIds: [ROLE.review] });
+      await handleInteraction(client(), hold);
+      expect(f.edits.at(-1)!.payload.embeds[0].description).toBe('⏸️ Später');
+    } finally {
+      await prisma.application.update({ where: { id: appId }, data: { config: config as never } });
+    }
+  });
+});

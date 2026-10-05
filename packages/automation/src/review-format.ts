@@ -83,6 +83,36 @@ export interface ReviewMessageInput {
   number?: string | null | undefined;
   /** Bearbeiter, der die Bewerbung übernommen hat. */
   assigneeId?: string | null | undefined;
+  /** Eigene Statusnamen/-farben der Bewerbungsart. */
+  statusLabels?: StatusLabels | undefined;
+}
+
+/** Eigene Statusnamen/-farben einer Bewerbungsart (aus `config.statusLabels`). */
+export type StatusLabels = Partial<Record<string, { label?: string | undefined; color?: string | undefined }>>;
+
+/** Liest `config.statusLabels` tolerant (ungültige Einträge werden ignoriert). */
+export function statusLabelsOf(config: unknown): StatusLabels {
+  const raw = (config as { statusLabels?: unknown } | null)?.statusLabels;
+  if (!raw || typeof raw !== 'object') return {};
+  const out: StatusLabels = {};
+  for (const [k, v] of Object.entries(raw as Record<string, unknown>)) {
+    if (!v || typeof v !== 'object') continue;
+    const { label, color } = v as { label?: unknown; color?: unknown };
+    out[k] = {
+      ...(typeof label === 'string' && label.trim() ? { label: label.trim().slice(0, 40) } : {}),
+      ...(typeof color === 'string' && /^#[0-9a-fA-F]{6}$/.test(color) ? { color } : {}),
+    };
+  }
+  return out;
+}
+
+/** Anzeige eines Status: eigener Name/eigene Farbe, sonst Standard. */
+export function statusDisplay(status: string, labels: StatusLabels = {}): { label: string; color: number } {
+  const own = labels[status];
+  return {
+    label: own?.label ?? STATUS_LABEL[status] ?? status,
+    color: own?.color ? parseInt(own.color.slice(1), 16) : (COLOR[status] ?? 0x5865f2),
+  };
 }
 
 const COLOR: Record<string, number> = {
@@ -119,8 +149,8 @@ export function reviewMessage(
   }
   const embed: DiscordEmbed = {
     title: `📋 ${i.number ? `#${i.number} · ` : ''}${cut(i.applicantName, 120)} – ${cut(i.applicationName, 100)}${i.isTest ? ' (TEST)' : ''}`,
-    description: STATUS_LABEL[i.status] ?? i.status,
-    color: COLOR[i.status] ?? 0x5865f2,
+    description: statusDisplay(i.status, i.statusLabels).label,
+    color: statusDisplay(i.status, i.statusLabels).color,
     fields,
     footer: { text: `ID ${i.submissionId}` },
   };

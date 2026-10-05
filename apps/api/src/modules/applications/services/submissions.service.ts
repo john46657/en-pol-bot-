@@ -245,7 +245,7 @@ export class SubmissionsService {
       where: { guildId: assertGuildId(guildId), userId, isTest: false },
       orderBy: { createdAt: 'desc' },
       take: 50,
-      select: { id: true, submissionNumber: true, status: true, submittedAt: true, createdAt: true, deniedAt: true, acceptedAt: true, publicReason: true, application: { select: { name: true } } },
+      select: { id: true, submissionNumber: true, status: true, submittedAt: true, createdAt: true, deniedAt: true, acceptedAt: true, publicReason: true, application: { select: { name: true, config: true } } },
     });
   }
 

@@ -3,7 +3,8 @@ import { useState } from 'react';
 import { Link, useParams } from 'react-router';
 import {
   api,
-  STATUS_TEXT,
+  statusStyle,
+  statusText,
   type DecisionResponse,
   type DenyReason,
   type ReviewOptions,
@@ -45,7 +46,7 @@ export function SubmissionDetail() {
     queryKey: ['submission-user-history', guildId, userId],
     enabled: !!userId,
     queryFn: () =>
-      api<{ id: string; submissionNumber: string | null; status: string; submittedAt: string | null; createdAt: string; publicReason: string | null; application: { name: string } }[]>(
+      api<{ id: string; submissionNumber: string | null; status: string; submittedAt: string | null; createdAt: string; publicReason: string | null; application: { name: string; config?: { statusLabels?: import('../api').StatusLabels } | null } }[]>(
         `/guilds/${guildId}/submissions/by-user/${userId}`,
       ),
   });
@@ -134,7 +135,7 @@ export function SubmissionDetail() {
                 </small>
               </h1>
               <p>
-                <span className={`pill s-${s.status}`}>{STATUS_TEXT[s.status] ?? s.status}</span>{' '}
+                <span className={`pill s-${s.status}`} style={statusStyle(s.status, s.application.config)}>{statusText(s.status, s.application.config)}</span>{' '}
                 {s.isTest && <span className="pill">TEST</span>}{' '}
                 <small className="muted">Discord-ID {s.userId}</small>
               </p>
@@ -315,7 +316,7 @@ export function SubmissionDetail() {
                       <Link to={`/guilds/${guildId}/submissions/${p.id}`}>
                         <strong>{p.submissionNumber ? `#${p.submissionNumber}` : 'Entwurf'}</strong>
                       </Link>{' '}
-                      {p.application.name} · <span className={`pill s-${p.status}`}>{STATUS_TEXT[p.status] ?? p.status}</span>{' '}
+                      {p.application.name} · <span className={`pill s-${p.status}`} style={statusStyle(p.status, p.application.config)}>{statusText(p.status, p.application.config)}</span>{' '}
                       <small className="muted">{new Date(p.submittedAt ?? p.createdAt).toLocaleDateString('de-DE')}</small>
                       {p.id === s.id && <small className="muted"> (diese)</small>}
                     </li>
