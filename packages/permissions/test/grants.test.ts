@@ -269,3 +269,12 @@ describe('Vorlagen und Personalakten (Phase 11)', () => {
     expect(decide(grants('beamter'), 'personnel.view').allowed).toBe(false);
   });
 });
+
+describe('Sammelrechte in der Auswertung', () => {
+  const g = (key: string, effect: 'ALLOW' | 'DENY'): Grant => ({ key, effect, scope: 'SERVER', scopeRef: '', source: { kind: 'role', roleName: 'R' } });
+  it('Sammelrecht erlaubt Einzelrecht, eine Sperre auf das Einzelrecht schlägt es', () => {
+    expect(decide([g('tickets.handle', 'ALLOW')], 'tickets.close').allowed).toBe(true);
+    expect(decide([g('tickets.handle', 'ALLOW'), g('tickets.close', 'DENY')], 'tickets.close').allowed).toBe(false);
+    expect(decide([g('tickets.close', 'ALLOW')], 'tickets.claim').allowed).toBe(false);
+  });
+});

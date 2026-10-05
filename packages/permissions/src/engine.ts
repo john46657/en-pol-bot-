@@ -1,5 +1,5 @@
 import type { Permission, PermissionSet } from '@nexus/types';
-import { PERMISSIONS } from '@nexus/types';
+import { PERMISSIONS, PERMISSION_IMPLIED_BY } from '@nexus/types';
 
 /**
  * Zentrale Permission-Engine (reine Logik, ohne I/O).
@@ -28,7 +28,11 @@ export function resolvePermissions(
 
 /** Besitzt das Set die Permission – direkt oder über `<modul>.manage`? */
 export function hasPermission(set: PermissionSet, required: Permission): boolean {
-  return set.has(required) || set.has(`${moduleOf(required)}.manage` as Permission);
+  return (
+    set.has(required) ||
+    set.has(`${moduleOf(required)}.manage` as Permission) ||
+    (PERMISSION_IMPLIED_BY[required] ?? []).some((k) => set.has(k as Permission))
+  );
 }
 
 export function hasAllPermissions(set: PermissionSet, required: readonly Permission[]): boolean {

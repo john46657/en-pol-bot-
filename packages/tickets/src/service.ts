@@ -356,20 +356,25 @@ export interface Actor {
   manage: boolean;
   /** `tickets.handle` */
   handle: boolean;
+  /** Einzelrechte; fehlt ein Eintrag, gilt `handle` (ältere Aufrufer). */
+  rights?: Partial<Record<TicketRight, boolean>>;
 }
+
+export type TicketRight = 'claim' | 'priority' | 'members' | 'close';
 
 type WithCat = { category: { staffRoleIds: string[] } };
 
 /** Darf der Handelnde dieses Ticket bearbeiten (Bearbeiter-Rolle der Kategorie oder Verwaltung)? */
-export function isStaff(t: WithCat, a: Actor): boolean {
-  return a.manage || (a.handle && (t.category.staffRoleIds.length === 0 || t.category.staffRoleIds.some((r) => a.roleIds.includes(r))));
+export function isStaff(t: WithCat, a: Actor, right?: TicketRight): boolean {
+  const may = right ? (a.rights?.[right] ?? a.handle) : a.handle;
+  return a.manage || (may && (t.category.staffRoleIds.length === 0 || t.category.staffRoleIds.some((r) => a.roleIds.includes(r))));
 }
 
 /** Admin-Rollen des Servers zählen wie Verwaltung (alles in allen Tickets). */
 async function withAdmin(gid: string, a: Actor): Promise<{ actor: Actor; settings: Awaited<ReturnType<typeof getSettings>> }> {
   const settings = await getSettings(gid);
   const admin = settings.adminRoleIds.some((r) => a.roleIds.includes(r));
-  return { settings, actor: admin ? { ...a, manage: true, handle: true } : a };
+  return { settings, actor: admin ? { ...a, manage: true, handle: true, rights: {} } : a };
 }
 
 /** „Nur der Bearbeiter“: bei aktiviertem Claim-Zwang darf nur der Bearbeiter (oder die Verwaltung) ein übernommenes Ticket verändern. */
@@ -389,7 +394,7 @@ export async function claim(guildId: string, id: string, rawActor: Actor, discor
   const { actor, settings } = await withAdmin(gid, rawActor);
   if (!settings.claimEnabled) throw new TicketError('conflict', 'Die Übernahme von Tickets ist auf diesem Server deaktiviert.');
   const t = await openTicketOf(gid, id);
-  if (!isStaff(t, actor)) throw new TicketError('forbidden', 'Nur Bearbeiter dieser Kategorie können Tickets übernehmen.');
+  if (!isStaff(t, actor, 'claim')) throw new TicketError('forbidden', 'Nur Bearbeiter dieser Kategorie können Tickets übernehmen.');
   if (t.claimedBy === actor.userId) throw new TicketError('conflict', 'Du bearbeitest dieses Ticket bereits.');
   if (t.claimedBy && !actor.manage) throw new TicketError('conflict', `Das Ticket wird bereits von <@${t.claimedBy}> bearbeitet.`);
   const r = await prisma.ticket.updateMany({ where: { id, status: { not: 'CLOSED' }, claimedBy: t.claimedBy }, data: { status: 'IN_PROGRESS', claimedBy: actor.userId, claimedAt: now } });
@@ -422,7 +427,7 @@ export async function setWaiting(guildId: string, id: string, waiting: boolean, 
   const gid = assertGuildId(guildId);
   const { actor, settings } = await withAdmin(gid, rawActor);
   const t = await openTicketOf(gid, id);
-  if (!isStaff(t, actor)) throw new TicketError('forbidden', 'Nur Bearbeiter können den Status ändern.');
+  if (!isStaff(t, actor, 'claim')) throw new TicketError('forbidden', 'Nur Bearbeiter können den Status ändern.');
   assertExclusive(t, actor, settings);
   if (waiting && t.status === 'WAITING') throw new TicketError('conflict', 'Das Ticket wartet bereits auf Rückmeldung.');
   if (!waiting && t.status !== 'WAITING') throw new TicketError('conflict', 'Das Ticket wartet nicht auf Rückmeldung.');
@@ -442,7 +447,7 @@ export async function setPriority(guildId: string, id: string, priority: string,
   if (!(PRIORITIES as readonly string[]).includes(priority)) throw new TicketError('invalid', 'Unbekannte Priorität.');
   const { actor, settings } = await withAdmin(gid, rawActor);
   const t = await openTicketOf(gid, id);
-  if (!isStaff(t, actor)) throw new TicketError('forbidden', 'Nur Bearbeiter können die Priorität ändern.');
+  if (!isStaff(t, actor, 'priority')) throw new TicketError('forbidden', 'Nur Bearbeiter können die Priorität ändern.');
   assertExclusive(t, actor, settings);
   if (t.priority === priority) return t;
   await prisma.ticket.update({ where: { id }, data: { priority } });
@@ -456,8 +461,8 @@ export async function setParticipant(guildId: string, id: string, userId: string
   if (!ID.test(userId)) throw new TicketError('invalid', 'Ungültige Discord-ID.');
   const { actor, settings } = await withAdmin(gid, rawActor);
   const t = await openTicketOf(gid, id);
-  if (!isStaff(t, actor) && t.userId !== actor.userId) throw new TicketError('forbidden', 'Nur der Ersteller oder Bearbeiter kann Mitglieder hinzufügen.');
-  if (isStaff(t, actor)) assertExclusive(t, actor, settings);
+  if (!isStaff(t, actor, 'members') && t.userId !== actor.userId) throw new TicketError('forbidden', 'Nur der Ersteller oder Bearbeiter kann Mitglieder hinzufügen.');
+  if (isStaff(t, actor, 'members')) assertExclusive(t, actor, settings);
   if (userId === t.userId) throw new TicketError('invalid', 'Der Ersteller hat immer Zugriff.');
   const has = t.participantIds.includes(userId);
   if (add === has) throw new TicketError('conflict', add ? 'Das Mitglied ist schon im Ticket.' : 'Das Mitglied ist nicht im Ticket.');
@@ -516,7 +521,7 @@ export async function closeTicket(
   const { actor, settings } = await withAdmin(gid, rawActor);
   const t = await openTicketOf(gid, id);
   const isCreator = t.userId === actor.userId;
-  if (!isStaff(t, actor) && !isCreator) throw new TicketError('forbidden', 'Nur der Ersteller oder ein Bearbeiter kann das Ticket schließen.');
+  if (!isStaff(t, actor, 'close') && !isCreator) throw new TicketError('forbidden', 'Nur der Ersteller oder ein Bearbeiter kann das Ticket schließen.');
   if (!isCreator) assertExclusive(t, actor, settings);
   const why = reason?.trim() || null;
   if (!why || why.length < 3) throw new TicketError('invalid', 'Bitte einen Schließungsgrund angeben (z. B. „Problem gelöst“).');
@@ -548,7 +553,7 @@ export async function closeTicket(
   const r = await prisma.ticket.updateMany({ where: { id, status: { not: 'CLOSED' } }, data: { status: 'CLOSED', closedBy: actor.userId, closedAt: now, closeReason: why, transcript: messages as unknown as Json, transcriptContent: contentAvailable, transcriptHtml: html, deleteAt } });
   if (r.count === 0) throw new TicketError('conflict', 'Das Ticket wurde gerade geschlossen.');
   await event(gid, id, 'closed', actor.userId, { reason: why, messages: messages.length, contentAvailable });
-  await auditRepository.createRaw({ data: { guildId: gid, actorType: 'USER', actorId: actor.userId, action: 'ticket.closed', resourceType: 'Ticket', resourceId: id, before: { number: t.number, status: t.status } as Json, after: { status: 'CLOSED', messages: messages.length } as Json, reason: why, permission: isStaff(t, actor) ? 'tickets.handle' : 'tickets.create', result: 'success' } });
+  await auditRepository.createRaw({ data: { guildId: gid, actorType: 'USER', actorId: actor.userId, action: 'ticket.closed', resourceType: 'Ticket', resourceId: id, before: { number: t.number, status: t.status } as Json, after: { status: 'CLOSED', messages: messages.length } as Json, reason: why, permission: isStaff(t, actor, 'close') ? 'tickets.close' : 'tickets.create', result: 'success' } });
 
   // Ersteller und Beteiligte verlieren den Zugriff, das Team behält ihn
   if (t.channelId && !deleteNow) for (const uid of [t.userId, ...t.participantIds]) await discord.setMemberAccess(t.channelId, uid, false).catch(() => undefined);

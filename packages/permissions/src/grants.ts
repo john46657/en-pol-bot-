@@ -1,5 +1,5 @@
 import type { PermissionEffect, PermissionScope } from '@nexus/types';
-import { PERMISSIONS, permissionLabel } from '@nexus/types';
+import { PERMISSIONS, PERMISSION_IMPLIED_BY, permissionLabel } from '@nexus/types';
 import { moduleOf } from './engine.js';
 
 /**
@@ -44,6 +44,10 @@ const keyMatches = (g: Grant, key: string): { match: boolean; viaManage: boolean
   // Erlaubnisse über `<modul>.manage`; Sperren gelten nur für ihren exakten Schlüssel.
   if (g.effect === 'ALLOW' && g.key === `${moduleOf(key)}.manage` && g.key !== key) {
     return { match: true, viaManage: true };
+  }
+  // Sammelrechte (z. B. `tickets.handle` ⇒ `tickets.close`)
+  if (g.effect === 'ALLOW' && (PERMISSION_IMPLIED_BY[key] ?? []).includes(g.key)) {
+    return { match: true, viaManage: false };
   }
   return { match: false, viaManage: false };
 };

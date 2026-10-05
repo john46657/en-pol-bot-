@@ -81,3 +81,17 @@ describe('Engine', () => {
     expect(isValidPermission('')).toBe(false);
   });
 });
+
+describe('Sammelrechte (tickets.handle ⇒ Einzelrechte)', () => {
+  const set = (...p: string[]) => new Set(p) as ReadonlySet<Permission> as never;
+  it('tickets.handle schließt Einzelrechte ein, ein Einzelrecht nicht das Sammelrecht', () => {
+    expect(hasPermission(set('tickets.handle'), 'tickets.close' as Permission)).toBe(true);
+    expect(hasPermission(set('tickets.close'), 'tickets.close' as Permission)).toBe(true);
+    expect(hasPermission(set('tickets.close'), 'tickets.claim' as Permission)).toBe(false);
+    expect(hasPermission(set('tickets.close'), 'tickets.handle' as Permission)).toBe(false);
+  });
+  it('tickets.view genügt für Transkripte, aber nicht zum Schließen', () => {
+    expect(hasPermission(set('tickets.view'), 'tickets.transcript.view' as Permission)).toBe(true);
+    expect(hasPermission(set('tickets.view'), 'tickets.close' as Permission)).toBe(false);
+  });
+});

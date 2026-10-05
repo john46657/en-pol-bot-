@@ -24,7 +24,7 @@ export class TicketsController {
     return restTicketDiscord(this.config.get<string>('DISCORD_TOKEN') ?? '');
   }
   private async actor(a: RequestAccess, user: RequestUser): Promise<Actor> {
-    return { userId: user.id, roleIds: a.roleIds, manage: a.bypass || (await permissions.can(a, 'tickets.manage')), handle: a.bypass || (await permissions.can(a, 'tickets.handle')) };
+    return { userId: user.id, roleIds: a.roleIds, manage: a.bypass || (await permissions.can(a, 'tickets.manage')), handle: a.bypass || (await permissions.can(a, 'tickets.handle')), rights: { claim: a.bypass || (await permissions.can(a, 'tickets.claim')), priority: a.bypass || (await permissions.can(a, 'tickets.priority.edit')), members: a.bypass || (await permissions.can(a, 'tickets.members.manage')), close: a.bypass || (await permissions.can(a, 'tickets.close')) } };
   }
 
   @Get()
@@ -47,7 +47,7 @@ export class TicketsController {
   }
 
   @Put('settings')
-  @RequirePermissions('tickets.manage')
+  @RequirePermissions('tickets.settings.manage')
   saveSettings(@GuildId() guildId: string, @Body() b: Body_, @CurrentUser() user: RequestUser) {
     return saveSettings(guildId, b, user.id);
   }
@@ -61,7 +61,7 @@ export class TicketsController {
 
   /** Panel im konfigurierten (oder angegebenen) Kanal veröffentlichen. */
   @Post('panel')
-  @RequirePermissions('tickets.manage')
+  @RequirePermissions('tickets.settings.manage')
   async panel(@GuildId() guildId: string, @Body() b: Body_) {
     const channelId = str(b['channelId']) ?? (await getSettings(guildId)).panelChannelId;
     if (!channelId || !/^\d{5,25}$/.test(channelId)) throw new TicketError('invalid', 'Bitte zuerst einen Panel-Kanal wählen.');
@@ -75,14 +75,14 @@ export class TicketsController {
   }
 
   @Put('categories')
-  @RequirePermissions('tickets.manage')
+  @RequirePermissions('tickets.categories.manage')
   saveCategory(@GuildId() guildId: string, @Body() b: Body_, @CurrentUser() user: RequestUser) {
     const roles = b['staffRoleIds'];
     return saveCategory(guildId, { id: str(b['id']), name: str(b['name']) ?? '', description: str(b['description']), emoji: str(b['emoji']), discordCategoryId: str(b['discordCategoryId']), staffRoleIds: Array.isArray(roles) ? roles.filter((r): r is string => typeof r === 'string') : undefined, defaultPriority: str(b['defaultPriority']), maxOpenPerUser: typeof b['maxOpenPerUser'] === 'number' ? b['maxOpenPerUser'] : undefined, active: typeof b['active'] === 'boolean' ? b['active'] : undefined, color: typeof b['color'] === 'number' ? b['color'] : b['color'] === null ? null : undefined, maxOpenTotal: typeof b['maxOpenTotal'] === 'number' ? b['maxOpenTotal'] : undefined, requiredRoleIds: Array.isArray(b['requiredRoleIds']) ? b['requiredRoleIds'].filter((r): r is string => typeof r === 'string') : undefined, nameTemplate: typeof b['nameTemplate'] === 'string' ? b['nameTemplate'] : b['nameTemplate'] === null ? null : undefined, formFields: Array.isArray(b['formFields']) ? (b['formFields'] as never) : b['formFields'] === null ? null : undefined, transcriptEnabled: typeof b['transcriptEnabled'] === 'boolean' ? b['transcriptEnabled'] : b['transcriptEnabled'] === null ? null : undefined }, user.id);
   }
 
   @Delete('categories/:id')
-  @RequirePermissions('tickets.manage')
+  @RequirePermissions('tickets.categories.manage')
   async deleteCategory(@GuildId() guildId: string, @Param('id') id: string, @CurrentUser() user: RequestUser) {
     await deleteCategory(guildId, id, user.id);
     return { ok: true };
@@ -90,7 +90,7 @@ export class TicketsController {
 
   /** Gespeichertes HTML-Transcript als Download (nie inline: Inhalte stammen von Nutzern). */
   @Get(':id/transcript.html')
-  @RequirePermissions('tickets.view')
+  @RequirePermissions('tickets.transcript.view')
   async transcript(@GuildId() guildId: string, @Param('id') id: string, @Res() res: Response) {
     const t = await getTicket(guildId, id);
     if (!t.transcriptHtml) throw new TicketError('not-found', 'Für dieses Ticket gibt es kein HTML-Transcript.');
@@ -114,37 +114,37 @@ export class TicketsController {
   }
 
   @Post(':id/claim')
-  @RequirePermissions('tickets.handle')
+  @RequirePermissions('tickets.claim')
   async claim(@GuildId() guildId: string, @Param('id') id: string, @Access() access: RequestAccess, @CurrentUser() user: RequestUser) {
     return claim(guildId, id, await this.actor(access, user), this.discord());
   }
 
   @Post(':id/release')
-  @RequirePermissions('tickets.handle')
+  @RequirePermissions('tickets.claim')
   async release(@GuildId() guildId: string, @Param('id') id: string, @Access() access: RequestAccess, @CurrentUser() user: RequestUser) {
     return release(guildId, id, await this.actor(access, user), this.discord());
   }
 
   @Post(':id/waiting')
-  @RequirePermissions('tickets.handle')
+  @RequirePermissions('tickets.claim')
   async waiting(@GuildId() guildId: string, @Param('id') id: string, @Body() b: Body_, @Access() access: RequestAccess, @CurrentUser() user: RequestUser) {
     return setWaiting(guildId, id, b['waiting'] !== false, await this.actor(access, user), this.discord());
   }
 
   @Post(':id/priority')
-  @RequirePermissions('tickets.handle')
+  @RequirePermissions('tickets.priority.edit')
   async priority(@GuildId() guildId: string, @Param('id') id: string, @Body() b: Body_, @Access() access: RequestAccess, @CurrentUser() user: RequestUser) {
     return setPriority(guildId, id, str(b['priority']) ?? '', await this.actor(access, user));
   }
 
   @Post(':id/participants')
-  @RequirePermissions('tickets.handle')
+  @RequirePermissions('tickets.members.manage')
   async participant(@GuildId() guildId: string, @Param('id') id: string, @Body() b: Body_, @Access() access: RequestAccess, @CurrentUser() user: RequestUser) {
     return setParticipant(guildId, id, str(b['userId']) ?? '', b['add'] !== false, await this.actor(access, user), this.discord());
   }
 
   @Post(':id/close')
-  @RequirePermissions('tickets.handle')
+  @RequirePermissions('tickets.close')
   async close(@GuildId() guildId: string, @Param('id') id: string, @Body() b: Body_, @Access() access: RequestAccess, @CurrentUser() user: RequestUser) {
     return closeTicket(guildId, id, str(b['reason']), await this.actor(access, user), this.discord());
   }

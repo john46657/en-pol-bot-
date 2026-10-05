@@ -287,6 +287,13 @@ export const PERMISSION_CATALOG = [
       ['tickets.create', 'Tickets eröffnen'],
       ['tickets.view', 'Alle Tickets und das Archiv ansehen'],
       ['tickets.handle', 'Tickets bearbeiten (übernehmen, Priorität, schließen)'],
+      ['tickets.claim', 'Tickets übernehmen, freigeben und Status setzen'],
+      ['tickets.priority.edit', 'Ticket-Priorität ändern'],
+      ['tickets.members.manage', 'Benutzer zu Tickets hinzufügen/entfernen'],
+      ['tickets.close', 'Tickets schließen'],
+      ['tickets.transcript.view', 'Ticket-Transkripte ansehen'],
+      ['tickets.categories.manage', 'Ticket-Kategorien, Fragen und Bearbeiter-Rollen verwalten'],
+      ['tickets.settings.manage', 'Ticket-Einstellungen und Panels verwalten (Limits, Ping, Embeds)'],
       ['tickets.manage', 'Ticket-System verwalten (Kategorien, Panels, jedes Ticket)'],
     ],
   },
@@ -336,6 +343,19 @@ export const PERMISSIONS: readonly Permission[] = PERMISSION_CATALOG.flatMap(
 );
 
 export type PermissionSet = ReadonlySet<Permission>;
+
+/**
+ * Sammelrechte: Ein Recht, das einzelne feinere Rechte einschließt (zusätzlich zu `<modul>.manage`). So bleiben
+ * bestehende Zuordnungen (`tickets.handle`, `tickets.view`) gültig, während sich Einzelrechte getrennt vergeben lassen.
+ * Schlüssel = feines Recht, Wert = Rechte, die es einschließen. Sperren gelten nur für ihren exakten Schlüssel.
+ */
+export const PERMISSION_IMPLIED_BY: Readonly<Record<string, readonly string[]>> = {
+  'tickets.claim': ['tickets.handle'],
+  'tickets.priority.edit': ['tickets.handle'],
+  'tickets.members.manage': ['tickets.handle'],
+  'tickets.close': ['tickets.handle'],
+  'tickets.transcript.view': ['tickets.view', 'tickets.handle'],
+};
 
 /** Anzeigename (Beschriftung) eines Schlüssels; unbekannte Schlüssel liefern `undefined`. */
 export function permissionLabel(key: string): string | undefined {

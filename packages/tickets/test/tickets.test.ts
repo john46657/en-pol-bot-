@@ -279,3 +279,16 @@ describe('Fragetypen im Ticket-Formular (Phase 51)', () => {
     expect(fieldPlaceholder(f('date'))).toBe('TT.MM.JJJJ');
   });
 });
+
+describe('Ticket-Einzelrechte (isStaff)', async () => {
+  const { isStaff } = await import('../src/index.js');
+  const t = { category: { staffRoleIds: [] as string[] } };
+  const base = { userId: 'u', roleIds: [] as string[], manage: false, handle: false };
+  it('Einzelrecht gilt nur für die eigene Aktion; ohne rights gilt handle', () => {
+    const a = { ...base, rights: { close: true } };
+    expect(isStaff(t, a, 'close')).toBe(true);
+    expect(isStaff(t, a, 'claim')).toBe(false);
+    expect(isStaff(t, { ...base, handle: true }, 'priority')).toBe(true);
+    expect(isStaff(t, { ...base, manage: true }, 'members')).toBe(true);
+  });
+});

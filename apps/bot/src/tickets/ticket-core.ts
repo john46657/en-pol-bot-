@@ -10,7 +10,7 @@ export const setTicketDiscordForTests = (d: TicketDiscord | null) => void (overr
 export const ticketDiscord = (): TicketDiscord => override ?? restTicketDiscord(config.discord.token);
 
 export async function actorOf(member: GuildMember): Promise<Actor> {
-  return { userId: member.id, roleIds: [...member.roles.cache.keys()], manage: await memberCan(member, 'tickets.manage'), handle: await memberCan(member, 'tickets.handle') };
+  return { userId: member.id, roleIds: [...member.roles.cache.keys()], manage: await memberCan(member, 'tickets.manage'), handle: await memberCan(member, 'tickets.handle'), rights: { claim: await memberCan(member, 'tickets.claim'), priority: await memberCan(member, 'tickets.priority.edit'), members: await memberCan(member, 'tickets.members.manage'), close: await memberCan(member, 'tickets.close') } };
 }
 
 export const ephemeral = MessageFlags.Ephemeral;
