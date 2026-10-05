@@ -1067,6 +1067,11 @@ model PermissionProfile {
   entries     Json
   /// Vorlage, aus der das Profil erzeugt wurde (nur Herkunft, keine Kopplung).
   templateKey String?
+  /// Anzeige: Farbe (#RRGGBB) und Priorität (höher = wichtiger, nur zur Sortierung/Übersicht).
+  color       String?
+  priority    Int      @default(0)
+  /// Deaktivierte Profile gelten nirgends, bleiben aber gespeichert und zugeordnet.
+  enabled     Boolean  @default(true)
   createdBy   String?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
@@ -1106,10 +1111,13 @@ model UserPermission {
   note      String?
   createdBy String?
   createdAt DateTime         @default(now())
+  /// Temporäres Recht: gilt nur bis zu diesem Zeitpunkt (null = unbefristet).
+  expiresAt DateTime?
 
   guild Guild @relation(fields: [guildId], references: [id], onDelete: Cascade)
 
   @@unique([guildId, userId, key, effect, scope, scopeRef])
+  @@index([expiresAt])
   @@index([guildId, userId])
   @@map("user_permissions")
 }

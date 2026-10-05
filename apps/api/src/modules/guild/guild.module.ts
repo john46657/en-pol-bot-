@@ -5,6 +5,7 @@ import { SelectionsService } from './selections.service.js';
 import { AccessService } from './access.service.js';
 import { PermissionsAdminService } from './permissions.service.js';
 import { DiscordService } from './discord.service.js';
+import { RightsService } from './rights.service.js';
 
 /**
  * GuildModule: Server-Daten für das Dashboard (Overview/Health, Channels,
@@ -18,6 +19,7 @@ import { DiscordService } from './discord.service.js';
     SelectionsService,
     PermissionsAdminService,
     AccessService,
+    RightsService,
   ],
   exports: [GuildService, DiscordService],
 })

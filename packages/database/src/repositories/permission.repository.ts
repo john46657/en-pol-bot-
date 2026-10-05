@@ -2,6 +2,9 @@ import type { Prisma } from '@prisma/client';
 import { prisma } from '../client.js';
 import { assertGuildId } from '../scoped.js';
 
+/** Nur noch gültige (nicht abgelaufene) benutzerbezogene Rechte. */
+const activeNow = (now = new Date()) => ({ OR: [{ expiresAt: null }, { expiresAt: { gt: now } }] });
+
 export const permissionRepository = {
   /** Ersetzt die Rollen-Zuordnung eines Permission-Keys (nur Rollen derselben Guild). */
   async setRolesForKey(guildId: string, key: string, roleDiscordIds: string[]) {
@@ -146,14 +149,18 @@ export const permissionRepository = {
         },
       }),
       prisma.roleProfile.findMany({
-        where: { guildId: gid, role: { discordId: { in: roleDiscordIds }, deletedAt: null } },
+        where: {
+          guildId: gid,
+          profile: { enabled: true },
+          role: { discordId: { in: roleDiscordIds }, deletedAt: null },
+        },
         select: {
           role: { select: { discordId: true, name: true } },
           profile: { select: { id: true, name: true, entries: true } },
         },
       }),
       userId
-        ? prisma.userPermission.findMany({ where: { guildId: gid, userId } })
+        ? prisma.userPermission.findMany({ where: { guildId: gid, userId, ...activeNow() } })
         : Promise.resolve([]),
     ]);
     const out: GrantRow[] = [];
@@ -207,13 +214,13 @@ export const permissionRepository = {
         },
       }),
       prisma.roleProfile.findMany({
-        where: { guildId: gid, role: { deletedAt: null } },
+        where: { guildId: gid, profile: { enabled: true }, role: { deletedAt: null } },
         select: {
           role: { select: { discordId: true, name: true } },
           profile: { select: { id: true, name: true, entries: true } },
         },
       }),
-      prisma.userPermission.findMany({ where: { guildId: gid } }),
+      prisma.userPermission.findMany({ where: { guildId: gid, ...activeNow() } }),
     ]);
     const byRole = new Map<string, GrantRow[]>();
     const push = (roleId: string, row: GrantRow) =>
@@ -262,7 +269,7 @@ export const permissionRepository = {
   async listProfiles(guildId: string) {
     const rows = await prisma.permissionProfile.findMany({
       where: { guildId: assertGuildId(guildId) },
-      orderBy: { name: 'asc' },
+      orderBy: [{ priority: 'desc' }, { name: 'asc' }],
       include: { roles: { select: { role: { select: { discordId: true, name: true } } } } },
     });
     return rows.map((p) => ({
@@ -270,6 +277,9 @@ export const permissionRepository = {
       name: p.name,
       description: p.description,
       templateKey: p.templateKey,
+      color: p.color,
+      priority: p.priority,
+      enabled: p.enabled,
       entries: readEntries(p.entries),
       roles: p.roles.map((r) => ({ id: r.role.discordId, name: r.role.name })),
     }));
@@ -288,6 +298,9 @@ export const permissionRepository = {
       description?: string | undefined;
       entries: ProfileEntry[];
       templateKey?: string | undefined;
+      color?: string | null | undefined;
+      priority?: number | undefined;
+      enabled?: boolean | undefined;
       createdBy?: string | undefined;
     },
   ) {
@@ -298,6 +311,9 @@ export const permissionRepository = {
         description: data.description ?? null,
         entries: data.entries as unknown as Prisma.InputJsonValue,
         templateKey: data.templateKey ?? null,
+        color: data.color ?? null,
+        priority: data.priority ?? 0,
+        enabled: data.enabled ?? true,
         createdBy: data.createdBy ?? null,
       },
     });
@@ -310,11 +326,17 @@ export const permissionRepository = {
       name?: string | undefined;
       description?: string | null | undefined;
       entries?: ProfileEntry[] | undefined;
+      color?: string | null | undefined;
+      priority?: number | undefined;
+      enabled?: boolean | undefined;
     },
   ) {
     const res = await prisma.permissionProfile.updateMany({
       where: { id: profileId, guildId: assertGuildId(guildId) },
       data: {
+        ...(data.color !== undefined ? { color: data.color } : {}),
+        ...(data.priority !== undefined ? { priority: data.priority } : {}),
+        ...(data.enabled !== undefined ? { enabled: data.enabled } : {}),
         ...(data.name !== undefined ? { name: data.name } : {}),
         ...(data.description !== undefined ? { description: data.description } : {}),
         ...(data.entries !== undefined
@@ -387,7 +409,7 @@ export const permissionRepository = {
 
   async listUserOverrides(guildId: string, userId: string) {
     return prisma.userPermission.findMany({
-      where: { guildId: assertGuildId(guildId), userId },
+      where: { guildId: assertGuildId(guildId), userId, ...activeNow() },
       orderBy: { createdAt: 'asc' },
     });
   },
@@ -402,6 +424,8 @@ export const permissionRepository = {
       scopeRef?: string;
       note?: string | undefined;
       createdBy?: string | undefined;
+      /** Ablaufzeitpunkt (temporäres Recht); ohne Angabe unbefristet. */
+      expiresAt?: Date | null | undefined;
     },
   ) {
     const gid = assertGuildId(guildId);
@@ -415,8 +439,13 @@ export const permissionRepository = {
     };
     return prisma.userPermission.upsert({
       where: { guildId_userId_key_effect_scope_scopeRef: where },
-      create: { ...where, note: data.note ?? null, createdBy: data.createdBy ?? null },
-      update: { note: data.note ?? null },
+      create: {
+        ...where,
+        note: data.note ?? null,
+        createdBy: data.createdBy ?? null,
+        expiresAt: data.expiresAt ?? null,
+      },
+      update: { note: data.note ?? null, expiresAt: data.expiresAt ?? null },
     });
   },
 
@@ -425,6 +454,18 @@ export const permissionRepository = {
       where: { id, guildId: assertGuildId(guildId) },
     });
     return res.count > 0;
+  },
+
+  /**
+   * Abgelaufene temporäre Rechte endgültig entfernen (alle Server oder einer). Gibt die entfernten Einträge zurück,
+   * damit der Aufrufer sie protokollieren kann. Abgelaufene Rechte gelten ohnehin nirgends mehr (`activeNow`).
+   */
+  async purgeExpiredOverrides(now = new Date(), guildId?: string) {
+    const where = { expiresAt: { lte: now }, ...(guildId ? { guildId: assertGuildId(guildId) } : {}) };
+    const rows = await prisma.userPermission.findMany({ where });
+    if (rows.length === 0) return [];
+    await prisma.userPermission.deleteMany({ where: { id: { in: rows.map((r) => r.id) } } });
+    return rows;
   },
 };
 

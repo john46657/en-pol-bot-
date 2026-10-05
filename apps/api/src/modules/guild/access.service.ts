@@ -46,7 +46,17 @@ const profileSchema = z.object({
   name: z.string().trim().min(1, 'Name fehlt.').max(80),
   description: z.string().trim().max(500).optional(),
   entries: z.array(entrySchema).max(400),
+  /** Anzeige-Farbe (#RRGGBB), Priorität (höher = wichtiger) und Aktiv-Schalter – alles optional. */
+  color: z
+    .string()
+    .regex(/^#[0-9a-fA-F]{6}$/, 'Die Farbe muss als #RRGGBB angegeben werden.')
+    .nullable()
+    .optional(),
+  priority: z.number().int().min(-1000).max(1000).optional(),
+  enabled: z.boolean().optional(),
 });
+/** Temporäres Recht: Ablaufzeitpunkt oder Dauer in Tagen (höchstens ein Jahr, nur in der Zukunft). */
+export const MAX_TEMP_DAYS = 365;
 
 const label = new Map<
   string,
@@ -107,6 +117,34 @@ export class AccessService {
           name: data.name,
           description: data.description,
           entries: data.entries as ProfileEntry[],
+          color: data.color ?? null,
+          priority: data.priority ?? 0,
+          enabled: data.enabled ?? true,
+          createdBy: actorId,
+        }),
+      'permissions.profile.create',
+    );
+  }
+
+  /** Profil duplizieren: gleiche Rechte, Name „… (Kopie)“ (bei Bedarf nummeriert), Priorität und Farbe übernommen. */
+  async duplicateProfile(guildId: string, actorId: string, profileId: string) {
+    const source = (await permissionRepository.listProfiles(guildId)).find((p) => p.id === profileId);
+    if (!source) throw new NotFoundException('Profil nicht gefunden.');
+    const taken = new Set((await permissionRepository.listProfiles(guildId)).map((p) => p.name));
+    const base = `${source.name} (Kopie)`.slice(0, 80);
+    let name = base;
+    for (let n = 2; taken.has(name); n++) name = `${base.slice(0, 74)} ${n}`;
+    return this.save(
+      guildId,
+      actorId,
+      () =>
+        permissionRepository.createProfile(guildId, {
+          name,
+          description: source.description ?? undefined,
+          entries: source.entries,
+          color: source.color,
+          priority: source.priority,
+          enabled: source.enabled,
           createdBy: actorId,
         }),
       'permissions.profile.create',
@@ -166,6 +204,9 @@ export class AccessService {
           name: data.name,
           description: data.description ?? null,
           entries: data.entries as ProfileEntry[],
+          ...(data.color !== undefined ? { color: data.color } : {}),
+          ...(data.priority !== undefined ? { priority: data.priority } : {}),
+          ...(data.enabled !== undefined ? { enabled: data.enabled } : {}),
         }),
       'permissions.profile.update',
       before,
@@ -316,6 +357,7 @@ export class AccessService {
         scopeRef: o.scopeRef,
         note: o.note,
         createdAt: o.createdAt,
+        expiresAt: o.expiresAt,
       })),
       recentActions: recent.map((a) => ({
         id: a.id,
@@ -331,8 +373,25 @@ export class AccessService {
   }
 
   async addOverride(guildId: string, actorId: string, userId: string, input: unknown) {
-    const data = parse(entrySchema.and(z.object({ note: z.string().max(200).optional() })), input);
+    const data = parse(
+      entrySchema.and(
+        z.object({
+          note: z.string().max(200).optional(),
+          expiresAt: z.string().datetime().optional(),
+          durationDays: z.number().int().min(1).max(MAX_TEMP_DAYS).optional(),
+        }),
+      ),
+      input,
+    );
     if (!/^\d{5,25}$/.test(userId)) throw new BadRequestException('Ungültige Benutzer-ID.');
+    if (data.expiresAt && data.durationDays) throw new BadRequestException('Entweder ein Ablaufdatum oder eine Dauer angeben.');
+    const expiresAt = data.durationDays
+      ? new Date(Date.now() + data.durationDays * 86_400_000)
+      : data.expiresAt
+        ? new Date(data.expiresAt)
+        : null;
+    if (expiresAt && (expiresAt.getTime() <= Date.now() || expiresAt.getTime() > Date.now() + MAX_TEMP_DAYS * 86_400_000))
+      throw new BadRequestException(`Das Ablaufdatum muss in der Zukunft und höchstens ${MAX_TEMP_DAYS} Tage entfernt liegen.`);
     const row = await permissionRepository.addUserOverride(guildId, {
       userId,
       key: data.key,
@@ -341,6 +400,7 @@ export class AccessService {
       scopeRef: data.scopeRef,
       note: data.note,
       createdBy: actorId,
+      expiresAt,
     });
     await this.audit(guildId, actorId, 'permissions.user.override.add', userId, undefined, {
       key: data.key,
@@ -348,6 +408,7 @@ export class AccessService {
       scope: data.scope,
       scopeRef: data.scopeRef,
       note: data.note,
+      expiresAt: expiresAt?.toISOString() ?? null,
     });
     return row;
   }

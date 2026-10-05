@@ -10,6 +10,7 @@ import {
   Query,
 } from '@nestjs/common';
 import { auditRepository } from '@nexus/database';
+import { resolveTemplate } from '@nexus/types';
 import {
   RequireDashboardAccess,
   RequireGuildAdmin,
@@ -25,6 +26,8 @@ import { SelectionsService } from './selections.service.js';
 import { SetSelectionDto } from './selections.dto.js';
 import type { ChannelKind } from './bot-access.js';
 import { GuildService } from './guild.service.js';
+import { RightsService } from './rights.service.js';
+import { Access, type RequestAccess } from '../../common/decorators/scope.decorator.js';
 import { DiscordService } from './discord.service.js';
 
 /**
@@ -43,6 +46,7 @@ export class GuildController {
     private readonly selections: SelectionsService,
     private readonly permissionsAdmin: PermissionsAdminService,
     private readonly access: AccessService,
+    private readonly rights: RightsService,
   ) {}
 
   /** Server-Overview + Configuration Health (§4/§36). */
@@ -98,26 +102,28 @@ export class GuildController {
 
   /** Rolle → Permission-Zuordnung (nur Server-Verwalter). */
   @Get('permissions')
-  @RequireGuildAdmin()
+  @RequirePermissions('permissions.view')
   permissionsOverview(@GuildId() guildId: string) {
     return this.permissionsAdmin.overview(guildId);
   }
 
   @Put('permissions/:roleId')
-  @RequireGuildAdmin()
-  setRolePermissions(
+  @RequirePermissions('permissions.edit')
+  async setRolePermissions(
     @GuildId() guildId: string,
     @Param('roleId') roleId: string,
     @Body() body: SetRolePermissionsDto,
+    @Access() access: RequestAccess,
     @CurrentUser() user?: RequestUser,
   ) {
     if (!/^\d{5,25}$/.test(roleId)) throw new BadRequestException('Ungültige Rollen-ID.');
+    await this.rights.forSetRole(guildId, access, roleId, body);
     return this.permissionsAdmin.setForRole(guildId, user?.id ?? 'unknown', roleId, body);
   }
 
   /** Audit-Log des Servers, neueste zuerst, seitenweise (`cursor` = ID des letzten Eintrags). Nur Server-Verwalter. */
   @Get('audit')
-  @RequireGuildAdmin()
+  @RequirePermissions('audit.view')
   async audit(
     @GuildId() guildId: string,
     @Query('action') action?: string,
@@ -137,57 +143,79 @@ export class GuildController {
   // --- Profile & Vorlagen ----------------------------------------------------
 
   @Get('permission-profiles')
-  @RequireGuildAdmin()
+  @RequirePermissions('permissions.view')
   listProfiles(@GuildId() guildId: string) {
     return this.access.listProfiles(guildId);
   }
 
   @Post('permission-profiles')
-  @RequireGuildAdmin()
-  createProfile(
+  @RequirePermissions('permissions.edit')
+  async createProfile(
     @GuildId() guildId: string,
     @Body() body: unknown,
+    @Access() access: RequestAccess,
     @CurrentUser() user?: RequestUser,
   ) {
+    await this.rights.forProfileCreate(guildId, access, allowKeysOf(body));
     return this.access.createProfile(guildId, user?.id ?? 'unknown', body);
   }
 
   /** Legt aus einer Standardvorlage ein frei änderbares Profil an. */
   @Post('permission-profiles/from-template')
-  @RequireGuildAdmin()
-  fromTemplate(
+  @RequirePermissions('permissions.edit')
+  async fromTemplate(
     @GuildId() guildId: string,
     @Body() body: { templateKey?: unknown; name?: unknown },
+    @Access() access: RequestAccess,
     @CurrentUser() user?: RequestUser,
   ) {
+    await this.rights.forProfileCreate(guildId, access, resolveTemplateAllowKeys(body.templateKey));
     return this.access.createFromTemplate(guildId, user?.id ?? 'unknown', body);
   }
 
+  /** Profil duplizieren („Kopie von …“): gleiche Rechte, eigener Name, standardmäßig aktiv. */
+  @Post('permission-profiles/:profileId/duplicate')
+  @RequirePermissions('permissions.edit')
+  async duplicateProfile(
+    @GuildId() guildId: string,
+    @Param('profileId') profileId: string,
+    @Access() access: RequestAccess,
+    @CurrentUser() user?: RequestUser,
+  ) {
+    const source = (await this.access.listProfiles(guildId)).find((p) => p.id === profileId);
+    await this.rights.forProfileCreate(guildId, access, source ? source.entries.filter((e) => e.effect === 'ALLOW').map((e) => e.key) : []);
+    return this.access.duplicateProfile(guildId, user?.id ?? 'unknown', profileId);
+  }
+
   @Put('permission-profiles/:profileId')
-  @RequireGuildAdmin()
-  updateProfile(
+  @RequirePermissions('permissions.edit')
+  async updateProfile(
     @GuildId() guildId: string,
     @Param('profileId') profileId: string,
     @Body() body: unknown,
+    @Access() access: RequestAccess,
     @CurrentUser() user?: RequestUser,
   ) {
+    await this.rights.forProfileChange(guildId, access, profileId, allowKeysOf(body));
     return this.access.updateProfile(guildId, user?.id ?? 'unknown', profileId, body);
   }
 
   @Delete('permission-profiles/:profileId')
-  @RequireGuildAdmin()
-  deleteProfile(
+  @RequirePermissions('permissions.edit')
+  async deleteProfile(
     @GuildId() guildId: string,
     @Param('profileId') profileId: string,
+    @Access() access: RequestAccess,
     @CurrentUser() user?: RequestUser,
   ) {
+    await this.rights.forProfileChange(guildId, access, profileId);
     return this.access.deleteProfile(guildId, user?.id ?? 'unknown', profileId);
   }
 
   // --- Benutzer-Übersicht ----------------------------------------------------
 
   @Get('members')
-  @RequireGuildAdmin()
+  @RequirePermissions('permissions.view')
   listMembers(
     @GuildId() guildId: string,
     @Query('query') query?: string,
@@ -201,30 +229,47 @@ export class GuildController {
   }
 
   @Get('members/:userId/access')
-  @RequireGuildAdmin()
+  @RequirePermissions('permissions.view')
   memberAccess(@GuildId() guildId: string, @Param('userId') userId: string) {
     return this.access.memberAccess(guildId, userId);
   }
 
   @Post('members/:userId/overrides')
-  @RequireGuildAdmin()
-  addOverride(
+  @RequirePermissions('permissions.edit')
+  async addOverride(
     @GuildId() guildId: string,
     @Param('userId') userId: string,
     @Body() body: unknown,
+    @Access() access: RequestAccess,
     @CurrentUser() user?: RequestUser,
   ) {
+    const b = (body ?? {}) as { key?: unknown; effect?: unknown };
+    await this.rights.forOverride(guildId, access, userId, typeof b.key === 'string' && (b.effect === 'ALLOW' || b.effect === 'DENY') ? { key: b.key, effect: b.effect } : undefined);
     return this.access.addOverride(guildId, user?.id ?? 'unknown', userId, body);
   }
 
   @Delete('members/:userId/overrides/:overrideId')
-  @RequireGuildAdmin()
-  removeOverride(
+  @RequirePermissions('permissions.edit')
+  async removeOverride(
     @GuildId() guildId: string,
     @Param('userId') userId: string,
     @Param('overrideId') overrideId: string,
+    @Access() access: RequestAccess,
     @CurrentUser() user?: RequestUser,
   ) {
+    await this.rights.forOverride(guildId, access, userId);
     return this.access.removeOverride(guildId, user?.id ?? 'unknown', userId, overrideId);
   }
+}
+
+/** Erlaubte Schlüssel einer Profil-Eingabe (für die Rechteprüfung; Ungültiges prüft der Dienst selbst). */
+function allowKeysOf(body: unknown): string[] {
+  const entries = (body as { entries?: unknown } | null)?.entries;
+  return Array.isArray(entries)
+    ? entries.flatMap((e: { key?: unknown; effect?: unknown }) => (e && e.effect === 'ALLOW' && typeof e.key === 'string' ? [e.key] : []))
+    : [];
+}
+function resolveTemplateAllowKeys(templateKey: unknown): string[] {
+  const r = typeof templateKey === 'string' ? resolveTemplate(templateKey) : undefined;
+  return r ? r.allow.map((a) => a.key) : [];
 }
