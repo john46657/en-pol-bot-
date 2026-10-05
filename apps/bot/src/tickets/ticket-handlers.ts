@@ -3,6 +3,7 @@ import { prisma } from '@nexus/database';
 import { TicketError, claim, closeTicket, formatNumber, getTicket, loads, openTicket, parseFormFields, fieldPlaceholder, validateAnswer, pingStaff, release, PRIORITY_LABEL, type PRIORITIES } from '@nexus/tickets';
 import { viewSubmission } from '@nexus/automation';
 import { log } from '../logger.js';
+import { moduleOffMessage } from '../core/modules.js';
 import { memberCan, requireMemberPermission } from '../discord/permissions.js';
 import { reviewPort } from '../applications/review-handlers.js';
 import { registerButton, registerModal, registerSelect } from '../core/interaction-registry.js';
@@ -41,6 +42,8 @@ const namesFor = (i: Any, ...ids: (string | null | undefined)[]) => Object.fromE
 async function create(i: StringSelectMenuInteraction | ModalSubmitInteraction, categoryId: string, answers?: { label: string; value: string }[]): Promise<void> {
   const member = i.member as GuildMember | null;
   if (!i.guild || !member) return;
+  const off = await moduleOffMessage(i.guild.id, 'tickets');
+  if (off) return void (await i.reply({ content: `⛔ ${off}`, flags: E }));
   if (!(await memberCan(member, 'tickets.create'))) return void (await i.reply({ content: '❌ Du darfst keine Tickets eröffnen.', flags: E }));
   if (!i.deferred && !i.replied) await i.deferReply({ flags: E });
   try {
@@ -55,6 +58,8 @@ async function create(i: StringSelectMenuInteraction | ModalSubmitInteraction, c
 export async function openFromModal(i: ModalSubmitInteraction, categoryId: string): Promise<void> {
   const member = i.member as GuildMember | null;
   if (!i.guild || !member) return;
+  const off = await moduleOffMessage(i.guild.id, 'tickets');
+  if (off) return void (await i.reply({ content: `⛔ ${off}`, flags: E }));
   if (!(await memberCan(member, 'tickets.create'))) return void (await i.reply({ content: '❌ Du darfst keine Tickets eröffnen.', flags: E }));
   await i.deferReply({ flags: E });
   try {

@@ -88,6 +88,26 @@ export const guildRepository = {
       return { before, after: value };
     });
   },
+
+  /** Roh gespeicherter Modul-Zustand (`settings.data.modules`); Auswertung über `@nexus/modules`. */
+  async getModuleState(guildId: string): Promise<unknown> {
+    const settings = await this.getSettings(guildId);
+    const data = settings?.data;
+    return data && typeof data === 'object' && !Array.isArray(data) ? (data as { modules?: unknown }).modules ?? null : null;
+  },
+
+  /** Speichert den Modul-Zustand (Transaktion wie bei den Auswahlen); gibt den vorherigen Rohwert zurück. */
+  async setModuleState(guildId: string, state: { disabled: string[]; disabledCommands: string[] }): Promise<{ before: unknown }> {
+    const id = assertGuildId(guildId);
+    return prisma.$transaction(async (tx) => {
+      await tx.$queryRaw`SELECT 1 FROM guild_settings WHERE "guildId" = ${id} FOR UPDATE`;
+      const row = await tx.guildSettings.findUnique({ where: { guildId: id } });
+      const data = (row?.data && typeof row.data === 'object' && !Array.isArray(row.data) ? row.data : {}) as Record<string, unknown>;
+      const next = { ...data, modules: state } as Prisma.InputJsonValue;
+      await tx.guildSettings.upsert({ where: { guildId: id }, create: { guildId: id, data: next }, update: { data: next } });
+      return { before: data['modules'] ?? null };
+    });
+  },
 };
 
 export function readSelections(data: unknown): Record<string, string> {

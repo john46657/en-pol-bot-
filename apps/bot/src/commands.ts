@@ -20,6 +20,7 @@ import { buildPanelEmbed } from './discord/embeds.js';
 import { permissionDeniedMessage } from '@nexus/permissions';
 import { memberCanManage } from './discord/permissions.js';
 import { getCommand, listCommandData } from './commands/registry.js';
+import { commandBlockedMessage } from './core/modules.js';
 import './commands/server.js';
 import './commands/diagnose.js';
 import './commands/health.js';
@@ -128,6 +129,9 @@ export async function handleCommand(interaction: ChatInputCommandInteraction): P
     });
     return;
   }
+  // Module & Befehle (Dashboard): abgeschaltete Module/Befehle verständlich ablehnen
+  const blocked = await commandBlockedMessage(interaction.guild.id, interaction.commandName);
+  if (blocked) return void (await interaction.reply({ content: `⛔ ${blocked}`, flags: MessageFlags.Ephemeral }));
   const mod = getCommand(interaction.commandName);
   if (mod) return mod.execute(interaction);
   if (interaction.commandName === 'nexus') return nexusStatus(interaction);

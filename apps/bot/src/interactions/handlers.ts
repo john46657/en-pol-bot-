@@ -16,6 +16,7 @@ import {
 import { parseCustomId, CustomIdAction, isValidId } from '../discord/custom-ids.js';
 import { log } from '../logger.js';
 import { openApplicationTicket } from '../applications/application-ticket.js';
+import { moduleOffMessage } from '../core/modules.js';
 import { dispatchComponent, dispatchModal, registerSelect } from '../core/interaction-registry.js';
 import { buildCustomId } from '../discord/custom-ids.js';
 import { DMPhase, SubmissionStatus } from '@nexus/types';
@@ -113,6 +114,8 @@ async function startApplicationFromPanel(
   }
   const member = await interaction.guild.members.fetch(interaction.user.id).catch(() => null);
   if (!member) return;
+  const off = await moduleOffMessage(interaction.guild.id, 'applications');
+  if (off) return void (await interaction.reply({ content: `⛔ ${off}`, ephemeral: true }).catch(() => undefined));
 
   const started = await startApplication({
     guildId: interaction.guild.id,

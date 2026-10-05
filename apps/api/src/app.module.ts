@@ -32,6 +32,7 @@ import { DevUserMiddleware } from './common/middleware/dev-user.middleware.js';
 import { AuthMiddleware } from './common/middleware/auth.middleware.js';
 import { JwtAuthGuard } from './common/guards/jwt-auth.guard.js';
 import { PermissionGuard } from './common/guards/permission.guard.js';
+import { ModuleGuard } from './common/guards/module.guard.js';
 
 @Module({
   imports: [
@@ -69,6 +70,7 @@ import { PermissionGuard } from './common/guards/permission.guard.js';
     // Frontend-Permissions sind nur UI.
     { provide: APP_GUARD, useClass: JwtAuthGuard },
     { provide: APP_GUARD, useClass: PermissionGuard },
+    { provide: APP_GUARD, useClass: ModuleGuard },
   ],
 })
 export class AppModule implements NestModule {

@@ -12,8 +12,6 @@
     "test": "vitest run"
   },
   "dependencies": {
-    "@nexus/moderation": "workspace:*",
-    "@nexus/restrictions": "workspace:*",
     "@nestjs/common": "^11.1.5",
     "@nestjs/config": "^4.0.2",
     "@nestjs/core": "^11.1.5",
@@ -32,6 +30,8 @@
     "@nexus/fleet": "workspace:*",
     "@nexus/health": "workspace:*",
     "@nexus/jobs": "workspace:*",
+    "@nexus/moderation": "workspace:*",
+    "@nexus/modules": "workspace:*",
     "@nexus/office": "workspace:*",
     "@nexus/operations": "workspace:*",
     "@nexus/permissions": "workspace:*",
@@ -41,6 +41,7 @@
     "@nexus/radio": "workspace:*",
     "@nexus/realtime": "workspace:*",
     "@nexus/reports": "workspace:*",
+    "@nexus/restrictions": "workspace:*",
     "@nexus/sek": "workspace:*",
     "@nexus/shifts": "workspace:*",
     "@nexus/tickets": "workspace:*",

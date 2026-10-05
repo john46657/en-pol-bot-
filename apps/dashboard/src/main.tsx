@@ -37,6 +37,7 @@ import { Radio } from './pages/Radio';
 import { Shifts } from './pages/Shifts';
 import { ProfileEditor, Profiles } from './pages/Profiles';
 import { NexusRoles } from './pages/NexusRoles';
+import { Modules } from './pages/Modules';
 import { SubmissionDetail } from './pages/SubmissionDetail';
 import { Submissions } from './pages/Submissions';
 import { UserDetail, Users } from './pages/Users';
@@ -101,6 +102,7 @@ createRoot(document.getElementById('root')!).render(
                   <Route path="panels" element={<Panels />} />
                   <Route path="panels/:panelId" element={<PanelEditor />} />
                   <Route path="nexus-roles" element={<NexusRoles />} />
+                  <Route path="modules" element={<Modules />} />
                   <Route path="profiles" element={<Profiles />} />
                   <Route path="profiles/:profileId" element={<ProfileEditor />} />
                   <Route path="users" element={<Users />} />

@@ -9,8 +9,10 @@ import {
   Put,
   Query,
 } from '@nestjs/common';
-import { auditRepository, logForwardRepository } from '@nexus/database';
+import { auditRepository, guildRepository, logForwardRepository } from '@nexus/database';
 import { AREAS } from '@nexus/audit';
+import { CORE_COMMANDS, MODULES, normalizeState } from '@nexus/modules';
+import { forgetModuleState } from '../../common/guards/module.guard.js';
 import { resolveTemplate } from '@nexus/types';
 import {
   RequireDashboardAccess,
@@ -213,6 +215,30 @@ export class GuildController {
   ) {
     await this.rights.forProfileChange(guildId, access, profileId);
     return this.access.deleteProfile(guildId, user?.id ?? 'unknown', profileId);
+  }
+
+  // --- Module & Befehle -------------------------------------------------------
+
+  /** Zustand der Module und Befehle (für Menü und Einstellungen; jeder mit Dashboard-Zugang). */
+  @Get('modules')
+  @RequireDashboardAccess()
+  async modules(@GuildId() guildId: string) {
+    const state = normalizeState(await guildRepository.getModuleState(guildId));
+    return { state, modules: MODULES, coreCommands: CORE_COMMANDS };
+  }
+
+  @Put('modules')
+  @RequirePermissions('modules.manage')
+  async setModules(@GuildId() guildId: string, @Body() body: unknown, @CurrentUser() user?: RequestUser) {
+    const b = (body ?? {}) as { disabled?: unknown; disabledCommands?: unknown };
+    if (!Array.isArray(b.disabled) || !Array.isArray(b.disabledCommands)) throw new BadRequestException('Erwartet: disabled[] und disabledCommands[].');
+    const state = normalizeState(b);
+    if (state.disabled.length !== new Set(b.disabled).size || state.disabledCommands.length !== new Set(b.disabledCommands).size)
+      throw new BadRequestException('Unbekanntes Modul oder unbekannter Befehl (Grundbefehle lassen sich nicht abschalten).');
+    const { before } = await guildRepository.setModuleState(guildId, state);
+    forgetModuleState(guildId);
+    await auditRepository.create({ guildId, actorType: 'USER', actorId: user?.id ?? 'unknown', action: 'config.modules.update', resourceType: 'Modules', resourceId: guildId, permission: 'modules.manage', result: 'success', before: normalizeState(before) as never, after: state as never });
+    return { state };
   }
 
   // --- Log-Weiterleitung (Audit-Log → Discord-Kanäle) -------------------------

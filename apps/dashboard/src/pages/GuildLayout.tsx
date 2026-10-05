@@ -11,6 +11,7 @@ import { assetUrl } from '../design/assetUrl';
 import { BannerBar } from '../design/widgets/BannerBar';
 import { HeaderSearch } from '../design/header/HeaderSearch';
 import { NotificationBell } from '../design/header/NotificationBell';
+import type { ModulesResponse } from './Modules';
 
 type Needs =
   | 'any'
@@ -40,6 +41,7 @@ type Needs =
   | 'reports'
   | 'automation'
   | 'rights'
+  | 'modules'
   | 'audit'
   | 'design';
 /** Was die Seiten vom Rahmen erhalten (Übersicht: Schnellzugriff, Servername, Symbol). */
@@ -81,6 +83,7 @@ export const NAV: { to: string; label: string; icon: string; end?: boolean; need
   { to: 'nexus-roles', label: 'Rollen & Rechte', icon: '🛂', needs: 'rights' },
   { to: 'profiles', label: 'Profile', icon: '🧾', needs: 'rights' },
   { to: 'permissions', label: 'Berechtigungen', icon: '🔐', needs: 'rights' },
+  { to: 'modules', label: 'Module & Befehle', icon: '🔌', needs: 'modules' },
   { to: 'automation', label: 'Automatisierung', icon: '🤖', needs: 'admin' },
   { to: 'logs', label: 'Logs', icon: '📜', needs: 'audit' },
 ];
@@ -142,6 +145,7 @@ const DEFAULT_GROUPS: { id: string; name: string; keys: string[] }[] = [
       'channels',
       'users',
       'nexus-roles',
+      'modules',
       'profiles',
       'permissions',
       'automation',
@@ -185,6 +189,9 @@ export function GuildLayout() {
     queryFn: () => api<GuildOverview>(`/guilds/${guildId}`),
   });
   // Nur Komfort: ausgeblendete Einträge sind serverseitig ohnehin gesperrt.
+  // Abgeschaltete Module (Module & Befehle) aus dem Menü nehmen
+  const modules = useQuery({ queryKey: ['modules', guildId], queryFn: () => api<ModulesResponse>(`/guilds/${guildId}/modules`), retry: false });
+  const navOff = useMemo(() => new Set((modules.data?.modules ?? []).filter((m) => modules.data!.state.disabled.includes(m.key)).flatMap((m) => m.navKeys)), [modules.data]);
   const me = useQuery({
     queryKey: ['my-permissions', guildId],
     queryFn: () =>
@@ -201,6 +208,7 @@ export function GuildLayout() {
     needs === 'any' ||
     (needs === 'view' && me.data.permissions.includes('applications.view')) ||
     (needs === 'rights' && me.data.permissions.includes('permissions.view')) ||
+    (needs === 'modules' && me.data.permissions.includes('modules.view')) ||
     (needs === 'audit' && me.data.permissions.includes('audit.view')) ||
     (needs === 'design' && me.data.permissions.includes('design.view')) ||
     (needs === 'panels' && me.data.permissions.includes('panels.view')) ||
@@ -234,12 +242,12 @@ export function GuildLayout() {
     const resolved = resolveNavigation(navWithPages(cfg.layout.custom), cfg.navigation, {
       isAdmin: me.data?.guildAdmin ?? false,
       roleIds: me.data?.roleIds ?? [],
-      allowed: (key) => (key.startsWith('page-') ? true : allowed(needsByKey.get(key) ?? 'admin')),
+      allowed: (key) => (key.startsWith('page-') ? true : !navOff.has(key) && allowed(needsByKey.get(key) ?? 'admin')),
       pinned: ['design'], // wer das Design bearbeiten darf, kann sich nicht aus dem Menü aussperren
     });
     // Hat der Server keine eigenen Gruppen angelegt, gilt die Standard-Gruppierung
     return cfg.navigation.groups.length === 0 ? groupByDefault(resolved) : resolved;
-  }, [cfg.navigation, cfg.layout.custom, me.data, needsByKey]);
+  }, [cfg.navigation, cfg.layout.custom, me.data, needsByKey, navOff]);
   const pageTitle = sections.flatMap((sec) => sec.items).find((i) => i.key === page)?.title ?? '';
   const discordIcon = g.data && guildIcon(g.data.id, g.data.icon);
   const logo = cfg.general.logo;
