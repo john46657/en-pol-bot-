@@ -23,7 +23,10 @@ test('Teamliste: Menüpunkt, Mitglied mit Zustand sichtbar', async ({ page, cont
     { encoding: 'utf8' },
   );
   await page.goto(`/guilds/${E2E.guildId}`);
-  await page.getByRole('link', { name: 'Team', exact: true }).click();
+  await page
+    .getByRole('complementary', { name: 'Navigation' })
+    .getByRole('link', { name: 'Team', exact: true })
+    .click();
   await expect(page.getByRole('heading', { name: 'Team', exact: true })).toBeVisible();
   const group = page.getByRole('region', { name: 'Ohne Team' });
   await expect(group).toContainText('Lena Listentest');

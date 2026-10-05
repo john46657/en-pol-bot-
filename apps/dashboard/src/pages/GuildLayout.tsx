@@ -3,9 +3,9 @@ import { useEffect, useMemo, useState, type CSSProperties } from 'react';
 import { Link, NavLink, Outlet, useLocation, useParams } from 'react-router';
 import { api, guildIcon, type GuildOverview } from '../api';
 import { HealthBadge } from '../components/HealthBadge';
-import { UserMenu } from '../components/UserMenu';
+import { UserMenu, useLogout } from '../components/UserMenu';
 import { useLive } from '../live';
-import { resolveNavigation } from '@nexus/design/client';
+import { resolveNavigation, type ResolvedItem } from '@nexus/design/client';
 import { DesignBackground, DesignCtx, useDesign } from '../design/useDesign';
 import { assetUrl } from '../design/assetUrl';
 import { BannerBar } from '../design/widgets/BannerBar';
@@ -39,6 +39,12 @@ type Needs =
   | 'reports'
   | 'automation'
   | 'design';
+/** Was die Seiten vom Rahmen erhalten (Übersicht: Schnellzugriff, Servername, Symbol). */
+export interface LayoutContext {
+  nav: ResolvedItem[];
+  serverName: string;
+  icon: string | null | undefined;
+}
 export const NAV: { to: string; label: string; icon: string; end?: boolean; needs: Needs }[] = [
   { to: '', label: 'Übersicht', icon: '🏠', end: true, needs: 'any' },
   { to: 'settings', label: 'Rollen & Kanäle wählen', icon: '⚙️', needs: 'view' },
@@ -87,12 +93,82 @@ export const navWithPages = (custom: readonly { key: string; name: string; icon:
   ...custom.map((c) => ({ key: c.key, label: c.name, icon: c.icon || '📄' })),
 ];
 
-/** Rahmen für alle Server-Seiten: Sidebar (mobil einklappbar), Kopfzeile mit Serverwechsel. */
+/** Standard-Gruppierung des Menüs, solange der Server im Design-Editor keine eigenen Gruppen angelegt hat. */
+const DEFAULT_GROUPS: { id: string; name: string; keys: string[] }[] = [
+  { id: 'start', name: '', keys: ['overview'] },
+  { id: 'apps', name: 'Bewerbungen', keys: ['applications', 'submissions', 'panels'] },
+  {
+    id: 'people',
+    name: 'Personal',
+    keys: [
+      'team',
+      'personnel',
+      'personnel-structure',
+      'promotions',
+      'qualifications',
+      'training',
+      'absences',
+      'shifts',
+    ],
+  },
+  {
+    id: 'ops',
+    name: 'Einsatz',
+    keys: [
+      'duty',
+      'radio',
+      'operations',
+      'danger',
+      'wanted',
+      'fleet',
+      'penalties',
+      'restrictions',
+      'sek',
+    ],
+  },
+  { id: 'service', name: 'Service', keys: ['tickets', 'reports'] },
+  {
+    id: 'admin',
+    name: 'Verwaltung',
+    keys: [
+      'settings',
+      'roles',
+      'channels',
+      'users',
+      'profiles',
+      'permissions',
+      'automation',
+      'logs',
+    ],
+  },
+  { id: 'look', name: 'Darstellung', keys: ['design'] },
+];
+type NavSection = {
+  group: { id: string; name: string; icon?: string } | null;
+  items: ResolvedItem[];
+};
+/** Ungruppiertes Menü → sinnvolle Gruppen (Reihenfolge der Einträge bleibt je Gruppe erhalten); eigene Seiten/Links in „Weitere“. */
+export function groupByDefault(sections: readonly NavSection[]): NavSection[] {
+  const items = sections.flatMap((s) => s.items);
+  const used = new Set<string>();
+  const out: NavSection[] = [];
+  for (const g of DEFAULT_GROUPS) {
+    const mine = g.keys.flatMap((k) => items.filter((i) => i.key === k));
+    mine.forEach((i) => used.add(i.key));
+    if (mine.length) out.push({ group: g.name ? { id: g.id, name: g.name } : null, items: mine });
+  }
+  const rest = items.filter((i) => !used.has(i.key));
+  if (rest.length) out.push({ group: { id: 'more', name: 'Weitere' }, items: rest });
+  return out;
+}
+
+/** Rahmen für alle Server-Seiten: Sidebar (mobil einklappbar), Kopfzeile mit Seitentitel. */
 export function GuildLayout() {
   const { guildId = '' } = useParams();
   const [open, setOpen] = useState(false);
   const { pathname } = useLocation();
   const live = useLive(guildId);
+  const logout = useLogout();
   const { config: cfg } = useDesign(guildId);
   const seg = pathname.split('/');
   const page = seg[3] === 'p' ? `page-${seg[4] ?? ''}` : seg[3] || 'overview'; // Schlüssel für Hintergründe und Banner
@@ -144,18 +220,17 @@ export function GuildLayout() {
       ['shifts.view', 'shifts.manage'].some((k) => me.data.permissions.includes(k))) ||
     (needs === 'structure' && me.data.permissions.includes('personnel.structure.manage'));
   const needsByKey = useMemo(() => new Map(NAV.map((n) => [navKey(n.to), n.needs])), []);
-  const sections = useMemo(
-    () =>
-      resolveNavigation(navWithPages(cfg.layout.custom), cfg.navigation, {
-        isAdmin: me.data?.guildAdmin ?? false,
-        roleIds: me.data?.roleIds ?? [],
-        allowed: (key) =>
-          key.startsWith('page-') ? true : allowed(needsByKey.get(key) ?? 'admin'),
-        pinned: ['design'], // wer das Design bearbeiten darf, kann sich nicht aus dem Menü aussperren
-      }),
-    // eslint-disable-next-line
-    [cfg.navigation, cfg.layout.custom, me.data, needsByKey],
-  );
+  const sections: NavSection[] = useMemo(() => {
+    const resolved = resolveNavigation(navWithPages(cfg.layout.custom), cfg.navigation, {
+      isAdmin: me.data?.guildAdmin ?? false,
+      roleIds: me.data?.roleIds ?? [],
+      allowed: (key) => (key.startsWith('page-') ? true : allowed(needsByKey.get(key) ?? 'admin')),
+      pinned: ['design'], // wer das Design bearbeiten darf, kann sich nicht aus dem Menü aussperren
+    });
+    // Hat der Server keine eigenen Gruppen angelegt, gilt die Standard-Gruppierung
+    return cfg.navigation.groups.length === 0 ? groupByDefault(resolved) : resolved;
+  }, [cfg.navigation, cfg.layout.custom, me.data, needsByKey]);
+  const pageTitle = sections.flatMap((sec) => sec.items).find((i) => i.key === page)?.title ?? '';
   const discordIcon = g.data && guildIcon(g.data.id, g.data.icon);
   const logo = cfg.general.logo;
   const icon =
@@ -183,7 +258,15 @@ export function GuildLayout() {
       <DesignBackground config={cfg} page={page} />
       {cfg.sidebar.enabled && (
         <aside className="sidebar" aria-label="Navigation">
-          <div className="brand">NEXUS</div>
+          <div className="brand">
+            <span className="brand-mark" aria-hidden>
+              N
+            </span>
+            <span className="brand-text">
+              <b>NEXUS</b>
+              <small>{serverName}</small>
+            </span>
+          </div>
           <nav>
             {sections.map((sec) => (
               <div key={sec.group?.id ?? 'loose'} className="nav-section">
@@ -200,7 +283,10 @@ export function GuildLayout() {
                   } as CSSProperties;
                   const body = (
                     <>
-                      <span aria-hidden>{n.icon}</span> {n.title}
+                      <span className="nav-ic" aria-hidden>
+                        {n.icon}
+                      </span>{' '}
+                      <span className="nav-label">{n.title}</span>
                       {n.badge && <span className="nav-badge">{n.badge}</span>}
                     </>
                   );
@@ -229,7 +315,15 @@ export function GuildLayout() {
               </div>
             ))}
           </nav>
-          <HealthBadge />
+          <div className="side-foot">
+            <Link to="/servers">
+              <span aria-hidden>⇄</span> Server wechseln
+            </Link>
+            <button type="button" className="side-link only-sm" onClick={() => void logout()}>
+              <span aria-hidden>⎋</span> Abmelden
+            </button>
+            <HealthBadge />
+          </div>
         </aside>
       )}
       {open && (
@@ -259,7 +353,15 @@ export function GuildLayout() {
                 }}
               />
             )}
-            {cfg.header.showName && <strong>{serverName}</strong>}
+            <span className="crumbs">
+              {cfg.header.showName && <span className="muted hide-sm">{serverName}</span>}
+              {cfg.header.showName && pageTitle && (
+                <span className="sep hide-sm" aria-hidden>
+                  /
+                </span>
+              )}
+              {pageTitle && <strong className="page-title">{pageTitle}</strong>}
+            </span>
             <span
               className={`badge ${live === 'live' ? 'ok' : 'no'}`}
               title={
@@ -272,9 +374,6 @@ export function GuildLayout() {
             >
               {live === 'live' ? '● Live' : live === 'connecting' ? '○ …' : '○ offline'}
             </span>
-            <Link to="/servers" className="muted hide-sm">
-              Server wechseln
-            </Link>
           </span>
           <span className="who">
             {cfg.header.showSearch && (
@@ -305,7 +404,15 @@ export function GuildLayout() {
           ) : (
             <DesignCtx.Provider value={cfg}>
               <BannerBar config={cfg} page={page} guildId={guildId} />
-              <Outlet />
+              <Outlet
+                context={
+                  {
+                    nav: sections.flatMap((sec) => sec.items),
+                    serverName,
+                    icon,
+                  } satisfies LayoutContext
+                }
+              />
             </DesignCtx.Provider>
           )}
         </div>

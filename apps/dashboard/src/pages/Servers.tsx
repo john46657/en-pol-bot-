@@ -6,12 +6,13 @@ import { api, guildIcon, inviteUrl, type GuildSelectionEntry } from '../api';
 function Icon({ g }: { g: GuildSelectionEntry }) {
   const src = guildIcon(g.id, g.icon);
   return src ? (
-    <img className="icon" src={src} alt="" width={40} height={40} />
+    <img className="icon" src={src} alt="" width={56} height={56} />
   ) : (
     <span className="icon fallback">{g.name.slice(0, 1).toUpperCase()}</span>
   );
 }
 
+/** Serverauswahl: nur Server, die der Benutzer verwalten darf. */
 export function Servers() {
   const q = useQuery({
     queryKey: ['guilds'],
@@ -19,16 +20,27 @@ export function Servers() {
   });
   return (
     <>
-      <header className="bar">
-        <strong>NEXUS</strong>
+      <header className="page-top">
+        <span className="brand">
+          <span className="brand-mark" aria-hidden>
+            N
+          </span>
+          <span className="brand-text">
+            <b>NEXUS</b>
+            <small>Management</small>
+          </span>
+        </span>
         <UserMenu />
       </header>
-      <main className="page">
-        <h1>Server auswählen</h1>
-        {q.isLoading && <p className="muted">Lade deine Server …</p>}
+      <main className="page" style={{ maxWidth: 1040 }}>
+        <div className="servers-head">
+          <h1>Server auswählen</h1>
+          <p className="muted">Wähle den Server, den du verwalten möchtest.</p>
+        </div>
+        {q.isLoading && <p className="skeleton">Lade deine Server …</p>}
         {q.error && (
-          <p className="error">
-            {q.error.message}{' '}
+          <p className="alert" role="alert">
+            <span>{q.error.message}</span>
             <button className="btn" onClick={() => void q.refetch()}>
               Erneut versuchen
             </button>
@@ -40,20 +52,21 @@ export function Servers() {
             oder eine NEXUS-Rolle).
           </p>
         )}
-        <ul className="list">
+        <ul className="server-grid">
           {q.data?.map((g) => (
-            <li key={g.id} className="row">
-              <Icon g={g} />
-              <span className="grow">
-                <strong>{g.name}</strong>
-                <br />
-                <small className="muted">
-                  {g.botPresent ? 'Bot ist auf dem Server' : 'Bot noch nicht eingeladen'}
-                </small>
-              </span>
+            <li key={g.id} className="server-card">
+              <div className="server-top">
+                <Icon g={g} />
+                <span style={{ minWidth: 0 }}>
+                  <strong>{g.name}</strong>
+                  <span className={`badge ${g.botPresent ? 'ok' : 'no'}`}>
+                    {g.botPresent ? '● Bot aktiv' : '○ Bot fehlt'}
+                  </span>
+                </span>
+              </div>
               {g.botPresent ? (
                 <Link className="btn primary" to={`/guilds/${g.id}`}>
-                  Öffnen
+                  Dashboard öffnen
                 </Link>
               ) : g.canManage ? (
                 <a className="btn" href={inviteUrl(g.id)}>
