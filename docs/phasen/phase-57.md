@@ -11,7 +11,7 @@
 | 6 Ticket-Kategorien mit eigenen Rollen | Bereits vorhanden (`staffRoleIds` je Kategorie). **Neu (57d):** `tickets.reopen`, `tickets.delete`, `tickets.transcript.delete` (nur ausdrücklich oder über `tickets.manage`, nie aus `tickets.handle`); Dashboard-Buttons und API (`POST :id/reopen`, `DELETE :id`, `DELETE :id/transcript`). Wieder öffnen nur solange der Kanal noch existiert (Standard: 10 Min. nach dem Schließen); Löschen nur geschlossener Tickets, Audit hält Nummer/Betreff/Ersteller fest. Im Bot gibt es dafür (noch) keinen Befehl. |
 | 7 Bewerbungsrechte | Feingranular vorhanden (`applications.submissions.*`, Formulare, Einstellungen). |
 | 8/9 Funk, Büro | Funk hat Rechte. **Neu:** `office.view`/`office.manage` (API und `/buero`; bisherige Rechte `applications.view`/`personnel.view` gelten weiter als Sammelrechte). Büros anlegen/Channels erstellen gibt es nicht – nur den Warteraum. |
-| 11 Dashboard-Rechte | **Neu:** `dashboard.view` (Zugang ohne Schreibrechte; Dashboard-Zugang gilt für jede Berechtigung). Rechte je Seite (`dashboard.roles` …) fehlen. |
+| 11 Dashboard-Rechte | **Neu:** `dashboard.view` (Zugang ohne Schreibrechte; Dashboard-Zugang gilt für jede Berechtigung). **Neu (57f):** Seitenrechte `dashboard.roles/applications/tickets/logs/radio/offices` und `bot.settings` als Sammelrechte, die nur das jeweilige Lese-Recht freischalten (z. B. `dashboard.tickets` ⇒ `tickets.view`, Transkript); Ändern braucht weiter das Modulrecht, eine Sperre auf das Lese-Recht schlägt die Seitenfreigabe. `dashboard.teamchance` fehlt (kein Modul). |
 | 13 Matrix | Vorhanden (PermissionMatrix). |
 | 14/15 Benutzerrechte, temporär | Vorhanden (Phase 56), Ablauf wirkt sofort bei der Auflösung. |
 | 16 Audit | Rechte-Änderungen werden protokolliert. |
@@ -38,3 +38,8 @@
 
 ## Browser-Test (57e)
 `e2e/nexus-roles.spec.ts` (Playwright, Fake-Discord, echte API): Dashboard-Rolle anlegen → Beschreibung/Farbe/Priorität speichern → Mitglied befristet hinzufügen → duplizieren (Kopie deaktiviert) → löschen; Profil mit Farbe/Priorität speichern und duplizieren; Ticket schließen → wieder öffnen → erneut schließen → Transkript und Ticket löschen. Gesamte Suite: 23 Tests grün. Damit sind die Seiten „Rollen & Rechte“, Profile und Tickets praktisch geprüft; nicht geprüft: Rechte-Matrix-Klicks im Rollen-Editor, Benutzerausnahme mit Ablauf in der Oberfläche.
+
+## Seitenrechte (57f)
+- Menü: Verwaltungsseiten (Benutzer, Rollen & Rechte, Profile, Berechtigungen, Logs) waren bisher nur für Discord-Verwalter sichtbar, obwohl die API seit Phase 56 `permissions.view`/`audit.view` genügen lässt – jetzt richtet sich das Menü nach diesen Rechten.
+- Fehlerbehebung: Die Serverauswahl berechnete Rechte ohne Benutzer-ID, Dashboard-Rollen (Mitgliedschaft) und Benutzerausnahmen zählten dort nicht.
+- Tests: `grants.test.ts` (Sammelrechte, Sperre schlägt Freigabe), `e2e/dashboard-rights.spec.ts` (Mitglied mit nur `dashboard.tickets`: Tickets lesen 200, Einstellungen/Schließen/Rechte/Audit 403, Menü zeigt nur Tickets). Suite: 24 Browser-Tests.

@@ -278,3 +278,33 @@ describe('Sammelrechte in der Auswertung', () => {
     expect(decide([g('tickets.close', 'ALLOW')], 'tickets.claim').allowed).toBe(false);
   });
 });
+
+describe('Dashboard-Seitenrechte (nur lesen)', () => {
+  const g = (key: string, effect: 'ALLOW' | 'DENY' = 'ALLOW'): Grant => ({ key, effect, scope: 'SERVER', scopeRef: '', source: { kind: 'role', roleName: 'R' } });
+  it('dashboard.tickets erlaubt Ansehen und Transkript, aber weder Schließen noch Verwalten', () => {
+    const grants = [g('dashboard.tickets')];
+    expect(decide(grants, 'tickets.view').allowed).toBe(true);
+    expect(decide(grants, 'tickets.transcript.view').allowed).toBe(true);
+    for (const k of ['tickets.close', 'tickets.handle', 'tickets.manage', 'tickets.settings.manage', 'tickets.delete']) expect(decide(grants, k).allowed).toBe(false);
+  });
+  it('jede Seite schaltet nur ihr Lese-Recht frei', () => {
+    const pairs: [string, string[], string[]][] = [
+      ['dashboard.applications', ['applications.view', 'applications.submissions.view'], ['applications.submissions.accept', 'applications.edit']],
+      ['dashboard.logs', ['audit.view'], ['audit.export']],
+      ['dashboard.roles', ['permissions.view', 'roles.view'], ['permissions.edit', 'roles.edit']],
+      ['dashboard.radio', ['radio.view'], ['radio.channel.manage']],
+      ['dashboard.offices', ['office.view'], ['office.manage']],
+      ['bot.settings', ['config.view'], ['config.edit']],
+    ];
+    for (const [page, yes, no] of pairs) {
+      for (const k of yes) expect(decide([g(page)], k).allowed, `${page} → ${k}`).toBe(true);
+      for (const k of no) expect(decide([g(page)], k).allowed, `${page} ⇏ ${k}`).toBe(false);
+    }
+  });
+  it('dashboard.view allein erlaubt keine Änderung', () => {
+    for (const k of ['config.edit', 'tickets.close', 'permissions.edit', 'applications.submissions.accept']) expect(decide([g('dashboard.view')], k).allowed).toBe(false);
+  });
+  it('eine Sperre auf das Lese-Recht schlägt die Seitenfreigabe', () => {
+    expect(decide([g('dashboard.tickets'), g('tickets.view', 'DENY')], 'tickets.view').allowed).toBe(false);
+  });
+});

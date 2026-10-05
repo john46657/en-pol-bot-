@@ -73,8 +73,19 @@ export const PERMISSION_CATALOG = [
     label: 'Dashboard',
     permissions: [
       ['dashboard.view', 'Dashboard ansehen (nur lesen, ohne weitere Rechte)'],
+      ['dashboard.roles', 'Seiten „Rollen & Rechte“, Profile und Benutzer ansehen (nur lesen)'],
+      ['dashboard.applications', 'Bewerbungs-Seiten ansehen (nur lesen)'],
+      ['dashboard.tickets', 'Ticket-Seite ansehen (nur lesen)'],
+      ['dashboard.logs', 'Audit-Log ansehen (nur lesen)'],
+      ['dashboard.radio', 'Funk-Seite ansehen (nur lesen)'],
+      ['dashboard.offices', 'Büro-Seite ansehen (nur lesen)'],
       ['dashboard.manage', 'Dashboard konfigurieren', 'DASHBOARD_MANAGE'],
     ],
+  },
+  {
+    module: 'bot',
+    label: 'Bot',
+    permissions: [['bot.settings', 'Bot-Einstellungen ansehen (nur lesen; ändern mit „Serverkonfiguration ändern“)']],
   },
   {
     module: 'office',
@@ -365,12 +376,21 @@ export type PermissionSet = ReadonlySet<Permission>;
  */
 export const PERMISSION_IMPLIED_BY: Readonly<Record<string, readonly string[]>> = {
   // bisher prüften Dashboard und Bot das Büro über Bewerbungs- bzw. Personalrechte
-  'office.view': ['applications.view', 'personnel.view'],
+  'office.view': ['applications.view', 'personnel.view', 'dashboard.offices'],
+  // Seiten-Rechte des Dashboards: nur Ansehen; Ändern braucht weiterhin das Modulrecht
+  'tickets.view': ['dashboard.tickets'],
+  'applications.view': ['dashboard.applications'],
+  'applications.submissions.view': ['dashboard.applications'],
+  'audit.view': ['dashboard.logs'],
+  'radio.view': ['dashboard.radio'],
+  'permissions.view': ['dashboard.roles'],
+  'roles.view': ['dashboard.roles'],
+  'config.view': ['bot.settings'],
   'tickets.claim': ['tickets.handle'],
   'tickets.priority.edit': ['tickets.handle'],
   'tickets.members.manage': ['tickets.handle'],
   'tickets.close': ['tickets.handle'],
-  'tickets.transcript.view': ['tickets.view', 'tickets.handle'],
+  'tickets.transcript.view': ['tickets.view', 'tickets.handle', 'dashboard.tickets'],
 };
 
 /** Anzeigename (Beschriftung) eines Schlüssels; unbekannte Schlüssel liefern `undefined`. */

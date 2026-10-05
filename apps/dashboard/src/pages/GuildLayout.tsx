@@ -38,6 +38,8 @@ type Needs =
   | 'absences'
   | 'reports'
   | 'automation'
+  | 'rights'
+  | 'audit'
   | 'design';
 /** Was die Seiten vom Rahmen erhalten (Übersicht: Schnellzugriff, Servername, Symbol). */
 export interface LayoutContext {
@@ -73,12 +75,12 @@ export const NAV: { to: string; label: string; icon: string; end?: boolean; need
   { to: 'reports', label: 'Berichte', icon: '📊', needs: 'reports' },
   { to: 'design', label: 'Design & Erscheinungsbild', icon: '🎨', needs: 'design' },
   { to: 'panels', label: 'Panels', icon: '🧩', needs: 'panels' },
-  { to: 'users', label: 'Benutzer', icon: '👥', needs: 'admin' },
-  { to: 'nexus-roles', label: 'Rollen & Rechte', icon: '🛂', needs: 'admin' },
-  { to: 'profiles', label: 'Profile', icon: '🧾', needs: 'admin' },
-  { to: 'permissions', label: 'Berechtigungen', icon: '🔐', needs: 'admin' },
+  { to: 'users', label: 'Benutzer', icon: '👥', needs: 'rights' },
+  { to: 'nexus-roles', label: 'Rollen & Rechte', icon: '🛂', needs: 'rights' },
+  { to: 'profiles', label: 'Profile', icon: '🧾', needs: 'rights' },
+  { to: 'permissions', label: 'Berechtigungen', icon: '🔐', needs: 'rights' },
   { to: 'automation', label: 'Automatisierung', icon: '🤖', needs: 'admin' },
-  { to: 'logs', label: 'Logs', icon: '📜', needs: 'admin' },
+  { to: 'logs', label: 'Logs', icon: '📜', needs: 'audit' },
 ];
 
 /** Schlüssel eines Menüpunkts (Übersicht = `overview`) – so heißt er auch in der Design-Konfiguration. */
@@ -195,6 +197,8 @@ export function GuildLayout() {
     me.data.guildAdmin ||
     needs === 'any' ||
     (needs === 'view' && me.data.permissions.includes('applications.view')) ||
+    (needs === 'rights' && me.data.permissions.includes('permissions.view')) ||
+    (needs === 'audit' && me.data.permissions.includes('audit.view')) ||
     (needs === 'design' && me.data.permissions.includes('design.view')) ||
     (needs === 'panels' && me.data.permissions.includes('panels.view')) ||
     (needs === 'submissions' && me.data.permissions.includes('applications.submissions.view')) ||

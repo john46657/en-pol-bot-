@@ -77,7 +77,7 @@ export class GuildService {
         let nexusPermissions: ReadonlySet<Permission> = new Set<Permission>();
         if (known.has(guild.id) && !(isOwner || hasDiscordPerms)) {
           const member = await getGuildMember(this.botToken, guild.id, userId, this.cache);
-          nexusPermissions = await permissions.forRoles(guild.id, member?.roles ?? []);
+          nexusPermissions = await permissions.forRoles(guild.id, member?.roles ?? [], userId);
         }
 
         const canManage = isOwner || hasDiscordPerms || nexusPermissions.has('applications.manage');
