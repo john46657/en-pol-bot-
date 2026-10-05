@@ -419,7 +419,7 @@ describe('Berechtigungen im Bearbeitungs-Panel (serverseitig)', () => {
     // Ablehner darf nicht annehmen
     const a = await viaModal('review:accept_r', id, ...DENY);
     expect(a.click.out.shown).toHaveLength(0);
-    expect(text(a.click)).toContain('Du benötigst: Einreichungen annehmen');
+    expect(text(a.click)).toContain('Du benötigst: Einreichungen mit eigenem Grund annehmen'); // „mit Grund“ ist eine eigene Aktion
     // Annehmer darf nicht ablehnen
     const d = interaction('button', cid('review:deny', id), {
       userId: U.acceptor,
@@ -443,6 +443,20 @@ describe('Berechtigungen im Bearbeitungs-Panel (serverseitig)', () => {
     expect(text(n)).toContain('Du benötigst');
     expect(await status(id)).toBe('SUBMITTED');
     expect(f.dms).toHaveLength(0);
+  });
+
+  it('„mit Grund“ ist eine eigene Aktion: Rolle nur mit „annehmen mit Grund“ darf nicht ohne Grund annehmen', async () => {
+    await permissionRepository.setPermissionsForRole(G, 'r-reason', ['applications.submissions.accept_reason', 'applications.submissions.view'], { name: 'Nur mit Grund' });
+    const f = fakePort();
+    setReviewPort(f.port as never);
+    const id = await submitted();
+    const plain = interaction('button', cid('review:accept', id), { userId: 'u-reason', roleIds: ['r-reason'] });
+    await handleInteraction(client(), plain); // „Annehmen“ ohne Grund
+    expect(text(plain)).toContain('Du benötigst');
+    expect(await status(id)).toBe('SUBMITTED');
+    const withReason = await viaModal('review:accept_r', id, 'u-reason', ['r-reason'], { note: 'Starke Antworten' });
+    expect(withReason.click.out.shown).toHaveLength(1); // Formular öffnet sich
+    expect(await status(id)).toBe('ACCEPTED');
   });
 
   it('Modal-Absenden prüft die Berechtigung erneut (gefälschte Modal-ID eines Unberechtigten wirkt nicht)', async () => {
