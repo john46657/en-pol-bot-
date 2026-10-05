@@ -7,6 +7,7 @@ import { PanelsController } from './controllers/panels.controller.js';
 import { AnalyticsController } from './controllers/analytics.controller.js';
 import { ApplicationsService } from './services/applications.service.js';
 import { SubmissionsService } from './services/submissions.service.js';
+import { RatingsService } from './services/ratings.service.js';
 import { PanelsService } from './services/panels.service.js';
 import { ApplicationAnalyticsService } from './services/analytics.service.js';
 
@@ -22,6 +23,7 @@ import { ApplicationAnalyticsService } from './services/analytics.service.js';
     QuestionsService,
     ApplicationsService,
     SubmissionsService,
+    RatingsService,
     PanelsService,
     ApplicationAnalyticsService,
   ],

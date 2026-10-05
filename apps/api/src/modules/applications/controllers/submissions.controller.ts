@@ -1,4 +1,4 @@
-import { BadRequestException, Body, ForbiddenException, Controller, Get, Param, Post, Query, Res, StreamableFile } from '@nestjs/common';
+import { BadRequestException, Body, ForbiddenException, Controller, Get, Param, Post, Put, Query, Res, StreamableFile } from '@nestjs/common';
 import type { Response } from 'express';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { GuildId } from '../../../common/decorators/guild-id.decorator.js';
@@ -10,6 +10,7 @@ import { Access, type RequestAccess } from '../../../common/decorators/scope.dec
 import { permissions } from '@nexus/permissions';
 import type { Permission } from '@nexus/types';
 import { SubmissionsService } from '../services/submissions.service.js';
+import { RatingsService } from '../services/ratings.service.js';
 import {
   AcceptSubmissionDto,
   ContactApplicantDto,
@@ -26,7 +27,10 @@ import {
 @ApiBearerAuth()
 @Controller('guilds/:guildId/submissions')
 export class SubmissionsController {
-  constructor(private readonly submissions: SubmissionsService) {}
+  constructor(
+    private readonly submissions: SubmissionsService,
+    private readonly ratings: RatingsService,
+  ) {}
 
   private async need(access: RequestAccess, key: Permission): Promise<void> {
     if (!(access.bypass || (await permissions.can(access, key)))) throw new ForbiddenException('Dafür fehlt dir die Berechtigung.');
@@ -72,6 +76,20 @@ export class SubmissionsController {
   @RequirePermissions('applications.submissions.view')
   getById(@GuildId() guildId: string, @Param('submissionId') submissionId: string) {
     return this.submissions.getById(guildId, submissionId);
+  }
+
+  /** Interne Bewertung (nur Team): alle Einzelbewertungen, Mittelwerte; der Bewerber sieht sie nie. */
+  @Get(':submissionId/ratings')
+  @RequirePermissions('applications.ratings.view')
+  getRatings(@GuildId() guildId: string, @Param('submissionId') submissionId: string, @CurrentUser() user: RequestUser) {
+    return this.ratings.get(guildId, submissionId, user.id);
+  }
+
+  /** Eigene Bewertung setzen (`{ "<feld>": 1…max | null }`). */
+  @Put(':submissionId/ratings')
+  @RequirePermissions('applications.ratings.edit')
+  setRatings(@GuildId() guildId: string, @Param('submissionId') submissionId: string, @Body() body: { values?: unknown }, @CurrentUser() user: RequestUser) {
+    return this.ratings.setMine(guildId, submissionId, user.id, body?.values);
   }
 
   /** Accept (§30) – inkl. public/internal Reason für Transparenz. */

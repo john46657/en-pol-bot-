@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { createRequire } from 'node:module';
 
-/** Legt in der E2E-Datenbank `nexus_e2e` eine eingereichte Bewerbung an und gibt deren ID aus (argv: guildId applicationId userId name). */
+/** Legt in der E2E-Datenbank `nexus_e2e` eine eingereichte Bewerbung an und gibt deren ID aus (argv: guildId applicationId userId name [Präfix der Nummer, Standard POL]). */
 const { PrismaClient } = createRequire(`${process.cwd()}/packages/database/package.json`)(
   '@prisma/client',
 );
@@ -9,7 +9,7 @@ const base = /^DATABASE_URL="?([^"\n]*)"?/m.exec(readFileSync('.env', 'utf8'))?.
 const url = new URL(base);
 url.pathname = '/nexus_e2e';
 const prisma = new PrismaClient({ datasourceUrl: url.toString() });
-const [guildId, applicationId, userId, name] = process.argv.slice(2);
+const [guildId, applicationId, userId, name, prefix = 'POL'] = process.argv.slice(2);
 const version =
   (await prisma.applicationVersion.findFirst({ where: { applicationId } })) ??
   (await prisma.applicationVersion.create({
@@ -29,7 +29,7 @@ const mk = (status, number) =>
       submissionNumber: number,
     },
   });
-await mk('DENIED', 'POL-00001');
-const s = await mk('SUBMITTED', 'POL-00002');
+await mk('DENIED', `${prefix}-00001`);
+const s = await mk('SUBMITTED', `${prefix}-00002`);
 process.stdout.write(s.id);
 await prisma.$disconnect();

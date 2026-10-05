@@ -14,7 +14,7 @@
 | 8–10 Annehmen/Ablehnen (mit Grund) | ✅ Bestätigung, Gründe, DM, Rollen, Archiv. **Neu (60a):** getrennte Rechte `…accept_reason` / `…deny_reason` (siehe unten). ❌ Wartezeit nach Ablehnung **getrennt** vom allgemeinen Cooldown. |
 | 11 Historie | ✅ Verlauf je Bewerbung und je Benutzer, Audit-Ereignisse. |
 | 12 Bewerbungs-Ticket | ◐ Option `createTicket` vorhanden; Kategorie/Knöpfe nicht je Bewerbungsart einstellbar. |
-| 13 Bewertungssystem | ❌ nicht vorhanden. |
+| 13 Bewertungssystem | ✅ **60b**: frei definierbare Bewertungsfelder je Bewerbungsart (Name, 2–10 Sterne), jede Person bewertet sich selbst, Mittelwerte je Feld und Gesamt (in %), Rechte `…ratings.view/edit`, Audit `submission.rated`. Nur Dashboard (kein Discord-Knopf). |
 | 14 Mehrere Bearbeiter | ❌ genau ein Bearbeiter (Übernehmen/Freigeben/Zuweisen); Notizen ✅. |
 | 15 Voraussetzungen | ◐ siehe Punkt 2. |
 | 16 Cooldown | ✅ je Bewerbungsart (Tage/Stunden/Minuten). |
@@ -29,3 +29,19 @@
 - **Regel:** Annehmen/Ablehnen **ohne eigenen Text** (Ablehnen mit vorgegebenem Grund) braucht `accept`/`deny`; **mit eigenem Text** `accept_reason`/`deny_reason`. Wer bisher annehmen/ablehnen durfte, darf es weiterhin auch mit Grund (Sammelrecht), umgekehrt nicht: „mit Grund“ allein erlaubt keine Entscheidung ohne Grund; eine Sperre auf „mit Grund“ schlägt die Freigabe.
 - Durchgesetzt in der API (`submissions.controller.ts`) und im Bot (Knöpfe, Auswahl, Formulare; `REVIEW_KEYS`).
 - Tests: `grants.test.ts` (4), `apps/api/test/e2e.test.ts` (Annehmen/Ablehnen mit/ohne Grund, Rückwärtskompatibilität, Sperre).
+
+## 60b – Bewertungssystem (Punkt 13)
+- **Konfiguration:** `Application.config.rating.fields[]` (`id`, `label`, `max` 2–10, höchstens 20 Felder); ohne Felder ist die Bewertung aus. Dashboard: Bewerbungsart bearbeiten → „Interne Bewertung“.
+- **Bewertungen:** Tabelle `application_ratings` (Migration `20261005080000_application_ratings`), je Bearbeiter und Feld ein Wert 1…max; jeder ändert nur die eigene Bewertung (Klick auf den gesetzten Stern entfernt sie); nur für eingereichte Bewerbungen.
+- **Auswertung:** Mittelwert je Feld, Gesamtwert = Mittel der auf Prozent normierten Feld-Mittelwerte; Einzelbewertungen aufklappbar.
+- **Rechte:** `applications.ratings.view` (nur Team, nie für Bewerber), `applications.ratings.edit`; `applications.manage` schließt beides ein. Die Standard-Vorlagen enthalten sie bewusst **nicht** (ausdrücklich vergeben).
+- **Tests:** `apps/api/test/ratings.test.ts` (Felder, Mittelwerte, Prüfung der Werte, Entfernen, Verlauf, nur eingereicht, Mandantentrennung), Browser `e2e/ratings.spec.ts` (Felder einrichten, Sterne setzen, Mittelwert, 403 ohne Recht).
+- **Grenze:** Keine Bewertung im Discord (nur Dashboard); Bewertungen werden im CSV/JSON-Export noch nicht ausgegeben.
+
+## 60b – Bewertungssystem (Punkt 13)
+- **Konfiguration:** `Application.config.rating.fields[]` (`id`, `label`, `max` 2–10, höchstens 20 Felder); ohne Felder ist die Bewertung aus. Dashboard: Bewerbungsart bearbeiten → „Interne Bewertung“.
+- **Bewertungen:** Tabelle `application_ratings` (Migration `20261005080000_application_ratings`), je Bearbeiter und Feld ein Wert 1…max; jeder ändert nur die eigene Bewertung (Klick auf den gesetzten Stern entfernt sie); nur für eingereichte Bewerbungen.
+- **Auswertung:** Mittelwert je Feld, Gesamtwert = Mittel der auf Prozent normierten Feld-Mittelwerte; Einzelbewertungen aufklappbar.
+- **Rechte:** `applications.ratings.view` (nur Team, nie für Bewerber), `applications.ratings.edit`; `applications.manage` schließt beides ein. Die Standard-Vorlagen enthalten sie bewusst **nicht** (ausdrücklich vergeben).
+- **Tests:** `apps/api/test/ratings.test.ts` (Felder, Mittelwerte, Prüfung der Werte, Entfernen, Verlauf, nur eingereicht, Mandantentrennung), Browser `e2e/ratings.spec.ts` (Felder einrichten, Sterne setzen, Mittelwert, 403 ohne Recht).
+- **Grenze:** Keine Bewertung im Discord (nur Dashboard); Bewertungen werden im CSV/JSON-Export noch nicht ausgegeben.

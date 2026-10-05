@@ -225,6 +225,26 @@ export const advancedSettingsSchema = z.object({
   multipleActiveSubmissions: z.enum(['none', 'per_application', 'unlimited']).optional(),
 });
 
+/** Interne Bewertung: frei definierbare Felder mit Höchstwert (z. B. Kommunikation 1–5). Ohne Felder ist die Bewertung aus. */
+export const ratingConfigSchema = z.object({
+  fields: z
+    .array(
+      z.object({
+        id: z.string().regex(/^[a-z0-9_-]{1,30}$/, 'Ungültige Feld-ID.'),
+        label: z.string().trim().min(1, 'Bezeichnung fehlt.').max(60),
+        max: z.number().int().min(2).max(10).default(5),
+      }),
+    )
+    .max(20)
+    .superRefine((fields, ctx) => {
+      const seen = new Set<string>();
+      for (const f of fields) {
+        if (seen.has(f.id)) ctx.addIssue({ code: 'custom', message: `Doppelte Feld-ID: ${f.id}.` });
+        seen.add(f.id);
+      }
+    }),
+});
+
 /** Komplettes Application-Config-Objekt (versioniert, §65). */
 export const applicationConfigSchema = z.object({
   requirements: requirementsSchema,
@@ -234,6 +254,7 @@ export const applicationConfigSchema = z.object({
   review: reviewConfigSchema,
   advanced: advancedSettingsSchema,
   roleRules: z.array(roleRuleSchema).max(100).default([]),
+  rating: ratingConfigSchema.optional(),
   questions: z.array(questionSchema).max(500).default([]),
 });
 

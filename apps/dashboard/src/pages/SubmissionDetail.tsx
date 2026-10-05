@@ -11,6 +11,7 @@ import {
   type BuilderQuestion,
 } from '../api';
 import { errorText, QueryState } from '../components/QueryState';
+import { SubmissionRatings } from '../components/SubmissionRatings';
 import { useToast } from '../toast';
 
 const ICON = { done: '✅', skipped: '⏭️', failed: '❌', unavailable: '⏳' } as const;
@@ -308,6 +309,7 @@ export function SubmissionDetail() {
                 <p className="muted">Keine weiteren Bewerbungen.</p>
               )}
 
+              <SubmissionRatings guildId={guildId} submissionId={submissionId} />
               <h2>Notizen</h2>
               {s.notes.length === 0 ? (
                 <p className="muted">Keine.</p>

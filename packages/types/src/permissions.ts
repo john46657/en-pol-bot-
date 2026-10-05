@@ -160,6 +160,8 @@ export const PERMISSION_CATALOG = [
       ['applications.submissions.reopen', 'Einreichungen wieder öffnen', 'APPLICATION_REOPEN'],
       ['applications.submissions.export', 'Einreichungen exportieren'],
       ['applications.submissions.delete', 'Einreichungen löschen'],
+      ['applications.ratings.view', 'Interne Bewertungen ansehen (nur Team)'],
+      ['applications.ratings.edit', 'Bewerbungen intern bewerten'],
       ['applications.notes.create', 'Notizen schreiben'],
       ['applications.notes.edit', 'Notizen bearbeiten'],
       ['applications.analytics.view', 'Statistiken ansehen'],

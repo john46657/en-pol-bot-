@@ -10,6 +10,7 @@ import {
 } from '../api';
 import { errorText, QueryState } from '../components/QueryState';
 import { ReviewSettings } from '../components/ReviewSettings';
+import { RatingSettings } from '../components/RatingSettings';
 import { useToast } from '../toast';
 
 const SELECTS = ['SINGLE_SELECT', 'MULTI_SELECT'];
@@ -258,6 +259,7 @@ export function ApplicationBuilder() {
       )}
       <h2>Bearbeitung</h2>
       <ReviewSettings guildId={guildId} applicationId={applicationId} />
+      <RatingSettings guildId={guildId} applicationId={applicationId} />
     </>
   );
 }
