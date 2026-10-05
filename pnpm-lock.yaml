@@ -671,6 +671,9 @@ importers:
       '@nexus/absences':
         specifier: workspace:*
         version: link:../absences
+      '@nexus/audit':
+        specifier: workspace:*
+        version: link:../audit
       '@nexus/automation':
         specifier: workspace:*
         version: link:../automation
