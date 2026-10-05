@@ -10,7 +10,7 @@ import { RequirePermissions } from '../../common/decorators/permissions.decorato
 @Controller('guilds/:guildId/office')
 export class OfficeController {
   @Get()
-  @RequirePermissions('applications.view')
+  @RequirePermissions('office.view')
   waitingRoom(@GuildId() guildId: string) {
     return getWaitingRoom(guildId);
   }

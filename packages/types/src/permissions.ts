@@ -71,7 +71,18 @@ export const PERMISSION_CATALOG = [
   {
     module: 'dashboard',
     label: 'Dashboard',
-    permissions: [['dashboard.manage', 'Dashboard konfigurieren', 'DASHBOARD_MANAGE']],
+    permissions: [
+      ['dashboard.view', 'Dashboard ansehen (nur lesen, ohne weitere Rechte)'],
+      ['dashboard.manage', 'Dashboard konfigurieren', 'DASHBOARD_MANAGE'],
+    ],
+  },
+  {
+    module: 'office',
+    label: 'Büro',
+    permissions: [
+      ['office.view', 'Büro-Warteraum ansehen (Status, Wartende)'],
+      ['office.manage', 'Büro-Warteraum verwalten'],
+    ],
   },
   {
     module: 'personnel',
@@ -350,6 +361,8 @@ export type PermissionSet = ReadonlySet<Permission>;
  * Schlüssel = feines Recht, Wert = Rechte, die es einschließen. Sperren gelten nur für ihren exakten Schlüssel.
  */
 export const PERMISSION_IMPLIED_BY: Readonly<Record<string, readonly string[]>> = {
+  // bisher prüften Dashboard und Bot das Büro über Bewerbungs- bzw. Personalrechte
+  'office.view': ['applications.view', 'personnel.view'],
   'tickets.claim': ['tickets.handle'],
   'tickets.priority.edit': ['tickets.handle'],
   'tickets.members.manage': ['tickets.handle'],

@@ -95,3 +95,16 @@ describe('Sammelrechte (tickets.handle ⇒ Einzelrechte)', () => {
     expect(hasPermission(set('tickets.view'), 'tickets.close' as Permission)).toBe(false);
   });
 });
+
+describe('Büro und Dashboard-Ansicht', () => {
+  const set = (...p: string[]) => new Set(p) as never;
+  it('office.view gilt auch über die bisherigen Rechte; office.manage schließt es ein', () => {
+    expect(hasPermission(set('office.manage'), 'office.view' as Permission)).toBe(true);
+    expect(hasPermission(set('personnel.view'), 'office.view' as Permission)).toBe(true);
+    expect(hasPermission(set('tickets.view'), 'office.view' as Permission)).toBe(false);
+  });
+  it('dashboard.view ist ein eigener Schlüssel ohne Schreibrechte', () => {
+    expect(isValidPermission('dashboard.view')).toBe(true);
+    expect(hasPermission(set('dashboard.view'), 'dashboard.manage' as Permission)).toBe(false);
+  });
+});

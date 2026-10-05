@@ -39,3 +39,10 @@ describe('/buero', () => {
     expect(await call([], 'status')).toContain('Du benötigst');
   });
 });
+
+describe('Bot-Prüfung nutzt die zentrale Engine', () => {
+  it('Sperre auf das Recht schlägt die Erlaubnis', async () => {
+    await permissionRepository.setPermissionsForRole(G, 'role-p', [{ key: 'office.view', effect: 'DENY', scope: 'SERVER', scopeRef: '' }, { key: 'personnel.view', effect: 'ALLOW', scope: 'SERVER', scopeRef: '' }], { name: 'Personal' });
+    expect(await call(['role-p'], 'status')).toContain('Du benötigst');
+  });
+});

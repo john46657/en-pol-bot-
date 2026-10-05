@@ -1,10 +1,11 @@
 import { PermissionFlagsBits, type GuildMember } from 'discord.js';
-import { permissionRepository } from '@nexus/database';
+import { permissions } from '@nexus/permissions';
+import type { Permission } from '@nexus/types';
 
 /**
  * Serverseitige Berechtigungsprüfung für Bot-Aktionen.
  * Discord-Administratoren dürfen immer; sonst zählen die in NEXUS zugeordneten Rollen
- * (Tabelle `permissions`). Die Prüfung läuft immer im Bot/API, nie nur im Frontend.
+ * (zentrale Engine `@nexus/permissions`). Die Prüfung läuft immer im Bot/API, nie nur im Frontend.
  */
 export function evaluatePermission(
   isAdministrator: boolean,
@@ -24,10 +25,16 @@ export const permissionService = {
 
   async can(member: GuildMember, key: string): Promise<boolean> {
     if (this.isDiscordAdmin(member)) return true;
-    const keys = await permissionRepository.getKeysForRoles(member.guild.id, [
-      ...member.roles.cache.keys(),
-    ]);
-    return evaluatePermission(false, keys, key);
+    // dieselbe zentrale Engine wie die API: Profile, Sperren, Benutzerausnahmen, Ablauf, `.manage`, Sammelrechte
+    return permissions.can(
+      {
+        guildId: member.guild.id,
+        roleIds: [...member.roles.cache.keys()],
+        bypass: false,
+        userId: member.id,
+      },
+      key as Permission,
+    );
   },
 
   /** Darf der Bot Nachrichten/Embeds in diesen Kanal senden? */

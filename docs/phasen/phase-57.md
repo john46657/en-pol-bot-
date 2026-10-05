@@ -10,8 +10,8 @@
 | 5 Modulrechte | Ticket-Einzelrechte jetzt trennbar; Supporter-Beispiel (claim/close/members/transcript) abbildbar. |
 | 6 Ticket-Kategorien mit eigenen Rollen | Bereits vorhanden (`staffRoleIds` je Kategorie). Ticket löschen/wieder öffnen/Transcript löschen: nicht umgesetzt. |
 | 7 Bewerbungsrechte | Feingranular vorhanden (`applications.submissions.*`, Formulare, Einstellungen). |
-| 8/9 Funk, Büro | Funk hat Rechte; Büro-API hängt an `applications.view` – **offen:** eigene Büro-Rechte. |
-| 11 Dashboard-Rechte | `dashboard.manage` existiert; **offen:** `dashboard.view`-Nur-Lesen-Modus. |
+| 8/9 Funk, Büro | Funk hat Rechte. **Neu:** `office.view`/`office.manage` (API und `/buero`; bisherige Rechte `applications.view`/`personnel.view` gelten weiter als Sammelrechte). Büros anlegen/Channels erstellen gibt es nicht – nur den Warteraum. |
+| 11 Dashboard-Rechte | **Neu:** `dashboard.view` (Zugang ohne Schreibrechte; Dashboard-Zugang gilt für jede Berechtigung). Rechte je Seite (`dashboard.roles` …) fehlen. |
 | 13 Matrix | Vorhanden (PermissionMatrix). |
 | 14/15 Benutzerrechte, temporär | Vorhanden (Phase 56), Ablauf wirkt sofort bei der Auflösung. |
 | 16 Audit | Rechte-Änderungen werden protokolliert. |
@@ -22,6 +22,8 @@
 - **Sammelrechte** (`PERMISSION_IMPLIED_BY`): `tickets.handle` schließt claim/priority/members/close ein, `tickets.view` und `tickets.handle` das Transkript. Bestehende Zuordnungen bleiben gültig; eine Sperre auf das Einzelrecht schlägt das Sammelrecht.
 - Durchgesetzt in API (Controller), Bot (`actorOf`) und Ticket-Dienst (`isStaff(t, actor, recht)`).
 - Tests: Engine, Grants, Ticket-Dienst.
+
+- **Sicherheitskorrektur Bot:** `permissionService.can` prüfte nur exakte Schlüssel direkt an der Rolle und ignorierte Profile, Sperren, Benutzerausnahmen, Ablauf und `.manage`. Sie nutzt jetzt dieselbe Engine wie die API (Spec 17). Betrifft u. a. /gefahr, /sperre, /fahrzeug, /funk, /einsatz, /sek, /bericht.
 
 ## Grenzen
 - Die Rechte-Matrix zeigt neue Rechte automatisch (Katalog), im Browser nicht geprüft.

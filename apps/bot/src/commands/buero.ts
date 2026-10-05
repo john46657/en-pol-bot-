@@ -13,7 +13,7 @@ export async function runBuero(interaction: ChatInputCommandInteraction): Promis
   const guild = interaction.guild;
   const member = (interaction.member as GuildMember | null) ?? null;
   if (!guild || !member) return void (await interaction.reply({ content: 'Das geht nur auf einem Server.', flags: MessageFlags.Ephemeral }));
-  if (!(await permissionService.can(member, 'personnel.view'))) return void (await interaction.reply({ content: `❌ ${permissionDeniedMessage(['personnel.view'])}`, flags: MessageFlags.Ephemeral }));
+  if (!(await permissionService.can(member, 'office.view'))) return void (await interaction.reply({ content: `❌ ${permissionDeniedMessage(['office.view'])}`, flags: MessageFlags.Ephemeral }));
   const room = await getWaitingRoom(guild.id);
   if (room.state !== 'ok' || !room.channelId) return void (await interaction.reply({ content: `⚠️ ${room.message}`, flags: MessageFlags.Ephemeral }));
   if (interaction.options.getSubcommand() === 'status') return void (await interaction.reply({ content: `🟢 Büro-Warteraum: <#${room.channelId}> (${room.name})`, flags: MessageFlags.Ephemeral }));
