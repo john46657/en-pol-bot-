@@ -593,7 +593,7 @@ export async function closeTicket(
 }
 
 /** Geschlossenes Ticket wieder öffnen: nur solange der Kanal noch existiert; Ersteller und Beteiligte erhalten den Zugriff zurück. */
-export async function reopenTicket(guildId: string, id: string, rawActor: Actor, discord: TicketDiscord, now = new Date()) {
+export async function reopenTicket(guildId: string, id: string, rawActor: Actor, discord: TicketDiscord) {
   const gid = assertGuildId(guildId);
   const { actor } = await withAdmin(gid, rawActor);
   const t = await getTicket(gid, id);

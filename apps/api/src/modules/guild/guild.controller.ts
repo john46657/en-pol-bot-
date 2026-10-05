@@ -14,10 +14,7 @@ import { AREAS } from '@nexus/audit';
 import { CORE_COMMANDS, MODULES, normalizeState } from '@nexus/modules';
 import { forgetModuleState } from '../../common/guards/module.guard.js';
 import { resolveTemplate } from '@nexus/types';
-import {
-  RequireDashboardAccess,
-  RequireGuildAdmin,
-} from '../../common/decorators/guild-admin.decorator.js';
+import { RequireDashboardAccess } from '../../common/decorators/guild-admin.decorator.js';
 import { AccessService } from './access.service.js';
 import { PermissionsAdminService } from './permissions.service.js';
 import { SetRolePermissionsDto } from './permissions.dto.js';

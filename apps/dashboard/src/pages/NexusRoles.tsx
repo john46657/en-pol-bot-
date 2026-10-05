@@ -155,9 +155,7 @@ function Editor({
     },
     onError: err,
   });
-  const catalog = (overview?.catalog ?? [])
-    .map((m) => ({ ...m, permissions: m.permissions.filter((p) => !filter || m.module === filter) }))
-    .filter((m) => m.permissions.length > 0);
+  const catalog = (overview?.catalog ?? []).filter((m) => !filter || m.module === filter);
   return (
     <div className="card comp">
       <h2>Rolle bearbeiten</h2>
