@@ -63,3 +63,9 @@ sh('zip', ['-r', '-q', path.join(out, 'en-polizei-hosting.zip'), '.'], bundle);
 console.log(`\nBundle: ${(size(bundle) / 1e6).toFixed(1)} MB unkomprimiert, ZIP: ${(statSync(path.join(out, 'en-polizei-hosting.zip')).size / 1e6).toFixed(1)} MB`);
 console.log(`→ ${path.join(out, 'en-polizei-hosting.zip')}`);
 if (!existsSync(path.join(bundle, 'api/dist/main.js'))) { console.error('api/dist/main.js fehlt'); process.exit(1); }
+
+// Auch als Ordner hosting/ ins Repo legen: Panels, die `main` von GitHub holen, starten es über die start.js im Hauptordner
+const repoCopy = path.join(root, 'hosting');
+rmSync(repoCopy, { recursive: true, force: true });
+cpSync(bundle, repoCopy, { recursive: true, filter: (src) => !src.endsWith('.zip') && path.basename(src) !== 'bot.py' });
+console.log(`→ ${repoCopy} (für Start aus main: node start.js)`);

@@ -17,3 +17,6 @@ dist-bot
 .vite
 __pycache__
 *.pyc
+# Fertiges Hosting-Paket wird mit eingecheckt (pnpm bundle:hosting), Laufzeitdaten nicht
+!/hosting/**/dist
+/hosting/data

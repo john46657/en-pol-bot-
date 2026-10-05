@@ -1,0 +1,117 @@
+import { PrismaService } from '../prisma/prisma.service';
+import { AuditService, Actor } from '../audit/audit.service';
+import { TimelineService } from '../timeline/timeline.service';
+import { StudioService } from '../studio/studio.service';
+import { Prisma } from '@prisma/client';
+import { PageQuery } from '../common/pagination';
+export declare class VehiclesService {
+    private readonly prisma;
+    private readonly audit;
+    private readonly timeline;
+    private readonly studio;
+    constructor(prisma: PrismaService, audit: AuditService, timeline: TimelineService, studio: StudioService);
+    list(p: PageQuery): Promise<{
+        items: ({
+            owner: {
+                id: string;
+                robloxUsername: string;
+            } | null;
+        } & {
+            id: string;
+            createdAt: Date;
+            updatedAt: Date;
+            version: number;
+            status: string;
+            custom: Prisma.JsonValue | null;
+            serverId: string | null;
+            notes: string | null;
+            ownerId: string | null;
+            plate: string;
+            model: string | null;
+            color: string | null;
+            erlcReference: string | null;
+        })[];
+        total: number;
+        page: number;
+        pageSize: number;
+    }>;
+    get(id: string): Promise<{
+        vehicle: {
+            owner: {
+                id: string;
+                createdById: string | null;
+                createdAt: Date;
+                robloxUserId: string | null;
+                robloxUsername: string;
+                updatedAt: Date;
+                version: number;
+                status: string;
+                custom: Prisma.JsonValue | null;
+                aliases: string[];
+                serverId: string | null;
+                notes: string | null;
+            } | null;
+        } & {
+            id: string;
+            createdAt: Date;
+            updatedAt: Date;
+            version: number;
+            status: string;
+            custom: Prisma.JsonValue | null;
+            serverId: string | null;
+            notes: string | null;
+            ownerId: string | null;
+            plate: string;
+            model: string | null;
+            color: string | null;
+            erlcReference: string | null;
+        };
+        timeline: {
+            id: string;
+            createdAt: Date;
+            action: string;
+            entityType: string;
+            entityId: string;
+            summary: string;
+            actorId: string | null;
+        }[];
+    }>;
+    create(actor: Actor, d: {
+        plate: string;
+        model?: string;
+        color?: string;
+        ownerId?: string;
+        notes?: string;
+        erlcReference?: string;
+        custom?: Record<string, unknown>;
+    }): Promise<{
+        id: string;
+        createdAt: Date;
+        updatedAt: Date;
+        version: number;
+        status: string;
+        custom: Prisma.JsonValue | null;
+        serverId: string | null;
+        notes: string | null;
+        ownerId: string | null;
+        plate: string;
+        model: string | null;
+        color: string | null;
+        erlcReference: string | null;
+    }>;
+    archive(actor: Actor, id: string, reason: string): Promise<{
+        id: string;
+        createdAt: Date;
+        updatedAt: Date;
+        version: number;
+        status: string;
+        custom: Prisma.JsonValue | null;
+        serverId: string | null;
+        notes: string | null;
+        ownerId: string | null;
+        plate: string;
+        model: string | null;
+        color: string | null;
+        erlcReference: string | null;
+    }>;
+}

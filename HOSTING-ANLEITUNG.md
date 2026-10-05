@@ -1,16 +1,13 @@
 # EN Polizei auf bot-hosting.net starten (API + Web + Discord-Bot)
 
-Diese Anleitung gilt für den Branch **`hosting`** (fertig gebautes Paket). Auf `main` liegt nur der Quellcode.
+Funktioniert direkt mit dem Branch **`main`** (das fertige Paket liegt dort im Ordner `hosting/`). Der Branch `hosting` geht weiterhin auch.
 
 ## 1. Code ins Panel holen
-Im Panel-Tab **GitHub**: Repo `john46657/en-pol-bot-`, Branch **`hosting`** eintragen und **Pull** klicken. Danach müssen im Tab **Files** u. a. `start.js`, `bot.py`, `package.json`, `api/`, `web/` liegen.
-Eine alte `bot.js` darf im Ordner liegen bleiben (wird ignoriert), am saubersten ist es, sie zu löschen.
+Im Panel-Tab **GitHub**: Repo `john46657/en-pol-bot-`, Branch **`main`** und **Pull** klicken. Danach müssen im Tab **Files** u. a. `start.js` und der Ordner `hosting/` liegen.
 
 ## 2. Startdatei / Startbefehl
-```
-python3 bot.py
-```
-(Tab **Startup**, Startdatei `bot.py`.) `bot.py` startet `start.js` – das startet **API, Web-Oberfläche und Discord-Bot zusammen**. Läuft dein Server mit Node.js statt Python, ist der Befehl `node start.js`.
+Tab **Startup**, Startdatei **`start.js`** (Node.js-Server). Kann dein Server nur Python: `python3 bot.py`.
+`start.js` installiert beim ersten Start die Pakete in `hosting/` (einige Minuten) und startet **API, Web-Oberfläche und Discord-Bot zusammen**. Die Warnung `install-scripts … esbuild` beim `npm install` des Panels ist harmlos.
 
 ## 3. Variablen (Tab **Env**)
 | Variable | Wert |
@@ -23,7 +20,7 @@ python3 bot.py
 | `DISCORD_GUILD_ID` | optional: Server-ID, dann erscheinen die Slash-Befehle sofort (sonst bis zu 1 Stunde) |
 
 **Nicht setzen bzw. löschen:** `PORT` (das Panel setzt `SERVER_PORT` selbst, und der hat Vorrang), `API_URL` (im gemeinsamen Betrieb nutzt der Bot automatisch die lokale API), `NEXUS_ENTRY`.
-`BOT_API_TOKEN` und `SESSION_SECRET` werden beim ersten Start automatisch erzeugt (Ordner `data/`, nicht löschen).
+`BOT_API_TOKEN` und `SESSION_SECRET` werden beim ersten Start automatisch erzeugt (Ordner `hosting/data/`, nicht löschen).
 
 Keine Passwörter oder Tokens in Dateien oder im GitHub-Repo speichern – nur im Panel unter **Env**.
 

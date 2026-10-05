@@ -1,6 +1,8 @@
 # EN Polizei
 
-> 🤖 **Bot-Start über GitHub/Panel:** `bot.py` + `bot.js` im Hauptverzeichnis sind der fertig gebaute Discord-Bot (`bot.js` wird aus `apps/bot` mit `pnpm bundle:bot` erzeugt – nicht von Hand ändern). Startbefehl: `python3 bot.py` oder `node bot.js`; Einstellungen in einer `.env` (Vorlage: `apps/bot`-Doku in [docs/discord-bot.md](docs/discord-bot.md)).
+> 🤖 **Panel-Start aus `main` (API + Web + Bot):** Startdatei `start.js` – startet das fertige Paket aus `hosting/` (erzeugt mit `pnpm bundle:hosting`, nicht von Hand ändern). Anleitung: [HOSTING-ANLEITUNG.md](HOSTING-ANLEITUNG.md).
+>
+> 🤖 **Nur der Bot:** `bot.py` + `bot.js` im Hauptverzeichnis sind der fertig gebaute Discord-Bot (`bot.js` wird aus `apps/bot` mit `pnpm bundle:bot` erzeugt – nicht von Hand ändern). Startbefehl: `python3 bot.py` oder `node bot.js`; Einstellungen in einer `.env` (Vorlage: `apps/bot`-Doku in [docs/discord-bot.md](docs/discord-bot.md)).
 
 > 📦 **Der frühere Python-Bot** (Emden RP Bot) ist entfernt (Git-Historie); seine Funktionen sind portiert. Übersicht: [docs/migration-vom-alten-bot.md](docs/migration-vom-alten-bot.md).
 
