@@ -16,6 +16,8 @@ import {
   startReview,
   withdrawByStaff,
   holdSubmission,
+  setCoReviewer,
+  forwardSubmission,
 } from '@nexus/automation';
 import { SubmissionStatus } from '@nexus/types';
 import { auditRepository, prisma, assertGuildId } from '@nexus/database';
@@ -152,6 +154,22 @@ export class SubmissionsService {
   async assign(guildId: string, submissionId: string, actorId: string, assigneeId: string | null, canReassign: boolean) {
     await this.getById(guildId, submissionId);
     const r = await assignSubmission(this.port(), { submissionId, guildId, actorId, assigneeId, canReassign });
+    if (!r.ok) throw new ConflictException(r.message);
+    return r;
+  }
+
+  /** Weitere Bearbeiter hinzufügen/entfernen (Hauptbearbeiter oder Führungskraft). */
+  async coReviewer(guildId: string, submissionId: string, actorId: string, userId: string, add: boolean, canReassign: boolean) {
+    await this.getById(guildId, submissionId);
+    const r = await setCoReviewer(this.port(), { submissionId, guildId, actorId, userId, add, canReassign });
+    if (!r.ok) throw new ConflictException(r.message);
+    return r;
+  }
+
+  /** Weiterleiten an eine andere Person (neuer Hauptbearbeiter). */
+  async forward(guildId: string, submissionId: string, actorId: string, toUserId: string, note: string | undefined, canReassign: boolean) {
+    await this.getById(guildId, submissionId);
+    const r = await forwardSubmission(this.port(), { submissionId, guildId, actorId, toUserId, note, canReassign });
     if (!r.ok) throw new ConflictException(r.message);
     return r;
   }

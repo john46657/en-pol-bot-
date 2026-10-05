@@ -367,6 +367,7 @@ async function refreshReviewMessage(
         number: s.submissionNumber,
         statusLabels: statusLabelsOf(s.application.config),
         assigneeId: s.assigneeUserId,
+        coReviewerIds: await coReviewerIds(s.id),
         decision,
         dashboardUrl,
       }) as never,
@@ -490,6 +491,95 @@ async function takeUnderReview(s: Submission, reviewerId: string): Promise<void>
 
 const assignedElsewhere = (id: string) => `Diese Bewerbung wird bereits von <@${id}> bearbeitet.`;
 
+/** Weitere Bearbeiter (neben dem Hauptbearbeiter `assigneeUserId`). */
+export async function coReviewerIds(submissionId: string): Promise<string[]> {
+  const rows = await prisma.applicationReviewer.findMany({ where: { submissionId, assigneeType: 'USER' }, orderBy: { assignedAt: 'asc' }, select: { assigneeId: true } });
+  return [...new Set(rows.map((r) => r.assigneeId))];
+}
+
+/** Darf diese Person die Bewerbung bearbeiten? Niemand zugewiesen, Hauptbearbeiter oder weiterer Bearbeiter. */
+async function mayAct(s: { id: string; assigneeUserId: string | null }, userId: string): Promise<boolean> {
+  return !s.assigneeUserId || s.assigneeUserId === userId || (await coReviewerIds(s.id)).includes(userId);
+}
+
+const MAX_CO_REVIEWERS = 10;
+
+/**
+ * Weitere Bearbeiter hinzufügen/entfernen. Festlegen dürfen der Hauptbearbeiter und Führungskräfte (`canReassign`);
+ * ohne Hauptbearbeiter wird die handelnde Person zuerst Hauptbearbeiter. Weitere Bearbeiter dürfen wie der
+ * Hauptbearbeiter entscheiden und zurückstellen.
+ */
+export async function setCoReviewer(
+  port: DiscordPort,
+  input: { submissionId: string; guildId: string; actorId: string; userId: string; add: boolean; canReassign?: boolean | undefined },
+): Promise<{ ok: true; coReviewerIds: string[] } | { ok: false; message: string }> {
+  if (!/^\d{5,25}$/.test(input.userId)) return { ok: false, message: 'Ungültige Discord-ID.' };
+  const s = await load(input.submissionId, input.guildId);
+  if (!s) return { ok: false, message: 'Bewerbung nicht gefunden.' };
+  if (isFinal(s.status)) return { ok: false, message: `Diese Bewerbung ist bereits abgeschlossen (${STATUS_LABEL[s.status]}).` };
+  if (s.assigneeUserId && s.assigneeUserId !== input.actorId && !input.canReassign)
+    return { ok: false, message: 'Nur der Hauptbearbeiter oder eine Führungskraft kann weitere Bearbeiter festlegen.' };
+  const current = await coReviewerIds(s.id);
+  if (input.add) {
+    if (input.userId === s.assigneeUserId) return { ok: false, message: 'Diese Person ist bereits Hauptbearbeiter.' };
+    if (current.includes(input.userId)) return { ok: false, message: 'Diese Person bearbeitet die Bewerbung bereits.' };
+    if (current.length >= MAX_CO_REVIEWERS) return { ok: false, message: `Höchstens ${MAX_CO_REVIEWERS} weitere Bearbeiter.` };
+    if (!s.assigneeUserId) {
+      await prisma.applicationSubmission.updateMany({ where: { id: s.id, assigneeUserId: null }, data: { assigneeUserId: input.actorId, assignedAt: new Date() } });
+      await takeUnderReview(s, input.actorId);
+    }
+    await prisma.applicationReviewer.create({ data: { submissionId: s.id, assigneeType: 'USER', assigneeId: input.userId, assignedById: input.actorId } });
+  } else {
+    const r = await prisma.applicationReviewer.deleteMany({ where: { submissionId: s.id, assigneeType: 'USER', assigneeId: input.userId } });
+    if (r.count === 0) return { ok: false, message: 'Diese Person ist kein weiterer Bearbeiter.' };
+  }
+  await audit(s.guildId, s.id, s.applicationId, input.actorId, input.add ? 'submission.reviewer_added' : 'submission.reviewer_removed', {
+    before: { coReviewers: current },
+    after: { coReviewers: await coReviewerIds(s.id), userId: input.userId },
+  });
+  const fresh = (await load(s.id)) ?? s;
+  await refreshReviewMessage(port, fresh, fresh.status);
+  if (input.add)
+    await port.sendDm(input.userId, { content: `👥 <@${input.actorId}> hat dich als Bearbeiter der Bewerbung **${s.application.name}**${s.submissionNumber ? ` (#${s.submissionNumber})` : ''} hinzugefügt.` }).catch(() => undefined);
+  return { ok: true, coReviewerIds: await coReviewerIds(s.id) };
+}
+
+/**
+ * Bewerbung weiterleiten: Der Hauptbearbeiter (oder eine Führungskraft) übergibt an eine andere Person, die neuer
+ * Hauptbearbeiter wird; eine kurze Notiz ist möglich. War die Person weiterer Bearbeiter, wird sie dort entfernt.
+ */
+export async function forwardSubmission(
+  port: DiscordPort,
+  input: { submissionId: string; guildId: string; actorId: string; toUserId: string; note?: string | undefined; canReassign?: boolean | undefined },
+): Promise<{ ok: true } | { ok: false; message: string }> {
+  if (!/^\d{5,25}$/.test(input.toUserId)) return { ok: false, message: 'Ungültige Discord-ID.' };
+  const note = input.note?.trim() || undefined;
+  if (note && note.length > 500) return { ok: false, message: 'Die Notiz ist zu lang (max. 500 Zeichen).' };
+  const s = await load(input.submissionId, input.guildId);
+  if (!s) return { ok: false, message: 'Bewerbung nicht gefunden.' };
+  if (isFinal(s.status)) return { ok: false, message: `Diese Bewerbung ist bereits abgeschlossen (${STATUS_LABEL[s.status]}).` };
+  if (s.assigneeUserId !== input.actorId && !input.canReassign)
+    return { ok: false, message: 'Nur der Hauptbearbeiter oder eine Führungskraft kann die Bewerbung weiterleiten.' };
+  if (input.toUserId === s.assigneeUserId) return { ok: false, message: 'Diese Person ist bereits Hauptbearbeiter.' };
+  const r = await prisma.applicationSubmission.updateMany({
+    where: { id: s.id, assigneeUserId: s.assigneeUserId, status: { in: [...OPEN_SUBMISSION_STATUSES] } },
+    data: { assigneeUserId: input.toUserId, assignedAt: new Date() },
+  });
+  if (r.count === 0) return { ok: false, message: 'Die Bewerbung wurde gerade geändert – bitte erneut versuchen.' };
+  await prisma.applicationReviewer.deleteMany({ where: { submissionId: s.id, assigneeType: 'USER', assigneeId: input.toUserId } });
+  await takeUnderReview(s, input.actorId);
+  await audit(s.guildId, s.id, s.applicationId, input.actorId, 'submission.forwarded', {
+    before: { assigneeId: s.assigneeUserId },
+    after: { assigneeId: input.toUserId, ...(note ? { note } : {}) },
+  });
+  const fresh = (await load(s.id)) ?? s;
+  await refreshReviewMessage(port, fresh, fresh.status);
+  await port
+    .sendDm(input.toUserId, { content: `📨 <@${input.actorId}> hat dir die Bewerbung **${s.application.name}**${s.submissionNumber ? ` (#${s.submissionNumber})` : ''} weitergeleitet.${note ? `\n\nNotiz: ${note}` : ''}` })
+    .catch(() => undefined);
+  return { ok: true };
+}
+
 /**
  * Übernehmen / Freigeben / Zuweisen. Genau ein Bearbeiter: eine bereits übernommene Bewerbung kann nur eine Führungskraft
  * (`canReassign`) übernehmen oder neu zuweisen; freigeben dürfen der Bearbeiter selbst oder eine Führungskraft.
@@ -542,7 +632,7 @@ export async function holdSubmission(
   if (reason && reason.length > 500) return { ok: false, message: 'Der Grund ist zu lang (max. 500 Zeichen).' };
   const s = await load(input.submissionId, input.guildId);
   if (!s) return { ok: false, message: 'Bewerbung nicht gefunden.' };
-  if (s.assigneeUserId && s.assigneeUserId !== input.actorId && !input.canReassign) return { ok: false, message: assignedElsewhere(s.assigneeUserId) };
+  if (!input.canReassign && !(await mayAct(s, input.actorId))) return { ok: false, message: assignedElsewhere(s.assigneeUserId!) };
   if (input.hold && s.status === SubmissionStatus.ON_HOLD) return { ok: false, message: 'Die Bewerbung ist bereits zurückgestellt.' };
   if (!input.hold && s.status !== SubmissionStatus.ON_HOLD) return { ok: false, message: 'Die Bewerbung ist nicht zurückgestellt.' };
   const target = input.hold ? SubmissionStatus.ON_HOLD : SubmissionStatus.UNDER_REVIEW;
@@ -773,8 +863,8 @@ export async function decideSubmission(
   } catch {
     return denied(s.status);
   }
-  if (s.assigneeUserId && s.assigneeUserId !== input.reviewerId && !input.bypassAssignee)
-    return { ok: false, message: assignedElsewhere(s.assigneeUserId) };
+  if (!input.bypassAssignee && !(await mayAct(s, input.reviewerId)))
+    return { ok: false, message: assignedElsewhere(s.assigneeUserId!) };
 
   // Ablehnungsgrund auflösen
   let publicReason: string | undefined;

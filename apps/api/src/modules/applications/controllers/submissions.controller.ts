@@ -1,4 +1,4 @@
-import { BadRequestException, Body, ForbiddenException, Controller, Get, Param, Post, Put, Query, Res, StreamableFile } from '@nestjs/common';
+import { BadRequestException, Body, Delete, ForbiddenException, Controller, Get, Param, Post, Put, Query, Res, StreamableFile } from '@nestjs/common';
 import type { Response } from 'express';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { GuildId } from '../../../common/decorators/guild-id.decorator.js';
@@ -143,6 +143,26 @@ export class SubmissionsController {
   }
 
   /** Bewerbung durch das Team zurücknehmen (WITHDRAWN) – Grund Pflicht. */
+  /** Weiteren Bearbeiter hinzufügen (`{ userId }`). */
+  @Post(':submissionId/reviewers')
+  @RequirePermissions('applications.reviewers.assign')
+  async addReviewer(@GuildId() guildId: string, @Param('submissionId') submissionId: string, @Body() body: { userId?: unknown }, @CurrentUser() user: RequestUser, @Access() access: RequestAccess) {
+    return this.submissions.coReviewer(guildId, submissionId, user.id, typeof body?.userId === 'string' ? body.userId.trim() : '', true, await this.canReassign(access));
+  }
+
+  @Delete(':submissionId/reviewers/:userId')
+  @RequirePermissions('applications.reviewers.assign')
+  async removeReviewer(@GuildId() guildId: string, @Param('submissionId') submissionId: string, @Param('userId') userId: string, @CurrentUser() user: RequestUser, @Access() access: RequestAccess) {
+    return this.submissions.coReviewer(guildId, submissionId, user.id, userId, false, await this.canReassign(access));
+  }
+
+  /** Weiterleiten (`{ userId, note? }`): neuer Hauptbearbeiter. */
+  @Post(':submissionId/forward')
+  @RequirePermissions('applications.reviewers.assign')
+  async forward(@GuildId() guildId: string, @Param('submissionId') submissionId: string, @Body() body: { userId?: unknown; note?: unknown }, @CurrentUser() user: RequestUser, @Access() access: RequestAccess) {
+    return this.submissions.forward(guildId, submissionId, user.id, typeof body?.userId === 'string' ? body.userId.trim() : '', typeof body?.note === 'string' ? body.note : undefined, await this.canReassign(access));
+  }
+
   /** Zurückstellen / fortsetzen (`{ hold: true|false, reason? }`). */
   @Post(':submissionId/hold')
   @RequirePermissions('applications.submissions.hold')

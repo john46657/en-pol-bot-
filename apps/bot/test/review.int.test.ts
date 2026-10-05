@@ -1093,3 +1093,50 @@ describe('Ergebnis-Kanal (Team-Chance)', () => {
     }
   });
 });
+
+describe('Mehrere Bearbeiter und Weiterleiten (Team-Chance)', () => {
+  it('Hauptbearbeiter fügt weitere hinzu; diese dürfen entscheiden, andere nicht; Anzeige in der Prüf-Nachricht', async () => {
+    const { setCoReviewer } = await import('@nexus/automation');
+    const f = fakePort();
+    setReviewPort(f.port as never);
+    const id = await submitted({ f });
+    await prisma.applicationSubmission.update({ where: { id }, data: { assigneeUserId: 'u-main' } });
+    // Nicht-Hauptbearbeiter ohne Führungsrecht darf nichts festlegen
+    expect(await setCoReviewer(f.port as never, { submissionId: id, guildId: G, actorId: 'u-other', userId: '900000000000720001', add: true })).toMatchObject({ ok: false });
+    const r = await setCoReviewer(f.port as never, { submissionId: id, guildId: G, actorId: 'u-main', userId: '900000000000720001', add: true });
+    expect(r).toEqual({ ok: true, coReviewerIds: ['900000000000720001'] });
+    expect(await setCoReviewer(f.port as never, { submissionId: id, guildId: G, actorId: 'u-main', userId: '900000000000720001', add: true })).toMatchObject({ ok: false, message: expect.stringContaining('bereits') });
+    expect(JSON.stringify(f.edits.at(-1)!.payload.embeds)).toContain('(+ <@900000000000720001>)');
+    expect(f.dms.some((d) => d.userId === '900000000000720001')).toBe(true);
+
+    // Annehmer ohne Zuweisung wird abgewiesen …
+    const ACC = '900000000000720009';
+    const blocked = interaction('button', cid('review:accept_ok', id), { userId: ACC, roleIds: ACCEPT[1] });
+    await handleInteraction(client(), blocked);
+    expect(await status(id)).toBe('SUBMITTED');
+    // … als weiterer Bearbeiter darf er entscheiden
+    expect(await setCoReviewer(f.port as never, { submissionId: id, guildId: G, actorId: 'u-main', userId: ACC, add: true })).toMatchObject({ ok: true });
+    await handleInteraction(client(), interaction('button', cid('review:accept_ok', id), { userId: ACC, roleIds: ACCEPT[1] }));
+    expect(await status(id)).toBe('ACCEPTED');
+    expect(await events(id)).toEqual(expect.arrayContaining(['submission.reviewer_added']));
+  });
+
+  it('Weiterleiten: neuer Hauptbearbeiter, Notiz im Verlauf, Benachrichtigung; nur Hauptbearbeiter oder Führungskraft', async () => {
+    const { forwardSubmission, setCoReviewer } = await import('@nexus/automation');
+    const f = fakePort();
+    setReviewPort(f.port as never);
+    const id = await submitted({ f });
+    await prisma.applicationSubmission.update({ where: { id }, data: { assigneeUserId: 'u-main' } });
+    await setCoReviewer(f.port as never, { submissionId: id, guildId: G, actorId: 'u-main', userId: '900000000000720002', add: true });
+    expect(await forwardSubmission(f.port as never, { submissionId: id, guildId: G, actorId: 'u-other', toUserId: '900000000000720003' })).toMatchObject({ ok: false });
+    expect(await forwardSubmission(f.port as never, { submissionId: id, guildId: G, actorId: 'u-main', toUserId: '900000000000720002', note: 'Bitte du übernehmen' })).toEqual({ ok: true });
+    const row = await prisma.applicationSubmission.findUniqueOrThrow({ where: { id } });
+    expect(row.assigneeUserId).toBe('900000000000720002');
+    expect(await prisma.applicationReviewer.count({ where: { submissionId: id } })).toBe(0); // war weiterer Bearbeiter → jetzt Hauptbearbeiter
+    expect(f.dms.find((d) => d.userId === '900000000000720002' && d.content.includes('weitergeleitet'))!.content).toContain('Bitte du übernehmen');
+    const ev = await prisma.applicationAuditEvent.findFirstOrThrow({ where: { submissionId: id, action: 'submission.forwarded' } });
+    expect(ev.after).toMatchObject({ assigneeId: '900000000000720002', note: 'Bitte du übernehmen' });
+    // Führungskraft darf immer
+    expect(await forwardSubmission(f.port as never, { submissionId: id, guildId: G, actorId: 'u-lead', toUserId: '900000000000720003', canReassign: true })).toEqual({ ok: true });
+  });
+});

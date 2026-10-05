@@ -85,6 +85,8 @@ export interface ReviewMessageInput {
   assigneeId?: string | null | undefined;
   /** Eigene Statusnamen/-farben der Bewerbungsart. */
   statusLabels?: StatusLabels | undefined;
+  /** Weitere Bearbeiter neben dem Hauptbearbeiter. */
+  coReviewerIds?: string[] | undefined;
 }
 
 /** Eigene Statusnamen/-farben einer Bewerbungsart (aus `config.statusLabels`). */
@@ -140,7 +142,7 @@ export function reviewMessage(
       value: `<t:${Math.floor(i.submittedAt.getTime() / 1000)}:R>`,
       inline: true,
     });
-  fields.push({ name: 'Bearbeiter', value: i.assigneeId ? `<@${i.assigneeId}>` : 'Noch nicht zugewiesen', inline: true });
+  fields.push({ name: 'Bearbeiter', value: (i.assigneeId ? `<@${i.assigneeId}>` : 'Noch nicht zugewiesen') + (i.coReviewerIds?.length ? ` (+ ${i.coReviewerIds.map((id) => `<@${id}>`).join(', ')})` : ''), inline: true });
   if (i.decision) {
     fields.push({ name: 'Entschieden von', value: `<@${i.decision.by}>`, inline: true });
     if (i.decision.reason) fields.push({ name: 'Grund', value: cut(i.decision.reason, 1000) });

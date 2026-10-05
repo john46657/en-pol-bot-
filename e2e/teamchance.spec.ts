@@ -69,4 +69,17 @@ test('Team-Chance: Bewerbung zurückstellen und fortsetzen', async ({ page, cont
   await page.getByRole('button', { name: '▶️ Fortsetzen' }).click();
   await expect(page.getByText('Bewerbung wird weiter bearbeitet.')).toBeVisible();
   expect((await (await request.get(`${g}/submissions/${id}`, { headers })).json()).status).toBe('UNDER_REVIEW');
+
+  // Mehrere Bearbeiter: hinzufügen, entfernen, weiterleiten
+  await page.getByLabel('Weiteren Bearbeiter hinzufügen').fill('900000000000000040');
+  await page.getByRole('button', { name: '👥 Hinzufügen' }).click();
+  await expect(page.getByText('Bearbeiter hinzugefügt.')).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Bearbeiter 900000000000000040 entfernen' })).toBeVisible();
+  await page.getByRole('button', { name: 'Bearbeiter 900000000000000040 entfernen' }).click();
+  await expect(page.getByText('Bearbeiter entfernt.')).toBeVisible();
+  await page.getByLabel('Weiterleiten an').fill('900000000000000030');
+  page.once('dialog', (d) => void d.accept('Bitte du'));
+  await page.getByRole('button', { name: '📨 Weiterleiten' }).click();
+  await expect(page.getByText('Bewerbung weitergeleitet.')).toBeVisible();
+  expect((await (await request.get(`${g}/submissions/${id}`, { headers })).json()).assigneeUserId).toBe('900000000000000030');
 });

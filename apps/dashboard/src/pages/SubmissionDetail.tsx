@@ -51,6 +51,8 @@ export function SubmissionDetail() {
       ),
   });
   const [assignee, setAssignee] = useState('');
+  const [coReviewer, setCoReviewer] = useState('');
+  const [forwardTo, setForwardTo] = useState('');
   const [note, setNote] = useState('');
   const [reasonId, setReasonId] = useState('');
   const [text, setText] = useState('');
@@ -88,6 +90,14 @@ export function SubmissionDetail() {
     onSuccess: (r) => {
       toast.success(r.message);
       setText('');
+      void refresh();
+    },
+    onError: (e) => toast.error(errorText(e)),
+  });
+  const removeReviewer = useMutation({
+    mutationFn: (userId: string) => api(`${base}/reviewers/${userId}`, { method: 'DELETE' }),
+    onSuccess: () => {
+      toast.success('Bearbeiter entfernt.');
       void refresh();
     },
     onError: (e) => toast.error(errorText(e)),
@@ -223,6 +233,41 @@ export function SubmissionDetail() {
                         🟠 Zurückstellen
                       </button>
                     )}
+                  </div>
+                  <div className="actions" aria-label="Weitere Bearbeiter">
+                    <span>
+                      <strong>Hauptbearbeiter:</strong> {s.assigneeUserId ? <code>{s.assigneeUserId}</code> : 'niemand'}
+                      {' · '}
+                      <strong>Weitere Bearbeiter:</strong>{' '}
+                      {(s.reviewers ?? []).filter((r) => r.assigneeType === 'USER').length === 0
+                        ? 'keine'
+                        : (s.reviewers ?? [])
+                            .filter((r) => r.assigneeType === 'USER')
+                            .map((r) => (
+                              <span key={r.assigneeId}>
+                                <code>{r.assigneeId}</code>{' '}
+                                <button className="linklike" aria-label={`Bearbeiter ${r.assigneeId} entfernen`} disabled={removeReviewer.isPending} onClick={() => removeReviewer.mutate(r.assigneeId)}>✕</button>{' '}
+                              </span>
+                            ))}
+                    </span>
+                    <input className="inline-input" placeholder="Discord-ID als weiteren Bearbeiter" aria-label="Weiteren Bearbeiter hinzufügen" value={coReviewer} onChange={(e) => setCoReviewer(e.target.value)} />
+                    <button className="btn" disabled={!/^\d{5,25}$/.test(coReviewer.trim()) || flow.isPending} onClick={() => { flow.mutate({ path: 'reviewers', body: { userId: coReviewer.trim() }, msg: 'Bearbeiter hinzugefügt.' }); setCoReviewer(''); }}>
+                      👥 Hinzufügen
+                    </button>
+                    <input className="inline-input" placeholder="Discord-ID (neuer Hauptbearbeiter)" aria-label="Weiterleiten an" value={forwardTo} onChange={(e) => setForwardTo(e.target.value)} />
+                    <button
+                      className="btn"
+                      disabled={!/^\d{5,25}$/.test(forwardTo.trim()) || flow.isPending}
+                      onClick={() => {
+                        const note = window.prompt('Notiz zur Weiterleitung (optional)');
+                        if (note !== null) {
+                          flow.mutate({ path: 'forward', body: { userId: forwardTo.trim(), ...(note.trim() ? { note } : {}) }, msg: 'Bewerbung weitergeleitet.' });
+                          setForwardTo('');
+                        }
+                      }}
+                    >
+                      📨 Weiterleiten
+                    </button>
                   </div>
                   {s.status === 'SUBMITTED' && (
                     <button

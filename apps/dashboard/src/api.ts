@@ -377,6 +377,8 @@ export interface SubmissionDetail extends SubmissionRow {
   version: { version: number; questions: { questions?: BuilderQuestion[] } | BuilderQuestion[] };
   answers: { questionId: string; value: unknown }[];
   notes: { id: string; authorId: string; content: string; createdAt: string }[];
+  /** Weitere Bearbeiter (neben `assigneeUserId`). */
+  reviewers?: { assigneeType: string; assigneeId: string }[];
 }
 export interface ReviewOptions {
   steps: { key: string; label: string; available: boolean; enabled: boolean }[];

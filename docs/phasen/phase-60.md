@@ -15,7 +15,7 @@
 | 11 Historie | ✅ Verlauf je Bewerbung und je Benutzer, Audit-Ereignisse. |
 | 12 Bewerbungs-Ticket | ✅ **60f**: automatisch nach dem Absenden (Option war vorher wirkungslos), Kategorie je Bewerbungsart, Knöpfe im Ticket: Schließen, Übernehmen, Annehmen, Ablehnen, Notiz, Bewerbung ansehen. |
 | 13 Bewertungssystem | ✅ **60b**: frei definierbare Bewertungsfelder je Bewerbungsart (Name, 2–10 Sterne), jede Person bewertet sich selbst, Mittelwerte je Feld und Gesamt (in %), Rechte `…ratings.view/edit`, Audit `submission.rated`. Nur Dashboard (kein Discord-Knopf). |
-| 14 Mehrere Bearbeiter | ❌ genau ein Bearbeiter (Übernehmen/Freigeben/Zuweisen); Notizen ✅. |
+| 14 Mehrere Bearbeiter | ✅ **60g**: Hauptbearbeiter + weitere Bearbeiter (hinzufügen/entfernen), Weiterleiten, Notizen. |
 | 15 Voraussetzungen | ✅ **60e** (Mindestalter einer Person nur über eine Frage mit Mindestwert; „bestimmte Fraktion“ = Team der Personalakte). |
 | 16 Cooldown | ✅ **60e** je Bewerbungsart: kein, 1/3/7/14/30 Tage oder individuell (vorher wirkungslos, s. o.). |
 | 17 Automatische Rollen | ✅ Rollenaktionen bei Einreichung/Annahme/Ablehnung. |
@@ -77,3 +77,13 @@
 - **Ergebnis-Kanal** (`review.resultChannelId`): Annahmen werden als Embed gemeldet (Text mit Platzhaltern, Standard „🎉 {user} wurde bei **{applicationName}** angenommen. Willkommen im Team!“); Ablehnungen nur mit `resultPostDenied`; nie für Testbewerbungen; erwähnt nur den Bewerber. Erscheint als Schritt „Ergebnis-Kanal“ im Ergebnis der Entscheidung (fehlgeschlagen, wenn der Bot dort nicht schreiben darf).
 - **Dashboard:** Bewerbungsart → Bearbeitung → „Ticket und Ergebnis“.
 - **Tests:** `apps/bot/test/application-ticket.int.test.ts` (Kategorie, kein Doppel, Knöpfe, Fehlerfälle), `review.int.test.ts` (Ergebnis-Kanal: Annahme, Ablehnung nur auf Wunsch, Test nie, eigener Text), Browser `e2e/teamchance.spec.ts`.
+
+## 60g – Mehrere Bearbeiter (Punkt 14)
+- **Hauptbearbeiter** = bisheriger Bearbeiter (`assigneeUserId`: Übernehmen/Freigeben/Zuweisen wie gehabt). **Weitere Bearbeiter** in `application_reviewers` (bisher ungenutzte Tabelle), höchstens 10; sie dürfen wie der Hauptbearbeiter **entscheiden und zurückstellen**.
+- **Festlegen** dürfen der Hauptbearbeiter und Führungskräfte (`…reassign`); ohne Hauptbearbeiter wird die handelnde Person zuerst Hauptbearbeiter. Hinzugefügte erhalten eine DM.
+- **Weiterleiten:** Hauptbearbeiter (oder Führungskraft) übergibt an eine andere Person (neuer Hauptbearbeiter, optional mit Notiz, DM an die Person); war sie weiterer Bearbeiter, wird sie dort entfernt.
+- **Anzeige:** Prüf-Nachricht „Bearbeiter: @Haupt (+ @A, @B)“; Dashboard-Detail mit Liste, Entfernen (✕), Hinzufügen und Weiterleiten.
+- **Recht:** `applications.reviewers.assign` („Bearbeiter zuweisen“, existierte ohne Funktion). API: `POST submissions/:id/reviewers`, `DELETE submissions/:id/reviewers/:userId`, `POST submissions/:id/forward`.
+- **Verlauf:** `submission.reviewer_added/removed`, `submission.forwarded` (mit Notiz).
+- **Tests:** Bot (Festlegen nur durch Hauptbearbeiter, Doppel, Anzeige, Entscheidung durch weiteren Bearbeiter, Weiterleiten inkl. Notiz/DM/Führungskraft), Browser `e2e/teamchance.spec.ts`.
+- **Grenze:** Weitere Bearbeiter lassen sich nur im Dashboard (nicht per Discord-Knopf) festlegen.
