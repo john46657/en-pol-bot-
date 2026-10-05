@@ -4,6 +4,7 @@ import { api } from '../../api';
 import { Dialog } from '../../components/Dialog';
 import { errorText } from '../../components/QueryState';
 import { useToast } from '../../toast';
+import { UserName } from '../../components/UserName';
 
 export interface ThemeRow {
   id: string;
@@ -407,7 +408,7 @@ function History({ guildId }: { guildId: string }) {
               <br />
               <small className="muted">
                 {new Date(e.at).toLocaleString('de-DE')}
-                {e.actorId ? ` · ${e.actorName ?? `Benutzer ${e.actorId}`}` : ' · automatisch'}
+                {e.actorId ? <> · {e.actorName ?? <UserName id={e.actorId} />}</> : ' · automatisch'}
               </small>
             </span>
           </li>
@@ -452,7 +453,7 @@ function Versions({
               <br />
               <small className="muted">
                 {new Date(v.createdAt).toLocaleString('de-DE')}
-                {v.createdBy ? ` · ${v.createdBy}` : ''}
+                {v.createdBy ? <> · <UserName id={v.createdBy} /></> : ''}
               </small>
             </span>
             {i > 0 && !theme.builtin && (

@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { api } from '../api';
 import { errorText } from './QueryState';
 import { useToast } from '../toast';
+import { UserName } from './UserName';
 
 interface Ratings {
   enabled: boolean;
@@ -73,7 +74,7 @@ export function SubmissionRatings({ guildId, submissionId }: { guildId: string; 
           <ul className="plain">
             {r.reviewers.map((x) => (
               <li key={x.reviewerId}>
-                <code>{x.reviewerId}</code>: {r.fields.map((f) => `${f.label} ${stars(x.values[f.id], f.max)}`).join(' · ')}
+                <UserName id={x.reviewerId} />: {r.fields.map((f) => `${f.label} ${stars(x.values[f.id], f.max)}`).join(' · ')}
               </li>
             ))}
           </ul>

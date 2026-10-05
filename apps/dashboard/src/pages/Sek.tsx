@@ -4,6 +4,7 @@ import { useParams } from 'react-router';
 import { api, type CourseRow, type QualificationRow, type SekConfigRow, type SekMemberRow, type SekSquadRow, type SekStats, type ShiftTypeRow, type TeamRow } from '../api';
 import { errorText, QueryState } from '../components/QueryState';
 import { useToast } from '../toast';
+import { UserName } from '../components/UserName';
 
 const DUTY = { ON: '🟢 im Dienst', PAUSED: '🟡 Pause', OFF: '⚫ nicht im Dienst' } as const;
 const hrs = (s: number) => `${Math.floor(s / 3600)} Std ${String(Math.floor((s % 3600) / 60)).padStart(2, '0')} Min`;
@@ -65,7 +66,7 @@ export function Sek() {
             {(s) => (
               <p>
                 <strong>{s.members.total}</strong> Mitglieder · <strong>{s.members.qualified}</strong> qualifiziert · <strong>{s.members.onDuty}</strong> im Dienst · Einsätze: {Object.entries(s.operations).map(([k, v]) => `${k} ${v}`).join(', ') || '–'} · Ausbildungen: {s.trainings.passed} bestanden
-                {s.shifts && s.shifts.leaderboard.length > 0 && <><br /><small>🏆 {s.shifts.leaderboard.map((e) => `${e.rank}. ${e.userId} ${hrs(e.totalSeconds)}`).join(' · ')}</small></>}
+                {s.shifts && s.shifts.leaderboard.length > 0 && <><br /><small>🏆 {s.shifts.leaderboard.map((e, i) => <span key={e.userId}>{i > 0 ? ' · ' : ''}{e.rank}. <UserName id={e.userId} /> {hrs(e.totalSeconds)}</span>)}</small></>}
               </p>
             )}
           </QueryState>
@@ -75,7 +76,7 @@ export function Sek() {
               <ul className="list">
                 {rows.map((m) => (
                   <li key={m.userId} className="row">
-                    <span className="grow"><strong>{m.rpName}</strong> <code>{m.userId}</code> · {m.rank ?? '–'} · {DUTY[m.onDuty]}{!m.hasQualification && ' · ⚠️ Qualifikation fehlt'}{m.squads.length > 0 && ` · ${m.squads.join(', ')}`}</span>
+                    <span className="grow"><strong>{m.rpName}</strong> <UserName id={m.userId} variant="discord" /> · {m.rank ?? '–'} · {DUTY[m.onDuty]}{!m.hasQualification && ' · ⚠️ Qualifikation fehlt'}{m.squads.length > 0 && ` · ${m.squads.join(', ')}`}</span>
                     <button className="btn danger" onClick={() => { const r = prompt('Grund für das Entfernen?'); if (r) call.mutate({ method: 'DELETE', path: `/members/${m.userId}?reason=${encodeURIComponent(r)}`, msg: 'Aus dem SEK entfernt.' }); }}>Entfernen</button>
                   </li>
                 ))}
@@ -103,7 +104,7 @@ export function Sek() {
                   <li key={s.id} className="row" style={{ alignItems: 'flex-start' }}>
                     <span className="grow">
                       <strong>{s.name}</strong> {!s.active && <em>(deaktiviert)</em>}
-                      <br />{s.members.map((m) => <span key={m.userId} style={{ marginRight: 8 }}><code>{m.userId}</code> ({m.role}) <button className="btn" onClick={() => call.mutate({ method: 'DELETE', path: `/squads/${s.id}/members/${m.userId}`, msg: 'Entfernt.' })}>✕</button></span>)}
+                      <br />{s.members.map((m) => <span key={m.userId} style={{ marginRight: 8 }}><UserName id={m.userId} /> ({m.role}) <button className="btn" onClick={() => call.mutate({ method: 'DELETE', path: `/squads/${s.id}/members/${m.userId}`, msg: 'Entfernt.' })}>✕</button></span>)}
                       <br />
                       <input className="inline-input" placeholder="Discord-ID" value={sm[s.id]?.userId ?? ''} onChange={(e) => setSm({ ...sm, [s.id]: { userId: e.target.value, role: sm[s.id]?.role ?? '' } })} />
                       <input className="inline-input" placeholder="Funktion (z. B. Scharfschütze)" value={sm[s.id]?.role ?? ''} onChange={(e) => setSm({ ...sm, [s.id]: { userId: sm[s.id]?.userId ?? '', role: e.target.value } })} />

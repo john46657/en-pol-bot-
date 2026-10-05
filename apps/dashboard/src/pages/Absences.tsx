@@ -4,6 +4,7 @@ import { useParams } from 'react-router';
 import { api, type AbsenceRow } from '../api';
 import { errorText, QueryState } from '../components/QueryState';
 import { useToast } from '../toast';
+import { UserName } from '../components/UserName';
 
 const ST = { PENDING: '🕓 offen', APPROVED: '✅ genehmigt', REJECTED: '❌ abgelehnt', WITHDRAWN: '↩️ zurückgezogen', ENDED: '🏁 vorzeitig beendet' } as const;
 const CAT: Record<string, string> = { URLAUB: 'Urlaub', KRANK: 'Krankheit', BERUFLICH: 'Beruflich/Schule', SONSTIGES: 'Sonstiges' };
@@ -36,7 +37,7 @@ export function Absences() {
       <h2>Aktuell abgemeldet</h2>
       <QueryState query={active}>
         {(rows) => rows.length === 0 ? <p className="muted">Niemand ist abgemeldet.</p> : (
-          <ul className="list">{rows.map((a) => <li key={a.id} className="row"><code>{a.userId}</code> · bis {day(a.endDate)} · {CAT[a.category] ?? a.category}</li>)}</ul>
+          <ul className="list">{rows.map((a) => <li key={a.id} className="row"><UserName id={a.userId} /> · bis {day(a.endDate)} · {CAT[a.category] ?? a.category}</li>)}</ul>
         )}
       </QueryState>
       <h2>Anträge</h2>
@@ -47,7 +48,7 @@ export function Absences() {
             {d.items.map((a) => (
               <li key={a.id} className="row" style={{ alignItems: 'flex-start' }}>
                 <span className="grow">
-                  <strong>{num(a.number)}</strong> <code>{a.userId}</code> · {day(a.startDate)} – {day(a.endDate)} · {CAT[a.category] ?? a.category} · {ST[a.status]}
+                  <strong>{num(a.number)}</strong> <UserName id={a.userId} /> · {day(a.startDate)} – {day(a.endDate)} · {CAT[a.category] ?? a.category} · {ST[a.status]}
                   <br /><small className="muted">{a.reason}{a.decisionReason ? ` · Entscheidung: ${a.decisionReason}` : ''}</small>
                   {a.status === 'PENDING' && (
                     <div>

@@ -4,6 +4,7 @@ import { useParams } from 'react-router';
 import { api, type DiscordRole, type NumberFormat, type RankRow, type TeamRow } from '../api';
 import { errorText, QueryState } from '../components/QueryState';
 import { useToast } from '../toast';
+import { UserName } from '../components/UserName';
 
 /** Dienstgrade, Teams und Dienstnummern-Format. */
 export function PersonnelStructure() {
@@ -302,7 +303,7 @@ export function PersonnelStructure() {
                   <small className="muted">
                     {t._count?.records ?? 0} Mitglieder
                     {t.discordRoleId ? ` · @${roleName(t.discordRoleId) ?? '?'}` : ''}
-                    {t.leaderUserId ? ` · Leitung ${t.leaderUserId}` : ''}
+                    {t.leaderUserId ? <> · Leitung <UserName id={t.leaderUserId} /></> : ''}
                     {t.active ? '' : ' · deaktiviert'}
                   </small>
                 </span>

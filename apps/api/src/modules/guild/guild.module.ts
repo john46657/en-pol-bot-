@@ -7,6 +7,7 @@ import { PermissionsAdminService } from './permissions.service.js';
 import { DiscordService } from './discord.service.js';
 import { RightsService } from './rights.service.js';
 import { NexusRolesService } from './nexus-roles.service.js';
+import { NamesService } from './names.service.js';
 
 /**
  * GuildModule: Server-Daten für das Dashboard (Overview/Health, Channels,
@@ -22,6 +23,7 @@ import { NexusRolesService } from './nexus-roles.service.js';
     AccessService,
     RightsService,
     NexusRolesService,
+    NamesService,
   ],
   exports: [GuildService, DiscordService],
 })

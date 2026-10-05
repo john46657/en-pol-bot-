@@ -4,6 +4,7 @@ import { useParams } from 'react-router';
 import { api } from '../api';
 import { errorText, QueryState } from '../components/QueryState';
 import { useToast } from '../toast';
+import { UserName } from '../components/UserName';
 
 interface Row {
   id: string;
@@ -91,10 +92,10 @@ export function Moderation() {
               {rows.map((r) => (
                 <li key={r.id} className="row" style={{ opacity: r.status === 'ACTIVE' || r.status === 'DONE' ? 1 : 0.6 }}>
                   <span className="grow">
-                    <strong>#{r.number} {label(r.type)}</strong> · <code>{r.userId}</code> · {STATUS[r.status]}
+                    <strong>#{r.number} {label(r.type)}</strong> · <UserName id={r.userId} /> · {STATUS[r.status]}
                     <br />
                     <small className="muted">
-                      {r.reason} · {when(r.createdAt)} · von <code>{r.moderatorId}</code>
+                      {r.reason} · {when(r.createdAt)} · von <UserName id={r.moderatorId} />
                       {r.durationMin ? ` · ${r.type === 'BAN' ? `${Math.round(r.durationMin / 1440)} Tage` : `${r.durationMin} Min.`}${r.expiresAt ? ` (bis ${when(r.expiresAt)})` : ''}` : ''}
                       {r.dmDelivered ? '' : ' · keine DM zugestellt'}
                       {r.revokeReason ? ` · aufgehoben: ${r.revokeReason}` : ''}

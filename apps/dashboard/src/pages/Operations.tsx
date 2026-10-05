@@ -4,6 +4,7 @@ import { useParams } from 'react-router';
 import { api, type DutyOverviewData, type OpStatusKey, type OperationRow } from '../api';
 import { errorText, QueryState } from '../components/QueryState';
 import { useToast } from '../toast';
+import { UserName } from '../components/UserName';
 
 const STATUS: Record<OpStatusKey, string> = { REQUESTED: 'Angefordert', EN_ROUTE: 'Angefahren', ACTIVE: 'Aktiv', COMPLETED: 'Abgeschlossen', CANCELLED: 'Abgebrochen' };
 const PRIO = { LOW: '⚪ Niedrig', NORMAL: '🔵 Normal', HIGH: '🟠 Hoch', URGENT: '🔴 Dringend' } as const;
@@ -54,7 +55,7 @@ export function Operations() {
                     <br />
                     <small>Einheiten: {o.units.map((u) => (
                       <span key={u.id}>{u.callsign}{(o.status !== 'COMPLETED' && o.status !== 'CANCELLED') && <button className="btn" onClick={() => call.mutate({ method: 'DELETE', path: `/${o.id}/units/${u.unitId}`, msg: 'Einheit abgezogen.' })}>✕</button>} </span>
-                    ))}{o.units.length === 0 && '–'} · Leiter: {o.leaderId ? <code>{o.leaderId}</code> : '–'}</small>
+                    ))}{o.units.length === 0 && '–'} · Leiter: {o.leaderId ? <UserName id={o.leaderId} /> : '–'}</small>
                     {o.report && <><br /><small>{o.status === 'CANCELLED' ? 'Abbruchgrund' : 'Bericht'}: {o.report}</small></>}
                     {NEXT[o.status].length > 0 && (
                       <>

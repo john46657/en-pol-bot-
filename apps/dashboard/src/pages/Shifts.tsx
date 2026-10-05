@@ -4,6 +4,7 @@ import { useParams } from 'react-router';
 import { api, type DiscordRole, type LeaderboardRow, type ShiftPeriodRow, type ShiftRow, type ShiftStatsRow, type ShiftTypeRow } from '../api';
 import { errorText, QueryState } from '../components/QueryState';
 import { useToast } from '../toast';
+import { UserName } from '../components/UserName';
 
 const fmtDur = (s: number | null) => {
   if (s === null) return '–';
@@ -135,7 +136,7 @@ export function Shifts() {
             <ol className="list">
               {d.items.map((e) => (
                 <li key={e.userId} className="row">
-                  <span className="grow"><strong>{e.rank}.</strong> <code>{e.userId}</code></span>
+                  <span className="grow"><strong>{e.rank}.</strong> <UserName id={e.userId} /></span>
                   <span>{fmtDur(e.totalSeconds)} · {e.count} Schichten · Ø {fmtDur(e.averageSeconds)}</span>
                 </li>
               ))}
@@ -181,7 +182,7 @@ export function Shifts() {
               {d.items.map((s) => (
                 <li key={s.id} className="row">
                   <span className="grow">
-                    <strong>{s.type.emoji} {s.type.name}</strong> · <code>{s.userId}</code> · {STATUS[s.status]}
+                    <strong>{s.type.emoji} {s.type.name}</strong> · <UserName id={s.userId} /> · {STATUS[s.status]}
                     {s.flaggedLongAt && s.status !== 'ENDED' ? ' · ⏰ ungewöhnlich lang' : ''}
                     {s.endReason === 'corrected' ? ' · korrigiert' : s.endReason === 'supervisor' ? ' · durch Führung beendet' : ''}
                     <br />

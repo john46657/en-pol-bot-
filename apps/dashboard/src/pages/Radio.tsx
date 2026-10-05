@@ -4,6 +4,7 @@ import { useParams } from 'react-router';
 import { api, type DiscordChannel, type MemberHit, type RadioAccessRow, type RadioChannelRow, type RadioLevelKey } from '../api';
 import { errorText, QueryState } from '../components/QueryState';
 import { useToast } from '../toast';
+import { UserName } from '../components/UserName';
 
 const LEVEL: Record<RadioLevelKey, string> = { LISTEN: 'Mithören', SPEAK: 'Sprechen', FULL: 'Vollzugriff' };
 
@@ -60,7 +61,7 @@ export function Radio() {
               {d.items.map((a) => (
                 <li key={a.id} className="row">
                   <span className="grow">
-                    <strong>{d.names[a.userId] ?? a.userId}</strong> <code>{a.userId}</code>
+                    <strong>{d.names[a.userId] ?? <UserName id={a.userId} />}</strong>
                     <br /><small className="muted">{a.reason ?? 'kein Grund angegeben'}</small>
                   </span>
                   <select value={a.level} aria-label="Stufe ändern" onChange={(e) => call.mutate({ method: 'POST', path: '/whitelist', body: { userId: a.userId, level: e.target.value, special: a.special }, msg: 'Stufe geändert.' })}>

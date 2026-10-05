@@ -69,6 +69,8 @@ const members = {
   '900000000000000082': [],
   '900000000000000083': [],
 };
+/** Spitznamen auf dem Server (Namensanzeige im Dashboard). */
+const NICKS = { '900000000000000040': 'Hauptkommissarin Lea' };
 const routes = {
   // Serverauswahl im Dashboard: der „angemeldete“ Benutzer ist Besitzer des Demo-Servers
   '/api/v10/users/@me/guilds': [{ id: G, name: 'NEXUS Demo-Server', icon: null, owner: true, permissions: String(1n << 3n) }],
@@ -181,10 +183,13 @@ createServer(async (req, res) => {
       return json(204);
     }
   }
+  // Discord-Konten (auch Ausgetretene): Benutzername „ehemalig“ + letzte zwei Ziffern
+  const userRoute = url.match(/^\/api\/v10\/users\/(\d{5,25})$/);
+  if (userRoute) return json(200, { id: userRoute[1], username: members[userRoute[1]] ? 'u' + userRoute[1] : 'ehemalig' + userRoute[1].slice(-2), global_name: null, avatar: null });
   const m = url.match(new RegExp(`^/api/v10/guilds/${G}/members/(\\d+)$`));
   const body = m
     ? members[m[1]]
-      ? { user: { id: m[1], username: 'u' + m[1], global_name: null }, roles: members[m[1]] }
+      ? { user: { id: m[1], username: 'u' + m[1], global_name: null }, roles: members[m[1]], nick: NICKS[m[1]] ?? null }
       : undefined
     : routes[url];
   res.writeHead(body ? 200 : 404, { 'Content-Type': 'application/json' });

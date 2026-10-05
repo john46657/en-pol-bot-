@@ -4,6 +4,7 @@ import { useParams } from 'react-router';
 import { api, type CourseRow, type PromotionCandidate, type PromotionRow, type PromotionRuleRow, type QualificationRow, type RankRow, type RequirementRow } from '../api';
 import { errorText, QueryState } from '../components/QueryState';
 import { useToast } from '../toast';
+import { UserName } from '../components/UserName';
 
 const ST = { PENDING: '🕓 offen', APPROVED: '✅ genehmigt', REJECTED: '❌ abgelehnt', WITHDRAWN: '↩️ zurückgezogen' } as const;
 const num = (n: number) => `B-${String(n).padStart(4, '0')}`;
@@ -52,7 +53,7 @@ export function Promotions() {
           <ul className="list">
             {rows.map((c) => (
               <li key={c.userId} className="row">
-                <span className="grow"><strong>{c.rpName}</strong> <code>{c.userId}</code> · {c.fromRank ?? '–'} → <strong>{c.toRank}</strong></span>
+                <span className="grow"><strong>{c.rpName}</strong> <UserName id={c.userId} variant="discord" /> · {c.fromRank ?? '–'} → <strong>{c.toRank}</strong></span>
                 <button className="btn primary" disabled={c.hasOpenRequest || call.isPending} onClick={() => call.mutate({ method: 'POST', path: '', body: { userId: c.userId, toRankId: c.toRankId }, msg: 'Antrag gestellt.' })}>{c.hasOpenRequest ? 'Antrag offen' : 'Antrag stellen'}</button>
               </li>
             ))}
@@ -67,8 +68,8 @@ export function Promotions() {
             {d.items.map((r) => (
               <li key={r.id} className="row" style={{ alignItems: 'flex-start' }}>
                 <span className="grow">
-                  <strong>{num(r.number)}</strong> <code>{r.userId}</code>: {r.fromRankName ?? '–'} → <strong>{r.toRankName}</strong> · {ST[r.status]}{r.override ? ' · ⚠️ Ausnahme' : ''}
-                  <br /><small className="muted">von <code>{r.requestedBy}</code>{r.reason ? ` · ${r.reason}` : ''}{r.decisionReason ? ` · Entscheidung: ${r.decisionReason}` : ''}{r.roleResult && r.roleResult !== 'success' ? ` · ⚠️ Rollen: ${r.roleResult}` : ''}</small>
+                  <strong>{num(r.number)}</strong> <UserName id={r.userId} />: {r.fromRankName ?? '–'} → <strong>{r.toRankName}</strong> · {ST[r.status]}{r.override ? ' · ⚠️ Ausnahme' : ''}
+                  <br /><small className="muted">von <UserName id={r.requestedBy} />{r.reason ? ` · ${r.reason}` : ''}{r.decisionReason ? ` · Entscheidung: ${r.decisionReason}` : ''}{r.roleResult && r.roleResult !== 'success' ? ` · ⚠️ Rollen: ${r.roleResult}` : ''}</small>
                   <ul className="plain">{(r.checks ?? []).map((c, i) => <li key={i}><small>{c.met ? '✅' : '❌'} {c.label} – {c.detail}</small></li>)}</ul>
                   {r.status === 'PENDING' && (
                     <>

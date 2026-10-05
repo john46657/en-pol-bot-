@@ -4,6 +4,7 @@ import { useParams } from 'react-router';
 import { api, type PenaltyRegister, type PenaltyRow } from '../api';
 import { errorText, QueryState } from '../components/QueryState';
 import { useToast } from '../toast';
+import { UserName } from '../components/UserName';
 
 const KIND = { FINE: 'Bußgeld', WARNING: 'Verwarnung', POINTS: 'Strafpunkte', LICENSE_REVOCATION: 'Führerscheinentzug', VEHICLE_SEIZURE: 'Fahrzeugbeschlagnahmung' } as const;
 const detail = (p: PenaltyRow) => (p.kind === 'FINE' ? `${p.amount} $` : p.kind === 'POINTS' ? `${p.points} Punkt(e)` : p.kind === 'LICENSE_REVOCATION' ? `${p.durationDays} Tage` : p.kind === 'VEHICLE_SEIZURE' ? p.plate : '');
@@ -48,7 +49,7 @@ export function Penalties() {
                   <span className="grow">
                     <strong>{num(p.number)} · {KIND[p.kind]} {detail(p)}</strong> · <button className="btn" onClick={() => setReg(p.subjectName)}>{p.subjectName}</button>
                     {p.status === 'REVOKED' && <em> · aufgehoben: {p.revokeReason}</em>}
-                    <br /><small className="muted">{p.reason} · von <code>{p.issuedBy}</code></small>
+                    <br /><small className="muted">{p.reason} · von <UserName id={p.issuedBy} /></small>
                     {p.status === 'ACTIVE' && (
                       <>
                         <br />

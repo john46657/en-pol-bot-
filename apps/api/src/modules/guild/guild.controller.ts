@@ -28,6 +28,7 @@ import type { ChannelKind } from './bot-access.js';
 import { GuildService } from './guild.service.js';
 import { RightsService } from './rights.service.js';
 import { NexusRolesService } from './nexus-roles.service.js';
+import { NamesService } from './names.service.js';
 import { Access, type RequestAccess } from '../../common/decorators/scope.decorator.js';
 import { DiscordService } from './discord.service.js';
 
@@ -49,6 +50,7 @@ export class GuildController {
     private readonly access: AccessService,
     private readonly rights: RightsService,
     private readonly nexusRoles: NexusRolesService,
+    private readonly names: NamesService,
   ) {}
 
   /** Server-Overview + Configuration Health (§4/§36). */
@@ -212,6 +214,15 @@ export class GuildController {
   ) {
     await this.rights.forProfileChange(guildId, access, profileId);
     return this.access.deleteProfile(guildId, user?.id ?? 'unknown', profileId);
+  }
+
+  // --- Namen statt Discord-IDs ------------------------------------------------
+
+  /** Discord-IDs → Namen (`?ids=1,2,3`, höchstens 100). Für jeden mit Dashboard-Zugang (nur Namen und Avatar). */
+  @Get('discord/names')
+  @RequireDashboardAccess()
+  resolveNames(@GuildId() guildId: string, @Query('ids') ids?: string) {
+    return this.names.resolve(guildId, (ids ?? '').split(',').map((s) => s.trim()).filter(Boolean));
   }
 
   // --- Module & Befehle -------------------------------------------------------

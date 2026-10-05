@@ -2,6 +2,7 @@ import { useQuery } from '@tanstack/react-query';
 import { useParams } from 'react-router';
 import { api } from '../api';
 import { QueryState } from '../components/QueryState';
+import { UserName } from '../components/UserName';
 
 interface Status {
   jobs: { name: string; label: string; everyMs: number; lastRun: { at: string; ok: boolean; error: string | null; summary: unknown } | null; failedRecently: number }[];
@@ -35,7 +36,7 @@ export function Automation() {
             <p>Gesendet: <strong>{d.notifications['SENT'] ?? 0}</strong> · Wartend/Wiederholung: <strong>{d.notifications['PENDING'] ?? 0}</strong> · Fehlgeschlagen: <strong>{d.notifications['FAILED'] ?? 0}</strong></p>
             {d.failedNotifications.length > 0 && (
               <ul className="list">
-                {d.failedNotifications.map((n) => <li key={n.id} className="row"><span className="grow"><strong>{n.kind}</strong> an {n.targetKind === 'USER' ? 'Benutzer' : 'Kanal'} <code>{n.targetId}</code> · {n.attempts} Versuche<br /><small className="muted">{n.lastError}</small></span></li>)}
+                {d.failedNotifications.map((n) => <li key={n.id} className="row"><span className="grow"><strong>{n.kind}</strong> an {n.targetKind === 'USER' ? <>Benutzer <UserName id={n.targetId} /></> : <>Kanal <code>{n.targetId}</code></>} · {n.attempts} Versuche<br /><small className="muted">{n.lastError}</small></span></li>)}
               </ul>
             )}
           </>

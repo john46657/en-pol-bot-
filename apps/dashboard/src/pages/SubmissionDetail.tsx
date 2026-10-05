@@ -14,6 +14,7 @@ import {
 import { errorText, QueryState } from '../components/QueryState';
 import { SubmissionRatings } from '../components/SubmissionRatings';
 import { useToast } from '../toast';
+import { UserName } from '../components/UserName';
 
 const ICON = { done: '✅', skipped: '⏭️', failed: '❌', unavailable: '⏳' } as const;
 const show = (v: unknown, q?: BuilderQuestion): string => {
@@ -152,7 +153,7 @@ export function SubmissionDetail() {
               {s.publicReason && <p className="muted">Begründung/Nachricht: {s.publicReason}</p>}
               <p aria-label="Bearbeiter">
                 <strong>Bearbeiter:</strong>{' '}
-                {s.assigneeUserId ? <code>{s.assigneeUserId}</code> : <span className="muted">Noch nicht zugewiesen</span>}
+                {s.assigneeUserId ? <UserName id={s.assigneeUserId} /> : <span className="muted">Noch nicht zugewiesen</span>}
               </p>
 
               {result && (
@@ -236,7 +237,7 @@ export function SubmissionDetail() {
                   </div>
                   <div className="actions" aria-label="Weitere Bearbeiter">
                     <span>
-                      <strong>Hauptbearbeiter:</strong> {s.assigneeUserId ? <code>{s.assigneeUserId}</code> : 'niemand'}
+                      <strong>Hauptbearbeiter:</strong> {s.assigneeUserId ? <UserName id={s.assigneeUserId} /> : 'niemand'}
                       {' · '}
                       <strong>Weitere Bearbeiter:</strong>{' '}
                       {(s.reviewers ?? []).filter((r) => r.assigneeType === 'USER').length === 0
@@ -245,7 +246,7 @@ export function SubmissionDetail() {
                             .filter((r) => r.assigneeType === 'USER')
                             .map((r) => (
                               <span key={r.assigneeId}>
-                                <code>{r.assigneeId}</code>{' '}
+                                <UserName id={r.assigneeId} />{' '}
                                 <button className="linklike" aria-label={`Bearbeiter ${r.assigneeId} entfernen`} disabled={removeReviewer.isPending} onClick={() => removeReviewer.mutate(r.assigneeId)}>✕</button>{' '}
                               </span>
                             ))}
@@ -380,7 +381,7 @@ export function SubmissionDetail() {
                   {s.notes.map((x) => (
                     <li key={x.id} className="card">
                       <small className="muted">
-                        {x.authorId} · {new Date(x.createdAt).toLocaleString('de-DE')}
+                        <UserName id={x.authorId} /> · {new Date(x.createdAt).toLocaleString('de-DE')}
                       </small>
                       <div>{x.content}</div>
                     </li>
@@ -394,7 +395,7 @@ export function SubmissionDetail() {
                   <li key={h.id}>
                     <code>{h.action}</code>{' '}
                     <small className="muted">
-                      {h.actorId ? `von ${h.actorId} · ` : ''}
+                      {h.actorId ? <>von <UserName id={h.actorId} /> · </> : ''}
                       {new Date(h.createdAt).toLocaleString('de-DE')}
                     </small>
                   </li>

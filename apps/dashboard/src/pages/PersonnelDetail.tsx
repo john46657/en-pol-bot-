@@ -10,6 +10,7 @@ import {
 } from '../api';
 import { errorText, QueryState } from '../components/QueryState';
 import { useToast } from '../toast';
+import { UserName } from '../components/UserName';
 
 const KIND = { AWARD: 'Auszeichnung', DISCIPLINE: 'Disziplin', NOTE: 'Notiz' } as const;
 const EVENT: Record<string, string> = {
@@ -307,7 +308,7 @@ function Body({
               <li key={e.id}>
                 {EVENT[e.type] ?? e.type}{' '}
                 <small className="muted">
-                  {e.actorId ? `von ${e.actorId} · ` : 'automatisch · '}
+                  {e.actorId ? <>von <UserName id={e.actorId} /> · </> : 'automatisch · '}
                   {new Date(e.createdAt).toLocaleString('de-DE')}
                 </small>
               </li>
@@ -348,7 +349,7 @@ function EntrySection({
               <strong>{e.title}</strong>{' '}
               <small className="muted">
                 {day(e.occurredAt)}
-                {e.createdBy ? ` · ${e.createdBy}` : ''}
+                {e.createdBy ? <> · <UserName id={e.createdBy} /></> : ''}
                 {e.revokedAt ? ` · widerrufen${e.revokeReason ? `: ${e.revokeReason}` : ''}` : ''}
               </small>
               {e.body && <div>{e.body}</div>}

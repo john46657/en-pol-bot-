@@ -4,6 +4,7 @@ import { useParams } from 'react-router';
 import { api, API_URL, type DiscordChannel } from '../api';
 import { errorText } from '../components/QueryState';
 import { useToast } from '../toast';
+import { UserName } from '../components/UserName';
 
 interface AuditEntry {
   id: string;
@@ -105,7 +106,7 @@ export function Logs() {
               <small className="muted">{new Date(e.createdAt).toLocaleString('de-DE')}</small>
             </div>
             <small className="muted">
-              {areas.data?.areas.find((a) => a.key === e.area)?.label ?? 'Sonstiges'} · {e.actorType}{e.actorId ? ` ${e.actorId}` : ''}{e.automation ? ` (${e.automation})` : ''}
+              {areas.data?.areas.find((a) => a.key === e.area)?.label ?? 'Sonstiges'} · {e.actorId ? <UserName id={e.actorId} /> : e.actorType}{e.automation ? ` (${e.automation})` : ''}
               {e.resourceType ? ` · ${e.resourceType} ${e.resourceId ?? ''}` : ''}{e.permission ? ` · Recht: ${e.permission}` : ''}{e.result && e.result !== 'success' ? ` · ${e.result}` : ''}
             </small>
             {e.reason && <div><small>Grund: {e.reason}</small></div>}

@@ -4,6 +4,7 @@ import { useParams } from 'react-router';
 import { api, type DutyOverviewData, type UnitRow, type UnitStatusKey } from '../api';
 import { errorText, QueryState } from '../components/QueryState';
 import { useToast } from '../toast';
+import { UserName } from '../components/UserName';
 
 const LABEL: Record<UnitStatusKey, string> = { AVAILABLE: 'Verfügbar', BUSY: 'Im Einsatz', BREAK: 'Pause', UNAVAILABLE: 'Nicht verfügbar' };
 const ICON: Record<UnitStatusKey, string> = { AVAILABLE: '🟢', BUSY: '🔴', BREAK: '🟡', UNAVAILABLE: '⚫' };
@@ -36,7 +37,7 @@ export function Duty() {
         <br />
         {u.members.map((m) => (
           <span key={m.userId} style={{ marginRight: 8 }}>
-            {m.role === 'LEADER' ? '⭐' : ''}<code>{m.userId}</code>{m.onBreak ? ' ☕' : ''}{' '}
+            {m.role === 'LEADER' ? '⭐' : ''}<UserName id={m.userId} />{m.onBreak ? ' ☕' : ''}{' '}
             <button className="btn" onClick={() => call.mutate({ method: 'POST', path: `/units/${u.id}/remove`, body: { userId: m.userId }, msg: 'Entfernt.' })}>✕</button>
           </span>
         ))}
@@ -70,7 +71,7 @@ export function Duty() {
               <ul className="list">
                 {d.unassigned.map((x) => (
                   <li key={x.userId} className="row">
-                    <code>{x.userId}</code> · {x.type} · seit {new Date(x.since).toLocaleTimeString('de-DE')}{x.paused ? ' · ☕ Pause' : ''}
+                    <UserName id={x.userId} /> · {x.type} · seit {new Date(x.since).toLocaleTimeString('de-DE')}{x.paused ? ' · ☕ Pause' : ''}
                   </li>
                 ))}
               </ul>

@@ -4,6 +4,7 @@ import { useParams } from 'react-router';
 import { api, type DutyOverviewData, type VehicleRow, type VehicleStatusKey } from '../api';
 import { errorText, QueryState } from '../components/QueryState';
 import { useToast } from '../toast';
+import { UserName } from '../components/UserName';
 
 const STATUS: Record<VehicleStatusKey, string> = { AVAILABLE: '🟢 Verfügbar', IN_USE: '🔵 Im Dienst', MAINTENANCE: '🟠 Werkstatt', OUT_OF_SERVICE: '⚫ Außer Dienst' };
 const SEV = { MINOR: 'Leicht', MAJOR: 'Schwer', TOTAL: 'Totalschaden' } as const;
@@ -39,7 +40,7 @@ export function Fleet() {
                 <li key={v.id} className="row" style={{ alignItems: 'flex-start' }}>
                   <span className="grow">
                     <strong>{v.plate}</strong> ({v.type}) · {STATUS[v.status]}
-                    {v.unitId && <> · Einheit: {callsign(v.unitId) ?? '–'}</>}{v.driverId && <> · Fahrer: <code>{v.driverId}</code></>}
+                    {v.unitId && <> · Einheit: {callsign(v.unitId) ?? '–'}</>}{v.driverId && <> · Fahrer: <UserName id={v.driverId} /></>}
                     {v.damages.map((d) => (
                       <div key={d.id}><small>🔧 {SEV[d.severity]}: {d.description}</small> <button className="btn" onClick={() => call.mutate({ method: 'POST', path: `/damages/${d.id}/repair`, msg: 'Als repariert markiert.' })}>Repariert</button></div>
                     ))}

@@ -249,8 +249,9 @@ export async function getGuildRoles(
 // --- Mitglieder --------------------------------------------------------------
 
 interface RawMember {
-  user: { id: string; username: string; global_name: string | null };
+  user: { id: string; username: string; global_name: string | null; avatar?: string | null };
   roles: string[];
+  nick?: string | null;
 }
 
 function mapMember(m: RawMember): DiscordMemberSummary {
@@ -259,7 +260,18 @@ function mapMember(m: RawMember): DiscordMemberSummary {
     username: m.user.username,
     globalName: m.user.global_name,
     roles: m.roles,
+    nick: m.nick ?? null,
+    avatar: m.user.avatar ?? null,
   };
+}
+
+/** Discord-Konto (auch für Personen, die nicht mehr auf dem Server sind); `null`, wenn es das Konto nicht gibt. */
+export async function getUserProfile(botToken: string, userId: string): Promise<{ id: string; username: string; globalName: string | null; avatar: string | null } | null> {
+  const u = await discordFetch<{ id: string; username: string; global_name: string | null; avatar: string | null }>(botToken, `/users/${userId}`).catch((error: unknown) => {
+    if (error instanceof DiscordApiError && (error.status === 404 || error.status === 400)) return null;
+    throw error;
+  });
+  return u ? { id: u.id, username: u.username, globalName: u.global_name, avatar: u.avatar } : null;
 }
 
 export async function getBotMember(

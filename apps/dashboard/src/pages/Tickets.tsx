@@ -5,6 +5,7 @@ import { API_URL, api, type DiscordChannel, type DiscordRole, type TicketCategor
 import { errorText, QueryState } from '../components/QueryState';
 import { TicketSettings } from '../components/TicketSettings';
 import { useToast } from '../toast';
+import { UserName } from '../components/UserName';
 
 const ST = { OPEN: '🟢 offen', IN_PROGRESS: '🔵 in Bearbeitung', WAITING: '🟡 wartet auf Rückmeldung', CLOSED: '🔒 geschlossen' } as const;
 const PRIO = { LOW: 'Niedrig', NORMAL: 'Normal', HIGH: 'Hoch', URGENT: 'Dringend' } as const;
@@ -60,7 +61,7 @@ export function Tickets() {
                 <li key={t.id} className="row" style={{ alignItems: 'flex-start' }}>
                   <span className="grow">
                     <strong>{num(t.number)} · {t.category.emoji} {t.subject}</strong> · {ST[t.status]} · {PRIO[t.priority]}
-                    <br /><small className="muted">{t.category.name} · von <code>{t.userId}</code>{t.claimedBy && <> · Bearbeiter <code>{t.claimedBy}</code></>}{t.closeReason ? ` · Grund: ${t.closeReason}` : ''}</small>
+                    <br /><small className="muted">{t.category.name} · von <UserName id={t.userId} />{t.claimedBy && <> · Bearbeiter <UserName id={t.claimedBy} /></>}{t.closeReason ? ` · Grund: ${t.closeReason}` : ''}</small>
                     {t.status !== 'CLOSED' && (
                       <div>
                         {t.claimedBy ? <button className="btn" onClick={() => call.mutate({ method: 'POST', path: `/${t.id}/release`, msg: 'Freigegeben.' })}>Freigeben</button> : <button className="btn primary" onClick={() => call.mutate({ method: 'POST', path: `/${t.id}/claim`, msg: 'Übernommen.' })}>Übernehmen</button>}

@@ -4,6 +4,7 @@ import { Link, useParams } from 'react-router';
 import { api, API_URL, STATUS_TEXT, statusStyle, statusText, type SubmissionRow } from '../api';
 import { errorText, QueryState } from '../components/QueryState';
 import { useToast } from '../toast';
+import { UserName } from '../components/UserName';
 
 export function Submissions() {
   const { guildId = '' } = useParams();
@@ -87,7 +88,7 @@ export function Submissions() {
                         ? `Eingereicht ${new Date(s.submittedAt).toLocaleString('de-DE')}`
                         : `Gestartet ${new Date(s.createdAt).toLocaleString('de-DE')}`}
                       {' · Bearbeiter: '}
-                      {s.assigneeUserId ? <code>{s.assigneeUserId}</code> : 'noch nicht zugewiesen'}
+                      {s.assigneeUserId ? <UserName id={s.assigneeUserId} /> : 'noch nicht zugewiesen'}
                     </small>
                   </span>
                   <span className={`pill s-${s.status}`} style={statusStyle(s.status, s.application.config)}>{statusText(s.status, s.application.config)}</span>

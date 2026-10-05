@@ -35,6 +35,10 @@ export interface DiscordMemberSummary {
   username: string;
   globalName: string | null;
   roles: string[];
+  /** Spitzname auf diesem Server (falls gesetzt). */
+  nick?: string | null | undefined;
+  /** Avatar-Hash des Kontos (für die Avatar-Adresse). */
+  avatar?: string | null | undefined;
 }
 
 /** Discord-Nachrichten-Payload (Embeds + Components). */

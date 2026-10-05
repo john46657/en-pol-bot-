@@ -4,6 +4,7 @@ import { useParams } from 'react-router';
 import { api, type CourseRow, type DiscordRole, type TrainingRow } from '../api';
 import { errorText, QueryState } from '../components/QueryState';
 import { useToast } from '../toast';
+import { UserName } from '../components/UserName';
 
 const STATUS = { PLANNED: '🗓️ Geplant', RUNNING: '▶️ Läuft', FINISHED: '✅ Beendet', CANCELLED: '❌ Abgesagt' } as const;
 const PART = { THEORY: 'Theorie', PRACTICE: 'Praxis', EXAM: 'Prüfung' } as const;
@@ -45,11 +46,11 @@ export function Training() {
                 <li key={x.id} className="row" style={{ alignItems: 'flex-start' }}>
                   <span className="grow">
                     <strong>T-{String(x.number).padStart(4, '0')} · {x.course.name}</strong> · {STATUS[x.status]} · {new Date(x.scheduledAt).toLocaleString('de-DE')}{x.location ? ` · ${x.location}` : ''}
-                    <br /><small className="muted">Ausbilder: {x.trainerIds.map((u) => <code key={u}>{u} </code>)} · Plätze {x.participants.filter((p) => ['ENROLLED', 'PASSED', 'FAILED'].includes(p.status)).length}/{x.maxParticipants}</small>
+                    <br /><small className="muted">Ausbilder: {x.trainerIds.length ? x.trainerIds.map((u, i) => <span key={u}>{i > 0 ? ', ' : ''}<UserName id={u} /></span>) : '–'} · Plätze {x.participants.filter((p) => ['ENROLLED', 'PASSED', 'FAILED'].includes(p.status)).length}/{x.maxParticipants}</small>
                     <ul className="plain">
                       {x.participants.filter((p) => ['ENROLLED', 'PASSED', 'FAILED'].includes(p.status)).map((p) => (
                         <li key={p.id}>
-                          <code>{p.userId}</code> {p.status === 'PASSED' ? `✅ ${p.percent} %` : p.status === 'FAILED' ? `❌ ${p.percent} %` : ''}{p.roleResult?.endsWith('failed') ? ' ⚠️ Rolle fehlgeschlagen' : ''}
+                          <UserName id={p.userId} /> {p.status === 'PASSED' ? `✅ ${p.percent} %` : p.status === 'FAILED' ? `❌ ${p.percent} %` : ''}{p.roleResult?.endsWith('failed') ? ' ⚠️ Rolle fehlgeschlagen' : ''}
                           {' · '}T {p.theoryPoints ?? '–'}/{x.course.theoryMax} · P {p.practicePoints ?? '–'}/{x.course.practiceMax} · Prüf. {p.examPoints ?? '–'}/{x.course.examMax}
                           {x.status === 'RUNNING' && (['THEORY', 'PRACTICE', 'EXAM'] as const).filter((k) => ({ THEORY: x.course.theoryMax, PRACTICE: x.course.practiceMax, EXAM: x.course.examMax })[k] > 0).map((k) => (
                             <span key={k}> <input type="number" min={0} style={{ width: 60 }} placeholder={PART[k]} value={pts[`${p.id}${k}`] ?? ''} onChange={(e) => setPts({ ...pts, [`${p.id}${k}`]: e.target.value })} aria-label={PART[k]} />
