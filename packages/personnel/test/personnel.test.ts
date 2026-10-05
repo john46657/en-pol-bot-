@@ -831,3 +831,19 @@ describe('Teamliste (Phase 53)', () => {
     expect(await teamOverview(G, [])).toEqual([]);
   });
 });
+
+describe('Fraktionssperre (Sperren-System)', () => {
+  it('verhindert Anlegen, Teamzuweisung und Wiederherstellen; nach Ablauf wieder möglich', async () => {
+    const team = await saveTeam(G, { name: 'Streife' }, ACTOR);
+    const ok = await createRecord({ guildId: G, userId: U(41), rpName: 'Ohne Sperre', actorId: ACTOR });
+    const ban = await prisma.restriction.create({ data: { guildId: G, userId: U(40), type: 'FACTION', reason: 'Fraktionswechsel-Missbrauch', createdBy: ACTOR, endsAt: new Date(Date.now() + 86_400_000) } });
+    await expect(createRecord({ guildId: G, userId: U(40), rpName: 'Gesperrt', actorId: ACTOR })).rejects.toMatchObject({ code: 'forbidden', message: expect.stringContaining('Fraktionssperre bis') });
+    // Sperre einer anderen Person stört nicht; eigene Akte vorhanden → Teamzuweisung gesperrt
+    await prisma.restriction.update({ where: { id: ban.id }, data: { userId: U(41) } });
+    await expect(setTeam(G, ok.id, team.id, ACTOR)).rejects.toMatchObject({ code: 'forbidden', message: expect.stringContaining('Fraktionswechsel-Missbrauch') });
+    expect((await setTeam(G, ok.id, null, ACTOR)).record.teamId).toBeNull(); // Entfernen aus dem Team bleibt möglich
+    await prisma.restriction.update({ where: { id: ban.id }, data: { endsAt: new Date(Date.now() - 1000) } });
+    expect((await setTeam(G, ok.id, team.id, ACTOR)).record.teamId).toBe(team.id);
+    expect((await createRecord({ guildId: G, userId: U(40), rpName: 'Jetzt frei', actorId: ACTOR })).userId).toBe(U(40));
+  });
+});

@@ -553,6 +553,9 @@ importers:
       '@nexus/discord':
         specifier: workspace:*
         version: link:../discord
+      '@nexus/restrictions':
+        specifier: workspace:*
+        version: link:../restrictions
       '@nexus/types':
         specifier: workspace:*
         version: link:../types
@@ -802,6 +805,9 @@ importers:
       '@nexus/permissions':
         specifier: workspace:*
         version: link:../permissions
+      '@nexus/restrictions':
+        specifier: workspace:*
+        version: link:../restrictions
       '@nexus/types':
         specifier: workspace:*
         version: link:../types

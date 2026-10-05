@@ -20,6 +20,7 @@
     "@nexus/core": "workspace:*",
     "@nexus/database": "workspace:*",
     "@nexus/discord": "workspace:*",
+    "@nexus/restrictions": "workspace:*",
     "@nexus/types": "workspace:*"
   },
   "devDependencies": {

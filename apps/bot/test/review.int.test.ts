@@ -1187,3 +1187,22 @@ describe('Benachrichtigungen je Ereignis (Team-Chance)', () => {
     }
   });
 });
+
+describe('Fraktionssperre bei der Annahme', () => {
+  it('Annahme mit Personalakte ist gesperrt (verständliche Meldung), Ablehnung bleibt möglich', async () => {
+    const f = fakePort();
+    setReviewPort(f.port as never);
+    const id = await submitted({ f });
+    const ban = await prisma.restriction.create({ data: { guildId: G, userId: APPLICANT, type: 'FACTION', reason: 'Fraktionssperre-Test', createdBy: 'x' } });
+    try {
+      const ok = interaction('button', cid('review:accept_ok', id), { userId: ACCEPT[0], roleIds: ACCEPT[1] });
+      await handleInteraction(client(), ok);
+      expect(text(ok)).toContain('Fraktionssperre');
+      expect(await status(id)).toBe('SUBMITTED');
+      await viaModal('review:deny_r', id, U.denier, [ROLE.deny], { note: 'Gesperrt.' });
+      expect(await status(id)).toBe('DENIED');
+    } finally {
+      await prisma.restriction.delete({ where: { id: ban.id } });
+    }
+  });
+});

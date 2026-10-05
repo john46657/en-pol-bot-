@@ -2,6 +2,7 @@ import { renderTemplate, assertTransition, roleActionsForTransition, durationToS
 import { guildRepository, prisma } from '@nexus/database';
 import type { Prisma } from '@nexus/database';
 import { OPEN_SUBMISSION_STATUSES, SubmissionStatus } from '@nexus/types';
+import { getActive } from '@nexus/restrictions';
 import type { Question } from '@nexus/types';
 import type { DiscordPort } from './discord-port.js';
 import {
@@ -898,6 +899,16 @@ export async function decideSubmission(
   }
   if (!input.bypassAssignee && !(await mayAct(s, input.reviewerId)))
     return { ok: false, message: assignedElsewhere(s.assigneeUserId!) };
+
+  // Fraktionssperre: Eine Annahme, die eine Personalakte anlegt (Aufnahme in die Fraktion), ist gesperrt
+  if (target === SubmissionStatus.ACCEPTED && !s.isTest && readConfig(s.application.config).review.acceptPipeline?.['personnelRecord'] !== false) {
+    const ban = await getActive(s.guildId, s.userId, 'FACTION');
+    if (ban)
+      return {
+        ok: false,
+        message: `Annahme nicht möglich: Für <@${s.userId}> besteht eine Fraktionssperre ${ban.endsAt ? `bis ${ban.endsAt.toLocaleString('de-DE', { timeZone: 'Europe/Berlin', dateStyle: 'short', timeStyle: 'short' })} Uhr` : 'auf unbestimmte Zeit'} (Grund: ${ban.reason}).`,
+      };
+  }
 
   // Ablehnungsgrund auflösen
   let publicReason: string | undefined;

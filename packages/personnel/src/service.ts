@@ -1,5 +1,6 @@
 import { applyRoleChanges, type DiscordPort } from '@nexus/automation';
 import { assertGuildId, auditRepository, prisma, type Prisma } from '@nexus/database';
+import { getActive } from '@nexus/restrictions';
 import { PersonnelError } from './errors.js';
 
 /**
@@ -214,6 +215,16 @@ export interface CreateRecordInput {
   sourceSubmissionId?: string | undefined;
 }
 
+/** Fraktionssperre (Sperren-System): Aufnahme in die Fraktion – Akte anlegen/wiederherstellen, Team zuweisen – ist gesperrt. */
+async function assertNoFactionBan(guildId: string, userId: string): Promise<void> {
+  const ban = await getActive(guildId, userId, 'FACTION');
+  if (ban)
+    throw new PersonnelError(
+      'forbidden',
+      `Für diesen Benutzer besteht eine Fraktionssperre ${ban.endsAt ? `bis ${ban.endsAt.toLocaleString('de-DE', { timeZone: 'Europe/Berlin', dateStyle: 'short', timeStyle: 'short' })} Uhr` : 'auf unbestimmte Zeit'} (Grund: ${ban.reason}).`,
+    );
+}
+
 export async function createRecord(input: CreateRecordInput, opts: ServiceOptions = {}) {
   const guildId = assertGuildId(input.guildId);
   const rpName = input.rpName.trim();
@@ -223,6 +234,7 @@ export async function createRecord(input: CreateRecordInput, opts: ServiceOption
     throw new PersonnelError('invalid', 'Ungültige Discord-Benutzer-ID.');
   if (input.rankId) await assertRank(guildId, input.rankId);
   if (input.teamId) await assertTeam(guildId, input.teamId);
+  await assertNoFactionBan(guildId, input.userId);
   try {
     const record = await prisma.personnelRecord.create({
       data: {
@@ -382,6 +394,7 @@ export async function setTeam(
   const before = await load(guildId, id);
   if ((before.teamId ?? null) === teamId) return { record: before, roleChange: undefined };
   const team = teamId ? await assertTeam(guildId, teamId) : null;
+  if (teamId) await assertNoFactionBan(guildId, before.userId);
   const record = await prisma.personnelRecord.update({
     where: { id },
     data: { teamId },
@@ -503,6 +516,7 @@ export async function restoreRecord(
   const before = await load(guildId, id);
   if (before.status !== 'ARCHIVED')
     throw new PersonnelError('conflict', 'Die Akte ist nicht archiviert.');
+  await assertNoFactionBan(guildId, before.userId);
   const record = await prisma.personnelRecord.update({
     where: { id },
     data: { status: 'ACTIVE', archivedAt: null, archivedReason: null, archivedBy: null, teamState: 'ACTIVE', teamStateReason: null, teamStateAt: null, teamStateBy: null },
