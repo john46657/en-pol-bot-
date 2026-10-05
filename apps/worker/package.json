@@ -11,11 +11,12 @@
     "lint": "eslint src"
   },
   "dependencies": {
-    "@nexus/restrictions": "workspace:*",
     "@nexus/automation": "workspace:*",
     "@nexus/health": "workspace:*",
     "@nexus/jobs": "workspace:*",
+    "@nexus/moderation": "workspace:*",
     "@nexus/realtime": "workspace:*",
+    "@nexus/restrictions": "workspace:*",
     "@nexus/shifts": "workspace:*",
     "@nexus/tickets": "workspace:*",
     "@nexus/wanted": "workspace:*",

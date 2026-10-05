@@ -167,3 +167,23 @@ describe('Zusammenfassung', () => {
     expect(await userSummary(G, USER)).toMatchObject({ warns: 2, banned: true });
   });
 });
+
+describe('Befristeter Bann', () => {
+  it('Dauer prüfen, Ende speichern, nach Ablauf bei Discord aufheben (Fehler: später erneut)', async () => {
+    const { expireDueBans } = await import('../src/index.js');
+    const { port, calls } = fake();
+    const t0 = new Date('2026-10-05T12:00:00Z');
+    await err(moderate({ guildId: G, type: 'BAN', userId: USER, reason: 'Test', durationMin: 30, actor: mod }, port, t0), 'invalid', /1 Stunde bis 365 Tage/);
+    const b = await moderate({ guildId: G, type: 'BAN', userId: USER, reason: 'Raid', durationMin: 7 * 1440, actor: mod }, port, t0);
+    expect(b.expiresAt?.toISOString()).toBe('2026-10-12T12:00:00.000Z');
+    expect(calls.find((c) => c.startsWith(`dm:${USER}`))).toBeTruthy();
+    expect(await expireDueBans(port, new Date('2026-10-10T00:00:00Z'))).toEqual({ expired: 0, failed: 0 }); // noch nicht fällig
+    const broken = fake({ unban: async () => { throw new Error('403'); } });
+    expect(await expireDueBans(broken.port, new Date('2026-10-13T00:00:00Z'))).toEqual({ expired: 0, failed: 1 });
+    expect((await prisma.moderationCase.findUniqueOrThrow({ where: { id: b.id } })).status).toBe('ACTIVE');
+    expect(await expireDueBans(port, new Date('2026-10-13T00:00:00Z'))).toEqual({ expired: 1, failed: 0 });
+    expect(calls).toContain(`unban:${USER}`);
+    expect((await prisma.moderationCase.findUniqueOrThrow({ where: { id: b.id } })).status).toBe('EXPIRED');
+    expect(await prisma.auditLog.count({ where: { guildId: G, action: 'moderation.ban_expired' } })).toBe(1);
+  });
+});

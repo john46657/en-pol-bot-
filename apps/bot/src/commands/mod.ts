@@ -26,7 +26,7 @@ export async function runMod(interaction: ChatInputCommandInteraction): Promise<
   try {
     if (['warn', 'timeout', 'kick', 'ban'].includes(sub)) {
       const type = sub.toUpperCase() as CaseType;
-      const c = await moderate({ guildId: guild.id, type, userId: o.getUser('mitglied', true).id, reason: o.getString('grund', true), durationMin: o.getInteger('minuten') ?? undefined, deleteDays: o.getInteger('loeschtage') ?? undefined, actor }, port);
+      const c = await moderate({ guildId: guild.id, type, userId: o.getUser('mitglied', true).id, reason: o.getString('grund', true), durationMin: o.getInteger('minuten') ?? (o.getInteger('tage') ? (o.getInteger('tage') as number) * 1440 : undefined), deleteDays: o.getInteger('loeschtage') ?? undefined, actor }, port);
       return void (await reply(interaction, `✅ ${TYPE_LABEL[type]} für <@${c.userId}> – Fall #${c.number}${c.dmDelivered ? '' : ' (Benutzer konnte nicht per DM informiert werden)'}.\nID: \`${c.id}\``));
     }
     if (sub === 'aufheben') {
@@ -57,7 +57,8 @@ export const modCommand = defineCommand({
     .addSubcommand((s) => s.setName('kick').setDescription('Mitglied vom Server entfernen').addUserOption(mitglied).addStringOption(grund))
     .addSubcommand((s) =>
       s.setName('ban').setDescription('Benutzer bannen').addUserOption(mitglied).addStringOption(grund)
-        .addIntegerOption((o) => o.setName('loeschtage').setDescription('Nachrichten der letzten Tage löschen (0–7)').setMinValue(0).setMaxValue(7)),
+        .addIntegerOption((o) => o.setName('loeschtage').setDescription('Nachrichten der letzten Tage löschen (0–7)').setMinValue(0).setMaxValue(7))
+        .addIntegerOption((o) => o.setName('tage').setDescription('Befristet: Bann endet nach so vielen Tagen (leer = dauerhaft)').setMinValue(1).setMaxValue(365)),
     )
     .addSubcommand((s) =>
       s.setName('aufheben').setDescription('Verwarnung, Timeout oder Bann aufheben')

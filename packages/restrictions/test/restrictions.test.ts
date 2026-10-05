@@ -108,3 +108,22 @@ describe('Liste', () => {
     expect((await listRestrictions({ guildId: G2 })).map((r) => r.reason)).toEqual(['Anderer Server']);
   });
 });
+
+describe('Benachrichtigung an die gesperrte Person (Spezifikation 53)', () => {
+  it('DM bei Verhängen (mit Ende und Grund), Aufheben und Ablauf – je einmal', async () => {
+    const { prisma } = await import('@nexus/database');
+    const { createRestriction, revokeRestriction, expireDueRestrictions } = await import('../src/index.js');
+    const gid = G;
+    const user = '900000000000950001';
+    const a = await createRestriction({ guildId: gid, userId: user, type: 'TICKET', reason: 'Spam in Tickets', endsAt: new Date(Date.now() + 3_600_000), actorId: 'x' });
+    const dms = () => prisma.notification.findMany({ where: { guildId: gid, targetId: user }, orderBy: { createdAt: 'asc' } });
+    expect((await dms()).map((n) => n.kind)).toEqual(['restriction.created']);
+    expect(((await dms())[0]!.payload as any).content).toMatch(/Ticketsperre.*bis zum .* Uhr\.\nGrund: Spam in Tickets/s);
+    await revokeRestriction(gid, a.id, 'Irrtum', 'x');
+    const b = await createRestriction({ guildId: gid, userId: user, type: 'RADIO', reason: 'Funkdisziplin', endsAt: new Date(Date.now() + 1000), actorId: 'x' });
+    await expireDueRestrictions(gid, new Date(Date.now() + 5000));
+    expect((await dms()).map((n) => n.kind)).toEqual(['restriction.created', 'restriction.revoked', 'restriction.created', 'restriction.expired']);
+    expect(((await dms())[3]!.payload as any).content).toContain('Funk-/Kommunikationssperre');
+    expect(b.type).toBe('RADIO');
+  });
+});

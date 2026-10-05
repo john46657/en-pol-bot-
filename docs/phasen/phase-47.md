@@ -16,6 +16,6 @@
 
 ## Grenzen
 - ~~Fraktionssperre ist nur erfassbar, wirkt aber nirgends~~ – **seit Phase 64 wirksam**: blockiert die Aufnahme in die Fraktion (Personalakte anlegen/wiederherstellen, Team zuweisen, Annahme einer Bewerbung mit Personalakte).
-- Kein Bot-Befehl zum Verhängen (nur Dashboard/API). Keine Benachrichtigung an den Gesperrten oder das Team bei Erstellung/Ablauf (nur Audit-Log) – Spezifikation 53 bleibt offen.
+- Kein Bot-Befehl zum Verhängen (nur Dashboard/API). ~~Keine Benachrichtigung …~~ Seit Phase 65: DM an die gesperrte Person bei Verhängen, Aufheben und Ablauf; das Team erreicht man über die Log-Weiterleitung (Bereich „Sperren“).
 - Benutzer werden per Discord-ID eingegeben (keine Suche nach Namen).
 - Nicht gegen echten Discord-Bot geprüft; getestet sind Dienste, Bot-Logik mit Test-Eingaben, API und Dashboard.

@@ -18,4 +18,4 @@
 ## Grenzen
 - Dashboard: Ablauf (Tage), Farbe, Priorität, Aktiv-Schalter und Duplizieren sind angebunden (Typprüfung und Build grün), aber nicht im Browser geklickt.
 - Rang- und Besitzerprüfung gegen Discord ist nur mit Mocks getestet, nie gegen einen echten Server.
-- Abgelaufene Zeilen werden nicht automatisch gelöscht.
+- ~~Abgelaufene Zeilen werden nicht automatisch gelöscht.~~ Seit Phase 65 entfernt der Worker sie (Audit `permissions.user.override.expired`).

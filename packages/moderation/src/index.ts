@@ -26,6 +26,9 @@ export const MAX_REASON = 300;
 /** Discord erlaubt Timeouts von höchstens 28 Tagen. */
 export const MAX_TIMEOUT_MIN = 28 * 24 * 60;
 export const DELETE_DAYS_MAX = 7;
+/** Befristeter Bann: 1 Stunde bis 365 Tage. */
+export const MIN_BAN_MIN = 60;
+export const MAX_BAN_MIN = 365 * 24 * 60;
 
 export class ModerationError extends Error {
   constructor(public readonly code: 'invalid' | 'not-found' | 'conflict' | 'forbidden' | 'discord', message: string) {
@@ -129,7 +132,7 @@ export interface ModerateInput {
   type: string;
   userId: string;
   reason: string;
-  /** Nur Timeout: Dauer in Minuten (1 bis 40320). */
+  /** Timeout: Dauer in Minuten (1 bis 40320, Pflicht). Bann: optional befristet (60 bis 525600 Minuten). */
   durationMin?: number | undefined;
   /** Nur Bann: Nachrichten der letzten Tage löschen (0–7). */
   deleteDays?: number | undefined;
@@ -146,6 +149,10 @@ export async function moderate(i: ModerateInput, port: ModerationPort, now = new
     if (!Number.isInteger(i.durationMin) || (i.durationMin as number) < 1 || (i.durationMin as number) > MAX_TIMEOUT_MIN) throw new ModerationError('invalid', `Ein Timeout dauert 1 Minute bis 28 Tage (${MAX_TIMEOUT_MIN} Minuten).`);
     durationMin = i.durationMin as number;
   }
+  if (type === 'BAN' && i.durationMin !== undefined && i.durationMin !== null) {
+    if (!Number.isInteger(i.durationMin) || i.durationMin < MIN_BAN_MIN || i.durationMin > MAX_BAN_MIN) throw new ModerationError('invalid', 'Ein befristeter Bann dauert 1 Stunde bis 365 Tage.');
+    durationMin = i.durationMin;
+  }
   const deleteDays = type === 'BAN' ? i.deleteDays ?? 0 : 0;
   if (!Number.isInteger(deleteDays) || deleteDays < 0 || deleteDays > DELETE_DAYS_MAX) throw new ModerationError('invalid', `Nachrichten lassen sich für 0 bis ${DELETE_DAYS_MAX} Tage löschen.`);
   await assertCanModerate(port, guildId, i.actor, i.userId, type);
@@ -160,7 +167,7 @@ export async function moderate(i: ModerateInput, port: ModerationPort, now = new
     WARN: `⚠️ Verwarnung auf **${server}**\nGrund: ${reason}`,
     TIMEOUT: `⏳ Du wurdest auf **${server}** für ${durationMin} Minuten stummgeschaltet.\nGrund: ${reason}`,
     KICK: `👢 Du wurdest von **${server}** entfernt.\nGrund: ${reason}`,
-    BAN: `⛔ Du wurdest von **${server}** gebannt.\nGrund: ${reason}`,
+    BAN: `⛔ Du wurdest von **${server}** ${durationMin ? `bis zum ${expiresAt!.toLocaleString('de-DE', { timeZone: 'Europe/Berlin', dateStyle: 'short', timeStyle: 'short' })} Uhr ` : ''}gebannt.\nGrund: ${reason}`,
   }[type];
   const dm = () => port.dm(i.userId, dmText).then(() => true, () => false);
 
@@ -204,6 +211,28 @@ export async function revoke(guildId: string, id: string, reason: string | undef
   if (u.count === 0) throw new ModerationError('conflict', 'Dieser Fall ist bereits beendet.');
   await audit(gid, actor.userId, 'moderation.revoke', id, { status: 'ACTIVE' }, { status: 'REVOKED', number: c.number, type: c.type }, why);
   return prisma.moderationCase.findFirstOrThrow({ where: { id } });
+}
+
+/**
+ * Befristete Banns nach Ablauf bei Discord aufheben (Worker). Schlägt das Aufheben fehl (z. B. fehlendes Recht), bleibt der
+ * Fall aktiv und wird beim nächsten Lauf erneut versucht; ein bereits aufgehobener Bann (404) gilt als erledigt.
+ */
+export async function expireDueBans(port: ModerationPort, now = new Date()): Promise<{ expired: number; failed: number }> {
+  const due = await prisma.moderationCase.findMany({ where: { type: 'BAN', status: 'ACTIVE', expiresAt: { lte: now } }, take: 50, orderBy: { expiresAt: 'asc' } });
+  const r = { expired: 0, failed: 0 };
+  for (const c of due) {
+    try {
+      await port.unban(c.guildId, c.userId, `Befristeter Bann (Fall #${c.number}) abgelaufen`);
+    } catch {
+      r.failed++;
+      continue;
+    }
+    const u = await prisma.moderationCase.updateMany({ where: { id: c.id, status: 'ACTIVE' }, data: { status: 'EXPIRED' } });
+    if (u.count === 0) continue;
+    await auditRepository.createRaw({ data: { guildId: c.guildId, actorType: 'SYSTEM', actorId: null, action: 'moderation.ban_expired', resourceType: 'ModerationCase', resourceId: c.id, before: { status: 'ACTIVE' } as Json, after: { status: 'EXPIRED', number: c.number, userId: c.userId } as Json, reason: 'Befristeter Bann abgelaufen', result: 'success' } });
+    r.expired++;
+  }
+  return r;
 }
 
 /** Setzt abgelaufene Timeouts auf EXPIRED (Discord hebt sie selbst auf). */

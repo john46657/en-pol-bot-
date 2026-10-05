@@ -44,6 +44,7 @@ export const AREAS: readonly AuditArea[] = [
   { key: 'danger', label: 'Gefahrenstatus', prefixes: ['danger.'] },
   { key: 'tickets', label: 'Tickets', prefixes: ['ticket.'] },
   { key: 'moderation', label: 'Moderation', prefixes: ['moderation.'] },
+  { key: 'restrictions', label: 'Sperren', prefixes: ['restriction.'] },
   { key: 'absences', label: 'Abmeldungen', prefixes: ['absence.'] },
   { key: 'sek', label: 'SEK', prefixes: ['sek.'] },
   { key: 'radio', label: 'Funk', prefixes: ['radio.'] },

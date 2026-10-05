@@ -21,7 +21,7 @@ interface Row {
 }
 const STATUS = { ACTIVE: '🔴 Aktiv', EXPIRED: '⚪ Abgelaufen', REVOKED: '🟢 Aufgehoben', DONE: '⚫ Erledigt' } as const;
 const when = (d: string) => new Date(d).toLocaleString('de-DE', { dateStyle: 'short', timeStyle: 'short' });
-const empty = { userId: '', type: 'WARN', reason: '', durationMin: '60', deleteDays: '0' };
+const empty = { userId: '', type: 'WARN', reason: '', durationMin: '60', deleteDays: '0', banDays: '' };
 
 /** Moderation: Verwarnungen, Timeouts, Kicks und Banns verhängen und aufheben; jeder Fall ist nummeriert und protokolliert. */
 export function Moderation() {
@@ -48,7 +48,7 @@ export function Moderation() {
     mutationFn: () =>
       api<Row>(`${base}/cases`, {
         method: 'POST',
-        body: { userId: f.userId.trim(), type: f.type, reason: f.reason, ...(f.type === 'TIMEOUT' ? { durationMin: Number(f.durationMin) } : {}), ...(f.type === 'BAN' ? { deleteDays: Number(f.deleteDays) } : {}) },
+        body: { userId: f.userId.trim(), type: f.type, reason: f.reason, ...(f.type === 'TIMEOUT' ? { durationMin: Number(f.durationMin) } : {}), ...(f.type === 'BAN' ? { deleteDays: Number(f.deleteDays), ...(f.banDays ? { durationMin: Number(f.banDays) * 1440 } : {}) } : {}) },
       }),
     onSuccess: (c) => {
       done(`${label(c.type)} verhängt (Fall #${c.number})${c.dmDelivered ? '.' : ' – der Benutzer konnte nicht per DM informiert werden.'}`);
@@ -95,7 +95,7 @@ export function Moderation() {
                     <br />
                     <small className="muted">
                       {r.reason} · {when(r.createdAt)} · von <code>{r.moderatorId}</code>
-                      {r.durationMin ? ` · ${r.durationMin} Min.${r.expiresAt ? ` (bis ${when(r.expiresAt)})` : ''}` : ''}
+                      {r.durationMin ? ` · ${r.type === 'BAN' ? `${Math.round(r.durationMin / 1440)} Tage` : `${r.durationMin} Min.`}${r.expiresAt ? ` (bis ${when(r.expiresAt)})` : ''}` : ''}
                       {r.dmDelivered ? '' : ' · keine DM zugestellt'}
                       {r.revokeReason ? ` · aufgehoben: ${r.revokeReason}` : ''}
                     </small>
@@ -139,7 +139,10 @@ export function Moderation() {
           <label className="fld"><span>Dauer in Minuten (1 bis 40320 = 28 Tage)</span><input type="number" min={1} max={40320} value={f.durationMin} onChange={(e) => setF({ ...f, durationMin: e.target.value })} /></label>
         )}
         {f.type === 'BAN' && (
-          <label className="fld"><span>Nachrichten der letzten Tage löschen (0–7)</span><input type="number" min={0} max={7} value={f.deleteDays} onChange={(e) => setF({ ...f, deleteDays: e.target.value })} /></label>
+          <>
+            <label className="fld"><span>Nachrichten der letzten Tage löschen (0–7)</span><input type="number" min={0} max={7} value={f.deleteDays} onChange={(e) => setF({ ...f, deleteDays: e.target.value })} /></label>
+            <label className="fld"><span>Befristet: Dauer in Tagen (leer = dauerhaft)</span><input type="number" min={1} max={365} value={f.banDays} onChange={(e) => setF({ ...f, banDays: e.target.value })} /></label>
+          </>
         )}
         <button
           className="btn primary"

@@ -19,6 +19,6 @@ Aus der Spezifikation „Rollen- & Rechtesystem“ (Rechte `moderation.view/mana
 
 ## Grenzen
 - Nie gegen einen echten Discord-Server getestet (Fake-Discord); echte Antworten (Rollenposition, Rate Limits) können abweichen.
-- Keine zeitlich begrenzten Banns (Bann bleibt bis zum Aufheben), keine automatische Moderation (Spam-/Wortfilter), keine Appeals.
+- Seit Phase 65 gibt es befristete Banns; keine automatische Moderation (Spam-/Wortfilter), keine Einsprüche.
 - Moderation ist nur über Dashboard und `/mod` möglich; Maßnahmen, die direkt auf Discord ausgeführt werden, erscheinen nicht als Fälle.
 - Mitgliedersuche (`GET moderation/members`, `moderation.view`) liefert nur ID und Namen, ab 2 Zeichen.

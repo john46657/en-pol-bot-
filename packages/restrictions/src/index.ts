@@ -36,6 +36,15 @@ export interface CreateInput {
   actorId: string;
 }
 
+/**
+ * Benachrichtigung an die gesperrte Person (DM über die Benachrichtigungs-Warteschlange des Workers: Wiederholung, nie
+ * doppelt). Fehler beim Einreihen ändern nichts an der Sperre selbst.
+ */
+async function notifyUser(guildId: string, userId: string, kind: string, dedupeKey: string, content: string) {
+  await prisma.notification.create({ data: { guildId, targetKind: 'USER', targetId: userId, kind, dedupeKey, payload: { content } as Json } }).catch(() => undefined);
+}
+const serverName = async (guildId: string) => (await prisma.guild.findUnique({ where: { id: guildId }, select: { name: true } }))?.name ?? 'dem Server';
+
 async function audit(guildId: string, actorId: string | null, action: string, id: string, before: unknown, after: unknown, reason?: string) {
   await auditRepository.createRaw({ data: { guildId, actorType: actorId ? 'USER' : 'SYSTEM', actorId, action, resourceType: 'Restriction', resourceId: id, before: before as Json, after: after as Json, reason: reason ?? null, result: 'success' } });
 }
@@ -56,6 +65,9 @@ export async function createRestriction(i: CreateInput) {
   if (endsAt && endsAt.getTime() <= Date.now()) throw new RestrictionError('invalid', 'Das Ende liegt bereits in der Vergangenheit.');
   const row = await prisma.restriction.create({ data: { guildId, userId: i.userId, type: i.type as RestrictionKind, reason, note, startsAt, endsAt, createdBy: i.actorId } });
   await audit(guildId, i.actorId, 'restriction.created', row.id, null, { type: row.type, userId: row.userId, startsAt, endsAt }, reason);
+  const until = endsAt ? `bis zum ${fmt(endsAt)} Uhr` : 'bis auf Weiteres';
+  const from = startsAt.getTime() > Date.now() + 60_000 ? ` ab dem ${fmt(startsAt)} Uhr` : '';
+  await notifyUser(guildId, row.userId, 'restriction.created', `restriction-created:${row.id}`, `⛔ **${TYPE_LABEL[row.type as RestrictionKind]}** auf **${await serverName(guildId)}**${from} ${until}.\nGrund: ${reason}`);
   return row;
 }
 
@@ -70,6 +82,7 @@ export async function revokeRestriction(guildId: string, id: string, reason: str
   const u = await prisma.restriction.updateMany({ where: { id, status: 'ACTIVE' }, data: { status: 'REVOKED', revokedBy: actorId, revokeReason: why, revokedAt: new Date() } });
   if (u.count === 0) throw new RestrictionError('conflict', 'Diese Sperre ist bereits beendet.');
   await audit(gid, actorId, 'restriction.revoked', id, { status: 'ACTIVE' }, { status: 'REVOKED' }, why);
+  await notifyUser(gid, r.userId, 'restriction.revoked', `restriction-revoked:${id}`, `✅ Deine **${TYPE_LABEL[r.type as RestrictionKind]}** auf **${await serverName(gid)}** wurde aufgehoben.`);
   return prisma.restriction.findFirstOrThrow({ where: { id } });
 }
 
@@ -81,6 +94,7 @@ export async function expireDueRestrictions(guildId?: string, now = new Date()):
     const u = await prisma.restriction.updateMany({ where: { id: r.id, status: 'ACTIVE' }, data: { status: 'EXPIRED', expiredAt: now } });
     if (u.count === 0) continue;
     await audit(r.guildId, null, 'restriction.expired', r.id, { status: 'ACTIVE' }, { status: 'EXPIRED', type: r.type, userId: r.userId }, 'Automatisch abgelaufen');
+    await notifyUser(r.guildId, r.userId, 'restriction.expired', `restriction-expired:${r.id}`, `✅ Deine **${TYPE_LABEL[r.type as RestrictionKind]}** auf **${await serverName(r.guildId)}** ist abgelaufen.`);
     expired++;
   }
   return { expired };

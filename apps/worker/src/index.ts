@@ -15,6 +15,7 @@ import {
   syncAllGuilds,
   forwardAuditLogs,
   sendScheduledMessages,
+  removeExpiredGrants,
   trainingReminders,
 } from '@nexus/jobs';
 import { startHeartbeat } from '@nexus/health';
@@ -23,6 +24,7 @@ import { watchOverlongShifts } from '@nexus/shifts';
 import { expireDueRestrictions } from '@nexus/restrictions';
 import { expireDueNotices } from '@nexus/wanted';
 import { deleteDueChannels, refreshAllPanels, restTicketDiscord } from '@nexus/tickets';
+import { expireDueBans, restModerationPort } from '@nexus/moderation';
 
 /**
  * NEXUS Worker: betreibt die Hintergrund-Jobs (Phase 31) über BullMQ – Benachrichtigungen, Bewerbungs-Timeouts,
@@ -62,6 +64,11 @@ const HANDLERS: Record<string, () => Promise<unknown>> = {
   'wanted-expiry': () => expireDueNotices(),
   'log-forward': () => forwardAuditLogs(),
   'scheduled-messages': () => sendScheduledMessages(),
+  'permission-expiry': () => removeExpiredGrants(),
+  'moderation-expiry': async () => {
+    if (!token) throw new Error('DISCORD_TOKEN fehlt');
+    return expireDueBans(restModerationPort(token));
+  },
   'shift-watch': () => watchOverlongShifts(port(), new Date(), process.env['DASHBOARD_URL']),
 };
 

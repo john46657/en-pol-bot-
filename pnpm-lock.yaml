@@ -417,6 +417,9 @@ importers:
       '@nexus/jobs':
         specifier: workspace:*
         version: link:../../packages/jobs
+      '@nexus/moderation':
+        specifier: workspace:*
+        version: link:../../packages/moderation
       '@nexus/realtime':
         specifier: workspace:*
         version: link:../../packages/realtime
