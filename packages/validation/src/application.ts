@@ -164,6 +164,13 @@ export const reviewConfigSchema = z.object({
   createThread: z.boolean().optional(),
   threadArchiveHours: z.number().int().min(1).max(336).optional(),
   createTicket: z.boolean().optional(),
+  /** Ticket-Kategorie für Bewerbungstickets dieser Art (leer = Server-Einstellung). */
+  ticketCategoryId: z.string().max(40).optional(),
+  /** Ergebnis-Kanal: Annahmen (und optional Ablehnungen) werden dort bekannt gegeben. */
+  resultChannelId: z.string().regex(/^\d{5,25}$/, 'Ungültiger Kanal.').optional(),
+  resultPostDenied: z.boolean().optional(),
+  resultAcceptedText: z.string().trim().max(1000).optional(),
+  resultDeniedText: z.string().trim().max(1000).optional(),
   notifyApplicant: z.boolean().optional(),
   notifyStaffRoleIds: z.array(z.string()).max(20).optional(),
   reviewerAssignment: z

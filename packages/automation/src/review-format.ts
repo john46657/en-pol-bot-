@@ -189,6 +189,7 @@ export function reviewButtons(submissionId: string, dashboardUrl?: string, statu
       ],
     },
     { type: 1, components: second },
+    { type: 1, components: [{ type: 2, style: 1, label: 'Ticket öffnen', emoji: { name: '🎫' }, custom_id: id('ticket') }] },
   ];
 }
 

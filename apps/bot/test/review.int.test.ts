@@ -1056,3 +1056,40 @@ describe('Ablehnungs-DM nennt die Wartezeit (Team-Chance)', () => {
     }
   });
 });
+
+describe('Ergebnis-Kanal (Team-Chance)', () => {
+  it('Annahme wird gemeldet, Ablehnung nur wenn gewünscht, Testbewerbungen nie; eigener Text mit Platzhaltern', async () => {
+    const RESULT = '900000000000710001';
+    const app = await prisma.application.findUniqueOrThrow({ where: { id: appId } });
+    const config = (app.config ?? {}) as Record<string, any>;
+    const setReview = (extra: Record<string, unknown>) => prisma.application.update({ where: { id: appId }, data: { config: { ...config, review: { ...(config['review'] ?? {}), resultChannelId: RESULT, ...extra } } as never } });
+    const inResult = (f: ReturnType<typeof fakePort>) => f.posts.filter((p) => p.channelId === RESULT);
+    try {
+      await setReview({ resultAcceptedText: '🎉 {user} ist jetzt im Team **{applicationName}**!' });
+      const f = fakePort();
+      setReviewPort(f.port as never);
+      const a = await submitted({ f });
+      await handleInteraction(client(), interaction('button', cid('review:accept_ok', a), { userId: ACCEPT[0], roleIds: ACCEPT[1] }));
+      expect(await status(a)).toBe('ACCEPTED');
+      expect(inResult(f)).toHaveLength(1);
+      expect(inResult(f)[0]!.payload.embeds[0].description).toBe(`🎉 <@${APPLICANT}> ist jetzt im Team **Polizei**!`);
+      expect(inResult(f)[0]!.payload.allowed_mentions).toEqual({ parse: [], users: [APPLICANT] });
+
+      const d = await submitted({ f, userId: 'applicant-3' });
+      await viaModal('review:deny_r', d, U.denier, [ROLE.deny], { note: 'Nein.' });
+      expect(inResult(f)).toHaveLength(1); // Ablehnung standardmäßig nicht öffentlich
+
+      await setReview({ resultPostDenied: true });
+      const d2 = await submitted({ f, userId: 'applicant-4' });
+      await viaModal('review:deny_r', d2, U.denier, [ROLE.deny], { note: 'Nein.' });
+      expect(inResult(f)).toHaveLength(2);
+      expect(inResult(f)[1]!.payload.embeds[0].description).toContain('wurde abgelehnt');
+
+      const t = await submitted({ f, userId: 'applicant-5', isTest: true });
+      await handleInteraction(client(), interaction('button', cid('review:accept_ok', t), { userId: ACCEPT[0], roleIds: ACCEPT[1] }));
+      expect(inResult(f)).toHaveLength(2); // Testbewerbung
+    } finally {
+      await prisma.application.update({ where: { id: appId }, data: { config: config as never } });
+    }
+  });
+});

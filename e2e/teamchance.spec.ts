@@ -36,6 +36,13 @@ test('Team-Chance: Bewerbung zurückstellen und fortsetzen', async ({ page, cont
   const req = (await (await request.get(`${g}/applications/${app.id}`, { headers })).json()).config.requirements;
   expect(req).toMatchObject({ denyCooldown: { days: 14 }, cooldown: { days: 1, hours: 12 }, timeLimit: { days: 2 }, minGuildMembershipDays: 30, maxOpenSubmissions: 5, failMessage: '❌ Du erfüllst derzeit nicht die Voraussetzungen für diese Team-Chance.' });
 
+  // Ticket und Ergebnis (Bearbeitung)
+  await page.getByLabel('Nach dem Absenden automatisch ein Bewerbungsticket eröffnen').check();
+  await page.getByLabel('Ergebnis-Kanal (Annahmen werden dort bekannt gegeben)').selectOption({ label: '#bewerbungen' });
+  await page.getByLabel('Auch Ablehnungen im Ergebnis-Kanal melden').check();
+  await page.getByRole('button', { name: 'Speichern', exact: true }).first().click();
+  await expect.poll(async () => (await (await request.get(`${g}/applications/${app.id}`, { headers })).json()).config.review).toMatchObject({ createTicket: true, resultChannelId: '900000000000000201', resultPostDenied: true });
+
   // Eigener Statusname für „Zurückgestellt“ (Bewerbungsart → Statusnamen und Farben)
   await page.getByLabel('Name für Zurückgestellt').fill('⏸️ Später prüfen');
   await page.getByRole('button', { name: 'Statusnamen speichern' }).click();

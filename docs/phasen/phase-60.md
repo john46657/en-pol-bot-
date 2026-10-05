@@ -5,15 +5,15 @@
 ## Abgleich (Stand 2026-10-05)
 | Punkt | Stand |
 |---|---|
-| 1/2 Arten, Einstellungen | ✅ Name, Beschreibung, Icon/Emoji, Farbe, Banner (`image`), Status, Panel-/Bewerbungs-Kanal, Prüf-Kanal (`submissionChannelId`), zuständige und Bearbeiter-Rollen, Rollenregeln. **Korrektur:** Bewerbungsdauer, Cooldown, Mindest-Kontoalter, Mitgliedsdauer, erforderliche/ausgeschlossene Rollen und Vorgänger-Bewerbungen standen zwar in der Konfiguration, wurden aber **nicht geprüft** (Cooldown las eine nie befüllte Tabelle) und hatten keine Oberfläche – in 60a fälschlich als ✅ geführt; **behoben in 60e** (inkl. max. Bewerbungen, Plätze, Dienstgrad/Team, Mindestaktivität). ❌ Ergebnis-Kanal, ❌ Ticket-Kategorie je Bewerbungsart. |
+| 1/2 Arten, Einstellungen | ✅ Name, Beschreibung, Icon/Emoji, Farbe, Banner (`image`), Status, Panel-/Bewerbungs-Kanal, Prüf-Kanal (`submissionChannelId`), zuständige und Bearbeiter-Rollen, Rollenregeln. **Korrektur:** Bewerbungsdauer, Cooldown, Mindest-Kontoalter, Mitgliedsdauer, erforderliche/ausgeschlossene Rollen und Vorgänger-Bewerbungen standen zwar in der Konfiguration, wurden aber **nicht geprüft** (Cooldown las eine nie befüllte Tabelle) und hatten keine Oberfläche – in 60a fälschlich als ✅ geführt; **behoben in 60e** (inkl. max. Bewerbungen, Plätze, Dienstgrad/Team, Mindestaktivität). ✅ **60f** Ergebnis-Kanal, Ticket-Kategorie je Bewerbungsart. |
 | 3 Start (Buttons/Select) | ✅ Panels (Button, Select, beides). |
 | 4 Fragen | ✅ 28 Fragetypen (alle genannten inkl. Zahl, Discord-Benutzer, Datum, Mehrfachauswahl; Roblox-Name über Benutzername/Text mit Regex), Pflicht/optional, verschieben (Drag & Drop), Bedingungen. |
 | 5 Ablauf | ✅ DM Frage für Frage, „Frage x von y“, Abbrechen; Thread-Option. |
 | 6 Status anpassbar | ✅ **60d** eigene Statusnamen/-farben je Bewerbungsart; ✅ **60c** „Zurückgestellt“ (`ON_HOLD`). |
-| 7 Prüf-Nachricht | ✅ Annehmen, Ablehnen, Übernehmen, Ansehen, Verlauf, Dashboard-Link, **Zurückstellen/Fortsetzen (60c)**; ❌ „Ticket öffnen“ als Knopf. |
+| 7 Prüf-Nachricht | ✅ Annehmen, Ablehnen, Übernehmen, Ansehen, Verlauf, Dashboard-Link, **Zurückstellen/Fortsetzen (60c)**, **Ticket öffnen (60f)**. |
 | 8–10 Annehmen/Ablehnen (mit Grund) | ✅ Bestätigung, Gründe, DM, Rollen, Archiv. **60a:** getrennte Rechte `…accept_reason` / `…deny_reason`. **60e:** Wartezeit nach Ablehnung getrennt einstellbar und in der Ablehnungs-DM genannt. |
 | 11 Historie | ✅ Verlauf je Bewerbung und je Benutzer, Audit-Ereignisse. |
-| 12 Bewerbungs-Ticket | ◐ Option `createTicket` vorhanden; Kategorie/Knöpfe nicht je Bewerbungsart einstellbar. |
+| 12 Bewerbungs-Ticket | ✅ **60f**: automatisch nach dem Absenden (Option war vorher wirkungslos), Kategorie je Bewerbungsart, Knöpfe im Ticket: Schließen, Übernehmen, Annehmen, Ablehnen, Notiz, Bewerbung ansehen. |
 | 13 Bewertungssystem | ✅ **60b**: frei definierbare Bewertungsfelder je Bewerbungsart (Name, 2–10 Sterne), jede Person bewertet sich selbst, Mittelwerte je Feld und Gesamt (in %), Rechte `…ratings.view/edit`, Audit `submission.rated`. Nur Dashboard (kein Discord-Knopf). |
 | 14 Mehrere Bearbeiter | ❌ genau ein Bearbeiter (Übernehmen/Freigeben/Zuweisen); Notizen ✅. |
 | 15 Voraussetzungen | ✅ **60e** (Mindestalter einer Person nur über eine Frage mit Mindestwert; „bestimmte Fraktion“ = Team der Personalakte). |
@@ -69,3 +69,11 @@
 - **Dashboard:** Bewerbungsart → „Voraussetzungen“ (Wartezeiten mit Vorgaben und „Individuell“, Bewerbungsdauer, Kontoalter, Mitgliedsdauer, Rollen, frühere Annahmen, Höchstzahlen, Dienstgrad/Team, Dienststunden, Hinweistext).
 - **Tests:** `packages/core/tests/requirements.test.ts` (10), `packages/automation/test/deny-wait.test.ts` (3), Bot `dm-flow.int.test.ts` (6 Szenarien gegen echte Datenbank), `review.int.test.ts` (Wartezeit in der DM, nicht doppelt), Browser `e2e/teamchance.spec.ts` (Voraussetzungen speichern).
 - **Grenzen:** Discord-Aktivität (Nachrichten/Sprachzeit) wird nicht erfasst – „Mindestaktivität“ misst Dienststunden. Das Alter einer Person lässt sich nur über eine Frage (Zahl mit Mindestwert) prüfen.
+
+## 60f – Bewerbungsticket und Ergebnis-Kanal (Punkte 2, 7, 12, 18)
+- **„Ticket öffnen“** als dritte Zeile in der Discord-Prüf-Nachricht (Handler gab es, der Knopf fehlte). Gemeinsame Funktion `openApplicationTicket` (Bot): Kategorie der Bewerbungsart (`review.ticketCategoryId`) → Server-Einstellung → erste aktive; kein doppeltes Ticket.
+- **Automatisches Bewerbungsticket** nach dem Absenden, wenn `review.createTicket` gesetzt ist (die Option wurde bisher nirgends ausgewertet); nicht für Testbewerbungen; Fehler werden protokolliert, das Absenden bleibt erfolgreich.
+- **Knöpfe im Bewerbungsticket:** Annehmen, Ablehnen, Bearbeiter übernehmen, Notiz hinzufügen (dieselben Abläufe und Rechte wie in der Prüf-Nachricht) zusätzlich zu Schließen/Übernehmen/Bewerbung ansehen.
+- **Ergebnis-Kanal** (`review.resultChannelId`): Annahmen werden als Embed gemeldet (Text mit Platzhaltern, Standard „🎉 {user} wurde bei **{applicationName}** angenommen. Willkommen im Team!“); Ablehnungen nur mit `resultPostDenied`; nie für Testbewerbungen; erwähnt nur den Bewerber. Erscheint als Schritt „Ergebnis-Kanal“ im Ergebnis der Entscheidung (fehlgeschlagen, wenn der Bot dort nicht schreiben darf).
+- **Dashboard:** Bewerbungsart → Bearbeitung → „Ticket und Ergebnis“.
+- **Tests:** `apps/bot/test/application-ticket.int.test.ts` (Kategorie, kein Doppel, Knöpfe, Fehlerfälle), `review.int.test.ts` (Ergebnis-Kanal: Annahme, Ablehnung nur auf Wunsch, Test nie, eigener Text), Browser `e2e/teamchance.spec.ts`.

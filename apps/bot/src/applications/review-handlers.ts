@@ -31,9 +31,8 @@ import { config } from '../config.js';
 import { buildCustomId, isValidId } from '../discord/custom-ids.js';
 import { memberCan, requireMemberPermission } from '../discord/permissions.js';
 import { addNote, buildHistoryEmbed } from './review-service.js';
-import { getSettings, listCategories, openTicket } from '@nexus/tickets';
 import { log } from '../logger.js';
-import { ticketDiscord } from '../tickets/ticket-core.js';
+import { openApplicationTicket } from './application-ticket.js';
 
 /**
  * Bearbeitung durch das Team (Phase 10): Ansehen · Annehmen · Ablehnen · Rückfrage · Gespräch · Notiz · Verlauf
@@ -261,19 +260,9 @@ registerButton(A.ticket, async (i, { args }) => {
   if (!isValidId(submissionId) || !member || !i.guild) return;
   await i.deferReply({ flags: ephemeral });
   try {
-    const s = await prisma.applicationSubmission.findFirst({ where: { id: submissionId, guildId: i.guild.id }, include: { application: true } });
-    if (!s) return void (await i.editReply('⚠️ Bewerbung nicht gefunden.'));
-    const applicant = await i.guild.members.fetch(s.userId).catch(() => null);
-    if (!applicant) return void (await i.editReply('⚠️ Der Bewerber ist nicht (mehr) auf dem Server.'));
-    // Bereits ein offenes Gespräch zu dieser Bewerbung? Dann nicht doppelt anlegen.
-    const existing = await prisma.ticket.findFirst({ where: { guildId: i.guild.id, submissionId, status: { not: 'CLOSED' } } });
-    if (existing?.channelId) return void (await i.editReply(`ℹ️ Es gibt bereits ein Gespräch zu dieser Bewerbung: <#${existing.channelId}>`));
-    const categories = await listCategories(i.guild.id, true);
-    const configured = (await getSettings(i.guild.id)).applicationCategoryId;
-    const cat = categories.find((c) => c.id === configured) ?? categories[0];
-    if (!cat) return void (await i.editReply('⚠️ Es gibt keine aktive Ticket-Kategorie. Lege im Dashboard eine an.'));
-    const t = await openTicket({ guildId: i.guild.id, userId: s.userId, username: applicant.displayName, categoryId: cat.id, subject: `Bewerbungsgespräch – ${s.application.name}`.slice(0, 100), roleIds: [...applicant.roles.cache.keys()], submission: { id: s.id, name: s.application.name }, openedBy: i.user.id }, ticketDiscord());
-    await i.editReply(`🎫 Gespräch eröffnet: <#${t.channelId}>`);
+    const r = await openApplicationTicket(i.guild, submissionId, i.user.id);
+    if (!r.ok) return void (await i.editReply(`⚠️ ${r.message}`));
+    await i.editReply(r.existing ? `ℹ️ Es gibt bereits ein Ticket zu dieser Bewerbung: <#${r.channelId}>` : `🎫 Ticket eröffnet: <#${r.channelId}>`);
   } catch (e) {
     log.error({ err: e instanceof Error ? (e.stack ?? e.message) : String(e), submissionId }, 'Ticket mit Bewerber fehlgeschlagen.');
     await i.editReply(e instanceof Error && e.name === 'TicketError' ? `❌ ${e.message}` : '❌ Ein Fehler ist aufgetreten. Bitte versuche es erneut oder wende dich an den Support.').catch(() => undefined);

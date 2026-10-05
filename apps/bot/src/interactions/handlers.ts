@@ -15,6 +15,7 @@ import {
 } from 'discord.js';
 import { parseCustomId, CustomIdAction, isValidId } from '../discord/custom-ids.js';
 import { log } from '../logger.js';
+import { openApplicationTicket } from '../applications/application-ticket.js';
 import { dispatchComponent, dispatchModal, registerSelect } from '../core/interaction-registry.js';
 import { buildCustomId } from '../discord/custom-ids.js';
 import { DMPhase, SubmissionStatus } from '@nexus/types';
@@ -349,6 +350,8 @@ async function submitFromSummary(
       { submissionId, reason: posted.reason },
       'Bearbeitungsteam konnte nicht benachrichtigt werden.',
     );
+  // Optional: Bewerbungsticket automatisch eröffnen (Bewerbungsart → Bearbeitung → „Ticket automatisch eröffnen“)
+  await autoTicket(interaction, submissionId);
   // Bewerber: Zurückziehen bis zur Entscheidung
   const dm = interaction.channel;
   if (dm?.isDMBased()) {
@@ -390,3 +393,15 @@ registerSelect(CustomIdAction.DM_EDIT_SELECT, async (interaction, { args }) => {
     })
     .catch(() => undefined);
 });
+
+
+/** Eröffnet nach dem Absenden ein Bewerbungsticket, wenn die Bewerbungsart das verlangt (Fehler werden nur protokolliert). */
+async function autoTicket(interaction: MessageComponentInteraction, submissionId: string): Promise<void> {
+  const s = await prisma.applicationSubmission.findUnique({ where: { id: submissionId }, select: { guildId: true, isTest: true, application: { select: { config: true } } } });
+  const wanted = (s?.application.config as { review?: { createTicket?: boolean } } | null)?.review?.createTicket === true;
+  if (!s || !wanted || s.isTest) return;
+  const guild = interaction.client.guilds.cache.get(s.guildId) ?? (await interaction.client.guilds.fetch(s.guildId).catch(() => null));
+  if (!guild) return;
+  const r = await openApplicationTicket(guild, submissionId, interaction.client.user?.id ?? interaction.user.id).catch((e: unknown) => ({ ok: false as const, message: e instanceof Error ? e.message : String(e) }));
+  if (!r.ok) log.warn({ submissionId, reason: r.message }, 'Bewerbungsticket konnte nicht automatisch eröffnet werden.');
+}

@@ -3,6 +3,7 @@ import { useState } from 'react';
 import {
   api,
   type DenyReason,
+  type DiscordChannel,
   type QuestionsResponse,
   type RankRow,
   type ReviewOptions,
@@ -20,6 +21,12 @@ interface Onboarding {
 interface AppDetail {
   config: {
     review?: Record<string, unknown> & {
+      createTicket?: boolean;
+      ticketCategoryId?: string;
+      resultChannelId?: string;
+      resultPostDenied?: boolean;
+      resultAcceptedText?: string;
+      resultDeniedText?: string;
       acceptPipeline?: Record<string, boolean>;
       denyReasons?: DenyReason[];
       onboarding?: Onboarding;
@@ -109,6 +116,17 @@ function Form({
   const [steps, setSteps] = useState<Record<string, boolean>>(review.acceptPipeline ?? {});
   const [reasons, setReasons] = useState<DenyReason[]>(review.denyReasons ?? []);
   const [onb, setOnb] = useState<Onboarding>(review.onboarding ?? {});
+  const [out, setOut] = useState({
+    createTicket: review.createTicket ?? false,
+    ticketCategoryId: review.ticketCategoryId ?? '',
+    resultChannelId: review.resultChannelId ?? '',
+    resultPostDenied: review.resultPostDenied ?? false,
+    resultAcceptedText: review.resultAcceptedText ?? '',
+    resultDeniedText: review.resultDeniedText ?? '',
+  });
+  const guildBase = base.replace(/\/applications\/[^/]+$/, '');
+  const categories = useQuery({ queryKey: ['ticket-cats', guildBase], queryFn: () => api<{ id: string; name: string; active: boolean }[]>(`${guildBase}/tickets/categories`), retry: false });
+  const channels = useQuery({ queryKey: ['channels', guildBase], queryFn: () => api<DiscordChannel[]>(`${guildBase}/discord/channels`), retry: false });
   const setO = (p: Partial<Onboarding>) =>
     setOnb(
       (o) =>
@@ -122,7 +140,19 @@ function Form({
         method: 'PATCH',
         body: {
           config: {
-            review: { ...review, acceptPipeline: steps, denyReasons: reasons, onboarding: onb },
+            review: {
+              ...review,
+              acceptPipeline: steps,
+              denyReasons: reasons,
+              onboarding: onb,
+              createTicket: out.createTicket,
+              resultPostDenied: out.resultPostDenied,
+              // leere Felder entfernen (= Standard)
+              ticketCategoryId: out.ticketCategoryId || undefined,
+              resultChannelId: out.resultChannelId || undefined,
+              resultAcceptedText: out.resultAcceptedText.trim() || undefined,
+              resultDeniedText: out.resultDeniedText.trim() || undefined,
+            },
           },
         },
       }),
@@ -260,6 +290,33 @@ function Form({
         >
           + Grund
         </button>
+      </div>
+      <h4>Ticket und Ergebnis</h4>
+      <label className="fld">
+        <span>
+          <input type="checkbox" checked={out.createTicket} onChange={(e) => setOut({ ...out, createTicket: e.target.checked })} /> Nach dem Absenden automatisch ein Bewerbungsticket eröffnen
+        </span>
+      </label>
+      <label className="fld">
+        <span>Ticket-Kategorie für Bewerbungstickets dieser Art</span>
+        <select value={out.ticketCategoryId} onChange={(e) => setOut({ ...out, ticketCategoryId: e.target.value })}>
+          <option value="">– Server-Einstellung –</option>
+          {(categories.data ?? []).filter((c) => c.active).map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
+        </select>
+      </label>
+      <label className="fld">
+        <span>Ergebnis-Kanal (Annahmen werden dort bekannt gegeben)</span>
+        <select value={out.resultChannelId} onChange={(e) => setOut({ ...out, resultChannelId: e.target.value })}>
+          <option value="">– kein Ergebnis-Kanal –</option>
+          {(channels.data ?? []).filter((c) => c.kind === 'text').map((c) => <option key={c.id} value={c.id}>#{c.name}</option>)}
+        </select>
+      </label>
+      <label className="fld">
+        <span><input type="checkbox" checked={out.resultPostDenied} onChange={(e) => setOut({ ...out, resultPostDenied: e.target.checked })} /> Auch Ablehnungen im Ergebnis-Kanal melden</span>
+      </label>
+      <label className="fld"><span>Text bei Annahme (Platzhalter: {'{user}'}, {'{applicationName}'}, {'{reviewer}'})</span><input maxLength={1000} placeholder="🎉 {user} wurde bei **{applicationName}** angenommen. Willkommen im Team!" value={out.resultAcceptedText} onChange={(e) => setOut({ ...out, resultAcceptedText: e.target.value })} /></label>
+      <label className="fld"><span>Text bei Ablehnung</span><input maxLength={1000} placeholder="❌ Die Bewerbung von {user} für **{applicationName}** wurde abgelehnt." value={out.resultDeniedText} onChange={(e) => setOut({ ...out, resultDeniedText: e.target.value })} /></label>
+      <div className="actions">
         <button
           className="btn primary"
           disabled={save.isPending || reasons.some((r) => !r.label.trim())}

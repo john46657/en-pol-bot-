@@ -893,6 +893,21 @@ export async function decideSubmission(
       });
     }
   }
+  // Ergebnis-Kanal: Annahmen (und – falls gewünscht – Ablehnungen) öffentlich bekannt geben; Testbewerbungen nicht
+  const review = cfg.review as typeof cfg.review & { resultChannelId?: string; resultPostDenied?: boolean; resultAcceptedText?: string; resultDeniedText?: string };
+  if (review.resultChannelId && !s.isTest && (target === SubmissionStatus.ACCEPTED || review.resultPostDenied)) {
+    const accepted = target === SubmissionStatus.ACCEPTED;
+    const template = (accepted ? review.resultAcceptedText : review.resultDeniedText) || (accepted ? '🎉 {user} wurde bei **{applicationName}** angenommen. Willkommen im Team!' : '❌ Die Bewerbung von {user} für **{applicationName}** wurde abgelehnt.');
+    try {
+      await port.postMessage(review.resultChannelId, {
+        embeds: [{ description: textOr(template, template, ctx.variables).slice(0, 4000), color: accepted ? 0x57f287 : 0xed4245, timestamp: now.toISOString() }],
+        allowed_mentions: { parse: [], users: [s.userId] },
+      } as never);
+      steps.push({ key: 'resultChannel', label: 'Ergebnis-Kanal', status: 'done' });
+    } catch {
+      steps.push({ key: 'resultChannel', label: 'Ergebnis-Kanal', status: 'failed', detail: 'Der Bot konnte nicht in den Ergebnis-Kanal schreiben (Rechte prüfen).' });
+    }
+  }
   const overall = overallOf(steps);
   await audit(
     s.guildId,

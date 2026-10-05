@@ -200,7 +200,7 @@ describe('Bewerbung → Ticket', () => {
     expect(start.embeds[0].title).toBe('🎫 Bewerbungsgespräch');
     expect(start.components[1].components[0].label).toBe('View Applicants Application');
     const again = await press('button', `nexus:review:ticket:${sub.id}`, STAFF, [STAFF_ROLE], { guildMembers: { [APPLICANT]: applicant } });
-    expect(text(again)).toContain('bereits ein Gespräch');
+    expect(text(again)).toContain('bereits ein Ticket zu dieser Bewerbung');
     // Ansicht der Bewerbung im Ticket
     const view = await press('button', `nexus:ticket:app:${t.id}`, STAFF, [STAFF_ROLE]);
     expect(text(view)).toContain('Flugstaffel');

@@ -330,7 +330,7 @@ export async function openTicket(i: OpenInput, discord: TicketDiscord) {
     .send(channelId, {
       content: `<@${i.userId}>${staff.length ? ` ${staff.map((r) => `<@&${r}>`).join(' ')}` : ''}`,
       embeds: [{ title: `${intro.title}`, description: [intro.description, i.description?.trim()].filter(Boolean).join('\n\n').slice(0, 4000), color: cat.color ?? settings.color, fields: [{ name: 'Kategorie', value: `${cat.emoji ? `${cat.emoji} ` : ''}${cat.name}`, inline: true }, { name: 'Ticket', value: formatNumber(ticket.number), inline: true }, ...fields], footer: { text: `Ticket-ID ${ticket.id}` } }],
-      components: ticketButtons(ticket.id, settings, i.submission ? true : false),
+      components: ticketButtons(ticket.id, settings, i.submission?.id),
       // @ts-expect-error allowed_mentions ist Teil der Discord-Nachricht, aber nicht des schmalen MessagePayload-Typs
       allowed_mentions: { users: [i.userId], roles: staff },
     })
@@ -341,11 +341,16 @@ export async function openTicket(i: OpenInput, discord: TicketDiscord) {
 
 
 /** Buttons im Ticket-Kanal; Custom-IDs werden vom Bot-Handler ausgewertet. Anzeige richtet sich nach den Server-Einstellungen. */
-export function ticketButtons(ticketId: string, s: { claimEnabled: boolean; closeWithReason: boolean }, withApplication = false): NonNullable<MessagePayload['components']> {
+/** Ticket-Knöpfe; bei einem Bewerbungsticket (`submissionId`) zusätzlich die Bearbeitung der Bewerbung (gleiche Rechte wie in der Prüf-Nachricht). */
+export function ticketButtons(ticketId: string, s: { claimEnabled: boolean; closeWithReason: boolean }, submissionId?: string | boolean): NonNullable<MessagePayload['components']> {
   const b = (style: number, label: string, emoji: string, action: string) => ({ type: 2, style, label, emoji: { name: emoji }, custom_id: `nexus:ticket:${action}:${ticketId}` });
   const row1 = [b(4, 'Ticket schließen', '🔒', 'close'), ...(s.closeWithReason ? [b(2, 'Schließen mit Grund', '📝', 'closer')] : []), ...(s.claimEnabled ? [b(1, 'Claim / Übernehmen', '👤', 'claim')] : []), b(2, 'Benachrichtigung', '🔔', 'ping'), b(2, 'Informationen', '📋', 'info')];
   const rows = [{ type: 1, components: row1 }];
-  if (withApplication) rows.push({ type: 1, components: [b(2, 'View Applicants Application', '📄', 'app')] });
+  if (submissionId) rows.push({ type: 1, components: [b(2, 'View Applicants Application', '📄', 'app')] });
+  if (typeof submissionId === 'string') {
+    const r = (style: number, label: string, emoji: string, action: string) => ({ type: 2, style, label, emoji: { name: emoji }, custom_id: `nexus:review:${action}:${submissionId}` });
+    rows.push({ type: 1, components: [r(3, 'Annehmen', '🟢', 'accept'), r(4, 'Ablehnen', '🔴', 'deny'), r(1, 'Bearbeiter übernehmen', '👤', 'claim'), r(2, 'Notiz hinzufügen', '📝', 'note')] as never });
+  }
   return rows as never;
 }
 
