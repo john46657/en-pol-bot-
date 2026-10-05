@@ -363,6 +363,36 @@ describe('Bewerbung erstellen & abschließen', () => {
       (await call('GET', `/guilds/${G}/submissions/${submissionId}/history`, ADMIN)).data.length,
     ).toBeGreaterThan(0);
   });
+
+  it('Annehmen/Ablehnen mit Grund sind eigene Rechte: „mit Grund“ allein erlaubt keine Entscheidung ohne Grund', async () => {
+    const version = await prisma.applicationVersion.findFirstOrThrow({ where: { applicationId } });
+    const mk = (n: string) =>
+      prisma.applicationSubmission.create({
+        data: { guildId: G, applicationId, versionId: version.id, userId: `90000000000033${n}`, usernameSnapshot: 'b' + n, displayNameSnapshot: 'B' + n, status: 'SUBMITTED', submittedAt: new Date() },
+      });
+    const [a, d] = [await mk('0021'), await mk('0022')];
+    const put = (permissions: string[]) => call('PUT', `/guilds/${G}/permissions/${ROLE_ENTRY}`, ADMIN, { permissions });
+    const base = ['applications.view', 'applications.submissions.view', 'applications.submissions.review'];
+
+    expect((await put([...base, 'applications.submissions.accept_reason', 'applications.submissions.deny_reason'])).status).toBe(200);
+    expect((await call('POST', `/guilds/${G}/submissions/${a.id}/accept`, OFFICER, {})).status).toBe(403); // ohne Grund: nicht erlaubt
+    expect((await call('POST', `/guilds/${G}/submissions/${d.id}/deny`, OFFICER, { reasonId: 'x' })).status).toBe(403); // vorgegebener Grund = „ablehnen“
+    expect((await call('POST', `/guilds/${G}/submissions/${a.id}/accept`, OFFICER, { note: 'Starke Antworten' })).status).toBe(201);
+    expect((await call('POST', `/guilds/${G}/submissions/${d.id}/deny`, OFFICER, { note: 'Zu wenig Erfahrung' })).status).toBe(201);
+
+    // nur „annehmen“ (ohne „mit Grund“ zu sperren) erlaubt beides – Rückwärtskompatibilität
+    const e = await mk('0023');
+    expect((await put([...base, 'applications.submissions.accept'])).status).toBe(200);
+    expect((await call('POST', `/guilds/${G}/submissions/${e.id}/accept`, OFFICER, { note: 'Gut' })).status).toBe(201);
+
+    // ausdrücklich gesperrt: „mit Grund“ nicht, ohne Grund schon
+    const f = await mk('0024');
+    const g = await mk('0025');
+    expect((await call('PUT', `/guilds/${G}/permissions/${ROLE_ENTRY}`, ADMIN, { allow: [...base, 'applications.submissions.accept'], deny: ['applications.submissions.accept_reason'] })).status).toBe(200);
+    expect((await call('POST', `/guilds/${G}/submissions/${f.id}/accept`, OFFICER, { note: 'Mit Grund' })).status).toBe(403);
+    expect((await call('POST', `/guilds/${G}/submissions/${g.id}/accept`, OFFICER, {})).status).toBe(201);
+    await put(['applications.view', 'applications.submissions.view', 'operations.view', 'operations.create', 'operations.manage', 'promotions.view']); // Ausgangszustand
+  });
 });
 
 describe('Schicht, Einsatz und Beförderung', () => {

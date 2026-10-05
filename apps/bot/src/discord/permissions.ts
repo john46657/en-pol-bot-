@@ -29,7 +29,9 @@ export const memberCanAny = (member: GuildMember, keys: readonly Permission[]): 
 
 export const REVIEW_KEYS: readonly Permission[] = [
   'applications.submissions.accept',
+  'applications.submissions.accept_reason',
   'applications.submissions.deny',
+  'applications.submissions.deny_reason',
   'applications.submissions.review',
 ];
 

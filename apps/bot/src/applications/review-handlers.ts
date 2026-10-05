@@ -178,7 +178,7 @@ registerButton(A.cancel, async (i) => {
 // Ablehnen: Ein Grund ist Pflicht – Auswahl der Gründe (konfigurierbar); „Sonstiger Grund“ fragt einen eigenen Text ab.
 registerButton(A.deny, async (i, { args }) => {
   const submissionId = args[0] ?? '';
-  if (!isValidId(submissionId) || !(await need(i, 'applications.submissions.deny'))) return;
+  if (!isValidId(submissionId) || !(await need(i, 'applications.submissions.deny', 'applications.submissions.deny_reason'))) return;
   const s = await prisma.applicationSubmission.findFirst({ where: { id: submissionId, guildId: guildOf(i) }, include: { application: { select: { config: true } } } });
   if (!s) return void (await i.reply({ content: '⚠️ Bewerbung nicht gefunden.', flags: ephemeral }));
   const reasons = denyReasonsOf(s.application.config).slice(0, 24);
@@ -197,9 +197,13 @@ registerButton(A.deny, async (i, { args }) => {
 });
 registerSelect(A.denySelect, async (i, { args }) => {
   const submissionId = args[0] ?? '';
-  if (!isValidId(submissionId) || !(await need(i, 'applications.submissions.deny'))) return;
+  if (!isValidId(submissionId) || !(await need(i, 'applications.submissions.deny', 'applications.submissions.deny_reason'))) return;
   const choice = i.values[0] ?? '';
-  if (choice === '__custom') return void (await i.showModal(textModal(id(A.denyReason, submissionId), 'Ablehnungstext', 'note', 'Eigener Ablehnungstext', true, 1000)));
+  // vorgegebener Grund = „ablehnen“, eigener Text = „mit Grund ablehnen“
+  if (!(await need(i, choice === '__custom' ? 'applications.submissions.deny_reason' : 'applications.submissions.deny'))) return;
+  if (choice === '__custom') {
+    return void (await i.showModal(textModal(id(A.denyReason, submissionId), 'Ablehnungstext', 'note', 'Eigener Ablehnungstext', true, 1000)));
+  }
   await i.update({ content: 'Bewerbung wird abgelehnt …', components: [] });
   const r = await decideSubmission(reviewPort(), { submissionId, guildId: guildOf(i), reviewerId: i.user.id, decision: 'DENIED', reasonId: choice, bypassAssignee: await canReassign(i), dashboardUrl: dashboardLink(submissionId) });
   await i.editReply({ content: slice(r.ok ? r.message : `⚠️ ${r.message}`), allowedMentions: { parse: [] } });
@@ -217,8 +221,8 @@ registerButton(A.claim, async (i, { args }) => {
 });
 
 for (const [action, decision, perm, title, label] of [
-  [A.acceptReason, 'ACCEPTED', 'applications.submissions.accept', 'Provide a reason for accepting', 'Provide a reason for accepting'],
-  [A.denyReason, 'DENIED', 'applications.submissions.deny', 'Provide a reason for denying', 'Provide a reason for denying'],
+  [A.acceptReason, 'ACCEPTED', 'applications.submissions.accept_reason', 'Provide a reason for accepting', 'Provide a reason for accepting'],
+  [A.denyReason, 'DENIED', 'applications.submissions.deny_reason', 'Provide a reason for denying', 'Provide a reason for denying'],
 ] as const) {
   const modalId = action;
   registerButton(action, async (i, { args }) => {

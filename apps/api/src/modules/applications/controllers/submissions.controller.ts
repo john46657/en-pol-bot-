@@ -1,12 +1,14 @@
-import { BadRequestException, Body, Controller, Get, Param, Post, Query, Res, StreamableFile } from '@nestjs/common';
+import { BadRequestException, Body, ForbiddenException, Controller, Get, Param, Post, Query, Res, StreamableFile } from '@nestjs/common';
 import type { Response } from 'express';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { GuildId } from '../../../common/decorators/guild-id.decorator.js';
 import { CurrentUser } from '../../../common/decorators/current-user.decorator.js';
 import type { RequestUser } from '../../../common/decorators/current-user.decorator.js';
 import { RequirePermissions } from '../../../common/decorators/permissions.decorator.js';
+import { RequireDashboardAccess } from '../../../common/decorators/guild-admin.decorator.js';
 import { Access, type RequestAccess } from '../../../common/decorators/scope.decorator.js';
 import { permissions } from '@nexus/permissions';
+import type { Permission } from '@nexus/types';
 import { SubmissionsService } from '../services/submissions.service.js';
 import {
   AcceptSubmissionDto,
@@ -25,6 +27,10 @@ import {
 @Controller('guilds/:guildId/submissions')
 export class SubmissionsController {
   constructor(private readonly submissions: SubmissionsService) {}
+
+  private async need(access: RequestAccess, key: Permission): Promise<void> {
+    if (!(access.bypass || (await permissions.can(access, key)))) throw new ForbiddenException('Dafür fehlt dir die Berechtigung.');
+  }
 
   @Get()
   @RequirePermissions('applications.submissions.view')
@@ -70,7 +76,7 @@ export class SubmissionsController {
 
   /** Accept (§30) – inkl. public/internal Reason für Transparenz. */
   @Post(':submissionId/accept')
-  @RequirePermissions('applications.submissions.accept')
+  @RequireDashboardAccess()
   async accept(
     @GuildId() guildId: string,
     @Param('submissionId') submissionId: string,
@@ -78,11 +84,13 @@ export class SubmissionsController {
     @CurrentUser() user: RequestUser,
     @Access() access: RequestAccess,
   ) {
+    // Annehmen ohne eigenen Grund braucht „annehmen“, mit Grund „mit Grund annehmen“ (jenes folgt aus diesem, nicht umgekehrt)
+    await this.need(access, [dto.note, dto.publicReason, dto.internalReason].some((t) => t?.trim()) ? 'applications.submissions.accept_reason' : 'applications.submissions.accept');
     return this.submissions.accept(guildId, submissionId, user.id, dto, await this.canReassign(access));
   }
 
   @Post(':submissionId/deny')
-  @RequirePermissions('applications.submissions.deny')
+  @RequireDashboardAccess()
   async deny(
     @GuildId() guildId: string,
     @Param('submissionId') submissionId: string,
@@ -90,6 +98,8 @@ export class SubmissionsController {
     @CurrentUser() user: RequestUser,
     @Access() access: RequestAccess,
   ) {
+    // Ablehnen mit einem der vorgegebenen Gründe braucht „ablehnen“, mit eigenem Text „mit Grund ablehnen“
+    await this.need(access, [dto.note, dto.publicReason, dto.internalReason].some((t) => t?.trim()) ? 'applications.submissions.deny_reason' : 'applications.submissions.deny');
     return this.submissions.deny(guildId, submissionId, user.id, dto, await this.canReassign(access));
   }
 

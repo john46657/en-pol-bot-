@@ -308,3 +308,23 @@ describe('Dashboard-Seitenrechte (nur lesen)', () => {
     expect(decide([g('dashboard.tickets'), g('tickets.view', 'DENY')], 'tickets.view').allowed).toBe(false);
   });
 });
+
+describe('Annehmen/Ablehnen mit Grund (eigene Aktionen)', () => {
+  const g = (key: string, effect: 'ALLOW' | 'DENY' = 'ALLOW'): Grant => ({ key, effect, scope: 'SERVER', scopeRef: '', source: { kind: 'role', roleName: 'R' } });
+  it('wer annehmen/ablehnen darf, darf es auch mit Grund (Rückwärtskompatibilität)', () => {
+    expect(decide([g('applications.submissions.accept')], 'applications.submissions.accept_reason').allowed).toBe(true);
+    expect(decide([g('applications.submissions.deny')], 'applications.submissions.deny_reason').allowed).toBe(true);
+  });
+  it('„mit Grund“ allein erlaubt nicht das Annehmen/Ablehnen ohne Grund', () => {
+    expect(decide([g('applications.submissions.accept_reason')], 'applications.submissions.accept').allowed).toBe(false);
+    expect(decide([g('applications.submissions.deny_reason')], 'applications.submissions.deny').allowed).toBe(false);
+  });
+  it('Sperre auf „mit Grund“ schlägt die Erlaubnis zum Annehmen', () => {
+    const grants = [g('applications.submissions.accept'), g('applications.submissions.accept_reason', 'DENY')];
+    expect(decide(grants, 'applications.submissions.accept').allowed).toBe(true);
+    expect(decide(grants, 'applications.submissions.accept_reason').allowed).toBe(false);
+  });
+  it('applications.manage schließt beides ein', () => {
+    expect(decide([g('applications.manage')], 'applications.submissions.deny_reason').allowed).toBe(true);
+  });
+});
