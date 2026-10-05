@@ -3,8 +3,8 @@
 ## Abgleich (Stand 2026-10-05)
 | Spec-Punkt | Stand |
 |---|---|
-| 1 Rollenverwaltung | Discord-Rollen werden synchronisiert und über Profile/Matrix mit Rechten belegt. **Offen:** eigene, nicht an Discord gebundene Rollen (anlegen, duplizieren, Beschreibung, Aktiv-Schalter, Mitglieder zuweisen). Profile haben Farbe, Priorität, Aktiv, Duplizieren (Phase 56). |
-| 2 Hierarchie | Rangfolge der Discord-Rollen wird erzwungen (Phase 56). Freie Priorität nur bei Profilen. |
+| 1 Rollenverwaltung | **Neu (57c):** eigene Dashboard-Rollen (`NexusRole`): anlegen, bearbeiten, duplizieren, löschen, umbenennen, Farbe, Beschreibung, Priorität, aktiv/inaktiv, Rechte-Matrix mit Kategorie-Filter, Mitglieder hinzufügen/entfernen (mehrere, optional befristet), Kopplung an eine Discord-Rolle (Träger erhalten die Rolle automatisch). Seite „Rollen & Rechte“, API `guilds/:id/nexus-roles`. Discord-Rollen werden weiter über Profile/Matrix belegt. |
+| 2 Hierarchie | Rangfolge der Discord-Rollen wird erzwungen (Phase 56). Für Dashboard-Rollen gilt die Priorität: nur Rollen unterhalb der eigenen höchsten Priorität ändern/vergeben, keine Priorität auf oder über der eigenen, sich selbst keine Rolle geben, nur Rechte vergeben, die man besitzt. Discord-Verwalter/Besitzer sind von der Prioritätsregel ausgenommen. |
 | 3 Besitzer | Besitzer ist bypass und nicht einschränkbar (Phase 56). |
 | 4/12 Einzelrechte | Katalog `modul.aktion`, Spec-Namen teils als Alias. **Neu:** Ticket-Einzelrechte (unten). **Offen:** Moderation, Logs, Embeds, Channels, Nachrichten, Commands, Team-Chance (Module existieren nicht bzw. ohne Rechte). |
 | 5 Modulrechte | Ticket-Einzelrechte jetzt trennbar; Supporter-Beispiel (claim/close/members/transcript) abbildbar. |
@@ -25,6 +25,13 @@
 
 - **Sicherheitskorrektur Bot:** `permissionService.can` prüfte nur exakte Schlüssel direkt an der Rolle und ignorierte Profile, Sperren, Benutzerausnahmen, Ablauf und `.manage`. Sie nutzt jetzt dieselbe Engine wie die API (Spec 17). Betrifft u. a. /gefahr, /sperre, /fahrzeug, /funk, /einsatz, /sek, /bericht.
 
+## Dashboard-Rollen (57c)
+- Tabellen `nexus_roles`, `nexus_role_members` (Migration `20261005050000_nexus_roles`). Rechte (`entries`) fließen in `loadGrants` ein – damit gelten sie in API **und** Bot. Abgelaufene Mitgliedschaften und deaktivierte Rollen zählen nicht.
+- Audit: `permissions.nexusrole.create|update|delete|member.add|member.remove` mit vorher/nachher.
+- Tests: `packages/database/test/nexus-roles.test.ts`, `apps/api/test/rights.test.ts`.
+
 ## Grenzen
 - Die Rechte-Matrix zeigt neue Rechte automatisch (Katalog), im Browser nicht geprüft.
 - Kategorie-spezifische Rechte laufen weiter über Bearbeiter-Rollen je Kategorie.
+- Dashboard-Rollen: Mitglieder-Zuordnung in der Übersicht „Benutzer“ (Rechte-Erklärung „Warum?“) zeigt die Quelle als Rolle, nicht als Dashboard-Rolle; Discord-Rollen werden nicht automatisch angelegt/gespiegelt; Seite im Browser nicht geklickt.
+- Die Rechteübersicht je Discord-Rolle (`loadGrantIndex`) kennt Dashboard-Rollen nicht.

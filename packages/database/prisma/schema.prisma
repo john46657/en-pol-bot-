@@ -427,6 +427,7 @@ model Guild {
   messagePanels      Panel[]
   permissionProfiles PermissionProfile[]
   userPermissions    UserPermission[]
+  nexusRoles         NexusRole[]
   ranks              Rank[]
   teams              Team[]
   personnelRecords   PersonnelRecord[]
@@ -2456,4 +2457,51 @@ model ApplicationNumberCounter {
 
   @@id([guildId, prefix])
   @@map("application_number_counters")
+}
+
+/// Eigene Rolle des Dashboards: frei benennbar, mit Priorität und Rechten, optional an eine Discord-Rolle gekoppelt.
+/// Rechte kommen über Mitglieder (`NexusRoleMember`) oder – bei Kopplung – über alle Träger der Discord-Rolle.
+model NexusRole {
+  id            String   @id @default(cuid())
+  guildId       String
+  name          String
+  description   String?
+  /// #RRGGBB
+  color         String?
+  /// Höher = ranghöher; niemand verändert Rollen auf oder über der eigenen Priorität.
+  priority      Int      @default(0)
+  enabled       Boolean  @default(true)
+  /// Verknüpfte Discord-Rolle (Snowflake): wer sie trägt, hat diese Rolle automatisch.
+  discordRoleId String?
+  /// [{ key, effect, scope, scopeRef }]
+  entries       Json
+  createdBy     String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  guild   Guild             @relation(fields: [guildId], references: [id], onDelete: Cascade)
+  members NexusRoleMember[]
+
+  @@unique([guildId, name])
+  @@index([guildId, priority])
+  @@index([guildId, discordRoleId])
+  @@map("nexus_roles")
+}
+
+model NexusRoleMember {
+  id        String    @id @default(cuid())
+  roleId    String
+  guildId   String
+  userId    String
+  /// Befristete Zuweisung (null = unbefristet).
+  expiresAt DateTime?
+  createdBy String?
+  createdAt DateTime  @default(now())
+
+  role NexusRole @relation(fields: [roleId], references: [id], onDelete: Cascade)
+
+  @@unique([roleId, userId])
+  @@index([guildId, userId])
+  @@index([expiresAt])
+  @@map("nexus_role_members")
 }

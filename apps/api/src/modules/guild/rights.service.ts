@@ -1,6 +1,6 @@
 import { ForbiddenException, Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { auditRepository, permissionRepository } from '@nexus/database';
+import { auditRepository, nexusRoleRepository, permissionRepository } from '@nexus/database';
 import { getGuild, getGuildMember } from '@nexus/discord';
 import { permissions } from '@nexus/permissions';
 import type { RequestAccess } from '../../common/decorators/scope.decorator.js';
@@ -141,5 +141,40 @@ export class RightsService {
       if (targetTop >= a.top) await this.deny(guildId, a.userId, res, 'Du kannst nur Benutzer bearbeiten, deren höchste Rolle unter deiner eigenen steht.');
     }
     if (grant?.effect === 'ALLOW') await this.assertGrant(a, guildId, res, [grant.key]);
+  }
+
+  /** Höchste Priorität unter den eigenen Dashboard-Rollen (Verwalter/Besitzer: unbegrenzt). */
+  private async nexusTop(a: Actor, guildId: string, access: RequestAccess): Promise<number> {
+    if (a.isOwner || a.bypass) return Number.POSITIVE_INFINITY;
+    const mine = await nexusRoleRepository.rolesOfUser(guildId, access.userId, access.roleIds);
+    return Math.max(-1, ...mine.map((r) => r.priority));
+  }
+
+  /** Dashboard-Rolle anlegen/ändern/löschen: nur unterhalb der eigenen Priorität, nur Rechte, die man selbst besitzt. */
+  async forNexusRole(guildId: string, access: RequestAccess, change: { roleId?: string; priority?: number; allowKeys?: string[] }): Promise<void> {
+    const a = await this.actor(guildId, access);
+    const top = await this.nexusTop(a, guildId, access);
+    const res: [string, string] = ['NexusRole', change.roleId ?? 'new'];
+    let before: string[] = [];
+    if (change.roleId) {
+      const role = await nexusRoleRepository.get(guildId, change.roleId);
+      if (!role) return; // fehlende Rolle meldet der Dienst selbst
+      if (role.priority >= top) await this.deny(guildId, a.userId, res, 'Du kannst nur Rollen bearbeiten, deren Priorität unter deiner höchsten Rolle liegt.');
+      before = role.entries.filter((e) => e.effect === 'ALLOW').map((e) => e.key);
+    }
+    if (change.priority !== undefined && change.priority >= top)
+      await this.deny(guildId, a.userId, res, 'Du kannst keine Priorität auf oder über deiner eigenen vergeben.');
+    await this.assertGrant(a, guildId, res, (change.allowKeys ?? []).filter((k) => !before.includes(k)));
+  }
+
+  /** Mitglieder einer Dashboard-Rolle ändern: nicht sich selbst, nicht über der eigenen Priorität, nur Rechte, die man besitzt. */
+  async forNexusMember(guildId: string, access: RequestAccess, roleId: string, targetUserIds: string[], adding: boolean): Promise<void> {
+    const a = await this.actor(guildId, access);
+    const res: [string, string] = ['NexusRole', roleId];
+    if (targetUserIds.includes(a.userId) && !a.isOwner) await this.deny(guildId, a.userId, res, 'Du kannst dir selbst keine Rollen geben oder nehmen.');
+    const role = await nexusRoleRepository.get(guildId, roleId);
+    if (!role) return;
+    if (role.priority >= (await this.nexusTop(a, guildId, access))) await this.deny(guildId, a.userId, res, 'Du kannst nur Rollen vergeben, deren Priorität unter deiner höchsten Rolle liegt.');
+    if (adding) await this.assertGrant(a, guildId, res, role.entries.filter((e) => e.effect === 'ALLOW').map((e) => e.key));
   }
 }

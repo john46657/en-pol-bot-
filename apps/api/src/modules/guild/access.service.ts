@@ -21,7 +21,7 @@ import { DiscordService } from './discord.service.js';
 const keySchema = z
   .string()
   .refine((k) => (PERMISSIONS as readonly string[]).includes(k), 'Unbekannte Permission.');
-const entrySchema = z
+export const entrySchema = z
   .object({
     key: keySchema,
     effect: z.enum(['ALLOW', 'DENY']),
@@ -68,7 +68,7 @@ for (const m of PERMISSION_CATALOG) {
   }
 }
 
-const parse = <T>(schema: z.ZodType<T, z.ZodTypeDef, unknown>, input: unknown): T => {
+export const parse = <T>(schema: z.ZodType<T, z.ZodTypeDef, unknown>, input: unknown): T => {
   const r = schema.safeParse(input);
   if (!r.success)
     throw new BadRequestException(
@@ -78,7 +78,7 @@ const parse = <T>(schema: z.ZodType<T, z.ZodTypeDef, unknown>, input: unknown): 
 };
 
 /** Konflikt: dasselbe Recht im selben Geltungsbereich erlaubt und gesperrt. */
-function assertNoContradiction(entries: ProfileEntry[]): void {
+export function assertNoContradiction(entries: ProfileEntry[]): void {
   const sig = (e: ProfileEntry) => `${e.key}|${e.scope}|${e.scopeRef}`;
   const allows = new Set(entries.filter((e) => e.effect === 'ALLOW').map(sig));
   if (entries.some((e) => e.effect === 'DENY' && allows.has(sig(e)))) {

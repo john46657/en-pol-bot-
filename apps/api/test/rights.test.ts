@@ -6,11 +6,14 @@ const getGrants = vi.fn(async () => new Map<string, any>());
 const getProfilesByRole = vi.fn(async () => new Map<string, string[]>());
 const listProfiles = vi.fn(async () => [] as any[]);
 const getGuildMember = vi.fn(async (..._a: unknown[]) => ({ roles: ['low'] }) as any);
+const nexusGet = vi.fn(async (..._a: unknown[]) => null as any);
+const nexusMine = vi.fn(async (..._a: unknown[]) => [] as any[]);
 const forRoles = vi.fn(async (..._a: unknown[]) => ['applications.view', 'applications.manage']);
 
 vi.mock('@nexus/database', () => ({
   auditRepository: { create: audit },
   permissionRepository: { getGrants, getProfilesByRole, listProfiles },
+  nexusRoleRepository: { get: nexusGet, rolesOfUser: nexusMine },
 }));
 vi.mock('@nexus/discord', () => ({
   getGuild: vi.fn(async () => ({ ownerId: 'owner' })),
@@ -78,5 +81,36 @@ describe('RightsService', () => {
     await expect(svc.forOverride('G', acc('u1', ['mid']), 'u2', { key: 'config.edit', effect: 'ALLOW' })).rejects.toBeInstanceOf(ForbiddenException);
     // Einschränken (DENY) braucht das Recht nicht
     await expect(svc.forOverride('G', acc('u1', ['mid']), 'u2', { key: 'config.edit', effect: 'DENY' })).resolves.toBeUndefined();
+  });
+});
+
+describe('Dashboard-Rollen (Priorität)', () => {
+  const role = (priority: number, keys: string[] = []) => ({ id: 'r', priority, entries: keys.map((key) => ({ key, effect: 'ALLOW' })) });
+  beforeEach(() => {
+    nexusMine.mockResolvedValue([{ priority: 5 }]);
+  });
+  it('nur Rollen unterhalb der eigenen Priorität bearbeiten', async () => {
+    nexusGet.mockResolvedValue(role(5));
+    await expect(svc.forNexusRole('G', acc('u1', ['mid']), { roleId: 'r' })).rejects.toBeInstanceOf(ForbiddenException);
+    nexusGet.mockResolvedValue(role(4));
+    await expect(svc.forNexusRole('G', acc('u1', ['mid']), { roleId: 'r' })).resolves.toBeUndefined();
+  });
+  it('keine Priorität auf oder über der eigenen vergeben', async () => {
+    await expect(svc.forNexusRole('G', acc('u1', ['mid']), { priority: 5 })).rejects.toBeInstanceOf(ForbiddenException);
+    await expect(svc.forNexusRole('G', acc('u1', ['mid']), { priority: 4 })).resolves.toBeUndefined();
+  });
+  it('nur Rechte vergeben, die man besitzt; Verwalter und Besitzer sind ausgenommen', async () => {
+    await expect(svc.forNexusRole('G', acc('u1', ['mid']), { priority: 1, allowKeys: ['config.edit'] })).rejects.toThrow(/config\.edit/);
+    await expect(svc.forNexusRole('G', acc('u1', ['mid'], true), { priority: 9999, allowKeys: ['config.edit'] })).resolves.toBeUndefined();
+  });
+  it('Mitglieder: nicht sich selbst, nicht Rollen darüber, Rechte der Rolle müssen vorhanden sein', async () => {
+    nexusGet.mockResolvedValue(role(1, ['applications.view']));
+    await expect(svc.forNexusMember('G', acc('u1', ['mid']), 'r', ['u1'], true)).rejects.toThrow(/selbst/);
+    await expect(svc.forNexusMember('G', acc('u1', ['mid']), 'r', ['u2'], true)).resolves.toBeUndefined();
+    nexusGet.mockResolvedValue(role(1, ['config.edit']));
+    await expect(svc.forNexusMember('G', acc('u1', ['mid']), 'r', ['u2'], true)).rejects.toBeInstanceOf(ForbiddenException);
+    await expect(svc.forNexusMember('G', acc('u1', ['mid']), 'r', ['u2'], false)).resolves.toBeUndefined();
+    nexusGet.mockResolvedValue(role(7));
+    await expect(svc.forNexusMember('G', acc('u1', ['mid']), 'r', ['u2'], false)).rejects.toBeInstanceOf(ForbiddenException);
   });
 });

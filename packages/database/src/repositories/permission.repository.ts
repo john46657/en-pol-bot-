@@ -1,6 +1,7 @@
 import type { Prisma } from '@prisma/client';
 import { prisma } from '../client.js';
 import { assertGuildId } from '../scoped.js';
+import { nexusRoleRepository } from './nexus-role.repository.js';
 
 /** Nur noch gültige (nicht abgelaufene) benutzerbezogene Rechte. */
 const activeNow = (now = new Date()) => ({ OR: [{ expiresAt: null }, { expiresAt: { gt: now } }] });
@@ -137,7 +138,7 @@ export const permissionRepository = {
     userId?: string,
   ): Promise<GrantRow[]> {
     const gid = assertGuildId(guildId);
-    const [direct, profiles, user] = await Promise.all([
+    const [direct, profiles, user, nexusRoles] = await Promise.all([
       prisma.permission.findMany({
         where: { guildId: gid, role: { discordId: { in: roleDiscordIds }, deletedAt: null } },
         select: {
@@ -162,8 +163,14 @@ export const permissionRepository = {
       userId
         ? prisma.userPermission.findMany({ where: { guildId: gid, userId, ...activeNow() } })
         : Promise.resolve([]),
+      nexusRoleRepository.rolesOfUser(gid, userId, roleDiscordIds),
     ]);
     const out: GrantRow[] = [];
+    for (const nr of nexusRoles) {
+      for (const e of nr.entries) {
+        out.push({ ...e, source: { kind: 'role', roleId: `nexus:${nr.id}`, roleName: nr.name } });
+      }
+    }
     for (const d of direct) {
       out.push({
         key: d.key,

@@ -267,6 +267,17 @@ export interface ProfileRow {
   enabled: boolean;
   roles: { id: string; name: string }[];
 }
+export interface NexusRoleRow {
+  id: string;
+  name: string;
+  description: string | null;
+  color: string | null;
+  priority: number;
+  enabled: boolean;
+  discordRoleId: string | null;
+  entries: ProfileEntry[];
+  members: { id: string; userId: string; name: string | null; expiresAt: string | null }[];
+}
 export interface MemberRow {
   id: string;
   username: string;

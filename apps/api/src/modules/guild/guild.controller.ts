@@ -27,6 +27,7 @@ import { SetSelectionDto } from './selections.dto.js';
 import type { ChannelKind } from './bot-access.js';
 import { GuildService } from './guild.service.js';
 import { RightsService } from './rights.service.js';
+import { NexusRolesService } from './nexus-roles.service.js';
 import { Access, type RequestAccess } from '../../common/decorators/scope.decorator.js';
 import { DiscordService } from './discord.service.js';
 
@@ -47,6 +48,7 @@ export class GuildController {
     private readonly permissionsAdmin: PermissionsAdminService,
     private readonly access: AccessService,
     private readonly rights: RightsService,
+    private readonly nexusRoles: NexusRolesService,
   ) {}
 
   /** Server-Overview + Configuration Health (§4/§36). */
@@ -210,6 +212,60 @@ export class GuildController {
   ) {
     await this.rights.forProfileChange(guildId, access, profileId);
     return this.access.deleteProfile(guildId, user?.id ?? 'unknown', profileId);
+  }
+
+  // --- Dashboard-Rollen (eigene Rollen, optional an Discord gekoppelt) ---------
+
+  @Get('nexus-roles')
+  @RequirePermissions('permissions.view')
+  listNexusRoles(@GuildId() guildId: string) {
+    return this.nexusRoles.list(guildId);
+  }
+
+  @Post('nexus-roles')
+  @RequirePermissions('permissions.edit')
+  async createNexusRole(@GuildId() guildId: string, @Body() body: unknown, @Access() access: RequestAccess, @CurrentUser() user?: RequestUser) {
+    const d = this.nexusRoles.validate(body);
+    await this.rights.forNexusRole(guildId, access, { priority: d.priority ?? 0, allowKeys: d.entries.filter((e) => e.effect === 'ALLOW').map((e) => e.key) });
+    return this.nexusRoles.create(guildId, user?.id ?? 'unknown', body);
+  }
+
+  @Put('nexus-roles/:id')
+  @RequirePermissions('permissions.edit')
+  async updateNexusRole(@GuildId() guildId: string, @Param('id') id: string, @Body() body: unknown, @Access() access: RequestAccess, @CurrentUser() user?: RequestUser) {
+    const d = this.nexusRoles.validate(body);
+    await this.rights.forNexusRole(guildId, access, { roleId: id, ...(d.priority !== undefined ? { priority: d.priority } : {}), allowKeys: d.entries.filter((e) => e.effect === 'ALLOW').map((e) => e.key) });
+    return this.nexusRoles.update(guildId, user?.id ?? 'unknown', id, body);
+  }
+
+  @Post('nexus-roles/:id/duplicate')
+  @RequirePermissions('permissions.edit')
+  async duplicateNexusRole(@GuildId() guildId: string, @Param('id') id: string, @Access() access: RequestAccess, @CurrentUser() user?: RequestUser) {
+    const src = (await this.nexusRoles.list(guildId)).find((r) => r.id === id);
+    await this.rights.forNexusRole(guildId, access, { ...(src ? { priority: src.priority } : {}), allowKeys: src ? src.entries.filter((e) => e.effect === 'ALLOW').map((e) => e.key) : [] });
+    return this.nexusRoles.duplicate(guildId, user?.id ?? 'unknown', id);
+  }
+
+  @Delete('nexus-roles/:id')
+  @RequirePermissions('permissions.edit')
+  async deleteNexusRole(@GuildId() guildId: string, @Param('id') id: string, @Access() access: RequestAccess, @CurrentUser() user?: RequestUser) {
+    await this.rights.forNexusRole(guildId, access, { roleId: id });
+    return this.nexusRoles.remove(guildId, user?.id ?? 'unknown', id);
+  }
+
+  @Post('nexus-roles/:id/members')
+  @RequirePermissions('permissions.edit')
+  async addNexusRoleMembers(@GuildId() guildId: string, @Param('id') id: string, @Body() body: unknown, @Access() access: RequestAccess, @CurrentUser() user?: RequestUser) {
+    const d = this.nexusRoles.parseMembers(body);
+    await this.rights.forNexusMember(guildId, access, id, d.userIds, true);
+    return this.nexusRoles.addMembers(guildId, user?.id ?? 'unknown', id, body);
+  }
+
+  @Delete('nexus-roles/:id/members/:userId')
+  @RequirePermissions('permissions.edit')
+  async removeNexusRoleMember(@GuildId() guildId: string, @Param('id') id: string, @Param('userId') userId: string, @Access() access: RequestAccess, @CurrentUser() user?: RequestUser) {
+    await this.rights.forNexusMember(guildId, access, id, [userId], false);
+    return this.nexusRoles.removeMember(guildId, user?.id ?? 'unknown', id, userId);
   }
 
   // --- Benutzer-Übersicht ----------------------------------------------------
