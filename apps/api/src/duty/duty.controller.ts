@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, ParseUUIDPipe, Put } from '@nestjs/common';
+import { Body, Controller, Get, Param, ParseUUIDPipe, Put, Query } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { z } from 'zod';
 import { DUTY_STATUSES } from '@enrp/shared';
@@ -7,6 +7,7 @@ import { CurrentActor, RequirePermission } from '../authz/decorators';
 import type { Actor } from '../audit/audit.service';
 import { zodBody } from '../common/zod.pipe';
 
+const hoursQuery = z.object({ days: z.coerce.number().int().min(1).max(90).default(7) });
 const body = z.object({ status: z.enum(DUTY_STATUSES), unitId: z.string().uuid().optional(), callsign: z.string().max(16).optional() });
 
 @ApiTags('team')
@@ -19,6 +20,12 @@ export class DutyController {
   overview() { return this.d.overview(); }
   @Get('me') @RequirePermission('team.view')
   mine(@CurrentActor() a: Actor) { return this.d.mine(a.userId!); }
+  /** Eigene Dienststunden. */
+  @Get('me/hours') @RequirePermission('team.view')
+  myHours(@CurrentActor() a: Actor, @Query(zodBody(hoursQuery)) f: z.infer<typeof hoursQuery>) { return this.d.hours(f.days, a.userId!); }
+  /** Dienststunden aller Beamten (Schichtleitung). */
+  @Get('hours') @RequirePermission('team.manage')
+  hours(@Query(zodBody(hoursQuery)) f: z.infer<typeof hoursQuery>) { return this.d.hours(f.days); }
   @Put('me/status') @RequirePermission('team.view')
   set(@CurrentActor() a: Actor, @Body(zodBody(body)) b: z.infer<typeof body>) { return this.d.setStatus(a, b.status, b); }
 

@@ -5,7 +5,7 @@ Der frühere Bot (Emden RP Bot) wurde entfernt (liegt in der Git-Historie). Hier
 | Alt (Datei) | Was es tat | Im neuen System | Stand |
 |---|---|---|---|
 | `bewerbungen.py` | `/bewerbung` Formular, Antworten in Channel | **Bewerbungen**: öffentliches Web-Formular `/apply`, konfigurierbar in Studio, Prüfung/Entscheidung in *Applications* (Workflow SUBMITTED → … → ACCEPTED/REJECTED) | ✅ Web + Discord `/bewerbung` (Formular, Entscheidung per DM) |
-| `dienst.py` | `/dienst start/ende`, Stunden | **Dienststatus**: Team-Dashboard, Discord `/dienst an\|pause\|aus`; Dienststunden in *Analytics* | ✅ · ❌ `/dienst stunden` |
+| `dienst.py` | `/dienst start/ende`, Stunden | **Dienststatus**: Team-Dashboard, Discord `/dienst an\|pause\|aus`; Dienststunden in *Analytics* und per `/dienststunden` (eigene bzw. mit `alle` das ganze Team) | ✅ |
 | `dienstberichte.py` | `/dienstbericht` Formular | **Berichte** (versioniert, Prüf-Workflow), Discord `/bericht` | ✅ |
 | `fahndung.py` | Fahndung erstellen/beenden/Liste | **Fahndungen** (Person/Fahrzeug, Ablauf, Aufheben mit Begründung), Discord `/fahndung` + `/fahndungen`, Alarm-Channel | ✅ · Aufheben nur im Web |
 | `ausbildung.py` | Ausbilder, Modul-Checkliste, Abschluss | **Academy**: Kurse, Einschreibung, Benotung → Qualifikation | ✅ teilweise (keine Modul-Checkliste pro Rekrut) |
@@ -19,4 +19,4 @@ Der frühere Bot (Emden RP Bot) wurde entfernt (liegt in der Git-Historie). Hier
 | `config.py`, `settings.py`, `checks.py`, `database.py`, `discord_oauth.py` | Rollen-Checks, Einstellungen, Datenbank, Discord-Login | Rollen/Berechtigungen, Admin-Settings, PostgreSQL, eigener Login (kein Discord-OAuth) | ✅ ersetzt · ❌ Discord-Login |
 
 ## Noch offen (nach Bedarf)
-`/dienst stunden`, Modul-Checkliste pro Rekrut (Academy), eigenes GSG9-Modul, Discord-OAuth-Login. Die Struktur dafür steht (siehe [extending.md](extending.md) und [discord-bot.md](discord-bot.md)).
+Modul-Checkliste pro Rekrut (Academy), eigenes GSG9-Modul, Discord-OAuth-Login. Die Struktur dafür steht (siehe [extending.md](extending.md) und [discord-bot.md](discord-bot.md)).

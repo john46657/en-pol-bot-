@@ -18,6 +18,7 @@ Der Bot (`apps/bot`, TypeScript, discord.js 14) ist ein **schlanker Client der S
 | `/einsatzinfo nummer` | Details, Einheiten, Verlauf eines Einsatzes | `incidents.view` |
 | `/einheiten` | Einheiten + Status | `dispatch.view` |
 | `/team` | wer ist im Dienst (Einheit, Einsatz) | `team.view` |
+| `/dienststunden [tage] [alle]` | eigene Dienststunden der letzten 7 (1–90) Tage nach Status; mit `alle` die Stunden aller Beamten | `team.view` · `alle`: `team.manage` |
 | `/dienst status` | eigener Dienststatus: an, pause, training, verwaltung, aus | `team.view` |
 | `/einheitstatus rufzeichen status` | Einheitenstatus ändern | `dispatch.edit` |
 | `/einsatz titel [prioritaet] [ort]` | Einsatz anlegen | `incidents.create` |

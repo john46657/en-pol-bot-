@@ -68,4 +68,25 @@ describe('team dashboard', () => {
     expect((await disp.put(`/api/v1/dispatch/units/${u.id}/members`).send({ userIds: [ghost.id] })).status).toBe(404);
     expect(await prisma.auditLog.count({ where: { action: 'unit.members', entityId: u.id } })).toBe(1);
   });
+
+  it('duty hours: own hours for everyone, team hours only with team.manage; clipped to the period', async () => {
+    const off = (await login(app, 't_off')).agent;
+    const sup = (await login(app, 't_sup')).agent;
+    const h = 3_600_000; const now = Date.now();
+    // 10 h ON_DUTY, began 3 days ago → with days=1 only the last 24 h count partly; with days=7 fully
+    await prisma.dutySession.create({ data: { userId: uid('t_sup'), status: 'ON_DUTY', startedAt: new Date(now - 30 * h), endedAt: new Date(now - 20 * h) } });
+    await prisma.dutySession.create({ data: { userId: uid('t_sup'), status: 'BREAK', startedAt: new Date(now - 20 * h), endedAt: new Date(now - 19 * h) } });
+    await prisma.dutySession.create({ data: { userId: uid('t_sup'), status: 'ON_DUTY', startedAt: new Date(now - 30 * 24 * h), endedAt: new Date(now - 29 * 24 * h) } }); // outside
+    const week = (await sup.get('/api/v1/team/me/hours?days=7')).body;
+    expect(week.users).toHaveLength(1);
+    expect(week.users[0]).toMatchObject({ userId: uid('t_sup'), minutes: 660, byStatus: { ON_DUTY: 600, BREAK: 60 }, sessions: 2, callsign: 'T-S' });
+    const day = (await sup.get('/api/v1/team/me/hours?days=1')).body;
+    expect(day.users[0].byStatus.ON_DUTY).toBe(240);
+    expect((await sup.get('/api/v1/team/me/hours?days=0')).status).toBe(400);
+    // team list
+    expect((await off.get('/api/v1/team/hours')).status).toBe(403);
+    const team = (await sup.get('/api/v1/team/hours?days=7')).body.users as { userId: string; minutes: number }[];
+    expect(team.map((u) => u.userId)).toEqual(expect.arrayContaining([uid('t_off'), uid('t_sup')]));
+    expect(team[0]!.minutes).toBeGreaterThanOrEqual(team[team.length - 1]!.minutes);
+  });
 });

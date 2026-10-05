@@ -92,6 +92,22 @@ describe('commands run as the linked user and reply ephemerally', () => {
     expect(text(await run('dienst', { status: 'bogus' }, api))).toContain('Unbekannter Status');
     expect(calls).toHaveLength(1);
   });
+  it('/dienststunden shows own hours, or the team list with „alle“', async () => {
+    const { api, calls } = fakeApi({
+      'GET /team/me/hours': { users: [{ name: 'Oscar', callsign: 'A-1', minutes: 185, byStatus: { ON_DUTY: 125, BREAK: 60 }, sessions: 2 }] },
+      'GET /team/hours': { users: [{ name: 'Oscar', callsign: 'A-1', minutes: 185, byStatus: { ON_DUTY: 125 }, sessions: 2 }, { name: 'Bea', callsign: null, minutes: 30, byStatus: {}, sessions: 1 }] },
+    });
+    const own = text(await run('dienststunden', {}, api));
+    expect(calls[0]).toMatchObject({ method: 'GET', path: '/team/me/hours?days=7' });
+    expect(own).toContain('Gesamt: 3 h 05 min');
+    expect(own).toContain('ON DUTY: 2 h 05 min');
+    const team = text(await run('dienststunden', { tage: 30, alle: true }, api));
+    expect(calls[1]).toMatchObject({ path: '/team/hours?days=30' });
+    expect(team).toContain('**A-1** (Oscar)');
+    expect(team).toContain('**Bea** — 0 h 30 min');
+    const none = fakeApi({ 'GET /team/me/hours': { users: [] } });
+    expect(text(await run('dienststunden', { tage: 1 }, none.api))).toContain('nicht im Dienst');
+  });
   it('/einheitstatus resolves the callsign case-insensitively and rejects unknown units', async () => {
     const { api, calls } = fakeApi({ 'GET /dispatch/units': [{ id: 'u1', callsign: 'ADAM-1', status: 'BUSY' }], 'PUT /dispatch/units/u1/status': {} });
     expect(text(await run('einheitstatus', { rufzeichen: 'adam-1', status: 'verfuegbar' }, api))).toContain('AVAILABLE');

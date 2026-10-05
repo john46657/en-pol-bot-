@@ -76168,6 +76168,7 @@ var interactionFor = (customId) => {
 };
 
 // apps/bot/src/commands/index.ts
+var hm = (min) => `${Math.floor(min / 60)} h ${String(Math.round(min % 60)).padStart(2, "0")} min`;
 var q = (s) => encodeURIComponent(s.trim());
 var str2 = (c, k) => String(c.opts[k] ?? "").trim();
 async function resolvePerson(c, term, opts = {}) {
@@ -76226,7 +76227,7 @@ var COMMANDS = [
       return { ephemeral: true, embeds: [{ title: "EN Polizei \u2014 Befehle", color: COLORS.info, fields: [
         { name: "Konto", value: "`/verknuepfen` `/entverknuepfen` `/profil` `/benachrichtigungen`" },
         { name: "Abfragen", value: "`/person` `/kennzeichen` `/fahndungen` `/einsaetze` `/einsatzinfo` `/einheiten` `/team`" },
-        { name: "Dienst & Leitstelle", value: "`/dienst` `/einheitstatus` `/einsatz` `/einsatzstatus` `/einsatzzuweisen` `/funk`" },
+        { name: "Dienst & Leitstelle", value: "`/dienst` `/dienststunden` `/einheitstatus` `/einsatz` `/einsatzstatus` `/einsatzzuweisen` `/funk`" },
         { name: "Erfassen", value: "`/ticket` `/bericht` `/beschwerde` `/ermittlung` `/fahndung` `/beweis`" },
         { name: "Leitung & Team", value: "`/gefahrenstatus` `/funkfreigabe` `/teamliste` `/supportpanel` `/roblox`" },
         { name: "F\xFCr alle", value: "`/bewerbung` (auch ohne Verkn\xFCpfung)" },
@@ -76289,6 +76290,32 @@ var COMMANDS = [
       try {
         await c.api.asUser(c.discordId, "PUT", "/team/me/status", { status });
         return okReply(`Dienststatus: **${label(status)}**`);
+      } catch (e) {
+        return mapError(e);
+      }
+    }
+  },
+  {
+    name: "dienststunden",
+    description: "Zeigt deine Dienststunden (oder mit \u201Ealle\u201C die des Teams)",
+    options: [
+      { name: "tage", description: "Zeitraum in Tagen (Standard: 7)", type: "integer", min: 1, max: 90 },
+      { name: "alle", description: "Alle Beamten anzeigen (nur Schichtleitung)", type: "boolean" }
+    ],
+    async run(c) {
+      const days = Number(c.opts.tage ?? 7);
+      const all = c.opts.alle === true;
+      try {
+        const r = await c.api.asUser(c.discordId, "GET", `${all ? "/team/hours" : "/team/me/hours"}?days=${days}`);
+        const period = days === 1 ? "letzte 24 Stunden" : `letzte ${days} Tage`;
+        if (all) {
+          const lines2 = r.users.slice(0, 25).map((u, i) => `${i + 1}. **${plain(u.callsign ?? u.name)}** ${u.callsign ? `(${plain(u.name)}) ` : ""}\u2014 ${hm(u.minutes)} \xB7 im Dienst ${hm(u.byStatus.ON_DUTY ?? 0)}`);
+          return { ephemeral: true, embeds: [listEmbed(`\u23F1\uFE0F Dienststunden Team (${period})`, lines2, "Im Zeitraum war niemand im Dienst.")] };
+        }
+        const me = r.users[0];
+        if (!me) return { ephemeral: true, embeds: [listEmbed(`\u23F1\uFE0F Deine Dienststunden (${period})`, [], "Im Zeitraum warst du nicht im Dienst.")] };
+        const lines = Object.entries(me.byStatus).sort((a, b) => b[1] - a[1]).map(([s, m]) => `\u2022 ${label(s)}: ${hm(m)}`);
+        return { ephemeral: true, embeds: [listEmbed(`\u23F1\uFE0F Deine Dienststunden (${period})`, [`**Gesamt: ${hm(me.minutes)}** in ${me.sessions} Abschnitt${me.sessions === 1 ? "" : "en"}`, ...lines], "")] };
       } catch (e) {
         return mapError(e);
       }
