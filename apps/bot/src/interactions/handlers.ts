@@ -121,6 +121,7 @@ async function startApplicationFromPanel(
     username: interaction.user.username,
     displayName: interaction.user.displayName,
     avatarUrl: interaction.user.displayAvatarURL(),
+    joinedAt: member.joinedAt ?? undefined,
   });
 
   if (!started.ok || !started.submissionId) {

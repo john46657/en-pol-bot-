@@ -1027,3 +1027,32 @@ describe('Eigene Statusnamen (Team-Chance)', () => {
     }
   });
 });
+
+describe('Ablehnungs-DM nennt die Wartezeit (Team-Chance)', () => {
+  it('automatisch angehängt bzw. über {wartezeit}/{wiederAb} im eigenen Text', async () => {
+    const app = await prisma.application.findUniqueOrThrow({ where: { id: appId } });
+    const config = (app.config ?? {}) as Record<string, any>;
+    try {
+      await prisma.application.update({ where: { id: appId }, data: { config: { ...config, requirements: { denyCooldown: { days: 14 } } } as never } });
+      const f = fakePort();
+      setReviewPort(f.port as never);
+      const id = await submitted({ f });
+      await viaModal('review:deny_r', id, U.denier, [ROLE.deny], { note: 'Zu wenig Erfahrung.' });
+      expect(await status(id)).toBe('DENIED');
+      const dm = f.dms.find((d) => d.userId === APPLICANT)!.content;
+      expect(dm).toContain('Zu wenig Erfahrung.');
+      expect(dm).toContain('Du kannst dich nach 14 Tagen erneut bewerben');
+
+      await prisma.application.update({ where: { id: appId }, data: { config: { ...config, requirements: { denyCooldown: { days: 14 } }, messages: { ...(config['messages'] ?? {}), denied: '❌ Leider abgelehnt. Neuer Versuch nach {wartezeit}.' } } as never } });
+      const g = fakePort();
+      setReviewPort(g.port as never);
+      const id2 = await submitted({ f: g, userId: 'applicant-2' });
+      await viaModal('review:deny_r', id2, U.denier, [ROLE.deny], { note: 'Bitte später.' });
+      const dm2 = g.dms.find((d) => d.userId === 'applicant-2')!.content;
+      expect(dm2).toContain('Neuer Versuch nach 14 Tagen.');
+      expect(dm2).not.toContain('Du kannst dich nach'); // nicht doppelt
+    } finally {
+      await prisma.application.update({ where: { id: appId }, data: { config: config as never } });
+    }
+  });
+});

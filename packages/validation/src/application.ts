@@ -198,12 +198,21 @@ export const reviewConfigSchema = z.object({
 export const requirementsSchema = z.object({
   enabled: z.boolean().default(false),
   cooldown: durationSchema.optional(),
+  denyCooldown: durationSchema.optional(),
   timeLimit: durationSchema.optional(),
   requiredRoleIds: z.array(z.string()).max(50).optional(),
   restrictedRoleIds: z.array(z.string()).max(50).optional(),
   minAccountAgeDays: z.number().int().min(0).max(36500).optional(),
   minGuildMembershipDays: z.number().int().min(0).max(36500).optional(),
   requirePreviousApproval: z.array(z.string()).max(20).optional(),
+  forbidPreviousApproval: z.array(z.string()).max(20).optional(),
+  maxSubmissionsPerUser: z.number().int().min(1).max(100).optional(),
+  maxOpenSubmissions: z.number().int().min(1).max(1000).optional(),
+  requiredRankIds: z.array(z.string().max(40)).max(50).optional(),
+  requiredTeamIds: z.array(z.string().max(40)).max(50).optional(),
+  minDutyHours: z.number().min(0).max(1000).optional(),
+  dutyWindowDays: z.number().int().min(1).max(365).optional(),
+  failMessage: z.string().trim().max(500).optional(),
 });
 
 export const advancedSettingsSchema = z.object({

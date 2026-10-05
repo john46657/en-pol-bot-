@@ -210,8 +210,13 @@ export interface AdvancedSettings {
  * Anforderungen an den Bewerber (§70).
  */
 export interface Requirements {
-  enabled: boolean;
+  /** Altfeld; geprüft wird jede gesetzte Voraussetzung. */
+  enabled?: boolean;
+  /** Wartezeit nach jeder eingereichten Bewerbung dieser Art. */
   cooldown?: Duration;
+  /** Wartezeit nach einer Ablehnung (zusätzlich zum allgemeinen Cooldown). */
+  denyCooldown?: Duration;
+  /** Bewerbungsdauer (ab Start); danach läuft die Bewerbung ab. */
   timeLimit?: Duration;
   requiredRoleIds?: string[];
   restrictedRoleIds?: string[];
@@ -219,8 +224,22 @@ export interface Requirements {
   minAccountAgeDays?: number;
   /** Mindest-Mitgliedschaft im Server in Tagen. */
   minGuildMembershipDays?: number;
-  /** Mindest-Anzahl vorheriger (andrer) Applications – 0 = keine Pflicht. */
+  /** Bewerbungsarten, bei denen der Bewerber bereits angenommen sein muss. */
   requirePreviousApproval?: string[];
+  /** Bewerbungsarten, bei denen eine frühere Annahme die Bewerbung ausschließt. */
+  forbidPreviousApproval?: string[];
+  /** Höchstzahl eingereichter Bewerbungen je Person für diese Art. */
+  maxSubmissionsPerUser?: number;
+  /** Höchstzahl gleichzeitig offener (eingereichter, unentschiedener) Bewerbungen insgesamt – „Plätze“. */
+  maxOpenSubmissions?: number;
+  /** Personalakte: einer dieser Dienstgrade bzw. Teams ist nötig. */
+  requiredRankIds?: string[];
+  requiredTeamIds?: string[];
+  /** Mindestaktivität: Dienststunden (beendete Schichten) im Zeitraum. */
+  minDutyHours?: number;
+  dutyWindowDays?: number;
+  /** Eigener Hinweis, wenn Voraussetzungen fehlen (darunter folgen die Gründe). */
+  failMessage?: string;
 }
 
 /**

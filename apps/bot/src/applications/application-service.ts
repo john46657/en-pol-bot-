@@ -1,8 +1,8 @@
 import { blockedMessage, getActive } from '@nexus/restrictions';
-import { ApplicationStatus, ResubmissionMode, SubmissionStatus } from '@nexus/types';
-import type { Question } from '@nexus/types';
+import { ApplicationStatus, OPEN_SUBMISSION_STATUSES, ResubmissionMode, SubmissionStatus } from '@nexus/types';
+import type { Question, Requirements } from '@nexus/types';
 import { prisma, getActiveCooldown } from '@nexus/database';
-import { checkCooldown, checkRoleRequirements } from '@nexus/core';
+import { checkRequirements, checkRoleRequirements, requirementMessage, type RequirementContext } from '@nexus/core';
 import { statusLabelsOf } from '@nexus/automation';
 import { config } from '../config.js';
 import { log } from '../logger.js';
@@ -23,6 +23,8 @@ export interface StartApplicationInput {
   avatarUrl?: string;
   /** Test-Bewerbung (§118: keine echten Rollenaktionen). */
   isTest?: boolean;
+  /** Beitritt zum Server (für „Mindestzeit auf dem Server“). */
+  joinedAt?: Date | undefined;
 }
 
 export interface StartApplicationResult {
@@ -75,18 +77,15 @@ export async function startApplication(
   const ban = await getActive(guildId, userId, 'APPLICATION');
   if (ban) return fail(blockedMessage(ban));
 
-  // 4) Cooldown (§51)
-  const cooldownRow = await getActiveCooldown(guildId, applicationId, userId);
+  // 4) Voraussetzungen der Bewerbungsart (Team-Chance): Wartezeiten, Rollen, Kontoalter, Mitgliedsdauer, frühere
+  //    Annahmen, Höchstzahlen, Personalakte, Dienststunden. Zusätzlich eine von Hand gesetzte Wartezeit (Cooldown-Tabelle).
   const requirements = readRequirements(application.config);
-  const cooldownState = checkCooldown(requirements.cooldown, cooldownRow?.createdAt.toISOString());
-  if (cooldownState.active) {
-    const ende = new Date(cooldownState.endsAt).toLocaleString('de-DE');
-    return fail(
-      `Du kannst diese Bewerbung vorerst nicht erneut starten (Cooldown). Sie endet am ${ende}.`,
-    );
-  }
+  const manual = await getActiveCooldown(guildId, applicationId, userId);
+  if (manual) return fail(`Du kannst diese Bewerbung vorerst nicht erneut starten. Die Wartezeit endet am ${manual.expiresAt.toLocaleString('de-DE', { timeZone: 'Europe/Berlin' })}.`);
+  const check = checkRequirements(requirements, await requirementContext(guildId, applicationId, input, requirements));
+  if (!check.ok) return fail(requirementMessage(check, requirements.failMessage));
 
-  // 5) Required / Restricted Rollen (§38/§70)
+  // 5) Rollenregeln (§38/§70)
   const roleCheck = checkRoleRequirements(input.memberRoleIds, application.roleRules);
   if (!roleCheck.ok) return fail(roleCheck.messages[0] ?? 'Du erfüllst die Voraussetzungen nicht.');
 
@@ -160,11 +159,60 @@ export async function startApplication(
   return { ok: true, submissionId: submission.id, message: 'Bewerbung gestartet.' };
 }
 
-export interface RequirementsConfig {
-  cooldown?: { days?: number; hours?: number; minutes?: number };
-  timeLimit?: { days?: number; hours?: number; minutes?: number };
+export type RequirementsConfig = Requirements & {
   multipleActiveSubmissions?: 'none' | 'per_application' | 'unlimited';
   resubmission?: ResubmissionMode;
+};
+
+/** Zustand des Bewerbers für die Voraussetzungen – fragt nur ab, was die Bewerbungsart tatsächlich verlangt. */
+async function requirementContext(guildId: string, applicationId: string, input: StartApplicationInput, r: RequirementsConfig): Promise<RequirementContext> {
+  const { userId } = input;
+  const submitted = { guildId, userId, applicationId, isTest: false, submittedAt: { not: null } };
+  const [lastSubmitted, lastDenied, submittedCount, openCount] = await Promise.all([
+    r.cooldown ? prisma.applicationSubmission.findFirst({ where: submitted, orderBy: { submittedAt: 'desc' }, select: { submittedAt: true } }) : null,
+    r.denyCooldown ? prisma.applicationSubmission.findFirst({ where: { ...submitted, status: SubmissionStatus.DENIED }, orderBy: { deniedAt: 'desc' }, select: { deniedAt: true, updatedAt: true } }) : null,
+    r.maxSubmissionsPerUser ? prisma.applicationSubmission.count({ where: submitted }) : 0,
+    r.maxOpenSubmissions ? prisma.applicationSubmission.count({ where: { guildId, applicationId, isTest: false, status: { in: [...OPEN_SUBMISSION_STATUSES] } } }) : 0,
+  ]);
+  const appIds = [...(r.requirePreviousApproval ?? []), ...(r.forbidPreviousApproval ?? [])];
+  const accepted = appIds.length
+    ? await prisma.applicationSubmission.findMany({ where: { guildId, userId, applicationId: { in: appIds }, status: SubmissionStatus.ACCEPTED, isTest: false }, select: { applicationId: true } })
+    : [];
+  const apps = appIds.length ? await prisma.application.findMany({ where: { guildId, id: { in: appIds } }, select: { id: true, name: true } }) : [];
+  const needsRecord = !!(r.requiredRankIds?.length || r.requiredTeamIds?.length);
+  const personnel = needsRecord ? await prisma.personnelRecord.findFirst({ where: { guildId, userId, archivedAt: null }, select: { rankId: true, teamId: true } }) : null;
+  const [ranks, teams] = needsRecord
+    ? await Promise.all([
+        prisma.rank.findMany({ where: { guildId, id: { in: r.requiredRankIds ?? [] } }, select: { id: true, name: true } }),
+        prisma.team.findMany({ where: { guildId, id: { in: r.requiredTeamIds ?? [] } }, select: { id: true, name: true } }),
+      ])
+    : [[], []];
+  let dutyHours: number | undefined;
+  if (r.minDutyHours) {
+    const since = new Date(Date.now() - (r.dutyWindowDays ?? 30) * 86_400_000);
+    const sum = await prisma.shift.aggregate({ where: { guildId, userId, startedAt: { gte: since }, durationSeconds: { not: null } }, _sum: { durationSeconds: true } });
+    dutyHours = (sum._sum.durationSeconds ?? 0) / 3600;
+  }
+  return {
+    now: new Date(),
+    userId,
+    memberRoleIds: input.memberRoleIds,
+    joinedAt: input.joinedAt,
+    lastSubmittedAt: lastSubmitted?.submittedAt ?? undefined,
+    lastDeniedAt: lastDenied ? (lastDenied.deniedAt ?? lastDenied.updatedAt) : undefined,
+    submittedCount,
+    openCount,
+    acceptedApplicationIds: new Set(accepted.map((a) => a.applicationId)),
+    personnel,
+    dutyHours,
+    names: {
+      // Rollen als Erwähnung: Discord zeigt in der (nur für den Bewerber sichtbaren) Antwort den Rollennamen
+      roles: Object.fromEntries([...(r.requiredRoleIds ?? []), ...(r.restrictedRoleIds ?? [])].map((id) => [id, `<@&${id}>`])),
+      applications: Object.fromEntries(apps.map((a) => [a.id, a.name])),
+      ranks: Object.fromEntries(ranks.map((x) => [x.id, x.name])),
+      teams: Object.fromEntries(teams.map((x) => [x.id, x.name])),
+    },
+  };
 }
 
 export interface ApplicationConfigShape {

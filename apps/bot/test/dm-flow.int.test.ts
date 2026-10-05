@@ -619,3 +619,93 @@ describe('Offene Bewerbung (Phase 54)', () => {
     }
   });
 });
+
+describe('Voraussetzungen der Bewerbungsart (Team-Chance, Phase 60e)', () => {
+  const DAY = 86_400_000;
+  const setReq = async (requirements: Record<string, unknown>) => {
+    const a = await prisma.application.findUniqueOrThrow({ where: { id: appId } });
+    await prisma.application.update({ where: { id: appId }, data: { config: { ...(a.config as object), requirements } as never } });
+  };
+  const start = (o: Partial<Parameters<typeof startApplication>[0]> = {}) =>
+    startApplication({ guildId: G, applicationId: appId, userId: USER, memberRoleIds: [], username: 'max', displayName: 'Max', ...o });
+  const past = async (status: 'DENIED' | 'ACCEPTED' | 'SUBMITTED', daysAgo: number, opts: { userId?: string; applicationId?: string } = {}) => {
+    const applicationId = opts.applicationId ?? appId;
+    const v = await prisma.applicationVersion.findFirstOrThrow({ where: { applicationId } });
+    const at = new Date(Date.now() - daysAgo * DAY);
+    return prisma.applicationSubmission.create({
+      data: { guildId: G, applicationId, versionId: v.id, userId: opts.userId ?? USER, usernameSnapshot: 'max', displayNameSnapshot: 'Max', status, submittedAt: at, ...(status === 'DENIED' ? { deniedAt: at } : status === 'ACCEPTED' ? { acceptedAt: at } : {}) },
+    });
+  };
+  const count = () => prisma.applicationSubmission.count({ where: { guildId: G, applicationId: appId, status: 'STARTED' } });
+
+  it('Wartezeit nach jeder Bewerbung (vorher wirkungslos) – nach Ablauf wieder möglich', async () => {
+    await setReq({ cooldown: { days: 3 } });
+    const s = await past('DENIED', 1);
+    const r = await start();
+    expect(r.ok).toBe(false);
+    expect(r.message).toContain('erneut bewerben');
+    expect(await count()).toBe(0);
+    await prisma.applicationSubmission.update({ where: { id: s.id }, data: { submittedAt: new Date(Date.now() - 4 * DAY) } });
+    expect((await start()).ok).toBe(true);
+  });
+
+  it('getrennte Wartezeit nach Ablehnung; eine Annahme löst sie nicht aus', async () => {
+    await setReq({ denyCooldown: { days: 14 } });
+    await past('ACCEPTED', 1);
+    await past('DENIED', 2);
+    const r = await start();
+    expect(r.message).toContain('letzten Ablehnung');
+    await prisma.applicationSubmission.updateMany({ where: { guildId: G, status: 'DENIED' }, data: { deniedAt: new Date(Date.now() - 15 * DAY) } });
+    expect((await start()).ok).toBe(true);
+  });
+
+  it('Rollen, Mitgliedsdauer und eigener Hinweis – alle Gründe auf einmal', async () => {
+    await setReq({ requiredRoleIds: ['900000000000600001'], restrictedRoleIds: ['900000000000600002'], minGuildMembershipDays: 30, failMessage: '❌ Du erfüllst derzeit nicht die Voraussetzungen für diese Team-Chance.' });
+    const r = await start({ memberRoleIds: ['900000000000600002'], joinedAt: new Date(Date.now() - 10 * DAY) });
+    expect(r.ok).toBe(false);
+    expect(r.message.split('\n')[0]).toBe('❌ Du erfüllst derzeit nicht die Voraussetzungen für diese Team-Chance.');
+    expect(r.message).toContain('<@&900000000000600001>');
+    expect(r.message).toContain('<@&900000000000600002>');
+    expect(r.message).toContain('30 Tage auf dem Server');
+    expect((await start({ memberRoleIds: ['900000000000600001'], joinedAt: new Date(Date.now() - 40 * DAY) })).ok).toBe(true);
+  });
+
+  it('vorherige Annahme nötig bzw. ausgeschlossen (mit Namen der Bewerbungsart)', async () => {
+    const support = await prisma.application.create({ data: { guildId: G, name: 'Support', slug: 'support', status: 'PUBLISHED', enabled: true, config: {}, createdBy: 'x', updatedBy: 'x' } });
+    await prisma.applicationVersion.create({ data: { applicationId: support.id, version: 1, questions: [], publishedById: 'x' } });
+    await setReq({ requirePreviousApproval: [support.id] });
+    expect((await start()).message).toContain('„Support“ angenommen');
+    await past('ACCEPTED', 5, { applicationId: support.id });
+    await setReq({ forbidPreviousApproval: [support.id] });
+    expect((await start()).message).toContain('Annahme bei „Support“');
+    await setReq({ requirePreviousApproval: [support.id] });
+    expect((await start()).ok).toBe(true);
+  });
+
+  it('Höchstzahl je Person und freie Plätze', async () => {
+    await setReq({ maxSubmissionsPerUser: 1 });
+    await past('DENIED', 30);
+    expect((await start()).message).toContain('Höchstzahl von 1 Bewerbung');
+    await setReq({ maxOpenSubmissions: 1 });
+    await past('SUBMITTED', 0, { userId: OTHER });
+    expect((await start()).message).toContain('alle Plätze belegt');
+    await prisma.applicationSubmission.updateMany({ where: { guildId: G, userId: OTHER }, data: { status: 'ACCEPTED' } });
+    expect((await start()).ok).toBe(true);
+  });
+
+  it('Dienstgrad aus der Personalakte und Mindest-Dienststunden', async () => {
+    const rank = await prisma.rank.create({ data: { guildId: G, name: 'Kommissar', order: 3 } });
+    await setReq({ requiredRankIds: [rank.id] });
+    expect((await start()).message).toContain('Personalakte');
+    await prisma.personnelRecord.create({ data: { guildId: G, userId: USER, rpName: 'Max', rankId: null } });
+    expect((await start()).message).toContain('„Kommissar“');
+    await prisma.personnelRecord.update({ where: { guildId_userId: { guildId: G, userId: USER } }, data: { rankId: rank.id } });
+    await setReq({ requiredRankIds: [rank.id], minDutyHours: 5, dutyWindowDays: 7 });
+    const type = await prisma.shiftType.create({ data: { guildId: G, name: 'Streife' } });
+    await prisma.shift.create({ data: { guildId: G, userId: USER, typeId: type.id, status: 'ENDED', startedAt: new Date(Date.now() - 2 * DAY), endedAt: new Date(Date.now() - 2 * DAY + 3 * 3600_000), durationSeconds: 3 * 3600 } });
+    await prisma.shift.create({ data: { guildId: G, userId: USER, typeId: type.id, status: 'ENDED', startedAt: new Date(Date.now() - 20 * DAY), endedAt: new Date(Date.now() - 20 * DAY + 4 * 3600_000), durationSeconds: 4 * 3600 } }); // außerhalb des Zeitraums
+    expect((await start()).message).toContain('mindestens 5 Dienststunden in den letzten 7 Tagen (bisher 3)');
+    await prisma.shift.create({ data: { guildId: G, userId: USER, typeId: type.id, status: 'ENDED', startedAt: new Date(Date.now() - 1 * DAY), endedAt: new Date(Date.now() - 1 * DAY + 2 * 3600_000), durationSeconds: 2 * 3600 } });
+    expect((await start()).ok).toBe(true);
+  });
+});

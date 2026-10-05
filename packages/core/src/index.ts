@@ -6,3 +6,4 @@ export * from './validation.js';
 export * from './variables.js';
 export * from './cooldown.js';
 export * from './role-rules.js';
+export * from './requirements.js';

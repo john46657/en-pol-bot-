@@ -22,8 +22,21 @@ test('Team-Chance: Bewerbung zurückstellen und fortsetzen', async ({ page, cont
   const app = await (await request.post(`${g}/applications`, { headers, data: { name: 'Moderation (Team-Chance)', slug: `tc-${Date.now()}` } })).json();
   const id = execFileSync('node', ['e2e/seed-submission.mjs', E2E.guildId, app.id, '900000000000777002', 'Hold Tester', 'HLD'], { encoding: 'utf8' }).trim();
 
-  // Eigener Statusname für „Zurückgestellt“ (Bewerbungsart → Statusnamen und Farben)
+  // Voraussetzungen (Wartezeiten, Mitglied, Plätze, Hinweis)
   await page.goto(`/guilds/${E2E.guildId}/applications/${app.id}`);
+  await page.getByLabel('Wartezeit nach einer Ablehnung').selectOption('14');
+  await page.getByLabel('Wartezeit zwischen zwei Bewerbungen').selectOption('custom');
+  await page.getByLabel('Wartezeit zwischen zwei Bewerbungen: Stunden').fill('12');
+  await page.getByLabel('Bewerbungsdauer (danach läuft eine angefangene Bewerbung ab)').selectOption('48');
+  await page.getByLabel('Mindestens … Tage auf dem Server').fill('30');
+  await page.getByLabel('Plätze: höchstens … offene Bewerbungen gleichzeitig').fill('5');
+  await page.getByLabel('Hinweis, wenn Voraussetzungen fehlen').fill('❌ Du erfüllst derzeit nicht die Voraussetzungen für diese Team-Chance.');
+  await page.getByRole('button', { name: 'Voraussetzungen speichern' }).click();
+  await expect(page.getByText('Voraussetzungen gespeichert.')).toBeVisible();
+  const req = (await (await request.get(`${g}/applications/${app.id}`, { headers })).json()).config.requirements;
+  expect(req).toMatchObject({ denyCooldown: { days: 14 }, cooldown: { days: 1, hours: 12 }, timeLimit: { days: 2 }, minGuildMembershipDays: 30, maxOpenSubmissions: 5, failMessage: '❌ Du erfüllst derzeit nicht die Voraussetzungen für diese Team-Chance.' });
+
+  // Eigener Statusname für „Zurückgestellt“ (Bewerbungsart → Statusnamen und Farben)
   await page.getByLabel('Name für Zurückgestellt').fill('⏸️ Später prüfen');
   await page.getByRole('button', { name: 'Statusnamen speichern' }).click();
   await expect(page.getByText('Statusnamen gespeichert.')).toBeVisible();

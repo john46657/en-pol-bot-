@@ -1,4 +1,4 @@
-import { renderTemplate, assertTransition, roleActionsForTransition } from '@nexus/core';
+import { renderTemplate, assertTransition, roleActionsForTransition, durationToSeconds } from '@nexus/core';
 import { guildRepository, prisma } from '@nexus/database';
 import type { Prisma } from '@nexus/database';
 import { OPEN_SUBMISSION_STATUSES, SubmissionStatus } from '@nexus/types';
@@ -160,6 +160,28 @@ export function describeAcceptPipeline(config?: Record<string, boolean>) {
 
 const textOr = (template: string | undefined, fallback: string, vars: Record<string, unknown>) =>
   renderTemplate(template ?? fallback, vars);
+
+/**
+ * Wartezeit nach einer Ablehnung (die längere aus „nach Ablehnung“ und „zwischen zwei Bewerbungen“) als Platzhalter
+ * `{wartezeit}` („14 Tagen“) und `{wiederAb}` (Datum/Uhrzeit). Leer, wenn keine Wartezeit eingestellt ist.
+ */
+export function denyWaitVariables(config: unknown, now = new Date()): { wartezeit: string; wiederAb: string } {
+  const req = (config as { requirements?: { cooldown?: unknown; denyCooldown?: unknown } } | null)?.requirements;
+  const secs = Math.max(durationToSeconds(req?.denyCooldown as never), durationToSeconds(req?.cooldown as never));
+  if (secs <= 0) return { wartezeit: '', wiederAb: '' };
+  const days = Math.floor(secs / 86_400);
+  const hours = Math.floor((secs % 86_400) / 3600);
+  const minutes = Math.round((secs % 3600) / 60);
+  const parts = [
+    days ? `${days} ${days === 1 ? 'Tag' : 'Tagen'}` : '',
+    hours ? `${hours} ${hours === 1 ? 'Stunde' : 'Stunden'}` : '',
+    minutes ? `${minutes} ${minutes === 1 ? 'Minute' : 'Minuten'}` : '',
+  ].filter(Boolean);
+  return {
+    wartezeit: parts.length > 1 ? `${parts.slice(0, -1).join(', ')} und ${parts.at(-1)}` : (parts[0] ?? ''),
+    wiederAb: new Date(now.getTime() + secs * 1000).toLocaleString('de-DE', { timeZone: 'Europe/Berlin', dateStyle: 'short', timeStyle: 'short' }),
+  };
+}
 
 registerAcceptStep('roles', async (ctx) => {
   const { add, remove } = ctx.roleActions;
@@ -848,15 +870,16 @@ export async function decideSubmission(
     const denyRoles = await rolesStepForDenial(ctx);
     steps.push(denyRoles);
     try {
+      const wait = denyWaitVariables(s.application.config, now);
+      const template = cfg.messages['denied'] ?? '🔴 Deine Bewerbung für **{applicationName}** wurde leider **abgelehnt**.';
+      // Wartezeit nennen: als Platzhalter im eigenen Text oder – falls der Text sie nicht erwähnt – automatisch am Ende
+      const mentionsWait = /\{(wartezeit|wiederAb)\}/.test(template);
       await port.sendDm(s.userId, {
-        content: textOr(
-          cfg.messages['denied'],
-          '🔴 Deine Bewerbung für **{applicationName}** wurde leider **abgelehnt**.',
-          ctx.variables,
-        )
+        content: textOr(template, template, { ...ctx.variables, ...wait })
           .concat(
             reasonLabel ? `\n\n**Grund:** ${reasonLabel}` : '',
             publicReason ? `\n${publicReason}` : '',
+            wait.wartezeit && !mentionsWait ? `\n\nDu kannst dich nach ${wait.wartezeit} erneut bewerben (ab ${wait.wiederAb} Uhr).` : '',
           )
           .slice(0, 1900),
       });

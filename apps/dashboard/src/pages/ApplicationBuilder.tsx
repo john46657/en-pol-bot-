@@ -12,6 +12,7 @@ import { errorText, QueryState } from '../components/QueryState';
 import { ReviewSettings } from '../components/ReviewSettings';
 import { RatingSettings } from '../components/RatingSettings';
 import { StatusSettings } from '../components/StatusSettings';
+import { RequirementsSettings } from '../components/RequirementsSettings';
 import { useToast } from '../toast';
 
 const SELECTS = ['SINGLE_SELECT', 'MULTI_SELECT'];
@@ -259,6 +260,7 @@ export function ApplicationBuilder() {
         />
       )}
       <h2>Bearbeitung</h2>
+      <RequirementsSettings guildId={guildId} applicationId={applicationId} />
       <ReviewSettings guildId={guildId} applicationId={applicationId} />
       <RatingSettings guildId={guildId} applicationId={applicationId} />
       <StatusSettings guildId={guildId} applicationId={applicationId} />
