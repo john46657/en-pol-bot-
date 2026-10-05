@@ -49,6 +49,20 @@ export declare class DutyService {
         startedAt: Date;
         endedAt: Date | null;
     } | null, null, import("@prisma/client/runtime/library").DefaultArgs, import("@prisma/client").Prisma.PrismaClientOptions>;
+    /**
+     * Dienststunden der letzten `days` Tage, pro Benutzer und Status (in Minuten).
+     * Sitzungen, die vor dem Zeitraum begonnen haben oder noch laufen, zählen nur mit dem Anteil im Zeitraum.
+     */
+    hours(days: number, userId?: string): Promise<{
+        days: number;
+        since: Date;
+        users: {
+            minutes: number;
+            byStatus: {
+                [k: string]: number;
+            };
+        }[];
+    }>;
     /** Team-Dashboard: pro aktivem Beamten Dienststatus, Einheit, aktueller Einsatz und letzte Statusänderung. */
     overview(): Promise<{
         userId: string;

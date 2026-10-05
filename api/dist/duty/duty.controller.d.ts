@@ -1,6 +1,13 @@
 import { z } from 'zod';
 import { DutyService } from './duty.service';
 import type { Actor } from '../audit/audit.service';
+declare const hoursQuery: z.ZodObject<{
+    days: z.ZodDefault<z.ZodNumber>;
+}, "strip", z.ZodTypeAny, {
+    days: number;
+}, {
+    days?: number | undefined;
+}>;
 declare const body: z.ZodObject<{
     status: z.ZodEnum<["OFF_DUTY", "ON_DUTY", "BREAK", "TRAINING", "ADMINISTRATIVE"]>;
     unitId: z.ZodOptional<z.ZodString>;
@@ -67,6 +74,28 @@ export declare class DutyController {
         startedAt: Date;
         endedAt: Date | null;
     } | null, null, import("@prisma/client/runtime/library").DefaultArgs, import("@prisma/client").Prisma.PrismaClientOptions>;
+    /** Eigene Dienststunden. */
+    myHours(a: Actor, f: z.infer<typeof hoursQuery>): Promise<{
+        days: number;
+        since: Date;
+        users: {
+            minutes: number;
+            byStatus: {
+                [k: string]: number;
+            };
+        }[];
+    }>;
+    /** Dienststunden aller Beamten (Schichtleitung). */
+    hours(f: z.infer<typeof hoursQuery>): Promise<{
+        days: number;
+        since: Date;
+        users: {
+            minutes: number;
+            byStatus: {
+                [k: string]: number;
+            };
+        }[];
+    }>;
     set(a: Actor, b: z.infer<typeof body>): Promise<{
         id: string;
         userId: string;

@@ -54,6 +54,34 @@ let DutyService = class DutyService {
         });
     }
     mine(userId) { return this.prisma.dutySession.findFirst({ where: { userId, endedAt: null } }); }
+    /**
+     * Dienststunden der letzten `days` Tage, pro Benutzer und Status (in Minuten).
+     * Sitzungen, die vor dem Zeitraum begonnen haben oder noch laufen, zählen nur mit dem Anteil im Zeitraum.
+     */
+    async hours(days, userId) {
+        const now = new Date();
+        const since = new Date(now.getTime() - days * 86_400_000);
+        const sessions = await this.prisma.dutySession.findMany({
+            where: { ...(userId ? { userId } : {}), OR: [{ endedAt: null }, { endedAt: { gt: since } }] },
+            include: { user: { select: { displayName: true, personnel: { select: { rank: true, callsign: true } } } } },
+        });
+        const rows = new Map();
+        for (const s of sessions) {
+            const from = Math.max(s.startedAt.getTime(), since.getTime());
+            const to = (s.endedAt ?? now).getTime();
+            if (to <= from)
+                continue;
+            const r = rows.get(s.userId) ?? { userId: s.userId, name: s.user.displayName, rank: s.user.personnel?.rank ?? null, callsign: s.user.personnel?.callsign ?? null, minutes: 0, byStatus: {}, sessions: 0 };
+            const min = (to - from) / 60_000;
+            r.minutes += min;
+            r.byStatus[s.status] = (r.byStatus[s.status] ?? 0) + min;
+            r.sessions++;
+            rows.set(s.userId, r);
+        }
+        const round = (r) => ({ ...r, minutes: Math.round(r.minutes), byStatus: Object.fromEntries(Object.entries(r.byStatus).map(([k, v]) => [k, Math.round(v)])) });
+        const users = [...rows.values()].map(round).sort((a, b) => b.minutes - a.minutes);
+        return { days, since, users };
+    }
     /** Team-Dashboard: pro aktivem Beamten Dienststatus, Einheit, aktueller Einsatz und letzte Statusänderung. */
     async overview() {
         const [people, open, units, assignments] = await Promise.all([
