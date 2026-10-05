@@ -62,6 +62,7 @@ export const AREAS: readonly AuditArea[] = [
       'config.',
       'audit.',
       'design.',
+      'backup.',
     ],
   },
 ];

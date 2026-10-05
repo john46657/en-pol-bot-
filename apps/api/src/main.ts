@@ -1,6 +1,7 @@
 import 'reflect-metadata';
 import 'dotenv/config';
 import cookieParser from 'cookie-parser';
+import express from 'express';
 import { NestFactory } from '@nestjs/core';
 import type { NestExpressApplication } from '@nestjs/platform-express';
 import { Logger, ValidationPipe } from '@nestjs/common';
@@ -24,6 +25,9 @@ async function bootstrap(): Promise<void> {
   app.disable('x-powered-by');
   // Hinter einem Reverse-Proxy (z. B. nginx) die echte Client-IP für Rate Limits verwenden
   if (process.env['TRUST_PROXY']) app.set('trust proxy', process.env['TRUST_PROXY'] === 'true' ? 1 : Number(process.env['TRUST_PROXY']) || process.env['TRUST_PROXY']);
+  // Einzige Ausnahme vom 256-KB-Limit: Wiederherstellen einer Sicherung (Recht „Backup wiederherstellen“ wird danach geprüft)
+  const restoreJson = express.json({ limit: '10mb' });
+  app.use((req: { path: string }, res: unknown, next: () => void) => (/^\/api\/v1\/guilds\/\d{5,25}\/backup\/restore$/.test(req.path) ? restoreJson(req as never, res as never, next) : next()));
   app.useBodyParser('json', { limit: '256kb' });
   app.useBodyParser('urlencoded', { limit: '64kb', extended: false });
 

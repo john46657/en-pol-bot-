@@ -21,6 +21,7 @@ import { TrainingModule } from './modules/training/training.module.js';
 import { FleetModule } from './modules/fleet/fleet.module.js';
 import { RestrictionsModule } from './modules/restrictions/restrictions.module.js';
 import { ModerationModule } from './modules/moderation/moderation.module.js';
+import { BackupModule } from './modules/backup/backup.module.js';
 import { WantedModule } from './modules/wanted/wanted.module.js';
 import { DangerModule } from './modules/danger/danger.module.js';
 import { OperationsModule } from './modules/operations/operations.module.js';
@@ -49,6 +50,7 @@ import { ModuleGuard } from './common/guards/module.guard.js';
     WantedModule,
     RestrictionsModule,
     ModerationModule,
+    BackupModule,
     FleetModule,
     TrainingModule,
     QualificationsModule,
