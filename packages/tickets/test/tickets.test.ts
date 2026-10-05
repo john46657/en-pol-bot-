@@ -2,7 +2,7 @@ import { guildRepository, prisma } from '@nexus/database';
 import { afterAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import { createRestriction, revokeRestriction } from '@nexus/restrictions';
 import { saveSettings } from '../src/index.js';
-import { CLOSE_REASONS, fieldPlaceholder, parseFormFields, validateAnswer, TicketError, claim, setWaiting, closeTicket, deleteCategory, formatNumber, getByChannel, getByNumber, listTickets, openTicket, release, renderTranscript, saveCategory, setParticipant, setPriority, stats, ticketHistory, type Actor, type TicketDiscord, type TranscriptMessage } from '../src/index.js';
+import { CLOSE_REASONS, fieldPlaceholder, parseFormFields, validateAnswer, TicketError, claim, setWaiting, closeTicket, reopenTicket, deleteTicket, deleteTranscript, deleteCategory, formatNumber, getByChannel, getByNumber, listTickets, openTicket, release, renderTranscript, saveCategory, setParticipant, setPriority, stats, ticketHistory, type Actor, type TicketDiscord, type TranscriptMessage } from '../src/index.js';
 
 const G = 'tickettest-guild';
 const [U1, U2, STAFF, ADMIN, OTHER] = ['900000000000210001', '900000000000210002', '900000000000210003', '900000000000210004', '900000000000210005'];
@@ -290,5 +290,48 @@ describe('Ticket-Einzelrechte (isStaff)', async () => {
     expect(isStaff(t, a, 'claim')).toBe(false);
     expect(isStaff(t, { ...base, handle: true }, 'priority')).toBe(true);
     expect(isStaff(t, { ...base, manage: true }, 'members')).toBe(true);
+  });
+});
+
+describe('Wieder öffnen und Löschen', () => {
+  const rightsActor = (rights: Actor['rights']): Actor => ({ userId: STAFF, roleIds: [ROLE], manage: false, handle: true, rights });
+  it('Wieder öffnen: Recht nötig, Kanal muss existieren, Zugriff kommt zurück', async () => {
+    const d = fake();
+    const t = await openTicket({ guildId: G, userId: U1, username: 'Max', categoryId: cat, subject: 'Hilfe' }, d);
+    await err(reopenTicket(G, t.id, admin, d), 'conflict'); // nicht geschlossen
+    await closeTicket(G, t.id, 'Problem gelöst', staff, d); // Standard: Kanal bleibt 10 Minuten
+    await err(reopenTicket(G, t.id, staff, d), 'forbidden'); // handle genügt nicht
+    const r = await reopenTicket(G, t.id, rightsActor({ reopen: true }), d);
+    expect(r).toMatchObject({ status: 'OPEN', closedAt: null, closeReason: null, deleteAt: null });
+    expect(d.access.filter((a) => a[2] === true).map((a) => a[1])).toContain(U1);
+    await closeTicket(G, t.id, 'doch erledigt', staff, d);
+  });
+  it('Wieder öffnen ist nach Löschen des Kanals nicht mehr möglich', async () => {
+    await saveSettings(G, { deleteAfterMinutes: 0 }, 'b');
+    const d = fake();
+    const t = await openTicket({ guildId: G, userId: U1, username: 'Max', categoryId: cat, subject: 'Hilfe' }, d);
+    await closeTicket(G, t.id, 'Problem gelöst', staff, d);
+    await err(reopenTicket(G, t.id, admin, d), 'conflict');
+  });
+  it('Löschen: nur geschlossene, nur mit Recht; Audit hält fest, was gelöscht wurde', async () => {
+    const d = fake();
+    const t = await openTicket({ guildId: G, userId: U1, username: 'Max', categoryId: cat, subject: 'Weg damit' }, d);
+    await err(deleteTicket(G, t.id, admin, d), 'conflict'); // noch offen
+    await closeTicket(G, t.id, 'Problem gelöst', staff, d);
+    await err(deleteTicket(G, t.id, staff, d), 'forbidden');
+    await err(deleteTicket(G, t.id, rightsActor({ reopen: true }), d), 'forbidden');
+    await deleteTicket(G, t.id, rightsActor({ delete: true }), d);
+    expect(await prisma.ticket.findUnique({ where: { id: t.id } })).toBeNull();
+    const a = await prisma.auditLog.findFirst({ where: { guildId: G, action: 'ticket.deleted' } });
+    expect(a?.before).toMatchObject({ subject: 'Weg damit', userId: U1 });
+  });
+  it('Transkript löschen lässt das Ticket im Archiv', async () => {
+    const d = fake({ messages: [msg(U1, 'Hallo')] });
+    const t = await openTicket({ guildId: G, userId: U1, username: 'Max', categoryId: cat, subject: 'Archiv' }, d);
+    await closeTicket(G, t.id, 'Problem gelöst', staff, d);
+    await err(deleteTranscript(G, t.id, staff), 'forbidden');
+    await deleteTranscript(G, t.id, rightsActor({ transcriptDelete: true }));
+    const after = await prisma.ticket.findUnique({ where: { id: t.id } });
+    expect(after).toMatchObject({ status: 'CLOSED', transcriptHtml: null });
   });
 });

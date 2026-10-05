@@ -8,7 +8,7 @@
 | 3 Besitzer | Besitzer ist bypass und nicht einschränkbar (Phase 56). |
 | 4/12 Einzelrechte | Katalog `modul.aktion`, Spec-Namen teils als Alias. **Neu:** Ticket-Einzelrechte (unten). **Offen:** Moderation, Logs, Embeds, Channels, Nachrichten, Commands, Team-Chance (Module existieren nicht bzw. ohne Rechte). |
 | 5 Modulrechte | Ticket-Einzelrechte jetzt trennbar; Supporter-Beispiel (claim/close/members/transcript) abbildbar. |
-| 6 Ticket-Kategorien mit eigenen Rollen | Bereits vorhanden (`staffRoleIds` je Kategorie). Ticket löschen/wieder öffnen/Transcript löschen: nicht umgesetzt. |
+| 6 Ticket-Kategorien mit eigenen Rollen | Bereits vorhanden (`staffRoleIds` je Kategorie). **Neu (57d):** `tickets.reopen`, `tickets.delete`, `tickets.transcript.delete` (nur ausdrücklich oder über `tickets.manage`, nie aus `tickets.handle`); Dashboard-Buttons und API (`POST :id/reopen`, `DELETE :id`, `DELETE :id/transcript`). Wieder öffnen nur solange der Kanal noch existiert (Standard: 10 Min. nach dem Schließen); Löschen nur geschlossener Tickets, Audit hält Nummer/Betreff/Ersteller fest. Im Bot gibt es dafür (noch) keinen Befehl. |
 | 7 Bewerbungsrechte | Feingranular vorhanden (`applications.submissions.*`, Formulare, Einstellungen). |
 | 8/9 Funk, Büro | Funk hat Rechte. **Neu:** `office.view`/`office.manage` (API und `/buero`; bisherige Rechte `applications.view`/`personnel.view` gelten weiter als Sammelrechte). Büros anlegen/Channels erstellen gibt es nicht – nur den Warteraum. |
 | 11 Dashboard-Rechte | **Neu:** `dashboard.view` (Zugang ohne Schreibrechte; Dashboard-Zugang gilt für jede Berechtigung). Rechte je Seite (`dashboard.roles` …) fehlen. |

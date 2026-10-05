@@ -3,7 +3,7 @@ import type { Response } from 'express';
 import { ConfigService } from '@nestjs/config';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { permissions } from '@nexus/permissions';
-import { TicketError, getSettings, loads, postPanel, saveSettings, transcriptFileName, claim, closeTicket, setWaiting, CLOSE_REASONS, deleteCategory, getTicket, listCategories, listTickets, release, renderTranscript, restTicketDiscord, saveCategory, setParticipant, setPriority, stats, ticketHistory, type Actor } from '@nexus/tickets';
+import { TicketError, getSettings, loads, postPanel, saveSettings, transcriptFileName, claim, closeTicket, reopenTicket, deleteTicket, deleteTranscript, setWaiting, CLOSE_REASONS, deleteCategory, getTicket, listCategories, listTickets, release, renderTranscript, restTicketDiscord, saveCategory, setParticipant, setPriority, stats, ticketHistory, type Actor } from '@nexus/tickets';
 import { CurrentUser, type RequestUser } from '../../common/decorators/current-user.decorator.js';
 import { GuildId } from '../../common/decorators/guild-id.decorator.js';
 import { RequirePermissions } from '../../common/decorators/permissions.decorator.js';
@@ -24,7 +24,7 @@ export class TicketsController {
     return restTicketDiscord(this.config.get<string>('DISCORD_TOKEN') ?? '');
   }
   private async actor(a: RequestAccess, user: RequestUser): Promise<Actor> {
-    return { userId: user.id, roleIds: a.roleIds, manage: a.bypass || (await permissions.can(a, 'tickets.manage')), handle: a.bypass || (await permissions.can(a, 'tickets.handle')), rights: { claim: a.bypass || (await permissions.can(a, 'tickets.claim')), priority: a.bypass || (await permissions.can(a, 'tickets.priority.edit')), members: a.bypass || (await permissions.can(a, 'tickets.members.manage')), close: a.bypass || (await permissions.can(a, 'tickets.close')) } };
+    return { userId: user.id, roleIds: a.roleIds, manage: a.bypass || (await permissions.can(a, 'tickets.manage')), handle: a.bypass || (await permissions.can(a, 'tickets.handle')), rights: { claim: a.bypass || (await permissions.can(a, 'tickets.claim')), priority: a.bypass || (await permissions.can(a, 'tickets.priority.edit')), members: a.bypass || (await permissions.can(a, 'tickets.members.manage')), close: a.bypass || (await permissions.can(a, 'tickets.close')), reopen: a.bypass || (await permissions.can(a, 'tickets.reopen')), delete: a.bypass || (await permissions.can(a, 'tickets.delete')), transcriptDelete: a.bypass || (await permissions.can(a, 'tickets.transcript.delete')) } };
   }
 
   @Get()
@@ -141,6 +141,25 @@ export class TicketsController {
   @RequirePermissions('tickets.members.manage')
   async participant(@GuildId() guildId: string, @Param('id') id: string, @Body() b: Body_, @Access() access: RequestAccess, @CurrentUser() user: RequestUser) {
     return setParticipant(guildId, id, str(b['userId']) ?? '', b['add'] !== false, await this.actor(access, user), this.discord());
+  }
+
+  @Post(':id/reopen')
+  @RequirePermissions('tickets.reopen')
+  async reopen(@GuildId() guildId: string, @Param('id') id: string, @Access() access: RequestAccess, @CurrentUser() user: RequestUser) {
+    return reopenTicket(guildId, id, await this.actor(access, user), this.discord());
+  }
+
+  @Delete(':id')
+  @RequirePermissions('tickets.delete')
+  async remove(@GuildId() guildId: string, @Param('id') id: string, @Access() access: RequestAccess, @CurrentUser() user: RequestUser) {
+    return deleteTicket(guildId, id, await this.actor(access, user), this.discord());
+  }
+
+  @Delete(':id/transcript')
+  @RequirePermissions('tickets.transcript.delete')
+  async removeTranscript(@GuildId() guildId: string, @Param('id') id: string, @Access() access: RequestAccess, @CurrentUser() user: RequestUser) {
+    await deleteTranscript(guildId, id, await this.actor(access, user));
+    return { ok: true };
   }
 
   @Post(':id/close')

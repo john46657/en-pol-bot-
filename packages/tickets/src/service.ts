@@ -1,5 +1,5 @@
 import { ChannelPerm, createChannelMessage, createGuildTextChannel, deleteChannel, getCurrentBotUserId, listChannelMessages, sendDirectMessage, setChannelMemberAccess, type MessagePayload } from '@nexus/discord';
-import { assertGuildId, auditRepository, guildRepository, prisma, type Prisma } from '@nexus/database';
+import { assertGuildId, auditRepository, guildRepository, prisma, Prisma } from '@nexus/database';
 import { DiscordApiError, createChannelMessageWithFile, editChannelMessage, sendDirectMessageWithFile } from '@nexus/discord';
 import { renderTranscriptHtml } from './html.js';
 import { refreshPanel, loads } from './panel.js';
@@ -357,10 +357,14 @@ export interface Actor {
   /** `tickets.handle` */
   handle: boolean;
   /** Einzelrechte; fehlt ein Eintrag, gilt `handle` (ältere Aufrufer). */
-  rights?: Partial<Record<TicketRight, boolean>>;
+  rights?: Partial<Record<TicketRight | TicketStrictRight, boolean>>;
 }
 
 export type TicketRight = 'claim' | 'priority' | 'members' | 'close';
+/** Rechte, die nie aus `tickets.handle` folgen, sondern ausdrücklich vergeben werden müssen (oder über Verwaltung). */
+export type TicketStrictRight = 'reopen' | 'delete' | 'transcriptDelete';
+const strictMay = (t: WithCat, a: Actor, right: TicketStrictRight): boolean =>
+  a.manage || (!!(a.rights as Partial<Record<TicketStrictRight, boolean>> | undefined)?.[right] && (t.category.staffRoleIds.length === 0 || t.category.staffRoleIds.some((r) => a.roleIds.includes(r))));
 
 type WithCat = { category: { staffRoleIds: string[] } };
 
@@ -581,6 +585,49 @@ export async function closeTicket(
   }
   void refreshPanel(gid, discord).catch(() => undefined);
   return { ticket: await getTicket(gid, id), transcriptMessages: messages.length, contentAvailable, logged, dmDelivered, channelDeleted, deleteAt };
+}
+
+/** Geschlossenes Ticket wieder öffnen: nur solange der Kanal noch existiert; Ersteller und Beteiligte erhalten den Zugriff zurück. */
+export async function reopenTicket(guildId: string, id: string, rawActor: Actor, discord: TicketDiscord, now = new Date()) {
+  const gid = assertGuildId(guildId);
+  const { actor } = await withAdmin(gid, rawActor);
+  const t = await getTicket(gid, id);
+  if (!strictMay(t, actor, 'reopen')) throw new TicketError('forbidden', 'Du darfst Tickets nicht wieder öffnen.');
+  if (t.status !== 'CLOSED') throw new TicketError('conflict', 'Das Ticket ist nicht geschlossen.');
+  if (!t.channelId || t.channelDeletedAt) throw new TicketError('conflict', 'Der Ticket-Kanal wurde bereits gelöscht – das Ticket kann nicht wieder geöffnet werden.');
+  const r = await prisma.ticket.updateMany({ where: { id, status: 'CLOSED' }, data: { status: t.claimedBy ? 'IN_PROGRESS' : 'OPEN', closedBy: null, closedAt: null, closeReason: null, deleteAt: null } });
+  if (r.count === 0) throw new TicketError('conflict', 'Das Ticket wurde gerade geändert.');
+  for (const uid of [t.userId, ...t.participantIds]) await discord.setMemberAccess(t.channelId, uid, true).catch(() => undefined);
+  await discord.send(t.channelId, { embeds: [{ title: '🔓 Ticket wieder geöffnet', description: `<@${actor.userId}> hat dieses Ticket wieder geöffnet.`, color: 0x16a34a }], allowed_mentions: { parse: [] } } as never).catch(() => undefined);
+  await event(gid, id, 'reopened', actor.userId, { previousReason: t.closeReason });
+  void refreshPanel(gid, discord).catch(() => undefined);
+  return getTicket(gid, id);
+}
+
+/** Geschlossenes Ticket endgültig löschen (Kanal, Verlauf, Transkript). Der Audit-Eintrag hält fest, was gelöscht wurde. */
+export async function deleteTicket(guildId: string, id: string, rawActor: Actor, discord: TicketDiscord) {
+  const gid = assertGuildId(guildId);
+  const { actor } = await withAdmin(gid, rawActor);
+  const t = await getTicket(gid, id);
+  if (!strictMay(t, actor, 'delete')) throw new TicketError('forbidden', 'Du darfst Tickets nicht löschen.');
+  if (t.status !== 'CLOSED') throw new TicketError('conflict', 'Nur geschlossene Tickets können gelöscht werden.');
+  if (t.channelId && !t.channelDeletedAt) await discord.deleteChannel(t.channelId).catch((e) => { if (!(e instanceof DiscordApiError && e.status === 404)) throw new TicketError('conflict', 'Der Ticket-Kanal konnte nicht gelöscht werden – bitte später erneut versuchen.'); });
+  await auditRepository.createRaw({ data: { guildId: gid, actorType: 'USER', actorId: actor.userId, action: 'ticket.deleted', resourceType: 'Ticket', resourceId: id, before: { number: t.number, subject: t.subject, userId: t.userId, category: t.category.name, closedAt: t.closedAt?.toISOString() ?? null, closeReason: t.closeReason } as Json, permission: 'tickets.delete', result: 'success' } });
+  await prisma.ticket.delete({ where: { id } });
+  void refreshPanel(gid, discord).catch(() => undefined);
+  return { ok: true };
+}
+
+/** Nur das gespeicherte Transkript löschen (das Ticket bleibt im Archiv). */
+export async function deleteTranscript(guildId: string, id: string, rawActor: Actor) {
+  const gid = assertGuildId(guildId);
+  const { actor } = await withAdmin(gid, rawActor);
+  const t = await getTicket(gid, id);
+  if (!strictMay(t, actor, 'transcriptDelete')) throw new TicketError('forbidden', 'Du darfst Transkripte nicht löschen.');
+  if (t.status !== 'CLOSED') throw new TicketError('conflict', 'Nur das Transkript eines geschlossenen Tickets kann gelöscht werden.');
+  await prisma.ticket.update({ where: { id }, data: { transcript: Prisma.DbNull, transcriptHtml: null } });
+  await auditRepository.createRaw({ data: { guildId: gid, actorType: 'USER', actorId: actor.userId, action: 'ticket.transcript.deleted', resourceType: 'Ticket', resourceId: id, before: { number: t.number, hadHtml: !!t.transcriptHtml } as Json, permission: 'tickets.transcript.delete', result: 'success' } });
+  return getTicket(gid, id);
 }
 
 /** Löscht die Kanäle geschlossener Tickets, deren Löschfrist abgelaufen ist (Worker-Job). Bereits fehlende Kanäle gelten als gelöscht. */
