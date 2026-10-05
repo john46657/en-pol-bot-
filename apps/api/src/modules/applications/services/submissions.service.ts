@@ -15,6 +15,7 @@ import {
   restDiscordPort,
   startReview,
   withdrawByStaff,
+  holdSubmission,
 } from '@nexus/automation';
 import { SubmissionStatus } from '@nexus/types';
 import { auditRepository, prisma, assertGuildId } from '@nexus/database';
@@ -151,6 +152,14 @@ export class SubmissionsService {
   async assign(guildId: string, submissionId: string, actorId: string, assigneeId: string | null, canReassign: boolean) {
     await this.getById(guildId, submissionId);
     const r = await assignSubmission(this.port(), { submissionId, guildId, actorId, assigneeId, canReassign });
+    if (!r.ok) throw new ConflictException(r.message);
+    return r;
+  }
+
+  /** Zurückstellen (`hold: true`) oder fortsetzen; Grund optional. */
+  async hold(guildId: string, submissionId: string, actorId: string, hold: boolean, reason: string | undefined, canReassign: boolean) {
+    await this.getById(guildId, submissionId);
+    const r = await holdSubmission(this.port(), { submissionId, guildId, actorId, hold, reason, canReassign });
     if (!r.ok) throw new ConflictException(r.message);
     return r;
   }

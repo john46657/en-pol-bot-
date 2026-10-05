@@ -30,6 +30,7 @@ enum SubmissionStatus {
   PAUSED
   SUBMITTED
   UNDER_REVIEW
+  ON_HOLD
   ACCEPTED
   DENIED
   EXPIRED

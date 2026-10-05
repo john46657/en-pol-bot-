@@ -14,6 +14,7 @@ import {
 import {
   askClarification,
   assignSubmission,
+  holdSubmission,
   decideSubmission,
   denyReasonsOf,
   inviteToInterview,
@@ -61,6 +62,7 @@ const A = {
   ask: 'review:ask',
   interview: 'review:interview',
   claim: 'review:claim',
+  hold: 'review:hold',
   acceptOk: 'review:accept_ok',
   cancel: 'review:cancel',
   denySelect: 'review:denysel',
@@ -218,6 +220,17 @@ registerButton(A.claim, async (i, { args }) => {
   const releasing = s?.assigneeUserId === i.user.id;
   const r = await assignSubmission(reviewPort(), { submissionId, guildId: guildOf(i), actorId: i.user.id, assigneeId: releasing ? null : i.user.id, canReassign: await canReassign(i) });
   await i.editReply({ content: r.ok ? (releasing ? '↩️ Du hast die Bewerbung freigegeben.' : '👤 Du bearbeitest diese Bewerbung jetzt.') : `⚠️ ${r.message}`, allowedMentions: { parse: [] } });
+});
+
+// Zurückstellen / Fortsetzen (Umschalter, Grund optional über das Dashboard)
+registerButton(A.hold, async (i, { args }) => {
+  const submissionId = args[0] ?? '';
+  if (!isValidId(submissionId) || !(await need(i, 'applications.submissions.hold'))) return;
+  await i.deferReply({ flags: ephemeral });
+  const s = await prisma.applicationSubmission.findFirst({ where: { id: submissionId, guildId: guildOf(i) }, select: { status: true } });
+  const hold = s?.status !== 'ON_HOLD';
+  const r = await holdSubmission(reviewPort(), { submissionId, guildId: guildOf(i), actorId: i.user.id, hold, canReassign: await canReassign(i) });
+  await i.editReply({ content: r.ok ? (hold ? '🟠 Die Bewerbung ist zurückgestellt.' : '▶️ Die Bewerbung wird weiter bearbeitet.') : `⚠️ ${r.message}`, allowedMentions: { parse: [] } });
 });
 
 for (const [action, decision, perm, title, label] of [

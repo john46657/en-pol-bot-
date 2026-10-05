@@ -119,7 +119,7 @@ export function SubmissionDetail() {
             (a, b) => a.order - b.order,
           );
           const answers = new Map(s.answers.map((a) => [a.questionId, a.value]));
-          const open = s.status === 'SUBMITTED' || s.status === 'UNDER_REVIEW';
+          const open = s.status === 'SUBMITTED' || s.status === 'UNDER_REVIEW' || s.status === 'ON_HOLD';
           const reasons: DenyReason[] = s.application.config?.review?.denyReasons?.length
             ? s.application.config.review.denyReasons
             : (options.data?.defaultDenyReasons ?? []);
@@ -206,6 +206,22 @@ export function SubmissionDetail() {
                     >
                       ↩ Zurücknehmen
                     </button>
+                    {s.status === 'ON_HOLD' ? (
+                      <button className="btn" disabled={flow.isPending} onClick={() => flow.mutate({ path: 'hold', body: { hold: false }, msg: 'Bewerbung wird weiter bearbeitet.' })}>
+                        ▶️ Fortsetzen
+                      </button>
+                    ) : (
+                      <button
+                        className="btn"
+                        disabled={flow.isPending}
+                        onClick={() => {
+                          const reason = window.prompt('Grund für das Zurückstellen (optional)');
+                          if (reason !== null) flow.mutate({ path: 'hold', body: { hold: true, ...(reason.trim() ? { reason } : {}) }, msg: 'Bewerbung zurückgestellt.' });
+                        }}
+                      >
+                        🟠 Zurückstellen
+                      </button>
+                    )}
                   </div>
                   {s.status === 'SUBMITTED' && (
                     <button

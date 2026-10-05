@@ -345,6 +345,7 @@ export const submissionListQuerySchema = z.object({
       PAUSED: 'PAUSED',
       SUBMITTED: 'SUBMITTED',
       UNDER_REVIEW: 'UNDER_REVIEW',
+      ON_HOLD: 'ON_HOLD',
       ACCEPTED: 'ACCEPTED',
       DENIED: 'DENIED',
       EXPIRED: 'EXPIRED',

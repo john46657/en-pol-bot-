@@ -963,3 +963,47 @@ describe('Bewerbungs-ID, Übernehmen und Zurücknehmen (Phase 54)', () => {
     expect(await withdrawByStaff(f.port as never, { submissionId: done, guildId: G, actorId: 'u-lead', reason: 'zu spät' })).toMatchObject({ ok: false });
   });
 });
+
+describe('Zurückstellen / Fortsetzen', () => {
+  it('Prüfer stellt zurück und setzt fort (Status, Knopf, Verlauf); aus „zurückgestellt“ lässt sich direkt entscheiden', async () => {
+    const f = fakePort();
+    setReviewPort(f.port as never);
+    const id = await submitted({ f });
+    const click = async (userId: string, roleIds: string[]) => {
+      const i = interaction('button', cid('review:hold', id), { userId, roleIds });
+      await handleInteraction(client(), i);
+      return text(i);
+    };
+    const labels = () => f.edits.at(-1)!.payload.components.flatMap((r: any) => r.components.map((c: any) => c.label));
+
+    expect(await click(U.viewer, [ROLE.viewer])).toContain('Du benötigst'); // ohne Prüfrecht
+    expect(await status(id)).toBe('SUBMITTED');
+
+    expect(await click(U.reviewer, [ROLE.review])).toContain('zurückgestellt');
+    expect(await status(id)).toBe('ON_HOLD');
+    expect(labels()).toContain('Fortsetzen');
+    expect(JSON.stringify(f.edits.at(-1)!.payload.embeds)).toContain('Zurückgestellt');
+
+    expect(await click(U.reviewer, [ROLE.review])).toContain('weiter bearbeitet');
+    expect(await status(id)).toBe('UNDER_REVIEW');
+    expect(labels()).toContain('Zurückstellen');
+
+    await click(U.reviewer, [ROLE.review]);
+    expect(await status(id)).toBe('ON_HOLD');
+    const ok = interaction('button', cid('review:accept_ok', id), { userId: ACCEPT[0], roleIds: ACCEPT[1] });
+    await handleInteraction(client(), ok);
+    expect(await status(id)).toBe('ACCEPTED');
+    expect(await events(id)).toEqual(expect.arrayContaining(['submission.on_hold', 'submission.resumed']));
+  });
+
+  it('wer eine fremd zugewiesene Bewerbung nicht übernehmen darf, kann sie auch nicht zurückstellen', async () => {
+    const f = fakePort();
+    setReviewPort(f.port as never);
+    const id = await submitted({ f });
+    await prisma.applicationSubmission.update({ where: { id }, data: { assigneeUserId: 'u-someone-else' } });
+    const i = interaction('button', cid('review:hold', id), { userId: U.reviewer, roleIds: [ROLE.review] });
+    await handleInteraction(client(), i);
+    expect(text(i)).toContain('bereits von');
+    expect(await status(id)).toBe('SUBMITTED');
+  });
+});

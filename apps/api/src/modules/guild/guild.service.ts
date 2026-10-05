@@ -118,7 +118,7 @@ export class GuildService {
       applications,
       submissions: {
         total: [...counts.values()].reduce((a, b) => a + b, 0),
-        pending: (counts.get('SUBMITTED') ?? 0) + (counts.get('UNDER_REVIEW') ?? 0),
+        pending: (counts.get('SUBMITTED') ?? 0) + (counts.get('UNDER_REVIEW') ?? 0) + (counts.get('ON_HOLD') ?? 0),
         accepted: counts.get('ACCEPTED') ?? 0,
         denied: counts.get('DENIED') ?? 0,
       },

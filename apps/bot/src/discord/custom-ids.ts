@@ -29,6 +29,7 @@ export const CustomIdAction = {
   REVIEW_ASK: 'review:ask', // review:ask:<submissionId>
   REVIEW_INTERVIEW: 'review:interview', // review:interview:<submissionId>
   REVIEW_CLAIM: 'review:claim', // review:claim:<submissionId>
+  REVIEW_HOLD: 'review:hold', // review:hold:<submissionId> (Zurückstellen/Fortsetzen)
   REVIEW_ACCEPT_OK: 'review:accept_ok', // review:accept_ok:<submissionId> (Bestätigung)
   REVIEW_CANCEL: 'review:cancel', // Abbrechen einer Bestätigung
   REVIEW_DENY_SELECT: 'review:denysel', // review:denysel:<submissionId> (Select, Wert = Grund-ID)

@@ -388,6 +388,7 @@ export const STATUS_TEXT: Record<string, string> = {
   PAUSED: 'Pausiert',
   SUBMITTED: 'Offen',
   UNDER_REVIEW: 'In Prüfung',
+  ON_HOLD: 'Zurückgestellt',
   ACCEPTED: 'Angenommen',
   DENIED: 'Abgelehnt',
   WITHDRAWN: 'Zurückgezogen',

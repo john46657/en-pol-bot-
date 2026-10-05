@@ -99,7 +99,7 @@ export async function countActiveSubmissions(
     where: {
       guildId: assertGuildId(guildId),
       userId,
-      status: { in: ['STARTED', 'IN_PROGRESS', 'PAUSED', 'SUBMITTED', 'UNDER_REVIEW'] },
+      status: { in: ['STARTED', 'IN_PROGRESS', 'PAUSED', 'SUBMITTED', 'UNDER_REVIEW', 'ON_HOLD'] },
       ...(applicationId ? { applicationId } : {}),
     },
   });

@@ -143,6 +143,14 @@ export class SubmissionsController {
   }
 
   /** Bewerbung durch das Team zurücknehmen (WITHDRAWN) – Grund Pflicht. */
+  /** Zurückstellen / fortsetzen (`{ hold: true|false, reason? }`). */
+  @Post(':submissionId/hold')
+  @RequirePermissions('applications.submissions.hold')
+  async hold(@GuildId() guildId: string, @Param('submissionId') submissionId: string, @Body() body: { hold?: unknown; reason?: unknown }, @CurrentUser() user: RequestUser, @Access() access: RequestAccess) {
+    if (typeof body?.hold !== 'boolean') throw new BadRequestException('Angabe „hold“ (true/false) fehlt.');
+    return this.submissions.hold(guildId, submissionId, user.id, body.hold, typeof body.reason === 'string' ? body.reason : undefined, await this.canReassign(access));
+  }
+
   @Post(':submissionId/withdraw')
   @RequirePermissions('applications.submissions.withdraw')
   withdraw(@GuildId() guildId: string, @Param('submissionId') submissionId: string, @Body() body: { reason?: unknown }, @CurrentUser() user: RequestUser) {

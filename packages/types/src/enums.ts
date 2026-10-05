@@ -21,6 +21,7 @@ export type ApplicationStatus = (typeof ApplicationStatus)[keyof typeof Applicat
  * PAUSED       – vom User pausiert
  * SUBMITTED    – eingereicht
  * UNDER_REVIEW – in aktiver Bearbeitung durch Staff
+ * ON_HOLD      – vom Team zurückgestellt (wartet bewusst, kann fortgesetzt oder entschieden werden)
  * ACCEPTED     – angenommen
  * DENIED       – abgelehnt
  * EXPIRED      – Zeitlimit abgelaufen
@@ -33,6 +34,7 @@ export const SubmissionStatus = {
   PAUSED: 'PAUSED',
   SUBMITTED: 'SUBMITTED',
   UNDER_REVIEW: 'UNDER_REVIEW',
+  ON_HOLD: 'ON_HOLD',
   ACCEPTED: 'ACCEPTED',
   DENIED: 'DENIED',
   EXPIRED: 'EXPIRED',
@@ -42,6 +44,9 @@ export const SubmissionStatus = {
   ARCHIVED: 'ARCHIVED',
 } as const;
 export type SubmissionStatus = (typeof SubmissionStatus)[keyof typeof SubmissionStatus];
+
+/** Eingereichte, noch nicht entschiedene Bewerbungen (für „offen“, Entscheidungen, Zuweisung, Zählungen). */
+export const OPEN_SUBMISSION_STATUSES = [SubmissionStatus.SUBMITTED, SubmissionStatus.UNDER_REVIEW, SubmissionStatus.ON_HOLD] as const;
 
 /** Fragetypen (§9). Neue Typen müssen später über die Component Registry ergänzt werden. */
 export const QuestionType = {

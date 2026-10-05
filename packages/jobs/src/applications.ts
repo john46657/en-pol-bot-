@@ -44,6 +44,7 @@ export async function applicationReminders(now = new Date()): Promise<{ applican
     const note = left !== null ? ` (noch ca. ${Math.max(1, Math.round(left / 3600_000))} Std. Zeit)` : '';
     if (await enqueue({ guildId: s.guildId, target: { kind: 'USER', id: s.userId }, kind: 'application.reminder', dedupeKey: `application-reminder:${s.id}`, payload: { content: `📝 Du hast deine Bewerbung „${s.application.name}“ noch nicht abgeschlossen${note}. Mach einfach hier in den Direktnachrichten weiter.` } })) applicants++;
   }
+  // Zurückgestellte Bewerbungen (ON_HOLD) wartet das Team bewusst ab – dafür keine Erinnerung
   const waiting = await prisma.applicationSubmission.findMany({ where: { status: { in: ['SUBMITTED', 'UNDER_REVIEW'] }, isTest: false, submittedAt: { lte: new Date(now.getTime() - STAFF_REMINDER_AFTER_MS) } }, include: { application: { select: { name: true } } } });
   const channels = new Map<string, string | undefined>();
   for (const s of waiting) {

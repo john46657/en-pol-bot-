@@ -36,11 +36,12 @@ const OPEN_STATUS_LABEL: Record<string, string> = {
   PAUSED: 'PAUSIERT',
   SUBMITTED: 'EINGEREICHT',
   UNDER_REVIEW: 'IN REVIEW',
+  ON_HOLD: 'ZURÜCKGESTELLT',
 };
 /** „Du hast bereits eine offene Bewerbung.“ mit dem aktuellen Status (und der ID, falls schon eingereicht). */
 async function openMessage(guildId: string, userId: string, applicationId?: string): Promise<string> {
   const open = await prisma.applicationSubmission.findFirst({
-    where: { guildId, userId, ...(applicationId ? { applicationId } : {}), isTest: false, status: { in: [SubmissionStatus.STARTED, SubmissionStatus.IN_PROGRESS, SubmissionStatus.PAUSED, SubmissionStatus.SUBMITTED, SubmissionStatus.UNDER_REVIEW] } },
+    where: { guildId, userId, ...(applicationId ? { applicationId } : {}), isTest: false, status: { in: [SubmissionStatus.STARTED, SubmissionStatus.IN_PROGRESS, SubmissionStatus.PAUSED, SubmissionStatus.SUBMITTED, SubmissionStatus.UNDER_REVIEW, SubmissionStatus.ON_HOLD] } },
     orderBy: { createdAt: 'desc' },
     select: { status: true, submissionNumber: true },
   });
@@ -118,6 +119,7 @@ export async function startApplication(
             SubmissionStatus.PAUSED,
             SubmissionStatus.SUBMITTED,
             SubmissionStatus.UNDER_REVIEW,
+            SubmissionStatus.ON_HOLD,
           ],
         },
       },

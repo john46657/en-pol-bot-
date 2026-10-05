@@ -26,12 +26,22 @@ export const SUBMISSION_TRANSITIONS: Readonly<Record<SubmissionStatus, Submissio
   // (Ansehen, Rückfrage, Gespräch).
   SUBMITTED: [
     SubmissionStatus.UNDER_REVIEW,
+    SubmissionStatus.ON_HOLD,
     SubmissionStatus.ACCEPTED,
     SubmissionStatus.DENIED,
     SubmissionStatus.WITHDRAWN,
     SubmissionStatus.ARCHIVED,
   ],
   UNDER_REVIEW: [
+    SubmissionStatus.ON_HOLD,
+    SubmissionStatus.ACCEPTED,
+    SubmissionStatus.DENIED,
+    SubmissionStatus.WITHDRAWN,
+    SubmissionStatus.ARCHIVED,
+  ],
+  // Zurückgestellt: fortsetzen (in Prüfung) oder direkt entscheiden/zurücknehmen
+  ON_HOLD: [
+    SubmissionStatus.UNDER_REVIEW,
     SubmissionStatus.ACCEPTED,
     SubmissionStatus.DENIED,
     SubmissionStatus.WITHDRAWN,
@@ -59,6 +69,7 @@ export const TERMINAL_SUBMISSION_STATUSES: ReadonlySet<SubmissionStatus> = new S
 export const REVIEWABLE_STATUSES: ReadonlySet<SubmissionStatus> = new Set([
   SubmissionStatus.SUBMITTED,
   SubmissionStatus.UNDER_REVIEW,
+  SubmissionStatus.ON_HOLD,
 ]);
 
 export function canTransition(from: SubmissionStatus, to: SubmissionStatus): boolean {

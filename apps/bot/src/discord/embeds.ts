@@ -15,6 +15,7 @@ export const STATUS_LABEL: Record<SubmissionStatus, string> = {
   PAUSED: '⏸️ Pausiert',
   SUBMITTED: '📨 Eingereicht',
   UNDER_REVIEW: '🔵 In Prüfung',
+  ON_HOLD: '🟠 Zurückgestellt',
   ACCEPTED: '🟢 Angenommen',
   DENIED: '🔴 Abgelehnt',
   EXPIRED: '⚫ Abgelaufen',

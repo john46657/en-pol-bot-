@@ -76,3 +76,16 @@ describe('Entscheidung und Zurückziehen (Phase 10)', () => {
     expect(canTransition(SubmissionStatus.WITHDRAWN, SubmissionStatus.UNDER_REVIEW)).toBe(false);
   });
 });
+
+describe('Zurückstellen (ON_HOLD)', () => {
+  it('offene Bewerbungen lassen sich zurückstellen, zurückgestellte fortsetzen oder direkt entscheiden', () => {
+    expect(canTransition(SubmissionStatus.SUBMITTED, SubmissionStatus.ON_HOLD)).toBe(true);
+    expect(canTransition(SubmissionStatus.UNDER_REVIEW, SubmissionStatus.ON_HOLD)).toBe(true);
+    for (const to of [SubmissionStatus.UNDER_REVIEW, SubmissionStatus.ACCEPTED, SubmissionStatus.DENIED, SubmissionStatus.WITHDRAWN])
+      expect(canTransition(SubmissionStatus.ON_HOLD, to), to).toBe(true);
+  });
+  it('nicht eingereichte oder entschiedene Bewerbungen lassen sich nicht zurückstellen', () => {
+    for (const from of [SubmissionStatus.STARTED, SubmissionStatus.IN_PROGRESS, SubmissionStatus.ACCEPTED, SubmissionStatus.DENIED, SubmissionStatus.WITHDRAWN])
+      expect(canTransition(from, SubmissionStatus.ON_HOLD), from).toBe(false);
+  });
+});

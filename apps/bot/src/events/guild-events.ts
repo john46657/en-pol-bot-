@@ -23,6 +23,7 @@ export async function handleMemberRemove(member: GuildMember): Promise<void> {
           SubmissionStatus.PAUSED,
           SubmissionStatus.SUBMITTED,
           SubmissionStatus.UNDER_REVIEW,
+          SubmissionStatus.ON_HOLD,
         ],
       },
     },

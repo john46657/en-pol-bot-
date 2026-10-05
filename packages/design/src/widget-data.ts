@@ -20,7 +20,7 @@ export interface WidgetData {
 }
 
 const OPEN_TICKET = ['OPEN', 'IN_PROGRESS', 'WAITING'] as const;
-const PENDING_SUB = ['SUBMITTED', 'UNDER_REVIEW'] as const;
+const PENDING_SUB = ['SUBMITTED', 'UNDER_REVIEW', 'ON_HOLD'] as const;
 const ON_DUTY = ['ACTIVE', 'PAUSED'] as const;
 const RUNNING_OP = ['REQUESTED', 'EN_ROUTE', 'ACTIVE'] as const;
 const LIMIT = 10;

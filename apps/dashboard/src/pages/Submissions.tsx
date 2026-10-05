@@ -48,7 +48,7 @@ export function Submissions() {
       >
         <select value={status} onChange={(e) => setStatus(e.target.value)} aria-label="Status">
           <option value="">Alle offenen & abgeschlossenen</option>
-          {['SUBMITTED', 'UNDER_REVIEW', 'ACCEPTED', 'DENIED', 'WITHDRAWN'].map((s) => (
+          {['SUBMITTED', 'UNDER_REVIEW', 'ON_HOLD', 'ACCEPTED', 'DENIED', 'WITHDRAWN'].map((s) => (
             <option key={s} value={s}>
               {STATUS_TEXT[s]}
             </option>

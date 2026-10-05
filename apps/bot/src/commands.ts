@@ -141,7 +141,7 @@ async function nexusStatus(interaction: ChatInputCommandInteraction): Promise<vo
       where: { guildId, status: ApplicationStatus.PUBLISHED, enabled: true },
     }),
     prisma.applicationSubmission.count({
-      where: { guildId, status: { in: ['SUBMITTED', 'UNDER_REVIEW'] } },
+      where: { guildId, status: { in: ['SUBMITTED', 'UNDER_REVIEW', 'ON_HOLD'] } },
     }),
   ]);
   const dashboard = process.env['DASHBOARD_URL']?.split(',')[0] ?? 'http://localhost:3001';

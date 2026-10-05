@@ -9,6 +9,7 @@ export const STATUS_LABEL: Record<string, string> = {
   PAUSED: '⏸️ Pausiert',
   SUBMITTED: '📨 Offen (PENDING)',
   UNDER_REVIEW: '🔵 In Prüfung',
+  ON_HOLD: '🟠 Zurückgestellt',
   ACCEPTED: '🟢 Angenommen',
   DENIED: '🔴 Abgelehnt',
   WITHDRAWN: '↩️ Vom Bewerber zurückgezogen',
@@ -87,6 +88,7 @@ export interface ReviewMessageInput {
 const COLOR: Record<string, number> = {
   SUBMITTED: 0xfee75c,
   UNDER_REVIEW: 0x5865f2,
+  ON_HOLD: 0xe67e22,
   ACCEPTED: 0x57f287,
   DENIED: 0xed4245,
   WITHDRAWN: 0x95a5a6,
@@ -127,17 +129,20 @@ export function reviewMessage(
       ? { content: i.pingRoleIds.map((r) => `<@&${r}>`).join(' ') + ' – neue Bewerbung' }
       : {}),
     embeds: [embed],
-    components: isFinal(i.status) ? [] : reviewButtons(i.submissionId, i.dashboardUrl),
+    components: isFinal(i.status) ? [] : reviewButtons(i.submissionId, i.dashboardUrl, i.status),
     allowed_mentions: { parse: [], roles: i.pingRoleIds ?? [] },
   };
   return payload;
 }
 
-/** Ansehen · Annehmen · Ablehnen · Rückfragen · Gespräch  /  Verlauf · Notiz · Dashboard */
-export function reviewButtons(submissionId: string, dashboardUrl?: string): DiscordComponents[] {
+/** Ansehen · Annehmen · Ablehnen · Rückfragen · Gespräch  /  Übernehmen · Zurückstellen/Fortsetzen · Verlauf · Notiz · Dashboard */
+export function reviewButtons(submissionId: string, dashboardUrl?: string, status?: string): DiscordComponents[] {
   const id = (a: string) => `nexus:review:${a}:${submissionId}`;
   const second: DiscordComponents['components'] = [
     { type: 2, style: 1, label: 'Übernehmen', emoji: { name: '👤' }, custom_id: id('claim') },
+    status === SubmissionStatus.ON_HOLD
+      ? { type: 2, style: 1, label: 'Fortsetzen', emoji: { name: '▶️' }, custom_id: id('hold') }
+      : { type: 2, style: 2, label: 'Zurückstellen', emoji: { name: '🟠' }, custom_id: id('hold') },
     { type: 2, style: 2, label: 'Verlauf', emoji: { name: '📜' }, custom_id: id('history') },
     { type: 2, style: 2, label: 'Notiz', emoji: { name: '📝' }, custom_id: id('note') },
   ];

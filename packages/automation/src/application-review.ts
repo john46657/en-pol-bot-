@@ -1,7 +1,7 @@
 import { renderTemplate, assertTransition, roleActionsForTransition } from '@nexus/core';
 import { guildRepository, prisma } from '@nexus/database';
 import type { Prisma } from '@nexus/database';
-import { SubmissionStatus } from '@nexus/types';
+import { OPEN_SUBMISSION_STATUSES, SubmissionStatus } from '@nexus/types';
 import type { Question } from '@nexus/types';
 import type { DiscordPort } from './discord-port.js';
 import {
@@ -491,7 +491,7 @@ export async function assignSubmission(
     if (next !== input.actorId && !/^\d{5,25}$/.test(next)) return { ok: false, message: 'Ungültige Discord-ID.' };
   }
   const r = await prisma.applicationSubmission.updateMany({
-    where: { id: s.id, assigneeUserId: current, status: { in: [SubmissionStatus.SUBMITTED, SubmissionStatus.UNDER_REVIEW] } },
+    where: { id: s.id, assigneeUserId: current, status: { in: [...OPEN_SUBMISSION_STATUSES] } },
     data: { assigneeUserId: next, assignedAt: next ? new Date() : null },
   });
   if (r.count === 0) return { ok: false, message: 'Die Bewerbung wurde gerade geändert – bitte erneut versuchen.' };
@@ -503,6 +503,41 @@ export async function assignSubmission(
   const fresh = (await load(s.id)) ?? s;
   await refreshReviewMessage(port, fresh, fresh.status);
   return { ok: true, assigneeId: next };
+}
+
+/**
+ * Zurückstellen (offen → ON_HOLD) oder fortsetzen (ON_HOLD → UNDER_REVIEW). Wie bei Entscheidungen: ist die Bewerbung einer
+ * anderen Person zugewiesen, darf nur eine Führungskraft (`canReassign`). Der Grund ist optional und steht im Verlauf.
+ */
+export async function holdSubmission(
+  port: DiscordPort,
+  input: { submissionId: string; guildId: string; actorId: string; hold: boolean; reason?: string | undefined; canReassign?: boolean | undefined },
+): Promise<{ ok: true; status: SubmissionStatus } | { ok: false; message: string }> {
+  const reason = input.reason?.trim() || undefined;
+  if (reason && reason.length > 500) return { ok: false, message: 'Der Grund ist zu lang (max. 500 Zeichen).' };
+  const s = await load(input.submissionId, input.guildId);
+  if (!s) return { ok: false, message: 'Bewerbung nicht gefunden.' };
+  if (s.assigneeUserId && s.assigneeUserId !== input.actorId && !input.canReassign) return { ok: false, message: assignedElsewhere(s.assigneeUserId) };
+  if (input.hold && s.status === SubmissionStatus.ON_HOLD) return { ok: false, message: 'Die Bewerbung ist bereits zurückgestellt.' };
+  if (!input.hold && s.status !== SubmissionStatus.ON_HOLD) return { ok: false, message: 'Die Bewerbung ist nicht zurückgestellt.' };
+  const target = input.hold ? SubmissionStatus.ON_HOLD : SubmissionStatus.UNDER_REVIEW;
+  try {
+    assertTransition(s.status, target);
+  } catch {
+    return { ok: false, message: `Diese Bewerbung lässt sich nicht ${input.hold ? 'zurückstellen' : 'fortsetzen'} (${STATUS_LABEL[s.status] ?? s.status}).` };
+  }
+  const r = await prisma.applicationSubmission.updateMany({
+    where: { id: s.id, status: s.status },
+    data: { status: target, ...(target === SubmissionStatus.UNDER_REVIEW ? { reviewerUserId: s.reviewerUserId ?? input.actorId } : {}) },
+  });
+  if (r.count === 0) return { ok: false, message: 'Die Bewerbung wurde gerade geändert – bitte erneut versuchen.' };
+  await audit(s.guildId, s.id, s.applicationId, input.actorId, input.hold ? 'submission.on_hold' : 'submission.resumed', {
+    before: { status: s.status },
+    after: { status: target, ...(reason ? { reason } : {}) },
+  });
+  const fresh = (await load(s.id)) ?? s;
+  await refreshReviewMessage(port, fresh, fresh.status);
+  return { ok: true, status: target };
 }
 
 /**
@@ -524,7 +559,7 @@ export async function withdrawByStaff(
     return { ok: false, message: `Diese Bewerbung lässt sich nicht mehr zurücknehmen (${STATUS_LABEL[s.status] ?? s.status}).` };
   }
   const r = await prisma.applicationSubmission.updateMany({
-    where: { id: s.id, status: { in: [SubmissionStatus.SUBMITTED, SubmissionStatus.UNDER_REVIEW] } },
+    where: { id: s.id, status: { in: [...OPEN_SUBMISSION_STATUSES] } },
     data: { status: SubmissionStatus.WITHDRAWN, internalReason: reason, reviewerUserId: input.actorId },
   });
   if (r.count === 0) return { ok: false, message: 'Die Bewerbung wurde in der Zwischenzeit entschieden.' };
@@ -629,7 +664,7 @@ export async function recordClarificationReply(
   input: { userId: string; text: string },
 ): Promise<{ handled: boolean; submissionId?: string }> {
   const candidates = await prisma.applicationSubmission.findMany({
-    where: { userId: input.userId, status: SubmissionStatus.UNDER_REVIEW },
+    where: { userId: input.userId, status: { in: [SubmissionStatus.UNDER_REVIEW, SubmissionStatus.ON_HOLD] } },
     orderBy: { updatedAt: 'desc' },
     include: { application: { include: { roleRules: true } }, version: true },
   });
@@ -734,7 +769,7 @@ export async function decideSubmission(
     where: {
       id: s.id,
       guildId: s.guildId,
-      status: { in: [SubmissionStatus.SUBMITTED, SubmissionStatus.UNDER_REVIEW] },
+      status: { in: [...OPEN_SUBMISSION_STATUSES] },
     },
     data: {
       status: target,
@@ -918,7 +953,7 @@ export async function withdrawSubmission(
   const r = await prisma.applicationSubmission.updateMany({
     where: {
       id: s.id,
-      status: { in: [SubmissionStatus.SUBMITTED, SubmissionStatus.UNDER_REVIEW] },
+      status: { in: [...OPEN_SUBMISSION_STATUSES] },
     },
     data: {
       status: SubmissionStatus.WITHDRAWN,

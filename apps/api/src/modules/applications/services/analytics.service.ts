@@ -26,6 +26,7 @@ export class ApplicationAnalyticsService {
     const submitted =
       (counts['SUBMITTED'] ?? 0) +
       (counts['UNDER_REVIEW'] ?? 0) +
+      (counts['ON_HOLD'] ?? 0) +
       (counts['ACCEPTED'] ?? 0) +
       (counts['DENIED'] ?? 0);
     const accepted = counts['ACCEPTED'] ?? 0;

@@ -151,6 +151,7 @@ export const PERMISSION_CATALOG = [
       ['applications.manage', 'Alles im Bereich Bewerbungen'],
       ['applications.submissions.view', 'Einreichungen ansehen', 'APPLICATION_VIEW'],
       ['applications.submissions.review', 'Einreichungen prüfen'],
+      ['applications.submissions.hold', 'Einreichungen zurückstellen und fortsetzen'],
       ['applications.submissions.accept', 'Einreichungen annehmen', 'APPLICATION_ACCEPT'],
       ['applications.submissions.deny', 'Einreichungen ablehnen', 'APPLICATION_REJECT'],
       ['applications.submissions.accept_reason', 'Einreichungen mit eigenem Grund annehmen'],
@@ -403,6 +404,7 @@ export type PermissionSet = ReadonlySet<Permission>;
 export const PERMISSION_IMPLIED_BY: Readonly<Record<string, readonly string[]>> = {
   // bisher prüften Dashboard und Bot das Büro über Bewerbungs- bzw. Personalrechte
   // „mit Grund“ ist eine eigene Aktion; wer bisher annehmen/ablehnen durfte, darf es weiterhin auch mit Grund
+  'applications.submissions.hold': ['applications.submissions.review'],
   'applications.submissions.accept_reason': ['applications.submissions.accept'],
   'applications.submissions.deny_reason': ['applications.submissions.deny'],
   'office.view': ['applications.view', 'personnel.view', 'dashboard.offices'],
