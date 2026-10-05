@@ -5,6 +5,7 @@ import { api, type CourseRow, type DiscordRole, type TrainingRow } from '../api'
 import { errorText, QueryState } from '../components/QueryState';
 import { useToast } from '../toast';
 import { UserName } from '../components/UserName';
+import { UserPicker } from '../components/UserPicker';
 
 const STATUS = { PLANNED: '🗓️ Geplant', RUNNING: '▶️ Läuft', FINISHED: '✅ Beendet', CANCELLED: '❌ Abgesagt' } as const;
 const PART = { THEORY: 'Theorie', PRACTICE: 'Praxis', EXAM: 'Prüfung' } as const;
@@ -61,7 +62,7 @@ export function Training() {
                     </ul>
                     {x.status === 'PLANNED' && (
                       <>
-                        <input className="inline-input" placeholder="Discord-ID anmelden" value={add[x.id] ?? ''} onChange={(e) => setAdd({ ...add, [x.id]: e.target.value })} />
+                        <UserPicker inline label="Teilnehmer anmelden" placeholder="Teilnehmer anmelden …" value={add[x.id] ?? ''} onChange={(id) => setAdd((a) => ({ ...a, [x.id]: id }))} />
                         <button className="btn" disabled={!(add[x.id] ?? '').trim()} onClick={() => call.mutate({ method: 'POST', path: `/${x.id}/enroll`, body: { userId: add[x.id]!.trim() }, msg: 'Angemeldet.' })}>Anmelden</button>
                         <button className="btn primary" onClick={() => call.mutate({ method: 'POST', path: `/${x.id}/start`, msg: 'Termin gestartet.' })}>Starten</button>
                       </>
@@ -93,7 +94,7 @@ export function Training() {
         </div>
         <div className="two">
           <label className="fld"><span>Ort</span><input value={t.location} maxLength={100} onChange={(e) => setT({ ...t, location: e.target.value })} /></label>
-          <label className="fld"><span>Ausbilder (Discord-ID)</span><input value={t.trainer} onChange={(e) => setT({ ...t, trainer: e.target.value })} /></label>
+          <div className="fld"><span>Ausbilder</span><UserPicker label="Ausbilder" value={t.trainer} onChange={(id) => setT((x) => ({ ...x, trainer: id }))} /></div>
         </div>
         <button className="btn primary" disabled={!t.courseId || !t.scheduledAt} onClick={() => call.mutate({ method: 'POST', path: '', body: { courseId: t.courseId, scheduledAt: new Date(t.scheduledAt).toISOString(), location: t.location, trainerIds: t.trainer.trim() ? [t.trainer.trim()] : [] }, msg: 'Termin angelegt.' })}>Anlegen</button>
       </div>

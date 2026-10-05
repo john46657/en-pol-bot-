@@ -28,7 +28,9 @@ test('Moderation: verwarnen, stummschalten, kicken, bannen und aufheben', async 
   await expect(page.getByRole('heading', { name: 'Moderation' })).toBeVisible();
 
   const issue = async (userId: string, type: string, reason: string, extra?: () => Promise<void>) => {
-    await page.getByLabel('Discord-ID des Benutzers').fill(userId);
+    const person = page.getByLabel('Betroffene Person', { exact: true });
+    if (await person.count()) await person.fill(userId); // eingefügte ID wird direkt übernommen
+    await expect(page.locator(`.user-picker [data-user-id="${userId}"]`)).toBeVisible();
     const kind = page.getByRole('combobox', { name: 'Maßnahme', exact: true }).last();
     await kind.selectOption({ value: type });
     await expect(kind).toHaveValue(type);
@@ -36,10 +38,10 @@ test('Moderation: verwarnen, stummschalten, kicken, bannen und aufheben', async 
     if (extra) await extra();
   };
 
-  // Mitgliedersuche übernimmt die ID
-  await page.getByLabel(/Mitglied suchen/).fill('000080');
-  await page.getByRole('listitem').filter({ hasText: WARN_U }).getByRole('button', { name: 'Auswählen' }).click();
-  await expect(page.getByLabel('Discord-ID des Benutzers')).toHaveValue(WARN_U);
+  // Personensuche: Name tippen, Treffer wählen → Auswahl zeigt den Namen
+  await page.getByLabel('Betroffene Person', { exact: true }).fill('0080');
+  await page.getByRole('listbox', { name: 'Betroffene Person: Treffer' }).getByRole('button', { name: /user80/ }).click();
+  await expect(page.locator(`.user-picker [data-user-id="${WARN_U}"]`)).toHaveText(`u${WARN_U}`); // Name laut Fake-Discord (Einzelabfrage)
 
   // Verwarnung
   await issue(WARN_U, 'WARN', 'Spam im Chat');

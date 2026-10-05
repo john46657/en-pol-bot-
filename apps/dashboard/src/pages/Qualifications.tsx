@@ -4,6 +4,7 @@ import { useParams } from 'react-router';
 import { api, type CourseRow, type DiscordRole, type QualificationCheck, type QualificationRow, type RankRow, type RequirementRow } from '../api';
 import { errorText, QueryState } from '../components/QueryState';
 import { useToast } from '../toast';
+import { UserPicker } from '../components/UserPicker';
 
 const empty = { id: '', name: '', description: '', active: true, autoGrant: false, grantRoleId: '', validDays: '' };
 
@@ -53,7 +54,7 @@ export function Qualifications() {
                   <strong>{q.name}</strong> {!q.active && <em>(deaktiviert)</em>}{q.autoGrant && ' · automatisch'}{q.validDays ? ` · ${q.validDays} Tage gültig` : ''}
                   <br /><small className="muted">{q.requirements.map(label).join(' · ') || 'keine Voraussetzungen'}</small>
                   <br />
-                  <input className="inline-input" placeholder="Discord-ID" value={who[q.id] ?? ''} onChange={(e) => setWho({ ...who, [q.id]: e.target.value })} />
+                  <UserPicker inline label={`Person für ${q.name}`} value={who[q.id] ?? ''} onChange={(id) => setWho((w) => ({ ...w, [q.id]: id }))} />
                   <button className="btn" disabled={!(who[q.id] ?? '').trim()} onClick={() => api<QualificationCheck>(`${base}/${q.id}/check?userId=${who[q.id]!.trim()}`).then((d) => setCheck({ id: q.id, data: d })).catch((e) => toast.error(errorText(e)))}>Prüfen</button>
                   <button className="btn primary" disabled={!(who[q.id] ?? '').trim()} onClick={() => call.mutate({ method: 'POST', path: `/${q.id}/award`, body: { userId: who[q.id]!.trim(), override: (why[q.id] ?? '').trim().length > 0, reason: why[q.id] }, msg: 'Vergeben.' })}>Vergeben</button>
                   <input className="inline-input" placeholder="Begründung (nur für Ausnahme)" value={why[q.id] ?? ''} onChange={(e) => setWhy({ ...why, [q.id]: e.target.value })} />

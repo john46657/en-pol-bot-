@@ -5,6 +5,7 @@ import { api, type DiscordRole, type LeaderboardRow, type ShiftPeriodRow, type S
 import { errorText, QueryState } from '../components/QueryState';
 import { useToast } from '../toast';
 import { UserName } from '../components/UserName';
+import { UserPicker } from '../components/UserPicker';
 
 const fmtDur = (s: number | null) => {
   if (s === null) return '–';
@@ -159,7 +160,7 @@ export function Shifts() {
             <option key={x.id} value={x.id}>{x.name}</option>
           ))}
         </select>
-        <input className="inline-input" placeholder="Discord-ID des Mitglieds" value={userId} onChange={(e) => setUserId(e.target.value)} />
+        <UserPicker inline label="Mitglied" placeholder="Mitglied …" value={userId} onChange={setUserId} />
         <input type="date" value={from} onChange={(e) => setFrom(e.target.value)} aria-label="Von" />
         <input type="date" value={to} onChange={(e) => setTo(e.target.value)} aria-label="Bis" />
         <button type="button" className="btn" onClick={() => exportCsv.mutate()}>CSV-Export</button>

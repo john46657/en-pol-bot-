@@ -225,6 +225,13 @@ export class GuildController {
     return this.names.resolve(guildId, (ids ?? '').split(',').map((s) => s.trim()).filter(Boolean));
   }
 
+  /** Personensuche für Auswahlfelder (`?query=`): Discord-Name, Spitzname, RP-Name oder Discord-ID. */
+  @Get('discord/people')
+  @RequireDashboardAccess()
+  searchPeople(@GuildId() guildId: string, @Query('query') query?: string) {
+    return this.names.search(guildId, query ?? '');
+  }
+
   // --- Module & Befehle -------------------------------------------------------
 
   /** Zustand der Module und Befehle (für Menü und Einstellungen; jeder mit Dashboard-Zugang). */

@@ -5,6 +5,7 @@ import { api, type DiscordRole, type NumberFormat, type RankRow, type TeamRow } 
 import { errorText, QueryState } from '../components/QueryState';
 import { useToast } from '../toast';
 import { UserName } from '../components/UserName';
+import { UserPicker } from '../components/UserPicker';
 
 /** Dienstgrade, Teams und Dienstnummern-Format. */
 export function PersonnelStructure() {
@@ -381,14 +382,10 @@ export function PersonnelStructure() {
             ))}
           </select>
         </label>
-        <label className="fld">
-          <span>Teamleitung (Discord-ID, optional – gilt für „nur eigenes Team“)</span>
-          <input
-            value={team.leaderUserId}
-            maxLength={25}
-            onChange={(e) => setTeam({ ...team, leaderUserId: e.target.value.replace(/\D/g, '') })}
-          />
-        </label>
+        <div className="fld">
+          <span>Teamleitung (optional – gilt für „nur eigenes Team“)</span>
+          <UserPicker label="Teamleitung" value={team.leaderUserId} onChange={(id) => setTeam((t) => ({ ...t, leaderUserId: id }))} />
+        </div>
         <div>
           <button className="btn primary" disabled={!team.name.trim() || call.isPending}>
             Team anlegen

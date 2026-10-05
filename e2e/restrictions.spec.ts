@@ -24,7 +24,8 @@ test('Sperren: verhängen, ansehen, aufheben', async ({ page, context }) => {
   await expect(page.getByRole('heading', { name: 'Sperren' })).toBeVisible();
   await expect(page.getByText('Keine Sperren gefunden.')).toBeVisible();
 
-  await page.getByLabel('Discord-ID des Benutzers').fill('900000000000555001');
+  await page.getByLabel('Betroffene Person', { exact: true }).fill('900000000000555001');
+  await expect(page.locator('.user-picker [data-user-id="900000000000555001"]')).toBeVisible();
   await page.getByLabel('Art der Sperre').selectOption({ label: 'Ticketsperre' });
   await page.getByLabel('Grund', { exact: true }).fill('Browser-Test Missbrauch');
   const end = new Date(Date.now() + 3 * 3600_000);

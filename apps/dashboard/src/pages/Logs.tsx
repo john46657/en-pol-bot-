@@ -5,6 +5,7 @@ import { api, API_URL, type DiscordChannel } from '../api';
 import { errorText } from '../components/QueryState';
 import { useToast } from '../toast';
 import { UserName } from '../components/UserName';
+import { UserPicker } from '../components/UserPicker';
 
 interface AuditEntry {
   id: string;
@@ -82,7 +83,7 @@ export function Logs() {
           {areas.data?.areas.map((a) => <option key={a.key} value={a.key}>{a.label}{count(a.key) ? ` (${count(a.key)})` : ''}</option>)}
         </select>
         <input className="inline-input" placeholder="Suche (Aktion, Grund, ID) …" value={f.search} onChange={(e) => setF({ ...f, search: e.target.value })} />
-        <input className="inline-input" placeholder="Benutzer-ID" value={f.actorId} onChange={(e) => setF({ ...f, actorId: e.target.value })} />
+        <UserPicker inline label="Nur Aktionen von" placeholder="Person …" value={f.actorId} onChange={(id) => setF((x) => ({ ...x, actorId: id }))} />
         <select value={f.result} onChange={(e) => setF({ ...f, result: e.target.value })} aria-label="Ergebnis"><option value="">Alle Ergebnisse</option><option value="success">Erfolg</option><option value="partial">Teilweise</option><option value="failed">Fehlgeschlagen</option></select>
         <input type="date" value={f.from} onChange={(e) => setF({ ...f, from: e.target.value })} aria-label="Von" />
         <input type="date" value={f.to} onChange={(e) => setF({ ...f, to: e.target.value })} aria-label="Bis" />

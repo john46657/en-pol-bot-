@@ -5,6 +5,7 @@ import { api, type CourseRow, type QualificationRow, type SekConfigRow, type Sek
 import { errorText, QueryState } from '../components/QueryState';
 import { useToast } from '../toast';
 import { UserName } from '../components/UserName';
+import { UserPicker } from '../components/UserPicker';
 
 const DUTY = { ON: '🟢 im Dienst', PAUSED: '🟡 Pause', OFF: '⚫ nicht im Dienst' } as const;
 const hrs = (s: number) => `${Math.floor(s / 3600)} Std ${String(Math.floor((s % 3600) / 60)).padStart(2, '0')} Min`;
@@ -87,7 +88,7 @@ export function Sek() {
           <div className="card comp">
             <h3>Mitglied aufnehmen</h3>
             <div className="two">
-              <label className="fld"><span>Discord-ID</span><input value={add.userId} onChange={(e) => setAdd({ ...add, userId: e.target.value })} /></label>
+              <div className="fld"><span>Person</span><UserPicker label="SEK-Mitglied" value={add.userId} onChange={(id) => setAdd((a) => ({ ...a, userId: id }))} /></div>
               <label className="fld"><span>Begründung (nur für Ausnahme)</span><input value={add.reason} onChange={(e) => setAdd({ ...add, reason: e.target.value })} /></label>
             </div>
             <label><input type="checkbox" checked={add.override} onChange={(e) => setAdd({ ...add, override: e.target.checked })} /> Voraussetzungen übergehen</label>
@@ -106,7 +107,7 @@ export function Sek() {
                       <strong>{s.name}</strong> {!s.active && <em>(deaktiviert)</em>}
                       <br />{s.members.map((m) => <span key={m.userId} style={{ marginRight: 8 }}><UserName id={m.userId} /> ({m.role}) <button className="btn" onClick={() => call.mutate({ method: 'DELETE', path: `/squads/${s.id}/members/${m.userId}`, msg: 'Entfernt.' })}>✕</button></span>)}
                       <br />
-                      <input className="inline-input" placeholder="Discord-ID" value={sm[s.id]?.userId ?? ''} onChange={(e) => setSm({ ...sm, [s.id]: { userId: e.target.value, role: sm[s.id]?.role ?? '' } })} />
+                      <UserPicker inline label={`Mitglied für ${s.name}`} value={sm[s.id]?.userId ?? ''} onChange={(id) => setSm((m) => ({ ...m, [s.id]: { userId: id, role: m[s.id]?.role ?? '' } }))} />
                       <input className="inline-input" placeholder="Funktion (z. B. Scharfschütze)" value={sm[s.id]?.role ?? ''} onChange={(e) => setSm({ ...sm, [s.id]: { userId: sm[s.id]?.userId ?? '', role: e.target.value } })} />
                       <button className="btn" disabled={!(sm[s.id]?.userId ?? '').trim()} onClick={() => call.mutate({ method: 'POST', path: `/squads/${s.id}/members`, body: { userId: sm[s.id]!.userId.trim(), role: sm[s.id]!.role }, msg: 'Eingetragen.' })}>Eintragen</button>
                     </span>
@@ -117,7 +118,7 @@ export function Sek() {
           </QueryState>
           <div className="actions">
             <input className="inline-input" placeholder="Name (z. B. Alpha)" value={sq.name} onChange={(e) => setSq({ ...sq, name: e.target.value })} />
-            <input className="inline-input" placeholder="Leiter (Discord-ID, optional)" value={sq.leaderId} onChange={(e) => setSq({ ...sq, leaderId: e.target.value })} />
+            <UserPicker inline label="Leiter des Einsatzteams (optional)" placeholder="Leiter (optional) …" value={sq.leaderId} onChange={(id) => setSq((x) => ({ ...x, leaderId: id }))} />
             <button className="btn primary" disabled={!sq.name.trim()} onClick={() => call.mutate({ method: 'PUT', path: '/squads', body: { name: sq.name, leaderId: sq.leaderId.trim() || undefined }, msg: 'Einsatzteam gespeichert.' }, { onSuccess: () => setSq({ name: '', leaderId: '' }) })}>Einsatzteam anlegen</button>
           </div>
         </>

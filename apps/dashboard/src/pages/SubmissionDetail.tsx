@@ -15,6 +15,7 @@ import { errorText, QueryState } from '../components/QueryState';
 import { SubmissionRatings } from '../components/SubmissionRatings';
 import { useToast } from '../toast';
 import { UserName } from '../components/UserName';
+import { UserPicker } from '../components/UserPicker';
 
 const ICON = { done: '✅', skipped: '⏭️', failed: '❌', unavailable: '⏳' } as const;
 const show = (v: unknown, q?: BuilderQuestion): string => {
@@ -204,7 +205,7 @@ export function SubmissionDetail() {
                     <button className="btn primary" disabled={flow.isPending} onClick={() => flow.mutate({ path: 'claim', msg: 'Übernommen.' })}>
                       👤 Bewerbung übernehmen
                     </button>
-                    <input className="inline-input" placeholder="Discord-ID zuweisen (Führungskraft)" aria-label="Bearbeiter zuweisen" value={assignee} onChange={(e) => setAssignee(e.target.value)} />
+                    <UserPicker inline label="Bearbeiter zuweisen" placeholder="Zuweisen an … (Führungskraft)" value={assignee} onChange={setAssignee} />
                     <button className="btn" disabled={!/^\d{5,25}$/.test(assignee.trim()) || flow.isPending} onClick={() => flow.mutate({ path: 'assign', body: { assigneeId: assignee.trim() }, msg: 'Zugewiesen.' })}>
                       Zuweisen
                     </button>
@@ -251,11 +252,11 @@ export function SubmissionDetail() {
                               </span>
                             ))}
                     </span>
-                    <input className="inline-input" placeholder="Discord-ID als weiteren Bearbeiter" aria-label="Weiteren Bearbeiter hinzufügen" value={coReviewer} onChange={(e) => setCoReviewer(e.target.value)} />
+                    <UserPicker inline label="Weiteren Bearbeiter hinzufügen" placeholder="Weiterer Bearbeiter …" value={coReviewer} onChange={setCoReviewer} />
                     <button className="btn" disabled={!/^\d{5,25}$/.test(coReviewer.trim()) || flow.isPending} onClick={() => { flow.mutate({ path: 'reviewers', body: { userId: coReviewer.trim() }, msg: 'Bearbeiter hinzugefügt.' }); setCoReviewer(''); }}>
                       👥 Hinzufügen
                     </button>
-                    <input className="inline-input" placeholder="Discord-ID (neuer Hauptbearbeiter)" aria-label="Weiterleiten an" value={forwardTo} onChange={(e) => setForwardTo(e.target.value)} />
+                    <UserPicker inline label="Weiterleiten an" placeholder="Neuer Hauptbearbeiter …" value={forwardTo} onChange={setForwardTo} />
                     <button
                       className="btn"
                       disabled={!/^\d{5,25}$/.test(forwardTo.trim()) || flow.isPending}

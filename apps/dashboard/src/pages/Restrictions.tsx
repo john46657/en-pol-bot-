@@ -5,6 +5,7 @@ import { api } from '../api';
 import { errorText, QueryState } from '../components/QueryState';
 import { useToast } from '../toast';
 import { UserName } from '../components/UserName';
+import { UserPicker } from '../components/UserPicker';
 
 interface Row {
   id: string;
@@ -103,7 +104,7 @@ export function Restrictions() {
       <div className="card comp">
         <h3>Sperre verhängen</h3>
         <div className="two">
-          <label className="fld"><span>Discord-ID des Benutzers</span><input value={f.userId} maxLength={25} onChange={(e) => setF({ ...f, userId: e.target.value })} /></label>
+          <div className="fld"><span>Betroffene Person</span><UserPicker label="Betroffene Person" value={f.userId} onChange={(id) => setF((x) => ({ ...x, userId: id }))} /></div>
           <label className="fld"><span>Art der Sperre</span>
             <select value={f.type} onChange={(e) => setF({ ...f, type: e.target.value })}>
               {types.data?.map((t) => (<option key={t.type} value={t.type}>{t.label}</option>))}

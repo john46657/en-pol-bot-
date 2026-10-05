@@ -5,6 +5,7 @@ import { api, type DutyOverviewData, type UnitRow, type UnitStatusKey } from '..
 import { errorText, QueryState } from '../components/QueryState';
 import { useToast } from '../toast';
 import { UserName } from '../components/UserName';
+import { UserPicker } from '../components/UserPicker';
 
 const LABEL: Record<UnitStatusKey, string> = { AVAILABLE: 'Verfügbar', BUSY: 'Im Einsatz', BREAK: 'Pause', UNAVAILABLE: 'Nicht verfügbar' };
 const ICON: Record<UnitStatusKey, string> = { AVAILABLE: '🟢', BUSY: '🔴', BREAK: '🟡', UNAVAILABLE: '⚫' };
@@ -42,7 +43,7 @@ export function Duty() {
           </span>
         ))}
         <br />
-        <input className="inline-input" placeholder="Discord-ID zuteilen" value={assign[u.id] ?? ''} onChange={(e) => setAssign({ ...assign, [u.id]: e.target.value })} />
+        <UserPicker inline label={`Zuteilen zu ${u.callsign}`} placeholder="Person zuteilen …" value={assign[u.id] ?? ''} onChange={(id) => setAssign((a) => ({ ...a, [u.id]: id }))} />
         <button className="btn" disabled={!(assign[u.id] ?? '').trim()} onClick={() => call.mutate({ method: 'POST', path: `/units/${u.id}/assign`, body: { userId: assign[u.id]!.trim() }, msg: 'Zugeteilt.' })}>Zuteilen</button>
       </span>
       <select value={u.status} aria-label="Status" onChange={(e) => call.mutate({ method: 'PATCH', path: `/units/${u.id}`, body: { status: e.target.value }, msg: 'Status geändert.' })}>

@@ -42,6 +42,20 @@ test('Namen statt Discord-IDs im Dashboard', async ({ page, context, request }) 
   await page.goto(`/guilds/${E2E.guildId}/logs`);
   await expect(page.locator(`[data-user-id="${E2E.ownerId}"]`).first()).toBeVisible();
 
+  // Personenauswahl: Suche nach RP-Name (Personalakte) und nach Discord-Name
+  const rec = await request.post(`${g}/personnel`, { headers, data: { userId: '900000000000000080', rpName: 'Kommissar Zebrowski' } });
+  expect(rec.ok(), await rec.text()).toBeTruthy();
+  const people = await (await request.get(`${g}/discord/people?query=Zebrow`, { headers })).json();
+  expect(people).toEqual([expect.objectContaining({ id: '900000000000000080', rpName: 'Kommissar Zebrowski' })]);
+  await page.goto(`/guilds/${E2E.guildId}/restrictions`);
+  await page.getByLabel('Betroffene Person', { exact: true }).fill('Zebrow');
+  await page.getByRole('listbox', { name: 'Betroffene Person: Treffer' }).getByRole('button', { name: /Kommissar Zebrowski/ }).click();
+  await expect(page.locator('.user-picker [data-user-id="900000000000000080"]')).toHaveText('Kommissar Zebrowski');
+  await page.getByRole('button', { name: 'Betroffene Person: Auswahl entfernen' }).click();
+  await expect(page.getByLabel('Betroffene Person', { exact: true })).toBeVisible();
+  await page.getByLabel('Betroffene Person', { exact: true }).fill('gibtesnichtxyz');
+  await expect(page.getByText('Niemand gefunden.')).toBeVisible();
+
   // Aufräumen: Sperren wieder aufheben (andere Tests erwarten eine leere Liste)
   for (const id of created) expect((await request.post(`${g}/restrictions/${id}/revoke`, { headers, data: { reason: 'Test beendet' } })).ok()).toBeTruthy();
 });

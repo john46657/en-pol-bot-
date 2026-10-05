@@ -3,8 +3,9 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const getGuildMember = vi.fn();
 const getUserProfile = vi.fn();
+const listGuildMembers = vi.fn(async (..._a: unknown[]) => [] as unknown[]);
 const findMany = vi.fn(async (..._a: unknown[]) => [{ userId: '900000000000000002', rpName: 'Max Mustermann' }]);
-vi.mock('@nexus/discord', () => ({ getGuildMember, getUserProfile }));
+vi.mock('@nexus/discord', () => ({ getGuildMember, getUserProfile, listGuildMembers }));
 vi.mock('@nexus/database', () => ({ assertGuildId: (g: string) => g, prisma: { personnelRecord: { findMany } } }));
 
 const { NamesService } = await import('../src/modules/guild/names.service.js');
@@ -46,5 +47,21 @@ describe('Namen statt Discord-IDs', () => {
     getUserProfile.mockResolvedValue(null);
     const ids = Array.from({ length: 150 }, (_, i) => `9000000000001${String(i).padStart(5, '0')}`);
     expect(Object.keys(await svc().resolve('G', ids))).toHaveLength(100);
+  });
+});
+
+describe('Personensuche', () => {
+  it('Discord-Treffer und RP-Namen zusammengeführt; ID direkt; zu kurz = leer', async () => {
+    listGuildMembers.mockResolvedValueOnce([{ userId: '900000000000000020', username: 'zebra', globalName: 'Zebra', nick: null, roles: [] }]);
+    findMany.mockImplementation(async (a: any) => (a?.where?.rpName ? [{ userId: '900000000000000021', rpName: 'Zebrowski' }] : []));
+    getGuildMember.mockImplementation(async (_t: string, _g: string, id: string) => ({ userId: id, username: 'zeb21', globalName: null, nick: 'Zeb', avatar: null, roles: [] }));
+    const r = await svc().search('G', 'zeb');
+    expect(r).toEqual([
+      { id: '900000000000000020', name: 'Zebra', username: 'zebra', rpName: null },
+      { id: '900000000000000021', name: 'Zeb', username: 'zeb21', rpName: 'Zebrowski' },
+    ]);
+    expect(await svc().search('G', 'z')).toEqual([]);
+    const byId = await svc().search('G', '900000000000000021');
+    expect(byId).toEqual([expect.objectContaining({ id: '900000000000000021', name: 'Zeb' })]);
   });
 });

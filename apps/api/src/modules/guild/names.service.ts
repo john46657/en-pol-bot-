@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { assertGuildId, prisma } from '@nexus/database';
-import { getGuildMember, getUserProfile } from '@nexus/discord';
+import { getGuildMember, getUserProfile, listGuildMembers } from '@nexus/discord';
 
 export interface NameInfo {
   /** Anzeigename: Spitzname auf dem Server, sonst Discord-Anzeigename, sonst Benutzername; `null` = unbekannt. */
@@ -50,6 +50,33 @@ export class NamesService {
     this.cache.set(key, { at: Date.now(), info });
     if (this.cache.size > 20_000) this.cache.delete(this.cache.keys().next().value!);
     return info;
+  }
+
+  /**
+   * Personen suchen (für Auswahlfelder): Discord-Mitglieder nach Name und Personalakten nach RP-Name, zusammengeführt,
+   * höchstens 15 Treffer. Eine eingegebene Discord-ID wird direkt aufgelöst.
+   */
+  async search(guildId: string, query: string): Promise<{ id: string; name: string; username: string | null; rpName: string | null }[]> {
+    const gid = assertGuildId(guildId);
+    const q = query.trim().slice(0, 50);
+    if (/^\d{5,25}$/.test(q)) {
+      const r = (await this.resolve(gid, [q]))[q];
+      return r?.name ? [{ id: q, name: r.name, username: r.username, rpName: r.rpName }] : [];
+    }
+    if (q.length < 2) return [];
+    const [members, records] = await Promise.all([
+      listGuildMembers(this.token, gid, { query: q, limit: 15 }).catch(() => []),
+      prisma.personnelRecord.findMany({ where: { guildId: gid, rpName: { contains: q, mode: 'insensitive' } }, select: { userId: true, rpName: true }, take: 15 }),
+    ]);
+    const rp = new Map(records.map((r) => [r.userId, r.rpName]));
+    const out = new Map<string, { id: string; name: string; username: string | null; rpName: string | null }>();
+    for (const m of members) out.set(m.userId, { id: m.userId, name: m.nick || m.globalName || m.username, username: m.username, rpName: rp.get(m.userId) ?? null });
+    const missing = records.filter((r) => !out.has(r.userId)).map((r) => r.userId);
+    if (missing.length) {
+      const named = await this.resolve(gid, missing);
+      for (const id of missing) out.set(id, { id, name: named[id]?.name ?? id, username: named[id]?.username ?? null, rpName: rp.get(id) ?? null });
+    }
+    return [...out.values()].slice(0, 15);
   }
 
   async resolve(guildId: string, rawIds: string[]): Promise<Record<string, NameInfo>> {
