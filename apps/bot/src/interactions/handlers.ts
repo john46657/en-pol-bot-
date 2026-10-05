@@ -20,7 +20,7 @@ import { dispatchComponent, dispatchModal, registerSelect } from '../core/intera
 import { buildCustomId } from '../discord/custom-ids.js';
 import { DMPhase, SubmissionStatus } from '@nexus/types';
 import { prisma } from '@nexus/database';
-import { postSubmissionToReview } from '@nexus/automation';
+import { postSubmissionToReview, notifyEvent } from '@nexus/automation';
 import { startApplication } from '../applications/application-service.js';
 import { dashboardLink, reviewPort } from '../applications/review-handlers.js';
 import {
@@ -131,6 +131,7 @@ async function startApplicationFromPanel(
       .catch(() => undefined);
     return;
   }
+  await notifyEvent(reviewPort(), started.submissionId, 'started').catch(() => undefined);
 
   // DM öffnen (§60: DM-Sicherheit) – Panel-Channel als Fallback
   const dm = await openDM(client, interaction.user.id, (interaction.channel as never) ?? undefined);
@@ -190,6 +191,7 @@ async function cancelSubmission(
     interaction,
     '✖️ Deine Bewerbung wurde abgebrochen. Du kannst jederzeit eine neue starten.',
   );
+  await notifyEvent(reviewPort(), submissionId, 'cancelled').catch(() => undefined);
 }
 
 async function pauseSubmission(
@@ -350,6 +352,8 @@ async function submitFromSummary(
       { submissionId, reason: posted.reason },
       'Bearbeitungsteam konnte nicht benachrichtigt werden.',
     );
+  // Benachrichtigung „eingereicht“ (Kanal/eigene DM laut Bewerbungsart)
+  await notifyEvent(reviewPort(), submissionId, 'submitted').catch(() => undefined);
   // Optional: Bewerbungsticket automatisch eröffnen (Bewerbungsart → Bearbeitung → „Ticket automatisch eröffnen“)
   await autoTicket(interaction, submissionId);
   // Bewerber: Zurückziehen bis zur Entscheidung

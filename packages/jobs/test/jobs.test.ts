@@ -88,6 +88,16 @@ describe('Bewerbungs-Timeouts und -Erinnerungen', () => {
     expect(log).toMatchObject({ actorType: 'AUTOMATION', automation: 'application-timeout', resourceId: old.id });
     expect(await expireStaleApplications(NOW)).toEqual({ expired: 0 }); // idempotent
   });
+  it('Benachrichtigung „abgelaufen“ laut Bewerbungsart: keine DM, dafür Kanalnachricht', async () => {
+    const app = await prisma.application.create({ data: { guildId: G, name: 'Support', slug: `s${Math.random().toString(36).slice(2, 8)}`, createdBy: 'x', updatedBy: 'x', config: { requirements: { timeLimit: { hours: 2 } }, notifications: { expired: { dm: false, channelId: '800000000000300009', channelEmbed: { title: 'Abgelaufen: {applicationName}', description: '{user}' } } } } } });
+    const v = await version(app.id);
+    const s = await submission(app.id, v.id, A, 'IN_PROGRESS', h(-3));
+    expect(await expireStaleApplications(NOW)).toEqual({ expired: 1 });
+    expect(await prisma.notification.count({ where: { guildId: G, kind: 'application.expired' } })).toBe(0);
+    const n = await prisma.notification.findFirstOrThrow({ where: { guildId: G, kind: 'application.expired.channel' } });
+    expect(n).toMatchObject({ targetKind: 'CHANNEL', targetId: '800000000000300009', dedupeKey: `application-expired-channel:${s.id}` });
+    expect((n.payload as any).embeds[0]).toMatchObject({ title: 'Abgelaufen: Support', description: `<@${A}>` });
+  });
   it('Erinnerung an Bewerber (einmalig, nicht kurz vor/nach Ablauf) und ans Team bei langer Wartezeit', async () => {
     const app = await application(100);
     const v = await version(app.id);

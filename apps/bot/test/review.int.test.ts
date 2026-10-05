@@ -1140,3 +1140,50 @@ describe('Mehrere Bearbeiter und Weiterleiten (Team-Chance)', () => {
     expect(await forwardSubmission(f.port as never, { submissionId: id, guildId: G, actorId: 'u-lead', toUserId: '900000000000720003', canReassign: true })).toEqual({ ok: true });
   });
 });
+
+describe('Benachrichtigungen je Ereignis (Team-Chance)', () => {
+  it('Annahme mit eigenem DM-Embed, Ablehnung ohne DM, Kanalnachrichten bei Annahme, Zurückstellen und Übernehmen', async () => {
+    const CH2 = '900000000000810001';
+    const app = await prisma.application.findUniqueOrThrow({ where: { id: appId } });
+    const config = (app.config ?? {}) as Record<string, any>;
+    try {
+      await prisma.application.update({
+        where: { id: appId },
+        data: {
+          config: {
+            ...config,
+            notifications: {
+              accepted: { dmEmbed: { title: '🎉 Willkommen', description: 'Du bist jetzt bei **{applicationName}**.' }, channelId: CH2, mentionApplicant: true },
+              denied: { dm: false },
+              on_hold: { channelId: CH2, channelEmbed: { title: 'Zurückgestellt von {reviewer}', description: '{reason}' } },
+              assigned: { channelId: CH2 },
+            },
+          } as never,
+        },
+      });
+      const f = fakePort();
+      setReviewPort(f.port as never);
+      const inCh2 = () => f.posts.filter((p) => p.channelId === CH2);
+
+      const a = await submitted({ f });
+      await handleInteraction(client(), interaction('button', cid('review:claim', a), { userId: U.reviewer, roleIds: [ROLE.review] }));
+      expect(inCh2().at(-1)!.payload.embeds[0].title).toBe('Bewerbung übernommen');
+      const { holdSubmission } = await import('@nexus/automation');
+      await holdSubmission(f.port as never, { submissionId: a, guildId: G, actorId: U.reviewer, hold: true, reason: 'Warten auf Leitung' });
+      expect(inCh2().at(-1)!.payload.embeds[0]).toMatchObject({ title: `Zurückgestellt von <@${U.reviewer}>`, description: 'Warten auf Leitung' });
+      await handleInteraction(client(), interaction('button', cid('review:accept_ok', a), { userId: U.reviewer, roleIds: [ROLE.review, ROLE.accept] }));
+      expect(await status(a)).toBe('ACCEPTED');
+      const dm = (f.port.sendDm as any).mock.calls.filter((c: any[]) => c[0] === APPLICANT).at(-1)[1];
+      expect(dm.embeds[0]).toMatchObject({ title: '🎉 Willkommen', description: 'Du bist jetzt bei **Polizei**.' });
+      expect(inCh2().at(-1)!.payload.content).toBe(`<@${APPLICANT}>`);
+
+      const d = await submitted({ f, userId: 'applicant-6' });
+      const before = f.dms.filter((x) => x.userId === 'applicant-6').length;
+      await viaModal('review:deny_r', d, U.denier, [ROLE.deny], { note: 'Nein.' });
+      expect(await status(d)).toBe('DENIED');
+      expect(f.dms.filter((x) => x.userId === 'applicant-6').length).toBe(before); // keine DM bei Ablehnung
+    } finally {
+      await prisma.application.update({ where: { id: appId }, data: { config: config as never } });
+    }
+  });
+});

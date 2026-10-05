@@ -13,6 +13,7 @@ import { ReviewSettings } from '../components/ReviewSettings';
 import { RatingSettings } from '../components/RatingSettings';
 import { StatusSettings } from '../components/StatusSettings';
 import { RequirementsSettings } from '../components/RequirementsSettings';
+import { NotificationSettings } from '../components/NotificationSettings';
 import { useToast } from '../toast';
 
 const SELECTS = ['SINGLE_SELECT', 'MULTI_SELECT'];
@@ -264,6 +265,7 @@ export function ApplicationBuilder() {
       <ReviewSettings guildId={guildId} applicationId={applicationId} />
       <RatingSettings guildId={guildId} applicationId={applicationId} />
       <StatusSettings guildId={guildId} applicationId={applicationId} />
+      <NotificationSettings guildId={guildId} applicationId={applicationId} />
     </>
   );
 }

@@ -2,6 +2,7 @@ import { durationToSeconds } from '@nexus/core';
 import { auditRepository, guildRepository, prisma } from '@nexus/database';
 import type { Duration } from '@nexus/types';
 import { enqueue } from './notifications.js';
+import { eventMessages } from '@nexus/automation';
 
 /**
  * Bewerbungen: (1) **Timeouts** – offene, nicht eingereichte Bewerbungen (gestartet/in Arbeit/pausiert) laufen ab, wenn die
@@ -25,7 +26,11 @@ export async function expireStaleApplications(now = new Date()): Promise<{ expir
     if (r.count === 0) continue;
     await prisma.applicationDMState.deleteMany({ where: { submissionId: s.id } });
     await auditRepository.log({ guildId: s.guildId, actorId: null, action: 'submission.expired', resource: ['ApplicationSubmission', s.id], before: { status: s.status } as never, after: { status: 'EXPIRED', application: s.application.name } as never, automation: 'application-timeout', reason: 'Zeitlimit der Bewerbung abgelaufen' });
-    await enqueue({ guildId: s.guildId, target: { kind: 'USER', id: s.userId }, kind: 'application.expired', dedupeKey: `application-expired:${s.id}`, payload: { content: `⌛ Deine Bewerbung „${s.application.name}“ ist abgelaufen, weil sie nicht rechtzeitig abgeschlossen wurde. Du kannst sie jederzeit neu starten.` } });
+    // Benachrichtigung „abgelaufen“ laut Bewerbungsart: DM aus / eigenes Embed / Standardtext, optional Kanalnachricht
+    const m = eventMessages(s.application.config, 'expired', { applicationName: s.application.name, applicationId: s.applicationId, submissionId: s.id, userId: s.userId, userMention: `<@${s.userId}>`, username: s.usernameSnapshot, displayName: s.displayNameSnapshot, guildId: s.guildId });
+    if (m.dm !== 'off')
+      await enqueue({ guildId: s.guildId, target: { kind: 'USER', id: s.userId }, kind: 'application.expired', dedupeKey: `application-expired:${s.id}`, payload: m.dm === 'default' ? { content: `⌛ Deine Bewerbung „${s.application.name}“ ist abgelaufen, weil sie nicht rechtzeitig abgeschlossen wurde. Du kannst sie jederzeit neu starten.` } : m.dm });
+    if (m.channel) await enqueue({ guildId: s.guildId, target: { kind: 'CHANNEL', id: m.channel.channelId }, kind: 'application.expired.channel', dedupeKey: `application-expired-channel:${s.id}`, payload: m.channel.payload });
     expired++;
   }
   return { expired };

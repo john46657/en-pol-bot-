@@ -12,6 +12,7 @@ import {
   STATUS_LABEL,
   statusLabelsOf,
 } from './review-format.js';
+import { eventMessages, type NotificationEvent } from './notification-rules.js';
 import { applyRoleChanges } from './role-changes.js';
 
 /**
@@ -115,6 +116,8 @@ export interface PipelineContext {
   selections: Record<string, string>;
   /** Variablen für Textvorlagen. */
   variables: Record<string, unknown>;
+  /** Konfiguration der Bewerbungsart (für Benachrichtigungen je Ereignis). */
+  appConfig?: unknown;
 }
 /** Ein Schritt kann sich selbst als „übersprungen“ melden (z. B. keine Probezeit konfiguriert). */
 export type StepHandler = (
@@ -207,6 +210,13 @@ registerAcceptStep('roles', async (ctx) => {
 });
 
 registerAcceptStep('notifyApplicant', async (ctx) => {
+  // Benachrichtigung je Ereignis: DM aus, eigenes Embed oder Standardtext
+  const custom = eventMessages(ctx.appConfig, 'accepted', ctx.variables).dm;
+  if (custom === 'off') return { skipped: true, detail: 'Per Einstellung keine DM bei Annahme.' };
+  if (custom !== 'default') {
+    await ctx.port.sendDm(ctx.applicantId, { ...custom, ...(ctx.note ? { content: `**Nachricht vom Team:** ${ctx.note}`.slice(0, 1900) } : {}) });
+    return;
+  }
   const text = textOr(
     ctx.messages['accepted'],
     '🎉 Deine Bewerbung für **{applicationName}** wurde **angenommen**! Willkommen im Team.',
@@ -389,6 +399,27 @@ const vars = (s: Submission, extra: Record<string, unknown> = {}) => ({
   guildId: s.guildId,
   ...extra,
 });
+
+/**
+ * Benachrichtigung zu einem Ereignis (gestartet, eingereicht, abgebrochen, zurückgestellt, übernommen …): Kanalnachricht
+ * und – falls ein eigenes Embed eingestellt ist – DM. Standard-DMs der Aufrufer bleiben unberührt; das Ergebnis sagt, ob
+ * der Aufrufer seine Standard-DM senden soll (`dm: 'default'`) oder nicht. Testbewerbungen lösen keine Kanalnachricht aus.
+ */
+export async function notifyEvent(
+  port: DiscordPort,
+  submissionId: string,
+  event: NotificationEvent,
+  extra: Record<string, unknown> = {},
+): Promise<{ dm: 'default' | 'off' | 'sent' | 'failed'; channel: 'none' | 'sent' | 'failed' }> {
+  const s = await load(submissionId);
+  if (!s) return { dm: 'default', channel: 'none' };
+  const m = eventMessages(s.application.config, event, vars(s, extra));
+  let channel: 'none' | 'sent' | 'failed' = 'none';
+  if (m.channel && !s.isTest) channel = await port.postMessage(m.channel.channelId, m.channel.payload as never).then(() => 'sent' as const, () => 'failed' as const);
+  if (m.dm === 'default' || m.dm === 'off') return { dm: m.dm, channel };
+  const dm = await port.sendDm(s.userId, m.dm).then(() => 'sent' as const, () => 'failed' as const);
+  return { dm, channel };
+}
 
 // ---------------------------------------------------------------------------
 // Nach dem Absenden: Bearbeiter benachrichtigen (Ablauf: SUBMITTED → Bearbeiter erhält Benachrichtigung)
@@ -617,6 +648,7 @@ export async function assignSubmission(
   });
   const fresh = (await load(s.id)) ?? s;
   await refreshReviewMessage(port, fresh, fresh.status);
+  if (next) await notifyEvent(port, s.id, 'assigned', { reviewer: `<@${next}>` }).catch(() => undefined);
   return { ok: true, assigneeId: next };
 }
 
@@ -652,6 +684,7 @@ export async function holdSubmission(
   });
   const fresh = (await load(s.id)) ?? s;
   await refreshReviewMessage(port, fresh, fresh.status);
+  if (input.hold) await notifyEvent(port, s.id, 'on_hold', { reviewer: `<@${input.actorId}>`, reason: reason ?? '' }).catch(() => undefined);
   return { ok: true, status: target };
 }
 
@@ -948,6 +981,7 @@ export async function decideSubmission(
     messages: cfg.messages,
     selections: targets.selections,
     variables: vars(s, { reviewer: `<@${input.reviewerId}>`, reason: publicReason ?? '' }),
+    appConfig: s.application.config,
   };
 
   let steps: StepResult[];
@@ -959,29 +993,46 @@ export async function decideSubmission(
     steps = [];
     const denyRoles = await rolesStepForDenial(ctx);
     steps.push(denyRoles);
-    try {
-      const wait = denyWaitVariables(s.application.config, now);
-      const template = cfg.messages['denied'] ?? '🔴 Deine Bewerbung für **{applicationName}** wurde leider **abgelehnt**.';
-      // Wartezeit nennen: als Platzhalter im eigenen Text oder – falls der Text sie nicht erwähnt – automatisch am Ende
-      const mentionsWait = /\{(wartezeit|wiederAb)\}/.test(template);
-      await port.sendDm(s.userId, {
-        content: textOr(template, template, { ...ctx.variables, ...wait })
-          .concat(
-            reasonLabel ? `\n\n**Grund:** ${reasonLabel}` : '',
-            publicReason ? `\n${publicReason}` : '',
-            wait.wartezeit && !mentionsWait ? `\n\nDu kannst dich nach ${wait.wartezeit} erneut bewerben (ab ${wait.wiederAb} Uhr).` : '',
-          )
-          .slice(0, 1900),
-      });
-      steps.push({ key: 'notifyApplicant', label: 'Bewerber informieren', status: 'done' });
-    } catch {
-      steps.push({
-        key: 'notifyApplicant',
-        label: 'Bewerber informieren',
-        status: 'failed',
-        detail: 'Direktnachricht nicht zustellbar (DMs deaktiviert?).',
-      });
+    const custom = eventMessages(s.application.config, 'denied', { ...ctx.variables, ...denyWaitVariables(s.application.config, now) }).dm;
+    if (custom === 'off') steps.push({ key: 'notifyApplicant', label: 'Bewerber informieren', status: 'skipped', detail: 'Per Einstellung keine DM bei Ablehnung.' });
+    else if (custom !== 'default') {
+      try {
+        await port.sendDm(s.userId, { ...custom, ...(reasonLabel || publicReason ? { content: [reasonLabel ? `**Grund:** ${reasonLabel}` : '', publicReason ?? ''].filter(Boolean).join('\n').slice(0, 1900) } : {}) });
+        steps.push({ key: 'notifyApplicant', label: 'Bewerber informieren', status: 'done' });
+      } catch {
+        steps.push({ key: 'notifyApplicant', label: 'Bewerber informieren', status: 'failed', detail: 'Direktnachricht nicht zustellbar (DMs deaktiviert?).' });
+      }
+    } else {
+      try {
+        const wait = denyWaitVariables(s.application.config, now);
+        const template = cfg.messages['denied'] ?? '🔴 Deine Bewerbung für **{applicationName}** wurde leider **abgelehnt**.';
+        // Wartezeit nennen: als Platzhalter im eigenen Text oder – falls der Text sie nicht erwähnt – automatisch am Ende
+        const mentionsWait = /\{(wartezeit|wiederAb)\}/.test(template);
+        await port.sendDm(s.userId, {
+          content: textOr(template, template, { ...ctx.variables, ...wait })
+            .concat(
+              reasonLabel ? `\n\n**Grund:** ${reasonLabel}` : '',
+              publicReason ? `\n${publicReason}` : '',
+              wait.wartezeit && !mentionsWait ? `\n\nDu kannst dich nach ${wait.wartezeit} erneut bewerben (ab ${wait.wiederAb} Uhr).` : '',
+            )
+            .slice(0, 1900),
+        });
+        steps.push({ key: 'notifyApplicant', label: 'Bewerber informieren', status: 'done' });
+      } catch {
+        steps.push({
+          key: 'notifyApplicant',
+          label: 'Bewerber informieren',
+          status: 'failed',
+          detail: 'Direktnachricht nicht zustellbar (DMs deaktiviert?).',
+        });
+      }
     }
+  }
+  // Benachrichtigung je Ereignis in einen Kanal (Team-Chance, Punkt 18)
+  const eventChannel = eventMessages(s.application.config, target === SubmissionStatus.ACCEPTED ? 'accepted' : 'denied', { ...ctx.variables, ...denyWaitVariables(s.application.config, now) }).channel;
+  if (eventChannel && !s.isTest) {
+    const ok = await port.postMessage(eventChannel.channelId, eventChannel.payload as never).then(() => true, () => false);
+    steps.push({ key: 'eventChannel', label: 'Benachrichtigung im Kanal', status: ok ? 'done' : 'failed', ...(ok ? {} : { detail: 'Der Bot konnte nicht in den Kanal schreiben (Rechte prüfen).' }) });
   }
   // Ergebnis-Kanal: Annahmen (und – falls gewünscht – Ablehnungen) öffentlich bekannt geben; Testbewerbungen nicht
   const review = cfg.review as typeof cfg.review & { resultChannelId?: string; resultPostDenied?: boolean; resultAcceptedText?: string; resultDeniedText?: string };

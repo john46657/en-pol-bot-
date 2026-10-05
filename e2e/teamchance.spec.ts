@@ -43,6 +43,23 @@ test('Team-Chance: Bewerbung zurückstellen und fortsetzen', async ({ page, cont
   await page.getByRole('button', { name: 'Speichern', exact: true }).first().click();
   await expect.poll(async () => (await (await request.get(`${g}/applications/${app.id}`, { headers })).json()).config.review).toMatchObject({ createTicket: true, resultChannelId: '900000000000000201', resultPostDenied: true });
 
+  // Benachrichtigungen je Ereignis
+  await page.getByText('Bewerbung eingereicht', { exact: true }).click();
+  await page.getByLabel('Bewerbung eingereicht: Kanal').selectOption({ label: '#bewerbungen' });
+  await page.getByLabel('Bewerber erwähnen').check();
+  await page.getByLabel('Bewerbung eingereicht Kanal: Titel').fill('Neue Bewerbung: {applicationName}');
+  await page.getByText('Bewerbung angenommen', { exact: true }).click();
+  await page.getByLabel('Bewerbung angenommen: Direktnachricht').selectOption('embed');
+  await page.getByLabel('Bewerbung angenommen DM: Beschreibung').fill('Herzlichen Glückwunsch! Willkommen im Team.');
+  await page.getByText('Bewerbung abgelehnt', { exact: true }).click();
+  await page.getByLabel('Bewerbung abgelehnt: Direktnachricht').selectOption('off');
+  await page.getByRole('button', { name: 'Benachrichtigungen speichern' }).click();
+  await expect(page.getByText('Benachrichtigungen gespeichert.')).toBeVisible();
+  const notes = (await (await request.get(`${g}/applications/${app.id}`, { headers })).json()).config.notifications;
+  expect(notes.submitted).toMatchObject({ channelId: '900000000000000201', mentionApplicant: true, channelEmbed: { title: 'Neue Bewerbung: {applicationName}' } });
+  expect(notes.accepted).toMatchObject({ dmEmbed: { title: 'Bewerbung angenommen', description: 'Herzlichen Glückwunsch! Willkommen im Team.' } });
+  expect(notes.denied).toEqual({ dm: false });
+
   // Eigener Statusname für „Zurückgestellt“ (Bewerbungsart → Statusnamen und Farben)
   await page.getByLabel('Name für Zurückgestellt').fill('⏸️ Später prüfen');
   await page.getByRole('button', { name: 'Statusnamen speichern' }).click();

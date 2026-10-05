@@ -272,6 +272,34 @@ export const statusLabelsSchema = z
     }),
   );
 
+/** Benachrichtigungen je Ereignis (Team-Chance): DM an/aus mit eigenem Embed, Kanalnachricht mit Erwähnungen und Link-Knöpfen. */
+const https = z.string().trim().max(500).regex(/^https:\/\/\S+$/, 'Nur https-Adressen.');
+const embedTemplateSchema = z
+  .object({
+    title: z.string().trim().max(256),
+    description: z.string().trim().max(4000),
+    color: z.string().regex(/^#[0-9a-fA-F]{6}$/, 'Die Farbe muss als #RRGGBB angegeben werden.'),
+    thumbnailUrl: https,
+    imageUrl: https,
+    footer: z.string().trim().max(2048),
+  })
+  .partial();
+export const NOTIFICATION_EVENT_KEYS = ['started', 'submitted', 'accepted', 'denied', 'cancelled', 'expired', 'on_hold', 'assigned'] as const;
+export const notificationsSchema = z.record(
+  z.enum(NOTIFICATION_EVENT_KEYS),
+  z
+    .object({
+      dm: z.boolean(),
+      dmEmbed: embedTemplateSchema,
+      channelId: z.string().regex(/^\d{5,25}$/, 'Ungültiger Kanal.'),
+      channelEmbed: embedTemplateSchema,
+      mentionApplicant: z.boolean(),
+      mentionRoleIds: z.array(z.string().regex(/^\d{5,25}$/)).max(10),
+      buttons: z.array(z.object({ label: z.string().trim().min(1).max(80), url: https })).max(5),
+    })
+    .partial(),
+);
+
 /** Komplettes Application-Config-Objekt (versioniert, §65). */
 export const applicationConfigSchema = z.object({
   requirements: requirementsSchema,
@@ -283,6 +311,7 @@ export const applicationConfigSchema = z.object({
   roleRules: z.array(roleRuleSchema).max(100).default([]),
   rating: ratingConfigSchema.optional(),
   statusLabels: statusLabelsSchema.optional(),
+  notifications: notificationsSchema.optional(),
   questions: z.array(questionSchema).max(500).default([]),
 });
 

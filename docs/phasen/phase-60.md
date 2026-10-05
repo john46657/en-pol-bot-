@@ -19,7 +19,7 @@
 | 15 Voraussetzungen | ✅ **60e** (Mindestalter einer Person nur über eine Frage mit Mindestwert; „bestimmte Fraktion“ = Team der Personalakte). |
 | 16 Cooldown | ✅ **60e** je Bewerbungsart: kein, 1/3/7/14/30 Tage oder individuell (vorher wirkungslos, s. o.). |
 | 17 Automatische Rollen | ✅ Rollenaktionen bei Einreichung/Annahme/Ablehnung. |
-| 18 Benachrichtigungen | ◐ DM-/Review-Texte konfigurierbar; je Ereignis eigene Embeds/Kanal/Buttons/Erwähnungen ❌. |
+| 18 Benachrichtigungen | ✅ **60i**: je Ereignis DM (Standard/eigenes Embed/keine) und Kanalnachricht (Embed, Erwähnungen, Link-Knöpfe). |
 | 19 Auswertung | ✅ **60h**: Kennzahlen gesamt und je Bewerbungsart im Dashboard (Bewerbungen). |
 | 20 Export | ✅ CSV, JSON, **PDF (60h)**, Recht `…export`; Bewertung in allen drei Formaten. |
 | 21 Anpassbarkeit | ✅ weitgehend; Lücken wie oben. |
@@ -94,3 +94,11 @@
 - **Bewertung im Export:** Spalte „Bewertung (%)“ (CSV), Feld `rating` (JSON), Zeile im PDF.
 - **Tests:** `apps/api/test/team-chance-stats.test.ts` (Zeitgrenzen inkl. Winterzeit, Kennzahlen, leer), `submissions-export.test.ts` (PDF-Aufbau inkl. Querverweis-Positionen, Maskierung, Umlaute, mehrere Seiten, Bewertung in allen Formaten), Browser `e2e/teamchance.spec.ts` (Auswertung je Art, PDF-Download).
 - **Grenze:** Der PDF-Export enthält keine Bilder/Anhänge und keine Emojis.
+
+## 60i – Benachrichtigungen je Ereignis (Punkt 18)
+- **Ereignisse:** neue Bewerbung (gestartet), eingereicht, angenommen, abgelehnt, abgebrochen, abgelaufen, zurückgestellt, übernommen.
+- **Je Ereignis** (`config.notifications.<ereignis>`): Direktnachricht an den Bewerber – Standard / eigenes Embed (Titel, Beschreibung, Farbe) / keine; Nachricht in einen Kanal mit Embed (Titel, Beschreibung, Farbe, Vorschaubild, Bild, Fußzeile), Erwähnung des Bewerbers und/oder von Rollen, Link-Knöpfe (bis 5, nur https). Platzhalter wie `{user}`, `{applicationName}`, `{reviewer}`, `{reason}`, `{wartezeit}`.
+- **Wirkung:** Annahme-/Ablehnungs-DM werden durch das eigene Embed ersetzt oder abgeschaltet (Schritt „Bewerber informieren“ zeigt „übersprungen“); Kanalnachrichten erscheinen als Schritt „Benachrichtigung im Kanal“. Zurückgestellt/übernommen (Automatisierung), gestartet/eingereicht/abgebrochen (Bot), abgelaufen (Worker über die Warteschlange). Erwähnt wird nur, was eingestellt ist; Testbewerbungen lösen keine Kanalnachrichten aus.
+- **Dashboard:** Bewerbungsart → „Benachrichtigungen“ (ein aufklappbarer Bereich je Ereignis).
+- **Tests:** `packages/automation/test/notification-rules.test.ts` (4), Bot (eigene Annahme-DM, keine Ablehnungs-DM, Kanalnachrichten bei Übernehmen/Zurückstellen/Annahme mit Erwähnung), Worker (abgelaufen: keine DM, Kanalnachricht), Browser `e2e/teamchance.spec.ts`.
+- **Grenzen:** „Eingereicht“ und „abgebrochen“ antworten dem Bewerber weiterhin direkt auf seinen Klick (die Antwort lässt sich nicht abschalten; ein eigenes Embed wird zusätzlich gesendet). Knöpfe sind nur Links (keine Aktionen).
