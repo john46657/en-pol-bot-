@@ -36,6 +36,11 @@ test('Moderation: verwarnen, stummschalten, kicken, bannen und aufheben', async 
     if (extra) await extra();
   };
 
+  // Mitgliedersuche übernimmt die ID
+  await page.getByLabel(/Mitglied suchen/).fill('000080');
+  await page.getByRole('listitem').filter({ hasText: WARN_U }).getByRole('button', { name: 'Auswählen' }).click();
+  await expect(page.getByLabel('Discord-ID des Benutzers')).toHaveValue(WARN_U);
+
   // Verwarnung
   await issue(WARN_U, 'WARN', 'Spam im Chat');
   await page.getByRole('button', { name: 'Verwarnung verhängen' }).click();

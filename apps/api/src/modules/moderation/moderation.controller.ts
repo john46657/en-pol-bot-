@@ -2,6 +2,7 @@ import { Body, Controller, ForbiddenException, Get, Param, Post, Query, UseFilte
 import { ConfigService } from '@nestjs/config';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { TYPES, TYPE_LABEL, listCases, moderate, restModerationPort, revoke, userSummary } from '@nexus/moderation';
+import { listGuildMembers } from '@nexus/discord';
 import { permissions } from '@nexus/permissions';
 import type { Permission } from '@nexus/types';
 import { CurrentUser, type RequestUser } from '../../common/decorators/current-user.decorator.js';
@@ -33,6 +34,16 @@ export class ModerationController {
   @RequirePermissions('moderation.view')
   types() {
     return TYPES.map((t) => ({ type: t, label: TYPE_LABEL[t] }));
+  }
+
+  /** Mitgliedersuche für die Auswahl im Dashboard (nur Name und Rollen-Anzahl, kein Zugriff auf die Rechteverwaltung nötig). */
+  @Get('members')
+  @RequirePermissions('moderation.view')
+  async members(@GuildId() guildId: string, @Query('query') query?: string) {
+    const q = query?.trim();
+    if (!q || q.length < 2) return [];
+    const rows = await listGuildMembers(this.config.get<string>('DISCORD_TOKEN') ?? '', guildId, { query: q, limit: 15 });
+    return rows.map((m) => ({ id: m.userId, username: m.username, displayName: m.globalName ?? m.username }));
   }
 
   @Get('cases')

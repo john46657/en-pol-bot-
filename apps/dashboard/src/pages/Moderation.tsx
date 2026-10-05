@@ -33,6 +33,8 @@ export function Moderation() {
   const [type, setType] = useState('');
   const [user, setUser] = useState('');
   const [f, setF] = useState(empty);
+  const [search, setSearch] = useState('');
+  const found = useQuery({ queryKey: ['moderation-members', guildId, search], enabled: search.trim().length >= 2, queryFn: () => api<{ id: string; username: string; displayName: string }[]>(`${base}/members?query=${encodeURIComponent(search.trim())}`) });
   const [revoke, setRevoke] = useState<Record<string, string>>({});
   const qs = new URLSearchParams({ ...(status ? { status } : {}), ...(type ? { type } : {}), ...(/^\d{5,25}$/.test(user.trim()) ? { userId: user.trim() } : {}) }).toString();
   const types = useQuery({ queryKey: ['moderation-types', guildId], queryFn: () => api<{ type: string; label: string }[]>(`${base}/types`) });
@@ -113,6 +115,17 @@ export function Moderation() {
       </QueryState>
       <div className="card comp">
         <h3>Maßnahme verhängen</h3>
+        <label className="fld"><span>Mitglied suchen (ab 2 Zeichen)</span><input value={search} placeholder="Name …" onChange={(e) => setSearch(e.target.value)} /></label>
+        {found.data && found.data.length > 0 && (
+          <ul className="list" aria-label="Suchergebnisse">
+            {found.data.map((m) => (
+              <li key={m.id} className="row">
+                <span className="grow">{m.displayName} <small className="muted">{m.username} · <code>{m.id}</code></small></span>
+                <button className="btn" onClick={() => { setF({ ...f, userId: m.id }); setSearch(''); }}>Auswählen</button>
+              </li>
+            ))}
+          </ul>
+        )}
         <div className="two">
           <label className="fld"><span>Discord-ID des Benutzers</span><input value={f.userId} maxLength={25} onChange={(e) => setF({ ...f, userId: e.target.value })} /></label>
           <label className="fld"><span>Maßnahme</span>
