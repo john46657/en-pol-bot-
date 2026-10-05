@@ -35,6 +35,7 @@ export const JOBS: readonly JobDef[] = [
   { name: 'ticket-cleanup', everyMs: 2 * 60_000, label: 'Geschlossene Ticket-Kanäle löschen, Panels aktualisieren' },
   { name: 'restriction-expiry', everyMs: 60_000, label: 'Abgelaufene Sperren beenden' },
   { name: 'wanted-expiry', everyMs: 60_000, label: 'Abgelaufene Fahndungen beenden' },
+  { name: 'scheduled-messages', everyMs: 60_000, label: 'Automatische Nachrichten senden' },
   { name: 'log-forward', everyMs: 30_000, label: 'Audit-Log in Discord-Kanäle weiterleiten' },
   { name: 'shift-watch', everyMs: 5 * 60_000, label: 'Zu lange Schichten melden' },
 ];

@@ -97,6 +97,14 @@ export const PERMISSION_CATALOG = [
     ],
   },
   {
+    module: 'messages',
+    label: 'Automatische Nachrichten',
+    permissions: [
+      ['messages.view', 'Automatische Nachrichten ansehen'],
+      ['messages.manage', 'Automatische Nachrichten anlegen, ändern, senden'],
+    ],
+  },
+  {
     module: 'logs',
     label: 'Logs',
     permissions: [

@@ -39,6 +39,7 @@ import { ProfileEditor, Profiles } from './pages/Profiles';
 import { NexusRoles } from './pages/NexusRoles';
 import { Modules } from './pages/Modules';
 import { Backup } from './pages/Backup';
+import { Messages } from './pages/Messages';
 import { SubmissionDetail } from './pages/SubmissionDetail';
 import { Submissions } from './pages/Submissions';
 import { UserDetail, Users } from './pages/Users';
@@ -105,6 +106,7 @@ createRoot(document.getElementById('root')!).render(
                   <Route path="nexus-roles" element={<NexusRoles />} />
                   <Route path="modules" element={<Modules />} />
                   <Route path="backup" element={<Backup />} />
+                  <Route path="messages" element={<Messages />} />
                   <Route path="profiles" element={<Profiles />} />
                   <Route path="profiles/:profileId" element={<ProfileEditor />} />
                   <Route path="users" element={<Users />} />

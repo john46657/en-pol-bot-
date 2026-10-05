@@ -43,6 +43,7 @@ type Needs =
   | 'rights'
   | 'modules'
   | 'backup'
+  | 'messages'
   | 'audit'
   | 'design';
 /** Was die Seiten vom Rahmen erhalten (Übersicht: Schnellzugriff, Servername, Symbol). */
@@ -80,6 +81,7 @@ export const NAV: { to: string; label: string; icon: string; end?: boolean; need
   { to: 'reports', label: 'Berichte', icon: '📊', needs: 'reports' },
   { to: 'design', label: 'Design & Erscheinungsbild', icon: '🎨', needs: 'design' },
   { to: 'panels', label: 'Panels', icon: '🧩', needs: 'panels' },
+  { to: 'messages', label: 'Automatische Nachrichten', icon: '⏰', needs: 'messages' },
   { to: 'users', label: 'Benutzer', icon: '👥', needs: 'rights' },
   { to: 'nexus-roles', label: 'Rollen & Rechte', icon: '🛂', needs: 'rights' },
   { to: 'profiles', label: 'Profile', icon: '🧾', needs: 'rights' },
@@ -137,7 +139,7 @@ const DEFAULT_GROUPS: { id: string; name: string; keys: string[] }[] = [
       'sek',
     ],
   },
-  { id: 'service', name: 'Service', keys: ['tickets', 'reports'] },
+  { id: 'service', name: 'Service', keys: ['tickets', 'reports', 'messages'] },
   {
     id: 'admin',
     name: 'Verwaltung',
@@ -213,6 +215,7 @@ export function GuildLayout() {
     (needs === 'rights' && me.data.permissions.includes('permissions.view')) ||
     (needs === 'modules' && me.data.permissions.includes('modules.view')) ||
     (needs === 'backup' && me.data.permissions.includes('backup.create')) ||
+    (needs === 'messages' && me.data.permissions.includes('messages.view')) ||
     (needs === 'audit' && me.data.permissions.includes('audit.view')) ||
     (needs === 'design' && me.data.permissions.includes('design.view')) ||
     (needs === 'panels' && me.data.permissions.includes('panels.view')) ||

@@ -30,6 +30,7 @@ export const MODULES: readonly ModuleDef[] = [
   { key: 'restrictions', label: 'Sperren', description: 'Bewerbungs-, Ticket-, Fraktions- und Funksperren', commands: ['sperre'], apiPrefixes: ['restrictions'], navKeys: ['restrictions'] },
   { key: 'absences', label: 'Abmeldungen', description: 'Abwesenheiten', commands: ['abmeldung'], apiPrefixes: ['absences'], navKeys: ['absences'] },
   { key: 'reports', label: 'Berichte', description: 'Tages- und Wochenberichte', commands: ['bericht'], apiPrefixes: ['reports'], navKeys: ['reports'] },
+  { key: 'messages', label: 'Automatische Nachrichten', description: 'Geplante Nachrichten in Kanälen', commands: [], apiPrefixes: ['scheduled-messages'], navKeys: ['messages'] },
   { key: 'sek', label: 'SEK', description: 'Spezialeinheit', commands: ['sek'], apiPrefixes: ['sek'], navKeys: ['sek'] },
 ];
 

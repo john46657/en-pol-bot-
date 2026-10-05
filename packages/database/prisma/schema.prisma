@@ -431,6 +431,7 @@ model Guild {
   nexusRoles         NexusRole[]
   logForwards        LogForward[]
   moderationCases    ModerationCase[]
+  scheduledMessages  ScheduledMessage[]
   ranks              Rank[]
   teams              Team[]
   personnelRecords   PersonnelRecord[]
@@ -2583,4 +2584,36 @@ model ModerationCase {
   @@index([guildId, userId, createdAt])
   @@index([guildId, type, status])
   @@map("moderation_cases")
+}
+
+/// Automatische Nachricht: wird zu festen Zeiten in einen Kanal gesendet (einmalig, alle N Minuten, täglich, an Wochentagen).
+model ScheduledMessage {
+  id              String    @id @default(cuid())
+  guildId         String
+  name            String
+  channelId       String
+  /// { content?, embed?: { title, description, color, imageUrl, thumbnailUrl, footer }, buttons?: [{ label, url }], mentionRoleIds? }
+  payload         Json
+  /// once | interval | daily | weekly
+  scheduleType    String
+  /// einmalig: Zeitpunkt
+  runAt           DateTime?
+  /// Intervall in Minuten (mind. 10)
+  intervalMinutes Int?
+  /// täglich/wöchentlich: Uhrzeit „HH:MM“ (deutsche Zeit)
+  timeOfDay       String?
+  /// wöchentlich: Wochentage 1 = Montag … 7 = Sonntag
+  weekdays        Int[]
+  enabled         Boolean   @default(true)
+  nextRunAt       DateTime?
+  lastRunAt       DateTime?
+  createdBy       String?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  guild Guild @relation(fields: [guildId], references: [id], onDelete: Cascade)
+
+  @@index([enabled, nextRunAt])
+  @@index([guildId])
+  @@map("scheduled_messages")
 }

@@ -14,6 +14,7 @@ import {
   runJob,
   syncAllGuilds,
   forwardAuditLogs,
+  sendScheduledMessages,
   trainingReminders,
 } from '@nexus/jobs';
 import { startHeartbeat } from '@nexus/health';
@@ -60,6 +61,7 @@ const HANDLERS: Record<string, () => Promise<unknown>> = {
   'restriction-expiry': () => expireDueRestrictions(),
   'wanted-expiry': () => expireDueNotices(),
   'log-forward': () => forwardAuditLogs(),
+  'scheduled-messages': () => sendScheduledMessages(),
   'shift-watch': () => watchOverlongShifts(port(), new Date(), process.env['DASHBOARD_URL']),
 };
 
