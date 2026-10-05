@@ -16,6 +16,6 @@
 `apps/api/test/rights.test.ts` (7 Fälle: Rangfolge, Eigenbesitz, Verwalter, Besitzer, Profile, Ausnahmen).
 
 ## Grenzen
-- Dashboard-Oberfläche für Ablaufdatum, Farbe, Priorität und Duplizieren ist noch nicht angebunden (nur API).
+- Dashboard: Ablauf (Tage), Farbe, Priorität, Aktiv-Schalter und Duplizieren sind angebunden (Typprüfung und Build grün), aber nicht im Browser geklickt.
 - Rang- und Besitzerprüfung gegen Discord ist nur mit Mocks getestet, nie gegen einen echten Server.
 - Abgelaufene Zeilen werden nicht automatisch gelöscht.

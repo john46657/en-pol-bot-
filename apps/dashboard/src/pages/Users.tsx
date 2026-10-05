@@ -87,15 +87,23 @@ export function UserDetail() {
   const [key, setKey] = useState('');
   const [effect, setEffect] = useState<'ALLOW' | 'DENY'>('ALLOW');
   const [note, setNote] = useState('');
+  const [days, setDays] = useState('');
   const [open, setOpen] = useState<string | null>(null);
   const refresh = () => qc.invalidateQueries({ queryKey: ['member-access', guildId, userId] });
   const add = useMutation({
     mutationFn: () =>
-      api(`${base}/overrides`, { method: 'POST', body: { key, effect, note: note || undefined } }),
+      api(`${base}/overrides`, { method: 'POST', body: {
+          key,
+          effect,
+          note: note || undefined,
+          durationDays: days ? Number(days) : undefined,
+        },
+      }),
     onSuccess: () => {
       toast.success('Ausnahme gespeichert.');
       setKey('');
       setNote('');
+      setDays('');
       void refresh();
     },
     onError: (e) => toast.error(errorText(e)),
@@ -210,6 +218,9 @@ export function UserDetail() {
                         {o.effect === 'DENY' ? '✗ Sperre' : '✓ Erlaubnis'}: <code>{o.key}</code> ·{' '}
                         {SCOPE[o.scope]}
                         {o.note ? ` · ${o.note}` : ''}
+                        {o.expiresAt
+                          ? ` · gilt bis ${new Date(o.expiresAt).toLocaleString('de-DE')}`
+                          : ''}
                       </span>
                       <button className="btn" onClick={() => remove.mutate(o.id)}>
                         Entfernen
@@ -256,6 +267,16 @@ export function UserDetail() {
                   maxLength={200}
                   value={note}
                   onChange={(e) => setNote(e.target.value)}
+                />
+                <input
+                  className="inline-input"
+                  type="number"
+                  min={1}
+                  max={365}
+                  placeholder="Tage (leer = unbefristet)"
+                  aria-label="Gültig für Tage"
+                  value={days}
+                  onChange={(e) => setDays(e.target.value)}
                 />
                 <button className="btn primary" disabled={!key || add.isPending}>
                   Hinzufügen

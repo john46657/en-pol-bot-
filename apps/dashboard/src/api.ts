@@ -262,6 +262,9 @@ export interface ProfileRow {
   description: string | null;
   templateKey: string | null;
   entries: ProfileEntry[];
+  color: string | null;
+  priority: number;
+  enabled: boolean;
   roles: { id: string; name: string }[];
 }
 export interface MemberRow {
@@ -306,6 +309,7 @@ export interface MemberAccess {
     scope: Scope;
     scopeRef: string;
     note: string | null;
+    expiresAt: string | null;
   }[];
   recentActions: {
     id: string;

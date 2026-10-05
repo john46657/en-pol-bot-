@@ -11,6 +11,15 @@ import {
 import { errorText, QueryState } from '../components/QueryState';
 import { useToast } from '../toast';
 
+interface SaveValues {
+  name: string;
+  description: string;
+  entries: unknown[];
+  color: string | null;
+  priority: number;
+  enabled: boolean;
+}
+
 export function Profiles() {
   const { guildId = '' } = useParams();
   const nav = useNavigate();
@@ -106,8 +115,9 @@ export function Profiles() {
                 <li key={p.id} className="row">
                   <span className="grow">
                     <Link to={`/guilds/${guildId}/profiles/${p.id}`}>
-                      <strong>{p.name}</strong>
+                      <strong style={p.color ? { color: p.color } : undefined}>{p.name}</strong>
                     </Link>
+                    {!p.enabled && <small className="muted"> (deaktiviert)</small>}
                     <br />
                     <small className="muted">
                       {p.entries.filter((e) => e.effect === 'ALLOW').length} Rechte ·{' '}
@@ -140,15 +150,31 @@ export function ProfileEditor() {
     queryFn: () => api<PermissionOverview>(`/guilds/${guildId}/permissions`),
   });
   const save = useMutation({
-    mutationFn: (v: { name: string; description: string; entries: unknown[] }) =>
+    mutationFn: (v: SaveValues) =>
       api(`${base}/${profileId}`, {
         method: 'PUT',
-        body: { name: v.name, description: v.description || undefined, entries: v.entries },
+        body: {
+          name: v.name,
+          description: v.description || undefined,
+          entries: v.entries,
+          color: v.color,
+          priority: v.priority,
+          enabled: v.enabled,
+        },
       }),
     onSuccess: () => {
       toast.success('Profil gespeichert.');
       void qc.invalidateQueries({ queryKey: ['profiles', guildId] });
       void qc.invalidateQueries({ queryKey: ['permissions', guildId] });
+    },
+    onError: (e) => toast.error(errorText(e)),
+  });
+  const duplicate = useMutation({
+    mutationFn: () => api<ProfileRow>(`${base}/${profileId}/duplicate`, { method: 'POST' }),
+    onSuccess: (p) => {
+      toast.success('Profil dupliziert.');
+      void qc.invalidateQueries({ queryKey: ['profiles', guildId] });
+      nav(`/guilds/${guildId}/profiles/${p.id}`);
     },
     onError: (e) => toast.error(errorText(e)),
   });
@@ -177,6 +203,7 @@ export function ProfileEditor() {
               catalog={overview.data?.catalog ?? []}
               saving={save.isPending}
               onSave={(v) => save.mutate(v)}
+              onDuplicate={() => duplicate.mutate()}
               onDelete={() =>
                 window.confirm(`„${p.name}“ löschen? Rollen verlieren dieses Profil.`) &&
                 remove.mutate()
@@ -194,16 +221,21 @@ function Form({
   catalog,
   saving,
   onSave,
+  onDuplicate,
   onDelete,
 }: {
   p: ProfileRow;
   catalog: PermissionOverview['catalog'];
   saving: boolean;
-  onSave: (v: { name: string; description: string; entries: unknown[] }) => void;
+  onSave: (v: SaveValues) => void;
+  onDuplicate: () => void;
   onDelete: () => void;
 }) {
   const [name, setName] = useState(p.name);
   const [description, setDescription] = useState(p.description ?? '');
+  const [color, setColor] = useState(p.color ?? '');
+  const [priority, setPriority] = useState(String(p.priority));
+  const [enabled, setEnabled] = useState(p.enabled);
   const [matrix, setMatrix] = useState<MatrixState>(() => toMatrix(p.entries));
   return (
     <div className="card comp">
@@ -220,6 +252,35 @@ function Form({
           onChange={(e) => setDescription(e.target.value)}
         />
       </label>
+      <label className="fld">
+        <span>Farbe (#RRGGBB, optional)</span>
+        <input
+          value={color}
+          maxLength={7}
+          placeholder="#3366cc"
+          onChange={(e) => setColor(e.target.value)}
+        />
+      </label>
+      <label className="fld">
+        <span>Priorität (höher = weiter oben)</span>
+        <input
+          type="number"
+          min={-1000}
+          max={1000}
+          value={priority}
+          onChange={(e) => setPriority(e.target.value)}
+        />
+      </label>
+      <label className="fld">
+        <span>
+          <input
+            type="checkbox"
+            checked={enabled}
+            onChange={(e) => setEnabled(e.target.checked)}
+          />{' '}
+          Aktiv (deaktivierte Profile gelten nirgends)
+        </span>
+      </label>
       <p className="muted">
         Zugewiesen an: {p.roles.map((r) => `@${r.name}`).join(', ') || 'keine Rolle'}
         {p.templateKey ? ` · Vorlage: ${p.templateKey}` : ''}
@@ -229,9 +290,21 @@ function Form({
         <button
           className="btn primary"
           disabled={saving || !name.trim()}
-          onClick={() => onSave({ name, description, entries: fromMatrix(matrix) })}
+          onClick={() =>
+            onSave({
+              name,
+              description,
+              entries: fromMatrix(matrix),
+              color: color.trim() || null,
+              priority: Number.parseInt(priority, 10) || 0,
+              enabled,
+            })
+          }
         >
           {saving ? 'Speichere …' : 'Speichern'}
+        </button>
+        <button className="btn" onClick={onDuplicate}>
+          Duplizieren
         </button>
         <button className="btn" onClick={onDelete}>
           Profil löschen
