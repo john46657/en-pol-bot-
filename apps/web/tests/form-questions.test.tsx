@@ -3,13 +3,15 @@ import { describe, expect, it } from 'vitest';
 import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import type { FormField } from '@enrp/shared';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { FormQuestionsEditor } from '../src/components/FormQuestionsEditor';
 
 let latest: FormField[] = [];
 function Host({ initial }: { initial: FormField[] }) {
   const [v, setV] = useState(initial);
   latest = v;
-  return <FormQuestionsEditor value={v} onChange={setV} />;
+  const [qc] = useState(() => new QueryClient());
+  return <QueryClientProvider client={qc}><FormQuestionsEditor value={v} onChange={setV} /></QueryClientProvider>;
 }
 const q = (key: string, label: string): FormField => ({ key, label, required: true, maxLength: 1000 });
 
@@ -27,11 +29,11 @@ describe('application questions editor (like Appy)', () => {
     await u.type(within(third).getByLabelText('Option 2'), 'Spät');
     await u.click(within(third).getByLabelText('Allow multiple selections'));
     expect(latest[2]).toMatchObject({ key: 'frage2', label: 'Welche Schicht?', type: 'CHOICE', multiple: true, options: [{ label: 'Früh' }, { label: 'Spät' }] });
-    // Rollen-Auswahl: Rollen-ID auch als Erwähnung einfügbar
+    // Rollen-Auswahl (Liste der Discord-Rollen; ohne gemeldete Server: ID/Erwähnung eintippen)
     await u.selectOptions(screen.getByLabelText('Type of question 2'), 'ROLE');
     const second = screen.getByRole('region', { name: 'Question 2' });
     await u.type(within(second).getByLabelText('Option 1'), 'Hubschrauber');
-    await u.type(within(second).getByLabelText('Role ID of option 1'), '<@&510000000000000001>');
+    await u.type(within(second).getByLabelText('Role of option 1'), '<@&510000000000000001>{Enter}');
     expect(latest[1]!.options![0]).toEqual({ label: 'Hubschrauber', roleId: '510000000000000001' });
     // Text: Mindestlänge + optional
     const first = screen.getByRole('region', { name: 'Question 1' });

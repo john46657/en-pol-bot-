@@ -1,7 +1,7 @@
 import { useSyncExternalStore } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { api } from './api';
-import { useAuth } from './auth';
+import { useOptionalAuth } from './auth';
 import { getServer, setServer, subscribeServer } from './server';
 
 /** Discord-Server des Bots mit Channels und Rollen (meldet der Bot automatisch). */
@@ -12,8 +12,8 @@ export interface GuildInfo {
 }
 
 export function useGuilds() {
-  const { can } = useAuth();
-  return useQuery({ queryKey: ['discord-guilds'], queryFn: async () => { const r = await api<GuildInfo[]>('/discord/guilds'); return Array.isArray(r) ? r : []; }, staleTime: 60_000, enabled: can('dashboard.view') });
+  const auth = useOptionalAuth();
+  return useQuery({ queryKey: ['discord-guilds'], queryFn: async () => { const r = await api<GuildInfo[]>('/discord/guilds'); return Array.isArray(r) ? r : []; }, staleTime: 60_000, enabled: !!auth?.can('dashboard.view') });
 }
 /** Name eines Servers (oder die ID, solange der Bot ihn noch nicht gemeldet hat). */
 export const guildName = (guilds: GuildInfo[] | undefined, id: string | null | undefined) => (id ? guilds?.find((g) => g.id === id)?.name ?? id : null);

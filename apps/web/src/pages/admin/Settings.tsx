@@ -4,12 +4,12 @@ import { api, ApiError } from '../../lib/api';
 import { useAuth } from '../../lib/auth';
 import { useGuilds, useServer } from '../../lib/guilds';
 import { useSettings } from '../../lib/settings';
-import { ChannelPicker, ChannelsPicker, RolePicker } from '../../components/DiscordPickers';
+import { ChannelPicker, ChannelsPicker, RolePicker, ServersPicker } from '../../components/DiscordPickers';
 import { Button, Card, ErrorState, Field, Input, PageHeader, Select, SkeletonRows } from '../../components/ui';
 
 const TEXT = [['org.name', 'Organisation name'], ['org.serverName', 'Server name'], ['org.timezone', 'Timezone (IANA)']] as const;
 const CHANNELS = [['dispatch', '📡 Leitstellen-Channel (neue/zugewiesene Einsätze)'], ['wanted', '🚨 Fahndungs-Channel (neue Fahndungen und Statusänderungen)'], ['announcements', '📢 Ankündigungs-Channel'], ['applications', 'Applications channel ID (police applications with answers + accept/deny buttons – staff only!)'], ['danger', 'Danger level channel ID (level changes)'], ['sek', 'SEK channel ID (SEK mission reports)'], ['qualifications', 'Qualifications channel ID (applications from /qualipanel with accept/reject buttons)'], ['duty', 'Duty channel ID (message on every duty status change)'],
-  ['teamlist', 'Team list channel ID (self-updating list, one channel)'], ['tickets', 'Support ticket category ID (one category)'], ['staffRole', 'Staff role ID (sees support tickets)'], ['radioRole', 'Radio role ID (given with the radio whitelist)'], ['sekRole', 'SEK role ID (given/removed with /sek in Discord)'], ['dutyRole', 'On-duty role ID(s) (given while ON DUTY, removed otherwise; several servers: one ID each, comma-separated)'], ['breakRole', 'Break role ID(s) (optional)'], ['trainingRole', 'Training role ID(s) (optional)'], ['adminDutyRole', 'Administrative duty role ID(s) (optional)'], ['guildId', 'Server (guild) ID – optional']] as const;
+  ['teamlist', 'Team list channel ID (self-updating list, one channel)'], ['tickets', 'Support ticket category ID (one category)'], ['staffRole', 'Staff role ID (sees support tickets)'], ['radioRole', 'Radio role ID (given with the radio whitelist)'], ['sekRole', 'SEK role ID (given/removed with /sek in Discord)'], ['dutyRole', 'On-duty role ID(s) (given while ON DUTY, removed otherwise; several servers: one ID each, comma-separated)'], ['breakRole', 'Break role ID(s) (optional)'], ['trainingRole', 'Training role ID(s) (optional)'], ['adminDutyRole', 'Administrative duty role ID(s) (optional)'], ['guildId', 'Server – optional (für Discord-Anmeldung/Mitgliedschaft)']] as const;
 /** Rollen-Felder (Auswahl als Rolle) und Felder mit genau einer ID. */
 const ROLE_KEYS = new Set(['staffRole', 'radioRole', 'sekRole', 'dutyRole', 'breakRole', 'trainingRole', 'adminDutyRole']);
 const SINGLE = new Set(['teamlist', 'tickets', 'staffRole', 'radioRole', 'sekRole']);
@@ -69,7 +69,7 @@ export function Settings() {
             <p className="text-xs font-medium text-muted">{label}</p>
             {ROLE_KEYS.has(k) ? <RolePicker ariaLabel={label} disabled={!manage} max={SINGLE.has(k) ? 1 : 10} value={chVal(k).split(/[\s,;]+/).filter(Boolean)} onChange={(ids) => setChannel(k, ids.join(', '))} />
               : k === 'tickets' ? <ChannelPicker ariaLabel={label} kind="category" disabled={!manage} value={chVal(k) || null} onChange={(v) => setChannel(k, v ?? '')} />
-              : k === 'guildId' ? <Input aria-label={label} inputMode="numeric" disabled={!manage} value={chVal(k)} onChange={(e) => setChannel(k, e.target.value)} placeholder="123456789012345678" />
+              : k === 'guildId' ? <ServersPicker ariaLabel={label} disabled={!manage} value={chVal(k)} onChange={(v) => setChannel(k, v)} />
               : <ChannelsPicker ariaLabel={label} disabled={!manage} max={SINGLE.has(k) ? 1 : 10} value={chVal(k)} onChange={(v) => setChannel(k, v)} />}
           </div>
         ))}</div>
@@ -107,13 +107,13 @@ function DiscordLoginCard({ manage, value, onSave }: { manage: boolean; value?: 
         <label className="flex items-center gap-2"><input type="checkbox" disabled={!manage} checked={d.requireGuild} onChange={(e) => setD({ ...d, requireGuild: e.target.checked })} />Only members of our Discord server may sign in</label>
       </div>
       <h3 className="mb-1 mt-4 text-xs font-semibold uppercase text-muted">Discord-Rollen mit Dashboard-Zugriff (Teamrollen)</h3>
-      <div className="max-w-xl"><Input aria-label="Team role IDs" disabled={!manage} value={team} placeholder="Discord role ID(s), e.g. 123456789012345678" onChange={(e) => setTeam(e.target.value)} /></div>
+      <div className="max-w-xl"><RolePicker ariaLabel="Teamrollen" disabled={!manage} max={20} value={team.match(/\d{15,25}/g) ?? []} onChange={(ids) => setTeam(ids.join(', '))} /></div>
       <p className="mt-1 text-xs text-muted">Only people who have one of these Discord roles can sign in (several servers / roles: comma-separated). Empty = every server member. Accounts in ADMIN_DISCORD_IDS always get in. Checked at every sign-in and continuously afterwards (losing the role ends the session). Linking Discord roles to dashboard roles: Roles &amp; Permissions → role → „Verknüpfte Discord-Rollen“.</p>
       <h3 className="mb-1 mt-4 text-xs font-semibold uppercase text-muted">Discord role → system role (synced on every Discord login)</h3>
       <div className="space-y-2">
         {d.roleMap.map((r, i) => (
           <div key={i} className="flex flex-wrap items-center gap-2">
-            <div className="w-full sm:w-56"><Input aria-label="Discord role ID" inputMode="numeric" disabled={!manage} value={r.discordRoleId} placeholder="Discord role ID" onChange={(e) => row(i, { discordRoleId: e.target.value.trim() })} /></div>
+            <div className="w-full sm:w-64"><RolePicker ariaLabel="Discord-Rolle" disabled={!manage} max={1} value={r.discordRoleId ? [r.discordRoleId] : []} onChange={(ids) => row(i, { discordRoleId: ids[0] ?? '' })} /></div>
             <span className="text-muted">→</span>
             <div className="w-full sm:w-56"><Select aria-label="System role" disabled={!manage} value={r.role} onChange={(e) => row(i, { role: e.target.value })}>
               <option value="">Choose role…</option>

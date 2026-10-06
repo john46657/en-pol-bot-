@@ -96,3 +96,26 @@ export function ChannelsPicker({ value, onChange, ariaLabel, disabled, max = 10 
     </div>
   );
 }
+
+/** Discord-Server auswählen (Server, auf denen der Bot ist). Wert: Komma-getrennte IDs. Ohne gemeldete Server: ID eintippen. */
+export function ServersPicker({ value, onChange, ariaLabel, disabled }: { value: string; onChange: (ids: string) => void; ariaLabel: string; disabled?: boolean }) {
+  const all = useGuilds().data ?? [];
+  const ids = value.split(/[\s,;]+/).filter(Boolean);
+  const set = (next: string[]) => onChange([...new Set(next)].join(', '));
+  if (!all.length) return <Input aria-label={ariaLabel} inputMode="numeric" disabled={disabled} value={value} placeholder="Server-ID" onChange={(e) => onChange(e.target.value)} />;
+  return (
+    <div className="grid gap-2">
+      {ids.length > 0 && <ul className="flex flex-wrap gap-1.5">{ids.map((id) => { const g = all.find((x) => x.id === id); return (
+        <li key={id} className="inline-flex items-center gap-1.5 rounded border border-primary/40 bg-primary/10 px-2 py-0.5 text-xs">
+          {g?.icon && <img src={g.icon} alt="" className="h-3.5 w-3.5 rounded-full" />}<span>{g?.name ?? id}</span>
+          {!disabled && <button type="button" aria-label={`Server ${g?.name ?? id} entfernen`} className="text-muted hover:text-danger" onClick={() => set(ids.filter((x) => x !== id))}><X size={12} /></button>}
+        </li>); })}</ul>}
+      {!disabled && all.some((g) => !ids.includes(g.id)) && (
+        <Select aria-label={ariaLabel} value="" onChange={(e) => e.target.value && set([...ids, e.target.value])}>
+          <option value="">{ids.length ? '+ weiteren Server wählen…' : 'Server wählen…'}</option>
+          {all.filter((g) => !ids.includes(g.id)).map((g) => <option key={g.id} value={g.id}>{g.name}</option>)}
+        </Select>
+      )}
+    </div>
+  );
+}

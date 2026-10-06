@@ -53,3 +53,6 @@ export function useAuth() {
   if (!c) throw new Error('useAuth outside AuthProvider');
   return c;
 }
+
+/** Wie useAuth, aber ohne Fehler außerhalb des Providers (z. B. eigenständig getestete Bausteine). */
+export function useOptionalAuth() { return useContext(Ctx); }
