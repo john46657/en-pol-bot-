@@ -55,9 +55,30 @@ if (!process.env.COOKIE_SECURE) {
   log('         Nutze HTTPS (z. B. eigene Domain über Cloudflare) und setze dann COOKIE_SECURE=true. Siehe docs/hosting-bot-hosting.md.');
 }
 
-function runNode(label, args) {
-  const r = spawnSync(process.execPath, args, { cwd: root, env: process.env, stdio: 'inherit' });
-  if (r.status !== 0) die(`${label} ist fehlgeschlagen (Exit ${r.status}). Prüfe DATABASE_URL und die Logs oben.`);
+function runNode(label, args, env = process.env, tries = 1) {
+  for (let i = 1; ; i++) {
+    const r = spawnSync(process.execPath, args, { cwd: root, env, stdio: 'inherit' });
+    if (r.status === 0) return;
+    if (i >= tries) die(`${label} ist fehlgeschlagen (Exit ${r.status}). Prüfe DATABASE_URL und die Logs oben.`);
+    log(`${label} fehlgeschlagen – neuer Versuch ${i + 1}/${tries} in 10 Sekunden …`);
+    Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, 10_000);
+  }
+}
+
+/**
+ * Migrationen brauchen eine direkte Datenbankverbindung: über einen Pooler (z. B. Neon „-pooler“, PgBouncer)
+ * hängt die Prisma-Sperre (pg_advisory_lock) → Fehler P1002 „timed out“. Daher: DIRECT_DATABASE_URL, sonst
+ * bei Neon automatisch die Adresse ohne „-pooler“; die Sperre ist unnötig, weil hier nur ein Server migriert.
+ */
+function migrateEnv() {
+  let url = process.env.DIRECT_DATABASE_URL || process.env.DATABASE_URL || '';
+  if (!process.env.DIRECT_DATABASE_URL) {
+    try {
+      const u = new URL(url);
+      if (/-pooler\./.test(u.hostname)) { u.hostname = u.hostname.replace('-pooler.', '.'); url = u.toString(); log('Migrationen über die direkte Neon-Verbindung (ohne „-pooler“).'); }
+    } catch { /* ungültige URL → Prisma meldet den Fehler selbst */ }
+  }
+  return { ...process.env, DATABASE_URL: url, PRISMA_SCHEMA_DISABLE_ADVISORY_LOCK: '1' };
 }
 
 // Prisma-Client passend zum Datenbankschema erzeugen – auch wenn nur das Schema neu ist (sonst kennt die API neue Tabellen nicht → „Serverfehler“).
@@ -75,7 +96,7 @@ function runNode(label, args) {
 }
 
 log('Datenbank-Migrationen …');
-runNode('prisma migrate deploy', [require.resolve('prisma/build/index.js'), 'migrate', 'deploy', '--schema', path.join(root, 'api/prisma/schema.prisma')]);
+runNode('prisma migrate deploy', [require.resolve('prisma/build/index.js'), 'migrate', 'deploy', '--schema', path.join(root, 'api/prisma/schema.prisma')], migrateEnv(), 3);
 log('Erster Administrator (nur falls noch kein Benutzer existiert) …');
 runNode('seed', [path.join(root, 'api/dist/seed/run.js')]);
 
