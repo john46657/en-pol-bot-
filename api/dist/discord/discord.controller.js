@@ -31,7 +31,7 @@ const rate = process.env.NODE_ENV === 'test' ? 10_000 : 20;
 const stateKey = zod_1.z.string().regex(/^[a-z0-9:_-]{1,64}$/);
 const stateBody = zod_1.z.object({ value: zod_1.z.unknown() });
 const openQ = zod_1.z.object({ discordId: zod_1.z.string().regex(/^\d{15,25}$/) });
-const application = zod_1.z.object({ robloxUsername: zod_1.z.string().trim().min(1).max(64), robloxUserId: zod_1.z.string().max(20).optional(), discordId: zod_1.z.string().regex(/^\d{15,25}$/), answers: zod_1.z.record(zod_1.z.string(), zod_1.z.string().max(5000)) });
+const application = zod_1.z.object({ robloxUsername: zod_1.z.string().trim().min(1).max(64), robloxUserId: zod_1.z.string().max(20).optional(), discordId: zod_1.z.string().regex(/^\d{15,25}$/), discordName: zod_1.z.string().trim().max(100).optional(), durationSec: zod_1.z.number().int().min(0).max(86_400).optional(), joinedAt: zod_1.z.coerce.date().optional(), answers: zod_1.z.record(zod_1.z.string(), zod_1.z.string().max(5000)) });
 /** Web-Seite: eigenes Konto verknüpfen. Authentifiziert per Session; Bot-Zugang ist hier nicht erlaubt. */
 let DiscordController = class DiscordController {
     d;
@@ -111,7 +111,7 @@ let BotController = class BotController {
     async setState(key, b) { await this.d.setState(key, b.value); }
     /** Bewerbung aus Discord. Eigener Dienstweg (mit Bot-Token), damit das öffentliche Rate-Limit pro IP nicht alle Discord-Bewerber gemeinsam trifft. */
     openApplication(q) { return this.applications.openForDiscord(q.discordId); }
-    submitApplication(b) { return this.applications.submit({ robloxUsername: b.robloxUsername, robloxUserId: b.robloxUserId, answers: b.answers }, { discordId: b.discordId }); }
+    submitApplication(b) { return this.applications.submit({ robloxUsername: b.robloxUsername, robloxUserId: b.robloxUserId, answers: b.answers }, { discordId: b.discordId, discordName: b.discordName, durationSec: b.durationSec, joinedAt: b.joinedAt }); }
 };
 exports.BotController = BotController;
 __decorate([

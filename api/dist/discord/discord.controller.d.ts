@@ -50,17 +50,26 @@ declare const application: z.ZodObject<{
     robloxUsername: z.ZodString;
     robloxUserId: z.ZodOptional<z.ZodString>;
     discordId: z.ZodString;
+    discordName: z.ZodOptional<z.ZodString>;
+    durationSec: z.ZodOptional<z.ZodNumber>;
+    joinedAt: z.ZodOptional<z.ZodDate>;
     answers: z.ZodRecord<z.ZodString, z.ZodString>;
 }, "strip", z.ZodTypeAny, {
     discordId: string;
     robloxUsername: string;
     answers: Record<string, string>;
     robloxUserId?: string | undefined;
+    discordName?: string | undefined;
+    durationSec?: number | undefined;
+    joinedAt?: Date | undefined;
 }, {
     discordId: string;
     robloxUsername: string;
     answers: Record<string, string>;
     robloxUserId?: string | undefined;
+    discordName?: string | undefined;
+    durationSec?: number | undefined;
+    joinedAt?: Date | undefined;
 }>;
 /** Web-Seite: eigenes Konto verknüpfen. Authentifiziert per Session; Bot-Zugang ist hier nicht erlaubt. */
 export declare class DiscordController {

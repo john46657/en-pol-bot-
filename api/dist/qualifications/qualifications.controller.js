@@ -22,8 +22,9 @@ const decorators_1 = require("../authz/decorators");
 const zod_pipe_1 = require("../common/zod.pipe");
 const discordId = zod_1.z.string().regex(/^\d{15,25}$/);
 const list = zod_1.z.object({ unit: zod_1.z.string().max(24).optional(), status: zod_1.z.enum(['OPEN', 'ACCEPTED', 'REJECTED']).optional() });
-const decision = zod_1.z.object({ status: zod_1.z.enum(['ACCEPTED', 'REJECTED']) });
-const submit = zod_1.z.object({ unit: zod_1.z.string().max(24), discordId, discordName: zod_1.z.string().trim().min(1).max(100), answers: zod_1.z.array(zod_1.z.object({ question: zod_1.z.string().max(300), answer: zod_1.z.string().trim().min(1).max(1000) })).min(1).max(15) });
+const decision = zod_1.z.object({ status: zod_1.z.enum(['ACCEPTED', 'REJECTED']), reason: zod_1.z.string().trim().max(1000).optional() });
+const historyQ = zod_1.z.object({ discordId });
+const submit = zod_1.z.object({ unit: zod_1.z.string().max(24), discordId, discordName: zod_1.z.string().trim().min(1).max(100), durationSec: zod_1.z.number().int().min(0).max(86_400).optional(), joinedAt: zod_1.z.coerce.date().optional(), answers: zod_1.z.array(zod_1.z.object({ question: zod_1.z.string().max(300), answer: zod_1.z.string().trim().min(1).max(1000) })).min(1).max(15) });
 const openQ = zod_1.z.object({ discordId, unit: zod_1.z.string().max(24).optional() });
 let QualificationsController = class QualificationsController {
     q;
@@ -34,8 +35,10 @@ let QualificationsController = class QualificationsController {
     config() { return this.q.setup(); }
     save(a, b) { return this.q.saveConfig(a, b); }
     list(f) { return this.q.list(f); }
+    history(q) { return this.q.history(q.discordId); }
+    get(id) { return this.q.get(id); }
     /** Auch vom Bot (Button im Team-Channel) mit den Rechten des klickenden Benutzers. */
-    decide(a, id, b) { return this.q.decide(a, id, b.status); }
+    decide(a, id, b) { return this.q.decide(a, id, b.status, b.reason); }
 };
 exports.QualificationsController = QualificationsController;
 __decorate([
@@ -62,6 +65,22 @@ __decorate([
     __metadata("design:paramtypes", [void 0]),
     __metadata("design:returntype", void 0)
 ], QualificationsController.prototype, "list", null);
+__decorate([
+    (0, common_1.Get)('history'),
+    (0, decorators_1.RequirePermission)('qualifications.view'),
+    __param(0, (0, common_1.Query)((0, zod_pipe_1.zodBody)(historyQ))),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [void 0]),
+    __metadata("design:returntype", void 0)
+], QualificationsController.prototype, "history", null);
+__decorate([
+    (0, common_1.Get)('applications/:id'),
+    (0, decorators_1.RequirePermission)('qualifications.view'),
+    __param(0, (0, common_1.Param)('id', common_1.ParseUUIDPipe)),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String]),
+    __metadata("design:returntype", void 0)
+], QualificationsController.prototype, "get", null);
 __decorate([
     (0, common_1.Post)('applications/:id/decision'),
     (0, common_1.HttpCode)(200),

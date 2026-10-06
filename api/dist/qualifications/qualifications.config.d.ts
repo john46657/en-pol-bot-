@@ -6,6 +6,8 @@ export declare const unitSchema: z.ZodObject<{
     description: z.ZodDefault<z.ZodString>;
     /** Discord-Rolle, die bei Annahme vergeben wird (optional). */
     roleId: z.ZodOptional<z.ZodUnion<[z.ZodString, z.ZodLiteral<"">]>>;
+    /** Eigener Discord-Channel für eingehende Bewerbungen dieser Einheit (sonst der allgemeine Qualifications-Channel). */
+    channelId: z.ZodOptional<z.ZodUnion<[z.ZodString, z.ZodLiteral<"">]>>;
     questions: z.ZodArray<z.ZodString, "many">;
 }, "strip", z.ZodTypeAny, {
     name: string;
@@ -13,12 +15,14 @@ export declare const unitSchema: z.ZodObject<{
     key: string;
     questions: string[];
     roleId?: string | undefined;
+    channelId?: string | undefined;
 }, {
     name: string;
     key: string;
     questions: string[];
     roleId?: string | undefined;
     description?: string | undefined;
+    channelId?: string | undefined;
 }>;
 /** Texte des Panels für die normale Bewerbung bei EN Polizei (/bewerbungspanel); die Fragen sind das Bewerbungsformular (`application.form`). */
 export declare const policeSchema: z.ZodObject<{
@@ -40,6 +44,8 @@ export declare const configSchema: z.ZodObject<{
         description: z.ZodDefault<z.ZodString>;
         /** Discord-Rolle, die bei Annahme vergeben wird (optional). */
         roleId: z.ZodOptional<z.ZodUnion<[z.ZodString, z.ZodLiteral<"">]>>;
+        /** Eigener Discord-Channel für eingehende Bewerbungen dieser Einheit (sonst der allgemeine Qualifications-Channel). */
+        channelId: z.ZodOptional<z.ZodUnion<[z.ZodString, z.ZodLiteral<"">]>>;
         questions: z.ZodArray<z.ZodString, "many">;
     }, "strip", z.ZodTypeAny, {
         name: string;
@@ -47,24 +53,28 @@ export declare const configSchema: z.ZodObject<{
         key: string;
         questions: string[];
         roleId?: string | undefined;
+        channelId?: string | undefined;
     }, {
         name: string;
         key: string;
         questions: string[];
         roleId?: string | undefined;
         description?: string | undefined;
+        channelId?: string | undefined;
     }>, "many">, {
         name: string;
         description: string;
         key: string;
         questions: string[];
         roleId?: string | undefined;
+        channelId?: string | undefined;
     }[], {
         name: string;
         key: string;
         questions: string[];
         roleId?: string | undefined;
         description?: string | undefined;
+        channelId?: string | undefined;
     }[]>;
     police: z.ZodDefault<z.ZodObject<{
         title: z.ZodDefault<z.ZodString>;
@@ -84,6 +94,7 @@ export declare const configSchema: z.ZodObject<{
         key: string;
         questions: string[];
         roleId?: string | undefined;
+        channelId?: string | undefined;
     }[];
     intro: string;
     police: {
@@ -97,6 +108,7 @@ export declare const configSchema: z.ZodObject<{
         questions: string[];
         roleId?: string | undefined;
         description?: string | undefined;
+        channelId?: string | undefined;
     }[];
     title?: string | undefined;
     intro?: string | undefined;
@@ -132,6 +144,8 @@ export declare const saveSchema: z.ZodObject<{
         description: z.ZodDefault<z.ZodString>;
         /** Discord-Rolle, die bei Annahme vergeben wird (optional). */
         roleId: z.ZodOptional<z.ZodUnion<[z.ZodString, z.ZodLiteral<"">]>>;
+        /** Eigener Discord-Channel für eingehende Bewerbungen dieser Einheit (sonst der allgemeine Qualifications-Channel). */
+        channelId: z.ZodOptional<z.ZodUnion<[z.ZodString, z.ZodLiteral<"">]>>;
         questions: z.ZodArray<z.ZodString, "many">;
     }, "strip", z.ZodTypeAny, {
         name: string;
@@ -139,24 +153,28 @@ export declare const saveSchema: z.ZodObject<{
         key: string;
         questions: string[];
         roleId?: string | undefined;
+        channelId?: string | undefined;
     }, {
         name: string;
         key: string;
         questions: string[];
         roleId?: string | undefined;
         description?: string | undefined;
+        channelId?: string | undefined;
     }>, "many">, {
         name: string;
         description: string;
         key: string;
         questions: string[];
         roleId?: string | undefined;
+        channelId?: string | undefined;
     }[], {
         name: string;
         key: string;
         questions: string[];
         roleId?: string | undefined;
         description?: string | undefined;
+        channelId?: string | undefined;
     }[]>;
     police: z.ZodDefault<z.ZodObject<{
         title: z.ZodDefault<z.ZodString>;
@@ -203,6 +221,7 @@ export declare const saveSchema: z.ZodObject<{
         key: string;
         questions: string[];
         roleId?: string | undefined;
+        channelId?: string | undefined;
     }[];
     intro: string;
     police: {
@@ -222,6 +241,7 @@ export declare const saveSchema: z.ZodObject<{
         questions: string[];
         roleId?: string | undefined;
         description?: string | undefined;
+        channelId?: string | undefined;
     }[];
     title?: string | undefined;
     intro?: string | undefined;

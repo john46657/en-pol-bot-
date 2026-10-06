@@ -16,6 +16,7 @@ const audit_service_1 = require("../audit/audit.service");
 const discord_service_1 = require("../discord/discord.service");
 const errors_1 = require("../common/errors");
 const numbering_1 = require("../common/numbering");
+const web_url_1 = require("../common/web-url");
 const qualifications_config_1 = require("./qualifications.config");
 const applications_service_1 = require("../applications/applications.service");
 const KEY = 'qualifications.config';
@@ -72,11 +73,16 @@ let QualificationsService = class QualificationsService {
             throw new errors_1.AppError('CONFLICT', `There is already an open application for ${unit.name}.`);
         const user = await this.discord.resolveUser(d.discordId);
         const a = await this.prisma.$transaction(async (tx) => {
-            const row = await tx.qualificationApplication.create({ data: { number: (0, numbering_1.makeNumber)('Q'), unit: unit.key, unitName: unit.name, discordId: d.discordId, discordName: d.discordName, userId: user?.id, answers: d.answers } });
+            const row = await tx.qualificationApplication.create({ data: { number: (0, numbering_1.makeNumber)('Q'), unit: unit.key, unitName: unit.name, discordId: d.discordId, discordName: d.discordName, userId: user?.id, answers: d.answers, durationSec: d.durationSec, joinedAt: d.joinedAt } });
             await this.audit.record({ userId: user?.id ?? null }, { action: 'qualifications.application.submit', module: 'qualifications', entityType: 'QualificationApplication', entityId: row.id, after: { number: row.number, unit: unit.key, discordId: d.discordId } }, tx);
             return row;
         });
-        await this.discord.enqueue('qualifications', 'qualification.submitted', { id: a.id, number: a.number, unitName: a.unitName, discordId: a.discordId, discordName: a.discordName, linkedName: user?.displayName ?? null, answers: d.answers });
+        // Eigener Channel der Einheit (falls eingestellt) – sonst der allgemeine Qualifications-Channel
+        await this.discord.enqueue('qualifications', 'qualification.submitted', {
+            id: a.id, number: a.number, unitName: a.unitName, discordId: a.discordId, discordName: a.discordName, linkedName: user?.displayName ?? null, answers: d.answers,
+            durationSec: a.durationSec, joinedAt: a.joinedAt?.toISOString() ?? null, createdAt: a.createdAt.toISOString(), dashboardUrl: (0, web_url_1.webUrl)(`/qualifications?id=${a.id}`),
+            ...(unit.channelId ? { channelId: unit.channelId } : {}),
+        }, { always: !!unit.channelId });
         return { id: a.id, number: a.number, unitName: a.unitName };
     }
     async list(f) {
@@ -85,7 +91,17 @@ let QualificationsService = class QualificationsService {
         const users = new Map((await this.prisma.user.findMany({ where: { id: { in: ids } }, select: { id: true, displayName: true } })).map((u) => [u.id, u.displayName]));
         return rows.map((r) => ({ ...r, linkedName: r.userId ? users.get(r.userId) ?? null : null, decidedByName: r.decidedById ? users.get(r.decidedById) ?? '—' : null }));
     }
-    async decide(actor, id, status) {
+    async get(id) {
+        const a = await this.prisma.qualificationApplication.findUnique({ where: { id } });
+        if (!a)
+            throw new errors_1.AppError('NOT_FOUND', 'Application not found.');
+        return a;
+    }
+    /** Bisherige Qualifikations-Bewerbungen einer Discord-ID (Button „Verlauf“). */
+    history(discordId) {
+        return this.prisma.qualificationApplication.findMany({ where: { discordId }, orderBy: { createdAt: 'desc' }, take: 20, select: { id: true, number: true, unitName: true, status: true, createdAt: true, decisionReason: true } });
+    }
+    async decide(actor, id, status, reason) {
         const a = await this.prisma.qualificationApplication.findUnique({ where: { id } });
         if (!a)
             throw new errors_1.AppError('NOT_FOUND', 'Application not found.');
@@ -97,7 +113,7 @@ let QualificationsService = class QualificationsService {
         const unit = (await this.config()).units.find((u) => u.key === a.unit);
         let addedToSek = false;
         await this.prisma.$transaction(async (tx) => {
-            const claimed = await tx.qualificationApplication.updateMany({ where: { id, status: 'OPEN' }, data: { status, decidedById: actor.userId, decidedAt: new Date() } });
+            const claimed = await tx.qualificationApplication.updateMany({ where: { id, status: 'OPEN' }, data: { status, decidedById: actor.userId, decidedAt: new Date(), decisionReason: reason || null } });
             if (claimed.count === 0)
                 throw new errors_1.AppError('CONFLICT', 'This application has already been decided.');
             if (status === 'ACCEPTED' && a.unit === 'sek' && a.userId) {
@@ -110,10 +126,11 @@ let QualificationsService = class QualificationsService {
             }
             if (a.userId)
                 await tx.notification.create({ data: { userId: a.userId, type: 'QUALIFICATION', title: `Your ${a.unitName} application ${a.number} was ${status === 'ACCEPTED' ? 'accepted' : 'not accepted'}` } });
-            await this.audit.record(actor, { action: `qualifications.application.${status === 'ACCEPTED' ? 'accept' : 'reject'}`, module: 'qualifications', entityType: 'QualificationApplication', entityId: id, before: { status: 'OPEN' }, after: { status } }, tx);
+            await this.audit.record(actor, { action: `qualifications.application.${status === 'ACCEPTED' ? 'accept' : 'reject'}`, module: 'qualifications', entityType: 'QualificationApplication', entityId: id, before: { status: 'OPEN' }, after: { status }, reason }, tx);
         });
-        await this.discord.enqueue('qualifications', 'qualification.decided', { discordId: a.discordId, status, number: a.number, unitName: a.unitName, roleId: status === 'ACCEPTED' ? unit?.roleId || null : null }, { always: true });
-        return { id, number: a.number, unitName: a.unitName, status, addedToSek };
+        await this.discord.enqueue('qualifications', 'qualification.decided', { discordId: a.discordId, status, number: a.number, unitName: a.unitName, roleId: status === 'ACCEPTED' ? unit?.roleId || null : null, reason: reason || null }, { always: true });
+        const by = actor.userId ? await this.prisma.user.findUnique({ where: { id: actor.userId }, select: { displayName: true } }) : null;
+        return { id, number: a.number, unitName: a.unitName, status, addedToSek, decidedByName: by?.displayName ?? null, reason: reason || null };
     }
 };
 exports.QualificationsService = QualificationsService;

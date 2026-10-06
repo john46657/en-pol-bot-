@@ -1,9 +1,11 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.DANGER_BUTTONS = exports.DANGER = exports.incidentLine = exports.vehicleEmbed = exports.okReply = exports.errorReply = exports.plain = exports.label = exports.clip = exports.COLORS = void 0;
+exports.DANGER_BUTTONS = exports.DANGER = exports.fmtDuration = exports.incidentLine = exports.vehicleEmbed = exports.okReply = exports.errorReply = exports.plain = exports.label = exports.clip = exports.COLORS = void 0;
 exports.personEmbed = personEmbed;
 exports.listEmbed = listEmbed;
 exports.renderOutbox = renderOutbox;
+exports.applicationEmbeds = applicationEmbeds;
+exports.renderOutboxEmbeds = renderOutboxEmbeds;
 exports.outboxButtons = outboxButtons;
 exports.qualificationDecisionText = qualificationDecisionText;
 exports.applicationDecisionText = applicationDecisionText;
@@ -64,46 +66,92 @@ function renderOutbox(type, p) {
             const d = exports.DANGER[String(p.level)] ?? exports.DANGER.GREEN;
             return { title: `${d.emoji} Gefahrenstatus: ${d.label}`, description: p.reason ? (0, exports.clip)((0, exports.plain)(p.reason), 1000) : undefined, color: d.color, fields: [{ name: 'Vorher', value: (exports.DANGER[String(p.previous)]?.label) ?? '—', inline: true }, { name: 'Gesetzt von', value: (0, exports.clip)((0, exports.plain)(p.setBy ?? 'System'), 200), inline: true }] };
         }
-        case 'application.submitted':
-            return { title: `📋 Neue Bewerbung ${p.number}`, color: exports.COLORS.info, description: 'Prüfung und Entscheidung im System (Bereich *Applications*).', fields: [
-                    { name: 'Roblox-Name', value: (0, exports.clip)((0, exports.plain)(p.robloxUsername), 200), inline: true }, { name: 'Quelle', value: p.source === 'DISCORD' ? 'Discord' : 'Web', inline: true },
-                    ...(p.discordId ? [{ name: 'Discord', value: `<@${String(p.discordId)}>`, inline: true }] : [])
-                ] };
         case 'sek.report':
             return { title: `🎯 SEK-Einsatzbericht ${p.number}`, color: exports.COLORS.neutral, description: (0, exports.clip)((0, exports.plain)(p.description), 3500), fields: [
                     { name: 'Einsatzart', value: (0, exports.clip)((0, exports.plain)(p.missionType), 200), inline: true }, { name: 'Datum', value: new Date(String(p.occurredAt)).toLocaleString('de-DE', { timeZone: 'Europe/Berlin' }), inline: true }, { name: 'Beamter', value: (0, exports.clip)((0, exports.plain)(p.author), 200), inline: true }
                 ] };
-        case 'qualification.submitted': {
-            const answers = Array.isArray(p.answers) ? p.answers : [];
-            return { title: (0, exports.clip)(`📋 Neue Bewerbung: ${(0, exports.plain)(p.unitName)} (${p.number})`, 256), color: exports.COLORS.info,
-                description: (0, exports.clip)(`Von <@${String(p.discordId)}> (${(0, exports.plain)(p.discordName)})${p.linkedName ? ` · im System: **${(0, exports.plain)(p.linkedName)}**` : ' · nicht mit dem System verknüpft'}`, 4000),
-                fields: answers.slice(0, 24).map((a, i) => ({ name: (0, exports.clip)(`${i + 1}. ${(0, exports.plain)(a.question)}`, 256), value: (0, exports.clip)((0, exports.plain)(a.answer) || '—', 1024) })),
-                footer: 'Entscheiden: Buttons unten (Recht „qualifications.decide“) oder im Web unter Qualifications' };
-        }
         default:
             return null;
     }
 }
-/** Buttons unter Channel-Benachrichtigungen (z. B. Annehmen/Ablehnen). */
-function outboxButtons(type, p) {
-    if (type === 'qualification.submitted' && typeof p.id === 'string')
-        return [
-            { id: `quali:decide:${p.id}:ACCEPTED`, label: 'Annehmen', emoji: '✅', style: 'success' },
-            { id: `quali:decide:${p.id}:REJECTED`, label: 'Ablehnen', emoji: '✖️', style: 'danger' },
-        ];
-    return undefined;
+// ---- Eingegangene Bewerbungen im Team-Channel (wie Appy) ----
+const unix = (iso) => { const t = Date.parse(String(iso ?? '')); return Number.isFinite(t) ? Math.floor(t / 1000) : null; };
+const fmtDuration = (sec) => (sec < 60 ? `${sec}s` : sec < 3600 ? `${Math.floor(sec / 60)} min ${sec % 60}s` : `${Math.floor(sec / 3600)} h ${Math.floor((sec % 3600) / 60)} min`);
+exports.fmtDuration = fmtDuration;
+/** Gesamtbudget der Embeds einer Nachricht (Discord: 6000 Zeichen) – Platz lassen für das spätere Feld „Entscheidung“. */
+const BUDGET = 4800;
+/** Fragen fett + nummeriert, Antwort darunter, am Ende die Bewerber-Infos. Lange Bewerbungen werden auf mehrere Embeds verteilt bzw. gekürzt. */
+function applicationEmbeds(p, kind) {
+    const qa = Array.isArray(p.answers) ? p.answers : [];
+    const id = String(p.discordId ?? '');
+    const joined = unix(p.joinedAt), submitted = unix(p.createdAt);
+    const stats = ['**Bewerber-Infos**',
+        ...(id ? [`Discord-ID: \`${id}\``, `Benutzername: \`${(0, exports.plain)(p.discordName ?? '—')}\``, `Benutzer: <@${id}>`] : ['Quelle: Web-Formular (kein Discord)']),
+        ...(kind === 'p' ? [`Roblox: \`${(0, exports.plain)(p.robloxUsername)}\`${p.robloxUserId ? ` (\`${String(p.robloxUserId)}\`)` : ''}`] : [p.linkedName ? `Im System: **${(0, exports.plain)(p.linkedName)}**` : 'Im System: nicht verknüpft']),
+        ...(typeof p.durationSec === 'number' ? [`Dauer: \`${(0, exports.fmtDuration)(p.durationSec)}\``] : []),
+        ...(joined ? [`Server beigetreten: <t:${joined}:R>`] : []),
+        ...(submitted ? [`Eingereicht: <t:${submitted}:R>`] : []),
+    ].join('\n');
+    const section = (q, i, max) => {
+        const a = (0, exports.plain)(q.answer) || '—';
+        return `**${i + 1}. ${(0, exports.plain)(q.question)}**\n${max !== undefined && a.length > max ? `${a.slice(0, max)}… *(gekürzt – vollständig im Dashboard)*` : a}`;
+    };
+    let sections = qa.map((q, i) => section(q, i));
+    const total = sections.reduce((n, x) => n + x.length + 2, 0) + stats.length;
+    if (total > BUDGET) {
+        const questions = qa.reduce((n, q, i) => n + section({ question: q.question, answer: '' }, i).length + 50, 0);
+        const per = Math.max(60, Math.floor((BUDGET - stats.length - questions) / Math.max(1, qa.length)));
+        sections = qa.map((q, i) => section(q, i, per));
+    }
+    const title = (0, exports.clip)(kind === 'p' ? `📋 Bewerbung bei EN Polizei – ${p.number}` : `📋 ${(0, exports.plain)(p.unitName)} – Bewerbung ${p.number}`, 256);
+    const embeds = [];
+    let cur = '';
+    for (const piece of [...sections, stats]) {
+        if (cur && cur.length + piece.length + 2 > 4000) {
+            embeds.push({ title: embeds.length ? `${title} (Fortsetzung)` : title, color: exports.COLORS.warning, description: cur });
+            cur = '';
+        }
+        cur = cur ? `${cur}\n\n${piece}` : (0, exports.clip)(piece, 4000);
+    }
+    embeds.push({ title: embeds.length ? `${title} (Fortsetzung)` : title, color: exports.COLORS.warning, description: cur });
+    return embeds.slice(0, 10);
 }
+/** Alle Embeds einer Channel-Benachrichtigung (Bewerbungen ggf. mehrere). */
+function renderOutboxEmbeds(type, p) {
+    if (type === 'qualification.submitted')
+        return applicationEmbeds(p, 'q');
+    if (type === 'application.submitted')
+        return applicationEmbeds(p, 'p');
+    const e = renderOutbox(type, p);
+    return e ? [e] : null;
+}
+/** Buttons unter Channel-Benachrichtigungen: Annehmen/Ablehnen (auch mit Grund), Verlauf, Ticket, Dashboard. */
+function outboxButtons(type, p) {
+    const kind = type === 'qualification.submitted' ? 'q' : type === 'application.submitted' ? 'p' : null;
+    if (!kind || typeof p.id !== 'string')
+        return undefined;
+    const id = p.id, discordId = typeof p.discordId === 'string' && /^\d{15,25}$/.test(p.discordId) ? p.discordId : null;
+    return [
+        { id: `quali:decide:${kind}:${id}:ACCEPTED`, label: 'Annehmen', style: 'success' },
+        { id: `quali:decide:${kind}:${id}:REJECTED`, label: 'Ablehnen', style: 'danger' },
+        { id: `quali:reason:${kind}:${id}:ACCEPTED`, label: 'Annehmen mit Grund', style: 'success' },
+        { id: `quali:reason:${kind}:${id}:REJECTED`, label: 'Ablehnen mit Grund', style: 'danger' },
+        ...(discordId ? [{ id: `quali:history:${discordId}`, label: 'Verlauf', style: 'primary' }, { id: `quali:ticket:${kind}:${id}`, label: 'Ticket mit Bewerber öffnen', emoji: '🎫', style: 'secondary' }] : []),
+        ...(typeof p.dashboardUrl === 'string' && /^https?:\/\//.test(p.dashboardUrl) ? [{ id: 'link', label: 'Im Dashboard ansehen', style: 'secondary', url: p.dashboardUrl }] : []),
+    ];
+}
+const reasonText = (p) => (p.reason ? `\n\n**Begründung:** ${(0, exports.clip)((0, exports.plain)(p.reason), 1000)}` : '');
 /** Direktnachricht nach der Entscheidung über eine Qualifikations-Bewerbung. */
 function qualificationDecisionText(p) {
     return p.status === 'ACCEPTED'
-        ? `🎉 Deine Bewerbung für **${(0, exports.plain)(p.unitName)}** (${p.number}) wurde **angenommen** – willkommen! Ein Teammitglied meldet sich bei dir.`
-        : `Deine Bewerbung für **${(0, exports.plain)(p.unitName)}** (${p.number}) wurde diesmal leider **nicht angenommen**. Du kannst dich später gerne erneut bewerben.`;
+        ? `🎉 Deine Bewerbung für **${(0, exports.plain)(p.unitName)}** (${p.number}) wurde **angenommen** – willkommen! Ein Teammitglied meldet sich bei dir.${reasonText(p)}`
+        : `Deine Bewerbung für **${(0, exports.plain)(p.unitName)}** (${p.number}) wurde diesmal leider **nicht angenommen**. Du kannst dich später gerne erneut bewerben.${reasonText(p)}`;
 }
 /** Texte der Entscheidungs-Direktnachricht an Bewerber (ohne internen Grund). */
 function applicationDecisionText(p) {
     return p.status === 'ACCEPTED'
-        ? `🎉 Deine Bewerbung **${p.number}** bei EN Polizei wurde **angenommen**! Ein Teammitglied meldet sich bei dir für die nächsten Schritte.`
-        : `Deine Bewerbung **${p.number}** bei EN Polizei wurde diesmal leider **nicht angenommen**. Du kannst dich gerne später erneut bewerben.`;
+        ? `🎉 Deine Bewerbung **${p.number}** bei EN Polizei wurde **angenommen**! Ein Teammitglied meldet sich bei dir für die nächsten Schritte.${reasonText(p)}`
+        : `Deine Bewerbung **${p.number}** bei EN Polizei wurde diesmal leider **nicht angenommen**. Du kannst dich gerne später erneut bewerben.${reasonText(p)}`;
 }
 // ---- Gefahrenstatus ----
 exports.DANGER = {

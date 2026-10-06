@@ -30,6 +30,7 @@ export declare class QualificationsService {
             key: string;
             questions: string[];
             roleId?: string | undefined;
+            channelId?: string | undefined;
         }[];
         intro: string;
         police: {
@@ -48,6 +49,7 @@ export declare class QualificationsService {
             key: string;
             questions: string[];
             roleId?: string | undefined;
+            channelId?: string | undefined;
         }[];
         intro: string;
         police: {
@@ -66,6 +68,8 @@ export declare class QualificationsService {
         discordId: string;
         discordName: string;
         answers: Answer[];
+        durationSec?: number;
+        joinedAt?: Date;
     }): Promise<{
         id: string;
         number: string;
@@ -86,15 +90,46 @@ export declare class QualificationsService {
         status: string;
         answers: Prisma.JsonValue;
         decidedById: string | null;
-        unitName: string;
         discordName: string;
+        durationSec: number | null;
+        joinedAt: Date | null;
+        decisionReason: string | null;
+        unitName: string;
         decidedAt: Date | null;
     }[]>;
-    decide(actor: Actor, id: string, status: 'ACCEPTED' | 'REJECTED'): Promise<{
+    get(id: string): Promise<{
+        number: string;
+        unit: string;
+        id: string;
+        userId: string | null;
+        createdAt: Date;
+        discordId: string;
+        status: string;
+        answers: Prisma.JsonValue;
+        decidedById: string | null;
+        discordName: string;
+        durationSec: number | null;
+        joinedAt: Date | null;
+        decisionReason: string | null;
+        unitName: string;
+        decidedAt: Date | null;
+    }>;
+    /** Bisherige Qualifikations-Bewerbungen einer Discord-ID (Button „Verlauf“). */
+    history(discordId: string): Prisma.PrismaPromise<{
+        number: string;
+        id: string;
+        createdAt: Date;
+        status: string;
+        decisionReason: string | null;
+        unitName: string;
+    }[]>;
+    decide(actor: Actor, id: string, status: 'ACCEPTED' | 'REJECTED', reason?: string): Promise<{
         id: string;
         number: string;
         unitName: string;
         status: "REJECTED" | "ACCEPTED";
         addedToSek: boolean;
+        decidedByName: string | null;
+        reason: string | null;
     }>;
 }

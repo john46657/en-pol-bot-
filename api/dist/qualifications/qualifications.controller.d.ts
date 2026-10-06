@@ -14,15 +14,27 @@ declare const list: z.ZodObject<{
 }>;
 declare const decision: z.ZodObject<{
     status: z.ZodEnum<["ACCEPTED", "REJECTED"]>;
+    reason: z.ZodOptional<z.ZodString>;
 }, "strip", z.ZodTypeAny, {
     status: "REJECTED" | "ACCEPTED";
+    reason?: string | undefined;
 }, {
     status: "REJECTED" | "ACCEPTED";
+    reason?: string | undefined;
+}>;
+declare const historyQ: z.ZodObject<{
+    discordId: z.ZodString;
+}, "strip", z.ZodTypeAny, {
+    discordId: string;
+}, {
+    discordId: string;
 }>;
 declare const submit: z.ZodObject<{
     unit: z.ZodString;
     discordId: z.ZodString;
     discordName: z.ZodString;
+    durationSec: z.ZodOptional<z.ZodNumber>;
+    joinedAt: z.ZodOptional<z.ZodDate>;
     answers: z.ZodArray<z.ZodObject<{
         question: z.ZodString;
         answer: z.ZodString;
@@ -41,6 +53,8 @@ declare const submit: z.ZodObject<{
         answer: string;
     }[];
     discordName: string;
+    durationSec?: number | undefined;
+    joinedAt?: Date | undefined;
 }, {
     unit: string;
     discordId: string;
@@ -49,6 +63,8 @@ declare const submit: z.ZodObject<{
         answer: string;
     }[];
     discordName: string;
+    durationSec?: number | undefined;
+    joinedAt?: Date | undefined;
 }>;
 declare const openQ: z.ZodObject<{
     discordId: z.ZodString;
@@ -73,6 +89,7 @@ export declare class QualificationsController {
             key: string;
             questions: string[];
             roleId?: string | undefined;
+            channelId?: string | undefined;
         }[];
         intro: string;
         police: {
@@ -89,6 +106,7 @@ export declare class QualificationsController {
             key: string;
             questions: string[];
             roleId?: string | undefined;
+            channelId?: string | undefined;
         }[];
         intro: string;
         police: {
@@ -108,10 +126,38 @@ export declare class QualificationsController {
         status: string;
         answers: import("@prisma/client/runtime/library").JsonValue;
         decidedById: string | null;
-        unitName: string;
         discordName: string;
+        durationSec: number | null;
+        joinedAt: Date | null;
+        decisionReason: string | null;
+        unitName: string;
         decidedAt: Date | null;
     }[]>;
+    history(q: z.infer<typeof historyQ>): import("@prisma/client").Prisma.PrismaPromise<{
+        number: string;
+        id: string;
+        createdAt: Date;
+        status: string;
+        decisionReason: string | null;
+        unitName: string;
+    }[]>;
+    get(id: string): Promise<{
+        number: string;
+        unit: string;
+        id: string;
+        userId: string | null;
+        createdAt: Date;
+        discordId: string;
+        status: string;
+        answers: import("@prisma/client/runtime/library").JsonValue;
+        decidedById: string | null;
+        discordName: string;
+        durationSec: number | null;
+        joinedAt: Date | null;
+        decisionReason: string | null;
+        unitName: string;
+        decidedAt: Date | null;
+    }>;
     /** Auch vom Bot (Button im Team-Channel) mit den Rechten des klickenden Benutzers. */
     decide(a: Actor, id: string, b: z.infer<typeof decision>): Promise<{
         id: string;
@@ -119,6 +165,8 @@ export declare class QualificationsController {
         unitName: string;
         status: "REJECTED" | "ACCEPTED";
         addedToSek: boolean;
+        decidedByName: string | null;
+        reason: string | null;
     }>;
 }
 /** Dienst-Endpunkte für das Discord-Panel – Bewerben geht auch ohne verknüpftes Konto. */
@@ -133,6 +181,7 @@ export declare class BotQualificationsController {
             key: string;
             questions: string[];
             roleId?: string | undefined;
+            channelId?: string | undefined;
         }[];
         intro: string;
         police: {

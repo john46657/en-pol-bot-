@@ -33,6 +33,7 @@ let ApplicationsController = class ApplicationsController {
     form() { return this.a.form(); }
     submit(b) { return this.a.submit(b); }
     list(q) { return this.a.list(q, q.status); }
+    history(q) { return this.a.history(q.discordId); }
     get(id) { return this.a.get(id); }
     /** Prüfschritte benötigen applications.review; Entscheidungen applications.decide. */
     move(a, id, b) {
@@ -40,6 +41,10 @@ let ApplicationsController = class ApplicationsController {
     }
     decide(a, id, b) {
         return this.a.transition(a, id, b.accept ? 'ACCEPTED' : 'REJECTED', b.reason);
+    }
+    /** Annehmen/Ablehnen per Discord-Button (aus jedem offenen Status); optionaler Grund geht per DM an die Person. */
+    discordDecide(a, id, b) {
+        return this.a.discordDecide(a, id, b.status, b.reason);
     }
 };
 exports.ApplicationsController = ApplicationsController;
@@ -68,6 +73,14 @@ __decorate([
     __metadata("design:returntype", void 0)
 ], ApplicationsController.prototype, "list", null);
 __decorate([
+    (0, common_1.Get)('history'),
+    (0, decorators_1.RequirePermission)('applications.view'),
+    __param(0, (0, common_1.Query)((0, zod_pipe_1.zodBody)(zod_1.z.object({ discordId: zod_1.z.string().regex(/^\d{15,25}$/) })))),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object]),
+    __metadata("design:returntype", void 0)
+], ApplicationsController.prototype, "history", null);
+__decorate([
     (0, common_1.Get)(':id'),
     (0, decorators_1.RequirePermission)('applications.view'),
     __param(0, (0, common_1.Param)('id', common_1.ParseUUIDPipe)),
@@ -95,6 +108,17 @@ __decorate([
     __metadata("design:paramtypes", [Object, String, Object]),
     __metadata("design:returntype", void 0)
 ], ApplicationsController.prototype, "decide", null);
+__decorate([
+    (0, common_1.Post)(':id/discord-decision'),
+    (0, common_1.HttpCode)(200),
+    (0, decorators_1.RequirePermission)('applications.decide'),
+    __param(0, (0, decorators_1.CurrentActor)()),
+    __param(1, (0, common_1.Param)('id', common_1.ParseUUIDPipe)),
+    __param(2, (0, common_1.Body)((0, zod_pipe_1.zodBody)(zod_1.z.object({ status: zod_1.z.enum(['ACCEPTED', 'REJECTED']), reason: zod_1.z.string().trim().max(1000).optional() })))),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, String, Object]),
+    __metadata("design:returntype", void 0)
+], ApplicationsController.prototype, "discordDecide", null);
 exports.ApplicationsController = ApplicationsController = __decorate([
     (0, swagger_1.ApiTags)('applications'),
     (0, common_1.Controller)('applications'),
