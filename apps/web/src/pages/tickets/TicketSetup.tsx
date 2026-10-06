@@ -7,8 +7,9 @@ import {
 import { api } from '../../lib/api';
 import { Badge, Button, Card, ConfirmDialog, EmptyState, ErrorState, Field, Input, Select, SkeletonRows, Textarea } from '../../components/ui';
 import { DiscordPreview } from '../../components/DiscordPreview';
+import { ChannelPicker, RolePicker } from '../../components/DiscordPickers';
 import {
-  errText, fromHex, hex, idsFromText, idsToText, label, oneId, useTicketConfig,
+  errText, fromHex, hex, idsFromText, idsToText, label, useTicketConfig,
   type TicketCategoryCfg, type TicketConfig, type TicketPanelCfg, type TicketPriorityCfg, type TicketReasonCfg, type TicketSettingsCfg, type TicketStatusCfg,
 } from '../../lib/tickets';
 
@@ -56,6 +57,9 @@ const Ids = ({ label: l, value, onChange, hint }: { label: string; value: string
   useEffect(() => setText(idsToText(value)), [value]);
   return <Field label={l} hint={hint ?? 'Discord IDs, separated by commas'}>{(id) => <Input id={id} value={text} onChange={(e) => setText(e.target.value)} onBlur={() => onChange(idsFromText(text))} placeholder="123456789012345678, …" />}</Field>;
 };
+const Roles = ({ label: l, value, onChange }: { label: string; value: string[]; onChange: (v: string[]) => void }) => (
+  <div className="grid gap-1"><span className="text-xs font-medium text-muted">{l}</span><RolePicker ariaLabel={l} value={value} onChange={onChange} /></div>
+);
 const Names = ({ label: l, value, onChange, hint }: { label: string; value: string[]; onChange: (v: string[]) => void; hint?: string }) => {
   const [text, setText] = useState(value.join(', '));
   useEffect(() => setText(value.join(', ')), [value]);
@@ -120,12 +124,12 @@ function PanelEditor({ draft, c, onDone }: { draft: PanelDraft; c: TicketConfig;
           <Section title="General">
             <div className="grid gap-3 md:grid-cols-2">
               <Field label="Internal name">{(id) => <Input id={id} value={p.name} maxLength={80} onChange={(e) => set({ name: e.target.value })} />}</Field>
-              <Field label="Target channel (Discord ID)">{(id) => <Input id={id} inputMode="numeric" value={p.channelId ?? ''} onChange={(e) => set({ channelId: oneId(e.target.value) })} placeholder="123456789012345678" />}</Field>
+              <Field label="Target channel">{(id) => <ChannelPicker ariaLabel={id} kind="text" value={p.channelId} onChange={(v) => set({ channelId: v })} />}</Field>
               <Field label="Type">{(id) => <Select id={id} value={p.style} onChange={(e) => set({ style: e.target.value as PanelDraft['style'] })}><option value="BUTTONS">Buttons</option><option value="DROPDOWN">Dropdown menu</option></Select>}</Field>
               {p.style === 'DROPDOWN' && <Field label="Dropdown placeholder">{(id) => <Input id={id} value={p.placeholder} maxLength={150} onChange={(e) => set({ placeholder: e.target.value })} />}</Field>}
               <Num label="Order" value={p.position} max={1000} onChange={(v) => set({ position: v })} />
             </div>
-            <Ids label="Visible for Discord roles (empty = everyone)" value={p.allowedRoleIds} onChange={(v) => set({ allowedRoleIds: v })} />
+            <Roles label="Visible for Discord roles (empty = everyone)" value={p.allowedRoleIds} onChange={(v) => set({ allowedRoleIds: v })} />
           </Section>
           <Section title="Embed">
             <div className="grid gap-3 md:grid-cols-2">
@@ -236,14 +240,14 @@ function CategoryEditor({ draft, c, onDone }: { draft: CatDraft; c: TicketConfig
           </Section>
           <Section title="Discord channel">
             <div className="grid gap-3 md:grid-cols-2">
-              <Field label="Discord category ID for new tickets">{(id) => <Input id={id} inputMode="numeric" value={d.discordCategoryId ?? ''} onChange={(e) => set({ discordCategoryId: oneId(e.target.value) })} />}</Field>
+              <Field label="Discord category for new tickets">{(id) => <ChannelPicker ariaLabel={id} kind="category" value={d.discordCategoryId} onChange={(v) => set({ discordCategoryId: v })} />}</Field>
               <Field label="Channel name format" hint={`Example: ${ticketChannelName(d.channelNameFormat, { ...SAMPLE, '{category}': d.name })}`}>{(id) => <Input id={id} value={d.channelNameFormat} maxLength={90} onChange={(e) => set({ channelNameFormat: e.target.value })} />}</Field>
             </div>
-            <Ids label="Staff roles (see + write, are mentioned)" value={d.staffRoleIds} onChange={(v) => set({ staffRoleIds: v })} />
-            <Ids label="Additional roles (see + write)" value={d.extraRoleIds} onChange={(v) => set({ extraRoleIds: v })} />
+            <Roles label="Staff roles (see + write, are mentioned)" value={d.staffRoleIds} onChange={(v) => set({ staffRoleIds: v })} />
+            <Roles label="Additional roles (see + write)" value={d.extraRoleIds} onChange={(v) => set({ extraRoleIds: v })} />
           </Section>
           <Section title="Who may open · limits">
-            <Ids label="Required Discord roles (empty = everyone)" value={d.requiredRoleIds} onChange={(v) => set({ requiredRoleIds: v })} />
+            <Roles label="Required Discord roles (empty = everyone)" value={d.requiredRoleIds} onChange={(v) => set({ requiredRoleIds: v })} />
             <Ids label="Only these users (empty = everyone)" value={d.allowedUserIds} onChange={(v) => set({ allowedUserIds: v })} />
             <div className="grid gap-3 md:grid-cols-2">
               <Num label="Max. open tickets per user (0 = unlimited)" value={d.maxOpen} max={100} onChange={(v) => set({ maxOpen: v })} />
@@ -276,7 +280,7 @@ function CategoryEditor({ draft, c, onDone }: { draft: CatDraft; c: TicketConfig
           </Section>
           <Section title="Transcript & rating">
             <Check label="Create a transcript when closed" checked={d.transcriptOnClose} onChange={(v) => set({ transcriptOnClose: v })} />
-            <Field label="Transcript channel ID (empty = general transcript channel)">{(id) => <Input id={id} inputMode="numeric" value={d.transcriptChannelId ?? ''} onChange={(e) => set({ transcriptChannelId: oneId(e.target.value) })} />}</Field>
+            <Field label="Transcript channel (empty = general transcript channel)">{(id) => <ChannelPicker ariaLabel={id} kind="text" value={d.transcriptChannelId} onChange={(v) => set({ transcriptChannelId: v })} />}</Field>
             <Check label="Send the transcript to the creator via DM" checked={d.transcriptToUser} onChange={(v) => set({ transcriptToUser: v })} />
             <Check label="Ask the creator for a rating (DM, 1–5 stars)" checked={d.ratingEnabled} onChange={(v) => set({ ratingEnabled: v })} />
             <Field label="Rating question">{(id) => <Input id={id} value={d.ratingQuestion} maxLength={300} onChange={(e) => set({ ratingQuestion: e.target.value })} />}</Field>
@@ -289,7 +293,7 @@ function CategoryEditor({ draft, c, onDone }: { draft: CatDraft; c: TicketConfig
             <Field label="Warning message">{(id) => <Input id={id} value={d.autoCloseMessage} maxLength={1000} onChange={(e) => set({ autoCloseMessage: e.target.value })} />}</Field>
           </Section>
           <Section title="Escalation">
-            <Ids label="Roles added on escalation" value={d.escalationRoleIds} onChange={(v) => set({ escalationRoleIds: v })} />
+            <Roles label="Roles added on escalation" value={d.escalationRoleIds} onChange={(v) => set({ escalationRoleIds: v })} />
             <Field label="Priority on escalation">{(id) => <Select id={id} value={d.escalationPriorityId ?? ''} onChange={(e) => set({ escalationPriorityId: e.target.value || null })}><option value="">unchanged</option>{c.priorities.map((p) => <option key={p.id} value={p.id}>{label(p)}</option>)}</Select>}</Field>
             <Field label="Message">{(id) => <Input id={id} value={d.escalationMessage} maxLength={1000} onChange={(e) => set({ escalationMessage: e.target.value })} />}</Field>
           </Section>
@@ -398,7 +402,7 @@ function States({ c }: { c: TicketConfig }) {
             </div>
             <Color label="Color (also the ticket embed color)" value={p.color} onChange={(v) => set({ color: v })} />
             <Names label="May be set by system roles (empty = everyone with ticket.change_priority)" value={p.allowedRoleNames} onChange={(v) => set({ allowedRoleNames: v })} />
-            <Ids label="Notify Discord roles when set" value={p.notifyRoleIds} onChange={(v) => set({ notifyRoleIds: v })} />
+            <Roles label="Notify Discord roles when set" value={p.notifyRoleIds} onChange={(v) => set({ notifyRoleIds: v })} />
             <Check label="Default for new tickets" checked={p.isDefault} onChange={(v) => set({ isDefault: v })} />
           </>
         )}
@@ -460,8 +464,8 @@ function General({ c }: { c: TicketConfig }) {
         <div className="grid gap-3">
           <Section title="Channels">
             <div className="grid gap-3 md:grid-cols-2">
-              <Field label="Log channel ID (every ticket action)">{(id) => <Input id={id} inputMode="numeric" value={s.logChannelId ?? ''} onChange={(e) => set({ logChannelId: oneId(e.target.value) })} />}</Field>
-              <Field label="Transcript channel ID (default)">{(id) => <Input id={id} inputMode="numeric" value={s.transcriptChannelId ?? ''} onChange={(e) => set({ transcriptChannelId: oneId(e.target.value) })} />}</Field>
+              <Field label="Log channel (every ticket action)">{(id) => <ChannelPicker ariaLabel={id} kind="text" value={s.logChannelId} onChange={(v) => set({ logChannelId: v })} />}</Field>
+              <Field label="Transcript channel (default)">{(id) => <ChannelPicker ariaLabel={id} kind="text" value={s.transcriptChannelId} onChange={(v) => set({ transcriptChannelId: v })} />}</Field>
             </div>
             <Num label="Delete transcripts after (days, 0 = keep forever)" value={s.transcriptRetentionDays} max={3650} onChange={(v) => set({ transcriptRetentionDays: v })} />
           </Section>

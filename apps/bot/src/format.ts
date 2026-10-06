@@ -102,6 +102,7 @@ export function applicationEmbeds(p: Record<string, unknown>, kind: 'q' | 'p'): 
     ...(typeof p.durationSec === 'number' ? [`Dauer: \`${fmtDuration(p.durationSec)}\``] : []),
     ...(joined ? [`Server beigetreten: <t:${joined}:R>`] : []),
     ...(submitted ? [`Eingereicht: <t:${submitted}:R>`] : []),
+    ...(p.guildName ? [`Server: \`${plain(p.guildName)}\``] : []),
   ].join('\n');
   const section = (q: { question?: unknown; answer?: unknown }, i: number, max?: number) => {
     const a = plain(q.answer) || '—';
@@ -140,6 +141,14 @@ export function applicationEmbeds(p: Record<string, unknown>, kind: 'q' | 'p'): 
 export function renderOutboxEmbeds(type: string, p: Record<string, unknown>): EmbedData[] | null {
   if (type === 'qualification.submitted') return applicationEmbeds(p, 'q');
   if (type === 'application.submitted') return applicationEmbeds(p, 'p');
+  // entschiedene Bewerbung für den Channel „angenommen“/„abgelehnt“ (wie bei Appy)
+  if (type === 'qualification.archived' || type === 'application.archived') {
+    const accepted = p.status === 'ACCEPTED';
+    const embeds = applicationEmbeds(p, type === 'application.archived' ? 'p' : 'q').map((e) => ({ ...e, color: accepted ? COLORS.success : COLORS.danger }));
+    const last = embeds[embeds.length - 1]!;
+    last.fields = [{ name: 'Entscheidung', value: clip(`${accepted ? '✅ Angenommen' : '❌ Abgelehnt'}${p.decidedByName ? ` von ${plain(p.decidedByName)}` : ''}${p.reason ? `\n**Grund:** ${plain(p.reason)}` : ''}`, 1024) }];
+    return embeds;
+  }
   const e = renderOutbox(type, p);
   return e ? [e] : null;
 }
@@ -162,14 +171,16 @@ export function outboxButtons(type: string, p: Record<string, unknown>): ButtonS
 const reasonText = (p: { reason?: unknown }) => (p.reason ? `\n\n**Begründung:** ${clip(plain(p.reason), 1000)}` : '');
 
 /** Direktnachricht nach der Entscheidung über eine Qualifikations-Bewerbung. */
-export function qualificationDecisionText(p: { status?: unknown; number?: unknown; unitName?: unknown; reason?: unknown }): string {
+export function qualificationDecisionText(p: { status?: unknown; number?: unknown; unitName?: unknown; reason?: unknown; message?: unknown }): string {
+  if (typeof p.message === 'string' && p.message.trim()) return clip(p.message, 2000); // Text aus der Einrichtung (Accepted/Denied Message)
   return p.status === 'ACCEPTED'
     ? `🎉 Deine Bewerbung für **${plain(p.unitName)}** (${p.number}) wurde **angenommen** – willkommen! Ein Teammitglied meldet sich bei dir.${reasonText(p)}`
     : `Deine Bewerbung für **${plain(p.unitName)}** (${p.number}) wurde diesmal leider **nicht angenommen**. Du kannst dich später gerne erneut bewerben.${reasonText(p)}`;
 }
 
 /** Texte der Entscheidungs-Direktnachricht an Bewerber (ohne internen Grund). */
-export function applicationDecisionText(p: { status?: unknown; number?: unknown; reason?: unknown }): string {
+export function applicationDecisionText(p: { status?: unknown; number?: unknown; reason?: unknown; message?: unknown }): string {
+  if (typeof p.message === 'string' && p.message.trim()) return clip(p.message, 2000);
   return p.status === 'ACCEPTED'
     ? `🎉 Deine Bewerbung **${p.number}** bei EN Polizei wurde **angenommen**! Ein Teammitglied meldet sich bei dir für die nächsten Schritte.${reasonText(p)}`
     : `Deine Bewerbung **${p.number}** bei EN Polizei wurde diesmal leider **nicht angenommen**. Du kannst dich gerne später erneut bewerben.${reasonText(p)}`;

@@ -22,10 +22,54 @@ export declare class ApplicationsService {
         discordName?: string;
         durationSec?: number;
         joinedAt?: Date;
+        guildId?: string;
     }): Promise<{
         number: string;
         status: string;
     }>;
+    /** Einstellungen der Polizei-Bewerbung (Qualifications/Applications → Setup). */
+    police(): Promise<{
+        name: string;
+        description: string;
+        settings: {
+            roles: {
+                required: {
+                    mode: "ALL" | "ANY";
+                    ids: string[];
+                };
+                accepted: string[];
+                denied: string[];
+                restricted: {
+                    mode: "ALL" | "ANY";
+                    ids: string[];
+                };
+                acceptedRemove: string[];
+                deniedRemove: string[];
+                pending: string[];
+                removeOnSubmit: string[];
+                managers: string[];
+            };
+            messages: {
+                accepted: string;
+                denied: string;
+                confirmation: string;
+                completion: string;
+            };
+            staffThreads: boolean;
+            cooldownMinutes: number;
+            timeLimitMinutes: number;
+        };
+        title: string;
+        pingRoleIds: string[];
+        enabled: boolean;
+        channelId?: string | undefined;
+        acceptedChannelId?: string | undefined;
+        deniedChannelId?: string | undefined;
+    }>;
+    /** Entscheidungs-DM mit Text und Rollen aus den Einstellungen. */
+    private decided;
+    /** Wie bei Appy: entschiedene Bewerbung in den Channel für angenommene/abgelehnte Bewerbungen posten. */
+    private archive;
     /** Für den Bot: hat dieses Discord-Konto schon eine offene Bewerbung? */
     openForDiscord(discordId: string): Promise<{
         open: boolean;
@@ -52,6 +96,7 @@ export declare class ApplicationsService {
     }>;
     list(p: PageQuery, status?: string): Promise<{
         items: {
+            decidedByName: string | null;
             number: string;
             id: string;
             createdAt: Date;
@@ -60,6 +105,7 @@ export declare class ApplicationsService {
             robloxUsername: string;
             updatedAt: Date;
             version: number;
+            guildId: string | null;
             status: string;
             source: string;
             answers: import("@prisma/client/runtime/library").JsonValue;
@@ -83,6 +129,7 @@ export declare class ApplicationsService {
         robloxUsername: string;
         updatedAt: Date;
         version: number;
+        guildId: string | null;
         status: string;
         source: string;
         answers: import("@prisma/client/runtime/library").JsonValue;
@@ -102,6 +149,7 @@ export declare class ApplicationsService {
         robloxUsername: string;
         updatedAt: Date;
         version: number;
+        guildId: string | null;
         status: string;
         source: string;
         answers: import("@prisma/client/runtime/library").JsonValue;

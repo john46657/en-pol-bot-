@@ -24,19 +24,20 @@ declare const move: z.ZodObject<{
     status: "SUBMITTED" | "REJECTED" | "SCREENING" | "INTERVIEW" | "PENDING_DECISION" | "ACCEPTED" | "WITHDRAWN";
     reason?: string | undefined;
 }>;
+/** `OPEN` = alle noch nicht entschiedenen (eingereicht, Prüfung, Gespräch, Entscheidung offen). */
 declare const listQ: z.ZodObject<{
     page: z.ZodDefault<z.ZodNumber>;
     pageSize: z.ZodDefault<z.ZodNumber>;
     q: z.ZodOptional<z.ZodString>;
 } & {
-    status: z.ZodOptional<z.ZodEnum<["SUBMITTED", "SCREENING", "INTERVIEW", "PENDING_DECISION", "ACCEPTED", "REJECTED", "WITHDRAWN"]>>;
+    status: z.ZodOptional<z.ZodUnion<[z.ZodEnum<["SUBMITTED", "SCREENING", "INTERVIEW", "PENDING_DECISION", "ACCEPTED", "REJECTED", "WITHDRAWN"]>, z.ZodLiteral<"OPEN">]>>;
 }, "strip", z.ZodTypeAny, {
     page: number;
     pageSize: number;
-    status?: "SUBMITTED" | "REJECTED" | "SCREENING" | "INTERVIEW" | "PENDING_DECISION" | "ACCEPTED" | "WITHDRAWN" | undefined;
+    status?: "SUBMITTED" | "REJECTED" | "SCREENING" | "OPEN" | "INTERVIEW" | "PENDING_DECISION" | "ACCEPTED" | "WITHDRAWN" | undefined;
     q?: string | undefined;
 }, {
-    status?: "SUBMITTED" | "REJECTED" | "SCREENING" | "INTERVIEW" | "PENDING_DECISION" | "ACCEPTED" | "WITHDRAWN" | undefined;
+    status?: "SUBMITTED" | "REJECTED" | "SCREENING" | "OPEN" | "INTERVIEW" | "PENDING_DECISION" | "ACCEPTED" | "WITHDRAWN" | undefined;
     page?: number | undefined;
     pageSize?: number | undefined;
     q?: string | undefined;
@@ -51,6 +52,7 @@ export declare class ApplicationsController {
     }>;
     list(q: z.infer<typeof listQ>): Promise<{
         items: {
+            decidedByName: string | null;
             number: string;
             id: string;
             createdAt: Date;
@@ -59,6 +61,7 @@ export declare class ApplicationsController {
             robloxUsername: string;
             updatedAt: Date;
             version: number;
+            guildId: string | null;
             status: string;
             source: string;
             answers: import("@prisma/client/runtime/library").JsonValue;
@@ -91,6 +94,7 @@ export declare class ApplicationsController {
         robloxUsername: string;
         updatedAt: Date;
         version: number;
+        guildId: string | null;
         status: string;
         source: string;
         answers: import("@prisma/client/runtime/library").JsonValue;
@@ -111,6 +115,7 @@ export declare class ApplicationsController {
         robloxUsername: string;
         updatedAt: Date;
         version: number;
+        guildId: string | null;
         status: string;
         source: string;
         answers: import("@prisma/client/runtime/library").JsonValue;
@@ -133,6 +138,7 @@ export declare class ApplicationsController {
         robloxUsername: string;
         updatedAt: Date;
         version: number;
+        guildId: string | null;
         status: string;
         source: string;
         answers: import("@prisma/client/runtime/library").JsonValue;

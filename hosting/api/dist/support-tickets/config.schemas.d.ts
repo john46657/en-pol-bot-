@@ -44,14 +44,14 @@ export declare const buttonSchema: z.ZodObject<{
 }, "strip", z.ZodTypeAny, {
     action: string;
     label: string;
-    style: "danger" | "success" | "primary" | "secondary";
     enabled: boolean;
+    style: "danger" | "success" | "primary" | "secondary";
     emoji?: string | undefined;
 }, {
     action: string;
     label: string;
-    style: "danger" | "success" | "primary" | "secondary";
     enabled: boolean;
+    style: "danger" | "success" | "primary" | "secondary";
     emoji?: string | undefined;
 }>;
 export declare const categorySchema: z.ZodObject<{
@@ -135,14 +135,14 @@ export declare const categorySchema: z.ZodObject<{
     }, "strip", z.ZodTypeAny, {
         action: string;
         label: string;
-        style: "danger" | "success" | "primary" | "secondary";
         enabled: boolean;
+        style: "danger" | "success" | "primary" | "secondary";
         emoji?: string | undefined;
     }, {
         action: string;
         label: string;
-        style: "danger" | "success" | "primary" | "secondary";
         enabled: boolean;
+        style: "danger" | "success" | "primary" | "secondary";
         emoji?: string | undefined;
     }>, "many">>;
     claimMode: z.ZodDefault<z.ZodEnum<["MULTI" | "SINGLE" | "PRIMARY", ...("MULTI" | "SINGLE" | "PRIMARY")[]]>>;
@@ -170,6 +170,7 @@ export declare const categorySchema: z.ZodObject<{
     description: string;
     active: boolean;
     color: number;
+    cooldownMinutes: number;
     questions: {
         id: string;
         type: "SHORT" | "LONG" | "YESNO" | "SELECT" | "MULTI";
@@ -178,9 +179,9 @@ export declare const categorySchema: z.ZodObject<{
         required: boolean;
         placeholder?: string | undefined;
     }[];
+    position: number;
     emoji: string | null;
     buttonStyle: "danger" | "success" | "primary" | "secondary";
-    position: number;
     discordCategoryId: string | null;
     channelNameFormat: string;
     staffRoleIds: string[];
@@ -189,7 +190,6 @@ export declare const categorySchema: z.ZodObject<{
     allowedUserIds: string[];
     accessRoleNames: string[];
     maxOpen: number;
-    cooldownMinutes: number;
     welcomeTitle: string;
     welcomeMessage: string;
     mentionStaff: boolean;
@@ -197,8 +197,8 @@ export declare const categorySchema: z.ZodObject<{
     buttons: {
         action: string;
         label: string;
-        style: "danger" | "success" | "primary" | "secondary";
         enabled: boolean;
+        style: "danger" | "success" | "primary" | "secondary";
         emoji?: string | undefined;
     }[];
     claimMode: "MULTI" | "SINGLE" | "PRIMARY";
@@ -227,6 +227,7 @@ export declare const categorySchema: z.ZodObject<{
     description?: string | undefined;
     active?: boolean | undefined;
     color?: number | undefined;
+    cooldownMinutes?: number | undefined;
     questions?: {
         id: string;
         type: "SHORT" | "LONG" | "YESNO" | "SELECT" | "MULTI";
@@ -235,9 +236,9 @@ export declare const categorySchema: z.ZodObject<{
         options?: string[] | undefined;
         placeholder?: string | undefined;
     }[] | undefined;
+    position?: number | undefined;
     emoji?: string | undefined;
     buttonStyle?: "danger" | "success" | "primary" | "secondary" | undefined;
-    position?: number | undefined;
     discordCategoryId?: string | undefined;
     channelNameFormat?: string | undefined;
     staffRoleIds?: string[] | undefined;
@@ -246,7 +247,6 @@ export declare const categorySchema: z.ZodObject<{
     allowedUserIds?: string[] | undefined;
     accessRoleNames?: string[] | undefined;
     maxOpen?: number | undefined;
-    cooldownMinutes?: number | undefined;
     defaultPriorityId?: string | null | undefined;
     welcomeTitle?: string | undefined;
     welcomeMessage?: string | undefined;
@@ -255,8 +255,8 @@ export declare const categorySchema: z.ZodObject<{
     buttons?: {
         action: string;
         label: string;
-        style: "danger" | "success" | "primary" | "secondary";
         enabled: boolean;
+        style: "danger" | "success" | "primary" | "secondary";
         emoji?: string | undefined;
     }[] | undefined;
     claimMode?: "MULTI" | "SINGLE" | "PRIMARY" | undefined;
@@ -306,10 +306,10 @@ export declare const panelSchema: z.ZodObject<{
     color: number;
     title: string;
     channelId: string | null;
+    position: number;
     placeholder: string;
     emoji: string | null;
     style: "BUTTONS" | "DROPDOWN";
-    position: number;
     thumbnailUrl: string | null;
     imageUrl: string | null;
     bannerUrl: string | null;
@@ -325,10 +325,10 @@ export declare const panelSchema: z.ZodObject<{
     color?: number | undefined;
     title?: string | undefined;
     channelId?: string | undefined;
+    position?: number | undefined;
     placeholder?: string | undefined;
     emoji?: string | undefined;
     style?: "BUTTONS" | "DROPDOWN" | undefined;
-    position?: number | undefined;
     thumbnailUrl?: string | undefined;
     imageUrl?: string | undefined;
     bannerUrl?: string | undefined;
@@ -354,8 +354,8 @@ export declare const statusSchema: z.ZodObject<{
     name: string;
     color: number;
     kind: "ARCHIVED" | "CLOSED" | "OPEN";
-    emoji: string;
     position: number;
+    emoji: string;
     isDefault: boolean;
     isClaimed: boolean;
     isEscalation: boolean;
@@ -364,8 +364,8 @@ export declare const statusSchema: z.ZodObject<{
     name: string;
     color?: number | undefined;
     kind?: "ARCHIVED" | "CLOSED" | "OPEN" | undefined;
-    emoji?: string | undefined;
     position?: number | undefined;
+    emoji?: string | undefined;
     isDefault?: boolean | undefined;
     isClaimed?: boolean | undefined;
     isEscalation?: boolean | undefined;
@@ -382,16 +382,16 @@ export declare const prioritySchema: z.ZodObject<{
 }, "strip", z.ZodTypeAny, {
     name: string;
     color: number;
-    emoji: string;
     position: number;
+    emoji: string;
     isDefault: boolean;
     allowedRoleNames: string[];
     notifyRoleIds: string[];
 }, {
     name: string;
     color?: number | undefined;
-    emoji?: string | undefined;
     position?: number | undefined;
+    emoji?: string | undefined;
     isDefault?: boolean | undefined;
     allowedRoleNames?: string[] | undefined;
     notifyRoleIds?: string[] | undefined;

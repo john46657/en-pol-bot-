@@ -4,6 +4,7 @@ import {
   type AnySelectMenuInteraction, type ButtonComponent, type ButtonInteraction, type ChatInputCommandInteraction, type Interaction, type Message, type ModalSubmitInteraction,
 } from 'discord.js';
 import { componentsOf, createTicketRuntime } from './discord-tickets';
+import { startGuildDirectory } from './guilds';
 import { HttpApi } from './api';
 import { byName, COMMANDS, mapError } from './commands';
 import { interactionFor } from './commands/features';
@@ -311,11 +312,14 @@ function wireReady(client0: Client) {
     const list = avatar && embeds[0] ? [{ ...embeds[0], thumbnail: avatar }, ...embeds.slice(1)] : embeds;
     // Nur die ausdrücklich eingestellten Rollen pingen – niemals @everyone/@here
     const roles = opts?.pingRoleIds ?? [];
-    await ch.send({ ...(roles.length ? { content: roles.map((r) => `<@&${r}>`).join(' ') } : {}), embeds: list.map(toEmbed), components: toRows(buttons), allowedMentions: { parse: [], roles } });
+    const msg = await ch.send({ ...(roles.length ? { content: roles.map((r) => `<@&${r}>`).join(' ') } : {}), embeds: list.map(toEmbed), components: toRows(buttons), allowedMentions: { parse: [], roles } });
+    // Staff-Thread zur Bewerbung (braucht im Channel das Recht „Öffentliche Threads erstellen“)
+    if (opts?.thread) await msg.startThread({ name: opts.thread, autoArchiveDuration: 10080 }).catch((e) => console.error('could not create staff thread:', e instanceof Error ? e.message : e));
   }, cfg.OUTBOX_POLL_SECONDS, console.log, (userId, text) => platform.sendDirectMessage(userId, text), grantRoleEverywhere, syncRolesEverywhere, () => void live.refresh('teamlist').catch(() => undefined),
     (effects) => tickets.apply(effects).then(() => undefined, (e) => console.error('ticket effects failed:', e instanceof Error ? e.message : e)));
   live.start(cfg.LIVE_REFRESH_SECONDS);
   void tickets.refresh();
+  startGuildDirectory(() => client, api);
   setInterval(() => void tickets.refresh(), 120_000).unref();
   });
 }

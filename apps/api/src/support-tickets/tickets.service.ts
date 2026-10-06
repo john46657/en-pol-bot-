@@ -651,7 +651,7 @@ export class SupportTicketsService {
     return { id: l.t.id, number: ticketNumber(l.t.number), name: l.t.name, channelId: l.t.channelId, category: { id: l.cat.id, name: l.cat.name, emoji: l.cat.emoji }, status: l.status, priority: l.priority, claimers: l.t.claimers, creatorId: l.t.creatorId, creatorName: l.t.creatorName, locked: l.t.locked, closedAt: l.t.closedAt, createdAt: l.t.createdAt };
   }
 
-  async list(userId: string, f: { kind?: string; statusId?: string; priorityId?: string; categoryId?: string; claimer?: string; creator?: string; from?: Date; to?: Date; q?: string; page: number; pageSize: number }) {
+  async list(userId: string, f: { kind?: string; statusId?: string; priorityId?: string; categoryId?: string; claimer?: string; creator?: string; from?: Date; to?: Date; q?: string; guildId?: string; page: number; pageSize: number }) {
     const visible = await this.visibleCategoryIds(userId);
     let claimer = f.claimer;
     if (claimer === 'me') claimer = (await this.prisma.discordLink.findUnique({ where: { userId } }))?.discordId ?? '__none__';
@@ -661,7 +661,7 @@ export class SupportTicketsService {
       deletedAt: f.kind === 'deleted' ? { not: null } : undefined,
       ...(visible ? { categoryId: { in: f.categoryId ? visible.filter((c) => c === f.categoryId) : visible } } : f.categoryId ? { categoryId: f.categoryId } : {}),
       ...(f.kind === 'open' ? { statusId: { in: kindIds('OPEN') } } : f.kind === 'closed' ? { statusId: { in: kindIds('CLOSED') } } : f.kind === 'archived' ? { statusId: { in: kindIds('ARCHIVED') } } : f.kind === 'escalated' ? { escalatedAt: { not: null }, statusId: { in: kindIds('OPEN') } } : {}),
-      ...(f.statusId ? { statusId: f.statusId } : {}), ...(f.priorityId ? { priorityId: f.priorityId } : {}),
+      ...(f.statusId ? { statusId: f.statusId } : {}), ...(f.priorityId ? { priorityId: f.priorityId } : {}), ...(f.guildId ? { guildId: f.guildId } : {}),
       ...(claimer ? { claimers: { has: claimer } } : {}),
       ...(f.creator ? { OR: [{ creatorId: f.creator }, { creatorName: { contains: f.creator, mode: 'insensitive' } }] } : {}),
       ...(f.from || f.to ? { createdAt: { ...(f.from ? { gte: f.from } : {}), ...(f.to ? { lte: f.to } : {}) } } : {}),
@@ -672,7 +672,7 @@ export class SupportTicketsService {
       this.prisma.supportTicket.count({ where }), this.prisma.ticketCategory.findMany({ select: { id: true, name: true, emoji: true } }), this.prisma.ticketPriority.findMany(),
     ]);
     return { total, page: f.page, pageSize: f.pageSize, items: rows.map((t) => ({
-      id: t.id, number: ticketNumber(t.number), name: t.name, creatorId: t.creatorId, creatorName: t.creatorName, claimers: t.claimers, locked: t.locked, createdAt: t.createdAt, closedAt: t.closedAt, deletedAt: t.deletedAt, escalatedAt: t.escalatedAt,
+      id: t.id, number: ticketNumber(t.number), name: t.name, guildId: t.guildId, creatorId: t.creatorId, creatorName: t.creatorName, claimers: t.claimers, locked: t.locked, createdAt: t.createdAt, closedAt: t.closedAt, deletedAt: t.deletedAt, escalatedAt: t.escalatedAt,
       category: cats.find((c) => c.id === t.categoryId) ?? null, status: statuses.find((s) => s.id === t.statusId) ?? null, priority: prios.find((p) => p.id === t.priorityId) ?? null,
     })) };
   }

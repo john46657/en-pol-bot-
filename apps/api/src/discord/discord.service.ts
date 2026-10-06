@@ -11,6 +11,12 @@ const hash = (c: string) => createHash('sha256').update(c.toUpperCase().replace(
 export const CHANNEL_KEYS = ['dispatch', 'wanted', 'announcements', 'applications', 'danger', 'sek', 'qualifications', 'duty', 'tickets'] as const;
 export type ChannelKey = (typeof CHANNEL_KEYS)[number];
 /** Channel-/Rollen-IDs aus den Einstellungen. Die Benachrichtigungs-Channels dürfen Komma-Listen sein (mehrere Channels/Server). */
+export interface DiscordGuildInfo {
+  id: string; name: string; icon: string | null;
+  channels: { id: string; name: string; type: 'text' | 'category' | 'voice' | 'other'; parentId: string | null; position: number }[];
+  roles: { id: string; name: string; color: number; position: number }[];
+}
+const GUILDS_KEY = 'discord.guilds';
 export interface DiscordChannels { guildId?: string; dispatch?: string; wanted?: string; announcements?: string; applications?: string; danger?: string; sek?: string; qualifications?: string; duty?: string; teamlist?: string; tickets?: string; staffRole?: string; radioRole?: string; sekRole?: string; dutyRole?: string; breakRole?: string; trainingRole?: string; adminDutyRole?: string }
 
 @Injectable()
@@ -89,6 +95,16 @@ export class DiscordService {
   }
 
   // ---- Bot-Zustand (z. B. IDs der selbst aktualisierenden Nachrichten) ----
+  /** Server des Bots mit Channels und Rollen (meldet der Bot regelmäßig) – für Namen und Auswahllisten im Dashboard. */
+  async guilds(): Promise<DiscordGuildInfo[]> {
+    const v = (await this.prisma.systemSetting.findUnique({ where: { key: GUILDS_KEY } }))?.value;
+    return Array.isArray(v) ? (v as unknown as DiscordGuildInfo[]) : [];
+  }
+  async saveGuilds(guilds: DiscordGuildInfo[]) {
+    const value = guilds as unknown as Prisma.InputJsonValue;
+    await this.prisma.systemSetting.upsert({ where: { key: GUILDS_KEY }, create: { key: GUILDS_KEY, value }, update: { value } });
+  }
+
   async getState(key: string): Promise<unknown> {
     return (await this.prisma.systemSetting.findUnique({ where: { key: `bot.state.${key}` } }))?.value ?? null;
   }

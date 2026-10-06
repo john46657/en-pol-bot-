@@ -57,3 +57,32 @@ export function checkAnswer(field: FormField, value: string | string[] | null | 
   if (opts.some((o) => !o)) return { ok: false, error: `Ungültige Auswahl bei „${f.label}“.` };
   return { ok: true, text: picked.join(', '), roleIds: f.type === 'ROLE' ? opts.map((o) => o!.roleId).filter((r): r is string => !!r && /^\d{15,25}$/.test(r)) : [] };
 }
+
+// ---- Bewerbungs-Einstellungen wie bei Appy: Texte mit Variablen ----
+export const APPLICATION_VARIABLES = {
+  '{applicationName}': 'Name der Bewerbung (z. B. Polizeianwärter, Flugstaffel)',
+  '{user}': 'Wer entschieden hat (Erwähnung)',
+  '{applicant}': 'Der Bewerber (Erwähnung)',
+  '{number}': 'Bewerbungsnummer',
+  '{reason}': 'Grund (falls angegeben)',
+  '{questionCount}': 'Anzahl der Fragen',
+  '{timeLimit}': 'Zeitlimit, z. B. 3 Stunden',
+} as const;
+export type ApplicationVars = Partial<Record<keyof typeof APPLICATION_VARIABLES, string>>;
+export const DEFAULT_APPLICATION_MESSAGES = {
+  accepted: '🎉 Deine Bewerbung als `{applicationName}` ({number}) wurde von {user} **angenommen**!',
+  denied: 'Deine Bewerbung als `{applicationName}` ({number}) wurde von {user} leider **abgelehnt**. Du kannst dich später gerne erneut bewerben.',
+  confirmation: 'Bist du sicher, dass du dich bewerben möchtest?\n\nSobald du startest, schicke ich dir nacheinander **{questionCount} Fragen**. Du hast **{timeLimit}** Zeit, die Bewerbung abzuschließen – sonst musst du neu starten. Abbrechen kannst du jederzeit über den Button.',
+  completion: '✅ Deine Bewerbung **{number}** ist eingegangen! Das Team prüft sie – die Entscheidung bekommst du hier per Direktnachricht.',
+} as const;
+/** Ersetzt bekannte Variablen; ein Grund wird angehängt, wenn der Text `{reason}` nicht selbst enthält. */
+export function renderApplicationText(text: string, vars: ApplicationVars, appendReason = false): string {
+  const out = text.replace(/\{[a-zA-Z]+\}/g, (m) => (m in vars ? vars[m as keyof ApplicationVars] ?? '' : m));
+  return appendReason && vars['{reason}'] && !text.includes('{reason}') ? `${out}\n\n**Grund:** ${vars['{reason}']}` : out;
+}
+export const formatMinutes = (min: number) => {
+  const d = Math.floor(min / 1440), h = Math.floor((min % 1440) / 60), m = min % 60;
+  return [d ? `${d} ${d === 1 ? 'Tag' : 'Tage'}` : '', h ? `${h} ${h === 1 ? 'Stunde' : 'Stunden'}` : '', m ? `${m} ${m === 1 ? 'Minute' : 'Minuten'}` : ''].filter(Boolean).join(' ') || '0 Minuten';
+};
+/** Rollen-Voraussetzung: „alle“ oder „mindestens eine“ der Rollen. */
+export const rolesMatch = (have: string[], ids: string[], mode: 'ALL' | 'ANY') => (mode === 'ALL' ? ids.every((r) => have.includes(r)) : ids.some((r) => have.includes(r)));

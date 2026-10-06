@@ -150,10 +150,63 @@ describe('qualification applications', () => {
     expect(post.payload).toMatchObject({ pingRoleIds: ['520000000000000001'] });
     expect((await admin.post(`/api/v1/qualifications/applications/${ok.body.id}/decision`).send({ status: 'ACCEPTED' })).status).toBe(200);
     const decided = await prisma.discordOutbox.findFirstOrThrow({ where: { type: 'qualification.decided', payload: { path: ['number'], equals: row.number } } });
-    expect(decided.payload).toMatchObject({ status: 'ACCEPTED', roleId: '510000000000000009', roleIds: ['510000000000000001', '510000000000000002'] });
+    expect(decided.payload).toMatchObject({ status: 'ACCEPTED', roleIds: ['510000000000000009', '510000000000000001', '510000000000000002'], removeRoleIds: [] });
+    expect((decided.payload as { message: string }).message).toContain('`Flugstaffel`');
     // alte Einrichtungen (Fragen als reiner Text) funktionieren weiter
     await prisma.systemSetting.update({ where: { key: 'qualifications.config' }, data: { value: { ...cur, units: [{ key: 'alt', name: 'Alt', description: '', questions: ['Eine alte Frage?'] }] } } });
     expect((await admin.get('/api/v1/qualifications/config')).body.units[0].questions[0]).toMatchObject({ key: 'q1', label: 'Eine alte Frage?', type: 'TEXT', required: true });
+    expect((await admin.put('/api/v1/qualifications/config').send(cur)).status).toBe(200);
+  });
+
+  it('requirements like Appy: closed applications receive no submissions; decided ones go to the accepted/denied channel; police pending channel', async () => {
+    const admin = (await login(app, 'q_admin')).agent;
+    const cur = (await admin.get('/api/v1/qualifications/config')).body;
+    const unit = { key: 'flugstaffel', name: 'Flugstaffel', description: '', questions: ['Warum?'], enabled: false, acceptedChannelId: '610000000000000001', deniedChannelId: '610000000000000002' };
+    expect((await admin.put('/api/v1/qualifications/config').send({ ...cur, units: [unit], police: { ...cur.police, enabled: false, name: 'Polizeianwärter', channelId: '610000000000000010', acceptedChannelId: '610000000000000011' } })).status).toBe(200);
+    const D = '300000000000000088';
+    const send = () => http().post('/api/v1/bot/qualifications/applications').set(bot()).send({ unit: 'flugstaffel', discordId: D, discordName: 'x', answers: [{ question: 'Warum?', answer: 'Darum' }] });
+    expect((await send()).status).toBe(409);
+    const form = (await http().get('/api/v1/applications/form')).body as { key: string; required: boolean }[];
+    const answers = Object.fromEntries(form.filter((f) => f.required).map((f) => [f.key, 'Antwort']));
+    expect((await http().post('/api/v1/applications').send({ robloxUsername: 'Closed_Test', answers })).status).toBe(409);
+    // öffnen → Bewerbung geht in den eigenen Channel; Entscheidung landet im Channel „abgelehnt“
+    expect((await admin.put('/api/v1/qualifications/config').send({ ...cur, units: [{ ...unit, enabled: true }], police: { ...cur.police, enabled: true, channelId: '610000000000000010', acceptedChannelId: '610000000000000011' } })).status).toBe(200);
+    const ok = await send();
+    expect(ok.status).toBe(201);
+    expect((await admin.post(`/api/v1/qualifications/applications/${ok.body.id}/decision`).send({ status: 'REJECTED', reason: 'Zu wenig Erfahrung' })).status).toBe(200);
+    const archived = await prisma.discordOutbox.findFirstOrThrow({ where: { type: 'qualification.archived', payload: { path: ['id'], equals: ok.body.id } } });
+    expect(archived.payload).toMatchObject({ channelId: '610000000000000002', status: 'REJECTED', reason: 'Zu wenig Erfahrung', answers: [{ question: 'Warum?', answer: 'Darum' }] });
+    const pol = await http().post('/api/v1/bot/application').set(bot()).send({ robloxUsername: 'Arch_Test', discordId: '300000000000000089', answers });
+    expect(pol.status).toBe(201);
+    const posted = await prisma.discordOutbox.findFirstOrThrow({ where: { type: 'application.submitted', payload: { path: ['number'], equals: pol.body.number } } });
+    expect(posted.payload).toMatchObject({ channelId: '610000000000000010' });
+    const row = await prisma.application.findFirstOrThrow({ where: { number: pol.body.number } });
+    expect((await admin.post(`/api/v1/applications/${row.id}/discord-decision`).send({ status: 'ACCEPTED' })).status).toBe(200);
+    expect((await prisma.discordOutbox.findFirstOrThrow({ where: { type: 'application.archived', payload: { path: ['id'], equals: row.id } } })).payload).toMatchObject({ channelId: '610000000000000011', status: 'ACCEPTED' });
+    expect((await admin.put('/api/v1/qualifications/config').send(cur)).status).toBe(200);
+  });
+
+  it('Appy settings: cooldown, pending roles on submit, staff thread, own accepted/denied text and roles', async () => {
+    const admin = (await login(app, 'q_admin')).agent;
+    const cur = (await admin.get('/api/v1/qualifications/config')).body;
+    const settings = { messages: { denied: 'Bewerbung {number} als {applicationName} abgelehnt von {user}.' }, roles: { pending: ['620000000000000001'], removeOnSubmit: ['620000000000000002'], denied: ['620000000000000003'], deniedRemove: ['620000000000000004'] }, staffThreads: true, cooldownMinutes: 60 * 24 * 14 };
+    expect((await admin.put('/api/v1/qualifications/config').send({ ...cur, units: [{ key: 'flugstaffel', name: 'Flugstaffel', description: '', questions: ['Warum?'], settings }] })).status).toBe(200);
+    expect((await admin.get('/api/v1/qualifications/config')).body.units[0].settings).toMatchObject({ timeLimitMinutes: 180, roles: { required: { ids: [], mode: 'ANY' } }, messages: { accepted: expect.stringContaining('{applicationName}') } });
+    const D = '300000000000000099';
+    const send = () => http().post('/api/v1/bot/qualifications/applications').set(bot()).send({ unit: 'flugstaffel', discordId: D, discordName: 'x', answers: [{ question: 'Warum?', answer: 'Darum' }] });
+    const ok = await send();
+    expect(ok.status).toBe(201);
+    const post = await prisma.discordOutbox.findFirstOrThrow({ where: { type: 'qualification.submitted', payload: { path: ['id'], equals: ok.body.id } } });
+    expect(post.payload).toMatchObject({ thread: true });
+    expect((await prisma.discordOutbox.findFirstOrThrow({ where: { type: 'member.roles', payload: { path: ['discordId'], equals: D } } })).payload).toMatchObject({ add: ['620000000000000001'], remove: ['620000000000000002'] });
+    expect((await admin.post(`/api/v1/qualifications/applications/${ok.body.id}/decision`).send({ status: 'REJECTED' })).status).toBe(200);
+    const dec = (await prisma.discordOutbox.findFirstOrThrow({ where: { type: 'qualification.decided', payload: { path: ['discordId'], equals: D } } })).payload as Record<string, unknown>;
+    expect(dec).toMatchObject({ roleIds: ['620000000000000003'], removeRoleIds: ['620000000000000004', '620000000000000001'] });
+    expect(dec.message).toMatch(/^Bewerbung Q-\S+ als Flugstaffel abgelehnt von /);
+    // Cooldown (14 Tage) nach der letzten Bewerbung
+    const again = await send();
+    expect(again.status).toBe(409);
+    expect(again.body.message).toContain('14 Tage');
     expect((await admin.put('/api/v1/qualifications/config').send(cur)).status).toBe(200);
   });
 

@@ -5,6 +5,7 @@ import { api, type Page } from '../../lib/api';
 import { useAuth } from '../../lib/auth';
 import { DataTable, useDebounced } from '../../components/DataTable';
 import { Badge, Button, Card, ConfirmDialog, EmptyState, ErrorState, Field, fmt, Input, Modal, PageHeader, Select, SkeletonRows, Tabs } from '../../components/ui';
+import { GuildTag, useGuilds } from '../../lib/guilds';
 import { duration, errText, hex, label, useTicketConfig, type RatingSummary, type TicketRow, type TicketStats } from '../../lib/tickets';
 const TicketSetup = lazy(() => import('./TicketSetup').then((m) => ({ default: m.TicketSetup })));
 
@@ -44,7 +45,9 @@ function TicketList() {
   const nav = useNavigate();
   const { can } = useAuth();
   const cfg = useTicketConfig();
-  const [f, setF] = useState({ kind: 'open', statusId: '', priorityId: '', categoryId: '', claimer: '', creator: '', from: '', to: '' });
+  const guilds = useGuilds();
+  const multi = (guilds.data?.length ?? 0) > 1;
+  const [f, setF] = useState({ kind: 'open', statusId: '', priorityId: '', categoryId: '', claimer: '', creator: '', from: '', to: '', guildId: '' });
   const [q, setQ] = useState('');
   const [page, setPage] = useState(1);
   const [open, setOpen] = useState(false);
@@ -59,6 +62,7 @@ function TicketList() {
         columns={[
           { key: 'number', label: '#', render: (t) => <span className="font-mono">#{t.number}</span> },
           { key: 'name', label: 'Channel', render: (t) => <span>{t.name}{t.locked && <span className="ml-1" title="Locked">⛔</span>}{t.escalatedAt && !t.closedAt && <span className="ml-1" title="Escalated">🟠</span>}</span> },
+          ...(multi ? [{ key: 'guild', label: 'Server', render: (t: TicketRow) => <GuildTag id={t.guildId} /> }] : []),
           { key: 'category', label: 'Category', render: (t) => label(t.category) },
           { key: 'status', label: 'Status', render: (t) => <StatusChip s={t.status} /> },
           { key: 'priority', label: 'Priority', render: (t) => <StatusChip s={t.priority} /> },
@@ -72,6 +76,7 @@ function TicketList() {
         search={q} onSearch={(v) => { setQ(v); setPage(1); }}
         toolbar={(
           <div className="flex flex-wrap gap-2">
+            {multi && <div className="w-40"><Select aria-label="Server" value={f.guildId} onChange={(e) => set({ guildId: e.target.value })}><option value="">All servers</option>{guilds.data!.map((g) => <option key={g.id} value={g.id}>{g.name}</option>)}</Select></div>}
             <div className="w-36"><Select aria-label="Type" value={f.kind} onChange={(e) => set({ kind: e.target.value })}>{KINDS.map(([v, l]) => <option key={v} value={v}>{l}</option>)}</Select></div>
             <div className="w-40"><Select aria-label="Category" value={f.categoryId} onChange={(e) => set({ categoryId: e.target.value })}><option value="">All categories</option>{c?.categories.map((x) => <option key={x.id} value={x.id}>{label(x)}</option>)}</Select></div>
             <div className="w-36"><Select aria-label="Status" value={f.statusId} onChange={(e) => set({ statusId: e.target.value })}><option value="">All statuses</option>{c?.statuses.map((x) => <option key={x.id} value={x.id}>{label(x)}</option>)}</Select></div>

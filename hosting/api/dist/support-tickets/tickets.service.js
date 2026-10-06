@@ -748,7 +748,7 @@ let SupportTicketsService = class SupportTicketsService {
             deletedAt: f.kind === 'deleted' ? { not: null } : undefined,
             ...(visible ? { categoryId: { in: f.categoryId ? visible.filter((c) => c === f.categoryId) : visible } } : f.categoryId ? { categoryId: f.categoryId } : {}),
             ...(f.kind === 'open' ? { statusId: { in: kindIds('OPEN') } } : f.kind === 'closed' ? { statusId: { in: kindIds('CLOSED') } } : f.kind === 'archived' ? { statusId: { in: kindIds('ARCHIVED') } } : f.kind === 'escalated' ? { escalatedAt: { not: null }, statusId: { in: kindIds('OPEN') } } : {}),
-            ...(f.statusId ? { statusId: f.statusId } : {}), ...(f.priorityId ? { priorityId: f.priorityId } : {}),
+            ...(f.statusId ? { statusId: f.statusId } : {}), ...(f.priorityId ? { priorityId: f.priorityId } : {}), ...(f.guildId ? { guildId: f.guildId } : {}),
             ...(claimer ? { claimers: { has: claimer } } : {}),
             ...(f.creator ? { OR: [{ creatorId: f.creator }, { creatorName: { contains: f.creator, mode: 'insensitive' } }] } : {}),
             ...(f.from || f.to ? { createdAt: { ...(f.from ? { gte: f.from } : {}), ...(f.to ? { lte: f.to } : {}) } } : {}),
@@ -759,7 +759,7 @@ let SupportTicketsService = class SupportTicketsService {
             this.prisma.supportTicket.count({ where }), this.prisma.ticketCategory.findMany({ select: { id: true, name: true, emoji: true } }), this.prisma.ticketPriority.findMany(),
         ]);
         return { total, page: f.page, pageSize: f.pageSize, items: rows.map((t) => ({
-                id: t.id, number: (0, shared_1.ticketNumber)(t.number), name: t.name, creatorId: t.creatorId, creatorName: t.creatorName, claimers: t.claimers, locked: t.locked, createdAt: t.createdAt, closedAt: t.closedAt, deletedAt: t.deletedAt, escalatedAt: t.escalatedAt,
+                id: t.id, number: (0, shared_1.ticketNumber)(t.number), name: t.name, guildId: t.guildId, creatorId: t.creatorId, creatorName: t.creatorName, claimers: t.claimers, locked: t.locked, createdAt: t.createdAt, closedAt: t.closedAt, deletedAt: t.deletedAt, escalatedAt: t.escalatedAt,
                 category: cats.find((c) => c.id === t.categoryId) ?? null, status: statuses.find((s) => s.id === t.statusId) ?? null, priority: prios.find((p) => p.id === t.priorityId) ?? null,
             })) };
     }

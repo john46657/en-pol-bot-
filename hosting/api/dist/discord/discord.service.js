@@ -20,6 +20,7 @@ const ALPHABET = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
 const CODE_TTL_MS = 10 * 60_000;
 const hash = (c) => (0, node_crypto_1.createHash)('sha256').update(c.toUpperCase().replace(/[\s-]/g, '')).digest('hex');
 exports.CHANNEL_KEYS = ['dispatch', 'wanted', 'announcements', 'applications', 'danger', 'sek', 'qualifications', 'duty', 'tickets'];
+const GUILDS_KEY = 'discord.guilds';
 let DiscordService = class DiscordService {
     prisma;
     audit;
@@ -103,6 +104,15 @@ let DiscordService = class DiscordService {
         catch { /* Benachrichtigung ist best effort */ }
     }
     // ---- Bot-Zustand (z. B. IDs der selbst aktualisierenden Nachrichten) ----
+    /** Server des Bots mit Channels und Rollen (meldet der Bot regelmäßig) – für Namen und Auswahllisten im Dashboard. */
+    async guilds() {
+        const v = (await this.prisma.systemSetting.findUnique({ where: { key: GUILDS_KEY } }))?.value;
+        return Array.isArray(v) ? v : [];
+    }
+    async saveGuilds(guilds) {
+        const value = guilds;
+        await this.prisma.systemSetting.upsert({ where: { key: GUILDS_KEY }, create: { key: GUILDS_KEY, value }, update: { value } });
+    }
     async getState(key) {
         return (await this.prisma.systemSetting.findUnique({ where: { key: `bot.state.${key}` } }))?.value ?? null;
     }

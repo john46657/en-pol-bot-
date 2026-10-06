@@ -3,7 +3,7 @@ import { BotApiError, type Api } from '../src/api';
 import { byName } from '../src/commands';
 import { interactionFor } from '../src/commands/features';
 import type { Ctx } from '../src/commands/types';
-import { teamlistEmbed, type Reply } from '../src/format';
+import { COLORS, teamlistEmbed, type Reply } from '../src/format';
 import { createLive } from '../src/live';
 import { dutyRoleChanges, pollOnce } from '../src/outbox';
 import type { Platform } from '../src/platform';
@@ -302,7 +302,7 @@ describe('Qualifikationen (Panel → Fragen per DM)', () => {
     expect(d.out[2]!.embed.description).toContain('**2/2.** Warum?');
     await handleDirectMessage({ userId: ME, userName: 'oscar', content: 'Weil ich fliegen will.', api, sendDm: d.sendDm });
     expect(d.out[3]!.embed.description).toContain('Q-2026-AB');
-    expect(calls.find((c) => c.path === '/bot/qualifications/applications')!.body).toMatchObject({ unit: 'flugstaffel', discordId: ME, discordName: 'oscar', durationSec: expect.any(Number), answers: [{ question: 'Roblox- und Discord-Name?', answer: 'Oscar / oscar#1' }, { question: 'Warum?', answer: 'Weil ich fliegen will.' }] });
+    expect(calls.find((c) => c.path === '/bot/qualifications/applications')!.body).toMatchObject({ unit: 'flugstaffel', discordId: ME, discordName: 'oscar', guildId: GUILD, durationSec: expect.any(Number), answers: [{ question: 'Roblox- und Discord-Name?', answer: 'Oscar / oscar#1' }, { question: 'Warum?', answer: 'Weil ich fliegen will.' }] });
     await handleDirectMessage({ userId: ME, userName: 'oscar', content: 'noch was', api, sendDm: d.sendDm });
     expect(d.out[4]!.embed.description).toContain('keine laufende Bewerbung');
   });
@@ -362,6 +362,62 @@ describe('Qualifikationen (Panel → Fragen per DM)', () => {
     expect(granted).toEqual(['510000000000000009', '510000000000000001']);
   });
 
+  it('closed applications (Enabled off) cannot be started; decided applications are posted for the accepted/denied channel', async () => {
+    const cfg = { title: 'Q', intro: '', units: [{ key: 'flug', name: 'Flugstaffel', description: '', enabled: false, questions: ['Warum?'] }] };
+    const { api } = fakeApi({ 'GET /bot/qualifications/open': { open: false }, 'GET /bot/qualifications': cfg });
+    const { p } = fakePlatform();
+    const pick = interactionFor('quali:pick')!;
+    expect(text(await pick.def.run({ ...ctx(api, { platform: p }), args: pick.args, values: ['flug'] }))).toContain('derzeit geschlossen');
+    const start = interactionFor('quali:start:flug')!;
+    expect(text(await start.def.run({ ...ctx(api, { platform: p }), args: start.args }))).toContain('derzeit geschlossen');
+    const e = renderOutboxEmbeds('qualification.archived', { number: 'Q-1', unitName: 'Flugstaffel', discordId: OTHER, discordName: 'bea', answers: [{ question: 'Warum?', answer: 'Darum' }], status: 'REJECTED', reason: 'Zu wenig Erfahrung', decidedByName: 'Chief' })!;
+    expect(e[0]!.color).toBe(COLORS.danger);
+    expect(e.at(-1)!.fields).toEqual([{ name: 'Entscheidung', value: '❌ Abgelehnt von Chief\n**Grund:** Zu wenig Erfahrung' }]);
+    expect(outboxButtons('qualification.archived', { id: 'x' })).toBeUndefined();
+  });
+
+  it('Appy settings in Discord: required/restricted roles, own confirmation/completion text and time limit, manager roles for decisions', async () => {
+    const settings = { messages: { confirmation: 'Willst du dich als {applicationName} bewerben? {questionCount} Fragen, {timeLimit} Zeit.', completion: 'Danke! {number} ist da.' }, roles: { required: { ids: ['R-BUERGER'], mode: 'ALL' }, restricted: { ids: ['R-GESPERRT'], mode: 'ANY' }, managers: ['R-LEITUNG'] }, timeLimitMinutes: 30 };
+    const cfg = { title: 'Q', intro: '', units: [{ key: 'flug', name: 'Flugstaffel', description: '', questions: ['Warum?'], settings }] };
+    const { api } = fakeApi({ 'GET /bot/qualifications/open': { open: false }, 'GET /bot/qualifications': cfg, 'POST /bot/qualifications/applications': { number: 'Q-7' }, 'GET /qualifications/applications/': { unit: 'flug' }, 'POST /qualifications/applications/': { number: 'Q-7', unitName: 'Flugstaffel' } });
+    const { p, log } = fakePlatform();
+    const pick = interactionFor('quali:pick')!;
+    expect(text(await pick.def.run({ ...ctx(api, { platform: p, memberRoleIds: [] }), args: pick.args, values: ['flug'] }))).toContain('nötigen Rollen');
+    expect(text(await pick.def.run({ ...ctx(api, { platform: p, memberRoleIds: ['R-BUERGER', 'R-GESPERRT'] }), args: pick.args, values: ['flug'] }))).toContain('nicht bewerben');
+    const dms: { embed: { description?: string } }[] = [];
+    const p2 = { ...p, async sendDm(_u: string, m: (typeof dms)[number]) { dms.push(m); return { channelId: 'DM', messageId: 'M' }; } } as never;
+    await pick.def.run({ ...ctx(api, { platform: p2, memberRoleIds: ['R-BUERGER'] }), args: pick.args, values: ['flug'] });
+    expect(dms[0]!.embed.description).toBe('Willst du dich als Flugstaffel bewerben? 1 Fragen, 30 Minuten Zeit.');
+    void log;
+    const start = interactionFor('quali:start:flug')!;
+    await start.def.run({ ...ctx(api, { platform: p2, memberRoleIds: ['R-BUERGER'] }), args: start.args });
+    const d = dmLog();
+    await handleDirectMessage({ userId: ME, userName: 'o', content: 'Darum', api, sendDm: d.sendDm });
+    expect(d.out.at(-1)!.embed.description).toBe('Danke! Q-7 ist da.');
+    // Zeitlimit 30 Minuten
+    await start.def.run({ ...ctx(api, { platform: p2, memberRoleIds: ['R-BUERGER'] }), args: start.args });
+    await handleDirectMessage({ userId: ME, userName: 'o', content: 'x', api, sendDm: d.sendDm, now: Date.now() + 31 * 60_000 });
+    expect(d.out.at(-1)!.embed.description).toContain('abgelaufen (30 Minuten)');
+    // Entscheiden nur mit Manager-Rolle
+    const dec = interactionFor('quali:decide:q:ID1:ACCEPTED')!;
+    expect(text(await dec.def.run({ ...ctx(api, { memberRoleIds: [] }), args: dec.args }))).toContain('Manager-Rollen');
+    expect(text(await dec.def.run({ ...ctx(api, { memberRoleIds: ['R-LEITUNG'] }), args: dec.args }))).toContain('angenommen');
+  });
+
+  it('outbox: decision DM uses the configured text, gives and removes roles; member.roles changes roles on submit', async () => {
+    const box = (items: unknown[]) => { const acks: unknown[] = []; const api: Api = { async asUser() { throw new Error('unused'); }, async service(_m, path, body) { if (path === '/bot/config') return {} as never; if (path.startsWith('/bot/outbox?')) return items as never; acks.push(body); return undefined as never; } }; return { api, acks }; };
+    const dms: string[] = [], granted: string[] = [], synced: string[] = [];
+    const b = box([
+      { id: 'a', type: 'application.decided', channelKey: 'applications', payload: { discordId: OTHER, status: 'REJECTED', number: 'APP-1', message: 'Leider nein, {user} sagt nein.', roleIds: ['700000000000000001'], removeRoleIds: ['700000000000000002'] } },
+      { id: 'b', type: 'member.roles', channelKey: 'applications', payload: { discordId: OTHER, add: ['700000000000000003'], remove: ['700000000000000004'] } },
+    ]);
+    await pollOnce(b.api, async () => undefined, () => undefined, async (_u, t) => { dms.push(t); }, async (_u, r) => { granted.push(r); }, async (_u, add, remove) => { synced.push(`+${add.join(',')} -${remove.join(',')}`); });
+    expect(dms).toEqual(['Leider nein, {user} sagt nein.']);
+    expect(granted).toEqual(['700000000000000001']); // Ablehnungs-Rolle wird auch bei Ablehnung vergeben
+    expect(synced).toEqual(['+ -700000000000000002', '+700000000000000003 -700000000000000004']);
+    expect(b.acks).toEqual([{ ok: true }, { ok: true }]);
+  });
+
   it('cancel, 3-hour timeout and retry when the system is down', async () => {
     const down = fakeApi({ 'GET /bot/qualifications/open': { open: false }, 'GET /bot/qualifications': CFG, 'POST /bot/qualifications/applications': new BotApiError(0, 'UNREACHABLE', 'down') });
     const { p } = fakePlatform();
@@ -402,18 +458,18 @@ describe('Qualifikationen (Panel → Fragen per DM)', () => {
     const r = await hit.def.run({ ...ctx(api), args: hit.args });
     expect(text(r)).toContain('ins SEK aufgenommen');
     expect(r.decided?.text).toContain(`✅ Angenommen von <@${ME}> (Lead)`);
-    expect(calls[0]).toMatchObject({ kind: 'user', path: `/qualifications/applications/${ID}/decision`, body: { status: 'ACCEPTED' } });
+    expect(calls.filter((x) => x.method === 'POST')[0]).toMatchObject({ kind: 'user', path: `/qualifications/applications/${ID}/decision`, body: { status: 'ACCEPTED' } });
     // alte Buttons (ohne Art) funktionieren weiter
     const old = interactionFor(`quali:decide:${ID}:REJECTED`)!;
     await old.def.run({ ...ctx(api), args: old.args });
-    expect(calls[1]).toMatchObject({ path: `/qualifications/applications/${ID}/decision`, body: { status: 'REJECTED' } });
+    expect(calls.filter((x) => x.method === 'POST')[1]).toMatchObject({ path: `/qualifications/applications/${ID}/decision`, body: { status: 'REJECTED' } });
     // mit Grund: erst Formular, dann Entscheidung (Polizei-Bewerbung)
     const reason = interactionFor(`quali:reason:p:${ID}:REJECTED`)!;
     expect(reason.def.opensModal?.(reason.args)).toBe(true);
     const modal = (await reason.def.run({ ...ctx(api), args: reason.args })).modal!;
     const submit = interactionFor(modal.id)!;
     const r2 = await submit.def.run({ ...ctx(api), args: submit.args, fields: { reason: 'Zu wenig Erfahrung' } });
-    expect(calls[2]).toMatchObject({ path: `/applications/${ID}/discord-decision`, body: { status: 'REJECTED', reason: 'Zu wenig Erfahrung' } });
+    expect(calls.filter((x) => x.method === 'POST')[2]).toMatchObject({ path: `/applications/${ID}/discord-decision`, body: { status: 'REJECTED', reason: 'Zu wenig Erfahrung' } });
     expect(r2.decided?.text).toContain('**Grund:** Zu wenig Erfahrung');
     const done = fakeApi({ 'POST /qualifications/applications': new BotApiError(409, 'CONFLICT', 'x') });
     expect(text(await hit.def.run({ ...ctx(done.api), args: hit.args }))).toContain('bereits entschieden');

@@ -29,7 +29,7 @@ export interface TicketSettingsCfg {
 export interface TicketConfig { categories: TicketCategoryCfg[]; panels: TicketPanelCfg[]; statuses: TicketStatusCfg[]; priorities: TicketPriorityCfg[]; reasons: TicketReasonCfg[]; settings: TicketSettingsCfg }
 
 export interface TicketRow {
-  id: string; number: string; name: string; creatorId: string; creatorName: string; claimers: string[]; locked: boolean; createdAt: string; closedAt: string | null; deletedAt: string | null; escalatedAt: string | null;
+  id: string; number: string; name: string; guildId?: string; creatorId: string; creatorName: string; claimers: string[]; locked: boolean; createdAt: string; closedAt: string | null; deletedAt: string | null; escalatedAt: string | null;
   category: { id: string; name: string; emoji: string | null } | null; status: TicketStatusCfg | null; priority: TicketPriorityCfg | null;
 }
 export interface TicketAttachment { name: string; size: number; contentType: string | null; url: string; storageKey?: string | null }
@@ -63,13 +63,13 @@ const FIELD: Record<string, string> = {
   name: 'Name', emoji: 'Emoji', description: 'Description', channelNameFormat: 'Channel name format', discordCategoryId: 'Discord category ID', channelId: 'Target channel',
   staffRoleIds: 'Staff roles', extraRoleIds: 'Additional roles', requiredRoleIds: 'Required Discord roles', allowedUserIds: 'Only these users', escalationRoleIds: 'Roles added on escalation',
   allowedRoleIds: 'Visible for Discord roles', notifyRoleIds: 'Notify Discord roles', accessRoleNames: 'Dashboard access roles', allowedRoleNames: 'May be set by system roles',
-  transcriptChannelId: 'Transcript channel ID', logChannelId: 'Log channel ID', questions: 'Question', units: 'Unit', policeForm: 'Police application – question', minLength: 'min. length', maxLength: 'max. length', pingRoleIds: 'Ping roles', roleId: 'role ID', buttons: 'Button', welcomeTitle: 'Title', welcomeMessage: 'Message',
+  transcriptChannelId: 'Transcript channel ID', logChannelId: 'Log channel ID', questions: 'Question', units: 'Unit', policeForm: 'Police application – question', minLength: 'min. length', maxLength: 'max. length', pingRoleIds: 'Ping roles', roleId: 'role ID', police: 'Police application', settings: 'Settings', messages: 'Messages', roles: 'Roles', timeLimitMinutes: 'Time limit', cooldownMinutes: 'Cooldown', acceptedChannelId: 'Accepted channel', deniedChannelId: 'Denied channel', accepted: 'Accepted', denied: 'Denied', confirmation: 'Confirmation', completion: 'Completion', buttons: 'Button', welcomeTitle: 'Title', welcomeMessage: 'Message',
   thumbnailUrl: 'Thumbnail', imageUrl: 'Image', bannerUrl: 'Banner', footerIconUrl: 'Footer icon', authorIconUrl: 'Author icon', placeholder: 'Placeholder', text: 'Reason', label: 'text', options: 'options',
 };
 const fieldName = (path: string) => {
   const parts = path.split('.');
   // tiefe Pfade (z. B. units.0.questions.1.options): „units 1 › Question 2 › options“
-  if (parts.length > 3) return parts.reduce<string[]>((out, p) => { if (/^\d+$/.test(p)) out[out.length - 1] = `${out[out.length - 1]} ${Number(p) + 1}`; else out.push(FIELD[p] ?? p); return out; }, []).join(' › ');
+  if (parts.length > 3 || (parts[1] !== undefined && !/^\d+$/.test(parts[1]))) return parts.reduce<string[]>((out, p) => { if (/^\d+$/.test(p)) out[out.length - 1] = `${out[out.length - 1]} ${Number(p) + 1}`; else out.push(FIELD[p] ?? p); return out; }, []).join(' › ');
   const [k = '', i, sub] = parts;
   const base = FIELD[k] ?? k;
   if (i === undefined) return base;

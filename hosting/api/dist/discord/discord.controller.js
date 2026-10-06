@@ -24,6 +24,12 @@ const duty_service_1 = require("../duty/duty.service");
 const prisma_service_1 = require("../prisma/prisma.service");
 const decorators_1 = require("../authz/decorators");
 const zod_pipe_1 = require("../common/zod.pipe");
+const sf = zod_1.z.string().regex(/^\d{15,25}$/);
+const guildsBody = zod_1.z.object({ guilds: zod_1.z.array(zod_1.z.object({
+        id: sf, name: zod_1.z.string().max(100), icon: zod_1.z.string().url().max(300).nullable(),
+        channels: zod_1.z.array(zod_1.z.object({ id: sf, name: zod_1.z.string().max(100), type: zod_1.z.enum(['text', 'category', 'voice', 'other']), parentId: sf.nullable(), position: zod_1.z.number().int() })).max(500),
+        roles: zod_1.z.array(zod_1.z.object({ id: sf, name: zod_1.z.string().max(100), color: zod_1.z.number().int().min(0), position: zod_1.z.number().int() })).max(250),
+    })).max(50) });
 const redeem = zod_1.z.object({ code: zod_1.z.string().trim().min(8).max(12), discordId: zod_1.z.string().regex(/^\d{15,25}$/) });
 const ack = zod_1.z.object({ ok: zod_1.z.boolean(), error: zod_1.z.string().max(300).optional() });
 const outboxQ = zod_1.z.object({ limit: zod_1.z.coerce.number().int().min(1).max(50).default(20) });
@@ -31,7 +37,7 @@ const rate = process.env.NODE_ENV === 'test' ? 10_000 : 20;
 const stateKey = zod_1.z.string().regex(/^[a-z0-9:_-]{1,64}$/);
 const stateBody = zod_1.z.object({ value: zod_1.z.unknown() });
 const openQ = zod_1.z.object({ discordId: zod_1.z.string().regex(/^\d{15,25}$/) });
-const application = zod_1.z.object({ robloxUsername: zod_1.z.string().trim().min(1).max(64), robloxUserId: zod_1.z.string().max(20).optional(), discordId: zod_1.z.string().regex(/^\d{15,25}$/), discordName: zod_1.z.string().trim().max(100).optional(), durationSec: zod_1.z.number().int().min(0).max(86_400).optional(), joinedAt: zod_1.z.coerce.date().optional(), answers: zod_1.z.record(zod_1.z.string(), zod_1.z.union([zod_1.z.string().max(5000), zod_1.z.array(zod_1.z.string().max(100)).max(25)])) });
+const application = zod_1.z.object({ guildId: zod_1.z.string().regex(/^\d{15,25}$/).optional(), robloxUsername: zod_1.z.string().trim().min(1).max(64), robloxUserId: zod_1.z.string().max(20).optional(), discordId: zod_1.z.string().regex(/^\d{15,25}$/), discordName: zod_1.z.string().trim().max(100).optional(), durationSec: zod_1.z.number().int().min(0).max(86_400).optional(), joinedAt: zod_1.z.coerce.date().optional(), answers: zod_1.z.record(zod_1.z.string(), zod_1.z.union([zod_1.z.string().max(5000), zod_1.z.array(zod_1.z.string().max(100)).max(25)])) });
 /** Web-Seite: eigenes Konto verknüpfen. Authentifiziert per Session; Bot-Zugang ist hier nicht erlaubt. */
 let DiscordController = class DiscordController {
     d;
@@ -39,6 +45,8 @@ let DiscordController = class DiscordController {
         this.d = d;
     }
     link(a) { return this.d.status(a.userId); }
+    /** Server des Bots mit Channels und Rollen (Namen + Auswahllisten im Dashboard). */
+    guilds() { return this.d.guilds(); }
     linkCode(a) { return this.d.createLinkCode(a); }
     unlinkSelf(a) { return this.d.unlink(a, a.userId); }
     unlinkUser(a, userId) { return this.d.unlink(a, userId); }
@@ -51,6 +59,13 @@ __decorate([
     __metadata("design:paramtypes", [Object]),
     __metadata("design:returntype", void 0)
 ], DiscordController.prototype, "link", null);
+__decorate([
+    (0, common_1.Get)('guilds'),
+    (0, decorators_1.RequirePermission)('dashboard.view'),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", []),
+    __metadata("design:returntype", void 0)
+], DiscordController.prototype, "guilds", null);
 __decorate([
     (0, common_1.Post)('link-code'),
     (0, throttler_1.Throttle)({ default: { limit: process.env.NODE_ENV === 'test' ? 10_000 : 10, ttl: 60_000 } }),
@@ -98,6 +113,7 @@ let BotController = class BotController {
     }
     redeem(b) { return this.d.redeem(b.code, b.discordId); }
     config() { return this.d.channels(); }
+    async guilds(b) { await this.d.saveGuilds(b.guilds); }
     outbox(q) { return this.d.pending(q.limit); }
     ack(id, b) { return this.d.ack(id, b.ok, b.error); }
     /** Teamübersicht für die selbst aktualisierende Teamliste in Discord (nur Anzeigefelder). */
@@ -111,7 +127,7 @@ let BotController = class BotController {
     async setState(key, b) { await this.d.setState(key, b.value); }
     /** Bewerbung aus Discord. Eigener Dienstweg (mit Bot-Token), damit das öffentliche Rate-Limit pro IP nicht alle Discord-Bewerber gemeinsam trifft. */
     openApplication(q) { return this.applications.openForDiscord(q.discordId); }
-    submitApplication(b) { return this.applications.submit({ robloxUsername: b.robloxUsername, robloxUserId: b.robloxUserId, answers: b.answers }, { discordId: b.discordId, discordName: b.discordName, durationSec: b.durationSec, joinedAt: b.joinedAt }); }
+    submitApplication(b) { return this.applications.submit({ robloxUsername: b.robloxUsername, robloxUserId: b.robloxUserId, answers: b.answers }, { discordId: b.discordId, discordName: b.discordName, durationSec: b.durationSec, joinedAt: b.joinedAt, guildId: b.guildId }); }
 };
 exports.BotController = BotController;
 __decorate([
@@ -131,6 +147,15 @@ __decorate([
     __metadata("design:paramtypes", []),
     __metadata("design:returntype", void 0)
 ], BotController.prototype, "config", null);
+__decorate([
+    (0, decorators_1.BotService)(),
+    (0, common_1.Put)('guilds'),
+    (0, common_1.HttpCode)(204),
+    __param(0, (0, common_1.Body)((0, zod_pipe_1.zodBody)(guildsBody))),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [void 0]),
+    __metadata("design:returntype", Promise)
+], BotController.prototype, "guilds", null);
 __decorate([
     (0, decorators_1.BotService)(),
     (0, common_1.Get)('outbox'),

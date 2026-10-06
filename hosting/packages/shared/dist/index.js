@@ -23,11 +23,13 @@ __export(index_exports, {
   ALL_PERMISSIONS: () => ALL_PERMISSIONS,
   APPLICATION_STATUSES: () => APPLICATION_STATUSES,
   APPLICATION_TRANSITIONS: () => APPLICATION_TRANSITIONS,
+  APPLICATION_VARIABLES: () => APPLICATION_VARIABLES,
   CLAIM_MODES: () => CLAIM_MODES,
   CLOSE_REASON_MODES: () => CLOSE_REASON_MODES,
   CLOSE_REASON_SOURCES: () => CLOSE_REASON_SOURCES,
   COMPLAINT_STATUSES: () => COMPLAINT_STATUSES,
   COMPLAINT_TRANSITIONS: () => COMPLAINT_TRANSITIONS,
+  DEFAULT_APPLICATION_MESSAGES: () => DEFAULT_APPLICATION_MESSAGES,
   DISPATCH_STATUSES: () => DISPATCH_STATUSES,
   DISPATCH_TRANSITIONS: () => DISPATCH_TRANSITIONS,
   DUTY_STATUSES: () => DUTY_STATUSES,
@@ -61,13 +63,16 @@ __export(index_exports, {
   checkAnswer: () => checkAnswer,
   defaultTicketButtons: () => defaultTicketButtons,
   effectivePermissions: () => effectivePermissions,
+  formatMinutes: () => formatMinutes,
   freeFieldKey: () => freeFieldKey,
   grantMatches: () => grantMatches,
   isPermissionKey: () => isPermissionKey,
   isValidRobloxUserId: () => isValidRobloxUserId,
   normalizeField: () => normalizeField,
+  renderApplicationText: () => renderApplicationText,
   renderTicketText: () => renderTicketText,
   resolvePermission: () => resolvePermission,
+  rolesMatch: () => rolesMatch,
   ticketChannelName: () => ticketChannelName,
   ticketNumber: () => ticketNumber
 });
@@ -309,16 +314,44 @@ function checkAnswer(field, value) {
   if (opts.some((o) => !o)) return { ok: false, error: `Ung\xFCltige Auswahl bei \u201E${f.label}\u201C.` };
   return { ok: true, text: picked.join(", "), roleIds: f.type === "ROLE" ? opts.map((o) => o.roleId).filter((r) => !!r && /^\d{15,25}$/.test(r)) : [] };
 }
+var APPLICATION_VARIABLES = {
+  "{applicationName}": "Name der Bewerbung (z. B. Polizeianw\xE4rter, Flugstaffel)",
+  "{user}": "Wer entschieden hat (Erw\xE4hnung)",
+  "{applicant}": "Der Bewerber (Erw\xE4hnung)",
+  "{number}": "Bewerbungsnummer",
+  "{reason}": "Grund (falls angegeben)",
+  "{questionCount}": "Anzahl der Fragen",
+  "{timeLimit}": "Zeitlimit, z. B. 3 Stunden"
+};
+var DEFAULT_APPLICATION_MESSAGES = {
+  accepted: "\u{1F389} Deine Bewerbung als `{applicationName}` ({number}) wurde von {user} **angenommen**!",
+  denied: "Deine Bewerbung als `{applicationName}` ({number}) wurde von {user} leider **abgelehnt**. Du kannst dich sp\xE4ter gerne erneut bewerben.",
+  confirmation: "Bist du sicher, dass du dich bewerben m\xF6chtest?\n\nSobald du startest, schicke ich dir nacheinander **{questionCount} Fragen**. Du hast **{timeLimit}** Zeit, die Bewerbung abzuschlie\xDFen \u2013 sonst musst du neu starten. Abbrechen kannst du jederzeit \xFCber den Button.",
+  completion: "\u2705 Deine Bewerbung **{number}** ist eingegangen! Das Team pr\xFCft sie \u2013 die Entscheidung bekommst du hier per Direktnachricht."
+};
+function renderApplicationText(text, vars, appendReason = false) {
+  const out = text.replace(/\{[a-zA-Z]+\}/g, (m) => m in vars ? vars[m] ?? "" : m);
+  return appendReason && vars["{reason}"] && !text.includes("{reason}") ? `${out}
+
+**Grund:** ${vars["{reason}"]}` : out;
+}
+var formatMinutes = (min) => {
+  const d = Math.floor(min / 1440), h = Math.floor(min % 1440 / 60), m = min % 60;
+  return [d ? `${d} ${d === 1 ? "Tag" : "Tage"}` : "", h ? `${h} ${h === 1 ? "Stunde" : "Stunden"}` : "", m ? `${m} ${m === 1 ? "Minute" : "Minuten"}` : ""].filter(Boolean).join(" ") || "0 Minuten";
+};
+var rolesMatch = (have, ids, mode) => mode === "ALL" ? ids.every((r) => have.includes(r)) : ids.some((r) => have.includes(r));
 // Annotate the CommonJS export names for ESM import in node:
 0 && (module.exports = {
   ALL_PERMISSIONS,
   APPLICATION_STATUSES,
   APPLICATION_TRANSITIONS,
+  APPLICATION_VARIABLES,
   CLAIM_MODES,
   CLOSE_REASON_MODES,
   CLOSE_REASON_SOURCES,
   COMPLAINT_STATUSES,
   COMPLAINT_TRANSITIONS,
+  DEFAULT_APPLICATION_MESSAGES,
   DISPATCH_STATUSES,
   DISPATCH_TRANSITIONS,
   DUTY_STATUSES,
@@ -352,13 +385,16 @@ function checkAnswer(field, value) {
   checkAnswer,
   defaultTicketButtons,
   effectivePermissions,
+  formatMinutes,
   freeFieldKey,
   grantMatches,
   isPermissionKey,
   isValidRobloxUserId,
   normalizeField,
+  renderApplicationText,
   renderTicketText,
   resolvePermission,
+  rolesMatch,
   ticketChannelName,
   ticketNumber
 });

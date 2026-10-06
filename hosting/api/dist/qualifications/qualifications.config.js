@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.DEFAULT_CONFIG = exports.saveSchema = exports.configSchema = exports.policeSchema = exports.unitSchema = exports.formSchema = exports.formFieldSchema = void 0;
+exports.DEFAULT_CONFIG = exports.saveSchema = exports.configSchema = exports.policeSchema = exports.unitSchema = exports.appSettingsSchema = exports.formSchema = exports.formFieldSchema = void 0;
 const zod_1 = require("zod");
 const shared_1 = require("@enrp/shared");
 const roleIdOpt = zod_1.z.union([zod_1.z.string().regex(/^\d{15,25}$/, 'Discord role ID (15–25 digits)'), zod_1.z.literal('')]).optional().transform((v) => v || undefined);
@@ -26,6 +26,29 @@ exports.formSchema = zod_1.z.array(exports.formFieldSchema).min(1).max(shared_1.
 const unitQuestions = zod_1.z.array(zod_1.z.union([zod_1.z.string().trim().min(3).max(300), exports.formFieldSchema])).min(1).max(shared_1.MAX_FORM_QUESTIONS)
     .transform((qs) => qs.map((q, i) => (typeof q === 'string' ? { key: `q${i + 1}`, label: q, required: true, type: 'TEXT', minLength: 0, maxLength: 1000, options: [], multiple: false } : q)))
     .refine((f) => new Set(f.map((x) => x.key)).size === f.length, 'Question keys must be unique.');
+/** Wie bei Appy: Bewerbung offen/geschlossen, Channels für angenommene/abgelehnte Bewerbungen. */
+const channelOpt = zod_1.z.union([zod_1.z.string().regex(/^\d{15,25}$/, 'Discord channel ID (15–25 digits)'), zod_1.z.literal('')]).optional();
+const roleList = zod_1.z.array(zod_1.z.string().regex(/^\d{15,25}$/, 'Discord role ID (15–25 digits)')).max(25).default([]);
+const roleRule = zod_1.z.object({ ids: roleList, mode: zod_1.z.enum(['ALL', 'ANY']).default('ANY') }).default({});
+/** Texte, Rollen und Sonstiges je Bewerbung (wie Appy: Embed Customization, Role Config, Other). */
+exports.appSettingsSchema = zod_1.z.object({
+    messages: zod_1.z.object({
+        accepted: zod_1.z.string().trim().min(1).max(2000).default(shared_1.DEFAULT_APPLICATION_MESSAGES.accepted),
+        denied: zod_1.z.string().trim().min(1).max(2000).default(shared_1.DEFAULT_APPLICATION_MESSAGES.denied),
+        confirmation: zod_1.z.string().trim().min(1).max(2000).default(shared_1.DEFAULT_APPLICATION_MESSAGES.confirmation),
+        completion: zod_1.z.string().trim().min(1).max(2000).default(shared_1.DEFAULT_APPLICATION_MESSAGES.completion),
+    }).default({}),
+    roles: zod_1.z.object({
+        restricted: roleRule, required: roleRule,
+        accepted: roleList, denied: roleList, acceptedRemove: roleList, deniedRemove: roleList, pending: roleList, removeOnSubmit: roleList,
+        /** Wer im Discord annehmen/ablehnen darf (zusätzlich zum Recht im System); leer = alle mit dem Recht. */
+        managers: roleList,
+    }).default({}),
+    staffThreads: zod_1.z.boolean().default(false),
+    cooldownMinutes: zod_1.z.number().int().min(0).max(60 * 24 * 365).default(0),
+    timeLimitMinutes: zod_1.z.number().int().min(5).max(60 * 24 * 7).default(180),
+}).default({});
+const requirements = { enabled: zod_1.z.boolean().default(true), acceptedChannelId: channelOpt, deniedChannelId: channelOpt, settings: exports.appSettingsSchema };
 /** Eine Einheit/Qualifikation, für die man sich über das Discord-Panel bewerben kann. */
 exports.unitSchema = zod_1.z.object({
     key: zod_1.z.string().trim().regex(/^[a-z0-9_-]{2,24}$/, 'Key: 2–24 characters a-z, 0-9, - or _'),
@@ -35,12 +58,17 @@ exports.unitSchema = zod_1.z.object({
     roleId: zod_1.z.union([zod_1.z.string().regex(/^\d{15,25}$/), zod_1.z.literal('')]).optional(),
     /** Eigener Discord-Channel für eingehende Bewerbungen dieser Einheit (sonst der allgemeine Qualifications-Channel). */
     channelId: zod_1.z.union([zod_1.z.string().regex(/^\d{15,25}$/), zod_1.z.literal('')]).optional(),
+    ...requirements,
     questions: unitQuestions,
     /** Discord-Rolle(n), die bei einer neuen Bewerbung im Channel erwähnt werden (z. B. @Staffelkommandant). */
     pingRoleIds: zod_1.z.array(zod_1.z.string().regex(/^\d{15,25}$/, 'Discord role ID (15–25 digits)')).max(10).default([]),
 });
 /** Texte des Panels für die normale Bewerbung bei EN Polizei (/bewerbungspanel); die Fragen sind das Bewerbungsformular (`application.form`). */
 exports.policeSchema = zod_1.z.object({
+    ...requirements,
+    name: zod_1.z.string().trim().min(2).max(60).default('Polizeianwärter'),
+    /** Channel für neue Bewerbungen (sonst der Applications-Channel aus den Einstellungen). */
+    channelId: channelOpt,
     pingRoleIds: zod_1.z.array(zod_1.z.string().regex(/^\d{15,25}$/, 'Discord role ID (15–25 digits)')).max(10).default([]),
     title: zod_1.z.string().trim().min(2).max(100).default('📋 Bewerbung bei EN Polizei'),
     description: zod_1.z.string().trim().max(1500).default('Du möchtest Teil der **EN Polizei** werden? Klicke auf **Jetzt bewerben** – der Bot stellt dir die Fragen nacheinander per **Direktnachricht**.\n\nDu brauchst deinen **Roblox-Namen** und etwa 10 Minuten Zeit. Die Entscheidung bekommst du ebenfalls per Direktnachricht.'),

@@ -1,16 +1,22 @@
-import { checkAnswer, normalizeField, type Field, type FormField } from '@enrp/shared';
+import { checkAnswer, DEFAULT_APPLICATION_MESSAGES, formatMinutes, normalizeField, renderApplicationText, rolesMatch, type Field, type FormField } from '@enrp/shared';
 import { BotApiError, type Api } from '../api';
 import { clip, COLORS, errorReply, okReply, plain, type ButtonSpec, type EmbedData, type Reply, type SelectSpec } from '../format';
 import type { CommandDef, Ctx, InteractionDef } from './types';
 import { mapError } from './errors';
 
 // ---------------- Bewerbungen per Direktnachricht: Polizei-Bewerbung (/bewerbung, /bewerbungspanel) und Qualifikationen (SEK, Flugstaffel, Ausbilder … über /qualipanel) ----------------
-export interface QualiUnit { key: string; name: string; description: string; questions: (string | FormField)[] }
-export interface QualiConfig { title: string; intro: string; units: QualiUnit[]; police?: { title: string; description: string } }
+/** Einstellungen je Bewerbung (Dashboard → Setup): Texte, Rollen-Voraussetzungen, Manager-Rollen, Zeitlimit. */
+export interface AppSettings {
+  messages?: { confirmation?: string; completion?: string };
+  roles?: { required?: { ids: string[]; mode: 'ALL' | 'ANY' }; restricted?: { ids: string[]; mode: 'ALL' | 'ANY' }; managers?: string[] };
+  timeLimitMinutes?: number;
+}
+export interface QualiUnit { key: string; name: string; description: string; questions: (string | FormField)[]; enabled?: boolean; settings?: AppSettings }
+export interface QualiConfig { title: string; intro: string; units: QualiUnit[]; police?: { title: string; description: string; name?: string; enabled?: boolean; settings?: AppSettings } }
 interface Question { text: string; key?: string; field: Field }
 /** Antworten: Text, gewählte Optionen (Auswahl/Rollen) oder `null` (übersprungen). */
 type Answer = string | string[] | null;
-interface Session { unit: string; unitName: string; questions: Question[]; answers: Answer[]; expiresAt: number; startedAt: number; joinedAt?: string }
+interface Session { unit: string; unitName: string; questions: Question[]; answers: Answer[]; expiresAt: number; startedAt: number; joinedAt?: string; guildId?: string; settings: AppSettings; appName: string }
 type SendDm = (userId: string, m: { embed: EmbedData; buttons?: ButtonSpec[]; select?: SelectSpec }) => Promise<unknown>;
 type RobloxLookup = (name: string) => Promise<{ id: number; name: string } | null>;
 
@@ -19,14 +25,25 @@ export const POLICE = '@polizei';
 const POLICE_NAME = 'Bewerbung – EN Polizei';
 const SKIP = '-';
 
-/** Zeit für eine Bewerbung (wie bei Appy: 3 Stunden). */
+/** Standard-Zeit für eine Bewerbung (wie bei Appy: 3 Stunden; je Bewerbung einstellbar). */
 export const APPLICATION_MS = 3 * 60 * 60_000;
+const limitMs = (st: AppSettings) => (st.timeLimitMinutes ?? 180) * 60_000;
+/** Rollen-Voraussetzungen der Bewerbung (nur auf dem Server prüfbar) – Fehlermeldung oder null. */
+function roleBlock(st: AppSettings, roles: string[] | undefined): string | null {
+  if (!roles) return null;
+  const req = st.roles?.required, res = st.roles?.restricted;
+  if (req?.ids.length && !rolesMatch(roles, req.ids, req.mode)) return `Dir fehlt ${req.mode === 'ALL' ? 'eine der nötigen Rollen' : 'die nötige Rolle'} für diese Bewerbung.`;
+  if (res?.ids.length && rolesMatch(roles, res.ids, res.mode)) return 'Mit deinen Rollen kannst du dich hierfür nicht bewerben.';
+  return null;
+}
 export const MAX_ANSWER = 1000;
 /** Laufende Bewerbungen im Speicher des Bots (ein Neustart des Bots bricht sie ab – dann einfach neu starten). */
 const sessions = new Map<string, Session>();
 /** Server-Beitritt aus der Auswahl im Server (die eigentliche Bewerbung läuft per DM, dort ist er unbekannt). */
 const joinedAtOf = new Map<string, string>();
-export const resetSessions = () => { sessions.clear(); joinedAtOf.clear(); };
+/** Server, auf dem die Bewerbung gestartet wurde (Anzeige im Dashboard und im Team-Channel). */
+const guildOf = new Map<string, string>();
+export const resetSessions = () => { sessions.clear(); joinedAtOf.clear(); guildOf.clear(); };
 export const sweepSessions = (now = Date.now()) => { for (const [k, s] of sessions) if (s.expiresAt <= now) sessions.delete(k); };
 
 const CANCEL: ButtonSpec = { id: 'quali:cancel', label: 'Bewerbung abbrechen', style: 'danger' };
@@ -51,16 +68,16 @@ const questionMessage = (s: Session): { embed: EmbedData; buttons: ButtonSpec[];
 };
 const answerText = (a: Answer) => (a === null ? '— (übersprungen)' : Array.isArray(a) ? a.join(', ') : a);
 
-interface Flow { key: string; name: string; questions: Question[] }
+interface Flow { key: string; name: string; questions: Question[]; enabled: boolean; settings: AppSettings; appName: string }
 /** Lädt Fragen einer Einheit bzw. der Polizei-Bewerbung (Formular aus dem System). */
 async function loadFlow(api: Api, key: string | undefined): Promise<Flow | null> {
   if (!key) return null;
   if (key === POLICE) {
-    const form = await api.service<FormField[]>('GET', '/applications/form');
-    return { key, name: POLICE_NAME, questions: [{ text: 'Wie ist dein Roblox-Benutzername?', key: 'roblox', field: field({ key: 'roblox', label: 'Roblox', required: true, maxLength: 20 }) }, ...form.map((f) => ({ text: f.label, key: f.key, field: field(f) }))] };
+    const [form, cfg] = await Promise.all([api.service<FormField[]>('GET', '/applications/form'), getConfig(api).catch(() => undefined)]);
+    return { key, name: cfg?.police?.name ? `Bewerbung – ${cfg.police.name}` : POLICE_NAME, appName: cfg?.police?.name ?? 'EN Polizei', enabled: cfg?.police?.enabled !== false, settings: cfg?.police?.settings ?? {}, questions: [{ text: 'Wie ist dein Roblox-Benutzername?', key: 'roblox', field: field({ key: 'roblox', label: 'Roblox', required: true, maxLength: 20 }) }, ...form.map((f) => ({ text: f.label, key: f.key, field: field(f) }))] };
   }
   const unit = (await getConfig(api)).units.find((u) => u.key === key);
-  return unit ? { key: unit.key, name: unit.name, questions: unit.questions.map(asField).map((f) => ({ text: f.label, key: f.key, field: field(f) })) } : null;
+  return unit ? { key: unit.key, name: unit.name, appName: unit.name, enabled: unit.enabled !== false, settings: unit.settings ?? {}, questions: unit.questions.map(asField).map((f) => ({ text: f.label, key: f.key, field: field(f) })) } : null;
 }
 async function openApplication(api: Api, key: string, discordId: string) {
   return key === POLICE
@@ -68,7 +85,7 @@ async function openApplication(api: Api, key: string, discordId: string) {
     : api.service<{ open: boolean; number: string | null }>('GET', `/bot/qualifications/open?discordId=${discordId}&unit=${encodeURIComponent(key)}`);
 }
 async function submitSession(api: Api, s: Session, userId: string, userName: string, robloxLookup?: RobloxLookup, now = Date.now()): Promise<string> {
-  const meta = { durationSec: Math.max(0, Math.round((now - s.startedAt) / 1000)), ...(s.joinedAt ? { joinedAt: s.joinedAt } : {}) };
+  const meta = { durationSec: Math.max(0, Math.round((now - s.startedAt) / 1000)), ...(s.joinedAt ? { joinedAt: s.joinedAt } : {}), ...(s.guildId ? { guildId: s.guildId } : {}) };
   if (s.unit === POLICE) {
     const roblox = String(s.answers[0] ?? '').trim();
     const rb = await robloxLookup?.(roblox).catch(() => null);
@@ -87,14 +104,18 @@ async function offer(c: Ctx, key: string | undefined): Promise<Reply> {
   if (running && running.expiresAt > Date.now()) return errorReply(`Du hast bereits eine laufende Bewerbung (**${plain(running.unitName)}**) in deinen Direktnachrichten. Beende oder brich sie dort zuerst ab.`);
   const flow = await loadFlow(c.api, key);
   if (!flow) return errorReply('Diese Auswahl gibt es nicht mehr. Bitte das Panel neu laden.');
+  if (!flow.enabled) return errorReply(`Bewerbungen für **${plain(flow.name)}** sind derzeit geschlossen.`);
+  const blocked = roleBlock(flow.settings, c.guildId ? c.memberRoleIds ?? [] : undefined);
+  if (blocked) return errorReply(blocked);
   const open = await openApplication(c.api, flow.key, c.discordId);
   if (open.open) return errorReply(`Du hast für **${plain(flow.name)}** bereits eine offene Bewerbung (${open.number}). Bitte warte auf die Entscheidung.`);
   if (!c.platform) return errorReply('Direktnachrichten sind hier nicht verfügbar.');
   if (c.memberJoinedAt) joinedAtOf.set(c.discordId, c.memberJoinedAt);
+  if (c.guildId) guildOf.set(c.discordId, c.guildId);
   let dm: { channelId: string; messageId: string };
   try {
     dm = await c.platform.sendDm(c.discordId, {
-      embed: { title: clip(flow.name, 256), color: COLORS.info, description: `Bist du sicher, dass du dich bewerben möchtest?\n\nSobald du startest, schicke ich dir nacheinander **${flow.questions.length} Fragen**. Du hast **3 Stunden** Zeit, die Bewerbung abzuschließen – sonst musst du neu starten. Abbrechen kannst du jederzeit über den Button.` },
+      embed: { title: clip(flow.name, 256), color: COLORS.info, description: clip(renderApplicationText(flow.settings.messages?.confirmation ?? DEFAULT_APPLICATION_MESSAGES.confirmation, { '{questionCount}': String(flow.questions.length), '{timeLimit}': formatMinutes(Math.round(limitMs(flow.settings) / 60_000)), '{applicationName}': flow.appName }), 4000) },
       buttons: [{ id: `quali:start:${flow.key}`, label: 'Bewerbung starten', style: 'success' }, { id: 'quali:cancel', label: 'Abbrechen', style: 'danger' }],
     });
   } catch {
@@ -135,7 +156,7 @@ export const QUALI_COMMANDS: CommandDef[] = [
       if (!c.channelId || !c.platform) return errorReply('Panel kann hier nicht gepostet werden.');
       try {
         const cfg = await getConfig(c.api);
-        await c.platform.postPanel({ channelId: c.channelId, embed: panelEmbed(cfg), select: { id: 'quali:pick', placeholder: 'Triff eine Auswahl', options: cfg.units.map((u) => ({ label: clip(u.name, 100), value: u.key, ...(u.description ? { description: clip(plain(u.description).replace(/\*|_/g, ''), 100) } : {}) })) } });
+        await c.platform.postPanel({ channelId: c.channelId, embed: panelEmbed(cfg), select: { id: 'quali:pick', placeholder: 'Triff eine Auswahl', options: cfg.units.map((u) => ({ label: clip(`${u.name}${u.enabled === false ? ' (geschlossen)' : ''}`, 100), value: u.key, ...(u.description ? { description: clip(plain(u.description).replace(/\*|_/g, ''), 100) } : {}) })) } });
         const ch = await c.config?.().catch(() => undefined);
         return okReply(`Qualifikations-Panel gepostet.${ch?.qualifications ? '' : ' Tipp: In den Einstellungen einen **Qualifications channel** hinterlegen – dort landen die Bewerbungen mit Annehmen/Ablehnen-Buttons.'}`);
       } catch (e) {
@@ -154,7 +175,7 @@ export async function handleDirectMessage(a: { userId: string; userName: string;
   if (!s) { await say('Du hast gerade keine laufende Bewerbung. Starte eine über das Bewerbungs- oder Qualifikations-Panel auf dem Server (oder mit `/bewerbung`).', COLORS.neutral); return; }
   if (s.expiresAt <= now) {
     sessions.delete(a.userId);
-    await say('⏰ Die Zeit für deine Bewerbung ist abgelaufen (3 Stunden). Bitte starte sie über das Panel neu.', COLORS.warning);
+    await say(`⏰ Die Zeit für deine Bewerbung ist abgelaufen (${formatMinutes(Math.round(limitMs(s.settings) / 60_000))}). Bitte starte sie über das Panel neu.`, COLORS.warning);
     return;
   }
   const q = s.questions[s.answers.length]!;
@@ -177,7 +198,7 @@ async function proceed(o: { api: Api; userId: string; userName: string; sendDm: 
   try {
     const number = await submitSession(o.api, s, o.userId, o.userName, o.robloxLookup, o.now);
     sessions.delete(o.userId);
-    await say(`✅ Deine Bewerbung **${number}** ist eingegangen! Das Team prüft sie – die Entscheidung bekommst du hier per Direktnachricht.`, COLORS.success);
+    await say(clip(renderApplicationText(s.settings.messages?.completion ?? DEFAULT_APPLICATION_MESSAGES.completion, { '{number}': number, '{applicationName}': s.appName }), 4000), COLORS.success);
   } catch (e) {
     if (e instanceof BotApiError && (e.status === 409 || e.status === 400 || e.status === 404)) {
       sessions.delete(o.userId);
@@ -201,6 +222,14 @@ const parseDecision = (rest: string[]): { kind: Kind; id: string; status: 'ACCEP
 
 /** Entscheidung als klickender Benutzer (Rechte im System); aktualisiert danach die Bewerbungs-Nachricht im Channel. */
 async function decide(c: Ctx, d: { kind: Kind; id: string; status: 'ACCEPTED' | 'REJECTED' }, reason?: string): Promise<Reply> {
+  // Manager-Rollen (Setup → Role Config): nur wer eine davon hat, darf im Discord entscheiden
+  const cfg = await getConfig(c.api).catch(() => undefined);
+  let managers = d.kind === 'p' ? cfg?.police?.settings?.roles?.managers : undefined;
+  if (d.kind === 'q' && cfg?.units.some((u) => u.settings?.roles?.managers?.length)) {
+    const app = await c.api.asUser<{ unit: string }>(c.discordId, 'GET', `/qualifications/applications/${d.id}`);
+    managers = cfg.units.find((u) => u.key === app.unit)?.settings?.roles?.managers;
+  }
+  if (managers?.length && !managers.some((r) => (c.memberRoleIds ?? []).includes(r))) return errorReply('Über diese Bewerbung dürfen nur die eingestellten Manager-Rollen entscheiden.');
   const path = d.kind === 'p' ? `/applications/${d.id}/discord-decision` : `/qualifications/applications/${d.id}/decision`;
   const r = await c.api.asUser<{ number: string; unitName?: string; addedToSek?: boolean; decidedByName?: string | null }>(c.discordId, 'POST', path, { status: d.status, ...(reason ? { reason } : {}) });
   const accepted = d.status === 'ACCEPTED';
@@ -292,10 +321,13 @@ export const QUALI_INTERACTION: InteractionDef = {
       }
       const flow = await loadFlow(c.api, rest[0]);
       if (!flow) return errorReply('Diese Auswahl gibt es nicht mehr. Bitte das Panel neu laden.');
+      if (!flow.enabled) return errorReply(`Bewerbungen für **${plain(flow.name)}** sind derzeit geschlossen.`);
       const open = await openApplication(c.api, flow.key, c.discordId);
       if (open.open) return errorReply(`Du hast für **${plain(flow.name)}** bereits eine offene Bewerbung (${open.number}). Bitte warte auf die Entscheidung.`);
       if (!c.platform) return errorReply('Direktnachrichten sind hier nicht verfügbar.');
-      const s: Session = { unit: flow.key, unitName: flow.name, questions: flow.questions, answers: [], startedAt: Date.now(), expiresAt: Date.now() + APPLICATION_MS, joinedAt: joinedAtOf.get(c.discordId) };
+      const blocked = roleBlock(flow.settings, c.guildId ? c.memberRoleIds ?? [] : undefined);
+      if (blocked) return errorReply(blocked);
+      const s: Session = { unit: flow.key, unitName: flow.name, appName: flow.appName, settings: flow.settings, questions: flow.questions, answers: [], startedAt: Date.now(), expiresAt: Date.now() + limitMs(flow.settings), joinedAt: joinedAtOf.get(c.discordId), guildId: c.guildId ?? guildOf.get(c.discordId) };
       sessions.set(c.discordId, s);
       try { await c.platform.sendDm(c.discordId, questionMessage(s)); }
       catch { sessions.delete(c.discordId); return errorReply('Ich kann dir keine Direktnachricht schicken. Bitte erlaube Direktnachrichten und versuche es erneut.'); }

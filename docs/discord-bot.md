@@ -63,7 +63,7 @@ Neue/zugewiesene Einsätze (Dispatch-Channel), neue Fahndungen (Wanted-Channel),
 ### 1. Discord Developer Portal (https://discord.com/developers/applications)
 1. *New Application* → *Bot* → **Token** kopieren (nur einmal sichtbar).
 2. **Message Content Intent** einschalten (*Bot → Privileged Gateway Intents*) – nur nötig, damit Nachrichten in Support-Tickets für Dashboard und Transcript mitgeschnitten werden. Ohne ihn startet der Bot trotzdem (dann ohne Verlauf).
-3. *OAuth2 → URL Generator*: Scopes `bot` **und** `applications.commands`; Bot-Rechte: *View Channels*, *Send Messages*, *Embed Links* *Attach Files*, *Read Message History* – für Support-Tickets zusätzlich *Manage Channels* und *Manage Roles* (Kanalrechte), für die Funkrolle *Manage Roles*. URL öffnen → Bot auf deinen Server einladen.
+3. *OAuth2 → URL Generator*: Scopes `bot` **und** `applications.commands`; Bot-Rechte: *View Channels*, *Send Messages*, *Embed Links* *Attach Files*, *Read Message History* – für Support-Tickets zusätzlich *Manage Channels* und *Manage Roles* (Kanalrechte), für Rollen bei Bewerbungen/Funk *Manage Roles*, für Staff-Threads bei Bewerbungen *Create Public Threads*. Der Bot meldet dem Dashboard automatisch seine Server mit Channels und Rollen (für die Auswahllisten). URL öffnen → Bot auf deinen Server einladen.
 4. Discord → Einstellungen → Erweitert → **Entwicklermodus** an. Rechtsklick auf deinen Server → *Server-ID kopieren*; Rechtsklick auf die Ziel-Channels → *Channel-ID kopieren*. Der Bot braucht in diesen Channels die Rechte *Kanal ansehen*, *Nachrichten senden*, *Links einbetten*.
 
 ### 2. Konfiguration

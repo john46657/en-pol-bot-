@@ -116,7 +116,8 @@ describe('applications from Discord', () => {
     await adm.put('/api/v1/admin/settings/discord.channels').send({ value: { dispatch: '600000000000000002' } });
     expect((await adm.post(`/api/v1/applications/${row.id}/decide`).send({ accept: false, reason: 'INTERNAL-NOTE too inexperienced' })).status).toBe(201);
     const decided = await prisma.discordOutbox.findFirstOrThrow({ where: { type: 'application.decided' } });
-    expect(decided.payload).toEqual({ discordId: D_APPLICANT, status: 'REJECTED', number: ok.body.number, roleIds: [] });
+    expect(decided.payload).toMatchObject({ discordId: D_APPLICANT, status: 'REJECTED', number: ok.body.number, reason: null, roleIds: [], removeRoleIds: [] });
+    expect(JSON.stringify(decided.payload)).not.toContain('INTERNAL-NOTE');
   });
   it('web submissions are unchanged: no Discord id, no DM', async () => {
     await prisma.discordOutbox.deleteMany({ where: { type: 'application.decided' } });

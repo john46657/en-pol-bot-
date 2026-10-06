@@ -4,7 +4,7 @@ import { applicationDecisionText, outboxButtons, qualificationDecisionText, rend
 
 interface OutboxItem { id: string; type: string; channelKey: string; payload: Record<string, unknown> }
 /** `opts`: Rollen, die erwähnt werden (z. B. neue Bewerbung → @Staffelkommandant), und Discord-Benutzer für das Profilbild rechts. */
-export type Sender = (channelId: string, embeds: EmbedData[], buttons?: ButtonSpec[], opts?: { pingRoleIds?: string[]; avatarUserId?: string }) => Promise<void>;
+export type Sender = (channelId: string, embeds: EmbedData[], buttons?: ButtonSpec[], opts?: { pingRoleIds?: string[]; avatarUserId?: string; thread?: string }) => Promise<void>;
 /** Discord-Rollen eines Mitglieds anpassen (alle Server, auf denen es die Rollen gibt). */
 export type RoleSync = (userId: string, add: string[], remove: string[]) => Promise<void>;
 /** Welche Discord-Rolle zu welchem Dienststatus gehört (Einstellungen → Discord). */
@@ -36,11 +36,12 @@ export async function pollOnce(api: Api, send: Sender, log: (m: string) => void 
         const userId = String(item.payload.discordId ?? '');
         if (!/^\d{15,25}$/.test(userId)) throw new Error('no Discord user id');
         // Rolle zuerst (wichtiger als die Nachricht; erneutes Vergeben bei Wiederholung schadet nicht)
-        // Rolle der Einheit + Rollen aus Rollen-Auswahl-Fragen
-        const roleIds = [...new Set([item.payload.roleId, ...(Array.isArray(item.payload.roleIds) ? item.payload.roleIds : [])].map((r) => String(r ?? '')).filter((r) => /^\d{15,25}$/.test(r)))];
-        if (item.payload.status === 'ACCEPTED' && grantRole) {
-          for (const roleId of roleIds) await grantRole(userId, roleId).catch((e) => log(`outbox ${item.id}: role ${roleId} could not be given: ${e instanceof Error ? e.message : e}`));
-        }
+        // Rollen aus der Entscheidung (Annahme-/Ablehnungs-Rollen, Rolle der Einheit, Rollen-Auswahl); `roleId` = ältere Einträge (nur bei Annahme)
+        const ids = (v: unknown) => (Array.isArray(v) ? v : []).map((r) => String(r ?? '')).filter((r) => /^\d{15,25}$/.test(r));
+        const roleIds = [...new Set([...(item.payload.status === 'ACCEPTED' ? ids([item.payload.roleId]) : []), ...ids(item.payload.roleIds)])];
+        if (grantRole) for (const roleId of roleIds) await grantRole(userId, roleId).catch((e) => log(`outbox ${item.id}: role ${roleId} could not be given: ${e instanceof Error ? e.message : e}`));
+        const remove = ids(item.payload.removeRoleIds);
+        if (remove.length && syncRoles) await syncRoles(userId, [], remove).catch((e) => log(`outbox ${item.id}: roles could not be removed: ${e instanceof Error ? e.message : e}`));
         if (!dm) throw new Error('direct messages not available');
         await dm(userId, direct(item.payload));
         await api.service('POST', `/bot/outbox/${item.id}/ack`, { ok: true });
@@ -68,6 +69,22 @@ export async function pollOnce(api: Api, send: Sender, log: (m: string) => void 
       }
       continue;
     }
+    // Rollen eines Mitglieds ändern (z. B. „ausstehend“-Rollen beim Einreichen einer Bewerbung)
+    if (item.type === 'member.roles') {
+      const userId = String(item.payload.discordId ?? '');
+      const ids = (v: unknown) => (Array.isArray(v) ? v : []).map(String).filter((r) => /^\d{15,25}$/.test(r));
+      try {
+        if (!syncRoles || !/^\d{15,25}$/.test(userId)) throw new Error('roles not available');
+        await syncRoles(userId, ids(item.payload.add), ids(item.payload.remove));
+        await api.service('POST', `/bot/outbox/${item.id}/ack`, { ok: true }).catch(() => undefined);
+        sent++;
+      } catch (e) {
+        const msg = e instanceof Error ? e.message : 'roles failed';
+        log(`outbox ${item.id} (member.roles) failed: ${msg}`);
+        await api.service('POST', `/bot/outbox/${item.id}/ack`, { ok: false, error: msg }).catch(() => undefined);
+      }
+      continue;
+    }
     // Dienststatus: zuerst die Dienst-Rollen abgleichen; ohne Dienst-Channel ist der Eintrag damit erledigt
     if (item.type === 'duty.changed') {
       onDutyChanged?.(); // z. B. Teamliste sofort neu zeichnen
@@ -87,8 +104,10 @@ export async function pollOnce(api: Api, send: Sender, log: (m: string) => void 
       if (!embeds) throw new Error(`unknown type "${item.type}"`);
       const buttons = outboxButtons(item.type, item.payload);
       const pingRoleIds = Array.isArray(item.payload.pingRoleIds) ? item.payload.pingRoleIds.map(String).filter((r) => /^\d{15,25}$/.test(r)) : [];
-      const avatarUserId = (item.type === 'qualification.submitted' || item.type === 'application.submitted') && typeof item.payload.discordId === 'string' && /^\d{15,25}$/.test(item.payload.discordId) ? item.payload.discordId : undefined;
-      const opts = pingRoleIds.length || avatarUserId ? { ...(pingRoleIds.length ? { pingRoleIds } : {}), ...(avatarUserId ? { avatarUserId } : {}) } : undefined;
+      const avatarUserId = /\.(submitted|archived)$/.test(item.type) && /^(qualification|application)\./.test(item.type) && typeof item.payload.discordId === 'string' && /^\d{15,25}$/.test(item.payload.discordId) ? item.payload.discordId : undefined;
+      // Staff-Thread je Bewerbung (wie bei Appy)
+      const thread = item.payload.thread === true && /\.submitted$/.test(item.type) ? `Bewerbung ${String(item.payload.number ?? '')}`.slice(0, 100) : undefined;
+      const opts = pingRoleIds.length || avatarUserId || thread ? { ...(pingRoleIds.length ? { pingRoleIds } : {}), ...(avatarUserId ? { avatarUserId } : {}), ...(thread ? { thread } : {}) } : undefined;
       const results = await Promise.allSettled(channelIds.map((id) => (opts ? send(id, embeds, buttons, opts) : send(id, embeds, buttons))));
       const failed = results.flatMap((r, i) => (r.status === 'rejected' ? [`${channelIds[i]}: ${r.reason instanceof Error ? r.reason.message : r.reason}`] : []));
       failed.forEach((f) => log(`outbox ${item.id}: send failed for channel ${f}`));

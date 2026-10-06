@@ -6,6 +6,7 @@ import { useAuth } from '../../lib/auth';
 import { Badge, Button, Card, ConfirmDialog, ErrorState, Field, fmt, Input, Modal, PageHeader, Select, SkeletonRows, Textarea } from '../../components/ui';
 import { errText, label, type TicketDetail as Detail, type TicketOptions } from '../../lib/tickets';
 import { StatusChip } from './SupportTickets';
+import { GuildTag, useGuilds } from '../../lib/guilds';
 
 const LOG: Record<string, string> = {
   created: 'Ticket opened', answers: 'Questions answered', claimed: 'Claimed', claim_transferred: 'Staff changed', unclaimed: 'Unclaimed', user_added: 'User added', user_removed: 'User removed',
@@ -23,6 +24,7 @@ export function TicketDetail() {
   const t = useQuery({ queryKey: ['support-ticket', id], queryFn: () => api<Detail>(`/support-tickets/${id}`) });
   const opts = useQuery({ queryKey: ['support-ticket-options', id], queryFn: () => api<TicketOptions>(`/support-tickets/${id}/options`), enabled: !!t.data });
   const [dialog, setDialog] = useState<Dialog>(null);
+  const multiServer = (useGuilds().data?.length ?? 0) > 1;
   const [msg, setMsg] = useState<string>();
   const [note, setNote] = useState('');
   const act = useMutation({
@@ -115,6 +117,7 @@ export function TicketDetail() {
               <dt className="text-muted">Status</dt><dd><StatusChip s={d.status} />{d.locked && <span className="ml-1"><Badge tone="danger">locked</Badge></span>}{deleted && <span className="ml-1"><Badge tone="neutral">deleted</Badge></span>}</dd>
               <dt className="text-muted">Priority</dt><dd><StatusChip s={d.priority} /></dd>
               <dt className="text-muted">Category</dt><dd>{label(d.category)}</dd>
+              {multiServer && <><dt className="text-muted">Server</dt><dd><GuildTag id={d.guildId} /></dd></>}
               <dt className="text-muted">Creator</dt><dd>{d.creatorName} <span className="font-mono text-xs text-muted">{d.creatorId}</span></dd>
               <dt className="text-muted">Staff</dt><dd>{d.claimers.length ? d.claimers.map((c, i) => <span key={c} className="mr-2 inline-block">{d.names[c] ?? <span className="font-mono text-xs">{c}</span>}{i === 0 && d.category.claimMode === 'PRIMARY' && d.claimers.length > 1 ? ' (primary)' : ''}</span>) : <span className="text-muted">unclaimed</span>}</dd>
               <dt className="text-muted">Channel</dt><dd>{d.channelId ? <a className="text-primary underline" href={`https://discord.com/channels/${d.guildId}/${d.channelId}`} target="_blank" rel="noreferrer">Open in Discord</a> : '—'}</dd>

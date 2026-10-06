@@ -54,10 +54,10 @@ export declare class TicketsService {
                 code: string;
                 id: string;
                 description: string | null;
+                category: string;
                 expiresAt: Date | null;
                 active: boolean;
                 title: string;
-                category: string;
                 penalty: import("@prisma/client/runtime/library").JsonValue;
                 effectiveDate: Date;
             } | null;

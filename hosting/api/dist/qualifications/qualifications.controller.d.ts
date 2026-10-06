@@ -30,6 +30,7 @@ declare const historyQ: z.ZodObject<{
     discordId: string;
 }>;
 declare const submit: z.ZodObject<{
+    guildId: z.ZodOptional<z.ZodString>;
     unit: z.ZodString;
     discordId: z.ZodString;
     discordName: z.ZodString;
@@ -53,6 +54,7 @@ declare const submit: z.ZodObject<{
         answer: string | string[] | null;
     }[];
     discordName: string;
+    guildId?: string | undefined;
     durationSec?: number | undefined;
     joinedAt?: Date | undefined;
 }, {
@@ -63,6 +65,7 @@ declare const submit: z.ZodObject<{
         answer: string | string[] | null;
     }[];
     discordName: string;
+    guildId?: string | undefined;
     durationSec?: number | undefined;
     joinedAt?: Date | undefined;
 }>;
@@ -86,17 +89,81 @@ export declare class QualificationsController {
         units: {
             name: string;
             description: string;
+            settings: {
+                roles: {
+                    required: {
+                        mode: "ALL" | "ANY";
+                        ids: string[];
+                    };
+                    accepted: string[];
+                    denied: string[];
+                    restricted: {
+                        mode: "ALL" | "ANY";
+                        ids: string[];
+                    };
+                    acceptedRemove: string[];
+                    deniedRemove: string[];
+                    pending: string[];
+                    removeOnSubmit: string[];
+                    managers: string[];
+                };
+                messages: {
+                    accepted: string;
+                    denied: string;
+                    confirmation: string;
+                    completion: string;
+                };
+                staffThreads: boolean;
+                cooldownMinutes: number;
+                timeLimitMinutes: number;
+            };
             key: string;
-            pingRoleIds: string[];
             questions: import("@enrp/shared").FormField[];
+            pingRoleIds: string[];
+            enabled: boolean;
             roleId?: string | undefined;
             channelId?: string | undefined;
+            acceptedChannelId?: string | undefined;
+            deniedChannelId?: string | undefined;
         }[];
         intro: string;
         police: {
+            name: string;
             description: string;
+            settings: {
+                roles: {
+                    required: {
+                        mode: "ALL" | "ANY";
+                        ids: string[];
+                    };
+                    accepted: string[];
+                    denied: string[];
+                    restricted: {
+                        mode: "ALL" | "ANY";
+                        ids: string[];
+                    };
+                    acceptedRemove: string[];
+                    deniedRemove: string[];
+                    pending: string[];
+                    removeOnSubmit: string[];
+                    managers: string[];
+                };
+                messages: {
+                    accepted: string;
+                    denied: string;
+                    confirmation: string;
+                    completion: string;
+                };
+                staffThreads: boolean;
+                cooldownMinutes: number;
+                timeLimitMinutes: number;
+            };
             title: string;
             pingRoleIds: string[];
+            enabled: boolean;
+            channelId?: string | undefined;
+            acceptedChannelId?: string | undefined;
+            deniedChannelId?: string | undefined;
         };
     }>;
     save(a: Actor, b: z.infer<typeof saveSchema>): Promise<{
@@ -105,17 +172,81 @@ export declare class QualificationsController {
         units: {
             name: string;
             description: string;
+            settings: {
+                roles: {
+                    required: {
+                        mode: "ALL" | "ANY";
+                        ids: string[];
+                    };
+                    accepted: string[];
+                    denied: string[];
+                    restricted: {
+                        mode: "ALL" | "ANY";
+                        ids: string[];
+                    };
+                    acceptedRemove: string[];
+                    deniedRemove: string[];
+                    pending: string[];
+                    removeOnSubmit: string[];
+                    managers: string[];
+                };
+                messages: {
+                    accepted: string;
+                    denied: string;
+                    confirmation: string;
+                    completion: string;
+                };
+                staffThreads: boolean;
+                cooldownMinutes: number;
+                timeLimitMinutes: number;
+            };
             key: string;
-            pingRoleIds: string[];
             questions: import("@enrp/shared").FormField[];
+            pingRoleIds: string[];
+            enabled: boolean;
             roleId?: string | undefined;
             channelId?: string | undefined;
+            acceptedChannelId?: string | undefined;
+            deniedChannelId?: string | undefined;
         }[];
         intro: string;
         police: {
+            name: string;
             description: string;
+            settings: {
+                roles: {
+                    required: {
+                        mode: "ALL" | "ANY";
+                        ids: string[];
+                    };
+                    accepted: string[];
+                    denied: string[];
+                    restricted: {
+                        mode: "ALL" | "ANY";
+                        ids: string[];
+                    };
+                    acceptedRemove: string[];
+                    deniedRemove: string[];
+                    pending: string[];
+                    removeOnSubmit: string[];
+                    managers: string[];
+                };
+                messages: {
+                    accepted: string;
+                    denied: string;
+                    confirmation: string;
+                    completion: string;
+                };
+                staffThreads: boolean;
+                cooldownMinutes: number;
+                timeLimitMinutes: number;
+            };
             title: string;
             pingRoleIds: string[];
+            enabled: boolean;
+            channelId?: string | undefined;
+            acceptedChannelId?: string | undefined;
+            deniedChannelId?: string | undefined;
         };
     }>;
     list(f: z.infer<typeof list>): Promise<{
@@ -127,6 +258,7 @@ export declare class QualificationsController {
         userId: string | null;
         createdAt: Date;
         discordId: string;
+        guildId: string | null;
         status: string;
         answers: import("@prisma/client/runtime/library").JsonValue;
         grantRoleIds: string[];
@@ -153,6 +285,7 @@ export declare class QualificationsController {
         userId: string | null;
         createdAt: Date;
         discordId: string;
+        guildId: string | null;
         status: string;
         answers: import("@prisma/client/runtime/library").JsonValue;
         grantRoleIds: string[];
@@ -184,17 +317,81 @@ export declare class BotQualificationsController {
         units: {
             name: string;
             description: string;
+            settings: {
+                roles: {
+                    required: {
+                        mode: "ALL" | "ANY";
+                        ids: string[];
+                    };
+                    accepted: string[];
+                    denied: string[];
+                    restricted: {
+                        mode: "ALL" | "ANY";
+                        ids: string[];
+                    };
+                    acceptedRemove: string[];
+                    deniedRemove: string[];
+                    pending: string[];
+                    removeOnSubmit: string[];
+                    managers: string[];
+                };
+                messages: {
+                    accepted: string;
+                    denied: string;
+                    confirmation: string;
+                    completion: string;
+                };
+                staffThreads: boolean;
+                cooldownMinutes: number;
+                timeLimitMinutes: number;
+            };
             key: string;
-            pingRoleIds: string[];
             questions: import("@enrp/shared").FormField[];
+            pingRoleIds: string[];
+            enabled: boolean;
             roleId?: string | undefined;
             channelId?: string | undefined;
+            acceptedChannelId?: string | undefined;
+            deniedChannelId?: string | undefined;
         }[];
         intro: string;
         police: {
+            name: string;
             description: string;
+            settings: {
+                roles: {
+                    required: {
+                        mode: "ALL" | "ANY";
+                        ids: string[];
+                    };
+                    accepted: string[];
+                    denied: string[];
+                    restricted: {
+                        mode: "ALL" | "ANY";
+                        ids: string[];
+                    };
+                    acceptedRemove: string[];
+                    deniedRemove: string[];
+                    pending: string[];
+                    removeOnSubmit: string[];
+                    managers: string[];
+                };
+                messages: {
+                    accepted: string;
+                    denied: string;
+                    confirmation: string;
+                    completion: string;
+                };
+                staffThreads: boolean;
+                cooldownMinutes: number;
+                timeLimitMinutes: number;
+            };
             title: string;
             pingRoleIds: string[];
+            enabled: boolean;
+            channelId?: string | undefined;
+            acceptedChannelId?: string | undefined;
+            deniedChannelId?: string | undefined;
         };
     }>;
     open(f: z.infer<typeof openQ>): Promise<{

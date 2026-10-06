@@ -18,8 +18,8 @@ declare const create: z.ZodObject<{
     }>;
 }, "strip", z.ZodTypeAny, {
     code: string;
-    title: string;
     category: string;
+    title: string;
     penalty: {
         fine?: number | undefined;
         jailMinutes?: number | undefined;
@@ -27,8 +27,8 @@ declare const create: z.ZodObject<{
     description?: string | undefined;
 }, {
     code: string;
-    title: string;
     category: string;
+    title: string;
     penalty: {
         fine?: number | undefined;
         jailMinutes?: number | undefined;
@@ -44,10 +44,10 @@ export declare class LegalCodesController {
         code: string;
         id: string;
         description: string | null;
+        category: string;
         expiresAt: Date | null;
         active: boolean;
         title: string;
-        category: string;
         penalty: import("@prisma/client/runtime/library").JsonValue;
         effectiveDate: Date;
     }[]>;
@@ -55,10 +55,10 @@ export declare class LegalCodesController {
         code: string;
         id: string;
         description: string | null;
+        category: string;
         expiresAt: Date | null;
         active: boolean;
         title: string;
-        category: string;
         penalty: import("@prisma/client/runtime/library").JsonValue;
         effectiveDate: Date;
     }>;

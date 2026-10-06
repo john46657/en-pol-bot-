@@ -11,6 +11,12 @@ import { BotService, CurrentActor, RequirePermission } from '../authz/decorators
 import type { Actor } from '../audit/audit.service';
 import { zodBody } from '../common/zod.pipe';
 
+const sf = z.string().regex(/^\d{15,25}$/);
+const guildsBody = z.object({ guilds: z.array(z.object({
+  id: sf, name: z.string().max(100), icon: z.string().url().max(300).nullable(),
+  channels: z.array(z.object({ id: sf, name: z.string().max(100), type: z.enum(['text', 'category', 'voice', 'other']), parentId: sf.nullable(), position: z.number().int() })).max(500),
+  roles: z.array(z.object({ id: sf, name: z.string().max(100), color: z.number().int().min(0), position: z.number().int() })).max(250),
+})).max(50) });
 const redeem = z.object({ code: z.string().trim().min(8).max(12), discordId: z.string().regex(/^\d{15,25}$/) });
 const ack = z.object({ ok: z.boolean(), error: z.string().max(300).optional() });
 const outboxQ = z.object({ limit: z.coerce.number().int().min(1).max(50).default(20) });
@@ -18,7 +24,7 @@ const rate = process.env.NODE_ENV === 'test' ? 10_000 : 20;
 const stateKey = z.string().regex(/^[a-z0-9:_-]{1,64}$/);
 const stateBody = z.object({ value: z.unknown() });
 const openQ = z.object({ discordId: z.string().regex(/^\d{15,25}$/) });
-const application = z.object({ robloxUsername: z.string().trim().min(1).max(64), robloxUserId: z.string().max(20).optional(), discordId: z.string().regex(/^\d{15,25}$/), discordName: z.string().trim().max(100).optional(), durationSec: z.number().int().min(0).max(86_400).optional(), joinedAt: z.coerce.date().optional(), answers: z.record(z.string(), z.union([z.string().max(5000), z.array(z.string().max(100)).max(25)])) });
+const application = z.object({ guildId: z.string().regex(/^\d{15,25}$/).optional(), robloxUsername: z.string().trim().min(1).max(64), robloxUserId: z.string().max(20).optional(), discordId: z.string().regex(/^\d{15,25}$/), discordName: z.string().trim().max(100).optional(), durationSec: z.number().int().min(0).max(86_400).optional(), joinedAt: z.coerce.date().optional(), answers: z.record(z.string(), z.union([z.string().max(5000), z.array(z.string().max(100)).max(25)])) });
 
 /** Web-Seite: eigenes Konto verknüpfen. Authentifiziert per Session; Bot-Zugang ist hier nicht erlaubt. */
 @ApiTags('discord')
@@ -26,6 +32,8 @@ const application = z.object({ robloxUsername: z.string().trim().min(1).max(64),
 export class DiscordController {
   constructor(private readonly d: DiscordService) {}
   @Get('link') link(@CurrentActor() a: Actor) { return this.d.status(a.userId!); }
+  /** Server des Bots mit Channels und Rollen (Namen + Auswahllisten im Dashboard). */
+  @Get('guilds') @RequirePermission('dashboard.view') guilds() { return this.d.guilds(); }
   @Post('link-code') @Throttle({ default: { limit: process.env.NODE_ENV === 'test' ? 10_000 : 10, ttl: 60_000 } })
   linkCode(@CurrentActor() a: Actor) { return this.d.createLinkCode(a); }
   @Delete('link') @HttpCode(204) unlinkSelf(@CurrentActor() a: Actor) { return this.d.unlink(a, a.userId!); }
@@ -41,6 +49,7 @@ export class BotController {
   @BotService() @Throttle({ default: { limit: rate, ttl: 60_000 } }) @Post('link') @HttpCode(200)
   redeem(@Body(zodBody(redeem)) b: z.infer<typeof redeem>) { return this.d.redeem(b.code, b.discordId); }
   @BotService() @Get('config') config() { return this.d.channels(); }
+  @BotService() @Put('guilds') @HttpCode(204) async guilds(@Body(zodBody(guildsBody)) b: z.infer<typeof guildsBody>) { await this.d.saveGuilds(b.guilds); }
   @BotService() @Get('outbox') outbox(@Query(zodBody(outboxQ)) q: z.infer<typeof outboxQ>) { return this.d.pending(q.limit); }
   @BotService() @Post('outbox/:id/ack') @HttpCode(204)
   ack(@Param('id', ParseUUIDPipe) id: string, @Body(zodBody(ack)) b: z.infer<typeof ack>) { return this.d.ack(id, b.ok, b.error); }
@@ -63,5 +72,5 @@ export class BotController {
   @BotService() @Get('application/open')
   openApplication(@Query(zodBody(openQ)) q: z.infer<typeof openQ>) { return this.applications.openForDiscord(q.discordId); }
   @BotService() @Throttle({ default: { limit: rate, ttl: 60_000 } }) @Post('application') @HttpCode(201)
-  submitApplication(@Body(zodBody(application)) b: z.infer<typeof application>) { return this.applications.submit({ robloxUsername: b.robloxUsername, robloxUserId: b.robloxUserId, answers: b.answers }, { discordId: b.discordId, discordName: b.discordName, durationSec: b.durationSec, joinedAt: b.joinedAt }); }
+  submitApplication(@Body(zodBody(application)) b: z.infer<typeof application>) { return this.applications.submit({ robloxUsername: b.robloxUsername, robloxUserId: b.robloxUserId, answers: b.answers }, { discordId: b.discordId, discordName: b.discordName, durationSec: b.durationSec, joinedAt: b.joinedAt, guildId: b.guildId }); }
 }

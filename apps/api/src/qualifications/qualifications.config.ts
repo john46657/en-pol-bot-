@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { FORM_QUESTION_TYPES, MAX_FORM_OPTIONS, MAX_FORM_QUESTIONS, type FormField } from '@enrp/shared';
+import { DEFAULT_APPLICATION_MESSAGES, FORM_QUESTION_TYPES, MAX_FORM_OPTIONS, MAX_FORM_QUESTIONS, type FormField } from '@enrp/shared';
 
 const roleIdOpt = z.union([z.string().regex(/^\d{15,25}$/, 'Discord role ID (15–25 digits)'), z.literal('')]).optional().transform((v) => v || undefined);
 /** Eine Bewerbungsfrage wie bei Appy: Text, Auswahl oder Rollen-Auswahl – mit Prüf-Einstellungen. */
@@ -22,6 +22,30 @@ const unitQuestions = z.array(z.union([z.string().trim().min(3).max(300), formFi
   .refine((f) => new Set(f.map((x) => x.key)).size === f.length, 'Question keys must be unique.');
 
 
+/** Wie bei Appy: Bewerbung offen/geschlossen, Channels für angenommene/abgelehnte Bewerbungen. */
+const channelOpt = z.union([z.string().regex(/^\d{15,25}$/, 'Discord channel ID (15–25 digits)'), z.literal('')]).optional();
+const roleList = z.array(z.string().regex(/^\d{15,25}$/, 'Discord role ID (15–25 digits)')).max(25).default([]);
+const roleRule = z.object({ ids: roleList, mode: z.enum(['ALL', 'ANY']).default('ANY') }).default({});
+/** Texte, Rollen und Sonstiges je Bewerbung (wie Appy: Embed Customization, Role Config, Other). */
+export const appSettingsSchema = z.object({
+  messages: z.object({
+    accepted: z.string().trim().min(1).max(2000).default(DEFAULT_APPLICATION_MESSAGES.accepted),
+    denied: z.string().trim().min(1).max(2000).default(DEFAULT_APPLICATION_MESSAGES.denied),
+    confirmation: z.string().trim().min(1).max(2000).default(DEFAULT_APPLICATION_MESSAGES.confirmation),
+    completion: z.string().trim().min(1).max(2000).default(DEFAULT_APPLICATION_MESSAGES.completion),
+  }).default({}),
+  roles: z.object({
+    restricted: roleRule, required: roleRule,
+    accepted: roleList, denied: roleList, acceptedRemove: roleList, deniedRemove: roleList, pending: roleList, removeOnSubmit: roleList,
+    /** Wer im Discord annehmen/ablehnen darf (zusätzlich zum Recht im System); leer = alle mit dem Recht. */
+    managers: roleList,
+  }).default({}),
+  staffThreads: z.boolean().default(false),
+  cooldownMinutes: z.number().int().min(0).max(60 * 24 * 365).default(0),
+  timeLimitMinutes: z.number().int().min(5).max(60 * 24 * 7).default(180),
+}).default({});
+export type AppSettings = z.infer<typeof appSettingsSchema>;
+const requirements = { enabled: z.boolean().default(true), acceptedChannelId: channelOpt, deniedChannelId: channelOpt, settings: appSettingsSchema };
 /** Eine Einheit/Qualifikation, für die man sich über das Discord-Panel bewerben kann. */
 export const unitSchema = z.object({
   key: z.string().trim().regex(/^[a-z0-9_-]{2,24}$/, 'Key: 2–24 characters a-z, 0-9, - or _'),
@@ -31,12 +55,17 @@ export const unitSchema = z.object({
   roleId: z.union([z.string().regex(/^\d{15,25}$/), z.literal('')]).optional(),
   /** Eigener Discord-Channel für eingehende Bewerbungen dieser Einheit (sonst der allgemeine Qualifications-Channel). */
   channelId: z.union([z.string().regex(/^\d{15,25}$/), z.literal('')]).optional(),
+  ...requirements,
   questions: unitQuestions,
   /** Discord-Rolle(n), die bei einer neuen Bewerbung im Channel erwähnt werden (z. B. @Staffelkommandant). */
   pingRoleIds: z.array(z.string().regex(/^\d{15,25}$/, 'Discord role ID (15–25 digits)')).max(10).default([]),
 });
 /** Texte des Panels für die normale Bewerbung bei EN Polizei (/bewerbungspanel); die Fragen sind das Bewerbungsformular (`application.form`). */
 export const policeSchema = z.object({
+  ...requirements,
+  name: z.string().trim().min(2).max(60).default('Polizeianwärter'),
+  /** Channel für neue Bewerbungen (sonst der Applications-Channel aus den Einstellungen). */
+  channelId: channelOpt,
   pingRoleIds: z.array(z.string().regex(/^\d{15,25}$/, 'Discord role ID (15–25 digits)')).max(10).default([]),
   title: z.string().trim().min(2).max(100).default('📋 Bewerbung bei EN Polizei'),
   description: z.string().trim().max(1500).default('Du möchtest Teil der **EN Polizei** werden? Klicke auf **Jetzt bewerben** – der Bot stellt dir die Fragen nacheinander per **Direktnachricht**.\n\nDu brauchst deinen **Roblox-Namen** und etwa 10 Minuten Zeit. Die Entscheidung bekommst du ebenfalls per Direktnachricht.'),

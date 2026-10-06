@@ -6,9 +6,11 @@ import { DiscordService } from '../discord/discord.service';
 import { AppError } from '../common/errors';
 import { makeNumber } from '../common/numbering';
 import { webUrl } from '../common/web-url';
-import { configSchema, DEFAULT_CONFIG, type QualificationConfig } from './qualifications.config';
+import { appSettingsSchema, configSchema, DEFAULT_CONFIG, type QualificationConfig } from './qualifications.config';
 import { checkAnswer, type FormField } from '@enrp/shared';
 import { DEFAULT_FORM } from '../applications/applications.service';
+import { cooldownLeft, decisionMessage, decisionRoles, submitRoles } from './decision';
+import { formatMinutes } from '@enrp/shared';
 
 const KEY = 'qualifications.config';
 const FORM_KEY = 'application.form';
@@ -55,10 +57,11 @@ export class QualificationsService {
     return { open: !!open, number: open?.number ?? null, unitName: open?.unitName ?? null };
   }
 
-  async submit(d: { unit: string; discordId: string; discordName: string; answers: Answer[]; durationSec?: number; joinedAt?: Date }) {
+  async submit(d: { unit: string; discordId: string; discordName: string; answers: Answer[]; durationSec?: number; joinedAt?: Date; guildId?: string }) {
     const cfg = await this.config();
     const unit = cfg.units.find((u) => u.key === d.unit);
     if (!unit) throw new AppError('NOT_FOUND', 'Unknown unit.');
+    if (!unit.enabled) throw new AppError('CONFLICT', `Bewerbungen für ${unit.name} sind derzeit geschlossen.`);
     if (d.answers.length !== unit.questions.length) throw new AppError('VALIDATION_FAILED', `Expected ${unit.questions.length} answers.`);
     // jede Antwort gegen ihre Frage prüfen (Pflicht, Länge, gültige Auswahl); gewählte Rollen merken
     const answers: { question: string; answer: string }[] = [];
@@ -70,18 +73,23 @@ export class QualificationsService {
       r.roleIds.forEach((x) => grantRoleIds.add(x));
     });
     if ((await this.openFor(d.discordId, unit.key)).open) throw new AppError('CONFLICT', `There is already an open application for ${unit.name}.`);
+    const last = await this.prisma.qualificationApplication.findFirst({ where: { discordId: d.discordId, unit: unit.key }, orderBy: { createdAt: 'desc' }, select: { createdAt: true } });
+    const wait = cooldownLeft(unit.settings, last?.createdAt);
+    if (wait) throw new AppError('CONFLICT', `Du kannst dich für ${unit.name} erst in ${formatMinutes(wait)} erneut bewerben.`);
     const user = await this.discord.resolveUser(d.discordId);
     const a = await this.prisma.$transaction(async (tx) => {
-      const row = await tx.qualificationApplication.create({ data: { number: makeNumber('Q'), unit: unit.key, unitName: unit.name, discordId: d.discordId, discordName: d.discordName, userId: user?.id, answers: answers as unknown as Prisma.InputJsonValue, grantRoleIds: [...grantRoleIds], durationSec: d.durationSec, joinedAt: d.joinedAt } });
+      const row = await tx.qualificationApplication.create({ data: { number: makeNumber('Q'), unit: unit.key, unitName: unit.name, discordId: d.discordId, discordName: d.discordName, userId: user?.id, answers: answers as unknown as Prisma.InputJsonValue, grantRoleIds: [...grantRoleIds], guildId: d.guildId ?? null, durationSec: d.durationSec, joinedAt: d.joinedAt } });
       await this.audit.record({ userId: user?.id ?? null }, { action: 'qualifications.application.submit', module: 'qualifications', entityType: 'QualificationApplication', entityId: row.id, after: { number: row.number, unit: unit.key, discordId: d.discordId } }, tx);
       return row;
     });
     // Eigener Channel der Einheit (falls eingestellt) – sonst der allgemeine Qualifications-Channel
     await this.discord.enqueue('qualifications', 'qualification.submitted', {
-      id: a.id, number: a.number, unitName: a.unitName, discordId: a.discordId, discordName: a.discordName, linkedName: user?.displayName ?? null, answers, pingRoleIds: unit.pingRoleIds,
+      id: a.id, number: a.number, unitName: a.unitName, discordId: a.discordId, discordName: a.discordName, linkedName: user?.displayName ?? null, answers, pingRoleIds: unit.pingRoleIds, guildName: d.guildId ? (await this.discord.guilds()).find((g) => g.id === d.guildId)?.name ?? null : null,
       durationSec: a.durationSec, joinedAt: a.joinedAt?.toISOString() ?? null, createdAt: a.createdAt.toISOString(), dashboardUrl: webUrl(`/qualifications?id=${a.id}`),
-      ...(unit.channelId ? { channelId: unit.channelId } : {}),
+      ...(unit.channelId ? { channelId: unit.channelId } : {}), ...(unit.settings.staffThreads ? { thread: true } : {}),
     }, { always: !!unit.channelId });
+    const roles = submitRoles(unit.settings);
+    if (roles.add.length || roles.remove.length) await this.discord.enqueue('qualifications', 'member.roles', { discordId: d.discordId, ...roles, reason: `Bewerbung ${a.number}` }, { always: true });
     return { id: a.id, number: a.number, unitName: a.unitName };
   }
 
@@ -124,8 +132,23 @@ export class QualificationsService {
       if (a.userId) await tx.notification.create({ data: { userId: a.userId, type: 'QUALIFICATION', title: `Your ${a.unitName} application ${a.number} was ${status === 'ACCEPTED' ? 'accepted' : 'not accepted'}` } });
       await this.audit.record(actor, { action: `qualifications.application.${status === 'ACCEPTED' ? 'accept' : 'reject'}`, module: 'qualifications', entityType: 'QualificationApplication', entityId: id, before: { status: 'OPEN' }, after: { status }, reason }, tx);
     });
-    await this.discord.enqueue('qualifications', 'qualification.decided', { discordId: a.discordId, status, number: a.number, unitName: a.unitName, roleId: status === 'ACCEPTED' ? unit?.roleId || null : null, roleIds: status === 'ACCEPTED' ? a.grantRoleIds : [], reason: reason || null }, { always: true });
+    // wie bei Appy: entschiedene Bewerbung in den Channel für angenommene/abgelehnte Bewerbungen posten
+    const archive = status === 'ACCEPTED' ? unit?.acceptedChannelId : unit?.deniedChannelId;
+    if (archive) {
+      const by = actor.userId ? await this.prisma.user.findUnique({ where: { id: actor.userId }, select: { displayName: true } }) : null;
+      await this.discord.enqueue('qualifications', 'qualification.archived', {
+        id: a.id, number: a.number, unitName: a.unitName, discordId: a.discordId, discordName: a.discordName, answers: a.answers, durationSec: a.durationSec, joinedAt: a.joinedAt?.toISOString() ?? null, createdAt: a.createdAt.toISOString(),
+        status, reason: reason || null, decidedByName: by?.displayName ?? null, channelId: archive, guildName: a.guildId ? (await this.discord.guilds()).find((g) => g.id === a.guildId)?.name ?? null : null,
+      }, { always: true });
+    }
     const by = actor.userId ? await this.prisma.user.findUnique({ where: { id: actor.userId }, select: { displayName: true } }) : null;
+    const settings = unit?.settings ?? appSettingsSchema.parse({});
+    const roles = decisionRoles(settings, status === 'ACCEPTED', [unit?.roleId, ...a.grantRoleIds]);
+    const decider = ownLink ? `<@${ownLink.discordId}>` : by?.displayName ?? 'dem Team';
+    await this.discord.enqueue('qualifications', 'qualification.decided', {
+      discordId: a.discordId, status, number: a.number, unitName: a.unitName, roleIds: roles.add, removeRoleIds: roles.remove, reason: reason || null,
+      message: decisionMessage(settings, status === 'ACCEPTED', { applicationName: a.unitName, number: a.number, decider, applicantId: a.discordId, reason }),
+    }, { always: true });
     return { id, number: a.number, unitName: a.unitName, status, addedToSek, decidedByName: by?.displayName ?? null, reason: reason || null };
   }
 }

@@ -19,6 +19,32 @@ Regeln: eine offene Bewerbung pro Person und Einheit; eine laufende Bewerbung im
 - *Bewerbung bei EN Polizei*: Titel/Text des Panels (`/bewerbungspanel`), **Ping-Rollen** (werden bei neuen Bewerbungen im Channel erwähnt) und die Fragen. Das ist dasselbe Formular wie unter Studio → Application form und auf der Web-Seite `/apply`; der Roblox-Name wird immer zuerst gefragt.
 - *Qualifikationen*: Titel und Einleitung des Panels; je Einheit Name, Beschreibung, Discord-Rollen-ID (bei Annahme), eigener Bewerbungs-Channel, **Ping-Rollen** (z. B. @Staffelkommandant) und die Fragen. Startwerte: Flugstaffel, SEK, Ausbilder mit je 6 Fragen.
 
+**Seiten im Dashboard:** *Organisation → Applications* (Polizei-Bewerbung) und *Organisation → Qualifications* (SEK, Flugstaffel, Ausbilder …) sind gleich aufgebaut:
+- Tab **Applications**: Bewerbungen als Karten mit allen Antworten und den Buttons **Accept**, **Reject**, **Accept with reason** und **Reject with reason**. Der Grund geht per DM an die Person.
+- Tab **Setup**: alle Einstellungen.
+
+**Einstellungen je Bewerbung (wie bei Appy)** – Channels und Rollen wählst du aus Listen mit Namen. Die Listen meldet der Bot automatisch für jeden Server, auf dem er ist.
+- *Requirements*:
+  - **Enabled** öffnet oder schließt die Bewerbung; geschlossen nimmt sie keine Einsendungen an.
+  - **Application name**: Name der Bewerbung.
+  - **Application type**: Direct Message.
+  - **Pending Submission Channel**: Hier landen neue Bewerbungen.
+  - **Accepted / Denied Submission Channel**: Hierhin postet der Bot die Bewerbung nach der Entscheidung, mit Ergebnis und Grund.
+- *Embed Customization*: eigene Texte für **Accepted**, **Denied**, **Confirmation** (erste DM) und **Completion** (nach dem Absenden). Variablen: `{applicationName}`, `{user}` (wer entschieden hat), `{applicant}`, `{number}`, `{reason}`, `{questionCount}`, `{timeLimit}`. Ein Grund wird automatisch angehängt, wenn der Text kein `{reason}` enthält.
+- *Role Config*:
+  - **Restricted Roles** und **Required Roles**, jeweils mit „Has all roles“ oder „Has any role“.
+  - **Accepted Roles** / **Denied Roles** vergibt der Bot nach der Entscheidung.
+  - **Ping Roles** werden bei neuen Bewerbungen erwähnt.
+  - **Accepted / Denied Removal Roles** werden nach der Entscheidung entfernt.
+  - **Pending Roles** gibt es beim Einreichen; sie werden nach der Entscheidung wieder entfernt.
+  - **Remove roles on submit** werden beim Einreichen entfernt.
+  - **Application Manager Roles**: Nur wer eine davon hat, darf im Discord entscheiden. Das Recht im System (`applications.decide` bzw. `qualifications.decide`) braucht man trotzdem.
+- *Other*:
+  - **Staff Threads**: ein Thread je Bewerbung. Der Bot braucht dafür das Recht „Öffentliche Threads erstellen“.
+  - **Application cooldown**: Wartezeit bis zur nächsten Bewerbung.
+  - **Time Limit**: Zeit zum Ausfüllen, 5 Minuten bis 7 Tage, Standard 3 Stunden.
+- Noch nicht eingebaut: „Action On User Leave“. Dafür bräuchte der Bot den privilegierten *Server Members Intent*.
+
 **Fragen-Editor (wie bei Appy)** – bis zu 50 Fragen je Bewerbung, jede als Karte:
 - **Typ**: *Text* (Antwort per Nachricht), *Multiple choice* (Auswahlmenü in der DM, eine oder mehrere Optionen) oder *Role select* (wie Auswahl, jede Option mit einer Discord-Rolle – die gewählten Rollen bekommt die Person **bei Annahme** zusätzlich).
 - **Duplizieren**, **Löschen**, **Verschieben** (ziehen oder ↑/↓).

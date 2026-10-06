@@ -35,5 +35,6 @@ describe('ticket panel preview', () => {
     const e = new ApiError(400, 'VALIDATION_FAILED', 'Request validation failed.', 'r1', [{ path: 'staffRoleIds.0', message: 'Discord ID (15–25 digits)' }, { path: 'questions.1.label', message: 'too short' }]);
     expect(errText(e)).toBe('Please check: Staff roles (entry 1): Discord ID (15–25 digits) · Question 2 – text: too short (Request ID r1)');
     expect(errText(new ApiError(409, 'CONFLICT', 'In use.'))).toBe('In use.');
+    expect(errText(new ApiError(400, 'VALIDATION_FAILED', 'x', undefined, [{ path: 'police.settings.timeLimitMinutes', message: 'Number must be greater than or equal to 5' }]))).toBe('Please check: Police application › Settings › Time limit: Number must be greater than or equal to 5');
   });
 });

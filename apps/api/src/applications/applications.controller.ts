@@ -11,7 +11,8 @@ import { pageQuery } from '../common/pagination';
 
 const submit = z.object({ robloxUsername: z.string().trim().min(1).max(64), robloxUserId: z.string().max(20).optional(), answers: z.record(z.string(), z.union([z.string().max(5000), z.array(z.string().max(100)).max(25)])) });
 const move = z.object({ status: z.enum(APPLICATION_STATUSES).refine((s) => s !== 'ACCEPTED' && s !== 'REJECTED', 'Use the decide endpoint.'), reason: z.string().trim().min(3).max(1000).optional() });
-const listQ = pageQuery.extend({ status: z.enum(APPLICATION_STATUSES).optional() });
+/** `OPEN` = alle noch nicht entschiedenen (eingereicht, Prüfung, Gespräch, Entscheidung offen). */
+const listQ = pageQuery.extend({ status: z.union([z.enum(APPLICATION_STATUSES), z.literal('OPEN')]).optional() });
 
 @ApiTags('applications')
 @Controller('applications')
