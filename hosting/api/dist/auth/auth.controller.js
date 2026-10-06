@@ -37,6 +37,8 @@ let AuthController = class AuthController {
     }
     secure() { return this.env.COOKIE_SECURE ? this.env.COOKIE_SECURE === 'true' : this.env.NODE_ENV === 'production'; }
     /** Welche Anmeldewege es gibt (Login-Seite). */
+    /** Einladungs-Link für den Bot (Einstellungen → „Bot zu einem Server hinzufügen“). */
+    invite() { return { url: this.discord.inviteUrl() }; }
     providers() { return { discord: this.discord.enabled(), password: this.discord.passwordLoginAllowed() }; }
     /** „Mit Discord anmelden“ → weiter zu Discord. */
     discordStart(res) {
@@ -93,6 +95,13 @@ let AuthController = class AuthController {
     }
 };
 exports.AuthController = AuthController;
+__decorate([
+    (0, common_1.Get)('discord/invite'),
+    (0, decorators_1.RequirePermission)('settings.view'),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", []),
+    __metadata("design:returntype", void 0)
+], AuthController.prototype, "invite", null);
 __decorate([
     (0, decorators_1.Public)(),
     (0, common_1.Get)('providers'),

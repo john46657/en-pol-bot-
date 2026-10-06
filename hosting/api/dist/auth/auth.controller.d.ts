@@ -21,6 +21,10 @@ export declare class AuthController {
     constructor(auth: AuthService, discord: DiscordOAuthService);
     private secure;
     /** Welche Anmeldewege es gibt (Login-Seite). */
+    /** Einladungs-Link für den Bot (Einstellungen → „Bot zu einem Server hinzufügen“). */
+    invite(): {
+        url: string | null;
+    };
     providers(): {
         discord: boolean;
         password: boolean;

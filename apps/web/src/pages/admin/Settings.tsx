@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { api, ApiError } from '../../lib/api';
 import { useAuth } from '../../lib/auth';
+import { useGuilds } from '../../lib/guilds';
 import { Button, Card, ErrorState, Field, Input, PageHeader, Select, SkeletonRows } from '../../components/ui';
 
 interface S { settings: Record<string, unknown>; allowedKeys: string[] }
@@ -43,6 +44,7 @@ export function Settings() {
         <p className="mb-3 text-xs text-muted">Empty = that notification type is disabled (nothing is queued). Several channels (also on different servers): separate the IDs with a comma. Everyone who can read the Discord channel will see the posts — use staff-only channels. Only summaries are posted (incident number/title/priority/location, wanted reason/subject, announcements, full applications incl. answers (like Appy), danger level, SEK mission reports and qualification applications incl. their text and answers). Team list, ticket category and the roles take a single ID.</p>
         <div className="grid gap-3 md:grid-cols-2">{CHANNELS.map(([k, label]) => <Field key={k} label={label}>{(id) => <Input id={id} inputMode="numeric" disabled={!manage} value={drafts[`discord.${k}`] ?? String((q.data.settings['discord.channels'] as Record<string, string> | undefined)?.[k] ?? '')} onChange={(e) => setDrafts({ ...drafts, [`discord.${k}`]: e.target.value })} placeholder="123456789012345678, 234567890123456789" />}</Field>)}</div>
       </Card>
+      <BotInviteCard />
       <DiscordLoginCard manage={manage} value={q.data.settings['auth.discord'] as DiscordLogin | undefined} busy={save.isPending} onSave={(v) => save.mutate({ key: 'auth.discord', value: v })} />
       <Card title="Team list rank order" className="mt-4" actions={manage && <Button disabled={save.isPending} onClick={() => save.mutate({ key: 'team.rankOrder', value: val('team.rankOrder').split(',').map((r) => r.trim()).filter(Boolean) })}>Save order</Button>}>
         <p className="mb-3 text-xs text-muted">Ranks in the Discord team list, highest first, separated by commas. Ranks not listed here follow alphabetically.</p>
@@ -90,6 +92,27 @@ function DiscordLoginCard({ manage, value, busy, onSave }: { manage: boolean; va
         ))}
         {manage && <Button variant="secondary" size="sm" onClick={() => setD({ ...d, roleMap: [...d.roleMap, { discordRoleId: '', role: '' }] })}>Add mapping</Button>}
         <p className="text-xs text-muted">Example: Discord role “Polizei” → Police Member, “Leitstelle” → Dispatch. Mapped roles are added when the person has the Discord role and removed when they lose it; other roles are never touched.</p>
+      </div>
+    </Card>
+  );
+}
+
+/** Bot auf einen (weiteren) Discord-Server einladen – fertiger Link mit genau den nötigen Rechten. */
+function BotInviteCard() {
+  const invite = useQuery({ queryKey: ['bot-invite'], queryFn: () => api<{ url: string | null }>('/auth/discord/invite') });
+  const guilds = useGuilds();
+  return (
+    <Card title="Discord bot on your servers" className="mt-4">
+      <div className="grid gap-3 text-sm">
+        {invite.data?.url
+          ? <div><a className="inline-flex items-center gap-1.5 rounded-md bg-[#5865f2] px-3.5 py-2 font-medium text-white hover:brightness-110" href={invite.data.url} target="_blank" rel="noreferrer">Add bot to a server</a></div>
+          : <p className="text-muted">Set DISCORD_TOKEN in the panel first – then the invite link appears here.</p>}
+        <p className="text-xs text-muted">Opens Discord: choose your server and click <b>Authorize</b>. You need „Manage Server“ on that server. If Discord says the bot is private or needs a code grant: Developer Portal → <b>Bot</b> → turn <b>Public Bot</b> on (or invite with the account that owns the bot) and turn <b>Requires OAuth2 Code Grant</b> off.</p>
+        <div>
+          <p className="mb-1 text-xs font-semibold uppercase text-muted">Bot is on {guilds.data?.length ?? 0} server(s)</p>
+          {guilds.data?.length ? <ul className="flex flex-wrap gap-2">{guilds.data.map((g) => <li key={g.id} className="inline-flex items-center gap-1.5 rounded border border-line px-2 py-1">{g.icon && <img src={g.icon} alt="" className="h-4 w-4 rounded-full" />}{g.name}</li>)}</ul>
+            : <p className="text-xs text-muted">None reported yet – the bot reports its servers a few seconds after it starts.</p>}
+        </div>
       </div>
     </Card>
   );

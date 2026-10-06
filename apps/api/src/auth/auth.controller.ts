@@ -7,7 +7,7 @@ import { AuthService } from './auth.service';
 import { DiscordLoginFailure, DiscordOAuthService } from './discord-oauth.service';
 import { webUrl } from '../common/web-url';
 import { AppError } from '../common/errors';
-import { CurrentActor, CurrentUser, Public } from '../authz/decorators';
+import { CurrentActor, CurrentUser, Public, RequirePermission } from '../authz/decorators';
 import { SESSION_COOKIE } from '../authz/guards';
 import { zodBody } from '../common/zod.pipe';
 import type { AppRequest, AuthUser } from '../common/request-context';
@@ -26,6 +26,10 @@ export class AuthController {
   private secure() { return this.env.COOKIE_SECURE ? this.env.COOKIE_SECURE === 'true' : this.env.NODE_ENV === 'production'; }
 
   /** Welche Anmeldewege es gibt (Login-Seite). */
+  /** Einladungs-Link für den Bot (Einstellungen → „Bot zu einem Server hinzufügen“). */
+  @Get('discord/invite') @RequirePermission('settings.view')
+  invite() { return { url: this.discord.inviteUrl() }; }
+
   @Public() @Get('providers')
   providers() { return { discord: this.discord.enabled(), password: this.discord.passwordLoginAllowed() }; }
 

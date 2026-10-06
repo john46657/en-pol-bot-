@@ -43,6 +43,17 @@ export class DiscordOAuthService {
     return /^\d{15,25}$/.test(id) ? id : null;
   }
   enabled() { return !!(this.clientId() && this.env.DISCORD_CLIENT_SECRET); }
+  /**
+   * Link zum Einladen des Bots auf einen Server – mit genau den Rechten, die er braucht:
+   * Kanäle ansehen, Nachrichten senden/verwalten, Links einbetten, Dateien anhängen, Verlauf lesen,
+   * Kanäle verwalten (Tickets), Rollen verwalten (Rollen vergeben), öffentliche Threads + Nachrichten in Threads.
+   */
+  inviteUrl(): string | null {
+    const id = this.clientId();
+    if (!id) return null;
+    const perms = [1n << 4n, 1n << 10n, 1n << 11n, 1n << 13n, 1n << 14n, 1n << 15n, 1n << 16n, 1n << 28n, 1n << 35n, 1n << 38n].reduce((a, b) => a | b, 0n);
+    return `https://discord.com/oauth2/authorize?client_id=${id}&scope=bot%20applications.commands&permissions=${perms}`;
+  }
   /** Passwort-Login nur, solange Discord-Login nicht eingerichtet ist – oder im Notfall mit PASSWORD_LOGIN=true. */
   passwordLoginAllowed() { return !this.enabled() || process.env.PASSWORD_LOGIN === 'true'; }
   private isAdminId(id: string) { return (this.env.ADMIN_DISCORD_IDS ?? '').split(/[\s,;]+/).includes(id); }
