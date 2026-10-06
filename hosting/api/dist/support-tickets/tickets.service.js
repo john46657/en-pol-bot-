@@ -249,11 +249,15 @@ let SupportTicketsService = class SupportTicketsService {
         const effects = [];
         await this.logAction(l, 'created', actor, { category: cat.name, by: actor.discordId === d.discordId ? 'creator' : actor.name }, effects, `🎫 Ticket erstellt von ${mention(d.discordId)} (${cat.name})`);
         const control = this.control(l);
-        const staffRoles = [...new Set([...cat.staffRoleIds, ...cat.extraRoleIds])];
+        // Zuständige Rollen: die der Kategorie – ohne eigene die allgemeine Staff-Rolle (Einstellungen → Discord-Bot-Channels)
+        const fallback = cat.staffRoleIds.length ? [] : ((await this.discord.channels()).staffRole ?? '').split(/[\s,;]+/).filter((r) => /^\d{15,25}$/.test(r));
+        const responsible = cat.staffRoleIds.length ? cat.staffRoleIds : fallback;
+        const staffRoles = [...new Set([...responsible, ...cat.extraRoleIds])];
         const mentionText = (0, shared_1.renderTicketText)(cat.mentionText || '', this.vars(l)).trim();
-        control.content = [mention(d.discordId), ...(cat.mentionStaff ? cat.staffRoleIds.map((r) => `<@&${r}>`) : []), mentionText].filter(Boolean).join(' ');
+        // neues Ticket: Ersteller und zuständige Rollen werden gepingt
+        control.content = [mention(d.discordId), ...(cat.mentionStaff ? responsible.map((r) => `<@&${r}>`) : []), mentionText].filter(Boolean).join(' ');
         control.mentionUsers = [d.discordId];
-        control.mentionRoles = cat.mentionStaff ? cat.staffRoleIds : [];
+        control.mentionRoles = cat.mentionStaff ? responsible : [];
         const first = this.questionMessage(t, cat, 0);
         effects.unshift({
             type: 'create', ticketId: t.id, guildId: d.guildId, name, parentId: cat.discordCategoryId, topic: `Ticket #${(0, shared_1.ticketNumber)(t.number)} · ${cat.name} · ${d.discordName} (${d.discordId})`,

@@ -355,3 +355,25 @@ describe('GalaxyBot-like features', () => {
     expect((await prisma.supportTicket.findUniqueOrThrow({ where: { id } })).claimers).toEqual([]);
   });
 });
+
+describe('ping on new tickets', () => {
+  it('the creator and the responsible roles are pinged; without category roles the general staff role is used; no start question', async () => {
+    const admin = (await login(app, 'tk_admin')).agent;
+    const STAFF_ROLE = '910000000000000099';
+    await admin.put('/api/v1/admin/settings/discord.channels').send({ value: { staffRole: STAFF_ROLE } });
+    const cat = (await admin.post('/api/v1/support-tickets/categories').send({ name: 'Ping-Test', staffRoleIds: [], maxOpen: 5 })).body;
+    const r = await http().post('/api/v1/bot/support-tickets/open').set(bot()).send({ categoryId: cat.id, guildId: GUILD, discordId: '900000000000000077', discordName: 'Neu' });
+    expect(r.status).toBe(201);
+    const create = find(r.body.effects, 'create')[0]!;
+    expect(create.control.content).toContain(`<@&${STAFF_ROLE}>`);
+    expect(create.control.content).toContain('<@900000000000000077>');
+    expect(create.control.mentionRoles).toEqual([STAFF_ROLE]);
+    expect(create.viewers.map((v) => v.id)).toContain(STAFF_ROLE);
+    expect(create.messages).toEqual([]); // keine Frage „Was ist dein Anliegen?“
+    // mit eigenen Rollen: genau diese
+    await admin.put(`/api/v1/support-tickets/categories/${cat.id}`).send({ ...cat, id: undefined, staffRoleIds: [ROLE_SUPPORT] });
+    const r2 = await http().post('/api/v1/bot/support-tickets/open').set(bot()).send({ categoryId: cat.id, guildId: GUILD, discordId: '900000000000000078', discordName: 'Neu2' });
+    expect(find(r2.body.effects, 'create')[0]!.control.mentionRoles).toEqual([ROLE_SUPPORT]);
+    await admin.put('/api/v1/admin/settings/discord.channels').send({ value: {} });
+  });
+});

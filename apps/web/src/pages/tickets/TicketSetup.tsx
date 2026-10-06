@@ -276,7 +276,7 @@ function CategoryEditor({ draft, c, onDone }: { draft: CatDraft; c: TicketConfig
               <Field label="Discord category for new tickets">{(id) => <ChannelPicker ariaLabel={id} kind="category" value={d.discordCategoryId} onChange={(v) => set({ discordCategoryId: v })} />}</Field>
               <Field label="Channel name format" hint={`Example: ${ticketChannelName(d.channelNameFormat, { ...SAMPLE, '{category}': d.name })}`}>{(id) => <Input id={id} value={d.channelNameFormat} maxLength={90} onChange={(e) => set({ channelNameFormat: e.target.value })} />}</Field>
             </div>
-            <Roles label="Staff roles (see + write, are mentioned)" value={d.staffRoleIds} onChange={(v) => set({ staffRoleIds: v })} />
+            <Roles label="Zuständige Rollen (sehen + schreiben, werden beim Öffnen gepingt; leer = allgemeine Staff-Rolle aus den Einstellungen)" value={d.staffRoleIds} onChange={(v) => set({ staffRoleIds: v })} />
             <Roles label="Additional roles (see + write)" value={d.extraRoleIds} onChange={(v) => set({ extraRoleIds: v })} />
           </Section>
           <Section title="Who may open · limits">
@@ -295,7 +295,7 @@ function CategoryEditor({ draft, c, onDone }: { draft: CatDraft; c: TicketConfig
             <Field label="Title">{(id) => <Input id={id} value={d.welcomeTitle} maxLength={256} onChange={(e) => set({ welcomeTitle: e.target.value })} />}</Field>
             <Field label="Message">{(id) => <Textarea id={id} rows={5} value={d.welcomeMessage} maxLength={4000} onChange={(e) => set({ welcomeMessage: e.target.value })} />}</Field>
             <Field label="Image (URL, optional – e.g. your banner)">{(id) => <Input id={id} type="url" value={d.welcomeImageUrl ?? ''} maxLength={500} placeholder="https://…" onChange={(e) => set({ welcomeImageUrl: e.target.value || null })} />}</Field>
-            <Check label="Mention staff roles when the ticket opens" checked={d.mentionStaff} onChange={(v) => set({ mentionStaff: v })} />
+            <Check label="Zuständige Rollen beim Öffnen eines Tickets pingen" checked={d.mentionStaff} onChange={(v) => set({ mentionStaff: v })} />
             <Field label="Additional mention / text above the message">{(id) => <Input id={id} value={d.mentionText} maxLength={1000} onChange={(e) => set({ mentionText: e.target.value })} />}</Field>
           </Section>
           <Section title="Buttons on the ticket"><ButtonsEditor value={d.buttons} onChange={(v) => set({ buttons: v })} /></Section>
