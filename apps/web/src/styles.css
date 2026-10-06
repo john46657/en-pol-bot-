@@ -32,3 +32,5 @@ body { background: var(--color-bg); color: var(--color-fg); font-family: var(--f
 .table-scroll th, .table-scroll td { white-space: nowrap; padding-right: 1rem; }
 /* Raster-Elemente nie breiter als ihre Spalte (sonst schieben lange Texte Karten auf dem Handy über den Rand) */
 @layer base { .grid > * { min-width: 0; } }
+/* Touch-Geräte (Handy/Tablet): Buttons groß genug für den Finger */
+@media (pointer: coarse) { button:not([role='tab']), select { min-height: 2.5rem; } }

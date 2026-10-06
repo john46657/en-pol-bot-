@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { NavLink, Outlet } from 'react-router';
 import { LogOut, Menu, Shield } from 'lucide-react';
 import { useAuth } from '../lib/auth';
+import { useMediaQuery } from '../lib/media';
 import { ACCENTS, useStudio } from '../lib/studio';
 import { GROUPS, NAV } from '../nav';
 import { DiscordLink } from './DiscordLink';
@@ -19,6 +20,7 @@ export function AppShell() {
     document.title = orgName;
   }, [studio.data, orgName]);
   const items = NAV.filter((n) => !n.perm || can(n.perm));
+  const tablet = useMediaQuery('(min-width: 768px) and (max-width: 1023px)');
   const sidebar = (
     <nav aria-label="Main" className="flex h-full flex-col gap-4 overflow-y-auto p-3">
       {GROUPS.map((g) => {
@@ -39,6 +41,15 @@ export function AppShell() {
   return (
     <div className="flex h-full">
       <a href="#main" className="sr-only focus:not-sr-only focus:absolute focus:z-50 focus:bg-primary focus:p-2">Skip to content</a>
+      {/* Tablet hochkant: schmale Symbol-Leiste; ☰ öffnet das volle Menü mit Beschriftungen */}
+      {tablet && <nav aria-label="Quick navigation" className="flex w-16 shrink-0 flex-col items-center gap-1 overflow-y-auto border-r border-line bg-panel py-2">
+        <Shield size={20} className="mb-2 mt-2 text-primary" aria-hidden />
+        {items.map((i) => (
+          <NavLink key={i.path} to={i.path} title={i.label} aria-label={i.label} className={({ isActive }) => `grid h-11 w-11 shrink-0 place-items-center rounded-md ${isActive ? 'bg-primary/15 text-fg' : 'text-muted hover:bg-panel-2 hover:text-fg'}`}>
+            <i.icon size={20} aria-hidden />
+          </NavLink>
+        ))}
+      </nav>}
       <aside className="hidden w-60 shrink-0 border-r border-line bg-panel lg:block">
         <div className="flex h-14 items-center gap-2 border-b border-line px-4 font-semibold"><Shield size={18} className="text-primary" aria-hidden /><span className="min-w-0 truncate">{orgName}</span></div>
         {sidebar}

@@ -65,7 +65,7 @@ export function Dispatch() {
         <Card title="Units">
           {units.isLoading ? <SkeletonRows rows={4} /> : !units.data?.length ? <EmptyState text="No units configured." /> : (
             <ul className="space-y-2">{units.data.map((u) => (
-              <li key={u.id} className="flex items-center justify-between gap-2"><span className="font-medium">{u.callsign}</span>
+              <li key={u.id} className="flex items-center justify-between gap-2"><span className="shrink-0 whitespace-nowrap font-medium">{u.callsign}</span>
                 {canEdit ? <Select aria-label={`Status of ${u.callsign}`} className="w-auto py-1 text-xs" value={u.status} onChange={(e) => unitStatus.mutate({ id: u.id, status: e.target.value })}>{UNIT_STATUSES.map((s) => <option key={s}>{s}</option>)}</Select> : <StatusBadge status={u.status} />}
               </li>))}</ul>
           )}
