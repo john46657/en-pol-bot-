@@ -13,7 +13,7 @@ export const persons: ResourceConfig<Row> = {
   title: 'Persons', subtitle: 'Person records', customEntity: 'persons', endpoint: '/persons', queryKey: 'persons', emptyText: 'No persons found.', emptyHint: 'Create a person record to get started.',
   detailPath: (r) => `/persons/${r.id}`,
   columns: [{ key: 'robloxUsername', label: 'Roblox username' }, { key: 'robloxUserId', label: 'Roblox ID', render: (r) => s(r.robloxUserId) }, { key: 'status', label: 'Status', render: status }, { key: 'createdAt', label: 'Created', render: date('createdAt') }],
-  create: { perm: 'persons.create', label: 'New person', fields: [{ name: 'robloxUsername', label: 'Roblox username', required: true, max: 64 }, { name: 'robloxUserId', label: 'Roblox user ID', hint: 'Digits only. Leave empty if unknown — identities are never guessed.' }, { name: 'notes', label: 'Notes', type: 'textarea' }] },
+  create: { perm: 'persons.create', label: 'New person', fields: [{ name: 'robloxUsername', label: 'Roblox username or Roblox ID', required: true, max: 64, hint: 'One is enough – the other is looked up on Roblox automatically.' }, { name: 'robloxUserId', label: 'Roblox user ID (optional)', hint: 'Digits only. Only needed if Roblox cannot be reached.' }, { name: 'notes', label: 'Notes', type: 'textarea' }] },
 };
 
 export const vehicles: ResourceConfig<Row> = {
@@ -38,7 +38,7 @@ export const reports: ResourceConfig<Row> = {
 export const tickets: ResourceConfig<Row> = {
   title: 'Tickets', subtitle: 'Citations and fines', endpoint: '/tickets', queryKey: 'tickets', emptyText: 'No tickets issued.', detailPath: (r) => `/tickets/${r.id}`,
   columns: [{ key: 'number', label: 'Number' }, { key: 'person', label: 'Person', render: (r) => s((r.person as Row)?.robloxUsername) }, { key: 'reason', label: 'Reason' }, { key: 'amount', label: 'Amount', render: (r) => Number(r.amount).toFixed(2) }, { key: 'status', label: 'Status', render: status }, { key: 'issuedAt', label: 'Issued', render: date('issuedAt') }],
-  create: { perm: 'tickets.create', label: 'New ticket', fields: [{ name: 'personId', label: 'Person', type: 'person', required: true }, { name: 'legalCodeId', label: 'Legal code ID', hint: 'Optional; amount defaults from the code.' }, { name: 'reason', label: 'Reason', required: true, min: 3, max: 1000 }, { name: 'amount', label: 'Amount', type: 'number' }] },
+  create: { perm: 'tickets.create', label: 'New ticket', fields: [{ name: 'personId', label: 'Person', type: 'person', required: true }, { name: 'legalCodeId', label: 'Legal code', type: 'legalCode', hint: 'Optional; the amount is taken from the code if you leave it empty.' }, { name: 'reason', label: 'Reason', required: true, min: 3, max: 1000 }, { name: 'amount', label: 'Amount', type: 'number' }] },
 };
 
 export const complaints: ResourceConfig<Row> = {

@@ -12,6 +12,7 @@ export const PASSWORD = 'correct-horse-battery-staple';
 
 export async function createTestApp(override?: (b: TestingModuleBuilder) => TestingModuleBuilder) {
   process.env.NODE_ENV = 'test';
+  process.env.ROBLOX_LOOKUP ??= 'off'; // nur test/roblox.test.ts fragt (gemockt) bei Roblox nach
   const builder = Test.createTestingModule({ imports: [AppModule] });
   const mod = await (override ? override(builder) : builder).compile();
   const app: INestApplication = mod.createNestApplication({ rawBody: true });

@@ -10,6 +10,7 @@ const USER = { id: 4242424242, name: 'Builderman_LC', displayName: 'Bob', descri
 const json = (v: unknown, status = 200) => new Response(JSON.stringify(v), { status, headers: { 'content-type': 'application/json' } });
 
 beforeAll(async () => {
+  process.env.ROBLOX_LOOKUP = 'on';
   const realFetch = globalThis.fetch;
   vi.spyOn(globalThis, 'fetch').mockImplementation(async (input, init) => {
     const url = String(input);
@@ -62,5 +63,18 @@ describe('Roblox lookup (MDT search)', () => {
   it('allows Discord and Roblox images in the page security policy', async () => {
     const res = await (await login(app, 'rb_off')).agent.get('/api/v1/auth/me');
     expect(String(res.headers['content-security-policy'])).toMatch(/img-src 'self' data: blob: https:\/\/cdn\.discordapp\.com https:\/\/\*\.rbxcdn\.com/);
+  });
+  it('new person with only the name or only the ID: the rest comes from Roblox', async () => {
+    await prisma.person.deleteMany({ where: { robloxUserId: String(USER.id) } });
+    const admin = (await login(app, 'rb_admin')).agent;
+    const byId = await admin.post('/api/v1/persons').send({ robloxUsername: String(USER.id) });
+    expect(byId.status).toBe(201);
+    expect(byId.body.person).toMatchObject({ robloxUsername: USER.name, robloxUserId: String(USER.id) });
+    // gleicher Spieler nochmal per Name → schon vorhanden
+    const again = await admin.post('/api/v1/persons').send({ robloxUsername: 'builderman_lc' });
+    expect(again.status).toBe(409);
+    // unbekannt bei Roblox → wird so gespeichert, wie eingegeben
+    const unknown = await admin.post('/api/v1/persons').send({ robloxUsername: 'Nobody_Here_1' });
+    expect(unknown.body.person).toMatchObject({ robloxUsername: 'Nobody_Here_1', robloxUserId: null });
   });
 });

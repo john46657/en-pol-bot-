@@ -7,10 +7,11 @@ import { StudioService } from '../studio/studio.service';
 import { Prisma } from '@prisma/client';
 import { AppError } from '../common/errors';
 import { PageQuery, pageResult, skipTake } from '../common/pagination';
+import { RobloxService } from './roblox.service';
 
 @Injectable()
 export class PersonsService {
-  constructor(private readonly prisma: PrismaService, private readonly audit: AuditService, private readonly timeline: TimelineService, private readonly studio: StudioService) {}
+  constructor(private readonly prisma: PrismaService, private readonly audit: AuditService, private readonly timeline: TimelineService, private readonly studio: StudioService, private readonly roblox: RobloxService) {}
 
   async list(p: PageQuery, includeArchived = false) {
     const where = {
@@ -51,6 +52,11 @@ export class PersonsService {
   async create(actor: Actor, d: { robloxUsername: string; robloxUserId?: string | null; aliases?: string[]; notes?: string; custom?: Record<string, unknown> }) {
     const custom = await this.studio.check('persons', d.custom);
     if (d.robloxUserId && !isValidRobloxUserId(d.robloxUserId)) throw new AppError('VALIDATION_FAILED', 'Invalid Roblox user id.');
+    // Nur Name oder nur ID angegeben → das Fehlende bei Roblox nachschlagen (Name in der richtigen Schreibweise)
+    if (!d.robloxUserId) {
+      const r = await this.roblox.lookup(d.robloxUsername).catch(() => null);
+      if (r) d = { ...d, robloxUsername: r.name, robloxUserId: r.id };
+    }
     const dups = await this.findDuplicates(d.robloxUsername, d.robloxUserId);
     const hard = dups.find((x) => d.robloxUserId && x.robloxUserId === d.robloxUserId);
     if (hard) throw new AppError('CONFLICT', 'A person with this Roblox user id already exists.', { existingId: hard.id });

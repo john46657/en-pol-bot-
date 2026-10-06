@@ -4,12 +4,14 @@ import { TimelineService } from '../timeline/timeline.service';
 import { StudioService } from '../studio/studio.service';
 import { Prisma } from '@prisma/client';
 import { PageQuery } from '../common/pagination';
+import { RobloxService } from './roblox.service';
 export declare class PersonsService {
     private readonly prisma;
     private readonly audit;
     private readonly timeline;
     private readonly studio;
-    constructor(prisma: PrismaService, audit: AuditService, timeline: TimelineService, studio: StudioService);
+    private readonly roblox;
+    constructor(prisma: PrismaService, audit: AuditService, timeline: TimelineService, studio: StudioService, roblox: RobloxService);
     list(p: PageQuery, includeArchived?: boolean): Promise<{
         items: {
             id: string;
@@ -21,8 +23,8 @@ export declare class PersonsService {
             version: number;
             status: string;
             custom: Prisma.JsonValue | null;
-            aliases: string[];
             serverId: string | null;
+            aliases: string[];
             notes: string | null;
         }[];
         total: number;
@@ -55,8 +57,8 @@ export declare class PersonsService {
         version: number;
         status: string;
         custom: Prisma.JsonValue | null;
-        aliases: string[];
         serverId: string | null;
+        aliases: string[];
         notes: string | null;
     }>;
     overview(id: string): Promise<{
@@ -86,8 +88,8 @@ export declare class PersonsService {
             version: number;
             status: string;
             custom: Prisma.JsonValue | null;
-            aliases: string[];
             serverId: string | null;
+            aliases: string[];
             notes: string | null;
         };
         tickets: {
@@ -150,8 +152,8 @@ export declare class PersonsService {
             version: number;
             status: string;
             custom: Prisma.JsonValue | null;
-            aliases: string[];
             serverId: string | null;
+            aliases: string[];
             notes: string | null;
         };
         possibleDuplicates: {
@@ -176,8 +178,8 @@ export declare class PersonsService {
         version: number;
         status: string;
         custom: Prisma.JsonValue | null;
-        aliases: string[];
         serverId: string | null;
+        aliases: string[];
         notes: string | null;
     }>;
     archive(actor: Actor, id: string, reason: string): Promise<{
@@ -190,8 +192,8 @@ export declare class PersonsService {
         version: number;
         status: string;
         custom: Prisma.JsonValue | null;
-        aliases: string[];
         serverId: string | null;
+        aliases: string[];
         notes: string | null;
     }>;
     /** Merge nur auf ausdrückliche Bestätigung (nie automatisch). Quelle wird archiviert, nichts wird gelöscht. */
@@ -205,8 +207,8 @@ export declare class PersonsService {
         version: number;
         status: string;
         custom: Prisma.JsonValue | null;
-        aliases: string[];
         serverId: string | null;
+        aliases: string[];
         notes: string | null;
     }>;
 }

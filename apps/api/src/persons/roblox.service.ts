@@ -32,6 +32,7 @@ export class RobloxService {
   }
 
   async lookup(input: string): Promise<RobloxProfile | null> {
+    if (process.env.ROBLOX_LOOKUP === 'off') return null; // Tests ohne Internet
     const p = RobloxService.parse(input);
     if (!p) return null;
     const key = p.id ? `id:${p.id}` : `name:${p.name!.toLowerCase()}`;

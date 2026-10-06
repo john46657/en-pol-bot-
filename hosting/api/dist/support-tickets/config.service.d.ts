@@ -72,8 +72,8 @@ export declare class TicketConfigService {
             description: string;
             updatedAt: Date;
             guildId: string | null;
-            color: number;
             imageUrl: string | null;
+            color: number;
             title: string;
             channelId: string | null;
             position: number;
@@ -329,8 +329,8 @@ export declare class TicketConfigService {
         description: string;
         updatedAt: Date;
         guildId: string | null;
-        color: number;
         imageUrl: string | null;
+        color: number;
         title: string;
         channelId: string | null;
         position: number;
@@ -355,8 +355,8 @@ export declare class TicketConfigService {
         description: string;
         updatedAt: Date;
         guildId: string | null;
-        color: number;
         imageUrl: string | null;
+        color: number;
         title: string;
         channelId: string | null;
         position: number;
