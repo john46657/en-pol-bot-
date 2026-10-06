@@ -37,6 +37,11 @@ exports.SETTING_SCHEMAS = {
     'discord.channels': zod_1.z.object({ guildId: idList(), dispatch: idList(), wanted: idList(), announcements: idList(), applications: idList(), danger: idList(), sek: idList(), qualifications: idList(), duty: idList(), teamlist: singleId(), tickets: singleId(), staffRole: singleId(), radioRole: singleId(), sekRole: singleId(), dutyRole: singleId(), breakRole: singleId(), trainingRole: singleId(), adminDutyRole: singleId() }),
     'team.rankOrder': zod_1.z.array(zod_1.z.string().trim().min(1).max(64)).max(50),
     'application.form': zod_1.z.array(formField).min(1).max(30),
+    /** „Mit Discord anmelden“: neue Konten erlauben, nur Mitglieder des Discord-Servers, Discord-Rolle → Systemrolle. */
+    'auth.discord': zod_1.z.object({
+        signup: zod_1.z.boolean(), requireGuild: zod_1.z.boolean(),
+        roleMap: zod_1.z.array(zod_1.z.object({ discordRoleId: zod_1.z.string().regex(/^\d{15,25}$/), role: zod_1.z.string().trim().min(1).max(64) })).max(50),
+    }),
 };
 let AdminService = class AdminService {
     prisma;

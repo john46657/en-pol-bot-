@@ -25,6 +25,28 @@ export declare class AuthService {
             lastLogin: Date | null;
         };
     }>;
+    /** Neue Session nach erfolgreicher Anmeldung (Passwort oder Discord). */
+    startSession(user: {
+        id: string;
+        robloxUserId: string | null;
+    }, meta: {
+        ip?: string;
+        userAgent?: string;
+        requestId?: string;
+    }, action?: string): Promise<{
+        token: string;
+        expiresAt: Date;
+        user: {
+            id: string;
+            username: string;
+            displayName: string;
+            robloxUserId: string | null;
+            robloxUsername: string | null;
+            roles: string[];
+            permissions: import("@enrp/shared").PermissionKey[];
+            lastLogin: Date | null;
+        };
+    }>;
     logout(actor: Actor, sessionId: string): Promise<void>;
     /** Beendet alle Sessions eines Benutzers (Session Invalidation). */
     revokeAllSessions(userId: string): Promise<void>;

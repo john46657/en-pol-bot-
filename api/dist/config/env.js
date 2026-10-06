@@ -23,6 +23,13 @@ const schema = zod_1.z.object({
     SESSION_TTL_HOURS: zod_1.z.coerce.number().positive().default(12),
     WEB_ORIGIN: zod_1.z.string().default('http://localhost:5173'),
     STORAGE_DIR: zod_1.z.string().default('./uploads'),
+    /** „Mit Discord anmelden“: OAuth2-Client-Secret aus dem Discord Developer Portal (OAuth2 → Client Secret). Leer = nur Passwort-Login. */
+    DISCORD_CLIENT_SECRET: zod_1.z.string().min(8).optional(),
+    /** Application/Client-ID; wird sonst aus DISCORD_TOKEN abgeleitet (gleiche Anwendung wie der Bot). */
+    DISCORD_CLIENT_ID: zod_1.z.string().regex(/^\d{15,25}$/).optional(),
+    /** Bot-Token (für Server-Mitgliedschaft und Rollen beim Discord-Login). */
+    DISCORD_TOKEN: zod_1.z.string().min(20).optional(),
+    DISCORD_GUILD_ID: zod_1.z.string().optional(),
 });
 function loadEnv(source = process.env) {
     // Leere Strings (z. B. aus docker-compose `${VAR:-}`) gelten als nicht gesetzt.

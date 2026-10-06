@@ -224,6 +224,35 @@ export declare const SETTING_SCHEMAS: {
         required: boolean;
         maxLength: number;
     }>, "many">;
+    /** „Mit Discord anmelden“: neue Konten erlauben, nur Mitglieder des Discord-Servers, Discord-Rolle → Systemrolle. */
+    readonly 'auth.discord': z.ZodObject<{
+        signup: z.ZodBoolean;
+        requireGuild: z.ZodBoolean;
+        roleMap: z.ZodArray<z.ZodObject<{
+            discordRoleId: z.ZodString;
+            role: z.ZodString;
+        }, "strip", z.ZodTypeAny, {
+            role: string;
+            discordRoleId: string;
+        }, {
+            role: string;
+            discordRoleId: string;
+        }>, "many">;
+    }, "strip", z.ZodTypeAny, {
+        signup: boolean;
+        requireGuild: boolean;
+        roleMap: {
+            role: string;
+            discordRoleId: string;
+        }[];
+    }, {
+        signup: boolean;
+        requireGuild: boolean;
+        roleMap: {
+            role: string;
+            discordRoleId: string;
+        }[];
+    }>;
 };
 export type SettingKey = keyof typeof SETTING_SCHEMAS;
 export declare class AdminService {
