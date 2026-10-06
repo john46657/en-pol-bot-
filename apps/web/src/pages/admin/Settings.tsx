@@ -4,7 +4,7 @@ import { api, ApiError } from '../../lib/api';
 import { useAuth } from '../../lib/auth';
 import { useGuilds, useServer } from '../../lib/guilds';
 import { useSettings } from '../../lib/settings';
-import { ChannelPicker, ChannelsPicker, RolePicker, ServersPicker } from '../../components/DiscordPickers';
+import { ChannelPicker, ChannelsPicker, RolePicker, ServersPicker, TagListEditor } from '../../components/DiscordPickers';
 import { Button, Card, ErrorState, Field, Input, PageHeader, Select, SkeletonRows } from '../../components/ui';
 
 const TEXT = [['org.name', 'Organisation name'], ['org.serverName', 'Server name'], ['org.timezone', 'Timezone (IANA)']] as const;
@@ -37,7 +37,6 @@ export function Settings() {
     // nur vollständige IDs speichern (sonst lehnt der Server ab); halbe Eingaben bleiben lokal stehen
     if (manage && Object.values(all).every((x) => /^\d{15,25}(\s*,\s*\d{15,25})*$/.test(String(x)))) put('discord.channels', all, 'Discord-Channels');
   };
-  const list = (v: string) => v.split(',').map((r) => r.trim()).filter(Boolean);
   const structure = get<{ teams: string[]; offices: string[] }>('team.structure') ?? { teams: [], offices: [] };
   const serverName = server ? guilds.data?.find((g) => g.id === server)?.name ?? server : null;
   return (
@@ -55,11 +54,11 @@ export function Settings() {
         </Card>
       </div>
       <Card title={`👥 Teamstruktur${serverName ? ` – ${serverName}` : ''}`} className="mt-4">
-        <p className="mb-3 text-xs text-muted">{serverName ? `Gilt nur für ${serverName} (Server laufen getrennt). Ohne eigene Werte gilt die gemeinsame Einstellung („Alle Server“).` : 'Gemeinsame Werte für alle Server. Wähle oben links einen Server, um für ihn eigene Werte festzulegen.'} Auswahl in Personalakten, Filter der Teamliste. Werte mit Komma trennen.</p>
-        <div className="grid gap-3 md:grid-cols-3">
-          <Field label="Teams">{(id) => <Input id={id} disabled={!manage} value={drafts['teams'] ?? structure.teams.join(', ')} placeholder="Polizei, Support, Moderation" onChange={(e) => edit('teams', e.target.value, (v) => { put('team.structure', { ...structure, teams: list(v) }, 'Teams'); return true; })} />}</Field>
-          <Field label="Dienstgrade (höchster zuerst)">{(id) => <Input id={id} disabled={!manage} value={drafts['ranks'] ?? (get<string[]>('team.rankOrder') ?? []).join(', ')} placeholder="Serverleitung, Moderator, Supporter" onChange={(e) => edit('ranks', e.target.value, (v) => { put('team.rankOrder', list(v), 'Dienstgrade'); return true; })} />}</Field>
-          <Field label="Büros">{(id) => <Input id={id} disabled={!manage} value={drafts['offices'] ?? structure.offices.join(', ')} placeholder="Verwaltung, Ausbildung" onChange={(e) => edit('offices', e.target.value, (v) => { put('team.structure', { ...structure, offices: list(v) }, 'Büros'); return true; })} />}</Field>
+        <p className="mb-3 text-xs text-muted">{serverName ? `Gilt nur für ${serverName} (Server laufen getrennt). Ohne eigene Werte gilt die gemeinsame Einstellung („Alle Server“).` : 'Gemeinsame Werte für alle Server. Wähle oben links einen Server, um für ihn eigene Werte festzulegen.'} Auswahl in Personalakten und Filter der Teamliste. Werte aus euren Discord-Rollen übernehmen oder selbst eintippen – heißt eine Discord-Rolle wie ein Dienstgrad oder Team, erkennt die Teamliste ihn automatisch.</p>
+        <div className="grid gap-4 lg:grid-cols-3">
+          <div><p className="mb-1 text-xs font-medium text-muted">Teams</p><TagListEditor ariaLabel="Team hinzufügen" disabled={!manage} value={structure.teams} placeholder="z. B. Polizei + Enter" onChange={(v) => put('team.structure', { ...structure, teams: v }, 'Teams')} /></div>
+          <div><p className="mb-1 text-xs font-medium text-muted">Dienstgrade (höchster zuerst)</p><TagListEditor ariaLabel="Dienstgrad hinzufügen" ordered disabled={!manage} value={get<string[]>('team.rankOrder') ?? []} placeholder="z. B. Polizeipräsident + Enter" onChange={(v) => put('team.rankOrder', v, 'Dienstgrade')} /></div>
+          <div><p className="mb-1 text-xs font-medium text-muted">Büros</p><TagListEditor ariaLabel="Büro hinzufügen" disabled={!manage} value={structure.offices} placeholder="z. B. Verwaltung + Enter" onChange={(v) => put('team.structure', { ...structure, offices: v }, 'Büros')} /></div>
         </div>
       </Card>
       <Card title="Discord bot channels" className="mt-4">

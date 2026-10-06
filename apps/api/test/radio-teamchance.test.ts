@@ -109,3 +109,17 @@ describe('wanted from the dashboard goes to the Discord wanted channel', () => {
     expect((await adm.get('/api/v1/discord/channel-status')).body).toMatchObject({ wanted: true, dispatch: false });
   });
 });
+
+describe('team list derives rank/team/office from Discord roles', () => {
+  it('a member with the Discord role „🏛️ · Polizeipräsident“ gets that rank without a personnel file', async () => {
+    const adm = (await login(app, 'x_admin')).agent;
+    const http = request(app.getHttpServer());
+    const GU = '850000000000000001', R1 = '850000000000000011', R2 = '850000000000000012';
+    await http.put('/api/v1/bot/guilds').set({ Authorization: `Bot ${TOKEN}` }).send({ guilds: [{ id: GU, name: 'EN', icon: null, channels: [], roles: [{ id: R1, name: '🏛️ · Polizeipräsident', color: 0, position: 5 }, { id: R2, name: 'EN | Polizei', color: 0, position: 1 }] }] });
+    await adm.put('/api/v1/admin/settings/team.rankOrder').send({ value: ['Polizeipräsident', 'Polizeirat'] });
+    await adm.put('/api/v1/admin/settings/team.structure').send({ value: { teams: ['EN | Polizei'], offices: [] } });
+    await http.put('/api/v1/bot/members').set({ Authorization: `Bot ${TOKEN}` }).send({ members: [{ id: '850000000000000099', guildId: GU, username: 'chef', displayName: 'Chef', avatar: null, status: 'online', roleIds: [R2, R1], joinedAt: null }] });
+    const chef = ((await adm.get('/api/v1/team/roster').set('X-Guild-Id', GU)).body.members as { name: string; rank: string; team: string }[]).find((m) => m.name === 'Chef');
+    expect(chef).toMatchObject({ rank: 'Polizeipräsident', team: 'EN | Polizei' });
+  });
+});

@@ -119,3 +119,44 @@ export function ServersPicker({ value, onChange, ariaLabel, disabled }: { value:
     </div>
   );
 }
+
+/** Rollenname ohne Deko (Emojis, „·“, „|“): „🏛️ · Polizeipräsident“ → „Polizeipräsident“, „EN | Leitung“ bleibt lesbar. */
+export const cleanRoleName = (n: string) => n.replace(/^[^\p{L}\p{N}]+/u, '').replace(/^·\s*/, '').trim() || n.trim();
+
+/**
+ * Liste von Werten (Teams, Dienstgrade, Büros): Auswahl aus den Discord-Rollen des Servers oder eigener Wert;
+ * entfernen, optional sortieren (Reihenfolge = Rang).
+ */
+export function TagListEditor({ value, onChange, ariaLabel, disabled, ordered, placeholder, max = 50 }: { value: string[]; onChange: (v: string[]) => void; ariaLabel: string; disabled?: boolean; ordered?: boolean; placeholder?: string; max?: number }) {
+  const list = useGuildList();
+  const [typed, setTyped] = useState('');
+  const add = (v: string) => { const t = v.trim().slice(0, 64); if (t && !value.some((x) => x.toLowerCase() === t.toLowerCase()) && value.length < max) onChange([...value, t]); };
+  const move = (i: number, d: -1 | 1) => { const j = i + d; if (j < 0 || j >= value.length) return; const n = [...value]; [n[i], n[j]] = [n[j]!, n[i]!]; onChange(n); };
+  const roleNames = [...new Set(list.flatMap((g) => [...g.roles].sort((a, b) => b.position - a.position).map((r) => cleanRoleName(r.name))))].filter((n) => !value.some((x) => x.toLowerCase() === n.toLowerCase()));
+  return (
+    <div className="grid gap-2">
+      {value.length > 0 && (
+        <ol className="flex flex-wrap gap-1.5">{value.map((v, i) => (
+          <li key={v} className="inline-flex items-center gap-1 rounded border border-primary/40 bg-primary/10 px-2 py-0.5 text-xs">
+            {ordered && <span className="text-muted">{i + 1}.</span>}<span>{v}</span>
+            {!disabled && ordered && <>
+              <button type="button" aria-label={`${v} nach oben`} className="text-muted hover:text-fg disabled:opacity-30" disabled={i === 0} onClick={() => move(i, -1)}>↑</button>
+              <button type="button" aria-label={`${v} nach unten`} className="text-muted hover:text-fg disabled:opacity-30" disabled={i === value.length - 1} onClick={() => move(i, 1)}>↓</button>
+            </>}
+            {!disabled && <button type="button" aria-label={`${v} entfernen`} className="text-muted hover:text-danger" onClick={() => onChange(value.filter((x) => x !== v))}><X size={12} /></button>}
+          </li>
+        ))}</ol>
+      )}
+      {!disabled && value.length < max && (
+        <div className="grid gap-2 sm:grid-cols-2">
+          {roleNames.length > 0 && <Select aria-label={ariaLabel} value="" onChange={(e) => add(e.target.value)}>
+            <option value="">Aus Discord-Rolle übernehmen…</option>
+            {roleNames.map((n) => <option key={n} value={n}>@{n}</option>)}
+          </Select>}
+          <Input aria-label={`${ariaLabel} – eigener Wert`} value={typed} placeholder={placeholder ?? 'Eigener Wert + Enter'} maxLength={64}
+            onChange={(e) => setTyped(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ',') { e.preventDefault(); add(typed); setTyped(''); } }} onBlur={() => { add(typed); setTyped(''); }} />
+        </div>
+      )}
+    </div>
+  );
+}

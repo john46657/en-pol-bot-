@@ -14,6 +14,10 @@ export interface RosterMember {
   status: LiveMember['status']; joinedAt: string | null; discordRoles: string[];
 }
 
+/** „🏛️ · Polizeipräsident“ und „Polizeipräsident“ gelten als gleich. */
+const norm = (n: string) => n.normalize('NFKC').replace(/[^\p{L}\p{N}]+/gu, '').toLowerCase();
+/** Erster Wert der Liste (Reihenfolge = Rang), den die Person als Discord-Rolle hat. */
+const fromRoles = (list: string[], roleNames: string[]) => { const have = new Set(roleNames.map(norm)); return list.find((x) => have.has(norm(x))) ?? null; };
 const uniq = (v: (string | null | undefined)[]) => [...new Set(v.filter((x): x is string => !!x && !!x.trim()))];
 
 /**
@@ -57,6 +61,7 @@ export class RosterService {
     const { members: all, updatedAt } = this.live.getMembers();
     const live = g ? all.filter((m) => m.guildId === g) : [...new Map(all.map((m) => [m.id, m])).values()];
     const roleName = new Map(guilds.flatMap((x) => x.roles.map((r) => [r.id, r.name] as const)));
+    const names = (d?: LiveMember) => (d?.roleIds ?? []).map((r) => roleName.get(r) ?? '');
     const linkOf = new Map(links.map((l) => [l.userId, l.discordId]));
     const userOf = new Map(links.map((l) => [l.discordId, l.userId]));
     const byDiscord = new Map(live.map((m) => [m.id, m]));
@@ -69,7 +74,8 @@ export class RosterService {
       if (discordId) seen.add(discordId);
       out.push({
         key: p.userId, userId: p.userId, discordId, name: d?.displayName ?? p.user.displayName, username: d?.username ?? p.user.username, avatar: d?.avatar ?? null,
-        team: p.team, rank: p.rank, office: p.office, serviceNumber: p.serviceNumber, callsign: p.callsign,
+        // ohne Eintrag in der Personalakte: aus den Discord-Rollen (gleichnamige Rolle wie Team/Dienstgrad/Büro)
+        team: p.team ?? fromRoles(structure.teams, names(d)), rank: p.rank ?? fromRoles(structure.ranks, names(d)), office: p.office ?? fromRoles(structure.offices, names(d)), serviceNumber: p.serviceNumber, callsign: p.callsign,
         status: d?.status ?? (live.length ? 'offline' : 'unknown'), joinedAt: (d?.joinedAt ?? p.joinDate.toISOString()) || null,
         discordRoles: (d?.roleIds ?? []).map((r) => roleName.get(r) ?? r),
       });
@@ -79,7 +85,7 @@ export class RosterService {
       if (seen.has(d.id)) continue;
       out.push({
         key: `discord:${d.id}`, userId: userOf.get(d.id) ?? null, discordId: d.id, name: d.displayName, username: d.username, avatar: d.avatar,
-        team: null, rank: null, office: null, serviceNumber: null, callsign: null, status: d.status, joinedAt: d.joinedAt, discordRoles: d.roleIds.map((r) => roleName.get(r) ?? r),
+        team: fromRoles(structure.teams, names(d)), rank: fromRoles(structure.ranks, names(d)), office: fromRoles(structure.offices, names(d)), serviceNumber: null, callsign: null, status: d.status, joinedAt: d.joinedAt, discordRoles: d.roleIds.map((r) => roleName.get(r) ?? r),
       });
     }
     const rankIdx = (r: string | null) => { const i = r ? structure.ranks.indexOf(r) : -1; return i < 0 ? 999 : i; };
