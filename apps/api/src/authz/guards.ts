@@ -34,7 +34,7 @@ const BOT_USER_ROUTES: [string, RegExp][] = [
   ['POST', new RegExp(`^/qualifications/applications/${UUID}/decision$`)], ['GET', new RegExp(`^/qualifications/applications/${UUID}$`)], ['GET', /^\/qualifications\/history$/],
   ['POST', new RegExp(`^/applications/${UUID}/discord-decision$`)], ['GET', new RegExp(`^/applications/${UUID}$`)], ['GET', /^\/applications\/history$/],
   ['POST', /^\/communication\/channels\/(TEAM|DISPATCH)\/messages$/],
-  ['POST', new RegExp(`^/support-tickets/${UUID}/actions$`)], ['GET', new RegExp(`^/support-tickets/${UUID}/options$`)],
+  ['POST', /^\/support-tickets$/], ['POST', new RegExp(`^/support-tickets/${UUID}/actions$`)], ['GET', new RegExp(`^/support-tickets/${UUID}/options$`)],
 ];
 
 @Injectable()

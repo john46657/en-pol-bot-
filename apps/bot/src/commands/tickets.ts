@@ -1,7 +1,7 @@
 import type { TicketEffect } from '@enrp/shared';
 import { BotApiError } from '../api';
 import { clip, COLORS, errorReply, okReply, plain, type ButtonSpec, type Reply, type SelectSpec } from '../format';
-import type { Ctx, InteractionDef } from './types';
+import type { CommandDef, Ctx, InteractionDef } from './types';
 import { mapError } from './errors';
 
 // ---------------- Support-Tickets (konfiguriert im Dashboard; der Bot führt nur aus) ----------------
@@ -69,6 +69,16 @@ export const TICKET_INTERACTION: InteractionDef = {
           if (!c.applyEffects) return errorReply('Tickets sind hier nicht verfügbar.');
           const done = await c.applyEffects(r.effects ?? []);
           return okReply(done.channelId ? `Dein Ticket wurde erstellt: <#${done.channelId}>` : 'Dein Ticket wird erstellt …');
+        }
+        // ---- Ticket für ein anderes Mitglied öffnen (Team, Recht ticket.create): /support mitglied:… ----
+        case 'for': {
+          const categoryId = c.values?.[0];
+          if (!/^\d{15,25}$/.test(id) || !categoryId || !UUID.test(categoryId) || !c.guildId) return errorReply('Bitte eine Ticket-Art auswählen.');
+          const name = (await c.userNameOf?.(id).catch(() => null)) ?? id;
+          const r = await c.api.asUser<R & { ticket?: { id: string } }>(c.discordId, 'POST', '/support-tickets', { categoryId, discordId: id, discordName: name, guildId: c.guildId });
+          if (!c.applyEffects) return errorReply('Tickets sind hier nicht verfügbar.');
+          const done = await c.applyEffects(r.effects ?? []);
+          return okReply(done.channelId ? `Ticket für <@${id}> erstellt: <#${done.channelId}>` : 'Ticket wird erstellt …');
         }
         // ---- Fragen ----
         case 'ans': {
@@ -164,3 +174,29 @@ export const TICKET_INTERACTION: InteractionDef = {
 const pick = (id: string, title: string, opts: SelectSpec['options']): Reply => (opts.length
   ? { ephemeral: true, embeds: [{ title, color: COLORS.info }], select: { id, placeholder: 'Bitte auswählen …', options: opts.slice(0, 25).map((o) => ({ ...o, label: clip(o.label, 100) })) } }
   : errorReply('Keine Auswahl verfügbar.'));
+
+interface OpenableCategory { id: string; name: string; emoji: string | null; description: string; requiredRoleIds: string[]; allowedUserIds: string[] }
+/** `/support` – Ticket ohne Panel öffnen; mit `mitglied` öffnet das Team ein Ticket für jemand anderen. */
+export const TICKET_COMMAND: CommandDef = {
+  name: 'support', description: 'Ein Support-Ticket öffnen (Team: auch für ein anderes Mitglied)',
+  options: [{ name: 'mitglied', description: 'Nur Team: Ticket für dieses Mitglied öffnen', type: 'user' }],
+  async run(c) {
+    if (!c.guildId) return errorReply('Tickets gehen nur auf einem Server, nicht per Direktnachricht.');
+    const member = typeof c.opts.mitglied === 'string' && c.opts.mitglied !== c.discordId ? c.opts.mitglied : null;
+    try {
+      const all = await c.api.service<OpenableCategory[]>('GET', '/bot/support-tickets/categories');
+      // für sich selbst nur Ticket-Arten, die man öffnen darf (das System prüft beim Öffnen erneut)
+      const roles = c.memberRoleIds ?? [];
+      const cats = member ? all : all.filter((x) => (!x.requiredRoleIds.length || x.requiredRoleIds.some((r) => roles.includes(r))) && (!x.allowedUserIds.length || x.allowedUserIds.includes(c.discordId)));
+      if (!cats.length) return errorReply(all.length ? 'Du darfst derzeit keine Ticket-Art öffnen.' : 'Es ist noch keine Ticket-Art eingerichtet (Dashboard → Support Tickets → Categories).');
+      const options = cats.slice(0, 25).map((x) => ({ label: clip(x.name, 100), value: x.id, ...(x.description ? { description: clip(x.description, 100) } : {}), ...(emojiOf(x.emoji) ? { emoji: emojiOf(x.emoji)! } : {}) }));
+      // genau eine Ticket-Art für sich selbst: direkt öffnen
+      if (!member && cats.length === 1) return await TICKET_INTERACTION.run({ ...c, args: ['open', 'cmd', cats[0]!.id] });
+      return {
+        ephemeral: true,
+        embeds: [{ title: member ? '🎫 Ticket für ein Mitglied öffnen' : '🎫 Ticket öffnen', description: member ? `Für <@${member}> – wähle die Ticket-Art.` : 'Wähle die passende Ticket-Art.', color: COLORS.info }],
+        select: { id: member ? `tk:for:${member}` : 'tk:open:cmd', placeholder: 'Ticket-Art wählen …', options },
+      };
+    } catch (e) { return fail(e); }
+  },
+};

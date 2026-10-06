@@ -221,3 +221,25 @@ describe('automation, panels, limits', () => {
     expect(dup.messageId).toBeNull();
   });
 });
+
+describe('/support in Discord', () => {
+  it('lists the openable ticket types for the bot and lets the team open a ticket for another member (with their own rights)', async () => {
+    const cats = await http().get('/api/v1/bot/support-tickets/categories').set(bot());
+    expect(cats.status).toBe(200);
+    expect(cats.body.every((c: { id: string; requiredRoleIds: unknown }) => typeof c.id === 'string' && Array.isArray(c.requiredRoleIds))).toBe(true);
+    expect((await http().get('/api/v1/bot/support-tickets/categories')).status).toBe(401);
+    const MEMBER = '900000000000000099';
+    await prisma.ticketCategory.update({ where: { id: categoryId }, data: { maxOpen: 1, cooldownMinutes: 0 } });
+    // ohne ticket.create: abgelehnt
+    expect((await http().post('/api/v1/support-tickets').set(bot(OTHER)).send({ categoryId, discordId: MEMBER, discordName: 'Gast', guildId: GUILD })).status).toBe(403);
+    // Team: auch wenn das Mitglied die nötige Rolle nicht hat und schon ein Ticket offen ist (keine Limits fürs Team)
+    const first = await http().post('/api/v1/support-tickets').set(bot(LEAD)).send({ categoryId, discordId: MEMBER, discordName: 'Gast', guildId: GUILD });
+    expect(first.status).toBe(201);
+    const create = find(first.body.effects as TicketEffect[], 'create')[0]!;
+    expect(create).toMatchObject({ guildId: GUILD });
+    expect(create.viewers.some((v) => v.id === MEMBER)).toBe(true);
+    expect((await http().post('/api/v1/support-tickets').set(bot(LEAD)).send({ categoryId, discordId: MEMBER, discordName: 'Gast', guildId: GUILD })).status).toBe(201);
+    // der Mitglied selbst unterliegt weiter dem Limit
+    expect((await http().post('/api/v1/bot/support-tickets/open').set(bot()).send({ categoryId, guildId: GUILD, discordId: MEMBER, discordName: 'Gast', memberRoleIds: [ROLE_MEMBER] })).status).toBe(409);
+  });
+});

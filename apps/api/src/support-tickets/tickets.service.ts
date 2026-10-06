@@ -173,9 +173,15 @@ export class SupportTicketsService {
 
   // ================= Öffnen =================
   /** Prüft alle Voraussetzungen, legt das Ticket an und liefert den „create“-Effekt (Channel, Rechte, Ticket-Embed, erste Frage). */
-  async open(d: { categoryId: string; panelId?: string | null; guildId: string; discordId: string; discordName: string; memberRoleIds: string[] }, actor: TicketActor) {
+  /** `byStaff`: vom Team für ein Mitglied geöffnet (Recht ticket.create) – ohne Rollen-, Limit- und Cooldown-Prüfung. */
+  async open(d: { categoryId: string; panelId?: string | null; guildId: string; discordId: string; discordName: string; memberRoleIds: string[] }, actor: TicketActor, byStaff = false) {
     const cat = await this.config.category(d.categoryId);
     if (!cat.active) throw new AppError('CONFLICT', 'Diese Ticket-Art ist derzeit deaktiviert.');
+    if (!byStaff) await this.checkCanOpen(cat, d);
+    return this.create(cat, d, actor);
+  }
+
+  private async checkCanOpen(cat: Awaited<ReturnType<TicketConfigService['category']>>, d: { panelId?: string | null; discordId: string; memberRoleIds: string[] }) {
     if (d.panelId) {
       const panel = await this.prisma.ticketPanel.findUnique({ where: { id: d.panelId } });
       if (panel?.allowedRoleIds.length && !panel.allowedRoleIds.some((r) => d.memberRoleIds.includes(r))) throw new AppError('PERMISSION_DENIED', 'Du darfst dieses Ticket-Panel nicht benutzen.');
@@ -191,6 +197,9 @@ export class SupportTicketsService {
       const wait = last ? last.createdAt.getTime() + cat.cooldownMinutes * 60_000 - Date.now() : 0;
       if (wait > 0) throw new AppError('CONFLICT', `Bitte warte noch ${Math.ceil(wait / 60_000)} Minute(n), bevor du ein neues Ticket dieser Art öffnest.`);
     }
+  }
+
+  private async create(cat: Awaited<ReturnType<TicketConfigService['category']>>, d: { panelId?: string | null; guildId: string; discordId: string; discordName: string }, actor: TicketActor) {
     const status = await this.prisma.ticketStatus.findFirst({ where: { isDefault: true } }) ?? await this.prisma.ticketStatus.findFirst({ where: { kind: 'OPEN' }, orderBy: { position: 'asc' } });
     if (!status) throw new AppError('CONFLICT', 'Kein offener Ticket-Status eingerichtet (Dashboard → Tickets → Einstellungen).');
     const priority = cat.defaultPriorityId ? await this.prisma.ticketPriority.findUnique({ where: { id: cat.defaultPriorityId } }) : await this.prisma.ticketPriority.findFirst({ where: { isDefault: true } });
@@ -217,12 +226,19 @@ export class SupportTicketsService {
   }
 
   /** Ticket aus dem Dashboard für einen Discord-Benutzer öffnen (Recht ticket.create). */
-  async openFromDashboard(actor: TicketActor, d: { categoryId: string; discordId: string; discordName?: string }) {
+  async openFromDashboard(actor: TicketActor, d: { categoryId: string; discordId: string; discordName?: string; guildId?: string }) {
     if (actor.userId) await this.perms.assert(actor.userId, 'ticket.create');
     const ch = await this.discord.channels();
-    const guildId = (ch.guildId ?? process.env.DISCORD_GUILD_ID ?? '').split(/[\s,;]+/).find((g) => /^\d{15,25}$/.test(g));
+    // aus Discord (/ticket mitglied:…): der Server, auf dem der Befehl kam – sonst der eingestellte Server
+    const guildId = d.guildId ?? (ch.guildId ?? process.env.DISCORD_GUILD_ID ?? '').split(/[\s,;]+/).find((g) => /^\d{15,25}$/.test(g));
     if (!guildId) throw new AppError('VALIDATION_FAILED', 'Set the Discord server (guild) ID in Settings → Discord bot channels first.');
-    return this.open({ categoryId: d.categoryId, guildId, discordId: d.discordId, discordName: d.discordName || d.discordId, memberRoleIds: [] }, { ...actor, viaBot: false });
+    return this.open({ categoryId: d.categoryId, guildId, discordId: d.discordId, discordName: d.discordName || d.discordId, memberRoleIds: [] }, actor, true);
+  }
+
+  /** Für /ticket im Discord: aktive Ticket-Arten (Voraussetzungen prüft der Bot vorab, das System beim Öffnen erneut). */
+  async openableCategories() {
+    const cats = await this.prisma.ticketCategory.findMany({ where: { active: true }, orderBy: [{ position: 'asc' }, { name: 'asc' }] });
+    return cats.map((c) => ({ id: c.id, name: c.name, emoji: c.emoji, description: c.description, requiredRoleIds: c.requiredRoleIds, allowedUserIds: c.allowedUserIds }));
   }
 
   /** Bot meldet: Channel und Ticket-Embed sind angelegt. */

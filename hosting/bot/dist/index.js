@@ -191,6 +191,7 @@ function baseCtx(i) {
         memberRoleIds: rolesOf(i.member),
         applyEffects: (effects) => tickets.apply(effects),
         listCategories: (guildId) => tickets.listCategories(guildId),
+        userNameOf: (id) => client.users.fetch(id).then((u) => u.username, () => null),
     };
 }
 /** Rollen-IDs des Mitglieds (voller GuildMember oder rohe API-Daten). */

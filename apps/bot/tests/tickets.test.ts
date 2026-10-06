@@ -2,6 +2,7 @@ import { describe, expect, it, vi } from 'vitest';
 import { ChannelType } from 'discord.js';
 import type { TicketEffect } from '@enrp/shared';
 import { BotApiError, type Api } from '../src/api';
+import { byName } from '../src/commands';
 import { interactionFor } from '../src/commands/features';
 import type { Ctx } from '../src/commands/types';
 import type { Reply } from '../src/format';
@@ -261,5 +262,36 @@ describe('outbox: ticket effects from the dashboard', () => {
     expect(n).toBe(1);
     expect(seen).toEqual(['a']);
     expect(acks).toEqual([{ path: '/bot/outbox/o1/ack', ok: true }, { path: '/bot/outbox/o2/ack', ok: false, error: 'Missing Access' }]);
+  });
+});
+
+describe('/support command', () => {
+  const CAT2 = '44444444-4444-4444-8444-444444444444';
+  const cats = [{ id: CAT, name: 'Support', emoji: '🎫', description: 'Hilfe', requiredRoleIds: [], allowedUserIds: [] }, { id: CAT2, name: 'Team intern', emoji: null, description: '', requiredRoleIds: ['R-TEAM'], allowedUserIds: [] }];
+  const cmd = async (api: Api, extra: Partial<Ctx> = {}) => {
+    return byName('support')!.run({ discordId: ME, opts: {}, api, guildId: GUILD, channelId: CH, userName: 'Max', memberRoleIds: ['R1'], ...extra } as Ctx);
+  };
+  it('opens directly when only one ticket type fits; otherwise offers a menu of the allowed types', async () => {
+    const { api, calls } = fakeApi({ 'GET /bot/support-tickets/categories': cats, 'POST /bot/support-tickets/open': { effects: [] } });
+    const applyEffects = vi.fn(async () => ({ channelId: '999' }));
+    expect(text(await cmd(api, { applyEffects }))).toContain('<#999>'); // „Team intern“ braucht eine Rolle → nur Support
+    expect(calls.at(-1)).toMatchObject({ path: '/bot/support-tickets/open', body: { categoryId: CAT, discordId: ME } });
+    const menu = await cmd(api, { applyEffects, memberRoleIds: ['R-TEAM'] });
+    expect(menu.select).toMatchObject({ id: 'tk:open:cmd', options: [{ value: CAT, label: 'Support', emoji: '🎫' }, { value: CAT2 }] });
+    expect(text(await cmd(api, { guildId: undefined }))).toContain('nur auf einem Server');
+  });
+  it('staff open a ticket for another member with their own rights (no role/limit checks for the member)', async () => {
+    const OTHER = '555555555555555555';
+    const { api, calls } = fakeApi({ 'GET /bot/support-tickets/categories': cats, 'POST /support-tickets': { effects: [{ type: 'post', channelId: CH, message: {} }] } });
+    const menu = await cmd(api, { opts: { mitglied: OTHER } });
+    expect(menu.select?.id).toBe(`tk:for:${OTHER}`);
+    expect(menu.select?.options).toHaveLength(2); // alle Arten
+    const applyEffects = vi.fn(async () => ({ channelId: '777' }));
+    const r = await run(`tk:for:${OTHER}`, api, { values: [CAT2], applyEffects, userNameOf: async () => 'Oscar' });
+    expect(text(r)).toContain(`<@${OTHER}>`);
+    expect(calls.at(-1)).toMatchObject({ kind: 'user', method: 'POST', path: '/support-tickets', body: { categoryId: CAT2, discordId: OTHER, discordName: 'Oscar', guildId: GUILD } });
+    // ohne Recht: deutsche Meldung des Systems bzw. Standard-Fehler
+    const denied = fakeApi({ 'POST /support-tickets': new BotApiError(403, 'PERMISSION_DENIED', 'Missing permission') });
+    expect(text(await run(`tk:for:${OTHER}`, denied.api, { values: [CAT], applyEffects }))).not.toContain('<#');
   });
 });

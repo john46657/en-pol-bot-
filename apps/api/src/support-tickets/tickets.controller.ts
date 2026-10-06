@@ -33,7 +33,7 @@ const transcriptQ = z.object({
   page: z.coerce.number().int().min(1).default(1), pageSize: z.coerce.number().int().min(1).max(100).default(25),
 });
 const ratingQ = z.object({ stars: z.coerce.number().int().min(1).max(5).optional(), categoryId: z.string().uuid().optional(), page: z.coerce.number().int().min(1).default(1), pageSize: z.coerce.number().int().min(1).max(100).default(25) });
-const openQ = z.object({ categoryId: z.string().uuid(), discordId: snowflake, discordName: z.string().trim().max(100).optional() });
+const openQ = z.object({ categoryId: z.string().uuid(), discordId: snowflake, discordName: z.string().trim().max(100).optional(), guildId: snowflake.optional() });
 const actor = (u: AuthUser): Actor => ({ userId: u.id, robloxUserId: u.robloxUserId });
 
 /** Support-Tickets im Dashboard (Pfad `support-tickets`, weil `tickets` die Strafzettel sind). */
@@ -118,6 +118,7 @@ export class BotSupportTicketsController {
   @BotService() @Post(':id/rating-comment') @HttpCode(200) rateComment(@Param('id', ParseUUIDPipe) id: string, @Body(zodBody(z.object({ discordId: snowflake, comment: z.string().trim().min(1).max(1000) }))) b: { discordId: string; comment: string }) { return this.s.rateComment(id, b.discordId, b.comment); }
   @BotService() @Post('messages') @HttpCode(200) message(@Body(zodBody(botMessage)) b: z.infer<typeof botMessage>) { return this.s.message(b); }
   @BotService() @Get('channels') channels() { return this.s.channels(); }
+  @BotService() @Get('categories') categories() { return this.s.openableCategories(); }
   @BotService() @Get(':id/close-options') closeOptions(@Param('id', ParseUUIDPipe) id: string) { return this.s.closeOptions(id); }
   @BotService() @Post('panels/:id/posted') @HttpCode(200) posted(@Param('id', ParseUUIDPipe) id: string, @Body(zodBody(z.object({ channelId: snowflake, messageId: snowflake }))) b: { channelId: string; messageId: string }) { return this.s.panelPosted(id, b.channelId, b.messageId); }
   @BotService() @Get('transcripts/:id') async transcript(@Param('id', ParseUUIDPipe) id: string) { const t = await this.s.transcript(null, id); return { html: t.html }; }

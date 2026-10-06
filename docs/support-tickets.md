@@ -17,6 +17,11 @@ Ein komplett im Dashboard konfigurierbares Ticket-System für den Discord-Bot. *
 
 ## Ablauf
 
+Ticket öffnen geht auf zwei Wegen:
+- **Panel**: Button bzw. Dropdown in einem Channel (im Dashboard unter *Panels* gesendet).
+- **`/support`** überall auf dem Server: gibt es nur eine passende Ticket-Art, wird das Ticket sofort geöffnet, sonst kommt eine Auswahl. Team-Mitglieder mit `ticket.create` öffnen mit **`/support mitglied:@…`** ein Ticket für jemand anderen. Dabei gelten keine Rollen-, Limit- und Cooldown-Prüfungen, und das Ticket gilt als vom Team geöffnet.
+
+
 1. Ein Mitglied klickt im Panel auf einen Button oder wählt im Dropdown eine Kategorie.
 2. Das System prüft:
    - ob die Kategorie aktiv ist,

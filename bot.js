@@ -76820,6 +76820,16 @@ var TICKET_INTERACTION = {
           const done = await c.applyEffects(r.effects ?? []);
           return okReply(done.channelId ? `Dein Ticket wurde erstellt: <#${done.channelId}>` : "Dein Ticket wird erstellt \u2026");
         }
+        // ---- Ticket für ein anderes Mitglied öffnen (Team, Recht ticket.create): /support mitglied:… ----
+        case "for": {
+          const categoryId = c.values?.[0];
+          if (!/^\d{15,25}$/.test(id) || !categoryId || !UUID.test(categoryId) || !c.guildId) return errorReply("Bitte eine Ticket-Art ausw\xE4hlen.");
+          const name = await c.userNameOf?.(id).catch(() => null) ?? id;
+          const r = await c.api.asUser(c.discordId, "POST", "/support-tickets", { categoryId, discordId: id, discordName: name, guildId: c.guildId });
+          if (!c.applyEffects) return errorReply("Tickets sind hier nicht verf\xFCgbar.");
+          const done = await c.applyEffects(r.effects ?? []);
+          return okReply(done.channelId ? `Ticket f\xFCr <@${id}> erstellt: <#${done.channelId}>` : "Ticket wird erstellt \u2026");
+        }
         // ---- Fragen ----
         case "ans": {
           const [qid, kind] = rest;
@@ -76952,6 +76962,30 @@ var TICKET_INTERACTION = {
   }
 };
 var pick = (id, title, opts) => opts.length ? { ephemeral: true, embeds: [{ title, color: COLORS.info }], select: { id, placeholder: "Bitte ausw\xE4hlen \u2026", options: opts.slice(0, 25).map((o) => ({ ...o, label: clip(o.label, 100) })) } } : errorReply("Keine Auswahl verf\xFCgbar.");
+var TICKET_COMMAND = {
+  name: "support",
+  description: "Ein Support-Ticket \xF6ffnen (Team: auch f\xFCr ein anderes Mitglied)",
+  options: [{ name: "mitglied", description: "Nur Team: Ticket f\xFCr dieses Mitglied \xF6ffnen", type: "user" }],
+  async run(c) {
+    if (!c.guildId) return errorReply("Tickets gehen nur auf einem Server, nicht per Direktnachricht.");
+    const member = typeof c.opts.mitglied === "string" && c.opts.mitglied !== c.discordId ? c.opts.mitglied : null;
+    try {
+      const all = await c.api.service("GET", "/bot/support-tickets/categories");
+      const roles = c.memberRoleIds ?? [];
+      const cats = member ? all : all.filter((x) => (!x.requiredRoleIds.length || x.requiredRoleIds.some((r) => roles.includes(r))) && (!x.allowedUserIds.length || x.allowedUserIds.includes(c.discordId)));
+      if (!cats.length) return errorReply(all.length ? "Du darfst derzeit keine Ticket-Art \xF6ffnen." : "Es ist noch keine Ticket-Art eingerichtet (Dashboard \u2192 Support Tickets \u2192 Categories).");
+      const options2 = cats.slice(0, 25).map((x) => ({ label: clip(x.name, 100), value: x.id, ...x.description ? { description: clip(x.description, 100) } : {}, ...emojiOf(x.emoji) ? { emoji: emojiOf(x.emoji) } : {} }));
+      if (!member && cats.length === 1) return await TICKET_INTERACTION.run({ ...c, args: ["open", "cmd", cats[0].id] });
+      return {
+        ephemeral: true,
+        embeds: [{ title: member ? "\u{1F3AB} Ticket f\xFCr ein Mitglied \xF6ffnen" : "\u{1F3AB} Ticket \xF6ffnen", description: member ? `F\xFCr <@${member}> \u2013 w\xE4hle die Ticket-Art.` : "W\xE4hle die passende Ticket-Art.", color: COLORS.info }],
+        select: { id: member ? `tk:for:${member}` : "tk:open:cmd", placeholder: "Ticket-Art w\xE4hlen \u2026", options: options2 }
+      };
+    } catch (e) {
+      return fail(e);
+    }
+  }
+};
 
 // apps/bot/src/commands/features.ts
 var str2 = (c, k) => String(c.opts[k] ?? "").trim();
@@ -77206,7 +77240,7 @@ var COMMANDS = [
         { name: "Erfassen", value: "`/ticket` `/bericht` `/beschwerde` `/ermittlung` `/fahndung` `/beweis`" },
         { name: "Leitung & Team", value: "`/gefahrenstatus` `/funkfreigabe` `/teamliste` `/dienstpanel` `/bewerbungspanel` `/qualipanel` `/roblox`" },
         { name: "SEK", value: "`/sek` `/sek-bericht`" },
-        { name: "Support-Tickets", value: "Ticket-Panels, Kategorien, Fragen und Buttons werden im Dashboard eingerichtet (Support Tickets \u2192 Einstellungen) und von dort in Discord gesendet." },
+        { name: "Support-Tickets", value: "`/support` \xF6ffnet ein Ticket (Team: `/support mitglied:@\u2026` f\xFCr jemand anderen). Ticket-Panels, Kategorien, Fragen und Buttons werden im Dashboard eingerichtet und von dort in Discord gesendet." },
         { name: "F\xFCr alle", value: "`/bewerbung` (auch ohne Verkn\xFCpfung; Fragen per Direktnachricht) \xB7 SEK/Flugstaffel/Ausbilder \xFCber das Qualifikations-Panel" },
         { name: "Hinweis", value: "Alle Befehle laufen mit **deinen** Rechten im System. Antworten sind nur f\xFCr dich sichtbar." }
       ] }] };
@@ -77630,7 +77664,8 @@ var COMMANDS = [
   },
   ...FEATURE_COMMANDS,
   ...SEK_COMMANDS,
-  ...QUALI_COMMANDS
+  ...QUALI_COMMANDS,
+  TICKET_COMMAND
 ];
 var byName = (n) => COMMANDS.find((c) => c.name === n);
 
@@ -82075,7 +82110,8 @@ function baseCtx(i) {
     robloxLookup: (name) => robloxLookup(name),
     memberRoleIds: rolesOf(i.member),
     applyEffects: (effects) => tickets.apply(effects),
-    listCategories: (guildId) => tickets.listCategories(guildId)
+    listCategories: (guildId) => tickets.listCategories(guildId),
+    userNameOf: (id) => client.users.fetch(id).then((u) => u.username, () => null)
   };
 }
 function rolesOf(m) {

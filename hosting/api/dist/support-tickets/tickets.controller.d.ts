@@ -240,13 +240,16 @@ declare const openQ: z.ZodObject<{
     categoryId: z.ZodString;
     discordId: z.ZodString;
     discordName: z.ZodOptional<z.ZodString>;
+    guildId: z.ZodOptional<z.ZodString>;
 }, "strip", z.ZodTypeAny, {
     discordId: string;
     categoryId: string;
+    guildId?: string | undefined;
     discordName?: string | undefined;
 }, {
     discordId: string;
     categoryId: string;
+    guildId?: string | undefined;
     discordName?: string | undefined;
 }>;
 /** Support-Tickets im Dashboard (Pfad `support-tickets`, weil `tickets` die Strafzettel sind). */
@@ -1260,6 +1263,14 @@ export declare class BotSupportTicketsController {
         ok: boolean;
     }>;
     channels(): Promise<string[]>;
+    categories(): Promise<{
+        id: string;
+        name: string;
+        emoji: string | null;
+        description: string;
+        requiredRoleIds: string[];
+        allowedUserIds: string[];
+    }[]>;
     closeOptions(id: string): Promise<{
         mode: string;
         source: string;

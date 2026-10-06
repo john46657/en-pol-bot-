@@ -28,6 +28,8 @@ export interface Ctx {
   listCategories?: (guildId: string) => Promise<{ id: string; name: string }[]>;
   /** Beitritt des Aufrufers zum Server (ISO), falls aus einem Server ausgelöst. */
   memberJoinedAt?: string;
+  /** Discord-Benutzername zu einer ID (z. B. Ticket für ein anderes Mitglied). */
+  userNameOf?: (userId: string) => Promise<string | null>;
   /** Roblox-Namenssuche (öffentliche Roblox-API; in Tests ersetzbar). */
   robloxLookup?: (username: string) => Promise<{ id: number; name: string; displayName: string } | null>;
 }

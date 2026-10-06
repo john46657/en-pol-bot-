@@ -172,6 +172,7 @@ function baseCtx(i: ChatInputCommandInteraction | ButtonInteraction | ModalSubmi
     memberRoleIds: rolesOf(i.member),
     applyEffects: (effects) => tickets.apply(effects),
     listCategories: (guildId) => tickets.listCategories(guildId),
+    userNameOf: (id) => client.users.fetch(id).then((u) => u.username, () => null),
   };
 }
 

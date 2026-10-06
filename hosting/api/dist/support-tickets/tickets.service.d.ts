@@ -106,6 +106,7 @@ export declare class SupportTicketsService {
     /** IDs der Kategorien, deren Tickets der Benutzer sehen darf (null = alle). */
     visibleCategoryIds(userId: string): Promise<string[] | null>;
     /** Prüft alle Voraussetzungen, legt das Ticket an und liefert den „create“-Effekt (Channel, Rechte, Ticket-Embed, erste Frage). */
+    /** `byStaff`: vom Team für ein Mitglied geöffnet (Recht ticket.create) – ohne Rollen-, Limit- und Cooldown-Prüfung. */
     open(d: {
         categoryId: string;
         panelId?: string | null;
@@ -113,7 +114,7 @@ export declare class SupportTicketsService {
         discordId: string;
         discordName: string;
         memberRoleIds: string[];
-    }, actor: TicketActor): Promise<{
+    }, actor: TicketActor, byStaff?: boolean): Promise<{
         ticket: {
             id: string;
             number: string;
@@ -155,11 +156,14 @@ export declare class SupportTicketsService {
         };
         effects: TicketEffect[];
     }>;
+    private checkCanOpen;
+    private create;
     /** Ticket aus dem Dashboard für einen Discord-Benutzer öffnen (Recht ticket.create). */
     openFromDashboard(actor: TicketActor, d: {
         categoryId: string;
         discordId: string;
         discordName?: string;
+        guildId?: string;
     }): Promise<{
         ticket: {
             id: string;
@@ -202,6 +206,15 @@ export declare class SupportTicketsService {
         };
         effects: TicketEffect[];
     }>;
+    /** Für /ticket im Discord: aktive Ticket-Arten (Voraussetzungen prüft der Bot vorab, das System beim Öffnen erneut). */
+    openableCategories(): Promise<{
+        id: string;
+        name: string;
+        emoji: string | null;
+        description: string;
+        requiredRoleIds: string[];
+        allowedUserIds: string[];
+    }[]>;
     /** Bot meldet: Channel und Ticket-Embed sind angelegt. */
     attachChannel(id: string, channelId: string, controlMessageId: string | null): Promise<{
         ok: boolean;

@@ -44,7 +44,7 @@ const transcriptQ = zod_1.z.object({
     page: zod_1.z.coerce.number().int().min(1).default(1), pageSize: zod_1.z.coerce.number().int().min(1).max(100).default(25),
 });
 const ratingQ = zod_1.z.object({ stars: zod_1.z.coerce.number().int().min(1).max(5).optional(), categoryId: zod_1.z.string().uuid().optional(), page: zod_1.z.coerce.number().int().min(1).default(1), pageSize: zod_1.z.coerce.number().int().min(1).max(100).default(25) });
-const openQ = zod_1.z.object({ categoryId: zod_1.z.string().uuid(), discordId: snowflake, discordName: zod_1.z.string().trim().max(100).optional() });
+const openQ = zod_1.z.object({ categoryId: zod_1.z.string().uuid(), discordId: snowflake, discordName: zod_1.z.string().trim().max(100).optional(), guildId: snowflake.optional() });
 const actor = (u) => ({ userId: u.id, robloxUserId: u.robloxUserId });
 /** Support-Tickets im Dashboard (Pfad `support-tickets`, weil `tickets` die Strafzettel sind). */
 let SupportTicketsController = class SupportTicketsController {
@@ -431,6 +431,7 @@ let BotSupportTicketsController = class BotSupportTicketsController {
     rateComment(id, b) { return this.s.rateComment(id, b.discordId, b.comment); }
     message(b) { return this.s.message(b); }
     channels() { return this.s.channels(); }
+    categories() { return this.s.openableCategories(); }
     closeOptions(id) { return this.s.closeOptions(id); }
     posted(id, b) { return this.s.panelPosted(id, b.channelId, b.messageId); }
     async transcript(id) { const t = await this.s.transcript(null, id); return { html: t.html }; }
@@ -520,6 +521,13 @@ __decorate([
     __metadata("design:paramtypes", []),
     __metadata("design:returntype", void 0)
 ], BotSupportTicketsController.prototype, "channels", null);
+__decorate([
+    (0, decorators_1.BotService)(),
+    (0, common_1.Get)('categories'),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", []),
+    __metadata("design:returntype", void 0)
+], BotSupportTicketsController.prototype, "categories", null);
 __decorate([
     (0, decorators_1.BotService)(),
     (0, common_1.Get)(':id/close-options'),
