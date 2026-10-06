@@ -34,6 +34,9 @@ export declare class DiscordOAuthService {
     constructor(prisma: PrismaService, audit: AuditService, auth: AuthService);
     clientId(): string | null;
     enabled(): boolean;
+    /** Passwort-Login nur, solange Discord-Login nicht eingerichtet ist – oder im Notfall mit PASSWORD_LOGIN=true. */
+    passwordLoginAllowed(): boolean;
+    private isAdminId;
     redirectUri(): string;
     /** Schritt 1: Adresse bei Discord + Browser-Bindung. */
     start(mode: 'login' | 'link', userId?: string): {
@@ -67,6 +70,7 @@ export declare class DiscordOAuthService {
     /** Mitglied auf einem der Server des Bots (bzw. der eingestellten Server)? `null` = nein, `unknown` = nicht prüfbar. */
     private membership;
     private createUser;
+    private ensureAdmin;
     /** Discord-Rolle → Systemrolle: zugeordnete Rollen vergeben bzw. entziehen (nur Rollen aus der Zuordnung). */
     private syncRoles;
 }

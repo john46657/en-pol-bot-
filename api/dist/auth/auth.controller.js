@@ -20,6 +20,7 @@ const zod_1 = require("zod");
 const auth_service_1 = require("./auth.service");
 const discord_oauth_service_1 = require("./discord-oauth.service");
 const web_url_1 = require("../common/web-url");
+const errors_1 = require("../common/errors");
 const decorators_1 = require("../authz/decorators");
 const guards_1 = require("../authz/guards");
 const zod_pipe_1 = require("../common/zod.pipe");
@@ -36,7 +37,7 @@ let AuthController = class AuthController {
     }
     secure() { return this.env.COOKIE_SECURE ? this.env.COOKIE_SECURE === 'true' : this.env.NODE_ENV === 'production'; }
     /** Welche Anmeldewege es gibt (Login-Seite). */
-    providers() { return { discord: this.discord.enabled() }; }
+    providers() { return { discord: this.discord.enabled(), password: this.discord.passwordLoginAllowed() }; }
     /** „Mit Discord anmelden“ → weiter zu Discord. */
     discordStart(res) {
         try {
@@ -76,6 +77,9 @@ let AuthController = class AuthController {
         }
     }
     async login(body, req, res) {
+        // Ist „Mit Discord anmelden“ eingerichtet, gibt es nur noch Discord (Notfall: PASSWORD_LOGIN=true)
+        if (!this.discord.passwordLoginAllowed())
+            throw new errors_1.AppError('PERMISSION_DENIED', 'Password login is disabled – sign in with Discord.');
         const r = await this.auth.login(body.username, body.password, { ip: req.ip, userAgent: req.headers['user-agent'], requestId: req.requestId });
         res.cookie(guards_1.SESSION_COOKIE, r.token, { httpOnly: true, sameSite: 'strict', secure: this.env.COOKIE_SECURE ? this.env.COOKIE_SECURE === 'true' : this.env.NODE_ENV === 'production', expires: r.expiresAt, path: '/' });
         return r.user;

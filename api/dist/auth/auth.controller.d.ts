@@ -23,6 +23,7 @@ export declare class AuthController {
     /** Welche Anmeldewege es gibt (Login-Seite). */
     providers(): {
         discord: boolean;
+        password: boolean;
     };
     /** „Mit Discord anmelden“ → weiter zu Discord. */
     discordStart(res: Response): void;
