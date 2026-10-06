@@ -19,6 +19,7 @@ Der Bot (`apps/bot`, TypeScript, discord.js 14) ist ein **schlanker Client der S
 | `/einheiten` | Einheiten + Status | `dispatch.view` |
 | `/team` | wer ist im Dienst (Einheit, Einsatz) | `team.view` |
 | `/dienststunden [tage] [alle]` | eigene Dienststunden der letzten 7 (1–90) Tage nach Status; mit `alle` die Stunden aller Beamten | `team.view` · `alle`: `team.manage` |
+| `/dienstpanel` | postet das Dienst-Panel: Buttons **Im Dienst / Pause / Training / Verwaltung / Außer Dienst** (setzt den Status als verknüpfter Benutzer) | Discord „Server verwalten“; Klick: `team.view` |
 | `/sek [aktion] [mitglied]` | SEK: Mitgliederliste, letzte Einsatzberichte, eigener Status; Mitglieder hinzufügen/entfernen (+ optionale SEK-Rolle) | `sek.view` · Status: `team.view` · verwalten: `sek.manage` |
 | `/sek-bericht` | SEK-Einsatzbericht per Formular (Datum, Einsatzart, Beschreibung) | `sek.report` + SEK-Mitglied |
 | `/qualipanel` | postet das Qualifikations-Panel (SEK, Flugstaffel, Ausbilder …): Auswahl → Fragen einzeln per DM → Bewerbung mit Annehmen/Ablehnen-Buttons im Team-Channel ([qualifications.md](qualifications.md)) | Discord „Server verwalten“; entscheiden: `qualifications.decide` |
@@ -114,3 +115,11 @@ Jede Person: Web → Chat-Symbol oben rechts („Discord verknüpfen“) → *Co
 | Bot meldet „nicht erreichbar“ | `API_URL` stimmt nicht (im Compose-Netz: `http://api:3000`) oder API ist down. |
 | Benachrichtigungen kommen nicht | Channel-ID in *Settings* gesetzt? Bot hat im Channel Schreibrechte? `docker compose logs bot` zeigt `outbox … failed: Missing Access`. |
 | Bot startet nicht: `Invalid bot configuration` | `DISCORD_TOKEN` / `BOT_API_TOKEN` (mind. 32 Zeichen, identisch zur API) fehlen. |
+
+## Dienststatus ↔ Discord (Synchronisierung)
+Jeder Statuswechsel – egal ob im **Dashboard**, per **`/dienst`**, per **Dienst-Panel** oder durch die **Schichtleitung** – wird an Discord weitergegeben:
+- **Dienst-Rollen** (*Settings → Discord*: *On-duty role ID*, optional *Break / Training / Administrative role ID*): Im Dienst → Rolle vergeben, sonst entfernt; immer nur die Rolle des aktuellen Status. Gilt auf allen Servern, auf denen es die Rolle gibt. Voraussetzung: verknüpftes Konto (`/verknuepfen`), Bot-Rolle steht über den Dienst-Rollen und hat „Rollen verwalten“.
+- **Dienst-Channel** (*Duty channel ID*): Meldung wie „🟢 A-11 · Oscar ist jetzt im Dienst“ bzw. „⚪ … außer Dienst – Vorher: im Dienst – 2 h 15 min“ (bei Schichtleitung: „Gesetzt von …“).
+- **Teamliste** (`/teamliste`) wird sofort neu gezeichnet.
+
+Ist weder Channel noch Rolle eingestellt, wird nichts eingereiht. Fällt der Bot kurz aus, werden die Änderungen nachgeholt.

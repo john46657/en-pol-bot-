@@ -25,6 +25,13 @@ async function setDanger(c, level, reason) {
 const SUPPORT_PANEL = { title: '🎫 Support', color: format_1.COLORS.info, description: 'Fragen, Probleme oder Anliegen an die Leitung? Klicke auf **Ticket öffnen** – es wird ein privater Channel nur für dich und das Team angelegt.' };
 const SUPPORT_OPEN = { id: 'support:open', label: 'Ticket öffnen', emoji: '🎫', style: 'primary' };
 const SUPPORT_CLOSE = { id: 'support:close', label: 'Ticket schließen', emoji: '🔒', style: 'danger' };
+// ---------------- Dienst-Panel ----------------
+const DUTY_PANEL = { title: '🚓 Dienststatus', color: format_1.COLORS.info, description: 'Melde dich hier mit einem Klick **in den Dienst**, in die **Pause** oder **außer Dienst**.\nDein Status erscheint sofort im Dashboard, in der Teamliste und – falls eingestellt – als Discord-Rolle.\n\n*Dein Discord-Konto muss verknüpft sein (`/verknuepfen`).*' };
+const DUTY_BUTTONS = [
+    { id: 'duty:ON_DUTY', label: 'Im Dienst', emoji: '🟢', style: 'success' }, { id: 'duty:BREAK', label: 'Pause', emoji: '🟡', style: 'secondary' },
+    { id: 'duty:TRAINING', label: 'Training', emoji: '🔵', style: 'secondary' }, { id: 'duty:ADMINISTRATIVE', label: 'Verwaltung', emoji: '🗂️', style: 'secondary' },
+    { id: 'duty:OFF_DUTY', label: 'Außer Dienst', emoji: '⚪', style: 'danger' },
+];
 // ---------------- Funk-Freigabe ----------------
 const RADIO = { hinzufuegen: 'add', entfernen: 'remove', pruefen: 'check', liste: 'list' };
 exports.FEATURE_COMMANDS = [
@@ -128,6 +135,24 @@ exports.FEATURE_COMMANDS = [
         },
     },
     {
+        name: 'dienstpanel', description: 'Postet das Dienst-Panel (Im Dienst / Pause / Außer Dienst per Button) in diesen Channel',
+        async run(c) {
+            const denied = needGuildAdmin(c);
+            if (denied)
+                return denied;
+            if (!c.channelId || !c.platform)
+                return (0, format_1.errorReply)('Panel kann hier nicht gepostet werden.');
+            try {
+                await c.platform.postPanel({ channelId: c.channelId, embed: DUTY_PANEL, buttons: DUTY_BUTTONS });
+            }
+            catch {
+                return (0, format_1.errorReply)('Panel konnte nicht gepostet werden (fehlen dem Bot Rechte in diesem Channel?).');
+            }
+            const cfg = await c.config?.().catch(() => undefined);
+            return (0, format_1.okReply)(`Dienst-Panel gepostet.${cfg?.dutyRole || cfg?.duty ? '' : ' Tipp: In den Einstellungen einen **Dienst-Channel** (Meldungen) und eine **Dienst-Rolle** hinterlegen.'}`);
+        },
+    },
+    {
         name: 'supportpanel', description: 'Postet das Support-Ticket-Panel in diesen Channel',
         async run(c) {
             const denied = needGuildAdmin(c);
@@ -162,6 +187,23 @@ exports.FEATURE_COMMANDS = [
     },
 ];
 exports.INTERACTIONS = [
+    {
+        prefix: 'duty',
+        async run(c) {
+            const status = c.args[0] ?? '';
+            if (!format_1.DUTY_DE[status])
+                return (0, format_1.errorReply)('Unbekannter Status.');
+            try {
+                await c.api.asUser(c.discordId, 'PUT', '/team/me/status', { status });
+                return (0, format_1.okReply)(`${format_1.DUTY_DE[status].emoji} Du bist jetzt **${format_1.DUTY_DE[status].label}**.`);
+            }
+            catch (e) {
+                if (e instanceof api_1.BotApiError && e.status === 409)
+                    return (0, format_1.okReply)(`Du bist bereits **${format_1.DUTY_DE[status].label}**.`);
+                return (0, errors_1.mapError)(e);
+            }
+        },
+    },
     sek_1.SEK_INTERACTION,
     qualifications_1.QUALI_INTERACTION,
     {

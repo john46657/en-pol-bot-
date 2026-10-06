@@ -15,18 +15,22 @@ const realtime_service_1 = require("../realtime/realtime.service");
 const prisma_service_1 = require("../prisma/prisma.service");
 const audit_service_1 = require("../audit/audit.service");
 const errors_1 = require("../common/errors");
+const discord_service_1 = require("../discord/discord.service");
 /** Dienststatus wird ausschließlich explizit gesetzt – Online-Status ist niemals Dienststatus. */
 let DutyService = class DutyService {
     prisma;
     audit;
     rt;
-    constructor(prisma, audit, rt) {
+    discord;
+    constructor(prisma, audit, rt, discord) {
         this.prisma = prisma;
         this.audit = audit;
         this.rt = rt;
+        this.discord = discord;
     }
     async setStatus(actor, status, d, targetUserId) {
         const userId = targetUserId ?? actor.userId;
+        let previous = null;
         return this.prisma.$transaction(async (tx) => {
             const open = await tx.dutySession.findFirst({ where: { userId, endedAt: null } });
             if ((open?.status ?? 'OFF_DUTY') === status && !d.unitId)
@@ -35,6 +39,7 @@ let DutyService = class DutyService {
                 throw new errors_1.AppError('NOT_FOUND', 'User not found.');
             if (open)
                 await tx.dutySession.update({ where: { id: open.id }, data: { endedAt: new Date() } });
+            previous = open ? { status: open.status, startedAt: open.startedAt } : null;
             if (d.unitId && !(await tx.unit.findUnique({ where: { id: d.unitId } })))
                 throw new errors_1.AppError('NOT_FOUND', 'Unit not found.');
             let created = null;
@@ -44,7 +49,35 @@ let DutyService = class DutyService {
             }
             await this.audit.record(actor, { action: targetUserId && targetUserId !== actor.userId ? 'duty.status.set_by_supervisor' : 'duty.status', module: 'team', entityType: 'User', entityId: userId, before: { status: open?.status ?? 'OFF_DUTY' }, after: { status } }, tx);
             return created ?? { status: 'OFF_DUTY' };
-        }).then((r) => { this.rt.publish('team', 'duty.changed', { userId, status }); return r; });
+        }).then(async (r) => {
+            this.rt.publish('team', 'duty.changed', { userId, status });
+            const before = previous;
+            if ((before?.status ?? 'OFF_DUTY') !== status)
+                await this.notifyDiscord(actor, userId, status, before);
+            return r;
+        });
+    }
+    /**
+     * Discord-Abgleich: Dienst-Rollen (Im Dienst/Pause/Training/Verwaltung) und Meldung im Dienst-Channel.
+     * Wird nur eingereiht, wenn ein Dienst-Channel oder eine Dienst-Rolle eingestellt ist. Fehler stören den Statuswechsel nie.
+     */
+    async notifyDiscord(actor, userId, status, before) {
+        try {
+            const ch = await this.discord.channels();
+            const roles = !!(ch.dutyRole || ch.breakRole || ch.trainingRole || ch.adminDutyRole);
+            if (!ch.duty && !roles)
+                return;
+            const [user, link] = await Promise.all([
+                this.prisma.user.findUnique({ where: { id: userId }, select: { displayName: true, personnel: { select: { callsign: true, rank: true } } } }),
+                this.prisma.discordLink.findUnique({ where: { userId } }),
+            ]);
+            const by = actor.userId && actor.userId !== userId ? await this.prisma.user.findUnique({ where: { id: actor.userId }, select: { displayName: true } }) : null;
+            await this.discord.enqueue('duty', 'duty.changed', {
+                discordId: link?.discordId ?? null, name: user?.displayName ?? '—', callsign: user?.personnel?.callsign ?? null, rank: user?.personnel?.rank ?? null,
+                status, previous: before?.status ?? 'OFF_DUTY', previousMinutes: before ? Math.round((Date.now() - before.startedAt.getTime()) / 60_000) : null, setBy: by?.displayName ?? null,
+            }, { always: roles });
+        }
+        catch { /* best effort */ }
     }
     team() {
         return this.prisma.dutySession.findMany({
@@ -110,6 +143,6 @@ let DutyService = class DutyService {
 exports.DutyService = DutyService;
 exports.DutyService = DutyService = __decorate([
     (0, common_1.Injectable)(),
-    __metadata("design:paramtypes", [prisma_service_1.PrismaService, audit_service_1.AuditService, realtime_service_1.RealtimeService])
+    __metadata("design:paramtypes", [prisma_service_1.PrismaService, audit_service_1.AuditService, realtime_service_1.RealtimeService, discord_service_1.DiscordService])
 ], DutyService);
 //# sourceMappingURL=duty.service.js.map

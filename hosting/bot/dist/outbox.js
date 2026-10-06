@@ -1,15 +1,23 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.dutyRoleChanges = dutyRoleChanges;
 exports.pollOnce = pollOnce;
 exports.startOutboxLoop = startOutboxLoop;
 const format_1 = require("./format");
+/** Welche Discord-Rolle zu welchem Dienststatus gehört (Einstellungen → Discord). */
+function dutyRoleChanges(status, cfg) {
+    const map = { ON_DUTY: cfg.dutyRole, BREAK: cfg.breakRole, TRAINING: cfg.trainingRole, ADMINISTRATIVE: cfg.adminDutyRole };
+    const target = map[status];
+    const all = [...new Set(Object.values(map).filter((r) => !!r && /^\d{15,25}$/.test(r)))];
+    return { add: target && all.includes(target) ? [target] : [], remove: all.filter((r) => r !== target) };
+}
 /** Benachrichtigungen, die per Direktnachricht an eine Person gehen statt in einen Channel. */
 const DIRECT = { 'application.decided': format_1.applicationDecisionText, 'qualification.decided': format_1.qualificationDecisionText };
 /**
  * Holt offene Benachrichtigungen aus der System-API, postet sie und quittiert.
  * Fehlgeschlagene Sendungen werden gemeldet (die API zählt Versuche und gibt nach 5 Fehlversuchen auf).
  */
-async function pollOnce(api, send, log = console.log, dm, grantRole) {
+async function pollOnce(api, send, log = console.log, dm, grantRole, syncRoles, onDutyChanged) {
     const [channels, items] = await Promise.all([api.service('GET', '/bot/config'), api.service('GET', '/bot/outbox?limit=20')]);
     let sent = 0;
     for (const item of items) {
@@ -39,6 +47,21 @@ async function pollOnce(api, send, log = console.log, dm, grantRole) {
             continue;
         }
         // pro Art dürfen mehrere Channel-IDs (Komma-getrennt, auch auf mehreren Servern) hinterlegt sein
+        // Dienststatus: zuerst die Dienst-Rollen abgleichen; ohne Dienst-Channel ist der Eintrag damit erledigt
+        if (item.type === 'duty.changed') {
+            onDutyChanged?.(); // z. B. Teamliste sofort neu zeichnen
+            const userId = String(item.payload.discordId ?? '');
+            if (syncRoles && /^\d{15,25}$/.test(userId)) {
+                const { add, remove } = dutyRoleChanges(String(item.payload.status), channels);
+                if (add.length || remove.length)
+                    await syncRoles(userId, add, remove).catch((e) => log(`outbox ${item.id}: duty roles could not be updated: ${e instanceof Error ? e.message : e}`));
+            }
+            if (!channels.duty) {
+                await api.service('POST', `/bot/outbox/${item.id}/ack`, { ok: true }).catch(() => undefined);
+                sent++;
+                continue;
+            }
+        }
         // eigener Channel im Eintrag (z. B. Bewerbungen einer Einheit) hat Vorrang
         const own = typeof item.payload.channelId === 'string' && /^\d{15,25}$/.test(item.payload.channelId) ? item.payload.channelId : null;
         const channelIds = own ? [own] : (channels[item.channelKey] ?? '').split(/[\s,;]+/).filter(Boolean);
@@ -67,7 +90,7 @@ async function pollOnce(api, send, log = console.log, dm, grantRole) {
     return sent;
 }
 /** Läuft dauerhaft; überlappende Durchläufe werden vermieden, Fehler (z. B. API kurz down) beenden die Schleife nicht. */
-function startOutboxLoop(api, send, seconds, log = console.log, dm, grantRole) {
+function startOutboxLoop(api, send, seconds, log = console.log, dm, grantRole, syncRoles, onDutyChanged) {
     let running = false;
     let lastError;
     const tick = async () => {
@@ -75,7 +98,7 @@ function startOutboxLoop(api, send, seconds, log = console.log, dm, grantRole) {
             return;
         running = true;
         try {
-            await pollOnce(api, send, log, dm, grantRole);
+            await pollOnce(api, send, log, dm, grantRole, syncRoles, onDutyChanged);
             if (lastError) {
                 log('outbox: connection to the API restored');
                 lastError = undefined;

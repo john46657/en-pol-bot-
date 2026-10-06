@@ -66,6 +66,13 @@ export function renderOutbox(type: string, p: Record<string, unknown>): EmbedDat
       const d = DANGER[String(p.level)] ?? DANGER.GREEN!;
       return { title: `${d.emoji} Gefahrenstatus: ${d.label}`, description: p.reason ? clip(plain(p.reason), 1000) : undefined, color: d.color, fields: [{ name: 'Vorher', value: (DANGER[String(p.previous)]?.label) ?? '—', inline: true }, { name: 'Gesetzt von', value: clip(plain(p.setBy ?? 'System'), 200), inline: true }] };
     }
+    case 'duty.changed': {
+      const st = String(p.status), prev = String(p.previous ?? 'OFF_DUTY');
+      const who = `${p.callsign ? `${plain(p.callsign)} · ` : ''}${plain(p.name)}`;
+      const mins = typeof p.previousMinutes === 'number' && prev !== 'OFF_DUTY' ? ` – ${fmtDuration(p.previousMinutes * 60)}` : '';
+      return { title: clip(`${DUTY_DE[st]?.emoji ?? '•'} ${who} ist jetzt ${DUTY_DE[st]?.label ?? label(st)}`, 256), color: DUTY_DE[st]?.color ?? COLORS.neutral,
+        description: clip([p.discordId ? `<@${String(p.discordId)}>` : null, `Vorher: ${DUTY_DE[prev]?.label ?? label(prev)}${mins}`, p.setBy ? `Gesetzt von: ${plain(p.setBy)}` : null].filter(Boolean).join('\n'), 1000) };
+    }
     case 'sek.report':
       return { title: `🎯 SEK-Einsatzbericht ${p.number}`, color: COLORS.neutral, description: clip(plain(p.description), 3500), fields: [
         { name: 'Einsatzart', value: clip(plain(p.missionType), 200), inline: true }, { name: 'Datum', value: new Date(String(p.occurredAt)).toLocaleString('de-DE', { timeZone: 'Europe/Berlin' }), inline: true }, { name: 'Beamter', value: clip(plain(p.author), 200), inline: true }] };
@@ -173,6 +180,12 @@ export const DANGER_BUTTONS: ButtonSpec[] = [
 // ---- Teamliste ----
 export interface TeamMember { name: string; rank: string | null; callsign: string | null; team: string | null; dutyStatus: string; unit: string | null }
 const DUTY_EMOJI: Record<string, string> = { ON_DUTY: '🟢', BREAK: '🟡', TRAINING: '🔵', ADMINISTRATIVE: '🔵', OFF_DUTY: '⚪' };
+/** Dienststatus auf Deutsch (Meldungen im Dienst-Channel, Dienst-Panel). */
+export const DUTY_DE: Record<string, { label: string; emoji: string; color: number }> = {
+  ON_DUTY: { label: 'im Dienst', emoji: '🟢', color: 0x22c55e }, BREAK: { label: 'in Pause', emoji: '🟡', color: 0xf59e0b },
+  TRAINING: { label: 'im Training', emoji: '🔵', color: 0x3b82f6 }, ADMINISTRATIVE: { label: 'in der Verwaltung', emoji: '🔵', color: 0x06b6d4 },
+  OFF_DUTY: { label: 'außer Dienst', emoji: '⚪', color: 0x64748b },
+};
 export function teamlistEmbed(members: TeamMember[], rankOrder: string[]): EmbedData {
   const rankOf = (m: TeamMember) => m.rank ?? 'Ohne Rang';
   const known = rankOrder.filter((r) => members.some((m) => rankOf(m) === r));

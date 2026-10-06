@@ -15,4 +15,4 @@ export interface Platform {
   postPanel(a: { channelId: string; embed: EmbedData; buttons?: ButtonSpec[]; select?: SelectSpec }): Promise<void>;
 }
 
-export interface DiscordConfig { guildId?: string; dispatch?: string; wanted?: string; announcements?: string; applications?: string; danger?: string; sek?: string; qualifications?: string; teamlist?: string; tickets?: string; staffRole?: string; radioRole?: string; sekRole?: string }
+export interface DiscordConfig { guildId?: string; dispatch?: string; wanted?: string; announcements?: string; applications?: string; danger?: string; sek?: string; qualifications?: string; duty?: string; teamlist?: string; tickets?: string; staffRole?: string; radioRole?: string; sekRole?: string; dutyRole?: string; breakRole?: string; trainingRole?: string; adminDutyRole?: string }

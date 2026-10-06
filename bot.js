@@ -75874,6 +75874,16 @@ ${clip(plain(p.reason), 3e3)}`, color: PRIORITY_COLOR[String(p.priority)] ?? COL
       const d = DANGER[String(p.level)] ?? DANGER.GREEN;
       return { title: `${d.emoji} Gefahrenstatus: ${d.label}`, description: p.reason ? clip(plain(p.reason), 1e3) : void 0, color: d.color, fields: [{ name: "Vorher", value: DANGER[String(p.previous)]?.label ?? "\u2014", inline: true }, { name: "Gesetzt von", value: clip(plain(p.setBy ?? "System"), 200), inline: true }] };
     }
+    case "duty.changed": {
+      const st = String(p.status), prev = String(p.previous ?? "OFF_DUTY");
+      const who = `${p.callsign ? `${plain(p.callsign)} \xB7 ` : ""}${plain(p.name)}`;
+      const mins = typeof p.previousMinutes === "number" && prev !== "OFF_DUTY" ? ` \u2013 ${fmtDuration(p.previousMinutes * 60)}` : "";
+      return {
+        title: clip(`${DUTY_DE[st]?.emoji ?? "\u2022"} ${who} ist jetzt ${DUTY_DE[st]?.label ?? label(st)}`, 256),
+        color: DUTY_DE[st]?.color ?? COLORS.neutral,
+        description: clip([p.discordId ? `<@${String(p.discordId)}>` : null, `Vorher: ${DUTY_DE[prev]?.label ?? label(prev)}${mins}`, p.setBy ? `Gesetzt von: ${plain(p.setBy)}` : null].filter(Boolean).join("\n"), 1e3)
+      };
+    }
     case "sek.report":
       return { title: `\u{1F3AF} SEK-Einsatzbericht ${p.number}`, color: COLORS.neutral, description: clip(plain(p.description), 3500), fields: [
         { name: "Einsatzart", value: clip(plain(p.missionType), 200), inline: true },
@@ -75978,6 +75988,13 @@ var DANGER_BUTTONS = [
   { id: "danger:set:RED", label: "Rot", emoji: "\u{1F534}", style: "danger" }
 ];
 var DUTY_EMOJI = { ON_DUTY: "\u{1F7E2}", BREAK: "\u{1F7E1}", TRAINING: "\u{1F535}", ADMINISTRATIVE: "\u{1F535}", OFF_DUTY: "\u26AA" };
+var DUTY_DE = {
+  ON_DUTY: { label: "im Dienst", emoji: "\u{1F7E2}", color: 2278750 },
+  BREAK: { label: "in Pause", emoji: "\u{1F7E1}", color: 16096779 },
+  TRAINING: { label: "im Training", emoji: "\u{1F535}", color: 3900150 },
+  ADMINISTRATIVE: { label: "in der Verwaltung", emoji: "\u{1F535}", color: 440020 },
+  OFF_DUTY: { label: "au\xDFer Dienst", emoji: "\u26AA", color: 6583435 }
+};
 function teamlistEmbed(members, rankOrder) {
   const rankOf = (m) => m.rank ?? "Ohne Rang";
   const known = rankOrder.filter((r) => members.some((m) => rankOf(m) === r));
@@ -76392,6 +76409,14 @@ async function setDanger(c, level, reason) {
 var SUPPORT_PANEL = { title: "\u{1F3AB} Support", color: COLORS.info, description: "Fragen, Probleme oder Anliegen an die Leitung? Klicke auf **Ticket \xF6ffnen** \u2013 es wird ein privater Channel nur f\xFCr dich und das Team angelegt." };
 var SUPPORT_OPEN = { id: "support:open", label: "Ticket \xF6ffnen", emoji: "\u{1F3AB}", style: "primary" };
 var SUPPORT_CLOSE = { id: "support:close", label: "Ticket schlie\xDFen", emoji: "\u{1F512}", style: "danger" };
+var DUTY_PANEL = { title: "\u{1F693} Dienststatus", color: COLORS.info, description: "Melde dich hier mit einem Klick **in den Dienst**, in die **Pause** oder **au\xDFer Dienst**.\nDein Status erscheint sofort im Dashboard, in der Teamliste und \u2013 falls eingestellt \u2013 als Discord-Rolle.\n\n*Dein Discord-Konto muss verkn\xFCpft sein (`/verknuepfen`).*" };
+var DUTY_BUTTONS = [
+  { id: "duty:ON_DUTY", label: "Im Dienst", emoji: "\u{1F7E2}", style: "success" },
+  { id: "duty:BREAK", label: "Pause", emoji: "\u{1F7E1}", style: "secondary" },
+  { id: "duty:TRAINING", label: "Training", emoji: "\u{1F535}", style: "secondary" },
+  { id: "duty:ADMINISTRATIVE", label: "Verwaltung", emoji: "\u{1F5C2}\uFE0F", style: "secondary" },
+  { id: "duty:OFF_DUTY", label: "Au\xDFer Dienst", emoji: "\u26AA", style: "danger" }
+];
 var RADIO = { hinzufuegen: "add", entfernen: "remove", pruefen: "check", liste: "list" };
 var FEATURE_COMMANDS = [
   {
@@ -76484,6 +76509,22 @@ var FEATURE_COMMANDS = [
     }
   },
   {
+    name: "dienstpanel",
+    description: "Postet das Dienst-Panel (Im Dienst / Pause / Au\xDFer Dienst per Button) in diesen Channel",
+    async run(c) {
+      const denied = needGuildAdmin(c);
+      if (denied) return denied;
+      if (!c.channelId || !c.platform) return errorReply("Panel kann hier nicht gepostet werden.");
+      try {
+        await c.platform.postPanel({ channelId: c.channelId, embed: DUTY_PANEL, buttons: DUTY_BUTTONS });
+      } catch {
+        return errorReply("Panel konnte nicht gepostet werden (fehlen dem Bot Rechte in diesem Channel?).");
+      }
+      const cfg2 = await c.config?.().catch(() => void 0);
+      return okReply(`Dienst-Panel gepostet.${cfg2?.dutyRole || cfg2?.duty ? "" : " Tipp: In den Einstellungen einen **Dienst-Channel** (Meldungen) und eine **Dienst-Rolle** hinterlegen."}`);
+    }
+  },
+  {
     name: "supportpanel",
     description: "Postet das Support-Ticket-Panel in diesen Channel",
     async run(c) {
@@ -76516,6 +76557,20 @@ var FEATURE_COMMANDS = [
   }
 ];
 var INTERACTIONS = [
+  {
+    prefix: "duty",
+    async run(c) {
+      const status = c.args[0] ?? "";
+      if (!DUTY_DE[status]) return errorReply("Unbekannter Status.");
+      try {
+        await c.api.asUser(c.discordId, "PUT", "/team/me/status", { status });
+        return okReply(`${DUTY_DE[status].emoji} Du bist jetzt **${DUTY_DE[status].label}**.`);
+      } catch (e) {
+        if (e instanceof BotApiError && e.status === 409) return okReply(`Du bist bereits **${DUTY_DE[status].label}**.`);
+        return mapError(e);
+      }
+    }
+  },
   SEK_INTERACTION,
   QUALI_INTERACTION,
   {
@@ -76616,7 +76671,7 @@ var COMMANDS = [
         { name: "Abfragen", value: "`/person` `/kennzeichen` `/fahndungen` `/einsaetze` `/einsatzinfo` `/einheiten` `/team`" },
         { name: "Dienst & Leitstelle", value: "`/dienst` `/dienststunden` `/einheitstatus` `/einsatz` `/einsatzstatus` `/einsatzzuweisen` `/funk`" },
         { name: "Erfassen", value: "`/ticket` `/bericht` `/beschwerde` `/ermittlung` `/fahndung` `/beweis`" },
-        { name: "Leitung & Team", value: "`/gefahrenstatus` `/funkfreigabe` `/teamliste` `/supportpanel` `/bewerbungspanel` `/qualipanel` `/roblox`" },
+        { name: "Leitung & Team", value: "`/gefahrenstatus` `/funkfreigabe` `/teamliste` `/dienstpanel` `/supportpanel` `/bewerbungspanel` `/qualipanel` `/roblox`" },
         { name: "SEK", value: "`/sek` `/sek-bericht`" },
         { name: "F\xFCr alle", value: "`/bewerbung` (auch ohne Verkn\xFCpfung; Fragen per Direktnachricht) \xB7 SEK/Flugstaffel/Ausbilder \xFCber das Qualifikations-Panel" },
         { name: "Hinweis", value: "Alle Befehle laufen mit **deinen** Rechten im System. Antworten sind nur f\xFCr dich sichtbar." }
@@ -81183,8 +81238,14 @@ function createLive(api2, platform2, log = console.log) {
 }
 
 // apps/bot/src/outbox.ts
+function dutyRoleChanges(status, cfg2) {
+  const map = { ON_DUTY: cfg2.dutyRole, BREAK: cfg2.breakRole, TRAINING: cfg2.trainingRole, ADMINISTRATIVE: cfg2.adminDutyRole };
+  const target = map[status];
+  const all = [...new Set(Object.values(map).filter((r) => !!r && /^\d{15,25}$/.test(r)))];
+  return { add: target && all.includes(target) ? [target] : [], remove: all.filter((r) => r !== target) };
+}
 var DIRECT = { "application.decided": applicationDecisionText, "qualification.decided": qualificationDecisionText };
-async function pollOnce(api2, send, log = console.log, dm, grantRole) {
+async function pollOnce(api2, send, log = console.log, dm, grantRole, syncRoles, onDutyChanged) {
   const [channels, items] = await Promise.all([api2.service("GET", "/bot/config"), api2.service("GET", "/bot/outbox?limit=20")]);
   let sent = 0;
   for (const item of items) {
@@ -81208,6 +81269,19 @@ async function pollOnce(api2, send, log = console.log, dm, grantRole) {
       }
       continue;
     }
+    if (item.type === "duty.changed") {
+      onDutyChanged?.();
+      const userId = String(item.payload.discordId ?? "");
+      if (syncRoles && /^\d{15,25}$/.test(userId)) {
+        const { add, remove } = dutyRoleChanges(String(item.payload.status), channels);
+        if (add.length || remove.length) await syncRoles(userId, add, remove).catch((e) => log(`outbox ${item.id}: duty roles could not be updated: ${e instanceof Error ? e.message : e}`));
+      }
+      if (!channels.duty) {
+        await api2.service("POST", `/bot/outbox/${item.id}/ack`, { ok: true }).catch(() => void 0);
+        sent++;
+        continue;
+      }
+    }
     const own = typeof item.payload.channelId === "string" && /^\d{15,25}$/.test(item.payload.channelId) ? item.payload.channelId : null;
     const channelIds = own ? [own] : (channels[item.channelKey] ?? "").split(/[\s,;]+/).filter(Boolean);
     const embeds = renderOutboxEmbeds(item.type, item.payload);
@@ -81229,14 +81303,14 @@ async function pollOnce(api2, send, log = console.log, dm, grantRole) {
   }
   return sent;
 }
-function startOutboxLoop(api2, send, seconds, log = console.log, dm, grantRole) {
+function startOutboxLoop(api2, send, seconds, log = console.log, dm, grantRole, syncRoles, onDutyChanged) {
   let running = false;
   let lastError;
   const tick = async () => {
     if (running) return;
     running = true;
     try {
-      await pollOnce(api2, send, log, dm, grantRole);
+      await pollOnce(api2, send, log, dm, grantRole, syncRoles, onDutyChanged);
       if (lastError) {
         log("outbox: connection to the API restored");
         lastError = void 0;
@@ -81496,6 +81570,18 @@ client.on("messageCreate", (m) => {
   void handleDirectMessage({ userId: m.author.id, userName: m.author.username, content: m.content, api, sendDm: (u, msg) => platform.sendDm(u, msg), robloxLookup: (n) => robloxLookup(n) }).catch((e) => console.error("direct message handling failed:", e instanceof Error ? e.message : e));
 });
 setInterval(() => sweepSessions(), 10 * 6e4).unref();
+async function syncRolesEverywhere(userId, add, remove) {
+  for (const g of client.guilds.cache.values()) {
+    const present = [...add, ...remove].filter((r) => g.roles.cache.has(r));
+    if (!present.length) continue;
+    const member = await g.members.fetch(userId).catch(() => null);
+    if (!member) continue;
+    const toRemove = remove.filter((r) => g.roles.cache.has(r) && member.roles.cache.has(r));
+    const toAdd = add.filter((r) => g.roles.cache.has(r) && !member.roles.cache.has(r));
+    if (toRemove.length) await member.roles.remove(toRemove, "EN Polizei: Dienststatus");
+    if (toAdd.length) await member.roles.add(toAdd, "EN Polizei: Dienststatus");
+  }
+}
 async function grantRoleEverywhere(userId, roleId) {
   let found = false;
   for (const g of client.guilds.cache.values()) {
@@ -81548,7 +81634,7 @@ client.once("clientReady", async (c) => {
     const ch = await client.channels.fetch(channelId);
     if (!ch?.isSendable()) throw new Error(`channel ${channelId} is not a text channel the bot can post in`);
     await ch.send({ embeds: embeds.map(toEmbed), components: toRows(buttons), allowedMentions: { parse: [] } });
-  }, cfg.OUTBOX_POLL_SECONDS, console.log, (userId, text) => platform.sendDirectMessage(userId, text), grantRoleEverywhere);
+  }, cfg.OUTBOX_POLL_SECONDS, console.log, (userId, text) => platform.sendDirectMessage(userId, text), grantRoleEverywhere, syncRolesEverywhere, () => void live.refresh("teamlist").catch(() => void 0));
   live.start(cfg.LIVE_REFRESH_SECONDS);
 });
 for (const sig of ["SIGINT", "SIGTERM"]) process.on(sig, () => {

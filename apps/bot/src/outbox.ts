@@ -3,6 +3,15 @@ import { applicationDecisionText, outboxButtons, qualificationDecisionText, rend
 
 interface OutboxItem { id: string; type: string; channelKey: string; payload: Record<string, unknown> }
 export type Sender = (channelId: string, embeds: EmbedData[], buttons?: ButtonSpec[]) => Promise<void>;
+/** Discord-Rollen eines Mitglieds anpassen (alle Server, auf denen es die Rollen gibt). */
+export type RoleSync = (userId: string, add: string[], remove: string[]) => Promise<void>;
+/** Welche Discord-Rolle zu welchem Dienststatus gehört (Einstellungen → Discord). */
+export function dutyRoleChanges(status: string, cfg: Record<string, string | undefined>): { add: string[]; remove: string[] } {
+  const map: Record<string, string | undefined> = { ON_DUTY: cfg.dutyRole, BREAK: cfg.breakRole, TRAINING: cfg.trainingRole, ADMINISTRATIVE: cfg.adminDutyRole };
+  const target = map[status];
+  const all = [...new Set(Object.values(map).filter((r): r is string => !!r && /^\d{15,25}$/.test(r)))];
+  return { add: target && all.includes(target) ? [target] : [], remove: all.filter((r) => r !== target) };
+}
 /** Vergibt eine Discord-Rolle auf allen Servern, auf denen es sie gibt (z. B. nach angenommener Bewerbung). */
 export type RoleGranter = (userId: string, roleId: string) => Promise<void>;
 export type DirectSender = (userId: string, text: string) => Promise<void>;
@@ -13,7 +22,7 @@ const DIRECT: Record<string, (p: Record<string, unknown>) => string> = { 'applic
  * Holt offene Benachrichtigungen aus der System-API, postet sie und quittiert.
  * Fehlgeschlagene Sendungen werden gemeldet (die API zählt Versuche und gibt nach 5 Fehlversuchen auf).
  */
-export async function pollOnce(api: Api, send: Sender, log: (m: string) => void = console.log, dm?: DirectSender, grantRole?: RoleGranter): Promise<number> {
+export async function pollOnce(api: Api, send: Sender, log: (m: string) => void = console.log, dm?: DirectSender, grantRole?: RoleGranter, syncRoles?: RoleSync, onDutyChanged?: () => void): Promise<number> {
   const [channels, items] = await Promise.all([api.service<Record<string, string | undefined>>('GET', '/bot/config'), api.service<OutboxItem[]>('GET', '/bot/outbox?limit=20')]);
   let sent = 0;
   for (const item of items) {
@@ -40,6 +49,16 @@ export async function pollOnce(api: Api, send: Sender, log: (m: string) => void 
       continue;
     }
     // pro Art dürfen mehrere Channel-IDs (Komma-getrennt, auch auf mehreren Servern) hinterlegt sein
+    // Dienststatus: zuerst die Dienst-Rollen abgleichen; ohne Dienst-Channel ist der Eintrag damit erledigt
+    if (item.type === 'duty.changed') {
+      onDutyChanged?.(); // z. B. Teamliste sofort neu zeichnen
+      const userId = String(item.payload.discordId ?? '');
+      if (syncRoles && /^\d{15,25}$/.test(userId)) {
+        const { add, remove } = dutyRoleChanges(String(item.payload.status), channels);
+        if (add.length || remove.length) await syncRoles(userId, add, remove).catch((e) => log(`outbox ${item.id}: duty roles could not be updated: ${e instanceof Error ? e.message : e}`));
+      }
+      if (!channels.duty) { await api.service('POST', `/bot/outbox/${item.id}/ack`, { ok: true }).catch(() => undefined); sent++; continue; }
+    }
     // eigener Channel im Eintrag (z. B. Bewerbungen einer Einheit) hat Vorrang
     const own = typeof item.payload.channelId === 'string' && /^\d{15,25}$/.test(item.payload.channelId) ? item.payload.channelId : null;
     const channelIds = own ? [own] : (channels[item.channelKey] ?? '').split(/[\s,;]+/).filter(Boolean);
@@ -65,14 +84,14 @@ export async function pollOnce(api: Api, send: Sender, log: (m: string) => void 
 }
 
 /** Läuft dauerhaft; überlappende Durchläufe werden vermieden, Fehler (z. B. API kurz down) beenden die Schleife nicht. */
-export function startOutboxLoop(api: Api, send: Sender, seconds: number, log: (m: string) => void = console.log, dm?: DirectSender, grantRole?: RoleGranter) {
+export function startOutboxLoop(api: Api, send: Sender, seconds: number, log: (m: string) => void = console.log, dm?: DirectSender, grantRole?: RoleGranter, syncRoles?: RoleSync, onDutyChanged?: () => void) {
   let running = false;
   let lastError: string | undefined;
   const tick = async () => {
     if (running) return;
     running = true;
     try {
-      await pollOnce(api, send, log, dm, grantRole);
+      await pollOnce(api, send, log, dm, grantRole, syncRoles, onDutyChanged);
       if (lastError) { log('outbox: connection to the API restored'); lastError = undefined; }
     } catch (e) {
       // Nur bei neuer/anderer Störung loggen – nicht alle 5 Sekunden dieselbe Zeile

@@ -5,7 +5,7 @@ import { interactionFor } from '../src/commands/features';
 import type { Ctx } from '../src/commands/types';
 import { teamlistEmbed, type Reply } from '../src/format';
 import { createLive } from '../src/live';
-import { pollOnce } from '../src/outbox';
+import { dutyRoleChanges, pollOnce } from '../src/outbox';
 import type { Platform } from '../src/platform';
 import { robloxLookup } from '../src/roblox';
 import { parseGermanDate } from '../src/commands/sek';
@@ -395,5 +395,45 @@ describe('Qualifikationen (Panel → Fragen per DM)', () => {
     expect(order[0]).toBe(`role ${OTHER} 623456789012345678`);
     expect(order[1]).toContain('angenommen');
     expect(order[1]).toContain('**Begründung:** Top Bewerbung');
+  });
+});
+
+describe('Dienststatus ↔ Discord', () => {
+  it('/dienstpanel posts the buttons; a button sets the duty status as the linked user', async () => {
+    const { p, log } = fakePlatform();
+    expect(text(await byName('dienstpanel')!.run(ctx(fakeApi({}).api, { platform: p })))).toContain('Server verwalten');
+    await byName('dienstpanel')!.run(ctx(fakeApi({}).api, { platform: p, isGuildAdmin: true, config: async () => ({}) }));
+    expect(log).toEqual([`panel ${CHANNEL} duty:ON_DUTY,duty:BREAK,duty:TRAINING,duty:ADMINISTRATIVE,duty:OFF_DUTY`]);
+    const { api, calls } = fakeApi({ 'PUT /team/me/status': {} });
+    const hit = interactionFor('duty:ON_DUTY')!;
+    expect(text(await hit.def.run({ ...ctx(api), args: hit.args }))).toContain('im Dienst');
+    expect(calls[0]).toMatchObject({ kind: 'user', method: 'PUT', path: '/team/me/status', body: { status: 'ON_DUTY' } });
+    const again = fakeApi({ 'PUT /team/me/status': new BotApiError(409, 'CONFLICT', 'Already') });
+    expect(text(await hit.def.run({ ...ctx(again.api), args: hit.args }))).toContain('bereits');
+    const unlinked = fakeApi({ 'PUT /team/me/status': new BotApiError(401, 'UNAUTHENTICATED', 'x', 'r', 'NOT_LINKED') });
+    expect(text(await hit.def.run({ ...ctx(unlinked.api), args: hit.args }))).toContain('/verknuepfen');
+  });
+
+  it('maps duty statuses to the configured roles (only one duty role at a time)', () => {
+    const cfg = { dutyRole: '700000000000000001', breakRole: '700000000000000002' };
+    expect(dutyRoleChanges('ON_DUTY', cfg)).toEqual({ add: ['700000000000000001'], remove: ['700000000000000002'] });
+    expect(dutyRoleChanges('BREAK', cfg)).toEqual({ add: ['700000000000000002'], remove: ['700000000000000001'] });
+    expect(dutyRoleChanges('OFF_DUTY', cfg)).toEqual({ add: [], remove: ['700000000000000001', '700000000000000002'] });
+    expect(dutyRoleChanges('TRAINING', cfg)).toEqual({ add: [], remove: ['700000000000000001', '700000000000000002'] });
+  });
+
+  it('outbox: syncs roles and posts to the duty channel; without a channel only the roles are synced', async () => {
+    const item = { id: 'd1', type: 'duty.changed', channelKey: 'duty', payload: { discordId: OTHER, name: 'Oscar', callsign: 'A-11', status: 'OFF_DUTY', previous: 'ON_DUTY', previousMinutes: 135, setBy: null } };
+    const roles: string[] = [], posts: string[] = [];
+    const withChannel = fakeApi({ 'GET /bot/config': { duty: '800000000000000001', dutyRole: '700000000000000001' }, 'GET /bot/outbox': [item], 'POST /bot/outbox/d1/ack': {} });
+    await pollOnce(withChannel.api, async (ch, embeds) => { posts.push(`${ch} ${embeds[0]!.title} | ${embeds[0]!.description}`); }, () => undefined, undefined, undefined, async (u, add, remove) => { roles.push(`${u} +${add.join(',')} -${remove.join(',')}`); });
+    expect(roles).toEqual([`${OTHER} + -700000000000000001`]);
+    expect(posts[0]).toContain('800000000000000001 ⚪ A-11 · Oscar ist jetzt außer Dienst');
+    expect(posts[0]).toContain('Vorher: im Dienst – 2 h 15 min');
+    const noChannel = fakeApi({ 'GET /bot/config': { dutyRole: '700000000000000001' }, 'GET /bot/outbox': [{ ...item, payload: { ...item.payload, status: 'ON_DUTY' } }], 'POST /bot/outbox/d1/ack': {} });
+    const sent = await pollOnce(noChannel.api, async () => { throw new Error('must not post'); }, () => undefined, undefined, undefined, async (u, add) => { roles.push(`${u} +${add.join(',')}`); });
+    expect(sent).toBe(1);
+    expect(roles.at(-1)).toBe(`${OTHER} +700000000000000001`);
+    expect(noChannel.calls.find((c) => c.path === '/bot/outbox/d1/ack')!.body).toEqual({ ok: true });
   });
 });

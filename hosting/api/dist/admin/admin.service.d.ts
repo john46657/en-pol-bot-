@@ -158,11 +158,16 @@ export declare const SETTING_SCHEMAS: {
         danger: z.ZodOptional<z.ZodString>;
         sek: z.ZodOptional<z.ZodString>;
         qualifications: z.ZodOptional<z.ZodString>;
+        duty: z.ZodOptional<z.ZodString>;
         teamlist: z.ZodOptional<z.ZodString>;
         tickets: z.ZodOptional<z.ZodString>;
         staffRole: z.ZodOptional<z.ZodString>;
         radioRole: z.ZodOptional<z.ZodString>;
         sekRole: z.ZodOptional<z.ZodString>;
+        dutyRole: z.ZodOptional<z.ZodString>;
+        breakRole: z.ZodOptional<z.ZodString>;
+        trainingRole: z.ZodOptional<z.ZodString>;
+        adminDutyRole: z.ZodOptional<z.ZodString>;
     }, "strip", z.ZodTypeAny, {
         dispatch?: string | undefined;
         tickets?: string | undefined;
@@ -172,11 +177,16 @@ export declare const SETTING_SCHEMAS: {
         qualifications?: string | undefined;
         announcements?: string | undefined;
         danger?: string | undefined;
+        duty?: string | undefined;
         guildId?: string | undefined;
         teamlist?: string | undefined;
         staffRole?: string | undefined;
         radioRole?: string | undefined;
         sekRole?: string | undefined;
+        dutyRole?: string | undefined;
+        breakRole?: string | undefined;
+        trainingRole?: string | undefined;
+        adminDutyRole?: string | undefined;
     }, {
         dispatch?: string | undefined;
         tickets?: string | undefined;
@@ -186,11 +196,16 @@ export declare const SETTING_SCHEMAS: {
         qualifications?: string | undefined;
         announcements?: string | undefined;
         danger?: string | undefined;
+        duty?: string | undefined;
         guildId?: string | undefined;
         teamlist?: string | undefined;
         staffRole?: string | undefined;
         radioRole?: string | undefined;
         sekRole?: string | undefined;
+        dutyRole?: string | undefined;
+        breakRole?: string | undefined;
+        trainingRole?: string | undefined;
+        adminDutyRole?: string | undefined;
     }>;
     readonly 'team.rankOrder': z.ZodArray<z.ZodString, "many">;
     readonly 'application.form': z.ZodArray<z.ZodObject<{

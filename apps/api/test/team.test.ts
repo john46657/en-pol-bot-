@@ -89,4 +89,28 @@ describe('team dashboard', () => {
     expect(team.map((u) => u.userId)).toEqual(expect.arrayContaining([uid('t_off'), uid('t_sup')]));
     expect(team[0]!.minutes).toBeGreaterThanOrEqual(team[team.length - 1]!.minutes);
   });
+
+  it('duty changes are queued for Discord (roles + duty channel) with Discord id, previous status and duration', async () => {
+    await prisma.discordOutbox.deleteMany({ where: { type: 'duty.changed' } });
+    const off = (await login(app, 't_off')).agent;
+    await off.put('/api/v1/team/me/status').send({ status: 'OFF_DUTY' }).catch(() => undefined);
+    // nichts eingestellt → nichts eingereiht
+    await prisma.systemSetting.deleteMany({ where: { key: 'discord.channels' } });
+    await off.put('/api/v1/team/me/status').send({ status: 'ON_DUTY' });
+    expect(await prisma.discordOutbox.count({ where: { type: 'duty.changed' } })).toBe(0);
+    // nur eine Dienst-Rolle eingestellt → trotzdem eingereiht (Rollen-Abgleich)
+    await prisma.systemSetting.create({ data: { key: 'discord.channels', value: { dutyRole: '700000000000000001' } } });
+    await prisma.discordLink.upsert({ where: { userId: uid('t_off') }, create: { userId: uid('t_off'), discordId: '900000000000000001' }, update: {} });
+    await off.put('/api/v1/team/me/status').send({ status: 'BREAK' });
+    const sup = (await login(app, 't_sup')).agent;
+    await sup.put(`/api/v1/team/${uid('t_off')}/status`).send({ status: 'OFF_DUTY' });
+    const rows = await prisma.discordOutbox.findMany({ where: { type: 'duty.changed' }, orderBy: { createdAt: 'asc' } });
+    expect(rows.map((r) => r.payload)).toMatchObject([
+      { discordId: '900000000000000001', status: 'BREAK', previous: 'ON_DUTY', callsign: 'T-1', setBy: null },
+      { discordId: '900000000000000001', status: 'OFF_DUTY', previous: 'BREAK', setBy: 't_sup' },
+    ]);
+    expect(typeof (rows[0]!.payload as { previousMinutes: unknown }).previousMinutes).toBe('number');
+    // gleicher Status (z. B. nur Einheit gewechselt) → keine Meldung
+    await prisma.systemSetting.deleteMany({ where: { key: 'discord.channels' } });
+  });
 });
