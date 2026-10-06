@@ -4,7 +4,7 @@ Der Bot (`apps/bot`, TypeScript, discord.js 14) ist ein **schlanker Client der S
 
 > **Ehrlich vorab:** Der Bot-Code, die API-Seite (Verknüpfung, Bot-Auth, Outbox) und die Befehlslogik sind automatisiert getestet (Befehle/Outbox mit Fake-API, API-Seite mit Integrationstests, Verknüpfung im Browser-E2E). **Gegen den echten Discord-Dienst wurde er nicht getestet** – dafür fehlen mir Bot-Token und Server. Plane beim ersten Start ein paar Minuten für Rechte/Channel-IDs ein und schick mir die Bot-Logs, falls etwas hakt.
 
-## Befehle (30)
+## Befehle
 | Befehl | Zweck | Benötigtes Recht (im System) |
 |---|---|---|
 | `/verknuepfen code` | Discord-Konto mit Benutzer verknüpfen | – |
@@ -18,6 +18,7 @@ Der Bot (`apps/bot`, TypeScript, discord.js 14) ist ein **schlanker Client der S
 | `/einsatzinfo nummer` | Details, Einheiten, Verlauf eines Einsatzes | `incidents.view` |
 | `/einheiten` | Einheiten + Status | `dispatch.view` |
 | `/team` | wer ist im Dienst (Einheit, Einsatz) | `team.view` |
+| `/abmeldung von bis grund` | Abmeldung (Urlaub, Abwesenheit) beantragen, z. B. `von: 24.12.` `bis: 02.01.2027` (auch `heute`, `morgen 18:00`); die Leitung entscheidet per Button | `leave.request` |
 | `/dienststunden [tage] [alle]` | eigene Dienststunden der letzten 7 (1–90) Tage nach Status; mit `alle` die Stunden aller Beamten | `team.view` · `alle`: `team.manage` |
 | `/dienstpanel` | postet das Dienst-Panel: Buttons **Im Dienst / Pause / Training / Verwaltung / Außer Dienst** (setzt den Status als verknüpfter Benutzer) | Discord „Server verwalten“; Klick: `team.view` |
 | `/sek [aktion] [mitglied]` | SEK: Mitgliederliste, letzte Einsatzberichte, eigener Status; Mitglieder hinzufügen/entfernen (+ optionale SEK-Rolle) | `sek.view` · Status: `team.view` · verwalten: `sek.manage` |
@@ -134,7 +135,15 @@ Jeder Statuswechsel – egal ob im **Dashboard**, per **`/dienst`**, per **Diens
 - **Dienst-Channel** (*Duty channel ID*): Meldung wie „🟢 A-11 · Oscar ist jetzt im Dienst“ bzw. „⚪ … außer Dienst – Vorher: im Dienst – 2 h 15 min“ (bei Schichtleitung: „Gesetzt von …“).
 - **Teamliste** (`/teamliste`) wird sofort neu gezeichnet.
 
+**Schichten-Modul** (*Administration → Shifts*, wie bei Melonly/ERM): Ist es an, gelten statt der Dienst-Rollen oben die **Schicht-Arten**: je Art eine *On Shift Role* (im Dienst), eine *On Break Role* (Pause) und ein *Shift Log Channel* (sonst der Dienst-Channel). Bei mehreren Arten fragt der Bot nach „Im Dienst“ (Panel-Button oder `/dienst`) per Auswahlmenü, welche Schicht beginnt; im Dashboard wählt man sie auf der Team-Seite. Ohne Auswahl gilt die **Default**-Schicht. Außer Dienst entfernt alle Schicht-Rollen.
+
 Ist weder Channel noch Rolle eingestellt, wird nichts eingereiht. Fällt der Bot kurz aus, werden die Änderungen nachgeholt.
+
+## Abmeldungen (Leave of Absences)
+*Administration → Leave of Absences*: Modul einschalten, **Leave Approval Channel** (Anträge mit Buttons *Annehmen* / *Ablehnen* / *Ablehnen mit Grund*), **Leave Logs Channel** (angenommen, abgelehnt, beginnt, beendet …), **On Leave Role** und die längste erlaubte Dauer.
+- Beantragen: `/abmeldung` in Discord oder *Organisation → Leave* im Dashboard (Recht `leave.request`, haben alle *Police Member*).
+- Entscheiden: Recht `leave.manage` (*Police Administration*), per Button im Freigabe-Channel oder im Dashboard. Die Person bekommt eine Direktnachricht.
+- Die Rolle kommt automatisch zum **Beginn** und geht zum **Ende** (Prüfung jede Minute); „End now“ / „Withdraw“ beendet vorzeitig. Alle Abmeldungen sehen: `leave.view` (*Supervisor*).
 
 ## Mit Discord anmelden (wie bei Dyno)
 Auf der Login-Seite erscheint **„Mit Discord anmelden“**, sobald `DISCORD_CLIENT_SECRET` gesetzt ist (Developer Portal → OAuth2 → Client Secret; die Client-ID wird aus `DISCORD_TOKEN` gelesen). Im Developer Portal unter **OAuth2 → Redirects** muss `https://<deine-domain>/api/v1/auth/discord/callback` stehen (`WEB_ORIGIN` muss genau diese Domain sein).

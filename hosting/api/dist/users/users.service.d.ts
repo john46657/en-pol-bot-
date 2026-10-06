@@ -17,17 +17,6 @@ export declare class UsersService {
         items: {
             id: string;
             createdAt: Date;
-            roles: {
-                role: {
-                    id: string;
-                    name: string;
-                };
-            }[];
-            overrides: {
-                permissionKey: string;
-                effect: string;
-                reason: string | null;
-            }[];
             username: string;
             email: string | null;
             robloxUserId: string | null;
@@ -38,6 +27,17 @@ export declare class UsersService {
             active: boolean;
             lastLogin: Date | null;
             updatedAt: Date;
+            roles: {
+                role: {
+                    id: string;
+                    name: string;
+                };
+            }[];
+            overrides: {
+                reason: string | null;
+                permissionKey: string;
+                effect: string;
+            }[];
         }[];
         total: number;
         page: number;
@@ -46,17 +46,6 @@ export declare class UsersService {
     get(id: string): Promise<{
         id: string;
         createdAt: Date;
-        roles: {
-            role: {
-                id: string;
-                name: string;
-            };
-        }[];
-        overrides: {
-            permissionKey: string;
-            effect: string;
-            reason: string | null;
-        }[];
         username: string;
         email: string | null;
         robloxUserId: string | null;
@@ -67,6 +56,17 @@ export declare class UsersService {
         active: boolean;
         lastLogin: Date | null;
         updatedAt: Date;
+        roles: {
+            role: {
+                id: string;
+                name: string;
+            };
+        }[];
+        overrides: {
+            reason: string | null;
+            permissionKey: string;
+            effect: string;
+        }[];
     }>;
     create(actor: Actor, d: {
         username: string;
@@ -77,17 +77,6 @@ export declare class UsersService {
     }): Promise<{
         id: string;
         createdAt: Date;
-        roles: {
-            role: {
-                id: string;
-                name: string;
-            };
-        }[];
-        overrides: {
-            permissionKey: string;
-            effect: string;
-            reason: string | null;
-        }[];
         username: string;
         email: string | null;
         robloxUserId: string | null;
@@ -98,6 +87,17 @@ export declare class UsersService {
         active: boolean;
         lastLogin: Date | null;
         updatedAt: Date;
+        roles: {
+            role: {
+                id: string;
+                name: string;
+            };
+        }[];
+        overrides: {
+            reason: string | null;
+            permissionKey: string;
+            effect: string;
+        }[];
     }>;
     /** Manuelle Roblox-ID-Hinterlegung durch Administratoren. Keine Identität wird geraten. */
     setRoblox(actor: Actor, id: string, d: {
@@ -106,17 +106,6 @@ export declare class UsersService {
     }): Promise<{
         id: string;
         createdAt: Date;
-        roles: {
-            role: {
-                id: string;
-                name: string;
-            };
-        }[];
-        overrides: {
-            permissionKey: string;
-            effect: string;
-            reason: string | null;
-        }[];
         username: string;
         email: string | null;
         robloxUserId: string | null;
@@ -127,21 +116,21 @@ export declare class UsersService {
         active: boolean;
         lastLogin: Date | null;
         updatedAt: Date;
+        roles: {
+            role: {
+                id: string;
+                name: string;
+            };
+        }[];
+        overrides: {
+            reason: string | null;
+            permissionKey: string;
+            effect: string;
+        }[];
     }>;
     setActive(actor: Actor, id: string, active: boolean, reason?: string): Promise<{
         id: string;
         createdAt: Date;
-        roles: {
-            role: {
-                id: string;
-                name: string;
-            };
-        }[];
-        overrides: {
-            permissionKey: string;
-            effect: string;
-            reason: string | null;
-        }[];
         username: string;
         email: string | null;
         robloxUserId: string | null;
@@ -152,21 +141,21 @@ export declare class UsersService {
         active: boolean;
         lastLogin: Date | null;
         updatedAt: Date;
+        roles: {
+            role: {
+                id: string;
+                name: string;
+            };
+        }[];
+        overrides: {
+            reason: string | null;
+            permissionKey: string;
+            effect: string;
+        }[];
     }>;
     setRoles(actor: Actor, id: string, roleIds: string[]): Promise<{
         id: string;
         createdAt: Date;
-        roles: {
-            role: {
-                id: string;
-                name: string;
-            };
-        }[];
-        overrides: {
-            permissionKey: string;
-            effect: string;
-            reason: string | null;
-        }[];
         username: string;
         email: string | null;
         robloxUserId: string | null;
@@ -177,6 +166,17 @@ export declare class UsersService {
         active: boolean;
         lastLogin: Date | null;
         updatedAt: Date;
+        roles: {
+            role: {
+                id: string;
+                name: string;
+            };
+        }[];
+        overrides: {
+            reason: string | null;
+            permissionKey: string;
+            effect: string;
+        }[];
     }>;
     setOverride(actor: Actor, id: string, d: {
         permission: string;
@@ -184,12 +184,12 @@ export declare class UsersService {
         reason?: string;
     }): Promise<{
         id: string;
+        reason: string | null;
+        createdAt: Date;
         userId: string;
         permissionKey: string;
         effect: string;
-        reason: string | null;
         createdById: string | null;
-        createdAt: Date;
     }>;
     removeOverride(actor: Actor, id: string, permission: string): Promise<void>;
 }

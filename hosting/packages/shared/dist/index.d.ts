@@ -13,6 +13,7 @@ declare const PERMISSION_CATALOG: {
     readonly wanted: readonly ["view", "create", "edit", "activate", "clear"];
     readonly evidence: readonly ["view", "create", "transfer", "release"];
     readonly personnel: readonly ["view", "create", "edit", "promote", "discipline"];
+    readonly leave: readonly ["view", "request", "manage"];
     readonly applications: readonly ["view", "review", "decide"];
     readonly academy: readonly ["view", "manage"];
     readonly sek: readonly ["view", "report", "manage"];

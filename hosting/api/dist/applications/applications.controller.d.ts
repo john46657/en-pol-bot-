@@ -74,14 +74,14 @@ export declare class ApplicationsController {
             version: number;
             guildId: string | null;
             status: string;
+            decidedById: string | null;
+            decisionReason: string | null;
             source: string;
             answers: import("@prisma/client/runtime/library").JsonValue;
             grantRoleIds: string[];
-            decidedById: string | null;
             discordName: string | null;
             durationSec: number | null;
             joinedAt: Date | null;
-            decisionReason: string | null;
         }[];
         total: number;
         page: number;
@@ -107,14 +107,14 @@ export declare class ApplicationsController {
         version: number;
         guildId: string | null;
         status: string;
+        decidedById: string | null;
+        decisionReason: string | null;
         source: string;
         answers: import("@prisma/client/runtime/library").JsonValue;
         grantRoleIds: string[];
-        decidedById: string | null;
         discordName: string | null;
         durationSec: number | null;
         joinedAt: Date | null;
-        decisionReason: string | null;
     }>;
     /** Prüfschritte benötigen applications.review; Entscheidungen applications.decide. */
     move(a: Actor, id: string, b: z.infer<typeof move>): Promise<{
@@ -128,14 +128,14 @@ export declare class ApplicationsController {
         version: number;
         guildId: string | null;
         status: string;
+        decidedById: string | null;
+        decisionReason: string | null;
         source: string;
         answers: import("@prisma/client/runtime/library").JsonValue;
         grantRoleIds: string[];
-        decidedById: string | null;
         discordName: string | null;
         durationSec: number | null;
         joinedAt: Date | null;
-        decisionReason: string | null;
     }>;
     decide(a: Actor, id: string, b: {
         accept: boolean;
@@ -151,14 +151,14 @@ export declare class ApplicationsController {
         version: number;
         guildId: string | null;
         status: string;
+        decidedById: string | null;
+        decisionReason: string | null;
         source: string;
         answers: import("@prisma/client/runtime/library").JsonValue;
         grantRoleIds: string[];
-        decidedById: string | null;
         discordName: string | null;
         durationSec: number | null;
         joinedAt: Date | null;
-        decisionReason: string | null;
     }>;
     /** Annehmen/Ablehnen per Discord-Button (aus jedem offenen Status); optionaler Grund geht per DM an die Person. */
     discordDecide(a: Actor, id: string, b: {

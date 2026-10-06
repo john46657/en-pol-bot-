@@ -5,16 +5,17 @@ import { DUTY_STATUSES } from '@enrp/shared';
 import { api, ApiError } from '../lib/api';
 import { useAuth } from '../lib/auth';
 import { useRealtime } from '../lib/realtime';
+import type { ShiftsConfig } from './admin/Shifts';
 import { Button, Card, EmptyState, ErrorState, fmt, PageHeader, PriorityBadge, Select, SkeletonRows, StatusBadge } from '../components/ui';
 
 interface Member {
   userId: string; personnelId: string; name: string; rank: string | null; callsign: string | null; team: string | null;
-  dutyStatus: string; onDutySince: string | null; lastStatusChange: string | null;
+  dutyStatus: string; onDutySince: string | null; lastStatusChange: string | null; shiftType?: string | null;
   unit: { id: string; callsign: string; status: string } | null;
   currentIncident: { id: string; number: string; title: string; status: string; priority: string } | null;
 }
 interface Unit { id: string; callsign: string; status: string; members: { userId: string }[] }
-interface Session { status: string }
+interface Session { status: string; shiftType?: string | null }
 
 /** Team Dashboard: Officer, Rank, Callsign, Unit, Duty Status, aktueller Einsatz, letzte Statusänderung. Supervisor-Aktionen sind permission-abhängig. */
 export function Team() {
@@ -31,7 +32,11 @@ export function Team() {
   const units = useQuery({ queryKey: ['team-units'], queryFn: () => api<Unit[]>('/dispatch/units'), enabled: assign || manage });
   const refresh = () => { setErr(undefined); void qc.invalidateQueries({ queryKey: ['team-overview'] }); void qc.invalidateQueries({ queryKey: ['my-duty'] }); void qc.invalidateQueries({ queryKey: ['team-units'] }); };
   const onError = (e: unknown) => setErr(e instanceof ApiError ? `${e.message}${e.requestId ? ` (Request ID ${e.requestId})` : ''}` : 'Failed');
-  const setMine = useMutation({ mutationFn: (status: string) => api('/team/me/status', { method: 'PUT', body: { status } }), onSuccess: refresh, onError });
+  // Schicht-Arten (Admin → Shifts): bei mehreren wird beim Dienstbeginn gewählt
+  const shifts = useQuery({ queryKey: ['shifts-config'], queryFn: () => api<ShiftsConfig>('/shifts/config') });
+  const types = shifts.data?.enabled ? shifts.data.types : [];
+  const [shiftType, setShiftType] = useState('');
+  const setMine = useMutation({ mutationFn: (status: string) => api('/team/me/status', { method: 'PUT', body: { status, ...(status === 'ON_DUTY' && shiftType ? { shiftType } : {}) } }), onSuccess: refresh, onError });
   const setOther = useMutation({ mutationFn: (v: { userId: string; status: string }) => api(`/team/${v.userId}/status`, { method: 'PUT', body: { status: v.status } }), onSuccess: refresh, onError });
   const moveToUnit = useMutation({
     mutationFn: async (v: { userId: string; unitId: string }) => {
@@ -64,6 +69,12 @@ export function Team() {
       </div>
       <Card title="My duty status" className="mb-4">
         <div className="flex flex-wrap items-center gap-2"><StatusBadge status={current} />
+          {current !== 'OFF_DUTY' && types.find((t) => t.id === mine.data?.shiftType) && <span className="text-sm text-muted">Shift: {types.find((t) => t.id === mine.data?.shiftType)!.name}</span>}
+          {types.length > 1 && <div className="w-56"><Select aria-label="Shift type" className="py-1 text-sm" value={shiftType} onChange={(e) => setShiftType(e.target.value)}>
+            <option value="">Default shift ({types.find((t) => t.isDefault)?.name ?? types[0]!.name})</option>
+            {types.map((t) => <option key={t.id} value={t.id}>{t.name}</option>)}
+          </Select></div>}
+          {types.length > 1 && current === 'ON_DUTY' && shiftType && shiftType !== mine.data?.shiftType && <Button size="sm" disabled={setMine.isPending} onClick={() => setMine.mutate('ON_DUTY')}>Switch shift</Button>}
           {DUTY_STATUSES.filter((s) => s !== current).map((s) => <Button key={s} size="sm" variant="secondary" disabled={setMine.isPending} onClick={() => setMine.mutate(s)}>Go {s.replace('_', ' ')}</Button>)}
         </div>
       </Card>
@@ -79,7 +90,7 @@ export function Team() {
                     <td className="p-2 font-medium">{can('personnel.view') ? <Link className="hover:underline" to={`/personnel/${m.personnelId}`}>{m.name}</Link> : m.name}{m.userId === user?.id && <span className="ml-1 text-xs text-muted">(you)</span>}</td>
                     <td>{m.rank ?? '—'}</td><td>{m.callsign ?? '—'}</td>
                     <td>{m.unit ? <span className="flex items-center gap-1">{m.unit.callsign}<StatusBadge status={m.unit.status} /></span> : '—'}</td>
-                    <td><StatusBadge status={m.dutyStatus} /></td>
+                    <td><StatusBadge status={m.dutyStatus} />{m.shiftType && m.dutyStatus !== 'OFF_DUTY' && <span className="ml-1 text-xs text-muted">{m.shiftType}</span>}</td>
                     <td>{m.currentIncident ? <Link className="flex items-center gap-1 hover:underline" to={`/incidents/${m.currentIncident.id}`}>{m.currentIncident.number}<PriorityBadge priority={m.currentIncident.priority} /></Link> : '—'}</td>
                     <td className="text-xs text-muted">{fmt(m.lastStatusChange)}</td>
                     {(manage || assign) && (

@@ -33,7 +33,7 @@ const Box = ({ title, desc, children }: { title: string; desc: string; children:
 const Section = ({ title, children }: { title: string; children: ReactNode }) => (
   <section className="grid gap-2"><h3 className="text-base font-semibold">{title}</h3><div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">{children}</div></section>
 );
-const Toggle = ({ checked, onChange, label }: { checked: boolean; onChange: (v: boolean) => void; label: string }) => (
+export const Toggle = ({ checked, onChange, label }: { checked: boolean; onChange: (v: boolean) => void; label: string }) => (
   <button type="button" role="switch" aria-checked={checked} aria-label={label} onClick={() => onChange(!checked)}
     className={`relative h-6 w-11 rounded-full transition ${checked ? 'bg-primary' : 'bg-line'}`}>
     <span className={`absolute top-0.5 h-5 w-5 rounded-full bg-white transition ${checked ? 'left-[22px]' : 'left-0.5'}`} />

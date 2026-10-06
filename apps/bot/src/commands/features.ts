@@ -5,6 +5,7 @@ import { mapError } from './errors';
 import { SEK_INTERACTION } from './sek';
 import { QUALI_INTERACTION } from './qualifications';
 import { TICKET_INTERACTION } from './tickets';
+import { LEAVE_INTERACTION } from './leave';
 
 const str = (c: Ctx, k: string) => String(c.opts[k] ?? '').trim();
 const choices = (m: Record<string, string>) => Object.keys(m).map((k) => ({ name: k.replace('_', ' '), value: k }));
@@ -131,15 +132,31 @@ export const FEATURE_COMMANDS: CommandDef[] = [
   },
 ];
 
+interface ShiftTypeInfo { id: string; name: string; isDefault: boolean }
+async function shiftTypes(c: Ctx): Promise<ShiftTypeInfo[] | null> {
+  const cfg = await c.api.service<{ enabled: boolean; types: ShiftTypeInfo[] }>('GET', '/bot/shifts').catch(() => null);
+  return cfg?.enabled ? cfg.types : null;
+}
+/** Mehrere Schicht-Arten (Admin → Shifts)? Dann erst auswählen lassen; sonst `null` (Standard-Schicht). */
+export async function shiftPicker(c: Ctx): Promise<Reply | null> {
+  const types = await shiftTypes(c);
+  if (!types || types.length < 2) return null;
+  return { ephemeral: true, content: 'Welche Schicht beginnst du?', select: { id: 'duty:type', placeholder: 'Schicht wählen …', options: types.slice(0, 25).map((t) => ({ label: clip(t.name, 100), value: t.id, ...(t.isDefault ? { description: 'Standard' } : {}) })) } };
+}
+
 export const INTERACTIONS: InteractionDef[] = [
   {
     prefix: 'duty',
     async run(c) {
-      const status = c.args[0] ?? '';
+      // Auswahl der Schicht-Art (Auswahlmenü nach „Im Dienst“)
+      const shiftType = c.args[0] === 'type' ? c.values?.[0] : undefined;
+      const status = c.args[0] === 'type' ? 'ON_DUTY' : c.args[0] ?? '';
       if (!DUTY_DE[status]) return errorReply('Unbekannter Status.');
+      if (status === 'ON_DUTY' && !shiftType) { const pick = await shiftPicker(c); if (pick) return pick; }
       try {
-        await c.api.asUser(c.discordId, 'PUT', '/team/me/status', { status });
-        return okReply(`${DUTY_DE[status]!.emoji} Du bist jetzt **${DUTY_DE[status]!.label}**.`);
+        const r = await c.api.asUser<{ shiftType?: string | null }>(c.discordId, 'PUT', '/team/me/status', { status, ...(shiftType ? { shiftType } : {}) });
+        const name = shiftType ? (await shiftTypes(c))?.find((t) => t.id === (r.shiftType ?? shiftType))?.name : undefined;
+        return okReply(`${DUTY_DE[status]!.emoji} Du bist jetzt **${DUTY_DE[status]!.label}**${name ? ` (Schicht: **${plain(name)}**)` : ''}.`);
       } catch (e) {
         if (e instanceof BotApiError && e.status === 409) return okReply(`Du bist bereits **${DUTY_DE[status]!.label}**.`);
         return mapError(e);
@@ -149,6 +166,7 @@ export const INTERACTIONS: InteractionDef[] = [
   SEK_INTERACTION,
   QUALI_INTERACTION,
   TICKET_INTERACTION,
+  LEAVE_INTERACTION,
   {
     prefix: 'danger',
     async run(c) {

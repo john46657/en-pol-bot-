@@ -16,9 +16,9 @@ export declare class PersonnelService {
             };
         } & {
             id: string;
+            qualifications: string[];
             userId: string;
             team: string | null;
-            qualifications: string[];
             callsign: string | null;
             rank: string | null;
             employmentStatus: string;
@@ -60,19 +60,19 @@ export declare class PersonnelService {
             courseId: string;
         })[];
         records: {
-            details: string | null;
             id: string;
-            createdById: string;
             createdAt: Date;
-            summary: string;
+            details: string | null;
             type: string;
+            createdById: string;
+            summary: string;
             personnelId: string;
         }[];
     } & {
         id: string;
+        qualifications: string[];
         userId: string;
         team: string | null;
-        qualifications: string[];
         callsign: string | null;
         rank: string | null;
         employmentStatus: string;
@@ -86,9 +86,9 @@ export declare class PersonnelService {
         qualifications?: string[];
     }): Promise<{
         id: string;
+        qualifications: string[];
         userId: string;
         team: string | null;
-        qualifications: string[];
         callsign: string | null;
         rank: string | null;
         employmentStatus: string;
@@ -101,9 +101,9 @@ export declare class PersonnelService {
         qualifications?: string[];
     }): Promise<{
         id: string;
+        qualifications: string[];
         userId: string;
         team: string | null;
-        qualifications: string[];
         callsign: string | null;
         rank: string | null;
         employmentStatus: string;
@@ -111,9 +111,9 @@ export declare class PersonnelService {
     }>;
     promote(actor: Actor, id: string, rank: string, reason: string): Promise<{
         id: string;
+        qualifications: string[];
         userId: string;
         team: string | null;
-        qualifications: string[];
         callsign: string | null;
         rank: string | null;
         employmentStatus: string;
@@ -124,12 +124,12 @@ export declare class PersonnelService {
         summary: string;
         details?: string;
     }): Promise<{
-        details: string | null;
         id: string;
-        createdById: string;
         createdAt: Date;
-        summary: string;
+        details: string | null;
         type: string;
+        createdById: string;
+        summary: string;
         personnelId: string;
     }>;
 }

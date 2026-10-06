@@ -8,7 +8,7 @@ import type { Actor } from '../audit/audit.service';
 import { zodBody } from '../common/zod.pipe';
 
 const hoursQuery = z.object({ days: z.coerce.number().int().min(1).max(90).default(7) });
-const body = z.object({ status: z.enum(DUTY_STATUSES), unitId: z.string().uuid().optional(), callsign: z.string().max(16).optional() });
+const body = z.object({ status: z.enum(DUTY_STATUSES), unitId: z.string().uuid().optional(), callsign: z.string().max(16).optional(), shiftType: z.string().regex(/^[a-z0-9-]{1,40}$/).optional() });
 
 @ApiTags('team')
 @Controller('team')

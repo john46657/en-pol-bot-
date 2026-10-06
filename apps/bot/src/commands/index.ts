@@ -3,6 +3,8 @@ import { mapError } from './errors';
 import { FEATURE_COMMANDS } from './features';
 import { SEK_COMMANDS } from './sek';
 import { QUALI_COMMANDS } from './qualifications';
+import { LEAVE_COMMANDS } from './leave';
+import { shiftPicker } from './features';
 import { TICKET_COMMAND } from './tickets';
 import { clip, COLORS, EmbedData, errorReply, incidentLine, label, listEmbed, okReply, personEmbed, plain, Reply, Row, vehicleEmbed } from '../format';
 import type { CommandDef, Ctx } from './types';
@@ -77,7 +79,7 @@ export const COMMANDS: CommandDef[] = [
       return { ephemeral: true, embeds: [{ title: 'EN Polizei — Befehle', color: COLORS.info, fields: [
         { name: 'Konto', value: '`/verknuepfen` `/entverknuepfen` `/profil` `/benachrichtigungen`' },
         { name: 'Abfragen', value: '`/person` `/kennzeichen` `/fahndungen` `/einsaetze` `/einsatzinfo` `/einheiten` `/team`' },
-        { name: 'Dienst & Leitstelle', value: '`/dienst` `/dienststunden` `/einheitstatus` `/einsatz` `/einsatzstatus` `/einsatzzuweisen` `/funk`' },
+        { name: 'Dienst & Leitstelle', value: '`/dienst` `/dienststunden` `/abmeldung` `/einheitstatus` `/einsatz` `/einsatzstatus` `/einsatzzuweisen` `/funk`' },
         { name: 'Erfassen', value: '`/ticket` `/bericht` `/beschwerde` `/ermittlung` `/fahndung` `/beweis`' },
         { name: 'Leitung & Team', value: '`/gefahrenstatus` `/funkfreigabe` `/teamliste` `/dienstpanel` `/bewerbungspanel` `/qualipanel` `/roblox`' },
         { name: 'SEK', value: '`/sek` `/sek-bericht`' },
@@ -128,6 +130,7 @@ export const COMMANDS: CommandDef[] = [
     async run(c) {
       const status = DUTY[str(c, 'status') as keyof typeof DUTY];
       if (!status) return errorReply('Unbekannter Status.');
+      if (status === 'ON_DUTY') { const pick = await shiftPicker(c); if (pick) return pick; }
       try {
         await c.api.asUser(c.discordId, 'PUT', '/team/me/status', { status });
         return okReply(`Dienststatus: **${label(status)}**`);
@@ -423,6 +426,7 @@ export const COMMANDS: CommandDef[] = [
   ...FEATURE_COMMANDS,
   ...SEK_COMMANDS,
   ...QUALI_COMMANDS,
+  ...LEAVE_COMMANDS,
   TICKET_COMMAND,
 ];
 

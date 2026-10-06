@@ -30,15 +30,14 @@ export declare class QualificationsService {
         title: string;
         units: {
             name: string;
-            description: string;
             settings: {
                 roles: {
+                    denied: string[];
                     required: {
                         mode: "ALL" | "ANY";
                         ids: string[];
                     };
                     accepted: string[];
-                    denied: string[];
                     restricted: {
                         mode: "ALL" | "ANY";
                         ids: string[];
@@ -50,8 +49,8 @@ export declare class QualificationsService {
                     managers: string[];
                 };
                 messages: {
-                    accepted: string;
                     denied: string;
+                    accepted: string;
                     confirmation: string;
                     completion: string;
                 };
@@ -60,9 +59,10 @@ export declare class QualificationsService {
                 timeLimitMinutes: number;
             };
             key: string;
+            description: string;
+            enabled: boolean;
             questions: FormField[];
             pingRoleIds: string[];
-            enabled: boolean;
             roleId?: string | undefined;
             channelId?: string | undefined;
             acceptedChannelId?: string | undefined;
@@ -71,15 +71,14 @@ export declare class QualificationsService {
         intro: string;
         police: {
             name: string;
-            description: string;
             settings: {
                 roles: {
+                    denied: string[];
                     required: {
                         mode: "ALL" | "ANY";
                         ids: string[];
                     };
                     accepted: string[];
-                    denied: string[];
                     restricted: {
                         mode: "ALL" | "ANY";
                         ids: string[];
@@ -91,8 +90,8 @@ export declare class QualificationsService {
                     managers: string[];
                 };
                 messages: {
-                    accepted: string;
                     denied: string;
+                    accepted: string;
                     confirmation: string;
                     completion: string;
                 };
@@ -100,9 +99,10 @@ export declare class QualificationsService {
                 cooldownMinutes: number;
                 timeLimitMinutes: number;
             };
+            description: string;
+            enabled: boolean;
             title: string;
             pingRoleIds: string[];
-            enabled: boolean;
             channelId?: string | undefined;
             acceptedChannelId?: string | undefined;
             deniedChannelId?: string | undefined;
@@ -116,15 +116,14 @@ export declare class QualificationsService {
         title: string;
         units: {
             name: string;
-            description: string;
             settings: {
                 roles: {
+                    denied: string[];
                     required: {
                         mode: "ALL" | "ANY";
                         ids: string[];
                     };
                     accepted: string[];
-                    denied: string[];
                     restricted: {
                         mode: "ALL" | "ANY";
                         ids: string[];
@@ -136,8 +135,8 @@ export declare class QualificationsService {
                     managers: string[];
                 };
                 messages: {
-                    accepted: string;
                     denied: string;
+                    accepted: string;
                     confirmation: string;
                     completion: string;
                 };
@@ -146,9 +145,10 @@ export declare class QualificationsService {
                 timeLimitMinutes: number;
             };
             key: string;
+            description: string;
+            enabled: boolean;
             questions: FormField[];
             pingRoleIds: string[];
-            enabled: boolean;
             roleId?: string | undefined;
             channelId?: string | undefined;
             acceptedChannelId?: string | undefined;
@@ -157,15 +157,14 @@ export declare class QualificationsService {
         intro: string;
         police: {
             name: string;
-            description: string;
             settings: {
                 roles: {
+                    denied: string[];
                     required: {
                         mode: "ALL" | "ANY";
                         ids: string[];
                     };
                     accepted: string[];
-                    denied: string[];
                     restricted: {
                         mode: "ALL" | "ANY";
                         ids: string[];
@@ -177,8 +176,8 @@ export declare class QualificationsService {
                     managers: string[];
                 };
                 messages: {
-                    accepted: string;
                     denied: string;
+                    accepted: string;
                     confirmation: string;
                     completion: string;
                 };
@@ -186,9 +185,10 @@ export declare class QualificationsService {
                 cooldownMinutes: number;
                 timeLimitMinutes: number;
             };
+            description: string;
+            enabled: boolean;
             title: string;
             pingRoleIds: string[];
-            enabled: boolean;
             channelId?: string | undefined;
             acceptedChannelId?: string | undefined;
             deniedChannelId?: string | undefined;
@@ -201,15 +201,14 @@ export declare class QualificationsService {
         title: string;
         units: {
             name: string;
-            description: string;
             settings: {
                 roles: {
+                    denied: string[];
                     required: {
                         mode: "ALL" | "ANY";
                         ids: string[];
                     };
                     accepted: string[];
-                    denied: string[];
                     restricted: {
                         mode: "ALL" | "ANY";
                         ids: string[];
@@ -221,8 +220,8 @@ export declare class QualificationsService {
                     managers: string[];
                 };
                 messages: {
-                    accepted: string;
                     denied: string;
+                    accepted: string;
                     confirmation: string;
                     completion: string;
                 };
@@ -231,9 +230,10 @@ export declare class QualificationsService {
                 timeLimitMinutes: number;
             };
             key: string;
+            description: string;
+            enabled: boolean;
             questions: FormField[];
             pingRoleIds: string[];
-            enabled: boolean;
             roleId?: string | undefined;
             channelId?: string | undefined;
             acceptedChannelId?: string | undefined;
@@ -242,15 +242,14 @@ export declare class QualificationsService {
         intro: string;
         police: {
             name: string;
-            description: string;
             settings: {
                 roles: {
+                    denied: string[];
                     required: {
                         mode: "ALL" | "ANY";
                         ids: string[];
                     };
                     accepted: string[];
-                    denied: string[];
                     restricted: {
                         mode: "ALL" | "ANY";
                         ids: string[];
@@ -262,8 +261,8 @@ export declare class QualificationsService {
                     managers: string[];
                 };
                 messages: {
-                    accepted: string;
                     denied: string;
+                    accepted: string;
                     confirmation: string;
                     completion: string;
                 };
@@ -271,9 +270,10 @@ export declare class QualificationsService {
                 cooldownMinutes: number;
                 timeLimitMinutes: number;
             };
+            description: string;
+            enabled: boolean;
             title: string;
             pingRoleIds: string[];
-            enabled: boolean;
             channelId?: string | undefined;
             acceptedChannelId?: string | undefined;
             deniedChannelId?: string | undefined;
@@ -308,39 +308,39 @@ export declare class QualificationsService {
         number: string;
         unit: string;
         id: string;
-        userId: string | null;
         createdAt: Date;
+        userId: string | null;
         discordId: string;
         guildId: string | null;
         status: string;
+        decidedById: string | null;
+        decidedAt: Date | null;
+        decisionReason: string | null;
         answers: Prisma.JsonValue;
         grantRoleIds: string[];
-        decidedById: string | null;
         discordName: string;
         durationSec: number | null;
         joinedAt: Date | null;
-        decisionReason: string | null;
         unitName: string;
-        decidedAt: Date | null;
     }[]>;
     get(id: string): Promise<{
         number: string;
         unit: string;
         id: string;
-        userId: string | null;
         createdAt: Date;
+        userId: string | null;
         discordId: string;
         guildId: string | null;
         status: string;
+        decidedById: string | null;
+        decidedAt: Date | null;
+        decisionReason: string | null;
         answers: Prisma.JsonValue;
         grantRoleIds: string[];
-        decidedById: string | null;
         discordName: string;
         durationSec: number | null;
         joinedAt: Date | null;
-        decisionReason: string | null;
         unitName: string;
-        decidedAt: Date | null;
     }>;
     /** Bisherige Qualifikations-Bewerbungen einer Discord-ID (Button „Verlauf“). */
     history(discordId: string): Prisma.PrismaPromise<{

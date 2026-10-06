@@ -170,14 +170,14 @@ export declare const SETTING_SCHEMAS: {
         adminDutyRole: z.ZodOptional<z.ZodString>;
     }, "strip", z.ZodTypeAny, {
         dispatch?: string | undefined;
-        tickets?: string | undefined;
         wanted?: string | undefined;
+        announcements?: string | undefined;
         applications?: string | undefined;
+        danger?: string | undefined;
         sek?: string | undefined;
         qualifications?: string | undefined;
-        announcements?: string | undefined;
-        danger?: string | undefined;
         duty?: string | undefined;
+        tickets?: string | undefined;
         guildId?: string | undefined;
         teamlist?: string | undefined;
         staffRole?: string | undefined;
@@ -189,14 +189,14 @@ export declare const SETTING_SCHEMAS: {
         adminDutyRole?: string | undefined;
     }, {
         dispatch?: string | undefined;
-        tickets?: string | undefined;
         wanted?: string | undefined;
+        announcements?: string | undefined;
         applications?: string | undefined;
+        danger?: string | undefined;
         sek?: string | undefined;
         qualifications?: string | undefined;
-        announcements?: string | undefined;
-        danger?: string | undefined;
         duty?: string | undefined;
+        tickets?: string | undefined;
         guildId?: string | undefined;
         teamlist?: string | undefined;
         staffRole?: string | undefined;
@@ -350,9 +350,9 @@ export declare class AdminService {
     }>;
     securityEvents(take?: number, type?: string): Prisma.PrismaPromise<{
         id: string;
-        userId: string | null;
-        createdAt: Date;
         requestId: string | null;
+        createdAt: Date;
+        userId: string | null;
         type: string;
         ip: string | null;
         detail: string | null;

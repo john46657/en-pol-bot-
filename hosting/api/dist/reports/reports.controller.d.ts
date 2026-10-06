@@ -52,10 +52,10 @@ declare const listQ: z.ZodObject<{
 }, "strip", z.ZodTypeAny, {
     page: number;
     pageSize: number;
-    status?: "ARCHIVED" | "APPROVED" | "DRAFT" | "SUBMITTED" | "UNDER_REVIEW" | "REJECTED" | undefined;
+    status?: "APPROVED" | "ARCHIVED" | "DRAFT" | "SUBMITTED" | "UNDER_REVIEW" | "REJECTED" | undefined;
     q?: string | undefined;
 }, {
-    status?: "ARCHIVED" | "APPROVED" | "DRAFT" | "SUBMITTED" | "UNDER_REVIEW" | "REJECTED" | undefined;
+    status?: "APPROVED" | "ARCHIVED" | "DRAFT" | "SUBMITTED" | "UNDER_REVIEW" | "REJECTED" | undefined;
     page?: number | undefined;
     pageSize?: number | undefined;
     q?: string | undefined;
@@ -108,10 +108,10 @@ export declare class ReportsController {
         };
         timeline: {
             id: string;
-            createdAt: Date;
             action: string;
             entityType: string;
             entityId: string;
+            createdAt: Date;
             summary: string;
             actorId: string | null;
         }[];

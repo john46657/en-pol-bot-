@@ -3,24 +3,28 @@ import { RealtimeService } from '../realtime/realtime.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { AuditService, Actor } from '../audit/audit.service';
 import { DiscordService } from '../discord/discord.service';
+import { ShiftsService } from './shifts';
 /** Dienststatus wird ausschließlich explizit gesetzt – Online-Status ist niemals Dienststatus. */
 export declare class DutyService {
     private readonly prisma;
     private readonly audit;
     private readonly rt;
     private readonly discord;
-    constructor(prisma: PrismaService, audit: AuditService, rt: RealtimeService, discord: DiscordService);
+    private readonly shifts;
+    constructor(prisma: PrismaService, audit: AuditService, rt: RealtimeService, discord: DiscordService, shifts: ShiftsService);
     setStatus(actor: Actor, status: DutyStatus, d: {
         unitId?: string;
         callsign?: string;
+        shiftType?: string;
     }, targetUserId?: string): Promise<{
         id: string;
         userId: string;
         status: string;
+        endedAt: Date | null;
         callsign: string | null;
         unitId: string | null;
+        shiftType: string | null;
         startedAt: Date;
-        endedAt: Date | null;
     } | {
         status: string;
     }>;
@@ -42,19 +46,21 @@ export declare class DutyService {
         id: string;
         userId: string;
         status: string;
+        endedAt: Date | null;
         callsign: string | null;
         unitId: string | null;
+        shiftType: string | null;
         startedAt: Date;
-        endedAt: Date | null;
     })[]>;
     mine(userId: string): import("@prisma/client").Prisma.Prisma__DutySessionClient<{
         id: string;
         userId: string;
         status: string;
+        endedAt: Date | null;
         callsign: string | null;
         unitId: string | null;
+        shiftType: string | null;
         startedAt: Date;
-        endedAt: Date | null;
     } | null, null, import("@prisma/client/runtime/library").DefaultArgs, import("@prisma/client").Prisma.PrismaClientOptions>;
     /**
      * Dienststunden der letzten `days` Tage, pro Benutzer und Status (in Minuten).
@@ -80,6 +86,7 @@ export declare class DutyService {
         team: string | null;
         dutyStatus: string;
         onDutySince: Date | null;
+        shiftType: string | null;
         lastStatusChange: Date | null;
         unit: {
             id: string;

@@ -15,8 +15,8 @@ declare const evQ: z.ZodObject<{
     take: number;
     type?: string | undefined;
 }, {
-    take?: number | undefined;
     type?: string | undefined;
+    take?: number | undefined;
 }>;
 export declare class AdminController {
     private readonly a;
@@ -35,9 +35,9 @@ export declare class AdminController {
     }>;
     events(q: z.infer<typeof evQ>): import("@prisma/client").Prisma.PrismaPromise<{
         id: string;
-        userId: string | null;
-        createdAt: Date;
         requestId: string | null;
+        createdAt: Date;
+        userId: string | null;
         type: string;
         ip: string | null;
         detail: string | null;

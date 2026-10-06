@@ -45,8 +45,8 @@ export declare class RolesController {
         id: string;
         createdAt: Date;
         name: string;
-        description: string | null;
         updatedAt: Date;
+        description: string | null;
         system: boolean;
     })[]>;
     catalog(): readonly import("@enrp/shared").PermissionKey[];
@@ -54,8 +54,8 @@ export declare class RolesController {
         id: string;
         createdAt: Date;
         name: string;
-        description: string | null;
         updatedAt: Date;
+        description: string | null;
         system: boolean;
     }>;
     setPermissions(a: Actor, id: string, b: z.infer<typeof grants>): Promise<{
@@ -68,8 +68,8 @@ export declare class RolesController {
         id: string;
         createdAt: Date;
         name: string;
-        description: string | null;
         updatedAt: Date;
+        description: string | null;
         system: boolean;
     }>;
 }

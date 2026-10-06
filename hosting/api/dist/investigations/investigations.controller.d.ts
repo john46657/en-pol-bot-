@@ -76,9 +76,9 @@ export declare class InvestigationsController {
         items: {
             id: string;
             createdAt: Date;
-            description: string | null;
             updatedAt: Date;
             version: number;
+            description: string | null;
             status: string;
             title: string;
             caseNumber: string;
@@ -92,9 +92,9 @@ export declare class InvestigationsController {
         investigation: {
             id: string;
             createdAt: Date;
-            description: string | null;
             updatedAt: Date;
             version: number;
+            description: string | null;
             status: string;
             title: string;
             caseNumber: string;
@@ -103,9 +103,9 @@ export declare class InvestigationsController {
         links: {
             role: string;
             id: string;
-            createdAt: Date;
             entityType: string;
             entityId: string;
+            createdAt: Date;
             personId: string | null;
             vehicleId: string | null;
         }[];
@@ -117,10 +117,10 @@ export declare class InvestigationsController {
         }[];
         timeline: {
             id: string;
-            createdAt: Date;
             action: string;
             entityType: string;
             entityId: string;
+            createdAt: Date;
             summary: string;
             actorId: string | null;
         }[];
@@ -128,9 +128,9 @@ export declare class InvestigationsController {
     create(a: Actor, b: z.infer<typeof create>): Promise<{
         id: string;
         createdAt: Date;
-        description: string | null;
         updatedAt: Date;
         version: number;
+        description: string | null;
         status: string;
         title: string;
         caseNumber: string;
@@ -140,9 +140,9 @@ export declare class InvestigationsController {
     setStatus(a: Actor, id: string, b: z.infer<typeof status>): Promise<{
         id: string;
         createdAt: Date;
-        description: string | null;
         updatedAt: Date;
         version: number;
+        description: string | null;
         status: string;
         title: string;
         caseNumber: string;
@@ -153,9 +153,9 @@ export declare class InvestigationsController {
     }): Promise<{
         id: string;
         createdAt: Date;
-        description: string | null;
         updatedAt: Date;
         version: number;
+        description: string | null;
         status: string;
         title: string;
         caseNumber: string;

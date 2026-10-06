@@ -76127,7 +76127,24 @@ ${clip(plain(p.reason), 3e3)}`, color: PRIORITY_COLOR[String(p.priority)] ?? COL
       return {
         title: clip(`${DUTY_DE[st]?.emoji ?? "\u2022"} ${who} ist jetzt ${DUTY_DE[st]?.label ?? label(st)}`, 256),
         color: DUTY_DE[st]?.color ?? COLORS.neutral,
-        description: clip([p.discordId ? `<@${String(p.discordId)}>` : null, `Vorher: ${DUTY_DE[prev]?.label ?? label(prev)}${mins}`, p.setBy ? `Gesetzt von: ${plain(p.setBy)}` : null].filter(Boolean).join("\n"), 1e3)
+        description: clip([p.discordId ? `<@${String(p.discordId)}>` : null, p.shiftType ? `Schicht: **${plain(p.shiftType)}**` : null, `Vorher: ${DUTY_DE[prev]?.label ?? label(prev)}${mins}`, p.setBy ? `Gesetzt von: ${plain(p.setBy)}` : null].filter(Boolean).join("\n"), 1e3)
+      };
+    }
+    case "leave.requested":
+      return {
+        title: clip(`\u{1F4C5} Abmeldung ${String(p.number)} \u2013 ${plain(p.name)}`, 256),
+        color: COLORS.warning,
+        description: clip(`${p.discordId ? `<@${String(p.discordId)}> ` : ""}m\xF6chte sich abmelden.
+
+**Grund:** ${plain(p.reason)}`, 4e3),
+        fields: [{ name: "Von", value: berlinDate(p.startsAt), inline: true }, { name: "Bis", value: berlinDate(p.endsAt), inline: true }, { name: "Dauer", value: leaveDays(p), inline: true }]
+      };
+    case "leave.log": {
+      const ev = LEAVE_EVENTS[String(p.event)] ?? { text: String(p.event), color: COLORS.neutral };
+      return {
+        title: clip(`${ev.text}: ${plain(p.name)} (${String(p.number)})`, 256),
+        color: ev.color,
+        description: clip([p.discordId ? `<@${String(p.discordId)}>` : null, `**Zeitraum:** ${berlinDate(p.startsAt)} \u2013 ${berlinDate(p.endsAt)} (${leaveDays(p)})`, `**Grund:** ${plain(p.reason)}`, p.decidedByName ? `**Entschieden von:** ${plain(p.decidedByName)}` : null, p.decisionReason ? `**Begr\xFCndung:** ${plain(p.decisionReason)}` : null].filter(Boolean).join("\n"), 4e3)
       };
     }
     case "sek.report":
@@ -76197,6 +76214,30 @@ ${piece}` : clip(piece, 4e3);
   embeds.push({ title: embeds.length ? `${title} (Fortsetzung)` : title, color: COLORS.warning, description: cur });
   return embeds.slice(0, 10);
 }
+var berlinDate = (v) => {
+  const d = new Date(String(v));
+  return Number.isNaN(d.getTime()) ? "\u2014" : d.toLocaleString("de-DE", { timeZone: "Europe/Berlin", day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" });
+};
+var leaveDays = (p) => {
+  const d = Math.max(1, Math.round((new Date(String(p.endsAt)).getTime() - new Date(String(p.startsAt)).getTime()) / 864e5));
+  return `${d} ${d === 1 ? "Tag" : "Tage"}`;
+};
+var LEAVE_EVENTS = {
+  approved: { text: "\u2705 Abmeldung angenommen", color: COLORS.success },
+  denied: { text: "\u274C Abmeldung abgelehnt", color: COLORS.danger },
+  started: { text: "\u{1F3DD}\uFE0F Abmeldung beginnt", color: COLORS.info },
+  ended: { text: "\u{1F44B} Abmeldung beendet", color: COLORS.neutral },
+  ended_early: { text: "\u21A9\uFE0F Abmeldung vorzeitig beendet", color: COLORS.neutral },
+  cancelled: { text: "\u21A9\uFE0F Abmeldung zur\xFCckgezogen", color: COLORS.neutral }
+};
+function leaveDecisionText(p) {
+  const when = `${berlinDate(p.startsAt)} \u2013 ${berlinDate(p.endsAt)}`;
+  return p.status === "APPROVED" ? `\u2705 Deine Abmeldung **${String(p.number)}** (${when}) wurde **angenommen**.${p.decisionReason ? `
+
+**Hinweis:** ${clip(plain(p.decisionReason), 1e3)}` : ""}` : `\u274C Deine Abmeldung **${String(p.number)}** (${when}) wurde **abgelehnt**.${p.decisionReason ? `
+
+**Grund:** ${clip(plain(p.decisionReason), 1e3)}` : ""}`;
+}
 function renderOutboxEmbeds(type, p) {
   if (type === "qualification.submitted") return applicationEmbeds(p, "q");
   if (type === "application.submitted") return applicationEmbeds(p, "p");
@@ -76212,6 +76253,12 @@ function renderOutboxEmbeds(type, p) {
   return e ? [e] : null;
 }
 function outboxButtons(type, p) {
+  if (type === "leave.requested" && typeof p.id === "string") return [
+    { id: `leave:decide:${p.id}:APPROVED`, label: "Annehmen", style: "success" },
+    { id: `leave:decide:${p.id}:DENIED`, label: "Ablehnen", style: "danger" },
+    { id: `leave:reason:${p.id}:DENIED`, label: "Ablehnen mit Grund", style: "danger" },
+    ...typeof p.dashboardUrl === "string" && /^https?:\/\//.test(p.dashboardUrl) ? [{ id: "link", label: "Im Dashboard ansehen", style: "secondary", url: p.dashboardUrl }] : []
+  ];
   const kind2 = type === "qualification.submitted" ? "q" : type === "application.submitted" ? "p" : null;
   if (!kind2 || typeof p.id !== "string") return void 0;
   const id = p.id, discordId = typeof p.discordId === "string" && /^\d{15,25}$/.test(p.discordId) ? p.discordId : null;
@@ -76409,6 +76456,7 @@ var PERMISSION_CATALOG = {
   wanted: ["view", "create", "edit", "activate", "clear"],
   evidence: ["view", "create", "transfer", "release"],
   personnel: ["view", "create", "edit", "promote", "discipline"],
+  leave: ["view", "request", "manage"],
   applications: ["view", "review", "decide"],
   academy: ["view", "manage"],
   sek: ["view", "report", "manage"],
@@ -77067,6 +77115,105 @@ var TICKET_COMMAND = {
   }
 };
 
+// apps/bot/src/commands/leave.ts
+function berlinTime(y, m, d, h, min) {
+  const guess = Date.UTC(y, m - 1, d, h, min);
+  const parts = Object.fromEntries(new Intl.DateTimeFormat("en-US", { timeZone: "Europe/Berlin", hourCycle: "h23", year: "numeric", month: "numeric", day: "numeric", hour: "numeric", minute: "numeric" }).formatToParts(new Date(guess)).map((p) => [p.type, p.value]));
+  const shown = Date.UTC(Number(parts.year), Number(parts.month) - 1, Number(parts.day), Number(parts.hour), Number(parts.minute));
+  return new Date(guess - (shown - guess));
+}
+function parseLeaveDate(input, end, now = /* @__PURE__ */ new Date()) {
+  const t = input.trim().toLowerCase();
+  const today = new Intl.DateTimeFormat("en-CA", { timeZone: "Europe/Berlin" }).format(now).split("-").map(Number);
+  let y, m, d, rest = "";
+  const rel = t.match(/^(heute|morgen|übermorgen)(.*)$/);
+  if (rel) {
+    const add = rel[1] === "heute" ? 0 : rel[1] === "morgen" ? 1 : 2;
+    const base = new Date(Date.UTC(today[0], today[1] - 1, today[2] + add));
+    [y, m, d] = [base.getUTCFullYear(), base.getUTCMonth() + 1, base.getUTCDate()];
+    rest = rel[2] ?? "";
+  } else {
+    const x = t.match(/^(\d{1,2})\.(\d{1,2})\.(\d{2,4})?(.*)$/);
+    if (!x) return null;
+    d = Number(x[1]);
+    m = Number(x[2]);
+    y = x[3] ? x[3].length === 2 ? 2e3 + Number(x[3]) : Number(x[3]) : today[0];
+    rest = x[4] ?? "";
+    if (!x[3] && Date.UTC(y, m - 1, d) < Date.UTC(today[0], today[1] - 1, today[2])) y++;
+  }
+  const time = rest.trim().replace(/^(um|,)\s*/, "").replace(/\s*uhr$/, "");
+  let h = end ? 23 : 0, min = end ? 59 : 0;
+  if (time) {
+    const tm = time.match(/^(\d{1,2})(?::(\d{2}))?$/);
+    if (!tm) return null;
+    h = Number(tm[1]);
+    min = Number(tm[2] ?? 0);
+    if (h > 23 || min > 59) return null;
+  }
+  if (m < 1 || m > 12 || d < 1 || d > 31) return null;
+  const check = new Date(Date.UTC(y, m - 1, d));
+  if (check.getUTCMonth() !== m - 1) return null;
+  return berlinTime(y, m, d, h, min);
+}
+var fmt = (iso) => new Date(iso).toLocaleString("de-DE", { timeZone: "Europe/Berlin", day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" });
+var LEAVE_COMMANDS = [
+  {
+    name: "abmeldung",
+    description: "Abmeldung (Urlaub, Abwesenheit) beantragen \u2013 die Leitung entscheidet",
+    options: [
+      { name: "von", description: "Beginn, z. B. heute, 24.12. oder 24.12.2026 18:00", type: "string", required: true, maxLength: 30 },
+      { name: "bis", description: "Ende, z. B. 31.12. oder 02.01.2027", type: "string", required: true, maxLength: 30 },
+      { name: "grund", description: "Grund der Abmeldung", type: "string", required: true, maxLength: 1e3 }
+    ],
+    async run(c) {
+      const from = parseLeaveDate(String(c.opts.von ?? ""), false), to = parseLeaveDate(String(c.opts.bis ?? ""), true);
+      if (!from) return errorReply("\u201Evon\u201C verstehe ich nicht. Beispiele: `heute`, `24.12.`, `24.12.2026 18:00`.");
+      if (!to) return errorReply("\u201Ebis\u201C verstehe ich nicht. Beispiele: `31.12.`, `02.01.2027`, `morgen 20:00`.");
+      try {
+        const r = await c.api.asUser(c.discordId, "POST", "/leave", { startsAt: from.toISOString(), endsAt: to.toISOString(), reason: String(c.opts.grund ?? ""), ...c.guildId ? { guildId: c.guildId } : {} });
+        return { ephemeral: true, embeds: [{
+          title: `\u{1F4C5} Abmeldung ${r.number} beantragt`,
+          color: COLORS.info,
+          description: `**${fmt(r.startsAt)}** bis **${fmt(r.endsAt)}** (${r.days} ${r.days === 1 ? "Tag" : "Tage"})
+
+Die Leitung entscheidet \u2013 du bekommst eine Direktnachricht.`
+        }] };
+      } catch (e) {
+        return mapError(e);
+      }
+    }
+  }
+];
+async function decide2(c, id, status, reason) {
+  try {
+    const r = await c.api.asUser(c.discordId, "POST", `/leave/${id}/decision`, { status, ...reason ? { reason } : {} });
+    const ok = status === "APPROVED";
+    return {
+      ...okReply(`Abmeldung **${r.number}** von ${plain(r.name)} ${ok ? "**angenommen**" : "**abgelehnt**"}. Die Person bekommt eine Direktnachricht.`),
+      decided: { color: ok ? COLORS.success : COLORS.danger, text: clip(`${ok ? "\u2705 Angenommen" : "\u274C Abgelehnt"} von <@${c.discordId}>${r.decidedByName ? ` (${plain(r.decidedByName)})` : ""}${reason ? `
+**Grund:** ${plain(reason)}` : ""}`, 1024) }
+    };
+  } catch (e) {
+    return mapError(e);
+  }
+}
+var LEAVE_INTERACTION = {
+  prefix: "leave",
+  opensModal: (args) => args[0] === "reason",
+  async run(c) {
+    const [action, id, st] = c.args;
+    const status = st === "APPROVED" || st === "DENIED" ? st : null;
+    if (!id || !/^[0-9a-f-]{36}$/.test(id) || !status) return errorReply("Unbekannte Aktion.");
+    if (action === "decide") return decide2(c, id, status);
+    if (action === "reason") return { modal: { id: `leave:reasonsubmit:${id}:${status}`, title: status === "APPROVED" ? "Annehmen mit Hinweis" : "Ablehnen mit Grund", fields: [{ id: "reason", label: "Grund (geht per DM an die Person)", paragraph: true, required: true, maxLength: 1e3 }] } };
+    if (action === "reasonsubmit") {
+      const reason = (c.fields?.reason ?? "").trim();
+      return reason ? decide2(c, id, status, reason) : errorReply("Bitte einen Grund angeben.");
+    }
+    return errorReply("Unbekannte Aktion.");
+  }
+};
+
 // apps/bot/src/commands/features.ts
 var str2 = (c, k) => String(c.opts[k] ?? "").trim();
 var choices = (m) => Object.keys(m).map((k) => ({ name: k.replace("_", " "), value: k }));
@@ -77212,15 +77359,30 @@ var FEATURE_COMMANDS = [
     }
   }
 ];
+async function shiftTypes(c) {
+  const cfg2 = await c.api.service("GET", "/bot/shifts").catch(() => null);
+  return cfg2?.enabled ? cfg2.types : null;
+}
+async function shiftPicker(c) {
+  const types = await shiftTypes(c);
+  if (!types || types.length < 2) return null;
+  return { ephemeral: true, content: "Welche Schicht beginnst du?", select: { id: "duty:type", placeholder: "Schicht w\xE4hlen \u2026", options: types.slice(0, 25).map((t) => ({ label: clip(t.name, 100), value: t.id, ...t.isDefault ? { description: "Standard" } : {} })) } };
+}
 var INTERACTIONS = [
   {
     prefix: "duty",
     async run(c) {
-      const status = c.args[0] ?? "";
+      const shiftType = c.args[0] === "type" ? c.values?.[0] : void 0;
+      const status = c.args[0] === "type" ? "ON_DUTY" : c.args[0] ?? "";
       if (!DUTY_DE[status]) return errorReply("Unbekannter Status.");
+      if (status === "ON_DUTY" && !shiftType) {
+        const pick2 = await shiftPicker(c);
+        if (pick2) return pick2;
+      }
       try {
-        await c.api.asUser(c.discordId, "PUT", "/team/me/status", { status });
-        return okReply(`${DUTY_DE[status].emoji} Du bist jetzt **${DUTY_DE[status].label}**.`);
+        const r = await c.api.asUser(c.discordId, "PUT", "/team/me/status", { status, ...shiftType ? { shiftType } : {} });
+        const name = shiftType ? (await shiftTypes(c))?.find((t) => t.id === (r.shiftType ?? shiftType))?.name : void 0;
+        return okReply(`${DUTY_DE[status].emoji} Du bist jetzt **${DUTY_DE[status].label}**${name ? ` (Schicht: **${plain(name)}**)` : ""}.`);
       } catch (e) {
         if (e instanceof BotApiError && e.status === 409) return okReply(`Du bist bereits **${DUTY_DE[status].label}**.`);
         return mapError(e);
@@ -77230,6 +77392,7 @@ var INTERACTIONS = [
   SEK_INTERACTION,
   QUALI_INTERACTION,
   TICKET_INTERACTION,
+  LEAVE_INTERACTION,
   {
     prefix: "danger",
     async run(c) {
@@ -77316,7 +77479,7 @@ var COMMANDS = [
       return { ephemeral: true, embeds: [{ title: "EN Polizei \u2014 Befehle", color: COLORS.info, fields: [
         { name: "Konto", value: "`/verknuepfen` `/entverknuepfen` `/profil` `/benachrichtigungen`" },
         { name: "Abfragen", value: "`/person` `/kennzeichen` `/fahndungen` `/einsaetze` `/einsatzinfo` `/einheiten` `/team`" },
-        { name: "Dienst & Leitstelle", value: "`/dienst` `/dienststunden` `/einheitstatus` `/einsatz` `/einsatzstatus` `/einsatzzuweisen` `/funk`" },
+        { name: "Dienst & Leitstelle", value: "`/dienst` `/dienststunden` `/abmeldung` `/einheitstatus` `/einsatz` `/einsatzstatus` `/einsatzzuweisen` `/funk`" },
         { name: "Erfassen", value: "`/ticket` `/bericht` `/beschwerde` `/ermittlung` `/fahndung` `/beweis`" },
         { name: "Leitung & Team", value: "`/gefahrenstatus` `/funkfreigabe` `/teamliste` `/dienstpanel` `/bewerbungspanel` `/qualipanel` `/roblox`" },
         { name: "SEK", value: "`/sek` `/sek-bericht`" },
@@ -77378,6 +77541,10 @@ var COMMANDS = [
     async run(c) {
       const status = DUTY[str3(c, "status")];
       if (!status) return errorReply("Unbekannter Status.");
+      if (status === "ON_DUTY") {
+        const pick2 = await shiftPicker(c);
+        if (pick2) return pick2;
+      }
       try {
         await c.api.asUser(c.discordId, "PUT", "/team/me/status", { status });
         return okReply(`Dienststatus: **${label(status)}**`);
@@ -77745,6 +77912,7 @@ var COMMANDS = [
   ...FEATURE_COMMANDS,
   ...SEK_COMMANDS,
   ...QUALI_COMMANDS,
+  ...LEAVE_COMMANDS,
   TICKET_COMMAND
 ];
 var byName = (n) => COMMANDS.find((c) => c.name === n);
@@ -81894,7 +82062,7 @@ function dutyRoleChanges(status, cfg2) {
   const all = [...new Set(Object.values(map).flat())];
   return { add: [...new Set(add)], remove: all.filter((r) => !add.includes(r)) };
 }
-var DIRECT = { "application.decided": applicationDecisionText, "qualification.decided": qualificationDecisionText };
+var DIRECT = { "application.decided": applicationDecisionText, "qualification.decided": qualificationDecisionText, "leave.decided": leaveDecisionText };
 async function pollOnce(api2, send, log = console.log, dm, grantRole, syncRoles, onDutyChanged, ticketEffects) {
   const [channels, items] = await Promise.all([api2.service("GET", "/bot/config"), api2.service("GET", "/bot/outbox?limit=20")]);
   let sent = 0;
@@ -81955,10 +82123,13 @@ async function pollOnce(api2, send, log = console.log, dm, grantRole, syncRoles,
       onDutyChanged?.();
       const userId = String(item.payload.discordId ?? "");
       if (syncRoles && /^\d{15,25}$/.test(userId)) {
-        const { add, remove } = dutyRoleChanges(String(item.payload.status), channels);
+        const given = item.payload.roles;
+        const ids = (v) => (Array.isArray(v) ? v : []).map(String).filter((r) => /^\d{15,25}$/.test(r));
+        const { add, remove } = given ? { add: ids(given.add), remove: ids(given.remove) } : dutyRoleChanges(String(item.payload.status), channels);
         if (add.length || remove.length) await syncRoles(userId, add, remove).catch((e) => log(`outbox ${item.id}: duty roles could not be updated: ${e instanceof Error ? e.message : e}`));
       }
-      if (!channels.duty) {
+      const ownLog = typeof item.payload.channelId === "string" && /^\d{15,25}$/.test(item.payload.channelId);
+      if (!channels.duty && !ownLog) {
         await api2.service("POST", `/bot/outbox/${item.id}/ack`, { ok: true }).catch(() => void 0);
         sent++;
         continue;

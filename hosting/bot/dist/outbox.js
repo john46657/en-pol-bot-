@@ -14,7 +14,7 @@ function dutyRoleChanges(status, cfg) {
     return { add: [...new Set(add)], remove: all.filter((r) => !add.includes(r)) };
 }
 /** Benachrichtigungen, die per Direktnachricht an eine Person gehen statt in einen Channel. */
-const DIRECT = { 'application.decided': format_1.applicationDecisionText, 'qualification.decided': format_1.qualificationDecisionText };
+const DIRECT = { 'application.decided': format_1.applicationDecisionText, 'qualification.decided': format_1.qualificationDecisionText, 'leave.decided': format_1.leaveDecisionText };
 /**
  * Holt offene Benachrichtigungen aus der System-API, postet sie und quittiert.
  * Fehlgeschlagene Sendungen werden gemeldet (die API zählt Versuche und gibt nach 5 Fehlversuchen auf).
@@ -95,11 +95,15 @@ async function pollOnce(api, send, log = console.log, dm, grantRole, syncRoles, 
             onDutyChanged?.(); // z. B. Teamliste sofort neu zeichnen
             const userId = String(item.payload.discordId ?? '');
             if (syncRoles && /^\d{15,25}$/.test(userId)) {
-                const { add, remove } = dutyRoleChanges(String(item.payload.status), channels);
+                // Schichten-Modul: Rollen kommen fertig aus der API (Schicht-/Pausen-Rolle der Schicht-Art)
+                const given = item.payload.roles;
+                const ids = (v) => (Array.isArray(v) ? v : []).map(String).filter((r) => /^\d{15,25}$/.test(r));
+                const { add, remove } = given ? { add: ids(given.add), remove: ids(given.remove) } : dutyRoleChanges(String(item.payload.status), channels);
                 if (add.length || remove.length)
                     await syncRoles(userId, add, remove).catch((e) => log(`outbox ${item.id}: duty roles could not be updated: ${e instanceof Error ? e.message : e}`));
             }
-            if (!channels.duty) {
+            const ownLog = typeof item.payload.channelId === 'string' && /^\d{15,25}$/.test(item.payload.channelId);
+            if (!channels.duty && !ownLog) {
                 await api.service('POST', `/bot/outbox/${item.id}/ack`, { ok: true }).catch(() => undefined);
                 sent++;
                 continue;

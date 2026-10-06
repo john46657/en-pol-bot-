@@ -76,9 +76,9 @@ export declare class DispatchService {
             number: string;
             id: string;
             createdAt: Date;
-            description: string | null;
             updatedAt: Date;
             version: number;
+            description: string | null;
             status: string;
             serverId: string | null;
             priority: string;
@@ -114,9 +114,9 @@ export declare class DispatchService {
             number: string;
             id: string;
             createdAt: Date;
-            description: string | null;
             updatedAt: Date;
             version: number;
+            description: string | null;
             status: string;
             serverId: string | null;
             priority: string;
@@ -130,18 +130,18 @@ export declare class DispatchService {
         links: {
             role: string;
             id: string;
-            createdAt: Date;
             entityType: string;
             entityId: string;
+            createdAt: Date;
             personId: string | null;
             vehicleId: string | null;
         }[];
         timeline: {
             id: string;
-            createdAt: Date;
             action: string;
             entityType: string;
             entityId: string;
+            createdAt: Date;
             summary: string;
             actorId: string | null;
         }[];
@@ -157,9 +157,9 @@ export declare class DispatchService {
         number: string;
         id: string;
         createdAt: Date;
-        description: string | null;
         updatedAt: Date;
         version: number;
+        description: string | null;
         status: string;
         serverId: string | null;
         priority: string;
@@ -185,9 +185,9 @@ export declare class DispatchService {
         number: string;
         id: string;
         createdAt: Date;
-        description: string | null;
         updatedAt: Date;
         version: number;
+        description: string | null;
         status: string;
         serverId: string | null;
         priority: string;
@@ -202,9 +202,9 @@ export declare class DispatchService {
         number: string;
         id: string;
         createdAt: Date;
-        description: string | null;
         updatedAt: Date;
         version: number;
+        description: string | null;
         status: string;
         serverId: string | null;
         priority: string;
@@ -226,9 +226,9 @@ export declare class DispatchService {
         number: string;
         id: string;
         createdAt: Date;
-        description: string | null;
         updatedAt: Date;
         version: number;
+        description: string | null;
         status: string;
         serverId: string | null;
         priority: string;

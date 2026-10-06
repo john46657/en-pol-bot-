@@ -8,14 +8,14 @@ declare const create: z.ZodObject<{
     category: z.ZodString;
     description: z.ZodString;
 }, "strip", z.ZodTypeAny, {
-    description: string;
     category: string;
+    description: string;
     officerId?: string | undefined;
     complainantId?: string | undefined;
     subjectId?: string | undefined;
 }, {
-    description: string;
     category: string;
+    description: string;
     officerId?: string | undefined;
     complainantId?: string | undefined;
     subjectId?: string | undefined;
@@ -72,10 +72,10 @@ export declare class ComplaintsController {
             number: string;
             id: string;
             createdAt: Date;
-            description: string;
             category: string;
             updatedAt: Date;
             version: number;
+            description: string;
             status: string;
             officerId: string | null;
             complainantId: string | null;
@@ -90,10 +90,10 @@ export declare class ComplaintsController {
             number: string;
             id: string;
             createdAt: Date;
-            description: string;
             category: string;
             updatedAt: Date;
             version: number;
+            description: string;
             status: string;
             officerId: string | null;
             complainantId: string | null;
@@ -110,10 +110,10 @@ export declare class ComplaintsController {
             number: string;
             id: string;
             createdAt: Date;
-            description: string;
             category: string;
             updatedAt: Date;
             version: number;
+            description: string;
             status: string;
             officerId: string | null;
             complainantId: string | null;
@@ -128,10 +128,10 @@ export declare class ComplaintsController {
             number: string;
             id: string;
             createdAt: Date;
-            description: string;
             category: string;
             updatedAt: Date;
             version: number;
+            description: string;
             status: string;
             officerId: string | null;
             complainantId: string | null;
@@ -141,10 +141,10 @@ export declare class ComplaintsController {
         };
         timeline: {
             id: string;
-            createdAt: Date;
             action: string;
             entityType: string;
             entityId: string;
+            createdAt: Date;
             summary: string;
             actorId: string | null;
         }[];

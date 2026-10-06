@@ -1,6 +1,6 @@
 import type { Api } from './api';
 import type { TicketEffect } from '@enrp/shared';
-import { applicationDecisionText, outboxButtons, qualificationDecisionText, renderOutboxEmbeds, type ButtonSpec, type EmbedData } from './format';
+import { applicationDecisionText, leaveDecisionText, outboxButtons, qualificationDecisionText, renderOutboxEmbeds, type ButtonSpec, type EmbedData } from './format';
 
 interface OutboxItem { id: string; type: string; channelKey: string; payload: Record<string, unknown> }
 /** `opts`: Rollen, die erwähnt werden (z. B. neue Bewerbung → @Staffelkommandant), und Discord-Benutzer für das Profilbild rechts. */
@@ -20,7 +20,7 @@ export function dutyRoleChanges(status: string, cfg: Record<string, string | und
 export type RoleGranter = (userId: string, roleId: string) => Promise<void>;
 export type DirectSender = (userId: string, text: string) => Promise<void>;
 /** Benachrichtigungen, die per Direktnachricht an eine Person gehen statt in einen Channel. */
-const DIRECT: Record<string, (p: Record<string, unknown>) => string> = { 'application.decided': applicationDecisionText, 'qualification.decided': qualificationDecisionText };
+const DIRECT: Record<string, (p: Record<string, unknown>) => string> = { 'application.decided': applicationDecisionText, 'qualification.decided': qualificationDecisionText, 'leave.decided': leaveDecisionText };
 
 /**
  * Holt offene Benachrichtigungen aus der System-API, postet sie und quittiert.
@@ -90,10 +90,14 @@ export async function pollOnce(api: Api, send: Sender, log: (m: string) => void 
       onDutyChanged?.(); // z. B. Teamliste sofort neu zeichnen
       const userId = String(item.payload.discordId ?? '');
       if (syncRoles && /^\d{15,25}$/.test(userId)) {
-        const { add, remove } = dutyRoleChanges(String(item.payload.status), channels);
+        // Schichten-Modul: Rollen kommen fertig aus der API (Schicht-/Pausen-Rolle der Schicht-Art)
+        const given = item.payload.roles as { add?: unknown; remove?: unknown } | undefined;
+        const ids = (v: unknown) => (Array.isArray(v) ? v : []).map(String).filter((r) => /^\d{15,25}$/.test(r));
+        const { add, remove } = given ? { add: ids(given.add), remove: ids(given.remove) } : dutyRoleChanges(String(item.payload.status), channels);
         if (add.length || remove.length) await syncRoles(userId, add, remove).catch((e) => log(`outbox ${item.id}: duty roles could not be updated: ${e instanceof Error ? e.message : e}`));
       }
-      if (!channels.duty) { await api.service('POST', `/bot/outbox/${item.id}/ack`, { ok: true }).catch(() => undefined); sent++; continue; }
+      const ownLog = typeof item.payload.channelId === 'string' && /^\d{15,25}$/.test(item.payload.channelId);
+      if (!channels.duty && !ownLog) { await api.service('POST', `/bot/outbox/${item.id}/ack`, { ok: true }).catch(() => undefined); sent++; continue; }
     }
     // eigener Channel im Eintrag (z. B. Bewerbungen einer Einheit) hat Vorrang
     const own = typeof item.payload.channelId === 'string' && /^\d{15,25}$/.test(item.payload.channelId) ? item.payload.channelId : null;

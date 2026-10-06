@@ -107,15 +107,14 @@ export declare class QualificationsController {
         title: string;
         units: {
             name: string;
-            description: string;
             settings: {
                 roles: {
+                    denied: string[];
                     required: {
                         mode: "ALL" | "ANY";
                         ids: string[];
                     };
                     accepted: string[];
-                    denied: string[];
                     restricted: {
                         mode: "ALL" | "ANY";
                         ids: string[];
@@ -127,8 +126,8 @@ export declare class QualificationsController {
                     managers: string[];
                 };
                 messages: {
-                    accepted: string;
                     denied: string;
+                    accepted: string;
                     confirmation: string;
                     completion: string;
                 };
@@ -137,9 +136,10 @@ export declare class QualificationsController {
                 timeLimitMinutes: number;
             };
             key: string;
+            description: string;
+            enabled: boolean;
             questions: import("@enrp/shared").FormField[];
             pingRoleIds: string[];
-            enabled: boolean;
             roleId?: string | undefined;
             channelId?: string | undefined;
             acceptedChannelId?: string | undefined;
@@ -148,15 +148,14 @@ export declare class QualificationsController {
         intro: string;
         police: {
             name: string;
-            description: string;
             settings: {
                 roles: {
+                    denied: string[];
                     required: {
                         mode: "ALL" | "ANY";
                         ids: string[];
                     };
                     accepted: string[];
-                    denied: string[];
                     restricted: {
                         mode: "ALL" | "ANY";
                         ids: string[];
@@ -168,8 +167,8 @@ export declare class QualificationsController {
                     managers: string[];
                 };
                 messages: {
-                    accepted: string;
                     denied: string;
+                    accepted: string;
                     confirmation: string;
                     completion: string;
                 };
@@ -177,9 +176,10 @@ export declare class QualificationsController {
                 cooldownMinutes: number;
                 timeLimitMinutes: number;
             };
+            description: string;
+            enabled: boolean;
             title: string;
             pingRoleIds: string[];
-            enabled: boolean;
             channelId?: string | undefined;
             acceptedChannelId?: string | undefined;
             deniedChannelId?: string | undefined;
@@ -191,15 +191,14 @@ export declare class QualificationsController {
         title: string;
         units: {
             name: string;
-            description: string;
             settings: {
                 roles: {
+                    denied: string[];
                     required: {
                         mode: "ALL" | "ANY";
                         ids: string[];
                     };
                     accepted: string[];
-                    denied: string[];
                     restricted: {
                         mode: "ALL" | "ANY";
                         ids: string[];
@@ -211,8 +210,8 @@ export declare class QualificationsController {
                     managers: string[];
                 };
                 messages: {
-                    accepted: string;
                     denied: string;
+                    accepted: string;
                     confirmation: string;
                     completion: string;
                 };
@@ -221,9 +220,10 @@ export declare class QualificationsController {
                 timeLimitMinutes: number;
             };
             key: string;
+            description: string;
+            enabled: boolean;
             questions: import("@enrp/shared").FormField[];
             pingRoleIds: string[];
-            enabled: boolean;
             roleId?: string | undefined;
             channelId?: string | undefined;
             acceptedChannelId?: string | undefined;
@@ -232,15 +232,14 @@ export declare class QualificationsController {
         intro: string;
         police: {
             name: string;
-            description: string;
             settings: {
                 roles: {
+                    denied: string[];
                     required: {
                         mode: "ALL" | "ANY";
                         ids: string[];
                     };
                     accepted: string[];
-                    denied: string[];
                     restricted: {
                         mode: "ALL" | "ANY";
                         ids: string[];
@@ -252,8 +251,8 @@ export declare class QualificationsController {
                     managers: string[];
                 };
                 messages: {
-                    accepted: string;
                     denied: string;
+                    accepted: string;
                     confirmation: string;
                     completion: string;
                 };
@@ -261,9 +260,10 @@ export declare class QualificationsController {
                 cooldownMinutes: number;
                 timeLimitMinutes: number;
             };
+            description: string;
+            enabled: boolean;
             title: string;
             pingRoleIds: string[];
-            enabled: boolean;
             channelId?: string | undefined;
             acceptedChannelId?: string | undefined;
             deniedChannelId?: string | undefined;
@@ -276,15 +276,14 @@ export declare class QualificationsController {
         title: string;
         units: {
             name: string;
-            description: string;
             settings: {
                 roles: {
+                    denied: string[];
                     required: {
                         mode: "ALL" | "ANY";
                         ids: string[];
                     };
                     accepted: string[];
-                    denied: string[];
                     restricted: {
                         mode: "ALL" | "ANY";
                         ids: string[];
@@ -296,8 +295,8 @@ export declare class QualificationsController {
                     managers: string[];
                 };
                 messages: {
-                    accepted: string;
                     denied: string;
+                    accepted: string;
                     confirmation: string;
                     completion: string;
                 };
@@ -306,9 +305,10 @@ export declare class QualificationsController {
                 timeLimitMinutes: number;
             };
             key: string;
+            description: string;
+            enabled: boolean;
             questions: import("@enrp/shared").FormField[];
             pingRoleIds: string[];
-            enabled: boolean;
             roleId?: string | undefined;
             channelId?: string | undefined;
             acceptedChannelId?: string | undefined;
@@ -317,15 +317,14 @@ export declare class QualificationsController {
         intro: string;
         police: {
             name: string;
-            description: string;
             settings: {
                 roles: {
+                    denied: string[];
                     required: {
                         mode: "ALL" | "ANY";
                         ids: string[];
                     };
                     accepted: string[];
-                    denied: string[];
                     restricted: {
                         mode: "ALL" | "ANY";
                         ids: string[];
@@ -337,8 +336,8 @@ export declare class QualificationsController {
                     managers: string[];
                 };
                 messages: {
-                    accepted: string;
                     denied: string;
+                    accepted: string;
                     confirmation: string;
                     completion: string;
                 };
@@ -346,9 +345,10 @@ export declare class QualificationsController {
                 cooldownMinutes: number;
                 timeLimitMinutes: number;
             };
+            description: string;
+            enabled: boolean;
             title: string;
             pingRoleIds: string[];
-            enabled: boolean;
             channelId?: string | undefined;
             acceptedChannelId?: string | undefined;
             deniedChannelId?: string | undefined;
@@ -360,20 +360,20 @@ export declare class QualificationsController {
         number: string;
         unit: string;
         id: string;
-        userId: string | null;
         createdAt: Date;
+        userId: string | null;
         discordId: string;
         guildId: string | null;
         status: string;
+        decidedById: string | null;
+        decidedAt: Date | null;
+        decisionReason: string | null;
         answers: import("@prisma/client/runtime/library").JsonValue;
         grantRoleIds: string[];
-        decidedById: string | null;
         discordName: string;
         durationSec: number | null;
         joinedAt: Date | null;
-        decisionReason: string | null;
         unitName: string;
-        decidedAt: Date | null;
     }[]>;
     history(q: z.infer<typeof historyQ>): import("@prisma/client").Prisma.PrismaPromise<{
         number: string;
@@ -387,20 +387,20 @@ export declare class QualificationsController {
         number: string;
         unit: string;
         id: string;
-        userId: string | null;
         createdAt: Date;
+        userId: string | null;
         discordId: string;
         guildId: string | null;
         status: string;
+        decidedById: string | null;
+        decidedAt: Date | null;
+        decisionReason: string | null;
         answers: import("@prisma/client/runtime/library").JsonValue;
         grantRoleIds: string[];
-        decidedById: string | null;
         discordName: string;
         durationSec: number | null;
         joinedAt: Date | null;
-        decisionReason: string | null;
         unitName: string;
-        decidedAt: Date | null;
     }>;
     /** Auch vom Bot (Button im Team-Channel) mit den Rechten des klickenden Benutzers. */
     decide(a: Actor, id: string, b: z.infer<typeof decision>): Promise<{
@@ -421,15 +421,14 @@ export declare class BotQualificationsController {
         title: string;
         units: {
             name: string;
-            description: string;
             settings: {
                 roles: {
+                    denied: string[];
                     required: {
                         mode: "ALL" | "ANY";
                         ids: string[];
                     };
                     accepted: string[];
-                    denied: string[];
                     restricted: {
                         mode: "ALL" | "ANY";
                         ids: string[];
@@ -441,8 +440,8 @@ export declare class BotQualificationsController {
                     managers: string[];
                 };
                 messages: {
-                    accepted: string;
                     denied: string;
+                    accepted: string;
                     confirmation: string;
                     completion: string;
                 };
@@ -451,9 +450,10 @@ export declare class BotQualificationsController {
                 timeLimitMinutes: number;
             };
             key: string;
+            description: string;
+            enabled: boolean;
             questions: import("@enrp/shared").FormField[];
             pingRoleIds: string[];
-            enabled: boolean;
             roleId?: string | undefined;
             channelId?: string | undefined;
             acceptedChannelId?: string | undefined;
@@ -462,15 +462,14 @@ export declare class BotQualificationsController {
         intro: string;
         police: {
             name: string;
-            description: string;
             settings: {
                 roles: {
+                    denied: string[];
                     required: {
                         mode: "ALL" | "ANY";
                         ids: string[];
                     };
                     accepted: string[];
-                    denied: string[];
                     restricted: {
                         mode: "ALL" | "ANY";
                         ids: string[];
@@ -482,8 +481,8 @@ export declare class BotQualificationsController {
                     managers: string[];
                 };
                 messages: {
-                    accepted: string;
                     denied: string;
+                    accepted: string;
                     confirmation: string;
                     completion: string;
                 };
@@ -491,9 +490,10 @@ export declare class BotQualificationsController {
                 cooldownMinutes: number;
                 timeLimitMinutes: number;
             };
+            description: string;
+            enabled: boolean;
             title: string;
             pingRoleIds: string[];
-            enabled: boolean;
             channelId?: string | undefined;
             acceptedChannelId?: string | undefined;
             deniedChannelId?: string | undefined;

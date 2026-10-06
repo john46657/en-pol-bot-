@@ -36,6 +36,7 @@ model User {
   notifications Notification[]
   personnel     Personnel?
   dutySessions  DutySession[]
+  leaveRequests LeaveRequest[]
   settings      UserSettings?
 
   @@index([robloxUsername])
@@ -448,11 +449,35 @@ model DutySession {
   status    String
   unitId    String?   @db.Uuid
   callsign  String?
+  /// Schicht-Art (Admin → Shifts), z. B. „Im Dienst“
+  shiftType String?
   startedAt DateTime  @default(now())
   endedAt   DateTime?
   user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId, endedAt])
+}
+
+/// Abmeldung (Leave of Absence): Antrag → Freigabe → Rolle „abgemeldet“ von Beginn bis Ende.
+model LeaveRequest {
+  id             String    @id @default(uuid()) @db.Uuid
+  number         String    @unique
+  userId         String    @db.Uuid
+  startsAt       DateTime
+  endsAt         DateTime
+  reason         String
+  status         String    @default("PENDING") // PENDING | APPROVED | DENIED | CANCELLED | ENDED
+  guildId        String?
+  decidedById    String?   @db.Uuid
+  decidedAt      DateTime?
+  decisionReason String?
+  roleApplied    Boolean   @default(false)
+  endedAt        DateTime?
+  createdAt      DateTime  @default(now())
+  user           User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([status, startsAt])
+  @@index([userId])
 }
 
 model Application {

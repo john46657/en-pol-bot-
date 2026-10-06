@@ -13,10 +13,10 @@ export declare class EvidenceService {
             number: string;
             id: string;
             createdAt: Date;
-            description: string;
             updatedAt: Date;
             version: number;
             type: string;
+            description: string;
             ownerId: string | null;
             source: string | null;
             caseRef: string | null;
@@ -43,10 +43,10 @@ export declare class EvidenceService {
         number: string;
         id: string;
         createdAt: Date;
-        description: string;
         updatedAt: Date;
         version: number;
         type: string;
+        description: string;
         ownerId: string | null;
         source: string | null;
         caseRef: string | null;
@@ -64,10 +64,10 @@ export declare class EvidenceService {
         number: string;
         id: string;
         createdAt: Date;
-        description: string;
         updatedAt: Date;
         version: number;
         type: string;
+        description: string;
         ownerId: string | null;
         source: string | null;
         caseRef: string | null;
@@ -84,10 +84,10 @@ export declare class EvidenceService {
         number: string;
         id: string;
         createdAt: Date;
-        description: string;
         updatedAt: Date;
         version: number;
         type: string;
+        description: string;
         ownerId: string | null;
         source: string | null;
         caseRef: string | null;

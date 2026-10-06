@@ -513,7 +513,7 @@ describe('Dienststatus ↔ Discord', () => {
     const { api, calls } = fakeApi({ 'PUT /team/me/status': {} });
     const hit = interactionFor('duty:ON_DUTY')!;
     expect(text(await hit.def.run({ ...ctx(api), args: hit.args }))).toContain('im Dienst');
-    expect(calls[0]).toMatchObject({ kind: 'user', method: 'PUT', path: '/team/me/status', body: { status: 'ON_DUTY' } });
+    expect(calls.find((c) => c.method === 'PUT')).toMatchObject({ kind: 'user', method: 'PUT', path: '/team/me/status', body: { status: 'ON_DUTY' } });
     const again = fakeApi({ 'PUT /team/me/status': new BotApiError(409, 'CONFLICT', 'Already') });
     expect(text(await hit.def.run({ ...ctx(again.api), args: hit.args }))).toContain('bereits');
     const unlinked = fakeApi({ 'PUT /team/me/status': new BotApiError(401, 'UNAUTHENTICATED', 'x', 'r', 'NOT_LINKED') });

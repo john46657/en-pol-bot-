@@ -1,4 +1,4 @@
-import { LifeBuoy, Monitor, BarChart3, BookOpen, Briefcase, Award, Car, ClipboardList, Crosshair, FileText, Fingerprint, Flag, Gavel, LayoutDashboard, MessageSquare, Radio, Scale, Search, Settings, Shield, Siren, Ticket, UserCheck, Users, Wrench, type LucideIcon } from 'lucide-react';
+import { CalendarOff, Clock, LifeBuoy, Monitor, BarChart3, BookOpen, Briefcase, Award, Car, ClipboardList, Crosshair, FileText, Fingerprint, Flag, Gavel, LayoutDashboard, MessageSquare, Radio, Scale, Search, Settings, Shield, Siren, Ticket, UserCheck, Users, Wrench, type LucideIcon } from 'lucide-react';
 
 export interface NavItem { path: string; label: string; icon: LucideIcon; perm?: string; group: 'Operations' | 'Records' | 'Organisation' | 'Administration' }
 
@@ -21,6 +21,7 @@ export const NAV: NavItem[] = [
   { path: '/personnel', label: 'Personnel', icon: UserCheck, perm: 'personnel.view', group: 'Organisation' },
   { path: '/applications', label: 'Applications', icon: ClipboardList, perm: 'applications.view', group: 'Organisation' },
   { path: '/qualifications', label: 'Qualifications', icon: Award, perm: 'qualifications.view', group: 'Organisation' },
+  { path: '/leave', label: 'Leave', icon: CalendarOff, perm: 'leave.request', group: 'Organisation' },
   { path: '/sek', label: 'SEK', icon: Crosshair, perm: 'team.view', group: 'Organisation' },
   { path: '/academy', label: 'Academy', icon: BookOpen, perm: 'academy.view', group: 'Organisation' },
   { path: '/analytics', label: 'Analytics', icon: BarChart3, perm: 'analytics.view', group: 'Organisation' },
@@ -29,6 +30,8 @@ export const NAV: NavItem[] = [
   { path: '/admin/audit', label: 'Audit', icon: Gavel, perm: 'audit.view', group: 'Administration' },
   { path: '/admin/legal-codes', label: 'Legal Codes', icon: Scale, perm: 'settings.view', group: 'Administration' },
   { path: '/admin/settings', label: 'Settings', icon: Settings, perm: 'settings.view', group: 'Administration' },
+  { path: '/admin/shifts', label: 'Shifts', icon: Clock, perm: 'settings.view', group: 'Administration' },
+  { path: '/admin/leave', label: 'Leave of Absences', icon: CalendarOff, perm: 'settings.view', group: 'Administration' },
   { path: '/admin/studio', label: 'Studio', icon: Wrench, perm: 'studio.view', group: 'Administration' },
 ];
 export const GROUPS = ['Operations', 'Records', 'Organisation', 'Administration'] as const;

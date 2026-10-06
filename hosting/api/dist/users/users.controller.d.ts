@@ -68,17 +68,6 @@ export declare class UsersController {
         items: {
             id: string;
             createdAt: Date;
-            roles: {
-                role: {
-                    id: string;
-                    name: string;
-                };
-            }[];
-            overrides: {
-                permissionKey: string;
-                effect: string;
-                reason: string | null;
-            }[];
             username: string;
             email: string | null;
             robloxUserId: string | null;
@@ -89,6 +78,17 @@ export declare class UsersController {
             active: boolean;
             lastLogin: Date | null;
             updatedAt: Date;
+            roles: {
+                role: {
+                    id: string;
+                    name: string;
+                };
+            }[];
+            overrides: {
+                reason: string | null;
+                permissionKey: string;
+                effect: string;
+            }[];
         }[];
         total: number;
         page: number;
@@ -97,17 +97,6 @@ export declare class UsersController {
     get(id: string): Promise<{
         id: string;
         createdAt: Date;
-        roles: {
-            role: {
-                id: string;
-                name: string;
-            };
-        }[];
-        overrides: {
-            permissionKey: string;
-            effect: string;
-            reason: string | null;
-        }[];
         username: string;
         email: string | null;
         robloxUserId: string | null;
@@ -118,21 +107,21 @@ export declare class UsersController {
         active: boolean;
         lastLogin: Date | null;
         updatedAt: Date;
+        roles: {
+            role: {
+                id: string;
+                name: string;
+            };
+        }[];
+        overrides: {
+            reason: string | null;
+            permissionKey: string;
+            effect: string;
+        }[];
     }>;
     create(a: Actor, b: z.infer<typeof createUser>): Promise<{
         id: string;
         createdAt: Date;
-        roles: {
-            role: {
-                id: string;
-                name: string;
-            };
-        }[];
-        overrides: {
-            permissionKey: string;
-            effect: string;
-            reason: string | null;
-        }[];
         username: string;
         email: string | null;
         robloxUserId: string | null;
@@ -143,21 +132,21 @@ export declare class UsersController {
         active: boolean;
         lastLogin: Date | null;
         updatedAt: Date;
+        roles: {
+            role: {
+                id: string;
+                name: string;
+            };
+        }[];
+        overrides: {
+            reason: string | null;
+            permissionKey: string;
+            effect: string;
+        }[];
     }>;
     setRoblox(a: Actor, id: string, b: z.infer<typeof roblox>): Promise<{
         id: string;
         createdAt: Date;
-        roles: {
-            role: {
-                id: string;
-                name: string;
-            };
-        }[];
-        overrides: {
-            permissionKey: string;
-            effect: string;
-            reason: string | null;
-        }[];
         username: string;
         email: string | null;
         robloxUserId: string | null;
@@ -168,21 +157,21 @@ export declare class UsersController {
         active: boolean;
         lastLogin: Date | null;
         updatedAt: Date;
+        roles: {
+            role: {
+                id: string;
+                name: string;
+            };
+        }[];
+        overrides: {
+            reason: string | null;
+            permissionKey: string;
+            effect: string;
+        }[];
     }>;
     setActive(a: Actor, id: string, b: z.infer<typeof active>): Promise<{
         id: string;
         createdAt: Date;
-        roles: {
-            role: {
-                id: string;
-                name: string;
-            };
-        }[];
-        overrides: {
-            permissionKey: string;
-            effect: string;
-            reason: string | null;
-        }[];
         username: string;
         email: string | null;
         robloxUserId: string | null;
@@ -193,21 +182,21 @@ export declare class UsersController {
         active: boolean;
         lastLogin: Date | null;
         updatedAt: Date;
+        roles: {
+            role: {
+                id: string;
+                name: string;
+            };
+        }[];
+        overrides: {
+            reason: string | null;
+            permissionKey: string;
+            effect: string;
+        }[];
     }>;
     setRoles(a: Actor, id: string, b: z.infer<typeof roles>): Promise<{
         id: string;
         createdAt: Date;
-        roles: {
-            role: {
-                id: string;
-                name: string;
-            };
-        }[];
-        overrides: {
-            permissionKey: string;
-            effect: string;
-            reason: string | null;
-        }[];
         username: string;
         email: string | null;
         robloxUserId: string | null;
@@ -218,15 +207,26 @@ export declare class UsersController {
         active: boolean;
         lastLogin: Date | null;
         updatedAt: Date;
+        roles: {
+            role: {
+                id: string;
+                name: string;
+            };
+        }[];
+        overrides: {
+            reason: string | null;
+            permissionKey: string;
+            effect: string;
+        }[];
     }>;
     setOverride(a: Actor, id: string, b: z.infer<typeof override>): Promise<{
         id: string;
+        reason: string | null;
+        createdAt: Date;
         userId: string;
         permissionKey: string;
         effect: string;
-        reason: string | null;
         createdById: string | null;
-        createdAt: Date;
     }>;
     removeOverride(a: Actor, id: string, p: string): Promise<void>;
 }

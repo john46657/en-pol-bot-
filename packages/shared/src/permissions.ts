@@ -13,6 +13,7 @@ export const PERMISSION_CATALOG = {
   wanted: ['view', 'create', 'edit', 'activate', 'clear'],
   evidence: ['view', 'create', 'transfer', 'release'],
   personnel: ['view', 'create', 'edit', 'promote', 'discipline'],
+  leave: ['view', 'request', 'manage'],
   applications: ['view', 'review', 'decide'],
   academy: ['view', 'manage'],
   sek: ['view', 'report', 'manage'],

@@ -31,15 +31,14 @@ export declare class ApplicationsService {
     /** Einstellungen der Polizei-Bewerbung (Qualifications/Applications → Setup). */
     police(guildId?: string | null): Promise<{
         name: string;
-        description: string;
         settings: {
             roles: {
+                denied: string[];
                 required: {
                     mode: "ALL" | "ANY";
                     ids: string[];
                 };
                 accepted: string[];
-                denied: string[];
                 restricted: {
                     mode: "ALL" | "ANY";
                     ids: string[];
@@ -51,8 +50,8 @@ export declare class ApplicationsService {
                 managers: string[];
             };
             messages: {
-                accepted: string;
                 denied: string;
+                accepted: string;
                 confirmation: string;
                 completion: string;
             };
@@ -60,9 +59,10 @@ export declare class ApplicationsService {
             cooldownMinutes: number;
             timeLimitMinutes: number;
         };
+        description: string;
+        enabled: boolean;
         title: string;
         pingRoleIds: string[];
-        enabled: boolean;
         channelId?: string | undefined;
         acceptedChannelId?: string | undefined;
         deniedChannelId?: string | undefined;
@@ -108,14 +108,14 @@ export declare class ApplicationsService {
             version: number;
             guildId: string | null;
             status: string;
+            decidedById: string | null;
+            decisionReason: string | null;
             source: string;
             answers: import("@prisma/client/runtime/library").JsonValue;
             grantRoleIds: string[];
-            decidedById: string | null;
             discordName: string | null;
             durationSec: number | null;
             joinedAt: Date | null;
-            decisionReason: string | null;
         }[];
         total: number;
         page: number;
@@ -132,14 +132,14 @@ export declare class ApplicationsService {
         version: number;
         guildId: string | null;
         status: string;
+        decidedById: string | null;
+        decisionReason: string | null;
         source: string;
         answers: import("@prisma/client/runtime/library").JsonValue;
         grantRoleIds: string[];
-        decidedById: string | null;
         discordName: string | null;
         durationSec: number | null;
         joinedAt: Date | null;
-        decisionReason: string | null;
     }>;
     transition(actor: Actor, id: string, to: ApplicationStatus, reason?: string): Promise<{
         number: string;
@@ -152,13 +152,13 @@ export declare class ApplicationsService {
         version: number;
         guildId: string | null;
         status: string;
+        decidedById: string | null;
+        decisionReason: string | null;
         source: string;
         answers: import("@prisma/client/runtime/library").JsonValue;
         grantRoleIds: string[];
-        decidedById: string | null;
         discordName: string | null;
         durationSec: number | null;
         joinedAt: Date | null;
-        decisionReason: string | null;
     }>;
 }
