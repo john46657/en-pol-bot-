@@ -12,7 +12,7 @@ import { categorySchema, panelSchema, prioritySchema, reasonSchema, settingsSche
 
 const snowflake = z.string().regex(/^\d{15,25}$/);
 const actionSchema = z.discriminatedUnion('action', [
-  z.object({ action: z.literal('close'), reason: z.string().trim().max(500).optional() }),
+  z.object({ action: z.literal('close'), reason: z.string().trim().max(500).optional() }), z.object({ action: z.literal('close_request') }),
   z.object({ action: z.literal('reopen') }), z.object({ action: z.literal('claim') }), z.object({ action: z.literal('unclaim'), targetId: snowflake.optional() }),
   z.object({ action: z.literal('add_access'), targetId: snowflake, kind: z.enum(['USER', 'ROLE']), minutes: z.number().int().min(1).max(60 * 24 * 30).optional() }),
   z.object({ action: z.literal('remove_access'), targetId: snowflake }),
@@ -113,6 +113,8 @@ export class BotSupportTicketsController {
   @BotService() @Post(':id/channel') @HttpCode(200) attach(@Param('id', ParseUUIDPipe) id: string, @Body(zodBody(z.object({ channelId: snowflake, controlMessageId: snowflake.nullable() }))) b: { channelId: string; controlMessageId: string | null }) { return this.s.attachChannel(id, b.channelId, b.controlMessageId); }
   @BotService() @Post(':id/abort') @HttpCode(200) abort(@Param('id', ParseUUIDPipe) id: string, @Body(zodBody(z.object({ reason: z.string().max(300).default('') }))) b: { reason: string }) { return this.s.abort(id, b.reason); }
   @BotService() @Post(':id/answer') @HttpCode(200) answer(@Param('id', ParseUUIDPipe) id: string, @Body(zodBody(z.object({ discordId: snowflake, questionId: z.string().max(40), values: z.array(z.string().max(2000)).max(25).nullable() }))) b: { discordId: string; questionId: string; values: string[] | null }) { return this.s.answer(id, b.discordId, b.questionId, b.values); }
+  @BotService() @Post(':id/close-request') @HttpCode(200) closeRequest(@Param('id', ParseUUIDPipe) id: string, @Body(zodBody(z.object({ discordId: snowflake, accept: z.boolean() }))) b: { discordId: string; accept: boolean }) { return this.s.closeRequestAnswer(id, b.discordId, b.accept); }
+  @BotService() @Post(':id/creator-add') @HttpCode(200) creatorAdd(@Param('id', ParseUUIDPipe) id: string, @Body(zodBody(z.object({ discordId: snowflake, targetId: snowflake }))) b: { discordId: string; targetId: string }) { return this.s.creatorAdd(id, b.discordId, b.targetId); }
   @BotService() @Post(':id/creator-close') @HttpCode(200) creatorClose(@Param('id', ParseUUIDPipe) id: string, @Body(zodBody(z.object({ discordId: snowflake, reason: z.string().trim().max(500).optional() }))) b: { discordId: string; reason?: string }) { return this.s.creatorClose(id, b.discordId, b.reason); }
   @BotService() @Post(':id/rating') @HttpCode(200) rate(@Param('id', ParseUUIDPipe) id: string, @Body(zodBody(z.object({ discordId: snowflake, stars: z.number().int().min(1).max(5) }))) b: { discordId: string; stars: number }) { return this.s.rate(id, b.discordId, b.stars); }
   @BotService() @Post(':id/rating-comment') @HttpCode(200) rateComment(@Param('id', ParseUUIDPipe) id: string, @Body(zodBody(z.object({ discordId: snowflake, comment: z.string().trim().min(1).max(1000) }))) b: { discordId: string; comment: string }) { return this.s.rateComment(id, b.discordId, b.comment); }

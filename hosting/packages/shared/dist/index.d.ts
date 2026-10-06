@@ -120,6 +120,14 @@ declare const TICKET_ACTIONS: {
         readonly state: "open";
         readonly permission: "ticket.close";
     };
+    /** Team fragt den Ersteller, ob das Ticket geschlossen werden kann (wie GalaxyBot „Close-Request“). */
+    readonly close_request: {
+        readonly label: "Schließen anfragen";
+        readonly emoji: "❓";
+        readonly style: "secondary";
+        readonly state: "open";
+        readonly permission: "ticket.close";
+    };
     readonly reopen: {
         readonly label: "Wieder öffnen";
         readonly emoji: "🔓";
@@ -267,6 +275,10 @@ interface TicketQuestion {
     required: boolean;
     options: string[];
     placeholder?: string;
+    /** Beschreibung unter der Frage; Zeichenlimit für Text-Antworten (wie GalaxyBot). */
+    description?: string;
+    minLength?: number;
+    maxLength?: number;
 }
 declare const CLAIM_MODES: {
     readonly SINGLE: "Nur ein Bearbeiter";

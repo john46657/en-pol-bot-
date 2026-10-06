@@ -263,3 +263,95 @@ describe('several Discord servers', () => {
     expect((await http().post('/api/v1/bot/support-tickets/open').set(bot()).send({ categoryId: own.body.id, guildId: G2, discordId: '900000000000000077', discordName: 'Gast' })).status).toBe(201);
   });
 });
+
+describe('GalaxyBot-like features', () => {
+  const U2 = '900000000000000201', FRIEND = '900000000000000202', CLAIM_CAT = '960000000000000001', BASE_CAT = '960000000000000002';
+  let cat = '', tid = '';
+  const outboxEffects = async () => (await prisma.discordOutbox.findMany({ where: { type: 'ticket.effects' }, orderBy: { createdAt: 'asc' } })).flatMap((o) => (o.payload as { effects: TicketEffect[] }).effects);
+  it('claim category, chat restricted after claim, image in the opening embed, question limits', async () => {
+    const admin = (await login(app, 'tk_admin')).agent;
+    const r = await admin.post('/api/v1/support-tickets/categories').send({
+      name: 'General', staffRoleIds: [ROLE_SUPPORT], accessRoleNames: ['Ticket Support', 'Ticket Leitung'], maxOpen: 1, discordCategoryId: BASE_CAT, claimDiscordCategoryId: CLAIM_CAT, claimLocksChat: true,
+      creatorCanAddUsers: true, welcomeImageUrl: 'https://example.com/banner.png', capacity: 2,
+      questions: [{ id: 'name', label: 'Discord- und Roblox-Name?', type: 'SHORT', required: true, options: [], description: 'z. B. max / Max_123', minLength: 5, maxLength: 40 }],
+    });
+    expect(r.status).toBe(201);
+    cat = r.body.id;
+    expect((await admin.post('/api/v1/support-tickets/categories').send({ name: 'x', questions: [{ id: 'a', label: 'Frage?', type: 'SHORT', required: true, options: [], minLength: 50, maxLength: 10 }] })).status).toBe(400);
+    const o = await http().post('/api/v1/bot/support-tickets/open').set(bot()).send({ categoryId: cat, guildId: GUILD, discordId: U2, discordName: 'Neu' });
+    tid = o.body.ticket.id;
+    const [create] = find(o.body.effects, 'create');
+    expect(create!.control.embeds![0]!.image).toBe('https://example.com/banner.png');
+    expect(create!.messages[0]!.buttons![0]!.id).toBe(`tk:ans:${tid}:name:s:5-40`);
+    expect(create!.messages[0]!.embeds![0]!.description).toContain('z. B. max / Max_123');
+    await http().post(`/api/v1/bot/support-tickets/${tid}/channel`).set(bot()).send({ channelId: '960000000000000010', controlMessageId: '960000000000000011' });
+    const ans = (v: string) => http().post(`/api/v1/bot/support-tickets/${tid}/answer`).set(bot()).send({ discordId: U2, questionId: 'name', values: [v] });
+    expect((await ans('abc')).body.message).toContain('zu kurz');
+    expect((await ans('x'.repeat(41))).body.message).toContain('zu lang');
+    expect((await ans('neu / Neu_123')).status).toBe(200);
+    const c = await act(tid, STAFF, { action: 'claim' });
+    expect(find(c.body.effects, 'move')).toEqual([{ type: 'move', channelId: '960000000000000010', parentId: CLAIM_CAT }]);
+    expect(find(c.body.effects, 'access')).toEqual(expect.arrayContaining([
+      { type: 'access', channelId: '960000000000000010', targetId: ROLE_SUPPORT, kind: 'role', view: true, send: false },
+      { type: 'access', channelId: '960000000000000010', targetId: STAFF, kind: 'user', view: true, send: true }]));
+    const u = await act(tid, STAFF, { action: 'unclaim' });
+    expect(find(u.body.effects, 'move')[0]!.parentId).toBe(BASE_CAT);
+    expect(find(u.body.effects, 'access')).toEqual(expect.arrayContaining([{ type: 'access', channelId: '960000000000000010', targetId: ROLE_SUPPORT, kind: 'role', view: true, send: true }]));
+  });
+
+  it('creator may add people (if allowed); close request: no keeps it open, yes closes it', async () => {
+    expect((await http().post(`/api/v1/bot/support-tickets/${tid}/creator-add`).set(bot()).send({ discordId: OTHER, targetId: FRIEND })).status).toBe(403);
+    const add = await http().post(`/api/v1/bot/support-tickets/${tid}/creator-add`).set(bot()).send({ discordId: U2, targetId: FRIEND });
+    expect(find(add.body.effects, 'access')[0]).toMatchObject({ targetId: FRIEND, kind: 'user', view: true });
+    expect((await http().post(`/api/v1/bot/support-tickets/${tid}/creator-add`).set(bot()).send({ discordId: USER, targetId: FRIEND })).status).toBe(403); // nicht der Ersteller
+    const answer = (discordId: string, accept: boolean) => http().post(`/api/v1/bot/support-tickets/${tid}/close-request`).set(bot()).send({ discordId, accept });
+    expect((await answer(U2, true)).status).toBe(409); // keine Anfrage offen
+    const req = await act(tid, STAFF, { action: 'close_request' });
+    expect(find(req.body.effects, 'post')[0]!.message.buttons!.map((b) => b.id)).toEqual([`tk:creq:${tid}:yes`, `tk:creq:${tid}:no`]);
+    expect((await answer(OTHER, true)).status).toBe(403);
+    expect((await answer(U2, false)).body.message).toContain('offen');
+    await act(tid, STAFF, { action: 'close_request' });
+    const yes = await answer(U2, true);
+    expect(yes.body.message).toContain('geschlossen');
+    expect((await prisma.supportTicket.findUniqueOrThrow({ where: { id: tid } })).closeReason).toContain('bestätigt');
+  });
+
+  it('ticket load in the panel; ratings go to the team and public channels', async () => {
+    const admin = (await login(app, 'tk_admin')).agent;
+    const panel = (await admin.post('/api/v1/support-tickets/panels').send({ name: 'Load', title: 'Support', categoryIds: [cat], channelId: '950000000000000011', showLoad: true })).body;
+    await http().post(`/api/v1/bot/support-tickets/panels/${panel.id}/posted`).set(bot()).send({ channelId: '950000000000000011', messageId: '950000000000000012' });
+    const o = await http().post('/api/v1/bot/support-tickets/open').set(bot()).send({ categoryId: cat, guildId: GUILD, discordId: '900000000000000203', discordName: 'Dritter' });
+    const p = find(o.body.effects, 'panel')[0]!;
+    expect(p).toMatchObject({ panelId: panel.id, messageId: '950000000000000012' });
+    expect(p.message.embeds![0]!.fields![0]!.value).toContain('**General** – 1/2 offen');
+    const s = (await admin.get('/api/v1/support-tickets/config')).body.settings;
+    expect((await admin.put('/api/v1/support-tickets/settings').send({ ...s, ratingChannelId: '970000000000000001', ratingPublicChannelId: '970000000000000002', ratingPublicFields: ['category', 'duration'] })).status).toBe(200);
+    await prisma.discordOutbox.deleteMany({ where: { type: 'ticket.effects' } });
+    await http().post(`/api/v1/bot/support-tickets/${tid}/rating`).set(bot()).send({ discordId: U2, stars: 5 });
+    const posts = (await outboxEffects()).filter((e): e is Extract<TicketEffect, { type: 'post' }> => e.type === 'post');
+    const team = posts.find((x) => x.channelId === '970000000000000001')!, pub = posts.find((x) => x.channelId === '970000000000000002')!;
+    expect(team.message.embeds![0]!.fields!.map((f) => f.name)).toEqual(['Ersteller', 'Kategorie', 'Bearbeiter', 'Bearbeitungszeit']);
+    expect(pub.message.embeds![0]!.fields!.map((f) => f.name)).toEqual(['Kategorie', 'Bearbeitungszeit']);
+    expect(pub.message.embeds![0]!.title).toContain('⭐⭐⭐⭐⭐');
+  });
+
+  it('auto-claim when staff writes; team alert, then auto-unclaim after the same time', async () => {
+    const admin = (await login(app, 'tk_admin')).agent;
+    const full = (await admin.get('/api/v1/support-tickets/config')).body.categories.find((c: { id: string }) => c.id === cat);
+    expect((await admin.put(`/api/v1/support-tickets/categories/${cat}`).send({ ...full, autoClaimOnMessage: true, staffAlertMinutes: 10, maxOpen: 5, capacity: 0 })).status).toBe(200);
+    const o = await http().post('/api/v1/bot/support-tickets/open').set(bot()).send({ categoryId: cat, guildId: GUILD, discordId: U2, discordName: 'Neu' });
+    const id = o.body.ticket.id;
+    await http().post(`/api/v1/bot/support-tickets/${id}/channel`).set(bot()).send({ channelId: '960000000000000020', controlMessageId: '960000000000000021' });
+    const msg = (authorId: string, n: string) => http().post('/api/v1/bot/support-tickets/messages').set(bot()).send({ channelId: '960000000000000020', discordMessageId: `96000000000000003${n}`, authorId, authorName: 'x', isBot: false, content: 'Hallo', attachments: [], embeds: [] });
+    await msg(U2, '1');
+    expect((await prisma.supportTicket.findUniqueOrThrow({ where: { id } })).claimers).toEqual([]);
+    await msg(STAFF, '2');
+    expect((await prisma.supportTicket.findUniqueOrThrow({ where: { id } })).claimers).toEqual([STAFF]);
+    const now = Date.now();
+    await prisma.supportTicket.update({ where: { id }, data: { lastActivityAt: new Date(now - 15 * 60_000) } });
+    expect(await svc.runAutomation(new Date(now))).toMatchObject({ alerted: 1, unclaimed: 0 });
+    expect(await svc.runAutomation(new Date(now))).toMatchObject({ alerted: 0, unclaimed: 0 });
+    expect(await svc.runAutomation(new Date(now + 11 * 60_000))).toMatchObject({ unclaimed: 1 });
+    expect((await prisma.supportTicket.findUniqueOrThrow({ where: { id } })).claimers).toEqual([]);
+  });
+});

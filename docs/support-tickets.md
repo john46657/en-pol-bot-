@@ -114,6 +114,20 @@ Pro Kategorie lässt sich mit *Dashboard access: system roles* festlegen, welche
 - **Auto-Delete** nach dem Schließen (Transcript vorher).
 - **Befristeter Zugriff** läuft ab und wird entfernt.
 - **Transcripts** werden nach den eingestellten Tagen gelöscht.
+- **Auto-Team-Alert** (Kategorie → Automation): Bearbeiter wird nach X Minuten Inaktivität markiert; passiert dann X Minuten nichts, wird das Ticket freigegeben.
+- **Auto-Unclaim** nach X Minuten Inaktivität.
+
+## Wie bei GalaxyBot
+- **Claim-Kategorie**: übernommene Tickets wandern in eine eigene Discord-Kategorie (nach dem Freigeben zurück).
+- **Chat nach Übernahme einschränken**: nur Bearbeiter, Ersteller und die Zusatzrollen schreiben; nach dem Freigeben wieder alle Supporter.
+- **Auto-Claim**: das erste Teammitglied (mit `ticket.claim`), das im Ticket schreibt, übernimmt.
+- **Schließen anfragen** (Button `close_request`, bei bestehenden Kategorien unter *Buttons → Add button* hinzufügen): der Ersteller bekommt *Ja, schließen* / *Nein, offen lassen*; mit „Close request“ an wird bei *Ja* sofort geschlossen.
+- **Ersteller darf Personen hinzufügen** (Kategorie → Who may open).
+- **Ticketauslastung**: *Capacity* je Kategorie und im Panel *Show ticket load* – das Panel zeigt 🟢/🟡/🔴 mit offenen Tickets und aktualisiert sich bei jedem Öffnen/Schließen.
+- **Bild im Eröffnungs-Embed** (Kategorie → Ticket message → Image).
+- **Fragen**: Beschreibung sowie Mindest-/Höchstzahl an Zeichen (wird im Discord-Formular und im System geprüft).
+- **Bewertungen**: Team-Channel (alle Angaben) und öffentlicher Channel (nur die gewählten Werte: Ersteller, Kategorie, Bearbeiter, Bearbeitungszeit, Kommentar) unter *General → Ratings*.
+- **Aktion beim Verlassen des Servers**: noch nicht – braucht den *Server Members Intent* (kommt mit den Willkommensnachrichten).
 
 ## Platzhalter
 

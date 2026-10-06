@@ -59,6 +59,7 @@ const toComponents = (buttons?: ButtonSpec[], select?: SelectSpec, selects: Sele
 const toModal = (m: ModalSpec) => new ModalBuilder().setCustomId(m.id).setTitle(m.title.slice(0, 45)).addComponents(m.fields.map((f) => {
   const input = new TextInputBuilder().setCustomId(f.id).setLabel(f.label.slice(0, 45)).setStyle(f.paragraph ? TextInputStyle.Paragraph : TextInputStyle.Short).setRequired(!!f.required);
   if (f.maxLength) input.setMaxLength(f.maxLength);
+  if (f.minLength) input.setMinLength(Math.min(f.minLength, f.maxLength ?? 4000));
   if (f.placeholder) input.setPlaceholder(f.placeholder.slice(0, 100));
   return new ActionRowBuilder<TextInputBuilder>().addComponents(input);
 }));

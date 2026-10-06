@@ -76476,6 +76476,8 @@ var ALL_PERMISSIONS = Object.entries(PERMISSION_CATALOG).flatMap(
 var PERMISSION_SET = new Set(ALL_PERMISSIONS);
 var TICKET_ACTIONS = {
   close: { label: "Schlie\xDFen", emoji: "\u{1F512}", style: "danger", state: "open", permission: "ticket.close" },
+  /** Team fragt den Ersteller, ob das Ticket geschlossen werden kann (wie GalaxyBot „Close-Request“). */
+  close_request: { label: "Schlie\xDFen anfragen", emoji: "\u2753", style: "secondary", state: "open", permission: "ticket.close" },
   reopen: { label: "Wieder \xF6ffnen", emoji: "\u{1F513}", style: "success", state: "closed", permission: "ticket.reopen" },
   claim: { label: "\xDCbernehmen", emoji: "\u{1F464}", style: "primary", state: "open", permission: "ticket.claim" },
   unclaim: { label: "Freigeben", emoji: "\u21A9\uFE0F", style: "secondary", state: "open", permission: "ticket.claim" },
@@ -76960,8 +76962,10 @@ var TICKET_INTERACTION = {
         }
         // ---- Fragen ----
         case "ans": {
-          const [qid, kind2] = rest;
-          return { modal: { id: `tk:ansm:${id}:${qid}`, title: "Antwort", fields: [{ id: "value", label: "Deine Antwort", paragraph: kind2 === "l", required: true, maxLength: kind2 === "l" ? 2e3 : 200 }] } };
+          const [qid, kind2, limits] = rest;
+          const [min, max] = (limits ?? "").split("-").map(Number);
+          const maxLength = Math.min(4e3, max || (kind2 === "l" ? 2e3 : 200));
+          return { modal: { id: `tk:ansm:${id}:${qid}`, title: "Antwort", fields: [{ id: "value", label: "Deine Antwort", paragraph: kind2 === "l", required: true, maxLength, ...min ? { minLength: Math.min(min, maxLength) } : {} }] } };
         }
         case "ansm":
           return answer(c, id, rest[0] ?? "", [f.value ?? ""]);
@@ -77001,7 +77005,14 @@ var TICKET_INTERACTION = {
         case "transcript":
         case "reopen":
         case "rating":
+        case "close_request":
           return run(c, await staff(c, id, { action }));
+        // ---- Antwort des Erstellers auf „Schließen anfragen“ ----
+        case "creq": {
+          const r = await c.api.service("POST", `/bot/support-tickets/${id}/close-request`, { discordId: c.discordId, accept: rest[0] === "yes" });
+          if (r.effects?.length && c.applyEffects) await c.applyEffects(r.effects);
+          return { ...okReply(r.message ?? "Erledigt."), update: { embeds: [{ title: rest[0] === "yes" ? "\u2705 Schlie\xDFen best\xE4tigt" : "\u2716\uFE0F Ticket bleibt offen", color: rest[0] === "yes" ? COLORS.success : COLORS.neutral }] } };
+        }
         case "delete":
           return { ephemeral: true, embeds: [{ title: "\u{1F5D1}\uFE0F Ticket l\xF6schen?", description: "Der Channel wird gel\xF6scht (ein Transcript wird vorher gesichert, falls eingestellt).", color: COLORS.danger }], buttons: [{ id: `tk:delyes:${id}`, label: "Endg\xFCltig l\xF6schen", style: "danger" }] };
         case "delyes":
@@ -77016,7 +77027,10 @@ var TICKET_INTERACTION = {
           const minutes = Number(rest[0]) || 0;
           let n = 0;
           for (const target of c.values ?? []) {
-            const r = await staff(c, id, { action: "add_access", targetId: target, kind: action === "addu" ? "USER" : "ROLE", ...minutes ? { minutes } : {} });
+            const r = await staff(c, id, { action: "add_access", targetId: target, kind: action === "addu" ? "USER" : "ROLE", ...minutes ? { minutes } : {} }).catch((e) => {
+              if (action === "addu" && e instanceof BotApiError && (e.status === 401 || e.status === 403)) return c.api.service("POST", `/bot/support-tickets/${id}/creator-add`, { discordId: c.discordId, targetId: target });
+              throw e;
+            });
             if (r.effects?.length && c.applyEffects) await c.applyEffects(r.effects);
             n++;
           }
@@ -82241,6 +82255,7 @@ var toComponents = (buttons, select, selects = []) => componentsOf(buttons, [...
 var toModal = (m) => new import_discord3.ModalBuilder().setCustomId(m.id).setTitle(m.title.slice(0, 45)).addComponents(m.fields.map((f) => {
   const input = new import_discord3.TextInputBuilder().setCustomId(f.id).setLabel(f.label.slice(0, 45)).setStyle(f.paragraph ? import_discord3.TextInputStyle.Paragraph : import_discord3.TextInputStyle.Short).setRequired(!!f.required);
   if (f.maxLength) input.setMaxLength(f.maxLength);
+  if (f.minLength) input.setMinLength(Math.min(f.minLength, f.maxLength ?? 4e3));
   if (f.placeholder) input.setPlaceholder(f.placeholder.slice(0, 100));
   return new import_discord3.ActionRowBuilder().addComponents(input);
 }));

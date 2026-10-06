@@ -295,3 +295,29 @@ describe('/support command', () => {
     expect(text(await run(`tk:for:${OTHER}`, denied.api, { values: [CAT], applyEffects }))).not.toContain('<#');
   });
 });
+
+describe('GalaxyBot-like ticket features in Discord', () => {
+  it('answer form uses the character limits of the question', async () => {
+    const { api } = fakeApi({});
+    const m = (await run(`tk:ans:${TID}:name:s:5-40`, api)).modal!;
+    expect(m.fields[0]).toMatchObject({ minLength: 5, maxLength: 40, paragraph: false });
+    expect((await run(`tk:ans:${TID}:why:l`, api)).modal!.fields[0]).toMatchObject({ maxLength: 2000 });
+  });
+  it('close request: staff asks, the creator answers with the buttons', async () => {
+    const applied: TicketEffect[][] = [];
+    const applyEffects = async (e: TicketEffect[]) => { applied.push(e); return {}; };
+    const { api, calls } = fakeApi({ [`POST /support-tickets/${TID}/actions`]: { message: 'Der Ersteller wurde gefragt.', effects: [{ type: 'post', channelId: CH, message: { content: 'q' } }] }, [`POST /bot/support-tickets/${TID}/close-request`]: { message: 'Ticket geschlossen – danke!', effects: [{ type: 'post', channelId: CH, message: { content: 'c' } }] } });
+    expect(text(await run(`tk:close_request:${TID}`, api, { applyEffects }))).toContain('gefragt');
+    expect(calls[0]).toMatchObject({ kind: 'user', body: { action: 'close_request' } });
+    const r = await run(`tk:creq:${TID}:yes`, api, { applyEffects });
+    expect(text(r)).toContain('geschlossen');
+    expect(r.update?.embeds?.[0]?.title).toContain('bestätigt');
+    expect(calls[1]).toMatchObject({ kind: 'service', path: `/bot/support-tickets/${TID}/close-request`, body: { discordId: ME, accept: true } });
+    expect(applied).toHaveLength(2);
+  });
+  it('the creator adds a person when they have no staff rights (if the ticket type allows it)', async () => {
+    const { api, calls } = fakeApi({ [`POST /support-tickets/${TID}/actions`]: new BotApiError(403, 'PERMISSION_DENIED', 'nope'), [`POST /bot/support-tickets/${TID}/creator-add`]: { effects: [] } });
+    expect(text(await run(`tk:addu:${TID}`, api, { values: ['923456789012345678'] }))).toContain('1 Benutzer');
+    expect(calls.at(-1)).toMatchObject({ kind: 'service', body: { discordId: ME, targetId: '923456789012345678' } });
+  });
+});

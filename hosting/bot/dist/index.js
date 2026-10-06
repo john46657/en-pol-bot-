@@ -59,6 +59,8 @@ const toModal = (m) => new discord_js_1.ModalBuilder().setCustomId(m.id).setTitl
     const input = new discord_js_1.TextInputBuilder().setCustomId(f.id).setLabel(f.label.slice(0, 45)).setStyle(f.paragraph ? discord_js_1.TextInputStyle.Paragraph : discord_js_1.TextInputStyle.Short).setRequired(!!f.required);
     if (f.maxLength)
         input.setMaxLength(f.maxLength);
+    if (f.minLength)
+        input.setMinLength(Math.min(f.minLength, f.maxLength ?? 4000));
     if (f.placeholder)
         input.setPlaceholder(f.placeholder.slice(0, 100));
     return new discord_js_1.ActionRowBuilder().addComponents(input);

@@ -17,16 +17,21 @@ export interface TicketCategoryCfg {
   transcriptOnClose: boolean; transcriptChannelId: string | null; transcriptToUser: boolean; ratingEnabled: boolean; ratingQuestion: string;
   autoCloseMinutes: number; autoCloseWarnMinutes: number; autoCloseMessage: string; deleteAfterMinutes: number;
   escalationRoleIds: string[]; escalationPriorityId: string | null; escalationMessage: string;
+  welcomeImageUrl: string | null; capacity: number; creatorCanAddUsers: boolean; claimDiscordCategoryId: string | null; claimLocksChat: boolean;
+  autoClaimOnMessage: boolean; autoUnclaimMinutes: number; staffAlertMinutes: number; closeRequestCloses: boolean;
 }
 export interface TicketPanelCfg {
   id: string; guildId: string | null; name: string; title: string; description: string; emoji: string | null; color: number; thumbnailUrl: string | null; imageUrl: string | null; bannerUrl: string | null;
   footer: string | null; footerIconUrl: string | null; authorName: string | null; authorIconUrl: string | null; style: 'BUTTONS' | 'DROPDOWN'; placeholder: string;
-  channelId: string | null; categoryIds: string[]; allowedRoleIds: string[]; position: number; messageChannelId: string | null; messageId: string | null;
+  channelId: string | null; categoryIds: string[]; allowedRoleIds: string[]; showLoad: boolean; position: number; messageChannelId: string | null; messageId: string | null;
 }
 export interface TicketSettingsCfg {
   logChannelId: string | null; transcriptChannelId: string | null; closedTitle: string; closedMessage: string; closedColor: number;
   reopenedMessage: string; ratingMessage: string; ratingThanks: string; transcriptRetentionDays: number;
+  ratingChannelId: string | null; ratingPublicChannelId: string | null; ratingPublicFields: RatingField[];
 }
+export const RATING_FIELDS = { creator: 'Creator', category: 'Category', staff: 'Staff', duration: 'Handling time', comment: 'Comment' } as const;
+export type RatingField = keyof typeof RATING_FIELDS;
 export interface TicketConfig { categories: TicketCategoryCfg[]; panels: TicketPanelCfg[]; statuses: TicketStatusCfg[]; priorities: TicketPriorityCfg[]; reasons: TicketReasonCfg[]; settings: TicketSettingsCfg }
 
 export interface TicketRow {

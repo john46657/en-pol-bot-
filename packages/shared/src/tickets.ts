@@ -6,6 +6,8 @@
 /** Alle Ticket-Aktionen mit Standard-Button und benötigtem Recht. `state`: wann der Button am Ticket erscheint. */
 export const TICKET_ACTIONS = {
   close: { label: 'Schließen', emoji: '🔒', style: 'danger', state: 'open', permission: 'ticket.close' },
+  /** Team fragt den Ersteller, ob das Ticket geschlossen werden kann (wie GalaxyBot „Close-Request“). */
+  close_request: { label: 'Schließen anfragen', emoji: '❓', style: 'secondary', state: 'open', permission: 'ticket.close' },
   reopen: { label: 'Wieder öffnen', emoji: '🔓', style: 'success', state: 'closed', permission: 'ticket.reopen' },
   claim: { label: 'Übernehmen', emoji: '👤', style: 'primary', state: 'open', permission: 'ticket.claim' },
   unclaim: { label: 'Freigeben', emoji: '↩️', style: 'secondary', state: 'open', permission: 'ticket.claim' },
@@ -31,12 +33,16 @@ export type ButtonStyleName = 'primary' | 'secondary' | 'success' | 'danger';
 /** Konfiguration eines Buttons am Ticket (pro Kategorie im Dashboard). */
 export interface TicketButtonConfig { action: TicketAction; label: string; emoji?: string; style: ButtonStyleName; enabled: boolean }
 export const defaultTicketButtons = (): TicketButtonConfig[] =>
-  (['close', 'claim', 'unclaim', 'add_user', 'remove_user', 'priority', 'transcript', 'escalate', 'note', 'reopen', 'delete'] as TicketAction[])
+  (['close', 'close_request', 'claim', 'unclaim', 'add_user', 'remove_user', 'priority', 'transcript', 'escalate', 'note', 'reopen', 'delete'] as TicketAction[])
     .map((action) => ({ action, label: TICKET_ACTIONS[action].label, emoji: TICKET_ACTIONS[action].emoji, style: TICKET_ACTIONS[action].style as ButtonStyleName, enabled: true }));
 
 export const QUESTION_TYPES = { SHORT: 'Kurze Antwort', LONG: 'Lange Antwort', YESNO: 'Ja/Nein', SELECT: 'Auswahl', MULTI: 'Mehrere Optionen' } as const;
 export type QuestionType = keyof typeof QUESTION_TYPES;
-export interface TicketQuestion { id: string; label: string; type: QuestionType; required: boolean; options: string[]; placeholder?: string }
+export interface TicketQuestion {
+  id: string; label: string; type: QuestionType; required: boolean; options: string[]; placeholder?: string;
+  /** Beschreibung unter der Frage; Zeichenlimit für Text-Antworten (wie GalaxyBot). */
+  description?: string; minLength?: number; maxLength?: number;
+}
 
 export const CLAIM_MODES = { SINGLE: 'Nur ein Bearbeiter', MULTI: 'Mehrere Bearbeiter', PRIMARY: 'Hauptbearbeiter + Helfer' } as const;
 export type ClaimMode = keyof typeof CLAIM_MODES;

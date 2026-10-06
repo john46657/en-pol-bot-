@@ -26,6 +26,8 @@ export type ActionInput = {
     action: 'close';
     reason?: string;
 } | {
+    action: 'close_request';
+} | {
     action: 'reopen';
 } | {
     action: 'claim';
@@ -278,6 +280,20 @@ export declare class SupportTicketsService {
         message: string;
         effects: TicketEffect[];
     }>;
+    /** Antwort des Erstellers auf „Schließen anfragen“. */
+    closeRequestAnswer(id: string, discordId: string, accept: boolean): Promise<{
+        ok: boolean;
+        message: string;
+        effects: TicketEffect[];
+    }>;
+    /** Ersteller fügt eine Person hinzu (wenn in der Kategorie erlaubt). */
+    creatorAdd(id: string, discordId: string, targetId: string): Promise<{
+        ok: boolean;
+        message: string;
+        effects: TicketEffect[];
+    }>;
+    /** Ticketauslastung: Panels mit „Auslastung anzeigen“, die diese Kategorie enthalten, neu zeichnen. */
+    private panelLoad;
     private requireOpen;
     private actorTag;
     private perform;
@@ -291,6 +307,8 @@ export declare class SupportTicketsService {
     rateComment(id: string, discordId: string, comment: string): Promise<{
         ok: boolean;
     }>;
+    /** Bewertung in den Team-Channel (alles) und den öffentlichen Channel (gewählte Werte); Kommentar kommt als eigene Nachricht. */
+    private postRating;
     /** Bot meldet eine Nachricht aus einem Ticket-Channel (Verlauf + Transcript). */
     message(d: {
         channelId: string;
@@ -519,12 +537,12 @@ export declare class SupportTicketsService {
         rating: {
             id: string;
             createdAt: Date;
+            comment: string | null;
             categoryId: string;
             creatorId: string;
             ticketId: string;
             staffIds: string[];
             stars: number;
-            comment: string | null;
         } | null;
         names: Record<string, string>;
         id: string;
@@ -553,6 +571,8 @@ export declare class SupportTicketsService {
         firstResponseAt: Date | null;
         lastActivityAt: Date;
         warnedAt: Date | null;
+        staffAlertedAt: Date | null;
+        closeRequestedAt: Date | null;
         deleteAt: Date | null;
         escalatedAt: Date | null;
     }>;
@@ -734,12 +754,12 @@ export declare class SupportTicketsService {
             category: string;
             id: string;
             createdAt: Date;
+            comment: string | null;
             categoryId: string;
             creatorId: string;
             ticketId: string;
             staffIds: string[];
             stars: number;
-            comment: string | null;
         }[];
     }>;
     /** Offene Ticket-Channels (der Bot schneidet nur dort Nachrichten mit). */
@@ -758,6 +778,8 @@ export declare class SupportTicketsService {
         warned: number;
         deleted: number;
         expired: number;
+        alerted: number;
+        unclaimed: number;
     }>;
 }
 export {};

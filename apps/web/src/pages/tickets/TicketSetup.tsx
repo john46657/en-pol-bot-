@@ -12,6 +12,7 @@ import { GuildTag, useGuilds, useServer } from '../../lib/guilds';
 import {
   errText, fromHex, hex, idsFromText, idsToText, label, useTicketConfig,
   type TicketCategoryCfg, type TicketConfig, type TicketPanelCfg, type TicketPriorityCfg, type TicketReasonCfg, type TicketSettingsCfg, type TicketStatusCfg,
+  RATING_FIELDS, type RatingField,
 } from '../../lib/tickets';
 
 type Section = 'panels' | 'categories' | 'states' | 'settings';
@@ -78,7 +79,7 @@ function ServerField({ value, onChange }: { value: string | null; onChange: (v: 
 
 // =============================== Panels ===============================
 type PanelDraft = Omit<TicketPanelCfg, 'id' | 'messageChannelId' | 'messageId'> & { id?: string };
-const NEW_PANEL: PanelDraft = { guildId: null, name: 'Neues Panel', title: 'Support', description: 'Wähle unten die passende Kategorie, um ein Ticket zu öffnen.', emoji: '🎫', color: 0x3b82f6, thumbnailUrl: null, imageUrl: null, bannerUrl: null, footer: null, footerIconUrl: null, authorName: null, authorIconUrl: null, style: 'BUTTONS', placeholder: 'Wähle eine Kategorie …', channelId: null, categoryIds: [], allowedRoleIds: [], position: 0 };
+const NEW_PANEL: PanelDraft = { guildId: null, name: 'Neues Panel', title: 'Support', description: 'Wähle unten die passende Kategorie, um ein Ticket zu öffnen.', emoji: '🎫', color: 0x3b82f6, thumbnailUrl: null, imageUrl: null, bannerUrl: null, footer: null, footerIconUrl: null, authorName: null, authorIconUrl: null, style: 'BUTTONS', placeholder: 'Wähle eine Kategorie …', channelId: null, categoryIds: [], allowedRoleIds: [], showLoad: false, position: 0 };
 
 /** Gleiche Darstellung wie der Bot (Embed + Buttons bzw. Menü). */
 function panelPreview(p: PanelDraft, cats: TicketCategoryCfg[]): MessageSpec {
@@ -140,6 +141,7 @@ function PanelEditor({ draft, c, onDone }: { draft: PanelDraft; c: TicketConfig;
               <Num label="Order" value={p.position} max={1000} onChange={(v) => set({ position: v })} />
             </div>
             <Roles label="Visible for Discord roles (empty = everyone)" value={p.allowedRoleIds} onChange={(v) => set({ allowedRoleIds: v })} />
+            <Check label="Show ticket load (open tickets per category, updated automatically)" checked={p.showLoad} onChange={(v) => set({ showLoad: v })} />
           </Section>
           <Section title="Embed">
             <div className="grid gap-3 md:grid-cols-2">
@@ -192,6 +194,8 @@ const NEW_CATEGORY: CatDraft = {
   transcriptOnClose: true, transcriptChannelId: null, transcriptToUser: false, ratingEnabled: true, ratingQuestion: 'Wie zufrieden warst du mit dem Support?',
   autoCloseMinutes: 0, autoCloseWarnMinutes: 0, autoCloseMessage: '⏰ {user}, dieses Ticket wird bald wegen Inaktivität geschlossen. Schreib eine Nachricht, wenn du noch Hilfe brauchst.', deleteAfterMinutes: -1,
   escalationRoleIds: [], escalationPriorityId: null, escalationMessage: '🟠 Dieses Ticket wurde eskaliert. {staff}',
+  welcomeImageUrl: null, capacity: 0, creatorCanAddUsers: false, claimDiscordCategoryId: null, claimLocksChat: false,
+  autoClaimOnMessage: false, autoUnclaimMinutes: 0, staffAlertMinutes: 0, closeRequestCloses: true,
 };
 
 function Categories({ c }: { c: TicketConfig }) {
@@ -231,7 +235,7 @@ function CategoryEditor({ draft, c, onDone }: { draft: CatDraft; c: TicketConfig
   const vars: TicketVars = { ...SAMPLE, '{category}': d.name, '{priority}': prio ? label(prio) : '—', '{status}': status ? label(status) : '—', '{channel}': `#${ticketChannelName(d.channelNameFormat, { ...SAMPLE, '{category}': d.name })}` };
   const preview: MessageSpec = {
     content: ['@Max', ...(d.mentionStaff ? d.staffRoleIds.map((r) => `@Rolle ${r}`) : []), renderTicketText(d.mentionText, vars)].filter(Boolean).join(' '),
-    embeds: [{ title: renderTicketText(d.welcomeTitle || '🎫 {category}', vars), description: renderTicketText(d.welcomeMessage || 'Hallo {user}!', vars), color: prio?.color ?? d.color, fields: [{ name: 'Status', value: vars['{status}']!, inline: true }, { name: 'Priorität', value: vars['{priority}']!, inline: true }, { name: 'Bearbeiter', value: 'niemand', inline: true }], footer: 'Ticket #0042 · erstellt jetzt' }],
+    embeds: [{ title: renderTicketText(d.welcomeTitle || '🎫 {category}', vars), description: renderTicketText(d.welcomeMessage || 'Hallo {user}!', vars), color: prio?.color ?? d.color, fields: [{ name: 'Status', value: vars['{status}']!, inline: true }, { name: 'Priorität', value: vars['{priority}']!, inline: true }, { name: 'Bearbeiter', value: 'niemand', inline: true }], footer: 'Ticket #0042 · erstellt jetzt', ...(d.welcomeImageUrl ? { image: d.welcomeImageUrl } : {}) }],
     buttons: d.buttons.filter((b) => b.enabled && TICKET_ACTIONS[b.action].state !== 'closed' && b.action !== 'unclaim' && b.action !== 'unlock').map((b) => ({ id: b.action, label: b.label, emoji: b.emoji, style: b.style })).slice(0, 25),
   };
   return (
@@ -265,13 +269,16 @@ function CategoryEditor({ draft, c, onDone }: { draft: CatDraft; c: TicketConfig
             <div className="grid gap-3 md:grid-cols-2">
               <Num label="Max. open tickets per user (0 = unlimited)" value={d.maxOpen} max={100} onChange={(v) => set({ maxOpen: v })} />
               <Num label="Cooldown between tickets (minutes)" value={d.cooldownMinutes} onChange={(v) => set({ cooldownMinutes: v })} />
+              <Num label="Capacity: full at this many open tickets (0 = off)" value={d.capacity} max={1000} onChange={(v) => set({ capacity: v })} hint="Shown in panels with „Show ticket load“ (🟢 / 🟡 / 🔴)." />
             </div>
+            <Check label="The creator may add more people to the ticket" checked={d.creatorCanAddUsers} onChange={(v) => set({ creatorCanAddUsers: v })} />
             <Names label="Dashboard access: system roles (empty = everyone with ticket.view)" value={d.accessRoleNames} onChange={(v) => set({ accessRoleNames: v })} hint="Role names from Roles & Permissions, separated by commas – e.g. Ticket Support" />
           </Section>
           <Section title="Questions (asked one by one in the ticket)"><QuestionsEditor value={d.questions} onChange={(v) => set({ questions: v })} /></Section>
           <Section title="Ticket message">
             <Field label="Title">{(id) => <Input id={id} value={d.welcomeTitle} maxLength={256} onChange={(e) => set({ welcomeTitle: e.target.value })} />}</Field>
             <Field label="Message">{(id) => <Textarea id={id} rows={5} value={d.welcomeMessage} maxLength={4000} onChange={(e) => set({ welcomeMessage: e.target.value })} />}</Field>
+            <Field label="Image (URL, optional – e.g. your banner)">{(id) => <Input id={id} type="url" value={d.welcomeImageUrl ?? ''} maxLength={500} placeholder="https://…" onChange={(e) => set({ welcomeImageUrl: e.target.value || null })} />}</Field>
             <Check label="Mention staff roles when the ticket opens" checked={d.mentionStaff} onChange={(v) => set({ mentionStaff: v })} />
             <Field label="Additional mention / text above the message">{(id) => <Input id={id} value={d.mentionText} maxLength={1000} onChange={(e) => set({ mentionText: e.target.value })} />}</Field>
           </Section>
@@ -280,6 +287,9 @@ function CategoryEditor({ draft, c, onDone }: { draft: CatDraft; c: TicketConfig
             <Field label="Mode">{(id) => <Select id={id} value={d.claimMode} onChange={(e) => set({ claimMode: e.target.value as CatDraft['claimMode'] })}>{Object.entries(CLAIM_MODES).map(([k, v]) => <option key={k} value={k}>{v}</option>)}</Select>}</Field>
             <Field label="Message when claimed">{(id) => <Input id={id} value={d.claimMessage} maxLength={1000} onChange={(e) => set({ claimMessage: e.target.value })} />}</Field>
             <Check label="Notify the staff roles when claimed" checked={d.claimNotifyStaff} onChange={(v) => set({ claimNotifyStaff: v })} />
+            <Field label="Claim category: move claimed tickets to this Discord category (empty = stay)">{(id) => <ChannelPicker ariaLabel={id} kind="category" value={d.claimDiscordCategoryId} onChange={(v) => set({ claimDiscordCategoryId: v })} />}</Field>
+            <Check label="Restrict chat after claim: only the claimer, the creator and the additional roles can write (all staff again after unclaim)" checked={d.claimLocksChat} onChange={(v) => set({ claimLocksChat: v })} />
+            <Check label="Auto-claim: the first staff member who writes claims the ticket" checked={d.autoClaimOnMessage} onChange={(v) => set({ autoClaimOnMessage: v })} />
           </Section>
           <Section title="Closing">
             <div className="grid gap-3 md:grid-cols-2">
@@ -289,6 +299,7 @@ function CategoryEditor({ draft, c, onDone }: { draft: CatDraft; c: TicketConfig
             <Check label="The creator may close their own ticket" checked={d.creatorCanClose} onChange={(v) => set({ creatorCanClose: v })} />
             <Check label="Remove the creator's access when closed" checked={d.closeRemovesAccess} onChange={(v) => set({ closeRemovesAccess: v })} />
             <Check label="Allow reopening" checked={d.allowReopen} onChange={(v) => set({ allowReopen: v })} />
+            <Check label="Close request: close the ticket right away when the creator confirms (button „Schließen anfragen“)" checked={d.closeRequestCloses} onChange={(v) => set({ closeRequestCloses: v })} />
             <Num label="Delete channel after closing (minutes, -1 = never, 0 = immediately)" value={d.deleteAfterMinutes} min={-1} onChange={(v) => set({ deleteAfterMinutes: v })} hint="A transcript is saved before deleting if enabled." />
           </Section>
           <Section title="Transcript & rating">
@@ -304,6 +315,10 @@ function CategoryEditor({ draft, c, onDone }: { draft: CatDraft; c: TicketConfig
               <Num label="Warn this many minutes before (0 = no warning)" value={d.autoCloseWarnMinutes} onChange={(v) => set({ autoCloseWarnMinutes: v })} />
             </div>
             <Field label="Warning message">{(id) => <Input id={id} value={d.autoCloseMessage} maxLength={1000} onChange={(e) => set({ autoCloseMessage: e.target.value })} />}</Field>
+            <div className="grid gap-3 md:grid-cols-2">
+              <Num label="Auto-team-alert: ping the claimer after inactivity (minutes, 0 = off)" value={d.staffAlertMinutes} onChange={(v) => set({ staffAlertMinutes: v })} hint="If nothing happens for the same time again, the ticket is unclaimed." />
+              <Num label="Auto-unclaim after inactivity (minutes, 0 = off)" value={d.autoUnclaimMinutes} onChange={(v) => set({ autoUnclaimMinutes: v })} />
+            </div>
           </Section>
           <Section title="Escalation">
             <Roles label="Roles added on escalation" value={d.escalationRoleIds} onChange={(v) => set({ escalationRoleIds: v })} />
@@ -340,6 +355,11 @@ function QuestionsEditor({ value, onChange }: { value: TicketQuestion[]; onChang
           </div>
           {(q.type === 'SELECT' || q.type === 'MULTI') && <OptionsText value={q.options} onChange={(v) => patch(i, { options: v })} />}
           {(q.type === 'SHORT' || q.type === 'LONG') && <Field label="Placeholder (optional)">{(id) => <Input id={id} value={q.placeholder ?? ''} maxLength={100} onChange={(e) => patch(i, { placeholder: e.target.value || undefined })} />}</Field>}
+          <Field label="Description (optional, shown under the question)">{(id) => <Input id={id} value={q.description ?? ''} maxLength={200} onChange={(e) => patch(i, { description: e.target.value || undefined })} />}</Field>
+          {(q.type === 'SHORT' || q.type === 'LONG') && <div className="grid gap-2 sm:grid-cols-2">
+            <Field label="Min. characters">{(id) => <Input id={id} type="number" min={0} max={4000} value={q.minLength ?? ''} onChange={(e) => patch(i, { minLength: e.target.value === '' ? undefined : Math.max(0, Math.floor(Number(e.target.value))) })} />}</Field>
+            <Field label={`Max. characters (default ${q.type === 'LONG' ? 2000 : 200})`}>{(id) => <Input id={id} type="number" min={1} max={4000} value={q.maxLength ?? ''} onChange={(e) => patch(i, { maxLength: e.target.value === '' ? undefined : Math.max(1, Math.floor(Number(e.target.value))) })} />}</Field>
+          </div>}
           <Check label="Required" checked={q.required} onChange={(v) => patch(i, { required: v })} />
         </div>
       ))}
@@ -481,6 +501,16 @@ function General({ c }: { c: TicketConfig }) {
               <Field label="Transcript channel (default)">{(id) => <ChannelPicker ariaLabel={id} kind="text" value={s.transcriptChannelId} onChange={(v) => set({ transcriptChannelId: v })} />}</Field>
             </div>
             <Num label="Delete transcripts after (days, 0 = keep forever)" value={s.transcriptRetentionDays} max={3650} onChange={(v) => set({ transcriptRetentionDays: v })} />
+          </Section>
+          <Section title="Ratings">
+            <div className="grid gap-3 md:grid-cols-2">
+              <Field label="Rating channel (team, all details)">{(id) => <ChannelPicker ariaLabel={id} kind="text" value={s.ratingChannelId} onChange={(v) => set({ ratingChannelId: v })} />}</Field>
+              <Field label="Public rating channel (only the values below)">{(id) => <ChannelPicker ariaLabel={id} kind="text" value={s.ratingPublicChannelId} onChange={(v) => set({ ratingPublicChannelId: v })} />}</Field>
+            </div>
+            <div className="flex flex-wrap gap-x-4 gap-y-1" role="group" aria-label="Shown in the public channel">
+              <span className="text-xs text-muted">Shown publicly:</span>
+              {(Object.keys(RATING_FIELDS) as RatingField[]).map((k) => <Check key={k} label={RATING_FIELDS[k]} checked={s.ratingPublicFields.includes(k)} onChange={(v) => set({ ratingPublicFields: v ? [...s.ratingPublicFields, k] : s.ratingPublicFields.filter((x) => x !== k) })} />)}
+            </div>
           </Section>
           <Section title="Closed display">
             <Field label="Title">{(id) => <Input id={id} value={s.closedTitle} maxLength={256} onChange={(e) => set({ closedTitle: e.target.value })} />}</Field>
