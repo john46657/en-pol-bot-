@@ -55,7 +55,7 @@ let SupportTicketsController = class SupportTicketsController {
         this.cfg = cfg;
     }
     // ---- Konfiguration ----
-    config() { return this.cfg.all(); }
+    config(q) { return this.cfg.all(q.guildId); }
     settings(u, b) { return this.cfg.saveSettings(actor(u), b); }
     createCategory(u, b) { return this.cfg.saveCategory(actor(u), null, b); }
     updateCategory(u, id, b) { return this.cfg.saveCategory(actor(u), id, b); }
@@ -107,8 +107,9 @@ exports.SupportTicketsController = SupportTicketsController;
 __decorate([
     (0, common_1.Get)('config'),
     (0, decorators_1.RequirePermission)('ticket.view'),
+    __param(0, (0, common_1.Query)((0, zod_pipe_1.zodBody)(zod_1.z.object({ guildId: snowflake.optional() })))),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", []),
+    __metadata("design:paramtypes", [Object]),
     __metadata("design:returntype", void 0)
 ], SupportTicketsController.prototype, "config", null);
 __decorate([
@@ -431,7 +432,7 @@ let BotSupportTicketsController = class BotSupportTicketsController {
     rateComment(id, b) { return this.s.rateComment(id, b.discordId, b.comment); }
     message(b) { return this.s.message(b); }
     channels() { return this.s.channels(); }
-    categories() { return this.s.openableCategories(); }
+    categories(q) { return this.s.openableCategories(q.guildId); }
     closeOptions(id) { return this.s.closeOptions(id); }
     posted(id, b) { return this.s.panelPosted(id, b.channelId, b.messageId); }
     async transcript(id) { const t = await this.s.transcript(null, id); return { html: t.html }; }
@@ -524,8 +525,9 @@ __decorate([
 __decorate([
     (0, decorators_1.BotService)(),
     (0, common_1.Get)('categories'),
+    __param(0, (0, common_1.Query)((0, zod_pipe_1.zodBody)(zod_1.z.object({ guildId: snowflake.optional() })))),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", []),
+    __metadata("design:paramtypes", [Object]),
     __metadata("design:returntype", void 0)
 ], BotSupportTicketsController.prototype, "categories", null);
 __decorate([

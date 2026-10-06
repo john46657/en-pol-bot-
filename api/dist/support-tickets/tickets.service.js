@@ -201,6 +201,8 @@ let SupportTicketsService = class SupportTicketsService {
         const cat = await this.config.category(d.categoryId);
         if (!cat.active)
             throw new errors_1.AppError('CONFLICT', 'Diese Ticket-Art ist derzeit deaktiviert.');
+        if (cat.guildId && cat.guildId !== d.guildId)
+            throw new errors_1.AppError('CONFLICT', 'Diese Ticket-Art gibt es auf diesem Server nicht.');
         if (!byStaff)
             await this.checkCanOpen(cat, d);
         return this.create(cat, d, actor);
@@ -259,14 +261,15 @@ let SupportTicketsService = class SupportTicketsService {
             await this.perms.assert(actor.userId, 'ticket.create');
         const ch = await this.discord.channels();
         // aus Discord (/ticket mitglied:…): der Server, auf dem der Befehl kam – sonst der eingestellte Server
-        const guildId = d.guildId ?? (ch.guildId ?? process.env.DISCORD_GUILD_ID ?? '').split(/[\s,;]+/).find((g) => /^\d{15,25}$/.test(g));
+        const cat = await this.config.category(d.categoryId);
+        const guildId = d.guildId ?? cat.guildId ?? (ch.guildId ?? process.env.DISCORD_GUILD_ID ?? '').split(/[\s,;]+/).find((g) => /^\d{15,25}$/.test(g));
         if (!guildId)
             throw new errors_1.AppError('VALIDATION_FAILED', 'Set the Discord server (guild) ID in Settings → Discord bot channels first.');
         return this.open({ categoryId: d.categoryId, guildId, discordId: d.discordId, discordName: d.discordName || d.discordId, memberRoleIds: [] }, actor, true);
     }
     /** Für /ticket im Discord: aktive Ticket-Arten (Voraussetzungen prüft der Bot vorab, das System beim Öffnen erneut). */
-    async openableCategories() {
-        const cats = await this.prisma.ticketCategory.findMany({ where: { active: true }, orderBy: [{ position: 'asc' }, { name: 'asc' }] });
+    async openableCategories(guildId) {
+        const cats = await this.prisma.ticketCategory.findMany({ where: { active: true, ...(guildId ? { OR: [{ guildId }, { guildId: null }] } : {}) }, orderBy: [{ position: 'asc' }, { name: 'asc' }] });
         return cats.map((c) => ({ id: c.id, name: c.name, emoji: c.emoji, description: c.description, requiredRoleIds: c.requiredRoleIds, allowedUserIds: c.allowedUserIds }));
     }
     /** Bot meldet: Channel und Ticket-Embed sind angelegt. */

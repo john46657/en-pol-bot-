@@ -59,10 +59,9 @@ Eigenen Admin-Benutzer anlegen, Rollen/Rechte anpassen, Legal Codes eintragen, B
 
 ## 4. Discord-Bot dazuschalten
 1. Bot im Developer Portal anlegen und auf den Server einladen – **Schritt für Schritt in [discord-bot.md](discord-bot.md)** (Abschnitt „Einrichtung“).
-2. Im Panel zwei Variablen ergänzen und den Server neu starten:
+2. Im Panel die Variable ergänzen und den Server neu starten (`DISCORD_GUILD_ID` ist optional – die Befehle kommen automatisch auf jeden Server des Bots):
    ```
    DISCORD_TOKEN=<Bot-Token>
-   DISCORD_GUILD_ID=<Server-ID>
    ```
    Das Start-Skript startet den Bot dann automatisch **mit** (er spricht intern mit `127.0.0.1`; das Geheimnis zwischen API und Bot wird automatisch erzeugt und in `data/` gespeichert).
 3. Channel-IDs unter *Admin → Settings → Discord bot channels* eintragen; Konten über das Chat-Symbol oben rechts verknüpfen.
@@ -96,4 +95,4 @@ Solange du ohne HTTPS arbeitest: nur Testdaten verwenden, keine echten Passwört
 | Login klappt, aber sofort wieder abgemeldet | `COOKIE_SECURE=true` gesetzt, aber Seite über `http://` geöffnet. Entweder HTTPS einrichten oder `COOKIE_SECURE` leer lassen. |
 | Domain zeigt **502**, aber der Bot ist online | Es läuft nur der Bot oder die API lauscht auf einem anderen Port als dem der Domain. Prüfe die Konsole: Sie muss „Starte API + Web auf 0.0.0.0:<Port>“ und danach „API ist erreichbar: … /health → 200“ zeigen. (1) `bot.py` startet seit dieser Version `start.js` auch wenn `bot.js` daneben liegt (älter: `NEXUS_ENTRY=start.js` setzen oder `bot.js` löschen). (2) Der Panel-Port `SERVER_PORT` gewinnt jetzt vor `PORT`; entferne trotzdem die Variable `PORT`. (3) `API_URL` nicht setzen – der Bot nutzt im gemeinsamen Betrieb die lokale API. Die Domain muss im Panel auf den Server-Port zeigen. |
 | Bot: `Invalid bot configuration` | `DISCORD_TOKEN` fehlt/ungültig. (`BOT_API_TOKEN` wird automatisch erzeugt.) |
-| Bot online, aber keine `/`-Befehle | Beim Einladen fehlte der Scope `applications.commands`, oder ohne `DISCORD_GUILD_ID` dauert die Registrierung bis zu 1 h. |
+| Bot online, aber keine `/`-Befehle | Beim Einladen fehlte der Scope `applications.commands`, oder der Bot hat nach dem Einladen noch nicht neu gestartet (die Befehle kommen sonst sofort beim Beitritt). |

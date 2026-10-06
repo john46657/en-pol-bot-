@@ -17,12 +17,16 @@ export declare class QualificationsService {
     private readonly audit;
     private readonly discord;
     constructor(prisma: PrismaService, audit: AuditService, discord: DiscordService);
-    config(): Promise<QualificationConfig>;
+    /** Einstellungen eines Servers (`@<guildId>`) – ohne eigene gilt die gemeinsame Grundeinstellung. */
+    private keyOf;
+    private read;
+    config(guildId?: string | null): Promise<QualificationConfig>;
     /** Fragen der Polizei-Bewerbung (dasselbe Formular wie /apply und Studio). */
-    policeForm(): Promise<FormField[]>;
-    /** Alles für „Qualifications → Setup“ an einem Ort. */
-    setup(): Promise<{
+    policeForm(guildId?: string | null): Promise<FormField[]>;
+    /** Alles für „Setup“ an einem Ort; `own` = dieser Server hat eigene Einstellungen. */
+    setup(guildId?: string | null): Promise<{
         policeForm: FormField[];
+        own: boolean;
         title: string;
         units: {
             name: string;
@@ -106,8 +110,94 @@ export declare class QualificationsService {
     }>;
     saveConfig(actor: Actor, input: QualificationConfig & {
         policeForm?: FormField[];
-    }): Promise<{
+    }, guildId?: string | null): Promise<{
         policeForm: FormField[];
+        own: boolean;
+        title: string;
+        units: {
+            name: string;
+            description: string;
+            settings: {
+                roles: {
+                    required: {
+                        mode: "ALL" | "ANY";
+                        ids: string[];
+                    };
+                    accepted: string[];
+                    denied: string[];
+                    restricted: {
+                        mode: "ALL" | "ANY";
+                        ids: string[];
+                    };
+                    acceptedRemove: string[];
+                    deniedRemove: string[];
+                    pending: string[];
+                    removeOnSubmit: string[];
+                    managers: string[];
+                };
+                messages: {
+                    accepted: string;
+                    denied: string;
+                    confirmation: string;
+                    completion: string;
+                };
+                staffThreads: boolean;
+                cooldownMinutes: number;
+                timeLimitMinutes: number;
+            };
+            key: string;
+            questions: FormField[];
+            pingRoleIds: string[];
+            enabled: boolean;
+            roleId?: string | undefined;
+            channelId?: string | undefined;
+            acceptedChannelId?: string | undefined;
+            deniedChannelId?: string | undefined;
+        }[];
+        intro: string;
+        police: {
+            name: string;
+            description: string;
+            settings: {
+                roles: {
+                    required: {
+                        mode: "ALL" | "ANY";
+                        ids: string[];
+                    };
+                    accepted: string[];
+                    denied: string[];
+                    restricted: {
+                        mode: "ALL" | "ANY";
+                        ids: string[];
+                    };
+                    acceptedRemove: string[];
+                    deniedRemove: string[];
+                    pending: string[];
+                    removeOnSubmit: string[];
+                    managers: string[];
+                };
+                messages: {
+                    accepted: string;
+                    denied: string;
+                    confirmation: string;
+                    completion: string;
+                };
+                staffThreads: boolean;
+                cooldownMinutes: number;
+                timeLimitMinutes: number;
+            };
+            title: string;
+            pingRoleIds: string[];
+            enabled: boolean;
+            channelId?: string | undefined;
+            acceptedChannelId?: string | undefined;
+            deniedChannelId?: string | undefined;
+        };
+    }>;
+    /** Eigene Einstellungen eines Servers löschen – danach gilt wieder die gemeinsame Grundeinstellung. */
+    resetGuild(actor: Actor, guildId: string): Promise<{
+        policeForm: FormField[];
+        own: boolean;
         title: string;
         units: {
             name: string;
@@ -211,6 +301,7 @@ export declare class QualificationsService {
     list(f: {
         unit?: string;
         status?: string;
+        guildId?: string;
     }): Promise<{
         linkedName: string | null;
         decidedByName: string | null;

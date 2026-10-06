@@ -5,11 +5,14 @@ import type { Actor } from '../audit/audit.service';
 declare const list: z.ZodObject<{
     unit: z.ZodOptional<z.ZodString>;
     status: z.ZodOptional<z.ZodEnum<["OPEN", "ACCEPTED", "REJECTED"]>>;
+    guildId: z.ZodOptional<z.ZodString>;
 }, "strip", z.ZodTypeAny, {
     unit?: string | undefined;
+    guildId?: string | undefined;
     status?: "REJECTED" | "OPEN" | "ACCEPTED" | undefined;
 }, {
     unit?: string | undefined;
+    guildId?: string | undefined;
     status?: "REJECTED" | "OPEN" | "ACCEPTED" | undefined;
 }>;
 declare const decision: z.ZodObject<{
@@ -79,12 +82,28 @@ declare const openQ: z.ZodObject<{
     discordId: string;
     unit?: string | undefined;
 }>;
+declare const guildQ: z.ZodObject<{
+    guildId: z.ZodOptional<z.ZodString>;
+}, "strip", z.ZodTypeAny, {
+    guildId?: string | undefined;
+}, {
+    guildId?: string | undefined;
+}>;
+declare const guildRequired: z.ZodObject<{
+    guildId: z.ZodString;
+}, "strip", z.ZodTypeAny, {
+    guildId: string;
+}, {
+    guildId: string;
+}>;
 export declare class QualificationsController {
     private readonly q;
     constructor(q: QualificationsService);
     /** Panels, Einheiten und die Fragen der Polizei-Bewerbung (`policeForm`). */
-    config(): Promise<{
+    /** `?guildId=` – Einstellungen eines Servers (ohne eigene: die gemeinsamen, `own: false`). */
+    config(q: z.infer<typeof guildQ>): Promise<{
         policeForm: import("@enrp/shared").FormField[];
+        own: boolean;
         title: string;
         units: {
             name: string;
@@ -166,8 +185,94 @@ export declare class QualificationsController {
             deniedChannelId?: string | undefined;
         };
     }>;
-    save(a: Actor, b: z.infer<typeof saveSchema>): Promise<{
+    save(a: Actor, q: z.infer<typeof guildQ>, b: z.infer<typeof saveSchema>): Promise<{
         policeForm: import("@enrp/shared").FormField[];
+        own: boolean;
+        title: string;
+        units: {
+            name: string;
+            description: string;
+            settings: {
+                roles: {
+                    required: {
+                        mode: "ALL" | "ANY";
+                        ids: string[];
+                    };
+                    accepted: string[];
+                    denied: string[];
+                    restricted: {
+                        mode: "ALL" | "ANY";
+                        ids: string[];
+                    };
+                    acceptedRemove: string[];
+                    deniedRemove: string[];
+                    pending: string[];
+                    removeOnSubmit: string[];
+                    managers: string[];
+                };
+                messages: {
+                    accepted: string;
+                    denied: string;
+                    confirmation: string;
+                    completion: string;
+                };
+                staffThreads: boolean;
+                cooldownMinutes: number;
+                timeLimitMinutes: number;
+            };
+            key: string;
+            questions: import("@enrp/shared").FormField[];
+            pingRoleIds: string[];
+            enabled: boolean;
+            roleId?: string | undefined;
+            channelId?: string | undefined;
+            acceptedChannelId?: string | undefined;
+            deniedChannelId?: string | undefined;
+        }[];
+        intro: string;
+        police: {
+            name: string;
+            description: string;
+            settings: {
+                roles: {
+                    required: {
+                        mode: "ALL" | "ANY";
+                        ids: string[];
+                    };
+                    accepted: string[];
+                    denied: string[];
+                    restricted: {
+                        mode: "ALL" | "ANY";
+                        ids: string[];
+                    };
+                    acceptedRemove: string[];
+                    deniedRemove: string[];
+                    pending: string[];
+                    removeOnSubmit: string[];
+                    managers: string[];
+                };
+                messages: {
+                    accepted: string;
+                    denied: string;
+                    confirmation: string;
+                    completion: string;
+                };
+                staffThreads: boolean;
+                cooldownMinutes: number;
+                timeLimitMinutes: number;
+            };
+            title: string;
+            pingRoleIds: string[];
+            enabled: boolean;
+            channelId?: string | undefined;
+            acceptedChannelId?: string | undefined;
+            deniedChannelId?: string | undefined;
+        };
+    }>;
+    /** Eigene Einstellungen eines Servers entfernen (zurück zur gemeinsamen Grundeinstellung). */
+    reset(a: Actor, q: z.infer<typeof guildRequired>): Promise<{
+        policeForm: import("@enrp/shared").FormField[];
+        own: boolean;
         title: string;
         units: {
             name: string;
@@ -312,7 +417,7 @@ export declare class QualificationsController {
 export declare class BotQualificationsController {
     private readonly q;
     constructor(q: QualificationsService);
-    config(): Promise<{
+    config(q: z.infer<typeof guildQ>): Promise<{
         title: string;
         units: {
             name: string;

@@ -31,21 +31,32 @@ declare const listQ: z.ZodObject<{
     q: z.ZodOptional<z.ZodString>;
 } & {
     status: z.ZodOptional<z.ZodUnion<[z.ZodEnum<["SUBMITTED", "SCREENING", "INTERVIEW", "PENDING_DECISION", "ACCEPTED", "REJECTED", "WITHDRAWN"]>, z.ZodLiteral<"OPEN">]>>;
+    guildId: z.ZodOptional<z.ZodString>;
 }, "strip", z.ZodTypeAny, {
     page: number;
     pageSize: number;
+    guildId?: string | undefined;
     status?: "SUBMITTED" | "REJECTED" | "SCREENING" | "OPEN" | "INTERVIEW" | "PENDING_DECISION" | "ACCEPTED" | "WITHDRAWN" | undefined;
     q?: string | undefined;
 }, {
+    guildId?: string | undefined;
     status?: "SUBMITTED" | "REJECTED" | "SCREENING" | "OPEN" | "INTERVIEW" | "PENDING_DECISION" | "ACCEPTED" | "WITHDRAWN" | undefined;
     page?: number | undefined;
     pageSize?: number | undefined;
     q?: string | undefined;
 }>;
+declare const guildQ: z.ZodObject<{
+    guildId: z.ZodOptional<z.ZodString>;
+}, "strip", z.ZodTypeAny, {
+    guildId?: string | undefined;
+}, {
+    guildId?: string | undefined;
+}>;
 export declare class ApplicationsController {
     private readonly a;
     constructor(a: ApplicationsService);
-    form(): Promise<import("@enrp/shared").FormField[]>;
+    /** `?guildId=` – Formular eines Servers (für den Bot); ohne: das gemeinsame (Web-Seite /apply). */
+    form(q: z.infer<typeof guildQ>): Promise<import("@enrp/shared").FormField[]>;
     submit(b: z.infer<typeof submit>): Promise<{
         number: string;
         status: string;

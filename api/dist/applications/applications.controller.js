@@ -25,15 +25,17 @@ const pagination_1 = require("../common/pagination");
 const submit = zod_1.z.object({ robloxUsername: zod_1.z.string().trim().min(1).max(64), robloxUserId: zod_1.z.string().max(20).optional(), answers: zod_1.z.record(zod_1.z.string(), zod_1.z.union([zod_1.z.string().max(5000), zod_1.z.array(zod_1.z.string().max(100)).max(25)])) });
 const move = zod_1.z.object({ status: zod_1.z.enum(shared_1.APPLICATION_STATUSES).refine((s) => s !== 'ACCEPTED' && s !== 'REJECTED', 'Use the decide endpoint.'), reason: zod_1.z.string().trim().min(3).max(1000).optional() });
 /** `OPEN` = alle noch nicht entschiedenen (eingereicht, Prüfung, Gespräch, Entscheidung offen). */
-const listQ = pagination_1.pageQuery.extend({ status: zod_1.z.union([zod_1.z.enum(shared_1.APPLICATION_STATUSES), zod_1.z.literal('OPEN')]).optional() });
+const listQ = pagination_1.pageQuery.extend({ status: zod_1.z.union([zod_1.z.enum(shared_1.APPLICATION_STATUSES), zod_1.z.literal('OPEN')]).optional(), guildId: zod_1.z.string().regex(/^\d{15,25}$/).optional() });
+const guildQ = zod_1.z.object({ guildId: zod_1.z.string().regex(/^\d{15,25}$/).optional() });
 let ApplicationsController = class ApplicationsController {
     a;
     constructor(a) {
         this.a = a;
     }
-    form() { return this.a.form(); }
+    /** `?guildId=` – Formular eines Servers (für den Bot); ohne: das gemeinsame (Web-Seite /apply). */
+    form(q) { return this.a.form(q.guildId); }
     submit(b) { return this.a.submit(b); }
-    list(q) { return this.a.list(q, q.status); }
+    list(q) { return this.a.list(q, q.status, q.guildId); }
     history(q) { return this.a.history(q.discordId); }
     get(id) { return this.a.get(id); }
     /** Prüfschritte benötigen applications.review; Entscheidungen applications.decide. */
@@ -52,8 +54,9 @@ exports.ApplicationsController = ApplicationsController;
 __decorate([
     (0, decorators_1.Public)(),
     (0, common_1.Get)('form'),
+    __param(0, (0, common_1.Query)((0, zod_pipe_1.zodBody)(guildQ))),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", []),
+    __metadata("design:paramtypes", [void 0]),
     __metadata("design:returntype", void 0)
 ], ApplicationsController.prototype, "form", null);
 __decorate([
