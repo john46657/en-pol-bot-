@@ -65,8 +65,8 @@ test('dispatch workflow: unit + incident, assign, progress and close', async ({ 
 test('permission denial: a police member cannot reach admin pages or see admin navigation', async ({ page }) => {
   const u = await createUser('e2e_rookie', 'Police Member');
   await uiLogin(page, u.username, u.password);
-  await expect(page.getByRole('link', { name: 'Persons' })).toBeVisible();
-  await expect(page.getByRole('link', { name: 'Audit' })).toHaveCount(0);
+  await expect(page.getByRole('link', { name: 'Personen', exact: true })).toBeVisible();
+  await expect(page.getByRole('link', { name: 'Audit-Logs' })).toHaveCount(0);
   await page.goto('/admin/audit');
   await expect(page.getByRole('heading', { name: 'Forbidden' })).toBeVisible();
   await page.goto('/admin/roles');
@@ -277,4 +277,54 @@ test('dashboard: edit mode adds the voice widget separately from the team list; 
   await expect(page.getByPlaceholder('🔍 Teammitglied suchen')).toBeVisible();
   await page.getByRole('button', { name: 'Tabellenansicht' }).click();
   await expect(page.getByRole('button', { name: 'Tabellenansicht' })).toHaveAttribute('aria-pressed', 'true');
+});
+
+test('Funk-Codes: standard codes, edit with autosave, find via global search', async ({ page }) => {
+  await uiLogin(page, 'admin', ADMIN_PASSWORD);
+  await page.getByRole('link', { name: 'Funk-Codes' }).click();
+  await page.getByRole('button', { name: 'Standard-Codes einfügen' }).click();
+  await expect(page.getByLabel('Bedeutung 10-4')).toHaveValue('Verstanden');
+  await page.getByLabel('Bedeutung 10-4').fill('Verstanden, Ende');
+  await expect(page.getByRole('status').filter({ hasText: 'Alle Änderungen gespeichert' })).toBeVisible({ timeout: 10_000 });
+  await page.reload();
+  await expect(page.getByLabel('Bedeutung 10-4')).toHaveValue('Verstanden, Ende');
+  await page.keyboard.press('Control+k');
+  await page.getByLabel('Search term').fill('10-99');
+  await page.getByRole('dialog').getByRole('button', { name: /10-99/ }).click();
+  await expect(page).toHaveURL(/radio-codes\?q=10-99/);
+});
+
+test('Team-Chance: open it (autosave) – the public application page shows it', async ({ page, browser }) => {
+  await uiLogin(page, 'admin', ADMIN_PASSWORD);
+  await page.getByRole('link', { name: 'Team-Chance' }).click();
+  await page.getByLabel('Titel').fill('E2E Team-Chance');
+  await page.getByRole('checkbox', { name: /Team-Chance ist geschlossen/ }).check();
+  await expect(page.getByRole('status').filter({ hasText: 'Alle Änderungen gespeichert' })).toBeVisible({ timeout: 10_000 });
+  await expect(page.getByText('📣 offen')).toBeVisible({ timeout: 10_000 });
+  const ctx = await browser.newContext();
+  const p = await ctx.newPage();
+  await p.goto('/apply');
+  await expect(p.getByText('📣 E2E Team-Chance – jetzt offen')).toBeVisible();
+  await ctx.close();
+  await page.getByRole('checkbox', { name: /Team-Chance ist geöffnet/ }).uncheck();
+  await expect(page.getByRole('status').filter({ hasText: 'Alle Änderungen gespeichert' })).toBeVisible({ timeout: 10_000 });
+});
+
+test('system notice appears as popup and in the notification center; menu language switches to English', async ({ page, browser }) => {
+  await uiLogin(page, 'admin', ADMIN_PASSWORD);
+  const ctx = await browser.newContext();
+  const other = await ctx.newPage();
+  const u = await createUser('e2e_notice', 'Police Member');
+  await uiLogin(other, u.username, u.password);
+  await page.goto('/admin/settings');
+  await page.getByLabel('Titel').fill('Wartung heute Abend');
+  await page.getByRole('button', { name: 'Senden' }).click();
+  await expect(page.getByText(/An \d+ Benutzer gesendet/)).toBeVisible();
+  await expect(other.getByText('⚠️ Wartung heute Abend').first()).toBeVisible({ timeout: 10_000 });
+  await ctx.close();
+  await page.goto('/me/settings');
+  await page.getByRole('radio', { name: 'English' }).click();
+  await expect(page.getByRole('link', { name: 'Persons', exact: true })).toBeVisible();
+  await page.getByRole('radio', { name: 'Deutsch' }).click();
+  await expect(page.getByRole('link', { name: 'Personen', exact: true })).toBeVisible();
 });

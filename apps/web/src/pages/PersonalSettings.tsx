@@ -2,14 +2,16 @@ import type { ReactNode } from 'react';
 import { RotateCcw } from 'lucide-react';
 import { useAuth } from '../lib/auth';
 import { DEFAULT_PREFS, GRADIENTS, usePrefs, type Preferences } from '../lib/prefs';
-import { NAV, visible } from '../nav';
+import { NAV, tr, visible } from '../nav';
 import { QUICK_ACTIONS } from './Dashboard';
 import { Button, Card, Input, PageHeader, Select } from '../components/ui';
 
 const ACCENT_PRESETS = ['#5865F2', '#7289DA', '#3b82f6', '#22c55e', '#f59e0b', '#ef4444', '#06b6d4', '#8b5cf6', '#ec4899'];
 /** Benachrichtigungsarten, die man für sich ausblenden kann. */
 const NOTIFICATION_TYPES: [string, string][] = [
-  ['QUALIFICATION', '🏅 Qualifikationen / Bewerbungen'], ['TICKET_ISSUED', '🧾 Strafzettel'], ['PERSONNEL', '👥 Teamänderung / Dienstgrad'],
+  ['APPLICATION', '🔔 Neue Bewerbung'], ['TICKET_CLAIMED', '🎫 Ticket übernommen'], ['TEAM_CHANGE', '👥 Teamänderung'], ['MESSAGE', '📢 Neue Nachricht (Ankündigung)'],
+  ['SYSTEM', '⚠️ Systemhinweis'], ['TEAMCHANCE', '📣 Team-Chance geöffnet'],
+  ['QUALIFICATION', '🏅 Qualifikationen'], ['TICKET_ISSUED', '🧾 Strafzettel'], ['PERSONNEL', '🪪 Dienstgrad / Personal'],
   ['INCIDENT_ASSIGNMENT', '🚨 Einsatz zugewiesen'], ['REPORT_REVIEW', '📄 Bericht zur Prüfung'], ['COMPLAINT_ASSIGNMENT', '⚖️ Beschwerde zugewiesen'],
   ['ACADEMY_ASSIGNMENT', '🎓 Academy'], ['SEK', '🎯 SEK'], ['RADIO', '📡 Funk'],
 ];
@@ -66,12 +68,13 @@ export function PersonalSettings() {
           <Row label="Datumsformat"><Select aria-label="Datumsformat" className="w-auto" value={p.dateFormat} onChange={(e) => update({ dateFormat: e.target.value as Preferences['dateFormat'] })}><option>DD.MM.YYYY</option><option>YYYY-MM-DD</option><option>MM/DD/YYYY</option></Select></Row>
         </Card>
         <Card title="🔔 Benachrichtigungen">
-          <p className="mb-2 text-xs text-muted">Ausgeschaltete Arten erscheinen nicht im Benachrichtigungs-Center und nicht im Zähler.</p>
+          <p className="mb-2 text-xs text-muted">Ausgeschaltete Arten erscheinen nicht im Benachrichtigungs-Center, nicht im Zähler und nicht als Popup.</p>
+          <div className="mb-2"><Toggle label="Neue Benachrichtigungen als Popup zeigen" checked={p.notifications.toasts !== false} onChange={(v) => update({ notifications: { ...p.notifications, toasts: v } })} /></div>
           <div className="grid gap-1.5 sm:grid-cols-2">{NOTIFICATION_TYPES.map(([t, l]) => <Toggle key={t} label={l} checked={!p.notifications.muted.includes(t)} onChange={(on) => update({ notifications: { ...p.notifications, muted: on ? p.notifications.muted.filter((x) => x !== t) : [...p.notifications.muted, t] } })} />)}</div>
         </Card>
         <Card title="⭐ Favoriten & Schnellzugriff">
           <p className="mb-2 text-xs text-muted">Favoriten erscheinen oben im Menü und im Favoriten-Widget (auch über ☆ im Menü).</p>
-          <div className="grid gap-1.5 sm:grid-cols-2">{navItems.map((n) => <Toggle key={n.path} label={n.label} checked={p.favorites.includes(n.path)} onChange={(on) => update({ favorites: on ? [...p.favorites, n.path] : p.favorites.filter((x) => x !== n.path) })} />)}</div>
+          <div className="grid gap-1.5 sm:grid-cols-2">{navItems.map((n) => <Toggle key={n.path} label={tr(n.label, p.language)} checked={p.favorites.includes(n.path)} onChange={(on) => update({ favorites: on ? [...p.favorites, n.path] : p.favorites.filter((x) => x !== n.path) })} />)}</div>
           <h3 className="mb-1 mt-4 text-sm font-semibold">Schnellaktionen</h3>
           <div className="grid gap-1.5 sm:grid-cols-2">{QUICK_ACTIONS.filter((a) => a.perms.every(can)).map((a) => <Toggle key={a.id} label={a.label} checked={p.quickActions.includes(a.id)} onChange={(on) => update({ quickActions: on ? [...p.quickActions, a.id] : p.quickActions.filter((x) => x !== a.id) })} />)}</div>
         </Card>

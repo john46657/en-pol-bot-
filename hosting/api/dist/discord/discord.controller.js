@@ -57,6 +57,8 @@ let DiscordController = class DiscordController {
     link(a) { return this.d.status(a.userId); }
     /** Server des Bots mit Channels und Rollen (Namen + Auswahllisten im Dashboard). */
     guilds() { return this.d.guilds(); }
+    /** Welche Benachrichtigungs-Channels eingestellt sind (nur ja/nein, keine IDs) – Hinweise im Dashboard. */
+    async channelStatus() { const c = await this.d.channels(); return Object.fromEntries(discord_service_1.CHANNEL_KEYS.map((k) => [k, !!c[k]])); }
     linkCode(a) { return this.d.createLinkCode(a); }
     unlinkSelf(a) { return this.d.unlink(a, a.userId); }
     unlinkUser(a, userId) { return this.d.unlink(a, userId); }
@@ -76,6 +78,13 @@ __decorate([
     __metadata("design:paramtypes", []),
     __metadata("design:returntype", void 0)
 ], DiscordController.prototype, "guilds", null);
+__decorate([
+    (0, common_1.Get)('channel-status'),
+    (0, decorators_1.RequirePermission)('dashboard.view'),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", []),
+    __metadata("design:returntype", Promise)
+], DiscordController.prototype, "channelStatus", null);
 __decorate([
     (0, common_1.Post)('link-code'),
     (0, throttler_1.Throttle)({ default: { limit: process.env.NODE_ENV === 'test' ? 10_000 : 10, ttl: 60_000 } }),

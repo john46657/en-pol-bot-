@@ -42,9 +42,9 @@ declare const listQuery: z.ZodObject<{
     q?: string | undefined;
     personId?: string | undefined;
 }, {
+    q?: string | undefined;
     page?: number | undefined;
     pageSize?: number | undefined;
-    q?: string | undefined;
     personId?: string | undefined;
 }>;
 export declare class TicketsController {

@@ -376,6 +376,10 @@ export declare class DiscordController {
     }>;
     /** Server des Bots mit Channels und Rollen (Namen + Auswahllisten im Dashboard). */
     guilds(): Promise<import("./discord.service").DiscordGuildInfo[]>;
+    /** Welche Benachrichtigungs-Channels eingestellt sind (nur ja/nein, keine IDs) – Hinweise im Dashboard. */
+    channelStatus(): Promise<{
+        [k: string]: boolean;
+    }>;
     linkCode(a: Actor): Promise<{
         code: string;
         expiresAt: Date;

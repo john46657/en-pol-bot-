@@ -72,9 +72,9 @@ declare const listQ: z.ZodObject<{
 }, {
     active?: boolean | undefined;
     status?: "CANCELLED" | "CLOSED" | "EN_ROUTE" | "ON_SCENE" | "NEW" | "ACKNOWLEDGED" | "ASSIGNED" | "PROCESSING" | "CLEARING" | undefined;
+    q?: string | undefined;
     page?: number | undefined;
     pageSize?: number | undefined;
-    q?: string | undefined;
 }>;
 declare const attach: z.ZodObject<{
     personIds: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
@@ -126,8 +126,8 @@ export declare class IncidentsController {
             description: string | null;
             priority: string;
             status: string;
-            serverId: string | null;
             title: string;
+            serverId: string | null;
             location: string | null;
             source: string;
             dispatcherId: string | null;
@@ -164,8 +164,8 @@ export declare class IncidentsController {
             description: string | null;
             priority: string;
             status: string;
-            serverId: string | null;
             title: string;
+            serverId: string | null;
             location: string | null;
             source: string;
             dispatcherId: string | null;
@@ -200,8 +200,8 @@ export declare class IncidentsController {
         description: string | null;
         priority: string;
         status: string;
-        serverId: string | null;
         title: string;
+        serverId: string | null;
         location: string | null;
         source: string;
         dispatcherId: string | null;
@@ -217,8 +217,8 @@ export declare class IncidentsController {
         description: string | null;
         priority: string;
         status: string;
-        serverId: string | null;
         title: string;
+        serverId: string | null;
         location: string | null;
         source: string;
         dispatcherId: string | null;
@@ -294,8 +294,8 @@ export declare class DispatchController {
         description: string | null;
         priority: string;
         status: string;
-        serverId: string | null;
         title: string;
+        serverId: string | null;
         location: string | null;
         source: string;
         dispatcherId: string | null;
@@ -311,8 +311,8 @@ export declare class DispatchController {
         description: string | null;
         priority: string;
         status: string;
-        serverId: string | null;
         title: string;
+        serverId: string | null;
         location: string | null;
         source: string;
         dispatcherId: string | null;
@@ -328,8 +328,8 @@ export declare class DispatchController {
         description: string | null;
         priority: string;
         status: string;
-        serverId: string | null;
         title: string;
+        serverId: string | null;
         location: string | null;
         source: string;
         dispatcherId: string | null;

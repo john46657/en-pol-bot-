@@ -1,3 +1,4 @@
+import { webUrl } from '../common/web-url';
 import { Injectable } from '@nestjs/common';
 import { WANTED_TRANSITIONS, WantedStatus } from '@enrp/shared';
 import { PrismaService } from '../prisma/prisma.service';
@@ -49,7 +50,9 @@ export class WantedService {
       return w;
     }).then(async (w) => {
       const subject = w.personId ? (await this.prisma.person.findUnique({ where: { id: w.personId } }))?.robloxUsername : (await this.prisma.vehicle.findUnique({ where: { id: w.vehicleId! } }))?.plate;
-      await this.discord.enqueue('wanted', 'wanted.created', { reason: w.reason, priority: w.priority, subject: subject ?? 'unknown', kind: w.personId ? 'person' : 'vehicle' });
+      const by = actor.userId ? (await this.prisma.user.findUnique({ where: { id: actor.userId }, select: { displayName: true } }))?.displayName : null;
+      // Discord: Fahndungs-Channel (Einstellungen → Discord-Bot-Channels → Wanted) – egal ob aus Dashboard oder Discord angelegt
+      await this.discord.enqueue('wanted', 'wanted.created', { id: w.id, reason: w.reason, description: w.description ?? null, priority: w.priority, subject: subject ?? 'unknown', kind: w.personId ? 'person' : 'vehicle', expiresAt: w.expiresAt?.toISOString() ?? null, createdBy: by ?? null, dashboardUrl: webUrl(`/wanted/${w.id}`) });
       return w;
     });
   }
@@ -64,6 +67,12 @@ export class WantedService {
       await this.timeline.add(tx, { entityType: 'Wanted', entityId: id, action: `wanted.${to.toLowerCase()}`, summary: `${w.status} → ${to}`, actorId: actor.userId });
       if (w.personId) await this.timeline.add(tx, { entityType: 'Person', entityId: w.personId, action: `wanted.${to.toLowerCase()}`, summary: `Wanted record ${to}`, actorId: actor.userId });
       await this.audit.record(actor, { action: `wanted.${to.toLowerCase()}`, module: 'wanted', entityType: 'Wanted', entityId: id, before: { status: w.status }, after: { status: to }, reason }, tx);
+      return after;
+    }).then(async (after) => {
+      // Statusänderung (aufgehoben, abgebrochen, wieder aktiv) ebenfalls in den Fahndungs-Channel
+      const subject = after.personId ? (await this.prisma.person.findUnique({ where: { id: after.personId } }))?.robloxUsername : after.vehicleId ? (await this.prisma.vehicle.findUnique({ where: { id: after.vehicleId } }))?.plate : null;
+      const by = actor.userId ? (await this.prisma.user.findUnique({ where: { id: actor.userId }, select: { displayName: true } }))?.displayName : null;
+      await this.discord.enqueue('wanted', 'wanted.status', { id, status: to, reason: after.reason, note: reason, subject: subject ?? 'unknown', kind: after.personId ? 'person' : 'vehicle', by: by ?? null, dashboardUrl: webUrl(`/wanted/${id}`) });
       return after;
     });
   }

@@ -7,11 +7,12 @@ import { useMediaQuery } from '../lib/media';
 import { ACCENTS, useStudio } from '../lib/studio';
 import { useApplyPrefs, usePrefs } from '../lib/prefs';
 import { flush } from '../lib/autosave';
-import { GROUPS, NAV, visible, type NavItem } from '../nav';
+import { GROUPS, NAV, tr, visible, type NavItem } from '../nav';
 import { DiscordLink } from './DiscordLink';
 import { GlobalSearch } from './GlobalSearch';
 import { NotificationCenter } from './NotificationCenter';
 import { SaveStatus } from './SaveStatus';
+import { Toasts } from './Toasts';
 import { Button } from './ui';
 
 export function AppShell() {
@@ -26,16 +27,17 @@ export function AppShell() {
   // Seitenwechsel: offene Änderungen sofort senden (sie liegen ohnehin schon lokal vor)
   useEffect(() => { void flush(); }, [loc.pathname]);
   const items = NAV.filter((n) => visible(n, can));
+  const L = (t: string) => tr(t, prefs.language);
   const favs = prefs.favorites.map((p) => items.find((i) => i.path === p)).filter((i): i is NavItem => !!i);
   const toggleFav = (path: string) => update({ favorites: prefs.favorites.includes(path) ? prefs.favorites.filter((p) => p !== path) : [...prefs.favorites, path].slice(0, 30) });
   const collapsed = prefs.sidebarCollapsed;
   const tablet = useMediaQuery('(min-width: 768px) and (max-width: 1023px)');
   const link = (i: NavItem, fav = false) => (
     <div key={(fav ? 'f' : '') + i.path} className="group relative">
-      <NavLink to={i.path} onClick={() => setOpen(false)} title={collapsed ? i.label : undefined} className={({ isActive }) => `flex items-center gap-2.5 rounded-md px-2.5 py-1.5 text-sm ${isActive ? 'bg-primary/15 text-fg' : 'text-muted hover:bg-panel-2 hover:text-fg'}`}>
-        <i.icon size={16} aria-hidden className="shrink-0" />{!collapsed && <span className="min-w-0 truncate">{i.label}</span>}
+      <NavLink to={i.path} onClick={() => setOpen(false)} title={collapsed ? L(i.label) : undefined} className={({ isActive }) => `flex items-center gap-2.5 rounded-md px-2.5 py-1.5 text-sm ${isActive ? 'bg-primary/15 text-fg' : 'text-muted hover:bg-panel-2 hover:text-fg'}`}>
+        <i.icon size={16} aria-hidden className="shrink-0" />{!collapsed && <span className="min-w-0 truncate">{L(i.label)}</span>}
       </NavLink>
-      {!collapsed && <button type="button" aria-label={prefs.favorites.includes(i.path) ? `${i.label} aus Favoriten entfernen` : `${i.label} zu Favoriten`} onClick={() => toggleFav(i.path)}
+      {!collapsed && <button type="button" aria-label={prefs.favorites.includes(i.path) ? `${L(i.label)} aus Favoriten entfernen` : `${L(i.label)} zu Favoriten`} onClick={() => toggleFav(i.path)}
         className={`absolute right-1.5 top-1/2 -translate-y-1/2 rounded p-0.5 ${prefs.favorites.includes(i.path) ? 'text-warning' : 'text-muted opacity-0 group-hover:opacity-100 focus:opacity-100'}`}>
         <Star size={12} fill={prefs.favorites.includes(i.path) ? 'currentColor' : 'none'} aria-hidden />
       </button>}
@@ -46,7 +48,7 @@ export function AppShell() {
       {favs.length > 0 && <div><p className="mb-1 px-2 text-[11px] font-semibold uppercase tracking-wider text-muted">{collapsed ? '★' : '⭐ Favoriten'}</p>{favs.map((i) => link(i, true))}</div>}
       {GROUPS.map((g) => {
         const gi = items.filter((i) => i.group === g);
-        return gi.length ? <div key={g}>{!collapsed && <p className="mb-1 px-2 text-[11px] font-semibold uppercase tracking-wider text-muted">{g}</p>}{gi.map((i) => link(i))}</div> : null;
+        return gi.length ? <div key={g}>{!collapsed && <p className="mb-1 px-2 text-[11px] font-semibold uppercase tracking-wider text-muted">{L(g)}</p>}{gi.map((i) => link(i))}</div> : null;
       })}
     </nav>
   );
@@ -57,7 +59,7 @@ export function AppShell() {
       {tablet && <nav aria-label="Quick navigation" className="flex w-16 shrink-0 flex-col items-center gap-1 overflow-y-auto border-r border-line bg-panel py-2">
         <Shield size={20} className="mb-2 mt-2 text-primary" aria-hidden />
         {items.map((i) => (
-          <NavLink key={i.path} to={i.path} title={i.label} aria-label={i.label} className={({ isActive }) => `grid h-11 w-11 shrink-0 place-items-center rounded-md ${isActive ? 'bg-primary/15 text-fg' : 'text-muted hover:bg-panel-2 hover:text-fg'}`}>
+          <NavLink key={i.path} to={i.path} title={L(i.label)} aria-label={L(i.label)} className={({ isActive }) => `grid h-11 w-11 shrink-0 place-items-center rounded-md ${isActive ? 'bg-primary/15 text-fg' : 'text-muted hover:bg-panel-2 hover:text-fg'}`}>
             <i.icon size={20} aria-hidden />
           </NavLink>
         ))}
@@ -83,6 +85,7 @@ export function AppShell() {
           </div>
         </header>
         <main id="main" className="min-w-0 flex-1 overflow-y-auto p-3 sm:p-4 lg:p-6">{can('dashboard.view') ? <Outlet /> : <NoAccess />}</main>
+        <Toasts />
       </div>
     </div>
   );

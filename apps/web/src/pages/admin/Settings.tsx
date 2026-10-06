@@ -4,11 +4,15 @@ import { api, ApiError } from '../../lib/api';
 import { useAuth } from '../../lib/auth';
 import { useGuilds, useServer } from '../../lib/guilds';
 import { useSettings } from '../../lib/settings';
+import { ChannelPicker, ChannelsPicker, RolePicker } from '../../components/DiscordPickers';
 import { Button, Card, ErrorState, Field, Input, PageHeader, Select, SkeletonRows } from '../../components/ui';
 
 const TEXT = [['org.name', 'Organisation name'], ['org.serverName', 'Server name'], ['org.timezone', 'Timezone (IANA)']] as const;
-const CHANNELS = [['dispatch', 'Dispatch channel ID (new/assigned incidents)'], ['wanted', 'Wanted channel ID (new wanted records)'], ['announcements', 'Announcements channel ID'], ['applications', 'Applications channel ID (police applications with answers + accept/deny buttons – staff only!)'], ['danger', 'Danger level channel ID (level changes)'], ['sek', 'SEK channel ID (SEK mission reports)'], ['qualifications', 'Qualifications channel ID (applications from /qualipanel with accept/reject buttons)'], ['duty', 'Duty channel ID (message on every duty status change)'],
+const CHANNELS = [['dispatch', '📡 Leitstellen-Channel (neue/zugewiesene Einsätze)'], ['wanted', '🚨 Fahndungs-Channel (neue Fahndungen und Statusänderungen)'], ['announcements', '📢 Ankündigungs-Channel'], ['applications', 'Applications channel ID (police applications with answers + accept/deny buttons – staff only!)'], ['danger', 'Danger level channel ID (level changes)'], ['sek', 'SEK channel ID (SEK mission reports)'], ['qualifications', 'Qualifications channel ID (applications from /qualipanel with accept/reject buttons)'], ['duty', 'Duty channel ID (message on every duty status change)'],
   ['teamlist', 'Team list channel ID (self-updating list, one channel)'], ['tickets', 'Support ticket category ID (one category)'], ['staffRole', 'Staff role ID (sees support tickets)'], ['radioRole', 'Radio role ID (given with the radio whitelist)'], ['sekRole', 'SEK role ID (given/removed with /sek in Discord)'], ['dutyRole', 'On-duty role ID(s) (given while ON DUTY, removed otherwise; several servers: one ID each, comma-separated)'], ['breakRole', 'Break role ID(s) (optional)'], ['trainingRole', 'Training role ID(s) (optional)'], ['adminDutyRole', 'Administrative duty role ID(s) (optional)'], ['guildId', 'Server (guild) ID – optional']] as const;
+/** Rollen-Felder (Auswahl als Rolle) und Felder mit genau einer ID. */
+const ROLE_KEYS = new Set(['staffRole', 'radioRole', 'sekRole', 'dutyRole', 'breakRole', 'trainingRole', 'adminDutyRole']);
+const SINGLE = new Set(['teamlist', 'tickets', 'staffRole', 'radioRole', 'sekRole']);
 const NUM = [['retention.sessionDays', 'Keep expired sessions (days)', 1, 365], ['retention.loginHistoryDays', 'Keep login history (days)', 30, 3650], ['retention.readNotificationDays', 'Keep read notifications (days)', 7, 3650]] as const;
 
 export function Settings() {
@@ -59,9 +63,18 @@ export function Settings() {
         </div>
       </Card>
       <Card title="Discord bot channels" className="mt-4">
-        <p className="mb-3 text-xs text-muted">Wird automatisch gespeichert, sobald alle eingetragenen IDs vollständig sind. Empty = that notification type is disabled (nothing is queued). Several channels (also on different servers): separate the IDs with a comma. Everyone who can read the Discord channel will see the posts — use staff-only channels. Team list, ticket category and the roles take a single ID.</p>
-        <div className="grid gap-3 md:grid-cols-2">{CHANNELS.map(([k, label]) => <Field key={k} label={label} error={chVal(k).trim() && !/^\d{15,25}(\s*,\s*\d{15,25})*$/.test(chVal(k).trim()) ? 'Unvollständige ID – wird noch nicht gespeichert' : undefined}>{(id) => <Input id={id} inputMode="numeric" disabled={!manage} value={chVal(k)} onChange={(e) => setChannel(k, e.target.value)} placeholder="123456789012345678, 234567890123456789" />}</Field>)}</div>
+        <p className="mb-3 text-xs text-muted">Channel aus der Liste wählen – wird automatisch gespeichert. Beispiel: <b>Wanted channel</b> = euer Fahndungs-Channel; jede Fahndung (aus Dashboard oder Discord) wird dort gepostet. Empty = that notification type is disabled (nothing is queued). Several channels (also on different servers): separate the IDs with a comma. Everyone who can read the Discord channel will see the posts — use staff-only channels. Team list, ticket category and the roles take a single ID.</p>
+        <div className="grid gap-3 md:grid-cols-2">{CHANNELS.map(([k, label]) => (
+          <div key={k} className="grid gap-1">
+            <p className="text-xs font-medium text-muted">{label}</p>
+            {ROLE_KEYS.has(k) ? <RolePicker ariaLabel={label} disabled={!manage} max={SINGLE.has(k) ? 1 : 10} value={chVal(k).split(/[\s,;]+/).filter(Boolean)} onChange={(ids) => setChannel(k, ids.join(', '))} />
+              : k === 'tickets' ? <ChannelPicker ariaLabel={label} kind="category" disabled={!manage} value={chVal(k) || null} onChange={(v) => setChannel(k, v ?? '')} />
+              : k === 'guildId' ? <Input aria-label={label} inputMode="numeric" disabled={!manage} value={chVal(k)} onChange={(e) => setChannel(k, e.target.value)} placeholder="123456789012345678" />
+              : <ChannelsPicker ariaLabel={label} disabled={!manage} max={SINGLE.has(k) ? 1 : 10} value={chVal(k)} onChange={(v) => setChannel(k, v)} />}
+          </div>
+        ))}</div>
       </Card>
+      {manage && <SystemNoticeCard />}
       <BotInviteCard />
       <DiscordLoginCard manage={manage} value={get<DiscordLogin>('auth.discord')} onSave={(v) => put('auth.discord', v, 'Discord-Anmeldung')} />
     </>
@@ -141,6 +154,24 @@ function BotInviteCard() {
             : <p className="text-xs text-muted">None reported yet – the bot reports its servers a few seconds after it starts.</p>}
         </div>
       </div>
+    </Card>
+  );
+}
+
+/** ⚠️ Systemhinweis an alle Dashboard-Benutzer (des gewählten Servers) – erscheint im Benachrichtigungs-Center und als Popup. */
+function SystemNoticeCard() {
+  const [title, setTitle] = useState('');
+  const [body, setBody] = useState('');
+  const send = useMutation({ mutationFn: () => api<{ recipients: number }>('/notifications/system', { body: { title: title.trim(), body: body.trim() || undefined } }), onSuccess: () => { setTitle(''); setBody(''); } });
+  return (
+    <Card title="⚠️ Systemhinweis senden" className="mt-4">
+      <div className="grid gap-2 md:grid-cols-[1fr_2fr_auto] md:items-end">
+        <Field label="Titel">{(id) => <Input id={id} value={title} maxLength={200} placeholder="Wartung heute 22 Uhr" onChange={(e) => setTitle(e.target.value)} />}</Field>
+        <Field label="Text (optional)">{(id) => <Input id={id} value={body} maxLength={1000} onChange={(e) => setBody(e.target.value)} />}</Field>
+        <Button disabled={send.isPending || title.trim().length < 3} onClick={() => send.mutate()}>Senden</Button>
+      </div>
+      {send.data && <p role="status" className="mt-2 text-sm text-success">An {send.data.recipients} Benutzer gesendet.</p>}
+      {send.error && <p role="alert" className="mt-2 text-sm text-danger">{send.error instanceof ApiError ? send.error.message : 'Fehlgeschlagen'}</p>}
     </Card>
   );
 }

@@ -22,9 +22,9 @@ declare const q: z.ZodObject<{
     module?: string | undefined;
     entityType?: string | undefined;
     entityId?: string | undefined;
+    q?: string | undefined;
     page?: number | undefined;
     pageSize?: number | undefined;
-    q?: string | undefined;
 }>;
 /** Lesbarer Satz für Rechteänderungen („Max hat der Rolle Moderator die Berechtigung ticket.delete entzogen.“). */
 export declare function auditSummary(e: {

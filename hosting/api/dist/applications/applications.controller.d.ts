@@ -41,9 +41,9 @@ declare const listQ: z.ZodObject<{
 }, {
     guildId?: string | undefined;
     status?: "SUBMITTED" | "REJECTED" | "SCREENING" | "OPEN" | "INTERVIEW" | "PENDING_DECISION" | "ACCEPTED" | "WITHDRAWN" | undefined;
+    q?: string | undefined;
     page?: number | undefined;
     pageSize?: number | undefined;
-    q?: string | undefined;
 }>;
 declare const guildQ: z.ZodObject<{
     guildId: z.ZodOptional<z.ZodString>;

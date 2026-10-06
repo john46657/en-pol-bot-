@@ -13,7 +13,7 @@ export interface ResourceConfig<T> {
   title: string; subtitle?: string; endpoint: string; queryKey: string; columns: Column<T>[]; emptyText: string; emptyHint?: string;
   detailPath?: (r: T) => string; statusFilter?: readonly string[];
   create?: { perm: string; label: string; fields: FieldDef[]; toBody?: (v: Record<string, unknown>) => unknown; endpoint?: string };
-  extraQuery?: Record<string, string>; customEntity?: 'persons' | 'vehicles'; headerExtra?: ReactNode;
+  extraQuery?: Record<string, string>; customEntity?: 'persons' | 'vehicles'; headerExtra?: ReactNode; notice?: ReactNode;
 }
 
 /** Generische, serverseitig paginierte Listenseite mit Suche, Statusfilter und permission-aware „Neu“-Aktion. */
@@ -32,6 +32,7 @@ export function ResourcePage<T extends { id?: string }>({ cfg }: { cfg: Resource
   return (
     <>
       <PageHeader title={cfg.title} subtitle={cfg.subtitle} actions={<>{cfg.headerExtra}{canCreate && <Button onClick={() => setCreating(true)}><Plus size={14} />{cfg.create!.label}</Button>}</>} />
+      {cfg.notice}
       <DataTable<T> columns={cfg.columns} rows={res.data?.items} total={res.data?.total ?? 0} page={page} pageSize={25} onPage={setPage}
         loading={res.isLoading} error={res.error} onRetry={() => void res.refetch()} search={search} onSearch={(s) => { setSearch(s); setPage(1); }}
         onRowClick={cfg.detailPath ? (r) => nav(cfg.detailPath!(r)) : undefined} empty={{ text: cfg.emptyText, hint: cfg.emptyHint }}

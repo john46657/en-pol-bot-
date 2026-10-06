@@ -13,6 +13,7 @@ exports.DiscordLiveService = void 0;
 const common_1 = require("@nestjs/common");
 const prisma_service_1 = require("../prisma/prisma.service");
 const realtime_service_1 = require("../realtime/realtime.service");
+const notify_service_1 = require("../notifications/notify.service");
 const MAX_CHANGES = 100;
 /**
  * Aktueller Discord-Stand, den der Bot meldet (Teammitglieder ≥ alle 60 s, Voice bei jeder Änderung).
@@ -22,14 +23,16 @@ const MAX_CHANGES = 100;
 let DiscordLiveService = class DiscordLiveService {
     prisma;
     rt;
+    notify;
     members = new Map();
     membersAt = null;
     voice = [];
     voiceAt = null;
     changes = [];
-    constructor(prisma, rt) {
+    constructor(prisma, rt, notify) {
         this.prisma = prisma;
         this.rt = rt;
+        this.notify = notify;
     }
     /** Welche Discord-Rollen machen jemanden zum Teammitglied? Zugangsrollen + mit Dashboard-Rollen verknüpfte Rollen. */
     async teamRoleIds() {
@@ -66,6 +69,10 @@ let DiscordLiveService = class DiscordLiveService {
         if (found.length) {
             this.changes = [...found.reverse(), ...this.changes].slice(0, MAX_CHANGES);
             this.rt.publish('team', 'team.roster', { changes: found.length });
+            // 👥 Teamänderung (neu im Team / nicht mehr im Team) → Teamleitung des jeweiligen Servers
+            for (const c of found.filter((x) => x.kind === 'joined' || x.kind === 'left').slice(0, 20)) {
+                void this.notify.notifyPermission('team.manage', { type: 'TEAM_CHANGE', title: c.kind === 'joined' ? `👥 ${c.name} ist neu im Team` : `👥 ${c.name} ist nicht mehr im Team`, entityType: 'DiscordMember', entityId: c.discordId }, { guildId: c.guildId });
+            }
         }
     }
     setVoice(channels) {
@@ -82,6 +89,6 @@ let DiscordLiveService = class DiscordLiveService {
 exports.DiscordLiveService = DiscordLiveService;
 exports.DiscordLiveService = DiscordLiveService = __decorate([
     (0, common_1.Injectable)(),
-    __metadata("design:paramtypes", [prisma_service_1.PrismaService, realtime_service_1.RealtimeService])
+    __metadata("design:paramtypes", [prisma_service_1.PrismaService, realtime_service_1.RealtimeService, notify_service_1.NotifyService])
 ], DiscordLiveService);
 //# sourceMappingURL=discord-live.service.js.map

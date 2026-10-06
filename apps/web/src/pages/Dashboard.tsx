@@ -7,10 +7,12 @@ import { useAuth } from '../lib/auth';
 import { flush } from '../lib/autosave';
 import { DEFAULT_LAYOUTS, usePrefs, type Layout, type WidgetCfg, type WidgetSize } from '../lib/prefs';
 import { useRealtime } from '../lib/realtime';
-import { NAV, visible } from '../nav';
+import { NAV, tr, visible } from '../nav';
 import { Button, Card, EmptyState, ErrorState, fmt, Input, PageHeader, PriorityBadge, Select, Skeleton, StatusBadge } from '../components/ui';
 import { TeamRoster, useRoster } from '../components/TeamRoster';
 import { VoiceWidget } from '../components/VoiceWidget';
+import { RadioCodeList } from './RadioCodes';
+import { TeamChanceSummary } from './TeamChance';
 
 type Row = Record<string, unknown> & { id: string };
 interface WidgetDef { id: string; title: string; perms: string[]; to?: string; render: () => ReactNode }
@@ -52,6 +54,8 @@ export const QUICK_ACTIONS: { id: string; label: string; to?: string; perms: str
   { id: 'team-search', label: 'Teammitglied suchen', to: '/teamlist', perms: ['team.view', 'dashboard.team.view'] },
   { id: 'member-search', label: 'Mitglied suchen', to: '/admin/users', perms: ['users.view', 'dashboard.settings.view'] },
   { id: 'search', label: '🔍 Globale Suche (Strg+K)', perms: [], action: 'search' },
+  { id: 'radio', label: '📡 Funk-Code öffnen', to: '/radio-codes', perms: ['radio.view', 'dashboard.radio.view'] },
+  { id: 'teamchance', label: '📣 Team-Chance', to: '/teamchance', perms: ['teamchance.view', 'dashboard.teamchance.view'] },
   { id: 'incident', label: '+ Einsatz anlegen', to: '/incidents', perms: ['incidents.create'] },
   { id: 'report', label: '+ Bericht schreiben', to: '/reports', perms: ['reports.create'] },
   { id: 'settings', label: '⚙️ Persönliche Einstellungen', to: '/me/settings', perms: [] },
@@ -72,7 +76,7 @@ function Favorites() {
   const { can } = useAuth();
   const items = prefs.favorites.map((p) => NAV.find((n) => n.path === p)).filter((n): n is (typeof NAV)[number] => !!n && visible(n, can));
   if (!items.length) return <p className="text-sm text-muted">Noch keine Favoriten. Im Menü auf ☆ neben einem Bereich klicken.</p>;
-  return <ul className="grid gap-1 sm:grid-cols-2">{items.map((n) => <li key={n.path}><Link to={n.path} className="flex items-center gap-2 rounded px-2 py-1.5 text-sm hover:bg-panel-2"><n.icon size={14} aria-hidden />⭐ {n.label}</Link></li>)}</ul>;
+  return <ul className="grid gap-1 sm:grid-cols-2">{items.map((n) => <li key={n.path}><Link to={n.path} className="flex items-center gap-2 rounded px-2 py-1.5 text-sm hover:bg-panel-2"><n.icon size={14} aria-hidden />⭐ {tr(n.label, prefs.language)}</Link></li>)}</ul>;
 }
 
 function Notifications() {
@@ -123,6 +127,8 @@ export const WIDGETS: WidgetDef[] = [
   { id: 'activity', title: '📋 Team-Aktivitäten', perms: ['team.view', 'dashboard.team.view'], render: () => <Activity /> },
   { id: 'offices', title: '🏢 Büros', perms: ['team.view', 'dashboard.offices.view'], to: '/teamlist', render: () => <Grouped by="office" /> },
   { id: 'ranks', title: '🎖️ Dienstgrade', perms: ['team.view', 'dashboard.team.view'], to: '/teamlist', render: () => <Grouped by="rank" /> },
+  { id: 'radio', title: '📡 Funk-Codes', perms: ['radio.view', 'dashboard.radio.view'], to: '/radio-codes', render: () => <RadioCodeList /> },
+  { id: 'teamchance', title: '📣 Team-Chance', perms: ['teamchance.view', 'dashboard.teamchance.view'], to: '/teamchance', render: () => <TeamChanceSummary /> },
   { id: 'incidents', title: '🚨 Aktive Einsätze', perms: ['incidents.view'], to: '/incidents', render: () => <Incidents /> },
   { id: 'queue', title: '📡 Leitstellen-Warteschlange', perms: ['dispatch.view'], to: '/dispatch', render: () => <Queue /> },
   { id: 'units', title: '🚓 Einheiten', perms: ['dispatch.view'], to: '/dispatch', render: () => <Units /> },

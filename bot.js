@@ -76223,8 +76223,28 @@ function renderOutbox(type, p) {
     case "incident.assigned":
       return { title: `\u{1F4FB} ${plain(p.callsign)} \u2192 ${p.number}`, description: clip(plain(p.title), 4e3), color: PRIORITY_COLOR[String(p.priority)] ?? COLORS.info, fields: [{ name: "Ort", value: clip(plain(p.location ?? "unbekannt"), 1024), inline: true }] };
     case "wanted.created":
-      return { title: `\u{1F534} Neue Fahndung (${p.kind === "vehicle" ? "Fahrzeug" : "Person"})`, description: `**${clip(plain(p.subject), 200)}**
-${clip(plain(p.reason), 3e3)}`, color: PRIORITY_COLOR[String(p.priority)] ?? COLORS.danger, fields: [{ name: "Priorit\xE4t", value: label(p.priority), inline: true }] };
+      return {
+        title: `\u{1F6A8} Neue Fahndung (${p.kind === "vehicle" ? "Fahrzeug" : "Person"})`,
+        description: `**${clip(plain(p.subject), 200)}**
+${clip(plain(p.reason), 1500)}${p.description ? `
+
+${clip(plain(p.description), 2e3)}` : ""}`,
+        color: PRIORITY_COLOR[String(p.priority)] ?? COLORS.danger,
+        fields: [{ name: "Priorit\xE4t", value: label(p.priority), inline: true }, { name: "G\xFCltig bis", value: p.expiresAt ? `<t:${Math.floor(Date.parse(String(p.expiresAt)) / 1e3)}:f>` : "unbefristet", inline: true }, ...p.createdBy ? [{ name: "Ausgestellt von", value: clip(plain(p.createdBy), 200), inline: true }] : []]
+      };
+    case "wanted.status": {
+      const st = { CLEARED: ["\u2705 Fahndung aufgehoben", COLORS.success], CANCELLED: ["\u26AA Fahndung abgebrochen", COLORS.info], ACTIVE: ["\u{1F6A8} Fahndung wieder aktiv", COLORS.danger], EXPIRED: ["\u231B Fahndung abgelaufen", COLORS.info] };
+      const [title, color] = st[String(p.status)] ?? [`Fahndung: ${label(p.status)}`, COLORS.info];
+      return { title, description: `**${clip(plain(p.subject), 200)}** \u2013 ${clip(plain(p.reason), 1e3)}${p.note ? `
+**Grund:** ${clip(plain(p.note), 1e3)}` : ""}`, color, ...p.by ? { footer: `von ${clip(plain(p.by), 100)}` } : {} };
+    }
+    case "teamchance.changed":
+      return p.open ? {
+        title: `\u{1F4E3} ${clip(plain(p.title ?? "Team-Chance"), 200)} \u2013 jetzt offen!`,
+        description: clip(plain(p.description ?? ""), 3500) || void 0,
+        color: COLORS.success,
+        fields: [...p.closesAt ? [{ name: "Bewerbungsschluss", value: `<t:${Math.floor(Date.parse(String(p.closesAt)) / 1e3)}:f>`, inline: true }] : [], ...Number(p.slots) > 0 ? [{ name: "Pl\xE4tze", value: String(p.slots), inline: true }] : []]
+      } : { title: `\u{1F512} ${clip(plain(p.title ?? "Team-Chance"), 200)} \u2013 geschlossen`, description: "Vielen Dank f\xFCr alle Bewerbungen!", color: COLORS.danger };
     case "announcement":
       return { title: "\u{1F4E2} Ank\xFCndigung", description: clip(plain(p.body), 4e3), color: COLORS.warning, footer: `von ${clip(p.author, 100)}` };
     case "danger.changed": {
@@ -76370,6 +76390,7 @@ function outboxButtons(type, p) {
     { id: `leave:reason:${p.id}:DENIED`, label: "Ablehnen mit Grund", style: "danger" },
     ...typeof p.dashboardUrl === "string" && /^https?:\/\//.test(p.dashboardUrl) ? [{ id: "link", label: "Im Dashboard ansehen", style: "secondary", url: p.dashboardUrl }] : []
   ];
+  if (/^wanted\./.test(type) && typeof p.dashboardUrl === "string" && /^https?:\/\//.test(p.dashboardUrl)) return [{ id: "link", label: "Im Dashboard ansehen", style: "secondary", url: p.dashboardUrl }];
   const kind2 = type === "qualification.submitted" ? "q" : type === "application.submitted" ? "p" : null;
   if (!kind2 || typeof p.id !== "string") return void 0;
   const id = p.id, discordId = typeof p.discordId === "string" && /^\d{15,25}$/.test(p.discordId) ? p.discordId : null;
@@ -76555,7 +76576,7 @@ var SEK_INTERACTION = {
 // packages/shared/dist/index.mjs
 var PERMISSION_CATALOG = {
   /** `dashboard.<bereich>.view`: Sichtbarkeit ganzer Bereiche im Menü und auf der Startseite (zusätzlich zur Modul-Permission). */
-  dashboard: ["view", "customize", "tickets.view", "applications.view", "team.view", "offices.view", "voice.view", "logs.view", "settings.view"],
+  dashboard: ["view", "customize", "tickets.view", "applications.view", "team.view", "offices.view", "voice.view", "radio.view", "teamchance.view", "logs.view", "settings.view"],
   team: ["view", "manage"],
   dispatch: ["view", "create", "edit", "assign", "close", "manage"],
   incidents: ["view", "create", "edit", "close", "delete"],
@@ -76574,6 +76595,10 @@ var PERMISSION_CATALOG = {
   sek: ["view", "report", "manage"],
   qualifications: ["view", "decide", "manage"],
   ticket: ["view", "create", "claim", "close", "reopen", "delete", "add_user", "remove_user", "change_status", "change_priority", "change_category", "rename", "move", "lock", "escalate", "transcript", "transcript_delete", "internal_notes", "rate", "manage", "settings"],
+  /** Funk-Codes (Liste der Funkcodes, z. B. 10-4) */
+  radio: ["view", "manage"],
+  /** Team-Chance: Bewerbungsphase für das Team öffnen/schließen */
+  teamchance: ["view", "manage"],
   communication: ["view", "send", "moderate"],
   analytics: ["view"],
   audit: ["view", "export"],
@@ -77584,6 +77609,42 @@ async function resolveIncident(c, number) {
 }
 var COMMANDS = [
   {
+    name: "funkcode",
+    description: "Funk-Codes nachschlagen (z. B. 10-4)",
+    options: [{ name: "suche", description: "Code oder Bedeutung (leer = alle)", type: "string", maxLength: 64 }],
+    async run(c) {
+      try {
+        const term = str3(c, "suche");
+        const rows = await c.api.asUser(c.discordId, "GET", `/radio-codes${term ? `?q=${q(term)}` : ""}`);
+        if (!rows.length) return errorReply(term ? `Kein Funk-Code zu \u201E${plain(term)}\u201C gefunden.` : "Es sind noch keine Funk-Codes hinterlegt.");
+        const exact = term ? rows.find((r) => r.code.toLowerCase() === term.toLowerCase()) : void 0;
+        if (exact) return { ephemeral: true, embeds: [{ title: `\u{1F4E1} ${plain(exact.code)}`, description: `**${plain(exact.meaning)}**${exact.description ? `
+${plain(exact.description)}` : ""}`, color: 3900150, footer: exact.category ? plain(exact.category) : void 0 }] };
+        const lines = rows.slice(0, 40).map((r) => `\`${plain(r.code)}\` \u2013 ${plain(r.meaning)}`);
+        return { ephemeral: true, embeds: [{ title: "\u{1F4E1} Funk-Codes", description: lines.join("\n").slice(0, 4e3), color: 3900150, footer: rows.length > 40 ? `${rows.length - 40} weitere \u2013 Suche eingrenzen` : void 0 }] };
+      } catch (e) {
+        return mapError(e);
+      }
+    }
+  },
+  {
+    name: "teamchance",
+    description: "Zeigt, ob gerade eine Team-Chance (Bewerbungsphase f\xFCrs Team) offen ist",
+    async run(c) {
+      try {
+        const s = await c.api.service("GET", `/bot/teamchance${c.guildId ? `?guildId=${c.guildId}` : ""}`);
+        const when = (iso) => iso ? `<t:${Math.floor(Date.parse(iso) / 1e3)}:f>` : null;
+        if (s.isOpen) return { ephemeral: true, embeds: [{ title: `\u{1F4E3} ${plain(s.title)} \u2013 offen`, description: `${plain(s.description)}
+
+Bewerben: \`/bewerbung\``.slice(0, 4e3), color: 2278750, fields: [...s.closesAt ? [{ name: "Bewerbungsschluss", value: when(s.closesAt), inline: true }] : [], ...s.remaining !== null ? [{ name: "Freie Pl\xE4tze", value: String(s.remaining), inline: true }] : []] }] };
+        const why = s.reason === "not_started" && s.opensAt ? `Startet ${when(s.opensAt)}.` : s.reason === "full" ? "Alle Pl\xE4tze sind vergeben." : "Derzeit ist keine Team-Chance offen.";
+        return { ephemeral: true, embeds: [{ title: `\u{1F512} ${plain(s.title)}`, description: why, color: 15680580 }] };
+      } catch (e) {
+        return mapError(e);
+      }
+    }
+  },
+  {
     name: "verknuepfen",
     description: "Verkn\xFCpft dein Discord-Konto mit deinem EN-Polizei-Benutzer",
     options: [{ name: "code", description: "Code aus dem Web (\u201EDiscord verkn\xFCpfen\u201C)", type: "string", required: true, maxLength: 12 }],
@@ -77605,9 +77666,9 @@ var COMMANDS = [
       return { ephemeral: true, embeds: [{ title: "EN Polizei \u2014 Befehle", color: COLORS.info, fields: [
         { name: "Konto", value: "`/verknuepfen` `/entverknuepfen` `/profil` `/benachrichtigungen`" },
         { name: "Abfragen", value: "`/person` `/kennzeichen` `/fahndungen` `/einsaetze` `/einsatzinfo` `/einheiten` `/team`" },
-        { name: "Dienst & Leitstelle", value: "`/dienst` `/dienststunden` `/abmeldung` `/einheitstatus` `/einsatz` `/einsatzstatus` `/einsatzzuweisen` `/funk`" },
+        { name: "Dienst & Leitstelle", value: "`/dienst` `/dienststunden` `/abmeldung` `/einheitstatus` `/einsatz` `/einsatzstatus` `/einsatzzuweisen` `/funk` `/funkcode`" },
         { name: "Erfassen", value: "`/ticket` `/bericht` `/beschwerde` `/ermittlung` `/fahndung` `/beweis`" },
-        { name: "Leitung & Team", value: "`/gefahrenstatus` `/funkfreigabe` `/teamliste` `/dienstpanel` `/bewerbungspanel` `/qualipanel` `/roblox`" },
+        { name: "Leitung & Team", value: "`/gefahrenstatus` `/funkfreigabe` `/teamliste` `/dienstpanel` `/bewerbungspanel` `/qualipanel` `/teamchance` `/roblox`" },
         { name: "SEK", value: "`/sek` `/sek-bericht`" },
         { name: "Support-Tickets", value: "`/support` \xF6ffnet ein Ticket (Team: `/support mitglied:@\u2026` f\xFCr jemand anderen). Ticket-Panels, Kategorien, Fragen und Buttons werden im Dashboard eingerichtet und von dort in Discord gesendet." },
         { name: "F\xFCr alle", value: "`/bewerbung` (auch ohne Verkn\xFCpfung; Fragen per Direktnachricht) \xB7 SEK/Flugstaffel/Ausbilder \xFCber das Qualifikations-Panel" },

@@ -32,7 +32,7 @@ export interface Preferences {
 export const DEFAULT_PREFS: Preferences = {
   theme: 'dark', background: { type: 'none', value: '' }, cardStyle: 'solid', transparency: 0, radius: 8, shadow: 'none', glow: false, animations: true,
   sidebarWidth: 'normal', sidebarCollapsed: false, fontSize: 14, density: 'comfortable', language: 'de', dateFormat: 'DD.MM.YYYY',
-  notifications: { muted: [] }, favorites: [], quickActions: ['ticket-create', 'applications', 'team-search', 'search'],
+  notifications: { muted: [] }, favorites: [], quickActions: ['ticket-create', 'applications', 'team-search', 'member-search', 'search', 'radio'],
   teamList: { view: 'cards' }, voice: { channelIds: [], categoryIds: [], sort: 'members', compact: false, maxChannels: 10, showEmpty: false, showDuration: true },
 };
 
@@ -46,9 +46,9 @@ const w = (widget: string, size: WidgetSize = 'M'): WidgetCfg => ({ widget, size
 export const DEFAULT_LAYOUTS: Layouts = {
   active: 'standard',
   items: [
-    { id: 'standard', name: 'Standard', widgets: [w('stats', 'XL'), w('quick', 'M'), w('favorites', 'M'), w('notifications', 'M'), w('tickets', 'M'), w('applications', 'M'), w('teamlist', 'L'), w('voice', 'M'), w('incidents'), w('queue'), w('units'), w('wanted'), w('reports'), w('activity')] },
+    { id: 'standard', name: 'Standard', widgets: [w('stats', 'XL'), w('quick', 'M'), w('favorites', 'M'), w('notifications', 'M'), w('tickets', 'M'), w('applications', 'M'), w('teamlist', 'L'), w('voice', 'M'), w('radio', 'M'), w('teamchance', 'S'), w('incidents'), w('queue'), w('units'), w('wanted'), w('reports'), w('activity')] },
     { id: 'tickets', name: 'Tickets', widgets: [w('tickets', 'L'), w('my-tickets', 'M'), w('ticket-activity', 'M'), w('quick', 'M')] },
-    { id: 'team', name: 'Team', widgets: [w('teamlist', 'XL'), w('ranks', 'M'), w('offices', 'M'), w('activity', 'M'), w('voice', 'M')] },
+    { id: 'team', name: 'Team', widgets: [w('teamlist', 'XL'), w('ranks', 'M'), w('offices', 'M'), w('activity', 'M'), w('voice', 'M'), w('teamchance', 'M')] },
   ],
 };
 

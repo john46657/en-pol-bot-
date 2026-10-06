@@ -1,3 +1,4 @@
+import { DiscordChannelHint } from '../components/DiscordChannelHint';
 import { PersonnelTeamEditor } from '../components/PersonnelTeamEditor';
 import { Link } from 'react-router';
 import { COMPLAINT_STATUSES, DISPATCH_STATUSES, INVESTIGATION_STATUSES, PRIORITIES, REPORT_STATUSES, REPORT_TYPES, WANTED_STATUSES, APPLICATION_STATUSES } from '@enrp/shared';
@@ -24,6 +25,7 @@ export const vehicles: ResourceConfig<Row> = {
 };
 
 export const incidents: ResourceConfig<Row> = {
+  notice: <DiscordChannelHint channel="dispatch" what="Einsätze" />,
   title: 'Incidents', endpoint: '/incidents', queryKey: 'incidents', emptyText: 'No incidents.', statusFilter: DISPATCH_STATUSES, detailPath: (r) => `/incidents/${r.id}`,
   columns: [{ key: 'number', label: 'Number' }, { key: 'title', label: 'Title' }, { key: 'priority', label: 'Priority', render: (r) => <PriorityBadge priority={String(r.priority)} /> }, { key: 'status', label: 'Status', render: status }, { key: 'createdAt', label: 'Created', render: date('createdAt') }],
   create: { perm: 'incidents.create', label: 'New incident', fields: [{ name: 'title', label: 'Title', required: true, max: 200, min: 3 }, { name: 'priority', label: 'Priority', type: 'select', options: PRIORITIES }, { name: 'location', label: 'Location', max: 200 }, { name: 'description', label: 'Description', type: 'textarea' }] },
@@ -55,6 +57,7 @@ export const investigations: ResourceConfig<Row> = {
 };
 
 export const wanted: ResourceConfig<Row> = {
+  notice: <DiscordChannelHint channel="wanted" what="Fahndungen" />,
   title: 'Wanted', subtitle: 'Active wanted records by default', endpoint: '/wanted', queryKey: 'wanted', emptyText: 'No active wanted records.', statusFilter: WANTED_STATUSES, detailPath: (r) => `/wanted/${r.id}`,
   columns: [{ key: 'reason', label: 'Reason' }, { key: 'priority', label: 'Priority', render: (r) => <PriorityBadge priority={String(r.priority)} /> }, { key: 'status', label: 'Status', render: status }, { key: 'expiresAt', label: 'Expires', render: (r) => (r.expiresAt ? fmt(r.expiresAt as string) : 'Never') }],
   create: { perm: 'wanted.create', label: 'New wanted', fields: [{ name: 'personId', label: 'Person', type: 'person', required: true }, { name: 'reason', label: 'Reason', required: true, min: 3, max: 500 }, { name: 'priority', label: 'Priority', type: 'select', options: PRIORITIES }, { name: 'description', label: 'Description', type: 'textarea' }] },

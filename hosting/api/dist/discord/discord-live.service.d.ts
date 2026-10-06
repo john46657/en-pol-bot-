@@ -1,5 +1,6 @@
 import { PrismaService } from '../prisma/prisma.service';
 import { RealtimeService } from '../realtime/realtime.service';
+import { NotifyService } from '../notifications/notify.service';
 /** Ein Teammitglied, wie der Bot es auf Discord sieht (nur Team-Informationen, keine Voice-Daten). */
 export interface LiveMember {
     id: string;
@@ -48,12 +49,13 @@ export interface TeamChange {
 export declare class DiscordLiveService {
     private readonly prisma;
     private readonly rt;
+    private readonly notify;
     private members;
     private membersAt;
     private voice;
     private voiceAt;
     private changes;
-    constructor(prisma: PrismaService, rt: RealtimeService);
+    constructor(prisma: PrismaService, rt: RealtimeService, notify: NotifyService);
     /** Welche Discord-Rollen machen jemanden zum Teammitglied? Zugangsrollen + mit Dashboard-Rollen verknüpfte Rollen. */
     teamRoleIds(): Promise<string[]>;
     setMembers(list: LiveMember[]): void;

@@ -10,6 +10,7 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.CommunicationService = exports.CHANNELS = void 0;
+const notify_service_1 = require("../notifications/notify.service");
 const common_1 = require("@nestjs/common");
 const permission_service_1 = require("../authz/permission.service");
 const prisma_service_1 = require("../prisma/prisma.service");
@@ -25,11 +26,13 @@ let CommunicationService = class CommunicationService {
     perms;
     audit;
     discord;
-    constructor(prisma, perms, audit, discord) {
+    notify;
+    constructor(prisma, perms, audit, discord, notify) {
         this.prisma = prisma;
         this.perms = perms;
         this.audit = audit;
         this.discord = discord;
+        this.notify = notify;
     }
     /** Berechtigung wird serverseitig geprüft – auch für spätere WebSocket-Subscriptions (gleiche Methode). */
     async canRead(userId, channel) { return (await this.perms.has(userId, 'communication.view')) && (await this.perms.has(userId, READ[channel])); }
@@ -54,6 +57,8 @@ let CommunicationService = class CommunicationService {
         if (channel === 'ANNOUNCEMENT') {
             const author = await this.prisma.user.findUnique({ where: { id: uid }, select: { displayName: true } });
             await this.discord.enqueue('announcements', 'announcement', { body: d.body.slice(0, 1500), author: author?.displayName ?? 'Command' });
+            // 📢 Neue Nachricht (Ankündigung) → alle, die Kommunikation lesen dürfen
+            await this.notify.notifyPermission('communication.view', { type: 'MESSAGE', title: `📢 Neue Ankündigung von ${author?.displayName ?? 'Leitung'}`, body: d.body.slice(0, 300), entityType: 'Message', entityId: msg.id }, { exceptUserId: uid });
         }
         return msg;
     }
@@ -75,6 +80,6 @@ let CommunicationService = class CommunicationService {
 exports.CommunicationService = CommunicationService;
 exports.CommunicationService = CommunicationService = __decorate([
     (0, common_1.Injectable)(),
-    __metadata("design:paramtypes", [prisma_service_1.PrismaService, permission_service_1.PermissionService, audit_service_1.AuditService, discord_service_1.DiscordService])
+    __metadata("design:paramtypes", [prisma_service_1.PrismaService, permission_service_1.PermissionService, audit_service_1.AuditService, discord_service_1.DiscordService, notify_service_1.NotifyService])
 ], CommunicationService);
 //# sourceMappingURL=communication.service.js.map

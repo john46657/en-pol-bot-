@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { RealtimeService } from '../realtime/realtime.service';
+import { NotifyService } from '../notifications/notify.service';
 
 /** Ein Teammitglied, wie der Bot es auf Discord sieht (nur Team-Informationen, keine Voice-Daten). */
 export interface LiveMember { id: string; guildId: string; username: string; displayName: string; avatar: string | null; status: 'online' | 'idle' | 'dnd' | 'offline' | 'unknown'; roleIds: string[]; joinedAt: string | null }
@@ -25,7 +26,7 @@ export class DiscordLiveService {
   private voice: LiveVoiceChannel[] = [];
   private voiceAt: Date | null = null;
   private changes: TeamChange[] = [];
-  constructor(private readonly prisma: PrismaService, private readonly rt: RealtimeService) {}
+  constructor(private readonly prisma: PrismaService, private readonly rt: RealtimeService, private readonly notify: NotifyService) {}
 
   /** Welche Discord-Rollen machen jemanden zum Teammitglied? Zugangsrollen + mit Dashboard-Rollen verknüpfte Rollen. */
   async teamRoleIds(): Promise<string[]> {
@@ -54,6 +55,10 @@ export class DiscordLiveService {
     if (found.length) {
       this.changes = [...found.reverse(), ...this.changes].slice(0, MAX_CHANGES);
       this.rt.publish('team', 'team.roster', { changes: found.length });
+      // 👥 Teamänderung (neu im Team / nicht mehr im Team) → Teamleitung des jeweiligen Servers
+      for (const c of found.filter((x) => x.kind === 'joined' || x.kind === 'left').slice(0, 20)) {
+        void this.notify.notifyPermission('team.manage', { type: 'TEAM_CHANGE', title: c.kind === 'joined' ? `👥 ${c.name} ist neu im Team` : `👥 ${c.name} ist nicht mehr im Team`, entityType: 'DiscordMember', entityId: c.discordId }, { guildId: c.guildId });
+      }
     }
   }
 

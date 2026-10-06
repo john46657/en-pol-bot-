@@ -37,7 +37,11 @@ export async function seedBase(prisma: PrismaClient) {
     const role = await prisma.role.upsert({ where: { name }, create: { name, description: def.description, system: true, priority: STARTER_PRIORITY[name] ?? 100 }, update: {} });
     const existing = await prisma.rolePermission.count({ where: { roleId: role.id } });
     if (existing === 0) {
-      const grants = def.grants.includes('*') ? def.grants : [...def.grants, ...areaGrantsFor(def.grants)];
+      // wie die Migration: Funk-Codes sieht das Team, Team-Chance sieht/verwaltet, wer Bewerbungen sieht/entscheidet
+      const has = (k: string) => def.grants.some((g) => g === k || g === `${k.split('.')[0]}.*`);
+      const extra = [...(has('team.view') ? ['radio.view'] : []), ...(has('settings.manage') ? ['radio.manage'] : []), ...(has('applications.view') ? ['teamchance.view'] : []), ...(has('applications.decide') ? ['teamchance.manage'] : [])];
+      const base = [...def.grants, ...extra];
+      const grants = def.grants.includes('*') ? def.grants : [...base, ...areaGrantsFor(base)];
       await prisma.rolePermission.createMany({ data: grants.map((permissionKey) => ({ roleId: role.id, permissionKey, effect: 'ALLOW' })), skipDuplicates: true });
     }
   }

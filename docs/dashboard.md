@@ -41,5 +41,25 @@ Eigener Bereich (`dashboard.voice.view`), getrennt von der Teamliste: Channels m
 - Status oben: ✅ Alle Änderungen gespeichert · 🔄 Änderungen werden gespeichert … · ⚠️ Ungespeicherte Änderungen · ❌ Speichern fehlgeschlagen (Netzwerk-/Serverfehler werden automatisch wiederholt; vom Server abgelehnte Änderungen – fehlende Rechte, ungültige Werte – werden angezeigt und nicht endlos wiederholt). „Jetzt speichern“ speichert sofort.
 - Die Datenbank ist die Quelle der Wahrheit; nach dem Neuladen werden die gespeicherten Werte geladen.
 
+## 📡 Funk-Codes (Menü → Funk-Codes, Widget „📡 Funk-Codes“, Discord `/funkcode`)
+- Ansehen und suchen: `radio.view` (+ Bereich `dashboard.radio.view`); bearbeiten: `radio.manage`. Bestehende Rollen: sehen wie das Team (`team.view`), bearbeiten wie die Einstellungen (`settings.manage`).
+- „Standard-Codes einfügen“ legt gängige 10-Codes an (vorhandene bleiben). Inline bearbeiten (automatisch gespeichert), sortieren per Ziehen, löschen.
+- Je Server getrennt: Codes eines Servers überdecken gemeinsame Codes mit gleichem Namen. Auch in der globalen Suche (Strg+K).
+
+## 📣 Team-Chance (Menü → Team-Chance, Widget, Discord `/teamchance`)
+- Bewerbungsphase fürs Team öffnen/schließen – je Server; optional Start/Ende, Platzzahl, Ankündigungs-Channel mit Rollen-Erwähnung.
+- Beim Öffnen: Ankündigung in Discord + Benachrichtigung an alle mit `teamchance.view`; beim Schließen: Ankündigung „geschlossen“. Alles im Audit-Log.
+- Option „Bewerbungen nur während der Team-Chance“: Discord-Bewerbungen und `/apply` werden außerhalb abgelehnt (auch wenn alle Plätze vergeben sind). `/apply` zeigt den Status an.
+- Rechte: `teamchance.view` (wer Bewerbungen sieht), `teamchance.manage` (wer Bewerbungen entscheidet).
+
+## 🏢 Büros (Menü → Büros, Widget)
+Teammitglieder nach Büro gruppiert (Bereich `dashboard.offices.view`); Büros unter Einstellungen → Teamstruktur, Zuordnung in der Personalakte.
+
+## 🔔 Benachrichtigungen
+Erzeugt werden: neue Bewerbung (an alle mit `applications.review`), Ticket übernommen (an den Ersteller), Teamänderung neu/nicht mehr im Team (an `team.manage`), neue Ankündigung (an alle Leser), Team-Chance geöffnet, ⚠️ Systemhinweis (Einstellungen → „Systemhinweis senden“, an alle Dashboard-Benutzer des gewählten Servers) sowie die bisherigen (Einsatz, Bericht, Beschwerde, Personal …). Neue Benachrichtigungen erscheinen sofort als Popup; Arten und Popups stellt jeder unter Persönlich ein.
+
+## Sprache
+Persönlich → Sprache: Deutsch (Standard) oder Englisch für Menü und Navigation; Datum/Uhrzeit nach persönlichem Format und Zeitzone. Viele Seiteninhalte sind noch englisch bzw. deutsch gemischt.
+
 ## Bot-Voraussetzungen
 Developer Portal → Bot → Privileged Gateway Intents: **Server Members** (vollständige Teamliste) und **Presence** (Online-Status). Fehlen sie, startet der Bot trotzdem (Teamliste dann nur mit bekannten Mitgliedern bzw. Status „unbekannt“). Voice braucht kein privilegiertes Recht.

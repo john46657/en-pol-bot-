@@ -1,7 +1,7 @@
 /** Zentraler Permission-Katalog. Einzige Quelle der Wahrheit für Backend und Frontend. */
 declare const PERMISSION_CATALOG: {
     /** `dashboard.<bereich>.view`: Sichtbarkeit ganzer Bereiche im Menü und auf der Startseite (zusätzlich zur Modul-Permission). */
-    readonly dashboard: readonly ["view", "customize", "tickets.view", "applications.view", "team.view", "offices.view", "voice.view", "logs.view", "settings.view"];
+    readonly dashboard: readonly ["view", "customize", "tickets.view", "applications.view", "team.view", "offices.view", "voice.view", "radio.view", "teamchance.view", "logs.view", "settings.view"];
     readonly team: readonly ["view", "manage"];
     readonly dispatch: readonly ["view", "create", "edit", "assign", "close", "manage"];
     readonly incidents: readonly ["view", "create", "edit", "close", "delete"];
@@ -20,6 +20,10 @@ declare const PERMISSION_CATALOG: {
     readonly sek: readonly ["view", "report", "manage"];
     readonly qualifications: readonly ["view", "decide", "manage"];
     readonly ticket: readonly ["view", "create", "claim", "close", "reopen", "delete", "add_user", "remove_user", "change_status", "change_priority", "change_category", "rename", "move", "lock", "escalate", "transcript", "transcript_delete", "internal_notes", "rate", "manage", "settings"];
+    /** Funk-Codes (Liste der Funkcodes, z. B. 10-4) */
+    readonly radio: readonly ["view", "manage"];
+    /** Team-Chance: Bewerbungsphase für das Team öffnen/schließen */
+    readonly teamchance: readonly ["view", "manage"];
     readonly communication: readonly ["view", "send", "moderate"];
     readonly analytics: readonly ["view"];
     readonly audit: readonly ["view", "export"];

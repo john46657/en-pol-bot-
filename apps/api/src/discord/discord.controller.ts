@@ -2,7 +2,7 @@ import { Body, Controller, Delete, Get, HttpCode, Param, ParseUUIDPipe, Post, Pu
 import { ApiTags } from '@nestjs/swagger';
 import { Throttle } from '@nestjs/throttler';
 import { z } from 'zod';
-import { DiscordService } from './discord.service';
+import { CHANNEL_KEYS, DiscordService } from './discord.service';
 import { DiscordLiveService } from './discord-live.service';
 import { ApplicationsService } from '../applications/applications.service';
 import { DangerService } from '../danger/danger.service';
@@ -44,6 +44,9 @@ export class DiscordController {
   @Get('link') link(@CurrentActor() a: Actor) { return this.d.status(a.userId!); }
   /** Server des Bots mit Channels und Rollen (Namen + Auswahllisten im Dashboard). */
   @Get('guilds') @RequirePermission('dashboard.view') guilds() { return this.d.guilds(); }
+  /** Welche Benachrichtigungs-Channels eingestellt sind (nur ja/nein, keine IDs) – Hinweise im Dashboard. */
+  @Get('channel-status') @RequirePermission('dashboard.view')
+  async channelStatus() { const c = await this.d.channels(); return Object.fromEntries(CHANNEL_KEYS.map((k) => [k, !!c[k]])); }
   @Post('link-code') @Throttle({ default: { limit: process.env.NODE_ENV === 'test' ? 10_000 : 10, ttl: 60_000 } })
   linkCode(@CurrentActor() a: Actor) { return this.d.createLinkCode(a); }
   @Delete('link') @HttpCode(204) unlinkSelf(@CurrentActor() a: Actor) { return this.d.unlink(a, a.userId!); }

@@ -10,6 +10,8 @@ exports.AppModule = void 0;
 const leave_module_1 = require("./leave/leave.module");
 const roster_module_1 = require("./team-roster/roster.module");
 const me_module_1 = require("./me/me.module");
+const radio_codes_module_1 = require("./radio-codes/radio-codes.module");
+const teamchance_module_1 = require("./teamchance/teamchance.module");
 const common_1 = require("@nestjs/common");
 const core_1 = require("@nestjs/core");
 const throttler_1 = require("@nestjs/throttler");
@@ -65,7 +67,7 @@ exports.AppModule = AppModule = __decorate([
             throttler_1.ThrottlerModule.forRoot([{ ttl: 60_000, limit: process.env.NODE_ENV === 'test' ? 10_000 : 300 }]),
             core_1.DiscoveryModule, prisma_module_1.PrismaModule, authz_module_1.AuthzModule, audit_module_1.AuditModule, auth_module_1.AuthModule, users_module_1.UsersModule, persons_module_1.PersonsModule, vehicles_module_1.VehiclesModule, tickets_module_1.TicketsModule,
             dispatch_module_1.DispatchModule, reports_module_1.ReportsModule, complaints_module_1.ComplaintsModule, investigations_module_1.InvestigationsModule, wanted_module_1.WantedModule, evidence_module_1.EvidenceModule,
-            personnel_module_1.PersonnelModule, duty_module_1.DutyModule, applications_module_1.ApplicationsModule, academy_module_1.AcademyModule, notifications_module_1.NotificationsModule, search_module_1.SearchModule, communication_module_1.CommunicationModule, analytics_module_1.AnalyticsModule, realtime_module_1.RealtimeModule, admin_module_1.AdminModule, export_module_1.ExportModule, media_module_1.MediaModule, studio_module_1.StudioModule, discord_module_1.DiscordModule, danger_module_1.DangerModule, radio_module_1.RadioModule, sek_module_1.SekModule, qualifications_module_1.QualificationsModule, tickets_module_2.SupportTicketsModule, leave_module_1.LeaveModule, roster_module_1.RosterModule, me_module_1.MeModule,
+            personnel_module_1.PersonnelModule, duty_module_1.DutyModule, applications_module_1.ApplicationsModule, academy_module_1.AcademyModule, notifications_module_1.NotificationsModule, search_module_1.SearchModule, communication_module_1.CommunicationModule, analytics_module_1.AnalyticsModule, realtime_module_1.RealtimeModule, admin_module_1.AdminModule, export_module_1.ExportModule, media_module_1.MediaModule, studio_module_1.StudioModule, discord_module_1.DiscordModule, danger_module_1.DangerModule, radio_module_1.RadioModule, sek_module_1.SekModule, qualifications_module_1.QualificationsModule, tickets_module_2.SupportTicketsModule, leave_module_1.LeaveModule, roster_module_1.RosterModule, me_module_1.MeModule, radio_codes_module_1.RadioCodesModule, teamchance_module_1.TeamChanceModule,
         ],
         controllers: [health_controller_1.HealthController, audit_controller_1.AuditController],
         providers: [

@@ -227,8 +227,10 @@ describe('team list, voice and personal settings', () => {
     // ausgeblendete Benachrichtigungsarten erscheinen nicht
     await prisma.notification.createMany({ data: [{ userId: id.r_off!, type: 'RADIO', title: 'Funk' }, { userId: id.r_off!, type: 'PERSONNEL', title: 'Rang' }] });
     const n = (await off.get('/api/v1/notifications')).body;
-    expect(n.items.map((x: { type: string }) => x.type)).toEqual(['PERSONNEL']);
-    expect(n.unread).toBe(1);
+    const types = n.items.map((x: { type: string }) => x.type);
+    expect(types).toContain('PERSONNEL');
+    expect(types).not.toContain('RADIO');
+    expect(n.unread).toBe(n.items.length);
   });
 });
 

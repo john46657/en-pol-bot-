@@ -173,7 +173,7 @@ declare const listQ: z.ZodObject<{
     pageSize: number;
     guildId?: string | undefined;
     q?: string | undefined;
-    kind?: "open" | "archived" | "all" | "closed" | "escalated" | "deleted" | undefined;
+    kind?: "open" | "closed" | "archived" | "all" | "escalated" | "deleted" | undefined;
     to?: Date | undefined;
     creator?: string | undefined;
     categoryId?: string | undefined;
@@ -183,10 +183,10 @@ declare const listQ: z.ZodObject<{
     claimer?: string | undefined;
 }, {
     guildId?: string | undefined;
+    q?: string | undefined;
     page?: number | undefined;
     pageSize?: number | undefined;
-    q?: string | undefined;
-    kind?: "open" | "archived" | "all" | "closed" | "escalated" | "deleted" | undefined;
+    kind?: "open" | "closed" | "archived" | "all" | "escalated" | "deleted" | undefined;
     to?: Date | undefined;
     creator?: string | undefined;
     categoryId?: string | undefined;
@@ -220,9 +220,9 @@ declare const transcriptQ: z.ZodObject<{
 }, {
     number?: number | undefined;
     status?: string | undefined;
+    q?: string | undefined;
     page?: number | undefined;
     pageSize?: number | undefined;
-    q?: string | undefined;
     to?: Date | undefined;
     creator?: string | undefined;
     staff?: string | undefined;
@@ -339,10 +339,10 @@ export declare class SupportTicketsController {
             description: string;
             color: number;
             channelId: string | null;
+            title: string;
             categoryIds: string[];
             position: number;
             imageUrl: string | null;
-            title: string;
             placeholder: string;
             emoji: string | null;
             style: string;
@@ -606,10 +606,10 @@ export declare class SupportTicketsController {
         description: string;
         color: number;
         channelId: string | null;
+        title: string;
         categoryIds: string[];
         position: number;
         imageUrl: string | null;
-        title: string;
         placeholder: string;
         emoji: string | null;
         style: string;
@@ -633,10 +633,10 @@ export declare class SupportTicketsController {
         description: string;
         color: number;
         channelId: string | null;
+        title: string;
         categoryIds: string[];
         position: number;
         imageUrl: string | null;
-        title: string;
         placeholder: string;
         emoji: string | null;
         style: string;
@@ -660,10 +660,10 @@ export declare class SupportTicketsController {
         description: string;
         color: number;
         channelId: string | null;
+        title: string;
         categoryIds: string[];
         position: number;
         imageUrl: string | null;
-        title: string;
         placeholder: string;
         emoji: string | null;
         style: string;

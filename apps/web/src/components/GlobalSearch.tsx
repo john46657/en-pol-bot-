@@ -8,9 +8,9 @@ import { useDebounced } from './DataTable';
 import { RobloxCard } from './RobloxCard';
 
 interface Hit { type: string; id: string; label: string; sub?: string }
-const ROUTE: Record<string, string> = { member: 'teamlist', 'support-ticket': 'support-tickets', application: 'applications', person: 'persons', vehicle: 'vehicles', incident: 'incidents', report: 'reports', ticket: 'tickets', complaint: 'complaints', investigation: 'investigations', wanted: 'wanted', evidence: 'evidence', personnel: 'personnel' };
+const ROUTE: Record<string, string> = { 'radio-code': 'radio-codes', member: 'teamlist', 'support-ticket': 'support-tickets', application: 'applications', person: 'persons', vehicle: 'vehicles', incident: 'incidents', report: 'reports', ticket: 'tickets', complaint: 'complaints', investigation: 'investigations', wanted: 'wanted', evidence: 'evidence', personnel: 'personnel' };
 
-const TYPE_LABEL: Record<string, string> = { member: 'Team', 'support-ticket': 'Ticket', application: 'Bewerbung', person: 'Person', vehicle: 'Fahrzeug', incident: 'Einsatz', report: 'Bericht', ticket: 'Strafzettel', complaint: 'Beschwerde', investigation: 'Ermittlung', wanted: 'Fahndung', evidence: 'Beweis', personnel: 'Personal' };
+const TYPE_LABEL: Record<string, string> = { 'radio-code': 'Funk', member: 'Team', 'support-ticket': 'Ticket', application: 'Bewerbung', person: 'Person', vehicle: 'Fahrzeug', incident: 'Einsatz', report: 'Bericht', ticket: 'Strafzettel', complaint: 'Beschwerde', investigation: 'Ermittlung', wanted: 'Fahndung', evidence: 'Beweis', personnel: 'Personal' };
 
 /** Ctrl/Cmd+K. Die Suche ist serverseitig permission-aware. */
 export function GlobalSearch() {
@@ -24,7 +24,7 @@ export function GlobalSearch() {
     return () => document.removeEventListener('keydown', onKey);
   }, []);
   const res = useQuery({ queryKey: ['search', q], queryFn: () => api<{ results: Hit[] }>('/search', { query: { q } }), enabled: open && q.length >= 2 });
-  const go = (h: Hit) => { setOpen(false); setTerm(''); nav(h.type === 'member' ? `/teamlist?m=${encodeURIComponent(h.id)}` : `/${ROUTE[h.type]}/${h.id}`); };
+  const go = (h: Hit) => { setOpen(false); setTerm(''); nav(h.type === 'member' ? `/teamlist?m=${encodeURIComponent(h.id)}` : h.type === 'radio-code' ? `/radio-codes?q=${encodeURIComponent(h.id)}` : `/${ROUTE[h.type]}/${h.id}`); };
   return (
     <>
       <button onClick={() => setOpen(true)} className="flex min-w-0 flex-1 items-center gap-2 rounded-md border border-line bg-bg px-3 py-1.5 text-sm text-muted hover:border-primary sm:max-w-sm" aria-label="Open search (Ctrl+K)">

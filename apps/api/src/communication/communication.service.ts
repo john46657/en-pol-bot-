@@ -1,3 +1,4 @@
+import { NotifyService } from '../notifications/notify.service';
 import { Injectable } from '@nestjs/common';
 import { PermissionService } from '../authz/permission.service';
 import { PrismaService } from '../prisma/prisma.service';
@@ -13,7 +14,7 @@ const WRITE: Record<Channel, string> = { TEAM: 'communication.send', DISPATCH: '
 
 @Injectable()
 export class CommunicationService {
-  constructor(private readonly prisma: PrismaService, private readonly perms: PermissionService, private readonly audit: AuditService, private readonly discord: DiscordService) {}
+  constructor(private readonly prisma: PrismaService, private readonly perms: PermissionService, private readonly audit: AuditService, private readonly discord: DiscordService, private readonly notify: NotifyService) {}
 
   /** Berechtigung wird serverseitig geprüft – auch für spätere WebSocket-Subscriptions (gleiche Methode). */
   async canRead(userId: string, channel: Channel) { return (await this.perms.has(userId, 'communication.view')) && (await this.perms.has(userId, READ[channel])); }
@@ -38,6 +39,8 @@ export class CommunicationService {
     if (channel === 'ANNOUNCEMENT') {
       const author = await this.prisma.user.findUnique({ where: { id: uid }, select: { displayName: true } });
       await this.discord.enqueue('announcements', 'announcement', { body: d.body.slice(0, 1500), author: author?.displayName ?? 'Command' });
+      // 📢 Neue Nachricht (Ankündigung) → alle, die Kommunikation lesen dürfen
+      await this.notify.notifyPermission('communication.view', { type: 'MESSAGE', title: `📢 Neue Ankündigung von ${author?.displayName ?? 'Leitung'}`, body: d.body.slice(0, 300), entityType: 'Message', entityId: msg.id }, { exceptUserId: uid });
     }
     return msg;
   }

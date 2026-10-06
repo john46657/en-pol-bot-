@@ -354,7 +354,7 @@ export declare class AdminService {
             [k: string]: Prisma.JsonValue;
         };
         allowedKeys: string[];
-        serverScoped: readonly ["team.structure", "team.rankOrder", "dashboard.defaultLayout", "theme.accent", "org.name"];
+        serverScoped: readonly ["team.structure", "team.rankOrder", "dashboard.defaultLayout", "theme.accent", "org.name", "teamchance"];
     }>;
     /** `key@<guildId>`: Server-eigener Wert (nur für Einstellungen, die je Server getrennt sein dürfen). */
     setSetting(actor: Actor, key: string, value: unknown): Promise<{

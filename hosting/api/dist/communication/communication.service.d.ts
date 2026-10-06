@@ -1,3 +1,4 @@
+import { NotifyService } from '../notifications/notify.service';
 import { PermissionService } from '../authz/permission.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { AuditService, Actor } from '../audit/audit.service';
@@ -9,7 +10,8 @@ export declare class CommunicationService {
     private readonly perms;
     private readonly audit;
     private readonly discord;
-    constructor(prisma: PrismaService, perms: PermissionService, audit: AuditService, discord: DiscordService);
+    private readonly notify;
+    constructor(prisma: PrismaService, perms: PermissionService, audit: AuditService, discord: DiscordService, notify: NotifyService);
     /** Berechtigung wird serverseitig geprüft – auch für spätere WebSocket-Subscriptions (gleiche Methode). */
     canRead(userId: string, channel: Channel): Promise<boolean>;
     private conversation;

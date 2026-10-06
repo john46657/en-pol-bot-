@@ -1,3 +1,4 @@
+import { NotifyService } from '../notifications/notify.service';
 import { Prisma, type SupportTicket, type TicketPriority, type TicketStatus } from '@prisma/client';
 import { type MessageSpec, type TicketEffect } from '@enrp/shared';
 import { PrismaService } from '../prisma/prisma.service';
@@ -82,9 +83,10 @@ export declare class SupportTicketsService {
     private readonly perms;
     private readonly discord;
     private readonly config;
+    private readonly notify;
     private readonly log;
     private readonly dir;
-    constructor(prisma: PrismaService, perms: PermissionService, discord: DiscordService, config: TicketConfigService);
+    constructor(prisma: PrismaService, perms: PermissionService, discord: DiscordService, config: TicketConfigService, notify: NotifyService);
     actorFromUser(u: {
         id: string;
         displayName: string;

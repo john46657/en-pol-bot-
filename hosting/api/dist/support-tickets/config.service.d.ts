@@ -83,10 +83,10 @@ export declare class TicketConfigService {
             description: string;
             color: number;
             channelId: string | null;
+            title: string;
             categoryIds: string[];
             position: number;
             imageUrl: string | null;
-            title: string;
             placeholder: string;
             emoji: string | null;
             style: string;
@@ -371,10 +371,10 @@ export declare class TicketConfigService {
         description: string;
         color: number;
         channelId: string | null;
+        title: string;
         categoryIds: string[];
         position: number;
         imageUrl: string | null;
-        title: string;
         placeholder: string;
         emoji: string | null;
         style: string;
@@ -398,10 +398,10 @@ export declare class TicketConfigService {
         description: string;
         color: number;
         channelId: string | null;
+        title: string;
         categoryIds: string[];
         position: number;
         imageUrl: string | null;
-        title: string;
         placeholder: string;
         emoji: string | null;
         style: string;

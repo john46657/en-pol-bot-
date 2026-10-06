@@ -56,9 +56,9 @@ declare const listQ: z.ZodObject<{
     q?: string | undefined;
 }, {
     status?: "APPROVED" | "ARCHIVED" | "DRAFT" | "SUBMITTED" | "UNDER_REVIEW" | "REJECTED" | undefined;
+    q?: string | undefined;
     page?: number | undefined;
     pageSize?: number | undefined;
-    q?: string | undefined;
 }>;
 export declare class ReportsController {
     private readonly r;

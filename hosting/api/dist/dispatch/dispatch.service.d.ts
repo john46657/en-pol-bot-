@@ -81,8 +81,8 @@ export declare class DispatchService {
             description: string | null;
             priority: string;
             status: string;
-            serverId: string | null;
             title: string;
+            serverId: string | null;
             location: string | null;
             source: string;
             dispatcherId: string | null;
@@ -119,8 +119,8 @@ export declare class DispatchService {
             description: string | null;
             priority: string;
             status: string;
-            serverId: string | null;
             title: string;
+            serverId: string | null;
             location: string | null;
             source: string;
             dispatcherId: string | null;
@@ -162,8 +162,8 @@ export declare class DispatchService {
         description: string | null;
         priority: string;
         status: string;
-        serverId: string | null;
         title: string;
+        serverId: string | null;
         location: string | null;
         source: string;
         dispatcherId: string | null;
@@ -190,8 +190,8 @@ export declare class DispatchService {
         description: string | null;
         priority: string;
         status: string;
-        serverId: string | null;
         title: string;
+        serverId: string | null;
         location: string | null;
         source: string;
         dispatcherId: string | null;
@@ -207,8 +207,8 @@ export declare class DispatchService {
         description: string | null;
         priority: string;
         status: string;
-        serverId: string | null;
         title: string;
+        serverId: string | null;
         location: string | null;
         source: string;
         dispatcherId: string | null;
@@ -231,8 +231,8 @@ export declare class DispatchService {
         description: string | null;
         priority: string;
         status: string;
-        serverId: string | null;
         title: string;
+        serverId: string | null;
         location: string | null;
         source: string;
         dispatcherId: string | null;

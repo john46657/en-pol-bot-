@@ -421,10 +421,10 @@ export declare const panelSchema: z.ZodObject<{
     description: string;
     color: number;
     channelId: string | null;
+    title: string;
     categoryIds: string[];
     position: number;
     imageUrl: string | null;
-    title: string;
     placeholder: string;
     emoji: string | null;
     style: "BUTTONS" | "DROPDOWN";
@@ -442,10 +442,10 @@ export declare const panelSchema: z.ZodObject<{
     description?: string | undefined;
     color?: number | undefined;
     channelId?: string | null | undefined;
+    title?: string | undefined;
     categoryIds?: string[] | undefined;
     position?: number | undefined;
     imageUrl?: string | null | undefined;
-    title?: string | undefined;
     placeholder?: string | undefined;
     emoji?: string | null | undefined;
     style?: "BUTTONS" | "DROPDOWN" | undefined;

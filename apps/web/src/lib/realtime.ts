@@ -39,3 +39,10 @@ export function useRealtimeEvent(event: string, handler: () => void, enabled = t
     return () => { s.off(event, handler); };
   }, [event, enabled]);
 }
+
+/** Ereignis mit Inhalt abonnieren (außerhalb von React-Query), z. B. neue Benachrichtigung → Popup. */
+export function onRealtime(event: string, handler: (payload: unknown) => void) {
+  const s = ensure();
+  s.on(event, handler);
+  return () => { s.off(event, handler); };
+}

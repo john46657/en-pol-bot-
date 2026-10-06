@@ -8,9 +8,9 @@ export declare const pageQuery: z.ZodObject<{
     pageSize: number;
     q?: string | undefined;
 }, {
+    q?: string | undefined;
     page?: number | undefined;
     pageSize?: number | undefined;
-    q?: string | undefined;
 }>;
 export type PageQuery = z.infer<typeof pageQuery>;
 export declare const skipTake: (p: PageQuery) => {

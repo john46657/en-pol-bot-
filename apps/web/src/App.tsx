@@ -30,6 +30,9 @@ const Shifts = lazy(() => import('./pages/admin/Shifts').then((m) => ({ default:
 const LeaveSettings = lazy(() => import('./pages/admin/LeaveSettings').then((m) => ({ default: m.LeaveSettings })));
 const Leave = lazy(() => import('./pages/Leave').then((m) => ({ default: m.Leave })));
 const TeamList = lazy(() => import('./pages/TeamList').then((m) => ({ default: m.TeamList })));
+const RadioCodes = lazy(() => import('./pages/RadioCodes').then((m) => ({ default: m.RadioCodes })));
+const TeamChance = lazy(() => import('./pages/TeamChance').then((m) => ({ default: m.TeamChance })));
+const Offices = lazy(() => import('./pages/Offices').then((m) => ({ default: m.Offices })));
 const PersonalSettings = lazy(() => import('./pages/PersonalSettings').then((m) => ({ default: m.PersonalSettings })));
 const Studio = lazy(() => import('./pages/admin/Studio').then((m) => ({ default: m.Studio })));
 import * as R from './pages/resources';
@@ -59,6 +62,9 @@ export function App() {
           <Route path="dashboard" element={<Guard perm="dashboard.view"><Dashboard /></Guard>} />
           <Route path="team" element={<Guard perm="team.view" area="dashboard.team.view"><Team /></Guard>} />
           <Route path="teamlist" element={<Guard perm="team.view" area="dashboard.team.view"><TeamList /></Guard>} />
+          <Route path="offices" element={<Guard perm="team.view" area="dashboard.offices.view"><Offices /></Guard>} />
+          <Route path="radio-codes" element={<Guard perm="radio.view" area="dashboard.radio.view"><RadioCodes /></Guard>} />
+          <Route path="teamchance" element={<Guard perm="teamchance.view" area="dashboard.teamchance.view"><TeamChance /></Guard>} />
           <Route path="me/settings" element={<Guard perm="dashboard.view"><PersonalSettings /></Guard>} />
           <Route path="dispatch" element={<Guard perm="dispatch.view"><Dispatch /></Guard>} />
           <Route path="support-tickets" element={<Guard perm="ticket.view" area="dashboard.tickets.view"><SupportTickets /></Guard>} />

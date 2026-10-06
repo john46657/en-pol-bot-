@@ -1,7 +1,7 @@
 /** Zentraler Permission-Katalog. Einzige Quelle der Wahrheit für Backend und Frontend. */
 export const PERMISSION_CATALOG = {
   /** `dashboard.<bereich>.view`: Sichtbarkeit ganzer Bereiche im Menü und auf der Startseite (zusätzlich zur Modul-Permission). */
-  dashboard: ['view', 'customize', 'tickets.view', 'applications.view', 'team.view', 'offices.view', 'voice.view', 'logs.view', 'settings.view'],
+  dashboard: ['view', 'customize', 'tickets.view', 'applications.view', 'team.view', 'offices.view', 'voice.view', 'radio.view', 'teamchance.view', 'logs.view', 'settings.view'],
   team: ['view', 'manage'],
   dispatch: ['view', 'create', 'edit', 'assign', 'close', 'manage'],
   incidents: ['view', 'create', 'edit', 'close', 'delete'],
@@ -20,6 +20,10 @@ export const PERMISSION_CATALOG = {
   sek: ['view', 'report', 'manage'],
   qualifications: ['view', 'decide', 'manage'],
   ticket: ['view', 'create', 'claim', 'close', 'reopen', 'delete', 'add_user', 'remove_user', 'change_status', 'change_priority', 'change_category', 'rename', 'move', 'lock', 'escalate', 'transcript', 'transcript_delete', 'internal_notes', 'rate', 'manage', 'settings'],
+  /** Funk-Codes (Liste der Funkcodes, z. B. 10-4) */
+  radio: ['view', 'manage'],
+  /** Team-Chance: Bewerbungsphase für das Team öffnen/schließen */
+  teamchance: ['view', 'manage'],
   communication: ['view', 'send', 'moderate'],
   analytics: ['view'],
   audit: ['view', 'export'],
@@ -105,6 +109,8 @@ export const AREA_PERMISSIONS: Record<string, readonly string[]> = {
   'dashboard.team.view': ['team.view'],
   'dashboard.offices.view': ['team.view'],
   'dashboard.voice.view': ['team.view'],
+  'dashboard.radio.view': ['radio.view'],
+  'dashboard.teamchance.view': ['teamchance.view'],
   'dashboard.logs.view': ['audit.view'],
   'dashboard.settings.view': ['settings.view', 'roles.view', 'users.view', 'studio.view'],
 };

@@ -69,3 +69,30 @@ export function RolePicker({ value, onChange, ariaLabel, disabled, max = 25 }: {
     </div>
   );
 }
+
+/** Mehrere Channels auswählen (Liste mit Entfernen-Knopf, nach Server gruppiert). Wert: Komma-getrennte IDs. */
+export function ChannelsPicker({ value, onChange, ariaLabel, disabled, max = 10 }: { value: string; onChange: (ids: string) => void; ariaLabel: string; disabled?: boolean; max?: number }) {
+  const all = useGuilds().data ?? [];
+  const list = useGuildList();
+  const ids = value.split(/[\s,;]+/).filter(Boolean);
+  const [typed, setTyped] = useState('');
+  const name = (id: string) => { for (const g of all) { const c = g.channels.find((x) => x.id === id); if (c) return { name: c.name, guild: g.name }; } return null; };
+  const set = (next: string[]) => onChange([...new Set(next)].join(', '));
+  return (
+    <div className="grid gap-2">
+      {ids.length > 0 && <ul className="flex flex-wrap gap-1.5">{ids.map((id) => { const c = name(id); return (
+        <li key={id} className="inline-flex items-center gap-1.5 rounded border border-primary/40 bg-primary/10 px-2 py-0.5 text-xs">
+          <span># {c?.name ?? id}{all.length > 1 && c ? <span className="text-muted"> · {c.guild}</span> : null}</span>
+          {!disabled && <button type="button" aria-label={`Channel ${c?.name ?? id} entfernen`} className="text-muted hover:text-danger" onClick={() => set(ids.filter((x) => x !== id))}><X size={12} /></button>}
+        </li>); })}</ul>}
+      {!disabled && ids.length < max && (list.length ? (
+        <Select aria-label={ariaLabel} value="" onChange={(e) => e.target.value && set([...ids, e.target.value])}>
+          <option value="">{ids.length ? '+ weiteren Channel wählen…' : 'Channel wählen…'}</option>
+          {list.map((g) => <optgroup key={g.id} label={g.name}>{channelOptions(g, 'text').filter((c) => !ids.includes(c.id)).map((c) => <option key={c.id} value={c.id}>{c.label}</option>)}</optgroup>)}
+        </Select>
+      ) : (
+        <Input aria-label={ariaLabel} value={typed} placeholder="Channel-ID + Enter" onChange={(e) => setTyped(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); if (idOf(typed)) set([...ids, idOf(typed)]); setTyped(''); } }} onBlur={() => { if (idOf(typed)) set([...ids, idOf(typed)]); setTyped(''); }} />
+      ))}
+    </div>
+  );
+}

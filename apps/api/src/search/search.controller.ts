@@ -9,6 +9,7 @@ import type { AuthUser } from '../common/request-context';
 import { zodBody } from '../common/zod.pipe';
 import { SupportTicketsService } from '../support-tickets/tickets.service';
 import { DiscordLiveService } from '../discord/discord-live.service';
+import { currentGuild } from '../common/guild-context';
 
 const q = z.object({ q: z.string().trim().min(2).max(64) });
 interface Hit { type: string; id: string; label: string; sub?: string }
@@ -52,6 +53,10 @@ export class SearchController {
     }
     if (allowed('ticket.view')) jobs.push(this.tickets.list(u.id, { q: term, page: 1, pageSize: take }).then((r) => r.items.map((x) => ({ type: 'support-ticket', id: x.id, label: `${x.number} ${x.name}`, sub: x.creatorName }))));
     if (allowed('applications.view')) jobs.push(this.prisma.application.findMany({ where: { OR: [{ number: { contains: upper } }, { robloxUsername: ci(term) }, { discordName: ci(term) }] }, take, orderBy: { createdAt: 'desc' } }).then((r) => r.map((x) => ({ type: 'application', id: x.id, label: x.number, sub: x.robloxUsername }))));
+    if (allowed('radio.view')) {
+      const g = currentGuild();
+      jobs.push(this.prisma.radioCode.findMany({ where: { AND: [{ OR: [{ guildId: null }, ...(g ? [{ guildId: g }] : [])] }, { OR: [{ code: ci(term) }, { meaning: ci(term) }] }] }, take }).then((r) => r.map((x) => ({ type: 'radio-code', id: x.code, label: x.code, sub: x.meaning }))));
+    }
     const all = (await Promise.all(jobs)).flat();
     // dieselbe Person nicht doppelt (Personalakte + Discord)
     const seen = new Set<string>();
