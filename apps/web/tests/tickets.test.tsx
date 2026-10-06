@@ -1,7 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import { DiscordPreview } from '../src/components/DiscordPreview';
-import { fromHex, hex, idsFromText } from '../src/lib/tickets';
+import { ApiError } from '../src/lib/api';
+import { errText, fromHex, hex, idsFromText, oneId } from '../src/lib/tickets';
 
 describe('ticket panel preview', () => {
   it('shows embed, buttons and dropdown like Discord', () => {
@@ -23,5 +24,16 @@ describe('ticket panel preview', () => {
     expect(hex(0x3b82f6)).toBe('#3b82f6');
     expect(fromHex('#ef4444')).toBe(0xef4444);
     expect(idsFromText('1, 2;3\n 4')).toEqual(['1', '2', '3', '4']);
+  });
+  it('accepts Discord mentions and pasted IDs with spaces', () => {
+    expect(idsFromText('<@&123456789012345678> <@&223456789012345678>,<#323456789012345678>')).toEqual(['123456789012345678', '223456789012345678', '323456789012345678']);
+    expect(idsFromText('<@&123456789012345678><@&223456789012345678>')).toEqual(['123456789012345678', '223456789012345678']);
+    expect(oneId('  <#1213940450260684801> ')).toBe('1213940450260684801');
+    expect(oneId('   ')).toBeNull();
+  });
+  it('validation errors name the field instead of only „Request validation failed“', () => {
+    const e = new ApiError(400, 'VALIDATION_FAILED', 'Request validation failed.', 'r1', [{ path: 'staffRoleIds.0', message: 'Discord ID (15–25 digits)' }, { path: 'questions.1.label', message: 'too short' }]);
+    expect(errText(e)).toBe('Please check: Staff roles (entry 1): Discord ID (15–25 digits) · Question 2 – text: too short (Request ID r1)');
+    expect(errText(new ApiError(409, 'CONFLICT', 'In use.'))).toBe('In use.');
   });
 });

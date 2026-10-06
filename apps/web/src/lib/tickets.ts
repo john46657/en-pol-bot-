@@ -58,8 +58,30 @@ export const useTicketConfig = () => useQuery({ queryKey: ['ticket-config'], que
 export const hex = (n: number) => `#${(n >>> 0).toString(16).padStart(6, '0').slice(-6)}`;
 export const fromHex = (s: string) => parseInt(s.replace('#', ''), 16) || 0;
 export const duration = (min: number | null) => (min === null ? '—' : min < 60 ? `${min} min` : min < 1440 ? `${Math.floor(min / 60)} h ${min % 60} min` : `${Math.floor(min / 1440)} d ${Math.floor((min % 1440) / 60)} h`);
-export const errText = (e: unknown) => (e instanceof ApiError ? `${e.message}${e.requestId ? ` (Request ID ${e.requestId})` : ''}` : 'Failed');
+/** Lesbare Feldnamen für Prüf-Fehler der API (z. B. `staffRoleIds.0`, `questions.1.label`). */
+const FIELD: Record<string, string> = {
+  name: 'Name', emoji: 'Emoji', description: 'Description', channelNameFormat: 'Channel name format', discordCategoryId: 'Discord category ID', channelId: 'Target channel',
+  staffRoleIds: 'Staff roles', extraRoleIds: 'Additional roles', requiredRoleIds: 'Required Discord roles', allowedUserIds: 'Only these users', escalationRoleIds: 'Roles added on escalation',
+  allowedRoleIds: 'Visible for Discord roles', notifyRoleIds: 'Notify Discord roles', accessRoleNames: 'Dashboard access roles', allowedRoleNames: 'May be set by system roles',
+  transcriptChannelId: 'Transcript channel ID', logChannelId: 'Log channel ID', questions: 'Question', buttons: 'Button', welcomeTitle: 'Title', welcomeMessage: 'Message',
+  thumbnailUrl: 'Thumbnail', imageUrl: 'Image', bannerUrl: 'Banner', footerIconUrl: 'Footer icon', authorIconUrl: 'Author icon', placeholder: 'Placeholder', text: 'Reason', label: 'text', options: 'options',
+};
+const fieldName = (path: string) => {
+  const [k = '', i, sub] = path.split('.');
+  const base = FIELD[k] ?? k;
+  if (i === undefined) return base;
+  const n = Number(i) + 1;
+  return `${base}${['questions', 'buttons'].includes(k) ? ` ${n}` : ` (entry ${n})`}${sub ? ` – ${FIELD[sub] ?? sub}` : ''}`;
+};
+export const errText = (e: unknown) => {
+  if (!(e instanceof ApiError)) return 'Failed';
+  const details = Array.isArray(e.details) ? (e.details as { path?: string; message?: string }[]).filter((d) => d.message) : [];
+  const list = details.slice(0, 5).map((d) => (d.path ? `${fieldName(d.path)}: ${d.message}` : d.message)).join(' · ');
+  return `${list ? `Please check: ${list}` : e.message}${e.requestId ? ` (Request ID ${e.requestId})` : ''}`;
+};
 /** Discord-IDs aus Text (Komma/Leerzeichen/Zeilen getrennt). */
-export const idsFromText = (s: string) => s.split(/[\s,;]+/).map((x) => x.trim()).filter(Boolean);
+/** Eine Discord-ID aus Eingaben wie `123…`, `<@&123…>`, `<#123…>` oder mit Leerzeichen. */
+export const oneId = (s: string) => { const t = s.trim(); return t ? (t.match(/\d{15,25}/)?.[0] ?? t) : null; };
+export const idsFromText = (s: string) => s.replace(/></g, '> <').split(/[\s,;]+/).map((x) => oneId(x)).filter((x): x is string => !!x);
 export const idsToText = (a: string[]) => a.join(', ');
 export const label = (x: { emoji?: string | null; name: string } | null | undefined) => (x ? `${x.emoji ? `${x.emoji} ` : ''}${x.name}` : '—');

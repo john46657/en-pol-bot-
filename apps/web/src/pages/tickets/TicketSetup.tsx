@@ -8,7 +8,7 @@ import { api } from '../../lib/api';
 import { Badge, Button, Card, ConfirmDialog, EmptyState, ErrorState, Field, Input, Select, SkeletonRows, Textarea } from '../../components/ui';
 import { DiscordPreview } from '../../components/DiscordPreview';
 import {
-  errText, fromHex, hex, idsFromText, idsToText, label, useTicketConfig,
+  errText, fromHex, hex, idsFromText, idsToText, label, oneId, useTicketConfig,
   type TicketCategoryCfg, type TicketConfig, type TicketPanelCfg, type TicketPriorityCfg, type TicketReasonCfg, type TicketSettingsCfg, type TicketStatusCfg,
 } from '../../lib/tickets';
 
@@ -120,7 +120,7 @@ function PanelEditor({ draft, c, onDone }: { draft: PanelDraft; c: TicketConfig;
           <Section title="General">
             <div className="grid gap-3 md:grid-cols-2">
               <Field label="Internal name">{(id) => <Input id={id} value={p.name} maxLength={80} onChange={(e) => set({ name: e.target.value })} />}</Field>
-              <Field label="Target channel (Discord ID)">{(id) => <Input id={id} inputMode="numeric" value={p.channelId ?? ''} onChange={(e) => set({ channelId: e.target.value.trim() || null })} placeholder="123456789012345678" />}</Field>
+              <Field label="Target channel (Discord ID)">{(id) => <Input id={id} inputMode="numeric" value={p.channelId ?? ''} onChange={(e) => set({ channelId: oneId(e.target.value) })} placeholder="123456789012345678" />}</Field>
               <Field label="Type">{(id) => <Select id={id} value={p.style} onChange={(e) => set({ style: e.target.value as PanelDraft['style'] })}><option value="BUTTONS">Buttons</option><option value="DROPDOWN">Dropdown menu</option></Select>}</Field>
               {p.style === 'DROPDOWN' && <Field label="Dropdown placeholder">{(id) => <Input id={id} value={p.placeholder} maxLength={150} onChange={(e) => set({ placeholder: e.target.value })} />}</Field>}
               <Num label="Order" value={p.position} max={1000} onChange={(v) => set({ position: v })} />
@@ -236,7 +236,7 @@ function CategoryEditor({ draft, c, onDone }: { draft: CatDraft; c: TicketConfig
           </Section>
           <Section title="Discord channel">
             <div className="grid gap-3 md:grid-cols-2">
-              <Field label="Discord category ID for new tickets">{(id) => <Input id={id} inputMode="numeric" value={d.discordCategoryId ?? ''} onChange={(e) => set({ discordCategoryId: e.target.value.trim() || null })} />}</Field>
+              <Field label="Discord category ID for new tickets">{(id) => <Input id={id} inputMode="numeric" value={d.discordCategoryId ?? ''} onChange={(e) => set({ discordCategoryId: oneId(e.target.value) })} />}</Field>
               <Field label="Channel name format" hint={`Example: ${ticketChannelName(d.channelNameFormat, { ...SAMPLE, '{category}': d.name })}`}>{(id) => <Input id={id} value={d.channelNameFormat} maxLength={90} onChange={(e) => set({ channelNameFormat: e.target.value })} />}</Field>
             </div>
             <Ids label="Staff roles (see + write, are mentioned)" value={d.staffRoleIds} onChange={(v) => set({ staffRoleIds: v })} />
@@ -276,7 +276,7 @@ function CategoryEditor({ draft, c, onDone }: { draft: CatDraft; c: TicketConfig
           </Section>
           <Section title="Transcript & rating">
             <Check label="Create a transcript when closed" checked={d.transcriptOnClose} onChange={(v) => set({ transcriptOnClose: v })} />
-            <Field label="Transcript channel ID (empty = general transcript channel)">{(id) => <Input id={id} inputMode="numeric" value={d.transcriptChannelId ?? ''} onChange={(e) => set({ transcriptChannelId: e.target.value.trim() || null })} />}</Field>
+            <Field label="Transcript channel ID (empty = general transcript channel)">{(id) => <Input id={id} inputMode="numeric" value={d.transcriptChannelId ?? ''} onChange={(e) => set({ transcriptChannelId: oneId(e.target.value) })} />}</Field>
             <Check label="Send the transcript to the creator via DM" checked={d.transcriptToUser} onChange={(v) => set({ transcriptToUser: v })} />
             <Check label="Ask the creator for a rating (DM, 1–5 stars)" checked={d.ratingEnabled} onChange={(v) => set({ ratingEnabled: v })} />
             <Field label="Rating question">{(id) => <Input id={id} value={d.ratingQuestion} maxLength={300} onChange={(e) => set({ ratingQuestion: e.target.value })} />}</Field>
@@ -460,8 +460,8 @@ function General({ c }: { c: TicketConfig }) {
         <div className="grid gap-3">
           <Section title="Channels">
             <div className="grid gap-3 md:grid-cols-2">
-              <Field label="Log channel ID (every ticket action)">{(id) => <Input id={id} inputMode="numeric" value={s.logChannelId ?? ''} onChange={(e) => set({ logChannelId: e.target.value.trim() || null })} />}</Field>
-              <Field label="Transcript channel ID (default)">{(id) => <Input id={id} inputMode="numeric" value={s.transcriptChannelId ?? ''} onChange={(e) => set({ transcriptChannelId: e.target.value.trim() || null })} />}</Field>
+              <Field label="Log channel ID (every ticket action)">{(id) => <Input id={id} inputMode="numeric" value={s.logChannelId ?? ''} onChange={(e) => set({ logChannelId: oneId(e.target.value) })} />}</Field>
+              <Field label="Transcript channel ID (default)">{(id) => <Input id={id} inputMode="numeric" value={s.transcriptChannelId ?? ''} onChange={(e) => set({ transcriptChannelId: oneId(e.target.value) })} />}</Field>
             </div>
             <Num label="Delete transcripts after (days, 0 = keep forever)" value={s.transcriptRetentionDays} max={3650} onChange={(v) => set({ transcriptRetentionDays: v })} />
           </Section>
