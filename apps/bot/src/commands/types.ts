@@ -19,6 +19,8 @@ export interface Ctx {
   userName?: string;
   /** Selbst aktualisierende Nachrichten sofort neu zeichnen; mit `channelId` dorthin (um)ziehen. */
   refreshLive?: (kind: LiveKind, o?: { channelId?: string; force?: boolean }) => Promise<{ channelId: string; messageId?: string } | null>;
+  /** Beitritt des Aufrufers zum Server (ISO), falls aus einem Server ausgelöst. */
+  memberJoinedAt?: string;
   /** Roblox-Namenssuche (öffentliche Roblox-API; in Tests ersetzbar). */
   robloxLookup?: (username: string) => Promise<{ id: number; name: string; displayName: string } | null>;
 }
@@ -30,4 +32,4 @@ export interface CommandDef {
   run(ctx: Ctx): Promise<Reply>;
 }
 /** Buttons/Formulare/Auswahlmenüs: customId = `prefix:arg:arg`. `fields` nur bei Formular-Absendungen, `values` nur bei Auswahlmenüs. */
-export interface InteractionDef { prefix: string; run(ctx: Ctx & { args: string[]; fields?: Record<string, string>; values?: string[] }): Promise<Reply> }
+export interface InteractionDef { prefix: string; /** true: Antwort ist ein Formular (kein deferReply vorher). */ opensModal?: (args: string[]) => boolean; run(ctx: Ctx & { args: string[]; fields?: Record<string, string>; values?: string[] }): Promise<Reply> }

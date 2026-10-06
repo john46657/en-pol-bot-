@@ -1,8 +1,8 @@
 import type { Api } from './api';
-import { applicationDecisionText, outboxButtons, qualificationDecisionText, renderOutbox, type ButtonSpec, type EmbedData } from './format';
+import { applicationDecisionText, outboxButtons, qualificationDecisionText, renderOutboxEmbeds, type ButtonSpec, type EmbedData } from './format';
 
 interface OutboxItem { id: string; type: string; channelKey: string; payload: Record<string, unknown> }
-export type Sender = (channelId: string, embed: EmbedData, buttons?: ButtonSpec[]) => Promise<void>;
+export type Sender = (channelId: string, embeds: EmbedData[], buttons?: ButtonSpec[]) => Promise<void>;
 /** Vergibt eine Discord-Rolle auf allen Servern, auf denen es sie gibt (z. B. nach angenommener Bewerbung). */
 export type RoleGranter = (userId: string, roleId: string) => Promise<void>;
 export type DirectSender = (userId: string, text: string) => Promise<void>;
@@ -40,13 +40,15 @@ export async function pollOnce(api: Api, send: Sender, log: (m: string) => void 
       continue;
     }
     // pro Art dürfen mehrere Channel-IDs (Komma-getrennt, auch auf mehreren Servern) hinterlegt sein
-    const channelIds = (channels[item.channelKey] ?? '').split(/[\s,;]+/).filter(Boolean);
-    const embed = renderOutbox(item.type, item.payload);
+    // eigener Channel im Eintrag (z. B. Bewerbungen einer Einheit) hat Vorrang
+    const own = typeof item.payload.channelId === 'string' && /^\d{15,25}$/.test(item.payload.channelId) ? item.payload.channelId : null;
+    const channelIds = own ? [own] : (channels[item.channelKey] ?? '').split(/[\s,;]+/).filter(Boolean);
+    const embeds = renderOutboxEmbeds(item.type, item.payload);
     try {
       if (!channelIds.length) throw new Error(`channel "${item.channelKey}" not configured`);
-      if (!embed) throw new Error(`unknown type "${item.type}"`);
+      if (!embeds) throw new Error(`unknown type "${item.type}"`);
       const buttons = outboxButtons(item.type, item.payload);
-      const results = await Promise.allSettled(channelIds.map((id) => send(id, embed, buttons)));
+      const results = await Promise.allSettled(channelIds.map((id) => send(id, embeds, buttons)));
       const failed = results.flatMap((r, i) => (r.status === 'rejected' ? [`${channelIds[i]}: ${r.reason instanceof Error ? r.reason.message : r.reason}`] : []));
       failed.forEach((f) => log(`outbox ${item.id}: send failed for channel ${f}`));
       // Erfolg, wenn mindestens ein Channel erreicht wurde (sonst Wiederholung – würde die erfolgreichen doppelt beliefern)

@@ -9,8 +9,9 @@ import { zodBody } from '../common/zod.pipe';
 
 const discordId = z.string().regex(/^\d{15,25}$/);
 const list = z.object({ unit: z.string().max(24).optional(), status: z.enum(['OPEN', 'ACCEPTED', 'REJECTED']).optional() });
-const decision = z.object({ status: z.enum(['ACCEPTED', 'REJECTED']) });
-const submit = z.object({ unit: z.string().max(24), discordId, discordName: z.string().trim().min(1).max(100), answers: z.array(z.object({ question: z.string().max(300), answer: z.string().trim().min(1).max(1000) })).min(1).max(15) });
+const decision = z.object({ status: z.enum(['ACCEPTED', 'REJECTED']), reason: z.string().trim().max(1000).optional() });
+const historyQ = z.object({ discordId });
+const submit = z.object({ unit: z.string().max(24), discordId, discordName: z.string().trim().min(1).max(100), durationSec: z.number().int().min(0).max(86_400).optional(), joinedAt: z.coerce.date().optional(), answers: z.array(z.object({ question: z.string().max(300), answer: z.string().trim().min(1).max(1000) })).min(1).max(15) });
 const openQ = z.object({ discordId, unit: z.string().max(24).optional() });
 
 @ApiTags('qualifications')
@@ -24,9 +25,13 @@ export class QualificationsController {
   save(@CurrentActor() a: Actor, @Body(zodBody(saveSchema)) b: z.infer<typeof saveSchema>) { return this.q.saveConfig(a, b); }
   @Get('applications') @RequirePermission('qualifications.view')
   list(@Query(zodBody(list)) f: z.infer<typeof list>) { return this.q.list(f); }
+  @Get('history') @RequirePermission('qualifications.view')
+  history(@Query(zodBody(historyQ)) q: z.infer<typeof historyQ>) { return this.q.history(q.discordId); }
+  @Get('applications/:id') @RequirePermission('qualifications.view')
+  get(@Param('id', ParseUUIDPipe) id: string) { return this.q.get(id); }
   /** Auch vom Bot (Button im Team-Channel) mit den Rechten des klickenden Benutzers. */
   @Post('applications/:id/decision') @HttpCode(200) @RequirePermission('qualifications.decide')
-  decide(@CurrentActor() a: Actor, @Param('id', ParseUUIDPipe) id: string, @Body(zodBody(decision)) b: z.infer<typeof decision>) { return this.q.decide(a, id, b.status); }
+  decide(@CurrentActor() a: Actor, @Param('id', ParseUUIDPipe) id: string, @Body(zodBody(decision)) b: z.infer<typeof decision>) { return this.q.decide(a, id, b.status, b.reason); }
 }
 
 /** Dienst-Endpunkte für das Discord-Panel – Bewerben geht auch ohne verknüpftes Konto. */

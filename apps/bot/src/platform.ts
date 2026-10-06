@@ -4,7 +4,7 @@ import type { ButtonSpec, EmbedData, SelectSpec } from './format';
 export interface Platform {
   setRole(guildId: string, userId: string, roleId: string, on: boolean): Promise<void>;
   /** Legt einen privaten Ticket-Channel an (oder liefert den vorhandenen). */
-  createTicketChannel(a: { guildId: string; userId: string; userName: string; categoryId?: string; staffRoleId?: string }): Promise<{ channelId: string; existing: boolean }>;
+  createTicketChannel(a: { guildId: string; userId: string; userName: string; categoryId?: string; staffRoleId?: string; extraUserIds?: string[] }): Promise<{ channelId: string; existing: boolean }>;
   deleteChannel(channelId: string, delayMs?: number): Promise<void>;
   sendDirectMessage(userId: string, text: string): Promise<void>;
   /** Direktnachricht mit Embed (+ Buttons); liefert DM-Channel und Nachricht (für „Zur Bewerbung“-Links). */

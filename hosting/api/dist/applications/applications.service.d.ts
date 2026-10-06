@@ -24,6 +24,9 @@ export declare class ApplicationsService {
         answers: Record<string, string>;
     }, meta?: {
         discordId?: string;
+        discordName?: string;
+        durationSec?: number;
+        joinedAt?: Date;
     }): Promise<{
         number: string;
         status: string;
@@ -32,6 +35,25 @@ export declare class ApplicationsService {
     openForDiscord(discordId: string): Promise<{
         open: boolean;
         number: string | null;
+    }>;
+    /** Bisherige Bewerbungen einer Discord-ID (Button „Verlauf“). */
+    history(discordId: string): import("@prisma/client").Prisma.PrismaPromise<{
+        number: string;
+        id: string;
+        createdAt: Date;
+        status: string;
+        decisionReason: string | null;
+    }[]>;
+    /**
+     * Schnell-Entscheidung aus Discord (Buttons Annehmen/Ablehnen): aus jedem offenen Status direkt angenommen/abgelehnt.
+     * `reason` geht – anders als der interne Grund im Web-Workflow – per DM an die Person.
+     */
+    discordDecide(actor: Actor, id: string, to: 'ACCEPTED' | 'REJECTED', reason?: string): Promise<{
+        id: string;
+        number: string;
+        status: "REJECTED" | "ACCEPTED";
+        decidedByName: string | null;
+        reason: string | null;
     }>;
     list(p: PageQuery, status?: string): Promise<{
         items: {
@@ -47,6 +69,10 @@ export declare class ApplicationsService {
             source: string;
             answers: import("@prisma/client/runtime/library").JsonValue;
             decidedById: string | null;
+            discordName: string | null;
+            durationSec: number | null;
+            joinedAt: Date | null;
+            decisionReason: string | null;
         }[];
         total: number;
         page: number;
@@ -65,6 +91,10 @@ export declare class ApplicationsService {
         source: string;
         answers: import("@prisma/client/runtime/library").JsonValue;
         decidedById: string | null;
+        discordName: string | null;
+        durationSec: number | null;
+        joinedAt: Date | null;
+        decisionReason: string | null;
     }>;
     transition(actor: Actor, id: string, to: ApplicationStatus, reason?: string): Promise<{
         number: string;
@@ -79,5 +109,9 @@ export declare class ApplicationsService {
         source: string;
         answers: import("@prisma/client/runtime/library").JsonValue;
         decidedById: string | null;
+        discordName: string | null;
+        durationSec: number | null;
+        joinedAt: Date | null;
+        decisionReason: string | null;
     }>;
 }

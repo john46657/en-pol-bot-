@@ -7,6 +7,8 @@ export const unitSchema = z.object({
   description: z.string().trim().max(600).default(''),
   /** Discord-Rolle, die bei Annahme vergeben wird (optional). */
   roleId: z.union([z.string().regex(/^\d{15,25}$/), z.literal('')]).optional(),
+  /** Eigener Discord-Channel für eingehende Bewerbungen dieser Einheit (sonst der allgemeine Qualifications-Channel). */
+  channelId: z.union([z.string().regex(/^\d{15,25}$/), z.literal('')]).optional(),
   questions: z.array(z.string().trim().min(3).max(300)).min(1).max(15),
 });
 /** Texte des Panels für die normale Bewerbung bei EN Polizei (/bewerbungspanel); die Fragen sind das Bewerbungsformular (`application.form`). */

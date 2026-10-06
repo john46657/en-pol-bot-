@@ -31,7 +31,8 @@ const BOT_USER_ROUTES: [string, RegExp][] = [
   ['GET', /^\/danger-level$/], ['PUT', /^\/danger-level$/],
   ['GET', /^\/radio-whitelist(\/check)?$/], ['POST', /^\/radio-whitelist(\/remove)?$/],
   ['GET', /^\/sek\/(me|members|reports)$/], ['POST', /^\/sek\/(members|members\/remove|reports)$/],
-  ['POST', new RegExp(`^/qualifications/applications/${UUID}/decision$`)],
+  ['POST', new RegExp(`^/qualifications/applications/${UUID}/decision$`)], ['GET', new RegExp(`^/qualifications/applications/${UUID}$`)], ['GET', /^\/qualifications\/history$/],
+  ['POST', new RegExp(`^/applications/${UUID}/discord-decision$`)], ['GET', new RegExp(`^/applications/${UUID}$`)], ['GET', /^\/applications\/history$/],
   ['POST', /^\/communication\/channels\/(TEAM|DISPATCH)\/messages$/],
 ];
 

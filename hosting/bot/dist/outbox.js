@@ -39,15 +39,17 @@ async function pollOnce(api, send, log = console.log, dm, grantRole) {
             continue;
         }
         // pro Art dürfen mehrere Channel-IDs (Komma-getrennt, auch auf mehreren Servern) hinterlegt sein
-        const channelIds = (channels[item.channelKey] ?? '').split(/[\s,;]+/).filter(Boolean);
-        const embed = (0, format_1.renderOutbox)(item.type, item.payload);
+        // eigener Channel im Eintrag (z. B. Bewerbungen einer Einheit) hat Vorrang
+        const own = typeof item.payload.channelId === 'string' && /^\d{15,25}$/.test(item.payload.channelId) ? item.payload.channelId : null;
+        const channelIds = own ? [own] : (channels[item.channelKey] ?? '').split(/[\s,;]+/).filter(Boolean);
+        const embeds = (0, format_1.renderOutboxEmbeds)(item.type, item.payload);
         try {
             if (!channelIds.length)
                 throw new Error(`channel "${item.channelKey}" not configured`);
-            if (!embed)
+            if (!embeds)
                 throw new Error(`unknown type "${item.type}"`);
             const buttons = (0, format_1.outboxButtons)(item.type, item.payload);
-            const results = await Promise.allSettled(channelIds.map((id) => send(id, embed, buttons)));
+            const results = await Promise.allSettled(channelIds.map((id) => send(id, embeds, buttons)));
             const failed = results.flatMap((r, i) => (r.status === 'rejected' ? [`${channelIds[i]}: ${r.reason instanceof Error ? r.reason.message : r.reason}`] : []));
             failed.forEach((f) => log(`outbox ${item.id}: send failed for channel ${f}`));
             // Erfolg, wenn mindestens ein Channel erreicht wurde (sonst Wiederholung – würde die erfolgreichen doppelt beliefern)

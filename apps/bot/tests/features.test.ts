@@ -9,7 +9,7 @@ import { pollOnce } from '../src/outbox';
 import type { Platform } from '../src/platform';
 import { robloxLookup } from '../src/roblox';
 import { parseGermanDate } from '../src/commands/sek';
-import { outboxButtons, renderOutbox } from '../src/format';
+import { outboxButtons, renderOutbox, renderOutboxEmbeds } from '../src/format';
 import { APPLICATION_MS, handleDirectMessage, panelEmbed, resetSessions } from '../src/commands/qualifications';
 
 const ME = '123456789012345678', OTHER = '223456789012345678', GUILD = '323456789012345678', CHANNEL = '423456789012345678';
@@ -309,7 +309,7 @@ describe('Qualifikationen (Panel → Fragen per DM)', () => {
     expect(d.out[2]!.embed.description).toContain('**2/2.** Warum?');
     await handleDirectMessage({ userId: ME, userName: 'oscar', content: 'Weil ich fliegen will.', api, sendDm: d.sendDm });
     expect(d.out[3]!.embed.description).toContain('Q-2026-AB');
-    expect(calls.find((c) => c.path === '/bot/qualifications/applications')!.body).toEqual({ unit: 'flugstaffel', discordId: ME, discordName: 'oscar', answers: [{ question: 'Roblox- und Discord-Name?', answer: 'Oscar / oscar#1' }, { question: 'Warum?', answer: 'Weil ich fliegen will.' }] });
+    expect(calls.find((c) => c.path === '/bot/qualifications/applications')!.body).toMatchObject({ unit: 'flugstaffel', discordId: ME, discordName: 'oscar', durationSec: expect.any(Number), answers: [{ question: 'Roblox- und Discord-Name?', answer: 'Oscar / oscar#1' }, { question: 'Warum?', answer: 'Weil ich fliegen will.' }] });
     await handleDirectMessage({ userId: ME, userName: 'oscar', content: 'noch was', api, sendDm: d.sendDm });
     expect(d.out[4]!.embed.description).toContain('keine laufende Bewerbung');
   });
@@ -330,21 +330,70 @@ describe('Qualifikationen (Panel → Fragen per DM)', () => {
     expect(d.out.at(-1)!.embed.description).toContain('letzte Antwort');
   });
 
-  it('team decides via buttons as the clicking user; decision DM gives the role first', async () => {
-    expect(outboxButtons('qualification.submitted', { id: 'abc' })?.map((b) => b.id)).toEqual(['quali:decide:abc:ACCEPTED', 'quali:decide:abc:REJECTED']);
-    const e = renderOutbox('qualification.submitted', { number: 'Q-1', unitName: 'SEK', discordId: OTHER, discordName: 'bea', linkedName: null, answers: [{ question: 'Warum?', answer: 'Darum' }] })!;
-    expect(e.fields?.[0]).toMatchObject({ name: '1. Warum?', value: 'Darum' });
-    const { api, calls } = fakeApi({ 'POST /qualifications/applications': { number: 'Q-1', unitName: 'SEK', addedToSek: true } });
-    const hit = interactionFor('quali:decide:11111111-1111-4111-8111-111111111111:ACCEPTED')!;
-    expect(text(await hit.def.run({ ...ctx(api), args: hit.args }))).toContain('ins SEK aufgenommen');
-    expect(calls[0]).toMatchObject({ kind: 'user', path: '/qualifications/applications/11111111-1111-4111-8111-111111111111/decision', body: { status: 'ACCEPTED' } });
+  it('posts applications like Appy: bold numbered questions, applicant info, decision/history/ticket/dashboard buttons', () => {
+    const p = { id: 'abc', number: 'Q-1', unitName: 'Flugstaffel', discordId: OTHER, discordName: 'bea', linkedName: null, durationSec: 66, joinedAt: '2025-10-01T10:00:00Z', createdAt: '2026-10-06T10:00:00Z', dashboardUrl: 'https://x.example/qualifications?id=abc', answers: [{ question: 'Warum?', answer: 'Darum' }, { question: 'Erfahrung?', answer: 'Viel' }] };
+    const [e, ...more] = renderOutboxEmbeds('qualification.submitted', p)!;
+    expect(more).toEqual([]);
+    expect(e!.title).toBe('📋 Flugstaffel – Bewerbung Q-1');
+    expect(e!.description).toContain('**1. Warum?**\nDarum\n\n**2. Erfahrung?**\nViel');
+    for (const x of [`Discord-ID: \`${OTHER}\``, 'Benutzername: `bea`', `Benutzer: <@${OTHER}>`, 'Dauer: `1 min 6s`', 'Server beigetreten: <t:1759312800:R>', 'Eingereicht: <t:']) expect(e!.description).toContain(x);
+    expect(outboxButtons('qualification.submitted', p)?.map((b) => b.url ?? b.id)).toEqual(['quali:decide:q:abc:ACCEPTED', 'quali:decide:q:abc:REJECTED', 'quali:reason:q:abc:ACCEPTED', 'quali:reason:q:abc:REJECTED', `quali:history:${OTHER}`, 'quali:ticket:q:abc', 'https://x.example/qualifications?id=abc']);
+    // Web-Bewerbung (ohne Discord): keine Verlauf-/Ticket-Buttons
+    expect(outboxButtons('application.submitted', { id: 'p1', robloxUsername: 'x' })?.map((b) => b.id)).toEqual(['quali:decide:p:p1:ACCEPTED', 'quali:decide:p:p1:REJECTED', 'quali:reason:p:p1:ACCEPTED', 'quali:reason:p:p1:REJECTED']);
+    // sehr lange Bewerbungen: gekürzt, innerhalb der Discord-Limits
+    const long = renderOutboxEmbeds('application.submitted', { ...p, robloxUsername: 'Bea', answers: Array.from({ length: 15 }, (_, i) => ({ question: `Frage ${i}`, answer: 'x'.repeat(1000) })) })!;
+    expect(long.reduce((n, x) => n + x.title.length + (x.description ?? '').length, 0)).toBeLessThan(5000);
+    expect(long.every((x) => (x.description ?? '').length <= 4096)).toBe(true);
+    expect(long.map((x) => x.description).join('')).toContain('gekürzt');
+  });
+
+  it('team decides via buttons as the clicking user (with optional reason via form); the message gets updated', async () => {
+    const { api, calls } = fakeApi({ 'POST /qualifications/applications': { number: 'Q-1', unitName: 'SEK', addedToSek: true, decidedByName: 'Lead' }, 'POST /applications': { number: 'APP-1', decidedByName: 'Lead' } });
+    const ID = '11111111-1111-4111-8111-111111111111';
+    const hit = interactionFor(`quali:decide:q:${ID}:ACCEPTED`)!;
+    const r = await hit.def.run({ ...ctx(api), args: hit.args });
+    expect(text(r)).toContain('ins SEK aufgenommen');
+    expect(r.decided?.text).toContain(`✅ Angenommen von <@${ME}> (Lead)`);
+    expect(calls[0]).toMatchObject({ kind: 'user', path: `/qualifications/applications/${ID}/decision`, body: { status: 'ACCEPTED' } });
+    // alte Buttons (ohne Art) funktionieren weiter
+    const old = interactionFor(`quali:decide:${ID}:REJECTED`)!;
+    await old.def.run({ ...ctx(api), args: old.args });
+    expect(calls[1]).toMatchObject({ path: `/qualifications/applications/${ID}/decision`, body: { status: 'REJECTED' } });
+    // mit Grund: erst Formular, dann Entscheidung (Polizei-Bewerbung)
+    const reason = interactionFor(`quali:reason:p:${ID}:REJECTED`)!;
+    expect(reason.def.opensModal?.(reason.args)).toBe(true);
+    const modal = (await reason.def.run({ ...ctx(api), args: reason.args })).modal!;
+    const submit = interactionFor(modal.id)!;
+    const r2 = await submit.def.run({ ...ctx(api), args: submit.args, fields: { reason: 'Zu wenig Erfahrung' } });
+    expect(calls[2]).toMatchObject({ path: `/applications/${ID}/discord-decision`, body: { status: 'REJECTED', reason: 'Zu wenig Erfahrung' } });
+    expect(r2.decided?.text).toContain('**Grund:** Zu wenig Erfahrung');
     const done = fakeApi({ 'POST /qualifications/applications': new BotApiError(409, 'CONFLICT', 'x') });
     expect(text(await hit.def.run({ ...ctx(done.api), args: hit.args }))).toContain('bereits entschieden');
+  });
 
-    const box = fakeApi({ 'GET /bot/config': {}, 'GET /bot/outbox': [{ id: 'o1', type: 'qualification.decided', channelKey: 'qualifications', payload: { discordId: OTHER, status: 'ACCEPTED', number: 'Q-1', unitName: 'SEK', roleId: '623456789012345678' } }], 'POST /bot/outbox/o1/ack': {} });
+  it('history shows earlier applications; ticket opens a channel with applicant, staff and the clicking user', async () => {
+    const { api } = fakeApi({
+      'GET /qualifications/history': [{ number: 'Q-1', unitName: 'SEK', status: 'REJECTED', createdAt: '2026-01-01T00:00:00Z', decisionReason: 'Zu früh' }],
+      'GET /applications/history': new BotApiError(403, 'PERMISSION_DENIED', 'x'),
+      'GET /qualifications/applications/': { number: 'Q-2', discordId: OTHER, discordName: 'bea', unitName: 'Flugstaffel' },
+    });
+    const h = interactionFor(`quali:history:${OTHER}`)!;
+    const hist = text(await h.def.run({ ...ctx(api), args: h.args }));
+    expect(hist).toContain('**Q-1** · SEK · ❌ abgelehnt');
+    expect(hist).toContain('Zu früh');
+    const { p, log } = fakePlatform();
+    const t = interactionFor('quali:ticket:q:22222222-2222-4222-8222-222222222222')!;
+    const r = await t.def.run({ ...ctx(api, { platform: p, config: async () => ({ tickets: 'CAT', staffRole: 'STAFF' }) }), args: t.args });
+    expect(log[0]).toBe(`ticket ${OTHER} CAT STAFF`);
+    expect(text(r)).toContain('Ticket geöffnet');
+  });
+
+  it('decision DM gives the role first and includes the reason', async () => {
+    const box = fakeApi({ 'GET /bot/config': {}, 'GET /bot/outbox': [{ id: 'o1', type: 'qualification.decided', channelKey: 'qualifications', payload: { discordId: OTHER, status: 'ACCEPTED', number: 'Q-1', unitName: 'SEK', roleId: '623456789012345678', reason: 'Top Bewerbung' } }], 'POST /bot/outbox/o1/ack': {} });
     const order: string[] = [];
     await pollOnce(box.api, async () => undefined, () => undefined, async (u, t) => { order.push(`dm ${u} ${t}`); }, async (u, r) => { order.push(`role ${u} ${r}`); });
     expect(order[0]).toBe(`role ${OTHER} 623456789012345678`);
     expect(order[1]).toContain('angenommen');
+    expect(order[1]).toContain('**Begründung:** Top Bewerbung');
   });
 });

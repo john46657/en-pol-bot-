@@ -19,6 +19,7 @@ const discord_service_1 = require("../discord/discord.service");
 const numbering_1 = require("../common/numbering");
 const transition_1 = require("../common/transition");
 const pagination_1 = require("../common/pagination");
+const web_url_1 = require("../common/web-url");
 /** Die Beschriftungen sind zugleich die Fragen, die der Discord-Bot per Direktnachricht stellt. */
 exports.DEFAULT_FORM = [
     { key: 'experience', label: 'Welche Erfahrung hast du im Polizei-Roleplay (auch auf anderen Servern)?', required: true, maxLength: 2000 },
@@ -62,15 +63,45 @@ let ApplicationsService = class ApplicationsService {
         }
         if (meta.discordId && (await this.openForDiscord(meta.discordId)).open)
             throw new errors_1.AppError('CONFLICT', 'An open application already exists for this Discord account.');
-        const a = await this.prisma.application.create({ data: { number: (0, numbering_1.makeNumber)('APP'), robloxUsername: d.robloxUsername, robloxUserId: d.robloxUserId, answers, discordId: meta.discordId, source: meta.discordId ? 'DISCORD' : 'WEB' } });
+        const a = await this.prisma.application.create({ data: { number: (0, numbering_1.makeNumber)('APP'), robloxUsername: d.robloxUsername, robloxUserId: d.robloxUserId, answers, discordId: meta.discordId, discordName: meta.discordName, durationSec: meta.durationSec, joinedAt: meta.joinedAt, source: meta.discordId ? 'DISCORD' : 'WEB' } });
         await this.audit.record({ userId: null }, { action: 'application.submit', module: 'applications', entityType: 'Application', entityId: a.id, after: { source: a.source } });
-        await this.discord.enqueue('applications', 'application.submitted', { number: a.number, robloxUsername: a.robloxUsername, discordId: meta.discordId ?? null, source: a.source });
+        await this.discord.enqueue('applications', 'application.submitted', {
+            id: a.id, number: a.number, robloxUsername: a.robloxUsername, robloxUserId: a.robloxUserId ?? null, discordId: meta.discordId ?? null, discordName: meta.discordName ?? null, source: a.source,
+            answers: form.filter((f) => answers[f.key]).map((f) => ({ question: f.label, answer: answers[f.key] })),
+            durationSec: a.durationSec, joinedAt: a.joinedAt?.toISOString() ?? null, createdAt: a.createdAt.toISOString(), dashboardUrl: (0, web_url_1.webUrl)(`/applications/${a.id}`),
+        });
         return { number: a.number, status: a.status };
     }
     /** Für den Bot: hat dieses Discord-Konto schon eine offene Bewerbung? */
     async openForDiscord(discordId) {
         const a = await this.prisma.application.findFirst({ where: { discordId, status: { in: OPEN_STATUSES } }, select: { number: true } });
         return { open: !!a, number: a?.number ?? null };
+    }
+    /** Bisherige Bewerbungen einer Discord-ID (Button „Verlauf“). */
+    history(discordId) {
+        return this.prisma.application.findMany({ where: { discordId }, orderBy: { createdAt: 'desc' }, take: 20, select: { id: true, number: true, status: true, createdAt: true, decisionReason: true } });
+    }
+    /**
+     * Schnell-Entscheidung aus Discord (Buttons Annehmen/Ablehnen): aus jedem offenen Status direkt angenommen/abgelehnt.
+     * `reason` geht – anders als der interne Grund im Web-Workflow – per DM an die Person.
+     */
+    async discordDecide(actor, id, to, reason) {
+        const after = await this.prisma.$transaction(async (tx) => {
+            const a = await tx.application.findUnique({ where: { id } });
+            if (!a)
+                throw new errors_1.AppError('NOT_FOUND', 'Application not found.');
+            if (!OPEN_STATUSES.includes(a.status))
+                throw new errors_1.AppError('CONFLICT', 'This application has already been decided.');
+            const claimed = await tx.application.updateMany({ where: { id, status: a.status, version: a.version }, data: { status: to, decidedById: actor.userId, decisionReason: reason || null, version: { increment: 1 } } });
+            if (claimed.count === 0)
+                throw new errors_1.AppError('CONFLICT', 'This application has already been decided.');
+            await this.audit.record(actor, { action: `application.${to.toLowerCase()}`, module: 'applications', entityType: 'Application', entityId: id, before: { status: a.status }, after: { status: to }, reason: reason || 'Entschieden über Discord' }, tx);
+            return { ...a, status: to };
+        });
+        if (after.discordId)
+            await this.discord.enqueue('applications', 'application.decided', { discordId: after.discordId, status: to, number: after.number, reason: reason || null }, { always: true });
+        const by = actor.userId ? await this.prisma.user.findUnique({ where: { id: actor.userId }, select: { displayName: true } }) : null;
+        return { id, number: after.number, status: to, decidedByName: by?.displayName ?? null, reason: reason || null };
     }
     async list(p, status) {
         const where = { ...(status ? { status } : {}), ...(p.q ? { OR: [{ number: { contains: p.q.toUpperCase() } }, { robloxUsername: { contains: p.q, mode: 'insensitive' } }] } : {}) };

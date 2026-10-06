@@ -95,7 +95,7 @@ describe('bot service data', () => {
 
 describe('applications from Discord', () => {
   const answers = { experience: 'Two years', availability: 'Evenings', motivation: 'Structured RP', roleplayKnowledge: 'FRP / NITRP' };
-  it('the default form only requires four fields (fits a Discord modal); the bot route stores the Discord id, queues a staff notice, and DMs the decision', async () => {
+  it('the bot route stores the Discord id, posts the full application to the staff channel (like Appy), and DMs the decision', async () => {
     const form = (await http().get('/api/v1/applications/form')).body as { key: string; required: boolean }[];
     expect(form.filter((f) => f.required).length).toBeLessThanOrEqual(4);
     const adm = (await login(app, 'f_admin')).agent;
@@ -109,7 +109,7 @@ describe('applications from Discord', () => {
     expect(row).toMatchObject({ discordId: D_APPLICANT, source: 'DISCORD', robloxUsername: 'Disc_Applicant' });
     const submitted = await prisma.discordOutbox.findFirstOrThrow({ where: { type: 'application.submitted' } });
     expect(submitted.payload).toMatchObject({ number: ok.body.number, discordId: D_APPLICANT, source: 'DISCORD' });
-    expect(JSON.stringify(submitted.payload)).not.toContain('Structured RP'); // Antworten gehen nicht in den Discord-Channel
+    expect(JSON.stringify(submitted.payload)).toContain('Structured RP'); // Antworten stehen (wie bei Appy) im Team-Channel – nur interne Channels eintragen
 
     for (const s of ['SCREENING', 'INTERVIEW', 'PENDING_DECISION']) expect((await adm.put(`/api/v1/applications/${row.id}/status`).send({ status: s })).status).toBe(200);
     // Entscheidungs-DM wird auch ohne konfigurierten Channel eingereiht (always) und enthält den internen Grund nicht

@@ -18,7 +18,7 @@ const rate = process.env.NODE_ENV === 'test' ? 10_000 : 20;
 const stateKey = z.string().regex(/^[a-z0-9:_-]{1,64}$/);
 const stateBody = z.object({ value: z.unknown() });
 const openQ = z.object({ discordId: z.string().regex(/^\d{15,25}$/) });
-const application = z.object({ robloxUsername: z.string().trim().min(1).max(64), robloxUserId: z.string().max(20).optional(), discordId: z.string().regex(/^\d{15,25}$/), answers: z.record(z.string(), z.string().max(5000)) });
+const application = z.object({ robloxUsername: z.string().trim().min(1).max(64), robloxUserId: z.string().max(20).optional(), discordId: z.string().regex(/^\d{15,25}$/), discordName: z.string().trim().max(100).optional(), durationSec: z.number().int().min(0).max(86_400).optional(), joinedAt: z.coerce.date().optional(), answers: z.record(z.string(), z.string().max(5000)) });
 
 /** Web-Seite: eigenes Konto verknüpfen. Authentifiziert per Session; Bot-Zugang ist hier nicht erlaubt. */
 @ApiTags('discord')
@@ -63,5 +63,5 @@ export class BotController {
   @BotService() @Get('application/open')
   openApplication(@Query(zodBody(openQ)) q: z.infer<typeof openQ>) { return this.applications.openForDiscord(q.discordId); }
   @BotService() @Throttle({ default: { limit: rate, ttl: 60_000 } }) @Post('application') @HttpCode(201)
-  submitApplication(@Body(zodBody(application)) b: z.infer<typeof application>) { return this.applications.submit({ robloxUsername: b.robloxUsername, robloxUserId: b.robloxUserId, answers: b.answers }, { discordId: b.discordId }); }
+  submitApplication(@Body(zodBody(application)) b: z.infer<typeof application>) { return this.applications.submit({ robloxUsername: b.robloxUsername, robloxUserId: b.robloxUserId, answers: b.answers }, { discordId: b.discordId, discordName: b.discordName, durationSec: b.durationSec, joinedAt: b.joinedAt }); }
 }

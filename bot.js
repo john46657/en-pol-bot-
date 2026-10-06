@@ -20908,31 +20908,31 @@ var require_message = __commonJS({
       AllowedMentionsTypes2["Role"] = "roles";
       AllowedMentionsTypes2["User"] = "users";
     })(AllowedMentionsTypes || (exports2.AllowedMentionsTypes = AllowedMentionsTypes = {}));
-    var ComponentType;
-    (function(ComponentType2) {
-      ComponentType2[ComponentType2["ActionRow"] = 1] = "ActionRow";
-      ComponentType2[ComponentType2["Button"] = 2] = "Button";
-      ComponentType2[ComponentType2["StringSelect"] = 3] = "StringSelect";
-      ComponentType2[ComponentType2["TextInput"] = 4] = "TextInput";
-      ComponentType2[ComponentType2["UserSelect"] = 5] = "UserSelect";
-      ComponentType2[ComponentType2["RoleSelect"] = 6] = "RoleSelect";
-      ComponentType2[ComponentType2["MentionableSelect"] = 7] = "MentionableSelect";
-      ComponentType2[ComponentType2["ChannelSelect"] = 8] = "ChannelSelect";
-      ComponentType2[ComponentType2["Section"] = 9] = "Section";
-      ComponentType2[ComponentType2["TextDisplay"] = 10] = "TextDisplay";
-      ComponentType2[ComponentType2["Thumbnail"] = 11] = "Thumbnail";
-      ComponentType2[ComponentType2["MediaGallery"] = 12] = "MediaGallery";
-      ComponentType2[ComponentType2["File"] = 13] = "File";
-      ComponentType2[ComponentType2["Separator"] = 14] = "Separator";
-      ComponentType2[ComponentType2["ContentInventoryEntry"] = 16] = "ContentInventoryEntry";
-      ComponentType2[ComponentType2["Container"] = 17] = "Container";
-      ComponentType2[ComponentType2["Label"] = 18] = "Label";
-      ComponentType2[ComponentType2["FileUpload"] = 19] = "FileUpload";
-      ComponentType2[ComponentType2["RadioGroup"] = 21] = "RadioGroup";
-      ComponentType2[ComponentType2["CheckboxGroup"] = 22] = "CheckboxGroup";
-      ComponentType2[ComponentType2["Checkbox"] = 23] = "Checkbox";
-      ComponentType2[ComponentType2["SelectMenu"] = 3] = "SelectMenu";
-    })(ComponentType || (exports2.ComponentType = ComponentType = {}));
+    var ComponentType2;
+    (function(ComponentType3) {
+      ComponentType3[ComponentType3["ActionRow"] = 1] = "ActionRow";
+      ComponentType3[ComponentType3["Button"] = 2] = "Button";
+      ComponentType3[ComponentType3["StringSelect"] = 3] = "StringSelect";
+      ComponentType3[ComponentType3["TextInput"] = 4] = "TextInput";
+      ComponentType3[ComponentType3["UserSelect"] = 5] = "UserSelect";
+      ComponentType3[ComponentType3["RoleSelect"] = 6] = "RoleSelect";
+      ComponentType3[ComponentType3["MentionableSelect"] = 7] = "MentionableSelect";
+      ComponentType3[ComponentType3["ChannelSelect"] = 8] = "ChannelSelect";
+      ComponentType3[ComponentType3["Section"] = 9] = "Section";
+      ComponentType3[ComponentType3["TextDisplay"] = 10] = "TextDisplay";
+      ComponentType3[ComponentType3["Thumbnail"] = 11] = "Thumbnail";
+      ComponentType3[ComponentType3["MediaGallery"] = 12] = "MediaGallery";
+      ComponentType3[ComponentType3["File"] = 13] = "File";
+      ComponentType3[ComponentType3["Separator"] = 14] = "Separator";
+      ComponentType3[ComponentType3["ContentInventoryEntry"] = 16] = "ContentInventoryEntry";
+      ComponentType3[ComponentType3["Container"] = 17] = "Container";
+      ComponentType3[ComponentType3["Label"] = 18] = "Label";
+      ComponentType3[ComponentType3["FileUpload"] = 19] = "FileUpload";
+      ComponentType3[ComponentType3["RadioGroup"] = 21] = "RadioGroup";
+      ComponentType3[ComponentType3["CheckboxGroup"] = 22] = "CheckboxGroup";
+      ComponentType3[ComponentType3["Checkbox"] = 23] = "Checkbox";
+      ComponentType3[ComponentType3["SelectMenu"] = 3] = "SelectMenu";
+    })(ComponentType2 || (exports2.ComponentType = ComponentType2 = {}));
     var ButtonStyle2;
     (function(ButtonStyle3) {
       ButtonStyle3[ButtonStyle3["Primary"] = 1] = "Primary";
@@ -31880,7 +31880,7 @@ var require_ChannelFlagsBitField = __commonJS({
 var require_Constants = __commonJS({
   "node_modules/.pnpm/discord.js@14.27.0/node_modules/discord.js/src/util/Constants.js"(exports2) {
     "use strict";
-    var { ChannelType: ChannelType2, MessageType, ComponentType, ImageFormat, StickerFormatType } = require_v106();
+    var { ChannelType: ChannelType2, MessageType, ComponentType: ComponentType2, ImageFormat, StickerFormatType } = require_v106();
     exports2.MaxBulkDeletableMessageAge = 12096e5;
     exports2.SweeperKeys = [
       "autoModerationRules",
@@ -31920,11 +31920,11 @@ var require_Constants = __commonJS({
     exports2.ThreadChannelTypes = [ChannelType2.AnnouncementThread, ChannelType2.PublicThread, ChannelType2.PrivateThread];
     exports2.VoiceBasedChannelTypes = [ChannelType2.GuildVoice, ChannelType2.GuildStageVoice];
     exports2.SelectMenuTypes = [
-      ComponentType.StringSelect,
-      ComponentType.UserSelect,
-      ComponentType.RoleSelect,
-      ComponentType.MentionableSelect,
-      ComponentType.ChannelSelect
+      ComponentType2.StringSelect,
+      ComponentType2.UserSelect,
+      ComponentType2.RoleSelect,
+      ComponentType2.MentionableSelect,
+      ComponentType2.ChannelSelect
     ];
     exports2.UndeletableMessageTypes = [
       MessageType.RecipientAdd,
@@ -36165,7 +36165,7 @@ var require_BaseInteraction = __commonJS({
     var { deprecate } = require("node:util");
     var { Collection: Collection2 } = require_dist6();
     var { DiscordSnowflake } = require_cjs();
-    var { InteractionType, ApplicationCommandType, ComponentType } = require_v106();
+    var { InteractionType, ApplicationCommandType, ComponentType: ComponentType2 } = require_v106();
     var AuthorizingIntegrationOwners = require_AuthorizingIntegrationOwners();
     var Base = require_Base();
     var { SelectMenuTypes } = require_Constants();
@@ -36318,7 +36318,7 @@ var require_BaseInteraction = __commonJS({
        * @returns {boolean}
        */
       isButton() {
-        return this.type === InteractionType.MessageComponent && this.componentType === ComponentType.Button;
+        return this.type === InteractionType.MessageComponent && this.componentType === ComponentType2.Button;
       }
       /**
        * Indicates whether this interaction is a {@link StringSelectMenuInteraction}.
@@ -36340,35 +36340,35 @@ var require_BaseInteraction = __commonJS({
        * @returns {boolean}
        */
       isStringSelectMenu() {
-        return this.type === InteractionType.MessageComponent && this.componentType === ComponentType.StringSelect;
+        return this.type === InteractionType.MessageComponent && this.componentType === ComponentType2.StringSelect;
       }
       /**
        * Indicates whether this interaction is a {@link UserSelectMenuInteraction}
        * @returns {boolean}
        */
       isUserSelectMenu() {
-        return this.type === InteractionType.MessageComponent && this.componentType === ComponentType.UserSelect;
+        return this.type === InteractionType.MessageComponent && this.componentType === ComponentType2.UserSelect;
       }
       /**
        * Indicates whether this interaction is a {@link RoleSelectMenuInteraction}
        * @returns {boolean}
        */
       isRoleSelectMenu() {
-        return this.type === InteractionType.MessageComponent && this.componentType === ComponentType.RoleSelect;
+        return this.type === InteractionType.MessageComponent && this.componentType === ComponentType2.RoleSelect;
       }
       /**
        * Indicates whether this interaction is a {@link ChannelSelectMenuInteraction}
        * @returns {boolean}
        */
       isChannelSelectMenu() {
-        return this.type === InteractionType.MessageComponent && this.componentType === ComponentType.ChannelSelect;
+        return this.type === InteractionType.MessageComponent && this.componentType === ComponentType2.ChannelSelect;
       }
       /**
        * Indicates whether this interaction is a {@link MentionableSelectMenuInteraction}
        * @returns {boolean}
        */
       isMentionableSelectMenu() {
-        return this.type === InteractionType.MessageComponent && this.componentType === ComponentType.MentionableSelect;
+        return this.type === InteractionType.MessageComponent && this.componentType === ComponentType2.MentionableSelect;
       }
       /**
        * Indicates whether this interaction can be replied to.
@@ -49890,7 +49890,7 @@ var require_Components = __commonJS({
   "node_modules/.pnpm/discord.js@14.27.0/node_modules/discord.js/src/util/Components.js"(exports2, module2) {
     "use strict";
     var { ComponentBuilder } = require_dist8();
-    var { ComponentType } = require_v106();
+    var { ComponentType: ComponentType2 } = require_v106();
     function createComponent(data) {
       return data instanceof Component ? data : new (ComponentTypeToComponent[data.type] ?? Component)(data);
     }
@@ -49899,11 +49899,11 @@ var require_Components = __commonJS({
     }
     function extractInteractiveComponents(component) {
       switch (component.type) {
-        case ComponentType.ActionRow:
+        case ComponentType2.ActionRow:
           return component.components;
-        case ComponentType.Section:
+        case ComponentType2.Section:
           return [...component.components, component.accessory];
-        case ComponentType.Container:
+        case ComponentType2.Container:
           return component.components.flatMap(extractInteractiveComponents);
         default:
           return [component];
@@ -49939,32 +49939,32 @@ var require_Components = __commonJS({
     var UserSelectMenuBuilder = require_UserSelectMenuBuilder();
     var UserSelectMenuComponent = require_UserSelectMenuComponent();
     var ComponentTypeToComponent = {
-      [ComponentType.ActionRow]: ActionRow,
-      [ComponentType.Button]: ButtonComponent,
-      [ComponentType.StringSelect]: StringSelectMenuComponent,
-      [ComponentType.TextInput]: TextInputComponent,
-      [ComponentType.UserSelect]: UserSelectMenuComponent,
-      [ComponentType.RoleSelect]: RoleSelectMenuComponent,
-      [ComponentType.MentionableSelect]: MentionableSelectMenuComponent,
-      [ComponentType.ChannelSelect]: ChannelSelectMenuComponent,
-      [ComponentType.Container]: ContainerComponent,
-      [ComponentType.TextDisplay]: TextDisplayComponent,
-      [ComponentType.File]: FileComponent,
-      [ComponentType.MediaGallery]: MediaGalleryComponent,
-      [ComponentType.Section]: SectionComponent,
-      [ComponentType.Separator]: SeparatorComponent,
-      [ComponentType.Thumbnail]: ThumbnailComponent,
-      [ComponentType.Label]: LabelComponent
+      [ComponentType2.ActionRow]: ActionRow,
+      [ComponentType2.Button]: ButtonComponent,
+      [ComponentType2.StringSelect]: StringSelectMenuComponent,
+      [ComponentType2.TextInput]: TextInputComponent,
+      [ComponentType2.UserSelect]: UserSelectMenuComponent,
+      [ComponentType2.RoleSelect]: RoleSelectMenuComponent,
+      [ComponentType2.MentionableSelect]: MentionableSelectMenuComponent,
+      [ComponentType2.ChannelSelect]: ChannelSelectMenuComponent,
+      [ComponentType2.Container]: ContainerComponent,
+      [ComponentType2.TextDisplay]: TextDisplayComponent,
+      [ComponentType2.File]: FileComponent,
+      [ComponentType2.MediaGallery]: MediaGalleryComponent,
+      [ComponentType2.Section]: SectionComponent,
+      [ComponentType2.Separator]: SeparatorComponent,
+      [ComponentType2.Thumbnail]: ThumbnailComponent,
+      [ComponentType2.Label]: LabelComponent
     };
     var ComponentTypeToBuilder = {
-      [ComponentType.ActionRow]: ActionRowBuilder2,
-      [ComponentType.Button]: ButtonBuilder2,
-      [ComponentType.StringSelect]: StringSelectMenuBuilder2,
-      [ComponentType.TextInput]: TextInputBuilder2,
-      [ComponentType.UserSelect]: UserSelectMenuBuilder,
-      [ComponentType.RoleSelect]: RoleSelectMenuBuilder,
-      [ComponentType.MentionableSelect]: MentionableSelectMenuBuilder,
-      [ComponentType.ChannelSelect]: ChannelSelectMenuBuilder
+      [ComponentType2.ActionRow]: ActionRowBuilder2,
+      [ComponentType2.Button]: ButtonBuilder2,
+      [ComponentType2.StringSelect]: StringSelectMenuBuilder2,
+      [ComponentType2.TextInput]: TextInputBuilder2,
+      [ComponentType2.UserSelect]: UserSelectMenuBuilder,
+      [ComponentType2.RoleSelect]: RoleSelectMenuBuilder,
+      [ComponentType2.MentionableSelect]: MentionableSelectMenuBuilder,
+      [ComponentType2.ChannelSelect]: ChannelSelectMenuBuilder
     };
   }
 });
@@ -59189,7 +59189,7 @@ var require_ModalSubmitFields = __commonJS({
   "node_modules/.pnpm/discord.js@14.27.0/node_modules/discord.js/src/structures/ModalSubmitFields.js"(exports2, module2) {
     "use strict";
     var { Collection: Collection2 } = require_dist6();
-    var { ComponentType } = require_v106();
+    var { ComponentType: ComponentType2 } = require_v106();
     var { DiscordjsTypeError: DiscordjsTypeError2, ErrorCodes: ErrorCodes2 } = require_errors2();
     var ModalSubmitFields = class {
       constructor(components, resolved) {
@@ -59249,7 +59249,7 @@ var require_ModalSubmitFields = __commonJS({
        * @returns {string}
        */
       getTextInputValue(customId) {
-        return this._getTypedComponent(customId, [ComponentType.TextInput]).value;
+        return this._getTypedComponent(customId, [ComponentType2.TextInput]).value;
       }
       /**
        * Gets the values of a string select component given a custom id
@@ -59258,7 +59258,7 @@ var require_ModalSubmitFields = __commonJS({
        * @returns {string[]}
        */
       getStringSelectValues(customId) {
-        return this._getTypedComponent(customId, [ComponentType.StringSelect]).values;
+        return this._getTypedComponent(customId, [ComponentType2.StringSelect]).values;
       }
       /**
        * Gets users component
@@ -59270,7 +59270,7 @@ var require_ModalSubmitFields = __commonJS({
       getSelectedUsers(customId, required = false) {
         const component = this._getTypedComponent(
           customId,
-          [ComponentType.UserSelect, ComponentType.MentionableSelect],
+          [ComponentType2.UserSelect, ComponentType2.MentionableSelect],
           ["users"],
           required
         );
@@ -59286,7 +59286,7 @@ var require_ModalSubmitFields = __commonJS({
       getSelectedRoles(customId, required = false) {
         const component = this._getTypedComponent(
           customId,
-          [ComponentType.RoleSelect, ComponentType.MentionableSelect],
+          [ComponentType2.RoleSelect, ComponentType2.MentionableSelect],
           ["roles"],
           required
         );
@@ -59302,7 +59302,7 @@ var require_ModalSubmitFields = __commonJS({
        * or null if none were selected and not required
        */
       getSelectedChannels(customId, required = false, channelTypes = []) {
-        const component = this._getTypedComponent(customId, [ComponentType.ChannelSelect], ["channels"], required);
+        const component = this._getTypedComponent(customId, [ComponentType2.ChannelSelect], ["channels"], required);
         const channels = component.channels;
         if (channels && channelTypes.length > 0) {
           for (const channel of channels.values()) {
@@ -59328,7 +59328,7 @@ var require_ModalSubmitFields = __commonJS({
       getSelectedMembers(customId) {
         const component = this._getTypedComponent(
           customId,
-          [ComponentType.UserSelect, ComponentType.MentionableSelect],
+          [ComponentType2.UserSelect, ComponentType2.MentionableSelect],
           ["members"],
           false
         );
@@ -59344,7 +59344,7 @@ var require_ModalSubmitFields = __commonJS({
       getSelectedMentionables(customId, required = false) {
         const component = this._getTypedComponent(
           customId,
-          [ComponentType.MentionableSelect],
+          [ComponentType2.MentionableSelect],
           ["users", "members", "roles"],
           required
         );
@@ -59365,7 +59365,7 @@ var require_ModalSubmitFields = __commonJS({
        * @returns {?Collection<Snowflake, Attachment>} The uploaded files, or null if none were uploaded and not required
        */
       getUploadedFiles(customId, required = false) {
-        return this._getTypedComponent(customId, [ComponentType.FileUpload], ["attachments"], required).attachments ?? null;
+        return this._getTypedComponent(customId, [ComponentType2.FileUpload], ["attachments"], required).attachments ?? null;
       }
       /**
        * Get radio group component
@@ -59375,7 +59375,7 @@ var require_ModalSubmitFields = __commonJS({
        * @returns {?string} The selected radio group option value, or null if none were selected and not required
        */
       getRadioGroup(customId, required = false) {
-        return this._getTypedComponent(customId, [ComponentType.RadioGroup], ["value"], required).value;
+        return this._getTypedComponent(customId, [ComponentType2.RadioGroup], ["value"], required).value;
       }
       /**
        * Get checkbox group component
@@ -59384,7 +59384,7 @@ var require_ModalSubmitFields = __commonJS({
        * @returns {string[]} The selected checkbox group option values
        */
       getCheckboxGroup(customId) {
-        return this._getTypedComponent(customId, [ComponentType.CheckboxGroup]).values;
+        return this._getTypedComponent(customId, [ComponentType2.CheckboxGroup]).values;
       }
       /**
        * Get checkbox component
@@ -59393,7 +59393,7 @@ var require_ModalSubmitFields = __commonJS({
        * @returns {boolean} Whether this checkbox was selected
        */
       getCheckbox(customId) {
-        return this._getTypedComponent(customId, [ComponentType.Checkbox]).value;
+        return this._getTypedComponent(customId, [ComponentType2.Checkbox]).value;
       }
     };
     module2.exports = ModalSubmitFields;
@@ -59661,7 +59661,7 @@ var require_UserSelectMenuInteraction = __commonJS({
 var require_InteractionCreate = __commonJS({
   "node_modules/.pnpm/discord.js@14.27.0/node_modules/discord.js/src/client/actions/InteractionCreate.js"(exports2, module2) {
     "use strict";
-    var { InteractionType, ComponentType, ApplicationCommandType } = require_v106();
+    var { InteractionType, ComponentType: ComponentType2, ApplicationCommandType } = require_v106();
     var Action = require_Action();
     var AutocompleteInteraction = require_AutocompleteInteraction();
     var ButtonInteraction = require_ButtonInteraction();
@@ -59708,22 +59708,22 @@ var require_InteractionCreate = __commonJS({
           case InteractionType.MessageComponent:
             if (channel && !channel.isTextBased()) return;
             switch (data.data.component_type) {
-              case ComponentType.Button:
+              case ComponentType2.Button:
                 InteractionClass = ButtonInteraction;
                 break;
-              case ComponentType.StringSelect:
+              case ComponentType2.StringSelect:
                 InteractionClass = StringSelectMenuInteraction;
                 break;
-              case ComponentType.UserSelect:
+              case ComponentType2.UserSelect:
                 InteractionClass = UserSelectMenuInteraction;
                 break;
-              case ComponentType.RoleSelect:
+              case ComponentType2.RoleSelect:
                 InteractionClass = RoleSelectMenuInteraction;
                 break;
-              case ComponentType.MentionableSelect:
+              case ComponentType2.MentionableSelect:
                 InteractionClass = MentionableSelectMenuInteraction;
                 break;
-              case ComponentType.ChannelSelect:
+              case ComponentType2.ChannelSelect:
                 InteractionClass = ChannelSelectMenuInteraction;
                 break;
               default:
@@ -75874,44 +75874,88 @@ ${clip(plain(p.reason), 3e3)}`, color: PRIORITY_COLOR[String(p.priority)] ?? COL
       const d = DANGER[String(p.level)] ?? DANGER.GREEN;
       return { title: `${d.emoji} Gefahrenstatus: ${d.label}`, description: p.reason ? clip(plain(p.reason), 1e3) : void 0, color: d.color, fields: [{ name: "Vorher", value: DANGER[String(p.previous)]?.label ?? "\u2014", inline: true }, { name: "Gesetzt von", value: clip(plain(p.setBy ?? "System"), 200), inline: true }] };
     }
-    case "application.submitted":
-      return { title: `\u{1F4CB} Neue Bewerbung ${p.number}`, color: COLORS.info, description: "Pr\xFCfung und Entscheidung im System (Bereich *Applications*).", fields: [
-        { name: "Roblox-Name", value: clip(plain(p.robloxUsername), 200), inline: true },
-        { name: "Quelle", value: p.source === "DISCORD" ? "Discord" : "Web", inline: true },
-        ...p.discordId ? [{ name: "Discord", value: `<@${String(p.discordId)}>`, inline: true }] : []
-      ] };
     case "sek.report":
       return { title: `\u{1F3AF} SEK-Einsatzbericht ${p.number}`, color: COLORS.neutral, description: clip(plain(p.description), 3500), fields: [
         { name: "Einsatzart", value: clip(plain(p.missionType), 200), inline: true },
         { name: "Datum", value: new Date(String(p.occurredAt)).toLocaleString("de-DE", { timeZone: "Europe/Berlin" }), inline: true },
         { name: "Beamter", value: clip(plain(p.author), 200), inline: true }
       ] };
-    case "qualification.submitted": {
-      const answers = Array.isArray(p.answers) ? p.answers : [];
-      return {
-        title: clip(`\u{1F4CB} Neue Bewerbung: ${plain(p.unitName)} (${p.number})`, 256),
-        color: COLORS.info,
-        description: clip(`Von <@${String(p.discordId)}> (${plain(p.discordName)})${p.linkedName ? ` \xB7 im System: **${plain(p.linkedName)}**` : " \xB7 nicht mit dem System verkn\xFCpft"}`, 4e3),
-        fields: answers.slice(0, 24).map((a, i) => ({ name: clip(`${i + 1}. ${plain(a.question)}`, 256), value: clip(plain(a.answer) || "\u2014", 1024) })),
-        footer: "Entscheiden: Buttons unten (Recht \u201Equalifications.decide\u201C) oder im Web unter Qualifications"
-      };
-    }
     default:
       return null;
   }
 }
-function outboxButtons(type, p) {
-  if (type === "qualification.submitted" && typeof p.id === "string") return [
-    { id: `quali:decide:${p.id}:ACCEPTED`, label: "Annehmen", emoji: "\u2705", style: "success" },
-    { id: `quali:decide:${p.id}:REJECTED`, label: "Ablehnen", emoji: "\u2716\uFE0F", style: "danger" }
-  ];
-  return void 0;
+var unix = (iso) => {
+  const t = Date.parse(String(iso ?? ""));
+  return Number.isFinite(t) ? Math.floor(t / 1e3) : null;
+};
+var fmtDuration = (sec) => sec < 60 ? `${sec}s` : sec < 3600 ? `${Math.floor(sec / 60)} min ${sec % 60}s` : `${Math.floor(sec / 3600)} h ${Math.floor(sec % 3600 / 60)} min`;
+var BUDGET = 4800;
+function applicationEmbeds(p, kind) {
+  const qa = Array.isArray(p.answers) ? p.answers : [];
+  const id = String(p.discordId ?? "");
+  const joined = unix(p.joinedAt), submitted = unix(p.createdAt);
+  const stats = [
+    "**Bewerber-Infos**",
+    ...id ? [`Discord-ID: \`${id}\``, `Benutzername: \`${plain(p.discordName ?? "\u2014")}\``, `Benutzer: <@${id}>`] : ["Quelle: Web-Formular (kein Discord)"],
+    ...kind === "p" ? [`Roblox: \`${plain(p.robloxUsername)}\`${p.robloxUserId ? ` (\`${String(p.robloxUserId)}\`)` : ""}`] : [p.linkedName ? `Im System: **${plain(p.linkedName)}**` : "Im System: nicht verkn\xFCpft"],
+    ...typeof p.durationSec === "number" ? [`Dauer: \`${fmtDuration(p.durationSec)}\``] : [],
+    ...joined ? [`Server beigetreten: <t:${joined}:R>`] : [],
+    ...submitted ? [`Eingereicht: <t:${submitted}:R>`] : []
+  ].join("\n");
+  const section = (q2, i, max) => {
+    const a = plain(q2.answer) || "\u2014";
+    return `**${i + 1}. ${plain(q2.question)}**
+${max !== void 0 && a.length > max ? `${a.slice(0, max)}\u2026 *(gek\xFCrzt \u2013 vollst\xE4ndig im Dashboard)*` : a}`;
+  };
+  let sections = qa.map((q2, i) => section(q2, i));
+  const total = sections.reduce((n, x) => n + x.length + 2, 0) + stats.length;
+  if (total > BUDGET) {
+    const questions = qa.reduce((n, q2, i) => n + section({ question: q2.question, answer: "" }, i).length + 50, 0);
+    const per = Math.max(60, Math.floor((BUDGET - stats.length - questions) / Math.max(1, qa.length)));
+    sections = qa.map((q2, i) => section(q2, i, per));
+  }
+  const title = clip(kind === "p" ? `\u{1F4CB} Bewerbung bei EN Polizei \u2013 ${p.number}` : `\u{1F4CB} ${plain(p.unitName)} \u2013 Bewerbung ${p.number}`, 256);
+  const embeds = [];
+  let cur = "";
+  for (const piece of [...sections, stats]) {
+    if (cur && cur.length + piece.length + 2 > 4e3) {
+      embeds.push({ title: embeds.length ? `${title} (Fortsetzung)` : title, color: COLORS.warning, description: cur });
+      cur = "";
+    }
+    cur = cur ? `${cur}
+
+${piece}` : clip(piece, 4e3);
+  }
+  embeds.push({ title: embeds.length ? `${title} (Fortsetzung)` : title, color: COLORS.warning, description: cur });
+  return embeds.slice(0, 10);
 }
+function renderOutboxEmbeds(type, p) {
+  if (type === "qualification.submitted") return applicationEmbeds(p, "q");
+  if (type === "application.submitted") return applicationEmbeds(p, "p");
+  const e = renderOutbox(type, p);
+  return e ? [e] : null;
+}
+function outboxButtons(type, p) {
+  const kind = type === "qualification.submitted" ? "q" : type === "application.submitted" ? "p" : null;
+  if (!kind || typeof p.id !== "string") return void 0;
+  const id = p.id, discordId = typeof p.discordId === "string" && /^\d{15,25}$/.test(p.discordId) ? p.discordId : null;
+  return [
+    { id: `quali:decide:${kind}:${id}:ACCEPTED`, label: "Annehmen", style: "success" },
+    { id: `quali:decide:${kind}:${id}:REJECTED`, label: "Ablehnen", style: "danger" },
+    { id: `quali:reason:${kind}:${id}:ACCEPTED`, label: "Annehmen mit Grund", style: "success" },
+    { id: `quali:reason:${kind}:${id}:REJECTED`, label: "Ablehnen mit Grund", style: "danger" },
+    ...discordId ? [{ id: `quali:history:${discordId}`, label: "Verlauf", style: "primary" }, { id: `quali:ticket:${kind}:${id}`, label: "Ticket mit Bewerber \xF6ffnen", emoji: "\u{1F3AB}", style: "secondary" }] : [],
+    ...typeof p.dashboardUrl === "string" && /^https?:\/\//.test(p.dashboardUrl) ? [{ id: "link", label: "Im Dashboard ansehen", style: "secondary", url: p.dashboardUrl }] : []
+  ];
+}
+var reasonText = (p) => p.reason ? `
+
+**Begr\xFCndung:** ${clip(plain(p.reason), 1e3)}` : "";
 function qualificationDecisionText(p) {
-  return p.status === "ACCEPTED" ? `\u{1F389} Deine Bewerbung f\xFCr **${plain(p.unitName)}** (${p.number}) wurde **angenommen** \u2013 willkommen! Ein Teammitglied meldet sich bei dir.` : `Deine Bewerbung f\xFCr **${plain(p.unitName)}** (${p.number}) wurde diesmal leider **nicht angenommen**. Du kannst dich sp\xE4ter gerne erneut bewerben.`;
+  return p.status === "ACCEPTED" ? `\u{1F389} Deine Bewerbung f\xFCr **${plain(p.unitName)}** (${p.number}) wurde **angenommen** \u2013 willkommen! Ein Teammitglied meldet sich bei dir.${reasonText(p)}` : `Deine Bewerbung f\xFCr **${plain(p.unitName)}** (${p.number}) wurde diesmal leider **nicht angenommen**. Du kannst dich sp\xE4ter gerne erneut bewerben.${reasonText(p)}`;
 }
 function applicationDecisionText(p) {
-  return p.status === "ACCEPTED" ? `\u{1F389} Deine Bewerbung **${p.number}** bei EN Polizei wurde **angenommen**! Ein Teammitglied meldet sich bei dir f\xFCr die n\xE4chsten Schritte.` : `Deine Bewerbung **${p.number}** bei EN Polizei wurde diesmal leider **nicht angenommen**. Du kannst dich gerne sp\xE4ter erneut bewerben.`;
+  return p.status === "ACCEPTED" ? `\u{1F389} Deine Bewerbung **${p.number}** bei EN Polizei wurde **angenommen**! Ein Teammitglied meldet sich bei dir f\xFCr die n\xE4chsten Schritte.${reasonText(p)}` : `Deine Bewerbung **${p.number}** bei EN Polizei wurde diesmal leider **nicht angenommen**. Du kannst dich gerne sp\xE4ter erneut bewerben.${reasonText(p)}`;
 }
 var DANGER = {
   GREEN: { label: "Gr\xFCn \u2013 Normaler Dienst", emoji: "\u{1F7E2}", color: 3066993 },
@@ -76072,6 +76116,7 @@ var SKIP = "-";
 var APPLICATION_MS = 3 * 60 * 6e4;
 var MAX_ANSWER = 1e3;
 var sessions = /* @__PURE__ */ new Map();
+var joinedAtOf = /* @__PURE__ */ new Map();
 var sweepSessions = (now = Date.now()) => {
   for (const [k, s] of sessions) if (s.expiresAt <= now) sessions.delete(k);
 };
@@ -76099,7 +76144,8 @@ async function loadFlow(api2, key) {
 async function openApplication(api2, key, discordId) {
   return key === POLICE ? api2.service("GET", `/bot/application/open?discordId=${discordId}`) : api2.service("GET", `/bot/qualifications/open?discordId=${discordId}&unit=${encodeURIComponent(key)}`);
 }
-async function submitSession(api2, s, userId, userName, robloxLookup2) {
+async function submitSession(api2, s, userId, userName, robloxLookup2, now = Date.now()) {
+  const meta = { durationSec: Math.max(0, Math.round((now - s.startedAt) / 1e3)), ...s.joinedAt ? { joinedAt: s.joinedAt } : {} };
   if (s.unit === POLICE) {
     const roblox = s.answers[0].trim();
     const rb = await robloxLookup2?.(roblox).catch(() => null);
@@ -76107,9 +76153,9 @@ async function submitSession(api2, s, userId, userName, robloxLookup2) {
       const a = s.answers[i + 1];
       return q2.optional && a === SKIP ? [] : [[q2.key, a]];
     }));
-    return (await api2.service("POST", "/bot/application", { robloxUsername: rb?.name ?? roblox, ...rb ? { robloxUserId: String(rb.id) } : {}, discordId: userId, answers })).number;
+    return (await api2.service("POST", "/bot/application", { robloxUsername: rb?.name ?? roblox, ...rb ? { robloxUserId: String(rb.id) } : {}, discordId: userId, discordName: userName, answers, ...meta })).number;
   }
-  return (await api2.service("POST", "/bot/qualifications/applications", { unit: s.unit, discordId: userId, discordName: userName, answers: s.questions.map((q2, i) => ({ question: q2.text, answer: s.answers[i] })) })).number;
+  return (await api2.service("POST", "/bot/qualifications/applications", { unit: s.unit, discordId: userId, discordName: userName, answers: s.questions.map((q2, i) => ({ question: q2.text, answer: s.answers[i] })), ...meta })).number;
 }
 var POLICE_PANEL = { title: "\u{1F4CB} Bewerbung bei EN Polizei", color: COLORS.info, description: "Du m\xF6chtest Teil der **EN Polizei** werden? Klicke auf **Jetzt bewerben** \u2013 der Bot stellt dir die Fragen nacheinander per **Direktnachricht**.\n\nDu brauchst deinen **Roblox-Namen** und etwa 10 Minuten Zeit. Die Entscheidung bekommst du ebenfalls per Direktnachricht." };
 async function offer(c, key) {
@@ -76120,6 +76166,7 @@ async function offer(c, key) {
   const open = await openApplication(c.api, flow.key, c.discordId);
   if (open.open) return errorReply(`Du hast f\xFCr **${plain(flow.name)}** bereits eine offene Bewerbung (${open.number}). Bitte warte auf die Entscheidung.`);
   if (!c.platform) return errorReply("Direktnachrichten sind hier nicht verf\xFCgbar.");
+  if (c.memberJoinedAt) joinedAtOf.set(c.discordId, c.memberJoinedAt);
   let dm;
   try {
     dm = await c.platform.sendDm(c.discordId, {
@@ -76215,7 +76262,7 @@ async function handleDirectMessage(a) {
     return;
   }
   try {
-    const number = await submitSession(a.api, s, a.userId, a.userName, a.robloxLookup);
+    const number = await submitSession(a.api, s, a.userId, a.userName, a.robloxLookup, now);
     sessions.delete(a.userId);
     await say(`\u2705 Deine Bewerbung **${number}** ist eingegangen! Das Team pr\xFCft sie \u2013 die Entscheidung bekommst du hier per Direktnachricht.`, COLORS.success);
   } catch (e) {
@@ -76228,20 +76275,77 @@ async function handleDirectMessage(a) {
     await say("\u26A0\uFE0F Deine Bewerbung konnte gerade nicht gespeichert werden (System nicht erreichbar). Schicke deine **letzte Antwort** gleich noch einmal, um es erneut zu versuchen.", COLORS.warning, [CANCEL]);
   }
 }
+var STATUS = /* @__PURE__ */ new Set(["ACCEPTED", "REJECTED"]);
+var parseDecision = (rest) => {
+  const [kind, id, status] = rest.length === 2 ? ["q", rest[0], rest[1]] : rest;
+  return (kind === "q" || kind === "p") && id && status && STATUS.has(status) ? { kind, id, status } : null;
+};
+async function decide(c, d, reason) {
+  const path2 = d.kind === "p" ? `/applications/${d.id}/discord-decision` : `/qualifications/applications/${d.id}/decision`;
+  const r = await c.api.asUser(c.discordId, "POST", path2, { status: d.status, ...reason ? { reason } : {} });
+  const accepted = d.status === "ACCEPTED";
+  const what = `Bewerbung **${r.number}**${r.unitName ? ` (${plain(r.unitName)})` : ""}`;
+  return {
+    ...okReply(`${what} ${accepted ? "**angenommen**" : "**abgelehnt**"}. Die Person wird per Direktnachricht informiert${accepted && d.kind === "q" ? " (und bekommt ggf. die Rolle)" : ""}.${r.addedToSek ? " Au\xDFerdem ins SEK aufgenommen." : ""}`),
+    decided: { color: accepted ? COLORS.success : COLORS.danger, text: clip(`${accepted ? "\u2705 Angenommen" : "\u274C Abgelehnt"} von <@${c.discordId}>${r.decidedByName ? ` (${plain(r.decidedByName)})` : ""}${reason ? `
+**Grund:** ${plain(reason)}` : ""}`, 1024) }
+  };
+}
+var STATUS_DE = { OPEN: "\u{1F7E1} offen", SUBMITTED: "\u{1F7E1} eingereicht", SCREENING: "\u{1F7E1} in Pr\xFCfung", INTERVIEW: "\u{1F7E1} Gespr\xE4ch", PENDING_DECISION: "\u{1F7E1} Entscheidung offen", ACCEPTED: "\u2705 angenommen", REJECTED: "\u274C abgelehnt", WITHDRAWN: "\u21A9\uFE0F zur\xFCckgezogen" };
 var QUALI_INTERACTION = {
   prefix: "quali",
+  opensModal: (args) => args[0] === "reason",
   async run(c) {
     const [action, ...rest] = c.args;
     try {
+      if (action === "reason") {
+        const d = parseDecision(rest);
+        if (!d) return errorReply("Unbekannte Aktion.");
+        return { modal: { id: `quali:reasonsubmit:${d.kind}:${d.id}:${d.status}`, title: d.status === "ACCEPTED" ? "Annehmen mit Grund" : "Ablehnen mit Grund", fields: [{ id: "reason", label: "Grund (geht per DM an die Person)", paragraph: true, required: true, maxLength: 1e3 }] } };
+      }
+      if (action === "reasonsubmit") {
+        const d = parseDecision(rest);
+        const reason = (c.fields?.reason ?? "").trim();
+        if (!d || !reason) return errorReply("Bitte einen Grund angeben.");
+        return await decide(c, d, reason);
+      }
+      if (action === "history") {
+        const id = rest[0] ?? "";
+        if (!/^\d{15,25}$/.test(id)) return errorReply("Unbekannte Person.");
+        const get = (path2) => c.api.asUser(c.discordId, "GET", path2).then((x) => x, (e) => e instanceof BotApiError && e.status === 403 ? null : Promise.reject(e));
+        const [quali, police] = await Promise.all([get(`/qualifications/history?discordId=${id}`), get(`/applications/history?discordId=${id}`)]);
+        if (!quali && !police) return errorReply("Du hast keine Berechtigung, Bewerbungen anzusehen.");
+        const rows = [...(police ?? []).map((r) => ({ ...r, unitName: "EN Polizei" })), ...quali ?? []].sort((a, b) => Date.parse(b.createdAt) - Date.parse(a.createdAt));
+        const lines = rows.slice(0, 20).map((r) => `\u2022 **${r.number}** \xB7 ${plain(r.unitName)} \xB7 ${STATUS_DE[r.status] ?? r.status} \xB7 <t:${Math.floor(Date.parse(r.createdAt) / 1e3)}:d>${r.decisionReason ? `
+  \u21B3 ${clip(plain(r.decisionReason), 150)}` : ""}`);
+        return { ephemeral: true, embeds: [{ title: "\u{1F5C2}\uFE0F Bewerbungs-Verlauf", color: COLORS.info, description: clip(`<@${id}>
+
+${lines.join("\n") || "Keine Bewerbungen."}`, 4e3) }] };
+      }
+      if (action === "ticket") {
+        const [kind, id] = rest;
+        if (kind !== "q" && kind !== "p" || !id) return errorReply("Unbekannte Aktion.");
+        if (!c.guildId || !c.platform) return errorReply("Das geht nur auf einem Server.");
+        const a = await c.api.asUser(c.discordId, "GET", kind === "p" ? `/applications/${id}` : `/qualifications/applications/${id}`);
+        if (!a.discordId) return errorReply("Diese Bewerbung kam nicht \xFCber Discord \u2013 es gibt keinen Discord-Benutzer f\xFCr ein Ticket.");
+        const cfg2 = await c.config?.().catch(() => void 0);
+        let t;
+        try {
+          t = await c.platform.createTicketChannel({ guildId: c.guildId, userId: a.discordId, userName: a.discordName ?? a.robloxUsername ?? a.discordId, categoryId: cfg2?.tickets, staffRoleId: cfg2?.staffRole, extraUserIds: [c.discordId] });
+        } catch {
+          return errorReply("Ticket konnte nicht angelegt werden (fehlen dem Bot die Rechte \u201EKan\xE4le verwalten\u201C, oder ist die Person nicht mehr auf dem Server?).");
+        }
+        if (t.existing) return okReply(`Mit dieser Person gibt es schon ein offenes Ticket: <#${t.channelId}>`);
+        await c.platform.postPanel({ channelId: t.channelId, embed: { title: `\u{1F3AB} Ticket zur Bewerbung ${a.number}`, color: COLORS.info, description: `<@${a.discordId}>, das Team hat eine R\xFCckfrage zu deiner Bewerbung **${a.number}**${a.unitName ? ` (${plain(a.unitName)})` : ""}. Bitte antworte hier.` }, buttons: [{ id: "support:close", label: "Ticket schlie\xDFen", emoji: "\u{1F512}", style: "danger" }] }).catch(() => void 0);
+        return okReply(`Ticket ge\xF6ffnet: <#${t.channelId}>`);
+      }
       if (action === "cancel") {
         const had = sessions.delete(c.discordId);
         return okReply(had ? "Bewerbung abgebrochen. Du kannst jederzeit \xFCber das Panel neu starten." : "Es l\xE4uft keine Bewerbung.");
       }
       if (action === "decide") {
-        const [id, status] = rest;
-        if (!id || status !== "ACCEPTED" && status !== "REJECTED") return errorReply("Unbekannte Aktion.");
-        const r = await c.api.asUser(c.discordId, "POST", `/qualifications/applications/${id}/decision`, { status });
-        return okReply(`Bewerbung **${r.number}** (${plain(r.unitName)}) ${status === "ACCEPTED" ? "**angenommen**" : "**abgelehnt**"}. Die Person wird per Direktnachricht informiert${status === "ACCEPTED" ? " (und bekommt ggf. die Rolle)" : ""}.${r.addedToSek ? " Au\xDFerdem ins SEK aufgenommen." : ""}`);
+        const d = parseDecision(rest);
+        return d ? await decide(c, d) : errorReply("Unbekannte Aktion.");
       }
       if (action === "pick") return await offer(c, c.values?.[0] ?? rest[0]);
       if (action !== "start") return errorReply("Unbekannte Aktion.");
@@ -76255,7 +76359,7 @@ var QUALI_INTERACTION = {
       const open = await openApplication(c.api, flow.key, c.discordId);
       if (open.open) return errorReply(`Du hast f\xFCr **${plain(flow.name)}** bereits eine offene Bewerbung (${open.number}). Bitte warte auf die Entscheidung.`);
       if (!c.platform) return errorReply("Direktnachrichten sind hier nicht verf\xFCgbar.");
-      const s = { unit: flow.key, unitName: flow.name, questions: flow.questions, answers: [], expiresAt: Date.now() + APPLICATION_MS };
+      const s = { unit: flow.key, unitName: flow.name, questions: flow.questions, answers: [], startedAt: Date.now(), expiresAt: Date.now() + APPLICATION_MS, joinedAt: joinedAtOf.get(c.discordId) };
       sessions.set(c.discordId, s);
       try {
         await c.platform.sendDm(c.discordId, { embed: questionEmbed(s), buttons: [CANCEL] });
@@ -81104,13 +81208,14 @@ async function pollOnce(api2, send, log = console.log, dm, grantRole) {
       }
       continue;
     }
-    const channelIds = (channels[item.channelKey] ?? "").split(/[\s,;]+/).filter(Boolean);
-    const embed = renderOutbox(item.type, item.payload);
+    const own = typeof item.payload.channelId === "string" && /^\d{15,25}$/.test(item.payload.channelId) ? item.payload.channelId : null;
+    const channelIds = own ? [own] : (channels[item.channelKey] ?? "").split(/[\s,;]+/).filter(Boolean);
+    const embeds = renderOutboxEmbeds(item.type, item.payload);
     try {
       if (!channelIds.length) throw new Error(`channel "${item.channelKey}" not configured`);
-      if (!embed) throw new Error(`unknown type "${item.type}"`);
+      if (!embeds) throw new Error(`unknown type "${item.type}"`);
       const buttons = outboxButtons(item.type, item.payload);
-      const results = await Promise.allSettled(channelIds.map((id) => send(id, embed, buttons)));
+      const results = await Promise.allSettled(channelIds.map((id) => send(id, embeds, buttons)));
       const failed = results.flatMap((r, i) => r.status === "rejected" ? [`${channelIds[i]}: ${r.reason instanceof Error ? r.reason.message : r.reason}`] : []);
       failed.forEach((f) => log(`outbox ${item.id}: send failed for channel ${f}`));
       if (failed.length === channelIds.length) throw new Error(failed[0]);
@@ -81214,7 +81319,7 @@ var platform = {
     if (on) await member.roles.add(roleId, "EN Polizei");
     else await member.roles.remove(roleId, "EN Polizei");
   },
-  async createTicketChannel({ guildId, userId, userName, categoryId, staffRoleId }) {
+  async createTicketChannel({ guildId, userId, userName, categoryId, staffRoleId, extraUserIds = [] }) {
     const guild = await client.guilds.fetch(guildId);
     const channels = await guild.channels.fetch();
     const existing = channels.find((c) => c?.type === import_discord.ChannelType.GuildText && c.name.startsWith(TICKET_PREFIX) && c.topic?.includes(`(${userId})`));
@@ -81229,7 +81334,8 @@ var platform = {
         { id: guild.roles.everyone.id, type: import_discord.OverwriteType.Role, deny: [import_discord.PermissionFlagsBits.ViewChannel] },
         { id: userId, type: import_discord.OverwriteType.Member, allow: view },
         { id: client.user.id, type: import_discord.OverwriteType.Member, allow: [...view, import_discord.PermissionFlagsBits.ManageChannels] },
-        ...staffRoleId ? [{ id: staffRoleId, type: import_discord.OverwriteType.Role, allow: view }] : []
+        ...staffRoleId ? [{ id: staffRoleId, type: import_discord.OverwriteType.Role, allow: view }] : [],
+        ...extraUserIds.filter((id) => id !== userId).map((id) => ({ id, type: import_discord.OverwriteType.Member, allow: view }))
       ]
     });
     return { channelId: ch.id, existing: false };
@@ -81303,6 +81409,25 @@ function toBuilder(def) {
   }
   return b.toJSON();
 }
+function joinedAtOf2(m) {
+  const x = m;
+  const t = x?.joinedTimestamp ?? (x?.joined_at ? Date.parse(x.joined_at) : NaN);
+  return typeof t === "number" && Number.isFinite(t) ? new Date(t).toISOString() : void 0;
+}
+async function markDecided(message, d) {
+  const embeds = message.embeds.map((e, i, all) => {
+    const b = import_discord.EmbedBuilder.from(e).setColor(d.color);
+    if (i === all.length - 1) b.addFields({ name: "Entscheidung", value: d.text.slice(0, 1024) });
+    return b;
+  });
+  const rows = [];
+  for (const row of message.components) {
+    if (!("components" in row)) continue;
+    const kept = row.components.filter((c) => c.type === import_discord.ComponentType.Button && !/^quali:(decide|reason):/.test(c.customId ?? ""));
+    if (kept.length) rows.push(new import_discord.ActionRowBuilder().addComponents(kept.map((c) => import_discord.ButtonBuilder.from(c))));
+  }
+  await message.edit({ embeds, components: rows, allowedMentions: { parse: [] } });
+}
 function baseCtx(i) {
   const perms = i.memberPermissions;
   return {
@@ -81310,6 +81435,7 @@ function baseCtx(i) {
     api,
     platform,
     userName: i.user.username,
+    memberJoinedAt: joinedAtOf2(i.member),
     guildId: i.guildId ?? void 0,
     channelId: i.channelId ?? void 0,
     isGuildAdmin: !!perms && (perms.has(import_discord.PermissionFlagsBits.ManageGuild) || perms.has(import_discord.PermissionFlagsBits.Administrator)),
@@ -81347,11 +81473,19 @@ async function handleCommand(i) {
 async function handleComponent(i) {
   const hit = interactionFor(i.customId);
   if (!hit) return;
+  if (i.isButton() && hit.def.opensModal?.(hit.args)) {
+    const reply2 = await safeRun(`interaction ${i.customId}`, () => hit.def.run({ ...baseCtx(i), opts: {}, args: hit.args }));
+    if (reply2.modal) await i.showModal(toModal(reply2.modal));
+    else await i.reply({ ...replyPayload(reply2), flags: import_discord.MessageFlags.Ephemeral });
+    return;
+  }
   await i.deferReply({ flags: import_discord.MessageFlags.Ephemeral });
   const fields = i.isModalSubmit() ? Object.fromEntries(i.fields.fields.map((f, id) => [id, "value" in f ? String(f.value) : ""])) : void 0;
   const values = i.isStringSelectMenu() ? i.values : void 0;
   const reply = await safeRun(`interaction ${i.customId}`, () => hit.def.run({ ...baseCtx(i), opts: {}, args: hit.args, fields, values }));
   await i.editReply(replyPayload(reply));
+  const source = i.isModalSubmit() ? i.isFromMessage() ? i.message : null : i.message;
+  if (reply.decided && source) await markDecided(source, reply.decided).catch((e) => console.error("could not update the application message:", e instanceof Error ? e.message : e));
 }
 client.on("interactionCreate", (i) => {
   const task = i.isChatInputCommand() ? handleCommand(i) : i.isButton() || i.isModalSubmit() || i.isStringSelectMenu() ? handleComponent(i) : void 0;
@@ -81410,10 +81544,10 @@ client.once("clientReady", async (c) => {
       }
     }
   }
-  startOutboxLoop(api, async (channelId, embed, buttons) => {
+  startOutboxLoop(api, async (channelId, embeds, buttons) => {
     const ch = await client.channels.fetch(channelId);
     if (!ch?.isSendable()) throw new Error(`channel ${channelId} is not a text channel the bot can post in`);
-    await ch.send({ embeds: [toEmbed(embed)], components: toRows(buttons), allowedMentions: { parse: [] } });
+    await ch.send({ embeds: embeds.map(toEmbed), components: toRows(buttons), allowedMentions: { parse: [] } });
   }, cfg.OUTBOX_POLL_SECONDS, console.log, (userId, text) => platform.sendDirectMessage(userId, text), grantRoleEverywhere);
   live.start(cfg.LIVE_REFRESH_SECONDS);
 });

@@ -1,7 +1,7 @@
 import {
-  ActionRowBuilder, ButtonBuilder, ButtonStyle, ChannelType, Client, EmbedBuilder, GatewayIntentBits, MessageFlags, ModalBuilder, OverwriteType, Partials,
+  ActionRowBuilder, ButtonBuilder, ButtonStyle, ChannelType, Client, ComponentType, EmbedBuilder, GatewayIntentBits, MessageFlags, ModalBuilder, OverwriteType, Partials,
   PermissionFlagsBits, SlashCommandBuilder, StringSelectMenuBuilder, TextInputBuilder, TextInputStyle,
-  type ButtonInteraction, type ChatInputCommandInteraction, type Interaction, type Message, type ModalSubmitInteraction, type StringSelectMenuInteraction,
+  type ButtonComponent, type ButtonInteraction, type ChatInputCommandInteraction, type Interaction, type Message, type ModalSubmitInteraction, type StringSelectMenuInteraction,
 } from 'discord.js';
 import { HttpApi } from './api';
 import { byName, COMMANDS, mapError } from './commands';
@@ -66,7 +66,7 @@ const platform: Platform = {
     const member = await (await client.guilds.fetch(guildId)).members.fetch(userId);
     if (on) await member.roles.add(roleId, 'EN Polizei'); else await member.roles.remove(roleId, 'EN Polizei');
   },
-  async createTicketChannel({ guildId, userId, userName, categoryId, staffRoleId }) {
+  async createTicketChannel({ guildId, userId, userName, categoryId, staffRoleId, extraUserIds = [] }) {
     const guild = await client.guilds.fetch(guildId);
     const channels = await guild.channels.fetch();
     // Ein offenes Ticket pro Person: erkannt an der Benutzer-ID im Channel-Thema
@@ -81,6 +81,7 @@ const platform: Platform = {
         { id: userId, type: OverwriteType.Member, allow: view },
         { id: client.user!.id, type: OverwriteType.Member, allow: [...view, PermissionFlagsBits.ManageChannels] },
         ...(staffRoleId ? [{ id: staffRoleId, type: OverwriteType.Role, allow: view }] : []),
+        ...extraUserIds.filter((id) => id !== userId).map((id) => ({ id, type: OverwriteType.Member, allow: view })),
       ],
     });
     return { channelId: ch.id, existing: false };
@@ -129,11 +130,34 @@ function toBuilder(def: CommandDef) {
   return b.toJSON();
 }
 
+/** Server-Beitritt des Mitglieds (voller GuildMember oder rohe API-Daten). */
+function joinedAtOf(m: unknown): string | undefined {
+  const x = m as { joinedTimestamp?: number | null; joined_at?: string } | null;
+  const t = x?.joinedTimestamp ?? (x?.joined_at ? Date.parse(x.joined_at) : NaN);
+  return typeof t === 'number' && Number.isFinite(t) ? new Date(t).toISOString() : undefined;
+}
+
+/** Nach einer Entscheidung: Bewerbungs-Nachricht einfärben, Feld „Entscheidung“ anhängen, Entscheidungs-Buttons entfernen. */
+async function markDecided(message: Message, d: { text: string; color: number }) {
+  const embeds = message.embeds.map((e, i, all) => {
+    const b = EmbedBuilder.from(e).setColor(d.color);
+    if (i === all.length - 1) b.addFields({ name: 'Entscheidung', value: d.text.slice(0, 1024) });
+    return b;
+  });
+  const rows: ActionRowBuilder<ButtonBuilder>[] = [];
+  for (const row of message.components) {
+    if (!('components' in row)) continue;
+    const kept = row.components.filter((c): c is ButtonComponent => c.type === ComponentType.Button && !/^quali:(decide|reason):/.test(c.customId ?? ''));
+    if (kept.length) rows.push(new ActionRowBuilder<ButtonBuilder>().addComponents(kept.map((c) => ButtonBuilder.from(c))));
+  }
+  await message.edit({ embeds, components: rows, allowedMentions: { parse: [] } });
+}
+
 /** Gemeinsamer Kontext für Befehle, Buttons und Formulare. */
 function baseCtx(i: ChatInputCommandInteraction | ButtonInteraction | ModalSubmitInteraction | StringSelectMenuInteraction): Omit<Ctx, 'opts'> {
   const perms = i.memberPermissions;
   return {
-    discordId: i.user.id, api, platform, userName: i.user.username,
+    discordId: i.user.id, api, platform, userName: i.user.username, memberJoinedAt: joinedAtOf(i.member),
     guildId: i.guildId ?? undefined, channelId: i.channelId ?? undefined,
     isGuildAdmin: !!perms && (perms.has(PermissionFlagsBits.ManageGuild) || perms.has(PermissionFlagsBits.Administrator)),
     config: () => api.service<DiscordConfig>('GET', '/bot/config'),
@@ -170,11 +194,20 @@ async function handleCommand(i: ChatInputCommandInteraction) {
 async function handleComponent(i: ButtonInteraction | ModalSubmitInteraction | StringSelectMenuInteraction) {
   const hit = interactionFor(i.customId);
   if (!hit) return;
+  if (i.isButton() && hit.def.opensModal?.(hit.args)) {
+    // Formulare müssen die erste Antwort sein – kein deferReply vorher.
+    const reply = await safeRun(`interaction ${i.customId}`, () => hit.def.run({ ...baseCtx(i), opts: {}, args: hit.args }));
+    if (reply.modal) await i.showModal(toModal(reply.modal));
+    else await i.reply({ ...replyPayload(reply), flags: MessageFlags.Ephemeral });
+    return;
+  }
   await i.deferReply({ flags: MessageFlags.Ephemeral });
   const fields = i.isModalSubmit() ? Object.fromEntries(i.fields.fields.map((f, id) => [id, 'value' in f ? String(f.value) : ''])) : undefined;
   const values = i.isStringSelectMenu() ? i.values : undefined;
   const reply = await safeRun(`interaction ${i.customId}`, () => hit.def.run({ ...baseCtx(i), opts: {}, args: hit.args, fields, values }));
   await i.editReply(replyPayload(reply));
+  const source = i.isModalSubmit() ? (i.isFromMessage() ? i.message : null) : i.message;
+  if (reply.decided && source) await markDecided(source, reply.decided).catch((e) => console.error('could not update the application message:', e instanceof Error ? e.message : e));
 }
 
 client.on('interactionCreate', (i: Interaction) => {
@@ -233,10 +266,10 @@ client.once('clientReady', async (c) => {
       try { await c.application.commands.set([], g); } catch { /* Server ohne Befehle/Zugriff: egal */ }
     }
   }
-  startOutboxLoop(api, async (channelId, embed, buttons) => {
+  startOutboxLoop(api, async (channelId, embeds, buttons) => {
     const ch = await client.channels.fetch(channelId);
     if (!ch?.isSendable()) throw new Error(`channel ${channelId} is not a text channel the bot can post in`);
-    await ch.send({ embeds: [toEmbed(embed)], components: toRows(buttons), allowedMentions: { parse: [] } }); // niemals @everyone/@here/Rollen pingen
+    await ch.send({ embeds: embeds.map(toEmbed), components: toRows(buttons), allowedMentions: { parse: [] } }); // niemals @everyone/@here/Rollen pingen
   }, cfg.OUTBOX_POLL_SECONDS, console.log, (userId, text) => platform.sendDirectMessage(userId, text), grantRoleEverywhere);
   live.start(cfg.LIVE_REFRESH_SECONDS);
 });

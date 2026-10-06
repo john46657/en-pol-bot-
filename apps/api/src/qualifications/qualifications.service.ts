@@ -5,6 +5,7 @@ import { AuditService, Actor } from '../audit/audit.service';
 import { DiscordService } from '../discord/discord.service';
 import { AppError } from '../common/errors';
 import { makeNumber } from '../common/numbering';
+import { webUrl } from '../common/web-url';
 import { configSchema, DEFAULT_CONFIG, type QualificationConfig } from './qualifications.config';
 import { DEFAULT_FORM, type FormField } from '../applications/applications.service';
 
@@ -53,7 +54,7 @@ export class QualificationsService {
     return { open: !!open, number: open?.number ?? null, unitName: open?.unitName ?? null };
   }
 
-  async submit(d: { unit: string; discordId: string; discordName: string; answers: Answer[] }) {
+  async submit(d: { unit: string; discordId: string; discordName: string; answers: Answer[]; durationSec?: number; joinedAt?: Date }) {
     const cfg = await this.config();
     const unit = cfg.units.find((u) => u.key === d.unit);
     if (!unit) throw new AppError('NOT_FOUND', 'Unknown unit.');
@@ -61,11 +62,16 @@ export class QualificationsService {
     if ((await this.openFor(d.discordId, unit.key)).open) throw new AppError('CONFLICT', `There is already an open application for ${unit.name}.`);
     const user = await this.discord.resolveUser(d.discordId);
     const a = await this.prisma.$transaction(async (tx) => {
-      const row = await tx.qualificationApplication.create({ data: { number: makeNumber('Q'), unit: unit.key, unitName: unit.name, discordId: d.discordId, discordName: d.discordName, userId: user?.id, answers: d.answers as unknown as Prisma.InputJsonValue } });
+      const row = await tx.qualificationApplication.create({ data: { number: makeNumber('Q'), unit: unit.key, unitName: unit.name, discordId: d.discordId, discordName: d.discordName, userId: user?.id, answers: d.answers as unknown as Prisma.InputJsonValue, durationSec: d.durationSec, joinedAt: d.joinedAt } });
       await this.audit.record({ userId: user?.id ?? null }, { action: 'qualifications.application.submit', module: 'qualifications', entityType: 'QualificationApplication', entityId: row.id, after: { number: row.number, unit: unit.key, discordId: d.discordId } }, tx);
       return row;
     });
-    await this.discord.enqueue('qualifications', 'qualification.submitted', { id: a.id, number: a.number, unitName: a.unitName, discordId: a.discordId, discordName: a.discordName, linkedName: user?.displayName ?? null, answers: d.answers });
+    // Eigener Channel der Einheit (falls eingestellt) – sonst der allgemeine Qualifications-Channel
+    await this.discord.enqueue('qualifications', 'qualification.submitted', {
+      id: a.id, number: a.number, unitName: a.unitName, discordId: a.discordId, discordName: a.discordName, linkedName: user?.displayName ?? null, answers: d.answers,
+      durationSec: a.durationSec, joinedAt: a.joinedAt?.toISOString() ?? null, createdAt: a.createdAt.toISOString(), dashboardUrl: webUrl(`/qualifications?id=${a.id}`),
+      ...(unit.channelId ? { channelId: unit.channelId } : {}),
+    }, { always: !!unit.channelId });
     return { id: a.id, number: a.number, unitName: a.unitName };
   }
 
@@ -76,7 +82,18 @@ export class QualificationsService {
     return rows.map((r) => ({ ...r, linkedName: r.userId ? users.get(r.userId) ?? null : null, decidedByName: r.decidedById ? users.get(r.decidedById) ?? '—' : null }));
   }
 
-  async decide(actor: Actor, id: string, status: 'ACCEPTED' | 'REJECTED') {
+  async get(id: string) {
+    const a = await this.prisma.qualificationApplication.findUnique({ where: { id } });
+    if (!a) throw new AppError('NOT_FOUND', 'Application not found.');
+    return a;
+  }
+
+  /** Bisherige Qualifikations-Bewerbungen einer Discord-ID (Button „Verlauf“). */
+  history(discordId: string) {
+    return this.prisma.qualificationApplication.findMany({ where: { discordId }, orderBy: { createdAt: 'desc' }, take: 20, select: { id: true, number: true, unitName: true, status: true, createdAt: true, decisionReason: true } });
+  }
+
+  async decide(actor: Actor, id: string, status: 'ACCEPTED' | 'REJECTED', reason?: string) {
     const a = await this.prisma.qualificationApplication.findUnique({ where: { id } });
     if (!a) throw new AppError('NOT_FOUND', 'Application not found.');
     if (a.status !== 'OPEN') throw new AppError('CONFLICT', 'This application has already been decided.');
@@ -85,7 +102,7 @@ export class QualificationsService {
     const unit = (await this.config()).units.find((u) => u.key === a.unit);
     let addedToSek = false;
     await this.prisma.$transaction(async (tx) => {
-      const claimed = await tx.qualificationApplication.updateMany({ where: { id, status: 'OPEN' }, data: { status, decidedById: actor.userId, decidedAt: new Date() } });
+      const claimed = await tx.qualificationApplication.updateMany({ where: { id, status: 'OPEN' }, data: { status, decidedById: actor.userId, decidedAt: new Date(), decisionReason: reason || null } });
       if (claimed.count === 0) throw new AppError('CONFLICT', 'This application has already been decided.');
       if (status === 'ACCEPTED' && a.unit === 'sek' && a.userId) {
         await tx.sekMember.upsert({ where: { userId: a.userId }, create: { userId: a.userId, addedById: actor.userId }, update: {} });
@@ -95,9 +112,10 @@ export class QualificationsService {
         addedToSek = true;
       }
       if (a.userId) await tx.notification.create({ data: { userId: a.userId, type: 'QUALIFICATION', title: `Your ${a.unitName} application ${a.number} was ${status === 'ACCEPTED' ? 'accepted' : 'not accepted'}` } });
-      await this.audit.record(actor, { action: `qualifications.application.${status === 'ACCEPTED' ? 'accept' : 'reject'}`, module: 'qualifications', entityType: 'QualificationApplication', entityId: id, before: { status: 'OPEN' }, after: { status } }, tx);
+      await this.audit.record(actor, { action: `qualifications.application.${status === 'ACCEPTED' ? 'accept' : 'reject'}`, module: 'qualifications', entityType: 'QualificationApplication', entityId: id, before: { status: 'OPEN' }, after: { status }, reason }, tx);
     });
-    await this.discord.enqueue('qualifications', 'qualification.decided', { discordId: a.discordId, status, number: a.number, unitName: a.unitName, roleId: status === 'ACCEPTED' ? unit?.roleId || null : null }, { always: true });
-    return { id, number: a.number, unitName: a.unitName, status, addedToSek };
+    await this.discord.enqueue('qualifications', 'qualification.decided', { discordId: a.discordId, status, number: a.number, unitName: a.unitName, roleId: status === 'ACCEPTED' ? unit?.roleId || null : null, reason: reason || null }, { always: true });
+    const by = actor.userId ? await this.prisma.user.findUnique({ where: { id: actor.userId }, select: { displayName: true } }) : null;
+    return { id, number: a.number, unitName: a.unitName, status, addedToSek, decidedByName: by?.displayName ?? null, reason: reason || null };
   }
 }

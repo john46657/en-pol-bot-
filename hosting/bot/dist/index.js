@@ -67,7 +67,7 @@ const platform = {
         else
             await member.roles.remove(roleId, 'EN Polizei');
     },
-    async createTicketChannel({ guildId, userId, userName, categoryId, staffRoleId }) {
+    async createTicketChannel({ guildId, userId, userName, categoryId, staffRoleId, extraUserIds = [] }) {
         const guild = await client.guilds.fetch(guildId);
         const channels = await guild.channels.fetch();
         // Ein offenes Ticket pro Person: erkannt an der Benutzer-ID im Channel-Thema
@@ -83,6 +83,7 @@ const platform = {
                 { id: userId, type: discord_js_1.OverwriteType.Member, allow: view },
                 { id: client.user.id, type: discord_js_1.OverwriteType.Member, allow: [...view, discord_js_1.PermissionFlagsBits.ManageChannels] },
                 ...(staffRoleId ? [{ id: staffRoleId, type: discord_js_1.OverwriteType.Role, allow: view }] : []),
+                ...extraUserIds.filter((id) => id !== userId).map((id) => ({ id, type: discord_js_1.OverwriteType.Member, allow: view })),
             ],
         });
         return { channelId: ch.id, existing: false };
@@ -146,11 +147,35 @@ function toBuilder(def) {
     }
     return b.toJSON();
 }
+/** Server-Beitritt des Mitglieds (voller GuildMember oder rohe API-Daten). */
+function joinedAtOf(m) {
+    const x = m;
+    const t = x?.joinedTimestamp ?? (x?.joined_at ? Date.parse(x.joined_at) : NaN);
+    return typeof t === 'number' && Number.isFinite(t) ? new Date(t).toISOString() : undefined;
+}
+/** Nach einer Entscheidung: Bewerbungs-Nachricht einfärben, Feld „Entscheidung“ anhängen, Entscheidungs-Buttons entfernen. */
+async function markDecided(message, d) {
+    const embeds = message.embeds.map((e, i, all) => {
+        const b = discord_js_1.EmbedBuilder.from(e).setColor(d.color);
+        if (i === all.length - 1)
+            b.addFields({ name: 'Entscheidung', value: d.text.slice(0, 1024) });
+        return b;
+    });
+    const rows = [];
+    for (const row of message.components) {
+        if (!('components' in row))
+            continue;
+        const kept = row.components.filter((c) => c.type === discord_js_1.ComponentType.Button && !/^quali:(decide|reason):/.test(c.customId ?? ''));
+        if (kept.length)
+            rows.push(new discord_js_1.ActionRowBuilder().addComponents(kept.map((c) => discord_js_1.ButtonBuilder.from(c))));
+    }
+    await message.edit({ embeds, components: rows, allowedMentions: { parse: [] } });
+}
 /** Gemeinsamer Kontext für Befehle, Buttons und Formulare. */
 function baseCtx(i) {
     const perms = i.memberPermissions;
     return {
-        discordId: i.user.id, api, platform, userName: i.user.username,
+        discordId: i.user.id, api, platform, userName: i.user.username, memberJoinedAt: joinedAtOf(i.member),
         guildId: i.guildId ?? undefined, channelId: i.channelId ?? undefined,
         isGuildAdmin: !!perms && (perms.has(discord_js_1.PermissionFlagsBits.ManageGuild) || perms.has(discord_js_1.PermissionFlagsBits.Administrator)),
         config: () => api.service('GET', '/bot/config'),
@@ -194,11 +219,23 @@ async function handleComponent(i) {
     const hit = (0, features_1.interactionFor)(i.customId);
     if (!hit)
         return;
+    if (i.isButton() && hit.def.opensModal?.(hit.args)) {
+        // Formulare müssen die erste Antwort sein – kein deferReply vorher.
+        const reply = await safeRun(`interaction ${i.customId}`, () => hit.def.run({ ...baseCtx(i), opts: {}, args: hit.args }));
+        if (reply.modal)
+            await i.showModal(toModal(reply.modal));
+        else
+            await i.reply({ ...replyPayload(reply), flags: discord_js_1.MessageFlags.Ephemeral });
+        return;
+    }
     await i.deferReply({ flags: discord_js_1.MessageFlags.Ephemeral });
     const fields = i.isModalSubmit() ? Object.fromEntries(i.fields.fields.map((f, id) => [id, 'value' in f ? String(f.value) : ''])) : undefined;
     const values = i.isStringSelectMenu() ? i.values : undefined;
     const reply = await safeRun(`interaction ${i.customId}`, () => hit.def.run({ ...baseCtx(i), opts: {}, args: hit.args, fields, values }));
     await i.editReply(replyPayload(reply));
+    const source = i.isModalSubmit() ? (i.isFromMessage() ? i.message : null) : i.message;
+    if (reply.decided && source)
+        await markDecided(source, reply.decided).catch((e) => console.error('could not update the application message:', e instanceof Error ? e.message : e));
 }
 client.on('interactionCreate', (i) => {
     const task = i.isChatInputCommand() ? handleCommand(i) : i.isButton() || i.isModalSubmit() || i.isStringSelectMenu() ? handleComponent(i) : undefined;
@@ -271,11 +308,11 @@ client.once('clientReady', async (c) => {
             catch { /* Server ohne Befehle/Zugriff: egal */ }
         }
     }
-    (0, outbox_1.startOutboxLoop)(api, async (channelId, embed, buttons) => {
+    (0, outbox_1.startOutboxLoop)(api, async (channelId, embeds, buttons) => {
         const ch = await client.channels.fetch(channelId);
         if (!ch?.isSendable())
             throw new Error(`channel ${channelId} is not a text channel the bot can post in`);
-        await ch.send({ embeds: [toEmbed(embed)], components: toRows(buttons), allowedMentions: { parse: [] } }); // niemals @everyone/@here/Rollen pingen
+        await ch.send({ embeds: embeds.map(toEmbed), components: toRows(buttons), allowedMentions: { parse: [] } }); // niemals @everyone/@here/Rollen pingen
     }, cfg.OUTBOX_POLL_SECONDS, console.log, (userId, text) => platform.sendDirectMessage(userId, text), grantRoleEverywhere);
     live.start(cfg.LIVE_REFRESH_SECONDS);
 });

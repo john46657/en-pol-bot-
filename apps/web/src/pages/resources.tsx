@@ -116,7 +116,9 @@ export const records: Record<string, RecordConfig> = {
     fields: [{ key: 'rank', label: 'Rank' }, { key: 'team', label: 'Team' }, { key: 'callsign', label: 'Callsign' }, { key: 'joinDate', label: 'Joined' }, { key: 'qualifications', label: 'Qualifications', render: (v) => (Array.isArray(v) && v.length ? v.join(', ') : '—') }],
     extra: (r) => <div className="mt-4"><h3 className="mb-1 text-xs text-muted">Records (promotions, awards, discipline)</h3>{((r.records as Row[]) ?? []).length === 0 ? <p className="text-sm text-muted">No records.</p> : <ul className="space-y-1 text-sm">{(r.records as Row[]).map((x) => <li key={String(x.id)}><Badge>{String(x.type)}</Badge> {String(x.summary)} <span className="text-xs text-muted">{fmt(x.createdAt as string)}</span></li>)}</ul>}</div> },
   applications: { endpoint: '/applications', queryKey: 'applications', back: '/applications', title: (r) => `Application ${r.number}`, pick: (d) => ({ record: d as Row, timeline: undefined }),
-    fields: [{ key: 'robloxUsername', label: 'Roblox username' }, { key: 'robloxUserId', label: 'Roblox ID' }, { key: 'createdAt', label: 'Submitted' }],
+    fields: [{ key: 'robloxUsername', label: 'Roblox username' }, { key: 'robloxUserId', label: 'Roblox ID' }, { key: 'createdAt', label: 'Submitted' },
+      { key: 'discordName', label: 'Discord' }, { key: 'durationSec', label: 'Time to fill in (Discord)', render: (v) => (typeof v === 'number' ? `${Math.floor(v / 60)} min ${v % 60} s` : '—') },
+      { key: 'decisionReason', label: 'Reason sent to applicant' }],
     actions: [
       { label: 'Start screening', perm: 'applications.review', path: (id) => `/applications/${id}/status`, method: 'PUT', body: { status: 'SCREENING' }, show: (r) => r.status === 'SUBMITTED' },
       { label: 'Move to interview', perm: 'applications.review', path: (id) => `/applications/${id}/status`, method: 'PUT', body: { status: 'INTERVIEW' }, show: (r) => r.status === 'SCREENING' },

@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, ParseUUIDPipe, Post, Put, Query } from '@nestjs/common';
+import { Body, Controller, Get, HttpCode, Param, ParseUUIDPipe, Post, Put, Query } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { Throttle } from '@nestjs/throttler';
 import { z } from 'zod';
@@ -23,6 +23,8 @@ export class ApplicationsController {
   submit(@Body(zodBody(submit)) b: z.infer<typeof submit>) { return this.a.submit(b); }
   @Get() @RequirePermission('applications.view')
   list(@Query(zodBody(listQ)) q: z.infer<typeof listQ>) { return this.a.list(q, q.status); }
+  @Get('history') @RequirePermission('applications.view')
+  history(@Query(zodBody(z.object({ discordId: z.string().regex(/^\d{15,25}$/) }))) q: { discordId: string }) { return this.a.history(q.discordId); }
   @Get(':id') @RequirePermission('applications.view')
   get(@Param('id', ParseUUIDPipe) id: string) { return this.a.get(id); }
   /** Prüfschritte benötigen applications.review; Entscheidungen applications.decide. */
@@ -33,5 +35,10 @@ export class ApplicationsController {
   @Post(':id/decide') @RequirePermission('applications.decide')
   decide(@CurrentActor() a: Actor, @Param('id', ParseUUIDPipe) id: string, @Body(zodBody(z.object({ accept: z.boolean(), reason: z.string().trim().min(3).max(1000) }))) b: { accept: boolean; reason: string }) {
     return this.a.transition(a, id, b.accept ? 'ACCEPTED' : 'REJECTED', b.reason);
+  }
+  /** Annehmen/Ablehnen per Discord-Button (aus jedem offenen Status); optionaler Grund geht per DM an die Person. */
+  @Post(':id/discord-decision') @HttpCode(200) @RequirePermission('applications.decide')
+  discordDecide(@CurrentActor() a: Actor, @Param('id', ParseUUIDPipe) id: string, @Body(zodBody(z.object({ status: z.enum(['ACCEPTED', 'REJECTED']), reason: z.string().trim().max(1000).optional() }))) b: { status: 'ACCEPTED' | 'REJECTED'; reason?: string }) {
+    return this.a.discordDecide(a, id, b.status, b.reason);
   }
 }

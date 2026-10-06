@@ -9,6 +9,8 @@ exports.unitSchema = zod_1.z.object({
     description: zod_1.z.string().trim().max(600).default(''),
     /** Discord-Rolle, die bei Annahme vergeben wird (optional). */
     roleId: zod_1.z.union([zod_1.z.string().regex(/^\d{15,25}$/), zod_1.z.literal('')]).optional(),
+    /** Eigener Discord-Channel für eingehende Bewerbungen dieser Einheit (sonst der allgemeine Qualifications-Channel). */
+    channelId: zod_1.z.union([zod_1.z.string().regex(/^\d{15,25}$/), zod_1.z.literal('')]).optional(),
     questions: zod_1.z.array(zod_1.z.string().trim().min(3).max(300)).min(1).max(15),
 });
 /** Texte des Panels für die normale Bewerbung bei EN Polizei (/bewerbungspanel); die Fragen sind das Bewerbungsformular (`application.form`). */

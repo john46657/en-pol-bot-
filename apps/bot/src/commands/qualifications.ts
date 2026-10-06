@@ -7,7 +7,7 @@ import { mapError } from './errors';
 export interface QualiUnit { key: string; name: string; description: string; questions: string[] }
 export interface QualiConfig { title: string; intro: string; units: QualiUnit[]; police?: { title: string; description: string } }
 interface Question { text: string; key?: string; optional?: boolean; max: number }
-interface Session { unit: string; unitName: string; questions: Question[]; answers: string[]; expiresAt: number }
+interface Session { unit: string; unitName: string; questions: Question[]; answers: string[]; expiresAt: number; startedAt: number; joinedAt?: string }
 type SendDm = (userId: string, m: { embed: EmbedData; buttons?: ButtonSpec[] }) => Promise<unknown>;
 type RobloxLookup = (name: string) => Promise<{ id: number; name: string } | null>;
 
@@ -21,7 +21,9 @@ export const APPLICATION_MS = 3 * 60 * 60_000;
 export const MAX_ANSWER = 1000;
 /** Laufende Bewerbungen im Speicher des Bots (ein Neustart des Bots bricht sie ab – dann einfach neu starten). */
 const sessions = new Map<string, Session>();
-export const resetSessions = () => sessions.clear();
+/** Server-Beitritt aus der Auswahl im Server (die eigentliche Bewerbung läuft per DM, dort ist er unbekannt). */
+const joinedAtOf = new Map<string, string>();
+export const resetSessions = () => { sessions.clear(); joinedAtOf.clear(); };
 export const sweepSessions = (now = Date.now()) => { for (const [k, s] of sessions) if (s.expiresAt <= now) sessions.delete(k); };
 
 const CANCEL: ButtonSpec = { id: 'quali:cancel', label: 'Bewerbung abbrechen', style: 'danger' };
@@ -48,14 +50,15 @@ async function openApplication(api: Api, key: string, discordId: string) {
     ? api.service<{ open: boolean; number: string | null }>('GET', `/bot/application/open?discordId=${discordId}`)
     : api.service<{ open: boolean; number: string | null }>('GET', `/bot/qualifications/open?discordId=${discordId}&unit=${encodeURIComponent(key)}`);
 }
-async function submitSession(api: Api, s: Session, userId: string, userName: string, robloxLookup?: RobloxLookup): Promise<string> {
+async function submitSession(api: Api, s: Session, userId: string, userName: string, robloxLookup?: RobloxLookup, now = Date.now()): Promise<string> {
+  const meta = { durationSec: Math.max(0, Math.round((now - s.startedAt) / 1000)), ...(s.joinedAt ? { joinedAt: s.joinedAt } : {}) };
   if (s.unit === POLICE) {
     const roblox = s.answers[0]!.trim();
     const rb = await robloxLookup?.(roblox).catch(() => null);
     const answers = Object.fromEntries(s.questions.slice(1).flatMap((q, i) => { const a = s.answers[i + 1]!; return q.optional && a === SKIP ? [] : [[q.key!, a]]; }));
-    return (await api.service<{ number: string }>('POST', '/bot/application', { robloxUsername: rb?.name ?? roblox, ...(rb ? { robloxUserId: String(rb.id) } : {}), discordId: userId, answers })).number;
+    return (await api.service<{ number: string }>('POST', '/bot/application', { robloxUsername: rb?.name ?? roblox, ...(rb ? { robloxUserId: String(rb.id) } : {}), discordId: userId, discordName: userName, answers, ...meta })).number;
   }
-  return (await api.service<{ number: string }>('POST', '/bot/qualifications/applications', { unit: s.unit, discordId: userId, discordName: userName, answers: s.questions.map((q, i) => ({ question: q.text, answer: s.answers[i] })) })).number;
+  return (await api.service<{ number: string }>('POST', '/bot/qualifications/applications', { unit: s.unit, discordId: userId, discordName: userName, answers: s.questions.map((q, i) => ({ question: q.text, answer: s.answers[i] })), ...meta })).number;
 }
 
 /** Fallback, falls das System die Panel-Texte nicht liefert (Texte: Web → Qualifications → Setup). */
@@ -70,6 +73,7 @@ async function offer(c: Ctx, key: string | undefined): Promise<Reply> {
   const open = await openApplication(c.api, flow.key, c.discordId);
   if (open.open) return errorReply(`Du hast für **${plain(flow.name)}** bereits eine offene Bewerbung (${open.number}). Bitte warte auf die Entscheidung.`);
   if (!c.platform) return errorReply('Direktnachrichten sind hier nicht verfügbar.');
+  if (c.memberJoinedAt) joinedAtOf.set(c.discordId, c.memberJoinedAt);
   let dm: { channelId: string; messageId: string };
   try {
     dm = await c.platform.sendDm(c.discordId, {
@@ -143,7 +147,7 @@ export async function handleDirectMessage(a: { userId: string; userName: string;
   s.answers.push(text);
   if (s.answers.length < s.questions.length) { await a.sendDm(a.userId, { embed: questionEmbed(s), buttons: [CANCEL] }); return; }
   try {
-    const number = await submitSession(a.api, s, a.userId, a.userName, a.robloxLookup);
+    const number = await submitSession(a.api, s, a.userId, a.userName, a.robloxLookup, now);
     sessions.delete(a.userId);
     await say(`✅ Deine Bewerbung **${number}** ist eingegangen! Das Team prüft sie – die Entscheidung bekommst du hier per Direktnachricht.`, COLORS.success);
   } catch (e) {
@@ -157,20 +161,77 @@ export async function handleDirectMessage(a: { userId: string; userName: string;
   }
 }
 
+type Kind = 'q' | 'p';
+const STATUS = new Set(['ACCEPTED', 'REJECTED']);
+/** `quali:decide:<q|p>:<id>:<STATUS>` (alt: `quali:decide:<id>:<STATUS>` = Qualifikation). */
+const parseDecision = (rest: string[]): { kind: Kind; id: string; status: 'ACCEPTED' | 'REJECTED' } | null => {
+  const [kind, id, status] = rest.length === 2 ? ['q', rest[0], rest[1]] : rest;
+  return (kind === 'q' || kind === 'p') && id && status && STATUS.has(status) ? { kind, id, status: status as 'ACCEPTED' | 'REJECTED' } : null;
+};
+
+/** Entscheidung als klickender Benutzer (Rechte im System); aktualisiert danach die Bewerbungs-Nachricht im Channel. */
+async function decide(c: Ctx, d: { kind: Kind; id: string; status: 'ACCEPTED' | 'REJECTED' }, reason?: string): Promise<Reply> {
+  const path = d.kind === 'p' ? `/applications/${d.id}/discord-decision` : `/qualifications/applications/${d.id}/decision`;
+  const r = await c.api.asUser<{ number: string; unitName?: string; addedToSek?: boolean; decidedByName?: string | null }>(c.discordId, 'POST', path, { status: d.status, ...(reason ? { reason } : {}) });
+  const accepted = d.status === 'ACCEPTED';
+  const what = `Bewerbung **${r.number}**${r.unitName ? ` (${plain(r.unitName)})` : ''}`;
+  return {
+    ...okReply(`${what} ${accepted ? '**angenommen**' : '**abgelehnt**'}. Die Person wird per Direktnachricht informiert${accepted && d.kind === 'q' ? ' (und bekommt ggf. die Rolle)' : ''}.${r.addedToSek ? ' Außerdem ins SEK aufgenommen.' : ''}`),
+    decided: { color: accepted ? COLORS.success : COLORS.danger, text: clip(`${accepted ? '✅ Angenommen' : '❌ Abgelehnt'} von <@${c.discordId}>${r.decidedByName ? ` (${plain(r.decidedByName)})` : ''}${reason ? `\n**Grund:** ${plain(reason)}` : ''}`, 1024) },
+  };
+}
+
+const STATUS_DE: Record<string, string> = { OPEN: '🟡 offen', SUBMITTED: '🟡 eingereicht', SCREENING: '🟡 in Prüfung', INTERVIEW: '🟡 Gespräch', PENDING_DECISION: '🟡 Entscheidung offen', ACCEPTED: '✅ angenommen', REJECTED: '❌ abgelehnt', WITHDRAWN: '↩️ zurückgezogen' };
+interface HistoryRow { number: string; unitName?: string; status: string; createdAt: string; decisionReason?: string | null }
+
 export const QUALI_INTERACTION: InteractionDef = {
   prefix: 'quali',
+  opensModal: (args) => args[0] === 'reason',
   async run(c): Promise<Reply> {
     const [action, ...rest] = c.args;
     try {
+      if (action === 'reason') {
+        const d = parseDecision(rest);
+        if (!d) return errorReply('Unbekannte Aktion.');
+        return { modal: { id: `quali:reasonsubmit:${d.kind}:${d.id}:${d.status}`, title: d.status === 'ACCEPTED' ? 'Annehmen mit Grund' : 'Ablehnen mit Grund', fields: [{ id: 'reason', label: 'Grund (geht per DM an die Person)', paragraph: true, required: true, maxLength: 1000 }] } };
+      }
+      if (action === 'reasonsubmit') {
+        const d = parseDecision(rest);
+        const reason = (c.fields?.reason ?? '').trim();
+        if (!d || !reason) return errorReply('Bitte einen Grund angeben.');
+        return await decide(c, d, reason);
+      }
+      if (action === 'history') {
+        const id = rest[0] ?? '';
+        if (!/^\d{15,25}$/.test(id)) return errorReply('Unbekannte Person.');
+        const get = (path: string) => c.api.asUser<HistoryRow[]>(c.discordId, 'GET', path).then((x) => x, (e) => (e instanceof BotApiError && e.status === 403 ? null : Promise.reject(e)));
+        const [quali, police] = await Promise.all([get(`/qualifications/history?discordId=${id}`), get(`/applications/history?discordId=${id}`)]);
+        if (!quali && !police) return errorReply('Du hast keine Berechtigung, Bewerbungen anzusehen.');
+        const rows = [...(police ?? []).map((r) => ({ ...r, unitName: 'EN Polizei' })), ...(quali ?? [])].sort((a, b) => Date.parse(b.createdAt) - Date.parse(a.createdAt));
+        const lines = rows.slice(0, 20).map((r) => `• **${r.number}** · ${plain(r.unitName)} · ${STATUS_DE[r.status] ?? r.status} · <t:${Math.floor(Date.parse(r.createdAt) / 1000)}:d>${r.decisionReason ? `\n  ↳ ${clip(plain(r.decisionReason), 150)}` : ''}`);
+        return { ephemeral: true, embeds: [{ title: '🗂️ Bewerbungs-Verlauf', color: COLORS.info, description: clip(`<@${id}>\n\n${lines.join('\n') || 'Keine Bewerbungen.'}`, 4000) }] };
+      }
+      if (action === 'ticket') {
+        const [kind, id] = rest;
+        if ((kind !== 'q' && kind !== 'p') || !id) return errorReply('Unbekannte Aktion.');
+        if (!c.guildId || !c.platform) return errorReply('Das geht nur auf einem Server.');
+        const a = await c.api.asUser<{ number: string; discordId: string | null; discordName?: string | null; robloxUsername?: string; unitName?: string }>(c.discordId, 'GET', kind === 'p' ? `/applications/${id}` : `/qualifications/applications/${id}`);
+        if (!a.discordId) return errorReply('Diese Bewerbung kam nicht über Discord – es gibt keinen Discord-Benutzer für ein Ticket.');
+        const cfg = await c.config?.().catch(() => undefined);
+        let t: { channelId: string; existing: boolean };
+        try { t = await c.platform.createTicketChannel({ guildId: c.guildId, userId: a.discordId, userName: a.discordName ?? a.robloxUsername ?? a.discordId, categoryId: cfg?.tickets, staffRoleId: cfg?.staffRole, extraUserIds: [c.discordId] }); }
+        catch { return errorReply('Ticket konnte nicht angelegt werden (fehlen dem Bot die Rechte „Kanäle verwalten“, oder ist die Person nicht mehr auf dem Server?).'); }
+        if (t.existing) return okReply(`Mit dieser Person gibt es schon ein offenes Ticket: <#${t.channelId}>`);
+        await c.platform.postPanel({ channelId: t.channelId, embed: { title: `🎫 Ticket zur Bewerbung ${a.number}`, color: COLORS.info, description: `<@${a.discordId}>, das Team hat eine Rückfrage zu deiner Bewerbung **${a.number}**${a.unitName ? ` (${plain(a.unitName)})` : ''}. Bitte antworte hier.` }, buttons: [{ id: 'support:close', label: 'Ticket schließen', emoji: '🔒', style: 'danger' }] }).catch(() => undefined);
+        return okReply(`Ticket geöffnet: <#${t.channelId}>`);
+      }
       if (action === 'cancel') {
         const had = sessions.delete(c.discordId);
         return okReply(had ? 'Bewerbung abgebrochen. Du kannst jederzeit über das Panel neu starten.' : 'Es läuft keine Bewerbung.');
       }
       if (action === 'decide') {
-        const [id, status] = rest;
-        if (!id || (status !== 'ACCEPTED' && status !== 'REJECTED')) return errorReply('Unbekannte Aktion.');
-        const r = await c.api.asUser<{ number: string; unitName: string; addedToSek?: boolean }>(c.discordId, 'POST', `/qualifications/applications/${id}/decision`, { status });
-        return okReply(`Bewerbung **${r.number}** (${plain(r.unitName)}) ${status === 'ACCEPTED' ? '**angenommen**' : '**abgelehnt**'}. Die Person wird per Direktnachricht informiert${status === 'ACCEPTED' ? ' (und bekommt ggf. die Rolle)' : ''}.${r.addedToSek ? ' Außerdem ins SEK aufgenommen.' : ''}`);
+        const d = parseDecision(rest);
+        return d ? await decide(c, d) : errorReply('Unbekannte Aktion.');
       }
       if (action === 'pick') return await offer(c, c.values?.[0] ?? rest[0]);
       if (action !== 'start') return errorReply('Unbekannte Aktion.');
@@ -184,7 +245,7 @@ export const QUALI_INTERACTION: InteractionDef = {
       const open = await openApplication(c.api, flow.key, c.discordId);
       if (open.open) return errorReply(`Du hast für **${plain(flow.name)}** bereits eine offene Bewerbung (${open.number}). Bitte warte auf die Entscheidung.`);
       if (!c.platform) return errorReply('Direktnachrichten sind hier nicht verfügbar.');
-      const s: Session = { unit: flow.key, unitName: flow.name, questions: flow.questions, answers: [], expiresAt: Date.now() + APPLICATION_MS };
+      const s: Session = { unit: flow.key, unitName: flow.name, questions: flow.questions, answers: [], startedAt: Date.now(), expiresAt: Date.now() + APPLICATION_MS, joinedAt: joinedAtOf.get(c.discordId) };
       sessions.set(c.discordId, s);
       try { await c.platform.sendDm(c.discordId, { embed: questionEmbed(s), buttons: [CANCEL] }); }
       catch { sessions.delete(c.discordId); return errorReply('Ich kann dir keine Direktnachricht schicken. Bitte erlaube Direktnachrichten und versuche es erneut.'); }

@@ -63,11 +63,24 @@ export declare class ApplicationsController {
             source: string;
             answers: import("@prisma/client/runtime/library").JsonValue;
             decidedById: string | null;
+            discordName: string | null;
+            durationSec: number | null;
+            joinedAt: Date | null;
+            decisionReason: string | null;
         }[];
         total: number;
         page: number;
         pageSize: number;
     }>;
+    history(q: {
+        discordId: string;
+    }): import("@prisma/client").Prisma.PrismaPromise<{
+        number: string;
+        id: string;
+        createdAt: Date;
+        status: string;
+        decisionReason: string | null;
+    }[]>;
     get(id: string): Promise<{
         number: string;
         id: string;
@@ -81,6 +94,10 @@ export declare class ApplicationsController {
         source: string;
         answers: import("@prisma/client/runtime/library").JsonValue;
         decidedById: string | null;
+        discordName: string | null;
+        durationSec: number | null;
+        joinedAt: Date | null;
+        decisionReason: string | null;
     }>;
     /** Prüfschritte benötigen applications.review; Entscheidungen applications.decide. */
     move(a: Actor, id: string, b: z.infer<typeof move>): Promise<{
@@ -96,6 +113,10 @@ export declare class ApplicationsController {
         source: string;
         answers: import("@prisma/client/runtime/library").JsonValue;
         decidedById: string | null;
+        discordName: string | null;
+        durationSec: number | null;
+        joinedAt: Date | null;
+        decisionReason: string | null;
     }>;
     decide(a: Actor, id: string, b: {
         accept: boolean;
@@ -113,6 +134,21 @@ export declare class ApplicationsController {
         source: string;
         answers: import("@prisma/client/runtime/library").JsonValue;
         decidedById: string | null;
+        discordName: string | null;
+        durationSec: number | null;
+        joinedAt: Date | null;
+        decisionReason: string | null;
+    }>;
+    /** Annehmen/Ablehnen per Discord-Button (aus jedem offenen Status); optionaler Grund geht per DM an die Person. */
+    discordDecide(a: Actor, id: string, b: {
+        status: 'ACCEPTED' | 'REJECTED';
+        reason?: string;
+    }): Promise<{
+        id: string;
+        number: string;
+        status: "REJECTED" | "ACCEPTED";
+        decidedByName: string | null;
+        reason: string | null;
     }>;
 }
 export {};

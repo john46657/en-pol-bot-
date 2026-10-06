@@ -114,4 +114,42 @@ describe('qualification applications', () => {
     expect((await admin.put('/api/v1/qualifications/config').send({ ...body, policeForm: undefined })).status).toBe(200);
     expect((await http().get('/api/v1/applications/form')).body).toEqual(policeForm);
   });
+
+  it('team view in Discord: details in the post, own channel per unit, decision with reason, history, police quick decision', async () => {
+    const admin = (await login(app, 'q_admin')).agent;
+    const cur = (await admin.get('/api/v1/qualifications/config')).body;
+    const units = [{ key: 'flugstaffel', name: 'Flugstaffel', description: '', channelId: '600000000000000001', questions: ['Warum?'] }];
+    expect((await admin.put('/api/v1/qualifications/config').send({ title: cur.title, intro: cur.intro, police: cur.police, units })).status).toBe(200);
+    const D = '300000000000000055';
+    const sub = await http().post('/api/v1/bot/qualifications/applications').set(bot()).send({ unit: 'flugstaffel', discordId: D, discordName: 'flieger', durationSec: 66, joinedAt: '2025-10-01T10:00:00Z', answers: [{ question: 'Warum?', answer: 'Fliegen' }] });
+    expect(sub.status).toBe(201);
+    const post = await prisma.discordOutbox.findFirstOrThrow({ where: { type: 'qualification.submitted', payload: { path: ['id'], equals: sub.body.id } } });
+    expect(post.payload).toMatchObject({ channelId: '600000000000000001', durationSec: 66, joinedAt: '2025-10-01T10:00:00.000Z', discordName: 'flieger' });
+    expect(String((post.payload as { dashboardUrl: string }).dashboardUrl)).toMatch(new RegExp(`/qualifications\\?id=${sub.body.id}$`));
+    // Entscheidung mit Grund per Button (Bot im Namen der Leitung)
+    const r = await http().post(`/api/v1/qualifications/applications/${sub.body.id}/decision`).set(bot(LEAD_D)).send({ status: 'REJECTED', reason: 'Bitte in 2 Wochen erneut' });
+    expect(r.body).toMatchObject({ status: 'REJECTED', decidedByName: 'q_lead', reason: 'Bitte in 2 Wochen erneut' });
+    const dm = await prisma.discordOutbox.findFirstOrThrow({ where: { type: 'qualification.decided', payload: { path: ['discordId'], equals: D } } });
+    expect(dm.payload).toMatchObject({ reason: 'Bitte in 2 Wochen erneut' });
+    const hist = await http().get(`/api/v1/qualifications/history?discordId=${D}`).set(bot(LEAD_D));
+    expect(hist.body).toMatchObject([{ number: sub.body.number, status: 'REJECTED', decisionReason: 'Bitte in 2 Wochen erneut' }]);
+    expect((await http().get(`/api/v1/qualifications/applications/${sub.body.id}`).set(bot(LEAD_D))).body.discordId).toBe(D);
+
+    // Polizei-Bewerbung: Schnell-Entscheidung aus jedem offenen Status, Grund geht per DM, Rechte applications.decide
+    const form = (await http().get('/api/v1/applications/form')).body as { key: string; required: boolean; label: string }[];
+    const answers = Object.fromEntries(form.filter((f) => f.required).map((f) => [f.key, 'Antwort']));
+    await prisma.systemSetting.update({ where: { key: 'discord.channels' }, data: { value: { qualifications: '400000000000000001', applications: '400000000000000002' } } });
+    const P = '300000000000000066';
+    const pa = await http().post('/api/v1/bot/application').set(bot()).send({ robloxUsername: 'Polizist', discordId: P, discordName: 'polizist', durationSec: 120, answers });
+    const ppost = await prisma.discordOutbox.findFirstOrThrow({ where: { type: 'application.submitted', payload: { path: ['number'], equals: pa.body.number } } });
+    expect(ppost.payload).toMatchObject({ discordName: 'polizist', durationSec: 120, answers: [{ question: form.find((f) => f.required)!.label, answer: 'Antwort' }] });
+    const id = (ppost.payload as { id: string }).id;
+    expect((await http().post(`/api/v1/applications/${id}/discord-decision`).set(bot(LEAD_D)).send({ status: 'ACCEPTED' })).status).toBe(403); // SEK Leitung hat kein applications.decide
+    const a2 = (await login(app, 'q_admin')).agent;
+    const ok = await a2.post(`/api/v1/applications/${id}/discord-decision`).send({ status: 'ACCEPTED', reason: 'Willkommen!' });
+    expect(ok.body).toMatchObject({ status: 'ACCEPTED', reason: 'Willkommen!' });
+    expect((await a2.post(`/api/v1/applications/${id}/discord-decision`).send({ status: 'REJECTED' })).status).toBe(409);
+    expect((await prisma.discordOutbox.findFirstOrThrow({ where: { type: 'application.decided', payload: { path: ['discordId'], equals: P } } })).payload).toMatchObject({ status: 'ACCEPTED', reason: 'Willkommen!' });
+    expect((await a2.get(`/api/v1/applications/history?discordId=${P}`)).body).toMatchObject([{ status: 'ACCEPTED', decisionReason: 'Willkommen!' }]);
+  });
 });
