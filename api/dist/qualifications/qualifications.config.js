@@ -11,7 +11,7 @@ exports.unitSchema = zod_1.z.object({
     roleId: zod_1.z.union([zod_1.z.string().regex(/^\d{15,25}$/), zod_1.z.literal('')]).optional(),
     /** Eigener Discord-Channel für eingehende Bewerbungen dieser Einheit (sonst der allgemeine Qualifications-Channel). */
     channelId: zod_1.z.union([zod_1.z.string().regex(/^\d{15,25}$/), zod_1.z.literal('')]).optional(),
-    questions: zod_1.z.array(zod_1.z.string().trim().min(3).max(300)).min(1).max(15),
+    questions: zod_1.z.array(zod_1.z.string().trim().min(3).max(300)).min(1).max(50),
 });
 /** Texte des Panels für die normale Bewerbung bei EN Polizei (/bewerbungspanel); die Fragen sind das Bewerbungsformular (`application.form`). */
 exports.policeSchema = zod_1.z.object({
@@ -28,7 +28,7 @@ exports.configSchema = zod_1.z.object({
 exports.formFieldSchema = zod_1.z.object({ key: zod_1.z.string().regex(/^[a-zA-Z][\w]{0,40}$/), label: zod_1.z.string().trim().min(1).max(300), required: zod_1.z.boolean(), maxLength: zod_1.z.number().int().min(1).max(5000) });
 /** Speichern aus „Qualifications → Setup“: Panels + Einheiten und optional die Fragen der Polizei-Bewerbung. */
 exports.saveSchema = exports.configSchema.extend({
-    policeForm: zod_1.z.array(exports.formFieldSchema).min(1).max(30).refine((f) => new Set(f.map((x) => x.key)).size === f.length, 'Question keys must be unique.').optional(),
+    policeForm: zod_1.z.array(exports.formFieldSchema).min(1).max(50).refine((f) => new Set(f.map((x) => x.key)).size === f.length, 'Question keys must be unique.').optional(),
 });
 const Q1 = 'Wie ist dein Roblox-Username und dein Discord-Username?';
 /** Startkonfiguration – im Web unter „Qualifications → Setup“ änderbar. */
