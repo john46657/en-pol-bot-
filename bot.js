@@ -76516,7 +76516,7 @@ var sweepSessions = (now = Date.now()) => {
   for (const [k, s] of sessions) if (s.expiresAt <= now) sessions.delete(k);
 };
 var CANCEL = { id: "quali:cancel", label: "Bewerbung abbrechen", style: "danger" };
-var getConfig = (api2) => api2.service("GET", "/bot/qualifications");
+var getConfig = (api2, guildId) => api2.service("GET", `/bot/qualifications${guildId ? `?guildId=${guildId}` : ""}`);
 var field = (f) => {
   const n = normalizeField(f);
   return { ...n, maxLength: Math.min(n.maxLength, 2e3) };
@@ -76542,13 +76542,13 @@ _W\xE4hle unten ${f.multiple ? "eine oder mehrere Optionen" : "eine Option"} aus
   };
 };
 var answerText = (a) => a === null ? "\u2014 (\xFCbersprungen)" : Array.isArray(a) ? a.join(", ") : a;
-async function loadFlow(api2, key) {
+async function loadFlow(api2, key, guildId) {
   if (!key) return null;
   if (key === POLICE) {
-    const [form, cfg2] = await Promise.all([api2.service("GET", "/applications/form"), getConfig(api2).catch(() => void 0)]);
+    const [form, cfg2] = await Promise.all([api2.service("GET", `/applications/form${guildId ? `?guildId=${guildId}` : ""}`), getConfig(api2, guildId).catch(() => void 0)]);
     return { key, name: cfg2?.police?.name ? `Bewerbung \u2013 ${cfg2.police.name}` : POLICE_NAME, appName: cfg2?.police?.name ?? "EN Polizei", enabled: cfg2?.police?.enabled !== false, settings: cfg2?.police?.settings ?? {}, questions: [{ text: "Wie ist dein Roblox-Benutzername?", key: "roblox", field: field({ key: "roblox", label: "Roblox", required: true, maxLength: 20 }) }, ...form.map((f) => ({ text: f.label, key: f.key, field: field(f) }))] };
   }
-  const unit = (await getConfig(api2)).units.find((u) => u.key === key);
+  const unit = (await getConfig(api2, guildId)).units.find((u) => u.key === key);
   return unit ? { key: unit.key, name: unit.name, appName: unit.name, enabled: unit.enabled !== false, settings: unit.settings ?? {}, questions: unit.questions.map(asField).map((f) => ({ text: f.label, key: f.key, field: field(f) })) } : null;
 }
 async function openApplication(api2, key, discordId) {
@@ -76571,7 +76571,7 @@ var POLICE_PANEL = { title: "\u{1F4CB} Bewerbung bei EN Polizei", color: COLORS.
 async function offer(c, key) {
   const running = sessions.get(c.discordId);
   if (running && running.expiresAt > Date.now()) return errorReply(`Du hast bereits eine laufende Bewerbung (**${plain(running.unitName)}**) in deinen Direktnachrichten. Beende oder brich sie dort zuerst ab.`);
-  const flow = await loadFlow(c.api, key);
+  const flow = await loadFlow(c.api, key, c.guildId);
   if (!flow) return errorReply("Diese Auswahl gibt es nicht mehr. Bitte das Panel neu laden.");
   if (!flow.enabled) return errorReply(`Bewerbungen f\xFCr **${plain(flow.name)}** sind derzeit geschlossen.`);
   const blocked = roleBlock(flow.settings, c.guildId ? c.memberRoleIds ?? [] : void 0);
@@ -76617,7 +76617,7 @@ var QUALI_COMMANDS = [
       if (!c.isGuildAdmin) return errorReply("Daf\xFCr brauchst du auf diesem Discord-Server das Recht \u201EServer verwalten\u201C.");
       if (!c.channelId || !c.platform) return errorReply("Panel kann hier nicht gepostet werden.");
       try {
-        const police = (await getConfig(c.api).catch(() => void 0))?.police;
+        const police = (await getConfig(c.api, c.guildId).catch(() => void 0))?.police;
         const embed = police ? { title: clip(police.title, 256), color: COLORS.info, description: clip(police.description, 4e3) } : POLICE_PANEL;
         await c.platform.postPanel({ channelId: c.channelId, embed, buttons: [{ id: `quali:pick:${POLICE}`, label: "Jetzt bewerben", emoji: "\u{1F4CB}", style: "primary" }] });
       } catch {
@@ -76634,7 +76634,7 @@ var QUALI_COMMANDS = [
       if (!c.isGuildAdmin) return errorReply("Daf\xFCr brauchst du auf diesem Discord-Server das Recht \u201EServer verwalten\u201C.");
       if (!c.channelId || !c.platform) return errorReply("Panel kann hier nicht gepostet werden.");
       try {
-        const cfg2 = await getConfig(c.api);
+        const cfg2 = await getConfig(c.api, c.guildId);
         await c.platform.postPanel({ channelId: c.channelId, embed: panelEmbed(cfg2), select: { id: "quali:pick", placeholder: "Triff eine Auswahl", options: cfg2.units.map((u) => ({ label: clip(`${u.name}${u.enabled === false ? " (geschlossen)" : ""}`, 100), value: u.key, ...u.description ? { description: clip(plain(u.description).replace(/\*|_/g, ""), 100) } : {} })) } });
         const ch = await c.config?.().catch(() => void 0);
         return okReply(`Qualifikations-Panel gepostet.${ch?.qualifications ? "" : " Tipp: In den Einstellungen einen **Qualifications channel** hinterlegen \u2013 dort landen die Bewerbungen mit Annehmen/Ablehnen-Buttons."}`);
@@ -76711,7 +76711,7 @@ var parseDecision = (rest) => {
   return (kind2 === "q" || kind2 === "p") && id && status && STATUS.has(status) ? { kind: kind2, id, status } : null;
 };
 async function decide(c, d, reason) {
-  const cfg2 = await getConfig(c.api).catch(() => void 0);
+  const cfg2 = await getConfig(c.api, c.guildId).catch(() => void 0);
   let managers = d.kind === "p" ? cfg2?.police?.settings?.roles?.managers : void 0;
   if (d.kind === "q" && cfg2?.units.some((u) => u.settings?.roles?.managers?.length)) {
     const app = await c.api.asUser(c.discordId, "GET", `/qualifications/applications/${d.id}`);
@@ -76814,7 +76814,7 @@ ${lines.join("\n") || "Keine Bewerbungen."}`, 4e3) }] };
         if (running.unit === rest[0]) return okReply(`Deine Bewerbung l\xE4uft bereits \u2013 Frage ${running.answers.length + 1}/${running.questions.length}: ${plain(running.questions[running.answers.length].text)}`);
         return errorReply(`Du hast bereits eine laufende Bewerbung (**${plain(running.unitName)}**). Beende oder brich sie zuerst ab.`);
       }
-      const flow = await loadFlow(c.api, rest[0]);
+      const flow = await loadFlow(c.api, rest[0], c.guildId ?? guildOf.get(c.discordId));
       if (!flow) return errorReply("Diese Auswahl gibt es nicht mehr. Bitte das Panel neu laden.");
       if (!flow.enabled) return errorReply(`Bewerbungen f\xFCr **${plain(flow.name)}** sind derzeit geschlossen.`);
       const open = await openApplication(c.api, flow.key, c.discordId);
@@ -77050,7 +77050,7 @@ var TICKET_COMMAND = {
     if (!c.guildId) return errorReply("Tickets gehen nur auf einem Server, nicht per Direktnachricht.");
     const member = typeof c.opts.mitglied === "string" && c.opts.mitglied !== c.discordId ? c.opts.mitglied : null;
     try {
-      const all = await c.api.service("GET", "/bot/support-tickets/categories");
+      const all = await c.api.service("GET", `/bot/support-tickets/categories?guildId=${c.guildId}`);
       const roles = c.memberRoleIds ?? [];
       const cats = member ? all : all.filter((x) => (!x.requiredRoleIds.length || x.requiredRoleIds.some((r) => roles.includes(r))) && (!x.allowedUserIds.length || x.allowedUserIds.includes(c.discordId)));
       if (!cats.length) return errorReply(all.length ? "Du darfst derzeit keine Ticket-Art \xF6ffnen." : "Es ist noch keine Ticket-Art eingerichtet (Dashboard \u2192 Support Tickets \u2192 Categories).");
@@ -82313,31 +82313,26 @@ function wireReady(client0) {
     console.log(`Server (${c.guilds.cache.size}): ${[...c.guilds.cache.values()].map((g) => g.name).join(", ") || "keiner \u2013 Bot mit dem Link oben einladen"}`);
     void checkApi();
     const json = COMMANDS.map(toBuilder);
-    const guilds = guildIds(cfg);
-    if (guilds.length) {
-      try {
-        await c.application.commands.set([]);
-      } catch (e) {
-        console.error(`could not clear global commands: ${e instanceof Error ? e.message : e}`);
-      }
-      for (const g of guilds) {
-        try {
-          await c.application.commands.set(json, g);
-          console.log(`${json.length} slash commands registered for guild ${g}`);
-        } catch (e) {
-          console.error(`could not register commands for guild ${g} (is the bot invited there with the applications.commands scope?): ${e instanceof Error ? e.message : e}`);
-        }
-      }
-    } else {
-      await c.application.commands.set(json);
-      console.log(`${json.length} slash commands registered globally (can take up to an hour to appear)`);
-      for (const g of c.guilds.cache.keys()) {
-        try {
-          await c.application.commands.set([], g);
-        } catch {
-        }
-      }
+    try {
+      await c.application.commands.set([]);
+    } catch (e) {
+      console.error(`could not clear global commands: ${e instanceof Error ? e.message : e}`);
     }
+    const register = async (g, name) => {
+      try {
+        await c.application.commands.set(json, g);
+        console.log(`${json.length} slash commands registered for ${name ?? g}`);
+      } catch (e) {
+        console.error(`could not register commands for ${name ?? g} (invited with the applications.commands scope?): ${e instanceof Error ? e.message : e}`);
+      }
+    };
+    const all = new Map([...c.guilds.cache.values()].map((g) => [g.id, g.name]));
+    for (const g of guildIds(cfg)) if (!all.has(g)) all.set(g, g);
+    for (const [id, name] of all) await register(id, name);
+    c.on("guildCreate", (g) => {
+      console.log(`added to server ${g.name}`);
+      void register(g.id, g.name);
+    });
     startOutboxLoop(
       api,
       async (channelId, embeds, buttons, opts) => {

@@ -24,6 +24,8 @@ Regeln: eine offene Bewerbung pro Person und Einheit; eine laufende Bewerbung im
 - Tab **Setup**: alle Einstellungen.
 
 **Einstellungen je Bewerbung (wie bei Appy)** – Channels und Rollen wählst du aus Listen mit Namen. Die Listen meldet der Bot automatisch für jeden Server, auf dem er ist.
+
+**Mehrere Server:** Oben links bei „EN Polizei“ einen Server wählen → *Setup* gilt nur für diesen Server (eigene Fragen, Channels, Rollen, Einheiten). Ohne eigene Einstellungen nutzt ein Server die gemeinsamen (*All servers*); „Use shared settings again“ setzt ihn zurück. Die Liste zeigt dann nur Bewerbungen von diesem Server.
 - *Requirements*:
   - **Enabled** öffnet oder schließt die Bewerbung; geschlossen nimmt sie keine Einsendungen an.
   - **Application name**: Name der Bewerbung.

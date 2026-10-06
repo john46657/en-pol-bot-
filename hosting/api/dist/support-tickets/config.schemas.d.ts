@@ -55,6 +55,8 @@ export declare const buttonSchema: z.ZodObject<{
     emoji?: string | undefined;
 }>;
 export declare const categorySchema: z.ZodObject<{
+    /** Discord-Server, auf dem es diese Ticket-Art gibt (leer = alle Server). */
+    guildId: z.ZodEffects<z.ZodOptional<z.ZodUnion<[z.ZodString, z.ZodLiteral<"">]>>, string | null, string | undefined>;
     name: z.ZodString;
     description: z.ZodDefault<z.ZodString>;
     emoji: z.ZodEffects<z.ZodOptional<z.ZodString>, string | null, string | undefined>;
@@ -169,6 +171,7 @@ export declare const categorySchema: z.ZodObject<{
     name: string;
     description: string;
     active: boolean;
+    guildId: string | null;
     color: number;
     cooldownMinutes: number;
     questions: {
@@ -226,6 +229,7 @@ export declare const categorySchema: z.ZodObject<{
     name: string;
     description?: string | undefined;
     active?: boolean | undefined;
+    guildId?: string | undefined;
     color?: number | undefined;
     cooldownMinutes?: number | undefined;
     questions?: {
@@ -282,6 +286,7 @@ export declare const categorySchema: z.ZodObject<{
 }>;
 export type CategoryInput = z.infer<typeof categorySchema>;
 export declare const panelSchema: z.ZodObject<{
+    guildId: z.ZodEffects<z.ZodOptional<z.ZodUnion<[z.ZodString, z.ZodLiteral<"">]>>, string | null, string | undefined>;
     name: z.ZodString;
     title: z.ZodDefault<z.ZodString>;
     description: z.ZodDefault<z.ZodString>;
@@ -303,6 +308,7 @@ export declare const panelSchema: z.ZodObject<{
 }, "strip", z.ZodTypeAny, {
     name: string;
     description: string;
+    guildId: string | null;
     color: number;
     title: string;
     channelId: string | null;
@@ -322,6 +328,7 @@ export declare const panelSchema: z.ZodObject<{
 }, {
     name: string;
     description?: string | undefined;
+    guildId?: string | undefined;
     color?: number | undefined;
     title?: string | undefined;
     channelId?: string | undefined;

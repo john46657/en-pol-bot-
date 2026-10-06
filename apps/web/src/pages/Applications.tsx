@@ -4,7 +4,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type { FormField } from '@enrp/shared';
 import { api, type Page } from '../lib/api';
 import { useAuth } from '../lib/auth';
-import { GuildTag } from '../lib/guilds';
+import { GuildTag, useGuilds, useServer } from '../lib/guilds';
 import { errText } from '../lib/tickets';
 import { DecisionButtons } from '../components/DecisionButtons';
 import { FormQuestionsEditor } from '../components/FormQuestionsEditor';
@@ -16,7 +16,7 @@ interface Application {
   source: string; answers: Record<string, string>; createdAt: string; durationSec: number | null; decisionReason: string | null; decidedByName: string | null;
 }
 interface PoliceCfg extends Partial<AppCommon> { title: string; description: string; name?: string }
-interface QualiConfig { title: string; intro: string; units: unknown[]; police: PoliceCfg; policeForm: FormField[] }
+interface QualiConfig { title: string; intro: string; units: unknown[]; police: PoliceCfg; policeForm: FormField[]; own?: boolean }
 const OPEN = ['SUBMITTED', 'SCREENING', 'INTERVIEW', 'PENDING_DECISION'];
 const STATUS_FILTER = [['OPEN', 'Open'], ['ACCEPTED', 'Accepted'], ['REJECTED', 'Rejected'], ['WITHDRAWN', 'Withdrawn'], ['', 'All']] as const;
 
@@ -31,8 +31,9 @@ export function Applications() {
   const [q, setQ] = useState('');
   const [page, setPage] = useState(1);
   const [err, setErr] = useState<string>();
-  const form = useQuery({ queryKey: ['application-form'], queryFn: () => api<FormField[]>('/applications/form') });
-  const list = useQuery({ queryKey: ['applications-cards', status, q, page], queryFn: () => api<Page<Application>>('/applications', { query: { status, q, page, pageSize: 20 } }), enabled: tab === 'Applications' });
+  const [server] = useServer();
+  const form = useQuery({ queryKey: ['application-form', server], queryFn: () => api<FormField[]>('/applications/form', { query: { guildId: server } }) });
+  const list = useQuery({ queryKey: ['applications-cards', status, q, page, server], queryFn: () => api<Page<Application>>('/applications', { query: { status, q, page, pageSize: 20, guildId: server } }), enabled: tab === 'Applications' });
   const decide = useMutation({
     mutationFn: (v: { id: string; status: 'ACCEPTED' | 'REJECTED'; reason?: string }) => api(`/applications/${v.id}/discord-decision`, { method: 'POST', body: { status: v.status, ...(v.reason ? { reason: v.reason } : {}) } }),
     onSuccess: () => { setErr(undefined); void qc.invalidateQueries({ queryKey: ['applications-cards'] }); }, onError: (e) => setErr(errText(e)),
@@ -89,7 +90,8 @@ export function Applications() {
 /** Alles zur Polizei-Bewerbung wie bei Appy: Panel-Texte, Requirements, Fragen, Nachrichten, Rollen, Sonstiges. */
 function PoliceSetup() {
   const qc = useQueryClient();
-  const config = useQuery({ queryKey: ['quali-config'], queryFn: () => api<QualiConfig>('/qualifications/config') });
+  const [server] = useServer();
+  const config = useQuery({ queryKey: ['quali-config', server], queryFn: () => api<QualiConfig>('/qualifications/config', { query: { guildId: server } }) });
   const [title, setTitle] = useState('');
   const [text, setText] = useState('');
   const [name, setName] = useState('');
@@ -105,7 +107,7 @@ function PoliceSetup() {
   const save = useMutation({
     mutationFn: () => {
       const c = config.data!;
-      return api('/qualifications/config', { method: 'PUT', body: { title: c.title, intro: c.intro, units: c.units, police: { title, description: text, name, ...common }, policeForm: questions } });
+      return api('/qualifications/config', { method: 'PUT', query: { guildId: server }, body: { title: c.title, intro: c.intro, units: c.units, police: { title, description: text, name, ...common }, policeForm: questions } });
     },
     onSuccess: () => { setMsg('Saved. Changes apply to new applications right away; post the panel again (/bewerbungspanel) to show a changed text.'); void qc.invalidateQueries({ queryKey: ['quali-config'] }); void qc.invalidateQueries({ queryKey: ['application-form'] }); },
   });
@@ -113,6 +115,7 @@ function PoliceSetup() {
   if (config.isLoading || !common) return <SkeletonRows />;
   return (
     <div className="grid gap-4">
+      <ServerScope own={config.data?.own} onReset={() => void qc.invalidateQueries({ queryKey: ['quali-config'] })} />
       <Card title="Panel in Discord (/bewerbungspanel)">
         <div className="grid gap-3 md:grid-cols-2">
           <Field label="Panel title">{(id) => <Input id={id} value={title} maxLength={100} onChange={(e) => setTitle(e.target.value)} />}</Field>
@@ -129,6 +132,26 @@ function PoliceSetup() {
         <Button disabled={save.isPending} onClick={() => { setMsg(undefined); save.mutate(); }}>Save</Button>
         {msg && <span className="text-sm text-muted">{msg}</span>}
       </div>
+    </div>
+  );
+}
+
+/** Hinweis oben im Setup: für welchen Server gerade eingestellt wird (Dropdown oben links). */
+export function ServerScope({ own, onReset }: { own?: boolean; onReset: () => void }) {
+  const [server] = useServer();
+  const guilds = useGuilds();
+  const name = guilds.data?.find((g) => g.id === server)?.name;
+  const reset = useMutation({ mutationFn: () => api('/qualifications/config', { method: 'DELETE', query: { guildId: server } }), onSuccess: onReset });
+  if ((guilds.data?.length ?? 0) < 2) return null;
+  return (
+    <div className="flex flex-wrap items-center gap-2 rounded-lg border border-primary/40 bg-primary/10 p-3 text-sm">
+      {server ? <>
+        <span>Settings for server <b>{name ?? server}</b>.</span>
+        {own ? <>
+          <span className="text-muted">This server has its own settings.</span>
+          <Button size="sm" variant="secondary" disabled={reset.isPending} onClick={() => reset.mutate()}>Use shared settings again</Button>
+        </> : <span className="text-muted">Currently uses the shared settings – saving creates own settings for this server.</span>}
+      </> : <span><b>All servers:</b> these are the shared settings, used by every server without own settings. Choose a server top left to set it up separately.</span>}
     </div>
   );
 }

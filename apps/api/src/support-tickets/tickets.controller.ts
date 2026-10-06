@@ -43,7 +43,7 @@ export class SupportTicketsController {
   constructor(private readonly s: SupportTicketsService, private readonly cfg: TicketConfigService) {}
 
   // ---- Konfiguration ----
-  @Get('config') @RequirePermission('ticket.view') config() { return this.cfg.all(); }
+  @Get('config') @RequirePermission('ticket.view') config(@Query(zodBody(z.object({ guildId: snowflake.optional() }))) q: { guildId?: string }) { return this.cfg.all(q.guildId); }
   @Put('settings') @RequirePermission('ticket.settings') settings(@CurrentUser() u: AuthUser, @Body(zodBody(settingsSchema)) b: z.infer<typeof settingsSchema>) { return this.cfg.saveSettings(actor(u), b); }
   @Post('categories') @RequirePermission('ticket.settings') createCategory(@CurrentUser() u: AuthUser, @Body(zodBody(categorySchema)) b: z.infer<typeof categorySchema>) { return this.cfg.saveCategory(actor(u), null, b); }
   @Put('categories/:id') @RequirePermission('ticket.settings') updateCategory(@CurrentUser() u: AuthUser, @Param('id', ParseUUIDPipe) id: string, @Body(zodBody(categorySchema)) b: z.infer<typeof categorySchema>) { return this.cfg.saveCategory(actor(u), id, b); }
@@ -118,7 +118,7 @@ export class BotSupportTicketsController {
   @BotService() @Post(':id/rating-comment') @HttpCode(200) rateComment(@Param('id', ParseUUIDPipe) id: string, @Body(zodBody(z.object({ discordId: snowflake, comment: z.string().trim().min(1).max(1000) }))) b: { discordId: string; comment: string }) { return this.s.rateComment(id, b.discordId, b.comment); }
   @BotService() @Post('messages') @HttpCode(200) message(@Body(zodBody(botMessage)) b: z.infer<typeof botMessage>) { return this.s.message(b); }
   @BotService() @Get('channels') channels() { return this.s.channels(); }
-  @BotService() @Get('categories') categories() { return this.s.openableCategories(); }
+  @BotService() @Get('categories') categories(@Query(zodBody(z.object({ guildId: snowflake.optional() }))) q: { guildId?: string }) { return this.s.openableCategories(q.guildId); }
   @BotService() @Get(':id/close-options') closeOptions(@Param('id', ParseUUIDPipe) id: string) { return this.s.closeOptions(id); }
   @BotService() @Post('panels/:id/posted') @HttpCode(200) posted(@Param('id', ParseUUIDPipe) id: string, @Body(zodBody(z.object({ channelId: snowflake, messageId: snowflake }))) b: { channelId: string; messageId: string }) { return this.s.panelPosted(id, b.channelId, b.messageId); }
   @BotService() @Get('transcripts/:id') async transcript(@Param('id', ParseUUIDPipe) id: string) { const t = await this.s.transcript(null, id); return { html: t.html }; }

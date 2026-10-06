@@ -243,3 +243,23 @@ describe('/support in Discord', () => {
     expect((await http().post('/api/v1/bot/support-tickets/open').set(bot()).send({ categoryId, guildId: GUILD, discordId: MEMBER, discordName: 'Gast', memberRoleIds: [ROLE_MEMBER] })).status).toBe(409);
   });
 });
+
+describe('several Discord servers', () => {
+  it('ticket types can belong to one server: only listed and openable there; shared ones work everywhere', async () => {
+    const admin = (await login(app, 'tk_admin')).agent;
+    const G2 = '900000000000000002';
+    const own = await admin.post('/api/v1/support-tickets/categories').send({ name: 'Nur Server 2', guildId: G2 });
+    expect(own.status).toBe(201);
+    expect(own.body.guildId).toBe(G2);
+    expect((await admin.post('/api/v1/support-tickets/categories').send({ name: 'x', guildId: 'abc' })).status).toBe(400);
+    const names = async (q: string) => (await http().get(`/api/v1/bot/support-tickets/categories${q}`).set(bot())).body.map((c: { name: string }) => c.name);
+    expect(await names(`?guildId=${G2}`)).toContain('Nur Server 2');
+    expect(await names(`?guildId=${GUILD}`)).not.toContain('Nur Server 2');
+    expect(await names(`?guildId=${GUILD}`)).toContain('Spieler melden'); // gemeinsam (ohne Server)
+    expect((await admin.get(`/api/v1/support-tickets/config?guildId=${GUILD}`)).body.categories.map((c: { name: string }) => c.name)).not.toContain('Nur Server 2');
+    expect((await admin.get('/api/v1/support-tickets/config')).body.categories.map((c: { name: string }) => c.name)).toContain('Nur Server 2');
+    const wrong = await http().post('/api/v1/bot/support-tickets/open').set(bot()).send({ categoryId: own.body.id, guildId: GUILD, discordId: '900000000000000077', discordName: 'Gast' });
+    expect(wrong.status).toBe(409);
+    expect((await http().post('/api/v1/bot/support-tickets/open').set(bot()).send({ categoryId: own.body.id, guildId: G2, discordId: '900000000000000077', discordName: 'Gast' })).status).toBe(201);
+  });
+});

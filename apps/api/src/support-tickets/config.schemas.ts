@@ -18,7 +18,10 @@ export const buttonSchema = z.object({
   action: z.enum(TICKET_ACTION_KEYS as [string, ...string[]]), label: z.string().trim().min(1).max(80), emoji: z.string().trim().max(64).optional(), style, enabled: z.boolean(),
 });
 
+const guildOpt = z.union([snowflake, z.literal('')]).optional().transform((v) => v || null);
 export const categorySchema = z.object({
+  /** Discord-Server, auf dem es diese Ticket-Art gibt (leer = alle Server). */
+  guildId: guildOpt,
   name: z.string().trim().min(1).max(80), description: z.string().trim().max(500).default(''), emoji, color: color.default(0x3b82f6), buttonStyle: style.default('secondary'),
   position: z.number().int().min(0).max(1000).default(0), active: z.boolean().default(true),
   discordCategoryId: z.union([snowflake, z.literal('')]).optional().transform((v) => v || null),
@@ -44,6 +47,7 @@ export const categorySchema = z.object({
 export type CategoryInput = z.infer<typeof categorySchema>;
 
 export const panelSchema = z.object({
+  guildId: guildOpt,
   name: z.string().trim().min(1).max(80), title: z.string().trim().max(256).default(''), description: z.string().trim().max(4000).default(''), emoji,
   color: color.default(0x3b82f6), thumbnailUrl: url, imageUrl: url, bannerUrl: url, footer: z.string().trim().max(2048).optional().transform((v) => v || null), footerIconUrl: url,
   authorName: z.string().trim().max(256).optional().transform((v) => v || null), authorIconUrl: url,

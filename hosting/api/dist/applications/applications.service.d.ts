@@ -11,7 +11,8 @@ export declare class ApplicationsService {
     private readonly audit;
     private readonly discord;
     constructor(prisma: PrismaService, audit: AuditService, discord: DiscordService);
-    form(): Promise<FormField[]>;
+    /** Formular eines Servers (`application.form@<guildId>`), sonst das gemeinsame. */
+    form(guildId?: string | null): Promise<FormField[]>;
     /** Öffentliche Bewerbung (kein Account nötig). Antworten werden strikt gegen das konfigurierte Formular validiert. */
     submit(d: {
         robloxUsername: string;
@@ -28,7 +29,7 @@ export declare class ApplicationsService {
         status: string;
     }>;
     /** Einstellungen der Polizei-Bewerbung (Qualifications/Applications → Setup). */
-    police(): Promise<{
+    police(guildId?: string | null): Promise<{
         name: string;
         description: string;
         settings: {
@@ -94,7 +95,7 @@ export declare class ApplicationsService {
         decidedByName: string | null;
         reason: string | null;
     }>;
-    list(p: PageQuery, status?: string): Promise<{
+    list(p: PageQuery, status?: string, guildId?: string): Promise<{
         items: {
             decidedByName: string | null;
             number: string;

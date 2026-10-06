@@ -1,13 +1,14 @@
 import { useQuery } from '@tanstack/react-query';
 import type { ButtonStyleName, ClaimMode, CloseReasonMode, CloseReasonSource, StatusKind, TicketButtonConfig, TicketQuestion } from '@enrp/shared';
 import { api, ApiError } from './api';
+import { useServer } from './guilds';
 
 // ---- Support-Tickets: Typen der API-Antworten (Pfad /support-tickets) ----
 export interface TicketStatusCfg { id: string; name: string; emoji: string; color: number; position: number; kind: StatusKind; isDefault: boolean; isClaimed: boolean; isEscalation: boolean; isClose: boolean }
 export interface TicketPriorityCfg { id: string; name: string; emoji: string; color: number; position: number; isDefault: boolean; allowedRoleNames: string[]; notifyRoleIds: string[] }
 export interface TicketReasonCfg { id: string; text: string; position: number }
 export interface TicketCategoryCfg {
-  id: string; name: string; description: string; emoji: string | null; color: number; buttonStyle: ButtonStyleName; position: number; active: boolean;
+  id: string; guildId: string | null; name: string; description: string; emoji: string | null; color: number; buttonStyle: ButtonStyleName; position: number; active: boolean;
   discordCategoryId: string | null; channelNameFormat: string; staffRoleIds: string[]; extraRoleIds: string[]; requiredRoleIds: string[]; allowedUserIds: string[]; accessRoleNames: string[];
   maxOpen: number; cooldownMinutes: number; defaultPriorityId: string | null; questions: TicketQuestion[];
   welcomeTitle: string; welcomeMessage: string; mentionStaff: boolean; mentionText: string; buttons: TicketButtonConfig[];
@@ -18,7 +19,7 @@ export interface TicketCategoryCfg {
   escalationRoleIds: string[]; escalationPriorityId: string | null; escalationMessage: string;
 }
 export interface TicketPanelCfg {
-  id: string; name: string; title: string; description: string; emoji: string | null; color: number; thumbnailUrl: string | null; imageUrl: string | null; bannerUrl: string | null;
+  id: string; guildId: string | null; name: string; title: string; description: string; emoji: string | null; color: number; thumbnailUrl: string | null; imageUrl: string | null; bannerUrl: string | null;
   footer: string | null; footerIconUrl: string | null; authorName: string | null; authorIconUrl: string | null; style: 'BUTTONS' | 'DROPDOWN'; placeholder: string;
   channelId: string | null; categoryIds: string[]; allowedRoleIds: string[]; position: number; messageChannelId: string | null; messageId: string | null;
 }
@@ -53,7 +54,11 @@ export interface TicketStats {
   perCategory: { id: string; name: string; total: number; open: number }[]; perStaff: { discordId: string; tickets: number; closed: number }[]; ratings: RatingSummary; names: Record<string, string>;
 }
 
-export const useTicketConfig = () => useQuery({ queryKey: ['ticket-config'], queryFn: () => api<TicketConfig>('/support-tickets/config') });
+/** Einstellungen für den gewählten Server (Kategorien/Panels dieses Servers + die für alle Server). */
+export const useTicketConfig = () => {
+  const [server] = useServer();
+  return useQuery({ queryKey: ['ticket-config', server], queryFn: () => api<TicketConfig>('/support-tickets/config', { query: { guildId: server } }) });
+};
 
 export const hex = (n: number) => `#${(n >>> 0).toString(16).padStart(6, '0').slice(-6)}`;
 export const fromHex = (s: string) => parseInt(s.replace('#', ''), 16) || 0;

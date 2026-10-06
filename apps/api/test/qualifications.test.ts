@@ -247,4 +247,35 @@ describe('qualification applications', () => {
     expect((await prisma.discordOutbox.findFirstOrThrow({ where: { type: 'application.decided', payload: { path: ['discordId'], equals: P } } })).payload).toMatchObject({ status: 'ACCEPTED', reason: 'Willkommen!' });
     expect((await a2.get(`/api/v1/applications/history?discordId=${P}`)).body).toMatchObject([{ status: 'ACCEPTED', decisionReason: 'Willkommen!' }]);
   });
+  it('per server: own settings with fallback to the shared ones, reset, bot reads by guild, list filter', async () => {
+    const admin = (await login(app, 'q_admin')).agent;
+    const G = '700000000000000001', G2 = '700000000000000002';
+    const shared = (await admin.get('/api/v1/qualifications/config')).body;
+    expect(shared.own).toBe(true);
+    const viaG = (await admin.get(`/api/v1/qualifications/config?guildId=${G}`)).body;
+    expect(viaG).toMatchObject({ own: false, title: shared.title });
+    expect((await admin.get('/api/v1/qualifications/config?guildId=abc')).status).toBe(400);
+    // eigener Server: andere Einheiten + Polizei-Name; das Formular wird von den gemeinsamen übernommen
+    const units = [{ key: 'reiter', name: 'Reiterstaffel', description: '', questions: ['Pferd?'] }];
+    const saved = await admin.put(`/api/v1/qualifications/config?guildId=${G}`).send({ title: 'Server 1', intro: shared.intro, police: { ...shared.police, name: 'Anwärter S1' }, units });
+    expect(saved.status).toBe(200);
+    expect(saved.body).toMatchObject({ own: true, title: 'Server 1', policeForm: shared.policeForm });
+    expect((await admin.get('/api/v1/qualifications/config')).body.title).toBe(shared.title);
+    expect((await http().get(`/api/v1/bot/qualifications?guildId=${G}`).set(bot())).body.units.map((u: { key: string }) => u.key)).toEqual(['reiter']);
+    expect((await http().get(`/api/v1/bot/qualifications?guildId=${G2}`).set(bot())).body.title).toBe(shared.title);
+    expect((await http().get(`/api/v1/applications/form?guildId=${G}`)).body).toEqual(shared.policeForm);
+    // Bewerbung auf Server 1 nutzt dessen Einheiten; auf Server 2 gibt es die Einheit nicht
+    const D = '300000000000000077';
+    expect((await http().post('/api/v1/bot/qualifications/applications').set(bot()).send({ guildId: G2, unit: 'reiter', discordId: D, discordName: 'reiter', answers: [{ question: 'Pferd?', answer: 'Ja' }] })).status).toBe(404);
+    const sub = await http().post('/api/v1/bot/qualifications/applications').set(bot()).send({ guildId: G, unit: 'reiter', discordId: D, discordName: 'reiter', answers: [{ question: 'Pferd?', answer: 'Ja' }] });
+    expect(sub.status).toBe(201);
+    const lead = (await login(app, 'q_admin')).agent;
+    expect((await lead.get(`/api/v1/qualifications/applications?guildId=${G}`)).body.map((a: { id: string }) => a.id)).toEqual([sub.body.id]);
+    expect((await lead.get(`/api/v1/qualifications/applications?guildId=${G2}`)).body).toEqual([]);
+    // zurücksetzen: wieder die gemeinsamen Einstellungen
+    expect((await (await login(app, 'q_lead')).agent.delete(`/api/v1/qualifications/config?guildId=${G}`)).status).toBe(403);
+    const reset = await admin.delete(`/api/v1/qualifications/config?guildId=${G}`);
+    expect(reset.body).toMatchObject({ own: false, title: shared.title });
+    expect((await admin.delete('/api/v1/qualifications/config')).status).toBe(400);
+  });
 });

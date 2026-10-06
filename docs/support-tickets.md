@@ -15,6 +15,8 @@ Ein komplett im Dashboard konfigurierbares Ticket-System für den Discord-Bot. *
    - Discord-Kategorie und Team-Rollen eintragen (Rechtsklick → *ID kopieren*; dafür in Discord den Entwicklermodus einschalten).
 5. **Support Tickets → Panels:** Panel bearbeiten, Ziel-Channel eintragen, speichern, dann **Send to Discord**. Nach Änderungen: **Update in Discord** (bearbeitet dieselbe Nachricht).
 
+**Mehrere Server:** Panels und Ticket-Arten haben ein Feld *Server*. Leer = auf allen Servern; mit Server = nur dort (auch bei `/support`). Ist oben links ein Server gewählt, zeigt das Dashboard nur dessen Tickets, Panels und Ticket-Arten; neue werden automatisch diesem Server zugeordnet. Status, Prioritäten und Gründe sind für alle Server gemeinsam.
+
 ## Ablauf
 
 Ticket öffnen geht auf zwei Wegen:

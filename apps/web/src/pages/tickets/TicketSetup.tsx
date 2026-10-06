@@ -8,6 +8,7 @@ import { api } from '../../lib/api';
 import { Badge, Button, Card, ConfirmDialog, EmptyState, ErrorState, Field, Input, Select, SkeletonRows, Textarea } from '../../components/ui';
 import { DiscordPreview } from '../../components/DiscordPreview';
 import { ChannelPicker, RolePicker } from '../../components/DiscordPickers';
+import { GuildTag, useGuilds, useServer } from '../../lib/guilds';
 import {
   errText, fromHex, hex, idsFromText, idsToText, label, useTicketConfig,
   type TicketCategoryCfg, type TicketConfig, type TicketPanelCfg, type TicketPriorityCfg, type TicketReasonCfg, type TicketSettingsCfg, type TicketStatusCfg,
@@ -68,9 +69,16 @@ const Names = ({ label: l, value, onChange, hint }: { label: string; value: stri
 const move = <T,>(a: T[], i: number, d: -1 | 1) => { const b = [...a]; const j = i + d; if (j < 0 || j >= b.length) return b; [b[i], b[j]] = [b[j]!, b[i]!]; return b; };
 const Section = ({ title, children }: { title: string; children: ReactNode }) => <fieldset className="grid gap-3 rounded-md border border-line p-3"><legend className="px-1 text-sm font-semibold">{title}</legend>{children}</fieldset>;
 
+/** Für welchen Server (leer = alle Server) – nur sichtbar, wenn der Bot auf mehreren Servern ist. */
+function ServerField({ value, onChange }: { value: string | null; onChange: (v: string | null) => void }) {
+  const guilds = useGuilds();
+  if ((guilds.data?.length ?? 0) < 2) return null;
+  return <Field label="Server">{(id) => <Select id={id} value={value ?? ''} onChange={(e) => onChange(e.target.value || null)}><option value="">All servers</option>{guilds.data!.map((g) => <option key={g.id} value={g.id}>{g.name}</option>)}</Select>}</Field>;
+}
+
 // =============================== Panels ===============================
 type PanelDraft = Omit<TicketPanelCfg, 'id' | 'messageChannelId' | 'messageId'> & { id?: string };
-const NEW_PANEL: PanelDraft = { name: 'Neues Panel', title: 'Support', description: 'Wähle unten die passende Kategorie, um ein Ticket zu öffnen.', emoji: '🎫', color: 0x3b82f6, thumbnailUrl: null, imageUrl: null, bannerUrl: null, footer: null, footerIconUrl: null, authorName: null, authorIconUrl: null, style: 'BUTTONS', placeholder: 'Wähle eine Kategorie …', channelId: null, categoryIds: [], allowedRoleIds: [], position: 0 };
+const NEW_PANEL: PanelDraft = { guildId: null, name: 'Neues Panel', title: 'Support', description: 'Wähle unten die passende Kategorie, um ein Ticket zu öffnen.', emoji: '🎫', color: 0x3b82f6, thumbnailUrl: null, imageUrl: null, bannerUrl: null, footer: null, footerIconUrl: null, authorName: null, authorIconUrl: null, style: 'BUTTONS', placeholder: 'Wähle eine Kategorie …', channelId: null, categoryIds: [], allowedRoleIds: [], position: 0 };
 
 /** Gleiche Darstellung wie der Bot (Embed + Buttons bzw. Menü). */
 function panelPreview(p: PanelDraft, cats: TicketCategoryCfg[]): MessageSpec {
@@ -81,6 +89,7 @@ function panelPreview(p: PanelDraft, cats: TicketCategoryCfg[]): MessageSpec {
 }
 
 function Panels({ c }: { c: TicketConfig }) {
+  const [server] = useServer();
   const [edit, setEdit] = useState<PanelDraft>();
   const [del, setDel] = useState<TicketPanelCfg>();
   const [msg, setMsg] = useState<string>();
@@ -89,13 +98,13 @@ function Panels({ c }: { c: TicketConfig }) {
   const publish = useSave((id: string) => api<{ updating: boolean }>(`/support-tickets/panels/${id}/publish`, { method: 'POST', body: {} }), (r) => setMsg((r as { updating: boolean }).updating ? 'The panel message in Discord is being updated.' : 'The panel is being sent to Discord.'));
   if (edit) return <PanelEditor draft={edit} c={c} onDone={() => setEdit(undefined)} />;
   return (
-    <Card title="Ticket panels" actions={<Button size="sm" onClick={() => setEdit({ ...NEW_PANEL, categoryIds: c.categories.filter((x) => x.active).map((x) => x.id) })}>New panel</Button>}>
+    <Card title="Ticket panels" actions={<Button size="sm" onClick={() => setEdit({ ...NEW_PANEL, guildId: server || null, categoryIds: c.categories.filter((x) => x.active).map((x) => x.id) })}>New panel</Button>}>
       <Err error={dup.error ?? remove.error ?? publish.error} />
       {msg && <p role="status" className="mb-2 text-sm text-success">{msg}</p>}
       {!c.panels.length ? <EmptyState text="No panels yet." hint="A panel is the message in Discord with the buttons/menu to open a ticket." /> : (
         <ul className="grid gap-3 md:grid-cols-2">{c.panels.map((p) => (
           <li key={p.id} className="grid gap-2 rounded-md border border-line p-3">
-            <div className="flex flex-wrap items-center justify-between gap-2"><strong>{p.emoji} {p.name}</strong>{p.messageId ? <Badge tone="success">posted</Badge> : <Badge>not posted</Badge>}</div>
+            <div className="flex flex-wrap items-center justify-between gap-2"><strong>{p.emoji} {p.name} <GuildTag id={p.guildId} /></strong>{p.messageId ? <Badge tone="success">posted</Badge> : <Badge>not posted</Badge>}</div>
             <p className="text-xs text-muted">{p.style === 'DROPDOWN' ? 'Dropdown' : 'Buttons'} · {p.categoryIds.length} categories · channel {p.channelId ?? '—'}</p>
             <div className="flex flex-wrap gap-2">
               <Button size="sm" variant="secondary" onClick={() => setEdit(p)}>Edit</Button>
@@ -124,6 +133,7 @@ function PanelEditor({ draft, c, onDone }: { draft: PanelDraft; c: TicketConfig;
           <Section title="General">
             <div className="grid gap-3 md:grid-cols-2">
               <Field label="Internal name">{(id) => <Input id={id} value={p.name} maxLength={80} onChange={(e) => set({ name: e.target.value })} />}</Field>
+              <ServerField value={p.guildId} onChange={(v) => set({ guildId: v })} />
               <Field label="Target channel">{(id) => <ChannelPicker ariaLabel={id} kind="text" value={p.channelId} onChange={(v) => set({ channelId: v })} />}</Field>
               <Field label="Type">{(id) => <Select id={id} value={p.style} onChange={(e) => set({ style: e.target.value as PanelDraft['style'] })}><option value="BUTTONS">Buttons</option><option value="DROPDOWN">Dropdown menu</option></Select>}</Field>
               {p.style === 'DROPDOWN' && <Field label="Dropdown placeholder">{(id) => <Input id={id} value={p.placeholder} maxLength={150} onChange={(e) => set({ placeholder: e.target.value })} />}</Field>}
@@ -174,6 +184,7 @@ function PanelEditor({ draft, c, onDone }: { draft: PanelDraft; c: TicketConfig;
 // =============================== Kategorien ===============================
 type CatDraft = Omit<TicketCategoryCfg, 'id'> & { id?: string };
 const NEW_CATEGORY: CatDraft = {
+  guildId: null,
   name: 'Neue Kategorie', description: '', emoji: '🎫', color: 0x3b82f6, buttonStyle: 'secondary', position: 0, active: true, discordCategoryId: null, channelNameFormat: 'ticket-{username}',
   staffRoleIds: [], extraRoleIds: [], requiredRoleIds: [], allowedUserIds: [], accessRoleNames: [], maxOpen: 1, cooldownMinutes: 0, defaultPriorityId: null, questions: [],
   welcomeTitle: '🎫 {category}', welcomeMessage: 'Hallo {user}!\n\nBeschreibe dein Anliegen so genau wie möglich. Ein Teammitglied kümmert sich schnellstmöglich darum.', mentionStaff: true, mentionText: '', buttons: defaultTicketButtons(),
@@ -184,18 +195,19 @@ const NEW_CATEGORY: CatDraft = {
 };
 
 function Categories({ c }: { c: TicketConfig }) {
+  const [server] = useServer();
   const [edit, setEdit] = useState<CatDraft>();
   const [del, setDel] = useState<TicketCategoryCfg>();
   const dup = useSave((id: string) => api(`/support-tickets/categories/${id}/duplicate`, { method: 'POST' }));
   const remove = useSave((id: string) => api(`/support-tickets/categories/${id}`, { method: 'DELETE' }), () => setDel(undefined));
   if (edit) return <CategoryEditor draft={edit} c={c} onDone={() => setEdit(undefined)} />;
   return (
-    <Card title="Ticket categories" actions={<Button size="sm" onClick={() => setEdit({ ...NEW_CATEGORY, position: c.categories.length })}>New category</Button>}>
+    <Card title="Ticket categories" actions={<Button size="sm" onClick={() => setEdit({ ...NEW_CATEGORY, guildId: server || null, position: c.categories.length })}>New category</Button>}>
       <Err error={dup.error ?? remove.error} />
       {!c.categories.length ? <EmptyState text="No categories yet." hint="Categories are the ticket types (Support, Bewerbung, Beschwerde …)." /> : (
         <ul className="grid gap-3 md:grid-cols-2">{c.categories.map((x) => (
           <li key={x.id} className="grid gap-2 rounded-md border border-line p-3" style={{ borderLeft: `4px solid ${hex(x.color)}` }}>
-            <div className="flex flex-wrap items-center justify-between gap-2"><strong>{label(x)}</strong>{x.active ? <Badge tone="success">active</Badge> : <Badge>inactive</Badge>}</div>
+            <div className="flex flex-wrap items-center justify-between gap-2"><strong>{label(x)} <GuildTag id={x.guildId} /></strong>{x.active ? <Badge tone="success">active</Badge> : <Badge>inactive</Badge>}</div>
             <p className="text-xs text-muted">{x.questions.length} questions · max. {x.maxOpen || '∞'} open · claim {CLAIM_MODES[x.claimMode]} · channel „{x.channelNameFormat}“</p>
             <div className="flex flex-wrap gap-2">
               <Button size="sm" variant="secondary" onClick={() => setEdit(x)}>Edit</Button>
@@ -229,6 +241,7 @@ function CategoryEditor({ draft, c, onDone }: { draft: CatDraft; c: TicketConfig
           <Section title="General">
             <div className="grid gap-3 md:grid-cols-2">
               <Field label="Name">{(id) => <Input id={id} value={d.name} maxLength={80} onChange={(e) => set({ name: e.target.value })} />}</Field>
+              <ServerField value={d.guildId} onChange={(v) => set({ guildId: v })} />
               <Field label="Emoji">{(id) => <Input id={id} value={d.emoji ?? ''} maxLength={64} onChange={(e) => set({ emoji: e.target.value || null })} />}</Field>
               <Field label="Short description (dropdown)">{(id) => <Input id={id} value={d.description} maxLength={500} onChange={(e) => set({ description: e.target.value })} />}</Field>
               <Field label="Panel button color">{(id) => <Select id={id} value={d.buttonStyle} onChange={(e) => set({ buttonStyle: e.target.value as ButtonStyleName })}>{STYLES.map((s) => <option key={s} value={s}>{STYLE_LABEL[s]}</option>)}</Select>}</Field>

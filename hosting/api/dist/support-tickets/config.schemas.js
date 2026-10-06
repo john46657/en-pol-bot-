@@ -17,7 +17,10 @@ exports.questionSchema = zod_1.z.object({
 exports.buttonSchema = zod_1.z.object({
     action: zod_1.z.enum(shared_1.TICKET_ACTION_KEYS), label: zod_1.z.string().trim().min(1).max(80), emoji: zod_1.z.string().trim().max(64).optional(), style, enabled: zod_1.z.boolean(),
 });
+const guildOpt = zod_1.z.union([snowflake, zod_1.z.literal('')]).optional().transform((v) => v || null);
 exports.categorySchema = zod_1.z.object({
+    /** Discord-Server, auf dem es diese Ticket-Art gibt (leer = alle Server). */
+    guildId: guildOpt,
     name: zod_1.z.string().trim().min(1).max(80), description: zod_1.z.string().trim().max(500).default(''), emoji, color: color.default(0x3b82f6), buttonStyle: style.default('secondary'),
     position: zod_1.z.number().int().min(0).max(1000).default(0), active: zod_1.z.boolean().default(true),
     discordCategoryId: zod_1.z.union([snowflake, zod_1.z.literal('')]).optional().transform((v) => v || null),
@@ -41,6 +44,7 @@ exports.categorySchema = zod_1.z.object({
     escalationRoleIds: ids, escalationPriorityId: zod_1.z.string().uuid().nullable().optional(), escalationMessage: zod_1.z.string().trim().max(1000).default(''),
 });
 exports.panelSchema = zod_1.z.object({
+    guildId: guildOpt,
     name: zod_1.z.string().trim().min(1).max(80), title: zod_1.z.string().trim().max(256).default(''), description: zod_1.z.string().trim().max(4000).default(''), emoji,
     color: color.default(0x3b82f6), thumbnailUrl: url, imageUrl: url, bannerUrl: url, footer: zod_1.z.string().trim().max(2048).optional().transform((v) => v || null), footerIconUrl: url,
     authorName: zod_1.z.string().trim().max(256).optional().transform((v) => v || null), authorIconUrl: url,

@@ -721,6 +721,7 @@ model QualificationApplication {
 model TicketPanel {
   id               String   @id @default(uuid()) @db.Uuid
   name             String
+  guildId          String? // Discord-Server (leer = alle Server)
   title            String   @default("")
   description      String   @default("")
   emoji            String?
@@ -747,6 +748,7 @@ model TicketPanel {
 model TicketCategory {
   id                   String   @id @default(uuid()) @db.Uuid
   name                 String
+  guildId              String? // Discord-Server (leer = alle Server)
   description          String   @default("")
   emoji                String?
   color                Int      @default(3899638)

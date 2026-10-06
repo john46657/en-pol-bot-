@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { NavLink, Outlet } from 'react-router';
 import { LogOut, Menu, Shield } from 'lucide-react';
+import { ServerSwitcher } from './ServerSwitcher';
 import { useAuth } from '../lib/auth';
 import { useMediaQuery } from '../lib/media';
 import { ACCENTS, useStudio } from '../lib/studio';
@@ -51,10 +52,10 @@ export function AppShell() {
         ))}
       </nav>}
       <aside className="hidden w-60 shrink-0 border-r border-line bg-panel lg:block">
-        <div className="flex h-14 items-center gap-2 border-b border-line px-4 font-semibold"><Shield size={18} className="text-primary" aria-hidden /><span className="min-w-0 truncate">{orgName}</span></div>
+        <div className="flex h-14 items-center gap-2 border-b border-line px-2 font-semibold"><ServerSwitcher orgName={orgName} /></div>
         {sidebar}
       </aside>
-      {open && <div className="fixed inset-0 z-40 bg-black/50 lg:hidden" onClick={() => setOpen(false)}><aside className="h-full w-64 max-w-[85vw] bg-panel" onClick={(e) => e.stopPropagation()}>{sidebar}</aside></div>}
+      {open && <div className="fixed inset-0 z-40 bg-black/50 lg:hidden" onClick={() => setOpen(false)}><aside className="flex h-full w-64 max-w-[85vw] flex-col bg-panel" onClick={(e) => e.stopPropagation()}><div className="flex h-14 shrink-0 items-center border-b border-line px-2 font-semibold"><ServerSwitcher orgName={orgName} onPicked={() => setOpen(false)} /></div><div className="min-h-0 flex-1 overflow-y-auto">{sidebar}</div></aside></div>}
       <div className="flex min-w-0 flex-1 flex-col">
         <header className="flex h-14 items-center gap-2 border-b border-line bg-panel px-2 sm:gap-3 sm:px-4">
           <Button variant="ghost" className="lg:hidden" aria-label="Open menu" onClick={() => setOpen(true)}><Menu size={18} /></Button>

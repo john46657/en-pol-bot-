@@ -47,7 +47,8 @@ export const resetSessions = () => { sessions.clear(); joinedAtOf.clear(); guild
 export const sweepSessions = (now = Date.now()) => { for (const [k, s] of sessions) if (s.expiresAt <= now) sessions.delete(k); };
 
 const CANCEL: ButtonSpec = { id: 'quali:cancel', label: 'Bewerbung abbrechen', style: 'danger' };
-const getConfig = (api: Api) => api.service<QualiConfig>('GET', '/bot/qualifications');
+/** Einstellungen des Servers (ohne eigene: die gemeinsamen). */
+const getConfig = (api: Api, guildId?: string) => api.service<QualiConfig>('GET', `/bot/qualifications${guildId ? `?guildId=${guildId}` : ''}`);
 const field = (f: FormField): Field => { const n = normalizeField(f); return { ...n, maxLength: Math.min(n.maxLength, 2000) }; };
 const asField = (q: string | FormField, i: number): FormField => (typeof q === 'string' ? { key: `q${i + 1}`, label: q, required: true, maxLength: MAX_ANSWER } : q);
 /** Aktuelle Frage: Text → Antwort per Nachricht; Auswahl/Rollen → Menü (+ „Überspringen“, falls optional). */
@@ -70,13 +71,13 @@ const answerText = (a: Answer) => (a === null ? '— (übersprungen)' : Array.is
 
 interface Flow { key: string; name: string; questions: Question[]; enabled: boolean; settings: AppSettings; appName: string }
 /** Lädt Fragen einer Einheit bzw. der Polizei-Bewerbung (Formular aus dem System). */
-async function loadFlow(api: Api, key: string | undefined): Promise<Flow | null> {
+async function loadFlow(api: Api, key: string | undefined, guildId?: string): Promise<Flow | null> {
   if (!key) return null;
   if (key === POLICE) {
-    const [form, cfg] = await Promise.all([api.service<FormField[]>('GET', '/applications/form'), getConfig(api).catch(() => undefined)]);
+    const [form, cfg] = await Promise.all([api.service<FormField[]>('GET', `/applications/form${guildId ? `?guildId=${guildId}` : ''}`), getConfig(api, guildId).catch(() => undefined)]);
     return { key, name: cfg?.police?.name ? `Bewerbung – ${cfg.police.name}` : POLICE_NAME, appName: cfg?.police?.name ?? 'EN Polizei', enabled: cfg?.police?.enabled !== false, settings: cfg?.police?.settings ?? {}, questions: [{ text: 'Wie ist dein Roblox-Benutzername?', key: 'roblox', field: field({ key: 'roblox', label: 'Roblox', required: true, maxLength: 20 }) }, ...form.map((f) => ({ text: f.label, key: f.key, field: field(f) }))] };
   }
-  const unit = (await getConfig(api)).units.find((u) => u.key === key);
+  const unit = (await getConfig(api, guildId)).units.find((u) => u.key === key);
   return unit ? { key: unit.key, name: unit.name, appName: unit.name, enabled: unit.enabled !== false, settings: unit.settings ?? {}, questions: unit.questions.map(asField).map((f) => ({ text: f.label, key: f.key, field: field(f) })) } : null;
 }
 async function openApplication(api: Api, key: string, discordId: string) {
@@ -102,7 +103,7 @@ const POLICE_PANEL: EmbedData = { title: '📋 Bewerbung bei EN Polizei', color:
 async function offer(c: Ctx, key: string | undefined): Promise<Reply> {
   const running = sessions.get(c.discordId);
   if (running && running.expiresAt > Date.now()) return errorReply(`Du hast bereits eine laufende Bewerbung (**${plain(running.unitName)}**) in deinen Direktnachrichten. Beende oder brich sie dort zuerst ab.`);
-  const flow = await loadFlow(c.api, key);
+  const flow = await loadFlow(c.api, key, c.guildId);
   if (!flow) return errorReply('Diese Auswahl gibt es nicht mehr. Bitte das Panel neu laden.');
   if (!flow.enabled) return errorReply(`Bewerbungen für **${plain(flow.name)}** sind derzeit geschlossen.`);
   const blocked = roleBlock(flow.settings, c.guildId ? c.memberRoleIds ?? [] : undefined);
@@ -141,7 +142,7 @@ export const QUALI_COMMANDS: CommandDef[] = [
       if (!c.isGuildAdmin) return errorReply('Dafür brauchst du auf diesem Discord-Server das Recht „Server verwalten“.');
       if (!c.channelId || !c.platform) return errorReply('Panel kann hier nicht gepostet werden.');
       try {
-        const police = (await getConfig(c.api).catch(() => undefined))?.police;
+        const police = (await getConfig(c.api, c.guildId).catch(() => undefined))?.police;
         const embed = police ? { title: clip(police.title, 256), color: COLORS.info, description: clip(police.description, 4000) } : POLICE_PANEL;
         await c.platform.postPanel({ channelId: c.channelId, embed, buttons: [{ id: `quali:pick:${POLICE}`, label: 'Jetzt bewerben', emoji: '📋', style: 'primary' }] });
       } catch { return errorReply('Panel konnte nicht gepostet werden (fehlen dem Bot Rechte in diesem Channel?).'); }
@@ -155,7 +156,7 @@ export const QUALI_COMMANDS: CommandDef[] = [
       if (!c.isGuildAdmin) return errorReply('Dafür brauchst du auf diesem Discord-Server das Recht „Server verwalten“.');
       if (!c.channelId || !c.platform) return errorReply('Panel kann hier nicht gepostet werden.');
       try {
-        const cfg = await getConfig(c.api);
+        const cfg = await getConfig(c.api, c.guildId);
         await c.platform.postPanel({ channelId: c.channelId, embed: panelEmbed(cfg), select: { id: 'quali:pick', placeholder: 'Triff eine Auswahl', options: cfg.units.map((u) => ({ label: clip(`${u.name}${u.enabled === false ? ' (geschlossen)' : ''}`, 100), value: u.key, ...(u.description ? { description: clip(plain(u.description).replace(/\*|_/g, ''), 100) } : {}) })) } });
         const ch = await c.config?.().catch(() => undefined);
         return okReply(`Qualifikations-Panel gepostet.${ch?.qualifications ? '' : ' Tipp: In den Einstellungen einen **Qualifications channel** hinterlegen – dort landen die Bewerbungen mit Annehmen/Ablehnen-Buttons.'}`);
@@ -223,7 +224,7 @@ const parseDecision = (rest: string[]): { kind: Kind; id: string; status: 'ACCEP
 /** Entscheidung als klickender Benutzer (Rechte im System); aktualisiert danach die Bewerbungs-Nachricht im Channel. */
 async function decide(c: Ctx, d: { kind: Kind; id: string; status: 'ACCEPTED' | 'REJECTED' }, reason?: string): Promise<Reply> {
   // Manager-Rollen (Setup → Role Config): nur wer eine davon hat, darf im Discord entscheiden
-  const cfg = await getConfig(c.api).catch(() => undefined);
+  const cfg = await getConfig(c.api, c.guildId).catch(() => undefined);
   let managers = d.kind === 'p' ? cfg?.police?.settings?.roles?.managers : undefined;
   if (d.kind === 'q' && cfg?.units.some((u) => u.settings?.roles?.managers?.length)) {
     const app = await c.api.asUser<{ unit: string }>(c.discordId, 'GET', `/qualifications/applications/${d.id}`);
@@ -319,7 +320,7 @@ export const QUALI_INTERACTION: InteractionDef = {
         if (running.unit === rest[0]) return okReply(`Deine Bewerbung läuft bereits – Frage ${running.answers.length + 1}/${running.questions.length}: ${plain(running.questions[running.answers.length]!.text)}`);
         return errorReply(`Du hast bereits eine laufende Bewerbung (**${plain(running.unitName)}**). Beende oder brich sie zuerst ab.`);
       }
-      const flow = await loadFlow(c.api, rest[0]);
+      const flow = await loadFlow(c.api, rest[0], c.guildId ?? guildOf.get(c.discordId));
       if (!flow) return errorReply('Diese Auswahl gibt es nicht mehr. Bitte das Panel neu laden.');
       if (!flow.enabled) return errorReply(`Bewerbungen für **${plain(flow.name)}** sind derzeit geschlossen.`);
       const open = await openApplication(c.api, flow.key, c.discordId);

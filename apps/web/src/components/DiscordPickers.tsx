@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { X } from 'lucide-react';
-import { useGuilds, type GuildInfo } from '../lib/guilds';
+import { useGuilds, useServer, type GuildInfo } from '../lib/guilds';
 import { Input, Select } from './ui';
 
 const hexColor = (n: number) => (n ? `#${n.toString(16).padStart(6, '0')}` : 'var(--color-muted, #888)');
@@ -15,10 +15,17 @@ function channelOptions(g: GuildInfo, kind: 'text' | 'category') {
     .map((c) => ({ id: c.id, label: `# ${c.name}${c.parentId && cats.get(c.parentId) ? `  (${cats.get(c.parentId)!.name})` : ''}` }));
 }
 
+/** Gemeldete Server – ist oben links ein Server gewählt, nur dieser. */
+function useGuildList() {
+  const guilds = useGuilds();
+  const [server] = useServer();
+  const all = guilds.data ?? [];
+  return server ? all.filter((g) => g.id === server) : all;
+}
+
 /** Channel auswählen (nach Server gruppiert). Ohne gemeldete Server: Eingabe der ID. */
 export function ChannelPicker({ value, onChange, kind = 'text', ariaLabel, disabled }: { value: string | null | undefined; onChange: (id: string | null) => void; kind?: 'text' | 'category'; ariaLabel: string; disabled?: boolean }) {
-  const guilds = useGuilds();
-  const list = guilds.data ?? [];
+  const list = useGuildList();
   if (!list.length) return <Input aria-label={ariaLabel} inputMode="numeric" disabled={disabled} value={value ?? ''} placeholder={kind === 'category' ? 'Discord category ID' : 'Discord channel ID'} onChange={(e) => onChange(idOf(e.target.value) || null)} />;
   const known = list.some((g) => g.channels.some((c) => c.id === value));
   return (
@@ -32,10 +39,10 @@ export function ChannelPicker({ value, onChange, kind = 'text', ariaLabel, disab
 
 /** Mehrere Rollen auswählen – wie bei Appy als Liste mit Entfernen-Knopf. Ohne gemeldete Server: IDs eintippen. */
 export function RolePicker({ value, onChange, ariaLabel, disabled, max = 25 }: { value: string[]; onChange: (ids: string[]) => void; ariaLabel: string; disabled?: boolean; max?: number }) {
-  const guilds = useGuilds();
-  const list = guilds.data ?? [];
+  const all = useGuilds().data ?? [];
+  const list = useGuildList();
   const [typed, setTyped] = useState('');
-  const role = (id: string) => { for (const g of list) { const r = g.roles.find((x) => x.id === id); if (r) return { ...r, guild: g.name }; } return null; };
+  const role = (id: string) => { for (const g of all) { const r = g.roles.find((x) => x.id === id); if (r) return { ...r, guild: g.name }; } return null; };
   const add = (id: string) => { if (id && !value.includes(id) && value.length < max) onChange([...value, id]); };
   return (
     <div className="grid gap-2">
@@ -45,7 +52,7 @@ export function RolePicker({ value, onChange, ariaLabel, disabled, max = 25 }: {
           return (
             <li key={id} className="inline-flex items-center gap-1.5 rounded border border-success/40 bg-success/10 px-2 py-0.5 text-xs">
               <span aria-hidden className="h-2 w-2 rounded-full" style={{ background: hexColor(r?.color ?? 0) }} />
-              <span>@{r?.name ?? id}{list.length > 1 && r ? <span className="text-muted"> · {r.guild}</span> : null}</span>
+              <span>@{r?.name ?? id}{all.length > 1 && r ? <span className="text-muted"> · {r.guild}</span> : null}</span>
               {!disabled && <button type="button" aria-label={`Remove role ${r?.name ?? id}`} className="text-muted hover:text-danger" onClick={() => onChange(value.filter((x) => x !== id))}><X size={12} /></button>}
             </li>
           );

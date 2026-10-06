@@ -11,7 +11,8 @@ export declare class TicketConfigService {
     private readonly audit;
     constructor(prisma: PrismaService, audit: AuditService);
     private record;
-    all(): Promise<{
+    /** `guildId`: nur Kategorien/Panels dieses Servers und die für alle Server. */
+    all(guildId?: string): Promise<{
         categories: ({
             id: string;
             createdAt: Date;
@@ -19,6 +20,7 @@ export declare class TicketConfigService {
             description: string;
             active: boolean;
             updatedAt: Date;
+            guildId: string | null;
             color: number;
             cooldownMinutes: number;
             questions: Prisma.JsonValue;
@@ -69,6 +71,7 @@ export declare class TicketConfigService {
             name: string;
             description: string;
             updatedAt: Date;
+            guildId: string | null;
             color: number;
             title: string;
             channelId: string | null;
@@ -169,6 +172,7 @@ export declare class TicketConfigService {
         description: string;
         active: boolean;
         updatedAt: Date;
+        guildId: string | null;
         color: number;
         cooldownMinutes: number;
         questions: Prisma.JsonValue;
@@ -220,6 +224,7 @@ export declare class TicketConfigService {
         description: string;
         active: boolean;
         updatedAt: Date;
+        guildId: string | null;
         color: number;
         cooldownMinutes: number;
         questions: Prisma.JsonValue;
@@ -271,6 +276,7 @@ export declare class TicketConfigService {
         description: string;
         active: boolean;
         updatedAt: Date;
+        guildId: string | null;
         color: number;
         cooldownMinutes: number;
         questions: Prisma.JsonValue;
@@ -322,6 +328,7 @@ export declare class TicketConfigService {
         name: string;
         description: string;
         updatedAt: Date;
+        guildId: string | null;
         color: number;
         title: string;
         channelId: string | null;
@@ -347,6 +354,7 @@ export declare class TicketConfigService {
         name: string;
         description: string;
         updatedAt: Date;
+        guildId: string | null;
         color: number;
         title: string;
         channelId: string | null;

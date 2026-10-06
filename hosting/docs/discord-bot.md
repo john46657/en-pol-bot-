@@ -79,7 +79,7 @@ Gleiches Geheimnis in API **und** Bot (`openssl rand -hex 32`):
 ```
 BOT_API_TOKEN=<64 Hex-Zeichen>      # API + Bot
 DISCORD_TOKEN=<Token aus Schritt 1> # nur Bot
-DISCORD_GUILD_ID=<Server-ID>        # optional, empfohlen: Commands erscheinen sofort. Mehrere Server: IDs mit Komma trennen (111…,222…)
+DISCORD_GUILD_ID=<Server-ID>        # optional – Commands kommen automatisch auf jeden Server des Bots
 ```
 - **Lokal testen:** `DISCORD_TOKEN=… DISCORD_GUILD_ID=… pnpm dev:all` startet den Bot automatisch mit (mit einem festen Entwicklungs-Geheimnis; nur lokal verwenden).
 - **Auf dem VPS:** Werte in `.env` eintragen (`BOT_API_TOKEN` erzeugt `setup-server.sh` schon), dann
@@ -93,7 +93,11 @@ DISCORD_GUILD_ID=<Server-ID>        # optional, empfohlen: Commands erscheinen s
 Jede Person: Web → Chat-Symbol oben rechts („Discord verknüpfen“) → *Code erzeugen* → in Discord `/verknuepfen code:ABCD-EFGH` (10 Minuten gültig, einmal verwendbar). Lösen: im selben Dialog, oder ein Admin über `DELETE /api/v1/discord/links/:userId` (Benutzerverwaltung). Deaktivierte Benutzer verlieren sofort den Bot-Zugriff.
 
 ## Mehrere Discord-Server
-- **Befehle:** `DISCORD_GUILD_ID=111111111111111111,222222222222222222` – der Bot registriert die Slash-Commands auf jedem genannten Server (er muss auf allen eingeladen sein, mit Scope `applications.commands`). Schlägt einer fehl, steht das im Log, die anderen laufen weiter.
+- **Befehle:** Der Bot registriert die Slash-Commands **automatisch auf jedem Server, auf dem er ist** – beim Start und sofort, wenn er auf einen neuen Server eingeladen wird. `DISCORD_GUILD_ID` ist dafür nicht mehr nötig (optional zusätzlich). Schlägt ein Server fehl, steht das im Log, die anderen laufen weiter.
+- **Server-Auswahl im Dashboard (oben links bei „EN Polizei“):** Sobald der Bot auf mindestens 2 Servern ist, erscheint ein Dropdown. *All servers* = gemeinsame Einstellungen und alles sehen; ein Server gewählt = nur dessen Bewerbungen/Tickets, und Einstellungen gelten nur für diesen Server.
+  - **Pro Server** (ohne eigene Einstellungen gelten die gemeinsamen): Polizei-Bewerbung und Qualifikationen (Texte, Fragen, Channels, Rollen), Ticket-Panels und Ticket-Arten, die Bewerbungen und Tickets selbst. „Use shared settings again“ entfernt die eigenen Einstellungen eines Servers.
+  - **Gemeinsam:** MDT, Personen, Berichte, Team, Benutzer und Rechte, Ticket-Status/Prioritäten/Gründe.
+  - Channel- und Rollen-Auswahl zeigen nur den gewählten Server.
 - **Benachrichtigungen:** Unter *Admin → Settings → Discord bot channels* pro Art (Dispatch/Wanted/Announcements) mehrere Channel-IDs mit Komma eintragen, auch auf verschiedenen Servern. Gesendet wird an alle; die Nachricht gilt als zugestellt, sobald mindestens ein Channel erreicht wurde.
 - Die Verknüpfung (Discord-Konto ↔ Benutzer) ist serverübergreifend: ein Konto, alle Server.
 
@@ -118,7 +122,7 @@ Jede Person: Web → Chat-Symbol oben rechts („Discord verknüpfen“) → *Co
 ## Fehlersuche
 | Problem | Lösung |
 |---|---|
-| Bot online, aber keine `/`-Befehle | `applications.commands`-Scope fehlte beim Einladen, oder ohne `DISCORD_GUILD_ID` dauert die globale Registrierung bis zu 1 h. |
+| Bot online, aber keine `/`-Befehle | `applications.commands`-Scope fehlte beim Einladen, oder der Bot hat nach dem Einladen noch nicht neu gestartet (die Befehle kommen sonst sofort beim Beitritt). |
 | „Dein Discord-Konto ist nicht verknüpft“ | `/verknuepfen` mit frischem Code ausführen. |
 | Bot meldet „nicht erreichbar“ | `API_URL` stimmt nicht (im Compose-Netz: `http://api:3000`) oder API ist down. |
 | Benachrichtigungen kommen nicht | Channel-ID in *Settings* gesetzt? Bot hat im Channel Schreibrechte? `docker compose logs bot` zeigt `outbox … failed: Missing Access`. |

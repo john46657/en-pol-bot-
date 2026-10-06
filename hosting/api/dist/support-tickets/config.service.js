@@ -36,10 +36,12 @@ let TicketConfigService = class TicketConfigService {
     record(actor, action, entityType, entityId, after) {
         return this.audit.record(actor, { action: `ticket.config.${action}`, module: 'tickets', entityType, entityId, after });
     }
-    async all() {
+    /** `guildId`: nur Kategorien/Panels dieses Servers und die für alle Server. */
+    async all(guildId) {
+        const where = guildId ? { OR: [{ guildId }, { guildId: null }] } : {};
         const [categories, panels, statuses, priorities, reasons, settings] = await Promise.all([
-            this.prisma.ticketCategory.findMany({ orderBy: [{ position: 'asc' }, { name: 'asc' }] }),
-            this.prisma.ticketPanel.findMany({ orderBy: [{ position: 'asc' }, { name: 'asc' }] }),
+            this.prisma.ticketCategory.findMany({ where, orderBy: [{ position: 'asc' }, { name: 'asc' }] }),
+            this.prisma.ticketPanel.findMany({ where, orderBy: [{ position: 'asc' }, { name: 'asc' }] }),
             this.statuses(), this.priorities(), this.reasons(), this.settings(),
         ]);
         return { categories: categories.map((c) => this.categoryOut(c)), panels, statuses, priorities, reasons, settings };

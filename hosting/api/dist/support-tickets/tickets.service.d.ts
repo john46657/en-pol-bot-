@@ -207,7 +207,7 @@ export declare class SupportTicketsService {
         effects: TicketEffect[];
     }>;
     /** Für /ticket im Discord: aktive Ticket-Arten (Voraussetzungen prüft der Bot vorab, das System beim Öffnen erneut). */
-    openableCategories(): Promise<{
+    openableCategories(guildId?: string): Promise<{
         id: string;
         name: string;
         emoji: string | null;

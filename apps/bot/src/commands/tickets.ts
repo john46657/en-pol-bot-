@@ -184,7 +184,7 @@ export const TICKET_COMMAND: CommandDef = {
     if (!c.guildId) return errorReply('Tickets gehen nur auf einem Server, nicht per Direktnachricht.');
     const member = typeof c.opts.mitglied === 'string' && c.opts.mitglied !== c.discordId ? c.opts.mitglied : null;
     try {
-      const all = await c.api.service<OpenableCategory[]>('GET', '/bot/support-tickets/categories');
+      const all = await c.api.service<OpenableCategory[]>('GET', `/bot/support-tickets/categories?guildId=${c.guildId}`);
       // für sich selbst nur Ticket-Arten, die man öffnen darf (das System prüft beim Öffnen erneut)
       const roles = c.memberRoleIds ?? [];
       const cats = member ? all : all.filter((x) => (!x.requiredRoleIds.length || x.requiredRoleIds.some((r) => roles.includes(r))) && (!x.allowedUserIds.length || x.allowedUserIds.includes(c.discordId)));

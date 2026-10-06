@@ -290,6 +290,8 @@ describe('Qualifikationen (Panel → Fragen per DM)', () => {
     const start = interactionFor('quali:start:flugstaffel')!;
     await start.def.run({ ...ctx(api, { platform: p }), args: start.args });
     expect(log[0]).toBe(`dmEmbed ${ME} Flugstaffel quali:cancel`);
+    // Einstellungen des Servers, auf dem geklickt wurde
+    expect(calls.some((c) => c.path === `/bot/qualifications?guildId=${GUILD}`)).toBe(true);
     // zweite Auswahl während der laufenden Bewerbung wird abgewiesen
     const pick = interactionFor('quali:pick')!;
     expect(text(await pick.def.run({ ...ctx(api, { platform: p }), args: pick.args, values: ['sek'] }))).toContain('laufende Bewerbung');

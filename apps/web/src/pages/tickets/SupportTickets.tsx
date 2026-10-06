@@ -5,7 +5,7 @@ import { api, type Page } from '../../lib/api';
 import { useAuth } from '../../lib/auth';
 import { DataTable, useDebounced } from '../../components/DataTable';
 import { Badge, Button, Card, ConfirmDialog, EmptyState, ErrorState, Field, fmt, Input, Modal, PageHeader, Select, SkeletonRows, Tabs } from '../../components/ui';
-import { GuildTag, useGuilds } from '../../lib/guilds';
+import { GuildTag, useGuilds, useServer } from '../../lib/guilds';
 import { duration, errText, hex, label, useTicketConfig, type RatingSummary, type TicketRow, type TicketStats } from '../../lib/tickets';
 const TicketSetup = lazy(() => import('./TicketSetup').then((m) => ({ default: m.TicketSetup })));
 
@@ -46,13 +46,14 @@ function TicketList() {
   const { can } = useAuth();
   const cfg = useTicketConfig();
   const guilds = useGuilds();
+  const [server] = useServer();
   const multi = (guilds.data?.length ?? 0) > 1;
   const [f, setF] = useState({ kind: 'open', statusId: '', priorityId: '', categoryId: '', claimer: '', creator: '', from: '', to: '', guildId: '' });
   const [q, setQ] = useState('');
   const [page, setPage] = useState(1);
   const [open, setOpen] = useState(false);
   const dq = useDebounced(q), dCreator = useDebounced(f.creator);
-  const query = { ...f, creator: dCreator, q: dq, page, pageSize: 25, from: f.from ? new Date(f.from).toISOString() : undefined, to: f.to ? new Date(`${f.to}T23:59:59`).toISOString() : undefined };
+  const query = { ...f, guildId: server || f.guildId, creator: dCreator, q: dq, page, pageSize: 25, from: f.from ? new Date(f.from).toISOString() : undefined, to: f.to ? new Date(`${f.to}T23:59:59`).toISOString() : undefined };
   const list = useQuery({ queryKey: ['support-tickets', query], queryFn: () => api<Page<TicketRow>>('/support-tickets', { query }) });
   const set = (p: Partial<typeof f>) => { setF({ ...f, ...p }); setPage(1); };
   const c = cfg.data;
@@ -76,7 +77,7 @@ function TicketList() {
         search={q} onSearch={(v) => { setQ(v); setPage(1); }}
         toolbar={(
           <div className="flex flex-wrap gap-2">
-            {multi && <div className="w-40"><Select aria-label="Server" value={f.guildId} onChange={(e) => set({ guildId: e.target.value })}><option value="">All servers</option>{guilds.data!.map((g) => <option key={g.id} value={g.id}>{g.name}</option>)}</Select></div>}
+            {multi && !server && <div className="w-40"><Select aria-label="Server" value={f.guildId} onChange={(e) => set({ guildId: e.target.value })}><option value="">All servers</option>{guilds.data!.map((g) => <option key={g.id} value={g.id}>{g.name}</option>)}</Select></div>}
             <div className="w-36"><Select aria-label="Type" value={f.kind} onChange={(e) => set({ kind: e.target.value })}>{KINDS.map(([v, l]) => <option key={v} value={v}>{l}</option>)}</Select></div>
             <div className="w-40"><Select aria-label="Category" value={f.categoryId} onChange={(e) => set({ categoryId: e.target.value })}><option value="">All categories</option>{c?.categories.map((x) => <option key={x.id} value={x.id}>{label(x)}</option>)}</Select></div>
             <div className="w-36"><Select aria-label="Status" value={f.statusId} onChange={(e) => set({ statusId: e.target.value })}><option value="">All statuses</option>{c?.statuses.map((x) => <option key={x.id} value={x.id}>{label(x)}</option>)}</Select></div>

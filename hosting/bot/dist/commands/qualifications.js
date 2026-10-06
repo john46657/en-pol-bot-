@@ -39,7 +39,8 @@ const sweepSessions = (now = Date.now()) => { for (const [k, s] of sessions)
         sessions.delete(k); };
 exports.sweepSessions = sweepSessions;
 const CANCEL = { id: 'quali:cancel', label: 'Bewerbung abbrechen', style: 'danger' };
-const getConfig = (api) => api.service('GET', '/bot/qualifications');
+/** Einstellungen des Servers (ohne eigene: die gemeinsamen). */
+const getConfig = (api, guildId) => api.service('GET', `/bot/qualifications${guildId ? `?guildId=${guildId}` : ''}`);
 const field = (f) => { const n = (0, shared_1.normalizeField)(f); return { ...n, maxLength: Math.min(n.maxLength, 2000) }; };
 const asField = (q, i) => (typeof q === 'string' ? { key: `q${i + 1}`, label: q, required: true, maxLength: exports.MAX_ANSWER } : q);
 /** Aktuelle Frage: Text → Antwort per Nachricht; Auswahl/Rollen → Menü (+ „Überspringen“, falls optional). */
@@ -60,14 +61,14 @@ const questionMessage = (s) => {
 };
 const answerText = (a) => (a === null ? '— (übersprungen)' : Array.isArray(a) ? a.join(', ') : a);
 /** Lädt Fragen einer Einheit bzw. der Polizei-Bewerbung (Formular aus dem System). */
-async function loadFlow(api, key) {
+async function loadFlow(api, key, guildId) {
     if (!key)
         return null;
     if (key === exports.POLICE) {
-        const [form, cfg] = await Promise.all([api.service('GET', '/applications/form'), getConfig(api).catch(() => undefined)]);
+        const [form, cfg] = await Promise.all([api.service('GET', `/applications/form${guildId ? `?guildId=${guildId}` : ''}`), getConfig(api, guildId).catch(() => undefined)]);
         return { key, name: cfg?.police?.name ? `Bewerbung – ${cfg.police.name}` : POLICE_NAME, appName: cfg?.police?.name ?? 'EN Polizei', enabled: cfg?.police?.enabled !== false, settings: cfg?.police?.settings ?? {}, questions: [{ text: 'Wie ist dein Roblox-Benutzername?', key: 'roblox', field: field({ key: 'roblox', label: 'Roblox', required: true, maxLength: 20 }) }, ...form.map((f) => ({ text: f.label, key: f.key, field: field(f) }))] };
     }
-    const unit = (await getConfig(api)).units.find((u) => u.key === key);
+    const unit = (await getConfig(api, guildId)).units.find((u) => u.key === key);
     return unit ? { key: unit.key, name: unit.name, appName: unit.name, enabled: unit.enabled !== false, settings: unit.settings ?? {}, questions: unit.questions.map(asField).map((f) => ({ text: f.label, key: f.key, field: field(f) })) } : null;
 }
 async function openApplication(api, key, discordId) {
@@ -92,7 +93,7 @@ async function offer(c, key) {
     const running = sessions.get(c.discordId);
     if (running && running.expiresAt > Date.now())
         return (0, format_1.errorReply)(`Du hast bereits eine laufende Bewerbung (**${(0, format_1.plain)(running.unitName)}**) in deinen Direktnachrichten. Beende oder brich sie dort zuerst ab.`);
-    const flow = await loadFlow(c.api, key);
+    const flow = await loadFlow(c.api, key, c.guildId);
     if (!flow)
         return (0, format_1.errorReply)('Diese Auswahl gibt es nicht mehr. Bitte das Panel neu laden.');
     if (!flow.enabled)
@@ -145,7 +146,7 @@ exports.QUALI_COMMANDS = [
             if (!c.channelId || !c.platform)
                 return (0, format_1.errorReply)('Panel kann hier nicht gepostet werden.');
             try {
-                const police = (await getConfig(c.api).catch(() => undefined))?.police;
+                const police = (await getConfig(c.api, c.guildId).catch(() => undefined))?.police;
                 const embed = police ? { title: (0, format_1.clip)(police.title, 256), color: format_1.COLORS.info, description: (0, format_1.clip)(police.description, 4000) } : POLICE_PANEL;
                 await c.platform.postPanel({ channelId: c.channelId, embed, buttons: [{ id: `quali:pick:${exports.POLICE}`, label: 'Jetzt bewerben', emoji: '📋', style: 'primary' }] });
             }
@@ -165,7 +166,7 @@ exports.QUALI_COMMANDS = [
             if (!c.channelId || !c.platform)
                 return (0, format_1.errorReply)('Panel kann hier nicht gepostet werden.');
             try {
-                const cfg = await getConfig(c.api);
+                const cfg = await getConfig(c.api, c.guildId);
                 await c.platform.postPanel({ channelId: c.channelId, embed: panelEmbed(cfg), select: { id: 'quali:pick', placeholder: 'Triff eine Auswahl', options: cfg.units.map((u) => ({ label: (0, format_1.clip)(`${u.name}${u.enabled === false ? ' (geschlossen)' : ''}`, 100), value: u.key, ...(u.description ? { description: (0, format_1.clip)((0, format_1.plain)(u.description).replace(/\*|_/g, ''), 100) } : {}) })) } });
                 const ch = await c.config?.().catch(() => undefined);
                 return (0, format_1.okReply)(`Qualifikations-Panel gepostet.${ch?.qualifications ? '' : ' Tipp: In den Einstellungen einen **Qualifications channel** hinterlegen – dort landen die Bewerbungen mit Annehmen/Ablehnen-Buttons.'}`);
@@ -252,7 +253,7 @@ const parseDecision = (rest) => {
 /** Entscheidung als klickender Benutzer (Rechte im System); aktualisiert danach die Bewerbungs-Nachricht im Channel. */
 async function decide(c, d, reason) {
     // Manager-Rollen (Setup → Role Config): nur wer eine davon hat, darf im Discord entscheiden
-    const cfg = await getConfig(c.api).catch(() => undefined);
+    const cfg = await getConfig(c.api, c.guildId).catch(() => undefined);
     let managers = d.kind === 'p' ? cfg?.police?.settings?.roles?.managers : undefined;
     if (d.kind === 'q' && cfg?.units.some((u) => u.settings?.roles?.managers?.length)) {
         const app = await c.api.asUser(c.discordId, 'GET', `/qualifications/applications/${d.id}`);
@@ -368,7 +369,7 @@ exports.QUALI_INTERACTION = {
                     return (0, format_1.okReply)(`Deine Bewerbung läuft bereits – Frage ${running.answers.length + 1}/${running.questions.length}: ${(0, format_1.plain)(running.questions[running.answers.length].text)}`);
                 return (0, format_1.errorReply)(`Du hast bereits eine laufende Bewerbung (**${(0, format_1.plain)(running.unitName)}**). Beende oder brich sie zuerst ab.`);
             }
-            const flow = await loadFlow(c.api, rest[0]);
+            const flow = await loadFlow(c.api, rest[0], c.guildId ?? guildOf.get(c.discordId));
             if (!flow)
                 return (0, format_1.errorReply)('Diese Auswahl gibt es nicht mehr. Bitte das Panel neu laden.');
             if (!flow.enabled)

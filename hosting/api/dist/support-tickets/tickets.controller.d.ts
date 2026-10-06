@@ -260,7 +260,9 @@ export declare class SupportTicketsController {
     private readonly s;
     private readonly cfg;
     constructor(s: SupportTicketsService, cfg: TicketConfigService);
-    config(): Promise<{
+    config(q: {
+        guildId?: string;
+    }): Promise<{
         categories: ({
             id: string;
             createdAt: Date;
@@ -268,6 +270,7 @@ export declare class SupportTicketsController {
             description: string;
             active: boolean;
             updatedAt: Date;
+            guildId: string | null;
             color: number;
             cooldownMinutes: number;
             questions: import("@prisma/client/runtime/library").JsonValue;
@@ -318,6 +321,7 @@ export declare class SupportTicketsController {
             name: string;
             description: string;
             updatedAt: Date;
+            guildId: string | null;
             color: number;
             title: string;
             channelId: string | null;
@@ -394,6 +398,7 @@ export declare class SupportTicketsController {
         description: string;
         active: boolean;
         updatedAt: Date;
+        guildId: string | null;
         color: number;
         cooldownMinutes: number;
         questions: import("@prisma/client/runtime/library").JsonValue;
@@ -445,6 +450,7 @@ export declare class SupportTicketsController {
         description: string;
         active: boolean;
         updatedAt: Date;
+        guildId: string | null;
         color: number;
         cooldownMinutes: number;
         questions: import("@prisma/client/runtime/library").JsonValue;
@@ -496,6 +502,7 @@ export declare class SupportTicketsController {
         description: string;
         active: boolean;
         updatedAt: Date;
+        guildId: string | null;
         color: number;
         cooldownMinutes: number;
         questions: import("@prisma/client/runtime/library").JsonValue;
@@ -547,6 +554,7 @@ export declare class SupportTicketsController {
         name: string;
         description: string;
         updatedAt: Date;
+        guildId: string | null;
         color: number;
         title: string;
         channelId: string | null;
@@ -572,6 +580,7 @@ export declare class SupportTicketsController {
         name: string;
         description: string;
         updatedAt: Date;
+        guildId: string | null;
         color: number;
         title: string;
         channelId: string | null;
@@ -597,6 +606,7 @@ export declare class SupportTicketsController {
         name: string;
         description: string;
         updatedAt: Date;
+        guildId: string | null;
         color: number;
         title: string;
         channelId: string | null;
@@ -1267,7 +1277,9 @@ export declare class BotSupportTicketsController {
         ok: boolean;
     }>;
     channels(): Promise<string[]>;
-    categories(): Promise<{
+    categories(q: {
+        guildId?: string;
+    }): Promise<{
         id: string;
         name: string;
         emoji: string | null;

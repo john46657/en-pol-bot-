@@ -326,36 +326,30 @@ function wireReady(client0) {
         console.log(`Server (${c.guilds.cache.size}): ${[...c.guilds.cache.values()].map((g) => g.name).join(', ') || 'keiner – Bot mit dem Link oben einladen'}`);
         void checkApi();
         const json = commands_1.COMMANDS.map(toBuilder);
-        const guilds = (0, config_1.guildIds)(cfg);
-        if (guilds.length) {
-            // Frühere globale Registrierung entfernen – sonst erscheinen alle Befehle doppelt (global + Server)
+        // Befehle auf JEDEM Server des Bots registrieren (sofort sichtbar) – auch auf neuen Servern, sobald der Bot eingeladen wird.
+        // DISCORD_GUILD_ID wird zusätzlich berücksichtigt (falls der Bot dort noch nicht im Cache ist).
+        try {
+            await c.application.commands.set([]);
+        }
+        catch (e) {
+            console.error(`could not clear global commands: ${e instanceof Error ? e.message : e}`);
+        } // keine doppelten (global + Server)
+        const register = async (g, name) => {
             try {
-                await c.application.commands.set([]);
+                await c.application.commands.set(json, g);
+                console.log(`${json.length} slash commands registered for ${name ?? g}`);
             }
             catch (e) {
-                console.error(`could not clear global commands: ${e instanceof Error ? e.message : e}`);
+                console.error(`could not register commands for ${name ?? g} (invited with the applications.commands scope?): ${e instanceof Error ? e.message : e}`);
             }
-            for (const g of guilds) {
-                try {
-                    await c.application.commands.set(json, g);
-                    console.log(`${json.length} slash commands registered for guild ${g}`);
-                }
-                catch (e) {
-                    console.error(`could not register commands for guild ${g} (is the bot invited there with the applications.commands scope?): ${e instanceof Error ? e.message : e}`);
-                }
-            }
-        }
-        else {
-            await c.application.commands.set(json);
-            console.log(`${json.length} slash commands registered globally (can take up to an hour to appear)`);
-            // Frühere Server-Registrierungen entfernen – sonst erscheinen alle Befehle doppelt
-            for (const g of c.guilds.cache.keys()) {
-                try {
-                    await c.application.commands.set([], g);
-                }
-                catch { /* Server ohne Befehle/Zugriff: egal */ }
-            }
-        }
+        };
+        const all = new Map([...c.guilds.cache.values()].map((g) => [g.id, g.name]));
+        for (const g of (0, config_1.guildIds)(cfg))
+            if (!all.has(g))
+                all.set(g, g);
+        for (const [id, name] of all)
+            await register(id, name);
+        c.on('guildCreate', (g) => { console.log(`added to server ${g.name}`); void register(g.id, g.name); });
         (0, outbox_1.startOutboxLoop)(api, async (channelId, embeds, buttons, opts) => {
             const ch = await client.channels.fetch(channelId);
             if (!ch?.isSendable())
