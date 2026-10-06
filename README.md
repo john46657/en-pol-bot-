@@ -43,4 +43,5 @@ pnpm e2e         # Playwright (uses installed Google Chrome)
 | Browser E2E tests (10 specs), public application page `/apply` | done |
 | Support ticket system for Discord, fully configured in the dashboard (panel builder with preview, categories, questions, buttons, roles, statuses, priorities, close reasons, transcripts, ratings, statistics, auto-close/-delete, internal notes, `ticket.*` permissions): [docs/support-tickets.md](docs/support-tickets.md) | done; **not tested against real Discord** |
 | Studio: custom fields (persons/vehicles), accent theme, application form ([docs/studio.md](docs/studio.md)) | done |
+| Dashboard: Discord-Rollen laufend geprüft, Rollen-Hierarchie/-Editor/Matrix, Bereichsrechte, Server getrennt, persönliches Design + Widgets + Layouts, Teamliste (≥ 60 s) und Voice-Widget getrennt, automatisches Speichern: [docs/dashboard.md](docs/dashboard.md) | done; **Teamliste/Voice nicht gegen echtes Discord getestet** |
 | Studio workflows, configurable priorities, virtualized tables, record locking, 2FA | **not implemented** |

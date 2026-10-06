@@ -6,7 +6,7 @@ test('login rejects bad credentials, accepts good ones, and logout ends the sess
   await uiLogin(page, 'admin', 'wrong-password', { expectSuccess: false });
   await expect(page.getByRole('alert')).toContainText('Invalid username or password.');
   await uiLogin(page, 'admin', ADMIN_PASSWORD);
-  await expect(page.getByRole('heading', { name: /Welcome, System Administrator/ })).toBeVisible();
+  await expect(page.getByRole('heading', { name: /Willkommen, System Administrator/ })).toBeVisible();
   await page.getByRole('button', { name: 'Log out' }).click();
   await expect(page).toHaveURL(/\/login/);
   await page.goto('/dashboard');
@@ -17,7 +17,7 @@ test('person → ticket creation is linked and visible on the person record', as
   await uiLogin(page, 'admin', ADMIN_PASSWORD);
   await page.goto('/persons');
   await page.getByRole('button', { name: 'New person' }).click();
-  await page.getByLabel('Roblox username *').fill('E2E_Speeder');
+  await page.getByLabel('Roblox username or Roblox ID *').fill('E2E_Speeder');
   await page.getByLabel('Roblox user ID').fill('5550001');
   await page.getByRole('button', { name: 'Save' }).click();
   await expect(page.getByRole('heading', { name: 'E2E_Speeder' })).toBeVisible();
@@ -103,11 +103,12 @@ test('public application → staff review workflow', async ({ page, browser }) =
 
   await uiLogin(page, 'admin', ADMIN_PASSWORD);
   await page.goto('/applications');
-  await page.getByText('E2E_Applicant').click();
-  for (const b of ['Start screening', 'Move to interview', 'Ready for decision']) await page.getByRole('button', { name: b }).click();
-  await page.getByRole('button', { name: 'Accept' }).click();
+  // Entscheidung direkt in der Liste (wie die Buttons in Discord), mit Grund per DM
+  const card = page.locator('div').filter({ has: page.getByText('E2E_Applicant', { exact: true }) }).filter({ has: page.getByRole('button', { name: 'Accept with reason' }) }).last();
+  await card.getByRole('button', { name: 'Accept with reason' }).click();
   await page.getByLabel(/Reason/).fill('Strong interview');
   await page.getByRole('button', { name: 'Confirm' }).click();
+  await page.getByLabel('Status').selectOption({ label: 'Accepted' });
   await expect(page.getByText('ACCEPTED', { exact: true })).toBeVisible();
 });
 
@@ -121,15 +122,15 @@ test('Studio: custom field + accent colour apply to forms, validation and detail
   await page.getByLabel('persons field type').selectOption('select');
   await page.getByLabel('persons field options').fill('A, B, None');
   await page.getByLabel('persons field key').locator('xpath=ancestor::div[1]').getByLabel('required').check();
-  await page.getByRole('button', { name: 'Save custom fields' }).click();
-  await expect(page.getByRole('status')).toContainText('Saved.');
+  // automatisch gespeichert – kein Klick nötig
+  await expect(page.getByRole('status').filter({ hasText: 'Alle Änderungen gespeichert' })).toBeVisible({ timeout: 10_000 });
   await page.getByRole('tab', { name: 'Theme' }).click();
   await page.getByRole('radio', { name: /green/ }).click();
   await expect.poll(() => page.evaluate(() => getComputedStyle(document.documentElement).getPropertyValue('--color-primary').trim())).toBe('#22c55e');
 
   await page.goto('/persons');
   await page.getByRole('button', { name: 'New person' }).click();
-  await page.getByLabel('Roblox username *').fill('E2E_Custom');
+  await page.getByLabel('Roblox username or Roblox ID *').fill('E2E_Custom');
   await page.getByRole('button', { name: 'Save' }).click();
   await expect(page.getByText('License class is required')).toBeVisible(); // client-side required
   await page.getByLabel('License class *').selectOption('B');
@@ -208,4 +209,72 @@ test('Discord: link code from the UI is redeemed by the bot API, then unlinked',
   await expect(page.getByRole('button', { name: 'Code erzeugen' })).toBeVisible();
   const after = await request.get('http://localhost:3100/api/v1/persons', { headers: { ...BOT, 'X-Discord-User': '300000000000000001' } });
   expect(after.status()).toBe(401);
+});
+
+test('autosave: personal design survives a reload and another device; status shows saved', async ({ page, browser }) => {
+  await uiLogin(page, 'admin', ADMIN_PASSWORD);
+  await page.goto('/me/settings');
+  await page.getByRole('radio', { name: '☀️ Hell' }).click();
+  await page.getByRole('button', { name: 'Akzentfarbe #7289DA' }).click();
+  await expect(page.getByRole('status').filter({ hasText: 'Alle Änderungen gespeichert' })).toBeVisible({ timeout: 10_000 });
+  await page.reload();
+  await expect.poll(() => page.evaluate(() => document.documentElement.dataset.theme)).toBe('light');
+  // anderes „Gerät“: gleiche Einstellungen aus der Datenbank
+  const ctx = await browser.newContext();
+  const p2 = await ctx.newPage();
+  await uiLogin(p2, 'admin', ADMIN_PASSWORD);
+  await expect.poll(() => p2.evaluate(() => getComputedStyle(document.documentElement).getPropertyValue('--color-primary').trim().toLowerCase())).toBe('#7289da');
+  await ctx.close();
+  // zurück auf dunkel (andere Tests)
+  await page.getByRole('radio', { name: '🌙 Dunkel' }).click();
+  await expect(page.getByRole('status').filter({ hasText: 'Alle Änderungen gespeichert' })).toBeVisible({ timeout: 10_000 });
+});
+
+test('autosave: a change made right before navigating away is not lost (stored locally first)', async ({ page }) => {
+  await uiLogin(page, 'admin', ADMIN_PASSWORD);
+  await page.goto('/me/settings');
+  await page.getByRole('radio', { name: 'Kompakt' }).click();
+  await page.goto('/teamlist'); // sofort weg – ohne auf das Speichern zu warten
+  await page.reload();
+  await expect.poll(() => page.evaluate(() => document.documentElement.dataset.density)).toBe('compact');
+  const api = await adminApi();
+  await expect.poll(async () => (await (await api.get('/api/v1/me/preferences')).json()).preferences.density).toBe('compact');
+  await page.goto('/me/settings');
+  await page.getByRole('radio', { name: 'Komfortabel' }).click();
+  await expect(page.getByRole('status').filter({ hasText: 'Alle Änderungen gespeichert' })).toBeVisible({ timeout: 10_000 });
+});
+
+test('roles editor: create a role, change a permission in the matrix – saved automatically and audited', async ({ page }) => {
+  await uiLogin(page, 'admin', ADMIN_PASSWORD);
+  await page.goto('/admin/roles');
+  await page.getByRole('button', { name: 'Neue Rolle', exact: true }).click();
+  await page.getByRole('textbox', { name: 'Name', exact: true }).fill('E2E Moderator');
+  await page.getByRole('button', { name: 'ticket.close: NONE' }).click();
+  await expect(page.getByRole('status').filter({ hasText: 'Alle Änderungen gespeichert' })).toBeVisible({ timeout: 10_000 });
+  const api = await adminApi();
+  const role = ((await (await api.get('/api/v1/roles')).json()) as { name: string; permissions: { permissionKey: string; effect: string }[] }[]).find((r) => r.name === 'E2E Moderator');
+  expect(role?.permissions).toEqual([{ permissionKey: 'ticket.close', effect: 'ALLOW' }]);
+  await page.getByRole('tab', { name: 'Berechtigungsmatrix' }).click();
+  await page.getByRole('button', { name: 'E2E Moderator – ticket.delete: NONE' }).click();
+  await expect(page.getByRole('status').filter({ hasText: 'Alle Änderungen gespeichert' })).toBeVisible({ timeout: 10_000 });
+  await page.goto('/admin/audit');
+  await expect(page.getByText(/die Berechtigung ticket\.delete erteilt/).first()).toBeVisible();
+});
+
+test('dashboard: edit mode adds the voice widget separately from the team list; team list page has cards/table', async ({ page }) => {
+  await uiLogin(page, 'admin', ADMIN_PASSWORD);
+  await page.getByRole('button', { name: 'Dashboard bearbeiten' }).click();
+  await page.getByRole('button', { name: 'Auf Standard zurücksetzen' }).click();
+  await expect(page.getByRole('heading', { name: '🎙️ Aktive Voice-Channels' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: '👥 Teamliste' })).toBeVisible();
+  const voice = page.locator('section').filter({ has: page.getByRole('heading', { name: '🎙️ Aktive Voice-Channels' }) });
+  await voice.getByRole('button', { name: 'Entfernen' }).click();
+  await expect(page.getByRole('heading', { name: '🎙️ Aktive Voice-Channels' })).toHaveCount(0);
+  await page.getByLabel('Widget hinzufügen').selectOption({ label: '🎙️ Aktive Voice-Channels' });
+  await expect(page.getByRole('heading', { name: '🎙️ Aktive Voice-Channels' })).toBeVisible();
+  await page.getByRole('button', { name: 'Fertig' }).click();
+  await page.goto('/teamlist');
+  await expect(page.getByPlaceholder('🔍 Teammitglied suchen')).toBeVisible();
+  await page.getByRole('button', { name: 'Tabellenansicht' }).click();
+  await expect(page.getByRole('button', { name: 'Tabellenansicht' })).toHaveAttribute('aria-pressed', 'true');
 });

@@ -1,3 +1,4 @@
+import { currentGuild } from '../common/guild-context';
 import { Body, Controller, Get, HttpCode, Param, ParseUUIDPipe, Post, Put, Query } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { Throttle } from '@nestjs/throttler';
@@ -25,7 +26,7 @@ export class ApplicationsController {
   @Public() @Throttle({ default: { limit: process.env.NODE_ENV === 'test' ? 10_000 : 5, ttl: 3_600_000 } }) @Post()
   submit(@Body(zodBody(submit)) b: z.infer<typeof submit>) { return this.a.submit(b); }
   @Get() @RequirePermission('applications.view')
-  list(@Query(zodBody(listQ)) q: z.infer<typeof listQ>) { return this.a.list(q, q.status, q.guildId); }
+  list(@Query(zodBody(listQ)) q: z.infer<typeof listQ>) { return this.a.list(q, q.status, q.guildId ?? currentGuild() ?? undefined); } // Server getrennt: gewählter Server
   @Get('history') @RequirePermission('applications.view')
   history(@Query(zodBody(z.object({ discordId: z.string().regex(/^\d{15,25}$/) }))) q: { discordId: string }) { return this.a.history(q.discordId); }
   @Get(':id') @RequirePermission('applications.view')

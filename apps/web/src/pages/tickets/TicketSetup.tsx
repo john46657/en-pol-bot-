@@ -4,6 +4,7 @@ import {
   CLAIM_MODES, CLOSE_REASON_MODES, CLOSE_REASON_SOURCES, QUESTION_TYPES, STATUS_KINDS, TICKET_ACTIONS, TICKET_PLACEHOLDERS, defaultTicketButtons, renderTicketText, ticketChannelName,
   type ButtonStyleName, type MessageSpec, type QuestionType, type TicketAction, type TicketQuestion, type TicketVars,
 } from '@enrp/shared';
+import { flush, onSaved, useAutosaveDraft } from '../../lib/autosave';
 import { api } from '../../lib/api';
 import { Badge, Button, Card, ConfirmDialog, EmptyState, ErrorState, Field, Input, Select, SkeletonRows, Textarea } from '../../components/ui';
 import { DiscordPreview } from '../../components/DiscordPreview';
@@ -40,6 +41,11 @@ export function TicketSetup({ section }: { section: Section }) {
   );
 }
 
+/** Automatisch gespeicherte Ticket-Einstellungen: danach die Konfiguration neu laden (Vorschauen, Listen). */
+function useTicketAutosaveSync() {
+  const qc = useQueryClient();
+  useEffect(() => onSaved('ticket:', () => void qc.invalidateQueries({ queryKey: ['ticket-config'] })), [qc]);
+}
 function useSave<T>(fn: (v: T) => Promise<unknown>, done?: (r: unknown) => void) {
   const qc = useQueryClient();
   return useMutation({ mutationFn: fn, onSuccess: (r) => { void qc.invalidateQueries({ queryKey: ['ticket-config'] }); done?.(r); } });
@@ -125,6 +131,9 @@ function PanelEditor({ draft, c, onDone }: { draft: PanelDraft; c: TicketConfig;
   const [p, setP] = useState<PanelDraft>(draft);
   const set = (x: Partial<PanelDraft>) => setP({ ...p, ...x });
   const save = useSave(() => api(p.id ? `/support-tickets/panels/${p.id}` : '/support-tickets/panels', { method: p.id ? 'PUT' : 'POST', body: clean({ ...p, id: undefined }) }), onDone);
+  useTicketAutosaveSync();
+  // bestehendes Panel: jede Änderung automatisch speichern (neues Panel: einmal „Erstellen“)
+  useAutosaveDraft(p.id ? `ticket:panel:${p.id}` : null, p, (x) => (x.name.trim() ? { method: 'PUT', path: `/support-tickets/panels/${x.id}`, body: clean({ ...x, id: undefined }), label: `Panel „${x.name}“` } : null));
   const url = (k: 'thumbnailUrl' | 'imageUrl' | 'bannerUrl' | 'footerIconUrl' | 'authorIconUrl', l: string) => <Field label={l} hint="https:// link to an image">{(id) => <Input id={id} value={p[k] ?? ''} onChange={(e) => set({ [k]: e.target.value || null })} />}</Field>;
   const toggleCat = (id: string) => set({ categoryIds: p.categoryIds.includes(id) ? p.categoryIds.filter((x) => x !== id) : [...p.categoryIds, id] });
   return (
@@ -174,7 +183,7 @@ function PanelEditor({ draft, c, onDone }: { draft: PanelDraft; c: TicketConfig;
             )}
           </Section>
           <Err error={save.error} />
-          <div className="flex gap-2"><Button disabled={save.isPending} onClick={() => save.mutate(undefined)}>Save panel</Button><Button variant="secondary" onClick={onDone}>Cancel</Button></div>
+          <div className="flex gap-2">{p.id ? <><span className="self-center text-xs text-muted">Wird automatisch gespeichert.</span><Button onClick={() => void flush().then(onDone)}>Fertig</Button></> : <><Button disabled={save.isPending} onClick={() => save.mutate(undefined)}>Panel erstellen</Button><Button variant="secondary" onClick={onDone}>Cancel</Button></>}</div>
           <p className="text-xs text-muted">After saving, use „Send to Discord“ / „Update in Discord“ in the panel list.</p>
         </div>
       </Card>
@@ -230,6 +239,8 @@ function CategoryEditor({ draft, c, onDone }: { draft: CatDraft; c: TicketConfig
   const [d, setD] = useState<CatDraft>({ ...draft, buttons: draft.buttons.length ? draft.buttons : defaultTicketButtons() });
   const set = (x: Partial<CatDraft>) => setD({ ...d, ...x });
   const save = useSave(() => api(d.id ? `/support-tickets/categories/${d.id}` : '/support-tickets/categories', { method: d.id ? 'PUT' : 'POST', body: clean({ ...d, id: undefined }) }), onDone);
+  useTicketAutosaveSync();
+  useAutosaveDraft(d.id ? `ticket:category:${d.id}` : null, d, (x) => (x.name.trim() ? { method: 'PUT', path: `/support-tickets/categories/${x.id}`, body: clean({ ...x, id: undefined }), label: `Kategorie „${x.name}“` } : null));
   const prio = c.priorities.find((p) => p.id === d.defaultPriorityId) ?? c.priorities.find((p) => p.isDefault);
   const status = c.statuses.find((s) => s.isDefault);
   const vars: TicketVars = { ...SAMPLE, '{category}': d.name, '{priority}': prio ? label(prio) : '—', '{status}': status ? label(status) : '—', '{channel}': `#${ticketChannelName(d.channelNameFormat, { ...SAMPLE, '{category}': d.name })}` };
@@ -326,7 +337,7 @@ function CategoryEditor({ draft, c, onDone }: { draft: CatDraft; c: TicketConfig
             <Field label="Message">{(id) => <Input id={id} value={d.escalationMessage} maxLength={1000} onChange={(e) => set({ escalationMessage: e.target.value })} />}</Field>
           </Section>
           <Err error={save.error} />
-          <div className="flex gap-2"><Button disabled={save.isPending} onClick={() => save.mutate(undefined)}>Save category</Button><Button variant="secondary" onClick={onDone}>Cancel</Button></div>
+          <div className="flex gap-2">{d.id ? <><span className="self-center text-xs text-muted">Wird automatisch gespeichert.</span><Button onClick={() => void flush().then(onDone)}>Fertig</Button></> : <><Button disabled={save.isPending} onClick={() => save.mutate(undefined)}>Kategorie erstellen</Button><Button variant="secondary" onClick={onDone}>Cancel</Button></>}</div>
         </div>
       </Card>
       <div className="xl:sticky xl:top-4 xl:self-start"><Card title="Preview: new ticket"><DiscordPreview message={preview} /></Card></div>
@@ -460,6 +471,8 @@ function ListEditor<T extends { id: string }>({ title, items, path, blank, rende
   const [del, setDel] = useState<T>();
   const save = useSave(() => api(edit?.id ? `/support-tickets/${path}/${edit.id}` : `/support-tickets/${path}`, { method: edit?.id ? 'PUT' : 'POST', body: clean(edit!.v as object) }), () => setEdit(undefined));
   const remove = useSave((id: string) => api(`/support-tickets/${path}/${id}`, { method: 'DELETE' }), () => setDel(undefined));
+  useTicketAutosaveSync();
+  useAutosaveDraft(edit?.id ? `ticket:${path}:${edit.id}` : null, edit?.v, (v) => ({ method: 'PUT', path: `/support-tickets/${path}/${edit!.id}`, body: clean(v as object), label: title }));
   return (
     <Card title={title} actions={!edit && <Button size="sm" onClick={() => setEdit({ v: blank })}>Add</Button>}>
       {hint && <p className="mb-2 text-xs text-muted">{hint}</p>}
@@ -468,7 +481,7 @@ function ListEditor<T extends { id: string }>({ title, items, path, blank, rende
         <div className="mb-3 grid gap-2 rounded-md border border-primary/40 p-3">
           {render(edit.v, (p) => setEdit({ ...edit, v: { ...edit.v, ...p } }))}
           <Err error={save.error} />
-          <div className="flex gap-2"><Button size="sm" disabled={save.isPending} onClick={() => save.mutate(undefined)}>Save</Button><Button size="sm" variant="secondary" onClick={() => setEdit(undefined)}>Cancel</Button></div>
+          <div className="flex gap-2">{edit.id ? <Button size="sm" onClick={() => void flush().then(() => setEdit(undefined))}>Fertig (automatisch gespeichert)</Button> : <><Button size="sm" disabled={save.isPending} onClick={() => save.mutate(undefined)}>Hinzufügen</Button><Button size="sm" variant="secondary" onClick={() => setEdit(undefined)}>Cancel</Button></>}</div>
         </div>
       )}
       {!items.length ? <p className="text-sm text-muted">None yet.</p> : (
@@ -490,6 +503,8 @@ function General({ c }: { c: TicketConfig }) {
   const [ok, setOk] = useState(false);
   const set = (p: Partial<TicketSettingsCfg>) => { setS({ ...s, ...p }); setOk(false); };
   const save = useSave(() => api('/support-tickets/settings', { method: 'PUT', body: clean(s) }), () => setOk(true));
+  useTicketAutosaveSync();
+  useAutosaveDraft('ticket:settings', s, (x) => ({ method: 'PUT', path: '/support-tickets/settings', body: clean(x), label: 'Ticket-Einstellungen' }));
   const closed: MessageSpec = { embeds: [{ title: renderTicketText(s.closedTitle, SAMPLE), description: renderTicketText(s.closedMessage, SAMPLE), color: s.closedColor }] };
   return (
     <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_minmax(0,520px)]">
@@ -523,7 +538,7 @@ function General({ c }: { c: TicketConfig }) {
             <Field label="Thanks after rating">{(id) => <Input id={id} value={s.ratingThanks} maxLength={500} onChange={(e) => set({ ratingThanks: e.target.value })} />}</Field>
           </Section>
           <Err error={save.error} />
-          <div className="flex items-center gap-2"><Button disabled={save.isPending} onClick={() => save.mutate(undefined)}>Save</Button>{ok && <span role="status" className="text-sm text-success">Saved.</span>}</div>
+          <div className="flex items-center gap-2"><span className="text-xs text-muted">Änderungen werden automatisch gespeichert.</span><Button variant="secondary" disabled={save.isPending} onClick={() => save.mutate(undefined)}>Jetzt speichern</Button>{ok && <span role="status" className="text-sm text-success">Gespeichert.</span>}</div>
         </div>
       </Card>
       <div className="xl:sticky xl:top-4 xl:self-start"><Card title="Preview: closed ticket"><DiscordPreview message={closed} /></Card></div>

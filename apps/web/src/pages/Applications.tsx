@@ -1,7 +1,8 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { Link } from 'react-router';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type { FormField } from '@enrp/shared';
+import { useAutosaveDraft } from '../lib/autosave';
 import { api, type Page } from '../lib/api';
 import { useAuth } from '../lib/auth';
 import { GuildTag, useGuilds, useServer } from '../lib/guilds';
@@ -111,6 +112,12 @@ function PoliceSetup() {
     },
     onSuccess: () => { setMsg('Saved. Changes apply to new applications right away; post the panel again (/bewerbungspanel) to show a changed text.'); void qc.invalidateQueries({ queryKey: ['quali-config'] }); void qc.invalidateQueries({ queryKey: ['application-form'] }); },
   });
+  // automatisch speichern – für den gewählten Server (Server laufen getrennt)
+  const draft = useMemo(() => (common ? { title, text, name, common, questions } : undefined), [title, text, name, common, questions]);
+  useAutosaveDraft(config.data ? `app:setup:${server || 'all'}` : null, draft, (d) => {
+    const c = config.data!;
+    return { method: 'PUT', path: `/qualifications/config${server ? `?guildId=${server}` : ''}`, body: { title: c.title, intro: c.intro, units: c.units, police: { title: d.title, description: d.text, name: d.name, ...d.common }, policeForm: d.questions }, label: 'Bewerbungs-Einstellungen' };
+  }, 1500);
   if (config.error) return <ErrorState error={config.error} onRetry={() => void config.refetch()} />;
   if (config.isLoading || !common) return <SkeletonRows />;
   return (
@@ -129,7 +136,8 @@ function PoliceSetup() {
       </Card>
       {save.error && <p role="alert" className="text-sm text-danger">{errText(save.error)}</p>}
       <div className="sticky bottom-2 flex flex-wrap items-center gap-2 rounded-lg border border-line bg-panel p-2">
-        <Button disabled={save.isPending} onClick={() => { setMsg(undefined); save.mutate(); }}>Save</Button>
+        <span className="text-sm text-muted">Änderungen werden automatisch gespeichert.</span>
+        <Button variant="secondary" disabled={save.isPending} onClick={() => { setMsg(undefined); save.mutate(); }}>Jetzt speichern</Button>
         {msg && <span className="text-sm text-muted">{msg}</span>}
       </div>
     </div>

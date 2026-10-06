@@ -29,3 +29,13 @@ export function useRealtime(room: string, events: string[], queryKeys: string[][
 }
 
 export function disconnectRealtime() { socket?.disconnect(); socket = undefined; rooms.clear(); }
+
+/** Ereignisse an alle bzw. an den eigenen Benutzer (ohne Raum), z. B. „Rechte geändert“. */
+export function useRealtimeEvent(event: string, handler: () => void, enabled = true) {
+  useEffect(() => {
+    if (!enabled) return;
+    const s = ensure();
+    s.on(event, handler);
+    return () => { s.off(event, handler); };
+  }, [event, enabled]);
+}

@@ -13,6 +13,7 @@ var __param = (this && this.__param) || function (paramIndex, decorator) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.BotSupportTicketsController = exports.SupportTicketsController = void 0;
+const guild_context_1 = require("../common/guild-context");
 const common_1 = require("@nestjs/common");
 const swagger_1 = require("@nestjs/swagger");
 const zod_1 = require("zod");
@@ -77,7 +78,7 @@ let SupportTicketsController = class SupportTicketsController {
     updateReason(u, id, b) { return this.cfg.saveReason(actor(u), id, b); }
     delReason(u, id) { return this.cfg.deleteReason(actor(u), id); }
     // ---- Tickets ----
-    list(u, q) { return this.s.list(u.id, { ...q, kind: q.kind === 'all' ? undefined : q.kind }); }
+    list(u, q) { return this.s.list(u.id, { ...q, guildId: q.guildId ?? (0, guild_context_1.currentGuild)() ?? undefined, kind: q.kind === 'all' ? undefined : q.kind }); }
     async create(u, b) { return this.s.openFromDashboard(await this.s.actorFromUser(u), b); }
     stats(u) { return this.s.stats(u.id); }
     ratings(u, q) { return this.s.ratings(u.id, q); }

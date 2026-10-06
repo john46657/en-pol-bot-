@@ -2,6 +2,7 @@ import { useSyncExternalStore } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { api } from './api';
 import { useAuth } from './auth';
+import { getServer, setServer, subscribeServer } from './server';
 
 /** Discord-Server des Bots mit Channels und Rollen (meldet der Bot automatisch). */
 export interface GuildInfo {
@@ -29,18 +30,11 @@ export function GuildTag({ id }: { id: string | null | undefined }) {
   );
 }
 
-// ---- Ausgewählter Server (Dropdown oben links) – gilt für Bewerbungen, Qualifikationen und Tickets ----
-const KEY = 'enrp.server';
-const listeners = new Set<() => void>();
-let current = (() => { try { return localStorage.getItem(KEY) ?? ''; } catch { return ''; } })();
-export function setServer(id: string) {
-  current = id;
-  try { if (id) localStorage.setItem(KEY, id); else localStorage.removeItem(KEY); } catch { /* privater Modus */ }
-  listeners.forEach((l) => l());
-}
+// ---- Ausgewählter Server (Dropdown oben links) – gilt für alles: Rechte, Teamliste, Voice, Tickets, Bewerbungen, Einstellungen ----
+export { setServer };
 /** Gewählter Server ('' = alle Server). Ist der gespeicherte Server nicht mehr da, gilt „alle“. */
 export function useServer(): [string, (id: string) => void] {
-  const id = useSyncExternalStore((l) => { listeners.add(l); return () => listeners.delete(l); }, () => current, () => current);
+  const id = useSyncExternalStore(subscribeServer, getServer, getServer);
   const g = useGuilds();
   const valid = !id || !g.data || g.data.some((x) => x.id === id);
   return [valid ? id : '', setServer];
