@@ -9,10 +9,22 @@ export const unitSchema = z.object({
   roleId: z.union([z.string().regex(/^\d{15,25}$/), z.literal('')]).optional(),
   questions: z.array(z.string().trim().min(3).max(300)).min(1).max(15),
 });
+/** Texte des Panels für die normale Bewerbung bei EN Polizei (/bewerbungspanel); die Fragen sind das Bewerbungsformular (`application.form`). */
+export const policeSchema = z.object({
+  title: z.string().trim().min(2).max(100).default('📋 Bewerbung bei EN Polizei'),
+  description: z.string().trim().max(1500).default('Du möchtest Teil der **EN Polizei** werden? Klicke auf **Jetzt bewerben** – der Bot stellt dir die Fragen nacheinander per **Direktnachricht**.\n\nDu brauchst deinen **Roblox-Namen** und etwa 10 Minuten Zeit. Die Entscheidung bekommst du ebenfalls per Direktnachricht.'),
+});
 export const configSchema = z.object({
   title: z.string().trim().min(2).max(100).default('Qualifikationen'),
   intro: z.string().trim().max(1500).default(''),
   units: z.array(unitSchema).min(1).max(10).refine((u) => new Set(u.map((x) => x.key)).size === u.length, 'Unit keys must be unique.'),
+  police: policeSchema.default({}),
+});
+/** Feld des Bewerbungsformulars (gleiche Regeln wie Studio → Application form). */
+export const formFieldSchema = z.object({ key: z.string().regex(/^[a-zA-Z][\w]{0,40}$/), label: z.string().trim().min(1).max(300), required: z.boolean(), maxLength: z.number().int().min(1).max(5000) });
+/** Speichern aus „Qualifications → Setup“: Panels + Einheiten und optional die Fragen der Polizei-Bewerbung. */
+export const saveSchema = configSchema.extend({
+  policeForm: z.array(formFieldSchema).min(1).max(30).refine((f) => new Set(f.map((x) => x.key)).size === f.length, 'Question keys must be unique.').optional(),
 });
 export type QualificationUnit = z.infer<typeof unitSchema>;
 export type QualificationConfig = z.infer<typeof configSchema>;
@@ -20,6 +32,7 @@ export type QualificationConfig = z.infer<typeof configSchema>;
 const Q1 = 'Wie ist dein Roblox-Username und dein Discord-Username?';
 /** Startkonfiguration – im Web unter „Qualifications → Setup“ änderbar. */
 export const DEFAULT_CONFIG: QualificationConfig = {
+  police: policeSchema.parse({}),
   title: 'Qualifikationen',
   intro: 'Streife fahren und Einsätze abarbeiten – das sind nicht alle unsere Möglichkeiten, jeden Tag spannende Einsätze zu haben! Daher bieten wir unseren Beamten ab einem bestimmten Dienstgrad an, sich weiterzubilden: als Teil des **SEK**, der **Flugstaffel** oder als **Ausbilder**!',
   units: [

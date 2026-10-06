@@ -10,7 +10,11 @@ Ablauf wie bei Appy – aber im eigenen Bot und mit Daten im System. Die normale
 
 Regeln: eine offene Bewerbung pro Person und Einheit; eine laufende Bewerbung im Chat zur selben Zeit; über die eigene Bewerbung darf niemand entscheiden. Bewerben geht auch **ohne** verknüpftes Konto.
 
-**Einrichten (Web → Qualifications → Setup, Recht `qualifications.manage`):** Titel und Einleitung des Panels; je Einheit Name, Beschreibung, Discord-Rollen-ID (optional) und bis zu 15 Fragen (eine pro Zeile). Startwerte: Flugstaffel, SEK, Ausbilder mit je 6 Fragen. Nach Änderungen das Panel mit `/qualipanel` neu posten.
+**Einrichten – alles an einem Ort (Web → Qualifications → Setup, Recht `qualifications.manage`):**
+- *Bewerbung bei EN Polizei*: Titel/Text des Panels (`/bewerbungspanel`) und die Fragen – eine pro Zeile, optionale mit „(optional)“ am Ende (max. 30). Das ist dasselbe Formular wie unter Studio → Application form und auf der Web-Seite `/apply`; der Roblox-Name wird immer zuerst gefragt. Unveränderte Fragen behalten ihre Zuordnung zu alten Antworten.
+- *Qualifikationen*: Titel und Einleitung des Panels; je Einheit Name, Beschreibung, Discord-Rollen-ID (optional) und bis zu 15 Fragen (eine pro Zeile). Startwerte: Flugstaffel, SEK, Ausbilder mit je 6 Fragen.
+
+Fragen gelten sofort für neu gestartete Bewerbungen. Geänderte Panel-Texte/Einheiten: Panel mit `/bewerbungspanel` bzw. `/qualipanel` neu posten.
 
 **Discord-Einstellungen (Web → Administration → Settings):** *Qualifications channel ID* = Team-Channel für eingehende Bewerbungen (nur für das Team sichtbar machen – die Antworten stehen im Klartext darin). Die Bot-Rolle muss über den zu vergebenden Rollen stehen und „Rollen verwalten“ haben. Der Bot braucht keine „privileged intents“; Mitglieder müssen DMs von Servermitgliedern erlauben.
 
@@ -18,4 +22,4 @@ Regeln: eine offene Bewerbung pro Person und Einheit; eine laufende Bewerbung im
 
 Hinweis: Laufende Bewerbungen liegen im Speicher des Bots – startet der Bot neu, muss eine angefangene Bewerbung neu begonnen werden (eingereichte sind sicher gespeichert).
 
-API: `GET|PUT /qualifications/config`, `GET /qualifications/applications?unit=&status=`, `POST /qualifications/applications/:id/decision`; Bot-Dienst: `GET /bot/qualifications`, `GET /bot/qualifications/open`, `POST /bot/qualifications/applications`.
+API: `GET|PUT /qualifications/config` (inkl. `police` und `policeForm`), `GET /qualifications/applications?unit=&status=`, `POST /qualifications/applications/:id/decision`; Bot-Dienst: `GET /bot/qualifications`, `GET /bot/qualifications/open`, `POST /bot/qualifications/applications`.

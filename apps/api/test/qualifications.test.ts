@@ -97,4 +97,21 @@ describe('qualification applications', () => {
     expect((await http().get(`/api/v1/bot/application/open?discordId=${D}`).set(bot())).body).toEqual({ open: true, number: r.body.number });
     expect((await http().post('/api/v1/bot/application').set(bot()).send({ robloxUsername: 'Builderman2', discordId: D, answers })).status).toBe(409);
   });
+
+  it('setup edits the police application questions and panel texts in the same place', async () => {
+    const admin = (await login(app, 'q_admin')).agent;
+    const cur = (await admin.get('/api/v1/qualifications/config')).body;
+    expect(cur.police.title).toContain('Bewerbung');
+    expect(cur.policeForm.length).toBeGreaterThan(0);
+    const policeForm = [{ key: 'experience', label: 'Was hast du schon erlebt?', required: true, maxLength: 500 }, { key: 'frage1', label: 'Hast du ein Mikrofon?', required: false, maxLength: 1000 }];
+    const body = { title: cur.title, intro: cur.intro, units: cur.units, police: { title: 'Werde Polizist!', description: 'Text' }, policeForm };
+    expect((await admin.put('/api/v1/qualifications/config').send({ ...body, policeForm: [policeForm[0], policeForm[0]] })).status).toBe(400);
+    const r = await admin.put('/api/v1/qualifications/config').send(body);
+    expect(r.status).toBe(200);
+    expect((await http().get('/api/v1/applications/form')).body).toEqual(policeForm);
+    expect((await http().get('/api/v1/bot/qualifications').set(bot())).body.police).toEqual({ title: 'Werde Polizist!', description: 'Text' });
+    // ohne policeForm bleibt das Formular unverändert
+    expect((await admin.put('/api/v1/qualifications/config').send({ ...body, policeForm: undefined })).status).toBe(200);
+    expect((await http().get('/api/v1/applications/form')).body).toEqual(policeForm);
+  });
 });

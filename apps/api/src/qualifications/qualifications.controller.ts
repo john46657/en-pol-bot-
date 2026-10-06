@@ -2,7 +2,7 @@ import { Body, Controller, Get, HttpCode, Param, ParseUUIDPipe, Post, Put, Query
 import { ApiTags } from '@nestjs/swagger';
 import { z } from 'zod';
 import { QualificationsService } from './qualifications.service';
-import { configSchema } from './qualifications.config';
+import { saveSchema } from './qualifications.config';
 import { BotService, CurrentActor, RequirePermission } from '../authz/decorators';
 import type { Actor } from '../audit/audit.service';
 import { zodBody } from '../common/zod.pipe';
@@ -17,10 +17,11 @@ const openQ = z.object({ discordId, unit: z.string().max(24).optional() });
 @Controller('qualifications')
 export class QualificationsController {
   constructor(private readonly q: QualificationsService) {}
+  /** Panels, Einheiten und die Fragen der Polizei-Bewerbung (`policeForm`). */
   @Get('config') @RequirePermission('qualifications.view')
-  config() { return this.q.config(); }
+  config() { return this.q.setup(); }
   @Put('config') @RequirePermission('qualifications.manage')
-  save(@CurrentActor() a: Actor, @Body(zodBody(configSchema)) b: z.infer<typeof configSchema>) { return this.q.saveConfig(a, b); }
+  save(@CurrentActor() a: Actor, @Body(zodBody(saveSchema)) b: z.infer<typeof saveSchema>) { return this.q.saveConfig(a, b); }
   @Get('applications') @RequirePermission('qualifications.view')
   list(@Query(zodBody(list)) f: z.infer<typeof list>) { return this.q.list(f); }
   /** Auch vom Bot (Button im Team-Channel) mit den Rechten des klickenden Benutzers. */

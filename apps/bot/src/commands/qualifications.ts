@@ -5,7 +5,7 @@ import { mapError } from './errors';
 
 // ---------------- Bewerbungen per Direktnachricht: Polizei-Bewerbung (/bewerbung, /bewerbungspanel) und Qualifikationen (SEK, Flugstaffel, Ausbilder … über /qualipanel) ----------------
 export interface QualiUnit { key: string; name: string; description: string; questions: string[] }
-export interface QualiConfig { title: string; intro: string; units: QualiUnit[] }
+export interface QualiConfig { title: string; intro: string; units: QualiUnit[]; police?: { title: string; description: string } }
 interface Question { text: string; key?: string; optional?: boolean; max: number }
 interface Session { unit: string; unitName: string; questions: Question[]; answers: string[]; expiresAt: number }
 type SendDm = (userId: string, m: { embed: EmbedData; buttons?: ButtonSpec[] }) => Promise<unknown>;
@@ -58,6 +58,7 @@ async function submitSession(api: Api, s: Session, userId: string, userName: str
   return (await api.service<{ number: string }>('POST', '/bot/qualifications/applications', { unit: s.unit, discordId: userId, discordName: userName, answers: s.questions.map((q, i) => ({ question: q.text, answer: s.answers[i] })) })).number;
 }
 
+/** Fallback, falls das System die Panel-Texte nicht liefert (Texte: Web → Qualifications → Setup). */
 const POLICE_PANEL: EmbedData = { title: '📋 Bewerbung bei EN Polizei', color: COLORS.info, description: 'Du möchtest Teil der **EN Polizei** werden? Klicke auf **Jetzt bewerben** – der Bot stellt dir die Fragen nacheinander per **Direktnachricht**.\n\nDu brauchst deinen **Roblox-Namen** und etwa 10 Minuten Zeit. Die Entscheidung bekommst du ebenfalls per Direktnachricht.' };
 
 /** Schritt 1 (Panel-Auswahl, Button oder /bewerbung): Bestätigung per DM mit Start/Abbrechen, im Channel „Zur Bewerbung“. */
@@ -97,8 +98,11 @@ export const QUALI_COMMANDS: CommandDef[] = [
       if (!c.guildId) return errorReply('Das geht nur auf einem Server, nicht per Direktnachricht.');
       if (!c.isGuildAdmin) return errorReply('Dafür brauchst du auf diesem Discord-Server das Recht „Server verwalten“.');
       if (!c.channelId || !c.platform) return errorReply('Panel kann hier nicht gepostet werden.');
-      try { await c.platform.postPanel({ channelId: c.channelId, embed: POLICE_PANEL, buttons: [{ id: `quali:pick:${POLICE}`, label: 'Jetzt bewerben', emoji: '📋', style: 'primary' }] }); }
-      catch { return errorReply('Panel konnte nicht gepostet werden (fehlen dem Bot Rechte in diesem Channel?).'); }
+      try {
+        const police = (await getConfig(c.api).catch(() => undefined))?.police;
+        const embed = police ? { title: clip(police.title, 256), color: COLORS.info, description: clip(police.description, 4000) } : POLICE_PANEL;
+        await c.platform.postPanel({ channelId: c.channelId, embed, buttons: [{ id: `quali:pick:${POLICE}`, label: 'Jetzt bewerben', emoji: '📋', style: 'primary' }] });
+      } catch { return errorReply('Panel konnte nicht gepostet werden (fehlen dem Bot Rechte in diesem Channel?).'); }
       return okReply('Bewerbungs-Panel gepostet. Neue Bewerbungen erscheinen im System unter *Applications* (und im Applications-Channel, falls eingestellt).');
     },
   },

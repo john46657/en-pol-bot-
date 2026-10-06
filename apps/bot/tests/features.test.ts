@@ -108,6 +108,10 @@ describe('/bewerbung (Polizei-Bewerbung per Direktnachricht)', () => {
     expect(text(await byName('bewerbungspanel')!.run(ctx(api, { platform: p })))).toContain('Server verwalten');
     await byName('bewerbungspanel')!.run(ctx(api, { platform: p, isGuildAdmin: true }));
     expect(log.at(-1)).toBe(`panel ${CHANNEL} quali:pick:@polizei`);
+    const posted: string[] = [];
+    const withTexts = fakeApi({ 'GET /bot/qualifications': { title: 'Q', intro: '', units: [], police: { title: 'Komm zu uns!', description: 'Jetzt bewerben.' } } });
+    await byName('bewerbungspanel')!.run(ctx(withTexts.api, { platform: { ...p, postPanel: async (a) => { posted.push(a.embed.title); } }, isGuildAdmin: true }));
+    expect(posted).toEqual(['Komm zu uns!']);
     const open = fakeApi({ 'GET /applications/form': form, 'GET /bot/application/open': { open: true, number: 'APP-9' } });
     expect(text(await byName('bewerbung')!.run(ctx(open.api, { platform: p })))).toContain('APP-9');
   });

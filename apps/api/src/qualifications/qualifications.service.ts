@@ -6,8 +6,10 @@ import { DiscordService } from '../discord/discord.service';
 import { AppError } from '../common/errors';
 import { makeNumber } from '../common/numbering';
 import { configSchema, DEFAULT_CONFIG, type QualificationConfig } from './qualifications.config';
+import { DEFAULT_FORM, type FormField } from '../applications/applications.service';
 
 const KEY = 'qualifications.config';
+const FORM_KEY = 'application.form';
 export interface Answer { question: string; answer: string }
 
 /**
@@ -24,12 +26,25 @@ export class QualificationsService {
     return parsed?.success ? parsed.data : DEFAULT_CONFIG;
   }
 
-  async saveConfig(actor: Actor, c: QualificationConfig) {
+  /** Fragen der Polizei-Bewerbung (dasselbe Formular wie /apply und Studio). */
+  async policeForm(): Promise<FormField[]> {
+    return ((await this.prisma.systemSetting.findUnique({ where: { key: FORM_KEY } }))?.value as unknown as FormField[] | undefined) ?? DEFAULT_FORM;
+  }
+
+  /** Alles für „Qualifications → Setup“ an einem Ort. */
+  async setup() { return { ...(await this.config()), policeForm: await this.policeForm() }; }
+
+  async saveConfig(actor: Actor, input: QualificationConfig & { policeForm?: FormField[] }) {
+    const { policeForm, ...c } = input;
     await this.prisma.$transaction(async (tx) => {
       await tx.systemSetting.upsert({ where: { key: KEY }, create: { key: KEY, value: c as Prisma.InputJsonValue }, update: { value: c as Prisma.InputJsonValue } });
       await this.audit.record(actor, { action: 'qualifications.config', module: 'qualifications', entityType: 'SystemSetting', entityId: KEY, after: { units: c.units.map((u) => u.key) } }, tx);
+      if (policeForm) {
+        await tx.systemSetting.upsert({ where: { key: FORM_KEY }, create: { key: FORM_KEY, value: policeForm as unknown as Prisma.InputJsonValue }, update: { value: policeForm as unknown as Prisma.InputJsonValue } });
+        await this.audit.record(actor, { action: 'studio.config.changed', module: 'settings', entityType: 'SystemSetting', entityId: FORM_KEY, after: policeForm as unknown as Prisma.InputJsonValue }, tx);
+      }
     });
-    return c;
+    return this.setup();
   }
 
   /** Für den Bot: läuft für diese Discord-ID schon eine offene Bewerbung (je Einheit)? */

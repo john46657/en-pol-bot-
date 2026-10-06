@@ -17,7 +17,9 @@ const discord_service_1 = require("../discord/discord.service");
 const errors_1 = require("../common/errors");
 const numbering_1 = require("../common/numbering");
 const qualifications_config_1 = require("./qualifications.config");
+const applications_service_1 = require("../applications/applications.service");
 const KEY = 'qualifications.config';
+const FORM_KEY = 'application.form';
 /**
  * Qualifikations-Bewerbungen (SEK, Flugstaffel, Ausbilder …): Discord-Panel → Fragen per DM → Team entscheidet (Web oder Button im Team-Channel).
  * Bei Annahme: Direktnachricht, optionale Discord-Rolle; für die Einheit `sek` zusätzlich SEK-Roster + System-Rolle „SEK“ (bei verknüpftem Konto).
@@ -36,12 +38,23 @@ let QualificationsService = class QualificationsService {
         const parsed = row ? qualifications_config_1.configSchema.safeParse(row.value) : null;
         return parsed?.success ? parsed.data : qualifications_config_1.DEFAULT_CONFIG;
     }
-    async saveConfig(actor, c) {
+    /** Fragen der Polizei-Bewerbung (dasselbe Formular wie /apply und Studio). */
+    async policeForm() {
+        return (await this.prisma.systemSetting.findUnique({ where: { key: FORM_KEY } }))?.value ?? applications_service_1.DEFAULT_FORM;
+    }
+    /** Alles für „Qualifications → Setup“ an einem Ort. */
+    async setup() { return { ...(await this.config()), policeForm: await this.policeForm() }; }
+    async saveConfig(actor, input) {
+        const { policeForm, ...c } = input;
         await this.prisma.$transaction(async (tx) => {
             await tx.systemSetting.upsert({ where: { key: KEY }, create: { key: KEY, value: c }, update: { value: c } });
             await this.audit.record(actor, { action: 'qualifications.config', module: 'qualifications', entityType: 'SystemSetting', entityId: KEY, after: { units: c.units.map((u) => u.key) } }, tx);
+            if (policeForm) {
+                await tx.systemSetting.upsert({ where: { key: FORM_KEY }, create: { key: FORM_KEY, value: policeForm }, update: { value: policeForm } });
+                await this.audit.record(actor, { action: 'studio.config.changed', module: 'settings', entityType: 'SystemSetting', entityId: FORM_KEY, after: policeForm }, tx);
+            }
         });
-        return c;
+        return this.setup();
     }
     /** Für den Bot: läuft für diese Discord-ID schon eine offene Bewerbung (je Einheit)? */
     async openFor(discordId, unit) {

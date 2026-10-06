@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { QualificationsService } from './qualifications.service';
-import { configSchema } from './qualifications.config';
+import { saveSchema } from './qualifications.config';
 import type { Actor } from '../audit/audit.service';
 declare const list: z.ZodObject<{
     unit: z.ZodOptional<z.ZodString>;
@@ -63,7 +63,9 @@ declare const openQ: z.ZodObject<{
 export declare class QualificationsController {
     private readonly q;
     constructor(q: QualificationsService);
+    /** Panels, Einheiten und die Fragen der Polizei-Bewerbung (`policeForm`). */
     config(): Promise<{
+        policeForm: import("../applications/applications.service").FormField[];
         title: string;
         units: {
             name: string;
@@ -73,8 +75,13 @@ export declare class QualificationsController {
             roleId?: string | undefined;
         }[];
         intro: string;
+        police: {
+            description: string;
+            title: string;
+        };
     }>;
-    save(a: Actor, b: z.infer<typeof configSchema>): Promise<{
+    save(a: Actor, b: z.infer<typeof saveSchema>): Promise<{
+        policeForm: import("../applications/applications.service").FormField[];
         title: string;
         units: {
             name: string;
@@ -84,6 +91,10 @@ export declare class QualificationsController {
             roleId?: string | undefined;
         }[];
         intro: string;
+        police: {
+            description: string;
+            title: string;
+        };
     }>;
     list(f: z.infer<typeof list>): Promise<{
         linkedName: string | null;
@@ -124,6 +135,10 @@ export declare class BotQualificationsController {
             roleId?: string | undefined;
         }[];
         intro: string;
+        police: {
+            description: string;
+            title: string;
+        };
     }>;
     open(f: z.infer<typeof openQ>): Promise<{
         open: boolean;

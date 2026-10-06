@@ -76158,7 +76158,9 @@ var QUALI_COMMANDS = [
       if (!c.isGuildAdmin) return errorReply("Daf\xFCr brauchst du auf diesem Discord-Server das Recht \u201EServer verwalten\u201C.");
       if (!c.channelId || !c.platform) return errorReply("Panel kann hier nicht gepostet werden.");
       try {
-        await c.platform.postPanel({ channelId: c.channelId, embed: POLICE_PANEL, buttons: [{ id: `quali:pick:${POLICE}`, label: "Jetzt bewerben", emoji: "\u{1F4CB}", style: "primary" }] });
+        const police = (await getConfig(c.api).catch(() => void 0))?.police;
+        const embed = police ? { title: clip(police.title, 256), color: COLORS.info, description: clip(police.description, 4e3) } : POLICE_PANEL;
+        await c.platform.postPanel({ channelId: c.channelId, embed, buttons: [{ id: `quali:pick:${POLICE}`, label: "Jetzt bewerben", emoji: "\u{1F4CB}", style: "primary" }] });
       } catch {
         return errorReply("Panel konnte nicht gepostet werden (fehlen dem Bot Rechte in diesem Channel?).");
       }

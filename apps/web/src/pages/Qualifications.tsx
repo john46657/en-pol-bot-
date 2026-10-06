@@ -2,10 +2,11 @@ import { useEffect, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { api, ApiError } from '../lib/api';
 import { useAuth } from '../lib/auth';
+import { formToText, textToForm, type FormField } from '../lib/questions';
 import { Button, Card, EmptyState, ErrorState, Field, fmt, Input, PageHeader, Select, SkeletonRows, StatusBadge, Tabs, Textarea } from '../components/ui';
 
 interface Unit { key: string; name: string; description: string; roleId?: string; questions: string[] }
-interface Config { title: string; intro: string; units: Unit[] }
+interface Config { title: string; intro: string; units: Unit[]; police: { title: string; description: string }; policeForm: FormField[] }
 interface Application {
   id: string; number: string; unit: string; unitName: string; discordId: string; discordName: string; linkedName: string | null;
   answers: { question: string; answer: string }[]; status: string; createdAt: string; decidedAt: string | null; decidedByName: string | null;
@@ -37,20 +38,27 @@ export function Qualifications() {
   const [title, setTitle] = useState('');
   const [intro, setIntro] = useState('');
   const [units, setUnits] = useState<DraftUnit[]>([]);
+  const [policeTitle, setPoliceTitle] = useState('');
+  const [policeText, setPoliceText] = useState('');
+  const [policeQuestions, setPoliceQuestions] = useState('');
   useEffect(() => {
     if (!config.data) return;
     setTitle(config.data.title); setIntro(config.data.intro);
+    setPoliceTitle(config.data.police.title); setPoliceText(config.data.police.description); setPoliceQuestions(formToText(config.data.policeForm));
     setUnits(config.data.units.map((u) => ({ ...u, roleId: u.roleId ?? '', questions: u.questions.join('\n') })));
   }, [config.data]);
   const save = useMutation({
-    mutationFn: () => api<Config>('/qualifications/config', { method: 'PUT', body: { title, intro, units: units.map(({ isNew: _n, ...u }) => ({ ...u, roleId: u.roleId?.trim() ?? '', questions: u.questions.split('\n').map((q) => q.trim()).filter(Boolean) })) } }),
-    onSuccess: () => { setErr(undefined); setMsg('Saved. Post the panel again in Discord with /qualipanel to show new texts or units.'); void qc.invalidateQueries({ queryKey: ['quali-config'] }); }, onError,
+    mutationFn: () => api<Config>('/qualifications/config', { method: 'PUT', body: {
+      title, intro, police: { title: policeTitle, description: policeText }, policeForm: textToForm(policeQuestions, config.data?.policeForm ?? []),
+      units: units.map(({ isNew: _n, ...u }) => ({ ...u, roleId: u.roleId?.trim() ?? '', questions: u.questions.split('\n').map((q) => q.trim()).filter(Boolean) })),
+    } }),
+    onSuccess: () => { setErr(undefined); setMsg('Saved. Questions apply to new applications right away; post the panels again in Discord (/bewerbungspanel, /qualipanel) to show changed texts or units.'); void qc.invalidateQueries({ queryKey: ['quali-config'] }); }, onError,
   });
   const patch = (i: number, p: Partial<DraftUnit>) => setUnits(units.map((u, j) => (j === i ? { ...u, ...p } : u)));
 
   return (
     <>
-      <PageHeader title="Qualifications" subtitle="Applications for SEK, Flugstaffel, Ausbilder … from the Discord panel (/qualipanel)" />
+      <PageHeader title="Qualifications" subtitle="Applications for SEK, Flugstaffel, Ausbilder … from the Discord panel (/qualipanel). Setup: questions and panel texts of all applications." />
       {err && <p role="alert" className="mb-3 text-sm text-danger">{err}</p>}
       <Tabs tabs={tabs} active={tab} onChange={(t) => { setTab(t); setMsg(undefined); }} />
       <div className="mt-4">
@@ -85,9 +93,20 @@ export function Qualifications() {
         )}
         {tab === 'Setup' && manage && (config.isLoading ? <SkeletonRows /> : config.error ? <ErrorState error={config.error} onRetry={() => void config.refetch()} /> : (
           <div className="grid gap-4">
-            <Card title="Panel">
+            <Card title="Bewerbung bei EN Polizei (/bewerbung, /bewerbungspanel, web page /apply)">
               <div className="grid gap-3">
-                <Field label="Title">{(id) => <Input id={id} value={title} maxLength={100} onChange={(e) => setTitle(e.target.value)} />}</Field>
+                <div className="grid gap-3 md:grid-cols-2">
+                  <Field label="Panel title">{(id) => <Input id={id} value={policeTitle} maxLength={100} onChange={(e) => setPoliceTitle(e.target.value)} />}</Field>
+                  <Field label="Panel text (Discord markdown allowed)">{(id) => <Textarea id={id} rows={3} value={policeText} maxLength={1500} onChange={(e) => setPoliceText(e.target.value)} />}</Field>
+                </div>
+                <Field label={`Questions – one per line, add „(optional)“ at the end for optional ones (${policeQuestions.split('\n').filter((q) => q.trim()).length}/30)`} hint="The bot always asks for the Roblox username first – no need to add it.">
+                  {(id) => <Textarea id={id} rows={8} value={policeQuestions} onChange={(e) => setPoliceQuestions(e.target.value)} />}
+                </Field>
+              </div>
+            </Card>
+            <Card title="Qualifications panel (/qualipanel)">
+              <div className="grid gap-3">
+                <Field label="Panel title">{(id) => <Input id={id} value={title} maxLength={100} onChange={(e) => setTitle(e.target.value)} />}</Field>
                 <Field label="Intro text (Discord markdown allowed)">{(id) => <Textarea id={id} value={intro} maxLength={1500} onChange={(e) => setIntro(e.target.value)} />}</Field>
               </div>
             </Card>

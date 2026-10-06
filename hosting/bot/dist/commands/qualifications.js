@@ -53,6 +53,7 @@ async function submitSession(api, s, userId, userName, robloxLookup) {
     }
     return (await api.service('POST', '/bot/qualifications/applications', { unit: s.unit, discordId: userId, discordName: userName, answers: s.questions.map((q, i) => ({ question: q.text, answer: s.answers[i] })) })).number;
 }
+/** Fallback, falls das System die Panel-Texte nicht liefert (Texte: Web → Qualifications → Setup). */
 const POLICE_PANEL = { title: '📋 Bewerbung bei EN Polizei', color: format_1.COLORS.info, description: 'Du möchtest Teil der **EN Polizei** werden? Klicke auf **Jetzt bewerben** – der Bot stellt dir die Fragen nacheinander per **Direktnachricht**.\n\nDu brauchst deinen **Roblox-Namen** und etwa 10 Minuten Zeit. Die Entscheidung bekommst du ebenfalls per Direktnachricht.' };
 /** Schritt 1 (Panel-Auswahl, Button oder /bewerbung): Bestätigung per DM mit Start/Abbrechen, im Channel „Zur Bewerbung“. */
 async function offer(c, key) {
@@ -103,7 +104,9 @@ exports.QUALI_COMMANDS = [
             if (!c.channelId || !c.platform)
                 return (0, format_1.errorReply)('Panel kann hier nicht gepostet werden.');
             try {
-                await c.platform.postPanel({ channelId: c.channelId, embed: POLICE_PANEL, buttons: [{ id: `quali:pick:${exports.POLICE}`, label: 'Jetzt bewerben', emoji: '📋', style: 'primary' }] });
+                const police = (await getConfig(c.api).catch(() => undefined))?.police;
+                const embed = police ? { title: (0, format_1.clip)(police.title, 256), color: format_1.COLORS.info, description: (0, format_1.clip)(police.description, 4000) } : POLICE_PANEL;
+                await c.platform.postPanel({ channelId: c.channelId, embed, buttons: [{ id: `quali:pick:${exports.POLICE}`, label: 'Jetzt bewerben', emoji: '📋', style: 'primary' }] });
             }
             catch {
                 return (0, format_1.errorReply)('Panel konnte nicht gepostet werden (fehlen dem Bot Rechte in diesem Channel?).');

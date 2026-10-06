@@ -90,6 +90,7 @@ function AppForm({ manage, onSave, busy }: { manage: boolean; onSave: (v: FormFi
   const upd = (i: number, p: Partial<FormField>) => setFields(fields.map((f, j) => (j === i ? { ...f, ...p } : f)));
   return (
     <Card title="Application form" actions={manage && <Button disabled={busy} onClick={() => onSave(fields)}>Save</Button>}>
+      <p className="mb-3 text-xs text-muted">Tip: these questions (also used by the Discord bot) can be edited together with all other application questions under <strong>Organisation → Qualifications → Setup</strong>.</p>
       {q.isLoading ? <SkeletonRows /> : (
         <div className="space-y-2">
           {fields.map((f, i) => (
