@@ -17,19 +17,25 @@ const common_1 = require("@nestjs/common");
 const swagger_1 = require("@nestjs/swagger");
 const zod_1 = require("zod");
 const persons_service_1 = require("./persons.service");
+const roblox_service_1 = require("./roblox.service");
 const decorators_1 = require("../authz/decorators");
 const zod_pipe_1 = require("../common/zod.pipe");
 const pagination_1 = require("../common/pagination");
 const create = zod_1.z.object({ robloxUsername: zod_1.z.string().trim().min(1).max(64), robloxUserId: zod_1.z.string().nullish(), aliases: zod_1.z.array(zod_1.z.string().max(64)).max(20).optional(), notes: zod_1.z.string().max(5000).optional(), custom: zod_1.z.record(zod_1.z.string(), zod_1.z.unknown()).optional() });
 const update = zod_1.z.object({ version: zod_1.z.number().int(), robloxUsername: zod_1.z.string().trim().min(1).max(64).optional(), aliases: zod_1.z.array(zod_1.z.string().max(64)).max(20).optional(), notes: zod_1.z.string().max(5000).nullable().optional(), custom: zod_1.z.record(zod_1.z.string(), zod_1.z.unknown()).optional() });
 const merge = zod_1.z.object({ targetId: zod_1.z.string().uuid(), confirm: zod_1.z.literal(true), reason: zod_1.z.string().trim().min(3).max(500) });
+const robloxQ = zod_1.z.object({ q: zod_1.z.string().trim().min(1).max(200) });
 const archive = zod_1.z.object({ reason: zod_1.z.string().trim().min(3).max(500) });
 let PersonsController = class PersonsController {
     persons;
-    constructor(persons) {
+    roblox;
+    constructor(persons, roblox) {
         this.persons = persons;
+        this.roblox = roblox;
     }
     list(q) { return this.persons.list(q); }
+    /** Roblox-Konto per Name, ID oder Profil-Link nachschlagen (mit Avatar und vorhandener Akte); nicht gefunden → `null`. */
+    async robloxLookup(q) { return { profile: await this.roblox.lookup(q.q) }; }
     get(id) { return this.persons.overview(id); }
     create(a, b) { return this.persons.create(a, b); }
     update(a, id, b) {
@@ -48,6 +54,14 @@ __decorate([
     __metadata("design:paramtypes", [void 0]),
     __metadata("design:returntype", void 0)
 ], PersonsController.prototype, "list", null);
+__decorate([
+    (0, common_1.Get)('roblox'),
+    (0, decorators_1.RequirePermission)('persons.view'),
+    __param(0, (0, common_1.Query)((0, zod_pipe_1.zodBody)(robloxQ))),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [void 0]),
+    __metadata("design:returntype", Promise)
+], PersonsController.prototype, "robloxLookup", null);
 __decorate([
     (0, common_1.Get)(':id'),
     (0, decorators_1.RequirePermission)('persons.view'),
@@ -98,6 +112,6 @@ __decorate([
 exports.PersonsController = PersonsController = __decorate([
     (0, swagger_1.ApiTags)('persons'),
     (0, common_1.Controller)('persons'),
-    __metadata("design:paramtypes", [persons_service_1.PersonsService])
+    __metadata("design:paramtypes", [persons_service_1.PersonsService, roblox_service_1.RobloxService])
 ], PersonsController);
 //# sourceMappingURL=persons.controller.js.map

@@ -10,10 +10,11 @@ exports.PersonsModule = void 0;
 const common_1 = require("@nestjs/common");
 const persons_controller_1 = require("./persons.controller");
 const persons_service_1 = require("./persons.service");
+const roblox_service_1 = require("./roblox.service");
 let PersonsModule = class PersonsModule {
 };
 exports.PersonsModule = PersonsModule;
 exports.PersonsModule = PersonsModule = __decorate([
-    (0, common_1.Module)({ controllers: [persons_controller_1.PersonsController], providers: [persons_service_1.PersonsService], exports: [persons_service_1.PersonsService] })
+    (0, common_1.Module)({ controllers: [persons_controller_1.PersonsController], providers: [persons_service_1.PersonsService, roblox_service_1.RobloxService], exports: [persons_service_1.PersonsService, roblox_service_1.RobloxService] })
 ], PersonsModule);
 //# sourceMappingURL=persons.module.js.map

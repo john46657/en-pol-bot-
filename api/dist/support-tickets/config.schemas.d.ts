@@ -310,6 +310,7 @@ export declare const panelSchema: z.ZodObject<{
     description: string;
     guildId: string | null;
     color: number;
+    imageUrl: string | null;
     title: string;
     channelId: string | null;
     position: number;
@@ -317,7 +318,6 @@ export declare const panelSchema: z.ZodObject<{
     emoji: string | null;
     style: "BUTTONS" | "DROPDOWN";
     thumbnailUrl: string | null;
-    imageUrl: string | null;
     bannerUrl: string | null;
     footer: string | null;
     footerIconUrl: string | null;
@@ -330,6 +330,7 @@ export declare const panelSchema: z.ZodObject<{
     description?: string | undefined;
     guildId?: string | undefined;
     color?: number | undefined;
+    imageUrl?: string | undefined;
     title?: string | undefined;
     channelId?: string | undefined;
     position?: number | undefined;
@@ -337,7 +338,6 @@ export declare const panelSchema: z.ZodObject<{
     emoji?: string | undefined;
     style?: "BUTTONS" | "DROPDOWN" | undefined;
     thumbnailUrl?: string | undefined;
-    imageUrl?: string | undefined;
     bannerUrl?: string | undefined;
     footer?: string | undefined;
     footerIconUrl?: string | undefined;

@@ -323,6 +323,7 @@ export declare class SupportTicketsController {
             updatedAt: Date;
             guildId: string | null;
             color: number;
+            imageUrl: string | null;
             title: string;
             channelId: string | null;
             position: number;
@@ -330,7 +331,6 @@ export declare class SupportTicketsController {
             emoji: string | null;
             style: string;
             thumbnailUrl: string | null;
-            imageUrl: string | null;
             bannerUrl: string | null;
             footer: string | null;
             footerIconUrl: string | null;
@@ -556,6 +556,7 @@ export declare class SupportTicketsController {
         updatedAt: Date;
         guildId: string | null;
         color: number;
+        imageUrl: string | null;
         title: string;
         channelId: string | null;
         position: number;
@@ -563,7 +564,6 @@ export declare class SupportTicketsController {
         emoji: string | null;
         style: string;
         thumbnailUrl: string | null;
-        imageUrl: string | null;
         bannerUrl: string | null;
         footer: string | null;
         footerIconUrl: string | null;
@@ -582,6 +582,7 @@ export declare class SupportTicketsController {
         updatedAt: Date;
         guildId: string | null;
         color: number;
+        imageUrl: string | null;
         title: string;
         channelId: string | null;
         position: number;
@@ -589,7 +590,6 @@ export declare class SupportTicketsController {
         emoji: string | null;
         style: string;
         thumbnailUrl: string | null;
-        imageUrl: string | null;
         bannerUrl: string | null;
         footer: string | null;
         footerIconUrl: string | null;
@@ -608,6 +608,7 @@ export declare class SupportTicketsController {
         updatedAt: Date;
         guildId: string | null;
         color: number;
+        imageUrl: string | null;
         title: string;
         channelId: string | null;
         position: number;
@@ -615,7 +616,6 @@ export declare class SupportTicketsController {
         emoji: string | null;
         style: string;
         thumbnailUrl: string | null;
-        imageUrl: string | null;
         bannerUrl: string | null;
         footer: string | null;
         footerIconUrl: string | null;
