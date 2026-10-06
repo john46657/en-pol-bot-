@@ -42,12 +42,12 @@ declare const actionSchema: z.ZodDiscriminatedUnion<"action", [z.ZodObject<{
 }, "strip", z.ZodTypeAny, {
     action: "add_access";
     targetId: string;
-    kind: "USER" | "ROLE";
+    kind: "ROLE" | "USER";
     minutes?: number | undefined;
 }, {
     action: "add_access";
     targetId: string;
-    kind: "USER" | "ROLE";
+    kind: "ROLE" | "USER";
     minutes?: number | undefined;
 }>, z.ZodObject<{
     action: z.ZodLiteral<"remove_access">;
@@ -263,8 +263,8 @@ export declare class SupportTicketsController {
             active: boolean;
             updatedAt: Date;
             color: number;
-            emoji: string | null;
             questions: import("@prisma/client/runtime/library").JsonValue;
+            emoji: string | null;
             buttonStyle: string;
             position: number;
             discordCategoryId: string | null;
@@ -314,9 +314,9 @@ export declare class SupportTicketsController {
             updatedAt: Date;
             color: number;
             title: string;
-            emoji: string | null;
             channelId: string | null;
             placeholder: string;
+            emoji: string | null;
             style: string;
             position: number;
             thumbnailUrl: string | null;
@@ -389,8 +389,8 @@ export declare class SupportTicketsController {
         active: boolean;
         updatedAt: Date;
         color: number;
-        emoji: string | null;
         questions: import("@prisma/client/runtime/library").JsonValue;
+        emoji: string | null;
         buttonStyle: string;
         position: number;
         discordCategoryId: string | null;
@@ -440,8 +440,8 @@ export declare class SupportTicketsController {
         active: boolean;
         updatedAt: Date;
         color: number;
-        emoji: string | null;
         questions: import("@prisma/client/runtime/library").JsonValue;
+        emoji: string | null;
         buttonStyle: string;
         position: number;
         discordCategoryId: string | null;
@@ -491,8 +491,8 @@ export declare class SupportTicketsController {
         active: boolean;
         updatedAt: Date;
         color: number;
-        emoji: string | null;
         questions: import("@prisma/client/runtime/library").JsonValue;
+        emoji: string | null;
         buttonStyle: string;
         position: number;
         discordCategoryId: string | null;
@@ -543,9 +543,9 @@ export declare class SupportTicketsController {
         updatedAt: Date;
         color: number;
         title: string;
-        emoji: string | null;
         channelId: string | null;
         placeholder: string;
+        emoji: string | null;
         style: string;
         position: number;
         thumbnailUrl: string | null;
@@ -568,9 +568,9 @@ export declare class SupportTicketsController {
         updatedAt: Date;
         color: number;
         title: string;
-        emoji: string | null;
         channelId: string | null;
         placeholder: string;
+        emoji: string | null;
         style: string;
         position: number;
         thumbnailUrl: string | null;
@@ -593,9 +593,9 @@ export declare class SupportTicketsController {
         updatedAt: Date;
         color: number;
         title: string;
-        emoji: string | null;
         channelId: string | null;
         placeholder: string;
+        emoji: string | null;
         style: string;
         position: number;
         thumbnailUrl: string | null;
@@ -1113,13 +1113,13 @@ declare const botMessage: z.ZodObject<{
         contentType: z.ZodOptional<z.ZodNullable<z.ZodString>>;
     }, "strip", z.ZodTypeAny, {
         name: string;
-        url: string;
         size: number;
+        url: string;
         contentType?: string | null | undefined;
     }, {
         name: string;
-        url: string;
         size: number;
+        url: string;
         contentType?: string | null | undefined;
     }>, "many">>;
     embeds: z.ZodDefault<z.ZodArray<z.ZodObject<{
@@ -1140,8 +1140,8 @@ declare const botMessage: z.ZodObject<{
     isBot: boolean;
     attachments: {
         name: string;
-        url: string;
         size: number;
+        url: string;
         contentType?: string | null | undefined;
     }[];
     embeds: {
@@ -1160,8 +1160,8 @@ declare const botMessage: z.ZodObject<{
     authorAvatar?: string | null | undefined;
     attachments?: {
         name: string;
-        url: string;
         size: number;
+        url: string;
         contentType?: string | null | undefined;
     }[] | undefined;
     embeds?: {

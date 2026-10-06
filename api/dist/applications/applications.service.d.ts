@@ -1,14 +1,9 @@
-import { ApplicationStatus } from '@enrp/shared';
+import { ApplicationStatus, type FormField } from '@enrp/shared';
 import { PrismaService } from '../prisma/prisma.service';
 import { AuditService, Actor } from '../audit/audit.service';
 import { DiscordService } from '../discord/discord.service';
 import { PageQuery } from '../common/pagination';
-export interface FormField {
-    key: string;
-    label: string;
-    required: boolean;
-    maxLength: number;
-}
+export type { FormField };
 /** Die Beschriftungen sind zugleich die Fragen, die der Discord-Bot per Direktnachricht stellt. */
 export declare const DEFAULT_FORM: FormField[];
 export declare class ApplicationsService {
@@ -21,7 +16,7 @@ export declare class ApplicationsService {
     submit(d: {
         robloxUsername: string;
         robloxUserId?: string;
-        answers: Record<string, string>;
+        answers: Record<string, string | string[]>;
     }, meta?: {
         discordId?: string;
         discordName?: string;
@@ -68,6 +63,7 @@ export declare class ApplicationsService {
             status: string;
             source: string;
             answers: import("@prisma/client/runtime/library").JsonValue;
+            grantRoleIds: string[];
             decidedById: string | null;
             discordName: string | null;
             durationSec: number | null;
@@ -90,6 +86,7 @@ export declare class ApplicationsService {
         status: string;
         source: string;
         answers: import("@prisma/client/runtime/library").JsonValue;
+        grantRoleIds: string[];
         decidedById: string | null;
         discordName: string | null;
         durationSec: number | null;
@@ -108,6 +105,7 @@ export declare class ApplicationsService {
         status: string;
         source: string;
         answers: import("@prisma/client/runtime/library").JsonValue;
+        grantRoleIds: string[];
         decidedById: string | null;
         discordName: string | null;
         durationSec: number | null;

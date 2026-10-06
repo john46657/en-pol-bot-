@@ -34,6 +34,8 @@ const toEmbed = (e) => {
         b.addFields(e.fields.map((f) => ({ name: f.name, value: f.value, inline: f.inline ?? false })));
     if (e.footer)
         b.setFooter({ text: e.footer });
+    if (e.thumbnail && /^https:\/\//.test(e.thumbnail))
+        b.setThumbnail(e.thumbnail);
     return b;
 };
 const STYLE = { primary: discord_js_1.ButtonStyle.Primary, secondary: discord_js_1.ButtonStyle.Secondary, success: discord_js_1.ButtonStyle.Success, danger: discord_js_1.ButtonStyle.Danger };
@@ -103,8 +105,8 @@ const platform = {
     async sendDirectMessage(userId, text) {
         await (await client.users.fetch(userId)).send({ content: text, allowedMentions: { parse: [] } });
     },
-    async sendDm(userId, { embed, buttons }) {
-        const m = await (await client.users.fetch(userId)).send({ embeds: [toEmbed(embed)], components: toRows(buttons), allowedMentions: { parse: [] } });
+    async sendDm(userId, { embed, buttons, select }) {
+        const m = await (await client.users.fetch(userId)).send({ embeds: [toEmbed(embed)], components: toComponents(buttons, select), allowedMentions: { parse: [] } });
         return { channelId: m.channelId, messageId: m.id };
     },
     async postOrEdit({ channelId, messageId, embed, buttons }) {
@@ -349,11 +351,16 @@ function wireReady(client0) {
                 catch { /* Server ohne Befehle/Zugriff: egal */ }
             }
         }
-        (0, outbox_1.startOutboxLoop)(api, async (channelId, embeds, buttons) => {
+        (0, outbox_1.startOutboxLoop)(api, async (channelId, embeds, buttons, opts) => {
             const ch = await client.channels.fetch(channelId);
             if (!ch?.isSendable())
                 throw new Error(`channel ${channelId} is not a text channel the bot can post in`);
-            await ch.send({ embeds: embeds.map(toEmbed), components: toRows(buttons), allowedMentions: { parse: [] } }); // niemals @everyone/@here/Rollen pingen
+            // Profilbild des Bewerbers rechts (wie bei Appy)
+            const avatar = opts?.avatarUserId ? await client.users.fetch(opts.avatarUserId).then((u) => u.displayAvatarURL({ size: 256 }), () => undefined) : undefined;
+            const list = avatar && embeds[0] ? [{ ...embeds[0], thumbnail: avatar }, ...embeds.slice(1)] : embeds;
+            // Nur die ausdrücklich eingestellten Rollen pingen – niemals @everyone/@here
+            const roles = opts?.pingRoleIds ?? [];
+            await ch.send({ ...(roles.length ? { content: roles.map((r) => `<@&${r}>`).join(' ') } : {}), embeds: list.map(toEmbed), components: toRows(buttons), allowedMentions: { parse: [], roles } });
         }, cfg.OUTBOX_POLL_SECONDS, console.log, (userId, text) => platform.sendDirectMessage(userId, text), grantRoleEverywhere, syncRolesEverywhere, () => void live.refresh('teamlist').catch(() => undefined), (effects) => tickets.apply(effects).then(() => undefined, (e) => console.error('ticket effects failed:', e instanceof Error ? e.message : e)));
         live.start(cfg.LIVE_REFRESH_SECONDS);
         void tickets.refresh();

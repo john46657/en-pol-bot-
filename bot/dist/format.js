@@ -104,7 +104,9 @@ function applicationEmbeds(p, kind) {
         return `**${i + 1}. ${(0, exports.clip)((0, exports.plain)(q.question), 200)}**\n${max !== undefined && a.length > max ? `${a.slice(0, max)}… *(gekürzt)*` : a}`;
     };
     let sections = qa.map((q, i) => section(q, i));
-    const title = (0, exports.clip)(kind === 'p' ? `📋 Bewerbung bei EN Polizei – ${p.number}` : `📋 ${(0, exports.plain)(p.unitName)} – Bewerbung ${p.number}`, 256);
+    // wie bei Appy: „john45346s Bewerbung ‚Flugstaffel‘ eingereicht“
+    const who = p.discordName ? `${(0, exports.plain)(p.discordName)}s ` : '';
+    const title = (0, exports.clip)(kind === 'p' ? `📋 ${who}Bewerbung bei EN Polizei eingereicht · ${p.number}` : `📋 ${who}Bewerbung „${(0, exports.plain)(p.unitName)}“ eingereicht · ${p.number}`, 256);
     // Platz für Titel (bis zu 10 Embeds) und Bewerber-Infos abziehen
     const room = BUDGET - stats.length - (title.length + 20) * 3;
     const size = (xs) => xs.reduce((n, x) => n + x.length + 2, 0);

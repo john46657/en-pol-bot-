@@ -196,6 +196,44 @@ function ticketChannelName(format, vars) {
   return (clean || `ticket-${vars["{ticket_id}"] ?? ""}`).slice(0, 100);
 }
 var ticketNumber = (n) => String(n).padStart(4, "0");
+
+// src/forms.ts
+var FORM_QUESTION_TYPES = { TEXT: "Text", CHOICE: "Multiple choice", ROLE: "Role select" };
+var MAX_FORM_QUESTIONS = 50;
+var MAX_FORM_OPTIONS = 25;
+function normalizeField(f) {
+  const type = f.type ?? "TEXT";
+  return {
+    key: f.key,
+    label: f.label,
+    required: f.required,
+    type,
+    minLength: type === "TEXT" ? Math.max(0, f.minLength ?? 0) : 0,
+    maxLength: f.maxLength,
+    options: type === "TEXT" ? [] : (f.options ?? []).slice(0, MAX_FORM_OPTIONS),
+    multiple: type !== "TEXT" && !!f.multiple
+  };
+}
+function freeFieldKey(used) {
+  const set = new Set(used);
+  for (let n = 1; ; n++) if (!set.has(`frage${n}`)) return `frage${n}`;
+}
+function checkAnswer(field, value) {
+  const f = normalizeField(field);
+  if (f.type === "TEXT") {
+    const v = (Array.isArray(value) ? value.join("\n") : value ?? "").trim();
+    if (!v) return f.required ? { ok: false, error: `\u201E${f.label}\u201C ist eine Pflichtfrage.` } : { ok: true, text: "", roleIds: [] };
+    if (v.length < f.minLength) return { ok: false, error: `Die Antwort auf \u201E${f.label}\u201C ist zu kurz (mindestens ${f.minLength} Zeichen).` };
+    if (v.length > f.maxLength) return { ok: false, error: `Die Antwort auf \u201E${f.label}\u201C ist zu lang (h\xF6chstens ${f.maxLength} Zeichen).` };
+    return { ok: true, text: v, roleIds: [] };
+  }
+  const picked = [...new Set((Array.isArray(value) ? value : value ? [value] : []).map((x) => x.trim()).filter(Boolean))];
+  if (!picked.length) return f.required ? { ok: false, error: `Bitte bei \u201E${f.label}\u201C etwas ausw\xE4hlen.` } : { ok: true, text: "", roleIds: [] };
+  if (!f.multiple && picked.length > 1) return { ok: false, error: `Bei \u201E${f.label}\u201C ist nur eine Auswahl erlaubt.` };
+  const opts = picked.map((p) => f.options.find((o) => o.label === p));
+  if (opts.some((o) => !o)) return { ok: false, error: `Ung\xFCltige Auswahl bei \u201E${f.label}\u201C.` };
+  return { ok: true, text: picked.join(", "), roleIds: f.type === "ROLE" ? opts.map((o) => o.roleId).filter((r) => !!r && /^\d{15,25}$/.test(r)) : [] };
+}
 export {
   ALL_PERMISSIONS,
   APPLICATION_STATUSES,
@@ -210,9 +248,12 @@ export {
   DUTY_STATUSES,
   EVIDENCE_CUSTODY_STATES,
   EVIDENCE_TRANSITIONS,
+  FORM_QUESTION_TYPES,
   INVESTIGATION_STATUSES,
   INVESTIGATION_TRANSITIONS,
   InvalidTransitionError,
+  MAX_FORM_OPTIONS,
+  MAX_FORM_QUESTIONS,
   PERMISSION_CATALOG,
   PRIORITIES,
   QUESTION_TYPES,
@@ -232,11 +273,14 @@ export {
   assertTransition,
   can,
   canTransition,
+  checkAnswer,
   defaultTicketButtons,
   effectivePermissions,
+  freeFieldKey,
   grantMatches,
   isPermissionKey,
   isValidRobloxUserId,
+  normalizeField,
   renderTicketText,
   resolvePermission,
   ticketChannelName,

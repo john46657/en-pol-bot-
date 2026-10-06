@@ -423,4 +423,53 @@ type TicketEffect = {
     message: MessageSpec;
 };
 
-export { ALL_PERMISSIONS, APPLICATION_STATUSES, APPLICATION_TRANSITIONS, type ApplicationStatus, type ButtonStyleName, CLAIM_MODES, CLOSE_REASON_MODES, CLOSE_REASON_SOURCES, COMPLAINT_STATUSES, COMPLAINT_TRANSITIONS, type ClaimMode, type CloseReasonMode, type CloseReasonSource, type ComplaintStatus, type ComponentButton, type ComponentSelect, DISPATCH_STATUSES, DISPATCH_TRANSITIONS, DUTY_STATUSES, type DispatchStatus, type DutyStatus, EVIDENCE_CUSTODY_STATES, EVIDENCE_TRANSITIONS, type Effect, type EmbedSpec, type EvidenceCustodyState, INVESTIGATION_STATUSES, INVESTIGATION_TRANSITIONS, InvalidTransitionError, type InvestigationStatus, type MessageSpec, PERMISSION_CATALOG, PRIORITIES, type PermissionContext, type PermissionGrant, type PermissionKey, type Priority, QUESTION_TYPES, type QuestionType, REPORT_STATUSES, REPORT_TRANSITIONS, REPORT_TYPES, ROBLOX_VERIFICATION_STATUSES, type ReportStatus, type ReportType, type Resolution, type ResolutionSource, type RobloxVerificationStatus, STATUS_KINDS, type StatusKind, TICKET_ACTIONS, TICKET_ACTION_KEYS, TICKET_PLACEHOLDERS, TICKET_STATUSES, TICKET_TRANSITIONS, type TicketAction, type TicketButtonConfig, type TicketEffect, type TicketQuestion, type TicketStatus, type TicketVars, type TransitionMap, UNIT_STATUSES, type UnitStatus, WANTED_STATUSES, WANTED_TRANSITIONS, type WantedStatus, assertTransition, can, canTransition, defaultTicketButtons, effectivePermissions, grantMatches, isPermissionKey, isValidRobloxUserId, renderTicketText, resolvePermission, ticketChannelName, ticketNumber };
+/**
+ * Bewerbungsfragen (Polizei-Bewerbung und Qualifikationen) – wie bei Appy:
+ * Text, Auswahl (Multiple choice) oder Rollen-Auswahl, jeweils mit Prüf-Einstellungen.
+ */
+declare const FORM_QUESTION_TYPES: {
+    readonly TEXT: "Text";
+    readonly CHOICE: "Multiple choice";
+    readonly ROLE: "Role select";
+};
+type FormQuestionType = keyof typeof FORM_QUESTION_TYPES;
+/** Auswahl-Option; bei Rollen-Auswahl mit der Discord-Rolle, die bei Annahme vergeben wird. */
+interface FormOption {
+    label: string;
+    roleId?: string;
+}
+interface FormField {
+    key: string;
+    label: string;
+    required: boolean;
+    maxLength: number;
+    type?: FormQuestionType;
+    minLength?: number;
+    options?: FormOption[];
+    /** Auswahl: mehrere Optionen erlaubt (sonst genau eine). */
+    multiple?: boolean;
+}
+/** Vollständig ausgefüllt (alte Formulare kennen nur Text). */
+type Field = Required<Omit<FormField, 'options'>> & {
+    options: FormOption[];
+};
+declare const MAX_FORM_QUESTIONS = 50;
+declare const MAX_FORM_OPTIONS = 25;
+declare function normalizeField(f: FormField): Field;
+/** Freie Schlüssel `frage1`, `frage2` … (Antworten bleiben über Änderungen hinweg zugeordnet). */
+declare function freeFieldKey(used: Iterable<string>): string;
+type AnswerCheck = {
+    ok: true;
+    text: string;
+    roleIds: string[];
+} | {
+    ok: false;
+    error: string;
+};
+/**
+ * Prüft eine Antwort gegen die Frage. Text: ein String; Auswahl/Rollen: die gewählten Beschriftungen.
+ * Liefert den Anzeigetext (Auswahl mit „, “ verbunden) und die Rollen, die bei Annahme vergeben werden.
+ */
+declare function checkAnswer(field: FormField, value: string | string[] | null | undefined): AnswerCheck;
+
+export { ALL_PERMISSIONS, APPLICATION_STATUSES, APPLICATION_TRANSITIONS, type AnswerCheck, type ApplicationStatus, type ButtonStyleName, CLAIM_MODES, CLOSE_REASON_MODES, CLOSE_REASON_SOURCES, COMPLAINT_STATUSES, COMPLAINT_TRANSITIONS, type ClaimMode, type CloseReasonMode, type CloseReasonSource, type ComplaintStatus, type ComponentButton, type ComponentSelect, DISPATCH_STATUSES, DISPATCH_TRANSITIONS, DUTY_STATUSES, type DispatchStatus, type DutyStatus, EVIDENCE_CUSTODY_STATES, EVIDENCE_TRANSITIONS, type Effect, type EmbedSpec, type EvidenceCustodyState, FORM_QUESTION_TYPES, type Field, type FormField, type FormOption, type FormQuestionType, INVESTIGATION_STATUSES, INVESTIGATION_TRANSITIONS, InvalidTransitionError, type InvestigationStatus, MAX_FORM_OPTIONS, MAX_FORM_QUESTIONS, type MessageSpec, PERMISSION_CATALOG, PRIORITIES, type PermissionContext, type PermissionGrant, type PermissionKey, type Priority, QUESTION_TYPES, type QuestionType, REPORT_STATUSES, REPORT_TRANSITIONS, REPORT_TYPES, ROBLOX_VERIFICATION_STATUSES, type ReportStatus, type ReportType, type Resolution, type ResolutionSource, type RobloxVerificationStatus, STATUS_KINDS, type StatusKind, TICKET_ACTIONS, TICKET_ACTION_KEYS, TICKET_PLACEHOLDERS, TICKET_STATUSES, TICKET_TRANSITIONS, type TicketAction, type TicketButtonConfig, type TicketEffect, type TicketQuestion, type TicketStatus, type TicketVars, type TransitionMap, UNIT_STATUSES, type UnitStatus, WANTED_STATUSES, WANTED_TRANSITIONS, type WantedStatus, assertTransition, can, canTransition, checkAnswer, defaultTicketButtons, effectivePermissions, freeFieldKey, grantMatches, isPermissionKey, isValidRobloxUserId, normalizeField, renderTicketText, resolvePermission, ticketChannelName, ticketNumber };

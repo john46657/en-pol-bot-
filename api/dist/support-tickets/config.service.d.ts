@@ -20,8 +20,8 @@ export declare class TicketConfigService {
             active: boolean;
             updatedAt: Date;
             color: number;
-            emoji: string | null;
             questions: Prisma.JsonValue;
+            emoji: string | null;
             buttonStyle: string;
             position: number;
             discordCategoryId: string | null;
@@ -71,9 +71,9 @@ export declare class TicketConfigService {
             updatedAt: Date;
             color: number;
             title: string;
-            emoji: string | null;
             channelId: string | null;
             placeholder: string;
+            emoji: string | null;
             style: string;
             position: number;
             thumbnailUrl: string | null;
@@ -170,8 +170,8 @@ export declare class TicketConfigService {
         active: boolean;
         updatedAt: Date;
         color: number;
-        emoji: string | null;
         questions: Prisma.JsonValue;
+        emoji: string | null;
         buttonStyle: string;
         position: number;
         discordCategoryId: string | null;
@@ -221,8 +221,8 @@ export declare class TicketConfigService {
         active: boolean;
         updatedAt: Date;
         color: number;
-        emoji: string | null;
         questions: Prisma.JsonValue;
+        emoji: string | null;
         buttonStyle: string;
         position: number;
         discordCategoryId: string | null;
@@ -272,8 +272,8 @@ export declare class TicketConfigService {
         active: boolean;
         updatedAt: Date;
         color: number;
-        emoji: string | null;
         questions: Prisma.JsonValue;
+        emoji: string | null;
         buttonStyle: string;
         position: number;
         discordCategoryId: string | null;
@@ -324,9 +324,9 @@ export declare class TicketConfigService {
         updatedAt: Date;
         color: number;
         title: string;
-        emoji: string | null;
         channelId: string | null;
         placeholder: string;
+        emoji: string | null;
         style: string;
         position: number;
         thumbnailUrl: string | null;
@@ -349,9 +349,9 @@ export declare class TicketConfigService {
         updatedAt: Date;
         color: number;
         title: string;
-        emoji: string | null;
         channelId: string | null;
         placeholder: string;
+        emoji: string | null;
         style: string;
         position: number;
         thumbnailUrl: string | null;

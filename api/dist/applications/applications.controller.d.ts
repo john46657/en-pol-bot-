@@ -4,14 +4,14 @@ import type { Actor } from '../audit/audit.service';
 declare const submit: z.ZodObject<{
     robloxUsername: z.ZodString;
     robloxUserId: z.ZodOptional<z.ZodString>;
-    answers: z.ZodRecord<z.ZodString, z.ZodString>;
+    answers: z.ZodRecord<z.ZodString, z.ZodUnion<[z.ZodString, z.ZodArray<z.ZodString, "many">]>>;
 }, "strip", z.ZodTypeAny, {
     robloxUsername: string;
-    answers: Record<string, string>;
+    answers: Record<string, string | string[]>;
     robloxUserId?: string | undefined;
 }, {
     robloxUsername: string;
-    answers: Record<string, string>;
+    answers: Record<string, string | string[]>;
     robloxUserId?: string | undefined;
 }>;
 declare const move: z.ZodObject<{
@@ -44,7 +44,7 @@ declare const listQ: z.ZodObject<{
 export declare class ApplicationsController {
     private readonly a;
     constructor(a: ApplicationsService);
-    form(): Promise<import("./applications.service").FormField[]>;
+    form(): Promise<import("@enrp/shared").FormField[]>;
     submit(b: z.infer<typeof submit>): Promise<{
         number: string;
         status: string;
@@ -62,6 +62,7 @@ export declare class ApplicationsController {
             status: string;
             source: string;
             answers: import("@prisma/client/runtime/library").JsonValue;
+            grantRoleIds: string[];
             decidedById: string | null;
             discordName: string | null;
             durationSec: number | null;
@@ -93,6 +94,7 @@ export declare class ApplicationsController {
         status: string;
         source: string;
         answers: import("@prisma/client/runtime/library").JsonValue;
+        grantRoleIds: string[];
         decidedById: string | null;
         discordName: string | null;
         durationSec: number | null;
@@ -112,6 +114,7 @@ export declare class ApplicationsController {
         status: string;
         source: string;
         answers: import("@prisma/client/runtime/library").JsonValue;
+        grantRoleIds: string[];
         decidedById: string | null;
         discordName: string | null;
         durationSec: number | null;
@@ -133,6 +136,7 @@ export declare class ApplicationsController {
         status: string;
         source: string;
         answers: import("@prisma/client/runtime/library").JsonValue;
+        grantRoleIds: string[];
         decidedById: string | null;
         discordName: string | null;
         durationSec: number | null;

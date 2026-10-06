@@ -37,20 +37,20 @@ declare const submit: z.ZodObject<{
     joinedAt: z.ZodOptional<z.ZodDate>;
     answers: z.ZodArray<z.ZodObject<{
         question: z.ZodString;
-        answer: z.ZodString;
+        answer: z.ZodNullable<z.ZodUnion<[z.ZodString, z.ZodArray<z.ZodString, "many">]>>;
     }, "strip", z.ZodTypeAny, {
         question: string;
-        answer: string;
+        answer: string | string[] | null;
     }, {
         question: string;
-        answer: string;
+        answer: string | string[] | null;
     }>, "many">;
 }, "strip", z.ZodTypeAny, {
     unit: string;
     discordId: string;
     answers: {
         question: string;
-        answer: string;
+        answer: string | string[] | null;
     }[];
     discordName: string;
     durationSec?: number | undefined;
@@ -60,7 +60,7 @@ declare const submit: z.ZodObject<{
     discordId: string;
     answers: {
         question: string;
-        answer: string;
+        answer: string | string[] | null;
     }[];
     discordName: string;
     durationSec?: number | undefined;
@@ -81,13 +81,14 @@ export declare class QualificationsController {
     constructor(q: QualificationsService);
     /** Panels, Einheiten und die Fragen der Polizei-Bewerbung (`policeForm`). */
     config(): Promise<{
-        policeForm: import("../applications/applications.service").FormField[];
+        policeForm: import("@enrp/shared").FormField[];
         title: string;
         units: {
             name: string;
             description: string;
             key: string;
-            questions: string[];
+            pingRoleIds: string[];
+            questions: import("@enrp/shared").FormField[];
             roleId?: string | undefined;
             channelId?: string | undefined;
         }[];
@@ -95,16 +96,18 @@ export declare class QualificationsController {
         police: {
             description: string;
             title: string;
+            pingRoleIds: string[];
         };
     }>;
     save(a: Actor, b: z.infer<typeof saveSchema>): Promise<{
-        policeForm: import("../applications/applications.service").FormField[];
+        policeForm: import("@enrp/shared").FormField[];
         title: string;
         units: {
             name: string;
             description: string;
             key: string;
-            questions: string[];
+            pingRoleIds: string[];
+            questions: import("@enrp/shared").FormField[];
             roleId?: string | undefined;
             channelId?: string | undefined;
         }[];
@@ -112,6 +115,7 @@ export declare class QualificationsController {
         police: {
             description: string;
             title: string;
+            pingRoleIds: string[];
         };
     }>;
     list(f: z.infer<typeof list>): Promise<{
@@ -125,6 +129,7 @@ export declare class QualificationsController {
         discordId: string;
         status: string;
         answers: import("@prisma/client/runtime/library").JsonValue;
+        grantRoleIds: string[];
         decidedById: string | null;
         discordName: string;
         durationSec: number | null;
@@ -150,6 +155,7 @@ export declare class QualificationsController {
         discordId: string;
         status: string;
         answers: import("@prisma/client/runtime/library").JsonValue;
+        grantRoleIds: string[];
         decidedById: string | null;
         discordName: string;
         durationSec: number | null;
@@ -179,7 +185,8 @@ export declare class BotQualificationsController {
             name: string;
             description: string;
             key: string;
-            questions: string[];
+            pingRoleIds: string[];
+            questions: import("@enrp/shared").FormField[];
             roleId?: string | undefined;
             channelId?: string | undefined;
         }[];
@@ -187,6 +194,7 @@ export declare class BotQualificationsController {
         police: {
             description: string;
             title: string;
+            pingRoleIds: string[];
         };
     }>;
     open(f: z.infer<typeof openQ>): Promise<{
