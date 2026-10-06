@@ -47,8 +47,8 @@ export declare class VehiclesService {
                 version: number;
                 status: string;
                 custom: Prisma.JsonValue | null;
-                aliases: string[];
                 serverId: string | null;
+                aliases: string[];
                 notes: string | null;
             } | null;
         } & {

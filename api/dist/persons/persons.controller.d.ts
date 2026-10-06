@@ -83,8 +83,8 @@ export declare class PersonsController {
             version: number;
             status: string;
             custom: import("@prisma/client/runtime/library").JsonValue | null;
-            aliases: string[];
             serverId: string | null;
+            aliases: string[];
             notes: string | null;
         }[];
         total: number;
@@ -122,8 +122,8 @@ export declare class PersonsController {
             version: number;
             status: string;
             custom: import("@prisma/client/runtime/library").JsonValue | null;
-            aliases: string[];
             serverId: string | null;
+            aliases: string[];
             notes: string | null;
         };
         tickets: {
@@ -173,8 +173,8 @@ export declare class PersonsController {
             version: number;
             status: string;
             custom: import("@prisma/client/runtime/library").JsonValue | null;
-            aliases: string[];
             serverId: string | null;
+            aliases: string[];
             notes: string | null;
         };
         possibleDuplicates: {
@@ -194,8 +194,8 @@ export declare class PersonsController {
         version: number;
         status: string;
         custom: import("@prisma/client/runtime/library").JsonValue | null;
-        aliases: string[];
         serverId: string | null;
+        aliases: string[];
         notes: string | null;
     }>;
     archive(a: Actor, id: string, b: z.infer<typeof archive>): Promise<{
@@ -208,8 +208,8 @@ export declare class PersonsController {
         version: number;
         status: string;
         custom: import("@prisma/client/runtime/library").JsonValue | null;
-        aliases: string[];
         serverId: string | null;
+        aliases: string[];
         notes: string | null;
     }>;
     merge(a: Actor, id: string, b: z.infer<typeof merge>): Promise<{
@@ -222,8 +222,8 @@ export declare class PersonsController {
         version: number;
         status: string;
         custom: import("@prisma/client/runtime/library").JsonValue | null;
-        aliases: string[];
         serverId: string | null;
+        aliases: string[];
         notes: string | null;
     }>;
 }

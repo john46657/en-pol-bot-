@@ -18,16 +18,19 @@ const timeline_service_1 = require("../timeline/timeline.service");
 const studio_service_1 = require("../studio/studio.service");
 const errors_1 = require("../common/errors");
 const pagination_1 = require("../common/pagination");
+const roblox_service_1 = require("./roblox.service");
 let PersonsService = class PersonsService {
     prisma;
     audit;
     timeline;
     studio;
-    constructor(prisma, audit, timeline, studio) {
+    roblox;
+    constructor(prisma, audit, timeline, studio, roblox) {
         this.prisma = prisma;
         this.audit = audit;
         this.timeline = timeline;
         this.studio = studio;
+        this.roblox = roblox;
     }
     async list(p, includeArchived = false) {
         const where = {
@@ -66,6 +69,12 @@ let PersonsService = class PersonsService {
         const custom = await this.studio.check('persons', d.custom);
         if (d.robloxUserId && !(0, shared_1.isValidRobloxUserId)(d.robloxUserId))
             throw new errors_1.AppError('VALIDATION_FAILED', 'Invalid Roblox user id.');
+        // Nur Name oder nur ID angegeben → das Fehlende bei Roblox nachschlagen (Name in der richtigen Schreibweise)
+        if (!d.robloxUserId) {
+            const r = await this.roblox.lookup(d.robloxUsername).catch(() => null);
+            if (r)
+                d = { ...d, robloxUsername: r.name, robloxUserId: r.id };
+        }
         const dups = await this.findDuplicates(d.robloxUsername, d.robloxUserId);
         const hard = dups.find((x) => d.robloxUserId && x.robloxUserId === d.robloxUserId);
         if (hard)
@@ -138,6 +147,6 @@ let PersonsService = class PersonsService {
 exports.PersonsService = PersonsService;
 exports.PersonsService = PersonsService = __decorate([
     (0, common_1.Injectable)(),
-    __metadata("design:paramtypes", [prisma_service_1.PrismaService, audit_service_1.AuditService, timeline_service_1.TimelineService, studio_service_1.StudioService])
+    __metadata("design:paramtypes", [prisma_service_1.PrismaService, audit_service_1.AuditService, timeline_service_1.TimelineService, studio_service_1.StudioService, roblox_service_1.RobloxService])
 ], PersonsService);
 //# sourceMappingURL=persons.service.js.map

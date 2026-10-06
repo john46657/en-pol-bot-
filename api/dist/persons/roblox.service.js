@@ -38,6 +38,8 @@ let RobloxService = RobloxService_1 = class RobloxService {
         return NAME.test(name) ? { name } : null;
     }
     async lookup(input) {
+        if (process.env.ROBLOX_LOOKUP === 'off')
+            return null; // Tests ohne Internet
         const p = RobloxService_1.parse(input);
         if (!p)
             return null;

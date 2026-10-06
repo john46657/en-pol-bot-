@@ -309,8 +309,8 @@ export declare const panelSchema: z.ZodObject<{
     name: string;
     description: string;
     guildId: string | null;
-    color: number;
     imageUrl: string | null;
+    color: number;
     title: string;
     channelId: string | null;
     position: number;
@@ -329,8 +329,8 @@ export declare const panelSchema: z.ZodObject<{
     name: string;
     description?: string | undefined;
     guildId?: string | undefined;
-    color?: number | undefined;
     imageUrl?: string | undefined;
+    color?: number | undefined;
     title?: string | undefined;
     channelId?: string | undefined;
     position?: number | undefined;
