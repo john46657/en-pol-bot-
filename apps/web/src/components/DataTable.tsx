@@ -22,8 +22,9 @@ export function DataTable<T extends { id?: string }>({ columns, rows, total, pag
     <div className="rounded-lg border border-line bg-panel">
       {(onSearch || toolbar) && (
         <div className="flex flex-wrap items-center gap-2 border-b border-line p-3">
-          {onSearch && <div className="relative min-w-0 flex-1 sm:max-w-xs"><Search size={14} className="absolute left-2.5 top-3 text-muted" aria-hidden /><Input aria-label="Search" placeholder="Search…" value={search ?? ''} onChange={(e) => onSearch(e.target.value)} className="pl-8" /></div>}
-          {toolbar}
+          {/* Suchfeld behält seine Breite; viele Filter umbrechen in die nächste Zeile statt das Suchfeld zu quetschen */}
+          {onSearch && <div className="relative w-full shrink-0 sm:w-64"><Search size={14} className="absolute left-2.5 top-3 text-muted" aria-hidden /><Input aria-label="Search" placeholder="Suchen…" value={search ?? ''} onChange={(e) => onSearch(e.target.value)} className="pl-8" /></div>}
+          {toolbar && <div className="min-w-0 flex-1 basis-64">{toolbar}</div>}
         </div>
       )}
       {error ? <ErrorState error={error} onRetry={onRetry} /> : loading ? <div className="p-3"><SkeletonRows /></div> : !rows?.length ? <EmptyState text={empty.text} hint={empty.hint} /> : (
