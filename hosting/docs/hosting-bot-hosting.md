@@ -41,6 +41,8 @@ Die ZIP enthält vorkompilierten Code, **keine** `node_modules` (die haben Mac-B
 8. Seite öffnen: `http://<IP-aus-dem-Panel>:<Port>` → anmelden als `admin`.
 
 > Fehlt `ADMIN_PASSWORD`, wird ein zufälliges Passwort erzeugt und **nur einmal** in der Konsole angezeigt. Schau sofort in die Logs.
+>
+> **Passwort vergessen / „Invalid username or password“?** Im Panel `ADMIN_PASSWORD=<neues Passwort, mind. 12 Zeichen>` und zusätzlich `ADMIN_PASSWORD_RESET=true` setzen, neu starten (Konsole: „Admin password reset …“), mit `admin` + neuem Passwort anmelden und `ADMIN_PASSWORD_RESET` wieder entfernen. Das hebt auch eine Sperre nach zu vielen Fehlversuchen auf.
 
 ### 2a. Wenn dein Panel eine Domain mit HTTPS bereitstellt (z. B. `https://xxxx.apps.bot-hosting.cloud`)
 Dann hast du HTTPS – setze zusätzlich:

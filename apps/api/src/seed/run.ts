@@ -16,6 +16,17 @@ async function main() {
       await prisma.userRole.create({ data: { userId: admin.id, roleId: role.id } });
       console.log(`Initial admin created: username=admin${process.env.ADMIN_PASSWORD ? '' : ` password=${password} (change immediately; shown once)`}`);
     }
+    // Notfall: Admin-Passwort aus ADMIN_PASSWORD neu setzen (Panel: ADMIN_PASSWORD_RESET=true, danach wieder entfernen)
+    if (process.env.ADMIN_PASSWORD_RESET === 'true') {
+      const pw = process.env.ADMIN_PASSWORD ?? '';
+      const admin = await prisma.user.findUnique({ where: { username: 'admin' } });
+      if (pw.length < 12) console.log('ADMIN_PASSWORD_RESET ignored: set ADMIN_PASSWORD (at least 12 characters).');
+      else if (!admin) console.log('ADMIN_PASSWORD_RESET ignored: there is no user "admin".');
+      else {
+        await prisma.user.update({ where: { id: admin.id }, data: { passwordHash: await hashPassword(pw), active: true, failedLogins: 0, lockedUntil: null } });
+        console.log('Admin password reset from ADMIN_PASSWORD (user "admin", unlocked). Remove ADMIN_PASSWORD_RESET now.');
+      }
+    }
     await prisma.legalCode.upsert({ where: { code: 'TVO-1' }, create: { code: 'TVO-1', title: 'Geschwindigkeitsüberschreitung', category: 'Verkehr', penalty: { fine: 250 } }, update: {} });
   } finally { await prisma.$disconnect(); }
 }
