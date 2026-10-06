@@ -41,6 +41,7 @@ Der Bot (`apps/bot`, TypeScript, discord.js 14) ist ein **schlanker Client der S
 | `/gefahrenstatus [aktion] [stufe] [grund]` | Gefahrenstatus anzeigen / setzen (grün, gelb, rot) / als Button-Panel in den Channel posten | anzeigen: `dashboard.view` · setzen: `dispatch.manage` · Panel: Discord „Server verwalten“ |
 | `/teamliste` | selbst aktualisierende Teamliste einrichten bzw. sofort aktualisieren | `team.view` + Discord „Server verwalten“ |
 | `/funkfreigabe aktion [mitglied]` | Funk-Whitelist: hinzufuegen, entfernen, pruefen, liste (vergibt/entzieht optional die Funkrolle) | prüfen/liste: `team.view` · ändern: `personnel.edit` |
+| `/support [mitglied]` | Support-Ticket öffnen (Auswahl der Ticket-Art); mit `mitglied` öffnet das Team ein Ticket für jemand anderen | öffnen: jeder (Voraussetzungen der Ticket-Art) · für andere: `ticket.create` |
 | `/roblox name` | Roblox-Benutzer suchen (Name → ID, Profil-Link) | – |
 
 Bewusst **nicht** über Discord möglich: Berichte freigeben/ablehnen, Fahndungen aufheben, Beschwerden bearbeiten, Personal-, Benutzer-, Rollen- und Audit-Funktionen. Das bleibt im Web.
