@@ -77,6 +77,11 @@ describe('qualification applications', () => {
     expect((await admin.put('/api/v1/qualifications/config').send({ ...cfg, units: [...cfg.units, cfg.units[0]] })).status).toBe(400);
     expect((await admin.put('/api/v1/qualifications/config').send(cfg)).status).toBe(200);
     expect((await http().get('/api/v1/bot/qualifications').set(bot())).body).toMatchObject({ title: 'Qualis', units: [{ key: 'flugstaffel', roleId: '500000000000000001' }] });
+    // mehr als 15 Fragen sind erlaubt (bis 50), auch beim Einreichen
+    const many = Array.from({ length: 30 }, (_, i) => `Frage Nummer ${i + 1}?`);
+    expect((await admin.put('/api/v1/qualifications/config').send({ ...cfg, units: [{ ...cfg.units[0], questions: many }] })).status).toBe(200);
+    expect((await http().post('/api/v1/bot/qualifications/applications').set(bot()).send({ unit: 'flugstaffel', discordId: '700000000000000077', discordName: 'viele', answers: many.map((q) => ({ question: q, answer: 'Ja' })) })).status).toBe(201);
+    expect((await admin.put('/api/v1/qualifications/config').send({ ...cfg, units: [{ ...cfg.units[0], questions: [...many, ...many] }] })).status).toBe(400); // 60 > 50
   });
 
   it('bot may call duty hours and SEK routes on behalf of linked users (allowlist)', async () => {

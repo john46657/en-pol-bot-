@@ -105,16 +105,25 @@ export function applicationEmbeds(p: Record<string, unknown>, kind: 'q' | 'p'): 
   ].join('\n');
   const section = (q: { question?: unknown; answer?: unknown }, i: number, max?: number) => {
     const a = plain(q.answer) || '—';
-    return `**${i + 1}. ${plain(q.question)}**\n${max !== undefined && a.length > max ? `${a.slice(0, max)}… *(gekürzt – vollständig im Dashboard)*` : a}`;
+    return `**${i + 1}. ${clip(plain(q.question), 200)}**\n${max !== undefined && a.length > max ? `${a.slice(0, max)}… *(gekürzt)*` : a}`;
   };
   let sections = qa.map((q, i) => section(q, i));
-  const total = sections.reduce((n, x) => n + x.length + 2, 0) + stats.length;
-  if (total > BUDGET) {
-    const questions = qa.reduce((n, q, i) => n + section({ question: q.question, answer: '' }, i).length + 50, 0);
-    const per = Math.max(60, Math.floor((BUDGET - stats.length - questions) / Math.max(1, qa.length)));
+  const title = clip(kind === 'p' ? `📋 Bewerbung bei EN Polizei – ${p.number}` : `📋 ${plain(p.unitName)} – Bewerbung ${p.number}`, 256);
+  // Platz für Titel (bis zu 10 Embeds) und Bewerber-Infos abziehen
+  const room = BUDGET - stats.length - (title.length + 20) * 3;
+  const size = (xs: string[]) => xs.reduce((n, x) => n + x.length + 2, 0);
+  if (size(sections) > room) {
+    const questions = qa.reduce((n, q, i) => n + section({ question: q.question, answer: '' }, i).length + 15, 0);
+    const per = Math.max(40, Math.floor((room - questions) / Math.max(1, qa.length)));
     sections = qa.map((q, i) => section(q, i, per));
   }
-  const title = clip(kind === 'p' ? `📋 Bewerbung bei EN Polizei – ${p.number}` : `📋 ${plain(p.unitName)} – Bewerbung ${p.number}`, 256);
+  // passt es immer noch nicht (sehr viele Fragen), den Rest nur als Hinweis – vollständig im Dashboard
+  if (size(sections) > room) {
+    const kept: string[] = [];
+    for (const x of sections) { if (size(kept) + x.length + 2 > room - 120) break; kept.push(x); }
+    kept.push(`*… und ${sections.length - kept.length} weitere Antworten – vollständig im Dashboard.*`);
+    sections = kept;
+  }
   const embeds: EmbedData[] = [];
   let cur = '';
   for (const piece of [...sections, stats]) {

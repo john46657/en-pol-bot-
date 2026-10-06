@@ -76129,17 +76129,27 @@ function applicationEmbeds(p, kind) {
   ].join("\n");
   const section = (q2, i, max) => {
     const a = plain(q2.answer) || "\u2014";
-    return `**${i + 1}. ${plain(q2.question)}**
-${max !== void 0 && a.length > max ? `${a.slice(0, max)}\u2026 *(gek\xFCrzt \u2013 vollst\xE4ndig im Dashboard)*` : a}`;
+    return `**${i + 1}. ${clip(plain(q2.question), 200)}**
+${max !== void 0 && a.length > max ? `${a.slice(0, max)}\u2026 *(gek\xFCrzt)*` : a}`;
   };
   let sections = qa.map((q2, i) => section(q2, i));
-  const total = sections.reduce((n, x) => n + x.length + 2, 0) + stats.length;
-  if (total > BUDGET) {
-    const questions = qa.reduce((n, q2, i) => n + section({ question: q2.question, answer: "" }, i).length + 50, 0);
-    const per = Math.max(60, Math.floor((BUDGET - stats.length - questions) / Math.max(1, qa.length)));
+  const title = clip(kind === "p" ? `\u{1F4CB} Bewerbung bei EN Polizei \u2013 ${p.number}` : `\u{1F4CB} ${plain(p.unitName)} \u2013 Bewerbung ${p.number}`, 256);
+  const room = BUDGET - stats.length - (title.length + 20) * 3;
+  const size = (xs) => xs.reduce((n, x) => n + x.length + 2, 0);
+  if (size(sections) > room) {
+    const questions = qa.reduce((n, q2, i) => n + section({ question: q2.question, answer: "" }, i).length + 15, 0);
+    const per = Math.max(40, Math.floor((room - questions) / Math.max(1, qa.length)));
     sections = qa.map((q2, i) => section(q2, i, per));
   }
-  const title = clip(kind === "p" ? `\u{1F4CB} Bewerbung bei EN Polizei \u2013 ${p.number}` : `\u{1F4CB} ${plain(p.unitName)} \u2013 Bewerbung ${p.number}`, 256);
+  if (size(sections) > room) {
+    const kept = [];
+    for (const x of sections) {
+      if (size(kept) + x.length + 2 > room - 120) break;
+      kept.push(x);
+    }
+    kept.push(`*\u2026 und ${sections.length - kept.length} weitere Antworten \u2013 vollst\xE4ndig im Dashboard.*`);
+    sections = kept;
+  }
   const embeds = [];
   let cur = "";
   for (const piece of [...sections, stats]) {

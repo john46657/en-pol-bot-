@@ -11,7 +11,7 @@ const discordId = z.string().regex(/^\d{15,25}$/);
 const list = z.object({ unit: z.string().max(24).optional(), status: z.enum(['OPEN', 'ACCEPTED', 'REJECTED']).optional() });
 const decision = z.object({ status: z.enum(['ACCEPTED', 'REJECTED']), reason: z.string().trim().max(1000).optional() });
 const historyQ = z.object({ discordId });
-const submit = z.object({ unit: z.string().max(24), discordId, discordName: z.string().trim().min(1).max(100), durationSec: z.number().int().min(0).max(86_400).optional(), joinedAt: z.coerce.date().optional(), answers: z.array(z.object({ question: z.string().max(300), answer: z.string().trim().min(1).max(1000) })).min(1).max(15) });
+const submit = z.object({ unit: z.string().max(24), discordId, discordName: z.string().trim().min(1).max(100), durationSec: z.number().int().min(0).max(86_400).optional(), joinedAt: z.coerce.date().optional(), answers: z.array(z.object({ question: z.string().max(300), answer: z.string().trim().min(1).max(1000) })).min(1).max(50) });
 const openQ = z.object({ discordId, unit: z.string().max(24).optional() });
 
 @ApiTags('qualifications')

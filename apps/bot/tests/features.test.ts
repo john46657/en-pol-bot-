@@ -9,7 +9,7 @@ import { dutyRoleChanges, pollOnce } from '../src/outbox';
 import type { Platform } from '../src/platform';
 import { robloxLookup } from '../src/roblox';
 import { parseGermanDate } from '../src/commands/sek';
-import { outboxButtons, renderOutbox, renderOutboxEmbeds } from '../src/format';
+import { applicationEmbeds, outboxButtons, renderOutbox, renderOutboxEmbeds } from '../src/format';
 import { APPLICATION_MS, handleDirectMessage, panelEmbed, resetSessions } from '../src/commands/qualifications';
 
 const ME = '123456789012345678', OTHER = '223456789012345678', GUILD = '323456789012345678', CHANNEL = '423456789012345678';
@@ -428,5 +428,20 @@ describe('Dienststatus ↔ Discord', () => {
     expect(sent).toBe(1);
     expect(roles.at(-1)).toBe(`${OTHER} +700000000000000001`);
     expect(noChannel.calls.find((c) => c.path === '/bot/outbox/d1/ack')!.body).toEqual({ ok: true });
+  });
+});
+
+describe('applications with many questions', () => {
+  it('50 questions with long answers stay within Discord limits (≤ 10 embeds, ≤ 4096 per description, ≤ 6000 in total)', () => {
+    const answers = Array.from({ length: 50 }, (_, i) => ({ question: `Warum möchtest du Frage ${i + 1} beantworten und was ist deine Erfahrung?`, answer: 'x'.repeat(1000) }));
+    const embeds = applicationEmbeds({ number: 'Q-1', unitName: 'SEK', discordId: ME, discordName: 'max', answers, createdAt: new Date().toISOString() }, 'q');
+    expect(embeds.length).toBeLessThanOrEqual(10);
+    expect(embeds.every((e) => (e.description ?? '').length <= 4096)).toBe(true);
+    expect(embeds.reduce((n, e) => n + e.title.length + (e.description ?? '').length, 0)).toBeLessThanOrEqual(6000);
+    expect(embeds.map((e) => e.description).join('\n')).toMatch(/weitere Antworten – vollständig im Dashboard/);
+    // üblicher Fall: 20 normale Antworten erscheinen vollständig
+    const normal = applicationEmbeds({ number: 'Q-2', unitName: 'SEK', discordId: ME, answers: Array.from({ length: 20 }, (_, i) => ({ question: `Frage ${i + 1}?`, answer: `Antwort ${i + 1} mit etwas Text.` })) }, 'q').map((e) => e.description).join('\n');
+    expect(normal).toContain('**20. Frage 20?**\nAntwort 20 mit etwas Text.');
+    expect(normal).not.toContain('gekürzt');
   });
 });

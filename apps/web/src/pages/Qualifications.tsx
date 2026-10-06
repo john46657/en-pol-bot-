@@ -107,7 +107,7 @@ export function Qualifications() {
                   <Field label="Panel title">{(id) => <Input id={id} value={policeTitle} maxLength={100} onChange={(e) => setPoliceTitle(e.target.value)} />}</Field>
                   <Field label="Panel text (Discord markdown allowed)">{(id) => <Textarea id={id} rows={3} value={policeText} maxLength={1500} onChange={(e) => setPoliceText(e.target.value)} />}</Field>
                 </div>
-                <Field label={`Questions – one per line, add „(optional)“ at the end for optional ones (${policeQuestions.split('\n').filter((q) => q.trim()).length}/30)`} hint="The bot always asks for the Roblox username first – no need to add it.">
+                <Field label={`Questions – one per line, add „(optional)“ at the end for optional ones (${policeQuestions.split('\n').filter((q) => q.trim()).length} questions, max. 50)`} hint="The bot always asks for the Roblox username first – no need to add it.">
                   {(id) => <Textarea id={id} rows={8} value={policeQuestions} onChange={(e) => setPoliceQuestions(e.target.value)} />}
                 </Field>
               </div>
@@ -127,7 +127,7 @@ export function Qualifications() {
                   <Field label="Discord channel ID for incoming applications (optional)" hint="e.g. #flugstaffel-bewerbungen – empty = Qualifications channel from Settings">{(id) => <Input id={id} inputMode="numeric" value={u.channelId ?? ''} onChange={(e) => patch(i, { channelId: e.target.value })} placeholder="123456789012345678" />}</Field>
                   <Field label="Description (shown in the panel)">{(id) => <Textarea id={id} rows={3} maxLength={600} value={u.description} onChange={(e) => patch(i, { description: e.target.value })} />}</Field>
                 </div>
-                <div className="mt-3"><Field label={`Questions – one per line (${u.questions.split('\n').filter((q) => q.trim()).length}/15)`}>{(id) => <Textarea id={id} rows={7} value={u.questions} onChange={(e) => patch(i, { questions: e.target.value })} />}</Field></div>
+                <div className="mt-3"><Field label={`Questions – one per line (${u.questions.split('\n').filter((q) => q.trim()).length} questions, max. 50)`}>{(id) => <Textarea id={id} rows={7} value={u.questions} onChange={(e) => patch(i, { questions: e.target.value })} />}</Field></div>
               </Card>
             ))}
             <div className="flex flex-wrap items-center gap-2">

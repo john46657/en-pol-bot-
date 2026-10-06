@@ -9,7 +9,7 @@ export const unitSchema = z.object({
   roleId: z.union([z.string().regex(/^\d{15,25}$/), z.literal('')]).optional(),
   /** Eigener Discord-Channel für eingehende Bewerbungen dieser Einheit (sonst der allgemeine Qualifications-Channel). */
   channelId: z.union([z.string().regex(/^\d{15,25}$/), z.literal('')]).optional(),
-  questions: z.array(z.string().trim().min(3).max(300)).min(1).max(15),
+  questions: z.array(z.string().trim().min(3).max(300)).min(1).max(50),
 });
 /** Texte des Panels für die normale Bewerbung bei EN Polizei (/bewerbungspanel); die Fragen sind das Bewerbungsformular (`application.form`). */
 export const policeSchema = z.object({
@@ -26,7 +26,7 @@ export const configSchema = z.object({
 export const formFieldSchema = z.object({ key: z.string().regex(/^[a-zA-Z][\w]{0,40}$/), label: z.string().trim().min(1).max(300), required: z.boolean(), maxLength: z.number().int().min(1).max(5000) });
 /** Speichern aus „Qualifications → Setup“: Panels + Einheiten und optional die Fragen der Polizei-Bewerbung. */
 export const saveSchema = configSchema.extend({
-  policeForm: z.array(formFieldSchema).min(1).max(30).refine((f) => new Set(f.map((x) => x.key)).size === f.length, 'Question keys must be unique.').optional(),
+  policeForm: z.array(formFieldSchema).min(1).max(50).refine((f) => new Set(f.map((x) => x.key)).size === f.length, 'Question keys must be unique.').optional(),
 });
 export type QualificationUnit = z.infer<typeof unitSchema>;
 export type QualificationConfig = z.infer<typeof configSchema>;

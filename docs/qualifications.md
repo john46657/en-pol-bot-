@@ -16,8 +16,8 @@ Die **Polizei-Bewerbung** erscheint genauso im **Applications channel** (mit Rob
 Regeln: eine offene Bewerbung pro Person und Einheit; eine laufende Bewerbung im Chat zur selben Zeit; über die eigene Bewerbung darf niemand entscheiden. Bewerben geht auch **ohne** verknüpftes Konto.
 
 **Einrichten – alles an einem Ort (Web → Qualifications → Setup, Recht `qualifications.manage`):**
-- *Bewerbung bei EN Polizei*: Titel/Text des Panels (`/bewerbungspanel`) und die Fragen – eine pro Zeile, optionale mit „(optional)“ am Ende (max. 30). Das ist dasselbe Formular wie unter Studio → Application form und auf der Web-Seite `/apply`; der Roblox-Name wird immer zuerst gefragt. Unveränderte Fragen behalten ihre Zuordnung zu alten Antworten.
-- *Qualifikationen*: Titel und Einleitung des Panels; je Einheit Name, Beschreibung, Discord-Rollen-ID (optional), eigener Bewerbungs-Channel (optional) und bis zu 15 Fragen (eine pro Zeile). Startwerte: Flugstaffel, SEK, Ausbilder mit je 6 Fragen.
+- *Bewerbung bei EN Polizei*: Titel/Text des Panels (`/bewerbungspanel`) und die Fragen – eine pro Zeile, optionale mit „(optional)“ am Ende (max. 50). Das ist dasselbe Formular wie unter Studio → Application form und auf der Web-Seite `/apply`; der Roblox-Name wird immer zuerst gefragt. Unveränderte Fragen behalten ihre Zuordnung zu alten Antworten.
+- *Qualifikationen*: Titel und Einleitung des Panels; je Einheit Name, Beschreibung, Discord-Rollen-ID (optional), eigener Bewerbungs-Channel (optional) und bis zu 50 Fragen (eine pro Zeile). Startwerte: Flugstaffel, SEK, Ausbilder mit je 6 Fragen.
 
 Fragen gelten sofort für neu gestartete Bewerbungen. Geänderte Panel-Texte/Einheiten: Panel mit `/bewerbungspanel` bzw. `/qualipanel` neu posten.
 
