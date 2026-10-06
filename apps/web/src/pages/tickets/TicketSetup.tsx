@@ -102,20 +102,25 @@ function Panels({ c }: { c: TicketConfig }) {
   const [msg, setMsg] = useState<string>();
   const dup = useSave((id: string) => api(`/support-tickets/panels/${id}/duplicate`, { method: 'POST' }));
   const remove = useSave((id: string) => api(`/support-tickets/panels/${id}`, { method: 'DELETE' }), () => setDel(undefined));
+  // Channel direkt in der Liste wählen (ohne Bearbeiten-Ansicht) – dann ist „Send to Discord“ sofort möglich
+  const setChannel = useSave((v: { p: TicketPanelCfg; channelId: string | null }) => api(`/support-tickets/panels/${v.p.id}`, { method: 'PUT', body: clean({ ...v.p, id: undefined, messageId: undefined, channelId: v.channelId }) }));
+  const guilds = useGuilds();
+  const channelName = (id: string) => { for (const g of guilds.data ?? []) { const ch = g.channels.find((x) => x.id === id); if (ch) return `#${ch.name}`; } return id; };
   const publish = useSave((id: string) => api<{ updating: boolean }>(`/support-tickets/panels/${id}/publish`, { method: 'POST', body: {} }), (r) => setMsg((r as { updating: boolean }).updating ? 'The panel message in Discord is being updated.' : 'The panel is being sent to Discord.'));
   if (edit) return <PanelEditor draft={edit} c={c} onDone={() => setEdit(undefined)} />;
   return (
     <Card title="Ticket panels" actions={<Button size="sm" onClick={() => setEdit({ ...NEW_PANEL, guildId: server || null, categoryIds: c.categories.filter((x) => x.active).map((x) => x.id) })}>New panel</Button>}>
-      <Err error={dup.error ?? remove.error ?? publish.error} />
+      <Err error={dup.error ?? remove.error ?? publish.error ?? setChannel.error} />
       {msg && <p role="status" className="mb-2 text-sm text-success">{msg}</p>}
       {!c.panels.length ? <EmptyState text="No panels yet." hint="A panel is the message in Discord with the buttons/menu to open a ticket." /> : (
         <ul className="grid gap-3 md:grid-cols-2">{c.panels.map((p) => (
           <li key={p.id} className="grid gap-2 rounded-md border border-line p-3">
             <div className="flex flex-wrap items-center justify-between gap-2"><strong>{p.emoji} {p.name} <GuildTag id={p.guildId} /></strong>{p.messageId ? <Badge tone="success">posted</Badge> : <Badge>not posted</Badge>}</div>
-            <p className="text-xs text-muted">{p.style === 'DROPDOWN' ? 'Dropdown' : 'Buttons'} · {p.categoryIds.length} categories · channel {p.channelId ?? '—'}</p>
+            <p className="text-xs text-muted">{p.style === 'DROPDOWN' ? 'Dropdown' : 'Buttons'} · {p.categoryIds.length} categories · Channel {p.channelId ? channelName(p.channelId) : '—'}</p>
+            {!p.channelId && <div className="grid gap-1 rounded border border-warning/40 bg-warning/10 p-2 text-xs"><span>Wähle zuerst den Channel, in den das Panel gepostet wird:</span><ChannelPicker ariaLabel={`Channel für ${p.name}`} kind="text" value={null} onChange={(v) => v && setChannel.mutate({ p, channelId: v })} /></div>}
             <div className="flex flex-wrap gap-2">
               <Button size="sm" variant="secondary" onClick={() => setEdit(p)}>Edit</Button>
-              <Button size="sm" disabled={publish.isPending || !p.channelId} title={p.channelId ? undefined : 'Set a channel first'} onClick={() => { setMsg(undefined); publish.mutate(p.id); }}>{p.messageId ? 'Update in Discord' : 'Send to Discord'}</Button>
+              <Button size="sm" disabled={publish.isPending || !p.channelId} title={p.channelId ? undefined : 'Zuerst einen Channel wählen'} onClick={() => { setMsg(undefined); publish.mutate(p.id); }}>{p.messageId ? 'Update in Discord' : 'Send to Discord'}</Button>
               <Button size="sm" variant="secondary" disabled={dup.isPending} onClick={() => dup.mutate(p.id)}>Duplicate</Button>
               <Button size="sm" variant="ghost" onClick={() => setDel(p)}>Delete</Button>
             </div>
