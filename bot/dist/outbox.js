@@ -4,12 +4,12 @@ exports.pollOnce = pollOnce;
 exports.startOutboxLoop = startOutboxLoop;
 const format_1 = require("./format");
 /** Benachrichtigungen, die per Direktnachricht an eine Person gehen statt in einen Channel. */
-const DIRECT = { 'application.decided': format_1.applicationDecisionText, 'sek.application.decided': format_1.sekDecisionText };
+const DIRECT = { 'application.decided': format_1.applicationDecisionText, 'qualification.decided': format_1.qualificationDecisionText };
 /**
  * Holt offene Benachrichtigungen aus der System-API, postet sie und quittiert.
  * Fehlgeschlagene Sendungen werden gemeldet (die API zählt Versuche und gibt nach 5 Fehlversuchen auf).
  */
-async function pollOnce(api, send, log = console.log, dm) {
+async function pollOnce(api, send, log = console.log, dm, grantRole) {
     const [channels, items] = await Promise.all([api.service('GET', '/bot/config'), api.service('GET', '/bot/outbox?limit=20')]);
     let sent = 0;
     for (const item of items) {
@@ -19,6 +19,11 @@ async function pollOnce(api, send, log = console.log, dm) {
                 const userId = String(item.payload.discordId ?? '');
                 if (!/^\d{15,25}$/.test(userId))
                     throw new Error('no Discord user id');
+                // Rolle zuerst (wichtiger als die Nachricht; erneutes Vergeben bei Wiederholung schadet nicht)
+                const roleId = String(item.payload.roleId ?? '');
+                if (item.payload.status === 'ACCEPTED' && /^\d{15,25}$/.test(roleId) && grantRole) {
+                    await grantRole(userId, roleId).catch((e) => log(`outbox ${item.id}: role ${roleId} could not be given: ${e instanceof Error ? e.message : e}`));
+                }
                 if (!dm)
                     throw new Error('direct messages not available');
                 await dm(userId, direct(item.payload));
@@ -41,7 +46,8 @@ async function pollOnce(api, send, log = console.log, dm) {
                 throw new Error(`channel "${item.channelKey}" not configured`);
             if (!embed)
                 throw new Error(`unknown type "${item.type}"`);
-            const results = await Promise.allSettled(channelIds.map((id) => send(id, embed)));
+            const buttons = (0, format_1.outboxButtons)(item.type, item.payload);
+            const results = await Promise.allSettled(channelIds.map((id) => send(id, embed, buttons)));
             const failed = results.flatMap((r, i) => (r.status === 'rejected' ? [`${channelIds[i]}: ${r.reason instanceof Error ? r.reason.message : r.reason}`] : []));
             failed.forEach((f) => log(`outbox ${item.id}: send failed for channel ${f}`));
             // Erfolg, wenn mindestens ein Channel erreicht wurde (sonst Wiederholung – würde die erfolgreichen doppelt beliefern)
@@ -59,7 +65,7 @@ async function pollOnce(api, send, log = console.log, dm) {
     return sent;
 }
 /** Läuft dauerhaft; überlappende Durchläufe werden vermieden, Fehler (z. B. API kurz down) beenden die Schleife nicht. */
-function startOutboxLoop(api, send, seconds, log = console.log, dm) {
+function startOutboxLoop(api, send, seconds, log = console.log, dm, grantRole) {
     let running = false;
     let lastError;
     const tick = async () => {
@@ -67,7 +73,7 @@ function startOutboxLoop(api, send, seconds, log = console.log, dm) {
             return;
         running = true;
         try {
-            await pollOnce(api, send, log, dm);
+            await pollOnce(api, send, log, dm, grantRole);
             if (lastError) {
                 log('outbox: connection to the API restored');
                 lastError = undefined;

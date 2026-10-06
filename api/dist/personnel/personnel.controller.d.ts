@@ -11,15 +11,15 @@ declare const create: z.ZodObject<{
 }, "strip", z.ZodTypeAny, {
     userId: string;
     team?: string | undefined;
+    qualifications?: string[] | undefined;
     callsign?: string | undefined;
     rank?: string | undefined;
-    qualifications?: string[] | undefined;
 }, {
     userId: string;
     team?: string | undefined;
+    qualifications?: string[] | undefined;
     callsign?: string | undefined;
     rank?: string | undefined;
-    qualifications?: string[] | undefined;
 }>;
 declare const update: z.ZodObject<{
     team: z.ZodOptional<z.ZodString>;
@@ -28,14 +28,14 @@ declare const update: z.ZodObject<{
     qualifications: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
 }, "strip", z.ZodTypeAny, {
     team?: string | undefined;
+    qualifications?: string[] | undefined;
     callsign?: string | undefined;
     employmentStatus?: "ACTIVE" | "SUSPENDED" | "LOA" | "RESIGNED" | "TERMINATED" | undefined;
-    qualifications?: string[] | undefined;
 }, {
     team?: string | undefined;
+    qualifications?: string[] | undefined;
     callsign?: string | undefined;
     employmentStatus?: "ACTIVE" | "SUSPENDED" | "LOA" | "RESIGNED" | "TERMINATED" | undefined;
-    qualifications?: string[] | undefined;
 }>;
 declare const promote: z.ZodObject<{
     rank: z.ZodString;
@@ -74,11 +74,11 @@ export declare class PersonnelController {
             id: string;
             userId: string;
             team: string | null;
+            qualifications: string[];
             callsign: string | null;
             rank: string | null;
             employmentStatus: string;
             joinDate: Date;
-            qualifications: string[];
         })[];
         total: number;
         page: number;
@@ -127,41 +127,41 @@ export declare class PersonnelController {
         id: string;
         userId: string;
         team: string | null;
+        qualifications: string[];
         callsign: string | null;
         rank: string | null;
         employmentStatus: string;
         joinDate: Date;
-        qualifications: string[];
     }>;
     create(a: Actor, b: z.infer<typeof create>): Promise<{
         id: string;
         userId: string;
         team: string | null;
+        qualifications: string[];
         callsign: string | null;
         rank: string | null;
         employmentStatus: string;
         joinDate: Date;
-        qualifications: string[];
     }>;
     update(a: Actor, id: string, b: z.infer<typeof update>): Promise<{
         id: string;
         userId: string;
         team: string | null;
+        qualifications: string[];
         callsign: string | null;
         rank: string | null;
         employmentStatus: string;
         joinDate: Date;
-        qualifications: string[];
     }>;
     promote(a: Actor, id: string, b: z.infer<typeof promote>): Promise<{
         id: string;
         userId: string;
         team: string | null;
+        qualifications: string[];
         callsign: string | null;
         rank: string | null;
         employmentStatus: string;
         joinDate: Date;
-        qualifications: string[];
     }>;
     record(a: Actor, id: string, b: z.infer<typeof record>): Promise<{
         details: string | null;

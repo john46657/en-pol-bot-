@@ -15,9 +15,9 @@ exports.STARTER_ROLES = {
     Dispatch: { description: 'Leitstelle', grants: [...pick('dispatch.create', 'dispatch.edit', 'dispatch.assign', 'dispatch.close', 'dispatch.manage', 'incidents.create', 'incidents.edit', 'incidents.close', 'communication.moderate')] },
     Investigator: { description: 'Ermittler', grants: [...pick('investigations.view', 'investigations.create', 'investigations.edit', 'investigations.close', 'complaints.view', 'complaints.investigate', 'evidence.transfer', 'evidence.release', 'persons.edit')] },
     SEK: { description: 'Spezialeinsatzkommando (Mitglieder)', grants: [...pick('sek.view', 'sek.report')] },
-    'SEK Leitung': { description: 'Leitung des SEK (Mitglieder, Bewerbungen)', grants: [...only('sek')] },
-    'Training Staff': { description: 'Academy-Ausbilder', grants: [...pick('academy.view', 'academy.manage', 'personnel.view')] },
-    'Police Administration': { description: 'Polizeiführung', grants: [...only('personnel', 'applications', 'analytics', 'sek'), ...pick('persons.archive', 'vehicles.archive', 'complaints.resolve', 'complaints.close', 'audit.view', 'users.view', 'roles.view', 'dashboard.view', 'team.view', 'team.manage')] },
+    'SEK Leitung': { description: 'Leitung des SEK (Mitglieder, Bewerbungen)', grants: [...only('sek'), ...pick('qualifications.view', 'qualifications.decide')] },
+    'Training Staff': { description: 'Academy-Ausbilder', grants: [...pick('academy.view', 'academy.manage', 'personnel.view', 'qualifications.view', 'qualifications.decide')] },
+    'Police Administration': { description: 'Polizeiführung', grants: [...only('personnel', 'applications', 'analytics', 'sek', 'qualifications'), ...pick('persons.archive', 'vehicles.archive', 'complaints.resolve', 'complaints.close', 'audit.view', 'users.view', 'roles.view', 'dashboard.view', 'team.view', 'team.manage')] },
     'System Administrator': { description: 'Vollzugriff auf Systemverwaltung', grants: ['*'] },
 };
 async function seedBase(prisma) {

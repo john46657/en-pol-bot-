@@ -624,7 +624,7 @@ model RadioWhitelist {
   createdAt DateTime @default(now())
 }
 
-/** SEK (Spezialeinsatzkommando): eigenes Roster, eigene Einsatzberichte, eigene Bewerbungen. */
+/** SEK (Spezialeinsatzkommando): eigenes Roster und eigene Einsatzberichte (Bewerbung: QualificationApplication). */
 model SekMember {
   id        String   @id @default(uuid()) @db.Uuid
   userId    String   @unique @db.Uuid
@@ -643,16 +643,20 @@ model SekReport {
   @@index([createdAt])
 }
 
-model SekApplication {
+/** Bewerbungen für Qualifikationen (SEK, Flugstaffel, Ausbilder …) – per Discord-Panel, Fragen einzeln per Direktnachricht. */
+model QualificationApplication {
   id          String    @id @default(uuid()) @db.Uuid
   number      String    @unique
-  userId      String    @db.Uuid
-  serviceTime String
-  motivation  String
-  experience  String?
+  unit        String
+  unitName    String
+  discordId   String
+  discordName String
+  userId      String?   @db.Uuid
+  answers     Json
   status      String    @default("OPEN")
   decidedById String?   @db.Uuid
   decidedAt   DateTime?
   createdAt   DateTime  @default(now())
-  @@index([userId, status])
+  @@index([discordId, status])
+  @@index([status, createdAt])
 }

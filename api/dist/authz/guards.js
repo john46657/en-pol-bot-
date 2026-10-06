@@ -31,7 +31,7 @@ const UUID = '[0-9a-fA-F-]{36}';
 const BOT_USER_ROUTES = [
     ['GET', /^\/persons\/?$/], ['GET', new RegExp(`^/persons/${UUID}$`)], ['GET', /^\/vehicles\/?$/], ['GET', new RegExp(`^/vehicles/${UUID}$`)],
     ['GET', /^\/wanted\/?$/], ['GET', /^\/search\/?$/], ['GET', /^\/incidents\/?$/], ['POST', /^\/incidents\/?$/],
-    ['GET', /^\/team\/(overview|me)$/], ['PUT', /^\/team\/me\/status$/],
+    ['GET', /^\/team\/(overview|me|me\/hours|hours)$/], ['PUT', /^\/team\/me\/status$/],
     ['GET', /^\/dispatch\/units\/?$/], ['PUT', new RegExp(`^/dispatch/units/${UUID}/status$`)],
     ['POST', /^\/tickets\/?$/],
     ['GET', /^\/auth\/me$/], ['DELETE', /^\/discord\/link$/], ['GET', /^\/notifications\/?$/],
@@ -40,6 +40,8 @@ const BOT_USER_ROUTES = [
     ['POST', new RegExp(`^/dispatch/incidents/${UUID}/assign$`)], ['PUT', new RegExp(`^/dispatch/incidents/${UUID}/status$`)], ['POST', new RegExp(`^/dispatch/incidents/${UUID}/close$`)],
     ['GET', /^\/danger-level$/], ['PUT', /^\/danger-level$/],
     ['GET', /^\/radio-whitelist(\/check)?$/], ['POST', /^\/radio-whitelist(\/remove)?$/],
+    ['GET', /^\/sek\/(me|members|reports)$/], ['POST', /^\/sek\/(members|members\/remove|reports)$/],
+    ['POST', new RegExp(`^/qualifications/applications/${UUID}/decision$`)],
     ['POST', /^\/communication\/channels\/(TEAM|DISPATCH)\/messages$/],
 ];
 let AuthGuard = class AuthGuard {
