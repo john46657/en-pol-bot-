@@ -55,7 +55,7 @@ async function discordLogin(agent = request.agent(app.getHttpServer())) {
 }
 
 describe('login with Discord', () => {
-  it('gives admins a ready invite link for the bot (bot + slash commands, only the needed rights, no code grant)', async () => {
+  it('gives admins a ready invite link for the bot (bot + slash commands, administrator, no code grant)', async () => {
     const admin = (await login(app, 'dl_admin')).agent;
     const r = await admin.get('/api/v1/auth/discord/invite');
     expect(r.status).toBe(200);
@@ -64,9 +64,7 @@ describe('login with Discord', () => {
     expect(u.searchParams.get('client_id')).toBe(APP_ID);
     expect(u.searchParams.get('scope')).toBe('bot applications.commands');
     expect(u.searchParams.get('response_type')).toBeNull(); // sonst verlangt Discord eine Weiterleitung
-    const perms = BigInt(u.searchParams.get('permissions')!);
-    for (const bit of [10n, 11n, 16n, 4n, 28n, 35n]) expect(perms & (1n << bit)).not.toBe(0n); // ansehen, senden, Verlauf, Kanäle + Rollen verwalten, Threads
-    expect(perms & (1n << 3n)).toBe(0n); // kein Administrator
+    expect(u.searchParams.get('permissions')).toBe('8'); // Administrator
     expect((await request(app.getHttpServer()).get('/api/v1/auth/discord/invite')).status).toBe(401);
   });
 

@@ -43,15 +43,11 @@ export class DiscordOAuthService {
     return /^\d{15,25}$/.test(id) ? id : null;
   }
   enabled() { return !!(this.clientId() && this.env.DISCORD_CLIENT_SECRET); }
-  /**
-   * Link zum Einladen des Bots auf einen Server – mit genau den Rechten, die er braucht:
-   * Kanäle ansehen, Nachrichten senden/verwalten, Links einbetten, Dateien anhängen, Verlauf lesen,
-   * Kanäle verwalten (Tickets), Rollen verwalten (Rollen vergeben), öffentliche Threads + Nachrichten in Threads.
-   */
+  /** Link zum Einladen des Bots auf einen Server – mit Administrator-Rechten (so gewünscht; deckt Tickets, Rollen, Threads ab). */
   inviteUrl(): string | null {
     const id = this.clientId();
     if (!id) return null;
-    const perms = [1n << 4n, 1n << 10n, 1n << 11n, 1n << 13n, 1n << 14n, 1n << 15n, 1n << 16n, 1n << 28n, 1n << 35n, 1n << 38n].reduce((a, b) => a | b, 0n);
+    const perms = 8; // Administrator
     return `https://discord.com/oauth2/authorize?client_id=${id}&scope=bot%20applications.commands&permissions=${perms}`;
   }
   /** Passwort-Login nur, solange Discord-Login nicht eingerichtet ist – oder im Notfall mit PASSWORD_LOGIN=true. */

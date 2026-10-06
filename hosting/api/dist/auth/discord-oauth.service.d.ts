@@ -36,11 +36,7 @@ export declare class DiscordOAuthService {
     constructor(prisma: PrismaService, audit: AuditService, auth: AuthService);
     clientId(): string | null;
     enabled(): boolean;
-    /**
-     * Link zum Einladen des Bots auf einen Server – mit genau den Rechten, die er braucht:
-     * Kanäle ansehen, Nachrichten senden/verwalten, Links einbetten, Dateien anhängen, Verlauf lesen,
-     * Kanäle verwalten (Tickets), Rollen verwalten (Rollen vergeben), öffentliche Threads + Nachrichten in Threads.
-     */
+    /** Link zum Einladen des Bots auf einen Server – mit Administrator-Rechten (so gewünscht; deckt Tickets, Rollen, Threads ab). */
     inviteUrl(): string | null;
     /** Passwort-Login nur, solange Discord-Login nicht eingerichtet ist – oder im Notfall mit PASSWORD_LOGIN=true. */
     passwordLoginAllowed(): boolean;

@@ -97,7 +97,7 @@ function DiscordLoginCard({ manage, value, busy, onSave }: { manage: boolean; va
   );
 }
 
-/** Bot auf einen (weiteren) Discord-Server einladen – fertiger Link mit genau den nötigen Rechten. */
+/** Bot auf einen (weiteren) Discord-Server einladen – fertiger Link mit Administrator-Rechten. */
 function BotInviteCard() {
   const invite = useQuery({ queryKey: ['bot-invite'], queryFn: () => api<{ url: string | null }>('/auth/discord/invite') });
   const guilds = useGuilds();
@@ -107,7 +107,7 @@ function BotInviteCard() {
         {invite.data?.url
           ? <div><a className="inline-flex items-center gap-1.5 rounded-md bg-[#5865f2] px-3.5 py-2 font-medium text-white hover:brightness-110" href={invite.data.url} target="_blank" rel="noreferrer">Add bot to a server</a></div>
           : <p className="text-muted">Set DISCORD_TOKEN in the panel first – then the invite link appears here.</p>}
-        <p className="text-xs text-muted">Opens Discord: choose your server and click <b>Authorize</b>. You need „Manage Server“ on that server. If Discord says the bot is private or needs a code grant: Developer Portal → <b>Bot</b> → turn <b>Public Bot</b> on (or invite with the account that owns the bot) and turn <b>Requires OAuth2 Code Grant</b> off.</p>
+        <p className="text-xs text-muted">Opens Discord with administrator rights for the bot: choose your server and click <b>Authorize</b>. You need „Manage Server“ on that server. If Discord says the bot is private or needs a code grant: Developer Portal → <b>Bot</b> → turn <b>Public Bot</b> on (or invite with the account that owns the bot) and turn <b>Requires OAuth2 Code Grant</b> off.</p>
         <div>
           <p className="mb-1 text-xs font-semibold uppercase text-muted">Bot is on {guilds.data?.length ?? 0} server(s)</p>
           {guilds.data?.length ? <ul className="flex flex-wrap gap-2">{guilds.data.map((g) => <li key={g.id} className="inline-flex items-center gap-1.5 rounded border border-line px-2 py-1">{g.icon && <img src={g.icon} alt="" className="h-4 w-4 rounded-full" />}{g.name}</li>)}</ul>

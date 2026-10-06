@@ -82309,7 +82309,7 @@ async function checkApi() {
 function wireReady(client0) {
   client0.once("clientReady", async (c) => {
     console.log(`Logged in as ${c.user.tag}`);
-    console.log(`Bot einladen: https://discord.com/oauth2/authorize?client_id=${c.user.id}&scope=bot%20applications.commands&permissions=309506206736`);
+    console.log(`Bot einladen: https://discord.com/oauth2/authorize?client_id=${c.user.id}&scope=bot%20applications.commands&permissions=8`);
     console.log(`Server (${c.guilds.cache.size}): ${[...c.guilds.cache.values()].map((g) => g.name).join(", ") || "keiner \u2013 Bot mit dem Link oben einladen"}`);
     void checkApi();
     const json = COMMANDS.map(toBuilder);

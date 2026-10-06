@@ -66,7 +66,7 @@ Neue/zugewiesene Einsätze (Dispatch-Channel), neue Fahndungen (Wanted-Channel),
 3. *OAuth2 → URL Generator*: Scopes `bot` **und** `applications.commands`; Bot-Rechte: *View Channels*, *Send Messages*, *Embed Links* *Attach Files*, *Read Message History* – für Support-Tickets zusätzlich *Manage Channels* und *Manage Roles* (Kanalrechte), für Rollen bei Bewerbungen/Funk *Manage Roles*, für Staff-Threads bei Bewerbungen *Create Public Threads*. Der Bot meldet dem Dashboard automatisch seine Server mit Channels und Rollen (für die Auswahllisten). URL öffnen → Bot auf deinen Server einladen.
 4. Discord → Einstellungen → Erweitert → **Entwicklermodus** an. Rechtsklick auf deinen Server → *Server-ID kopieren*; Rechtsklick auf die Ziel-Channels → *Channel-ID kopieren*. Der Bot braucht in diesen Channels die Rechte *Kanal ansehen*, *Nachrichten senden*, *Links einbetten*.
 
-**Bot einladen (einfachster Weg):** Dashboard → *Administration → Settings* → **Add bot to a server**. Der Link hat genau die nötigen Rechte. Er steht auch in der Konsole, sobald der Bot startet („Bot einladen: …“).
+**Bot einladen (einfachster Weg):** Dashboard → *Administration → Settings* → **Add bot to a server**. Der Link gibt dem Bot Administrator-Rechte. Er steht auch in der Konsole, sobald der Bot startet („Bot einladen: …“).
 
 Klappt das Einladen nicht, im Developer Portal unter **Bot** prüfen:
 - **Public Bot** an: sonst kann nur das Konto einladen, dem der Bot gehört.
