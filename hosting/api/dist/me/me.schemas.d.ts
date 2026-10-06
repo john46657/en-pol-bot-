@@ -1,0 +1,318 @@
+import { z } from 'zod';
+/**
+ * Persönliche Einstellungen – gelten nur für den Benutzer selbst. Unbekannte Felder werden verworfen,
+ * alle Werte sind begrenzt (kein Ablageort für beliebige Daten).
+ */
+export declare const preferencesSchema: z.ZodObject<{
+    theme: z.ZodOptional<z.ZodEnum<["dark", "light", "system"]>>;
+    accent: z.ZodOptional<z.ZodString>;
+    background: z.ZodOptional<z.ZodEffects<z.ZodObject<{
+        type: z.ZodEnum<["none", "color", "gradient", "image"]>;
+        value: z.ZodString;
+    }, "strip", z.ZodTypeAny, {
+        value: string;
+        type: "color" | "none" | "gradient" | "image";
+    }, {
+        value: string;
+        type: "color" | "none" | "gradient" | "image";
+    }>, {
+        value: string;
+        type: "color" | "none" | "gradient" | "image";
+    }, {
+        value: string;
+        type: "color" | "none" | "gradient" | "image";
+    }>>;
+    cardStyle: z.ZodOptional<z.ZodEnum<["solid", "glass", "outline"]>>;
+    transparency: z.ZodOptional<z.ZodNumber>;
+    radius: z.ZodOptional<z.ZodNumber>;
+    shadow: z.ZodOptional<z.ZodEnum<["none", "soft", "strong"]>>;
+    glow: z.ZodOptional<z.ZodBoolean>;
+    animations: z.ZodOptional<z.ZodBoolean>;
+    sidebarWidth: z.ZodOptional<z.ZodEnum<["narrow", "normal", "wide"]>>;
+    sidebarCollapsed: z.ZodOptional<z.ZodBoolean>;
+    fontSize: z.ZodOptional<z.ZodNumber>;
+    density: z.ZodOptional<z.ZodEnum<["compact", "comfortable"]>>;
+    language: z.ZodOptional<z.ZodEnum<["de", "en"]>>;
+    timezone: z.ZodOptional<z.ZodString>;
+    dateFormat: z.ZodOptional<z.ZodEnum<["DD.MM.YYYY", "YYYY-MM-DD", "MM/DD/YYYY"]>>;
+    notifications: z.ZodOptional<z.ZodObject<{
+        muted: z.ZodArray<z.ZodString, "many">;
+        toasts: z.ZodOptional<z.ZodBoolean>;
+    }, "strip", z.ZodTypeAny, {
+        muted: string[];
+        toasts?: boolean | undefined;
+    }, {
+        muted: string[];
+        toasts?: boolean | undefined;
+    }>>;
+    favorites: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
+    quickActions: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
+    teamList: z.ZodOptional<z.ZodObject<{
+        view: z.ZodEnum<["cards", "table"]>;
+        search: z.ZodOptional<z.ZodString>;
+        filters: z.ZodOptional<z.ZodObject<{
+            team: z.ZodOptional<z.ZodString>;
+            rank: z.ZodOptional<z.ZodString>;
+            office: z.ZodOptional<z.ZodString>;
+            status: z.ZodOptional<z.ZodString>;
+        }, "strip", z.ZodTypeAny, {
+            team?: string | undefined;
+            status?: string | undefined;
+            rank?: string | undefined;
+            office?: string | undefined;
+        }, {
+            team?: string | undefined;
+            status?: string | undefined;
+            rank?: string | undefined;
+            office?: string | undefined;
+        }>>;
+    }, "strip", z.ZodTypeAny, {
+        view: "cards" | "table";
+        search?: string | undefined;
+        filters?: {
+            team?: string | undefined;
+            status?: string | undefined;
+            rank?: string | undefined;
+            office?: string | undefined;
+        } | undefined;
+    }, {
+        view: "cards" | "table";
+        search?: string | undefined;
+        filters?: {
+            team?: string | undefined;
+            status?: string | undefined;
+            rank?: string | undefined;
+            office?: string | undefined;
+        } | undefined;
+    }>>;
+    voice: z.ZodOptional<z.ZodObject<{
+        channelIds: z.ZodArray<z.ZodString, "many">;
+        categoryIds: z.ZodArray<z.ZodString, "many">;
+        sort: z.ZodEnum<["members", "name", "position"]>;
+        compact: z.ZodBoolean;
+        maxChannels: z.ZodNumber;
+        showEmpty: z.ZodOptional<z.ZodBoolean>;
+        showDuration: z.ZodOptional<z.ZodBoolean>;
+    }, "strip", z.ZodTypeAny, {
+        sort: "name" | "members" | "position";
+        compact: boolean;
+        channelIds: string[];
+        categoryIds: string[];
+        maxChannels: number;
+        showEmpty?: boolean | undefined;
+        showDuration?: boolean | undefined;
+    }, {
+        sort: "name" | "members" | "position";
+        compact: boolean;
+        channelIds: string[];
+        categoryIds: string[];
+        maxChannels: number;
+        showEmpty?: boolean | undefined;
+        showDuration?: boolean | undefined;
+    }>>;
+}, "strip", z.ZodTypeAny, {
+    voice?: {
+        sort: "name" | "members" | "position";
+        compact: boolean;
+        channelIds: string[];
+        categoryIds: string[];
+        maxChannels: number;
+        showEmpty?: boolean | undefined;
+        showDuration?: boolean | undefined;
+    } | undefined;
+    notifications?: {
+        muted: string[];
+        toasts?: boolean | undefined;
+    } | undefined;
+    theme?: "system" | "dark" | "light" | undefined;
+    accent?: string | undefined;
+    background?: {
+        value: string;
+        type: "color" | "none" | "gradient" | "image";
+    } | undefined;
+    cardStyle?: "solid" | "glass" | "outline" | undefined;
+    transparency?: number | undefined;
+    radius?: number | undefined;
+    shadow?: "none" | "soft" | "strong" | undefined;
+    glow?: boolean | undefined;
+    animations?: boolean | undefined;
+    sidebarWidth?: "narrow" | "normal" | "wide" | undefined;
+    sidebarCollapsed?: boolean | undefined;
+    fontSize?: number | undefined;
+    density?: "compact" | "comfortable" | undefined;
+    language?: "de" | "en" | undefined;
+    timezone?: string | undefined;
+    dateFormat?: "DD.MM.YYYY" | "YYYY-MM-DD" | "MM/DD/YYYY" | undefined;
+    favorites?: string[] | undefined;
+    quickActions?: string[] | undefined;
+    teamList?: {
+        view: "cards" | "table";
+        search?: string | undefined;
+        filters?: {
+            team?: string | undefined;
+            status?: string | undefined;
+            rank?: string | undefined;
+            office?: string | undefined;
+        } | undefined;
+    } | undefined;
+}, {
+    voice?: {
+        sort: "name" | "members" | "position";
+        compact: boolean;
+        channelIds: string[];
+        categoryIds: string[];
+        maxChannels: number;
+        showEmpty?: boolean | undefined;
+        showDuration?: boolean | undefined;
+    } | undefined;
+    notifications?: {
+        muted: string[];
+        toasts?: boolean | undefined;
+    } | undefined;
+    theme?: "system" | "dark" | "light" | undefined;
+    accent?: string | undefined;
+    background?: {
+        value: string;
+        type: "color" | "none" | "gradient" | "image";
+    } | undefined;
+    cardStyle?: "solid" | "glass" | "outline" | undefined;
+    transparency?: number | undefined;
+    radius?: number | undefined;
+    shadow?: "none" | "soft" | "strong" | undefined;
+    glow?: boolean | undefined;
+    animations?: boolean | undefined;
+    sidebarWidth?: "narrow" | "normal" | "wide" | undefined;
+    sidebarCollapsed?: boolean | undefined;
+    fontSize?: number | undefined;
+    density?: "compact" | "comfortable" | undefined;
+    language?: "de" | "en" | undefined;
+    timezone?: string | undefined;
+    dateFormat?: "DD.MM.YYYY" | "YYYY-MM-DD" | "MM/DD/YYYY" | undefined;
+    favorites?: string[] | undefined;
+    quickActions?: string[] | undefined;
+    teamList?: {
+        view: "cards" | "table";
+        search?: string | undefined;
+        filters?: {
+            team?: string | undefined;
+            status?: string | undefined;
+            rank?: string | undefined;
+            office?: string | undefined;
+        } | undefined;
+    } | undefined;
+}>;
+export type Preferences = z.infer<typeof preferencesSchema>;
+export declare const layoutsSchema: z.ZodEffects<z.ZodEffects<z.ZodObject<{
+    active: z.ZodString;
+    items: z.ZodArray<z.ZodObject<{
+        id: z.ZodString;
+        name: z.ZodString;
+        widgets: z.ZodArray<z.ZodObject<{
+            widget: z.ZodString;
+            size: z.ZodDefault<z.ZodEnum<["S", "M", "L", "XL"]>>;
+            minimized: z.ZodDefault<z.ZodBoolean>;
+            hidden: z.ZodDefault<z.ZodBoolean>;
+        }, "strip", z.ZodTypeAny, {
+            widget: string;
+            size: "S" | "M" | "L" | "XL";
+            minimized: boolean;
+            hidden: boolean;
+        }, {
+            widget: string;
+            size?: "S" | "M" | "L" | "XL" | undefined;
+            minimized?: boolean | undefined;
+            hidden?: boolean | undefined;
+        }>, "many">;
+    }, "strip", z.ZodTypeAny, {
+        id: string;
+        name: string;
+        widgets: {
+            widget: string;
+            size: "S" | "M" | "L" | "XL";
+            minimized: boolean;
+            hidden: boolean;
+        }[];
+    }, {
+        id: string;
+        name: string;
+        widgets: {
+            widget: string;
+            size?: "S" | "M" | "L" | "XL" | undefined;
+            minimized?: boolean | undefined;
+            hidden?: boolean | undefined;
+        }[];
+    }>, "many">;
+}, "strip", z.ZodTypeAny, {
+    active: string;
+    items: {
+        id: string;
+        name: string;
+        widgets: {
+            widget: string;
+            size: "S" | "M" | "L" | "XL";
+            minimized: boolean;
+            hidden: boolean;
+        }[];
+    }[];
+}, {
+    active: string;
+    items: {
+        id: string;
+        name: string;
+        widgets: {
+            widget: string;
+            size?: "S" | "M" | "L" | "XL" | undefined;
+            minimized?: boolean | undefined;
+            hidden?: boolean | undefined;
+        }[];
+    }[];
+}>, {
+    active: string;
+    items: {
+        id: string;
+        name: string;
+        widgets: {
+            widget: string;
+            size: "S" | "M" | "L" | "XL";
+            minimized: boolean;
+            hidden: boolean;
+        }[];
+    }[];
+}, {
+    active: string;
+    items: {
+        id: string;
+        name: string;
+        widgets: {
+            widget: string;
+            size?: "S" | "M" | "L" | "XL" | undefined;
+            minimized?: boolean | undefined;
+            hidden?: boolean | undefined;
+        }[];
+    }[];
+}>, {
+    active: string;
+    items: {
+        id: string;
+        name: string;
+        widgets: {
+            widget: string;
+            size: "S" | "M" | "L" | "XL";
+            minimized: boolean;
+            hidden: boolean;
+        }[];
+    }[];
+}, {
+    active: string;
+    items: {
+        id: string;
+        name: string;
+        widgets: {
+            widget: string;
+            size?: "S" | "M" | "L" | "XL" | undefined;
+            minimized?: boolean | undefined;
+            hidden?: boolean | undefined;
+        }[];
+    }[];
+}>;
+export type Layouts = z.infer<typeof layoutsSchema>;

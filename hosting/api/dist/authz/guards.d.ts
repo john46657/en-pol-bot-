@@ -3,14 +3,16 @@ import { Reflector } from '@nestjs/core';
 import { PrismaService } from '../prisma/prisma.service';
 import { PermissionService } from './permission.service';
 import { DiscordService } from '../discord/discord.service';
+import { DiscordAccessService } from './discord-access.service';
 export declare const SESSION_COOKIE = "enrp_session";
 export declare const hashToken: (t: string) => string;
 export declare class AuthGuard implements CanActivate {
     private readonly reflector;
     private readonly prisma;
     private readonly discord;
+    private readonly access;
     private readonly botToken;
-    constructor(reflector: Reflector, prisma: PrismaService, discord: DiscordService);
+    constructor(reflector: Reflector, prisma: PrismaService, discord: DiscordService, access: DiscordAccessService);
     private validBotToken;
     private botFailure;
     canActivate(ctx: ExecutionContext): Promise<boolean>;

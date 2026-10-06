@@ -12,16 +12,16 @@ export declare const leaveConfigSchema: z.ZodObject<{
     /** Längste erlaubte Abmeldung in Tagen. */
     maxDays: z.ZodDefault<z.ZodNumber>;
 }, "strip", z.ZodTypeAny, {
-    enabled: boolean;
     roleIds: string[];
+    enabled: boolean;
     maxDays: number;
     approvalChannelId?: string | null | undefined;
     logChannelId?: string | null | undefined;
 }, {
+    roleIds?: string[] | undefined;
     enabled?: boolean | undefined;
     approvalChannelId?: string | null | undefined;
     logChannelId?: string | null | undefined;
-    roleIds?: string[] | undefined;
     maxDays?: number | undefined;
 }>;
 export type LeaveConfig = z.infer<typeof leaveConfigSchema>;
@@ -34,8 +34,8 @@ export declare class LeaveService {
     constructor(prisma: PrismaService, audit: AuditService, discord: DiscordService, perms: PermissionService);
     config(): Promise<LeaveConfig>;
     saveConfig(actor: Actor, input: LeaveConfig): Promise<{
-        enabled: boolean;
         roleIds: string[];
+        enabled: boolean;
         maxDays: number;
         approvalChannelId?: string | null | undefined;
         logChannelId?: string | null | undefined;

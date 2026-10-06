@@ -60,7 +60,21 @@ function renderOutbox(type, p) {
         case 'incident.assigned':
             return { title: `📻 ${(0, exports.plain)(p.callsign)} → ${p.number}`, description: (0, exports.clip)((0, exports.plain)(p.title), 4000), color: PRIORITY_COLOR[String(p.priority)] ?? exports.COLORS.info, fields: [{ name: 'Ort', value: (0, exports.clip)((0, exports.plain)(p.location ?? 'unbekannt'), 1024), inline: true }] };
         case 'wanted.created':
-            return { title: `🔴 Neue Fahndung (${p.kind === 'vehicle' ? 'Fahrzeug' : 'Person'})`, description: `**${(0, exports.clip)((0, exports.plain)(p.subject), 200)}**\n${(0, exports.clip)((0, exports.plain)(p.reason), 3000)}`, color: PRIORITY_COLOR[String(p.priority)] ?? exports.COLORS.danger, fields: [{ name: 'Priorität', value: (0, exports.label)(p.priority), inline: true }] };
+            return {
+                title: `🚨 Neue Fahndung (${p.kind === 'vehicle' ? 'Fahrzeug' : 'Person'})`, description: `**${(0, exports.clip)((0, exports.plain)(p.subject), 200)}**\n${(0, exports.clip)((0, exports.plain)(p.reason), 1500)}${p.description ? `\n\n${(0, exports.clip)((0, exports.plain)(p.description), 2000)}` : ''}`,
+                color: PRIORITY_COLOR[String(p.priority)] ?? exports.COLORS.danger,
+                fields: [{ name: 'Priorität', value: (0, exports.label)(p.priority), inline: true }, { name: 'Gültig bis', value: p.expiresAt ? `<t:${Math.floor(Date.parse(String(p.expiresAt)) / 1000)}:f>` : 'unbefristet', inline: true }, ...(p.createdBy ? [{ name: 'Ausgestellt von', value: (0, exports.clip)((0, exports.plain)(p.createdBy), 200), inline: true }] : [])],
+            };
+        case 'wanted.status': {
+            const st = { CLEARED: ['✅ Fahndung aufgehoben', exports.COLORS.success], CANCELLED: ['⚪ Fahndung abgebrochen', exports.COLORS.info], ACTIVE: ['🚨 Fahndung wieder aktiv', exports.COLORS.danger], EXPIRED: ['⌛ Fahndung abgelaufen', exports.COLORS.info] };
+            const [title, color] = st[String(p.status)] ?? [`Fahndung: ${(0, exports.label)(p.status)}`, exports.COLORS.info];
+            return { title, description: `**${(0, exports.clip)((0, exports.plain)(p.subject), 200)}** – ${(0, exports.clip)((0, exports.plain)(p.reason), 1000)}${p.note ? `\n**Grund:** ${(0, exports.clip)((0, exports.plain)(p.note), 1000)}` : ''}`, color, ...(p.by ? { footer: `von ${(0, exports.clip)((0, exports.plain)(p.by), 100)}` } : {}) };
+        }
+        case 'teamchance.changed':
+            return p.open
+                ? { title: `📣 ${(0, exports.clip)((0, exports.plain)(p.title ?? 'Team-Chance'), 200)} – jetzt offen!`, description: (0, exports.clip)((0, exports.plain)(p.description ?? ''), 3500) || undefined, color: exports.COLORS.success,
+                    fields: [...(p.closesAt ? [{ name: 'Bewerbungsschluss', value: `<t:${Math.floor(Date.parse(String(p.closesAt)) / 1000)}:f>`, inline: true }] : []), ...(Number(p.slots) > 0 ? [{ name: 'Plätze', value: String(p.slots), inline: true }] : [])] }
+                : { title: `🔒 ${(0, exports.clip)((0, exports.plain)(p.title ?? 'Team-Chance'), 200)} – geschlossen`, description: 'Vielen Dank für alle Bewerbungen!', color: exports.COLORS.danger };
         case 'announcement':
             return { title: '📢 Ankündigung', description: (0, exports.clip)((0, exports.plain)(p.body), 4000), color: exports.COLORS.warning, footer: `von ${(0, exports.clip)(p.author, 100)}` };
         case 'danger.changed': {
@@ -188,6 +202,9 @@ function outboxButtons(type, p) {
             { id: `leave:reason:${p.id}:DENIED`, label: 'Ablehnen mit Grund', style: 'danger' },
             ...(typeof p.dashboardUrl === 'string' && /^https?:\/\//.test(p.dashboardUrl) ? [{ id: 'link', label: 'Im Dashboard ansehen', style: 'secondary', url: p.dashboardUrl }] : []),
         ];
+    // Fahndung / Einsatz: Link ins Dashboard
+    if (/^wanted\./.test(type) && typeof p.dashboardUrl === 'string' && /^https?:\/\//.test(p.dashboardUrl))
+        return [{ id: 'link', label: 'Im Dashboard ansehen', style: 'secondary', url: p.dashboardUrl }];
     const kind = type === 'qualification.submitted' ? 'q' : type === 'application.submitted' ? 'p' : null;
     if (!kind || typeof p.id !== 'string')
         return undefined;

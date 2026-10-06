@@ -13,6 +13,7 @@ var __param = (this && this.__param) || function (paramIndex, decorator) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.ApplicationsController = void 0;
+const guild_context_1 = require("../common/guild-context");
 const common_1 = require("@nestjs/common");
 const swagger_1 = require("@nestjs/swagger");
 const throttler_1 = require("@nestjs/throttler");
@@ -35,7 +36,7 @@ let ApplicationsController = class ApplicationsController {
     /** `?guildId=` – Formular eines Servers (für den Bot); ohne: das gemeinsame (Web-Seite /apply). */
     form(q) { return this.a.form(q.guildId); }
     submit(b) { return this.a.submit(b); }
-    list(q) { return this.a.list(q, q.status, q.guildId); }
+    list(q) { return this.a.list(q, q.status, q.guildId ?? (0, guild_context_1.currentGuild)() ?? undefined); } // Server getrennt: gewählter Server
     history(q) { return this.a.history(q.discordId); }
     get(id) { return this.a.get(id); }
     /** Prüfschritte benötigen applications.review; Entscheidungen applications.decide. */

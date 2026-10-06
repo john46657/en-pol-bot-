@@ -13,6 +13,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.SupportTicketsService = void 0;
+const notify_service_1 = require("../notifications/notify.service");
 const common_1 = require("@nestjs/common");
 const node_crypto_1 = require("node:crypto");
 const promises_1 = require("node:fs/promises");
@@ -44,13 +45,15 @@ let SupportTicketsService = class SupportTicketsService {
     perms;
     discord;
     config;
+    notify;
     log = new common_1.Logger('Tickets');
     dir = node_path_1.default.resolve((0, env_1.loadEnv)().STORAGE_DIR, 'tickets');
-    constructor(prisma, perms, discord, config) {
+    constructor(prisma, perms, discord, config, notify) {
         this.prisma = prisma;
         this.perms = perms;
         this.discord = discord;
         this.config = config;
+        this.notify = notify;
     }
     // ================= Hilfsfunktionen =================
     async actorFromUser(u) {
@@ -444,6 +447,9 @@ let SupportTicketsService = class SupportTicketsService {
                 const claimedStatus = l.status.isDefault ? await this.prisma.ticketStatus.findFirst({ where: { isClaimed: true, kind: 'OPEN' } }) : null;
                 await this.prisma.supportTicket.update({ where: { id: t.id }, data: { claimers, ...(claimedStatus ? { statusId: claimedStatus.id } : {}), firstResponseAt: t.firstResponseAt ?? new Date() } });
                 const fresh = await refresh();
+                // 🎫 Ticket übernommen → Ersteller (falls mit einem Dashboard-Konto verknüpft)
+                if (t.creatorUserId && t.creatorUserId !== actor.userId)
+                    await this.notify.notify([t.creatorUserId], { type: 'TICKET_CLAIMED', title: `🎫 Dein Ticket ${(0, shared_1.ticketNumber)(t.number)} wurde übernommen`, body: `Bearbeiter: ${this.actorTag(actor)}`, entityType: 'SupportTicket', entityId: t.id });
                 const text = (0, shared_1.renderTicketText)(l.cat.claimMessage || '👤 Bearbeiter: {staff}', this.vars(fresh, { '{actor}': this.actorTag(actor) }));
                 post({ content: l.cat.claimNotifyStaff ? l.cat.staffRoleIds.map((r) => `<@&${r}>`).join(' ') || undefined : undefined, mentionRoles: l.cat.claimNotifyStaff ? l.cat.staffRoleIds : [], embeds: [{ description: text, color: l.cat.color }] });
                 if (ch && !t.claimers.length && l.cat.claimDiscordCategoryId)
@@ -1127,6 +1133,6 @@ let SupportTicketsService = class SupportTicketsService {
 exports.SupportTicketsService = SupportTicketsService;
 exports.SupportTicketsService = SupportTicketsService = __decorate([
     (0, common_1.Injectable)(),
-    __metadata("design:paramtypes", [prisma_service_1.PrismaService, permission_service_1.PermissionService, discord_service_1.DiscordService, config_service_1.TicketConfigService])
+    __metadata("design:paramtypes", [prisma_service_1.PrismaService, permission_service_1.PermissionService, discord_service_1.DiscordService, config_service_1.TicketConfigService, notify_service_1.NotifyService])
 ], SupportTicketsService);
 //# sourceMappingURL=tickets.service.js.map

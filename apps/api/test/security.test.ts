@@ -78,7 +78,10 @@ describe('privilege escalation', () => {
     const fourth = await makeUser(prisma, 's_fourth', ['Police Member']);
     await prisma.userPermissionOverride.createMany({ data: [{ userId: fourth.id, permissionKey: 'users.manage', effect: 'ALLOW' }, { userId: fourth.id, permissionKey: 'roles.manage', effect: 'ALLOW' }] });
     const fourthAgent = (await login(app, 's_fourth')).agent;
-    expect((await fourthAgent.put(`/api/v1/users/${third.id}/active`).send({ active: false })).status).toBe(409);
-    expect((await fourthAgent.put(`/api/v1/users/${third.id}/roles`).send({ roleIds: [] })).status).toBe(409);
+    // (Rang: ein Police Member darf einen Administrator gar nicht verwalten → 403, noch vor der Letzter-Admin-Prüfung)
+    expect((await fourthAgent.put(`/api/v1/users/${third.id}/active`).send({ active: false })).status).toBe(403);
+    expect((await fourthAgent.put(`/api/v1/users/${third.id}/roles`).send({ roleIds: [] })).status).toBe(403);
+    // der letzte Administrator selbst ist ebenfalls geschützt (Selbst-Änderung)
+    expect((await thirdAgent.put(`/api/v1/users/${third.id}/roles`).send({ roleIds: [] })).status).toBe(409);
   });
 });

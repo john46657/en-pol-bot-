@@ -33,40 +33,40 @@ export declare class CommunicationController {
         createdAt: Date;
         body: string;
         authorId: string;
+        deletedAt: Date | null;
         conversationId: string;
         replyToId: string | null;
         pinned: boolean;
-        deletedAt: Date | null;
     }[]>;
     post(a: Actor, ch: z.infer<typeof channel>, b: z.infer<typeof post>): Promise<{
         id: string;
         createdAt: Date;
         body: string;
         authorId: string;
+        deletedAt: Date | null;
         conversationId: string;
         replyToId: string | null;
         pinned: boolean;
-        deletedAt: Date | null;
     }>;
     pin(a: Actor, id: string): Promise<{
         id: string;
         createdAt: Date;
         body: string;
         authorId: string;
+        deletedAt: Date | null;
         conversationId: string;
         replyToId: string | null;
         pinned: boolean;
-        deletedAt: Date | null;
     }>;
     del(a: Actor, id: string): Promise<{
         id: string;
         createdAt: Date;
         body: string;
         authorId: string;
+        deletedAt: Date | null;
         conversationId: string;
         replyToId: string | null;
         pinned: boolean;
-        deletedAt: Date | null;
     }>;
 }
 export {};

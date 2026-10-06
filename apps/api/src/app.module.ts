@@ -1,4 +1,8 @@
 import { LeaveModule } from './leave/leave.module';
+import { RosterModule } from './team-roster/roster.module';
+import { MeModule } from './me/me.module';
+import { RadioCodesModule } from './radio-codes/radio-codes.module';
+import { TeamChanceModule } from './teamchance/teamchance.module';
 import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
 import { APP_FILTER, APP_GUARD, DiscoveryModule } from '@nestjs/core';
 import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
@@ -41,13 +45,14 @@ import { AuthGuard, PermissionGuard } from './authz/guards';
 import { AllExceptionsFilter } from './common/all-exceptions.filter';
 import { RequestIdMiddleware } from './common/request-id.middleware';
 import { OriginMiddleware } from './common/origin.middleware';
+import { GuildContextMiddleware } from './common/guild-context';
 
 @Module({
   imports: [
     ThrottlerModule.forRoot([{ ttl: 60_000, limit: process.env.NODE_ENV === 'test' ? 10_000 : 300 }]),
     DiscoveryModule, PrismaModule, AuthzModule, AuditModule, AuthModule, UsersModule, PersonsModule, VehiclesModule, TicketsModule,
     DispatchModule, ReportsModule, ComplaintsModule, InvestigationsModule, WantedModule, EvidenceModule,
-    PersonnelModule, DutyModule, ApplicationsModule, AcademyModule, NotificationsModule, SearchModule, CommunicationModule, AnalyticsModule, RealtimeModule, AdminModule, ExportModule, MediaModule, StudioModule, DiscordModule, DangerModule, RadioModule, SekModule, QualificationsModule, SupportTicketsModule, LeaveModule,
+    PersonnelModule, DutyModule, ApplicationsModule, AcademyModule, NotificationsModule, SearchModule, CommunicationModule, AnalyticsModule, RealtimeModule, AdminModule, ExportModule, MediaModule, StudioModule, DiscordModule, DangerModule, RadioModule, SekModule, QualificationsModule, SupportTicketsModule, LeaveModule, RosterModule, MeModule, RadioCodesModule, TeamChanceModule,
   ],
   controllers: [HealthController, AuditController],
   providers: [
@@ -59,6 +64,6 @@ import { OriginMiddleware } from './common/origin.middleware';
 })
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {
-    consumer.apply(RequestIdMiddleware, OriginMiddleware).forRoutes('{*splat}');
+    consumer.apply(RequestIdMiddleware, OriginMiddleware, GuildContextMiddleware).forRoutes('{*splat}');
   }
 }

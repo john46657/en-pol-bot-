@@ -1,6 +1,7 @@
 /** Zentraler Permission-Katalog. Einzige Quelle der Wahrheit für Backend und Frontend. */
 export const PERMISSION_CATALOG = {
-  dashboard: ['view', 'customize'],
+  /** `dashboard.<bereich>.view`: Sichtbarkeit ganzer Bereiche im Menü und auf der Startseite (zusätzlich zur Modul-Permission). */
+  dashboard: ['view', 'customize', 'tickets.view', 'applications.view', 'team.view', 'offices.view', 'voice.view', 'radio.view', 'teamchance.view', 'logs.view', 'settings.view'],
   team: ['view', 'manage'],
   dispatch: ['view', 'create', 'edit', 'assign', 'close', 'manage'],
   incidents: ['view', 'create', 'edit', 'close', 'delete'],
@@ -19,6 +20,10 @@ export const PERMISSION_CATALOG = {
   sek: ['view', 'report', 'manage'],
   qualifications: ['view', 'decide', 'manage'],
   ticket: ['view', 'create', 'claim', 'close', 'reopen', 'delete', 'add_user', 'remove_user', 'change_status', 'change_priority', 'change_category', 'rename', 'move', 'lock', 'escalate', 'transcript', 'transcript_delete', 'internal_notes', 'rate', 'manage', 'settings'],
+  /** Funk-Codes (Liste der Funkcodes, z. B. 10-4) */
+  radio: ['view', 'manage'],
+  /** Team-Chance: Bewerbungsphase für das Team öffnen/schließen */
+  teamchance: ['view', 'manage'],
   communication: ['view', 'send', 'moderate'],
   analytics: ['view'],
   audit: ['view', 'export'],
@@ -92,4 +97,35 @@ export const can = (ctx: PermissionContext, permission: string): boolean =>
 /** Berechnet die effektive Menge erlaubter Katalog-Permissions (für Frontend-UI-Hinweise). */
 export function effectivePermissions(ctx: PermissionContext): PermissionKey[] {
   return ALL_PERMISSIONS.filter((p) => can(ctx, p));
+}
+
+/**
+ * Bereichs-Sichtbarkeit → Modul-Rechte, die zusammen mit dem Bereich vergeben werden (Startrollen, Migration).
+ * Ein Menüpunkt erscheint nur mit Bereichs-Recht UND Modul-Recht; die API prüft immer das Modul-Recht.
+ */
+export const AREA_PERMISSIONS: Record<string, readonly string[]> = {
+  'dashboard.tickets.view': ['ticket.view'],
+  'dashboard.applications.view': ['applications.view'],
+  'dashboard.team.view': ['team.view'],
+  'dashboard.offices.view': ['team.view'],
+  'dashboard.voice.view': ['team.view'],
+  'dashboard.radio.view': ['radio.view'],
+  'dashboard.teamchance.view': ['teamchance.view'],
+  'dashboard.logs.view': ['audit.view'],
+  'dashboard.settings.view': ['settings.view', 'roles.view', 'users.view', 'studio.view'],
+};
+
+/** Bereichs-Rechte, die zu einer Grant-Liste passen (wer `ticket.view` hat, sieht auch den Ticket-Bereich). */
+export function areaGrantsFor(grants: readonly string[]): string[] {
+  return Object.entries(AREA_PERMISSIONS).filter(([, bases]) => bases.some((b) => grants.some((g) => grantMatches(g, b)))).map(([area]) => area);
+}
+
+/**
+ * Darf jemand mit `holder`-Rechten eine Berechtigung `grant` weitergeben? Nur was man selbst besitzt
+ * (ein Wildcard nur, wenn man alle davon erfassten Rechte hat) – verhindert Rechteausweitung über den Rollen-Editor.
+ */
+export function canDelegate(holder: PermissionContext, grant: string): boolean {
+  const covered = ALL_PERMISSIONS.filter((p) => grantMatches(grant, p));
+  if (!covered.length) return can(holder, grant);
+  return covered.every((p) => can(holder, p)) && (grant !== '*' || can(holder, '*'));
 }

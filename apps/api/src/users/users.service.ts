@@ -6,6 +6,8 @@ import { hashPassword } from '../auth/password';
 import { AuthService } from '../auth/auth.service';
 import { PermissionService } from '../authz/permission.service';
 import { AppError } from '../common/errors';
+import { RealtimeService } from '../realtime/realtime.service';
+import { currentGuild } from '../common/guild-context';
 import { PageQuery, pageResult, skipTake } from '../common/pagination';
 
 const publicSelect = {
@@ -17,7 +19,7 @@ const publicSelect = {
 
 @Injectable()
 export class UsersService {
-  constructor(private readonly prisma: PrismaService, private readonly audit: AuditService, private readonly auth: AuthService, private readonly perms: PermissionService) {}
+  constructor(private readonly prisma: PrismaService, private readonly audit: AuditService, private readonly auth: AuthService, private readonly perms: PermissionService, private readonly rt: RealtimeService) {}
 
   /** Rollen-/Rechteänderungen an sich selbst sind verboten (Vier-Augen-Prinzip, verhindert Selbst-Eskalation). */
   private assertNotSelf(actor: Actor, id: string) {
@@ -49,7 +51,10 @@ export class UsersService {
   }
 
   async create(actor: Actor, d: { username: string; displayName: string; password: string; email?: string; roleIds?: string[] }) {
-    if (d.roleIds?.length) await this.perms.assert(actor.userId!, 'roles.manage'); // users.manage allein darf keine Rollen vergeben
+    if (d.roleIds?.length) {
+      await this.perms.assert(actor.userId!, 'roles.manage'); // users.manage allein darf keine Rollen vergeben
+      for (const r of await this.prisma.role.findMany({ where: { id: { in: d.roleIds } } })) await this.perms.assertOutranksRole(actor.userId!, r.priority, r.name);
+    }
     const passwordHash = await hashPassword(d.password);
     return this.prisma.$transaction(async (tx) => {
       const u = await tx.user.create({
@@ -81,6 +86,7 @@ export class UsersService {
   async setActive(actor: Actor, id: string, active: boolean, reason?: string) {
     if (!active && id === actor.userId) throw new AppError('CONFLICT', 'You cannot disable your own account.');
     await this.get(id);
+    await this.perms.assertOutranksUser(actor.userId!, id); // Sperren/Entsperren nur unterhalb des eigenen Rangs
     const u = await this.prisma.$transaction(async (tx) => {
       if (!active) await this.assertAdminRemains(tx, id);
       const r = await tx.user.update({ where: { id }, data: { active }, select: publicSelect });
@@ -94,13 +100,25 @@ export class UsersService {
   async setRoles(actor: Actor, id: string, roleIds: string[]) {
     this.assertNotSelf(actor, id);
     const before = await this.get(id);
+    await this.perms.assertOutranksUser(actor.userId!, id);
+    // Nur Rollen unterhalb des eigenen Rangs dürfen hinzukommen oder wegfallen
+    const old = before.roles.map((r) => r.role.id);
+    const touched = [...roleIds.filter((r) => !old.includes(r)), ...old.filter((r) => !roleIds.includes(r))];
+    const roles = await this.prisma.role.findMany({ where: { id: { in: touched } } });
+    if (roles.length !== new Set(touched).size) throw new AppError('NOT_FOUND', 'Role not found.');
+    const g = currentGuild();
+    for (const r of roles) {
+      if (g && r.guildId && r.guildId !== g) throw new AppError('NOT_FOUND', 'Role not found.'); // Server getrennt
+      await this.perms.assertOutranksRole(actor.userId!, r.priority, r.name);
+    }
     return this.prisma.$transaction(async (tx) => {
       const adminRole = await tx.role.findUnique({ where: { name: 'System Administrator' } });
       if (adminRole && !roleIds.includes(adminRole.id)) await this.assertAdminRemains(tx, id);
       await tx.userRole.deleteMany({ where: { userId: id } });
       await tx.userRole.createMany({ data: roleIds.map((roleId) => ({ userId: id, roleId })) });
       const after = await tx.user.findUniqueOrThrow({ where: { id }, select: publicSelect });
-      await this.audit.record(actor, { action: 'user.roles.set', module: 'users', entityType: 'User', entityId: id, before: before.roles, after: after.roles }, tx);
+      this.rt.publishToUser(id, 'permissions.changed', {});
+      await this.audit.record(actor, { action: 'user.roles.set', module: 'permissions', entityType: 'User', entityId: id, before: before.roles, after: after.roles }, tx);
       return after;
     });
   }
@@ -109,6 +127,8 @@ export class UsersService {
     this.assertNotSelf(actor, id);
     if (!isPermissionKey(d.permission)) throw new AppError('VALIDATION_FAILED', `Unknown permission "${d.permission}".`);
     await this.get(id);
+    await this.perms.assertOutranksUser(actor.userId!, id);
+    if (d.effect === 'ALLOW') await this.perms.assertCanDelegate(actor.userId!, [d.permission]);
     return this.prisma.$transaction(async (tx) => {
       const prev = await tx.userPermissionOverride.findUnique({ where: { userId_permissionKey: { userId: id, permissionKey: d.permission } } });
       const o = await tx.userPermissionOverride.upsert({
@@ -116,6 +136,7 @@ export class UsersService {
         create: { userId: id, permissionKey: d.permission, effect: d.effect, reason: d.reason, createdById: actor.userId },
         update: { effect: d.effect, reason: d.reason, createdById: actor.userId },
       });
+      this.rt.publishToUser(id, 'permissions.changed', {});
       await this.audit.record(actor, { action: 'user.override.add', module: 'permissions', entityType: 'User', entityId: id, before: prev, after: o, reason: d.reason }, tx);
       return o;
     });
@@ -123,10 +144,12 @@ export class UsersService {
 
   async removeOverride(actor: Actor, id: string, permission: string) {
     this.assertNotSelf(actor, id);
+    await this.perms.assertOutranksUser(actor.userId!, id); // auch das Aufheben einer Sperre (DENY) nur von oben
     await this.prisma.$transaction(async (tx) => {
       const prev = await tx.userPermissionOverride.findUnique({ where: { userId_permissionKey: { userId: id, permissionKey: permission } } });
       if (!prev) throw new AppError('NOT_FOUND', 'Override not found.');
       await tx.userPermissionOverride.delete({ where: { id: prev.id } });
+      this.rt.publishToUser(id, 'permissions.changed', {});
       await this.audit.record(actor, { action: 'user.override.remove', module: 'permissions', entityType: 'User', entityId: id, before: prev }, tx);
     });
   }

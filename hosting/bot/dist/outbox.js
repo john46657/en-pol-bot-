@@ -19,7 +19,7 @@ const DIRECT = { 'application.decided': format_1.applicationDecisionText, 'quali
  * Holt offene Benachrichtigungen aus der System-API, postet sie und quittiert.
  * Fehlgeschlagene Sendungen werden gemeldet (die API zählt Versuche und gibt nach 5 Fehlversuchen auf).
  */
-async function pollOnce(api, send, log = console.log, dm, grantRole, syncRoles, onDutyChanged, ticketEffects) {
+async function pollOnce(api, send, log = console.log, dm, grantRole, syncRoles, onDutyChanged, ticketEffects, onMembersSync) {
     const [channels, items] = await Promise.all([api.service('GET', '/bot/config'), api.service('GET', '/bot/outbox?limit=20')]);
     let sent = 0;
     for (const item of items) {
@@ -70,6 +70,13 @@ async function pollOnce(api, send, log = console.log, dm, grantRole, syncRoles, 
                 log(`outbox ${item.id} (${item.type}) failed: ${msg}`);
                 await api.service('POST', `/bot/outbox/${item.id}/ack`, { ok: false, error: msg }).catch(() => undefined);
             }
+            continue;
+        }
+        // „Jetzt aktualisieren“ in der Teamliste: Teammitglieder und Voice sofort neu melden
+        if (item.type === 'members.sync') {
+            onMembersSync?.();
+            await api.service('POST', `/bot/outbox/${item.id}/ack`, { ok: true }).catch(() => undefined);
+            sent++;
             continue;
         }
         // Rollen eines Mitglieds ändern (z. B. „ausstehend“-Rollen beim Einreichen einer Bewerbung)
@@ -142,7 +149,7 @@ async function pollOnce(api, send, log = console.log, dm, grantRole, syncRoles, 
     return sent;
 }
 /** Läuft dauerhaft; überlappende Durchläufe werden vermieden, Fehler (z. B. API kurz down) beenden die Schleife nicht. */
-function startOutboxLoop(api, send, seconds, log = console.log, dm, grantRole, syncRoles, onDutyChanged, ticketEffects) {
+function startOutboxLoop(api, send, seconds, log = console.log, dm, grantRole, syncRoles, onDutyChanged, ticketEffects, onMembersSync) {
     let running = false;
     let lastError;
     const tick = async () => {
@@ -150,7 +157,7 @@ function startOutboxLoop(api, send, seconds, log = console.log, dm, grantRole, s
             return;
         running = true;
         try {
-            await pollOnce(api, send, log, dm, grantRole, syncRoles, onDutyChanged, ticketEffects);
+            await pollOnce(api, send, log, dm, grantRole, syncRoles, onDutyChanged, ticketEffects, onMembersSync);
             if (lastError) {
                 log('outbox: connection to the API restored');
                 lastError = undefined;

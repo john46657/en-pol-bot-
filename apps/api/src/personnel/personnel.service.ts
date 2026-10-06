@@ -29,7 +29,7 @@ export class PersonnelService {
     return rec;
   }
 
-  async create(actor: Actor, d: { userId: string; rank?: string; team?: string; callsign?: string; qualifications?: string[] }) {
+  async create(actor: Actor, d: { userId: string; rank?: string; team?: string; office?: string; serviceNumber?: string; callsign?: string; qualifications?: string[] }) {
     return this.prisma.$transaction(async (tx) => {
       if (!(await tx.user.findUnique({ where: { id: d.userId } }))) throw new AppError('NOT_FOUND', 'User not found.');
       if (await tx.personnel.findUnique({ where: { userId: d.userId } })) throw new AppError('CONFLICT', 'A personnel file already exists for this user.');
@@ -40,7 +40,7 @@ export class PersonnelService {
     });
   }
 
-  async update(actor: Actor, id: string, d: { team?: string; callsign?: string; employmentStatus?: string; qualifications?: string[] }) {
+  async update(actor: Actor, id: string, d: { team?: string; office?: string | null; serviceNumber?: string | null; callsign?: string; employmentStatus?: string; qualifications?: string[] }) {
     return this.prisma.$transaction(async (tx) => {
       const before = await tx.personnel.findUnique({ where: { id } });
       if (!before) throw new AppError('NOT_FOUND', 'Personnel file not found.');

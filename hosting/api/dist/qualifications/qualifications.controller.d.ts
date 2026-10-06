@@ -43,18 +43,18 @@ declare const submit: z.ZodObject<{
         question: z.ZodString;
         answer: z.ZodNullable<z.ZodUnion<[z.ZodString, z.ZodArray<z.ZodString, "many">]>>;
     }, "strip", z.ZodTypeAny, {
-        question: string;
         answer: string | string[] | null;
+        question: string;
     }, {
-        question: string;
         answer: string | string[] | null;
+        question: string;
     }>, "many">;
 }, "strip", z.ZodTypeAny, {
     unit: string;
     discordId: string;
     answers: {
-        question: string;
         answer: string | string[] | null;
+        question: string;
     }[];
     discordName: string;
     guildId?: string | undefined;
@@ -64,8 +64,8 @@ declare const submit: z.ZodObject<{
     unit: string;
     discordId: string;
     answers: {
-        question: string;
         answer: string | string[] | null;
+        question: string;
     }[];
     discordName: string;
     guildId?: string | undefined;
@@ -138,8 +138,8 @@ export declare class QualificationsController {
             key: string;
             description: string;
             enabled: boolean;
-            questions: import("@enrp/shared").FormField[];
             pingRoleIds: string[];
+            questions: import("@enrp/shared").FormField[];
             roleId?: string | undefined;
             channelId?: string | undefined;
             acceptedChannelId?: string | undefined;
@@ -222,8 +222,8 @@ export declare class QualificationsController {
             key: string;
             description: string;
             enabled: boolean;
-            questions: import("@enrp/shared").FormField[];
             pingRoleIds: string[];
+            questions: import("@enrp/shared").FormField[];
             roleId?: string | undefined;
             channelId?: string | undefined;
             acceptedChannelId?: string | undefined;
@@ -307,8 +307,8 @@ export declare class QualificationsController {
             key: string;
             description: string;
             enabled: boolean;
-            questions: import("@enrp/shared").FormField[];
             pingRoleIds: string[];
+            questions: import("@enrp/shared").FormField[];
             roleId?: string | undefined;
             channelId?: string | undefined;
             acceptedChannelId?: string | undefined;
@@ -452,8 +452,8 @@ export declare class BotQualificationsController {
             key: string;
             description: string;
             enabled: boolean;
-            questions: import("@enrp/shared").FormField[];
             pingRoleIds: string[];
+            questions: import("@enrp/shared").FormField[];
             roleId?: string | undefined;
             channelId?: string | undefined;
             acceptedChannelId?: string | undefined;

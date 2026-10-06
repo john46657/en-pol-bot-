@@ -37,6 +37,7 @@ export declare class PersonsService {
             createdAt: Date;
             updatedAt: Date;
             version: number;
+            color: string | null;
             status: string;
             custom: Prisma.JsonValue | null;
             serverId: string | null;
@@ -44,7 +45,6 @@ export declare class PersonsService {
             ownerId: string | null;
             plate: string;
             model: string | null;
-            color: string | null;
             erlcReference: string | null;
         }[];
     } & {
@@ -68,6 +68,7 @@ export declare class PersonsService {
                 createdAt: Date;
                 updatedAt: Date;
                 version: number;
+                color: string | null;
                 status: string;
                 custom: Prisma.JsonValue | null;
                 serverId: string | null;
@@ -75,7 +76,6 @@ export declare class PersonsService {
                 ownerId: string | null;
                 plate: string;
                 model: string | null;
-                color: string | null;
                 erlcReference: string | null;
             }[];
         } & {

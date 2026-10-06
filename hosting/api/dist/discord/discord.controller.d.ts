@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { DiscordService } from './discord.service';
+import { DiscordLiveService } from './discord-live.service';
 import { ApplicationsService } from '../applications/applications.service';
 import { DangerService } from '../danger/danger.service';
 import { DutyService } from '../duty/duty.service';
@@ -20,14 +21,14 @@ declare const guildsBody: z.ZodObject<{
             id: string;
             name: string;
             type: "text" | "category" | "voice" | "other";
-            parentId: string | null;
             position: number;
+            parentId: string | null;
         }, {
             id: string;
             name: string;
             type: "text" | "category" | "voice" | "other";
-            parentId: string | null;
             position: number;
+            parentId: string | null;
         }>, "many">;
         roles: z.ZodArray<z.ZodObject<{
             id: z.ZodString;
@@ -59,8 +60,8 @@ declare const guildsBody: z.ZodObject<{
             id: string;
             name: string;
             type: "text" | "category" | "voice" | "other";
-            parentId: string | null;
             position: number;
+            parentId: string | null;
         }[];
     }, {
         id: string;
@@ -76,8 +77,8 @@ declare const guildsBody: z.ZodObject<{
             id: string;
             name: string;
             type: "text" | "category" | "voice" | "other";
-            parentId: string | null;
             position: number;
+            parentId: string | null;
         }[];
     }>, "many">;
 }, "strip", z.ZodTypeAny, {
@@ -95,8 +96,8 @@ declare const guildsBody: z.ZodObject<{
             id: string;
             name: string;
             type: "text" | "category" | "voice" | "other";
-            parentId: string | null;
             position: number;
+            parentId: string | null;
         }[];
     }[];
 }, {
@@ -114,8 +115,8 @@ declare const guildsBody: z.ZodObject<{
             id: string;
             name: string;
             type: "text" | "category" | "voice" | "other";
-            parentId: string | null;
             position: number;
+            parentId: string | null;
         }[];
     }[];
 }>;
@@ -152,6 +153,182 @@ declare const stateBody: z.ZodObject<{
     value?: unknown;
 }, {
     value?: unknown;
+}>;
+declare const membersBody: z.ZodObject<{
+    members: z.ZodArray<z.ZodObject<{
+        id: z.ZodString;
+        guildId: z.ZodString;
+        username: z.ZodString;
+        displayName: z.ZodString;
+        avatar: z.ZodNullable<z.ZodString>;
+        status: z.ZodEnum<["online", "idle", "dnd", "offline", "unknown"]>;
+        roleIds: z.ZodArray<z.ZodString, "many">;
+        joinedAt: z.ZodNullable<z.ZodString>;
+    }, "strip", z.ZodTypeAny, {
+        id: string;
+        username: string;
+        displayName: string;
+        guildId: string;
+        roleIds: string[];
+        status: "unknown" | "online" | "idle" | "dnd" | "offline";
+        avatar: string | null;
+        joinedAt: string | null;
+    }, {
+        id: string;
+        username: string;
+        displayName: string;
+        guildId: string;
+        roleIds: string[];
+        status: "unknown" | "online" | "idle" | "dnd" | "offline";
+        avatar: string | null;
+        joinedAt: string | null;
+    }>, "many">;
+}, "strip", z.ZodTypeAny, {
+    members: {
+        id: string;
+        username: string;
+        displayName: string;
+        guildId: string;
+        roleIds: string[];
+        status: "unknown" | "online" | "idle" | "dnd" | "offline";
+        avatar: string | null;
+        joinedAt: string | null;
+    }[];
+}, {
+    members: {
+        id: string;
+        username: string;
+        displayName: string;
+        guildId: string;
+        roleIds: string[];
+        status: "unknown" | "online" | "idle" | "dnd" | "offline";
+        avatar: string | null;
+        joinedAt: string | null;
+    }[];
+}>;
+declare const voiceBody: z.ZodObject<{
+    channels: z.ZodArray<z.ZodObject<{
+        id: z.ZodString;
+        guildId: z.ZodString;
+        name: z.ZodString;
+        parentId: z.ZodNullable<z.ZodString>;
+        parentName: z.ZodNullable<z.ZodString>;
+        position: z.ZodNumber;
+        members: z.ZodArray<z.ZodObject<{
+            id: z.ZodString;
+            displayName: z.ZodString;
+            avatar: z.ZodNullable<z.ZodString>;
+            selfMute: z.ZodBoolean;
+            selfDeaf: z.ZodBoolean;
+            serverMute: z.ZodBoolean;
+            serverDeaf: z.ZodBoolean;
+            video: z.ZodBoolean;
+            streaming: z.ZodBoolean;
+            since: z.ZodNullable<z.ZodString>;
+        }, "strip", z.ZodTypeAny, {
+            id: string;
+            displayName: string;
+            avatar: string | null;
+            selfMute: boolean;
+            selfDeaf: boolean;
+            serverMute: boolean;
+            serverDeaf: boolean;
+            video: boolean;
+            streaming: boolean;
+            since: string | null;
+        }, {
+            id: string;
+            displayName: string;
+            avatar: string | null;
+            selfMute: boolean;
+            selfDeaf: boolean;
+            serverMute: boolean;
+            serverDeaf: boolean;
+            video: boolean;
+            streaming: boolean;
+            since: string | null;
+        }>, "many">;
+    }, "strip", z.ZodTypeAny, {
+        id: string;
+        name: string;
+        guildId: string;
+        members: {
+            id: string;
+            displayName: string;
+            avatar: string | null;
+            selfMute: boolean;
+            selfDeaf: boolean;
+            serverMute: boolean;
+            serverDeaf: boolean;
+            video: boolean;
+            streaming: boolean;
+            since: string | null;
+        }[];
+        position: number;
+        parentId: string | null;
+        parentName: string | null;
+    }, {
+        id: string;
+        name: string;
+        guildId: string;
+        members: {
+            id: string;
+            displayName: string;
+            avatar: string | null;
+            selfMute: boolean;
+            selfDeaf: boolean;
+            serverMute: boolean;
+            serverDeaf: boolean;
+            video: boolean;
+            streaming: boolean;
+            since: string | null;
+        }[];
+        position: number;
+        parentId: string | null;
+        parentName: string | null;
+    }>, "many">;
+}, "strip", z.ZodTypeAny, {
+    channels: {
+        id: string;
+        name: string;
+        guildId: string;
+        members: {
+            id: string;
+            displayName: string;
+            avatar: string | null;
+            selfMute: boolean;
+            selfDeaf: boolean;
+            serverMute: boolean;
+            serverDeaf: boolean;
+            video: boolean;
+            streaming: boolean;
+            since: string | null;
+        }[];
+        position: number;
+        parentId: string | null;
+        parentName: string | null;
+    }[];
+}, {
+    channels: {
+        id: string;
+        name: string;
+        guildId: string;
+        members: {
+            id: string;
+            displayName: string;
+            avatar: string | null;
+            selfMute: boolean;
+            selfDeaf: boolean;
+            serverMute: boolean;
+            serverDeaf: boolean;
+            video: boolean;
+            streaming: boolean;
+            since: string | null;
+        }[];
+        position: number;
+        parentId: string | null;
+        parentName: string | null;
+    }[];
 }>;
 declare const openQ: z.ZodObject<{
     discordId: z.ZodString;
@@ -199,6 +376,10 @@ export declare class DiscordController {
     }>;
     /** Server des Bots mit Channels und Rollen (Namen + Auswahllisten im Dashboard). */
     guilds(): Promise<import("./discord.service").DiscordGuildInfo[]>;
+    /** Welche Benachrichtigungs-Channels eingestellt sind (nur ja/nein, keine IDs) – Hinweise im Dashboard. */
+    channelStatus(): Promise<{
+        [k: string]: boolean;
+    }>;
     linkCode(a: Actor): Promise<{
         code: string;
         expiresAt: Date;
@@ -209,11 +390,12 @@ export declare class DiscordController {
 /** Dienst-zu-Dienst-Endpunkte des Bots (Header `Authorization: Bot <BOT_API_TOKEN>`); ohne Benutzerkontext. */
 export declare class BotController {
     private readonly d;
+    private readonly live;
     private readonly duty;
     private readonly danger;
     private readonly applications;
     private readonly prisma;
-    constructor(d: DiscordService, duty: DutyService, danger: DangerService, applications: ApplicationsService, prisma: PrismaService);
+    constructor(d: DiscordService, live: DiscordLiveService, duty: DutyService, danger: DangerService, applications: ApplicationsService, prisma: PrismaService);
     redeem(b: z.infer<typeof redeem>): Promise<{
         displayName: string;
         username: string;
@@ -243,6 +425,13 @@ export declare class BotController {
             unit: string | null;
         }[];
     }>;
+    /** Teammitglieder (Avatar, Name, Online-Status, Rollen) – der Bot meldet mindestens alle 60 Sekunden. */
+    teamRoles(): Promise<{
+        roleIds: string[];
+    }>;
+    members(b: z.infer<typeof membersBody>): void;
+    /** Voice-Channels mit Personen (getrennt von der Teamliste). */
+    voice(b: z.infer<typeof voiceBody>): void;
     dangerState(): Promise<import("../danger/danger.service").DangerState>;
     getState(key: string): Promise<{
         value: unknown;

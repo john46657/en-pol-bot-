@@ -1,6 +1,7 @@
 /** Zentraler Permission-Katalog. Einzige Quelle der Wahrheit für Backend und Frontend. */
 declare const PERMISSION_CATALOG: {
-    readonly dashboard: readonly ["view", "customize"];
+    /** `dashboard.<bereich>.view`: Sichtbarkeit ganzer Bereiche im Menü und auf der Startseite (zusätzlich zur Modul-Permission). */
+    readonly dashboard: readonly ["view", "customize", "tickets.view", "applications.view", "team.view", "offices.view", "voice.view", "radio.view", "teamchance.view", "logs.view", "settings.view"];
     readonly team: readonly ["view", "manage"];
     readonly dispatch: readonly ["view", "create", "edit", "assign", "close", "manage"];
     readonly incidents: readonly ["view", "create", "edit", "close", "delete"];
@@ -19,6 +20,10 @@ declare const PERMISSION_CATALOG: {
     readonly sek: readonly ["view", "report", "manage"];
     readonly qualifications: readonly ["view", "decide", "manage"];
     readonly ticket: readonly ["view", "create", "claim", "close", "reopen", "delete", "add_user", "remove_user", "change_status", "change_priority", "change_category", "rename", "move", "lock", "escalate", "transcript", "transcript_delete", "internal_notes", "rate", "manage", "settings"];
+    /** Funk-Codes (Liste der Funkcodes, z. B. 10-4) */
+    readonly radio: readonly ["view", "manage"];
+    /** Team-Chance: Bewerbungsphase für das Team öffnen/schließen */
+    readonly teamchance: readonly ["view", "manage"];
     readonly communication: readonly ["view", "send", "moderate"];
     readonly analytics: readonly ["view"];
     readonly audit: readonly ["view", "export"];
@@ -59,6 +64,18 @@ declare function grantMatches(grant: string, permission: string): boolean;
 declare const can: (ctx: PermissionContext, permission: string) => boolean;
 /** Berechnet die effektive Menge erlaubter Katalog-Permissions (für Frontend-UI-Hinweise). */
 declare function effectivePermissions(ctx: PermissionContext): PermissionKey[];
+/**
+ * Bereichs-Sichtbarkeit → Modul-Rechte, die zusammen mit dem Bereich vergeben werden (Startrollen, Migration).
+ * Ein Menüpunkt erscheint nur mit Bereichs-Recht UND Modul-Recht; die API prüft immer das Modul-Recht.
+ */
+declare const AREA_PERMISSIONS: Record<string, readonly string[]>;
+/** Bereichs-Rechte, die zu einer Grant-Liste passen (wer `ticket.view` hat, sieht auch den Ticket-Bereich). */
+declare function areaGrantsFor(grants: readonly string[]): string[];
+/**
+ * Darf jemand mit `holder`-Rechten eine Berechtigung `grant` weitergeben? Nur was man selbst besitzt
+ * (ein Wildcard nur, wenn man alle davon erfassten Rechte hat) – verhindert Rechteausweitung über den Rollen-Editor.
+ */
+declare function canDelegate(holder: PermissionContext, grant: string): boolean;
 
 /** Zentrale Statusdefinitionen und erlaubte Übergänge. Nicht im Code verstreut hartcodieren. */
 type TransitionMap<S extends string> = Readonly<Record<S, readonly S[]>>;
@@ -506,4 +523,4 @@ declare const formatMinutes: (min: number) => string;
 /** Rollen-Voraussetzung: „alle“ oder „mindestens eine“ der Rollen. */
 declare const rolesMatch: (have: string[], ids: string[], mode: "ALL" | "ANY") => boolean;
 
-export { ALL_PERMISSIONS, APPLICATION_STATUSES, APPLICATION_TRANSITIONS, APPLICATION_VARIABLES, type AnswerCheck, type ApplicationStatus, type ApplicationVars, type ButtonStyleName, CLAIM_MODES, CLOSE_REASON_MODES, CLOSE_REASON_SOURCES, COMPLAINT_STATUSES, COMPLAINT_TRANSITIONS, type ClaimMode, type CloseReasonMode, type CloseReasonSource, type ComplaintStatus, type ComponentButton, type ComponentSelect, DEFAULT_APPLICATION_MESSAGES, DISPATCH_STATUSES, DISPATCH_TRANSITIONS, DUTY_STATUSES, type DispatchStatus, type DutyStatus, EVIDENCE_CUSTODY_STATES, EVIDENCE_TRANSITIONS, type Effect, type EmbedSpec, type EvidenceCustodyState, FORM_QUESTION_TYPES, type Field, type FormField, type FormOption, type FormQuestionType, INVESTIGATION_STATUSES, INVESTIGATION_TRANSITIONS, InvalidTransitionError, type InvestigationStatus, MAX_FORM_OPTIONS, MAX_FORM_QUESTIONS, type MessageSpec, PERMISSION_CATALOG, PRIORITIES, type PermissionContext, type PermissionGrant, type PermissionKey, type Priority, QUESTION_TYPES, type QuestionType, REPORT_STATUSES, REPORT_TRANSITIONS, REPORT_TYPES, ROBLOX_VERIFICATION_STATUSES, type ReportStatus, type ReportType, type Resolution, type ResolutionSource, type RobloxVerificationStatus, STATUS_KINDS, type StatusKind, TICKET_ACTIONS, TICKET_ACTION_KEYS, TICKET_PLACEHOLDERS, TICKET_STATUSES, TICKET_TRANSITIONS, type TicketAction, type TicketButtonConfig, type TicketEffect, type TicketQuestion, type TicketStatus, type TicketVars, type TransitionMap, UNIT_STATUSES, type UnitStatus, WANTED_STATUSES, WANTED_TRANSITIONS, type WantedStatus, assertTransition, can, canTransition, checkAnswer, defaultTicketButtons, effectivePermissions, formatMinutes, freeFieldKey, grantMatches, isPermissionKey, isValidRobloxUserId, normalizeField, renderApplicationText, renderTicketText, resolvePermission, rolesMatch, ticketChannelName, ticketNumber };
+export { ALL_PERMISSIONS, APPLICATION_STATUSES, APPLICATION_TRANSITIONS, APPLICATION_VARIABLES, AREA_PERMISSIONS, type AnswerCheck, type ApplicationStatus, type ApplicationVars, type ButtonStyleName, CLAIM_MODES, CLOSE_REASON_MODES, CLOSE_REASON_SOURCES, COMPLAINT_STATUSES, COMPLAINT_TRANSITIONS, type ClaimMode, type CloseReasonMode, type CloseReasonSource, type ComplaintStatus, type ComponentButton, type ComponentSelect, DEFAULT_APPLICATION_MESSAGES, DISPATCH_STATUSES, DISPATCH_TRANSITIONS, DUTY_STATUSES, type DispatchStatus, type DutyStatus, EVIDENCE_CUSTODY_STATES, EVIDENCE_TRANSITIONS, type Effect, type EmbedSpec, type EvidenceCustodyState, FORM_QUESTION_TYPES, type Field, type FormField, type FormOption, type FormQuestionType, INVESTIGATION_STATUSES, INVESTIGATION_TRANSITIONS, InvalidTransitionError, type InvestigationStatus, MAX_FORM_OPTIONS, MAX_FORM_QUESTIONS, type MessageSpec, PERMISSION_CATALOG, PRIORITIES, type PermissionContext, type PermissionGrant, type PermissionKey, type Priority, QUESTION_TYPES, type QuestionType, REPORT_STATUSES, REPORT_TRANSITIONS, REPORT_TYPES, ROBLOX_VERIFICATION_STATUSES, type ReportStatus, type ReportType, type Resolution, type ResolutionSource, type RobloxVerificationStatus, STATUS_KINDS, type StatusKind, TICKET_ACTIONS, TICKET_ACTION_KEYS, TICKET_PLACEHOLDERS, TICKET_STATUSES, TICKET_TRANSITIONS, type TicketAction, type TicketButtonConfig, type TicketEffect, type TicketQuestion, type TicketStatus, type TicketVars, type TransitionMap, UNIT_STATUSES, type UnitStatus, WANTED_STATUSES, WANTED_TRANSITIONS, type WantedStatus, areaGrantsFor, assertTransition, can, canDelegate, canTransition, checkAnswer, defaultTicketButtons, effectivePermissions, formatMinutes, freeFieldKey, grantMatches, isPermissionKey, isValidRobloxUserId, normalizeField, renderApplicationText, renderTicketText, resolvePermission, rolesMatch, ticketChannelName, ticketNumber };

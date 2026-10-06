@@ -20,12 +20,12 @@ export declare class WantedService {
             expiresAt: Date | null;
             updatedAt: Date;
             version: number;
-            createdById: string;
             description: string | null;
+            priority: string;
+            createdById: string;
             status: string;
             personId: string | null;
             vehicleId: string | null;
-            priority: string;
         }[];
         total: number;
         page: number;
@@ -39,12 +39,12 @@ export declare class WantedService {
             expiresAt: Date | null;
             updatedAt: Date;
             version: number;
-            createdById: string;
             description: string | null;
+            priority: string;
+            createdById: string;
             status: string;
             personId: string | null;
             vehicleId: string | null;
-            priority: string;
         };
         timeline: {
             id: string;
@@ -70,12 +70,12 @@ export declare class WantedService {
         expiresAt: Date | null;
         updatedAt: Date;
         version: number;
-        createdById: string;
         description: string | null;
+        priority: string;
+        createdById: string;
         status: string;
         personId: string | null;
         vehicleId: string | null;
-        priority: string;
     }>;
     setStatus(actor: Actor, id: string, to: WantedStatus, reason: string): Promise<{
         id: string;
@@ -84,11 +84,11 @@ export declare class WantedService {
         expiresAt: Date | null;
         updatedAt: Date;
         version: number;
-        createdById: string;
         description: string | null;
+        priority: string;
+        createdById: string;
         status: string;
         personId: string | null;
         vehicleId: string | null;
-        priority: string;
     }>;
 }

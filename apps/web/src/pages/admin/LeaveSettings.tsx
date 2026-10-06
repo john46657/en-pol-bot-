@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useAutosaveDraft } from '../../lib/autosave';
 import { api } from '../../lib/api';
 import { useAuth } from '../../lib/auth';
 import { errText } from '../../lib/tickets';
@@ -22,6 +23,8 @@ export function LeaveSettings() {
     mutationFn: (c: LeaveConfig) => api<LeaveConfig>('/leave/config', { method: 'PUT', body: c }),
     onSuccess: (r) => { qc.setQueryData(['leave-config'], r); setMsg('Saved.'); },
   });
+  // automatisch speichern (Rechte prüft die API)
+  useAutosaveDraft(manage ? 'leave:config' : null, cfg, (c) => (c.maxDays >= 1 ? { method: 'PUT', path: '/leave/config', body: c, label: 'Abmeldungen' } : null));
   if (q.error) return <ErrorState error={q.error} onRetry={() => void q.refetch()} />;
   if (!cfg) return <SkeletonRows />;
   const set = (p: Partial<LeaveConfig>) => { setCfg({ ...cfg, ...p }); setMsg(undefined); };
@@ -42,8 +45,9 @@ export function LeaveSettings() {
       {save.error && <p role="alert" className="mt-3 text-sm text-danger">{errText(save.error)}</p>}
       {manage && (
         <div className="sticky bottom-2 mt-4 flex flex-wrap items-center gap-2 rounded-lg border border-line bg-panel p-2">
-          <Button disabled={save.isPending || !dirty} onClick={() => save.mutate(cfg)}>Save</Button>
-          {dirty ? <span className="text-sm text-warning">Unsaved changes</span> : msg && <span className="text-sm text-muted">{msg}</span>}
+          <span className="text-sm text-muted">Änderungen werden automatisch gespeichert.</span>
+          <Button variant="secondary" disabled={save.isPending || !dirty} onClick={() => save.mutate(cfg)}>Jetzt speichern</Button>
+          {!dirty && msg && <span className="text-sm text-muted">{msg}</span>}
         </div>
       )}
     </>

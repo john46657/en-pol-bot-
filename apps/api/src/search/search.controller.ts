@@ -7,6 +7,9 @@ import { PermissionService } from '../authz/permission.service';
 import { CurrentUser } from '../authz/decorators';
 import type { AuthUser } from '../common/request-context';
 import { zodBody } from '../common/zod.pipe';
+import { SupportTicketsService } from '../support-tickets/tickets.service';
+import { DiscordLiveService } from '../discord/discord-live.service';
+import { currentGuild } from '../common/guild-context';
 
 const q = z.object({ q: z.string().trim().min(2).max(64) });
 interface Hit { type: string; id: string; label: string; sub?: string }
@@ -19,7 +22,7 @@ const ci = (v: string) => ({ contains: v, mode: 'insensitive' as const });
 @ApiTags('search')
 @Controller('search')
 export class SearchController {
-  constructor(private readonly prisma: PrismaService, private readonly perms: PermissionService) {}
+  constructor(private readonly prisma: PrismaService, private readonly perms: PermissionService, private readonly tickets: SupportTicketsService, private readonly live: DiscordLiveService) {}
 
   @Get()
   async search(@CurrentUser() u: AuthUser, @Query(zodBody(q)) { q: term }: z.infer<typeof q>) {
@@ -41,6 +44,22 @@ export class SearchController {
     if (allowed('wanted.view')) jobs.push(this.prisma.wantedRecord.findMany({ where: { status: 'ACTIVE', reason: ci(term) }, take }).then((r) => r.map((x) => ({ type: 'wanted', id: x.id, label: x.reason }))));
     if (allowed('evidence.view')) jobs.push(this.prisma.evidence.findMany({ where: { OR: [{ number: { contains: upper } }, { description: ci(term) }] }, take }).then((r) => r.map((x) => ({ type: 'evidence', id: x.id, label: x.number, sub: x.description }))));
     if (allowed('personnel.view')) jobs.push(this.prisma.personnel.findMany({ where: { OR: [{ callsign: ci(term) }, { user: { displayName: ci(term) } }] }, include: { user: true }, take }).then((r) => r.map((x) => ({ type: 'personnel', id: x.id, label: x.user.displayName, sub: x.callsign ?? undefined }))));
-    return { results: (await Promise.all(jobs)).flat() };
+    // Teamliste: Name, Dienstnummer, Team, Dienstgrad, Büro (+ Discord-Teammitglieder ohne Personalakte)
+    if (allowed('team.view')) {
+      jobs.push(this.prisma.personnel.findMany({ where: { employmentStatus: { notIn: ['RESIGNED', 'TERMINATED'] }, OR: [{ callsign: ci(term) }, { serviceNumber: ci(term) }, { team: ci(term) }, { rank: ci(term) }, { office: ci(term) }, { user: { displayName: ci(term) } }, { user: { username: ci(term) } }] }, include: { user: true }, take })
+        .then((r) => r.map((x) => ({ type: 'member', id: x.userId, label: x.user.displayName, sub: [x.rank, x.team, x.office, x.serviceNumber && `Nr. ${x.serviceNumber}`].filter(Boolean).join(' · ') || undefined }))));
+      const t = term.toLowerCase();
+      jobs.push(Promise.resolve(this.live.getMembers().members.filter((m) => m.displayName.toLowerCase().includes(t) || m.username.toLowerCase().includes(t) || m.id === term).slice(0, take).map((m) => ({ type: 'member', id: m.id, label: m.displayName, sub: `@${m.username}` }))));
+    }
+    if (allowed('ticket.view')) jobs.push(this.tickets.list(u.id, { q: term, page: 1, pageSize: take }).then((r) => r.items.map((x) => ({ type: 'support-ticket', id: x.id, label: `${x.number} ${x.name}`, sub: x.creatorName }))));
+    if (allowed('applications.view')) jobs.push(this.prisma.application.findMany({ where: { OR: [{ number: { contains: upper } }, { robloxUsername: ci(term) }, { discordName: ci(term) }] }, take, orderBy: { createdAt: 'desc' } }).then((r) => r.map((x) => ({ type: 'application', id: x.id, label: x.number, sub: x.robloxUsername }))));
+    if (allowed('radio.view')) {
+      const g = currentGuild();
+      jobs.push(this.prisma.radioCode.findMany({ where: { AND: [{ OR: [{ guildId: null }, ...(g ? [{ guildId: g }] : [])] }, { OR: [{ code: ci(term) }, { meaning: ci(term) }] }] }, take }).then((r) => r.map((x) => ({ type: 'radio-code', id: x.code, label: x.code, sub: x.meaning }))));
+    }
+    const all = (await Promise.all(jobs)).flat();
+    // dieselbe Person nicht doppelt (Personalakte + Discord)
+    const seen = new Set<string>();
+    return { results: all.filter((h) => { const k = h.type === 'member' ? `m:${h.label.toLowerCase()}` : `${h.type}:${h.id}`; if (seen.has(k)) return false; seen.add(k); return true; }) };
   }
 }

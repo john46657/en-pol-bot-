@@ -61,8 +61,8 @@ export declare class QualificationsService {
             key: string;
             description: string;
             enabled: boolean;
-            questions: FormField[];
             pingRoleIds: string[];
+            questions: FormField[];
             roleId?: string | undefined;
             channelId?: string | undefined;
             acceptedChannelId?: string | undefined;
@@ -147,8 +147,8 @@ export declare class QualificationsService {
             key: string;
             description: string;
             enabled: boolean;
-            questions: FormField[];
             pingRoleIds: string[];
+            questions: FormField[];
             roleId?: string | undefined;
             channelId?: string | undefined;
             acceptedChannelId?: string | undefined;
@@ -232,8 +232,8 @@ export declare class QualificationsService {
             key: string;
             description: string;
             enabled: boolean;
-            questions: FormField[];
             pingRoleIds: string[];
+            questions: FormField[];
             roleId?: string | undefined;
             channelId?: string | undefined;
             acceptedChannelId?: string | undefined;

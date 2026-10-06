@@ -10,6 +10,8 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.ApplicationsService = exports.DEFAULT_FORM = void 0;
+const teamchance_service_1 = require("../teamchance/teamchance.service");
+const notify_service_1 = require("../notifications/notify.service");
 const common_1 = require("@nestjs/common");
 const shared_1 = require("@enrp/shared");
 const prisma_service_1 = require("../prisma/prisma.service");
@@ -37,10 +39,14 @@ let ApplicationsService = class ApplicationsService {
     prisma;
     audit;
     discord;
-    constructor(prisma, audit, discord) {
+    notify;
+    teamchance;
+    constructor(prisma, audit, discord, notify, teamchance) {
         this.prisma = prisma;
         this.audit = audit;
         this.discord = discord;
+        this.notify = notify;
+        this.teamchance = teamchance;
     }
     /** Formular eines Servers (`application.form@<guildId>`), sonst das gemeinsame. */
     async form(guildId) {
@@ -55,6 +61,7 @@ let ApplicationsService = class ApplicationsService {
         const [form, police] = await Promise.all([this.form(meta.guildId), this.police(meta.guildId)]);
         if (!police.enabled)
             throw new errors_1.AppError('CONFLICT', 'Bewerbungen sind derzeit geschlossen.');
+        await this.teamchance.assertApplicationsAllowed(meta.guildId ?? null); // Team-Chance: ggf. nur während offener Phase
         const answers = {};
         const grantRoleIds = new Set();
         for (const f of form) {
@@ -77,6 +84,8 @@ let ApplicationsService = class ApplicationsService {
                 throw new errors_1.AppError('CONFLICT', `Du kannst dich erst in ${(0, shared_2.formatMinutes)(wait)} erneut bewerben.`);
         }
         const a = await this.prisma.application.create({ data: { number: (0, numbering_1.makeNumber)('APP'), robloxUsername: d.robloxUsername, robloxUserId: d.robloxUserId, answers, grantRoleIds: [...grantRoleIds], guildId: meta.guildId ?? null, discordId: meta.discordId, discordName: meta.discordName, durationSec: meta.durationSec, joinedAt: meta.joinedAt, source: meta.discordId ? 'DISCORD' : 'WEB' } });
+        // 🔔 Neue Bewerbung → alle, die Bewerbungen prüfen dürfen (im Server der Bewerbung)
+        await this.notify.notifyPermission('applications.review', { type: 'APPLICATION', title: `🔔 Neue Bewerbung ${a.number}`, body: `${d.robloxUsername}${meta.discordName ? ` · ${meta.discordName}` : ''}`, entityType: 'Application', entityId: a.id }, { guildId: meta.guildId ?? null });
         await this.audit.record({ userId: null }, { action: 'application.submit', module: 'applications', entityType: 'Application', entityId: a.id, after: { source: a.source } });
         await this.discord.enqueue('applications', 'application.submitted', {
             id: a.id, pingRoleIds: police.pingRoleIds, ...(police.channelId ? { channelId: police.channelId } : {}), guildName: meta.guildId ? (await this.discord.guilds()).find((g) => g.id === meta.guildId)?.name ?? null : null, number: a.number, robloxUsername: a.robloxUsername, robloxUserId: a.robloxUserId ?? null, discordId: meta.discordId ?? null, discordName: meta.discordName ?? null, source: a.source,
@@ -194,6 +203,6 @@ let ApplicationsService = class ApplicationsService {
 exports.ApplicationsService = ApplicationsService;
 exports.ApplicationsService = ApplicationsService = __decorate([
     (0, common_1.Injectable)(),
-    __metadata("design:paramtypes", [prisma_service_1.PrismaService, audit_service_1.AuditService, discord_service_1.DiscordService])
+    __metadata("design:paramtypes", [prisma_service_1.PrismaService, audit_service_1.AuditService, discord_service_1.DiscordService, notify_service_1.NotifyService, teamchance_service_1.TeamChanceService])
 ], ApplicationsService);
 //# sourceMappingURL=applications.service.js.map

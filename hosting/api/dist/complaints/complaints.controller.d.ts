@@ -60,9 +60,9 @@ declare const listQ: z.ZodObject<{
     q?: string | undefined;
 }, {
     status?: "CLOSED" | "ASSIGNED" | "INVESTIGATION" | "RECEIVED" | "SCREENING" | "REVIEW" | "RESOLVED" | undefined;
+    q?: string | undefined;
     page?: number | undefined;
     pageSize?: number | undefined;
-    q?: string | undefined;
 }>;
 export declare class ComplaintsController {
     private readonly c;

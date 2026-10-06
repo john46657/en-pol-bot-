@@ -1,19 +1,10 @@
 import { PrismaService } from '../prisma/prisma.service';
 import { AuditService } from '../audit/audit.service';
 import { AuthService } from './auth.service';
+import { DiscordAccessService, type DiscordLoginSettings } from '../authz/discord-access.service';
 /** Kein gültiger Passwort-Hash → mit Passwort nicht anmeldbar (nur Discord). */
 export declare const DISCORD_ONLY_PASSWORD = "!discord-login-only";
-/** `teamRoleIds`: ohne eine dieser Discord-Rollen kein Zugang zum MDT/Dashboard (leer = jedes Server-Mitglied). */
-export interface DiscordLoginSettings {
-    signup: boolean;
-    requireGuild: boolean;
-    roleMap: {
-        discordRoleId: string;
-        role: string;
-    }[];
-    teamRoleIds: string[];
-}
-export declare const DEFAULT_DISCORD_LOGIN: DiscordLoginSettings;
+export { DEFAULT_DISCORD_LOGIN, type DiscordLoginSettings } from '../authz/discord-access.service';
 /** Fehlercodes für die Login-Seite (`/login?discord=<code>`). */
 export type DiscordLoginError = 'disabled' | 'state' | 'failed' | 'no_account' | 'not_member' | 'cannot_verify' | 'inactive' | 'taken' | 'no_team_role' | 'install_failed';
 export declare class DiscordLoginFailure extends Error {
@@ -30,10 +21,11 @@ export declare class DiscordOAuthService {
     private readonly prisma;
     private readonly audit;
     private readonly auth;
+    private readonly access;
     private readonly env;
     private readonly pending;
     private readonly log;
-    constructor(prisma: PrismaService, audit: AuditService, auth: AuthService);
+    constructor(prisma: PrismaService, audit: AuditService, auth: AuthService, access: DiscordAccessService);
     clientId(): string | null;
     enabled(): boolean;
     /** Link zum Einladen des Bots auf einen Server – mit Administrator-Rechten (so gewünscht; deckt Tickets, Rollen, Threads ab). */
@@ -70,6 +62,8 @@ export declare class DiscordOAuthService {
             roles: string[];
             permissions: import("@enrp/shared").PermissionKey[];
             lastLogin: Date | null;
+            guildId: string | null;
+            servers: string[];
         };
         kind: "login";
         guildName?: undefined;
@@ -78,10 +72,6 @@ export declare class DiscordOAuthService {
     /** Code bei Discord einlösen (Login und Bot-Einladung). */
     private exchange;
     private discordUser;
-    /** Mitglied auf einem der Server des Bots (bzw. der eingestellten Server)? `null` = nein, `unknown` = nicht prüfbar. */
-    private membership;
     private createUser;
     private ensureAdmin;
-    /** Discord-Rolle → Systemrolle: zugeordnete Rollen vergeben bzw. entziehen (nur Rollen aus der Zuordnung). */
-    private syncRoles;
 }

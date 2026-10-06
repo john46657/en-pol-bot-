@@ -1,3 +1,4 @@
+import { NotifyService } from '../notifications/notify.service';
 import { Injectable, Logger } from '@nestjs/common';
 import { Prisma, type SupportTicket, type TicketPriority, type TicketStatus } from '@prisma/client';
 import { randomUUID } from 'node:crypto';
@@ -48,7 +49,7 @@ const PERM: Record<ActionInput['action'], TicketAction> = {
 export class SupportTicketsService {
   private readonly log = new Logger('Tickets');
   private readonly dir = path.resolve(loadEnv().STORAGE_DIR, 'tickets');
-  constructor(private readonly prisma: PrismaService, private readonly perms: PermissionService, private readonly discord: DiscordService, private readonly config: TicketConfigService) {}
+  constructor(private readonly prisma: PrismaService, private readonly perms: PermissionService, private readonly discord: DiscordService, private readonly config: TicketConfigService, private readonly notify: NotifyService) {}
 
   // ================= Hilfsfunktionen =================
   async actorFromUser(u: { id: string; displayName: string; sessionId: string }): Promise<TicketActor> {
@@ -395,6 +396,8 @@ export class SupportTicketsService {
         const claimedStatus = l.status.isDefault ? await this.prisma.ticketStatus.findFirst({ where: { isClaimed: true, kind: 'OPEN' } }) : null;
         await this.prisma.supportTicket.update({ where: { id: t.id }, data: { claimers, ...(claimedStatus ? { statusId: claimedStatus.id } : {}), firstResponseAt: t.firstResponseAt ?? new Date() } });
         const fresh = await refresh();
+        // 🎫 Ticket übernommen → Ersteller (falls mit einem Dashboard-Konto verknüpft)
+        if (t.creatorUserId && t.creatorUserId !== actor.userId) await this.notify.notify([t.creatorUserId], { type: 'TICKET_CLAIMED', title: `🎫 Dein Ticket ${ticketNumber(t.number)} wurde übernommen`, body: `Bearbeiter: ${this.actorTag(actor)}`, entityType: 'SupportTicket', entityId: t.id });
         const text = renderTicketText(l.cat.claimMessage || '👤 Bearbeiter: {staff}', this.vars(fresh, { '{actor}': this.actorTag(actor) }));
         post({ content: l.cat.claimNotifyStaff ? l.cat.staffRoleIds.map((r) => `<@&${r}>`).join(' ') || undefined : undefined, mentionRoles: l.cat.claimNotifyStaff ? l.cat.staffRoleIds : [], embeds: [{ description: text, color: l.cat.color }] });
         if (ch && !t.claimers.length && l.cat.claimDiscordCategoryId) effects.push({ type: 'move', channelId: ch, parentId: l.cat.claimDiscordCategoryId });

@@ -57,6 +57,42 @@ async function resolveIncident(c, number) {
 }
 exports.COMMANDS = [
     {
+        name: 'funkcode', description: 'Funk-Codes nachschlagen (z. B. 10-4)',
+        options: [{ name: 'suche', description: 'Code oder Bedeutung (leer = alle)', type: 'string', maxLength: 64 }],
+        async run(c) {
+            try {
+                const term = str(c, 'suche');
+                const rows = await c.api.asUser(c.discordId, 'GET', `/radio-codes${term ? `?q=${q(term)}` : ''}`);
+                if (!rows.length)
+                    return (0, format_1.errorReply)(term ? `Kein Funk-Code zu „${(0, format_1.plain)(term)}“ gefunden.` : 'Es sind noch keine Funk-Codes hinterlegt.');
+                const exact = term ? rows.find((r) => r.code.toLowerCase() === term.toLowerCase()) : undefined;
+                if (exact)
+                    return { ephemeral: true, embeds: [{ title: `📡 ${(0, format_1.plain)(exact.code)}`, description: `**${(0, format_1.plain)(exact.meaning)}**${exact.description ? `\n${(0, format_1.plain)(exact.description)}` : ''}`, color: 0x3b82f6, footer: exact.category ? (0, format_1.plain)(exact.category) : undefined }] };
+                const lines = rows.slice(0, 40).map((r) => `\`${(0, format_1.plain)(r.code)}\` – ${(0, format_1.plain)(r.meaning)}`);
+                return { ephemeral: true, embeds: [{ title: '📡 Funk-Codes', description: lines.join('\n').slice(0, 4000), color: 0x3b82f6, footer: rows.length > 40 ? `${rows.length - 40} weitere – Suche eingrenzen` : undefined }] };
+            }
+            catch (e) {
+                return (0, errors_1.mapError)(e);
+            }
+        },
+    },
+    {
+        name: 'teamchance', description: 'Zeigt, ob gerade eine Team-Chance (Bewerbungsphase fürs Team) offen ist',
+        async run(c) {
+            try {
+                const s = await c.api.service('GET', `/bot/teamchance${c.guildId ? `?guildId=${c.guildId}` : ''}`);
+                const when = (iso) => (iso ? `<t:${Math.floor(Date.parse(iso) / 1000)}:f>` : null);
+                if (s.isOpen)
+                    return { ephemeral: true, embeds: [{ title: `📣 ${(0, format_1.plain)(s.title)} – offen`, description: `${(0, format_1.plain)(s.description)}\n\nBewerben: \`/bewerbung\``.slice(0, 4000), color: 0x22c55e, fields: [...(s.closesAt ? [{ name: 'Bewerbungsschluss', value: when(s.closesAt), inline: true }] : []), ...(s.remaining !== null ? [{ name: 'Freie Plätze', value: String(s.remaining), inline: true }] : [])] }] };
+                const why = s.reason === 'not_started' && s.opensAt ? `Startet ${when(s.opensAt)}.` : s.reason === 'full' ? 'Alle Plätze sind vergeben.' : 'Derzeit ist keine Team-Chance offen.';
+                return { ephemeral: true, embeds: [{ title: `🔒 ${(0, format_1.plain)(s.title)}`, description: why, color: 0xef4444 }] };
+            }
+            catch (e) {
+                return (0, errors_1.mapError)(e);
+            }
+        },
+    },
+    {
         name: 'verknuepfen', description: 'Verknüpft dein Discord-Konto mit deinem EN-Polizei-Benutzer',
         options: [{ name: 'code', description: 'Code aus dem Web („Discord verknüpfen“)', type: 'string', required: true, maxLength: 12 }],
         async run(c) {
@@ -79,9 +115,9 @@ exports.COMMANDS = [
             return { ephemeral: true, embeds: [{ title: 'EN Polizei — Befehle', color: format_1.COLORS.info, fields: [
                             { name: 'Konto', value: '`/verknuepfen` `/entverknuepfen` `/profil` `/benachrichtigungen`' },
                             { name: 'Abfragen', value: '`/person` `/kennzeichen` `/fahndungen` `/einsaetze` `/einsatzinfo` `/einheiten` `/team`' },
-                            { name: 'Dienst & Leitstelle', value: '`/dienst` `/dienststunden` `/abmeldung` `/einheitstatus` `/einsatz` `/einsatzstatus` `/einsatzzuweisen` `/funk`' },
+                            { name: 'Dienst & Leitstelle', value: '`/dienst` `/dienststunden` `/abmeldung` `/einheitstatus` `/einsatz` `/einsatzstatus` `/einsatzzuweisen` `/funk` `/funkcode`' },
                             { name: 'Erfassen', value: '`/ticket` `/bericht` `/beschwerde` `/ermittlung` `/fahndung` `/beweis`' },
-                            { name: 'Leitung & Team', value: '`/gefahrenstatus` `/funkfreigabe` `/teamliste` `/dienstpanel` `/bewerbungspanel` `/qualipanel` `/roblox`' },
+                            { name: 'Leitung & Team', value: '`/gefahrenstatus` `/funkfreigabe` `/teamliste` `/dienstpanel` `/bewerbungspanel` `/qualipanel` `/teamchance` `/roblox`' },
                             { name: 'SEK', value: '`/sek` `/sek-bericht`' },
                             { name: 'Support-Tickets', value: '`/support` öffnet ein Ticket (Team: `/support mitglied:@…` für jemand anderen). Ticket-Panels, Kategorien, Fragen und Buttons werden im Dashboard eingerichtet und von dort in Discord gesendet.' },
                             { name: 'Für alle', value: '`/bewerbung` (auch ohne Verknüpfung; Fragen per Direktnachricht) · SEK/Flugstaffel/Ausbilder über das Qualifikations-Panel' },

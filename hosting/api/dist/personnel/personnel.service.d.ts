@@ -19,8 +19,10 @@ export declare class PersonnelService {
             qualifications: string[];
             userId: string;
             team: string | null;
-            callsign: string | null;
             rank: string | null;
+            callsign: string | null;
+            office: string | null;
+            serviceNumber: string | null;
             employmentStatus: string;
             joinDate: Date;
         })[];
@@ -73,8 +75,10 @@ export declare class PersonnelService {
         qualifications: string[];
         userId: string;
         team: string | null;
-        callsign: string | null;
         rank: string | null;
+        callsign: string | null;
+        office: string | null;
+        serviceNumber: string | null;
         employmentStatus: string;
         joinDate: Date;
     }>;
@@ -82,6 +86,8 @@ export declare class PersonnelService {
         userId: string;
         rank?: string;
         team?: string;
+        office?: string;
+        serviceNumber?: string;
         callsign?: string;
         qualifications?: string[];
     }): Promise<{
@@ -89,13 +95,17 @@ export declare class PersonnelService {
         qualifications: string[];
         userId: string;
         team: string | null;
-        callsign: string | null;
         rank: string | null;
+        callsign: string | null;
+        office: string | null;
+        serviceNumber: string | null;
         employmentStatus: string;
         joinDate: Date;
     }>;
     update(actor: Actor, id: string, d: {
         team?: string;
+        office?: string | null;
+        serviceNumber?: string | null;
         callsign?: string;
         employmentStatus?: string;
         qualifications?: string[];
@@ -104,8 +114,10 @@ export declare class PersonnelService {
         qualifications: string[];
         userId: string;
         team: string | null;
-        callsign: string | null;
         rank: string | null;
+        callsign: string | null;
+        office: string | null;
+        serviceNumber: string | null;
         employmentStatus: string;
         joinDate: Date;
     }>;
@@ -114,8 +126,10 @@ export declare class PersonnelService {
         qualifications: string[];
         userId: string;
         team: string | null;
-        callsign: string | null;
         rank: string | null;
+        callsign: string | null;
+        office: string | null;
+        serviceNumber: string | null;
         employmentStatus: string;
         joinDate: Date;
     }>;

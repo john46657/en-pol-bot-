@@ -1,3 +1,4 @@
+import { NotifyService } from '../notifications/notify.service';
 import { PermissionService } from '../authz/permission.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { AuditService, Actor } from '../audit/audit.service';
@@ -9,7 +10,8 @@ export declare class CommunicationService {
     private readonly perms;
     private readonly audit;
     private readonly discord;
-    constructor(prisma: PrismaService, perms: PermissionService, audit: AuditService, discord: DiscordService);
+    private readonly notify;
+    constructor(prisma: PrismaService, perms: PermissionService, audit: AuditService, discord: DiscordService, notify: NotifyService);
     /** Berechtigung wird serverseitig geprüft – auch für spätere WebSocket-Subscriptions (gleiche Methode). */
     canRead(userId: string, channel: Channel): Promise<boolean>;
     private conversation;
@@ -18,10 +20,10 @@ export declare class CommunicationService {
         createdAt: Date;
         body: string;
         authorId: string;
+        deletedAt: Date | null;
         conversationId: string;
         replyToId: string | null;
         pinned: boolean;
-        deletedAt: Date | null;
     }[]>;
     post(actor: Actor, channel: Channel, d: {
         body: string;
@@ -32,19 +34,19 @@ export declare class CommunicationService {
         createdAt: Date;
         body: string;
         authorId: string;
+        deletedAt: Date | null;
         conversationId: string;
         replyToId: string | null;
         pinned: boolean;
-        deletedAt: Date | null;
     }>;
     moderate(actor: Actor, id: string, action: 'pin' | 'unpin' | 'delete'): Promise<{
         id: string;
         createdAt: Date;
         body: string;
         authorId: string;
+        deletedAt: Date | null;
         conversationId: string;
         replyToId: string | null;
         pinned: boolean;
-        deletedAt: Date | null;
     }>;
 }

@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useAutosaveDraft } from '../../lib/autosave';
 import { api, ApiError } from '../../lib/api';
 import { useAuth } from '../../lib/auth';
 import { ACCENTS, useStudio, type CustomFieldDef, type StudioConfig } from '../../lib/studio';
@@ -37,6 +38,8 @@ function CustomFields({ manage, onSave, busy }: { manage: boolean; onSave: (v: C
   const studio = useStudio();
   const [cfg, setCfg] = useState<CF>({ persons: [], vehicles: [] });
   useEffect(() => { if (studio.data) setCfg(studio.data.customFields); }, [studio.data]);
+  const valid = (c: CF) => [...c.persons, ...c.vehicles].every((f) => /^[a-z][a-z0-9_]{0,39}$/i.test(f.key) && f.label.trim());
+  useAutosaveDraft(manage && studio.data ? 'setting:studio.customFields' : null, cfg, (c) => (valid(c) ? { method: 'PUT', path: '/admin/settings/studio.customFields', body: { value: c }, label: 'Custom fields' } : null));
   if (studio.isLoading) return <SkeletonRows />;
   const upd = (e: keyof CF, i: number, p: Partial<CustomFieldDef>) => setCfg({ ...cfg, [e]: cfg[e].map((f, j) => (j === i ? { ...f, ...p } : f)) });
   return (
@@ -59,7 +62,7 @@ function CustomFields({ manage, onSave, busy }: { manage: boolean; onSave: (v: C
           </div>
         </Card>
       ))}
-      {manage && <Button disabled={busy} onClick={() => onSave(cfg)}>Save custom fields</Button>}
+      {manage && <div className="flex items-center gap-2"><span className="text-xs text-muted">{valid(cfg) ? 'Wird automatisch gespeichert.' : 'Unvollständige Felder (Schlüssel/Name) werden noch nicht gespeichert.'}</span><Button variant="secondary" disabled={busy} onClick={() => onSave(cfg)}>Jetzt speichern</Button></div>}
     </div>
   );
 }

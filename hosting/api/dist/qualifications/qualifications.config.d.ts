@@ -573,8 +573,8 @@ export declare const unitSchema: z.ZodObject<{
     key: string;
     description: string;
     enabled: boolean;
-    questions: FormField[];
     pingRoleIds: string[];
+    questions: FormField[];
     roleId?: string | undefined;
     channelId?: string | undefined;
     acceptedChannelId?: string | undefined;
@@ -1131,8 +1131,8 @@ export declare const configSchema: z.ZodObject<{
         key: string;
         description: string;
         enabled: boolean;
-        questions: FormField[];
         pingRoleIds: string[];
+        questions: FormField[];
         roleId?: string | undefined;
         channelId?: string | undefined;
         acceptedChannelId?: string | undefined;
@@ -1221,8 +1221,8 @@ export declare const configSchema: z.ZodObject<{
         key: string;
         description: string;
         enabled: boolean;
-        questions: FormField[];
         pingRoleIds: string[];
+        questions: FormField[];
         roleId?: string | undefined;
         channelId?: string | undefined;
         acceptedChannelId?: string | undefined;
@@ -1536,8 +1536,8 @@ export declare const configSchema: z.ZodObject<{
         key: string;
         description: string;
         enabled: boolean;
-        questions: FormField[];
         pingRoleIds: string[];
+        questions: FormField[];
         roleId?: string | undefined;
         channelId?: string | undefined;
         acceptedChannelId?: string | undefined;
@@ -1954,8 +1954,8 @@ export declare const saveSchema: z.ZodObject<{
         key: string;
         description: string;
         enabled: boolean;
-        questions: FormField[];
         pingRoleIds: string[];
+        questions: FormField[];
         roleId?: string | undefined;
         channelId?: string | undefined;
         acceptedChannelId?: string | undefined;
@@ -2044,8 +2044,8 @@ export declare const saveSchema: z.ZodObject<{
         key: string;
         description: string;
         enabled: boolean;
-        questions: FormField[];
         pingRoleIds: string[];
+        questions: FormField[];
         roleId?: string | undefined;
         channelId?: string | undefined;
         acceptedChannelId?: string | undefined;
@@ -2451,8 +2451,8 @@ export declare const saveSchema: z.ZodObject<{
         key: string;
         description: string;
         enabled: boolean;
-        questions: FormField[];
         pingRoleIds: string[];
+        questions: FormField[];
         roleId?: string | undefined;
         channelId?: string | undefined;
         acceptedChannelId?: string | undefined;

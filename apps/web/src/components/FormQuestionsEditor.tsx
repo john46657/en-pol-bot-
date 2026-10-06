@@ -1,3 +1,4 @@
+import { RolePicker } from './DiscordPickers';
 import { useState } from 'react';
 import { ChevronDown, Copy, GripVertical, Plus, Trash2 } from 'lucide-react';
 import { FORM_QUESTION_TYPES, MAX_FORM_OPTIONS, MAX_FORM_QUESTIONS, freeFieldKey, type FormField, type FormQuestionType } from '@enrp/shared';
@@ -64,7 +65,7 @@ export function FormQuestionsEditor({ value, onChange, disabled }: { value: Form
                         {(q.options ?? []).map((o, j) => (
                           <div key={j} className="flex flex-wrap gap-2">
                             <Input aria-label={`Option ${j + 1}`} className="min-w-0 flex-1" maxLength={100} value={o.label} disabled={disabled} placeholder={type === 'ROLE' ? 'e.g. Hubschrauber' : 'Option'} onChange={(e) => patch(i, { options: q.options!.map((x, k) => (k === j ? { ...x, label: e.target.value } : x)) })} />
-                            {type === 'ROLE' && <Input aria-label={`Role ID of option ${j + 1}`} className="w-52" inputMode="numeric" value={o.roleId ?? ''} disabled={disabled} placeholder="Discord role ID" onChange={(e) => patch(i, { options: q.options!.map((x, k) => (k === j ? { ...x, roleId: e.target.value.match(/\d{15,25}/)?.[0] ?? e.target.value.trim() } : x)) })} />}
+                            {type === 'ROLE' && <div className="w-64"><RolePicker ariaLabel={`Role of option ${j + 1}`} disabled={disabled} max={1} value={o.roleId ? [o.roleId] : []} onChange={(ids) => patch(i, { options: q.options!.map((x, k) => (k === j ? { ...x, roleId: ids[0] ?? '' } : x)) })} /></div>}
                             <Button size="sm" variant="ghost" aria-label={`Remove option ${j + 1}`} disabled={disabled} onClick={() => patch(i, { options: q.options!.filter((_, k) => k !== j) })}><Trash2 size={14} /></Button>
                           </div>
                         ))}

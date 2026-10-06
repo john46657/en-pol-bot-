@@ -1,3 +1,4 @@
+import { currentGuild } from '../common/guild-context';
 import { Body, Controller, Delete, Get, HttpCode, Param, ParseUUIDPipe, Post, Put, Query, Res } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import type { Response } from 'express';
@@ -67,7 +68,7 @@ export class SupportTicketsController {
   @Delete('reasons/:id') @HttpCode(204) @RequirePermission('ticket.settings') delReason(@CurrentUser() u: AuthUser, @Param('id', ParseUUIDPipe) id: string) { return this.cfg.deleteReason(actor(u), id); }
 
   // ---- Tickets ----
-  @Get() @RequirePermission('ticket.view') list(@CurrentUser() u: AuthUser, @Query(zodBody(listQ)) q: z.infer<typeof listQ>) { return this.s.list(u.id, { ...q, kind: q.kind === 'all' ? undefined : q.kind }); }
+  @Get() @RequirePermission('ticket.view') list(@CurrentUser() u: AuthUser, @Query(zodBody(listQ)) q: z.infer<typeof listQ>) { return this.s.list(u.id, { ...q, guildId: q.guildId ?? currentGuild() ?? undefined, kind: q.kind === 'all' ? undefined : q.kind }); }
   @Post() @RequirePermission('ticket.create') async create(@CurrentUser() u: AuthUser, @Body(zodBody(openQ)) b: z.infer<typeof openQ>) { return this.s.openFromDashboard(await this.s.actorFromUser(u), b); }
   @Get('stats') @RequirePermission('ticket.view') stats(@CurrentUser() u: AuthUser) { return this.s.stats(u.id); }
   @Get('ratings') @RequirePermission('ticket.view') ratings(@CurrentUser() u: AuthUser, @Query(zodBody(ratingQ)) q: z.infer<typeof ratingQ>) { return this.s.ratings(u.id, q); }

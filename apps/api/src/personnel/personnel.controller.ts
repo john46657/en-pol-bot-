@@ -7,8 +7,8 @@ import type { Actor } from '../audit/audit.service';
 import { zodBody } from '../common/zod.pipe';
 import { pageQuery } from '../common/pagination';
 
-const create = z.object({ userId: z.string().uuid(), rank: z.string().max(64).optional(), team: z.string().max(64).optional(), callsign: z.string().trim().min(2).max(16).optional(), qualifications: z.array(z.string().max(64)).max(50).optional() });
-const update = z.object({ team: z.string().max(64).optional(), callsign: z.string().trim().min(2).max(16).optional(), employmentStatus: z.enum(['ACTIVE', 'LOA', 'SUSPENDED', 'RESIGNED', 'TERMINATED']).optional(), qualifications: z.array(z.string().max(64)).max(50).optional() });
+const create = z.object({ userId: z.string().uuid(), rank: z.string().max(64).optional(), team: z.string().max(64).optional(), office: z.string().max(64).optional(), serviceNumber: z.string().trim().min(1).max(16).optional(), callsign: z.string().trim().min(2).max(16).optional(), qualifications: z.array(z.string().max(64)).max(50).optional() });
+const update = z.object({ team: z.string().max(64).optional(), office: z.string().max(64).nullable().optional(), serviceNumber: z.string().trim().min(1).max(16).nullable().optional(), callsign: z.string().trim().min(2).max(16).optional(), employmentStatus: z.enum(['ACTIVE', 'LOA', 'SUSPENDED', 'RESIGNED', 'TERMINATED']).optional(), qualifications: z.array(z.string().max(64)).max(50).optional() });
 const promote = z.object({ rank: z.string().trim().min(2).max(64), reason: z.string().trim().min(3).max(1000) });
 const record = z.object({ type: z.enum(['AWARD', 'DISCIPLINE', 'NOTE']), summary: z.string().trim().min(3).max(300), details: z.string().max(5000).optional() });
 

@@ -72,9 +72,9 @@ declare const listQ: z.ZodObject<{
 }, {
     active?: boolean | undefined;
     status?: "CANCELLED" | "CLOSED" | "EN_ROUTE" | "ON_SCENE" | "NEW" | "ACKNOWLEDGED" | "ASSIGNED" | "PROCESSING" | "CLEARING" | undefined;
+    q?: string | undefined;
     page?: number | undefined;
     pageSize?: number | undefined;
-    q?: string | undefined;
 }>;
 declare const attach: z.ZodObject<{
     personIds: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
@@ -124,10 +124,10 @@ export declare class IncidentsController {
             updatedAt: Date;
             version: number;
             description: string | null;
-            status: string;
-            serverId: string | null;
             priority: string;
+            status: string;
             title: string;
+            serverId: string | null;
             location: string | null;
             source: string;
             dispatcherId: string | null;
@@ -146,8 +146,8 @@ export declare class IncidentsController {
                     id: string;
                     updatedAt: Date;
                     status: string;
-                    notes: string | null;
                     callsign: string;
+                    notes: string | null;
                 };
             } & {
                 unitId: string;
@@ -162,10 +162,10 @@ export declare class IncidentsController {
             updatedAt: Date;
             version: number;
             description: string | null;
-            status: string;
-            serverId: string | null;
             priority: string;
+            status: string;
             title: string;
+            serverId: string | null;
             location: string | null;
             source: string;
             dispatcherId: string | null;
@@ -198,10 +198,10 @@ export declare class IncidentsController {
         updatedAt: Date;
         version: number;
         description: string | null;
-        status: string;
-        serverId: string | null;
         priority: string;
+        status: string;
         title: string;
+        serverId: string | null;
         location: string | null;
         source: string;
         dispatcherId: string | null;
@@ -215,10 +215,10 @@ export declare class IncidentsController {
         updatedAt: Date;
         version: number;
         description: string | null;
-        status: string;
-        serverId: string | null;
         priority: string;
+        status: string;
         title: string;
+        serverId: string | null;
         location: string | null;
         source: string;
         dispatcherId: string | null;
@@ -240,16 +240,16 @@ export declare class DispatchController {
         id: string;
         updatedAt: Date;
         status: string;
-        notes: string | null;
         callsign: string;
+        notes: string | null;
     })[]>;
     createUnit(a: Actor, b: z.infer<typeof unit>): Promise<{
         vehicle: string | null;
         id: string;
         updatedAt: Date;
         status: string;
-        notes: string | null;
         callsign: string;
+        notes: string | null;
     }>;
     unitStatus(a: Actor, id: string, b: {
         status: (typeof UNIT_STATUSES)[number];
@@ -258,8 +258,8 @@ export declare class DispatchController {
         id: string;
         updatedAt: Date;
         status: string;
-        notes: string | null;
         callsign: string;
+        notes: string | null;
     }>;
     members(a: Actor, id: string, b: {
         userIds: string[];
@@ -273,8 +273,8 @@ export declare class DispatchController {
         id: string;
         updatedAt: Date;
         status: string;
-        notes: string | null;
         callsign: string;
+        notes: string | null;
     }>;
     assign(a: Actor, id: string, b: {
         unitId: string;
@@ -292,10 +292,10 @@ export declare class DispatchController {
         updatedAt: Date;
         version: number;
         description: string | null;
-        status: string;
-        serverId: string | null;
         priority: string;
+        status: string;
         title: string;
+        serverId: string | null;
         location: string | null;
         source: string;
         dispatcherId: string | null;
@@ -309,10 +309,10 @@ export declare class DispatchController {
         updatedAt: Date;
         version: number;
         description: string | null;
-        status: string;
-        serverId: string | null;
         priority: string;
+        status: string;
         title: string;
+        serverId: string | null;
         location: string | null;
         source: string;
         dispatcherId: string | null;
@@ -326,10 +326,10 @@ export declare class DispatchController {
         updatedAt: Date;
         version: number;
         description: string | null;
-        status: string;
-        serverId: string | null;
         priority: string;
+        status: string;
         title: string;
+        serverId: string | null;
         location: string | null;
         source: string;
         dispatcherId: string | null;

@@ -19,6 +19,7 @@ const errors_1 = require("../common/errors");
 const custom_fields_1 = require("../studio/custom-fields");
 const studio_service_1 = require("../studio/studio.service");
 const qualifications_config_1 = require("../qualifications/qualifications.config");
+const guild_context_1 = require("../common/guild-context");
 /** Eine oder mehrere Discord-IDs, mit Komma getrennt (z. B. Channels auf mehreren Servern). */
 const singleId = () => zod_1.z.string().regex(/^\d{15,25}$/).optional();
 const idList = () => zod_1.z.string().regex(/^\d{15,25}(\s*,\s*\d{15,25})*$/).optional();
@@ -36,6 +37,8 @@ exports.SETTING_SCHEMAS = {
     'theme.accent': zod_1.z.enum(studio_service_1.ACCENTS),
     'discord.channels': zod_1.z.object({ guildId: idList(), dispatch: idList(), wanted: idList(), announcements: idList(), applications: idList(), danger: idList(), sek: idList(), qualifications: idList(), duty: idList(), teamlist: singleId(), tickets: singleId(), staffRole: singleId(), radioRole: singleId(), sekRole: singleId(), dutyRole: idList(), breakRole: idList(), trainingRole: idList(), adminDutyRole: idList() }),
     'team.rankOrder': zod_1.z.array(zod_1.z.string().trim().min(1).max(64)).max(50),
+    /** Teams und Büros (Dienstgrade: `team.rankOrder`) – Auswahl in Personalakten und Filter der Teamliste. */
+    'team.structure': zod_1.z.object({ teams: zod_1.z.array(zod_1.z.string().trim().min(1).max(64)).max(50), offices: zod_1.z.array(zod_1.z.string().trim().min(1).max(64)).max(50) }),
     'application.form': qualifications_config_1.formSchema,
     /** „Mit Discord anmelden“: neue Konten erlauben, nur Mitglieder des Discord-Servers, Discord-Rolle → Systemrolle. */
     'auth.discord': zod_1.z.object({
@@ -54,10 +57,14 @@ let AdminService = class AdminService {
     }
     async getSettings() {
         const rows = await this.prisma.systemSetting.findMany();
-        return { settings: Object.fromEntries(rows.map((r) => [r.key, r.value])), allowedKeys: Object.keys(exports.SETTING_SCHEMAS) };
+        return { settings: Object.fromEntries(rows.map((r) => [r.key, r.value])), allowedKeys: Object.keys(exports.SETTING_SCHEMAS), serverScoped: guild_context_1.SERVER_SCOPED_SETTINGS };
     }
+    /** `key@<guildId>`: Server-eigener Wert (nur für Einstellungen, die je Server getrennt sein dürfen). */
     async setSetting(actor, key, value) {
-        const schema = exports.SETTING_SCHEMAS[key];
+        const [base, guild] = key.split('@');
+        if (guild !== undefined && (!/^\d{15,25}$/.test(guild) || !guild_context_1.SERVER_SCOPED_SETTINGS.includes(base)))
+            throw new errors_1.AppError('VALIDATION_FAILED', `Setting "${base}" cannot be set per server.`);
+        const schema = exports.SETTING_SCHEMAS[base];
         if (!schema)
             throw new errors_1.AppError('VALIDATION_FAILED', `Unknown setting "${key}".`);
         const parsed = schema.safeParse(value);

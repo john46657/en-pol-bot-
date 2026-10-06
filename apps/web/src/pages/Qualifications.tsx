@@ -1,6 +1,7 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { Link, useSearchParams } from 'react-router';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useAutosaveDraft } from '../lib/autosave';
 import { api } from '../lib/api';
 import { errText } from '../lib/tickets';
 import { useAuth } from '../lib/auth';
@@ -69,6 +70,9 @@ export function Qualifications() {
     } }),
     onSuccess: () => { setErr(undefined); setMsg('Saved. Questions apply to new applications right away; post the panel again in Discord (/qualipanel) to show changed texts or units.'); void qc.invalidateQueries({ queryKey: ['quali-config'] }); }, onError,
   });
+  // automatisch speichern – je Server getrennt; unvollständige Einheiten (ohne Name/Schlüssel/Frage) bleiben lokal
+  const qDraft = useMemo(() => (config.data ? { title, intro, units } : undefined), [title, intro, units, config.data]);
+  useAutosaveDraft(config.data && can('qualifications.manage') ? `quali:setup:${server || 'all'}` : null, qDraft, (d) => (d.units.every((u) => u.name.trim() && u.questions.length) ? { method: 'PUT', path: `/qualifications/config${server ? `?guildId=${server}` : ''}`, body: { title: d.title, intro: d.intro, police: config.data!.police, units: d.units.map(({ isNew: _n, ...u }) => u) }, label: 'Qualifikationen' } : null), 1500);
   const patch = (i: number, p: Partial<DraftUnit>) => setUnits(units.map((u, j) => (j === i ? { ...u, ...p } : u)));
 
   return (
@@ -126,7 +130,8 @@ export function Qualifications() {
             ))}
             <div className="flex flex-wrap items-center gap-2">
               <Button variant="secondary" disabled={units.length >= 10} onClick={() => setUnits([...units, { key: '', name: '', description: '', roleId: '', enabled: true, channelId: '', acceptedChannelId: '', deniedChannelId: '', pingRoleIds: [], settings: defaultAppSettings(), questions: [newQuestion()], isNew: true }])}>Add unit</Button>
-              <Button disabled={save.isPending} onClick={() => { setMsg(undefined); save.mutate(); }}>Save</Button>
+              <span className="text-sm text-muted">Änderungen werden automatisch gespeichert.</span>
+              <Button variant="secondary" disabled={save.isPending} onClick={() => { setMsg(undefined); save.mutate(); }}>Jetzt speichern</Button>
               {msg && <span className="text-sm text-muted">{msg}</span>}
             </div>
           </div>

@@ -63,7 +63,21 @@ export function renderOutbox(type: string, p: Record<string, unknown>): EmbedDat
     case 'incident.assigned':
       return { title: `📻 ${plain(p.callsign)} → ${p.number}`, description: clip(plain(p.title), 4000), color: PRIORITY_COLOR[String(p.priority)] ?? COLORS.info, fields: [{ name: 'Ort', value: clip(plain(p.location ?? 'unbekannt'), 1024), inline: true }] };
     case 'wanted.created':
-      return { title: `🔴 Neue Fahndung (${p.kind === 'vehicle' ? 'Fahrzeug' : 'Person'})`, description: `**${clip(plain(p.subject), 200)}**\n${clip(plain(p.reason), 3000)}`, color: PRIORITY_COLOR[String(p.priority)] ?? COLORS.danger, fields: [{ name: 'Priorität', value: label(p.priority), inline: true }] };
+      return {
+        title: `🚨 Neue Fahndung (${p.kind === 'vehicle' ? 'Fahrzeug' : 'Person'})`, description: `**${clip(plain(p.subject), 200)}**\n${clip(plain(p.reason), 1500)}${p.description ? `\n\n${clip(plain(p.description), 2000)}` : ''}`,
+        color: PRIORITY_COLOR[String(p.priority)] ?? COLORS.danger,
+        fields: [{ name: 'Priorität', value: label(p.priority), inline: true }, { name: 'Gültig bis', value: p.expiresAt ? `<t:${Math.floor(Date.parse(String(p.expiresAt)) / 1000)}:f>` : 'unbefristet', inline: true }, ...(p.createdBy ? [{ name: 'Ausgestellt von', value: clip(plain(p.createdBy), 200), inline: true }] : [])],
+      };
+    case 'wanted.status': {
+      const st: Record<string, [string, number]> = { CLEARED: ['✅ Fahndung aufgehoben', COLORS.success], CANCELLED: ['⚪ Fahndung abgebrochen', COLORS.info], ACTIVE: ['🚨 Fahndung wieder aktiv', COLORS.danger], EXPIRED: ['⌛ Fahndung abgelaufen', COLORS.info] };
+      const [title, color] = st[String(p.status)] ?? [`Fahndung: ${label(p.status)}`, COLORS.info];
+      return { title, description: `**${clip(plain(p.subject), 200)}** – ${clip(plain(p.reason), 1000)}${p.note ? `\n**Grund:** ${clip(plain(p.note), 1000)}` : ''}`, color, ...(p.by ? { footer: `von ${clip(plain(p.by), 100)}` } : {}) };
+    }
+    case 'teamchance.changed':
+      return p.open
+        ? { title: `📣 ${clip(plain(p.title ?? 'Team-Chance'), 200)} – jetzt offen!`, description: clip(plain(p.description ?? ''), 3500) || undefined, color: COLORS.success,
+          fields: [...(p.closesAt ? [{ name: 'Bewerbungsschluss', value: `<t:${Math.floor(Date.parse(String(p.closesAt)) / 1000)}:f>`, inline: true }] : []), ...(Number(p.slots) > 0 ? [{ name: 'Plätze', value: String(p.slots), inline: true }] : [])] }
+        : { title: `🔒 ${clip(plain(p.title ?? 'Team-Chance'), 200)} – geschlossen`, description: 'Vielen Dank für alle Bewerbungen!', color: COLORS.danger };
     case 'announcement':
       return { title: '📢 Ankündigung', description: clip(plain(p.body), 4000), color: COLORS.warning, footer: `von ${clip(p.author, 100)}` };
     case 'danger.changed': {
@@ -184,6 +198,8 @@ export function outboxButtons(type: string, p: Record<string, unknown>): ButtonS
     { id: `leave:reason:${p.id}:DENIED`, label: 'Ablehnen mit Grund', style: 'danger' },
     ...(typeof p.dashboardUrl === 'string' && /^https?:\/\//.test(p.dashboardUrl) ? [{ id: 'link', label: 'Im Dashboard ansehen', style: 'secondary' as const, url: p.dashboardUrl }] : []),
   ];
+  // Fahndung / Einsatz: Link ins Dashboard
+  if (/^wanted\./.test(type) && typeof p.dashboardUrl === 'string' && /^https?:\/\//.test(p.dashboardUrl)) return [{ id: 'link', label: 'Im Dashboard ansehen', style: 'secondary', url: p.dashboardUrl }];
   const kind = type === 'qualification.submitted' ? 'q' : type === 'application.submitted' ? 'p' : null;
   if (!kind || typeof p.id !== 'string') return undefined;
   const id = p.id, discordId = typeof p.discordId === 'string' && /^\d{15,25}$/.test(p.discordId) ? p.discordId : null;

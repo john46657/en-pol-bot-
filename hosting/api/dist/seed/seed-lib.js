@@ -23,16 +23,26 @@ exports.STARTER_ROLES = {
     'Police Administration': { description: 'Polizeiführung', grants: [...only('personnel', 'applications', 'analytics', 'sek', 'qualifications', 'ticket', 'leave'), ...pick('persons.archive', 'vehicles.archive', 'complaints.resolve', 'complaints.close', 'audit.view', 'users.view', 'roles.view', 'dashboard.view', 'team.view', 'team.manage')] },
     'System Administrator': { description: 'Vollzugriff auf Systemverwaltung', grants: ['*'] },
 };
+/** Rangfolge der Startrollen (kleiner = höher). Im Dashboard unter Rollen & Rechte frei änderbar. */
+const STARTER_PRIORITY = {
+    'System Administrator': 1, 'Police Administration': 10, Supervisor: 20, 'Ticket Leitung': 25, 'SEK Leitung': 30, 'Training Staff': 40,
+    Investigator: 50, Dispatch: 50, 'Senior Officer': 60, 'Ticket Support': 70, SEK: 70, 'Police Member': 90,
+};
 async function seedBase(prisma) {
     for (const key of shared_1.ALL_PERMISSIONS) {
         await prisma.permission.upsert({ where: { key }, create: { key, module: key.split('.')[0] ?? key }, update: {} });
     }
     await prisma.permission.upsert({ where: { key: '*' }, create: { key: '*', module: '*' }, update: {} });
     for (const [name, def] of Object.entries(exports.STARTER_ROLES)) {
-        const role = await prisma.role.upsert({ where: { name }, create: { name, description: def.description, system: true }, update: {} });
+        const role = await prisma.role.upsert({ where: { name }, create: { name, description: def.description, system: true, priority: STARTER_PRIORITY[name] ?? 100 }, update: {} });
         const existing = await prisma.rolePermission.count({ where: { roleId: role.id } });
         if (existing === 0) {
-            await prisma.rolePermission.createMany({ data: def.grants.map((permissionKey) => ({ roleId: role.id, permissionKey, effect: 'ALLOW' })), skipDuplicates: true });
+            // wie die Migration: Funk-Codes sieht das Team, Team-Chance sieht/verwaltet, wer Bewerbungen sieht/entscheidet
+            const has = (k) => def.grants.some((g) => g === k || g === `${k.split('.')[0]}.*`);
+            const extra = [...(has('team.view') ? ['radio.view'] : []), ...(has('settings.manage') ? ['radio.manage'] : []), ...(has('applications.view') ? ['teamchance.view'] : []), ...(has('applications.decide') ? ['teamchance.manage'] : [])];
+            const base = [...def.grants, ...extra];
+            const grants = def.grants.includes('*') ? def.grants : [...base, ...(0, shared_1.areaGrantsFor)(base)];
+            await prisma.rolePermission.createMany({ data: grants.map((permissionKey) => ({ roleId: role.id, permissionKey, effect: 'ALLOW' })), skipDuplicates: true });
         }
     }
 }

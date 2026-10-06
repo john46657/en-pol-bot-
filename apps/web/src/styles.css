@@ -17,7 +17,22 @@
 }
 
 html, body, #root { height: 100%; }
-body { background: var(--color-bg); color: var(--color-fg); font-family: var(--font-sans); font-size: 14px; }
+body { background: var(--app-bg, var(--color-bg)); color: var(--color-fg); font-family: var(--font-sans); font-size: var(--app-font-size, 14px); }
+
+/* ---- Persönliches Design (Einstellungen → Persönlich); gilt nur im eigenen Browser für den eigenen Benutzer ---- */
+:root[data-theme='light'] {
+  --color-bg: #f3f5f9; --color-panel: #ffffff; --color-panel-2: #eef1f6; --color-line: #d7dde8;
+  --color-fg: #111827; --color-muted: #5b6474; --color-primary-fg: #ffffff;
+}
+.card { border-radius: var(--card-radius, 8px); box-shadow: var(--card-shadow, none); background: color-mix(in srgb, var(--color-panel) var(--card-alpha, 100%), transparent); }
+:root[data-card-style='glass'] .card { backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); background: color-mix(in srgb, var(--color-panel) min(var(--card-alpha, 100%), 70%), transparent); }
+:root[data-card-style='outline'] .card { background: transparent; }
+:root[data-glow='on'] .card { box-shadow: var(--card-shadow, none), 0 0 18px color-mix(in srgb, var(--color-primary) 25%, transparent); border-color: color-mix(in srgb, var(--color-primary) 35%, var(--color-line)); }
+:root[data-motion='off'] * { animation: none !important; transition: none !important; }
+:root[data-density='compact'] .card > div { padding: 0.5rem 0.75rem; }
+:root[data-density='compact'] .card > header { padding-top: 0.35rem; padding-bottom: 0.35rem; }
+.sidebar { width: var(--sidebar-width, 15rem); }
+.widget-drop { outline: 2px dashed var(--color-primary); outline-offset: 2px; }
 :focus-visible { outline: 2px solid var(--color-primary); outline-offset: 2px; }
 ::selection { background: color-mix(in srgb, var(--color-primary) 40%, transparent); }
 @media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }

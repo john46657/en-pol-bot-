@@ -1,3 +1,5 @@
+import { TeamChanceService } from '../teamchance/teamchance.service';
+import { NotifyService } from '../notifications/notify.service';
 import { Injectable } from '@nestjs/common';
 import { APPLICATION_TRANSITIONS, ApplicationStatus, checkAnswer, isValidRobloxUserId, type FormField } from '@enrp/shared';
 import { PrismaService } from '../prisma/prisma.service';
@@ -26,7 +28,7 @@ const OPEN_STATUSES = ['SUBMITTED', 'SCREENING', 'INTERVIEW', 'PENDING_DECISION'
 
 @Injectable()
 export class ApplicationsService {
-  constructor(private readonly prisma: PrismaService, private readonly audit: AuditService, private readonly discord: DiscordService) {}
+  constructor(private readonly prisma: PrismaService, private readonly audit: AuditService, private readonly discord: DiscordService, private readonly notify: NotifyService, private readonly teamchance: TeamChanceService) {}
 
   /** Formular eines Servers (`application.form@<guildId>`), sonst das gemeinsame. */
   async form(guildId?: string | null): Promise<FormField[]> {
@@ -40,6 +42,7 @@ export class ApplicationsService {
     if (d.robloxUserId && !isValidRobloxUserId(d.robloxUserId)) throw new AppError('VALIDATION_FAILED', 'Invalid Roblox user id.');
     const [form, police] = await Promise.all([this.form(meta.guildId), this.police(meta.guildId)]);
     if (!police.enabled) throw new AppError('CONFLICT', 'Bewerbungen sind derzeit geschlossen.');
+    await this.teamchance.assertApplicationsAllowed(meta.guildId ?? null); // Team-Chance: ggf. nur während offener Phase
     const answers: Record<string, string> = {};
     const grantRoleIds = new Set<string>();
     for (const f of form) {
@@ -58,6 +61,8 @@ export class ApplicationsService {
       if (wait) throw new AppError('CONFLICT', `Du kannst dich erst in ${formatMinutes(wait)} erneut bewerben.`);
     }
     const a = await this.prisma.application.create({ data: { number: makeNumber('APP'), robloxUsername: d.robloxUsername, robloxUserId: d.robloxUserId, answers, grantRoleIds: [...grantRoleIds], guildId: meta.guildId ?? null, discordId: meta.discordId, discordName: meta.discordName, durationSec: meta.durationSec, joinedAt: meta.joinedAt, source: meta.discordId ? 'DISCORD' : 'WEB' } });
+    // 🔔 Neue Bewerbung → alle, die Bewerbungen prüfen dürfen (im Server der Bewerbung)
+    await this.notify.notifyPermission('applications.review', { type: 'APPLICATION', title: `🔔 Neue Bewerbung ${a.number}`, body: `${d.robloxUsername}${meta.discordName ? ` · ${meta.discordName}` : ''}`, entityType: 'Application', entityId: a.id }, { guildId: meta.guildId ?? null });
     await this.audit.record({ userId: null }, { action: 'application.submit', module: 'applications', entityType: 'Application', entityId: a.id, after: { source: a.source } });
     await this.discord.enqueue('applications', 'application.submitted', {
       id: a.id, pingRoleIds: police.pingRoleIds, ...(police.channelId ? { channelId: police.channelId } : {}), guildName: meta.guildId ? (await this.discord.guilds()).find((g) => g.id === meta.guildId)?.name ?? null : null, number: a.number, robloxUsername: a.robloxUsername, robloxUserId: a.robloxUserId ?? null, discordId: meta.discordId ?? null, discordName: meta.discordName ?? null, source: a.source,

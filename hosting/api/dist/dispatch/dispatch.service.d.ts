@@ -22,8 +22,8 @@ export declare class DispatchService {
         id: string;
         updatedAt: Date;
         status: string;
-        notes: string | null;
         callsign: string;
+        notes: string | null;
     })[]>;
     createUnit(actor: Actor, d: {
         callsign: string;
@@ -35,16 +35,16 @@ export declare class DispatchService {
         id: string;
         updatedAt: Date;
         status: string;
-        notes: string | null;
         callsign: string;
+        notes: string | null;
     }>;
     setUnitStatus(actor: Actor, id: string, status: UnitStatus): Promise<{
         vehicle: string | null;
         id: string;
         updatedAt: Date;
         status: string;
-        notes: string | null;
         callsign: string;
+        notes: string | null;
     }>;
     /** Besetzung einer Einheit (Supervisor/Leitstelle). Nur aktive Benutzer; ersetzt die bisherige Besetzung vollständig. */
     setUnitMembers(actor: Actor, id: string, userIds: string[]): Promise<{
@@ -57,8 +57,8 @@ export declare class DispatchService {
         id: string;
         updatedAt: Date;
         status: string;
-        notes: string | null;
         callsign: string;
+        notes: string | null;
     }>;
     list(p: PageQuery, status?: string, activeOnly?: boolean): Promise<{
         items: ({
@@ -79,10 +79,10 @@ export declare class DispatchService {
             updatedAt: Date;
             version: number;
             description: string | null;
-            status: string;
-            serverId: string | null;
             priority: string;
+            status: string;
             title: string;
+            serverId: string | null;
             location: string | null;
             source: string;
             dispatcherId: string | null;
@@ -101,8 +101,8 @@ export declare class DispatchService {
                     id: string;
                     updatedAt: Date;
                     status: string;
-                    notes: string | null;
                     callsign: string;
+                    notes: string | null;
                 };
             } & {
                 unitId: string;
@@ -117,10 +117,10 @@ export declare class DispatchService {
             updatedAt: Date;
             version: number;
             description: string | null;
-            status: string;
-            serverId: string | null;
             priority: string;
+            status: string;
             title: string;
+            serverId: string | null;
             location: string | null;
             source: string;
             dispatcherId: string | null;
@@ -160,10 +160,10 @@ export declare class DispatchService {
         updatedAt: Date;
         version: number;
         description: string | null;
-        status: string;
-        serverId: string | null;
         priority: string;
+        status: string;
         title: string;
+        serverId: string | null;
         location: string | null;
         source: string;
         dispatcherId: string | null;
@@ -188,10 +188,10 @@ export declare class DispatchService {
         updatedAt: Date;
         version: number;
         description: string | null;
-        status: string;
-        serverId: string | null;
         priority: string;
+        status: string;
         title: string;
+        serverId: string | null;
         location: string | null;
         source: string;
         dispatcherId: string | null;
@@ -205,10 +205,10 @@ export declare class DispatchService {
         updatedAt: Date;
         version: number;
         description: string | null;
-        status: string;
-        serverId: string | null;
         priority: string;
+        status: string;
         title: string;
+        serverId: string | null;
         location: string | null;
         source: string;
         dispatcherId: string | null;
@@ -229,10 +229,10 @@ export declare class DispatchService {
         updatedAt: Date;
         version: number;
         description: string | null;
-        status: string;
-        serverId: string | null;
         priority: string;
+        status: string;
         title: string;
+        serverId: string | null;
         location: string | null;
         source: string;
         dispatcherId: string | null;

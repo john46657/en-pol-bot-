@@ -29,16 +29,21 @@ const LegalCodes = lazy(() => import('./pages/admin/LegalCodes').then((m) => ({ 
 const Shifts = lazy(() => import('./pages/admin/Shifts').then((m) => ({ default: m.Shifts })));
 const LeaveSettings = lazy(() => import('./pages/admin/LeaveSettings').then((m) => ({ default: m.LeaveSettings })));
 const Leave = lazy(() => import('./pages/Leave').then((m) => ({ default: m.Leave })));
+const TeamList = lazy(() => import('./pages/TeamList').then((m) => ({ default: m.TeamList })));
+const RadioCodes = lazy(() => import('./pages/RadioCodes').then((m) => ({ default: m.RadioCodes })));
+const TeamChance = lazy(() => import('./pages/TeamChance').then((m) => ({ default: m.TeamChance })));
+const Offices = lazy(() => import('./pages/Offices').then((m) => ({ default: m.Offices })));
+const PersonalSettings = lazy(() => import('./pages/PersonalSettings').then((m) => ({ default: m.PersonalSettings })));
 const Studio = lazy(() => import('./pages/admin/Studio').then((m) => ({ default: m.Studio })));
 import * as R from './pages/resources';
 
 /** UI-seitige Routenprüfung (Komfort). Das Backend erzwingt dieselben Rechte unabhängig davon. */
-function Guard({ perm, children }: { perm?: string; children: ReactNode }) {
+function Guard({ perm, area, children }: { perm?: string; area?: string; children: ReactNode }) {
   const { user, loading, can } = useAuth();
   const loc = useLocation();
   if (loading) return <div className="p-6"><SkeletonRows /></div>;
   if (!user) return <Navigate to="/login" state={{ from: loc.pathname }} replace />;
-  if (perm && !can(perm)) return <Forbidden />;
+  if ((perm && !can(perm)) || (area && !can(area))) return <Forbidden />;
   return <Suspense fallback={<SkeletonRows />}>{children}</Suspense>;
 }
 
@@ -55,10 +60,15 @@ export function App() {
           <Route index element={<Navigate to="/dashboard" replace />} />
           <Route path="mdt" element={<Guard perm="dashboard.view"><Mdt /></Guard>} />
           <Route path="dashboard" element={<Guard perm="dashboard.view"><Dashboard /></Guard>} />
-          <Route path="team" element={<Guard perm="team.view"><Team /></Guard>} />
+          <Route path="team" element={<Guard perm="team.view" area="dashboard.team.view"><Team /></Guard>} />
+          <Route path="teamlist" element={<Guard perm="team.view" area="dashboard.team.view"><TeamList /></Guard>} />
+          <Route path="offices" element={<Guard perm="team.view" area="dashboard.offices.view"><Offices /></Guard>} />
+          <Route path="radio-codes" element={<Guard perm="radio.view" area="dashboard.radio.view"><RadioCodes /></Guard>} />
+          <Route path="teamchance" element={<Guard perm="teamchance.view" area="dashboard.teamchance.view"><TeamChance /></Guard>} />
+          <Route path="me/settings" element={<Guard perm="dashboard.view"><PersonalSettings /></Guard>} />
           <Route path="dispatch" element={<Guard perm="dispatch.view"><Dispatch /></Guard>} />
-          <Route path="support-tickets" element={<Guard perm="ticket.view"><SupportTickets /></Guard>} />
-          <Route path="support-tickets/:id" element={<Guard perm="ticket.view"><TicketDetail /></Guard>} />
+          <Route path="support-tickets" element={<Guard perm="ticket.view" area="dashboard.tickets.view"><SupportTickets /></Guard>} />
+          <Route path="support-tickets/:id" element={<Guard perm="ticket.view" area="dashboard.tickets.view"><TicketDetail /></Guard>} />
           <Route path="incidents" element={list(R.incidents as never, 'incidents.view')} />
           <Route path="incidents/:id" element={rec('incidents', 'incidents.view')} />
           <Route path="persons" element={list(R.persons as never, 'persons.view')} />
@@ -79,24 +89,24 @@ export function App() {
           <Route path="evidence/:id" element={rec('evidence', 'evidence.view')} />
           <Route path="personnel" element={list(R.personnel as never, 'personnel.view')} />
           <Route path="personnel/:id" element={rec('personnel', 'personnel.view')} />
-          <Route path="applications" element={<Guard perm="applications.view"><Applications /></Guard>} />
+          <Route path="applications" element={<Guard perm="applications.view" area="dashboard.applications.view"><Applications /></Guard>} />
           <Route path="applications/:id" element={rec('applications', 'applications.view')} />
-          <Route path="qualifications" element={<Guard perm="qualifications.view"><Qualifications /></Guard>} />
+          <Route path="qualifications" element={<Guard perm="qualifications.view" area="dashboard.applications.view"><Qualifications /></Guard>} />
           <Route path="sek" element={<Guard perm="team.view"><Sek /></Guard>} />
           <Route path="academy" element={<Guard perm="academy.view"><Academy /></Guard>} />
           <Route path="communication" element={<Guard perm="communication.view"><Communication /></Guard>} />
           <Route path="analytics" element={<Guard perm="analytics.view"><Analytics /></Guard>} />
-          <Route path="admin/users" element={<Guard perm="users.view"><Users /></Guard>} />
-          <Route path="admin/roles" element={<Guard perm="roles.view"><Roles /></Guard>} />
+          <Route path="admin/users" element={<Guard perm="users.view" area="dashboard.settings.view"><Users /></Guard>} />
+          <Route path="admin/roles" element={<Guard perm="roles.view" area="dashboard.settings.view"><Roles /></Guard>} />
           <Route path="admin/overrides" element={<Navigate to="/admin/users" replace />} />
           <Route path="admin/permissions" element={<Navigate to="/admin/roles" replace />} />
-          <Route path="admin/audit" element={<Guard perm="audit.view"><Audit /></Guard>} />
+          <Route path="admin/audit" element={<Guard perm="audit.view" area="dashboard.logs.view"><Audit /></Guard>} />
           <Route path="admin/shifts" element={<Guard perm="settings.view"><Shifts /></Guard>} />
           <Route path="admin/leave" element={<Guard perm="settings.view"><LeaveSettings /></Guard>} />
           <Route path="leave" element={<Guard perm="leave.request"><Leave /></Guard>} />
           <Route path="admin/legal-codes" element={<Guard perm="settings.view"><LegalCodes /></Guard>} />
-          <Route path="admin/settings" element={<Guard perm="settings.view"><Settings /></Guard>} />
-          <Route path="admin/studio" element={<Guard perm="studio.view"><Studio /></Guard>} />
+          <Route path="admin/settings" element={<Guard perm="settings.view" area="dashboard.settings.view"><Settings /></Guard>} />
+          <Route path="admin/studio" element={<Guard perm="studio.view" area="dashboard.settings.view"><Studio /></Guard>} />
           <Route path="*" element={<div className="py-16 text-center text-muted">404 — page not found</div>} />
         </Route>
       </Routes>

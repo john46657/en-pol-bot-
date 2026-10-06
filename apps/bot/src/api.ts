@@ -1,3 +1,8 @@
+import { AsyncLocalStorage } from 'node:async_hooks';
+
+/** Discord-Server der gerade bearbeiteten Interaktion – geht als `X-Guild-Id` an die API (Rechte gelten je Server). */
+export const guildScope = new AsyncLocalStorage<string | null>();
+
 /** Fehler der System-API (mit Request-ID, ohne Stacktrace). */
 export class BotApiError extends Error {
   constructor(public readonly status: number, public readonly code: string, message: string, public readonly requestId?: string, public readonly reason?: string) {
@@ -24,7 +29,7 @@ export class HttpApi implements Api {
     try {
       const res = await this.doFetch(`${this.baseUrl}/api/v1${path}`, {
         method, signal: ctl.signal,
-        headers: { authorization: `Bot ${this.token}`, ...(discordId ? { 'x-discord-user': discordId } : {}), ...(body ? { 'content-type': 'application/json' } : {}) },
+        headers: { authorization: `Bot ${this.token}`, ...(discordId ? { 'x-discord-user': discordId } : {}), ...(discordId && guildScope.getStore() ? { 'x-guild-id': guildScope.getStore()! } : {}), ...(body ? { 'content-type': 'application/json' } : {}) },
         body: body ? JSON.stringify(body) : undefined,
       });
       const text = await res.text();

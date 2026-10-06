@@ -1,3 +1,5 @@
+import { DiscordChannelHint } from '../components/DiscordChannelHint';
+import { PersonnelTeamEditor } from '../components/PersonnelTeamEditor';
 import { Link } from 'react-router';
 import { COMPLAINT_STATUSES, DISPATCH_STATUSES, INVESTIGATION_STATUSES, PRIORITIES, REPORT_STATUSES, REPORT_TYPES, WANTED_STATUSES, APPLICATION_STATUSES } from '@enrp/shared';
 import type { ResourceConfig } from '../components/ResourcePage';
@@ -23,6 +25,7 @@ export const vehicles: ResourceConfig<Row> = {
 };
 
 export const incidents: ResourceConfig<Row> = {
+  notice: <DiscordChannelHint channel="dispatch" what="Einsätze" />,
   title: 'Incidents', endpoint: '/incidents', queryKey: 'incidents', emptyText: 'No incidents.', statusFilter: DISPATCH_STATUSES, detailPath: (r) => `/incidents/${r.id}`,
   columns: [{ key: 'number', label: 'Number' }, { key: 'title', label: 'Title' }, { key: 'priority', label: 'Priority', render: (r) => <PriorityBadge priority={String(r.priority)} /> }, { key: 'status', label: 'Status', render: status }, { key: 'createdAt', label: 'Created', render: date('createdAt') }],
   create: { perm: 'incidents.create', label: 'New incident', fields: [{ name: 'title', label: 'Title', required: true, max: 200, min: 3 }, { name: 'priority', label: 'Priority', type: 'select', options: PRIORITIES }, { name: 'location', label: 'Location', max: 200 }, { name: 'description', label: 'Description', type: 'textarea' }] },
@@ -54,6 +57,7 @@ export const investigations: ResourceConfig<Row> = {
 };
 
 export const wanted: ResourceConfig<Row> = {
+  notice: <DiscordChannelHint channel="wanted" what="Fahndungen" />,
   title: 'Wanted', subtitle: 'Active wanted records by default', endpoint: '/wanted', queryKey: 'wanted', emptyText: 'No active wanted records.', statusFilter: WANTED_STATUSES, detailPath: (r) => `/wanted/${r.id}`,
   columns: [{ key: 'reason', label: 'Reason' }, { key: 'priority', label: 'Priority', render: (r) => <PriorityBadge priority={String(r.priority)} /> }, { key: 'status', label: 'Status', render: status }, { key: 'expiresAt', label: 'Expires', render: (r) => (r.expiresAt ? fmt(r.expiresAt as string) : 'Never') }],
   create: { perm: 'wanted.create', label: 'New wanted', fields: [{ name: 'personId', label: 'Person', type: 'person', required: true }, { name: 'reason', label: 'Reason', required: true, min: 3, max: 500 }, { name: 'priority', label: 'Priority', type: 'select', options: PRIORITIES }, { name: 'description', label: 'Description', type: 'textarea' }] },
@@ -113,8 +117,8 @@ export const records: Record<string, RecordConfig> = {
     actions: [{ label: 'Release', perm: 'evidence.release', path: (id) => `/evidence/${id}/release`, reason: 'required', show: (r) => r.custodyState !== 'RELEASED' && r.custodyState !== 'ARCHIVED' }],
     extra: (r) => <div className="mt-4"><h3 className="mb-1 text-xs text-muted">Chain of custody</h3><ol className="space-y-1 text-sm">{((r.transfers as Row[]) ?? []).map((t) => <li key={String(t.id)}>{fmt(t.createdAt as string)} — {String(t.fromState)} → <b>{String(t.toState)}</b> · {String(t.reason)} {t.confirmed ? '✓' : '(unconfirmed)'}</li>)}</ol></div> },
   personnel: { endpoint: '/personnel', queryKey: 'personnel', back: '/personnel', title: (r) => `${(r.user as Row)?.displayName} (${r.callsign ?? 'no callsign'})`, pick: (d) => ({ record: d as Row, timeline: undefined }),
-    fields: [{ key: 'rank', label: 'Rank' }, { key: 'team', label: 'Team' }, { key: 'callsign', label: 'Callsign' }, { key: 'joinDate', label: 'Joined' }, { key: 'qualifications', label: 'Qualifications', render: (v) => (Array.isArray(v) && v.length ? v.join(', ') : '—') }],
-    extra: (r) => <div className="mt-4"><h3 className="mb-1 text-xs text-muted">Records (promotions, awards, discipline)</h3>{((r.records as Row[]) ?? []).length === 0 ? <p className="text-sm text-muted">No records.</p> : <ul className="space-y-1 text-sm">{(r.records as Row[]).map((x) => <li key={String(x.id)}><Badge>{String(x.type)}</Badge> {String(x.summary)} <span className="text-xs text-muted">{fmt(x.createdAt as string)}</span></li>)}</ul>}</div> },
+    fields: [{ key: 'rank', label: 'Rank' }, { key: 'team', label: 'Team' }, { key: 'office', label: 'Büro' }, { key: 'serviceNumber', label: 'Dienstnummer' }, { key: 'callsign', label: 'Callsign' }, { key: 'joinDate', label: 'Joined' }, { key: 'qualifications', label: 'Qualifications', render: (v) => (Array.isArray(v) && v.length ? v.join(', ') : '—') }],
+    extra: (r) => <><PersonnelTeamEditor record={r} /><div className="mt-4"><h3 className="mb-1 text-xs text-muted">Records (promotions, awards, discipline)</h3>{((r.records as Row[]) ?? []).length === 0 ? <p className="text-sm text-muted">No records.</p> : <ul className="space-y-1 text-sm">{(r.records as Row[]).map((x) => <li key={String(x.id)}><Badge>{String(x.type)}</Badge> {String(x.summary)} <span className="text-xs text-muted">{fmt(x.createdAt as string)}</span></li>)}</ul>}</div></> },
   applications: { endpoint: '/applications', queryKey: 'applications', back: '/applications', title: (r) => `Application ${r.number}`, pick: (d) => ({ record: d as Row, timeline: undefined }),
     fields: [{ key: 'robloxUsername', label: 'Roblox username' }, { key: 'robloxUserId', label: 'Roblox ID' }, { key: 'createdAt', label: 'Submitted' },
       { key: 'discordName', label: 'Discord' }, { key: 'durationSec', label: 'Time to fill in (Discord)', render: (v) => (typeof v === 'number' ? `${Math.floor(v / 60)} min ${v % 60} s` : '—') },

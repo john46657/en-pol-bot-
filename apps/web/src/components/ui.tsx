@@ -2,6 +2,7 @@ import { useEffect, useRef, type ButtonHTMLAttributes, type InputHTMLAttributes,
 import { createPortal } from 'react-dom';
 import { AlertTriangle, Inbox, X } from 'lucide-react';
 import { ApiError } from '../lib/api';
+import { formatDate } from '../lib/prefs';
 
 const cx = (...c: (string | false | undefined)[]) => c.filter(Boolean).join(' ');
 
@@ -12,7 +13,7 @@ export function Button({ variant = 'primary', size = 'md', className, ...p }: Bu
 
 export function Card({ title, actions, children, className }: { title?: ReactNode; actions?: ReactNode; children: ReactNode; className?: string }) {
   return (
-    <section className={cx('min-w-0 rounded-lg border border-line bg-panel', className)}>
+    <section className={cx('card min-w-0 border border-line', className)}>
       {(title || actions) && <header className="flex flex-wrap items-center justify-between gap-2 border-b border-line px-4 py-2.5"><h2 className="min-w-0 text-sm font-semibold">{title}</h2>{actions}</header>}
       <div className="p-3 sm:p-4">{children}</div>
     </section>
@@ -146,4 +147,5 @@ export const PageHeader = ({ title, subtitle, actions }: { title: string; subtit
   <div className="mb-4 flex flex-wrap items-center justify-between gap-2"><div><h1 className="text-xl font-semibold">{title}</h1>{subtitle && <p className="text-sm text-muted">{subtitle}</p>}</div><div className="flex gap-2">{actions}</div></div>
 );
 
-export const fmt = (iso?: string | null) => (iso ? new Date(iso).toLocaleString() : '—');
+/** Datum/Uhrzeit im persönlichen Format und in der persönlichen Zeitzone (Einstellungen → Persönlich). */
+export const fmt = (iso?: string | null) => (iso ? formatDate(iso) : '—');

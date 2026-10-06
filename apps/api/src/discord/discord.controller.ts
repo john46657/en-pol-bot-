@@ -2,7 +2,8 @@ import { Body, Controller, Delete, Get, HttpCode, Param, ParseUUIDPipe, Post, Pu
 import { ApiTags } from '@nestjs/swagger';
 import { Throttle } from '@nestjs/throttler';
 import { z } from 'zod';
-import { DiscordService } from './discord.service';
+import { CHANNEL_KEYS, DiscordService } from './discord.service';
+import { DiscordLiveService } from './discord-live.service';
 import { ApplicationsService } from '../applications/applications.service';
 import { DangerService } from '../danger/danger.service';
 import { DutyService } from '../duty/duty.service';
@@ -23,6 +24,15 @@ const outboxQ = z.object({ limit: z.coerce.number().int().min(1).max(50).default
 const rate = process.env.NODE_ENV === 'test' ? 10_000 : 20;
 const stateKey = z.string().regex(/^[a-z0-9:_-]{1,64}$/);
 const stateBody = z.object({ value: z.unknown() });
+const avatar = z.string().url().max(300).nullable();
+const membersBody = z.object({ members: z.array(z.object({
+  id: sf, guildId: sf, username: z.string().max(100), displayName: z.string().max(100), avatar, status: z.enum(['online', 'idle', 'dnd', 'offline', 'unknown']),
+  roleIds: z.array(sf).max(250), joinedAt: z.string().datetime().nullable(),
+})).max(5000) });
+const voiceBody = z.object({ channels: z.array(z.object({
+  id: sf, guildId: sf, name: z.string().max(100), parentId: sf.nullable(), parentName: z.string().max(100).nullable(), position: z.number().int(),
+  members: z.array(z.object({ id: sf, displayName: z.string().max(100), avatar, selfMute: z.boolean(), selfDeaf: z.boolean(), serverMute: z.boolean(), serverDeaf: z.boolean(), video: z.boolean(), streaming: z.boolean(), since: z.string().datetime().nullable() })).max(500),
+})).max(500) });
 const openQ = z.object({ discordId: z.string().regex(/^\d{15,25}$/) });
 const application = z.object({ guildId: z.string().regex(/^\d{15,25}$/).optional(), robloxUsername: z.string().trim().min(1).max(64), robloxUserId: z.string().max(20).optional(), discordId: z.string().regex(/^\d{15,25}$/), discordName: z.string().trim().max(100).optional(), durationSec: z.number().int().min(0).max(86_400).optional(), joinedAt: z.coerce.date().optional(), answers: z.record(z.string(), z.union([z.string().max(5000), z.array(z.string().max(100)).max(25)])) });
 
@@ -34,6 +44,9 @@ export class DiscordController {
   @Get('link') link(@CurrentActor() a: Actor) { return this.d.status(a.userId!); }
   /** Server des Bots mit Channels und Rollen (Namen + Auswahllisten im Dashboard). */
   @Get('guilds') @RequirePermission('dashboard.view') guilds() { return this.d.guilds(); }
+  /** Welche Benachrichtigungs-Channels eingestellt sind (nur ja/nein, keine IDs) – Hinweise im Dashboard. */
+  @Get('channel-status') @RequirePermission('dashboard.view')
+  async channelStatus() { const c = await this.d.channels(); return Object.fromEntries(CHANNEL_KEYS.map((k) => [k, !!c[k]])); }
   @Post('link-code') @Throttle({ default: { limit: process.env.NODE_ENV === 'test' ? 10_000 : 10, ttl: 60_000 } })
   linkCode(@CurrentActor() a: Actor) { return this.d.createLinkCode(a); }
   @Delete('link') @HttpCode(204) unlinkSelf(@CurrentActor() a: Actor) { return this.d.unlink(a, a.userId!); }
@@ -45,7 +58,7 @@ export class DiscordController {
 @ApiTags('bot')
 @Controller('bot')
 export class BotController {
-  constructor(private readonly d: DiscordService, private readonly duty: DutyService, private readonly danger: DangerService, private readonly applications: ApplicationsService, private readonly prisma: PrismaService) {}
+  constructor(private readonly d: DiscordService, private readonly live: DiscordLiveService, private readonly duty: DutyService, private readonly danger: DangerService, private readonly applications: ApplicationsService, private readonly prisma: PrismaService) {}
   @BotService() @Throttle({ default: { limit: rate, ttl: 60_000 } }) @Post('link') @HttpCode(200)
   redeem(@Body(zodBody(redeem)) b: z.infer<typeof redeem>) { return this.d.redeem(b.code, b.discordId); }
   @BotService() @Get('config') config() { return this.d.channels(); }
@@ -61,6 +74,12 @@ export class BotController {
     const order = (((await this.prisma.systemSetting.findUnique({ where: { key: 'team.rankOrder' } }))?.value as string[] | undefined) ?? []);
     return { rankOrder: order, members: rows.map((r) => ({ name: r.name, rank: r.rank, callsign: r.callsign, team: r.team, dutyStatus: r.dutyStatus, unit: r.unit?.callsign ?? null })) };
   }
+
+  /** Teammitglieder (Avatar, Name, Online-Status, Rollen) – der Bot meldet mindestens alle 60 Sekunden. */
+  @BotService() @Get('team-roles') async teamRoles() { return { roleIds: await this.live.teamRoleIds() }; }
+  @BotService() @Put('members') @HttpCode(204) members(@Body(zodBody(membersBody)) b: z.infer<typeof membersBody>) { this.live.setMembers(b.members); }
+  /** Voice-Channels mit Personen (getrennt von der Teamliste). */
+  @BotService() @Put('voice') @HttpCode(204) voice(@Body(zodBody(voiceBody)) b: z.infer<typeof voiceBody>) { this.live.setVoice(b.channels); }
 
   @BotService() @Get('danger') dangerState() { return this.danger.get(); }
 

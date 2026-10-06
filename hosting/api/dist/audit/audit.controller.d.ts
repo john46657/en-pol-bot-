@@ -8,27 +8,47 @@ declare const q: z.ZodObject<{
     module: z.ZodOptional<z.ZodString>;
     entityType: z.ZodOptional<z.ZodString>;
     entityId: z.ZodOptional<z.ZodString>;
+    action: z.ZodOptional<z.ZodString>;
 }, "strip", z.ZodTypeAny, {
     page: number;
     pageSize: number;
+    action?: string | undefined;
     module?: string | undefined;
     entityType?: string | undefined;
     entityId?: string | undefined;
     q?: string | undefined;
 }, {
+    action?: string | undefined;
     module?: string | undefined;
     entityType?: string | undefined;
     entityId?: string | undefined;
+    q?: string | undefined;
     page?: number | undefined;
     pageSize?: number | undefined;
-    q?: string | undefined;
 }>;
+/** Lesbarer Satz für Rechteänderungen („Max hat der Rolle Moderator die Berechtigung ticket.delete entzogen.“). */
+export declare function auditSummary(e: {
+    action: string;
+    before: unknown;
+    after: unknown;
+}, actor: string, target?: string | null): string | null;
 /** Nur lesend. Es gibt bewusst keine Schreib-/Lösch-Endpunkte für Audit-Logs. */
 export declare class AuditController {
     private readonly prisma;
     constructor(prisma: PrismaService);
     list(f: z.infer<typeof q>): Promise<{
         items: {
+            actor: {
+                id: string;
+                name: string | null;
+                discordId: string | null;
+            } | null;
+            target: {
+                id: string;
+                name: string | null;
+                discordId: string | null;
+            } | null;
+            summary: string | null;
             id: string;
             actorUserId: string | null;
             actorRobloxUserId: string | null;

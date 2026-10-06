@@ -9,7 +9,8 @@ import { Button, Field, Input } from '../components/ui';
 /** Rückmeldungen nach „Mit Discord anmelden“ (`/login?discord=…`). */
 const DISCORD_ERRORS: Record<string, string> = {
   not_member: 'Du bist nicht auf unserem Discord-Server. Tritt zuerst dem Server bei.',
-  no_team_role: 'Dir fehlt die Team-Rolle auf unserem Discord-Server. Ohne sie kannst du das MDT nicht nutzen – wende dich an die Leitung.',
+  no_team_role: 'Du besitzt keine Discord-Rolle, die für den Zugriff auf dieses Dashboard freigeschaltet ist.',
+  no_access: 'Du besitzt keine Discord-Rolle, die für den Zugriff auf dieses Dashboard freigeschaltet ist. Deine Sitzung wurde beendet.',
   no_account: 'Für dieses Discord-Konto gibt es noch kein Konto. Bitte wende dich an die Leitung.',
   inactive: 'Dein Konto ist deaktiviert.',
   cannot_verify: 'Die Server-Mitgliedschaft konnte nicht geprüft werden. Bitte später erneut versuchen.',
@@ -46,7 +47,9 @@ export function Login() {
       <form onSubmit={submit} className="w-full max-w-sm space-y-4 rounded-lg border border-line bg-panel p-6" aria-label="Sign in">
         <div className="flex items-center gap-2 text-lg font-semibold"><Shield className="text-primary" aria-hidden />EN Polizei</div>
         <p className="text-sm text-muted">Police CAD / MDT — authorised personnel only.</p>
-        {discordError && <p role="alert" className="rounded border border-danger/40 bg-danger/10 p-2 text-sm text-danger">{DISCORD_ERRORS[discordError] ?? DISCORD_ERRORS.failed}</p>}
+        {discordError && (discordError === 'no_team_role' || discordError === 'no_access'
+          ? <div role="alert" className="rounded border border-danger/40 bg-danger/10 p-3 text-sm"><p className="font-semibold text-danger">🔒 Kein Zugriff</p><p className="mt-1 text-fg">{DISCORD_ERRORS[discordError]}</p></div>
+          : <p role="alert" className="rounded border border-danger/40 bg-danger/10 p-2 text-sm text-danger">{DISCORD_ERRORS[discordError] ?? DISCORD_ERRORS.failed}</p>)}
         {providers.data?.discord && (
           <>
             <a href="/api/v1/auth/discord" className="flex w-full items-center justify-center gap-2 rounded-md bg-[#5865F2] px-4 py-2.5 font-medium text-white hover:bg-[#4752c4]"><DiscordIcon />Mit Discord anmelden</a>

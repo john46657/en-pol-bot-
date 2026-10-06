@@ -5,15 +5,14 @@ import { AuditService } from '../audit/audit.service';
 import { AuthService } from './auth.service';
 import { loadEnv } from '../config/env';
 import { webUrl } from '../common/web-url';
+import { DiscordAccessService, type DiscordLoginSettings } from '../authz/discord-access.service';
 
 const API = 'https://discord.com/api/v10';
 const STATE_TTL_MS = 10 * 60_000;
 /** Kein gültiger Passwort-Hash → mit Passwort nicht anmeldbar (nur Discord). */
 export const DISCORD_ONLY_PASSWORD = '!discord-login-only';
 
-/** `teamRoleIds`: ohne eine dieser Discord-Rollen kein Zugang zum MDT/Dashboard (leer = jedes Server-Mitglied). */
-export interface DiscordLoginSettings { signup: boolean; requireGuild: boolean; roleMap: { discordRoleId: string; role: string }[]; teamRoleIds: string[] }
-export const DEFAULT_DISCORD_LOGIN: DiscordLoginSettings = { signup: true, requireGuild: true, roleMap: [], teamRoleIds: [] };
+export { DEFAULT_DISCORD_LOGIN, type DiscordLoginSettings } from '../authz/discord-access.service';
 
 /** Fehlercodes für die Login-Seite (`/login?discord=<code>`). */
 export type DiscordLoginError = 'disabled' | 'state' | 'failed' | 'no_account' | 'not_member' | 'cannot_verify' | 'inactive' | 'taken' | 'no_team_role' | 'install_failed';
@@ -33,7 +32,7 @@ export class DiscordOAuthService {
   private readonly env = loadEnv();
   private readonly pending = new Map<string, Pending>();
   private readonly log = new Logger('DiscordLogin');
-  constructor(private readonly prisma: PrismaService, private readonly audit: AuditService, private readonly auth: AuthService) {}
+  constructor(private readonly prisma: PrismaService, private readonly audit: AuditService, private readonly auth: AuthService, private readonly access: DiscordAccessService) {}
 
   clientId(): string | null {
     if (this.env.DISCORD_CLIENT_ID) return this.env.DISCORD_CLIENT_ID;
@@ -52,7 +51,7 @@ export class DiscordOAuthService {
   }
   /** Passwort-Login nur, solange Discord-Login nicht eingerichtet ist – oder im Notfall mit PASSWORD_LOGIN=true. */
   passwordLoginAllowed() { return !this.enabled() || process.env.PASSWORD_LOGIN === 'true'; }
-  private isAdminId(id: string) { return (this.env.ADMIN_DISCORD_IDS ?? '').split(/[\s,;]+/).includes(id); }
+  private isAdminId(id: string) { return this.access.isOwnerId(id); }
   redirectUri() { return webUrl('/api/v1/auth/discord/callback'); }
 
   /** Schritt 1: Adresse bei Discord + Browser-Bindung. */
@@ -96,7 +95,7 @@ export class DiscordOAuthService {
       return { kind: 'linked' as const };
     }
 
-    const member = await this.membership(du.id);
+    const member = await this.access.membership(du.id);
     const link = await this.prisma.discordLink.findUnique({ where: { discordId: du.id } });
     let user = link ? await this.prisma.user.findUnique({ where: { id: link.userId } }) : null;
     const owner = this.isAdminId(du.id); // Besitzer/Admins aus ADMIN_DISCORD_IDS kommen immer rein
@@ -114,15 +113,13 @@ export class DiscordOAuthService {
       user = await this.createUser(du, meta);
     }
     if (owner) await this.ensureAdmin(user.id);
-    if (member && member !== 'unknown') await this.syncRoles(user.id, member.roles, settings);
+    if (member && member !== 'unknown') await this.access.syncRoles(user.id, member.roles, settings);
+    this.access.remember(user.id, true);
     await this.prisma.loginHistory.create({ data: { userId: user.id, username: user.username, success: true, ip: meta.ip, reason: 'DISCORD' } });
     return { kind: 'login' as const, ...(await this.auth.startSession(user, meta, 'auth.login.discord')) };
   }
 
-  async settings(): Promise<DiscordLoginSettings> {
-    const v = (await this.prisma.systemSetting.findUnique({ where: { key: 'auth.discord' } }))?.value as Partial<DiscordLoginSettings> | undefined;
-    return { ...DEFAULT_DISCORD_LOGIN, ...(v ?? {}) };
-  }
+  settings(): Promise<DiscordLoginSettings> { return this.access.settings(); }
 
   /** Code bei Discord einlösen (Login und Bot-Einladung). */
   private async exchange(code: string): Promise<{ access_token: string; guild?: { id?: string; name?: string } }> {
@@ -155,32 +152,6 @@ export class DiscordOAuthService {
     }
   }
 
-  /** Mitglied auf einem der Server des Bots (bzw. der eingestellten Server)? `null` = nein, `unknown` = nicht prüfbar. */
-  private async membership(userId: string): Promise<{ roles: string[] } | null | 'unknown'> {
-    const token = this.env.DISCORD_TOKEN;
-    if (!token) return 'unknown';
-    const bot = (path: string) => fetch(`${API}${path}`, { headers: { authorization: `Bot ${token}` }, signal: AbortSignal.timeout(10_000) });
-    try {
-      const cfg = (await this.prisma.systemSetting.findUnique({ where: { key: 'discord.channels' } }))?.value as { guildId?: string } | undefined;
-      let guilds = [cfg?.guildId, this.env.DISCORD_GUILD_ID].join(',').split(/[\s,;]+/).filter((g) => /^\d{15,25}$/.test(g));
-      if (!guilds.length) {
-        const r = await bot('/users/@me/guilds?limit=200');
-        if (!r.ok) return 'unknown';
-        guilds = ((await r.json()) as { id: string }[]).map((g) => g.id);
-      }
-      let isMember = false;
-      const roles: string[] = [];
-      for (const g of [...new Set(guilds)].slice(0, 20)) {
-        const r = await bot(`/guilds/${g}/members/${userId}`);
-        if (r.status === 404) continue;
-        if (!r.ok) return 'unknown';
-        isMember = true;
-        roles.push(...(((await r.json()) as { roles?: string[] }).roles ?? []));
-      }
-      return isMember ? { roles } : null;
-    } catch { return 'unknown'; }
-  }
-
   private async createUser(du: DiscordUser, meta: { requestId?: string }) {
     const base = (du.username.toLowerCase().replace(/[^a-z0-9_.]/g, '').slice(0, 24) || 'discord').replace(/^\.+/, '');
     let username = base;
@@ -199,22 +170,5 @@ export class DiscordOAuthService {
     if (!role || (await this.prisma.userRole.findUnique({ where: { userId_roleId: { userId, roleId: role.id } } }))) return;
     await this.prisma.userRole.create({ data: { userId, roleId: role.id } });
     await this.audit.record({ userId }, { action: 'auth.discord.admin_granted', module: 'auth', entityType: 'User', entityId: userId, after: { role: role.name, via: 'ADMIN_DISCORD_IDS' } });
-  }
-
-  /** Discord-Rolle → Systemrolle: zugeordnete Rollen vergeben bzw. entziehen (nur Rollen aus der Zuordnung). */
-  private async syncRoles(userId: string, discordRoles: string[], settings: DiscordLoginSettings) {
-    if (!settings.roleMap.length) return;
-    const names = [...new Set(settings.roleMap.map((m) => m.role))];
-    const roles = await this.prisma.role.findMany({ where: { name: { in: names } } });
-    const want = new Set(settings.roleMap.filter((m) => discordRoles.includes(m.discordRoleId)).map((m) => m.role));
-    const current = await this.prisma.userRole.findMany({ where: { userId, roleId: { in: roles.map((r) => r.id) } } });
-    const add = roles.filter((r) => want.has(r.name) && !current.some((c) => c.roleId === r.id));
-    const remove = roles.filter((r) => !want.has(r.name) && current.some((c) => c.roleId === r.id));
-    if (!add.length && !remove.length) return;
-    await this.prisma.$transaction(async (tx) => {
-      if (add.length) await tx.userRole.createMany({ data: add.map((r) => ({ userId, roleId: r.id })), skipDuplicates: true });
-      if (remove.length) await tx.userRole.deleteMany({ where: { userId, roleId: { in: remove.map((r) => r.id) } } });
-      await this.audit.record({ userId }, { action: 'auth.discord.roles_synced', module: 'auth', entityType: 'User', entityId: userId, after: { added: add.map((r) => r.name), removed: remove.map((r) => r.name) } }, tx);
-    });
   }
 }

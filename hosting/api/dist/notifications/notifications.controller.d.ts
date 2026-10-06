@@ -1,6 +1,19 @@
 import { z } from 'zod';
 import { PrismaService } from '../prisma/prisma.service';
+import type { Actor } from '../audit/audit.service';
+import { AuditService } from '../audit/audit.service';
+import { NotifyService } from './notify.service';
 import type { AuthUser } from '../common/request-context';
+declare const systemBody: z.ZodObject<{
+    title: z.ZodString;
+    body: z.ZodOptional<z.ZodString>;
+}, "strip", z.ZodTypeAny, {
+    title: string;
+    body?: string | undefined;
+}, {
+    title: string;
+    body?: string | undefined;
+}>;
 declare const q: z.ZodObject<{
     page: z.ZodDefault<z.ZodNumber>;
     pageSize: z.ZodDefault<z.ZodNumber>;
@@ -17,14 +30,20 @@ declare const q: z.ZodObject<{
 }, {
     type?: string | undefined;
     filter?: "unread" | "read" | "archived" | "all" | undefined;
+    q?: string | undefined;
     page?: number | undefined;
     pageSize?: number | undefined;
-    q?: string | undefined;
 }>;
 /** Jeder Benutzer sieht ausschließlich eigene Benachrichtigungen (immer per userId gefiltert). */
 export declare class NotificationsController {
     private readonly prisma;
-    constructor(prisma: PrismaService);
+    private readonly notify;
+    private readonly audit;
+    constructor(prisma: PrismaService, notify: NotifyService, audit: AuditService);
+    /** ⚠️ Systemhinweis an alle Dashboard-Benutzer (des gewählten Servers). */
+    system(a: Actor, b: z.infer<typeof systemBody>): Promise<{
+        recipients: number;
+    }>;
     list(u: AuthUser, f: z.infer<typeof q>): Promise<{
         unread: number;
         items: {

@@ -12,16 +12,16 @@ declare const create: z.ZodObject<{
     reason: string;
     expiresAt?: Date | undefined;
     description?: string | undefined;
+    priority?: "MEDIUM" | "LOW" | "HIGH" | "URGENT" | "CRITICAL" | undefined;
     personId?: string | undefined;
     vehicleId?: string | undefined;
-    priority?: "MEDIUM" | "LOW" | "HIGH" | "URGENT" | "CRITICAL" | undefined;
 }, {
     reason: string;
     expiresAt?: Date | undefined;
     description?: string | undefined;
+    priority?: "MEDIUM" | "LOW" | "HIGH" | "URGENT" | "CRITICAL" | undefined;
     personId?: string | undefined;
     vehicleId?: string | undefined;
-    priority?: "MEDIUM" | "LOW" | "HIGH" | "URGENT" | "CRITICAL" | undefined;
 }>;
 declare const reason: z.ZodObject<{
     reason: z.ZodString;
@@ -43,9 +43,9 @@ declare const listQ: z.ZodObject<{
     q?: string | undefined;
 }, {
     status?: "CANCELLED" | "ACTIVE" | "ARCHIVED" | "EXPIRED" | "CLEARED" | undefined;
+    q?: string | undefined;
     page?: number | undefined;
     pageSize?: number | undefined;
-    q?: string | undefined;
 }>;
 export declare class WantedController {
     private readonly w;
@@ -58,12 +58,12 @@ export declare class WantedController {
             expiresAt: Date | null;
             updatedAt: Date;
             version: number;
-            createdById: string;
             description: string | null;
+            priority: string;
+            createdById: string;
             status: string;
             personId: string | null;
             vehicleId: string | null;
-            priority: string;
         }[];
         total: number;
         page: number;
@@ -77,12 +77,12 @@ export declare class WantedController {
             expiresAt: Date | null;
             updatedAt: Date;
             version: number;
-            createdById: string;
             description: string | null;
+            priority: string;
+            createdById: string;
             status: string;
             personId: string | null;
             vehicleId: string | null;
-            priority: string;
         };
         timeline: {
             id: string;
@@ -101,12 +101,12 @@ export declare class WantedController {
         expiresAt: Date | null;
         updatedAt: Date;
         version: number;
-        createdById: string;
         description: string | null;
+        priority: string;
+        createdById: string;
         status: string;
         personId: string | null;
         vehicleId: string | null;
-        priority: string;
     }>;
     activate(a: Actor, id: string, b: z.infer<typeof reason>): Promise<{
         id: string;
@@ -115,12 +115,12 @@ export declare class WantedController {
         expiresAt: Date | null;
         updatedAt: Date;
         version: number;
-        createdById: string;
         description: string | null;
+        priority: string;
+        createdById: string;
         status: string;
         personId: string | null;
         vehicleId: string | null;
-        priority: string;
     }>;
     clear(a: Actor, id: string, b: z.infer<typeof reason>): Promise<{
         id: string;
@@ -129,12 +129,12 @@ export declare class WantedController {
         expiresAt: Date | null;
         updatedAt: Date;
         version: number;
-        createdById: string;
         description: string | null;
+        priority: string;
+        createdById: string;
         status: string;
         personId: string | null;
         vehicleId: string | null;
-        priority: string;
     }>;
     cancel(a: Actor, id: string, b: z.infer<typeof reason>): Promise<{
         id: string;
@@ -143,12 +143,12 @@ export declare class WantedController {
         expiresAt: Date | null;
         updatedAt: Date;
         version: number;
-        createdById: string;
         description: string | null;
+        priority: string;
+        createdById: string;
         status: string;
         personId: string | null;
         vehicleId: string | null;
-        priority: string;
     }>;
     archive(a: Actor, id: string, b: z.infer<typeof reason>): Promise<{
         id: string;
@@ -157,12 +157,12 @@ export declare class WantedController {
         expiresAt: Date | null;
         updatedAt: Date;
         version: number;
-        createdById: string;
         description: string | null;
+        priority: string;
+        createdById: string;
         status: string;
         personId: string | null;
         vehicleId: string | null;
-        priority: string;
     }>;
 }
 export {};

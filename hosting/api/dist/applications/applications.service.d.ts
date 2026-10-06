@@ -1,3 +1,5 @@
+import { TeamChanceService } from '../teamchance/teamchance.service';
+import { NotifyService } from '../notifications/notify.service';
 import { ApplicationStatus, type FormField } from '@enrp/shared';
 import { PrismaService } from '../prisma/prisma.service';
 import { AuditService, Actor } from '../audit/audit.service';
@@ -10,7 +12,9 @@ export declare class ApplicationsService {
     private readonly prisma;
     private readonly audit;
     private readonly discord;
-    constructor(prisma: PrismaService, audit: AuditService, discord: DiscordService);
+    private readonly notify;
+    private readonly teamchance;
+    constructor(prisma: PrismaService, audit: AuditService, discord: DiscordService, notify: NotifyService, teamchance: TeamChanceService);
     /** Formular eines Servers (`application.form@<guildId>`), sonst das gemeinsame. */
     form(guildId?: string | null): Promise<FormField[]>;
     /** Öffentliche Bewerbung (kein Account nötig). Antworten werden strikt gegen das konfigurierte Formular validiert. */

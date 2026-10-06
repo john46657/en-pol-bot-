@@ -9,6 +9,7 @@ import { Button, ErrorState, Field, Input, SkeletonRows, Textarea } from '../com
 /** Öffentliche Bewerbung (kein Login). Das Formular kommt aus der Studio-Konfiguration; der Server validiert erneut. */
 export function Apply() {
   const form = useQuery({ queryKey: ['apply-form'], queryFn: () => api<FormField[]>('/applications/form') });
+  const tc = useQuery({ queryKey: ['teamchance-public'], queryFn: () => api<{ isOpen: boolean; reason: string | null; title: string; description: string; closesAt: string | null; remaining: number | null; restrictApplications: boolean }>('/teamchance/public'), retry: false });
   const [done, setDone] = useState<string>();
   const [err, setErr] = useState<string>();
   const submit = useMutation({
@@ -27,6 +28,14 @@ export function Apply() {
   return (
     <div className="mx-auto max-w-xl p-4 py-10">
       <div className="mb-4 flex items-center gap-2 text-lg font-semibold"><Shield className="text-primary" aria-hidden />Police application</div>
+      {tc.data && (tc.data.isOpen || tc.data.restrictApplications) && (
+        <div className={`mb-4 rounded-lg border p-3 text-sm ${tc.data.isOpen ? 'border-success/40 bg-success/10' : 'border-danger/40 bg-danger/10'}`}>
+          <p className="font-semibold">{tc.data.isOpen ? `📣 ${tc.data.title} – jetzt offen` : `🔒 ${tc.data.title} – derzeit geschlossen`}</p>
+          {tc.data.isOpen && tc.data.description && <p className="mt-1 whitespace-pre-wrap">{tc.data.description}</p>}
+          {tc.data.isOpen && tc.data.closesAt && <p className="mt-1 text-muted">Bewerbungsschluss: {new Date(tc.data.closesAt).toLocaleString()}</p>}
+          {!tc.data.isOpen && <p className="mt-1">Bewerbungen sind nur während einer Team-Chance möglich.</p>}
+        </div>
+      )}
       {done ? <div role="status" className="rounded-lg border border-success/40 bg-success/10 p-4">Thank you! Your application <b>{done}</b> was received. Keep this number.</div>
         : form.isLoading ? <SkeletonRows /> : form.error ? <ErrorState error={form.error} onRetry={() => void form.refetch()} /> : (
           <form onSubmit={onSubmit} className="space-y-4 rounded-lg border border-line bg-panel p-5" aria-label="Application form">

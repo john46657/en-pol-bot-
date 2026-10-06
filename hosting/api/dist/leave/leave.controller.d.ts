@@ -42,15 +42,15 @@ export declare class LeaveController {
     private readonly s;
     constructor(s: LeaveService);
     config(): Promise<{
-        enabled: boolean;
         roleIds: string[];
+        enabled: boolean;
         maxDays: number;
         approvalChannelId?: string | null | undefined;
         logChannelId?: string | null | undefined;
     }>;
     saveConfig(a: Actor, b: LeaveConfig): Promise<{
-        enabled: boolean;
         roleIds: string[];
+        enabled: boolean;
         maxDays: number;
         approvalChannelId?: string | null | undefined;
         logChannelId?: string | null | undefined;
