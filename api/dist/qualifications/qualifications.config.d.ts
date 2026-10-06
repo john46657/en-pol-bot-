@@ -159,15 +159,147 @@ export declare const formSchema: z.ZodEffects<z.ZodArray<z.ZodEffects<z.ZodObjec
     maxLength?: number | undefined;
     multiple?: boolean | undefined;
 }[]>;
+/** Texte, Rollen und Sonstiges je Bewerbung (wie Appy: Embed Customization, Role Config, Other). */
+export declare const appSettingsSchema: z.ZodDefault<z.ZodObject<{
+    messages: z.ZodDefault<z.ZodObject<{
+        accepted: z.ZodDefault<z.ZodString>;
+        denied: z.ZodDefault<z.ZodString>;
+        confirmation: z.ZodDefault<z.ZodString>;
+        completion: z.ZodDefault<z.ZodString>;
+    }, "strip", z.ZodTypeAny, {
+        accepted: string;
+        denied: string;
+        confirmation: string;
+        completion: string;
+    }, {
+        accepted?: string | undefined;
+        denied?: string | undefined;
+        confirmation?: string | undefined;
+        completion?: string | undefined;
+    }>>;
+    roles: z.ZodDefault<z.ZodObject<{
+        restricted: z.ZodDefault<z.ZodObject<{
+            ids: z.ZodDefault<z.ZodArray<z.ZodString, "many">>;
+            mode: z.ZodDefault<z.ZodEnum<["ALL", "ANY"]>>;
+        }, "strip", z.ZodTypeAny, {
+            mode: "ALL" | "ANY";
+            ids: string[];
+        }, {
+            mode?: "ALL" | "ANY" | undefined;
+            ids?: string[] | undefined;
+        }>>;
+        required: z.ZodDefault<z.ZodObject<{
+            ids: z.ZodDefault<z.ZodArray<z.ZodString, "many">>;
+            mode: z.ZodDefault<z.ZodEnum<["ALL", "ANY"]>>;
+        }, "strip", z.ZodTypeAny, {
+            mode: "ALL" | "ANY";
+            ids: string[];
+        }, {
+            mode?: "ALL" | "ANY" | undefined;
+            ids?: string[] | undefined;
+        }>>;
+        accepted: z.ZodDefault<z.ZodArray<z.ZodString, "many">>;
+        denied: z.ZodDefault<z.ZodArray<z.ZodString, "many">>;
+        acceptedRemove: z.ZodDefault<z.ZodArray<z.ZodString, "many">>;
+        deniedRemove: z.ZodDefault<z.ZodArray<z.ZodString, "many">>;
+        pending: z.ZodDefault<z.ZodArray<z.ZodString, "many">>;
+        removeOnSubmit: z.ZodDefault<z.ZodArray<z.ZodString, "many">>;
+        /** Wer im Discord annehmen/ablehnen darf (zusätzlich zum Recht im System); leer = alle mit dem Recht. */
+        managers: z.ZodDefault<z.ZodArray<z.ZodString, "many">>;
+    }, "strip", z.ZodTypeAny, {
+        required: {
+            mode: "ALL" | "ANY";
+            ids: string[];
+        };
+        accepted: string[];
+        denied: string[];
+        restricted: {
+            mode: "ALL" | "ANY";
+            ids: string[];
+        };
+        acceptedRemove: string[];
+        deniedRemove: string[];
+        pending: string[];
+        removeOnSubmit: string[];
+        managers: string[];
+    }, {
+        required?: {
+            mode?: "ALL" | "ANY" | undefined;
+            ids?: string[] | undefined;
+        } | undefined;
+        accepted?: string[] | undefined;
+        denied?: string[] | undefined;
+        restricted?: {
+            mode?: "ALL" | "ANY" | undefined;
+            ids?: string[] | undefined;
+        } | undefined;
+        acceptedRemove?: string[] | undefined;
+        deniedRemove?: string[] | undefined;
+        pending?: string[] | undefined;
+        removeOnSubmit?: string[] | undefined;
+        managers?: string[] | undefined;
+    }>>;
+    staffThreads: z.ZodDefault<z.ZodBoolean>;
+    cooldownMinutes: z.ZodDefault<z.ZodNumber>;
+    timeLimitMinutes: z.ZodDefault<z.ZodNumber>;
+}, "strip", z.ZodTypeAny, {
+    roles: {
+        required: {
+            mode: "ALL" | "ANY";
+            ids: string[];
+        };
+        accepted: string[];
+        denied: string[];
+        restricted: {
+            mode: "ALL" | "ANY";
+            ids: string[];
+        };
+        acceptedRemove: string[];
+        deniedRemove: string[];
+        pending: string[];
+        removeOnSubmit: string[];
+        managers: string[];
+    };
+    messages: {
+        accepted: string;
+        denied: string;
+        confirmation: string;
+        completion: string;
+    };
+    staffThreads: boolean;
+    cooldownMinutes: number;
+    timeLimitMinutes: number;
+}, {
+    roles?: {
+        required?: {
+            mode?: "ALL" | "ANY" | undefined;
+            ids?: string[] | undefined;
+        } | undefined;
+        accepted?: string[] | undefined;
+        denied?: string[] | undefined;
+        restricted?: {
+            mode?: "ALL" | "ANY" | undefined;
+            ids?: string[] | undefined;
+        } | undefined;
+        acceptedRemove?: string[] | undefined;
+        deniedRemove?: string[] | undefined;
+        pending?: string[] | undefined;
+        removeOnSubmit?: string[] | undefined;
+        managers?: string[] | undefined;
+    } | undefined;
+    messages?: {
+        accepted?: string | undefined;
+        denied?: string | undefined;
+        confirmation?: string | undefined;
+        completion?: string | undefined;
+    } | undefined;
+    staffThreads?: boolean | undefined;
+    cooldownMinutes?: number | undefined;
+    timeLimitMinutes?: number | undefined;
+}>>;
+export type AppSettings = z.infer<typeof appSettingsSchema>;
 /** Eine Einheit/Qualifikation, für die man sich über das Discord-Panel bewerben kann. */
 export declare const unitSchema: z.ZodObject<{
-    key: z.ZodString;
-    name: z.ZodString;
-    description: z.ZodDefault<z.ZodString>;
-    /** Discord-Rolle, die bei Annahme vergeben wird (optional). */
-    roleId: z.ZodOptional<z.ZodUnion<[z.ZodString, z.ZodLiteral<"">]>>;
-    /** Eigener Discord-Channel für eingehende Bewerbungen dieser Einheit (sonst der allgemeine Qualifications-Channel). */
-    channelId: z.ZodOptional<z.ZodUnion<[z.ZodString, z.ZodLiteral<"">]>>;
     questions: z.ZodEffects<z.ZodEffects<z.ZodArray<z.ZodUnion<[z.ZodString, z.ZodEffects<z.ZodObject<{
         key: z.ZodString;
         label: z.ZodString;
@@ -261,14 +393,192 @@ export declare const unitSchema: z.ZodObject<{
     })[]>;
     /** Discord-Rolle(n), die bei einer neuen Bewerbung im Channel erwähnt werden (z. B. @Staffelkommandant). */
     pingRoleIds: z.ZodDefault<z.ZodArray<z.ZodString, "many">>;
+    enabled: z.ZodDefault<z.ZodBoolean>;
+    acceptedChannelId: z.ZodOptional<z.ZodUnion<[z.ZodString, z.ZodLiteral<"">]>>;
+    deniedChannelId: z.ZodOptional<z.ZodUnion<[z.ZodString, z.ZodLiteral<"">]>>;
+    settings: z.ZodDefault<z.ZodObject<{
+        messages: z.ZodDefault<z.ZodObject<{
+            accepted: z.ZodDefault<z.ZodString>;
+            denied: z.ZodDefault<z.ZodString>;
+            confirmation: z.ZodDefault<z.ZodString>;
+            completion: z.ZodDefault<z.ZodString>;
+        }, "strip", z.ZodTypeAny, {
+            accepted: string;
+            denied: string;
+            confirmation: string;
+            completion: string;
+        }, {
+            accepted?: string | undefined;
+            denied?: string | undefined;
+            confirmation?: string | undefined;
+            completion?: string | undefined;
+        }>>;
+        roles: z.ZodDefault<z.ZodObject<{
+            restricted: z.ZodDefault<z.ZodObject<{
+                ids: z.ZodDefault<z.ZodArray<z.ZodString, "many">>;
+                mode: z.ZodDefault<z.ZodEnum<["ALL", "ANY"]>>;
+            }, "strip", z.ZodTypeAny, {
+                mode: "ALL" | "ANY";
+                ids: string[];
+            }, {
+                mode?: "ALL" | "ANY" | undefined;
+                ids?: string[] | undefined;
+            }>>;
+            required: z.ZodDefault<z.ZodObject<{
+                ids: z.ZodDefault<z.ZodArray<z.ZodString, "many">>;
+                mode: z.ZodDefault<z.ZodEnum<["ALL", "ANY"]>>;
+            }, "strip", z.ZodTypeAny, {
+                mode: "ALL" | "ANY";
+                ids: string[];
+            }, {
+                mode?: "ALL" | "ANY" | undefined;
+                ids?: string[] | undefined;
+            }>>;
+            accepted: z.ZodDefault<z.ZodArray<z.ZodString, "many">>;
+            denied: z.ZodDefault<z.ZodArray<z.ZodString, "many">>;
+            acceptedRemove: z.ZodDefault<z.ZodArray<z.ZodString, "many">>;
+            deniedRemove: z.ZodDefault<z.ZodArray<z.ZodString, "many">>;
+            pending: z.ZodDefault<z.ZodArray<z.ZodString, "many">>;
+            removeOnSubmit: z.ZodDefault<z.ZodArray<z.ZodString, "many">>;
+            /** Wer im Discord annehmen/ablehnen darf (zusätzlich zum Recht im System); leer = alle mit dem Recht. */
+            managers: z.ZodDefault<z.ZodArray<z.ZodString, "many">>;
+        }, "strip", z.ZodTypeAny, {
+            required: {
+                mode: "ALL" | "ANY";
+                ids: string[];
+            };
+            accepted: string[];
+            denied: string[];
+            restricted: {
+                mode: "ALL" | "ANY";
+                ids: string[];
+            };
+            acceptedRemove: string[];
+            deniedRemove: string[];
+            pending: string[];
+            removeOnSubmit: string[];
+            managers: string[];
+        }, {
+            required?: {
+                mode?: "ALL" | "ANY" | undefined;
+                ids?: string[] | undefined;
+            } | undefined;
+            accepted?: string[] | undefined;
+            denied?: string[] | undefined;
+            restricted?: {
+                mode?: "ALL" | "ANY" | undefined;
+                ids?: string[] | undefined;
+            } | undefined;
+            acceptedRemove?: string[] | undefined;
+            deniedRemove?: string[] | undefined;
+            pending?: string[] | undefined;
+            removeOnSubmit?: string[] | undefined;
+            managers?: string[] | undefined;
+        }>>;
+        staffThreads: z.ZodDefault<z.ZodBoolean>;
+        cooldownMinutes: z.ZodDefault<z.ZodNumber>;
+        timeLimitMinutes: z.ZodDefault<z.ZodNumber>;
+    }, "strip", z.ZodTypeAny, {
+        roles: {
+            required: {
+                mode: "ALL" | "ANY";
+                ids: string[];
+            };
+            accepted: string[];
+            denied: string[];
+            restricted: {
+                mode: "ALL" | "ANY";
+                ids: string[];
+            };
+            acceptedRemove: string[];
+            deniedRemove: string[];
+            pending: string[];
+            removeOnSubmit: string[];
+            managers: string[];
+        };
+        messages: {
+            accepted: string;
+            denied: string;
+            confirmation: string;
+            completion: string;
+        };
+        staffThreads: boolean;
+        cooldownMinutes: number;
+        timeLimitMinutes: number;
+    }, {
+        roles?: {
+            required?: {
+                mode?: "ALL" | "ANY" | undefined;
+                ids?: string[] | undefined;
+            } | undefined;
+            accepted?: string[] | undefined;
+            denied?: string[] | undefined;
+            restricted?: {
+                mode?: "ALL" | "ANY" | undefined;
+                ids?: string[] | undefined;
+            } | undefined;
+            acceptedRemove?: string[] | undefined;
+            deniedRemove?: string[] | undefined;
+            pending?: string[] | undefined;
+            removeOnSubmit?: string[] | undefined;
+            managers?: string[] | undefined;
+        } | undefined;
+        messages?: {
+            accepted?: string | undefined;
+            denied?: string | undefined;
+            confirmation?: string | undefined;
+            completion?: string | undefined;
+        } | undefined;
+        staffThreads?: boolean | undefined;
+        cooldownMinutes?: number | undefined;
+        timeLimitMinutes?: number | undefined;
+    }>>;
+    key: z.ZodString;
+    name: z.ZodString;
+    description: z.ZodDefault<z.ZodString>;
+    /** Discord-Rolle, die bei Annahme vergeben wird (optional). */
+    roleId: z.ZodOptional<z.ZodUnion<[z.ZodString, z.ZodLiteral<"">]>>;
+    /** Eigener Discord-Channel für eingehende Bewerbungen dieser Einheit (sonst der allgemeine Qualifications-Channel). */
+    channelId: z.ZodOptional<z.ZodUnion<[z.ZodString, z.ZodLiteral<"">]>>;
 }, "strip", z.ZodTypeAny, {
     name: string;
     description: string;
+    settings: {
+        roles: {
+            required: {
+                mode: "ALL" | "ANY";
+                ids: string[];
+            };
+            accepted: string[];
+            denied: string[];
+            restricted: {
+                mode: "ALL" | "ANY";
+                ids: string[];
+            };
+            acceptedRemove: string[];
+            deniedRemove: string[];
+            pending: string[];
+            removeOnSubmit: string[];
+            managers: string[];
+        };
+        messages: {
+            accepted: string;
+            denied: string;
+            confirmation: string;
+            completion: string;
+        };
+        staffThreads: boolean;
+        cooldownMinutes: number;
+        timeLimitMinutes: number;
+    };
     key: string;
-    pingRoleIds: string[];
     questions: FormField[];
+    pingRoleIds: string[];
+    enabled: boolean;
     roleId?: string | undefined;
     channelId?: string | undefined;
+    acceptedChannelId?: string | undefined;
+    deniedChannelId?: string | undefined;
 }, {
     name: string;
     key: string;
@@ -287,34 +597,267 @@ export declare const unitSchema: z.ZodObject<{
     })[];
     roleId?: string | undefined;
     description?: string | undefined;
-    pingRoleIds?: string[] | undefined;
+    settings?: {
+        roles?: {
+            required?: {
+                mode?: "ALL" | "ANY" | undefined;
+                ids?: string[] | undefined;
+            } | undefined;
+            accepted?: string[] | undefined;
+            denied?: string[] | undefined;
+            restricted?: {
+                mode?: "ALL" | "ANY" | undefined;
+                ids?: string[] | undefined;
+            } | undefined;
+            acceptedRemove?: string[] | undefined;
+            deniedRemove?: string[] | undefined;
+            pending?: string[] | undefined;
+            removeOnSubmit?: string[] | undefined;
+            managers?: string[] | undefined;
+        } | undefined;
+        messages?: {
+            accepted?: string | undefined;
+            denied?: string | undefined;
+            confirmation?: string | undefined;
+            completion?: string | undefined;
+        } | undefined;
+        staffThreads?: boolean | undefined;
+        cooldownMinutes?: number | undefined;
+        timeLimitMinutes?: number | undefined;
+    } | undefined;
     channelId?: string | undefined;
+    pingRoleIds?: string[] | undefined;
+    enabled?: boolean | undefined;
+    acceptedChannelId?: string | undefined;
+    deniedChannelId?: string | undefined;
 }>;
 /** Texte des Panels für die normale Bewerbung bei EN Polizei (/bewerbungspanel); die Fragen sind das Bewerbungsformular (`application.form`). */
 export declare const policeSchema: z.ZodObject<{
+    name: z.ZodDefault<z.ZodString>;
+    /** Channel für neue Bewerbungen (sonst der Applications-Channel aus den Einstellungen). */
+    channelId: z.ZodOptional<z.ZodUnion<[z.ZodString, z.ZodLiteral<"">]>>;
     pingRoleIds: z.ZodDefault<z.ZodArray<z.ZodString, "many">>;
     title: z.ZodDefault<z.ZodString>;
     description: z.ZodDefault<z.ZodString>;
+    enabled: z.ZodDefault<z.ZodBoolean>;
+    acceptedChannelId: z.ZodOptional<z.ZodUnion<[z.ZodString, z.ZodLiteral<"">]>>;
+    deniedChannelId: z.ZodOptional<z.ZodUnion<[z.ZodString, z.ZodLiteral<"">]>>;
+    settings: z.ZodDefault<z.ZodObject<{
+        messages: z.ZodDefault<z.ZodObject<{
+            accepted: z.ZodDefault<z.ZodString>;
+            denied: z.ZodDefault<z.ZodString>;
+            confirmation: z.ZodDefault<z.ZodString>;
+            completion: z.ZodDefault<z.ZodString>;
+        }, "strip", z.ZodTypeAny, {
+            accepted: string;
+            denied: string;
+            confirmation: string;
+            completion: string;
+        }, {
+            accepted?: string | undefined;
+            denied?: string | undefined;
+            confirmation?: string | undefined;
+            completion?: string | undefined;
+        }>>;
+        roles: z.ZodDefault<z.ZodObject<{
+            restricted: z.ZodDefault<z.ZodObject<{
+                ids: z.ZodDefault<z.ZodArray<z.ZodString, "many">>;
+                mode: z.ZodDefault<z.ZodEnum<["ALL", "ANY"]>>;
+            }, "strip", z.ZodTypeAny, {
+                mode: "ALL" | "ANY";
+                ids: string[];
+            }, {
+                mode?: "ALL" | "ANY" | undefined;
+                ids?: string[] | undefined;
+            }>>;
+            required: z.ZodDefault<z.ZodObject<{
+                ids: z.ZodDefault<z.ZodArray<z.ZodString, "many">>;
+                mode: z.ZodDefault<z.ZodEnum<["ALL", "ANY"]>>;
+            }, "strip", z.ZodTypeAny, {
+                mode: "ALL" | "ANY";
+                ids: string[];
+            }, {
+                mode?: "ALL" | "ANY" | undefined;
+                ids?: string[] | undefined;
+            }>>;
+            accepted: z.ZodDefault<z.ZodArray<z.ZodString, "many">>;
+            denied: z.ZodDefault<z.ZodArray<z.ZodString, "many">>;
+            acceptedRemove: z.ZodDefault<z.ZodArray<z.ZodString, "many">>;
+            deniedRemove: z.ZodDefault<z.ZodArray<z.ZodString, "many">>;
+            pending: z.ZodDefault<z.ZodArray<z.ZodString, "many">>;
+            removeOnSubmit: z.ZodDefault<z.ZodArray<z.ZodString, "many">>;
+            /** Wer im Discord annehmen/ablehnen darf (zusätzlich zum Recht im System); leer = alle mit dem Recht. */
+            managers: z.ZodDefault<z.ZodArray<z.ZodString, "many">>;
+        }, "strip", z.ZodTypeAny, {
+            required: {
+                mode: "ALL" | "ANY";
+                ids: string[];
+            };
+            accepted: string[];
+            denied: string[];
+            restricted: {
+                mode: "ALL" | "ANY";
+                ids: string[];
+            };
+            acceptedRemove: string[];
+            deniedRemove: string[];
+            pending: string[];
+            removeOnSubmit: string[];
+            managers: string[];
+        }, {
+            required?: {
+                mode?: "ALL" | "ANY" | undefined;
+                ids?: string[] | undefined;
+            } | undefined;
+            accepted?: string[] | undefined;
+            denied?: string[] | undefined;
+            restricted?: {
+                mode?: "ALL" | "ANY" | undefined;
+                ids?: string[] | undefined;
+            } | undefined;
+            acceptedRemove?: string[] | undefined;
+            deniedRemove?: string[] | undefined;
+            pending?: string[] | undefined;
+            removeOnSubmit?: string[] | undefined;
+            managers?: string[] | undefined;
+        }>>;
+        staffThreads: z.ZodDefault<z.ZodBoolean>;
+        cooldownMinutes: z.ZodDefault<z.ZodNumber>;
+        timeLimitMinutes: z.ZodDefault<z.ZodNumber>;
+    }, "strip", z.ZodTypeAny, {
+        roles: {
+            required: {
+                mode: "ALL" | "ANY";
+                ids: string[];
+            };
+            accepted: string[];
+            denied: string[];
+            restricted: {
+                mode: "ALL" | "ANY";
+                ids: string[];
+            };
+            acceptedRemove: string[];
+            deniedRemove: string[];
+            pending: string[];
+            removeOnSubmit: string[];
+            managers: string[];
+        };
+        messages: {
+            accepted: string;
+            denied: string;
+            confirmation: string;
+            completion: string;
+        };
+        staffThreads: boolean;
+        cooldownMinutes: number;
+        timeLimitMinutes: number;
+    }, {
+        roles?: {
+            required?: {
+                mode?: "ALL" | "ANY" | undefined;
+                ids?: string[] | undefined;
+            } | undefined;
+            accepted?: string[] | undefined;
+            denied?: string[] | undefined;
+            restricted?: {
+                mode?: "ALL" | "ANY" | undefined;
+                ids?: string[] | undefined;
+            } | undefined;
+            acceptedRemove?: string[] | undefined;
+            deniedRemove?: string[] | undefined;
+            pending?: string[] | undefined;
+            removeOnSubmit?: string[] | undefined;
+            managers?: string[] | undefined;
+        } | undefined;
+        messages?: {
+            accepted?: string | undefined;
+            denied?: string | undefined;
+            confirmation?: string | undefined;
+            completion?: string | undefined;
+        } | undefined;
+        staffThreads?: boolean | undefined;
+        cooldownMinutes?: number | undefined;
+        timeLimitMinutes?: number | undefined;
+    }>>;
 }, "strip", z.ZodTypeAny, {
+    name: string;
     description: string;
+    settings: {
+        roles: {
+            required: {
+                mode: "ALL" | "ANY";
+                ids: string[];
+            };
+            accepted: string[];
+            denied: string[];
+            restricted: {
+                mode: "ALL" | "ANY";
+                ids: string[];
+            };
+            acceptedRemove: string[];
+            deniedRemove: string[];
+            pending: string[];
+            removeOnSubmit: string[];
+            managers: string[];
+        };
+        messages: {
+            accepted: string;
+            denied: string;
+            confirmation: string;
+            completion: string;
+        };
+        staffThreads: boolean;
+        cooldownMinutes: number;
+        timeLimitMinutes: number;
+    };
     title: string;
     pingRoleIds: string[];
+    enabled: boolean;
+    channelId?: string | undefined;
+    acceptedChannelId?: string | undefined;
+    deniedChannelId?: string | undefined;
 }, {
+    name?: string | undefined;
     description?: string | undefined;
+    settings?: {
+        roles?: {
+            required?: {
+                mode?: "ALL" | "ANY" | undefined;
+                ids?: string[] | undefined;
+            } | undefined;
+            accepted?: string[] | undefined;
+            denied?: string[] | undefined;
+            restricted?: {
+                mode?: "ALL" | "ANY" | undefined;
+                ids?: string[] | undefined;
+            } | undefined;
+            acceptedRemove?: string[] | undefined;
+            deniedRemove?: string[] | undefined;
+            pending?: string[] | undefined;
+            removeOnSubmit?: string[] | undefined;
+            managers?: string[] | undefined;
+        } | undefined;
+        messages?: {
+            accepted?: string | undefined;
+            denied?: string | undefined;
+            confirmation?: string | undefined;
+            completion?: string | undefined;
+        } | undefined;
+        staffThreads?: boolean | undefined;
+        cooldownMinutes?: number | undefined;
+        timeLimitMinutes?: number | undefined;
+    } | undefined;
     title?: string | undefined;
+    channelId?: string | undefined;
     pingRoleIds?: string[] | undefined;
+    enabled?: boolean | undefined;
+    acceptedChannelId?: string | undefined;
+    deniedChannelId?: string | undefined;
 }>;
 export declare const configSchema: z.ZodObject<{
     title: z.ZodDefault<z.ZodString>;
     intro: z.ZodDefault<z.ZodString>;
     units: z.ZodEffects<z.ZodArray<z.ZodObject<{
-        key: z.ZodString;
-        name: z.ZodString;
-        description: z.ZodDefault<z.ZodString>;
-        /** Discord-Rolle, die bei Annahme vergeben wird (optional). */
-        roleId: z.ZodOptional<z.ZodUnion<[z.ZodString, z.ZodLiteral<"">]>>;
-        /** Eigener Discord-Channel für eingehende Bewerbungen dieser Einheit (sonst der allgemeine Qualifications-Channel). */
-        channelId: z.ZodOptional<z.ZodUnion<[z.ZodString, z.ZodLiteral<"">]>>;
         questions: z.ZodEffects<z.ZodEffects<z.ZodArray<z.ZodUnion<[z.ZodString, z.ZodEffects<z.ZodObject<{
             key: z.ZodString;
             label: z.ZodString;
@@ -408,14 +951,192 @@ export declare const configSchema: z.ZodObject<{
         })[]>;
         /** Discord-Rolle(n), die bei einer neuen Bewerbung im Channel erwähnt werden (z. B. @Staffelkommandant). */
         pingRoleIds: z.ZodDefault<z.ZodArray<z.ZodString, "many">>;
+        enabled: z.ZodDefault<z.ZodBoolean>;
+        acceptedChannelId: z.ZodOptional<z.ZodUnion<[z.ZodString, z.ZodLiteral<"">]>>;
+        deniedChannelId: z.ZodOptional<z.ZodUnion<[z.ZodString, z.ZodLiteral<"">]>>;
+        settings: z.ZodDefault<z.ZodObject<{
+            messages: z.ZodDefault<z.ZodObject<{
+                accepted: z.ZodDefault<z.ZodString>;
+                denied: z.ZodDefault<z.ZodString>;
+                confirmation: z.ZodDefault<z.ZodString>;
+                completion: z.ZodDefault<z.ZodString>;
+            }, "strip", z.ZodTypeAny, {
+                accepted: string;
+                denied: string;
+                confirmation: string;
+                completion: string;
+            }, {
+                accepted?: string | undefined;
+                denied?: string | undefined;
+                confirmation?: string | undefined;
+                completion?: string | undefined;
+            }>>;
+            roles: z.ZodDefault<z.ZodObject<{
+                restricted: z.ZodDefault<z.ZodObject<{
+                    ids: z.ZodDefault<z.ZodArray<z.ZodString, "many">>;
+                    mode: z.ZodDefault<z.ZodEnum<["ALL", "ANY"]>>;
+                }, "strip", z.ZodTypeAny, {
+                    mode: "ALL" | "ANY";
+                    ids: string[];
+                }, {
+                    mode?: "ALL" | "ANY" | undefined;
+                    ids?: string[] | undefined;
+                }>>;
+                required: z.ZodDefault<z.ZodObject<{
+                    ids: z.ZodDefault<z.ZodArray<z.ZodString, "many">>;
+                    mode: z.ZodDefault<z.ZodEnum<["ALL", "ANY"]>>;
+                }, "strip", z.ZodTypeAny, {
+                    mode: "ALL" | "ANY";
+                    ids: string[];
+                }, {
+                    mode?: "ALL" | "ANY" | undefined;
+                    ids?: string[] | undefined;
+                }>>;
+                accepted: z.ZodDefault<z.ZodArray<z.ZodString, "many">>;
+                denied: z.ZodDefault<z.ZodArray<z.ZodString, "many">>;
+                acceptedRemove: z.ZodDefault<z.ZodArray<z.ZodString, "many">>;
+                deniedRemove: z.ZodDefault<z.ZodArray<z.ZodString, "many">>;
+                pending: z.ZodDefault<z.ZodArray<z.ZodString, "many">>;
+                removeOnSubmit: z.ZodDefault<z.ZodArray<z.ZodString, "many">>;
+                /** Wer im Discord annehmen/ablehnen darf (zusätzlich zum Recht im System); leer = alle mit dem Recht. */
+                managers: z.ZodDefault<z.ZodArray<z.ZodString, "many">>;
+            }, "strip", z.ZodTypeAny, {
+                required: {
+                    mode: "ALL" | "ANY";
+                    ids: string[];
+                };
+                accepted: string[];
+                denied: string[];
+                restricted: {
+                    mode: "ALL" | "ANY";
+                    ids: string[];
+                };
+                acceptedRemove: string[];
+                deniedRemove: string[];
+                pending: string[];
+                removeOnSubmit: string[];
+                managers: string[];
+            }, {
+                required?: {
+                    mode?: "ALL" | "ANY" | undefined;
+                    ids?: string[] | undefined;
+                } | undefined;
+                accepted?: string[] | undefined;
+                denied?: string[] | undefined;
+                restricted?: {
+                    mode?: "ALL" | "ANY" | undefined;
+                    ids?: string[] | undefined;
+                } | undefined;
+                acceptedRemove?: string[] | undefined;
+                deniedRemove?: string[] | undefined;
+                pending?: string[] | undefined;
+                removeOnSubmit?: string[] | undefined;
+                managers?: string[] | undefined;
+            }>>;
+            staffThreads: z.ZodDefault<z.ZodBoolean>;
+            cooldownMinutes: z.ZodDefault<z.ZodNumber>;
+            timeLimitMinutes: z.ZodDefault<z.ZodNumber>;
+        }, "strip", z.ZodTypeAny, {
+            roles: {
+                required: {
+                    mode: "ALL" | "ANY";
+                    ids: string[];
+                };
+                accepted: string[];
+                denied: string[];
+                restricted: {
+                    mode: "ALL" | "ANY";
+                    ids: string[];
+                };
+                acceptedRemove: string[];
+                deniedRemove: string[];
+                pending: string[];
+                removeOnSubmit: string[];
+                managers: string[];
+            };
+            messages: {
+                accepted: string;
+                denied: string;
+                confirmation: string;
+                completion: string;
+            };
+            staffThreads: boolean;
+            cooldownMinutes: number;
+            timeLimitMinutes: number;
+        }, {
+            roles?: {
+                required?: {
+                    mode?: "ALL" | "ANY" | undefined;
+                    ids?: string[] | undefined;
+                } | undefined;
+                accepted?: string[] | undefined;
+                denied?: string[] | undefined;
+                restricted?: {
+                    mode?: "ALL" | "ANY" | undefined;
+                    ids?: string[] | undefined;
+                } | undefined;
+                acceptedRemove?: string[] | undefined;
+                deniedRemove?: string[] | undefined;
+                pending?: string[] | undefined;
+                removeOnSubmit?: string[] | undefined;
+                managers?: string[] | undefined;
+            } | undefined;
+            messages?: {
+                accepted?: string | undefined;
+                denied?: string | undefined;
+                confirmation?: string | undefined;
+                completion?: string | undefined;
+            } | undefined;
+            staffThreads?: boolean | undefined;
+            cooldownMinutes?: number | undefined;
+            timeLimitMinutes?: number | undefined;
+        }>>;
+        key: z.ZodString;
+        name: z.ZodString;
+        description: z.ZodDefault<z.ZodString>;
+        /** Discord-Rolle, die bei Annahme vergeben wird (optional). */
+        roleId: z.ZodOptional<z.ZodUnion<[z.ZodString, z.ZodLiteral<"">]>>;
+        /** Eigener Discord-Channel für eingehende Bewerbungen dieser Einheit (sonst der allgemeine Qualifications-Channel). */
+        channelId: z.ZodOptional<z.ZodUnion<[z.ZodString, z.ZodLiteral<"">]>>;
     }, "strip", z.ZodTypeAny, {
         name: string;
         description: string;
+        settings: {
+            roles: {
+                required: {
+                    mode: "ALL" | "ANY";
+                    ids: string[];
+                };
+                accepted: string[];
+                denied: string[];
+                restricted: {
+                    mode: "ALL" | "ANY";
+                    ids: string[];
+                };
+                acceptedRemove: string[];
+                deniedRemove: string[];
+                pending: string[];
+                removeOnSubmit: string[];
+                managers: string[];
+            };
+            messages: {
+                accepted: string;
+                denied: string;
+                confirmation: string;
+                completion: string;
+            };
+            staffThreads: boolean;
+            cooldownMinutes: number;
+            timeLimitMinutes: number;
+        };
         key: string;
-        pingRoleIds: string[];
         questions: FormField[];
+        pingRoleIds: string[];
+        enabled: boolean;
         roleId?: string | undefined;
         channelId?: string | undefined;
+        acceptedChannelId?: string | undefined;
+        deniedChannelId?: string | undefined;
     }, {
         name: string;
         key: string;
@@ -434,16 +1155,78 @@ export declare const configSchema: z.ZodObject<{
         })[];
         roleId?: string | undefined;
         description?: string | undefined;
-        pingRoleIds?: string[] | undefined;
+        settings?: {
+            roles?: {
+                required?: {
+                    mode?: "ALL" | "ANY" | undefined;
+                    ids?: string[] | undefined;
+                } | undefined;
+                accepted?: string[] | undefined;
+                denied?: string[] | undefined;
+                restricted?: {
+                    mode?: "ALL" | "ANY" | undefined;
+                    ids?: string[] | undefined;
+                } | undefined;
+                acceptedRemove?: string[] | undefined;
+                deniedRemove?: string[] | undefined;
+                pending?: string[] | undefined;
+                removeOnSubmit?: string[] | undefined;
+                managers?: string[] | undefined;
+            } | undefined;
+            messages?: {
+                accepted?: string | undefined;
+                denied?: string | undefined;
+                confirmation?: string | undefined;
+                completion?: string | undefined;
+            } | undefined;
+            staffThreads?: boolean | undefined;
+            cooldownMinutes?: number | undefined;
+            timeLimitMinutes?: number | undefined;
+        } | undefined;
         channelId?: string | undefined;
+        pingRoleIds?: string[] | undefined;
+        enabled?: boolean | undefined;
+        acceptedChannelId?: string | undefined;
+        deniedChannelId?: string | undefined;
     }>, "many">, {
         name: string;
         description: string;
+        settings: {
+            roles: {
+                required: {
+                    mode: "ALL" | "ANY";
+                    ids: string[];
+                };
+                accepted: string[];
+                denied: string[];
+                restricted: {
+                    mode: "ALL" | "ANY";
+                    ids: string[];
+                };
+                acceptedRemove: string[];
+                deniedRemove: string[];
+                pending: string[];
+                removeOnSubmit: string[];
+                managers: string[];
+            };
+            messages: {
+                accepted: string;
+                denied: string;
+                confirmation: string;
+                completion: string;
+            };
+            staffThreads: boolean;
+            cooldownMinutes: number;
+            timeLimitMinutes: number;
+        };
         key: string;
-        pingRoleIds: string[];
         questions: FormField[];
+        pingRoleIds: string[];
+        enabled: boolean;
         roleId?: string | undefined;
         channelId?: string | undefined;
+        acceptedChannelId?: string | undefined;
+        deniedChannelId?: string | undefined;
     }[], {
         name: string;
         key: string;
@@ -462,38 +1245,342 @@ export declare const configSchema: z.ZodObject<{
         })[];
         roleId?: string | undefined;
         description?: string | undefined;
-        pingRoleIds?: string[] | undefined;
+        settings?: {
+            roles?: {
+                required?: {
+                    mode?: "ALL" | "ANY" | undefined;
+                    ids?: string[] | undefined;
+                } | undefined;
+                accepted?: string[] | undefined;
+                denied?: string[] | undefined;
+                restricted?: {
+                    mode?: "ALL" | "ANY" | undefined;
+                    ids?: string[] | undefined;
+                } | undefined;
+                acceptedRemove?: string[] | undefined;
+                deniedRemove?: string[] | undefined;
+                pending?: string[] | undefined;
+                removeOnSubmit?: string[] | undefined;
+                managers?: string[] | undefined;
+            } | undefined;
+            messages?: {
+                accepted?: string | undefined;
+                denied?: string | undefined;
+                confirmation?: string | undefined;
+                completion?: string | undefined;
+            } | undefined;
+            staffThreads?: boolean | undefined;
+            cooldownMinutes?: number | undefined;
+            timeLimitMinutes?: number | undefined;
+        } | undefined;
         channelId?: string | undefined;
+        pingRoleIds?: string[] | undefined;
+        enabled?: boolean | undefined;
+        acceptedChannelId?: string | undefined;
+        deniedChannelId?: string | undefined;
     }[]>;
     police: z.ZodDefault<z.ZodObject<{
+        name: z.ZodDefault<z.ZodString>;
+        /** Channel für neue Bewerbungen (sonst der Applications-Channel aus den Einstellungen). */
+        channelId: z.ZodOptional<z.ZodUnion<[z.ZodString, z.ZodLiteral<"">]>>;
         pingRoleIds: z.ZodDefault<z.ZodArray<z.ZodString, "many">>;
         title: z.ZodDefault<z.ZodString>;
         description: z.ZodDefault<z.ZodString>;
+        enabled: z.ZodDefault<z.ZodBoolean>;
+        acceptedChannelId: z.ZodOptional<z.ZodUnion<[z.ZodString, z.ZodLiteral<"">]>>;
+        deniedChannelId: z.ZodOptional<z.ZodUnion<[z.ZodString, z.ZodLiteral<"">]>>;
+        settings: z.ZodDefault<z.ZodObject<{
+            messages: z.ZodDefault<z.ZodObject<{
+                accepted: z.ZodDefault<z.ZodString>;
+                denied: z.ZodDefault<z.ZodString>;
+                confirmation: z.ZodDefault<z.ZodString>;
+                completion: z.ZodDefault<z.ZodString>;
+            }, "strip", z.ZodTypeAny, {
+                accepted: string;
+                denied: string;
+                confirmation: string;
+                completion: string;
+            }, {
+                accepted?: string | undefined;
+                denied?: string | undefined;
+                confirmation?: string | undefined;
+                completion?: string | undefined;
+            }>>;
+            roles: z.ZodDefault<z.ZodObject<{
+                restricted: z.ZodDefault<z.ZodObject<{
+                    ids: z.ZodDefault<z.ZodArray<z.ZodString, "many">>;
+                    mode: z.ZodDefault<z.ZodEnum<["ALL", "ANY"]>>;
+                }, "strip", z.ZodTypeAny, {
+                    mode: "ALL" | "ANY";
+                    ids: string[];
+                }, {
+                    mode?: "ALL" | "ANY" | undefined;
+                    ids?: string[] | undefined;
+                }>>;
+                required: z.ZodDefault<z.ZodObject<{
+                    ids: z.ZodDefault<z.ZodArray<z.ZodString, "many">>;
+                    mode: z.ZodDefault<z.ZodEnum<["ALL", "ANY"]>>;
+                }, "strip", z.ZodTypeAny, {
+                    mode: "ALL" | "ANY";
+                    ids: string[];
+                }, {
+                    mode?: "ALL" | "ANY" | undefined;
+                    ids?: string[] | undefined;
+                }>>;
+                accepted: z.ZodDefault<z.ZodArray<z.ZodString, "many">>;
+                denied: z.ZodDefault<z.ZodArray<z.ZodString, "many">>;
+                acceptedRemove: z.ZodDefault<z.ZodArray<z.ZodString, "many">>;
+                deniedRemove: z.ZodDefault<z.ZodArray<z.ZodString, "many">>;
+                pending: z.ZodDefault<z.ZodArray<z.ZodString, "many">>;
+                removeOnSubmit: z.ZodDefault<z.ZodArray<z.ZodString, "many">>;
+                /** Wer im Discord annehmen/ablehnen darf (zusätzlich zum Recht im System); leer = alle mit dem Recht. */
+                managers: z.ZodDefault<z.ZodArray<z.ZodString, "many">>;
+            }, "strip", z.ZodTypeAny, {
+                required: {
+                    mode: "ALL" | "ANY";
+                    ids: string[];
+                };
+                accepted: string[];
+                denied: string[];
+                restricted: {
+                    mode: "ALL" | "ANY";
+                    ids: string[];
+                };
+                acceptedRemove: string[];
+                deniedRemove: string[];
+                pending: string[];
+                removeOnSubmit: string[];
+                managers: string[];
+            }, {
+                required?: {
+                    mode?: "ALL" | "ANY" | undefined;
+                    ids?: string[] | undefined;
+                } | undefined;
+                accepted?: string[] | undefined;
+                denied?: string[] | undefined;
+                restricted?: {
+                    mode?: "ALL" | "ANY" | undefined;
+                    ids?: string[] | undefined;
+                } | undefined;
+                acceptedRemove?: string[] | undefined;
+                deniedRemove?: string[] | undefined;
+                pending?: string[] | undefined;
+                removeOnSubmit?: string[] | undefined;
+                managers?: string[] | undefined;
+            }>>;
+            staffThreads: z.ZodDefault<z.ZodBoolean>;
+            cooldownMinutes: z.ZodDefault<z.ZodNumber>;
+            timeLimitMinutes: z.ZodDefault<z.ZodNumber>;
+        }, "strip", z.ZodTypeAny, {
+            roles: {
+                required: {
+                    mode: "ALL" | "ANY";
+                    ids: string[];
+                };
+                accepted: string[];
+                denied: string[];
+                restricted: {
+                    mode: "ALL" | "ANY";
+                    ids: string[];
+                };
+                acceptedRemove: string[];
+                deniedRemove: string[];
+                pending: string[];
+                removeOnSubmit: string[];
+                managers: string[];
+            };
+            messages: {
+                accepted: string;
+                denied: string;
+                confirmation: string;
+                completion: string;
+            };
+            staffThreads: boolean;
+            cooldownMinutes: number;
+            timeLimitMinutes: number;
+        }, {
+            roles?: {
+                required?: {
+                    mode?: "ALL" | "ANY" | undefined;
+                    ids?: string[] | undefined;
+                } | undefined;
+                accepted?: string[] | undefined;
+                denied?: string[] | undefined;
+                restricted?: {
+                    mode?: "ALL" | "ANY" | undefined;
+                    ids?: string[] | undefined;
+                } | undefined;
+                acceptedRemove?: string[] | undefined;
+                deniedRemove?: string[] | undefined;
+                pending?: string[] | undefined;
+                removeOnSubmit?: string[] | undefined;
+                managers?: string[] | undefined;
+            } | undefined;
+            messages?: {
+                accepted?: string | undefined;
+                denied?: string | undefined;
+                confirmation?: string | undefined;
+                completion?: string | undefined;
+            } | undefined;
+            staffThreads?: boolean | undefined;
+            cooldownMinutes?: number | undefined;
+            timeLimitMinutes?: number | undefined;
+        }>>;
     }, "strip", z.ZodTypeAny, {
+        name: string;
         description: string;
+        settings: {
+            roles: {
+                required: {
+                    mode: "ALL" | "ANY";
+                    ids: string[];
+                };
+                accepted: string[];
+                denied: string[];
+                restricted: {
+                    mode: "ALL" | "ANY";
+                    ids: string[];
+                };
+                acceptedRemove: string[];
+                deniedRemove: string[];
+                pending: string[];
+                removeOnSubmit: string[];
+                managers: string[];
+            };
+            messages: {
+                accepted: string;
+                denied: string;
+                confirmation: string;
+                completion: string;
+            };
+            staffThreads: boolean;
+            cooldownMinutes: number;
+            timeLimitMinutes: number;
+        };
         title: string;
         pingRoleIds: string[];
+        enabled: boolean;
+        channelId?: string | undefined;
+        acceptedChannelId?: string | undefined;
+        deniedChannelId?: string | undefined;
     }, {
+        name?: string | undefined;
         description?: string | undefined;
+        settings?: {
+            roles?: {
+                required?: {
+                    mode?: "ALL" | "ANY" | undefined;
+                    ids?: string[] | undefined;
+                } | undefined;
+                accepted?: string[] | undefined;
+                denied?: string[] | undefined;
+                restricted?: {
+                    mode?: "ALL" | "ANY" | undefined;
+                    ids?: string[] | undefined;
+                } | undefined;
+                acceptedRemove?: string[] | undefined;
+                deniedRemove?: string[] | undefined;
+                pending?: string[] | undefined;
+                removeOnSubmit?: string[] | undefined;
+                managers?: string[] | undefined;
+            } | undefined;
+            messages?: {
+                accepted?: string | undefined;
+                denied?: string | undefined;
+                confirmation?: string | undefined;
+                completion?: string | undefined;
+            } | undefined;
+            staffThreads?: boolean | undefined;
+            cooldownMinutes?: number | undefined;
+            timeLimitMinutes?: number | undefined;
+        } | undefined;
         title?: string | undefined;
+        channelId?: string | undefined;
         pingRoleIds?: string[] | undefined;
+        enabled?: boolean | undefined;
+        acceptedChannelId?: string | undefined;
+        deniedChannelId?: string | undefined;
     }>>;
 }, "strip", z.ZodTypeAny, {
     title: string;
     units: {
         name: string;
         description: string;
+        settings: {
+            roles: {
+                required: {
+                    mode: "ALL" | "ANY";
+                    ids: string[];
+                };
+                accepted: string[];
+                denied: string[];
+                restricted: {
+                    mode: "ALL" | "ANY";
+                    ids: string[];
+                };
+                acceptedRemove: string[];
+                deniedRemove: string[];
+                pending: string[];
+                removeOnSubmit: string[];
+                managers: string[];
+            };
+            messages: {
+                accepted: string;
+                denied: string;
+                confirmation: string;
+                completion: string;
+            };
+            staffThreads: boolean;
+            cooldownMinutes: number;
+            timeLimitMinutes: number;
+        };
         key: string;
-        pingRoleIds: string[];
         questions: FormField[];
+        pingRoleIds: string[];
+        enabled: boolean;
         roleId?: string | undefined;
         channelId?: string | undefined;
+        acceptedChannelId?: string | undefined;
+        deniedChannelId?: string | undefined;
     }[];
     intro: string;
     police: {
+        name: string;
         description: string;
+        settings: {
+            roles: {
+                required: {
+                    mode: "ALL" | "ANY";
+                    ids: string[];
+                };
+                accepted: string[];
+                denied: string[];
+                restricted: {
+                    mode: "ALL" | "ANY";
+                    ids: string[];
+                };
+                acceptedRemove: string[];
+                deniedRemove: string[];
+                pending: string[];
+                removeOnSubmit: string[];
+                managers: string[];
+            };
+            messages: {
+                accepted: string;
+                denied: string;
+                confirmation: string;
+                completion: string;
+            };
+            staffThreads: boolean;
+            cooldownMinutes: number;
+            timeLimitMinutes: number;
+        };
         title: string;
         pingRoleIds: string[];
+        enabled: boolean;
+        channelId?: string | undefined;
+        acceptedChannelId?: string | undefined;
+        deniedChannelId?: string | undefined;
     };
 }, {
     units: {
@@ -514,15 +1601,79 @@ export declare const configSchema: z.ZodObject<{
         })[];
         roleId?: string | undefined;
         description?: string | undefined;
-        pingRoleIds?: string[] | undefined;
+        settings?: {
+            roles?: {
+                required?: {
+                    mode?: "ALL" | "ANY" | undefined;
+                    ids?: string[] | undefined;
+                } | undefined;
+                accepted?: string[] | undefined;
+                denied?: string[] | undefined;
+                restricted?: {
+                    mode?: "ALL" | "ANY" | undefined;
+                    ids?: string[] | undefined;
+                } | undefined;
+                acceptedRemove?: string[] | undefined;
+                deniedRemove?: string[] | undefined;
+                pending?: string[] | undefined;
+                removeOnSubmit?: string[] | undefined;
+                managers?: string[] | undefined;
+            } | undefined;
+            messages?: {
+                accepted?: string | undefined;
+                denied?: string | undefined;
+                confirmation?: string | undefined;
+                completion?: string | undefined;
+            } | undefined;
+            staffThreads?: boolean | undefined;
+            cooldownMinutes?: number | undefined;
+            timeLimitMinutes?: number | undefined;
+        } | undefined;
         channelId?: string | undefined;
+        pingRoleIds?: string[] | undefined;
+        enabled?: boolean | undefined;
+        acceptedChannelId?: string | undefined;
+        deniedChannelId?: string | undefined;
     }[];
     title?: string | undefined;
     intro?: string | undefined;
     police?: {
+        name?: string | undefined;
         description?: string | undefined;
+        settings?: {
+            roles?: {
+                required?: {
+                    mode?: "ALL" | "ANY" | undefined;
+                    ids?: string[] | undefined;
+                } | undefined;
+                accepted?: string[] | undefined;
+                denied?: string[] | undefined;
+                restricted?: {
+                    mode?: "ALL" | "ANY" | undefined;
+                    ids?: string[] | undefined;
+                } | undefined;
+                acceptedRemove?: string[] | undefined;
+                deniedRemove?: string[] | undefined;
+                pending?: string[] | undefined;
+                removeOnSubmit?: string[] | undefined;
+                managers?: string[] | undefined;
+            } | undefined;
+            messages?: {
+                accepted?: string | undefined;
+                denied?: string | undefined;
+                confirmation?: string | undefined;
+                completion?: string | undefined;
+            } | undefined;
+            staffThreads?: boolean | undefined;
+            cooldownMinutes?: number | undefined;
+            timeLimitMinutes?: number | undefined;
+        } | undefined;
         title?: string | undefined;
+        channelId?: string | undefined;
         pingRoleIds?: string[] | undefined;
+        enabled?: boolean | undefined;
+        acceptedChannelId?: string | undefined;
+        deniedChannelId?: string | undefined;
     } | undefined;
 }>;
 /** Speichern aus „Qualifications → Setup“: Panels + Einheiten und optional die Fragen der Polizei-Bewerbung. */
@@ -530,13 +1681,6 @@ export declare const saveSchema: z.ZodObject<{
     title: z.ZodDefault<z.ZodString>;
     intro: z.ZodDefault<z.ZodString>;
     units: z.ZodEffects<z.ZodArray<z.ZodObject<{
-        key: z.ZodString;
-        name: z.ZodString;
-        description: z.ZodDefault<z.ZodString>;
-        /** Discord-Rolle, die bei Annahme vergeben wird (optional). */
-        roleId: z.ZodOptional<z.ZodUnion<[z.ZodString, z.ZodLiteral<"">]>>;
-        /** Eigener Discord-Channel für eingehende Bewerbungen dieser Einheit (sonst der allgemeine Qualifications-Channel). */
-        channelId: z.ZodOptional<z.ZodUnion<[z.ZodString, z.ZodLiteral<"">]>>;
         questions: z.ZodEffects<z.ZodEffects<z.ZodArray<z.ZodUnion<[z.ZodString, z.ZodEffects<z.ZodObject<{
             key: z.ZodString;
             label: z.ZodString;
@@ -630,14 +1774,192 @@ export declare const saveSchema: z.ZodObject<{
         })[]>;
         /** Discord-Rolle(n), die bei einer neuen Bewerbung im Channel erwähnt werden (z. B. @Staffelkommandant). */
         pingRoleIds: z.ZodDefault<z.ZodArray<z.ZodString, "many">>;
+        enabled: z.ZodDefault<z.ZodBoolean>;
+        acceptedChannelId: z.ZodOptional<z.ZodUnion<[z.ZodString, z.ZodLiteral<"">]>>;
+        deniedChannelId: z.ZodOptional<z.ZodUnion<[z.ZodString, z.ZodLiteral<"">]>>;
+        settings: z.ZodDefault<z.ZodObject<{
+            messages: z.ZodDefault<z.ZodObject<{
+                accepted: z.ZodDefault<z.ZodString>;
+                denied: z.ZodDefault<z.ZodString>;
+                confirmation: z.ZodDefault<z.ZodString>;
+                completion: z.ZodDefault<z.ZodString>;
+            }, "strip", z.ZodTypeAny, {
+                accepted: string;
+                denied: string;
+                confirmation: string;
+                completion: string;
+            }, {
+                accepted?: string | undefined;
+                denied?: string | undefined;
+                confirmation?: string | undefined;
+                completion?: string | undefined;
+            }>>;
+            roles: z.ZodDefault<z.ZodObject<{
+                restricted: z.ZodDefault<z.ZodObject<{
+                    ids: z.ZodDefault<z.ZodArray<z.ZodString, "many">>;
+                    mode: z.ZodDefault<z.ZodEnum<["ALL", "ANY"]>>;
+                }, "strip", z.ZodTypeAny, {
+                    mode: "ALL" | "ANY";
+                    ids: string[];
+                }, {
+                    mode?: "ALL" | "ANY" | undefined;
+                    ids?: string[] | undefined;
+                }>>;
+                required: z.ZodDefault<z.ZodObject<{
+                    ids: z.ZodDefault<z.ZodArray<z.ZodString, "many">>;
+                    mode: z.ZodDefault<z.ZodEnum<["ALL", "ANY"]>>;
+                }, "strip", z.ZodTypeAny, {
+                    mode: "ALL" | "ANY";
+                    ids: string[];
+                }, {
+                    mode?: "ALL" | "ANY" | undefined;
+                    ids?: string[] | undefined;
+                }>>;
+                accepted: z.ZodDefault<z.ZodArray<z.ZodString, "many">>;
+                denied: z.ZodDefault<z.ZodArray<z.ZodString, "many">>;
+                acceptedRemove: z.ZodDefault<z.ZodArray<z.ZodString, "many">>;
+                deniedRemove: z.ZodDefault<z.ZodArray<z.ZodString, "many">>;
+                pending: z.ZodDefault<z.ZodArray<z.ZodString, "many">>;
+                removeOnSubmit: z.ZodDefault<z.ZodArray<z.ZodString, "many">>;
+                /** Wer im Discord annehmen/ablehnen darf (zusätzlich zum Recht im System); leer = alle mit dem Recht. */
+                managers: z.ZodDefault<z.ZodArray<z.ZodString, "many">>;
+            }, "strip", z.ZodTypeAny, {
+                required: {
+                    mode: "ALL" | "ANY";
+                    ids: string[];
+                };
+                accepted: string[];
+                denied: string[];
+                restricted: {
+                    mode: "ALL" | "ANY";
+                    ids: string[];
+                };
+                acceptedRemove: string[];
+                deniedRemove: string[];
+                pending: string[];
+                removeOnSubmit: string[];
+                managers: string[];
+            }, {
+                required?: {
+                    mode?: "ALL" | "ANY" | undefined;
+                    ids?: string[] | undefined;
+                } | undefined;
+                accepted?: string[] | undefined;
+                denied?: string[] | undefined;
+                restricted?: {
+                    mode?: "ALL" | "ANY" | undefined;
+                    ids?: string[] | undefined;
+                } | undefined;
+                acceptedRemove?: string[] | undefined;
+                deniedRemove?: string[] | undefined;
+                pending?: string[] | undefined;
+                removeOnSubmit?: string[] | undefined;
+                managers?: string[] | undefined;
+            }>>;
+            staffThreads: z.ZodDefault<z.ZodBoolean>;
+            cooldownMinutes: z.ZodDefault<z.ZodNumber>;
+            timeLimitMinutes: z.ZodDefault<z.ZodNumber>;
+        }, "strip", z.ZodTypeAny, {
+            roles: {
+                required: {
+                    mode: "ALL" | "ANY";
+                    ids: string[];
+                };
+                accepted: string[];
+                denied: string[];
+                restricted: {
+                    mode: "ALL" | "ANY";
+                    ids: string[];
+                };
+                acceptedRemove: string[];
+                deniedRemove: string[];
+                pending: string[];
+                removeOnSubmit: string[];
+                managers: string[];
+            };
+            messages: {
+                accepted: string;
+                denied: string;
+                confirmation: string;
+                completion: string;
+            };
+            staffThreads: boolean;
+            cooldownMinutes: number;
+            timeLimitMinutes: number;
+        }, {
+            roles?: {
+                required?: {
+                    mode?: "ALL" | "ANY" | undefined;
+                    ids?: string[] | undefined;
+                } | undefined;
+                accepted?: string[] | undefined;
+                denied?: string[] | undefined;
+                restricted?: {
+                    mode?: "ALL" | "ANY" | undefined;
+                    ids?: string[] | undefined;
+                } | undefined;
+                acceptedRemove?: string[] | undefined;
+                deniedRemove?: string[] | undefined;
+                pending?: string[] | undefined;
+                removeOnSubmit?: string[] | undefined;
+                managers?: string[] | undefined;
+            } | undefined;
+            messages?: {
+                accepted?: string | undefined;
+                denied?: string | undefined;
+                confirmation?: string | undefined;
+                completion?: string | undefined;
+            } | undefined;
+            staffThreads?: boolean | undefined;
+            cooldownMinutes?: number | undefined;
+            timeLimitMinutes?: number | undefined;
+        }>>;
+        key: z.ZodString;
+        name: z.ZodString;
+        description: z.ZodDefault<z.ZodString>;
+        /** Discord-Rolle, die bei Annahme vergeben wird (optional). */
+        roleId: z.ZodOptional<z.ZodUnion<[z.ZodString, z.ZodLiteral<"">]>>;
+        /** Eigener Discord-Channel für eingehende Bewerbungen dieser Einheit (sonst der allgemeine Qualifications-Channel). */
+        channelId: z.ZodOptional<z.ZodUnion<[z.ZodString, z.ZodLiteral<"">]>>;
     }, "strip", z.ZodTypeAny, {
         name: string;
         description: string;
+        settings: {
+            roles: {
+                required: {
+                    mode: "ALL" | "ANY";
+                    ids: string[];
+                };
+                accepted: string[];
+                denied: string[];
+                restricted: {
+                    mode: "ALL" | "ANY";
+                    ids: string[];
+                };
+                acceptedRemove: string[];
+                deniedRemove: string[];
+                pending: string[];
+                removeOnSubmit: string[];
+                managers: string[];
+            };
+            messages: {
+                accepted: string;
+                denied: string;
+                confirmation: string;
+                completion: string;
+            };
+            staffThreads: boolean;
+            cooldownMinutes: number;
+            timeLimitMinutes: number;
+        };
         key: string;
-        pingRoleIds: string[];
         questions: FormField[];
+        pingRoleIds: string[];
+        enabled: boolean;
         roleId?: string | undefined;
         channelId?: string | undefined;
+        acceptedChannelId?: string | undefined;
+        deniedChannelId?: string | undefined;
     }, {
         name: string;
         key: string;
@@ -656,16 +1978,78 @@ export declare const saveSchema: z.ZodObject<{
         })[];
         roleId?: string | undefined;
         description?: string | undefined;
-        pingRoleIds?: string[] | undefined;
+        settings?: {
+            roles?: {
+                required?: {
+                    mode?: "ALL" | "ANY" | undefined;
+                    ids?: string[] | undefined;
+                } | undefined;
+                accepted?: string[] | undefined;
+                denied?: string[] | undefined;
+                restricted?: {
+                    mode?: "ALL" | "ANY" | undefined;
+                    ids?: string[] | undefined;
+                } | undefined;
+                acceptedRemove?: string[] | undefined;
+                deniedRemove?: string[] | undefined;
+                pending?: string[] | undefined;
+                removeOnSubmit?: string[] | undefined;
+                managers?: string[] | undefined;
+            } | undefined;
+            messages?: {
+                accepted?: string | undefined;
+                denied?: string | undefined;
+                confirmation?: string | undefined;
+                completion?: string | undefined;
+            } | undefined;
+            staffThreads?: boolean | undefined;
+            cooldownMinutes?: number | undefined;
+            timeLimitMinutes?: number | undefined;
+        } | undefined;
         channelId?: string | undefined;
+        pingRoleIds?: string[] | undefined;
+        enabled?: boolean | undefined;
+        acceptedChannelId?: string | undefined;
+        deniedChannelId?: string | undefined;
     }>, "many">, {
         name: string;
         description: string;
+        settings: {
+            roles: {
+                required: {
+                    mode: "ALL" | "ANY";
+                    ids: string[];
+                };
+                accepted: string[];
+                denied: string[];
+                restricted: {
+                    mode: "ALL" | "ANY";
+                    ids: string[];
+                };
+                acceptedRemove: string[];
+                deniedRemove: string[];
+                pending: string[];
+                removeOnSubmit: string[];
+                managers: string[];
+            };
+            messages: {
+                accepted: string;
+                denied: string;
+                confirmation: string;
+                completion: string;
+            };
+            staffThreads: boolean;
+            cooldownMinutes: number;
+            timeLimitMinutes: number;
+        };
         key: string;
-        pingRoleIds: string[];
         questions: FormField[];
+        pingRoleIds: string[];
+        enabled: boolean;
         roleId?: string | undefined;
         channelId?: string | undefined;
+        acceptedChannelId?: string | undefined;
+        deniedChannelId?: string | undefined;
     }[], {
         name: string;
         key: string;
@@ -684,21 +2068,261 @@ export declare const saveSchema: z.ZodObject<{
         })[];
         roleId?: string | undefined;
         description?: string | undefined;
-        pingRoleIds?: string[] | undefined;
+        settings?: {
+            roles?: {
+                required?: {
+                    mode?: "ALL" | "ANY" | undefined;
+                    ids?: string[] | undefined;
+                } | undefined;
+                accepted?: string[] | undefined;
+                denied?: string[] | undefined;
+                restricted?: {
+                    mode?: "ALL" | "ANY" | undefined;
+                    ids?: string[] | undefined;
+                } | undefined;
+                acceptedRemove?: string[] | undefined;
+                deniedRemove?: string[] | undefined;
+                pending?: string[] | undefined;
+                removeOnSubmit?: string[] | undefined;
+                managers?: string[] | undefined;
+            } | undefined;
+            messages?: {
+                accepted?: string | undefined;
+                denied?: string | undefined;
+                confirmation?: string | undefined;
+                completion?: string | undefined;
+            } | undefined;
+            staffThreads?: boolean | undefined;
+            cooldownMinutes?: number | undefined;
+            timeLimitMinutes?: number | undefined;
+        } | undefined;
         channelId?: string | undefined;
+        pingRoleIds?: string[] | undefined;
+        enabled?: boolean | undefined;
+        acceptedChannelId?: string | undefined;
+        deniedChannelId?: string | undefined;
     }[]>;
     police: z.ZodDefault<z.ZodObject<{
+        name: z.ZodDefault<z.ZodString>;
+        /** Channel für neue Bewerbungen (sonst der Applications-Channel aus den Einstellungen). */
+        channelId: z.ZodOptional<z.ZodUnion<[z.ZodString, z.ZodLiteral<"">]>>;
         pingRoleIds: z.ZodDefault<z.ZodArray<z.ZodString, "many">>;
         title: z.ZodDefault<z.ZodString>;
         description: z.ZodDefault<z.ZodString>;
+        enabled: z.ZodDefault<z.ZodBoolean>;
+        acceptedChannelId: z.ZodOptional<z.ZodUnion<[z.ZodString, z.ZodLiteral<"">]>>;
+        deniedChannelId: z.ZodOptional<z.ZodUnion<[z.ZodString, z.ZodLiteral<"">]>>;
+        settings: z.ZodDefault<z.ZodObject<{
+            messages: z.ZodDefault<z.ZodObject<{
+                accepted: z.ZodDefault<z.ZodString>;
+                denied: z.ZodDefault<z.ZodString>;
+                confirmation: z.ZodDefault<z.ZodString>;
+                completion: z.ZodDefault<z.ZodString>;
+            }, "strip", z.ZodTypeAny, {
+                accepted: string;
+                denied: string;
+                confirmation: string;
+                completion: string;
+            }, {
+                accepted?: string | undefined;
+                denied?: string | undefined;
+                confirmation?: string | undefined;
+                completion?: string | undefined;
+            }>>;
+            roles: z.ZodDefault<z.ZodObject<{
+                restricted: z.ZodDefault<z.ZodObject<{
+                    ids: z.ZodDefault<z.ZodArray<z.ZodString, "many">>;
+                    mode: z.ZodDefault<z.ZodEnum<["ALL", "ANY"]>>;
+                }, "strip", z.ZodTypeAny, {
+                    mode: "ALL" | "ANY";
+                    ids: string[];
+                }, {
+                    mode?: "ALL" | "ANY" | undefined;
+                    ids?: string[] | undefined;
+                }>>;
+                required: z.ZodDefault<z.ZodObject<{
+                    ids: z.ZodDefault<z.ZodArray<z.ZodString, "many">>;
+                    mode: z.ZodDefault<z.ZodEnum<["ALL", "ANY"]>>;
+                }, "strip", z.ZodTypeAny, {
+                    mode: "ALL" | "ANY";
+                    ids: string[];
+                }, {
+                    mode?: "ALL" | "ANY" | undefined;
+                    ids?: string[] | undefined;
+                }>>;
+                accepted: z.ZodDefault<z.ZodArray<z.ZodString, "many">>;
+                denied: z.ZodDefault<z.ZodArray<z.ZodString, "many">>;
+                acceptedRemove: z.ZodDefault<z.ZodArray<z.ZodString, "many">>;
+                deniedRemove: z.ZodDefault<z.ZodArray<z.ZodString, "many">>;
+                pending: z.ZodDefault<z.ZodArray<z.ZodString, "many">>;
+                removeOnSubmit: z.ZodDefault<z.ZodArray<z.ZodString, "many">>;
+                /** Wer im Discord annehmen/ablehnen darf (zusätzlich zum Recht im System); leer = alle mit dem Recht. */
+                managers: z.ZodDefault<z.ZodArray<z.ZodString, "many">>;
+            }, "strip", z.ZodTypeAny, {
+                required: {
+                    mode: "ALL" | "ANY";
+                    ids: string[];
+                };
+                accepted: string[];
+                denied: string[];
+                restricted: {
+                    mode: "ALL" | "ANY";
+                    ids: string[];
+                };
+                acceptedRemove: string[];
+                deniedRemove: string[];
+                pending: string[];
+                removeOnSubmit: string[];
+                managers: string[];
+            }, {
+                required?: {
+                    mode?: "ALL" | "ANY" | undefined;
+                    ids?: string[] | undefined;
+                } | undefined;
+                accepted?: string[] | undefined;
+                denied?: string[] | undefined;
+                restricted?: {
+                    mode?: "ALL" | "ANY" | undefined;
+                    ids?: string[] | undefined;
+                } | undefined;
+                acceptedRemove?: string[] | undefined;
+                deniedRemove?: string[] | undefined;
+                pending?: string[] | undefined;
+                removeOnSubmit?: string[] | undefined;
+                managers?: string[] | undefined;
+            }>>;
+            staffThreads: z.ZodDefault<z.ZodBoolean>;
+            cooldownMinutes: z.ZodDefault<z.ZodNumber>;
+            timeLimitMinutes: z.ZodDefault<z.ZodNumber>;
+        }, "strip", z.ZodTypeAny, {
+            roles: {
+                required: {
+                    mode: "ALL" | "ANY";
+                    ids: string[];
+                };
+                accepted: string[];
+                denied: string[];
+                restricted: {
+                    mode: "ALL" | "ANY";
+                    ids: string[];
+                };
+                acceptedRemove: string[];
+                deniedRemove: string[];
+                pending: string[];
+                removeOnSubmit: string[];
+                managers: string[];
+            };
+            messages: {
+                accepted: string;
+                denied: string;
+                confirmation: string;
+                completion: string;
+            };
+            staffThreads: boolean;
+            cooldownMinutes: number;
+            timeLimitMinutes: number;
+        }, {
+            roles?: {
+                required?: {
+                    mode?: "ALL" | "ANY" | undefined;
+                    ids?: string[] | undefined;
+                } | undefined;
+                accepted?: string[] | undefined;
+                denied?: string[] | undefined;
+                restricted?: {
+                    mode?: "ALL" | "ANY" | undefined;
+                    ids?: string[] | undefined;
+                } | undefined;
+                acceptedRemove?: string[] | undefined;
+                deniedRemove?: string[] | undefined;
+                pending?: string[] | undefined;
+                removeOnSubmit?: string[] | undefined;
+                managers?: string[] | undefined;
+            } | undefined;
+            messages?: {
+                accepted?: string | undefined;
+                denied?: string | undefined;
+                confirmation?: string | undefined;
+                completion?: string | undefined;
+            } | undefined;
+            staffThreads?: boolean | undefined;
+            cooldownMinutes?: number | undefined;
+            timeLimitMinutes?: number | undefined;
+        }>>;
     }, "strip", z.ZodTypeAny, {
+        name: string;
         description: string;
+        settings: {
+            roles: {
+                required: {
+                    mode: "ALL" | "ANY";
+                    ids: string[];
+                };
+                accepted: string[];
+                denied: string[];
+                restricted: {
+                    mode: "ALL" | "ANY";
+                    ids: string[];
+                };
+                acceptedRemove: string[];
+                deniedRemove: string[];
+                pending: string[];
+                removeOnSubmit: string[];
+                managers: string[];
+            };
+            messages: {
+                accepted: string;
+                denied: string;
+                confirmation: string;
+                completion: string;
+            };
+            staffThreads: boolean;
+            cooldownMinutes: number;
+            timeLimitMinutes: number;
+        };
         title: string;
         pingRoleIds: string[];
+        enabled: boolean;
+        channelId?: string | undefined;
+        acceptedChannelId?: string | undefined;
+        deniedChannelId?: string | undefined;
     }, {
+        name?: string | undefined;
         description?: string | undefined;
+        settings?: {
+            roles?: {
+                required?: {
+                    mode?: "ALL" | "ANY" | undefined;
+                    ids?: string[] | undefined;
+                } | undefined;
+                accepted?: string[] | undefined;
+                denied?: string[] | undefined;
+                restricted?: {
+                    mode?: "ALL" | "ANY" | undefined;
+                    ids?: string[] | undefined;
+                } | undefined;
+                acceptedRemove?: string[] | undefined;
+                deniedRemove?: string[] | undefined;
+                pending?: string[] | undefined;
+                removeOnSubmit?: string[] | undefined;
+                managers?: string[] | undefined;
+            } | undefined;
+            messages?: {
+                accepted?: string | undefined;
+                denied?: string | undefined;
+                confirmation?: string | undefined;
+                completion?: string | undefined;
+            } | undefined;
+            staffThreads?: boolean | undefined;
+            cooldownMinutes?: number | undefined;
+            timeLimitMinutes?: number | undefined;
+        } | undefined;
         title?: string | undefined;
+        channelId?: string | undefined;
         pingRoleIds?: string[] | undefined;
+        enabled?: boolean | undefined;
+        acceptedChannelId?: string | undefined;
+        deniedChannelId?: string | undefined;
     }>>;
 } & {
     policeForm: z.ZodOptional<z.ZodEffects<z.ZodArray<z.ZodEffects<z.ZodObject<{
@@ -797,17 +2421,81 @@ export declare const saveSchema: z.ZodObject<{
     units: {
         name: string;
         description: string;
+        settings: {
+            roles: {
+                required: {
+                    mode: "ALL" | "ANY";
+                    ids: string[];
+                };
+                accepted: string[];
+                denied: string[];
+                restricted: {
+                    mode: "ALL" | "ANY";
+                    ids: string[];
+                };
+                acceptedRemove: string[];
+                deniedRemove: string[];
+                pending: string[];
+                removeOnSubmit: string[];
+                managers: string[];
+            };
+            messages: {
+                accepted: string;
+                denied: string;
+                confirmation: string;
+                completion: string;
+            };
+            staffThreads: boolean;
+            cooldownMinutes: number;
+            timeLimitMinutes: number;
+        };
         key: string;
-        pingRoleIds: string[];
         questions: FormField[];
+        pingRoleIds: string[];
+        enabled: boolean;
         roleId?: string | undefined;
         channelId?: string | undefined;
+        acceptedChannelId?: string | undefined;
+        deniedChannelId?: string | undefined;
     }[];
     intro: string;
     police: {
+        name: string;
         description: string;
+        settings: {
+            roles: {
+                required: {
+                    mode: "ALL" | "ANY";
+                    ids: string[];
+                };
+                accepted: string[];
+                denied: string[];
+                restricted: {
+                    mode: "ALL" | "ANY";
+                    ids: string[];
+                };
+                acceptedRemove: string[];
+                deniedRemove: string[];
+                pending: string[];
+                removeOnSubmit: string[];
+                managers: string[];
+            };
+            messages: {
+                accepted: string;
+                denied: string;
+                confirmation: string;
+                completion: string;
+            };
+            staffThreads: boolean;
+            cooldownMinutes: number;
+            timeLimitMinutes: number;
+        };
         title: string;
         pingRoleIds: string[];
+        enabled: boolean;
+        channelId?: string | undefined;
+        acceptedChannelId?: string | undefined;
+        deniedChannelId?: string | undefined;
     };
     policeForm?: {
         key: string;
@@ -841,15 +2529,79 @@ export declare const saveSchema: z.ZodObject<{
         })[];
         roleId?: string | undefined;
         description?: string | undefined;
-        pingRoleIds?: string[] | undefined;
+        settings?: {
+            roles?: {
+                required?: {
+                    mode?: "ALL" | "ANY" | undefined;
+                    ids?: string[] | undefined;
+                } | undefined;
+                accepted?: string[] | undefined;
+                denied?: string[] | undefined;
+                restricted?: {
+                    mode?: "ALL" | "ANY" | undefined;
+                    ids?: string[] | undefined;
+                } | undefined;
+                acceptedRemove?: string[] | undefined;
+                deniedRemove?: string[] | undefined;
+                pending?: string[] | undefined;
+                removeOnSubmit?: string[] | undefined;
+                managers?: string[] | undefined;
+            } | undefined;
+            messages?: {
+                accepted?: string | undefined;
+                denied?: string | undefined;
+                confirmation?: string | undefined;
+                completion?: string | undefined;
+            } | undefined;
+            staffThreads?: boolean | undefined;
+            cooldownMinutes?: number | undefined;
+            timeLimitMinutes?: number | undefined;
+        } | undefined;
         channelId?: string | undefined;
+        pingRoleIds?: string[] | undefined;
+        enabled?: boolean | undefined;
+        acceptedChannelId?: string | undefined;
+        deniedChannelId?: string | undefined;
     }[];
     title?: string | undefined;
     intro?: string | undefined;
     police?: {
+        name?: string | undefined;
         description?: string | undefined;
+        settings?: {
+            roles?: {
+                required?: {
+                    mode?: "ALL" | "ANY" | undefined;
+                    ids?: string[] | undefined;
+                } | undefined;
+                accepted?: string[] | undefined;
+                denied?: string[] | undefined;
+                restricted?: {
+                    mode?: "ALL" | "ANY" | undefined;
+                    ids?: string[] | undefined;
+                } | undefined;
+                acceptedRemove?: string[] | undefined;
+                deniedRemove?: string[] | undefined;
+                pending?: string[] | undefined;
+                removeOnSubmit?: string[] | undefined;
+                managers?: string[] | undefined;
+            } | undefined;
+            messages?: {
+                accepted?: string | undefined;
+                denied?: string | undefined;
+                confirmation?: string | undefined;
+                completion?: string | undefined;
+            } | undefined;
+            staffThreads?: boolean | undefined;
+            cooldownMinutes?: number | undefined;
+            timeLimitMinutes?: number | undefined;
+        } | undefined;
         title?: string | undefined;
+        channelId?: string | undefined;
         pingRoleIds?: string[] | undefined;
+        enabled?: boolean | undefined;
+        acceptedChannelId?: string | undefined;
+        deniedChannelId?: string | undefined;
     } | undefined;
     policeForm?: {
         key: string;

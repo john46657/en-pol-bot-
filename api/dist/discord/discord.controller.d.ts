@@ -5,6 +5,120 @@ import { DangerService } from '../danger/danger.service';
 import { DutyService } from '../duty/duty.service';
 import { PrismaService } from '../prisma/prisma.service';
 import type { Actor } from '../audit/audit.service';
+declare const guildsBody: z.ZodObject<{
+    guilds: z.ZodArray<z.ZodObject<{
+        id: z.ZodString;
+        name: z.ZodString;
+        icon: z.ZodNullable<z.ZodString>;
+        channels: z.ZodArray<z.ZodObject<{
+            id: z.ZodString;
+            name: z.ZodString;
+            type: z.ZodEnum<["text", "category", "voice", "other"]>;
+            parentId: z.ZodNullable<z.ZodString>;
+            position: z.ZodNumber;
+        }, "strip", z.ZodTypeAny, {
+            id: string;
+            name: string;
+            type: "text" | "category" | "voice" | "other";
+            parentId: string | null;
+            position: number;
+        }, {
+            id: string;
+            name: string;
+            type: "text" | "category" | "voice" | "other";
+            parentId: string | null;
+            position: number;
+        }>, "many">;
+        roles: z.ZodArray<z.ZodObject<{
+            id: z.ZodString;
+            name: z.ZodString;
+            color: z.ZodNumber;
+            position: z.ZodNumber;
+        }, "strip", z.ZodTypeAny, {
+            id: string;
+            name: string;
+            color: number;
+            position: number;
+        }, {
+            id: string;
+            name: string;
+            color: number;
+            position: number;
+        }>, "many">;
+    }, "strip", z.ZodTypeAny, {
+        id: string;
+        name: string;
+        roles: {
+            id: string;
+            name: string;
+            color: number;
+            position: number;
+        }[];
+        icon: string | null;
+        channels: {
+            id: string;
+            name: string;
+            type: "text" | "category" | "voice" | "other";
+            parentId: string | null;
+            position: number;
+        }[];
+    }, {
+        id: string;
+        name: string;
+        roles: {
+            id: string;
+            name: string;
+            color: number;
+            position: number;
+        }[];
+        icon: string | null;
+        channels: {
+            id: string;
+            name: string;
+            type: "text" | "category" | "voice" | "other";
+            parentId: string | null;
+            position: number;
+        }[];
+    }>, "many">;
+}, "strip", z.ZodTypeAny, {
+    guilds: {
+        id: string;
+        name: string;
+        roles: {
+            id: string;
+            name: string;
+            color: number;
+            position: number;
+        }[];
+        icon: string | null;
+        channels: {
+            id: string;
+            name: string;
+            type: "text" | "category" | "voice" | "other";
+            parentId: string | null;
+            position: number;
+        }[];
+    }[];
+}, {
+    guilds: {
+        id: string;
+        name: string;
+        roles: {
+            id: string;
+            name: string;
+            color: number;
+            position: number;
+        }[];
+        icon: string | null;
+        channels: {
+            id: string;
+            name: string;
+            type: "text" | "category" | "voice" | "other";
+            parentId: string | null;
+            position: number;
+        }[];
+    }[];
+}>;
 declare const redeem: z.ZodObject<{
     code: z.ZodString;
     discordId: z.ZodString;
@@ -47,6 +161,7 @@ declare const openQ: z.ZodObject<{
     discordId: string;
 }>;
 declare const application: z.ZodObject<{
+    guildId: z.ZodOptional<z.ZodString>;
     robloxUsername: z.ZodString;
     robloxUserId: z.ZodOptional<z.ZodString>;
     discordId: z.ZodString;
@@ -59,6 +174,7 @@ declare const application: z.ZodObject<{
     robloxUsername: string;
     answers: Record<string, string | string[]>;
     robloxUserId?: string | undefined;
+    guildId?: string | undefined;
     discordName?: string | undefined;
     durationSec?: number | undefined;
     joinedAt?: Date | undefined;
@@ -67,6 +183,7 @@ declare const application: z.ZodObject<{
     robloxUsername: string;
     answers: Record<string, string | string[]>;
     robloxUserId?: string | undefined;
+    guildId?: string | undefined;
     discordName?: string | undefined;
     durationSec?: number | undefined;
     joinedAt?: Date | undefined;
@@ -80,6 +197,8 @@ export declare class DiscordController {
         discordId: string | null;
         linkedAt: Date | null;
     }>;
+    /** Server des Bots mit Channels und Rollen (Namen + Auswahllisten im Dashboard). */
+    guilds(): Promise<import("./discord.service").DiscordGuildInfo[]>;
     linkCode(a: Actor): Promise<{
         code: string;
         expiresAt: Date;
@@ -100,6 +219,7 @@ export declare class BotController {
         username: string;
     }>;
     config(): Promise<import("./discord.service").DiscordChannels>;
+    guilds(b: z.infer<typeof guildsBody>): Promise<void>;
     outbox(q: z.infer<typeof outboxQ>): import("@prisma/client").Prisma.PrismaPromise<{
         id: string;
         createdAt: Date;

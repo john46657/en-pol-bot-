@@ -4,6 +4,24 @@ import { AuditService, Actor } from '../audit/audit.service';
 export declare const CHANNEL_KEYS: readonly ["dispatch", "wanted", "announcements", "applications", "danger", "sek", "qualifications", "duty", "tickets"];
 export type ChannelKey = (typeof CHANNEL_KEYS)[number];
 /** Channel-/Rollen-IDs aus den Einstellungen. Die Benachrichtigungs-Channels dürfen Komma-Listen sein (mehrere Channels/Server). */
+export interface DiscordGuildInfo {
+    id: string;
+    name: string;
+    icon: string | null;
+    channels: {
+        id: string;
+        name: string;
+        type: 'text' | 'category' | 'voice' | 'other';
+        parentId: string | null;
+        position: number;
+    }[];
+    roles: {
+        id: string;
+        name: string;
+        color: number;
+        position: number;
+    }[];
+}
 export interface DiscordChannels {
     guildId?: string;
     dispatch?: string;
@@ -68,6 +86,9 @@ export declare class DiscordService {
     enqueue(channelKey: ChannelKey, type: string, payload: Record<string, unknown>, opts?: {
         always?: boolean;
     }): Promise<void>;
+    /** Server des Bots mit Channels und Rollen (meldet der Bot regelmäßig) – für Namen und Auswahllisten im Dashboard. */
+    guilds(): Promise<DiscordGuildInfo[]>;
+    saveGuilds(guilds: DiscordGuildInfo[]): Promise<void>;
     getState(key: string): Promise<unknown>;
     setState(key: string, value: unknown): Promise<void>;
     pending(limit: number): Prisma.PrismaPromise<{

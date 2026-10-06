@@ -461,6 +461,7 @@ model Application {
   status         String    @default("SUBMITTED")
   answers        Json
   grantRoleIds   String[]  @default([]) // Discord-Rollen aus Rollen-Auswahl-Fragen, vergeben bei Annahme
+  guildId        String? // Discord-Server, auf dem die Bewerbung gestartet wurde
   robloxUsername String
   robloxUserId   String?
   decidedById    String?   @db.Uuid
@@ -699,6 +700,7 @@ model QualificationApplication {
   userId         String?   @db.Uuid
   answers        Json
   grantRoleIds   String[]  @default([]) // Discord-Rollen aus Rollen-Auswahl-Fragen, vergeben bei Annahme
+  guildId        String? // Discord-Server, auf dem die Bewerbung gestartet wurde
   status         String    @default("OPEN")
   decidedById    String?   @db.Uuid
   decidedAt      DateTime?

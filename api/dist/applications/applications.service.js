@@ -20,6 +20,9 @@ const numbering_1 = require("../common/numbering");
 const transition_1 = require("../common/transition");
 const pagination_1 = require("../common/pagination");
 const web_url_1 = require("../common/web-url");
+const qualifications_config_1 = require("../qualifications/qualifications.config");
+const decision_1 = require("../qualifications/decision");
+const shared_2 = require("@enrp/shared");
 /** Die Beschriftungen sind zugleich die Fragen, die der Discord-Bot per Direktnachricht stellt. */
 exports.DEFAULT_FORM = [
     { key: 'experience', label: 'Welche Erfahrung hast du im Polizei-Roleplay (auch auf anderen Servern)?', required: true, maxLength: 2000 },
@@ -47,7 +50,9 @@ let ApplicationsService = class ApplicationsService {
     async submit(d, meta = {}) {
         if (d.robloxUserId && !(0, shared_1.isValidRobloxUserId)(d.robloxUserId))
             throw new errors_1.AppError('VALIDATION_FAILED', 'Invalid Roblox user id.');
-        const form = await this.form();
+        const [form, police] = await Promise.all([this.form(), this.police()]);
+        if (!police.enabled)
+            throw new errors_1.AppError('CONFLICT', 'Bewerbungen sind derzeit geschlossen.');
         const answers = {};
         const grantRoleIds = new Set();
         for (const f of form) {
@@ -63,17 +68,58 @@ let ApplicationsService = class ApplicationsService {
         }
         if (meta.discordId && (await this.openForDiscord(meta.discordId)).open)
             throw new errors_1.AppError('CONFLICT', 'An open application already exists for this Discord account.');
-        const a = await this.prisma.application.create({ data: { number: (0, numbering_1.makeNumber)('APP'), robloxUsername: d.robloxUsername, robloxUserId: d.robloxUserId, answers, grantRoleIds: [...grantRoleIds], discordId: meta.discordId, discordName: meta.discordName, durationSec: meta.durationSec, joinedAt: meta.joinedAt, source: meta.discordId ? 'DISCORD' : 'WEB' } });
+        if (meta.discordId) {
+            const last = await this.prisma.application.findFirst({ where: { discordId: meta.discordId }, orderBy: { createdAt: 'desc' }, select: { createdAt: true } });
+            const wait = (0, decision_1.cooldownLeft)(police.settings, last?.createdAt);
+            if (wait)
+                throw new errors_1.AppError('CONFLICT', `Du kannst dich erst in ${(0, shared_2.formatMinutes)(wait)} erneut bewerben.`);
+        }
+        const a = await this.prisma.application.create({ data: { number: (0, numbering_1.makeNumber)('APP'), robloxUsername: d.robloxUsername, robloxUserId: d.robloxUserId, answers, grantRoleIds: [...grantRoleIds], guildId: meta.guildId ?? null, discordId: meta.discordId, discordName: meta.discordName, durationSec: meta.durationSec, joinedAt: meta.joinedAt, source: meta.discordId ? 'DISCORD' : 'WEB' } });
         await this.audit.record({ userId: null }, { action: 'application.submit', module: 'applications', entityType: 'Application', entityId: a.id, after: { source: a.source } });
-        // Rollen-Ping für neue Bewerbungen (Qualifications → Setup → Bewerbung bei EN Polizei)
-        const qcfg = (await this.prisma.systemSetting.findUnique({ where: { key: 'qualifications.config' } }))?.value;
-        const pingRoleIds = Array.isArray(qcfg?.police?.pingRoleIds) ? qcfg.police.pingRoleIds.filter((r) => typeof r === 'string' && /^\d{15,25}$/.test(r)) : [];
         await this.discord.enqueue('applications', 'application.submitted', {
-            id: a.id, pingRoleIds, number: a.number, robloxUsername: a.robloxUsername, robloxUserId: a.robloxUserId ?? null, discordId: meta.discordId ?? null, discordName: meta.discordName ?? null, source: a.source,
+            id: a.id, pingRoleIds: police.pingRoleIds, ...(police.channelId ? { channelId: police.channelId } : {}), guildName: meta.guildId ? (await this.discord.guilds()).find((g) => g.id === meta.guildId)?.name ?? null : null, number: a.number, robloxUsername: a.robloxUsername, robloxUserId: a.robloxUserId ?? null, discordId: meta.discordId ?? null, discordName: meta.discordName ?? null, source: a.source,
             answers: form.filter((f) => answers[f.key]).map((f) => ({ question: f.label, answer: answers[f.key] })),
             durationSec: a.durationSec, joinedAt: a.joinedAt?.toISOString() ?? null, createdAt: a.createdAt.toISOString(), dashboardUrl: (0, web_url_1.webUrl)(`/applications/${a.id}`),
-        });
+            ...(police.settings.staffThreads ? { thread: true } : {}),
+        }, { always: !!police.channelId });
+        const roles = (0, decision_1.submitRoles)(police.settings);
+        if (meta.discordId && (roles.add.length || roles.remove.length))
+            await this.discord.enqueue('applications', 'member.roles', { discordId: meta.discordId, ...roles, reason: `Bewerbung ${a.number}` }, { always: true });
         return { number: a.number, status: a.status };
+    }
+    /** Einstellungen der Polizei-Bewerbung (Qualifications/Applications → Setup). */
+    async police() {
+        const v = (await this.prisma.systemSetting.findUnique({ where: { key: 'qualifications.config' } }))?.value;
+        const p = qualifications_config_1.policeSchema.safeParse(v?.police ?? {});
+        return p.success ? p.data : qualifications_config_1.policeSchema.parse({});
+    }
+    /** Entscheidungs-DM mit Text und Rollen aus den Einstellungen. */
+    async decided(actor, a, to, reason) {
+        if (!a.discordId)
+            return;
+        const police = await this.police();
+        const roles = (0, decision_1.decisionRoles)(police.settings, to === 'ACCEPTED', a.grantRoleIds);
+        const link = actor.userId ? await this.prisma.discordLink.findUnique({ where: { userId: actor.userId } }) : null;
+        const by = !link && actor.userId ? await this.prisma.user.findUnique({ where: { id: actor.userId }, select: { displayName: true } }) : null;
+        const decider = link ? `<@${link.discordId}>` : by?.displayName ?? 'dem Team';
+        await this.discord.enqueue('applications', 'application.decided', {
+            discordId: a.discordId, status: to, number: a.number, reason, roleIds: roles.add, removeRoleIds: roles.remove,
+            message: (0, decision_1.decisionMessage)(police.settings, to === 'ACCEPTED', { applicationName: police.name, number: a.number, decider, applicantId: a.discordId, reason }),
+        }, { always: true });
+    }
+    /** Wie bei Appy: entschiedene Bewerbung in den Channel für angenommene/abgelehnte Bewerbungen posten. */
+    async archive(a, to, reason, decidedByName) {
+        const police = await this.police();
+        const channelId = to === 'ACCEPTED' ? police.acceptedChannelId : police.deniedChannelId;
+        if (!channelId)
+            return;
+        const form = await this.form();
+        const answers = (a.answers ?? {});
+        await this.discord.enqueue('applications', 'application.archived', {
+            id: a.id, number: a.number, robloxUsername: a.robloxUsername, robloxUserId: a.robloxUserId, discordId: a.discordId, discordName: a.discordName, source: a.source,
+            answers: form.filter((f) => answers[f.key]).map((f) => ({ question: f.label, answer: answers[f.key] })), durationSec: a.durationSec, joinedAt: a.joinedAt?.toISOString() ?? null, createdAt: a.createdAt.toISOString(),
+            status: to, reason, decidedByName, channelId, guildName: a.guildId ? (await this.discord.guilds()).find((g) => g.id === a.guildId)?.name ?? null : null,
+        }, { always: true });
     }
     /** Für den Bot: hat dieses Discord-Konto schon eine offene Bewerbung? */
     async openForDiscord(discordId) {
@@ -101,15 +147,18 @@ let ApplicationsService = class ApplicationsService {
             await this.audit.record(actor, { action: `application.${to.toLowerCase()}`, module: 'applications', entityType: 'Application', entityId: id, before: { status: a.status }, after: { status: to }, reason: reason || 'Entschieden über Discord' }, tx);
             return { ...a, status: to };
         });
-        if (after.discordId)
-            await this.discord.enqueue('applications', 'application.decided', { discordId: after.discordId, status: to, number: after.number, reason: reason || null, roleIds: to === 'ACCEPTED' ? after.grantRoleIds : [] }, { always: true });
+        await this.decided(actor, after, to, reason || null);
         const by = actor.userId ? await this.prisma.user.findUnique({ where: { id: actor.userId }, select: { displayName: true } }) : null;
+        await this.archive(after, to, reason || null, by?.displayName ?? null);
         return { id, number: after.number, status: to, decidedByName: by?.displayName ?? null, reason: reason || null };
     }
     async list(p, status) {
-        const where = { ...(status ? { status } : {}), ...(p.q ? { OR: [{ number: { contains: p.q.toUpperCase() } }, { robloxUsername: { contains: p.q, mode: 'insensitive' } }] } : {}) };
+        const where = { ...(status === 'OPEN' ? { status: { in: OPEN_STATUSES } } : status ? { status } : {}), ...(p.q ? { OR: [{ number: { contains: p.q.toUpperCase() } }, { robloxUsername: { contains: p.q, mode: 'insensitive' } }] } : {}) };
         const [items, total] = await Promise.all([this.prisma.application.findMany({ where, orderBy: { createdAt: 'desc' }, ...(0, pagination_1.skipTake)(p) }), this.prisma.application.count({ where })]);
-        return (0, pagination_1.pageResult)(items, total, p);
+        // wer entschieden hat (Name) – für die Karten-Ansicht
+        const ids = [...new Set(items.map((a) => a.decidedById).filter((x) => !!x))];
+        const users = new Map((await this.prisma.user.findMany({ where: { id: { in: ids } }, select: { id: true, displayName: true } })).map((u) => [u.id, u.displayName]));
+        return (0, pagination_1.pageResult)(items.map((a) => ({ ...a, decidedByName: a.decidedById ? users.get(a.decidedById) ?? '—' : null })), total, p);
     }
     async get(id) {
         const a = await this.prisma.application.findUnique({ where: { id } });
@@ -130,8 +179,11 @@ let ApplicationsService = class ApplicationsService {
             return after;
         }).then(async (after) => {
             // Entscheidung per Direktnachricht (nur bei Bewerbung über Discord). Der interne Grund wird NICHT mitgeschickt.
-            if (after.discordId && (to === 'ACCEPTED' || to === 'REJECTED'))
-                await this.discord.enqueue('applications', 'application.decided', { discordId: after.discordId, status: to, number: after.number, roleIds: to === 'ACCEPTED' ? after.grantRoleIds : [] }, { always: true });
+            if (to === 'ACCEPTED' || to === 'REJECTED') {
+                await this.decided(actor, after, to, null); // der interne Grund aus dem Web bleibt intern
+                const by = actor.userId ? await this.prisma.user.findUnique({ where: { id: actor.userId }, select: { displayName: true } }) : null;
+                await this.archive(after, to, null, by?.displayName ?? null); // der interne Grund aus dem Web bleibt intern
+            }
             return after;
         });
     }
