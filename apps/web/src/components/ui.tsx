@@ -61,12 +61,16 @@ Select.displayName = 'Select';
 
 export function Modal({ open, title, onClose, children, wide }: { open: boolean; title: string; onClose: () => void; children: ReactNode; wide?: boolean }) {
   const ref = useRef<HTMLDivElement>(null);
+  // onClose ist oft eine neue Funktion pro Render – nicht als Abhängigkeit, sonst springt der Fokus bei jedem Tastendruck zurück
+  const close = useRef(onClose);
+  close.current = onClose;
   useEffect(() => {
     if (!open) return;
     const prev = document.activeElement as HTMLElement | null;
-    ref.current?.querySelector<HTMLElement>('input,select,textarea,button')?.focus();
+    // erstes Eingabefeld fokussieren (nicht den Schließen-Button)
+    (ref.current?.querySelector<HTMLElement>('header ~ div :is(input,select,textarea,button)') ?? ref.current?.querySelector<HTMLElement>('button'))?.focus();
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onClose();
+      if (e.key === 'Escape') close.current();
       if (e.key === 'Tab' && ref.current) { // Fokus-Falle
         const f = [...ref.current.querySelectorAll<HTMLElement>('button,input,select,textarea,a[href]')].filter((x) => !x.hasAttribute('disabled'));
         if (!f.length) return;
@@ -76,7 +80,7 @@ export function Modal({ open, title, onClose, children, wide }: { open: boolean;
     };
     document.addEventListener('keydown', onKey);
     return () => { document.removeEventListener('keydown', onKey); prev?.focus(); };
-  }, [open, onClose]);
+  }, [open]);
   if (!open) return null;
   return createPortal(
     <div className="fixed inset-0 z-50 grid place-items-center bg-black/60 p-2 sm:p-4" onMouseDown={(e) => e.target === e.currentTarget && onClose()}>
