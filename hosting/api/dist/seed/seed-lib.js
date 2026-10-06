@@ -74,7 +74,7 @@ async function seedTickets(prisma) {
     if (!(await prisma.ticketCategory.count()) && !(await prisma.ticketPanel.count())) {
         const support = await prisma.ticketCategory.create({ data: {
                 name: 'Support', emoji: '🎫', description: 'Allgemeine Fragen und Hilfe', position: 0, channelNameFormat: 'support-{username}',
-                questions: [{ id: 'q1', label: 'Was ist dein Anliegen?', type: 'LONG', required: true, options: [] }],
+                questions: [], // keine Startfrage – Tickets starten direkt; Fragen bei Bedarf unter Categories anlegen
                 buttons: (0, shared_1.defaultTicketButtons)(),
             } });
         await prisma.ticketPanel.create({ data: {
