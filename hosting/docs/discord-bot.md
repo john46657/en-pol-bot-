@@ -19,6 +19,9 @@ Der Bot (`apps/bot`, TypeScript, discord.js 14) ist ein **schlanker Client der S
 | `/einheiten` | Einheiten + Status | `dispatch.view` |
 | `/team` | wer ist im Dienst (Einheit, Einsatz) | `team.view` |
 | `/dienststunden [tage] [alle]` | eigene Dienststunden der letzten 7 (1–90) Tage nach Status; mit `alle` die Stunden aller Beamten | `team.view` · `alle`: `team.manage` |
+| `/sek [aktion] [mitglied]` | SEK: Mitgliederliste, letzte Einsatzberichte, eigener Status; Mitglieder hinzufügen/entfernen (+ optionale SEK-Rolle) | `sek.view` · Status: `team.view` · verwalten: `sek.manage` |
+| `/sek-bericht` | SEK-Einsatzbericht per Formular (Datum, Einsatzart, Beschreibung) | `sek.report` + SEK-Mitglied |
+| `/sek-bewerbung` | Bewerbung für das SEK per Formular; Entscheidung per Direktnachricht | `team.view` |
 | `/dienst status` | eigener Dienststatus: an, pause, training, verwaltung, aus | `team.view` |
 | `/einheitstatus rufzeichen status` | Einheitenstatus ändern | `dispatch.edit` |
 | `/einsatz titel [prioritaet] [ort]` | Einsatz anlegen | `incidents.create` |

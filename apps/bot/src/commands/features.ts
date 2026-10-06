@@ -2,6 +2,7 @@ import { BotApiError } from '../api';
 import { clip, COLORS, DANGER, dangerEmbed, errorReply, listEmbed, okReply, plain, type ButtonSpec, type DangerState, type EmbedData, type ModalField, type Reply, type Row } from '../format';
 import type { CommandDef, Ctx, InteractionDef } from './types';
 import { mapError } from './errors';
+import { SEK_INTERACTION } from './sek';
 
 const str = (c: Ctx, k: string) => String(c.opts[k] ?? '').trim();
 const choices = (m: Record<string, string>) => Object.keys(m).map((k) => ({ name: k.replace('_', ' '), value: k }));
@@ -158,6 +159,7 @@ export const FEATURE_COMMANDS: CommandDef[] = [
 ];
 
 export const INTERACTIONS: InteractionDef[] = [
+  SEK_INTERACTION,
   {
     prefix: 'danger',
     async run(c) {

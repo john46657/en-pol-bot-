@@ -13,6 +13,7 @@ import { Dispatch } from './pages/Dispatch';
 import { Team } from './pages/Team';
 const Communication = lazy(() => import('./pages/Communication').then((m) => ({ default: m.Communication })));
 const Analytics = lazy(() => import('./pages/Analytics').then((m) => ({ default: m.Analytics })));
+const Sek = lazy(() => import('./pages/Sek').then((m) => ({ default: m.Sek })));
 const Academy = lazy(() => import('./pages/Academy').then((m) => ({ default: m.Academy })));
 import { PersonDetail } from './pages/PersonDetail';
 import { ReportDetail } from './pages/ReportDetail';
@@ -71,6 +72,7 @@ export function App() {
           <Route path="personnel/:id" element={rec('personnel', 'personnel.view')} />
           <Route path="applications" element={list(R.applications as never, 'applications.view')} />
           <Route path="applications/:id" element={rec('applications', 'applications.view')} />
+          <Route path="sek" element={<Guard perm="team.view"><Sek /></Guard>} />
           <Route path="academy" element={<Guard perm="academy.view"><Academy /></Guard>} />
           <Route path="communication" element={<Guard perm="communication.view"><Communication /></Guard>} />
           <Route path="analytics" element={<Guard perm="analytics.view"><Analytics /></Guard>} />

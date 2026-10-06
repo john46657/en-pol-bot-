@@ -66,9 +66,25 @@ export function renderOutbox(type: string, p: Record<string, unknown>): EmbedDat
       return { title: `📋 Neue Bewerbung ${p.number}`, color: COLORS.info, description: 'Prüfung und Entscheidung im System (Bereich *Applications*).', fields: [
         { name: 'Roblox-Name', value: clip(plain(p.robloxUsername), 200), inline: true }, { name: 'Quelle', value: p.source === 'DISCORD' ? 'Discord' : 'Web', inline: true },
         ...(p.discordId ? [{ name: 'Discord', value: `<@${String(p.discordId)}>`, inline: true }] : [])] };
+    case 'sek.report':
+      return { title: `🎯 SEK-Einsatzbericht ${p.number}`, color: COLORS.neutral, description: clip(plain(p.description), 3500), fields: [
+        { name: 'Einsatzart', value: clip(plain(p.missionType), 200), inline: true }, { name: 'Datum', value: new Date(String(p.occurredAt)).toLocaleString('de-DE', { timeZone: 'Europe/Berlin' }), inline: true }, { name: 'Beamter', value: clip(plain(p.author), 200), inline: true }] };
+    case 'sek.application':
+      return { title: `🎯 Neue SEK-Bewerbung ${p.number}`, color: COLORS.neutral, description: 'Entscheidung im System (Bereich *SEK*).', fields: [
+        { name: 'Bewerber', value: clip(`${p.callsign ? `${plain(p.callsign)} · ` : ''}${plain(p.applicant)}${p.discordId ? ` (<@${String(p.discordId)}>)` : ''}`, 300), inline: true },
+        { name: 'Dienstzeit', value: clip(plain(p.serviceTime), 200), inline: true },
+        { name: 'Motivation', value: clip(plain(p.motivation), 1024) },
+        ...(p.experience ? [{ name: 'Erfahrung', value: clip(plain(p.experience), 1024) }] : [])] };
     default:
       return null;
   }
+}
+
+/** Direktnachricht nach der Entscheidung über eine SEK-Bewerbung. */
+export function sekDecisionText(p: { status?: unknown; number?: unknown }): string {
+  return p.status === 'ACCEPTED'
+    ? `🎯 Deine SEK-Bewerbung **${p.number}** wurde **angenommen** – willkommen im SEK!`
+    : `Deine SEK-Bewerbung **${p.number}** wurde diesmal leider **nicht angenommen**.`;
 }
 
 /** Texte der Entscheidungs-Direktnachricht an Bewerber (ohne internen Grund). */

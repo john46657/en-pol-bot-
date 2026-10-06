@@ -31,13 +31,13 @@ pnpm e2e         # Playwright (uses installed Google Chrome)
 | RBAC (central resolver, user DENY/ALLOW overrides, groups, wildcards), Roblox ID (manual) | done |
 | Persons (+merge), Vehicles, Tickets, Legal codes | done |
 | Dispatch/Incidents/Units, Reports (versioned), Complaints, Investigations, Wanted, Evidence (custody) | done |
-| Personnel, Duty, Applications, Academy, Communication, Notifications, Search, Analytics | done (see docs for limits) |
+| Personnel, Duty, Applications, SEK special unit ([docs/sek.md](docs/sek.md)), Academy, Communication, Notifications, Search, Analytics | done (see docs for limits) |
 | Audit (append-only, DB trigger) + Timeline, Exports (CSV/JSON/PDF), Media upload, Settings, Retention | done |
 | WebSockets (authorized rooms) | done |
 | React UI: shell, search, notifications, dashboard (customizable), dispatch board, all record lists/details, admin | done |
 | Panel hosting package (`pnpm bundle:hosting` → one ZIP with API + web + bot, e.g. for bot-hosting.net): [docs/hosting-bot-hosting.md](docs/hosting-bot-hosting.md) | package simulated locally (install → start → login); **real panel untested** |
 | Hosting on a VPS (Docker Compose + Caddy HTTPS + daily DB backups + setup/update/restore scripts): [docs/deployment.md](docs/deployment.md) | written; production artifact tested locally, **Docker itself not run** |
-| Discord bot (`apps/bot`): 31 slash commands (lookups, duty + duty hours, dispatch, create ticket/report/complaint/investigation/wanted/evidence, applications via modal + decision DM, danger-level button panel, self-updating team list, radio whitelist, support tickets, Roblox lookup) with the linked user's permissions, channel notifications via outbox, one-time-code linking ([docs/discord-bot.md](docs/discord-bot.md)) | done; **not tested against real Discord** |
+| Discord bot (`apps/bot`): 34 slash commands (lookups, duty + duty hours, SEK roster/reports/applications, dispatch, create ticket/report/complaint/investigation/wanted/evidence, applications via modal + decision DM, danger-level button panel, self-updating team list, radio whitelist, support tickets, Roblox lookup) with the linked user's permissions, channel notifications via outbox, one-time-code linking ([docs/discord-bot.md](docs/discord-bot.md)) | done; **not tested against real Discord** |
 | Standalone bot package (`pnpm bundle:bot` → single self-contained `bot.js` + source) | done; loads without node_modules (verified), **real Discord untested** |
 | MDT portal, Team dashboard (supervisor actions), one-command dev start with demo data | done |
 | Browser E2E tests (10 specs), public application page `/apply` | done |

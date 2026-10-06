@@ -4,7 +4,7 @@ exports.pollOnce = pollOnce;
 exports.startOutboxLoop = startOutboxLoop;
 const format_1 = require("./format");
 /** Benachrichtigungen, die per Direktnachricht an eine Person gehen statt in einen Channel. */
-const DIRECT = { 'application.decided': format_1.applicationDecisionText };
+const DIRECT = { 'application.decided': format_1.applicationDecisionText, 'sek.application.decided': format_1.sekDecisionText };
 /**
  * Holt offene Benachrichtigungen aus der System-API, postet sie und quittiert.
  * Fehlgeschlagene Sendungen werden gemeldet (die API zählt Versuche und gibt nach 5 Fehlversuchen auf).

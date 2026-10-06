@@ -13,8 +13,10 @@ export const STARTER_ROLES: Record<string, { description: string; grants: readon
   Supervisor: { description: 'Schichtleitung', grants: [...pick('team.manage', 'dispatch.assign', 'dispatch.edit', 'incidents.close', 'reports.review', 'reports.approve', 'reports.reject', 'tickets.void', 'complaints.view', 'complaints.assign', 'wanted.activate', 'wanted.clear', 'applications.view', 'applications.review', 'analytics.view')] },
   Dispatch: { description: 'Leitstelle', grants: [...pick('dispatch.create', 'dispatch.edit', 'dispatch.assign', 'dispatch.close', 'dispatch.manage', 'incidents.create', 'incidents.edit', 'incidents.close', 'communication.moderate')] },
   Investigator: { description: 'Ermittler', grants: [...pick('investigations.view', 'investigations.create', 'investigations.edit', 'investigations.close', 'complaints.view', 'complaints.investigate', 'evidence.transfer', 'evidence.release', 'persons.edit')] },
+  SEK: { description: 'Spezialeinsatzkommando (Mitglieder)', grants: [...pick('sek.view', 'sek.report')] },
+  'SEK Leitung': { description: 'Leitung des SEK (Mitglieder, Bewerbungen)', grants: [...only('sek')] },
   'Training Staff': { description: 'Academy-Ausbilder', grants: [...pick('academy.view', 'academy.manage', 'personnel.view')] },
-  'Police Administration': { description: 'Polizeiführung', grants: [...only('personnel', 'applications', 'analytics'), ...pick('persons.archive', 'vehicles.archive', 'complaints.resolve', 'complaints.close', 'audit.view', 'users.view', 'roles.view', 'dashboard.view', 'team.view', 'team.manage')] },
+  'Police Administration': { description: 'Polizeiführung', grants: [...only('personnel', 'applications', 'analytics', 'sek'), ...pick('persons.archive', 'vehicles.archive', 'complaints.resolve', 'complaints.close', 'audit.view', 'users.view', 'roles.view', 'dashboard.view', 'team.view', 'team.manage')] },
   'System Administrator': { description: 'Vollzugriff auf Systemverwaltung', grants: ['*'] },
 };
 

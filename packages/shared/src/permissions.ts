@@ -15,6 +15,7 @@ export const PERMISSION_CATALOG = {
   personnel: ['view', 'create', 'edit', 'promote', 'discipline'],
   applications: ['view', 'review', 'decide'],
   academy: ['view', 'manage'],
+  sek: ['view', 'report', 'manage'],
   communication: ['view', 'send', 'moderate'],
   analytics: ['view'],
   audit: ['view', 'export'],

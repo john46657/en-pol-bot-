@@ -8,6 +8,8 @@ import { createLive } from '../src/live';
 import { pollOnce } from '../src/outbox';
 import type { Platform } from '../src/platform';
 import { robloxLookup } from '../src/roblox';
+import { parseGermanDate } from '../src/commands/sek';
+import { renderOutbox } from '../src/format';
 
 const ME = '123456789012345678', OTHER = '223456789012345678', GUILD = '323456789012345678', CHANNEL = '423456789012345678';
 type Call = { kind: 'user' | 'service'; method: string; path: string; body?: unknown };
@@ -204,5 +206,53 @@ describe('roblox lookup', () => {
     expect(await robloxLookup('no spaces allowed', ok as never)).toBeNull();
     expect(ok).toHaveBeenCalledTimes(1);
     expect(await robloxLookup('Roblox', (async () => { throw new Error('down'); }) as never)).toBeNull();
+  });
+});
+
+describe('SEK', () => {
+  it('/sek liste and berichte show roster and reports; mein status explains next steps', async () => {
+    const { api } = fakeApi({ 'GET /sek/members': [{ displayName: 'Oscar', callsign: 'S-1', rank: 'Officer' }], 'GET /sek/reports': [{ number: 'SEK-2026-AB', occurredAt: '2026-10-01T20:00:00Z', missionType: 'Zugriff', authorName: 'Oscar', authorCallsign: 'S-1' }], 'GET /sek/me': { member: false, openApplication: null } });
+    expect(text(await byName('sek')!.run(ctx(api)))).toContain('**S-1** Oscar · Officer');
+    expect(text(await byName('sek')!.run(ctx(api, { opts: { aktion: 'berichte' } })))).toContain('SEK-2026-AB');
+    expect(text(await byName('sek')!.run(ctx(api, { opts: { aktion: 'mein_status' } })))).toContain('/sek-bewerbung');
+  });
+  it('/sek hinzufuegen adds by Discord id and syncs the optional SEK role', async () => {
+    const { api, calls } = fakeApi({ 'POST /sek/members': { displayName: 'Bea' } });
+    const { p, log } = fakePlatform();
+    const r = await byName('sek')!.run(ctx(api, { opts: { aktion: 'hinzufuegen', mitglied: OTHER }, platform: p, config: async () => ({ sekRole: '523456789012345678' }) }));
+    expect(calls[0]).toMatchObject({ method: 'POST', path: '/sek/members', body: { discordId: OTHER } });
+    expect(log).toContain(`role ${GUILD} ${OTHER} 523456789012345678 true`);
+    expect(text(r)).toContain('Mitglied im SEK');
+    expect(text(await byName('sek')!.run(ctx(api, { opts: { aktion: 'entfernen' } })))).toContain('Bitte ein Mitglied');
+  });
+  it('/sek-bewerbung and /sek-bericht open forms; submissions go to the API as the user', async () => {
+    expect((await byName('sek-bewerbung')!.run(ctx(fakeApi({}).api))).modal?.id).toBe('sek:apply');
+    expect((await byName('sek-bericht')!.run(ctx(fakeApi({}).api))).modal?.id).toBe('sek:report');
+    const { api, calls } = fakeApi({ 'POST /sek/applications': { number: 'SEKB-1' }, 'POST /sek/reports': { number: 'SEK-1' } });
+    const apply = interactionFor('sek:apply')!;
+    expect(text(await apply.def.run({ ...ctx(api), args: apply.args, fields: { dienstzeit: '2 Monate', motivation: 'Ich will helfen, wirklich.', erfahrung: '' } }))).toContain('SEKB-1');
+    expect(calls[0]!.body).toEqual({ serviceTime: '2 Monate', motivation: 'Ich will helfen, wirklich.' });
+    const rep = interactionFor('sek:report')!;
+    expect(text(await rep.def.run({ ...ctx(api), args: rep.args, fields: { datum: '32.13.2026', einsatzart: 'Zugriff', beschreibung: 'Lagerhalle gestürmt' } }))).toContain('Ungültiges Datum');
+    expect(text(await rep.def.run({ ...ctx(api), args: rep.args, fields: { datum: '01.10.2026 21:30', einsatzart: 'Zugriff', beschreibung: 'Lagerhalle gestürmt' } }))).toContain('SEK-1');
+    expect(calls[1]).toMatchObject({ path: '/sek/reports', body: { missionType: 'Zugriff' } });
+    const denied = fakeApi({ 'POST /sek/reports': new BotApiError(403, 'PERMISSION_DENIED', 'x') });
+    expect(text(await rep.def.run({ ...ctx(denied.api), args: rep.args, fields: { datum: '', einsatzart: 'Zugriff', beschreibung: 'Lagerhalle gestürmt' } }))).toContain('nur SEK-Mitglieder');
+  });
+  it('parses German dates and rejects invalid or future ones', () => {
+    const now = new Date(2026, 9, 6, 12, 0);
+    expect(parseGermanDate('', now)).toBe(now);
+    expect(parseGermanDate('5.10.26 21:30', now)?.getHours()).toBe(21);
+    expect(parseGermanDate('31.02.2026', now)).toBeNull();
+    expect(parseGermanDate('01.01.2030', now)).toBeNull();
+    expect(parseGermanDate('gestern', now)).toBeNull();
+  });
+  it('renders SEK channel posts and sends decision DMs', async () => {
+    expect(renderOutbox('sek.application', { number: 'SEKB-1', applicant: 'Bea', serviceTime: '2 Monate', motivation: 'x', discordId: OTHER })?.fields?.map((f) => f.value).join(' ')).toContain(`<@${OTHER}>`);
+    expect(renderOutbox('sek.report', { number: 'SEK-1', missionType: 'Zugriff', description: 'd', occurredAt: '2026-10-01T20:00:00Z', author: 'S-1' })?.title).toContain('SEK-1');
+    const { api } = fakeApi({ 'GET /bot/config': {}, 'GET /bot/outbox': [{ id: 'o1', type: 'sek.application.decided', channelKey: 'sek', payload: { discordId: OTHER, status: 'ACCEPTED', number: 'SEKB-1' } }], 'POST /bot/outbox/o1/ack': {} });
+    const dms: string[] = [];
+    await pollOnce(api, async () => undefined, () => undefined, async (u, t) => { dms.push(`${u} ${t}`); });
+    expect(dms[0]).toContain('angenommen');
   });
 });

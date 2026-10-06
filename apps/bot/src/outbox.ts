@@ -1,11 +1,11 @@
 import type { Api } from './api';
-import { applicationDecisionText, renderOutbox, type EmbedData } from './format';
+import { applicationDecisionText, renderOutbox, sekDecisionText, type EmbedData } from './format';
 
 interface OutboxItem { id: string; type: string; channelKey: string; payload: Record<string, unknown> }
 export type Sender = (channelId: string, embed: EmbedData) => Promise<void>;
 export type DirectSender = (userId: string, text: string) => Promise<void>;
 /** Benachrichtigungen, die per Direktnachricht an eine Person gehen statt in einen Channel. */
-const DIRECT: Record<string, (p: Record<string, unknown>) => string> = { 'application.decided': applicationDecisionText };
+const DIRECT: Record<string, (p: Record<string, unknown>) => string> = { 'application.decided': applicationDecisionText, 'sek.application.decided': sekDecisionText };
 
 /**
  * Holt offene Benachrichtigungen aus der System-API, postet sie und quittiert.

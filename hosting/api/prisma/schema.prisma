@@ -623,3 +623,36 @@ model RadioWhitelist {
   addedById String?  @db.Uuid
   createdAt DateTime @default(now())
 }
+
+/** SEK (Spezialeinsatzkommando): eigenes Roster, eigene Einsatzberichte, eigene Bewerbungen. */
+model SekMember {
+  id        String   @id @default(uuid()) @db.Uuid
+  userId    String   @unique @db.Uuid
+  addedById String?  @db.Uuid
+  createdAt DateTime @default(now())
+}
+
+model SekReport {
+  id          String   @id @default(uuid()) @db.Uuid
+  number      String   @unique
+  authorId    String   @db.Uuid
+  occurredAt  DateTime
+  missionType String
+  description String
+  createdAt   DateTime @default(now())
+  @@index([createdAt])
+}
+
+model SekApplication {
+  id          String    @id @default(uuid()) @db.Uuid
+  number      String    @unique
+  userId      String    @db.Uuid
+  serviceTime String
+  motivation  String
+  experience  String?
+  status      String    @default("OPEN")
+  decidedById String?   @db.Uuid
+  decidedAt   DateTime?
+  createdAt   DateTime  @default(now())
+  @@index([userId, status])
+}

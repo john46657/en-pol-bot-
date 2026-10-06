@@ -156,32 +156,38 @@ export declare const SETTING_SCHEMAS: {
         announcements: z.ZodOptional<z.ZodString>;
         applications: z.ZodOptional<z.ZodString>;
         danger: z.ZodOptional<z.ZodString>;
+        sek: z.ZodOptional<z.ZodString>;
         teamlist: z.ZodOptional<z.ZodString>;
         tickets: z.ZodOptional<z.ZodString>;
         staffRole: z.ZodOptional<z.ZodString>;
         radioRole: z.ZodOptional<z.ZodString>;
+        sekRole: z.ZodOptional<z.ZodString>;
     }, "strip", z.ZodTypeAny, {
         dispatch?: string | undefined;
         tickets?: string | undefined;
         wanted?: string | undefined;
         applications?: string | undefined;
+        sek?: string | undefined;
         announcements?: string | undefined;
         danger?: string | undefined;
         guildId?: string | undefined;
         teamlist?: string | undefined;
         staffRole?: string | undefined;
         radioRole?: string | undefined;
+        sekRole?: string | undefined;
     }, {
         dispatch?: string | undefined;
         tickets?: string | undefined;
         wanted?: string | undefined;
         applications?: string | undefined;
+        sek?: string | undefined;
         announcements?: string | undefined;
         danger?: string | undefined;
         guildId?: string | undefined;
         teamlist?: string | undefined;
         staffRole?: string | undefined;
         radioRole?: string | undefined;
+        sekRole?: string | undefined;
     }>;
     readonly 'team.rankOrder': z.ZodArray<z.ZodString, "many">;
     readonly 'application.form': z.ZodArray<z.ZodObject<{
