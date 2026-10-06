@@ -182,10 +182,10 @@ client.on('interactionCreate', (i: Interaction) => {
   void task?.catch((e) => console.error('interaction failed:', e instanceof Error ? e.message : e));
 });
 
-// Direktnachrichten: Antworten auf Bewerbungsfragen (Qualifikations-Panel)
+// Direktnachrichten: Antworten auf Bewerbungsfragen (Bewerbung bei EN Polizei und Qualifikationen)
 client.on('messageCreate', (m: Message) => {
   if (m.author.bot || m.inGuild()) return;
-  void handleDirectMessage({ userId: m.author.id, userName: m.author.username, content: m.content, api, sendDm: (u, msg) => platform.sendDm(u, msg) })
+  void handleDirectMessage({ userId: m.author.id, userName: m.author.username, content: m.content, api, sendDm: (u, msg) => platform.sendDm(u, msg), robloxLookup: (n) => robloxLookup(n) })
     .catch((e) => console.error('direct message handling failed:', e instanceof Error ? e.message : e));
 });
 setInterval(() => sweepSessions(), 10 * 60_000).unref();

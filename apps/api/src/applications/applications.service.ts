@@ -9,14 +9,16 @@ import { nextStatus } from '../common/transition';
 import { PageQuery, pageResult, skipTake } from '../common/pagination';
 
 export interface FormField { key: string; label: string; required: boolean; maxLength: number }
+/** Die Beschriftungen sind zugleich die Fragen, die der Discord-Bot per Direktnachricht stellt. */
 export const DEFAULT_FORM: FormField[] = [
-  { key: 'experience', label: 'Experience', required: true, maxLength: 2000 },
-  { key: 'availability', label: 'Availability', required: true, maxLength: 500 },
-  { key: 'motivation', label: 'Motivation', required: true, maxLength: 3000 },
-  { key: 'roleplayKnowledge', label: 'Roleplay Knowledge', required: true, maxLength: 3000 },
-  { key: 'erlcKnowledge', label: 'ER:LC Knowledge', required: false, maxLength: 3000 },
-  { key: 'communication', label: 'Communication', required: false, maxLength: 2000 },
+  { key: 'experience', label: 'Welche Erfahrung hast du im Polizei-Roleplay (auch auf anderen Servern)?', required: true, maxLength: 2000 },
+  { key: 'availability', label: 'Wann und wie oft kannst du aktiv sein?', required: true, maxLength: 500 },
+  { key: 'motivation', label: 'Warum möchtest du zur EN Polizei?', required: true, maxLength: 3000 },
+  { key: 'roleplayKnowledge', label: 'Was bedeutet für dich gutes Roleplay?', required: true, maxLength: 3000 },
+  { key: 'erlcKnowledge', label: 'Wie gut kennst du ER:LC (Steuerung, Fahrzeuge, Regeln)?', required: false, maxLength: 3000 },
+  { key: 'communication', label: 'Wie gehst du im Funk und mit Kollegen mit Konflikten um?', required: false, maxLength: 2000 },
 ];
+const OPEN_STATUSES = ['SUBMITTED', 'SCREENING', 'INTERVIEW', 'PENDING_DECISION'];
 
 @Injectable()
 export class ApplicationsService {
@@ -38,13 +40,20 @@ export class ApplicationsService {
       if (v.length > f.maxLength) throw new AppError('VALIDATION_FAILED', `"${f.label}" is too long.`);
       if (v) answers[f.key] = v;
     }
-    if (d.robloxUserId && (await this.prisma.application.count({ where: { robloxUserId: d.robloxUserId, status: { in: ['SUBMITTED', 'SCREENING', 'INTERVIEW', 'PENDING_DECISION'] } } }))) {
+    if (d.robloxUserId && (await this.prisma.application.count({ where: { robloxUserId: d.robloxUserId, status: { in: OPEN_STATUSES } } }))) {
       throw new AppError('CONFLICT', 'An open application already exists for this Roblox user.');
     }
+    if (meta.discordId && (await this.openForDiscord(meta.discordId)).open) throw new AppError('CONFLICT', 'An open application already exists for this Discord account.');
     const a = await this.prisma.application.create({ data: { number: makeNumber('APP'), robloxUsername: d.robloxUsername, robloxUserId: d.robloxUserId, answers, discordId: meta.discordId, source: meta.discordId ? 'DISCORD' : 'WEB' } });
     await this.audit.record({ userId: null }, { action: 'application.submit', module: 'applications', entityType: 'Application', entityId: a.id, after: { source: a.source } });
     await this.discord.enqueue('applications', 'application.submitted', { number: a.number, robloxUsername: a.robloxUsername, discordId: meta.discordId ?? null, source: a.source });
     return { number: a.number, status: a.status };
+  }
+
+  /** Für den Bot: hat dieses Discord-Konto schon eine offene Bewerbung? */
+  async openForDiscord(discordId: string) {
+    const a = await this.prisma.application.findFirst({ where: { discordId, status: { in: OPEN_STATUSES } }, select: { number: true } });
+    return { open: !!a, number: a?.number ?? null };
   }
 
   async list(p: PageQuery, status?: string) {

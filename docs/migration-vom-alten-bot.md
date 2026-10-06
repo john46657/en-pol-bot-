@@ -4,7 +4,7 @@ Der frühere Bot (Emden RP Bot) wurde entfernt (liegt in der Git-Historie). Hier
 
 | Alt (Datei) | Was es tat | Im neuen System | Stand |
 |---|---|---|---|
-| `bewerbungen.py` | `/bewerbung` Formular, Antworten in Channel | **Bewerbungen**: öffentliches Web-Formular `/apply`, konfigurierbar in Studio, Prüfung/Entscheidung in *Applications* (Workflow SUBMITTED → … → ACCEPTED/REJECTED) | ✅ Web + Discord `/bewerbung` (Formular, Entscheidung per DM) |
+| `bewerbungen.py` | `/bewerbung` Formular, Antworten in Channel | **Bewerbungen**: öffentliches Web-Formular `/apply`, konfigurierbar in Studio, Prüfung/Entscheidung in *Applications* (Workflow SUBMITTED → … → ACCEPTED/REJECTED) | ✅ Web + Discord `/bewerbung` / `/bewerbungspanel` (Fragen einzeln per DM, Entscheidung per DM) |
 | `dienst.py` | `/dienst start/ende`, Stunden | **Dienststatus**: Team-Dashboard, Discord `/dienst an\|pause\|aus`; Dienststunden in *Analytics* und per `/dienststunden` (eigene bzw. mit `alle` das ganze Team) | ✅ |
 | `dienstberichte.py` | `/dienstbericht` Formular | **Berichte** (versioniert, Prüf-Workflow), Discord `/bericht` | ✅ |
 | `fahndung.py` | Fahndung erstellen/beenden/Liste | **Fahndungen** (Person/Fahrzeug, Ablauf, Aufheben mit Begründung), Discord `/fahndung` + `/fahndungen`, Alarm-Channel | ✅ · Aufheben nur im Web |

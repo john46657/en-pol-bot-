@@ -96,7 +96,7 @@ test('public application → staff review workflow', async ({ page, browser }) =
   const p = await pub.newPage();
   await p.goto('/apply');
   await p.getByLabel('Roblox username *').fill('E2E_Applicant');
-  for (const l of ['Experience', 'Availability', 'Motivation', 'Roleplay Knowledge', 'ER:LC Knowledge']) await p.getByLabel(`${l} *`).fill(`${l} answer`);
+  for (const l of ['Welche Erfahrung', 'Wann und wie oft', 'Warum möchtest du', 'Was bedeutet für dich', 'Wie gut kennst du']) await p.getByLabel(new RegExp(`^${l}`)).fill(`${l} – Antwort`);
   await p.getByRole('button', { name: 'Submit application' }).click();
   await expect(p.getByRole('status')).toContainText('APP-');
   await pub.close();

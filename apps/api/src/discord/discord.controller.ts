@@ -17,6 +17,7 @@ const outboxQ = z.object({ limit: z.coerce.number().int().min(1).max(50).default
 const rate = process.env.NODE_ENV === 'test' ? 10_000 : 20;
 const stateKey = z.string().regex(/^[a-z0-9:_-]{1,64}$/);
 const stateBody = z.object({ value: z.unknown() });
+const openQ = z.object({ discordId: z.string().regex(/^\d{15,25}$/) });
 const application = z.object({ robloxUsername: z.string().trim().min(1).max(64), robloxUserId: z.string().max(20).optional(), discordId: z.string().regex(/^\d{15,25}$/), answers: z.record(z.string(), z.string().max(5000)) });
 
 /** Web-Seite: eigenes Konto verknüpfen. Authentifiziert per Session; Bot-Zugang ist hier nicht erlaubt. */
@@ -59,6 +60,8 @@ export class BotController {
   async setState(@Param('key', zodBody(stateKey)) key: string, @Body(zodBody(stateBody)) b: z.infer<typeof stateBody>) { await this.d.setState(key, b.value); }
 
   /** Bewerbung aus Discord. Eigener Dienstweg (mit Bot-Token), damit das öffentliche Rate-Limit pro IP nicht alle Discord-Bewerber gemeinsam trifft. */
+  @BotService() @Get('application/open')
+  openApplication(@Query(zodBody(openQ)) q: z.infer<typeof openQ>) { return this.applications.openForDiscord(q.discordId); }
   @BotService() @Throttle({ default: { limit: rate, ttl: 60_000 } }) @Post('application') @HttpCode(201)
   submitApplication(@Body(zodBody(application)) b: z.infer<typeof application>) { return this.applications.submit({ robloxUsername: b.robloxUsername, robloxUserId: b.robloxUserId, answers: b.answers }, { discordId: b.discordId }); }
 }

@@ -86,4 +86,15 @@ describe('qualification applications', () => {
     expect((await http().post('/api/v1/sek/reports').set(bot(APPLICANT)).send({ missionType: 'Zugriff', description: 'Test über Discord' })).status).toBe(201); // angenommen → Roster + Rolle „SEK“
     expect((await http().get('/api/v1/qualifications/config').set(bot(LEAD_D))).status).toBe(403); // nicht auf der Allowlist
   });
+
+  it('police application via Discord: open check by Discord id, second one is rejected', async () => {
+    const D = '300000000000000099';
+    expect((await http().get(`/api/v1/bot/application/open?discordId=${D}`).set(bot())).body).toEqual({ open: false, number: null });
+    const form = (await http().get('/api/v1/applications/form')).body as { key: string; required: boolean }[];
+    const answers = Object.fromEntries(form.filter((f) => f.required).map((f) => [f.key, 'Antwort']));
+    const r = await http().post('/api/v1/bot/application').set(bot()).send({ robloxUsername: 'Builderman', discordId: D, answers });
+    expect(r.status).toBe(201);
+    expect((await http().get(`/api/v1/bot/application/open?discordId=${D}`).set(bot())).body).toEqual({ open: true, number: r.body.number });
+    expect((await http().post('/api/v1/bot/application').set(bot()).send({ robloxUsername: 'Builderman2', discordId: D, answers })).status).toBe(409);
+  });
 });

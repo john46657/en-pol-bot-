@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { BotApiError, type Api } from '../src/api';
 import { byName } from '../src/commands';
-import { interactionFor, modalFieldsFor, resetFormCache } from '../src/commands/features';
+import { interactionFor } from '../src/commands/features';
 import type { Ctx } from '../src/commands/types';
 import { teamlistEmbed, type Reply } from '../src/format';
 import { createLive } from '../src/live';
@@ -95,31 +95,38 @@ describe('/funkfreigabe', () => {
   });
 });
 
-describe('/bewerbung', () => {
-  beforeEach(() => resetFormCache());
-  const form = [
-    { key: 'age', label: 'Age', required: true, maxLength: 3 }, { key: 'motivation', label: 'Motivation', required: true, maxLength: 3000 },
-    { key: 'extra1', label: 'Extra 1', required: false, maxLength: 100 }, { key: 'extra2', label: 'Extra 2', required: false, maxLength: 100 }, { key: 'extra3', label: 'Extra 3', required: false, maxLength: 100 },
-  ];
-  it('fits the configured form into a Discord modal (max 5 inputs, required fields first)', () => {
-    const f = modalFieldsFor(form)!;
-    expect(f.map((x) => x.id)).toEqual(['f_age', 'f_motivation', 'f_extra1', 'f_extra2']);
-    expect(f[1]).toMatchObject({ paragraph: true, required: true });
-    expect(modalFieldsFor(Array.from({ length: 5 }, (_, i) => ({ key: `k${i}`, label: 'x', required: true, maxLength: 10 })))).toBeNull();
+describe('/bewerbung (Polizei-Bewerbung per Direktnachricht)', () => {
+  beforeEach(() => resetSessions());
+  const form = [{ key: 'age', label: 'Wie alt bist du?', required: true, maxLength: 3 }, { key: 'extra', label: 'Noch etwas?', required: false, maxLength: 100 }];
+  it('/bewerbung and the panel button send the confirmation DM; the panel needs server rights', async () => {
+    const { api } = fakeApi({ 'GET /applications/form': form, 'GET /bot/application/open': { open: false, number: null } });
+    const { p, log } = fakePlatform();
+    const r = await byName('bewerbung')!.run(ctx(api, { platform: p }));
+    expect(byName('bewerbung')!.opensModal).toBeFalsy();
+    expect(log).toEqual([`dmEmbed ${ME} Bewerbung – EN Polizei quali:start:@polizei,quali:cancel`]);
+    expect(r.buttons?.[0]?.url).toContain('/channels/@me/DM1/M1');
+    expect(text(await byName('bewerbungspanel')!.run(ctx(api, { platform: p })))).toContain('Server verwalten');
+    await byName('bewerbungspanel')!.run(ctx(api, { platform: p, isGuildAdmin: true }));
+    expect(log.at(-1)).toBe(`panel ${CHANNEL} quali:pick:@polizei`);
+    const open = fakeApi({ 'GET /applications/form': form, 'GET /bot/application/open': { open: true, number: 'APP-9' } });
+    expect(text(await byName('bewerbung')!.run(ctx(open.api, { platform: p })))).toContain('APP-9');
   });
-  it('opens a modal and submits it via the bot service route with the Discord id', async () => {
-    const { api, calls } = fakeApi({ 'GET /applications/form': form, 'POST /bot/application': { number: 'APP-1' } });
-    const r = await byName('bewerbung')!.run(ctx(api));
-    expect(byName('bewerbung')!.opensModal).toBe(true);
-    expect(r.modal!.fields.map((f) => f.id)).toEqual(['roblox', 'f_age', 'f_motivation', 'f_extra1', 'f_extra2']);
-    const hit = interactionFor(r.modal!.id)!;
-    const done = await hit.def.run({ ...ctx(api), args: hit.args, fields: { roblox: ' builderman ', f_age: '18', f_motivation: 'Helfen', f_extra1: '' }, robloxLookup: async () => ({ id: 156, name: 'Builderman', displayName: 'Builderman' }) });
-    expect(text(done)).toContain('APP-1');
-    expect(calls.at(-1)).toMatchObject({ kind: 'service', path: '/bot/application', body: { robloxUsername: 'Builderman', robloxUserId: '156', discordId: ME, answers: { age: '18', motivation: 'Helfen', extra1: '' } } });
-  });
-  it('explains an already open application', async () => {
-    const { api } = fakeApi({ 'POST /bot/application': new BotApiError(409, 'CONFLICT', 'open') });
-    expect(text(await interactionFor('bewerbung:submit')!.def.run({ ...ctx(api), args: ['submit'], fields: { roblox: 'x' } }))).toContain('bereits eine offene');
+  it('asks Roblox name + form questions one by one, optional ones can be skipped, then submits', async () => {
+    const { api, calls } = fakeApi({ 'GET /applications/form': form, 'GET /bot/application/open': { open: false }, 'POST /bot/application': { number: 'APP-1' } });
+    const { p } = fakePlatform();
+    const start = interactionFor('quali:start:@polizei')!;
+    await start.def.run({ ...ctx(api, { platform: p }), args: start.args });
+    const out: { embed: { description?: string } }[] = [];
+    const say = { api, sendDm: async (_u: string, m: { embed: { description?: string } }) => { out.push(m); }, robloxLookup: async () => ({ id: 156, name: 'Builderman' }) };
+    await handleDirectMessage({ userId: ME, userName: 'oscar', content: ' builderman ', ...say });
+    expect(out[0]!.embed.description).toContain('**2/3.** Wie alt bist du?');
+    await handleDirectMessage({ userId: ME, userName: 'oscar', content: '1234', ...say });
+    expect(out[1]!.embed.description).toContain('zu lang');
+    await handleDirectMessage({ userId: ME, userName: 'oscar', content: '18', ...say });
+    expect(out[2]!.embed.description).toContain('„-“');
+    await handleDirectMessage({ userId: ME, userName: 'oscar', content: '-', ...say });
+    expect(out[3]!.embed.description).toContain('APP-1');
+    expect(calls.at(-1)).toMatchObject({ kind: 'service', path: '/bot/application', body: { robloxUsername: 'Builderman', robloxUserId: '156', discordId: ME, answers: { age: '18' } } });
   });
 });
 

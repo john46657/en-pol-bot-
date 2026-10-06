@@ -1,5 +1,5 @@
 import { BotApiError } from '../api';
-import { clip, COLORS, DANGER, dangerEmbed, errorReply, listEmbed, okReply, plain, type ButtonSpec, type DangerState, type EmbedData, type ModalField, type Reply, type Row } from '../format';
+import { clip, COLORS, DANGER, dangerEmbed, errorReply, listEmbed, okReply, plain, type ButtonSpec, type DangerState, type EmbedData, type Reply, type Row } from '../format';
 import type { CommandDef, Ctx, InteractionDef } from './types';
 import { mapError } from './errors';
 import { SEK_INTERACTION } from './sek';
@@ -18,27 +18,6 @@ async function setDanger(c: Ctx, level: string, reason?: string): Promise<Reply>
     await c.refreshLive?.('danger').catch(() => undefined); // Panel sofort nachziehen (sonst spätestens beim nächsten Abgleich)
     return okReply(`Gefahrenstatus: ${DANGER[s.level]?.emoji ?? ''} **${DANGER[s.level]?.label ?? s.level}**`);
   } catch (e) { return mapError(e); }
-}
-
-// ---------------- Bewerbung (Discord-Formular) ----------------
-interface FormField { key: string; label: string; required: boolean; maxLength: number }
-/** Discord erlaubt höchstens 5 Eingabefelder pro Formular; eins davon ist der Roblox-Name. */
-const MAX_MODAL_FORM_FIELDS = 4;
-let formCache: { at: number; form: FormField[] } | undefined;
-/** Das Formular wird kurz zwischengespeichert: Discord gibt nur 3 Sekunden Zeit, bis das Formular angezeigt werden muss. */
-async function applicationForm(c: Ctx): Promise<FormField[]> {
-  if (formCache && Date.now() - formCache.at < 5 * 60_000) return formCache.form;
-  const form = await c.api.service<FormField[]>('GET', '/applications/form');
-  formCache = { at: Date.now(), form };
-  return form;
-}
-export const resetFormCache = () => { formCache = undefined; };
-
-/** Pflichtfelder zuerst; passt das Formular nicht in ein Discord-Formular, bleibt nur das Web. */
-export function modalFieldsFor(form: FormField[]): ModalField[] | null {
-  const required = form.filter((f) => f.required), optional = form.filter((f) => !f.required);
-  if (required.length > MAX_MODAL_FORM_FIELDS) return null;
-  return [...required, ...optional].slice(0, MAX_MODAL_FORM_FIELDS).map((f) => ({ id: `f_${f.key}`, label: clip(f.label, 45), paragraph: f.maxLength > 200, required: f.required, maxLength: Math.min(f.maxLength, 4000) }));
 }
 
 // ---------------- Support-Tickets ----------------
@@ -124,16 +103,6 @@ export const FEATURE_COMMANDS: CommandDef[] = [
     },
   },
   {
-    name: 'bewerbung', description: 'Bewirb dich bei EN Polizei (Formular)', opensModal: true,
-    async run(c) {
-      try {
-        const fields = modalFieldsFor(await applicationForm(c));
-        if (!fields) return errorReply('Das Bewerbungsformular ist zu lang für Discord. Bitte bewirb dich über das Web-Formular (Seite `/apply`).');
-        return { modal: { id: 'bewerbung:submit', title: 'Bewerbung – EN Polizei', fields: [{ id: 'roblox', label: 'Dein Roblox-Name', required: true, maxLength: 20, placeholder: 'z. B. Builderman' }, ...fields] } };
-      } catch (e) { return mapError(e); }
-    },
-  },
-  {
     name: 'supportpanel', description: 'Postet das Support-Ticket-Panel in diesen Channel',
     async run(c) {
       const denied = needGuildAdmin(c); if (denied) return denied;
@@ -167,24 +136,6 @@ export const INTERACTIONS: InteractionDef[] = [
     async run(c) {
       const level = c.args[0] === 'set' ? c.args[1] : undefined;
       return level && level in DANGER ? setDanger(c, level) : errorReply('Unbekannte Aktion.');
-    },
-  },
-  {
-    prefix: 'bewerbung',
-    async run(c) {
-      const f = c.fields ?? {};
-      const robloxUsername = (f.roblox ?? '').trim();
-      if (!robloxUsername) return errorReply('Bitte deinen Roblox-Namen angeben.');
-      const answers = Object.fromEntries(Object.entries(f).filter(([k]) => k.startsWith('f_')).map(([k, v]) => [k.slice(2), v.trim()]));
-      try {
-        // Roblox-ID ist optional: wird gefunden, prüft das System doppelte offene Bewerbungen zuverlässiger
-        const rb = await c.robloxLookup?.(robloxUsername).catch(() => null);
-        const r = await c.api.service<{ number: string }>('POST', '/bot/application', { robloxUsername: rb?.name ?? robloxUsername, ...(rb ? { robloxUserId: String(rb.id) } : {}), discordId: c.discordId, answers });
-        return okReply(`Danke! Deine Bewerbung **${r.number}** ist eingegangen. Die Entscheidung bekommst du per Direktnachricht (bitte DMs von Servermitgliedern erlauben).`);
-      } catch (e) {
-        if (e instanceof BotApiError && e.status === 409) return errorReply('Für diesen Roblox-Account läuft bereits eine offene Bewerbung.');
-        return mapError(e);
-      }
     },
   },
   {

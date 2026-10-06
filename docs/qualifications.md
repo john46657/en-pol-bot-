@@ -1,6 +1,6 @@
 # Qualifikationen (Bewerbung für SEK, Flugstaffel, Ausbilder …)
 
-Ablauf wie bei Appy – aber im eigenen Bot und mit Daten im System:
+Ablauf wie bei Appy – aber im eigenen Bot und mit Daten im System. Die normale **Bewerbung bei EN Polizei** (`/bewerbung`, Panel `/bewerbungspanel`) läuft genauso per DM, nutzt aber das Bewerbungsformular aus *Studio* und landet unter *Applications*.
 
 1. Ein Admin postet mit **`/qualipanel`** (Discord-Recht „Server verwalten“) das Panel in einen Channel: Titel, Einleitung, je Einheit Name + Beschreibung und ein Auswahlmenü **„Triff eine Auswahl“**.
 2. Wer eine Einheit auswählt, bekommt eine **Direktnachricht**: „Bist du sicher …?“ mit **Bewerbung starten** / **Abbrechen**; im Channel erscheint (nur für die Person) „Bewerbung gestartet“ mit dem Button **Zur Bewerbung**.

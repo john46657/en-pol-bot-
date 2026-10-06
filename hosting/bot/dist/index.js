@@ -204,11 +204,11 @@ client.on('interactionCreate', (i) => {
     const task = i.isChatInputCommand() ? handleCommand(i) : i.isButton() || i.isModalSubmit() || i.isStringSelectMenu() ? handleComponent(i) : undefined;
     void task?.catch((e) => console.error('interaction failed:', e instanceof Error ? e.message : e));
 });
-// Direktnachrichten: Antworten auf Bewerbungsfragen (Qualifikations-Panel)
+// Direktnachrichten: Antworten auf Bewerbungsfragen (Bewerbung bei EN Polizei und Qualifikationen)
 client.on('messageCreate', (m) => {
     if (m.author.bot || m.inGuild())
         return;
-    void (0, qualifications_1.handleDirectMessage)({ userId: m.author.id, userName: m.author.username, content: m.content, api, sendDm: (u, msg) => platform.sendDm(u, msg) })
+    void (0, qualifications_1.handleDirectMessage)({ userId: m.author.id, userName: m.author.username, content: m.content, api, sendDm: (u, msg) => platform.sendDm(u, msg), robloxLookup: (n) => (0, roblox_1.robloxLookup)(n) })
         .catch((e) => console.error('direct message handling failed:', e instanceof Error ? e.message : e));
 });
 setInterval(() => (0, qualifications_1.sweepSessions)(), 10 * 60_000).unref();
