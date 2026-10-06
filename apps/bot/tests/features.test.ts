@@ -413,6 +413,10 @@ describe('Dienststatus ↔ Discord', () => {
     expect(dutyRoleChanges('BREAK', cfg)).toEqual({ add: ['700000000000000002'], remove: ['700000000000000001'] });
     expect(dutyRoleChanges('OFF_DUTY', cfg)).toEqual({ add: [], remove: ['700000000000000001', '700000000000000002'] });
     expect(dutyRoleChanges('TRAINING', cfg)).toEqual({ add: [], remove: ['700000000000000001', '700000000000000002'] });
+    // mehrere Server: je Status eine Rollen-ID pro Server
+    const multi = { dutyRole: '700000000000000001, 800000000000000001', breakRole: '700000000000000002,800000000000000002' };
+    expect(dutyRoleChanges('ON_DUTY', multi)).toEqual({ add: ['700000000000000001', '800000000000000001'], remove: ['700000000000000002', '800000000000000002'] });
+    expect(dutyRoleChanges('OFF_DUTY', multi).remove).toHaveLength(4);
   });
 
   it('outbox: syncs roles and posts to the duty channel; without a channel only the roles are synced', async () => {

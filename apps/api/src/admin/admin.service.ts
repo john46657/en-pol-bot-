@@ -23,7 +23,7 @@ export const SETTING_SCHEMAS = {
   'dashboard.defaultLayout': z.array(z.object({ widget: z.string().max(40), visible: z.boolean(), order: z.number().int() })).max(50),
   'studio.customFields': customFieldsConfig,
   'theme.accent': z.enum(ACCENTS),
-  'discord.channels': z.object({ guildId: idList(), dispatch: idList(), wanted: idList(), announcements: idList(), applications: idList(), danger: idList(), sek: idList(), qualifications: idList(), duty: idList(), teamlist: singleId(), tickets: singleId(), staffRole: singleId(), radioRole: singleId(), sekRole: singleId(), dutyRole: singleId(), breakRole: singleId(), trainingRole: singleId(), adminDutyRole: singleId() }),
+  'discord.channels': z.object({ guildId: idList(), dispatch: idList(), wanted: idList(), announcements: idList(), applications: idList(), danger: idList(), sek: idList(), qualifications: idList(), duty: idList(), teamlist: singleId(), tickets: singleId(), staffRole: singleId(), radioRole: singleId(), sekRole: singleId(), dutyRole: idList(), breakRole: idList(), trainingRole: idList(), adminDutyRole: idList() }),
   'team.rankOrder': z.array(z.string().trim().min(1).max(64)).max(50),
   'application.form': z.array(formField).min(1).max(50),
   /** „Mit Discord anmelden“: neue Konten erlauben, nur Mitglieder des Discord-Servers, Discord-Rolle → Systemrolle. */

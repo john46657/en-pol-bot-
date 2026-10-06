@@ -8,10 +8,12 @@ export type Sender = (channelId: string, embeds: EmbedData[], buttons?: ButtonSp
 export type RoleSync = (userId: string, add: string[], remove: string[]) => Promise<void>;
 /** Welche Discord-Rolle zu welchem Dienststatus gehört (Einstellungen → Discord). */
 export function dutyRoleChanges(status: string, cfg: Record<string, string | undefined>): { add: string[]; remove: string[] } {
-  const map: Record<string, string | undefined> = { ON_DUTY: cfg.dutyRole, BREAK: cfg.breakRole, TRAINING: cfg.trainingRole, ADMINISTRATIVE: cfg.adminDutyRole };
-  const target = map[status];
-  const all = [...new Set(Object.values(map).filter((r): r is string => !!r && /^\d{15,25}$/.test(r)))];
-  return { add: target && all.includes(target) ? [target] : [], remove: all.filter((r) => r !== target) };
+  // je Status mehrere Rollen-IDs möglich (eine pro Discord-Server), Komma-getrennt
+  const ids = (v?: string) => (v ?? '').split(/[\s,;]+/).filter((r) => /^\d{15,25}$/.test(r));
+  const map: Record<string, string[]> = { ON_DUTY: ids(cfg.dutyRole), BREAK: ids(cfg.breakRole), TRAINING: ids(cfg.trainingRole), ADMINISTRATIVE: ids(cfg.adminDutyRole) };
+  const add = map[status] ?? [];
+  const all = [...new Set(Object.values(map).flat())];
+  return { add: [...new Set(add)], remove: all.filter((r) => !add.includes(r)) };
 }
 /** Vergibt eine Discord-Rolle auf allen Servern, auf denen es sie gibt (z. B. nach angenommener Bewerbung). */
 export type RoleGranter = (userId: string, roleId: string) => Promise<void>;
