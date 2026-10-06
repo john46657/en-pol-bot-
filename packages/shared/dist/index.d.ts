@@ -15,6 +15,7 @@ declare const PERMISSION_CATALOG: {
     readonly personnel: readonly ["view", "create", "edit", "promote", "discipline"];
     readonly applications: readonly ["view", "review", "decide"];
     readonly academy: readonly ["view", "manage"];
+    readonly sek: readonly ["view", "report", "manage"];
     readonly communication: readonly ["view", "send", "moderate"];
     readonly analytics: readonly ["view"];
     readonly audit: readonly ["view", "export"];

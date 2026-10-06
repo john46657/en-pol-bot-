@@ -5,6 +5,7 @@ exports.modalFieldsFor = modalFieldsFor;
 const api_1 = require("../api");
 const format_1 = require("../format");
 const errors_1 = require("./errors");
+const sek_1 = require("./sek");
 const str = (c, k) => String(c.opts[k] ?? '').trim();
 const choices = (m) => Object.keys(m).map((k) => ({ name: k.replace('_', ' '), value: k }));
 const needGuildAdmin = (c) => (!c.guildId ? (0, format_1.errorReply)('Das geht nur auf einem Server, nicht per Direktnachricht.') : !c.isGuildAdmin ? (0, format_1.errorReply)('Dafür brauchst du auf diesem Discord-Server das Recht „Server verwalten“.') : null);
@@ -195,6 +196,7 @@ exports.FEATURE_COMMANDS = [
     },
 ];
 exports.INTERACTIONS = [
+    sek_1.SEK_INTERACTION,
     {
         prefix: 'danger',
         async run(c) {

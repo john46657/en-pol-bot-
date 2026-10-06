@@ -34,7 +34,7 @@ exports.SETTING_SCHEMAS = {
     'dashboard.defaultLayout': zod_1.z.array(zod_1.z.object({ widget: zod_1.z.string().max(40), visible: zod_1.z.boolean(), order: zod_1.z.number().int() })).max(50),
     'studio.customFields': custom_fields_1.customFieldsConfig,
     'theme.accent': zod_1.z.enum(studio_service_1.ACCENTS),
-    'discord.channels': zod_1.z.object({ guildId: idList(), dispatch: idList(), wanted: idList(), announcements: idList(), applications: idList(), danger: idList(), teamlist: singleId(), tickets: singleId(), staffRole: singleId(), radioRole: singleId() }),
+    'discord.channels': zod_1.z.object({ guildId: idList(), dispatch: idList(), wanted: idList(), announcements: idList(), applications: idList(), danger: idList(), sek: idList(), teamlist: singleId(), tickets: singleId(), staffRole: singleId(), radioRole: singleId(), sekRole: singleId() }),
     'team.rankOrder': zod_1.z.array(zod_1.z.string().trim().min(1).max(64)).max(50),
     'application.form': zod_1.z.array(formField).min(1).max(30),
 };

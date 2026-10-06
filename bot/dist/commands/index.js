@@ -5,6 +5,7 @@ const api_1 = require("../api");
 const errors_1 = require("./errors");
 Object.defineProperty(exports, "mapError", { enumerable: true, get: function () { return errors_1.mapError; } });
 const features_1 = require("./features");
+const sek_1 = require("./sek");
 const format_1 = require("../format");
 /** Minuten → „3 h 05 min“. */
 const hm = (min) => `${Math.floor(min / 60)} h ${String(Math.round(min % 60)).padStart(2, '0')} min`;
@@ -77,6 +78,7 @@ exports.COMMANDS = [
                             { name: 'Dienst & Leitstelle', value: '`/dienst` `/dienststunden` `/einheitstatus` `/einsatz` `/einsatzstatus` `/einsatzzuweisen` `/funk`' },
                             { name: 'Erfassen', value: '`/ticket` `/bericht` `/beschwerde` `/ermittlung` `/fahndung` `/beweis`' },
                             { name: 'Leitung & Team', value: '`/gefahrenstatus` `/funkfreigabe` `/teamliste` `/supportpanel` `/roblox`' },
+                            { name: 'SEK', value: '`/sek` `/sek-bericht` `/sek-bewerbung`' },
                             { name: 'Für alle', value: '`/bewerbung` (auch ohne Verknüpfung)' },
                             { name: 'Hinweis', value: 'Alle Befehle laufen mit **deinen** Rechten im System. Antworten sind nur für dich sichtbar.' }
                         ] }] };
@@ -519,6 +521,7 @@ exports.COMMANDS = [
         },
     },
     ...features_1.FEATURE_COMMANDS,
+    ...sek_1.SEK_COMMANDS,
 ];
 const byName = (n) => exports.COMMANDS.find((c) => c.name === n);
 exports.byName = byName;

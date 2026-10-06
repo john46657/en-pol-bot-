@@ -6,16 +6,14 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
     return c > 3 && r && Object.defineProperty(target, key, r), r;
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.ERLCModule = void 0;
+exports.SekModule = void 0;
 const common_1 = require("@nestjs/common");
-const erlc_client_1 = require("./erlc.client");
-const erlc_controller_1 = require("./erlc.controller");
-const erlc_sync_1 = require("./erlc.sync");
-const erlc_webhook_1 = require("./erlc.webhook");
-let ERLCModule = class ERLCModule {
+const sek_controller_1 = require("./sek.controller");
+const sek_service_1 = require("./sek.service");
+let SekModule = class SekModule {
 };
-exports.ERLCModule = ERLCModule;
-exports.ERLCModule = ERLCModule = __decorate([
-    (0, common_1.Module)({ controllers: [erlc_controller_1.ERLCController], providers: [{ provide: erlc_client_1.ERLC_FETCH, useValue: undefined }, erlc_client_1.ERLCClient, erlc_sync_1.ERLCSyncService, erlc_webhook_1.ERLCWebhookService], exports: [erlc_sync_1.ERLCSyncService] })
-], ERLCModule);
-//# sourceMappingURL=erlc.module.js.map
+exports.SekModule = SekModule;
+exports.SekModule = SekModule = __decorate([
+    (0, common_1.Module)({ controllers: [sek_controller_1.SekController], providers: [sek_service_1.SekService] })
+], SekModule);
+//# sourceMappingURL=sek.module.js.map
