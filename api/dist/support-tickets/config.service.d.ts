@@ -61,6 +61,15 @@ export declare class TicketConfigService {
             escalationRoleIds: string[];
             escalationPriorityId: string | null;
             escalationMessage: string;
+            welcomeImageUrl: string | null;
+            capacity: number;
+            creatorCanAddUsers: boolean;
+            claimDiscordCategoryId: string | null;
+            claimLocksChat: boolean;
+            autoClaimOnMessage: boolean;
+            autoUnclaimMinutes: number;
+            staffAlertMinutes: number;
+            closeRequestCloses: boolean;
         } & {
             buttons: TicketButtonConfig[];
             questions: TicketQuestion[];
@@ -88,6 +97,7 @@ export declare class TicketConfigService {
             authorIconUrl: string | null;
             categoryIds: string[];
             allowedRoleIds: string[];
+            showLoad: boolean;
             messageChannelId: string | null;
             messageId: string | null;
         }[];
@@ -128,6 +138,9 @@ export declare class TicketConfigService {
             ratingMessage: string;
             ratingThanks: string;
             transcriptRetentionDays: number;
+            ratingChannelId: string | null;
+            ratingPublicChannelId: string | null;
+            ratingPublicFields: ("category" | "creator" | "staff" | "duration" | "comment")[];
         };
     }>;
     categoryOut<T extends {
@@ -213,6 +226,15 @@ export declare class TicketConfigService {
         escalationRoleIds: string[];
         escalationPriorityId: string | null;
         escalationMessage: string;
+        welcomeImageUrl: string | null;
+        capacity: number;
+        creatorCanAddUsers: boolean;
+        claimDiscordCategoryId: string | null;
+        claimLocksChat: boolean;
+        autoClaimOnMessage: boolean;
+        autoUnclaimMinutes: number;
+        staffAlertMinutes: number;
+        closeRequestCloses: boolean;
     } & {
         buttons: TicketButtonConfig[];
         questions: TicketQuestion[];
@@ -265,6 +287,15 @@ export declare class TicketConfigService {
         escalationRoleIds: string[];
         escalationPriorityId: string | null;
         escalationMessage: string;
+        welcomeImageUrl: string | null;
+        capacity: number;
+        creatorCanAddUsers: boolean;
+        claimDiscordCategoryId: string | null;
+        claimLocksChat: boolean;
+        autoClaimOnMessage: boolean;
+        autoUnclaimMinutes: number;
+        staffAlertMinutes: number;
+        closeRequestCloses: boolean;
     } & {
         buttons: TicketButtonConfig[];
         questions: TicketQuestion[];
@@ -317,6 +348,15 @@ export declare class TicketConfigService {
         escalationRoleIds: string[];
         escalationPriorityId: string | null;
         escalationMessage: string;
+        welcomeImageUrl: string | null;
+        capacity: number;
+        creatorCanAddUsers: boolean;
+        claimDiscordCategoryId: string | null;
+        claimLocksChat: boolean;
+        autoClaimOnMessage: boolean;
+        autoUnclaimMinutes: number;
+        staffAlertMinutes: number;
+        closeRequestCloses: boolean;
     } & {
         buttons: TicketButtonConfig[];
         questions: TicketQuestion[];
@@ -345,6 +385,7 @@ export declare class TicketConfigService {
         authorIconUrl: string | null;
         categoryIds: string[];
         allowedRoleIds: string[];
+        showLoad: boolean;
         messageChannelId: string | null;
         messageId: string | null;
     }>;
@@ -371,6 +412,7 @@ export declare class TicketConfigService {
         authorIconUrl: string | null;
         categoryIds: string[];
         allowedRoleIds: string[];
+        showLoad: boolean;
         messageChannelId: string | null;
         messageId: string | null;
     }>;
@@ -415,6 +457,9 @@ export declare class TicketConfigService {
         ratingMessage: string;
         ratingThanks: string;
         transcriptRetentionDays: number;
+        ratingChannelId: string | null;
+        ratingPublicChannelId: string | null;
+        ratingPublicFields: ("category" | "creator" | "staff" | "duration" | "comment")[];
     }>;
     private checkRefs;
 }

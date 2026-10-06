@@ -23,7 +23,7 @@ const config_service_1 = require("./config.service");
 const config_schemas_1 = require("./config.schemas");
 const snowflake = zod_1.z.string().regex(/^\d{15,25}$/);
 const actionSchema = zod_1.z.discriminatedUnion('action', [
-    zod_1.z.object({ action: zod_1.z.literal('close'), reason: zod_1.z.string().trim().max(500).optional() }),
+    zod_1.z.object({ action: zod_1.z.literal('close'), reason: zod_1.z.string().trim().max(500).optional() }), zod_1.z.object({ action: zod_1.z.literal('close_request') }),
     zod_1.z.object({ action: zod_1.z.literal('reopen') }), zod_1.z.object({ action: zod_1.z.literal('claim') }), zod_1.z.object({ action: zod_1.z.literal('unclaim'), targetId: snowflake.optional() }),
     zod_1.z.object({ action: zod_1.z.literal('add_access'), targetId: snowflake, kind: zod_1.z.enum(['USER', 'ROLE']), minutes: zod_1.z.number().int().min(1).max(60 * 24 * 30).optional() }),
     zod_1.z.object({ action: zod_1.z.literal('remove_access'), targetId: snowflake }),
@@ -427,6 +427,8 @@ let BotSupportTicketsController = class BotSupportTicketsController {
     attach(id, b) { return this.s.attachChannel(id, b.channelId, b.controlMessageId); }
     abort(id, b) { return this.s.abort(id, b.reason); }
     answer(id, b) { return this.s.answer(id, b.discordId, b.questionId, b.values); }
+    closeRequest(id, b) { return this.s.closeRequestAnswer(id, b.discordId, b.accept); }
+    creatorAdd(id, b) { return this.s.creatorAdd(id, b.discordId, b.targetId); }
     creatorClose(id, b) { return this.s.creatorClose(id, b.discordId, b.reason); }
     rate(id, b) { return this.s.rate(id, b.discordId, b.stars); }
     rateComment(id, b) { return this.s.rateComment(id, b.discordId, b.comment); }
@@ -476,6 +478,26 @@ __decorate([
     __metadata("design:paramtypes", [String, Object]),
     __metadata("design:returntype", void 0)
 ], BotSupportTicketsController.prototype, "answer", null);
+__decorate([
+    (0, decorators_1.BotService)(),
+    (0, common_1.Post)(':id/close-request'),
+    (0, common_1.HttpCode)(200),
+    __param(0, (0, common_1.Param)('id', common_1.ParseUUIDPipe)),
+    __param(1, (0, common_1.Body)((0, zod_pipe_1.zodBody)(zod_1.z.object({ discordId: snowflake, accept: zod_1.z.boolean() })))),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, Object]),
+    __metadata("design:returntype", void 0)
+], BotSupportTicketsController.prototype, "closeRequest", null);
+__decorate([
+    (0, decorators_1.BotService)(),
+    (0, common_1.Post)(':id/creator-add'),
+    (0, common_1.HttpCode)(200),
+    __param(0, (0, common_1.Param)('id', common_1.ParseUUIDPipe)),
+    __param(1, (0, common_1.Body)((0, zod_pipe_1.zodBody)(zod_1.z.object({ discordId: snowflake, targetId: snowflake })))),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, Object]),
+    __metadata("design:returntype", void 0)
+], BotSupportTicketsController.prototype, "creatorAdd", null);
 __decorate([
     (0, decorators_1.BotService)(),
     (0, common_1.Post)(':id/creator-close'),

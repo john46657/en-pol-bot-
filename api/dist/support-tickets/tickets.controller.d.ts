@@ -14,6 +14,12 @@ declare const actionSchema: z.ZodDiscriminatedUnion<"action", [z.ZodObject<{
     action: "close";
     reason?: string | undefined;
 }>, z.ZodObject<{
+    action: z.ZodLiteral<"close_request">;
+}, "strip", z.ZodTypeAny, {
+    action: "close_request";
+}, {
+    action: "close_request";
+}>, z.ZodObject<{
     action: z.ZodLiteral<"reopen">;
 }, "strip", z.ZodTypeAny, {
     action: "reopen";
@@ -169,10 +175,10 @@ declare const listQ: z.ZodObject<{
     q?: string | undefined;
     kind?: "open" | "archived" | "all" | "closed" | "escalated" | "deleted" | undefined;
     to?: Date | undefined;
+    creator?: string | undefined;
     categoryId?: string | undefined;
     statusId?: string | undefined;
     priorityId?: string | undefined;
-    creator?: string | undefined;
     from?: Date | undefined;
     claimer?: string | undefined;
 }, {
@@ -182,10 +188,10 @@ declare const listQ: z.ZodObject<{
     q?: string | undefined;
     kind?: "open" | "archived" | "all" | "closed" | "escalated" | "deleted" | undefined;
     to?: Date | undefined;
+    creator?: string | undefined;
     categoryId?: string | undefined;
     statusId?: string | undefined;
     priorityId?: string | undefined;
-    creator?: string | undefined;
     from?: Date | undefined;
     claimer?: string | undefined;
 }>;
@@ -207,8 +213,8 @@ declare const transcriptQ: z.ZodObject<{
     status?: string | undefined;
     q?: string | undefined;
     to?: Date | undefined;
-    staff?: string | undefined;
     creator?: string | undefined;
+    staff?: string | undefined;
     from?: Date | undefined;
     categoryName?: string | undefined;
 }, {
@@ -218,8 +224,8 @@ declare const transcriptQ: z.ZodObject<{
     pageSize?: number | undefined;
     q?: string | undefined;
     to?: Date | undefined;
-    staff?: string | undefined;
     creator?: string | undefined;
+    staff?: string | undefined;
     from?: Date | undefined;
     categoryName?: string | undefined;
 }>;
@@ -311,6 +317,15 @@ export declare class SupportTicketsController {
             escalationRoleIds: string[];
             escalationPriorityId: string | null;
             escalationMessage: string;
+            welcomeImageUrl: string | null;
+            capacity: number;
+            creatorCanAddUsers: boolean;
+            claimDiscordCategoryId: string | null;
+            claimLocksChat: boolean;
+            autoClaimOnMessage: boolean;
+            autoUnclaimMinutes: number;
+            staffAlertMinutes: number;
+            closeRequestCloses: boolean;
         } & {
             buttons: import("@enrp/shared").TicketButtonConfig[];
             questions: import("@enrp/shared").TicketQuestion[];
@@ -338,6 +353,7 @@ export declare class SupportTicketsController {
             authorIconUrl: string | null;
             categoryIds: string[];
             allowedRoleIds: string[];
+            showLoad: boolean;
             messageChannelId: string | null;
             messageId: string | null;
         }[];
@@ -378,6 +394,9 @@ export declare class SupportTicketsController {
             ratingMessage: string;
             ratingThanks: string;
             transcriptRetentionDays: number;
+            ratingChannelId: string | null;
+            ratingPublicChannelId: string | null;
+            ratingPublicFields: ("category" | "creator" | "staff" | "duration" | "comment")[];
         };
     }>;
     settings(u: AuthUser, b: z.infer<typeof settingsSchema>): Promise<{
@@ -390,6 +409,9 @@ export declare class SupportTicketsController {
         ratingMessage: string;
         ratingThanks: string;
         transcriptRetentionDays: number;
+        ratingChannelId: string | null;
+        ratingPublicChannelId: string | null;
+        ratingPublicFields: ("category" | "creator" | "staff" | "duration" | "comment")[];
     }>;
     createCategory(u: AuthUser, b: z.infer<typeof categorySchema>): Promise<{
         id: string;
@@ -439,6 +461,15 @@ export declare class SupportTicketsController {
         escalationRoleIds: string[];
         escalationPriorityId: string | null;
         escalationMessage: string;
+        welcomeImageUrl: string | null;
+        capacity: number;
+        creatorCanAddUsers: boolean;
+        claimDiscordCategoryId: string | null;
+        claimLocksChat: boolean;
+        autoClaimOnMessage: boolean;
+        autoUnclaimMinutes: number;
+        staffAlertMinutes: number;
+        closeRequestCloses: boolean;
     } & {
         buttons: import("@enrp/shared").TicketButtonConfig[];
         questions: import("@enrp/shared").TicketQuestion[];
@@ -491,6 +522,15 @@ export declare class SupportTicketsController {
         escalationRoleIds: string[];
         escalationPriorityId: string | null;
         escalationMessage: string;
+        welcomeImageUrl: string | null;
+        capacity: number;
+        creatorCanAddUsers: boolean;
+        claimDiscordCategoryId: string | null;
+        claimLocksChat: boolean;
+        autoClaimOnMessage: boolean;
+        autoUnclaimMinutes: number;
+        staffAlertMinutes: number;
+        closeRequestCloses: boolean;
     } & {
         buttons: import("@enrp/shared").TicketButtonConfig[];
         questions: import("@enrp/shared").TicketQuestion[];
@@ -543,6 +583,15 @@ export declare class SupportTicketsController {
         escalationRoleIds: string[];
         escalationPriorityId: string | null;
         escalationMessage: string;
+        welcomeImageUrl: string | null;
+        capacity: number;
+        creatorCanAddUsers: boolean;
+        claimDiscordCategoryId: string | null;
+        claimLocksChat: boolean;
+        autoClaimOnMessage: boolean;
+        autoUnclaimMinutes: number;
+        staffAlertMinutes: number;
+        closeRequestCloses: boolean;
     } & {
         buttons: import("@enrp/shared").TicketButtonConfig[];
         questions: import("@enrp/shared").TicketQuestion[];
@@ -571,6 +620,7 @@ export declare class SupportTicketsController {
         authorIconUrl: string | null;
         categoryIds: string[];
         allowedRoleIds: string[];
+        showLoad: boolean;
         messageChannelId: string | null;
         messageId: string | null;
     }>;
@@ -597,6 +647,7 @@ export declare class SupportTicketsController {
         authorIconUrl: string | null;
         categoryIds: string[];
         allowedRoleIds: string[];
+        showLoad: boolean;
         messageChannelId: string | null;
         messageId: string | null;
     }>;
@@ -623,6 +674,7 @@ export declare class SupportTicketsController {
         authorIconUrl: string | null;
         categoryIds: string[];
         allowedRoleIds: string[];
+        showLoad: boolean;
         messageChannelId: string | null;
         messageId: string | null;
     }>;
@@ -848,12 +900,12 @@ export declare class SupportTicketsController {
             category: string;
             id: string;
             createdAt: Date;
+            comment: string | null;
             categoryId: string;
             creatorId: string;
             ticketId: string;
             staffIds: string[];
             stars: number;
-            comment: string | null;
         }[];
     }>;
     transcripts(u: AuthUser, q: z.infer<typeof transcriptQ>): Promise<{
@@ -962,12 +1014,12 @@ export declare class SupportTicketsController {
         rating: {
             id: string;
             createdAt: Date;
+            comment: string | null;
             categoryId: string;
             creatorId: string;
             ticketId: string;
             staffIds: string[];
             stars: number;
-            comment: string | null;
         } | null;
         names: Record<string, string>;
         id: string;
@@ -996,6 +1048,8 @@ export declare class SupportTicketsController {
         firstResponseAt: Date | null;
         lastActivityAt: Date;
         warnedAt: Date | null;
+        staffAlertedAt: Date | null;
+        closeRequestedAt: Date | null;
         deleteAt: Date | null;
         escalatedAt: Date | null;
     }>;
@@ -1250,6 +1304,22 @@ export declare class BotSupportTicketsController {
     }): Promise<{
         answer: string;
         done: boolean;
+        effects: import("@enrp/shared").TicketEffect[];
+    }>;
+    closeRequest(id: string, b: {
+        discordId: string;
+        accept: boolean;
+    }): Promise<{
+        ok: boolean;
+        message: string;
+        effects: import("@enrp/shared").TicketEffect[];
+    }>;
+    creatorAdd(id: string, b: {
+        discordId: string;
+        targetId: string;
+    }): Promise<{
+        ok: boolean;
+        message: string;
         effects: import("@enrp/shared").TicketEffect[];
     }>;
     creatorClose(id: string, b: {

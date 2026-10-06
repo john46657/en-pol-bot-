@@ -91,8 +91,11 @@ exports.TICKET_INTERACTION = {
                 }
                 // ---- Fragen ----
                 case 'ans': {
-                    const [qid, kind] = rest;
-                    return { modal: { id: `tk:ansm:${id}:${qid}`, title: 'Antwort', fields: [{ id: 'value', label: 'Deine Antwort', paragraph: kind === 'l', required: true, maxLength: kind === 'l' ? 2000 : 200 }] } };
+                    const [qid, kind, limits] = rest;
+                    // Zeichenlimit aus der Einrichtung (…:min-max), sonst Standard
+                    const [min, max] = (limits ?? '').split('-').map(Number);
+                    const maxLength = Math.min(4000, max || (kind === 'l' ? 2000 : 200));
+                    return { modal: { id: `tk:ansm:${id}:${qid}`, title: 'Antwort', fields: [{ id: 'value', label: 'Deine Antwort', paragraph: kind === 'l', required: true, maxLength, ...(min ? { minLength: Math.min(min, maxLength) } : {}) }] } };
                 }
                 case 'ansm': return answer(c, id, rest[0] ?? '', [f.value ?? '']);
                 case 'ansv': return answer(c, id, rest[0] ?? '', [rest[1] ?? '']);
@@ -128,7 +131,15 @@ exports.TICKET_INTERACTION = {
                 case 'transcript':
                 case 'reopen':
                 case 'rating':
+                case 'close_request':
                     return run(c, await staff(c, id, { action }));
+                // ---- Antwort des Erstellers auf „Schließen anfragen“ ----
+                case 'creq': {
+                    const r = await c.api.service('POST', `/bot/support-tickets/${id}/close-request`, { discordId: c.discordId, accept: rest[0] === 'yes' });
+                    if (r.effects?.length && c.applyEffects)
+                        await c.applyEffects(r.effects);
+                    return { ...(0, format_1.okReply)(r.message ?? 'Erledigt.'), update: { embeds: [{ title: rest[0] === 'yes' ? '✅ Schließen bestätigt' : '✖️ Ticket bleibt offen', color: rest[0] === 'yes' ? format_1.COLORS.success : format_1.COLORS.neutral }] } };
+                }
                 case 'delete': return { ephemeral: true, embeds: [{ title: '🗑️ Ticket löschen?', description: 'Der Channel wird gelöscht (ein Transcript wird vorher gesichert, falls eingestellt).', color: format_1.COLORS.danger }], buttons: [{ id: `tk:delyes:${id}`, label: 'Endgültig löschen', style: 'danger' }] };
                 case 'delyes': return run(c, await staff(c, id, { action: 'delete' }));
                 // ---- Benutzer/Rollen ----
@@ -139,7 +150,12 @@ exports.TICKET_INTERACTION = {
                     const minutes = Number(rest[0]) || 0;
                     let n = 0;
                     for (const target of c.values ?? []) {
-                        const r = await staff(c, id, { action: 'add_access', targetId: target, kind: action === 'addu' ? 'USER' : 'ROLE', ...(minutes ? { minutes } : {}) });
+                        const r = await staff(c, id, { action: 'add_access', targetId: target, kind: action === 'addu' ? 'USER' : 'ROLE', ...(minutes ? { minutes } : {}) }).catch((e) => {
+                            // kein Teammitglied: als Ersteller hinzufügen (wenn die Ticket-Art das erlaubt)
+                            if (action === 'addu' && e instanceof api_1.BotApiError && (e.status === 401 || e.status === 403))
+                                return c.api.service('POST', `/bot/support-tickets/${id}/creator-add`, { discordId: c.discordId, targetId: target });
+                            throw e;
+                        });
                         if (r.effects?.length && c.applyEffects)
                             await c.applyEffects(r.effects);
                         n++;
