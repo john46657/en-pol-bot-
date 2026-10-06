@@ -16,6 +16,7 @@ export const PERMISSION_CATALOG = {
   applications: ['view', 'review', 'decide'],
   academy: ['view', 'manage'],
   sek: ['view', 'report', 'manage'],
+  qualifications: ['view', 'decide', 'manage'],
   communication: ['view', 'send', 'moderate'],
   analytics: ['view'],
   audit: ['view', 'export'],

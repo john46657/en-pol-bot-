@@ -16,7 +16,7 @@ const audit_service_1 = require("../audit/audit.service");
 const discord_service_1 = require("../discord/discord.service");
 const errors_1 = require("../common/errors");
 const numbering_1 = require("../common/numbering");
-/** SEK (Spezialeinsatzkommando): Roster, Einsatzberichte (nur Mitglieder) und Bewerbungen (Annahme → Aufnahme ins Roster). */
+/** SEK (Spezialeinsatzkommando): Roster und Einsatzberichte (nur Mitglieder). Bewerbungen laufen über die Qualifikationen. */
 let SekService = class SekService {
     prisma;
     audit;
@@ -37,10 +37,7 @@ let SekService = class SekService {
         return new Map(users.map((u) => [u.id, { displayName: u.displayName, callsign: u.personnel?.callsign ?? null, rank: u.personnel?.rank ?? null }]));
     }
     async isMember(userId) { return !!(await this.prisma.sekMember.findUnique({ where: { userId } })); }
-    async me(userId) {
-        const open = await this.prisma.sekApplication.findFirst({ where: { userId, status: 'OPEN' }, select: { number: true, createdAt: true } });
-        return { member: await this.isMember(userId), openApplication: open };
-    }
+    async me(userId) { return { member: await this.isMember(userId) }; }
     // ---- Roster ----
     async members() {
         const rows = await this.prisma.sekMember.findMany({ orderBy: { createdAt: 'asc' } });
@@ -86,50 +83,6 @@ let SekService = class SekService {
         const author = (await this.people([userId])).get(userId);
         await this.discord.enqueue('sek', 'sek.report', { number: r.number, missionType: r.missionType, description: r.description, occurredAt: r.occurredAt.toISOString(), author: author?.callsign ?? author?.displayName ?? '—' });
         return r;
-    }
-    // ---- Bewerbungen ----
-    async applications(status) {
-        const rows = await this.prisma.sekApplication.findMany({ where: status ? { status } : {}, orderBy: { createdAt: 'desc' }, take: 100 });
-        const p = await this.people(rows.flatMap((r) => [r.userId, ...(r.decidedById ? [r.decidedById] : [])]));
-        return rows.map((r) => ({ ...r, applicant: p.get(r.userId) ?? { displayName: '—', callsign: null, rank: null }, decidedByName: r.decidedById ? p.get(r.decidedById)?.displayName ?? '—' : null }));
-    }
-    async apply(actor, d) {
-        const userId = actor.userId;
-        if (await this.isMember(userId))
-            throw new errors_1.AppError('CONFLICT', 'You are already an SEK member.');
-        if (await this.prisma.sekApplication.findFirst({ where: { userId, status: 'OPEN' } }))
-            throw new errors_1.AppError('CONFLICT', 'You already have an open SEK application.');
-        const a = await this.prisma.$transaction(async (tx) => {
-            const app = await tx.sekApplication.create({ data: { number: (0, numbering_1.makeNumber)('SEKB'), userId, serviceTime: d.serviceTime, motivation: d.motivation, experience: d.experience } });
-            await this.audit.record(actor, { action: 'sek.application.submit', module: 'sek', entityType: 'SekApplication', entityId: app.id, after: { number: app.number } }, tx);
-            return app;
-        });
-        const me = (await this.people([userId])).get(userId);
-        const link = await this.prisma.discordLink.findUnique({ where: { userId } });
-        await this.discord.enqueue('sek', 'sek.application', { number: a.number, applicant: me?.displayName ?? '—', callsign: me?.callsign ?? null, discordId: link?.discordId ?? null, serviceTime: a.serviceTime, motivation: a.motivation, experience: a.experience });
-        return { number: a.number, status: a.status };
-    }
-    async decide(actor, id, status) {
-        const a = await this.prisma.sekApplication.findUnique({ where: { id } });
-        if (!a)
-            throw new errors_1.AppError('NOT_FOUND', 'Application not found.');
-        if (a.status !== 'OPEN')
-            throw new errors_1.AppError('CONFLICT', 'This application has already been decided.');
-        if (a.userId === actor.userId)
-            throw new errors_1.AppError('PERMISSION_DENIED', 'You cannot decide on your own application.');
-        await this.prisma.$transaction(async (tx) => {
-            const claimed = await tx.sekApplication.updateMany({ where: { id, status: 'OPEN' }, data: { status, decidedById: actor.userId, decidedAt: new Date() } });
-            if (claimed.count === 0)
-                throw new errors_1.AppError('CONFLICT', 'This application has already been decided.');
-            if (status === 'ACCEPTED')
-                await tx.sekMember.upsert({ where: { userId: a.userId }, create: { userId: a.userId, addedById: actor.userId }, update: {} });
-            await tx.notification.create({ data: { userId: a.userId, type: 'SEK', title: status === 'ACCEPTED' ? `Your SEK application ${a.number} was accepted` : `Your SEK application ${a.number} was not accepted` } });
-            await this.audit.record(actor, { action: `sek.application.${status === 'ACCEPTED' ? 'accept' : 'reject'}`, module: 'sek', entityType: 'SekApplication', entityId: id, before: { status: 'OPEN' }, after: { status } }, tx);
-        });
-        const link = await this.prisma.discordLink.findUnique({ where: { userId: a.userId } });
-        if (link)
-            await this.discord.enqueue('sek', 'sek.application.decided', { discordId: link.discordId, status, number: a.number }, { always: true });
-        return { id, number: a.number, status };
     }
 };
 exports.SekService = SekService;

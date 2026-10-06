@@ -4,7 +4,8 @@ exports.DANGER_BUTTONS = exports.DANGER = exports.incidentLine = exports.vehicle
 exports.personEmbed = personEmbed;
 exports.listEmbed = listEmbed;
 exports.renderOutbox = renderOutbox;
-exports.sekDecisionText = sekDecisionText;
+exports.outboxButtons = outboxButtons;
+exports.qualificationDecisionText = qualificationDecisionText;
 exports.applicationDecisionText = applicationDecisionText;
 exports.dangerEmbed = dangerEmbed;
 exports.teamlistEmbed = teamlistEmbed;
@@ -72,22 +73,31 @@ function renderOutbox(type, p) {
             return { title: `🎯 SEK-Einsatzbericht ${p.number}`, color: exports.COLORS.neutral, description: (0, exports.clip)((0, exports.plain)(p.description), 3500), fields: [
                     { name: 'Einsatzart', value: (0, exports.clip)((0, exports.plain)(p.missionType), 200), inline: true }, { name: 'Datum', value: new Date(String(p.occurredAt)).toLocaleString('de-DE', { timeZone: 'Europe/Berlin' }), inline: true }, { name: 'Beamter', value: (0, exports.clip)((0, exports.plain)(p.author), 200), inline: true }
                 ] };
-        case 'sek.application':
-            return { title: `🎯 Neue SEK-Bewerbung ${p.number}`, color: exports.COLORS.neutral, description: 'Entscheidung im System (Bereich *SEK*).', fields: [
-                    { name: 'Bewerber', value: (0, exports.clip)(`${p.callsign ? `${(0, exports.plain)(p.callsign)} · ` : ''}${(0, exports.plain)(p.applicant)}${p.discordId ? ` (<@${String(p.discordId)}>)` : ''}`, 300), inline: true },
-                    { name: 'Dienstzeit', value: (0, exports.clip)((0, exports.plain)(p.serviceTime), 200), inline: true },
-                    { name: 'Motivation', value: (0, exports.clip)((0, exports.plain)(p.motivation), 1024) },
-                    ...(p.experience ? [{ name: 'Erfahrung', value: (0, exports.clip)((0, exports.plain)(p.experience), 1024) }] : [])
-                ] };
+        case 'qualification.submitted': {
+            const answers = Array.isArray(p.answers) ? p.answers : [];
+            return { title: (0, exports.clip)(`📋 Neue Bewerbung: ${(0, exports.plain)(p.unitName)} (${p.number})`, 256), color: exports.COLORS.info,
+                description: (0, exports.clip)(`Von <@${String(p.discordId)}> (${(0, exports.plain)(p.discordName)})${p.linkedName ? ` · im System: **${(0, exports.plain)(p.linkedName)}**` : ' · nicht mit dem System verknüpft'}`, 4000),
+                fields: answers.slice(0, 24).map((a, i) => ({ name: (0, exports.clip)(`${i + 1}. ${(0, exports.plain)(a.question)}`, 256), value: (0, exports.clip)((0, exports.plain)(a.answer) || '—', 1024) })),
+                footer: 'Entscheiden: Buttons unten (Recht „qualifications.decide“) oder im Web unter Qualifications' };
+        }
         default:
             return null;
     }
 }
-/** Direktnachricht nach der Entscheidung über eine SEK-Bewerbung. */
-function sekDecisionText(p) {
+/** Buttons unter Channel-Benachrichtigungen (z. B. Annehmen/Ablehnen). */
+function outboxButtons(type, p) {
+    if (type === 'qualification.submitted' && typeof p.id === 'string')
+        return [
+            { id: `quali:decide:${p.id}:ACCEPTED`, label: 'Annehmen', emoji: '✅', style: 'success' },
+            { id: `quali:decide:${p.id}:REJECTED`, label: 'Ablehnen', emoji: '✖️', style: 'danger' },
+        ];
+    return undefined;
+}
+/** Direktnachricht nach der Entscheidung über eine Qualifikations-Bewerbung. */
+function qualificationDecisionText(p) {
     return p.status === 'ACCEPTED'
-        ? `🎯 Deine SEK-Bewerbung **${p.number}** wurde **angenommen** – willkommen im SEK!`
-        : `Deine SEK-Bewerbung **${p.number}** wurde diesmal leider **nicht angenommen**.`;
+        ? `🎉 Deine Bewerbung für **${(0, exports.plain)(p.unitName)}** (${p.number}) wurde **angenommen** – willkommen! Ein Teammitglied meldet sich bei dir.`
+        : `Deine Bewerbung für **${(0, exports.plain)(p.unitName)}** (${p.number}) wurde diesmal leider **nicht angenommen**. Du kannst dich später gerne erneut bewerben.`;
 }
 /** Texte der Entscheidungs-Direktnachricht an Bewerber (ohne internen Grund). */
 function applicationDecisionText(p) {

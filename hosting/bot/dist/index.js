@@ -4,6 +4,7 @@ const discord_js_1 = require("discord.js");
 const api_1 = require("./api");
 const commands_1 = require("./commands");
 const features_1 = require("./commands/features");
+const qualifications_1 = require("./commands/qualifications");
 const config_1 = require("./config");
 const live_1 = require("./live");
 const outbox_1 = require("./outbox");
@@ -11,8 +12,9 @@ const roblox_1 = require("./roblox");
 (0, config_1.loadDotEnv)();
 const cfg = (0, config_1.loadConfig)();
 const api = new api_1.HttpApi(cfg.API_URL, cfg.BOT_API_TOKEN);
-// Nur Guilds-Intent: Slash-Commands, Buttons, Channels und Rollen brauchen weder Message-Content noch Member-Intents (keine „privileged intents“).
-const client = new discord_js_1.Client({ intents: [discord_js_1.GatewayIntentBits.Guilds] });
+// Guilds: Slash-Commands, Buttons, Channels, Rollen. DirectMessages: Antworten auf Bewerbungsfragen per DM
+// (Inhalte von Direktnachrichten an den Bot sind ohne das „Message Content“-Privileg lesbar). Keine „privileged intents“ nötig.
+const client = new discord_js_1.Client({ intents: [discord_js_1.GatewayIntentBits.Guilds, discord_js_1.GatewayIntentBits.DirectMessages], partials: [discord_js_1.Partials.Channel] });
 const toEmbed = (e) => {
     const b = new discord_js_1.EmbedBuilder().setTitle(e.title);
     if (e.description)
@@ -31,7 +33,7 @@ const toRows = (buttons = []) => {
     const rows = [];
     for (let i = 0; i < buttons.length && rows.length < 5; i += 5) {
         rows.push(new discord_js_1.ActionRowBuilder().addComponents(buttons.slice(i, i + 5).map((b) => {
-            const x = new discord_js_1.ButtonBuilder().setCustomId(b.id).setLabel(b.label).setStyle(STYLE[b.style]);
+            const x = b.url ? new discord_js_1.ButtonBuilder().setURL(b.url).setLabel(b.label).setStyle(discord_js_1.ButtonStyle.Link) : new discord_js_1.ButtonBuilder().setCustomId(b.id).setLabel(b.label).setStyle(STYLE[b.style]);
             if (b.emoji)
                 x.setEmoji(b.emoji);
             return x;
@@ -39,6 +41,12 @@ const toRows = (buttons = []) => {
     }
     return rows;
 };
+/** Auswahlmenü als eigene Reihe (über den Buttons). */
+const toComponents = (buttons, select) => [
+    ...(select ? [new discord_js_1.ActionRowBuilder().addComponents(new discord_js_1.StringSelectMenuBuilder().setCustomId(select.id).setPlaceholder(select.placeholder.slice(0, 150))
+            .addOptions(select.options.slice(0, 25).map((o) => ({ label: o.label.slice(0, 100), value: o.value, ...(o.description ? { description: o.description.slice(0, 100) } : {}) }))))] : []),
+    ...toRows(buttons).slice(0, select ? 4 : 5),
+];
 const toModal = (m) => new discord_js_1.ModalBuilder().setCustomId(m.id).setTitle(m.title.slice(0, 45)).addComponents(m.fields.map((f) => {
     const input = new discord_js_1.TextInputBuilder().setCustomId(f.id).setLabel(f.label.slice(0, 45)).setStyle(f.paragraph ? discord_js_1.TextInputStyle.Paragraph : discord_js_1.TextInputStyle.Short).setRequired(!!f.required);
     if (f.maxLength)
@@ -47,7 +55,7 @@ const toModal = (m) => new discord_js_1.ModalBuilder().setCustomId(m.id).setTitl
         input.setPlaceholder(f.placeholder.slice(0, 100));
     return new discord_js_1.ActionRowBuilder().addComponents(input);
 }));
-const replyPayload = (r) => ({ content: r.content ?? '', embeds: (r.embeds ?? []).map(toEmbed), components: toRows(r.buttons), allowedMentions: { parse: [] } });
+const replyPayload = (r) => ({ content: r.content ?? '', embeds: (r.embeds ?? []).map(toEmbed), components: toComponents(r.buttons, r.select), allowedMentions: { parse: [] } });
 const TICKET_PREFIX = 'ticket-';
 const ticketName = (userName, userId) => `${TICKET_PREFIX}${userName.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 40) || userId}`;
 /** Echte Discord-Umsetzung der Plattform-Aktionen (in Tests ein Fake). */
@@ -55,9 +63,9 @@ const platform = {
     async setRole(guildId, userId, roleId, on) {
         const member = await (await client.guilds.fetch(guildId)).members.fetch(userId);
         if (on)
-            await member.roles.add(roleId, 'EN Polizei: Funk-Freigabe');
+            await member.roles.add(roleId, 'EN Polizei');
         else
-            await member.roles.remove(roleId, 'EN Polizei: Funk-Freigabe entzogen');
+            await member.roles.remove(roleId, 'EN Polizei');
     },
     async createTicketChannel({ guildId, userId, userName, categoryId, staffRoleId }) {
         const guild = await client.guilds.fetch(guildId);
@@ -89,6 +97,10 @@ const platform = {
     async sendDirectMessage(userId, text) {
         await (await client.users.fetch(userId)).send({ content: text, allowedMentions: { parse: [] } });
     },
+    async sendDm(userId, { embed, buttons }) {
+        const m = await (await client.users.fetch(userId)).send({ embeds: [toEmbed(embed)], components: toRows(buttons), allowedMentions: { parse: [] } });
+        return { channelId: m.channelId, messageId: m.id };
+    },
     async postOrEdit({ channelId, messageId, embed, buttons }) {
         const ch = await client.channels.fetch(channelId);
         if (!ch?.isSendable() || !('messages' in ch))
@@ -103,11 +115,11 @@ const platform = {
         }
         return (await ch.send(payload)).id;
     },
-    async postPanel({ channelId, embed, buttons }) {
+    async postPanel({ channelId, embed, buttons, select }) {
         const ch = await client.channels.fetch(channelId);
         if (!ch?.isSendable())
             throw new Error(`channel ${channelId} is not a text channel the bot can post in`);
-        await ch.send({ embeds: [toEmbed(embed)], components: toRows(buttons), allowedMentions: { parse: [] } });
+        await ch.send({ embeds: [toEmbed(embed)], components: toComponents(buttons, select), allowedMentions: { parse: [] } });
     },
 };
 const live = (0, live_1.createLive)(api, platform);
@@ -184,13 +196,37 @@ async function handleComponent(i) {
         return;
     await i.deferReply({ flags: discord_js_1.MessageFlags.Ephemeral });
     const fields = i.isModalSubmit() ? Object.fromEntries(i.fields.fields.map((f, id) => [id, 'value' in f ? String(f.value) : ''])) : undefined;
-    const reply = await safeRun(`interaction ${i.customId}`, () => hit.def.run({ ...baseCtx(i), opts: {}, args: hit.args, fields }));
+    const values = i.isStringSelectMenu() ? i.values : undefined;
+    const reply = await safeRun(`interaction ${i.customId}`, () => hit.def.run({ ...baseCtx(i), opts: {}, args: hit.args, fields, values }));
     await i.editReply(replyPayload(reply));
 }
 client.on('interactionCreate', (i) => {
-    const task = i.isChatInputCommand() ? handleCommand(i) : i.isButton() || i.isModalSubmit() ? handleComponent(i) : undefined;
+    const task = i.isChatInputCommand() ? handleCommand(i) : i.isButton() || i.isModalSubmit() || i.isStringSelectMenu() ? handleComponent(i) : undefined;
     void task?.catch((e) => console.error('interaction failed:', e instanceof Error ? e.message : e));
 });
+// Direktnachrichten: Antworten auf Bewerbungsfragen (Qualifikations-Panel)
+client.on('messageCreate', (m) => {
+    if (m.author.bot || m.inGuild())
+        return;
+    void (0, qualifications_1.handleDirectMessage)({ userId: m.author.id, userName: m.author.username, content: m.content, api, sendDm: (u, msg) => platform.sendDm(u, msg) })
+        .catch((e) => console.error('direct message handling failed:', e instanceof Error ? e.message : e));
+});
+setInterval(() => (0, qualifications_1.sweepSessions)(), 10 * 60_000).unref();
+/** Rolle auf allen Servern vergeben, auf denen es sie gibt (angenommene Bewerbung). */
+async function grantRoleEverywhere(userId, roleId) {
+    let found = false;
+    for (const g of client.guilds.cache.values()) {
+        const role = g.roles.cache.get(roleId) ?? await g.roles.fetch(roleId).catch(() => null);
+        if (!role)
+            continue;
+        found = true;
+        const member = await g.members.fetch(userId).catch(() => null);
+        if (member)
+            await member.roles.add(roleId, 'EN Polizei: Bewerbung angenommen');
+    }
+    if (!found)
+        throw new Error('role not found on any server');
+}
 /** Beim Start prüfen, ob das System erreichbar ist (nur Hinweis – der Bot läuft auch ohne API weiter). */
 async function checkApi() {
     try {
@@ -235,12 +271,12 @@ client.once('clientReady', async (c) => {
             catch { /* Server ohne Befehle/Zugriff: egal */ }
         }
     }
-    (0, outbox_1.startOutboxLoop)(api, async (channelId, embed) => {
+    (0, outbox_1.startOutboxLoop)(api, async (channelId, embed, buttons) => {
         const ch = await client.channels.fetch(channelId);
         if (!ch?.isSendable())
             throw new Error(`channel ${channelId} is not a text channel the bot can post in`);
-        await ch.send({ embeds: [toEmbed(embed)], allowedMentions: { parse: [] } }); // niemals @everyone/@here/Rollen pingen
-    }, cfg.OUTBOX_POLL_SECONDS, console.log, (userId, text) => platform.sendDirectMessage(userId, text));
+        await ch.send({ embeds: [toEmbed(embed)], components: toRows(buttons), allowedMentions: { parse: [] } }); // niemals @everyone/@here/Rollen pingen
+    }, cfg.OUTBOX_POLL_SECONDS, console.log, (userId, text) => platform.sendDirectMessage(userId, text), grantRoleEverywhere);
     live.start(cfg.LIVE_REFRESH_SECONDS);
 });
 for (const sig of ['SIGINT', 'SIGTERM'])

@@ -1,5 +1,5 @@
 import { BotApiError } from '../api';
-import { clip, COLORS, errorReply, listEmbed, okReply, plain, type Reply, type Row } from '../format';
+import { COLORS, errorReply, listEmbed, okReply, plain, type Reply, type Row } from '../format';
 import type { CommandDef, Ctx, InteractionDef } from './types';
 import { mapError } from './errors';
 
@@ -46,8 +46,8 @@ export const SEK_COMMANDS: CommandDef[] = [
           return { ephemeral: true, embeds: [{ ...listEmbed('🎯 SEK – letzte Einsatzberichte', rows.map((r) => `• **${r.number}** · ${day(r.occurredAt)} · ${plain(r.missionType)} — ${plain(r.authorCallsign ?? r.authorName)}`), 'Noch keine Einsatzberichte.'), color: COLORS.neutral }] };
         }
         if (action === 'me') {
-          const r = await c.api.asUser<{ member: boolean; openApplication: Row | null }>(c.discordId, 'GET', '/sek/me');
-          return okReply(r.member ? 'Du bist **Mitglied im SEK**. Einsatzbericht: `/sek-bericht`' : r.openApplication ? `Deine SEK-Bewerbung **${r.openApplication.number}** wird geprüft.` : 'Du bist nicht im SEK. Bewerben: `/sek-bewerbung`');
+          const r = await c.api.asUser<{ member: boolean }>(c.discordId, 'GET', '/sek/me');
+          return okReply(r.member ? 'Du bist **Mitglied im SEK**. Einsatzbericht: `/sek-bericht`' : 'Du bist nicht im SEK. Bewerben kannst du dich über das **Qualifikations-Panel** auf dem Server.');
         }
         const target = str(c, 'mitglied');
         if (!/^\d{15,25}$/.test(target)) return errorReply('Bitte ein Mitglied angeben.');
@@ -59,16 +59,6 @@ export const SEK_COMMANDS: CommandDef[] = [
         if (e instanceof BotApiError && e.status === 409) return errorReply('Diese Person ist bereits Mitglied im SEK.');
         return mapError(e);
       }
-    },
-  },
-  {
-    name: 'sek-bewerbung', description: 'Bewirb dich für das SEK (Formular)', opensModal: true,
-    async run() {
-      return { modal: { id: 'sek:apply', title: 'Bewerbung – SEK', fields: [
-        { id: 'dienstzeit', label: 'Wie lange bist du schon im Polizeidienst?', required: true, maxLength: 100 },
-        { id: 'motivation', label: 'Warum möchtest du zum SEK?', paragraph: true, required: true, maxLength: 2000 },
-        { id: 'erfahrung', label: 'Besondere Erfahrung/Qualifikation', paragraph: true, required: false, maxLength: 1000 },
-      ] } };
     },
   },
   {
@@ -89,11 +79,6 @@ export const SEK_INTERACTION: InteractionDef = {
     const f = c.fields ?? {};
     const v = (k: string) => (f[k] ?? '').trim();
     try {
-      if (c.args[0] === 'apply') {
-        if (v('motivation').length < 10) return errorReply('Bitte beschreibe deine Motivation etwas ausführlicher (mind. 10 Zeichen).');
-        const r = await c.api.asUser<{ number: string }>(c.discordId, 'POST', '/sek/applications', { serviceTime: v('dienstzeit'), motivation: v('motivation'), ...(v('erfahrung') ? { experience: v('erfahrung') } : {}) });
-        return okReply(`Deine SEK-Bewerbung **${r.number}** ist eingegangen. Die Entscheidung bekommst du per Direktnachricht.`);
-      }
       if (c.args[0] === 'report') {
         const when = parseGermanDate(v('datum'));
         if (!when) return errorReply('Ungültiges Datum. Bitte so angeben: 05.10.2026 oder 05.10.2026 21:30 (oder leer lassen).');
@@ -103,7 +88,6 @@ export const SEK_INTERACTION: InteractionDef = {
       }
       return errorReply('Unbekannte Aktion.');
     } catch (e) {
-      if (e instanceof BotApiError && e.status === 409) return errorReply(clip(c.args[0] === 'apply' ? 'Du bist schon im SEK oder hast bereits eine offene SEK-Bewerbung.' : 'Konflikt.', 200));
       if (e instanceof BotApiError && e.status === 403 && c.args[0] === 'report') return errorReply('Einsatzberichte können nur SEK-Mitglieder schreiben.');
       return mapError(e);
     }

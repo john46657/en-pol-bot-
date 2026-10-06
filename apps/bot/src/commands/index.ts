@@ -2,6 +2,7 @@ import { BotApiError } from '../api';
 import { mapError } from './errors';
 import { FEATURE_COMMANDS } from './features';
 import { SEK_COMMANDS } from './sek';
+import { QUALI_COMMANDS } from './qualifications';
 import { clip, COLORS, EmbedData, errorReply, incidentLine, label, listEmbed, okReply, personEmbed, plain, Reply, Row, vehicleEmbed } from '../format';
 import type { CommandDef, Ctx } from './types';
 
@@ -77,9 +78,9 @@ export const COMMANDS: CommandDef[] = [
         { name: 'Abfragen', value: '`/person` `/kennzeichen` `/fahndungen` `/einsaetze` `/einsatzinfo` `/einheiten` `/team`' },
         { name: 'Dienst & Leitstelle', value: '`/dienst` `/dienststunden` `/einheitstatus` `/einsatz` `/einsatzstatus` `/einsatzzuweisen` `/funk`' },
         { name: 'Erfassen', value: '`/ticket` `/bericht` `/beschwerde` `/ermittlung` `/fahndung` `/beweis`' },
-        { name: 'Leitung & Team', value: '`/gefahrenstatus` `/funkfreigabe` `/teamliste` `/supportpanel` `/roblox`' },
-        { name: 'SEK', value: '`/sek` `/sek-bericht` `/sek-bewerbung`' },
-        { name: 'Für alle', value: '`/bewerbung` (auch ohne Verknüpfung)' },
+        { name: 'Leitung & Team', value: '`/gefahrenstatus` `/funkfreigabe` `/teamliste` `/supportpanel` `/qualipanel` `/roblox`' },
+        { name: 'SEK', value: '`/sek` `/sek-bericht`' },
+        { name: 'Für alle', value: '`/bewerbung` (auch ohne Verknüpfung) · Bewerbung für SEK/Flugstaffel/Ausbilder über das Qualifikations-Panel' },
         { name: 'Hinweis', value: 'Alle Befehle laufen mit **deinen** Rechten im System. Antworten sind nur für dich sichtbar.' }] }] };
     },
   },
@@ -419,6 +420,7 @@ export const COMMANDS: CommandDef[] = [
   },
   ...FEATURE_COMMANDS,
   ...SEK_COMMANDS,
+  ...QUALI_COMMANDS,
 ];
 
 export { mapError };

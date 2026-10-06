@@ -30,26 +30,6 @@ declare const report: z.ZodObject<{
     missionType: string;
     occurredAt?: Date | undefined;
 }>;
-declare const application: z.ZodObject<{
-    serviceTime: z.ZodString;
-    motivation: z.ZodString;
-    experience: z.ZodOptional<z.ZodString>;
-}, "strip", z.ZodTypeAny, {
-    motivation: string;
-    serviceTime: string;
-    experience?: string | undefined;
-}, {
-    motivation: string;
-    serviceTime: string;
-    experience?: string | undefined;
-}>;
-declare const decision: z.ZodObject<{
-    status: z.ZodEnum<["ACCEPTED", "REJECTED"]>;
-}, "strip", z.ZodTypeAny, {
-    status: "REJECTED" | "ACCEPTED";
-}, {
-    status: "REJECTED" | "ACCEPTED";
-}>;
 declare const list: z.ZodObject<{
     limit: z.ZodDefault<z.ZodNumber>;
 }, "strip", z.ZodTypeAny, {
@@ -57,23 +37,12 @@ declare const list: z.ZodObject<{
 }, {
     limit?: number | undefined;
 }>;
-declare const appList: z.ZodObject<{
-    status: z.ZodOptional<z.ZodEnum<["OPEN", "ACCEPTED", "REJECTED"]>>;
-}, "strip", z.ZodTypeAny, {
-    status?: "REJECTED" | "OPEN" | "ACCEPTED" | undefined;
-}, {
-    status?: "REJECTED" | "OPEN" | "ACCEPTED" | undefined;
-}>;
 export declare class SekController {
     private readonly s;
     constructor(s: SekService);
-    /** Eigener Stand: Mitglied? offene Bewerbung? (für Web und Bot) */
+    /** Eigener Stand: Mitglied? (für Web und Bot) */
     me(a: Actor): Promise<{
         member: boolean;
-        openApplication: {
-            number: string;
-            createdAt: Date;
-        } | null;
     }>;
     members(): Promise<{
         since: Date;
@@ -111,34 +80,6 @@ export declare class SekController {
         authorId: string;
         occurredAt: Date;
         missionType: string;
-    }>;
-    /** Bewerben darf jeder Polizeibenutzer. */
-    apply(a: Actor, b: z.infer<typeof application>): Promise<{
-        number: string;
-        status: string;
-    }>;
-    applications(q: z.infer<typeof appList>): Promise<{
-        applicant: {
-            displayName: string;
-            callsign: string | null;
-            rank: string | null;
-        };
-        decidedByName: string | null;
-        number: string;
-        id: string;
-        userId: string;
-        createdAt: Date;
-        status: string;
-        experience: string | null;
-        motivation: string;
-        decidedById: string | null;
-        serviceTime: string;
-        decidedAt: Date | null;
-    }[]>;
-    decide(a: Actor, id: string, b: z.infer<typeof decision>): Promise<{
-        id: string;
-        number: string;
-        status: "REJECTED" | "ACCEPTED";
     }>;
 }
 export {};

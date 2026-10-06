@@ -9,7 +9,8 @@ import { pollOnce } from '../src/outbox';
 import type { Platform } from '../src/platform';
 import { robloxLookup } from '../src/roblox';
 import { parseGermanDate } from '../src/commands/sek';
-import { renderOutbox } from '../src/format';
+import { outboxButtons, renderOutbox } from '../src/format';
+import { APPLICATION_MS, handleDirectMessage, panelEmbed, resetSessions } from '../src/commands/qualifications';
 
 const ME = '123456789012345678', OTHER = '223456789012345678', GUILD = '323456789012345678', CHANNEL = '423456789012345678';
 type Call = { kind: 'user' | 'service'; method: string; path: string; body?: unknown };
@@ -35,8 +36,9 @@ function fakePlatform() {
     async createTicketChannel(a) { log.push(`ticket ${a.userId} ${a.categoryId ?? '-'} ${a.staffRoleId ?? '-'}`); return { channelId: 'T1', existing: false }; },
     async deleteChannel(id, ms) { log.push(`delete ${id} ${ms}`); },
     async sendDirectMessage(u, t) { log.push(`dm ${u} ${t}`); },
+    async sendDm(u, m) { log.push(`dmEmbed ${u} ${m.embed.title} ${(m.buttons ?? []).map((b) => b.id).join(',')}`); return { channelId: 'DM1', messageId: 'M1' }; },
     async postOrEdit(a) { log.push(`post ${a.channelId} ${a.messageId ?? 'new'}`); return a.messageId ?? 'M-new'; },
-    async postPanel(a) { log.push(`panel ${a.channelId} ${a.buttons.map((b) => b.id).join(',')}`); },
+    async postPanel(a) { log.push(`panel ${a.channelId} ${(a.buttons ?? []).map((b) => b.id).join(',')}${a.select ? ` select:${a.select.id}:${a.select.options.map((o) => o.value).join(',')}` : ''}`); },
   };
   return { p, log };
 }
@@ -211,10 +213,10 @@ describe('roblox lookup', () => {
 
 describe('SEK', () => {
   it('/sek liste and berichte show roster and reports; mein status explains next steps', async () => {
-    const { api } = fakeApi({ 'GET /sek/members': [{ displayName: 'Oscar', callsign: 'S-1', rank: 'Officer' }], 'GET /sek/reports': [{ number: 'SEK-2026-AB', occurredAt: '2026-10-01T20:00:00Z', missionType: 'Zugriff', authorName: 'Oscar', authorCallsign: 'S-1' }], 'GET /sek/me': { member: false, openApplication: null } });
+    const { api } = fakeApi({ 'GET /sek/members': [{ displayName: 'Oscar', callsign: 'S-1', rank: 'Officer' }], 'GET /sek/reports': [{ number: 'SEK-2026-AB', occurredAt: '2026-10-01T20:00:00Z', missionType: 'Zugriff', authorName: 'Oscar', authorCallsign: 'S-1' }], 'GET /sek/me': { member: false } });
     expect(text(await byName('sek')!.run(ctx(api)))).toContain('**S-1** Oscar · Officer');
     expect(text(await byName('sek')!.run(ctx(api, { opts: { aktion: 'berichte' } })))).toContain('SEK-2026-AB');
-    expect(text(await byName('sek')!.run(ctx(api, { opts: { aktion: 'mein_status' } })))).toContain('/sek-bewerbung');
+    expect(text(await byName('sek')!.run(ctx(api, { opts: { aktion: 'mein_status' } })))).toContain('Qualifikations-Panel');
   });
   it('/sek hinzufuegen adds by Discord id and syncs the optional SEK role', async () => {
     const { api, calls } = fakeApi({ 'POST /sek/members': { displayName: 'Bea' } });
@@ -225,17 +227,14 @@ describe('SEK', () => {
     expect(text(r)).toContain('Mitglied im SEK');
     expect(text(await byName('sek')!.run(ctx(api, { opts: { aktion: 'entfernen' } })))).toContain('Bitte ein Mitglied');
   });
-  it('/sek-bewerbung and /sek-bericht open forms; submissions go to the API as the user', async () => {
-    expect((await byName('sek-bewerbung')!.run(ctx(fakeApi({}).api))).modal?.id).toBe('sek:apply');
+  it('/sek-bericht opens a form; the report goes to the API as the user', async () => {
+    expect(byName('sek-bewerbung')).toBeUndefined();
     expect((await byName('sek-bericht')!.run(ctx(fakeApi({}).api))).modal?.id).toBe('sek:report');
-    const { api, calls } = fakeApi({ 'POST /sek/applications': { number: 'SEKB-1' }, 'POST /sek/reports': { number: 'SEK-1' } });
-    const apply = interactionFor('sek:apply')!;
-    expect(text(await apply.def.run({ ...ctx(api), args: apply.args, fields: { dienstzeit: '2 Monate', motivation: 'Ich will helfen, wirklich.', erfahrung: '' } }))).toContain('SEKB-1');
-    expect(calls[0]!.body).toEqual({ serviceTime: '2 Monate', motivation: 'Ich will helfen, wirklich.' });
+    const { api, calls } = fakeApi({ 'POST /sek/reports': { number: 'SEK-1' } });
     const rep = interactionFor('sek:report')!;
     expect(text(await rep.def.run({ ...ctx(api), args: rep.args, fields: { datum: '32.13.2026', einsatzart: 'Zugriff', beschreibung: 'Lagerhalle gestürmt' } }))).toContain('Ungültiges Datum');
     expect(text(await rep.def.run({ ...ctx(api), args: rep.args, fields: { datum: '01.10.2026 21:30', einsatzart: 'Zugriff', beschreibung: 'Lagerhalle gestürmt' } }))).toContain('SEK-1');
-    expect(calls[1]).toMatchObject({ path: '/sek/reports', body: { missionType: 'Zugriff' } });
+    expect(calls[0]).toMatchObject({ path: '/sek/reports', body: { missionType: 'Zugriff' } });
     const denied = fakeApi({ 'POST /sek/reports': new BotApiError(403, 'PERMISSION_DENIED', 'x') });
     expect(text(await rep.def.run({ ...ctx(denied.api), args: rep.args, fields: { datum: '', einsatzart: 'Zugriff', beschreibung: 'Lagerhalle gestürmt' } }))).toContain('nur SEK-Mitglieder');
   });
@@ -247,12 +246,94 @@ describe('SEK', () => {
     expect(parseGermanDate('01.01.2030', now)).toBeNull();
     expect(parseGermanDate('gestern', now)).toBeNull();
   });
-  it('renders SEK channel posts and sends decision DMs', async () => {
-    expect(renderOutbox('sek.application', { number: 'SEKB-1', applicant: 'Bea', serviceTime: '2 Monate', motivation: 'x', discordId: OTHER })?.fields?.map((f) => f.value).join(' ')).toContain(`<@${OTHER}>`);
+  it('renders SEK report posts', () => {
     expect(renderOutbox('sek.report', { number: 'SEK-1', missionType: 'Zugriff', description: 'd', occurredAt: '2026-10-01T20:00:00Z', author: 'S-1' })?.title).toContain('SEK-1');
-    const { api } = fakeApi({ 'GET /bot/config': {}, 'GET /bot/outbox': [{ id: 'o1', type: 'sek.application.decided', channelKey: 'sek', payload: { discordId: OTHER, status: 'ACCEPTED', number: 'SEKB-1' } }], 'POST /bot/outbox/o1/ack': {} });
-    const dms: string[] = [];
-    await pollOnce(api, async () => undefined, () => undefined, async (u, t) => { dms.push(`${u} ${t}`); });
-    expect(dms[0]).toContain('angenommen');
+  });
+});
+
+describe('Qualifikationen (Panel → Fragen per DM)', () => {
+  const CFG = { title: 'Qualifikationen', intro: 'Bildet euch weiter!', units: [
+    { key: 'flugstaffel', name: 'Flugstaffel', description: 'Aus der Luft!', questions: ['Roblox- und Discord-Name?', 'Warum?'] },
+    { key: 'sek', name: 'SEK', description: 'Zugriff!', questions: ['Q1', 'Q2', 'Q3'] }] };
+  beforeEach(() => resetSessions());
+  const dmLog = () => { const out: { embed: { title: string; description?: string }; buttons?: { id: string }[] }[] = []; return { out, sendDm: async (_u: string, m: (typeof out)[number]) => { out.push(m); } }; };
+
+  it('/qualipanel posts embed + select menu (admins only)', async () => {
+    const { api } = fakeApi({ 'GET /bot/qualifications': CFG });
+    const { p, log } = fakePlatform();
+    expect(text(await byName('qualipanel')!.run(ctx(api, { platform: p })))).toContain('Server verwalten');
+    await byName('qualipanel')!.run(ctx(api, { platform: p, isGuildAdmin: true, config: async () => ({}) }));
+    expect(log).toEqual([`panel ${CHANNEL}  select:quali:pick:flugstaffel,sek`]);
+    expect(panelEmbed(CFG).description).toContain('**__Flugstaffel:__**\nAus der Luft!');
+  });
+
+  it('selecting a unit sends a DM with Start/Abbrechen and answers with a jump link', async () => {
+    const { api } = fakeApi({ 'GET /bot/qualifications/open': { open: false, number: null }, 'GET /bot/qualifications': CFG });
+    const { p, log } = fakePlatform();
+    const hit = interactionFor('quali:pick')!;
+    const r = await hit.def.run({ ...ctx(api, { platform: p }), args: hit.args, values: ['flugstaffel'] });
+    expect(log).toEqual([`dmEmbed ${ME} Flugstaffel quali:start:flugstaffel,quali:cancel`]);
+    expect(r.buttons?.[0]?.url).toBe('https://discord.com/channels/@me/DM1/M1');
+    const open = fakeApi({ 'GET /bot/qualifications/open': { open: true, number: 'Q-1' }, 'GET /bot/qualifications': CFG });
+    expect(text(await hit.def.run({ ...ctx(open.api, { platform: p }), args: hit.args, values: ['sek'] }))).toContain('bereits eine offene Bewerbung');
+    const dmClosed = { ...p, sendDm: async () => { throw new Error('Cannot send messages to this user'); } };
+    expect(text(await hit.def.run({ ...ctx(api, { platform: dmClosed }), args: hit.args, values: ['sek'] }))).toContain('Direktnachrichten');
+  });
+
+  it('asks the questions one by one via DM and submits the answers', async () => {
+    const { api, calls } = fakeApi({ 'GET /bot/qualifications/open': { open: false }, 'GET /bot/qualifications': CFG, 'POST /bot/qualifications/applications': { number: 'Q-2026-AB' } });
+    const { p, log } = fakePlatform();
+    const start = interactionFor('quali:start:flugstaffel')!;
+    await start.def.run({ ...ctx(api, { platform: p }), args: start.args });
+    expect(log[0]).toBe(`dmEmbed ${ME} Flugstaffel quali:cancel`);
+    // zweite Auswahl während der laufenden Bewerbung wird abgewiesen
+    const pick = interactionFor('quali:pick')!;
+    expect(text(await pick.def.run({ ...ctx(api, { platform: p }), args: pick.args, values: ['sek'] }))).toContain('laufende Bewerbung');
+    const d = dmLog();
+    await handleDirectMessage({ userId: ME, userName: 'oscar', content: '   ', api, sendDm: d.sendDm });
+    expect(d.out[0]!.embed.description).toContain('mit Text');
+    await handleDirectMessage({ userId: ME, userName: 'oscar', content: 'x'.repeat(1001), api, sendDm: d.sendDm });
+    expect(d.out[1]!.embed.description).toContain('zu lang');
+    await handleDirectMessage({ userId: ME, userName: 'oscar', content: 'Oscar / oscar#1', api, sendDm: d.sendDm });
+    expect(d.out[2]!.embed.description).toContain('**2/2.** Warum?');
+    await handleDirectMessage({ userId: ME, userName: 'oscar', content: 'Weil ich fliegen will.', api, sendDm: d.sendDm });
+    expect(d.out[3]!.embed.description).toContain('Q-2026-AB');
+    expect(calls.find((c) => c.path === '/bot/qualifications/applications')!.body).toEqual({ unit: 'flugstaffel', discordId: ME, discordName: 'oscar', answers: [{ question: 'Roblox- und Discord-Name?', answer: 'Oscar / oscar#1' }, { question: 'Warum?', answer: 'Weil ich fliegen will.' }] });
+    await handleDirectMessage({ userId: ME, userName: 'oscar', content: 'noch was', api, sendDm: d.sendDm });
+    expect(d.out[4]!.embed.description).toContain('keine laufende Bewerbung');
+  });
+
+  it('cancel, 3-hour timeout and retry when the system is down', async () => {
+    const down = fakeApi({ 'GET /bot/qualifications/open': { open: false }, 'GET /bot/qualifications': CFG, 'POST /bot/qualifications/applications': new BotApiError(0, 'UNREACHABLE', 'down') });
+    const { p } = fakePlatform();
+    const start = interactionFor('quali:start:sek')!;
+    await start.def.run({ ...ctx(down.api, { platform: p }), args: start.args });
+    const cancel = interactionFor('quali:cancel')!;
+    expect(text(await cancel.def.run({ ...ctx(down.api), args: cancel.args }))).toContain('abgebrochen');
+    const d = dmLog();
+    await start.def.run({ ...ctx(down.api, { platform: p }), args: start.args });
+    await handleDirectMessage({ userId: ME, userName: 'o', content: 'a', api: down.api, sendDm: d.sendDm, now: Date.now() + APPLICATION_MS + 1 });
+    expect(d.out[0]!.embed.description).toContain('abgelaufen');
+    await start.def.run({ ...ctx(down.api, { platform: p }), args: start.args });
+    for (const a of ['a', 'b', 'c']) await handleDirectMessage({ userId: ME, userName: 'o', content: a, api: down.api, sendDm: d.sendDm });
+    expect(d.out.at(-1)!.embed.description).toContain('letzte Antwort');
+  });
+
+  it('team decides via buttons as the clicking user; decision DM gives the role first', async () => {
+    expect(outboxButtons('qualification.submitted', { id: 'abc' })?.map((b) => b.id)).toEqual(['quali:decide:abc:ACCEPTED', 'quali:decide:abc:REJECTED']);
+    const e = renderOutbox('qualification.submitted', { number: 'Q-1', unitName: 'SEK', discordId: OTHER, discordName: 'bea', linkedName: null, answers: [{ question: 'Warum?', answer: 'Darum' }] })!;
+    expect(e.fields?.[0]).toMatchObject({ name: '1. Warum?', value: 'Darum' });
+    const { api, calls } = fakeApi({ 'POST /qualifications/applications': { number: 'Q-1', unitName: 'SEK', addedToSek: true } });
+    const hit = interactionFor('quali:decide:11111111-1111-4111-8111-111111111111:ACCEPTED')!;
+    expect(text(await hit.def.run({ ...ctx(api), args: hit.args }))).toContain('ins SEK aufgenommen');
+    expect(calls[0]).toMatchObject({ kind: 'user', path: '/qualifications/applications/11111111-1111-4111-8111-111111111111/decision', body: { status: 'ACCEPTED' } });
+    const done = fakeApi({ 'POST /qualifications/applications': new BotApiError(409, 'CONFLICT', 'x') });
+    expect(text(await hit.def.run({ ...ctx(done.api), args: hit.args }))).toContain('bereits entschieden');
+
+    const box = fakeApi({ 'GET /bot/config': {}, 'GET /bot/outbox': [{ id: 'o1', type: 'qualification.decided', channelKey: 'qualifications', payload: { discordId: OTHER, status: 'ACCEPTED', number: 'Q-1', unitName: 'SEK', roleId: '623456789012345678' } }], 'POST /bot/outbox/o1/ack': {} });
+    const order: string[] = [];
+    await pollOnce(box.api, async () => undefined, () => undefined, async (u, t) => { order.push(`dm ${u} ${t}`); }, async (u, r) => { order.push(`role ${u} ${r}`); });
+    expect(order[0]).toBe(`role ${OTHER} 623456789012345678`);
+    expect(order[1]).toContain('angenommen');
   });
 });

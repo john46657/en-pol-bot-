@@ -5,7 +5,7 @@ export interface SekTarget {
     userId?: string;
     discordId?: string;
 }
-/** SEK (Spezialeinsatzkommando): Roster, Einsatzberichte (nur Mitglieder) und Bewerbungen (Annahme → Aufnahme ins Roster). */
+/** SEK (Spezialeinsatzkommando): Roster und Einsatzberichte (nur Mitglieder). Bewerbungen laufen über die Qualifikationen. */
 export declare class SekService {
     private readonly prisma;
     private readonly audit;
@@ -16,10 +16,6 @@ export declare class SekService {
     isMember(userId: string): Promise<boolean>;
     me(userId: string): Promise<{
         member: boolean;
-        openApplication: {
-            number: string;
-            createdAt: Date;
-        } | null;
     }>;
     members(): Promise<{
         since: Date;
@@ -61,36 +57,5 @@ export declare class SekService {
         authorId: string;
         occurredAt: Date;
         missionType: string;
-    }>;
-    applications(status?: string): Promise<{
-        applicant: {
-            displayName: string;
-            callsign: string | null;
-            rank: string | null;
-        };
-        decidedByName: string | null;
-        number: string;
-        id: string;
-        userId: string;
-        createdAt: Date;
-        status: string;
-        experience: string | null;
-        motivation: string;
-        decidedById: string | null;
-        serviceTime: string;
-        decidedAt: Date | null;
-    }[]>;
-    apply(actor: Actor, d: {
-        serviceTime: string;
-        motivation: string;
-        experience?: string;
-    }): Promise<{
-        number: string;
-        status: string;
-    }>;
-    decide(actor: Actor, id: string, status: 'ACCEPTED' | 'REJECTED'): Promise<{
-        id: string;
-        number: string;
-        status: "REJECTED" | "ACCEPTED";
     }>;
 }

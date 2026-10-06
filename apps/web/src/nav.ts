@@ -1,4 +1,4 @@
-import { Monitor, BarChart3, BookOpen, Briefcase, Car, ClipboardList, Crosshair, FileText, Fingerprint, Flag, Gavel, LayoutDashboard, MessageSquare, Radio, Scale, Search, Settings, Shield, Siren, Ticket, UserCheck, Users, Wrench, type LucideIcon } from 'lucide-react';
+import { Monitor, BarChart3, BookOpen, Briefcase, Award, Car, ClipboardList, Crosshair, FileText, Fingerprint, Flag, Gavel, LayoutDashboard, MessageSquare, Radio, Scale, Search, Settings, Shield, Siren, Ticket, UserCheck, Users, Wrench, type LucideIcon } from 'lucide-react';
 
 export interface NavItem { path: string; label: string; icon: LucideIcon; perm?: string; group: 'Operations' | 'Records' | 'Organisation' | 'Administration' }
 
@@ -19,6 +19,7 @@ export const NAV: NavItem[] = [
   { path: '/evidence', label: 'Evidence', icon: Briefcase, perm: 'evidence.view', group: 'Records' },
   { path: '/personnel', label: 'Personnel', icon: UserCheck, perm: 'personnel.view', group: 'Organisation' },
   { path: '/applications', label: 'Applications', icon: ClipboardList, perm: 'applications.view', group: 'Organisation' },
+  { path: '/qualifications', label: 'Qualifications', icon: Award, perm: 'qualifications.view', group: 'Organisation' },
   { path: '/sek', label: 'SEK', icon: Crosshair, perm: 'team.view', group: 'Organisation' },
   { path: '/academy', label: 'Academy', icon: BookOpen, perm: 'academy.view', group: 'Organisation' },
   { path: '/analytics', label: 'Analytics', icon: BarChart3, perm: 'analytics.view', group: 'Organisation' },

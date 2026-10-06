@@ -18,11 +18,11 @@ export declare class PersonnelService {
             id: string;
             userId: string;
             team: string | null;
+            qualifications: string[];
             callsign: string | null;
             rank: string | null;
             employmentStatus: string;
             joinDate: Date;
-            qualifications: string[];
         })[];
         total: number;
         page: number;
@@ -72,11 +72,11 @@ export declare class PersonnelService {
         id: string;
         userId: string;
         team: string | null;
+        qualifications: string[];
         callsign: string | null;
         rank: string | null;
         employmentStatus: string;
         joinDate: Date;
-        qualifications: string[];
     }>;
     create(actor: Actor, d: {
         userId: string;
@@ -88,11 +88,11 @@ export declare class PersonnelService {
         id: string;
         userId: string;
         team: string | null;
+        qualifications: string[];
         callsign: string | null;
         rank: string | null;
         employmentStatus: string;
         joinDate: Date;
-        qualifications: string[];
     }>;
     update(actor: Actor, id: string, d: {
         team?: string;
@@ -103,21 +103,21 @@ export declare class PersonnelService {
         id: string;
         userId: string;
         team: string | null;
+        qualifications: string[];
         callsign: string | null;
         rank: string | null;
         employmentStatus: string;
         joinDate: Date;
-        qualifications: string[];
     }>;
     promote(actor: Actor, id: string, rank: string, reason: string): Promise<{
         id: string;
         userId: string;
         team: string | null;
+        qualifications: string[];
         callsign: string | null;
         rank: string | null;
         employmentStatus: string;
         joinDate: Date;
-        qualifications: string[];
     }>;
     addRecord(actor: Actor, id: string, d: {
         type: 'AWARD' | 'DISCIPLINE' | 'NOTE';

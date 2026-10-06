@@ -29,5 +29,5 @@ export interface CommandDef {
   opensModal?: boolean;
   run(ctx: Ctx): Promise<Reply>;
 }
-/** Buttons/Formulare: customId = `prefix:arg:arg`. `fields` nur bei Formular-Absendungen. */
-export interface InteractionDef { prefix: string; run(ctx: Ctx & { args: string[]; fields?: Record<string, string> }): Promise<Reply> }
+/** Buttons/Formulare/Auswahlmenüs: customId = `prefix:arg:arg`. `fields` nur bei Formular-Absendungen, `values` nur bei Auswahlmenüs. */
+export interface InteractionDef { prefix: string; run(ctx: Ctx & { args: string[]; fields?: Record<string, string>; values?: string[] }): Promise<Reply> }

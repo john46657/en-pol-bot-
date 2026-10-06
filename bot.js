@@ -43240,7 +43240,7 @@ var require_dist8 = __commonJS({
       RoleSelectMenuBuilder: () => RoleSelectMenuBuilder,
       SectionBuilder: () => SectionBuilder,
       SelectMenuAssertions: () => Assertions_exports6,
-      SelectMenuBuilder: () => StringSelectMenuBuilder,
+      SelectMenuBuilder: () => StringSelectMenuBuilder2,
       SelectMenuOptionBuilder: () => StringSelectMenuOptionBuilder,
       SeparatorBuilder: () => SeparatorBuilder,
       SharedNameAndDescription: () => SharedNameAndDescription,
@@ -43260,7 +43260,7 @@ var require_dist8 = __commonJS({
       SlashCommandSubcommandBuilder: () => SlashCommandSubcommandBuilder,
       SlashCommandSubcommandGroupBuilder: () => SlashCommandSubcommandGroupBuilder,
       SlashCommandUserOption: () => SlashCommandUserOption,
-      StringSelectMenuBuilder: () => StringSelectMenuBuilder,
+      StringSelectMenuBuilder: () => StringSelectMenuBuilder2,
       StringSelectMenuOptionBuilder: () => StringSelectMenuOptionBuilder,
       TextDisplayBuilder: () => TextDisplayBuilder,
       TextInputAssertions: () => Assertions_exports5,
@@ -44952,7 +44952,7 @@ var require_dist8 = __commonJS({
       }
       return import_shapeshift6.Result.ok(value);
     }).setValidationEnabled(isValidationEnabled);
-    var StringSelectMenuBuilder = class extends BaseSelectMenuBuilder {
+    var StringSelectMenuBuilder2 = class extends BaseSelectMenuBuilder {
       static {
         __name(this, "StringSelectMenuBuilder");
       }
@@ -45351,7 +45351,7 @@ var require_dist8 = __commonJS({
        * @param input - A function that returns a component builder or an already built builder
        */
       setStringSelectMenuComponent(input) {
-        this.data.component = resolveBuilder(input, StringSelectMenuBuilder);
+        this.data.component = resolveBuilder(input, StringSelectMenuBuilder2);
         return this;
       }
       /**
@@ -46202,7 +46202,7 @@ var require_dist8 = __commonJS({
         case import_v1027.ComponentType.Button:
           return new ButtonBuilder2(data);
         case import_v1027.ComponentType.StringSelect:
-          return new StringSelectMenuBuilder(data);
+          return new StringSelectMenuBuilder2(data);
         case import_v1027.ComponentType.TextInput:
           return new TextInputBuilder2(data);
         case import_v1027.ComponentType.UserSelect:
@@ -49662,7 +49662,7 @@ var require_StringSelectMenuBuilder = __commonJS({
     var { isJSONEncodable } = require_dist();
     var { toSnakeCase } = require_Transformers();
     var { resolvePartialEmoji } = require_Util();
-    var StringSelectMenuBuilder = class _StringSelectMenuBuilder extends BuildersSelectMenu {
+    var StringSelectMenuBuilder2 = class _StringSelectMenuBuilder extends BuildersSelectMenu {
       constructor({ options, ...data } = {}) {
         super(
           toSnakeCase({
@@ -49718,7 +49718,7 @@ var require_StringSelectMenuBuilder = __commonJS({
         return new this(other);
       }
     };
-    module2.exports = StringSelectMenuBuilder;
+    module2.exports = StringSelectMenuBuilder2;
   }
 });
 
@@ -49930,7 +49930,7 @@ var require_Components = __commonJS({
     var RoleSelectMenuComponent = require_RoleSelectMenuComponent();
     var SectionComponent = require_SectionComponent();
     var SeparatorComponent = require_SeparatorComponent();
-    var StringSelectMenuBuilder = require_StringSelectMenuBuilder();
+    var StringSelectMenuBuilder2 = require_StringSelectMenuBuilder();
     var StringSelectMenuComponent = require_StringSelectMenuComponent();
     var TextDisplayComponent = require_TextDisplayComponent();
     var TextInputBuilder2 = require_TextInputBuilder();
@@ -49959,7 +49959,7 @@ var require_Components = __commonJS({
     var ComponentTypeToBuilder = {
       [ComponentType.ActionRow]: ActionRowBuilder2,
       [ComponentType.Button]: ButtonBuilder2,
-      [ComponentType.StringSelect]: StringSelectMenuBuilder,
+      [ComponentType.StringSelect]: StringSelectMenuBuilder2,
       [ComponentType.TextInput]: TextInputBuilder2,
       [ComponentType.UserSelect]: UserSelectMenuBuilder,
       [ComponentType.RoleSelect]: RoleSelectMenuBuilder,
@@ -53768,7 +53768,7 @@ var require_Action = __commonJS({
     var { ChannelType: ChannelType2 } = require_v106();
     var { Poll } = require_Poll();
     var { PollAnswer } = require_PollAnswer();
-    var Partials = require_Partials();
+    var Partials2 = require_Partials();
     var GenericAction = class {
       constructor(client2) {
         this.client = client2;
@@ -53792,7 +53792,7 @@ var require_Action = __commonJS({
           payloadData.recipients = [recipient];
         }
         if (id !== void 0) payloadData.id = id;
-        return data[this.client.actions.injectedChannel] ?? this.getPayload({ ...data, ...payloadData }, this.client.channels, id, Partials.Channel);
+        return data[this.client.actions.injectedChannel] ?? this.getPayload({ ...data, ...payloadData }, this.client.channels, id, Partials2.Channel);
       }
       getMessage(data, channel, cache) {
         const id = data.message_id ?? data.id;
@@ -53804,13 +53804,13 @@ var require_Action = __commonJS({
           },
           channel.messages,
           id,
-          Partials.Message,
+          Partials2.Message,
           cache
         );
       }
       getPoll(data, message, channel) {
-        const includePollPartial = this.client.options.partials.includes(Partials.Poll);
-        const includePollAnswerPartial = this.client.options.partials.includes(Partials.PollAnswer);
+        const includePollPartial = this.client.options.partials.includes(Partials2.Poll);
+        const includePollAnswerPartial = this.client.options.partials.includes(Partials2.PollAnswer);
         if (message.partial && (!includePollPartial || !includePollAnswerPartial)) return null;
         if (!message.poll && includePollPartial) {
           message.poll = new Poll(this.client, data, message, channel);
@@ -53831,15 +53831,15 @@ var require_Action = __commonJS({
           },
           message.reactions,
           id,
-          Partials.Reaction
+          Partials2.Reaction
         );
       }
       getMember(data, guild) {
-        return this.getPayload(data, guild.members, data.user.id, Partials.GuildMember);
+        return this.getPayload(data, guild.members, data.user.id, Partials2.GuildMember);
       }
       getUser(data) {
         const id = data.user_id;
-        return data[this.client.actions.injectedUser] ?? this.getPayload({ id }, this.client.users, id, Partials.User);
+        return data[this.client.actions.injectedUser] ?? this.getPayload({ id }, this.client.users, id, Partials2.User);
       }
       getUserFromMember(data) {
         if (data.guild_id && data.member?.user) {
@@ -53858,14 +53858,14 @@ var require_Action = __commonJS({
           { id, guild_id: data.guild_id ?? guild.id },
           guild.scheduledEvents,
           id,
-          Partials.GuildScheduledEvent
+          Partials2.GuildScheduledEvent
         );
       }
       getThreadMember(id, manager) {
-        return this.getPayload({ user_id: id }, manager, id, Partials.ThreadMember, false);
+        return this.getPayload({ user_id: id }, manager, id, Partials2.ThreadMember, false);
       }
       getSoundboardSound(data, guild) {
-        return this.getPayload(data, guild.soundboardSounds, data.sound_id, Partials.SoundboardSound);
+        return this.getPayload(data, guild.soundboardSounds, data.sound_id, Partials2.SoundboardSound);
       }
       spreadInjectedData(data) {
         return Object.fromEntries(Object.getOwnPropertySymbols(data).map((symbol) => [symbol, data[symbol]]));
@@ -54217,7 +54217,7 @@ var require_DMChannel = __commonJS({
     var { BaseChannel } = require_BaseChannel();
     var TextBasedChannel = require_TextBasedChannel();
     var DMMessageManager = require_DMMessageManager();
-    var Partials = require_Partials();
+    var Partials2 = require_Partials();
     var DMChannel = class extends BaseChannel {
       constructor(client2, data) {
         super(client2, data);
@@ -54231,7 +54231,7 @@ var require_DMChannel = __commonJS({
             .../* @__PURE__ */ new Set([...this.recipientIds ?? [], ...data.recipients.map((recipient) => recipient.id)])
           ];
           for (const recipient of data.recipients) {
-            if ("username" in recipient || this.client.options.partials.includes(Partials.User)) {
+            if ("username" in recipient || this.client.options.partials.includes(Partials2.User)) {
               this.client.users._add(recipient);
             }
           }
@@ -56911,7 +56911,7 @@ var require_GuildAuditLogsEntry = __commonJS({
     var { StageInstance } = require_StageInstance();
     var { Sticker: Sticker2 } = require_Sticker();
     var Webhook2 = require_Webhook();
-    var Partials = require_Partials();
+    var Partials2 = require_Partials();
     var { flatten } = require_Util();
     var Targets = {
       All: "All",
@@ -56955,7 +56955,7 @@ var require_GuildAuditLogsEntry = __commonJS({
         this.action = data.action_type;
         this.reason = data.reason ?? null;
         this.executorId = data.user_id;
-        this.executor = data.user_id ? guild.client.options.partials.includes(Partials.User) ? guild.client.users._add({ id: data.user_id }) : guild.client.users.cache.get(data.user_id) ?? null : null;
+        this.executor = data.user_id ? guild.client.options.partials.includes(Partials2.User) ? guild.client.users._add({ id: data.user_id }) : guild.client.users.cache.get(data.user_id) ?? null : null;
         this.changes = data.changes?.map((change) => ({
           key: change.key,
           ..."old_value" in change ? { old: change.old_value } : {},
@@ -57050,7 +57050,7 @@ var require_GuildAuditLogsEntry = __commonJS({
           this.target = changesReduce(this.changes);
           this.target.id = data.target_id;
         } else if (targetType === Targets.User && data.target_id) {
-          this.target = guild.client.options.partials.includes(Partials.User) ? guild.client.users._add({ id: data.target_id }) : guild.client.users.cache.get(data.target_id) ?? null;
+          this.target = guild.client.options.partials.includes(Partials2.User) ? guild.client.users._add({ id: data.target_id }) : guild.client.users.cache.get(data.target_id) ?? null;
         } else if (targetType === Targets.Guild) {
           this.target = guild.client.guilds.cache.get(data.target_id);
         } else if (targetType === Targets.Webhook) {
@@ -59963,7 +59963,7 @@ var require_MessageReactionAdd = __commonJS({
     "use strict";
     var Action = require_Action();
     var Events2 = require_Events();
-    var Partials = require_Partials();
+    var Partials2 = require_Partials();
     var MessageReactionAdd = class extends Action {
       handle(data, fromStructure = false) {
         if (!data.emoji) return false;
@@ -59978,7 +59978,7 @@ var require_MessageReactionAdd = __commonJS({
         if (!channel?.isTextBased()) return false;
         const message = this.getMessage(data, channel);
         if (!message) return false;
-        const includePartial = this.client.options.partials.includes(Partials.Reaction);
+        const includePartial = this.client.options.partials.includes(Partials2.Reaction);
         if (message.partial && !includePartial) return false;
         const reaction = message.reactions._add({
           emoji: data.emoji,
@@ -60105,11 +60105,11 @@ var require_PresenceUpdate = __commonJS({
     "use strict";
     var Action = require_Action();
     var Events2 = require_Events();
-    var Partials = require_Partials();
+    var Partials2 = require_Partials();
     var PresenceUpdateAction = class extends Action {
       handle(data) {
         let user = this.client.users.cache.get(data.user.id);
-        if (!user && ("username" in data.user || this.client.options.partials.includes(Partials.User))) {
+        if (!user && ("username" in data.user || this.client.options.partials.includes(Partials2.User))) {
           user = this.client.users._add(data.user);
         }
         if (!user) return;
@@ -69445,7 +69445,7 @@ var require_GuildMemberManager = __commonJS({
     var { resolveImage } = require_DataResolver();
     var Events2 = require_Events();
     var { GuildMemberFlagsBitField } = require_GuildMemberFlagsBitField();
-    var Partials = require_Partials();
+    var Partials2 = require_Partials();
     var deprecatedEmittedForEditSoleNickname = false;
     var GuildMemberManager = class extends CachedManager {
       constructor(guild, iterable) {
@@ -69553,7 +69553,7 @@ var require_GuildMemberManager = __commonJS({
        * @readonly
        */
       get me() {
-        return this.cache.get(this.client.user.id) ?? (this.client.options.partials.includes(Partials.GuildMember) ? this._add({ user: { id: this.client.user.id } }, true) : null);
+        return this.cache.get(this.client.user.id) ?? (this.client.options.partials.includes(Partials2.GuildMember) ? this._add({ user: { id: this.client.user.id } }, true) : null);
       }
       /**
        * Options used to fetch a single member from a guild.
@@ -75381,9 +75381,9 @@ var require_SelectMenuBuilder = __commonJS({
   "node_modules/.pnpm/discord.js@14.27.0/node_modules/discord.js/src/structures/SelectMenuBuilder.js"(exports2, module2) {
     "use strict";
     var process2 = require("node:process");
-    var StringSelectMenuBuilder = require_StringSelectMenuBuilder();
+    var StringSelectMenuBuilder2 = require_StringSelectMenuBuilder();
     var deprecationEmitted = false;
-    var SelectMenuBuilder2 = class extends StringSelectMenuBuilder {
+    var SelectMenuBuilder2 = class extends StringSelectMenuBuilder2 {
       constructor(...params) {
         super(...params);
         if (!deprecationEmitted) {
@@ -75886,19 +75886,29 @@ ${clip(plain(p.reason), 3e3)}`, color: PRIORITY_COLOR[String(p.priority)] ?? COL
         { name: "Datum", value: new Date(String(p.occurredAt)).toLocaleString("de-DE", { timeZone: "Europe/Berlin" }), inline: true },
         { name: "Beamter", value: clip(plain(p.author), 200), inline: true }
       ] };
-    case "sek.application":
-      return { title: `\u{1F3AF} Neue SEK-Bewerbung ${p.number}`, color: COLORS.neutral, description: "Entscheidung im System (Bereich *SEK*).", fields: [
-        { name: "Bewerber", value: clip(`${p.callsign ? `${plain(p.callsign)} \xB7 ` : ""}${plain(p.applicant)}${p.discordId ? ` (<@${String(p.discordId)}>)` : ""}`, 300), inline: true },
-        { name: "Dienstzeit", value: clip(plain(p.serviceTime), 200), inline: true },
-        { name: "Motivation", value: clip(plain(p.motivation), 1024) },
-        ...p.experience ? [{ name: "Erfahrung", value: clip(plain(p.experience), 1024) }] : []
-      ] };
+    case "qualification.submitted": {
+      const answers = Array.isArray(p.answers) ? p.answers : [];
+      return {
+        title: clip(`\u{1F4CB} Neue Bewerbung: ${plain(p.unitName)} (${p.number})`, 256),
+        color: COLORS.info,
+        description: clip(`Von <@${String(p.discordId)}> (${plain(p.discordName)})${p.linkedName ? ` \xB7 im System: **${plain(p.linkedName)}**` : " \xB7 nicht mit dem System verkn\xFCpft"}`, 4e3),
+        fields: answers.slice(0, 24).map((a, i) => ({ name: clip(`${i + 1}. ${plain(a.question)}`, 256), value: clip(plain(a.answer) || "\u2014", 1024) })),
+        footer: "Entscheiden: Buttons unten (Recht \u201Equalifications.decide\u201C) oder im Web unter Qualifications"
+      };
+    }
     default:
       return null;
   }
 }
-function sekDecisionText(p) {
-  return p.status === "ACCEPTED" ? `\u{1F3AF} Deine SEK-Bewerbung **${p.number}** wurde **angenommen** \u2013 willkommen im SEK!` : `Deine SEK-Bewerbung **${p.number}** wurde diesmal leider **nicht angenommen**.`;
+function outboxButtons(type, p) {
+  if (type === "qualification.submitted" && typeof p.id === "string") return [
+    { id: `quali:decide:${p.id}:ACCEPTED`, label: "Annehmen", emoji: "\u2705", style: "success" },
+    { id: `quali:decide:${p.id}:REJECTED`, label: "Ablehnen", emoji: "\u2716\uFE0F", style: "danger" }
+  ];
+  return void 0;
+}
+function qualificationDecisionText(p) {
+  return p.status === "ACCEPTED" ? `\u{1F389} Deine Bewerbung f\xFCr **${plain(p.unitName)}** (${p.number}) wurde **angenommen** \u2013 willkommen! Ein Teammitglied meldet sich bei dir.` : `Deine Bewerbung f\xFCr **${plain(p.unitName)}** (${p.number}) wurde diesmal leider **nicht angenommen**. Du kannst dich sp\xE4ter gerne erneut bewerben.`;
 }
 function applicationDecisionText(p) {
   return p.status === "ACCEPTED" ? `\u{1F389} Deine Bewerbung **${p.number}** bei EN Polizei wurde **angenommen**! Ein Teammitglied meldet sich bei dir f\xFCr die n\xE4chsten Schritte.` : `Deine Bewerbung **${p.number}** bei EN Polizei wurde diesmal leider **nicht angenommen**. Du kannst dich gerne sp\xE4ter erneut bewerben.`;
@@ -76007,7 +76017,7 @@ var SEK_COMMANDS = [
         }
         if (action === "me") {
           const r2 = await c.api.asUser(c.discordId, "GET", "/sek/me");
-          return okReply(r2.member ? "Du bist **Mitglied im SEK**. Einsatzbericht: `/sek-bericht`" : r2.openApplication ? `Deine SEK-Bewerbung **${r2.openApplication.number}** wird gepr\xFCft.` : "Du bist nicht im SEK. Bewerben: `/sek-bewerbung`");
+          return okReply(r2.member ? "Du bist **Mitglied im SEK**. Einsatzbericht: `/sek-bericht`" : "Du bist nicht im SEK. Bewerben kannst du dich \xFCber das **Qualifikations-Panel** auf dem Server.");
         }
         const target = str(c, "mitglied");
         if (!/^\d{15,25}$/.test(target)) return errorReply("Bitte ein Mitglied angeben.");
@@ -76019,18 +76029,6 @@ var SEK_COMMANDS = [
         if (e instanceof BotApiError && e.status === 409) return errorReply("Diese Person ist bereits Mitglied im SEK.");
         return mapError(e);
       }
-    }
-  },
-  {
-    name: "sek-bewerbung",
-    description: "Bewirb dich f\xFCr das SEK (Formular)",
-    opensModal: true,
-    async run() {
-      return { modal: { id: "sek:apply", title: "Bewerbung \u2013 SEK", fields: [
-        { id: "dienstzeit", label: "Wie lange bist du schon im Polizeidienst?", required: true, maxLength: 100 },
-        { id: "motivation", label: "Warum m\xF6chtest du zum SEK?", paragraph: true, required: true, maxLength: 2e3 },
-        { id: "erfahrung", label: "Besondere Erfahrung/Qualifikation", paragraph: true, required: false, maxLength: 1e3 }
-      ] } };
     }
   },
   {
@@ -76052,11 +76050,6 @@ var SEK_INTERACTION = {
     const f = c.fields ?? {};
     const v = (k) => (f[k] ?? "").trim();
     try {
-      if (c.args[0] === "apply") {
-        if (v("motivation").length < 10) return errorReply("Bitte beschreibe deine Motivation etwas ausf\xFChrlicher (mind. 10 Zeichen).");
-        const r = await c.api.asUser(c.discordId, "POST", "/sek/applications", { serviceTime: v("dienstzeit"), motivation: v("motivation"), ...v("erfahrung") ? { experience: v("erfahrung") } : {} });
-        return okReply(`Deine SEK-Bewerbung **${r.number}** ist eingegangen. Die Entscheidung bekommst du per Direktnachricht.`);
-      }
       if (c.args[0] === "report") {
         const when = parseGermanDate(v("datum"));
         if (!when) return errorReply("Ung\xFCltiges Datum. Bitte so angeben: 05.10.2026 oder 05.10.2026 21:30 (oder leer lassen).");
@@ -76066,8 +76059,146 @@ var SEK_INTERACTION = {
       }
       return errorReply("Unbekannte Aktion.");
     } catch (e) {
-      if (e instanceof BotApiError && e.status === 409) return errorReply(clip(c.args[0] === "apply" ? "Du bist schon im SEK oder hast bereits eine offene SEK-Bewerbung." : "Konflikt.", 200));
       if (e instanceof BotApiError && e.status === 403 && c.args[0] === "report") return errorReply("Einsatzberichte k\xF6nnen nur SEK-Mitglieder schreiben.");
+      return mapError(e);
+    }
+  }
+};
+
+// apps/bot/src/commands/qualifications.ts
+var APPLICATION_MS = 3 * 60 * 6e4;
+var MAX_ANSWER = 1e3;
+var sessions = /* @__PURE__ */ new Map();
+var sweepSessions = (now = Date.now()) => {
+  for (const [k, s] of sessions) if (s.expiresAt <= now) sessions.delete(k);
+};
+var CANCEL = { id: "quali:cancel", label: "Bewerbung abbrechen", style: "danger" };
+var getConfig = (api2) => api2.service("GET", "/bot/qualifications");
+var questionEmbed = (s) => ({
+  title: clip(s.unitName, 256),
+  color: COLORS.info,
+  description: clip(`**${s.answers.length + 1}/${s.questions.length}.** ${plain(s.questions[s.answers.length])}
+
+_Antworte einfach mit einer Nachricht hier im Chat._`, 4e3)
+});
+function panelEmbed(cfg2) {
+  const parts = [cfg2.intro, ...cfg2.units.map((u) => `**__${plain(u.name)}:__**
+${u.description}`)].filter(Boolean);
+  return { title: clip(cfg2.title, 256), color: COLORS.info, description: clip(parts.join("\n\n"), 4e3) };
+}
+var QUALI_COMMANDS = [
+  {
+    name: "qualipanel",
+    description: "Postet das Qualifikations-Panel (SEK, Flugstaffel, Ausbilder \u2026) in diesen Channel",
+    async run(c) {
+      if (!c.guildId) return errorReply("Das geht nur auf einem Server, nicht per Direktnachricht.");
+      if (!c.isGuildAdmin) return errorReply("Daf\xFCr brauchst du auf diesem Discord-Server das Recht \u201EServer verwalten\u201C.");
+      if (!c.channelId || !c.platform) return errorReply("Panel kann hier nicht gepostet werden.");
+      try {
+        const cfg2 = await getConfig(c.api);
+        await c.platform.postPanel({ channelId: c.channelId, embed: panelEmbed(cfg2), select: { id: "quali:pick", placeholder: "Triff eine Auswahl", options: cfg2.units.map((u) => ({ label: clip(u.name, 100), value: u.key, ...u.description ? { description: clip(plain(u.description).replace(/\*|_/g, ""), 100) } : {} })) } });
+        const ch = await c.config?.().catch(() => void 0);
+        return okReply(`Qualifikations-Panel gepostet.${ch?.qualifications ? "" : " Tipp: In den Einstellungen einen **Qualifications channel** hinterlegen \u2013 dort landen die Bewerbungen mit Annehmen/Ablehnen-Buttons."}`);
+      } catch (e) {
+        if (e instanceof BotApiError) return mapError(e);
+        return errorReply("Panel konnte nicht gepostet werden (fehlen dem Bot Rechte in diesem Channel?).");
+      }
+    }
+  }
+];
+async function handleDirectMessage(a) {
+  const now = a.now ?? Date.now();
+  const s = sessions.get(a.userId);
+  const say = (description, color = COLORS.info, buttons) => a.sendDm(a.userId, { embed: { title: s ? clip(s.unitName, 256) : "Bewerbung", description, color }, buttons });
+  if (!s) {
+    await say("Du hast gerade keine laufende Bewerbung. Starte eine \xFCber das **Qualifikations-Panel** auf dem Server.", COLORS.neutral);
+    return;
+  }
+  if (s.expiresAt <= now) {
+    sessions.delete(a.userId);
+    await say("\u23F0 Die Zeit f\xFCr deine Bewerbung ist abgelaufen (3 Stunden). Bitte starte sie \xFCber das Panel neu.", COLORS.warning);
+    return;
+  }
+  const text = a.content.trim();
+  if (!text) {
+    await say("Bitte antworte mit Text.", COLORS.warning, [CANCEL]);
+    return;
+  }
+  if (text.length > MAX_ANSWER) {
+    await say(`Deine Antwort ist zu lang (${text.length} Zeichen, h\xF6chstens ${MAX_ANSWER}). Bitte k\xFCrzer fassen.`, COLORS.warning, [CANCEL]);
+    return;
+  }
+  s.answers.push(text);
+  if (s.answers.length < s.questions.length) {
+    await a.sendDm(a.userId, { embed: questionEmbed(s), buttons: [CANCEL] });
+    return;
+  }
+  try {
+    const r = await a.api.service("POST", "/bot/qualifications/applications", { unit: s.unit, discordId: a.userId, discordName: a.userName, answers: s.questions.map((question, i) => ({ question, answer: s.answers[i] })) });
+    sessions.delete(a.userId);
+    await say(`\u2705 Deine Bewerbung **${r.number}** ist eingegangen! Das Team pr\xFCft sie \u2013 die Entscheidung bekommst du hier per Direktnachricht.`, COLORS.success);
+  } catch (e) {
+    if (e instanceof BotApiError && (e.status === 409 || e.status === 400 || e.status === 404)) {
+      sessions.delete(a.userId);
+      await say(e.status === 409 ? "Du hast f\xFCr diese Einheit bereits eine offene Bewerbung. Bitte warte auf die Entscheidung." : "Die Fragen wurden inzwischen ge\xE4ndert. Bitte starte die Bewerbung \xFCber das Panel neu.", COLORS.warning);
+      return;
+    }
+    s.answers.pop();
+    await say("\u26A0\uFE0F Deine Bewerbung konnte gerade nicht gespeichert werden (System nicht erreichbar). Schicke deine **letzte Antwort** gleich noch einmal, um es erneut zu versuchen.", COLORS.warning, [CANCEL]);
+  }
+}
+var QUALI_INTERACTION = {
+  prefix: "quali",
+  async run(c) {
+    const [action, ...rest] = c.args;
+    try {
+      if (action === "cancel") {
+        const had = sessions.delete(c.discordId);
+        return okReply(had ? "Bewerbung abgebrochen. Du kannst jederzeit \xFCber das Panel neu starten." : "Es l\xE4uft keine Bewerbung.");
+      }
+      if (action === "decide") {
+        const [id, status] = rest;
+        if (!id || status !== "ACCEPTED" && status !== "REJECTED") return errorReply("Unbekannte Aktion.");
+        const r = await c.api.asUser(c.discordId, "POST", `/qualifications/applications/${id}/decision`, { status });
+        return okReply(`Bewerbung **${r.number}** (${plain(r.unitName)}) ${status === "ACCEPTED" ? "**angenommen**" : "**abgelehnt**"}. Die Person wird per Direktnachricht informiert${status === "ACCEPTED" ? " (und bekommt ggf. die Rolle)" : ""}.${r.addedToSek ? " Au\xDFerdem ins SEK aufgenommen." : ""}`);
+      }
+      if (action !== "pick" && action !== "start") return errorReply("Unbekannte Aktion.");
+      const key = action === "pick" ? c.values?.[0] : rest[0];
+      const running = sessions.get(c.discordId);
+      if (running && running.expiresAt > Date.now()) {
+        if (action === "start" && running.unit === key) return okReply(`Deine Bewerbung l\xE4uft bereits \u2013 Frage ${running.answers.length + 1}/${running.questions.length}: ${plain(running.questions[running.answers.length])}`);
+        return errorReply(`Du hast bereits eine laufende Bewerbung (**${plain(running.unitName)}**) in deinen Direktnachrichten. Beende oder brich sie dort zuerst ab.`);
+      }
+      const unit = (await getConfig(c.api)).units.find((u) => u.key === key);
+      if (!unit) return errorReply("Diese Auswahl gibt es nicht mehr. Bitte das Panel neu laden.");
+      const open = await c.api.service("GET", `/bot/qualifications/open?discordId=${c.discordId}&unit=${encodeURIComponent(unit.key)}`);
+      if (open.open) return errorReply(`Du hast f\xFCr **${plain(unit.name)}** bereits eine offene Bewerbung (${open.number}). Bitte warte auf die Entscheidung.`);
+      if (!c.platform) return errorReply("Direktnachrichten sind hier nicht verf\xFCgbar.");
+      if (action === "pick") {
+        let dm;
+        try {
+          dm = await c.platform.sendDm(c.discordId, {
+            embed: { title: clip(unit.name, 256), color: COLORS.info, description: `Bist du sicher, dass du dich bewerben m\xF6chtest?
+
+Sobald du startest, schicke ich dir nacheinander **${unit.questions.length} Fragen**. Du hast **3 Stunden** Zeit, die Bewerbung abzuschlie\xDFen \u2013 sonst musst du neu starten. Abbrechen kannst du jederzeit \xFCber den Button.` },
+            buttons: [{ id: `quali:start:${unit.key}`, label: "Bewerbung starten", style: "success" }, { id: "quali:cancel", label: "Abbrechen", style: "danger" }]
+          });
+        } catch {
+          return errorReply("Ich kann dir keine Direktnachricht schicken. Bitte erlaube Direktnachrichten von Servermitgliedern (Server-Men\xFC \u2192 Privatsph\xE4re-Einstellungen) und w\xE4hle erneut.");
+        }
+        return { ephemeral: true, embeds: [{ title: "Bewerbung gestartet", description: "Die Bewerbung wurde in deinen **Direktnachrichten** gestartet!", color: COLORS.success }], buttons: [{ id: "quali:link", label: "Zur Bewerbung", style: "secondary", url: `https://discord.com/channels/@me/${dm.channelId}/${dm.messageId}` }] };
+      }
+      const s = { unit: unit.key, unitName: unit.name, questions: unit.questions, answers: [], expiresAt: Date.now() + APPLICATION_MS };
+      sessions.set(c.discordId, s);
+      try {
+        await c.platform.sendDm(c.discordId, { embed: questionEmbed(s), buttons: [CANCEL] });
+      } catch {
+        sessions.delete(c.discordId);
+        return errorReply("Ich kann dir keine Direktnachricht schicken. Bitte erlaube Direktnachrichten und versuche es erneut.");
+      }
+      return okReply("Los geht\u2019s \u2013 beantworte die Fragen einfach hier im Chat.");
+    } catch (e) {
+      if (e instanceof BotApiError && e.status === 409) return errorReply("\xDCber diese Bewerbung wurde bereits entschieden.");
       return mapError(e);
     }
   }
@@ -76242,6 +76373,7 @@ var FEATURE_COMMANDS = [
 ];
 var INTERACTIONS = [
   SEK_INTERACTION,
+  QUALI_INTERACTION,
   {
     prefix: "danger",
     async run(c) {
@@ -76357,9 +76489,9 @@ var COMMANDS = [
         { name: "Abfragen", value: "`/person` `/kennzeichen` `/fahndungen` `/einsaetze` `/einsatzinfo` `/einheiten` `/team`" },
         { name: "Dienst & Leitstelle", value: "`/dienst` `/dienststunden` `/einheitstatus` `/einsatz` `/einsatzstatus` `/einsatzzuweisen` `/funk`" },
         { name: "Erfassen", value: "`/ticket` `/bericht` `/beschwerde` `/ermittlung` `/fahndung` `/beweis`" },
-        { name: "Leitung & Team", value: "`/gefahrenstatus` `/funkfreigabe` `/teamliste` `/supportpanel` `/roblox`" },
-        { name: "SEK", value: "`/sek` `/sek-bericht` `/sek-bewerbung`" },
-        { name: "F\xFCr alle", value: "`/bewerbung` (auch ohne Verkn\xFCpfung)" },
+        { name: "Leitung & Team", value: "`/gefahrenstatus` `/funkfreigabe` `/teamliste` `/supportpanel` `/qualipanel` `/roblox`" },
+        { name: "SEK", value: "`/sek` `/sek-bericht`" },
+        { name: "F\xFCr alle", value: "`/bewerbung` (auch ohne Verkn\xFCpfung) \xB7 Bewerbung f\xFCr SEK/Flugstaffel/Ausbilder \xFCber das Qualifikations-Panel" },
         { name: "Hinweis", value: "Alle Befehle laufen mit **deinen** Rechten im System. Antworten sind nur f\xFCr dich sichtbar." }
       ] }] };
     }
@@ -76781,7 +76913,8 @@ var COMMANDS = [
     }
   },
   ...FEATURE_COMMANDS,
-  ...SEK_COMMANDS
+  ...SEK_COMMANDS,
+  ...QUALI_COMMANDS
 ];
 var byName = (n) => COMMANDS.find((c) => c.name === n);
 
@@ -80923,8 +81056,8 @@ function createLive(api2, platform2, log = console.log) {
 }
 
 // apps/bot/src/outbox.ts
-var DIRECT = { "application.decided": applicationDecisionText, "sek.application.decided": sekDecisionText };
-async function pollOnce(api2, send, log = console.log, dm) {
+var DIRECT = { "application.decided": applicationDecisionText, "qualification.decided": qualificationDecisionText };
+async function pollOnce(api2, send, log = console.log, dm, grantRole) {
   const [channels, items] = await Promise.all([api2.service("GET", "/bot/config"), api2.service("GET", "/bot/outbox?limit=20")]);
   let sent = 0;
   for (const item of items) {
@@ -80933,6 +81066,10 @@ async function pollOnce(api2, send, log = console.log, dm) {
       try {
         const userId = String(item.payload.discordId ?? "");
         if (!/^\d{15,25}$/.test(userId)) throw new Error("no Discord user id");
+        const roleId = String(item.payload.roleId ?? "");
+        if (item.payload.status === "ACCEPTED" && /^\d{15,25}$/.test(roleId) && grantRole) {
+          await grantRole(userId, roleId).catch((e) => log(`outbox ${item.id}: role ${roleId} could not be given: ${e instanceof Error ? e.message : e}`));
+        }
         if (!dm) throw new Error("direct messages not available");
         await dm(userId, direct(item.payload));
         await api2.service("POST", `/bot/outbox/${item.id}/ack`, { ok: true });
@@ -80949,7 +81086,8 @@ async function pollOnce(api2, send, log = console.log, dm) {
     try {
       if (!channelIds.length) throw new Error(`channel "${item.channelKey}" not configured`);
       if (!embed) throw new Error(`unknown type "${item.type}"`);
-      const results = await Promise.allSettled(channelIds.map((id) => send(id, embed)));
+      const buttons = outboxButtons(item.type, item.payload);
+      const results = await Promise.allSettled(channelIds.map((id) => send(id, embed, buttons)));
       const failed = results.flatMap((r, i) => r.status === "rejected" ? [`${channelIds[i]}: ${r.reason instanceof Error ? r.reason.message : r.reason}`] : []);
       failed.forEach((f) => log(`outbox ${item.id}: send failed for channel ${f}`));
       if (failed.length === channelIds.length) throw new Error(failed[0]);
@@ -80963,14 +81101,14 @@ async function pollOnce(api2, send, log = console.log, dm) {
   }
   return sent;
 }
-function startOutboxLoop(api2, send, seconds, log = console.log, dm) {
+function startOutboxLoop(api2, send, seconds, log = console.log, dm, grantRole) {
   let running = false;
   let lastError;
   const tick = async () => {
     if (running) return;
     running = true;
     try {
-      await pollOnce(api2, send, log, dm);
+      await pollOnce(api2, send, log, dm, grantRole);
       if (lastError) {
         log("outbox: connection to the API restored");
         lastError = void 0;
@@ -81013,7 +81151,7 @@ async function robloxLookup(username, doFetch = fetch) {
 loadDotEnv();
 var cfg = loadConfig();
 var api = new HttpApi(cfg.API_URL, cfg.BOT_API_TOKEN);
-var client = new import_discord.Client({ intents: [import_discord.GatewayIntentBits.Guilds] });
+var client = new import_discord.Client({ intents: [import_discord.GatewayIntentBits.Guilds, import_discord.GatewayIntentBits.DirectMessages], partials: [import_discord.Partials.Channel] });
 var toEmbed = (e) => {
   const b = new import_discord.EmbedBuilder().setTitle(e.title);
   if (e.description) b.setDescription(e.description);
@@ -81027,27 +81165,31 @@ var toRows = (buttons = []) => {
   const rows = [];
   for (let i = 0; i < buttons.length && rows.length < 5; i += 5) {
     rows.push(new import_discord.ActionRowBuilder().addComponents(buttons.slice(i, i + 5).map((b) => {
-      const x = new import_discord.ButtonBuilder().setCustomId(b.id).setLabel(b.label).setStyle(STYLE[b.style]);
+      const x = b.url ? new import_discord.ButtonBuilder().setURL(b.url).setLabel(b.label).setStyle(import_discord.ButtonStyle.Link) : new import_discord.ButtonBuilder().setCustomId(b.id).setLabel(b.label).setStyle(STYLE[b.style]);
       if (b.emoji) x.setEmoji(b.emoji);
       return x;
     })));
   }
   return rows;
 };
+var toComponents = (buttons, select) => [
+  ...select ? [new import_discord.ActionRowBuilder().addComponents(new import_discord.StringSelectMenuBuilder().setCustomId(select.id).setPlaceholder(select.placeholder.slice(0, 150)).addOptions(select.options.slice(0, 25).map((o) => ({ label: o.label.slice(0, 100), value: o.value, ...o.description ? { description: o.description.slice(0, 100) } : {} }))))] : [],
+  ...toRows(buttons).slice(0, select ? 4 : 5)
+];
 var toModal = (m) => new import_discord.ModalBuilder().setCustomId(m.id).setTitle(m.title.slice(0, 45)).addComponents(m.fields.map((f) => {
   const input = new import_discord.TextInputBuilder().setCustomId(f.id).setLabel(f.label.slice(0, 45)).setStyle(f.paragraph ? import_discord.TextInputStyle.Paragraph : import_discord.TextInputStyle.Short).setRequired(!!f.required);
   if (f.maxLength) input.setMaxLength(f.maxLength);
   if (f.placeholder) input.setPlaceholder(f.placeholder.slice(0, 100));
   return new import_discord.ActionRowBuilder().addComponents(input);
 }));
-var replyPayload = (r) => ({ content: r.content ?? "", embeds: (r.embeds ?? []).map(toEmbed), components: toRows(r.buttons), allowedMentions: { parse: [] } });
+var replyPayload = (r) => ({ content: r.content ?? "", embeds: (r.embeds ?? []).map(toEmbed), components: toComponents(r.buttons, r.select), allowedMentions: { parse: [] } });
 var TICKET_PREFIX = "ticket-";
 var ticketName = (userName, userId) => `${TICKET_PREFIX}${userName.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 40) || userId}`;
 var platform = {
   async setRole(guildId, userId, roleId, on) {
     const member = await (await client.guilds.fetch(guildId)).members.fetch(userId);
-    if (on) await member.roles.add(roleId, "EN Polizei: Funk-Freigabe");
-    else await member.roles.remove(roleId, "EN Polizei: Funk-Freigabe entzogen");
+    if (on) await member.roles.add(roleId, "EN Polizei");
+    else await member.roles.remove(roleId, "EN Polizei");
   },
   async createTicketChannel({ guildId, userId, userName, categoryId, staffRoleId }) {
     const guild = await client.guilds.fetch(guildId);
@@ -81077,6 +81219,10 @@ var platform = {
   async sendDirectMessage(userId, text) {
     await (await client.users.fetch(userId)).send({ content: text, allowedMentions: { parse: [] } });
   },
+  async sendDm(userId, { embed, buttons }) {
+    const m = await (await client.users.fetch(userId)).send({ embeds: [toEmbed(embed)], components: toRows(buttons), allowedMentions: { parse: [] } });
+    return { channelId: m.channelId, messageId: m.id };
+  },
   async postOrEdit({ channelId, messageId, embed, buttons }) {
     const ch = await client.channels.fetch(channelId);
     if (!ch?.isSendable() || !("messages" in ch)) throw new Error(`channel ${channelId} is not a text channel the bot can post in`);
@@ -81090,10 +81236,10 @@ var platform = {
     }
     return (await ch.send(payload)).id;
   },
-  async postPanel({ channelId, embed, buttons }) {
+  async postPanel({ channelId, embed, buttons, select }) {
     const ch = await client.channels.fetch(channelId);
     if (!ch?.isSendable()) throw new Error(`channel ${channelId} is not a text channel the bot can post in`);
-    await ch.send({ embeds: [toEmbed(embed)], components: toRows(buttons), allowedMentions: { parse: [] } });
+    await ch.send({ embeds: [toEmbed(embed)], components: toComponents(buttons, select), allowedMentions: { parse: [] } });
   }
 };
 var live = createLive(api, platform);
@@ -81180,13 +81326,30 @@ async function handleComponent(i) {
   if (!hit) return;
   await i.deferReply({ flags: import_discord.MessageFlags.Ephemeral });
   const fields = i.isModalSubmit() ? Object.fromEntries(i.fields.fields.map((f, id) => [id, "value" in f ? String(f.value) : ""])) : void 0;
-  const reply = await safeRun(`interaction ${i.customId}`, () => hit.def.run({ ...baseCtx(i), opts: {}, args: hit.args, fields }));
+  const values = i.isStringSelectMenu() ? i.values : void 0;
+  const reply = await safeRun(`interaction ${i.customId}`, () => hit.def.run({ ...baseCtx(i), opts: {}, args: hit.args, fields, values }));
   await i.editReply(replyPayload(reply));
 }
 client.on("interactionCreate", (i) => {
-  const task = i.isChatInputCommand() ? handleCommand(i) : i.isButton() || i.isModalSubmit() ? handleComponent(i) : void 0;
+  const task = i.isChatInputCommand() ? handleCommand(i) : i.isButton() || i.isModalSubmit() || i.isStringSelectMenu() ? handleComponent(i) : void 0;
   void task?.catch((e) => console.error("interaction failed:", e instanceof Error ? e.message : e));
 });
+client.on("messageCreate", (m) => {
+  if (m.author.bot || m.inGuild()) return;
+  void handleDirectMessage({ userId: m.author.id, userName: m.author.username, content: m.content, api, sendDm: (u, msg) => platform.sendDm(u, msg) }).catch((e) => console.error("direct message handling failed:", e instanceof Error ? e.message : e));
+});
+setInterval(() => sweepSessions(), 10 * 6e4).unref();
+async function grantRoleEverywhere(userId, roleId) {
+  let found = false;
+  for (const g of client.guilds.cache.values()) {
+    const role = g.roles.cache.get(roleId) ?? await g.roles.fetch(roleId).catch(() => null);
+    if (!role) continue;
+    found = true;
+    const member = await g.members.fetch(userId).catch(() => null);
+    if (member) await member.roles.add(roleId, "EN Polizei: Bewerbung angenommen");
+  }
+  if (!found) throw new Error("role not found on any server");
+}
 async function checkApi() {
   try {
     const res = await fetch(`${cfg.API_URL}/health`, { signal: AbortSignal.timeout(8e3) });
@@ -81224,11 +81387,11 @@ client.once("clientReady", async (c) => {
       }
     }
   }
-  startOutboxLoop(api, async (channelId, embed) => {
+  startOutboxLoop(api, async (channelId, embed, buttons) => {
     const ch = await client.channels.fetch(channelId);
     if (!ch?.isSendable()) throw new Error(`channel ${channelId} is not a text channel the bot can post in`);
-    await ch.send({ embeds: [toEmbed(embed)], allowedMentions: { parse: [] } });
-  }, cfg.OUTBOX_POLL_SECONDS, console.log, (userId, text) => platform.sendDirectMessage(userId, text));
+    await ch.send({ embeds: [toEmbed(embed)], components: toRows(buttons), allowedMentions: { parse: [] } });
+  }, cfg.OUTBOX_POLL_SECONDS, console.log, (userId, text) => platform.sendDirectMessage(userId, text), grantRoleEverywhere);
   live.start(cfg.LIVE_REFRESH_SECONDS);
 });
 for (const sig of ["SIGINT", "SIGTERM"]) process.on(sig, () => {

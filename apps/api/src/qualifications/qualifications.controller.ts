@@ -1,0 +1,39 @@
+import { Body, Controller, Get, HttpCode, Param, ParseUUIDPipe, Post, Put, Query } from '@nestjs/common';
+import { ApiTags } from '@nestjs/swagger';
+import { z } from 'zod';
+import { QualificationsService } from './qualifications.service';
+import { configSchema } from './qualifications.config';
+import { BotService, CurrentActor, RequirePermission } from '../authz/decorators';
+import type { Actor } from '../audit/audit.service';
+import { zodBody } from '../common/zod.pipe';
+
+const discordId = z.string().regex(/^\d{15,25}$/);
+const list = z.object({ unit: z.string().max(24).optional(), status: z.enum(['OPEN', 'ACCEPTED', 'REJECTED']).optional() });
+const decision = z.object({ status: z.enum(['ACCEPTED', 'REJECTED']) });
+const submit = z.object({ unit: z.string().max(24), discordId, discordName: z.string().trim().min(1).max(100), answers: z.array(z.object({ question: z.string().max(300), answer: z.string().trim().min(1).max(1000) })).min(1).max(15) });
+const openQ = z.object({ discordId, unit: z.string().max(24).optional() });
+
+@ApiTags('qualifications')
+@Controller('qualifications')
+export class QualificationsController {
+  constructor(private readonly q: QualificationsService) {}
+  @Get('config') @RequirePermission('qualifications.view')
+  config() { return this.q.config(); }
+  @Put('config') @RequirePermission('qualifications.manage')
+  save(@CurrentActor() a: Actor, @Body(zodBody(configSchema)) b: z.infer<typeof configSchema>) { return this.q.saveConfig(a, b); }
+  @Get('applications') @RequirePermission('qualifications.view')
+  list(@Query(zodBody(list)) f: z.infer<typeof list>) { return this.q.list(f); }
+  /** Auch vom Bot (Button im Team-Channel) mit den Rechten des klickenden Benutzers. */
+  @Post('applications/:id/decision') @HttpCode(200) @RequirePermission('qualifications.decide')
+  decide(@CurrentActor() a: Actor, @Param('id', ParseUUIDPipe) id: string, @Body(zodBody(decision)) b: z.infer<typeof decision>) { return this.q.decide(a, id, b.status); }
+}
+
+/** Dienst-Endpunkte für das Discord-Panel – Bewerben geht auch ohne verknüpftes Konto. */
+@ApiTags('bot')
+@Controller('bot/qualifications')
+export class BotQualificationsController {
+  constructor(private readonly q: QualificationsService) {}
+  @BotService() @Get() config() { return this.q.config(); }
+  @BotService() @Get('open') open(@Query(zodBody(openQ)) f: z.infer<typeof openQ>) { return this.q.openFor(f.discordId, f.unit); }
+  @BotService() @Post('applications') submit(@Body(zodBody(submit)) b: z.infer<typeof submit>) { return this.q.submit(b); }
+}

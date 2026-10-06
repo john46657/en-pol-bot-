@@ -157,6 +157,7 @@ export declare const SETTING_SCHEMAS: {
         applications: z.ZodOptional<z.ZodString>;
         danger: z.ZodOptional<z.ZodString>;
         sek: z.ZodOptional<z.ZodString>;
+        qualifications: z.ZodOptional<z.ZodString>;
         teamlist: z.ZodOptional<z.ZodString>;
         tickets: z.ZodOptional<z.ZodString>;
         staffRole: z.ZodOptional<z.ZodString>;
@@ -168,6 +169,7 @@ export declare const SETTING_SCHEMAS: {
         wanted?: string | undefined;
         applications?: string | undefined;
         sek?: string | undefined;
+        qualifications?: string | undefined;
         announcements?: string | undefined;
         danger?: string | undefined;
         guildId?: string | undefined;
@@ -181,6 +183,7 @@ export declare const SETTING_SCHEMAS: {
         wanted?: string | undefined;
         applications?: string | undefined;
         sek?: string | undefined;
+        qualifications?: string | undefined;
         announcements?: string | undefined;
         danger?: string | undefined;
         guildId?: string | undefined;

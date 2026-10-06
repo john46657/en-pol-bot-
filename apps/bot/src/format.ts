@@ -1,9 +1,12 @@
 /** Discord-unabhängige Nachrichtenmodelle + Formatierung (einfach testbar). */
 export interface EmbedData { title: string; description?: string; color?: number; fields?: { name: string; value: string; inline?: boolean }[]; footer?: string }
-export interface ButtonSpec { id: string; label: string; style: 'primary' | 'secondary' | 'success' | 'danger'; emoji?: string }
+/** `url`: Link-Button (öffnet die Adresse, löst keine Interaktion aus). */
+export interface ButtonSpec { id: string; label: string; style: 'primary' | 'secondary' | 'success' | 'danger'; emoji?: string; url?: string }
+/** Auswahlmenü (eine Auswahl); `id` wie bei Buttons `prefix:arg`. */
+export interface SelectSpec { id: string; placeholder: string; options: { label: string; value: string; description?: string }[] }
 export interface ModalField { id: string; label: string; paragraph?: boolean; required?: boolean; maxLength?: number; placeholder?: string }
 export interface ModalSpec { id: string; title: string; fields: ModalField[] }
-export interface Reply { content?: string; embeds?: EmbedData[]; ephemeral?: boolean; buttons?: ButtonSpec[]; modal?: ModalSpec }
+export interface Reply { content?: string; embeds?: EmbedData[]; ephemeral?: boolean; buttons?: ButtonSpec[]; select?: SelectSpec; modal?: ModalSpec }
 
 export const COLORS = { info: 0x3b82f6, success: 0x22c55e, warning: 0xf59e0b, danger: 0xef4444, neutral: 0x64748b } as const;
 const PRIORITY_COLOR: Record<string, number> = { LOW: COLORS.neutral, MEDIUM: COLORS.info, HIGH: COLORS.warning, URGENT: COLORS.danger, CRITICAL: COLORS.danger };
@@ -69,22 +72,32 @@ export function renderOutbox(type: string, p: Record<string, unknown>): EmbedDat
     case 'sek.report':
       return { title: `🎯 SEK-Einsatzbericht ${p.number}`, color: COLORS.neutral, description: clip(plain(p.description), 3500), fields: [
         { name: 'Einsatzart', value: clip(plain(p.missionType), 200), inline: true }, { name: 'Datum', value: new Date(String(p.occurredAt)).toLocaleString('de-DE', { timeZone: 'Europe/Berlin' }), inline: true }, { name: 'Beamter', value: clip(plain(p.author), 200), inline: true }] };
-    case 'sek.application':
-      return { title: `🎯 Neue SEK-Bewerbung ${p.number}`, color: COLORS.neutral, description: 'Entscheidung im System (Bereich *SEK*).', fields: [
-        { name: 'Bewerber', value: clip(`${p.callsign ? `${plain(p.callsign)} · ` : ''}${plain(p.applicant)}${p.discordId ? ` (<@${String(p.discordId)}>)` : ''}`, 300), inline: true },
-        { name: 'Dienstzeit', value: clip(plain(p.serviceTime), 200), inline: true },
-        { name: 'Motivation', value: clip(plain(p.motivation), 1024) },
-        ...(p.experience ? [{ name: 'Erfahrung', value: clip(plain(p.experience), 1024) }] : [])] };
+    case 'qualification.submitted': {
+      const answers = Array.isArray(p.answers) ? (p.answers as { question?: unknown; answer?: unknown }[]) : [];
+      return { title: clip(`📋 Neue Bewerbung: ${plain(p.unitName)} (${p.number})`, 256), color: COLORS.info,
+        description: clip(`Von <@${String(p.discordId)}> (${plain(p.discordName)})${p.linkedName ? ` · im System: **${plain(p.linkedName)}**` : ' · nicht mit dem System verknüpft'}`, 4000),
+        fields: answers.slice(0, 24).map((a, i) => ({ name: clip(`${i + 1}. ${plain(a.question)}`, 256), value: clip(plain(a.answer) || '—', 1024) })),
+        footer: 'Entscheiden: Buttons unten (Recht „qualifications.decide“) oder im Web unter Qualifications' };
+    }
     default:
       return null;
   }
 }
 
-/** Direktnachricht nach der Entscheidung über eine SEK-Bewerbung. */
-export function sekDecisionText(p: { status?: unknown; number?: unknown }): string {
+/** Buttons unter Channel-Benachrichtigungen (z. B. Annehmen/Ablehnen). */
+export function outboxButtons(type: string, p: Record<string, unknown>): ButtonSpec[] | undefined {
+  if (type === 'qualification.submitted' && typeof p.id === 'string') return [
+    { id: `quali:decide:${p.id}:ACCEPTED`, label: 'Annehmen', emoji: '✅', style: 'success' },
+    { id: `quali:decide:${p.id}:REJECTED`, label: 'Ablehnen', emoji: '✖️', style: 'danger' },
+  ];
+  return undefined;
+}
+
+/** Direktnachricht nach der Entscheidung über eine Qualifikations-Bewerbung. */
+export function qualificationDecisionText(p: { status?: unknown; number?: unknown; unitName?: unknown }): string {
   return p.status === 'ACCEPTED'
-    ? `🎯 Deine SEK-Bewerbung **${p.number}** wurde **angenommen** – willkommen im SEK!`
-    : `Deine SEK-Bewerbung **${p.number}** wurde diesmal leider **nicht angenommen**.`;
+    ? `🎉 Deine Bewerbung für **${plain(p.unitName)}** (${p.number}) wurde **angenommen** – willkommen! Ein Teammitglied meldet sich bei dir.`
+    : `Deine Bewerbung für **${plain(p.unitName)}** (${p.number}) wurde diesmal leider **nicht angenommen**. Du kannst dich später gerne erneut bewerben.`;
 }
 
 /** Texte der Entscheidungs-Direktnachricht an Bewerber (ohne internen Grund). */

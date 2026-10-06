@@ -3,6 +3,7 @@ import { clip, COLORS, DANGER, dangerEmbed, errorReply, listEmbed, okReply, plai
 import type { CommandDef, Ctx, InteractionDef } from './types';
 import { mapError } from './errors';
 import { SEK_INTERACTION } from './sek';
+import { QUALI_INTERACTION } from './qualifications';
 
 const str = (c: Ctx, k: string) => String(c.opts[k] ?? '').trim();
 const choices = (m: Record<string, string>) => Object.keys(m).map((k) => ({ name: k.replace('_', ' '), value: k }));
@@ -160,6 +161,7 @@ export const FEATURE_COMMANDS: CommandDef[] = [
 
 export const INTERACTIONS: InteractionDef[] = [
   SEK_INTERACTION,
+  QUALI_INTERACTION,
   {
     prefix: 'danger',
     async run(c) {
