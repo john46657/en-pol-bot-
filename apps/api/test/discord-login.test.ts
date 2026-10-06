@@ -16,6 +16,8 @@ beforeAll(async () => {
   process.env.DISCORD_CLIENT_SECRET = 'test-client-secret';
   process.env.DISCORD_TOKEN = `${Buffer.from(APP_ID).toString('base64')}.xxxxxx.yyyyyyyyyyyyyyyyyyyyyyyy`;
   process.env.DISCORD_GUILD_ID = GUILD;
+  process.env.PASSWORD_LOGIN = 'true'; // Notfall-Schalter – für die Einrichtung der Tests (Admin per Passwort)
+  process.env.ADMIN_DISCORD_IDS = '444444444444444444';
   vi.spyOn(globalThis, 'fetch').mockImplementation(async (input, init) => {
     const url = String(input);
     if (!url.startsWith('https://discord.com/')) return realFetch(input, init);
@@ -36,7 +38,7 @@ beforeAll(async () => {
 });
 afterAll(async () => {
   vi.restoreAllMocks();
-  for (const k of ['DISCORD_CLIENT_SECRET', 'DISCORD_TOKEN', 'DISCORD_GUILD_ID']) delete process.env[k];
+  for (const k of ['DISCORD_CLIENT_SECRET', 'DISCORD_TOKEN', 'DISCORD_GUILD_ID', 'PASSWORD_LOGIN', 'ADMIN_DISCORD_IDS']) delete process.env[k];
   await app.close();
 });
 beforeEach(() => { discord.tokenOk = true; });
@@ -54,7 +56,7 @@ async function discordLogin(agent = request.agent(app.getHttpServer())) {
 
 describe('login with Discord', () => {
   it('offers Discord on the login page', async () => {
-    expect((await request(app.getHttpServer()).get('/api/v1/auth/providers')).body).toEqual({ discord: true });
+    expect((await request(app.getHttpServer()).get('/api/v1/auth/providers')).body).toEqual({ discord: true, password: true });
   });
 
   it('only members of the Discord server get a new account; it starts without roles', async () => {
@@ -119,5 +121,19 @@ describe('login with Discord', () => {
     const ok = await discordLogin();
     expect((await ok.agent.get('/api/v1/auth/me')).body.username).toBe('dl_admin');
     expect((await request(app.getHttpServer()).get('/api/v1/auth/discord/link')).status).toBe(401);
+  });
+
+  it('only Discord: password login is off once Discord is set up; ADMIN_DISCORD_IDS always get in as admin', async () => {
+    delete process.env.PASSWORD_LOGIN;
+    expect((await request(app.getHttpServer()).get('/api/v1/auth/providers')).body).toEqual({ discord: true, password: false });
+    const pw = await login(app, 'dl_admin');
+    expect(pw.res.status).toBe(403);
+    // Besitzer: nicht auf dem Server, Anmeldung neuer Konten aus – kommt trotzdem rein und ist Admin
+    discord.user = { id: '444444444444444444', username: 'owner', global_name: 'Owner' };
+    const ok = await discordLogin();
+    expect(ok.location).toMatch(/\/$/);
+    expect((await ok.agent.get('/api/v1/auth/me')).body.roles).toContain('System Administrator');
+    process.env.PASSWORD_LOGIN = 'true';
+    expect((await login(app, 'dl_admin')).res.status).toBe(200);
   });
 });

@@ -64,7 +64,7 @@ function DiscordLoginCard({ manage, value, busy, onSave }: { manage: boolean; va
   return (
     <Card title="Sign in with Discord" className="mt-4" actions={manage && <Button disabled={busy} onClick={() => onSave({ ...d, roleMap: d.roleMap.filter((r) => r.discordRoleId.trim() && r.role) })}>Save</Button>}>
       <p className="mb-3 text-xs text-muted">
-        {providers.data?.discord ? 'Enabled – the login page shows “Mit Discord anmelden”.' : 'Not enabled yet: set DISCORD_CLIENT_SECRET (Discord Developer Portal → OAuth2) in the panel and add the redirect URL below in the Developer Portal.'}
+        {providers.data?.discord ? 'Enabled – sign-in works only with Discord (emergency: PASSWORD_LOGIN=true in the panel). Your own Discord ID belongs in ADMIN_DISCORD_IDS so you always get admin rights.' : 'Not enabled yet (password login is active for setup): set ADMIN_DISCORD_IDS (your Discord ID) and DISCORD_CLIENT_SECRET (Discord Developer Portal → OAuth2) in the panel and add the redirect URL below in the Developer Portal.'}
         {' '}Redirect URL: <code>{window.location.origin}/api/v1/auth/discord/callback</code>
       </p>
       <div className="space-y-2 text-sm">

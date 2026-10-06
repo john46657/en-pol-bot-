@@ -130,4 +130,5 @@ Auf der Login-Seite erscheint **„Mit Discord anmelden“**, sobald `DISCORD_CL
 - **Bestehende Konten**: wer schon verknüpft ist (`/verknuepfen` oder im Web „Mit Discord verknüpfen“), landet direkt im eigenen Konto.
 - **Neue Personen** bekommen beim ersten Login automatisch ein Konto – nur wenn sie auf eurem Discord-Server sind (abschaltbar) und zunächst **ohne Rechte**.
 - **Rollen wie bei Dyno** (*Settings → Sign in with Discord*): Discord-Rolle → Systemrolle, z. B. „Polizei“ → *Police Member*. Wird bei jeder Discord-Anmeldung abgeglichen (dazu/weg); andere Rollen bleiben unberührt.
-- Der Passwort-Login (z. B. `admin`) bleibt erhalten.
+- **Nur Discord:** Sobald `DISCORD_CLIENT_SECRET` gesetzt ist, zeigt die Login-Seite nur noch „Mit Discord anmelden“ und die API lehnt Passwort-Anmeldungen ab. Vorher (Einrichtung) gilt der Passwort-Login.
+- **Nicht aussperren:** Deine Discord-ID gehört in `ADMIN_DISCORD_IDS` – diese Konten sind beim Discord-Login immer *System Administrator* (auch ohne Server-Mitgliedschaft). **Notfall-Zugang:** `PASSWORD_LOGIN=true` setzen und neu starten, dann ist der Passwort-Login (z. B. `admin`) wieder da.

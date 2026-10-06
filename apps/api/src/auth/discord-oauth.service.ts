@@ -42,6 +42,9 @@ export class DiscordOAuthService {
     return /^\d{15,25}$/.test(id) ? id : null;
   }
   enabled() { return !!(this.clientId() && this.env.DISCORD_CLIENT_SECRET); }
+  /** Passwort-Login nur, solange Discord-Login nicht eingerichtet ist – oder im Notfall mit PASSWORD_LOGIN=true. */
+  passwordLoginAllowed() { return !this.enabled() || process.env.PASSWORD_LOGIN === 'true'; }
+  private isAdminId(id: string) { return (this.env.ADMIN_DISCORD_IDS ?? '').split(/[\s,;]+/).includes(id); }
   redirectUri() { return webUrl('/api/v1/auth/discord/callback'); }
 
   /** Schritt 1: Adresse bei Discord + Browser-Bindung. */
@@ -78,13 +81,15 @@ export class DiscordOAuthService {
     const member = await this.membership(du.id);
     const link = await this.prisma.discordLink.findUnique({ where: { discordId: du.id } });
     let user = link ? await this.prisma.user.findUnique({ where: { id: link.userId } }) : null;
-    if (settings.requireGuild && member === 'unknown' && !user) throw new DiscordLoginFailure('cannot_verify');
-    if (settings.requireGuild && member === null) throw new DiscordLoginFailure('not_member');
+    const owner = this.isAdminId(du.id); // Besitzer/Admins aus ADMIN_DISCORD_IDS kommen immer rein
+    if (!owner && settings.requireGuild && member === 'unknown' && !user) throw new DiscordLoginFailure('cannot_verify');
+    if (!owner && settings.requireGuild && member === null) throw new DiscordLoginFailure('not_member');
     if (user && !user.active) throw new DiscordLoginFailure('inactive');
     if (!user) {
-      if (!settings.signup) throw new DiscordLoginFailure('no_account');
+      if (!settings.signup && !owner) throw new DiscordLoginFailure('no_account');
       user = await this.createUser(du, meta);
     }
+    if (owner) await this.ensureAdmin(user.id);
     if (member && member !== 'unknown') await this.syncRoles(user.id, member.roles, settings);
     await this.prisma.loginHistory.create({ data: { userId: user.id, username: user.username, success: true, ip: meta.ip, reason: 'DISCORD' } });
     return { kind: 'login' as const, ...(await this.auth.startSession(user, meta, 'auth.login.discord')) };
@@ -152,6 +157,13 @@ export class DiscordOAuthService {
       return u;
     });
     return user;
+  }
+
+  private async ensureAdmin(userId: string) {
+    const role = await this.prisma.role.findUnique({ where: { name: 'System Administrator' } });
+    if (!role || (await this.prisma.userRole.findUnique({ where: { userId_roleId: { userId, roleId: role.id } } }))) return;
+    await this.prisma.userRole.create({ data: { userId, roleId: role.id } });
+    await this.audit.record({ userId }, { action: 'auth.discord.admin_granted', module: 'auth', entityType: 'User', entityId: userId, after: { role: role.name, via: 'ADMIN_DISCORD_IDS' } });
   }
 
   /** Discord-Rolle → Systemrolle: zugeordnete Rollen vergeben bzw. entziehen (nur Rollen aus der Zuordnung). */

@@ -26,7 +26,8 @@ function DiscordIcon() {
 export function Login() {
   const { user, login } = useAuth();
   const loc = useLocation();
-  const providers = useQuery({ queryKey: ['auth-providers'], queryFn: () => api<{ discord: boolean }>('/auth/providers'), retry: false });
+  const providers = useQuery({ queryKey: ['auth-providers'], queryFn: () => api<{ discord: boolean; password?: boolean }>('/auth/providers'), retry: false });
+  const passwordForm = !providers.data || providers.data.password !== false; // nur Discord, sobald eingerichtet
   const discordError = new URLSearchParams(loc.search).get('discord');
   const [err, setErr] = useState<string>();
   const [busy, setBusy] = useState(false);
@@ -48,12 +49,16 @@ export function Login() {
         {providers.data?.discord && (
           <>
             <a href="/api/v1/auth/discord" className="flex w-full items-center justify-center gap-2 rounded-md bg-[#5865F2] px-4 py-2.5 font-medium text-white hover:bg-[#4752c4]"><DiscordIcon />Mit Discord anmelden</a>
-            <div className="flex items-center gap-2 text-xs text-muted"><span className="h-px flex-1 bg-line" />oder mit Benutzername<span className="h-px flex-1 bg-line" /></div>
+            {passwordForm && <div className="flex items-center gap-2 text-xs text-muted"><span className="h-px flex-1 bg-line" />oder mit Benutzername (Notfall-Zugang)<span className="h-px flex-1 bg-line" /></div>}
           </>
         )}
-        <Field label="Username">{(id) => <Input id={id} name="username" autoComplete="username" required autoFocus={!providers.data?.discord} />}</Field>
-        <Field label="Password" error={err}>{(id) => <Input id={id} name="password" type="password" autoComplete="current-password" required />}</Field>
-        <Button type="submit" disabled={busy} className="w-full">{busy ? 'Signing in…' : 'Sign in'}</Button>
+        {passwordForm && (
+          <>
+            <Field label="Username">{(id) => <Input id={id} name="username" autoComplete="username" required autoFocus={!providers.data?.discord} />}</Field>
+            <Field label="Password" error={err}>{(id) => <Input id={id} name="password" type="password" autoComplete="current-password" required />}</Field>
+            <Button type="submit" disabled={busy} className="w-full">{busy ? 'Signing in…' : 'Sign in'}</Button>
+          </>
+        )}
       </form>
     </div>
   );

@@ -17,7 +17,8 @@ Tab **Startup**, Startdatei **`start.js`** (Node.js-Server). Kann dein Server nu
 | `DISCORD_TOKEN` | Bot-Token aus dem Discord Developer Portal |
 | `COOKIE_SECURE` | `true` (die Domain hat HTTPS) |
 | `WEB_ORIGIN` | deine Domain, z. B. `https://tnnyq4svmz.apps.bot-hosting.cloud` (ohne `/` am Ende) |
-| `DISCORD_CLIENT_SECRET` | optional: **„Mit Discord anmelden“** – Discord Developer Portal → deine Anwendung → OAuth2 → *Client Secret* (Reset Secret). Dort unter *Redirects* eintragen: `https://<deine-domain>/api/v1/auth/discord/callback` |
+| `ADMIN_DISCORD_IDS` | **zuerst setzen:** deine Discord-ID (Rechtsklick auf dich → „ID kopieren“; mehrere mit Komma) – du bist beim Discord-Login immer Administrator |
+| `DISCORD_CLIENT_SECRET` | **Nur noch mit Discord anmelden**: sobald gesetzt, gibt es keinen Passwort-Login mehr (Notfall: `PASSWORD_LOGIN=true`). – Discord Developer Portal → deine Anwendung → OAuth2 → *Client Secret* (Reset Secret). Dort unter *Redirects* eintragen: `https://<deine-domain>/api/v1/auth/discord/callback` |
 | `DISCORD_GUILD_ID` | optional: Server-ID, dann erscheinen die Slash-Befehle sofort (sonst bis zu 1 Stunde) |
 
 **Nicht setzen bzw. löschen:** `PORT` (das Panel setzt `SERVER_PORT` selbst, und der hat Vorrang), `API_URL` (im gemeinsamen Betrieb nutzt der Bot automatisch die lokale API), `NEXUS_ENTRY`.

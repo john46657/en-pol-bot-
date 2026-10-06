@@ -28,6 +28,8 @@ const schema = z.object({
   /** Bot-Token (für Server-Mitgliedschaft und Rollen beim Discord-Login). */
   DISCORD_TOKEN: z.string().min(20).optional(),
   DISCORD_GUILD_ID: z.string().optional(),
+  /** Discord-IDs (Komma), die beim Discord-Login immer „System Administrator“ sind – damit sich der Besitzer nicht aussperrt. */
+  ADMIN_DISCORD_IDS: z.string().optional(),
 });
 
 export type Env = z.infer<typeof schema>;

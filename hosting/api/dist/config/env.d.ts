@@ -27,6 +27,8 @@ declare const schema: z.ZodObject<{
     /** Bot-Token (für Server-Mitgliedschaft und Rollen beim Discord-Login). */
     DISCORD_TOKEN: z.ZodOptional<z.ZodString>;
     DISCORD_GUILD_ID: z.ZodOptional<z.ZodString>;
+    /** Discord-IDs (Komma), die beim Discord-Login immer „System Administrator“ sind – damit sich der Besitzer nicht aussperrt. */
+    ADMIN_DISCORD_IDS: z.ZodOptional<z.ZodString>;
 }, "strip", z.ZodTypeAny, {
     NODE_ENV: "development" | "test" | "production";
     PORT: number;
@@ -46,6 +48,7 @@ declare const schema: z.ZodObject<{
     DISCORD_CLIENT_ID?: string | undefined;
     DISCORD_TOKEN?: string | undefined;
     DISCORD_GUILD_ID?: string | undefined;
+    ADMIN_DISCORD_IDS?: string | undefined;
 }, {
     DATABASE_URL: string;
     NODE_ENV?: "development" | "test" | "production" | undefined;
@@ -65,6 +68,7 @@ declare const schema: z.ZodObject<{
     DISCORD_CLIENT_ID?: string | undefined;
     DISCORD_TOKEN?: string | undefined;
     DISCORD_GUILD_ID?: string | undefined;
+    ADMIN_DISCORD_IDS?: string | undefined;
 }>;
 export type Env = z.infer<typeof schema>;
 export declare function loadEnv(source?: NodeJS.ProcessEnv): Env;
