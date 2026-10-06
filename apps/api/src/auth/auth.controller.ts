@@ -1,9 +1,11 @@
-import { Body, Controller, Get, HttpCode, Post, Req, Res } from '@nestjs/common';
+import { Body, Controller, Get, HttpCode, Post, Query, Req, Res } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { Throttle } from '@nestjs/throttler';
 import type { Response } from 'express';
 import { z } from 'zod';
 import { AuthService } from './auth.service';
+import { DiscordLoginFailure, DiscordOAuthService } from './discord-oauth.service';
+import { webUrl } from '../common/web-url';
 import { CurrentActor, CurrentUser, Public } from '../authz/decorators';
 import { SESSION_COOKIE } from '../authz/guards';
 import { zodBody } from '../common/zod.pipe';
@@ -11,13 +13,55 @@ import type { AppRequest, AuthUser } from '../common/request-context';
 import type { Actor } from '../audit/audit.service';
 import { loadEnv } from '../config/env';
 
+const OAUTH_COOKIE = 'enrp_oauth';
 const loginSchema = z.object({ username: z.string().min(1).max(64), password: z.string().min(1).max(256) });
 
 @ApiTags('auth')
 @Controller('auth')
 export class AuthController {
   private readonly env = loadEnv();
-  constructor(private readonly auth: AuthService) {}
+  constructor(private readonly auth: AuthService, private readonly discord: DiscordOAuthService) {}
+
+  private secure() { return this.env.COOKIE_SECURE ? this.env.COOKIE_SECURE === 'true' : this.env.NODE_ENV === 'production'; }
+
+  /** Welche Anmeldewege es gibt (Login-Seite). */
+  @Public() @Get('providers')
+  providers() { return { discord: this.discord.enabled() }; }
+
+  /** „Mit Discord anmelden“ → weiter zu Discord. */
+  @Public() @Throttle({ default: { limit: process.env.NODE_ENV === 'test' ? 10_000 : 20, ttl: 60_000 } }) @Get('discord')
+  discordStart(@Res() res: Response) {
+    try {
+      const s = this.discord.start('login');
+      res.cookie(OAUTH_COOKIE, s.browser, { httpOnly: true, sameSite: 'lax', secure: this.secure(), maxAge: 10 * 60_000, path: '/api/v1/auth/discord' });
+      res.redirect(302, s.url);
+    } catch { res.redirect(302, webUrl('/login?discord=disabled')); }
+  }
+
+  /** Angemeldeter Benutzer verknüpft sein Discord-Konto per Discord-Login (statt Einmal-Code). */
+  @Get('discord/link')
+  discordLink(@CurrentUser() user: AuthUser, @Res() res: Response) {
+    try {
+      const s = this.discord.start('link', user.id);
+      res.cookie(OAUTH_COOKIE, s.browser, { httpOnly: true, sameSite: 'lax', secure: this.secure(), maxAge: 10 * 60_000, path: '/api/v1/auth/discord' });
+      res.redirect(302, s.url);
+    } catch { res.redirect(302, webUrl('/?discord=disabled')); }
+  }
+
+  /** Rücksprung von Discord (diese Adresse muss im Developer Portal unter OAuth2 → Redirects stehen). */
+  @Public() @Throttle({ default: { limit: process.env.NODE_ENV === 'test' ? 10_000 : 20, ttl: 60_000 } }) @Get('discord/callback')
+  async discordCallback(@Query('code') code: string | undefined, @Query('state') state: string | undefined, @Query('error') error: string | undefined, @Req() req: AppRequest & { cookies?: Record<string, string> }, @Res() res: Response) {
+    res.clearCookie(OAUTH_COOKIE, { path: '/api/v1/auth/discord' });
+    if (error) return res.redirect(302, webUrl('/login?discord=cancelled'));
+    try {
+      const r = await this.discord.callback(code, state, req.cookies?.[OAUTH_COOKIE], { ip: req.ip, userAgent: req.headers['user-agent'], requestId: req.requestId });
+      if (r.kind === 'linked') return res.redirect(302, webUrl('/?discord=linked'));
+      res.cookie(SESSION_COOKIE, r.token, { httpOnly: true, sameSite: 'strict', secure: this.secure(), expires: r.expiresAt, path: '/' });
+      return res.redirect(302, webUrl('/'));
+    } catch (e) {
+      return res.redirect(302, webUrl(`/login?discord=${e instanceof DiscordLoginFailure ? e.code : 'failed'}`));
+    }
+  }
 
   @Public()
   @Throttle({ default: { limit: process.env.NODE_ENV === 'test' ? 10_000 : loadEnv().LOGIN_RATE_LIMIT, ttl: 60_000 } })

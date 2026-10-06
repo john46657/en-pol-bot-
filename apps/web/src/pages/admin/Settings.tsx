@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { api, ApiError } from '../../lib/api';
 import { useAuth } from '../../lib/auth';
@@ -43,10 +43,50 @@ export function Settings() {
         <p className="mb-3 text-xs text-muted">Empty = that notification type is disabled (nothing is queued). Several channels (also on different servers): separate the IDs with a comma. Everyone who can read the Discord channel will see the posts — use staff-only channels. Only summaries are posted (incident number/title/priority/location, wanted reason/subject, announcements, full applications incl. answers (like Appy), danger level, SEK mission reports and qualification applications incl. their text and answers). Team list, ticket category and the roles take a single ID.</p>
         <div className="grid gap-3 md:grid-cols-2">{CHANNELS.map(([k, label]) => <Field key={k} label={label}>{(id) => <Input id={id} inputMode="numeric" disabled={!manage} value={drafts[`discord.${k}`] ?? String((q.data.settings['discord.channels'] as Record<string, string> | undefined)?.[k] ?? '')} onChange={(e) => setDrafts({ ...drafts, [`discord.${k}`]: e.target.value })} placeholder="123456789012345678, 234567890123456789" />}</Field>)}</div>
       </Card>
+      <DiscordLoginCard manage={manage} value={q.data.settings['auth.discord'] as DiscordLogin | undefined} busy={save.isPending} onSave={(v) => save.mutate({ key: 'auth.discord', value: v })} />
       <Card title="Team list rank order" className="mt-4" actions={manage && <Button disabled={save.isPending} onClick={() => save.mutate({ key: 'team.rankOrder', value: val('team.rankOrder').split(',').map((r) => r.trim()).filter(Boolean) })}>Save order</Button>}>
         <p className="mb-3 text-xs text-muted">Ranks in the Discord team list, highest first, separated by commas. Ranks not listed here follow alphabetically.</p>
         <Input aria-label="Rank order" disabled={!manage} value={drafts['team.rankOrder'] ?? ((q.data.settings['team.rankOrder'] as string[] | undefined) ?? []).join(', ')} onChange={(e) => setDrafts({ ...drafts, 'team.rankOrder': e.target.value })} placeholder="Chief, Captain, Sergeant, Officer" />
       </Card>
     </>
+  );
+}
+
+interface DiscordLogin { signup: boolean; requireGuild: boolean; roleMap: { discordRoleId: string; role: string }[] }
+
+/** „Mit Discord anmelden“: neue Konten, Server-Pflicht, Discord-Rolle → Systemrolle (wird bei jeder Discord-Anmeldung abgeglichen). */
+function DiscordLoginCard({ manage, value, busy, onSave }: { manage: boolean; value?: DiscordLogin; busy: boolean; onSave: (v: DiscordLogin) => void }) {
+  const [d, setD] = useState<DiscordLogin>(value ?? { signup: true, requireGuild: true, roleMap: [] });
+  useEffect(() => { if (value) setD(value); }, [value]);
+  const roles = useQuery({ queryKey: ['roles-names'], queryFn: () => api<{ name: string }[]>('/roles') });
+  const providers = useQuery({ queryKey: ['auth-providers'], queryFn: () => api<{ discord: boolean }>('/auth/providers') });
+  const row = (i: number, p: Partial<DiscordLogin['roleMap'][number]>) => setD({ ...d, roleMap: d.roleMap.map((r, j) => (j === i ? { ...r, ...p } : r)) });
+  return (
+    <Card title="Sign in with Discord" className="mt-4" actions={manage && <Button disabled={busy} onClick={() => onSave({ ...d, roleMap: d.roleMap.filter((r) => r.discordRoleId.trim() && r.role) })}>Save</Button>}>
+      <p className="mb-3 text-xs text-muted">
+        {providers.data?.discord ? 'Enabled – the login page shows “Mit Discord anmelden”.' : 'Not enabled yet: set DISCORD_CLIENT_SECRET (Discord Developer Portal → OAuth2) in the panel and add the redirect URL below in the Developer Portal.'}
+        {' '}Redirect URL: <code>{window.location.origin}/api/v1/auth/discord/callback</code>
+      </p>
+      <div className="space-y-2 text-sm">
+        <label className="flex items-center gap-2"><input type="checkbox" disabled={!manage} checked={d.signup} onChange={(e) => setD({ ...d, signup: e.target.checked })} />New users can sign up with Discord (account is created on first login)</label>
+        <label className="flex items-center gap-2"><input type="checkbox" disabled={!manage} checked={d.requireGuild} onChange={(e) => setD({ ...d, requireGuild: e.target.checked })} />Only members of our Discord server may sign in</label>
+      </div>
+      <h3 className="mb-1 mt-4 text-xs font-semibold uppercase text-muted">Discord role → system role (synced on every Discord login)</h3>
+      <div className="space-y-2">
+        {d.roleMap.map((r, i) => (
+          <div key={i} className="flex flex-wrap items-center gap-2">
+            <div className="w-full sm:w-56"><Input aria-label="Discord role ID" inputMode="numeric" disabled={!manage} value={r.discordRoleId} placeholder="Discord role ID" onChange={(e) => row(i, { discordRoleId: e.target.value.trim() })} /></div>
+            <span className="text-muted">→</span>
+            <div className="w-full sm:w-56"><Select aria-label="System role" disabled={!manage} value={r.role} onChange={(e) => row(i, { role: e.target.value })}>
+              <option value="">Choose role…</option>
+              {(roles.data ?? []).map((x) => <option key={x.name}>{x.name}</option>)}
+            </Select></div>
+            {manage && <Button variant="ghost" size="sm" onClick={() => setD({ ...d, roleMap: d.roleMap.filter((_, j) => j !== i) })}>Remove</Button>}
+          </div>
+        ))}
+        {manage && <Button variant="secondary" size="sm" onClick={() => setD({ ...d, roleMap: [...d.roleMap, { discordRoleId: '', role: '' }] })}>Add mapping</Button>}
+        <p className="text-xs text-muted">Example: Discord role “Polizei” → Police Member, “Leitstelle” → Dispatch. Mapped roles are added when the person has the Discord role and removed when they lose it; other roles are never touched.</p>
+      </div>
+    </Card>
   );
 }

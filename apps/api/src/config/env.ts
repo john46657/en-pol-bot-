@@ -21,6 +21,13 @@ const schema = z.object({
   SESSION_TTL_HOURS: z.coerce.number().positive().default(12),
   WEB_ORIGIN: z.string().default('http://localhost:5173'),
   STORAGE_DIR: z.string().default('./uploads'),
+  /** „Mit Discord anmelden“: OAuth2-Client-Secret aus dem Discord Developer Portal (OAuth2 → Client Secret). Leer = nur Passwort-Login. */
+  DISCORD_CLIENT_SECRET: z.string().min(8).optional(),
+  /** Application/Client-ID; wird sonst aus DISCORD_TOKEN abgeleitet (gleiche Anwendung wie der Bot). */
+  DISCORD_CLIENT_ID: z.string().regex(/^\d{15,25}$/).optional(),
+  /** Bot-Token (für Server-Mitgliedschaft und Rollen beim Discord-Login). */
+  DISCORD_TOKEN: z.string().min(20).optional(),
+  DISCORD_GUILD_ID: z.string().optional(),
 });
 
 export type Env = z.infer<typeof schema>;

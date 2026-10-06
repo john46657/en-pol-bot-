@@ -11,6 +11,7 @@ export function DiscordLink() {
   const [err, setErr] = useState<string>();
   const qc = useQueryClient();
   const status = useQuery({ queryKey: ['discord-link'], queryFn: () => api<{ linked: boolean; discordId: string | null }>('/discord/link'), enabled: open });
+  const providers = useQuery({ queryKey: ['auth-providers'], queryFn: () => api<{ discord: boolean }>('/auth/providers'), enabled: open });
   const onError = (e: unknown) => setErr(e instanceof ApiError ? e.message : 'Failed');
   const create = useMutation({ mutationFn: () => api<{ code: string; expiresAt: string }>('/discord/link-code', { method: 'POST' }), onSuccess: (c) => { setCode(c); setErr(undefined); }, onError });
   const unlink = useMutation({ mutationFn: () => api('/discord/link', { method: 'DELETE' }), onSuccess: () => { setCode(undefined); setErr(undefined); void qc.invalidateQueries({ queryKey: ['discord-link'] }); }, onError });
@@ -35,7 +36,10 @@ export function DiscordLink() {
           ) : (
             <>
               <p className="text-muted">Mit einem Einmal-Code verknüpfst du dein Discord-Konto. Danach kannst du Personen, Kennzeichen und Einsätze direkt im Discord abfragen und deinen Dienststatus setzen — immer mit deinen Rechten.</p>
-              <div className="flex justify-end"><Button disabled={create.isPending || status.isLoading} onClick={() => create.mutate()}>Code erzeugen</Button></div>
+              <div className="flex flex-wrap justify-end gap-2">
+                {providers.data?.discord && <a href="/api/v1/auth/discord/link" className="rounded-md bg-[#5865F2] px-3 py-1.5 text-sm font-medium text-white hover:bg-[#4752c4]">Mit Discord verknüpfen</a>}
+                <Button variant={providers.data?.discord ? 'secondary' : 'primary'} disabled={create.isPending || status.isLoading} onClick={() => create.mutate()}>Code erzeugen</Button>
+              </div>
             </>
           )}
         </div>

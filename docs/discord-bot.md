@@ -123,3 +123,11 @@ Jeder Statuswechsel – egal ob im **Dashboard**, per **`/dienst`**, per **Diens
 - **Teamliste** (`/teamliste`) wird sofort neu gezeichnet.
 
 Ist weder Channel noch Rolle eingestellt, wird nichts eingereiht. Fällt der Bot kurz aus, werden die Änderungen nachgeholt.
+
+## Mit Discord anmelden (wie bei Dyno)
+Auf der Login-Seite erscheint **„Mit Discord anmelden“**, sobald `DISCORD_CLIENT_SECRET` gesetzt ist (Developer Portal → OAuth2 → Client Secret; die Client-ID wird aus `DISCORD_TOKEN` gelesen). Im Developer Portal unter **OAuth2 → Redirects** muss `https://<deine-domain>/api/v1/auth/discord/callback` stehen (`WEB_ORIGIN` muss genau diese Domain sein).
+- Discord fragt nur nach dem Benutzernamen (Scope `identify`) – kein Passwort, keine E-Mail.
+- **Bestehende Konten**: wer schon verknüpft ist (`/verknuepfen` oder im Web „Mit Discord verknüpfen“), landet direkt im eigenen Konto.
+- **Neue Personen** bekommen beim ersten Login automatisch ein Konto – nur wenn sie auf eurem Discord-Server sind (abschaltbar) und zunächst **ohne Rechte**.
+- **Rollen wie bei Dyno** (*Settings → Sign in with Discord*): Discord-Rolle → Systemrolle, z. B. „Polizei“ → *Police Member*. Wird bei jeder Discord-Anmeldung abgeglichen (dazu/weg); andere Rollen bleiben unberührt.
+- Der Passwort-Login (z. B. `admin`) bleibt erhalten.

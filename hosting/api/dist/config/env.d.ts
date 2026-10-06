@@ -20,6 +20,13 @@ declare const schema: z.ZodObject<{
     SESSION_TTL_HOURS: z.ZodDefault<z.ZodNumber>;
     WEB_ORIGIN: z.ZodDefault<z.ZodString>;
     STORAGE_DIR: z.ZodDefault<z.ZodString>;
+    /** „Mit Discord anmelden“: OAuth2-Client-Secret aus dem Discord Developer Portal (OAuth2 → Client Secret). Leer = nur Passwort-Login. */
+    DISCORD_CLIENT_SECRET: z.ZodOptional<z.ZodString>;
+    /** Application/Client-ID; wird sonst aus DISCORD_TOKEN abgeleitet (gleiche Anwendung wie der Bot). */
+    DISCORD_CLIENT_ID: z.ZodOptional<z.ZodString>;
+    /** Bot-Token (für Server-Mitgliedschaft und Rollen beim Discord-Login). */
+    DISCORD_TOKEN: z.ZodOptional<z.ZodString>;
+    DISCORD_GUILD_ID: z.ZodOptional<z.ZodString>;
 }, "strip", z.ZodTypeAny, {
     NODE_ENV: "development" | "test" | "production";
     PORT: number;
@@ -35,6 +42,10 @@ declare const schema: z.ZodObject<{
     BOT_API_TOKEN?: string | undefined;
     COOKIE_SECURE?: "true" | "false" | undefined;
     WEB_DIST?: string | undefined;
+    DISCORD_CLIENT_SECRET?: string | undefined;
+    DISCORD_CLIENT_ID?: string | undefined;
+    DISCORD_TOKEN?: string | undefined;
+    DISCORD_GUILD_ID?: string | undefined;
 }, {
     DATABASE_URL: string;
     NODE_ENV?: "development" | "test" | "production" | undefined;
@@ -50,6 +61,10 @@ declare const schema: z.ZodObject<{
     SESSION_TTL_HOURS?: number | undefined;
     WEB_ORIGIN?: string | undefined;
     STORAGE_DIR?: string | undefined;
+    DISCORD_CLIENT_SECRET?: string | undefined;
+    DISCORD_CLIENT_ID?: string | undefined;
+    DISCORD_TOKEN?: string | undefined;
+    DISCORD_GUILD_ID?: string | undefined;
 }>;
 export type Env = z.infer<typeof schema>;
 export declare function loadEnv(source?: NodeJS.ProcessEnv): Env;

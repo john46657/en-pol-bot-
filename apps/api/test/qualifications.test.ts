@@ -113,6 +113,7 @@ describe('qualification applications', () => {
     // ohne policeForm bleibt das Formular unverändert
     expect((await admin.put('/api/v1/qualifications/config').send({ ...body, policeForm: undefined })).status).toBe(200);
     expect((await http().get('/api/v1/applications/form')).body).toEqual(policeForm);
+    await prisma.systemSetting.deleteMany({ where: { key: 'application.form' } }); // Standardformular für andere Tests
   });
 
   it('team view in Discord: details in the post, own channel per unit, decision with reason, history, police quick decision', async () => {
@@ -142,7 +143,7 @@ describe('qualification applications', () => {
     const P = '300000000000000066';
     const pa = await http().post('/api/v1/bot/application').set(bot()).send({ robloxUsername: 'Polizist', discordId: P, discordName: 'polizist', durationSec: 120, answers });
     const ppost = await prisma.discordOutbox.findFirstOrThrow({ where: { type: 'application.submitted', payload: { path: ['number'], equals: pa.body.number } } });
-    expect(ppost.payload).toMatchObject({ discordName: 'polizist', durationSec: 120, answers: [{ question: form.find((f) => f.required)!.label, answer: 'Antwort' }] });
+    expect(ppost.payload).toMatchObject({ discordName: 'polizist', durationSec: 120, answers: expect.arrayContaining([{ question: form.find((f) => f.required)!.label, answer: 'Antwort' }]) });
     const id = (ppost.payload as { id: string }).id;
     expect((await http().post(`/api/v1/applications/${id}/discord-decision`).set(bot(LEAD_D)).send({ status: 'ACCEPTED' })).status).toBe(403); // SEK Leitung hat kein applications.decide
     const a2 = (await login(app, 'q_admin')).agent;

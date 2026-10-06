@@ -35,12 +35,17 @@ export class AuthService {
       throw new AppError('UNAUTHENTICATED', 'Invalid credentials.');
     }
 
+    return this.startSession(user, meta, 'auth.login');
+  }
+
+  /** Neue Session nach erfolgreicher Anmeldung (Passwort oder Discord). */
+  async startSession(user: { id: string; robloxUserId: string | null }, meta: { ip?: string; userAgent?: string; requestId?: string }, action = 'auth.login') {
     const token = randomBytes(32).toString('base64url');
     const expiresAt = new Date(Date.now() + this.env.SESSION_TTL_HOURS * 3600_000);
     await this.prisma.$transaction(async (tx) => {
       await tx.session.create({ data: { userId: user.id, tokenHash: hashToken(token), expiresAt, ip: meta.ip, userAgent: meta.userAgent?.slice(0, 255) } });
       await tx.user.update({ where: { id: user.id }, data: { lastLogin: new Date(), failedLogins: 0, lockedUntil: null } });
-      await this.audit.record({ userId: user.id, robloxUserId: user.robloxUserId, requestId: meta.requestId }, { action: 'auth.login', module: 'auth', entityType: 'User', entityId: user.id }, tx);
+      await this.audit.record({ userId: user.id, robloxUserId: user.robloxUserId, requestId: meta.requestId }, { action, module: 'auth', entityType: 'User', entityId: user.id }, tx);
     });
     return { token, expiresAt, user: await this.profile(user.id) };
   }
