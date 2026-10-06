@@ -15,7 +15,7 @@ export interface DiscordLoginSettings {
 }
 export declare const DEFAULT_DISCORD_LOGIN: DiscordLoginSettings;
 /** Fehlercodes für die Login-Seite (`/login?discord=<code>`). */
-export type DiscordLoginError = 'disabled' | 'state' | 'failed' | 'no_account' | 'not_member' | 'cannot_verify' | 'inactive' | 'taken' | 'no_team_role';
+export type DiscordLoginError = 'disabled' | 'state' | 'failed' | 'no_account' | 'not_member' | 'cannot_verify' | 'inactive' | 'taken' | 'no_team_role' | 'install_failed';
 export declare class DiscordLoginFailure extends Error {
     readonly code: DiscordLoginError;
     constructor(code: DiscordLoginError);
@@ -43,7 +43,7 @@ export declare class DiscordOAuthService {
     private isAdminId;
     redirectUri(): string;
     /** Schritt 1: Adresse bei Discord + Browser-Bindung. */
-    start(mode: 'login' | 'link', userId?: string): {
+    start(mode: 'login' | 'link' | 'install', userId?: string): {
         url: string;
         browser: string;
     };
@@ -53,7 +53,11 @@ export declare class DiscordOAuthService {
         userAgent?: string;
         requestId?: string;
     }): Promise<{
+        kind: "installed";
+        guildName: string | null;
+    } | {
         kind: "linked";
+        guildName?: undefined;
     } | {
         token: string;
         expiresAt: Date;
@@ -68,8 +72,11 @@ export declare class DiscordOAuthService {
             lastLogin: Date | null;
         };
         kind: "login";
+        guildName?: undefined;
     }>;
     settings(): Promise<DiscordLoginSettings>;
+    /** Code bei Discord einlösen (Login und Bot-Einladung). */
+    private exchange;
     private discordUser;
     /** Mitglied auf einem der Server des Bots (bzw. der eingestellten Server)? `null` = nein, `unknown` = nicht prüfbar. */
     private membership;

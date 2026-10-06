@@ -99,15 +99,23 @@ function DiscordLoginCard({ manage, value, busy, onSave }: { manage: boolean; va
 
 /** Bot auf einen (weiteren) Discord-Server einladen – fertiger Link mit Administrator-Rechten. */
 function BotInviteCard() {
+  const params = new URLSearchParams(window.location.search);
+  const result = params.get('discord'), server = params.get('server');
   const invite = useQuery({ queryKey: ['bot-invite'], queryFn: () => api<{ url: string | null }>('/auth/discord/invite') });
   const guilds = useGuilds();
   return (
     <Card title="Discord bot on your servers" className="mt-4">
       <div className="grid gap-3 text-sm">
-        {invite.data?.url
-          ? <div><a className="inline-flex items-center gap-1.5 rounded-md bg-[#5865f2] px-3.5 py-2 font-medium text-white hover:brightness-110" href={invite.data.url} target="_blank" rel="noreferrer">Add bot to a server</a></div>
-          : <p className="text-muted">Set DISCORD_TOKEN in the panel first – then the invite link appears here.</p>}
-        <p className="text-xs text-muted">Opens Discord with administrator rights for the bot: choose your server and click <b>Authorize</b>. You need „Manage Server“ on that server. If Discord says the bot is private or needs a code grant: Developer Portal → <b>Bot</b> → turn <b>Public Bot</b> on (or invite with the account that owns the bot) and turn <b>Requires OAuth2 Code Grant</b> off.</p>
+        {result === 'installed' && <p role="status" className="text-success">✅ Bot added{server ? ` to „${server}“` : ''}. It appears in the list below within a few seconds.</p>}
+        {result === 'install_failed' && <p role="alert" className="text-danger">Adding the bot failed. Check DISCORD_CLIENT_SECRET and the redirect URL in the Developer Portal, then try again.</p>}
+        {invite.data?.url ? (
+          <div className="flex flex-wrap items-center gap-3">
+            {/* über das Dashboard: funktioniert auch, wenn „OAuth2-Code-Erlaubnis benötigt“ an ist */}
+            <a className="inline-flex items-center gap-1.5 rounded-md bg-[#5865f2] px-3.5 py-2 font-medium text-white hover:brightness-110" href="/api/v1/auth/discord/install">Add bot to a server</a>
+            <a className="text-xs text-primary underline" href={invite.data.url} target="_blank" rel="noreferrer">plain invite link</a>
+          </div>
+        ) : <p className="text-muted">Set DISCORD_TOKEN in the panel first – then the invite button appears here.</p>}
+        <p className="text-xs text-muted">Opens Discord with administrator rights for the bot: choose your server and click <b>Authorize</b> – you come back here afterwards. Works even with „Requires OAuth2 Code Grant“ turned on. You need „Manage Server“ on that server; if the bot is not public, use the Discord account that owns it.</p>
         <div>
           <p className="mb-1 text-xs font-semibold uppercase text-muted">Bot is on {guilds.data?.length ?? 0} server(s)</p>
           {guilds.data?.length ? <ul className="flex flex-wrap gap-2">{guilds.data.map((g) => <li key={g.id} className="inline-flex items-center gap-1.5 rounded border border-line px-2 py-1">{g.icon && <img src={g.icon} alt="" className="h-4 w-4 rounded-full" />}{g.name}</li>)}</ul>

@@ -68,6 +68,27 @@ describe('login with Discord', () => {
     expect((await request(app.getHttpServer()).get('/api/v1/auth/discord/invite')).status).toBe(401);
   });
 
+  it('admins can add the bot to a server through the dashboard (code grant is redeemed by the system)', async () => {
+    const admin = (await login(app, 'dl_admin')).agent;
+    const start = await admin.get('/api/v1/auth/discord/install');
+    expect(start.status).toBe(302);
+    const to = new URL(start.headers.location as string);
+    expect(to.searchParams.get('scope')).toBe('bot applications.commands');
+    expect(to.searchParams.get('permissions')).toBe('8');
+    expect(to.searchParams.get('response_type')).toBe('code');
+    expect(to.searchParams.get('redirect_uri')).toMatch(/\/api\/v1\/auth\/discord\/callback$/);
+    const back = await admin.get(`/api/v1/auth/discord/callback?code=abc&state=${to.searchParams.get('state')}&guild_id=1`);
+    expect(String(back.headers.location)).toMatch(/\/admin\/settings\?discord=installed/);
+    expect(await prisma.auditLog.count({ where: { action: 'discord.bot_installed' } })).toBe(1);
+    // fehlgeschlagener Code → zurück in die Einstellungen mit Hinweis
+    discord.tokenOk = false;
+    const s2 = new URL((await admin.get('/api/v1/auth/discord/install')).headers.location as string);
+    expect(String((await admin.get(`/api/v1/auth/discord/callback?code=abc&state=${s2.searchParams.get('state')}`)).headers.location)).toMatch(/\/admin\/settings\?discord=install_failed$/);
+    discord.tokenOk = true;
+    // nur mit Recht (Gast ohne Login)
+    expect((await request(app.getHttpServer()).get('/api/v1/auth/discord/install')).status).toBe(401);
+  });
+
   it('offers Discord on the login page', async () => {
     expect((await request(app.getHttpServer()).get('/api/v1/auth/providers')).body).toEqual({ discord: true, password: true });
   });

@@ -16,10 +16,10 @@ export interface DiscordLoginSettings { signup: boolean; requireGuild: boolean; 
 export const DEFAULT_DISCORD_LOGIN: DiscordLoginSettings = { signup: true, requireGuild: true, roleMap: [], teamRoleIds: [] };
 
 /** Fehlercodes für die Login-Seite (`/login?discord=<code>`). */
-export type DiscordLoginError = 'disabled' | 'state' | 'failed' | 'no_account' | 'not_member' | 'cannot_verify' | 'inactive' | 'taken' | 'no_team_role';
+export type DiscordLoginError = 'disabled' | 'state' | 'failed' | 'no_account' | 'not_member' | 'cannot_verify' | 'inactive' | 'taken' | 'no_team_role' | 'install_failed';
 export class DiscordLoginFailure extends Error { constructor(readonly code: DiscordLoginError) { super(code); } }
 
-interface Pending { mode: 'login' | 'link'; userId?: string; browser: string; expires: number }
+interface Pending { mode: 'login' | 'link' | 'install'; userId?: string; browser: string; expires: number }
 interface DiscordUser { id: string; username: string; global_name?: string | null }
 
 /**
@@ -56,13 +56,16 @@ export class DiscordOAuthService {
   redirectUri() { return webUrl('/api/v1/auth/discord/callback'); }
 
   /** Schritt 1: Adresse bei Discord + Browser-Bindung. */
-  start(mode: 'login' | 'link', userId?: string) {
+  start(mode: 'login' | 'link' | 'install', userId?: string) {
     if (!this.enabled()) throw new DiscordLoginFailure('disabled');
     const now = Date.now();
     for (const [k, v] of this.pending) if (v.expires < now) this.pending.delete(k);
     const state = randomBytes(24).toString('base64url'), browser = randomBytes(24).toString('base64url');
     this.pending.set(state, { mode, userId, browser, expires: now + STATE_TTL_MS });
-    const q = new URLSearchParams({ response_type: 'code', client_id: this.clientId()!, scope: 'identify', redirect_uri: this.redirectUri(), state, prompt: 'none' });
+    // „install“: Bot auf einen Server holen – über den Code-Ablauf, funktioniert auch mit „OAuth2-Code-Erlaubnis benötigt“
+    const q = mode === 'install'
+      ? new URLSearchParams({ response_type: 'code', client_id: this.clientId()!, scope: 'bot applications.commands', permissions: '8', redirect_uri: this.redirectUri(), state })
+      : new URLSearchParams({ response_type: 'code', client_id: this.clientId()!, scope: 'identify', redirect_uri: this.redirectUri(), state, prompt: 'none' });
     return { url: `https://discord.com/oauth2/authorize?${q}`, browser };
   }
 
@@ -72,6 +75,13 @@ export class DiscordOAuthService {
     if (state) this.pending.delete(state); // nur einmal verwendbar
     if (!p || p.expires < Date.now() || !browser || p.browser !== browser) throw new DiscordLoginFailure('state');
     if (!code) throw new DiscordLoginFailure('failed');
+    if (p.mode === 'install') {
+      // Code einlösen = Bot tritt dem Server bei (Discord fügt ihn erst danach hinzu)
+      const tok = await this.exchange(code).catch(() => { throw new DiscordLoginFailure('install_failed'); });
+      const guildId = typeof tok.guild?.id === 'string' ? tok.guild.id : null;
+      await this.audit.record({ userId: p.userId ?? null, requestId: meta.requestId }, { action: 'discord.bot_installed', module: 'discord', entityType: 'Guild', entityId: guildId ?? 'unknown', after: { guildId, name: tok.guild?.name ?? null } });
+      return { kind: 'installed' as const, guildName: tok.guild?.name ?? null };
+    }
     const du = await this.discordUser(code);
     const settings = await this.settings();
 
@@ -114,14 +124,25 @@ export class DiscordOAuthService {
     return { ...DEFAULT_DISCORD_LOGIN, ...(v ?? {}) };
   }
 
-  private async discordUser(code: string): Promise<DiscordUser> {
+  /** Code bei Discord einlösen (Login und Bot-Einladung). */
+  private async exchange(code: string): Promise<{ access_token: string; guild?: { id?: string; name?: string } }> {
     try {
       const tok = await fetch(`${API}/oauth2/token`, {
         method: 'POST', headers: { 'content-type': 'application/x-www-form-urlencoded' }, signal: AbortSignal.timeout(10_000),
         body: new URLSearchParams({ client_id: this.clientId()!, client_secret: this.env.DISCORD_CLIENT_SECRET!, grant_type: 'authorization_code', code, redirect_uri: this.redirectUri() }),
       });
       if (!tok.ok) { this.log.warn(`token exchange failed: HTTP ${tok.status} (Client-Secret und Redirect-URL im Developer Portal prüfen)`); throw new DiscordLoginFailure('failed'); }
-      const { access_token } = (await tok.json()) as { access_token: string };
+      return (await tok.json()) as { access_token: string; guild?: { id?: string; name?: string } };
+    } catch (e) {
+      if (e instanceof DiscordLoginFailure) throw e;
+      this.log.warn(`Discord not reachable: ${e instanceof Error ? e.message : e}`);
+      throw new DiscordLoginFailure('failed');
+    }
+  }
+
+  private async discordUser(code: string): Promise<DiscordUser> {
+    const { access_token } = await this.exchange(code);
+    try {
       const me = await fetch(`${API}/users/@me`, { headers: { authorization: `Bearer ${access_token}` }, signal: AbortSignal.timeout(10_000) });
       if (!me.ok) throw new DiscordLoginFailure('failed');
       const u = (await me.json()) as DiscordUser;

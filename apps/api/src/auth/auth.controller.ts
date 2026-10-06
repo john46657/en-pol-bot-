@@ -53,17 +53,30 @@ export class AuthController {
     } catch { res.redirect(302, webUrl('/?discord=disabled')); }
   }
 
+  /** Bot auf einen Server einladen – über das Dashboard (löst den Code ein; klappt auch mit „OAuth2-Code-Erlaubnis benötigt“). */
+  @Get('discord/install') @RequirePermission('settings.view')
+  discordInstall(@CurrentUser() user: AuthUser, @Res() res: Response) {
+    try {
+      const s = this.discord.start('install', user.id);
+      res.cookie(OAUTH_COOKIE, s.browser, { httpOnly: true, sameSite: 'lax', secure: this.secure(), maxAge: 10 * 60_000, path: '/api/v1/auth/discord' });
+      res.redirect(302, s.url);
+    } catch { res.redirect(302, webUrl('/admin/settings?discord=disabled')); }
+  }
+
   /** Rücksprung von Discord (diese Adresse muss im Developer Portal unter OAuth2 → Redirects stehen). */
   @Public() @Throttle({ default: { limit: process.env.NODE_ENV === 'test' ? 10_000 : 20, ttl: 60_000 } }) @Get('discord/callback')
   async discordCallback(@Query('code') code: string | undefined, @Query('state') state: string | undefined, @Query('error') error: string | undefined, @Req() req: AppRequest & { cookies?: Record<string, string> }, @Res() res: Response) {
     res.clearCookie(OAUTH_COOKIE, { path: '/api/v1/auth/discord' });
     if (error) return res.redirect(302, webUrl('/login?discord=cancelled'));
+    // (Abbruch beim Bot-Einladen landet ebenfalls hier – die Login-Seite leitet Angemeldete einfach weiter)
     try {
       const r = await this.discord.callback(code, state, req.cookies?.[OAUTH_COOKIE], { ip: req.ip, userAgent: req.headers['user-agent'], requestId: req.requestId });
       if (r.kind === 'linked') return res.redirect(302, webUrl('/?discord=linked'));
+      if (r.kind === 'installed') return res.redirect(302, webUrl(`/admin/settings?discord=installed${r.guildName ? `&server=${encodeURIComponent(r.guildName)}` : ''}`));
       res.cookie(SESSION_COOKIE, r.token, { httpOnly: true, sameSite: 'strict', secure: this.secure(), expires: r.expiresAt, path: '/' });
       return res.redirect(302, webUrl('/'));
     } catch (e) {
+      if (e instanceof DiscordLoginFailure && e.code === 'install_failed') return res.redirect(302, webUrl('/admin/settings?discord=install_failed'));
       return res.redirect(302, webUrl(`/login?discord=${e instanceof DiscordLoginFailure ? e.code : 'failed'}`));
     }
   }

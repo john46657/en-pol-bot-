@@ -80,7 +80,10 @@ let DiscordOAuthService = class DiscordOAuthService {
                 this.pending.delete(k);
         const state = (0, node_crypto_1.randomBytes)(24).toString('base64url'), browser = (0, node_crypto_1.randomBytes)(24).toString('base64url');
         this.pending.set(state, { mode, userId, browser, expires: now + STATE_TTL_MS });
-        const q = new URLSearchParams({ response_type: 'code', client_id: this.clientId(), scope: 'identify', redirect_uri: this.redirectUri(), state, prompt: 'none' });
+        // „install“: Bot auf einen Server holen – über den Code-Ablauf, funktioniert auch mit „OAuth2-Code-Erlaubnis benötigt“
+        const q = mode === 'install'
+            ? new URLSearchParams({ response_type: 'code', client_id: this.clientId(), scope: 'bot applications.commands', permissions: '8', redirect_uri: this.redirectUri(), state })
+            : new URLSearchParams({ response_type: 'code', client_id: this.clientId(), scope: 'identify', redirect_uri: this.redirectUri(), state, prompt: 'none' });
         return { url: `https://discord.com/oauth2/authorize?${q}`, browser };
     }
     /** Schritt 2: Rücksprung von Discord. Liefert eine neue Session (Login) oder verknüpft das Konto (Link). */
@@ -92,6 +95,13 @@ let DiscordOAuthService = class DiscordOAuthService {
             throw new DiscordLoginFailure('state');
         if (!code)
             throw new DiscordLoginFailure('failed');
+        if (p.mode === 'install') {
+            // Code einlösen = Bot tritt dem Server bei (Discord fügt ihn erst danach hinzu)
+            const tok = await this.exchange(code).catch(() => { throw new DiscordLoginFailure('install_failed'); });
+            const guildId = typeof tok.guild?.id === 'string' ? tok.guild.id : null;
+            await this.audit.record({ userId: p.userId ?? null, requestId: meta.requestId }, { action: 'discord.bot_installed', module: 'discord', entityType: 'Guild', entityId: guildId ?? 'unknown', after: { guildId, name: tok.guild?.name ?? null } });
+            return { kind: 'installed', guildName: tok.guild?.name ?? null };
+        }
         const du = await this.discordUser(code);
         const settings = await this.settings();
         if (p.mode === 'link') {
@@ -140,7 +150,8 @@ let DiscordOAuthService = class DiscordOAuthService {
         const v = (await this.prisma.systemSetting.findUnique({ where: { key: 'auth.discord' } }))?.value;
         return { ...exports.DEFAULT_DISCORD_LOGIN, ...(v ?? {}) };
     }
-    async discordUser(code) {
+    /** Code bei Discord einlösen (Login und Bot-Einladung). */
+    async exchange(code) {
         try {
             const tok = await fetch(`${API}/oauth2/token`, {
                 method: 'POST', headers: { 'content-type': 'application/x-www-form-urlencoded' }, signal: AbortSignal.timeout(10_000),
@@ -150,7 +161,18 @@ let DiscordOAuthService = class DiscordOAuthService {
                 this.log.warn(`token exchange failed: HTTP ${tok.status} (Client-Secret und Redirect-URL im Developer Portal prüfen)`);
                 throw new DiscordLoginFailure('failed');
             }
-            const { access_token } = (await tok.json());
+            return (await tok.json());
+        }
+        catch (e) {
+            if (e instanceof DiscordLoginFailure)
+                throw e;
+            this.log.warn(`Discord not reachable: ${e instanceof Error ? e.message : e}`);
+            throw new DiscordLoginFailure('failed');
+        }
+    }
+    async discordUser(code) {
+        const { access_token } = await this.exchange(code);
+        try {
             const me = await fetch(`${API}/users/@me`, { headers: { authorization: `Bearer ${access_token}` }, signal: AbortSignal.timeout(10_000) });
             if (!me.ok)
                 throw new DiscordLoginFailure('failed');
