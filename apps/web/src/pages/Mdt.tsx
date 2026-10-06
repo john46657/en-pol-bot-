@@ -7,6 +7,7 @@ import { useAuth } from '../lib/auth';
 import { useRealtime } from '../lib/realtime';
 import { Badge, Button, Card, EmptyState, ErrorState, Input, PageHeader, PriorityBadge, SkeletonRows, StatusBadge } from '../components/ui';
 import { FormModal } from '../components/FormModal';
+import { RobloxCard } from '../components/RobloxCard';
 import { useDebounced } from '../components/DataTable';
 import * as R from './resources';
 import type { ResourceConfig } from '../components/ResourcePage';
@@ -57,12 +58,13 @@ export function Mdt() {
           {canPerson && <Button size="sm" variant={mode === 'person' ? 'primary' : 'secondary'} onClick={() => setMode('person')}><Fingerprint size={13} />Search Person</Button>}
           {canVehicle && <Button size="sm" variant={mode === 'vehicle' ? 'primary' : 'secondary'} onClick={() => setMode('vehicle')}><Car size={13} />Search Vehicle</Button>}
         </div>
-        <Input ref={input} aria-label="MDT search" placeholder={mode === 'vehicle' ? 'Plate, e.g. LC 1001' : mode === 'person' ? 'Name or Roblox ID' : 'Name, Roblox ID, plate, I-/R-/T-/C-/CASE-/E- number…'} value={term}
+        <Input ref={input} aria-label="MDT search" placeholder={mode === 'vehicle' ? 'Plate, e.g. LC 1001' : mode === 'person' ? 'Roblox username or Roblox ID' : 'Roblox username or ID, plate, I-/R-/T-/C-/CASE-/E- number…'} value={term}
           onChange={(e) => setTerm(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter' && results[0]) nav(`/${ROUTE[results[0].type]}/${results[0].id}`); }} />
         <div className="mt-3" aria-live="polite">
+          {q.length >= 2 && mode !== 'vehicle' && <RobloxCard term={q} />}
           {q.length < 2 ? <p className="text-xs text-muted">Type at least 2 characters. Results only include records you are allowed to see.</p>
             : search.isLoading ? <SkeletonRows rows={2} /> : search.error ? <ErrorState error={search.error} onRetry={() => void search.refetch()} />
-            : !results.length ? <EmptyState text="No matching records." /> : (
+            : !results.length ? <EmptyState text="No matching records in the system." /> : (
               <ul className="grid gap-1 md:grid-cols-2">{results.map((h) => <li key={`${h.type}${h.id}`}><Link to={`/${ROUTE[h.type]}/${h.id}`} className="flex items-center gap-2 rounded px-2 py-1.5 hover:bg-panel-2"><Badge>{h.type}</Badge><span className="font-medium">{h.label}</span>{h.sub && <span className="min-w-0 truncate text-xs text-muted">{h.sub}</span>}</Link></li>)}</ul>
             )}
         </div>

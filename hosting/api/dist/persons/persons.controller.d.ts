@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { PersonsService } from './persons.service';
+import { RobloxService } from './roblox.service';
 import type { Actor } from '../audit/audit.service';
 import { pageQuery } from '../common/pagination';
 declare const create: z.ZodObject<{
@@ -53,6 +54,13 @@ declare const merge: z.ZodObject<{
     targetId: string;
     confirm: true;
 }>;
+declare const robloxQ: z.ZodObject<{
+    q: z.ZodString;
+}, "strip", z.ZodTypeAny, {
+    q: string;
+}, {
+    q: string;
+}>;
 declare const archive: z.ZodObject<{
     reason: z.ZodString;
 }, "strip", z.ZodTypeAny, {
@@ -62,7 +70,8 @@ declare const archive: z.ZodObject<{
 }>;
 export declare class PersonsController {
     private readonly persons;
-    constructor(persons: PersonsService);
+    private readonly roblox;
+    constructor(persons: PersonsService, roblox: RobloxService);
     list(q: z.infer<typeof pageQuery>): Promise<{
         items: {
             id: string;
@@ -81,6 +90,10 @@ export declare class PersonsController {
         total: number;
         page: number;
         pageSize: number;
+    }>;
+    /** Roblox-Konto per Name, ID oder Profil-Link nachschlagen (mit Avatar und vorhandener Akte); nicht gefunden → `null`. */
+    robloxLookup(q: z.infer<typeof robloxQ>): Promise<{
+        profile: import("./roblox.service").RobloxProfile | null;
     }>;
     get(id: string): Promise<{
         person: {

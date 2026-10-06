@@ -2,6 +2,7 @@ import { Body, Controller, Get, Param, ParseUUIDPipe, Patch, Post, Query } from 
 import { ApiTags } from '@nestjs/swagger';
 import { z } from 'zod';
 import { PersonsService } from './persons.service';
+import { RobloxService } from './roblox.service';
 import { CurrentActor, RequirePermission } from '../authz/decorators';
 import type { Actor } from '../audit/audit.service';
 import { zodBody } from '../common/zod.pipe';
@@ -10,15 +11,20 @@ import { pageQuery } from '../common/pagination';
 const create = z.object({ robloxUsername: z.string().trim().min(1).max(64), robloxUserId: z.string().nullish(), aliases: z.array(z.string().max(64)).max(20).optional(), notes: z.string().max(5000).optional(), custom: z.record(z.string(), z.unknown()).optional() });
 const update = z.object({ version: z.number().int(), robloxUsername: z.string().trim().min(1).max(64).optional(), aliases: z.array(z.string().max(64)).max(20).optional(), notes: z.string().max(5000).nullable().optional(), custom: z.record(z.string(), z.unknown()).optional() });
 const merge = z.object({ targetId: z.string().uuid(), confirm: z.literal(true), reason: z.string().trim().min(3).max(500) });
+const robloxQ = z.object({ q: z.string().trim().min(1).max(200) });
 const archive = z.object({ reason: z.string().trim().min(3).max(500) });
 
 @ApiTags('persons')
 @Controller('persons')
 export class PersonsController {
-  constructor(private readonly persons: PersonsService) {}
+  constructor(private readonly persons: PersonsService, private readonly roblox: RobloxService) {}
 
   @Get() @RequirePermission('persons.view')
   list(@Query(zodBody(pageQuery)) q: z.infer<typeof pageQuery>) { return this.persons.list(q); }
+
+  /** Roblox-Konto per Name, ID oder Profil-Link nachschlagen (mit Avatar und vorhandener Akte); nicht gefunden → `null`. */
+  @Get('roblox') @RequirePermission('persons.view')
+  async robloxLookup(@Query(zodBody(robloxQ)) q: z.infer<typeof robloxQ>) { return { profile: await this.roblox.lookup(q.q) }; }
 
   @Get(':id') @RequirePermission('persons.view')
   get(@Param('id', ParseUUIDPipe) id: string) { return this.persons.overview(id); }

@@ -12,7 +12,7 @@ export function configureApp(app: INestApplication) {
   app.setGlobalPrefix('api/v1', { exclude: ['health', 'readiness'] });
   const httpsOnly = env.COOKIE_SECURE ? env.COOKIE_SECURE === 'true' : env.NODE_ENV === 'production';
   // Ohne HTTPS dürfen CSP/HSTS die Seite nicht auf https „hochziehen“ (sonst laden Assets nicht).
-  app.use(helmet({ contentSecurityPolicy: { useDefaults: true, directives: httpsOnly ? {} : { 'upgrade-insecure-requests': null } }, hsts: httpsOnly }));
+  app.use(helmet({ contentSecurityPolicy: { useDefaults: true, directives: { 'img-src': ["'self'", 'data:', 'blob:', 'https://cdn.discordapp.com', 'https://*.rbxcdn.com'], ...(httpsOnly ? {} : { 'upgrade-insecure-requests': null }) } }, hsts: httpsOnly }));
   app.use(cookieParser());
   const express = app.getHttpAdapter().getInstance();
   express.set('trust proxy', 1);
