@@ -2,7 +2,8 @@
 /**
  * EN Polizei – Panel-Start direkt aus dem GitHub-Branch `main` (z. B. bot-hosting.net: Startdatei start.js).
  * Startet das fertig gebaute Paket aus ./hosting (API + Web + Discord-Bot; erzeugt mit `pnpm bundle:hosting` – nicht von Hand ändern).
- *   1) .env im Hauptordner laden  2) Pakete in ./hosting installieren (nur wenn nötig)  3) Prisma-Client erzeugen  4) hosting/start.js starten
+ *   1) .env im Hauptordner laden  2) Pakete in ./hosting installieren (nur wenn nötig)  3) hosting/start.js starten
+ *   (das erzeugt den Prisma-Client neu, sobald sich das Datenbankschema ändert)
  */
 const { spawnSync } = require('node:child_process');
 const crypto = require('node:crypto');
@@ -38,9 +39,6 @@ const have = fs.existsSync(stamp) ? fs.readFileSync(stamp, 'utf8').trim() : '';
 if (have !== want) {
   log('Installiere Pakete für API + Web + Bot (beim ersten Start einige Minuten) …');
   run('npm install', npm, ['install', '--omit=dev', '--no-fund', '--no-audit']);
-  // Neuere npm-Versionen blockieren Installationsskripte – den Prisma-Client daher immer selbst erzeugen
-  log('Erzeuge Prisma-Client …');
-  run('prisma generate', process.execPath, [path.join(dir, 'node_modules/prisma/build/index.js'), 'generate', '--schema', path.join(dir, 'api/prisma/schema.prisma')]);
   fs.writeFileSync(stamp, want);
 }
 

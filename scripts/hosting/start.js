@@ -60,6 +60,20 @@ function runNode(label, args) {
   if (r.status !== 0) die(`${label} ist fehlgeschlagen (Exit ${r.status}). Prüfe DATABASE_URL und die Logs oben.`);
 }
 
+// Prisma-Client passend zum Datenbankschema erzeugen – auch wenn nur das Schema neu ist (sonst kennt die API neue Tabellen nicht → „Serverfehler“).
+// Nötig, weil npm Installationsskripte blockieren kann und bei unveränderter package.json gar nichts neu erzeugt.
+{
+  const schema = path.join(root, 'api/prisma/schema.prisma');
+  const stamp = path.join(root, 'node_modules', '.en-polizei-prisma-schema');
+  const want = crypto.createHash('sha256').update(fs.readFileSync(schema)).digest('hex');
+  const have = fs.existsSync(stamp) ? fs.readFileSync(stamp, 'utf8').trim() : '';
+  if (have !== want) {
+    log('Erzeuge Prisma-Client (Datenbankschema neu oder geändert) …');
+    runNode('prisma generate', [require.resolve('prisma/build/index.js'), 'generate', '--schema', schema]);
+    fs.writeFileSync(stamp, want);
+  }
+}
+
 log('Datenbank-Migrationen …');
 runNode('prisma migrate deploy', [require.resolve('prisma/build/index.js'), 'migrate', 'deploy', '--schema', path.join(root, 'api/prisma/schema.prisma')]);
 log('Erster Administrator (nur falls noch kein Benutzer existiert) …');

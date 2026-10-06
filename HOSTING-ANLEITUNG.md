@@ -44,6 +44,7 @@ Dann im Browser: `https://<deine-domain>/health` → muss `{"status":"ok"}` zeig
 | `Invalid bot configuration` | `DISCORD_TOKEN` fehlt/ungültig. |
 | Slash-Befehle erscheinen nicht | `DISCORD_GUILD_ID` setzen oder bis zu 1 Stunde warten; Bot mit Bereich `applications.commands` einladen. |
 | Befehle antworten „System nicht erreichbar“ | API läuft nicht (siehe 502). |
+| Bot antwortet „Serverfehler (Request-ID …)“ nach einem Update | Server neu starten – beim Start erscheint „Erzeuge Prisma-Client …“, danach passt die API wieder zur Datenbank. Hilft das nicht: Konsole nach der Request-ID durchsuchen. |
 | Abbruch bei `npm install` | Zu wenig Speicher/RAM → im Panel „Adjust resources“ erhöhen. |
 
 Weitere Details: `docs/hosting-bot-hosting.md`, `docs/discord-bot.md`.
