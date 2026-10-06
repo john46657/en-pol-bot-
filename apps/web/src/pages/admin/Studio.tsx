@@ -1,7 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import type { FormField } from '@enrp/shared';
-import { FormQuestionsEditor } from '../../components/FormQuestionsEditor';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { api, ApiError } from '../../lib/api';
 import { useAuth } from '../../lib/auth';
 import { ACCENTS, useStudio, type CustomFieldDef, type StudioConfig } from '../../lib/studio';
@@ -10,7 +8,7 @@ import { Button, Card, Input, PageHeader, Select, SkeletonRows, Tabs } from '../
 type CF = StudioConfig['customFields'];
 const TYPES: CustomFieldDef['type'][] = ['text', 'number', 'select', 'date'];
 
-/** Studio: Bewerbungsformular, Custom Fields (Personen/Fahrzeuge) und Theme-Akzent. Workflows (konfigurierbare Status) gibt es bewusst nicht. */
+/** Studio: Custom Fields (Personen/Fahrzeuge) und Theme-Akzent (Bewerbungsfragen: Applications → Setup). Workflows (konfigurierbare Status) gibt es bewusst nicht. */
 export function Studio() {
   const { can } = useAuth();
   const manage = can('studio.manage') || can('settings.manage');
@@ -24,13 +22,12 @@ export function Studio() {
   });
   return (
     <>
-      <PageHeader title="Studio" subtitle="Configure custom fields, theme and the application form. Every change is validated and audited." />
+      <PageHeader title="Studio" subtitle="Configure custom fields and the theme. Every change is validated and audited. Application questions: Applications → Setup." />
       {msg && <p role="status" className="mb-3 rounded border border-line bg-panel p-2 text-sm">{msg}</p>}
-      <Tabs tabs={['Custom fields', 'Theme', 'Application form']} active={tab} onChange={(t) => { setTab(t); setMsg(undefined); }} />
+      <Tabs tabs={['Custom fields', 'Theme']} active={tab} onChange={(t) => { setTab(t); setMsg(undefined); }} />
       <div className="mt-4">
         {tab === 'Custom fields' && <CustomFields manage={manage} onSave={(v) => save.mutate({ key: 'studio.customFields', value: v })} busy={save.isPending} />}
         {tab === 'Theme' && <Theme manage={manage} onSave={(v) => save.mutate({ key: 'theme.accent', value: v })} />}
-        {tab === 'Application form' && <AppForm manage={manage} onSave={(v) => save.mutate({ key: 'application.form', value: v })} busy={save.isPending} />}
       </div>
     </>
   );
@@ -80,20 +77,6 @@ function Theme({ manage, onSave }: { manage: boolean; onSave: (v: string) => voi
         ))}
       </div>
       <p className="mt-3 text-xs text-muted">The UI is always dark; only the accent colour is configurable.</p>
-    </Card>
-  );
-}
-
-function AppForm({ manage, onSave, busy }: { manage: boolean; onSave: (v: FormField[]) => void; busy: boolean }) {
-  const q = useQuery({ queryKey: ['application-form'], queryFn: () => api<FormField[]>('/applications/form') });
-  const [fields, setFields] = useState<FormField[]>([]);
-  useEffect(() => { if (q.data) setFields(q.data); }, [q.data]);
-  return (
-    <Card title="Application form" actions={manage && <Button disabled={busy} onClick={() => onSave(fields)}>Save</Button>}>
-      <p className="mb-3 text-xs text-muted">Tip: these questions (also used by the Discord bot) can be edited together with all other application questions under <strong>Organisation → Qualifications → Setup</strong>.</p>
-      {q.isLoading ? <SkeletonRows /> : (
-        <FormQuestionsEditor value={fields} onChange={setFields} disabled={!manage} />
-      )}
     </Card>
   );
 }

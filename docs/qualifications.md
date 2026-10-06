@@ -16,7 +16,7 @@ Die **Polizei-Bewerbung** erscheint genauso im **Applications channel** (mit Rob
 Regeln: eine offene Bewerbung pro Person und Einheit; eine laufende Bewerbung im Chat zur selben Zeit; über die eigene Bewerbung darf niemand entscheiden. Bewerben geht auch **ohne** verknüpftes Konto.
 
 **Einrichten – alles an einem Ort (Web → Qualifications → Setup, Recht `qualifications.manage`):**
-- *Bewerbung bei EN Polizei*: Titel/Text des Panels (`/bewerbungspanel`), **Ping-Rollen** (werden bei neuen Bewerbungen im Channel erwähnt) und die Fragen. Das ist dasselbe Formular wie unter Studio → Application form und auf der Web-Seite `/apply`; der Roblox-Name wird immer zuerst gefragt.
+- *Bewerbung bei EN Polizei*: Titel/Text des Panels (`/bewerbungspanel`), **Ping-Rollen** (werden bei neuen Bewerbungen im Channel erwähnt) und die Fragen. Das ist dasselbe Formular wie auf der Web-Seite `/apply` (bearbeitet wird es nur hier unter Applications → Setup); der Roblox-Name wird immer zuerst gefragt.
 - *Qualifikationen*: Titel und Einleitung des Panels; je Einheit Name, Beschreibung, Discord-Rollen-ID (bei Annahme), eigener Bewerbungs-Channel, **Ping-Rollen** (z. B. @Staffelkommandant) und die Fragen. Startwerte: Flugstaffel, SEK, Ausbilder mit je 6 Fragen.
 
 **Seiten im Dashboard:** *Organisation → Applications* (Polizei-Bewerbung) und *Organisation → Qualifications* (SEK, Flugstaffel, Ausbilder …) sind gleich aufgebaut:
