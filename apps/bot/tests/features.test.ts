@@ -134,17 +134,10 @@ describe('/bewerbung (Polizei-Bewerbung per Direktnachricht)', () => {
   });
 });
 
-describe('support tickets', () => {
-  it('panel needs server rights; opening creates a private channel with category/staff role; closing deletes it', async () => {
+describe('application ticket channels', () => {
+  it('the close button of an application ticket deletes the channel', async () => {
     const { api } = fakeApi({});
     const { p, log } = fakePlatform();
-    expect(text(await byName('supportpanel')!.run(ctx(api, { platform: p })))).toContain('Server verwalten');
-    await byName('supportpanel')!.run(ctx(api, { platform: p, isGuildAdmin: true, config: async () => ({ staffRole: '5' }) }));
-    expect(log).toEqual([`panel ${CHANNEL} support:open`]);
-    const open = interactionFor('support:open')!;
-    const r = await open.def.run({ ...ctx(api, { platform: p, config: async () => ({ tickets: 'CAT', staffRole: 'STAFF' }) }), args: open.args });
-    expect(text(r)).toContain('<#T1>');
-    expect(log.slice(1)).toEqual([`ticket ${ME} CAT STAFF`, 'panel T1 support:close']);
     await interactionFor('support:close')!.def.run({ ...ctx(api, { platform: p, channelId: 'T1' }), args: ['close'] });
     expect(log.at(-1)).toBe('delete T1 5000');
   });

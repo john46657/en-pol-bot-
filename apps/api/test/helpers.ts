@@ -6,7 +6,7 @@ import { AppModule } from '../src/app.module';
 import { configureApp } from '../src/setup-app';
 import { PrismaService } from '../src/prisma/prisma.service';
 import { hashPassword } from '../src/auth/password';
-import { seedBase } from '../src/seed/seed-lib';
+import { seedBase, seedTickets } from '../src/seed/seed-lib';
 
 export const PASSWORD = 'correct-horse-battery-staple';
 
@@ -19,6 +19,7 @@ export async function createTestApp(override?: (b: TestingModuleBuilder) => Test
   await app.init();
   const prisma = app.get(PrismaService);
   await seedBase(prisma);
+  await seedTickets(prisma);
   return { app, prisma, http: () => request(app.getHttpServer()) };
 }
 

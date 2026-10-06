@@ -2,6 +2,7 @@ import type { Api } from '../api';
 import type { Reply } from '../format';
 import type { LiveKind } from '../live';
 import type { DiscordConfig, Platform } from '../platform';
+import type { TicketEffect } from '@enrp/shared';
 
 export type Opts = Record<string, string | number | boolean | undefined>;
 export interface Ctx {
@@ -19,6 +20,12 @@ export interface Ctx {
   userName?: string;
   /** Selbst aktualisierende Nachrichten sofort neu zeichnen; mit `channelId` dorthin (um)ziehen. */
   refreshLive?: (kind: LiveKind, o?: { channelId?: string; force?: boolean }) => Promise<{ channelId: string; messageId?: string } | null>;
+  /** Discord-Rollen des Aufrufers auf diesem Server (Ticket-Voraussetzungen). */
+  memberRoleIds?: string[];
+  /** Ticket-Effekte sofort in Discord ausführen (Channel anlegen, Rechte, Nachrichten …). */
+  applyEffects?: (effects: TicketEffect[]) => Promise<{ channelId?: string }>;
+  /** Discord-Kategorien eines Servers (Ticket verschieben). */
+  listCategories?: (guildId: string) => Promise<{ id: string; name: string }[]>;
   /** Beitritt des Aufrufers zum Server (ISO), falls aus einem Server ausgelöst. */
   memberJoinedAt?: string;
   /** Roblox-Namenssuche (öffentliche Roblox-API; in Tests ersetzbar). */

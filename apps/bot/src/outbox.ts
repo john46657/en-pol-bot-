@@ -1,4 +1,5 @@
 import type { Api } from './api';
+import type { TicketEffect } from '@enrp/shared';
 import { applicationDecisionText, outboxButtons, qualificationDecisionText, renderOutboxEmbeds, type ButtonSpec, type EmbedData } from './format';
 
 interface OutboxItem { id: string; type: string; channelKey: string; payload: Record<string, unknown> }
@@ -22,7 +23,7 @@ const DIRECT: Record<string, (p: Record<string, unknown>) => string> = { 'applic
  * Holt offene Benachrichtigungen aus der System-API, postet sie und quittiert.
  * Fehlgeschlagene Sendungen werden gemeldet (die API zählt Versuche und gibt nach 5 Fehlversuchen auf).
  */
-export async function pollOnce(api: Api, send: Sender, log: (m: string) => void = console.log, dm?: DirectSender, grantRole?: RoleGranter, syncRoles?: RoleSync, onDutyChanged?: () => void): Promise<number> {
+export async function pollOnce(api: Api, send: Sender, log: (m: string) => void = console.log, dm?: DirectSender, grantRole?: RoleGranter, syncRoles?: RoleSync, onDutyChanged?: () => void, ticketEffects?: (effects: TicketEffect[]) => Promise<void>): Promise<number> {
   const [channels, items] = await Promise.all([api.service<Record<string, string | undefined>>('GET', '/bot/config'), api.service<OutboxItem[]>('GET', '/bot/outbox?limit=20')]);
   let sent = 0;
   for (const item of items) {
@@ -49,6 +50,20 @@ export async function pollOnce(api: Api, send: Sender, log: (m: string) => void 
       continue;
     }
     // pro Art dürfen mehrere Channel-IDs (Komma-getrennt, auch auf mehreren Servern) hinterlegt sein
+    // Support-Tickets: Discord-Änderungen aus dem Dashboard/der Automatik ausführen
+    if (item.type === 'ticket.effects') {
+      if (!ticketEffects) { await api.service('POST', `/bot/outbox/${item.id}/ack`, { ok: false, error: 'tickets not available' }).catch(() => undefined); continue; }
+      try {
+        await ticketEffects((item.payload.effects as TicketEffect[]) ?? []);
+        await api.service('POST', `/bot/outbox/${item.id}/ack`, { ok: true }).catch(() => undefined);
+        sent++;
+      } catch (e) {
+        const msg = e instanceof Error ? e.message : 'ticket effects failed';
+        log(`outbox ${item.id} (${item.type}) failed: ${msg}`);
+        await api.service('POST', `/bot/outbox/${item.id}/ack`, { ok: false, error: msg }).catch(() => undefined);
+      }
+      continue;
+    }
     // Dienststatus: zuerst die Dienst-Rollen abgleichen; ohne Dienst-Channel ist der Eintrag damit erledigt
     if (item.type === 'duty.changed') {
       onDutyChanged?.(); // z. B. Teamliste sofort neu zeichnen
@@ -84,14 +99,14 @@ export async function pollOnce(api: Api, send: Sender, log: (m: string) => void 
 }
 
 /** Läuft dauerhaft; überlappende Durchläufe werden vermieden, Fehler (z. B. API kurz down) beenden die Schleife nicht. */
-export function startOutboxLoop(api: Api, send: Sender, seconds: number, log: (m: string) => void = console.log, dm?: DirectSender, grantRole?: RoleGranter, syncRoles?: RoleSync, onDutyChanged?: () => void) {
+export function startOutboxLoop(api: Api, send: Sender, seconds: number, log: (m: string) => void = console.log, dm?: DirectSender, grantRole?: RoleGranter, syncRoles?: RoleSync, onDutyChanged?: () => void, ticketEffects?: (effects: TicketEffect[]) => Promise<void>) {
   let running = false;
   let lastError: string | undefined;
   const tick = async () => {
     if (running) return;
     running = true;
     try {
-      await pollOnce(api, send, log, dm, grantRole, syncRoles, onDutyChanged);
+      await pollOnce(api, send, log, dm, grantRole, syncRoles, onDutyChanged, ticketEffects);
       if (lastError) { log('outbox: connection to the API restored'); lastError = undefined; }
     } catch (e) {
       // Nur bei neuer/anderer Störung loggen – nicht alle 5 Sekunden dieselbe Zeile

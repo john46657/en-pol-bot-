@@ -17,6 +17,7 @@ export const PERMISSION_CATALOG = {
   academy: ['view', 'manage'],
   sek: ['view', 'report', 'manage'],
   qualifications: ['view', 'decide', 'manage'],
+  ticket: ['view', 'create', 'claim', 'close', 'reopen', 'delete', 'add_user', 'remove_user', 'change_status', 'change_priority', 'change_category', 'rename', 'move', 'lock', 'escalate', 'transcript', 'transcript_delete', 'internal_notes', 'rate', 'manage', 'settings'],
   communication: ['view', 'send', 'moderate'],
   analytics: ['view'],
   audit: ['view', 'export'],

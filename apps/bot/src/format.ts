@@ -2,12 +2,16 @@
 export interface EmbedData { title: string; description?: string; color?: number; fields?: { name: string; value: string; inline?: boolean }[]; footer?: string }
 /** `url`: Link-Button (öffnet die Adresse, löst keine Interaktion aus). */
 export interface ButtonSpec { id: string; label: string; style: 'primary' | 'secondary' | 'success' | 'danger'; emoji?: string; url?: string }
-/** Auswahlmenü (eine Auswahl); `id` wie bei Buttons `prefix:arg`. */
-export interface SelectSpec { id: string; placeholder: string; options: { label: string; value: string; description?: string }[] }
+/** Auswahlmenü; `id` wie bei Buttons `prefix:arg`. `kind`: Text-Optionen (Standard), Discord-Benutzer oder -Rollen. */
+export interface SelectSpec { id: string; placeholder: string; options: { label: string; value: string; description?: string; emoji?: string }[]; kind?: 'string' | 'user' | 'role'; min?: number; max?: number }
 export interface ModalField { id: string; label: string; paragraph?: boolean; required?: boolean; maxLength?: number; placeholder?: string }
 export interface ModalSpec { id: string; title: string; fields: ModalField[] }
 /** `decided`: die Nachricht mit dem geklickten Button wird aktualisiert (Farbe, Feld „Entscheidung“, Entscheidungs-Buttons entfernt). */
-export interface Reply { content?: string; embeds?: EmbedData[]; ephemeral?: boolean; buttons?: ButtonSpec[]; select?: SelectSpec; modal?: ModalSpec; decided?: { text: string; color: number } }
+export interface Reply {
+  content?: string; embeds?: EmbedData[]; ephemeral?: boolean; buttons?: ButtonSpec[]; select?: SelectSpec; selects?: SelectSpec[]; modal?: ModalSpec; decided?: { text: string; color: number };
+  /** Nachricht mit dem geklickten Button/Menü ersetzen (z. B. beantwortete Frage); ohne Buttons = Komponenten entfernen. */
+  update?: { embeds?: EmbedData[]; buttons?: ButtonSpec[] };
+}
 
 export const COLORS = { info: 0x3b82f6, success: 0x22c55e, warning: 0xf59e0b, danger: 0xef4444, neutral: 0x64748b } as const;
 const PRIORITY_COLOR: Record<string, number> = { LOW: COLORS.neutral, MEDIUM: COLORS.info, HIGH: COLORS.warning, URGENT: COLORS.danger, CRITICAL: COLORS.danger };

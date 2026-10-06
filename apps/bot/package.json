@@ -16,7 +16,8 @@
   },
   "devDependencies": {
     "tsx": "^4.20.0",
-    "vitest": "^3.2.4"
+    "vitest": "^3.2.4",
+    "@enrp/shared": "workspace:*"
   },
   "files": [
     "dist"

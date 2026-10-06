@@ -8,7 +8,7 @@ import { AppError } from '../common/errors';
 const ALPHABET = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
 const CODE_TTL_MS = 10 * 60_000;
 const hash = (c: string) => createHash('sha256').update(c.toUpperCase().replace(/[\s-]/g, '')).digest('hex');
-export const CHANNEL_KEYS = ['dispatch', 'wanted', 'announcements', 'applications', 'danger', 'sek', 'qualifications', 'duty'] as const;
+export const CHANNEL_KEYS = ['dispatch', 'wanted', 'announcements', 'applications', 'danger', 'sek', 'qualifications', 'duty', 'tickets'] as const;
 export type ChannelKey = (typeof CHANNEL_KEYS)[number];
 /** Channel-/Rollen-IDs aus den Einstellungen. Die Benachrichtigungs-Channels dürfen Komma-Listen sein (mehrere Channels/Server). */
 export interface DiscordChannels { guildId?: string; dispatch?: string; wanted?: string; announcements?: string; applications?: string; danger?: string; sek?: string; qualifications?: string; duty?: string; teamlist?: string; tickets?: string; staffRole?: string; radioRole?: string; sekRole?: string; dutyRole?: string; breakRole?: string; trainingRole?: string; adminDutyRole?: string }
