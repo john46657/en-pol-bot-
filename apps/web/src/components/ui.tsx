@@ -12,9 +12,9 @@ export function Button({ variant = 'primary', size = 'md', className, ...p }: Bu
 
 export function Card({ title, actions, children, className }: { title?: ReactNode; actions?: ReactNode; children: ReactNode; className?: string }) {
   return (
-    <section className={cx('rounded-lg border border-line bg-panel', className)}>
-      {(title || actions) && <header className="flex items-center justify-between gap-2 border-b border-line px-4 py-2.5"><h2 className="text-sm font-semibold">{title}</h2>{actions}</header>}
-      <div className="p-4">{children}</div>
+    <section className={cx('min-w-0 rounded-lg border border-line bg-panel', className)}>
+      {(title || actions) && <header className="flex flex-wrap items-center justify-between gap-2 border-b border-line px-4 py-2.5"><h2 className="min-w-0 text-sm font-semibold">{title}</h2>{actions}</header>}
+      <div className="p-3 sm:p-4">{children}</div>
     </section>
   );
 }
@@ -79,8 +79,8 @@ export function Modal({ open, title, onClose, children, wide }: { open: boolean;
   }, [open, onClose]);
   if (!open) return null;
   return createPortal(
-    <div className="fixed inset-0 z-50 grid place-items-center bg-black/60 p-4" onMouseDown={(e) => e.target === e.currentTarget && onClose()}>
-      <div ref={ref} role="dialog" aria-modal="true" aria-label={title} className={cx('max-h-[90vh] w-full overflow-auto rounded-lg border border-line bg-panel shadow-xl', wide ? 'max-w-3xl' : 'max-w-lg')}>
+    <div className="fixed inset-0 z-50 grid place-items-center bg-black/60 p-2 sm:p-4" onMouseDown={(e) => e.target === e.currentTarget && onClose()}>
+      <div ref={ref} role="dialog" aria-modal="true" aria-label={title} className={cx('max-h-[92dvh] w-full overflow-auto rounded-lg border border-line bg-panel shadow-xl', wide ? 'max-w-3xl' : 'max-w-lg')}>
         <header className="flex items-center justify-between border-b border-line px-4 py-3"><h2 className="font-semibold">{title}</h2><Button variant="ghost" size="sm" aria-label="Close" onClick={onClose}><X size={16} /></Button></header>
         <div className="p-4">{children}</div>
       </div>

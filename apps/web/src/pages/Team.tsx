@@ -70,7 +70,7 @@ export function Team() {
       {err && <div role="alert" className="mb-3 rounded border border-danger/40 bg-danger/10 p-2 text-sm text-danger">{err}</div>}
       <Card title={`Officers (${shown.length})`} actions={<Select aria-label="Duty filter" className="w-auto py-1 text-xs" value={filter} onChange={(e) => setFilter(e.target.value)}><option value="ALL">All</option>{DUTY_STATUSES.map((s) => <option key={s}>{s}</option>)}</Select>}>
         {overview.isLoading ? <SkeletonRows /> : overview.error ? <ErrorState error={overview.error} onRetry={() => void overview.refetch()} /> : !shown.length ? <EmptyState text="No officers match." hint="Create personnel files under Personnel to see officers here." /> : (
-          <div className="overflow-x-auto">
+          <div className="table-scroll">
             <table className="w-full text-left text-sm">
               <thead className="border-b border-line text-xs uppercase text-muted"><tr><th className="p-2">Officer</th><th>Rank</th><th>Callsign</th><th>Unit</th><th>Duty status</th><th>Current incident</th><th>Last change</th>{(manage || assign) && <th>Actions</th>}</tr></thead>
               <tbody>

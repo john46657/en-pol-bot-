@@ -63,7 +63,7 @@ export function Mdt() {
           {q.length < 2 ? <p className="text-xs text-muted">Type at least 2 characters. Results only include records you are allowed to see.</p>
             : search.isLoading ? <SkeletonRows rows={2} /> : search.error ? <ErrorState error={search.error} onRetry={() => void search.refetch()} />
             : !results.length ? <EmptyState text="No matching records." /> : (
-              <ul className="grid gap-1 md:grid-cols-2">{results.map((h) => <li key={`${h.type}${h.id}`}><Link to={`/${ROUTE[h.type]}/${h.id}`} className="flex items-center gap-2 rounded px-2 py-1.5 hover:bg-panel-2"><Badge>{h.type}</Badge><span className="font-medium">{h.label}</span>{h.sub && <span className="truncate text-xs text-muted">{h.sub}</span>}</Link></li>)}</ul>
+              <ul className="grid gap-1 md:grid-cols-2">{results.map((h) => <li key={`${h.type}${h.id}`}><Link to={`/${ROUTE[h.type]}/${h.id}`} className="flex items-center gap-2 rounded px-2 py-1.5 hover:bg-panel-2"><Badge>{h.type}</Badge><span className="font-medium">{h.label}</span>{h.sub && <span className="min-w-0 truncate text-xs text-muted">{h.sub}</span>}</Link></li>)}</ul>
             )}
         </div>
       </Card>
@@ -80,21 +80,21 @@ export function Mdt() {
         {can('wanted.view') && (
           <Card title="Wanted alerts" actions={<Link to="/wanted" className="text-xs text-primary hover:underline">View all</Link>}>
             {wanted.isLoading ? <SkeletonRows rows={3} /> : wanted.error ? <ErrorState error={wanted.error} /> : !wanted.data?.items.length ? <EmptyState text="No active wanted records." /> : (
-              <ul className="space-y-1.5">{wanted.data.items.map((w) => <li key={w.id} className="flex items-center justify-between gap-2"><Link className="truncate hover:underline" to={`/wanted/${w.id}`}>{String(w.reason)}</Link><PriorityBadge priority={String(w.priority)} /></li>)}</ul>
+              <ul className="space-y-1.5">{wanted.data.items.map((w) => <li key={w.id} className="flex items-center justify-between gap-2"><Link className="min-w-0 truncate hover:underline" to={`/wanted/${w.id}`}>{String(w.reason)}</Link><PriorityBadge priority={String(w.priority)} /></li>)}</ul>
             )}
           </Card>
         )}
         {can('incidents.view') && (
           <Card title="Active incidents" actions={<Link to="/incidents" className="text-xs text-primary hover:underline">View all</Link>}>
             {incidents.isLoading ? <SkeletonRows rows={3} /> : incidents.error ? <ErrorState error={incidents.error} /> : !incidents.data?.items.length ? <EmptyState text="Keine offenen Einsätze." /> : (
-              <ul className="space-y-1.5">{incidents.data.items.map((i) => <li key={i.id} className="flex items-center justify-between gap-2"><Link className="truncate hover:underline" to={`/incidents/${i.id}`}>{String(i.number)} · {String(i.title)}</Link><StatusBadge status={String(i.status)} /></li>)}</ul>
+              <ul className="space-y-1.5">{incidents.data.items.map((i) => <li key={i.id} className="flex items-center justify-between gap-2"><Link className="min-w-0 truncate hover:underline" to={`/incidents/${i.id}`}>{String(i.number)} · {String(i.title)}</Link><StatusBadge status={String(i.status)} /></li>)}</ul>
             )}
           </Card>
         )}
         {can('reports.view') && (
           <Card title="Recent reports" actions={<Link to="/reports" className="text-xs text-primary hover:underline">View all</Link>}>
             {reports.isLoading ? <SkeletonRows rows={3} /> : reports.error ? <ErrorState error={reports.error} /> : !reports.data?.items.length ? <EmptyState text="No reports yet." /> : (
-              <ul className="space-y-1.5">{reports.data.items.map((r) => <li key={r.id} className="flex items-center justify-between gap-2"><Link className="truncate hover:underline" to={`/reports/${r.id}`}>{String(r.number)} · {String(r.title)}</Link><StatusBadge status={String(r.status)} /></li>)}</ul>
+              <ul className="space-y-1.5">{reports.data.items.map((r) => <li key={r.id} className="flex items-center justify-between gap-2"><Link className="min-w-0 truncate hover:underline" to={`/reports/${r.id}`}>{String(r.number)} · {String(r.title)}</Link><StatusBadge status={String(r.status)} /></li>)}</ul>
             )}
           </Card>
         )}

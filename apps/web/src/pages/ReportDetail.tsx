@@ -45,7 +45,7 @@ export function ReportDetail() {
       <Tabs tabs={['Content', 'Versions', 'Timeline']} active={tab} onChange={setTab} />
       <div className="mt-4">
         {tab === 'Content' && <Card><p className="whitespace-pre-wrap text-sm">{latest.content.body ?? JSON.stringify(latest.content, null, 2)}</p></Card>}
-        {tab === 'Versions' && <Card><table className="w-full text-sm"><thead className="text-left text-xs uppercase text-muted"><tr><th className="py-1">Ver.</th><th>Change</th><th>Date</th><th>Hash</th></tr></thead><tbody>{r.versions.map((v) => <tr key={v.id} className="border-t border-line"><td className="py-1.5">{v.version}</td><td>{v.changeSummary}</td><td>{fmt(v.createdAt)}</td><td><code className="text-xs">{v.contentHash.slice(0, 12)}</code></td></tr>)}</tbody></table></Card>}
+        {tab === 'Versions' && <Card><div className="table-scroll"><table className="w-full text-sm"><thead className="text-left text-xs uppercase text-muted"><tr><th className="py-1">Ver.</th><th>Change</th><th>Date</th><th>Hash</th></tr></thead><tbody>{r.versions.map((v) => <tr key={v.id} className="border-t border-line"><td className="py-1.5">{v.version}</td><td>{v.changeSummary}</td><td>{fmt(v.createdAt)}</td><td><code className="text-xs">{v.contentHash.slice(0, 12)}</code></td></tr>)}</tbody></table></div></Card>}
         {tab === 'Timeline' && <Card><Timeline items={q.data.timeline} /></Card>}
       </div>
       <Modal open={editing} title="Edit report" onClose={() => setEditing(false)} wide>

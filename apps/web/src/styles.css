@@ -23,3 +23,12 @@ body { background: var(--color-bg); color: var(--color-fg); font-family: var(--f
 @media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
 @keyframes pulse-bar { 0%, 100% { opacity: .5; } 50% { opacity: 1; } }
 .skeleton { background: var(--color-panel-2); border-radius: 6px; animation: pulse-bar 1.4s ease-in-out infinite; }
+
+/* Handy: Eingabefelder mit 16px, sonst zoomt iOS beim Antippen in die Seite */
+@media (max-width: 639px) { input, select, textarea { font-size: 16px !important; } }
+/* Breite Tabellen auf schmalen Bildschirmen seitlich wischbar statt zusammengequetscht */
+.table-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+.table-scroll > table { min-width: 36rem; }
+.table-scroll th, .table-scroll td { white-space: nowrap; padding-right: 1rem; }
+/* Raster-Elemente nie breiter als ihre Spalte (sonst schieben lange Texte Karten auf dem Handy über den Rand) */
+@layer base { .grid > * { min-width: 0; } }

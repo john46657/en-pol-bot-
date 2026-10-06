@@ -15,7 +15,7 @@ export function LegalCodes() {
     <>
       <PageHeader title="Legal Codes" subtitle="Stored in the database — never hard-coded in the frontend." actions={can('settings.manage') && <Button onClick={() => setOpen(true)}>New legal code</Button>} />
       {q.isLoading ? <SkeletonRows /> : q.error ? <ErrorState error={q.error} onRetry={() => void q.refetch()} /> : !q.data?.length ? <EmptyState text="No legal codes configured." /> : (
-        <div className="overflow-x-auto rounded-lg border border-line bg-panel"><table className="w-full text-sm"><thead className="text-left text-xs uppercase text-muted"><tr><th className="p-2">Code</th><th>Title</th><th>Category</th><th>Fine</th><th>Jail (min)</th></tr></thead>
+        <div className="table-scroll rounded-lg border border-line bg-panel"><table className="w-full text-sm"><thead className="text-left text-xs uppercase text-muted"><tr><th className="p-2">Code</th><th>Title</th><th>Category</th><th>Fine</th><th>Jail (min)</th></tr></thead>
           <tbody>{q.data.map((c) => <tr key={c.id} className="border-t border-line"><td className="p-2"><Badge>{c.code}</Badge></td><td>{c.title}</td><td>{c.category}</td><td>{c.penalty.fine ?? '—'}</td><td>{c.penalty.jailMinutes ?? '—'}</td></tr>)}</tbody></table></div>
       )}
       <FormModal open={open} onClose={() => setOpen(false)} title="New legal code" endpoint="/legal-codes" invalidate={[['legal-codes']]}
