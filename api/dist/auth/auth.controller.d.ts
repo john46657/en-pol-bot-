@@ -33,6 +33,8 @@ export declare class AuthController {
     discordStart(res: Response): void;
     /** Angemeldeter Benutzer verknüpft sein Discord-Konto per Discord-Login (statt Einmal-Code). */
     discordLink(user: AuthUser, res: Response): void;
+    /** Bot auf einen Server einladen – über das Dashboard (löst den Code ein; klappt auch mit „OAuth2-Code-Erlaubnis benötigt“). */
+    discordInstall(user: AuthUser, res: Response): void;
     /** Rücksprung von Discord (diese Adresse muss im Developer Portal unter OAuth2 → Redirects stehen). */
     discordCallback(code: string | undefined, state: string | undefined, error: string | undefined, req: AppRequest & {
         cookies?: Record<string, string>;
