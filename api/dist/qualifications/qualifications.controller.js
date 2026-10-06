@@ -30,7 +30,8 @@ let QualificationsController = class QualificationsController {
     constructor(q) {
         this.q = q;
     }
-    config() { return this.q.config(); }
+    /** Panels, Einheiten und die Fragen der Polizei-Bewerbung (`policeForm`). */
+    config() { return this.q.setup(); }
     save(a, b) { return this.q.saveConfig(a, b); }
     list(f) { return this.q.list(f); }
     /** Auch vom Bot (Button im Team-Channel) mit den Rechten des klickenden Benutzers. */
@@ -48,7 +49,7 @@ __decorate([
     (0, common_1.Put)('config'),
     (0, decorators_1.RequirePermission)('qualifications.manage'),
     __param(0, (0, decorators_1.CurrentActor)()),
-    __param(1, (0, common_1.Body)((0, zod_pipe_1.zodBody)(qualifications_config_1.configSchema))),
+    __param(1, (0, common_1.Body)((0, zod_pipe_1.zodBody)(qualifications_config_1.saveSchema))),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [Object, void 0]),
     __metadata("design:returntype", void 0)

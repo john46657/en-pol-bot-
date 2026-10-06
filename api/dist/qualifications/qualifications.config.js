@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.DEFAULT_CONFIG = exports.configSchema = exports.unitSchema = void 0;
+exports.DEFAULT_CONFIG = exports.saveSchema = exports.formFieldSchema = exports.configSchema = exports.policeSchema = exports.unitSchema = void 0;
 const zod_1 = require("zod");
 /** Eine Einheit/Qualifikation, für die man sich über das Discord-Panel bewerben kann. */
 exports.unitSchema = zod_1.z.object({
@@ -11,14 +11,27 @@ exports.unitSchema = zod_1.z.object({
     roleId: zod_1.z.union([zod_1.z.string().regex(/^\d{15,25}$/), zod_1.z.literal('')]).optional(),
     questions: zod_1.z.array(zod_1.z.string().trim().min(3).max(300)).min(1).max(15),
 });
+/** Texte des Panels für die normale Bewerbung bei EN Polizei (/bewerbungspanel); die Fragen sind das Bewerbungsformular (`application.form`). */
+exports.policeSchema = zod_1.z.object({
+    title: zod_1.z.string().trim().min(2).max(100).default('📋 Bewerbung bei EN Polizei'),
+    description: zod_1.z.string().trim().max(1500).default('Du möchtest Teil der **EN Polizei** werden? Klicke auf **Jetzt bewerben** – der Bot stellt dir die Fragen nacheinander per **Direktnachricht**.\n\nDu brauchst deinen **Roblox-Namen** und etwa 10 Minuten Zeit. Die Entscheidung bekommst du ebenfalls per Direktnachricht.'),
+});
 exports.configSchema = zod_1.z.object({
     title: zod_1.z.string().trim().min(2).max(100).default('Qualifikationen'),
     intro: zod_1.z.string().trim().max(1500).default(''),
     units: zod_1.z.array(exports.unitSchema).min(1).max(10).refine((u) => new Set(u.map((x) => x.key)).size === u.length, 'Unit keys must be unique.'),
+    police: exports.policeSchema.default({}),
+});
+/** Feld des Bewerbungsformulars (gleiche Regeln wie Studio → Application form). */
+exports.formFieldSchema = zod_1.z.object({ key: zod_1.z.string().regex(/^[a-zA-Z][\w]{0,40}$/), label: zod_1.z.string().trim().min(1).max(300), required: zod_1.z.boolean(), maxLength: zod_1.z.number().int().min(1).max(5000) });
+/** Speichern aus „Qualifications → Setup“: Panels + Einheiten und optional die Fragen der Polizei-Bewerbung. */
+exports.saveSchema = exports.configSchema.extend({
+    policeForm: zod_1.z.array(exports.formFieldSchema).min(1).max(30).refine((f) => new Set(f.map((x) => x.key)).size === f.length, 'Question keys must be unique.').optional(),
 });
 const Q1 = 'Wie ist dein Roblox-Username und dein Discord-Username?';
 /** Startkonfiguration – im Web unter „Qualifications → Setup“ änderbar. */
 exports.DEFAULT_CONFIG = {
+    police: exports.policeSchema.parse({}),
     title: 'Qualifikationen',
     intro: 'Streife fahren und Einsätze abarbeiten – das sind nicht alle unsere Möglichkeiten, jeden Tag spannende Einsätze zu haben! Daher bieten wir unseren Beamten ab einem bestimmten Dienstgrad an, sich weiterzubilden: als Teil des **SEK**, der **Flugstaffel** oder als **Ausbilder**!',
     units: [

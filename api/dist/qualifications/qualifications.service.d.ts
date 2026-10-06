@@ -3,6 +3,7 @@ import { PrismaService } from '../prisma/prisma.service';
 import { AuditService, Actor } from '../audit/audit.service';
 import { DiscordService } from '../discord/discord.service';
 import { type QualificationConfig } from './qualifications.config';
+import { type FormField } from '../applications/applications.service';
 export interface Answer {
     question: string;
     answer: string;
@@ -17,7 +18,11 @@ export declare class QualificationsService {
     private readonly discord;
     constructor(prisma: PrismaService, audit: AuditService, discord: DiscordService);
     config(): Promise<QualificationConfig>;
-    saveConfig(actor: Actor, c: QualificationConfig): Promise<{
+    /** Fragen der Polizei-Bewerbung (dasselbe Formular wie /apply und Studio). */
+    policeForm(): Promise<FormField[]>;
+    /** Alles für „Qualifications → Setup“ an einem Ort. */
+    setup(): Promise<{
+        policeForm: FormField[];
         title: string;
         units: {
             name: string;
@@ -27,6 +32,28 @@ export declare class QualificationsService {
             roleId?: string | undefined;
         }[];
         intro: string;
+        police: {
+            description: string;
+            title: string;
+        };
+    }>;
+    saveConfig(actor: Actor, input: QualificationConfig & {
+        policeForm?: FormField[];
+    }): Promise<{
+        policeForm: FormField[];
+        title: string;
+        units: {
+            name: string;
+            description: string;
+            key: string;
+            questions: string[];
+            roleId?: string | undefined;
+        }[];
+        intro: string;
+        police: {
+            description: string;
+            title: string;
+        };
     }>;
     /** Für den Bot: läuft für diese Discord-ID schon eine offene Bewerbung (je Einheit)? */
     openFor(discordId: string, unit?: string): Promise<{

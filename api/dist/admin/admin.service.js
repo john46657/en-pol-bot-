@@ -18,7 +18,7 @@ const audit_service_1 = require("../audit/audit.service");
 const errors_1 = require("../common/errors");
 const custom_fields_1 = require("../studio/custom-fields");
 const studio_service_1 = require("../studio/studio.service");
-const formField = zod_1.z.object({ key: zod_1.z.string().regex(/^[a-zA-Z][\w]{0,40}$/), label: zod_1.z.string().min(1).max(100), required: zod_1.z.boolean(), maxLength: zod_1.z.number().int().min(1).max(5000) });
+const formField = zod_1.z.object({ key: zod_1.z.string().regex(/^[a-zA-Z][\w]{0,40}$/), label: zod_1.z.string().min(1).max(300), required: zod_1.z.boolean(), maxLength: zod_1.z.number().int().min(1).max(5000) });
 /** Eine oder mehrere Discord-IDs, mit Komma getrennt (z. B. Channels auf mehreren Servern). */
 const singleId = () => zod_1.z.string().regex(/^\d{15,25}$/).optional();
 const idList = () => zod_1.z.string().regex(/^\d{15,25}(\s*,\s*\d{15,25})*$/).optional();
