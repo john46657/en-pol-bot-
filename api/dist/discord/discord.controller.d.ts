@@ -39,6 +39,13 @@ declare const stateBody: z.ZodObject<{
 }, {
     value?: unknown;
 }>;
+declare const openQ: z.ZodObject<{
+    discordId: z.ZodString;
+}, "strip", z.ZodTypeAny, {
+    discordId: string;
+}, {
+    discordId: string;
+}>;
 declare const application: z.ZodObject<{
     robloxUsername: z.ZodString;
     robloxUserId: z.ZodOptional<z.ZodString>;
@@ -113,6 +120,10 @@ export declare class BotController {
     }>;
     setState(key: string, b: z.infer<typeof stateBody>): Promise<void>;
     /** Bewerbung aus Discord. Eigener Dienstweg (mit Bot-Token), damit das öffentliche Rate-Limit pro IP nicht alle Discord-Bewerber gemeinsam trifft. */
+    openApplication(q: z.infer<typeof openQ>): Promise<{
+        open: boolean;
+        number: string | null;
+    }>;
     submitApplication(b: z.infer<typeof application>): Promise<{
         number: string;
         status: string;

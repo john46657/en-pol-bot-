@@ -30,6 +30,7 @@ const outboxQ = zod_1.z.object({ limit: zod_1.z.coerce.number().int().min(1).max
 const rate = process.env.NODE_ENV === 'test' ? 10_000 : 20;
 const stateKey = zod_1.z.string().regex(/^[a-z0-9:_-]{1,64}$/);
 const stateBody = zod_1.z.object({ value: zod_1.z.unknown() });
+const openQ = zod_1.z.object({ discordId: zod_1.z.string().regex(/^\d{15,25}$/) });
 const application = zod_1.z.object({ robloxUsername: zod_1.z.string().trim().min(1).max(64), robloxUserId: zod_1.z.string().max(20).optional(), discordId: zod_1.z.string().regex(/^\d{15,25}$/), answers: zod_1.z.record(zod_1.z.string(), zod_1.z.string().max(5000)) });
 /** Web-Seite: eigenes Konto verknüpfen. Authentifiziert per Session; Bot-Zugang ist hier nicht erlaubt. */
 let DiscordController = class DiscordController {
@@ -109,6 +110,7 @@ let BotController = class BotController {
     async getState(key) { return { value: await this.d.getState(key) }; }
     async setState(key, b) { await this.d.setState(key, b.value); }
     /** Bewerbung aus Discord. Eigener Dienstweg (mit Bot-Token), damit das öffentliche Rate-Limit pro IP nicht alle Discord-Bewerber gemeinsam trifft. */
+    openApplication(q) { return this.applications.openForDiscord(q.discordId); }
     submitApplication(b) { return this.applications.submit({ robloxUsername: b.robloxUsername, robloxUserId: b.robloxUserId, answers: b.answers }, { discordId: b.discordId }); }
 };
 exports.BotController = BotController;
@@ -179,6 +181,14 @@ __decorate([
     __metadata("design:paramtypes", [String, void 0]),
     __metadata("design:returntype", Promise)
 ], BotController.prototype, "setState", null);
+__decorate([
+    (0, decorators_1.BotService)(),
+    (0, common_1.Get)('application/open'),
+    __param(0, (0, common_1.Query)((0, zod_pipe_1.zodBody)(openQ))),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [void 0]),
+    __metadata("design:returntype", void 0)
+], BotController.prototype, "openApplication", null);
 __decorate([
     (0, decorators_1.BotService)(),
     (0, throttler_1.Throttle)({ default: { limit: rate, ttl: 60_000 } }),

@@ -9,6 +9,7 @@ export interface FormField {
     required: boolean;
     maxLength: number;
 }
+/** Die Beschriftungen sind zugleich die Fragen, die der Discord-Bot per Direktnachricht stellt. */
 export declare const DEFAULT_FORM: FormField[];
 export declare class ApplicationsService {
     private readonly prisma;
@@ -26,6 +27,11 @@ export declare class ApplicationsService {
     }): Promise<{
         number: string;
         status: string;
+    }>;
+    /** Für den Bot: hat dieses Discord-Konto schon eine offene Bewerbung? */
+    openForDiscord(discordId: string): Promise<{
+        open: boolean;
+        number: string | null;
     }>;
     list(p: PageQuery, status?: string): Promise<{
         items: {
