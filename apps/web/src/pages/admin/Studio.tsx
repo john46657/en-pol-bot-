@@ -1,11 +1,12 @@
 import { useEffect, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import type { FormField } from '@enrp/shared';
+import { FormQuestionsEditor } from '../../components/FormQuestionsEditor';
 import { api, ApiError } from '../../lib/api';
 import { useAuth } from '../../lib/auth';
 import { ACCENTS, useStudio, type CustomFieldDef, type StudioConfig } from '../../lib/studio';
 import { Button, Card, Input, PageHeader, Select, SkeletonRows, Tabs } from '../../components/ui';
 
-interface FormField { key: string; label: string; required: boolean; maxLength: number }
 type CF = StudioConfig['customFields'];
 const TYPES: CustomFieldDef['type'][] = ['text', 'number', 'select', 'date'];
 
@@ -87,23 +88,11 @@ function AppForm({ manage, onSave, busy }: { manage: boolean; onSave: (v: FormFi
   const q = useQuery({ queryKey: ['application-form'], queryFn: () => api<FormField[]>('/applications/form') });
   const [fields, setFields] = useState<FormField[]>([]);
   useEffect(() => { if (q.data) setFields(q.data); }, [q.data]);
-  const upd = (i: number, p: Partial<FormField>) => setFields(fields.map((f, j) => (j === i ? { ...f, ...p } : f)));
   return (
     <Card title="Application form" actions={manage && <Button disabled={busy} onClick={() => onSave(fields)}>Save</Button>}>
       <p className="mb-3 text-xs text-muted">Tip: these questions (also used by the Discord bot) can be edited together with all other application questions under <strong>Organisation → Qualifications → Setup</strong>.</p>
       {q.isLoading ? <SkeletonRows /> : (
-        <div className="space-y-2">
-          {fields.map((f, i) => (
-            <div key={i} className="grid items-center gap-2 sm:grid-cols-[1fr_1fr_100px_auto_auto]">
-              <Input aria-label="Key" value={f.key} disabled={!manage} onChange={(e) => upd(i, { key: e.target.value })} />
-              <Input aria-label="Label" value={f.label} disabled={!manage} onChange={(e) => upd(i, { label: e.target.value })} />
-              <Input aria-label="Max length" type="number" value={f.maxLength} disabled={!manage} onChange={(e) => upd(i, { maxLength: Number(e.target.value) })} />
-              <label className="flex items-center gap-1 text-xs"><input type="checkbox" checked={f.required} disabled={!manage} onChange={(e) => upd(i, { required: e.target.checked })} />required</label>
-              {manage && <Button variant="ghost" size="sm" onClick={() => setFields(fields.filter((_, j) => j !== i))}>Remove</Button>}
-            </div>
-          ))}
-          {manage && <Button variant="secondary" onClick={() => setFields([...fields, { key: 'newField', label: 'New field', required: false, maxLength: 1000 }])}>Add field</Button>}
-        </div>
+        <FormQuestionsEditor value={fields} onChange={setFields} disabled={!manage} />
       )}
     </Card>
   );

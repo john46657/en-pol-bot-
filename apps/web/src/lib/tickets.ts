@@ -63,11 +63,14 @@ const FIELD: Record<string, string> = {
   name: 'Name', emoji: 'Emoji', description: 'Description', channelNameFormat: 'Channel name format', discordCategoryId: 'Discord category ID', channelId: 'Target channel',
   staffRoleIds: 'Staff roles', extraRoleIds: 'Additional roles', requiredRoleIds: 'Required Discord roles', allowedUserIds: 'Only these users', escalationRoleIds: 'Roles added on escalation',
   allowedRoleIds: 'Visible for Discord roles', notifyRoleIds: 'Notify Discord roles', accessRoleNames: 'Dashboard access roles', allowedRoleNames: 'May be set by system roles',
-  transcriptChannelId: 'Transcript channel ID', logChannelId: 'Log channel ID', questions: 'Question', buttons: 'Button', welcomeTitle: 'Title', welcomeMessage: 'Message',
+  transcriptChannelId: 'Transcript channel ID', logChannelId: 'Log channel ID', questions: 'Question', units: 'Unit', policeForm: 'Police application – question', minLength: 'min. length', maxLength: 'max. length', pingRoleIds: 'Ping roles', roleId: 'role ID', buttons: 'Button', welcomeTitle: 'Title', welcomeMessage: 'Message',
   thumbnailUrl: 'Thumbnail', imageUrl: 'Image', bannerUrl: 'Banner', footerIconUrl: 'Footer icon', authorIconUrl: 'Author icon', placeholder: 'Placeholder', text: 'Reason', label: 'text', options: 'options',
 };
 const fieldName = (path: string) => {
-  const [k = '', i, sub] = path.split('.');
+  const parts = path.split('.');
+  // tiefe Pfade (z. B. units.0.questions.1.options): „units 1 › Question 2 › options“
+  if (parts.length > 3) return parts.reduce<string[]>((out, p) => { if (/^\d+$/.test(p)) out[out.length - 1] = `${out[out.length - 1]} ${Number(p) + 1}`; else out.push(FIELD[p] ?? p); return out; }, []).join(' › ');
+  const [k = '', i, sub] = parts;
   const base = FIELD[k] ?? k;
   if (i === undefined) return base;
   const n = Number(i) + 1;

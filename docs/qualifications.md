@@ -16,8 +16,14 @@ Die **Polizei-Bewerbung** erscheint genauso im **Applications channel** (mit Rob
 Regeln: eine offene Bewerbung pro Person und Einheit; eine laufende Bewerbung im Chat zur selben Zeit; über die eigene Bewerbung darf niemand entscheiden. Bewerben geht auch **ohne** verknüpftes Konto.
 
 **Einrichten – alles an einem Ort (Web → Qualifications → Setup, Recht `qualifications.manage`):**
-- *Bewerbung bei EN Polizei*: Titel/Text des Panels (`/bewerbungspanel`) und die Fragen – eine pro Zeile, optionale mit „(optional)“ am Ende (max. 50). Das ist dasselbe Formular wie unter Studio → Application form und auf der Web-Seite `/apply`; der Roblox-Name wird immer zuerst gefragt. Unveränderte Fragen behalten ihre Zuordnung zu alten Antworten.
-- *Qualifikationen*: Titel und Einleitung des Panels; je Einheit Name, Beschreibung, Discord-Rollen-ID (optional), eigener Bewerbungs-Channel (optional) und bis zu 50 Fragen (eine pro Zeile). Startwerte: Flugstaffel, SEK, Ausbilder mit je 6 Fragen.
+- *Bewerbung bei EN Polizei*: Titel/Text des Panels (`/bewerbungspanel`), **Ping-Rollen** (werden bei neuen Bewerbungen im Channel erwähnt) und die Fragen. Das ist dasselbe Formular wie unter Studio → Application form und auf der Web-Seite `/apply`; der Roblox-Name wird immer zuerst gefragt.
+- *Qualifikationen*: Titel und Einleitung des Panels; je Einheit Name, Beschreibung, Discord-Rollen-ID (bei Annahme), eigener Bewerbungs-Channel, **Ping-Rollen** (z. B. @Staffelkommandant) und die Fragen. Startwerte: Flugstaffel, SEK, Ausbilder mit je 6 Fragen.
+
+**Fragen-Editor (wie bei Appy)** – bis zu 50 Fragen je Bewerbung, jede als Karte:
+- **Typ**: *Text* (Antwort per Nachricht), *Multiple choice* (Auswahlmenü in der DM, eine oder mehrere Optionen) oder *Role select* (wie Auswahl, jede Option mit einer Discord-Rolle – die gewählten Rollen bekommt die Person **bei Annahme** zusätzlich).
+- **Duplizieren**, **Löschen**, **Verschieben** (ziehen oder ↑/↓).
+- **Validation settings**: Pflicht/optional (optionale Fragen kann man überspringen – Text mit „-“, Auswahl mit „Überspringen“), Mindest- und Höchstlänge bei Text, Optionen und „Mehrfachauswahl“ bei Auswahl/Rollen.
+- Bestehende Fragen behalten ihren Schlüssel, damit alte Antworten zugeordnet bleiben; alte Einrichtungen (Fragen als Textzeilen) werden automatisch zu Text-Fragen.
 
 Fragen gelten sofort für neu gestartete Bewerbungen. Geänderte Panel-Texte/Einheiten: Panel mit `/bewerbungspanel` bzw. `/qualipanel` neu posten.
 

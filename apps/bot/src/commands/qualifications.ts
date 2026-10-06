@@ -1,14 +1,17 @@
+import { checkAnswer, normalizeField, type Field, type FormField } from '@enrp/shared';
 import { BotApiError, type Api } from '../api';
-import { clip, COLORS, errorReply, okReply, plain, type ButtonSpec, type EmbedData, type Reply } from '../format';
+import { clip, COLORS, errorReply, okReply, plain, type ButtonSpec, type EmbedData, type Reply, type SelectSpec } from '../format';
 import type { CommandDef, Ctx, InteractionDef } from './types';
 import { mapError } from './errors';
 
 // ---------------- Bewerbungen per Direktnachricht: Polizei-Bewerbung (/bewerbung, /bewerbungspanel) und Qualifikationen (SEK, Flugstaffel, Ausbilder … über /qualipanel) ----------------
-export interface QualiUnit { key: string; name: string; description: string; questions: string[] }
+export interface QualiUnit { key: string; name: string; description: string; questions: (string | FormField)[] }
 export interface QualiConfig { title: string; intro: string; units: QualiUnit[]; police?: { title: string; description: string } }
-interface Question { text: string; key?: string; optional?: boolean; max: number }
-interface Session { unit: string; unitName: string; questions: Question[]; answers: string[]; expiresAt: number; startedAt: number; joinedAt?: string }
-type SendDm = (userId: string, m: { embed: EmbedData; buttons?: ButtonSpec[] }) => Promise<unknown>;
+interface Question { text: string; key?: string; field: Field }
+/** Antworten: Text, gewählte Optionen (Auswahl/Rollen) oder `null` (übersprungen). */
+type Answer = string | string[] | null;
+interface Session { unit: string; unitName: string; questions: Question[]; answers: Answer[]; expiresAt: number; startedAt: number; joinedAt?: string }
+type SendDm = (userId: string, m: { embed: EmbedData; buttons?: ButtonSpec[]; select?: SelectSpec }) => Promise<unknown>;
 type RobloxLookup = (name: string) => Promise<{ id: number; name: string } | null>;
 
 /** Pseudo-Einheit für die normale Bewerbung bei EN Polizei (kann nicht mit konfigurierten Einheiten kollidieren). */
@@ -28,22 +31,36 @@ export const sweepSessions = (now = Date.now()) => { for (const [k, s] of sessio
 
 const CANCEL: ButtonSpec = { id: 'quali:cancel', label: 'Bewerbung abbrechen', style: 'danger' };
 const getConfig = (api: Api) => api.service<QualiConfig>('GET', '/bot/qualifications');
-const questionEmbed = (s: Session): EmbedData => {
-  const q = s.questions[s.answers.length]!;
-  return { title: clip(s.unitName, 256), color: COLORS.info,
-    description: clip(`**${s.answers.length + 1}/${s.questions.length}.** ${plain(q.text)}\n\n_Antworte einfach mit einer Nachricht hier im Chat.${q.optional ? ` Optional – schreibe „${SKIP}“, um die Frage zu überspringen.` : ''}_`, 4000) };
+const field = (f: FormField): Field => { const n = normalizeField(f); return { ...n, maxLength: Math.min(n.maxLength, 2000) }; };
+const asField = (q: string | FormField, i: number): FormField => (typeof q === 'string' ? { key: `q${i + 1}`, label: q, required: true, maxLength: MAX_ANSWER } : q);
+/** Aktuelle Frage: Text → Antwort per Nachricht; Auswahl/Rollen → Menü (+ „Überspringen“, falls optional). */
+const questionMessage = (s: Session): { embed: EmbedData; buttons: ButtonSpec[]; select?: SelectSpec } => {
+  const i = s.answers.length;
+  const q = s.questions[i]!;
+  const f = q.field;
+  const head = `**${i + 1}/${s.questions.length}.** ${plain(q.text)}`;
+  if (f.type === 'TEXT') {
+    const hints = [f.minLength ? `mindestens ${f.minLength} Zeichen` : '', !f.required ? `optional – schreibe „${SKIP}“, um zu überspringen` : ''].filter(Boolean).join(' · ');
+    return { embed: { title: clip(s.unitName, 256), color: COLORS.info, description: clip(`${head}\n\n_Antworte einfach mit einer Nachricht hier im Chat.${hints ? ` (${hints})` : ''}_`, 4000) }, buttons: [CANCEL] };
+  }
+  return {
+    embed: { title: clip(s.unitName, 256), color: COLORS.info, description: clip(`${head}\n\n_Wähle unten ${f.multiple ? 'eine oder mehrere Optionen' : 'eine Option'} aus.${f.required ? '' : ' Optional.'}_`, 4000) },
+    select: { id: `quali:ans:${i}`, placeholder: f.multiple ? 'Optionen wählen …' : 'Option wählen …', min: 1, max: f.multiple ? f.options.length : 1, options: f.options.map((o, j) => ({ label: clip(o.label, 100), value: String(j) })) },
+    buttons: [...(f.required ? [] : [{ id: `quali:skip:${i}`, label: 'Überspringen', style: 'secondary' as const }]), CANCEL],
+  };
 };
+const answerText = (a: Answer) => (a === null ? '— (übersprungen)' : Array.isArray(a) ? a.join(', ') : a);
 
 interface Flow { key: string; name: string; questions: Question[] }
 /** Lädt Fragen einer Einheit bzw. der Polizei-Bewerbung (Formular aus dem System). */
 async function loadFlow(api: Api, key: string | undefined): Promise<Flow | null> {
   if (!key) return null;
   if (key === POLICE) {
-    const form = await api.service<{ key: string; label: string; required: boolean; maxLength: number }[]>('GET', '/applications/form');
-    return { key, name: POLICE_NAME, questions: [{ text: 'Wie ist dein Roblox-Benutzername?', key: 'roblox', max: 20 }, ...form.map((f) => ({ text: f.label, key: f.key, optional: !f.required, max: Math.min(f.maxLength, 2000) }))] };
+    const form = await api.service<FormField[]>('GET', '/applications/form');
+    return { key, name: POLICE_NAME, questions: [{ text: 'Wie ist dein Roblox-Benutzername?', key: 'roblox', field: field({ key: 'roblox', label: 'Roblox', required: true, maxLength: 20 }) }, ...form.map((f) => ({ text: f.label, key: f.key, field: field(f) }))] };
   }
   const unit = (await getConfig(api)).units.find((u) => u.key === key);
-  return unit ? { key: unit.key, name: unit.name, questions: unit.questions.map((text) => ({ text, max: MAX_ANSWER })) } : null;
+  return unit ? { key: unit.key, name: unit.name, questions: unit.questions.map(asField).map((f) => ({ text: f.label, key: f.key, field: field(f) })) } : null;
 }
 async function openApplication(api: Api, key: string, discordId: string) {
   return key === POLICE
@@ -53,12 +70,12 @@ async function openApplication(api: Api, key: string, discordId: string) {
 async function submitSession(api: Api, s: Session, userId: string, userName: string, robloxLookup?: RobloxLookup, now = Date.now()): Promise<string> {
   const meta = { durationSec: Math.max(0, Math.round((now - s.startedAt) / 1000)), ...(s.joinedAt ? { joinedAt: s.joinedAt } : {}) };
   if (s.unit === POLICE) {
-    const roblox = s.answers[0]!.trim();
+    const roblox = String(s.answers[0] ?? '').trim();
     const rb = await robloxLookup?.(roblox).catch(() => null);
-    const answers = Object.fromEntries(s.questions.slice(1).flatMap((q, i) => { const a = s.answers[i + 1]!; return q.optional && a === SKIP ? [] : [[q.key!, a]]; }));
+    const answers = Object.fromEntries(s.questions.slice(1).flatMap((q, i) => { const a = s.answers[i + 1]; return a === null || a === undefined ? [] : [[q.key!, a]]; }));
     return (await api.service<{ number: string }>('POST', '/bot/application', { robloxUsername: rb?.name ?? roblox, ...(rb ? { robloxUserId: String(rb.id) } : {}), discordId: userId, discordName: userName, answers, ...meta })).number;
   }
-  return (await api.service<{ number: string }>('POST', '/bot/qualifications/applications', { unit: s.unit, discordId: userId, discordName: userName, answers: s.questions.map((q, i) => ({ question: q.text, answer: s.answers[i] })), ...meta })).number;
+  return (await api.service<{ number: string }>('POST', '/bot/qualifications/applications', { unit: s.unit, discordId: userId, discordName: userName, answers: s.questions.map((q, i) => ({ question: q.text, answer: s.answers[i] ?? null })), ...meta })).number;
 }
 
 /** Fallback, falls das System die Panel-Texte nicht liefert (Texte: Web → Qualifications → Setup). */
@@ -140,24 +157,37 @@ export async function handleDirectMessage(a: { userId: string; userName: string;
     await say('⏰ Die Zeit für deine Bewerbung ist abgelaufen (3 Stunden). Bitte starte sie über das Panel neu.', COLORS.warning);
     return;
   }
+  const q = s.questions[s.answers.length]!;
+  if (q.field.type !== 'TEXT') { await say('Bitte wähle die Antwort im **Menü** der letzten Frage aus.', COLORS.warning); await a.sendDm(a.userId, questionMessage(s)); return; }
   const text = a.content.trim();
   if (!text) { await say('Bitte antworte mit Text.', COLORS.warning, [CANCEL]); return; }
-  const max = s.questions[s.answers.length]!.max;
-  if (text.length > max) { await say(`Deine Antwort ist zu lang (${text.length} Zeichen, höchstens ${max}). Bitte kürzer fassen.`, COLORS.warning, [CANCEL]); return; }
-  s.answers.push(text);
-  if (s.answers.length < s.questions.length) { await a.sendDm(a.userId, { embed: questionEmbed(s), buttons: [CANCEL] }); return; }
+  if (!q.field.required && text === SKIP) s.answers.push(null);
+  else {
+    const r = checkAnswer(q.field, text);
+    if (!r.ok) { await say(r.error, COLORS.warning, [CANCEL]); return; }
+    s.answers.push(text);
+  }
+  await proceed({ api: a.api, userId: a.userId, userName: a.userName, sendDm: a.sendDm, robloxLookup: a.robloxLookup, now }, s);
+}
+
+/** Nächste Frage senden – oder nach der letzten Antwort einreichen. */
+async function proceed(o: { api: Api; userId: string; userName: string; sendDm: SendDm; robloxLookup?: RobloxLookup; now: number }, s: Session): Promise<void> {
+  const say = (description: string, color: number = COLORS.info, buttons?: ButtonSpec[]) => o.sendDm(o.userId, { embed: { title: clip(s.unitName, 256), description, color }, buttons });
+  if (s.answers.length < s.questions.length) { await o.sendDm(o.userId, questionMessage(s)); return; }
   try {
-    const number = await submitSession(a.api, s, a.userId, a.userName, a.robloxLookup, now);
-    sessions.delete(a.userId);
+    const number = await submitSession(o.api, s, o.userId, o.userName, o.robloxLookup, o.now);
+    sessions.delete(o.userId);
     await say(`✅ Deine Bewerbung **${number}** ist eingegangen! Das Team prüft sie – die Entscheidung bekommst du hier per Direktnachricht.`, COLORS.success);
   } catch (e) {
     if (e instanceof BotApiError && (e.status === 409 || e.status === 400 || e.status === 404)) {
-      sessions.delete(a.userId);
+      sessions.delete(o.userId);
       await say(e.status === 409 ? 'Du hast hierfür bereits eine offene Bewerbung. Bitte warte auf die Entscheidung.' : 'Die Fragen wurden inzwischen geändert. Bitte starte die Bewerbung neu.', COLORS.warning);
       return;
     }
-    s.answers.pop(); // letzte Antwort erneut senden = erneuter Versuch
-    await say('⚠️ Deine Bewerbung konnte gerade nicht gespeichert werden (System nicht erreichbar). Schicke deine **letzte Antwort** gleich noch einmal, um es erneut zu versuchen.', COLORS.warning, [CANCEL]);
+    const last = s.questions[s.answers.length - 1]!;
+    s.answers.pop(); // letzte Antwort erneut = erneuter Versuch
+    if (last.field.type === 'TEXT') await say('⚠️ Deine Bewerbung konnte gerade nicht gespeichert werden (System nicht erreichbar). Schicke deine **letzte Antwort** gleich noch einmal, um es erneut zu versuchen.', COLORS.warning, [CANCEL]);
+    else { await say('⚠️ Deine Bewerbung konnte gerade nicht gespeichert werden (System nicht erreichbar). Wähle deine letzte Antwort gleich noch einmal aus.', COLORS.warning); await o.sendDm(o.userId, questionMessage(s)); }
   }
 }
 
@@ -225,6 +255,26 @@ export const QUALI_INTERACTION: InteractionDef = {
         await c.platform.postPanel({ channelId: t.channelId, embed: { title: `🎫 Ticket zur Bewerbung ${a.number}`, color: COLORS.info, description: `<@${a.discordId}>, das Team hat eine Rückfrage zu deiner Bewerbung **${a.number}**${a.unitName ? ` (${plain(a.unitName)})` : ''}. Bitte antworte hier.` }, buttons: [{ id: 'support:close', label: 'Ticket schließen', emoji: '🔒', style: 'danger' }] }).catch(() => undefined);
         return okReply(`Ticket geöffnet: <#${t.channelId}>`);
       }
+      if (action === 'ans' || action === 'skip') {
+        const s = sessions.get(c.discordId);
+        if (!s || s.expiresAt <= Date.now()) return errorReply('Du hast gerade keine laufende Bewerbung. Starte sie über das Panel neu.');
+        const i = Number(rest[0]);
+        if (i !== s.answers.length) return errorReply('Diese Frage hast du schon beantwortet.');
+        const q = s.questions[i]!;
+        let value: Answer = null;
+        if (action === 'skip') { if (q.field.required) return errorReply('Diese Frage ist eine Pflichtfrage.'); }
+        else {
+          const labels = (c.values ?? []).map((v) => q.field.options[Number(v)]?.label).filter((x): x is string => !!x);
+          const r = checkAnswer(q.field, labels);
+          if (!r.ok) return errorReply(r.error);
+          value = labels;
+        }
+        if (!c.platform) return errorReply('Direktnachrichten sind hier nicht verfügbar.');
+        s.answers.push(value);
+        const platform = c.platform;
+        await proceed({ api: c.api, userId: c.discordId, userName: c.userName ?? c.discordId, sendDm: (u, m) => platform.sendDm(u, m), robloxLookup: c.robloxLookup, now: Date.now() }, s);
+        return { ...okReply('Gespeichert.'), update: { embeds: [{ title: clip(s.unitName, 256), color: COLORS.success, description: clip(`**${i + 1}/${s.questions.length}.** ${plain(q.text)}\n\n✅ ${plain(answerText(value))}`, 4000) }] } };
+      }
       if (action === 'cancel') {
         const had = sessions.delete(c.discordId);
         return okReply(had ? 'Bewerbung abgebrochen. Du kannst jederzeit über das Panel neu starten.' : 'Es läuft keine Bewerbung.');
@@ -247,7 +297,7 @@ export const QUALI_INTERACTION: InteractionDef = {
       if (!c.platform) return errorReply('Direktnachrichten sind hier nicht verfügbar.');
       const s: Session = { unit: flow.key, unitName: flow.name, questions: flow.questions, answers: [], startedAt: Date.now(), expiresAt: Date.now() + APPLICATION_MS, joinedAt: joinedAtOf.get(c.discordId) };
       sessions.set(c.discordId, s);
-      try { await c.platform.sendDm(c.discordId, { embed: questionEmbed(s), buttons: [CANCEL] }); }
+      try { await c.platform.sendDm(c.discordId, questionMessage(s)); }
       catch { sessions.delete(c.discordId); return errorReply('Ich kann dir keine Direktnachricht schicken. Bitte erlaube Direktnachrichten und versuche es erneut.'); }
       return okReply('Los geht’s – beantworte die Fragen einfach hier im Chat.');
     } catch (e) {

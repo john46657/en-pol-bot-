@@ -40,7 +40,7 @@ describe('admin settings', () => {
     expect((await adm.put('/api/v1/admin/settings/application.form').send({ value: form })).status).toBe(200);
     expect(await prisma.auditLog.count({ where: { action: 'studio.config.changed' } })).toBe(auditedBefore + 1);
     const pub = await (await import('supertest')).default(app.getHttpServer()).get('/api/v1/applications/form');
-    expect(pub.body).toEqual(form);
+    expect(pub.body).toMatchObject(form); // um Standardwerte ergänzt (Typ Text, keine Mindestlänge …)
   });
   it('dashboard layout: user override, admin default, reset', async () => {
     const adm = (await login(app, 'p_admin')).agent;

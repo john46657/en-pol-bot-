@@ -208,22 +208,97 @@ export declare const SETTING_SCHEMAS: {
         adminDutyRole?: string | undefined;
     }>;
     readonly 'team.rankOrder': z.ZodArray<z.ZodString, "many">;
-    readonly 'application.form': z.ZodArray<z.ZodObject<{
+    readonly 'application.form': z.ZodEffects<z.ZodArray<z.ZodEffects<z.ZodObject<{
         key: z.ZodString;
         label: z.ZodString;
         required: z.ZodBoolean;
-        maxLength: z.ZodNumber;
+        type: z.ZodDefault<z.ZodEnum<["TEXT" | "CHOICE" | "ROLE", ...("TEXT" | "CHOICE" | "ROLE")[]]>>;
+        minLength: z.ZodDefault<z.ZodNumber>;
+        maxLength: z.ZodDefault<z.ZodNumber>;
+        options: z.ZodDefault<z.ZodArray<z.ZodObject<{
+            label: z.ZodString;
+            roleId: z.ZodEffects<z.ZodOptional<z.ZodUnion<[z.ZodString, z.ZodLiteral<"">]>>, string | undefined, string | undefined>;
+        }, "strip", z.ZodTypeAny, {
+            label: string;
+            roleId?: string | undefined;
+        }, {
+            label: string;
+            roleId?: string | undefined;
+        }>, "many">>;
+        multiple: z.ZodDefault<z.ZodBoolean>;
     }, "strip", z.ZodTypeAny, {
         key: string;
+        type: "TEXT" | "CHOICE" | "ROLE";
+        options: {
+            label: string;
+            roleId?: string | undefined;
+        }[];
         label: string;
         required: boolean;
+        minLength: number;
         maxLength: number;
+        multiple: boolean;
     }, {
         key: string;
         label: string;
         required: boolean;
+        type?: "TEXT" | "CHOICE" | "ROLE" | undefined;
+        options?: {
+            label: string;
+            roleId?: string | undefined;
+        }[] | undefined;
+        minLength?: number | undefined;
+        maxLength?: number | undefined;
+        multiple?: boolean | undefined;
+    }>, {
+        key: string;
+        type: "TEXT" | "CHOICE" | "ROLE";
+        options: {
+            label: string;
+            roleId?: string | undefined;
+        }[];
+        label: string;
+        required: boolean;
+        minLength: number;
         maxLength: number;
-    }>, "many">;
+        multiple: boolean;
+    }, {
+        key: string;
+        label: string;
+        required: boolean;
+        type?: "TEXT" | "CHOICE" | "ROLE" | undefined;
+        options?: {
+            label: string;
+            roleId?: string | undefined;
+        }[] | undefined;
+        minLength?: number | undefined;
+        maxLength?: number | undefined;
+        multiple?: boolean | undefined;
+    }>, "many">, {
+        key: string;
+        type: "TEXT" | "CHOICE" | "ROLE";
+        options: {
+            label: string;
+            roleId?: string | undefined;
+        }[];
+        label: string;
+        required: boolean;
+        minLength: number;
+        maxLength: number;
+        multiple: boolean;
+    }[], {
+        key: string;
+        label: string;
+        required: boolean;
+        type?: "TEXT" | "CHOICE" | "ROLE" | undefined;
+        options?: {
+            label: string;
+            roleId?: string | undefined;
+        }[] | undefined;
+        minLength?: number | undefined;
+        maxLength?: number | undefined;
+        multiple?: boolean | undefined;
+    }[]>;
     /** „Mit Discord anmelden“: neue Konten erlauben, nur Mitglieder des Discord-Servers, Discord-Rolle → Systemrolle. */
     readonly 'auth.discord': z.ZodObject<{
         signup: z.ZodBoolean;
@@ -238,6 +313,8 @@ export declare const SETTING_SCHEMAS: {
             role: string;
             discordRoleId: string;
         }>, "many">;
+        /** Team-Rolle(n): nur wer eine davon auf dem Discord-Server hat, kommt ins MDT/Dashboard (leer = alle Mitglieder). */
+        teamRoleIds: z.ZodDefault<z.ZodArray<z.ZodString, "many">>;
     }, "strip", z.ZodTypeAny, {
         signup: boolean;
         requireGuild: boolean;
@@ -245,6 +322,7 @@ export declare const SETTING_SCHEMAS: {
             role: string;
             discordRoleId: string;
         }[];
+        teamRoleIds: string[];
     }, {
         signup: boolean;
         requireGuild: boolean;
@@ -252,6 +330,7 @@ export declare const SETTING_SCHEMAS: {
             role: string;
             discordRoleId: string;
         }[];
+        teamRoleIds?: string[] | undefined;
     }>;
 };
 export type SettingKey = keyof typeof SETTING_SCHEMAS;

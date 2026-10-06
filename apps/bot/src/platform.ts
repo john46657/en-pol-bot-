@@ -8,7 +8,7 @@ export interface Platform {
   deleteChannel(channelId: string, delayMs?: number): Promise<void>;
   sendDirectMessage(userId: string, text: string): Promise<void>;
   /** Direktnachricht mit Embed (+ Buttons); liefert DM-Channel und Nachricht (für „Zur Bewerbung“-Links). */
-  sendDm(userId: string, m: { embed: EmbedData; buttons?: ButtonSpec[] }): Promise<{ channelId: string; messageId: string }>;
+  sendDm(userId: string, m: { embed: EmbedData; buttons?: ButtonSpec[]; select?: SelectSpec }): Promise<{ channelId: string; messageId: string }>;
   /** Sendet oder bearbeitet eine Nachricht; liefert deren ID (bei fehlender/gelöschter Alt-Nachricht wird neu gesendet). */
   postOrEdit(a: { channelId: string; messageId?: string; embed: EmbedData; buttons?: ButtonSpec[] }): Promise<string>;
   /** Postet ein Panel (Embed + Buttons und/oder Auswahlmenü) in einen Channel. */

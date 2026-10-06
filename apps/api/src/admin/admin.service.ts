@@ -6,8 +6,8 @@ import { AuditService, Actor } from '../audit/audit.service';
 import { AppError } from '../common/errors';
 import { customFieldsConfig } from '../studio/custom-fields';
 import { ACCENTS } from '../studio/studio.service';
+import { formSchema } from '../qualifications/qualifications.config';
 
-const formField = z.object({ key: z.string().regex(/^[a-zA-Z][\w]{0,40}$/), label: z.string().min(1).max(300), required: z.boolean(), maxLength: z.number().int().min(1).max(5000) });
 /** Eine oder mehrere Discord-IDs, mit Komma getrennt (z. B. Channels auf mehreren Servern). */
 const singleId = () => z.string().regex(/^\d{15,25}$/).optional();
 const idList = () => z.string().regex(/^\d{15,25}(\s*,\s*\d{15,25})*$/).optional();
@@ -25,11 +25,13 @@ export const SETTING_SCHEMAS = {
   'theme.accent': z.enum(ACCENTS),
   'discord.channels': z.object({ guildId: idList(), dispatch: idList(), wanted: idList(), announcements: idList(), applications: idList(), danger: idList(), sek: idList(), qualifications: idList(), duty: idList(), teamlist: singleId(), tickets: singleId(), staffRole: singleId(), radioRole: singleId(), sekRole: singleId(), dutyRole: idList(), breakRole: idList(), trainingRole: idList(), adminDutyRole: idList() }),
   'team.rankOrder': z.array(z.string().trim().min(1).max(64)).max(50),
-  'application.form': z.array(formField).min(1).max(50),
+  'application.form': formSchema,
   /** „Mit Discord anmelden“: neue Konten erlauben, nur Mitglieder des Discord-Servers, Discord-Rolle → Systemrolle. */
   'auth.discord': z.object({
     signup: z.boolean(), requireGuild: z.boolean(),
     roleMap: z.array(z.object({ discordRoleId: z.string().regex(/^\d{15,25}$/), role: z.string().trim().min(1).max(64) })).max(50),
+    /** Team-Rolle(n): nur wer eine davon auf dem Discord-Server hat, kommt ins MDT/Dashboard (leer = alle Mitglieder). */
+    teamRoleIds: z.array(z.string().regex(/^\d{15,25}$/, 'Discord role ID (15–25 digits)')).max(20).default([]),
   }),
 } as const;
 export type SettingKey = keyof typeof SETTING_SCHEMAS;

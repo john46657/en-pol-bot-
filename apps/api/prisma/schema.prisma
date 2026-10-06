@@ -10,50 +10,50 @@ datasource db {
 // ───────────── Identity & RBAC ─────────────
 
 model User {
-  id                 String   @id @default(uuid()) @db.Uuid
-  username           String   @unique
+  id                 String    @id @default(uuid()) @db.Uuid
+  username           String    @unique
   displayName        String
-  email              String?  @unique
+  email              String?   @unique
   passwordHash       String
-  robloxUserId       String?  @unique
+  robloxUserId       String?   @unique
   robloxUsername     String?
-  robloxStatus       String   @default("UNVERIFIED") // UNVERIFIED | VERIFIED | FAILED | MANUAL
+  robloxStatus       String    @default("UNVERIFIED") // UNVERIFIED | VERIFIED | FAILED | MANUAL
   robloxVerifiedAt   DateTime?
-  robloxVerifiedById String?  @db.Uuid
-  active             Boolean  @default(true)
-  failedLogins       Int      @default(0)
+  robloxVerifiedById String?   @db.Uuid
+  active             Boolean   @default(true)
+  failedLogins       Int       @default(0)
   lockedUntil        DateTime?
   lastLogin          DateTime?
-  createdAt          DateTime @default(now())
-  updatedAt          DateTime @updatedAt
-  version            Int      @default(1)
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+  version            Int       @default(1)
 
-  roles        UserRole[]
-  groups       GroupMember[]
-  overrides    UserPermissionOverride[]
-  sessions     Session[]
-  loginHistory LoginHistory[]
+  roles         UserRole[]
+  groups        GroupMember[]
+  overrides     UserPermissionOverride[]
+  sessions      Session[]
+  loginHistory  LoginHistory[]
   notifications Notification[]
-  personnel    Personnel?
-  dutySessions DutySession[]
-  settings     UserSettings?
+  personnel     Personnel?
+  dutySessions  DutySession[]
+  settings      UserSettings?
 
   @@index([robloxUsername])
 }
 
 model Role {
-  id          String   @id @default(uuid()) @db.Uuid
-  name        String   @unique
+  id          String           @id @default(uuid()) @db.Uuid
+  name        String           @unique
   description String?
-  system      Boolean  @default(false)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  system      Boolean          @default(false)
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
   users       UserRole[]
   permissions RolePermission[]
 }
 
 model Permission {
-  key         String  @id // z. B. "dispatch.view"
+  key         String                   @id // z. B. "dispatch.view"
   module      String
   description String?
   roles       RolePermission[]
@@ -65,21 +65,23 @@ model UserRole {
   roleId String @db.Uuid
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
   role   Role   @relation(fields: [roleId], references: [id], onDelete: Cascade)
+
   @@id([userId, roleId])
 }
 
 model RolePermission {
-  roleId        String @db.Uuid
+  roleId        String     @db.Uuid
   permissionKey String
-  effect        String @default("ALLOW") // ALLOW | DENY
+  effect        String     @default("ALLOW") // ALLOW | DENY
   role          Role       @relation(fields: [roleId], references: [id], onDelete: Cascade)
   permission    Permission @relation(fields: [permissionKey], references: [key], onDelete: Cascade)
+
   @@id([roleId, permissionKey])
 }
 
 model Group {
-  id          String   @id @default(uuid()) @db.Uuid
-  name        String   @unique
+  id          String        @id @default(uuid()) @db.Uuid
+  name        String        @unique
   description String?
   members     GroupMember[]
   roles       GroupRole[]
@@ -89,6 +91,7 @@ model GroupRole {
   groupId String @db.Uuid
   roleId  String @db.Uuid
   group   Group  @relation(fields: [groupId], references: [id], onDelete: Cascade)
+
   @@id([groupId, roleId])
 }
 
@@ -97,32 +100,35 @@ model GroupMember {
   userId  String @db.Uuid
   group   Group  @relation(fields: [groupId], references: [id], onDelete: Cascade)
   user    User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
   @@id([groupId, userId])
 }
 
 model UserPermissionOverride {
-  id            String   @id @default(uuid()) @db.Uuid
-  userId        String   @db.Uuid
+  id            String     @id @default(uuid()) @db.Uuid
+  userId        String     @db.Uuid
   permissionKey String
   effect        String // ALLOW | DENY
   reason        String?
-  createdById   String?  @db.Uuid
-  createdAt     DateTime @default(now())
+  createdById   String?    @db.Uuid
+  createdAt     DateTime   @default(now())
   user          User       @relation(fields: [userId], references: [id], onDelete: Cascade)
   permission    Permission @relation(fields: [permissionKey], references: [key], onDelete: Cascade)
+
   @@unique([userId, permissionKey])
 }
 
 model Session {
-  id          String   @id @default(uuid()) @db.Uuid
-  userId      String   @db.Uuid
-  tokenHash   String   @unique
-  createdAt   DateTime @default(now())
-  expiresAt   DateTime
-  revokedAt   DateTime?
-  ip          String?
-  userAgent   String?
-  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id        String    @id @default(uuid()) @db.Uuid
+  userId    String    @db.Uuid
+  tokenHash String    @unique
+  createdAt DateTime  @default(now())
+  expiresAt DateTime
+  revokedAt DateTime?
+  ip        String?
+  userAgent String?
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
   @@index([userId])
   @@index([expiresAt])
 }
@@ -136,6 +142,7 @@ model LoginHistory {
   ip        String?
   createdAt DateTime @default(now())
   user      User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+
   @@index([userId, createdAt])
   @@index([username, createdAt])
 }
@@ -159,7 +166,7 @@ model Person {
   aliases        String[] @default([])
   status         String   @default("ACTIVE") // ACTIVE | ARCHIVED
   notes          String?
-  custom         Json?    // Werte der in Studio definierten Custom Fields
+  custom         Json? // Werte der in Studio definierten Custom Fields
   createdById    String?  @db.Uuid
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
@@ -168,6 +175,7 @@ model Person {
   vehicles Vehicle[]
   links    RecordLink[]
   tickets  Ticket[]
+
   @@index([robloxUsername])
 }
 
@@ -186,11 +194,14 @@ model Vehicle {
   updatedAt     DateTime @updatedAt
   version       Int      @default(1)
   owner         Person?  @relation(fields: [ownerId], references: [id], onDelete: SetNull)
+
   @@unique([serverId, plate])
   @@index([plate])
 }
 
-/** Generische, dedupe-sichere Verknüpfung Datensatz <-> Person/Fahrzeug. */
+/**
+ * Generische, dedupe-sichere Verknüpfung Datensatz <-> Person/Fahrzeug.
+ */
 model RecordLink {
   id         String   @id @default(uuid()) @db.Uuid
   personId   String?  @db.Uuid
@@ -200,106 +211,112 @@ model RecordLink {
   role       String   @default("SUBJECT") // SUBJECT | SUSPECT | WITNESS | VICTIM | ...
   createdAt  DateTime @default(now())
   person     Person?  @relation(fields: [personId], references: [id], onDelete: Cascade)
+
   @@unique([personId, entityType, entityId, role])
   @@index([entityType, entityId])
 }
 
 model LegalCode {
-  id            String   @id @default(uuid()) @db.Uuid
-  code          String   @unique
+  id            String    @id @default(uuid()) @db.Uuid
+  code          String    @unique
   title         String
   description   String?
   category      String
   penalty       Json
-  active        Boolean  @default(true)
-  effectiveDate DateTime @default(now())
+  active        Boolean   @default(true)
+  effectiveDate DateTime  @default(now())
   expiresAt     DateTime?
   tickets       Ticket[]
 }
 
 model Ticket {
-  id          String   @id @default(uuid()) @db.Uuid
-  number      String   @unique
-  personId    String   @db.Uuid
-  officerId   String   @db.Uuid
-  legalCodeId String?  @db.Uuid
+  id          String     @id @default(uuid()) @db.Uuid
+  number      String     @unique
+  personId    String     @db.Uuid
+  officerId   String     @db.Uuid
+  legalCodeId String?    @db.Uuid
   reason      String
-  amount      Decimal  @default(0) @db.Decimal(12, 2)
-  status      String   @default("ISSUED")
+  amount      Decimal    @default(0) @db.Decimal(12, 2)
+  status      String     @default("ISSUED")
   notes       String?
-  reportId    String?  @db.Uuid
+  reportId    String?    @db.Uuid
   voidReason  String?
-  voidedById  String?  @db.Uuid
-  issuedAt    DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  version     Int      @default(1)
+  voidedById  String?    @db.Uuid
+  issuedAt    DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+  version     Int        @default(1)
   person      Person     @relation(fields: [personId], references: [id])
   legalCode   LegalCode? @relation(fields: [legalCodeId], references: [id])
+
   @@index([personId])
   @@index([officerId])
 }
 
 model Unit {
-  id        String   @id @default(uuid()) @db.Uuid
-  callsign  String   @unique
-  status    String   @default("OFF_DUTY")
+  id        String         @id @default(uuid()) @db.Uuid
+  callsign  String         @unique
+  status    String         @default("OFF_DUTY")
   vehicle   String?
   notes     String?
   members   UnitMember[]
   incidents IncidentUnit[]
-  updatedAt DateTime @updatedAt
+  updatedAt DateTime       @updatedAt
 }
 
 model UnitMember {
   unitId String @db.Uuid
   userId String @db.Uuid
   unit   Unit   @relation(fields: [unitId], references: [id], onDelete: Cascade)
+
   @@id([unitId, userId])
 }
 
 model Incident {
-  id           String   @id @default(uuid()) @db.Uuid
-  serverId     String?  @db.Uuid
-  number       String   @unique
+  id           String         @id @default(uuid()) @db.Uuid
+  serverId     String?        @db.Uuid
+  number       String         @unique
   title        String
   description  String?
-  priority     String   @default("MEDIUM")
+  priority     String         @default("MEDIUM")
   location     String?
-  source       String   @default("MANUAL") // MANUAL
-  status       String   @default("NEW")
-  dispatcherId String?  @db.Uuid
-  supervisorId String?  @db.Uuid
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  source       String         @default("MANUAL") // MANUAL
+  status       String         @default("NEW")
+  dispatcherId String?        @db.Uuid
+  supervisorId String?        @db.Uuid
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
   closedAt     DateTime?
-  version      Int      @default(1)
+  version      Int            @default(1)
   units        IncidentUnit[]
+
   @@index([status, priority])
 }
 
 model IncidentUnit {
-  incidentId String   @db.Uuid
-  unitId     String   @db.Uuid
-  assignedAt DateTime @default(now())
+  incidentId String    @db.Uuid
+  unitId     String    @db.Uuid
+  assignedAt DateTime  @default(now())
   clearedAt  DateTime?
-  incident   Incident @relation(fields: [incidentId], references: [id], onDelete: Cascade)
-  unit       Unit     @relation(fields: [unitId], references: [id], onDelete: Cascade)
+  incident   Incident  @relation(fields: [incidentId], references: [id], onDelete: Cascade)
+  unit       Unit      @relation(fields: [unitId], references: [id], onDelete: Cascade)
+
   @@id([incidentId, unitId])
 }
 
 model Report {
-  id          String   @id @default(uuid()) @db.Uuid
-  number      String   @unique
-  type        String
-  title       String
-  status      String   @default("DRAFT")
-  authorId    String   @db.Uuid
-  incidentId  String?  @db.Uuid
-  currentVersion Int   @default(1)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  version     Int      @default(1)
-  versions    ReportVersion[]
+  id             String          @id @default(uuid()) @db.Uuid
+  number         String          @unique
+  type           String
+  title          String
+  status         String          @default("DRAFT")
+  authorId       String          @db.Uuid
+  incidentId     String?         @db.Uuid
+  currentVersion Int             @default(1)
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+  version        Int             @default(1)
+  versions       ReportVersion[]
+
   @@index([status])
 }
 
@@ -313,6 +330,7 @@ model ReportVersion {
   contentHash   String
   createdAt     DateTime @default(now())
   report        Report   @relation(fields: [reportId], references: [id], onDelete: Cascade)
+
   @@unique([reportId, version])
 }
 
@@ -332,50 +350,52 @@ model Complaint {
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
   version        Int      @default(1)
+
   @@index([status])
 }
 
 model Investigation {
-  id             String   @id @default(uuid()) @db.Uuid
-  caseNumber     String   @unique
-  title          String
-  description    String?
-  leadId         String?  @db.Uuid
-  status         String   @default("OPEN")
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
-  version        Int      @default(1)
+  id          String   @id @default(uuid()) @db.Uuid
+  caseNumber  String   @unique
+  title       String
+  description String?
+  leadId      String?  @db.Uuid
+  status      String   @default("OPEN")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  version     Int      @default(1)
 }
 
 model WantedRecord {
-  id          String   @id @default(uuid()) @db.Uuid
-  personId    String?  @db.Uuid
-  vehicleId   String?  @db.Uuid
+  id          String    @id @default(uuid()) @db.Uuid
+  personId    String?   @db.Uuid
+  vehicleId   String?   @db.Uuid
   reason      String
   description String?
-  priority    String   @default("MEDIUM")
-  status      String   @default("ACTIVE")
-  createdById String   @db.Uuid
-  createdAt   DateTime @default(now())
+  priority    String    @default("MEDIUM")
+  status      String    @default("ACTIVE")
+  createdById String    @db.Uuid
+  createdAt   DateTime  @default(now())
   expiresAt   DateTime?
-  updatedAt   DateTime @updatedAt
-  version     Int      @default(1)
+  updatedAt   DateTime  @updatedAt
+  version     Int       @default(1)
+
   @@index([status])
 }
 
 model Evidence {
-  id              String   @id @default(uuid()) @db.Uuid
-  number          String   @unique
+  id              String             @id @default(uuid()) @db.Uuid
+  number          String             @unique
   caseRef         String?
   type            String
   description     String
   source          String?
-  ownerId         String?  @db.Uuid
+  ownerId         String?            @db.Uuid
   storageLocation String?
-  custodyState    String   @default("COLLECTED")
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
-  version         Int      @default(1)
+  custodyState    String             @default("COLLECTED")
+  createdAt       DateTime           @default(now())
+  updatedAt       DateTime           @updatedAt
+  version         Int                @default(1)
   transfers       EvidenceTransfer[]
 }
 
@@ -395,129 +415,136 @@ model EvidenceTransfer {
 // ───────────── Personnel / Dienst ─────────────
 
 model Personnel {
-  id               String   @id @default(uuid()) @db.Uuid
-  userId           String   @unique @db.Uuid
-  rank             String?
-  team             String?
-  callsign         String?  @unique
-  employmentStatus String   @default("ACTIVE")
-  joinDate         DateTime @default(now())
-  qualifications   String[] @default([])
-  user             User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id                 String              @id @default(uuid()) @db.Uuid
+  userId             String              @unique @db.Uuid
+  rank               String?
+  team               String?
+  callsign           String?             @unique
+  employmentStatus   String              @default("ACTIVE")
+  joinDate           DateTime            @default(now())
+  qualifications     String[]            @default([])
+  user               User                @relation(fields: [userId], references: [id], onDelete: Cascade)
   academyEnrollments AcademyEnrollment[]
-  records          PersonnelRecord[]
+  records            PersonnelRecord[]
 }
 
 /// Beförderungen, Auszeichnungen, Disziplinarmaßnahmen (nur mit personnel.* sichtbar).
 model PersonnelRecord {
-  id          String   @id @default(uuid()) @db.Uuid
-  personnelId String   @db.Uuid
-  type        String   // PROMOTION | AWARD | DISCIPLINE | NOTE
+  id          String    @id @default(uuid()) @db.Uuid
+  personnelId String    @db.Uuid
+  type        String // PROMOTION | AWARD | DISCIPLINE | NOTE
   summary     String
   details     String?
-  createdById String   @db.Uuid
-  createdAt   DateTime @default(now())
+  createdById String    @db.Uuid
+  createdAt   DateTime  @default(now())
   personnel   Personnel @relation(fields: [personnelId], references: [id], onDelete: Cascade)
+
   @@index([personnelId, createdAt])
 }
 
 model DutySession {
-  id        String   @id @default(uuid()) @db.Uuid
-  userId    String   @db.Uuid
+  id        String    @id @default(uuid()) @db.Uuid
+  userId    String    @db.Uuid
   status    String
-  unitId    String?  @db.Uuid
+  unitId    String?   @db.Uuid
   callsign  String?
-  startedAt DateTime @default(now())
+  startedAt DateTime  @default(now())
   endedAt   DateTime?
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
   @@index([userId, endedAt])
 }
 
 model Application {
-  id          String   @id @default(uuid()) @db.Uuid
-  number      String   @unique
-  status      String   @default("SUBMITTED")
-  answers     Json
+  id             String    @id @default(uuid()) @db.Uuid
+  number         String    @unique
+  status         String    @default("SUBMITTED")
+  answers        Json
+  grantRoleIds   String[]  @default([]) // Discord-Rollen aus Rollen-Auswahl-Fragen, vergeben bei Annahme
   robloxUsername String
   robloxUserId   String?
-  decidedById String?  @db.Uuid
-  discordId   String?  // Bewerber-Discord-ID (bei Bewerbung über den Bot) – für die Entscheidungs-DM
-  discordName String?
-  source      String   @default("WEB") // WEB | DISCORD
-  durationSec Int?     // Dauer der Bewerbung im Discord-Chat
-  joinedAt    DateTime? // Beitritt zum Discord-Server
+  decidedById    String?   @db.Uuid
+  discordId      String? // Bewerber-Discord-ID (bei Bewerbung über den Bot) – für die Entscheidungs-DM
+  discordName    String?
+  source         String    @default("WEB") // WEB | DISCORD
+  durationSec    Int? // Dauer der Bewerbung im Discord-Chat
+  joinedAt       DateTime? // Beitritt zum Discord-Server
   decisionReason String? // Begründung für den Bewerber (Discord „… mit Grund“), geht per DM raus
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  version     Int      @default(1)
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+  version        Int       @default(1)
+
   @@index([status])
 }
 
 model AcademyCourse {
-  id          String   @id @default(uuid()) @db.Uuid
-  title       String
-  description String?
-  passScore   Int      @default(70)
-  instructorId String? @db.Uuid
-  enrollments AcademyEnrollment[]
+  id           String              @id @default(uuid()) @db.Uuid
+  title        String
+  description  String?
+  passScore    Int                 @default(70)
+  instructorId String?             @db.Uuid
+  enrollments  AcademyEnrollment[]
 }
 
 model AcademyEnrollment {
-  id          String   @id @default(uuid()) @db.Uuid
-  courseId    String   @db.Uuid
-  personnelId String   @db.Uuid
-  createdAt   DateTime @default(now())
-  course      AcademyCourse @relation(fields: [courseId], references: [id], onDelete: Cascade)
-  personnel   Personnel     @relation(fields: [personnelId], references: [id], onDelete: Cascade)
+  id          String          @id @default(uuid()) @db.Uuid
+  courseId    String          @db.Uuid
+  personnelId String          @db.Uuid
+  createdAt   DateTime        @default(now())
+  course      AcademyCourse   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  personnel   Personnel       @relation(fields: [personnelId], references: [id], onDelete: Cascade)
   results     AcademyResult[]
+
   @@unique([courseId, personnelId])
 }
 
 model AcademyResult {
-  id           String   @id @default(uuid()) @db.Uuid
-  enrollmentId String   @db.Uuid
+  id           String            @id @default(uuid()) @db.Uuid
+  enrollmentId String            @db.Uuid
   score        Int
   passed       Boolean
-  gradedById   String?  @db.Uuid
-  createdAt    DateTime @default(now())
+  gradedById   String?           @db.Uuid
+  createdAt    DateTime          @default(now())
   enrollment   AcademyEnrollment @relation(fields: [enrollmentId], references: [id], onDelete: Cascade)
 }
 
 // ───────────── Kommunikation ─────────────
 
 model Conversation {
-  id       String   @id @default(uuid()) @db.Uuid
-  channel  String   // TEAM | DISPATCH | INCIDENT | SUPERVISOR | ANNOUNCEMENT
+  id       String    @id @default(uuid()) @db.Uuid
+  channel  String // TEAM | DISPATCH | INCIDENT | SUPERVISOR | ANNOUNCEMENT
   title    String?
   entityId String?
   messages Message[]
 }
 
 model Message {
-  id             String   @id @default(uuid()) @db.Uuid
-  conversationId String   @db.Uuid
-  authorId       String   @db.Uuid
+  id             String       @id @default(uuid()) @db.Uuid
+  conversationId String       @db.Uuid
+  authorId       String       @db.Uuid
   body           String
-  replyToId      String?  @db.Uuid
-  pinned         Boolean  @default(false)
+  replyToId      String?      @db.Uuid
+  pinned         Boolean      @default(false)
   deletedAt      DateTime?
-  createdAt      DateTime @default(now())
+  createdAt      DateTime     @default(now())
   conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+
   @@index([conversationId, createdAt])
 }
 
 model Notification {
-  id        String   @id @default(uuid()) @db.Uuid
-  userId    String   @db.Uuid
-  type      String
-  title     String
-  body      String?
+  id         String    @id @default(uuid()) @db.Uuid
+  userId     String    @db.Uuid
+  type       String
+  title      String
+  body       String?
   entityType String?
-  entityId  String?
-  readAt    DateTime?
+  entityId   String?
+  readAt     DateTime?
   archivedAt DateTime?
-  createdAt DateTime @default(now())
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt  DateTime  @default(now())
+  user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
   @@index([userId, readAt])
 }
 
@@ -532,12 +559,15 @@ model Media {
   linkedType   String?
   linkedId     String?
   createdAt    DateTime @default(now())
+
   @@index([linkedType, linkedId])
 }
 
 // ───────────── Timeline & Audit ─────────────
 
-/** Operative Historie (sichtbar für Fachanwender). */
+/**
+ * Operative Historie (sichtbar für Fachanwender).
+ */
 model TimelineEvent {
   id         String   @id @default(uuid()) @db.Uuid
   entityType String
@@ -546,23 +576,27 @@ model TimelineEvent {
   summary    String
   actorId    String?  @db.Uuid
   createdAt  DateTime @default(now())
+
   @@index([entityType, entityId, createdAt])
 }
 
-/** Technische Nachvollziehbarkeit. Append-only; durch DB-Trigger gegen UPDATE/DELETE geschützt. */
+/**
+ * Technische Nachvollziehbarkeit. Append-only; durch DB-Trigger gegen UPDATE/DELETE geschützt.
+ */
 model AuditLog {
-  id               String   @id @default(uuid()) @db.Uuid
-  actorUserId      String?  @db.Uuid
+  id                String   @id @default(uuid()) @db.Uuid
+  actorUserId       String?  @db.Uuid
   actorRobloxUserId String?
-  action           String
-  module           String
-  entityType       String?
-  entityId         String?
-  before           Json?
-  after            Json?
-  reason           String?
-  requestId        String?
-  createdAt        DateTime @default(now())
+  action            String
+  module            String
+  entityType        String?
+  entityId          String?
+  before            Json?
+  after             Json?
+  reason            String?
+  requestId         String?
+  createdAt         DateTime @default(now())
+
   @@index([module, createdAt])
   @@index([entityType, entityId])
   @@index([actorUserId, createdAt])
@@ -570,12 +604,13 @@ model AuditLog {
 
 model SecurityEvent {
   id        String   @id @default(uuid()) @db.Uuid
-  type      String   // LOGIN_FAILURE | PERMISSION_DENIED | WEBHOOK_FAILURE | INVALID_TOKEN | RATE_LIMIT | SUSPICIOUS
+  type      String // LOGIN_FAILURE | PERMISSION_DENIED | WEBHOOK_FAILURE | INVALID_TOKEN | RATE_LIMIT | SUSPICIOUS
   userId    String?  @db.Uuid
   ip        String?
   detail    String?
   requestId String?
   createdAt DateTime @default(now())
+
   @@index([type, createdAt])
 }
 
@@ -584,7 +619,6 @@ model SystemSetting {
   value     Json
   updatedAt DateTime @updatedAt
 }
-
 
 // ───────────── Discord-Bot ─────────────
 
@@ -598,25 +632,27 @@ model DiscordLink {
 
 /// Einmal-Code zum Verknüpfen (nur der Hash wird gespeichert, 10 Minuten gültig, einmal verwendbar).
 model DiscordLinkCode {
-  id        String   @id @default(uuid()) @db.Uuid
-  userId    String   @db.Uuid
-  codeHash  String   @unique
+  id        String    @id @default(uuid()) @db.Uuid
+  userId    String    @db.Uuid
+  codeHash  String    @unique
   expiresAt DateTime
   usedAt    DateTime?
-  createdAt DateTime @default(now())
+  createdAt DateTime  @default(now())
+
   @@index([userId])
 }
 
 /// Ausgangs-Warteschlange für Discord-Nachrichten (Bot holt ab und quittiert).
 model DiscordOutbox {
-  id         String   @id @default(uuid()) @db.Uuid
+  id         String    @id @default(uuid()) @db.Uuid
   type       String
-  channelKey String   // dispatch | wanted | announcements
+  channelKey String // dispatch | wanted | announcements
   payload    Json
-  attempts   Int      @default(0)
+  attempts   Int       @default(0)
   lastError  String?
-  createdAt  DateTime @default(now())
+  createdAt  DateTime  @default(now())
   sentAt     DateTime?
+
   @@index([sentAt, createdAt])
 }
 
@@ -628,7 +664,9 @@ model RadioWhitelist {
   createdAt DateTime @default(now())
 }
 
-/** SEK (Spezialeinsatzkommando): eigenes Roster und eigene Einsatzberichte (Bewerbung: QualificationApplication). */
+/**
+ * SEK (Spezialeinsatzkommando): eigenes Roster und eigene Einsatzberichte (Bewerbung: QualificationApplication).
+ */
 model SekMember {
   id        String   @id @default(uuid()) @db.Uuid
   userId    String   @unique @db.Uuid
@@ -644,106 +682,113 @@ model SekReport {
   missionType String
   description String
   createdAt   DateTime @default(now())
+
   @@index([createdAt])
 }
 
-/** Bewerbungen für Qualifikationen (SEK, Flugstaffel, Ausbilder …) – per Discord-Panel, Fragen einzeln per Direktnachricht. */
+/**
+ * Bewerbungen für Qualifikationen (SEK, Flugstaffel, Ausbilder …) – per Discord-Panel, Fragen einzeln per Direktnachricht.
+ */
 model QualificationApplication {
-  id          String    @id @default(uuid()) @db.Uuid
-  number      String    @unique
-  unit        String
-  unitName    String
-  discordId   String
-  discordName String
-  userId      String?   @db.Uuid
-  answers     Json
-  status      String    @default("OPEN")
-  decidedById String?   @db.Uuid
-  decidedAt   DateTime?
+  id             String    @id @default(uuid()) @db.Uuid
+  number         String    @unique
+  unit           String
+  unitName       String
+  discordId      String
+  discordName    String
+  userId         String?   @db.Uuid
+  answers        Json
+  grantRoleIds   String[]  @default([]) // Discord-Rollen aus Rollen-Auswahl-Fragen, vergeben bei Annahme
+  status         String    @default("OPEN")
+  decidedById    String?   @db.Uuid
+  decidedAt      DateTime?
   decisionReason String? // geht per DM an die Person
-  durationSec Int?
-  joinedAt    DateTime?
-  createdAt   DateTime  @default(now())
+  durationSec    Int?
+  joinedAt       DateTime?
+  createdAt      DateTime  @default(now())
+
   @@index([discordId, status])
   @@index([status, createdAt])
 }
 
 // ================= Ticket-System (alles über das Dashboard konfigurierbar) =================
 
-/** Panel in einem Discord-Channel (Embed + Buttons oder Dropdown mit Ticket-Kategorien). */
+/**
+ * Panel in einem Discord-Channel (Embed + Buttons oder Dropdown mit Ticket-Kategorien).
+ */
 model TicketPanel {
-  id            String   @id @default(uuid()) @db.Uuid
-  name          String
-  title         String   @default("")
-  description   String   @default("")
-  emoji         String?
-  color         Int      @default(3899638)
-  thumbnailUrl  String?
-  imageUrl      String?
-  bannerUrl     String?
-  footer        String?
-  footerIconUrl String?
-  authorName    String?
-  authorIconUrl String?
-  style         String   @default("BUTTONS") // BUTTONS | DROPDOWN
-  placeholder   String   @default("Wähle eine Kategorie …")
-  channelId     String?  // Ziel-Channel für das Panel
-  categoryIds   String[] @db.Uuid // verfügbare Ticket-Arten in dieser Reihenfolge
-  allowedRoleIds String[] // Discord-Rollen, die dieses Panel benutzen dürfen (leer = alle)
-  position      Int      @default(0)
+  id               String   @id @default(uuid()) @db.Uuid
+  name             String
+  title            String   @default("")
+  description      String   @default("")
+  emoji            String?
+  color            Int      @default(3899638)
+  thumbnailUrl     String?
+  imageUrl         String?
+  bannerUrl        String?
+  footer           String?
+  footerIconUrl    String?
+  authorName       String?
+  authorIconUrl    String?
+  style            String   @default("BUTTONS") // BUTTONS | DROPDOWN
+  placeholder      String   @default("Wähle eine Kategorie …")
+  channelId        String? // Ziel-Channel für das Panel
+  categoryIds      String[] @db.Uuid // verfügbare Ticket-Arten in dieser Reihenfolge
+  allowedRoleIds   String[] // Discord-Rollen, die dieses Panel benutzen dürfen (leer = alle)
+  position         Int      @default(0)
   messageChannelId String?
-  messageId     String?
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  messageId        String?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
 }
 
 model TicketCategory {
-  id                 String   @id @default(uuid()) @db.Uuid
-  name               String
-  description        String   @default("")
-  emoji              String?
-  color              Int      @default(3899638)
-  buttonStyle        String   @default("secondary")
-  position           Int      @default(0)
-  active             Boolean  @default(true)
-  discordCategoryId  String?  // Discord-Kategorie für neue Ticket-Channels
-  channelNameFormat  String   @default("ticket-{username}")
-  staffRoleIds       String[] // zuständige Discord-Rollen (sehen + schreiben)
-  extraRoleIds       String[] // zusätzliche Discord-Rollen (sehen + schreiben)
-  accessRoleNames    String[] // Systemrollen, die diese Tickets im Dashboard sehen (leer = alle mit ticket.view)
-  requiredRoleIds    String[] // Discord-Rollen, die zum Öffnen nötig sind (leer = alle)
-  allowedUserIds     String[] // nur diese Discord-Benutzer dürfen öffnen (leer = alle)
-  maxOpen            Int      @default(1) // 0 = unbegrenzt
-  cooldownMinutes    Int      @default(0)
-  defaultPriorityId  String?  @db.Uuid
-  questions          Json     @default("[]")
-  welcomeTitle       String   @default("🎫 {category}")
-  welcomeMessage     String   @default("Hallo {user}!\n\nBeschreibe dein Anliegen so genau wie möglich. Ein Teammitglied kümmert sich schnellstmöglich darum.")
-  mentionStaff       Boolean  @default(true)
-  mentionText        String   @default("")
-  buttons            Json     @default("[]")
-  claimMode          String   @default("SINGLE") // SINGLE | MULTI | PRIMARY
-  claimMessage       String   @default("👤 Bearbeiter: {staff}")
-  claimNotifyStaff   Boolean  @default(false)
-  creatorCanClose    Boolean  @default(true)
-  closeReasonMode    String   @default("OPTIONAL") // NONE | OPTIONAL | REQUIRED
-  closeReasonSource  String   @default("BOTH") // PRESET | CUSTOM | BOTH
-  closeRemovesAccess Boolean  @default(true)
-  allowReopen        Boolean  @default(true)
-  transcriptOnClose  Boolean  @default(true)
-  transcriptChannelId String?
-  transcriptToUser   Boolean  @default(false)
-  ratingEnabled      Boolean  @default(true)
-  ratingQuestion     String   @default("Wie zufrieden warst du mit dem Support?")
-  autoCloseMinutes   Int      @default(0) // 0 = aus
-  autoCloseWarnMinutes Int    @default(0) // Warnung so viele Minuten vorher (0 = keine)
-  autoCloseMessage   String   @default("⏰ {user}, dieses Ticket wird bald wegen Inaktivität geschlossen. Schreib eine Nachricht, wenn du noch Hilfe brauchst.")
-  deleteAfterMinutes Int      @default(-1) // -1 = nie, 0 = sofort
-  escalationRoleIds  String[]
-  escalationPriorityId String? @db.Uuid
-  escalationMessage  String   @default("🟠 Dieses Ticket wurde eskaliert. {staff}")
-  createdAt          DateTime @default(now())
-  updatedAt          DateTime @updatedAt
+  id                   String   @id @default(uuid()) @db.Uuid
+  name                 String
+  description          String   @default("")
+  emoji                String?
+  color                Int      @default(3899638)
+  buttonStyle          String   @default("secondary")
+  position             Int      @default(0)
+  active               Boolean  @default(true)
+  discordCategoryId    String? // Discord-Kategorie für neue Ticket-Channels
+  channelNameFormat    String   @default("ticket-{username}")
+  staffRoleIds         String[] // zuständige Discord-Rollen (sehen + schreiben)
+  extraRoleIds         String[] // zusätzliche Discord-Rollen (sehen + schreiben)
+  accessRoleNames      String[] // Systemrollen, die diese Tickets im Dashboard sehen (leer = alle mit ticket.view)
+  requiredRoleIds      String[] // Discord-Rollen, die zum Öffnen nötig sind (leer = alle)
+  allowedUserIds       String[] // nur diese Discord-Benutzer dürfen öffnen (leer = alle)
+  maxOpen              Int      @default(1) // 0 = unbegrenzt
+  cooldownMinutes      Int      @default(0)
+  defaultPriorityId    String?  @db.Uuid
+  questions            Json     @default("[]")
+  welcomeTitle         String   @default("🎫 {category}")
+  welcomeMessage       String   @default("Hallo {user}!\n\nBeschreibe dein Anliegen so genau wie möglich. Ein Teammitglied kümmert sich schnellstmöglich darum.")
+  mentionStaff         Boolean  @default(true)
+  mentionText          String   @default("")
+  buttons              Json     @default("[]")
+  claimMode            String   @default("SINGLE") // SINGLE | MULTI | PRIMARY
+  claimMessage         String   @default("👤 Bearbeiter: {staff}")
+  claimNotifyStaff     Boolean  @default(false)
+  creatorCanClose      Boolean  @default(true)
+  closeReasonMode      String   @default("OPTIONAL") // NONE | OPTIONAL | REQUIRED
+  closeReasonSource    String   @default("BOTH") // PRESET | CUSTOM | BOTH
+  closeRemovesAccess   Boolean  @default(true)
+  allowReopen          Boolean  @default(true)
+  transcriptOnClose    Boolean  @default(true)
+  transcriptChannelId  String?
+  transcriptToUser     Boolean  @default(false)
+  ratingEnabled        Boolean  @default(true)
+  ratingQuestion       String   @default("Wie zufrieden warst du mit dem Support?")
+  autoCloseMinutes     Int      @default(0) // 0 = aus
+  autoCloseWarnMinutes Int      @default(0) // Warnung so viele Minuten vorher (0 = keine)
+  autoCloseMessage     String   @default("⏰ {user}, dieses Ticket wird bald wegen Inaktivität geschlossen. Schreib eine Nachricht, wenn du noch Hilfe brauchst.")
+  deleteAfterMinutes   Int      @default(-1) // -1 = nie, 0 = sofort
+  escalationRoleIds    String[]
+  escalationPriorityId String?  @db.Uuid
+  escalationMessage    String   @default("🟠 Dieses Ticket wurde eskaliert. {staff}")
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
 }
 
 model TicketStatus {
@@ -776,7 +821,9 @@ model TicketCloseReason {
   position Int    @default(0)
 }
 
-/** Support-Ticket (nicht zu verwechseln mit `Ticket` = Strafzettel). */
+/**
+ * Support-Ticket (nicht zu verwechseln mit `Ticket` = Strafzettel).
+ */
 model SupportTicket {
   id               String    @id @default(uuid()) @db.Uuid
   number           Int       @unique @default(autoincrement())
@@ -786,12 +833,12 @@ model SupportTicket {
   channelId        String?   @unique
   controlMessageId String?
   name             String
-  creatorId        String    // Discord-ID
+  creatorId        String // Discord-ID
   creatorName      String
   creatorUserId    String?   @db.Uuid
   statusId         String    @db.Uuid
   priorityId       String?   @db.Uuid
-  claimers         String[]  // Discord-IDs; erster = Hauptbearbeiter (PRIMARY)
+  claimers         String[] // Discord-IDs; erster = Hauptbearbeiter (PRIMARY)
   answers          Json      @default("[]")
   questionIndex    Int       @default(0)
   locked           Boolean   @default(false)
@@ -807,48 +854,56 @@ model SupportTicket {
   escalatedAt      DateTime?
   createdAt        DateTime  @default(now())
   updatedAt        DateTime  @updatedAt
+
   @@index([creatorId, categoryId])
   @@index([statusId])
   @@index([createdAt])
 }
 
-/** Zusätzlicher Zugriff im Ticket (Benutzer oder Rolle), optional befristet. */
+/**
+ * Zusätzlicher Zugriff im Ticket (Benutzer oder Rolle), optional befristet.
+ */
 model TicketAccess {
   id        String    @id @default(uuid()) @db.Uuid
   ticketId  String    @db.Uuid
   targetId  String
-  kind      String    // USER | ROLE
+  kind      String // USER | ROLE
   expiresAt DateTime?
   addedById String?
   createdAt DateTime  @default(now())
+
   @@unique([ticketId, targetId])
 }
 
 model TicketMessage {
-  id          String   @id @default(uuid()) @db.Uuid
-  ticketId    String   @db.Uuid
-  discordId   String?  @unique
-  authorId    String
-  authorName  String
+  id           String   @id @default(uuid()) @db.Uuid
+  ticketId     String   @db.Uuid
+  discordId    String?  @unique
+  authorId     String
+  authorName   String
   authorAvatar String?
-  isStaff     Boolean  @default(false)
-  isBot       Boolean  @default(false)
-  content     String   @default("")
-  attachments Json     @default("[]") // [{name, size, contentType, storageKey?, url}]
-  embeds      Json     @default("[]")
-  createdAt   DateTime @default(now())
+  isStaff      Boolean  @default(false)
+  isBot        Boolean  @default(false)
+  content      String   @default("")
+  attachments  Json     @default("[]") // [{name, size, contentType, storageKey?, url}]
+  embeds       Json     @default("[]")
+  createdAt    DateTime @default(now())
+
   @@index([ticketId, createdAt])
 }
 
-/** Interne Notizen – nur für berechtigte Mitarbeiter, nie für den Ersteller. */
+/**
+ * Interne Notizen – nur für berechtigte Mitarbeiter, nie für den Ersteller.
+ */
 model TicketNote {
-  id         String   @id @default(uuid()) @db.Uuid
-  ticketId   String   @db.Uuid
-  authorId   String?  // Discord-ID
-  authorUserId String? @db.Uuid
-  authorName String
-  text       String
-  createdAt  DateTime @default(now())
+  id           String   @id @default(uuid()) @db.Uuid
+  ticketId     String   @db.Uuid
+  authorId     String? // Discord-ID
+  authorUserId String?  @db.Uuid
+  authorName   String
+  text         String
+  createdAt    DateTime @default(now())
+
   @@index([ticketId])
 }
 
@@ -856,27 +911,29 @@ model TicketLog {
   id        String   @id @default(uuid()) @db.Uuid
   ticketId  String   @db.Uuid
   action    String
-  actorId   String?  // Discord-ID
+  actorId   String? // Discord-ID
   actorName String?
   detail    Json     @default("{}")
   createdAt DateTime @default(now())
+
   @@index([ticketId, createdAt])
 }
 
 model TicketTranscript {
-  id          String    @id @default(uuid()) @db.Uuid
-  ticketId    String    @db.Uuid
-  ticketNumber Int
-  categoryName String
-  creatorId   String
-  creatorName String
-  claimers    String[]
-  statusName  String
-  html        String
-  sizeBytes   Int
-  createdById String?
+  id            String   @id @default(uuid()) @db.Uuid
+  ticketId      String   @db.Uuid
+  ticketNumber  Int
+  categoryName  String
+  creatorId     String
+  creatorName   String
+  claimers      String[]
+  statusName    String
+  html          String
+  sizeBytes     Int
+  createdById   String?
   createdByName String?
-  createdAt   DateTime  @default(now())
+  createdAt     DateTime @default(now())
+
   @@index([ticketId])
   @@index([createdAt])
 }

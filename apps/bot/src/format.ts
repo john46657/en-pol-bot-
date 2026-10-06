@@ -1,5 +1,5 @@
 /** Discord-unabhängige Nachrichtenmodelle + Formatierung (einfach testbar). */
-export interface EmbedData { title: string; description?: string; color?: number; fields?: { name: string; value: string; inline?: boolean }[]; footer?: string }
+export interface EmbedData { title: string; description?: string; color?: number; fields?: { name: string; value: string; inline?: boolean }[]; footer?: string; thumbnail?: string }
 /** `url`: Link-Button (öffnet die Adresse, löst keine Interaktion aus). */
 export interface ButtonSpec { id: string; label: string; style: 'primary' | 'secondary' | 'success' | 'danger'; emoji?: string; url?: string }
 /** Auswahlmenü; `id` wie bei Buttons `prefix:arg`. `kind`: Text-Optionen (Standard), Discord-Benutzer oder -Rollen. */
@@ -108,7 +108,9 @@ export function applicationEmbeds(p: Record<string, unknown>, kind: 'q' | 'p'): 
     return `**${i + 1}. ${clip(plain(q.question), 200)}**\n${max !== undefined && a.length > max ? `${a.slice(0, max)}… *(gekürzt)*` : a}`;
   };
   let sections = qa.map((q, i) => section(q, i));
-  const title = clip(kind === 'p' ? `📋 Bewerbung bei EN Polizei – ${p.number}` : `📋 ${plain(p.unitName)} – Bewerbung ${p.number}`, 256);
+  // wie bei Appy: „john45346s Bewerbung ‚Flugstaffel‘ eingereicht“
+  const who = p.discordName ? `${plain(p.discordName)}s ` : '';
+  const title = clip(kind === 'p' ? `📋 ${who}Bewerbung bei EN Polizei eingereicht · ${p.number}` : `📋 ${who}Bewerbung „${plain(p.unitName)}“ eingereicht · ${p.number}`, 256);
   // Platz für Titel (bis zu 10 Embeds) und Bewerber-Infos abziehen
   const room = BUDGET - stats.length - (title.length + 20) * 3;
   const size = (xs: string[]) => xs.reduce((n, x) => n + x.length + 2, 0);

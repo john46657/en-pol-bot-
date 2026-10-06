@@ -84,6 +84,25 @@ describe('login with Discord', () => {
     expect(await prisma.auditLog.count({ where: { action: 'auth.discord.roles_synced' } })).toBe(2);
   });
 
+  it('team role: without one of the configured Discord roles no access to the MDT (owners always get in)', async () => {
+    const admin = (await login(app, 'dl_admin')).agent;
+    const TEAM = '777777777777777777';
+    expect((await admin.put('/api/v1/admin/settings/auth.discord').send({ value: { signup: true, requireGuild: true, roleMap: [], teamRoleIds: ['nope'] } })).status).toBe(400);
+    expect((await admin.put('/api/v1/admin/settings/auth.discord').send({ value: { signup: true, requireGuild: true, roleMap: [], teamRoleIds: [TEAM] } })).status).toBe(200);
+    discord.members.set(discord.user.id, [ROLE_POLICE]);
+    expect((await discordLogin()).location).toMatch(/discord=no_team_role$/);
+    discord.members.set(discord.user.id, [ROLE_POLICE, TEAM]);
+    const ok = await discordLogin();
+    expect((await ok.agent.get('/api/v1/auth/me')).status).toBe(200);
+    // Besitzer (ADMIN_DISCORD_IDS) braucht die Team-Rolle nicht
+    const before = discord.user;
+    discord.user = { ...before, id: '444444444444444444', username: 'owner' };
+    discord.members.set('444444444444444444', []);
+    expect((await (await discordLogin()).agent.get('/api/v1/auth/me')).status).toBe(200);
+    discord.user = before;
+    await admin.put('/api/v1/admin/settings/auth.discord').send({ value: { signup: true, requireGuild: true, roleMap: [], teamRoleIds: [] } });
+  });
+
   it('rejects forged or replayed callbacks, other browsers, failed token exchange and disabled sign-up', async () => {
     const agent = request.agent(app.getHttpServer());
     const to = new URL((await agent.get('/api/v1/auth/discord')).headers.location as string);

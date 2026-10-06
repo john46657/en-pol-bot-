@@ -3,10 +3,10 @@ import { PrismaService } from '../prisma/prisma.service';
 import { AuditService, Actor } from '../audit/audit.service';
 import { DiscordService } from '../discord/discord.service';
 import { type QualificationConfig } from './qualifications.config';
-import { type FormField } from '../applications/applications.service';
+import { type FormField } from '@enrp/shared';
 export interface Answer {
     question: string;
-    answer: string;
+    answer: string | string[] | null;
 }
 /**
  * Qualifikations-Bewerbungen (SEK, Flugstaffel, Ausbilder …): Discord-Panel → Fragen per DM → Team entscheidet (Web oder Button im Team-Channel).
@@ -28,7 +28,8 @@ export declare class QualificationsService {
             name: string;
             description: string;
             key: string;
-            questions: string[];
+            pingRoleIds: string[];
+            questions: FormField[];
             roleId?: string | undefined;
             channelId?: string | undefined;
         }[];
@@ -36,6 +37,7 @@ export declare class QualificationsService {
         police: {
             description: string;
             title: string;
+            pingRoleIds: string[];
         };
     }>;
     saveConfig(actor: Actor, input: QualificationConfig & {
@@ -47,7 +49,8 @@ export declare class QualificationsService {
             name: string;
             description: string;
             key: string;
-            questions: string[];
+            pingRoleIds: string[];
+            questions: FormField[];
             roleId?: string | undefined;
             channelId?: string | undefined;
         }[];
@@ -55,6 +58,7 @@ export declare class QualificationsService {
         police: {
             description: string;
             title: string;
+            pingRoleIds: string[];
         };
     }>;
     /** Für den Bot: läuft für diese Discord-ID schon eine offene Bewerbung (je Einheit)? */
@@ -89,6 +93,7 @@ export declare class QualificationsService {
         discordId: string;
         status: string;
         answers: Prisma.JsonValue;
+        grantRoleIds: string[];
         decidedById: string | null;
         discordName: string;
         durationSec: number | null;
@@ -106,6 +111,7 @@ export declare class QualificationsService {
         discordId: string;
         status: string;
         answers: Prisma.JsonValue;
+        grantRoleIds: string[];
         decidedById: string | null;
         discordName: string;
         durationSec: number | null;

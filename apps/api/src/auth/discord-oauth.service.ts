@@ -11,11 +11,12 @@ const STATE_TTL_MS = 10 * 60_000;
 /** Kein gültiger Passwort-Hash → mit Passwort nicht anmeldbar (nur Discord). */
 export const DISCORD_ONLY_PASSWORD = '!discord-login-only';
 
-export interface DiscordLoginSettings { signup: boolean; requireGuild: boolean; roleMap: { discordRoleId: string; role: string }[] }
-export const DEFAULT_DISCORD_LOGIN: DiscordLoginSettings = { signup: true, requireGuild: true, roleMap: [] };
+/** `teamRoleIds`: ohne eine dieser Discord-Rollen kein Zugang zum MDT/Dashboard (leer = jedes Server-Mitglied). */
+export interface DiscordLoginSettings { signup: boolean; requireGuild: boolean; roleMap: { discordRoleId: string; role: string }[]; teamRoleIds: string[] }
+export const DEFAULT_DISCORD_LOGIN: DiscordLoginSettings = { signup: true, requireGuild: true, roleMap: [], teamRoleIds: [] };
 
 /** Fehlercodes für die Login-Seite (`/login?discord=<code>`). */
-export type DiscordLoginError = 'disabled' | 'state' | 'failed' | 'no_account' | 'not_member' | 'cannot_verify' | 'inactive' | 'taken';
+export type DiscordLoginError = 'disabled' | 'state' | 'failed' | 'no_account' | 'not_member' | 'cannot_verify' | 'inactive' | 'taken' | 'no_team_role';
 export class DiscordLoginFailure extends Error { constructor(readonly code: DiscordLoginError) { super(code); } }
 
 interface Pending { mode: 'login' | 'link'; userId?: string; browser: string; expires: number }
@@ -84,6 +85,12 @@ export class DiscordOAuthService {
     const owner = this.isAdminId(du.id); // Besitzer/Admins aus ADMIN_DISCORD_IDS kommen immer rein
     if (!owner && settings.requireGuild && member === 'unknown' && !user) throw new DiscordLoginFailure('cannot_verify');
     if (!owner && settings.requireGuild && member === null) throw new DiscordLoginFailure('not_member');
+    // Team-Rolle Pflicht: ohne eine der eingestellten Discord-Rollen kein Zugang (Besitzer aus ADMIN_DISCORD_IDS ausgenommen)
+    if (!owner && settings.teamRoleIds.length) {
+      if (member === 'unknown') throw new DiscordLoginFailure('cannot_verify');
+      if (member === null) throw new DiscordLoginFailure('not_member');
+      if (!member.roles.some((r) => settings.teamRoleIds.includes(r))) throw new DiscordLoginFailure('no_team_role');
+    }
     if (user && !user.active) throw new DiscordLoginFailure('inactive');
     if (!user) {
       if (!settings.signup && !owner) throw new DiscordLoginFailure('no_account');

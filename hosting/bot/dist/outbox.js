@@ -6,10 +6,12 @@ exports.startOutboxLoop = startOutboxLoop;
 const format_1 = require("./format");
 /** Welche Discord-Rolle zu welchem Dienststatus gehört (Einstellungen → Discord). */
 function dutyRoleChanges(status, cfg) {
-    const map = { ON_DUTY: cfg.dutyRole, BREAK: cfg.breakRole, TRAINING: cfg.trainingRole, ADMINISTRATIVE: cfg.adminDutyRole };
-    const target = map[status];
-    const all = [...new Set(Object.values(map).filter((r) => !!r && /^\d{15,25}$/.test(r)))];
-    return { add: target && all.includes(target) ? [target] : [], remove: all.filter((r) => r !== target) };
+    // je Status mehrere Rollen-IDs möglich (eine pro Discord-Server), Komma-getrennt
+    const ids = (v) => (v ?? '').split(/[\s,;]+/).filter((r) => /^\d{15,25}$/.test(r));
+    const map = { ON_DUTY: ids(cfg.dutyRole), BREAK: ids(cfg.breakRole), TRAINING: ids(cfg.trainingRole), ADMINISTRATIVE: ids(cfg.adminDutyRole) };
+    const add = map[status] ?? [];
+    const all = [...new Set(Object.values(map).flat())];
+    return { add: [...new Set(add)], remove: all.filter((r) => !add.includes(r)) };
 }
 /** Benachrichtigungen, die per Direktnachricht an eine Person gehen statt in einen Channel. */
 const DIRECT = { 'application.decided': format_1.applicationDecisionText, 'qualification.decided': format_1.qualificationDecisionText };
@@ -28,9 +30,11 @@ async function pollOnce(api, send, log = console.log, dm, grantRole, syncRoles, 
                 if (!/^\d{15,25}$/.test(userId))
                     throw new Error('no Discord user id');
                 // Rolle zuerst (wichtiger als die Nachricht; erneutes Vergeben bei Wiederholung schadet nicht)
-                const roleId = String(item.payload.roleId ?? '');
-                if (item.payload.status === 'ACCEPTED' && /^\d{15,25}$/.test(roleId) && grantRole) {
-                    await grantRole(userId, roleId).catch((e) => log(`outbox ${item.id}: role ${roleId} could not be given: ${e instanceof Error ? e.message : e}`));
+                // Rolle der Einheit + Rollen aus Rollen-Auswahl-Fragen
+                const roleIds = [...new Set([item.payload.roleId, ...(Array.isArray(item.payload.roleIds) ? item.payload.roleIds : [])].map((r) => String(r ?? '')).filter((r) => /^\d{15,25}$/.test(r)))];
+                if (item.payload.status === 'ACCEPTED' && grantRole) {
+                    for (const roleId of roleIds)
+                        await grantRole(userId, roleId).catch((e) => log(`outbox ${item.id}: role ${roleId} could not be given: ${e instanceof Error ? e.message : e}`));
                 }
                 if (!dm)
                     throw new Error('direct messages not available');
@@ -90,7 +94,10 @@ async function pollOnce(api, send, log = console.log, dm, grantRole, syncRoles, 
             if (!embeds)
                 throw new Error(`unknown type "${item.type}"`);
             const buttons = (0, format_1.outboxButtons)(item.type, item.payload);
-            const results = await Promise.allSettled(channelIds.map((id) => send(id, embeds, buttons)));
+            const pingRoleIds = Array.isArray(item.payload.pingRoleIds) ? item.payload.pingRoleIds.map(String).filter((r) => /^\d{15,25}$/.test(r)) : [];
+            const avatarUserId = (item.type === 'qualification.submitted' || item.type === 'application.submitted') && typeof item.payload.discordId === 'string' && /^\d{15,25}$/.test(item.payload.discordId) ? item.payload.discordId : undefined;
+            const opts = pingRoleIds.length || avatarUserId ? { ...(pingRoleIds.length ? { pingRoleIds } : {}), ...(avatarUserId ? { avatarUserId } : {}) } : undefined;
+            const results = await Promise.allSettled(channelIds.map((id) => (opts ? send(id, embeds, buttons, opts) : send(id, embeds, buttons))));
             const failed = results.flatMap((r, i) => (r.status === 'rejected' ? [`${channelIds[i]}: ${r.reason instanceof Error ? r.reason.message : r.reason}`] : []));
             failed.forEach((f) => log(`outbox ${item.id}: send failed for channel ${f}`));
             // Erfolg, wenn mindestens ein Channel erreicht wurde (sonst Wiederholung – würde die erfolgreichen doppelt beliefern)

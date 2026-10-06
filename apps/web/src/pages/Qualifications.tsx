@@ -1,20 +1,23 @@
 import { useEffect, useState } from 'react';
 import { Link, useSearchParams } from 'react-router';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { api, ApiError } from '../lib/api';
+import { api } from '../lib/api';
+import { errText } from '../lib/tickets';
 import { useAuth } from '../lib/auth';
-import { formToText, textToForm, type FormField } from '../lib/questions';
+import type { FormField } from '@enrp/shared';
+import { FormQuestionsEditor } from '../components/FormQuestionsEditor';
 import { Button, Card, EmptyState, ErrorState, Field, fmt, Input, PageHeader, Select, SkeletonRows, StatusBadge, Tabs, Textarea } from '../components/ui';
 
-interface Unit { key: string; name: string; description: string; roleId?: string; channelId?: string; questions: string[] }
-interface Config { title: string; intro: string; units: Unit[]; police: { title: string; description: string }; policeForm: FormField[] }
+interface Unit { key: string; name: string; description: string; roleId?: string; channelId?: string; pingRoleIds?: string[]; questions: FormField[] }
+interface Config { title: string; intro: string; units: Unit[]; police: { title: string; description: string; pingRoleIds?: string[] }; policeForm: FormField[] }
 interface Application {
   id: string; number: string; unit: string; unitName: string; discordId: string; discordName: string; linkedName: string | null;
   answers: { question: string; answer: string }[]; status: string; createdAt: string; decidedAt: string | null; decidedByName: string | null;
   decisionReason: string | null; durationSec: number | null;
 }
-/** Im Formular: Fragen als Text (eine pro Zeile). */
-type DraftUnit = Omit<Unit, 'questions'> & { questions: string; isNew?: boolean };
+type DraftUnit = Omit<Unit, 'pingRoleIds'> & { pingRoles: string; isNew?: boolean };
+/** Rollen-IDs aus einem Textfeld (auch als <@&…>-Erwähnung eingefügt). */
+const roleIds = (t: string) => t.match(/\d{15,25}/g) ?? [];
 
 /** Qualifikationen (SEK, Flugstaffel, Ausbilder …): Bewerbungen aus dem Discord-Panel entscheiden und Einheiten/Fragen einrichten. */
 export function Qualifications() {
@@ -30,7 +33,7 @@ export function Qualifications() {
   const [status, setStatus] = useState('OPEN');
   const [err, setErr] = useState<string>();
   const [msg, setMsg] = useState<string>();
-  const onError = (e: unknown) => setErr(e instanceof ApiError ? `${e.message}${e.requestId ? ` (Request ID ${e.requestId})` : ''}` : 'Failed');
+  const onError = (e: unknown) => setErr(errText(e));
   const config = useQuery({ queryKey: ['quali-config'], queryFn: () => api<Config>('/qualifications/config') });
   const params = new URLSearchParams({ ...(unit ? { unit } : {}), ...(status && !only ? { status } : {}) });
   const apps = useQuery({ queryKey: ['quali-apps', unit, only ? '' : status], queryFn: () => api<Application[]>(`/qualifications/applications?${params}`), enabled: tab === 'Applications' });
@@ -46,17 +49,18 @@ export function Qualifications() {
   const [units, setUnits] = useState<DraftUnit[]>([]);
   const [policeTitle, setPoliceTitle] = useState('');
   const [policeText, setPoliceText] = useState('');
-  const [policeQuestions, setPoliceQuestions] = useState('');
+  const [policeForm, setPoliceForm] = useState<FormField[]>([]);
+  const [policePing, setPolicePing] = useState('');
   useEffect(() => {
     if (!config.data) return;
     setTitle(config.data.title); setIntro(config.data.intro);
-    setPoliceTitle(config.data.police.title); setPoliceText(config.data.police.description); setPoliceQuestions(formToText(config.data.policeForm));
-    setUnits(config.data.units.map((u) => ({ ...u, roleId: u.roleId ?? '', channelId: u.channelId ?? '', questions: u.questions.join('\n') })));
+    setPoliceTitle(config.data.police.title); setPoliceText(config.data.police.description); setPoliceForm(config.data.policeForm); setPolicePing((config.data.police.pingRoleIds ?? []).join(', '));
+    setUnits(config.data.units.map(({ pingRoleIds, ...u }) => ({ ...u, roleId: u.roleId ?? '', channelId: u.channelId ?? '', pingRoles: (pingRoleIds ?? []).join(', ') })));
   }, [config.data]);
   const save = useMutation({
     mutationFn: () => api<Config>('/qualifications/config', { method: 'PUT', body: {
-      title, intro, police: { title: policeTitle, description: policeText }, policeForm: textToForm(policeQuestions, config.data?.policeForm ?? []),
-      units: units.map(({ isNew: _n, ...u }) => ({ ...u, roleId: u.roleId?.trim() ?? '', channelId: u.channelId?.trim() ?? '', questions: u.questions.split('\n').map((q) => q.trim()).filter(Boolean) })),
+      title, intro, police: { title: policeTitle, description: policeText, pingRoleIds: roleIds(policePing) }, policeForm,
+      units: units.map(({ isNew: _n, pingRoles, ...u }) => ({ ...u, roleId: u.roleId?.trim() ?? '', channelId: u.channelId?.trim() ?? '', pingRoleIds: roleIds(pingRoles) })),
     } }),
     onSuccess: () => { setErr(undefined); setMsg('Saved. Questions apply to new applications right away; post the panels again in Discord (/bewerbungspanel, /qualipanel) to show changed texts or units.'); void qc.invalidateQueries({ queryKey: ['quali-config'] }); }, onError,
   });
@@ -107,9 +111,9 @@ export function Qualifications() {
                   <Field label="Panel title">{(id) => <Input id={id} value={policeTitle} maxLength={100} onChange={(e) => setPoliceTitle(e.target.value)} />}</Field>
                   <Field label="Panel text (Discord markdown allowed)">{(id) => <Textarea id={id} rows={3} value={policeText} maxLength={1500} onChange={(e) => setPoliceText(e.target.value)} />}</Field>
                 </div>
-                <Field label={`Questions – one per line, add „(optional)“ at the end for optional ones (${policeQuestions.split('\n').filter((q) => q.trim()).length} questions, max. 50)`} hint="The bot always asks for the Roblox username first – no need to add it.">
-                  {(id) => <Textarea id={id} rows={8} value={policeQuestions} onChange={(e) => setPoliceQuestions(e.target.value)} />}
-                </Field>
+                <Field label="Ping roles for new applications (Discord role IDs, comma-separated)" hint="Mentioned above the application in the channel, e.g. @Personalabteilung.">{(id) => <Input id={id} value={policePing} onChange={(e) => setPolicePing(e.target.value)} placeholder="123456789012345678" />}</Field>
+                <p className="text-xs text-muted">The bot always asks for the Roblox username first – no need to add it.</p>
+                <FormQuestionsEditor value={policeForm} onChange={setPoliceForm} />
               </div>
             </Card>
             <Card title="Qualifications panel (/qualipanel)">
@@ -127,11 +131,12 @@ export function Qualifications() {
                   <Field label="Discord channel ID for incoming applications (optional)" hint="e.g. #flugstaffel-bewerbungen – empty = Qualifications channel from Settings">{(id) => <Input id={id} inputMode="numeric" value={u.channelId ?? ''} onChange={(e) => patch(i, { channelId: e.target.value })} placeholder="123456789012345678" />}</Field>
                   <Field label="Description (shown in the panel)">{(id) => <Textarea id={id} rows={3} maxLength={600} value={u.description} onChange={(e) => patch(i, { description: e.target.value })} />}</Field>
                 </div>
-                <div className="mt-3"><Field label={`Questions – one per line (${u.questions.split('\n').filter((q) => q.trim()).length} questions, max. 50)`}>{(id) => <Textarea id={id} rows={7} value={u.questions} onChange={(e) => patch(i, { questions: e.target.value })} />}</Field></div>
+                <div className="mt-3"><Field label="Ping roles for new applications (Discord role IDs, comma-separated)" hint="Mentioned above the application in the channel, e.g. @Staffelkommandant.">{(id) => <Input id={id} value={u.pingRoles} onChange={(e) => patch(i, { pingRoles: e.target.value })} placeholder="123456789012345678" />}</Field></div>
+                <div className="mt-3"><FormQuestionsEditor value={u.questions} onChange={(q) => patch(i, { questions: q })} /></div>
               </Card>
             ))}
             <div className="flex flex-wrap items-center gap-2">
-              <Button variant="secondary" disabled={units.length >= 10} onClick={() => setUnits([...units, { key: '', name: '', description: '', roleId: '', channelId: '', questions: '', isNew: true }])}>Add unit</Button>
+              <Button variant="secondary" disabled={units.length >= 10} onClick={() => setUnits([...units, { key: '', name: '', description: '', roleId: '', channelId: '', pingRoles: '', questions: [{ key: 'frage1', label: '', type: 'TEXT', required: true, minLength: 0, maxLength: 1000, options: [], multiple: false }], isNew: true }])}>Add unit</Button>
               <Button disabled={save.isPending} onClick={() => { setMsg(undefined); save.mutate(); }}>Save</Button>
               {msg && <span className="text-sm text-muted">{msg}</span>}
             </div>

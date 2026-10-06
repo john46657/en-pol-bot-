@@ -3,6 +3,7 @@ import { AuditService } from '../audit/audit.service';
 import { AuthService } from './auth.service';
 /** Kein gültiger Passwort-Hash → mit Passwort nicht anmeldbar (nur Discord). */
 export declare const DISCORD_ONLY_PASSWORD = "!discord-login-only";
+/** `teamRoleIds`: ohne eine dieser Discord-Rollen kein Zugang zum MDT/Dashboard (leer = jedes Server-Mitglied). */
 export interface DiscordLoginSettings {
     signup: boolean;
     requireGuild: boolean;
@@ -10,10 +11,11 @@ export interface DiscordLoginSettings {
         discordRoleId: string;
         role: string;
     }[];
+    teamRoleIds: string[];
 }
 export declare const DEFAULT_DISCORD_LOGIN: DiscordLoginSettings;
 /** Fehlercodes für die Login-Seite (`/login?discord=<code>`). */
-export type DiscordLoginError = 'disabled' | 'state' | 'failed' | 'no_account' | 'not_member' | 'cannot_verify' | 'inactive' | 'taken';
+export type DiscordLoginError = 'disabled' | 'state' | 'failed' | 'no_account' | 'not_member' | 'cannot_verify' | 'inactive' | 'taken' | 'no_team_role';
 export declare class DiscordLoginFailure extends Error {
     readonly code: DiscordLoginError;
     constructor(code: DiscordLoginError);

@@ -53,11 +53,11 @@ declare const application: z.ZodObject<{
     discordName: z.ZodOptional<z.ZodString>;
     durationSec: z.ZodOptional<z.ZodNumber>;
     joinedAt: z.ZodOptional<z.ZodDate>;
-    answers: z.ZodRecord<z.ZodString, z.ZodString>;
+    answers: z.ZodRecord<z.ZodString, z.ZodUnion<[z.ZodString, z.ZodArray<z.ZodString, "many">]>>;
 }, "strip", z.ZodTypeAny, {
     discordId: string;
     robloxUsername: string;
-    answers: Record<string, string>;
+    answers: Record<string, string | string[]>;
     robloxUserId?: string | undefined;
     discordName?: string | undefined;
     durationSec?: number | undefined;
@@ -65,7 +65,7 @@ declare const application: z.ZodObject<{
 }, {
     discordId: string;
     robloxUsername: string;
-    answers: Record<string, string>;
+    answers: Record<string, string | string[]>;
     robloxUserId?: string | undefined;
     discordName?: string | undefined;
     durationSec?: number | undefined;

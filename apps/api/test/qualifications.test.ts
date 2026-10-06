@@ -45,7 +45,9 @@ describe('qualification applications', () => {
     expect(stranger.status).toBe(201);
     const posted = await prisma.discordOutbox.findMany({ where: { type: 'qualification.submitted' } });
     expect(posted).toHaveLength(2);
-    expect(posted[0]!.payload).toMatchObject({ number: r.body.number, linkedName: 'q_off', answers: answers(n) });
+    expect(posted[0]!.payload).toMatchObject({ number: r.body.number, linkedName: 'q_off' });
+    // die Fragen kommen aus der Einrichtung (nicht vom Bot), die Antworten wie eingereicht
+    expect((posted[0]!.payload as { answers: { answer: string }[] }).answers.map((a) => a.answer)).toEqual(answers(n).map((a) => a.answer));
   });
 
   it('decisions need qualifications.decide (web or bot button), accept adds SEK roster + DM with role', async () => {
@@ -113,12 +115,46 @@ describe('qualification applications', () => {
     expect((await admin.put('/api/v1/qualifications/config').send({ ...body, policeForm: [policeForm[0], policeForm[0]] })).status).toBe(400);
     const r = await admin.put('/api/v1/qualifications/config').send(body);
     expect(r.status).toBe(200);
-    expect((await http().get('/api/v1/applications/form')).body).toEqual(policeForm);
-    expect((await http().get('/api/v1/bot/qualifications').set(bot())).body.police).toEqual({ title: 'Werde Polizist!', description: 'Text' });
+    expect((await http().get('/api/v1/applications/form')).body).toMatchObject(policeForm);
+    expect((await http().get('/api/v1/bot/qualifications').set(bot())).body.police).toMatchObject({ title: 'Werde Polizist!', description: 'Text' });
     // ohne policeForm bleibt das Formular unverändert
     expect((await admin.put('/api/v1/qualifications/config').send({ ...body, policeForm: undefined })).status).toBe(200);
-    expect((await http().get('/api/v1/applications/form')).body).toEqual(policeForm);
+    expect((await http().get('/api/v1/applications/form')).body).toMatchObject(policeForm);
     await prisma.systemSetting.deleteMany({ where: { key: 'application.form' } }); // Standardformular für andere Tests
+  });
+
+  it('question types like Appy: multiple choice and role select are validated, chosen roles are given on acceptance, ping role in the post', async () => {
+    const admin = (await login(app, 'q_admin')).agent;
+    const cur = (await admin.get('/api/v1/qualifications/config')).body;
+    const questions = [
+      { key: 'warum', label: 'Warum möchtest du zur Flugstaffel?', required: true, type: 'TEXT', minLength: 10, maxLength: 200 },
+      { key: 'erfahrung', label: 'Hast du Flugerfahrung?', required: true, type: 'CHOICE', options: [{ label: 'Ja' }, { label: 'Nein' }] },
+      { key: 'rollen', label: 'Welche Bereiche interessieren dich?', required: false, type: 'ROLE', multiple: true, options: [{ label: 'Hubschrauber', roleId: '510000000000000001' }, { label: 'Flugzeug', roleId: '510000000000000002' }] },
+    ];
+    const units = [{ key: 'flugstaffel', name: 'Flugstaffel', description: '', roleId: '510000000000000009', pingRoleIds: ['520000000000000001'], questions }];
+    // Rollen-Auswahl ohne Rollen-ID und Auswahl ohne Optionen werden abgelehnt
+    expect((await admin.put('/api/v1/qualifications/config').send({ ...cur, units: [{ ...units[0], questions: [{ ...questions[2], options: [{ label: 'X' }] }] }] })).status).toBe(400);
+    expect((await admin.put('/api/v1/qualifications/config').send({ ...cur, units: [{ ...units[0], questions: [{ ...questions[1], options: [] }] }] })).status).toBe(400);
+    expect((await admin.put('/api/v1/qualifications/config').send({ ...cur, units })).status).toBe(200);
+    const send = (D: string, a: unknown[]) => http().post('/api/v1/bot/qualifications/applications').set(bot()).send({ unit: 'flugstaffel', discordId: D, discordName: 'flieger', answers: a.map((answer, i) => ({ question: questions[i]!.label, answer })) });
+    const D = '300000000000000077';
+    expect((await send(D, ['zu kurz', 'Ja', null])).status).toBe(400); // Mindestlänge
+    expect((await send(D, ['Weil ich gern fliege', 'Vielleicht', null])).status).toBe(400); // keine gültige Option
+    expect((await send(D, ['Weil ich gern fliege', ['Ja', 'Nein'], null])).status).toBe(400); // nur eine Auswahl erlaubt
+    const ok = await send(D, ['Weil ich gern fliege', 'Ja', ['Hubschrauber', 'Flugzeug']]);
+    expect(ok.status).toBe(201);
+    const row = await prisma.qualificationApplication.findUniqueOrThrow({ where: { id: ok.body.id } });
+    expect(row.grantRoleIds).toEqual(['510000000000000001', '510000000000000002']);
+    expect((row.answers as { answer: string }[]).map((a) => a.answer)).toEqual(['Weil ich gern fliege', 'Ja', 'Hubschrauber, Flugzeug']);
+    const post = await prisma.discordOutbox.findFirstOrThrow({ where: { type: 'qualification.submitted', payload: { path: ['id'], equals: ok.body.id } } });
+    expect(post.payload).toMatchObject({ pingRoleIds: ['520000000000000001'] });
+    expect((await admin.post(`/api/v1/qualifications/applications/${ok.body.id}/decision`).send({ status: 'ACCEPTED' })).status).toBe(200);
+    const decided = await prisma.discordOutbox.findFirstOrThrow({ where: { type: 'qualification.decided', payload: { path: ['number'], equals: row.number } } });
+    expect(decided.payload).toMatchObject({ status: 'ACCEPTED', roleId: '510000000000000009', roleIds: ['510000000000000001', '510000000000000002'] });
+    // alte Einrichtungen (Fragen als reiner Text) funktionieren weiter
+    await prisma.systemSetting.update({ where: { key: 'qualifications.config' }, data: { value: { ...cur, units: [{ key: 'alt', name: 'Alt', description: '', questions: ['Eine alte Frage?'] }] } } });
+    expect((await admin.get('/api/v1/qualifications/config')).body.units[0].questions[0]).toMatchObject({ key: 'q1', label: 'Eine alte Frage?', type: 'TEXT', required: true });
+    expect((await admin.put('/api/v1/qualifications/config').send(cur)).status).toBe(200);
   });
 
   it('team view in Discord: details in the post, own channel per unit, decision with reason, history, police quick decision', async () => {

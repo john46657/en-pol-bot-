@@ -3,7 +3,8 @@ import type { TicketEffect } from '@enrp/shared';
 import { applicationDecisionText, outboxButtons, qualificationDecisionText, renderOutboxEmbeds, type ButtonSpec, type EmbedData } from './format';
 
 interface OutboxItem { id: string; type: string; channelKey: string; payload: Record<string, unknown> }
-export type Sender = (channelId: string, embeds: EmbedData[], buttons?: ButtonSpec[]) => Promise<void>;
+/** `opts`: Rollen, die erwähnt werden (z. B. neue Bewerbung → @Staffelkommandant), und Discord-Benutzer für das Profilbild rechts. */
+export type Sender = (channelId: string, embeds: EmbedData[], buttons?: ButtonSpec[], opts?: { pingRoleIds?: string[]; avatarUserId?: string }) => Promise<void>;
 /** Discord-Rollen eines Mitglieds anpassen (alle Server, auf denen es die Rollen gibt). */
 export type RoleSync = (userId: string, add: string[], remove: string[]) => Promise<void>;
 /** Welche Discord-Rolle zu welchem Dienststatus gehört (Einstellungen → Discord). */
@@ -35,9 +36,10 @@ export async function pollOnce(api: Api, send: Sender, log: (m: string) => void 
         const userId = String(item.payload.discordId ?? '');
         if (!/^\d{15,25}$/.test(userId)) throw new Error('no Discord user id');
         // Rolle zuerst (wichtiger als die Nachricht; erneutes Vergeben bei Wiederholung schadet nicht)
-        const roleId = String(item.payload.roleId ?? '');
-        if (item.payload.status === 'ACCEPTED' && /^\d{15,25}$/.test(roleId) && grantRole) {
-          await grantRole(userId, roleId).catch((e) => log(`outbox ${item.id}: role ${roleId} could not be given: ${e instanceof Error ? e.message : e}`));
+        // Rolle der Einheit + Rollen aus Rollen-Auswahl-Fragen
+        const roleIds = [...new Set([item.payload.roleId, ...(Array.isArray(item.payload.roleIds) ? item.payload.roleIds : [])].map((r) => String(r ?? '')).filter((r) => /^\d{15,25}$/.test(r)))];
+        if (item.payload.status === 'ACCEPTED' && grantRole) {
+          for (const roleId of roleIds) await grantRole(userId, roleId).catch((e) => log(`outbox ${item.id}: role ${roleId} could not be given: ${e instanceof Error ? e.message : e}`));
         }
         if (!dm) throw new Error('direct messages not available');
         await dm(userId, direct(item.payload));
@@ -84,7 +86,10 @@ export async function pollOnce(api: Api, send: Sender, log: (m: string) => void 
       if (!channelIds.length) throw new Error(`channel "${item.channelKey}" not configured`);
       if (!embeds) throw new Error(`unknown type "${item.type}"`);
       const buttons = outboxButtons(item.type, item.payload);
-      const results = await Promise.allSettled(channelIds.map((id) => send(id, embeds, buttons)));
+      const pingRoleIds = Array.isArray(item.payload.pingRoleIds) ? item.payload.pingRoleIds.map(String).filter((r) => /^\d{15,25}$/.test(r)) : [];
+      const avatarUserId = (item.type === 'qualification.submitted' || item.type === 'application.submitted') && typeof item.payload.discordId === 'string' && /^\d{15,25}$/.test(item.payload.discordId) ? item.payload.discordId : undefined;
+      const opts = pingRoleIds.length || avatarUserId ? { ...(pingRoleIds.length ? { pingRoleIds } : {}), ...(avatarUserId ? { avatarUserId } : {}) } : undefined;
+      const results = await Promise.allSettled(channelIds.map((id) => (opts ? send(id, embeds, buttons, opts) : send(id, embeds, buttons))));
       const failed = results.flatMap((r, i) => (r.status === 'rejected' ? [`${channelIds[i]}: ${r.reason instanceof Error ? r.reason.message : r.reason}`] : []));
       failed.forEach((f) => log(`outbox ${item.id}: send failed for channel ${f}`));
       // Erfolg, wenn mindestens ein Channel erreicht wurde (sonst Wiederholung – würde die erfolgreichen doppelt beliefern)

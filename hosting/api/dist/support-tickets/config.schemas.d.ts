@@ -170,7 +170,6 @@ export declare const categorySchema: z.ZodObject<{
     description: string;
     active: boolean;
     color: number;
-    emoji: string | null;
     questions: {
         id: string;
         type: "SHORT" | "LONG" | "YESNO" | "SELECT" | "MULTI";
@@ -179,6 +178,7 @@ export declare const categorySchema: z.ZodObject<{
         required: boolean;
         placeholder?: string | undefined;
     }[];
+    emoji: string | null;
     buttonStyle: "danger" | "success" | "primary" | "secondary";
     position: number;
     discordCategoryId: string | null;
@@ -227,7 +227,6 @@ export declare const categorySchema: z.ZodObject<{
     description?: string | undefined;
     active?: boolean | undefined;
     color?: number | undefined;
-    emoji?: string | undefined;
     questions?: {
         id: string;
         type: "SHORT" | "LONG" | "YESNO" | "SELECT" | "MULTI";
@@ -236,6 +235,7 @@ export declare const categorySchema: z.ZodObject<{
         options?: string[] | undefined;
         placeholder?: string | undefined;
     }[] | undefined;
+    emoji?: string | undefined;
     buttonStyle?: "danger" | "success" | "primary" | "secondary" | undefined;
     position?: number | undefined;
     discordCategoryId?: string | undefined;
@@ -305,9 +305,9 @@ export declare const panelSchema: z.ZodObject<{
     description: string;
     color: number;
     title: string;
-    emoji: string | null;
     channelId: string | null;
     placeholder: string;
+    emoji: string | null;
     style: "BUTTONS" | "DROPDOWN";
     position: number;
     thumbnailUrl: string | null;
@@ -324,9 +324,9 @@ export declare const panelSchema: z.ZodObject<{
     description?: string | undefined;
     color?: number | undefined;
     title?: string | undefined;
-    emoji?: string | undefined;
     channelId?: string | undefined;
     placeholder?: string | undefined;
+    emoji?: string | undefined;
     style?: "BUTTONS" | "DROPDOWN" | undefined;
     position?: number | undefined;
     thumbnailUrl?: string | undefined;

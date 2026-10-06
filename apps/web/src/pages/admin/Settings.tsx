@@ -52,17 +52,18 @@ export function Settings() {
   );
 }
 
-interface DiscordLogin { signup: boolean; requireGuild: boolean; roleMap: { discordRoleId: string; role: string }[] }
+interface DiscordLogin { signup: boolean; requireGuild: boolean; roleMap: { discordRoleId: string; role: string }[]; teamRoleIds?: string[] }
 
 /** „Mit Discord anmelden“: neue Konten, Server-Pflicht, Discord-Rolle → Systemrolle (wird bei jeder Discord-Anmeldung abgeglichen). */
 function DiscordLoginCard({ manage, value, busy, onSave }: { manage: boolean; value?: DiscordLogin; busy: boolean; onSave: (v: DiscordLogin) => void }) {
-  const [d, setD] = useState<DiscordLogin>(value ?? { signup: true, requireGuild: true, roleMap: [] });
-  useEffect(() => { if (value) setD(value); }, [value]);
+  const [d, setD] = useState<DiscordLogin>(value ?? { signup: true, requireGuild: true, roleMap: [], teamRoleIds: [] });
+  const [team, setTeam] = useState((value?.teamRoleIds ?? []).join(', '));
+  useEffect(() => { if (value) { setD(value); setTeam((value.teamRoleIds ?? []).join(', ')); } }, [value]);
   const roles = useQuery({ queryKey: ['roles-names'], queryFn: () => api<{ name: string }[]>('/roles') });
   const providers = useQuery({ queryKey: ['auth-providers'], queryFn: () => api<{ discord: boolean }>('/auth/providers') });
   const row = (i: number, p: Partial<DiscordLogin['roleMap'][number]>) => setD({ ...d, roleMap: d.roleMap.map((r, j) => (j === i ? { ...r, ...p } : r)) });
   return (
-    <Card title="Sign in with Discord" className="mt-4" actions={manage && <Button disabled={busy} onClick={() => onSave({ ...d, roleMap: d.roleMap.filter((r) => r.discordRoleId.trim() && r.role) })}>Save</Button>}>
+    <Card title="Sign in with Discord" className="mt-4" actions={manage && <Button disabled={busy} onClick={() => onSave({ ...d, roleMap: d.roleMap.filter((r) => r.discordRoleId.trim() && r.role), teamRoleIds: team.match(/\d{15,25}/g) ?? [] })}>Save</Button>}>
       <p className="mb-3 text-xs text-muted">
         {providers.data?.discord ? 'Enabled – sign-in works only with Discord (emergency: PASSWORD_LOGIN=true in the panel). Your own Discord ID belongs in ADMIN_DISCORD_IDS so you always get admin rights.' : 'Not enabled yet (password login is active for setup): set ADMIN_DISCORD_IDS (your Discord ID) and DISCORD_CLIENT_SECRET (Discord Developer Portal → OAuth2) in the panel and add the redirect URL below in the Developer Portal.'}
         {' '}Redirect URL: <code>{window.location.origin}/api/v1/auth/discord/callback</code>
@@ -71,6 +72,9 @@ function DiscordLoginCard({ manage, value, busy, onSave }: { manage: boolean; va
         <label className="flex items-center gap-2"><input type="checkbox" disabled={!manage} checked={d.signup} onChange={(e) => setD({ ...d, signup: e.target.checked })} />New users can sign up with Discord (account is created on first login)</label>
         <label className="flex items-center gap-2"><input type="checkbox" disabled={!manage} checked={d.requireGuild} onChange={(e) => setD({ ...d, requireGuild: e.target.checked })} />Only members of our Discord server may sign in</label>
       </div>
+      <h3 className="mb-1 mt-4 text-xs font-semibold uppercase text-muted">Team role – required to use the MDT</h3>
+      <div className="max-w-xl"><Input aria-label="Team role IDs" disabled={!manage} value={team} placeholder="Discord role ID(s), e.g. 123456789012345678" onChange={(e) => setTeam(e.target.value)} /></div>
+      <p className="mt-1 text-xs text-muted">Only people who have one of these Discord roles can sign in (several servers / roles: comma-separated). Empty = every server member. Accounts in ADMIN_DISCORD_IDS always get in. Checked at every sign-in.</p>
       <h3 className="mb-1 mt-4 text-xs font-semibold uppercase text-muted">Discord role → system role (synced on every Discord login)</h3>
       <div className="space-y-2">
         {d.roleMap.map((r, i) => (

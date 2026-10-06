@@ -9,6 +9,7 @@ import { Button, Field, Input } from '../components/ui';
 /** Rückmeldungen nach „Mit Discord anmelden“ (`/login?discord=…`). */
 const DISCORD_ERRORS: Record<string, string> = {
   not_member: 'Du bist nicht auf unserem Discord-Server. Tritt zuerst dem Server bei.',
+  no_team_role: 'Dir fehlt die Team-Rolle auf unserem Discord-Server. Ohne sie kannst du das MDT nicht nutzen – wende dich an die Leitung.',
   no_account: 'Für dieses Discord-Konto gibt es noch kein Konto. Bitte wende dich an die Leitung.',
   inactive: 'Dein Konto ist deaktiviert.',
   cannot_verify: 'Die Server-Mitgliedschaft konnte nicht geprüft werden. Bitte später erneut versuchen.',

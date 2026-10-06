@@ -18,7 +18,7 @@ const audit_service_1 = require("../audit/audit.service");
 const errors_1 = require("../common/errors");
 const custom_fields_1 = require("../studio/custom-fields");
 const studio_service_1 = require("../studio/studio.service");
-const formField = zod_1.z.object({ key: zod_1.z.string().regex(/^[a-zA-Z][\w]{0,40}$/), label: zod_1.z.string().min(1).max(300), required: zod_1.z.boolean(), maxLength: zod_1.z.number().int().min(1).max(5000) });
+const qualifications_config_1 = require("../qualifications/qualifications.config");
 /** Eine oder mehrere Discord-IDs, mit Komma getrennt (z. B. Channels auf mehreren Servern). */
 const singleId = () => zod_1.z.string().regex(/^\d{15,25}$/).optional();
 const idList = () => zod_1.z.string().regex(/^\d{15,25}(\s*,\s*\d{15,25})*$/).optional();
@@ -34,13 +34,15 @@ exports.SETTING_SCHEMAS = {
     'dashboard.defaultLayout': zod_1.z.array(zod_1.z.object({ widget: zod_1.z.string().max(40), visible: zod_1.z.boolean(), order: zod_1.z.number().int() })).max(50),
     'studio.customFields': custom_fields_1.customFieldsConfig,
     'theme.accent': zod_1.z.enum(studio_service_1.ACCENTS),
-    'discord.channels': zod_1.z.object({ guildId: idList(), dispatch: idList(), wanted: idList(), announcements: idList(), applications: idList(), danger: idList(), sek: idList(), qualifications: idList(), duty: idList(), teamlist: singleId(), tickets: singleId(), staffRole: singleId(), radioRole: singleId(), sekRole: singleId(), dutyRole: singleId(), breakRole: singleId(), trainingRole: singleId(), adminDutyRole: singleId() }),
+    'discord.channels': zod_1.z.object({ guildId: idList(), dispatch: idList(), wanted: idList(), announcements: idList(), applications: idList(), danger: idList(), sek: idList(), qualifications: idList(), duty: idList(), teamlist: singleId(), tickets: singleId(), staffRole: singleId(), radioRole: singleId(), sekRole: singleId(), dutyRole: idList(), breakRole: idList(), trainingRole: idList(), adminDutyRole: idList() }),
     'team.rankOrder': zod_1.z.array(zod_1.z.string().trim().min(1).max(64)).max(50),
-    'application.form': zod_1.z.array(formField).min(1).max(50),
+    'application.form': qualifications_config_1.formSchema,
     /** „Mit Discord anmelden“: neue Konten erlauben, nur Mitglieder des Discord-Servers, Discord-Rolle → Systemrolle. */
     'auth.discord': zod_1.z.object({
         signup: zod_1.z.boolean(), requireGuild: zod_1.z.boolean(),
         roleMap: zod_1.z.array(zod_1.z.object({ discordRoleId: zod_1.z.string().regex(/^\d{15,25}$/), role: zod_1.z.string().trim().min(1).max(64) })).max(50),
+        /** Team-Rolle(n): nur wer eine davon auf dem Discord-Server hat, kommt ins MDT/Dashboard (leer = alle Mitglieder). */
+        teamRoleIds: zod_1.z.array(zod_1.z.string().regex(/^\d{15,25}$/, 'Discord role ID (15–25 digits)')).max(20).default([]),
     }),
 };
 let AdminService = class AdminService {

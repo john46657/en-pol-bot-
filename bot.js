@@ -18743,12 +18743,12 @@ var require_eventsource_stream = __commonJS({
       }
       return true;
     }
-    function isFieldName(line, length, field) {
-      if (length !== field.length) {
+    function isFieldName(line, length, field2) {
+      if (length !== field2.length) {
         return false;
       }
       for (let i = 0; i < length; i++) {
-        if (line[i] !== field[i]) {
+        if (line[i] !== field2[i]) {
           return false;
         }
       }
@@ -47940,7 +47940,7 @@ var require_Embed = __commonJS({
         if (other instanceof _Embed) {
           return isEqual(this.data, other.data);
         }
-        return this.author?.iconURL === other.author?.icon_url && this.author?.name === other.author?.name && this.author?.url === other.author?.url && this.color === (other.color ?? null) && this.description === (other.description ?? null) && this.footer?.iconURL === other.footer?.icon_url && this.footer?.text === other.footer?.text && this.image?.url === other.image?.url && this.thumbnail?.url === other.thumbnail?.url && (this.timestamp && Date.parse(this.timestamp)) === (other.timestamp ? Date.parse(other.timestamp) : null) && this.title === (other.title ?? null) && this.url === (other.url ?? null) && this.video?.url === other.video?.url && isEqual(this.fields, other.fields?.map((field) => ({ ...field, inline: field.inline ?? false })) ?? []) && isEqual(this.provider, other.provider ?? null);
+        return this.author?.iconURL === other.author?.icon_url && this.author?.name === other.author?.name && this.author?.url === other.author?.url && this.color === (other.color ?? null) && this.description === (other.description ?? null) && this.footer?.iconURL === other.footer?.icon_url && this.footer?.text === other.footer?.text && this.image?.url === other.image?.url && this.thumbnail?.url === other.thumbnail?.url && (this.timestamp && Date.parse(this.timestamp)) === (other.timestamp ? Date.parse(other.timestamp) : null) && this.title === (other.title ?? null) && this.url === (other.url ?? null) && this.video?.url === other.video?.url && isEqual(this.fields, other.fields?.map((field2) => ({ ...field2, inline: field2.inline ?? false })) ?? []) && isEqual(this.provider, other.provider ?? null);
       }
     };
     module2.exports = Embed;
@@ -59212,12 +59212,12 @@ var require_ModalSubmitFields = __commonJS({
        * @returns {ModalData}
        */
       getField(customId, type) {
-        const field = this.fields.get(customId);
-        if (!field) throw new DiscordjsTypeError2(ErrorCodes2.ModalSubmitInteractionFieldNotFound, customId);
-        if (type !== void 0 && type !== field.type) {
-          throw new DiscordjsTypeError2(ErrorCodes2.ModalSubmitInteractionFieldType, customId, field.type, type);
+        const field2 = this.fields.get(customId);
+        if (!field2) throw new DiscordjsTypeError2(ErrorCodes2.ModalSubmitInteractionFieldNotFound, customId);
+        if (type !== void 0 && type !== field2.type) {
+          throw new DiscordjsTypeError2(ErrorCodes2.ModalSubmitInteractionFieldType, customId, field2.type, type);
         }
-        return field;
+        return field2;
       }
       /**
        * Gets a component by custom id and property and checks its type.
@@ -76133,7 +76133,8 @@ function applicationEmbeds(p, kind) {
 ${max !== void 0 && a.length > max ? `${a.slice(0, max)}\u2026 *(gek\xFCrzt)*` : a}`;
   };
   let sections = qa.map((q2, i) => section(q2, i));
-  const title = clip(kind === "p" ? `\u{1F4CB} Bewerbung bei EN Polizei \u2013 ${p.number}` : `\u{1F4CB} ${plain(p.unitName)} \u2013 Bewerbung ${p.number}`, 256);
+  const who = p.discordName ? `${plain(p.discordName)}s ` : "";
+  const title = clip(kind === "p" ? `\u{1F4CB} ${who}Bewerbung bei EN Polizei eingereicht \xB7 ${p.number}` : `\u{1F4CB} ${who}Bewerbung \u201E${plain(p.unitName)}\u201C eingereicht \xB7 ${p.number}`, 256);
   const room = BUDGET - stats.length - (title.length + 20) * 3;
   const size = (xs) => xs.reduce((n, x) => n + x.length + 2, 0);
   if (size(sections) > room) {
@@ -76351,6 +76352,90 @@ var SEK_INTERACTION = {
   }
 };
 
+// packages/shared/dist/index.mjs
+var PERMISSION_CATALOG = {
+  dashboard: ["view", "customize"],
+  team: ["view", "manage"],
+  dispatch: ["view", "create", "edit", "assign", "close", "manage"],
+  incidents: ["view", "create", "edit", "close", "delete"],
+  persons: ["view", "create", "edit", "archive", "merge"],
+  vehicles: ["view", "create", "edit", "archive"],
+  reports: ["view", "create", "edit", "submit", "review", "approve", "reject", "archive"],
+  tickets: ["view", "create", "edit", "void"],
+  complaints: ["view", "create", "assign", "investigate", "resolve", "close"],
+  investigations: ["view", "create", "edit", "close"],
+  wanted: ["view", "create", "edit", "activate", "clear"],
+  evidence: ["view", "create", "transfer", "release"],
+  personnel: ["view", "create", "edit", "promote", "discipline"],
+  applications: ["view", "review", "decide"],
+  academy: ["view", "manage"],
+  sek: ["view", "report", "manage"],
+  qualifications: ["view", "decide", "manage"],
+  ticket: ["view", "create", "claim", "close", "reopen", "delete", "add_user", "remove_user", "change_status", "change_priority", "change_category", "rename", "move", "lock", "escalate", "transcript", "transcript_delete", "internal_notes", "rate", "manage", "settings"],
+  communication: ["view", "send", "moderate"],
+  analytics: ["view"],
+  audit: ["view", "export"],
+  studio: ["view", "manage"],
+  settings: ["view", "manage"],
+  users: ["view", "manage"],
+  roles: ["view", "manage"]
+};
+var ALL_PERMISSIONS = Object.entries(PERMISSION_CATALOG).flatMap(
+  ([module2, actions]) => actions.map((a) => `${module2}.${a}`)
+);
+var PERMISSION_SET = new Set(ALL_PERMISSIONS);
+var TICKET_ACTIONS = {
+  close: { label: "Schlie\xDFen", emoji: "\u{1F512}", style: "danger", state: "open", permission: "ticket.close" },
+  reopen: { label: "Wieder \xF6ffnen", emoji: "\u{1F513}", style: "success", state: "closed", permission: "ticket.reopen" },
+  claim: { label: "\xDCbernehmen", emoji: "\u{1F464}", style: "primary", state: "open", permission: "ticket.claim" },
+  unclaim: { label: "Freigeben", emoji: "\u21A9\uFE0F", style: "secondary", state: "open", permission: "ticket.claim" },
+  add_user: { label: "Hinzuf\xFCgen", emoji: "\u2795", style: "secondary", state: "open", permission: "ticket.add_user" },
+  remove_user: { label: "Entfernen", emoji: "\u2796", style: "secondary", state: "open", permission: "ticket.remove_user" },
+  priority: { label: "Priorit\xE4t", emoji: "\u{1F514}", style: "secondary", state: "open", permission: "ticket.change_priority" },
+  status: { label: "Status", emoji: "\u{1F3F7}\uFE0F", style: "secondary", state: "open", permission: "ticket.change_status" },
+  category: { label: "Kategorie", emoji: "\u{1F5C2}\uFE0F", style: "secondary", state: "open", permission: "ticket.change_category" },
+  rename: { label: "Umbenennen", emoji: "\u270F\uFE0F", style: "secondary", state: "open", permission: "ticket.rename" },
+  move: { label: "Verschieben", emoji: "\u{1F4C1}", style: "secondary", state: "both", permission: "ticket.move" },
+  transcript: { label: "Transcript", emoji: "\u{1F4CB}", style: "secondary", state: "both", permission: "ticket.transcript" },
+  lock: { label: "Sperren", emoji: "\u26D4", style: "secondary", state: "open", permission: "ticket.lock" },
+  unlock: { label: "Entsperren", emoji: "\u2705", style: "secondary", state: "open", permission: "ticket.lock" },
+  escalate: { label: "Eskalieren", emoji: "\u{1F7E0}", style: "danger", state: "open", permission: "ticket.escalate" },
+  note: { label: "Notiz", emoji: "\u{1F5D2}\uFE0F", style: "secondary", state: "both", permission: "ticket.internal_notes" },
+  rating: { label: "Bewertung", emoji: "\u2B50", style: "secondary", state: "closed", permission: "ticket.rate" },
+  delete: { label: "L\xF6schen", emoji: "\u{1F5D1}\uFE0F", style: "danger", state: "closed", permission: "ticket.delete" }
+};
+var TICKET_ACTION_KEYS = Object.keys(TICKET_ACTIONS);
+var MAX_FORM_OPTIONS = 25;
+function normalizeField(f) {
+  const type = f.type ?? "TEXT";
+  return {
+    key: f.key,
+    label: f.label,
+    required: f.required,
+    type,
+    minLength: type === "TEXT" ? Math.max(0, f.minLength ?? 0) : 0,
+    maxLength: f.maxLength,
+    options: type === "TEXT" ? [] : (f.options ?? []).slice(0, MAX_FORM_OPTIONS),
+    multiple: type !== "TEXT" && !!f.multiple
+  };
+}
+function checkAnswer(field2, value) {
+  const f = normalizeField(field2);
+  if (f.type === "TEXT") {
+    const v = (Array.isArray(value) ? value.join("\n") : value ?? "").trim();
+    if (!v) return f.required ? { ok: false, error: `\u201E${f.label}\u201C ist eine Pflichtfrage.` } : { ok: true, text: "", roleIds: [] };
+    if (v.length < f.minLength) return { ok: false, error: `Die Antwort auf \u201E${f.label}\u201C ist zu kurz (mindestens ${f.minLength} Zeichen).` };
+    if (v.length > f.maxLength) return { ok: false, error: `Die Antwort auf \u201E${f.label}\u201C ist zu lang (h\xF6chstens ${f.maxLength} Zeichen).` };
+    return { ok: true, text: v, roleIds: [] };
+  }
+  const picked = [...new Set((Array.isArray(value) ? value : value ? [value] : []).map((x) => x.trim()).filter(Boolean))];
+  if (!picked.length) return f.required ? { ok: false, error: `Bitte bei \u201E${f.label}\u201C etwas ausw\xE4hlen.` } : { ok: true, text: "", roleIds: [] };
+  if (!f.multiple && picked.length > 1) return { ok: false, error: `Bei \u201E${f.label}\u201C ist nur eine Auswahl erlaubt.` };
+  const opts = picked.map((p) => f.options.find((o) => o.label === p));
+  if (opts.some((o) => !o)) return { ok: false, error: `Ung\xFCltige Auswahl bei \u201E${f.label}\u201C.` };
+  return { ok: true, text: picked.join(", "), roleIds: f.type === "ROLE" ? opts.map((o) => o.roleId).filter((r) => !!r && /^\d{15,25}$/.test(r)) : [] };
+}
+
 // apps/bot/src/commands/qualifications.ts
 var POLICE = "@polizei";
 var POLICE_NAME = "Bewerbung \u2013 EN Polizei";
@@ -76364,24 +76449,39 @@ var sweepSessions = (now = Date.now()) => {
 };
 var CANCEL = { id: "quali:cancel", label: "Bewerbung abbrechen", style: "danger" };
 var getConfig = (api2) => api2.service("GET", "/bot/qualifications");
-var questionEmbed = (s) => {
-  const q2 = s.questions[s.answers.length];
-  return {
-    title: clip(s.unitName, 256),
-    color: COLORS.info,
-    description: clip(`**${s.answers.length + 1}/${s.questions.length}.** ${plain(q2.text)}
+var field = (f) => {
+  const n = normalizeField(f);
+  return { ...n, maxLength: Math.min(n.maxLength, 2e3) };
+};
+var asField = (q2, i) => typeof q2 === "string" ? { key: `q${i + 1}`, label: q2, required: true, maxLength: MAX_ANSWER } : q2;
+var questionMessage = (s) => {
+  const i = s.answers.length;
+  const q2 = s.questions[i];
+  const f = q2.field;
+  const head = `**${i + 1}/${s.questions.length}.** ${plain(q2.text)}`;
+  if (f.type === "TEXT") {
+    const hints = [f.minLength ? `mindestens ${f.minLength} Zeichen` : "", !f.required ? `optional \u2013 schreibe \u201E${SKIP}\u201C, um zu \xFCberspringen` : ""].filter(Boolean).join(" \xB7 ");
+    return { embed: { title: clip(s.unitName, 256), color: COLORS.info, description: clip(`${head}
 
-_Antworte einfach mit einer Nachricht hier im Chat.${q2.optional ? ` Optional \u2013 schreibe \u201E${SKIP}\u201C, um die Frage zu \xFCberspringen.` : ""}_`, 4e3)
+_Antworte einfach mit einer Nachricht hier im Chat.${hints ? ` (${hints})` : ""}_`, 4e3) }, buttons: [CANCEL] };
+  }
+  return {
+    embed: { title: clip(s.unitName, 256), color: COLORS.info, description: clip(`${head}
+
+_W\xE4hle unten ${f.multiple ? "eine oder mehrere Optionen" : "eine Option"} aus.${f.required ? "" : " Optional."}_`, 4e3) },
+    select: { id: `quali:ans:${i}`, placeholder: f.multiple ? "Optionen w\xE4hlen \u2026" : "Option w\xE4hlen \u2026", min: 1, max: f.multiple ? f.options.length : 1, options: f.options.map((o, j) => ({ label: clip(o.label, 100), value: String(j) })) },
+    buttons: [...f.required ? [] : [{ id: `quali:skip:${i}`, label: "\xDCberspringen", style: "secondary" }], CANCEL]
   };
 };
+var answerText = (a) => a === null ? "\u2014 (\xFCbersprungen)" : Array.isArray(a) ? a.join(", ") : a;
 async function loadFlow(api2, key) {
   if (!key) return null;
   if (key === POLICE) {
     const form = await api2.service("GET", "/applications/form");
-    return { key, name: POLICE_NAME, questions: [{ text: "Wie ist dein Roblox-Benutzername?", key: "roblox", max: 20 }, ...form.map((f) => ({ text: f.label, key: f.key, optional: !f.required, max: Math.min(f.maxLength, 2e3) }))] };
+    return { key, name: POLICE_NAME, questions: [{ text: "Wie ist dein Roblox-Benutzername?", key: "roblox", field: field({ key: "roblox", label: "Roblox", required: true, maxLength: 20 }) }, ...form.map((f) => ({ text: f.label, key: f.key, field: field(f) }))] };
   }
   const unit = (await getConfig(api2)).units.find((u) => u.key === key);
-  return unit ? { key: unit.key, name: unit.name, questions: unit.questions.map((text) => ({ text, max: MAX_ANSWER })) } : null;
+  return unit ? { key: unit.key, name: unit.name, questions: unit.questions.map(asField).map((f) => ({ text: f.label, key: f.key, field: field(f) })) } : null;
 }
 async function openApplication(api2, key, discordId) {
   return key === POLICE ? api2.service("GET", `/bot/application/open?discordId=${discordId}`) : api2.service("GET", `/bot/qualifications/open?discordId=${discordId}&unit=${encodeURIComponent(key)}`);
@@ -76389,15 +76489,15 @@ async function openApplication(api2, key, discordId) {
 async function submitSession(api2, s, userId, userName, robloxLookup2, now = Date.now()) {
   const meta = { durationSec: Math.max(0, Math.round((now - s.startedAt) / 1e3)), ...s.joinedAt ? { joinedAt: s.joinedAt } : {} };
   if (s.unit === POLICE) {
-    const roblox = s.answers[0].trim();
+    const roblox = String(s.answers[0] ?? "").trim();
     const rb = await robloxLookup2?.(roblox).catch(() => null);
     const answers = Object.fromEntries(s.questions.slice(1).flatMap((q2, i) => {
       const a = s.answers[i + 1];
-      return q2.optional && a === SKIP ? [] : [[q2.key, a]];
+      return a === null || a === void 0 ? [] : [[q2.key, a]];
     }));
     return (await api2.service("POST", "/bot/application", { robloxUsername: rb?.name ?? roblox, ...rb ? { robloxUserId: String(rb.id) } : {}, discordId: userId, discordName: userName, answers, ...meta })).number;
   }
-  return (await api2.service("POST", "/bot/qualifications/applications", { unit: s.unit, discordId: userId, discordName: userName, answers: s.questions.map((q2, i) => ({ question: q2.text, answer: s.answers[i] })), ...meta })).number;
+  return (await api2.service("POST", "/bot/qualifications/applications", { unit: s.unit, discordId: userId, discordName: userName, answers: s.questions.map((q2, i) => ({ question: q2.text, answer: s.answers[i] ?? null })), ...meta })).number;
 }
 var POLICE_PANEL = { title: "\u{1F4CB} Bewerbung bei EN Polizei", color: COLORS.info, description: "Du m\xF6chtest Teil der **EN Polizei** werden? Klicke auf **Jetzt bewerben** \u2013 der Bot stellt dir die Fragen nacheinander per **Direktnachricht**.\n\nDu brauchst deinen **Roblox-Namen** und etwa 10 Minuten Zeit. Die Entscheidung bekommst du ebenfalls per Direktnachricht." };
 async function offer(c, key) {
@@ -76488,33 +76588,51 @@ async function handleDirectMessage(a) {
     await say("\u23F0 Die Zeit f\xFCr deine Bewerbung ist abgelaufen (3 Stunden). Bitte starte sie \xFCber das Panel neu.", COLORS.warning);
     return;
   }
+  const q2 = s.questions[s.answers.length];
+  if (q2.field.type !== "TEXT") {
+    await say("Bitte w\xE4hle die Antwort im **Men\xFC** der letzten Frage aus.", COLORS.warning);
+    await a.sendDm(a.userId, questionMessage(s));
+    return;
+  }
   const text = a.content.trim();
   if (!text) {
     await say("Bitte antworte mit Text.", COLORS.warning, [CANCEL]);
     return;
   }
-  const max = s.questions[s.answers.length].max;
-  if (text.length > max) {
-    await say(`Deine Antwort ist zu lang (${text.length} Zeichen, h\xF6chstens ${max}). Bitte k\xFCrzer fassen.`, COLORS.warning, [CANCEL]);
-    return;
+  if (!q2.field.required && text === SKIP) s.answers.push(null);
+  else {
+    const r = checkAnswer(q2.field, text);
+    if (!r.ok) {
+      await say(r.error, COLORS.warning, [CANCEL]);
+      return;
+    }
+    s.answers.push(text);
   }
-  s.answers.push(text);
+  await proceed({ api: a.api, userId: a.userId, userName: a.userName, sendDm: a.sendDm, robloxLookup: a.robloxLookup, now }, s);
+}
+async function proceed(o, s) {
+  const say = (description, color = COLORS.info, buttons) => o.sendDm(o.userId, { embed: { title: clip(s.unitName, 256), description, color }, buttons });
   if (s.answers.length < s.questions.length) {
-    await a.sendDm(a.userId, { embed: questionEmbed(s), buttons: [CANCEL] });
+    await o.sendDm(o.userId, questionMessage(s));
     return;
   }
   try {
-    const number = await submitSession(a.api, s, a.userId, a.userName, a.robloxLookup, now);
-    sessions.delete(a.userId);
+    const number = await submitSession(o.api, s, o.userId, o.userName, o.robloxLookup, o.now);
+    sessions.delete(o.userId);
     await say(`\u2705 Deine Bewerbung **${number}** ist eingegangen! Das Team pr\xFCft sie \u2013 die Entscheidung bekommst du hier per Direktnachricht.`, COLORS.success);
   } catch (e) {
     if (e instanceof BotApiError && (e.status === 409 || e.status === 400 || e.status === 404)) {
-      sessions.delete(a.userId);
+      sessions.delete(o.userId);
       await say(e.status === 409 ? "Du hast hierf\xFCr bereits eine offene Bewerbung. Bitte warte auf die Entscheidung." : "Die Fragen wurden inzwischen ge\xE4ndert. Bitte starte die Bewerbung neu.", COLORS.warning);
       return;
     }
+    const last = s.questions[s.answers.length - 1];
     s.answers.pop();
-    await say("\u26A0\uFE0F Deine Bewerbung konnte gerade nicht gespeichert werden (System nicht erreichbar). Schicke deine **letzte Antwort** gleich noch einmal, um es erneut zu versuchen.", COLORS.warning, [CANCEL]);
+    if (last.field.type === "TEXT") await say("\u26A0\uFE0F Deine Bewerbung konnte gerade nicht gespeichert werden (System nicht erreichbar). Schicke deine **letzte Antwort** gleich noch einmal, um es erneut zu versuchen.", COLORS.warning, [CANCEL]);
+    else {
+      await say("\u26A0\uFE0F Deine Bewerbung konnte gerade nicht gespeichert werden (System nicht erreichbar). W\xE4hle deine letzte Antwort gleich noch einmal aus.", COLORS.warning);
+      await o.sendDm(o.userId, questionMessage(s));
+    }
   }
 }
 var STATUS = /* @__PURE__ */ new Set(["ACCEPTED", "REJECTED"]);
@@ -76581,6 +76699,29 @@ ${lines.join("\n") || "Keine Bewerbungen."}`, 4e3) }] };
         await c.platform.postPanel({ channelId: t.channelId, embed: { title: `\u{1F3AB} Ticket zur Bewerbung ${a.number}`, color: COLORS.info, description: `<@${a.discordId}>, das Team hat eine R\xFCckfrage zu deiner Bewerbung **${a.number}**${a.unitName ? ` (${plain(a.unitName)})` : ""}. Bitte antworte hier.` }, buttons: [{ id: "support:close", label: "Ticket schlie\xDFen", emoji: "\u{1F512}", style: "danger" }] }).catch(() => void 0);
         return okReply(`Ticket ge\xF6ffnet: <#${t.channelId}>`);
       }
+      if (action === "ans" || action === "skip") {
+        const s2 = sessions.get(c.discordId);
+        if (!s2 || s2.expiresAt <= Date.now()) return errorReply("Du hast gerade keine laufende Bewerbung. Starte sie \xFCber das Panel neu.");
+        const i = Number(rest[0]);
+        if (i !== s2.answers.length) return errorReply("Diese Frage hast du schon beantwortet.");
+        const q2 = s2.questions[i];
+        let value = null;
+        if (action === "skip") {
+          if (q2.field.required) return errorReply("Diese Frage ist eine Pflichtfrage.");
+        } else {
+          const labels = (c.values ?? []).map((v) => q2.field.options[Number(v)]?.label).filter((x) => !!x);
+          const r = checkAnswer(q2.field, labels);
+          if (!r.ok) return errorReply(r.error);
+          value = labels;
+        }
+        if (!c.platform) return errorReply("Direktnachrichten sind hier nicht verf\xFCgbar.");
+        s2.answers.push(value);
+        const platform2 = c.platform;
+        await proceed({ api: c.api, userId: c.discordId, userName: c.userName ?? c.discordId, sendDm: (u, m) => platform2.sendDm(u, m), robloxLookup: c.robloxLookup, now: Date.now() }, s2);
+        return { ...okReply("Gespeichert."), update: { embeds: [{ title: clip(s2.unitName, 256), color: COLORS.success, description: clip(`**${i + 1}/${s2.questions.length}.** ${plain(q2.text)}
+
+\u2705 ${plain(answerText(value))}`, 4e3) }] } };
+      }
       if (action === "cancel") {
         const had = sessions.delete(c.discordId);
         return okReply(had ? "Bewerbung abgebrochen. Du kannst jederzeit \xFCber das Panel neu starten." : "Es l\xE4uft keine Bewerbung.");
@@ -76604,7 +76745,7 @@ ${lines.join("\n") || "Keine Bewerbungen."}`, 4e3) }] };
       const s = { unit: flow.key, unitName: flow.name, questions: flow.questions, answers: [], startedAt: Date.now(), expiresAt: Date.now() + APPLICATION_MS, joinedAt: joinedAtOf.get(c.discordId) };
       sessions.set(c.discordId, s);
       try {
-        await c.platform.sendDm(c.discordId, { embed: questionEmbed(s), buttons: [CANCEL] });
+        await c.platform.sendDm(c.discordId, questionMessage(s));
       } catch {
         sessions.delete(c.discordId);
         return errorReply("Ich kann dir keine Direktnachricht schicken. Bitte erlaube Direktnachrichten und versuche es erneut.");
@@ -81632,10 +81773,11 @@ function createLive(api2, platform2, log = console.log) {
 
 // apps/bot/src/outbox.ts
 function dutyRoleChanges(status, cfg2) {
-  const map = { ON_DUTY: cfg2.dutyRole, BREAK: cfg2.breakRole, TRAINING: cfg2.trainingRole, ADMINISTRATIVE: cfg2.adminDutyRole };
-  const target = map[status];
-  const all = [...new Set(Object.values(map).filter((r) => !!r && /^\d{15,25}$/.test(r)))];
-  return { add: target && all.includes(target) ? [target] : [], remove: all.filter((r) => r !== target) };
+  const ids = (v) => (v ?? "").split(/[\s,;]+/).filter((r) => /^\d{15,25}$/.test(r));
+  const map = { ON_DUTY: ids(cfg2.dutyRole), BREAK: ids(cfg2.breakRole), TRAINING: ids(cfg2.trainingRole), ADMINISTRATIVE: ids(cfg2.adminDutyRole) };
+  const add = map[status] ?? [];
+  const all = [...new Set(Object.values(map).flat())];
+  return { add: [...new Set(add)], remove: all.filter((r) => !add.includes(r)) };
 }
 var DIRECT = { "application.decided": applicationDecisionText, "qualification.decided": qualificationDecisionText };
 async function pollOnce(api2, send, log = console.log, dm, grantRole, syncRoles, onDutyChanged, ticketEffects) {
@@ -81647,9 +81789,9 @@ async function pollOnce(api2, send, log = console.log, dm, grantRole, syncRoles,
       try {
         const userId = String(item.payload.discordId ?? "");
         if (!/^\d{15,25}$/.test(userId)) throw new Error("no Discord user id");
-        const roleId = String(item.payload.roleId ?? "");
-        if (item.payload.status === "ACCEPTED" && /^\d{15,25}$/.test(roleId) && grantRole) {
-          await grantRole(userId, roleId).catch((e) => log(`outbox ${item.id}: role ${roleId} could not be given: ${e instanceof Error ? e.message : e}`));
+        const roleIds = [...new Set([item.payload.roleId, ...Array.isArray(item.payload.roleIds) ? item.payload.roleIds : []].map((r) => String(r ?? "")).filter((r) => /^\d{15,25}$/.test(r)))];
+        if (item.payload.status === "ACCEPTED" && grantRole) {
+          for (const roleId of roleIds) await grantRole(userId, roleId).catch((e) => log(`outbox ${item.id}: role ${roleId} could not be given: ${e instanceof Error ? e.message : e}`));
         }
         if (!dm) throw new Error("direct messages not available");
         await dm(userId, direct(item.payload));
@@ -81698,7 +81840,10 @@ async function pollOnce(api2, send, log = console.log, dm, grantRole, syncRoles,
       if (!channelIds.length) throw new Error(`channel "${item.channelKey}" not configured`);
       if (!embeds) throw new Error(`unknown type "${item.type}"`);
       const buttons = outboxButtons(item.type, item.payload);
-      const results = await Promise.allSettled(channelIds.map((id) => send(id, embeds, buttons)));
+      const pingRoleIds = Array.isArray(item.payload.pingRoleIds) ? item.payload.pingRoleIds.map(String).filter((r) => /^\d{15,25}$/.test(r)) : [];
+      const avatarUserId = (item.type === "qualification.submitted" || item.type === "application.submitted") && typeof item.payload.discordId === "string" && /^\d{15,25}$/.test(item.payload.discordId) ? item.payload.discordId : void 0;
+      const opts = pingRoleIds.length || avatarUserId ? { ...pingRoleIds.length ? { pingRoleIds } : {}, ...avatarUserId ? { avatarUserId } : {} } : void 0;
+      const results = await Promise.allSettled(channelIds.map((id) => opts ? send(id, embeds, buttons, opts) : send(id, embeds, buttons)));
       const failed = results.flatMap((r, i) => r.status === "rejected" ? [`${channelIds[i]}: ${r.reason instanceof Error ? r.reason.message : r.reason}`] : []);
       failed.forEach((f) => log(`outbox ${item.id}: send failed for channel ${f}`));
       if (failed.length === channelIds.length) throw new Error(failed[0]);
@@ -81774,6 +81919,7 @@ var toEmbed = (e) => {
   if (e.color !== void 0) b.setColor(e.color);
   if (e.fields?.length) b.addFields(e.fields.map((f) => ({ name: f.name, value: f.value, inline: f.inline ?? false })));
   if (e.footer) b.setFooter({ text: e.footer });
+  if (e.thumbnail && /^https:\/\//.test(e.thumbnail)) b.setThumbnail(e.thumbnail);
   return b;
 };
 var STYLE2 = { primary: import_discord2.ButtonStyle.Primary, secondary: import_discord2.ButtonStyle.Secondary, success: import_discord2.ButtonStyle.Success, danger: import_discord2.ButtonStyle.Danger };
@@ -81833,8 +81979,8 @@ var platform = {
   async sendDirectMessage(userId, text) {
     await (await client.users.fetch(userId)).send({ content: text, allowedMentions: { parse: [] } });
   },
-  async sendDm(userId, { embed, buttons }) {
-    const m = await (await client.users.fetch(userId)).send({ embeds: [toEmbed(embed)], components: toRows(buttons), allowedMentions: { parse: [] } });
+  async sendDm(userId, { embed, buttons, select }) {
+    const m = await (await client.users.fetch(userId)).send({ embeds: [toEmbed(embed)], components: toComponents(buttons, select), allowedMentions: { parse: [] } });
     return { channelId: m.channelId, messageId: m.id };
   },
   async postOrEdit({ channelId, messageId, embed, buttons }) {
@@ -82059,10 +82205,13 @@ function wireReady(client0) {
     }
     startOutboxLoop(
       api,
-      async (channelId, embeds, buttons) => {
+      async (channelId, embeds, buttons, opts) => {
         const ch = await client.channels.fetch(channelId);
         if (!ch?.isSendable()) throw new Error(`channel ${channelId} is not a text channel the bot can post in`);
-        await ch.send({ embeds: embeds.map(toEmbed), components: toRows(buttons), allowedMentions: { parse: [] } });
+        const avatar = opts?.avatarUserId ? await client.users.fetch(opts.avatarUserId).then((u) => u.displayAvatarURL({ size: 256 }), () => void 0) : void 0;
+        const list = avatar && embeds[0] ? [{ ...embeds[0], thumbnail: avatar }, ...embeds.slice(1)] : embeds;
+        const roles = opts?.pingRoleIds ?? [];
+        await ch.send({ ...roles.length ? { content: roles.map((r) => `<@&${r}>`).join(" ") } : {}, embeds: list.map(toEmbed), components: toRows(buttons), allowedMentions: { parse: [], roles } });
       },
       cfg.OUTBOX_POLL_SECONDS,
       console.log,

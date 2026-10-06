@@ -21,7 +21,7 @@ const API = 'https://discord.com/api/v10';
 const STATE_TTL_MS = 10 * 60_000;
 /** Kein gültiger Passwort-Hash → mit Passwort nicht anmeldbar (nur Discord). */
 exports.DISCORD_ONLY_PASSWORD = '!discord-login-only';
-exports.DEFAULT_DISCORD_LOGIN = { signup: true, requireGuild: true, roleMap: [] };
+exports.DEFAULT_DISCORD_LOGIN = { signup: true, requireGuild: true, roleMap: [], teamRoleIds: [] };
 class DiscordLoginFailure extends Error {
     code;
     constructor(code) {
@@ -105,6 +105,15 @@ let DiscordOAuthService = class DiscordOAuthService {
             throw new DiscordLoginFailure('cannot_verify');
         if (!owner && settings.requireGuild && member === null)
             throw new DiscordLoginFailure('not_member');
+        // Team-Rolle Pflicht: ohne eine der eingestellten Discord-Rollen kein Zugang (Besitzer aus ADMIN_DISCORD_IDS ausgenommen)
+        if (!owner && settings.teamRoleIds.length) {
+            if (member === 'unknown')
+                throw new DiscordLoginFailure('cannot_verify');
+            if (member === null)
+                throw new DiscordLoginFailure('not_member');
+            if (!member.roles.some((r) => settings.teamRoleIds.includes(r)))
+                throw new DiscordLoginFailure('no_team_role');
+        }
         if (user && !user.active)
             throw new DiscordLoginFailure('inactive');
         if (!user) {

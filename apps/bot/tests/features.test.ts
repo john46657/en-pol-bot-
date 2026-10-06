@@ -260,7 +260,7 @@ describe('Qualifikationen (Panel → Fragen per DM)', () => {
     { key: 'flugstaffel', name: 'Flugstaffel', description: 'Aus der Luft!', questions: ['Roblox- und Discord-Name?', 'Warum?'] },
     { key: 'sek', name: 'SEK', description: 'Zugriff!', questions: ['Q1', 'Q2', 'Q3'] }] };
   beforeEach(() => resetSessions());
-  const dmLog = () => { const out: { embed: { title: string; description?: string }; buttons?: { id: string }[] }[] = []; return { out, sendDm: async (_u: string, m: (typeof out)[number]) => { out.push(m); } }; };
+  const dmLog = () => { const out: { embed: { title: string; description?: string }; buttons?: { id: string }[]; select?: { id: string; max?: number; options: { label: string; value: string }[] } }[] = []; return { out, sendDm: async (_u: string, m: (typeof out)[number]) => { out.push(m); } }; };
 
   it('/qualipanel posts embed + select menu (admins only)', async () => {
     const { api } = fakeApi({ 'GET /bot/qualifications': CFG });
@@ -307,6 +307,61 @@ describe('Qualifikationen (Panel → Fragen per DM)', () => {
     expect(d.out[4]!.embed.description).toContain('keine laufende Bewerbung');
   });
 
+  it('question types like Appy: text with min length, choice and role select via menu in the DM (optional = skip)', async () => {
+    const cfg = { title: 'Q', intro: '', units: [{ key: 'flug', name: 'Flugstaffel', description: '', questions: [
+      { key: 'warum', label: 'Warum?', required: true, type: 'TEXT', minLength: 10, maxLength: 200 },
+      { key: 'exp', label: 'Flugerfahrung?', required: true, type: 'CHOICE', options: [{ label: 'Ja' }, { label: 'Nein' }] },
+      { key: 'rollen', label: 'Bereiche?', required: false, type: 'ROLE', multiple: true, options: [{ label: 'Hubschrauber', roleId: '510000000000000001' }, { label: 'Flugzeug', roleId: '510000000000000002' }] },
+    ] }] };
+    const { api, calls } = fakeApi({ 'GET /bot/qualifications/open': { open: false }, 'GET /bot/qualifications': cfg, 'POST /bot/qualifications/applications': { number: 'Q-9' } });
+    const dms: { embed: { description?: string }; buttons?: { id: string }[]; select?: { id: string; max?: number; options: { label: string; value: string }[] } }[] = [];
+    const p = { ...fakePlatform().p, async sendDm(_u: string, m: (typeof dms)[number]) { dms.push(m); return { channelId: 'DM', messageId: 'M' }; } } as never;
+    const start = interactionFor('quali:start:flug')!;
+    await start.def.run({ ...ctx(api, { platform: p }), args: start.args });
+    const d = dmLog();
+    await handleDirectMessage({ userId: ME, userName: 'o', content: 'zu kurz', api, sendDm: d.sendDm });
+    expect(d.out[0]!.embed.description).toContain('zu kurz (mindestens 10 Zeichen)');
+    await handleDirectMessage({ userId: ME, userName: 'o', content: 'Weil ich gern fliege', api, sendDm: d.sendDm });
+    // Auswahl-Frage: Menü statt Text
+    const choice = d.out[1]!;
+    expect(choice.select).toMatchObject({ id: 'quali:ans:1', max: 1, options: [{ label: 'Ja', value: '0' }, { label: 'Nein', value: '1' }] });
+    expect(choice.buttons?.map((b) => b.id)).toEqual(['quali:cancel']); // Pflicht: kein Überspringen
+    await handleDirectMessage({ userId: ME, userName: 'o', content: 'Ja', api, sendDm: d.sendDm });
+    expect(d.out[2]!.embed.description).toContain('Menü');
+    const ans = interactionFor('quali:ans:1')!;
+    const r = await ans.def.run({ ...ctx(api, { platform: p }), args: ans.args, values: ['0'] });
+    expect(r.update?.embeds?.[0]?.description).toContain('✅ Ja');
+    // nächste Frage (Rollen, mehrere, optional) kam per DM über die Plattform
+    expect(dms.at(-1)!.select).toMatchObject({ id: 'quali:ans:2', max: 2 });
+    expect(dms.at(-1)!.buttons?.map((b) => b.id)).toEqual(['quali:skip:2', 'quali:cancel']);
+    expect(text(await ans.def.run({ ...ctx(api, { platform: p }), args: ans.args, values: ['1'] }))).toContain('schon beantwortet');
+    const roles = interactionFor('quali:ans:2')!;
+    await roles.def.run({ ...ctx(api, { platform: p }), args: roles.args, values: ['0', '1'] });
+    expect(calls.find((c) => c.path === '/bot/qualifications/applications')!.body).toMatchObject({ unit: 'flug', answers: [{ question: 'Warum?', answer: 'Weil ich gern fliege' }, { question: 'Flugerfahrung?', answer: ['Ja'] }, { question: 'Bereiche?', answer: ['Hubschrauber', 'Flugzeug'] }] });
+    expect(dms.at(-1)!.embed.description).toContain('Q-9');
+    // optionale Frage überspringen
+    resetSessions();
+    calls.length = 0;
+    await start.def.run({ ...ctx(api, { platform: p }), args: start.args });
+    await handleDirectMessage({ userId: ME, userName: 'o', content: 'Weil ich gern fliege', api, sendDm: d.sendDm });
+    await ans.def.run({ ...ctx(api, { platform: p }), args: ans.args, values: ['1'] });
+    const skip = interactionFor('quali:skip:2')!;
+    await skip.def.run({ ...ctx(api, { platform: p }), args: skip.args });
+    expect((calls.find((c) => c.path === '/bot/qualifications/applications')!.body as { answers: { answer: unknown }[] }).answers[2]!.answer).toBeNull();
+  });
+
+  it('outbox: pings the configured roles with the new application and gives all chosen roles on acceptance', async () => {
+    const box = (items: unknown[]) => { const acks: unknown[] = []; const api: Api = { async asUser() { throw new Error('unused'); }, async service(_m, path, body) { if (path === '/bot/config') return { qualifications: '600000000000000001' } as never; if (path.startsWith('/bot/outbox?')) return items as never; acks.push(body); return undefined as never; } }; return { api, acks }; };
+    const sub = box([{ id: 's1', type: 'qualification.submitted', channelKey: 'qualifications', payload: { id: 'x', number: 'Q-1', unitName: 'Flug', discordId: OTHER, pingRoleIds: ['520000000000000001', 'nope'], answers: [{ question: 'Q', answer: 'A' }] } }]);
+    const sent: unknown[] = [];
+    await pollOnce(sub.api, async (ch, embeds, buttons, opts) => { sent.push({ ch, opts }); }, () => undefined);
+    expect(sent).toEqual([{ ch: '600000000000000001', opts: { pingRoleIds: ['520000000000000001'], avatarUserId: OTHER } }]);
+    const dec = box([{ id: 'd1', type: 'qualification.decided', channelKey: 'qualifications', payload: { discordId: OTHER, status: 'ACCEPTED', number: 'Q-1', unitName: 'Flug', roleId: '510000000000000009', roleIds: ['510000000000000001', '510000000000000009'] } }]);
+    const granted: string[] = [];
+    await pollOnce(dec.api, async () => undefined, () => undefined, async () => undefined, async (_u, r) => { granted.push(r); });
+    expect(granted).toEqual(['510000000000000009', '510000000000000001']);
+  });
+
   it('cancel, 3-hour timeout and retry when the system is down', async () => {
     const down = fakeApi({ 'GET /bot/qualifications/open': { open: false }, 'GET /bot/qualifications': CFG, 'POST /bot/qualifications/applications': new BotApiError(0, 'UNREACHABLE', 'down') });
     const { p } = fakePlatform();
@@ -327,7 +382,7 @@ describe('Qualifikationen (Panel → Fragen per DM)', () => {
     const p = { id: 'abc', number: 'Q-1', unitName: 'Flugstaffel', discordId: OTHER, discordName: 'bea', linkedName: null, durationSec: 66, joinedAt: '2025-10-01T10:00:00Z', createdAt: '2026-10-06T10:00:00Z', dashboardUrl: 'https://x.example/qualifications?id=abc', answers: [{ question: 'Warum?', answer: 'Darum' }, { question: 'Erfahrung?', answer: 'Viel' }] };
     const [e, ...more] = renderOutboxEmbeds('qualification.submitted', p)!;
     expect(more).toEqual([]);
-    expect(e!.title).toBe('📋 Flugstaffel – Bewerbung Q-1');
+    expect(e!.title).toBe('📋 beas Bewerbung „Flugstaffel“ eingereicht · Q-1');
     expect(e!.description).toContain('**1. Warum?**\nDarum\n\n**2. Erfahrung?**\nViel');
     for (const x of [`Discord-ID: \`${OTHER}\``, 'Benutzername: `bea`', `Benutzer: <@${OTHER}>`, 'Dauer: `1 min 6s`', 'Server beigetreten: <t:1759312800:R>', 'Eingereicht: <t:']) expect(e!.description).toContain(x);
     expect(outboxButtons('qualification.submitted', p)?.map((b) => b.url ?? b.id)).toEqual(['quali:decide:q:abc:ACCEPTED', 'quali:decide:q:abc:REJECTED', 'quali:reason:q:abc:ACCEPTED', 'quali:reason:q:abc:REJECTED', `quali:history:${OTHER}`, 'quali:ticket:q:abc', 'https://x.example/qualifications?id=abc']);

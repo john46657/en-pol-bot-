@@ -24,7 +24,7 @@ const discordId = zod_1.z.string().regex(/^\d{15,25}$/);
 const list = zod_1.z.object({ unit: zod_1.z.string().max(24).optional(), status: zod_1.z.enum(['OPEN', 'ACCEPTED', 'REJECTED']).optional() });
 const decision = zod_1.z.object({ status: zod_1.z.enum(['ACCEPTED', 'REJECTED']), reason: zod_1.z.string().trim().max(1000).optional() });
 const historyQ = zod_1.z.object({ discordId });
-const submit = zod_1.z.object({ unit: zod_1.z.string().max(24), discordId, discordName: zod_1.z.string().trim().min(1).max(100), durationSec: zod_1.z.number().int().min(0).max(86_400).optional(), joinedAt: zod_1.z.coerce.date().optional(), answers: zod_1.z.array(zod_1.z.object({ question: zod_1.z.string().max(300), answer: zod_1.z.string().trim().min(1).max(1000) })).min(1).max(50) });
+const submit = zod_1.z.object({ unit: zod_1.z.string().max(24), discordId, discordName: zod_1.z.string().trim().min(1).max(100), durationSec: zod_1.z.number().int().min(0).max(86_400).optional(), joinedAt: zod_1.z.coerce.date().optional(), answers: zod_1.z.array(zod_1.z.object({ question: zod_1.z.string().max(300), answer: zod_1.z.union([zod_1.z.string().max(5000), zod_1.z.array(zod_1.z.string().max(100)).max(25)]).nullable() })).min(1).max(50) });
 const openQ = zod_1.z.object({ discordId, unit: zod_1.z.string().max(24).optional() });
 let QualificationsController = class QualificationsController {
     q;
