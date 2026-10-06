@@ -16,6 +16,10 @@ export class RealtimeService {
   publish(room: string, event: string, payload: Record<string, unknown>) {
     this.server?.to(room).emit(event, payload);
   }
+  /** An alle angemeldeten Verbindungen (z. B. „Rechte geändert“ → Oberfläche lädt das eigene Profil neu). Ohne Inhalt. */
+  broadcast(event: string) {
+    this.server?.emit(event, {});
+  }
   publishToUser(userId: string, event: string, payload: Record<string, unknown>) {
     this.publish(`user:${userId}`, event, payload);
   }

@@ -102,6 +102,7 @@ export declare class PersonsController {
                 createdAt: Date;
                 updatedAt: Date;
                 version: number;
+                color: string | null;
                 status: string;
                 custom: import("@prisma/client/runtime/library").JsonValue | null;
                 serverId: string | null;
@@ -109,7 +110,6 @@ export declare class PersonsController {
                 ownerId: string | null;
                 plate: string;
                 model: string | null;
-                color: string | null;
                 erlcReference: string | null;
             }[];
         } & {

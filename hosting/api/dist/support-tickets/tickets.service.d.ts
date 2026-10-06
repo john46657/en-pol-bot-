@@ -131,9 +131,9 @@ export declare class SupportTicketsService {
                 id: string;
                 name: string;
                 color: number;
+                position: number;
                 kind: string;
                 isDefault: boolean;
-                position: number;
                 emoji: string;
                 isClaimed: boolean;
                 isEscalation: boolean;
@@ -143,8 +143,8 @@ export declare class SupportTicketsService {
                 id: string;
                 name: string;
                 color: number;
-                isDefault: boolean;
                 position: number;
+                isDefault: boolean;
                 emoji: string;
                 allowedRoleNames: string[];
                 notifyRoleIds: string[];
@@ -181,9 +181,9 @@ export declare class SupportTicketsService {
                 id: string;
                 name: string;
                 color: number;
+                position: number;
                 kind: string;
                 isDefault: boolean;
-                position: number;
                 emoji: string;
                 isClaimed: boolean;
                 isEscalation: boolean;
@@ -193,8 +193,8 @@ export declare class SupportTicketsService {
                 id: string;
                 name: string;
                 color: number;
-                isDefault: boolean;
                 position: number;
+                isDefault: boolean;
                 emoji: string;
                 allowedRoleNames: string[];
                 notifyRoleIds: string[];
@@ -247,9 +247,9 @@ export declare class SupportTicketsService {
                 id: string;
                 name: string;
                 color: number;
+                position: number;
                 kind: string;
                 isDefault: boolean;
-                position: number;
                 emoji: string;
                 isClaimed: boolean;
                 isEscalation: boolean;
@@ -259,8 +259,8 @@ export declare class SupportTicketsService {
                 id: string;
                 name: string;
                 color: number;
-                isDefault: boolean;
                 position: number;
+                isDefault: boolean;
                 emoji: string;
                 allowedRoleNames: string[];
                 notifyRoleIds: string[];
@@ -370,9 +370,9 @@ export declare class SupportTicketsService {
             id: string;
             name: string;
             color: number;
+            position: number;
             kind: string;
             isDefault: boolean;
-            position: number;
             emoji: string;
             isClaimed: boolean;
             isEscalation: boolean;
@@ -382,8 +382,8 @@ export declare class SupportTicketsService {
             id: string;
             name: string;
             color: number;
-            isDefault: boolean;
             position: number;
+            isDefault: boolean;
             emoji: string;
             allowedRoleNames: string[];
             notifyRoleIds: string[];
@@ -434,9 +434,9 @@ export declare class SupportTicketsService {
                 id: string;
                 name: string;
                 color: number;
+                position: number;
                 kind: string;
                 isDefault: boolean;
-                position: number;
                 emoji: string;
                 isClaimed: boolean;
                 isEscalation: boolean;
@@ -446,8 +446,8 @@ export declare class SupportTicketsService {
                 id: string;
                 name: string;
                 color: number;
-                isDefault: boolean;
                 position: number;
+                isDefault: boolean;
                 emoji: string;
                 allowedRoleNames: string[];
                 notifyRoleIds: string[];
@@ -469,9 +469,9 @@ export declare class SupportTicketsService {
             id: string;
             name: string;
             color: number;
+            position: number;
             kind: string;
             isDefault: boolean;
-            position: number;
             emoji: string;
             isClaimed: boolean;
             isEscalation: boolean;
@@ -481,8 +481,8 @@ export declare class SupportTicketsService {
             id: string;
             name: string;
             color: number;
-            isDefault: boolean;
             position: number;
+            isDefault: boolean;
             emoji: string;
             allowedRoleNames: string[];
             notifyRoleIds: string[];
@@ -493,8 +493,8 @@ export declare class SupportTicketsService {
             expiresAt: Date | null;
             targetId: string;
             kind: string;
-            addedById: string | null;
             ticketId: string;
+            addedById: string | null;
         }[];
         messages: {
             id: string;
@@ -553,8 +553,8 @@ export declare class SupportTicketsService {
         channelId: string | null;
         closedAt: Date | null;
         answers: Prisma.JsonValue;
-        deletedAt: Date | null;
         categoryId: string;
+        deletedAt: Date | null;
         statusId: string;
         priorityId: string | null;
         panelId: string | null;
@@ -583,9 +583,9 @@ export declare class SupportTicketsService {
             id: string;
             name: string;
             color: number;
+            position: number;
             kind: string;
             isDefault: boolean;
-            position: number;
             emoji: string;
             isClaimed: boolean;
             isEscalation: boolean;
@@ -595,8 +595,8 @@ export declare class SupportTicketsService {
             id: string;
             name: string;
             color: number;
-            isDefault: boolean;
             position: number;
+            isDefault: boolean;
             emoji: string;
             allowedRoleNames: string[];
             notifyRoleIds: string[];
@@ -617,8 +617,8 @@ export declare class SupportTicketsService {
             expiresAt: Date | null;
             targetId: string;
             kind: string;
-            addedById: string | null;
             ticketId: string;
+            addedById: string | null;
         }[];
         close: {
             mode: string;

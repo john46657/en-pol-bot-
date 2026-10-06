@@ -36,8 +36,8 @@ export declare class DutyService {
     team(): import("@prisma/client").Prisma.PrismaPromise<({
         user: {
             personnel: {
-                callsign: string | null;
                 rank: string | null;
+                callsign: string | null;
             } | null;
             id: string;
             displayName: string;
@@ -96,8 +96,8 @@ export declare class DutyService {
         currentIncident: {
             number: string;
             id: string;
-            status: string;
             priority: string;
+            status: string;
             title: string;
         } | null;
     }[]>;

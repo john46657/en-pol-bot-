@@ -27,11 +27,11 @@ export declare class MediaService {
         media: {
             id: string;
             createdAt: Date;
-            hash: string;
             size: number;
+            hash: string;
+            storageKey: string;
             originalName: string;
             mime: string;
-            storageKey: string;
             uploaderId: string;
             linkedType: string | null;
             linkedId: string | null;
@@ -41,8 +41,8 @@ export declare class MediaService {
     list(actor: Actor, linkedType: string, linkedId: string): Promise<{
         id: string;
         createdAt: Date;
-        hash: string;
         size: number;
+        hash: string;
         originalName: string;
         mime: string;
     }[]>;

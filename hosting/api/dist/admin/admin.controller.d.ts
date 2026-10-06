@@ -26,6 +26,7 @@ export declare class AdminController {
             [k: string]: import("@prisma/client/runtime/library").JsonValue;
         };
         allowedKeys: string[];
+        serverScoped: readonly ["team.structure", "team.rankOrder", "dashboard.defaultLayout", "theme.accent", "org.name"];
     }>;
     set(ac: Actor, key: string, b: {
         value: unknown;

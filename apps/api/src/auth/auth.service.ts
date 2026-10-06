@@ -3,6 +3,8 @@ import { randomBytes } from 'node:crypto';
 import { PrismaService } from '../prisma/prisma.service';
 import { AuditService, Actor } from '../audit/audit.service';
 import { PermissionService } from '../authz/permission.service';
+import { DiscordAccessService } from '../authz/discord-access.service';
+import { currentGuild } from '../common/guild-context';
 import { hashToken } from '../authz/guards';
 import { DUMMY_HASH, verifyPassword } from './password';
 import { AppError } from '../common/errors';
@@ -14,7 +16,7 @@ const LOCK_MS = 15 * 60 * 1000;
 @Injectable()
 export class AuthService {
   private readonly env = loadEnv();
-  constructor(private readonly prisma: PrismaService, private readonly audit: AuditService, private readonly perms: PermissionService) {}
+  constructor(private readonly prisma: PrismaService, private readonly audit: AuditService, private readonly perms: PermissionService, private readonly access: DiscordAccessService) {}
 
   async login(username: string, password: string, meta: { ip?: string; userAgent?: string; requestId?: string }) {
     const user = await this.prisma.user.findUnique({ where: { username: username.toLowerCase() } });
@@ -47,6 +49,7 @@ export class AuthService {
       await tx.user.update({ where: { id: user.id }, data: { lastLogin: new Date(), failedLogins: 0, lockedUntil: null } });
       await this.audit.record({ userId: user.id, robloxUserId: user.robloxUserId, requestId: meta.requestId }, { action, module: 'auth', entityType: 'User', entityId: user.id }, tx);
     });
+    this.access.forget(user.id); // neue Anmeldung → Discord-Rollen beim nächsten Aufruf frisch prüfen
     return { token, expiresAt, user: await this.profile(user.id) };
   }
 
@@ -64,9 +67,12 @@ export class AuthService {
 
   async profile(userId: string) {
     const u = await this.prisma.user.findUniqueOrThrow({ where: { id: userId }, include: { roles: { include: { role: true } } } });
+    const active = new Set(await this.perms.roleIdsFor(userId));
     return {
       id: u.id, username: u.username, displayName: u.displayName, robloxUserId: u.robloxUserId, robloxUsername: u.robloxUsername,
-      roles: u.roles.map((r) => r.role.name), permissions: await this.perms.effective(userId), lastLogin: u.lastLogin,
+      // Rollen, die im gewählten Server gelten; `servers` = Server, auf denen man eigene Server-Rollen hat
+      roles: u.roles.filter((r) => active.has(r.roleId)).map((r) => r.role.name), permissions: await this.perms.effective(userId), lastLogin: u.lastLogin,
+      guildId: currentGuild(), servers: [...new Set(u.roles.map((r) => r.role.guildId).filter((g): g is string => !!g))],
     };
   }
 }

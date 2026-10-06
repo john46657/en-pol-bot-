@@ -25,8 +25,8 @@ export declare class MediaController {
     list(a: Actor, q: z.infer<typeof link>): Promise<{
         id: string;
         createdAt: Date;
-        hash: string;
         size: number;
+        hash: string;
         originalName: string;
         mime: string;
     }[]>;

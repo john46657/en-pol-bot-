@@ -1,5 +1,5 @@
 import type { PrismaClient } from '@prisma/client';
-import { ALL_PERMISSIONS, defaultTicketButtons, PermissionKey } from '@enrp/shared';
+import { ALL_PERMISSIONS, areaGrantsFor, defaultTicketButtons, PermissionKey } from '@enrp/shared';
 
 const only = (...mods: string[]): PermissionKey[] => ALL_PERMISSIONS.filter((p) => mods.includes(p.split('.')[0] ?? ''));
 const pick = (...keys: PermissionKey[]) => keys;
@@ -22,16 +22,23 @@ export const STARTER_ROLES: Record<string, { description: string; grants: readon
   'System Administrator': { description: 'Vollzugriff auf Systemverwaltung', grants: ['*'] },
 };
 
+/** Rangfolge der Startrollen (kleiner = höher). Im Dashboard unter Rollen & Rechte frei änderbar. */
+const STARTER_PRIORITY: Record<string, number> = {
+  'System Administrator': 1, 'Police Administration': 10, Supervisor: 20, 'Ticket Leitung': 25, 'SEK Leitung': 30, 'Training Staff': 40,
+  Investigator: 50, Dispatch: 50, 'Senior Officer': 60, 'Ticket Support': 70, SEK: 70, 'Police Member': 90,
+};
+
 export async function seedBase(prisma: PrismaClient) {
   for (const key of ALL_PERMISSIONS) {
     await prisma.permission.upsert({ where: { key }, create: { key, module: key.split('.')[0] ?? key }, update: {} });
   }
   await prisma.permission.upsert({ where: { key: '*' }, create: { key: '*', module: '*' }, update: {} });
   for (const [name, def] of Object.entries(STARTER_ROLES)) {
-    const role = await prisma.role.upsert({ where: { name }, create: { name, description: def.description, system: true }, update: {} });
+    const role = await prisma.role.upsert({ where: { name }, create: { name, description: def.description, system: true, priority: STARTER_PRIORITY[name] ?? 100 }, update: {} });
     const existing = await prisma.rolePermission.count({ where: { roleId: role.id } });
     if (existing === 0) {
-      await prisma.rolePermission.createMany({ data: def.grants.map((permissionKey) => ({ roleId: role.id, permissionKey, effect: 'ALLOW' })), skipDuplicates: true });
+      const grants = def.grants.includes('*') ? def.grants : [...def.grants, ...areaGrantsFor(def.grants)];
+      await prisma.rolePermission.createMany({ data: grants.map((permissionKey) => ({ roleId: role.id, permissionKey, effect: 'ALLOW' })), skipDuplicates: true });
     }
   }
 }

@@ -24,6 +24,7 @@ __export(index_exports, {
   APPLICATION_STATUSES: () => APPLICATION_STATUSES,
   APPLICATION_TRANSITIONS: () => APPLICATION_TRANSITIONS,
   APPLICATION_VARIABLES: () => APPLICATION_VARIABLES,
+  AREA_PERMISSIONS: () => AREA_PERMISSIONS,
   CLAIM_MODES: () => CLAIM_MODES,
   CLOSE_REASON_MODES: () => CLOSE_REASON_MODES,
   CLOSE_REASON_SOURCES: () => CLOSE_REASON_SOURCES,
@@ -57,8 +58,10 @@ __export(index_exports, {
   UNIT_STATUSES: () => UNIT_STATUSES,
   WANTED_STATUSES: () => WANTED_STATUSES,
   WANTED_TRANSITIONS: () => WANTED_TRANSITIONS,
+  areaGrantsFor: () => areaGrantsFor,
   assertTransition: () => assertTransition,
   can: () => can,
+  canDelegate: () => canDelegate,
   canTransition: () => canTransition,
   checkAnswer: () => checkAnswer,
   defaultTicketButtons: () => defaultTicketButtons,
@@ -80,7 +83,8 @@ module.exports = __toCommonJS(index_exports);
 
 // src/permissions.ts
 var PERMISSION_CATALOG = {
-  dashboard: ["view", "customize"],
+  /** `dashboard.<bereich>.view`: Sichtbarkeit ganzer Bereiche im Menü und auf der Startseite (zusätzlich zur Modul-Permission). */
+  dashboard: ["view", "customize", "tickets.view", "applications.view", "team.view", "offices.view", "voice.view", "logs.view", "settings.view"],
   team: ["view", "manage"],
   dispatch: ["view", "create", "edit", "assign", "close", "manage"],
   incidents: ["view", "create", "edit", "close", "delete"],
@@ -130,6 +134,23 @@ function grantMatches(grant, permission) {
 var can = (ctx, permission) => resolvePermission(ctx, permission).allowed;
 function effectivePermissions(ctx) {
   return ALL_PERMISSIONS.filter((p) => can(ctx, p));
+}
+var AREA_PERMISSIONS = {
+  "dashboard.tickets.view": ["ticket.view"],
+  "dashboard.applications.view": ["applications.view"],
+  "dashboard.team.view": ["team.view"],
+  "dashboard.offices.view": ["team.view"],
+  "dashboard.voice.view": ["team.view"],
+  "dashboard.logs.view": ["audit.view"],
+  "dashboard.settings.view": ["settings.view", "roles.view", "users.view", "studio.view"]
+};
+function areaGrantsFor(grants) {
+  return Object.entries(AREA_PERMISSIONS).filter(([, bases]) => bases.some((b) => grants.some((g) => grantMatches(g, b)))).map(([area]) => area);
+}
+function canDelegate(holder, grant) {
+  const covered = ALL_PERMISSIONS.filter((p) => grantMatches(grant, p));
+  if (!covered.length) return can(holder, grant);
+  return covered.every((p) => can(holder, p)) && (grant !== "*" || can(holder, "*"));
 }
 
 // src/statuses.ts
@@ -349,6 +370,7 @@ var rolesMatch = (have, ids, mode) => mode === "ALL" ? ids.every((r) => have.inc
   APPLICATION_STATUSES,
   APPLICATION_TRANSITIONS,
   APPLICATION_VARIABLES,
+  AREA_PERMISSIONS,
   CLAIM_MODES,
   CLOSE_REASON_MODES,
   CLOSE_REASON_SOURCES,
@@ -382,8 +404,10 @@ var rolesMatch = (have, ids, mode) => mode === "ALL" ? ids.every((r) => have.inc
   UNIT_STATUSES,
   WANTED_STATUSES,
   WANTED_TRANSITIONS,
+  areaGrantsFor,
   assertTransition,
   can,
+  canDelegate,
   canTransition,
   checkAnswer,
   defaultTicketButtons,

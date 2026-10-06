@@ -16,13 +16,13 @@ export declare const SETTING_SCHEMAS: {
         visible: z.ZodBoolean;
         order: z.ZodNumber;
     }, "strip", z.ZodTypeAny, {
+        order: number;
         widget: string;
         visible: boolean;
-        order: number;
     }, {
+        order: number;
         widget: string;
         visible: boolean;
-        order: number;
     }>, "many">;
     readonly 'studio.customFields': z.ZodEffects<z.ZodObject<{
         persons: z.ZodDefault<z.ZodArray<z.ZodEffects<z.ZodObject<{
@@ -208,6 +208,17 @@ export declare const SETTING_SCHEMAS: {
         adminDutyRole?: string | undefined;
     }>;
     readonly 'team.rankOrder': z.ZodArray<z.ZodString, "many">;
+    /** Teams und Büros (Dienstgrade: `team.rankOrder`) – Auswahl in Personalakten und Filter der Teamliste. */
+    readonly 'team.structure': z.ZodObject<{
+        teams: z.ZodArray<z.ZodString, "many">;
+        offices: z.ZodArray<z.ZodString, "many">;
+    }, "strip", z.ZodTypeAny, {
+        teams: string[];
+        offices: string[];
+    }, {
+        teams: string[];
+        offices: string[];
+    }>;
     readonly 'application.form': z.ZodEffects<z.ZodArray<z.ZodEffects<z.ZodObject<{
         key: z.ZodString;
         label: z.ZodString;
@@ -343,7 +354,9 @@ export declare class AdminService {
             [k: string]: Prisma.JsonValue;
         };
         allowedKeys: string[];
+        serverScoped: readonly ["team.structure", "team.rankOrder", "dashboard.defaultLayout", "theme.accent", "org.name"];
     }>;
+    /** `key@<guildId>`: Server-eigener Wert (nur für Einstellungen, die je Server getrennt sein dürfen). */
     setSetting(actor: Actor, key: string, value: unknown): Promise<{
         key: string;
         value: Prisma.JsonValue;

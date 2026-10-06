@@ -48,6 +48,8 @@ export declare class AuthController {
         roles: string[];
         permissions: import("@enrp/shared").PermissionKey[];
         lastLogin: Date | null;
+        guildId: string | null;
+        servers: string[];
     }>;
     logout(user: AuthUser, actor: Actor, res: Response): Promise<void>;
     me(user: AuthUser): Promise<{
@@ -59,6 +61,8 @@ export declare class AuthController {
         roles: string[];
         permissions: import("@enrp/shared").PermissionKey[];
         lastLogin: Date | null;
+        guildId: string | null;
+        servers: string[];
     }>;
 }
 export {};

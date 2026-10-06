@@ -15,6 +15,8 @@ const node_crypto_1 = require("node:crypto");
 const prisma_service_1 = require("../prisma/prisma.service");
 const audit_service_1 = require("../audit/audit.service");
 const permission_service_1 = require("../authz/permission.service");
+const discord_access_service_1 = require("../authz/discord-access.service");
+const guild_context_1 = require("../common/guild-context");
 const guards_1 = require("../authz/guards");
 const password_1 = require("./password");
 const errors_1 = require("../common/errors");
@@ -25,11 +27,13 @@ let AuthService = class AuthService {
     prisma;
     audit;
     perms;
+    access;
     env = (0, env_1.loadEnv)();
-    constructor(prisma, audit, perms) {
+    constructor(prisma, audit, perms, access) {
         this.prisma = prisma;
         this.audit = audit;
         this.perms = perms;
+        this.access = access;
     }
     async login(username, password, meta) {
         const user = await this.prisma.user.findUnique({ where: { username: username.toLowerCase() } });
@@ -58,6 +62,7 @@ let AuthService = class AuthService {
             await tx.user.update({ where: { id: user.id }, data: { lastLogin: new Date(), failedLogins: 0, lockedUntil: null } });
             await this.audit.record({ userId: user.id, robloxUserId: user.robloxUserId, requestId: meta.requestId }, { action, module: 'auth', entityType: 'User', entityId: user.id }, tx);
         });
+        this.access.forget(user.id); // neue Anmeldung → Discord-Rollen beim nächsten Aufruf frisch prüfen
         return { token, expiresAt, user: await this.profile(user.id) };
     }
     async logout(actor, sessionId) {
@@ -72,15 +77,18 @@ let AuthService = class AuthService {
     }
     async profile(userId) {
         const u = await this.prisma.user.findUniqueOrThrow({ where: { id: userId }, include: { roles: { include: { role: true } } } });
+        const active = new Set(await this.perms.roleIdsFor(userId));
         return {
             id: u.id, username: u.username, displayName: u.displayName, robloxUserId: u.robloxUserId, robloxUsername: u.robloxUsername,
-            roles: u.roles.map((r) => r.role.name), permissions: await this.perms.effective(userId), lastLogin: u.lastLogin,
+            // Rollen, die im gewählten Server gelten; `servers` = Server, auf denen man eigene Server-Rollen hat
+            roles: u.roles.filter((r) => active.has(r.roleId)).map((r) => r.role.name), permissions: await this.perms.effective(userId), lastLogin: u.lastLogin,
+            guildId: (0, guild_context_1.currentGuild)(), servers: [...new Set(u.roles.map((r) => r.role.guildId).filter((g) => !!g))],
         };
     }
 };
 exports.AuthService = AuthService;
 exports.AuthService = AuthService = __decorate([
     (0, common_1.Injectable)(),
-    __metadata("design:paramtypes", [prisma_service_1.PrismaService, audit_service_1.AuditService, permission_service_1.PermissionService])
+    __metadata("design:paramtypes", [prisma_service_1.PrismaService, audit_service_1.AuditService, permission_service_1.PermissionService, discord_access_service_1.DiscordAccessService])
 ], AuthService);
 //# sourceMappingURL=auth.service.js.map

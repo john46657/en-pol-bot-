@@ -6,6 +6,7 @@ import { PrismaService } from '../prisma/prisma.service';
 import { PermissionService } from './permission.service';
 import { BOT_SERVICE_KEY, PERMISSION_KEY, PUBLIC_KEY } from './decorators';
 import { DiscordService } from '../discord/discord.service';
+import { DiscordAccessService } from './discord-access.service';
 import { loadEnv } from '../config/env';
 import { AppError } from '../common/errors';
 import type { AppRequest } from '../common/request-context';
@@ -41,7 +42,7 @@ const BOT_USER_ROUTES: [string, RegExp][] = [
 @Injectable()
 export class AuthGuard implements CanActivate {
   private readonly botToken = loadEnv().BOT_API_TOKEN;
-  constructor(private readonly reflector: Reflector, private readonly prisma: PrismaService, private readonly discord: DiscordService) {}
+  constructor(private readonly reflector: Reflector, private readonly prisma: PrismaService, private readonly discord: DiscordService, private readonly access: DiscordAccessService) {}
 
   private validBotToken(header: unknown): boolean {
     if (!this.botToken || typeof header !== 'string' || !header.startsWith('Bot ')) return false;
@@ -82,6 +83,8 @@ export class AuthGuard implements CanActivate {
       await this.prisma.securityEvent.create({ data: { type: 'INVALID_TOKEN', requestId: req.requestId, ip: req.ip } }).catch(() => undefined);
       throw new AppError('UNAUTHENTICATED', 'Authentication required.');
     }
+    // Discord-Rollen laufend prüfen (nicht nur beim Login): ohne freigeschaltete Rolle ist die Session sofort beendet
+    if (!(await this.access.verify(session.user.id))) throw new AppError('UNAUTHENTICATED', 'Your Discord roles no longer grant access to this dashboard.', { reason: 'NO_ACCESS' });
     req.user = { id: session.user.id, username: session.user.username, displayName: session.user.displayName, robloxUserId: session.user.robloxUserId, sessionId: session.id };
     return true;
   }

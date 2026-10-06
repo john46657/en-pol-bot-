@@ -258,6 +258,7 @@ export declare const categorySchema: z.ZodObject<{
     guildId: string | null;
     description: string;
     color: number;
+    position: number;
     cooldownMinutes: number;
     questions: {
         id: string;
@@ -270,7 +271,6 @@ export declare const categorySchema: z.ZodObject<{
         maxLength?: number | undefined;
         placeholder?: string | undefined;
     }[];
-    position: number;
     emoji: string | null;
     buttonStyle: "danger" | "success" | "primary" | "secondary";
     discordCategoryId: string | null;
@@ -328,6 +328,7 @@ export declare const categorySchema: z.ZodObject<{
     guildId?: string | null | undefined;
     description?: string | undefined;
     color?: number | undefined;
+    position?: number | undefined;
     cooldownMinutes?: number | undefined;
     questions?: {
         id: string;
@@ -340,7 +341,6 @@ export declare const categorySchema: z.ZodObject<{
         maxLength?: number | undefined;
         placeholder?: string | undefined;
     }[] | undefined;
-    position?: number | undefined;
     emoji?: string | null | undefined;
     buttonStyle?: "danger" | "success" | "primary" | "secondary" | undefined;
     discordCategoryId?: string | null | undefined;
@@ -419,11 +419,12 @@ export declare const panelSchema: z.ZodObject<{
     name: string;
     guildId: string | null;
     description: string;
-    channelId: string | null;
-    imageUrl: string | null;
     color: number;
-    title: string;
+    channelId: string | null;
+    categoryIds: string[];
     position: number;
+    imageUrl: string | null;
+    title: string;
     placeholder: string;
     emoji: string | null;
     style: "BUTTONS" | "DROPDOWN";
@@ -433,18 +434,18 @@ export declare const panelSchema: z.ZodObject<{
     footerIconUrl: string | null;
     authorName: string | null;
     authorIconUrl: string | null;
-    categoryIds: string[];
     allowedRoleIds: string[];
     showLoad: boolean;
 }, {
     name: string;
     guildId?: string | null | undefined;
     description?: string | undefined;
-    channelId?: string | null | undefined;
-    imageUrl?: string | null | undefined;
     color?: number | undefined;
-    title?: string | undefined;
+    channelId?: string | null | undefined;
+    categoryIds?: string[] | undefined;
     position?: number | undefined;
+    imageUrl?: string | null | undefined;
+    title?: string | undefined;
     placeholder?: string | undefined;
     emoji?: string | null | undefined;
     style?: "BUTTONS" | "DROPDOWN" | undefined;
@@ -454,7 +455,6 @@ export declare const panelSchema: z.ZodObject<{
     footerIconUrl?: string | null | undefined;
     authorName?: string | null | undefined;
     authorIconUrl?: string | null | undefined;
-    categoryIds?: string[] | undefined;
     allowedRoleIds?: string[] | undefined;
     showLoad?: boolean | undefined;
 }>;
@@ -472,9 +472,9 @@ export declare const statusSchema: z.ZodObject<{
 }, "strip", z.ZodTypeAny, {
     name: string;
     color: number;
+    position: number;
     kind: "ARCHIVED" | "CLOSED" | "OPEN";
     isDefault: boolean;
-    position: number;
     emoji: string;
     isClaimed: boolean;
     isEscalation: boolean;
@@ -482,9 +482,9 @@ export declare const statusSchema: z.ZodObject<{
 }, {
     name: string;
     color?: number | undefined;
+    position?: number | undefined;
     kind?: "ARCHIVED" | "CLOSED" | "OPEN" | undefined;
     isDefault?: boolean | undefined;
-    position?: number | undefined;
     emoji?: string | undefined;
     isClaimed?: boolean | undefined;
     isEscalation?: boolean | undefined;
@@ -501,16 +501,16 @@ export declare const prioritySchema: z.ZodObject<{
 }, "strip", z.ZodTypeAny, {
     name: string;
     color: number;
-    isDefault: boolean;
     position: number;
+    isDefault: boolean;
     emoji: string;
     allowedRoleNames: string[];
     notifyRoleIds: string[];
 }, {
     name: string;
     color?: number | undefined;
-    isDefault?: boolean | undefined;
     position?: number | undefined;
+    isDefault?: boolean | undefined;
     emoji?: string | undefined;
     allowedRoleNames?: string[] | undefined;
     notifyRoleIds?: string[] | undefined;

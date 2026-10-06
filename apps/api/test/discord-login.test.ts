@@ -115,7 +115,8 @@ describe('login with Discord', () => {
     discord.members.set(discord.user.id, []);
     const b = await discordLogin();
     expect((await b.agent.get('/api/v1/auth/me')).body.roles).toEqual([]);
-    expect(await prisma.auditLog.count({ where: { action: 'auth.discord.roles_synced' } })).toBe(2);
+    const oscar = await prisma.user.findUniqueOrThrow({ where: { username: 'oscar.officer' } });
+    expect(await prisma.auditLog.count({ where: { action: 'auth.discord.roles_synced', entityId: oscar.id } })).toBe(2);
   });
 
   it('team role: without one of the configured Discord roles no access to the MDT (owners always get in)', async () => {

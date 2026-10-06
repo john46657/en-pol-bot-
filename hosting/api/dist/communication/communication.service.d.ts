@@ -18,10 +18,10 @@ export declare class CommunicationService {
         createdAt: Date;
         body: string;
         authorId: string;
+        deletedAt: Date | null;
         conversationId: string;
         replyToId: string | null;
         pinned: boolean;
-        deletedAt: Date | null;
     }[]>;
     post(actor: Actor, channel: Channel, d: {
         body: string;
@@ -32,19 +32,19 @@ export declare class CommunicationService {
         createdAt: Date;
         body: string;
         authorId: string;
+        deletedAt: Date | null;
         conversationId: string;
         replyToId: string | null;
         pinned: boolean;
-        deletedAt: Date | null;
     }>;
     moderate(actor: Actor, id: string, action: 'pin' | 'unpin' | 'delete'): Promise<{
         id: string;
         createdAt: Date;
         body: string;
         authorId: string;
+        deletedAt: Date | null;
         conversationId: string;
         replyToId: string | null;
         pinned: boolean;
-        deletedAt: Date | null;
     }>;
 }

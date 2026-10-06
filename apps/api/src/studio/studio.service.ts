@@ -1,3 +1,4 @@
+import { currentGuild, scopedKey } from '../common/guild-context';
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { AppError } from '../common/errors';
@@ -10,7 +11,9 @@ export class StudioService {
   constructor(private readonly prisma: PrismaService) {}
 
   private async setting<T>(key: string, fallback: T): Promise<T> {
-    return ((await this.prisma.systemSetting.findUnique({ where: { key } }))?.value as T | undefined) ?? fallback;
+    const g = currentGuild(); // Server-eigener Wert (z. B. Name, Akzentfarbe) vor dem gemeinsamen
+    const own = g ? await this.prisma.systemSetting.findUnique({ where: { key: scopedKey(key, g) } }) : null;
+    return ((own ?? (await this.prisma.systemSetting.findUnique({ where: { key } })))?.value as T | undefined) ?? fallback;
   }
 
   async config() {

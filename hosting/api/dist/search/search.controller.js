@@ -21,6 +21,8 @@ const prisma_service_1 = require("../prisma/prisma.service");
 const permission_service_1 = require("../authz/permission.service");
 const decorators_1 = require("../authz/decorators");
 const zod_pipe_1 = require("../common/zod.pipe");
+const tickets_service_1 = require("../support-tickets/tickets.service");
+const discord_live_service_1 = require("../discord/discord-live.service");
 const q = zod_1.z.object({ q: zod_1.z.string().trim().min(2).max(64) });
 const ci = (v) => ({ contains: v, mode: 'insensitive' });
 /**
@@ -30,9 +32,13 @@ const ci = (v) => ({ contains: v, mode: 'insensitive' });
 let SearchController = class SearchController {
     prisma;
     perms;
-    constructor(prisma, perms) {
+    tickets;
+    live;
+    constructor(prisma, perms, tickets, live) {
         this.prisma = prisma;
         this.perms = perms;
+        this.tickets = tickets;
+        this.live = live;
     }
     async search(u, { q: term }) {
         const pctx = await this.perms.contextFor(u.id);
@@ -62,7 +68,22 @@ let SearchController = class SearchController {
             jobs.push(this.prisma.evidence.findMany({ where: { OR: [{ number: { contains: upper } }, { description: ci(term) }] }, take }).then((r) => r.map((x) => ({ type: 'evidence', id: x.id, label: x.number, sub: x.description }))));
         if (allowed('personnel.view'))
             jobs.push(this.prisma.personnel.findMany({ where: { OR: [{ callsign: ci(term) }, { user: { displayName: ci(term) } }] }, include: { user: true }, take }).then((r) => r.map((x) => ({ type: 'personnel', id: x.id, label: x.user.displayName, sub: x.callsign ?? undefined }))));
-        return { results: (await Promise.all(jobs)).flat() };
+        // Teamliste: Name, Dienstnummer, Team, Dienstgrad, Büro (+ Discord-Teammitglieder ohne Personalakte)
+        if (allowed('team.view')) {
+            jobs.push(this.prisma.personnel.findMany({ where: { employmentStatus: { notIn: ['RESIGNED', 'TERMINATED'] }, OR: [{ callsign: ci(term) }, { serviceNumber: ci(term) }, { team: ci(term) }, { rank: ci(term) }, { office: ci(term) }, { user: { displayName: ci(term) } }, { user: { username: ci(term) } }] }, include: { user: true }, take })
+                .then((r) => r.map((x) => ({ type: 'member', id: x.userId, label: x.user.displayName, sub: [x.rank, x.team, x.office, x.serviceNumber && `Nr. ${x.serviceNumber}`].filter(Boolean).join(' · ') || undefined }))));
+            const t = term.toLowerCase();
+            jobs.push(Promise.resolve(this.live.getMembers().members.filter((m) => m.displayName.toLowerCase().includes(t) || m.username.toLowerCase().includes(t) || m.id === term).slice(0, take).map((m) => ({ type: 'member', id: m.id, label: m.displayName, sub: `@${m.username}` }))));
+        }
+        if (allowed('ticket.view'))
+            jobs.push(this.tickets.list(u.id, { q: term, page: 1, pageSize: take }).then((r) => r.items.map((x) => ({ type: 'support-ticket', id: x.id, label: `${x.number} ${x.name}`, sub: x.creatorName }))));
+        if (allowed('applications.view'))
+            jobs.push(this.prisma.application.findMany({ where: { OR: [{ number: { contains: upper } }, { robloxUsername: ci(term) }, { discordName: ci(term) }] }, take, orderBy: { createdAt: 'desc' } }).then((r) => r.map((x) => ({ type: 'application', id: x.id, label: x.number, sub: x.robloxUsername }))));
+        const all = (await Promise.all(jobs)).flat();
+        // dieselbe Person nicht doppelt (Personalakte + Discord)
+        const seen = new Set();
+        return { results: all.filter((h) => { const k = h.type === 'member' ? `m:${h.label.toLowerCase()}` : `${h.type}:${h.id}`; if (seen.has(k))
+                return false; seen.add(k); return true; }) };
     }
 };
 exports.SearchController = SearchController;
@@ -77,6 +98,6 @@ __decorate([
 exports.SearchController = SearchController = __decorate([
     (0, swagger_1.ApiTags)('search'),
     (0, common_1.Controller)('search'),
-    __metadata("design:paramtypes", [prisma_service_1.PrismaService, permission_service_1.PermissionService])
+    __metadata("design:paramtypes", [prisma_service_1.PrismaService, permission_service_1.PermissionService, tickets_service_1.SupportTicketsService, discord_live_service_1.DiscordLiveService])
 ], SearchController);
 //# sourceMappingURL=search.controller.js.map

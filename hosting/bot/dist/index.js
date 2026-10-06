@@ -3,6 +3,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const discord_js_1 = require("discord.js");
 const discord_tickets_1 = require("./discord-tickets");
 const guilds_1 = require("./guilds");
+const presence_1 = require("./presence");
 const api_1 = require("./api");
 const commands_1 = require("./commands");
 const features_1 = require("./commands/features");
@@ -14,16 +15,18 @@ const roblox_1 = require("./roblox");
 (0, config_1.loadDotEnv)();
 const cfg = (0, config_1.loadConfig)();
 const api = new api_1.HttpApi(cfg.API_URL, cfg.BOT_API_TOKEN);
-/**
- * Guilds: Slash-Commands, Buttons, Channels, Rollen. DirectMessages: Antworten auf Bewerbungsfragen per DM.
- * GuildMessages + MessageContent: Verlauf/Transcript der Support-Tickets. „Message Content“ ist ein privilegiertes Recht
- * (Developer Portal → Bot → Message Content Intent). Ist es dort aus, startet der Bot ohne – Tickets laufen dann ohne Nachrichtentexte.
- */
-const makeClient = (withContent) => new discord_js_1.Client({
-    intents: [discord_js_1.GatewayIntentBits.Guilds, discord_js_1.GatewayIntentBits.DirectMessages, discord_js_1.GatewayIntentBits.GuildMessages, ...(withContent ? [discord_js_1.GatewayIntentBits.MessageContent] : [])],
+const makeClient = (i) => new discord_js_1.Client({
+    intents: [discord_js_1.GatewayIntentBits.Guilds, discord_js_1.GatewayIntentBits.DirectMessages, discord_js_1.GatewayIntentBits.GuildMessages, discord_js_1.GatewayIntentBits.GuildVoiceStates,
+        ...(i.content ? [discord_js_1.GatewayIntentBits.MessageContent] : []), ...(i.members ? [discord_js_1.GatewayIntentBits.GuildMembers] : []), ...(i.presences ? [discord_js_1.GatewayIntentBits.GuildPresences] : [])],
     partials: [discord_js_1.Partials.Channel],
 });
-let client = makeClient(true);
+/** Reihenfolge der Versuche, falls privilegierte Intents im Developer Portal aus sind. */
+const INTENT_STEPS = [
+    { content: true, members: true, presences: true }, { content: true, members: true, presences: false },
+    { content: true, members: false, presences: false }, { content: false, members: true, presences: true }, { content: false, members: false, presences: false },
+];
+let intents = INTENT_STEPS[0];
+let client = makeClient(intents);
 const tickets = (0, discord_tickets_1.createTicketRuntime)(() => client, api);
 const toEmbed = (e) => {
     const b = new discord_js_1.EmbedBuilder().setTitle(e.title);
@@ -262,7 +265,8 @@ async function handleComponent(i) {
 }
 function wire(c) {
     c.on('interactionCreate', (i) => {
-        const task = i.isChatInputCommand() ? handleCommand(i) : i.isButton() || i.isModalSubmit() || i.isAnySelectMenu() ? handleComponent(i) : undefined;
+        // Server der Interaktion → API prüft Rechte für genau diesen Server (Server laufen getrennt)
+        const task = api_1.guildScope.run(i.guildId ?? null, () => (i.isChatInputCommand() ? handleCommand(i) : i.isButton() || i.isModalSubmit() || i.isAnySelectMenu() ? handleComponent(i) : undefined));
         void task?.catch((e) => console.error('interaction failed:', e instanceof Error ? e.message : e));
     });
     // Direktnachrichten: Antworten auf Bewerbungsfragen (Bewerbung bei EN Polizei und Qualifikationen)
@@ -352,6 +356,8 @@ function wireReady(client0) {
         for (const [id, name] of all)
             await register(id, name);
         c.on('guildCreate', (g) => { console.log(`added to server ${g.name}`); void register(g.id, g.name); });
+        // Teamliste (≥ alle 60 s) und Voice-Widget im Dashboard
+        const presence = (0, presence_1.startPresenceReporter)(() => client, api, { members: intents.members, presences: intents.presences });
         (0, outbox_1.startOutboxLoop)(api, async (channelId, embeds, buttons, opts) => {
             const ch = await client.channels.fetch(channelId);
             if (!ch?.isSendable())
@@ -365,7 +371,7 @@ function wireReady(client0) {
             // Staff-Thread zur Bewerbung (braucht im Channel das Recht „Öffentliche Threads erstellen“)
             if (opts?.thread)
                 await msg.startThread({ name: opts.thread, autoArchiveDuration: 10080 }).catch((e) => console.error('could not create staff thread:', e instanceof Error ? e.message : e));
-        }, cfg.OUTBOX_POLL_SECONDS, console.log, (userId, text) => platform.sendDirectMessage(userId, text), grantRoleEverywhere, syncRolesEverywhere, () => void live.refresh('teamlist').catch(() => undefined), (effects) => tickets.apply(effects).then(() => undefined, (e) => console.error('ticket effects failed:', e instanceof Error ? e.message : e)));
+        }, cfg.OUTBOX_POLL_SECONDS, console.log, (userId, text) => platform.sendDirectMessage(userId, text), grantRoleEverywhere, syncRolesEverywhere, () => void live.refresh('teamlist').catch(() => undefined), (effects) => tickets.apply(effects).then(() => undefined, (e) => console.error('ticket effects failed:', e instanceof Error ? e.message : e)), () => void presence.sync().catch((e) => console.error('team/voice sync failed:', e instanceof Error ? e.message : e)));
         live.start(cfg.LIVE_REFRESH_SECONDS);
         void tickets.refresh();
         (0, guilds_1.startGuildDirectory)(() => client, api);
@@ -375,23 +381,28 @@ function wireReady(client0) {
 for (const sig of ['SIGINT', 'SIGTERM'])
     process.on(sig, () => { void client.destroy().finally(() => process.exit(0)); });
 process.on('unhandledRejection', (e) => console.error('unhandledRejection:', e instanceof Error ? e.message : e));
-/** Start; ist „Message Content Intent“ im Developer Portal aus, ohne dieses Recht neu verbinden. */
+/** Start; sind privilegierte Intents im Developer Portal aus, schrittweise ohne sie neu verbinden. */
 async function start() {
-    wire(client);
-    wireReady(client);
-    try {
-        await client.login(cfg.DISCORD_TOKEN);
-    }
-    catch (e) {
-        if (!/disallowed intents/i.test(e instanceof Error ? e.message : String(e)))
-            throw e;
-        console.warn('Discord: "Message Content Intent" is not enabled in the Developer Portal (Bot → Privileged Gateway Intents). Starting without it – ticket transcripts will not contain message texts.');
-        await client.destroy().catch(() => undefined);
-        client = makeClient(false);
+    for (const [n, step] of INTENT_STEPS.entries()) {
+        if (n > 0) {
+            await client.destroy().catch(() => undefined);
+            intents = step;
+            client = makeClient(step);
+        }
         wire(client);
         wireReady(client);
-        await client.login(cfg.DISCORD_TOKEN);
+        try {
+            await client.login(cfg.DISCORD_TOKEN);
+            break;
+        }
+        catch (e) {
+            if (!/disallowed intents/i.test(e instanceof Error ? e.message : String(e)) || n === INTENT_STEPS.length - 1)
+                throw e;
+        }
     }
+    const off = [!intents.content && '"Message Content" (ticket transcripts without texts)', !intents.members && '"Server Members" (dashboard team list only shows cached members)', !intents.presences && '"Presence" (no online status in the team list)'].filter(Boolean);
+    if (off.length)
+        console.warn(`Discord: privileged intents not enabled in the Developer Portal (Bot → Privileged Gateway Intents): ${off.join(', ')}.`);
 }
 void start().catch((e) => { console.error('Discord login failed:', e instanceof Error ? e.message : e); process.exit(1); });
 //# sourceMappingURL=index.js.map

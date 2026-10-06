@@ -43,14 +43,24 @@ model User {
 }
 
 model Role {
-  id          String           @id @default(uuid()) @db.Uuid
-  name        String           @unique
-  description String?
-  system      Boolean          @default(false)
-  createdAt   DateTime         @default(now())
-  updatedAt   DateTime         @updatedAt
-  users       UserRole[]
-  permissions RolePermission[]
+  id             String           @id @default(uuid()) @db.Uuid
+  name           String           @unique
+  description    String?
+  system         Boolean          @default(false)
+  /// Rang in der Hierarchie: kleiner = höher (1 = Serverbesitzer). Nur Rollen unterhalb der eigenen dürfen verwaltet werden.
+  priority       Int              @default(100)
+  color          String?
+  icon           String?
+  /// Deaktivierte Rollen verleihen keine Rechte (bleiben aber zugewiesen).
+  active         Boolean          @default(true)
+  /// Discord-Rollen, die diese Dashboard-Rolle automatisch verleihen (Abgleich bei Login und regelmäßig).
+  discordRoleIds String[]         @default([])
+  /// Discord-Server, auf dem die Rolle gilt (null = alle Server). Server laufen getrennt.
+  guildId        String?
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+  users          UserRole[]
+  permissions    RolePermission[]
 }
 
 model Permission {
@@ -154,6 +164,10 @@ model UserSettings {
   timezone        String @default("Europe/Berlin")
   dashboardLayout Json?
   notifications   Json?
+  /// Persönliches Design, Favoriten, Schnellzugriff, Benachrichtigungen, Ansichten (nur für den Benutzer selbst)
+  preferences     Json?
+  /// Mehrere persönliche Startseiten-Layouts mit Widgets
+  layouts         Json?
   user            User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
@@ -421,6 +435,10 @@ model Personnel {
   rank               String?
   team               String?
   callsign           String?             @unique
+  /// Büro (Liste unter Einstellungen → Teamstruktur)
+  office             String?
+  /// Dienstnummer
+  serviceNumber      String?             @unique
   employmentStatus   String              @default("ACTIVE")
   joinDate           DateTime            @default(now())
   qualifications     String[]            @default([])

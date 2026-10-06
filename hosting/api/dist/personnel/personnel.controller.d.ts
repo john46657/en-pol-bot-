@@ -6,23 +6,31 @@ declare const create: z.ZodObject<{
     userId: z.ZodString;
     rank: z.ZodOptional<z.ZodString>;
     team: z.ZodOptional<z.ZodString>;
+    office: z.ZodOptional<z.ZodString>;
+    serviceNumber: z.ZodOptional<z.ZodString>;
     callsign: z.ZodOptional<z.ZodString>;
     qualifications: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
 }, "strip", z.ZodTypeAny, {
     userId: string;
     qualifications?: string[] | undefined;
     team?: string | undefined;
-    callsign?: string | undefined;
     rank?: string | undefined;
+    callsign?: string | undefined;
+    office?: string | undefined;
+    serviceNumber?: string | undefined;
 }, {
     userId: string;
     qualifications?: string[] | undefined;
     team?: string | undefined;
-    callsign?: string | undefined;
     rank?: string | undefined;
+    callsign?: string | undefined;
+    office?: string | undefined;
+    serviceNumber?: string | undefined;
 }>;
 declare const update: z.ZodObject<{
     team: z.ZodOptional<z.ZodString>;
+    office: z.ZodOptional<z.ZodNullable<z.ZodString>>;
+    serviceNumber: z.ZodOptional<z.ZodNullable<z.ZodString>>;
     callsign: z.ZodOptional<z.ZodString>;
     employmentStatus: z.ZodOptional<z.ZodEnum<["ACTIVE", "LOA", "SUSPENDED", "RESIGNED", "TERMINATED"]>>;
     qualifications: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
@@ -30,12 +38,16 @@ declare const update: z.ZodObject<{
     qualifications?: string[] | undefined;
     team?: string | undefined;
     callsign?: string | undefined;
-    employmentStatus?: "LOA" | "ACTIVE" | "SUSPENDED" | "RESIGNED" | "TERMINATED" | undefined;
+    office?: string | null | undefined;
+    serviceNumber?: string | null | undefined;
+    employmentStatus?: "LOA" | "ACTIVE" | "RESIGNED" | "TERMINATED" | "SUSPENDED" | undefined;
 }, {
     qualifications?: string[] | undefined;
     team?: string | undefined;
     callsign?: string | undefined;
-    employmentStatus?: "LOA" | "ACTIVE" | "SUSPENDED" | "RESIGNED" | "TERMINATED" | undefined;
+    office?: string | null | undefined;
+    serviceNumber?: string | null | undefined;
+    employmentStatus?: "LOA" | "ACTIVE" | "RESIGNED" | "TERMINATED" | "SUSPENDED" | undefined;
 }>;
 declare const promote: z.ZodObject<{
     rank: z.ZodString;
@@ -75,8 +87,10 @@ export declare class PersonnelController {
             qualifications: string[];
             userId: string;
             team: string | null;
-            callsign: string | null;
             rank: string | null;
+            callsign: string | null;
+            office: string | null;
+            serviceNumber: string | null;
             employmentStatus: string;
             joinDate: Date;
         })[];
@@ -128,8 +142,10 @@ export declare class PersonnelController {
         qualifications: string[];
         userId: string;
         team: string | null;
-        callsign: string | null;
         rank: string | null;
+        callsign: string | null;
+        office: string | null;
+        serviceNumber: string | null;
         employmentStatus: string;
         joinDate: Date;
     }>;
@@ -138,8 +154,10 @@ export declare class PersonnelController {
         qualifications: string[];
         userId: string;
         team: string | null;
-        callsign: string | null;
         rank: string | null;
+        callsign: string | null;
+        office: string | null;
+        serviceNumber: string | null;
         employmentStatus: string;
         joinDate: Date;
     }>;
@@ -148,8 +166,10 @@ export declare class PersonnelController {
         qualifications: string[];
         userId: string;
         team: string | null;
-        callsign: string | null;
         rank: string | null;
+        callsign: string | null;
+        office: string | null;
+        serviceNumber: string | null;
         employmentStatus: string;
         joinDate: Date;
     }>;
@@ -158,8 +178,10 @@ export declare class PersonnelController {
         qualifications: string[];
         userId: string;
         team: string | null;
-        callsign: string | null;
         rank: string | null;
+        callsign: string | null;
+        office: string | null;
+        serviceNumber: string | null;
         employmentStatus: string;
         joinDate: Date;
     }>;

@@ -21,6 +21,7 @@ export declare class VehiclesService {
             createdAt: Date;
             updatedAt: Date;
             version: number;
+            color: string | null;
             status: string;
             custom: Prisma.JsonValue | null;
             serverId: string | null;
@@ -28,7 +29,6 @@ export declare class VehiclesService {
             ownerId: string | null;
             plate: string;
             model: string | null;
-            color: string | null;
             erlcReference: string | null;
         })[];
         total: number;
@@ -56,6 +56,7 @@ export declare class VehiclesService {
             createdAt: Date;
             updatedAt: Date;
             version: number;
+            color: string | null;
             status: string;
             custom: Prisma.JsonValue | null;
             serverId: string | null;
@@ -63,7 +64,6 @@ export declare class VehiclesService {
             ownerId: string | null;
             plate: string;
             model: string | null;
-            color: string | null;
             erlcReference: string | null;
         };
         timeline: {
@@ -89,6 +89,7 @@ export declare class VehiclesService {
         createdAt: Date;
         updatedAt: Date;
         version: number;
+        color: string | null;
         status: string;
         custom: Prisma.JsonValue | null;
         serverId: string | null;
@@ -96,7 +97,6 @@ export declare class VehiclesService {
         ownerId: string | null;
         plate: string;
         model: string | null;
-        color: string | null;
         erlcReference: string | null;
     }>;
     archive(actor: Actor, id: string, reason: string): Promise<{
@@ -104,6 +104,7 @@ export declare class VehiclesService {
         createdAt: Date;
         updatedAt: Date;
         version: number;
+        color: string | null;
         status: string;
         custom: Prisma.JsonValue | null;
         serverId: string | null;
@@ -111,7 +112,6 @@ export declare class VehiclesService {
         ownerId: string | null;
         plate: string;
         model: string | null;
-        color: string | null;
         erlcReference: string | null;
     }>;
 }

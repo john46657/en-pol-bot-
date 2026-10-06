@@ -18,6 +18,7 @@ const prisma_service_1 = require("../prisma/prisma.service");
 const permission_service_1 = require("./permission.service");
 const decorators_1 = require("./decorators");
 const discord_service_1 = require("../discord/discord.service");
+const discord_access_service_1 = require("./discord-access.service");
 const env_1 = require("../config/env");
 const errors_1 = require("../common/errors");
 exports.SESSION_COOKIE = 'enrp_session';
@@ -51,11 +52,13 @@ let AuthGuard = class AuthGuard {
     reflector;
     prisma;
     discord;
+    access;
     botToken = (0, env_1.loadEnv)().BOT_API_TOKEN;
-    constructor(reflector, prisma, discord) {
+    constructor(reflector, prisma, discord, access) {
         this.reflector = reflector;
         this.prisma = prisma;
         this.discord = discord;
+        this.access = access;
     }
     validBotToken(header) {
         if (!this.botToken || typeof header !== 'string' || !header.startsWith('Bot '))
@@ -104,6 +107,9 @@ let AuthGuard = class AuthGuard {
             await this.prisma.securityEvent.create({ data: { type: 'INVALID_TOKEN', requestId: req.requestId, ip: req.ip } }).catch(() => undefined);
             throw new errors_1.AppError('UNAUTHENTICATED', 'Authentication required.');
         }
+        // Discord-Rollen laufend prüfen (nicht nur beim Login): ohne freigeschaltete Rolle ist die Session sofort beendet
+        if (!(await this.access.verify(session.user.id)))
+            throw new errors_1.AppError('UNAUTHENTICATED', 'Your Discord roles no longer grant access to this dashboard.', { reason: 'NO_ACCESS' });
         req.user = { id: session.user.id, username: session.user.username, displayName: session.user.displayName, robloxUserId: session.user.robloxUserId, sessionId: session.id };
         return true;
     }
@@ -111,7 +117,7 @@ let AuthGuard = class AuthGuard {
 exports.AuthGuard = AuthGuard;
 exports.AuthGuard = AuthGuard = __decorate([
     (0, common_1.Injectable)(),
-    __metadata("design:paramtypes", [core_1.Reflector, prisma_service_1.PrismaService, discord_service_1.DiscordService])
+    __metadata("design:paramtypes", [core_1.Reflector, prisma_service_1.PrismaService, discord_service_1.DiscordService, discord_access_service_1.DiscordAccessService])
 ], AuthGuard);
 let PermissionGuard = class PermissionGuard {
     reflector;

@@ -21,6 +21,10 @@ let RealtimeService = class RealtimeService {
     publish(room, event, payload) {
         this.server?.to(room).emit(event, payload);
     }
+    /** An alle angemeldeten Verbindungen (z. B. „Rechte geändert“ → Oberfläche lädt das eigene Profil neu). Ohne Inhalt. */
+    broadcast(event) {
+        this.server?.emit(event, {});
+    }
     publishToUser(userId, event, payload) {
         this.publish(`user:${userId}`, event, payload);
     }

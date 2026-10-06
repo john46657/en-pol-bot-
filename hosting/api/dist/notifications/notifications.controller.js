@@ -29,11 +29,15 @@ let NotificationsController = class NotificationsController {
     }
     async list(u, f) {
         const state = f.filter === 'unread' ? { readAt: null, archivedAt: null } : f.filter === 'read' ? { readAt: { not: null }, archivedAt: null } : f.filter === 'archived' ? { archivedAt: { not: null } } : {};
-        const where = { userId: u.id, ...state, ...(f.type ? { type: f.type } : {}) };
+        // Persönlich ausgeblendete Arten (Einstellungen → Benachrichtigungen) erscheinen weder in der Liste noch im Zähler
+        const prefs = (await this.prisma.userSettings.findUnique({ where: { userId: u.id }, select: { preferences: true } }))?.preferences;
+        const muted = prefs?.notifications?.muted ?? [];
+        const type = f.type ? { type: f.type } : muted.length ? { type: { notIn: muted } } : {};
+        const where = { userId: u.id, ...state, ...type };
         const [items, total, unread] = await Promise.all([
             this.prisma.notification.findMany({ where, orderBy: { createdAt: 'desc' }, ...(0, pagination_1.skipTake)(f) }),
             this.prisma.notification.count({ where }),
-            this.prisma.notification.count({ where: { userId: u.id, readAt: null, archivedAt: null } }),
+            this.prisma.notification.count({ where: { userId: u.id, readAt: null, archivedAt: null, ...(muted.length ? { type: { notIn: muted } } : {}) } }),
         ]);
         return { ...(0, pagination_1.pageResult)(items, total, f), unread };
     }

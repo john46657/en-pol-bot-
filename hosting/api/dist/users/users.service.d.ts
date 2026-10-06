@@ -2,13 +2,15 @@ import { PrismaService } from '../prisma/prisma.service';
 import { AuditService, Actor } from '../audit/audit.service';
 import { AuthService } from '../auth/auth.service';
 import { PermissionService } from '../authz/permission.service';
+import { RealtimeService } from '../realtime/realtime.service';
 import { PageQuery } from '../common/pagination';
 export declare class UsersService {
     private readonly prisma;
     private readonly audit;
     private readonly auth;
     private readonly perms;
-    constructor(prisma: PrismaService, audit: AuditService, auth: AuthService, perms: PermissionService);
+    private readonly rt;
+    constructor(prisma: PrismaService, audit: AuditService, auth: AuthService, perms: PermissionService, rt: RealtimeService);
     /** Rollen-/Rechteänderungen an sich selbst sind verboten (Vier-Augen-Prinzip, verhindert Selbst-Eskalation). */
     private assertNotSelf;
     /** Mindestens ein aktiver System Administrator muss bestehen bleiben. */

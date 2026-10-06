@@ -7,6 +7,7 @@ import { AppError } from '../common/errors';
 import { customFieldsConfig } from '../studio/custom-fields';
 import { ACCENTS } from '../studio/studio.service';
 import { formSchema } from '../qualifications/qualifications.config';
+import { SERVER_SCOPED_SETTINGS } from '../common/guild-context';
 
 /** Eine oder mehrere Discord-IDs, mit Komma getrennt (z. B. Channels auf mehreren Servern). */
 const singleId = () => z.string().regex(/^\d{15,25}$/).optional();
@@ -25,6 +26,8 @@ export const SETTING_SCHEMAS = {
   'theme.accent': z.enum(ACCENTS),
   'discord.channels': z.object({ guildId: idList(), dispatch: idList(), wanted: idList(), announcements: idList(), applications: idList(), danger: idList(), sek: idList(), qualifications: idList(), duty: idList(), teamlist: singleId(), tickets: singleId(), staffRole: singleId(), radioRole: singleId(), sekRole: singleId(), dutyRole: idList(), breakRole: idList(), trainingRole: idList(), adminDutyRole: idList() }),
   'team.rankOrder': z.array(z.string().trim().min(1).max(64)).max(50),
+  /** Teams und Büros (Dienstgrade: `team.rankOrder`) – Auswahl in Personalakten und Filter der Teamliste. */
+  'team.structure': z.object({ teams: z.array(z.string().trim().min(1).max(64)).max(50), offices: z.array(z.string().trim().min(1).max(64)).max(50) }),
   'application.form': formSchema,
   /** „Mit Discord anmelden“: neue Konten erlauben, nur Mitglieder des Discord-Servers, Discord-Rolle → Systemrolle. */
   'auth.discord': z.object({
@@ -42,11 +45,14 @@ export class AdminService {
 
   async getSettings() {
     const rows = await this.prisma.systemSetting.findMany();
-    return { settings: Object.fromEntries(rows.map((r) => [r.key, r.value])), allowedKeys: Object.keys(SETTING_SCHEMAS) };
+    return { settings: Object.fromEntries(rows.map((r) => [r.key, r.value])), allowedKeys: Object.keys(SETTING_SCHEMAS), serverScoped: SERVER_SCOPED_SETTINGS };
   }
 
+  /** `key@<guildId>`: Server-eigener Wert (nur für Einstellungen, die je Server getrennt sein dürfen). */
   async setSetting(actor: Actor, key: string, value: unknown) {
-    const schema = SETTING_SCHEMAS[key as SettingKey];
+    const [base, guild] = key.split('@') as [string, string | undefined];
+    if (guild !== undefined && (!/^\d{15,25}$/.test(guild) || !(SERVER_SCOPED_SETTINGS as readonly string[]).includes(base))) throw new AppError('VALIDATION_FAILED', `Setting "${base}" cannot be set per server.`);
+    const schema = SETTING_SCHEMAS[base as SettingKey];
     if (!schema) throw new AppError('VALIDATION_FAILED', `Unknown setting "${key}".`);
     const parsed = schema.safeParse(value);
     if (!parsed.success) throw new AppError('VALIDATION_FAILED', 'Invalid setting value.', parsed.error.issues.map((i) => ({ path: i.path.join('.'), message: i.message })));

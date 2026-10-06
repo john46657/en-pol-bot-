@@ -18,6 +18,7 @@ const swagger_1 = require("@nestjs/swagger");
 const throttler_1 = require("@nestjs/throttler");
 const zod_1 = require("zod");
 const discord_service_1 = require("./discord.service");
+const discord_live_service_1 = require("./discord-live.service");
 const applications_service_1 = require("../applications/applications.service");
 const danger_service_1 = require("../danger/danger.service");
 const duty_service_1 = require("../duty/duty.service");
@@ -36,6 +37,15 @@ const outboxQ = zod_1.z.object({ limit: zod_1.z.coerce.number().int().min(1).max
 const rate = process.env.NODE_ENV === 'test' ? 10_000 : 20;
 const stateKey = zod_1.z.string().regex(/^[a-z0-9:_-]{1,64}$/);
 const stateBody = zod_1.z.object({ value: zod_1.z.unknown() });
+const avatar = zod_1.z.string().url().max(300).nullable();
+const membersBody = zod_1.z.object({ members: zod_1.z.array(zod_1.z.object({
+        id: sf, guildId: sf, username: zod_1.z.string().max(100), displayName: zod_1.z.string().max(100), avatar, status: zod_1.z.enum(['online', 'idle', 'dnd', 'offline', 'unknown']),
+        roleIds: zod_1.z.array(sf).max(250), joinedAt: zod_1.z.string().datetime().nullable(),
+    })).max(5000) });
+const voiceBody = zod_1.z.object({ channels: zod_1.z.array(zod_1.z.object({
+        id: sf, guildId: sf, name: zod_1.z.string().max(100), parentId: sf.nullable(), parentName: zod_1.z.string().max(100).nullable(), position: zod_1.z.number().int(),
+        members: zod_1.z.array(zod_1.z.object({ id: sf, displayName: zod_1.z.string().max(100), avatar, selfMute: zod_1.z.boolean(), selfDeaf: zod_1.z.boolean(), serverMute: zod_1.z.boolean(), serverDeaf: zod_1.z.boolean(), video: zod_1.z.boolean(), streaming: zod_1.z.boolean(), since: zod_1.z.string().datetime().nullable() })).max(500),
+    })).max(500) });
 const openQ = zod_1.z.object({ discordId: zod_1.z.string().regex(/^\d{15,25}$/) });
 const application = zod_1.z.object({ guildId: zod_1.z.string().regex(/^\d{15,25}$/).optional(), robloxUsername: zod_1.z.string().trim().min(1).max(64), robloxUserId: zod_1.z.string().max(20).optional(), discordId: zod_1.z.string().regex(/^\d{15,25}$/), discordName: zod_1.z.string().trim().max(100).optional(), durationSec: zod_1.z.number().int().min(0).max(86_400).optional(), joinedAt: zod_1.z.coerce.date().optional(), answers: zod_1.z.record(zod_1.z.string(), zod_1.z.union([zod_1.z.string().max(5000), zod_1.z.array(zod_1.z.string().max(100)).max(25)])) });
 /** Web-Seite: eigenes Konto verknüpfen. Authentifiziert per Session; Bot-Zugang ist hier nicht erlaubt. */
@@ -100,12 +110,14 @@ exports.DiscordController = DiscordController = __decorate([
 /** Dienst-zu-Dienst-Endpunkte des Bots (Header `Authorization: Bot <BOT_API_TOKEN>`); ohne Benutzerkontext. */
 let BotController = class BotController {
     d;
+    live;
     duty;
     danger;
     applications;
     prisma;
-    constructor(d, duty, danger, applications, prisma) {
+    constructor(d, live, duty, danger, applications, prisma) {
         this.d = d;
+        this.live = live;
         this.duty = duty;
         this.danger = danger;
         this.applications = applications;
@@ -122,6 +134,11 @@ let BotController = class BotController {
         const order = ((await this.prisma.systemSetting.findUnique({ where: { key: 'team.rankOrder' } }))?.value ?? []);
         return { rankOrder: order, members: rows.map((r) => ({ name: r.name, rank: r.rank, callsign: r.callsign, team: r.team, dutyStatus: r.dutyStatus, unit: r.unit?.callsign ?? null })) };
     }
+    /** Teammitglieder (Avatar, Name, Online-Status, Rollen) – der Bot meldet mindestens alle 60 Sekunden. */
+    async teamRoles() { return { roleIds: await this.live.teamRoleIds() }; }
+    members(b) { this.live.setMembers(b.members); }
+    /** Voice-Channels mit Personen (getrennt von der Teamliste). */
+    voice(b) { this.live.setVoice(b.channels); }
     dangerState() { return this.danger.get(); }
     async getState(key) { return { value: await this.d.getState(key) }; }
     async setState(key, b) { await this.d.setState(key, b.value); }
@@ -183,6 +200,31 @@ __decorate([
 ], BotController.prototype, "team", null);
 __decorate([
     (0, decorators_1.BotService)(),
+    (0, common_1.Get)('team-roles'),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", []),
+    __metadata("design:returntype", Promise)
+], BotController.prototype, "teamRoles", null);
+__decorate([
+    (0, decorators_1.BotService)(),
+    (0, common_1.Put)('members'),
+    (0, common_1.HttpCode)(204),
+    __param(0, (0, common_1.Body)((0, zod_pipe_1.zodBody)(membersBody))),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [void 0]),
+    __metadata("design:returntype", void 0)
+], BotController.prototype, "members", null);
+__decorate([
+    (0, decorators_1.BotService)(),
+    (0, common_1.Put)('voice'),
+    (0, common_1.HttpCode)(204),
+    __param(0, (0, common_1.Body)((0, zod_pipe_1.zodBody)(voiceBody))),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [void 0]),
+    __metadata("design:returntype", void 0)
+], BotController.prototype, "voice", null);
+__decorate([
+    (0, decorators_1.BotService)(),
     (0, common_1.Get)('danger'),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", []),
@@ -227,6 +269,6 @@ __decorate([
 exports.BotController = BotController = __decorate([
     (0, swagger_1.ApiTags)('bot'),
     (0, common_1.Controller)('bot'),
-    __metadata("design:paramtypes", [discord_service_1.DiscordService, duty_service_1.DutyService, danger_service_1.DangerService, applications_service_1.ApplicationsService, prisma_service_1.PrismaService])
+    __metadata("design:paramtypes", [discord_service_1.DiscordService, discord_live_service_1.DiscordLiveService, duty_service_1.DutyService, danger_service_1.DangerService, applications_service_1.ApplicationsService, prisma_service_1.PrismaService])
 ], BotController);
 //# sourceMappingURL=discord.controller.js.map

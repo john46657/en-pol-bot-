@@ -1,6 +1,9 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.HttpApi = exports.BotApiError = void 0;
+exports.HttpApi = exports.BotApiError = exports.guildScope = void 0;
+const node_async_hooks_1 = require("node:async_hooks");
+/** Discord-Server der gerade bearbeiteten Interaktion – geht als `X-Guild-Id` an die API (Rechte gelten je Server). */
+exports.guildScope = new node_async_hooks_1.AsyncLocalStorage();
 /** Fehler der System-API (mit Request-ID, ohne Stacktrace). */
 class BotApiError extends Error {
     status;
@@ -31,7 +34,7 @@ class HttpApi {
         try {
             const res = await this.doFetch(`${this.baseUrl}/api/v1${path}`, {
                 method, signal: ctl.signal,
-                headers: { authorization: `Bot ${this.token}`, ...(discordId ? { 'x-discord-user': discordId } : {}), ...(body ? { 'content-type': 'application/json' } : {}) },
+                headers: { authorization: `Bot ${this.token}`, ...(discordId ? { 'x-discord-user': discordId } : {}), ...(discordId && exports.guildScope.getStore() ? { 'x-guild-id': exports.guildScope.getStore() } : {}), ...(body ? { 'content-type': 'application/json' } : {}) },
                 body: body ? JSON.stringify(body) : undefined,
             });
             const text = await res.text();

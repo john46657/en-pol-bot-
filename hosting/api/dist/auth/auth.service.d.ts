@@ -1,12 +1,14 @@
 import { PrismaService } from '../prisma/prisma.service';
 import { AuditService, Actor } from '../audit/audit.service';
 import { PermissionService } from '../authz/permission.service';
+import { DiscordAccessService } from '../authz/discord-access.service';
 export declare class AuthService {
     private readonly prisma;
     private readonly audit;
     private readonly perms;
+    private readonly access;
     private readonly env;
-    constructor(prisma: PrismaService, audit: AuditService, perms: PermissionService);
+    constructor(prisma: PrismaService, audit: AuditService, perms: PermissionService, access: DiscordAccessService);
     login(username: string, password: string, meta: {
         ip?: string;
         userAgent?: string;
@@ -23,6 +25,8 @@ export declare class AuthService {
             roles: string[];
             permissions: import("@enrp/shared").PermissionKey[];
             lastLogin: Date | null;
+            guildId: string | null;
+            servers: string[];
         };
     }>;
     /** Neue Session nach erfolgreicher Anmeldung (Passwort oder Discord). */
@@ -45,6 +49,8 @@ export declare class AuthService {
             roles: string[];
             permissions: import("@enrp/shared").PermissionKey[];
             lastLogin: Date | null;
+            guildId: string | null;
+            servers: string[];
         };
     }>;
     logout(actor: Actor, sessionId: string): Promise<void>;
@@ -59,5 +65,7 @@ export declare class AuthService {
         roles: string[];
         permissions: import("@enrp/shared").PermissionKey[];
         lastLogin: Date | null;
+        guildId: string | null;
+        servers: string[];
     }>;
 }

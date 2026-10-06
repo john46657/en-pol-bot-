@@ -18,6 +18,8 @@ const password_1 = require("../auth/password");
 const auth_service_1 = require("../auth/auth.service");
 const permission_service_1 = require("../authz/permission.service");
 const errors_1 = require("../common/errors");
+const realtime_service_1 = require("../realtime/realtime.service");
+const guild_context_1 = require("../common/guild-context");
 const pagination_1 = require("../common/pagination");
 const publicSelect = {
     id: true, username: true, displayName: true, email: true, robloxUserId: true, robloxUsername: true, robloxStatus: true,
@@ -30,11 +32,13 @@ let UsersService = class UsersService {
     audit;
     auth;
     perms;
-    constructor(prisma, audit, auth, perms) {
+    rt;
+    constructor(prisma, audit, auth, perms, rt) {
         this.prisma = prisma;
         this.audit = audit;
         this.auth = auth;
         this.perms = perms;
+        this.rt = rt;
     }
     /** Rollen-/Rechteänderungen an sich selbst sind verboten (Vier-Augen-Prinzip, verhindert Selbst-Eskalation). */
     assertNotSelf(actor, id) {
@@ -66,8 +70,11 @@ let UsersService = class UsersService {
         return u;
     }
     async create(actor, d) {
-        if (d.roleIds?.length)
+        if (d.roleIds?.length) {
             await this.perms.assert(actor.userId, 'roles.manage'); // users.manage allein darf keine Rollen vergeben
+            for (const r of await this.prisma.role.findMany({ where: { id: { in: d.roleIds } } }))
+                await this.perms.assertOutranksRole(actor.userId, r.priority, r.name);
+        }
         const passwordHash = await (0, password_1.hashPassword)(d.password);
         return this.prisma.$transaction(async (tx) => {
             const u = await tx.user.create({
@@ -99,6 +106,7 @@ let UsersService = class UsersService {
         if (!active && id === actor.userId)
             throw new errors_1.AppError('CONFLICT', 'You cannot disable your own account.');
         await this.get(id);
+        await this.perms.assertOutranksUser(actor.userId, id); // Sperren/Entsperren nur unterhalb des eigenen Rangs
         const u = await this.prisma.$transaction(async (tx) => {
             if (!active)
                 await this.assertAdminRemains(tx, id);
@@ -113,6 +121,19 @@ let UsersService = class UsersService {
     async setRoles(actor, id, roleIds) {
         this.assertNotSelf(actor, id);
         const before = await this.get(id);
+        await this.perms.assertOutranksUser(actor.userId, id);
+        // Nur Rollen unterhalb des eigenen Rangs dürfen hinzukommen oder wegfallen
+        const old = before.roles.map((r) => r.role.id);
+        const touched = [...roleIds.filter((r) => !old.includes(r)), ...old.filter((r) => !roleIds.includes(r))];
+        const roles = await this.prisma.role.findMany({ where: { id: { in: touched } } });
+        if (roles.length !== new Set(touched).size)
+            throw new errors_1.AppError('NOT_FOUND', 'Role not found.');
+        const g = (0, guild_context_1.currentGuild)();
+        for (const r of roles) {
+            if (g && r.guildId && r.guildId !== g)
+                throw new errors_1.AppError('NOT_FOUND', 'Role not found.'); // Server getrennt
+            await this.perms.assertOutranksRole(actor.userId, r.priority, r.name);
+        }
         return this.prisma.$transaction(async (tx) => {
             const adminRole = await tx.role.findUnique({ where: { name: 'System Administrator' } });
             if (adminRole && !roleIds.includes(adminRole.id))
@@ -120,7 +141,8 @@ let UsersService = class UsersService {
             await tx.userRole.deleteMany({ where: { userId: id } });
             await tx.userRole.createMany({ data: roleIds.map((roleId) => ({ userId: id, roleId })) });
             const after = await tx.user.findUniqueOrThrow({ where: { id }, select: publicSelect });
-            await this.audit.record(actor, { action: 'user.roles.set', module: 'users', entityType: 'User', entityId: id, before: before.roles, after: after.roles }, tx);
+            this.rt.publishToUser(id, 'permissions.changed', {});
+            await this.audit.record(actor, { action: 'user.roles.set', module: 'permissions', entityType: 'User', entityId: id, before: before.roles, after: after.roles }, tx);
             return after;
         });
     }
@@ -129,6 +151,9 @@ let UsersService = class UsersService {
         if (!(0, shared_1.isPermissionKey)(d.permission))
             throw new errors_1.AppError('VALIDATION_FAILED', `Unknown permission "${d.permission}".`);
         await this.get(id);
+        await this.perms.assertOutranksUser(actor.userId, id);
+        if (d.effect === 'ALLOW')
+            await this.perms.assertCanDelegate(actor.userId, [d.permission]);
         return this.prisma.$transaction(async (tx) => {
             const prev = await tx.userPermissionOverride.findUnique({ where: { userId_permissionKey: { userId: id, permissionKey: d.permission } } });
             const o = await tx.userPermissionOverride.upsert({
@@ -136,17 +161,20 @@ let UsersService = class UsersService {
                 create: { userId: id, permissionKey: d.permission, effect: d.effect, reason: d.reason, createdById: actor.userId },
                 update: { effect: d.effect, reason: d.reason, createdById: actor.userId },
             });
+            this.rt.publishToUser(id, 'permissions.changed', {});
             await this.audit.record(actor, { action: 'user.override.add', module: 'permissions', entityType: 'User', entityId: id, before: prev, after: o, reason: d.reason }, tx);
             return o;
         });
     }
     async removeOverride(actor, id, permission) {
         this.assertNotSelf(actor, id);
+        await this.perms.assertOutranksUser(actor.userId, id); // auch das Aufheben einer Sperre (DENY) nur von oben
         await this.prisma.$transaction(async (tx) => {
             const prev = await tx.userPermissionOverride.findUnique({ where: { userId_permissionKey: { userId: id, permissionKey: permission } } });
             if (!prev)
                 throw new errors_1.AppError('NOT_FOUND', 'Override not found.');
             await tx.userPermissionOverride.delete({ where: { id: prev.id } });
+            this.rt.publishToUser(id, 'permissions.changed', {});
             await this.audit.record(actor, { action: 'user.override.remove', module: 'permissions', entityType: 'User', entityId: id, before: prev }, tx);
         });
     }
@@ -154,6 +182,6 @@ let UsersService = class UsersService {
 exports.UsersService = UsersService;
 exports.UsersService = UsersService = __decorate([
     (0, common_1.Injectable)(),
-    __metadata("design:paramtypes", [prisma_service_1.PrismaService, audit_service_1.AuditService, auth_service_1.AuthService, permission_service_1.PermissionService])
+    __metadata("design:paramtypes", [prisma_service_1.PrismaService, audit_service_1.AuditService, auth_service_1.AuthService, permission_service_1.PermissionService, realtime_service_1.RealtimeService])
 ], UsersService);
 //# sourceMappingURL=users.service.js.map
