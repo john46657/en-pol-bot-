@@ -19,7 +19,7 @@ const errors_1 = require("../common/errors");
 const ALPHABET = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
 const CODE_TTL_MS = 10 * 60_000;
 const hash = (c) => (0, node_crypto_1.createHash)('sha256').update(c.toUpperCase().replace(/[\s-]/g, '')).digest('hex');
-exports.CHANNEL_KEYS = ['dispatch', 'wanted', 'announcements', 'applications', 'danger', 'sek', 'qualifications', 'duty'];
+exports.CHANNEL_KEYS = ['dispatch', 'wanted', 'announcements', 'applications', 'danger', 'sek', 'qualifications', 'duty', 'tickets'];
 let DiscordService = class DiscordService {
     prisma;
     audit;

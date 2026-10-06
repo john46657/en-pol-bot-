@@ -9,6 +9,7 @@ async function main() {
     const prisma = new client_1.PrismaClient();
     try {
         await (0, seed_lib_1.seedBase)(prisma);
+        await (0, seed_lib_1.seedTickets)(prisma);
         if (!(await prisma.user.findFirst())) {
             const password = process.env.ADMIN_PASSWORD ?? (0, node_crypto_1.randomBytes)(12).toString('base64url');
             const admin = await prisma.user.create({ data: { username: 'admin', displayName: 'System Administrator', passwordHash: await (0, password_1.hashPassword)(password), settings: { create: {} } } });

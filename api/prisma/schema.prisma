@@ -667,3 +667,227 @@ model QualificationApplication {
   @@index([discordId, status])
   @@index([status, createdAt])
 }
+
+// ================= Ticket-System (alles über das Dashboard konfigurierbar) =================
+
+/** Panel in einem Discord-Channel (Embed + Buttons oder Dropdown mit Ticket-Kategorien). */
+model TicketPanel {
+  id            String   @id @default(uuid()) @db.Uuid
+  name          String
+  title         String   @default("")
+  description   String   @default("")
+  emoji         String?
+  color         Int      @default(3899638)
+  thumbnailUrl  String?
+  imageUrl      String?
+  bannerUrl     String?
+  footer        String?
+  footerIconUrl String?
+  authorName    String?
+  authorIconUrl String?
+  style         String   @default("BUTTONS") // BUTTONS | DROPDOWN
+  placeholder   String   @default("Wähle eine Kategorie …")
+  channelId     String?  // Ziel-Channel für das Panel
+  categoryIds   String[] @db.Uuid // verfügbare Ticket-Arten in dieser Reihenfolge
+  allowedRoleIds String[] // Discord-Rollen, die dieses Panel benutzen dürfen (leer = alle)
+  position      Int      @default(0)
+  messageChannelId String?
+  messageId     String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+model TicketCategory {
+  id                 String   @id @default(uuid()) @db.Uuid
+  name               String
+  description        String   @default("")
+  emoji              String?
+  color              Int      @default(3899638)
+  buttonStyle        String   @default("secondary")
+  position           Int      @default(0)
+  active             Boolean  @default(true)
+  discordCategoryId  String?  // Discord-Kategorie für neue Ticket-Channels
+  channelNameFormat  String   @default("ticket-{username}")
+  staffRoleIds       String[] // zuständige Discord-Rollen (sehen + schreiben)
+  extraRoleIds       String[] // zusätzliche Discord-Rollen (sehen + schreiben)
+  accessRoleNames    String[] // Systemrollen, die diese Tickets im Dashboard sehen (leer = alle mit ticket.view)
+  requiredRoleIds    String[] // Discord-Rollen, die zum Öffnen nötig sind (leer = alle)
+  allowedUserIds     String[] // nur diese Discord-Benutzer dürfen öffnen (leer = alle)
+  maxOpen            Int      @default(1) // 0 = unbegrenzt
+  cooldownMinutes    Int      @default(0)
+  defaultPriorityId  String?  @db.Uuid
+  questions          Json     @default("[]")
+  welcomeTitle       String   @default("🎫 {category}")
+  welcomeMessage     String   @default("Hallo {user}!\n\nBeschreibe dein Anliegen so genau wie möglich. Ein Teammitglied kümmert sich schnellstmöglich darum.")
+  mentionStaff       Boolean  @default(true)
+  mentionText        String   @default("")
+  buttons            Json     @default("[]")
+  claimMode          String   @default("SINGLE") // SINGLE | MULTI | PRIMARY
+  claimMessage       String   @default("👤 Bearbeiter: {staff}")
+  claimNotifyStaff   Boolean  @default(false)
+  creatorCanClose    Boolean  @default(true)
+  closeReasonMode    String   @default("OPTIONAL") // NONE | OPTIONAL | REQUIRED
+  closeReasonSource  String   @default("BOTH") // PRESET | CUSTOM | BOTH
+  closeRemovesAccess Boolean  @default(true)
+  allowReopen        Boolean  @default(true)
+  transcriptOnClose  Boolean  @default(true)
+  transcriptChannelId String?
+  transcriptToUser   Boolean  @default(false)
+  ratingEnabled      Boolean  @default(true)
+  ratingQuestion     String   @default("Wie zufrieden warst du mit dem Support?")
+  autoCloseMinutes   Int      @default(0) // 0 = aus
+  autoCloseWarnMinutes Int    @default(0) // Warnung so viele Minuten vorher (0 = keine)
+  autoCloseMessage   String   @default("⏰ {user}, dieses Ticket wird bald wegen Inaktivität geschlossen. Schreib eine Nachricht, wenn du noch Hilfe brauchst.")
+  deleteAfterMinutes Int      @default(-1) // -1 = nie, 0 = sofort
+  escalationRoleIds  String[]
+  escalationPriorityId String? @db.Uuid
+  escalationMessage  String   @default("🟠 Dieses Ticket wurde eskaliert. {staff}")
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+}
+
+model TicketStatus {
+  id           String  @id @default(uuid()) @db.Uuid
+  name         String
+  emoji        String  @default("")
+  color        Int     @default(3899638)
+  position     Int     @default(0)
+  kind         String  @default("OPEN") // OPEN | CLOSED | ARCHIVED
+  isDefault    Boolean @default(false) // neue / wieder geöffnete Tickets
+  isClaimed    Boolean @default(false) // beim Übernehmen
+  isEscalation Boolean @default(false) // beim Eskalieren
+  isClose      Boolean @default(false) // beim Schließen
+}
+
+model TicketPriority {
+  id               String   @id @default(uuid()) @db.Uuid
+  name             String
+  emoji            String   @default("")
+  color            Int      @default(3899638)
+  position         Int      @default(0)
+  isDefault        Boolean  @default(false)
+  allowedRoleNames String[] // Systemrollen, die diese Priorität setzen dürfen (leer = alle mit ticket.change_priority)
+  notifyRoleIds    String[] // Discord-Rollen, die bei dieser Priorität benachrichtigt werden
+}
+
+model TicketCloseReason {
+  id       String @id @default(uuid()) @db.Uuid
+  text     String
+  position Int    @default(0)
+}
+
+/** Support-Ticket (nicht zu verwechseln mit `Ticket` = Strafzettel). */
+model SupportTicket {
+  id               String    @id @default(uuid()) @db.Uuid
+  number           Int       @unique @default(autoincrement())
+  categoryId       String    @db.Uuid
+  panelId          String?   @db.Uuid
+  guildId          String
+  channelId        String?   @unique
+  controlMessageId String?
+  name             String
+  creatorId        String    // Discord-ID
+  creatorName      String
+  creatorUserId    String?   @db.Uuid
+  statusId         String    @db.Uuid
+  priorityId       String?   @db.Uuid
+  claimers         String[]  // Discord-IDs; erster = Hauptbearbeiter (PRIMARY)
+  answers          Json      @default("[]")
+  questionIndex    Int       @default(0)
+  locked           Boolean   @default(false)
+  closeReason      String?
+  closedById       String?
+  closedByName     String?
+  closedAt         DateTime?
+  firstResponseAt  DateTime?
+  lastActivityAt   DateTime  @default(now())
+  warnedAt         DateTime?
+  deleteAt         DateTime?
+  deletedAt        DateTime?
+  escalatedAt      DateTime?
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+  @@index([creatorId, categoryId])
+  @@index([statusId])
+  @@index([createdAt])
+}
+
+/** Zusätzlicher Zugriff im Ticket (Benutzer oder Rolle), optional befristet. */
+model TicketAccess {
+  id        String    @id @default(uuid()) @db.Uuid
+  ticketId  String    @db.Uuid
+  targetId  String
+  kind      String    // USER | ROLE
+  expiresAt DateTime?
+  addedById String?
+  createdAt DateTime  @default(now())
+  @@unique([ticketId, targetId])
+}
+
+model TicketMessage {
+  id          String   @id @default(uuid()) @db.Uuid
+  ticketId    String   @db.Uuid
+  discordId   String?  @unique
+  authorId    String
+  authorName  String
+  authorAvatar String?
+  isStaff     Boolean  @default(false)
+  isBot       Boolean  @default(false)
+  content     String   @default("")
+  attachments Json     @default("[]") // [{name, size, contentType, storageKey?, url}]
+  embeds      Json     @default("[]")
+  createdAt   DateTime @default(now())
+  @@index([ticketId, createdAt])
+}
+
+/** Interne Notizen – nur für berechtigte Mitarbeiter, nie für den Ersteller. */
+model TicketNote {
+  id         String   @id @default(uuid()) @db.Uuid
+  ticketId   String   @db.Uuid
+  authorId   String?  // Discord-ID
+  authorUserId String? @db.Uuid
+  authorName String
+  text       String
+  createdAt  DateTime @default(now())
+  @@index([ticketId])
+}
+
+model TicketLog {
+  id        String   @id @default(uuid()) @db.Uuid
+  ticketId  String   @db.Uuid
+  action    String
+  actorId   String?  // Discord-ID
+  actorName String?
+  detail    Json     @default("{}")
+  createdAt DateTime @default(now())
+  @@index([ticketId, createdAt])
+}
+
+model TicketTranscript {
+  id          String    @id @default(uuid()) @db.Uuid
+  ticketId    String    @db.Uuid
+  ticketNumber Int
+  categoryName String
+  creatorId   String
+  creatorName String
+  claimers    String[]
+  statusName  String
+  html        String
+  sizeBytes   Int
+  createdById String?
+  createdByName String?
+  createdAt   DateTime  @default(now())
+  @@index([ticketId])
+  @@index([createdAt])
+}
+
+model TicketRating {
+  id         String   @id @default(uuid()) @db.Uuid
+  ticketId   String   @unique @db.Uuid
+  categoryId String   @db.Uuid
+  creatorId  String
+  staffIds   String[]
+  stars      Int
+  comment    String?
+  createdAt  DateTime @default(now())
+}
