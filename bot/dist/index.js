@@ -249,6 +249,23 @@ client.on('messageCreate', (m) => {
         .catch((e) => console.error('direct message handling failed:', e instanceof Error ? e.message : e));
 });
 setInterval(() => (0, qualifications_1.sweepSessions)(), 10 * 60_000).unref();
+/** Rollen auf allen Servern abgleichen, auf denen es sie gibt (Dienst-Rollen). Nur tatsächlich nötige Änderungen. */
+async function syncRolesEverywhere(userId, add, remove) {
+    for (const g of client.guilds.cache.values()) {
+        const present = [...add, ...remove].filter((r) => g.roles.cache.has(r));
+        if (!present.length)
+            continue;
+        const member = await g.members.fetch(userId).catch(() => null);
+        if (!member)
+            continue;
+        const toRemove = remove.filter((r) => g.roles.cache.has(r) && member.roles.cache.has(r));
+        const toAdd = add.filter((r) => g.roles.cache.has(r) && !member.roles.cache.has(r));
+        if (toRemove.length)
+            await member.roles.remove(toRemove, 'EN Polizei: Dienststatus');
+        if (toAdd.length)
+            await member.roles.add(toAdd, 'EN Polizei: Dienststatus');
+    }
+}
 /** Rolle auf allen Servern vergeben, auf denen es sie gibt (angenommene Bewerbung). */
 async function grantRoleEverywhere(userId, roleId) {
     let found = false;
@@ -313,7 +330,7 @@ client.once('clientReady', async (c) => {
         if (!ch?.isSendable())
             throw new Error(`channel ${channelId} is not a text channel the bot can post in`);
         await ch.send({ embeds: embeds.map(toEmbed), components: toRows(buttons), allowedMentions: { parse: [] } }); // niemals @everyone/@here/Rollen pingen
-    }, cfg.OUTBOX_POLL_SECONDS, console.log, (userId, text) => platform.sendDirectMessage(userId, text), grantRoleEverywhere);
+    }, cfg.OUTBOX_POLL_SECONDS, console.log, (userId, text) => platform.sendDirectMessage(userId, text), grantRoleEverywhere, syncRolesEverywhere, () => void live.refresh('teamlist').catch(() => undefined));
     live.start(cfg.LIVE_REFRESH_SECONDS);
 });
 for (const sig of ['SIGINT', 'SIGTERM'])

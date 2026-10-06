@@ -1,7 +1,7 @@
 import { Prisma } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { AuditService, Actor } from '../audit/audit.service';
-export declare const CHANNEL_KEYS: readonly ["dispatch", "wanted", "announcements", "applications", "danger", "sek", "qualifications"];
+export declare const CHANNEL_KEYS: readonly ["dispatch", "wanted", "announcements", "applications", "danger", "sek", "qualifications", "duty"];
 export type ChannelKey = (typeof CHANNEL_KEYS)[number];
 /** Channel-/Rollen-IDs aus den Einstellungen. Die Benachrichtigungs-Channels dürfen Komma-Listen sein (mehrere Channels/Server). */
 export interface DiscordChannels {
@@ -13,11 +13,16 @@ export interface DiscordChannels {
     danger?: string;
     sek?: string;
     qualifications?: string;
+    duty?: string;
     teamlist?: string;
     tickets?: string;
     staffRole?: string;
     radioRole?: string;
     sekRole?: string;
+    dutyRole?: string;
+    breakRole?: string;
+    trainingRole?: string;
+    adminDutyRole?: string;
 }
 export declare class DiscordService {
     private readonly prisma;

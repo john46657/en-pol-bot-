@@ -2,12 +2,14 @@ import { DutyStatus } from '@enrp/shared';
 import { RealtimeService } from '../realtime/realtime.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { AuditService, Actor } from '../audit/audit.service';
+import { DiscordService } from '../discord/discord.service';
 /** Dienststatus wird ausschließlich explizit gesetzt – Online-Status ist niemals Dienststatus. */
 export declare class DutyService {
     private readonly prisma;
     private readonly audit;
     private readonly rt;
-    constructor(prisma: PrismaService, audit: AuditService, rt: RealtimeService);
+    private readonly discord;
+    constructor(prisma: PrismaService, audit: AuditService, rt: RealtimeService, discord: DiscordService);
     setStatus(actor: Actor, status: DutyStatus, d: {
         unitId?: string;
         callsign?: string;
@@ -22,6 +24,11 @@ export declare class DutyService {
     } | {
         status: string;
     }>;
+    /**
+     * Discord-Abgleich: Dienst-Rollen (Im Dienst/Pause/Training/Verwaltung) und Meldung im Dienst-Channel.
+     * Wird nur eingereiht, wenn ein Dienst-Channel oder eine Dienst-Rolle eingestellt ist. Fehler stören den Statuswechsel nie.
+     */
+    private notifyDiscord;
     team(): import("@prisma/client").Prisma.PrismaPromise<({
         user: {
             personnel: {
