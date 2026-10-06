@@ -41,7 +41,6 @@ Der Bot (`apps/bot`, TypeScript, discord.js 14) ist ein **schlanker Client der S
 | `/gefahrenstatus [aktion] [stufe] [grund]` | Gefahrenstatus anzeigen / setzen (grün, gelb, rot) / als Button-Panel in den Channel posten | anzeigen: `dashboard.view` · setzen: `dispatch.manage` · Panel: Discord „Server verwalten“ |
 | `/teamliste` | selbst aktualisierende Teamliste einrichten bzw. sofort aktualisieren | `team.view` + Discord „Server verwalten“ |
 | `/funkfreigabe aktion [mitglied]` | Funk-Whitelist: hinzufuegen, entfernen, pruefen, liste (vergibt/entzieht optional die Funkrolle) | prüfen/liste: `team.view` · ändern: `personnel.edit` |
-| `/supportpanel` | Support-Ticket-Panel posten (Button „Ticket öffnen“ → privater Channel) | Discord „Server verwalten“ |
 | `/roblox name` | Roblox-Benutzer suchen (Name → ID, Profil-Link) | – |
 
 Bewusst **nicht** über Discord möglich: Berichte freigeben/ablehnen, Fahndungen aufheben, Beschwerden bearbeiten, Personal-, Benutzer-, Rollen- und Audit-Funktionen. Das bleibt im Web.
@@ -51,7 +50,7 @@ Alle Antworten sind **nur für den Aufrufer sichtbar** (ephemeral). Fehlt ein Re
 ## Panels, Teamliste und Support-Tickets
 - **Gefahrenstatus-Panel** (`/gefahrenstatus aktion:panel hier posten`): Embed mit Buttons Grün/Gelb/Rot. Wer klickt, ändert den Status **mit seinen eigenen Rechten** (verknüpft + `dispatch.manage`). Das Panel zieht sich selbst nach – auch wenn der Status im Web (Leitstelle) geändert wird. Es gibt immer nur ein aktives Panel; ein neues ersetzt das alte (das alte wird nicht mehr bearbeitet).
 - **Teamliste** (`/teamliste`): steht im Channel aus *Settings → Team list channel ID* (sonst im aktuellen Channel), gruppiert nach Rang (Reihenfolge: *Settings → Team list rank order*), mit Dienststatus. Abgleich alle `LIVE_REFRESH_SECONDS` (Standard 60 s); bearbeitet wird nur bei Änderungen. Gelöschte Nachricht → wird neu gepostet.
-- **Support-Tickets** (`/supportpanel`): Button legt einen privaten Channel `ticket-<name>` an (sichtbar für die Person, das Team aus *Staff role ID* und den Bot), optional in der Kategorie *Support ticket category ID*. Ein offenes Ticket pro Person. „Ticket schließen“ löscht den Channel nach 5 s (der Bot löscht nur `ticket-…`-Channels). *Hinweis:* „Tickets“ im System sind Strafzettel – Support-Tickets leben nur in Discord.
+- **Support-Tickets**: komplett im Dashboard eingerichtet (*Operations → Support Tickets*): Panels werden von dort gesendet/aktualisiert – kein Slash-Command nötig. Kategorien, Fragen, Buttons, Rollen, Texte, Status, Prioritäten, Transcripts, Bewertungen, Automatik: [support-tickets.md](support-tickets.md).
 - **Funk-Freigabe**: maßgeblich ist die Liste im System; ist *Radio role ID* gesetzt, vergibt/entzieht der Bot zusätzlich diese Discord-Rolle (Bot-Rolle muss **über** der Funkrolle stehen).
 - **Bewerbung** (wie bei Appy): `/bewerbung` oder Button „Jetzt bewerben“ (`/bewerbungspanel`) → Direktnachricht „Bist du sicher …?“ mit *Bewerbung starten*/*Abbrechen* → der Bot fragt den Roblox-Namen und danach **jede Frage des Bewerbungsformulars einzeln** (bearbeiten unter *Qualifications → Setup*) (optionale Fragen mit „-“ überspringen; 3 Stunden Zeit). Die Roblox-ID wird über die Roblox-API ergänzt; eine offene Bewerbung pro Discord-Konto. Die Bewerbung erscheint wie bei Appy im **Applications channel** (Fragen fett + Antworten, Bewerber-Infos, Buttons Annehmen/Ablehnen – auch mit Grund –, Verlauf, Ticket, Dashboard). Bei Annahme/Ablehnung bekommt die Person eine **DM** (mit Grund nur, wenn „… mit Grund“ benutzt wurde; der interne Grund aus dem Web bleibt intern). Qualifikationen (SEK, Flugstaffel, Ausbilder) laufen genauso über `/qualipanel` ([qualifications.md](qualifications.md)).
 
@@ -62,8 +61,8 @@ Neue/zugewiesene Einsätze (Dispatch-Channel), neue Fahndungen (Wanted-Channel),
 
 ### 1. Discord Developer Portal (https://discord.com/developers/applications)
 1. *New Application* → *Bot* → **Token** kopieren (nur einmal sichtbar).
-2. **Keine** „Privileged Gateway Intents“ nötig (der Bot nutzt nur Slash-Commands).
-3. *OAuth2 → URL Generator*: Scopes `bot` **und** `applications.commands`; Bot-Rechte: *View Channels*, *Send Messages*, *Embed Links* – für Support-Tickets zusätzlich *Manage Channels*, für die Funkrolle *Manage Roles*. URL öffnen → Bot auf deinen Server einladen.
+2. **Message Content Intent** einschalten (*Bot → Privileged Gateway Intents*) – nur nötig, damit Nachrichten in Support-Tickets für Dashboard und Transcript mitgeschnitten werden. Ohne ihn startet der Bot trotzdem (dann ohne Verlauf).
+3. *OAuth2 → URL Generator*: Scopes `bot` **und** `applications.commands`; Bot-Rechte: *View Channels*, *Send Messages*, *Embed Links* *Attach Files*, *Read Message History* – für Support-Tickets zusätzlich *Manage Channels* und *Manage Roles* (Kanalrechte), für die Funkrolle *Manage Roles*. URL öffnen → Bot auf deinen Server einladen.
 4. Discord → Einstellungen → Erweitert → **Entwicklermodus** an. Rechtsklick auf deinen Server → *Server-ID kopieren*; Rechtsklick auf die Ziel-Channels → *Channel-ID kopieren*. Der Bot braucht in diesen Channels die Rechte *Kanal ansehen*, *Nachrichten senden*, *Links einbetten*.
 
 ### 2. Konfiguration

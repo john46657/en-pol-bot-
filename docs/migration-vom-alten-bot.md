@@ -14,7 +14,7 @@ Der frühere Bot (Emden RP Bot) wurde entfernt (liegt in der Git-Historie). Hier
 | `funk.py` | Funk-Whitelist | **Funk-Freigabe** im System + `/funkfreigabe` (optional mit Discord-Rolle) | ✅ |
 | `gefahrenstatus.py` | Button-Panel für das Gefahrenlevel | **Gefahrenstatus** (Leitstelle im Web + Button-Panel `/gefahrenstatus`, Meldung im Danger-Channel) | ✅ |
 | `gsg9.py` | eigenes Roster + Einsatzberichte | **SEK-Modul** (umbenannt von GSG9): Roster, Einsatzberichte – Web `/sek`, Discord `/sek`, `/sek-bericht` ([sek.md](sek.md)); Bewerbung über das Qualifikations-Panel `/qualipanel` ([qualifications.md](qualifications.md)) | ✅ |
-| `tickets.py` | Support-Ticket-Channels (Button) | Support-Tickets in Discord: `/supportpanel` → privater Ticket-Channel (*Tickets* im System sind weiterhin Strafzettel) | ✅ |
+| `tickets.py` | Support-Ticket-Channels (Button) | Vollständiges Ticket-System, eingerichtet im Dashboard ([support-tickets.md](support-tickets.md)); *Tickets* im System sind weiterhin Strafzettel | ✅ |
 | `app.py`, `*.html`, `api_server.py`, `dashboard_config.py` | Web-Dashboard für die Leitung | komplettes neues Web (Dashboard, MDT, Team, Admin, Studio) | ✅ ersetzt |
 | `config.py`, `settings.py`, `checks.py`, `database.py`, `discord_oauth.py` | Rollen-Checks, Einstellungen, Datenbank, Discord-Login | Rollen/Berechtigungen, Admin-Settings, PostgreSQL, eigener Login (kein Discord-OAuth) | ✅ ersetzt · ❌ Discord-Login |
 

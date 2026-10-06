@@ -85,16 +85,16 @@ var require_dist = __commonJS({
     __name(lazy, "lazy");
     function* range(range2) {
       let rangeEnd;
-      let start = 0;
+      let start2 = 0;
       let step = 1;
       if (typeof range2 === "number") {
         rangeEnd = range2;
       } else {
-        start = range2.start;
+        start2 = range2.start;
         rangeEnd = range2.end;
         step = range2.step ?? 1;
       }
-      for (let index = start; index < rangeEnd; index += step) {
+      for (let index = start2; index < rangeEnd; index += step) {
         yield index;
       }
     }
@@ -575,7 +575,7 @@ function __addDisposableResource(env, value, async) {
   return value;
 }
 function __disposeResources(env) {
-  function fail(e) {
+  function fail2(e) {
     env.error = env.hasError ? new _SuppressedError(e, env.error, "An error was suppressed during disposal.") : e;
     env.hasError = true;
   }
@@ -587,12 +587,12 @@ function __disposeResources(env) {
         if (r.dispose) {
           var result = r.dispose.call(r.value);
           if (r.async) return s |= 2, Promise.resolve(result).then(next, function(e) {
-            fail(e);
+            fail2(e);
             return next();
           });
         } else s |= 1;
       } catch (e) {
-        fail(e);
+        fail2(e);
       }
     }
     if (s === 1) return env.hasError ? Promise.reject(env.error) : Promise.resolve();
@@ -1071,8 +1071,8 @@ var require_errors = __commonJS({
     };
     var kSecureProxyConnectionError = /* @__PURE__ */ Symbol.for("undici.error.UND_ERR_PRX_TLS");
     var SecureProxyConnectionError = class extends UndiciError {
-      constructor(cause, message, options) {
-        super(message, { cause, ...options ?? {} });
+      constructor(cause, message, options2) {
+        super(message, { cause, ...options2 ?? {} });
         this.name = "SecureProxyConnectionError";
         this.message = message || "Secure Proxy Connection failed";
         this.code = "UND_ERR_PRX_TLS";
@@ -2989,7 +2989,7 @@ var require_connect = __commonJS({
       if (maxCachedSessions != null && (!Number.isInteger(maxCachedSessions) || maxCachedSessions < 0)) {
         throw new InvalidArgumentError("maxCachedSessions must be a positive integer or zero");
       }
-      const options = { path: socketPath, ...opts };
+      const options2 = { path: socketPath, ...opts };
       const sessionCache = new SessionCache(maxCachedSessions == null ? 100 : maxCachedSessions);
       timeout = timeout == null ? 1e4 : timeout;
       allowH2 = allowH2 != null ? allowH2 : false;
@@ -2999,7 +2999,7 @@ var require_connect = __commonJS({
           if (!tls) {
             tls = require("node:tls");
           }
-          servername = servername || options.servername || util2.getServerName(host) || null;
+          servername = servername || options2.servername || util2.getServerName(host) || null;
           const sessionKey = servername || hostname;
           assert(sessionKey);
           const session = customSession || sessionCache.get(sessionKey) || null;
@@ -3007,7 +3007,7 @@ var require_connect = __commonJS({
           socket = tls.connect({
             highWaterMark: 16384,
             // TLS in node can't have bigger HWM anyway...
-            ...options,
+            ...options2,
             servername,
             session,
             localAddress,
@@ -3027,14 +3027,14 @@ var require_connect = __commonJS({
           socket = net.connect({
             highWaterMark: 64 * 1024,
             // Same as nodejs fs streams.
-            ...options,
+            ...options2,
             localAddress,
             port,
             host: hostname
           });
         }
-        if (options.keepAlive == null || options.keepAlive) {
-          const keepAliveInitialDelay = options.keepAliveInitialDelay === void 0 ? 6e4 : options.keepAliveInitialDelay;
+        if (options2.keepAlive == null || options2.keepAlive) {
+          const keepAliveInitialDelay = options2.keepAliveInitialDelay === void 0 ? 6e4 : options2.keepAliveInitialDelay;
           socket.setKeepAlive(true, keepAliveInitialDelay);
         }
         const clearConnectTimeout = setupConnectTimeout(new WeakRef(socket), { timeout, hostname, port });
@@ -3786,13 +3786,13 @@ var require_data_url = __commonJS({
     }
     function collectASequenceOfCodePointsFast(char, input, position) {
       const idx = input.indexOf(char, position.position);
-      const start = position.position;
+      const start2 = position.position;
       if (idx === -1) {
         position.position = input.length;
-        return input.slice(start);
+        return input.slice(start2);
       }
       position.position = idx;
-      return input.slice(start, position.position);
+      return input.slice(start2, position.position);
     }
     function stringPercentDecode(input) {
       const bytes = encoder.encode(input);
@@ -4307,8 +4307,8 @@ var require_webidl = __commonJS({
             message: `Expected ${dictionary} to be one of: Null, Undefined, Object.`
           });
         }
-        for (const options of converters) {
-          const { key, defaultValue, required, converter } = options;
+        for (const options2 of converters) {
+          const { key, defaultValue, required, converter } = options2;
           if (required === true) {
             if (!Object.hasOwn(dictionary, key)) {
               throw webidl.errors.exception({
@@ -4318,16 +4318,16 @@ var require_webidl = __commonJS({
             }
           }
           let value = dictionary[key];
-          const hasDefault = Object.hasOwn(options, "defaultValue");
+          const hasDefault = Object.hasOwn(options2, "defaultValue");
           if (hasDefault && value !== null) {
             value ??= defaultValue();
           }
           if (required || hasDefault || value !== void 0) {
             value = converter(value, prefix, `${argument}.${key}`);
-            if (options.allowedValues && !options.allowedValues.includes(value)) {
+            if (options2.allowedValues && !options2.allowedValues.includes(value)) {
               throw webidl.errors.exception({
                 header: prefix,
-                message: `${value} is not an accepted type. Expected one of ${options.allowedValues.join(", ")}.`
+                message: `${value} is not an accepted type. Expected one of ${options2.allowedValues.join(", ")}.`
               });
             }
             dict[key] = value;
@@ -5380,10 +5380,10 @@ var require_file = __commonJS({
     var { kState } = require_symbols2();
     var { webidl } = require_webidl();
     var FileLike = class _FileLike {
-      constructor(blobLike, fileName, options = {}) {
+      constructor(blobLike, fileName, options2 = {}) {
         const n = fileName;
-        const t = options.type;
-        const d = options.lastModified ?? Date.now();
+        const t = options2.type;
+        const d = options2.lastModified ?? Date.now();
         this[kState] = {
           blobLike,
           name: n,
@@ -5530,7 +5530,7 @@ var require_formdata = __commonJS({
           this[kState].push(entry);
         }
       }
-      [nodeUtil.inspect.custom](depth, options) {
+      [nodeUtil.inspect.custom](depth, options2) {
         const state = this[kState].reduce((a, b) => {
           if (a[b.name]) {
             if (Array.isArray(a[b.name])) {
@@ -5543,9 +5543,9 @@ var require_formdata = __commonJS({
           }
           return a;
         }, { __proto__: null });
-        options.depth ??= depth;
-        options.colors ??= true;
-        const output = nodeUtil.formatWithOptions(options, state);
+        options2.depth ??= depth;
+        options2.colors ??= true;
+        const output = nodeUtil.formatWithOptions(options2, state);
         return `FormData ${output.slice(output.indexOf("]") + 2)}`;
       }
     };
@@ -5569,11 +5569,11 @@ var require_formdata = __commonJS({
           value = value instanceof Blob ? new File([value], "blob", { type: value.type }) : new FileLike(value, "blob", { type: value.type });
         }
         if (filename !== void 0) {
-          const options = {
+          const options2 = {
             type: value.type,
             lastModified: value.lastModified
           };
-          value = value instanceof NativeFile ? new File([value], filename, options) : new FileLike(value, filename, options);
+          value = value instanceof NativeFile ? new File([value], filename, options2) : new FileLike(value, filename, options2);
         }
       }
       return { name, value };
@@ -5798,11 +5798,11 @@ var require_formdata_parser = __commonJS({
       return name;
     }
     function collectASequenceOfBytes(condition, input, position) {
-      let start = position.position;
-      while (start < input.length && condition(input[start])) {
-        ++start;
+      let start2 = position.position;
+      while (start2 < input.length && condition(input[start2])) {
+        ++start2;
       }
-      return input.subarray(position.position, position.position = start);
+      return input.subarray(position.position, position.position = start2);
     }
     function removeChars(buf, leading, trailing, predicate) {
       let lead = 0;
@@ -5815,12 +5815,12 @@ var require_formdata_parser = __commonJS({
       }
       return lead === 0 && trail === buf.length - 1 ? buf : buf.subarray(lead, trail + 1);
     }
-    function bufferStartsWith(buffer, start, position) {
-      if (buffer.length < start.length) {
+    function bufferStartsWith(buffer, start2, position) {
+      if (buffer.length < start2.length) {
         return false;
       }
-      for (let i = 0; i < start.length; i++) {
-        if (start[i] !== buffer[position.position + i]) {
+      for (let i = 0; i < start2.length; i++) {
+        if (start2[i] !== buffer[position.position + i]) {
           return false;
         }
       }
@@ -6226,8 +6226,8 @@ var require_client_h1 = __commonJS({
           },
           wasm_on_status: (p, at, len) => {
             assert(currentParser.ptr === p);
-            const start = at - currentBufferPtr + currentBufferRef.byteOffset;
-            return currentParser.onStatus(new FastBuffer(currentBufferRef.buffer, start, len)) || 0;
+            const start2 = at - currentBufferPtr + currentBufferRef.byteOffset;
+            return currentParser.onStatus(new FastBuffer(currentBufferRef.buffer, start2, len)) || 0;
           },
           wasm_on_message_begin: (p) => {
             assert(currentParser.ptr === p);
@@ -6235,13 +6235,13 @@ var require_client_h1 = __commonJS({
           },
           wasm_on_header_field: (p, at, len) => {
             assert(currentParser.ptr === p);
-            const start = at - currentBufferPtr + currentBufferRef.byteOffset;
-            return currentParser.onHeaderField(new FastBuffer(currentBufferRef.buffer, start, len)) || 0;
+            const start2 = at - currentBufferPtr + currentBufferRef.byteOffset;
+            return currentParser.onHeaderField(new FastBuffer(currentBufferRef.buffer, start2, len)) || 0;
           },
           wasm_on_header_value: (p, at, len) => {
             assert(currentParser.ptr === p);
-            const start = at - currentBufferPtr + currentBufferRef.byteOffset;
-            return currentParser.onHeaderValue(new FastBuffer(currentBufferRef.buffer, start, len)) || 0;
+            const start2 = at - currentBufferPtr + currentBufferRef.byteOffset;
+            return currentParser.onHeaderValue(new FastBuffer(currentBufferRef.buffer, start2, len)) || 0;
           },
           wasm_on_headers_complete: (p, statusCode, upgrade, shouldKeepAlive) => {
             assert(currentParser.ptr === p);
@@ -6249,8 +6249,8 @@ var require_client_h1 = __commonJS({
           },
           wasm_on_body: (p, at, len) => {
             assert(currentParser.ptr === p);
-            const start = at - currentBufferPtr + currentBufferRef.byteOffset;
-            return currentParser.onBody(new FastBuffer(currentBufferRef.buffer, start, len)) || 0;
+            const start2 = at - currentBufferPtr + currentBufferRef.byteOffset;
+            return currentParser.onBody(new FastBuffer(currentBufferRef.buffer, start2, len)) || 0;
           },
           wasm_on_message_complete: (p) => {
             assert(currentParser.ptr === p);
@@ -8816,7 +8816,7 @@ var require_pool = __commonJS({
         autoSelectFamily,
         autoSelectFamilyAttemptTimeout,
         allowH2,
-        ...options
+        ...options2
       } = {}) {
         if (connections != null && (!Number.isFinite(connections) || connections < 0)) {
           throw new InvalidArgumentError("invalid connections");
@@ -8838,12 +8838,12 @@ var require_pool = __commonJS({
             ...connect
           });
         }
-        super(options);
-        this[kInterceptors] = options.interceptors?.Pool && Array.isArray(options.interceptors.Pool) ? options.interceptors.Pool : [];
+        super(options2);
+        this[kInterceptors] = options2.interceptors?.Pool && Array.isArray(options2.interceptors.Pool) ? options2.interceptors.Pool : [];
         this[kConnections] = connections || null;
         this[kUrl] = util2.parseOrigin(origin);
-        this[kOptions] = { ...util2.deepClone(options), connect, allowH2 };
-        this[kOptions].interceptors = options.interceptors ? { ...options.interceptors } : void 0;
+        this[kOptions] = { ...util2.deepClone(options2), connect, allowH2 };
+        this[kOptions].interceptors = options2.interceptors ? { ...options2.interceptors } : void 0;
         this[kFactory] = factory;
         this.on("connectionError", (origin2, targets, error) => {
           for (const target of targets) {
@@ -9037,7 +9037,7 @@ var require_agent = __commonJS({
       return opts && opts.connections === 1 ? new Client3(origin, opts) : new Pool(origin, opts);
     }
     var Agent = class extends DispatcherBase {
-      constructor({ factory = defaultFactory, maxRedirections = 0, connect, ...options } = {}) {
+      constructor({ factory = defaultFactory, maxRedirections = 0, connect, ...options2 } = {}) {
         if (typeof factory !== "function") {
           throw new InvalidArgumentError("factory must be a function.");
         }
@@ -9047,13 +9047,13 @@ var require_agent = __commonJS({
         if (!Number.isInteger(maxRedirections) || maxRedirections < 0) {
           throw new InvalidArgumentError("maxRedirections must be a positive number");
         }
-        super(options);
+        super(options2);
         if (connect && typeof connect !== "function") {
           connect = { ...connect };
         }
-        this[kInterceptors] = options.interceptors?.Agent && Array.isArray(options.interceptors.Agent) ? options.interceptors.Agent : [createRedirectInterceptor({ maxRedirections })];
-        this[kOptions] = { ...util2.deepClone(options), connect };
-        this[kOptions].interceptors = options.interceptors ? { ...options.interceptors } : void 0;
+        this[kInterceptors] = options2.interceptors?.Agent && Array.isArray(options2.interceptors.Agent) ? options2.interceptors.Agent : [createRedirectInterceptor({ maxRedirections })];
+        this[kOptions] = { ...util2.deepClone(options2), connect };
+        this[kOptions].interceptors = options2.interceptors ? { ...options2.interceptors } : void 0;
         this[kMaxRedirections] = maxRedirections;
         this[kFactory] = factory;
         this[kClients] = /* @__PURE__ */ new Map();
@@ -9221,7 +9221,7 @@ var require_proxy_agent = __commonJS({
         const connect = buildConnector({ ...opts.proxyTls });
         this[kConnectEndpoint] = buildConnector({ ...opts.requestTls });
         const agentFactory = opts.factory || defaultAgentFactory;
-        const factory = (origin2, options) => {
+        const factory = (origin2, options2) => {
           const { protocol: protocol2 } = new URL2(origin2);
           if (!this[kTunnelProxy] && protocol2 === "http:" && this[kProxy].protocol === "http:") {
             return new Http1ProxyWrapper(this[kProxy].uri, {
@@ -9230,7 +9230,7 @@ var require_proxy_agent = __commonJS({
               factory: agentFactory
             });
           }
-          return agentFactory(origin2, options);
+          return agentFactory(origin2, options2);
         };
         this[kClient] = clientFactory(url, { connect });
         this[kAgent] = new Agent({
@@ -9697,8 +9697,8 @@ var require_retry_handler = __commonJS({
             this.abort(contentLengthError);
             return false;
           }
-          const { start, size, end = size - 1 } = contentRange;
-          if (this.start !== start || this.end != null && this.end !== end) {
+          const { start: start2, size, end = size - 1 } = contentRange;
+          if (this.start !== start2 || this.end != null && this.end !== end) {
             this.abort(
               new RequestRetryError("Content-Range mismatch", statusCode, {
                 headers,
@@ -9727,13 +9727,13 @@ var require_retry_handler = __commonJS({
               this.abort(contentLengthError);
               return false;
             }
-            const { start, size, end = size - 1 } = range;
+            const { start: start2, size, end = size - 1 } = range;
             assert(
-              start != null && Number.isFinite(start),
+              start2 != null && Number.isFinite(start2),
               "content-range mismatch"
             );
             assert(end != null && Number.isFinite(end), "invalid content-length");
-            this.start = start;
+            this.start = start2;
             this.end = end;
           }
           if (this.end == null) {
@@ -9829,10 +9829,10 @@ var require_retry_agent = __commonJS({
     var RetryAgent = class extends Dispatcher {
       #agent = null;
       #options = null;
-      constructor(agent, options = {}) {
-        super(options);
+      constructor(agent, options2 = {}) {
+        super(options2);
         this.#agent = agent;
-        this.#options = options;
+        this.#options = options2;
       }
       dispatch(opts, handler) {
         const retry = new RetryHandler({
@@ -10059,9 +10059,9 @@ var require_readable = __commonJS({
       }
       const { _readableState: state } = consume2.stream;
       if (state.bufferIndex) {
-        const start = state.bufferIndex;
+        const start2 = state.bufferIndex;
         const end = state.buffer.length;
-        for (let n = start; n < end; n++) {
+        for (let n = start2; n < end; n++) {
           consumePush(consume2, state.buffer[n]);
         }
       } else {
@@ -10086,8 +10086,8 @@ var require_readable = __commonJS({
       }
       const buffer = chunks.length === 1 ? chunks[0] : Buffer.concat(chunks, length);
       const bufferLength = buffer.length;
-      const start = bufferLength > 2 && buffer[0] === 239 && buffer[1] === 187 && buffer[2] === 191 ? 3 : 0;
-      return buffer.utf8Slice(start, bufferLength);
+      const start2 = bufferLength > 2 && buffer[0] === 239 && buffer[1] === 187 && buffer[2] === 191 ? 3 : 0;
+      return buffer.utf8Slice(start2, bufferLength);
     }
     function chunksConcat(chunks, length) {
       if (chunks.length === 0 || length === 0) {
@@ -12712,9 +12712,9 @@ var require_headers = __commonJS({
         }
         return this.#headersList[kHeadersSortedMap] = headers;
       }
-      [util2.inspect.custom](depth, options) {
-        options.depth ??= depth;
-        return `Headers ${util2.formatWithOptions(options, this.#headersList.entries)}`;
+      [util2.inspect.custom](depth, options2) {
+        options2.depth ??= depth;
+        return `Headers ${util2.formatWithOptions(options2, this.#headersList.entries)}`;
       }
       static getHeadersGuard(o) {
         return o.#guard;
@@ -12939,11 +12939,11 @@ var require_response = __commonJS({
         }
         return fromInnerResponse(clonedResponse, getHeadersGuard(this[kHeaders]));
       }
-      [nodeUtil.inspect.custom](depth, options) {
-        if (options.depth === null) {
-          options.depth = 2;
+      [nodeUtil.inspect.custom](depth, options2) {
+        if (options2.depth === null) {
+          options2.depth = 2;
         }
-        options.colors ??= true;
+        options2.colors ??= true;
         const properties = {
           status: this.status,
           statusText: this.statusText,
@@ -12955,7 +12955,7 @@ var require_response = __commonJS({
           type: this.type,
           url: this.url
         };
-        return `Response ${nodeUtil.formatWithOptions(options, properties)}`;
+        return `Response ${nodeUtil.formatWithOptions(options2, properties)}`;
       }
     };
     mixinBody(Response2);
@@ -13708,11 +13708,11 @@ var require_request2 = __commonJS({
         }
         return fromInnerRequest(clonedRequest, ac.signal, getHeadersGuard(this[kHeaders]));
       }
-      [nodeUtil.inspect.custom](depth, options) {
-        if (options.depth === null) {
-          options.depth = 2;
+      [nodeUtil.inspect.custom](depth, options2) {
+        if (options2.depth === null) {
+          options2.depth = 2;
         }
-        options.colors ??= true;
+        options2.colors ??= true;
         const properties = {
           method: this.method,
           url: this.url,
@@ -13730,7 +13730,7 @@ var require_request2 = __commonJS({
           isHistoryNavigation: this.isHistoryNavigation,
           signal: this.signal
         };
-        return `Request ${nodeUtil.formatWithOptions(options, properties)}`;
+        return `Request ${nodeUtil.formatWithOptions(options2, properties)}`;
       }
     };
     mixinBody(Request);
@@ -15867,24 +15867,24 @@ var require_cache = __commonJS({
         webidl.util.markAsUncloneable(this);
         this.#relevantRequestResponseList = arguments[1];
       }
-      async match(request, options = {}) {
+      async match(request, options2 = {}) {
         webidl.brandCheck(this, _Cache);
         const prefix = "Cache.match";
         webidl.argumentLengthCheck(arguments, 1, prefix);
         request = webidl.converters.RequestInfo(request, prefix, "request");
-        options = webidl.converters.CacheQueryOptions(options, prefix, "options");
-        const p = this.#internalMatchAll(request, options, 1);
+        options2 = webidl.converters.CacheQueryOptions(options2, prefix, "options");
+        const p = this.#internalMatchAll(request, options2, 1);
         if (p.length === 0) {
           return;
         }
         return p[0];
       }
-      async matchAll(request = void 0, options = {}) {
+      async matchAll(request = void 0, options2 = {}) {
         webidl.brandCheck(this, _Cache);
         const prefix = "Cache.matchAll";
         if (request !== void 0) request = webidl.converters.RequestInfo(request, prefix, "request");
-        options = webidl.converters.CacheQueryOptions(options, prefix, "options");
-        return this.#internalMatchAll(request, options);
+        options2 = webidl.converters.CacheQueryOptions(options2, prefix, "options");
+        return this.#internalMatchAll(request, options2);
       }
       async add(request) {
         webidl.brandCheck(this, _Cache);
@@ -16081,16 +16081,16 @@ var require_cache = __commonJS({
         });
         return cacheJobPromise.promise;
       }
-      async delete(request, options = {}) {
+      async delete(request, options2 = {}) {
         webidl.brandCheck(this, _Cache);
         const prefix = "Cache.delete";
         webidl.argumentLengthCheck(arguments, 1, prefix);
         request = webidl.converters.RequestInfo(request, prefix, "request");
-        options = webidl.converters.CacheQueryOptions(options, prefix, "options");
+        options2 = webidl.converters.CacheQueryOptions(options2, prefix, "options");
         let r = null;
         if (request instanceof Request) {
           r = request[kState];
-          if (r.method !== "GET" && !options.ignoreMethod) {
+          if (r.method !== "GET" && !options2.ignoreMethod) {
             return false;
           }
         } else {
@@ -16101,7 +16101,7 @@ var require_cache = __commonJS({
         const operation = {
           type: "delete",
           request: r,
-          options
+          options: options2
         };
         operations.push(operation);
         const cacheJobPromise = createDeferredPromise();
@@ -16127,16 +16127,16 @@ var require_cache = __commonJS({
        * @param {import('../../types/cache').CacheQueryOptions} options
        * @returns {Promise<readonly Request[]>}
        */
-      async keys(request = void 0, options = {}) {
+      async keys(request = void 0, options2 = {}) {
         webidl.brandCheck(this, _Cache);
         const prefix = "Cache.keys";
         if (request !== void 0) request = webidl.converters.RequestInfo(request, prefix, "request");
-        options = webidl.converters.CacheQueryOptions(options, prefix, "options");
+        options2 = webidl.converters.CacheQueryOptions(options2, prefix, "options");
         let r = null;
         if (request !== void 0) {
           if (request instanceof Request) {
             r = request[kState];
-            if (r.method !== "GET" && !options.ignoreMethod) {
+            if (r.method !== "GET" && !options2.ignoreMethod) {
               return [];
             }
           } else if (typeof request === "string") {
@@ -16150,7 +16150,7 @@ var require_cache = __commonJS({
             requests.push(requestResponse[0]);
           }
         } else {
-          const requestResponses = this.#queryCache(r, options);
+          const requestResponses = this.#queryCache(r, options2);
           for (const requestResponse of requestResponses) {
             requests.push(requestResponse[0]);
           }
@@ -16258,12 +16258,12 @@ var require_cache = __commonJS({
        * @param {requestResponseList} targetStorage
        * @returns {requestResponseList}
        */
-      #queryCache(requestQuery, options, targetStorage) {
+      #queryCache(requestQuery, options2, targetStorage) {
         const resultList = [];
         const storage = targetStorage ?? this.#relevantRequestResponseList;
         for (const requestResponse of storage) {
           const [cachedRequest, cachedResponse] = requestResponse;
-          if (this.#requestMatchesCachedItem(requestQuery, cachedRequest, cachedResponse, options)) {
+          if (this.#requestMatchesCachedItem(requestQuery, cachedRequest, cachedResponse, options2)) {
             resultList.push(requestResponse);
           }
         }
@@ -16277,17 +16277,17 @@ var require_cache = __commonJS({
        * @param {import('../../types/cache').CacheQueryOptions | undefined} options
        * @returns {boolean}
        */
-      #requestMatchesCachedItem(requestQuery, request, response = null, options) {
+      #requestMatchesCachedItem(requestQuery, request, response = null, options2) {
         const queryURL = new URL(requestQuery.url);
         const cachedURL = new URL(request.url);
-        if (options?.ignoreSearch) {
+        if (options2?.ignoreSearch) {
           cachedURL.search = "";
           queryURL.search = "";
         }
         if (!urlEquals(queryURL, cachedURL, true)) {
           return false;
         }
-        if (response == null || options?.ignoreVary || !response.headersList.contains("vary")) {
+        if (response == null || options2?.ignoreVary || !response.headersList.contains("vary")) {
           return true;
         }
         const fieldValues = getFieldValues(response.headersList.get("vary"));
@@ -16303,12 +16303,12 @@ var require_cache = __commonJS({
         }
         return true;
       }
-      #internalMatchAll(request, options, maxResponses = Infinity) {
+      #internalMatchAll(request, options2, maxResponses = Infinity) {
         let r = null;
         if (request !== void 0) {
           if (request instanceof Request) {
             r = request[kState];
-            if (r.method !== "GET" && !options.ignoreMethod) {
+            if (r.method !== "GET" && !options2.ignoreMethod) {
               return [];
             }
           } else if (typeof request === "string") {
@@ -16321,7 +16321,7 @@ var require_cache = __commonJS({
             responses.push(requestResponse[1]);
           }
         } else {
-          const requestResponses = this.#queryCache(r, options);
+          const requestResponses = this.#queryCache(r, options2);
           for (const requestResponse of requestResponses) {
             responses.push(requestResponse[1]);
           }
@@ -16405,21 +16405,21 @@ var require_cachestorage = __commonJS({
         }
         webidl.util.markAsUncloneable(this);
       }
-      async match(request, options = {}) {
+      async match(request, options2 = {}) {
         webidl.brandCheck(this, _CacheStorage);
         webidl.argumentLengthCheck(arguments, 1, "CacheStorage.match");
         request = webidl.converters.RequestInfo(request);
-        options = webidl.converters.MultiCacheQueryOptions(options);
-        if (options.cacheName != null) {
-          if (this.#caches.has(options.cacheName)) {
-            const cacheList = this.#caches.get(options.cacheName);
+        options2 = webidl.converters.MultiCacheQueryOptions(options2);
+        if (options2.cacheName != null) {
+          if (this.#caches.has(options2.cacheName)) {
+            const cacheList = this.#caches.get(options2.cacheName);
             const cache = new Cache(kConstruct, cacheList);
-            return await cache.match(request, options);
+            return await cache.match(request, options2);
           }
         } else {
           for (const cacheList of this.#caches.values()) {
             const cache = new Cache(kConstruct, cacheList);
-            const response = await cache.match(request, options);
+            const response = await cache.match(request, options2);
             if (response !== void 0) {
               return response;
             }
@@ -17596,7 +17596,7 @@ var require_connection = __commonJS({
       crypto = require("node:crypto");
     } catch {
     }
-    function establishWebSocketConnection(url, protocols, client2, ws, onEstablish, options) {
+    function establishWebSocketConnection(url, protocols, client2, ws, onEstablish, options2) {
       const requestURL = url;
       requestURL.protocol = url.protocol === "ws:" ? "http:" : "https:";
       const request = makeRequest({
@@ -17609,8 +17609,8 @@ var require_connection = __commonJS({
         cache: "no-store",
         redirect: "error"
       });
-      if (options.headers) {
-        const headersList = getHeadersList(new Headers(options.headers));
+      if (options2.headers) {
+        const headersList = getHeadersList(new Headers(options2.headers));
         request.headersList = headersList;
       }
       const keyValue = crypto.randomBytes(16).toString("base64");
@@ -17624,7 +17624,7 @@ var require_connection = __commonJS({
       const controller = fetching({
         request,
         useParallelQueue: true,
-        dispatcher: options.dispatcher,
+        dispatcher: options2.dispatcher,
         processResponse(response) {
           if (response.type === "error" || response.status !== 101) {
             failWebsocketConnection(ws, "Received network error or non-101 status code.");
@@ -17774,10 +17774,10 @@ var require_permessage_deflate = __commonJS({
       /**
        * @param {Map<string, string>} extensions
        */
-      constructor(extensions, options) {
+      constructor(extensions, options2) {
         this.#options.serverNoContextTakeover = extensions.has("server_no_context_takeover");
         this.#options.serverMaxWindowBits = extensions.get("server_max_window_bits");
-        this.#maxPayloadSize = options.maxPayloadSize;
+        this.#maxPayloadSize = options2.maxPayloadSize;
       }
       /**
        * Decompress a compressed payload.
@@ -17884,14 +17884,14 @@ var require_receiver = __commonJS({
        * @param {Map<string, string>|null} extensions
        * @param {{ maxFragments?: number, maxPayloadSize?: number }} [options]
        */
-      constructor(ws, extensions, options = {}) {
+      constructor(ws, extensions, options2 = {}) {
         super();
         this.ws = ws;
         this.#extensions = extensions == null ? /* @__PURE__ */ new Map() : extensions;
-        this.#maxFragments = options.maxFragments ?? 0;
-        this.#maxPayloadSize = options.maxPayloadSize ?? 0;
+        this.#maxFragments = options2.maxFragments ?? 0;
+        this.#maxPayloadSize = options2.maxPayloadSize ?? 0;
         if (this.#extensions.has("permessage-deflate")) {
-          this.#extensions.set("permessage-deflate", new PerMessageDeflate(extensions, options));
+          this.#extensions.set("permessage-deflate", new PerMessageDeflate(extensions, options2));
         }
       }
       /**
@@ -18344,9 +18344,9 @@ var require_websocket = __commonJS({
         webidl.util.markAsUncloneable(this);
         const prefix = "WebSocket constructor";
         webidl.argumentLengthCheck(arguments, 1, prefix);
-        const options = webidl.converters["DOMString or sequence<DOMString> or WebSocketInit"](protocols, prefix, "options");
+        const options2 = webidl.converters["DOMString or sequence<DOMString> or WebSocketInit"](protocols, prefix, "options");
         url = webidl.converters.USVString(url, prefix, "url");
-        protocols = options.protocols;
+        protocols = options2.protocols;
         const baseURL = environmentSettingsObject.settingsObject.baseUrl;
         let urlRecord;
         try {
@@ -18385,7 +18385,7 @@ var require_websocket = __commonJS({
           client2,
           this,
           (response, extensions) => this.#onConnectionEstablished(response, extensions),
-          options
+          options2
         );
         this[kReadyState] = _WebSocket.CONNECTING;
         this[kSentClose] = sentCloseFrameState.NOT_SENT;
@@ -18724,19 +18724,19 @@ var require_eventsource_stream = __commonJS({
     var EVENT = Buffer.from("event");
     var ID = Buffer.from("id");
     var RETRY = Buffer.from("retry");
-    function isASCIINumberBytes(buffer, start) {
-      if (start >= buffer.length) {
+    function isASCIINumberBytes(buffer, start2) {
+      if (start2 >= buffer.length) {
         return false;
       }
-      for (let i = start; i < buffer.length; i++) {
+      for (let i = start2; i < buffer.length; i++) {
         if (buffer[i] < 48 || buffer[i] > 57) {
           return false;
         }
       }
       return true;
     }
-    function isValidLastEventIdBytes(buffer, start) {
-      for (let i = start; i < buffer.length; i++) {
+    function isValidLastEventIdBytes(buffer, start2) {
+      for (let i = start2; i < buffer.length; i++) {
         if (buffer[i] === 0) {
           return false;
         }
@@ -18791,12 +18791,12 @@ var require_eventsource_stream = __commonJS({
        * @param {eventSourceSettings} options.eventSourceSettings
        * @param {Function} [options.push]
        */
-      constructor(options = {}) {
-        options.readableObjectMode = true;
-        super(options);
-        this.state = options.eventSourceSettings || {};
-        if (options.push) {
-          this.push = options.push;
+      constructor(options2 = {}) {
+        options2.readableObjectMode = true;
+        super(options2);
+        this.state = options2.eventSourceSettings || {};
+        if (options2.push) {
+          this.push = options2.push;
         }
       }
       /**
@@ -18979,9 +18979,9 @@ ${value}`;
         let length = 0;
         for (let i = this.lineChunkIndex; i <= this.chunkIndex; i++) {
           const chunk = this.chunks[i];
-          const start = i === this.lineChunkIndex ? this.linePos : 0;
+          const start2 = i === this.lineChunkIndex ? this.linePos : 0;
           const end = i === this.chunkIndex ? this.pos : chunk.length;
-          const slice = chunk.subarray(start, end);
+          const slice = chunk.subarray(start2, end);
           length += slice.length;
           chunks.push(slice);
         }
@@ -19439,9 +19439,9 @@ var require_undici = __commonJS({
     module2.exports.setGlobalDispatcher = setGlobalDispatcher;
     module2.exports.getGlobalDispatcher = getGlobalDispatcher;
     var fetchImpl = require_fetch().fetch;
-    module2.exports.fetch = async function fetch2(init, options = void 0) {
+    module2.exports.fetch = async function fetch2(init, options2 = void 0) {
       try {
-        return await fetchImpl(init, options);
+        return await fetchImpl(init, options2);
       } catch (err) {
         if (err && typeof err === "object") {
           Error.captureStackTrace(err);
@@ -20273,36 +20273,36 @@ var require_channel = __commonJS({
       ForumLayoutType2[ForumLayoutType2["ListView"] = 1] = "ListView";
       ForumLayoutType2[ForumLayoutType2["GalleryView"] = 2] = "GalleryView";
     })(ForumLayoutType || (exports2.ForumLayoutType = ForumLayoutType = {}));
-    var ChannelType2;
-    (function(ChannelType3) {
-      ChannelType3[ChannelType3["GuildText"] = 0] = "GuildText";
-      ChannelType3[ChannelType3["DM"] = 1] = "DM";
-      ChannelType3[ChannelType3["GuildVoice"] = 2] = "GuildVoice";
-      ChannelType3[ChannelType3["GroupDM"] = 3] = "GroupDM";
-      ChannelType3[ChannelType3["GuildCategory"] = 4] = "GuildCategory";
-      ChannelType3[ChannelType3["GuildAnnouncement"] = 5] = "GuildAnnouncement";
-      ChannelType3[ChannelType3["AnnouncementThread"] = 10] = "AnnouncementThread";
-      ChannelType3[ChannelType3["PublicThread"] = 11] = "PublicThread";
-      ChannelType3[ChannelType3["PrivateThread"] = 12] = "PrivateThread";
-      ChannelType3[ChannelType3["GuildStageVoice"] = 13] = "GuildStageVoice";
-      ChannelType3[ChannelType3["GuildDirectory"] = 14] = "GuildDirectory";
-      ChannelType3[ChannelType3["GuildForum"] = 15] = "GuildForum";
-      ChannelType3[ChannelType3["GuildMedia"] = 16] = "GuildMedia";
-      ChannelType3[ChannelType3["GuildNews"] = 5] = "GuildNews";
-      ChannelType3[ChannelType3["GuildNewsThread"] = 10] = "GuildNewsThread";
-      ChannelType3[ChannelType3["GuildPublicThread"] = 11] = "GuildPublicThread";
-      ChannelType3[ChannelType3["GuildPrivateThread"] = 12] = "GuildPrivateThread";
-    })(ChannelType2 || (exports2.ChannelType = ChannelType2 = {}));
+    var ChannelType3;
+    (function(ChannelType4) {
+      ChannelType4[ChannelType4["GuildText"] = 0] = "GuildText";
+      ChannelType4[ChannelType4["DM"] = 1] = "DM";
+      ChannelType4[ChannelType4["GuildVoice"] = 2] = "GuildVoice";
+      ChannelType4[ChannelType4["GroupDM"] = 3] = "GroupDM";
+      ChannelType4[ChannelType4["GuildCategory"] = 4] = "GuildCategory";
+      ChannelType4[ChannelType4["GuildAnnouncement"] = 5] = "GuildAnnouncement";
+      ChannelType4[ChannelType4["AnnouncementThread"] = 10] = "AnnouncementThread";
+      ChannelType4[ChannelType4["PublicThread"] = 11] = "PublicThread";
+      ChannelType4[ChannelType4["PrivateThread"] = 12] = "PrivateThread";
+      ChannelType4[ChannelType4["GuildStageVoice"] = 13] = "GuildStageVoice";
+      ChannelType4[ChannelType4["GuildDirectory"] = 14] = "GuildDirectory";
+      ChannelType4[ChannelType4["GuildForum"] = 15] = "GuildForum";
+      ChannelType4[ChannelType4["GuildMedia"] = 16] = "GuildMedia";
+      ChannelType4[ChannelType4["GuildNews"] = 5] = "GuildNews";
+      ChannelType4[ChannelType4["GuildNewsThread"] = 10] = "GuildNewsThread";
+      ChannelType4[ChannelType4["GuildPublicThread"] = 11] = "GuildPublicThread";
+      ChannelType4[ChannelType4["GuildPrivateThread"] = 12] = "GuildPrivateThread";
+    })(ChannelType3 || (exports2.ChannelType = ChannelType3 = {}));
     var VideoQualityMode;
     (function(VideoQualityMode2) {
       VideoQualityMode2[VideoQualityMode2["Auto"] = 1] = "Auto";
       VideoQualityMode2[VideoQualityMode2["Full"] = 2] = "Full";
     })(VideoQualityMode || (exports2.VideoQualityMode = VideoQualityMode = {}));
-    var OverwriteType2;
-    (function(OverwriteType3) {
-      OverwriteType3[OverwriteType3["Role"] = 0] = "Role";
-      OverwriteType3[OverwriteType3["Member"] = 1] = "Member";
-    })(OverwriteType2 || (exports2.OverwriteType = OverwriteType2 = {}));
+    var OverwriteType3;
+    (function(OverwriteType4) {
+      OverwriteType4[OverwriteType4["Role"] = 0] = "Role";
+      OverwriteType4[OverwriteType4["Member"] = 1] = "Member";
+    })(OverwriteType3 || (exports2.OverwriteType = OverwriteType3 = {}));
     var ThreadAutoArchiveDuration;
     (function(ThreadAutoArchiveDuration2) {
       ThreadAutoArchiveDuration2[ThreadAutoArchiveDuration2["OneHour"] = 60] = "OneHour";
@@ -20933,15 +20933,15 @@ var require_message = __commonJS({
       ComponentType3[ComponentType3["Checkbox"] = 23] = "Checkbox";
       ComponentType3[ComponentType3["SelectMenu"] = 3] = "SelectMenu";
     })(ComponentType2 || (exports2.ComponentType = ComponentType2 = {}));
-    var ButtonStyle2;
-    (function(ButtonStyle3) {
-      ButtonStyle3[ButtonStyle3["Primary"] = 1] = "Primary";
-      ButtonStyle3[ButtonStyle3["Secondary"] = 2] = "Secondary";
-      ButtonStyle3[ButtonStyle3["Success"] = 3] = "Success";
-      ButtonStyle3[ButtonStyle3["Danger"] = 4] = "Danger";
-      ButtonStyle3[ButtonStyle3["Link"] = 5] = "Link";
-      ButtonStyle3[ButtonStyle3["Premium"] = 6] = "Premium";
-    })(ButtonStyle2 || (exports2.ButtonStyle = ButtonStyle2 = {}));
+    var ButtonStyle3;
+    (function(ButtonStyle4) {
+      ButtonStyle4[ButtonStyle4["Primary"] = 1] = "Primary";
+      ButtonStyle4[ButtonStyle4["Secondary"] = 2] = "Secondary";
+      ButtonStyle4[ButtonStyle4["Success"] = 3] = "Success";
+      ButtonStyle4[ButtonStyle4["Danger"] = 4] = "Danger";
+      ButtonStyle4[ButtonStyle4["Link"] = 5] = "Link";
+      ButtonStyle4[ButtonStyle4["Premium"] = 6] = "Premium";
+    })(ButtonStyle3 || (exports2.ButtonStyle = ButtonStyle3 = {}));
     var TextInputStyle2;
     (function(TextInputStyle3) {
       TextInputStyle3[TextInputStyle3["Short"] = 1] = "Short";
@@ -26706,8 +26706,8 @@ Emitted 'error' event${ctorInfo} at:
       static listenerCount(emitter, eventName) {
         return emitter.listenerCount(eventName);
       }
-      static async once(emitter, eventName, options = {}) {
-        const signal = options?.signal;
+      static async once(emitter, eventName, options2 = {}) {
+        const signal = options2?.signal;
         validateAbortSignal(signal);
         if (signal?.aborted) {
           throw new AbortError(void 0, { cause: getReason(signal) });
@@ -26741,8 +26741,8 @@ Emitted 'error' event${ctorInfo} at:
           }
         });
       }
-      static on(emitter, eventName, options = {}) {
-        const signal = options?.signal;
+      static on(emitter, eventName, options2 = {}) {
+        const signal = options2?.signal;
         validateAbortSignal(signal);
         if (signal?.aborted) {
           throw new AbortError(void 0, { cause: getReason(signal) });
@@ -26874,11 +26874,11 @@ Emitted 'error' event${ctorInfo} at:
     }
     __name(createIterResult, "createIterResult");
     var _AbortError = class _AbortError extends Error {
-      constructor(message = "The operation was aborted", options = void 0) {
-        if (options !== void 0 && typeof options !== "object") {
+      constructor(message = "The operation was aborted", options2 = void 0) {
+        if (options2 !== void 0 && typeof options2 !== "object") {
           throw new TypeError(`Failed to create AbortError: options is not an object or undefined`);
         }
-        super(message, options);
+        super(message, options2);
         this.code = "ABORT_ERR";
         this.name = "AbortError";
       }
@@ -28335,14 +28335,14 @@ var require_cjs2 = __commonJS({
        * request(someUrl3, someOptions3); // Will call fetch() after the second finished
        * ```
        */
-      wait(options) {
+      wait(options2) {
         const entry = new AsyncQueueEntry(this);
         if (this.promises.length === 0) {
           this.promises.push(entry);
           return Promise.resolve();
         }
         this.promises.push(entry);
-        if (options?.signal) entry.setSignal(options.signal);
+        if (options2?.signal) entry.setSignal(options2.signal);
         return entry.promise;
       }
       /**
@@ -28438,11 +28438,11 @@ var require_dist5 = __commonJS({
     var import_node_util = require("util");
     var import_undici = require_undici();
     async function makeRequest(url, init) {
-      const options = {
+      const options2 = {
         ...init,
         body: await resolveBody(init.body)
       };
-      const res = await (0, import_undici.request)(url, options);
+      const res = await (0, import_undici.request)(url, options2);
       return {
         body: res.body,
         async arrayBuffer() {
@@ -28628,10 +28628,10 @@ var require_dist5 = __commonJS({
       }
     }
     __name(serializeSearchParam, "serializeSearchParam");
-    function makeURLSearchParams2(parameters, options = {}) {
+    function makeURLSearchParams2(parameters, options2 = {}) {
       const params = new URLSearchParams();
       if (!parameters) return params;
-      const { arrayFormat = "repeat" } = options;
+      const { arrayFormat = "repeat" } = options2;
       for (const [key, value] of Object.entries(parameters)) {
         if (Array.isArray(value)) {
           const commaSeparatedElements = arrayFormat === "comma" ? [] : null;
@@ -28680,9 +28680,9 @@ var require_dist5 = __commonJS({
     }
     __name(shouldRetry, "shouldRetry");
     async function onRateLimit(manager, rateLimitData) {
-      const { options } = manager;
-      if (!options.rejectOnRateLimit) return;
-      const shouldThrow = typeof options.rejectOnRateLimit === "function" ? await options.rejectOnRateLimit(rateLimitData) : options.rejectOnRateLimit.some((route) => rateLimitData.route.startsWith(route.toLowerCase()));
+      const { options: options2 } = manager;
+      if (!options2.rejectOnRateLimit) return;
+      const shouldThrow = typeof options2.rejectOnRateLimit === "function" ? await options2.rejectOnRateLimit(rateLimitData) : options2.rejectOnRateLimit.some((route) => rateLimitData.route.startsWith(route.toLowerCase()));
       if (shouldThrow) {
         throw new RateLimitError(rateLimitData);
       }
@@ -28736,8 +28736,8 @@ var require_dist5 = __commonJS({
        * @param assetHash - The hash provided by Discord for this asset
        * @param options - Optional options for the asset
        */
-      appAsset(clientId, assetHash, options) {
-        return this.makeURL(`/app-assets/${clientId}/${assetHash}`, options);
+      appAsset(clientId, assetHash, options2) {
+        return this.makeURL(`/app-assets/${clientId}/${assetHash}`, options2);
       }
       /**
        * Generates an app icon URL for a client's icon.
@@ -28746,8 +28746,8 @@ var require_dist5 = __commonJS({
        * @param iconHash - The hash provided by Discord for this icon
        * @param options - Optional options for the icon
        */
-      appIcon(clientId, iconHash, options) {
-        return this.makeURL(`/app-icons/${clientId}/${iconHash}`, options);
+      appIcon(clientId, iconHash, options2) {
+        return this.makeURL(`/app-icons/${clientId}/${iconHash}`, options2);
       }
       /**
        * Generates an avatar URL, e.g. for a user or a webhook.
@@ -28756,12 +28756,12 @@ var require_dist5 = __commonJS({
        * @param avatarHash - The hash provided by Discord for this avatar
        * @param options - Optional options for the avatar
        */
-      avatar(id, avatarHash, options) {
-        return this.dynamicMakeURL(`/avatars/${id}/${avatarHash}`, avatarHash, options);
+      avatar(id, avatarHash, options2) {
+        return this.dynamicMakeURL(`/avatars/${id}/${avatarHash}`, avatarHash, options2);
       }
-      avatarDecoration(userIdOrAsset, userAvatarDecoration, options) {
+      avatarDecoration(userIdOrAsset, userAvatarDecoration, options2) {
         if (userAvatarDecoration) {
-          return this.makeURL(`/avatar-decorations/${userIdOrAsset}/${userAvatarDecoration}`, options);
+          return this.makeURL(`/avatar-decorations/${userIdOrAsset}/${userAvatarDecoration}`, options2);
         }
         return this.makeURL(`/avatar-decoration-presets/${userIdOrAsset}`, { extension: "png" });
       }
@@ -28772,8 +28772,8 @@ var require_dist5 = __commonJS({
        * @param bannerHash - The hash provided by Discord for this banner
        * @param options - Optional options for the banner
        */
-      banner(id, bannerHash, options) {
-        return this.dynamicMakeURL(`/banners/${id}/${bannerHash}`, bannerHash, options);
+      banner(id, bannerHash, options2) {
+        return this.dynamicMakeURL(`/banners/${id}/${bannerHash}`, bannerHash, options2);
       }
       /**
        * Generates an icon URL for a channel, e.g. a group DM.
@@ -28782,8 +28782,8 @@ var require_dist5 = __commonJS({
        * @param iconHash - The hash provided by Discord for this channel
        * @param options - Optional options for the icon
        */
-      channelIcon(channelId, iconHash, options) {
-        return this.makeURL(`/channel-icons/${channelId}/${iconHash}`, options);
+      channelIcon(channelId, iconHash, options2) {
+        return this.makeURL(`/channel-icons/${channelId}/${iconHash}`, options2);
       }
       /**
        * Generates a default avatar URL
@@ -28803,21 +28803,21 @@ var require_dist5 = __commonJS({
        * @param splashHash - The hash provided by Discord for this splash
        * @param options - Optional options for the splash
        */
-      discoverySplash(guildId, splashHash, options) {
-        return this.makeURL(`/discovery-splashes/${guildId}/${splashHash}`, options);
+      discoverySplash(guildId, splashHash, options2) {
+        return this.makeURL(`/discovery-splashes/${guildId}/${splashHash}`, options2);
       }
-      emoji(emojiId, options) {
+      emoji(emojiId, options2) {
         let resolvedOptions;
-        if (typeof options === "string") {
+        if (typeof options2 === "string") {
           if (!deprecationEmittedForEmoji) {
             deprecationWarning(
               "Passing a string for the second parameter of CDN#emoji() is deprecated. Use an object instead."
             );
             deprecationEmittedForEmoji = true;
           }
-          resolvedOptions = { extension: options };
+          resolvedOptions = { extension: options2 };
         } else {
-          resolvedOptions = options;
+          resolvedOptions = options2;
         }
         return this.makeURL(`/emojis/${emojiId}`, resolvedOptions);
       }
@@ -28829,8 +28829,8 @@ var require_dist5 = __commonJS({
        * @param avatarHash - The hash provided by Discord for this avatar
        * @param options - Optional options for the avatar
        */
-      guildMemberAvatar(guildId, userId, avatarHash, options) {
-        return this.dynamicMakeURL(`/guilds/${guildId}/users/${userId}/avatars/${avatarHash}`, avatarHash, options);
+      guildMemberAvatar(guildId, userId, avatarHash, options2) {
+        return this.dynamicMakeURL(`/guilds/${guildId}/users/${userId}/avatars/${avatarHash}`, avatarHash, options2);
       }
       /**
        * Generates a guild member banner URL.
@@ -28840,8 +28840,8 @@ var require_dist5 = __commonJS({
        * @param bannerHash - The hash provided by Discord for this banner
        * @param options - Optional options for the banner
        */
-      guildMemberBanner(guildId, userId, bannerHash, options) {
-        return this.dynamicMakeURL(`/guilds/${guildId}/users/${userId}/banners/${bannerHash}`, bannerHash, options);
+      guildMemberBanner(guildId, userId, bannerHash, options2) {
+        return this.dynamicMakeURL(`/guilds/${guildId}/users/${userId}/banners/${bannerHash}`, bannerHash, options2);
       }
       /**
        * Generates an icon URL, e.g. for a guild.
@@ -28850,8 +28850,8 @@ var require_dist5 = __commonJS({
        * @param iconHash - The hash provided by Discord for this icon
        * @param options - Optional options for the icon
        */
-      icon(id, iconHash, options) {
-        return this.dynamicMakeURL(`/icons/${id}/${iconHash}`, iconHash, options);
+      icon(id, iconHash, options2) {
+        return this.dynamicMakeURL(`/icons/${id}/${iconHash}`, iconHash, options2);
       }
       /**
        * Generates a URL for the icon of a role
@@ -28860,8 +28860,8 @@ var require_dist5 = __commonJS({
        * @param roleIconHash - The hash provided by Discord for this role icon
        * @param options - Optional options for the role icon
        */
-      roleIcon(roleId, roleIconHash, options) {
-        return this.makeURL(`/role-icons/${roleId}/${roleIconHash}`, options);
+      roleIcon(roleId, roleIconHash, options2) {
+        return this.makeURL(`/role-icons/${roleId}/${roleIconHash}`, options2);
       }
       /**
        * Generates a guild invite splash URL for a guild's invite splash.
@@ -28870,8 +28870,8 @@ var require_dist5 = __commonJS({
        * @param splashHash - The hash provided by Discord for this splash
        * @param options - Optional options for the splash
        */
-      splash(guildId, splashHash, options) {
-        return this.makeURL(`/splashes/${guildId}/${splashHash}`, options);
+      splash(guildId, splashHash, options2) {
+        return this.makeURL(`/splashes/${guildId}/${splashHash}`, options2);
       }
       /**
        * Generates a sticker URL.
@@ -28895,8 +28895,8 @@ var require_dist5 = __commonJS({
        * @param bannerId - The banner id
        * @param options - Optional options for the banner
        */
-      stickerPackBanner(bannerId, options) {
-        return this.makeURL(`/app-assets/710982414301790216/store/${bannerId}`, options);
+      stickerPackBanner(bannerId, options2) {
+        return this.makeURL(`/app-assets/710982414301790216/store/${bannerId}`, options2);
       }
       /**
        * Generates a team icon URL for a team's icon.
@@ -28905,8 +28905,8 @@ var require_dist5 = __commonJS({
        * @param iconHash - The hash provided by Discord for this icon
        * @param options - Optional options for the icon
        */
-      teamIcon(teamId, iconHash, options) {
-        return this.makeURL(`/team-icons/${teamId}/${iconHash}`, options);
+      teamIcon(teamId, iconHash, options2) {
+        return this.makeURL(`/team-icons/${teamId}/${iconHash}`, options2);
       }
       /**
        * Generates a cover image for a guild scheduled event.
@@ -28915,8 +28915,8 @@ var require_dist5 = __commonJS({
        * @param coverHash - The hash provided by discord for this cover image
        * @param options - Optional options for the cover image
        */
-      guildScheduledEventCover(scheduledEventId, coverHash, options) {
-        return this.makeURL(`/guild-events/${scheduledEventId}/${coverHash}`, options);
+      guildScheduledEventCover(scheduledEventId, coverHash, options2) {
+        return this.makeURL(`/guild-events/${scheduledEventId}/${coverHash}`, options2);
       }
       /**
        * Generates a URL for a soundboard sound.
@@ -28933,8 +28933,8 @@ var require_dist5 = __commonJS({
        * @param badgeHash - The hash of the badge
        * @param options - Optional options for the badge
        */
-      guildTagBadge(guildId, badgeHash, options) {
-        return this.makeURL(`/guild-tag-badges/${guildId}/${badgeHash}`, options);
+      guildTagBadge(guildId, badgeHash, options2) {
+        return this.makeURL(`/guild-tag-badges/${guildId}/${badgeHash}`, options2);
       }
       /**
        * Constructs the URL for the resource, checking whether or not `hash` starts with `a_` if `dynamic` is set to `true`.
@@ -28943,8 +28943,8 @@ var require_dist5 = __commonJS({
        * @param hash - The hash provided by Discord for this icon
        * @param options - Optional options for the link
        */
-      dynamicMakeURL(route, hash, { forceStatic = false, ...options } = {}) {
-        return this.makeURL(route, !forceStatic && hash.startsWith("a_") ? { ...options, extension: "gif" } : options);
+      dynamicMakeURL(route, hash, { forceStatic = false, ...options2 } = {}) {
+        return this.makeURL(route, !forceStatic && hash.startsWith("a_") ? { ...options2, extension: "gif" } : options2);
       }
       /**
        * Constructs the URL for the resource
@@ -29093,7 +29093,7 @@ ${flattened}` : error.message || flattened || "Unknown Error";
       }
     }
     __name(incrementInvalidCount, "incrementInvalidCount");
-    async function makeNetworkRequest(manager, routeId, url, options, requestData, retries) {
+    async function makeNetworkRequest(manager, routeId, url, options2, requestData, retries) {
       const controller = new AbortController();
       const timeout = setTimeout(() => controller.abort(), manager.options.timeout);
       if (requestData.signal) {
@@ -29102,7 +29102,7 @@ ${flattened}` : error.message || flattened || "Unknown Error";
       }
       let res;
       try {
-        res = await manager.options.makeRequest(url, { ...options, signal: controller.signal });
+        res = await manager.options.makeRequest(url, { ...options2, signal: controller.signal });
       } catch (error) {
         if (!(error instanceof Error)) throw error;
         if (shouldRetry(error) && retries !== manager.options.retries) {
@@ -29119,10 +29119,10 @@ ${flattened}` : error.message || flattened || "Unknown Error";
         manager.emit(
           "response",
           {
-            method: options.method ?? "get",
+            method: options2.method ?? "get",
             path: routeId.original,
             route: routeId.bucketRoute,
-            options,
+            options: options2,
             data: requestData,
             retries
           },
@@ -29188,8 +29188,8 @@ ${flattened}` : error.message || flattened || "Unknown Error";
       /**
        * {@inheritDoc IHandler.queueRequest}
        */
-      async queueRequest(routeId, url, options, requestData) {
-        return this.runRequest(routeId, url, options, requestData);
+      async queueRequest(routeId, url, options2, requestData) {
+        return this.runRequest(routeId, url, options2, requestData);
       }
       /**
        * The method that actually makes the request to the API, and updates info about the bucket accordingly
@@ -29200,11 +29200,11 @@ ${flattened}` : error.message || flattened || "Unknown Error";
        * @param requestData - Extra data from the user's request needed for errors and additional processing
        * @param retries - The number of retries this request has already attempted (recursion)
        */
-      async runRequest(routeId, url, options, requestData, retries = 0) {
-        const method = options.method ?? "get";
-        const res = await makeNetworkRequest(this.manager, routeId, url, options, requestData, retries);
+      async runRequest(routeId, url, options2, requestData, retries = 0) {
+        const method = options2.method ?? "get";
+        const res = await makeNetworkRequest(this.manager, routeId, url, options2, requestData, retries);
         if (res === null) {
-          return this.runRequest(routeId, url, options, requestData, ++retries);
+          return this.runRequest(routeId, url, options2, requestData, ++retries);
         }
         const status = res.status;
         let retryAfter = 0;
@@ -29248,11 +29248,11 @@ ${flattened}` : error.message || flattened || "Unknown Error";
             ].join("\n")
           );
           await sleep(retryAfter);
-          return this.runRequest(routeId, url, options, requestData, retries);
+          return this.runRequest(routeId, url, options2, requestData, retries);
         } else {
           const handled = await handleErrors(this.manager, res, method, url, requestData, retries);
           if (handled === null) {
-            return this.runRequest(routeId, url, options, requestData, ++retries);
+            return this.runRequest(routeId, url, options2, requestData, ++retries);
           }
           return handled;
         }
@@ -29360,16 +29360,16 @@ ${flattened}` : error.message || flattened || "Unknown Error";
       /**
        * {@inheritDoc IHandler.queueRequest}
        */
-      async queueRequest(routeId, url, options, requestData) {
+      async queueRequest(routeId, url, options2, requestData) {
         let queue = this.#asyncQueue;
         let queueType = 0;
-        if (this.#sublimitedQueue && hasSublimit(routeId.bucketRoute, requestData.body, options.method)) {
+        if (this.#sublimitedQueue && hasSublimit(routeId.bucketRoute, requestData.body, options2.method)) {
           queue = this.#sublimitedQueue;
           queueType = 1;
         }
         await queue.wait({ signal: requestData.signal });
         if (queueType === 0) {
-          if (this.#sublimitedQueue && hasSublimit(routeId.bucketRoute, requestData.body, options.method)) {
+          if (this.#sublimitedQueue && hasSublimit(routeId.bucketRoute, requestData.body, options2.method)) {
             queue = this.#sublimitedQueue;
             const wait = queue.wait();
             this.#asyncQueue.shift();
@@ -29379,7 +29379,7 @@ ${flattened}` : error.message || flattened || "Unknown Error";
           }
         }
         try {
-          return await this.runRequest(routeId, url, options, requestData);
+          return await this.runRequest(routeId, url, options2, requestData);
         } finally {
           queue.shift();
           if (this.#shiftSublimit) {
@@ -29401,7 +29401,7 @@ ${flattened}` : error.message || flattened || "Unknown Error";
        * @param requestData - Extra data from the user's request needed for errors and additional processing
        * @param retries - The number of retries this request has already attempted (recursion)
        */
-      async runRequest(routeId, url, options, requestData, retries = 0) {
+      async runRequest(routeId, url, options2, requestData, retries = 0) {
         while (this.limited) {
           const isGlobal = this.globalLimited;
           let limit2;
@@ -29422,7 +29422,7 @@ ${flattened}` : error.message || flattened || "Unknown Error";
           }
           const rateLimitData = {
             global: isGlobal,
-            method: options.method ?? "get",
+            method: options2.method ?? "get",
             url,
             route: routeId.bucketRoute,
             majorParameter: this.majorParameter,
@@ -29447,10 +29447,10 @@ ${flattened}` : error.message || flattened || "Unknown Error";
           this.manager.globalRemaining = this.manager.options.globalRequestsPerSecond;
         }
         this.manager.globalRemaining--;
-        const method = options.method ?? "get";
-        const res = await makeNetworkRequest(this.manager, routeId, url, options, requestData, retries);
+        const method = options2.method ?? "get";
+        const res = await makeNetworkRequest(this.manager, routeId, url, options2, requestData, retries);
         if (res === null) {
-          return this.runRequest(routeId, url, options, requestData, ++retries);
+          return this.runRequest(routeId, url, options2, requestData, ++retries);
         }
         const status = res.status;
         let retryAfter = 0;
@@ -29546,11 +29546,11 @@ ${flattened}` : error.message || flattened || "Unknown Error";
               this.#shiftSublimit = true;
             }
           }
-          return this.runRequest(routeId, url, options, requestData, retries);
+          return this.runRequest(routeId, url, options2, requestData, retries);
         } else {
           const handled = await handleErrors(this.manager, res, method, url, requestData, retries);
           if (handled === null) {
-            return this.runRequest(routeId, url, options, requestData, ++retries);
+            return this.runRequest(routeId, url, options2, requestData, ++retries);
           }
           return handled;
         }
@@ -29590,12 +29590,12 @@ ${flattened}` : error.message || flattened || "Unknown Error";
       hashTimer;
       handlerTimer;
       options;
-      constructor(options = {}) {
+      constructor(options2 = {}) {
         super();
-        this.cdn = new CDN(options.cdn ?? DefaultRestOptions.cdn, options.mediaProxy ?? DefaultRestOptions.mediaProxy);
-        this.options = { ...DefaultRestOptions, ...options };
+        this.cdn = new CDN(options2.cdn ?? DefaultRestOptions.cdn, options2.mediaProxy ?? DefaultRestOptions.mediaProxy);
+        this.options = { ...DefaultRestOptions, ...options2 };
         this.globalRemaining = Math.max(1, this.options.globalRequestsPerSecond);
-        this.agent = options.agent ?? null;
+        this.agent = options2.agent ?? null;
         this.setupSweepers();
       }
       setupSweepers() {
@@ -29645,9 +29645,9 @@ ${flattened}` : error.message || flattened || "Unknown Error";
        * @param fullRoute - The full route to query
        * @param options - Optional request options
        */
-      async get(fullRoute, options = {}) {
+      async get(fullRoute, options2 = {}) {
         return this.request({
-          ...options,
+          ...options2,
           fullRoute,
           method: "GET"
           /* Get */
@@ -29659,9 +29659,9 @@ ${flattened}` : error.message || flattened || "Unknown Error";
        * @param fullRoute - The full route to query
        * @param options - Optional request options
        */
-      async delete(fullRoute, options = {}) {
+      async delete(fullRoute, options2 = {}) {
         return this.request({
-          ...options,
+          ...options2,
           fullRoute,
           method: "DELETE"
           /* Delete */
@@ -29673,9 +29673,9 @@ ${flattened}` : error.message || flattened || "Unknown Error";
        * @param fullRoute - The full route to query
        * @param options - Optional request options
        */
-      async post(fullRoute, options = {}) {
+      async post(fullRoute, options2 = {}) {
         return this.request({
-          ...options,
+          ...options2,
           fullRoute,
           method: "POST"
           /* Post */
@@ -29687,9 +29687,9 @@ ${flattened}` : error.message || flattened || "Unknown Error";
        * @param fullRoute - The full route to query
        * @param options - Optional request options
        */
-      async put(fullRoute, options = {}) {
+      async put(fullRoute, options2 = {}) {
         return this.request({
-          ...options,
+          ...options2,
           fullRoute,
           method: "PUT"
           /* Put */
@@ -29701,9 +29701,9 @@ ${flattened}` : error.message || flattened || "Unknown Error";
        * @param fullRoute - The full route to query
        * @param options - Optional request options
        */
-      async patch(fullRoute, options = {}) {
+      async patch(fullRoute, options2 = {}) {
         return this.request({
-          ...options,
+          ...options2,
           fullRoute,
           method: "PATCH"
           /* Patch */
@@ -29714,8 +29714,8 @@ ${flattened}` : error.message || flattened || "Unknown Error";
        *
        * @param options - Request options
        */
-      async request(options) {
-        const response = await this.queueRequest(options);
+      async request(options2) {
+        const response = await this.queueRequest(options2);
         return parseResponse(response);
       }
       /**
@@ -29775,7 +29775,7 @@ ${flattened}` : error.message || flattened || "Unknown Error";
        * @param request - The request data
        */
       async resolveRequest(request2) {
-        const { options } = this;
+        const { options: options2 } = this;
         let query = "";
         if (request2.query) {
           const resolvedQuery = request2.query.toString();
@@ -29785,7 +29785,7 @@ ${flattened}` : error.message || flattened || "Unknown Error";
         }
         const headers = {
           ...this.options.headers,
-          "User-Agent": `${DefaultUserAgent} ${options.userAgentAppendix}`.trim()
+          "User-Agent": `${DefaultUserAgent} ${options2.userAgentAppendix}`.trim()
         };
         if (request2.auth !== false) {
           if (!this.#token) {
@@ -29796,7 +29796,7 @@ ${flattened}` : error.message || flattened || "Unknown Error";
         if (request2.reason?.length) {
           headers["X-Audit-Log-Reason"] = encodeURIComponent(request2.reason);
         }
-        const url = `${options.api}${request2.versioned === false ? "" : `/v${options.version}`}${request2.fullRoute}${query}`;
+        const url = `${options2.api}${request2.versioned === false ? "" : `/v${options2.version}`}${request2.fullRoute}${query}`;
         let finalBody;
         let additionalHeaders = {};
         if (request2.files?.length) {
@@ -31432,7 +31432,7 @@ var require_dist7 = __commonJS({
       version: () => version
     });
     module2.exports = __toCommonJS2(index_exports);
-    function escapeMarkdown(text, options = {}) {
+    function escapeMarkdown(text, options2 = {}) {
       const {
         codeBlock: codeBlock2 = true,
         inlineCode: inlineCode2 = true,
@@ -31448,7 +31448,7 @@ var require_dist7 = __commonJS({
         bulletedList = false,
         numberedList = false,
         maskedLink = false
-      } = options;
+      } = options2;
       if (!codeBlockContent) {
         return text.split("```").map((subString, index, array) => {
           if (index % 2 && index !== array.length - 1) return subString;
@@ -31652,11 +31652,11 @@ ${content}
     }
     __name(chatInputApplicationCommandMention, "chatInputApplicationCommandMention");
     function formatEmoji(emojiIdOrOptions, animated) {
-      const options = typeof emojiIdOrOptions === "string" ? {
+      const options2 = typeof emojiIdOrOptions === "string" ? {
         id: emojiIdOrOptions,
         animated: animated ?? false
       } : emojiIdOrOptions;
-      const { id, animated: isAnimated, name: emojiName } = options;
+      const { id, animated: isAnimated, name: emojiName } = options2;
       return `<${isAnimated ? "a" : ""}:${emojiName ?? "emoji"}:${id}>`;
     }
     __name(formatEmoji, "formatEmoji");
@@ -31880,7 +31880,7 @@ var require_ChannelFlagsBitField = __commonJS({
 var require_Constants = __commonJS({
   "node_modules/.pnpm/discord.js@14.27.0/node_modules/discord.js/src/util/Constants.js"(exports2) {
     "use strict";
-    var { ChannelType: ChannelType2, MessageType, ComponentType: ComponentType2, ImageFormat, StickerFormatType } = require_v106();
+    var { ChannelType: ChannelType3, MessageType, ComponentType: ComponentType2, ImageFormat, StickerFormatType } = require_v106();
     exports2.MaxBulkDeletableMessageAge = 12096e5;
     exports2.SweeperKeys = [
       "autoModerationRules",
@@ -31907,18 +31907,18 @@ var require_Constants = __commonJS({
       MessageType.ContextMenuCommand
     ];
     exports2.GuildTextBasedChannelTypes = [
-      ChannelType2.GuildText,
-      ChannelType2.GuildAnnouncement,
-      ChannelType2.AnnouncementThread,
-      ChannelType2.PublicThread,
-      ChannelType2.PrivateThread,
-      ChannelType2.GuildVoice,
-      ChannelType2.GuildStageVoice
+      ChannelType3.GuildText,
+      ChannelType3.GuildAnnouncement,
+      ChannelType3.AnnouncementThread,
+      ChannelType3.PublicThread,
+      ChannelType3.PrivateThread,
+      ChannelType3.GuildVoice,
+      ChannelType3.GuildStageVoice
     ];
-    exports2.TextBasedChannelTypes = [...exports2.GuildTextBasedChannelTypes, ChannelType2.DM, ChannelType2.GroupDM];
-    exports2.SendableChannels = [...exports2.GuildTextBasedChannelTypes, ChannelType2.DM];
-    exports2.ThreadChannelTypes = [ChannelType2.AnnouncementThread, ChannelType2.PublicThread, ChannelType2.PrivateThread];
-    exports2.VoiceBasedChannelTypes = [ChannelType2.GuildVoice, ChannelType2.GuildStageVoice];
+    exports2.TextBasedChannelTypes = [...exports2.GuildTextBasedChannelTypes, ChannelType3.DM, ChannelType3.GroupDM];
+    exports2.SendableChannels = [...exports2.GuildTextBasedChannelTypes, ChannelType3.DM];
+    exports2.ThreadChannelTypes = [ChannelType3.AnnouncementThread, ChannelType3.PublicThread, ChannelType3.PrivateThread];
+    exports2.VoiceBasedChannelTypes = [ChannelType3.GuildVoice, ChannelType3.GuildStageVoice];
     exports2.SelectMenuTypes = [
       ComponentType2.StringSelect,
       ComponentType2.UserSelect,
@@ -31977,7 +31977,7 @@ var require_BaseChannel = __commonJS({
     "use strict";
     var { channelLink, channelMention } = require_dist7();
     var { DiscordSnowflake } = require_cjs();
-    var { ChannelType: ChannelType2, Routes: Routes2 } = require_v106();
+    var { ChannelType: ChannelType3, Routes: Routes2 } = require_v106();
     var Base = require_Base();
     var ChannelFlagsBitField = require_ChannelFlagsBitField();
     var { ThreadChannelTypes } = require_Constants();
@@ -32078,7 +32078,7 @@ var require_BaseChannel = __commonJS({
        * @returns {boolean}
        */
       isDMBased() {
-        return [ChannelType2.DM, ChannelType2.GroupDM].includes(this.type);
+        return [ChannelType3.DM, ChannelType3.GroupDM].includes(this.type);
       }
       /**
        * Indicates whether this channel is {@link BaseGuildVoiceChannel voice-based}.
@@ -32231,7 +32231,7 @@ var require_CachedManager = __commonJS({
 var require_PermissionsBitField = __commonJS({
   "node_modules/.pnpm/discord.js@14.27.0/node_modules/discord.js/src/util/PermissionsBitField.js"(exports2, module2) {
     "use strict";
-    var { PermissionFlagsBits: PermissionFlagsBits2 } = require_v106();
+    var { PermissionFlagsBits: PermissionFlagsBits3 } = require_v106();
     var BitField = require_BitField();
     var PermissionsBitField2 = class extends BitField {
       /**
@@ -32240,13 +32240,13 @@ var require_PermissionsBitField = __commonJS({
        * @memberof PermissionsBitField
        * @see {@link https://discord.com/developers/docs/topics/permissions#permissions-bitwise-permission-flags}
        */
-      static Flags = PermissionFlagsBits2;
+      static Flags = PermissionFlagsBits3;
       /**
        * Bitfield representing every permission combined
        * @type {bigint}
        * @memberof PermissionsBitField
        */
-      static All = Object.values(PermissionFlagsBits2).reduce((all, p) => all | p, 0n);
+      static All = Object.values(PermissionFlagsBits3).reduce((all, p) => all | p, 0n);
       /**
        * Bitfield representing the default permissions for users
        * @type {bigint}
@@ -32258,7 +32258,7 @@ var require_PermissionsBitField = __commonJS({
        * @type {bigint}
        * @memberof PermissionsBitField
        */
-      static StageModerator = PermissionFlagsBits2.ManageChannels | PermissionFlagsBits2.MuteMembers | PermissionFlagsBits2.MoveMembers;
+      static StageModerator = PermissionFlagsBits3.ManageChannels | PermissionFlagsBits3.MuteMembers | PermissionFlagsBits3.MoveMembers;
       /**
        * @type {bigint}
        * @memberof PermissionsBitField
@@ -32285,7 +32285,7 @@ var require_PermissionsBitField = __commonJS({
        * @returns {string[]}
        */
       missing(bits, checkAdmin = true) {
-        return checkAdmin && this.has(PermissionFlagsBits2.Administrator) ? [] : super.missing(bits);
+        return checkAdmin && this.has(PermissionFlagsBits3.Administrator) ? [] : super.missing(bits);
       }
       /**
        * Checks whether the bitfield has a permission, or any of multiple permissions.
@@ -32294,7 +32294,7 @@ var require_PermissionsBitField = __commonJS({
        * @returns {boolean}
        */
       any(permission, checkAdmin = true) {
-        return checkAdmin && super.has(PermissionFlagsBits2.Administrator) || super.any(permission);
+        return checkAdmin && super.has(PermissionFlagsBits3.Administrator) || super.any(permission);
       }
       /**
        * Checks whether the bitfield has a permission, or multiple permissions.
@@ -32303,7 +32303,7 @@ var require_PermissionsBitField = __commonJS({
        * @returns {boolean}
        */
       has(permission, checkAdmin = true) {
-        return checkAdmin && super.has(PermissionFlagsBits2.Administrator) || super.has(permission);
+        return checkAdmin && super.has(PermissionFlagsBits3.Administrator) || super.has(permission);
       }
       /**
        * Gets an {@link Array} of bitfield names based on the permissions available.
@@ -32341,7 +32341,7 @@ var require_Role = __commonJS({
     "use strict";
     var { roleMention } = require_dist7();
     var { DiscordSnowflake } = require_cjs();
-    var { PermissionFlagsBits: PermissionFlagsBits2 } = require_v106();
+    var { PermissionFlagsBits: PermissionFlagsBits3 } = require_v106();
     var Base = require_Base();
     var { DiscordjsError: DiscordjsError2, ErrorCodes: ErrorCodes2 } = require_errors2();
     var PermissionsBitField2 = require_PermissionsBitField();
@@ -32453,7 +32453,7 @@ var require_Role = __commonJS({
       get editable() {
         if (this.managed) return false;
         const clientMember = this.guild.members.resolve(this.client.user);
-        if (!clientMember.permissions.has(PermissionFlagsBits2.ManageRoles)) return false;
+        if (!clientMember.permissions.has(PermissionFlagsBits3.ManageRoles)) return false;
         return clientMember.roles.highest.comparePositionTo(this) > 0;
       }
       /**
@@ -32505,8 +32505,8 @@ var require_Role = __commonJS({
        *   .then(updated => console.log(`Edited role name to ${updated.name}`))
        *   .catch(console.error);
        */
-      edit(options) {
-        return this.guild.roles.edit(this, options);
+      edit(options2) {
+        return this.guild.roles.edit(this, options2);
       }
       /**
        * Returns `channel.permissionsFor(role)`. Returns permissions for a role in a guild channel,
@@ -32659,8 +32659,8 @@ var require_Role = __commonJS({
        *   .then(updated => console.log(`Role position: ${updated.position}`))
        *   .catch(console.error);
        */
-      setPosition(position, options = {}) {
-        return this.guild.roles.setPosition(this, position, options);
+      setPosition(position, options2 = {}) {
+        return this.guild.roles.setPosition(this, position, options2);
       }
       /**
        * Deletes the role.
@@ -32681,8 +32681,8 @@ var require_Role = __commonJS({
        * @param {ImageURLOptions} [options={}] Options for the image URL
        * @returns {?string}
        */
-      iconURL(options = {}) {
-        return this.icon && this.client.rest.cdn.roleIcon(this.id, this.icon, options);
+      iconURL(options2 = {}) {
+        return this.icon && this.client.rest.cdn.roleIcon(this.id, this.icon, options2);
       }
       /**
        * Whether this role equals another role. It compares all properties, so for most operations
@@ -32720,7 +32720,7 @@ var require_Role = __commonJS({
 var require_PermissionOverwrites = __commonJS({
   "node_modules/.pnpm/discord.js@14.27.0/node_modules/discord.js/src/structures/PermissionOverwrites.js"(exports2, module2) {
     "use strict";
-    var { OverwriteType: OverwriteType2 } = require_v106();
+    var { OverwriteType: OverwriteType3 } = require_v106();
     var Base = require_Base();
     var { Role } = require_Role();
     var { DiscordjsTypeError: DiscordjsTypeError2, ErrorCodes: ErrorCodes2 } = require_errors2();
@@ -32756,8 +32756,8 @@ var require_PermissionOverwrites = __commonJS({
        *   .then(channel => console.log(channel.permissionOverwrites.get(message.author.id)))
        *   .catch(console.error);
        */
-      async edit(options, reason) {
-        await this.channel.permissionOverwrites.upsert(this.id, options, { type: this.type, reason }, this);
+      async edit(options2, reason) {
+        await this.channel.permissionOverwrites.upsert(this.id, options2, { type: this.type, reason }, this);
         return this;
       }
       /**
@@ -32799,10 +32799,10 @@ var require_PermissionOverwrites = __commonJS({
        * @param {ResolvedOverwriteOptions} initialPermissions The initial permissions
        * @returns {ResolvedOverwriteOptions}
        */
-      static resolveOverwriteOptions(options, { allow, deny } = {}) {
+      static resolveOverwriteOptions(options2, { allow, deny } = {}) {
         allow = new PermissionsBitField2(allow);
         deny = new PermissionsBitField2(deny);
-        for (const [perm, value] of Object.entries(options)) {
+        for (const [perm, value] of Object.entries(options2)) {
           if (value === true) {
             allow.add(perm);
             deny.remove(perm);
@@ -32846,7 +32846,7 @@ var require_PermissionOverwrites = __commonJS({
        */
       static resolve(overwrite, guild) {
         if (overwrite instanceof this) return overwrite.toJSON();
-        if (typeof overwrite.id === "string" && overwrite.type in OverwriteType2) {
+        if (typeof overwrite.id === "string" && overwrite.type in OverwriteType3) {
           return {
             id: overwrite.id,
             type: overwrite.type,
@@ -32858,7 +32858,7 @@ var require_PermissionOverwrites = __commonJS({
         if (!userOrRole) {
           throw new DiscordjsTypeError2(ErrorCodes2.InvalidType, "parameter", "cached User or Role");
         }
-        const type = userOrRole instanceof Role ? OverwriteType2.Role : OverwriteType2.Member;
+        const type = userOrRole instanceof Role ? OverwriteType3.Role : OverwriteType3.Member;
         return {
           id: userOrRole.id,
           type,
@@ -32877,7 +32877,7 @@ var require_PermissionOverwriteManager = __commonJS({
     "use strict";
     var process2 = require("node:process");
     var { Collection: Collection2 } = require_dist6();
-    var { OverwriteType: OverwriteType2, Routes: Routes2 } = require_v106();
+    var { OverwriteType: OverwriteType3, Routes: Routes2 } = require_v106();
     var CachedManager = require_CachedManager();
     var { DiscordjsTypeError: DiscordjsTypeError2, ErrorCodes: ErrorCodes2 } = require_errors2();
     var PermissionOverwrites = require_PermissionOverwrites();
@@ -32949,15 +32949,15 @@ var require_PermissionOverwriteManager = __commonJS({
        * @returns {Promise<GuildChannel>}
        * @private
        */
-      async upsert(userOrRole, options, overwriteOptions = {}, existing) {
+      async upsert(userOrRole, options2, overwriteOptions = {}, existing) {
         let userOrRoleId = this.channel.guild.roles.resolveId(userOrRole) ?? this.client.users.resolveId(userOrRole);
         let { type, reason } = overwriteOptions;
         if (typeof type !== "number") {
           userOrRole = this.channel.guild.roles.resolve(userOrRole) ?? this.client.users.resolve(userOrRole);
           if (!userOrRole) throw new DiscordjsTypeError2(ErrorCodes2.InvalidType, "parameter", "User nor a Role");
-          type = userOrRole instanceof Role ? OverwriteType2.Role : OverwriteType2.Member;
+          type = userOrRole instanceof Role ? OverwriteType3.Role : OverwriteType3.Member;
         }
-        const { allow, deny } = PermissionOverwrites.resolveOverwriteOptions(options, existing);
+        const { allow, deny } = PermissionOverwrites.resolveOverwriteOptions(options2, existing);
         await this.client.rest.put(Routes2.channelPermission(this.channel.id, userOrRoleId), {
           body: { id: userOrRoleId, type, allow, deny },
           reason
@@ -32978,8 +32978,8 @@ var require_PermissionOverwriteManager = __commonJS({
        *   .then(channel => console.log(channel.permissionOverwrites.cache.get(message.author.id)))
        *   .catch(console.error);
        */
-      create(userOrRole, options, overwriteOptions) {
-        return this.upsert(userOrRole, options, overwriteOptions);
+      create(userOrRole, options2, overwriteOptions) {
+        return this.upsert(userOrRole, options2, overwriteOptions);
       }
       /**
        * Edits permission overwrites for a user or role in this channel, or creates an entry if not already present.
@@ -32995,11 +32995,11 @@ var require_PermissionOverwriteManager = __commonJS({
        *   .then(channel => console.log(channel.permissionOverwrites.cache.get(message.author.id)))
        *   .catch(console.error);
        */
-      edit(userOrRole, options, overwriteOptions) {
+      edit(userOrRole, options2, overwriteOptions) {
         const existing = this.cache.get(
           this.channel.guild.roles.resolveId(userOrRole) ?? this.client.users.resolveId(userOrRole)
         );
-        return this.upsert(userOrRole, options, overwriteOptions, existing);
+        return this.upsert(userOrRole, options2, overwriteOptions, existing);
       }
       /**
        * Deletes permission overwrites for a user or role in this channel.
@@ -33023,7 +33023,7 @@ var require_GuildChannel = __commonJS({
   "node_modules/.pnpm/discord.js@14.27.0/node_modules/discord.js/src/structures/GuildChannel.js"(exports2, module2) {
     "use strict";
     var { Snowflake } = require_cjs();
-    var { PermissionFlagsBits: PermissionFlagsBits2, ChannelType: ChannelType2 } = require_v106();
+    var { PermissionFlagsBits: PermissionFlagsBits3, ChannelType: ChannelType3 } = require_v106();
     var { BaseChannel } = require_BaseChannel();
     var { DiscordjsError: DiscordjsError2, ErrorCodes: ErrorCodes2 } = require_errors2();
     var PermissionOverwriteManager = require_PermissionOverwriteManager();
@@ -33101,7 +33101,7 @@ var require_GuildChannel = __commonJS({
        * @readonly
        */
       get position() {
-        const selfIsCategory = this.type === ChannelType2.GuildCategory;
+        const selfIsCategory = this.type === ChannelType3.GuildCategory;
         const types = getSortableGroupTypes(this.type);
         let count = 0;
         for (const channel of this.guild.channels.cache.values()) {
@@ -33164,7 +33164,7 @@ var require_GuildChannel = __commonJS({
         }
         const roles = member.roles.cache;
         const permissions = new PermissionsBitField2(roles.map((role) => role.permissions));
-        if (checkAdmin && permissions.has(PermissionFlagsBits2.Administrator)) {
+        if (checkAdmin && permissions.has(PermissionFlagsBits3.Administrator)) {
           return new PermissionsBitField2(PermissionsBitField2.All).freeze();
         }
         const overwrites = this.overwritesFor(member, true, roles);
@@ -33179,7 +33179,7 @@ var require_GuildChannel = __commonJS({
        * @private
        */
       rolePermissions(role, checkAdmin) {
-        if (checkAdmin && role.permissions.has(PermissionFlagsBits2.Administrator)) {
+        if (checkAdmin && role.permissions.has(PermissionFlagsBits3.Administrator)) {
           return new PermissionsBitField2(PermissionsBitField2.All).freeze();
         }
         const basePermissions = new PermissionsBitField2([role.permissions, role.guild.roles.everyone.permissions]);
@@ -33205,7 +33205,7 @@ var require_GuildChannel = __commonJS({
        */
       get members() {
         return this.guild.members.cache.filter(
-          (member) => this.permissionsFor(member).has(PermissionFlagsBits2.ViewChannel, false)
+          (member) => this.permissionsFor(member).has(PermissionFlagsBits3.ViewChannel, false)
         );
       }
       /**
@@ -33218,8 +33218,8 @@ var require_GuildChannel = __commonJS({
        *   .then(console.log)
        *   .catch(console.error);
        */
-      edit(options) {
-        return this.guild.channels.edit(this, options);
+      edit(options2) {
+        return this.guild.channels.edit(this, options2);
       }
       /**
        * Sets a new name for the guild channel.
@@ -33276,8 +33276,8 @@ var require_GuildChannel = __commonJS({
        *   .then(newChannel => console.log(`Channel's new position is ${newChannel.position}`))
        *   .catch(console.error);
        */
-      setPosition(position, options = {}) {
-        return this.guild.channels.setPosition(this, position, options);
+      setPosition(position, options2 = {}) {
+        return this.guild.channels.setPosition(this, position, options2);
       }
       /**
        * Options used to clone a guild channel.
@@ -33289,9 +33289,9 @@ var require_GuildChannel = __commonJS({
        * @param {GuildChannelCloneOptions} [options] The options for cloning this channel
        * @returns {Promise<GuildChannel>}
        */
-      clone(options = {}) {
+      clone(options2 = {}) {
         return this.guild.channels.create({
-          name: options.name ?? this.name,
+          name: options2.name ?? this.name,
           permissionOverwrites: this.permissionOverwrites.cache,
           topic: this.topic,
           type: this.type,
@@ -33302,7 +33302,7 @@ var require_GuildChannel = __commonJS({
           rateLimitPerUser: this.rateLimitPerUser,
           position: this.rawPosition,
           reason: null,
-          ...options
+          ...options2
         });
       }
       /**
@@ -33339,10 +33339,10 @@ var require_GuildChannel = __commonJS({
         if (this.client.user.id === this.guild.ownerId) return true;
         const permissions = this.permissionsFor(this.client.user);
         if (!permissions) return false;
-        if (permissions.has(PermissionFlagsBits2.Administrator, false)) return true;
+        if (permissions.has(PermissionFlagsBits3.Administrator, false)) return true;
         if (this.guild.members.me.communicationDisabledUntilTimestamp > Date.now()) return false;
-        const baseBitfield = PermissionFlagsBits2.ViewChannel | PermissionFlagsBits2.ManageChannels;
-        const bitfield = VoiceBasedChannelTypes.includes(this.type) ? baseBitfield | PermissionFlagsBits2.Connect : baseBitfield;
+        const baseBitfield = PermissionFlagsBits3.ViewChannel | PermissionFlagsBits3.ManageChannels;
+        const bitfield = VoiceBasedChannelTypes.includes(this.type) ? baseBitfield | PermissionFlagsBits3.Connect : baseBitfield;
         return permissions.has(bitfield, false);
       }
       /**
@@ -33354,7 +33354,7 @@ var require_GuildChannel = __commonJS({
         if (this.client.user.id === this.guild.ownerId) return true;
         const permissions = this.permissionsFor(this.client.user);
         if (!permissions) return false;
-        return permissions.has(PermissionFlagsBits2.ViewChannel, false);
+        return permissions.has(PermissionFlagsBits3.ViewChannel, false);
       }
       /**
        * Deletes this channel.
@@ -33421,7 +33421,7 @@ var require_Util = __commonJS({
     var { parse } = require("node:path");
     var process2 = require("node:process");
     var { Collection: Collection2 } = require_dist6();
-    var { ChannelType: ChannelType2, RouteBases, Routes: Routes2 } = require_v106();
+    var { ChannelType: ChannelType3, RouteBases, Routes: Routes2 } = require_v106();
     var { fetch: fetch2 } = require_undici();
     var Colors = require_Colors();
     var { DiscordjsError: DiscordjsError2, DiscordjsRangeError: DiscordjsRangeError2, DiscordjsTypeError: DiscordjsTypeError2, ErrorCodes: ErrorCodes2 } = require_errors2();
@@ -33490,24 +33490,24 @@ var require_Util = __commonJS({
       };
     }
     var TextSortableGroupTypes = [
-      ChannelType2.GuildText,
-      ChannelType2.GuildAnnouncement,
-      ChannelType2.GuildForum,
-      ChannelType2.GuildMedia
+      ChannelType3.GuildText,
+      ChannelType3.GuildAnnouncement,
+      ChannelType3.GuildForum,
+      ChannelType3.GuildMedia
     ];
-    var VoiceSortableGroupTypes = [ChannelType2.GuildVoice, ChannelType2.GuildStageVoice];
-    var CategorySortableGroupTypes = [ChannelType2.GuildCategory];
+    var VoiceSortableGroupTypes = [ChannelType3.GuildVoice, ChannelType3.GuildStageVoice];
+    var CategorySortableGroupTypes = [ChannelType3.GuildCategory];
     function getSortableGroupTypes(type) {
       switch (type) {
-        case ChannelType2.GuildText:
-        case ChannelType2.GuildAnnouncement:
-        case ChannelType2.GuildForum:
-        case ChannelType2.GuildMedia:
+        case ChannelType3.GuildText:
+        case ChannelType3.GuildAnnouncement:
+        case ChannelType3.GuildForum:
+        case ChannelType3.GuildMedia:
           return TextSortableGroupTypes;
-        case ChannelType2.GuildVoice:
-        case ChannelType2.GuildStageVoice:
+        case ChannelType3.GuildVoice:
+        case ChannelType3.GuildStageVoice:
           return VoiceSortableGroupTypes;
-        case ChannelType2.GuildCategory:
+        case ChannelType3.GuildCategory:
           return CategorySortableGroupTypes;
         default:
           return [type];
@@ -33582,7 +33582,7 @@ var require_Util = __commonJS({
               return user ? `@${user.displayName}` : match;
             }
             case "@&": {
-              if (channel.type === ChannelType2.DM) return match;
+              if (channel.type === ChannelType3.DM) return match;
               const role = channel.guild.roles.cache.get(id);
               return role ? `@${role.name}` : match;
             }
@@ -33948,11 +33948,11 @@ var require_LimitedCollection = __commonJS({
     var { Collection: Collection2 } = require_dist6();
     var { DiscordjsTypeError: DiscordjsTypeError2, ErrorCodes: ErrorCodes2 } = require_errors2();
     var LimitedCollection = class extends Collection2 {
-      constructor(options = {}, iterable) {
-        if (typeof options !== "object" || options === null) {
+      constructor(options2 = {}, iterable) {
+        if (typeof options2 !== "object" || options2 === null) {
           throw new DiscordjsTypeError2(ErrorCodes2.InvalidType, "options", "object", true);
         }
-        const { maxSize = Infinity, keepOverLimit = null } = options;
+        const { maxSize = Infinity, keepOverLimit = null } = options2;
         if (typeof maxSize !== "number") {
           throw new DiscordjsTypeError2(ErrorCodes2.InvalidType, "maxSize", "number");
         }
@@ -34116,31 +34116,31 @@ var require_BaseClient = __commonJS({
     var Options2 = require_Options();
     var { flatten } = require_Util();
     var BaseClient2 = class extends EventEmitter {
-      constructor(options = {}) {
+      constructor(options2 = {}) {
         super({ captureRejections: true });
-        if (typeof options !== "object" || options === null) {
+        if (typeof options2 !== "object" || options2 === null) {
           throw new DiscordjsTypeError2(ErrorCodes2.InvalidType, "options", "object", true);
         }
         const defaultOptions = Options2.createDefault();
         this.options = {
           ...defaultOptions,
-          ...options,
+          ...options2,
           presence: {
             ...defaultOptions.presence,
-            ...options.presence
+            ...options2.presence
           },
           sweepers: {
             ...defaultOptions.sweepers,
-            ...options.sweepers
+            ...options2.sweepers
           },
           ws: {
             ...defaultOptions.ws,
-            ...options.ws
+            ...options2.ws
           },
           rest: {
             ...defaultOptions.rest,
-            ...options.rest,
-            userAgentAppendix: options.rest?.userAgentAppendix ? `${Options2.userAgentAppendix} ${options.rest.userAgentAppendix}` : Options2.userAgentAppendix
+            ...options2.rest,
+            userAgentAppendix: options2.rest?.userAgentAppendix ? `${Options2.userAgentAppendix} ${options2.rest.userAgentAppendix}` : Options2.userAgentAppendix
           }
         };
         this.rest = new REST(this.options.rest);
@@ -34229,8 +34229,8 @@ var require_Emoji = __commonJS({
        * @param {EmojiURLOptions} [options] Options for the emoji URL
        * @returns {?string}
        */
-      imageURL(options) {
-        return this.id && this.client.rest.cdn.emoji(this.id, options);
+      imageURL(options2) {
+        return this.id && this.client.rest.cdn.emoji(this.id, options2);
       }
       /**
        * Returns a URL for the emoji or `null` if this is not a custom emoji.
@@ -34300,11 +34300,11 @@ var require_Collector = __commonJS({
     var { DiscordjsTypeError: DiscordjsTypeError2, ErrorCodes: ErrorCodes2 } = require_errors2();
     var { flatten } = require_Util();
     var Collector = class extends EventEmitter {
-      constructor(client2, options = {}) {
+      constructor(client2, options2 = {}) {
         super();
         Object.defineProperty(this, "client", { value: client2 });
-        this.filter = options.filter ?? (() => true);
-        this.options = options;
+        this.filter = options2.filter ?? (() => true);
+        this.options = options2;
         this.collected = new Collection2();
         this.ended = false;
         this._timeout = null;
@@ -34315,8 +34315,8 @@ var require_Collector = __commonJS({
         }
         this.handleCollect = this.handleCollect.bind(this);
         this.handleDispose = this.handleDispose.bind(this);
-        if (options.time) this._timeout = setTimeout2(() => this.stop("time"), options.time).unref();
-        if (options.idle) this._idletimeout = setTimeout2(() => this.stop("idle"), options.idle).unref();
+        if (options2.time) this._timeout = setTimeout2(() => this.stop("time"), options2.time).unref();
+        if (options2.idle) this._idletimeout = setTimeout2(() => this.stop("idle"), options2.idle).unref();
         this.lastCollectedTimestamp = null;
       }
       /**
@@ -34616,14 +34616,14 @@ var require_InteractionCollector = __commonJS({
        * @param {Client} client The client on which to collect interactions
        * @param {InteractionCollectorOptions} [options={}] The options to apply to this collector
        */
-      constructor(client2, options = {}) {
-        super(client2, options);
-        this.messageId = options.message?.id ?? options.interactionResponse?.interaction.message?.id ?? null;
-        this.messageInteractionId = options.interactionResponse?.id ?? null;
-        this.channelId = options.interactionResponse?.interaction.channelId ?? options.message?.channelId ?? options.message?.channel_id ?? this.client.channels.resolveId(options.channel);
-        this.guildId = options.interactionResponse?.interaction.guildId ?? options.message?.guildId ?? options.message?.guild_id ?? this.client.guilds.resolveId(options.channel?.guild) ?? this.client.guilds.resolveId(options.guild);
-        this.interactionType = options.interactionType ?? null;
-        this.componentType = options.componentType ?? null;
+      constructor(client2, options2 = {}) {
+        super(client2, options2);
+        this.messageId = options2.message?.id ?? options2.interactionResponse?.interaction.message?.id ?? null;
+        this.messageInteractionId = options2.interactionResponse?.id ?? null;
+        this.channelId = options2.interactionResponse?.interaction.channelId ?? options2.message?.channelId ?? options2.message?.channel_id ?? this.client.channels.resolveId(options2.channel);
+        this.guildId = options2.interactionResponse?.interaction.guildId ?? options2.message?.guildId ?? options2.message?.guild_id ?? this.client.guilds.resolveId(options2.channel?.guild) ?? this.client.guilds.resolveId(options2.guild);
+        this.interactionType = options2.interactionType ?? null;
+        this.componentType = options2.componentType ?? null;
         this.users = new Collection2();
         this.total = 0;
         this.client.incrementMaxListeners();
@@ -34777,8 +34777,8 @@ var require_MessageCollector = __commonJS({
        * @param {MessageCollectorOptions} options The options to be applied to this collector
        * @emits MessageCollector#message
        */
-      constructor(channel, options = {}) {
-        super(channel.client, options);
+      constructor(channel, options2 = {}) {
+        super(channel.client, options2);
         this.channel = channel;
         this.received = 0;
         const bulkDeleteListener = (messages) => {
@@ -34999,8 +34999,8 @@ var require_GuildScheduledEvent = __commonJS({
        * @param {BaseImageURLOptions} [options={}] Options for image URL
        * @returns {?string}
        */
-      coverImageURL(options = {}) {
-        return this.image && this.client.rest.cdn.guildScheduledEventCover(this.id, this.image, options);
+      coverImageURL(options2 = {}) {
+        return this.image && this.client.rest.cdn.guildScheduledEventCover(this.id, this.image, options2);
       }
       /**
        * The timestamp the guild scheduled event was created at
@@ -35072,14 +35072,14 @@ var require_GuildScheduledEvent = __commonJS({
        * @param {GuildScheduledEventInviteURLCreateOptions} [options] The options to create the invite
        * @returns {Promise<string>}
        */
-      async createInviteURL(options) {
+      async createInviteURL(options2) {
         let channelId = this.channelId;
         if (this.entityType === GuildScheduledEventEntityType.External) {
-          if (!options?.channel) throw new DiscordjsError2(ErrorCodes2.InviteOptionsMissingChannel);
-          channelId = this.guild.channels.resolveId(options.channel);
+          if (!options2?.channel) throw new DiscordjsError2(ErrorCodes2.InviteOptionsMissingChannel);
+          channelId = this.guild.channels.resolveId(options2.channel);
           if (!channelId) throw new DiscordjsError2(ErrorCodes2.GuildChannelResolve);
         }
-        const invite = await this.guild.invites.create(channelId, options);
+        const invite = await this.guild.invites.create(channelId, options2);
         return `${RouteBases.invite}/${invite.code}?event=${this.id}`;
       }
       /**
@@ -35092,8 +35092,8 @@ var require_GuildScheduledEvent = __commonJS({
        *  .then(guildScheduledEvent => console.log(guildScheduledEvent))
        *  .catch(console.error);
        */
-      edit(options) {
-        return this.guild.scheduledEvents.edit(this.id, options);
+      edit(options2) {
+        return this.guild.scheduledEvents.edit(this.id, options2);
       }
       /**
        * Fetches this guild scheduled event.
@@ -35208,8 +35208,8 @@ var require_GuildScheduledEvent = __commonJS({
        * @param {FetchGuildScheduledEventSubscribersOptions} [options] Options for fetching the subscribers
        * @returns {Promise<Collection<Snowflake, GuildScheduledEventUser>>}
        */
-      fetchSubscribers(options) {
-        return this.guild.scheduledEvents.fetchSubscribers(this.id, options);
+      fetchSubscribers(options2) {
+        return this.guild.scheduledEvents.fetchSubscribers(this.id, options2);
       }
       /**
        * When concatenated with a string, this automatically concatenates the event's URL instead of the object.
@@ -35329,16 +35329,16 @@ var require_Application = __commonJS({
        * @param {ImageURLOptions} [options={}] Options for the image URL
        * @returns {?string}
        */
-      iconURL(options = {}) {
-        return this.icon && this.client.rest.cdn.appIcon(this.id, this.icon, options);
+      iconURL(options2 = {}) {
+        return this.icon && this.client.rest.cdn.appIcon(this.id, this.icon, options2);
       }
       /**
        * A link to this application's cover image.
        * @param {ImageURLOptions} [options={}] Options for the image URL
        * @returns {?string}
        */
-      coverURL(options = {}) {
-        return this.cover && this.client.rest.cdn.appIcon(this.id, this.cover, options);
+      coverURL(options2 = {}) {
+        return this.cover && this.client.rest.cdn.appIcon(this.id, this.cover, options2);
       }
       /**
        * When concatenated with a string, this automatically returns the application's name instead of the
@@ -35539,8 +35539,8 @@ var require_BaseGuild = __commonJS({
        * @param {ImageURLOptions} [options={}] Options for the image URL
        * @returns {?string}
        */
-      iconURL(options = {}) {
-        return this.icon && this.client.rest.cdn.icon(this.id, this.icon, options);
+      iconURL(options2 = {}) {
+        return this.icon && this.client.rest.cdn.icon(this.id, this.icon, options2);
       }
       /**
        * Fetches this guild.
@@ -35605,16 +35605,16 @@ var require_AnonymousGuild = __commonJS({
        * @param {ImageURLOptions} [options={}] Options for the image URL
        * @returns {?string}
        */
-      bannerURL(options = {}) {
-        return this.banner && this.client.rest.cdn.banner(this.id, this.banner, options);
+      bannerURL(options2 = {}) {
+        return this.banner && this.client.rest.cdn.banner(this.id, this.banner, options2);
       }
       /**
        * The URL to this guild's invite splash image.
        * @param {ImageURLOptions} [options={}] Options for the image URL
        * @returns {?string}
        */
-      splashURL(options = {}) {
-        return this.splash && this.client.rest.cdn.splash(this.id, this.splash, options);
+      splashURL(options2 = {}) {
+        return this.splash && this.client.rest.cdn.splash(this.id, this.splash, options2);
       }
     };
     module2.exports = AnonymousGuild;
@@ -35708,7 +35708,7 @@ var require_InviteGuild = __commonJS({
 var require_Invite = __commonJS({
   "node_modules/.pnpm/discord.js@14.27.0/node_modules/discord.js/src/structures/Invite.js"(exports2, module2) {
     "use strict";
-    var { RouteBases, Routes: Routes2, PermissionFlagsBits: PermissionFlagsBits2 } = require_v106();
+    var { RouteBases, Routes: Routes2, PermissionFlagsBits: PermissionFlagsBits3 } = require_v106();
     var Base = require_Base();
     var { GuildScheduledEvent } = require_GuildScheduledEvent();
     var IntegrationApplication = require_IntegrationApplication();
@@ -35842,7 +35842,7 @@ var require_Invite = __commonJS({
         if (!guild || !this.client.guilds.cache.has(guild.id)) return false;
         if (!guild.members.me) throw new DiscordjsError2(ErrorCodes2.GuildUncachedMe);
         return Boolean(
-          this.channel?.permissionsFor(this.client.user).has(PermissionFlagsBits2.ManageChannels, false) || guild.members.me.permissions.has(PermissionFlagsBits2.ManageGuild)
+          this.channel?.permissionsFor(this.client.user).has(PermissionFlagsBits3.ManageChannels, false) || guild.members.me.permissions.has(PermissionFlagsBits3.ManageGuild)
         );
       }
       /**
@@ -36575,8 +36575,8 @@ var require_Team = __commonJS({
        * @param {ImageURLOptions} [options={}] Options for the image URL
        * @returns {?string}
        */
-      iconURL(options = {}) {
-        return this.icon && this.client.rest.cdn.teamIcon(this.id, this.icon, options);
+      iconURL(options2 = {}) {
+        return this.icon && this.client.rest.cdn.teamIcon(this.id, this.icon, options2);
       }
       /**
        * When concatenated with a string, this automatically returns the Team's name instead of the
@@ -37247,8 +37247,8 @@ var require_ApplicationCommand = __commonJS({
        * @param {ApplicationCommandOptionData[]} options The options to set for this command
        * @returns {Promise<ApplicationCommand>}
        */
-      setOptions(options) {
-        return this.edit({ options });
+      setOptions(options2) {
+        return this.edit({ options: options2 });
       }
       /**
        * Deletes this command.
@@ -37304,12 +37304,12 @@ var require_ApplicationCommand = __commonJS({
        * order in the array <info>The client may not always respect this ordering!</info>
        * @returns {boolean}
        */
-      static optionsEqual(existing, options, enforceOptionOrder = false) {
-        if (existing.length !== options.length) return false;
+      static optionsEqual(existing, options2, enforceOptionOrder = false) {
+        if (existing.length !== options2.length) return false;
         if (enforceOptionOrder) {
-          return existing.every((option, index) => this._optionEquals(option, options[index], enforceOptionOrder));
+          return existing.every((option, index) => this._optionEquals(option, options2[index], enforceOptionOrder));
         }
-        const newOptions = new Map(options.map((option) => [option.name, option]));
+        const newOptions = new Map(options2.map((option) => [option.name, option]));
         for (const option of existing) {
           const foundOption = newOptions.get(option.name);
           if (!foundOption || !this._optionEquals(option, foundOption)) return false;
@@ -37725,8 +37725,8 @@ var require_ApplicationEmoji = __commonJS({
        *   .then(emoji => console.log(`Edited emoji ${emoji}`))
        *   .catch(console.error);
        */
-      edit(options) {
-        return this.application.emojis.edit(this.id, options);
+      edit(options2) {
+        return this.application.emojis.edit(this.id, options2);
       }
       /**
        * Sets the name of the emoji.
@@ -37852,12 +37852,12 @@ var require_ApplicationEmojiManager = __commonJS({
        * @param {ApplicationEmojiEditOptions} options The options to provide
        * @returns {Promise<ApplicationEmoji>}
        */
-      async edit(emoji, options) {
+      async edit(emoji, options2) {
         const id = this.resolveId(emoji);
         if (!id) throw new DiscordjsTypeError2(ErrorCodes2.InvalidType, "emoji", "EmojiResolvable", true);
         const newData = await this.client.rest.patch(Routes2.applicationEmoji(this.application.id, id), {
           body: {
-            name: options.name
+            name: options2.name
           }
         });
         const existing = this.cache.get(id);
@@ -38058,14 +38058,14 @@ var require_EntitlementManager = __commonJS({
        * Options for fetching the entitlements
        * @returns {Promise<Entitlement|Collection<Snowflake, Entitlement>>}
        */
-      async fetch(options) {
-        if (!options) return this._fetchMany(options);
-        const { entitlement, cache, force } = options;
-        const resolvedEntitlement = this.resolveId(entitlement ?? options);
+      async fetch(options2) {
+        if (!options2) return this._fetchMany(options2);
+        const { entitlement, cache, force } = options2;
+        const resolvedEntitlement = this.resolveId(entitlement ?? options2);
         if (resolvedEntitlement) {
           return this._fetchSingle({ entitlement: resolvedEntitlement, cache, force });
         }
-        return this._fetchMany(options);
+        return this._fetchMany(options2);
       }
       async _fetchSingle({ entitlement, cache, force = false }) {
         if (!force) {
@@ -38254,9 +38254,9 @@ var require_SubscriptionManager = __commonJS({
        * @param {FetchSubscriptionOptions|FetchSubscriptionsOptions} [options={}] Options for fetching the subscriptions
        * @returns {Promise<Subscription|Collection<Snowflake, Subscription>>}
        */
-      async fetch(options = {}) {
-        if (typeof options !== "object") throw new DiscordjsTypeError2(ErrorCodes2.InvalidType, "options", "object", true);
-        const { after, before, cache, limit, sku, subscriptionId, user } = options;
+      async fetch(options2 = {}) {
+        if (typeof options2 !== "object") throw new DiscordjsTypeError2(ErrorCodes2.InvalidType, "options", "object", true);
+        const { after, before, cache, limit, sku, subscriptionId, user } = options2;
         const skuId = resolveSKUId(sku);
         if (!skuId) throw new DiscordjsTypeError2(ErrorCodes2.InvalidType, "sku", "SKUResolvable");
         if (subscriptionId) {
@@ -40416,8 +40416,8 @@ var require_cjs3 = __commonJS({
           message: this.message
         };
       }
-      [customInspectSymbol](depth, options) {
-        return `${this[customInspectSymbolStackLess](depth, options)}
+      [customInspectSymbol](depth, options2) {
+        return `${this[customInspectSymbolStackLess](depth, options2)}
 ${this.stack.slice(this.stack.indexOf("\n"))}`;
       }
     };
@@ -40454,21 +40454,21 @@ ${this.stack.slice(this.stack.indexOf("\n"))}`;
           message: this.message
         };
       }
-      [customInspectSymbolStackLess](depth, options) {
-        const constraint = options.stylize(this.constraint, "string");
+      [customInspectSymbolStackLess](depth, options2) {
+        const constraint = options2.stylize(this.constraint, "string");
         if (depth < 0) {
-          return options.stylize(`[ExpectedConstraintError: ${constraint}]`, "special");
+          return options2.stylize(`[ExpectedConstraintError: ${constraint}]`, "special");
         }
-        const newOptions = { ...options, depth: options.depth === null ? null : options.depth - 1 };
+        const newOptions = { ...options2, depth: options2.depth === null ? null : options2.depth - 1 };
         const padding = `
-  ${options.stylize("|", "undefined")} `;
+  ${options2.stylize("|", "undefined")} `;
         const given = inspect2(this.given, newOptions).replace(/\n/g, padding);
-        const header = `${options.stylize("ExpectedConstraintError", "special")} > ${constraint}`;
-        const message = options.stylize(this.message, "regexp");
+        const header = `${options2.stylize("ExpectedConstraintError", "special")} > ${constraint}`;
+        const message = options2.stylize(this.message, "regexp");
         const expectedBlock = `
-  ${options.stylize("Expected: ", "string")}${options.stylize(this.expected, "boolean")}`;
+  ${options2.stylize("Expected: ", "string")}${options2.stylize(this.expected, "boolean")}`;
         const givenBlock = `
-  ${options.stylize("Received:", "regexp")}${padding}${given}`;
+  ${options2.stylize("Received:", "regexp")}${padding}${given}`;
         return `${header}
   ${message}
 ${expectedBlock}
@@ -40506,7 +40506,7 @@ ${givenBlock}`;
     };
     __name(_Result, "Result");
     var Result = _Result;
-    function whenConstraint(key, options, validator, validatorOptions) {
+    function whenConstraint(key, options2, validator, validatorOptions) {
       return {
         run(input, parent) {
           if (!parent) {
@@ -40521,7 +40521,7 @@ ${givenBlock}`;
           }
           const isKeyArray = Array.isArray(key);
           const value = isKeyArray ? key.map((k2) => get__default.default(parent, k2)) : get__default.default(parent, key);
-          const predicate = resolveBooleanIs(options, value, isKeyArray) ? options.then : options.otherwise;
+          const predicate = resolveBooleanIs(options2, value, isKeyArray) ? options2.then : options2.otherwise;
           if (predicate) {
             return predicate(validator).run(input);
           }
@@ -40530,14 +40530,14 @@ ${givenBlock}`;
       };
     }
     __name(whenConstraint, "whenConstraint");
-    function resolveBooleanIs(options, value, isKeyArray) {
-      if (options.is === void 0) {
+    function resolveBooleanIs(options2, value, isKeyArray) {
+      if (options2.is === void 0) {
         return isKeyArray ? !value.some((val) => !val) : Boolean(value);
       }
-      if (typeof options.is === "function") {
-        return options.is(value);
+      if (typeof options2.is === "function") {
+        return options2.is(value);
       }
-      return value === options.is;
+      return value === options2.is;
     }
     __name(resolveBooleanIs, "resolveBooleanIs");
     var validationEnabled = true;
@@ -40564,45 +40564,45 @@ ${givenBlock}`;
         this.parent = parent;
         return this;
       }
-      optional(options = this.validatorOptions) {
-        return new UnionValidator([new LiteralValidator(void 0, options), this.clone()], options);
+      optional(options2 = this.validatorOptions) {
+        return new UnionValidator([new LiteralValidator(void 0, options2), this.clone()], options2);
       }
-      nullable(options = this.validatorOptions) {
-        return new UnionValidator([new LiteralValidator(null, options), this.clone()], options);
+      nullable(options2 = this.validatorOptions) {
+        return new UnionValidator([new LiteralValidator(null, options2), this.clone()], options2);
       }
-      nullish(options = this.validatorOptions) {
-        return new UnionValidator([new NullishValidator(options), this.clone()], options);
+      nullish(options2 = this.validatorOptions) {
+        return new UnionValidator([new NullishValidator(options2), this.clone()], options2);
       }
-      array(options = this.validatorOptions) {
-        return new ArrayValidator(this.clone(), options);
+      array(options2 = this.validatorOptions) {
+        return new ArrayValidator(this.clone(), options2);
       }
-      set(options = this.validatorOptions) {
-        return new SetValidator(this.clone(), options);
+      set(options2 = this.validatorOptions) {
+        return new SetValidator(this.clone(), options2);
       }
       or(...predicates) {
         return new UnionValidator([this.clone(), ...predicates], this.validatorOptions);
       }
-      transform(cb, options = this.validatorOptions) {
+      transform(cb, options2 = this.validatorOptions) {
         return this.addConstraint(
           {
             run: (input) => Result.ok(cb(input))
           },
-          options
+          options2
         );
       }
-      reshape(cb, options = this.validatorOptions) {
+      reshape(cb, options2 = this.validatorOptions) {
         return this.addConstraint(
           {
             run: cb
           },
-          options
+          options2
         );
       }
-      default(value, options = this.validatorOptions) {
-        return new DefaultValidator(this.clone(), value, options);
+      default(value, options2 = this.validatorOptions) {
+        return new DefaultValidator(this.clone(), value, options2);
       }
-      when(key, options, validatorOptions) {
-        return this.addConstraint(whenConstraint(key, options, this, validatorOptions));
+      when(key, options2, validatorOptions) {
+        return this.addConstraint(whenConstraint(key, options2, this, validatorOptions));
       }
       describe(description) {
         const clone = this.clone();
@@ -40690,82 +40690,82 @@ ${givenBlock}`;
       return a3 !== b2;
     }
     __name(notEqual, "notEqual");
-    function arrayLengthComparator(comparator, name, expected, length, options) {
+    function arrayLengthComparator(comparator, name, expected, length, options2) {
       return {
         run(input) {
-          return comparator(input.length, length) ? Result.ok(input) : Result.err(new ExpectedConstraintError(name, options?.message ?? "Invalid Array length", input, expected));
+          return comparator(input.length, length) ? Result.ok(input) : Result.err(new ExpectedConstraintError(name, options2?.message ?? "Invalid Array length", input, expected));
         }
       };
     }
     __name(arrayLengthComparator, "arrayLengthComparator");
-    function arrayLengthLessThan(value, options) {
+    function arrayLengthLessThan(value, options2) {
       const expected = `expected.length < ${value}`;
-      return arrayLengthComparator(lessThan, "s.array(T).lengthLessThan()", expected, value, options);
+      return arrayLengthComparator(lessThan, "s.array(T).lengthLessThan()", expected, value, options2);
     }
     __name(arrayLengthLessThan, "arrayLengthLessThan");
-    function arrayLengthLessThanOrEqual(value, options) {
+    function arrayLengthLessThanOrEqual(value, options2) {
       const expected = `expected.length <= ${value}`;
-      return arrayLengthComparator(lessThanOrEqual, "s.array(T).lengthLessThanOrEqual()", expected, value, options);
+      return arrayLengthComparator(lessThanOrEqual, "s.array(T).lengthLessThanOrEqual()", expected, value, options2);
     }
     __name(arrayLengthLessThanOrEqual, "arrayLengthLessThanOrEqual");
-    function arrayLengthGreaterThan(value, options) {
+    function arrayLengthGreaterThan(value, options2) {
       const expected = `expected.length > ${value}`;
-      return arrayLengthComparator(greaterThan, "s.array(T).lengthGreaterThan()", expected, value, options);
+      return arrayLengthComparator(greaterThan, "s.array(T).lengthGreaterThan()", expected, value, options2);
     }
     __name(arrayLengthGreaterThan, "arrayLengthGreaterThan");
-    function arrayLengthGreaterThanOrEqual(value, options) {
+    function arrayLengthGreaterThanOrEqual(value, options2) {
       const expected = `expected.length >= ${value}`;
-      return arrayLengthComparator(greaterThanOrEqual, "s.array(T).lengthGreaterThanOrEqual()", expected, value, options);
+      return arrayLengthComparator(greaterThanOrEqual, "s.array(T).lengthGreaterThanOrEqual()", expected, value, options2);
     }
     __name(arrayLengthGreaterThanOrEqual, "arrayLengthGreaterThanOrEqual");
-    function arrayLengthEqual(value, options) {
+    function arrayLengthEqual(value, options2) {
       const expected = `expected.length === ${value}`;
-      return arrayLengthComparator(equal, "s.array(T).lengthEqual()", expected, value, options);
+      return arrayLengthComparator(equal, "s.array(T).lengthEqual()", expected, value, options2);
     }
     __name(arrayLengthEqual, "arrayLengthEqual");
-    function arrayLengthNotEqual(value, options) {
+    function arrayLengthNotEqual(value, options2) {
       const expected = `expected.length !== ${value}`;
-      return arrayLengthComparator(notEqual, "s.array(T).lengthNotEqual()", expected, value, options);
+      return arrayLengthComparator(notEqual, "s.array(T).lengthNotEqual()", expected, value, options2);
     }
     __name(arrayLengthNotEqual, "arrayLengthNotEqual");
-    function arrayLengthRange(start, endBefore, options) {
-      const expected = `expected.length >= ${start} && expected.length < ${endBefore}`;
+    function arrayLengthRange(start2, endBefore, options2) {
+      const expected = `expected.length >= ${start2} && expected.length < ${endBefore}`;
       return {
         run(input) {
-          return input.length >= start && input.length < endBefore ? Result.ok(input) : Result.err(new ExpectedConstraintError("s.array(T).lengthRange()", options?.message ?? "Invalid Array length", input, expected));
+          return input.length >= start2 && input.length < endBefore ? Result.ok(input) : Result.err(new ExpectedConstraintError("s.array(T).lengthRange()", options2?.message ?? "Invalid Array length", input, expected));
         }
       };
     }
     __name(arrayLengthRange, "arrayLengthRange");
-    function arrayLengthRangeInclusive(start, end, options) {
-      const expected = `expected.length >= ${start} && expected.length <= ${end}`;
+    function arrayLengthRangeInclusive(start2, end, options2) {
+      const expected = `expected.length >= ${start2} && expected.length <= ${end}`;
       return {
         run(input) {
-          return input.length >= start && input.length <= end ? Result.ok(input) : Result.err(
-            new ExpectedConstraintError("s.array(T).lengthRangeInclusive()", options?.message ?? "Invalid Array length", input, expected)
+          return input.length >= start2 && input.length <= end ? Result.ok(input) : Result.err(
+            new ExpectedConstraintError("s.array(T).lengthRangeInclusive()", options2?.message ?? "Invalid Array length", input, expected)
           );
         }
       };
     }
     __name(arrayLengthRangeInclusive, "arrayLengthRangeInclusive");
-    function arrayLengthRangeExclusive(startAfter, endBefore, options) {
+    function arrayLengthRangeExclusive(startAfter, endBefore, options2) {
       const expected = `expected.length > ${startAfter} && expected.length < ${endBefore}`;
       return {
         run(input) {
           return input.length > startAfter && input.length < endBefore ? Result.ok(input) : Result.err(
-            new ExpectedConstraintError("s.array(T).lengthRangeExclusive()", options?.message ?? "Invalid Array length", input, expected)
+            new ExpectedConstraintError("s.array(T).lengthRangeExclusive()", options2?.message ?? "Invalid Array length", input, expected)
           );
         }
       };
     }
     __name(arrayLengthRangeExclusive, "arrayLengthRangeExclusive");
-    function uniqueArray(options) {
+    function uniqueArray(options2) {
       return {
         run(input) {
           return isUnique(input) ? Result.ok(input) : Result.err(
             new ExpectedConstraintError(
               "s.array(T).unique()",
-              options?.message ?? "Array values are not unique",
+              options2?.message ?? "Array values are not unique",
               input,
               "Expected all values to be unique"
             )
@@ -40779,17 +40779,17 @@ ${givenBlock}`;
         super(validatorOptions?.message ?? "Received one or more errors");
         this.errors = errors;
       }
-      [customInspectSymbolStackLess](depth, options) {
+      [customInspectSymbolStackLess](depth, options2) {
         if (depth < 0) {
-          return options.stylize("[CombinedPropertyError]", "special");
+          return options2.stylize("[CombinedPropertyError]", "special");
         }
-        const newOptions = { ...options, depth: options.depth === null ? null : options.depth - 1, compact: true };
+        const newOptions = { ...options2, depth: options2.depth === null ? null : options2.depth - 1, compact: true };
         const padding = `
-  ${options.stylize("|", "undefined")} `;
-        const header = `${options.stylize("CombinedPropertyError", "special")} (${options.stylize(this.errors.length.toString(), "number")})`;
-        const message = options.stylize(this.message, "regexp");
+  ${options2.stylize("|", "undefined")} `;
+        const header = `${options2.stylize("CombinedPropertyError", "special")} (${options2.stylize(this.errors.length.toString(), "number")})`;
+        const message = options2.stylize(this.message, "regexp");
         const errors = this.errors.map(([key, error]) => {
-          const property = _CombinedPropertyError2.formatProperty(key, options);
+          const property = _CombinedPropertyError2.formatProperty(key, options2);
           const body = error[customInspectSymbolStackLess](depth - 1, newOptions).replace(/\n/g, padding);
           return `  input${property}${padding}${body}`;
         }).join("\n\n");
@@ -40798,12 +40798,12 @@ ${givenBlock}`;
 
 ${errors}`;
       }
-      static formatProperty(key, options) {
+      static formatProperty(key, options2) {
         if (typeof key === "string")
-          return options.stylize(`.${key}`, "symbol");
+          return options2.stylize(`.${key}`, "symbol");
         if (typeof key === "number")
-          return `[${options.stylize(key.toString(), "number")}]`;
-        return `[${options.stylize("Symbol", "symbol")}(${key.description})]`;
+          return `[${options2.stylize(key.toString(), "number")}]`;
+        return `[${options2.stylize("Symbol", "symbol")}(${key.description})]`;
       }
     };
     __name(_CombinedPropertyError, "CombinedPropertyError");
@@ -40822,19 +40822,19 @@ ${errors}`;
           given: this.given
         };
       }
-      [customInspectSymbolStackLess](depth, options) {
-        const validator = options.stylize(this.validator, "string");
+      [customInspectSymbolStackLess](depth, options2) {
+        const validator = options2.stylize(this.validator, "string");
         if (depth < 0) {
-          return options.stylize(`[ValidationError: ${validator}]`, "special");
+          return options2.stylize(`[ValidationError: ${validator}]`, "special");
         }
-        const newOptions = { ...options, depth: options.depth === null ? null : options.depth - 1, compact: true };
+        const newOptions = { ...options2, depth: options2.depth === null ? null : options2.depth - 1, compact: true };
         const padding = `
-  ${options.stylize("|", "undefined")} `;
+  ${options2.stylize("|", "undefined")} `;
         const given = inspect2(this.given, newOptions).replace(/\n/g, padding);
-        const header = `${options.stylize("ValidationError", "special")} > ${validator}`;
-        const message = options.stylize(this.message, "regexp");
+        const header = `${options2.stylize("ValidationError", "special")} > ${validator}`;
+        const message = options2.stylize(this.message, "regexp");
         const givenBlock = `
-  ${options.stylize("Received:", "regexp")}${padding}${given}`;
+  ${options2.stylize("Received:", "regexp")}${padding}${given}`;
         return `${header}
   ${message}
 ${givenBlock}`;
@@ -40847,35 +40847,35 @@ ${givenBlock}`;
         super(validatorOptions, constraints);
         this.validator = validator;
       }
-      lengthLessThan(length, options = this.validatorOptions) {
-        return this.addConstraint(arrayLengthLessThan(length, options));
+      lengthLessThan(length, options2 = this.validatorOptions) {
+        return this.addConstraint(arrayLengthLessThan(length, options2));
       }
-      lengthLessThanOrEqual(length, options = this.validatorOptions) {
-        return this.addConstraint(arrayLengthLessThanOrEqual(length, options));
+      lengthLessThanOrEqual(length, options2 = this.validatorOptions) {
+        return this.addConstraint(arrayLengthLessThanOrEqual(length, options2));
       }
-      lengthGreaterThan(length, options = this.validatorOptions) {
-        return this.addConstraint(arrayLengthGreaterThan(length, options));
+      lengthGreaterThan(length, options2 = this.validatorOptions) {
+        return this.addConstraint(arrayLengthGreaterThan(length, options2));
       }
-      lengthGreaterThanOrEqual(length, options = this.validatorOptions) {
-        return this.addConstraint(arrayLengthGreaterThanOrEqual(length, options));
+      lengthGreaterThanOrEqual(length, options2 = this.validatorOptions) {
+        return this.addConstraint(arrayLengthGreaterThanOrEqual(length, options2));
       }
-      lengthEqual(length, options = this.validatorOptions) {
-        return this.addConstraint(arrayLengthEqual(length, options));
+      lengthEqual(length, options2 = this.validatorOptions) {
+        return this.addConstraint(arrayLengthEqual(length, options2));
       }
-      lengthNotEqual(length, options = this.validatorOptions) {
-        return this.addConstraint(arrayLengthNotEqual(length, options));
+      lengthNotEqual(length, options2 = this.validatorOptions) {
+        return this.addConstraint(arrayLengthNotEqual(length, options2));
       }
-      lengthRange(start, endBefore, options = this.validatorOptions) {
-        return this.addConstraint(arrayLengthRange(start, endBefore, options));
+      lengthRange(start2, endBefore, options2 = this.validatorOptions) {
+        return this.addConstraint(arrayLengthRange(start2, endBefore, options2));
       }
-      lengthRangeInclusive(startAt, endAt, options = this.validatorOptions) {
-        return this.addConstraint(arrayLengthRangeInclusive(startAt, endAt, options));
+      lengthRangeInclusive(startAt, endAt, options2 = this.validatorOptions) {
+        return this.addConstraint(arrayLengthRangeInclusive(startAt, endAt, options2));
       }
-      lengthRangeExclusive(startAfter, endBefore, options = this.validatorOptions) {
-        return this.addConstraint(arrayLengthRangeExclusive(startAfter, endBefore, options));
+      lengthRangeExclusive(startAfter, endBefore, options2 = this.validatorOptions) {
+        return this.addConstraint(arrayLengthRangeExclusive(startAfter, endBefore, options2));
       }
-      unique(options = this.validatorOptions) {
-        return this.addConstraint(uniqueArray(options));
+      unique(options2 = this.validatorOptions) {
+        return this.addConstraint(uniqueArray(options2));
       }
       clone() {
         return Reflect.construct(this.constructor, [this.validator, this.validatorOptions, this.constraints]);
@@ -40901,89 +40901,89 @@ ${givenBlock}`;
     };
     __name(_ArrayValidator, "ArrayValidator");
     var ArrayValidator = _ArrayValidator;
-    function bigintComparator(comparator, name, expected, number, options) {
+    function bigintComparator(comparator, name, expected, number, options2) {
       return {
         run(input) {
-          return comparator(input, number) ? Result.ok(input) : Result.err(new ExpectedConstraintError(name, options?.message ?? "Invalid bigint value", input, expected));
+          return comparator(input, number) ? Result.ok(input) : Result.err(new ExpectedConstraintError(name, options2?.message ?? "Invalid bigint value", input, expected));
         }
       };
     }
     __name(bigintComparator, "bigintComparator");
-    function bigintLessThan(value, options) {
+    function bigintLessThan(value, options2) {
       const expected = `expected < ${value}n`;
-      return bigintComparator(lessThan, "s.bigint().lessThan()", expected, value, options);
+      return bigintComparator(lessThan, "s.bigint().lessThan()", expected, value, options2);
     }
     __name(bigintLessThan, "bigintLessThan");
-    function bigintLessThanOrEqual(value, options) {
+    function bigintLessThanOrEqual(value, options2) {
       const expected = `expected <= ${value}n`;
-      return bigintComparator(lessThanOrEqual, "s.bigint().lessThanOrEqual()", expected, value, options);
+      return bigintComparator(lessThanOrEqual, "s.bigint().lessThanOrEqual()", expected, value, options2);
     }
     __name(bigintLessThanOrEqual, "bigintLessThanOrEqual");
-    function bigintGreaterThan(value, options) {
+    function bigintGreaterThan(value, options2) {
       const expected = `expected > ${value}n`;
-      return bigintComparator(greaterThan, "s.bigint().greaterThan()", expected, value, options);
+      return bigintComparator(greaterThan, "s.bigint().greaterThan()", expected, value, options2);
     }
     __name(bigintGreaterThan, "bigintGreaterThan");
-    function bigintGreaterThanOrEqual(value, options) {
+    function bigintGreaterThanOrEqual(value, options2) {
       const expected = `expected >= ${value}n`;
-      return bigintComparator(greaterThanOrEqual, "s.bigint().greaterThanOrEqual()", expected, value, options);
+      return bigintComparator(greaterThanOrEqual, "s.bigint().greaterThanOrEqual()", expected, value, options2);
     }
     __name(bigintGreaterThanOrEqual, "bigintGreaterThanOrEqual");
-    function bigintEqual(value, options) {
+    function bigintEqual(value, options2) {
       const expected = `expected === ${value}n`;
-      return bigintComparator(equal, "s.bigint().equal()", expected, value, options);
+      return bigintComparator(equal, "s.bigint().equal()", expected, value, options2);
     }
     __name(bigintEqual, "bigintEqual");
-    function bigintNotEqual(value, options) {
+    function bigintNotEqual(value, options2) {
       const expected = `expected !== ${value}n`;
-      return bigintComparator(notEqual, "s.bigint().notEqual()", expected, value, options);
+      return bigintComparator(notEqual, "s.bigint().notEqual()", expected, value, options2);
     }
     __name(bigintNotEqual, "bigintNotEqual");
-    function bigintDivisibleBy(divider, options) {
+    function bigintDivisibleBy(divider, options2) {
       const expected = `expected % ${divider}n === 0n`;
       return {
         run(input) {
-          return input % divider === 0n ? Result.ok(input) : Result.err(new ExpectedConstraintError("s.bigint().divisibleBy()", options?.message ?? "BigInt is not divisible", input, expected));
+          return input % divider === 0n ? Result.ok(input) : Result.err(new ExpectedConstraintError("s.bigint().divisibleBy()", options2?.message ?? "BigInt is not divisible", input, expected));
         }
       };
     }
     __name(bigintDivisibleBy, "bigintDivisibleBy");
     var _BigIntValidator = class _BigIntValidator extends BaseValidator {
-      lessThan(number, options = this.validatorOptions) {
-        return this.addConstraint(bigintLessThan(number, options));
+      lessThan(number, options2 = this.validatorOptions) {
+        return this.addConstraint(bigintLessThan(number, options2));
       }
-      lessThanOrEqual(number, options = this.validatorOptions) {
-        return this.addConstraint(bigintLessThanOrEqual(number, options));
+      lessThanOrEqual(number, options2 = this.validatorOptions) {
+        return this.addConstraint(bigintLessThanOrEqual(number, options2));
       }
-      greaterThan(number, options = this.validatorOptions) {
-        return this.addConstraint(bigintGreaterThan(number, options));
+      greaterThan(number, options2 = this.validatorOptions) {
+        return this.addConstraint(bigintGreaterThan(number, options2));
       }
-      greaterThanOrEqual(number, options = this.validatorOptions) {
-        return this.addConstraint(bigintGreaterThanOrEqual(number, options));
+      greaterThanOrEqual(number, options2 = this.validatorOptions) {
+        return this.addConstraint(bigintGreaterThanOrEqual(number, options2));
       }
-      equal(number, options = this.validatorOptions) {
-        return this.addConstraint(bigintEqual(number, options));
+      equal(number, options2 = this.validatorOptions) {
+        return this.addConstraint(bigintEqual(number, options2));
       }
-      notEqual(number, options = this.validatorOptions) {
-        return this.addConstraint(bigintNotEqual(number, options));
+      notEqual(number, options2 = this.validatorOptions) {
+        return this.addConstraint(bigintNotEqual(number, options2));
       }
-      positive(options = this.validatorOptions) {
-        return this.greaterThanOrEqual(0n, options);
+      positive(options2 = this.validatorOptions) {
+        return this.greaterThanOrEqual(0n, options2);
       }
-      negative(options = this.validatorOptions) {
-        return this.lessThan(0n, options);
+      negative(options2 = this.validatorOptions) {
+        return this.lessThan(0n, options2);
       }
-      divisibleBy(number, options = this.validatorOptions) {
-        return this.addConstraint(bigintDivisibleBy(number, options));
+      divisibleBy(number, options2 = this.validatorOptions) {
+        return this.addConstraint(bigintDivisibleBy(number, options2));
       }
-      abs(options = this.validatorOptions) {
-        return this.transform((value) => value < 0 ? -value : value, options);
+      abs(options2 = this.validatorOptions) {
+        return this.transform((value) => value < 0 ? -value : value, options2);
       }
-      intN(bits, options = this.validatorOptions) {
-        return this.transform((value) => BigInt.asIntN(bits, value), options);
+      intN(bits, options2 = this.validatorOptions) {
+        return this.transform((value) => BigInt.asIntN(bits, value), options2);
       }
-      uintN(bits, options = this.validatorOptions) {
-        return this.transform((value) => BigInt.asUintN(bits, value), options);
+      uintN(bits, options2 = this.validatorOptions) {
+        return this.transform((value) => BigInt.asUintN(bits, value), options2);
       }
       handle(value) {
         return typeof value === "bigint" ? Result.ok(value) : Result.err(new ValidationError("s.bigint()", this.validatorOptions.message ?? "Expected a bigint primitive", value));
@@ -40991,34 +40991,34 @@ ${givenBlock}`;
     };
     __name(_BigIntValidator, "BigIntValidator");
     var BigIntValidator = _BigIntValidator;
-    function booleanTrue(options) {
+    function booleanTrue(options2) {
       return {
         run(input) {
-          return input ? Result.ok(input) : Result.err(new ExpectedConstraintError("s.boolean().true()", options?.message ?? "Invalid boolean value", input, "true"));
+          return input ? Result.ok(input) : Result.err(new ExpectedConstraintError("s.boolean().true()", options2?.message ?? "Invalid boolean value", input, "true"));
         }
       };
     }
     __name(booleanTrue, "booleanTrue");
-    function booleanFalse(options) {
+    function booleanFalse(options2) {
       return {
         run(input) {
-          return input ? Result.err(new ExpectedConstraintError("s.boolean().false()", options?.message ?? "Invalid boolean value", input, "false")) : Result.ok(input);
+          return input ? Result.err(new ExpectedConstraintError("s.boolean().false()", options2?.message ?? "Invalid boolean value", input, "false")) : Result.ok(input);
         }
       };
     }
     __name(booleanFalse, "booleanFalse");
     var _BooleanValidator = class _BooleanValidator extends BaseValidator {
-      true(options = this.validatorOptions) {
-        return this.addConstraint(booleanTrue(options));
+      true(options2 = this.validatorOptions) {
+        return this.addConstraint(booleanTrue(options2));
       }
-      false(options = this.validatorOptions) {
-        return this.addConstraint(booleanFalse(options));
+      false(options2 = this.validatorOptions) {
+        return this.addConstraint(booleanFalse(options2));
       }
-      equal(value, options = this.validatorOptions) {
-        return value ? this.true(options) : this.false(options);
+      equal(value, options2 = this.validatorOptions) {
+        return value ? this.true(options2) : this.false(options2);
       }
-      notEqual(value, options = this.validatorOptions) {
-        return value ? this.false(options) : this.true(options);
+      notEqual(value, options2 = this.validatorOptions) {
+        return value ? this.false(options2) : this.true(options2);
       }
       handle(value) {
         return typeof value === "boolean" ? Result.ok(value) : Result.err(new ValidationError("s.boolean()", this.validatorOptions.message ?? "Expected a boolean primitive", value));
@@ -41026,86 +41026,86 @@ ${givenBlock}`;
     };
     __name(_BooleanValidator, "BooleanValidator");
     var BooleanValidator = _BooleanValidator;
-    function dateComparator(comparator, name, expected, number, options) {
+    function dateComparator(comparator, name, expected, number, options2) {
       return {
         run(input) {
-          return comparator(input.getTime(), number) ? Result.ok(input) : Result.err(new ExpectedConstraintError(name, options?.message ?? "Invalid Date value", input, expected));
+          return comparator(input.getTime(), number) ? Result.ok(input) : Result.err(new ExpectedConstraintError(name, options2?.message ?? "Invalid Date value", input, expected));
         }
       };
     }
     __name(dateComparator, "dateComparator");
-    function dateLessThan(value, options) {
+    function dateLessThan(value, options2) {
       const expected = `expected < ${value.toISOString()}`;
-      return dateComparator(lessThan, "s.date().lessThan()", expected, value.getTime(), options);
+      return dateComparator(lessThan, "s.date().lessThan()", expected, value.getTime(), options2);
     }
     __name(dateLessThan, "dateLessThan");
-    function dateLessThanOrEqual(value, options) {
+    function dateLessThanOrEqual(value, options2) {
       const expected = `expected <= ${value.toISOString()}`;
-      return dateComparator(lessThanOrEqual, "s.date().lessThanOrEqual()", expected, value.getTime(), options);
+      return dateComparator(lessThanOrEqual, "s.date().lessThanOrEqual()", expected, value.getTime(), options2);
     }
     __name(dateLessThanOrEqual, "dateLessThanOrEqual");
-    function dateGreaterThan(value, options) {
+    function dateGreaterThan(value, options2) {
       const expected = `expected > ${value.toISOString()}`;
-      return dateComparator(greaterThan, "s.date().greaterThan()", expected, value.getTime(), options);
+      return dateComparator(greaterThan, "s.date().greaterThan()", expected, value.getTime(), options2);
     }
     __name(dateGreaterThan, "dateGreaterThan");
-    function dateGreaterThanOrEqual(value, options) {
+    function dateGreaterThanOrEqual(value, options2) {
       const expected = `expected >= ${value.toISOString()}`;
-      return dateComparator(greaterThanOrEqual, "s.date().greaterThanOrEqual()", expected, value.getTime(), options);
+      return dateComparator(greaterThanOrEqual, "s.date().greaterThanOrEqual()", expected, value.getTime(), options2);
     }
     __name(dateGreaterThanOrEqual, "dateGreaterThanOrEqual");
-    function dateEqual(value, options) {
+    function dateEqual(value, options2) {
       const expected = `expected === ${value.toISOString()}`;
-      return dateComparator(equal, "s.date().equal()", expected, value.getTime(), options);
+      return dateComparator(equal, "s.date().equal()", expected, value.getTime(), options2);
     }
     __name(dateEqual, "dateEqual");
-    function dateNotEqual(value, options) {
+    function dateNotEqual(value, options2) {
       const expected = `expected !== ${value.toISOString()}`;
-      return dateComparator(notEqual, "s.date().notEqual()", expected, value.getTime(), options);
+      return dateComparator(notEqual, "s.date().notEqual()", expected, value.getTime(), options2);
     }
     __name(dateNotEqual, "dateNotEqual");
-    function dateInvalid(options) {
+    function dateInvalid(options2) {
       return {
         run(input) {
-          return Number.isNaN(input.getTime()) ? Result.ok(input) : Result.err(new ExpectedConstraintError("s.date().invalid()", options?.message ?? "Invalid Date value", input, "expected === NaN"));
+          return Number.isNaN(input.getTime()) ? Result.ok(input) : Result.err(new ExpectedConstraintError("s.date().invalid()", options2?.message ?? "Invalid Date value", input, "expected === NaN"));
         }
       };
     }
     __name(dateInvalid, "dateInvalid");
-    function dateValid(options) {
+    function dateValid(options2) {
       return {
         run(input) {
-          return Number.isNaN(input.getTime()) ? Result.err(new ExpectedConstraintError("s.date().valid()", options?.message ?? "Invalid Date value", input, "expected !== NaN")) : Result.ok(input);
+          return Number.isNaN(input.getTime()) ? Result.err(new ExpectedConstraintError("s.date().valid()", options2?.message ?? "Invalid Date value", input, "expected !== NaN")) : Result.ok(input);
         }
       };
     }
     __name(dateValid, "dateValid");
     var _DateValidator = class _DateValidator extends BaseValidator {
-      lessThan(date, options = this.validatorOptions) {
-        return this.addConstraint(dateLessThan(new Date(date), options));
+      lessThan(date, options2 = this.validatorOptions) {
+        return this.addConstraint(dateLessThan(new Date(date), options2));
       }
-      lessThanOrEqual(date, options = this.validatorOptions) {
-        return this.addConstraint(dateLessThanOrEqual(new Date(date), options));
+      lessThanOrEqual(date, options2 = this.validatorOptions) {
+        return this.addConstraint(dateLessThanOrEqual(new Date(date), options2));
       }
-      greaterThan(date, options = this.validatorOptions) {
-        return this.addConstraint(dateGreaterThan(new Date(date), options));
+      greaterThan(date, options2 = this.validatorOptions) {
+        return this.addConstraint(dateGreaterThan(new Date(date), options2));
       }
-      greaterThanOrEqual(date, options = this.validatorOptions) {
-        return this.addConstraint(dateGreaterThanOrEqual(new Date(date), options));
+      greaterThanOrEqual(date, options2 = this.validatorOptions) {
+        return this.addConstraint(dateGreaterThanOrEqual(new Date(date), options2));
       }
-      equal(date, options = this.validatorOptions) {
+      equal(date, options2 = this.validatorOptions) {
         const resolved = new Date(date);
-        return Number.isNaN(resolved.getTime()) ? this.invalid(options) : this.addConstraint(dateEqual(resolved, options));
+        return Number.isNaN(resolved.getTime()) ? this.invalid(options2) : this.addConstraint(dateEqual(resolved, options2));
       }
-      notEqual(date, options = this.validatorOptions) {
+      notEqual(date, options2 = this.validatorOptions) {
         const resolved = new Date(date);
-        return Number.isNaN(resolved.getTime()) ? this.valid(options) : this.addConstraint(dateNotEqual(resolved, options));
+        return Number.isNaN(resolved.getTime()) ? this.valid(options2) : this.addConstraint(dateNotEqual(resolved, options2));
       }
-      valid(options = this.validatorOptions) {
-        return this.addConstraint(dateValid(options));
+      valid(options2 = this.validatorOptions) {
+        return this.addConstraint(dateValid(options2));
       }
-      invalid(options = this.validatorOptions) {
-        return this.addConstraint(dateInvalid(options));
+      invalid(options2 = this.validatorOptions) {
+        return this.addConstraint(dateInvalid(options2));
       }
       handle(value) {
         return value instanceof Date ? Result.ok(value) : Result.err(new ValidationError("s.date()", this.validatorOptions.message ?? "Expected a Date", value));
@@ -41127,22 +41127,22 @@ ${givenBlock}`;
           message: this.message
         };
       }
-      [customInspectSymbolStackLess](depth, options) {
-        const validator = options.stylize(this.validator, "string");
+      [customInspectSymbolStackLess](depth, options2) {
+        const validator = options2.stylize(this.validator, "string");
         if (depth < 0) {
-          return options.stylize(`[ExpectedValidationError: ${validator}]`, "special");
+          return options2.stylize(`[ExpectedValidationError: ${validator}]`, "special");
         }
-        const newOptions = { ...options, depth: options.depth === null ? null : options.depth - 1 };
+        const newOptions = { ...options2, depth: options2.depth === null ? null : options2.depth - 1 };
         const padding = `
-  ${options.stylize("|", "undefined")} `;
+  ${options2.stylize("|", "undefined")} `;
         const expected = inspect2(this.expected, newOptions).replace(/\n/g, padding);
         const given = inspect2(this.given, newOptions).replace(/\n/g, padding);
-        const header = `${options.stylize("ExpectedValidationError", "special")} > ${validator}`;
-        const message = options.stylize(this.message, "regexp");
+        const header = `${options2.stylize("ExpectedValidationError", "special")} > ${validator}`;
+        const message = options2.stylize(this.message, "regexp");
         const expectedBlock = `
-  ${options.stylize("Expected:", "string")}${padding}${expected}`;
+  ${options2.stylize("Expected:", "string")}${padding}${expected}`;
         const givenBlock = `
-  ${options.stylize("Received:", "regexp")}${padding}${given}`;
+  ${options2.stylize("Received:", "regexp")}${padding}${given}`;
         return `${header}
   ${message}
 ${expectedBlock}
@@ -41195,51 +41195,51 @@ ${givenBlock}`;
     };
     __name(_NullishValidator, "NullishValidator");
     var NullishValidator = _NullishValidator;
-    function numberComparator(comparator, name, expected, number, options) {
+    function numberComparator(comparator, name, expected, number, options2) {
       return {
         run(input) {
-          return comparator(input, number) ? Result.ok(input) : Result.err(new ExpectedConstraintError(name, options?.message ?? "Invalid number value", input, expected));
+          return comparator(input, number) ? Result.ok(input) : Result.err(new ExpectedConstraintError(name, options2?.message ?? "Invalid number value", input, expected));
         }
       };
     }
     __name(numberComparator, "numberComparator");
-    function numberLessThan(value, options) {
+    function numberLessThan(value, options2) {
       const expected = `expected < ${value}`;
-      return numberComparator(lessThan, "s.number().lessThan()", expected, value, options);
+      return numberComparator(lessThan, "s.number().lessThan()", expected, value, options2);
     }
     __name(numberLessThan, "numberLessThan");
-    function numberLessThanOrEqual(value, options) {
+    function numberLessThanOrEqual(value, options2) {
       const expected = `expected <= ${value}`;
-      return numberComparator(lessThanOrEqual, "s.number().lessThanOrEqual()", expected, value, options);
+      return numberComparator(lessThanOrEqual, "s.number().lessThanOrEqual()", expected, value, options2);
     }
     __name(numberLessThanOrEqual, "numberLessThanOrEqual");
-    function numberGreaterThan(value, options) {
+    function numberGreaterThan(value, options2) {
       const expected = `expected > ${value}`;
-      return numberComparator(greaterThan, "s.number().greaterThan()", expected, value, options);
+      return numberComparator(greaterThan, "s.number().greaterThan()", expected, value, options2);
     }
     __name(numberGreaterThan, "numberGreaterThan");
-    function numberGreaterThanOrEqual(value, options) {
+    function numberGreaterThanOrEqual(value, options2) {
       const expected = `expected >= ${value}`;
-      return numberComparator(greaterThanOrEqual, "s.number().greaterThanOrEqual()", expected, value, options);
+      return numberComparator(greaterThanOrEqual, "s.number().greaterThanOrEqual()", expected, value, options2);
     }
     __name(numberGreaterThanOrEqual, "numberGreaterThanOrEqual");
-    function numberEqual(value, options) {
+    function numberEqual(value, options2) {
       const expected = `expected === ${value}`;
-      return numberComparator(equal, "s.number().equal()", expected, value, options);
+      return numberComparator(equal, "s.number().equal()", expected, value, options2);
     }
     __name(numberEqual, "numberEqual");
-    function numberNotEqual(value, options) {
+    function numberNotEqual(value, options2) {
       const expected = `expected !== ${value}`;
-      return numberComparator(notEqual, "s.number().notEqual()", expected, value, options);
+      return numberComparator(notEqual, "s.number().notEqual()", expected, value, options2);
     }
     __name(numberNotEqual, "numberNotEqual");
-    function numberInt(options) {
+    function numberInt(options2) {
       return {
         run(input) {
           return Number.isInteger(input) ? Result.ok(input) : Result.err(
             new ExpectedConstraintError(
               "s.number().int()",
-              options?.message ?? "Given value is not an integer",
+              options2?.message ?? "Given value is not an integer",
               input,
               "Number.isInteger(expected) to be true"
             )
@@ -41248,13 +41248,13 @@ ${givenBlock}`;
       };
     }
     __name(numberInt, "numberInt");
-    function numberSafeInt(options) {
+    function numberSafeInt(options2) {
       return {
         run(input) {
           return Number.isSafeInteger(input) ? Result.ok(input) : Result.err(
             new ExpectedConstraintError(
               "s.number().safeInt()",
-              options?.message ?? "Given value is not a safe integer",
+              options2?.message ?? "Given value is not a safe integer",
               input,
               "Number.isSafeInteger(expected) to be true"
             )
@@ -41263,13 +41263,13 @@ ${givenBlock}`;
       };
     }
     __name(numberSafeInt, "numberSafeInt");
-    function numberFinite(options) {
+    function numberFinite(options2) {
       return {
         run(input) {
           return Number.isFinite(input) ? Result.ok(input) : Result.err(
             new ExpectedConstraintError(
               "s.number().finite()",
-              options?.message ?? "Given value is not finite",
+              options2?.message ?? "Given value is not finite",
               input,
               "Number.isFinite(expected) to be true"
             )
@@ -41278,92 +41278,92 @@ ${givenBlock}`;
       };
     }
     __name(numberFinite, "numberFinite");
-    function numberNaN(options) {
+    function numberNaN(options2) {
       return {
         run(input) {
           return Number.isNaN(input) ? Result.ok(input) : Result.err(
-            new ExpectedConstraintError("s.number().equal(NaN)", options?.message ?? "Invalid number value", input, "expected === NaN")
+            new ExpectedConstraintError("s.number().equal(NaN)", options2?.message ?? "Invalid number value", input, "expected === NaN")
           );
         }
       };
     }
     __name(numberNaN, "numberNaN");
-    function numberNotNaN(options) {
+    function numberNotNaN(options2) {
       return {
         run(input) {
           return Number.isNaN(input) ? Result.err(
-            new ExpectedConstraintError("s.number().notEqual(NaN)", options?.message ?? "Invalid number value", input, "expected !== NaN")
+            new ExpectedConstraintError("s.number().notEqual(NaN)", options2?.message ?? "Invalid number value", input, "expected !== NaN")
           ) : Result.ok(input);
         }
       };
     }
     __name(numberNotNaN, "numberNotNaN");
-    function numberDivisibleBy(divider, options) {
+    function numberDivisibleBy(divider, options2) {
       const expected = `expected % ${divider} === 0`;
       return {
         run(input) {
-          return input % divider === 0 ? Result.ok(input) : Result.err(new ExpectedConstraintError("s.number().divisibleBy()", options?.message ?? "Number is not divisible", input, expected));
+          return input % divider === 0 ? Result.ok(input) : Result.err(new ExpectedConstraintError("s.number().divisibleBy()", options2?.message ?? "Number is not divisible", input, expected));
         }
       };
     }
     __name(numberDivisibleBy, "numberDivisibleBy");
     var _NumberValidator = class _NumberValidator extends BaseValidator {
-      lessThan(number, options = this.validatorOptions) {
-        return this.addConstraint(numberLessThan(number, options));
+      lessThan(number, options2 = this.validatorOptions) {
+        return this.addConstraint(numberLessThan(number, options2));
       }
-      lessThanOrEqual(number, options = this.validatorOptions) {
-        return this.addConstraint(numberLessThanOrEqual(number, options));
+      lessThanOrEqual(number, options2 = this.validatorOptions) {
+        return this.addConstraint(numberLessThanOrEqual(number, options2));
       }
-      greaterThan(number, options = this.validatorOptions) {
-        return this.addConstraint(numberGreaterThan(number, options));
+      greaterThan(number, options2 = this.validatorOptions) {
+        return this.addConstraint(numberGreaterThan(number, options2));
       }
-      greaterThanOrEqual(number, options = this.validatorOptions) {
-        return this.addConstraint(numberGreaterThanOrEqual(number, options));
+      greaterThanOrEqual(number, options2 = this.validatorOptions) {
+        return this.addConstraint(numberGreaterThanOrEqual(number, options2));
       }
-      equal(number, options = this.validatorOptions) {
-        return Number.isNaN(number) ? this.addConstraint(numberNaN(options)) : this.addConstraint(numberEqual(number, options));
+      equal(number, options2 = this.validatorOptions) {
+        return Number.isNaN(number) ? this.addConstraint(numberNaN(options2)) : this.addConstraint(numberEqual(number, options2));
       }
-      notEqual(number, options = this.validatorOptions) {
-        return Number.isNaN(number) ? this.addConstraint(numberNotNaN(options)) : this.addConstraint(numberNotEqual(number, options));
+      notEqual(number, options2 = this.validatorOptions) {
+        return Number.isNaN(number) ? this.addConstraint(numberNotNaN(options2)) : this.addConstraint(numberNotEqual(number, options2));
       }
-      int(options = this.validatorOptions) {
-        return this.addConstraint(numberInt(options));
+      int(options2 = this.validatorOptions) {
+        return this.addConstraint(numberInt(options2));
       }
-      safeInt(options = this.validatorOptions) {
-        return this.addConstraint(numberSafeInt(options));
+      safeInt(options2 = this.validatorOptions) {
+        return this.addConstraint(numberSafeInt(options2));
       }
-      finite(options = this.validatorOptions) {
-        return this.addConstraint(numberFinite(options));
+      finite(options2 = this.validatorOptions) {
+        return this.addConstraint(numberFinite(options2));
       }
-      positive(options = this.validatorOptions) {
-        return this.greaterThanOrEqual(0, options);
+      positive(options2 = this.validatorOptions) {
+        return this.greaterThanOrEqual(0, options2);
       }
-      negative(options = this.validatorOptions) {
-        return this.lessThan(0, options);
+      negative(options2 = this.validatorOptions) {
+        return this.lessThan(0, options2);
       }
-      divisibleBy(divider, options = this.validatorOptions) {
-        return this.addConstraint(numberDivisibleBy(divider, options));
+      divisibleBy(divider, options2 = this.validatorOptions) {
+        return this.addConstraint(numberDivisibleBy(divider, options2));
       }
-      abs(options = this.validatorOptions) {
-        return this.transform(Math.abs, options);
+      abs(options2 = this.validatorOptions) {
+        return this.transform(Math.abs, options2);
       }
-      sign(options = this.validatorOptions) {
-        return this.transform(Math.sign, options);
+      sign(options2 = this.validatorOptions) {
+        return this.transform(Math.sign, options2);
       }
-      trunc(options = this.validatorOptions) {
-        return this.transform(Math.trunc, options);
+      trunc(options2 = this.validatorOptions) {
+        return this.transform(Math.trunc, options2);
       }
-      floor(options = this.validatorOptions) {
-        return this.transform(Math.floor, options);
+      floor(options2 = this.validatorOptions) {
+        return this.transform(Math.floor, options2);
       }
-      fround(options = this.validatorOptions) {
-        return this.transform(Math.fround, options);
+      fround(options2 = this.validatorOptions) {
+        return this.transform(Math.fround, options2);
       }
-      round(options = this.validatorOptions) {
-        return this.transform(Math.round, options);
+      round(options2 = this.validatorOptions) {
+        return this.transform(Math.round, options2);
       }
-      ceil(options = this.validatorOptions) {
-        return this.transform(Math.ceil, options);
+      ceil(options2 = this.validatorOptions) {
+        return this.transform(Math.ceil, options2);
       }
       handle(value) {
         return typeof value === "number" ? Result.ok(value) : Result.err(new ValidationError("s.number()", this.validatorOptions.message ?? "Expected a number primitive", value));
@@ -41383,13 +41383,13 @@ ${givenBlock}`;
           property: this.property
         };
       }
-      [customInspectSymbolStackLess](depth, options) {
-        const property = options.stylize(this.property.toString(), "string");
+      [customInspectSymbolStackLess](depth, options2) {
+        const property = options2.stylize(this.property.toString(), "string");
         if (depth < 0) {
-          return options.stylize(`[MissingPropertyError: ${property}]`, "special");
+          return options2.stylize(`[MissingPropertyError: ${property}]`, "special");
         }
-        const header = `${options.stylize("MissingPropertyError", "special")} > ${property}`;
-        const message = options.stylize(this.message, "regexp");
+        const header = `${options2.stylize("MissingPropertyError", "special")} > ${property}`;
+        const message = options2.stylize(this.message, "regexp");
         return `${header}
   ${message}`;
       }
@@ -41397,8 +41397,8 @@ ${givenBlock}`;
     __name(_MissingPropertyError, "MissingPropertyError");
     var MissingPropertyError = _MissingPropertyError;
     var _UnknownPropertyError = class _UnknownPropertyError extends BaseError {
-      constructor(property, value, options) {
-        super(options?.message ?? "Received unexpected property");
+      constructor(property, value, options2) {
+        super(options2?.message ?? "Received unexpected property");
         this.property = property;
         this.value = value;
       }
@@ -41410,19 +41410,19 @@ ${givenBlock}`;
           value: this.value
         };
       }
-      [customInspectSymbolStackLess](depth, options) {
-        const property = options.stylize(this.property.toString(), "string");
+      [customInspectSymbolStackLess](depth, options2) {
+        const property = options2.stylize(this.property.toString(), "string");
         if (depth < 0) {
-          return options.stylize(`[UnknownPropertyError: ${property}]`, "special");
+          return options2.stylize(`[UnknownPropertyError: ${property}]`, "special");
         }
-        const newOptions = { ...options, depth: options.depth === null ? null : options.depth - 1, compact: true };
+        const newOptions = { ...options2, depth: options2.depth === null ? null : options2.depth - 1, compact: true };
         const padding = `
-  ${options.stylize("|", "undefined")} `;
+  ${options2.stylize("|", "undefined")} `;
         const given = inspect2(this.value, newOptions).replace(/\n/g, padding);
-        const header = `${options.stylize("UnknownPropertyError", "special")} > ${property}`;
-        const message = options.stylize(this.message, "regexp");
+        const header = `${options2.stylize("UnknownPropertyError", "special")} > ${property}`;
+        const message = options2.stylize(this.message, "regexp");
         const givenBlock = `
-  ${options.stylize("Received:", "regexp")}${padding}${given}`;
+  ${options2.stylize("Received:", "regexp")}${padding}${given}`;
         return `${header}
   ${message}
 ${givenBlock}`;
@@ -41436,9 +41436,9 @@ ${givenBlock}`;
         this.validator = validator;
         this.defaultValue = value;
       }
-      default(value, options = this.validatorOptions) {
+      default(value, options2 = this.validatorOptions) {
         const clone = this.clone();
-        clone.validatorOptions = options;
+        clone.validatorOptions = options2;
         clone.defaultValue = value;
         return clone;
       }
@@ -41456,17 +41456,17 @@ ${givenBlock}`;
         super(validatorOptions?.message ?? "Received one or more errors");
         this.errors = errors;
       }
-      [customInspectSymbolStackLess](depth, options) {
+      [customInspectSymbolStackLess](depth, options2) {
         if (depth < 0) {
-          return options.stylize("[CombinedError]", "special");
+          return options2.stylize("[CombinedError]", "special");
         }
-        const newOptions = { ...options, depth: options.depth === null ? null : options.depth - 1, compact: true };
+        const newOptions = { ...options2, depth: options2.depth === null ? null : options2.depth - 1, compact: true };
         const padding = `
-  ${options.stylize("|", "undefined")} `;
-        const header = `${options.stylize("CombinedError", "special")} (${options.stylize(this.errors.length.toString(), "number")})`;
-        const message = options.stylize(this.message, "regexp");
+  ${options2.stylize("|", "undefined")} `;
+        const header = `${options2.stylize("CombinedError", "special")} (${options2.stylize(this.errors.length.toString(), "number")})`;
+        const message = options2.stylize(this.message, "regexp");
         const errors = this.errors.map((error, i3) => {
-          const index = options.stylize((i3 + 1).toString(), "number");
+          const index = options2.stylize((i3 + 1).toString(), "number");
           const body = error[customInspectSymbolStackLess](depth - 1, newOptions).replace(/\n/g, padding);
           return `  ${index} ${body}`;
         }).join("\n\n");
@@ -41483,16 +41483,16 @@ ${errors}`;
         super(validatorOptions, constraints);
         this.validators = validators;
       }
-      optional(options = this.validatorOptions) {
+      optional(options2 = this.validatorOptions) {
         if (this.validators.length === 0)
-          return new _UnionValidator2([new LiteralValidator(void 0, options)], this.validatorOptions, this.constraints);
+          return new _UnionValidator2([new LiteralValidator(void 0, options2)], this.validatorOptions, this.constraints);
         const [validator] = this.validators;
         if (validator instanceof LiteralValidator) {
           if (validator.expected === void 0)
             return this.clone();
           if (validator.expected === null) {
             return new _UnionValidator2(
-              [new NullishValidator(options), ...this.validators.slice(1)],
+              [new NullishValidator(options2), ...this.validators.slice(1)],
               this.validatorOptions,
               this.constraints
             );
@@ -41500,9 +41500,9 @@ ${errors}`;
         } else if (validator instanceof NullishValidator) {
           return this.clone();
         }
-        return new _UnionValidator2([new LiteralValidator(void 0, options), ...this.validators], this.validatorOptions);
+        return new _UnionValidator2([new LiteralValidator(void 0, options2), ...this.validators], this.validatorOptions);
       }
-      required(options = this.validatorOptions) {
+      required(options2 = this.validatorOptions) {
         if (this.validators.length === 0)
           return this.clone();
         const [validator] = this.validators;
@@ -41512,16 +41512,16 @@ ${errors}`;
           }
         } else if (validator instanceof NullishValidator) {
           return new _UnionValidator2(
-            [new LiteralValidator(null, options), ...this.validators.slice(1)],
+            [new LiteralValidator(null, options2), ...this.validators.slice(1)],
             this.validatorOptions,
             this.constraints
           );
         }
         return this.clone();
       }
-      nullable(options = this.validatorOptions) {
+      nullable(options2 = this.validatorOptions) {
         if (this.validators.length === 0) {
-          return new _UnionValidator2([new LiteralValidator(null, options)], this.validatorOptions, this.constraints);
+          return new _UnionValidator2([new LiteralValidator(null, options2)], this.validatorOptions, this.constraints);
         }
         const [validator] = this.validators;
         if (validator instanceof LiteralValidator) {
@@ -41529,7 +41529,7 @@ ${errors}`;
             return this.clone();
           if (validator.expected === void 0) {
             return new _UnionValidator2(
-              [new NullishValidator(options), ...this.validators.slice(1)],
+              [new NullishValidator(options2), ...this.validators.slice(1)],
               this.validatorOptions,
               this.constraints
             );
@@ -41537,25 +41537,25 @@ ${errors}`;
         } else if (validator instanceof NullishValidator) {
           return this.clone();
         }
-        return new _UnionValidator2([new LiteralValidator(null, options), ...this.validators], this.validatorOptions);
+        return new _UnionValidator2([new LiteralValidator(null, options2), ...this.validators], this.validatorOptions);
       }
-      nullish(options = this.validatorOptions) {
+      nullish(options2 = this.validatorOptions) {
         if (this.validators.length === 0) {
-          return new _UnionValidator2([new NullishValidator(options)], options, this.constraints);
+          return new _UnionValidator2([new NullishValidator(options2)], options2, this.constraints);
         }
         const [validator] = this.validators;
         if (validator instanceof LiteralValidator) {
           if (validator.expected === null || validator.expected === void 0) {
             return new _UnionValidator2(
-              [new NullishValidator(options), ...this.validators.slice(1)],
-              options,
+              [new NullishValidator(options2), ...this.validators.slice(1)],
+              options2,
               this.constraints
             );
           }
         } else if (validator instanceof NullishValidator) {
           return this.clone();
         }
-        return new _UnionValidator2([new NullishValidator(options), ...this.validators], options);
+        return new _UnionValidator2([new NullishValidator(options2), ...this.validators], options2);
       }
       or(...predicates) {
         return new _UnionValidator2([...this.validators, ...predicates], this.validatorOptions);
@@ -41630,45 +41630,45 @@ ${errors}`;
           }
         }
       }
-      strict(options = this.validatorOptions) {
-        return Reflect.construct(this.constructor, [this.shape, 1, options, this.constraints]);
+      strict(options2 = this.validatorOptions) {
+        return Reflect.construct(this.constructor, [this.shape, 1, options2, this.constraints]);
       }
-      ignore(options = this.validatorOptions) {
-        return Reflect.construct(this.constructor, [this.shape, 0, options, this.constraints]);
+      ignore(options2 = this.validatorOptions) {
+        return Reflect.construct(this.constructor, [this.shape, 0, options2, this.constraints]);
       }
-      passthrough(options = this.validatorOptions) {
-        return Reflect.construct(this.constructor, [this.shape, 2, options, this.constraints]);
+      passthrough(options2 = this.validatorOptions) {
+        return Reflect.construct(this.constructor, [this.shape, 2, options2, this.constraints]);
       }
-      partial(options = this.validatorOptions) {
-        const shape = Object.fromEntries(this.keys.map((key) => [key, this.shape[key].optional(options)]));
-        return Reflect.construct(this.constructor, [shape, this.strategy, options, this.constraints]);
+      partial(options2 = this.validatorOptions) {
+        const shape = Object.fromEntries(this.keys.map((key) => [key, this.shape[key].optional(options2)]));
+        return Reflect.construct(this.constructor, [shape, this.strategy, options2, this.constraints]);
       }
-      required(options = this.validatorOptions) {
+      required(options2 = this.validatorOptions) {
         const shape = Object.fromEntries(
           this.keys.map((key) => {
             let validator = this.shape[key];
             if (validator instanceof UnionValidator)
-              validator = validator.required(options);
+              validator = validator.required(options2);
             return [key, validator];
           })
         );
-        return Reflect.construct(this.constructor, [shape, this.strategy, options, this.constraints]);
+        return Reflect.construct(this.constructor, [shape, this.strategy, options2, this.constraints]);
       }
-      extend(schema2, options = this.validatorOptions) {
+      extend(schema2, options2 = this.validatorOptions) {
         const shape = { ...this.shape, ...schema2 instanceof _ObjectValidator2 ? schema2.shape : schema2 };
-        return Reflect.construct(this.constructor, [shape, this.strategy, options, this.constraints]);
+        return Reflect.construct(this.constructor, [shape, this.strategy, options2, this.constraints]);
       }
-      pick(keys, options = this.validatorOptions) {
+      pick(keys, options2 = this.validatorOptions) {
         const shape = Object.fromEntries(
           keys.filter((key) => this.keys.includes(key)).map((key) => [key, this.shape[key]])
         );
-        return Reflect.construct(this.constructor, [shape, this.strategy, options, this.constraints]);
+        return Reflect.construct(this.constructor, [shape, this.strategy, options2, this.constraints]);
       }
-      omit(keys, options = this.validatorOptions) {
+      omit(keys, options2 = this.validatorOptions) {
         const shape = Object.fromEntries(
           this.keys.filter((key) => !keys.includes(key)).map((key) => [key, this.shape[key]])
         );
-        return Reflect.construct(this.constructor, [shape, this.strategy, options, this.constraints]);
+        return Reflect.construct(this.constructor, [shape, this.strategy, options2, this.constraints]);
       }
       handle(value) {
         const typeOfValue = typeof value;
@@ -41937,24 +41937,24 @@ ${errors}`;
           expected: this.expected
         };
       }
-      [customInspectSymbolStackLess](depth, options) {
-        const constraint = options.stylize(this.constraint, "string");
+      [customInspectSymbolStackLess](depth, options2) {
+        const constraint = options2.stylize(this.constraint, "string");
         if (depth < 0) {
-          return options.stylize(`[MultiplePossibilitiesConstraintError: ${constraint}]`, "special");
+          return options2.stylize(`[MultiplePossibilitiesConstraintError: ${constraint}]`, "special");
         }
-        const newOptions = { ...options, depth: options.depth === null ? null : options.depth - 1 };
-        const verticalLine = options.stylize("|", "undefined");
+        const newOptions = { ...options2, depth: options2.depth === null ? null : options2.depth - 1 };
+        const verticalLine = options2.stylize("|", "undefined");
         const padding = `
   ${verticalLine} `;
         const given = inspect2(this.given, newOptions).replace(/\n/g, padding);
-        const header = `${options.stylize("MultiplePossibilitiesConstraintError", "special")} > ${constraint}`;
-        const message = options.stylize(this.message, "regexp");
+        const header = `${options2.stylize("MultiplePossibilitiesConstraintError", "special")} > ${constraint}`;
+        const message = options2.stylize(this.message, "regexp");
         const expectedPadding = `
   ${verticalLine} - `;
         const expectedBlock = `
-  ${options.stylize("Expected any of the following:", "string")}${expectedPadding}${this.expected.map((possible) => options.stylize(possible, "boolean")).join(expectedPadding)}`;
+  ${options2.stylize("Expected any of the following:", "string")}${expectedPadding}${this.expected.map((possible) => options2.stylize(possible, "boolean")).join(expectedPadding)}`;
         const givenBlock = `
-  ${options.stylize("Received:", "regexp")}${padding}${given}`;
+  ${options2.stylize("Received:", "regexp")}${padding}${given}`;
         return `${header}
   ${message}
 ${expectedBlock}
@@ -41986,68 +41986,68 @@ ${givenBlock}`;
       }
     }
     __name(combinedErrorFn, "combinedErrorFn");
-    function createUrlValidators(options, validatorOptions) {
+    function createUrlValidators(options2, validatorOptions) {
       const fns = [];
-      if (options?.allowedProtocols?.length)
-        fns.push(allowedProtocolsFn(options.allowedProtocols, validatorOptions));
-      if (options?.allowedDomains?.length)
-        fns.push(allowedDomainsFn(options.allowedDomains, validatorOptions));
+      if (options2?.allowedProtocols?.length)
+        fns.push(allowedProtocolsFn(options2.allowedProtocols, validatorOptions));
+      if (options2?.allowedDomains?.length)
+        fns.push(allowedDomainsFn(options2.allowedDomains, validatorOptions));
       return combinedErrorFn(...fns);
     }
     __name(createUrlValidators, "createUrlValidators");
-    function allowedProtocolsFn(allowedProtocols, options) {
-      return (input, url) => allowedProtocols.includes(url.protocol) ? null : new MultiplePossibilitiesConstraintError("s.string().url()", options?.message ?? "Invalid URL protocol", input, allowedProtocols);
+    function allowedProtocolsFn(allowedProtocols, options2) {
+      return (input, url) => allowedProtocols.includes(url.protocol) ? null : new MultiplePossibilitiesConstraintError("s.string().url()", options2?.message ?? "Invalid URL protocol", input, allowedProtocols);
     }
     __name(allowedProtocolsFn, "allowedProtocolsFn");
-    function allowedDomainsFn(allowedDomains, options) {
-      return (input, url) => allowedDomains.includes(url.hostname) ? null : new MultiplePossibilitiesConstraintError("s.string().url()", options?.message ?? "Invalid URL domain", input, allowedDomains);
+    function allowedDomainsFn(allowedDomains, options2) {
+      return (input, url) => allowedDomains.includes(url.hostname) ? null : new MultiplePossibilitiesConstraintError("s.string().url()", options2?.message ?? "Invalid URL domain", input, allowedDomains);
     }
     __name(allowedDomainsFn, "allowedDomainsFn");
-    function stringLengthComparator(comparator, name, expected, length, options) {
+    function stringLengthComparator(comparator, name, expected, length, options2) {
       return {
         run(input) {
-          return comparator(input.length, length) ? Result.ok(input) : Result.err(new ExpectedConstraintError(name, options?.message ?? "Invalid string length", input, expected));
+          return comparator(input.length, length) ? Result.ok(input) : Result.err(new ExpectedConstraintError(name, options2?.message ?? "Invalid string length", input, expected));
         }
       };
     }
     __name(stringLengthComparator, "stringLengthComparator");
-    function stringLengthLessThan(length, options) {
+    function stringLengthLessThan(length, options2) {
       const expected = `expected.length < ${length}`;
-      return stringLengthComparator(lessThan, "s.string().lengthLessThan()", expected, length, options);
+      return stringLengthComparator(lessThan, "s.string().lengthLessThan()", expected, length, options2);
     }
     __name(stringLengthLessThan, "stringLengthLessThan");
-    function stringLengthLessThanOrEqual(length, options) {
+    function stringLengthLessThanOrEqual(length, options2) {
       const expected = `expected.length <= ${length}`;
-      return stringLengthComparator(lessThanOrEqual, "s.string().lengthLessThanOrEqual()", expected, length, options);
+      return stringLengthComparator(lessThanOrEqual, "s.string().lengthLessThanOrEqual()", expected, length, options2);
     }
     __name(stringLengthLessThanOrEqual, "stringLengthLessThanOrEqual");
-    function stringLengthGreaterThan(length, options) {
+    function stringLengthGreaterThan(length, options2) {
       const expected = `expected.length > ${length}`;
-      return stringLengthComparator(greaterThan, "s.string().lengthGreaterThan()", expected, length, options);
+      return stringLengthComparator(greaterThan, "s.string().lengthGreaterThan()", expected, length, options2);
     }
     __name(stringLengthGreaterThan, "stringLengthGreaterThan");
-    function stringLengthGreaterThanOrEqual(length, options) {
+    function stringLengthGreaterThanOrEqual(length, options2) {
       const expected = `expected.length >= ${length}`;
-      return stringLengthComparator(greaterThanOrEqual, "s.string().lengthGreaterThanOrEqual()", expected, length, options);
+      return stringLengthComparator(greaterThanOrEqual, "s.string().lengthGreaterThanOrEqual()", expected, length, options2);
     }
     __name(stringLengthGreaterThanOrEqual, "stringLengthGreaterThanOrEqual");
-    function stringLengthEqual(length, options) {
+    function stringLengthEqual(length, options2) {
       const expected = `expected.length === ${length}`;
-      return stringLengthComparator(equal, "s.string().lengthEqual()", expected, length, options);
+      return stringLengthComparator(equal, "s.string().lengthEqual()", expected, length, options2);
     }
     __name(stringLengthEqual, "stringLengthEqual");
-    function stringLengthNotEqual(length, options) {
+    function stringLengthNotEqual(length, options2) {
       const expected = `expected.length !== ${length}`;
-      return stringLengthComparator(notEqual, "s.string().lengthNotEqual()", expected, length, options);
+      return stringLengthComparator(notEqual, "s.string().lengthNotEqual()", expected, length, options2);
     }
     __name(stringLengthNotEqual, "stringLengthNotEqual");
-    function stringEmail(options) {
+    function stringEmail(options2) {
       return {
         run(input) {
           return validateEmail(input) ? Result.ok(input) : Result.err(
             new ExpectedConstraintError(
               "s.string().email()",
-              options?.message ?? "Invalid email address",
+              options2?.message ?? "Invalid email address",
               input,
               "expected to be an email address"
             )
@@ -42056,16 +42056,16 @@ ${givenBlock}`;
       };
     }
     __name(stringEmail, "stringEmail");
-    function stringRegexValidator(type, expected, regex, options) {
+    function stringRegexValidator(type, expected, regex, options2) {
       return {
         run(input) {
-          return regex.test(input) ? Result.ok(input) : Result.err(new ExpectedConstraintError(type, options?.message ?? "Invalid string format", input, expected));
+          return regex.test(input) ? Result.ok(input) : Result.err(new ExpectedConstraintError(type, options2?.message ?? "Invalid string format", input, expected));
         }
       };
     }
     __name(stringRegexValidator, "stringRegexValidator");
-    function stringUrl(options, validatorOptions) {
-      const validatorFn = createUrlValidators(options, validatorOptions);
+    function stringUrl(options2, validatorOptions) {
+      const validatorFn = createUrlValidators(options2, validatorOptions);
       return {
         run(input) {
           let url;
@@ -42084,7 +42084,7 @@ ${givenBlock}`;
       };
     }
     __name(stringUrl, "stringUrl");
-    function stringIp(version, options) {
+    function stringIp(version, options2) {
       const ipVersion = version ? `v${version}` : "";
       const validatorFn = version === 4 ? isIPv4 : version === 6 ? isIPv6 : isIP;
       const name = `s.string().ip${ipVersion}()`;
@@ -42092,33 +42092,33 @@ ${givenBlock}`;
       const expected = `expected to be an IP${ipVersion} address`;
       return {
         run(input) {
-          return validatorFn(input) ? Result.ok(input) : Result.err(new ExpectedConstraintError(name, options?.message ?? message, input, expected));
+          return validatorFn(input) ? Result.ok(input) : Result.err(new ExpectedConstraintError(name, options2?.message ?? message, input, expected));
         }
       };
     }
     __name(stringIp, "stringIp");
-    function stringRegex(regex, options) {
-      return stringRegexValidator("s.string().regex()", `expected ${regex}.test(expected) to be true`, regex, options);
+    function stringRegex(regex, options2) {
+      return stringRegexValidator("s.string().regex()", `expected ${regex}.test(expected) to be true`, regex, options2);
     }
     __name(stringRegex, "stringRegex");
-    function stringUuid({ version = 4, nullable = false } = {}, options) {
+    function stringUuid({ version = 4, nullable = false } = {}, options2) {
       version ?? (version = "1-5");
       const regex = new RegExp(
         `^(?:[0-9A-F]{8}-[0-9A-F]{4}-[${version}][0-9A-F]{3}-[89AB][0-9A-F]{3}-[0-9A-F]{12}${nullable ? "|00000000-0000-0000-0000-000000000000" : ""})$`,
         "i"
       );
       const expected = `expected to match UUID${typeof version === "number" ? `v${version}` : ` in range of ${version}`}`;
-      return stringRegexValidator("s.string().uuid()", expected, regex, options);
+      return stringRegexValidator("s.string().uuid()", expected, regex, options2);
     }
     __name(stringUuid, "stringUuid");
-    function stringDate(options) {
+    function stringDate(options2) {
       return {
         run(input) {
           const time = Date.parse(input);
           return Number.isNaN(time) ? Result.err(
             new ExpectedConstraintError(
               "s.string().date()",
-              options?.message ?? "Invalid date string",
+              options2?.message ?? "Invalid date string",
               input,
               "expected to be a valid date string (in the ISO 8601 or ECMA-262 format)"
             )
@@ -42127,13 +42127,13 @@ ${givenBlock}`;
       };
     }
     __name(stringDate, "stringDate");
-    function stringPhone(options) {
+    function stringPhone(options2) {
       return {
         run(input) {
           return validatePhoneNumber(input) ? Result.ok(input) : Result.err(
             new ExpectedConstraintError(
               "s.string().phone()",
-              options?.message ?? "Invalid phone number",
+              options2?.message ?? "Invalid phone number",
               input,
               "expected to be a phone number"
             )
@@ -42143,67 +42143,67 @@ ${givenBlock}`;
     }
     __name(stringPhone, "stringPhone");
     var _StringValidator = class _StringValidator extends BaseValidator {
-      lengthLessThan(length, options = this.validatorOptions) {
-        return this.addConstraint(stringLengthLessThan(length, options));
+      lengthLessThan(length, options2 = this.validatorOptions) {
+        return this.addConstraint(stringLengthLessThan(length, options2));
       }
-      lengthLessThanOrEqual(length, options = this.validatorOptions) {
-        return this.addConstraint(stringLengthLessThanOrEqual(length, options));
+      lengthLessThanOrEqual(length, options2 = this.validatorOptions) {
+        return this.addConstraint(stringLengthLessThanOrEqual(length, options2));
       }
-      lengthGreaterThan(length, options = this.validatorOptions) {
-        return this.addConstraint(stringLengthGreaterThan(length, options));
+      lengthGreaterThan(length, options2 = this.validatorOptions) {
+        return this.addConstraint(stringLengthGreaterThan(length, options2));
       }
-      lengthGreaterThanOrEqual(length, options = this.validatorOptions) {
-        return this.addConstraint(stringLengthGreaterThanOrEqual(length, options));
+      lengthGreaterThanOrEqual(length, options2 = this.validatorOptions) {
+        return this.addConstraint(stringLengthGreaterThanOrEqual(length, options2));
       }
-      lengthEqual(length, options = this.validatorOptions) {
-        return this.addConstraint(stringLengthEqual(length, options));
+      lengthEqual(length, options2 = this.validatorOptions) {
+        return this.addConstraint(stringLengthEqual(length, options2));
       }
-      lengthNotEqual(length, options = this.validatorOptions) {
-        return this.addConstraint(stringLengthNotEqual(length, options));
+      lengthNotEqual(length, options2 = this.validatorOptions) {
+        return this.addConstraint(stringLengthNotEqual(length, options2));
       }
-      email(options = this.validatorOptions) {
-        return this.addConstraint(stringEmail(options));
+      email(options2 = this.validatorOptions) {
+        return this.addConstraint(stringEmail(options2));
       }
-      url(options, validatorOptions = this.validatorOptions) {
-        const urlOptions = this.isUrlOptions(options);
+      url(options2, validatorOptions = this.validatorOptions) {
+        const urlOptions = this.isUrlOptions(options2);
         if (urlOptions) {
-          return this.addConstraint(stringUrl(options, validatorOptions));
+          return this.addConstraint(stringUrl(options2, validatorOptions));
         }
         return this.addConstraint(stringUrl(void 0, validatorOptions));
       }
-      uuid(options, validatorOptions = this.validatorOptions) {
-        const stringUuidOptions = this.isStringUuidOptions(options);
+      uuid(options2, validatorOptions = this.validatorOptions) {
+        const stringUuidOptions = this.isStringUuidOptions(options2);
         if (stringUuidOptions) {
-          return this.addConstraint(stringUuid(options, validatorOptions));
+          return this.addConstraint(stringUuid(options2, validatorOptions));
         }
         return this.addConstraint(stringUuid(void 0, validatorOptions));
       }
-      regex(regex, options = this.validatorOptions) {
-        return this.addConstraint(stringRegex(regex, options));
+      regex(regex, options2 = this.validatorOptions) {
+        return this.addConstraint(stringRegex(regex, options2));
       }
-      date(options = this.validatorOptions) {
-        return this.addConstraint(stringDate(options));
+      date(options2 = this.validatorOptions) {
+        return this.addConstraint(stringDate(options2));
       }
-      ipv4(options = this.validatorOptions) {
-        return this.ip(4, options);
+      ipv4(options2 = this.validatorOptions) {
+        return this.ip(4, options2);
       }
-      ipv6(options = this.validatorOptions) {
-        return this.ip(6, options);
+      ipv6(options2 = this.validatorOptions) {
+        return this.ip(6, options2);
       }
-      ip(version, options = this.validatorOptions) {
-        return this.addConstraint(stringIp(version, options));
+      ip(version, options2 = this.validatorOptions) {
+        return this.addConstraint(stringIp(version, options2));
       }
-      phone(options = this.validatorOptions) {
-        return this.addConstraint(stringPhone(options));
+      phone(options2 = this.validatorOptions) {
+        return this.addConstraint(stringPhone(options2));
       }
       handle(value) {
         return typeof value === "string" ? Result.ok(value) : Result.err(new ValidationError("s.string()", this.validatorOptions.message ?? "Expected a string primitive", value));
       }
-      isUrlOptions(options) {
-        return options?.message === void 0;
+      isUrlOptions(options2) {
+        return options2?.message === void 0;
       }
-      isStringUuidOptions(options) {
-        return options?.message === void 0;
+      isStringUuidOptions(options2) {
+        return options2?.message === void 0;
       }
     };
     __name(_StringValidator, "StringValidator");
@@ -42307,22 +42307,22 @@ ${givenBlock}`;
           enumMappings: [...this.enumMappings.entries()]
         };
       }
-      [customInspectSymbolStackLess](depth, options) {
-        const value = options.stylize(this.value.toString(), "string");
+      [customInspectSymbolStackLess](depth, options2) {
+        const value = options2.stylize(this.value.toString(), "string");
         if (depth < 0) {
-          return options.stylize(`[UnknownEnumValueError: ${value}]`, "special");
+          return options2.stylize(`[UnknownEnumValueError: ${value}]`, "special");
         }
         const padding = `
-  ${options.stylize("|", "undefined")} `;
+  ${options2.stylize("|", "undefined")} `;
         const pairs = this.enumKeys.map((key) => {
           const enumValue = this.enumMappings.get(key);
-          return `${options.stylize(key, "string")} or ${options.stylize(
+          return `${options2.stylize(key, "string")} or ${options2.stylize(
             enumValue.toString(),
             typeof enumValue === "number" ? "number" : "string"
           )}`;
         }).join(padding);
-        const header = `${options.stylize("UnknownEnumValueError", "special")} > ${value}`;
-        const message = options.stylize(this.message, "regexp");
+        const header = `${options2.stylize("UnknownEnumValueError", "special")} > ${value}`;
+        const message = options2.stylize(this.message, "regexp");
         const pairsBlock = `${padding}${pairs}`;
         return `${header}
   ${message}
@@ -42373,52 +42373,52 @@ ${pairsBlock}`;
     };
     __name(_NativeEnumValidator, "NativeEnumValidator");
     var NativeEnumValidator = _NativeEnumValidator;
-    function typedArrayByteLengthComparator(comparator, name, expected, length, options) {
+    function typedArrayByteLengthComparator(comparator, name, expected, length, options2) {
       return {
         run(input) {
-          return comparator(input.byteLength, length) ? Result.ok(input) : Result.err(new ExpectedConstraintError(name, options?.message ?? "Invalid Typed Array byte length", input, expected));
+          return comparator(input.byteLength, length) ? Result.ok(input) : Result.err(new ExpectedConstraintError(name, options2?.message ?? "Invalid Typed Array byte length", input, expected));
         }
       };
     }
     __name(typedArrayByteLengthComparator, "typedArrayByteLengthComparator");
-    function typedArrayByteLengthLessThan(value, options) {
+    function typedArrayByteLengthLessThan(value, options2) {
       const expected = `expected.byteLength < ${value}`;
-      return typedArrayByteLengthComparator(lessThan, "s.typedArray(T).byteLengthLessThan()", expected, value, options);
+      return typedArrayByteLengthComparator(lessThan, "s.typedArray(T).byteLengthLessThan()", expected, value, options2);
     }
     __name(typedArrayByteLengthLessThan, "typedArrayByteLengthLessThan");
-    function typedArrayByteLengthLessThanOrEqual(value, options) {
+    function typedArrayByteLengthLessThanOrEqual(value, options2) {
       const expected = `expected.byteLength <= ${value}`;
-      return typedArrayByteLengthComparator(lessThanOrEqual, "s.typedArray(T).byteLengthLessThanOrEqual()", expected, value, options);
+      return typedArrayByteLengthComparator(lessThanOrEqual, "s.typedArray(T).byteLengthLessThanOrEqual()", expected, value, options2);
     }
     __name(typedArrayByteLengthLessThanOrEqual, "typedArrayByteLengthLessThanOrEqual");
-    function typedArrayByteLengthGreaterThan(value, options) {
+    function typedArrayByteLengthGreaterThan(value, options2) {
       const expected = `expected.byteLength > ${value}`;
-      return typedArrayByteLengthComparator(greaterThan, "s.typedArray(T).byteLengthGreaterThan()", expected, value, options);
+      return typedArrayByteLengthComparator(greaterThan, "s.typedArray(T).byteLengthGreaterThan()", expected, value, options2);
     }
     __name(typedArrayByteLengthGreaterThan, "typedArrayByteLengthGreaterThan");
-    function typedArrayByteLengthGreaterThanOrEqual(value, options) {
+    function typedArrayByteLengthGreaterThanOrEqual(value, options2) {
       const expected = `expected.byteLength >= ${value}`;
-      return typedArrayByteLengthComparator(greaterThanOrEqual, "s.typedArray(T).byteLengthGreaterThanOrEqual()", expected, value, options);
+      return typedArrayByteLengthComparator(greaterThanOrEqual, "s.typedArray(T).byteLengthGreaterThanOrEqual()", expected, value, options2);
     }
     __name(typedArrayByteLengthGreaterThanOrEqual, "typedArrayByteLengthGreaterThanOrEqual");
-    function typedArrayByteLengthEqual(value, options) {
+    function typedArrayByteLengthEqual(value, options2) {
       const expected = `expected.byteLength === ${value}`;
-      return typedArrayByteLengthComparator(equal, "s.typedArray(T).byteLengthEqual()", expected, value, options);
+      return typedArrayByteLengthComparator(equal, "s.typedArray(T).byteLengthEqual()", expected, value, options2);
     }
     __name(typedArrayByteLengthEqual, "typedArrayByteLengthEqual");
-    function typedArrayByteLengthNotEqual(value, options) {
+    function typedArrayByteLengthNotEqual(value, options2) {
       const expected = `expected.byteLength !== ${value}`;
-      return typedArrayByteLengthComparator(notEqual, "s.typedArray(T).byteLengthNotEqual()", expected, value, options);
+      return typedArrayByteLengthComparator(notEqual, "s.typedArray(T).byteLengthNotEqual()", expected, value, options2);
     }
     __name(typedArrayByteLengthNotEqual, "typedArrayByteLengthNotEqual");
-    function typedArrayByteLengthRange(start, endBefore, options) {
-      const expected = `expected.byteLength >= ${start} && expected.byteLength < ${endBefore}`;
+    function typedArrayByteLengthRange(start2, endBefore, options2) {
+      const expected = `expected.byteLength >= ${start2} && expected.byteLength < ${endBefore}`;
       return {
         run(input) {
-          return input.byteLength >= start && input.byteLength < endBefore ? Result.ok(input) : Result.err(
+          return input.byteLength >= start2 && input.byteLength < endBefore ? Result.ok(input) : Result.err(
             new ExpectedConstraintError(
               "s.typedArray(T).byteLengthRange()",
-              options?.message ?? "Invalid Typed Array byte length",
+              options2?.message ?? "Invalid Typed Array byte length",
               input,
               expected
             )
@@ -42427,14 +42427,14 @@ ${pairsBlock}`;
       };
     }
     __name(typedArrayByteLengthRange, "typedArrayByteLengthRange");
-    function typedArrayByteLengthRangeInclusive(start, end, options) {
-      const expected = `expected.byteLength >= ${start} && expected.byteLength <= ${end}`;
+    function typedArrayByteLengthRangeInclusive(start2, end, options2) {
+      const expected = `expected.byteLength >= ${start2} && expected.byteLength <= ${end}`;
       return {
         run(input) {
-          return input.byteLength >= start && input.byteLength <= end ? Result.ok(input) : Result.err(
+          return input.byteLength >= start2 && input.byteLength <= end ? Result.ok(input) : Result.err(
             new ExpectedConstraintError(
               "s.typedArray(T).byteLengthRangeInclusive()",
-              options?.message ?? "Invalid Typed Array byte length",
+              options2?.message ?? "Invalid Typed Array byte length",
               input,
               expected
             )
@@ -42443,14 +42443,14 @@ ${pairsBlock}`;
       };
     }
     __name(typedArrayByteLengthRangeInclusive, "typedArrayByteLengthRangeInclusive");
-    function typedArrayByteLengthRangeExclusive(startAfter, endBefore, options) {
+    function typedArrayByteLengthRangeExclusive(startAfter, endBefore, options2) {
       const expected = `expected.byteLength > ${startAfter} && expected.byteLength < ${endBefore}`;
       return {
         run(input) {
           return input.byteLength > startAfter && input.byteLength < endBefore ? Result.ok(input) : Result.err(
             new ExpectedConstraintError(
               "s.typedArray(T).byteLengthRangeExclusive()",
-              options?.message ?? "Invalid Typed Array byte length",
+              options2?.message ?? "Invalid Typed Array byte length",
               input,
               expected
             )
@@ -42459,52 +42459,52 @@ ${pairsBlock}`;
       };
     }
     __name(typedArrayByteLengthRangeExclusive, "typedArrayByteLengthRangeExclusive");
-    function typedArrayLengthComparator(comparator, name, expected, length, options) {
+    function typedArrayLengthComparator(comparator, name, expected, length, options2) {
       return {
         run(input) {
-          return comparator(input.length, length) ? Result.ok(input) : Result.err(new ExpectedConstraintError(name, options?.message ?? "Invalid Typed Array length", input, expected));
+          return comparator(input.length, length) ? Result.ok(input) : Result.err(new ExpectedConstraintError(name, options2?.message ?? "Invalid Typed Array length", input, expected));
         }
       };
     }
     __name(typedArrayLengthComparator, "typedArrayLengthComparator");
-    function typedArrayLengthLessThan(value, options) {
+    function typedArrayLengthLessThan(value, options2) {
       const expected = `expected.length < ${value}`;
-      return typedArrayLengthComparator(lessThan, "s.typedArray(T).lengthLessThan()", expected, value, options);
+      return typedArrayLengthComparator(lessThan, "s.typedArray(T).lengthLessThan()", expected, value, options2);
     }
     __name(typedArrayLengthLessThan, "typedArrayLengthLessThan");
-    function typedArrayLengthLessThanOrEqual(value, options) {
+    function typedArrayLengthLessThanOrEqual(value, options2) {
       const expected = `expected.length <= ${value}`;
-      return typedArrayLengthComparator(lessThanOrEqual, "s.typedArray(T).lengthLessThanOrEqual()", expected, value, options);
+      return typedArrayLengthComparator(lessThanOrEqual, "s.typedArray(T).lengthLessThanOrEqual()", expected, value, options2);
     }
     __name(typedArrayLengthLessThanOrEqual, "typedArrayLengthLessThanOrEqual");
-    function typedArrayLengthGreaterThan(value, options) {
+    function typedArrayLengthGreaterThan(value, options2) {
       const expected = `expected.length > ${value}`;
-      return typedArrayLengthComparator(greaterThan, "s.typedArray(T).lengthGreaterThan()", expected, value, options);
+      return typedArrayLengthComparator(greaterThan, "s.typedArray(T).lengthGreaterThan()", expected, value, options2);
     }
     __name(typedArrayLengthGreaterThan, "typedArrayLengthGreaterThan");
-    function typedArrayLengthGreaterThanOrEqual(value, options) {
+    function typedArrayLengthGreaterThanOrEqual(value, options2) {
       const expected = `expected.length >= ${value}`;
-      return typedArrayLengthComparator(greaterThanOrEqual, "s.typedArray(T).lengthGreaterThanOrEqual()", expected, value, options);
+      return typedArrayLengthComparator(greaterThanOrEqual, "s.typedArray(T).lengthGreaterThanOrEqual()", expected, value, options2);
     }
     __name(typedArrayLengthGreaterThanOrEqual, "typedArrayLengthGreaterThanOrEqual");
-    function typedArrayLengthEqual(value, options) {
+    function typedArrayLengthEqual(value, options2) {
       const expected = `expected.length === ${value}`;
-      return typedArrayLengthComparator(equal, "s.typedArray(T).lengthEqual()", expected, value, options);
+      return typedArrayLengthComparator(equal, "s.typedArray(T).lengthEqual()", expected, value, options2);
     }
     __name(typedArrayLengthEqual, "typedArrayLengthEqual");
-    function typedArrayLengthNotEqual(value, options) {
+    function typedArrayLengthNotEqual(value, options2) {
       const expected = `expected.length !== ${value}`;
-      return typedArrayLengthComparator(notEqual, "s.typedArray(T).lengthNotEqual()", expected, value, options);
+      return typedArrayLengthComparator(notEqual, "s.typedArray(T).lengthNotEqual()", expected, value, options2);
     }
     __name(typedArrayLengthNotEqual, "typedArrayLengthNotEqual");
-    function typedArrayLengthRange(start, endBefore, options) {
-      const expected = `expected.length >= ${start} && expected.length < ${endBefore}`;
+    function typedArrayLengthRange(start2, endBefore, options2) {
+      const expected = `expected.length >= ${start2} && expected.length < ${endBefore}`;
       return {
         run(input) {
-          return input.length >= start && input.length < endBefore ? Result.ok(input) : Result.err(
+          return input.length >= start2 && input.length < endBefore ? Result.ok(input) : Result.err(
             new ExpectedConstraintError(
               "s.typedArray(T).lengthRange()",
-              options?.message ?? "Invalid Typed Array length",
+              options2?.message ?? "Invalid Typed Array length",
               input,
               expected
             )
@@ -42513,14 +42513,14 @@ ${pairsBlock}`;
       };
     }
     __name(typedArrayLengthRange, "typedArrayLengthRange");
-    function typedArrayLengthRangeInclusive(start, end, options) {
-      const expected = `expected.length >= ${start} && expected.length <= ${end}`;
+    function typedArrayLengthRangeInclusive(start2, end, options2) {
+      const expected = `expected.length >= ${start2} && expected.length <= ${end}`;
       return {
         run(input) {
-          return input.length >= start && input.length <= end ? Result.ok(input) : Result.err(
+          return input.length >= start2 && input.length <= end ? Result.ok(input) : Result.err(
             new ExpectedConstraintError(
               "s.typedArray(T).lengthRangeInclusive()",
-              options?.message ?? "Invalid Typed Array length",
+              options2?.message ?? "Invalid Typed Array length",
               input,
               expected
             )
@@ -42529,14 +42529,14 @@ ${pairsBlock}`;
       };
     }
     __name(typedArrayLengthRangeInclusive, "typedArrayLengthRangeInclusive");
-    function typedArrayLengthRangeExclusive(startAfter, endBefore, options) {
+    function typedArrayLengthRangeExclusive(startAfter, endBefore, options2) {
       const expected = `expected.length > ${startAfter} && expected.length < ${endBefore}`;
       return {
         run(input) {
           return input.length > startAfter && input.length < endBefore ? Result.ok(input) : Result.err(
             new ExpectedConstraintError(
               "s.typedArray(T).lengthRangeExclusive()",
-              options?.message ?? "Invalid Typed Array length",
+              options2?.message ?? "Invalid Typed Array length",
               input,
               expected
             )
@@ -42568,59 +42568,59 @@ ${pairsBlock}`;
         super(validatorOptions, constraints);
         this.type = type;
       }
-      byteLengthLessThan(length, options = this.validatorOptions) {
-        return this.addConstraint(typedArrayByteLengthLessThan(length, options));
+      byteLengthLessThan(length, options2 = this.validatorOptions) {
+        return this.addConstraint(typedArrayByteLengthLessThan(length, options2));
       }
-      byteLengthLessThanOrEqual(length, options = this.validatorOptions) {
-        return this.addConstraint(typedArrayByteLengthLessThanOrEqual(length, options));
+      byteLengthLessThanOrEqual(length, options2 = this.validatorOptions) {
+        return this.addConstraint(typedArrayByteLengthLessThanOrEqual(length, options2));
       }
-      byteLengthGreaterThan(length, options = this.validatorOptions) {
-        return this.addConstraint(typedArrayByteLengthGreaterThan(length, options));
+      byteLengthGreaterThan(length, options2 = this.validatorOptions) {
+        return this.addConstraint(typedArrayByteLengthGreaterThan(length, options2));
       }
-      byteLengthGreaterThanOrEqual(length, options = this.validatorOptions) {
-        return this.addConstraint(typedArrayByteLengthGreaterThanOrEqual(length, options));
+      byteLengthGreaterThanOrEqual(length, options2 = this.validatorOptions) {
+        return this.addConstraint(typedArrayByteLengthGreaterThanOrEqual(length, options2));
       }
-      byteLengthEqual(length, options = this.validatorOptions) {
-        return this.addConstraint(typedArrayByteLengthEqual(length, options));
+      byteLengthEqual(length, options2 = this.validatorOptions) {
+        return this.addConstraint(typedArrayByteLengthEqual(length, options2));
       }
-      byteLengthNotEqual(length, options = this.validatorOptions) {
-        return this.addConstraint(typedArrayByteLengthNotEqual(length, options));
+      byteLengthNotEqual(length, options2 = this.validatorOptions) {
+        return this.addConstraint(typedArrayByteLengthNotEqual(length, options2));
       }
-      byteLengthRange(start, endBefore, options = this.validatorOptions) {
-        return this.addConstraint(typedArrayByteLengthRange(start, endBefore, options));
+      byteLengthRange(start2, endBefore, options2 = this.validatorOptions) {
+        return this.addConstraint(typedArrayByteLengthRange(start2, endBefore, options2));
       }
-      byteLengthRangeInclusive(startAt, endAt, options = this.validatorOptions) {
-        return this.addConstraint(typedArrayByteLengthRangeInclusive(startAt, endAt, options));
+      byteLengthRangeInclusive(startAt, endAt, options2 = this.validatorOptions) {
+        return this.addConstraint(typedArrayByteLengthRangeInclusive(startAt, endAt, options2));
       }
-      byteLengthRangeExclusive(startAfter, endBefore, options = this.validatorOptions) {
-        return this.addConstraint(typedArrayByteLengthRangeExclusive(startAfter, endBefore, options));
+      byteLengthRangeExclusive(startAfter, endBefore, options2 = this.validatorOptions) {
+        return this.addConstraint(typedArrayByteLengthRangeExclusive(startAfter, endBefore, options2));
       }
-      lengthLessThan(length, options = this.validatorOptions) {
-        return this.addConstraint(typedArrayLengthLessThan(length, options));
+      lengthLessThan(length, options2 = this.validatorOptions) {
+        return this.addConstraint(typedArrayLengthLessThan(length, options2));
       }
-      lengthLessThanOrEqual(length, options = this.validatorOptions) {
-        return this.addConstraint(typedArrayLengthLessThanOrEqual(length, options));
+      lengthLessThanOrEqual(length, options2 = this.validatorOptions) {
+        return this.addConstraint(typedArrayLengthLessThanOrEqual(length, options2));
       }
-      lengthGreaterThan(length, options = this.validatorOptions) {
-        return this.addConstraint(typedArrayLengthGreaterThan(length, options));
+      lengthGreaterThan(length, options2 = this.validatorOptions) {
+        return this.addConstraint(typedArrayLengthGreaterThan(length, options2));
       }
-      lengthGreaterThanOrEqual(length, options = this.validatorOptions) {
-        return this.addConstraint(typedArrayLengthGreaterThanOrEqual(length, options));
+      lengthGreaterThanOrEqual(length, options2 = this.validatorOptions) {
+        return this.addConstraint(typedArrayLengthGreaterThanOrEqual(length, options2));
       }
-      lengthEqual(length, options = this.validatorOptions) {
-        return this.addConstraint(typedArrayLengthEqual(length, options));
+      lengthEqual(length, options2 = this.validatorOptions) {
+        return this.addConstraint(typedArrayLengthEqual(length, options2));
       }
-      lengthNotEqual(length, options = this.validatorOptions) {
-        return this.addConstraint(typedArrayLengthNotEqual(length, options));
+      lengthNotEqual(length, options2 = this.validatorOptions) {
+        return this.addConstraint(typedArrayLengthNotEqual(length, options2));
       }
-      lengthRange(start, endBefore, options = this.validatorOptions) {
-        return this.addConstraint(typedArrayLengthRange(start, endBefore, options));
+      lengthRange(start2, endBefore, options2 = this.validatorOptions) {
+        return this.addConstraint(typedArrayLengthRange(start2, endBefore, options2));
       }
-      lengthRangeInclusive(startAt, endAt, options = this.validatorOptions) {
-        return this.addConstraint(typedArrayLengthRangeInclusive(startAt, endAt, options));
+      lengthRangeInclusive(startAt, endAt, options2 = this.validatorOptions) {
+        return this.addConstraint(typedArrayLengthRangeInclusive(startAt, endAt, options2));
       }
-      lengthRangeExclusive(startAfter, endBefore, options = this.validatorOptions) {
-        return this.addConstraint(typedArrayLengthRangeExclusive(startAfter, endBefore, options));
+      lengthRangeExclusive(startAfter, endBefore, options2 = this.validatorOptions) {
+        return this.addConstraint(typedArrayLengthRangeExclusive(startAfter, endBefore, options2));
       }
       clone() {
         return Reflect.construct(this.constructor, [this.type, this.validatorOptions, this.constraints]);
@@ -42632,116 +42632,116 @@ ${pairsBlock}`;
     __name(_TypedArrayValidator, "TypedArrayValidator");
     var TypedArrayValidator = _TypedArrayValidator;
     var _Shapes = class _Shapes {
-      string(options) {
-        return new StringValidator(options);
+      string(options2) {
+        return new StringValidator(options2);
       }
-      number(options) {
-        return new NumberValidator(options);
+      number(options2) {
+        return new NumberValidator(options2);
       }
-      bigint(options) {
-        return new BigIntValidator(options);
+      bigint(options2) {
+        return new BigIntValidator(options2);
       }
-      boolean(options) {
-        return new BooleanValidator(options);
+      boolean(options2) {
+        return new BooleanValidator(options2);
       }
-      date(options) {
-        return new DateValidator(options);
+      date(options2) {
+        return new DateValidator(options2);
       }
-      object(shape, options) {
-        return new ObjectValidator(shape, 0, options);
+      object(shape, options2) {
+        return new ObjectValidator(shape, 0, options2);
       }
-      undefined(options) {
-        return this.literal(void 0, { equalsOptions: options });
+      undefined(options2) {
+        return this.literal(void 0, { equalsOptions: options2 });
       }
-      null(options) {
-        return this.literal(null, { equalsOptions: options });
+      null(options2) {
+        return this.literal(null, { equalsOptions: options2 });
       }
-      nullish(options) {
-        return new NullishValidator(options);
+      nullish(options2) {
+        return new NullishValidator(options2);
       }
-      any(options) {
-        return new PassthroughValidator(options);
+      any(options2) {
+        return new PassthroughValidator(options2);
       }
-      unknown(options) {
-        return new PassthroughValidator(options);
+      unknown(options2) {
+        return new PassthroughValidator(options2);
       }
-      never(options) {
-        return new NeverValidator(options);
+      never(options2) {
+        return new NeverValidator(options2);
       }
-      enum(values, options) {
+      enum(values, options2) {
         return this.union(
-          values.map((value) => this.literal(value, { equalsOptions: options })),
-          options
+          values.map((value) => this.literal(value, { equalsOptions: options2 })),
+          options2
         );
       }
-      nativeEnum(enumShape, options) {
-        return new NativeEnumValidator(enumShape, options);
+      nativeEnum(enumShape, options2) {
+        return new NativeEnumValidator(enumShape, options2);
       }
-      literal(value, options) {
+      literal(value, options2) {
         if (value instanceof Date) {
-          return this.date(options?.dateOptions).equal(value, options?.equalsOptions);
+          return this.date(options2?.dateOptions).equal(value, options2?.equalsOptions);
         }
-        return new LiteralValidator(value, options?.equalsOptions);
+        return new LiteralValidator(value, options2?.equalsOptions);
       }
-      instance(expected, options) {
-        return new InstanceValidator(expected, options);
+      instance(expected, options2) {
+        return new InstanceValidator(expected, options2);
       }
-      union(validators, options) {
-        return new UnionValidator(validators, options);
+      union(validators, options2) {
+        return new UnionValidator(validators, options2);
       }
-      array(validator, options) {
-        return new ArrayValidator(validator, options);
+      array(validator, options2) {
+        return new ArrayValidator(validator, options2);
       }
-      typedArray(type = "TypedArray", options) {
-        return new TypedArrayValidator(type, options);
+      typedArray(type = "TypedArray", options2) {
+        return new TypedArrayValidator(type, options2);
       }
-      int8Array(options) {
-        return this.typedArray("Int8Array", options);
+      int8Array(options2) {
+        return this.typedArray("Int8Array", options2);
       }
-      uint8Array(options) {
-        return this.typedArray("Uint8Array", options);
+      uint8Array(options2) {
+        return this.typedArray("Uint8Array", options2);
       }
-      uint8ClampedArray(options) {
-        return this.typedArray("Uint8ClampedArray", options);
+      uint8ClampedArray(options2) {
+        return this.typedArray("Uint8ClampedArray", options2);
       }
-      int16Array(options) {
-        return this.typedArray("Int16Array", options);
+      int16Array(options2) {
+        return this.typedArray("Int16Array", options2);
       }
-      uint16Array(options) {
-        return this.typedArray("Uint16Array", options);
+      uint16Array(options2) {
+        return this.typedArray("Uint16Array", options2);
       }
-      int32Array(options) {
-        return this.typedArray("Int32Array", options);
+      int32Array(options2) {
+        return this.typedArray("Int32Array", options2);
       }
-      uint32Array(options) {
-        return this.typedArray("Uint32Array", options);
+      uint32Array(options2) {
+        return this.typedArray("Uint32Array", options2);
       }
-      float32Array(options) {
-        return this.typedArray("Float32Array", options);
+      float32Array(options2) {
+        return this.typedArray("Float32Array", options2);
       }
-      float64Array(options) {
-        return this.typedArray("Float64Array", options);
+      float64Array(options2) {
+        return this.typedArray("Float64Array", options2);
       }
-      bigInt64Array(options) {
-        return this.typedArray("BigInt64Array", options);
+      bigInt64Array(options2) {
+        return this.typedArray("BigInt64Array", options2);
       }
-      bigUint64Array(options) {
-        return this.typedArray("BigUint64Array", options);
+      bigUint64Array(options2) {
+        return this.typedArray("BigUint64Array", options2);
       }
-      tuple(validators, options) {
-        return new TupleValidator(validators, options);
+      tuple(validators, options2) {
+        return new TupleValidator(validators, options2);
       }
-      set(validator, options) {
-        return new SetValidator(validator, options);
+      set(validator, options2) {
+        return new SetValidator(validator, options2);
       }
-      record(validator, options) {
-        return new RecordValidator(validator, options);
+      record(validator, options2) {
+        return new RecordValidator(validator, options2);
       }
-      map(keyValidator, valueValidator, options) {
-        return new MapValidator(keyValidator, valueValidator, options);
+      map(keyValidator, valueValidator, options2) {
+        return new MapValidator(keyValidator, valueValidator, options2);
       }
-      lazy(validator, options) {
-        return new LazyValidator(validator, options);
+      lazy(validator, options2) {
+        return new LazyValidator(validator, options2);
       }
     };
     __name(_Shapes, "Shapes");
@@ -43204,14 +43204,14 @@ var require_dist8 = __commonJS({
     };
     var index_exports = {};
     __export2(index_exports, {
-      ActionRowBuilder: () => ActionRowBuilder2,
+      ActionRowBuilder: () => ActionRowBuilder3,
       ApplicationCommandNumericOptionMinMaxValueMixin: () => ApplicationCommandNumericOptionMinMaxValueMixin,
       ApplicationCommandOptionBase: () => ApplicationCommandOptionBase,
       ApplicationCommandOptionChannelTypesMixin: () => ApplicationCommandOptionChannelTypesMixin,
       ApplicationCommandOptionWithAutocompleteMixin: () => ApplicationCommandOptionWithAutocompleteMixin,
       ApplicationCommandOptionWithChoicesMixin: () => ApplicationCommandOptionWithChoicesMixin,
       BaseSelectMenuBuilder: () => BaseSelectMenuBuilder,
-      ButtonBuilder: () => ButtonBuilder2,
+      ButtonBuilder: () => ButtonBuilder3,
       ChannelSelectMenuBuilder: () => ChannelSelectMenuBuilder,
       CheckboxAssertions: () => Assertions_exports3,
       CheckboxBuilder: () => CheckboxBuilder,
@@ -43224,7 +43224,7 @@ var require_dist8 = __commonJS({
       ContextMenuCommandAssertions: () => Assertions_exports11,
       ContextMenuCommandBuilder: () => ContextMenuCommandBuilder,
       EmbedAssertions: () => Assertions_exports,
-      EmbedBuilder: () => EmbedBuilder2,
+      EmbedBuilder: () => EmbedBuilder3,
       FileBuilder: () => FileBuilder,
       FileUploadAssertions: () => Assertions_exports4,
       FileUploadBuilder: () => FileUploadBuilder,
@@ -43237,7 +43237,7 @@ var require_dist8 = __commonJS({
       ModalBuilder: () => ModalBuilder2,
       RadioGroupBuilder: () => RadioGroupBuilder,
       RadioGroupOptionBuilder: () => RadioGroupOptionBuilder,
-      RoleSelectMenuBuilder: () => RoleSelectMenuBuilder,
+      RoleSelectMenuBuilder: () => RoleSelectMenuBuilder2,
       SectionBuilder: () => SectionBuilder,
       SelectMenuAssertions: () => Assertions_exports6,
       SelectMenuBuilder: () => StringSelectMenuBuilder2,
@@ -43266,7 +43266,7 @@ var require_dist8 = __commonJS({
       TextInputAssertions: () => Assertions_exports5,
       TextInputBuilder: () => TextInputBuilder2,
       ThumbnailBuilder: () => ThumbnailBuilder,
-      UserSelectMenuBuilder: () => UserSelectMenuBuilder,
+      UserSelectMenuBuilder: () => UserSelectMenuBuilder2,
       createComponentBuilder: () => createComponentBuilder,
       disableValidators: () => disableValidators,
       embedLength: () => embedLength,
@@ -43353,7 +43353,7 @@ var require_dist8 = __commonJS({
       return arr;
     }
     __name(normalizeArray, "normalizeArray");
-    var EmbedBuilder2 = class {
+    var EmbedBuilder3 = class {
       static {
         __name(this, "EmbedBuilder");
       }
@@ -43457,13 +43457,13 @@ var require_dist8 = __commonJS({
        *
        * @param options - The options to use
        */
-      setAuthor(options) {
-        if (options === null) {
+      setAuthor(options2) {
+        if (options2 === null) {
           this.data.author = void 0;
           return this;
         }
-        embedAuthorPredicate.parse(options);
-        this.data.author = { name: options.name, url: options.url, icon_url: options.iconURL };
+        embedAuthorPredicate.parse(options2);
+        this.data.author = { name: options2.name, url: options2.url, icon_url: options2.iconURL };
         return this;
       }
       /**
@@ -43496,13 +43496,13 @@ var require_dist8 = __commonJS({
        *
        * @param options - The footer to use
        */
-      setFooter(options) {
-        if (options === null) {
+      setFooter(options2) {
+        if (options2 === null) {
           this.data.footer = void 0;
           return this;
         }
-        embedFooterPredicate.parse(options);
-        this.data.footer = { text: options.text, icon_url: options.iconURL };
+        embedFooterPredicate.parse(options2);
+        this.data.footer = { text: options2.text, icon_url: options2.iconURL };
         return this;
       }
       /**
@@ -43698,9 +43698,9 @@ var require_dist8 = __commonJS({
     var optionValidator = import_shapeshift2.s.instance(StringSelectMenuOptionBuilder).setValidationEnabled(isValidationEnabled);
     var optionsValidator = optionValidator.array().lengthGreaterThanOrEqual(0).setValidationEnabled(isValidationEnabled);
     var optionsLengthValidator = import_shapeshift2.s.number().int().greaterThanOrEqual(0).lessThanOrEqual(25).setValidationEnabled(isValidationEnabled);
-    function validateRequiredSelectMenuParameters(options, customId) {
+    function validateRequiredSelectMenuParameters(options2, customId) {
       customIdValidator.parse(customId);
-      optionsValidator.parse(options);
+      optionsValidator.parse(options2);
     }
     __name(validateRequiredSelectMenuParameters, "validateRequiredSelectMenuParameters");
     var defaultValidator = import_shapeshift2.s.boolean();
@@ -43777,7 +43777,7 @@ var require_dist8 = __commonJS({
     };
     var import_v1027 = require_v106();
     var import_v102 = require_v106();
-    var ButtonBuilder2 = class extends ComponentBuilder {
+    var ButtonBuilder3 = class extends ComponentBuilder {
       static {
         __name(this, "ButtonBuilder");
       }
@@ -44138,9 +44138,9 @@ var require_dist8 = __commonJS({
        * ```
        */
       constructor(data) {
-        const { options, ...initData } = data ?? {};
+        const { options: options2, ...initData } = data ?? {};
         super({ ...initData, type: import_v105.ComponentType.CheckboxGroup });
-        this.options = options?.map((option) => new CheckboxGroupOptionBuilder(option)) ?? [];
+        this.options = options2?.map((option) => new CheckboxGroupOptionBuilder(option)) ?? [];
       }
       /**
        * Sets the custom id of this checkbox group.
@@ -44156,8 +44156,8 @@ var require_dist8 = __commonJS({
        *
        * @param options - The options to add
        */
-      addOptions(...options) {
-        const normalizedOptions = normalizeArray(options);
+      addOptions(...options2) {
+        const normalizedOptions = normalizeArray(options2);
         this.options.push(
           ...normalizedOptions.map((normalizedOption) => {
             const json = "toJSON" in normalizedOption ? normalizedOption.toJSON() : normalizedOption;
@@ -44173,8 +44173,8 @@ var require_dist8 = __commonJS({
        *
        * @param options - The options to use
        */
-      setOptions(...options) {
-        return this.spliceOptions(0, this.options.length, ...options);
+      setOptions(...options2) {
+        return this.spliceOptions(0, this.options.length, ...options2);
       }
       /**
        * Removes, replaces, or inserts options for this checkbox group.
@@ -44187,8 +44187,8 @@ var require_dist8 = __commonJS({
        * @param deleteCount - The number of options to remove
        * @param options - The replacing option objects or builders
        */
-      spliceOptions(index, deleteCount, ...options) {
-        const normalizedOptions = normalizeArray(options);
+      spliceOptions(index, deleteCount, ...options2) {
+        const normalizedOptions = normalizeArray(options2);
         const clone = [...this.options];
         clone.splice(
           index,
@@ -44351,9 +44351,9 @@ var require_dist8 = __commonJS({
        * ```
        */
       constructor(data) {
-        const { options, ...initData } = data ?? {};
+        const { options: options2, ...initData } = data ?? {};
         super({ ...initData, type: import_v106.ComponentType.RadioGroup });
-        this.options = options?.map((option) => new RadioGroupOptionBuilder(option)) ?? [];
+        this.options = options2?.map((option) => new RadioGroupOptionBuilder(option)) ?? [];
       }
       /**
        * Sets the custom id of this radio group.
@@ -44369,8 +44369,8 @@ var require_dist8 = __commonJS({
        *
        * @param options - The options to add
        */
-      addOptions(...options) {
-        const normalizedOptions = normalizeArray(options);
+      addOptions(...options2) {
+        const normalizedOptions = normalizeArray(options2);
         this.options.push(
           ...normalizedOptions.map((normalizedOption) => {
             const json = "toJSON" in normalizedOption ? normalizedOption.toJSON() : normalizedOption;
@@ -44386,8 +44386,8 @@ var require_dist8 = __commonJS({
        *
        * @param options - The options to use
        */
-      setOptions(...options) {
-        return this.spliceOptions(0, this.options.length, ...options);
+      setOptions(...options2) {
+        return this.spliceOptions(0, this.options.length, ...options2);
       }
       /**
        * Removes, replaces, or inserts options for this radio group.
@@ -44400,8 +44400,8 @@ var require_dist8 = __commonJS({
        * @param deleteCount - The number of options to remove
        * @param options - The replacing option objects or builders
        */
-      spliceOptions(index, deleteCount, ...options) {
-        const normalizedOptions = normalizeArray(options);
+      spliceOptions(index, deleteCount, ...options2) {
+        const normalizedOptions = normalizeArray(options2);
         const clone = [...this.options];
         clone.splice(
           index,
@@ -44830,7 +44830,7 @@ var require_dist8 = __commonJS({
       }
     };
     var import_v1012 = require_v106();
-    var RoleSelectMenuBuilder = class extends BaseSelectMenuBuilder {
+    var RoleSelectMenuBuilder2 = class extends BaseSelectMenuBuilder {
       static {
         __name(this, "RoleSelectMenuBuilder");
       }
@@ -44992,17 +44992,17 @@ var require_dist8 = __commonJS({
        * ```
        */
       constructor(data) {
-        const { options, ...initData } = data ?? {};
+        const { options: options2, ...initData } = data ?? {};
         super({ ...initData, type: import_v1014.ComponentType.StringSelect });
-        this.options = options?.map((option) => new StringSelectMenuOptionBuilder(option)) ?? [];
+        this.options = options2?.map((option) => new StringSelectMenuOptionBuilder(option)) ?? [];
       }
       /**
        * Adds options to this select menu.
        *
        * @param options - The options to add
        */
-      addOptions(...options) {
-        const normalizedOptions = normalizeArray(options);
+      addOptions(...options2) {
+        const normalizedOptions = normalizeArray(options2);
         optionsLengthValidator.parse(this.options.length + normalizedOptions.length);
         this.options.push(
           ...normalizedOptions.map(
@@ -45016,8 +45016,8 @@ var require_dist8 = __commonJS({
        *
        * @param options - The options to set
        */
-      setOptions(...options) {
-        return this.spliceOptions(0, this.options.length, ...options);
+      setOptions(...options2) {
+        return this.spliceOptions(0, this.options.length, ...options2);
       }
       /**
        * Removes, replaces, or inserts options for this select menu.
@@ -45046,8 +45046,8 @@ var require_dist8 = __commonJS({
        * @param deleteCount - The number of options to remove
        * @param options - The replacing option objects or builders
        */
-      spliceOptions(index, deleteCount, ...options) {
-        const normalizedOptions = normalizeArray(options);
+      spliceOptions(index, deleteCount, ...options2) {
+        const normalizedOptions = normalizeArray(options2);
         const clone = [...this.options];
         clone.splice(
           index,
@@ -45072,7 +45072,7 @@ var require_dist8 = __commonJS({
       }
     };
     var import_v1015 = require_v106();
-    var UserSelectMenuBuilder = class extends BaseSelectMenuBuilder {
+    var UserSelectMenuBuilder2 = class extends BaseSelectMenuBuilder {
       static {
         __name(this, "UserSelectMenuBuilder");
       }
@@ -45360,7 +45360,7 @@ var require_dist8 = __commonJS({
        * @param input - A function that returns a component builder or an already built builder
        */
       setUserSelectMenuComponent(input) {
-        this.data.component = resolveBuilder(input, UserSelectMenuBuilder);
+        this.data.component = resolveBuilder(input, UserSelectMenuBuilder2);
         return this;
       }
       /**
@@ -45369,7 +45369,7 @@ var require_dist8 = __commonJS({
        * @param input - A function that returns a component builder or an already built builder
        */
       setRoleSelectMenuComponent(input) {
-        this.data.component = resolveBuilder(input, RoleSelectMenuBuilder);
+        this.data.component = resolveBuilder(input, RoleSelectMenuBuilder2);
         return this;
       }
       /**
@@ -45559,7 +45559,7 @@ var require_dist8 = __commonJS({
     var dividerPredicate = import_shapeshift8.s.boolean();
     var spacingPredicate = import_shapeshift8.s.nativeEnum(import_v1020.SeparatorSpacingSize);
     var textDisplayContentPredicate = import_shapeshift8.s.string().lengthGreaterThanOrEqual(1).lengthLessThanOrEqual(4e3).setValidationEnabled(isValidationEnabled);
-    var accessoryPredicate = import_shapeshift8.s.instance(ButtonBuilder2).or(import_shapeshift8.s.instance(ThumbnailBuilder)).setValidationEnabled(isValidationEnabled);
+    var accessoryPredicate = import_shapeshift8.s.instance(ButtonBuilder3).or(import_shapeshift8.s.instance(ThumbnailBuilder)).setValidationEnabled(isValidationEnabled);
     var containerColorPredicate = colorPredicate.nullish();
     function assertReturnOfBuilder(input, ExpectedInstanceOf) {
       import_shapeshift8.s.instance(ExpectedInstanceOf).setValidationEnabled(isValidationEnabled).parse(input);
@@ -45812,7 +45812,7 @@ var require_dist8 = __commonJS({
        */
       addActionRowComponents(...components) {
         this.components.push(
-          ...normalizeArray(components).map((component) => resolveBuilder(component, ActionRowBuilder2))
+          ...normalizeArray(components).map((component) => resolveBuilder(component, ActionRowBuilder3))
         );
         return this;
       }
@@ -46134,7 +46134,7 @@ var require_dist8 = __commonJS({
        * @param accessory - The accessory to use
        */
       setButtonAccessory(accessory) {
-        Reflect.set(this, "accessory", accessoryPredicate.parse(resolveBuilder(accessory, ButtonBuilder2)));
+        Reflect.set(this, "accessory", accessoryPredicate.parse(resolveBuilder(accessory, ButtonBuilder3)));
         return this;
       }
       /**
@@ -46198,17 +46198,17 @@ var require_dist8 = __commonJS({
       }
       switch (data.type) {
         case import_v1027.ComponentType.ActionRow:
-          return new ActionRowBuilder2(data);
+          return new ActionRowBuilder3(data);
         case import_v1027.ComponentType.Button:
-          return new ButtonBuilder2(data);
+          return new ButtonBuilder3(data);
         case import_v1027.ComponentType.StringSelect:
           return new StringSelectMenuBuilder2(data);
         case import_v1027.ComponentType.TextInput:
           return new TextInputBuilder2(data);
         case import_v1027.ComponentType.UserSelect:
-          return new UserSelectMenuBuilder(data);
+          return new UserSelectMenuBuilder2(data);
         case import_v1027.ComponentType.RoleSelect:
-          return new RoleSelectMenuBuilder(data);
+          return new RoleSelectMenuBuilder2(data);
         case import_v1027.ComponentType.MentionableSelect:
           return new MentionableSelectMenuBuilder(data);
         case import_v1027.ComponentType.ChannelSelect:
@@ -46256,7 +46256,7 @@ var require_dist8 = __commonJS({
       return new Constructor(builder);
     }
     __name(resolveBuilder, "resolveBuilder");
-    var ActionRowBuilder2 = class extends ComponentBuilder {
+    var ActionRowBuilder3 = class extends ComponentBuilder {
       static {
         __name(this, "ActionRowBuilder");
       }
@@ -46339,7 +46339,7 @@ var require_dist8 = __commonJS({
     });
     var import_shapeshift9 = require_cjs3();
     var titleValidator = import_shapeshift9.s.string().lengthGreaterThanOrEqual(1).lengthLessThanOrEqual(45).setValidationEnabled(isValidationEnabled);
-    var componentsValidator = import_shapeshift9.s.union([import_shapeshift9.s.instance(ActionRowBuilder2), import_shapeshift9.s.instance(LabelBuilder), import_shapeshift9.s.instance(TextDisplayBuilder)]).array().lengthGreaterThanOrEqual(1).setValidationEnabled(isValidationEnabled);
+    var componentsValidator = import_shapeshift9.s.union([import_shapeshift9.s.instance(ActionRowBuilder3), import_shapeshift9.s.instance(LabelBuilder), import_shapeshift9.s.instance(TextDisplayBuilder)]).array().lengthGreaterThanOrEqual(1).setValidationEnabled(isValidationEnabled);
     function validateRequiredParameters2(customId, title, components) {
       customIdValidator.parse(customId);
       titleValidator.parse(title);
@@ -46394,15 +46394,15 @@ var require_dist8 = __commonJS({
       addComponents(...components) {
         this.components.push(
           ...normalizeArray(components).map((component, idx) => {
-            if (component instanceof ActionRowBuilder2 || component instanceof LabelBuilder || component instanceof TextDisplayBuilder) {
+            if (component instanceof ActionRowBuilder3 || component instanceof LabelBuilder || component instanceof TextDisplayBuilder) {
               return component;
             }
             if (component instanceof TextInputBuilder2) {
-              return new ActionRowBuilder2().addComponents(component);
+              return new ActionRowBuilder3().addComponents(component);
             }
             if ("type" in component) {
               if (component.type === import_v1029.ComponentType.ActionRow) {
-                return new ActionRowBuilder2(component);
+                return new ActionRowBuilder3(component);
               }
               if (component.type === import_v1029.ComponentType.Label) {
                 return new LabelBuilder(component);
@@ -46411,7 +46411,7 @@ var require_dist8 = __commonJS({
                 return new TextDisplayBuilder(component);
               }
               if (component.type === import_v1029.ComponentType.TextInput) {
-                return new ActionRowBuilder2().addComponents(
+                return new ActionRowBuilder3().addComponents(
                   new TextInputBuilder2(component)
                 );
               }
@@ -46451,7 +46451,7 @@ var require_dist8 = __commonJS({
        */
       addActionRowComponents(...components) {
         const normalized = normalizeArray(components);
-        const resolved = normalized.map((row) => resolveBuilder(row, ActionRowBuilder2));
+        const resolved = normalized.map((row) => resolveBuilder(row, ActionRowBuilder3));
         this.components.push(...resolved);
         return this;
       }
@@ -46557,14 +46557,14 @@ var require_dist8 = __commonJS({
       return localePredicate.parse(locale);
     }
     __name(validateLocale, "validateLocale");
-    function validateMaxOptionsLength(options) {
-      maxArrayLengthPredicate.parse(options);
+    function validateMaxOptionsLength(options2) {
+      maxArrayLengthPredicate.parse(options2);
     }
     __name(validateMaxOptionsLength, "validateMaxOptionsLength");
-    function validateRequiredParameters3(name, description, options) {
+    function validateRequiredParameters3(name, description, options2) {
       validateName(name);
       validateDescription(description);
-      validateMaxOptionsLength(options);
+      validateMaxOptionsLength(options2);
     }
     __name(validateRequiredParameters3, "validateRequiredParameters");
     var booleanPredicate = import_shapeshift10.s.boolean();
@@ -47339,11 +47339,11 @@ var require_dist8 = __commonJS({
        * @internal
        */
       _sharedAddOptionMethod(input, Instance) {
-        const { options } = this;
-        validateMaxOptionsLength(options);
+        const { options: options2 } = this;
+        validateMaxOptionsLength(options2);
         const result = typeof input === "function" ? input(new Instance()) : input;
         assertReturnOfBuilder2(result, Instance);
-        options.push(result);
+        options2.push(result);
         return this;
       }
     };
@@ -47368,11 +47368,11 @@ var require_dist8 = __commonJS({
        * @param input - A function that returns a subcommand builder or an already built builder
        */
       addSubcommand(input) {
-        const { options } = this;
-        validateMaxOptionsLength(options);
+        const { options: options2 } = this;
+        validateMaxOptionsLength(options2);
         const result = typeof input === "function" ? input(new SlashCommandSubcommandBuilder()) : input;
         assertReturnOfBuilder2(result, SlashCommandSubcommandBuilder);
-        options.push(result);
+        options2.push(result);
         return this;
       }
       /**
@@ -47445,11 +47445,11 @@ var require_dist8 = __commonJS({
        * @param input - A function that returns a subcommand group builder or an already built builder
        */
       addSubcommandGroup(input) {
-        const { options } = this;
-        validateMaxOptionsLength(options);
+        const { options: options2 } = this;
+        validateMaxOptionsLength(options2);
         const result = typeof input === "function" ? input(new SlashCommandSubcommandGroupBuilder()) : input;
         assertReturnOfBuilder2(result, SlashCommandSubcommandGroupBuilder);
-        options.push(result);
+        options2.push(result);
         return this;
       }
       /**
@@ -47458,11 +47458,11 @@ var require_dist8 = __commonJS({
        * @param input - A function that returns a subcommand builder or an already built builder
        */
       addSubcommand(input) {
-        const { options } = this;
-        validateMaxOptionsLength(options);
+        const { options: options2 } = this;
+        validateMaxOptionsLength(options2);
         const result = typeof input === "function" ? input(new SlashCommandSubcommandBuilder()) : input;
         assertReturnOfBuilder2(result, SlashCommandSubcommandBuilder);
-        options.push(result);
+        options2.push(result);
         return this;
       }
     };
@@ -48161,8 +48161,8 @@ var require_ReactionCollector = __commonJS({
        * @param {Message} message The message upon which to collect reactions
        * @param {ReactionCollectorOptions} [options={}] The options to apply to this collector
        */
-      constructor(message, options = {}) {
-        super(message.client, options);
+      constructor(message, options2 = {}) {
+        super(message.client, options2);
         this.message = message;
         this.users = new Collection2();
         this.total = 0;
@@ -48456,8 +48456,8 @@ var require_Sticker = __commonJS({
        *   .then(sticker => console.log(`Updated the name of the sticker to ${sticker.name}`))
        *   .catch(console.error);
        */
-      edit(options) {
-        return this.guild.stickers.edit(this, options);
+      edit(options2) {
+        return this.guild.stickers.edit(this, options2);
       }
       /**
        * Deletes the sticker.
@@ -48629,7 +48629,7 @@ var require_GuildEmojiRoleManager = __commonJS({
 var require_GuildEmoji = __commonJS({
   "node_modules/.pnpm/discord.js@14.27.0/node_modules/discord.js/src/structures/GuildEmoji.js"(exports2, module2) {
     "use strict";
-    var { PermissionFlagsBits: PermissionFlagsBits2 } = require_v106();
+    var { PermissionFlagsBits: PermissionFlagsBits3 } = require_v106();
     var BaseGuildEmoji = require_BaseGuildEmoji();
     var { DiscordjsError: DiscordjsError2, ErrorCodes: ErrorCodes2 } = require_errors2();
     var GuildEmojiRoleManager = require_GuildEmojiRoleManager();
@@ -48662,7 +48662,7 @@ var require_GuildEmoji = __commonJS({
        */
       get deletable() {
         if (!this.guild.members.me) throw new DiscordjsError2(ErrorCodes2.GuildUncachedMe);
-        return !this.managed && this.guild.members.me.permissions.has(PermissionFlagsBits2.ManageGuildExpressions);
+        return !this.managed && this.guild.members.me.permissions.has(PermissionFlagsBits3.ManageGuildExpressions);
       }
       /**
        * A manager for roles this emoji is active for.
@@ -48696,8 +48696,8 @@ var require_GuildEmoji = __commonJS({
        *   .then(emoji => console.log(`Edited emoji ${emoji}`))
        *   .catch(console.error);
        */
-      edit(options) {
-        return this.guild.emojis.edit(this.id, options);
+      edit(options2) {
+        return this.guild.emojis.edit(this.id, options2);
       }
       /**
        * Sets the name of the emoji.
@@ -49109,7 +49109,7 @@ var require_ActionRowBuilder = __commonJS({
     var { isJSONEncodable } = require_dist();
     var { createComponentBuilder } = require_Components();
     var { toSnakeCase } = require_Transformers();
-    var ActionRowBuilder2 = class extends BuildersActionRow {
+    var ActionRowBuilder3 = class extends BuildersActionRow {
       constructor({ components, ...data } = {}) {
         super({
           ...toSnakeCase(data),
@@ -49125,7 +49125,7 @@ var require_ActionRowBuilder = __commonJS({
         return new this(isJSONEncodable(other) ? other.toJSON() : other);
       }
     };
-    module2.exports = ActionRowBuilder2;
+    module2.exports = ActionRowBuilder3;
   }
 });
 
@@ -49137,7 +49137,7 @@ var require_ButtonBuilder = __commonJS({
     var { isJSONEncodable } = require_dist();
     var { toSnakeCase } = require_Transformers();
     var { resolvePartialEmoji } = require_Util();
-    var ButtonBuilder2 = class extends BuildersButton {
+    var ButtonBuilder3 = class extends BuildersButton {
       constructor({ emoji, ...data } = {}) {
         super(toSnakeCase({ ...data, emoji: emoji && typeof emoji === "string" ? resolvePartialEmoji(emoji) : emoji }));
       }
@@ -49161,7 +49161,7 @@ var require_ButtonBuilder = __commonJS({
         return new this(isJSONEncodable(other) ? other.toJSON() : other);
       }
     };
-    module2.exports = ButtonBuilder2;
+    module2.exports = ButtonBuilder3;
   }
 });
 
@@ -49570,7 +49570,7 @@ var require_RoleSelectMenuBuilder = __commonJS({
     var { RoleSelectMenuBuilder: BuildersRoleSelectMenu } = require_dist8();
     var { isJSONEncodable } = require_dist();
     var { toSnakeCase } = require_Transformers();
-    var RoleSelectMenuBuilder = class extends BuildersRoleSelectMenu {
+    var RoleSelectMenuBuilder2 = class extends BuildersRoleSelectMenu {
       constructor(data = {}) {
         super(toSnakeCase(data));
       }
@@ -49583,7 +49583,7 @@ var require_RoleSelectMenuBuilder = __commonJS({
         return new this(isJSONEncodable(other) ? other.toJSON() : other);
       }
     };
-    module2.exports = RoleSelectMenuBuilder;
+    module2.exports = RoleSelectMenuBuilder2;
   }
 });
 
@@ -49663,11 +49663,11 @@ var require_StringSelectMenuBuilder = __commonJS({
     var { toSnakeCase } = require_Transformers();
     var { resolvePartialEmoji } = require_Util();
     var StringSelectMenuBuilder2 = class _StringSelectMenuBuilder extends BuildersSelectMenu {
-      constructor({ options, ...data } = {}) {
+      constructor({ options: options2, ...data } = {}) {
         super(
           toSnakeCase({
             ...data,
-            options: options?.map(({ emoji, ...option }) => ({
+            options: options2?.map(({ emoji, ...option }) => ({
               ...option,
               emoji: emoji && typeof emoji === "string" ? resolvePartialEmoji(emoji) : emoji
             }))
@@ -49695,16 +49695,16 @@ var require_StringSelectMenuBuilder = __commonJS({
        * @param {RestOrArray<APISelectMenuOption>} options The options to add to this select menu
        * @returns {StringSelectMenuBuilder}
        */
-      addOptions(...options) {
-        return super.addOptions(normalizeArray(options).map((option) => _StringSelectMenuBuilder.normalizeEmoji(option)));
+      addOptions(...options2) {
+        return super.addOptions(normalizeArray(options2).map((option) => _StringSelectMenuBuilder.normalizeEmoji(option)));
       }
       /**
        * Sets the options on this select menu
        * @param {RestOrArray<APISelectMenuOption>} options The options to set on this select menu
        * @returns {StringSelectMenuBuilder}
        */
-      setOptions(...options) {
-        return super.setOptions(normalizeArray(options).map((option) => _StringSelectMenuBuilder.normalizeEmoji(option)));
+      setOptions(...options2) {
+        return super.setOptions(normalizeArray(options2).map((option) => _StringSelectMenuBuilder.normalizeEmoji(option)));
       }
       /**
        * Creates a new select menu builder from json data
@@ -49857,7 +49857,7 @@ var require_UserSelectMenuBuilder = __commonJS({
     var { UserSelectMenuBuilder: BuildersUserSelectMenu } = require_dist8();
     var { isJSONEncodable } = require_dist();
     var { toSnakeCase } = require_Transformers();
-    var UserSelectMenuBuilder = class extends BuildersUserSelectMenu {
+    var UserSelectMenuBuilder2 = class extends BuildersUserSelectMenu {
       constructor(data = {}) {
         super(toSnakeCase(data));
       }
@@ -49870,7 +49870,7 @@ var require_UserSelectMenuBuilder = __commonJS({
         return new this(isJSONEncodable(other) ? other.toJSON() : other);
       }
     };
-    module2.exports = UserSelectMenuBuilder;
+    module2.exports = UserSelectMenuBuilder2;
   }
 });
 
@@ -49914,8 +49914,8 @@ var require_Components = __commonJS({
     }
     module2.exports = { createComponent, createComponentBuilder, findComponentByCustomId };
     var ActionRow = require_ActionRow();
-    var ActionRowBuilder2 = require_ActionRowBuilder();
-    var ButtonBuilder2 = require_ButtonBuilder();
+    var ActionRowBuilder3 = require_ActionRowBuilder();
+    var ButtonBuilder3 = require_ButtonBuilder();
     var ButtonComponent = require_ButtonComponent();
     var ChannelSelectMenuBuilder = require_ChannelSelectMenuBuilder();
     var ChannelSelectMenuComponent = require_ChannelSelectMenuComponent();
@@ -49926,7 +49926,7 @@ var require_Components = __commonJS({
     var MediaGalleryComponent = require_MediaGalleryComponent();
     var MentionableSelectMenuBuilder = require_MentionableSelectMenuBuilder();
     var MentionableSelectMenuComponent = require_MentionableSelectMenuComponent();
-    var RoleSelectMenuBuilder = require_RoleSelectMenuBuilder();
+    var RoleSelectMenuBuilder2 = require_RoleSelectMenuBuilder();
     var RoleSelectMenuComponent = require_RoleSelectMenuComponent();
     var SectionComponent = require_SectionComponent();
     var SeparatorComponent = require_SeparatorComponent();
@@ -49936,7 +49936,7 @@ var require_Components = __commonJS({
     var TextInputBuilder2 = require_TextInputBuilder();
     var TextInputComponent = require_TextInputComponent();
     var ThumbnailComponent = require_ThumbnailComponent();
-    var UserSelectMenuBuilder = require_UserSelectMenuBuilder();
+    var UserSelectMenuBuilder2 = require_UserSelectMenuBuilder();
     var UserSelectMenuComponent = require_UserSelectMenuComponent();
     var ComponentTypeToComponent = {
       [ComponentType2.ActionRow]: ActionRow,
@@ -49957,12 +49957,12 @@ var require_Components = __commonJS({
       [ComponentType2.Label]: LabelComponent
     };
     var ComponentTypeToBuilder = {
-      [ComponentType2.ActionRow]: ActionRowBuilder2,
-      [ComponentType2.Button]: ButtonBuilder2,
+      [ComponentType2.ActionRow]: ActionRowBuilder3,
+      [ComponentType2.Button]: ButtonBuilder3,
       [ComponentType2.StringSelect]: StringSelectMenuBuilder2,
       [ComponentType2.TextInput]: TextInputBuilder2,
-      [ComponentType2.UserSelect]: UserSelectMenuBuilder,
-      [ComponentType2.RoleSelect]: RoleSelectMenuBuilder,
+      [ComponentType2.UserSelect]: UserSelectMenuBuilder2,
+      [ComponentType2.RoleSelect]: RoleSelectMenuBuilder2,
       [ComponentType2.MentionableSelect]: MentionableSelectMenuBuilder,
       [ComponentType2.ChannelSelect]: ChannelSelectMenuBuilder
     };
@@ -49978,10 +49978,10 @@ var require_Message = __commonJS({
     var { DiscordSnowflake } = require_cjs();
     var {
       InteractionType,
-      ChannelType: ChannelType2,
+      ChannelType: ChannelType3,
       MessageType,
       MessageFlags: MessageFlags2,
-      PermissionFlagsBits: PermissionFlagsBits2,
+      PermissionFlagsBits: PermissionFlagsBits3,
       MessageReferenceType
     } = require_v106();
     var Attachment = require_Attachment();
@@ -50337,8 +50337,8 @@ var require_Message = __commonJS({
        * collector.on('collect', r => console.log(`Collected ${r.emoji.name}`));
        * collector.on('end', collected => console.log(`Collected ${collected.size} items`));
        */
-      createReactionCollector(options = {}) {
-        return new ReactionCollector(this, options);
+      createReactionCollector(options2 = {}) {
+        return new ReactionCollector(this, options2);
       }
       /**
        * An object containing the same properties as CollectorOptions, but a few more:
@@ -50357,11 +50357,11 @@ var require_Message = __commonJS({
        *   .then(collected => console.log(`Collected ${collected.size} reactions`))
        *   .catch(console.error);
        */
-      awaitReactions(options = {}) {
+      awaitReactions(options2 = {}) {
         return new Promise((resolve, reject) => {
-          const collector = this.createReactionCollector(options);
+          const collector = this.createReactionCollector(options2);
           collector.once("end", (reactions, reason) => {
-            if (options.errors?.includes(reason)) reject(reactions);
+            if (options2.errors?.includes(reason)) reject(reactions);
             else resolve(reactions);
           });
         });
@@ -50384,9 +50384,9 @@ var require_Message = __commonJS({
        * collector.on('collect', i => console.log(`Collected ${i.customId}`));
        * collector.on('end', collected => console.log(`Collected ${collected.size} items`));
        */
-      createMessageComponentCollector(options = {}) {
+      createMessageComponentCollector(options2 = {}) {
         return new InteractionCollector(this.client, {
-          ...options,
+          ...options2,
           interactionType: InteractionType.MessageComponent,
           message: this
         });
@@ -50413,8 +50413,8 @@ var require_Message = __commonJS({
        *   .then(interaction => console.log(`${interaction.customId} was clicked!`))
        *   .catch(console.error);
        */
-      awaitMessageComponent(options = {}) {
-        const _options = { ...options, max: 1 };
+      awaitMessageComponent(options2 = {}) {
+        const _options = { ...options2, max: 1 };
         return new Promise((resolve, reject) => {
           const collector = this.createMessageComponentCollector(_options);
           collector.once("end", (interactions, reason) => {
@@ -50437,7 +50437,7 @@ var require_Message = __commonJS({
           if (this.channel.archived) return false;
           if (this.channel.locked) {
             const permissions = this.channel.permissionsFor(this.client.user);
-            if (!permissions?.has(PermissionFlagsBits2.ManageThreads, true)) return false;
+            if (!permissions?.has(PermissionFlagsBits3.ManageThreads, true)) return false;
           }
         }
         return precheck;
@@ -50457,8 +50457,8 @@ var require_Message = __commonJS({
         }
         const permissions = this.channel?.permissionsFor(this.client.user);
         if (!permissions) return false;
-        if (permissions.has(PermissionFlagsBits2.Administrator, false)) return true;
-        return this.type !== MessageType.AutoModerationAction && this.author.id === this.client.user.id || permissions.has(PermissionFlagsBits2.ManageMessages, false) && !this.guild.members.me.isCommunicationDisabled();
+        if (permissions.has(PermissionFlagsBits3.Administrator, false)) return true;
+        return this.type !== MessageType.AutoModerationAction && this.author.id === this.client.user.id || permissions.has(PermissionFlagsBits3.ManageMessages, false) && !this.guild.members.me.isCommunicationDisabled();
       }
       /**
        * Whether the message is bulk deletable by the client user
@@ -50469,7 +50469,7 @@ var require_Message = __commonJS({
        * channel.bulkDelete(messages.filter(message => message.bulkDeletable));
        */
       get bulkDeletable() {
-        return (this.inGuild() && Date.now() - this.createdTimestamp < MaxBulkDeletableMessageAge && this.deletable && this.channel?.permissionsFor(this.client.user).has(PermissionFlagsBits2.ManageMessages, false)) ?? false;
+        return (this.inGuild() && Date.now() - this.createdTimestamp < MaxBulkDeletableMessageAge && this.deletable && this.channel?.permissionsFor(this.client.user).has(PermissionFlagsBits3.ManageMessages, false)) ?? false;
       }
       /**
        * Whether the message is pinnable by the client user
@@ -50483,7 +50483,7 @@ var require_Message = __commonJS({
         if (!channel || channel.isVoiceBased() || !channel.viewable) return false;
         const permissions = channel?.permissionsFor(this.client.user);
         if (!permissions) return false;
-        return permissions.has(PermissionFlagsBits2.ReadMessageHistory | PermissionFlagsBits2.PinMessages);
+        return permissions.has(PermissionFlagsBits3.ReadMessageHistory | PermissionFlagsBits3.PinMessages);
       }
       /**
        * Fetches the Message this crosspost/reply/pin-add references, if available to the client
@@ -50504,10 +50504,10 @@ var require_Message = __commonJS({
        * @readonly
        */
       get crosspostable() {
-        const bitfield = PermissionFlagsBits2.SendMessages | (this.author.id === this.client.user.id ? PermissionsBitField2.DefaultBit : PermissionFlagsBits2.ManageMessages);
+        const bitfield = PermissionFlagsBits3.SendMessages | (this.author.id === this.client.user.id ? PermissionsBitField2.DefaultBit : PermissionFlagsBits3.ManageMessages);
         const { channel } = this;
         return Boolean(
-          channel?.type === ChannelType2.GuildAnnouncement && !this.flags.has(MessageFlags2.Crossposted) && this.reference?.type !== MessageReferenceType.Forward && this.type === MessageType.Default && !this.poll && channel.viewable && channel.permissionsFor(this.client.user)?.has(bitfield, false)
+          channel?.type === ChannelType3.GuildAnnouncement && !this.flags.has(MessageFlags2.Crossposted) && this.reference?.type !== MessageReferenceType.Forward && this.type === MessageType.Default && !this.poll && channel.viewable && channel.permissionsFor(this.client.user)?.has(bitfield, false)
         );
       }
       /**
@@ -50520,9 +50520,9 @@ var require_Message = __commonJS({
        *   .then(msg => console.log(`Updated the content of a message to ${msg.content}`))
        *   .catch(console.error);
        */
-      async edit(options) {
+      async edit(options2) {
         if (!this.channel) throw new DiscordjsError2(ErrorCodes2.ChannelNotCached);
-        return this.channel.messages.edit(this, options);
+        return this.channel.messages.edit(this, options2);
       }
       /**
        * Publishes a message in an announcement channel to all channels following it.
@@ -50627,16 +50627,16 @@ var require_Message = __commonJS({
        *   .then(() => console.log(`Replied to message "${message.content}"`))
        *   .catch(console.error);
        */
-      async reply(options) {
+      async reply(options2) {
         if (!this.channel) throw new DiscordjsError2(ErrorCodes2.ChannelNotCached);
         let data;
-        if (options instanceof MessagePayload) {
-          data = options;
+        if (options2 instanceof MessagePayload) {
+          data = options2;
         } else {
-          data = MessagePayload.create(this, options, {
+          data = MessagePayload.create(this, options2, {
             reply: {
               messageReference: this,
-              failIfNotExists: options?.failIfNotExists ?? this.client.options.failIfNotExists
+              failIfNotExists: options2?.failIfNotExists ?? this.client.options.failIfNotExists
             }
           });
         }
@@ -50674,13 +50674,13 @@ var require_Message = __commonJS({
        * @param {StartThreadOptions} [options] Options for starting a thread on this message
        * @returns {Promise<ThreadChannel>}
        */
-      async startThread(options = {}) {
+      async startThread(options2 = {}) {
         if (!this.channel) throw new DiscordjsError2(ErrorCodes2.ChannelNotCached);
-        if (![ChannelType2.GuildText, ChannelType2.GuildAnnouncement].includes(this.channel.type)) {
+        if (![ChannelType3.GuildText, ChannelType3.GuildAnnouncement].includes(this.channel.type)) {
           throw new DiscordjsError2(ErrorCodes2.MessageThreadParent);
         }
         if (this.hasThread) throw new DiscordjsError2(ErrorCodes2.MessageExistingThread);
-        return this.channel.threads.create({ ...options, startMessage: this });
+        return this.channel.threads.create({ ...options2, startMessage: this });
       }
       /**
        * Fetch this message.
@@ -50918,13 +50918,13 @@ var require_Webhook = __commonJS({
        *   .then(console.log)
        *   .catch(console.error);
        */
-      async send(options) {
+      async send(options2) {
         if (!this.token) throw new DiscordjsError2(ErrorCodes2.WebhookTokenUnavailable);
         let messagePayload;
-        if (options instanceof MessagePayload) {
-          messagePayload = options.resolveBody();
+        if (options2 instanceof MessagePayload) {
+          messagePayload = options2.resolveBody();
         } else {
-          messagePayload = MessagePayload.create(this, options).resolveBody();
+          messagePayload = MessagePayload.create(this, options2).resolveBody();
         }
         const { body, files } = await messagePayload.resolveFiles();
         const query = makeURLSearchParams2({
@@ -51027,11 +51027,11 @@ var require_Webhook = __commonJS({
        * @param {string|MessagePayload|WebhookMessageEditOptions} options The options to provide
        * @returns {Promise<Message>} Returns the message edited by this webhook
        */
-      async editMessage(message, options) {
+      async editMessage(message, options2) {
         if (!this.token) throw new DiscordjsError2(ErrorCodes2.WebhookTokenUnavailable);
         let messagePayload;
-        if (options instanceof MessagePayload) messagePayload = options;
-        else messagePayload = MessagePayload.create(this, options);
+        if (options2 instanceof MessagePayload) messagePayload = options2;
+        else messagePayload = MessagePayload.create(this, options2);
         const { body, files } = await messagePayload.resolveBody().resolveFiles();
         const query = makeURLSearchParams2({
           thread_id: messagePayload.options.threadId,
@@ -51109,8 +51109,8 @@ var require_Webhook = __commonJS({
        * @param {ImageURLOptions} [options={}] Options for the image URL
        * @returns {?string}
        */
-      avatarURL(options = {}) {
-        return this.avatar && this.client.rest.cdn.avatar(this.id, this.avatar, options);
+      avatarURL(options2 = {}) {
+        return this.avatar && this.client.rest.cdn.avatar(this.id, this.avatar, options2);
       }
       /**
        * Whether this webhook is created by a user.
@@ -51196,8 +51196,8 @@ var require_WebhookClient = __commonJS({
        * @param {WebhookClientData} data The data of the webhook
        * @param {WebhookClientOptions} [options] Options for the webhook client
        */
-      constructor(data, options) {
-        super(options);
+      constructor(data, options2) {
+        super(options2);
         Object.defineProperty(this, "client", { value: this });
         let { id, token } = data;
         if ("url" in data) {
@@ -51264,7 +51264,7 @@ var require_WebhookClient = __commonJS({
 var require_VoiceState = __commonJS({
   "node_modules/.pnpm/discord.js@14.27.0/node_modules/discord.js/src/structures/VoiceState.js"(exports2, module2) {
     "use strict";
-    var { ChannelType: ChannelType2, Routes: Routes2 } = require_v106();
+    var { ChannelType: ChannelType3, Routes: Routes2 } = require_v106();
     var Base = require_Base();
     var { DiscordjsError: DiscordjsError2, DiscordjsTypeError: DiscordjsTypeError2, ErrorCodes: ErrorCodes2 } = require_errors2();
     var VoiceState = class extends Base {
@@ -51407,23 +51407,23 @@ var require_VoiceState = __commonJS({
        * @param {VoiceStateEditOptions} options The options to provide
        * @returns {Promise<VoiceState>}
        */
-      async edit(options) {
-        if (this.channel?.type !== ChannelType2.GuildStageVoice) throw new DiscordjsError2(ErrorCodes2.VoiceNotStageChannel);
+      async edit(options2) {
+        if (this.channel?.type !== ChannelType3.GuildStageVoice) throw new DiscordjsError2(ErrorCodes2.VoiceNotStageChannel);
         const target = this.client.user.id === this.id ? "@me" : this.id;
-        if (target !== "@me" && options.requestToSpeak !== void 0) {
+        if (target !== "@me" && options2.requestToSpeak !== void 0) {
           throw new DiscordjsError2(ErrorCodes2.VoiceStateNotOwn);
         }
-        if (!["boolean", "undefined"].includes(typeof options.requestToSpeak)) {
+        if (!["boolean", "undefined"].includes(typeof options2.requestToSpeak)) {
           throw new DiscordjsTypeError2(ErrorCodes2.VoiceStateInvalidType, "requestToSpeak");
         }
-        if (!["boolean", "undefined"].includes(typeof options.suppressed)) {
+        if (!["boolean", "undefined"].includes(typeof options2.suppressed)) {
           throw new DiscordjsTypeError2(ErrorCodes2.VoiceStateInvalidType, "suppressed");
         }
         await this.client.rest.patch(Routes2.guildVoiceState(this.guild.id, target), {
           body: {
             channel_id: this.channelId,
-            request_to_speak_timestamp: options.requestToSpeak ? (/* @__PURE__ */ new Date()).toISOString() : options.requestToSpeak === false ? null : void 0,
-            suppress: options.suppressed
+            request_to_speak_timestamp: options2.requestToSpeak ? (/* @__PURE__ */ new Date()).toISOString() : options2.requestToSpeak === false ? null : void 0,
+            suppress: options2.suppressed
           }
         });
         return this;
@@ -51697,7 +51697,7 @@ var require_GuildMemberFlagsBitField = __commonJS({
 var require_GuildMember = __commonJS({
   "node_modules/.pnpm/discord.js@14.27.0/node_modules/discord.js/src/structures/GuildMember.js"(exports2) {
     "use strict";
-    var { PermissionFlagsBits: PermissionFlagsBits2 } = require_v106();
+    var { PermissionFlagsBits: PermissionFlagsBits3 } = require_v106();
     var Base = require_Base();
     var VoiceState = require_VoiceState();
     var TextBasedChannel = require_TextBasedChannel();
@@ -51802,8 +51802,8 @@ var require_GuildMember = __commonJS({
        * @param {ImageURLOptions} [options={}] Options for the image URL
        * @returns {?string}
        */
-      avatarURL(options = {}) {
-        return this.avatar && this.client.rest.cdn.guildMemberAvatar(this.guild.id, this.id, this.avatar, options);
+      avatarURL(options2 = {}) {
+        return this.avatar && this.client.rest.cdn.guildMemberAvatar(this.guild.id, this.id, this.avatar, options2);
       }
       /**
        * A link to the member's avatar decoration.
@@ -51818,8 +51818,8 @@ var require_GuildMember = __commonJS({
        * @param {ImageURLOptions} [options={}] Options for the banner URL
        * @returns {?string}
        */
-      bannerURL(options = {}) {
-        return this.banner && this.client.rest.cdn.guildMemberBanner(this.guild.id, this.id, this.banner, options);
+      bannerURL(options2 = {}) {
+        return this.banner && this.client.rest.cdn.guildMemberBanner(this.guild.id, this.id, this.banner, options2);
       }
       /**
        * A link to the member's guild avatar if they have one.
@@ -51827,8 +51827,8 @@ var require_GuildMember = __commonJS({
        * @param {ImageURLOptions} [options={}] Options for the image URL
        * @returns {string}
        */
-      displayAvatarURL(options) {
-        return this.avatarURL(options) ?? this.user.displayAvatarURL(options);
+      displayAvatarURL(options2) {
+        return this.avatarURL(options2) ?? this.user.displayAvatarURL(options2);
       }
       /**
        * A link to the member's guild banner if they have one.
@@ -51836,8 +51836,8 @@ var require_GuildMember = __commonJS({
        * @param {ImageURLOptions} [options={}] Options for the image URL
        * @returns {?string}
        */
-      displayBannerURL(options) {
-        return this.bannerURL(options) ?? this.user.bannerURL(options);
+      displayBannerURL(options2) {
+        return this.bannerURL(options2) ?? this.user.bannerURL(options2);
       }
       /**
        * A link to the member's guild avatar decoration if they have one.
@@ -51949,7 +51949,7 @@ var require_GuildMember = __commonJS({
        */
       get kickable() {
         if (!this.guild.members.me) throw new DiscordjsError2(ErrorCodes2.GuildUncachedMe);
-        return this.manageable && this.guild.members.me.permissions.has(PermissionFlagsBits2.KickMembers);
+        return this.manageable && this.guild.members.me.permissions.has(PermissionFlagsBits3.KickMembers);
       }
       /**
        * Whether this member is bannable by the client user
@@ -51958,7 +51958,7 @@ var require_GuildMember = __commonJS({
        */
       get bannable() {
         if (!this.guild.members.me) throw new DiscordjsError2(ErrorCodes2.GuildUncachedMe);
-        return this.manageable && this.guild.members.me.permissions.has(PermissionFlagsBits2.BanMembers);
+        return this.manageable && this.guild.members.me.permissions.has(PermissionFlagsBits3.BanMembers);
       }
       /**
        * Whether this member is moderatable by the client user
@@ -51966,7 +51966,7 @@ var require_GuildMember = __commonJS({
        * @readonly
        */
       get moderatable() {
-        return !this.permissions.has(PermissionFlagsBits2.Administrator) && this.manageable && (this.guild.members.me?.permissions.has(PermissionFlagsBits2.ModerateMembers) ?? false);
+        return !this.permissions.has(PermissionFlagsBits3.Administrator) && this.manageable && (this.guild.members.me?.permissions.has(PermissionFlagsBits3.ModerateMembers) ?? false);
       }
       /**
        * Whether this member is currently timed out
@@ -51991,8 +51991,8 @@ var require_GuildMember = __commonJS({
        * @param {GuildMemberEditOptions} options The options to provide
        * @returns {Promise<GuildMember>}
        */
-      edit(options) {
-        return this.guild.members.edit(this, options);
+      edit(options2) {
+        return this.guild.members.edit(this, options2);
       }
       /**
        * Sets the flags for this member.
@@ -52055,8 +52055,8 @@ var require_GuildMember = __commonJS({
        *   .then(console.log)
        *   .catch(console.error);
        */
-      ban(options) {
-        return this.guild.bans.create(this, options);
+      ban(options2) {
+        return this.guild.bans.create(this, options2);
       }
       /**
        * Times this guild member out.
@@ -52219,12 +52219,12 @@ var require_MessageManager = __commonJS({
        *          message.author.id === '84484653687267328').size} messages`))
        *   .catch(console.error);
        */
-      fetch(options) {
-        if (!options) return this._fetchMany();
-        const { message, cache, force } = options;
-        const resolvedMessage = this.resolveId(message ?? options);
+      fetch(options2) {
+        if (!options2) return this._fetchMany();
+        const { message, cache, force } = options2;
+        const resolvedMessage = this.resolveId(message ?? options2);
         if (resolvedMessage) return this._fetchSingle({ message: resolvedMessage, cache, force });
-        return this._fetchMany(options);
+        return this._fetchMany(options2);
       }
       async _fetchSingle({ message, cache, force = false }) {
         if (!force) {
@@ -52350,10 +52350,10 @@ var require_MessageManager = __commonJS({
        * @param {string|MessageEditOptions|MessagePayload} options The options to edit the message
        * @returns {Promise<Message>}
        */
-      async edit(message, options) {
+      async edit(message, options2) {
         const messageId = this.resolveId(message);
         if (!messageId) throw new DiscordjsTypeError2(ErrorCodes2.InvalidType, "message", "MessageResolvable");
-        const { body, files } = await (options instanceof MessagePayload ? options : MessagePayload.create(message instanceof Message ? message : this, options)).resolveBody().resolveFiles();
+        const { body, files } = await (options2 instanceof MessagePayload ? options2 : MessagePayload.create(message instanceof Message ? message : this, options2)).resolveBody().resolveFiles();
         const d = await this.client.rest.patch(Routes2.channelMessage(this.channel.id, messageId), { body, files });
         const existing = this.cache.get(messageId);
         if (existing) {
@@ -52519,9 +52519,9 @@ var require_MessagePayload = __commonJS({
        * @param {MessageTarget} target The target for this message to be sent to
        * @param {MessagePayloadOption} options The payload of this message
        */
-      constructor(target, options) {
+      constructor(target, options2) {
         this.target = target;
-        this.options = options;
+        this.options = options2;
         this.body = null;
         this.files = null;
       }
@@ -52685,8 +52685,8 @@ var require_MessagePayload = __commonJS({
             question: {
               text: this.options.poll.question.text
             },
-            answers: this.options.poll.answers.map((answer) => ({
-              poll_media: { text: answer.text, emoji: resolvePartialEmoji(answer.emoji) }
+            answers: this.options.poll.answers.map((answer2) => ({
+              poll_media: { text: answer2.text, emoji: resolvePartialEmoji(answer2.emoji) }
             })),
             duration: this.options.poll.duration,
             allow_multiselect: this.options.poll.allowMultiselect,
@@ -52769,10 +52769,10 @@ var require_MessagePayload = __commonJS({
        * @param {MessagePayloadOption} [extra={}] Extra options to add onto specified options
        * @returns {MessagePayload}
        */
-      static create(target, options, extra = {}) {
+      static create(target, options2, extra = {}) {
         return new this(
           target,
-          typeof options !== "object" || options === null ? { content: options, ...extra } : { ...options, ...extra }
+          typeof options2 !== "object" || options2 === null ? { content: options2, ...extra } : { ...options2, ...extra }
         );
       }
     };
@@ -52942,18 +52942,18 @@ var require_TextBasedChannel = __commonJS({
        *   .then(console.log)
        *   .catch(console.error);
        */
-      async send(options) {
+      async send(options2) {
         const User = require_User();
         const { GuildMember } = require_GuildMember();
         if (this instanceof User || this instanceof GuildMember) {
           const dm = await this.createDM();
-          return dm.send(options);
+          return dm.send(options2);
         }
         let messagePayload;
-        if (options instanceof MessagePayload) {
-          messagePayload = options.resolveBody();
+        if (options2 instanceof MessagePayload) {
+          messagePayload = options2.resolveBody();
         } else {
-          messagePayload = MessagePayload.create(this, options).resolveBody();
+          messagePayload = MessagePayload.create(this, options2).resolveBody();
         }
         const { body, files } = await messagePayload.resolveFiles();
         const d = await this.client.rest.post(Routes2.channelMessages(this.id), { body, files });
@@ -52980,8 +52980,8 @@ var require_TextBasedChannel = __commonJS({
        * collector.on('collect', message => console.log(`Collected ${message.content}`));
        * collector.on('end', collected => console.log(`Collected ${collected.size} items`));
        */
-      createMessageCollector(options = {}) {
-        return new MessageCollector(this, options);
+      createMessageCollector(options2 = {}) {
+        return new MessageCollector(this, options2);
       }
       /**
        * An object containing the same properties as CollectorOptions, but a few more:
@@ -53001,11 +53001,11 @@ var require_TextBasedChannel = __commonJS({
        *   .then(collected => console.log(collected.size))
        *   .catch(collected => console.log(`After a minute, only ${collected.size} out of 4 voted.`));
        */
-      awaitMessages(options = {}) {
+      awaitMessages(options2 = {}) {
         return new Promise((resolve, reject) => {
-          const collector = this.createMessageCollector(options);
+          const collector = this.createMessageCollector(options2);
           collector.once("end", (collection, reason) => {
-            if (options.errors?.includes(reason)) {
+            if (options2.errors?.includes(reason)) {
               reject(collection);
             } else {
               resolve(collection);
@@ -53024,9 +53024,9 @@ var require_TextBasedChannel = __commonJS({
        * collector.on('collect', interaction => console.log(`Collected ${interaction.customId}`));
        * collector.on('end', collected => console.log(`Collected ${collected.size} items`));
        */
-      createMessageComponentCollector(options = {}) {
+      createMessageComponentCollector(options2 = {}) {
         return new InteractionCollector(this.client, {
-          ...options,
+          ...options2,
           interactionType: InteractionType.MessageComponent,
           channel: this
         });
@@ -53043,8 +53043,8 @@ var require_TextBasedChannel = __commonJS({
        *   .then(interaction => console.log(`${interaction.customId} was clicked!`))
        *   .catch(console.error);
        */
-      awaitMessageComponent(options = {}) {
-        const _options = { ...options, max: 1 };
+      awaitMessageComponent(options2 = {}) {
+        const _options = { ...options2, max: 1 };
         return new Promise((resolve, reject) => {
           const collector = this.createMessageComponentCollector(_options);
           collector.once("end", (interactions, reason) => {
@@ -53138,8 +53138,8 @@ var require_TextBasedChannel = __commonJS({
        *   .then(console.log)
        *   .catch(console.error)
        */
-      createWebhook(options) {
-        return this.guild.channels.createWebhook({ channel: this.id, ...options });
+      createWebhook(options2) {
+        return this.guild.channels.createWebhook({ channel: this.id, ...options2 });
       }
       /**
        * Sets the rate limit per user (slowmode) for this channel.
@@ -53341,19 +53341,19 @@ var require_User = __commonJS({
        * @param {ImageURLOptions} [options={}] Options for the image URL
        * @returns {?string}
        */
-      avatarURL(options = {}) {
-        return this.avatar && this.client.rest.cdn.avatar(this.id, this.avatar, options);
+      avatarURL(options2 = {}) {
+        return this.avatar && this.client.rest.cdn.avatar(this.id, this.avatar, options2);
       }
       /**
        * A link to the user's avatar decoration.
        * @param {BaseImageURLOptions} [options={}] Options for the image URL
        * @returns {?string}
        */
-      avatarDecorationURL(options = {}) {
+      avatarDecorationURL(options2 = {}) {
         if (this.avatarDecorationData) {
           return this.client.rest.cdn.avatarDecoration(this.avatarDecorationData.asset);
         }
-        return this.avatarDecoration && this.client.rest.cdn.avatarDecoration(this.id, this.avatarDecoration, options);
+        return this.avatarDecoration && this.client.rest.cdn.avatarDecoration(this.id, this.avatarDecoration, options2);
       }
       /**
        * A link to the user's default avatar
@@ -53370,8 +53370,8 @@ var require_User = __commonJS({
        * @param {ImageURLOptions} [options={}] Options for the image URL
        * @returns {string}
        */
-      displayAvatarURL(options) {
-        return this.avatarURL(options) ?? this.defaultAvatarURL;
+      displayAvatarURL(options2) {
+        return this.avatarURL(options2) ?? this.defaultAvatarURL;
       }
       /**
        * The hexadecimal version of the user accent color, with a leading hash
@@ -53388,8 +53388,8 @@ var require_User = __commonJS({
        * @param {ImageURLOptions} [options={}] Options for the image URL
        * @returns {?string}
        */
-      bannerURL(options = {}) {
-        return this.banner && this.client.rest.cdn.banner(this.id, this.banner, options);
+      bannerURL(options2 = {}) {
+        return this.banner && this.client.rest.cdn.banner(this.id, this.banner, options2);
       }
       /**
        * A link to the user's guild tag badge.
@@ -53397,8 +53397,8 @@ var require_User = __commonJS({
        * @param {ImageURLOptions} [options={}] Options for the image URL
        * @returns {?string}
        */
-      guildTagBadgeURL(options = {}) {
-        return this.primaryGuild?.badge ? this.client.rest.cdn.guildTagBadge(this.primaryGuild.identityGuildId, this.primaryGuild.badge, options) : null;
+      guildTagBadgeURL(options2 = {}) {
+        return this.primaryGuild?.badge ? this.client.rest.cdn.guildTagBadge(this.primaryGuild.identityGuildId, this.primaryGuild.badge, options2) : null;
       }
       /**
        * The tag of this user
@@ -53521,9 +53521,9 @@ var require_PollAnswerVoterManager = __commonJS({
     var CachedManager = require_CachedManager();
     var User = require_User();
     var PollAnswerVoterManager = class extends CachedManager {
-      constructor(answer) {
-        super(answer.client, User);
-        this.answer = answer;
+      constructor(answer2) {
+        super(answer2.client, User);
+        this.answer = answer2;
       }
       /**
        * The cache of this manager
@@ -53642,20 +53642,20 @@ var require_Poll = __commonJS({
       }
       _patch(data) {
         if (data.answers) {
-          for (const answer of data.answers) {
-            const existing = this.answers.get(answer.answer_id);
+          for (const answer2 of data.answers) {
+            const existing = this.answers.get(answer2.answer_id);
             if (existing) {
-              existing._patch(answer);
+              existing._patch(answer2);
             } else {
-              this.answers.set(answer.answer_id, new PollAnswer(this.client, answer, this));
+              this.answers.set(answer2.answer_id, new PollAnswer(this.client, answer2, this));
             }
           }
         }
         if (data.results) {
           this.resultsFinalized = data.results.is_finalized;
           for (const answerResult of data.results.answer_counts) {
-            const answer = this.answers.get(answerResult.id);
-            answer?._patch(answerResult);
+            const answer2 = this.answers.get(answerResult.id);
+            answer2?._patch(answerResult);
           }
         } else {
           this.resultsFinalized ??= false;
@@ -53765,7 +53765,7 @@ var require_Partials = __commonJS({
 var require_Action = __commonJS({
   "node_modules/.pnpm/discord.js@14.27.0/node_modules/discord.js/src/client/actions/Action.js"(exports2, module2) {
     "use strict";
-    var { ChannelType: ChannelType2 } = require_v106();
+    var { ChannelType: ChannelType3 } = require_v106();
     var { Poll } = require_Poll();
     var { PollAnswer } = require_PollAnswer();
     var Partials2 = require_Partials();
@@ -53787,7 +53787,7 @@ var require_Action = __commonJS({
           if (!data.recipients.some((existingRecipient) => recipient.id === existingRecipient.id)) {
             payloadData.recipients = [...data.recipients, recipient];
           }
-        } else if (data.type === ChannelType2.DM || data.type === ChannelType2.GroupDM) {
+        } else if (data.type === ChannelType3.DM || data.type === ChannelType3.GroupDM) {
           const recipient = data.author ?? data.user ?? { id: data.user_id };
           payloadData.recipients = [recipient];
         }
@@ -54140,9 +54140,9 @@ var require_CategoryChannelChildManager = __commonJS({
        * @param {CategoryCreateChannelOptions} options Options for creating the new channel
        * @returns {Promise<GuildChannel>}
        */
-      create(options) {
+      create(options2) {
         return this.guild.channels.create({
-          ...options,
+          ...options2,
           parent: this.channel.id
         });
       }
@@ -54213,7 +54213,7 @@ var require_DMChannel = __commonJS({
   "node_modules/.pnpm/discord.js@14.27.0/node_modules/discord.js/src/structures/DMChannel.js"(exports2, module2) {
     "use strict";
     var { userMention } = require_dist7();
-    var { ChannelType: ChannelType2 } = require_v106();
+    var { ChannelType: ChannelType3 } = require_v106();
     var { BaseChannel } = require_BaseChannel();
     var TextBasedChannel = require_TextBasedChannel();
     var DMMessageManager = require_DMMessageManager();
@@ -54221,7 +54221,7 @@ var require_DMChannel = __commonJS({
     var DMChannel = class extends BaseChannel {
       constructor(client2, data) {
         super(client2, data);
-        this.type = ChannelType2.DM;
+        this.type = ChannelType3.DM;
         this.messages = new DMMessageManager(this);
       }
       _patch(data) {
@@ -54492,8 +54492,8 @@ var require_ThreadOnlyChannel = __commonJS({
        *   .then(invite => console.log(`Created an invite with a code of ${invite.code}`))
        *   .catch(console.error);
        */
-      createInvite(options) {
-        return this.guild.invites.create(this.id, options);
+      createInvite(options2) {
+        return this.guild.invites.create(this.id, options2);
       }
       /**
        * Fetches a collection of invites to this guild channel.
@@ -54699,8 +54699,8 @@ var require_ThreadMemberManager = __commonJS({
        * @param {BaseFetchOptions} [options] The options for fetching the member
        * @returns {Promise<ThreadMember>}
        */
-      fetchMe(options) {
-        return this.fetch({ ...options, member: this.client.user.id });
+      fetchMe(options2) {
+        return this.fetch({ ...options2, member: this.client.user.id });
       }
       /**
        * The client user as a ThreadMember of this ThreadChannel
@@ -54809,12 +54809,12 @@ var require_ThreadMemberManager = __commonJS({
        * Options for fetching thread member(s)
        * @returns {Promise<ThreadMember|Collection<Snowflake, ThreadMember>>}
        */
-      fetch(options) {
-        if (!options) return this._fetchMany();
-        const { member, withMember, cache, force } = options;
-        const resolvedMember = this.resolveId(member ?? options);
+      fetch(options2) {
+        if (!options2) return this._fetchMany();
+        const { member, withMember, cache, force } = options2;
+        const resolvedMember = this.resolveId(member ?? options2);
         if (resolvedMember) return this._fetchSingle({ member: resolvedMember, withMember, cache, force });
-        return this._fetchMany(options);
+        return this._fetchMany(options2);
       }
       async _fetchSingle({ member, withMember, cache, force = false }) {
         if (!force) {
@@ -54843,7 +54843,7 @@ var require_ThreadChannel = __commonJS({
     "use strict";
     var { DiscordAPIError } = require_dist5();
     var { lazy } = require_dist();
-    var { RESTJSONErrorCodes, ChannelFlags, ChannelType: ChannelType2, PermissionFlagsBits: PermissionFlagsBits2, Routes: Routes2 } = require_v106();
+    var { RESTJSONErrorCodes, ChannelFlags, ChannelType: ChannelType3, PermissionFlagsBits: PermissionFlagsBits3, Routes: Routes2 } = require_v106();
     var { BaseChannel } = require_BaseChannel();
     var getThreadOnlyChannel = lazy(() => require_ThreadOnlyChannel());
     var TextBasedChannel = require_TextBasedChannel();
@@ -54877,7 +54877,7 @@ var require_ThreadChannel = __commonJS({
         }
         if ("thread_metadata" in data) {
           this.locked = data.thread_metadata.locked ?? false;
-          this.invitable = this.type === ChannelType2.PrivateThread ? data.thread_metadata.invitable ?? false : null;
+          this.invitable = this.type === ChannelType3.PrivateThread ? data.thread_metadata.invitable ?? false : null;
           this.archived = data.thread_metadata.archived;
           this.autoArchiveDuration = data.thread_metadata.auto_archive_duration;
           this.archiveTimestamp = Date.parse(data.thread_metadata.archive_timestamp);
@@ -54891,7 +54891,7 @@ var require_ThreadChannel = __commonJS({
           this.archiveTimestamp ??= null;
           this.invitable ??= null;
         }
-        this._createdTimestamp ??= this.type === ChannelType2.PrivateThread ? super.createdTimestamp : null;
+        this._createdTimestamp ??= this.type === ChannelType3.PrivateThread ? super.createdTimestamp : null;
         if ("last_message_id" in data) {
           this.lastMessageId = data.last_message_id;
         } else {
@@ -55010,8 +55010,8 @@ var require_ThreadChannel = __commonJS({
        * @param {FetchThreadOwnerOptions} [options] Options for fetching the owner
        * @returns {Promise<?ThreadMember>}
        */
-      async fetchOwner(options) {
-        const member = await this.members._fetchSingle({ ...options, member: this.ownerId }).catch((error) => {
+      async fetchOwner(options2) {
+        const member = await this.members._fetchSingle({ ...options2, member: this.ownerId }).catch((error) => {
           if (error instanceof DiscordAPIError && error.code === RESTJSONErrorCodes.UnknownMember) {
             return null;
           }
@@ -55027,9 +55027,9 @@ var require_ThreadChannel = __commonJS({
        * @param {BaseFetchOptions} [options] Additional options for this fetch
        * @returns {Promise<?Message<true>>}
        */
-      async fetchStarterMessage(options) {
+      async fetchStarterMessage(options2) {
         const channel = this.parent instanceof getThreadOnlyChannel() ? this : this.parent;
-        return channel?.messages.fetch({ message: this.id, ...options }) ?? null;
+        return channel?.messages.fetch({ message: this.id, ...options2 }) ?? null;
       }
       /**
        * The options used to edit a thread channel
@@ -55056,19 +55056,19 @@ var require_ThreadChannel = __commonJS({
        *   .then(editedThread => console.log(editedThread))
        *   .catch(console.error);
        */
-      async edit(options) {
+      async edit(options2) {
         const newData = await this.client.rest.patch(Routes2.channel(this.id), {
           body: {
-            name: options.name,
-            archived: options.archived,
-            auto_archive_duration: options.autoArchiveDuration,
-            rate_limit_per_user: options.rateLimitPerUser,
-            locked: options.locked,
-            invitable: this.type === ChannelType2.PrivateThread ? options.invitable : void 0,
-            applied_tags: options.appliedTags,
-            flags: "flags" in options ? ChannelFlagsBitField.resolve(options.flags) : void 0
+            name: options2.name,
+            archived: options2.archived,
+            auto_archive_duration: options2.autoArchiveDuration,
+            rate_limit_per_user: options2.rateLimitPerUser,
+            locked: options2.locked,
+            invitable: this.type === ChannelType3.PrivateThread ? options2.invitable : void 0,
+            applied_tags: options2.appliedTags,
+            flags: "flags" in options2 ? ChannelFlagsBitField.resolve(options2.flags) : void 0
           },
-          reason: options.reason
+          reason: options2.reason
         });
         return this.client.actions.ChannelUpdate.handle(newData).updated;
       }
@@ -55111,7 +55111,7 @@ var require_ThreadChannel = __commonJS({
        * @returns {Promise<ThreadChannel>}
        */
       async setInvitable(invitable = true, reason) {
-        if (this.type !== ChannelType2.PrivateThread) {
+        if (this.type !== ChannelType3.PrivateThread) {
           throw new DiscordjsRangeError2(ErrorCodes2.ThreadInvitableType, this.type);
         }
         return this.edit({ invitable, reason });
@@ -55194,7 +55194,7 @@ var require_ThreadChannel = __commonJS({
        * @readonly
        */
       get editable() {
-        return this.ownerId === this.client.user.id && (this.type !== ChannelType2.PrivateThread || this.joined) || this.manageable;
+        return this.ownerId === this.client.user.id && (this.type !== ChannelType3.PrivateThread || this.joined) || this.manageable;
       }
       /**
        * Whether the thread is joinable by the client user
@@ -55203,7 +55203,7 @@ var require_ThreadChannel = __commonJS({
        */
       get joinable() {
         return !this.archived && !this.joined && this.permissionsFor(this.client.user)?.has(
-          this.type === ChannelType2.PrivateThread ? PermissionFlagsBits2.ManageThreads : PermissionFlagsBits2.ViewChannel,
+          this.type === ChannelType3.PrivateThread ? PermissionFlagsBits3.ManageThreads : PermissionFlagsBits3.ViewChannel,
           false
         );
       }
@@ -55215,8 +55215,8 @@ var require_ThreadChannel = __commonJS({
       get manageable() {
         const permissions = this.permissionsFor(this.client.user);
         if (!permissions) return false;
-        if (permissions.has(PermissionFlagsBits2.Administrator, false)) return true;
-        return this.guild.members.me.communicationDisabledUntilTimestamp < Date.now() && permissions.has(PermissionFlagsBits2.ManageThreads, false);
+        if (permissions.has(PermissionFlagsBits3.Administrator, false)) return true;
+        return this.guild.members.me.communicationDisabledUntilTimestamp < Date.now() && permissions.has(PermissionFlagsBits3.ManageThreads, false);
       }
       /**
        * Whether the thread is viewable by the client user
@@ -55227,7 +55227,7 @@ var require_ThreadChannel = __commonJS({
         if (this.client.user.id === this.guild.ownerId) return true;
         const permissions = this.permissionsFor(this.client.user);
         if (!permissions) return false;
-        return permissions.has(PermissionFlagsBits2.ViewChannel, false);
+        return permissions.has(PermissionFlagsBits3.ViewChannel, false);
       }
       /**
        * Whether the client user can send messages in this thread
@@ -55237,8 +55237,8 @@ var require_ThreadChannel = __commonJS({
       get sendable() {
         const permissions = this.permissionsFor(this.client.user);
         if (!permissions) return false;
-        if (permissions.has(PermissionFlagsBits2.Administrator, false)) return true;
-        return !(this.archived && this.locked && !this.manageable) && (this.type !== ChannelType2.PrivateThread || this.joined || this.manageable) && permissions.has(PermissionFlagsBits2.SendMessagesInThreads, false) && this.guild.members.me.communicationDisabledUntilTimestamp < Date.now();
+        if (permissions.has(PermissionFlagsBits3.Administrator, false)) return true;
+        return !(this.archived && this.locked && !this.manageable) && (this.type !== ChannelType3.PrivateThread || this.joined || this.manageable) && permissions.has(PermissionFlagsBits3.SendMessagesInThreads, false) && this.guild.members.me.communicationDisabledUntilTimestamp < Date.now();
       }
       /**
        * Whether the thread is unarchivable by the client user
@@ -55359,12 +55359,12 @@ var require_ThreadManager = __commonJS({
        *   .then(channel => console.log(channel.name))
        *   .catch(console.error);
        */
-      fetch(options, { cache, force } = {}) {
-        if (!options) return this.fetchActive(cache);
-        const channel = this.client.channels.resolveId(options);
+      fetch(options2, { cache, force } = {}) {
+        if (!options2) return this.fetchActive(cache);
+        const channel = this.client.channels.resolveId(options2);
         if (channel) return this.client.channels.fetch(channel, { cache, force });
-        if (options.archived) {
-          return this.fetchArchived(options.archived, cache);
+        if (options2.archived) {
+          return this.fetchArchived(options2.archived, cache);
         }
         return this.fetchActive(cache);
       }
@@ -55461,7 +55461,7 @@ var require_ThreadManager = __commonJS({
 var require_GuildTextThreadManager = __commonJS({
   "node_modules/.pnpm/discord.js@14.27.0/node_modules/discord.js/src/managers/GuildTextThreadManager.js"(exports2, module2) {
     "use strict";
-    var { ChannelType: ChannelType2, Routes: Routes2 } = require_v106();
+    var { ChannelType: ChannelType3, Routes: Routes2 } = require_v106();
     var ThreadManager = require_ThreadManager();
     var { DiscordjsTypeError: DiscordjsTypeError2, ErrorCodes: ErrorCodes2 } = require_errors2();
     var GuildTextThreadManager = class extends ThreadManager {
@@ -55517,12 +55517,12 @@ var require_GuildTextThreadManager = __commonJS({
         reason,
         rateLimitPerUser
       } = {}) {
-        let resolvedType = this.channel.type === ChannelType2.GuildAnnouncement ? ChannelType2.AnnouncementThread : ChannelType2.PublicThread;
+        let resolvedType = this.channel.type === ChannelType3.GuildAnnouncement ? ChannelType3.AnnouncementThread : ChannelType3.PublicThread;
         let startMessageId;
         if (startMessage) {
           startMessageId = this.channel.messages.resolveId(startMessage);
           if (!startMessageId) throw new DiscordjsTypeError2(ErrorCodes2.InvalidType, "startMessage", "MessageResolvable");
-        } else if (this.channel.type !== ChannelType2.GuildAnnouncement) {
+        } else if (this.channel.type !== ChannelType3.GuildAnnouncement) {
           resolvedType = type ?? resolvedType;
         }
         const data = await this.client.rest.post(Routes2.threads(this.channel.id, startMessageId), {
@@ -55530,7 +55530,7 @@ var require_GuildTextThreadManager = __commonJS({
             name,
             auto_archive_duration: autoArchiveDuration,
             type: resolvedType,
-            invitable: resolvedType === ChannelType2.PrivateThread ? invitable : void 0,
+            invitable: resolvedType === ChannelType3.PrivateThread ? invitable : void 0,
             rate_limit_per_user: rateLimitPerUser
           },
           reason
@@ -55650,8 +55650,8 @@ var require_BaseGuildTextChannel = __commonJS({
        *   .then(invite => console.log(`Created an invite with a code of ${invite.code}`))
        *   .catch(console.error);
        */
-      createInvite(options) {
-        return this.guild.invites.create(this.id, options);
+      createInvite(options2) {
+        return this.guild.invites.create(this.id, options2);
       }
       /**
        * Fetches a collection of invites to this guild channel.
@@ -55732,7 +55732,7 @@ var require_BaseGuildVoiceChannel = __commonJS({
   "node_modules/.pnpm/discord.js@14.27.0/node_modules/discord.js/src/structures/BaseGuildVoiceChannel.js"(exports2, module2) {
     "use strict";
     var { Collection: Collection2 } = require_dist6();
-    var { PermissionFlagsBits: PermissionFlagsBits2 } = require_v106();
+    var { PermissionFlagsBits: PermissionFlagsBits3 } = require_v106();
     var GuildChannel = require_GuildChannel();
     var TextBasedChannel = require_TextBasedChannel();
     var GuildMessageManager = require_GuildMessageManager();
@@ -55803,8 +55803,8 @@ var require_BaseGuildVoiceChannel = __commonJS({
         if (!this.viewable) return false;
         const permissions = this.permissionsFor(this.client.user);
         if (!permissions) return false;
-        if (permissions.has(PermissionFlagsBits2.Administrator, false)) return true;
-        return this.guild.members.me.communicationDisabledUntilTimestamp < Date.now() && permissions.has(PermissionFlagsBits2.Connect, false);
+        if (permissions.has(PermissionFlagsBits3.Administrator, false)) return true;
+        return this.guild.members.me.communicationDisabledUntilTimestamp < Date.now() && permissions.has(PermissionFlagsBits3.Connect, false);
       }
       /**
        * Creates an invite to this guild channel.
@@ -55816,8 +55816,8 @@ var require_BaseGuildVoiceChannel = __commonJS({
        *   .then(invite => console.log(`Created an invite with a code of ${invite.code}`))
        *   .catch(console.error);
        */
-      createInvite(options) {
-        return this.guild.invites.create(this.id, options);
+      createInvite(options2) {
+        return this.guild.invites.create(this.id, options2);
       }
       /**
        * Fetches a collection of invites to this guild channel.
@@ -55936,8 +55936,8 @@ var require_StageChannel = __commonJS({
        * @param {StageInstanceCreateOptions} options The options to create the stage instance
        * @returns {Promise<StageInstance>}
        */
-      createStageInstance(options) {
-        return this.guild.stageInstances.create(this.id, options);
+      createStageInstance(options2) {
+        return this.guild.stageInstances.create(this.id, options2);
       }
       /**
        * Sets a new topic for the guild channel.
@@ -55988,7 +55988,7 @@ var require_TextChannel = __commonJS({
 var require_VoiceChannel = __commonJS({
   "node_modules/.pnpm/discord.js@14.27.0/node_modules/discord.js/src/structures/VoiceChannel.js"(exports2, module2) {
     "use strict";
-    var { PermissionFlagsBits: PermissionFlagsBits2, Routes: Routes2 } = require_v106();
+    var { PermissionFlagsBits: PermissionFlagsBits3, Routes: Routes2 } = require_v106();
     var BaseGuildVoiceChannel = require_BaseGuildVoiceChannel();
     var VoiceChannel = class extends BaseGuildVoiceChannel {
       /**
@@ -55998,7 +55998,7 @@ var require_VoiceChannel = __commonJS({
        */
       get joinable() {
         if (!super.joinable) return false;
-        if (this.full && !this.permissionsFor(this.client.user).has(PermissionFlagsBits2.MoveMembers, false)) return false;
+        if (this.full && !this.permissionsFor(this.client.user).has(PermissionFlagsBits3.MoveMembers, false)) return false;
         return true;
       }
       /**
@@ -56009,8 +56009,8 @@ var require_VoiceChannel = __commonJS({
       get speakable() {
         const permissions = this.permissionsFor(this.client.user);
         if (!permissions) return false;
-        if (permissions.has(PermissionFlagsBits2.Administrator, false)) return true;
-        return this.guild.members.me.communicationDisabledUntilTimestamp < Date.now() && permissions.has(PermissionFlagsBits2.Speak, false);
+        if (permissions.has(PermissionFlagsBits3.Administrator, false)) return true;
+        return this.guild.members.me.communicationDisabledUntilTimestamp < Date.now() && permissions.has(PermissionFlagsBits3.Speak, false);
       }
       /**
        * @typedef {Object} SendSoundboardSoundOptions
@@ -56108,19 +56108,19 @@ var require_PartialGroupDMChannel = __commonJS({
        * @param {ImageURLOptions} [options={}] Options for the image URL
        * @returns {?string}
        */
-      iconURL(options = {}) {
-        return this.icon && this.client.rest.cdn.channelIcon(this.id, this.icon, options);
+      iconURL(options2 = {}) {
+        return this.icon && this.client.rest.cdn.channelIcon(this.id, this.icon, options2);
       }
       /**
        * Fetches the owner of this Group DM Channel.
        * @param {BaseFetchOptions} [options] The options for fetching the user
        * @returns {Promise<User>}
        */
-      async fetchOwner(options) {
+      async fetchOwner(options2) {
         if (!this.ownerId) {
           throw new DiscordjsError2(ErrorCodes2.FetchOwnerId, "group DM");
         }
-        return this.client.users.fetch(this.ownerId, options);
+        return this.client.users.fetch(this.ownerId, options2);
       }
       async delete() {
         throw new DiscordjsError2(ErrorCodes2.DeleteGroupDMChannel);
@@ -56194,7 +56194,7 @@ var require_Channels = __commonJS({
   "node_modules/.pnpm/discord.js@14.27.0/node_modules/discord.js/src/util/Channels.js"(exports2, module2) {
     "use strict";
     var { lazy } = require_dist();
-    var { ChannelType: ChannelType2 } = require_v106();
+    var { ChannelType: ChannelType3 } = require_v106();
     var getCategoryChannel = lazy(() => require_CategoryChannel());
     var getDMChannel = lazy(() => require_DMChannel());
     var getNewsChannel = lazy(() => require_NewsChannel());
@@ -56209,49 +56209,49 @@ var require_Channels = __commonJS({
     function createChannel(client2, data, guild, { allowUnknownGuild } = {}) {
       let channel;
       if (!data.guild_id && !guild) {
-        if (data.recipients && data.type !== ChannelType2.GroupDM || data.type === ChannelType2.DM) {
+        if (data.recipients && data.type !== ChannelType3.GroupDM || data.type === ChannelType3.DM) {
           channel = new (getDMChannel())(client2, data);
-        } else if (data.type === ChannelType2.GroupDM) {
+        } else if (data.type === ChannelType3.GroupDM) {
           channel = new (getPartialGroupDMChannel())(client2, data);
         }
       } else {
         guild ??= client2.guilds.cache.get(data.guild_id);
         if (guild || allowUnknownGuild) {
           switch (data.type) {
-            case ChannelType2.GuildText: {
+            case ChannelType3.GuildText: {
               channel = new (getTextChannel())(guild, data, client2);
               break;
             }
-            case ChannelType2.GuildVoice: {
+            case ChannelType3.GuildVoice: {
               channel = new (getVoiceChannel())(guild, data, client2);
               break;
             }
-            case ChannelType2.GuildCategory: {
+            case ChannelType3.GuildCategory: {
               channel = new (getCategoryChannel())(guild, data, client2);
               break;
             }
-            case ChannelType2.GuildAnnouncement: {
+            case ChannelType3.GuildAnnouncement: {
               channel = new (getNewsChannel())(guild, data, client2);
               break;
             }
-            case ChannelType2.GuildStageVoice: {
+            case ChannelType3.GuildStageVoice: {
               channel = new (getStageChannel())(guild, data, client2);
               break;
             }
-            case ChannelType2.AnnouncementThread:
-            case ChannelType2.PublicThread:
-            case ChannelType2.PrivateThread: {
+            case ChannelType3.AnnouncementThread:
+            case ChannelType3.PublicThread:
+            case ChannelType3.PrivateThread: {
               channel = new (getThreadChannel())(guild, data, client2);
               if (!allowUnknownGuild) channel.parent?.threads.cache.set(channel.id, channel);
               break;
             }
-            case ChannelType2.GuildDirectory:
+            case ChannelType3.GuildDirectory:
               channel = new (getDirectoryChannel())(guild, data, client2);
               break;
-            case ChannelType2.GuildForum:
+            case ChannelType3.GuildForum:
               channel = new (getForumChannel())(guild, data, client2);
               break;
-            case ChannelType2.GuildMedia:
+            case ChannelType3.GuildMedia:
               channel = new (getMediaChannel())(guild, data, client2);
               break;
           }
@@ -56451,8 +56451,8 @@ var require_AutoModerationRule = __commonJS({
        * @param {AutoModerationRuleEditOptions} options Options for editing this auto moderation rule
        * @returns {Promise<AutoModerationRule>}
        */
-      edit(options) {
-        return this.guild.autoModerationRules.edit(this.id, options);
+      edit(options2) {
+        return this.guild.autoModerationRules.edit(this.id, options2);
       }
       /**
        * Deletes this auto moderation rule.
@@ -56641,7 +56641,7 @@ var require_GuildOnboardingPrompt = __commonJS({
         this.guildId = guildId;
         this.id = data.id;
         this.options = data.options.reduce(
-          (options, option) => options.set(option.id, new GuildOnboardingPromptOption(client2, option, guildId)),
+          (options2, option) => options2.set(option.id, new GuildOnboardingPromptOption(client2, option, guildId)),
           new Collection2()
         );
         this.title = data.title;
@@ -56846,8 +56846,8 @@ var require_StageInstance = __commonJS({
        *  .then(stageInstance => console.log(stageInstance))
        *  .catch(console.error)
        */
-      edit(options) {
-        return this.guild.stageInstances.edit(this.channelId, options);
+      edit(options2) {
+        return this.guild.stageInstances.edit(this.channelId, options2);
       }
       /**
        * Deletes this stage instance.
@@ -57931,11 +57931,11 @@ var require_CommandInteractionOptionResolver = __commonJS({
     var { ApplicationCommandOptionType } = require_v106();
     var { DiscordjsTypeError: DiscordjsTypeError2, ErrorCodes: ErrorCodes2 } = require_errors2();
     var CommandInteractionOptionResolver = class {
-      constructor(client2, options, resolved) {
+      constructor(client2, options2, resolved) {
         Object.defineProperty(this, "client", { value: client2 });
         this._group = null;
         this._subcommand = null;
-        this._hoistedOptions = options;
+        this._hoistedOptions = options2;
         if (this._hoistedOptions[0]?.type === ApplicationCommandOptionType.SubcommandGroup) {
           this._group = this._hoistedOptions[0].name;
           this._hoistedOptions = this._hoistedOptions[0].options ?? [];
@@ -57944,7 +57944,7 @@ var require_CommandInteractionOptionResolver = __commonJS({
           this._subcommand = this._hoistedOptions[0].name;
           this._hoistedOptions = this._hoistedOptions[0].options ?? [];
         }
-        Object.defineProperty(this, "data", { value: Object.freeze([...options]) });
+        Object.defineProperty(this, "data", { value: Object.freeze([...options2]) });
         Object.defineProperty(this, "resolved", { value: resolved ? Object.freeze(resolved) : null });
       }
       /**
@@ -58213,13 +58213,13 @@ var require_AutocompleteInteraction = __commonJS({
        *  .then(() => console.log('Successfully responded to the autocomplete interaction'))
        *  .catch(console.error);
        */
-      async respond(options) {
+      async respond(options2) {
         if (this.responded) throw new DiscordjsError2(ErrorCodes2.InteractionAlreadyReplied);
         await this.client.rest.post(Routes2.interactionCallback(this.id, this.token), {
           body: {
             type: InteractionResponseType.ApplicationCommandAutocompleteResult,
             data: {
-              choices: options.map(({ nameLocalizations, ...option }) => ({
+              choices: options2.map(({ nameLocalizations, ...option }) => ({
                 ...this.client.options.jsonTransformer(option),
                 name_localizations: nameLocalizations
               }))
@@ -58344,8 +58344,8 @@ var require_InteractionResponse = __commonJS({
        * @param {AwaitMessageComponentOptions} [options={}] Options to pass to the internal collector
        * @returns {Promise<MessageComponentInteraction>}
        */
-      awaitMessageComponent(options = {}) {
-        const _options = { ...options, max: 1 };
+      awaitMessageComponent(options2 = {}) {
+        const _options = { ...options2, max: 1 };
         return new Promise((resolve, reject) => {
           const collector = this.createMessageComponentCollector(_options);
           collector.once("end", (interactions, reason) => {
@@ -58360,9 +58360,9 @@ var require_InteractionResponse = __commonJS({
        * @param {MessageComponentCollectorOptions} [options={}] Options to send to the collector
        * @returns {InteractionCollector}
        */
-      createMessageComponentCollector(options = {}) {
+      createMessageComponentCollector(options2 = {}) {
         return new InteractionCollector(this.client, {
-          ...options,
+          ...options2,
           interactionResponse: this,
           interactionType: InteractionType.MessageComponent
         });
@@ -58386,8 +58386,8 @@ var require_InteractionResponse = __commonJS({
        * @param {string|MessagePayload|WebhookMessageEditOptions} options The new options for the response.
        * @returns {Promise<Message>}
        */
-      edit(options) {
-        return this.interaction.editReply(options);
+      edit(options2) {
+        return this.interaction.editReply(options2);
       }
     };
     var InteractionCollector = require_InteractionCollector();
@@ -58476,9 +58476,9 @@ var require_InteractionResponses = __commonJS({
        *   .then(console.log)
        *   .catch(console.error);
        */
-      async deferReply(options = {}) {
+      async deferReply(options2 = {}) {
         if (this.deferred || this.replied) throw new DiscordjsError2(ErrorCodes2.InteractionAlreadyReplied);
-        if ("ephemeral" in options) {
+        if ("ephemeral" in options2) {
           if (!deprecationEmittedForEphemeralOption) {
             process2.emitWarning(
               `Supplying "ephemeral" for interaction response options is deprecated. Utilize flags instead.`
@@ -58486,7 +58486,7 @@ var require_InteractionResponses = __commonJS({
             deprecationEmittedForEphemeralOption = true;
           }
         }
-        if ("fetchReply" in options) {
+        if ("fetchReply" in options2) {
           if (!deprecationEmittedForFetchReplyOption) {
             process2.emitWarning(
               // eslint-disable-next-line max-len
@@ -58495,8 +58495,8 @@ var require_InteractionResponses = __commonJS({
             deprecationEmittedForFetchReplyOption = true;
           }
         }
-        const flags = new MessageFlagsBitField(options.flags);
-        if (options.ephemeral) {
+        const flags = new MessageFlagsBitField(options2.flags);
+        if (options2.ephemeral) {
           flags.add(MessageFlags2.Ephemeral);
         }
         const response = await this.client.rest.post(Routes2.interactionCallback(this.id, this.token), {
@@ -58507,11 +58507,11 @@ var require_InteractionResponses = __commonJS({
             }
           },
           auth: false,
-          query: makeURLSearchParams2({ with_response: options.withResponse ?? false })
+          query: makeURLSearchParams2({ with_response: options2.withResponse ?? false })
         });
         this.deferred = true;
         this.ephemeral = flags.has(MessageFlags2.Ephemeral);
-        return options.withResponse ? new InteractionCallbackResponse(this.client, response) : options.fetchReply ? this.fetchReply() : new InteractionResponse(this);
+        return options2.withResponse ? new InteractionCallbackResponse(this.client, response) : options2.fetchReply ? this.fetchReply() : new InteractionResponse(this);
       }
       /**
        * Creates a reply to this interaction.
@@ -58531,10 +58531,10 @@ var require_InteractionResponses = __commonJS({
        *   .then(() => console.log('Reply sent.'))
        *   .catch(console.error);
        */
-      async reply(options) {
+      async reply(options2) {
         if (this.deferred || this.replied) throw new DiscordjsError2(ErrorCodes2.InteractionAlreadyReplied);
-        if (typeof options !== "string") {
-          if ("ephemeral" in options) {
+        if (typeof options2 !== "string") {
+          if ("ephemeral" in options2) {
             if (!deprecationEmittedForEphemeralOption) {
               process2.emitWarning(
                 `Supplying "ephemeral" for interaction response options is deprecated. Utilize flags instead.`
@@ -58542,7 +58542,7 @@ var require_InteractionResponses = __commonJS({
               deprecationEmittedForEphemeralOption = true;
             }
           }
-          if ("fetchReply" in options) {
+          if ("fetchReply" in options2) {
             if (!deprecationEmittedForFetchReplyOption) {
               process2.emitWarning(
                 // eslint-disable-next-line max-len
@@ -58553,8 +58553,8 @@ var require_InteractionResponses = __commonJS({
           }
         }
         let messagePayload;
-        if (options instanceof MessagePayload) messagePayload = options;
-        else messagePayload = MessagePayload.create(this, options);
+        if (options2 instanceof MessagePayload) messagePayload = options2;
+        else messagePayload = MessagePayload.create(this, options2);
         const { body: data, files } = await messagePayload.resolveBody().resolveFiles();
         const response = await this.client.rest.post(Routes2.interactionCallback(this.id, this.token), {
           body: {
@@ -58563,11 +58563,11 @@ var require_InteractionResponses = __commonJS({
           },
           files,
           auth: false,
-          query: makeURLSearchParams2({ with_response: options.withResponse ?? false })
+          query: makeURLSearchParams2({ with_response: options2.withResponse ?? false })
         });
         this.ephemeral = Boolean(data.flags & MessageFlags2.Ephemeral);
         this.replied = true;
-        return options.withResponse ? new InteractionCallbackResponse(this.client, response) : options.fetchReply ? this.fetchReply() : new InteractionResponse(this);
+        return options2.withResponse ? new InteractionCallbackResponse(this.client, response) : options2.fetchReply ? this.fetchReply() : new InteractionResponse(this);
       }
       /**
        * Fetches a reply to this interaction.
@@ -58599,9 +58599,9 @@ var require_InteractionResponses = __commonJS({
        *   .then(console.log)
        *   .catch(console.error);
        */
-      async editReply(options) {
+      async editReply(options2) {
         if (!this.deferred && !this.replied) throw new DiscordjsError2(ErrorCodes2.InteractionNotReplied);
-        const msg = await this.webhook.editMessage(options.message ?? "@original", options);
+        const msg = await this.webhook.editMessage(options2.message ?? "@original", options2);
         this.replied = true;
         return msg;
       }
@@ -58625,9 +58625,9 @@ var require_InteractionResponses = __commonJS({
        * @param {string|MessagePayload|InteractionReplyOptions} options The options for the reply
        * @returns {Promise<Message>}
        */
-      async followUp(options) {
+      async followUp(options2) {
         if (!this.deferred && !this.replied) throw new DiscordjsError2(ErrorCodes2.InteractionNotReplied);
-        const msg = await this.webhook.send(options);
+        const msg = await this.webhook.send(options2);
         this.replied = true;
         return msg;
       }
@@ -58641,9 +58641,9 @@ var require_InteractionResponses = __commonJS({
        *   .then(console.log)
        *   .catch(console.error);
        */
-      async deferUpdate(options = {}) {
+      async deferUpdate(options2 = {}) {
         if (this.deferred || this.replied) throw new DiscordjsError2(ErrorCodes2.InteractionAlreadyReplied);
-        if ("fetchReply" in options) {
+        if ("fetchReply" in options2) {
           if (!deprecationEmittedForFetchReplyOption) {
             process2.emitWarning(
               // eslint-disable-next-line max-len
@@ -58657,10 +58657,10 @@ var require_InteractionResponses = __commonJS({
             type: InteractionResponseType.DeferredMessageUpdate
           },
           auth: false,
-          query: makeURLSearchParams2({ with_response: options.withResponse ?? false })
+          query: makeURLSearchParams2({ with_response: options2.withResponse ?? false })
         });
         this.deferred = true;
-        return options.withResponse ? new InteractionCallbackResponse(this.client, response) : options.fetchReply ? this.fetchReply() : new InteractionResponse(this, this.message?.interactionMetadata?.id);
+        return options2.withResponse ? new InteractionCallbackResponse(this.client, response) : options2.fetchReply ? this.fetchReply() : new InteractionResponse(this, this.message?.interactionMetadata?.id);
       }
       /**
        * Updates the original message of the component on which the interaction was received on.
@@ -58675,9 +58675,9 @@ var require_InteractionResponses = __commonJS({
        *   .then(console.log)
        *   .catch(console.error);
        */
-      async update(options = {}) {
+      async update(options2 = {}) {
         if (this.deferred || this.replied) throw new DiscordjsError2(ErrorCodes2.InteractionAlreadyReplied);
-        if (typeof options !== "string" && "fetchReply" in options) {
+        if (typeof options2 !== "string" && "fetchReply" in options2) {
           if (!deprecationEmittedForFetchReplyOption) {
             process2.emitWarning(
               // eslint-disable-next-line max-len
@@ -58687,8 +58687,8 @@ var require_InteractionResponses = __commonJS({
           }
         }
         let messagePayload;
-        if (options instanceof MessagePayload) messagePayload = options;
-        else messagePayload = MessagePayload.create(this, options);
+        if (options2 instanceof MessagePayload) messagePayload = options2;
+        else messagePayload = MessagePayload.create(this, options2);
         const { body: data, files } = await messagePayload.resolveBody().resolveFiles();
         const response = await this.client.rest.post(Routes2.interactionCallback(this.id, this.token), {
           body: {
@@ -58697,10 +58697,10 @@ var require_InteractionResponses = __commonJS({
           },
           files,
           auth: false,
-          query: makeURLSearchParams2({ with_response: options.withResponse ?? false })
+          query: makeURLSearchParams2({ with_response: options2.withResponse ?? false })
         });
         this.replied = true;
-        return options.withResponse ? new InteractionCallbackResponse(this.client, response) : options.fetchReply ? this.fetchReply() : new InteractionResponse(this, this.message.interactionMetadata?.id);
+        return options2.withResponse ? new InteractionCallbackResponse(this.client, response) : options2.fetchReply ? this.fetchReply() : new InteractionResponse(this, this.message.interactionMetadata?.id);
       }
       /**
        * Launches this application's activity, if enabled
@@ -58725,7 +58725,7 @@ var require_InteractionResponses = __commonJS({
        * @param {ShowModalOptions} [options={}] The options for sending this interaction response
        * @returns {Promise<InteractionCallbackResponse|undefined>}
        */
-      async showModal(modal, options = {}) {
+      async showModal(modal, options2 = {}) {
         if (this.deferred || this.replied) throw new DiscordjsError2(ErrorCodes2.InteractionAlreadyReplied);
         const response = await this.client.rest.post(Routes2.interactionCallback(this.id, this.token), {
           body: {
@@ -58733,10 +58733,10 @@ var require_InteractionResponses = __commonJS({
             data: isJSONEncodable(modal) ? modal.toJSON() : this.client.options.jsonTransformer(modal)
           },
           auth: false,
-          query: makeURLSearchParams2({ with_response: options.withResponse ?? false })
+          query: makeURLSearchParams2({ with_response: options2.withResponse ?? false })
         });
         this.replied = true;
-        return options.withResponse ? new InteractionCallbackResponse(this.client, response) : void 0;
+        return options2.withResponse ? new InteractionCallbackResponse(this.client, response) : void 0;
       }
       /**
        * Responds to the interaction with an upgrade button.
@@ -58772,9 +58772,9 @@ var require_InteractionResponses = __commonJS({
        *   .then(interaction => console.log(`${interaction.customId} was submitted!`))
        *   .catch(console.error);
        */
-      async awaitModalSubmit(options) {
-        if (typeof options.time !== "number") throw new DiscordjsError2(ErrorCodes2.InvalidType, "time", "number");
-        const _options = { ...options, max: 1, interactionType: InteractionType.ModalSubmit };
+      async awaitModalSubmit(options2) {
+        if (typeof options2.time !== "number") throw new DiscordjsError2(ErrorCodes2.InvalidType, "time", "number");
+        const _options = { ...options2, max: 1, interactionType: InteractionType.ModalSubmit };
         return new Promise((resolve, reject) => {
           const collector = new InteractionCollector(this.client, _options);
           collector.once("end", (interactions, reason) => {
@@ -59914,14 +59914,14 @@ var require_MessagePollVoteAdd = __commonJS({
         if (!message) return false;
         const poll = this.getPoll(data, message, channel);
         if (!poll) return false;
-        const answer = poll.answers.get(data.answer_id);
-        if (!answer) return false;
+        const answer2 = poll.answers.get(data.answer_id);
+        if (!answer2) return false;
         const user = this.getUser(data);
         if (user) {
-          answer.voters._add(user);
+          answer2.voters._add(user);
         }
-        answer.voteCount++;
-        this.client.emit(Events2.MessagePollVoteAdd, answer, data.user_id);
+        answer2.voteCount++;
+        this.client.emit(Events2.MessagePollVoteAdd, answer2, data.user_id);
         return { poll };
       }
     };
@@ -59943,13 +59943,13 @@ var require_MessagePollVoteRemove = __commonJS({
         if (!message) return false;
         const poll = this.getPoll(data, message, channel);
         if (!poll) return false;
-        const answer = poll.answers.get(data.answer_id);
-        if (!answer) return false;
-        answer.voters.cache.delete(data.user_id);
-        if (answer.voteCount > 0) {
-          answer.voteCount--;
+        const answer2 = poll.answers.get(data.answer_id);
+        if (!answer2) return false;
+        answer2.voters.cache.delete(data.user_id);
+        if (answer2.voteCount > 0) {
+          answer2.voteCount--;
         }
-        this.client.emit(Events2.MessagePollVoteRemove, answer, data.user_id);
+        this.client.emit(Events2.MessagePollVoteRemove, answer2, data.user_id);
         return { poll };
       }
     };
@@ -60828,8 +60828,8 @@ var require_permessage_deflate2 = __commonJS({
        * @param {Object} [options.zlibInflateOptions] Options to pass to zlib on
        *     inflate
        */
-      constructor(options) {
-        this._options = options || {};
+      constructor(options2) {
+        this._options = options2 || {};
         this._threshold = this._options.threshold !== void 0 ? this._options.threshold : 1024;
         this._maxPayload = this._options.maxPayload | 0;
         this._isServer = !!this._options.isServer;
@@ -61414,16 +61414,16 @@ var require_receiver2 = __commonJS({
        * @param {Boolean} [options.skipUTF8Validation=false] Specifies whether or
        *     not to skip UTF-8 validation for text and close messages
        */
-      constructor(options = {}) {
+      constructor(options2 = {}) {
         super();
-        this._allowSynchronousEvents = options.allowSynchronousEvents !== void 0 ? options.allowSynchronousEvents : true;
-        this._binaryType = options.binaryType || BINARY_TYPES[0];
-        this._extensions = options.extensions || {};
-        this._isServer = !!options.isServer;
-        this._maxBufferedChunks = options.maxBufferedChunks | 0;
-        this._maxFragments = options.maxFragments | 0;
-        this._maxPayload = options.maxPayload | 0;
-        this._skipUTF8Validation = !!options.skipUTF8Validation;
+        this._allowSynchronousEvents = options2.allowSynchronousEvents !== void 0 ? options2.allowSynchronousEvents : true;
+        this._binaryType = options2.binaryType || BINARY_TYPES[0];
+        this._extensions = options2.extensions || {};
+        this._isServer = !!options2.isServer;
+        this._maxBufferedChunks = options2.maxBufferedChunks | 0;
+        this._maxFragments = options2.maxFragments | 0;
+        this._maxPayload = options2.maxPayload | 0;
+        this._skipUTF8Validation = !!options2.skipUTF8Validation;
         this[kWebSocket] = void 0;
         this._bufferedBytes = 0;
         this._buffers = [];
@@ -62060,15 +62060,15 @@ var require_sender2 = __commonJS({
        * @return {(Buffer|String)[]} The framed data
        * @public
        */
-      static frame(data, options) {
+      static frame(data, options2) {
         let mask;
         let merge = false;
         let offset = 2;
         let skipMasking = false;
-        if (options.mask) {
-          mask = options.maskBuffer || maskBuffer;
-          if (options.generateMask) {
-            options.generateMask(mask);
+        if (options2.mask) {
+          mask = options2.maskBuffer || maskBuffer;
+          if (options2.generateMask) {
+            options2.generateMask(mask);
           } else {
             if (randomPoolPointer === RANDOM_POOL_SIZE) {
               if (randomPool === void 0) {
@@ -62087,15 +62087,15 @@ var require_sender2 = __commonJS({
         }
         let dataLength;
         if (typeof data === "string") {
-          if ((!options.mask || skipMasking) && options[kByteLength] !== void 0) {
-            dataLength = options[kByteLength];
+          if ((!options2.mask || skipMasking) && options2[kByteLength] !== void 0) {
+            dataLength = options2[kByteLength];
           } else {
             data = Buffer.from(data);
             dataLength = data.length;
           }
         } else {
           dataLength = data.length;
-          merge = options.mask && options.readOnly && !skipMasking;
+          merge = options2.mask && options2.readOnly && !skipMasking;
         }
         let payloadLength = dataLength;
         if (dataLength >= 65536) {
@@ -62106,8 +62106,8 @@ var require_sender2 = __commonJS({
           payloadLength = 126;
         }
         const target = Buffer.allocUnsafe(merge ? dataLength + offset : offset);
-        target[0] = options.fin ? options.opcode | 128 : options.opcode;
-        if (options.rsv1) target[0] |= 64;
+        target[0] = options2.fin ? options2.opcode | 128 : options2.opcode;
+        if (options2.rsv1) target[0] |= 64;
         target[1] = payloadLength;
         if (payloadLength === 126) {
           target.writeUInt16BE(dataLength, 2);
@@ -62115,7 +62115,7 @@ var require_sender2 = __commonJS({
           target[2] = target[3] = 0;
           target.writeUIntBE(dataLength, 4, 6);
         }
-        if (!options.mask) return [target, data];
+        if (!options2.mask) return [target, data];
         target[1] |= 128;
         target[offset - 4] = mask[0];
         target[offset - 3] = mask[1];
@@ -62162,7 +62162,7 @@ var require_sender2 = __commonJS({
             throw new TypeError("Second argument must be a string or a Uint8Array");
           }
         }
-        const options = {
+        const options2 = {
           [kByteLength]: buf.length,
           fin: true,
           generateMask: this._generateMask,
@@ -62173,9 +62173,9 @@ var require_sender2 = __commonJS({
           rsv1: false
         };
         if (this._state !== DEFAULT) {
-          this.enqueue([this.dispatch, buf, false, options, cb]);
+          this.enqueue([this.dispatch, buf, false, options2, cb]);
         } else {
-          this.sendFrame(_Sender.frame(buf, options), cb);
+          this.sendFrame(_Sender.frame(buf, options2), cb);
         }
       }
       /**
@@ -62203,7 +62203,7 @@ var require_sender2 = __commonJS({
         if (byteLength > 125) {
           throw new RangeError("The data size must not be greater than 125 bytes");
         }
-        const options = {
+        const options2 = {
           [kByteLength]: byteLength,
           fin: true,
           generateMask: this._generateMask,
@@ -62215,14 +62215,14 @@ var require_sender2 = __commonJS({
         };
         if (isBlob(data)) {
           if (this._state !== DEFAULT) {
-            this.enqueue([this.getBlobData, data, false, options, cb]);
+            this.enqueue([this.getBlobData, data, false, options2, cb]);
           } else {
-            this.getBlobData(data, false, options, cb);
+            this.getBlobData(data, false, options2, cb);
           }
         } else if (this._state !== DEFAULT) {
-          this.enqueue([this.dispatch, data, false, options, cb]);
+          this.enqueue([this.dispatch, data, false, options2, cb]);
         } else {
-          this.sendFrame(_Sender.frame(data, options), cb);
+          this.sendFrame(_Sender.frame(data, options2), cb);
         }
       }
       /**
@@ -62250,7 +62250,7 @@ var require_sender2 = __commonJS({
         if (byteLength > 125) {
           throw new RangeError("The data size must not be greater than 125 bytes");
         }
-        const options = {
+        const options2 = {
           [kByteLength]: byteLength,
           fin: true,
           generateMask: this._generateMask,
@@ -62262,14 +62262,14 @@ var require_sender2 = __commonJS({
         };
         if (isBlob(data)) {
           if (this._state !== DEFAULT) {
-            this.enqueue([this.getBlobData, data, false, options, cb]);
+            this.enqueue([this.getBlobData, data, false, options2, cb]);
           } else {
-            this.getBlobData(data, false, options, cb);
+            this.getBlobData(data, false, options2, cb);
           }
         } else if (this._state !== DEFAULT) {
-          this.enqueue([this.dispatch, data, false, options, cb]);
+          this.enqueue([this.dispatch, data, false, options2, cb]);
         } else {
-          this.sendFrame(_Sender.frame(data, options), cb);
+          this.sendFrame(_Sender.frame(data, options2), cb);
         }
       }
       /**
@@ -62288,10 +62288,10 @@ var require_sender2 = __commonJS({
        * @param {Function} [cb] Callback
        * @public
        */
-      send(data, options, cb) {
+      send(data, options2, cb) {
         const perMessageDeflate = this._extensions[PerMessageDeflate.extensionName];
-        let opcode = options.binary ? 2 : 1;
-        let rsv1 = options.compress;
+        let opcode = options2.binary ? 2 : 1;
+        let rsv1 = options2.compress;
         let byteLength;
         let readOnly;
         if (typeof data === "string") {
@@ -62315,12 +62315,12 @@ var require_sender2 = __commonJS({
           rsv1 = false;
           opcode = 0;
         }
-        if (options.fin) this._firstFragment = true;
+        if (options2.fin) this._firstFragment = true;
         const opts = {
           [kByteLength]: byteLength,
-          fin: options.fin,
+          fin: options2.fin,
           generateMask: this._generateMask,
-          mask: options.mask,
+          mask: options2.mask,
           maskBuffer: this._maskBuffer,
           opcode,
           readOnly,
@@ -62361,8 +62361,8 @@ var require_sender2 = __commonJS({
        * @param {Function} [cb] Callback
        * @private
        */
-      getBlobData(blob, compress, options, cb) {
-        this._bufferedBytes += options[kByteLength];
+      getBlobData(blob, compress, options2, cb) {
+        this._bufferedBytes += options2[kByteLength];
         this._state = GET_BLOB_DATA;
         blob.arrayBuffer().then((arrayBuffer) => {
           if (this._socket.destroyed) {
@@ -62372,14 +62372,14 @@ var require_sender2 = __commonJS({
             process.nextTick(callCallbacks, this, err, cb);
             return;
           }
-          this._bufferedBytes -= options[kByteLength];
+          this._bufferedBytes -= options2[kByteLength];
           const data = toBuffer(arrayBuffer);
           if (!compress) {
             this._state = DEFAULT;
-            this.sendFrame(_Sender.frame(data, options), cb);
+            this.sendFrame(_Sender.frame(data, options2), cb);
             this.dequeue();
           } else {
-            this.dispatch(data, compress, options, cb);
+            this.dispatch(data, compress, options2, cb);
           }
         }).catch((err) => {
           process.nextTick(onError, this, err, cb);
@@ -62408,15 +62408,15 @@ var require_sender2 = __commonJS({
        * @param {Function} [cb] Callback
        * @private
        */
-      dispatch(data, compress, options, cb) {
+      dispatch(data, compress, options2, cb) {
         if (!compress) {
-          this.sendFrame(_Sender.frame(data, options), cb);
+          this.sendFrame(_Sender.frame(data, options2), cb);
           return;
         }
         const perMessageDeflate = this._extensions[PerMessageDeflate.extensionName];
-        this._bufferedBytes += options[kByteLength];
+        this._bufferedBytes += options2[kByteLength];
         this._state = DEFLATING;
-        perMessageDeflate.compress(data, options.fin, (_, buf) => {
+        perMessageDeflate.compress(data, options2.fin, (_, buf) => {
           if (this._socket.destroyed) {
             const err = new Error(
               "The socket was closed while data was being compressed"
@@ -62424,10 +62424,10 @@ var require_sender2 = __commonJS({
             callCallbacks(this, err, cb);
             return;
           }
-          this._bufferedBytes -= options[kByteLength];
+          this._bufferedBytes -= options2[kByteLength];
           this._state = DEFAULT;
-          options.readOnly = false;
-          this.sendFrame(_Sender.frame(buf, options), cb);
+          options2.readOnly = false;
+          this.sendFrame(_Sender.frame(buf, options2), cb);
           this.dequeue();
         });
       }
@@ -62540,11 +62540,11 @@ var require_event_target = __commonJS({
        * @param {Boolean} [options.wasClean=false] Indicates whether or not the
        *     connection was cleanly closed
        */
-      constructor(type, options = {}) {
+      constructor(type, options2 = {}) {
         super(type);
-        this[kCode] = options.code === void 0 ? 0 : options.code;
-        this[kReason] = options.reason === void 0 ? "" : options.reason;
-        this[kWasClean] = options.wasClean === void 0 ? false : options.wasClean;
+        this[kCode] = options2.code === void 0 ? 0 : options2.code;
+        this[kReason] = options2.reason === void 0 ? "" : options2.reason;
+        this[kWasClean] = options2.wasClean === void 0 ? false : options2.wasClean;
       }
       /**
        * @type {Number}
@@ -62578,10 +62578,10 @@ var require_event_target = __commonJS({
        * @param {*} [options.error=null] The error that generated this event
        * @param {String} [options.message=''] The error message
        */
-      constructor(type, options = {}) {
+      constructor(type, options2 = {}) {
         super(type);
-        this[kError] = options.error === void 0 ? null : options.error;
-        this[kMessage] = options.message === void 0 ? "" : options.message;
+        this[kError] = options2.error === void 0 ? null : options2.error;
+        this[kMessage] = options2.message === void 0 ? "" : options2.message;
       }
       /**
        * @type {*}
@@ -62607,9 +62607,9 @@ var require_event_target = __commonJS({
        *     attributes via object members of the same name
        * @param {*} [options.data=null] The message content
        */
-      constructor(type, options = {}) {
+      constructor(type, options2 = {}) {
         super(type);
-        this[kData] = options.data === void 0 ? null : options.data;
+        this[kData] = options2.data === void 0 ? null : options2.data;
       }
       /**
        * @type {*}
@@ -62632,9 +62632,9 @@ var require_event_target = __commonJS({
        *     the listener would be automatically removed when invoked.
        * @public
        */
-      addEventListener(type, handler, options = {}) {
+      addEventListener(type, handler, options2 = {}) {
         for (const listener of this.listeners(type)) {
-          if (!options[kForOnEventAttribute] && listener[kListener] === handler && !listener[kForOnEventAttribute]) {
+          if (!options2[kForOnEventAttribute] && listener[kListener] === handler && !listener[kForOnEventAttribute]) {
             return;
           }
         }
@@ -62675,9 +62675,9 @@ var require_event_target = __commonJS({
         } else {
           return;
         }
-        wrapper[kForOnEventAttribute] = !!options[kForOnEventAttribute];
+        wrapper[kForOnEventAttribute] = !!options2[kForOnEventAttribute];
         wrapper[kListener] = handler;
-        if (options.once) {
+        if (options2.once) {
           this.once(type, wrapper);
         } else {
           this.on(type, wrapper);
@@ -62733,7 +62733,7 @@ var require_extension = __commonJS({
       let inQuotes = false;
       let extensionName;
       let paramName;
-      let start = -1;
+      let start2 = -1;
       let code = -1;
       let end = -1;
       let i = 0;
@@ -62741,45 +62741,45 @@ var require_extension = __commonJS({
         code = header.charCodeAt(i);
         if (extensionName === void 0) {
           if (end === -1 && tokenChars[code] === 1) {
-            if (start === -1) start = i;
+            if (start2 === -1) start2 = i;
           } else if (i !== 0 && (code === 32 || code === 9)) {
-            if (end === -1 && start !== -1) end = i;
+            if (end === -1 && start2 !== -1) end = i;
           } else if (code === 59 || code === 44) {
-            if (start === -1) {
+            if (start2 === -1) {
               throw new SyntaxError(`Unexpected character at index ${i}`);
             }
             if (end === -1) end = i;
-            const name = header.slice(start, end);
+            const name = header.slice(start2, end);
             if (code === 44) {
               push(offers, name, params);
               params = /* @__PURE__ */ Object.create(null);
             } else {
               extensionName = name;
             }
-            start = end = -1;
+            start2 = end = -1;
           } else {
             throw new SyntaxError(`Unexpected character at index ${i}`);
           }
         } else if (paramName === void 0) {
           if (end === -1 && tokenChars[code] === 1) {
-            if (start === -1) start = i;
+            if (start2 === -1) start2 = i;
           } else if (code === 32 || code === 9) {
-            if (end === -1 && start !== -1) end = i;
+            if (end === -1 && start2 !== -1) end = i;
           } else if (code === 59 || code === 44) {
-            if (start === -1) {
+            if (start2 === -1) {
               throw new SyntaxError(`Unexpected character at index ${i}`);
             }
             if (end === -1) end = i;
-            push(params, header.slice(start, end), true);
+            push(params, header.slice(start2, end), true);
             if (code === 44) {
               push(offers, extensionName, params);
               params = /* @__PURE__ */ Object.create(null);
               extensionName = void 0;
             }
-            start = end = -1;
-          } else if (code === 61 && start !== -1 && end === -1) {
-            paramName = header.slice(start, i);
-            start = end = -1;
+            start2 = end = -1;
+          } else if (code === 61 && start2 !== -1 && end === -1) {
+            paramName = header.slice(start2, i);
+            start2 = end = -1;
           } else {
             throw new SyntaxError(`Unexpected character at index ${i}`);
           }
@@ -62788,13 +62788,13 @@ var require_extension = __commonJS({
             if (tokenChars[code] !== 1) {
               throw new SyntaxError(`Unexpected character at index ${i}`);
             }
-            if (start === -1) start = i;
+            if (start2 === -1) start2 = i;
             else if (!mustUnescape) mustUnescape = true;
             isEscaping = false;
           } else if (inQuotes) {
             if (tokenChars[code] === 1) {
-              if (start === -1) start = i;
-            } else if (code === 34 && start !== -1) {
+              if (start2 === -1) start2 = i;
+            } else if (code === 34 && start2 !== -1) {
               inQuotes = false;
               end = i;
             } else if (code === 92) {
@@ -62805,15 +62805,15 @@ var require_extension = __commonJS({
           } else if (code === 34 && header.charCodeAt(i - 1) === 61) {
             inQuotes = true;
           } else if (end === -1 && tokenChars[code] === 1) {
-            if (start === -1) start = i;
-          } else if (start !== -1 && (code === 32 || code === 9)) {
+            if (start2 === -1) start2 = i;
+          } else if (start2 !== -1 && (code === 32 || code === 9)) {
             if (end === -1) end = i;
           } else if (code === 59 || code === 44) {
-            if (start === -1) {
+            if (start2 === -1) {
               throw new SyntaxError(`Unexpected character at index ${i}`);
             }
             if (end === -1) end = i;
-            let value = header.slice(start, end);
+            let value = header.slice(start2, end);
             if (mustUnescape) {
               value = value.replace(/\\/g, "");
               mustUnescape = false;
@@ -62825,17 +62825,17 @@ var require_extension = __commonJS({
               extensionName = void 0;
             }
             paramName = void 0;
-            start = end = -1;
+            start2 = end = -1;
           } else {
             throw new SyntaxError(`Unexpected character at index ${i}`);
           }
         }
       }
-      if (start === -1 || inQuotes || code === 32 || code === 9) {
+      if (start2 === -1 || inQuotes || code === 32 || code === 9) {
         throw new SyntaxError("Unexpected end of input");
       }
       if (end === -1) end = i;
-      const token = header.slice(start, end);
+      const token = header.slice(start2, end);
       if (extensionName === void 0) {
         push(offers, token, params);
       } else {
@@ -62874,7 +62874,7 @@ var require_websocket2 = __commonJS({
   "node_modules/.pnpm/ws@8.21.3/node_modules/ws/lib/websocket.js"(exports2, module2) {
     "use strict";
     var EventEmitter = require("events");
-    var https = require("https");
+    var https2 = require("https");
     var http = require("http");
     var net = require("net");
     var tls = require("tls");
@@ -62913,7 +62913,7 @@ var require_websocket2 = __commonJS({
        * @param {(String|String[])} [protocols] The subprotocols
        * @param {Object} [options] Connection options
        */
-      constructor(address, protocols, options) {
+      constructor(address, protocols, options2) {
         super();
         this._binaryType = BINARY_TYPES[0];
         this._closeCode = 1006;
@@ -62937,16 +62937,16 @@ var require_websocket2 = __commonJS({
             protocols = [];
           } else if (!Array.isArray(protocols)) {
             if (typeof protocols === "object" && protocols !== null) {
-              options = protocols;
+              options2 = protocols;
               protocols = [];
             } else {
               protocols = [protocols];
             }
           }
-          initAsClient(this, address, protocols, options);
+          initAsClient(this, address, protocols, options2);
         } else {
-          this._autoPong = options.autoPong;
-          this._closeTimeout = options.closeTimeout;
+          this._autoPong = options2.autoPong;
+          this._closeTimeout = options2.closeTimeout;
           this._isServer = true;
         }
       }
@@ -63049,18 +63049,18 @@ var require_websocket2 = __commonJS({
        *     not to skip UTF-8 validation for text and close messages
        * @private
        */
-      setSocket(socket, head, options) {
+      setSocket(socket, head, options2) {
         const receiver = new Receiver({
-          allowSynchronousEvents: options.allowSynchronousEvents,
+          allowSynchronousEvents: options2.allowSynchronousEvents,
           binaryType: this.binaryType,
           extensions: this._extensions,
           isServer: this._isServer,
-          maxBufferedChunks: options.maxBufferedChunks,
-          maxFragments: options.maxFragments,
-          maxPayload: options.maxPayload,
-          skipUTF8Validation: options.skipUTF8Validation
+          maxBufferedChunks: options2.maxBufferedChunks,
+          maxFragments: options2.maxFragments,
+          maxPayload: options2.maxPayload,
+          skipUTF8Validation: options2.skipUTF8Validation
         });
-        const sender = new Sender(socket, this._extensions, options.generateMask);
+        const sender = new Sender(socket, this._extensions, options2.generateMask);
         this._receiver = receiver;
         this._sender = sender;
         this._socket = socket;
@@ -63238,13 +63238,13 @@ var require_websocket2 = __commonJS({
        * @param {Function} [cb] Callback which is executed when data is written out
        * @public
        */
-      send(data, options, cb) {
+      send(data, options2, cb) {
         if (this.readyState === _WebSocket.CONNECTING) {
           throw new Error("WebSocket is not open: readyState 0 (CONNECTING)");
         }
-        if (typeof options === "function") {
-          cb = options;
-          options = {};
+        if (typeof options2 === "function") {
+          cb = options2;
+          options2 = {};
         }
         if (typeof data === "number") data = data.toString();
         if (this.readyState !== _WebSocket.OPEN) {
@@ -63256,7 +63256,7 @@ var require_websocket2 = __commonJS({
           mask: !this._isServer,
           compress: true,
           fin: true,
-          ...options
+          ...options2
         };
         if (!this._extensions[PerMessageDeflate.extensionName]) {
           opts.compress = false;
@@ -63350,7 +63350,7 @@ var require_websocket2 = __commonJS({
     WebSocket.prototype.addEventListener = addEventListener;
     WebSocket.prototype.removeEventListener = removeEventListener;
     module2.exports = WebSocket;
-    function initAsClient(websocket, address, protocols, options) {
+    function initAsClient(websocket, address, protocols, options2) {
       const opts = {
         allowSynchronousEvents: true,
         autoPong: true,
@@ -63363,7 +63363,7 @@ var require_websocket2 = __commonJS({
         perMessageDeflate: true,
         followRedirects: false,
         maxRedirects: 10,
-        ...options,
+        ...options2,
         socketPath: void 0,
         hostname: void 0,
         protocol: void 0,
@@ -63417,7 +63417,7 @@ var require_websocket2 = __commonJS({
       }
       const defaultPort = isSecure ? 443 : 80;
       const key = randomBytes(16).toString("base64");
-      const request = isSecure ? https.request : http.request;
+      const request = isSecure ? https2.request : http.request;
       const protocolSet = /* @__PURE__ */ new Set();
       let perMessageDeflate;
       opts.createConnection = opts.createConnection || (isSecure ? tlsConnect : netConnect);
@@ -63475,11 +63475,11 @@ var require_websocket2 = __commonJS({
           websocket._originalIpc = isIpcUrl;
           websocket._originalSecure = isSecure;
           websocket._originalHostOrSocketPath = isIpcUrl ? opts.socketPath : parsedUrl.host;
-          const headers = options && options.headers;
-          options = { ...options, headers: {} };
+          const headers = options2 && options2.headers;
+          options2 = { ...options2, headers: {} };
           if (headers) {
             for (const [key2, value] of Object.entries(headers)) {
-              options.headers[key2.toLowerCase()] = value;
+              options2.headers[key2.toLowerCase()] = value;
             }
           }
         } else if (websocket.listenerCount("redirect") === 0) {
@@ -63491,8 +63491,8 @@ var require_websocket2 = __commonJS({
             opts.auth = void 0;
           }
         }
-        if (opts.auth && !options.headers.authorization) {
-          options.headers.authorization = "Basic " + Buffer.from(opts.auth).toString("base64");
+        if (opts.auth && !options2.headers.authorization) {
+          options2.headers.authorization = "Basic " + Buffer.from(opts.auth).toString("base64");
         }
         req = websocket._req = request(opts);
         if (websocket._redirects) {
@@ -63528,7 +63528,7 @@ var require_websocket2 = __commonJS({
             emitErrorAndClose(websocket, err);
             return;
           }
-          initAsClient(websocket, addr, protocols, options);
+          initAsClient(websocket, addr, protocols, options2);
         } else if (!websocket.emit("unexpected-response", req, res)) {
           abortHandshake(
             websocket,
@@ -63618,16 +63618,16 @@ var require_websocket2 = __commonJS({
       websocket.emit("error", err);
       websocket.emitClose();
     }
-    function netConnect(options) {
-      options.path = options.socketPath;
-      return net.connect(options);
+    function netConnect(options2) {
+      options2.path = options2.socketPath;
+      return net.connect(options2);
     }
-    function tlsConnect(options) {
-      options.path = void 0;
-      if (!options.servername && options.servername !== "") {
-        options.servername = net.isIP(options.host) ? "" : options.host;
+    function tlsConnect(options2) {
+      options2.path = void 0;
+      if (!options2.servername && options2.servername !== "") {
+        options2.servername = net.isIP(options2.host) ? "" : options2.host;
       }
-      return tls.connect(options);
+      return tls.connect(options2);
     }
     function abortHandshake(websocket, stream, message) {
       websocket._readyState = WebSocket.CLOSING;
@@ -63786,10 +63786,10 @@ var require_stream = __commonJS({
         this.emit("error", err);
       }
     }
-    function createWebSocketStream(ws, options) {
+    function createWebSocketStream(ws, options2) {
       let terminateOnDestroy = true;
       const duplex = new Duplex({
-        ...options,
+        ...options2,
         autoDestroy: false,
         emitClose: false,
         objectMode: false,
@@ -63804,7 +63804,7 @@ var require_stream = __commonJS({
         terminateOnDestroy = false;
         duplex.destroy(err);
       });
-      ws.once("close", function close() {
+      ws.once("close", function close2() {
         if (duplex.destroyed) return;
         duplex.push(null);
       });
@@ -63819,7 +63819,7 @@ var require_stream = __commonJS({
           called = true;
           callback(err2);
         });
-        ws.once("close", function close() {
+        ws.once("close", function close2() {
           if (!called) callback(err);
           process.nextTick(emitClose, duplex);
         });
@@ -63870,34 +63870,34 @@ var require_subprotocol = __commonJS({
     var { tokenChars } = require_validation();
     function parse(header) {
       const protocols = /* @__PURE__ */ new Set();
-      let start = -1;
+      let start2 = -1;
       let end = -1;
       let i = 0;
       for (i; i < header.length; i++) {
         const code = header.charCodeAt(i);
         if (end === -1 && tokenChars[code] === 1) {
-          if (start === -1) start = i;
+          if (start2 === -1) start2 = i;
         } else if (i !== 0 && (code === 32 || code === 9)) {
-          if (end === -1 && start !== -1) end = i;
+          if (end === -1 && start2 !== -1) end = i;
         } else if (code === 44) {
-          if (start === -1) {
+          if (start2 === -1) {
             throw new SyntaxError(`Unexpected character at index ${i}`);
           }
           if (end === -1) end = i;
-          const protocol2 = header.slice(start, end);
+          const protocol2 = header.slice(start2, end);
           if (protocols.has(protocol2)) {
             throw new SyntaxError(`The "${protocol2}" subprotocol is duplicated`);
           }
           protocols.add(protocol2);
-          start = end = -1;
+          start2 = end = -1;
         } else {
           throw new SyntaxError(`Unexpected character at index ${i}`);
         }
       }
-      if (start === -1 || end !== -1) {
+      if (start2 === -1 || end !== -1) {
         throw new SyntaxError("Unexpected end of input");
       }
-      const protocol = header.slice(start, i);
+      const protocol = header.slice(start2, i);
       if (protocols.has(protocol)) {
         throw new SyntaxError(`The "${protocol}" subprotocol is duplicated`);
       }
@@ -63964,9 +63964,9 @@ var require_websocket_server = __commonJS({
        *     class to use. It must be the `WebSocket` class or class that extends it
        * @param {Function} [callback] A listener for the `listening` event
        */
-      constructor(options, callback) {
+      constructor(options2, callback) {
         super();
-        options = {
+        options2 = {
           allowSynchronousEvents: true,
           autoPong: true,
           maxBufferedChunks: 256 * 1024,
@@ -63986,14 +63986,14 @@ var require_websocket_server = __commonJS({
           path: null,
           port: null,
           WebSocket,
-          ...options
+          ...options2
         };
-        if (options.port == null && !options.server && !options.noServer || options.port != null && (options.server || options.noServer) || options.server && options.noServer) {
+        if (options2.port == null && !options2.server && !options2.noServer || options2.port != null && (options2.server || options2.noServer) || options2.server && options2.noServer) {
           throw new TypeError(
             'One and only one of the "port", "server", or "noServer" options must be specified'
           );
         }
-        if (options.port != null) {
+        if (options2.port != null) {
           this._server = http.createServer((req, res) => {
             const body = http.STATUS_CODES[426];
             res.writeHead(426, {
@@ -64003,13 +64003,13 @@ var require_websocket_server = __commonJS({
             res.end(body);
           });
           this._server.listen(
-            options.port,
-            options.host,
-            options.backlog,
+            options2.port,
+            options2.host,
+            options2.backlog,
             callback
           );
-        } else if (options.server) {
-          this._server = options.server;
+        } else if (options2.server) {
+          this._server = options2.server;
         }
         if (this._server) {
           const emitConnection = this.emit.bind(this, "connection");
@@ -64021,12 +64021,12 @@ var require_websocket_server = __commonJS({
             }
           });
         }
-        if (options.perMessageDeflate === true) options.perMessageDeflate = {};
-        if (options.clientTracking) {
+        if (options2.perMessageDeflate === true) options2.perMessageDeflate = {};
+        if (options2.clientTracking) {
           this.clients = /* @__PURE__ */ new Set();
           this._shouldEmitClose = false;
         }
-        this.options = options;
+        this.options = options2;
         this._state = RUNNING;
       }
       /**
@@ -64412,9 +64412,9 @@ var require_dist9 = __commonJS({
     }
     __name(managerToFetchingStrategyOptions, "managerToFetchingStrategyOptions");
     var SimpleContextFetchingStrategy = class _SimpleContextFetchingStrategy {
-      constructor(manager, options) {
+      constructor(manager, options2) {
         this.manager = manager;
-        this.options = options;
+        this.options = options2;
       }
       static {
         __name(this, "SimpleContextFetchingStrategy");
@@ -64482,9 +64482,9 @@ var require_dist9 = __commonJS({
       fetchStatusPromises = new import_collection.Collection();
       waitForIdentifyControllers = new import_collection.Collection();
       throttler;
-      constructor(manager, options) {
+      constructor(manager, options2) {
         this.manager = manager;
-        this.options = options;
+        this.options = options2;
       }
       /**
        * {@inheritDoc IShardingStrategy.spawn}
@@ -64523,13 +64523,13 @@ var require_dist9 = __commonJS({
       /**
        * {@inheritDoc IShardingStrategy.destroy}
        */
-      async destroy(options = {}) {
+      async destroy(options2 = {}) {
         const promises = [];
         for (const [shardId, worker] of this.#workerByShardId.entries()) {
           const payload = {
             op: 1,
             shardId,
-            options
+            options: options2
           };
           promises.push(
             // eslint-disable-next-line no-promise-executor-return, promise/prefer-await-to-then
@@ -64701,8 +64701,8 @@ var require_dist9 = __commonJS({
       }
     };
     var WorkerContextFetchingStrategy = class {
-      constructor(options) {
-        this.options = options;
+      constructor(options2) {
+        this.options = options2;
         if (import_node_worker_threads2.isMainThread) {
           throw new Error("Cannot instantiate WorkerContextFetchingStrategy on the main thread");
         }
@@ -65017,19 +65017,19 @@ var require_dist9 = __commonJS({
           await this.identify();
         }
       }
-      async destroy(options = {}) {
+      async destroy(options2 = {}) {
         if (this.#status === 0) {
           this.debug(["Tried to destroy a shard that was idle"]);
           return;
         }
-        if (!options.code) {
-          options.code = options.recover === 1 ? 4200 : 1e3;
+        if (!options2.code) {
+          options2.code = options2.recover === 1 ? 4200 : 1e3;
         }
         this.debug([
           "Destroying shard",
-          `Reason: ${options.reason ?? "none"}`,
-          `Code: ${options.code}`,
-          `Recover: ${options.recover === void 0 ? "none" : WebSocketShardDestroyRecovery[options.recover]}`
+          `Reason: ${options2.reason ?? "none"}`,
+          `Code: ${options2.code}`,
+          `Recover: ${options2.recover === void 0 ? "none" : WebSocketShardDestroyRecovery[options2.recover]}`
         ]);
         this.isAck = true;
         if (this.heartbeatInterval) {
@@ -65045,7 +65045,7 @@ var require_dist9 = __commonJS({
         }
         this.timeoutAbortControllers.clear();
         this.failedToConnectDueToNetworkError = false;
-        if (options.recover !== 1) {
+        if (options2.recover !== 1) {
           await this.strategy.updateSessionInfo(this.id, null);
         }
         if (this.connection) {
@@ -65063,16 +65063,16 @@ var require_dist9 = __commonJS({
               outerResolve = resolve2;
             });
             this.connection.onclose = outerResolve;
-            this.connection.close(options.code, options.reason);
+            this.connection.close(options2.code, options2.reason);
             await promise;
-            this.emit("closed", { code: options.code });
+            this.emit("closed", { code: options2.code });
           }
           this.connection.onerror = null;
         } else {
           this.debug(["Destroying a shard that has no connection; please open an issue on GitHub"]);
         }
         this.#status = 0;
-        if (options.recover !== void 0) {
+        if (options2.recover !== void 0) {
           await (0, import_promises2.setTimeout)(500);
           return this.internalConnect();
         }
@@ -65570,10 +65570,10 @@ var require_dist9 = __commonJS({
       /**
        * {@inheritDoc IShardingStrategy.destroy}
        */
-      async destroy(options) {
+      async destroy(options2) {
         const promises = [];
         for (const shard of this.shards.values()) {
-          promises.push(shard.destroy(options));
+          promises.push(shard.destroy(options2));
         }
         await Promise.all(promises);
         this.shards.clear();
@@ -65627,12 +65627,12 @@ var require_dist9 = __commonJS({
       /**
        * Helper method to destroy a shard
        */
-      async destroy(shardId, options) {
+      async destroy(shardId, options2) {
         const shard = this.shards.get(shardId);
         if (!shard) {
           throw new RangeError(`Shard ${shardId} does not exist`);
         }
-        await shard.destroy(options);
+        await shard.destroy(options2);
       }
       /**
        * Helper method to attach event listeners to the parentPort
@@ -65693,10 +65693,10 @@ var require_dist9 = __commonJS({
       /**
        * Bootstraps the worker thread with the provided options
        */
-      async bootstrap(options = {}) {
+      async bootstrap(options2 = {}) {
         for (const shardId of this.data.shardIds) {
           const shard = new WebSocketShard(new WorkerContextFetchingStrategy(this.data), shardId);
-          for (const event of options.forwardEvents ?? Object.values(WebSocketShardEvents)) {
+          for (const event of options2.forwardEvents ?? Object.values(WebSocketShardEvents)) {
             shard.on(event, (data) => {
               const payload = {
                 op: 2,
@@ -65707,7 +65707,7 @@ var require_dist9 = __commonJS({
               import_node_worker_threads3.parentPort.postMessage(payload);
             });
           }
-          await options.shardCallback?.(shard);
+          await options2.shardCallback?.(shard);
           this.shards.set(shardId, shard);
         }
         this.setupThreadEvents();
@@ -65745,9 +65745,9 @@ var require_dist9 = __commonJS({
        * @defaultValue `SimpleShardingStrategy`
        */
       strategy;
-      constructor(options) {
+      constructor(options2) {
         super();
-        this.options = { ...DefaultWebSocketManagerOptions, ...options };
+        this.options = { ...DefaultWebSocketManagerOptions, ...options2 };
         this.strategy = this.options.buildStrategy(this);
       }
       /**
@@ -65801,8 +65801,8 @@ var require_dist9 = __commonJS({
           if (Array.isArray(this.options.shardIds)) {
             shardIds = this.options.shardIds;
           } else {
-            const { start, end } = this.options.shardIds;
-            shardIds = [...(0, import_util32.range)({ start, end: end + 1 })];
+            const { start: start2, end } = this.options.shardIds;
+            shardIds = [...(0, import_util32.range)({ start: start2, end: end + 1 })];
           }
         } else {
           const data = await this.fetchGatewayInformation();
@@ -65823,8 +65823,8 @@ var require_dist9 = __commonJS({
         }
         await this.strategy.connect();
       }
-      destroy(options) {
-        return this.strategy.destroy(options);
+      destroy(options2) {
+        return this.strategy.destroy(options2);
       }
       send(shardId, payload) {
         return this.strategy.send(shardId, payload);
@@ -66749,9 +66749,9 @@ var require_ClientUser = __commonJS({
        * // Set the client user's activity
        * client.user.setActivity('discord.js', { type: ActivityType.Watching });
        */
-      setActivity(name, options = {}) {
-        if (!name) return this.setPresence({ activities: [], shardId: options.shardId });
-        const activity = Object.assign({}, options, typeof name === "object" ? name : { name });
+      setActivity(name, options2 = {}) {
+        if (!name) return this.setPresence({ activities: [], shardId: options2.shardId });
+        const activity = Object.assign({}, options2, typeof name === "object" ? name : { name });
         return this.setPresence({ activities: [activity], shardId: activity.shardId });
       }
       /**
@@ -67757,16 +67757,16 @@ var require_ShardClientUtil = __commonJS({
        *   .catch(console.error);
        * @see {@link ShardingManager#broadcastEval}
        */
-      broadcastEval(script2, options = {}) {
+      broadcastEval(script2, options2 = {}) {
         return new Promise((resolve, reject) => {
           const parent = this.parentPort ?? process2;
           if (typeof script2 !== "function") {
             reject(new DiscordjsTypeError2(ErrorCodes2.ShardingInvalidEvalBroadcast));
             return;
           }
-          script2 = `(${script2})(this, ${JSON.stringify(options.context)})`;
+          script2 = `(${script2})(this, ${JSON.stringify(options2.context)})`;
           const listener = (message) => {
-            if (message?._sEval !== script2 || message._sEvalShard !== options.shard) return;
+            if (message?._sEval !== script2 || message._sEvalShard !== options2.shard) return;
             parent.removeListener("message", listener);
             this.decrementMaxListeners(parent);
             if (!message._error) resolve(message._result);
@@ -67774,7 +67774,7 @@ var require_ShardClientUtil = __commonJS({
           };
           this.incrementMaxListeners(parent);
           parent.on("message", listener);
-          this.send({ _sEval: script2, _sEvalShard: options.shard }).catch((err) => {
+          this.send({ _sEval: script2, _sEvalShard: options2.shard }).catch((err) => {
             parent.removeListener("message", listener);
             this.decrementMaxListeners(parent);
             reject(err);
@@ -68070,24 +68070,24 @@ var require_GuildPreview = __commonJS({
        * @param {ImageURLOptions} [options={}] Options for the image URL
        * @returns {?string}
        */
-      splashURL(options = {}) {
-        return this.splash && this.client.rest.cdn.splash(this.id, this.splash, options);
+      splashURL(options2 = {}) {
+        return this.splash && this.client.rest.cdn.splash(this.id, this.splash, options2);
       }
       /**
        * The URL to this guild's discovery splash.
        * @param {ImageURLOptions} [options={}] Options for the image URL
        * @returns {?string}
        */
-      discoverySplashURL(options = {}) {
-        return this.discoverySplash && this.client.rest.cdn.discoverySplash(this.id, this.discoverySplash, options);
+      discoverySplashURL(options2 = {}) {
+        return this.discoverySplash && this.client.rest.cdn.discoverySplash(this.id, this.discoverySplash, options2);
       }
       /**
        * The URL to this guild's icon.
        * @param {ImageURLOptions} [options={}] Options for the image URL
        * @returns {?string}
        */
-      iconURL(options = {}) {
-        return this.icon && this.client.rest.cdn.icon(this.id, this.icon, options);
+      iconURL(options2 = {}) {
+        return this.icon && this.client.rest.cdn.icon(this.id, this.icon, options2);
       }
       /**
        * Fetches this guild.
@@ -68340,14 +68340,14 @@ var require_AutoModerationRuleManager = __commonJS({
        *   .then(console.log)
        *   .catch(console.error)
        */
-      fetch(options) {
-        if (!options) return this._fetchMany();
-        const { autoModerationRule, cache, force } = options;
-        const resolvedAutoModerationRule = this.resolveId(autoModerationRule ?? options);
+      fetch(options2) {
+        if (!options2) return this._fetchMany();
+        const { autoModerationRule, cache, force } = options2;
+        const resolvedAutoModerationRule = this.resolveId(autoModerationRule ?? options2);
         if (resolvedAutoModerationRule) {
           return this._fetchSingle({ autoModerationRule: resolvedAutoModerationRule, cache, force });
         }
-        return this._fetchMany(options);
+        return this._fetchMany(options2);
       }
       async _fetchSingle({ autoModerationRule, cache, force = false }) {
         if (!force) {
@@ -68357,10 +68357,10 @@ var require_AutoModerationRuleManager = __commonJS({
         const data = await this.client.rest.get(Routes2.guildAutoModerationRule(this.guild.id, autoModerationRule));
         return this._add(data, cache);
       }
-      async _fetchMany(options = {}) {
+      async _fetchMany(options2 = {}) {
         const data = await this.client.rest.get(Routes2.guildAutoModerationRules(this.guild.id));
         return data.reduce(
-          (col, autoModerationRule) => col.set(autoModerationRule.id, this._add(autoModerationRule, options.cache)),
+          (col, autoModerationRule) => col.set(autoModerationRule.id, this._add(autoModerationRule, options2.cache)),
           new Collection2()
         );
       }
@@ -68479,15 +68479,15 @@ var require_GuildBanManager = __commonJS({
        *   .then(console.log)
        *   .catch(console.error);
        */
-      async fetch(options) {
-        if (!options) return this._fetchMany();
-        const { user, cache, force, limit, before, after } = options;
-        const resolvedUser = this.client.users.resolveId(user ?? options);
+      async fetch(options2) {
+        if (!options2) return this._fetchMany();
+        const { user, cache, force, limit, before, after } = options2;
+        const resolvedUser = this.client.users.resolveId(user ?? options2);
         if (resolvedUser) return this._fetchSingle({ user: resolvedUser, cache, force });
         if (!before && !after && !limit && cache === void 0) {
           throw new DiscordjsError2(ErrorCodes2.FetchBanResolveId);
         }
-        return this._fetchMany(options);
+        return this._fetchMany(options2);
       }
       async _fetchSingle({ user, cache, force = false }) {
         if (!force) {
@@ -68525,11 +68525,11 @@ var require_GuildBanManager = __commonJS({
        *   .then(banInfo => console.log(`Banned ${banInfo.user?.tag ?? banInfo.tag ?? banInfo}`))
        *   .catch(console.error);
        */
-      async create(user, options = {}) {
-        if (typeof options !== "object") throw new DiscordjsTypeError2(ErrorCodes2.InvalidType, "options", "object", true);
+      async create(user, options2 = {}) {
+        if (typeof options2 !== "object") throw new DiscordjsTypeError2(ErrorCodes2.InvalidType, "options", "object", true);
         const id = this.client.users.resolveId(user);
         if (!id) throw new DiscordjsError2(ErrorCodes2.BanResolveId, true);
-        if (options.deleteMessageDays !== void 0 && !deprecationEmittedForDeleteMessageDays) {
+        if (options2.deleteMessageDays !== void 0 && !deprecationEmittedForDeleteMessageDays) {
           process2.emitWarning(
             // eslint-disable-next-line max-len
             "The deleteMessageDays option for GuildBanManager#create() is deprecated. Use the deleteMessageSeconds option instead.",
@@ -68539,9 +68539,9 @@ var require_GuildBanManager = __commonJS({
         }
         await this.client.rest.put(Routes2.guildBan(this.guild.id, id), {
           body: {
-            delete_message_seconds: options.deleteMessageSeconds ?? (options.deleteMessageDays ? options.deleteMessageDays * 24 * 60 * 60 : void 0)
+            delete_message_seconds: options2.deleteMessageSeconds ?? (options2.deleteMessageDays ? options2.deleteMessageDays * 24 * 60 * 60 : void 0)
           },
-          reason: options.reason
+          reason: options2.reason
         });
         if (user instanceof GuildMember) return user;
         const _user = this.client.users.cache.get(id);
@@ -68594,16 +68594,16 @@ var require_GuildBanManager = __commonJS({
        *   })
        *   .catch(console.error);
        */
-      async bulkCreate(users, options = {}) {
+      async bulkCreate(users, options2 = {}) {
         if (!users || !(Array.isArray(users) || users instanceof Collection2)) {
           throw new DiscordjsTypeError2(ErrorCodes2.InvalidType, "users", "Array or Collection of UserResolvable", true);
         }
-        if (typeof options !== "object") throw new DiscordjsTypeError2(ErrorCodes2.InvalidType, "options", "object", true);
+        if (typeof options2 !== "object") throw new DiscordjsTypeError2(ErrorCodes2.InvalidType, "options", "object", true);
         const userIds = users.map((user) => this.client.users.resolveId(user));
         if (userIds.length === 0) throw new DiscordjsError2(ErrorCodes2.BulkBanUsersOptionEmpty);
         const result = await this.client.rest.post(Routes2.guildBulkBan(this.guild.id), {
-          body: { delete_message_seconds: options.deleteMessageSeconds, user_ids: userIds },
-          reason: options.reason
+          body: { delete_message_seconds: options2.deleteMessageSeconds, user_ids: userIds },
+          reason: options2.reason
         });
         return { bannedUsers: result.banned_users, failedUsers: result.failed_users };
       }
@@ -68618,7 +68618,7 @@ var require_GuildChannelManager = __commonJS({
     "use strict";
     var process2 = require("node:process");
     var { Collection: Collection2 } = require_dist6();
-    var { ChannelType: ChannelType2, Routes: Routes2 } = require_v106();
+    var { ChannelType: ChannelType3, Routes: Routes2 } = require_v106();
     var CachedManager = require_CachedManager();
     var GuildTextThreadManager = require_GuildTextThreadManager();
     var { DiscordjsError: DiscordjsError2, DiscordjsTypeError: DiscordjsTypeError2, ErrorCodes: ErrorCodes2 } = require_errors2();
@@ -68868,20 +68868,20 @@ var require_GuildChannelManager = __commonJS({
        *   .then(console.log)
        *   .catch(console.error);
        */
-      async edit(channel, options) {
+      async edit(channel, options2) {
         const resolvedChannel = this.resolve(channel);
         if (!resolvedChannel) throw new DiscordjsTypeError2(ErrorCodes2.InvalidType, "channel", "GuildChannelResolvable");
-        const parentId = options.parent && this.client.channels.resolveId(options.parent);
-        if (options.position !== void 0) {
-          await this.setPosition(resolvedChannel, options.position, { position: options.position, reason: options.reason });
+        const parentId = options2.parent && this.client.channels.resolveId(options2.parent);
+        if (options2.position !== void 0) {
+          await this.setPosition(resolvedChannel, options2.position, { position: options2.position, reason: options2.reason });
         }
-        let permission_overwrites = options.permissionOverwrites?.map(
+        let permission_overwrites = options2.permissionOverwrites?.map(
           (overwrite) => PermissionOverwrites.resolve(overwrite, this.guild)
         );
-        if (options.lockPermissions) {
+        if (options2.lockPermissions) {
           if (parentId) {
             const newParent = this.cache.get(parentId);
-            if (newParent?.type === ChannelType2.GuildCategory) {
+            if (newParent?.type === ChannelType3.GuildCategory) {
               permission_overwrites = newParent.permissionOverwrites.cache.map(
                 (overwrite) => PermissionOverwrites.resolve(overwrite, this.guild)
               );
@@ -68894,27 +68894,27 @@ var require_GuildChannelManager = __commonJS({
         }
         const newData = await this.client.rest.patch(Routes2.channel(resolvedChannel.id), {
           body: {
-            name: options.name,
-            type: options.type,
-            topic: options.topic,
-            nsfw: options.nsfw,
-            bitrate: options.bitrate,
-            user_limit: options.userLimit,
-            rtc_region: options.rtcRegion,
-            video_quality_mode: options.videoQualityMode,
+            name: options2.name,
+            type: options2.type,
+            topic: options2.topic,
+            nsfw: options2.nsfw,
+            bitrate: options2.bitrate,
+            user_limit: options2.userLimit,
+            rtc_region: options2.rtcRegion,
+            video_quality_mode: options2.videoQualityMode,
             parent_id: parentId,
-            lock_permissions: options.lockPermissions,
-            rate_limit_per_user: options.rateLimitPerUser,
-            default_auto_archive_duration: options.defaultAutoArchiveDuration,
+            lock_permissions: options2.lockPermissions,
+            rate_limit_per_user: options2.rateLimitPerUser,
+            default_auto_archive_duration: options2.defaultAutoArchiveDuration,
             permission_overwrites,
-            available_tags: options.availableTags?.map((availableTag) => transformGuildForumTag(availableTag)),
-            default_reaction_emoji: options.defaultReactionEmoji && transformGuildDefaultReaction(options.defaultReactionEmoji),
-            default_thread_rate_limit_per_user: options.defaultThreadRateLimitPerUser,
-            flags: "flags" in options ? ChannelFlagsBitField.resolve(options.flags) : void 0,
-            default_sort_order: options.defaultSortOrder,
-            default_forum_layout: options.defaultForumLayout
+            available_tags: options2.availableTags?.map((availableTag) => transformGuildForumTag(availableTag)),
+            default_reaction_emoji: options2.defaultReactionEmoji && transformGuildDefaultReaction(options2.defaultReactionEmoji),
+            default_thread_rate_limit_per_user: options2.defaultThreadRateLimitPerUser,
+            flags: "flags" in options2 ? ChannelFlagsBitField.resolve(options2.flags) : void 0,
+            default_sort_order: options2.defaultSortOrder,
+            default_forum_layout: options2.defaultForumLayout
           },
-          reason: options.reason
+          reason: options2.reason
         });
         return this.client.actions.ChannelUpdate.handle(newData).updated;
       }
@@ -69087,7 +69087,7 @@ var require_GuildEmojiManager = __commonJS({
   "node_modules/.pnpm/discord.js@14.27.0/node_modules/discord.js/src/managers/GuildEmojiManager.js"(exports2, module2) {
     "use strict";
     var { Collection: Collection2 } = require_dist6();
-    var { Routes: Routes2, PermissionFlagsBits: PermissionFlagsBits2 } = require_v106();
+    var { Routes: Routes2, PermissionFlagsBits: PermissionFlagsBits3 } = require_v106();
     var BaseGuildEmojiManager2 = require_BaseGuildEmojiManager();
     var { DiscordjsError: DiscordjsError2, DiscordjsTypeError: DiscordjsTypeError2, ErrorCodes: ErrorCodes2 } = require_errors2();
     var { resolveImage } = require_DataResolver();
@@ -69194,16 +69194,16 @@ var require_GuildEmojiManager = __commonJS({
        * @param {GuildEmojiEditOptions} options The options to provide
        * @returns {Promise<GuildEmoji>}
        */
-      async edit(emoji, options) {
+      async edit(emoji, options2) {
         const id = this.resolveId(emoji);
         if (!id) throw new DiscordjsTypeError2(ErrorCodes2.InvalidType, "emoji", "EmojiResolvable", true);
-        const roles = options.roles?.map((role) => this.guild.roles.resolveId(role));
+        const roles = options2.roles?.map((role) => this.guild.roles.resolveId(role));
         const newData = await this.client.rest.patch(Routes2.guildEmoji(this.guild.id, id), {
           body: {
-            name: options.name,
+            name: options2.name,
             roles
           },
-          reason: options.reason
+          reason: options2.reason
         });
         const existing = this.cache.get(id);
         if (existing) {
@@ -69226,7 +69226,7 @@ var require_GuildEmojiManager = __commonJS({
         }
         const { me } = this.guild.members;
         if (!me) throw new DiscordjsError2(ErrorCodes2.GuildUncachedMe);
-        if (!me.permissions.any(PermissionFlagsBits2.CreateGuildExpressions | PermissionFlagsBits2.ManageGuildExpressions)) {
+        if (!me.permissions.any(PermissionFlagsBits3.CreateGuildExpressions | PermissionFlagsBits3.ManageGuildExpressions)) {
           throw new DiscordjsError2(ErrorCodes2.MissingManageGuildExpressionsPermission, this.guild);
         }
         const data = await this.client.rest.get(Routes2.guildEmoji(this.guild.id, emoji.id));
@@ -69344,25 +69344,25 @@ var require_GuildInviteManager = __commonJS({
        *   .then(console.log)
        *   .catch(console.error);
        */
-      async fetch(options) {
-        if (!options) return this._fetchMany();
-        if (typeof options === "string") {
-          const code = resolveInviteCode2(options);
+      async fetch(options2) {
+        if (!options2) return this._fetchMany();
+        if (typeof options2 === "string") {
+          const code = resolveInviteCode2(options2);
           if (!code) throw new DiscordjsError2(ErrorCodes2.InviteResolveCode);
           return this._fetchSingle({ code, cache: true });
         }
-        if (!options.code) {
-          if (options.channelId) {
-            const id = this.guild.channels.resolveId(options.channelId);
+        if (!options2.code) {
+          if (options2.channelId) {
+            const id = this.guild.channels.resolveId(options2.channelId);
             if (!id) throw new DiscordjsError2(ErrorCodes2.GuildChannelResolve);
-            return this._fetchChannelMany(id, options.cache);
+            return this._fetchChannelMany(id, options2.cache);
           }
-          if ("cache" in options) return this._fetchMany(options.cache);
+          if ("cache" in options2) return this._fetchMany(options2.cache);
           throw new DiscordjsError2(ErrorCodes2.InviteResolveCode);
         }
         return this._fetchSingle({
-          ...options,
-          code: resolveInviteCode2(options.code)
+          ...options2,
+          code: resolveInviteCode2(options2.code)
         });
       }
       async _fetchSingle({ code, cache, force = false }) {
@@ -69512,21 +69512,21 @@ var require_GuildMemberManager = __commonJS({
        * @param {AddGuildMemberOptions} options Options for adding the user to the guild
        * @returns {Promise<?GuildMember>}
        */
-      async add(user, options) {
+      async add(user, options2) {
         const userId = this.client.users.resolveId(user);
         if (!userId) throw new DiscordjsTypeError2(ErrorCodes2.InvalidType, "user", "UserResolvable");
-        if (!options.force) {
+        if (!options2.force) {
           const cachedUser = this.cache.get(userId);
           if (cachedUser) return cachedUser;
         }
         const resolvedOptions = {
-          access_token: options.accessToken,
-          nick: options.nick,
-          mute: options.mute,
-          deaf: options.deaf
+          access_token: options2.accessToken,
+          nick: options2.nick,
+          mute: options2.mute,
+          deaf: options2.deaf
         };
-        if (options.roles) {
-          if (!Array.isArray(options.roles) && !(options.roles instanceof Collection2)) {
+        if (options2.roles) {
+          if (!Array.isArray(options2.roles) && !(options2.roles instanceof Collection2)) {
             throw new DiscordjsTypeError2(
               ErrorCodes2.InvalidType,
               "options.roles",
@@ -69535,7 +69535,7 @@ var require_GuildMemberManager = __commonJS({
             );
           }
           const resolvedRoles = [];
-          for (const role of options.roles.values()) {
+          for (const role of options2.roles.values()) {
             const resolvedRole = this.guild.roles.resolveId(role);
             if (!resolvedRole) {
               throw new DiscordjsTypeError2(ErrorCodes2.InvalidElement, "Array or Collection", "options.roles", role);
@@ -69545,7 +69545,7 @@ var require_GuildMemberManager = __commonJS({
           resolvedOptions.roles = resolvedRoles;
         }
         const data = await this.client.rest.put(Routes2.guildMember(this.guild.id, userId), { body: resolvedOptions });
-        return data instanceof ArrayBuffer ? options.fetchWhenExisting === false ? null : this.fetch(userId) : this._add(data);
+        return data instanceof ArrayBuffer ? options2.fetchWhenExisting === false ? null : this.fetch(userId) : this._add(data);
       }
       /**
        * The client user as a GuildMember of this guild
@@ -69606,13 +69606,13 @@ var require_GuildMemberManager = __commonJS({
        *   .then(console.log)
        *   .catch(console.error);
        */
-      fetch(options) {
-        if (!options) return this._fetchMany();
-        const { user: users, limit, withPresences, cache, force } = options;
-        const resolvedUser = this.client.users.resolveId(users ?? options);
+      fetch(options2) {
+        if (!options2) return this._fetchMany();
+        const { user: users, limit, withPresences, cache, force } = options2;
+        const resolvedUser = this.client.users.resolveId(users ?? options2);
         if (resolvedUser && !limit && !withPresences) return this._fetchSingle({ user: resolvedUser, cache, force });
         const resolvedUsers = users?.map?.((user) => this.client.users.resolveId(user)) ?? resolvedUser ?? void 0;
-        return this._fetchMany({ ...options, users: resolvedUsers });
+        return this._fetchMany({ ...options2, users: resolvedUsers });
       }
       async _fetchSingle({ user, cache, force = false }) {
         if (!force) {
@@ -69687,8 +69687,8 @@ var require_GuildMemberManager = __commonJS({
        * @param {BaseFetchOptions} [options] The options for fetching the member
        * @returns {Promise<GuildMember>}
        */
-      fetchMe(options) {
-        return this.fetch({ ...options, user: this.client.user.id });
+      fetchMe(options2) {
+        return this.fetch({ ...options2, user: this.client.user.id });
       }
       /**
        * Options used for searching guild members.
@@ -69746,31 +69746,31 @@ var require_GuildMemberManager = __commonJS({
        * @param {GuildMemberEditOptions} options The options to provide
        * @returns {Promise<GuildMember>}
        */
-      async edit(user, { reason, ...options }) {
+      async edit(user, { reason, ...options2 }) {
         const id = this.client.users.resolveId(user);
         if (!id) throw new DiscordjsTypeError2(ErrorCodes2.InvalidType, "user", "UserResolvable");
-        if (options.channel) {
-          options.channel = this.guild.channels.resolve(options.channel);
-          if (!(options.channel instanceof BaseGuildVoiceChannel)) {
+        if (options2.channel) {
+          options2.channel = this.guild.channels.resolve(options2.channel);
+          if (!(options2.channel instanceof BaseGuildVoiceChannel)) {
             throw new DiscordjsError2(ErrorCodes2.GuildVoiceChannelResolve);
           }
-          options.channel_id = options.channel.id;
-          options.channel = void 0;
-        } else if (options.channel === null) {
-          options.channel_id = null;
-          options.channel = void 0;
+          options2.channel_id = options2.channel.id;
+          options2.channel = void 0;
+        } else if (options2.channel === null) {
+          options2.channel_id = null;
+          options2.channel = void 0;
         }
-        options.roles &&= options.roles.map((role) => role instanceof Role ? role.id : role);
-        if (options.communicationDisabledUntil !== void 0) {
-          options.communication_disabled_until = // eslint-disable-next-line eqeqeq
-          options.communicationDisabledUntil != null ? new Date(options.communicationDisabledUntil).toISOString() : options.communicationDisabledUntil;
+        options2.roles &&= options2.roles.map((role) => role instanceof Role ? role.id : role);
+        if (options2.communicationDisabledUntil !== void 0) {
+          options2.communication_disabled_until = // eslint-disable-next-line eqeqeq
+          options2.communicationDisabledUntil != null ? new Date(options2.communicationDisabledUntil).toISOString() : options2.communicationDisabledUntil;
         }
-        if (options.flags !== void 0) {
-          options.flags = GuildMemberFlagsBitField.resolve(options.flags);
+        if (options2.flags !== void 0) {
+          options2.flags = GuildMemberFlagsBitField.resolve(options2.flags);
         }
         let endpoint;
         if (id === this.client.user.id) {
-          const keys = Object.keys(options);
+          const keys = Object.keys(options2);
           if (keys.length === 1 && keys[0] === "nick") {
             endpoint = Routes2.guildMember(this.guild.id, "@me");
             if (!deprecatedEmittedForEditSoleNickname) {
@@ -69784,7 +69784,7 @@ var require_GuildMemberManager = __commonJS({
           }
         }
         endpoint ??= Routes2.guildMember(this.guild.id, id);
-        const d = await this.client.rest.patch(endpoint, { body: options, reason });
+        const d = await this.client.rest.patch(endpoint, { body: options2, reason });
         const clone = this.cache.get(id)?._clone();
         clone?._patch(d);
         return clone ?? this._add(d, false);
@@ -69805,12 +69805,12 @@ var require_GuildMemberManager = __commonJS({
        * @param {GuildMemberEditMeOptions} options The options to provide
        * @returns {Promise<GuildMember>}
        */
-      async editMe({ reason, ...options }) {
+      async editMe({ reason, ...options2 }) {
         const data = await this.client.rest.patch(Routes2.guildMember(this.guild.id, "@me"), {
           body: {
-            ...options,
-            banner: options.banner && await resolveImage(options.banner),
-            avatar: options.avatar && await resolveImage(options.avatar)
+            ...options2,
+            banner: options2.banner && await resolveImage(options2.banner),
+            avatar: options2.avatar && await resolveImage(options2.avatar)
           },
           reason
         });
@@ -69901,8 +69901,8 @@ var require_GuildMemberManager = __commonJS({
        *   .then(banInfo => console.log(`Banned ${banInfo.user?.tag ?? banInfo.tag ?? banInfo}`))
        *   .catch(console.error);
        */
-      ban(user, options) {
-        return this.guild.bans.create(user, options);
+      ban(user, options2) {
+        return this.guild.bans.create(user, options2);
       }
       /**
        * Unbans a user from the guild. Internally calls the {@link GuildBanManager#remove} method.
@@ -69933,8 +69933,8 @@ var require_GuildMemberManager = __commonJS({
        *   })
        *   .catch(console.error);
        */
-      bulkBan(users, options = {}) {
-        return this.guild.bans.bulkCreate(users, options);
+      bulkBan(users, options2 = {}) {
+        return this.guild.bans.bulkCreate(users, options2);
       }
       /**
        * Options used for adding or removing a role from a member.
@@ -69948,8 +69948,8 @@ var require_GuildMemberManager = __commonJS({
        * @param {AddOrRemoveGuildMemberRoleOptions} options Options for adding the role
        * @returns {Promise<GuildMember|User|Snowflake>}
        */
-      async addRole(options) {
-        const { user, role, reason } = options;
+      async addRole(options2) {
+        const { user, role, reason } = options2;
         const userId = this.resolveId(user);
         const roleId = this.guild.roles.resolveId(role);
         await this.client.rest.put(Routes2.guildMemberRole(this.guild.id, userId, roleId), { reason });
@@ -69960,8 +69960,8 @@ var require_GuildMemberManager = __commonJS({
        * @param {AddOrRemoveGuildMemberRoleOptions} options Options for removing the role
        * @returns {Promise<GuildMember|User|Snowflake>}
        */
-      async removeRole(options) {
-        const { user, role, reason } = options;
+      async removeRole(options2) {
+        const { user, role, reason } = options2;
         const userId = this.resolveId(user);
         const roleId = this.guild.roles.resolveId(role);
         await this.client.rest.delete(Routes2.guildMemberRole(this.guild.id, userId, roleId), { reason });
@@ -70043,8 +70043,8 @@ var require_GuildScheduledEventManager = __commonJS({
        * @param {GuildScheduledEventCreateOptions} options Options for creating the guild scheduled event
        * @returns {Promise<GuildScheduledEvent>}
        */
-      async create(options) {
-        if (typeof options !== "object") throw new DiscordjsTypeError2(ErrorCodes2.InvalidType, "options", "object", true);
+      async create(options2) {
+        if (typeof options2 !== "object") throw new DiscordjsTypeError2(ErrorCodes2.InvalidType, "options", "object", true);
         let {
           privacyLevel,
           entityType,
@@ -70057,7 +70057,7 @@ var require_GuildScheduledEventManager = __commonJS({
           reason,
           image,
           recurrenceRule
-        } = options;
+        } = options2;
         let entity_metadata, channel_id;
         if (entityType === GuildScheduledEventEntityType.External) {
           channel_id = channel === void 0 ? channel : null;
@@ -70103,23 +70103,23 @@ var require_GuildScheduledEventManager = __commonJS({
        * The id of the guild scheduled event or options
        * @returns {Promise<GuildScheduledEvent|Collection<Snowflake, GuildScheduledEvent>>}
        */
-      async fetch(options = {}) {
-        const id = this.resolveId(options.guildScheduledEvent ?? options);
+      async fetch(options2 = {}) {
+        const id = this.resolveId(options2.guildScheduledEvent ?? options2);
         if (id) {
-          if (!options.force) {
+          if (!options2.force) {
             const existing = this.cache.get(id);
             if (existing) return existing;
           }
           const data2 = await this.client.rest.get(Routes2.guildScheduledEvent(this.guild.id, id), {
-            query: makeURLSearchParams2({ with_user_count: options.withUserCount ?? true })
+            query: makeURLSearchParams2({ with_user_count: options2.withUserCount ?? true })
           });
-          return this._add(data2, options.cache);
+          return this._add(data2, options2.cache);
         }
         const data = await this.client.rest.get(Routes2.guildScheduledEvents(this.guild.id), {
-          query: makeURLSearchParams2({ with_user_count: options.withUserCount ?? true })
+          query: makeURLSearchParams2({ with_user_count: options2.withUserCount ?? true })
         });
         return data.reduce(
-          (coll, rawGuildScheduledEventData) => coll.set(rawGuildScheduledEventData.id, this._add(rawGuildScheduledEventData, options.cache)),
+          (coll, rawGuildScheduledEventData) => coll.set(rawGuildScheduledEventData.id, this._add(rawGuildScheduledEventData, options2.cache)),
           new Collection2()
         );
       }
@@ -70149,10 +70149,10 @@ var require_GuildScheduledEventManager = __commonJS({
        * @param {GuildScheduledEventEditOptions} options Options to edit the guild scheduled event
        * @returns {Promise<GuildScheduledEvent>}
        */
-      async edit(guildScheduledEvent, options) {
+      async edit(guildScheduledEvent, options2) {
         const guildScheduledEventId = this.resolveId(guildScheduledEvent);
         if (!guildScheduledEventId) throw new DiscordjsError2(ErrorCodes2.GuildScheduledEventResolve);
-        if (typeof options !== "object") throw new DiscordjsTypeError2(ErrorCodes2.InvalidType, "options", "object", true);
+        if (typeof options2 !== "object") throw new DiscordjsTypeError2(ErrorCodes2.InvalidType, "options", "object", true);
         let {
           privacyLevel,
           entityType,
@@ -70166,7 +70166,7 @@ var require_GuildScheduledEventManager = __commonJS({
           reason,
           image,
           recurrenceRule
-        } = options;
+        } = options2;
         let entity_metadata;
         if (entityMetadata) {
           entity_metadata = {
@@ -70223,14 +70223,14 @@ var require_GuildScheduledEventManager = __commonJS({
        * @param {FetchGuildScheduledEventSubscribersOptions} [options={}] Options for fetching the subscribers
        * @returns {Promise<Collection<Snowflake, GuildScheduledEventUser>>}
        */
-      async fetchSubscribers(guildScheduledEvent, options = {}) {
+      async fetchSubscribers(guildScheduledEvent, options2 = {}) {
         const guildScheduledEventId = this.resolveId(guildScheduledEvent);
         if (!guildScheduledEventId) throw new DiscordjsError2(ErrorCodes2.GuildScheduledEventResolve);
         const query = makeURLSearchParams2({
-          limit: options.limit,
-          with_member: options.withMember,
-          before: options.before,
-          after: options.after
+          limit: options2.limit,
+          with_member: options2.withMember,
+          before: options2.before,
+          after: options2.after
         });
         const data = await this.client.rest.get(Routes2.guildScheduledEventUsers(this.guild.id, guildScheduledEventId), {
           query
@@ -70349,9 +70349,9 @@ var require_SoundboardSound = __commonJS({
        *   .then(sound => console.log(`Updated the name of the soundboard sound to ${sound.name}`))
        *   .catch(console.error);
        */
-      async edit(options) {
+      async edit(options2) {
         if (!this.guildId) throw new DiscordjsError2(ErrorCodes2.NotGuildSoundboardSound, "edited");
-        return this.guild.soundboardSounds.edit(this, options);
+        return this.guild.soundboardSounds.edit(this, options2);
       }
       /**
        * Deletes this soundboard sound.
@@ -70480,10 +70480,10 @@ var require_GuildSoundboardSoundManager = __commonJS({
        * @param {GuildSoundboardSoundEditOptions} [options={}] The new data for the soundboard sound
        * @returns {Promise<SoundboardSound>}
        */
-      async edit(soundboardSound, options = {}) {
+      async edit(soundboardSound, options2 = {}) {
         const soundId = this.resolveId(soundboardSound);
         if (!soundId) throw new DiscordjsTypeError2(ErrorCodes2.InvalidType, "soundboardSound", "SoundboardSoundResolvable");
-        const { emojiId, emojiName, name, reason, volume } = options;
+        const { emojiId, emojiName, name, reason, volume } = options2;
         const body = { emoji_id: emojiId, emoji_name: emojiName, name, volume };
         const data = await this.client.rest.patch(Routes2.guildSoundboardSound(this.guild.id, soundId), {
           body,
@@ -70535,10 +70535,10 @@ var require_GuildSoundboardSoundManager = __commonJS({
        *   .catch(console.error);
        */
       /* eslint-enable max-len */
-      async fetch(options) {
-        if (!options) return this._fetchMany();
-        const { cache, force, soundboardSound } = options;
-        const resolvedSoundboardSound = this.resolveId(soundboardSound ?? options);
+      async fetch(options2) {
+        if (!options2) return this._fetchMany();
+        const { cache, force, soundboardSound } = options2;
+        const resolvedSoundboardSound = this.resolveId(soundboardSound ?? options2);
         if (resolvedSoundboardSound) return this._fetchSingle({ cache, force, soundboardSound: resolvedSoundboardSound });
         return this._fetchMany({ cache });
       }
@@ -70647,12 +70647,12 @@ var require_GuildStickerManager = __commonJS({
        * @param {GuildStickerEditOptions} [options={}] The new data for the sticker
        * @returns {Promise<Sticker>}
        */
-      async edit(sticker, options = {}) {
+      async edit(sticker, options2 = {}) {
         const stickerId = this.resolveId(sticker);
         if (!stickerId) throw new DiscordjsTypeError2(ErrorCodes2.InvalidType, "sticker", "StickerResolvable");
         const d = await this.client.rest.patch(Routes2.guildSticker(this.guild.id, stickerId), {
-          body: options,
-          reason: options.reason
+          body: options2,
+          reason: options2.reason
         });
         const existing = this.cache.get(stickerId);
         if (existing) {
@@ -70863,7 +70863,7 @@ var require_Presence = __commonJS({
        * @param {ImageURLOptions} [options={}] Options for the image URL
        * @returns {?string}
        */
-      smallImageURL(options = {}) {
+      smallImageURL(options2 = {}) {
         if (!this.smallImage) return null;
         if (this.smallImage.includes(":")) {
           const [platform2, id] = this.smallImage.split(":");
@@ -70874,14 +70874,14 @@ var require_Presence = __commonJS({
               return null;
           }
         }
-        return this.activity.presence.client.rest.cdn.appAsset(this.activity.applicationId, this.smallImage, options);
+        return this.activity.presence.client.rest.cdn.appAsset(this.activity.applicationId, this.smallImage, options2);
       }
       /**
        * Gets the URL of the large image asset
        * @param {ImageURLOptions} [options={}] Options for the image URL
        * @returns {?string}
        */
-      largeImageURL(options = {}) {
+      largeImageURL(options2 = {}) {
         if (!this.largeImage) return null;
         if (this.largeImage.includes(":")) {
           const [platform2, id] = this.largeImage.split(":");
@@ -70898,7 +70898,7 @@ var require_Presence = __commonJS({
               return null;
           }
         }
-        return this.activity.presence.client.rest.cdn.appAsset(this.activity.applicationId, this.largeImage, options);
+        return this.activity.presence.client.rest.cdn.appAsset(this.activity.applicationId, this.largeImage, options2);
       }
     };
     exports2.Presence = Presence;
@@ -71137,19 +71137,19 @@ var require_RoleManager = __commonJS({
        *   .then(console.log)
        *   .catch(console.error);
        */
-      async create(options = {}) {
-        let { permissions, icon } = options;
-        const { name, color, hoist, position, mentionable, reason, unicodeEmoji } = options;
+      async create(options2 = {}) {
+        let { permissions, icon } = options2;
+        const { name, color, hoist, position, mentionable, reason, unicodeEmoji } = options2;
         if (permissions !== void 0) permissions = new PermissionsBitField2(permissions);
         if (icon) {
           const guildEmojiURL = this.guild.emojis.resolve(icon)?.imageURL();
           icon = guildEmojiURL ? await resolveImage(guildEmojiURL) : await resolveImage(icon);
           if (typeof icon !== "string") icon = void 0;
         }
-        let colors = options.colors && {
-          primary_color: resolveColor(options.colors.primaryColor),
-          secondary_color: options.colors.secondaryColor && resolveColor(options.colors.secondaryColor),
-          tertiary_color: options.colors.tertiaryColor && resolveColor(options.colors.tertiaryColor)
+        let colors = options2.colors && {
+          primary_color: resolveColor(options2.colors.primaryColor),
+          secondary_color: options2.colors.secondaryColor && resolveColor(options2.colors.secondaryColor),
+          tertiary_color: options2.colors.tertiaryColor && resolveColor(options2.colors.tertiaryColor)
         };
         if (color !== void 0) {
           if (!deprecationEmittedForCreate) {
@@ -71198,44 +71198,44 @@ var require_RoleManager = __commonJS({
        *   .then(updated => console.log(`Edited role name to ${updated.name}`))
        *   .catch(console.error);
        */
-      async edit(role, options) {
+      async edit(role, options2) {
         role = this.resolve(role);
         if (!role) throw new DiscordjsTypeError2(ErrorCodes2.InvalidType, "role", "RoleResolvable");
-        if (typeof options.position === "number") {
-          await this.setPosition(role, options.position, { reason: options.reason });
+        if (typeof options2.position === "number") {
+          await this.setPosition(role, options2.position, { reason: options2.reason });
         }
-        let icon = options.icon;
+        let icon = options2.icon;
         if (icon) {
           const guildEmojiURL = this.guild.emojis.resolve(icon)?.imageURL();
           icon = guildEmojiURL ? await resolveImage(guildEmojiURL) : await resolveImage(icon);
           if (typeof icon !== "string") icon = void 0;
         }
-        let colors = options.colors && {
-          primary_color: resolveColor(options.colors.primaryColor),
-          secondary_color: options.colors.secondaryColor && resolveColor(options.colors.secondaryColor),
-          tertiary_color: options.colors.tertiaryColor && resolveColor(options.colors.tertiaryColor)
+        let colors = options2.colors && {
+          primary_color: resolveColor(options2.colors.primaryColor),
+          secondary_color: options2.colors.secondaryColor && resolveColor(options2.colors.secondaryColor),
+          tertiary_color: options2.colors.tertiaryColor && resolveColor(options2.colors.tertiaryColor)
         };
-        if (options.color !== void 0) {
+        if (options2.color !== void 0) {
           if (!deprecationEmittedForEdit) {
             process2.emitWarning(`Passing "color" to RoleManager#edit() is deprecated. Use "colors" instead.`);
           }
           deprecationEmittedForEdit = true;
           colors = {
-            primary_color: resolveColor(options.color),
+            primary_color: resolveColor(options2.color),
             secondary_color: null,
             tertiary_color: null
           };
         }
         const body = {
-          name: options.name,
+          name: options2.name,
           colors,
-          hoist: options.hoist,
-          permissions: options.permissions === void 0 ? void 0 : new PermissionsBitField2(options.permissions),
-          mentionable: options.mentionable,
+          hoist: options2.hoist,
+          permissions: options2.permissions === void 0 ? void 0 : new PermissionsBitField2(options2.permissions),
+          mentionable: options2.mentionable,
           icon,
-          unicode_emoji: options.unicodeEmoji
+          unicode_emoji: options2.unicodeEmoji
         };
-        const d = await this.client.rest.patch(Routes2.guildRole(this.guild.id, role.id), { body, reason: options.reason });
+        const d = await this.client.rest.patch(Routes2.guildRole(this.guild.id, role.id), { body, reason: options2.reason });
         const clone = role._clone();
         clone._patch(d);
         return clone;
@@ -71419,11 +71419,11 @@ var require_StageInstanceManager = __commonJS({
        *  .then(stageInstance => console.log(stageInstance))
        *  .catch(console.error);
        */
-      async create(channel, options) {
+      async create(channel, options2) {
         const channelId = this.guild.channels.resolveId(channel);
         if (!channelId) throw new DiscordjsError2(ErrorCodes2.StageChannelResolve);
-        if (typeof options !== "object") throw new DiscordjsTypeError2(ErrorCodes2.InvalidType, "options", "object", true);
-        const { guildScheduledEvent, topic, privacyLevel, sendStartNotification } = options;
+        if (typeof options2 !== "object") throw new DiscordjsTypeError2(ErrorCodes2.InvalidType, "options", "object", true);
+        const { guildScheduledEvent, topic, privacyLevel, sendStartNotification } = options2;
         const guildScheduledEventId = guildScheduledEvent && this.guild.scheduledEvents.resolveId(guildScheduledEvent);
         const data = await this.client.rest.post(Routes2.stageInstances(), {
           body: {
@@ -71474,11 +71474,11 @@ var require_StageInstanceManager = __commonJS({
        *  .then(stageInstance => console.log(stageInstance))
        *  .catch(console.error);
        */
-      async edit(channel, options) {
-        if (typeof options !== "object") throw new DiscordjsTypeError2(ErrorCodes2.InvalidType, "options", "object", true);
+      async edit(channel, options2) {
+        if (typeof options2 !== "object") throw new DiscordjsTypeError2(ErrorCodes2.InvalidType, "options", "object", true);
         const channelId = this.guild.channels.resolveId(channel);
         if (!channelId) throw new DiscordjsError2(ErrorCodes2.StageChannelResolve);
-        let { topic, privacyLevel } = options;
+        let { topic, privacyLevel } = options2;
         const data = await this.client.rest.patch(Routes2.stageInstance(channelId), {
           body: {
             topic,
@@ -71581,7 +71581,7 @@ var require_Guild = __commonJS({
     var { Collection: Collection2 } = require_dist6();
     var { makeURLSearchParams: makeURLSearchParams2 } = require_dist5();
     var { DiscordSnowflake } = require_cjs();
-    var { ChannelType: ChannelType2, GuildPremiumTier, Routes: Routes2, GuildFeature } = require_v106();
+    var { ChannelType: ChannelType3, GuildPremiumTier, Routes: Routes2, GuildFeature } = require_v106();
     var AnonymousGuild = require_AnonymousGuild();
     var GuildAuditLogs = require_GuildAuditLogs();
     var { GuildOnboarding } = require_GuildOnboarding();
@@ -71837,8 +71837,8 @@ var require_Guild = __commonJS({
        * @param {ImageURLOptions} [options={}] Options for the image URL
        * @returns {?string}
        */
-      discoverySplashURL(options = {}) {
-        return this.discoverySplash && this.client.rest.cdn.discoverySplash(this.id, this.discoverySplash, options);
+      discoverySplashURL(options2 = {}) {
+        return this.discoverySplash && this.client.rest.cdn.discoverySplash(this.id, this.discoverySplash, options2);
       }
       /**
        * Fetches the owner of the guild.
@@ -71846,11 +71846,11 @@ var require_Guild = __commonJS({
        * @param {BaseFetchOptions} [options] The options for fetching the member
        * @returns {Promise<GuildMember>}
        */
-      async fetchOwner(options) {
+      async fetchOwner(options2) {
         if (!this.ownerId) {
           throw new DiscordjsError2(ErrorCodes2.FetchOwnerId, "guild");
         }
-        const member = await this.members.fetch({ ...options, user: this.ownerId });
+        const member = await this.members.fetch({ ...options2, user: this.ownerId });
         return member;
       }
       /**
@@ -72185,11 +72185,11 @@ var require_Guild = __commonJS({
         preferredLocale,
         premiumProgressBarEnabled,
         safetyAlertsChannel,
-        ...options
+        ...options2
       }) {
         const data = await this.client.rest.patch(Routes2.guild(this.id), {
           body: {
-            ...options,
+            ...options2,
             verification_level: verificationLevel,
             default_message_notifications: defaultMessageNotifications,
             explicit_content_filter: explicitContentFilter,
@@ -72208,7 +72208,7 @@ var require_Guild = __commonJS({
             premium_progress_bar_enabled: premiumProgressBarEnabled,
             safety_alerts_channel_id: safetyAlertsChannel && this.client.channels.resolveId(safetyAlertsChannel)
           },
-          reason: options.reason
+          reason: options2.reason
         });
         return this.client.actions.GuildUpdate.handle(data).updated;
       }
@@ -72252,10 +72252,10 @@ var require_Guild = __commonJS({
        * @param {GuildOnboardingEditOptions} options The options to provide
        * @returns {Promise<GuildOnboarding>}
        */
-      async editOnboarding(options) {
+      async editOnboarding(options2) {
         const newData = await this.client.rest.put(Routes2.guildOnboarding(this.id), {
           body: {
-            prompts: options.prompts?.map((prompt) => ({
+            prompts: options2.prompts?.map((prompt) => ({
               // Currently, the prompt ids are required even for new ones (which won't be used)
               id: prompt.id ?? DiscordSnowflake.generate().toString(),
               title: prompt.title,
@@ -72277,11 +72277,11 @@ var require_Guild = __commonJS({
                 };
               })
             })),
-            default_channel_ids: options.defaultChannels?.map((channel) => this.channels.resolveId(channel)),
-            enabled: options.enabled,
-            mode: options.mode
+            default_channel_ids: options2.defaultChannels?.map((channel) => this.channels.resolveId(channel)),
+            enabled: options2.enabled,
+            mode: options2.mode
           },
-          reason: options.reason
+          reason: options2.reason
         });
         return new GuildOnboarding(this.client, newData);
       }
@@ -72330,8 +72330,8 @@ var require_Guild = __commonJS({
        *   ],
        * })
        */
-      async editWelcomeScreen(options) {
-        const { enabled, description, welcomeChannels } = options;
+      async editWelcomeScreen(options2) {
+        const { enabled, description, welcomeChannels } = options2;
         const welcome_channels = welcomeChannels?.map((welcomeChannelData) => {
           const emoji = this.emojis.resolve(welcomeChannelData.emoji);
           return {
@@ -72717,7 +72717,7 @@ var require_Guild = __commonJS({
        * @private
        */
       _sortedChannels(channel) {
-        const channelIsCategory = channel.type === ChannelType2.GuildCategory;
+        const channelIsCategory = channel.type === ChannelType3.GuildCategory;
         const types = getSortableGroupTypes(channel.type);
         return discordSort(
           this.channels.cache.filter(
@@ -72910,8 +72910,8 @@ var require_GuildManager = __commonJS({
             verification_level: verificationLevel,
             default_message_notifications: defaultMessageNotifications,
             explicit_content_filter: explicitContentFilter,
-            roles: roles.map(({ color, permissions, ...options }) => ({
-              ...options,
+            roles: roles.map(({ color, permissions, ...options2 }) => ({
+              ...options2,
               color: color && resolveColor(color),
               permissions: permissions === void 0 ? void 0 : PermissionsBitField2.resolve(permissions).toString()
             })),
@@ -72923,9 +72923,9 @@ var require_GuildManager = __commonJS({
                 videoQualityMode,
                 permissionOverwrites,
                 rateLimitPerUser,
-                ...options
+                ...options2
               }) => ({
-                ...options,
+                ...options2,
                 parent_id: parentId,
                 user_limit: userLimit,
                 rtc_region: rtcRegion,
@@ -72979,20 +72979,20 @@ var require_GuildManager = __commonJS({
        * @param {GuildResolvable|FetchGuildOptions|FetchGuildsOptions} [options] The guild's id or options
        * @returns {Promise<Guild|Collection<Snowflake, OAuth2Guild>>}
        */
-      async fetch(options = {}) {
-        const id = this.resolveId(options) ?? this.resolveId(options.guild);
+      async fetch(options2 = {}) {
+        const id = this.resolveId(options2) ?? this.resolveId(options2.guild);
         if (id) {
-          if (!options.force) {
+          if (!options2.force) {
             const existing = this.cache.get(id);
             if (existing) return existing;
           }
           const data2 = await this.client.rest.get(Routes2.guild(id), {
-            query: makeURLSearchParams2({ with_counts: options.withCounts ?? true })
+            query: makeURLSearchParams2({ with_counts: options2.withCounts ?? true })
           });
           data2.shardId = ShardClientUtil2.shardIdForGuildId(id, this.client.options.shardCount);
-          return this._add(data2, options.cache);
+          return this._add(data2, options2.cache);
         }
-        const data = await this.client.rest.get(Routes2.userGuilds(), { query: makeURLSearchParams2(options) });
+        const data = await this.client.rest.get(Routes2.userGuilds(), { query: makeURLSearchParams2(options2) });
         return data.reduce((coll, guild) => coll.set(guild.id, new OAuth2Guild(this.client, guild)), new Collection2());
       }
       /**
@@ -73099,7 +73099,7 @@ var require_GuildManager = __commonJS({
 var require_UserManager = __commonJS({
   "node_modules/.pnpm/discord.js@14.27.0/node_modules/discord.js/src/managers/UserManager.js"(exports2, module2) {
     "use strict";
-    var { ChannelType: ChannelType2, Routes: Routes2 } = require_v106();
+    var { ChannelType: ChannelType3, Routes: Routes2 } = require_v106();
     var CachedManager = require_CachedManager();
     var { DiscordjsError: DiscordjsError2, ErrorCodes: ErrorCodes2 } = require_errors2();
     var { GuildMember } = require_GuildMember();
@@ -73134,7 +73134,7 @@ var require_UserManager = __commonJS({
       dmChannel(userId) {
         const expectedRecipientIds = [userId, this.client.user.id];
         return this.client.channels.cache.find(
-          (channel) => channel.type === ChannelType2.DM && channel.recipientId === userId && channel.recipientIds.every((id) => expectedRecipientIds.includes(id))
+          (channel) => channel.type === ChannelType3.DM && channel.recipientId === userId && channel.recipientIds.every((id) => expectedRecipientIds.includes(id))
         ) ?? null;
       }
       /**
@@ -73188,9 +73188,9 @@ var require_UserManager = __commonJS({
        * @deprecated <warn>This method is deprecated and will be removed in the next major version.
        * Flags may still be retrieved via {@link UserManager#fetch}.</warn>
        */
-      async fetchFlags(user, options) {
+      async fetchFlags(user, options2) {
         emitDeprecationWarningForUserFetchFlags(this.constructor.name);
-        return (await this.fetch(user, options)).flags;
+        return (await this.fetch(user, options2)).flags;
       }
       /**
        * Sends a message to a user.
@@ -73198,8 +73198,8 @@ var require_UserManager = __commonJS({
        * @param {string|MessagePayload|MessageCreateOptions} options The options to provide
        * @returns {Promise<Message>}
        */
-      async send(user, options) {
-        return (await this.createDM(user)).send(options);
+      async send(user, options2) {
+        return (await this.createDM(user)).send(options2);
       }
       /**
        * Resolves a {@link UserResolvable} to a {@link User} object.
@@ -73352,8 +73352,8 @@ var require_StickerPack = __commonJS({
        * @param {ImageURLOptions} [options={}] Options for the image URL
        * @returns {?string}
        */
-      bannerURL(options = {}) {
-        return this.bannerId && this.client.rest.cdn.stickerPackBanner(this.bannerId, options);
+      bannerURL(options2 = {}) {
+        return this.bannerId && this.client.rest.cdn.stickerPackBanner(this.bannerId, options2);
       }
     };
     module2.exports = StickerPack2;
@@ -73502,12 +73502,12 @@ var require_Sweepers = __commonJS({
     var Events2 = require_Events();
     var { DiscordjsTypeError: DiscordjsTypeError2, ErrorCodes: ErrorCodes2 } = require_errors2();
     var Sweepers2 = class {
-      constructor(client2, options) {
+      constructor(client2, options2) {
         Object.defineProperty(this, "client", { value: client2 });
-        this.options = options;
+        this.options = options2;
         this.intervals = Object.fromEntries(SweeperKeys.map((key) => [key, null]));
         for (const key of SweeperKeys) {
-          if (!(key in options)) continue;
+          if (!(key in options2)) continue;
           this._validateProperties(key);
           const clonedOptions = { ...this.options[key] };
           if (!("filter" in clonedOptions)) {
@@ -73944,8 +73944,8 @@ var require_Client = __commonJS({
       /**
        * @param {ClientOptions} options Options for the client
        */
-      constructor(options) {
-        super(options);
+      constructor(options2) {
+        super(options2);
         const data = require("node:worker_threads").workerData ?? process.env;
         const defaults = Options.createDefault();
         if (this.options.shards === defaults.shards) {
@@ -74080,11 +74080,11 @@ var require_Client = __commonJS({
        *   .then(invite => console.log(`Obtained invite with code: ${invite.code}`))
        *   .catch(console.error);
        */
-      async fetchInvite(invite, options) {
+      async fetchInvite(invite, options2) {
         const code = resolveInviteCode(invite);
         const query = makeURLSearchParams({
           with_counts: true,
-          guild_scheduled_event_id: options?.guildScheduledEventId
+          guild_scheduled_event_id: options2?.guildScheduledEventId
         });
         const data = await this.rest.get(Routes.invite(code), { query });
         return new Invite(this, data);
@@ -74248,10 +74248,10 @@ var require_Client = __commonJS({
        * });
        * console.log(`Generated bot invite link: ${link}`);
        */
-      generateInvite(options = {}) {
-        if (typeof options !== "object") throw new DiscordjsTypeError(ErrorCodes.InvalidType, "options", "object", true);
+      generateInvite(options2 = {}) {
+        if (typeof options2 !== "object") throw new DiscordjsTypeError(ErrorCodes.InvalidType, "options", "object", true);
         if (!this.application) throw new DiscordjsError(ErrorCodes.ClientNotReady, "generate an invite link");
-        const { scopes } = options;
+        const { scopes } = options2;
         if (scopes === void 0) {
           throw new DiscordjsTypeError(ErrorCodes.InvalidMissingScopes);
         }
@@ -74261,7 +74261,7 @@ var require_Client = __commonJS({
         if (!scopes.some((scope) => [OAuth2Scopes.Bot, OAuth2Scopes.ApplicationsCommands].includes(scope))) {
           throw new DiscordjsTypeError(ErrorCodes.InvalidMissingScopes);
         }
-        if (!scopes.includes(OAuth2Scopes.Bot) && options.permissions) {
+        if (!scopes.includes(OAuth2Scopes.Bot) && options2.permissions) {
           throw new DiscordjsTypeError(ErrorCodes.InvalidScopesWithPermissions);
         }
         const validScopes = Object.values(OAuth2Scopes);
@@ -74272,14 +74272,14 @@ var require_Client = __commonJS({
         const query = makeURLSearchParams({
           client_id: this.application.id,
           scope: scopes.join(" "),
-          disable_guild_select: options.disableGuildSelect
+          disable_guild_select: options2.disableGuildSelect
         });
-        if (options.permissions) {
-          const permissions = PermissionsBitField.resolve(options.permissions);
+        if (options2.permissions) {
+          const permissions = PermissionsBitField.resolve(options2.permissions);
           if (permissions) query.set("permissions", permissions.toString());
         }
-        if (options.guild) {
-          const guildId = this.guilds.resolveId(options.guild);
+        if (options2.guild) {
+          const guildId = this.guilds.resolveId(options2.guild);
           if (!guildId) throw new DiscordjsTypeError(ErrorCodes.InvalidType, "options.guild", "GuildResolvable");
           query.set("guild_id", guildId);
         }
@@ -74316,50 +74316,50 @@ var require_Client = __commonJS({
        * @param {ClientOptions} [options=this.options] Options to validate
        * @private
        */
-      _validateOptions(options = this.options) {
-        if (options.intents === void 0) {
+      _validateOptions(options2 = this.options) {
+        if (options2.intents === void 0) {
           throw new DiscordjsTypeError(ErrorCodes.ClientMissingIntents);
         } else {
-          options.intents = new IntentsBitField(options.intents).freeze();
+          options2.intents = new IntentsBitField(options2.intents).freeze();
         }
-        if (typeof options.shardCount !== "number" || isNaN(options.shardCount) || options.shardCount < 1) {
+        if (typeof options2.shardCount !== "number" || isNaN(options2.shardCount) || options2.shardCount < 1) {
           throw new DiscordjsTypeError(ErrorCodes.ClientInvalidOption, "shardCount", "a number greater than or equal to 1");
         }
-        if (options.shards && !(options.shards === "auto" || Array.isArray(options.shards))) {
+        if (options2.shards && !(options2.shards === "auto" || Array.isArray(options2.shards))) {
           throw new DiscordjsTypeError(ErrorCodes.ClientInvalidOption, "shards", "'auto', a number or array of numbers");
         }
-        if (options.shards && !options.shards.length) throw new DiscordjsRangeError(ErrorCodes.ClientInvalidProvidedShards);
-        if (typeof options.makeCache !== "function") {
+        if (options2.shards && !options2.shards.length) throw new DiscordjsRangeError(ErrorCodes.ClientInvalidProvidedShards);
+        if (typeof options2.makeCache !== "function") {
           throw new DiscordjsTypeError(ErrorCodes.ClientInvalidOption, "makeCache", "a function");
         }
-        if (typeof options.sweepers !== "object" || options.sweepers === null) {
+        if (typeof options2.sweepers !== "object" || options2.sweepers === null) {
           throw new DiscordjsTypeError(ErrorCodes.ClientInvalidOption, "sweepers", "an object");
         }
-        if (!Array.isArray(options.partials)) {
+        if (!Array.isArray(options2.partials)) {
           throw new DiscordjsTypeError(ErrorCodes.ClientInvalidOption, "partials", "an Array");
         }
-        if (typeof options.waitGuildTimeout !== "number" || isNaN(options.waitGuildTimeout)) {
+        if (typeof options2.waitGuildTimeout !== "number" || isNaN(options2.waitGuildTimeout)) {
           throw new DiscordjsTypeError(ErrorCodes.ClientInvalidOption, "waitGuildTimeout", "a number");
         }
-        if (typeof options.failIfNotExists !== "boolean") {
+        if (typeof options2.failIfNotExists !== "boolean") {
           throw new DiscordjsTypeError(ErrorCodes.ClientInvalidOption, "failIfNotExists", "a boolean");
         }
-        if (typeof options.enforceNonce !== "boolean") {
+        if (typeof options2.enforceNonce !== "boolean") {
           throw new DiscordjsTypeError(ErrorCodes.ClientInvalidOption, "enforceNonce", "a boolean");
         }
-        if (typeof options.allowedMentions !== "object" && options.allowedMentions !== void 0 || options.allowedMentions === null) {
+        if (typeof options2.allowedMentions !== "object" && options2.allowedMentions !== void 0 || options2.allowedMentions === null) {
           throw new DiscordjsTypeError(ErrorCodes.ClientInvalidOption, "allowedMentions", "an object");
         }
-        if (typeof options.presence !== "object" || options.presence === null) {
+        if (typeof options2.presence !== "object" || options2.presence === null) {
           throw new DiscordjsTypeError(ErrorCodes.ClientInvalidOption, "presence", "an object");
         }
-        if (typeof options.ws !== "object" || options.ws === null) {
+        if (typeof options2.ws !== "object" || options2.ws === null) {
           throw new DiscordjsTypeError(ErrorCodes.ClientInvalidOption, "ws", "an object");
         }
-        if (typeof options.rest !== "object" || options.rest === null) {
+        if (typeof options2.rest !== "object" || options2.rest === null) {
           throw new DiscordjsTypeError(ErrorCodes.ClientInvalidOption, "rest", "an object");
         }
-        if (typeof options.jsonTransformer !== "function") {
+        if (typeof options2.jsonTransformer !== "function") {
           throw new DiscordjsTypeError(ErrorCodes.ClientInvalidOption, "jsonTransformer", "a function");
         }
       }
@@ -74742,7 +74742,7 @@ var require_ShardingManager = __commonJS({
        * @param {string} file Path to your shard script file
        * @param {ShardingManagerOptions} [options] Options for the sharding manager
        */
-      constructor(file, options) {
+      constructor(file, options2) {
         super();
         const _options = {
           totalShards: "auto",
@@ -74752,7 +74752,7 @@ var require_ShardingManager = __commonJS({
           shardArgs: [],
           execArgv: [],
           token: process2.env.DISCORD_TOKEN,
-          ...options
+          ...options2
         };
         this.file = file;
         if (!file) throw new DiscordjsError2(ErrorCodes2.ClientInvalidOption, "File", "specified.");
@@ -74882,11 +74882,11 @@ var require_ShardingManager = __commonJS({
        * @param {BroadcastEvalOptions} [options={}] The options for the broadcast
        * @returns {Promise<*|Array<*>>} Results of the script execution
        */
-      async broadcastEval(script2, options = {}) {
+      async broadcastEval(script2, options2 = {}) {
         if (typeof script2 !== "function") {
           throw new DiscordjsTypeError2(ErrorCodes2.ShardingInvalidEvalBroadcast);
         }
-        return this._performOnShards("eval", [`(${script2})(this, ${JSON.stringify(options.context)})`], options.shard);
+        return this._performOnShards("eval", [`(${script2})(this, ${JSON.stringify(options2.context)})`], options2.shard);
       }
       /**
        * Fetches a client property value of each shard, or a given shard.
@@ -75194,7 +75194,7 @@ var require_EmbedBuilder = __commonJS({
     var { isJSONEncodable } = require_dist();
     var { toSnakeCase } = require_Transformers();
     var { resolveColor } = require_Util();
-    var EmbedBuilder2 = class extends BuildersEmbed {
+    var EmbedBuilder3 = class extends BuildersEmbed {
       constructor(data) {
         super(toSnakeCase(data));
       }
@@ -75223,7 +75223,7 @@ var require_EmbedBuilder = __commonJS({
         return embedLength(this.data);
       }
     };
-    module2.exports = EmbedBuilder2;
+    module2.exports = EmbedBuilder3;
   }
 });
 
@@ -75232,7 +75232,7 @@ var require_AttachmentBuilder = __commonJS({
   "node_modules/.pnpm/discord.js@14.27.0/node_modules/discord.js/src/structures/AttachmentBuilder.js"(exports2, module2) {
     "use strict";
     var { basename, flatten } = require_Util();
-    var AttachmentBuilder = class _AttachmentBuilder {
+    var AttachmentBuilder2 = class _AttachmentBuilder {
       /**
        * @param {BufferResolvable|Stream} attachment The file
        * @param {AttachmentData} [data] Extra data
@@ -75343,7 +75343,7 @@ var require_AttachmentBuilder = __commonJS({
         });
       }
     };
-    module2.exports = AttachmentBuilder;
+    module2.exports = AttachmentBuilder2;
   }
 });
 
@@ -75758,7 +75758,222 @@ var require_src = __commonJS({
 });
 
 // apps/bot/src/index.ts
+var import_discord2 = __toESM(require_src());
+
+// apps/bot/src/discord-tickets.ts
 var import_discord = __toESM(require_src());
+var STYLE = { primary: import_discord.ButtonStyle.Primary, secondary: import_discord.ButtonStyle.Secondary, success: import_discord.ButtonStyle.Success, danger: import_discord.ButtonStyle.Danger };
+var VIEW = [import_discord.PermissionFlagsBits.ViewChannel, import_discord.PermissionFlagsBits.ReadMessageHistory];
+var TALK = [import_discord.PermissionFlagsBits.SendMessages, import_discord.PermissionFlagsBits.AttachFiles, import_discord.PermissionFlagsBits.EmbedLinks];
+var https = (u) => u && /^https:\/\//.test(u) ? u : void 0;
+function embedOf(e) {
+  const b = new import_discord.EmbedBuilder();
+  if (e.title) b.setTitle(e.title.slice(0, 256));
+  if (e.description) b.setDescription(e.description.slice(0, 4096));
+  if (e.color !== void 0) b.setColor(e.color);
+  if (https(e.thumbnail)) b.setThumbnail(e.thumbnail);
+  if (https(e.image)) b.setImage(e.image);
+  if (e.author) b.setAuthor({ name: e.author.slice(0, 256), ...https(e.authorIcon) ? { iconURL: e.authorIcon } : {} });
+  if (e.footer) b.setFooter({ text: e.footer.slice(0, 2048), ...https(e.footerIcon) ? { iconURL: e.footerIcon } : {} });
+  if (e.fields?.length) b.addFields(e.fields.slice(0, 25).map((f) => ({ name: f.name.slice(0, 256) || "\u200B", value: f.value.slice(0, 1024) || "\u200B", inline: f.inline ?? false })));
+  if (e.timestamp) b.setTimestamp(new Date(e.timestamp));
+  if (!e.title && !e.description && !e.fields?.length) b.setDescription("\u200B");
+  return b;
+}
+function componentsOf(buttons = [], selects = []) {
+  const rows = [];
+  for (const s of selects.slice(0, 5)) {
+    let menu;
+    if (s.kind === "user") menu = new import_discord.UserSelectMenuBuilder();
+    else if (s.kind === "role") menu = new import_discord.RoleSelectMenuBuilder();
+    else {
+      const sm = new import_discord.StringSelectMenuBuilder();
+      sm.addOptions((s.options ?? []).slice(0, 25).map((o) => ({ label: o.label.slice(0, 100), value: o.value.slice(0, 100), ...o.description ? { description: o.description.slice(0, 100) } : {}, ...o.emoji ? { emoji: o.emoji } : {} })));
+      menu = sm;
+    }
+    menu.setCustomId(s.id).setPlaceholder(s.placeholder.slice(0, 150));
+    const max = Math.max(1, Math.min(s.max ?? 1, s.kind === "user" || s.kind === "role" ? 25 : s.options?.length ?? 1));
+    menu.setMinValues(Math.min(s.min ?? 1, max)).setMaxValues(max);
+    rows.push(new import_discord.ActionRowBuilder().addComponents(menu));
+  }
+  for (let i = 0; i < buttons.length && rows.length < 5; i += 5) {
+    rows.push(new import_discord.ActionRowBuilder().addComponents(buttons.slice(i, i + 5).map((b) => {
+      const x = b.url ? new import_discord.ButtonBuilder().setURL(b.url).setStyle(import_discord.ButtonStyle.Link) : new import_discord.ButtonBuilder().setCustomId(b.id).setStyle(STYLE[b.style] ?? import_discord.ButtonStyle.Secondary);
+      x.setLabel(b.label.slice(0, 80));
+      if (b.emoji) x.setEmoji(b.emoji);
+      if (b.disabled) x.setDisabled(true);
+      return x;
+    })));
+  }
+  return rows;
+}
+function payloadOf(m) {
+  return {
+    ...m.content ? { content: m.content.slice(0, 2e3) } : {},
+    embeds: (m.embeds ?? []).slice(0, 10).map(embedOf),
+    components: componentsOf(m.buttons, m.select ? [m.select] : []),
+    // Nur ausdrücklich gewünschte Erwähnungen pingen – niemals @everyone/@here
+    allowedMentions: { parse: [], users: m.mentionUsers ?? [], roles: m.mentionRoles ?? [] }
+  };
+}
+function createTicketRuntime(client2, api2, log = console.log) {
+  const channels = /* @__PURE__ */ new Set();
+  const text = async (id) => {
+    const ch = await client2().channels.fetch(id).catch(() => null);
+    return ch && ch.type === import_discord.ChannelType.GuildText ? ch : null;
+  };
+  async function create(e) {
+    const guild = await client2().guilds.fetch(e.guildId);
+    const me = client2().user.id;
+    const overwrites = [
+      { id: guild.roles.everyone.id, type: import_discord.OverwriteType.Role, deny: [import_discord.PermissionFlagsBits.ViewChannel] },
+      { id: me, type: import_discord.OverwriteType.Member, allow: [...VIEW, ...TALK, import_discord.PermissionFlagsBits.ManageChannels, import_discord.PermissionFlagsBits.ManageMessages] },
+      ...e.viewers.map((v) => ({ id: v.id, type: v.kind === "user" ? import_discord.OverwriteType.Member : import_discord.OverwriteType.Role, allow: [...VIEW, ...v.send ? TALK : []], ...v.send ? {} : { deny: [import_discord.PermissionFlagsBits.SendMessages] } }))
+    ];
+    const parent = e.parentId ? await guild.channels.fetch(e.parentId).catch(() => null) : null;
+    const base = { name: e.name, type: import_discord.ChannelType.GuildText, topic: e.topic.slice(0, 1024), permissionOverwrites: overwrites };
+    let ch;
+    try {
+      ch = await guild.channels.create(parent?.type === import_discord.ChannelType.GuildCategory ? { ...base, parent: parent.id } : base);
+    } catch (err) {
+      if (!parent) throw err;
+      ch = await guild.channels.create(base);
+    }
+    channels.add(ch.id);
+    let control = null;
+    try {
+      control = await ch.send(payloadOf(e.control));
+      for (const m of e.messages) await ch.send(payloadOf(m));
+    } finally {
+      await api2.service("POST", `/bot/support-tickets/${e.ticketId}/channel`, { channelId: ch.id, controlMessageId: control?.id ?? null });
+    }
+    return ch.id;
+  }
+  async function transcript(e) {
+    const { html } = await api2.service("GET", `/bot/support-tickets/transcripts/${e.transcriptId}`);
+    const file = () => new import_discord.AttachmentBuilder(Buffer.from(html, "utf8"), { name: e.filename });
+    const extra = e.message ? payloadOf(e.message) : { allowedMentions: { parse: [] } };
+    for (const id of e.channelIds) {
+      const ch = await text(id);
+      if (ch) await ch.send({ ...extra, files: [file()] }).catch((err) => log(`transcript to ${id} failed: ${err instanceof Error ? err.message : err}`));
+    }
+    if (e.userId) await (await client2().users.fetch(e.userId)).send({ ...extra, files: [file()] }).catch(() => log(`transcript DM to ${e.userId} failed (DMs closed?)`));
+  }
+  async function applyOne(e, result) {
+    switch (e.type) {
+      case "create":
+        result.channelId = await create(e);
+        return;
+      case "access": {
+        const ch = await text(e.channelId);
+        if (!ch) return;
+        const type = e.kind === "user" ? import_discord.OverwriteType.Member : import_discord.OverwriteType.Role;
+        if (e.view === null) {
+          await ch.permissionOverwrites.delete(e.targetId, "EN Polizei: Ticket-Zugriff entfernt").catch(() => void 0);
+          return;
+        }
+        await ch.permissionOverwrites.edit(e.targetId, { ViewChannel: e.view, ReadMessageHistory: e.view, ...e.send === void 0 ? {} : { SendMessages: e.send, AttachFiles: e.send } }, { type, reason: "EN Polizei: Ticket-Zugriff" });
+        return;
+      }
+      case "rename": {
+        const ch = await text(e.channelId);
+        if (ch) await ch.setName(e.name, "EN Polizei: Ticket umbenannt");
+        return;
+      }
+      case "move": {
+        const ch = await text(e.channelId);
+        if (ch) await ch.setParent(e.parentId, { lockPermissions: false });
+        return;
+      }
+      case "post": {
+        const ch = await text(e.channelId);
+        if (ch) await ch.send(payloadOf(e.message));
+        return;
+      }
+      case "control": {
+        const ch = await text(e.channelId);
+        if (!ch) return;
+        const msg = e.messageId ? await ch.messages.fetch(e.messageId).catch(() => null) : null;
+        const edit = { ...payloadOf(e.message), content: void 0 };
+        if (msg) await msg.edit(edit);
+        else {
+          const sent = await ch.send(edit);
+          await api2.service("POST", `/bot/support-tickets/${e.ticketId}/channel`, { channelId: ch.id, controlMessageId: sent.id }).catch(() => void 0);
+        }
+        return;
+      }
+      case "dm":
+        await (await client2().users.fetch(e.userId)).send(payloadOf(e.message)).catch(() => log(`ticket DM to ${e.userId} failed (DMs closed?)`));
+        return;
+      case "transcript":
+        await transcript(e);
+        return;
+      case "delete": {
+        if (!channels.has(e.channelId)) await refresh();
+        if (!channels.has(e.channelId)) {
+          log(`refusing to delete ${e.channelId}: not a ticket channel`);
+          return;
+        }
+        const ch = await text(e.channelId);
+        if (!ch) return;
+        setTimeout(() => void ch.delete("EN Polizei: Ticket gel\xF6scht").then(() => channels.delete(e.channelId)).catch((err) => log(`ticket delete failed: ${err instanceof Error ? err.message : err}`)), e.delayMs);
+        return;
+      }
+      case "panel": {
+        const ch = await text(e.channelId);
+        if (!ch) throw new Error(`panel channel ${e.channelId} not found or not a text channel`);
+        const old = e.messageId ? await ch.messages.fetch(e.messageId).catch(() => null) : null;
+        const p = payloadOf(e.message);
+        const msg = old ? await old.edit(p) : await ch.send(p);
+        await api2.service("POST", `/bot/support-tickets/panels/${e.panelId}/posted`, { channelId: ch.id, messageId: msg.id });
+        return;
+      }
+    }
+  }
+  async function apply(effects) {
+    const result = {};
+    for (const e of effects) {
+      try {
+        await applyOne(e, result);
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : String(err);
+        log(`ticket effect ${e.type} failed: ${msg}`);
+        if (e.type === "create") {
+          await api2.service("POST", `/bot/support-tickets/${e.ticketId}/abort`, { reason: msg.slice(0, 300) }).catch(() => void 0);
+          throw new Error("Der Ticket-Channel konnte nicht erstellt werden (fehlen dem Bot die Rechte \u201EKan\xE4le verwalten\u201C / \u201ERollen verwalten\u201C?).");
+        }
+      }
+    }
+    return result;
+  }
+  async function refresh() {
+    try {
+      const ids = await api2.service("GET", "/bot/support-tickets/channels");
+      channels.clear();
+      ids.forEach((i) => channels.add(i));
+    } catch {
+    }
+  }
+  async function onMessage(m) {
+    if (!m.inGuild() || !channels.has(m.channelId)) return;
+    await api2.service("POST", "/bot/support-tickets/messages", {
+      channelId: m.channelId,
+      discordMessageId: m.id,
+      authorId: m.author.id,
+      authorName: (m.member?.displayName ?? m.author.globalName ?? m.author.username).slice(0, 100),
+      authorAvatar: m.author.displayAvatarURL({ size: 64 }),
+      isBot: m.author.bot,
+      content: m.content.slice(0, 8e3),
+      attachments: [...m.attachments.values()].slice(0, 10).map((a) => ({ name: a.name.slice(0, 200), url: a.url, size: a.size, contentType: a.contentType ?? null })),
+      embeds: m.embeds.slice(0, 10).map((e) => ({ ...e.title ? { title: e.title.slice(0, 256) } : {}, ...e.description ? { description: e.description.slice(0, 4096) } : {} }))
+    }).catch((err) => log(`ticket message not recorded: ${err instanceof Error ? err.message : err}`));
+  }
+  async function listCategories(guildId) {
+    const guild = await client2().guilds.fetch(guildId);
+    return [...(await guild.channels.fetch()).values()].filter((c) => c?.type === import_discord.ChannelType.GuildCategory).map((c) => ({ id: c.id, name: c.name })).sort((a, b) => a.name.localeCompare(b.name));
+  }
+  return { apply, refresh, onMessage, listCategories, isTicketChannel: (id) => channels.has(id) };
+}
 
 // apps/bot/src/api.ts
 var BotApiError = class extends Error {
@@ -76392,6 +76607,201 @@ ${lines.join("\n") || "Keine Bewerbungen."}`, 4e3) }] };
   }
 };
 
+// apps/bot/src/commands/tickets.ts
+var UUID = /^[0-9a-f-]{36}$/;
+var emojiOf = (e) => e && e.length <= 64 ? e : void 0;
+function fail(e) {
+  if (e instanceof BotApiError && [400, 403, 404, 409].includes(e.status) && e.message && !/^You |permission/i.test(e.message)) return errorReply(clip(e.message, 500));
+  return mapError(e);
+}
+async function run(c, r, text) {
+  if (r.effects?.length && c.applyEffects) await c.applyEffects(r.effects);
+  return okReply(text ?? r.message ?? "Erledigt.");
+}
+var staff = (c, id, body) => c.api.asUser(c.discordId, "POST", `/support-tickets/${id}/actions`, body);
+var options = (c, id) => c.api.asUser(c.discordId, "GET", `/support-tickets/${id}/options`);
+async function close(c, id, reason) {
+  try {
+    return await run(c, await staff(c, id, { action: "close", ...reason ? { reason } : {} }));
+  } catch (e) {
+    if (!(e instanceof BotApiError) || e.status !== 401 && e.status !== 403) return fail(e);
+    try {
+      return await run(c, await c.api.service("POST", `/bot/support-tickets/${id}/creator-close`, { discordId: c.discordId, ...reason ? { reason } : {} }));
+    } catch (e2) {
+      return fail(e2);
+    }
+  }
+}
+async function answer(c, id, questionId, values) {
+  try {
+    const r = await c.api.service("POST", `/bot/support-tickets/${id}/answer`, { discordId: c.discordId, questionId, values });
+    if (r.effects?.length && c.applyEffects) await c.applyEffects(r.effects);
+    return { ...okReply(r.done ? "Danke! Alle Fragen sind beantwortet \u2013 das Team meldet sich." : "Gespeichert."), update: { embeds: [{ title: "\u2705 Beantwortet", description: clip(plain(r.answer), 1e3), color: COLORS.success }] } };
+  } catch (e) {
+    return fail(e);
+  }
+}
+var durationButtons = (id, minutes) => [
+  { id: `tk:addt:${id}:0`, label: "Dauerhaft", style: minutes === 0 ? "primary" : "secondary" },
+  { id: `tk:addt:${id}:60`, label: "\u23F1\uFE0F 1 Stunde", style: minutes === 60 ? "primary" : "secondary" },
+  { id: `tk:addt:${id}:1440`, label: "\u23F1\uFE0F 24 Stunden", style: minutes === 1440 ? "primary" : "secondary" }
+];
+var addPicker = (id, minutes) => ({
+  ephemeral: true,
+  embeds: [{ title: "\u2795 Zum Ticket hinzuf\xFCgen", description: `W\xE4hle Benutzer oder Rollen.${minutes ? ` Zugriff ist **befristet** (${minutes >= 60 ? `${minutes / 60} Std.` : `${minutes} Min.`}).` : ""}`, color: COLORS.info }],
+  selects: [{ id: `tk:addu:${id}:${minutes}`, placeholder: "Benutzer w\xE4hlen \u2026", kind: "user", min: 1, max: 10, options: [] }, { id: `tk:addr:${id}:${minutes}`, placeholder: "Rolle w\xE4hlen \u2026", kind: "role", min: 1, max: 5, options: [] }],
+  buttons: durationButtons(id, minutes)
+});
+var TICKET_INTERACTION = {
+  prefix: "tk",
+  opensModal: (a) => ["ans", "rename", "note", "ratec", "closem"].includes(a[0] ?? "") || a[0] === "close" && a[2] === "m",
+  async run(c) {
+    const [action, id = "", ...rest] = c.args;
+    const f = c.fields ?? {};
+    try {
+      switch (action) {
+        // ---- Ticket öffnen (Panel: Button oder Dropdown) ----
+        case "open": {
+          const categoryId = rest[0] ?? c.values?.[0];
+          if (!categoryId || !UUID.test(categoryId) || !c.guildId) return errorReply("Bitte eine Ticket-Art ausw\xE4hlen.");
+          const r = await c.api.service("POST", "/bot/support-tickets/open", { categoryId, panelId: UUID.test(id) ? id : void 0, guildId: c.guildId, discordId: c.discordId, discordName: c.userName ?? c.discordId, memberRoleIds: c.memberRoleIds ?? [] });
+          if (!c.applyEffects) return errorReply("Tickets sind hier nicht verf\xFCgbar.");
+          const done = await c.applyEffects(r.effects ?? []);
+          return okReply(done.channelId ? `Dein Ticket wurde erstellt: <#${done.channelId}>` : "Dein Ticket wird erstellt \u2026");
+        }
+        // ---- Fragen ----
+        case "ans": {
+          const [qid, kind] = rest;
+          return { modal: { id: `tk:ansm:${id}:${qid}`, title: "Antwort", fields: [{ id: "value", label: "Deine Antwort", paragraph: kind === "l", required: true, maxLength: kind === "l" ? 2e3 : 200 }] } };
+        }
+        case "ansm":
+          return answer(c, id, rest[0] ?? "", [f.value ?? ""]);
+        case "ansv":
+          return answer(c, id, rest[0] ?? "", [rest[1] ?? ""]);
+        case "anss":
+          return answer(c, id, rest[0] ?? "", c.values ?? []);
+        case "skip":
+          return answer(c, id, rest[0] ?? "", null);
+        // ---- Schließen ----
+        case "close": {
+          if (rest[0] === "n") return close(c, id);
+          if (rest[0] === "m") return { modal: { id: `tk:closemodal:${id}`, title: "Ticket schlie\xDFen", fields: [{ id: "reason", label: "Warum wird dieses Ticket geschlossen?", paragraph: true, required: false, maxLength: 500 }] } };
+          const o = await c.api.service("GET", `/bot/support-tickets/${id}/close-options`);
+          if (o.closed) return errorReply("Das Ticket ist bereits geschlossen.");
+          if (!o.reasons.length && o.mode !== "NONE") return { modal: { id: `tk:closemodal:${id}`, title: "Ticket schlie\xDFen", fields: [{ id: "reason", label: "Warum wird dieses Ticket geschlossen?", paragraph: true, required: o.mode === "REQUIRED", maxLength: 500 }] } };
+          const buttons = [
+            ...o.source === "BOTH" ? [{ id: `tk:closem:${id}`, label: "Eigener Grund", emoji: "\u270F\uFE0F", style: "secondary" }] : [],
+            ...o.mode === "OPTIONAL" ? [{ id: `tk:closen:${id}`, label: "Ohne Grund schlie\xDFen", style: "secondary" }] : []
+          ];
+          return { ephemeral: true, embeds: [{ title: "\u{1F512} Ticket schlie\xDFen", description: "Warum wird dieses Ticket geschlossen?", color: COLORS.danger }], select: { id: `tk:closer:${id}`, placeholder: "Grund ausw\xE4hlen \u2026", options: o.reasons.slice(0, 25).map((r) => ({ label: clip(r, 100), value: clip(r, 100) })) }, buttons };
+        }
+        case "closem":
+          return { modal: { id: `tk:closemodal:${id}`, title: "Ticket schlie\xDFen", fields: [{ id: "reason", label: "Warum wird dieses Ticket geschlossen?", paragraph: true, required: true, maxLength: 500 }] } };
+        case "closemodal":
+          return close(c, id, (f.reason ?? "").trim() || void 0);
+        case "closer":
+          return close(c, id, c.values?.[0]);
+        case "closen":
+          return close(c, id);
+        // ---- Einfache Mitarbeiter-Aktionen ----
+        case "claim":
+        case "unclaim":
+        case "lock":
+        case "unlock":
+        case "escalate":
+        case "transcript":
+        case "reopen":
+        case "rating":
+          return run(c, await staff(c, id, { action }));
+        case "delete":
+          return { ephemeral: true, embeds: [{ title: "\u{1F5D1}\uFE0F Ticket l\xF6schen?", description: "Der Channel wird gel\xF6scht (ein Transcript wird vorher gesichert, falls eingestellt).", color: COLORS.danger }], buttons: [{ id: `tk:delyes:${id}`, label: "Endg\xFCltig l\xF6schen", style: "danger" }] };
+        case "delyes":
+          return run(c, await staff(c, id, { action: "delete" }));
+        // ---- Benutzer/Rollen ----
+        case "add_user":
+          return addPicker(id, 0);
+        case "addt":
+          return addPicker(id, Number(rest[0]) || 0);
+        case "addu":
+        case "addr": {
+          const minutes = Number(rest[0]) || 0;
+          let n = 0;
+          for (const target of c.values ?? []) {
+            const r = await staff(c, id, { action: "add_access", targetId: target, kind: action === "addu" ? "USER" : "ROLE", ...minutes ? { minutes } : {} });
+            if (r.effects?.length && c.applyEffects) await c.applyEffects(r.effects);
+            n++;
+          }
+          return okReply(`${n} ${action === "addu" ? "Benutzer" : "Rolle(n)"} hinzugef\xFCgt.`);
+        }
+        case "remove_user":
+          return { ephemeral: true, embeds: [{ title: "\u2796 Aus dem Ticket entfernen", description: "W\xE4hle Benutzer oder Rollen, die hinzugef\xFCgt wurden.", color: COLORS.info }], selects: [{ id: `tk:rmu:${id}`, placeholder: "Benutzer w\xE4hlen \u2026", kind: "user", min: 1, max: 10, options: [] }, { id: `tk:rmr:${id}`, placeholder: "Rolle w\xE4hlen \u2026", kind: "role", min: 1, max: 5, options: [] }] };
+        case "rmu":
+        case "rmr": {
+          let n = 0;
+          for (const target of c.values ?? []) {
+            const r = await staff(c, id, { action: "remove_access", targetId: target });
+            if (r.effects?.length && c.applyEffects) await c.applyEffects(r.effects);
+            n++;
+          }
+          return okReply(`${n} entfernt.`);
+        }
+        // ---- Auswahl: Priorität, Status, Kategorie, Verschieben ----
+        case "priority": {
+          const o = await options(c, id);
+          return pick(`tk:prio:${id}`, "\u{1F514} Priorit\xE4t \xE4ndern", o.priorities.map((p) => ({ label: p.name, value: p.id, emoji: emojiOf(p.emoji) })));
+        }
+        case "status": {
+          const o = await options(c, id);
+          return pick(`tk:stat:${id}`, "\u{1F3F7}\uFE0F Status \xE4ndern", o.statuses.map((s) => ({ label: s.name, value: s.id, emoji: emojiOf(s.emoji) })));
+        }
+        case "category": {
+          const o = await options(c, id);
+          return pick(`tk:cat:${id}`, "\u{1F5C2}\uFE0F Kategorie \xE4ndern", o.categories.map((x) => ({ label: x.name, value: x.id, emoji: emojiOf(x.emoji) })));
+        }
+        case "move": {
+          if (!c.guildId || !c.listCategories) return errorReply("Das geht nur auf einem Server.");
+          await options(c, id);
+          const cats = await c.listCategories(c.guildId);
+          return pick(`tk:movesel:${id}`, "\u{1F4C1} In Discord-Kategorie verschieben", [{ label: "(keine Kategorie)", value: "none" }, ...cats.slice(0, 24).map((x) => ({ label: x.name, value: x.id }))]);
+        }
+        case "prio":
+          return run(c, await staff(c, id, { action: "priority", priorityId: c.values?.[0] }));
+        case "stat":
+          return run(c, await staff(c, id, { action: "status", statusId: c.values?.[0] }));
+        case "cat":
+          return run(c, await staff(c, id, { action: "category", categoryId: c.values?.[0] }));
+        case "movesel":
+          return run(c, await staff(c, id, { action: "move", parentId: c.values?.[0] === "none" ? null : c.values?.[0] }));
+        // ---- Formulare ----
+        case "rename":
+          return { modal: { id: `tk:renm:${id}`, title: "Ticket umbenennen", fields: [{ id: "name", label: "Neuer Name (Platzhalter erlaubt)", required: true, maxLength: 90, placeholder: "z. B. support-{username}" }] } };
+        case "renm":
+          return run(c, await staff(c, id, { action: "rename", name: f.name ?? "" }));
+        case "note":
+          return { modal: { id: `tk:notem:${id}`, title: "Interne Notiz", fields: [{ id: "text", label: "Nur f\xFCr berechtigte Mitarbeiter sichtbar", paragraph: true, required: true, maxLength: 4e3 }] } };
+        case "notem":
+          return run(c, await staff(c, id, { action: "note", text: f.text ?? "" }));
+        // ---- Bewertung (per DM an den Ersteller) ----
+        case "rate": {
+          const r = await c.api.service("POST", `/bot/support-tickets/${id}/rating`, { discordId: c.discordId, stars: Number(rest[0]) });
+          return { ...okReply(r.thanks), buttons: [{ id: `tk:ratec:${id}`, label: "Kommentar hinzuf\xFCgen", emoji: "\u{1F4AC}", style: "secondary" }], update: { embeds: [{ title: `\u2B50 ${"\u2B50".repeat(Math.max(0, Number(rest[0]) - 1))} bewertet`, description: "Danke f\xFCr dein Feedback!", color: COLORS.success }] } };
+        }
+        case "ratec":
+          return { modal: { id: `tk:ratecm:${id}`, title: "Kommentar zur Bewertung", fields: [{ id: "comment", label: "Wie zufrieden warst du mit dem Support?", paragraph: true, required: true, maxLength: 1e3 }] } };
+        case "ratecm": {
+          await c.api.service("POST", `/bot/support-tickets/${id}/rating-comment`, { discordId: c.discordId, comment: f.comment ?? "" });
+          return okReply("Danke f\xFCr deinen Kommentar!");
+        }
+        default:
+          return errorReply("Unbekannte Aktion.");
+      }
+    } catch (e) {
+      return fail(e);
+    }
+  }
+};
+var pick = (id, title, opts) => opts.length ? { ephemeral: true, embeds: [{ title, color: COLORS.info }], select: { id, placeholder: "Bitte ausw\xE4hlen \u2026", options: opts.slice(0, 25).map((o) => ({ ...o, label: clip(o.label, 100) })) } } : errorReply("Keine Auswahl verf\xFCgbar.");
+
 // apps/bot/src/commands/features.ts
 var str2 = (c, k) => String(c.opts[k] ?? "").trim();
 var choices = (m) => Object.keys(m).map((k) => ({ name: k.replace("_", " "), value: k }));
@@ -76406,9 +76816,6 @@ async function setDanger(c, level, reason) {
     return mapError(e);
   }
 }
-var SUPPORT_PANEL = { title: "\u{1F3AB} Support", color: COLORS.info, description: "Fragen, Probleme oder Anliegen an die Leitung? Klicke auf **Ticket \xF6ffnen** \u2013 es wird ein privater Channel nur f\xFCr dich und das Team angelegt." };
-var SUPPORT_OPEN = { id: "support:open", label: "Ticket \xF6ffnen", emoji: "\u{1F3AB}", style: "primary" };
-var SUPPORT_CLOSE = { id: "support:close", label: "Ticket schlie\xDFen", emoji: "\u{1F512}", style: "danger" };
 var DUTY_PANEL = { title: "\u{1F693} Dienststatus", color: COLORS.info, description: "Melde dich hier mit einem Klick **in den Dienst**, in die **Pause** oder **au\xDFer Dienst**.\nDein Status erscheint sofort im Dashboard, in der Teamliste und \u2013 falls eingestellt \u2013 als Discord-Rolle.\n\n*Dein Discord-Konto muss verkn\xFCpft sein (`/verknuepfen`).*" };
 var DUTY_BUTTONS = [
   { id: "duty:ON_DUTY", label: "Im Dienst", emoji: "\u{1F7E2}", style: "success" },
@@ -76525,22 +76932,6 @@ var FEATURE_COMMANDS = [
     }
   },
   {
-    name: "supportpanel",
-    description: "Postet das Support-Ticket-Panel in diesen Channel",
-    async run(c) {
-      const denied = needGuildAdmin(c);
-      if (denied) return denied;
-      if (!c.channelId || !c.platform) return errorReply("Panel kann hier nicht gepostet werden.");
-      try {
-        await c.platform.postPanel({ channelId: c.channelId, embed: SUPPORT_PANEL, buttons: [SUPPORT_OPEN] });
-        const cfg2 = await c.config?.().catch(() => void 0);
-        return okReply(`Support-Panel gepostet.${cfg2?.staffRole ? "" : " Tipp: In den Einstellungen eine **Team-Rolle** hinterlegen, damit das Team Tickets sieht."}`);
-      } catch {
-        return errorReply("Panel konnte nicht gepostet werden (fehlen dem Bot Rechte in diesem Channel?).");
-      }
-    }
-  },
-  {
     name: "roblox",
     description: "Sucht einen Roblox-Benutzer (Name \u2192 ID)",
     options: [{ name: "name", description: "Roblox-Benutzername", type: "string", required: true, maxLength: 20 }],
@@ -76573,6 +76964,7 @@ var INTERACTIONS = [
   },
   SEK_INTERACTION,
   QUALI_INTERACTION,
+  TICKET_INTERACTION,
   {
     prefix: "danger",
     async run(c) {
@@ -76589,17 +76981,7 @@ var INTERACTIONS = [
         await c.platform.deleteChannel(c.channelId, 5e3);
         return okReply("Ticket wird in 5 Sekunden geschlossen.");
       }
-      if (c.args[0] !== "open") return errorReply("Unbekannte Aktion.");
-      const cfg2 = await c.config?.().catch(() => void 0);
-      try {
-        const t = await c.platform.createTicketChannel({ guildId: c.guildId, userId: c.discordId, userName: c.userName ?? c.discordId, categoryId: cfg2?.tickets, staffRoleId: cfg2?.staffRole });
-        if (t.existing) return okReply(`Du hast schon ein offenes Ticket: <#${t.channelId}>`);
-        await c.platform.postPanel({ channelId: t.channelId, embed: { title: "\u{1F3AB} Ticket ge\xF6ffnet", color: COLORS.info, description: `<@${c.discordId}>, beschreibe dein Anliegen \u2013 das Team meldet sich hier.
-Zum Schlie\xDFen den Button unten nutzen.` }, buttons: [SUPPORT_CLOSE] });
-        return okReply(`Dein Ticket: <#${t.channelId}>`);
-      } catch {
-        return errorReply("Ticket konnte nicht angelegt werden (fehlen dem Bot die Rechte \u201EKan\xE4le verwalten\u201C?).");
-      }
+      return errorReply("Dieses alte Support-Panel wird nicht mehr unterst\xFCtzt. Bitte das neue Ticket-Panel benutzen.");
     }
   }
 ];
@@ -76671,8 +77053,9 @@ var COMMANDS = [
         { name: "Abfragen", value: "`/person` `/kennzeichen` `/fahndungen` `/einsaetze` `/einsatzinfo` `/einheiten` `/team`" },
         { name: "Dienst & Leitstelle", value: "`/dienst` `/dienststunden` `/einheitstatus` `/einsatz` `/einsatzstatus` `/einsatzzuweisen` `/funk`" },
         { name: "Erfassen", value: "`/ticket` `/bericht` `/beschwerde` `/ermittlung` `/fahndung` `/beweis`" },
-        { name: "Leitung & Team", value: "`/gefahrenstatus` `/funkfreigabe` `/teamliste` `/dienstpanel` `/supportpanel` `/bewerbungspanel` `/qualipanel` `/roblox`" },
+        { name: "Leitung & Team", value: "`/gefahrenstatus` `/funkfreigabe` `/teamliste` `/dienstpanel` `/bewerbungspanel` `/qualipanel` `/roblox`" },
         { name: "SEK", value: "`/sek` `/sek-bericht`" },
+        { name: "Support-Tickets", value: "Ticket-Panels, Kategorien, Fragen und Buttons werden im Dashboard eingerichtet (Support Tickets \u2192 Einstellungen) und von dort in Discord gesendet." },
         { name: "F\xFCr alle", value: "`/bewerbung` (auch ohne Verkn\xFCpfung; Fragen per Direktnachricht) \xB7 SEK/Flugstaffel/Ausbilder \xFCber das Qualifikations-Panel" },
         { name: "Hinweis", value: "Alle Befehle laufen mit **deinen** Rechten im System. Antworten sind nur f\xFCr dich sichtbar." }
       ] }] };
@@ -78470,48 +78853,48 @@ var ZodString = class _ZodString extends ZodType {
       ...errorUtil.errToObj(message)
     });
   }
-  jwt(options) {
-    return this._addCheck({ kind: "jwt", ...errorUtil.errToObj(options) });
+  jwt(options2) {
+    return this._addCheck({ kind: "jwt", ...errorUtil.errToObj(options2) });
   }
-  ip(options) {
-    return this._addCheck({ kind: "ip", ...errorUtil.errToObj(options) });
+  ip(options2) {
+    return this._addCheck({ kind: "ip", ...errorUtil.errToObj(options2) });
   }
-  cidr(options) {
-    return this._addCheck({ kind: "cidr", ...errorUtil.errToObj(options) });
+  cidr(options2) {
+    return this._addCheck({ kind: "cidr", ...errorUtil.errToObj(options2) });
   }
-  datetime(options) {
-    if (typeof options === "string") {
+  datetime(options2) {
+    if (typeof options2 === "string") {
       return this._addCheck({
         kind: "datetime",
         precision: null,
         offset: false,
         local: false,
-        message: options
+        message: options2
       });
     }
     return this._addCheck({
       kind: "datetime",
-      precision: typeof options?.precision === "undefined" ? null : options?.precision,
-      offset: options?.offset ?? false,
-      local: options?.local ?? false,
-      ...errorUtil.errToObj(options?.message)
+      precision: typeof options2?.precision === "undefined" ? null : options2?.precision,
+      offset: options2?.offset ?? false,
+      local: options2?.local ?? false,
+      ...errorUtil.errToObj(options2?.message)
     });
   }
   date(message) {
     return this._addCheck({ kind: "date", message });
   }
-  time(options) {
-    if (typeof options === "string") {
+  time(options2) {
+    if (typeof options2 === "string") {
       return this._addCheck({
         kind: "time",
         precision: null,
-        message: options
+        message: options2
       });
     }
     return this._addCheck({
       kind: "time",
-      precision: typeof options?.precision === "undefined" ? null : options?.precision,
-      ...errorUtil.errToObj(options?.message)
+      precision: typeof options2?.precision === "undefined" ? null : options2?.precision,
+      ...errorUtil.errToObj(options2?.message)
     });
   }
   duration(message) {
@@ -78524,12 +78907,12 @@ var ZodString = class _ZodString extends ZodType {
       ...errorUtil.errToObj(message)
     });
   }
-  includes(value, options) {
+  includes(value, options2) {
     return this._addCheck({
       kind: "includes",
       value,
-      position: options?.position,
-      ...errorUtil.errToObj(options?.message)
+      position: options2?.position,
+      ...errorUtil.errToObj(options2?.message)
     });
   }
   startsWith(value, message) {
@@ -79813,7 +80196,7 @@ ZodObject.lazycreate = (shape, params) => {
 var ZodUnion = class extends ZodType {
   _parse(input) {
     const { ctx } = this._processInputParams(input);
-    const options = this._def.options;
+    const options2 = this._def.options;
     function handleResults(results) {
       for (const result of results) {
         if (result.result.status === "valid") {
@@ -79834,7 +80217,7 @@ var ZodUnion = class extends ZodType {
       return INVALID;
     }
     if (ctx.common.async) {
-      return Promise.all(options.map(async (option) => {
+      return Promise.all(options2.map(async (option) => {
         const childCtx = {
           ...ctx,
           common: {
@@ -79855,7 +80238,7 @@ var ZodUnion = class extends ZodType {
     } else {
       let dirty = void 0;
       const issues = [];
-      for (const option of options) {
+      for (const option of options2) {
         const childCtx = {
           ...ctx,
           common: {
@@ -79985,9 +80368,9 @@ var ZodDiscriminatedUnion = class _ZodDiscriminatedUnion extends ZodType {
    * @param types an array of object schemas
    * @param params
    */
-  static create(discriminator, options, params) {
+  static create(discriminator, options2, params) {
     const optionsMap = /* @__PURE__ */ new Map();
-    for (const type of options) {
+    for (const type of options2) {
       const discriminatorValues = getDiscriminator(type.shape[discriminator]);
       if (!discriminatorValues.length) {
         throw new Error(`A discriminator value for key \`${discriminator}\` could not be extracted from all schema options`);
@@ -80002,7 +80385,7 @@ var ZodDiscriminatedUnion = class _ZodDiscriminatedUnion extends ZodType {
     return new _ZodDiscriminatedUnion({
       typeName: ZodFirstPartyTypeKind.ZodDiscriminatedUnion,
       discriminator,
-      options,
+      options: options2,
       optionsMap,
       ...processCreateParams(params)
     });
@@ -81211,7 +81594,7 @@ function createLive(api2, platform2, log = console.log) {
     if (!sameSpot || stored?.messageId !== messageId) await api2.service("PUT", `/bot/state/${STATE_KEY[kind]}`, { value: placement });
     return placement;
   }
-  function start(seconds) {
+  function start2(seconds) {
     let running = false;
     let lastError;
     const tick = async () => {
@@ -81234,7 +81617,7 @@ function createLive(api2, platform2, log = console.log) {
     void tick();
     return () => clearInterval(timer);
   }
-  return { refresh, start };
+  return { refresh, start: start2 };
 }
 
 // apps/bot/src/outbox.ts
@@ -81245,7 +81628,7 @@ function dutyRoleChanges(status, cfg2) {
   return { add: target && all.includes(target) ? [target] : [], remove: all.filter((r) => r !== target) };
 }
 var DIRECT = { "application.decided": applicationDecisionText, "qualification.decided": qualificationDecisionText };
-async function pollOnce(api2, send, log = console.log, dm, grantRole, syncRoles, onDutyChanged) {
+async function pollOnce(api2, send, log = console.log, dm, grantRole, syncRoles, onDutyChanged, ticketEffects) {
   const [channels, items] = await Promise.all([api2.service("GET", "/bot/config"), api2.service("GET", "/bot/outbox?limit=20")]);
   let sent = 0;
   for (const item of items) {
@@ -81265,6 +81648,22 @@ async function pollOnce(api2, send, log = console.log, dm, grantRole, syncRoles,
       } catch (e) {
         const msg = e instanceof Error ? e.message : "send failed";
         log(`outbox ${item.id} (${item.type}) direct message failed: ${msg}`);
+        await api2.service("POST", `/bot/outbox/${item.id}/ack`, { ok: false, error: msg }).catch(() => void 0);
+      }
+      continue;
+    }
+    if (item.type === "ticket.effects") {
+      if (!ticketEffects) {
+        await api2.service("POST", `/bot/outbox/${item.id}/ack`, { ok: false, error: "tickets not available" }).catch(() => void 0);
+        continue;
+      }
+      try {
+        await ticketEffects(item.payload.effects ?? []);
+        await api2.service("POST", `/bot/outbox/${item.id}/ack`, { ok: true }).catch(() => void 0);
+        sent++;
+      } catch (e) {
+        const msg = e instanceof Error ? e.message : "ticket effects failed";
+        log(`outbox ${item.id} (${item.type}) failed: ${msg}`);
         await api2.service("POST", `/bot/outbox/${item.id}/ack`, { ok: false, error: msg }).catch(() => void 0);
       }
       continue;
@@ -81303,14 +81702,14 @@ async function pollOnce(api2, send, log = console.log, dm, grantRole, syncRoles,
   }
   return sent;
 }
-function startOutboxLoop(api2, send, seconds, log = console.log, dm, grantRole, syncRoles, onDutyChanged) {
+function startOutboxLoop(api2, send, seconds, log = console.log, dm, grantRole, syncRoles, onDutyChanged, ticketEffects) {
   let running = false;
   let lastError;
   const tick = async () => {
     if (running) return;
     running = true;
     try {
-      await pollOnce(api2, send, log, dm, grantRole, syncRoles, onDutyChanged);
+      await pollOnce(api2, send, log, dm, grantRole, syncRoles, onDutyChanged, ticketEffects);
       if (lastError) {
         log("outbox: connection to the API restored");
         lastError = void 0;
@@ -81353,38 +81752,40 @@ async function robloxLookup(username, doFetch = fetch) {
 loadDotEnv();
 var cfg = loadConfig();
 var api = new HttpApi(cfg.API_URL, cfg.BOT_API_TOKEN);
-var client = new import_discord.Client({ intents: [import_discord.GatewayIntentBits.Guilds, import_discord.GatewayIntentBits.DirectMessages], partials: [import_discord.Partials.Channel] });
+var makeClient = (withContent) => new import_discord2.Client({
+  intents: [import_discord2.GatewayIntentBits.Guilds, import_discord2.GatewayIntentBits.DirectMessages, import_discord2.GatewayIntentBits.GuildMessages, ...withContent ? [import_discord2.GatewayIntentBits.MessageContent] : []],
+  partials: [import_discord2.Partials.Channel]
+});
+var client = makeClient(true);
+var tickets = createTicketRuntime(() => client, api);
 var toEmbed = (e) => {
-  const b = new import_discord.EmbedBuilder().setTitle(e.title);
+  const b = new import_discord2.EmbedBuilder().setTitle(e.title);
   if (e.description) b.setDescription(e.description);
   if (e.color !== void 0) b.setColor(e.color);
   if (e.fields?.length) b.addFields(e.fields.map((f) => ({ name: f.name, value: f.value, inline: f.inline ?? false })));
   if (e.footer) b.setFooter({ text: e.footer });
   return b;
 };
-var STYLE = { primary: import_discord.ButtonStyle.Primary, secondary: import_discord.ButtonStyle.Secondary, success: import_discord.ButtonStyle.Success, danger: import_discord.ButtonStyle.Danger };
+var STYLE2 = { primary: import_discord2.ButtonStyle.Primary, secondary: import_discord2.ButtonStyle.Secondary, success: import_discord2.ButtonStyle.Success, danger: import_discord2.ButtonStyle.Danger };
 var toRows = (buttons = []) => {
   const rows = [];
   for (let i = 0; i < buttons.length && rows.length < 5; i += 5) {
-    rows.push(new import_discord.ActionRowBuilder().addComponents(buttons.slice(i, i + 5).map((b) => {
-      const x = b.url ? new import_discord.ButtonBuilder().setURL(b.url).setLabel(b.label).setStyle(import_discord.ButtonStyle.Link) : new import_discord.ButtonBuilder().setCustomId(b.id).setLabel(b.label).setStyle(STYLE[b.style]);
+    rows.push(new import_discord2.ActionRowBuilder().addComponents(buttons.slice(i, i + 5).map((b) => {
+      const x = b.url ? new import_discord2.ButtonBuilder().setURL(b.url).setLabel(b.label).setStyle(import_discord2.ButtonStyle.Link) : new import_discord2.ButtonBuilder().setCustomId(b.id).setLabel(b.label).setStyle(STYLE2[b.style]);
       if (b.emoji) x.setEmoji(b.emoji);
       return x;
     })));
   }
   return rows;
 };
-var toComponents = (buttons, select) => [
-  ...select ? [new import_discord.ActionRowBuilder().addComponents(new import_discord.StringSelectMenuBuilder().setCustomId(select.id).setPlaceholder(select.placeholder.slice(0, 150)).addOptions(select.options.slice(0, 25).map((o) => ({ label: o.label.slice(0, 100), value: o.value, ...o.description ? { description: o.description.slice(0, 100) } : {} }))))] : [],
-  ...toRows(buttons).slice(0, select ? 4 : 5)
-];
-var toModal = (m) => new import_discord.ModalBuilder().setCustomId(m.id).setTitle(m.title.slice(0, 45)).addComponents(m.fields.map((f) => {
-  const input = new import_discord.TextInputBuilder().setCustomId(f.id).setLabel(f.label.slice(0, 45)).setStyle(f.paragraph ? import_discord.TextInputStyle.Paragraph : import_discord.TextInputStyle.Short).setRequired(!!f.required);
+var toComponents = (buttons, select, selects = []) => componentsOf(buttons, [...select ? [select] : [], ...selects]);
+var toModal = (m) => new import_discord2.ModalBuilder().setCustomId(m.id).setTitle(m.title.slice(0, 45)).addComponents(m.fields.map((f) => {
+  const input = new import_discord2.TextInputBuilder().setCustomId(f.id).setLabel(f.label.slice(0, 45)).setStyle(f.paragraph ? import_discord2.TextInputStyle.Paragraph : import_discord2.TextInputStyle.Short).setRequired(!!f.required);
   if (f.maxLength) input.setMaxLength(f.maxLength);
   if (f.placeholder) input.setPlaceholder(f.placeholder.slice(0, 100));
-  return new import_discord.ActionRowBuilder().addComponents(input);
+  return new import_discord2.ActionRowBuilder().addComponents(input);
 }));
-var replyPayload = (r) => ({ content: r.content ?? "", embeds: (r.embeds ?? []).map(toEmbed), components: toComponents(r.buttons, r.select), allowedMentions: { parse: [] } });
+var replyPayload = (r) => ({ content: r.content ?? "", embeds: (r.embeds ?? []).map(toEmbed), components: toComponents(r.buttons, r.select, r.selects), allowedMentions: { parse: [] } });
 var TICKET_PREFIX = "ticket-";
 var ticketName = (userName, userId) => `${TICKET_PREFIX}${userName.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 40) || userId}`;
 var platform = {
@@ -81396,27 +81797,27 @@ var platform = {
   async createTicketChannel({ guildId, userId, userName, categoryId, staffRoleId, extraUserIds = [] }) {
     const guild = await client.guilds.fetch(guildId);
     const channels = await guild.channels.fetch();
-    const existing = channels.find((c) => c?.type === import_discord.ChannelType.GuildText && c.name.startsWith(TICKET_PREFIX) && c.topic?.includes(`(${userId})`));
+    const existing = channels.find((c) => c?.type === import_discord2.ChannelType.GuildText && c.name.startsWith(TICKET_PREFIX) && c.topic?.includes(`(${userId})`));
     if (existing) return { channelId: existing.id, existing: true };
-    const view = [import_discord.PermissionFlagsBits.ViewChannel, import_discord.PermissionFlagsBits.SendMessages, import_discord.PermissionFlagsBits.ReadMessageHistory, import_discord.PermissionFlagsBits.AttachFiles];
+    const view = [import_discord2.PermissionFlagsBits.ViewChannel, import_discord2.PermissionFlagsBits.SendMessages, import_discord2.PermissionFlagsBits.ReadMessageHistory, import_discord2.PermissionFlagsBits.AttachFiles];
     const ch = await guild.channels.create({
       name: ticketName(userName, userId),
-      type: import_discord.ChannelType.GuildText,
+      type: import_discord2.ChannelType.GuildText,
       topic: `Support-Ticket von ${userName} (${userId})`,
-      ...categoryId && channels.get(categoryId)?.type === import_discord.ChannelType.GuildCategory ? { parent: categoryId } : {},
+      ...categoryId && channels.get(categoryId)?.type === import_discord2.ChannelType.GuildCategory ? { parent: categoryId } : {},
       permissionOverwrites: [
-        { id: guild.roles.everyone.id, type: import_discord.OverwriteType.Role, deny: [import_discord.PermissionFlagsBits.ViewChannel] },
-        { id: userId, type: import_discord.OverwriteType.Member, allow: view },
-        { id: client.user.id, type: import_discord.OverwriteType.Member, allow: [...view, import_discord.PermissionFlagsBits.ManageChannels] },
-        ...staffRoleId ? [{ id: staffRoleId, type: import_discord.OverwriteType.Role, allow: view }] : [],
-        ...extraUserIds.filter((id) => id !== userId).map((id) => ({ id, type: import_discord.OverwriteType.Member, allow: view }))
+        { id: guild.roles.everyone.id, type: import_discord2.OverwriteType.Role, deny: [import_discord2.PermissionFlagsBits.ViewChannel] },
+        { id: userId, type: import_discord2.OverwriteType.Member, allow: view },
+        { id: client.user.id, type: import_discord2.OverwriteType.Member, allow: [...view, import_discord2.PermissionFlagsBits.ManageChannels] },
+        ...staffRoleId ? [{ id: staffRoleId, type: import_discord2.OverwriteType.Role, allow: view }] : [],
+        ...extraUserIds.filter((id) => id !== userId).map((id) => ({ id, type: import_discord2.OverwriteType.Member, allow: view }))
       ]
     });
     return { channelId: ch.id, existing: false };
   },
   async deleteChannel(channelId, delayMs = 0) {
     const ch = await client.channels.fetch(channelId);
-    if (!ch || ch.type !== import_discord.ChannelType.GuildText || !ch.name.startsWith(TICKET_PREFIX)) throw new Error("not a ticket channel");
+    if (!ch || ch.type !== import_discord2.ChannelType.GuildText || !ch.name.startsWith(TICKET_PREFIX)) throw new Error("not a ticket channel");
     setTimeout(() => void ch.delete("Support-Ticket geschlossen").catch((e) => console.error("ticket delete failed:", e instanceof Error ? e.message : e)), delayMs);
   },
   async sendDirectMessage(userId, text) {
@@ -81447,7 +81848,7 @@ var platform = {
 };
 var live = createLive(api, platform);
 function toBuilder(def) {
-  const b = new import_discord.SlashCommandBuilder().setName(def.name).setDescription(def.description);
+  const b = new import_discord2.SlashCommandBuilder().setName(def.name).setDescription(def.description);
   for (const o of def.options ?? []) {
     const common = (x) => {
       x.setName(o.name);
@@ -81490,15 +81891,15 @@ function joinedAtOf2(m) {
 }
 async function markDecided(message, d) {
   const embeds = message.embeds.map((e, i, all) => {
-    const b = import_discord.EmbedBuilder.from(e).setColor(d.color);
+    const b = import_discord2.EmbedBuilder.from(e).setColor(d.color);
     if (i === all.length - 1) b.addFields({ name: "Entscheidung", value: d.text.slice(0, 1024) });
     return b;
   });
   const rows = [];
   for (const row of message.components) {
     if (!("components" in row)) continue;
-    const kept = row.components.filter((c) => c.type === import_discord.ComponentType.Button && !/^quali:(decide|reason):/.test(c.customId ?? ""));
-    if (kept.length) rows.push(new import_discord.ActionRowBuilder().addComponents(kept.map((c) => import_discord.ButtonBuilder.from(c))));
+    const kept = row.components.filter((c) => c.type === import_discord2.ComponentType.Button && !/^quali:(decide|reason):/.test(c.customId ?? ""));
+    if (kept.length) rows.push(new import_discord2.ActionRowBuilder().addComponents(kept.map((c) => import_discord2.ButtonBuilder.from(c))));
   }
   await message.edit({ embeds, components: rows, allowedMentions: { parse: [] } });
 }
@@ -81512,11 +81913,19 @@ function baseCtx(i) {
     memberJoinedAt: joinedAtOf2(i.member),
     guildId: i.guildId ?? void 0,
     channelId: i.channelId ?? void 0,
-    isGuildAdmin: !!perms && (perms.has(import_discord.PermissionFlagsBits.ManageGuild) || perms.has(import_discord.PermissionFlagsBits.Administrator)),
+    isGuildAdmin: !!perms && (perms.has(import_discord2.PermissionFlagsBits.ManageGuild) || perms.has(import_discord2.PermissionFlagsBits.Administrator)),
     config: () => api.service("GET", "/bot/config"),
     refreshLive: (kind, o) => live.refresh(kind, o),
-    robloxLookup: (name) => robloxLookup(name)
+    robloxLookup: (name) => robloxLookup(name),
+    memberRoleIds: rolesOf(i.member),
+    applyEffects: (effects) => tickets.apply(effects),
+    listCategories: (guildId) => tickets.listCategories(guildId)
   };
+}
+function rolesOf(m) {
+  const x = m;
+  if (!x?.roles) return [];
+  return Array.isArray(x.roles) ? x.roles : [...x.roles.cache?.keys() ?? []];
 }
 async function safeRun(label2, fn) {
   try {
@@ -81537,10 +81946,10 @@ async function handleCommand(i) {
   if (def.opensModal) {
     const reply2 = await safeRun(`command ${def.name}`, () => def.run({ ...baseCtx(i), opts }));
     if (reply2.modal) await i.showModal(toModal(reply2.modal));
-    else await i.reply({ ...replyPayload(reply2), flags: import_discord.MessageFlags.Ephemeral });
+    else await i.reply({ ...replyPayload(reply2), flags: import_discord2.MessageFlags.Ephemeral });
     return;
   }
-  await i.deferReply({ flags: import_discord.MessageFlags.Ephemeral });
+  await i.deferReply({ flags: import_discord2.MessageFlags.Ephemeral });
   const reply = await safeRun(`command ${def.name}`, () => def.run({ ...baseCtx(i), opts }));
   await i.editReply(replyPayload(reply));
 }
@@ -81550,25 +81959,32 @@ async function handleComponent(i) {
   if (i.isButton() && hit.def.opensModal?.(hit.args)) {
     const reply2 = await safeRun(`interaction ${i.customId}`, () => hit.def.run({ ...baseCtx(i), opts: {}, args: hit.args }));
     if (reply2.modal) await i.showModal(toModal(reply2.modal));
-    else await i.reply({ ...replyPayload(reply2), flags: import_discord.MessageFlags.Ephemeral });
+    else await i.reply({ ...replyPayload(reply2), flags: import_discord2.MessageFlags.Ephemeral });
     return;
   }
-  await i.deferReply({ flags: import_discord.MessageFlags.Ephemeral });
+  await i.deferReply({ flags: import_discord2.MessageFlags.Ephemeral });
   const fields = i.isModalSubmit() ? Object.fromEntries(i.fields.fields.map((f, id) => [id, "value" in f ? String(f.value) : ""])) : void 0;
-  const values = i.isStringSelectMenu() ? i.values : void 0;
+  const values = i.isAnySelectMenu() ? i.values : void 0;
   const reply = await safeRun(`interaction ${i.customId}`, () => hit.def.run({ ...baseCtx(i), opts: {}, args: hit.args, fields, values }));
   await i.editReply(replyPayload(reply));
   const source = i.isModalSubmit() ? i.isFromMessage() ? i.message : null : i.message;
   if (reply.decided && source) await markDecided(source, reply.decided).catch((e) => console.error("could not update the application message:", e instanceof Error ? e.message : e));
+  if (reply.update && source) await source.edit({ embeds: (reply.update.embeds ?? []).map(toEmbed), components: toComponents(reply.update.buttons), allowedMentions: { parse: [] } }).catch((e) => console.error("could not update message:", e instanceof Error ? e.message : e));
 }
-client.on("interactionCreate", (i) => {
-  const task = i.isChatInputCommand() ? handleCommand(i) : i.isButton() || i.isModalSubmit() || i.isStringSelectMenu() ? handleComponent(i) : void 0;
-  void task?.catch((e) => console.error("interaction failed:", e instanceof Error ? e.message : e));
-});
-client.on("messageCreate", (m) => {
-  if (m.author.bot || m.inGuild()) return;
-  void handleDirectMessage({ userId: m.author.id, userName: m.author.username, content: m.content, api, sendDm: (u, msg) => platform.sendDm(u, msg), robloxLookup: (n) => robloxLookup(n) }).catch((e) => console.error("direct message handling failed:", e instanceof Error ? e.message : e));
-});
+function wire(c) {
+  c.on("interactionCreate", (i) => {
+    const task = i.isChatInputCommand() ? handleCommand(i) : i.isButton() || i.isModalSubmit() || i.isAnySelectMenu() ? handleComponent(i) : void 0;
+    void task?.catch((e) => console.error("interaction failed:", e instanceof Error ? e.message : e));
+  });
+  c.on("messageCreate", (m) => {
+    if (m.inGuild()) {
+      void tickets.onMessage(m);
+      return;
+    }
+    if (m.author.bot) return;
+    void handleDirectMessage({ userId: m.author.id, userName: m.author.username, content: m.content, api, sendDm: (u, msg) => platform.sendDm(u, msg), robloxLookup: (n) => robloxLookup(n) }).catch((e) => console.error("direct message handling failed:", e instanceof Error ? e.message : e));
+  });
+}
 setInterval(() => sweepSessions(), 10 * 6e4).unref();
 async function syncRolesEverywhere(userId, add, remove) {
   for (const g of client.guilds.cache.values()) {
@@ -81601,47 +82017,79 @@ async function checkApi() {
     console.log(`API NOT reachable at ${cfg.API_URL} \u2014 the bot runs, but commands will say "system not reachable" until the system is up`);
   }
 }
-client.once("clientReady", async (c) => {
-  console.log(`Logged in as ${c.user.tag}`);
-  void checkApi();
-  const json = COMMANDS.map(toBuilder);
-  const guilds = guildIds(cfg);
-  if (guilds.length) {
-    try {
-      await c.application.commands.set([]);
-    } catch (e) {
-      console.error(`could not clear global commands: ${e instanceof Error ? e.message : e}`);
-    }
-    for (const g of guilds) {
+function wireReady(client0) {
+  client0.once("clientReady", async (c) => {
+    console.log(`Logged in as ${c.user.tag}`);
+    void checkApi();
+    const json = COMMANDS.map(toBuilder);
+    const guilds = guildIds(cfg);
+    if (guilds.length) {
       try {
-        await c.application.commands.set(json, g);
-        console.log(`${json.length} slash commands registered for guild ${g}`);
+        await c.application.commands.set([]);
       } catch (e) {
-        console.error(`could not register commands for guild ${g} (is the bot invited there with the applications.commands scope?): ${e instanceof Error ? e.message : e}`);
+        console.error(`could not clear global commands: ${e instanceof Error ? e.message : e}`);
+      }
+      for (const g of guilds) {
+        try {
+          await c.application.commands.set(json, g);
+          console.log(`${json.length} slash commands registered for guild ${g}`);
+        } catch (e) {
+          console.error(`could not register commands for guild ${g} (is the bot invited there with the applications.commands scope?): ${e instanceof Error ? e.message : e}`);
+        }
+      }
+    } else {
+      await c.application.commands.set(json);
+      console.log(`${json.length} slash commands registered globally (can take up to an hour to appear)`);
+      for (const g of c.guilds.cache.keys()) {
+        try {
+          await c.application.commands.set([], g);
+        } catch {
+        }
       }
     }
-  } else {
-    await c.application.commands.set(json);
-    console.log(`${json.length} slash commands registered globally (can take up to an hour to appear)`);
-    for (const g of c.guilds.cache.keys()) {
-      try {
-        await c.application.commands.set([], g);
-      } catch {
-      }
-    }
-  }
-  startOutboxLoop(api, async (channelId, embeds, buttons) => {
-    const ch = await client.channels.fetch(channelId);
-    if (!ch?.isSendable()) throw new Error(`channel ${channelId} is not a text channel the bot can post in`);
-    await ch.send({ embeds: embeds.map(toEmbed), components: toRows(buttons), allowedMentions: { parse: [] } });
-  }, cfg.OUTBOX_POLL_SECONDS, console.log, (userId, text) => platform.sendDirectMessage(userId, text), grantRoleEverywhere, syncRolesEverywhere, () => void live.refresh("teamlist").catch(() => void 0));
-  live.start(cfg.LIVE_REFRESH_SECONDS);
-});
+    startOutboxLoop(
+      api,
+      async (channelId, embeds, buttons) => {
+        const ch = await client.channels.fetch(channelId);
+        if (!ch?.isSendable()) throw new Error(`channel ${channelId} is not a text channel the bot can post in`);
+        await ch.send({ embeds: embeds.map(toEmbed), components: toRows(buttons), allowedMentions: { parse: [] } });
+      },
+      cfg.OUTBOX_POLL_SECONDS,
+      console.log,
+      (userId, text) => platform.sendDirectMessage(userId, text),
+      grantRoleEverywhere,
+      syncRolesEverywhere,
+      () => void live.refresh("teamlist").catch(() => void 0),
+      (effects) => tickets.apply(effects).then(() => void 0, (e) => console.error("ticket effects failed:", e instanceof Error ? e.message : e))
+    );
+    live.start(cfg.LIVE_REFRESH_SECONDS);
+    void tickets.refresh();
+    setInterval(() => void tickets.refresh(), 12e4).unref();
+  });
+}
 for (const sig of ["SIGINT", "SIGTERM"]) process.on(sig, () => {
   void client.destroy().finally(() => process.exit(0));
 });
 process.on("unhandledRejection", (e) => console.error("unhandledRejection:", e instanceof Error ? e.message : e));
-void client.login(cfg.DISCORD_TOKEN);
+async function start() {
+  wire(client);
+  wireReady(client);
+  try {
+    await client.login(cfg.DISCORD_TOKEN);
+  } catch (e) {
+    if (!/disallowed intents/i.test(e instanceof Error ? e.message : String(e))) throw e;
+    console.warn('Discord: "Message Content Intent" is not enabled in the Developer Portal (Bot \u2192 Privileged Gateway Intents). Starting without it \u2013 ticket transcripts will not contain message texts.');
+    await client.destroy().catch(() => void 0);
+    client = makeClient(false);
+    wire(client);
+    wireReady(client);
+    await client.login(cfg.DISCORD_TOKEN);
+  }
+}
+void start().catch((e) => {
+  console.error("Discord login failed:", e instanceof Error ? e.message : e);
+  process.exit(1);
+});
 /*! Bundled license information:
 
 undici/lib/web/fetch/body.js:

@@ -1,6 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const discord_js_1 = require("discord.js");
+const discord_tickets_1 = require("./discord-tickets");
 const api_1 = require("./api");
 const commands_1 = require("./commands");
 const features_1 = require("./commands/features");
@@ -12,9 +13,17 @@ const roblox_1 = require("./roblox");
 (0, config_1.loadDotEnv)();
 const cfg = (0, config_1.loadConfig)();
 const api = new api_1.HttpApi(cfg.API_URL, cfg.BOT_API_TOKEN);
-// Guilds: Slash-Commands, Buttons, Channels, Rollen. DirectMessages: Antworten auf Bewerbungsfragen per DM
-// (Inhalte von Direktnachrichten an den Bot sind ohne das „Message Content“-Privileg lesbar). Keine „privileged intents“ nötig.
-const client = new discord_js_1.Client({ intents: [discord_js_1.GatewayIntentBits.Guilds, discord_js_1.GatewayIntentBits.DirectMessages], partials: [discord_js_1.Partials.Channel] });
+/**
+ * Guilds: Slash-Commands, Buttons, Channels, Rollen. DirectMessages: Antworten auf Bewerbungsfragen per DM.
+ * GuildMessages + MessageContent: Verlauf/Transcript der Support-Tickets. „Message Content“ ist ein privilegiertes Recht
+ * (Developer Portal → Bot → Message Content Intent). Ist es dort aus, startet der Bot ohne – Tickets laufen dann ohne Nachrichtentexte.
+ */
+const makeClient = (withContent) => new discord_js_1.Client({
+    intents: [discord_js_1.GatewayIntentBits.Guilds, discord_js_1.GatewayIntentBits.DirectMessages, discord_js_1.GatewayIntentBits.GuildMessages, ...(withContent ? [discord_js_1.GatewayIntentBits.MessageContent] : [])],
+    partials: [discord_js_1.Partials.Channel],
+});
+let client = makeClient(true);
+const tickets = (0, discord_tickets_1.createTicketRuntime)(() => client, api);
 const toEmbed = (e) => {
     const b = new discord_js_1.EmbedBuilder().setTitle(e.title);
     if (e.description)
@@ -41,12 +50,8 @@ const toRows = (buttons = []) => {
     }
     return rows;
 };
-/** Auswahlmenü als eigene Reihe (über den Buttons). */
-const toComponents = (buttons, select) => [
-    ...(select ? [new discord_js_1.ActionRowBuilder().addComponents(new discord_js_1.StringSelectMenuBuilder().setCustomId(select.id).setPlaceholder(select.placeholder.slice(0, 150))
-            .addOptions(select.options.slice(0, 25).map((o) => ({ label: o.label.slice(0, 100), value: o.value, ...(o.description ? { description: o.description.slice(0, 100) } : {}) }))))] : []),
-    ...toRows(buttons).slice(0, select ? 4 : 5),
-];
+/** Auswahlmenüs als eigene Reihen über den Buttons. */
+const toComponents = (buttons, select, selects = []) => (0, discord_tickets_1.componentsOf)(buttons, [...(select ? [select] : []), ...selects]);
 const toModal = (m) => new discord_js_1.ModalBuilder().setCustomId(m.id).setTitle(m.title.slice(0, 45)).addComponents(m.fields.map((f) => {
     const input = new discord_js_1.TextInputBuilder().setCustomId(f.id).setLabel(f.label.slice(0, 45)).setStyle(f.paragraph ? discord_js_1.TextInputStyle.Paragraph : discord_js_1.TextInputStyle.Short).setRequired(!!f.required);
     if (f.maxLength)
@@ -55,7 +60,7 @@ const toModal = (m) => new discord_js_1.ModalBuilder().setCustomId(m.id).setTitl
         input.setPlaceholder(f.placeholder.slice(0, 100));
     return new discord_js_1.ActionRowBuilder().addComponents(input);
 }));
-const replyPayload = (r) => ({ content: r.content ?? '', embeds: (r.embeds ?? []).map(toEmbed), components: toComponents(r.buttons, r.select), allowedMentions: { parse: [] } });
+const replyPayload = (r) => ({ content: r.content ?? '', embeds: (r.embeds ?? []).map(toEmbed), components: toComponents(r.buttons, r.select, r.selects), allowedMentions: { parse: [] } });
 const TICKET_PREFIX = 'ticket-';
 const ticketName = (userName, userId) => `${TICKET_PREFIX}${userName.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 40) || userId}`;
 /** Echte Discord-Umsetzung der Plattform-Aktionen (in Tests ein Fake). */
@@ -181,7 +186,17 @@ function baseCtx(i) {
         config: () => api.service('GET', '/bot/config'),
         refreshLive: (kind, o) => live.refresh(kind, o),
         robloxLookup: (name) => (0, roblox_1.robloxLookup)(name),
+        memberRoleIds: rolesOf(i.member),
+        applyEffects: (effects) => tickets.apply(effects),
+        listCategories: (guildId) => tickets.listCategories(guildId),
     };
+}
+/** Rollen-IDs des Mitglieds (voller GuildMember oder rohe API-Daten). */
+function rolesOf(m) {
+    const x = m;
+    if (!x?.roles)
+        return [];
+    return Array.isArray(x.roles) ? x.roles : [...(x.roles.cache?.keys() ?? [])];
 }
 async function safeRun(label, fn) {
     try {
@@ -230,24 +245,32 @@ async function handleComponent(i) {
     }
     await i.deferReply({ flags: discord_js_1.MessageFlags.Ephemeral });
     const fields = i.isModalSubmit() ? Object.fromEntries(i.fields.fields.map((f, id) => [id, 'value' in f ? String(f.value) : ''])) : undefined;
-    const values = i.isStringSelectMenu() ? i.values : undefined;
+    const values = i.isAnySelectMenu() ? i.values : undefined;
     const reply = await safeRun(`interaction ${i.customId}`, () => hit.def.run({ ...baseCtx(i), opts: {}, args: hit.args, fields, values }));
     await i.editReply(replyPayload(reply));
     const source = i.isModalSubmit() ? (i.isFromMessage() ? i.message : null) : i.message;
     if (reply.decided && source)
         await markDecided(source, reply.decided).catch((e) => console.error('could not update the application message:', e instanceof Error ? e.message : e));
+    if (reply.update && source)
+        await source.edit({ embeds: (reply.update.embeds ?? []).map(toEmbed), components: toComponents(reply.update.buttons), allowedMentions: { parse: [] } }).catch((e) => console.error('could not update message:', e instanceof Error ? e.message : e));
 }
-client.on('interactionCreate', (i) => {
-    const task = i.isChatInputCommand() ? handleCommand(i) : i.isButton() || i.isModalSubmit() || i.isStringSelectMenu() ? handleComponent(i) : undefined;
-    void task?.catch((e) => console.error('interaction failed:', e instanceof Error ? e.message : e));
-});
-// Direktnachrichten: Antworten auf Bewerbungsfragen (Bewerbung bei EN Polizei und Qualifikationen)
-client.on('messageCreate', (m) => {
-    if (m.author.bot || m.inGuild())
-        return;
-    void (0, qualifications_1.handleDirectMessage)({ userId: m.author.id, userName: m.author.username, content: m.content, api, sendDm: (u, msg) => platform.sendDm(u, msg), robloxLookup: (n) => (0, roblox_1.robloxLookup)(n) })
-        .catch((e) => console.error('direct message handling failed:', e instanceof Error ? e.message : e));
-});
+function wire(c) {
+    c.on('interactionCreate', (i) => {
+        const task = i.isChatInputCommand() ? handleCommand(i) : i.isButton() || i.isModalSubmit() || i.isAnySelectMenu() ? handleComponent(i) : undefined;
+        void task?.catch((e) => console.error('interaction failed:', e instanceof Error ? e.message : e));
+    });
+    // Direktnachrichten: Antworten auf Bewerbungsfragen (Bewerbung bei EN Polizei und Qualifikationen)
+    c.on('messageCreate', (m) => {
+        if (m.inGuild()) {
+            void tickets.onMessage(m);
+            return;
+        } // Verlauf der Support-Tickets
+        if (m.author.bot)
+            return;
+        void (0, qualifications_1.handleDirectMessage)({ userId: m.author.id, userName: m.author.username, content: m.content, api, sendDm: (u, msg) => platform.sendDm(u, msg), robloxLookup: (n) => (0, roblox_1.robloxLookup)(n) })
+            .catch((e) => console.error('direct message handling failed:', e instanceof Error ? e.message : e));
+    });
+}
 setInterval(() => (0, qualifications_1.sweepSessions)(), 10 * 60_000).unref();
 /** Rollen auf allen Servern abgleichen, auf denen es sie gibt (Dienst-Rollen). Nur tatsächlich nötige Änderungen. */
 async function syncRolesEverywhere(userId, add, remove) {
@@ -291,50 +314,72 @@ async function checkApi() {
         console.log(`API NOT reachable at ${cfg.API_URL} — the bot runs, but commands will say "system not reachable" until the system is up`);
     }
 }
-client.once('clientReady', async (c) => {
-    console.log(`Logged in as ${c.user.tag}`);
-    void checkApi();
-    const json = commands_1.COMMANDS.map(toBuilder);
-    const guilds = (0, config_1.guildIds)(cfg);
-    if (guilds.length) {
-        // Frühere globale Registrierung entfernen – sonst erscheinen alle Befehle doppelt (global + Server)
-        try {
-            await c.application.commands.set([]);
-        }
-        catch (e) {
-            console.error(`could not clear global commands: ${e instanceof Error ? e.message : e}`);
-        }
-        for (const g of guilds) {
+function wireReady(client0) {
+    client0.once('clientReady', async (c) => {
+        console.log(`Logged in as ${c.user.tag}`);
+        void checkApi();
+        const json = commands_1.COMMANDS.map(toBuilder);
+        const guilds = (0, config_1.guildIds)(cfg);
+        if (guilds.length) {
+            // Frühere globale Registrierung entfernen – sonst erscheinen alle Befehle doppelt (global + Server)
             try {
-                await c.application.commands.set(json, g);
-                console.log(`${json.length} slash commands registered for guild ${g}`);
+                await c.application.commands.set([]);
             }
             catch (e) {
-                console.error(`could not register commands for guild ${g} (is the bot invited there with the applications.commands scope?): ${e instanceof Error ? e.message : e}`);
+                console.error(`could not clear global commands: ${e instanceof Error ? e.message : e}`);
+            }
+            for (const g of guilds) {
+                try {
+                    await c.application.commands.set(json, g);
+                    console.log(`${json.length} slash commands registered for guild ${g}`);
+                }
+                catch (e) {
+                    console.error(`could not register commands for guild ${g} (is the bot invited there with the applications.commands scope?): ${e instanceof Error ? e.message : e}`);
+                }
             }
         }
-    }
-    else {
-        await c.application.commands.set(json);
-        console.log(`${json.length} slash commands registered globally (can take up to an hour to appear)`);
-        // Frühere Server-Registrierungen entfernen – sonst erscheinen alle Befehle doppelt
-        for (const g of c.guilds.cache.keys()) {
-            try {
-                await c.application.commands.set([], g);
+        else {
+            await c.application.commands.set(json);
+            console.log(`${json.length} slash commands registered globally (can take up to an hour to appear)`);
+            // Frühere Server-Registrierungen entfernen – sonst erscheinen alle Befehle doppelt
+            for (const g of c.guilds.cache.keys()) {
+                try {
+                    await c.application.commands.set([], g);
+                }
+                catch { /* Server ohne Befehle/Zugriff: egal */ }
             }
-            catch { /* Server ohne Befehle/Zugriff: egal */ }
         }
-    }
-    (0, outbox_1.startOutboxLoop)(api, async (channelId, embeds, buttons) => {
-        const ch = await client.channels.fetch(channelId);
-        if (!ch?.isSendable())
-            throw new Error(`channel ${channelId} is not a text channel the bot can post in`);
-        await ch.send({ embeds: embeds.map(toEmbed), components: toRows(buttons), allowedMentions: { parse: [] } }); // niemals @everyone/@here/Rollen pingen
-    }, cfg.OUTBOX_POLL_SECONDS, console.log, (userId, text) => platform.sendDirectMessage(userId, text), grantRoleEverywhere, syncRolesEverywhere, () => void live.refresh('teamlist').catch(() => undefined));
-    live.start(cfg.LIVE_REFRESH_SECONDS);
-});
+        (0, outbox_1.startOutboxLoop)(api, async (channelId, embeds, buttons) => {
+            const ch = await client.channels.fetch(channelId);
+            if (!ch?.isSendable())
+                throw new Error(`channel ${channelId} is not a text channel the bot can post in`);
+            await ch.send({ embeds: embeds.map(toEmbed), components: toRows(buttons), allowedMentions: { parse: [] } }); // niemals @everyone/@here/Rollen pingen
+        }, cfg.OUTBOX_POLL_SECONDS, console.log, (userId, text) => platform.sendDirectMessage(userId, text), grantRoleEverywhere, syncRolesEverywhere, () => void live.refresh('teamlist').catch(() => undefined), (effects) => tickets.apply(effects).then(() => undefined, (e) => console.error('ticket effects failed:', e instanceof Error ? e.message : e)));
+        live.start(cfg.LIVE_REFRESH_SECONDS);
+        void tickets.refresh();
+        setInterval(() => void tickets.refresh(), 120_000).unref();
+    });
+}
 for (const sig of ['SIGINT', 'SIGTERM'])
     process.on(sig, () => { void client.destroy().finally(() => process.exit(0)); });
 process.on('unhandledRejection', (e) => console.error('unhandledRejection:', e instanceof Error ? e.message : e));
-void client.login(cfg.DISCORD_TOKEN);
+/** Start; ist „Message Content Intent“ im Developer Portal aus, ohne dieses Recht neu verbinden. */
+async function start() {
+    wire(client);
+    wireReady(client);
+    try {
+        await client.login(cfg.DISCORD_TOKEN);
+    }
+    catch (e) {
+        if (!/disallowed intents/i.test(e instanceof Error ? e.message : String(e)))
+            throw e;
+        console.warn('Discord: "Message Content Intent" is not enabled in the Developer Portal (Bot → Privileged Gateway Intents). Starting without it – ticket transcripts will not contain message texts.');
+        await client.destroy().catch(() => undefined);
+        client = makeClient(false);
+        wire(client);
+        wireReady(client);
+        await client.login(cfg.DISCORD_TOKEN);
+    }
+}
+void start().catch((e) => { console.error('Discord login failed:', e instanceof Error ? e.message : e); process.exit(1); });
 //# sourceMappingURL=index.js.map

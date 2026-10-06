@@ -24,9 +24,9 @@ beforeAll(async () => {
   });
   ({ app, prisma } = await createTestApp());
   svc = app.get(SupportTicketsService);
-  for (const [n, roles] of Object.entries({ st_admin: ['System Administrator'], st_staff: ['Ticket Support'], st_lead: ['Ticket Leitung'], st_none: ['Police Member'] })) {
+  for (const [n, roles] of Object.entries({ tk_admin: ['System Administrator'], tk_staff: ['Ticket Support'], tk_lead: ['Ticket Leitung'], tk_none: ['Police Member'] })) {
     const u = await makeUser(prisma, n, roles);
-    const d = { st_staff: STAFF, st_lead: LEAD, st_none: OTHER }[n];
+    const d = { tk_staff: STAFF, tk_lead: LEAD, tk_none: OTHER }[n];
     if (d) await prisma.discordLink.create({ data: { userId: u.id, discordId: d } });
   }
 });
@@ -38,7 +38,7 @@ const find = <T extends TicketEffect['type']>(effects: TicketEffect[], type: T) 
 
 describe('ticket configuration (dashboard)', () => {
   it('starts with editable example data and validates everything', async () => {
-    const admin = (await login(app, 'st_admin')).agent;
+    const admin = (await login(app, 'tk_admin')).agent;
     const cfg = (await admin.get('/api/v1/support-tickets/config')).body;
     expect(cfg.statuses.map((s: { name: string }) => s.name)).toContain('Eskaliert');
     expect(cfg.priorities).toHaveLength(5);
@@ -58,7 +58,7 @@ describe('ticket configuration (dashboard)', () => {
     categoryId = res.body.id;
     expect(res.body.buttons.length).toBeGreaterThan(5); // Standard-Buttons
     expect((await admin.post('/api/v1/support-tickets/categories').send({ name: 'x', questions: [{ id: 'a', label: 'Wahl?', type: 'SELECT', required: true, options: ['nur eine'] }] })).status).toBe(400);
-    expect((await (await login(app, 'st_staff')).agent.post('/api/v1/support-tickets/categories').send({ name: 'x' })).status).toBe(403);
+    expect((await (await login(app, 'tk_staff')).agent.post('/api/v1/support-tickets/categories').send({ name: 'x' })).status).toBe(403);
   });
 });
 
@@ -148,7 +148,7 @@ describe('opening a ticket from Discord', () => {
   it('reopen restores access; dashboard view, transcripts, stats and ratings respect rights', async () => {
     const r = await act(id, STAFF, { action: 'reopen' });
     expect(find(r.body.effects, 'access')[0]).toMatchObject({ targetId: USER, view: true, send: false }); // noch gesperrt
-    const staff = (await login(app, 'st_staff')).agent;
+    const staff = (await login(app, 'tk_staff')).agent;
     const d = (await staff.get(`/api/v1/support-tickets/${id}`)).body;
     expect(d.notes[0].text).toBe('Bereits verwarnt.');
     expect(d.logs.map((l: { action: string }) => l.action)).toEqual(expect.arrayContaining(['created', 'answers', 'claimed', 'claim_transferred', 'priority_changed', 'user_added', 'note_added', 'locked', 'escalated', 'closed', 'transcript_created', 'rated', 'reopened'].filter((a) => a !== 'transcript_created')));
@@ -169,7 +169,7 @@ describe('opening a ticket from Discord', () => {
   });
 
   it('actions from the dashboard go through the outbox; the creator may close their own ticket', async () => {
-    const lead = (await login(app, 'st_lead')).agent;
+    const lead = (await login(app, 'tk_lead')).agent;
     await prisma.discordOutbox.deleteMany({ where: { type: 'ticket.effects' } });
     const r = await lead.post(`/api/v1/support-tickets/${id}/actions`).send({ action: 'unlock' });
     expect(r.body.effects).toEqual([]);
@@ -183,7 +183,7 @@ describe('opening a ticket from Discord', () => {
 
 describe('automation, panels, limits', () => {
   it('warns, auto-closes inactive tickets, expires temporary access and deletes after the configured time', async () => {
-    const admin = (await login(app, 'st_admin')).agent;
+    const admin = (await login(app, 'tk_admin')).agent;
     const cfg = (await admin.get('/api/v1/support-tickets/config')).body;
     const support = cfg.categories.find((c: { name: string }) => c.name === 'Support');
     await prisma.ticketCategory.update({ where: { id: support.id }, data: { autoCloseMinutes: 60, autoCloseWarnMinutes: 15, deleteAfterMinutes: 30, ratingEnabled: false, closeReasonMode: 'OPTIONAL' } });
@@ -204,7 +204,7 @@ describe('automation, panels, limits', () => {
   });
 
   it('cooldown between tickets, panel rendering (buttons/dropdown), publish and panel role restriction', async () => {
-    const admin = (await login(app, 'st_admin')).agent;
+    const admin = (await login(app, 'tk_admin')).agent;
     await prisma.ticketCategory.update({ where: { id: categoryId }, data: { cooldownMinutes: 30, maxOpen: 0 } });
     const r = await open();
     expect(r.body.message).toContain('warte noch');

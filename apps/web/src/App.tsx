@@ -15,6 +15,8 @@ const Communication = lazy(() => import('./pages/Communication').then((m) => ({ 
 const Analytics = lazy(() => import('./pages/Analytics').then((m) => ({ default: m.Analytics })));
 const Qualifications = lazy(() => import('./pages/Qualifications').then((m) => ({ default: m.Qualifications })));
 const Sek = lazy(() => import('./pages/Sek').then((m) => ({ default: m.Sek })));
+const SupportTickets = lazy(() => import('./pages/tickets/SupportTickets').then((m) => ({ default: m.SupportTickets })));
+const TicketDetail = lazy(() => import('./pages/tickets/TicketDetail').then((m) => ({ default: m.TicketDetail })));
 const Academy = lazy(() => import('./pages/Academy').then((m) => ({ default: m.Academy })));
 import { PersonDetail } from './pages/PersonDetail';
 import { ReportDetail } from './pages/ReportDetail';
@@ -51,6 +53,8 @@ export function App() {
           <Route path="dashboard" element={<Guard perm="dashboard.view"><Dashboard /></Guard>} />
           <Route path="team" element={<Guard perm="team.view"><Team /></Guard>} />
           <Route path="dispatch" element={<Guard perm="dispatch.view"><Dispatch /></Guard>} />
+          <Route path="support-tickets" element={<Guard perm="ticket.view"><SupportTickets /></Guard>} />
+          <Route path="support-tickets/:id" element={<Guard perm="ticket.view"><TicketDetail /></Guard>} />
           <Route path="incidents" element={list(R.incidents as never, 'incidents.view')} />
           <Route path="incidents/:id" element={rec('incidents', 'incidents.view')} />
           <Route path="persons" element={list(R.persons as never, 'persons.view')} />

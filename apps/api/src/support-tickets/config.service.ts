@@ -10,6 +10,12 @@ import type { prioritySchema, reasonSchema, statusSchema } from './config.schema
 
 const SETTINGS_KEY = 'tickets.settings';
 const json = (v: unknown) => v as Prisma.InputJsonValue;
+/** Kopie ohne die genannten Felder (z. B. id/Zeitstempel beim Duplizieren). */
+function omit<T extends object, K extends keyof T>(o: T, keys: K[]): Omit<T, K> {
+  const c = { ...o };
+  for (const k of keys) delete c[k];
+  return c;
+}
 
 /** Alles, was das Ticket-System konfigurierbar macht – ausschließlich Datenbank-Einträge. */
 @Injectable()
@@ -57,7 +63,7 @@ export class TicketConfigService {
     return this.categoryOut(c);
   }
   async duplicateCategory(actor: Actor, id: string) {
-    const { id: _id, createdAt: _c, updatedAt: _u, ...rest } = await this.prisma.ticketCategory.findUniqueOrThrow({ where: { id } }).catch(() => { throw new AppError('NOT_FOUND', 'Ticket category not found.'); });
+    const rest = omit(await this.prisma.ticketCategory.findUniqueOrThrow({ where: { id } }).catch(() => { throw new AppError('NOT_FOUND', 'Ticket category not found.'); }), ['id', 'createdAt', 'updatedAt']);
     const c = await this.prisma.ticketCategory.create({ data: { ...rest, name: `${rest.name} (Kopie)`, questions: json(rest.questions), buttons: json(rest.buttons) } });
     await this.record(actor, 'category.duplicate', 'TicketCategory', c.id, { from: id });
     return this.categoryOut(c);
@@ -79,7 +85,7 @@ export class TicketConfigService {
     return p;
   }
   async duplicatePanel(actor: Actor, id: string) {
-    const { id: _id, createdAt: _c, updatedAt: _u, messageId: _m, messageChannelId: _mc, ...rest } = await this.prisma.ticketPanel.findUniqueOrThrow({ where: { id } }).catch(() => { throw new AppError('NOT_FOUND', 'Panel not found.'); });
+    const rest = omit(await this.prisma.ticketPanel.findUniqueOrThrow({ where: { id } }).catch(() => { throw new AppError('NOT_FOUND', 'Panel not found.'); }), ['id', 'createdAt', 'updatedAt', 'messageId', 'messageChannelId']);
     const p = await this.prisma.ticketPanel.create({ data: { ...rest, name: `${rest.name} (Kopie)` } });
     await this.record(actor, 'panel.duplicate', 'TicketPanel', p.id, { from: id });
     return p;

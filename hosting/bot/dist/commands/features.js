@@ -6,6 +6,7 @@ const format_1 = require("../format");
 const errors_1 = require("./errors");
 const sek_1 = require("./sek");
 const qualifications_1 = require("./qualifications");
+const tickets_1 = require("./tickets");
 const str = (c, k) => String(c.opts[k] ?? '').trim();
 const choices = (m) => Object.keys(m).map((k) => ({ name: k.replace('_', ' '), value: k }));
 const needGuildAdmin = (c) => (!c.guildId ? (0, format_1.errorReply)('Das geht nur auf einem Server, nicht per Direktnachricht.') : !c.isGuildAdmin ? (0, format_1.errorReply)('Dafür brauchst du auf diesem Discord-Server das Recht „Server verwalten“.') : null);
@@ -21,10 +22,6 @@ async function setDanger(c, level, reason) {
         return (0, errors_1.mapError)(e);
     }
 }
-// ---------------- Support-Tickets ----------------
-const SUPPORT_PANEL = { title: '🎫 Support', color: format_1.COLORS.info, description: 'Fragen, Probleme oder Anliegen an die Leitung? Klicke auf **Ticket öffnen** – es wird ein privater Channel nur für dich und das Team angelegt.' };
-const SUPPORT_OPEN = { id: 'support:open', label: 'Ticket öffnen', emoji: '🎫', style: 'primary' };
-const SUPPORT_CLOSE = { id: 'support:close', label: 'Ticket schließen', emoji: '🔒', style: 'danger' };
 // ---------------- Dienst-Panel ----------------
 const DUTY_PANEL = { title: '🚓 Dienststatus', color: format_1.COLORS.info, description: 'Melde dich hier mit einem Klick **in den Dienst**, in die **Pause** oder **außer Dienst**.\nDein Status erscheint sofort im Dashboard, in der Teamliste und – falls eingestellt – als Discord-Rolle.\n\n*Dein Discord-Konto muss verknüpft sein (`/verknuepfen`).*' };
 const DUTY_BUTTONS = [
@@ -153,24 +150,6 @@ exports.FEATURE_COMMANDS = [
         },
     },
     {
-        name: 'supportpanel', description: 'Postet das Support-Ticket-Panel in diesen Channel',
-        async run(c) {
-            const denied = needGuildAdmin(c);
-            if (denied)
-                return denied;
-            if (!c.channelId || !c.platform)
-                return (0, format_1.errorReply)('Panel kann hier nicht gepostet werden.');
-            try {
-                await c.platform.postPanel({ channelId: c.channelId, embed: SUPPORT_PANEL, buttons: [SUPPORT_OPEN] });
-                const cfg = await c.config?.().catch(() => undefined);
-                return (0, format_1.okReply)(`Support-Panel gepostet.${cfg?.staffRole ? '' : ' Tipp: In den Einstellungen eine **Team-Rolle** hinterlegen, damit das Team Tickets sieht.'}`);
-            }
-            catch {
-                return (0, format_1.errorReply)('Panel konnte nicht gepostet werden (fehlen dem Bot Rechte in diesem Channel?).');
-            }
-        },
-    },
-    {
         name: 'roblox', description: 'Sucht einen Roblox-Benutzer (Name → ID)',
         options: [{ name: 'name', description: 'Roblox-Benutzername', type: 'string', required: true, maxLength: 20 }],
         async run(c) {
@@ -206,6 +185,7 @@ exports.INTERACTIONS = [
     },
     sek_1.SEK_INTERACTION,
     qualifications_1.QUALI_INTERACTION,
+    tickets_1.TICKET_INTERACTION,
     {
         prefix: 'danger',
         async run(c) {
@@ -224,19 +204,7 @@ exports.INTERACTIONS = [
                 await c.platform.deleteChannel(c.channelId, 5000);
                 return (0, format_1.okReply)('Ticket wird in 5 Sekunden geschlossen.');
             }
-            if (c.args[0] !== 'open')
-                return (0, format_1.errorReply)('Unbekannte Aktion.');
-            const cfg = await c.config?.().catch(() => undefined);
-            try {
-                const t = await c.platform.createTicketChannel({ guildId: c.guildId, userId: c.discordId, userName: c.userName ?? c.discordId, categoryId: cfg?.tickets, staffRoleId: cfg?.staffRole });
-                if (t.existing)
-                    return (0, format_1.okReply)(`Du hast schon ein offenes Ticket: <#${t.channelId}>`);
-                await c.platform.postPanel({ channelId: t.channelId, embed: { title: '🎫 Ticket geöffnet', color: format_1.COLORS.info, description: `<@${c.discordId}>, beschreibe dein Anliegen – das Team meldet sich hier.\nZum Schließen den Button unten nutzen.` }, buttons: [SUPPORT_CLOSE] });
-                return (0, format_1.okReply)(`Dein Ticket: <#${t.channelId}>`);
-            }
-            catch {
-                return (0, format_1.errorReply)('Ticket konnte nicht angelegt werden (fehlen dem Bot die Rechte „Kanäle verwalten“?).');
-            }
+            return (0, format_1.errorReply)('Dieses alte Support-Panel wird nicht mehr unterstützt. Bitte das neue Ticket-Panel benutzen.');
         },
     },
 ];

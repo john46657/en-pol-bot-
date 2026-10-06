@@ -616,6 +616,21 @@ export class SupportTicketsService {
   }
 
   // ================= Abfragen fürs Dashboard =================
+  /** Anzeigenamen zu Discord-IDs (verknüpfte Konten, sonst zuletzt gesehener Name in Tickets). */
+  private async discordNames(ids: string[]): Promise<Record<string, string>> {
+    const uniq = [...new Set(ids)].filter(Boolean);
+    if (!uniq.length) return {};
+    const [links, msgs] = await Promise.all([
+      this.prisma.discordLink.findMany({ where: { discordId: { in: uniq } } }),
+      this.prisma.ticketMessage.findMany({ where: { authorId: { in: uniq } }, orderBy: { createdAt: 'desc' }, distinct: ['authorId'], select: { authorId: true, authorName: true } }),
+    ]);
+    const out: Record<string, string> = {};
+    for (const m of msgs) out[m.authorId] = m.authorName;
+    const users = await this.prisma.user.findMany({ where: { id: { in: links.map((l) => l.userId) } }, select: { id: true, displayName: true } });
+    for (const l of links) { const u = users.find((x) => x.id === l.userId); if (u) out[l.discordId] = u.displayName; }
+    return out;
+  }
+
   summary(l: Loaded) {
     return { id: l.t.id, number: ticketNumber(l.t.number), name: l.t.name, channelId: l.t.channelId, category: { id: l.cat.id, name: l.cat.name, emoji: l.cat.emoji }, status: l.status, priority: l.priority, claimers: l.t.claimers, creatorId: l.t.creatorId, creatorName: l.t.creatorName, locked: l.t.locked, closedAt: l.t.closedAt, createdAt: l.t.createdAt };
   }
@@ -660,7 +675,8 @@ export class SupportTicketsService {
       canTranscripts ? this.prisma.ticketTranscript.findMany({ where: { ticketId: id }, orderBy: { createdAt: 'desc' }, select: { id: true, createdAt: true, createdByName: true, sizeBytes: true } }) : Promise.resolve(null),
       this.prisma.ticketRating.findUnique({ where: { ticketId: id } }),
     ]);
-    return { ...t, number: ticketNumber(t.number), category: { id: cat.id, name: cat.name, emoji: cat.emoji, claimMode: cat.claimMode, closeReasonMode: cat.closeReasonMode, closeReasonSource: cat.closeReasonSource, allowReopen: cat.allowReopen }, status, priority, access, messages, notes, logs, transcripts, rating };
+    const names = await this.discordNames([...t.claimers, ...access.filter((a) => a.kind === 'USER').map((a) => a.targetId)]);
+    return { ...t, number: ticketNumber(t.number), category: { id: cat.id, name: cat.name, emoji: cat.emoji, claimMode: cat.claimMode, closeReasonMode: cat.closeReasonMode, closeReasonSource: cat.closeReasonSource, allowReopen: cat.allowReopen }, status, priority, access, messages, notes, logs, transcripts, rating, names };
   }
 
   /** Auswahllisten für Discord-Menüs (Priorität, Status, Kategorie, Gründe, Zugriff). */
@@ -733,14 +749,16 @@ export class SupportTicketsService {
     const perCategory = cats.map((c) => ({ id: c.id, name: c.name, total: tickets.filter((t) => t.categoryId === c.id).length, open: tickets.filter((t) => t.categoryId === c.id && kind.get(t.statusId) === 'OPEN').length })).filter((c) => c.total);
     const staff = new Map<string, { tickets: number; closed: number }>();
     for (const t of tickets) for (const s of t.claimers) { const e = staff.get(s) ?? { tickets: 0, closed: 0 }; e.tickets++; if (t.closedAt) e.closed++; staff.set(s, e); }
+    const ratingSummary = this.ratingSummary(ratings, cats);
+    const names = await this.discordNames([...staff.keys(), ...ratingSummary.perStaff.map((s) => s.discordId)]);
     return {
-      total: tickets.length, open: tickets.filter((t) => kind.get(t.statusId) === 'OPEN').length, closed: tickets.filter((t) => kind.get(t.statusId) === 'CLOSED').length, archived: tickets.filter((t) => kind.get(t.statusId) === 'ARCHIVED').length,
+      names, total: tickets.length, open: tickets.filter((t) => kind.get(t.statusId) === 'OPEN').length, closed: tickets.filter((t) => kind.get(t.statusId) === 'CLOSED').length, archived: tickets.filter((t) => kind.get(t.statusId) === 'ARCHIVED').length,
       today: tickets.filter((t) => t.createdAt >= day).length, week: tickets.filter((t) => t.createdAt >= week).length, month: tickets.filter((t) => t.createdAt >= month).length,
       avgFirstResponseMinutes: avg(tickets.filter((t) => t.firstResponseAt).map((t) => (t.firstResponseAt!.getTime() - t.createdAt.getTime()) / 60_000)),
       avgCloseMinutes: avg(tickets.filter((t) => t.closedAt).map((t) => (t.closedAt!.getTime() - t.createdAt.getTime()) / 60_000)),
       escalations: tickets.filter((t) => t.escalatedAt).length,
       perCategory, perStaff: [...staff.entries()].map(([discordId, v]) => ({ discordId, ...v })).sort((a, b) => b.tickets - a.tickets),
-      ratings: this.ratingSummary(ratings, cats),
+      ratings: ratingSummary,
     };
   }
 
@@ -763,7 +781,8 @@ export class SupportTicketsService {
       this.prisma.ticketRating.findMany({ where: visible ? { categoryId: { in: visible } } : {} }), this.prisma.ticketCategory.findMany({ select: { id: true, name: true } }),
     ]);
     const tickets = await this.prisma.supportTicket.findMany({ where: { id: { in: items.map((i) => i.ticketId) } }, select: { id: true, number: true, creatorName: true } });
-    return { total, summary: this.ratingSummary(all, cats), items: items.map((r) => ({ ...r, ticket: tickets.find((t) => t.id === r.ticketId) ? { number: ticketNumber(tickets.find((t) => t.id === r.ticketId)!.number), creatorName: tickets.find((t) => t.id === r.ticketId)!.creatorName } : null, category: cats.find((c) => c.id === r.categoryId)?.name ?? '—' })) };
+    const summary = this.ratingSummary(all, cats);
+    return { total, summary, names: await this.discordNames(summary.perStaff.map((s) => s.discordId)), items: items.map((r) => ({ ...r, ticket: tickets.find((t) => t.id === r.ticketId) ? { number: ticketNumber(tickets.find((t) => t.id === r.ticketId)!.number), creatorName: tickets.find((t) => t.id === r.ticketId)!.creatorName } : null, category: cats.find((c) => c.id === r.categoryId)?.name ?? '—' })) };
   }
 
   /** Offene Ticket-Channels (der Bot schneidet nur dort Nachrichten mit). */
