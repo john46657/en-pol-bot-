@@ -15,12 +15,12 @@ export declare class PersonsService {
     list(p: PageQuery, includeArchived?: boolean): Promise<{
         items: {
             id: string;
-            createdById: string | null;
             createdAt: Date;
             robloxUserId: string | null;
             robloxUsername: string;
             updatedAt: Date;
             version: number;
+            createdById: string | null;
             status: string;
             custom: Prisma.JsonValue | null;
             serverId: string | null;
@@ -49,12 +49,12 @@ export declare class PersonsService {
         }[];
     } & {
         id: string;
-        createdById: string | null;
         createdAt: Date;
         robloxUserId: string | null;
         robloxUsername: string;
         updatedAt: Date;
         version: number;
+        createdById: string | null;
         status: string;
         custom: Prisma.JsonValue | null;
         serverId: string | null;
@@ -80,12 +80,12 @@ export declare class PersonsService {
             }[];
         } & {
             id: string;
-            createdById: string | null;
             createdAt: Date;
             robloxUserId: string | null;
             robloxUsername: string;
             updatedAt: Date;
             version: number;
+            createdById: string | null;
             status: string;
             custom: Prisma.JsonValue | null;
             serverId: string | null;
@@ -112,18 +112,18 @@ export declare class PersonsService {
         links: {
             role: string;
             id: string;
-            createdAt: Date;
             entityType: string;
             entityId: string;
+            createdAt: Date;
             personId: string | null;
             vehicleId: string | null;
         }[];
         timeline: {
             id: string;
-            createdAt: Date;
             action: string;
             entityType: string;
             entityId: string;
+            createdAt: Date;
             summary: string;
             actorId: string | null;
         }[];
@@ -144,12 +144,12 @@ export declare class PersonsService {
     }): Promise<{
         person: {
             id: string;
-            createdById: string | null;
             createdAt: Date;
             robloxUserId: string | null;
             robloxUsername: string;
             updatedAt: Date;
             version: number;
+            createdById: string | null;
             status: string;
             custom: Prisma.JsonValue | null;
             serverId: string | null;
@@ -170,12 +170,12 @@ export declare class PersonsService {
         custom?: Record<string, unknown>;
     }): Promise<{
         id: string;
-        createdById: string | null;
         createdAt: Date;
         robloxUserId: string | null;
         robloxUsername: string;
         updatedAt: Date;
         version: number;
+        createdById: string | null;
         status: string;
         custom: Prisma.JsonValue | null;
         serverId: string | null;
@@ -184,12 +184,12 @@ export declare class PersonsService {
     }>;
     archive(actor: Actor, id: string, reason: string): Promise<{
         id: string;
-        createdById: string | null;
         createdAt: Date;
         robloxUserId: string | null;
         robloxUsername: string;
         updatedAt: Date;
         version: number;
+        createdById: string | null;
         status: string;
         custom: Prisma.JsonValue | null;
         serverId: string | null;
@@ -199,12 +199,12 @@ export declare class PersonsService {
     /** Merge nur auf ausdrückliche Bestätigung (nie automatisch). Quelle wird archiviert, nichts wird gelöscht. */
     merge(actor: Actor, sourceId: string, targetId: string, reason: string): Promise<{
         id: string;
-        createdById: string | null;
         createdAt: Date;
         robloxUserId: string | null;
         robloxUsername: string;
         updatedAt: Date;
         version: number;
+        createdById: string | null;
         status: string;
         custom: Prisma.JsonValue | null;
         serverId: string | null;

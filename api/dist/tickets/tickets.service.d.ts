@@ -38,12 +38,12 @@ export declare class TicketsService {
         ticket: {
             person: {
                 id: string;
-                createdById: string | null;
                 createdAt: Date;
                 robloxUserId: string | null;
                 robloxUsername: string;
                 updatedAt: Date;
                 version: number;
+                createdById: string | null;
                 status: string;
                 custom: import("@prisma/client/runtime/library").JsonValue | null;
                 serverId: string | null;
@@ -51,12 +51,12 @@ export declare class TicketsService {
                 notes: string | null;
             };
             legalCode: {
-                code: string;
                 id: string;
-                description: string | null;
+                code: string;
                 category: string;
                 expiresAt: Date | null;
                 active: boolean;
+                description: string | null;
                 title: string;
                 penalty: import("@prisma/client/runtime/library").JsonValue;
                 effectiveDate: Date;
@@ -80,10 +80,10 @@ export declare class TicketsService {
         };
         timeline: {
             id: string;
-            createdAt: Date;
             action: string;
             entityType: string;
             entityId: string;
+            createdAt: Date;
             summary: string;
             actorId: string | null;
         }[];

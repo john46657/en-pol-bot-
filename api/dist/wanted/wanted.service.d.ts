@@ -16,12 +16,12 @@ export declare class WantedService {
         items: {
             id: string;
             reason: string;
-            createdById: string;
             createdAt: Date;
-            description: string | null;
             expiresAt: Date | null;
             updatedAt: Date;
             version: number;
+            createdById: string;
+            description: string | null;
             status: string;
             personId: string | null;
             vehicleId: string | null;
@@ -35,12 +35,12 @@ export declare class WantedService {
         wanted: {
             id: string;
             reason: string;
-            createdById: string;
             createdAt: Date;
-            description: string | null;
             expiresAt: Date | null;
             updatedAt: Date;
             version: number;
+            createdById: string;
+            description: string | null;
             status: string;
             personId: string | null;
             vehicleId: string | null;
@@ -48,10 +48,10 @@ export declare class WantedService {
         };
         timeline: {
             id: string;
-            createdAt: Date;
             action: string;
             entityType: string;
             entityId: string;
+            createdAt: Date;
             summary: string;
             actorId: string | null;
         }[];
@@ -66,12 +66,12 @@ export declare class WantedService {
     }): Promise<{
         id: string;
         reason: string;
-        createdById: string;
         createdAt: Date;
-        description: string | null;
         expiresAt: Date | null;
         updatedAt: Date;
         version: number;
+        createdById: string;
+        description: string | null;
         status: string;
         personId: string | null;
         vehicleId: string | null;
@@ -80,12 +80,12 @@ export declare class WantedService {
     setStatus(actor: Actor, id: string, to: WantedStatus, reason: string): Promise<{
         id: string;
         reason: string;
-        createdById: string;
         createdAt: Date;
-        description: string | null;
         expiresAt: Date | null;
         updatedAt: Date;
         version: number;
+        createdById: string;
+        description: string | null;
         status: string;
         personId: string | null;
         vehicleId: string | null;

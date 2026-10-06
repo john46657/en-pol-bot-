@@ -10,15 +10,15 @@ declare const create: z.ZodObject<{
     storageLocation: z.ZodOptional<z.ZodString>;
     personIds: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
 }, "strip", z.ZodTypeAny, {
-    description: string;
     type: string;
+    description: string;
     source?: string | undefined;
     personIds?: string[] | undefined;
     caseRef?: string | undefined;
     storageLocation?: string | undefined;
 }, {
-    description: string;
     type: string;
+    description: string;
     source?: string | undefined;
     personIds?: string[] | undefined;
     caseRef?: string | undefined;
@@ -48,10 +48,10 @@ export declare class EvidenceController {
             number: string;
             id: string;
             createdAt: Date;
-            description: string;
             updatedAt: Date;
             version: number;
             type: string;
+            description: string;
             ownerId: string | null;
             source: string | null;
             caseRef: string | null;
@@ -78,10 +78,10 @@ export declare class EvidenceController {
         number: string;
         id: string;
         createdAt: Date;
-        description: string;
         updatedAt: Date;
         version: number;
         type: string;
+        description: string;
         ownerId: string | null;
         source: string | null;
         caseRef: string | null;
@@ -92,10 +92,10 @@ export declare class EvidenceController {
         number: string;
         id: string;
         createdAt: Date;
-        description: string;
         updatedAt: Date;
         version: number;
         type: string;
+        description: string;
         ownerId: string | null;
         source: string | null;
         caseRef: string | null;
@@ -106,10 +106,10 @@ export declare class EvidenceController {
         number: string;
         id: string;
         createdAt: Date;
-        description: string;
         updatedAt: Date;
         version: number;
         type: string;
+        description: string;
         ownerId: string | null;
         source: string | null;
         caseRef: string | null;
@@ -122,10 +122,10 @@ export declare class EvidenceController {
         number: string;
         id: string;
         createdAt: Date;
-        description: string;
         updatedAt: Date;
         version: number;
         type: string;
+        description: string;
         ownerId: string | null;
         source: string | null;
         caseRef: string | null;

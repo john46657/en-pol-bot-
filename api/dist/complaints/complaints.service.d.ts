@@ -17,10 +17,10 @@ export declare class ComplaintsService {
             number: string;
             id: string;
             createdAt: Date;
-            description: string;
             category: string;
             updatedAt: Date;
             version: number;
+            description: string;
             status: string;
             officerId: string | null;
             complainantId: string | null;
@@ -35,10 +35,10 @@ export declare class ComplaintsService {
             number: string;
             id: string;
             createdAt: Date;
-            description: string;
             category: string;
             updatedAt: Date;
             version: number;
+            description: string;
             status: string;
             officerId: string | null;
             complainantId: string | null;
@@ -55,10 +55,10 @@ export declare class ComplaintsService {
             number: string;
             id: string;
             createdAt: Date;
-            description: string;
             category: string;
             updatedAt: Date;
             version: number;
+            description: string;
             status: string;
             officerId: string | null;
             complainantId: string | null;
@@ -73,10 +73,10 @@ export declare class ComplaintsService {
             number: string;
             id: string;
             createdAt: Date;
-            description: string;
             category: string;
             updatedAt: Date;
             version: number;
+            description: string;
             status: string;
             officerId: string | null;
             complainantId: string | null;
@@ -86,10 +86,10 @@ export declare class ComplaintsService {
         };
         timeline: {
             id: string;
-            createdAt: Date;
             action: string;
             entityType: string;
             entityId: string;
+            createdAt: Date;
             summary: string;
             actorId: string | null;
         }[];

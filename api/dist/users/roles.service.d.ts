@@ -13,8 +13,8 @@ export declare class RolesService {
         id: string;
         createdAt: Date;
         name: string;
-        description: string | null;
         updatedAt: Date;
+        description: string | null;
         system: boolean;
     })[]>;
     catalog(): readonly import("@enrp/shared").PermissionKey[];
@@ -25,8 +25,8 @@ export declare class RolesService {
         id: string;
         createdAt: Date;
         name: string;
-        description: string | null;
         updatedAt: Date;
+        description: string | null;
         system: boolean;
     }>;
     setPermissions(actor: Actor, id: string, grants: {
@@ -42,8 +42,8 @@ export declare class RolesService {
         id: string;
         createdAt: Date;
         name: string;
-        description: string | null;
         updatedAt: Date;
+        description: string | null;
         system: boolean;
     }>;
 }

@@ -75,12 +75,12 @@ export declare class PersonsController {
     list(q: z.infer<typeof pageQuery>): Promise<{
         items: {
             id: string;
-            createdById: string | null;
             createdAt: Date;
             robloxUserId: string | null;
             robloxUsername: string;
             updatedAt: Date;
             version: number;
+            createdById: string | null;
             status: string;
             custom: import("@prisma/client/runtime/library").JsonValue | null;
             serverId: string | null;
@@ -114,12 +114,12 @@ export declare class PersonsController {
             }[];
         } & {
             id: string;
-            createdById: string | null;
             createdAt: Date;
             robloxUserId: string | null;
             robloxUsername: string;
             updatedAt: Date;
             version: number;
+            createdById: string | null;
             status: string;
             custom: import("@prisma/client/runtime/library").JsonValue | null;
             serverId: string | null;
@@ -146,18 +146,18 @@ export declare class PersonsController {
         links: {
             role: string;
             id: string;
-            createdAt: Date;
             entityType: string;
             entityId: string;
+            createdAt: Date;
             personId: string | null;
             vehicleId: string | null;
         }[];
         timeline: {
             id: string;
-            createdAt: Date;
             action: string;
             entityType: string;
             entityId: string;
+            createdAt: Date;
             summary: string;
             actorId: string | null;
         }[];
@@ -165,12 +165,12 @@ export declare class PersonsController {
     create(a: Actor, b: z.infer<typeof create>): Promise<{
         person: {
             id: string;
-            createdById: string | null;
             createdAt: Date;
             robloxUserId: string | null;
             robloxUsername: string;
             updatedAt: Date;
             version: number;
+            createdById: string | null;
             status: string;
             custom: import("@prisma/client/runtime/library").JsonValue | null;
             serverId: string | null;
@@ -186,12 +186,12 @@ export declare class PersonsController {
     }>;
     update(a: Actor, id: string, b: z.infer<typeof update>): Promise<{
         id: string;
-        createdById: string | null;
         createdAt: Date;
         robloxUserId: string | null;
         robloxUsername: string;
         updatedAt: Date;
         version: number;
+        createdById: string | null;
         status: string;
         custom: import("@prisma/client/runtime/library").JsonValue | null;
         serverId: string | null;
@@ -200,12 +200,12 @@ export declare class PersonsController {
     }>;
     archive(a: Actor, id: string, b: z.infer<typeof archive>): Promise<{
         id: string;
-        createdById: string | null;
         createdAt: Date;
         robloxUserId: string | null;
         robloxUsername: string;
         updatedAt: Date;
         version: number;
+        createdById: string | null;
         status: string;
         custom: import("@prisma/client/runtime/library").JsonValue | null;
         serverId: string | null;
@@ -214,12 +214,12 @@ export declare class PersonsController {
     }>;
     merge(a: Actor, id: string, b: z.infer<typeof merge>): Promise<{
         id: string;
-        createdById: string | null;
         createdAt: Date;
         robloxUserId: string | null;
         robloxUsername: string;
         updatedAt: Date;
         version: number;
+        createdById: string | null;
         status: string;
         custom: import("@prisma/client/runtime/library").JsonValue | null;
         serverId: string | null;

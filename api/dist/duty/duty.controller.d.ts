@@ -12,14 +12,17 @@ declare const body: z.ZodObject<{
     status: z.ZodEnum<["OFF_DUTY", "ON_DUTY", "BREAK", "TRAINING", "ADMINISTRATIVE"]>;
     unitId: z.ZodOptional<z.ZodString>;
     callsign: z.ZodOptional<z.ZodString>;
+    shiftType: z.ZodOptional<z.ZodString>;
 }, "strip", z.ZodTypeAny, {
-    status: "OFF_DUTY" | "ON_DUTY" | "BREAK" | "TRAINING" | "ADMINISTRATIVE";
+    status: "OFF_DUTY" | "BREAK" | "ON_DUTY" | "TRAINING" | "ADMINISTRATIVE";
     callsign?: string | undefined;
     unitId?: string | undefined;
+    shiftType?: string | undefined;
 }, {
-    status: "OFF_DUTY" | "ON_DUTY" | "BREAK" | "TRAINING" | "ADMINISTRATIVE";
+    status: "OFF_DUTY" | "BREAK" | "ON_DUTY" | "TRAINING" | "ADMINISTRATIVE";
     callsign?: string | undefined;
     unitId?: string | undefined;
+    shiftType?: string | undefined;
 }>;
 export declare class DutyController {
     private readonly d;
@@ -37,10 +40,11 @@ export declare class DutyController {
         id: string;
         userId: string;
         status: string;
+        endedAt: Date | null;
         callsign: string | null;
         unitId: string | null;
+        shiftType: string | null;
         startedAt: Date;
-        endedAt: Date | null;
     })[]>;
     overview(): Promise<{
         userId: string;
@@ -51,6 +55,7 @@ export declare class DutyController {
         team: string | null;
         dutyStatus: string;
         onDutySince: Date | null;
+        shiftType: string | null;
         lastStatusChange: Date | null;
         unit: {
             id: string;
@@ -69,10 +74,11 @@ export declare class DutyController {
         id: string;
         userId: string;
         status: string;
+        endedAt: Date | null;
         callsign: string | null;
         unitId: string | null;
+        shiftType: string | null;
         startedAt: Date;
-        endedAt: Date | null;
     } | null, null, import("@prisma/client/runtime/library").DefaultArgs, import("@prisma/client").Prisma.PrismaClientOptions>;
     /** Eigene Dienststunden. */
     myHours(a: Actor, f: z.infer<typeof hoursQuery>): Promise<{
@@ -100,10 +106,11 @@ export declare class DutyController {
         id: string;
         userId: string;
         status: string;
+        endedAt: Date | null;
         callsign: string | null;
         unitId: string | null;
+        shiftType: string | null;
         startedAt: Date;
-        endedAt: Date | null;
     } | {
         status: string;
     }>;
@@ -112,10 +119,11 @@ export declare class DutyController {
         id: string;
         userId: string;
         status: string;
+        endedAt: Date | null;
         callsign: string | null;
         unitId: string | null;
+        shiftType: string | null;
         startedAt: Date;
-        endedAt: Date | null;
     } | {
         status: string;
     }>;

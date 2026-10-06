@@ -167,13 +167,13 @@ export declare const appSettingsSchema: z.ZodDefault<z.ZodObject<{
         confirmation: z.ZodDefault<z.ZodString>;
         completion: z.ZodDefault<z.ZodString>;
     }, "strip", z.ZodTypeAny, {
-        accepted: string;
         denied: string;
+        accepted: string;
         confirmation: string;
         completion: string;
     }, {
-        accepted?: string | undefined;
         denied?: string | undefined;
+        accepted?: string | undefined;
         confirmation?: string | undefined;
         completion?: string | undefined;
     }>>;
@@ -207,12 +207,12 @@ export declare const appSettingsSchema: z.ZodDefault<z.ZodObject<{
         /** Wer im Discord annehmen/ablehnen darf (zusätzlich zum Recht im System); leer = alle mit dem Recht. */
         managers: z.ZodDefault<z.ZodArray<z.ZodString, "many">>;
     }, "strip", z.ZodTypeAny, {
+        denied: string[];
         required: {
             mode: "ALL" | "ANY";
             ids: string[];
         };
         accepted: string[];
-        denied: string[];
         restricted: {
             mode: "ALL" | "ANY";
             ids: string[];
@@ -223,12 +223,12 @@ export declare const appSettingsSchema: z.ZodDefault<z.ZodObject<{
         removeOnSubmit: string[];
         managers: string[];
     }, {
+        denied?: string[] | undefined;
         required?: {
             mode?: "ALL" | "ANY" | undefined;
             ids?: string[] | undefined;
         } | undefined;
         accepted?: string[] | undefined;
-        denied?: string[] | undefined;
         restricted?: {
             mode?: "ALL" | "ANY" | undefined;
             ids?: string[] | undefined;
@@ -244,12 +244,12 @@ export declare const appSettingsSchema: z.ZodDefault<z.ZodObject<{
     timeLimitMinutes: z.ZodDefault<z.ZodNumber>;
 }, "strip", z.ZodTypeAny, {
     roles: {
+        denied: string[];
         required: {
             mode: "ALL" | "ANY";
             ids: string[];
         };
         accepted: string[];
-        denied: string[];
         restricted: {
             mode: "ALL" | "ANY";
             ids: string[];
@@ -261,8 +261,8 @@ export declare const appSettingsSchema: z.ZodDefault<z.ZodObject<{
         managers: string[];
     };
     messages: {
-        accepted: string;
         denied: string;
+        accepted: string;
         confirmation: string;
         completion: string;
     };
@@ -271,12 +271,12 @@ export declare const appSettingsSchema: z.ZodDefault<z.ZodObject<{
     timeLimitMinutes: number;
 }, {
     roles?: {
+        denied?: string[] | undefined;
         required?: {
             mode?: "ALL" | "ANY" | undefined;
             ids?: string[] | undefined;
         } | undefined;
         accepted?: string[] | undefined;
-        denied?: string[] | undefined;
         restricted?: {
             mode?: "ALL" | "ANY" | undefined;
             ids?: string[] | undefined;
@@ -288,8 +288,8 @@ export declare const appSettingsSchema: z.ZodDefault<z.ZodObject<{
         managers?: string[] | undefined;
     } | undefined;
     messages?: {
-        accepted?: string | undefined;
         denied?: string | undefined;
+        accepted?: string | undefined;
         confirmation?: string | undefined;
         completion?: string | undefined;
     } | undefined;
@@ -403,13 +403,13 @@ export declare const unitSchema: z.ZodObject<{
             confirmation: z.ZodDefault<z.ZodString>;
             completion: z.ZodDefault<z.ZodString>;
         }, "strip", z.ZodTypeAny, {
-            accepted: string;
             denied: string;
+            accepted: string;
             confirmation: string;
             completion: string;
         }, {
-            accepted?: string | undefined;
             denied?: string | undefined;
+            accepted?: string | undefined;
             confirmation?: string | undefined;
             completion?: string | undefined;
         }>>;
@@ -443,12 +443,12 @@ export declare const unitSchema: z.ZodObject<{
             /** Wer im Discord annehmen/ablehnen darf (zusätzlich zum Recht im System); leer = alle mit dem Recht. */
             managers: z.ZodDefault<z.ZodArray<z.ZodString, "many">>;
         }, "strip", z.ZodTypeAny, {
+            denied: string[];
             required: {
                 mode: "ALL" | "ANY";
                 ids: string[];
             };
             accepted: string[];
-            denied: string[];
             restricted: {
                 mode: "ALL" | "ANY";
                 ids: string[];
@@ -459,12 +459,12 @@ export declare const unitSchema: z.ZodObject<{
             removeOnSubmit: string[];
             managers: string[];
         }, {
+            denied?: string[] | undefined;
             required?: {
                 mode?: "ALL" | "ANY" | undefined;
                 ids?: string[] | undefined;
             } | undefined;
             accepted?: string[] | undefined;
-            denied?: string[] | undefined;
             restricted?: {
                 mode?: "ALL" | "ANY" | undefined;
                 ids?: string[] | undefined;
@@ -480,12 +480,12 @@ export declare const unitSchema: z.ZodObject<{
         timeLimitMinutes: z.ZodDefault<z.ZodNumber>;
     }, "strip", z.ZodTypeAny, {
         roles: {
+            denied: string[];
             required: {
                 mode: "ALL" | "ANY";
                 ids: string[];
             };
             accepted: string[];
-            denied: string[];
             restricted: {
                 mode: "ALL" | "ANY";
                 ids: string[];
@@ -497,8 +497,8 @@ export declare const unitSchema: z.ZodObject<{
             managers: string[];
         };
         messages: {
-            accepted: string;
             denied: string;
+            accepted: string;
             confirmation: string;
             completion: string;
         };
@@ -507,12 +507,12 @@ export declare const unitSchema: z.ZodObject<{
         timeLimitMinutes: number;
     }, {
         roles?: {
+            denied?: string[] | undefined;
             required?: {
                 mode?: "ALL" | "ANY" | undefined;
                 ids?: string[] | undefined;
             } | undefined;
             accepted?: string[] | undefined;
-            denied?: string[] | undefined;
             restricted?: {
                 mode?: "ALL" | "ANY" | undefined;
                 ids?: string[] | undefined;
@@ -524,8 +524,8 @@ export declare const unitSchema: z.ZodObject<{
             managers?: string[] | undefined;
         } | undefined;
         messages?: {
-            accepted?: string | undefined;
             denied?: string | undefined;
+            accepted?: string | undefined;
             confirmation?: string | undefined;
             completion?: string | undefined;
         } | undefined;
@@ -542,15 +542,14 @@ export declare const unitSchema: z.ZodObject<{
     channelId: z.ZodOptional<z.ZodUnion<[z.ZodString, z.ZodLiteral<"">]>>;
 }, "strip", z.ZodTypeAny, {
     name: string;
-    description: string;
     settings: {
         roles: {
+            denied: string[];
             required: {
                 mode: "ALL" | "ANY";
                 ids: string[];
             };
             accepted: string[];
-            denied: string[];
             restricted: {
                 mode: "ALL" | "ANY";
                 ids: string[];
@@ -562,8 +561,8 @@ export declare const unitSchema: z.ZodObject<{
             managers: string[];
         };
         messages: {
-            accepted: string;
             denied: string;
+            accepted: string;
             confirmation: string;
             completion: string;
         };
@@ -572,9 +571,10 @@ export declare const unitSchema: z.ZodObject<{
         timeLimitMinutes: number;
     };
     key: string;
+    description: string;
+    enabled: boolean;
     questions: FormField[];
     pingRoleIds: string[];
-    enabled: boolean;
     roleId?: string | undefined;
     channelId?: string | undefined;
     acceptedChannelId?: string | undefined;
@@ -595,16 +595,14 @@ export declare const unitSchema: z.ZodObject<{
         maxLength?: number | undefined;
         multiple?: boolean | undefined;
     })[];
-    roleId?: string | undefined;
-    description?: string | undefined;
     settings?: {
         roles?: {
+            denied?: string[] | undefined;
             required?: {
                 mode?: "ALL" | "ANY" | undefined;
                 ids?: string[] | undefined;
             } | undefined;
             accepted?: string[] | undefined;
-            denied?: string[] | undefined;
             restricted?: {
                 mode?: "ALL" | "ANY" | undefined;
                 ids?: string[] | undefined;
@@ -616,8 +614,8 @@ export declare const unitSchema: z.ZodObject<{
             managers?: string[] | undefined;
         } | undefined;
         messages?: {
-            accepted?: string | undefined;
             denied?: string | undefined;
+            accepted?: string | undefined;
             confirmation?: string | undefined;
             completion?: string | undefined;
         } | undefined;
@@ -625,9 +623,11 @@ export declare const unitSchema: z.ZodObject<{
         cooldownMinutes?: number | undefined;
         timeLimitMinutes?: number | undefined;
     } | undefined;
+    roleId?: string | undefined;
+    description?: string | undefined;
+    enabled?: boolean | undefined;
     channelId?: string | undefined;
     pingRoleIds?: string[] | undefined;
-    enabled?: boolean | undefined;
     acceptedChannelId?: string | undefined;
     deniedChannelId?: string | undefined;
 }>;
@@ -649,13 +649,13 @@ export declare const policeSchema: z.ZodObject<{
             confirmation: z.ZodDefault<z.ZodString>;
             completion: z.ZodDefault<z.ZodString>;
         }, "strip", z.ZodTypeAny, {
-            accepted: string;
             denied: string;
+            accepted: string;
             confirmation: string;
             completion: string;
         }, {
-            accepted?: string | undefined;
             denied?: string | undefined;
+            accepted?: string | undefined;
             confirmation?: string | undefined;
             completion?: string | undefined;
         }>>;
@@ -689,12 +689,12 @@ export declare const policeSchema: z.ZodObject<{
             /** Wer im Discord annehmen/ablehnen darf (zusätzlich zum Recht im System); leer = alle mit dem Recht. */
             managers: z.ZodDefault<z.ZodArray<z.ZodString, "many">>;
         }, "strip", z.ZodTypeAny, {
+            denied: string[];
             required: {
                 mode: "ALL" | "ANY";
                 ids: string[];
             };
             accepted: string[];
-            denied: string[];
             restricted: {
                 mode: "ALL" | "ANY";
                 ids: string[];
@@ -705,12 +705,12 @@ export declare const policeSchema: z.ZodObject<{
             removeOnSubmit: string[];
             managers: string[];
         }, {
+            denied?: string[] | undefined;
             required?: {
                 mode?: "ALL" | "ANY" | undefined;
                 ids?: string[] | undefined;
             } | undefined;
             accepted?: string[] | undefined;
-            denied?: string[] | undefined;
             restricted?: {
                 mode?: "ALL" | "ANY" | undefined;
                 ids?: string[] | undefined;
@@ -726,12 +726,12 @@ export declare const policeSchema: z.ZodObject<{
         timeLimitMinutes: z.ZodDefault<z.ZodNumber>;
     }, "strip", z.ZodTypeAny, {
         roles: {
+            denied: string[];
             required: {
                 mode: "ALL" | "ANY";
                 ids: string[];
             };
             accepted: string[];
-            denied: string[];
             restricted: {
                 mode: "ALL" | "ANY";
                 ids: string[];
@@ -743,8 +743,8 @@ export declare const policeSchema: z.ZodObject<{
             managers: string[];
         };
         messages: {
-            accepted: string;
             denied: string;
+            accepted: string;
             confirmation: string;
             completion: string;
         };
@@ -753,12 +753,12 @@ export declare const policeSchema: z.ZodObject<{
         timeLimitMinutes: number;
     }, {
         roles?: {
+            denied?: string[] | undefined;
             required?: {
                 mode?: "ALL" | "ANY" | undefined;
                 ids?: string[] | undefined;
             } | undefined;
             accepted?: string[] | undefined;
-            denied?: string[] | undefined;
             restricted?: {
                 mode?: "ALL" | "ANY" | undefined;
                 ids?: string[] | undefined;
@@ -770,8 +770,8 @@ export declare const policeSchema: z.ZodObject<{
             managers?: string[] | undefined;
         } | undefined;
         messages?: {
-            accepted?: string | undefined;
             denied?: string | undefined;
+            accepted?: string | undefined;
             confirmation?: string | undefined;
             completion?: string | undefined;
         } | undefined;
@@ -781,15 +781,14 @@ export declare const policeSchema: z.ZodObject<{
     }>>;
 }, "strip", z.ZodTypeAny, {
     name: string;
-    description: string;
     settings: {
         roles: {
+            denied: string[];
             required: {
                 mode: "ALL" | "ANY";
                 ids: string[];
             };
             accepted: string[];
-            denied: string[];
             restricted: {
                 mode: "ALL" | "ANY";
                 ids: string[];
@@ -801,8 +800,8 @@ export declare const policeSchema: z.ZodObject<{
             managers: string[];
         };
         messages: {
-            accepted: string;
             denied: string;
+            accepted: string;
             confirmation: string;
             completion: string;
         };
@@ -810,23 +809,23 @@ export declare const policeSchema: z.ZodObject<{
         cooldownMinutes: number;
         timeLimitMinutes: number;
     };
+    description: string;
+    enabled: boolean;
     title: string;
     pingRoleIds: string[];
-    enabled: boolean;
     channelId?: string | undefined;
     acceptedChannelId?: string | undefined;
     deniedChannelId?: string | undefined;
 }, {
     name?: string | undefined;
-    description?: string | undefined;
     settings?: {
         roles?: {
+            denied?: string[] | undefined;
             required?: {
                 mode?: "ALL" | "ANY" | undefined;
                 ids?: string[] | undefined;
             } | undefined;
             accepted?: string[] | undefined;
-            denied?: string[] | undefined;
             restricted?: {
                 mode?: "ALL" | "ANY" | undefined;
                 ids?: string[] | undefined;
@@ -838,8 +837,8 @@ export declare const policeSchema: z.ZodObject<{
             managers?: string[] | undefined;
         } | undefined;
         messages?: {
-            accepted?: string | undefined;
             denied?: string | undefined;
+            accepted?: string | undefined;
             confirmation?: string | undefined;
             completion?: string | undefined;
         } | undefined;
@@ -847,10 +846,11 @@ export declare const policeSchema: z.ZodObject<{
         cooldownMinutes?: number | undefined;
         timeLimitMinutes?: number | undefined;
     } | undefined;
-    title?: string | undefined;
-    channelId?: string | undefined;
-    pingRoleIds?: string[] | undefined;
+    description?: string | undefined;
     enabled?: boolean | undefined;
+    channelId?: string | undefined;
+    title?: string | undefined;
+    pingRoleIds?: string[] | undefined;
     acceptedChannelId?: string | undefined;
     deniedChannelId?: string | undefined;
 }>;
@@ -961,13 +961,13 @@ export declare const configSchema: z.ZodObject<{
                 confirmation: z.ZodDefault<z.ZodString>;
                 completion: z.ZodDefault<z.ZodString>;
             }, "strip", z.ZodTypeAny, {
-                accepted: string;
                 denied: string;
+                accepted: string;
                 confirmation: string;
                 completion: string;
             }, {
-                accepted?: string | undefined;
                 denied?: string | undefined;
+                accepted?: string | undefined;
                 confirmation?: string | undefined;
                 completion?: string | undefined;
             }>>;
@@ -1001,12 +1001,12 @@ export declare const configSchema: z.ZodObject<{
                 /** Wer im Discord annehmen/ablehnen darf (zusätzlich zum Recht im System); leer = alle mit dem Recht. */
                 managers: z.ZodDefault<z.ZodArray<z.ZodString, "many">>;
             }, "strip", z.ZodTypeAny, {
+                denied: string[];
                 required: {
                     mode: "ALL" | "ANY";
                     ids: string[];
                 };
                 accepted: string[];
-                denied: string[];
                 restricted: {
                     mode: "ALL" | "ANY";
                     ids: string[];
@@ -1017,12 +1017,12 @@ export declare const configSchema: z.ZodObject<{
                 removeOnSubmit: string[];
                 managers: string[];
             }, {
+                denied?: string[] | undefined;
                 required?: {
                     mode?: "ALL" | "ANY" | undefined;
                     ids?: string[] | undefined;
                 } | undefined;
                 accepted?: string[] | undefined;
-                denied?: string[] | undefined;
                 restricted?: {
                     mode?: "ALL" | "ANY" | undefined;
                     ids?: string[] | undefined;
@@ -1038,12 +1038,12 @@ export declare const configSchema: z.ZodObject<{
             timeLimitMinutes: z.ZodDefault<z.ZodNumber>;
         }, "strip", z.ZodTypeAny, {
             roles: {
+                denied: string[];
                 required: {
                     mode: "ALL" | "ANY";
                     ids: string[];
                 };
                 accepted: string[];
-                denied: string[];
                 restricted: {
                     mode: "ALL" | "ANY";
                     ids: string[];
@@ -1055,8 +1055,8 @@ export declare const configSchema: z.ZodObject<{
                 managers: string[];
             };
             messages: {
-                accepted: string;
                 denied: string;
+                accepted: string;
                 confirmation: string;
                 completion: string;
             };
@@ -1065,12 +1065,12 @@ export declare const configSchema: z.ZodObject<{
             timeLimitMinutes: number;
         }, {
             roles?: {
+                denied?: string[] | undefined;
                 required?: {
                     mode?: "ALL" | "ANY" | undefined;
                     ids?: string[] | undefined;
                 } | undefined;
                 accepted?: string[] | undefined;
-                denied?: string[] | undefined;
                 restricted?: {
                     mode?: "ALL" | "ANY" | undefined;
                     ids?: string[] | undefined;
@@ -1082,8 +1082,8 @@ export declare const configSchema: z.ZodObject<{
                 managers?: string[] | undefined;
             } | undefined;
             messages?: {
-                accepted?: string | undefined;
                 denied?: string | undefined;
+                accepted?: string | undefined;
                 confirmation?: string | undefined;
                 completion?: string | undefined;
             } | undefined;
@@ -1100,15 +1100,14 @@ export declare const configSchema: z.ZodObject<{
         channelId: z.ZodOptional<z.ZodUnion<[z.ZodString, z.ZodLiteral<"">]>>;
     }, "strip", z.ZodTypeAny, {
         name: string;
-        description: string;
         settings: {
             roles: {
+                denied: string[];
                 required: {
                     mode: "ALL" | "ANY";
                     ids: string[];
                 };
                 accepted: string[];
-                denied: string[];
                 restricted: {
                     mode: "ALL" | "ANY";
                     ids: string[];
@@ -1120,8 +1119,8 @@ export declare const configSchema: z.ZodObject<{
                 managers: string[];
             };
             messages: {
-                accepted: string;
                 denied: string;
+                accepted: string;
                 confirmation: string;
                 completion: string;
             };
@@ -1130,9 +1129,10 @@ export declare const configSchema: z.ZodObject<{
             timeLimitMinutes: number;
         };
         key: string;
+        description: string;
+        enabled: boolean;
         questions: FormField[];
         pingRoleIds: string[];
-        enabled: boolean;
         roleId?: string | undefined;
         channelId?: string | undefined;
         acceptedChannelId?: string | undefined;
@@ -1153,16 +1153,14 @@ export declare const configSchema: z.ZodObject<{
             maxLength?: number | undefined;
             multiple?: boolean | undefined;
         })[];
-        roleId?: string | undefined;
-        description?: string | undefined;
         settings?: {
             roles?: {
+                denied?: string[] | undefined;
                 required?: {
                     mode?: "ALL" | "ANY" | undefined;
                     ids?: string[] | undefined;
                 } | undefined;
                 accepted?: string[] | undefined;
-                denied?: string[] | undefined;
                 restricted?: {
                     mode?: "ALL" | "ANY" | undefined;
                     ids?: string[] | undefined;
@@ -1174,8 +1172,8 @@ export declare const configSchema: z.ZodObject<{
                 managers?: string[] | undefined;
             } | undefined;
             messages?: {
-                accepted?: string | undefined;
                 denied?: string | undefined;
+                accepted?: string | undefined;
                 confirmation?: string | undefined;
                 completion?: string | undefined;
             } | undefined;
@@ -1183,22 +1181,23 @@ export declare const configSchema: z.ZodObject<{
             cooldownMinutes?: number | undefined;
             timeLimitMinutes?: number | undefined;
         } | undefined;
+        roleId?: string | undefined;
+        description?: string | undefined;
+        enabled?: boolean | undefined;
         channelId?: string | undefined;
         pingRoleIds?: string[] | undefined;
-        enabled?: boolean | undefined;
         acceptedChannelId?: string | undefined;
         deniedChannelId?: string | undefined;
     }>, "many">, {
         name: string;
-        description: string;
         settings: {
             roles: {
+                denied: string[];
                 required: {
                     mode: "ALL" | "ANY";
                     ids: string[];
                 };
                 accepted: string[];
-                denied: string[];
                 restricted: {
                     mode: "ALL" | "ANY";
                     ids: string[];
@@ -1210,8 +1209,8 @@ export declare const configSchema: z.ZodObject<{
                 managers: string[];
             };
             messages: {
-                accepted: string;
                 denied: string;
+                accepted: string;
                 confirmation: string;
                 completion: string;
             };
@@ -1220,9 +1219,10 @@ export declare const configSchema: z.ZodObject<{
             timeLimitMinutes: number;
         };
         key: string;
+        description: string;
+        enabled: boolean;
         questions: FormField[];
         pingRoleIds: string[];
-        enabled: boolean;
         roleId?: string | undefined;
         channelId?: string | undefined;
         acceptedChannelId?: string | undefined;
@@ -1243,16 +1243,14 @@ export declare const configSchema: z.ZodObject<{
             maxLength?: number | undefined;
             multiple?: boolean | undefined;
         })[];
-        roleId?: string | undefined;
-        description?: string | undefined;
         settings?: {
             roles?: {
+                denied?: string[] | undefined;
                 required?: {
                     mode?: "ALL" | "ANY" | undefined;
                     ids?: string[] | undefined;
                 } | undefined;
                 accepted?: string[] | undefined;
-                denied?: string[] | undefined;
                 restricted?: {
                     mode?: "ALL" | "ANY" | undefined;
                     ids?: string[] | undefined;
@@ -1264,8 +1262,8 @@ export declare const configSchema: z.ZodObject<{
                 managers?: string[] | undefined;
             } | undefined;
             messages?: {
-                accepted?: string | undefined;
                 denied?: string | undefined;
+                accepted?: string | undefined;
                 confirmation?: string | undefined;
                 completion?: string | undefined;
             } | undefined;
@@ -1273,9 +1271,11 @@ export declare const configSchema: z.ZodObject<{
             cooldownMinutes?: number | undefined;
             timeLimitMinutes?: number | undefined;
         } | undefined;
+        roleId?: string | undefined;
+        description?: string | undefined;
+        enabled?: boolean | undefined;
         channelId?: string | undefined;
         pingRoleIds?: string[] | undefined;
-        enabled?: boolean | undefined;
         acceptedChannelId?: string | undefined;
         deniedChannelId?: string | undefined;
     }[]>;
@@ -1296,13 +1296,13 @@ export declare const configSchema: z.ZodObject<{
                 confirmation: z.ZodDefault<z.ZodString>;
                 completion: z.ZodDefault<z.ZodString>;
             }, "strip", z.ZodTypeAny, {
-                accepted: string;
                 denied: string;
+                accepted: string;
                 confirmation: string;
                 completion: string;
             }, {
-                accepted?: string | undefined;
                 denied?: string | undefined;
+                accepted?: string | undefined;
                 confirmation?: string | undefined;
                 completion?: string | undefined;
             }>>;
@@ -1336,12 +1336,12 @@ export declare const configSchema: z.ZodObject<{
                 /** Wer im Discord annehmen/ablehnen darf (zusätzlich zum Recht im System); leer = alle mit dem Recht. */
                 managers: z.ZodDefault<z.ZodArray<z.ZodString, "many">>;
             }, "strip", z.ZodTypeAny, {
+                denied: string[];
                 required: {
                     mode: "ALL" | "ANY";
                     ids: string[];
                 };
                 accepted: string[];
-                denied: string[];
                 restricted: {
                     mode: "ALL" | "ANY";
                     ids: string[];
@@ -1352,12 +1352,12 @@ export declare const configSchema: z.ZodObject<{
                 removeOnSubmit: string[];
                 managers: string[];
             }, {
+                denied?: string[] | undefined;
                 required?: {
                     mode?: "ALL" | "ANY" | undefined;
                     ids?: string[] | undefined;
                 } | undefined;
                 accepted?: string[] | undefined;
-                denied?: string[] | undefined;
                 restricted?: {
                     mode?: "ALL" | "ANY" | undefined;
                     ids?: string[] | undefined;
@@ -1373,12 +1373,12 @@ export declare const configSchema: z.ZodObject<{
             timeLimitMinutes: z.ZodDefault<z.ZodNumber>;
         }, "strip", z.ZodTypeAny, {
             roles: {
+                denied: string[];
                 required: {
                     mode: "ALL" | "ANY";
                     ids: string[];
                 };
                 accepted: string[];
-                denied: string[];
                 restricted: {
                     mode: "ALL" | "ANY";
                     ids: string[];
@@ -1390,8 +1390,8 @@ export declare const configSchema: z.ZodObject<{
                 managers: string[];
             };
             messages: {
-                accepted: string;
                 denied: string;
+                accepted: string;
                 confirmation: string;
                 completion: string;
             };
@@ -1400,12 +1400,12 @@ export declare const configSchema: z.ZodObject<{
             timeLimitMinutes: number;
         }, {
             roles?: {
+                denied?: string[] | undefined;
                 required?: {
                     mode?: "ALL" | "ANY" | undefined;
                     ids?: string[] | undefined;
                 } | undefined;
                 accepted?: string[] | undefined;
-                denied?: string[] | undefined;
                 restricted?: {
                     mode?: "ALL" | "ANY" | undefined;
                     ids?: string[] | undefined;
@@ -1417,8 +1417,8 @@ export declare const configSchema: z.ZodObject<{
                 managers?: string[] | undefined;
             } | undefined;
             messages?: {
-                accepted?: string | undefined;
                 denied?: string | undefined;
+                accepted?: string | undefined;
                 confirmation?: string | undefined;
                 completion?: string | undefined;
             } | undefined;
@@ -1428,15 +1428,14 @@ export declare const configSchema: z.ZodObject<{
         }>>;
     }, "strip", z.ZodTypeAny, {
         name: string;
-        description: string;
         settings: {
             roles: {
+                denied: string[];
                 required: {
                     mode: "ALL" | "ANY";
                     ids: string[];
                 };
                 accepted: string[];
-                denied: string[];
                 restricted: {
                     mode: "ALL" | "ANY";
                     ids: string[];
@@ -1448,8 +1447,8 @@ export declare const configSchema: z.ZodObject<{
                 managers: string[];
             };
             messages: {
-                accepted: string;
                 denied: string;
+                accepted: string;
                 confirmation: string;
                 completion: string;
             };
@@ -1457,23 +1456,23 @@ export declare const configSchema: z.ZodObject<{
             cooldownMinutes: number;
             timeLimitMinutes: number;
         };
+        description: string;
+        enabled: boolean;
         title: string;
         pingRoleIds: string[];
-        enabled: boolean;
         channelId?: string | undefined;
         acceptedChannelId?: string | undefined;
         deniedChannelId?: string | undefined;
     }, {
         name?: string | undefined;
-        description?: string | undefined;
         settings?: {
             roles?: {
+                denied?: string[] | undefined;
                 required?: {
                     mode?: "ALL" | "ANY" | undefined;
                     ids?: string[] | undefined;
                 } | undefined;
                 accepted?: string[] | undefined;
-                denied?: string[] | undefined;
                 restricted?: {
                     mode?: "ALL" | "ANY" | undefined;
                     ids?: string[] | undefined;
@@ -1485,8 +1484,8 @@ export declare const configSchema: z.ZodObject<{
                 managers?: string[] | undefined;
             } | undefined;
             messages?: {
-                accepted?: string | undefined;
                 denied?: string | undefined;
+                accepted?: string | undefined;
                 confirmation?: string | undefined;
                 completion?: string | undefined;
             } | undefined;
@@ -1494,10 +1493,11 @@ export declare const configSchema: z.ZodObject<{
             cooldownMinutes?: number | undefined;
             timeLimitMinutes?: number | undefined;
         } | undefined;
-        title?: string | undefined;
-        channelId?: string | undefined;
-        pingRoleIds?: string[] | undefined;
+        description?: string | undefined;
         enabled?: boolean | undefined;
+        channelId?: string | undefined;
+        title?: string | undefined;
+        pingRoleIds?: string[] | undefined;
         acceptedChannelId?: string | undefined;
         deniedChannelId?: string | undefined;
     }>>;
@@ -1505,15 +1505,14 @@ export declare const configSchema: z.ZodObject<{
     title: string;
     units: {
         name: string;
-        description: string;
         settings: {
             roles: {
+                denied: string[];
                 required: {
                     mode: "ALL" | "ANY";
                     ids: string[];
                 };
                 accepted: string[];
-                denied: string[];
                 restricted: {
                     mode: "ALL" | "ANY";
                     ids: string[];
@@ -1525,8 +1524,8 @@ export declare const configSchema: z.ZodObject<{
                 managers: string[];
             };
             messages: {
-                accepted: string;
                 denied: string;
+                accepted: string;
                 confirmation: string;
                 completion: string;
             };
@@ -1535,9 +1534,10 @@ export declare const configSchema: z.ZodObject<{
             timeLimitMinutes: number;
         };
         key: string;
+        description: string;
+        enabled: boolean;
         questions: FormField[];
         pingRoleIds: string[];
-        enabled: boolean;
         roleId?: string | undefined;
         channelId?: string | undefined;
         acceptedChannelId?: string | undefined;
@@ -1546,15 +1546,14 @@ export declare const configSchema: z.ZodObject<{
     intro: string;
     police: {
         name: string;
-        description: string;
         settings: {
             roles: {
+                denied: string[];
                 required: {
                     mode: "ALL" | "ANY";
                     ids: string[];
                 };
                 accepted: string[];
-                denied: string[];
                 restricted: {
                     mode: "ALL" | "ANY";
                     ids: string[];
@@ -1566,8 +1565,8 @@ export declare const configSchema: z.ZodObject<{
                 managers: string[];
             };
             messages: {
-                accepted: string;
                 denied: string;
+                accepted: string;
                 confirmation: string;
                 completion: string;
             };
@@ -1575,9 +1574,10 @@ export declare const configSchema: z.ZodObject<{
             cooldownMinutes: number;
             timeLimitMinutes: number;
         };
+        description: string;
+        enabled: boolean;
         title: string;
         pingRoleIds: string[];
-        enabled: boolean;
         channelId?: string | undefined;
         acceptedChannelId?: string | undefined;
         deniedChannelId?: string | undefined;
@@ -1599,16 +1599,14 @@ export declare const configSchema: z.ZodObject<{
             maxLength?: number | undefined;
             multiple?: boolean | undefined;
         })[];
-        roleId?: string | undefined;
-        description?: string | undefined;
         settings?: {
             roles?: {
+                denied?: string[] | undefined;
                 required?: {
                     mode?: "ALL" | "ANY" | undefined;
                     ids?: string[] | undefined;
                 } | undefined;
                 accepted?: string[] | undefined;
-                denied?: string[] | undefined;
                 restricted?: {
                     mode?: "ALL" | "ANY" | undefined;
                     ids?: string[] | undefined;
@@ -1620,8 +1618,8 @@ export declare const configSchema: z.ZodObject<{
                 managers?: string[] | undefined;
             } | undefined;
             messages?: {
-                accepted?: string | undefined;
                 denied?: string | undefined;
+                accepted?: string | undefined;
                 confirmation?: string | undefined;
                 completion?: string | undefined;
             } | undefined;
@@ -1629,9 +1627,11 @@ export declare const configSchema: z.ZodObject<{
             cooldownMinutes?: number | undefined;
             timeLimitMinutes?: number | undefined;
         } | undefined;
+        roleId?: string | undefined;
+        description?: string | undefined;
+        enabled?: boolean | undefined;
         channelId?: string | undefined;
         pingRoleIds?: string[] | undefined;
-        enabled?: boolean | undefined;
         acceptedChannelId?: string | undefined;
         deniedChannelId?: string | undefined;
     }[];
@@ -1639,15 +1639,14 @@ export declare const configSchema: z.ZodObject<{
     intro?: string | undefined;
     police?: {
         name?: string | undefined;
-        description?: string | undefined;
         settings?: {
             roles?: {
+                denied?: string[] | undefined;
                 required?: {
                     mode?: "ALL" | "ANY" | undefined;
                     ids?: string[] | undefined;
                 } | undefined;
                 accepted?: string[] | undefined;
-                denied?: string[] | undefined;
                 restricted?: {
                     mode?: "ALL" | "ANY" | undefined;
                     ids?: string[] | undefined;
@@ -1659,8 +1658,8 @@ export declare const configSchema: z.ZodObject<{
                 managers?: string[] | undefined;
             } | undefined;
             messages?: {
-                accepted?: string | undefined;
                 denied?: string | undefined;
+                accepted?: string | undefined;
                 confirmation?: string | undefined;
                 completion?: string | undefined;
             } | undefined;
@@ -1668,10 +1667,11 @@ export declare const configSchema: z.ZodObject<{
             cooldownMinutes?: number | undefined;
             timeLimitMinutes?: number | undefined;
         } | undefined;
-        title?: string | undefined;
-        channelId?: string | undefined;
-        pingRoleIds?: string[] | undefined;
+        description?: string | undefined;
         enabled?: boolean | undefined;
+        channelId?: string | undefined;
+        title?: string | undefined;
+        pingRoleIds?: string[] | undefined;
         acceptedChannelId?: string | undefined;
         deniedChannelId?: string | undefined;
     } | undefined;
@@ -1784,13 +1784,13 @@ export declare const saveSchema: z.ZodObject<{
                 confirmation: z.ZodDefault<z.ZodString>;
                 completion: z.ZodDefault<z.ZodString>;
             }, "strip", z.ZodTypeAny, {
-                accepted: string;
                 denied: string;
+                accepted: string;
                 confirmation: string;
                 completion: string;
             }, {
-                accepted?: string | undefined;
                 denied?: string | undefined;
+                accepted?: string | undefined;
                 confirmation?: string | undefined;
                 completion?: string | undefined;
             }>>;
@@ -1824,12 +1824,12 @@ export declare const saveSchema: z.ZodObject<{
                 /** Wer im Discord annehmen/ablehnen darf (zusätzlich zum Recht im System); leer = alle mit dem Recht. */
                 managers: z.ZodDefault<z.ZodArray<z.ZodString, "many">>;
             }, "strip", z.ZodTypeAny, {
+                denied: string[];
                 required: {
                     mode: "ALL" | "ANY";
                     ids: string[];
                 };
                 accepted: string[];
-                denied: string[];
                 restricted: {
                     mode: "ALL" | "ANY";
                     ids: string[];
@@ -1840,12 +1840,12 @@ export declare const saveSchema: z.ZodObject<{
                 removeOnSubmit: string[];
                 managers: string[];
             }, {
+                denied?: string[] | undefined;
                 required?: {
                     mode?: "ALL" | "ANY" | undefined;
                     ids?: string[] | undefined;
                 } | undefined;
                 accepted?: string[] | undefined;
-                denied?: string[] | undefined;
                 restricted?: {
                     mode?: "ALL" | "ANY" | undefined;
                     ids?: string[] | undefined;
@@ -1861,12 +1861,12 @@ export declare const saveSchema: z.ZodObject<{
             timeLimitMinutes: z.ZodDefault<z.ZodNumber>;
         }, "strip", z.ZodTypeAny, {
             roles: {
+                denied: string[];
                 required: {
                     mode: "ALL" | "ANY";
                     ids: string[];
                 };
                 accepted: string[];
-                denied: string[];
                 restricted: {
                     mode: "ALL" | "ANY";
                     ids: string[];
@@ -1878,8 +1878,8 @@ export declare const saveSchema: z.ZodObject<{
                 managers: string[];
             };
             messages: {
-                accepted: string;
                 denied: string;
+                accepted: string;
                 confirmation: string;
                 completion: string;
             };
@@ -1888,12 +1888,12 @@ export declare const saveSchema: z.ZodObject<{
             timeLimitMinutes: number;
         }, {
             roles?: {
+                denied?: string[] | undefined;
                 required?: {
                     mode?: "ALL" | "ANY" | undefined;
                     ids?: string[] | undefined;
                 } | undefined;
                 accepted?: string[] | undefined;
-                denied?: string[] | undefined;
                 restricted?: {
                     mode?: "ALL" | "ANY" | undefined;
                     ids?: string[] | undefined;
@@ -1905,8 +1905,8 @@ export declare const saveSchema: z.ZodObject<{
                 managers?: string[] | undefined;
             } | undefined;
             messages?: {
-                accepted?: string | undefined;
                 denied?: string | undefined;
+                accepted?: string | undefined;
                 confirmation?: string | undefined;
                 completion?: string | undefined;
             } | undefined;
@@ -1923,15 +1923,14 @@ export declare const saveSchema: z.ZodObject<{
         channelId: z.ZodOptional<z.ZodUnion<[z.ZodString, z.ZodLiteral<"">]>>;
     }, "strip", z.ZodTypeAny, {
         name: string;
-        description: string;
         settings: {
             roles: {
+                denied: string[];
                 required: {
                     mode: "ALL" | "ANY";
                     ids: string[];
                 };
                 accepted: string[];
-                denied: string[];
                 restricted: {
                     mode: "ALL" | "ANY";
                     ids: string[];
@@ -1943,8 +1942,8 @@ export declare const saveSchema: z.ZodObject<{
                 managers: string[];
             };
             messages: {
-                accepted: string;
                 denied: string;
+                accepted: string;
                 confirmation: string;
                 completion: string;
             };
@@ -1953,9 +1952,10 @@ export declare const saveSchema: z.ZodObject<{
             timeLimitMinutes: number;
         };
         key: string;
+        description: string;
+        enabled: boolean;
         questions: FormField[];
         pingRoleIds: string[];
-        enabled: boolean;
         roleId?: string | undefined;
         channelId?: string | undefined;
         acceptedChannelId?: string | undefined;
@@ -1976,16 +1976,14 @@ export declare const saveSchema: z.ZodObject<{
             maxLength?: number | undefined;
             multiple?: boolean | undefined;
         })[];
-        roleId?: string | undefined;
-        description?: string | undefined;
         settings?: {
             roles?: {
+                denied?: string[] | undefined;
                 required?: {
                     mode?: "ALL" | "ANY" | undefined;
                     ids?: string[] | undefined;
                 } | undefined;
                 accepted?: string[] | undefined;
-                denied?: string[] | undefined;
                 restricted?: {
                     mode?: "ALL" | "ANY" | undefined;
                     ids?: string[] | undefined;
@@ -1997,8 +1995,8 @@ export declare const saveSchema: z.ZodObject<{
                 managers?: string[] | undefined;
             } | undefined;
             messages?: {
-                accepted?: string | undefined;
                 denied?: string | undefined;
+                accepted?: string | undefined;
                 confirmation?: string | undefined;
                 completion?: string | undefined;
             } | undefined;
@@ -2006,22 +2004,23 @@ export declare const saveSchema: z.ZodObject<{
             cooldownMinutes?: number | undefined;
             timeLimitMinutes?: number | undefined;
         } | undefined;
+        roleId?: string | undefined;
+        description?: string | undefined;
+        enabled?: boolean | undefined;
         channelId?: string | undefined;
         pingRoleIds?: string[] | undefined;
-        enabled?: boolean | undefined;
         acceptedChannelId?: string | undefined;
         deniedChannelId?: string | undefined;
     }>, "many">, {
         name: string;
-        description: string;
         settings: {
             roles: {
+                denied: string[];
                 required: {
                     mode: "ALL" | "ANY";
                     ids: string[];
                 };
                 accepted: string[];
-                denied: string[];
                 restricted: {
                     mode: "ALL" | "ANY";
                     ids: string[];
@@ -2033,8 +2032,8 @@ export declare const saveSchema: z.ZodObject<{
                 managers: string[];
             };
             messages: {
-                accepted: string;
                 denied: string;
+                accepted: string;
                 confirmation: string;
                 completion: string;
             };
@@ -2043,9 +2042,10 @@ export declare const saveSchema: z.ZodObject<{
             timeLimitMinutes: number;
         };
         key: string;
+        description: string;
+        enabled: boolean;
         questions: FormField[];
         pingRoleIds: string[];
-        enabled: boolean;
         roleId?: string | undefined;
         channelId?: string | undefined;
         acceptedChannelId?: string | undefined;
@@ -2066,16 +2066,14 @@ export declare const saveSchema: z.ZodObject<{
             maxLength?: number | undefined;
             multiple?: boolean | undefined;
         })[];
-        roleId?: string | undefined;
-        description?: string | undefined;
         settings?: {
             roles?: {
+                denied?: string[] | undefined;
                 required?: {
                     mode?: "ALL" | "ANY" | undefined;
                     ids?: string[] | undefined;
                 } | undefined;
                 accepted?: string[] | undefined;
-                denied?: string[] | undefined;
                 restricted?: {
                     mode?: "ALL" | "ANY" | undefined;
                     ids?: string[] | undefined;
@@ -2087,8 +2085,8 @@ export declare const saveSchema: z.ZodObject<{
                 managers?: string[] | undefined;
             } | undefined;
             messages?: {
-                accepted?: string | undefined;
                 denied?: string | undefined;
+                accepted?: string | undefined;
                 confirmation?: string | undefined;
                 completion?: string | undefined;
             } | undefined;
@@ -2096,9 +2094,11 @@ export declare const saveSchema: z.ZodObject<{
             cooldownMinutes?: number | undefined;
             timeLimitMinutes?: number | undefined;
         } | undefined;
+        roleId?: string | undefined;
+        description?: string | undefined;
+        enabled?: boolean | undefined;
         channelId?: string | undefined;
         pingRoleIds?: string[] | undefined;
-        enabled?: boolean | undefined;
         acceptedChannelId?: string | undefined;
         deniedChannelId?: string | undefined;
     }[]>;
@@ -2119,13 +2119,13 @@ export declare const saveSchema: z.ZodObject<{
                 confirmation: z.ZodDefault<z.ZodString>;
                 completion: z.ZodDefault<z.ZodString>;
             }, "strip", z.ZodTypeAny, {
-                accepted: string;
                 denied: string;
+                accepted: string;
                 confirmation: string;
                 completion: string;
             }, {
-                accepted?: string | undefined;
                 denied?: string | undefined;
+                accepted?: string | undefined;
                 confirmation?: string | undefined;
                 completion?: string | undefined;
             }>>;
@@ -2159,12 +2159,12 @@ export declare const saveSchema: z.ZodObject<{
                 /** Wer im Discord annehmen/ablehnen darf (zusätzlich zum Recht im System); leer = alle mit dem Recht. */
                 managers: z.ZodDefault<z.ZodArray<z.ZodString, "many">>;
             }, "strip", z.ZodTypeAny, {
+                denied: string[];
                 required: {
                     mode: "ALL" | "ANY";
                     ids: string[];
                 };
                 accepted: string[];
-                denied: string[];
                 restricted: {
                     mode: "ALL" | "ANY";
                     ids: string[];
@@ -2175,12 +2175,12 @@ export declare const saveSchema: z.ZodObject<{
                 removeOnSubmit: string[];
                 managers: string[];
             }, {
+                denied?: string[] | undefined;
                 required?: {
                     mode?: "ALL" | "ANY" | undefined;
                     ids?: string[] | undefined;
                 } | undefined;
                 accepted?: string[] | undefined;
-                denied?: string[] | undefined;
                 restricted?: {
                     mode?: "ALL" | "ANY" | undefined;
                     ids?: string[] | undefined;
@@ -2196,12 +2196,12 @@ export declare const saveSchema: z.ZodObject<{
             timeLimitMinutes: z.ZodDefault<z.ZodNumber>;
         }, "strip", z.ZodTypeAny, {
             roles: {
+                denied: string[];
                 required: {
                     mode: "ALL" | "ANY";
                     ids: string[];
                 };
                 accepted: string[];
-                denied: string[];
                 restricted: {
                     mode: "ALL" | "ANY";
                     ids: string[];
@@ -2213,8 +2213,8 @@ export declare const saveSchema: z.ZodObject<{
                 managers: string[];
             };
             messages: {
-                accepted: string;
                 denied: string;
+                accepted: string;
                 confirmation: string;
                 completion: string;
             };
@@ -2223,12 +2223,12 @@ export declare const saveSchema: z.ZodObject<{
             timeLimitMinutes: number;
         }, {
             roles?: {
+                denied?: string[] | undefined;
                 required?: {
                     mode?: "ALL" | "ANY" | undefined;
                     ids?: string[] | undefined;
                 } | undefined;
                 accepted?: string[] | undefined;
-                denied?: string[] | undefined;
                 restricted?: {
                     mode?: "ALL" | "ANY" | undefined;
                     ids?: string[] | undefined;
@@ -2240,8 +2240,8 @@ export declare const saveSchema: z.ZodObject<{
                 managers?: string[] | undefined;
             } | undefined;
             messages?: {
-                accepted?: string | undefined;
                 denied?: string | undefined;
+                accepted?: string | undefined;
                 confirmation?: string | undefined;
                 completion?: string | undefined;
             } | undefined;
@@ -2251,15 +2251,14 @@ export declare const saveSchema: z.ZodObject<{
         }>>;
     }, "strip", z.ZodTypeAny, {
         name: string;
-        description: string;
         settings: {
             roles: {
+                denied: string[];
                 required: {
                     mode: "ALL" | "ANY";
                     ids: string[];
                 };
                 accepted: string[];
-                denied: string[];
                 restricted: {
                     mode: "ALL" | "ANY";
                     ids: string[];
@@ -2271,8 +2270,8 @@ export declare const saveSchema: z.ZodObject<{
                 managers: string[];
             };
             messages: {
-                accepted: string;
                 denied: string;
+                accepted: string;
                 confirmation: string;
                 completion: string;
             };
@@ -2280,23 +2279,23 @@ export declare const saveSchema: z.ZodObject<{
             cooldownMinutes: number;
             timeLimitMinutes: number;
         };
+        description: string;
+        enabled: boolean;
         title: string;
         pingRoleIds: string[];
-        enabled: boolean;
         channelId?: string | undefined;
         acceptedChannelId?: string | undefined;
         deniedChannelId?: string | undefined;
     }, {
         name?: string | undefined;
-        description?: string | undefined;
         settings?: {
             roles?: {
+                denied?: string[] | undefined;
                 required?: {
                     mode?: "ALL" | "ANY" | undefined;
                     ids?: string[] | undefined;
                 } | undefined;
                 accepted?: string[] | undefined;
-                denied?: string[] | undefined;
                 restricted?: {
                     mode?: "ALL" | "ANY" | undefined;
                     ids?: string[] | undefined;
@@ -2308,8 +2307,8 @@ export declare const saveSchema: z.ZodObject<{
                 managers?: string[] | undefined;
             } | undefined;
             messages?: {
-                accepted?: string | undefined;
                 denied?: string | undefined;
+                accepted?: string | undefined;
                 confirmation?: string | undefined;
                 completion?: string | undefined;
             } | undefined;
@@ -2317,10 +2316,11 @@ export declare const saveSchema: z.ZodObject<{
             cooldownMinutes?: number | undefined;
             timeLimitMinutes?: number | undefined;
         } | undefined;
-        title?: string | undefined;
-        channelId?: string | undefined;
-        pingRoleIds?: string[] | undefined;
+        description?: string | undefined;
         enabled?: boolean | undefined;
+        channelId?: string | undefined;
+        title?: string | undefined;
+        pingRoleIds?: string[] | undefined;
         acceptedChannelId?: string | undefined;
         deniedChannelId?: string | undefined;
     }>>;
@@ -2420,15 +2420,14 @@ export declare const saveSchema: z.ZodObject<{
     title: string;
     units: {
         name: string;
-        description: string;
         settings: {
             roles: {
+                denied: string[];
                 required: {
                     mode: "ALL" | "ANY";
                     ids: string[];
                 };
                 accepted: string[];
-                denied: string[];
                 restricted: {
                     mode: "ALL" | "ANY";
                     ids: string[];
@@ -2440,8 +2439,8 @@ export declare const saveSchema: z.ZodObject<{
                 managers: string[];
             };
             messages: {
-                accepted: string;
                 denied: string;
+                accepted: string;
                 confirmation: string;
                 completion: string;
             };
@@ -2450,9 +2449,10 @@ export declare const saveSchema: z.ZodObject<{
             timeLimitMinutes: number;
         };
         key: string;
+        description: string;
+        enabled: boolean;
         questions: FormField[];
         pingRoleIds: string[];
-        enabled: boolean;
         roleId?: string | undefined;
         channelId?: string | undefined;
         acceptedChannelId?: string | undefined;
@@ -2461,15 +2461,14 @@ export declare const saveSchema: z.ZodObject<{
     intro: string;
     police: {
         name: string;
-        description: string;
         settings: {
             roles: {
+                denied: string[];
                 required: {
                     mode: "ALL" | "ANY";
                     ids: string[];
                 };
                 accepted: string[];
-                denied: string[];
                 restricted: {
                     mode: "ALL" | "ANY";
                     ids: string[];
@@ -2481,8 +2480,8 @@ export declare const saveSchema: z.ZodObject<{
                 managers: string[];
             };
             messages: {
-                accepted: string;
                 denied: string;
+                accepted: string;
                 confirmation: string;
                 completion: string;
             };
@@ -2490,9 +2489,10 @@ export declare const saveSchema: z.ZodObject<{
             cooldownMinutes: number;
             timeLimitMinutes: number;
         };
+        description: string;
+        enabled: boolean;
         title: string;
         pingRoleIds: string[];
-        enabled: boolean;
         channelId?: string | undefined;
         acceptedChannelId?: string | undefined;
         deniedChannelId?: string | undefined;
@@ -2527,16 +2527,14 @@ export declare const saveSchema: z.ZodObject<{
             maxLength?: number | undefined;
             multiple?: boolean | undefined;
         })[];
-        roleId?: string | undefined;
-        description?: string | undefined;
         settings?: {
             roles?: {
+                denied?: string[] | undefined;
                 required?: {
                     mode?: "ALL" | "ANY" | undefined;
                     ids?: string[] | undefined;
                 } | undefined;
                 accepted?: string[] | undefined;
-                denied?: string[] | undefined;
                 restricted?: {
                     mode?: "ALL" | "ANY" | undefined;
                     ids?: string[] | undefined;
@@ -2548,8 +2546,8 @@ export declare const saveSchema: z.ZodObject<{
                 managers?: string[] | undefined;
             } | undefined;
             messages?: {
-                accepted?: string | undefined;
                 denied?: string | undefined;
+                accepted?: string | undefined;
                 confirmation?: string | undefined;
                 completion?: string | undefined;
             } | undefined;
@@ -2557,9 +2555,11 @@ export declare const saveSchema: z.ZodObject<{
             cooldownMinutes?: number | undefined;
             timeLimitMinutes?: number | undefined;
         } | undefined;
+        roleId?: string | undefined;
+        description?: string | undefined;
+        enabled?: boolean | undefined;
         channelId?: string | undefined;
         pingRoleIds?: string[] | undefined;
-        enabled?: boolean | undefined;
         acceptedChannelId?: string | undefined;
         deniedChannelId?: string | undefined;
     }[];
@@ -2567,15 +2567,14 @@ export declare const saveSchema: z.ZodObject<{
     intro?: string | undefined;
     police?: {
         name?: string | undefined;
-        description?: string | undefined;
         settings?: {
             roles?: {
+                denied?: string[] | undefined;
                 required?: {
                     mode?: "ALL" | "ANY" | undefined;
                     ids?: string[] | undefined;
                 } | undefined;
                 accepted?: string[] | undefined;
-                denied?: string[] | undefined;
                 restricted?: {
                     mode?: "ALL" | "ANY" | undefined;
                     ids?: string[] | undefined;
@@ -2587,8 +2586,8 @@ export declare const saveSchema: z.ZodObject<{
                 managers?: string[] | undefined;
             } | undefined;
             messages?: {
-                accepted?: string | undefined;
                 denied?: string | undefined;
+                accepted?: string | undefined;
                 confirmation?: string | undefined;
                 completion?: string | undefined;
             } | undefined;
@@ -2596,10 +2595,11 @@ export declare const saveSchema: z.ZodObject<{
             cooldownMinutes?: number | undefined;
             timeLimitMinutes?: number | undefined;
         } | undefined;
-        title?: string | undefined;
-        channelId?: string | undefined;
-        pingRoleIds?: string[] | undefined;
+        description?: string | undefined;
         enabled?: boolean | undefined;
+        channelId?: string | undefined;
+        title?: string | undefined;
+        pingRoleIds?: string[] | undefined;
         acceptedChannelId?: string | undefined;
         deniedChannelId?: string | undefined;
     } | undefined;

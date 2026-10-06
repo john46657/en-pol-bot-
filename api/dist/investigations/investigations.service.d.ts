@@ -13,9 +13,9 @@ export declare class InvestigationsService {
         items: {
             id: string;
             createdAt: Date;
-            description: string | null;
             updatedAt: Date;
             version: number;
+            description: string | null;
             status: string;
             title: string;
             caseNumber: string;
@@ -29,9 +29,9 @@ export declare class InvestigationsService {
         investigation: {
             id: string;
             createdAt: Date;
-            description: string | null;
             updatedAt: Date;
             version: number;
+            description: string | null;
             status: string;
             title: string;
             caseNumber: string;
@@ -40,9 +40,9 @@ export declare class InvestigationsService {
         links: {
             role: string;
             id: string;
-            createdAt: Date;
             entityType: string;
             entityId: string;
+            createdAt: Date;
             personId: string | null;
             vehicleId: string | null;
         }[];
@@ -54,10 +54,10 @@ export declare class InvestigationsService {
         }[];
         timeline: {
             id: string;
-            createdAt: Date;
             action: string;
             entityType: string;
             entityId: string;
+            createdAt: Date;
             summary: string;
             actorId: string | null;
         }[];
@@ -73,9 +73,9 @@ export declare class InvestigationsService {
     }): Promise<{
         id: string;
         createdAt: Date;
-        description: string | null;
         updatedAt: Date;
         version: number;
+        description: string | null;
         status: string;
         title: string;
         caseNumber: string;
@@ -85,9 +85,9 @@ export declare class InvestigationsService {
     setStatus(actor: Actor, id: string, to: InvestigationStatus, reason?: string): Promise<{
         id: string;
         createdAt: Date;
-        description: string | null;
         updatedAt: Date;
         version: number;
+        description: string | null;
         status: string;
         title: string;
         caseNumber: string;

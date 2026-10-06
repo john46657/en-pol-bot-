@@ -16,44 +16,52 @@ const prisma_service_1 = require("../prisma/prisma.service");
 const audit_service_1 = require("../audit/audit.service");
 const errors_1 = require("../common/errors");
 const discord_service_1 = require("../discord/discord.service");
+const shifts_1 = require("./shifts");
 /** Dienststatus wird ausschließlich explizit gesetzt – Online-Status ist niemals Dienststatus. */
 let DutyService = class DutyService {
     prisma;
     audit;
     rt;
     discord;
-    constructor(prisma, audit, rt, discord) {
+    shifts;
+    constructor(prisma, audit, rt, discord, shifts) {
         this.prisma = prisma;
         this.audit = audit;
         this.rt = rt;
         this.discord = discord;
+        this.shifts = shifts;
     }
     async setStatus(actor, status, d, targetUserId) {
         const userId = targetUserId ?? actor.userId;
         let previous = null;
+        const cfg = await this.shifts.config();
+        let type = null;
         return this.prisma.$transaction(async (tx) => {
             const open = await tx.dutySession.findFirst({ where: { userId, endedAt: null } });
-            if ((open?.status ?? 'OFF_DUTY') === status && !d.unitId)
+            type = status === 'OFF_DUTY' ? (cfg.types.find((t) => t.id === open?.shiftType) ?? null) : await this.shifts.resolve(cfg, d.shiftType, open?.shiftType);
+            const sameType = !type || status === 'OFF_DUTY' || type.id === open?.shiftType;
+            if ((open?.status ?? 'OFF_DUTY') === status && !d.unitId && sameType)
                 throw new errors_1.AppError('CONFLICT', `Already ${status}.`);
             if (targetUserId && !(await tx.user.findUnique({ where: { id: targetUserId, active: true } })))
                 throw new errors_1.AppError('NOT_FOUND', 'User not found.');
             if (open)
                 await tx.dutySession.update({ where: { id: open.id }, data: { endedAt: new Date() } });
-            previous = open ? { status: open.status, startedAt: open.startedAt } : null;
+            previous = open ? { status: open.status, startedAt: open.startedAt, shiftType: open.shiftType } : null;
             if (d.unitId && !(await tx.unit.findUnique({ where: { id: d.unitId } })))
                 throw new errors_1.AppError('NOT_FOUND', 'Unit not found.');
             let created = null;
             if (status !== 'OFF_DUTY') {
                 const pers = await tx.personnel.findUnique({ where: { userId } });
-                created = await tx.dutySession.create({ data: { userId, status, unitId: d.unitId, callsign: (d.callsign ?? pers?.callsign ?? undefined)?.toUpperCase() } });
+                created = await tx.dutySession.create({ data: { userId, status, unitId: d.unitId, shiftType: type?.id ?? null, callsign: (d.callsign ?? pers?.callsign ?? undefined)?.toUpperCase() } });
             }
             await this.audit.record(actor, { action: targetUserId && targetUserId !== actor.userId ? 'duty.status.set_by_supervisor' : 'duty.status', module: 'team', entityType: 'User', entityId: userId, before: { status: open?.status ?? 'OFF_DUTY' }, after: { status } }, tx);
             return created ?? { status: 'OFF_DUTY' };
         }).then(async (r) => {
             this.rt.publish('team', 'duty.changed', { userId, status });
             const before = previous;
-            if ((before?.status ?? 'OFF_DUTY') !== status)
-                await this.notifyDiscord(actor, userId, status, before);
+            const t = type;
+            if ((before?.status ?? 'OFF_DUTY') !== status || (t && status !== 'OFF_DUTY' && t.id !== before?.shiftType))
+                await this.notifyDiscord(actor, userId, status, before, cfg, t);
             return r;
         });
     }
@@ -61,11 +69,13 @@ let DutyService = class DutyService {
      * Discord-Abgleich: Dienst-Rollen (Im Dienst/Pause/Training/Verwaltung) und Meldung im Dienst-Channel.
      * Wird nur eingereiht, wenn ein Dienst-Channel oder eine Dienst-Rolle eingestellt ist. Fehler stören den Statuswechsel nie.
      */
-    async notifyDiscord(actor, userId, status, before) {
+    async notifyDiscord(actor, userId, status, before, cfg, type) {
         try {
             const ch = await this.discord.channels();
-            const roles = !!(ch.dutyRole || ch.breakRole || ch.trainingRole || ch.adminDutyRole);
-            if (!ch.duty && !roles)
+            // Schichten-Modul an: Rollen und Log-Channel der Schicht-Art; sonst die Dienst-Rollen aus den Einstellungen
+            const shift = cfg.enabled && cfg.types.length ? { ...shifts_1.ShiftsService.roleChanges(cfg, type, status), channelId: type?.logChannelId ?? null, name: type?.name ?? null } : null;
+            const roles = shift ? shift.add.length + shift.remove.length > 0 : !!(ch.dutyRole || ch.breakRole || ch.trainingRole || ch.adminDutyRole);
+            if (!ch.duty && !roles && !shift?.channelId)
                 return;
             const [user, link] = await Promise.all([
                 this.prisma.user.findUnique({ where: { id: userId }, select: { displayName: true, personnel: { select: { callsign: true, rank: true } } } }),
@@ -75,7 +85,8 @@ let DutyService = class DutyService {
             await this.discord.enqueue('duty', 'duty.changed', {
                 discordId: link?.discordId ?? null, name: user?.displayName ?? '—', callsign: user?.personnel?.callsign ?? null, rank: user?.personnel?.rank ?? null,
                 status, previous: before?.status ?? 'OFF_DUTY', previousMinutes: before ? Math.round((Date.now() - before.startedAt.getTime()) / 60_000) : null, setBy: by?.displayName ?? null,
-            }, { always: roles });
+                ...(shift ? { shiftType: shift.name, roles: { add: shift.add, remove: shift.remove }, ...(shift.channelId ? { channelId: shift.channelId } : {}) } : {}),
+            }, { always: roles || !!shift?.channelId });
         }
         catch { /* best effort */ }
     }
@@ -117,11 +128,12 @@ let DutyService = class DutyService {
     }
     /** Team-Dashboard: pro aktivem Beamten Dienststatus, Einheit, aktueller Einsatz und letzte Statusänderung. */
     async overview() {
-        const [people, open, units, assignments] = await Promise.all([
+        const [people, open, units, assignments, cfg] = await Promise.all([
             this.prisma.personnel.findMany({ where: { employmentStatus: 'ACTIVE' }, include: { user: { select: { id: true, displayName: true, active: true } } }, orderBy: { callsign: 'asc' } }),
             this.prisma.dutySession.findMany({ where: { endedAt: null } }),
             this.prisma.unit.findMany({ include: { members: true } }),
             this.prisma.incidentUnit.findMany({ where: { clearedAt: null, incident: { status: { notIn: ['CLOSED', 'CANCELLED'] } } }, include: { incident: { select: { id: true, number: true, title: true, status: true, priority: true } } } }),
+            this.shifts.config(),
         ]);
         const ids = people.map((p) => p.userId);
         const lastEnded = await this.prisma.dutySession.groupBy({ by: ['userId'], where: { userId: { in: ids }, endedAt: { not: null } }, _max: { endedAt: true } });
@@ -133,6 +145,7 @@ let DutyService = class DutyService {
             return {
                 userId: p.userId, personnelId: p.id, name: p.user.displayName, rank: p.rank, callsign: p.callsign, team: p.team,
                 dutyStatus: session?.status ?? 'OFF_DUTY', onDutySince: session?.startedAt ?? null,
+                shiftType: cfg.enabled ? cfg.types.find((t) => t.id === session?.shiftType)?.name ?? null : null,
                 lastStatusChange: session?.startedAt ?? ended.get(p.userId) ?? null,
                 unit: unit ? { id: unit.id, callsign: unit.callsign, status: unit.status } : null,
                 currentIncident: inc,
@@ -143,6 +156,6 @@ let DutyService = class DutyService {
 exports.DutyService = DutyService;
 exports.DutyService = DutyService = __decorate([
     (0, common_1.Injectable)(),
-    __metadata("design:paramtypes", [prisma_service_1.PrismaService, audit_service_1.AuditService, realtime_service_1.RealtimeService, discord_service_1.DiscordService])
+    __metadata("design:paramtypes", [prisma_service_1.PrismaService, audit_service_1.AuditService, realtime_service_1.RealtimeService, discord_service_1.DiscordService, shifts_1.ShiftsService])
 ], DutyService);
 //# sourceMappingURL=duty.service.js.map

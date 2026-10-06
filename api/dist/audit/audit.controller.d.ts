@@ -30,8 +30,6 @@ export declare class AuditController {
     list(f: z.infer<typeof q>): Promise<{
         items: {
             id: string;
-            reason: string | null;
-            createdAt: Date;
             actorUserId: string | null;
             actorRobloxUserId: string | null;
             action: string;
@@ -40,7 +38,9 @@ export declare class AuditController {
             entityId: string | null;
             before: import("@prisma/client/runtime/library").JsonValue | null;
             after: import("@prisma/client/runtime/library").JsonValue | null;
+            reason: string | null;
             requestId: string | null;
+            createdAt: Date;
         }[];
         total: number;
         page: number;

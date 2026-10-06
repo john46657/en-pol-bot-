@@ -15,8 +15,8 @@ declare const q: z.ZodObject<{
     type?: string | undefined;
     q?: string | undefined;
 }, {
-    filter?: "unread" | "read" | "archived" | "all" | undefined;
     type?: string | undefined;
+    filter?: "unread" | "read" | "archived" | "all" | undefined;
     page?: number | undefined;
     pageSize?: number | undefined;
     q?: string | undefined;
@@ -29,10 +29,10 @@ export declare class NotificationsController {
         unread: number;
         items: {
             id: string;
-            userId: string;
-            createdAt: Date;
             entityType: string | null;
             entityId: string | null;
+            createdAt: Date;
+            userId: string;
             type: string;
             title: string;
             body: string | null;

@@ -7,6 +7,8 @@ Object.defineProperty(exports, "mapError", { enumerable: true, get: function () 
 const features_1 = require("./features");
 const sek_1 = require("./sek");
 const qualifications_1 = require("./qualifications");
+const leave_1 = require("./leave");
+const features_2 = require("./features");
 const tickets_1 = require("./tickets");
 const format_1 = require("../format");
 /** Minuten → „3 h 05 min“. */
@@ -77,7 +79,7 @@ exports.COMMANDS = [
             return { ephemeral: true, embeds: [{ title: 'EN Polizei — Befehle', color: format_1.COLORS.info, fields: [
                             { name: 'Konto', value: '`/verknuepfen` `/entverknuepfen` `/profil` `/benachrichtigungen`' },
                             { name: 'Abfragen', value: '`/person` `/kennzeichen` `/fahndungen` `/einsaetze` `/einsatzinfo` `/einheiten` `/team`' },
-                            { name: 'Dienst & Leitstelle', value: '`/dienst` `/dienststunden` `/einheitstatus` `/einsatz` `/einsatzstatus` `/einsatzzuweisen` `/funk`' },
+                            { name: 'Dienst & Leitstelle', value: '`/dienst` `/dienststunden` `/abmeldung` `/einheitstatus` `/einsatz` `/einsatzstatus` `/einsatzzuweisen` `/funk`' },
                             { name: 'Erfassen', value: '`/ticket` `/bericht` `/beschwerde` `/ermittlung` `/fahndung` `/beweis`' },
                             { name: 'Leitung & Team', value: '`/gefahrenstatus` `/funkfreigabe` `/teamliste` `/dienstpanel` `/bewerbungspanel` `/qualipanel` `/roblox`' },
                             { name: 'SEK', value: '`/sek` `/sek-bericht`' },
@@ -140,6 +142,11 @@ exports.COMMANDS = [
             const status = DUTY[str(c, 'status')];
             if (!status)
                 return (0, format_1.errorReply)('Unbekannter Status.');
+            if (status === 'ON_DUTY') {
+                const pick = await (0, features_2.shiftPicker)(c);
+                if (pick)
+                    return pick;
+            }
             try {
                 await c.api.asUser(c.discordId, 'PUT', '/team/me/status', { status });
                 return (0, format_1.okReply)(`Dienststatus: **${(0, format_1.label)(status)}**`);
@@ -526,6 +533,7 @@ exports.COMMANDS = [
     ...features_1.FEATURE_COMMANDS,
     ...sek_1.SEK_COMMANDS,
     ...qualifications_1.QUALI_COMMANDS,
+    ...leave_1.LEAVE_COMMANDS,
     tickets_1.TICKET_COMMAND,
 ];
 const byName = (n) => exports.COMMANDS.find((c) => c.name === n);

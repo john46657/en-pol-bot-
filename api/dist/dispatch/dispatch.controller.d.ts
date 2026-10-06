@@ -47,13 +47,13 @@ declare const update: z.ZodObject<{
     supervisorId?: string | null | undefined;
 }>;
 declare const status: z.ZodObject<{
-    status: z.ZodEffects<z.ZodEnum<["NEW", "ACKNOWLEDGED", "ASSIGNED", "EN_ROUTE", "ON_SCENE", "PROCESSING", "CLEARING", "CLOSED", "CANCELLED"]>, "CANCELLED" | "EN_ROUTE" | "ON_SCENE" | "NEW" | "ACKNOWLEDGED" | "ASSIGNED" | "PROCESSING" | "CLEARING", "CLOSED" | "CANCELLED" | "EN_ROUTE" | "ON_SCENE" | "NEW" | "ACKNOWLEDGED" | "ASSIGNED" | "PROCESSING" | "CLEARING">;
+    status: z.ZodEffects<z.ZodEnum<["NEW", "ACKNOWLEDGED", "ASSIGNED", "EN_ROUTE", "ON_SCENE", "PROCESSING", "CLEARING", "CLOSED", "CANCELLED"]>, "CANCELLED" | "EN_ROUTE" | "ON_SCENE" | "NEW" | "ACKNOWLEDGED" | "ASSIGNED" | "PROCESSING" | "CLEARING", "CANCELLED" | "CLOSED" | "EN_ROUTE" | "ON_SCENE" | "NEW" | "ACKNOWLEDGED" | "ASSIGNED" | "PROCESSING" | "CLEARING">;
     note: z.ZodOptional<z.ZodString>;
 }, "strip", z.ZodTypeAny, {
     status: "CANCELLED" | "EN_ROUTE" | "ON_SCENE" | "NEW" | "ACKNOWLEDGED" | "ASSIGNED" | "PROCESSING" | "CLEARING";
     note?: string | undefined;
 }, {
-    status: "CLOSED" | "CANCELLED" | "EN_ROUTE" | "ON_SCENE" | "NEW" | "ACKNOWLEDGED" | "ASSIGNED" | "PROCESSING" | "CLEARING";
+    status: "CANCELLED" | "CLOSED" | "EN_ROUTE" | "ON_SCENE" | "NEW" | "ACKNOWLEDGED" | "ASSIGNED" | "PROCESSING" | "CLEARING";
     note?: string | undefined;
 }>;
 declare const listQ: z.ZodObject<{
@@ -67,11 +67,11 @@ declare const listQ: z.ZodObject<{
     page: number;
     pageSize: number;
     active?: boolean | undefined;
-    status?: "CLOSED" | "CANCELLED" | "EN_ROUTE" | "ON_SCENE" | "NEW" | "ACKNOWLEDGED" | "ASSIGNED" | "PROCESSING" | "CLEARING" | undefined;
+    status?: "CANCELLED" | "CLOSED" | "EN_ROUTE" | "ON_SCENE" | "NEW" | "ACKNOWLEDGED" | "ASSIGNED" | "PROCESSING" | "CLEARING" | undefined;
     q?: string | undefined;
 }, {
     active?: boolean | undefined;
-    status?: "CLOSED" | "CANCELLED" | "EN_ROUTE" | "ON_SCENE" | "NEW" | "ACKNOWLEDGED" | "ASSIGNED" | "PROCESSING" | "CLEARING" | undefined;
+    status?: "CANCELLED" | "CLOSED" | "EN_ROUTE" | "ON_SCENE" | "NEW" | "ACKNOWLEDGED" | "ASSIGNED" | "PROCESSING" | "CLEARING" | undefined;
     page?: number | undefined;
     pageSize?: number | undefined;
     q?: string | undefined;
@@ -121,9 +121,9 @@ export declare class IncidentsController {
             number: string;
             id: string;
             createdAt: Date;
-            description: string | null;
             updatedAt: Date;
             version: number;
+            description: string | null;
             status: string;
             serverId: string | null;
             priority: string;
@@ -159,9 +159,9 @@ export declare class IncidentsController {
             number: string;
             id: string;
             createdAt: Date;
-            description: string | null;
             updatedAt: Date;
             version: number;
+            description: string | null;
             status: string;
             serverId: string | null;
             priority: string;
@@ -175,18 +175,18 @@ export declare class IncidentsController {
         links: {
             role: string;
             id: string;
-            createdAt: Date;
             entityType: string;
             entityId: string;
+            createdAt: Date;
             personId: string | null;
             vehicleId: string | null;
         }[];
         timeline: {
             id: string;
-            createdAt: Date;
             action: string;
             entityType: string;
             entityId: string;
+            createdAt: Date;
             summary: string;
             actorId: string | null;
         }[];
@@ -195,9 +195,9 @@ export declare class IncidentsController {
         number: string;
         id: string;
         createdAt: Date;
-        description: string | null;
         updatedAt: Date;
         version: number;
+        description: string | null;
         status: string;
         serverId: string | null;
         priority: string;
@@ -212,9 +212,9 @@ export declare class IncidentsController {
         number: string;
         id: string;
         createdAt: Date;
-        description: string | null;
         updatedAt: Date;
         version: number;
+        description: string | null;
         status: string;
         serverId: string | null;
         priority: string;
@@ -289,9 +289,9 @@ export declare class DispatchController {
         number: string;
         id: string;
         createdAt: Date;
-        description: string | null;
         updatedAt: Date;
         version: number;
+        description: string | null;
         status: string;
         serverId: string | null;
         priority: string;
@@ -306,9 +306,9 @@ export declare class DispatchController {
         number: string;
         id: string;
         createdAt: Date;
-        description: string | null;
         updatedAt: Date;
         version: number;
+        description: string | null;
         status: string;
         serverId: string | null;
         priority: string;
@@ -323,9 +323,9 @@ export declare class DispatchController {
         number: string;
         id: string;
         createdAt: Date;
-        description: string | null;
         updatedAt: Date;
         version: number;
+        description: string | null;
         status: string;
         serverId: string | null;
         priority: string;

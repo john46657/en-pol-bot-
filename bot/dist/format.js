@@ -5,6 +5,7 @@ exports.personEmbed = personEmbed;
 exports.listEmbed = listEmbed;
 exports.renderOutbox = renderOutbox;
 exports.applicationEmbeds = applicationEmbeds;
+exports.leaveDecisionText = leaveDecisionText;
 exports.renderOutboxEmbeds = renderOutboxEmbeds;
 exports.outboxButtons = outboxButtons;
 exports.qualificationDecisionText = qualificationDecisionText;
@@ -71,7 +72,16 @@ function renderOutbox(type, p) {
             const who = `${p.callsign ? `${(0, exports.plain)(p.callsign)} · ` : ''}${(0, exports.plain)(p.name)}`;
             const mins = typeof p.previousMinutes === 'number' && prev !== 'OFF_DUTY' ? ` – ${(0, exports.fmtDuration)(p.previousMinutes * 60)}` : '';
             return { title: (0, exports.clip)(`${exports.DUTY_DE[st]?.emoji ?? '•'} ${who} ist jetzt ${exports.DUTY_DE[st]?.label ?? (0, exports.label)(st)}`, 256), color: exports.DUTY_DE[st]?.color ?? exports.COLORS.neutral,
-                description: (0, exports.clip)([p.discordId ? `<@${String(p.discordId)}>` : null, `Vorher: ${exports.DUTY_DE[prev]?.label ?? (0, exports.label)(prev)}${mins}`, p.setBy ? `Gesetzt von: ${(0, exports.plain)(p.setBy)}` : null].filter(Boolean).join('\n'), 1000) };
+                description: (0, exports.clip)([p.discordId ? `<@${String(p.discordId)}>` : null, p.shiftType ? `Schicht: **${(0, exports.plain)(p.shiftType)}**` : null, `Vorher: ${exports.DUTY_DE[prev]?.label ?? (0, exports.label)(prev)}${mins}`, p.setBy ? `Gesetzt von: ${(0, exports.plain)(p.setBy)}` : null].filter(Boolean).join('\n'), 1000) };
+        }
+        case 'leave.requested':
+            return { title: (0, exports.clip)(`📅 Abmeldung ${String(p.number)} – ${(0, exports.plain)(p.name)}`, 256), color: exports.COLORS.warning,
+                description: (0, exports.clip)(`${p.discordId ? `<@${String(p.discordId)}> ` : ''}möchte sich abmelden.\n\n**Grund:** ${(0, exports.plain)(p.reason)}`, 4000),
+                fields: [{ name: 'Von', value: berlinDate(p.startsAt), inline: true }, { name: 'Bis', value: berlinDate(p.endsAt), inline: true }, { name: 'Dauer', value: leaveDays(p), inline: true }] };
+        case 'leave.log': {
+            const ev = LEAVE_EVENTS[String(p.event)] ?? { text: String(p.event), color: exports.COLORS.neutral };
+            return { title: (0, exports.clip)(`${ev.text}: ${(0, exports.plain)(p.name)} (${String(p.number)})`, 256), color: ev.color,
+                description: (0, exports.clip)([p.discordId ? `<@${String(p.discordId)}>` : null, `**Zeitraum:** ${berlinDate(p.startsAt)} – ${berlinDate(p.endsAt)} (${leaveDays(p)})`, `**Grund:** ${(0, exports.plain)(p.reason)}`, p.decidedByName ? `**Entschieden von:** ${(0, exports.plain)(p.decidedByName)}` : null, p.decisionReason ? `**Begründung:** ${(0, exports.plain)(p.decisionReason)}` : null].filter(Boolean).join('\n'), 4000) };
         }
         case 'sek.report':
             return { title: `🎯 SEK-Einsatzbericht ${p.number}`, color: exports.COLORS.neutral, description: (0, exports.clip)((0, exports.plain)(p.description), 3500), fields: [
@@ -140,6 +150,20 @@ function applicationEmbeds(p, kind) {
     return embeds.slice(0, 10);
 }
 /** Alle Embeds einer Channel-Benachrichtigung (Bewerbungen ggf. mehrere). */
+const berlinDate = (v) => { const d = new Date(String(v)); return Number.isNaN(d.getTime()) ? '—' : d.toLocaleString('de-DE', { timeZone: 'Europe/Berlin', day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }); };
+const leaveDays = (p) => { const d = Math.max(1, Math.round((new Date(String(p.endsAt)).getTime() - new Date(String(p.startsAt)).getTime()) / 86_400_000)); return `${d} ${d === 1 ? 'Tag' : 'Tage'}`; };
+const LEAVE_EVENTS = {
+    approved: { text: '✅ Abmeldung angenommen', color: exports.COLORS.success }, denied: { text: '❌ Abmeldung abgelehnt', color: exports.COLORS.danger },
+    started: { text: '🏝️ Abmeldung beginnt', color: exports.COLORS.info }, ended: { text: '👋 Abmeldung beendet', color: exports.COLORS.neutral },
+    ended_early: { text: '↩️ Abmeldung vorzeitig beendet', color: exports.COLORS.neutral }, cancelled: { text: '↩️ Abmeldung zurückgezogen', color: exports.COLORS.neutral },
+};
+/** Direktnachricht nach der Entscheidung über eine Abmeldung. */
+function leaveDecisionText(p) {
+    const when = `${berlinDate(p.startsAt)} – ${berlinDate(p.endsAt)}`;
+    return p.status === 'APPROVED'
+        ? `✅ Deine Abmeldung **${String(p.number)}** (${when}) wurde **angenommen**.${p.decisionReason ? `\n\n**Hinweis:** ${(0, exports.clip)((0, exports.plain)(p.decisionReason), 1000)}` : ''}`
+        : `❌ Deine Abmeldung **${String(p.number)}** (${when}) wurde **abgelehnt**.${p.decisionReason ? `\n\n**Grund:** ${(0, exports.clip)((0, exports.plain)(p.decisionReason), 1000)}` : ''}`;
+}
 function renderOutboxEmbeds(type, p) {
     if (type === 'qualification.submitted')
         return applicationEmbeds(p, 'q');
@@ -158,6 +182,12 @@ function renderOutboxEmbeds(type, p) {
 }
 /** Buttons unter Channel-Benachrichtigungen: Annehmen/Ablehnen (auch mit Grund), Verlauf, Ticket, Dashboard. */
 function outboxButtons(type, p) {
+    if (type === 'leave.requested' && typeof p.id === 'string')
+        return [
+            { id: `leave:decide:${p.id}:APPROVED`, label: 'Annehmen', style: 'success' }, { id: `leave:decide:${p.id}:DENIED`, label: 'Ablehnen', style: 'danger' },
+            { id: `leave:reason:${p.id}:DENIED`, label: 'Ablehnen mit Grund', style: 'danger' },
+            ...(typeof p.dashboardUrl === 'string' && /^https?:\/\//.test(p.dashboardUrl) ? [{ id: 'link', label: 'Im Dashboard ansehen', style: 'secondary', url: p.dashboardUrl }] : []),
+        ];
     const kind = type === 'qualification.submitted' ? 'q' : type === 'application.submitted' ? 'p' : null;
     if (!kind || typeof p.id !== 'string')
         return undefined;

@@ -10,14 +10,14 @@ declare const create: z.ZodObject<{
     qualifications: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
 }, "strip", z.ZodTypeAny, {
     userId: string;
-    team?: string | undefined;
     qualifications?: string[] | undefined;
+    team?: string | undefined;
     callsign?: string | undefined;
     rank?: string | undefined;
 }, {
     userId: string;
-    team?: string | undefined;
     qualifications?: string[] | undefined;
+    team?: string | undefined;
     callsign?: string | undefined;
     rank?: string | undefined;
 }>;
@@ -27,15 +27,15 @@ declare const update: z.ZodObject<{
     employmentStatus: z.ZodOptional<z.ZodEnum<["ACTIVE", "LOA", "SUSPENDED", "RESIGNED", "TERMINATED"]>>;
     qualifications: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
 }, "strip", z.ZodTypeAny, {
-    team?: string | undefined;
     qualifications?: string[] | undefined;
+    team?: string | undefined;
     callsign?: string | undefined;
-    employmentStatus?: "ACTIVE" | "SUSPENDED" | "LOA" | "RESIGNED" | "TERMINATED" | undefined;
+    employmentStatus?: "LOA" | "ACTIVE" | "SUSPENDED" | "RESIGNED" | "TERMINATED" | undefined;
 }, {
-    team?: string | undefined;
     qualifications?: string[] | undefined;
+    team?: string | undefined;
     callsign?: string | undefined;
-    employmentStatus?: "ACTIVE" | "SUSPENDED" | "LOA" | "RESIGNED" | "TERMINATED" | undefined;
+    employmentStatus?: "LOA" | "ACTIVE" | "SUSPENDED" | "RESIGNED" | "TERMINATED" | undefined;
 }>;
 declare const promote: z.ZodObject<{
     rank: z.ZodString;
@@ -52,12 +52,12 @@ declare const record: z.ZodObject<{
     summary: z.ZodString;
     details: z.ZodOptional<z.ZodString>;
 }, "strip", z.ZodTypeAny, {
-    summary: string;
     type: "AWARD" | "DISCIPLINE" | "NOTE";
+    summary: string;
     details?: string | undefined;
 }, {
-    summary: string;
     type: "AWARD" | "DISCIPLINE" | "NOTE";
+    summary: string;
     details?: string | undefined;
 }>;
 export declare class PersonnelController {
@@ -72,9 +72,9 @@ export declare class PersonnelController {
             };
         } & {
             id: string;
+            qualifications: string[];
             userId: string;
             team: string | null;
-            qualifications: string[];
             callsign: string | null;
             rank: string | null;
             employmentStatus: string;
@@ -115,19 +115,19 @@ export declare class PersonnelController {
             courseId: string;
         })[];
         records: {
-            details: string | null;
             id: string;
-            createdById: string;
             createdAt: Date;
-            summary: string;
+            details: string | null;
             type: string;
+            createdById: string;
+            summary: string;
             personnelId: string;
         }[];
     } & {
         id: string;
+        qualifications: string[];
         userId: string;
         team: string | null;
-        qualifications: string[];
         callsign: string | null;
         rank: string | null;
         employmentStatus: string;
@@ -135,9 +135,9 @@ export declare class PersonnelController {
     }>;
     create(a: Actor, b: z.infer<typeof create>): Promise<{
         id: string;
+        qualifications: string[];
         userId: string;
         team: string | null;
-        qualifications: string[];
         callsign: string | null;
         rank: string | null;
         employmentStatus: string;
@@ -145,9 +145,9 @@ export declare class PersonnelController {
     }>;
     update(a: Actor, id: string, b: z.infer<typeof update>): Promise<{
         id: string;
+        qualifications: string[];
         userId: string;
         team: string | null;
-        qualifications: string[];
         callsign: string | null;
         rank: string | null;
         employmentStatus: string;
@@ -155,21 +155,21 @@ export declare class PersonnelController {
     }>;
     promote(a: Actor, id: string, b: z.infer<typeof promote>): Promise<{
         id: string;
+        qualifications: string[];
         userId: string;
         team: string | null;
-        qualifications: string[];
         callsign: string | null;
         rank: string | null;
         employmentStatus: string;
         joinDate: Date;
     }>;
     record(a: Actor, id: string, b: z.infer<typeof record>): Promise<{
-        details: string | null;
         id: string;
-        createdById: string;
         createdAt: Date;
-        summary: string;
+        details: string | null;
         type: string;
+        createdById: string;
+        summary: string;
         personnelId: string;
     }>;
 }

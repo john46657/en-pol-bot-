@@ -21,7 +21,7 @@ const duty_service_1 = require("./duty.service");
 const decorators_1 = require("../authz/decorators");
 const zod_pipe_1 = require("../common/zod.pipe");
 const hoursQuery = zod_1.z.object({ days: zod_1.z.coerce.number().int().min(1).max(90).default(7) });
-const body = zod_1.z.object({ status: zod_1.z.enum(shared_1.DUTY_STATUSES), unitId: zod_1.z.string().uuid().optional(), callsign: zod_1.z.string().max(16).optional() });
+const body = zod_1.z.object({ status: zod_1.z.enum(shared_1.DUTY_STATUSES), unitId: zod_1.z.string().uuid().optional(), callsign: zod_1.z.string().max(16).optional(), shiftType: zod_1.z.string().regex(/^[a-z0-9-]{1,40}$/).optional() });
 let DutyController = class DutyController {
     d;
     constructor(d) {

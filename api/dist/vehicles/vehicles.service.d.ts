@@ -39,12 +39,12 @@ export declare class VehiclesService {
         vehicle: {
             owner: {
                 id: string;
-                createdById: string | null;
                 createdAt: Date;
                 robloxUserId: string | null;
                 robloxUsername: string;
                 updatedAt: Date;
                 version: number;
+                createdById: string | null;
                 status: string;
                 custom: Prisma.JsonValue | null;
                 serverId: string | null;
@@ -68,10 +68,10 @@ export declare class VehiclesService {
         };
         timeline: {
             id: string;
-            createdAt: Date;
             action: string;
             entityType: string;
             entityId: string;
+            createdAt: Date;
             summary: string;
             actorId: string | null;
         }[];
