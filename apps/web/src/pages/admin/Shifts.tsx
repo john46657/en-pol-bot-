@@ -9,7 +9,8 @@ import { Toggle } from '../../components/ApplicationSettings';
 import { Badge, Button, Card, EmptyState, ErrorState, fmt, Input, Modal, Select, SkeletonRows, StatusBadge } from '../../components/ui';
 
 export interface ShiftType { id: string; name: string; isDefault: boolean; onShiftRoleIds: string[]; onBreakRoleIds: string[]; logChannelId?: string | null }
-export interface ShiftsConfig { enabled: boolean; types: ShiftType[] }
+export interface ShiftReminder { enabled: boolean; afterMinutes: number; autoOffMinutes: number }
+export interface ShiftsConfig { enabled: boolean; types: ShiftType[]; reminder?: ShiftReminder }
 
 /** Eingerahmtes Feld wie bei Melonly: Titel, Beschreibung, Eingabe. */
 export const Box = ({ title, desc, required, children }: { title: string; desc: string; required?: boolean; children: ReactNode }) => (
@@ -53,7 +54,7 @@ export function Shifts() {
   if (q.error) return <ErrorState error={q.error} onRetry={() => void q.refetch()} />;
   if (q.isLoading || !q.data) return <SkeletonRows />;
   const cfg = q.data;
-  const put = (types: ShiftType[], enabled = cfg.enabled) => save.mutate({ enabled, types });
+  const put = (types: ShiftType[], enabled = cfg.enabled, reminder = cfg.reminder) => save.mutate({ enabled, types, ...(reminder ? { reminder } : {}) });
   const remove = (t: ShiftType) => { if (confirm(`Schichtart „${t.name}“ löschen?`)) put(cfg.types.filter((x) => x.id !== t.id).map((x, i) => ({ ...x, isDefault: t.isDefault ? i === 0 : x.isDefault }))); };
   const startNew = () => setEdit({ isNew: true, type: { id: '', name: '', isDefault: cfg.types.length === 0, onShiftRoleIds: [], onBreakRoleIds: [], logChannelId: null } });
   return (
@@ -81,6 +82,7 @@ export function Shifts() {
           ))}</ul>
         )}
       </Card>
+      <ReminderCard value={cfg.reminder ?? { enabled: false, afterMinutes: 30, autoOffMinutes: 0 }} manage={manage} busy={save.isPending} onSave={(r) => put(cfg.types, cfg.enabled, r)} />
       {can('team.manage') && <ShiftLog types={cfg.types} />}
       {edit && <ShiftTypeModal value={edit.type} isNew={edit.isNew} busy={save.isPending} error={save.error ? errText(save.error) : undefined} onClose={() => { setEdit(undefined); save.reset(); }}
         onSave={(t) => {
@@ -89,6 +91,30 @@ export function Shifts() {
           put(edit.isNew ? [...others, typed] : cfg.types.map((x) => (x.id === typed.id ? typed : others.find((o) => o.id === x.id) ?? x)));
         }} />}
     </>
+  );
+}
+
+/** Erinnerung bei Inaktivität: nur für „Im Dienst“; optional automatisch außer Dienst. */
+function ReminderCard({ value, manage, busy, onSave }: { value: ShiftReminder; manage: boolean; busy: boolean; onSave: (r: ShiftReminder) => void }) {
+  const [r, setR] = useState(value);
+  useEffect(() => setR(value), [value.enabled, value.afterMinutes, value.autoOffMinutes]);
+  const dirty = JSON.stringify(r) !== JSON.stringify(value);
+  const num = (v: string, min: number, max: number) => Math.max(min, Math.min(max, Math.floor(Number(v) || 0)));
+  return (
+    <Card className="mt-4" title="Erinnerung bei Inaktivität" actions={manage && dirty && <Button size="sm" disabled={busy} onClick={() => onSave(r)}>Speichern</Button>}>
+      <div className="grid gap-3 md:grid-cols-3">
+        <Box title="Erinnerung" desc="Wer „Im Dienst“ ist und länger nichts gemacht hat (Dashboard/MDT, Discord-Befehle), bekommt eine Discord-DM und eine Meldung im Dashboard. Pause zählt nicht.">
+          <div className="flex items-center gap-2">{manage ? <Toggle label="Erinnerung aktiv" checked={r.enabled} onChange={(v) => setR({ ...r, enabled: v })} /> : <Badge tone={r.enabled ? 'success' : 'neutral'}>{r.enabled ? 'An' : 'Aus'}</Badge>}<span className="text-sm">{r.enabled ? 'An' : 'Aus'}</span></div>
+        </Box>
+        <Box title="Erinnern nach" desc="Minuten ohne Aktivität (5–600).">
+          <div className="flex items-center gap-2"><Input aria-label="Erinnern nach Minuten" type="number" min={5} max={600} disabled={!manage} className="w-24" value={r.afterMinutes} onChange={(e) => setR({ ...r, afterMinutes: num(e.target.value, 5, 600) })} /><span className="text-sm text-muted">Minuten</span></div>
+        </Box>
+        <Box title="Automatisch außer Dienst" desc="Minuten nach der Erinnerung ohne Reaktion (0 = nie).">
+          <div className="flex items-center gap-2"><Input aria-label="Automatisch außer Dienst nach Minuten" type="number" min={0} max={600} disabled={!manage} className="w-24" value={r.autoOffMinutes} onChange={(e) => setR({ ...r, autoOffMinutes: num(e.target.value, 0, 600) })} /><span className="text-sm text-muted">Minuten</span></div>
+        </Box>
+      </div>
+      <p className="mt-2 text-xs text-muted">In der DM gibt es die Buttons <b>Bin noch im Dienst</b> und <b>Außer Dienst</b>. Die Leitstelle sieht bei jedem im Dienst, seit wann er inaktiv ist (Leitstelle, Team).</p>
+    </Card>
   );
 }
 

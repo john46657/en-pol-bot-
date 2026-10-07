@@ -24,7 +24,7 @@ export const embedSchema = z.object({
   author: z.string().max(256).default(''),
   thumbnail: https, image: https,
   footer: z.string().max(2048).default(''),
-  timestamp: z.boolean().default(false),
+  timestamp: z.boolean().default(true),
   fields: z.array(z.object({ name: z.string().trim().min(1, 'Jeder Abschnitt braucht eine Überschrift.').max(256), value: z.string().trim().min(1, 'Jeder Abschnitt braucht Text.').max(1024), inline: z.boolean().default(false) })).max(25).default([]),
   /** Wo der Bot die Nachricht zuletzt gepostet hat (zum Aktualisieren). */
   posted: z.object({ channelId: sf, messageId: sf, at: z.string() }).nullable().default(null),

@@ -507,6 +507,10 @@ model DutySession {
   shiftType String?
   startedAt DateTime  @default(now())
   endedAt   DateTime?
+  /// Letzte echte Aktivität (Dashboard/MDT, Discord-Befehle) – für die Inaktivitäts-Erinnerung
+  lastActivityAt DateTime?
+  /// Wann zuletzt an die laufende Schicht erinnert wurde
+  remindedAt DateTime?
   user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId, endedAt])

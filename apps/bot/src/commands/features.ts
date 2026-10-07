@@ -151,6 +151,13 @@ export const INTERACTIONS: InteractionDef[] = [
   {
     prefix: 'duty',
     async run(c) {
+      // Erinnerung bei Inaktivität: „Bin noch im Dienst“
+      if (c.args[0] === 'still') {
+        try {
+          const r = await c.api.asUser<{ onDuty: boolean }>(c.discordId, 'POST', '/team/me/active');
+          return r.onDuty ? okReply('Danke! Deine Schicht läuft weiter.') : okReply('Du bist gerade nicht im Dienst.');
+        } catch (e) { return mapError(e); }
+      }
       // Auswahl der Schicht-Art (Auswahlmenü nach „Im Dienst“)
       const shiftType = c.args[0] === 'type' ? c.values?.[0] : undefined;
       const status = c.args[0] === 'type' ? 'ON_DUTY' : c.args[0] ?? '';

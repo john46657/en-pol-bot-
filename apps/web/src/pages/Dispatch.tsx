@@ -8,6 +8,7 @@ import { Button, Card, EmptyState, ErrorState, PageHeader, PriorityBadge, Select
 import { DISPATCH_TRANSITIONS, UNIT_STATUSES } from '@enrp/shared';
 import { FormModal } from '../components/FormModal';
 import { DangerLevel } from '../components/DangerLevel';
+import { DutyActivity } from '../components/DutyActivity';
 import { PRIORITIES } from '@enrp/shared';
 
 interface Inc { id: string; number: string; title: string; priority: string; status: string; location: string | null; version: number; units: { unitId: string; clearedAt: string | null; unit: { callsign: string } }[] }
@@ -70,6 +71,7 @@ export function Dispatch() {
               </li>))}</ul>
           )}
         </Card>
+        {can('team.view') && <Card title="Aktivität im Dienst" className="xl:col-start-3"><DutyActivity /></Card>}
       </div>
       <FormModal open={creating} onClose={() => setCreating(false)} title="Neuer Einsatz" endpoint="/incidents" invalidate={[['dispatch-incidents']]}
         fields={[{ name: 'title', label: 'Titel', required: true, min: 3, max: 200 }, { name: 'priority', label: 'Priorität', type: 'select', options: PRIORITIES }, { name: 'location', label: 'Ort' }, { name: 'description', label: 'Beschreibung', type: 'textarea' }]} />
