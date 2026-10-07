@@ -82,6 +82,7 @@ const toModal = (m: ModalSpec) => new ModalBuilder().setCustomId(m.id).setTitle(
   if (f.maxLength) input.setMaxLength(f.maxLength);
   if (f.minLength) input.setMinLength(Math.min(f.minLength, f.maxLength ?? 4000));
   if (f.placeholder) input.setPlaceholder(f.placeholder.slice(0, 100));
+  if (f.value) input.setValue(f.value.slice(0, f.maxLength ?? 4000));
   return new ActionRowBuilder<TextInputBuilder>().addComponents(input);
 }));
 const replyPayload = (r: Reply) => ({ content: r.content ?? '', embeds: (r.embeds ?? []).map(toEmbed), components: toComponents(r.buttons, r.select, r.selects), allowedMentions: { parse: [] as never[] } });
@@ -377,9 +378,9 @@ async function handleCommand(i: ChatInputCommandInteraction) {
 async function handleComponent(i: ButtonInteraction | ModalSubmitInteraction | AnySelectMenuInteraction) {
   const hit = interactionFor(i.customId);
   if (!hit) return;
-  if (i.isButton() && hit.def.opensModal?.(hit.args)) {
+  if ((i.isButton() || i.isAnySelectMenu()) && hit.def.opensModal?.(hit.args)) {
     // Formulare müssen die erste Antwort sein – kein deferReply vorher.
-    const reply = await safeRun(`interaction ${i.customId}`, () => hit.def.run({ ...baseCtx(i), opts: {}, args: hit.args }));
+    const reply = await safeRun(`interaction ${i.customId}`, () => hit.def.run({ ...baseCtx(i), opts: {}, args: hit.args, ...(i.isAnySelectMenu() ? { values: i.values } : {}) }));
     if (reply.modal) await i.showModal(toModal(reply.modal));
     else await i.reply({ ...replyPayload(reply), flags: MessageFlags.Ephemeral });
     return;

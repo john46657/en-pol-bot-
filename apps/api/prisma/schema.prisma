@@ -45,6 +45,7 @@ model User {
   leaveRequests LeaveRequest[]
   settings      UserSettings?
   editLocks     EditLock[]
+  dutyReports   DutyReport[]             @relation("DutyReportAuthor")
 
   @@index([robloxUsername])
 }
@@ -498,20 +499,20 @@ model PersonnelRecord {
 }
 
 model DutySession {
-  id        String    @id @default(uuid()) @db.Uuid
-  userId    String    @db.Uuid
-  status    String
-  unitId    String?   @db.Uuid
-  callsign  String?
+  id             String    @id @default(uuid()) @db.Uuid
+  userId         String    @db.Uuid
+  status         String
+  unitId         String?   @db.Uuid
+  callsign       String?
   /// Schicht-Art (Admin → Shifts), z. B. „Im Dienst“
-  shiftType String?
-  startedAt DateTime  @default(now())
-  endedAt   DateTime?
+  shiftType      String?
+  startedAt      DateTime  @default(now())
+  endedAt        DateTime?
   /// Letzte echte Aktivität (Dashboard/MDT, Discord-Befehle) – für die Inaktivitäts-Erinnerung
   lastActivityAt DateTime?
   /// Wann zuletzt an die laufende Schicht erinnert wurde
-  remindedAt DateTime?
-  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  remindedAt     DateTime?
+  user           User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId, endedAt])
 }
@@ -1374,17 +1375,44 @@ model RobloxOAuthState {
 
 /// Eine Einsendung über ein Formular-Panel (z. B. Zello-/Roblox-Daten); `messageId`: wo der Bot das Ergebnis gepostet hat.
 model PanelSubmission {
-  id         String   @id @default(uuid()) @db.Uuid
-  panelId    String   @db.Uuid
-  guildId    String?
-  discordId  String
-  userName   String
-  values     Json
-  channelId  String?
-  messageId  String?
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
+  id        String   @id @default(uuid()) @db.Uuid
+  panelId   String   @db.Uuid
+  guildId   String?
+  discordId String
+  userName  String
+  values    Json
+  channelId String?
+  messageId String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@index([panelId, discordId])
   @@index([panelId, createdAt])
+}
+
+// ───────────── Tages-/Wochenberichte (Vorlagen im Dashboard) ─────────────
+
+/// Ausgefüllter Bericht nach einer Vorlage (Dashboard oder Discord). `channelId`/`messageId`: Nachricht in Discord, wird bei Änderungen bearbeitet.
+model DutyReport {
+  id           String    @id @default(uuid()) @db.Uuid
+  number       String    @unique
+  templateId   String    @db.Uuid
+  templateName String
+  period       String // DAILY | WEEKLY | FREE
+  periodStart  DateTime
+  authorId     String    @db.Uuid
+  values       Json
+  status       String    @default("SUBMITTED") // SUBMITTED | REVIEWED
+  source       String    @default("WEB") // WEB | DISCORD
+  guildId      String?
+  reviewedById String?   @db.Uuid
+  reviewedAt   DateTime?
+  editedById   String?   @db.Uuid
+  version      Int       @default(1)
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  author       User      @relation("DutyReportAuthor", fields: [authorId], references: [id], onDelete: Cascade)
+
+  @@index([templateId, periodStart])
+  @@index([authorId, createdAt])
 }

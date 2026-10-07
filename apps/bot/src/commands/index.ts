@@ -6,6 +6,7 @@ import { LEAVE_COMMANDS } from './leave';
 import { CAD_COMMANDS } from './cad';
 import { shiftPicker } from './features';
 import { TICKET_COMMAND } from './tickets';
+import { DUTY_REPORT_COMMANDS } from './duty-reports';
 import { clip, COLORS, EmbedData, errorReply, incidentLine, label, listEmbed, okReply, personEmbed, plain, Reply, Row, vehicleEmbed } from '../format';
 import type { CommandDef, Ctx } from './types';
 
@@ -96,7 +97,7 @@ export const COMMANDS: CommandDef[] = [
         { name: 'Konto', value: '`/entverknuepfen` `/profil` `/benachrichtigungen`' },
         { name: 'Abfragen', value: '`/person` `/kennzeichen` `/fahndungen` `/einsaetze` `/einsatzinfo` `/einheiten` `/team`' },
         { name: 'Dienst & Leitstelle', value: '`/dienst` `/dienststunden` `/abmeldung` `/leave manage` `/einheitstatus` `/einsatz` `/einsatzstatus` `/einsatzzuweisen` `/funk` `/funkcode` `/cad`' },
-        { name: 'Erfassen', value: '`/ticket` `/bericht` `/beschwerde` `/ermittlung` `/fahndung` `/beweis`' },
+        { name: 'Erfassen', value: '`/ticket` `/bericht` `/dienstbericht` `/beschwerde` `/ermittlung` `/fahndung` `/beweis`' },
         { name: 'Leitung & Team', value: '`/gefahrenstatus` `/funkfreigabe` `/teamliste` `/dienstpanel` `/bewerbungspanel` `/qualipanel` `/teamchance` `/roblox`' },
         { name: 'Support-Tickets', value: '`/support` öffnet ein Ticket (Team: `/support mitglied:@…` für jemand anderen). Ticket-Panels, Kategorien, Fragen und Buttons werden im Dashboard eingerichtet und von dort in Discord gesendet.' },
         { name: 'Für alle', value: '`/bewerbung` (auch ohne Verknüpfung; Fragen per Direktnachricht) · SEK/Flugstaffel/Ausbilder über das Qualifikations-Panel' },
@@ -442,6 +443,7 @@ export const COMMANDS: CommandDef[] = [
   ...QUALI_COMMANDS,
   ...LEAVE_COMMANDS,
   ...CAD_COMMANDS,
+  ...DUTY_REPORT_COMMANDS,
   TICKET_COMMAND,
 ];
 

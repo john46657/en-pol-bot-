@@ -1,13 +1,14 @@
 /** Lesbare Namen für die Rechte-Matrix (Schlüssel bleiben sichtbar für Profis). */
 export const MODULE_LABELS: Record<string, string> = {
   dashboard: '🏠 Dashboard & Bereiche', team: '👥 Team', dispatch: '📡 Leitstelle', incidents: '🚨 Einsätze', persons: '🧑 Personen', vehicles: '🚗 Fahrzeuge',
-  reports: '📄 Berichte', tickets: '🧾 Strafzettel', complaints: '⚖️ Beschwerden', investigations: '🔍 Ermittlungen', wanted: '🚩 Fahndungen', evidence: '💼 Beweismittel',
+  reports: '📄 Berichte', dutyreports: '🗓️ Tages-/Wochenberichte', tickets: '🧾 Strafzettel', complaints: '⚖️ Beschwerden', investigations: '🔍 Ermittlungen', wanted: '🚩 Fahndungen', evidence: '💼 Beweismittel',
   personnel: '🪪 Personal', leave: '🏖️ Abmeldungen', applications: '📝 Bewerbungen', academy: '🎓 Akademie', sek: '🎯 SEK', qualifications: '🏅 Qualifikationen',
   ticket: '🎫 Support-Tickets', communication: '💬 Kommunikation', analytics: '📊 Statistiken', audit: '📋 Audit-Logs', studio: '🛠️ Studio',
   settings: '⚙️ Bot-Einstellungen', users: '👤 Benutzer', roles: '🛡️ Rollen & Rechte',
 };
 
 export const ACTION_LABELS: Record<string, string> = {
+  view_all: 'alle ansehen', edit_all: 'alle bearbeiten',
   view: 'ansehen', create: 'erstellen', edit: 'bearbeiten', delete: 'löschen', manage: 'verwalten', customize: 'anpassen', close: 'schließen', reopen: 'wieder öffnen',
   claim: 'übernehmen', add_user: 'Benutzer hinzufügen', remove_user: 'Benutzer entfernen', change_status: 'Status ändern', change_priority: 'Priorität ändern',
   change_category: 'Kategorie ändern', rename: 'umbenennen', move: 'verschieben', lock: 'sperren', escalate: 'eskalieren', transcript: 'Transkript ansehen',

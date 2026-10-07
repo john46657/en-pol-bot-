@@ -26,6 +26,8 @@ export const PERMISSION_CATALOG = {
   radio: ['view', 'manage'],
   /** Team-Chance: Bewerbungsphase für das Team öffnen/schließen */
   teamchance: ['view', 'manage'],
+  /** Tages-/Wochenberichte nach Vorlagen (Dashboard + Discord) */
+  dutyreports: ['view', 'create', 'view_all', 'edit_all', 'review', 'manage'],
   communication: ['view', 'send', 'moderate'],
   analytics: ['view'],
   audit: ['view', 'export'],
