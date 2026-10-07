@@ -16,7 +16,7 @@ import type { ButtonSpec, EmbedData, ModalSpec, Reply, SelectSpec } from './form
 import { createLive } from './live';
 import { startOutboxLoop } from './outbox';
 import type { DiscordConfig, Platform } from './platform';
-import { robloxLookup } from './roblox';
+import { robloxCheck, robloxLookup } from './roblox';
 
 loadDotEnv();
 const cfg = loadConfig();
@@ -263,7 +263,7 @@ function wire(c: Client) {
   c.on('messageCreate', (m: Message) => {
     if (m.inGuild()) { void tickets.onMessage(m); return; } // Verlauf der Support-Tickets
     if (m.author.bot) return;
-    void handleDirectMessage({ userId: m.author.id, userName: m.author.username, content: m.content, api, sendDm: (u, msg) => platform.sendDm(u, msg), robloxLookup: (n) => robloxLookup(n) })
+    void handleDirectMessage({ userId: m.author.id, userName: m.author.username, content: m.content, api, sendDm: (u, msg) => platform.sendDm(u, msg), robloxLookup: (n) => robloxLookup(n), robloxCheck: (n) => robloxCheck(n) })
       .catch((e) => console.error('direct message handling failed:', e instanceof Error ? e.message : e));
   });
 }

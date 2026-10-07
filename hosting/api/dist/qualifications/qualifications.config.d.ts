@@ -5,7 +5,7 @@ export declare const formFieldSchema: z.ZodEffects<z.ZodObject<{
     key: z.ZodString;
     label: z.ZodString;
     required: z.ZodBoolean;
-    type: z.ZodDefault<z.ZodEnum<["TEXT" | "CHOICE" | "ROLE", ...("TEXT" | "CHOICE" | "ROLE")[]]>>;
+    type: z.ZodDefault<z.ZodEnum<["TEXT" | "CHOICE" | "ROLE" | "ROBLOX", ...("TEXT" | "CHOICE" | "ROLE" | "ROBLOX")[]]>>;
     minLength: z.ZodDefault<z.ZodNumber>;
     maxLength: z.ZodDefault<z.ZodNumber>;
     options: z.ZodDefault<z.ZodArray<z.ZodObject<{
@@ -21,7 +21,7 @@ export declare const formFieldSchema: z.ZodEffects<z.ZodObject<{
     multiple: z.ZodDefault<z.ZodBoolean>;
 }, "strip", z.ZodTypeAny, {
     key: string;
-    type: "TEXT" | "CHOICE" | "ROLE";
+    type: "TEXT" | "CHOICE" | "ROLE" | "ROBLOX";
     options: {
         label: string;
         roleId?: string | undefined;
@@ -35,7 +35,7 @@ export declare const formFieldSchema: z.ZodEffects<z.ZodObject<{
     key: string;
     label: string;
     required: boolean;
-    type?: "TEXT" | "CHOICE" | "ROLE" | undefined;
+    type?: "TEXT" | "CHOICE" | "ROLE" | "ROBLOX" | undefined;
     options?: {
         label: string;
         roleId?: string | undefined;
@@ -45,7 +45,7 @@ export declare const formFieldSchema: z.ZodEffects<z.ZodObject<{
     multiple?: boolean | undefined;
 }>, {
     key: string;
-    type: "TEXT" | "CHOICE" | "ROLE";
+    type: "TEXT" | "CHOICE" | "ROLE" | "ROBLOX";
     options: {
         label: string;
         roleId?: string | undefined;
@@ -59,7 +59,7 @@ export declare const formFieldSchema: z.ZodEffects<z.ZodObject<{
     key: string;
     label: string;
     required: boolean;
-    type?: "TEXT" | "CHOICE" | "ROLE" | undefined;
+    type?: "TEXT" | "CHOICE" | "ROLE" | "ROBLOX" | undefined;
     options?: {
         label: string;
         roleId?: string | undefined;
@@ -72,7 +72,7 @@ export declare const formSchema: z.ZodEffects<z.ZodArray<z.ZodEffects<z.ZodObjec
     key: z.ZodString;
     label: z.ZodString;
     required: z.ZodBoolean;
-    type: z.ZodDefault<z.ZodEnum<["TEXT" | "CHOICE" | "ROLE", ...("TEXT" | "CHOICE" | "ROLE")[]]>>;
+    type: z.ZodDefault<z.ZodEnum<["TEXT" | "CHOICE" | "ROLE" | "ROBLOX", ...("TEXT" | "CHOICE" | "ROLE" | "ROBLOX")[]]>>;
     minLength: z.ZodDefault<z.ZodNumber>;
     maxLength: z.ZodDefault<z.ZodNumber>;
     options: z.ZodDefault<z.ZodArray<z.ZodObject<{
@@ -88,7 +88,7 @@ export declare const formSchema: z.ZodEffects<z.ZodArray<z.ZodEffects<z.ZodObjec
     multiple: z.ZodDefault<z.ZodBoolean>;
 }, "strip", z.ZodTypeAny, {
     key: string;
-    type: "TEXT" | "CHOICE" | "ROLE";
+    type: "TEXT" | "CHOICE" | "ROLE" | "ROBLOX";
     options: {
         label: string;
         roleId?: string | undefined;
@@ -102,7 +102,7 @@ export declare const formSchema: z.ZodEffects<z.ZodArray<z.ZodEffects<z.ZodObjec
     key: string;
     label: string;
     required: boolean;
-    type?: "TEXT" | "CHOICE" | "ROLE" | undefined;
+    type?: "TEXT" | "CHOICE" | "ROLE" | "ROBLOX" | undefined;
     options?: {
         label: string;
         roleId?: string | undefined;
@@ -112,7 +112,7 @@ export declare const formSchema: z.ZodEffects<z.ZodArray<z.ZodEffects<z.ZodObjec
     multiple?: boolean | undefined;
 }>, {
     key: string;
-    type: "TEXT" | "CHOICE" | "ROLE";
+    type: "TEXT" | "CHOICE" | "ROLE" | "ROBLOX";
     options: {
         label: string;
         roleId?: string | undefined;
@@ -126,7 +126,7 @@ export declare const formSchema: z.ZodEffects<z.ZodArray<z.ZodEffects<z.ZodObjec
     key: string;
     label: string;
     required: boolean;
-    type?: "TEXT" | "CHOICE" | "ROLE" | undefined;
+    type?: "TEXT" | "CHOICE" | "ROLE" | "ROBLOX" | undefined;
     options?: {
         label: string;
         roleId?: string | undefined;
@@ -136,7 +136,7 @@ export declare const formSchema: z.ZodEffects<z.ZodArray<z.ZodEffects<z.ZodObjec
     multiple?: boolean | undefined;
 }>, "many">, {
     key: string;
-    type: "TEXT" | "CHOICE" | "ROLE";
+    type: "TEXT" | "CHOICE" | "ROLE" | "ROBLOX";
     options: {
         label: string;
         roleId?: string | undefined;
@@ -150,7 +150,7 @@ export declare const formSchema: z.ZodEffects<z.ZodArray<z.ZodEffects<z.ZodObjec
     key: string;
     label: string;
     required: boolean;
-    type?: "TEXT" | "CHOICE" | "ROLE" | undefined;
+    type?: "TEXT" | "CHOICE" | "ROLE" | "ROBLOX" | undefined;
     options?: {
         label: string;
         roleId?: string | undefined;
@@ -304,7 +304,7 @@ export declare const unitSchema: z.ZodObject<{
         key: z.ZodString;
         label: z.ZodString;
         required: z.ZodBoolean;
-        type: z.ZodDefault<z.ZodEnum<["TEXT" | "CHOICE" | "ROLE", ...("TEXT" | "CHOICE" | "ROLE")[]]>>;
+        type: z.ZodDefault<z.ZodEnum<["TEXT" | "CHOICE" | "ROLE" | "ROBLOX", ...("TEXT" | "CHOICE" | "ROLE" | "ROBLOX")[]]>>;
         minLength: z.ZodDefault<z.ZodNumber>;
         maxLength: z.ZodDefault<z.ZodNumber>;
         options: z.ZodDefault<z.ZodArray<z.ZodObject<{
@@ -320,7 +320,7 @@ export declare const unitSchema: z.ZodObject<{
         multiple: z.ZodDefault<z.ZodBoolean>;
     }, "strip", z.ZodTypeAny, {
         key: string;
-        type: "TEXT" | "CHOICE" | "ROLE";
+        type: "TEXT" | "CHOICE" | "ROLE" | "ROBLOX";
         options: {
             label: string;
             roleId?: string | undefined;
@@ -334,7 +334,7 @@ export declare const unitSchema: z.ZodObject<{
         key: string;
         label: string;
         required: boolean;
-        type?: "TEXT" | "CHOICE" | "ROLE" | undefined;
+        type?: "TEXT" | "CHOICE" | "ROLE" | "ROBLOX" | undefined;
         options?: {
             label: string;
             roleId?: string | undefined;
@@ -344,7 +344,7 @@ export declare const unitSchema: z.ZodObject<{
         multiple?: boolean | undefined;
     }>, {
         key: string;
-        type: "TEXT" | "CHOICE" | "ROLE";
+        type: "TEXT" | "CHOICE" | "ROLE" | "ROBLOX";
         options: {
             label: string;
             roleId?: string | undefined;
@@ -358,7 +358,7 @@ export declare const unitSchema: z.ZodObject<{
         key: string;
         label: string;
         required: boolean;
-        type?: "TEXT" | "CHOICE" | "ROLE" | undefined;
+        type?: "TEXT" | "CHOICE" | "ROLE" | "ROBLOX" | undefined;
         options?: {
             label: string;
             roleId?: string | undefined;
@@ -370,7 +370,7 @@ export declare const unitSchema: z.ZodObject<{
         key: string;
         label: string;
         required: boolean;
-        type?: "TEXT" | "CHOICE" | "ROLE" | undefined;
+        type?: "TEXT" | "CHOICE" | "ROLE" | "ROBLOX" | undefined;
         options?: {
             label: string;
             roleId?: string | undefined;
@@ -382,7 +382,7 @@ export declare const unitSchema: z.ZodObject<{
         key: string;
         label: string;
         required: boolean;
-        type?: "TEXT" | "CHOICE" | "ROLE" | undefined;
+        type?: "TEXT" | "CHOICE" | "ROLE" | "ROBLOX" | undefined;
         options?: {
             label: string;
             roleId?: string | undefined;
@@ -586,7 +586,7 @@ export declare const unitSchema: z.ZodObject<{
         key: string;
         label: string;
         required: boolean;
-        type?: "TEXT" | "CHOICE" | "ROLE" | undefined;
+        type?: "TEXT" | "CHOICE" | "ROLE" | "ROBLOX" | undefined;
         options?: {
             label: string;
             roleId?: string | undefined;
@@ -862,7 +862,7 @@ export declare const configSchema: z.ZodObject<{
             key: z.ZodString;
             label: z.ZodString;
             required: z.ZodBoolean;
-            type: z.ZodDefault<z.ZodEnum<["TEXT" | "CHOICE" | "ROLE", ...("TEXT" | "CHOICE" | "ROLE")[]]>>;
+            type: z.ZodDefault<z.ZodEnum<["TEXT" | "CHOICE" | "ROLE" | "ROBLOX", ...("TEXT" | "CHOICE" | "ROLE" | "ROBLOX")[]]>>;
             minLength: z.ZodDefault<z.ZodNumber>;
             maxLength: z.ZodDefault<z.ZodNumber>;
             options: z.ZodDefault<z.ZodArray<z.ZodObject<{
@@ -878,7 +878,7 @@ export declare const configSchema: z.ZodObject<{
             multiple: z.ZodDefault<z.ZodBoolean>;
         }, "strip", z.ZodTypeAny, {
             key: string;
-            type: "TEXT" | "CHOICE" | "ROLE";
+            type: "TEXT" | "CHOICE" | "ROLE" | "ROBLOX";
             options: {
                 label: string;
                 roleId?: string | undefined;
@@ -892,7 +892,7 @@ export declare const configSchema: z.ZodObject<{
             key: string;
             label: string;
             required: boolean;
-            type?: "TEXT" | "CHOICE" | "ROLE" | undefined;
+            type?: "TEXT" | "CHOICE" | "ROLE" | "ROBLOX" | undefined;
             options?: {
                 label: string;
                 roleId?: string | undefined;
@@ -902,7 +902,7 @@ export declare const configSchema: z.ZodObject<{
             multiple?: boolean | undefined;
         }>, {
             key: string;
-            type: "TEXT" | "CHOICE" | "ROLE";
+            type: "TEXT" | "CHOICE" | "ROLE" | "ROBLOX";
             options: {
                 label: string;
                 roleId?: string | undefined;
@@ -916,7 +916,7 @@ export declare const configSchema: z.ZodObject<{
             key: string;
             label: string;
             required: boolean;
-            type?: "TEXT" | "CHOICE" | "ROLE" | undefined;
+            type?: "TEXT" | "CHOICE" | "ROLE" | "ROBLOX" | undefined;
             options?: {
                 label: string;
                 roleId?: string | undefined;
@@ -928,7 +928,7 @@ export declare const configSchema: z.ZodObject<{
             key: string;
             label: string;
             required: boolean;
-            type?: "TEXT" | "CHOICE" | "ROLE" | undefined;
+            type?: "TEXT" | "CHOICE" | "ROLE" | "ROBLOX" | undefined;
             options?: {
                 label: string;
                 roleId?: string | undefined;
@@ -940,7 +940,7 @@ export declare const configSchema: z.ZodObject<{
             key: string;
             label: string;
             required: boolean;
-            type?: "TEXT" | "CHOICE" | "ROLE" | undefined;
+            type?: "TEXT" | "CHOICE" | "ROLE" | "ROBLOX" | undefined;
             options?: {
                 label: string;
                 roleId?: string | undefined;
@@ -1144,7 +1144,7 @@ export declare const configSchema: z.ZodObject<{
             key: string;
             label: string;
             required: boolean;
-            type?: "TEXT" | "CHOICE" | "ROLE" | undefined;
+            type?: "TEXT" | "CHOICE" | "ROLE" | "ROBLOX" | undefined;
             options?: {
                 label: string;
                 roleId?: string | undefined;
@@ -1234,7 +1234,7 @@ export declare const configSchema: z.ZodObject<{
             key: string;
             label: string;
             required: boolean;
-            type?: "TEXT" | "CHOICE" | "ROLE" | undefined;
+            type?: "TEXT" | "CHOICE" | "ROLE" | "ROBLOX" | undefined;
             options?: {
                 label: string;
                 roleId?: string | undefined;
@@ -1590,7 +1590,7 @@ export declare const configSchema: z.ZodObject<{
             key: string;
             label: string;
             required: boolean;
-            type?: "TEXT" | "CHOICE" | "ROLE" | undefined;
+            type?: "TEXT" | "CHOICE" | "ROLE" | "ROBLOX" | undefined;
             options?: {
                 label: string;
                 roleId?: string | undefined;
@@ -1685,7 +1685,7 @@ export declare const saveSchema: z.ZodObject<{
             key: z.ZodString;
             label: z.ZodString;
             required: z.ZodBoolean;
-            type: z.ZodDefault<z.ZodEnum<["TEXT" | "CHOICE" | "ROLE", ...("TEXT" | "CHOICE" | "ROLE")[]]>>;
+            type: z.ZodDefault<z.ZodEnum<["TEXT" | "CHOICE" | "ROLE" | "ROBLOX", ...("TEXT" | "CHOICE" | "ROLE" | "ROBLOX")[]]>>;
             minLength: z.ZodDefault<z.ZodNumber>;
             maxLength: z.ZodDefault<z.ZodNumber>;
             options: z.ZodDefault<z.ZodArray<z.ZodObject<{
@@ -1701,7 +1701,7 @@ export declare const saveSchema: z.ZodObject<{
             multiple: z.ZodDefault<z.ZodBoolean>;
         }, "strip", z.ZodTypeAny, {
             key: string;
-            type: "TEXT" | "CHOICE" | "ROLE";
+            type: "TEXT" | "CHOICE" | "ROLE" | "ROBLOX";
             options: {
                 label: string;
                 roleId?: string | undefined;
@@ -1715,7 +1715,7 @@ export declare const saveSchema: z.ZodObject<{
             key: string;
             label: string;
             required: boolean;
-            type?: "TEXT" | "CHOICE" | "ROLE" | undefined;
+            type?: "TEXT" | "CHOICE" | "ROLE" | "ROBLOX" | undefined;
             options?: {
                 label: string;
                 roleId?: string | undefined;
@@ -1725,7 +1725,7 @@ export declare const saveSchema: z.ZodObject<{
             multiple?: boolean | undefined;
         }>, {
             key: string;
-            type: "TEXT" | "CHOICE" | "ROLE";
+            type: "TEXT" | "CHOICE" | "ROLE" | "ROBLOX";
             options: {
                 label: string;
                 roleId?: string | undefined;
@@ -1739,7 +1739,7 @@ export declare const saveSchema: z.ZodObject<{
             key: string;
             label: string;
             required: boolean;
-            type?: "TEXT" | "CHOICE" | "ROLE" | undefined;
+            type?: "TEXT" | "CHOICE" | "ROLE" | "ROBLOX" | undefined;
             options?: {
                 label: string;
                 roleId?: string | undefined;
@@ -1751,7 +1751,7 @@ export declare const saveSchema: z.ZodObject<{
             key: string;
             label: string;
             required: boolean;
-            type?: "TEXT" | "CHOICE" | "ROLE" | undefined;
+            type?: "TEXT" | "CHOICE" | "ROLE" | "ROBLOX" | undefined;
             options?: {
                 label: string;
                 roleId?: string | undefined;
@@ -1763,7 +1763,7 @@ export declare const saveSchema: z.ZodObject<{
             key: string;
             label: string;
             required: boolean;
-            type?: "TEXT" | "CHOICE" | "ROLE" | undefined;
+            type?: "TEXT" | "CHOICE" | "ROLE" | "ROBLOX" | undefined;
             options?: {
                 label: string;
                 roleId?: string | undefined;
@@ -1967,7 +1967,7 @@ export declare const saveSchema: z.ZodObject<{
             key: string;
             label: string;
             required: boolean;
-            type?: "TEXT" | "CHOICE" | "ROLE" | undefined;
+            type?: "TEXT" | "CHOICE" | "ROLE" | "ROBLOX" | undefined;
             options?: {
                 label: string;
                 roleId?: string | undefined;
@@ -2057,7 +2057,7 @@ export declare const saveSchema: z.ZodObject<{
             key: string;
             label: string;
             required: boolean;
-            type?: "TEXT" | "CHOICE" | "ROLE" | undefined;
+            type?: "TEXT" | "CHOICE" | "ROLE" | "ROBLOX" | undefined;
             options?: {
                 label: string;
                 roleId?: string | undefined;
@@ -2329,7 +2329,7 @@ export declare const saveSchema: z.ZodObject<{
         key: z.ZodString;
         label: z.ZodString;
         required: z.ZodBoolean;
-        type: z.ZodDefault<z.ZodEnum<["TEXT" | "CHOICE" | "ROLE", ...("TEXT" | "CHOICE" | "ROLE")[]]>>;
+        type: z.ZodDefault<z.ZodEnum<["TEXT" | "CHOICE" | "ROLE" | "ROBLOX", ...("TEXT" | "CHOICE" | "ROLE" | "ROBLOX")[]]>>;
         minLength: z.ZodDefault<z.ZodNumber>;
         maxLength: z.ZodDefault<z.ZodNumber>;
         options: z.ZodDefault<z.ZodArray<z.ZodObject<{
@@ -2345,7 +2345,7 @@ export declare const saveSchema: z.ZodObject<{
         multiple: z.ZodDefault<z.ZodBoolean>;
     }, "strip", z.ZodTypeAny, {
         key: string;
-        type: "TEXT" | "CHOICE" | "ROLE";
+        type: "TEXT" | "CHOICE" | "ROLE" | "ROBLOX";
         options: {
             label: string;
             roleId?: string | undefined;
@@ -2359,7 +2359,7 @@ export declare const saveSchema: z.ZodObject<{
         key: string;
         label: string;
         required: boolean;
-        type?: "TEXT" | "CHOICE" | "ROLE" | undefined;
+        type?: "TEXT" | "CHOICE" | "ROLE" | "ROBLOX" | undefined;
         options?: {
             label: string;
             roleId?: string | undefined;
@@ -2369,7 +2369,7 @@ export declare const saveSchema: z.ZodObject<{
         multiple?: boolean | undefined;
     }>, {
         key: string;
-        type: "TEXT" | "CHOICE" | "ROLE";
+        type: "TEXT" | "CHOICE" | "ROLE" | "ROBLOX";
         options: {
             label: string;
             roleId?: string | undefined;
@@ -2383,7 +2383,7 @@ export declare const saveSchema: z.ZodObject<{
         key: string;
         label: string;
         required: boolean;
-        type?: "TEXT" | "CHOICE" | "ROLE" | undefined;
+        type?: "TEXT" | "CHOICE" | "ROLE" | "ROBLOX" | undefined;
         options?: {
             label: string;
             roleId?: string | undefined;
@@ -2393,7 +2393,7 @@ export declare const saveSchema: z.ZodObject<{
         multiple?: boolean | undefined;
     }>, "many">, {
         key: string;
-        type: "TEXT" | "CHOICE" | "ROLE";
+        type: "TEXT" | "CHOICE" | "ROLE" | "ROBLOX";
         options: {
             label: string;
             roleId?: string | undefined;
@@ -2407,7 +2407,7 @@ export declare const saveSchema: z.ZodObject<{
         key: string;
         label: string;
         required: boolean;
-        type?: "TEXT" | "CHOICE" | "ROLE" | undefined;
+        type?: "TEXT" | "CHOICE" | "ROLE" | "ROBLOX" | undefined;
         options?: {
             label: string;
             roleId?: string | undefined;
@@ -2499,7 +2499,7 @@ export declare const saveSchema: z.ZodObject<{
     };
     policeForm?: {
         key: string;
-        type: "TEXT" | "CHOICE" | "ROLE";
+        type: "TEXT" | "CHOICE" | "ROLE" | "ROBLOX";
         options: {
             label: string;
             roleId?: string | undefined;
@@ -2518,7 +2518,7 @@ export declare const saveSchema: z.ZodObject<{
             key: string;
             label: string;
             required: boolean;
-            type?: "TEXT" | "CHOICE" | "ROLE" | undefined;
+            type?: "TEXT" | "CHOICE" | "ROLE" | "ROBLOX" | undefined;
             options?: {
                 label: string;
                 roleId?: string | undefined;
@@ -2607,7 +2607,7 @@ export declare const saveSchema: z.ZodObject<{
         key: string;
         label: string;
         required: boolean;
-        type?: "TEXT" | "CHOICE" | "ROLE" | undefined;
+        type?: "TEXT" | "CHOICE" | "ROLE" | "ROBLOX" | undefined;
         options?: {
             label: string;
             roleId?: string | undefined;

@@ -21,6 +21,7 @@ const qualifications_config_1 = require("./qualifications.config");
 const shared_1 = require("@enrp/shared");
 const applications_service_1 = require("../applications/applications.service");
 const decision_1 = require("./decision");
+const roblox_service_1 = require("../persons/roblox.service");
 const shared_2 = require("@enrp/shared");
 const KEY = 'qualifications.config';
 const FORM_KEY = 'application.form';
@@ -32,10 +33,12 @@ let QualificationsService = class QualificationsService {
     prisma;
     audit;
     discord;
-    constructor(prisma, audit, discord) {
+    roblox;
+    constructor(prisma, audit, discord, roblox) {
         this.prisma = prisma;
         this.audit = audit;
         this.discord = discord;
+        this.roblox = roblox;
     }
     /** Einstellungen eines Servers (`@<guildId>`) – ohne eigene gilt die gemeinsame Grundeinstellung. */
     keyOf(base, guildId) { return guildId ? `${base}@${guildId}` : base; }
@@ -99,13 +102,21 @@ let QualificationsService = class QualificationsService {
         // jede Antwort gegen ihre Frage prüfen (Pflicht, Länge, gültige Auswahl); gewählte Rollen merken
         const answers = [];
         const grantRoleIds = new Set();
-        unit.questions.forEach((q, i) => {
+        for (const [i, q] of unit.questions.entries()) {
             const r = (0, shared_1.checkAnswer)(q, d.answers[i]?.answer);
             if (!r.ok)
                 throw new errors_1.AppError('VALIDATION_FAILED', r.error);
-            answers.push({ question: q.label, answer: r.text || '—' });
+            let text = r.text;
+            if (q.type === 'ROBLOX' && text) {
+                const rb = await this.roblox.verifyName(text);
+                if (rb === null)
+                    throw new errors_1.AppError('VALIDATION_FAILED', `Den Roblox-Benutzer „${text}“ gibt es nicht.`);
+                if (rb)
+                    text = `${rb.name} (ID ${rb.id})`;
+            }
+            answers.push({ question: q.label, answer: text || '—' });
             r.roleIds.forEach((x) => grantRoleIds.add(x));
-        });
+        }
         if ((await this.openFor(d.discordId, unit.key)).open)
             throw new errors_1.AppError('CONFLICT', `There is already an open application for ${unit.name}.`);
         const last = await this.prisma.qualificationApplication.findFirst({ where: { discordId: d.discordId, unit: unit.key }, orderBy: { createdAt: 'desc' }, select: { createdAt: true } });
@@ -195,6 +206,6 @@ let QualificationsService = class QualificationsService {
 exports.QualificationsService = QualificationsService;
 exports.QualificationsService = QualificationsService = __decorate([
     (0, common_1.Injectable)(),
-    __metadata("design:paramtypes", [prisma_service_1.PrismaService, audit_service_1.AuditService, discord_service_1.DiscordService])
+    __metadata("design:paramtypes", [prisma_service_1.PrismaService, audit_service_1.AuditService, discord_service_1.DiscordService, roblox_service_1.RobloxService])
 ], QualificationsService);
 //# sourceMappingURL=qualifications.service.js.map

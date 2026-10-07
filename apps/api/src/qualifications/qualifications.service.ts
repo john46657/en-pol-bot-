@@ -10,6 +10,7 @@ import { appSettingsSchema, configSchema, DEFAULT_CONFIG, type QualificationConf
 import { checkAnswer, type FormField } from '@enrp/shared';
 import { DEFAULT_FORM } from '../applications/applications.service';
 import { cooldownLeft, decisionMessage, decisionRoles, submitRoles } from './decision';
+import { RobloxService } from '../persons/roblox.service';
 import { formatMinutes } from '@enrp/shared';
 
 const KEY = 'qualifications.config';
@@ -22,7 +23,7 @@ export interface Answer { question: string; answer: string | string[] | null }
  */
 @Injectable()
 export class QualificationsService {
-  constructor(private readonly prisma: PrismaService, private readonly audit: AuditService, private readonly discord: DiscordService) {}
+  constructor(private readonly prisma: PrismaService, private readonly audit: AuditService, private readonly discord: DiscordService, private readonly roblox: RobloxService) {}
 
   /** Einstellungen eines Servers (`@<guildId>`) – ohne eigene gilt die gemeinsame Grundeinstellung. */
   private keyOf(base: string, guildId?: string | null) { return guildId ? `${base}@${guildId}` : base; }
@@ -86,12 +87,18 @@ export class QualificationsService {
     // jede Antwort gegen ihre Frage prüfen (Pflicht, Länge, gültige Auswahl); gewählte Rollen merken
     const answers: { question: string; answer: string }[] = [];
     const grantRoleIds = new Set<string>();
-    unit.questions.forEach((q, i) => {
+    for (const [i, q] of unit.questions.entries()) {
       const r = checkAnswer(q, d.answers[i]?.answer);
       if (!r.ok) throw new AppError('VALIDATION_FAILED', r.error);
-      answers.push({ question: q.label, answer: r.text || '—' });
+      let text = r.text;
+      if (q.type === 'ROBLOX' && text) {
+        const rb = await this.roblox.verifyName(text);
+        if (rb === null) throw new AppError('VALIDATION_FAILED', `Den Roblox-Benutzer „${text}“ gibt es nicht.`);
+        if (rb) text = `${rb.name} (ID ${rb.id})`;
+      }
+      answers.push({ question: q.label, answer: text || '—' });
       r.roleIds.forEach((x) => grantRoleIds.add(x));
-    });
+    }
     if ((await this.openFor(d.discordId, unit.key)).open) throw new AppError('CONFLICT', `There is already an open application for ${unit.name}.`);
     const last = await this.prisma.qualificationApplication.findFirst({ where: { discordId: d.discordId, unit: unit.key }, orderBy: { createdAt: 'desc' }, select: { createdAt: true } });
     const wait = cooldownLeft(unit.settings, last?.createdAt);

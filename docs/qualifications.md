@@ -48,7 +48,7 @@ Regeln: eine offene Bewerbung pro Person und Einheit; eine laufende Bewerbung im
 - Noch nicht eingebaut: „Action On User Leave“. Dafür bräuchte der Bot den privilegierten *Server Members Intent*.
 
 **Fragen-Editor (wie bei Appy)** – bis zu 50 Fragen je Bewerbung, jede als Karte:
-- **Typ**: *Text* (Antwort per Nachricht), *Multiple choice* (Auswahlmenü in der DM, eine oder mehrere Optionen) oder *Role select* (wie Auswahl, jede Option mit einer Discord-Rolle – die gewählten Rollen bekommt die Person **bei Annahme** zusätzlich).
+- **Typ**: *Text* (Antwort per Nachricht), *Multiple choice* (Auswahlmenü in der DM, eine oder mehrere Optionen) oder *Role select* (wie Auswahl, jede Option mit einer Discord-Rolle – die gewählten Rollen bekommt die Person **bei Annahme** zusätzlich). Oder *Roblox User*: Die Person gibt ihren Roblox-Benutzernamen an – im Web mit Suche und Profilbild zum Auswählen, in Discord prüft der Bot den Namen sofort und zeigt das gefundene Konto (mit Bild) bzw. fragt bei unbekanntem Namen erneut. Der Server prüft beim Einreichen noch einmal bei Roblox und speichert `Name (ID …)`. Bei der Polizei-Bewerbung ersetzt eine solche Frage die eingebaute erste Frage nach dem Roblox-Namen (und setzt Roblox-Name + ID der Bewerbung). Ist Roblox gerade nicht erreichbar, wird der Name ungeprüft übernommen.
 - **Duplizieren**, **Löschen**, **Verschieben** (ziehen oder ↑/↓).
 - **Validation settings**: Pflicht/optional (optionale Fragen kann man überspringen – Text mit „-“, Auswahl mit „Überspringen“), Mindest- und Höchstlänge bei Text, Optionen und „Mehrfachauswahl“ bei Auswahl/Rollen.
 - Bestehende Fragen behalten ihren Schlüssel, damit alte Antworten zugeordnet bleiben; alte Einrichtungen (Fragen als Textzeilen) werden automatisch zu Text-Fragen.

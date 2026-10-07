@@ -4,6 +4,7 @@ import { AuditService, Actor } from '../audit/audit.service';
 import { DiscordService } from '../discord/discord.service';
 import { type QualificationConfig } from './qualifications.config';
 import { type FormField } from '@enrp/shared';
+import { RobloxService } from '../persons/roblox.service';
 export interface Answer {
     question: string;
     answer: string | string[] | null;
@@ -16,7 +17,8 @@ export declare class QualificationsService {
     private readonly prisma;
     private readonly audit;
     private readonly discord;
-    constructor(prisma: PrismaService, audit: AuditService, discord: DiscordService);
+    private readonly roblox;
+    constructor(prisma: PrismaService, audit: AuditService, discord: DiscordService, roblox: RobloxService);
     /** Einstellungen eines Servers (`@<guildId>`) – ohne eigene gilt die gemeinsame Grundeinstellung. */
     private keyOf;
     private read;

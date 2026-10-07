@@ -5,6 +5,7 @@ import { PrismaService } from '../prisma/prisma.service';
 import { AuditService, Actor } from '../audit/audit.service';
 import { DiscordService } from '../discord/discord.service';
 import { PageQuery } from '../common/pagination';
+import { RobloxService } from '../persons/roblox.service';
 export type { FormField };
 /** Die Beschriftungen sind zugleich die Fragen, die der Discord-Bot per Direktnachricht stellt. */
 export declare const DEFAULT_FORM: FormField[];
@@ -14,7 +15,8 @@ export declare class ApplicationsService {
     private readonly discord;
     private readonly notify;
     private readonly teamchance;
-    constructor(prisma: PrismaService, audit: AuditService, discord: DiscordService, notify: NotifyService, teamchance: TeamChanceService);
+    private readonly roblox;
+    constructor(prisma: PrismaService, audit: AuditService, discord: DiscordService, notify: NotifyService, teamchance: TeamChanceService, roblox: RobloxService);
     /** Formular eines Servers (`application.form@<guildId>`), sonst das gemeinsame. */
     form(guildId?: string | null): Promise<FormField[]>;
     /** Öffentliche Bewerbung (kein Account nötig). Antworten werden strikt gegen das konfigurierte Formular validiert. */

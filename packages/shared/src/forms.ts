@@ -1,8 +1,12 @@
 /**
  * Bewerbungsfragen (Polizei-Bewerbung und Qualifikationen) – wie bei Appy:
- * Text, Auswahl (Multiple choice) oder Rollen-Auswahl, jeweils mit Prüf-Einstellungen.
+ * Text, Auswahl (Multiple choice), Rollen-Auswahl oder Roblox-Benutzer (wird bei Roblox gesucht und geprüft).
  */
-export const FORM_QUESTION_TYPES = { TEXT: 'Text', CHOICE: 'Multiple choice', ROLE: 'Role select' } as const;
+export const FORM_QUESTION_TYPES = { TEXT: 'Text', CHOICE: 'Multiple choice', ROLE: 'Role select', ROBLOX: 'Roblox User' } as const;
+/** Gültiger Roblox-Benutzername (3–20 Zeichen, Buchstaben/Ziffern/_). */
+export const ROBLOX_NAME = /^[A-Za-z0-9_]{3,20}$/;
+/** Fragen ohne Auswahl-Optionen (freie Eingabe). */
+export const isInputQuestion = (t: FormQuestionType | undefined) => !t || t === 'TEXT' || t === 'ROBLOX';
 export type FormQuestionType = keyof typeof FORM_QUESTION_TYPES;
 
 /** Auswahl-Option; bei Rollen-Auswahl mit der Discord-Rolle, die bei Annahme vergeben wird. */
@@ -21,12 +25,13 @@ export const MAX_FORM_OPTIONS = 25;
 
 export function normalizeField(f: FormField): Field {
   const type = f.type ?? 'TEXT';
+  const input = isInputQuestion(type);
   return {
     key: f.key, label: f.label, required: f.required, type,
     minLength: type === 'TEXT' ? Math.max(0, f.minLength ?? 0) : 0,
-    maxLength: f.maxLength,
-    options: type === 'TEXT' ? [] : (f.options ?? []).slice(0, MAX_FORM_OPTIONS),
-    multiple: type !== 'TEXT' && !!f.multiple,
+    maxLength: type === 'ROBLOX' ? 20 : f.maxLength,
+    options: input ? [] : (f.options ?? []).slice(0, MAX_FORM_OPTIONS),
+    multiple: !input && !!f.multiple,
   };
 }
 
@@ -43,6 +48,12 @@ export type AnswerCheck = { ok: true; text: string; roleIds: string[] } | { ok: 
  */
 export function checkAnswer(field: FormField, value: string | string[] | null | undefined): AnswerCheck {
   const f = normalizeField(field);
+  if (f.type === 'ROBLOX') {
+    const v = (Array.isArray(value) ? value[0] ?? '' : value ?? '').trim().replace(/^@/, '');
+    if (!v) return f.required ? { ok: false, error: `„${f.label}“ ist eine Pflichtfrage.` } : { ok: true, text: '', roleIds: [] };
+    if (!ROBLOX_NAME.test(v)) return { ok: false, error: `Bei „${f.label}“ bitte einen gültigen Roblox-Benutzernamen angeben (3–20 Zeichen, Buchstaben, Ziffern, _).` };
+    return { ok: true, text: v, roleIds: [] };
+  }
   if (f.type === 'TEXT') {
     const v = (Array.isArray(value) ? value.join('\n') : value ?? '').trim();
     if (!v) return f.required ? { ok: false, error: `„${f.label}“ ist eine Pflichtfrage.` } : { ok: true, text: '', roleIds: [] };

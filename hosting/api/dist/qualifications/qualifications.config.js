@@ -14,7 +14,7 @@ exports.formFieldSchema = zod_1.z.object({
 }).superRefine((f, ctx) => {
     if (f.minLength > f.maxLength)
         ctx.addIssue({ code: 'custom', path: ['minLength'], message: 'Min length is larger than max length.' });
-    if (f.type !== 'TEXT' && f.options.length < 1)
+    if (f.type !== 'TEXT' && f.type !== 'ROBLOX' && f.options.length < 1)
         ctx.addIssue({ code: 'custom', path: ['options'], message: 'Add at least one option.' });
     if (f.type === 'ROLE' && f.options.some((o) => !o.roleId))
         ctx.addIssue({ code: 'custom', path: ['options'], message: 'Every option of a role select needs a Discord role ID.' });

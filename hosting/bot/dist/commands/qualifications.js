@@ -10,6 +10,8 @@ const errors_1 = require("./errors");
 /** Pseudo-Einheit für die normale Bewerbung bei EN Polizei (kann nicht mit konfigurierten Einheiten kollidieren). */
 exports.POLICE = '@polizei';
 const POLICE_NAME = 'Bewerbung – EN Polizei';
+/** Eingebaute erste Frage der Polizei-Bewerbung (wird nicht als Formular-Antwort gesendet). */
+const ROBLOX_KEY = '@roblox';
 const SKIP = '-';
 /** Standard-Zeit für eine Bewerbung (wie bei Appy: 3 Stunden; je Bewerbung einstellbar). */
 exports.APPLICATION_MS = 3 * 60 * 60_000;
@@ -49,6 +51,9 @@ const questionMessage = (s) => {
     const q = s.questions[i];
     const f = q.field;
     const head = `**${i + 1}/${s.questions.length}.** ${(0, format_1.plain)(q.text)}`;
+    if (f.type === 'ROBLOX') {
+        return { embed: { title: (0, format_1.clip)(s.unitName, 256), color: format_1.COLORS.info, description: (0, format_1.clip)(`${head}\n\n_Schreibe deinen **Roblox-Benutzernamen** (genau wie in Roblox, nicht den Anzeigenamen) hier in den Chat – ich prüfe, ob es das Konto gibt.${f.required ? '' : ` Optional – „${SKIP}“ zum Überspringen.`}_`, 4000) }, buttons: [CANCEL] };
+    }
     if (f.type === 'TEXT') {
         const hints = [f.minLength ? `mindestens ${f.minLength} Zeichen` : '', !f.required ? `optional – schreibe „${SKIP}“, um zu überspringen` : ''].filter(Boolean).join(' · ');
         return { embed: { title: (0, format_1.clip)(s.unitName, 256), color: format_1.COLORS.info, description: (0, format_1.clip)(`${head}\n\n_Antworte einfach mit einer Nachricht hier im Chat.${hints ? ` (${hints})` : ''}_`, 4000) }, buttons: [CANCEL] };
@@ -66,7 +71,11 @@ async function loadFlow(api, key, guildId) {
         return null;
     if (key === exports.POLICE) {
         const [form, cfg] = await Promise.all([api.service('GET', `/applications/form${guildId ? `?guildId=${guildId}` : ''}`), getConfig(api, guildId).catch(() => undefined)]);
-        return { key, name: cfg?.police?.name ? `Bewerbung – ${cfg.police.name}` : POLICE_NAME, appName: cfg?.police?.name ?? 'EN Polizei', enabled: cfg?.police?.enabled !== false, settings: cfg?.police?.settings ?? {}, questions: [{ text: 'Wie ist dein Roblox-Benutzername?', key: 'roblox', field: field({ key: 'roblox', label: 'Roblox', required: true, maxLength: 20 }) }, ...form.map((f) => ({ text: f.label, key: f.key, field: field(f) }))] };
+        return { key, name: cfg?.police?.name ? `Bewerbung – ${cfg.police.name}` : POLICE_NAME, appName: cfg?.police?.name ?? 'EN Polizei', enabled: cfg?.police?.enabled !== false, settings: cfg?.police?.settings ?? {}, questions: [
+                // Roblox-Name: eigene Frage „Roblox User“ im Formular ersetzt die eingebaute erste Frage
+                ...(form.some((f) => f.type === 'ROBLOX') ? [] : [{ text: 'Wie ist dein Roblox-Benutzername?', key: ROBLOX_KEY, field: field({ key: ROBLOX_KEY, label: 'Roblox', required: true, maxLength: 20, type: 'ROBLOX' }) }]),
+                ...form.map((f) => ({ text: f.label, key: f.key, field: field(f) })),
+            ] };
     }
     const unit = (await getConfig(api, guildId)).units.find((u) => u.key === key);
     return unit ? { key: unit.key, name: unit.name, appName: unit.name, enabled: unit.enabled !== false, settings: unit.settings ?? {}, questions: unit.questions.map(asField).map((f) => ({ text: f.label, key: f.key, field: field(f) })) } : null;
@@ -79,9 +88,10 @@ async function openApplication(api, key, discordId) {
 async function submitSession(api, s, userId, userName, robloxLookup, now = Date.now()) {
     const meta = { durationSec: Math.max(0, Math.round((now - s.startedAt) / 1000)), ...(s.joinedAt ? { joinedAt: s.joinedAt } : {}), ...(s.guildId ? { guildId: s.guildId } : {}) };
     if (s.unit === exports.POLICE) {
-        const roblox = String(s.answers[0] ?? '').trim();
-        const rb = await robloxLookup?.(roblox).catch(() => null);
-        const answers = Object.fromEntries(s.questions.slice(1).flatMap((q, i) => { const a = s.answers[i + 1]; return a === null || a === undefined ? [] : [[q.key, a]]; }));
+        const rbIndex = s.questions.findIndex((q) => q.field.type === 'ROBLOX');
+        const roblox = String(rbIndex >= 0 ? s.answers[rbIndex] ?? '' : '').trim();
+        const rb = roblox ? await robloxLookup?.(roblox).catch(() => null) : null;
+        const answers = Object.fromEntries(s.questions.flatMap((q, i) => { const a = s.answers[i]; return q.key === ROBLOX_KEY || a === null || a === undefined ? [] : [[q.key, a]]; }));
         return (await api.service('POST', '/bot/application', { robloxUsername: rb?.name ?? roblox, ...(rb ? { robloxUserId: String(rb.id) } : {}), discordId: userId, discordName: userName, answers, ...meta })).number;
     }
     return (await api.service('POST', '/bot/qualifications/applications', { unit: s.unit, discordId: userId, discordName: userName, answers: s.questions.map((q, i) => ({ question: q.text, answer: s.answers[i] ?? null })), ...meta })).number;
@@ -194,7 +204,7 @@ async function handleDirectMessage(a) {
         return;
     }
     const q = s.questions[s.answers.length];
-    if (q.field.type !== 'TEXT') {
+    if (q.field.type !== 'TEXT' && q.field.type !== 'ROBLOX') {
         await say('Bitte wähle die Antwort im **Menü** der letzten Frage aus.', format_1.COLORS.warning);
         await a.sendDm(a.userId, questionMessage(s));
         return;
@@ -212,7 +222,21 @@ async function handleDirectMessage(a) {
             await say(r.error, format_1.COLORS.warning, [CANCEL]);
             return;
         }
-        s.answers.push(text);
+        if (q.field.type === 'ROBLOX' && a.robloxCheck) {
+            const rb = await a.robloxCheck(r.text).catch(() => undefined);
+            if (rb === null) {
+                await say(`❌ Den Roblox-Benutzer **${(0, format_1.plain)(r.text)}** gibt es nicht. Bitte prüfe die Schreibweise und schicke ihn noch einmal.`, format_1.COLORS.warning, [CANCEL]);
+                return;
+            }
+            if (rb) {
+                await a.sendDm(a.userId, { embed: { title: (0, format_1.clip)(s.unitName, 256), color: format_1.COLORS.success, description: `✅ Roblox-Konto gefunden: **${(0, format_1.plain)(rb.name)}**${rb.displayName && rb.displayName !== rb.name ? ` (${(0, format_1.plain)(rb.displayName)})` : ''}`, ...(rb.avatarUrl ? { thumbnail: rb.avatarUrl } : {}) } });
+                s.answers.push(rb.name);
+            }
+            else
+                s.answers.push(r.text); // Roblox gerade nicht erreichbar → der Server prüft beim Einreichen
+        }
+        else
+            s.answers.push(text);
     }
     await proceed({ api: a.api, userId: a.userId, userName: a.userName, sendDm: a.sendDm, robloxLookup: a.robloxLookup, now }, s);
 }

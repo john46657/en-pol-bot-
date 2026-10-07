@@ -2,6 +2,7 @@ import { z } from 'zod';
 import { ApplicationsService } from './applications.service';
 import { ApplicationsAnalyticsService } from './applications-analytics.service';
 import type { Actor } from '../audit/audit.service';
+import { RobloxService } from '../persons/roblox.service';
 declare const submit: z.ZodObject<{
     robloxUsername: z.ZodString;
     robloxUserId: z.ZodOptional<z.ZodString>;
@@ -72,8 +73,20 @@ declare const analyticsQ: z.ZodObject<{
 export declare class ApplicationsController {
     private readonly a;
     private readonly stats;
-    constructor(a: ApplicationsService, stats: ApplicationsAnalyticsService);
+    private readonly roblox;
+    constructor(a: ApplicationsService, stats: ApplicationsAnalyticsService, roblox: RobloxService);
     /** `?guildId=` – Formular eines Servers (für den Bot); ohne: das gemeinsame (Web-Seite /apply). */
+    /** Frage „Roblox User“: Konto suchen (Name, Anzeigename, Bild – keine internen Daten). Öffentlich, begrenzt. */
+    robloxLookup(q: {
+        q: string;
+    }): Promise<{
+        profile: {
+            id: string;
+            name: string;
+            displayName: string;
+            avatarUrl: string | null;
+        } | null;
+    }>;
     form(q: z.infer<typeof guildQ>): Promise<import("@enrp/shared").FormField[]>;
     submit(b: z.infer<typeof submit>): Promise<{
         number: string;

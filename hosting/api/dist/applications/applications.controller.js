@@ -23,6 +23,7 @@ const applications_service_1 = require("./applications.service");
 const applications_analytics_service_1 = require("./applications-analytics.service");
 const decorators_1 = require("../authz/decorators");
 const zod_pipe_1 = require("../common/zod.pipe");
+const roblox_service_1 = require("../persons/roblox.service");
 const pagination_1 = require("../common/pagination");
 const submit = zod_1.z.object({ robloxUsername: zod_1.z.string().trim().min(1).max(64), robloxUserId: zod_1.z.string().max(20).optional(), answers: zod_1.z.record(zod_1.z.string(), zod_1.z.union([zod_1.z.string().max(5000), zod_1.z.array(zod_1.z.string().max(100)).max(25)])) });
 const move = zod_1.z.object({ status: zod_1.z.enum(shared_1.APPLICATION_STATUSES).refine((s) => s !== 'ACCEPTED' && s !== 'REJECTED', 'Use the decide endpoint.'), reason: zod_1.z.string().trim().min(3).max(1000).optional() });
@@ -33,11 +34,17 @@ const analyticsQ = zod_1.z.object({ type: zod_1.z.string().max(80).optional(), s
 let ApplicationsController = class ApplicationsController {
     a;
     stats;
-    constructor(a, stats) {
+    roblox;
+    constructor(a, stats, roblox) {
         this.a = a;
         this.stats = stats;
+        this.roblox = roblox;
     }
     /** `?guildId=` – Formular eines Servers (für den Bot); ohne: das gemeinsame (Web-Seite /apply). */
+    /** Frage „Roblox User“: Konto suchen (Name, Anzeigename, Bild – keine internen Daten). Öffentlich, begrenzt. */
+    async robloxLookup(q) {
+        return { profile: await this.roblox.publicLookup(q.q.replace(/^@/, '')) };
+    }
     form(q) { return this.a.form(q.guildId); }
     submit(b) { return this.a.submit(b); }
     list(q) { return this.a.list(q, q.status, q.guildId ?? (0, guild_context_1.currentGuild)() ?? undefined); } // Server getrennt: gewählter Server
@@ -58,6 +65,15 @@ let ApplicationsController = class ApplicationsController {
     }
 };
 exports.ApplicationsController = ApplicationsController;
+__decorate([
+    (0, decorators_1.Public)(),
+    (0, throttler_1.Throttle)({ default: { limit: process.env.NODE_ENV === 'test' ? 10_000 : 30, ttl: 60_000 } }),
+    (0, common_1.Get)('roblox'),
+    __param(0, (0, common_1.Query)((0, zod_pipe_1.zodBody)(zod_1.z.object({ q: zod_1.z.string().trim().min(3).max(20).regex(/^@?[A-Za-z0-9_]+$/) })))),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object]),
+    __metadata("design:returntype", Promise)
+], ApplicationsController.prototype, "robloxLookup", null);
 __decorate([
     (0, decorators_1.Public)(),
     (0, common_1.Get)('form'),
@@ -141,6 +157,6 @@ __decorate([
 exports.ApplicationsController = ApplicationsController = __decorate([
     (0, swagger_1.ApiTags)('applications'),
     (0, common_1.Controller)('applications'),
-    __metadata("design:paramtypes", [applications_service_1.ApplicationsService, applications_analytics_service_1.ApplicationsAnalyticsService])
+    __metadata("design:paramtypes", [applications_service_1.ApplicationsService, applications_analytics_service_1.ApplicationsAnalyticsService, roblox_service_1.RobloxService])
 ], ApplicationsController);
 //# sourceMappingURL=applications.controller.js.map

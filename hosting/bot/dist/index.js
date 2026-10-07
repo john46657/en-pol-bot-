@@ -294,7 +294,7 @@ function wire(c) {
         } // Verlauf der Support-Tickets
         if (m.author.bot)
             return;
-        void (0, qualifications_1.handleDirectMessage)({ userId: m.author.id, userName: m.author.username, content: m.content, api, sendDm: (u, msg) => platform.sendDm(u, msg), robloxLookup: (n) => (0, roblox_1.robloxLookup)(n) })
+        void (0, qualifications_1.handleDirectMessage)({ userId: m.author.id, userName: m.author.username, content: m.content, api, sendDm: (u, msg) => platform.sendDm(u, msg), robloxLookup: (n) => (0, roblox_1.robloxLookup)(n), robloxCheck: (n) => (0, roblox_1.robloxCheck)(n) })
             .catch((e) => console.error('direct message handling failed:', e instanceof Error ? e.message : e));
     });
 }

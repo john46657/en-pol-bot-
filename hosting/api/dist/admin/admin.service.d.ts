@@ -223,7 +223,7 @@ export declare const SETTING_SCHEMAS: {
         key: z.ZodString;
         label: z.ZodString;
         required: z.ZodBoolean;
-        type: z.ZodDefault<z.ZodEnum<["TEXT" | "CHOICE" | "ROLE", ...("TEXT" | "CHOICE" | "ROLE")[]]>>;
+        type: z.ZodDefault<z.ZodEnum<["TEXT" | "CHOICE" | "ROLE" | "ROBLOX", ...("TEXT" | "CHOICE" | "ROLE" | "ROBLOX")[]]>>;
         minLength: z.ZodDefault<z.ZodNumber>;
         maxLength: z.ZodDefault<z.ZodNumber>;
         options: z.ZodDefault<z.ZodArray<z.ZodObject<{
@@ -239,7 +239,7 @@ export declare const SETTING_SCHEMAS: {
         multiple: z.ZodDefault<z.ZodBoolean>;
     }, "strip", z.ZodTypeAny, {
         key: string;
-        type: "TEXT" | "CHOICE" | "ROLE";
+        type: "TEXT" | "CHOICE" | "ROLE" | "ROBLOX";
         options: {
             label: string;
             roleId?: string | undefined;
@@ -253,7 +253,7 @@ export declare const SETTING_SCHEMAS: {
         key: string;
         label: string;
         required: boolean;
-        type?: "TEXT" | "CHOICE" | "ROLE" | undefined;
+        type?: "TEXT" | "CHOICE" | "ROLE" | "ROBLOX" | undefined;
         options?: {
             label: string;
             roleId?: string | undefined;
@@ -263,7 +263,7 @@ export declare const SETTING_SCHEMAS: {
         multiple?: boolean | undefined;
     }>, {
         key: string;
-        type: "TEXT" | "CHOICE" | "ROLE";
+        type: "TEXT" | "CHOICE" | "ROLE" | "ROBLOX";
         options: {
             label: string;
             roleId?: string | undefined;
@@ -277,7 +277,7 @@ export declare const SETTING_SCHEMAS: {
         key: string;
         label: string;
         required: boolean;
-        type?: "TEXT" | "CHOICE" | "ROLE" | undefined;
+        type?: "TEXT" | "CHOICE" | "ROLE" | "ROBLOX" | undefined;
         options?: {
             label: string;
             roleId?: string | undefined;
@@ -287,7 +287,7 @@ export declare const SETTING_SCHEMAS: {
         multiple?: boolean | undefined;
     }>, "many">, {
         key: string;
-        type: "TEXT" | "CHOICE" | "ROLE";
+        type: "TEXT" | "CHOICE" | "ROLE" | "ROBLOX";
         options: {
             label: string;
             roleId?: string | undefined;
@@ -301,7 +301,7 @@ export declare const SETTING_SCHEMAS: {
         key: string;
         label: string;
         required: boolean;
-        type?: "TEXT" | "CHOICE" | "ROLE" | undefined;
+        type?: "TEXT" | "CHOICE" | "ROLE" | "ROBLOX" | undefined;
         options?: {
             label: string;
             roleId?: string | undefined;
