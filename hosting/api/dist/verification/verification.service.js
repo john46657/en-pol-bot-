@@ -130,17 +130,22 @@ let VerificationService = class VerificationService {
             throw new errors_1.AppError('CAPABILITY_UNAVAILABLE', 'Roblox ist gerade nicht erreichbar – versuch es gleich noch einmal.');
         if (!norm(about).includes(norm(pending.code)))
             throw new errors_1.AppError('VALIDATION_FAILED', 'Die Wörter stehen (noch) nicht in deinem Roblox-Profil unter „Über mich“. Speichere sie dort und versuch es erneut – Roblox braucht manchmal ein paar Sekunden.');
-        const data = { robloxId: pending.robloxId, robloxName: pending.robloxName, displayName: pending.displayName, ...(discordName ? { discordName } : {}) };
+        await this.prisma.robloxVerifyCode.delete({ where: { discordId } });
+        await this.linkAccount(guildId, discordId, discordName, { id: pending.robloxId, name: pending.robloxName, displayName: pending.displayName }, 'Code im Profil');
+        return this.status(guildId, discordId, discordName);
+    }
+    /** Discord ↔ Roblox verknüpfen (nach Code-Prüfung oder „Mit Roblox anmelden“): Dashboard-Konto/CAD abgleichen, Log. */
+    async linkAccount(guildId, discordId, discordName, roblox, method) {
+        const data = { robloxId: roblox.id, robloxName: roblox.name, displayName: roblox.displayName, ...(discordName ? { discordName } : {}) };
         const before = await this.prisma.robloxLink.findUnique({ where: { discordId } });
         const link = await this.prisma.$transaction(async (tx) => {
             const l = await tx.robloxLink.upsert({ where: { discordId }, create: { discordId, ...data }, update: { ...data, verifiedAt: new Date() } });
-            await tx.robloxVerifyCode.delete({ where: { discordId } });
-            await this.audit.record({ userId: null }, { action: 'verification.verified', module: 'settings', entityType: 'RobloxLink', entityId: discordId, before: before ? { robloxId: before.robloxId, robloxName: before.robloxName } : undefined, after: { robloxId: l.robloxId, robloxName: l.robloxName } }, tx);
+            await this.audit.record({ userId: null }, { action: 'verification.verified', module: 'settings', entityType: 'RobloxLink', entityId: discordId, before: before ? { robloxId: before.robloxId, robloxName: before.robloxName } : undefined, after: { robloxId: l.robloxId, robloxName: l.robloxName, method } }, tx);
             return l;
         });
         await this.syncAccounts(link);
         await this.log(guildId, `✅ <@${discordId}> hat sich als **${link.robloxName}** verifiziert${before && before.robloxId !== link.robloxId ? ` (vorher ${before.robloxName})` : ''}.`, 0x22c55e, link.robloxId);
-        return this.status(guildId, discordId, discordName);
+        return link;
     }
     /** Verknüpfung + was der Bot auf diesem Server tun soll (Rollen, Nickname). */
     async status(guildId, discordId, discordName) {

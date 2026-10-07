@@ -77861,6 +77861,22 @@ function cadButtons(type, p) {
 // apps/bot/src/commands/verify.ts
 var fail3 = (e) => e instanceof BotApiError && [400, 404, 409, 503].includes(e.status) ? errorReply(e.message) : mapError(e);
 var ts2 = (iso) => `<t:${Math.floor(Date.parse(iso) / 1e3)}:R>`;
+async function startVerify(c) {
+  try {
+    const r = await c.api.service("POST", "/bot/verify/oauth", { ...c.guildId ? { guildId: c.guildId } : {}, discordId: c.discordId, ...c.userName ? { discordName: c.userName } : {} });
+    if (!r.enabled || !r.url) return { ephemeral: true, content: "Best\xE4tige dein Roblox-Konto mit einem Code in deinem Profil:", buttons: [{ id: "verify:code", label: "Roblox-Namen eingeben", style: "success", emoji: "\u2705" }] };
+    return {
+      ephemeral: true,
+      embeds: [{ title: "\u2705 Mit Roblox verifizieren", color: COLORS.success, description: `Klick auf **Mit Roblox anmelden**, melde dich bei Roblox an und best\xE4tige den Zugriff.
+Danach bekommst du hier automatisch deine Rollen und deinen Nickname.
+
+Der Link gilt nur f\xFCr dich und l\xE4uft ${ts2(r.expiresAt)} ab.` }],
+      buttons: [{ id: "link", label: "Mit Roblox anmelden", style: "secondary", url: r.url }]
+    };
+  } catch (e) {
+    return fail3(e);
+  }
+}
 var nameModal = () => ({ modal: { id: "verify:name", title: "Roblox-Verifizierung", fields: [{ id: "roblox", label: "Dein Roblox-Benutzername", required: true, minLength: 3, maxLength: 20, placeholder: "z. B. Builderman" }] } });
 async function applyHere(c, s) {
   if (!c.guildId || !s.enabled || !s.actions || !c.verifyApply) return "";
@@ -77876,10 +77892,11 @@ var linkFields = (l) => [
 ];
 var VERIFY_INTERACTION = {
   prefix: "verify",
-  opensModal: (args) => args[0] === "start",
+  opensModal: (args) => args[0] === "code",
   async run(c) {
     const action = c.args[0];
-    if (action === "start") return nameModal();
+    if (action === "start") return startVerify(c);
+    if (action === "code") return nameModal();
     if (action === "name") {
       try {
         const r = await c.api.service("POST", "/bot/verify/start", { ...c.guildId ? { guildId: c.guildId } : {}, discordId: c.discordId, roblox: (c.fields?.roblox ?? "").trim() });
@@ -77902,7 +77919,7 @@ var VERIFY_INTERACTION = {
           }],
           buttons: [
             { id: "verify:check", label: "Fertig \u2013 pr\xFCfen", style: "success", emoji: "\u2705" },
-            { id: "verify:start", label: "Anderes Konto", style: "secondary" }
+            { id: "verify:code", label: "Anderes Konto", style: "secondary" }
           ]
         };
       } catch (e) {
@@ -77938,8 +77955,8 @@ async function update(c, userId = c.discordId) {
 }
 var nameModalHint = () => ({ content: "Du bist noch nicht verifiziert.", buttons: [{ id: "verify:start", label: "Jetzt verifizieren", style: "success", emoji: "\u2705" }] });
 var VERIFY_COMMANDS = [
-  { name: "verifizieren", description: "Verkn\xFCpft dein Roblox-Konto mit Discord (Rollen und Nickname)", opensModal: true, async run() {
-    return nameModal();
+  { name: "verifizieren", description: "Verkn\xFCpft dein Roblox-Konto mit Discord (Rollen und Nickname)", async run(c) {
+    return startVerify(c);
   } },
   {
     name: "aktualisieren",

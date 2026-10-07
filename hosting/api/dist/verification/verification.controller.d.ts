@@ -1,6 +1,8 @@
+import type { Response } from 'express';
 import { z } from 'zod';
 import type { VerifyConfig } from '@enrp/shared';
 import { VerificationService } from './verification.service';
+import { RobloxOAuthService, type OAuthSettings } from './roblox-oauth.service';
 import type { Actor } from '../audit/audit.service';
 declare const guildQ: z.ZodObject<{
     guildId: z.ZodOptional<z.ZodString>;
@@ -38,7 +40,22 @@ declare const member: z.ZodObject<{
 /** Administration → Roblox-Verifizierung. */
 export declare class VerificationController {
     private readonly s;
-    constructor(s: VerificationService);
+    private readonly oauth;
+    constructor(s: VerificationService, oauth: RobloxOAuthService);
+    oauthSettings(): Promise<{
+        enabled: boolean;
+        fromEnv: boolean;
+        clientId: string;
+        hasSecret: boolean;
+        redirectUri: string;
+    }>;
+    saveOauth(a: Actor, b: OAuthSettings): Promise<{
+        enabled: boolean;
+        fromEnv: boolean;
+        clientId: string;
+        hasSecret: boolean;
+        redirectUri: string;
+    }>;
     config(q: z.infer<typeof guildQ>): Promise<VerifyConfig & {
         own: boolean;
         panelMessageId: string | null;
@@ -74,7 +91,16 @@ export declare class VerificationController {
 /** Dienstweg des Bots: Verifizieren, Status (Beitritt, /aktualisieren), Panel-Ort melden. */
 export declare class BotVerificationController {
     private readonly s;
-    constructor(s: VerificationService);
+    private readonly oauth;
+    constructor(s: VerificationService, oauth: RobloxOAuthService);
+    /** „Mit Roblox anmelden“: eingerichtet? Dann Anmelde-Link für dieses Mitglied. */
+    oauthLink(b: z.infer<typeof member>): Promise<{
+        url: string;
+        expiresAt: Date;
+        enabled: boolean;
+    } | {
+        enabled: boolean;
+    }>;
     config(q: {
         guildId: string;
     }): Promise<VerifyConfig & {
@@ -153,5 +179,11 @@ export declare class BotVerificationController {
     }): Promise<{
         ok: boolean;
     }>;
+}
+/** Rücksprung von Roblox (diese Adresse muss in der Roblox-OAuth-App als Redirect-URL stehen). */
+export declare class RobloxOAuthController {
+    private readonly oauth;
+    constructor(oauth: RobloxOAuthService);
+    callback(code: string | undefined, state: string | undefined, error: string | undefined, res: Response): Promise<Response<any, Record<string, any>>>;
 }
 export {};

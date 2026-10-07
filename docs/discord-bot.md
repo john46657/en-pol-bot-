@@ -156,7 +156,8 @@ Braucht im Developer Portal den privilegierten **Server Members Intent** (Bot �
 
 ## Roblox-Verifizierung (wie RoVer)
 *Administration → Roblox-Verifizierung*, je Server oder gemeinsam:
-- **Ablauf:** Panel-Button **Verifizieren** oder `/verifizieren` → Roblox-Namen eingeben → der Bot zeigt fünf Wörter → in Roblox unter **„Über mich“** einfügen und speichern → **Fertig – prüfen**. Der Code gilt 15 Minuten. Eine Verifizierung gilt auf allen Servern.
+- **Ablauf:** Panel-Button **Verifizieren** oder `/verifizieren` → **Mit Roblox anmelden** (offizielle Roblox-Anmeldung, OAuth 2.0) → Rollen und Nickname kommen automatisch. Der Link gilt 10 Minuten und nur für dieses Mitglied. Eine Verifizierung gilt auf allen Servern.
+- **Einrichten:** auf [create.roblox.com → Zugangsdaten → OAuth 2.0-Apps](https://create.roblox.com/dashboard/credentials?activeTab=OAuthTab) eine App anlegen, Scopes `openid` und `profile`, Redirect-URL `https://<eure-dashboard-adresse>/api/v1/verify/roblox/callback` (steht im Dashboard zum Kopieren). Client-ID und Secret im Dashboard eintragen oder als `ROBLOX_CLIENT_ID`/`ROBLOX_CLIENT_SECRET` setzen. Solange das fehlt, läuft die Verifizierung über fünf Wörter in „Über mich“ im Roblox-Profil.
 - **Rollen:** *Verifiziert-Rollen* bekommt jeder Verifizierte; *Nicht-verifiziert-Rollen* bekommt, wer es noch nicht ist, und sie fallen danach weg. **Gruppen-Rollen**: Rang in einer Roblox-Gruppe (von–bis, 1–255) → Discord-Rollen.
 - **Nickname:** Vorlage mit `{roblox-name}`, `{display-name}`, `{discord-name}`, `{roblox-id}` (höchstens 32 Zeichen; leer = nicht ändern).
 - **Beim Beitritt** (Schalter): Verifizierte bekommen sofort Rollen und Nickname, alle anderen die Nicht-verifiziert-Rollen (braucht den „Server Members“-Intent).
