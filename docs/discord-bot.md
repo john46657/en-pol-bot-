@@ -10,9 +10,6 @@ Der Bot (`apps/bot`, TypeScript, discord.js 14) ist ein **schlanker Client der S
 | `/entverknuepfen` | Verknüpfung lösen | – |
 | `/profil` | eigenes Konto, Rollen, Anzahl Berechtigungen | – |
 | `/hilfe` | Befehlsübersicht | – |
-| `/verifizieren` | Roblox-Konto mit Discord verknüpfen (wie RoVer): Name eingeben → Wörter in „Über mich“ → prüfen | – (Verifizierung muss auf dem Server an sein) |
-| `/aktualisieren [mitglied]` | Rollen und Nickname aus der Roblox-Verifizierung neu setzen | – · anderes Mitglied: Discord „Server verwalten“ |
-| `/whois mitglied` | verifiziertes Roblox-Konto eines Mitglieds | – |
 | `/person suche` | Person nach Roblox-Name/-ID | `persons.view` |
 | `/kennzeichen kennzeichen` | Fahrzeug nach Kennzeichen | `vehicles.view` |
 | `/fahndungen` | aktive Fahndungen | `wanted.view` |
@@ -155,6 +152,8 @@ Ist weder Channel noch Rolle eingestellt, wird nichts eingereiht. Fällt der Bot
 Braucht im Developer Portal den privilegierten **Server Members Intent** (Bot → Privileged Gateway Intents). Ohne ihn startet der Bot trotzdem, nur Beitritte/Austritte kommen nicht an.
 
 ## Roblox-Verifizierung (wie RoVer)
+> **Vorerst abgeschaltet:** Menüpunkt, Befehle und das Setzen beim Beitritt sind deaktiviert; Code und gespeicherte Verknüpfungen bleiben für später erhalten.
+
 *Administration → Roblox-Verifizierung*, je Server oder gemeinsam:
 - **Ablauf:** Panel-Button **Verifizieren** oder `/verifizieren` → **Mit Roblox anmelden** (offizielle Roblox-Anmeldung, OAuth 2.0) → Rollen und Nickname kommen automatisch. Der Link gilt 10 Minuten und nur für dieses Mitglied. Eine Verifizierung gilt auf allen Servern.
 - **Einrichten:** auf [create.roblox.com → Zugangsdaten → OAuth 2.0-Apps](https://create.roblox.com/dashboard/credentials?activeTab=OAuthTab) eine App anlegen, Scopes `openid` und `profile`, Redirect-URL `https://<eure-dashboard-adresse>/api/v1/verify/roblox/callback` (steht im Dashboard zum Kopieren). Client-ID und Secret im Dashboard eintragen oder als `ROBLOX_CLIENT_ID`/`ROBLOX_CLIENT_SECRET` setzen. Solange das fehlt, läuft die Verifizierung über fünf Wörter in „Über mich“ im Roblox-Profil.
