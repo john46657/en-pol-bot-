@@ -19,22 +19,22 @@ interface Application {
 interface PoliceCfg extends Partial<AppCommon> { title: string; description: string; name?: string }
 interface QualiConfig { title: string; intro: string; units: unknown[]; police: PoliceCfg; policeForm: FormField[]; own?: boolean }
 const OPEN = ['SUBMITTED', 'SCREENING', 'INTERVIEW', 'PENDING_DECISION'];
-const STATUS_FILTER = [['OPEN', 'Open'], ['ACCEPTED', 'Accepted'], ['REJECTED', 'Rejected'], ['WITHDRAWN', 'Withdrawn'], ['', 'All']] as const;
+const STATUS_FILTER = [['OPEN', 'Offen'], ['ACCEPTED', 'Angenommen'], ['REJECTED', 'Abgelehnt'], ['WITHDRAWN', 'Zurückgezogen'], ['', 'Alle']] as const;
 
 /** Bewerbungen bei EN Polizei – genauso aufgebaut wie Qualifications: Karten mit allen Antworten und Entscheidung, Setup mit Fragen-Editor. */
 export function Applications() {
   const { can } = useAuth();
   const qc = useQueryClient();
   const manage = can('qualifications.manage'), decideAllowed = can('applications.decide');
-  const tabs = ['Applications', ...(manage ? ['Setup'] : [])];
-  const [tab, setTab] = useState('Applications');
+  const tabs = ['Bewerbungen', ...(manage ? ['Einrichtung'] : [])];
+  const [tab, setTab] = useState('Bewerbungen');
   const [status, setStatus] = useState('OPEN');
   const [q, setQ] = useState('');
   const [page, setPage] = useState(1);
   const [err, setErr] = useState<string>();
   const [server] = useServer();
   const form = useQuery({ queryKey: ['application-form', server], queryFn: () => api<FormField[]>('/applications/form', { query: { guildId: server } }) });
-  const list = useQuery({ queryKey: ['applications-cards', status, q, page, server], queryFn: () => api<Page<Application>>('/applications', { query: { status, q, page, pageSize: 20, guildId: server } }), enabled: tab === 'Applications' });
+  const list = useQuery({ queryKey: ['applications-cards', status, q, page, server], queryFn: () => api<Page<Application>>('/applications', { query: { status, q, page, pageSize: 20, guildId: server } }), enabled: tab === 'Bewerbungen' });
   const decide = useMutation({
     mutationFn: (v: { id: string; status: 'ACCEPTED' | 'REJECTED'; reason?: string }) => api(`/applications/${v.id}/discord-decision`, { method: 'POST', body: { status: v.status, ...(v.reason ? { reason: v.reason } : {}) } }),
     onSuccess: () => { setErr(undefined); void qc.invalidateQueries({ queryKey: ['applications-cards'] }); }, onError: (e) => setErr(errText(e)),
@@ -44,45 +44,45 @@ export function Applications() {
 
   return (
     <>
-      <PageHeader title="Applications" subtitle="Applications to EN Polizei from Discord (/bewerbung, /bewerbungspanel) and the web page /apply. Setup: panel texts and questions." actions={<Link to="/applications/analytics"><Button variant="secondary">📊 Statistik</Button></Link>} />
+      <PageHeader title="Bewerbungen" subtitle="Bewerbungen bei EN Polizei über Discord (/bewerbung, /bewerbungspanel) und die Webseite /apply. Einrichtung: Panel-Texte und Fragen." actions={<Link to="/applications/analytics"><Button variant="secondary">📊 Statistik</Button></Link>} />
       {err && <p role="alert" className="mb-3 text-sm text-danger">{err}</p>}
       <Tabs tabs={tabs} active={tab} onChange={setTab} />
       <div className="mt-4">
-        {tab === 'Applications' && (
+        {tab === 'Bewerbungen' && (
           <>
             <div className="mb-3 flex flex-wrap gap-2">
               <div className="w-40"><Select aria-label="Status" value={status} onChange={(e) => { setStatus(e.target.value); setPage(1); }}>{STATUS_FILTER.map(([v, l]) => <option key={v} value={v}>{l}</option>)}</Select></div>
-              <div className="w-56"><Input aria-label="Search" placeholder="Number or Roblox name" value={q} onChange={(e) => { setQ(e.target.value); setPage(1); }} /></div>
+              <div className="w-56"><Input aria-label="Suchen" placeholder="Nummer oder Roblox-Name" value={q} onChange={(e) => { setQ(e.target.value); setPage(1); }} /></div>
             </div>
-            {list.isLoading ? <SkeletonRows /> : list.error ? <ErrorState error={list.error} onRetry={() => void list.refetch()} /> : !list.data?.items.length ? <EmptyState text="No applications." hint="Applications arrive via Discord (/bewerbungspanel) or the web page /apply." /> : (
+            {list.isLoading ? <SkeletonRows /> : list.error ? <ErrorState error={list.error} onRetry={() => void list.refetch()} /> : !list.data?.items.length ? <EmptyState text="Keine Bewerbungen." hint="Bewerbungen kommen über Discord (/bewerbungspanel) oder die Webseite /apply." /> : (
               <div className="grid gap-3">{list.data.items.map((a) => (
                 <Card key={a.id} title={<span className="flex flex-wrap items-center gap-2">EN Polizei · {a.number} <StatusBadge status={a.status} /><GuildTag id={a.guildId} /></span>}
                   actions={OPEN.includes(a.status) && decideAllowed && <DecisionButtons busy={decide.isPending} onDecide={(s, reason) => decide.mutate({ id: a.id, status: s, reason })} />}>
                   <p className="mb-2 text-sm">
                     Roblox: <strong>{a.robloxUsername}</strong>{a.robloxUserId && <span className="text-xs text-muted"> ({a.robloxUserId})</span>}
-                    {a.discordId ? <> · Discord: <strong>{a.discordName ?? a.discordId}</strong> <span className="text-xs text-muted">({a.discordId})</span></> : <span className="text-muted"> · via web form</span>}
+                    {a.discordId ? <> · Discord: <strong>{a.discordName ?? a.discordId}</strong> <span className="text-xs text-muted">({a.discordId})</span></> : <span className="text-muted"> · über Webformular</span>}
                   </p>
                   <ol className="grid gap-2 text-sm">{Object.entries(a.answers ?? {}).map(([k, v], i) => (
                     <li key={k}><p className="text-xs text-muted">{i + 1}. {labelOf(k)}</p><p className="whitespace-pre-wrap">{v}</p></li>
                   ))}</ol>
-                  {a.decisionReason && <p className="mt-2 text-sm"><span className="text-xs text-muted">Reason:</span> {a.decisionReason}</p>}
+                  {a.decisionReason && <p className="mt-2 text-sm"><span className="text-xs text-muted">Begründung:</span> {a.decisionReason}</p>}
                   <p className="mt-2 flex flex-wrap items-center gap-x-2 text-xs text-muted">
-                    <span>Submitted {fmt(a.createdAt)}{a.durationSec !== null && ` · filled in within ${Math.floor(a.durationSec / 60)} min ${a.durationSec % 60} s`}{a.decidedByName && ` · decided by ${a.decidedByName}`}</span>
-                    <Link className="text-primary underline" to={`/applications/${a.id}`}>Details & review steps</Link>
+                    <span>Eingereicht {fmt(a.createdAt)}{a.durationSec !== null && ` · ausgefüllt in ${Math.floor(a.durationSec / 60)} min ${a.durationSec % 60} s`}{a.decidedByName && ` · entschieden von ${a.decidedByName}`}</span>
+                    <Link className="text-primary underline" to={`/applications/${a.id}`}>Details & Prüfschritte</Link>
                   </p>
                 </Card>
               ))}</div>
             )}
             {pages > 1 && (
               <div className="mt-3 flex items-center gap-2 text-sm">
-                <Button size="sm" variant="secondary" disabled={page <= 1} onClick={() => setPage(page - 1)}>Previous</Button>
-                <span className="text-muted">Page {page} / {pages}</span>
-                <Button size="sm" variant="secondary" disabled={page >= pages} onClick={() => setPage(page + 1)}>Next</Button>
+                <Button size="sm" variant="secondary" disabled={page <= 1} onClick={() => setPage(page - 1)}>Zurück</Button>
+                <span className="text-muted">Seite {page} / {pages}</span>
+                <Button size="sm" variant="secondary" disabled={page >= pages} onClick={() => setPage(page + 1)}>Weiter</Button>
               </div>
             )}
           </>
         )}
-        {tab === 'Setup' && manage && <PoliceSetup />}
+        {tab === 'Einrichtung' && manage && <PoliceSetup />}
       </div>
     </>
   );
@@ -110,7 +110,7 @@ function PoliceSetup() {
       const c = config.data!;
       return api('/qualifications/config', { method: 'PUT', query: { guildId: server }, body: { title: c.title, intro: c.intro, units: c.units, police: { title, description: text, name, ...common }, policeForm: questions } });
     },
-    onSuccess: () => { setMsg('Saved. Changes apply to new applications right away; post the panel again (/bewerbungspanel) to show a changed text.'); void qc.invalidateQueries({ queryKey: ['quali-config'] }); void qc.invalidateQueries({ queryKey: ['application-form'] }); },
+    onSuccess: () => { setMsg('Gespeichert. Änderungen gelten sofort für neue Bewerbungen; poste das Panel erneut (/bewerbungspanel), damit ein geänderter Text angezeigt wird.'); void qc.invalidateQueries({ queryKey: ['quali-config'] }); void qc.invalidateQueries({ queryKey: ['application-form'] }); },
   });
   // automatisch speichern – für den gewählten Server (Server laufen getrennt)
   const draft = useMemo(() => (common ? { title, text, name, common, questions } : undefined), [title, text, name, common, questions]);
@@ -125,14 +125,14 @@ function PoliceSetup() {
       <ServerScope own={config.data?.own} onReset={() => void qc.invalidateQueries({ queryKey: ['quali-config'] })} />
       <Card title="Panel in Discord (/bewerbungspanel)">
         <div className="grid gap-3 md:grid-cols-2">
-          <Field label="Panel title">{(id) => <Input id={id} value={title} maxLength={100} onChange={(e) => setTitle(e.target.value)} />}</Field>
-          <Field label="Panel text (Discord markdown allowed)">{(id) => <Textarea id={id} rows={3} value={text} maxLength={1500} onChange={(e) => setText(e.target.value)} />}</Field>
+          <Field label="Panel-Titel">{(id) => <Input id={id} value={title} maxLength={100} onChange={(e) => setTitle(e.target.value)} />}</Field>
+          <Field label="Panel-Text (Discord-Markdown erlaubt)">{(id) => <Textarea id={id} rows={3} value={text} maxLength={1500} onChange={(e) => setText(e.target.value)} />}</Field>
         </div>
       </Card>
-      <Card title="Application settings">
+      <Card title="Bewerbungs-Einstellungen">
         <ApplicationSettingsEditor value={common} onChange={(p) => setCommon({ ...common, ...p })} name={name} onName={setName}
-          pendingHint="New applications are posted here (empty = Applications channel from Settings)."
-          questions={<section className="grid gap-2"><h3 className="text-base font-semibold">Questions</h3><p className="text-xs text-muted">The bot always asks for the Roblox username first – no need to add it.</p><FormQuestionsEditor value={questions} onChange={setQuestions} /></section>} />
+          pendingHint="Neue Bewerbungen werden hier gepostet (leer = Bewerbungs-Kanal aus den Einstellungen)."
+          questions={<section className="grid gap-2"><h3 className="text-base font-semibold">Fragen</h3><p className="text-xs text-muted">Der Bot fragt immer zuerst nach dem Roblox-Benutzernamen – du musst das nicht hinzufügen.</p><FormQuestionsEditor value={questions} onChange={setQuestions} /></section>} />
       </Card>
       {save.error && <p role="alert" className="text-sm text-danger">{errText(save.error)}</p>}
       <div className="sticky bottom-2 flex flex-wrap items-center gap-2 rounded-lg border border-line bg-panel p-2">
@@ -154,12 +154,12 @@ export function ServerScope({ own, onReset }: { own?: boolean; onReset: () => vo
   return (
     <div className="flex flex-wrap items-center gap-2 rounded-lg border border-primary/40 bg-primary/10 p-3 text-sm">
       {server ? <>
-        <span>Settings for server <b>{name ?? server}</b>.</span>
+        <span>Einstellungen für den Server <b>{name ?? server}</b>.</span>
         {own ? <>
-          <span className="text-muted">This server has its own settings.</span>
-          <Button size="sm" variant="secondary" disabled={reset.isPending} onClick={() => reset.mutate()}>Use shared settings again</Button>
-        </> : <span className="text-muted">Currently uses the shared settings – saving creates own settings for this server.</span>}
-      </> : <span><b>All servers:</b> these are the shared settings, used by every server without own settings. Choose a server top left to set it up separately.</span>}
+          <span className="text-muted">Dieser Server hat eigene Einstellungen.</span>
+          <Button size="sm" variant="secondary" disabled={reset.isPending} onClick={() => reset.mutate()}>Wieder gemeinsame Einstellungen nutzen</Button>
+        </> : <span className="text-muted">Nutzt aktuell die gemeinsamen Einstellungen – beim Speichern werden eigene Einstellungen für diesen Server angelegt.</span>}
+      </> : <span><b>Alle Server:</b> Das sind die gemeinsamen Einstellungen, die jeder Server ohne eigene Einstellungen nutzt. Wähle oben links einen Server, um ihn separat einzurichten.</span>}
     </div>
   );
 }

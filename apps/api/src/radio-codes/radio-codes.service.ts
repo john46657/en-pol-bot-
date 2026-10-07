@@ -40,7 +40,7 @@ export class RadioCodesService {
   private async load(id: string) {
     const r = await this.prisma.radioCode.findUnique({ where: { id } });
     const g = currentGuild();
-    if (!r || (g && r.guildId && r.guildId !== g)) throw new AppError('NOT_FOUND', 'Radio code not found.');
+    if (!r || (g && r.guildId && r.guildId !== g)) throw new AppError('NOT_FOUND', 'Funk-Code nicht gefunden.');
     return r;
   }
 

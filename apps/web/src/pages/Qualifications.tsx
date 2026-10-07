@@ -28,8 +28,8 @@ export function Qualifications() {
   const { can } = useAuth();
   const qc = useQueryClient();
   const manage = can('qualifications.manage'), decideAllowed = can('qualifications.decide');
-  const tabs = ['Applications', ...(manage ? ['Setup'] : [])];
-  const [tab, setTab] = useState('Applications');
+  const tabs = ['Bewerbungen', ...(manage ? ['Einrichtung'] : [])];
+  const [tab, setTab] = useState('Bewerbungen');
   // „Im Dashboard ansehen“ aus Discord: ?id=<Bewerbung> zeigt genau diese Bewerbung
   const [search] = useSearchParams();
   const only = search.get('id');
@@ -41,7 +41,7 @@ export function Qualifications() {
   const [server] = useServer();
   const config = useQuery({ queryKey: ['quali-config', server], queryFn: () => api<Config>('/qualifications/config', { query: { guildId: server } }) });
   const params = new URLSearchParams({ ...(unit ? { unit } : {}), ...(status && !only ? { status } : {}), ...(server && !only ? { guildId: server } : {}) });
-  const apps = useQuery({ queryKey: ['quali-apps', unit, only ? '' : status, server], queryFn: () => api<Application[]>(`/qualifications/applications?${params}`), enabled: tab === 'Applications' });
+  const apps = useQuery({ queryKey: ['quali-apps', unit, only ? '' : status, server], queryFn: () => api<Application[]>(`/qualifications/applications?${params}`), enabled: tab === 'Bewerbungen' });
   const shown = only ? (apps.data ?? []).filter((a) => a.id === only) : apps.data;
   const decide = useMutation({
     mutationFn: (v: { id: string; status: string; reason?: string }) => api(`/qualifications/applications/${v.id}/decision`, { method: 'POST', body: { status: v.status, ...(v.reason ? { reason: v.reason } : {}) } }),
@@ -68,7 +68,7 @@ export function Qualifications() {
       title, intro, police: config.data!.police,
       units: units.map(({ isNew: _n, ...u }) => u),
     } }),
-    onSuccess: () => { setErr(undefined); setMsg('Saved. Questions apply to new applications right away; post the panel again in Discord (/qualipanel) to show changed texts or units.'); void qc.invalidateQueries({ queryKey: ['quali-config'] }); }, onError,
+    onSuccess: () => { setErr(undefined); setMsg('Gespeichert. Fragen gelten sofort für neue Bewerbungen; poste das Panel in Discord erneut (/qualipanel), damit geänderte Texte oder Einheiten angezeigt werden.'); void qc.invalidateQueries({ queryKey: ['quali-config'] }); }, onError,
   });
   // automatisch speichern – je Server getrennt; unvollständige Einheiten (ohne Name/Schlüssel/Frage) bleiben lokal
   const qDraft = useMemo(() => (config.data ? { title, intro, units } : undefined), [title, intro, units, config.data]);
@@ -77,59 +77,59 @@ export function Qualifications() {
 
   return (
     <>
-      <PageHeader title="Qualifications" subtitle="Applications for SEK, Flugstaffel, Ausbilder … from the Discord panel (/qualipanel). Setup: units, panel texts and questions. (Police applications: Organisation → Applications.)" />
+      <PageHeader title="Qualifikationen" subtitle="Bewerbungen für SEK, Flugstaffel, Ausbilder … aus dem Discord-Panel (/qualipanel). Einrichtung: Einheiten, Panel-Texte und Fragen. (Polizei-Bewerbungen: Organisation → Bewerbungen.)" />
       {err && <p role="alert" className="mb-3 text-sm text-danger">{err}</p>}
       <Tabs tabs={tabs} active={tab} onChange={(t) => { setTab(t); setMsg(undefined); }} />
       <div className="mt-4">
-        {tab === 'Applications' && (
+        {tab === 'Bewerbungen' && (
           <>
-            {only && <p className="mb-3 text-sm">Showing one application from Discord. <Link className="text-primary underline" to="/qualifications">Show all</Link></p>}
+            {only && <p className="mb-3 text-sm">Es wird eine Bewerbung aus Discord angezeigt. <Link className="text-primary underline" to="/qualifications">Alle anzeigen</Link></p>}
             <div className={only ? 'hidden' : 'mb-3 flex flex-wrap gap-2'}>
-              <div className="w-52"><Select aria-label="Unit" value={unit} onChange={(e) => setUnit(e.target.value)}>
-                <option value="">All units</option>
+              <div className="w-52"><Select aria-label="Einheit" value={unit} onChange={(e) => setUnit(e.target.value)}>
+                <option value="">Alle Einheiten</option>
                 {(config.data?.units ?? []).map((u) => <option key={u.key} value={u.key}>{u.name}</option>)}
               </Select></div>
               <div className="w-40"><Select aria-label="Status" value={status} onChange={(e) => setStatus(e.target.value)}>
-                <option value="OPEN">Open</option><option value="ACCEPTED">Accepted</option><option value="REJECTED">Rejected</option><option value="">All</option>
+                <option value="OPEN">Offen</option><option value="ACCEPTED">Angenommen</option><option value="REJECTED">Abgelehnt</option><option value="">Alle</option>
               </Select></div>
             </div>
-            {apps.isLoading ? <SkeletonRows /> : apps.error ? <ErrorState error={apps.error} onRetry={() => void apps.refetch()} /> : !shown?.length ? <EmptyState text="No applications." hint="Applications arrive via the Discord panel (/qualipanel)." /> : (
+            {apps.isLoading ? <SkeletonRows /> : apps.error ? <ErrorState error={apps.error} onRetry={() => void apps.refetch()} /> : !shown?.length ? <EmptyState text="Keine Bewerbungen." hint="Bewerbungen kommen über das Discord-Panel (/qualipanel)." /> : (
               <div className="grid gap-3">{shown.map((a) => (
                 <Card key={a.id} title={<span className="flex flex-wrap items-center gap-2">{a.unitName} · {a.number} <StatusBadge status={a.status} /><GuildTag id={a.guildId} /></span>}
                   actions={a.status === 'OPEN' && decideAllowed && <DecisionButtons busy={decide.isPending} onDecide={(st, reason) => decide.mutate({ id: a.id, status: st, reason })} />}>
-                  <p className="mb-2 text-sm">Discord: <strong>{a.discordName}</strong> <span className="text-xs text-muted">({a.discordId})</span>{a.linkedName ? <> · user <strong>{a.linkedName}</strong></> : <span className="text-muted"> · not linked to a user</span>}</p>
+                  <p className="mb-2 text-sm">Discord: <strong>{a.discordName}</strong> <span className="text-xs text-muted">({a.discordId})</span>{a.linkedName ? <> · Benutzer <strong>{a.linkedName}</strong></> : <span className="text-muted"> · nicht mit einem Benutzer verknüpft</span>}</p>
                   <ol className="grid gap-2 text-sm">{a.answers.map((x, i) => (
                     <li key={i}><p className="text-xs text-muted">{i + 1}. {x.question}</p><p className="whitespace-pre-wrap">{x.answer}</p></li>
                   ))}</ol>
-                  {a.decisionReason && <p className="mt-2 text-sm"><span className="text-xs text-muted">Reason sent to applicant:</span> {a.decisionReason}</p>}
-                  <p className="mt-2 text-xs text-muted">Submitted {fmt(a.createdAt)}{a.durationSec !== null && ` · filled in within ${Math.floor(a.durationSec / 60)} min ${a.durationSec % 60} s`}{a.decidedAt && ` · decided ${fmt(a.decidedAt)} by ${a.decidedByName}`}</p>
+                  {a.decisionReason && <p className="mt-2 text-sm"><span className="text-xs text-muted">Begründung an Bewerber:</span> {a.decisionReason}</p>}
+                  <p className="mt-2 text-xs text-muted">Eingereicht {fmt(a.createdAt)}{a.durationSec !== null && ` · ausgefüllt in ${Math.floor(a.durationSec / 60)} min ${a.durationSec % 60} s`}{a.decidedAt && ` · entschieden ${fmt(a.decidedAt)} von ${a.decidedByName}`}</p>
                 </Card>
               ))}</div>
             )}
           </>
         )}
-        {tab === 'Setup' && manage && (config.isLoading ? <SkeletonRows /> : config.error ? <ErrorState error={config.error} onRetry={() => void config.refetch()} /> : (
+        {tab === 'Einrichtung' && manage && (config.isLoading ? <SkeletonRows /> : config.error ? <ErrorState error={config.error} onRetry={() => void config.refetch()} /> : (
           <div className="grid gap-4">
             <ServerScope own={config.data?.own} onReset={() => void qc.invalidateQueries({ queryKey: ['quali-config'] })} />
-            <Card title="Qualifications panel (/qualipanel)">
+            <Card title="Qualifikations-Panel (/qualipanel)">
               <div className="grid gap-3">
-                <Field label="Panel title">{(id) => <Input id={id} value={title} maxLength={100} onChange={(e) => setTitle(e.target.value)} />}</Field>
-                <Field label="Intro text (Discord markdown allowed)">{(id) => <Textarea id={id} value={intro} maxLength={1500} onChange={(e) => setIntro(e.target.value)} />}</Field>
+                <Field label="Panel-Titel">{(id) => <Input id={id} value={title} maxLength={100} onChange={(e) => setTitle(e.target.value)} />}</Field>
+                <Field label="Einleitungstext (Discord-Markdown erlaubt)">{(id) => <Textarea id={id} value={intro} maxLength={1500} onChange={(e) => setIntro(e.target.value)} />}</Field>
               </div>
             </Card>
             {units.map((u, i) => (
-              <Card key={i} title={u.name || 'New unit'} actions={<Button size="sm" variant="ghost" disabled={units.length <= 1} onClick={() => setUnits(units.filter((_, j) => j !== i))}>Remove unit</Button>}>
+              <Card key={i} title={u.name || 'Neue Einheit'} actions={<Button size="sm" variant="ghost" disabled={units.length <= 1} onClick={() => setUnits(units.filter((_, j) => j !== i))}>Einheit entfernen</Button>}>
                 <div className="mb-4 grid gap-3 md:grid-cols-2">
-                  <Field label="Key (internal, a-z 0-9 - _)" hint={u.key === 'sek' ? 'Accepted SEK applicants also join the SEK roster.' : undefined}>{(id) => <Input id={id} value={u.key} disabled={!u.isNew} maxLength={24} onChange={(e) => patch(i, { key: e.target.value.toLowerCase() })} />}</Field>
-                  <Field label="Description (shown in the panel)">{(id) => <Textarea id={id} rows={2} maxLength={600} value={u.description} onChange={(e) => patch(i, { description: e.target.value })} />}</Field>
+                  <Field label="Schlüssel (intern, a-z 0-9 - _)" hint={u.key === 'sek' ? 'Angenommene SEK-Bewerber kommen auch in die SEK-Liste.' : undefined}>{(id) => <Input id={id} value={u.key} disabled={!u.isNew} maxLength={24} onChange={(e) => patch(i, { key: e.target.value.toLowerCase() })} />}</Field>
+                  <Field label="Beschreibung (im Panel angezeigt)">{(id) => <Textarea id={id} rows={2} maxLength={600} value={u.description} onChange={(e) => patch(i, { description: e.target.value })} />}</Field>
                 </div>
                 <ApplicationSettingsEditor value={u} onChange={(p) => patch(i, p)} name={u.name} onName={(v) => patch(i, { name: v })}
-                  pendingHint="New applications are posted here (empty = Qualifications channel from Settings)."
-                  questions={<section className="grid gap-2"><h3 className="text-base font-semibold">Questions</h3><FormQuestionsEditor value={u.questions} onChange={(q) => patch(i, { questions: q })} /></section>} />
+                  pendingHint="Neue Bewerbungen werden hier gepostet (leer = Qualifikations-Kanal aus den Einstellungen)."
+                  questions={<section className="grid gap-2"><h3 className="text-base font-semibold">Fragen</h3><FormQuestionsEditor value={u.questions} onChange={(q) => patch(i, { questions: q })} /></section>} />
               </Card>
             ))}
             <div className="flex flex-wrap items-center gap-2">
-              <Button variant="secondary" disabled={units.length >= 10} onClick={() => setUnits([...units, { key: '', name: '', description: '', roleId: '', enabled: true, channelId: '', acceptedChannelId: '', deniedChannelId: '', pingRoleIds: [], settings: defaultAppSettings(), questions: [newQuestion()], isNew: true }])}>Add unit</Button>
+              <Button variant="secondary" disabled={units.length >= 10} onClick={() => setUnits([...units, { key: '', name: '', description: '', roleId: '', enabled: true, channelId: '', acceptedChannelId: '', deniedChannelId: '', pingRoleIds: [], settings: defaultAppSettings(), questions: [newQuestion()], isNew: true }])}>Einheit hinzufügen</Button>
               <span className="text-sm text-muted">Änderungen werden automatisch gespeichert.</span>
               <Button variant="secondary" disabled={save.isPending} onClick={() => { setMsg(undefined); save.mutate(); }}>Jetzt speichern</Button>
               {msg && <span className="text-sm text-muted">{msg}</span>}

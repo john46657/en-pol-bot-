@@ -21,7 +21,7 @@ export function ErlcLive() {
   if (servers.error) return <ErrorState error={servers.error} />;
   if (!servers.data?.length) return <><PageHeader title="ER:LC Live" /><Card><EmptyState text="Kein ER:LC-Server verbunden." hint={can('cad.manage_erlc') ? 'CAD → Einstellungen → ER:LC Integration' : 'Ein Administrator muss den Server verbinden.'} /></Card></>;
   const d = live.data, s = d?.snapshot, srv = d?.server;
-  const tabs = ['Spieler', 'Staff', 'Queue', 'Fahrzeuge', 'Notrufe', 'Mod Calls', 'Join Logs', 'Kill Logs', 'Command Logs', ...(s?.webhookEvents?.length ? ['Webhook'] : []), ...(can('cad.erlc_command') && srv?.features.includes('commands') ? ['Command Center'] : [])];
+  const tabs = ['Spieler', 'Server-Team', 'Warteschlange', 'Fahrzeuge', 'Notrufe', 'Mod-Rufe', 'Beitritte', 'Kills', 'Befehlsprotokoll', ...(s?.webhookEvents?.length ? ['Webhook'] : []), ...(can('cad.erlc_command') && srv?.features.includes('commands') ? ['Befehle'] : [])];
   const f = filter.toLowerCase();
   const table = (head: string[], rows: React.ReactNode[][], empty = 'Keine Daten (oder Funktion nicht freigegeben).') => rows.length ? (
     <div className="overflow-x-auto"><table className="w-full text-sm"><thead><tr className="text-left text-xs text-muted">{head.map((h) => <th key={h} className="px-2 py-1 font-medium">{h}</th>)}</tr></thead><tbody>{rows.map((r, i) => <tr key={i} className="border-t border-line">{r.map((c, j) => <td key={j} className="px-2 py-1">{c}</td>)}</tr>)}</tbody></table></div>
@@ -31,34 +31,34 @@ export function ErlcLive() {
       <PageHeader title="ER:LC Live" subtitle={srv ? `Aktualisierung alle ${srv.pollSeconds} s · letzter Abruf ${ago(srv.lastSyncAt)}` : undefined}
         actions={servers.data.length > 1 ? <Select aria-label="Server" className="w-auto" value={id} onChange={(e) => set({ erlcServerId: e.target.value })}>{servers.data.map((x) => <option key={x.id} value={x.id}>{x.name}</option>)}</Select> : undefined} />
       {live.error && <ErrorState error={live.error} />}
-      {d?.stale && srv && <div role="status" className="mb-3 rounded border border-warning/40 bg-warning/10 px-3 py-2 text-sm text-warning">ER:LC API momentan nicht erreichbar oder eingeschränkt{srv.lastError ? `: ${srv.lastError}` : ''}. Angezeigt wird der letzte bekannte Stand{s ? ` (${ago(s.fetchedAt)})` : ''}.</div>}
+      {d?.stale && srv && <div role="status" className="mb-3 rounded border border-warning/40 bg-warning/10 px-3 py-2 text-sm text-warning">ER:LC-API momentan nicht erreichbar oder eingeschränkt{srv.lastError ? `: ${srv.lastError}` : ''}. Angezeigt wird der letzte bekannte Stand{s ? ` (${ago(s.fetchedAt)})` : ''}.</div>}
       <div className="mb-3 grid grid-cols-2 gap-2 md:grid-cols-3 xl:grid-cols-6">
         {[
           ['Status', srv ? <Badge tone={ERLC_STATUS_TONE[srv.status] ?? 'neutral'}>{srv.statusLabel}</Badge> : '—'],
           ['Spieler', s ? `${s.server.currentPlayers} / ${s.server.maxPlayers}` : '—'],
-          ['Queue', s?.queue ? s.queue.length : '—'],
-          ['Staff online', s?.players ? s.players.filter((p) => p.permission && p.permission !== 'Normal').length : '—'],
+          ['Warteschlange', s?.queue ? s.queue.length : '—'],
+          ['Server-Team online', s?.players ? s.players.filter((p) => p.permission && p.permission !== 'Normal').length : '—'],
           ['Fahrzeuge', s?.vehicles ? s.vehicles.length : '—'],
           ['Latenz', srv?.latencyMs ? `${srv.latencyMs} ms` : '—'],
         ].map(([k, v]) => <div key={String(k)} className="card border border-line p-3"><p className="text-xs text-muted">{k}</p><div className="text-xl font-semibold">{v}</div></div>)}
       </div>
-      {s && <p className="mb-2 text-xs text-muted">{s.server.name}{s.server.joinKey ? ` · Join-Key ${s.server.joinKey}` : ''}{s.server.accVerifiedReq ? ` · Verifizierung: ${s.server.accVerifiedReq}` : ''}{s.server.teamBalance !== null ? ` · Team-Balance ${s.server.teamBalance ? 'an' : 'aus'}` : ''}</p>}
+      {s && <p className="mb-2 text-xs text-muted">{s.server.name}{s.server.joinKey ? ` · Join-Key ${s.server.joinKey}` : ''}{s.server.accVerifiedReq ? ` · Verifizierung: ${s.server.accVerifiedReq}` : ''}{s.server.teamBalance !== null ? ` · Team-Ausgleich ${s.server.teamBalance ? 'an' : 'aus'}` : ''}</p>}
       <Tabs tabs={tabs} active={tab} onChange={setTab} />
       <div className="mt-2">
-        {tab !== 'Command Center' && <Input aria-label="Filtern" className="mb-2 max-w-xs py-1 text-xs" placeholder="Filtern…" value={filter} onChange={(e) => setFilter(e.target.value)} />}
-        {!s && tab !== 'Command Center' ? <EmptyState text="Noch keine Daten abgerufen." /> : <>
-          {tab === 'Spieler' && table(['Spieler', 'Team', 'Callsign', 'Rechte', 'Ort', 'Wanted'], (s!.players ?? []).filter((p) => !f || `${p.name} ${p.team} ${p.callsign}`.toLowerCase().includes(f)).map((p) => [p.name, p.team ?? '—', p.callsign ?? '—', p.permission ?? '—', p.location ? [p.location.street, p.location.postal && `Postal ${p.location.postal}`].filter(Boolean).join(' · ') || `${Math.round(p.location.x)}, ${Math.round(p.location.z)}` : '—', p.wantedStars ? '⭐'.repeat(p.wantedStars) : '']))}
-          {tab === 'Staff' && table(['Name', 'Rolle', 'Roblox-ID'], s!.staff ? [...s!.staff.admins.map((x) => [x.name, 'Admin', x.id]), ...s!.staff.mods.map((x) => [x.name, 'Moderator', x.id]), ...s!.staff.helpers.map((x) => [x.name, 'Helper', x.id])].filter((r) => !f || r.join(' ').toLowerCase().includes(f)) : [])}
-          {tab === 'Queue' && table(['#', 'Roblox-ID'], (s!.queue ?? []).map((x, i) => [i + 1, x]))}
+        {tab !== 'Befehle' && <Input aria-label="Filtern" className="mb-2 max-w-xs py-1 text-xs" placeholder="Filtern…" value={filter} onChange={(e) => setFilter(e.target.value)} />}
+        {!s && tab !== 'Befehle' ? <EmptyState text="Noch keine Daten abgerufen." /> : <>
+          {tab === 'Spieler' && table(['Spieler', 'Team', 'Rufname', 'Rechte', 'Ort', 'Gesucht'], (s!.players ?? []).filter((p) => !f || `${p.name} ${p.team} ${p.callsign}`.toLowerCase().includes(f)).map((p) => [p.name, p.team ?? '—', p.callsign ?? '—', p.permission ?? '—', p.location ? [p.location.street, p.location.postal && `PLZ ${p.location.postal}`].filter(Boolean).join(' · ') || `${Math.round(p.location.x)}, ${Math.round(p.location.z)}` : '—', p.wantedStars ? '⭐'.repeat(p.wantedStars) : '']))}
+          {tab === 'Server-Team' && table(['Name', 'Rolle', 'Roblox-ID'], s!.staff ? [...s!.staff.admins.map((x) => [x.name, 'Admin', x.id]), ...s!.staff.mods.map((x) => [x.name, 'Moderator', x.id]), ...s!.staff.helpers.map((x) => [x.name, 'Helfer', x.id])].filter((r) => !f || r.join(' ').toLowerCase().includes(f)) : [])}
+          {tab === 'Warteschlange' && table(['#', 'Roblox-ID'], (s!.queue ?? []).map((x, i) => [i + 1, x]))}
           {tab === 'Fahrzeuge' && table(['Fahrzeug', 'Besitzer', 'Kennzeichen', 'Farbe', 'Lackierung'], (s!.vehicles ?? []).filter((v) => !f || `${v.name} ${v.owner} ${v.plate}`.toLowerCase().includes(f)).map((v) => [v.name, v.owner, v.plate ?? '—', <span key="c" className="inline-flex items-center gap-1">{v.colorHex && <span className="inline-block h-3 w-3 rounded" style={{ background: v.colorHex }} />}{v.colorName ?? '—'}</span>, v.texture ?? '—']))}
           {tab === 'Notrufe' && table(['Nr.', 'Zeit', 'Team', 'Meldung', 'Ort'], (s!.emergencyCalls ?? []).map((c) => [`#${c.callNumber}`, unixTime(c.startedAt), c.team ?? '—', c.description ?? '—', c.positionDescriptor ?? '—']))}
-          {tab === 'Mod Calls' && table(['Zeit', 'Anrufer', 'Moderator'], (s!.modCalls ?? []).map((m) => [unixTime(m.timestamp), m.caller, m.moderator ?? 'offen']))}
-          {tab === 'Join Logs' && table(['Zeit', 'Spieler', ''], (s!.joinLogs ?? []).filter((j) => !f || j.player.toLowerCase().includes(f)).map((j) => [unixTime(j.timestamp), j.player, j.join ? '➡️ beigetreten' : '⬅️ verlassen']))}
-          {tab === 'Kill Logs' && table(['Zeit', 'Täter', 'Opfer'], (s!.killLogs ?? []).map((k) => [unixTime(k.timestamp), k.killer, k.killed]))}
-          {tab === 'Command Logs' && table(['Zeit', 'Spieler', 'Befehl'], (s!.commandLogs ?? []).filter((c) => !f || `${c.player} ${c.command}`.toLowerCase().includes(f)).map((c) => [unixTime(c.timestamp), c.player, <code key="c">{c.command}</code>]))}
+          {tab === 'Mod-Rufe' && table(['Zeit', 'Anrufer', 'Moderator'], (s!.modCalls ?? []).map((m) => [unixTime(m.timestamp), m.caller, m.moderator ?? 'offen']))}
+          {tab === 'Beitritte' && table(['Zeit', 'Spieler', ''], (s!.joinLogs ?? []).filter((j) => !f || j.player.toLowerCase().includes(f)).map((j) => [unixTime(j.timestamp), j.player, j.join ? '➡️ beigetreten' : '⬅️ verlassen']))}
+          {tab === 'Kills' && table(['Zeit', 'Täter', 'Opfer'], (s!.killLogs ?? []).map((k) => [unixTime(k.timestamp), k.killer, k.killed]))}
+          {tab === 'Befehlsprotokoll' && table(['Zeit', 'Spieler', 'Befehl'], (s!.commandLogs ?? []).filter((c) => !f || `${c.player} ${c.command}`.toLowerCase().includes(f)).map((c) => [unixTime(c.timestamp), c.player, <code key="c">{c.command}</code>]))}
           {tab === 'Webhook' && table(['Zeit', 'Ereignis'], (s!.webhookEvents ?? []).map((w) => [new Date(w.at).toLocaleTimeString('de-DE'), <code key="w" className="text-xs">{w.summary}</code>]))}
         </>}
-        {tab === 'Command Center' && srv && <CommandCenter server={srv} />}
+        {tab === 'Befehle' && srv && <CommandCenter server={srv} />}
       </div>
     </>
   );

@@ -24,7 +24,7 @@ export function GuildTag({ id }: { id: string | null | undefined }) {
   if (!id || (g.data?.length ?? 0) < 2) return null;
   const info = g.data?.find((x) => x.id === id);
   return (
-    <span className="inline-flex items-center gap-1 rounded border border-line px-1.5 py-0.5 text-[11px] text-muted" title="Discord server">
+    <span className="inline-flex items-center gap-1 rounded border border-line px-1.5 py-0.5 text-[11px] text-muted" title="Discord-Server">
       {info?.icon && <img src={info.icon} alt="" className="h-3.5 w-3.5 rounded-full" />}{info?.name ?? id}
     </span>
   );

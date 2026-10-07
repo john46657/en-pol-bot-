@@ -12,12 +12,12 @@ export function DiscordLink() {
   const qc = useQueryClient();
   const status = useQuery({ queryKey: ['discord-link'], queryFn: () => api<{ linked: boolean; discordId: string | null }>('/discord/link'), enabled: open });
   const providers = useQuery({ queryKey: ['auth-providers'], queryFn: () => api<{ discord: boolean }>('/auth/providers'), enabled: open });
-  const onError = (e: unknown) => setErr(e instanceof ApiError ? e.message : 'Failed');
+  const onError = (e: unknown) => setErr(e instanceof ApiError ? e.message : 'Fehlgeschlagen');
   const create = useMutation({ mutationFn: () => api<{ code: string; expiresAt: string }>('/discord/link-code', { method: 'POST' }), onSuccess: (c) => { setCode(c); setErr(undefined); }, onError });
   const unlink = useMutation({ mutationFn: () => api('/discord/link', { method: 'DELETE' }), onSuccess: () => { setCode(undefined); setErr(undefined); void qc.invalidateQueries({ queryKey: ['discord-link'] }); }, onError });
   return (
     <>
-      <Button variant="ghost" aria-label="Link Discord" onClick={() => setOpen(true)}><MessageCircle size={16} /></Button>
+      <Button variant="ghost" aria-label="Discord verknüpfen" onClick={() => setOpen(true)}><MessageCircle size={16} /></Button>
       <Modal open={open} title="Discord verknüpfen" onClose={() => { setOpen(false); setCode(undefined); }}>
         <div className="space-y-3 text-sm">
           {err && <p role="alert" className="text-danger">{err}</p>}

@@ -34,7 +34,7 @@ export const SETTING_SCHEMAS = {
     signup: z.boolean(), requireGuild: z.boolean(),
     roleMap: z.array(z.object({ discordRoleId: z.string().regex(/^\d{15,25}$/), role: z.string().trim().min(1).max(64) })).max(50),
     /** Team-Rolle(n): nur wer eine davon auf dem Discord-Server hat, kommt ins MDT/Dashboard (leer = alle Mitglieder). */
-    teamRoleIds: z.array(z.string().regex(/^\d{15,25}$/, 'Discord role ID (15–25 digits)')).max(20).default([]),
+    teamRoleIds: z.array(z.string().regex(/^\d{15,25}$/, 'Discord-Rollen-ID (15–25 Ziffern)')).max(20).default([]),
   }),
 } as const;
 export type SettingKey = keyof typeof SETTING_SCHEMAS;
@@ -51,11 +51,11 @@ export class AdminService {
   /** `key@<guildId>`: Server-eigener Wert (nur für Einstellungen, die je Server getrennt sein dürfen). */
   async setSetting(actor: Actor, key: string, value: unknown) {
     const [base, guild] = key.split('@') as [string, string | undefined];
-    if (guild !== undefined && (!/^\d{15,25}$/.test(guild) || !(SERVER_SCOPED_SETTINGS as readonly string[]).includes(base))) throw new AppError('VALIDATION_FAILED', `Setting "${base}" cannot be set per server.`);
+    if (guild !== undefined && (!/^\d{15,25}$/.test(guild) || !(SERVER_SCOPED_SETTINGS as readonly string[]).includes(base))) throw new AppError('VALIDATION_FAILED', `Die Einstellung „${base}“ kann nicht je Server gesetzt werden.`);
     const schema = SETTING_SCHEMAS[base as SettingKey];
-    if (!schema) throw new AppError('VALIDATION_FAILED', `Unknown setting "${key}".`);
+    if (!schema) throw new AppError('VALIDATION_FAILED', `Unbekannte Einstellung „${key}“.`);
     const parsed = schema.safeParse(value);
-    if (!parsed.success) throw new AppError('VALIDATION_FAILED', 'Invalid setting value.', parsed.error.issues.map((i) => ({ path: i.path.join('.'), message: i.message })));
+    if (!parsed.success) throw new AppError('VALIDATION_FAILED', 'Ungültiger Wert für diese Einstellung.', parsed.error.issues.map((i) => ({ path: i.path.join('.'), message: i.message })));
     return this.prisma.$transaction(async (tx) => {
       const before = await tx.systemSetting.findUnique({ where: { key } });
       const row = await tx.systemSetting.upsert({ where: { key }, create: { key, value: parsed.data as Prisma.InputJsonValue }, update: { value: parsed.data as Prisma.InputJsonValue } });

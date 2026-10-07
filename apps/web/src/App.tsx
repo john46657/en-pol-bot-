@@ -134,7 +134,7 @@ export function App() {
           <Route path="admin/legal-codes" element={<Guard perm="settings.view"><LegalCodes /></Guard>} />
           <Route path="admin/settings" element={<Guard perm="settings.view" area="dashboard.settings.view"><Settings /></Guard>} />
           <Route path="admin/studio" element={<Guard perm="studio.view" area="dashboard.settings.view"><Studio /></Guard>} />
-          <Route path="*" element={<div className="py-16 text-center text-muted">404 — page not found</div>} />
+          <Route path="*" element={<div className="py-16 text-center text-muted">404 – Seite nicht gefunden</div>} />
         </Route>
       </Routes>
     </BrowserRouter>

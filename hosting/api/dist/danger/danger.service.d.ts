@@ -28,32 +28,32 @@ export declare const dangerConfigSchema: z.ZodObject<{
         text: string;
         key: string;
         color: string;
-        title: string;
         emoji: string;
+        title: string;
         buttonStyle: "danger" | "success" | "primary" | "secondary";
     }, {
         name: string;
         text: string;
         key: string;
         color: string;
-        title: string;
         emoji: string;
+        title: string;
         buttonStyle: "danger" | "success" | "primary" | "secondary";
     }>, "many">, {
         name: string;
         text: string;
         key: string;
         color: string;
-        title: string;
         emoji: string;
+        title: string;
         buttonStyle: "danger" | "success" | "primary" | "secondary";
     }[], {
         name: string;
         text: string;
         key: string;
         color: string;
-        title: string;
         emoji: string;
+        title: string;
         buttonStyle: "danger" | "success" | "primary" | "secondary";
     }[]>;
 }, "strip", z.ZodTypeAny, {
@@ -66,8 +66,8 @@ export declare const dangerConfigSchema: z.ZodObject<{
         text: string;
         key: string;
         color: string;
-        title: string;
         emoji: string;
+        title: string;
         buttonStyle: "danger" | "success" | "primary" | "secondary";
     }[];
 }, {
@@ -80,8 +80,8 @@ export declare const dangerConfigSchema: z.ZodObject<{
         text: string;
         key: string;
         color: string;
-        title: string;
         emoji: string;
+        title: string;
         buttonStyle: "danger" | "success" | "primary" | "secondary";
     }[];
 }>;

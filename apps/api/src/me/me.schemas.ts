@@ -11,7 +11,7 @@ export const preferencesSchema = z.object({
   theme: z.enum(['dark', 'light', 'system']).optional(),
   accent: hex.optional(),
   background: z.object({ type: z.enum(['none', 'color', 'gradient', 'image']), value: z.string().max(500) })
-    .refine((b) => b.type !== 'image' || /^https:\/\/\S+$/.test(b.value), 'Background image must be an https URL').optional(),
+    .refine((b) => b.type !== 'image' || /^https:\/\/\S+$/.test(b.value), 'Das Hintergrundbild muss eine https-URL sein.').optional(),
   cardStyle: z.enum(['solid', 'glass', 'outline']).optional(),
   transparency: z.number().int().min(0).max(90).optional(),
   radius: z.number().int().min(0).max(24).optional(),
@@ -64,5 +64,5 @@ const widget = z.object({ widget: z.string().regex(/^[a-z0-9_-]{1,40}$/), size: 
 export const layoutsSchema = z.object({
   active: z.string().max(40),
   items: z.array(z.object({ id: z.string().regex(/^[a-z0-9_-]{1,40}$/), name: z.string().trim().min(1).max(40), widgets: z.array(widget).max(40) })).min(1).max(10),
-}).refine((l) => l.items.some((i) => i.id === l.active), 'Active layout must exist').refine((l) => new Set(l.items.map((i) => i.id)).size === l.items.length, 'Layout ids must be unique');
+}).refine((l) => l.items.some((i) => i.id === l.active), 'Das aktive Layout muss existieren.').refine((l) => new Set(l.items.map((i) => i.id)).size === l.items.length, 'Die IDs der Layouts müssen eindeutig sein.');
 export type Layouts = z.infer<typeof layoutsSchema>;

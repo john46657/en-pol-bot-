@@ -90,7 +90,7 @@ export class AuthController {
   @HttpCode(200)
   async login(@Body(zodBody(loginSchema)) body: z.infer<typeof loginSchema>, @Req() req: AppRequest, @Res({ passthrough: true }) res: Response) {
     // Ist „Mit Discord anmelden“ eingerichtet, gibt es nur noch Discord (Notfall: PASSWORD_LOGIN=true)
-    if (!this.discord.passwordLoginAllowed()) throw new AppError('PERMISSION_DENIED', 'Password login is disabled – sign in with Discord.');
+    if (!this.discord.passwordLoginAllowed()) throw new AppError('PERMISSION_DENIED', 'Die Anmeldung mit Passwort ist deaktiviert – bitte mit Discord anmelden.');
     const r = await this.auth.login(body.username, body.password, { ip: req.ip, userAgent: req.headers['user-agent'], requestId: req.requestId });
     if ('twoFactorRequired' in r) return r;
     res.cookie(SESSION_COOKIE, r.token, { httpOnly: true, sameSite: 'strict', secure: this.secure(), expires: r.expiresAt, path: '/' });
@@ -103,7 +103,7 @@ export class AuthController {
   @Post('login/2fa')
   @HttpCode(200)
   async login2fa(@Body(zodBody(login2faSchema)) body: z.infer<typeof login2faSchema>, @Req() req: AppRequest, @Res({ passthrough: true }) res: Response) {
-    if (!this.discord.passwordLoginAllowed()) throw new AppError('PERMISSION_DENIED', 'Password login is disabled – sign in with Discord.');
+    if (!this.discord.passwordLoginAllowed()) throw new AppError('PERMISSION_DENIED', 'Die Anmeldung mit Passwort ist deaktiviert – bitte mit Discord anmelden.');
     const r = await this.auth.loginTwoFactor(body.ticket, body.code, { ip: req.ip, userAgent: req.headers['user-agent'], requestId: req.requestId });
     res.cookie(SESSION_COOKIE, r.token, { httpOnly: true, sameSite: 'strict', secure: this.secure(), expires: r.expiresAt, path: '/' });
     return r.user;

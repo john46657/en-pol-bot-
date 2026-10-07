@@ -46,9 +46,9 @@ function Duration({ minutes, onChange, label }: { minutes: number; onChange: (m:
   const num = (v: string) => Math.max(0, Math.floor(Number(v) || 0));
   return (
     <div className="flex gap-2">
-      <label className="grid gap-1 text-xs text-muted">Days<Input aria-label={`${label} days`} type="number" min={0} className="w-20" value={d} onChange={(e) => set(num(e.target.value), h, m)} /></label>
-      <label className="grid gap-1 text-xs text-muted">Hours<Input aria-label={`${label} hours`} type="number" min={0} max={23} className="w-20" value={h} onChange={(e) => set(d, num(e.target.value), m)} /></label>
-      <label className="grid gap-1 text-xs text-muted">Minutes<Input aria-label={`${label} minutes`} type="number" min={0} max={59} className="w-20" value={m} onChange={(e) => set(d, h, num(e.target.value))} /></label>
+      <label className="grid gap-1 text-xs text-muted">Tage<Input aria-label={`${label} Tage`} type="number" min={0} className="w-20" value={d} onChange={(e) => set(num(e.target.value), h, m)} /></label>
+      <label className="grid gap-1 text-xs text-muted">Stunden<Input aria-label={`${label} Stunden`} type="number" min={0} max={23} className="w-20" value={h} onChange={(e) => set(d, num(e.target.value), m)} /></label>
+      <label className="grid gap-1 text-xs text-muted">Minuten<Input aria-label={`${label} Minuten`} type="number" min={0} max={59} className="w-20" value={m} onChange={(e) => set(d, h, num(e.target.value))} /></label>
     </div>
   );
 }
@@ -58,22 +58,22 @@ function Message({ title, desc, value, onChange }: { title: string; desc: string
     <div className="grid content-start gap-2 rounded-lg border border-line bg-panel-2/40 p-3">
       <div className="flex flex-wrap items-start justify-between gap-2">
         <div><p className="font-semibold">{title}</p><p className="text-xs text-muted">{desc}</p></div>
-        <button type="button" aria-expanded={vars} onClick={() => setVars(!vars)} className="inline-flex items-center gap-1 rounded bg-success/10 px-2 py-1 text-xs font-semibold text-success"><Tag size={14} aria-hidden />{vars ? 'Hide variables' : 'Show variables'}</button>
+        <button type="button" aria-expanded={vars} onClick={() => setVars(!vars)} className="inline-flex items-center gap-1 rounded bg-success/10 px-2 py-1 text-xs font-semibold text-success"><Tag size={14} aria-hidden />{vars ? 'Variablen ausblenden' : 'Variablen anzeigen'}</button>
       </div>
       {vars && <ul className="grid gap-0.5 text-xs">{Object.entries(APPLICATION_VARIABLES).map(([k, v]) => <li key={k}><button type="button" className="font-mono text-primary" onClick={() => onChange(`${value}${k}`)}>{k}</button> <span className="text-muted">{v}</span></li>)}</ul>}
       <Textarea aria-label={title} rows={5} maxLength={2000} value={value} onChange={(e) => onChange(e.target.value)} />
     </div>
   );
 }
-function MatchRoles({ title, desc, rule, onChange, verb }: { title: string; desc: string; rule: { ids: string[]; mode: Mode }; onChange: (r: { ids: string[]; mode: Mode }) => void; verb: string }) {
+function MatchRoles({ title, desc, rule, onChange, verb, end }: { title: string; desc: string; rule: { ids: string[]; mode: Mode }; onChange: (r: { ids: string[]; mode: Mode }) => void; verb: string; end: string }) {
   return (
     <Box title={`${title}: ${rule.ids.length}`} desc={desc}>
       <div className="rounded-md bg-bg/60 p-2 text-xs">
-        <p className="mb-1 font-semibold">Match mode</p>
-        <div className="mb-1 flex gap-1" role="radiogroup" aria-label={`${title} match mode`}>
-          {(['ALL', 'ANY'] as Mode[]).map((m) => <button key={m} type="button" role="radio" aria-checked={rule.mode === m} onClick={() => onChange({ ...rule, mode: m })} className={`rounded px-2 py-1 ${rule.mode === m ? 'bg-primary text-primary-fg' : 'bg-panel-2'}`}>{m === 'ALL' ? 'Has all roles' : 'Has any role'}</button>)}
+        <p className="mb-1 font-semibold">Abgleich</p>
+        <div className="mb-1 flex gap-1" role="radiogroup" aria-label={`${title} Abgleich`}>
+          {(['ALL', 'ANY'] as Mode[]).map((m) => <button key={m} type="button" role="radio" aria-checked={rule.mode === m} onClick={() => onChange({ ...rule, mode: m })} className={`rounded px-2 py-1 ${rule.mode === m ? 'bg-primary text-primary-fg' : 'bg-panel-2'}`}>{m === 'ALL' ? 'Hat alle Rollen' : 'Hat eine der Rollen'}</button>)}
         </div>
-        <p className="text-muted">{verb} {rule.mode === 'ALL' ? <b>ALL</b> : <b>ANY</b>} of the listed roles.</p>
+        <p className="text-muted">{verb} {rule.mode === 'ALL' ? <b>ALLE</b> : <b>MINDESTENS EINE</b>} der aufgeführten Rollen {end}.</p>
       </div>
       <RolePicker ariaLabel={title} value={rule.ids} onChange={(ids) => onChange({ ...rule, ids })} />
     </Box>
@@ -93,40 +93,40 @@ export function ApplicationSettingsEditor({ value, onChange, name, onName, quest
   );
   return (
     <div className="grid gap-5">
-      <Section title="Requirements">
-        <Box title="Enabled" desc="Open or close the application. Closed applications receive no submissions."><Toggle label="Enabled" checked={value.enabled} onChange={(v) => onChange({ enabled: v })} /></Box>
-        <Box title="Application name" desc="The name of the application ({applicationName})."><Input aria-label="Application name" maxLength={60} value={name} onChange={(e) => onName(e.target.value)} /></Box>
-        <Box title="Application type" desc="How the applicant fills out the application."><Select aria-label="Application type" value="DM" disabled><option value="DM">Direct Message</option></Select></Box>
-        <Box title="Pending Submission Channel" desc={pendingHint}><ChannelPicker ariaLabel="Pending submission channel" value={value.channelId} onChange={(id) => onChange({ channelId: id ?? '' })} /></Box>
-        <Box title="Accepted Submission Channel" desc="Accepted applications are posted here (staff only recommended)."><ChannelPicker ariaLabel="Accepted submission channel" value={value.acceptedChannelId} onChange={(id) => onChange({ acceptedChannelId: id ?? '' })} /></Box>
-        <Box title="Denied Submission Channel" desc="Denied applications are posted here (staff only recommended)."><ChannelPicker ariaLabel="Denied submission channel" value={value.deniedChannelId} onChange={(id) => onChange({ deniedChannelId: id ?? '' })} /></Box>
+      <Section title="Voraussetzungen">
+        <Box title="Aktiviert" desc="Bewerbung öffnen oder schließen. Geschlossene Bewerbungen nehmen keine Einsendungen an."><Toggle label="Aktiviert" checked={value.enabled} onChange={(v) => onChange({ enabled: v })} /></Box>
+        <Box title="Name der Bewerbung" desc="Der Name der Bewerbung ({applicationName})."><Input aria-label="Name der Bewerbung" maxLength={60} value={name} onChange={(e) => onName(e.target.value)} /></Box>
+        <Box title="Art der Bewerbung" desc="Wie die Person die Bewerbung ausfüllt."><Select aria-label="Art der Bewerbung" value="DM" disabled><option value="DM">Direktnachricht</option></Select></Box>
+        <Box title="Kanal für offene Einsendungen" desc={pendingHint}><ChannelPicker ariaLabel="Kanal für offene Einsendungen" value={value.channelId} onChange={(id) => onChange({ channelId: id ?? '' })} /></Box>
+        <Box title="Kanal für angenommene Einsendungen" desc="Angenommene Bewerbungen werden hier gepostet (am besten nur fürs Team sichtbar)."><ChannelPicker ariaLabel="Kanal für angenommene Einsendungen" value={value.acceptedChannelId} onChange={(id) => onChange({ acceptedChannelId: id ?? '' })} /></Box>
+        <Box title="Kanal für abgelehnte Einsendungen" desc="Abgelehnte Bewerbungen werden hier gepostet (am besten nur fürs Team sichtbar)."><ChannelPicker ariaLabel="Kanal für abgelehnte Einsendungen" value={value.deniedChannelId} onChange={(id) => onChange({ deniedChannelId: id ?? '' })} /></Box>
       </Section>
       {questions}
       <section className="grid gap-2">
-        <h3 className="text-base font-semibold">Embed Customization</h3>
+        <h3 className="text-base font-semibold">Nachrichten anpassen</h3>
         <div className="grid gap-3 lg:grid-cols-2">
-          <Message title="Accepted Message" desc="Sent to the applicant when the application is accepted." value={s.messages.accepted} onChange={(v) => msg({ accepted: v })} />
-          <Message title="Denied Message" desc="Sent to the applicant when the application is denied." value={s.messages.denied} onChange={(v) => msg({ denied: v })} />
-          <Message title="Confirmation Message" desc="The first message someone receives when starting the application." value={s.messages.confirmation} onChange={(v) => msg({ confirmation: v })} />
-          <Message title="Completion Message" desc="Sent when the applicant has completed the application." value={s.messages.completion} onChange={(v) => msg({ completion: v })} />
+          <Message title="Nachricht bei Annahme" desc="Wird an die Person gesendet, wenn die Bewerbung angenommen wird." value={s.messages.accepted} onChange={(v) => msg({ accepted: v })} />
+          <Message title="Nachricht bei Ablehnung" desc="Wird an die Person gesendet, wenn die Bewerbung abgelehnt wird." value={s.messages.denied} onChange={(v) => msg({ denied: v })} />
+          <Message title="Bestätigungsnachricht" desc="Die erste Nachricht, die jemand beim Start der Bewerbung erhält." value={s.messages.confirmation} onChange={(v) => msg({ confirmation: v })} />
+          <Message title="Abschlussnachricht" desc="Wird gesendet, wenn die Person die Bewerbung abgeschlossen hat." value={s.messages.completion} onChange={(v) => msg({ completion: v })} />
         </div>
       </section>
-      <Section title="Role Config">
-        <MatchRoles title="Restricted Roles" desc="Users with these roles cannot apply." verb="User is restricted if they have" rule={s.roles.restricted} onChange={(r) => roles({ restricted: r })} />
-        <MatchRoles title="Required Roles" desc="Users need these roles to apply." verb="User is required to have" rule={s.roles.required} onChange={(r) => roles({ required: r })} />
-        {R('accepted', 'Accepted Roles', 'Given to the applicant when accepted.')}
-        {R('denied', 'Denied Roles', 'Given to the applicant when denied.')}
-        <Box title={`Ping Roles: ${value.pingRoleIds.length}`} desc="Mentioned when an application is submitted."><RolePicker ariaLabel="Ping Roles" value={value.pingRoleIds} onChange={(ids) => onChange({ pingRoleIds: ids })} /></Box>
-        {R('acceptedRemove', 'Accepted Removal Roles', 'Removed from the applicant when accepted.')}
-        {R('deniedRemove', 'Denied Removal Roles', 'Removed from the applicant when denied.')}
-        {R('pending', 'Pending Roles', 'Given while the application is pending review (removed after the decision).')}
-        {R('removeOnSubmit', 'Remove roles on submit', 'Removed from the applicant when they submit.')}
-        {R('managers', 'Application Manager Roles', 'Only people with these roles can accept/deny in Discord (empty = everyone with the permission).')}
+      <Section title="Rollen">
+        <MatchRoles title="Gesperrte Rollen" desc="Personen mit diesen Rollen können sich nicht bewerben." verb="Gesperrt, wenn die Person" end="hat" rule={s.roles.restricted} onChange={(r) => roles({ restricted: r })} />
+        <MatchRoles title="Erforderliche Rollen" desc="Diese Rollen werden für die Bewerbung benötigt." verb="Die Person muss" end="haben" rule={s.roles.required} onChange={(r) => roles({ required: r })} />
+        {R('accepted', 'Rollen bei Annahme', 'Werden bei Annahme vergeben.')}
+        {R('denied', 'Rollen bei Ablehnung', 'Werden bei Ablehnung vergeben.')}
+        <Box title={`Ping-Rollen: ${value.pingRoleIds.length}`} desc="Werden erwähnt, wenn eine Bewerbung eingeht."><RolePicker ariaLabel="Ping-Rollen" value={value.pingRoleIds} onChange={(ids) => onChange({ pingRoleIds: ids })} /></Box>
+        {R('acceptedRemove', 'Entfernen bei Annahme', 'Werden bei Annahme entfernt.')}
+        {R('deniedRemove', 'Entfernen bei Ablehnung', 'Werden bei Ablehnung entfernt.')}
+        {R('pending', 'Rollen während der Prüfung', 'Werden vergeben, solange die Bewerbung geprüft wird (nach der Entscheidung entfernt).')}
+        {R('removeOnSubmit', 'Entfernen beim Absenden', 'Werden beim Absenden der Bewerbung entfernt.')}
+        {R('managers', 'Bewerbungs-Verwalter', 'Nur Personen mit diesen Rollen können im Discord annehmen/ablehnen (leer = alle mit der Berechtigung).')}
       </Section>
-      <Section title="Other">
-        <Box title="Staff Threads" desc="Creates a thread for each submission so the team can discuss it."><Toggle label="Staff Threads" checked={s.staffThreads} onChange={(v) => set({ staffThreads: v })} /></Box>
-        <Box title="Application cooldown" desc="How long a user must wait before submitting a new application."><Duration label="Cooldown" minutes={s.cooldownMinutes} onChange={(m) => set({ cooldownMinutes: m })} /></Box>
-        <Box title="Time Limit" desc="How long users have to complete the application (min. 5 minutes, max. 7 days)."><Duration label="Time limit" minutes={s.timeLimitMinutes} onChange={(m) => set({ timeLimitMinutes: m })} /></Box>
+      <Section title="Sonstiges">
+        <Box title="Team-Threads" desc="Erstellt zu jeder Einsendung einen Thread, damit das Team darüber sprechen kann."><Toggle label="Team-Threads" checked={s.staffThreads} onChange={(v) => set({ staffThreads: v })} /></Box>
+        <Box title="Wartezeit" desc="Wie lange jemand warten muss, bevor eine neue Bewerbung möglich ist."><Duration label="Wartezeit" minutes={s.cooldownMinutes} onChange={(m) => set({ cooldownMinutes: m })} /></Box>
+        <Box title="Zeitlimit" desc="Wie lange man Zeit hat, die Bewerbung auszufüllen (min. 5 Minuten, max. 7 Tage)."><Duration label="Zeitlimit" minutes={s.timeLimitMinutes} onChange={(m) => set({ timeLimitMinutes: m })} /></Box>
       </Section>
     </div>
   );

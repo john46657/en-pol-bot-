@@ -21,7 +21,7 @@ export function LeaveSettings() {
   useEffect(() => { if (q.data) setCfg(q.data); }, [q.data]);
   const save = useMutation({
     mutationFn: (c: LeaveConfig) => api<LeaveConfig>('/leave/config', { method: 'PUT', body: c }),
-    onSuccess: (r) => { qc.setQueryData(['leave-config'], r); setMsg('Saved.'); },
+    onSuccess: (r) => { qc.setQueryData(['leave-config'], r); setMsg('Gespeichert.'); },
   });
   // automatisch speichern (Rechte prüft die API)
   useAutosaveDraft(manage ? 'leave:config' : null, cfg, (c) => (c.maxDays >= 1 ? { method: 'PUT', path: '/leave/config', body: c, label: 'Abmeldungen' } : null));
@@ -31,16 +31,16 @@ export function LeaveSettings() {
   const dirty = JSON.stringify(cfg) !== JSON.stringify(q.data);
   return (
     <>
-      <ModuleHeader title="Leave of Absences" desc="Configure the leave of absences module for your server." enabled={cfg.enabled} disabled={!manage}
+      <ModuleHeader title="Abmeldungen" desc="Richte das Abmeldungs-Modul für deinen Server ein." enabled={cfg.enabled} disabled={!manage}
         onToggle={(v) => { const next = { ...cfg, enabled: v }; setCfg(next); save.mutate(next); }} />
       <Card>
         <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
-          <Box title="Leave Approval Channel" desc="Select a channel for leave approvals (Approve / Deny buttons)"><ChannelPicker ariaLabel="Leave Approval Channel" disabled={!manage} value={cfg.approvalChannelId} onChange={(id) => set({ approvalChannelId: id })} /></Box>
-          <Box title="Leave Logs Channel" desc="Select a channel for leave logs (approved, started, ended …)"><ChannelPicker ariaLabel="Leave Logs Channel" disabled={!manage} value={cfg.logChannelId} onChange={(id) => set({ logChannelId: id })} /></Box>
-          <Box title="On Leave Role" desc="Select a role for on leave members (from start to end)"><RolePicker ariaLabel="On Leave Role" disabled={!manage} value={cfg.roleIds} onChange={(ids) => set({ roleIds: ids })} /></Box>
-          <Box title="Maximum length" desc="Longest leave someone can request (days)"><Input aria-label="Maximum length in days" type="number" min={1} max={365} disabled={!manage} value={cfg.maxDays} onChange={(e) => set({ maxDays: Math.floor(Number(e.target.value) || 0) })} /></Box>
+          <Box title="Freigabe-Kanal" desc="Wähle einen Kanal für die Freigabe von Abmeldungen (Buttons Genehmigen / Ablehnen)"><ChannelPicker ariaLabel="Freigabe-Kanal" disabled={!manage} value={cfg.approvalChannelId} onChange={(id) => set({ approvalChannelId: id })} /></Box>
+          <Box title="Log-Kanal" desc="Wähle einen Kanal für Abmeldungs-Logs (genehmigt, begonnen, beendet …)"><ChannelPicker ariaLabel="Log-Kanal" disabled={!manage} value={cfg.logChannelId} onChange={(id) => set({ logChannelId: id })} /></Box>
+          <Box title="Abgemeldet-Rolle" desc="Wähle eine Rolle für abgemeldete Mitglieder (vom Beginn bis zum Ende)"><RolePicker ariaLabel="Abgemeldet-Rolle" disabled={!manage} value={cfg.roleIds} onChange={(ids) => set({ roleIds: ids })} /></Box>
+          <Box title="Maximale Dauer" desc="Längste Abmeldung, die man beantragen kann (Tage)"><Input aria-label="Maximale Dauer in Tagen" type="number" min={1} max={365} disabled={!manage} value={cfg.maxDays} onChange={(e) => set({ maxDays: Math.floor(Number(e.target.value) || 0) })} /></Box>
         </div>
-        <p className="mt-3 text-xs text-muted">Members request leave with <code>/abmeldung</code> in Discord or under <b>Organisation → Leave</b>. People with the right <code>leave.manage</code> approve or deny it with the buttons in the approval channel or in the dashboard.</p>
+        <p className="mt-3 text-xs text-muted">Mitglieder beantragen Abmeldungen mit <code>/abmeldung</code> in Discord oder unter <b>Organisation → Abmeldungen</b>. Personen mit dem Recht <code>leave.manage</code> genehmigen oder lehnen sie mit den Buttons im Freigabe-Kanal oder im Dashboard ab.</p>
       </Card>
       {save.error && <p role="alert" className="mt-3 text-sm text-danger">{errText(save.error)}</p>}
       {manage && (

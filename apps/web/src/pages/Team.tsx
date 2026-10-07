@@ -6,7 +6,7 @@ import { api, ApiError } from '../lib/api';
 import { useAuth } from '../lib/auth';
 import { useRealtime } from '../lib/realtime';
 import type { ShiftsConfig } from './admin/Shifts';
-import { Button, Card, EmptyState, ErrorState, fmt, PageHeader, PriorityBadge, Select, SkeletonRows, StatusBadge } from '../components/ui';
+import { Button, Card, EmptyState, ErrorState, fmt, PageHeader, PriorityBadge, Select, SkeletonRows, StatusBadge, statusLabel } from '../components/ui';
 
 interface Member {
   userId: string; personnelId: string; name: string; rank: string | null; callsign: string | null; team: string | null;
@@ -31,7 +31,7 @@ export function Team() {
   const assign = can('dispatch.assign');
   const units = useQuery({ queryKey: ['team-units'], queryFn: () => api<Unit[]>('/dispatch/units'), enabled: assign || manage });
   const refresh = () => { setErr(undefined); void qc.invalidateQueries({ queryKey: ['team-overview'] }); void qc.invalidateQueries({ queryKey: ['my-duty'] }); void qc.invalidateQueries({ queryKey: ['team-units'] }); };
-  const onError = (e: unknown) => setErr(e instanceof ApiError ? `${e.message}${e.requestId ? ` (Request ID ${e.requestId})` : ''}` : 'Failed');
+  const onError = (e: unknown) => setErr(e instanceof ApiError ? `${e.message}${e.requestId ? ` (Anfrage-ID ${e.requestId})` : ''}` : 'Fehlgeschlagen');
   // Schicht-Arten (Admin → Shifts): bei mehreren wird beim Dienstbeginn gewählt
   const shifts = useQuery({ queryKey: ['shifts-config'], queryFn: () => api<ShiftsConfig>('/shifts/config') });
   const types = shifts.data?.enabled ? shifts.data.types : [];
@@ -61,33 +61,33 @@ export function Team() {
 
   return (
     <>
-      <PageHeader title="Team Dashboard" subtitle="Duty status is always set explicitly — being online never counts as being on duty." />
+      <PageHeader title="Team-Übersicht" subtitle="Der Dienststatus wird immer ausdrücklich gesetzt – online sein zählt nie als im Dienst." />
       <div className="mb-4 grid grid-cols-2 gap-3 md:grid-cols-5">
-        {[['On duty', stats.onDuty], ['On break', stats.break], ['Training / admin', stats.training], ['On an incident', stats.onCall], ['On duty, no unit', stats.noUnit]].map(([l, v]) => (
+        {[['Im Dienst', stats.onDuty], ['In Pause', stats.break], ['Ausbildung / Verwaltung', stats.training], ['Im Einsatz', stats.onCall], ['Im Dienst, ohne Einheit', stats.noUnit]].map(([l, v]) => (
           <Card key={String(l)}><p className="text-2xl font-semibold">{v}</p><p className="text-xs text-muted">{l}</p></Card>
         ))}
       </div>
-      <Card title="My duty status" className="mb-4">
+      <Card title="Mein Dienststatus" className="mb-4">
         <div className="flex flex-wrap items-center gap-2"><StatusBadge status={current} />
-          {current !== 'OFF_DUTY' && types.find((t) => t.id === mine.data?.shiftType) && <span className="text-sm text-muted">Shift: {types.find((t) => t.id === mine.data?.shiftType)!.name}</span>}
-          {types.length > 1 && <div className="w-56"><Select aria-label="Shift type" className="py-1 text-sm" value={shiftType} onChange={(e) => setShiftType(e.target.value)}>
-            <option value="">Default shift ({types.find((t) => t.isDefault)?.name ?? types[0]!.name})</option>
+          {current !== 'OFF_DUTY' && types.find((t) => t.id === mine.data?.shiftType) && <span className="text-sm text-muted">Schicht: {types.find((t) => t.id === mine.data?.shiftType)!.name}</span>}
+          {types.length > 1 && <div className="w-56"><Select aria-label="Schichtart" className="py-1 text-sm" value={shiftType} onChange={(e) => setShiftType(e.target.value)}>
+            <option value="">Standardschicht ({types.find((t) => t.isDefault)?.name ?? types[0]!.name})</option>
             {types.map((t) => <option key={t.id} value={t.id}>{t.name}</option>)}
           </Select></div>}
-          {types.length > 1 && current === 'ON_DUTY' && shiftType && shiftType !== mine.data?.shiftType && <Button size="sm" disabled={setMine.isPending} onClick={() => setMine.mutate('ON_DUTY')}>Switch shift</Button>}
-          {DUTY_STATUSES.filter((s) => s !== current).map((s) => <Button key={s} size="sm" variant="secondary" disabled={setMine.isPending} onClick={() => setMine.mutate(s)}>Go {s.replace('_', ' ')}</Button>)}
+          {types.length > 1 && current === 'ON_DUTY' && shiftType && shiftType !== mine.data?.shiftType && <Button size="sm" disabled={setMine.isPending} onClick={() => setMine.mutate('ON_DUTY')}>Schicht wechseln</Button>}
+          {DUTY_STATUSES.filter((s) => s !== current).map((s) => <Button key={s} size="sm" variant="secondary" disabled={setMine.isPending} onClick={() => setMine.mutate(s)}>→ {statusLabel(s)}</Button>)}
         </div>
       </Card>
       {err && <div role="alert" className="mb-3 rounded border border-danger/40 bg-danger/10 p-2 text-sm text-danger">{err}</div>}
-      <Card title={`Officers (${shown.length})`} actions={<Select aria-label="Duty filter" className="w-auto py-1 text-xs" value={filter} onChange={(e) => setFilter(e.target.value)}><option value="ALL">All</option>{DUTY_STATUSES.map((s) => <option key={s}>{s}</option>)}</Select>}>
-        {overview.isLoading ? <SkeletonRows /> : overview.error ? <ErrorState error={overview.error} onRetry={() => void overview.refetch()} /> : !shown.length ? <EmptyState text="No officers match." hint="Create personnel files under Personnel to see officers here." /> : (
+      <Card title={`Beamte (${shown.length})`} actions={<Select aria-label="Dienststatus-Filter" className="w-auto py-1 text-xs" value={filter} onChange={(e) => setFilter(e.target.value)}><option value="ALL">Alle</option>{DUTY_STATUSES.map((s) => <option key={s} value={s}>{statusLabel(s)}</option>)}</Select>}>
+        {overview.isLoading ? <SkeletonRows /> : overview.error ? <ErrorState error={overview.error} onRetry={() => void overview.refetch()} /> : !shown.length ? <EmptyState text="Keine passenden Beamten." hint="Leg unter Personal Personalakten an, damit hier Beamte erscheinen." /> : (
           <div className="table-scroll">
             <table className="w-full text-left text-sm">
-              <thead className="border-b border-line text-xs uppercase text-muted"><tr><th className="p-2">Officer</th><th>Rank</th><th>Callsign</th><th>Unit</th><th>Duty status</th><th>Current incident</th><th>Last change</th>{(manage || assign) && <th>Actions</th>}</tr></thead>
+              <thead className="border-b border-line text-xs uppercase text-muted"><tr><th className="p-2">Beamter</th><th>Rang</th><th>Rufname</th><th>Einheit</th><th>Dienststatus</th><th>Aktueller Einsatz</th><th>Letzte Änderung</th>{(manage || assign) && <th>Aktionen</th>}</tr></thead>
               <tbody>
                 {shown.map((m) => (
                   <tr key={m.userId} className="border-b border-line/60 last:border-0">
-                    <td className="p-2 font-medium">{can('personnel.view') ? <Link className="hover:underline" to={`/personnel/${m.personnelId}`}>{m.name}</Link> : m.name}{m.userId === user?.id && <span className="ml-1 text-xs text-muted">(you)</span>}</td>
+                    <td className="p-2 font-medium">{can('personnel.view') ? <Link className="hover:underline" to={`/personnel/${m.personnelId}`}>{m.name}</Link> : m.name}{m.userId === user?.id && <span className="ml-1 text-xs text-muted">(du)</span>}</td>
                     <td>{m.rank ?? '—'}</td><td>{m.callsign ?? '—'}</td>
                     <td>{m.unit ? <span className="flex items-center gap-1">{m.unit.callsign}<StatusBadge status={m.unit.status} /></span> : '—'}</td>
                     <td><StatusBadge status={m.dutyStatus} />{m.shiftType && m.dutyStatus !== 'OFF_DUTY' && <span className="ml-1 text-xs text-muted">{m.shiftType}</span>}</td>
@@ -95,8 +95,8 @@ export function Team() {
                     <td className="text-xs text-muted">{fmt(m.lastStatusChange)}</td>
                     {(manage || assign) && (
                       <td className="space-x-1 whitespace-nowrap py-1">
-                        {manage && <Select aria-label={`Duty status of ${m.name}`} className="inline-block w-auto min-w-36 py-1 text-xs" value={m.dutyStatus} onChange={(e) => setOther.mutate({ userId: m.userId, status: e.target.value })}>{DUTY_STATUSES.map((s) => <option key={s}>{s}</option>)}</Select>}
-                        {assign && <Select aria-label={`Unit of ${m.name}`} className="inline-block w-auto min-w-36 py-1 text-xs" value={m.unit?.id ?? ''} onChange={(e) => moveToUnit.mutate({ userId: m.userId, unitId: e.target.value })}><option value="">No unit</option>{units.data?.map((u) => <option key={u.id} value={u.id}>{u.callsign}</option>)}</Select>}
+                        {manage && <Select aria-label={`Dienststatus von ${m.name}`} className="inline-block w-auto min-w-36 py-1 text-xs" value={m.dutyStatus} onChange={(e) => setOther.mutate({ userId: m.userId, status: e.target.value })}>{DUTY_STATUSES.map((s) => <option key={s} value={s}>{statusLabel(s)}</option>)}</Select>}
+                        {assign && <Select aria-label={`Einheit von ${m.name}`} className="inline-block w-auto min-w-36 py-1 text-xs" value={m.unit?.id ?? ''} onChange={(e) => moveToUnit.mutate({ userId: m.userId, unitId: e.target.value })}><option value="">Keine Einheit</option>{units.data?.map((u) => <option key={u.id} value={u.id}>{u.callsign}</option>)}</Select>}
                       </td>
                     )}
                   </tr>

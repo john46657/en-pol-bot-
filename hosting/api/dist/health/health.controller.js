@@ -25,7 +25,7 @@ let HealthController = class HealthController {
             await this.prisma.$queryRaw `SELECT 1`;
         }
         catch {
-            throw new common_1.ServiceUnavailableException({ code: 'NOT_READY', message: 'Database unavailable.' });
+            throw new common_1.ServiceUnavailableException({ code: 'NOT_READY', message: 'Die Datenbank ist nicht erreichbar.' });
         }
         return { status: 'ready', checks: { database: 'ok' } };
     }

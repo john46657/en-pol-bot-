@@ -46,7 +46,7 @@ export function DataTable<T extends { id?: string }>({ columns, rows, total, pag
       {(onSearch || toolbar) && (
         <div className="flex flex-wrap items-center gap-2 border-b border-line p-3">
           {/* Suchfeld behält seine Breite; viele Filter umbrechen in die nächste Zeile statt das Suchfeld zu quetschen */}
-          {onSearch && <div className="relative w-full shrink-0 sm:w-64"><Search size={14} className="absolute left-2.5 top-3 text-muted" aria-hidden /><Input aria-label="Search" placeholder="Suchen…" value={search ?? ''} onChange={(e) => onSearch(e.target.value)} className="pl-8" /></div>}
+          {onSearch && <div className="relative w-full shrink-0 sm:w-64"><Search size={14} className="absolute left-2.5 top-3 text-muted" aria-hidden /><Input aria-label="Suchen" placeholder="Suchen…" value={search ?? ''} onChange={(e) => onSearch(e.target.value)} className="pl-8" /></div>}
           {toolbar && <div className="min-w-0 flex-1 basis-64">{toolbar}</div>}
         </div>
       )}
@@ -96,10 +96,10 @@ export function DataTable<T extends { id?: string }>({ columns, rows, total, pag
       )}
       {(total > pageSize || (onPageSize && total > PAGE_SIZES[0])) && (
         <div className="flex flex-wrap items-center justify-between gap-2 border-t border-line px-3 py-2 text-xs text-muted">
-          <span className="flex items-center gap-2">{total} records
+          <span className="flex items-center gap-2">{total} Einträge
             {onPageSize && <Select aria-label="Zeilen pro Seite" value={pageSize} onChange={(e) => onPageSize(Number(e.target.value))} className="h-7 w-auto py-0 text-xs">{PAGE_SIZES.map((n) => <option key={n} value={n}>{n} / Seite</option>)}</Select>}
           </span>
-          <div className="flex items-center gap-2"><Button variant="ghost" size="sm" aria-label="Previous page" disabled={page <= 1} onClick={() => onPage(page - 1)}><ChevronLeft size={14} /></Button>Page {page} / {pages}<Button variant="ghost" size="sm" aria-label="Next page" disabled={page >= pages} onClick={() => onPage(page + 1)}><ChevronRight size={14} /></Button></div>
+          <div className="flex items-center gap-2"><Button variant="ghost" size="sm" aria-label="Vorherige Seite" disabled={page <= 1} onClick={() => onPage(page - 1)}><ChevronLeft size={14} /></Button>Seite {page} / {pages}<Button variant="ghost" size="sm" aria-label="Nächste Seite" disabled={page >= pages} onClick={() => onPage(page + 1)}><ChevronRight size={14} /></Button></div>
         </div>
       )}
     </div>

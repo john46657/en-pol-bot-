@@ -11,7 +11,7 @@ export class RadioService {
 
   private async resolve(t: { userId?: string; discordId?: string }) {
     const user = t.userId ? await this.prisma.user.findUnique({ where: { id: t.userId } }) : t.discordId ? await this.discord.resolveUser(t.discordId) : null;
-    if (!user?.active) throw new AppError('NOT_FOUND', t.discordId ? 'That Discord account is not linked to an active user.' : 'User not found.');
+    if (!user?.active) throw new AppError('NOT_FOUND', t.discordId ? 'Dieses Discord-Konto ist mit keinem aktiven Benutzer verknüpft.' : 'Benutzer nicht gefunden.');
     return user;
   }
 
@@ -28,10 +28,10 @@ export class RadioService {
 
   async add(actor: Actor, t: { userId?: string; discordId?: string }) {
     const user = await this.resolve(t);
-    if (await this.prisma.radioWhitelist.findUnique({ where: { userId: user.id } })) throw new AppError('CONFLICT', `${user.displayName} is already on the radio whitelist.`);
+    if (await this.prisma.radioWhitelist.findUnique({ where: { userId: user.id } })) throw new AppError('CONFLICT', `${user.displayName} steht schon auf der Funk-Whitelist.`);
     await this.prisma.$transaction(async (tx) => {
       await tx.radioWhitelist.create({ data: { userId: user.id, addedById: actor.userId } });
-      await tx.notification.create({ data: { userId: user.id, type: 'RADIO', title: 'You are now cleared for radio use' } });
+      await tx.notification.create({ data: { userId: user.id, type: 'RADIO', title: 'Du bist jetzt für den Funk freigegeben' } });
       await this.audit.record(actor, { action: 'radio.add', module: 'team', entityType: 'User', entityId: user.id }, tx);
     });
     return { userId: user.id, displayName: user.displayName, whitelisted: true };
@@ -41,7 +41,7 @@ export class RadioService {
     const user = await this.resolve(t);
     await this.prisma.$transaction(async (tx) => {
       const r = await tx.radioWhitelist.deleteMany({ where: { userId: user.id } });
-      if (r.count === 0) throw new AppError('NOT_FOUND', `${user.displayName} is not on the radio whitelist.`);
+      if (r.count === 0) throw new AppError('NOT_FOUND', `${user.displayName} steht nicht auf der Funk-Whitelist.`);
       await this.audit.record(actor, { action: 'radio.remove', module: 'team', entityType: 'User', entityId: user.id }, tx);
     });
     return { userId: user.id, displayName: user.displayName, whitelisted: false };

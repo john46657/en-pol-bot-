@@ -6,8 +6,10 @@ import path from 'node:path';
 import { static as serveStatic, type Request, type Response, type NextFunction } from 'express';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { loadEnv } from './config/env';
+import { installGermanZodErrors } from './common/zod-de';
 
 export function configureApp(app: INestApplication) {
+  installGermanZodErrors(); // deutsche Zod-Meldungen in Validierungsfehlern
   const env = loadEnv();
   app.setGlobalPrefix('api/v1', { exclude: ['health', 'readiness'] });
   const httpsOnly = env.COOKIE_SECURE ? env.COOKIE_SECURE === 'true' : env.NODE_ENV === 'production';

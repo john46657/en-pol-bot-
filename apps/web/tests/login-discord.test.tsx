@@ -16,12 +16,12 @@ describe('login page', () => {
   it('shows only “Mit Discord anmelden” once Discord login is set up', async () => {
     show({ discord: true, password: false }, '/login?discord=not_member');
     expect(await screen.findByRole('link', { name: /Mit Discord anmelden/ })).toHaveAttribute('href', '/api/v1/auth/discord');
-    expect(screen.queryByLabelText('Password')).toBeNull();
+    expect(screen.queryByLabelText('Passwort')).toBeNull();
     expect(screen.getByRole('alert').textContent).toContain('nicht auf unserem Discord-Server');
   });
   it('keeps the password form while Discord is not set up (first setup)', async () => {
     show({ discord: false, password: true });
-    expect(await screen.findByLabelText('Password')).toBeInTheDocument();
+    expect(await screen.findByLabelText('Passwort')).toBeInTheDocument();
     expect(screen.queryByRole('link', { name: /Mit Discord anmelden/ })).toBeNull();
   });
 });

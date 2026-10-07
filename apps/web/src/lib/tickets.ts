@@ -30,7 +30,7 @@ export interface TicketSettingsCfg {
   reopenedMessage: string; ratingMessage: string; ratingThanks: string; transcriptRetentionDays: number;
   ratingChannelId: string | null; ratingPublicChannelId: string | null; ratingPublicFields: RatingField[];
 }
-export const RATING_FIELDS = { creator: 'Creator', category: 'Category', staff: 'Staff', duration: 'Handling time', comment: 'Comment' } as const;
+export const RATING_FIELDS = { creator: 'Ersteller', category: 'Kategorie', staff: 'Bearbeiter', duration: 'Bearbeitungszeit', comment: 'Kommentar' } as const;
 export type RatingField = keyof typeof RATING_FIELDS;
 export interface TicketConfig { categories: TicketCategoryCfg[]; panels: TicketPanelCfg[]; statuses: TicketStatusCfg[]; priorities: TicketPriorityCfg[]; reasons: TicketReasonCfg[]; settings: TicketSettingsCfg }
 
@@ -67,30 +67,30 @@ export const useTicketConfig = () => {
 
 export const hex = (n: number) => `#${(n >>> 0).toString(16).padStart(6, '0').slice(-6)}`;
 export const fromHex = (s: string) => parseInt(s.replace('#', ''), 16) || 0;
-export const duration = (min: number | null) => (min === null ? '—' : min < 60 ? `${min} min` : min < 1440 ? `${Math.floor(min / 60)} h ${min % 60} min` : `${Math.floor(min / 1440)} d ${Math.floor((min % 1440) / 60)} h`);
+export const duration = (min: number | null) => (min === null ? '—' : min < 60 ? `${min} min` : min < 1440 ? `${Math.floor(min / 60)} h ${min % 60} min` : `${Math.floor(min / 1440)} T ${Math.floor((min % 1440) / 60)} h`);
 /** Lesbare Feldnamen für Prüf-Fehler der API (z. B. `staffRoleIds.0`, `questions.1.label`). */
 const FIELD: Record<string, string> = {
-  name: 'Name', emoji: 'Emoji', description: 'Description', channelNameFormat: 'Channel name format', discordCategoryId: 'Discord category ID', channelId: 'Target channel',
-  staffRoleIds: 'Staff roles', extraRoleIds: 'Additional roles', requiredRoleIds: 'Required Discord roles', allowedUserIds: 'Only these users', escalationRoleIds: 'Roles added on escalation',
-  allowedRoleIds: 'Visible for Discord roles', notifyRoleIds: 'Notify Discord roles', accessRoleNames: 'Dashboard access roles', allowedRoleNames: 'May be set by system roles',
-  transcriptChannelId: 'Transcript channel ID', logChannelId: 'Log channel ID', questions: 'Question', units: 'Unit', policeForm: 'Police application – question', minLength: 'min. length', maxLength: 'max. length', pingRoleIds: 'Ping roles', roleId: 'role ID', police: 'Police application', settings: 'Settings', messages: 'Messages', roles: 'Roles', timeLimitMinutes: 'Time limit', cooldownMinutes: 'Cooldown', acceptedChannelId: 'Accepted channel', deniedChannelId: 'Denied channel', accepted: 'Accepted', denied: 'Denied', confirmation: 'Confirmation', completion: 'Completion', buttons: 'Button', welcomeTitle: 'Title', welcomeMessage: 'Message',
-  thumbnailUrl: 'Thumbnail', imageUrl: 'Image', bannerUrl: 'Banner', footerIconUrl: 'Footer icon', authorIconUrl: 'Author icon', placeholder: 'Placeholder', text: 'Reason', label: 'text', options: 'options',
+  name: 'Name', emoji: 'Emoji', description: 'Beschreibung', channelNameFormat: 'Kanalname-Format', discordCategoryId: 'Discord-Kategorie-ID', channelId: 'Zielkanal',
+  staffRoleIds: 'Team-Rollen', extraRoleIds: 'Zusätzliche Rollen', requiredRoleIds: 'Benötigte Discord-Rollen', allowedUserIds: 'Nur diese Benutzer', escalationRoleIds: 'Rollen bei Eskalation',
+  allowedRoleIds: 'Sichtbar für Discord-Rollen', notifyRoleIds: 'Zu benachrichtigende Discord-Rollen', accessRoleNames: 'Dashboard-Zugriffsrollen', allowedRoleNames: 'Setzbar durch Systemrollen',
+  transcriptChannelId: 'Transkript-Kanal-ID', logChannelId: 'Log-Kanal-ID', questions: 'Frage', units: 'Einheit', policeForm: 'Polizei-Bewerbung – Frage', minLength: 'Mindestlänge', maxLength: 'Maximallänge', pingRoleIds: 'Ping-Rollen', roleId: 'Rollen-ID', police: 'Polizei-Bewerbung', settings: 'Einstellungen', messages: 'Nachrichten', roles: 'Rollen', timeLimitMinutes: 'Zeitlimit', cooldownMinutes: 'Cooldown', acceptedChannelId: 'Kanal für Annahmen', deniedChannelId: 'Kanal für Ablehnungen', accepted: 'Angenommen', denied: 'Abgelehnt', confirmation: 'Bestätigung', completion: 'Abschluss', buttons: 'Button', welcomeTitle: 'Titel', welcomeMessage: 'Nachricht',
+  thumbnailUrl: 'Vorschaubild', imageUrl: 'Bild', bannerUrl: 'Banner', footerIconUrl: 'Footer-Icon', authorIconUrl: 'Autor-Icon', placeholder: 'Platzhalter', text: 'Grund', label: 'Text', options: 'Optionen',
 };
 const fieldName = (path: string) => {
   const parts = path.split('.');
-  // tiefe Pfade (z. B. units.0.questions.1.options): „units 1 › Question 2 › options“
+  // tiefe Pfade (z. B. units.0.questions.1.options): „Einheit 1 › Frage 2 › Optionen“
   if (parts.length > 3 || (parts[1] !== undefined && !/^\d+$/.test(parts[1]))) return parts.reduce<string[]>((out, p) => { if (/^\d+$/.test(p)) out[out.length - 1] = `${out[out.length - 1]} ${Number(p) + 1}`; else out.push(FIELD[p] ?? p); return out; }, []).join(' › ');
   const [k = '', i, sub] = parts;
   const base = FIELD[k] ?? k;
   if (i === undefined) return base;
   const n = Number(i) + 1;
-  return `${base}${['questions', 'buttons'].includes(k) ? ` ${n}` : ` (entry ${n})`}${sub ? ` – ${FIELD[sub] ?? sub}` : ''}`;
+  return `${base}${['questions', 'buttons'].includes(k) ? ` ${n}` : ` (Eintrag ${n})`}${sub ? ` – ${FIELD[sub] ?? sub}` : ''}`;
 };
 export const errText = (e: unknown) => {
-  if (!(e instanceof ApiError)) return 'Failed';
+  if (!(e instanceof ApiError)) return 'Fehlgeschlagen';
   const details = Array.isArray(e.details) ? (e.details as { path?: string; message?: string }[]).filter((d) => d.message) : [];
   const list = details.slice(0, 5).map((d) => (d.path ? `${fieldName(d.path)}: ${d.message}` : d.message)).join(' · ');
-  return `${list ? `Please check: ${list}` : e.message}${e.requestId ? ` (Request ID ${e.requestId})` : ''}`;
+  return `${list ? `Bitte prüfen: ${list}` : e.message}${e.requestId ? ` (Anfrage-ID ${e.requestId})` : ''}`;
 };
 /** Discord-IDs aus Text (Komma/Leerzeichen/Zeilen getrennt). */
 /** Eine Discord-ID aus Eingaben wie `123…`, `<@&123…>`, `<#123…>` oder mit Leerzeichen. */

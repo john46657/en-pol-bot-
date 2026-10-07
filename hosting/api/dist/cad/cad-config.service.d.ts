@@ -15,26 +15,26 @@ export declare const cadConfigSchema: z.ZodObject<{
         key: string;
         label: string;
         color?: string | undefined;
-        order?: number | undefined;
         emoji?: string | undefined;
+        order?: number | undefined;
     }, {
         key: string;
         label: string;
         color?: string | undefined;
-        order?: number | undefined;
         emoji?: string | undefined;
+        order?: number | undefined;
     }>, "many">, {
         key: string;
         label: string;
         color?: string | undefined;
-        order?: number | undefined;
         emoji?: string | undefined;
+        order?: number | undefined;
     }[], {
         key: string;
         label: string;
         color?: string | undefined;
-        order?: number | undefined;
         emoji?: string | undefined;
+        order?: number | undefined;
     }[]>;
     priorities: z.ZodEffects<z.ZodArray<z.ZodObject<{
         key: z.ZodString;
@@ -46,26 +46,26 @@ export declare const cadConfigSchema: z.ZodObject<{
         key: string;
         label: string;
         color?: string | undefined;
-        order?: number | undefined;
         emoji?: string | undefined;
+        order?: number | undefined;
     }, {
         key: string;
         label: string;
         color?: string | undefined;
-        order?: number | undefined;
         emoji?: string | undefined;
+        order?: number | undefined;
     }>, "many">, {
         key: string;
         label: string;
         color?: string | undefined;
-        order?: number | undefined;
         emoji?: string | undefined;
+        order?: number | undefined;
     }[], {
         key: string;
         label: string;
         color?: string | undefined;
-        order?: number | undefined;
         emoji?: string | undefined;
+        order?: number | undefined;
     }[]>;
     incidentStatuses: z.ZodEffects<z.ZodEffects<z.ZodArray<z.ZodObject<{
         key: z.ZodString;
@@ -79,44 +79,44 @@ export declare const cadConfigSchema: z.ZodObject<{
         key: string;
         label: string;
         color?: string | undefined;
+        emoji?: string | undefined;
         order?: number | undefined;
         closed?: boolean | undefined;
-        emoji?: string | undefined;
     }, {
         key: string;
         label: string;
         color?: string | undefined;
+        emoji?: string | undefined;
         order?: number | undefined;
         closed?: boolean | undefined;
-        emoji?: string | undefined;
     }>, "many">, {
         key: string;
         label: string;
         color?: string | undefined;
+        emoji?: string | undefined;
         order?: number | undefined;
         closed?: boolean | undefined;
-        emoji?: string | undefined;
     }[], {
         key: string;
         label: string;
         color?: string | undefined;
+        emoji?: string | undefined;
         order?: number | undefined;
         closed?: boolean | undefined;
-        emoji?: string | undefined;
     }[]>, {
         key: string;
         label: string;
         color?: string | undefined;
+        emoji?: string | undefined;
         order?: number | undefined;
         closed?: boolean | undefined;
-        emoji?: string | undefined;
     }[], {
         key: string;
         label: string;
         color?: string | undefined;
+        emoji?: string | undefined;
         order?: number | undefined;
         closed?: boolean | undefined;
-        emoji?: string | undefined;
     }[]>;
     unitStatuses: z.ZodEffects<z.ZodArray<z.ZodObject<{
         key: z.ZodString;
@@ -128,26 +128,26 @@ export declare const cadConfigSchema: z.ZodObject<{
         key: string;
         label: string;
         color?: string | undefined;
-        order?: number | undefined;
         emoji?: string | undefined;
+        order?: number | undefined;
     }, {
         key: string;
         label: string;
         color?: string | undefined;
-        order?: number | undefined;
         emoji?: string | undefined;
+        order?: number | undefined;
     }>, "many">, {
         key: string;
         label: string;
         color?: string | undefined;
-        order?: number | undefined;
         emoji?: string | undefined;
+        order?: number | undefined;
     }[], {
         key: string;
         label: string;
         color?: string | undefined;
-        order?: number | undefined;
         emoji?: string | undefined;
+        order?: number | undefined;
     }[]>;
     unitTypes: z.ZodEffects<z.ZodArray<z.ZodObject<{
         key: z.ZodString;
@@ -161,29 +161,29 @@ export declare const cadConfigSchema: z.ZodObject<{
         key: string;
         label: string;
         color?: string | undefined;
-        order?: number | undefined;
         emoji?: string | undefined;
+        order?: number | undefined;
         layer?: string | undefined;
     }, {
         key: string;
         label: string;
         color?: string | undefined;
-        order?: number | undefined;
         emoji?: string | undefined;
+        order?: number | undefined;
         layer?: string | undefined;
     }>, "many">, {
         key: string;
         label: string;
         color?: string | undefined;
-        order?: number | undefined;
         emoji?: string | undefined;
+        order?: number | undefined;
         layer?: string | undefined;
     }[], {
         key: string;
         label: string;
         color?: string | undefined;
-        order?: number | undefined;
         emoji?: string | undefined;
+        order?: number | undefined;
         layer?: string | undefined;
     }[]>;
     layers: z.ZodEffects<z.ZodArray<z.ZodObject<{
@@ -220,23 +220,23 @@ export declare const cadConfigSchema: z.ZodObject<{
     }, "strip", z.ZodTypeAny, {
         key: string;
         color: string;
-        label: string;
         emoji: string;
+        label: string;
     }, {
         key: string;
         color: string;
-        label: string;
         emoji: string;
+        label: string;
     }>, "many">, {
         key: string;
         color: string;
-        label: string;
         emoji: string;
+        label: string;
     }[], {
         key: string;
         color: string;
-        label: string;
         emoji: string;
+        label: string;
     }[]>;
     map: z.ZodObject<{
         imageUrl: z.ZodOptional<z.ZodNullable<z.ZodEffects<z.ZodString, string, string>>>;
@@ -324,37 +324,37 @@ export declare const cadConfigSchema: z.ZodObject<{
         key: string;
         label: string;
         color?: string | undefined;
-        order?: number | undefined;
         emoji?: string | undefined;
+        order?: number | undefined;
     }[];
     priorities: {
         key: string;
         label: string;
         color?: string | undefined;
-        order?: number | undefined;
         emoji?: string | undefined;
+        order?: number | undefined;
     }[];
     incidentStatuses: {
         key: string;
         label: string;
         color?: string | undefined;
+        emoji?: string | undefined;
         order?: number | undefined;
         closed?: boolean | undefined;
-        emoji?: string | undefined;
     }[];
     unitStatuses: {
         key: string;
         label: string;
         color?: string | undefined;
-        order?: number | undefined;
         emoji?: string | undefined;
+        order?: number | undefined;
     }[];
     unitTypes: {
         key: string;
         label: string;
         color?: string | undefined;
-        order?: number | undefined;
         emoji?: string | undefined;
+        order?: number | undefined;
         layer?: string | undefined;
     }[];
     layers: {
@@ -366,8 +366,8 @@ export declare const cadConfigSchema: z.ZodObject<{
     markers: {
         key: string;
         color: string;
-        label: string;
         emoji: string;
+        label: string;
     }[];
     routes: {
         id: string;
@@ -398,37 +398,37 @@ export declare const cadConfigSchema: z.ZodObject<{
         key: string;
         label: string;
         color?: string | undefined;
-        order?: number | undefined;
         emoji?: string | undefined;
+        order?: number | undefined;
     }[];
     priorities: {
         key: string;
         label: string;
         color?: string | undefined;
-        order?: number | undefined;
         emoji?: string | undefined;
+        order?: number | undefined;
     }[];
     incidentStatuses: {
         key: string;
         label: string;
         color?: string | undefined;
+        emoji?: string | undefined;
         order?: number | undefined;
         closed?: boolean | undefined;
-        emoji?: string | undefined;
     }[];
     unitStatuses: {
         key: string;
         label: string;
         color?: string | undefined;
-        order?: number | undefined;
         emoji?: string | undefined;
+        order?: number | undefined;
     }[];
     unitTypes: {
         key: string;
         label: string;
         color?: string | undefined;
-        order?: number | undefined;
         emoji?: string | undefined;
+        order?: number | undefined;
         layer?: string | undefined;
     }[];
     layers: {
@@ -440,8 +440,8 @@ export declare const cadConfigSchema: z.ZodObject<{
     markers: {
         key: string;
         color: string;
-        label: string;
         emoji: string;
+        label: string;
     }[];
     routes: {
         id: string;

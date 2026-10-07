@@ -108,7 +108,7 @@ let RosterService = class RosterService {
         const r = await this.roster();
         const m = r.members.find((x) => x.key === key || x.userId === key || x.discordId === key);
         if (!m)
-            throw new errors_1.AppError('NOT_FOUND', 'Team member not found.');
+            throw new errors_1.AppError('NOT_FOUND', 'Teammitglied nicht gefunden.');
         const ctx = await this.perms.contextFor(viewerId);
         const details = (0, shared_1.can)(ctx, 'personnel.view') || (0, shared_1.can)(ctx, 'users.view');
         const personnelId = m.userId && (0, shared_1.can)(ctx, 'personnel.view') ? (await this.prisma.personnel.findUnique({ where: { userId: m.userId }, select: { id: true } }))?.id ?? null : null;

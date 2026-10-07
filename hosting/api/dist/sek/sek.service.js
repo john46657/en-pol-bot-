@@ -29,7 +29,7 @@ let SekService = class SekService {
     async resolve(t) {
         const user = t.userId ? await this.prisma.user.findUnique({ where: { id: t.userId } }) : t.discordId ? await this.discord.resolveUser(t.discordId) : null;
         if (!user?.active)
-            throw new errors_1.AppError('NOT_FOUND', t.discordId ? 'That Discord account is not linked to an active user.' : 'User not found.');
+            throw new errors_1.AppError('NOT_FOUND', t.discordId ? 'Dieses Discord-Konto ist mit keinem aktiven Benutzer verknüpft.' : 'Benutzer nicht gefunden.');
         return user;
     }
     async people(ids) {
@@ -47,10 +47,10 @@ let SekService = class SekService {
     async addMember(actor, t) {
         const user = await this.resolve(t);
         if (await this.isMember(user.id))
-            throw new errors_1.AppError('CONFLICT', `${user.displayName} is already an SEK member.`);
+            throw new errors_1.AppError('CONFLICT', `${user.displayName} ist schon SEK-Mitglied.`);
         await this.prisma.$transaction(async (tx) => {
             await tx.sekMember.create({ data: { userId: user.id, addedById: actor.userId } });
-            await tx.notification.create({ data: { userId: user.id, type: 'SEK', title: 'You are now a member of the SEK' } });
+            await tx.notification.create({ data: { userId: user.id, type: 'SEK', title: 'Du bist jetzt Mitglied des SEK' } });
             await this.audit.record(actor, { action: 'sek.member.add', module: 'sek', entityType: 'User', entityId: user.id }, tx);
         });
         return { userId: user.id, displayName: user.displayName, member: true };
@@ -60,7 +60,7 @@ let SekService = class SekService {
         await this.prisma.$transaction(async (tx) => {
             const r = await tx.sekMember.deleteMany({ where: { userId: user.id } });
             if (r.count === 0)
-                throw new errors_1.AppError('NOT_FOUND', `${user.displayName} is not an SEK member.`);
+                throw new errors_1.AppError('NOT_FOUND', `${user.displayName} ist kein SEK-Mitglied.`);
             await this.audit.record(actor, { action: 'sek.member.remove', module: 'sek', entityType: 'User', entityId: user.id }, tx);
         });
         return { userId: user.id, displayName: user.displayName, member: false };
@@ -74,7 +74,7 @@ let SekService = class SekService {
     async createReport(actor, d) {
         const userId = actor.userId;
         if (!(await this.isMember(userId)))
-            throw new errors_1.AppError('PERMISSION_DENIED', 'Only SEK members can file SEK mission reports.');
+            throw new errors_1.AppError('PERMISSION_DENIED', 'Nur SEK-Mitglieder können SEK-Einsatzberichte schreiben.');
         const r = await this.prisma.$transaction(async (tx) => {
             const rep = await tx.sekReport.create({ data: { number: (0, numbering_1.makeNumber)('SEK'), authorId: userId, occurredAt: d.occurredAt ?? new Date(), missionType: d.missionType, description: d.description } });
             await this.audit.record(actor, { action: 'sek.report.create', module: 'sek', entityType: 'SekReport', entityId: rep.id, after: { number: rep.number, missionType: rep.missionType } }, tx);

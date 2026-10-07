@@ -113,7 +113,7 @@ export class TwoFactorService {
   /** Verwaltung: Zwei-Faktor eines Kontos zurücksetzen (Handy verloren und keine Wiederherstellungscodes). */
   async adminReset(actor: Actor, userId: string) {
     if (userId === actor.userId) throw new AppError('CONFLICT', 'Die eigene Zwei-Faktor-Sicherung bitte unter „Persönlich“ abschalten.');
-    if (!(await this.prisma.user.findUnique({ where: { id: userId }, select: { id: true } }))) throw new AppError('NOT_FOUND', 'User not found.');
+    if (!(await this.prisma.user.findUnique({ where: { id: userId }, select: { id: true } }))) throw new AppError('NOT_FOUND', 'Benutzer nicht gefunden.');
     await this.clear(actor, userId, 'auth.2fa.reset');
   }
 

@@ -97,7 +97,7 @@ export class RosterService {
   async profile(viewerId: string, key: string) {
     const r = await this.roster();
     const m = r.members.find((x) => x.key === key || x.userId === key || x.discordId === key);
-    if (!m) throw new AppError('NOT_FOUND', 'Team member not found.');
+    if (!m) throw new AppError('NOT_FOUND', 'Teammitglied nicht gefunden.');
     const ctx = await this.perms.contextFor(viewerId);
     const details = can(ctx, 'personnel.view') || can(ctx, 'users.view');
     const personnelId = m.userId && can(ctx, 'personnel.view') ? (await this.prisma.personnel.findUnique({ where: { userId: m.userId }, select: { id: true } }))?.id ?? null : null;

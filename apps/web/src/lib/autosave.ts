@@ -73,7 +73,7 @@ async function send(e: Entry, keepalive = false) {
   const res = await fetch(`/api/v1${e.path}`, { method: e.method, credentials: 'same-origin', keepalive, headers: { 'content-type': 'application/json', ...apiHeaders(e.guildId) }, body: JSON.stringify(e.body) });
   const text = await res.text();
   let data: unknown; try { data = text ? JSON.parse(text) : undefined; } catch { data = undefined; }
-  if (!res.ok) { const d = (data ?? {}) as { code?: string; message?: string; requestId?: string }; throw new ApiError(res.status, d.code ?? 'ERROR', d.message ?? res.statusText, d.requestId); }
+  if (!res.ok) { const d = (data ?? {}) as { code?: string; message?: string; requestId?: string }; throw new ApiError(res.status, d.code ?? 'ERROR', d.message ?? `Anfrage fehlgeschlagen (${res.status})`, d.requestId); }
   return data;
 }
 

@@ -58,7 +58,7 @@ export function CadMapPage() {
   };
   return (
     <>
-      <PageHeader title="Einsatzkarte" subtitle="Mausrad/Buttons zum Zoomen, Ziehen zum Verschieben · Layer rechts oben" />
+      <PageHeader title="Einsatzkarte" subtitle="Mausrad/Schaltflächen zum Zoomen, Ziehen zum Verschieben · Ebenen rechts oben" />
       {map.error && <ErrorState error={map.error} />}
       <MapView cfg={cfg} data={map.data} height="calc(100dvh - 13rem)" focus={focus} placeUnit={place ? { id: place.id, callsign: place.callsign, done: () => nav('/cad/map', { replace: true }) } : null} actionsFor={actionsFor} onCreateIncidentAt={(x, z) => setDraft({ init: { mapX: x, mapZ: z } })} />
       {draft && <IncidentForm cfg={cfg} initial={draft.init} callId={draft.callId} onClose={() => setDraft(null)} onSaved={(i) => nav(`/cad/incidents?id=${i.id}`)} />}
@@ -77,7 +77,7 @@ export function CadCalls() {
   const hl = sp.get('id');
   return (
     <>
-      <PageHeader title="Notrufe" subtitle="ER:LC Emergency Calls – werden automatisch erkannt" actions={<Select aria-label="Status" className="w-auto" value={status} onChange={(e) => setStatus(e.target.value)}><option value="OPEN">Offen</option><option value="CLAIMED">Übernommen</option><option value="CLOSED">Geschlossen</option><option value="ALL">Alle</option></Select>} />
+      <PageHeader title="Notrufe" subtitle="ER:LC-Notrufe – werden automatisch erkannt" actions={<Select aria-label="Status" className="w-auto" value={status} onChange={(e) => setStatus(e.target.value)}><option value="OPEN">Offen</option><option value="CLAIMED">Übernommen</option><option value="CLOSED">Geschlossen</option><option value="ALL">Alle</option></Select>} />
       {q.isLoading ? <SkeletonRows /> : q.error ? <ErrorState error={q.error} /> : !q.data?.length ? <Card><EmptyState text="Keine Notrufe." hint="Sobald ER:LC Notrufe meldet, erscheinen sie hier und auf der Karte." /></Card> : (
         <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">{q.data.map((c) => (
           <Card key={c.id} className={hl === c.id ? 'ring-2 ring-primary' : undefined} title={<span>🚨 NOTRUF #{c.callNumber}</span>} actions={<Badge tone={c.status === 'OPEN' ? 'danger' : c.status === 'CLAIMED' ? 'warning' : 'neutral'}>{c.status === 'OPEN' ? 'Offen' : c.status === 'CLAIMED' ? 'Übernommen' : 'Geschlossen'}</Badge>}>
@@ -117,7 +117,7 @@ export function CadUnits() {
     <>
       <PageHeader title="Einheiten" subtitle="Status, Besatzung, aktuelle Einsätze und Position" actions={can('cad.manage_units') ? <Button onClick={() => setEdit({ callsign: '', type: cfg.unitTypes[0]?.key ?? null, operational: true })}>Neue Einheit</Button> : undefined} />
       {err && <div role="alert" className="mb-2 rounded border border-danger/40 bg-danger/10 p-2 text-sm text-danger">{err}</div>}
-      {q.isLoading ? <SkeletonRows /> : q.error ? <ErrorState error={q.error} /> : !q.data?.length ? <Card><EmptyState text="Noch keine Einheiten." hint="z. B. SEK-01, K9-01 – Typen, Farben und Icons unter Einstellungen." /></Card> : types.map((t) => {
+      {q.isLoading ? <SkeletonRows /> : q.error ? <ErrorState error={q.error} /> : !q.data?.length ? <Card><EmptyState text="Noch keine Einheiten." hint="z. B. SEK-01, K9-01 – Typen, Farben und Symbole unter Einstellungen." /></Card> : types.map((t) => {
         const list = q.data!.filter((u) => (u.type ?? null) === t || (t === null && u.type && !cfg.unitTypes.some((x) => x.key === u.type)));
         if (!list.length) return null;
         const ty = cfg.unitTypes.find((x) => x.key === t);
@@ -149,7 +149,7 @@ export function CadUnits() {
             <Field label="Einheitentyp">{(id) => <Select id={id} value={edit.type ?? ''} onChange={(e) => setEdit({ ...edit, type: e.target.value || null })}><option value="">—</option>{cfg.unitTypes.map((t) => <option key={t.key} value={t.key}>{t.emoji} {t.label}</option>)}</Select>}</Field>
             <Field label="Status">{(id) => <Select id={id} value={edit.status ?? cfg.unitStatuses[0]?.key} onChange={(e) => setEdit({ ...edit, status: e.target.value })}>{cfg.unitStatuses.map((s) => <option key={s.key} value={s.key}>{optLabel(cfg.unitStatuses, s.key)}</option>)}</Select>}</Field>
             <Field label="Farbe">{(id) => <Input id={id} type="color" value={edit.color ?? cfg.unitTypes.find((t) => t.key === edit.type)?.color ?? '#0891b2'} onChange={(e) => setEdit({ ...edit, color: e.target.value })} />}</Field>
-            <Field label="Icon (Emoji)">{(id) => <Input id={id} maxLength={4} value={edit.icon ?? ''} placeholder={cfg.unitTypes.find((t) => t.key === edit.type)?.emoji ?? '🚔'} onChange={(e) => setEdit({ ...edit, icon: e.target.value })} />}</Field>
+            <Field label="Symbol (Emoji)">{(id) => <Input id={id} maxLength={4} value={edit.icon ?? ''} placeholder={cfg.unitTypes.find((t) => t.key === edit.type)?.emoji ?? '🚔'} onChange={(e) => setEdit({ ...edit, icon: e.target.value })} />}</Field>
             <Field label="Discord-Server">{(id) => <Select id={id} value={edit.guildId ?? ''} onChange={(e) => setEdit({ ...edit, guildId: e.target.value || null })}><option value="">—</option>{(guilds.data ?? []).map((g) => <option key={g.id} value={g.id}>{g.name}</option>)}</Select>}</Field>
             <Field label="Discord-Rolle (wird bei Zuweisung erwähnt)">{(id) => <Select id={id} value={edit.discordRoleId ?? ''} onChange={(e) => setEdit({ ...edit, discordRoleId: e.target.value || null })}><option value="">—</option>{(guilds.data ?? []).filter((g) => !edit.guildId || g.id === edit.guildId).map((g) => <optgroup key={g.id} label={g.name}>{g.roles.map((r) => <option key={r.id} value={r.id}>@{r.name}</option>)}</optgroup>)}</Select>}</Field>
             <Field label="ER:LC-Team">{(id) => <Input id={id} maxLength={40} placeholder="z. B. Police, Sheriff" value={edit.erlcTeam ?? ''} onChange={(e) => setEdit({ ...edit, erlcTeam: e.target.value })} />}</Field>

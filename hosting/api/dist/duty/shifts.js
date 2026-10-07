@@ -36,11 +36,11 @@ exports.shiftTypeSchema = zod_1.z.object({
 exports.shiftsConfigSchema = zod_1.z.object({ enabled: zod_1.z.boolean().default(false), types: zod_1.z.array(exports.shiftTypeSchema).max(25).default([]) })
     .superRefine((c, ctx) => {
     if (new Set(c.types.map((t) => t.id)).size !== c.types.length)
-        ctx.addIssue({ code: 'custom', path: ['types'], message: 'Shift type ids must be unique.' });
+        ctx.addIssue({ code: 'custom', path: ['types'], message: 'Die IDs der Schichtarten müssen eindeutig sein.' });
     if (new Set(c.types.map((t) => t.name.toLowerCase())).size !== c.types.length)
-        ctx.addIssue({ code: 'custom', path: ['types'], message: 'Shift type names must be unique.' });
+        ctx.addIssue({ code: 'custom', path: ['types'], message: 'Die Namen der Schichtarten müssen eindeutig sein.' });
     if (c.types.filter((t) => t.isDefault).length > 1)
-        ctx.addIssue({ code: 'custom', path: ['types'], message: 'Only one shift type can be the default.' });
+        ctx.addIssue({ code: 'custom', path: ['types'], message: 'Nur eine Schichtart kann der Standard sein.' });
 });
 let ShiftsService = class ShiftsService {
     prisma;
@@ -69,13 +69,13 @@ let ShiftsService = class ShiftsService {
     async resolve(cfg, requested, current) {
         if (!cfg.enabled || !cfg.types.length) {
             if (requested)
-                throw new errors_1.AppError('VALIDATION_FAILED', 'Shift types are not enabled.');
+                throw new errors_1.AppError('VALIDATION_FAILED', 'Schichtarten sind nicht aktiviert.');
             return null;
         }
         if (requested) {
             const t = cfg.types.find((x) => x.id === requested);
             if (!t)
-                throw new errors_1.AppError('NOT_FOUND', 'Unknown shift type.');
+                throw new errors_1.AppError('NOT_FOUND', 'Unbekannte Schichtart.');
             return t;
         }
         return cfg.types.find((x) => x.id === current) ?? cfg.types.find((x) => x.isDefault) ?? cfg.types[0];

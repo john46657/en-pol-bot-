@@ -1,4 +1,5 @@
 import { useEffect, useRef, type ButtonHTMLAttributes, type InputHTMLAttributes, type ReactNode, type SelectHTMLAttributes, type TextareaHTMLAttributes, forwardRef, useId } from 'react';
+import { PRIORITY_LABEL, STATUS_LABEL, statusLabel } from '@enrp/shared';
 import { createPortal } from 'react-dom';
 import { AlertTriangle, Inbox, X } from 'lucide-react';
 import { ApiError } from '../lib/api';
@@ -37,9 +38,13 @@ const STATUS_TONE: Record<string, Tone> = {
   INTERVIEW: 'warning', PENDING_DECISION: 'warning', ACCEPTED: 'success', WITHDRAWN: 'neutral', PENDING: 'warning', CONFIRMED: 'success',
   ONLINE: 'success', OFFLINE: 'danger', UNKNOWN: 'neutral', ERROR: 'danger',
 };
-export const StatusBadge = ({ status }: { status: string }) => <Badge tone={STATUS_TONE[status] ?? 'neutral'}>{status.replace(/_/g, ' ')}</Badge>;
+/** Deutsche Anzeigenamen für Status-Enums (Werte selbst bleiben unverändert). */
+/** Anzeigetext für Auswahl-Optionen: bekannte Enum-Werte deutsch, sonst unverändert. */
+export { PRIORITY_LABEL, STATUS_LABEL, statusLabel };
+export const optionLabel = (o: string) => PRIORITY_LABEL[o] ?? STATUS_LABEL[o] ?? o;
+export const StatusBadge = ({ status }: { status: string }) => <Badge tone={STATUS_TONE[status] ?? 'neutral'}>{statusLabel(status)}</Badge>;
 const PRIO: Record<string, [Tone, string]> = { LOW: ['neutral', '▽'], MEDIUM: ['info', '◇'], HIGH: ['warning', '△'], URGENT: ['danger', '▲'], CRITICAL: ['danger', '⬣'] };
-export const PriorityBadge = ({ priority }: { priority: string }) => <Badge tone={PRIO[priority]?.[0] ?? 'neutral'} icon={PRIO[priority]?.[1]}>{priority}</Badge>;
+export const PriorityBadge = ({ priority }: { priority: string }) => <Badge tone={PRIO[priority]?.[0] ?? 'neutral'} icon={PRIO[priority]?.[1]}>{PRIORITY_LABEL[priority] ?? priority.replace(/_/g, ' ')}</Badge>;
 
 export const Field = ({ label, error, children, hint }: { label: string; error?: string; children: (id: string) => ReactNode; hint?: string }) => {
   const id = useId();
@@ -86,7 +91,7 @@ export function Modal({ open, title, onClose, children, wide }: { open: boolean;
   return createPortal(
     <div className="fixed inset-0 z-50 grid place-items-center bg-black/60 p-2 sm:p-4" onMouseDown={(e) => e.target === e.currentTarget && onClose()}>
       <div ref={ref} role="dialog" aria-modal="true" aria-label={title} className={cx('max-h-[92dvh] w-full overflow-auto rounded-lg border border-line bg-panel shadow-xl', wide ? 'max-w-3xl' : 'max-w-lg')}>
-        <header className="flex items-center justify-between border-b border-line px-4 py-3"><h2 className="font-semibold">{title}</h2><Button variant="ghost" size="sm" aria-label="Close" onClick={onClose}><X size={16} /></Button></header>
+        <header className="flex items-center justify-between border-b border-line px-4 py-3"><h2 className="font-semibold">{title}</h2><Button variant="ghost" size="sm" aria-label="Schließen" onClick={onClose}><X size={16} /></Button></header>
         <div className="p-4">{children}</div>
       </div>
     </div>,
@@ -94,7 +99,7 @@ export function Modal({ open, title, onClose, children, wide }: { open: boolean;
   );
 }
 
-export function ConfirmDialog({ open, title, message, confirmLabel = 'Confirm', cancelLabel = 'Cancel', danger, onConfirm, onClose, busy }: { open: boolean; title: string; message: ReactNode; confirmLabel?: string; cancelLabel?: string; danger?: boolean; busy?: boolean; onConfirm: () => void; onClose: () => void }) {
+export function ConfirmDialog({ open, title, message, confirmLabel = 'Bestätigen', cancelLabel = 'Abbrechen', danger, onConfirm, onClose, busy }: { open: boolean; title: string; message: ReactNode; confirmLabel?: string; cancelLabel?: string; danger?: boolean; busy?: boolean; onConfirm: () => void; onClose: () => void }) {
   return (
     <Modal open={open} title={title} onClose={onClose}>
       <p className="mb-4 text-sm text-muted">{message}</p>
@@ -104,7 +109,7 @@ export function ConfirmDialog({ open, title, message, confirmLabel = 'Confirm', 
 }
 
 export const Skeleton = ({ className = 'h-4 w-full' }: { className?: string }) => <div aria-hidden className={cx('skeleton', className)} />;
-export const SkeletonRows = ({ rows = 5 }: { rows?: number }) => <div role="status" aria-label="Loading" className="space-y-2">{Array.from({ length: rows }, (_, i) => <Skeleton key={i} className="h-8 w-full" />)}</div>;
+export const SkeletonRows = ({ rows = 5 }: { rows?: number }) => <div role="status" aria-label="Wird geladen" className="space-y-2">{Array.from({ length: rows }, (_, i) => <Skeleton key={i} className="h-8 w-full" />)}</div>;
 
 export function EmptyState({ text, hint, action }: { text: string; hint?: string; action?: ReactNode }) {
   return <div className="flex flex-col items-center gap-2 py-10 text-center text-muted"><Inbox size={28} aria-hidden /><p className="text-sm text-fg">{text}</p>{hint && <p className="text-xs">{hint}</p>}{action}</div>;
@@ -116,9 +121,9 @@ export function ErrorState({ error, onRetry }: { error: unknown; onRetry?: () =>
   return (
     <div role="alert" className="flex flex-col items-center gap-2 py-10 text-center">
       <AlertTriangle className="text-danger" aria-hidden />
-      <p className="text-sm">{e?.message ?? 'Something went wrong.'}</p>
-      {e?.requestId && <p className="text-xs text-muted">Request ID: <code>{e.requestId}</code></p>}
-      {onRetry && <Button variant="secondary" size="sm" onClick={onRetry}>Retry</Button>}
+      <p className="text-sm">{e?.message ?? 'Etwas ist schiefgelaufen.'}</p>
+      {e?.requestId && <p className="text-xs text-muted">Anfrage-ID: <code>{e.requestId}</code></p>}
+      {onRetry && <Button variant="secondary" size="sm" onClick={onRetry}>Erneut versuchen</Button>}
     </div>
   );
 }
@@ -127,8 +132,8 @@ export function Forbidden() {
   return (
     <div role="alert" className="mx-auto max-w-md py-16 text-center">
       <p className="text-5xl font-bold text-muted">403</p>
-      <h1 className="mt-2 text-lg font-semibold">Forbidden</h1>
-      <p className="mt-1 text-sm text-muted">You do not have permission to view this page. Ask an administrator if you believe this is a mistake.</p>
+      <h1 className="mt-2 text-lg font-semibold">Kein Zugriff</h1>
+      <p className="mt-1 text-sm text-muted">Du hast keine Berechtigung, diese Seite anzusehen. Wende dich an einen Administrator, falls das ein Fehler ist.</p>
     </div>
   );
 }

@@ -24,7 +24,7 @@ const pagination_1 = require("../common/pagination");
 const role = zod_1.z.enum(investigations_service_1.INVESTIGATION_ROLES);
 const create = zod_1.z.object({ title: zod_1.z.string().trim().min(3).max(200), description: zod_1.z.string().max(10000).optional(), leadId: zod_1.z.string().uuid().optional(), persons: zod_1.z.array(zod_1.z.object({ personId: zod_1.z.string().uuid(), role })).max(100).optional() });
 const addPerson = zod_1.z.object({ personId: zod_1.z.string().uuid(), role });
-const status = zod_1.z.object({ status: zod_1.z.enum(shared_1.INVESTIGATION_STATUSES).refine((s) => s !== 'CLOSED', 'Use the close endpoint.'), reason: zod_1.z.string().max(500).optional() });
+const status = zod_1.z.object({ status: zod_1.z.enum(shared_1.INVESTIGATION_STATUSES).refine((s) => s !== 'CLOSED', 'Abschließen bitte über die Abschließen-Aktion.'), reason: zod_1.z.string().max(500).optional() });
 const listQ = pagination_1.pageQuery.extend({ status: zod_1.z.enum(shared_1.INVESTIGATION_STATUSES).optional() });
 let InvestigationsController = class InvestigationsController {
     i;

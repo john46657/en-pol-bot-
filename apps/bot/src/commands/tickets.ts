@@ -12,7 +12,7 @@ const emojiOf = (e?: string | null) => (e && e.length <= 64 ? e : undefined);
 
 /** API-Fehler mit deutscher Meldung direkt anzeigen (Limits, Voraussetzungen …); sonst die Standard-Fehlerbehandlung. */
 function fail(e: unknown): Reply {
-  if (e instanceof BotApiError && [400, 403, 404, 409].includes(e.status) && e.message && !/^You |permission/i.test(e.message)) return errorReply(clip(e.message, 500));
+  if (e instanceof BotApiError && [400, 403, 404, 409].includes(e.status) && e.message && !/^You |permission|^Dafür fehlt dir die Berechtigung|steht dem Bot nicht zur Verfügung/i.test(e.message)) return errorReply(clip(e.message, 500));
   return mapError(e);
 }
 async function run(c: Ctx, r: R, text?: string): Promise<Reply> {

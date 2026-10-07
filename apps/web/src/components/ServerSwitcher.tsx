@@ -25,15 +25,15 @@ export function ServerSwitcher({ orgName, onPicked }: { orgName: string; onPicke
   if (list.length < 2) return <div className="flex min-w-0 items-center gap-2"><Shield size={18} className="text-primary" aria-hidden /><span className="min-w-0 truncate">{orgName}</span></div>;
   return (
     <div ref={ref} className="relative min-w-0 flex-1">
-      <button type="button" aria-haspopup="listbox" aria-expanded={open} aria-label={`Server: ${sel?.name ?? 'All servers'}`} onClick={() => setOpen(!open)}
+      <button type="button" aria-haspopup="listbox" aria-expanded={open} aria-label={`Server: ${sel?.name ?? 'Alle Server'}`} onClick={() => setOpen(!open)}
         className="flex w-full min-w-0 items-center gap-2 rounded-md px-2 py-1.5 text-left hover:bg-panel-2">
         {sel ? <Icon icon={sel.icon} name={sel.name} /> : <Shield size={18} className="shrink-0 text-primary" aria-hidden />}
-        <span className="min-w-0 flex-1"><span className="block truncate">{sel?.name ?? orgName}</span><span className="block text-[11px] font-normal text-muted">{sel ? 'Server' : 'All servers'}</span></span>
+        <span className="min-w-0 flex-1"><span className="block truncate">{sel?.name ?? orgName}</span><span className="block text-[11px] font-normal text-muted">{sel ? 'Server' : 'Alle Server'}</span></span>
         <ChevronDown size={16} className={`shrink-0 text-muted transition ${open ? 'rotate-180' : ''}`} aria-hidden />
       </button>
       {open && (
-        <ul role="listbox" aria-label="Choose server" className="absolute left-0 right-0 top-full z-50 mt-1 max-h-80 overflow-auto rounded-lg border border-line bg-panel p-1 shadow-xl">
-          {[{ id: '', name: 'All servers', icon: null as string | null }, ...list].map((g) => (
+        <ul role="listbox" aria-label="Server wählen" className="absolute left-0 right-0 top-full z-50 mt-1 max-h-80 overflow-auto rounded-lg border border-line bg-panel p-1 shadow-xl">
+          {[{ id: '', name: 'Alle Server', icon: null as string | null }, ...list].map((g) => (
             <li key={g.id || 'all'} role="none">
               <button type="button" role="option" aria-selected={g.id === server} onClick={() => { setServer(g.id); setOpen(false); onPicked?.(); }} className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-sm font-normal hover:bg-panel-2">
                 {g.id ? <Icon icon={g.icon} name={g.name} /> : <span className="grid h-6 w-6 place-items-center"><Globe size={16} className="text-muted" aria-hidden /></span>}

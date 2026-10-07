@@ -11,7 +11,9 @@ const node_path_1 = __importDefault(require("node:path"));
 const express_1 = require("express");
 const swagger_1 = require("@nestjs/swagger");
 const env_1 = require("./config/env");
+const zod_de_1 = require("./common/zod-de");
 function configureApp(app) {
+    (0, zod_de_1.installGermanZodErrors)(); // deutsche Zod-Meldungen in Validierungsfehlern
     const env = (0, env_1.loadEnv)();
     app.setGlobalPrefix('api/v1', { exclude: ['health', 'readiness'] });
     const httpsOnly = env.COOKIE_SECURE ? env.COOKIE_SECURE === 'true' : env.NODE_ENV === 'production';

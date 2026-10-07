@@ -35,13 +35,13 @@ let AcademyService = class AcademyService {
     async enroll(actor, courseId, personnelId) {
         return this.prisma.$transaction(async (tx) => {
             if (!(await tx.academyCourse.findUnique({ where: { id: courseId } })))
-                throw new errors_1.AppError('NOT_FOUND', 'Course not found.');
+                throw new errors_1.AppError('NOT_FOUND', 'Kurs nicht gefunden.');
             if (!(await tx.personnel.findUnique({ where: { id: personnelId } })))
-                throw new errors_1.AppError('NOT_FOUND', 'Personnel not found.');
+                throw new errors_1.AppError('NOT_FOUND', 'Personalakte nicht gefunden.');
             const e = await tx.academyEnrollment.upsert({ where: { courseId_personnelId: { courseId, personnelId } }, create: { courseId, personnelId }, update: {} });
             await this.audit.record(actor, { action: 'academy.enroll', module: 'academy', entityType: 'AcademyEnrollment', entityId: e.id, after: e }, tx);
             const p = await tx.personnel.findUniqueOrThrow({ where: { id: personnelId } });
-            await tx.notification.create({ data: { userId: p.userId, type: 'ACADEMY_ASSIGNMENT', title: 'You were enrolled in an academy course', entityType: 'AcademyCourse', entityId: courseId } });
+            await tx.notification.create({ data: { userId: p.userId, type: 'ACADEMY_ASSIGNMENT', title: 'Du wurdest in einen Akademie-Kurs eingeschrieben', entityType: 'AcademyCourse', entityId: courseId } });
             return e;
         });
     }
@@ -50,9 +50,9 @@ let AcademyService = class AcademyService {
         return this.prisma.$transaction(async (tx) => {
             const e = await tx.academyEnrollment.findUnique({ where: { id: enrollmentId }, include: { course: true, personnel: true } });
             if (!e)
-                throw new errors_1.AppError('NOT_FOUND', 'Enrollment not found.');
+                throw new errors_1.AppError('NOT_FOUND', 'Anmeldung zum Kurs nicht gefunden.');
             if (e.personnel.userId === actor.userId)
-                throw new errors_1.AppError('CONFLICT', 'You cannot grade yourself.');
+                throw new errors_1.AppError('CONFLICT', 'Du kannst dich nicht selbst bewerten.');
             const passed = score >= e.course.passScore;
             const r = await tx.academyResult.create({ data: { enrollmentId, score, passed, gradedById: actor.userId } });
             if (passed && !e.personnel.qualifications.includes(e.course.title)) {

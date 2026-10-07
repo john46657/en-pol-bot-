@@ -70,7 +70,7 @@ export function CadSettings() {
   const q = useCadConfig();
   const tabs = [
     ...(can('cad.manage_settings') ? ['Allgemein', 'Einsätze', 'Einheiten', 'Discord-Kanäle', 'Zusatzfelder'] : []),
-    ...(can('cad.manage_map') ? ['Karte & Layer'] : []),
+    ...(can('cad.manage_map') ? ['Karte & Ebenen'] : []),
     ...(can('cad.manage_erlc') ? ['ER:LC Integration'] : []),
     ...(can('settings.manage') ? ['Gefahrenstatus'] : []),
   ];
@@ -93,7 +93,7 @@ export function CadSettings() {
           <div className="grid max-w-xl gap-3">
             <Field label="Discord-Server der Leitstelle (Heimat der Einsätze)" hint="Von anderen Servern (z. B. SEK/K9) geht nur, was eine Server-Verbindung freigibt.">{() => <GuildSelect label="Leitstelle" value={draft.homeGuildId} onChange={(v) => upd({ homeGuildId: v })} />}</Field>
             <Field label="Präfix der Einsatznummer" hint={`Beispiel: ${draft.incidentNumberPrefix}-${new Date().getFullYear()}-00421`}>{(id) => <Input id={id} maxLength={6} value={draft.incidentNumberPrefix} onChange={(e) => upd({ incidentNumberPrefix: e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '') })} />}</Field>
-            <fieldset><legend className="mb-1 text-xs font-medium text-muted">Standard-Widgets der Leitstellen-Startseite (jeder kann seine eigene Ansicht davon abweichend anpassen)</legend>
+            <fieldset><legend className="mb-1 text-xs font-medium text-muted">Standard-Kacheln der Leitstellen-Startseite (jeder kann seine eigene Ansicht davon abweichend anpassen)</legend>
               <div className="grid gap-1 sm:grid-cols-2">{CAD_WIDGETS.map((w) => <label key={w} className="flex items-center gap-2 text-sm"><input type="checkbox" checked={draft.widgets.includes(w)} onChange={(e) => upd({ widgets: e.target.checked ? [...draft.widgets, w] : draft.widgets.filter((x) => x !== w) })} />{CAD_WIDGET_LABELS[w]}</label>)}</div>
             </fieldset>
           </div>
@@ -105,7 +105,7 @@ export function CadSettings() {
         </Card>}
         {tab === 'Einheiten' && <Card>
           <OptionListEditor title="Einheitenstatus (erster = verfügbar)" value={draft.unitStatuses} onChange={(v) => upd({ unitStatuses: v })} />
-          <OptionListEditor title="Einheitentypen" value={draft.unitTypes} onChange={(v) => upd({ unitTypes: v })} extra={(o, set) => <Select aria-label="Layer" className="w-auto py-1 text-xs" value={o.layer ?? 'units'} onChange={(e) => set({ layer: e.target.value })}>{draft.layers.map((l) => <option key={l.key} value={l.key}>{l.label}</option>)}</Select>} />
+          <OptionListEditor title="Einheitentypen" value={draft.unitTypes} onChange={(v) => upd({ unitTypes: v })} extra={(o, set) => <Select aria-label="Ebene" className="w-auto py-1 text-xs" value={o.layer ?? 'units'} onChange={(e) => set({ layer: e.target.value })}>{draft.layers.map((l) => <option key={l.key} value={l.key}>{l.label}</option>)}</Select>} />
         </Card>}
         {tab === 'Discord-Kanäle' && <RoutesEditor routes={draft.routes} onChange={(routes) => upd({ routes })} />}
         {tab === 'Zusatzfelder' && <Card>
@@ -113,7 +113,7 @@ export function CadSettings() {
           <OptionListEditor title="Zusatzfelder" value={draft.memberFields} noColor noEmoji onChange={(v) => upd({ memberFields: v.map((f) => ({ key: f.key, label: f.label, type: (f.type as 'text') ?? 'text', ...(f.options ? { options: f.options } : {}) })) })}
             extra={(o, set) => <Select aria-label="Typ" className="w-auto py-1 text-xs" value={o.type ?? 'text'} onChange={(e) => set({ type: e.target.value })}><option value="text">Text</option><option value="number">Zahl</option><option value="select">Auswahl</option></Select>} />
         </Card>}
-        {tab === 'Karte & Layer' && <MapSettings draft={draft} upd={upd} />}
+        {tab === 'Karte & Ebenen' && <MapSettings draft={draft} upd={upd} />}
         {tab === 'ER:LC Integration' && <ErlcIntegration />}
         {tab === 'Gefahrenstatus' && <DangerSettings />}
       </div>
@@ -171,8 +171,8 @@ function MapSettings({ draft, upd }: { draft: CadConfig; upd: (p: Partial<CadCon
         <div className="grid grid-cols-2 gap-2">{num('Breite (px)', 'width')}{num('Höhe (px)', 'height')}{num('Ursprung X (px)', 'originX')}{num('Ursprung Y (px)', 'originY')}{num('Maßstab (px je Einheit)', 'scale')}</div>
         <Button size="sm" variant="ghost" className="mt-2" onClick={() => setMap({ originX: m.width / 2, originY: m.height / 2, scale: 1 })}>Auf Standard zurücksetzen</Button>
       </Card>
-      <Card title="Layer" className="lg:col-span-2">
-        <OptionListEditor title="Layer (jeder einzeln ein-/ausblendbar)" value={draft.layers} noColor noEmoji onChange={(v) => upd({ layers: v.map((l) => ({ key: l.key.toLowerCase(), label: l.label, ...(l.builtin ? { builtin: true } : {}), enabledByDefault: l.enabledByDefault !== false })) })}
+      <Card title="Ebenen" className="lg:col-span-2">
+        <OptionListEditor title="Ebenen (jede einzeln ein-/ausblendbar)" value={draft.layers} noColor noEmoji onChange={(v) => upd({ layers: v.map((l) => ({ key: l.key.toLowerCase(), label: l.label, ...(l.builtin ? { builtin: true } : {}), enabledByDefault: l.enabledByDefault !== false })) })}
           extra={(o, set) => <label className="flex items-center gap-1 text-xs"><input type="checkbox" checked={o.enabledByDefault !== false} onChange={(e) => set({ enabledByDefault: e.target.checked })} />standardmäßig an</label>} />
         <OptionListEditor title="Marker-Darstellung" value={draft.markers} onChange={(v) => upd({ markers: v.map((x) => ({ key: x.key.toLowerCase(), label: x.label, emoji: x.emoji || '•', color: x.color ?? '#64748b' })) })} />
       </Card>
@@ -205,9 +205,9 @@ function ErlcIntegration() {
           <Card key={s.id} title={<span className="flex items-center gap-2">{s.logoUrl && <img src={s.logoUrl} alt="" className="h-5 w-5 rounded" />}{s.name}</span>} actions={<Badge tone={ERLC_STATUS_TONE[s.status] ?? 'neutral'}>{s.statusLabel}</Badge>}>
             <dl className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-0.5 text-sm">
               <dt className="text-muted">Server-Key</dt><dd className="font-mono">{s.keyMasked}</dd>
-              <dt className="text-muted">Letzte Synchronisierung</dt><dd>{s.lastSyncAt ? `${new Date(s.lastSyncAt).toLocaleString('de-DE')} (${ago(s.lastSyncAt)})` : '—'}</dd>
+              <dt className="text-muted">Letzter Abgleich</dt><dd>{s.lastSyncAt ? `${new Date(s.lastSyncAt).toLocaleString('de-DE')} (${ago(s.lastSyncAt)})` : '—'}</dd>
               <dt className="text-muted">API-Latenz</dt><dd>{s.latencyMs ? `${s.latencyMs} ms` : '—'}</dd>
-              <dt className="text-muted">Rate-Limit</dt><dd>{s.rateLimit.blockedUntil ? `pausiert bis ${new Date(s.rateLimit.blockedUntil).toLocaleTimeString('de-DE')}` : s.rateLimit.buckets.map((b) => `${b.bucket}: ${b.remaining ?? '?'}/${b.limit ?? '?'}`).join(' · ') || 'ok'}</dd>
+              <dt className="text-muted">Anfragelimit</dt><dd>{s.rateLimit.blockedUntil ? `pausiert bis ${new Date(s.rateLimit.blockedUntil).toLocaleTimeString('de-DE')}` : s.rateLimit.buckets.map((b) => `${b.bucket}: ${b.remaining ?? '?'}/${b.limit ?? '?'}`).join(' · ') || 'ok'}</dd>
               <dt className="text-muted">Letzter Fehler</dt><dd className={s.lastError ? 'text-danger' : ''}>{s.lastError ? `${s.lastError} (${ago(s.lastErrorAt)})` : '—'}</dd>
               <dt className="text-muted">Intervall</dt><dd>{s.pollSeconds} s{s.paused ? ' · pausiert (Key prüfen)' : ''}</dd>
               <dt className="text-muted">Funktionen</dt><dd className="text-xs">{s.features.map((f) => ERLC_FEATURE_LABELS[f as keyof typeof ERLC_FEATURE_LABELS] ?? f).join(', ') || '—'}</dd>
@@ -250,14 +250,14 @@ function ErlcServerForm({ value, onClose, onSaved }: { value: ErlcForm; onClose:
           <Input id={id} type="password" autoComplete="new-password" required={!v.id} placeholder={v.id ? '••••••••••••' : ''} value={v.key ?? ''} onChange={(e) => upd({ key: e.target.value })} />
         )}</Field>
         <Field label="Zugehöriger Discord-Server">{() => <GuildSelect label="Discord-Server" value={v.guildId} onChange={(g) => upd({ guildId: g })} />}</Field>
-        <Field label="Update-Intervall">{(id) => <Select id={id} value={v.pollSeconds} onChange={(e) => upd({ pollSeconds: Number(e.target.value) })}>{ERLC_POLL_OPTIONS.map((s) => <option key={s} value={s}>{s} Sekunden</option>)}</Select>}</Field>
+        <Field label="Aktualisierungsintervall">{(id) => <Select id={id} value={v.pollSeconds} onChange={(e) => upd({ pollSeconds: Number(e.target.value) })}>{ERLC_POLL_OPTIONS.map((s) => <option key={s} value={s}>{s} Sekunden</option>)}</Select>}</Field>
         <Field label="Logo (https-Adresse)">{(id) => <Input id={id} value={v.logoUrl ?? ''} onChange={(e) => upd({ logoUrl: e.target.value })} />}</Field>
         <div className="sm:col-span-2"><Field label="Beschreibung">{(id) => <Textarea id={id} rows={2} maxLength={1000} value={v.description ?? ''} onChange={(e) => upd({ description: e.target.value })} />}</Field></div>
         <fieldset className="sm:col-span-2"><legend className="mb-1 text-xs font-medium text-muted">Erlaubte Funktionen</legend>
           <div className="grid gap-1 sm:grid-cols-2">{ERLC_FEATURES.map((f) => <label key={f} className="flex items-center gap-2 text-sm"><input type="checkbox" checked={v.features.includes(f)} onChange={(e) => upd({ features: e.target.checked ? [...v.features, f] : v.features.filter((x) => x !== f) })} />{ERLC_FEATURE_LABELS[f]}</label>)}</div>
         </fieldset>
         <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={v.active} onChange={(e) => upd({ active: e.target.checked })} />Aktiv</label>
-        <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={v.webhookEnabled} onChange={(e) => upd({ webhookEnabled: e.target.checked })} />Event-Webhook nutzen (Notrufe sofort)</label>
+        <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={v.webhookEnabled} onChange={(e) => upd({ webhookEnabled: e.target.checked })} />Ereignis-Webhook nutzen (Notrufe sofort)</label>
         {v.id && <>
           <Field label="Kritische Befehle (Bestätigung + eigenes Recht)">{(id) => <Input id={id} value={v.criticalCommands} onChange={(e) => upd({ criticalCommands: e.target.value })} />}</Field>
           <Field label="Gesperrte Befehle">{(id) => <Input id={id} value={v.blockedCommands} onChange={(e) => upd({ blockedCommands: e.target.value })} />}</Field>
@@ -380,7 +380,7 @@ export function CadLogs() {
   const rows = (q.data ?? []).filter((r) => !f || `${r.action} ${r.actor} ${JSON.stringify(r.after)}`.toLowerCase().includes(f.toLowerCase()));
   return (
     <>
-      <PageHeader title="Protokolle" subtitle="Audit-Log von CAD und ER:LC (unveränderbar)" />
+      <PageHeader title="Protokolle" subtitle="Änderungsprotokoll von CAD und ER:LC (unveränderbar)" />
       <Input aria-label="Filtern" className="mb-2 max-w-xs" placeholder="Filtern…" value={f} onChange={(e) => setF(e.target.value)} />
       {q.isLoading ? <SkeletonRows /> : q.error ? <ErrorState error={q.error} /> : !rows.length ? <EmptyState text="Keine Einträge." /> : (
         <div className="overflow-x-auto"><table className="w-full text-sm"><thead><tr className="text-left text-xs text-muted"><th className="px-2 py-1">Zeit</th><th className="px-2 py-1">Benutzer</th><th className="px-2 py-1">Aktion</th><th className="px-2 py-1">Details</th></tr></thead>
@@ -406,7 +406,7 @@ function DangerPanelSender() {
   const chName = (id: string | null) => { for (const g of guilds.data ?? []) { const c = g.channels.find((x) => x.id === id); if (c) return `#${c.name} (${g.name})`; } return id ?? '—'; };
   return (
     <Card title="📌 Panel in Discord senden" className="lg:col-span-2">
-      <p className="mb-2 text-xs text-muted">Das Panel zeigt den aktuellen Status mit einem Button je Stufe und aktualisiert sich selbst. Es gibt immer nur ein Panel: Wird es in einen anderen Kanal geschickt, löscht der Bot das alte.</p>
+      <p className="mb-2 text-xs text-muted">Das Panel zeigt den aktuellen Status mit einer Schaltfläche je Stufe und aktualisiert sich selbst. Es gibt immer nur ein Panel: Wird es in einen anderen Kanal geschickt, löscht der Bot das alte.</p>
       <p className="mb-2 text-sm">Aktuell: {cur.data?.channelId ? <b>{chName(cur.data.channelId)}</b> : <span className="text-muted">noch kein Panel gepostet</span>}</p>
       <div className="flex flex-wrap items-end gap-2">
         <div className="min-w-64 flex-1"><Field label="Kanal">{() => <ChannelPicker ariaLabel="Kanal für das Panel" value={channelId ?? cur.data?.channelId} onChange={(id) => { setChannelId(id); setMsg(undefined); }} />}</Field></div>
@@ -433,8 +433,8 @@ function DangerSettings() {
         <div className="grid gap-2">
           <Field label="Titel">{(id) => <Input id={id} maxLength={200} value={d.panelTitle} onChange={(e) => setD({ ...d, panelTitle: e.target.value })} />}</Field>
           <Field label="Text (Markdown)">{(id) => <Textarea id={id} rows={5} maxLength={3000} value={d.panelText} onChange={(e) => setD({ ...d, panelText: e.target.value })} />}</Field>
-          <Field label="Emoji auf den Buttons (leer = Emoji der Stufe)">{(id) => <Input id={id} maxLength={4} value={d.buttonEmoji} onChange={(e) => setD({ ...d, buttonEmoji: e.target.value })} />}</Field>
-          <Field label="Bei jeder Änderung pingen (z. B. @Im Dienst)" hint="Kanal: Einstellungen → Discord → Gefahrenstatus-Channel">{() => (
+          <Field label="Emoji auf den Schaltflächen (leer = Emoji der Stufe)">{(id) => <Input id={id} maxLength={4} value={d.buttonEmoji} onChange={(e) => setD({ ...d, buttonEmoji: e.target.value })} />}</Field>
+          <Field label="Bei jeder Änderung pingen (z. B. @Im Dienst)" hint="Kanal: Einstellungen → Discord → Gefahrenstatus-Kanal">{() => (
             <div className="flex flex-wrap items-center gap-1">
               {d.pingRoleIds.map((id) => { const r = guilds.data?.flatMap((g) => g.roles).find((x) => x.id === id); return <span key={id} className="inline-flex items-center gap-1 rounded border border-success/40 bg-success/10 px-1.5 py-0.5 text-xs">@{r?.name ?? id}<button type="button" aria-label="entfernen" onClick={() => setD({ ...d, pingRoleIds: d.pingRoleIds.filter((x) => x !== id) })}>×</button></span>; })}
               <Select aria-label="Rolle hinzufügen" className="w-auto py-1 text-xs" value="" onChange={(e) => e.target.value && setD({ ...d, pingRoleIds: [...new Set([...d.pingRoleIds, e.target.value])] })}><option value="">+ Rolle…</option>{(guilds.data ?? []).map((g) => <optgroup key={g.id} label={g.name}>{g.roles.map((r) => <option key={r.id} value={r.id}>@{r.name}</option>)}</optgroup>)}</Select>
@@ -452,10 +452,10 @@ function DangerSettings() {
         <ul className="space-y-3">{d.levels.map((l, i) => (
           <li key={i} className="grid gap-2 rounded border border-line p-2 md:grid-cols-[auto_1fr_1fr_auto]">
             <div className="flex gap-1"><Input aria-label="Emoji" className="w-14 text-center" maxLength={4} value={l.emoji} onChange={(e) => setLevel(i, { emoji: e.target.value })} /><Input aria-label="Farbe" type="color" className="h-9 w-12 p-0.5" value={l.color} onChange={(e) => setLevel(i, { color: e.target.value })} /></div>
-            <Input aria-label="Name (Button)" maxLength={40} value={l.name} onChange={(e) => setLevel(i, { name: e.target.value })} />
+            <Input aria-label="Name (Schaltfläche)" maxLength={40} value={l.name} onChange={(e) => setLevel(i, { name: e.target.value })} />
             <Input aria-label="Überschrift" maxLength={200} value={l.title} placeholder="z. B. Geringe Kriminalität." onChange={(e) => setLevel(i, { title: e.target.value })} />
             <div className="flex items-center gap-1">
-              <Select aria-label="Button-Farbe" className="w-auto py-1 text-xs" value={l.buttonStyle} onChange={(e) => setLevel(i, { buttonStyle: e.target.value as 'danger' })}><option value="danger">rot</option><option value="primary">blau</option><option value="success">grün</option><option value="secondary">grau</option></Select>
+              <Select aria-label="Schaltflächenfarbe" className="w-auto py-1 text-xs" value={l.buttonStyle} onChange={(e) => setLevel(i, { buttonStyle: e.target.value as 'danger' })}><option value="danger">rot</option><option value="primary">blau</option><option value="success">grün</option><option value="secondary">grau</option></Select>
               <Button size="sm" variant="ghost" aria-label="nach oben" disabled={i === 0} onClick={() => move(i, -1)}><ArrowUp size={12} /></Button>
               <Button size="sm" variant="ghost" aria-label="nach unten" disabled={i === d.levels.length - 1} onClick={() => move(i, 1)}><ArrowDown size={12} /></Button>
               <Button size="sm" variant="ghost" aria-label="Entfernen" disabled={d.levels.length <= 2} onClick={() => setD({ ...d, levels: d.levels.filter((_, j) => j !== i) })}><Trash2 size={12} /></Button>

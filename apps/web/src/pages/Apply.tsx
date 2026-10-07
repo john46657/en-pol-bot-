@@ -16,7 +16,7 @@ export function Apply() {
   const submit = useMutation({
     mutationFn: (b: unknown) => api<{ number: string }>('/applications', { body: b }),
     onSuccess: (r) => setDone(r.number),
-    onError: (e) => setErr(e instanceof ApiError ? (e.status === 429 ? 'Too many submissions. Try again later.' : e.message) : 'Submission failed.'),
+    onError: (e) => setErr(e instanceof ApiError ? (e.status === 429 ? 'Zu viele Einsendungen. Versuch es später erneut.' : e.message) : 'Absenden fehlgeschlagen.'),
   });
   const onSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -31,7 +31,7 @@ export function Apply() {
   };
   return (
     <div className="mx-auto max-w-xl p-4 py-10">
-      <div className="mb-4 flex items-center gap-2 text-lg font-semibold"><Shield className="text-primary" aria-hidden />Police application</div>
+      <div className="mb-4 flex items-center gap-2 text-lg font-semibold"><Shield className="text-primary" aria-hidden />Polizei-Bewerbung</div>
       {tc.data && (tc.data.isOpen || tc.data.restrictApplications) && (
         <div className={`mb-4 rounded-lg border p-3 text-sm ${tc.data.isOpen ? 'border-success/40 bg-success/10' : 'border-danger/40 bg-danger/10'}`}>
           <p className="font-semibold">{tc.data.isOpen ? `📣 ${tc.data.title} – jetzt offen` : `🔒 ${tc.data.title} – derzeit geschlossen`}</p>
@@ -40,16 +40,16 @@ export function Apply() {
           {!tc.data.isOpen && <p className="mt-1">Bewerbungen sind nur während einer Team-Chance möglich.</p>}
         </div>
       )}
-      {done ? <div role="status" className="rounded-lg border border-success/40 bg-success/10 p-4">Thank you! Your application <b>{done}</b> was received. Keep this number.</div>
+      {done ? <div role="status" className="rounded-lg border border-success/40 bg-success/10 p-4">Danke! Deine Bewerbung <b>{done}</b> ist eingegangen. Bewahre diese Nummer gut auf.</div>
         : form.isLoading ? <SkeletonRows /> : form.error ? <ErrorState error={form.error} onRetry={() => void form.refetch()} /> : (
-          <form onSubmit={onSubmit} className="space-y-4 rounded-lg border border-line bg-panel p-5" aria-label="Application form">
+          <form onSubmit={onSubmit} className="space-y-4 rounded-lg border border-line bg-panel p-5" aria-label="Bewerbungsformular">
             {!form.data?.some((x) => x.type === 'ROBLOX') && <>
-              <Field label="Roblox username *">{(id) => <Input id={id} name="robloxUsername" required maxLength={64} />}</Field>
-              <Field label="Roblox user ID" hint="Optional, digits only.">{(id) => <Input id={id} name="robloxUserId" inputMode="numeric" pattern="[0-9]*" maxLength={18} />}</Field>
+              <Field label="Roblox-Benutzername *">{(id) => <Input id={id} name="robloxUsername" required maxLength={64} />}</Field>
+              <Field label="Roblox-Benutzer-ID" hint="Optional, nur Ziffern.">{(id) => <Input id={id} name="robloxUserId" inputMode="numeric" pattern="[0-9]*" maxLength={18} />}</Field>
             </>}
             {form.data?.map((raw) => <Question key={raw.key} f={raw} />)}
             {err && <p role="alert" className="text-sm text-danger">{err}</p>}
-            <Button type="submit" disabled={submit.isPending} className="w-full">{submit.isPending ? 'Sending…' : 'Submit application'}</Button>
+            <Button type="submit" disabled={submit.isPending} className="w-full">{submit.isPending ? 'Wird gesendet…' : 'Bewerbung absenden'}</Button>
           </form>
         )}
     </div>
@@ -60,11 +60,11 @@ export function Apply() {
 function Question({ f: raw }: { f: FormField }) {
   const f = normalizeField(raw);
   const label = `${f.label}${f.required ? ' *' : ''}`;
-  if (f.type === 'ROBLOX') return <Field label={label} hint="Search your Roblox account and select it.">{(id) => <RobloxPicker id={id} name={`a_${f.key}`} required={f.required} />}</Field>;
-  if (f.type === 'TEXT') return <Field label={label} hint={f.minLength ? `At least ${f.minLength} characters.` : undefined}>{(id) => <Textarea id={id} name={`a_${f.key}`} required={f.required} minLength={f.minLength || undefined} maxLength={f.maxLength} />}</Field>;
+  if (f.type === 'ROBLOX') return <Field label={label} hint="Such dein Roblox-Konto und wähle es aus.">{(id) => <RobloxPicker id={id} name={`a_${f.key}`} required={f.required} />}</Field>;
+  if (f.type === 'TEXT') return <Field label={label} hint={f.minLength ? `Mindestens ${f.minLength} Zeichen.` : undefined}>{(id) => <Textarea id={id} name={`a_${f.key}`} required={f.required} minLength={f.minLength || undefined} maxLength={f.maxLength} />}</Field>;
   return (
     <fieldset className="space-y-1">
-      <legend className="text-xs font-medium text-muted">{label}{f.multiple ? ' (multiple allowed)' : ''}</legend>
+      <legend className="text-xs font-medium text-muted">{label}{f.multiple ? ' (Mehrfachauswahl möglich)' : ''}</legend>
       {f.options.map((o) => (
         <label key={o.label} className="flex items-center gap-2 text-sm">
           <input type={f.multiple ? 'checkbox' : 'radio'} name={`a_${f.key}`} value={o.label} required={f.required && !f.multiple} />{o.label}
@@ -91,21 +91,21 @@ function RobloxPicker({ id, name, required }: { id: string; name: string; requir
   return (
     <div className="relative">
       <div className="relative">
-        <Input ref={setInput} id={id} required={required} autoComplete="off" maxLength={21} placeholder="Roblox username" value={text}
+        <Input ref={setInput} id={id} required={required} autoComplete="off" maxLength={21} placeholder="Roblox-Benutzername" value={text}
           className={picked ? 'border-success pr-12' : ''}
           onChange={(e) => { setText(e.target.value); setPicked(null); }} />
         {picked?.avatarUrl && <img src={picked.avatarUrl} alt="" className="absolute right-2 top-1/2 h-8 w-8 -translate-y-1/2 rounded" />}
       </div>
       <input type="hidden" name={name} value={picked?.name ?? fallback} />
       {!picked && valid && (
-        <div role="listbox" aria-label="Roblox accounts" className="absolute z-10 mt-1 w-full rounded-lg border border-line bg-panel shadow-lg">
-          {hit.isFetching ? <p className="px-3 py-2 text-sm text-muted">Searching Roblox…</p>
+        <div role="listbox" aria-label="Roblox-Konten" className="absolute z-10 mt-1 w-full rounded-lg border border-line bg-panel shadow-lg">
+          {hit.isFetching ? <p className="px-3 py-2 text-sm text-muted">Roblox wird durchsucht…</p>
             : p ? <button type="button" role="option" aria-selected={false} className="flex w-full items-center gap-3 px-3 py-2 text-left hover:bg-panel-2" onClick={() => { setPicked(p); setText(p.name); }}>
                 {p.avatarUrl ? <img src={p.avatarUrl} alt="" className="h-10 w-10 rounded" /> : <span className="h-10 w-10 rounded bg-panel-2" />}
                 <span><span className="block font-medium">{p.name}</span>{p.displayName !== p.name && <span className="text-xs text-muted">{p.displayName}</span>}</span>
               </button>
-            : hit.isError ? <p className="px-3 py-2 text-sm text-muted">Roblox is not reachable right now – try again in a moment.</p>
-            : <p className="px-3 py-2 text-sm text-danger">No Roblox account with this name.</p>}
+            : hit.isError ? <p className="px-3 py-2 text-sm text-muted">Roblox ist gerade nicht erreichbar – versuch es gleich noch einmal.</p>
+            : <p className="px-3 py-2 text-sm text-danger">Kein Roblox-Konto mit diesem Namen.</p>}
         </div>
       )}
     </div>

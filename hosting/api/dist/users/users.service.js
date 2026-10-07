@@ -43,7 +43,7 @@ let UsersService = class UsersService {
     /** Rollen-/Rechteänderungen an sich selbst sind verboten (Vier-Augen-Prinzip, verhindert Selbst-Eskalation). */
     assertNotSelf(actor, id) {
         if (actor.userId === id)
-            throw new errors_1.AppError('CONFLICT', 'You cannot change your own roles or permission overrides.');
+            throw new errors_1.AppError('CONFLICT', 'Deine eigenen Rollen und Sonderrechte kannst du nicht ändern.');
     }
     /** Mindestens ein aktiver System Administrator muss bestehen bleiben. */
     async assertAdminRemains(tx, targetId) {
@@ -53,7 +53,7 @@ let UsersService = class UsersService {
         const others = await tx.userRole.count({ where: { roleId: role.id, userId: { not: targetId }, user: { active: true } } });
         const targetIsAdmin = await tx.userRole.count({ where: { roleId: role.id, userId: targetId } });
         if (targetIsAdmin && others === 0)
-            throw new errors_1.AppError('CONFLICT', 'At least one active System Administrator must remain.');
+            throw new errors_1.AppError('CONFLICT', 'Mindestens ein aktiver System Administrator muss bleiben.');
     }
     async list(p) {
         const where = p.q ? { OR: [{ username: { contains: p.q, mode: 'insensitive' } }, { displayName: { contains: p.q, mode: 'insensitive' } }, { robloxUserId: p.q }] } : {};
@@ -66,7 +66,7 @@ let UsersService = class UsersService {
     async get(id) {
         const u = await this.prisma.user.findUnique({ where: { id }, select: publicSelect });
         if (!u)
-            throw new errors_1.AppError('NOT_FOUND', 'User not found.');
+            throw new errors_1.AppError('NOT_FOUND', 'Benutzer nicht gefunden.');
         return u;
     }
     async create(actor, d) {
@@ -88,7 +88,7 @@ let UsersService = class UsersService {
     /** Manuelle Roblox-ID-Hinterlegung durch Administratoren. Keine Identität wird geraten. */
     async setRoblox(actor, id, d) {
         if (d.robloxUserId !== null && !(0, shared_1.isValidRobloxUserId)(d.robloxUserId))
-            throw new errors_1.AppError('VALIDATION_FAILED', 'Invalid Roblox user id.');
+            throw new errors_1.AppError('VALIDATION_FAILED', 'Ungültige Roblox-Benutzer-ID.');
         const before = await this.get(id);
         return this.prisma.$transaction(async (tx) => {
             const u = await tx.user.update({
@@ -104,7 +104,7 @@ let UsersService = class UsersService {
     }
     async setActive(actor, id, active, reason) {
         if (!active && id === actor.userId)
-            throw new errors_1.AppError('CONFLICT', 'You cannot disable your own account.');
+            throw new errors_1.AppError('CONFLICT', 'Du kannst dein eigenes Konto nicht deaktivieren.');
         await this.get(id);
         await this.perms.assertOutranksUser(actor.userId, id); // Sperren/Entsperren nur unterhalb des eigenen Rangs
         const u = await this.prisma.$transaction(async (tx) => {
@@ -127,11 +127,11 @@ let UsersService = class UsersService {
         const touched = [...roleIds.filter((r) => !old.includes(r)), ...old.filter((r) => !roleIds.includes(r))];
         const roles = await this.prisma.role.findMany({ where: { id: { in: touched } } });
         if (roles.length !== new Set(touched).size)
-            throw new errors_1.AppError('NOT_FOUND', 'Role not found.');
+            throw new errors_1.AppError('NOT_FOUND', 'Rolle nicht gefunden.');
         const g = (0, guild_context_1.currentGuild)();
         for (const r of roles) {
             if (g && r.guildId && r.guildId !== g)
-                throw new errors_1.AppError('NOT_FOUND', 'Role not found.'); // Server getrennt
+                throw new errors_1.AppError('NOT_FOUND', 'Rolle nicht gefunden.'); // Server getrennt
             await this.perms.assertOutranksRole(actor.userId, r.priority, r.name);
         }
         return this.prisma.$transaction(async (tx) => {
@@ -149,7 +149,7 @@ let UsersService = class UsersService {
     async setOverride(actor, id, d) {
         this.assertNotSelf(actor, id);
         if (!(0, shared_1.isPermissionKey)(d.permission))
-            throw new errors_1.AppError('VALIDATION_FAILED', `Unknown permission "${d.permission}".`);
+            throw new errors_1.AppError('VALIDATION_FAILED', `Unbekannte Berechtigung „${d.permission}“.`);
         await this.get(id);
         await this.perms.assertOutranksUser(actor.userId, id);
         if (d.effect === 'ALLOW')
@@ -172,7 +172,7 @@ let UsersService = class UsersService {
         await this.prisma.$transaction(async (tx) => {
             const prev = await tx.userPermissionOverride.findUnique({ where: { userId_permissionKey: { userId: id, permissionKey: permission } } });
             if (!prev)
-                throw new errors_1.AppError('NOT_FOUND', 'Override not found.');
+                throw new errors_1.AppError('NOT_FOUND', 'Sonderrecht nicht gefunden.');
             await tx.userPermissionOverride.delete({ where: { id: prev.id } });
             this.rt.publishToUser(id, 'permissions.changed', {});
             await this.audit.record(actor, { action: 'user.override.remove', module: 'permissions', entityType: 'User', entityId: id, before: prev }, tx);

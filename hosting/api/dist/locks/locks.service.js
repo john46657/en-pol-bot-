@@ -47,7 +47,7 @@ let LocksService = class LocksService {
         for (const k of keys)
             if (await this.perms.has(userId, k))
                 return;
-        throw new errors_1.AppError('PERMISSION_DENIED', 'You do not have permission to perform this action.');
+        throw new errors_1.AppError('PERMISSION_DENIED', 'Dafür fehlt dir die Berechtigung.');
     }
     async holder(type, id) {
         const l = await this.prisma.editLock.findUnique({ where: { entityType_entityId: { entityType: type, entityId: id } }, include: { user: { select: { id: true, displayName: true } } } });

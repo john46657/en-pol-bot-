@@ -19,7 +19,7 @@ const zod_1 = require("zod");
 const sek_service_1 = require("./sek.service");
 const decorators_1 = require("../authz/decorators");
 const zod_pipe_1 = require("../common/zod.pipe");
-const target = zod_1.z.object({ userId: zod_1.z.string().uuid().optional(), discordId: zod_1.z.string().regex(/^\d{15,25}$/).optional() }).refine((v) => !!v.userId !== !!v.discordId, 'Provide exactly one of userId or discordId.');
+const target = zod_1.z.object({ userId: zod_1.z.string().uuid().optional(), discordId: zod_1.z.string().regex(/^\d{15,25}$/).optional() }).refine((v) => !!v.userId !== !!v.discordId, 'Bitte genau einen Benutzer oder eine Discord-ID angeben.');
 const report = zod_1.z.object({ occurredAt: zod_1.z.coerce.date().optional(), missionType: zod_1.z.string().trim().min(2).max(100), description: zod_1.z.string().trim().min(5).max(4000) });
 const list = zod_1.z.object({ limit: zod_1.z.coerce.number().int().min(1).max(100).default(25) });
 let SekController = class SekController {

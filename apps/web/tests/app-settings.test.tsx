@@ -29,33 +29,33 @@ describe('application settings like Appy', () => {
     const u = userEvent.setup();
     render(<QueryClientProvider client={new QueryClient({ defaultOptions: { queries: { retry: false } } })}><AuthProvider><Host /></AuthProvider></QueryClientProvider>);
     await screen.findAllByRole('option', { name: /streifen-bewerbung/ }); // Server-Liste geladen
-    const pending = screen.getByLabelText('Pending submission channel');
+    const pending = screen.getByLabelText('Kanal für offene Einsendungen');
     await u.selectOptions(pending, '200000000000000002');
-    await u.selectOptions(screen.getByLabelText('Accepted submission channel'), '200000000000000003');
+    await u.selectOptions(screen.getByLabelText('Kanal für angenommene Einsendungen'), '200000000000000003');
     expect(latest).toMatchObject({ channelId: '200000000000000002', acceptedChannelId: '200000000000000003' });
     // Rollen: Auswahl nach Namen, Anzeige als Chip, entfernen
-    await u.selectOptions(screen.getByLabelText('Required Roles'), '300000000000000001');
-    await u.click(within(screen.getByRole('radiogroup', { name: 'Required Roles match mode' })).getByRole('radio', { name: 'Has all roles' }));
+    await u.selectOptions(screen.getByLabelText('Erforderliche Rollen'), '300000000000000001');
+    await u.click(within(screen.getByRole('radiogroup', { name: 'Erforderliche Rollen Abgleich' })).getByRole('radio', { name: 'Hat alle Rollen' }));
     expect(latest!.settings.roles.required).toEqual({ ids: ['300000000000000001'], mode: 'ALL' });
-    expect(screen.getByRole('button', { name: 'Remove role Bürger' })).toBeTruthy(); // als Chip angezeigt
-    await u.selectOptions(screen.getByLabelText('Ping Roles'), '300000000000000002');
+    expect(screen.getByRole('button', { name: 'Rolle Bürger entfernen' })).toBeTruthy(); // als Chip angezeigt
+    await u.selectOptions(screen.getByLabelText('Ping-Rollen'), '300000000000000002');
     expect(latest!.pingRoleIds).toEqual(['300000000000000002']);
-    await u.click(screen.getByRole('button', { name: 'Remove role Bürger' }));
+    await u.click(screen.getByRole('button', { name: 'Rolle Bürger entfernen' }));
     expect(latest!.settings.roles.required.ids).toEqual([]);
     // Nachricht mit Variable
-    const accepted = screen.getByLabelText('Accepted Message');
+    const accepted = screen.getByLabelText('Nachricht bei Annahme');
     await u.clear(accepted);
     await u.type(accepted, 'Willkommen ');
-    await u.click(screen.getAllByRole('button', { name: 'Show variables' })[0]!);
+    await u.click(screen.getAllByRole('button', { name: 'Variablen anzeigen' })[0]!);
     await u.click(screen.getByRole('button', { name: '{applicationName}' }));
     expect(latest!.settings.messages.accepted).toBe('Willkommen {applicationName}');
     // Enabled, Staff Threads, Cooldown 14 Tage, Zeitlimit 1 Std.
-    await u.click(screen.getByRole('switch', { name: 'Enabled' }));
-    await u.click(screen.getByRole('switch', { name: 'Staff Threads' }));
-    await u.clear(screen.getByLabelText('Cooldown days'));
-    await u.type(screen.getByLabelText('Cooldown days'), '14');
-    await u.clear(screen.getByLabelText('Time limit hours'));
-    await u.type(screen.getByLabelText('Time limit hours'), '1');
+    await u.click(screen.getByRole('switch', { name: 'Aktiviert' }));
+    await u.click(screen.getByRole('switch', { name: 'Team-Threads' }));
+    await u.clear(screen.getByLabelText('Wartezeit Tage'));
+    await u.type(screen.getByLabelText('Wartezeit Tage'), '14');
+    await u.clear(screen.getByLabelText('Zeitlimit Stunden'));
+    await u.type(screen.getByLabelText('Zeitlimit Stunden'), '1');
     expect(latest).toMatchObject({ enabled: false, settings: { staffThreads: true, cooldownMinutes: 14 * 1440, timeLimitMinutes: 60 } });
   });
 });

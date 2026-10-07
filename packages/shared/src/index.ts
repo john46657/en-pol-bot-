@@ -6,3 +6,4 @@ export * from './forms';
 export * from './cad';
 export * from './danger';
 export * from './workflows';
+export * from './labels';

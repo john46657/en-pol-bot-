@@ -43,16 +43,16 @@ export function Login() {
       if (ticket) await loginTwoFactor(ticket, String(f.get('code')));
       else { const r = await login(String(f.get('username')), String(f.get('password'))); if (r) setTicket(r.ticket); }
     } catch (x) {
-      if (x instanceof ApiError && x.status === 429) setErr('Too many attempts. Please wait a minute.');
+      if (x instanceof ApiError && x.status === 429) setErr('Zu viele Versuche. Bitte warte eine Minute.');
       else if (ticket) { setErr(x instanceof ApiError && /abgelaufen/.test(x.message) ? x.message : 'Der Code stimmt nicht.'); if (x instanceof ApiError && /abgelaufen/.test(x.message)) setTicket(undefined); }
-      else setErr('Invalid username or password.');
+      else setErr('Benutzername oder Passwort ist falsch.');
     } finally { setBusy(false); }
   };
   return (
     <div className="grid min-h-full place-items-center p-4">
-      <form onSubmit={submit} className="w-full max-w-sm space-y-4 rounded-lg border border-line bg-panel p-6" aria-label="Sign in">
+      <form onSubmit={submit} className="w-full max-w-sm space-y-4 rounded-lg border border-line bg-panel p-6" aria-label="Anmelden">
         <div className="flex items-center gap-2 text-lg font-semibold"><Shield className="text-primary" aria-hidden />EN Polizei</div>
-        <p className="text-sm text-muted">Police CAD / MDT — authorised personnel only.</p>
+        <p className="text-sm text-muted">Polizei-CAD / MDT – nur für berechtigtes Personal.</p>
         {discordError && (discordError === 'no_team_role' || discordError === 'no_access'
           ? <div role="alert" className="rounded border border-danger/40 bg-danger/10 p-3 text-sm"><p className="font-semibold text-danger">🔒 Kein Zugriff</p><p className="mt-1 text-fg">{DISCORD_ERRORS[discordError]}</p></div>
           : <p role="alert" className="rounded border border-danger/40 bg-danger/10 p-2 text-sm text-danger">{DISCORD_ERRORS[discordError] ?? DISCORD_ERRORS.failed}</p>)}
@@ -72,9 +72,9 @@ export function Login() {
         )}
         {passwordForm && !ticket && (
           <>
-            <Field label="Username">{(id) => <Input id={id} name="username" autoComplete="username" required autoFocus={!providers.data?.discord} />}</Field>
-            <Field label="Password" error={err}>{(id) => <Input id={id} name="password" type="password" autoComplete="current-password" required />}</Field>
-            <Button type="submit" disabled={busy} className="w-full">{busy ? 'Signing in…' : 'Sign in'}</Button>
+            <Field label="Benutzername">{(id) => <Input id={id} name="username" autoComplete="username" required autoFocus={!providers.data?.discord} />}</Field>
+            <Field label="Passwort" error={err}>{(id) => <Input id={id} name="password" type="password" autoComplete="current-password" required />}</Field>
+            <Button type="submit" disabled={busy} className="w-full">{busy ? 'Anmeldung läuft…' : 'Anmelden'}</Button>
           </>
         )}
       </form>

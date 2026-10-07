@@ -6,7 +6,7 @@ import { CurrentActor, RequirePermission } from '../authz/decorators';
 import type { Actor } from '../audit/audit.service';
 import { zodBody } from '../common/zod.pipe';
 
-const target = z.object({ userId: z.string().uuid().optional(), discordId: z.string().regex(/^\d{15,25}$/).optional() }).refine((v) => !!v.userId !== !!v.discordId, 'Provide exactly one of userId or discordId.');
+const target = z.object({ userId: z.string().uuid().optional(), discordId: z.string().regex(/^\d{15,25}$/).optional() }).refine((v) => !!v.userId !== !!v.discordId, 'Bitte genau einen Benutzer oder eine Discord-ID angeben.');
 
 @ApiTags('radio')
 @Controller('radio-whitelist')

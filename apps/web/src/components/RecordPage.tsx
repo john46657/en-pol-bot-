@@ -37,10 +37,10 @@ export function RecordPage({ cfg }: { cfg: RecordConfig }) {
   const click = (a: RecordAction) => (a.reason ? setPending(a) : run.mutate(a));
   return (
     <>
-      <Button variant="ghost" size="sm" onClick={() => nav(cfg.back)} className="mb-2"><ArrowLeft size={14} />Back</Button>
+      <Button variant="ghost" size="sm" onClick={() => nav(cfg.back)} className="mb-2"><ArrowLeft size={14} />Zurück</Button>
       <PageHeader title={cfg.title(record)} subtitle={typeof record.status === 'string' ? undefined : undefined}
         actions={<>{typeof record.status === 'string' && <StatusBadge status={record.status} />}{visible.map((a) => <Button key={a.label} variant={a.danger ? 'danger' : 'secondary'} onClick={() => click(a)} disabled={run.isPending}>{a.label}</Button>)}</>} />
-      {err && !pending && <div role="alert" className="mb-3 rounded border border-danger/40 bg-danger/10 p-2 text-sm text-danger">{err.message}{err.requestId && <span className="ml-2 text-xs opacity-70">Request ID: {err.requestId}</span>}</div>}
+      {err && !pending && <div role="alert" className="mb-3 rounded border border-danger/40 bg-danger/10 p-2 text-sm text-danger">{err.message}{err.requestId && <span className="ml-2 text-xs opacity-70">Anfrage-ID: {err.requestId}</span>}</div>}
       <div className="grid gap-4 lg:grid-cols-3">
         <Card title="Details" className="lg:col-span-2">
           <dl className="grid gap-x-6 gap-y-3 sm:grid-cols-2">
@@ -48,12 +48,12 @@ export function RecordPage({ cfg }: { cfg: RecordConfig }) {
           </dl>
           {cfg.extra?.(record, q.data)}
         </Card>
-        <Card title="Timeline"><Timeline items={timeline} /></Card>
+        <Card title="Verlauf"><Timeline items={timeline} /></Card>
       </div>
       <Modal open={!!pending} title={pending?.label ?? ''} onClose={() => { setPending(undefined); setErr(undefined); }}>
-        <Field label={`Reason${pending?.reason === 'required' ? ' *' : ''}`}>{(fid) => <Textarea id={fid} value={reason} onChange={(e) => setReason(e.target.value)} />}</Field>
-        {err && <p role="alert" className="mt-2 text-sm text-danger">{err.message}{err.requestId && <span className="ml-2 text-xs opacity-70">Request ID: {err.requestId}</span>}</p>}
-        <div className="mt-4 flex justify-end gap-2"><Button variant="secondary" onClick={() => setPending(undefined)}>Cancel</Button><Button variant={pending?.danger ? 'danger' : 'primary'} disabled={run.isPending || (pending?.reason === 'required' && reason.trim().length < 3)} onClick={() => pending && run.mutate(pending)}>Confirm</Button></div>
+        <Field label={`Begründung${pending?.reason === 'required' ? ' *' : ''}`}>{(fid) => <Textarea id={fid} value={reason} onChange={(e) => setReason(e.target.value)} />}</Field>
+        {err && <p role="alert" className="mt-2 text-sm text-danger">{err.message}{err.requestId && <span className="ml-2 text-xs opacity-70">Anfrage-ID: {err.requestId}</span>}</p>}
+        <div className="mt-4 flex justify-end gap-2"><Button variant="secondary" onClick={() => setPending(undefined)}>Abbrechen</Button><Button variant={pending?.danger ? 'danger' : 'primary'} disabled={run.isPending || (pending?.reason === 'required' && reason.trim().length < 3)} onClick={() => pending && run.mutate(pending)}>Bestätigen</Button></div>
       </Modal>
     </>
   );

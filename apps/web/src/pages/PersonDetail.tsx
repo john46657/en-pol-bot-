@@ -14,13 +14,14 @@ interface Overview {
   links: { id: string; entityType: string; entityId: string; role: string; createdAt: string }[];
   timeline: TimelineItem[];
 }
-const TABS = ['Overview', 'Vehicles', 'Tickets', 'Related records', 'Timeline'];
+const TABS = ['Übersicht', 'Fahrzeuge', 'Strafzettel', 'Verknüpfte Akten', 'Verlauf'];
 const ROUTES: Record<string, string> = { Incident: 'incidents', Report: 'reports', Ticket: 'tickets', Complaint: 'complaints', Investigation: 'investigations', Wanted: 'wanted', Evidence: 'evidence' };
+const ENTITY_LABELS: Record<string, string> = { Incident: 'Einsatz', Report: 'Bericht', Ticket: 'Strafzettel', Complaint: 'Beschwerde', Investigation: 'Ermittlung', Wanted: 'Fahndung', Evidence: 'Beweismittel', Person: 'Person', Vehicle: 'Fahrzeug' };
 
 export function PersonDetail() {
   const { id = '' } = useParams();
   const { can } = useAuth();
-  const [tab, setTab] = useState('Overview');
+  const [tab, setTab] = useState('Übersicht');
   const [editing, setEditing] = useState(false);
   const studio = useStudio();
   const defs = studio.data?.customFields.persons ?? [];
@@ -30,17 +31,17 @@ export function PersonDetail() {
   const { person: p, tickets, links, timeline } = q.data;
   return (
     <>
-      <PageHeader title={p.robloxUsername} subtitle={`Roblox ID ${p.robloxUserId ?? 'unknown'}`} actions={<><StatusBadge status={p.status} />{can('persons.edit') && <Button variant="secondary" onClick={() => setEditing(true)}>Edit</Button>}</>} />
+      <PageHeader title={p.robloxUsername} subtitle={`Roblox-ID ${p.robloxUserId ?? 'unbekannt'}`} actions={<><StatusBadge status={p.status} />{can('persons.edit') && <Button variant="secondary" onClick={() => setEditing(true)}>Bearbeiten</Button>}</>} />
       <Tabs tabs={TABS} active={tab} onChange={setTab} />
       <div className="mt-4">
-        {tab === 'Overview' && <Card title="Overview"><dl className="grid gap-4 sm:grid-cols-2"><div><dt className="text-xs text-muted">Aliases</dt><dd>{p.aliases.join(', ') || '—'}</dd></div><div><dt className="text-xs text-muted">Notes</dt><dd className="whitespace-pre-wrap">{p.notes ?? '—'}</dd></div>{defs.map((d) => <div key={d.key}><dt className="text-xs text-muted">{d.label}</dt><dd>{p.custom?.[d.key] ?? '—'}</dd></div>)}</dl></Card>}
-        {tab === 'Vehicles' && <Card>{p.vehicles.length ? <ul>{p.vehicles.map((v) => <li key={v.id}>{v.plate} — {v.model ?? '—'}</li>)}</ul> : <EmptyState text="No linked vehicles." />}</Card>}
-        {tab === 'Tickets' && <Card>{tickets.length ? <ul className="divide-y divide-line">{tickets.map((t) => <li key={t.id} className="flex justify-between py-2"><span>{t.number} · {t.reason}</span><span className="flex gap-2">{Number(t.amount).toFixed(2)}<StatusBadge status={t.status} /></span></li>)}</ul> : <EmptyState text="No tickets." />}</Card>}
-        {tab === 'Related records' && <Card>{links.length ? <ul className="divide-y divide-line">{links.map((l) => <li key={l.id} className="py-2 text-sm">{l.entityType} <code className="text-xs">{l.entityId.slice(0, 8)}</code> · {l.role} · {fmt(l.createdAt)}{ROUTES[l.entityType] ? <> · <Link className="text-primary underline" to={`/${ROUTES[l.entityType]}/${l.entityId}`}>open</Link></> : null}</li>)}</ul> : <EmptyState text="No linked records." />}</Card>}
-        {tab === 'Timeline' && <Card><Timeline items={timeline} /></Card>}
+        {tab === 'Übersicht' && <Card title="Übersicht"><dl className="grid gap-4 sm:grid-cols-2"><div><dt className="text-xs text-muted">Aliasse</dt><dd>{p.aliases.join(', ') || '—'}</dd></div><div><dt className="text-xs text-muted">Notizen</dt><dd className="whitespace-pre-wrap">{p.notes ?? '—'}</dd></div>{defs.map((d) => <div key={d.key}><dt className="text-xs text-muted">{d.label}</dt><dd>{p.custom?.[d.key] ?? '—'}</dd></div>)}</dl></Card>}
+        {tab === 'Fahrzeuge' && <Card>{p.vehicles.length ? <ul>{p.vehicles.map((v) => <li key={v.id}>{v.plate} — {v.model ?? '—'}</li>)}</ul> : <EmptyState text="Keine verknüpften Fahrzeuge." />}</Card>}
+        {tab === 'Strafzettel' && <Card>{tickets.length ? <ul className="divide-y divide-line">{tickets.map((t) => <li key={t.id} className="flex justify-between py-2"><span>{t.number} · {t.reason}</span><span className="flex gap-2">{Number(t.amount).toFixed(2)}<StatusBadge status={t.status} /></span></li>)}</ul> : <EmptyState text="Keine Strafzettel." />}</Card>}
+        {tab === 'Verknüpfte Akten' && <Card>{links.length ? <ul className="divide-y divide-line">{links.map((l) => <li key={l.id} className="py-2 text-sm">{ENTITY_LABELS[l.entityType] ?? l.entityType} <code className="text-xs">{l.entityId.slice(0, 8)}</code> · {l.role} · {fmt(l.createdAt)}{ROUTES[l.entityType] ? <> · <Link className="text-primary underline" to={`/${ROUTES[l.entityType]}/${l.entityId}`}>öffnen</Link></> : null}</li>)}</ul> : <EmptyState text="Keine verknüpften Akten." />}</Card>}
+        {tab === 'Verlauf' && <Card><Timeline items={timeline} /></Card>}
       </div>
-      <FormModal open={editing} onClose={() => setEditing(false)} title="Edit person" endpoint={`/persons/${id}`} method="PATCH" lock={{ type: 'person', id }} invalidate={[['persons']]} defaults={{ robloxUsername: p.robloxUsername, notes: p.notes ?? '', ...Object.fromEntries(Object.entries(p.custom ?? {}).map(([k, v]) => [`cf_${k}`, String(v)])) }}
-        fields={[{ name: 'robloxUsername', label: 'Roblox username', required: true }, { name: 'notes', label: 'Notes', type: 'textarea' }, ...customFormFields(defs).map((f) => ({ ...f, required: false }))]} toBody={(v) => ({ ...withCustom(v), version: p.version })} />
+      <FormModal open={editing} onClose={() => setEditing(false)} title="Person bearbeiten" endpoint={`/persons/${id}`} method="PATCH" lock={{ type: 'person', id }} invalidate={[['persons']]} defaults={{ robloxUsername: p.robloxUsername, notes: p.notes ?? '', ...Object.fromEntries(Object.entries(p.custom ?? {}).map(([k, v]) => [`cf_${k}`, String(v)])) }}
+        fields={[{ name: 'robloxUsername', label: 'Roblox-Benutzername', required: true }, { name: 'notes', label: 'Notizen', type: 'textarea' }, ...customFormFields(defs).map((f) => ({ ...f, required: false }))]} toBody={(v) => ({ ...withCustom(v), version: p.version })} />
     </>
   );
 }

@@ -3,6 +3,18 @@ import type { Request, Response } from 'express';
 import { InvalidTransitionError } from '@enrp/shared';
 import { Prisma } from '@prisma/client';
 
+/** Deutsche Standardmeldungen für Framework-Fehler ohne eigenen Code. */
+const GENERIC: Record<number, string> = {
+  400: 'Ungültige Anfrage.',
+  401: 'Bitte melde dich an.',
+  403: 'Dafür fehlt dir die Berechtigung.',
+  404: 'Diese Seite bzw. Schnittstelle gibt es nicht.',
+  405: 'Diese Aktion ist hier nicht erlaubt.',
+  413: 'Die Anfrage ist zu groß.',
+  415: 'Dieses Format wird nicht unterstützt.',
+  429: 'Zu viele Anfragen – bitte kurz warten.',
+};
+
 /** Einheitliches Fehlerformat {code, message, requestId}; niemals Stacktraces nach außen. */
 @Catch()
 export class AllExceptionsFilter implements ExceptionFilter {
@@ -15,11 +27,11 @@ export class AllExceptionsFilter implements ExceptionFilter {
     const requestId = req.requestId ?? 'unknown';
     let status = 500;
     let code = 'INTERNAL_ERROR';
-    let message = 'An unexpected error occurred.';
+    let message = 'Ein unerwarteter Fehler ist aufgetreten.';
     let details: unknown;
 
     if (exception instanceof InvalidTransitionError) {
-      status = 409; code = 'INVALID_TRANSITION'; message = exception.message;
+      status = 409; code = 'INVALID_TRANSITION'; message = `Der Statuswechsel von ${exception.from} nach ${exception.to} ist nicht möglich.`;
     } else if (exception instanceof HttpException) {
       status = exception.getStatus();
       const body = exception.getResponse();
@@ -28,11 +40,12 @@ export class AllExceptionsFilter implements ExceptionFilter {
         code = b.code; message = b.message; details = b.details;
       } else {
         code = status === 401 ? 'UNAUTHENTICATED' : status === 403 ? 'PERMISSION_DENIED' : status === 404 ? 'NOT_FOUND' : status === 429 ? 'RATE_LIMITED' : 'ERROR';
-        message = typeof body === 'string' ? body : ((body as { message?: string }).message ?? exception.message);
+        // Meldungen von Nest/Express (z. B. „Cannot GET /x“, Throttler, Body-Parser) sind englisch → deutscher Standardtext je Status
+        message = GENERIC[status] ?? (status >= 500 ? 'Ein unerwarteter Fehler ist aufgetreten.' : 'Die Anfrage konnte nicht verarbeitet werden.');
       }
     } else if (exception instanceof Prisma.PrismaClientKnownRequestError) {
-      if (exception.code === 'P2002') { status = 409; code = 'CONFLICT'; message = 'A record with these unique values already exists.'; }
-      else if (exception.code === 'P2025') { status = 404; code = 'NOT_FOUND'; message = 'Record not found.'; }
+      if (exception.code === 'P2002') { status = 409; code = 'CONFLICT'; message = 'Ein Datensatz mit diesen Werten existiert bereits.'; }
+      else if (exception.code === 'P2025') { status = 404; code = 'NOT_FOUND'; message = 'Datensatz nicht gefunden.'; }
       else this.log.error({ requestId, prisma: exception.code }, 'prisma error');
     } else {
       this.log.error({ requestId, err: exception instanceof Error ? exception.message : String(exception) }, 'unhandled');

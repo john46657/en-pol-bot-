@@ -160,9 +160,21 @@ describe('/bewerbung (Polizei-Bewerbung per Direktnachricht)', () => {
     await handleDirectMessage({ userId: ME, userName: 'john', content: 'gibtsnicht99', ...say });
     expect(out.at(-1)!.embed.description).toContain('gibt es nicht');
     await handleDirectMessage({ userId: ME, userName: 'john', content: 'John150210', ...say });
-    expect(out.at(-2)!.embed).toMatchObject({ thumbnail: 'https://tr.rbxcdn.com/x.png' });
-    expect(out.at(-2)!.embed.description).toContain('Roblox-Konto gefunden');
-    expect(out.at(-1)!.embed.description).toContain('**2/2.** Warum?');
+    // wie im Web: Konto mit Bild zeigen, per Button bestätigen
+    const confirm = out.at(-1)! as { embed: { description?: string; thumbnail?: string }; buttons?: { id: string }[] };
+    expect(confirm.embed).toMatchObject({ thumbnail: 'https://tr.rbxcdn.com/x.png' });
+    expect(confirm.embed.description).toContain('Ist das dein Roblox-Konto?');
+    expect(confirm.buttons?.map((b) => b.id)).toEqual(['quali:rb:0:yes', 'quali:rb:0:no']);
+    const { p: plat } = fakePlatform();
+    const no = interactionFor('quali:rb:0:no')!;
+    expect((await no.def.run({ ...ctx(api, { platform: plat }), args: no.args })).update?.embeds?.[0]?.description).toContain('noch einmal');
+    expect(text(await no.def.run({ ...ctx(api, { platform: plat }), args: no.args }))).toContain('schon beantwortet'); // nichts mehr offen
+    await handleDirectMessage({ userId: ME, userName: 'john', content: 'john150210', ...say });
+    const sent: { embed: { description?: string } }[] = [];
+    const yes = interactionFor('quali:rb:0:yes')!;
+    const r = await yes.def.run({ ...ctx(api, { platform: { ...plat, sendDm: async (_u: string, m: { embed: { description?: string } }) => { sent.push(m); return { channelId: 'D', messageId: 'M' }; } } }), args: yes.args });
+    expect(r.update?.embeds?.[0]?.description).toContain('✅ john150210');
+    expect(sent.at(-1)!.embed.description).toContain('**2/2.** Warum?');
     await handleDirectMessage({ userId: ME, userName: 'john', content: 'Weil ich helfen will', ...say });
     expect(calls.at(-1)).toMatchObject({ path: '/bot/application', body: { robloxUsername: 'john150210', robloxUserId: '42', answers: { rb: 'john150210', why: 'Weil ich helfen will' } } });
   });
@@ -323,7 +335,7 @@ describe('Qualifikationen (Panel → Fragen per DM)', () => {
     const { p, log } = fakePlatform();
     const start = interactionFor('quali:start:flugstaffel')!;
     await start.def.run({ ...ctx(api, { platform: p }), args: start.args });
-    expect(log[0]).toBe(`dmEmbed ${ME} Flugstaffel quali:cancel`);
+    expect(log[0]).toBe(`dmEmbed ${ME} Flugstaffel `); // kein „Bewerbung abbrechen“-Button unter den Fragen
     // Einstellungen des Servers, auf dem geklickt wurde
     expect(calls.some((c) => c.path === `/bot/qualifications?guildId=${GUILD}`)).toBe(true);
     // zweite Auswahl während der laufenden Bewerbung wird abgewiesen
@@ -361,7 +373,7 @@ describe('Qualifikationen (Panel → Fragen per DM)', () => {
     // Auswahl-Frage: Menü statt Text
     const choice = d.out[1]!;
     expect(choice.select).toMatchObject({ id: 'quali:ans:1', max: 1, options: [{ label: 'Ja', value: '0' }, { label: 'Nein', value: '1' }] });
-    expect(choice.buttons?.map((b) => b.id)).toEqual(['quali:cancel']); // Pflicht: kein Überspringen
+    expect(choice.buttons ?? []).toEqual([]); // Pflicht: kein Überspringen, kein Abbrechen-Button
     await handleDirectMessage({ userId: ME, userName: 'o', content: 'Ja', api, sendDm: d.sendDm });
     expect(d.out[2]!.embed.description).toContain('Menü');
     const ans = interactionFor('quali:ans:1')!;
@@ -369,7 +381,7 @@ describe('Qualifikationen (Panel → Fragen per DM)', () => {
     expect(r.update?.embeds?.[0]?.description).toContain('✅ Ja');
     // nächste Frage (Rollen, mehrere, optional) kam per DM über die Plattform
     expect(dms.at(-1)!.select).toMatchObject({ id: 'quali:ans:2', max: 2 });
-    expect(dms.at(-1)!.buttons?.map((b) => b.id)).toEqual(['quali:skip:2', 'quali:cancel']);
+    expect(dms.at(-1)!.buttons?.map((b) => b.id)).toEqual(['quali:skip:2']);
     expect(text(await ans.def.run({ ...ctx(api, { platform: p }), args: ans.args, values: ['1'] }))).toContain('schon beantwortet');
     const roles = interactionFor('quali:ans:2')!;
     await roles.def.run({ ...ctx(api, { platform: p }), args: roles.args, values: ['0', '1'] });
@@ -459,9 +471,13 @@ describe('Qualifikationen (Panel → Fragen per DM)', () => {
     const { p } = fakePlatform();
     const start = interactionFor('quali:start:sek')!;
     await start.def.run({ ...ctx(down.api, { platform: p }), args: start.args });
-    const cancel = interactionFor('quali:cancel')!;
-    expect(text(await cancel.def.run({ ...ctx(down.api), args: cancel.args }))).toContain('abgebrochen');
     const d = dmLog();
+    // Abbrechen: „abbrechen“ schreiben
+    await handleDirectMessage({ userId: ME, userName: 'o', content: 'Abbrechen', api: down.api, sendDm: d.sendDm });
+    expect(d.out.at(-1)!.embed.description).toContain('abgebrochen');
+    await handleDirectMessage({ userId: ME, userName: 'o', content: 'x', api: down.api, sendDm: d.sendDm });
+    expect(d.out.at(-1)!.embed.description).toContain('keine laufende Bewerbung');
+    d.out.length = 0;
     await start.def.run({ ...ctx(down.api, { platform: p }), args: start.args });
     await handleDirectMessage({ userId: ME, userName: 'o', content: 'a', api: down.api, sendDm: d.sendDm, now: Date.now() + APPLICATION_MS + 1 });
     expect(d.out[0]!.embed.description).toContain('abgelaufen');

@@ -50,7 +50,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const set = new Set(user?.permissions ?? []);
     return { user, loading: q.isLoading, can: (p) => set.has(p), login, loginTwoFactor, logout };
   }, [user, q.isLoading, login, loginTwoFactor, logout]);
-  if (q.error && !(q.error instanceof ApiError && q.error.status === 401)) return <div role="alert" className="p-8 text-danger">Server not reachable. Retry later.</div>;
+  if (q.error && !(q.error instanceof ApiError && q.error.status === 401)) return <div role="alert" className="p-8 text-danger">Server nicht erreichbar. Bitte versuch es später erneut.</div>;
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
 }
 

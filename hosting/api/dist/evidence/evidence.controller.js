@@ -22,7 +22,7 @@ const decorators_1 = require("../authz/decorators");
 const zod_pipe_1 = require("../common/zod.pipe");
 const pagination_1 = require("../common/pagination");
 const create = zod_1.z.object({ type: zod_1.z.string().trim().min(2).max(64), description: zod_1.z.string().trim().min(3).max(5000), source: zod_1.z.string().max(200).optional(), caseRef: zod_1.z.string().max(40).optional(), storageLocation: zod_1.z.string().max(200).optional(), personIds: zod_1.z.array(zod_1.z.string().uuid()).max(50).optional() });
-const transfer = zod_1.z.object({ to: zod_1.z.enum(shared_1.EVIDENCE_CUSTODY_STATES).refine((s) => s !== 'RELEASED', 'Use the release endpoint.'), toUserId: zod_1.z.string().uuid().optional(), reason: zod_1.z.string().trim().min(3).max(500), storageLocation: zod_1.z.string().max(200).optional() });
+const transfer = zod_1.z.object({ to: zod_1.z.enum(shared_1.EVIDENCE_CUSTODY_STATES).refine((s) => s !== 'RELEASED', 'Freigeben bitte über die Freigabe-Aktion.'), toUserId: zod_1.z.string().uuid().optional(), reason: zod_1.z.string().trim().min(3).max(500), storageLocation: zod_1.z.string().max(200).optional() });
 let EvidenceController = class EvidenceController {
     e;
     constructor(e) {
