@@ -19,6 +19,7 @@ const zod_1 = require("zod");
 const danger_service_1 = require("./danger.service");
 const decorators_1 = require("../authz/decorators");
 const zod_pipe_1 = require("../common/zod.pipe");
+const panelBody = zod_1.z.object({ channelId: zod_1.z.string().regex(/^\d{15,25}$/, 'Discord-Kanal-ID') });
 const body = zod_1.z.object({ level: zod_1.z.string().trim().min(1).max(40), reason: zod_1.z.string().trim().max(200).optional() });
 let DangerController = class DangerController {
     d;
@@ -29,6 +30,9 @@ let DangerController = class DangerController {
     set(a, b) { return this.d.set(a, b.level, b.reason); }
     /** Stufen, Texte, Farben, Buttons und Pings (Dashboard). */
     config() { return this.d.config(); }
+    /** Button-Panel (Status per Klick) in einen Discord-Kanal senden. */
+    panel() { return this.d.panel(); }
+    sendPanel(a, b) { return this.d.sendPanel(a, b.channelId); }
     saveConfig(a, b) { return this.d.saveConfig(a, b); }
 };
 exports.DangerController = DangerController;
@@ -55,6 +59,23 @@ __decorate([
     __metadata("design:paramtypes", []),
     __metadata("design:returntype", void 0)
 ], DangerController.prototype, "config", null);
+__decorate([
+    (0, common_1.Get)('panel'),
+    (0, decorators_1.RequirePermission)('dashboard.view'),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", []),
+    __metadata("design:returntype", void 0)
+], DangerController.prototype, "panel", null);
+__decorate([
+    (0, common_1.Post)('panel'),
+    (0, common_1.HttpCode)(202),
+    (0, decorators_1.RequirePermission)('settings.manage'),
+    __param(0, (0, decorators_1.CurrentActor)()),
+    __param(1, (0, common_1.Body)((0, zod_pipe_1.zodBody)(panelBody))),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, void 0]),
+    __metadata("design:returntype", void 0)
+], DangerController.prototype, "sendPanel", null);
 __decorate([
     (0, common_1.Put)('config'),
     (0, decorators_1.RequirePermission)('settings.manage'),

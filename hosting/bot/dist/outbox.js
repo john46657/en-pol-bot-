@@ -23,10 +23,28 @@ const DIRECT = {
  * Holt offene Benachrichtigungen aus der System-API, postet sie und quittiert.
  * Fehlgeschlagene Sendungen werden gemeldet (die API zählt Versuche und gibt nach 5 Fehlversuchen auf).
  */
-async function pollOnce(api, send, log = console.log, dm, grantRole, syncRoles, onDutyChanged, ticketEffects, onMembersSync) {
+async function pollOnce(api, send, log = console.log, dm, grantRole, syncRoles, onDutyChanged, ticketEffects, onMembersSync, onPanel) {
     const [channels, items] = await Promise.all([api.service('GET', '/bot/config'), api.service('GET', '/bot/outbox?limit=20')]);
     let sent = 0;
     for (const item of items) {
+        if (item.type === 'danger.panel') {
+            try {
+                const channelId = String(item.payload.channelId ?? '');
+                if (!/^\d{15,25}$/.test(channelId))
+                    throw new Error('no channel id');
+                if (!onPanel)
+                    throw new Error('panels not supported');
+                await onPanel('danger', channelId);
+                await api.service('POST', `/bot/outbox/${item.id}/ack`, { ok: true });
+                sent++;
+            }
+            catch (e) {
+                const msg = e instanceof Error ? e.message : 'panel failed';
+                log(`outbox ${item.id} (danger.panel) failed: ${msg}`);
+                await api.service('POST', `/bot/outbox/${item.id}/ack`, { ok: false, error: msg }).catch(() => undefined);
+            }
+            continue;
+        }
         const direct = DIRECT[item.type];
         if (direct) {
             try {
@@ -159,7 +177,7 @@ async function pollOnce(api, send, log = console.log, dm, grantRole, syncRoles, 
     return sent;
 }
 /** Läuft dauerhaft; überlappende Durchläufe werden vermieden, Fehler (z. B. API kurz down) beenden die Schleife nicht. */
-function startOutboxLoop(api, send, seconds, log = console.log, dm, grantRole, syncRoles, onDutyChanged, ticketEffects, onMembersSync) {
+function startOutboxLoop(api, send, seconds, log = console.log, dm, grantRole, syncRoles, onDutyChanged, ticketEffects, onMembersSync, onPanel) {
     let running = false;
     let lastError;
     const tick = async () => {
@@ -167,7 +185,7 @@ function startOutboxLoop(api, send, seconds, log = console.log, dm, grantRole, s
             return;
         running = true;
         try {
-            await pollOnce(api, send, log, dm, grantRole, syncRoles, onDutyChanged, ticketEffects, onMembersSync);
+            await pollOnce(api, send, log, dm, grantRole, syncRoles, onDutyChanged, ticketEffects, onMembersSync, onPanel);
             if (lastError) {
                 log('outbox: connection to the API restored');
                 lastError = undefined;

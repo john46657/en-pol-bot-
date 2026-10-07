@@ -91,6 +91,19 @@ let DangerService = class DangerService {
         }
         return this.get();
     }
+    /** Wo das Button-Panel gerade steht (merkt sich der Bot). */
+    async panel() {
+        const v = await this.discord.getState('danger-panel');
+        return { channelId: v?.channelId ?? null, posted: !!v?.messageId };
+    }
+    /** Panel vom Dashboard aus in einen Kanal schicken (der Bot postet es und löscht ein älteres Panel). */
+    async sendPanel(actor, channelId) {
+        await this.prisma.$transaction(async (tx) => {
+            await tx.discordOutbox.create({ data: { type: 'danger.panel', channelKey: 'danger', payload: { channelId } } });
+            await this.audit.record(actor, { action: 'danger.panel', module: 'dispatch', entityType: 'DangerLevel', entityId: KEY, after: { channelId } }, tx);
+        });
+        return { queued: true };
+    }
 };
 exports.DangerService = DangerService;
 exports.DangerService = DangerService = __decorate([
