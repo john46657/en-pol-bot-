@@ -21,6 +21,8 @@ export class SekController {
 
   @Get('members') @RequirePermission('sek.view')
   members() { return this.s.members(); }
+  @Get('candidates') @RequirePermission('sek.manage')
+  candidates() { return this.s.candidates(); }
   @Post('members') @HttpCode(200) @RequirePermission('sek.manage')
   add(@CurrentActor() a: Actor, @Body(zodBody(target)) b: z.infer<typeof target>) { return this.s.addMember(a, b); }
   @Post('members/remove') @HttpCode(200) @RequirePermission('sek.manage')

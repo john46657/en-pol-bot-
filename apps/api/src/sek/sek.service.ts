@@ -34,6 +34,14 @@ export class SekService {
     return rows.map((r) => ({ userId: r.userId, ...(p.get(r.userId) ?? { displayName: '—', callsign: null, rank: null }), since: r.createdAt }));
   }
 
+  /** Wer hinzugefügt werden kann: alle aktiven Benutzer, die noch nicht im SEK sind (mit Dienstnummer/Dienstgrad, falls vorhanden). */
+  async candidates() {
+    const members = new Set((await this.prisma.sekMember.findMany({ select: { userId: true } })).map((m) => m.userId));
+    const users = await this.prisma.user.findMany({ where: { active: true }, orderBy: { displayName: 'asc' }, take: 1000, select: { id: true, displayName: true, username: true, personnel: { select: { callsign: true, rank: true } } } });
+    const linked = new Set((await this.prisma.discordLink.findMany({ select: { userId: true } })).map((l) => l.userId));
+    return users.filter((u) => !members.has(u.id)).map((u) => ({ userId: u.id, name: u.displayName, username: u.username, callsign: u.personnel?.callsign ?? null, rank: u.personnel?.rank ?? null, discordLinked: linked.has(u.id) }));
+  }
+
   async addMember(actor: Actor, t: SekTarget) {
     const user = await this.resolve(t);
     if (await this.isMember(user.id)) throw new AppError('CONFLICT', `${user.displayName} ist schon SEK-Mitglied.`);
