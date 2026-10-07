@@ -81,7 +81,7 @@ function RoomEditor({ room, onChange, onBack, onDelete, onPrimary, canManage }: 
             <div className="relative"><Input aria-label="Name des Raums" maxLength={100} value={room.name} onChange={(e) => set({ name: e.target.value })} /><span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-xs text-muted">{room.name.length} / 100</span></div>
           </Row>
           <Row title="Raum aktivieren?" desc="Regelt, ob der Raum aktiviert sein soll" required><Toggle label="Raum aktivieren" checked={room.enabled} onChange={(v) => set({ enabled: v })} /></Row>
-          <Row title="Warteraum" desc="Kanal, dem der Nutzer beitritt, um einen neuen Supportfall zu erstellen" required><ChannelPicker kind="voice" ariaLabel="Warteraum" value={room.waitingChannelId} onChange={(id) => set({ waitingChannelId: id ?? '' })} /></Row>
+          <Row title="Warteraum" desc="Kanal, dem der Nutzer beitritt, um einen neuen Support-Fall zu erstellen" required><ChannelPicker kind="voice" ariaLabel="Warteraum" value={room.waitingChannelId} onChange={(id) => set({ waitingChannelId: id ?? '' })} /></Row>
           <Row title="Benachrichtigungs-Kanal" desc="Kanal, in dem Teammitglieder über neue Supportfälle benachrichtigt werden" required><ChannelPicker ariaLabel="Benachrichtigungs-Kanal" value={room.notifyChannelId} onChange={(id) => set({ notifyChannelId: id ?? '' })} /></Row>
           <Row title="Team Rolle" desc="Rolle, die bei neuen Supportfällen markiert wird und Supportfälle übernehmen kann" required>
             <RolePicker ariaLabel="Team Rolle" max={1} value={room.teamRoleId ? [room.teamRoleId] : []} onChange={(ids) => set({ teamRoleId: ids[ids.length - 1] ?? '' })} />

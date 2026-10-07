@@ -27,7 +27,7 @@ function useGuildList() {
 /** Channel auswählen (nach Server gruppiert). Ohne gemeldete Server: Eingabe der ID. */
 export function ChannelPicker({ value, onChange, kind = 'text', ariaLabel, disabled }: { value: string | null | undefined; onChange: (id: string | null) => void; kind?: ChannelKind; ariaLabel: string; disabled?: boolean }) {
   const list = useGuildList();
-  if (!list.length) return <Input aria-label={ariaLabel} inputMode="numeric" disabled={disabled} value={value ?? ''} placeholder={kind === 'category' ? 'Discord-Kategorie-ID' : kind === 'voice' ? 'Sprachkanal-ID' : 'Discord-Channel-ID'} onChange={(e) => onChange(idOf(e.target.value) || null)} />;
+  if (!list.length) return <Input aria-label={ariaLabel} inputMode="numeric" disabled={disabled} value={value ?? ''} placeholder={kind === 'category' ? 'Discord-Kategorie-ID' : kind === 'voice' ? 'Sprachkanal-ID' : 'Discord-Kanal-ID'} onChange={(e) => onChange(idOf(e.target.value) || null)} />;
   const known = list.some((g) => g.channels.some((c) => c.id === value));
   return (
     <Select aria-label={ariaLabel} disabled={disabled} value={value ?? ''} onChange={(e) => onChange(e.target.value || null)}>
@@ -84,15 +84,15 @@ export function ChannelsPicker({ value, onChange, ariaLabel, disabled, max = 10,
       {ids.length > 0 && <ul className="flex flex-wrap gap-1.5">{ids.map((id) => { const c = name(id); return (
         <li key={id} className="inline-flex items-center gap-1.5 rounded border border-primary/40 bg-primary/10 px-2 py-0.5 text-xs">
           <span>{kind === 'voice' ? '🔊' : '#'} {c?.name ?? id}{all.length > 1 && c ? <span className="text-muted"> · {c.guild}</span> : null}</span>
-          {!disabled && <button type="button" aria-label={`Channel ${c?.name ?? id} entfernen`} className="text-muted hover:text-danger" onClick={() => set(ids.filter((x) => x !== id))}><X size={12} /></button>}
+          {!disabled && <button type="button" aria-label={`Kanal ${c?.name ?? id} entfernen`} className="text-muted hover:text-danger" onClick={() => set(ids.filter((x) => x !== id))}><X size={12} /></button>}
         </li>); })}</ul>}
       {!disabled && ids.length < max && (list.length ? (
         <Select aria-label={ariaLabel} value="" onChange={(e) => e.target.value && set([...ids, e.target.value])}>
-          <option value="">{ids.length ? '+ weiteren Channel wählen…' : 'Channel wählen…'}</option>
+          <option value="">{ids.length ? '+ weiteren Kanal wählen…' : 'Kanal wählen…'}</option>
           {list.map((g) => <optgroup key={g.id} label={g.name}>{channelOptions(g, kind).filter((c) => !ids.includes(c.id)).map((c) => <option key={c.id} value={c.id}>{c.label}</option>)}</optgroup>)}
         </Select>
       ) : (
-        <Input aria-label={ariaLabel} value={typed} placeholder="Channel-ID + Enter" onChange={(e) => setTyped(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); if (idOf(typed)) set([...ids, idOf(typed)]); setTyped(''); } }} onBlur={() => { if (idOf(typed)) set([...ids, idOf(typed)]); setTyped(''); }} />
+        <Input aria-label={ariaLabel} value={typed} placeholder="Kanal-ID + Enter" onChange={(e) => setTyped(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); if (idOf(typed)) set([...ids, idOf(typed)]); setTyped(''); } }} onBlur={() => { if (idOf(typed)) set([...ids, idOf(typed)]); setTyped(''); }} />
       ))}
     </div>
   );

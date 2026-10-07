@@ -152,7 +152,7 @@ export const QUALI_COMMANDS: CommandDef[] = [
     async run(c) { try { return await offer(c, POLICE); } catch (e) { return mapError(e); } },
   },
   {
-    name: 'bewerbungspanel', description: 'Postet das Bewerbungs-Panel („Jetzt bewerben“) in diesen Channel',
+    name: 'bewerbungspanel', description: 'Postet das Bewerbungs-Panel („Jetzt bewerben“) in diesen Kanal',
     async run(c) {
       if (!c.guildId) return errorReply('Das geht nur auf einem Server, nicht per Direktnachricht.');
       if (!c.isGuildAdmin) return errorReply('Dafür brauchst du auf diesem Discord-Server das Recht „Server verwalten“.');
@@ -161,12 +161,12 @@ export const QUALI_COMMANDS: CommandDef[] = [
         const police = (await getConfig(c.api, c.guildId).catch(() => undefined))?.police;
         const embed = police ? { title: clip(police.title, 256), color: COLORS.info, description: clip(police.description, 4000) } : POLICE_PANEL;
         await c.platform.postPanel({ channelId: c.channelId, embed, buttons: [{ id: `quali:pick:${POLICE}`, label: 'Jetzt bewerben', emoji: '📋', style: 'primary' }] });
-      } catch { return errorReply('Panel konnte nicht gepostet werden (fehlen dem Bot Rechte in diesem Channel?).'); }
-      return okReply('Bewerbungs-Panel gepostet. Neue Bewerbungen erscheinen im System unter *Applications* (und im Applications-Channel, falls eingestellt).');
+      } catch { return errorReply('Panel konnte nicht gepostet werden (fehlen dem Bot Rechte in diesem Kanal?).'); }
+      return okReply('Bewerbungs-Panel gepostet. Neue Bewerbungen erscheinen im System unter *Applications* (und im Bewerbungs-Kanal, falls eingestellt).');
     },
   },
   {
-    name: 'qualipanel', description: 'Postet das Qualifikations-Panel (SEK, Flugstaffel, Ausbilder …) in diesen Channel',
+    name: 'qualipanel', description: 'Postet das Qualifikations-Panel (SEK, Flugstaffel, Ausbilder …) in diesen Kanal',
     async run(c) {
       if (!c.guildId) return errorReply('Das geht nur auf einem Server, nicht per Direktnachricht.');
       if (!c.isGuildAdmin) return errorReply('Dafür brauchst du auf diesem Discord-Server das Recht „Server verwalten“.');
@@ -178,7 +178,7 @@ export const QUALI_COMMANDS: CommandDef[] = [
         return okReply(`Qualifikations-Panel gepostet.${ch?.qualifications ? '' : ' Tipp: In den Einstellungen einen **Qualifications channel** hinterlegen – dort landen die Bewerbungen mit Annehmen/Ablehnen-Buttons.'}`);
       } catch (e) {
         if (e instanceof BotApiError) return mapError(e);
-        return errorReply('Panel konnte nicht gepostet werden (fehlen dem Bot Rechte in diesem Channel?).');
+        return errorReply('Panel konnte nicht gepostet werden (fehlen dem Bot Rechte in diesem Kanal?).');
       }
     },
   },

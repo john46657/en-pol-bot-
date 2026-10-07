@@ -140,7 +140,7 @@ exports.TICKET_INTERACTION = {
                         await c.applyEffects(r.effects);
                     return { ...(0, format_1.okReply)(r.message ?? 'Erledigt.'), update: { embeds: [{ title: rest[0] === 'yes' ? '✅ Schließen bestätigt' : '✖️ Ticket bleibt offen', color: rest[0] === 'yes' ? format_1.COLORS.success : format_1.COLORS.neutral }] } };
                 }
-                case 'delete': return { ephemeral: true, embeds: [{ title: '🗑️ Ticket löschen?', description: 'Der Channel wird gelöscht (ein Transcript wird vorher gesichert, falls eingestellt).', color: format_1.COLORS.danger }], buttons: [{ id: `tk:delyes:${id}`, label: 'Endgültig löschen', style: 'danger' }] };
+                case 'delete': return { ephemeral: true, embeds: [{ title: '🗑️ Ticket löschen?', description: 'Der Kanal wird gelöscht (ein Transcript wird vorher gesichert, falls eingestellt).', color: format_1.COLORS.danger }], buttons: [{ id: `tk:delyes:${id}`, label: 'Endgültig löschen', style: 'danger' }] };
                 case 'delyes': return run(c, await staff(c, id, { action: 'delete' }));
                 // ---- Benutzer/Rollen ----
                 case 'add_user': return addPicker(id, 0);

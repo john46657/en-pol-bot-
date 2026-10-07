@@ -94,27 +94,10 @@ exports.COMMANDS = [
         },
     },
     {
-        name: 'verknuepfen', description: 'Verknüpft dein Discord-Konto mit deinem EN-Polizei-Benutzer',
-        options: [{ name: 'code', description: 'Code aus dem Web („Discord verknüpfen“)', type: 'string', required: true, maxLength: 12 }],
-        async run(c) {
-            try {
-                const r = await c.api.service('POST', '/bot/link', { code: str(c, 'code'), discordId: c.discordId });
-                return (0, format_1.okReply)(`Verknüpft mit **${(0, format_1.plain)(r.displayName)}** (@${(0, format_1.plain)(r.username)}). Alle Befehle laufen ab jetzt mit deinen Rechten.`);
-            }
-            catch (e) {
-                if (e instanceof api_1.BotApiError && e.status === 400)
-                    return (0, format_1.errorReply)('Ungültiger oder abgelaufener Code. Erzeuge im Web einen neuen.');
-                if (e instanceof api_1.BotApiError && e.status === 409)
-                    return (0, format_1.errorReply)('Dieses Discord-Konto oder dieser Benutzer ist bereits verknüpft.');
-                return (0, errors_1.mapError)(e);
-            }
-        },
-    },
-    {
         name: 'hilfe', description: 'Zeigt alle Befehle',
         async run() {
             return { ephemeral: true, embeds: [{ title: 'EN Polizei — Befehle', color: format_1.COLORS.info, fields: [
-                            { name: 'Konto', value: '`/verknuepfen` `/entverknuepfen` `/profil` `/benachrichtigungen`' },
+                            { name: 'Konto', value: '`/entverknuepfen` `/profil` `/benachrichtigungen`' },
                             { name: 'Abfragen', value: '`/person` `/kennzeichen` `/fahndungen` `/einsaetze` `/einsatzinfo` `/einheiten` `/team`' },
                             { name: 'Dienst & Leitstelle', value: '`/dienst` `/dienststunden` `/abmeldung` `/leave manage` `/einheitstatus` `/einsatz` `/einsatzstatus` `/einsatzzuweisen` `/funk` `/funkcode` `/cad`' },
                             { name: 'Erfassen', value: '`/ticket` `/bericht` `/beschwerde` `/ermittlung` `/fahndung` `/beweis`' },
@@ -332,7 +315,7 @@ exports.COMMANDS = [
         async run(c) {
             try {
                 await c.api.asUser(c.discordId, 'DELETE', '/discord/link');
-                return (0, format_1.okReply)('Verknüpfung gelöst. Mit `/verknuepfen` kannst du sie jederzeit neu herstellen.');
+                return (0, format_1.okReply)('Verknüpfung gelöst. Im Dashboard (Chat-Symbol oben rechts) kannst du sie jederzeit neu herstellen.');
             }
             catch (e) {
                 return (0, errors_1.mapError)(e);

@@ -186,13 +186,13 @@ test('Team dashboard: supervisor sets duty status of an officer', async ({ page 
   await expect(page.getByText('Im Dienst', { exact: true }).first()).toBeVisible();
 });
 
-test('Discord: link code from the UI is redeemed by the bot API, then unlinked', async ({ page, request }) => {
+test('Discord: linked account shows in the UI and acts with the user rights, then unlinked', async ({ page, request }) => {
   const BOT = { Authorization: 'Bot e2e-bot-token-0123456789-abcdefghijklmnop' };
   await uiLogin(page, 'admin', ADMIN_PASSWORD);
   await page.getByRole('button', { name: 'Discord verknüpfen' }).click();
-  await page.getByRole('button', { name: 'Code erzeugen' }).click();
-  const text = await page.getByTestId('link-code').innerText();
-  const code = text.split('code:')[1]!.trim();
+  await expect(page.getByText(/Verknüpfe dein Discord-Konto/)).toBeVisible();
+  // ohne Discord-App im Test: Verknüpfung direkt über die API (wie nach der Discord-Anmeldung)
+  const code = await page.evaluate(async () => (await (await fetch('/api/v1/discord/link-code', { method: 'POST', credentials: 'include', headers: { 'X-Requested-With': 'fetch' } })).json()).code as string);
   expect(code).toMatch(/^[A-Z2-9]{4}-[A-Z2-9]{4}$/);
   const res = await request.post('http://localhost:3100/api/v1/bot/link', { headers: BOT, data: { code, discordId: '300000000000000001' } });
   expect(res.status()).toBe(200);
@@ -206,7 +206,7 @@ test('Discord: link code from the UI is redeemed by the bot API, then unlinked',
   const blocked = await request.get('http://localhost:3100/api/v1/users', { headers: { ...BOT, 'X-Discord-User': '300000000000000001' } });
   expect(blocked.status()).toBe(403);
   await page.getByRole('button', { name: 'Verknüpfung lösen' }).click();
-  await expect(page.getByRole('button', { name: 'Code erzeugen' })).toBeVisible();
+  await expect(page.getByText(/Verknüpfe dein Discord-Konto/)).toBeVisible();
   const after = await request.get('http://localhost:3100/api/v1/persons', { headers: { ...BOT, 'X-Discord-User': '300000000000000001' } });
   expect(after.status()).toBe(401);
 });

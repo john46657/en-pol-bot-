@@ -23,13 +23,14 @@ export class DutyService {
       const sameType = !type || status === 'OFF_DUTY' || type.id === open?.shiftType;
       if ((open?.status ?? 'OFF_DUTY') === status && !d.unitId && sameType) throw new AppError('CONFLICT', `Dieser Status ist bereits gesetzt (${status}).`);
       if (targetUserId && !(await tx.user.findUnique({ where: { id: targetUserId, active: true } }))) throw new AppError('NOT_FOUND', 'Benutzer nicht gefunden.');
-      if (open) await tx.dutySession.update({ where: { id: open.id }, data: { endedAt: new Date() } });
+      const at = new Date(); // gleicher Zeitpunkt für Ende und Beginn → Schicht-Logs erkennen zusammenhängende Sitzungen
+      if (open) await tx.dutySession.update({ where: { id: open.id }, data: { endedAt: at } });
       previous = open ? { status: open.status, startedAt: open.startedAt, shiftType: open.shiftType } : null;
       if (d.unitId && !(await tx.unit.findUnique({ where: { id: d.unitId } }))) throw new AppError('NOT_FOUND', 'Einheit nicht gefunden.');
       let created = null;
       if (status !== 'OFF_DUTY') {
         const pers = await tx.personnel.findUnique({ where: { userId } });
-        created = await tx.dutySession.create({ data: { userId, status, unitId: d.unitId, shiftType: type?.id ?? null, callsign: (d.callsign ?? pers?.callsign ?? undefined)?.toUpperCase() } });
+        created = await tx.dutySession.create({ data: { userId, status, startedAt: at, unitId: d.unitId, shiftType: type?.id ?? null, callsign: (d.callsign ?? pers?.callsign ?? undefined)?.toUpperCase() } });
       }
       await this.audit.record(actor, { action: targetUserId && targetUserId !== actor.userId ? 'duty.status.set_by_supervisor' : 'duty.status', module: 'team', entityType: 'User', entityId: userId, before: { status: open?.status ?? 'OFF_DUTY' }, after: { status } }, tx);
       return created ?? { status: 'OFF_DUTY' };
@@ -100,6 +101,63 @@ export class DutyService {
     const round = (r: { minutes: number; byStatus: Record<string, number> }) => ({ ...r, minutes: Math.round(r.minutes), byStatus: Object.fromEntries(Object.entries(r.byStatus).map(([k, v]) => [k, Math.round(v)])) });
     const users = [...rows.values()].map(round).sort((a, b) => b.minutes - a.minutes);
     return { days, since, users };
+  }
+
+  /**
+   * Schicht-Logs: zusammenhängende Dienst-Sitzungen (Im Dienst ↔ Pause ↔ Schichtwechsel) bis „Außer Dienst“ ergeben eine Schicht.
+   * Je Schicht: wer, Schichtart, Beginn/Ende, Dauer, Pausen und wer sie gestartet/beendet hat (aus dem Audit-Log).
+   */
+  async shiftLog(f: { days: number; userId?: string; shiftType?: string }) {
+    const now = new Date();
+    const since = new Date(now.getTime() - f.days * 86_400_000);
+    // Sitzungen etwas vor dem Zeitraum mitnehmen, damit Schichten über die Grenze vollständig sind
+    const sessions = await this.prisma.dutySession.findMany({
+      where: { ...(f.userId ? { userId: f.userId } : {}), OR: [{ endedAt: null }, { endedAt: { gt: new Date(since.getTime() - 86_400_000) } }] },
+      include: { user: { select: { displayName: true, personnel: { select: { rank: true, callsign: true } } } } },
+      orderBy: [{ userId: 'asc' }, { startedAt: 'asc' }],
+    });
+    type S = (typeof sessions)[number];
+    const groups: S[][] = [];
+    for (const s of sessions) {
+      const g = groups[groups.length - 1];
+      const prev = g?.[g.length - 1];
+      // Statuswechsel beendet die alte Sitzung und startet die neue im selben Moment → gleiche Schicht
+      if (prev && prev.userId === s.userId && prev.endedAt?.getTime() === s.startedAt.getTime()) g!.push(s);
+      else groups.push([s]);
+    }
+    const cfg = await this.shifts.config();
+    const typeName = (id: string | null) => (id ? cfg.types.find((t) => t.id === id)?.name ?? id : null);
+    const shifts = groups.map((g) => {
+      const first = g[0]!, last = g[g.length - 1]!;
+      const end = last.endedAt;
+      const ms = (s: S) => (s.endedAt ?? now).getTime() - s.startedAt.getTime();
+      const types = [...new Set(g.map((s) => s.shiftType).filter((x): x is string => !!x))];
+      return {
+        id: first.id, userId: first.userId, name: first.user.displayName, rank: first.user.personnel?.rank ?? null, callsign: last.callsign ?? first.user.personnel?.callsign ?? null,
+        shiftTypes: types, shiftType: typeName(types[0] ?? null), shiftTypeNames: types.map((t) => typeName(t)!),
+        startedAt: first.startedAt, endedAt: end, active: !end, status: end ? 'OFF_DUTY' : last.status,
+        minutes: Math.round(g.reduce((n, s) => n + ms(s), 0) / 60_000),
+        breakMinutes: Math.round(g.filter((s) => s.status === 'BREAK').reduce((n, s) => n + ms(s), 0) / 60_000),
+        breaks: g.filter((s) => s.status === 'BREAK').length,
+        startedBy: null as string | null, endedBy: null as string | null,
+      };
+    }).filter((x) => (x.endedAt ?? now) > since && (!f.shiftType || x.shiftTypes.includes(f.shiftType)))
+      .sort((a, b) => b.startedAt.getTime() - a.startedAt.getTime()).slice(0, 500);
+    // Wer hat gestartet/beendet? Audit-Eintrag zum Statuswechsel (selbst, per Discord oder durch die Schichtleitung)
+    if (shifts.length) {
+      const audits = await this.prisma.auditLog.findMany({
+        where: { module: 'team', action: { in: ['duty.status', 'duty.status.set_by_supervisor'] }, entityType: 'User', entityId: { in: [...new Set(shifts.map((s) => s.userId))] }, createdAt: { gt: new Date(since.getTime() - 86_400_000) } },
+        select: { actorUserId: true, entityId: true, createdAt: true },
+      });
+      const names = new Map((await this.prisma.user.findMany({ where: { id: { in: [...new Set(audits.map((a) => a.actorUserId).filter((x): x is string => !!x))] } }, select: { id: true, displayName: true } })).map((u) => [u.id, u.displayName]));
+      const near = (userId: string, at: Date | null) => {
+        if (!at) return null;
+        const a = audits.filter((x) => x.entityId === userId && Math.abs(x.createdAt.getTime() - at.getTime()) < 10_000).sort((x, y) => Math.abs(x.createdAt.getTime() - at.getTime()) - Math.abs(y.createdAt.getTime() - at.getTime()))[0];
+        return a?.actorUserId ? names.get(a.actorUserId) ?? null : null;
+      };
+      for (const s of shifts) { s.startedBy = near(s.userId, s.startedAt); s.endedBy = near(s.userId, s.endedAt); }
+    }
+    return { days: f.days, since, items: shifts.map(({ shiftTypes: _, ...s }) => s) };
   }
 
   /** Team-Dashboard: pro aktivem Beamten Dienststatus, Einheit, aktueller Einsatz und letzte Statusänderung. */

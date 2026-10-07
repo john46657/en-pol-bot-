@@ -28,7 +28,7 @@ async function setDanger(c, level, reason) {
     }
 }
 // ---------------- Dienst-Panel ----------------
-const DUTY_PANEL = { title: '🚓 Dienststatus', color: format_1.COLORS.info, description: 'Melde dich hier mit einem Klick **in den Dienst**, in die **Pause** oder **außer Dienst**.\nDein Status erscheint sofort im Dashboard, in der Teamliste und – falls eingestellt – als Discord-Rolle.\n\n*Dein Discord-Konto muss verknüpft sein (`/verknuepfen`).*' };
+const DUTY_PANEL = { title: '🚓 Dienststatus', color: format_1.COLORS.info, description: 'Melde dich hier mit einem Klick **in den Dienst**, in die **Pause** oder **außer Dienst**.\nDein Status erscheint sofort im Dashboard, in der Teamliste und – falls eingestellt – als Discord-Rolle.\n\n*Dein Discord-Konto muss im Dashboard verknüpft sein.*' };
 const DUTY_BUTTONS = [
     { id: 'duty:ON_DUTY', label: 'Im Dienst', emoji: '🟢', style: 'success' }, { id: 'duty:BREAK', label: 'Pause', emoji: '🟡', style: 'secondary' },
     { id: 'duty:TRAINING', label: 'Training', emoji: '🔵', style: 'secondary' }, { id: 'duty:ADMINISTRATIVE', label: 'Verwaltung', emoji: '🗂️', style: 'secondary' },
@@ -85,7 +85,7 @@ exports.FEATURE_COMMANDS = [
                 await c.api.asUser(c.discordId, 'GET', '/team/overview'); // Leserecht im System prüfen
                 const cfg = await c.config?.();
                 const p = await c.refreshLive('teamlist', { channelId: cfg?.teamlist ? undefined : c.channelId, force: true });
-                return p ? (0, format_1.okReply)(`Teamliste steht in <#${p.channelId}> und aktualisiert sich automatisch.`) : (0, format_1.errorReply)('Kein Channel für die Teamliste gefunden.');
+                return p ? (0, format_1.okReply)(`Teamliste steht in <#${p.channelId}> und aktualisiert sich automatisch.`) : (0, format_1.errorReply)('Kein Kanal für die Teamliste gefunden.');
             }
             catch (e) {
                 return (0, errors_1.mapError)(e);
@@ -137,7 +137,7 @@ exports.FEATURE_COMMANDS = [
         },
     },
     {
-        name: 'dienstpanel', description: 'Postet das Dienst-Panel (Im Dienst / Pause / Außer Dienst per Button) in diesen Channel',
+        name: 'dienstpanel', description: 'Postet das Dienst-Panel (Im Dienst / Pause / Außer Dienst per Button) in diesen Kanal',
         async run(c) {
             const denied = needGuildAdmin(c);
             if (denied)
@@ -148,10 +148,10 @@ exports.FEATURE_COMMANDS = [
                 await c.platform.postPanel({ channelId: c.channelId, embed: DUTY_PANEL, buttons: DUTY_BUTTONS });
             }
             catch {
-                return (0, format_1.errorReply)('Panel konnte nicht gepostet werden (fehlen dem Bot Rechte in diesem Channel?).');
+                return (0, format_1.errorReply)('Panel konnte nicht gepostet werden (fehlen dem Bot Rechte in diesem Kanal?).');
             }
             const cfg = await c.config?.().catch(() => undefined);
-            return (0, format_1.okReply)(`Dienst-Panel gepostet.${cfg?.dutyRole || cfg?.duty ? '' : ' Tipp: In den Einstellungen einen **Dienst-Channel** (Meldungen) und eine **Dienst-Rolle** hinterlegen.'}`);
+            return (0, format_1.okReply)(`Dienst-Panel gepostet.${cfg?.dutyRole || cfg?.duty ? '' : ' Tipp: In den Einstellungen einen **Dienst-Kanal** (Meldungen) und eine **Dienst-Rolle** hinterlegen.'}`);
         },
     },
     {

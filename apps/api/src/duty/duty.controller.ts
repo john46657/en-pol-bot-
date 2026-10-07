@@ -8,6 +8,7 @@ import type { Actor } from '../audit/audit.service';
 import { zodBody } from '../common/zod.pipe';
 
 const hoursQuery = z.object({ days: z.coerce.number().int().min(1).max(90).default(7) });
+const logQuery = z.object({ days: z.coerce.number().int().min(1).max(90).default(7), userId: z.string().uuid().optional(), shiftType: z.string().regex(/^[a-z0-9-]{1,40}$/).optional() });
 const body = z.object({ status: z.enum(DUTY_STATUSES), unitId: z.string().uuid().optional(), callsign: z.string().max(16).optional(), shiftType: z.string().regex(/^[a-z0-9-]{1,40}$/).optional() });
 
 @ApiTags('team')
@@ -26,6 +27,9 @@ export class DutyController {
   /** Dienststunden aller Beamten (Schichtleitung). */
   @Get('hours') @RequirePermission('team.manage')
   hours(@Query(zodBody(hoursQuery)) f: z.infer<typeof hoursQuery>) { return this.d.hours(f.days); }
+  /** Schicht-Logs: wer wann welche Schicht gestartet/beendet hat (Schichtleitung). */
+  @Get('shifts') @RequirePermission('team.manage')
+  shiftLog(@Query(zodBody(logQuery)) f: z.infer<typeof logQuery>) { return this.d.shiftLog(f); }
   @Put('me/status') @RequirePermission('team.view')
   set(@CurrentActor() a: Actor, @Body(zodBody(body)) b: z.infer<typeof body>) { return this.d.setStatus(a, b.status, b); }
 

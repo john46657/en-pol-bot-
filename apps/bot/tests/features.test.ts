@@ -76,7 +76,7 @@ describe('/gefahrenstatus', () => {
   });
   it('maps an unlinked button user to the linking hint', async () => {
     const { api } = fakeApi({ 'PUT /danger-level': new BotApiError(401, 'UNAUTHENTICATED', 'x', undefined, 'NOT_LINKED') });
-    expect(text(await interactionFor('danger:set:STATUS_4')!.def.run({ ...ctx(api), args: ['set', 'STATUS_4'] }))).toContain('/verknuepfen');
+    expect(text(await interactionFor('danger:set:STATUS_4')!.def.run({ ...ctx(api), args: ['set', 'STATUS_4'] }))).toContain('Mit Discord verknüpfen');
   });
   it('panel and change message look like the old bot (Status 1–4, text of the level)', () => {
     const s = STATE('STATUS_1', { at: '2026-04-18T14:15:00Z' });
@@ -567,7 +567,7 @@ describe('Dienststatus ↔ Discord', () => {
     const again = fakeApi({ 'PUT /team/me/status': new BotApiError(409, 'CONFLICT', 'Already') });
     expect(text(await hit.def.run({ ...ctx(again.api), args: hit.args }))).toContain('bereits');
     const unlinked = fakeApi({ 'PUT /team/me/status': new BotApiError(401, 'UNAUTHENTICATED', 'x', 'r', 'NOT_LINKED') });
-    expect(text(await hit.def.run({ ...ctx(unlinked.api), args: hit.args }))).toContain('/verknuepfen');
+    expect(text(await hit.def.run({ ...ctx(unlinked.api), args: hit.args }))).toContain('Mit Discord verknüpfen');
   });
 
   it('maps duty statuses to the configured roles (only one duty role at a time)', () => {

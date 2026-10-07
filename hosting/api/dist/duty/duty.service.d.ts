@@ -76,6 +76,36 @@ export declare class DutyService {
             };
         }[];
     }>;
+    /**
+     * Schicht-Logs: zusammenhängende Dienst-Sitzungen (Im Dienst ↔ Pause ↔ Schichtwechsel) bis „Außer Dienst“ ergeben eine Schicht.
+     * Je Schicht: wer, Schichtart, Beginn/Ende, Dauer, Pausen und wer sie gestartet/beendet hat (aus dem Audit-Log).
+     */
+    shiftLog(f: {
+        days: number;
+        userId?: string;
+        shiftType?: string;
+    }): Promise<{
+        days: number;
+        since: Date;
+        items: {
+            id: string;
+            userId: string;
+            name: string;
+            rank: string | null;
+            callsign: string | null;
+            shiftType: string | null;
+            shiftTypeNames: string[];
+            startedAt: Date;
+            endedAt: Date | null;
+            active: boolean;
+            status: string;
+            minutes: number;
+            breakMinutes: number;
+            breaks: number;
+            startedBy: string | null;
+            endedBy: string | null;
+        }[];
+    }>;
     /** Team-Dashboard: pro aktivem Beamten Dienststatus, Einheit, aktueller Einsatz und letzte Statusänderung. */
     overview(): Promise<{
         userId: string;

@@ -66,7 +66,7 @@ function TeamChanceEditor({ s: initial, server }: { s: Status; server: string })
           <div className="grid gap-3">
             <label className="flex items-center gap-3 rounded-md border border-line p-3">
               <input type="checkbox" className="h-5 w-5" disabled={!manage} checked={d.open} onChange={(e) => set({ open: e.target.checked })} />
-              <span><span className="block font-semibold">{d.open ? '📣 Team-Chance ist geöffnet' : '🔒 Team-Chance ist geschlossen'}</span><span className="text-xs text-muted">Beim Öffnen und Schließen wird im Ankündigungs-Channel gepostet; beim Öffnen werden alle mit Zugriff auf die Team-Chance benachrichtigt.</span></span>
+              <span><span className="block font-semibold">{d.open ? '📣 Team-Chance ist geöffnet' : '🔒 Team-Chance ist geschlossen'}</span><span className="text-xs text-muted">Beim Öffnen und Schließen wird im Ankündigungs-Kanal gepostet; beim Öffnen werden alle mit Zugriff auf die Team-Chance benachrichtigt.</span></span>
             </label>
             <Field label="Titel">{(id) => <Input id={id} disabled={!manage} value={d.title} maxLength={100} onChange={(e) => set({ title: e.target.value })} />}</Field>
             <Field label="Beschreibung (Discord-Markdown möglich)">{(id) => <Textarea id={id} disabled={!manage} rows={4} value={d.description} maxLength={2000} onChange={(e) => set({ description: e.target.value })} />}</Field>
@@ -76,7 +76,7 @@ function TeamChanceEditor({ s: initial, server }: { s: Status; server: string })
               <Field label="Plätze (0 = unbegrenzt)">{(id) => <Input id={id} type="number" min={0} max={10000} disabled={!manage} value={d.slots} onChange={(e) => set({ slots: Math.max(0, Math.floor(Number(e.target.value) || 0)) })} />}</Field>
             </div>
             <label className="flex items-center gap-2 text-sm"><input type="checkbox" disabled={!manage} checked={d.restrictApplications} onChange={(e) => set({ restrictApplications: e.target.checked })} />Bewerbungen (Discord und /apply) nur annehmen, solange die Team-Chance offen ist</label>
-            <Field label="Ankündigungs-Channel (leer = keine Ankündigung)">{(id) => <ChannelPicker ariaLabel={id} disabled={!manage} value={d.channelId} onChange={(v) => set({ channelId: v })} />}</Field>
+            <Field label="Ankündigungs-Kanal (leer = keine Ankündigung)">{(id) => <ChannelPicker ariaLabel={id} disabled={!manage} value={d.channelId} onChange={(v) => set({ channelId: v })} />}</Field>
             <div><p className="mb-1 text-xs font-medium text-muted">Rollen erwähnen beim Öffnen</p><RolePicker ariaLabel="Rollen erwähnen" disabled={!manage} max={10} value={d.pingRoleIds} onChange={(ids) => set({ pingRoleIds: ids })} /></div>
           </div>
         </Card>

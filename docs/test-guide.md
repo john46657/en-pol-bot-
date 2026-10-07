@@ -33,4 +33,4 @@ Automated: `pnpm test` (unit + integration), `pnpm e2e` (browser).
 
 ## Discord-Bot testen
 Siehe [discord-bot.md](discord-bot.md). Kurz: Bot im Developer Portal anlegen, dann
-`DISCORD_TOKEN=… DISCORD_GUILD_ID=… pnpm dev:all`, im Web (Chat-Symbol oben rechts) Code erzeugen, in Discord `/verknuepfen`, danach `/person`, `/dienst an`, `/einsatz` ausprobieren. Channel-IDs unter *Admin → Settings* setzen und im Web einen Einsatz anlegen → Nachricht erscheint im Dispatch-Channel.
+`DISCORD_TOKEN=… DISCORD_GUILD_ID=… pnpm dev:all`, im Web (Chat-Symbol oben rechts) „Mit Discord verknüpfen“, danach `/person`, `/dienst an`, `/einsatz` ausprobieren. Kanal-IDs unter *Admin → Settings* setzen und im Web einen Einsatz anlegen → Nachricht erscheint im Dispatch-Kanal.

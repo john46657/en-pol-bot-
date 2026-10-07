@@ -8,8 +8,8 @@ import { ChannelPicker, ChannelsPicker, RolePicker, ServersPicker, TagListEditor
 import { Button, Card, ErrorState, Field, Input, PageHeader, Select, SkeletonRows } from '../../components/ui';
 
 const TEXT = [['org.name', 'Name der Organisation'], ['org.serverName', 'Servername'], ['org.timezone', 'Zeitzone (IANA)']] as const;
-const CHANNELS = [['dispatch', '📡 Leitstellen-Channel (neue/zugewiesene Einsätze)'], ['wanted', '🚨 Fahndungs-Channel (neue Fahndungen und Statusänderungen)'], ['announcements', '📢 Ankündigungs-Channel'], ['applications', 'Bewerbungs-Channel (Polizei-Bewerbungen mit Antworten + Annehmen/Ablehnen-Buttons – nur für Staff!)'], ['danger', 'Gefahrenstatus-Kanal (Stufenänderungen)'], ['sek', 'SEK-Channel (SEK-Einsatzberichte)'], ['qualifications', 'Qualifikations-Channel (Anträge aus /qualipanel mit Annehmen/Ablehnen-Buttons)'], ['duty', 'Dienst-Channel (Nachricht bei jeder Dienststatus-Änderung)'],
-  ['teamlist', 'Teamlisten-Channel (aktualisiert sich selbst, ein Channel)'], ['tickets', 'Support-Ticket-Kategorie (eine Kategorie)'], ['staffRole', 'Staff-Rolle (sieht Support-Tickets)'], ['radioRole', 'Funk-Rolle (wird mit der Funk-Whitelist vergeben)'], ['sekRole', 'SEK-Rolle (wird mit /sek in Discord vergeben/entzogen)'], ['dutyRole', 'Im-Dienst-Rolle(n) (im Dienst vergeben, sonst entzogen; mehrere Server: je eine ID, kommagetrennt)'], ['breakRole', 'Pausen-Rolle(n) (optional)'], ['trainingRole', 'Ausbildungs-Rolle(n) (optional)'], ['adminDutyRole', 'Verwaltungsdienst-Rolle(n) (optional)'], ['guildId', 'Server – optional (für Discord-Anmeldung/Mitgliedschaft)']] as const;
+const CHANNELS = [['dispatch', '📡 Leitstellen-Kanal (neue/zugewiesene Einsätze)'], ['wanted', '🚨 Fahndungs-Kanal (neue Fahndungen und Statusänderungen)'], ['announcements', '📢 Ankündigungs-Kanal'], ['applications', 'Bewerbungs-Kanal (Polizei-Bewerbungen mit Antworten + Annehmen/Ablehnen-Buttons – nur für Staff!)'], ['danger', 'Gefahrenstatus-Kanal (Stufenänderungen)'], ['sek', 'SEK-Kanal (SEK-Einsatzberichte)'], ['qualifications', 'Qualifikations-Kanal (Anträge aus /qualipanel mit Annehmen/Ablehnen-Buttons)'], ['duty', 'Dienst-Kanal (Nachricht bei jeder Dienststatus-Änderung)'],
+  ['teamlist', 'Teamlisten-Kanal (aktualisiert sich selbst, ein Kanal)'], ['tickets', 'Support-Ticket-Kategorie (eine Kategorie)'], ['staffRole', 'Staff-Rolle (sieht Support-Tickets)'], ['radioRole', 'Funk-Rolle (wird mit der Funk-Whitelist vergeben)'], ['sekRole', 'SEK-Rolle (wird mit /sek in Discord vergeben/entzogen)'], ['dutyRole', 'Im-Dienst-Rolle(n) (im Dienst vergeben, sonst entzogen; mehrere Server: je eine ID, kommagetrennt)'], ['breakRole', 'Pausen-Rolle(n) (optional)'], ['trainingRole', 'Ausbildungs-Rolle(n) (optional)'], ['adminDutyRole', 'Verwaltungsdienst-Rolle(n) (optional)'], ['guildId', 'Server – optional (für Discord-Anmeldung/Mitgliedschaft)']] as const;
 /** Rollen-Felder (Auswahl als Rolle) und Felder mit genau einer ID. */
 const ROLE_KEYS = new Set(['staffRole', 'radioRole', 'sekRole', 'dutyRole', 'breakRole', 'trainingRole', 'adminDutyRole']);
 const SINGLE = new Set(['teamlist', 'tickets', 'staffRole', 'radioRole', 'sekRole']);
@@ -35,7 +35,7 @@ export function Settings() {
     setDrafts(next);
     const all = Object.fromEntries(CHANNELS.map(([c]) => [c, (next[`discord.${c}`] ?? String(channels[c] ?? '')).trim()]).filter(([, x]) => x));
     // nur vollständige IDs speichern (sonst lehnt der Server ab); halbe Eingaben bleiben lokal stehen
-    if (manage && Object.values(all).every((x) => /^\d{15,25}(\s*,\s*\d{15,25})*$/.test(String(x)))) put('discord.channels', all, 'Discord-Channels');
+    if (manage && Object.values(all).every((x) => /^\d{15,25}(\s*,\s*\d{15,25})*$/.test(String(x)))) put('discord.channels', all, 'Discord-Kanäle');
   };
   const structure = get<{ teams: string[]; offices: string[] }>('team.structure') ?? { teams: [], offices: [] };
   const serverName = server ? guilds.data?.find((g) => g.id === server)?.name ?? server : null;
@@ -61,8 +61,8 @@ export function Settings() {
           <div><p className="mb-1 text-xs font-medium text-muted">Büros</p><TagListEditor ariaLabel="Büro hinzufügen" disabled={!manage} value={structure.offices} placeholder="z. B. Verwaltung + Enter" onChange={(v) => put('team.structure', { ...structure, offices: v }, 'Büros')} /></div>
         </div>
       </Card>
-      <Card title="Discord-Bot-Channels" className="mt-4">
-        <p className="mb-3 text-xs text-muted">Channel aus der Liste wählen – wird automatisch gespeichert. Beispiel: <b>Fahndungs-Channel</b> = euer Fahndungs-Channel; jede Fahndung (aus Dashboard oder Discord) wird dort gepostet. Leer = diese Benachrichtigungsart ist deaktiviert (nichts wird eingereiht). Mehrere Channels (auch auf verschiedenen Servern): IDs mit Komma trennen. Alle, die den Discord-Channel lesen können, sehen die Beiträge – nutze Channels nur für Staff. Teamliste, Ticket-Kategorie und Staff-/Funk-/SEK-Rolle nehmen genau eine ID.</p>
+      <Card title="Discord-Bot-Kanäle" className="mt-4">
+        <p className="mb-3 text-xs text-muted">Kanal aus der Liste wählen – wird automatisch gespeichert. Beispiel: <b>Fahndungs-Kanal</b> = euer Fahndungs-Kanal; jede Fahndung (aus Dashboard oder Discord) wird dort gepostet. Leer = diese Benachrichtigungsart ist deaktiviert (nichts wird eingereiht). Mehrere Kanäle (auch auf verschiedenen Servern): IDs mit Komma trennen. Alle, die den Discord-Kanal lesen können, sehen die Beiträge – nutze Kanäle nur für Staff. Teamliste, Ticket-Kategorie und Staff-/Funk-/SEK-Rolle nehmen genau eine ID.</p>
         <div className="grid gap-3 md:grid-cols-2">{CHANNELS.map(([k, label]) => (
           <div key={k} className="grid gap-1">
             <p className="text-xs font-medium text-muted">{label}</p>

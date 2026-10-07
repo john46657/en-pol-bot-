@@ -66,6 +66,29 @@ describe('Shifts module', () => {
     await (await login(app, 'sl_admin')).agent.put('/api/v1/shifts/config').send({ enabled: false, types: [] });
     expect((await off.put('/api/v1/team/me/status').send({ status: 'ON_DUTY', shiftType: 'sek' })).status).toBe(400);
   });
+
+  it('shift logs: one entry per shift with type, duration, breaks and who started/ended it; team.manage only', async () => {
+    const off = (await login(app, 'sl_off')).agent;
+    expect((await off.get('/api/v1/team/shifts')).status).toBe(403);
+    // gelöschte Schichtart → ID statt Name; wieder angelegt → Name
+    await (await login(app, 'sl_admin')).agent.put('/api/v1/shifts/config').send({ enabled: true, types: [{ id: 'im-dienst', name: 'Im Dienst' }, { id: 'sek', name: 'SEK Einsatz' }] });
+    const lead = (await login(app, 'sl_lead')).agent;
+    const r = await lead.get('/api/v1/team/shifts?days=1');
+    expect(r.status).toBe(200);
+    const mine = (r.body.items as { name: string }[]).filter((x) => x.name === 'sl_off');
+    // Im Dienst → Pause → SEK → Außer Dienst = eine Schicht; danach Modul aus (keine neue)
+    expect(mine).toHaveLength(1);
+    expect(mine[0]).toMatchObject({ active: false, status: 'OFF_DUTY', shiftType: 'Im Dienst', shiftTypeNames: ['Im Dienst', 'SEK Einsatz'], breaks: 1, callsign: 'SL-1', startedBy: 'sl_off', endedBy: 'sl_off', minutes: expect.any(Number) });
+    // durch die Schichtleitung gestartet → läuft noch
+    const offId = (await prisma.user.findFirstOrThrow({ where: { username: 'sl_off' } })).id;
+    expect((await lead.put(`/api/v1/team/${offId}/status`).send({ status: 'ON_DUTY' })).status).toBe(200);
+    const again = ((await lead.get(`/api/v1/team/shifts?userId=${offId}`)).body.items as { active: boolean; startedBy: string; endedBy: string | null }[]);
+    expect(again).toHaveLength(2);
+    expect(again[0]).toMatchObject({ active: true, startedBy: 'sl_lead', endedBy: null });
+    await lead.put(`/api/v1/team/${offId}/status`).send({ status: 'OFF_DUTY' });
+    expect((await lead.get('/api/v1/team/shifts?shiftType=sek')).body.items.filter((x: { name: string }) => x.name === 'sl_off')).toHaveLength(1);
+    await (await login(app, 'sl_admin')).agent.put('/api/v1/shifts/config').send({ enabled: false, types: [] });
+  });
 });
 
 describe('Leave of Absences', () => {
