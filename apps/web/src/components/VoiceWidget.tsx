@@ -25,11 +25,15 @@ export function VoiceWidget() {
   const [setup, setSetup] = useState(false);
   const all = q.data?.channels ?? [];
   const categories = useMemo(() => [...new Map(all.filter((c) => c.parentId).map((c) => [c.parentId!, c.parentName ?? c.parentId!])).entries()], [all]);
+  // Filter nur mit Kanälen/Kategorien, die es (noch) gibt – alte IDs (gelöscht, anderer Server) blenden sonst alles aus
+  const channelFilter = useMemo(() => v.channelIds.filter((id) => all.some((c) => c.id === id)), [all, v.channelIds]);
+  const categoryFilter = useMemo(() => v.categoryIds.filter((id) => all.some((c) => c.parentId === id)), [all, v.categoryIds]);
   const shown = useMemo(() => {
-    let list = all.filter((c) => (v.showEmpty || c.members.length > 0) && (!v.channelIds.length || v.channelIds.includes(c.id)) && (!v.categoryIds.length || (c.parentId && v.categoryIds.includes(c.parentId))));
+    let list = all.filter((c) => (v.showEmpty || c.members.length > 0) && (!channelFilter.length || channelFilter.includes(c.id)) && (!categoryFilter.length || (c.parentId && categoryFilter.includes(c.parentId))));
     list = [...list].sort((a, b) => (v.sort === 'name' ? a.name.localeCompare(b.name) : v.sort === 'position' ? a.position - b.position : b.members.length - a.members.length));
     return list.slice(0, v.maxChannels);
-  }, [all, v]);
+  }, [all, v, channelFilter, categoryFilter]);
+  const hidden = all.reduce((n, c) => n + c.members.length, 0) - shown.reduce((n, c) => n + c.members.length, 0);
   const toggle = (list: string[], id: string) => (list.includes(id) ? list.filter((x) => x !== id) : [...list, id]);
   return (
     <div>
@@ -50,7 +54,13 @@ export function VoiceWidget() {
           {all.length > 0 && <div><p className="mb-1 text-muted">Nur diese Channels (keine = alle)</p><div className="flex max-h-24 flex-wrap gap-1 overflow-auto">{all.map((c) => <button key={c.id} type="button" aria-pressed={v.channelIds.includes(c.id)} onClick={() => update({ voice: { ...v, channelIds: toggle(v.channelIds, c.id) } })} className={`rounded border px-1.5 py-0.5 ${v.channelIds.includes(c.id) ? 'border-primary bg-primary/15' : 'border-line'}`}>🔊 {c.name}</button>)}</div></div>}
         </div>
       )}
-      {q.isLoading ? <SkeletonRows rows={3} /> : q.error ? <ErrorState error={q.error} onRetry={() => void q.refetch()} /> : !shown.length ? <EmptyState text="Gerade ist niemand in einem Voice-Channel." hint={q.data?.updatedAt ? undefined : 'Der Bot hat noch keine Voice-Daten gemeldet.'} /> : (
+      {hidden > 0 && !q.isLoading && (
+        <p className="mb-2 flex flex-wrap items-center gap-2 rounded-md border border-warning/40 bg-warning/10 px-2 py-1 text-xs text-warning">
+          {hidden} {hidden === 1 ? 'Person ist' : 'Personen sind'} durch deine Filter bzw. die Anzahl ausgeblendet.
+          <button type="button" className="underline" onClick={() => update({ voice: { ...v, channelIds: [], categoryIds: [], maxChannels: Math.max(v.maxChannels, 10) } })}>Filter zurücksetzen</button>
+        </p>
+      )}
+      {q.isLoading ? <SkeletonRows rows={3} /> : q.error ? <ErrorState error={q.error} onRetry={() => void q.refetch()} /> : !shown.length ? <EmptyState text={hidden ? 'Keine passenden Voice-Channels für deine Filter.' : 'Gerade ist niemand in einem Voice-Channel.'} hint={q.data?.updatedAt ? undefined : 'Der Bot hat noch keine Voice-Daten gemeldet.'} /> : (
         <ul className="space-y-3">{shown.map((c) => (
           <li key={c.id}>
             <p className="text-sm font-semibold">🔊 {c.name} <span className="font-normal text-muted">· {c.members.length} {c.members.length === 1 ? 'Person' : 'Personen'}</span>{c.parentName && <span className="ml-1 text-xs font-normal text-muted">({c.parentName})</span>}</p>
