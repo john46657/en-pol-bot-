@@ -12,6 +12,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.ErlcService = exports.erlcServerInput = void 0;
 exports.normalizeSnapshot = normalizeSnapshot;
 exports.statusFor = statusFor;
+const erlc_sync_service_1 = require("./erlc-sync.service");
 const common_1 = require("@nestjs/common");
 const node_crypto_1 = require("node:crypto");
 const client_1 = require("@prisma/client");
@@ -117,17 +118,19 @@ let ErlcService = class ErlcService {
     perms;
     realtime;
     notify;
+    records;
     log = new common_1.Logger('ERLC');
     client;
     rt = new Map();
     webhookKey;
     seen = new Map();
-    constructor(prisma, audit, perms, realtime, notify) {
+    constructor(prisma, audit, perms, realtime, notify, records) {
         this.prisma = prisma;
         this.audit = audit;
         this.perms = perms;
         this.realtime = realtime;
         this.notify = notify;
+        this.records = records;
         this.client = new erlc_client_1.ErlcClient();
         this.webhookKey = (0, node_crypto_1.createPublicKey)({ key: Buffer.from(process.env.ERLC_WEBHOOK_PUBLIC_KEY || PRC_WEBHOOK_KEY, 'base64'), format: 'der', type: 'spki' });
     }
@@ -267,6 +270,7 @@ let ErlcService = class ErlcService {
             await this.prisma.erlcServer.update({ where: { id }, data: { status: 'CONNECTED', lastSyncAt: new Date(), latencyMs: res.latencyMs, snapshot: snap, rateLimit: this.client.rate(id) } });
             if (snap.emergencyCalls)
                 await this.syncCalls(s, snap.emergencyCalls, 'API');
+            await this.records.sync(id, snap); // Personen + Fahrzeuge ins System übernehmen
             this.realtime.publish('cad', 'erlc.snapshot', { serverId: id });
             return { ok: true, status: 'CONNECTED', latencyMs: res.latencyMs };
         }
@@ -417,6 +421,6 @@ let ErlcService = class ErlcService {
 exports.ErlcService = ErlcService;
 exports.ErlcService = ErlcService = __decorate([
     (0, common_1.Injectable)(),
-    __metadata("design:paramtypes", [prisma_service_1.PrismaService, audit_service_1.AuditService, permission_service_1.PermissionService, realtime_service_1.RealtimeService, cad_notify_service_1.CadNotifyService])
+    __metadata("design:paramtypes", [prisma_service_1.PrismaService, audit_service_1.AuditService, permission_service_1.PermissionService, realtime_service_1.RealtimeService, cad_notify_service_1.CadNotifyService, erlc_sync_service_1.ErlcSyncService])
 ], ErlcService);
 //# sourceMappingURL=erlc.service.js.map

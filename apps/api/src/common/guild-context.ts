@@ -21,5 +21,5 @@ export class GuildContextMiddleware implements NestMiddleware {
 }
 
 /** Zentrale Einstellungen, die je Server überschrieben werden können (`<key>@<guildId>`, sonst gilt der gemeinsame Wert). */
-export const SERVER_SCOPED_SETTINGS = ['team.structure', 'team.rankOrder', 'dashboard.defaultLayout', 'theme.accent', 'org.name', 'teamchance'] as const;
+export const SERVER_SCOPED_SETTINGS = ['team.structure', 'team.rankOrder', 'dashboard.defaultLayout', 'theme.accent', 'theme.customAccents', 'org.name', 'teamchance'] as const;
 export const scopedKey = (key: string, guildId: string | null) => (guildId && (SERVER_SCOPED_SETTINGS as readonly string[]).includes(key) ? `${key}@${guildId}` : key);

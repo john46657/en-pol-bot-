@@ -76,3 +76,11 @@ Alles mit `module: cad` oder `erlc`: Verbindung angelegt/geändert/Key geändert
 - Die Webhook-Nutzlast ist von PRC nur teilweise dokumentiert; Notrufe werden erkannt, andere Ereignisse nur protokolliert.
 - Zonen-„automatische Aktion“: „warn“ schreibt einen Hinweis in die Chronik, „notify“ zusätzlich eine Leitstellenmeldung – geprüft beim Anlegen eines Einsatzes mit Kartenposition.
 - Gegen den echten ER:LC-Server und echtes Discord nicht getestet (nur mit nachgebauter API und Tests).
+
+## Personen und Fahrzeuge aus ER:LC
+Bei jedem erfolgreichen Abruf eines ER:LC-Servers (Daten „Players“ und „Vehicles“ aktiv) übernimmt das System automatisch:
+- **Spieler → Personenakte** mit Roblox-Name und Roblox-ID. Eine vorhandene Akte mit gleichem Namen (ohne ID) wird ergänzt; ändert jemand seinen Roblox-Namen, wird die Akte angepasst. Neue Akten tragen den Hinweis „Automatisch aus ER:LC übernommen.“
+- **Gespawnte Fahrzeuge mit Kennzeichen → Fahrzeugregister** mit Modell, Farbe und Halter (über den Roblox-Namen verknüpft). Vorhandene Fahrzeuge (gleiches Kennzeichen) werden aktualisiert, nicht doppelt angelegt.
+- Geschrieben wird nur, was neu ist oder sich geändert hat; Notizen und Status aus dem Dashboard bleiben.
+
+Auf den Seiten **Personen** und **Fahrzeuge** zeigt „🎮 Gerade im Spiel (ER:LC)“ live, wer bzw. was gerade auf dem Server ist – mit Link zur Akte. Mit einem oben gewählten Discord-Server erscheinen dessen ER:LC-Server und die ohne Zuordnung.

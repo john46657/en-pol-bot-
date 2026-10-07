@@ -148,7 +148,18 @@ export declare const SETTING_SCHEMAS: {
             required?: boolean | undefined;
         }[] | undefined;
     }>;
-    readonly 'theme.accent': z.ZodEnum<["blue", "green", "amber", "red", "cyan", "violet"]>;
+    readonly 'theme.accent': z.ZodUnion<[z.ZodEnum<["blue", "green", "amber", "red", "cyan", "violet", "orange", "pink", "indigo", "teal", "lime", "sky", "rose", "emerald", "gold", "slate"]>, z.ZodString]>;
+    /** Eigene Akzentfarben (Studio → Design → „Eigene Farbe hinzufügen“). */
+    readonly 'theme.customAccents': z.ZodArray<z.ZodObject<{
+        name: z.ZodString;
+        hex: z.ZodString;
+    }, "strip", z.ZodTypeAny, {
+        name: string;
+        hex: string;
+    }, {
+        name: string;
+        hex: string;
+    }>, "many">;
     readonly 'discord.channels': z.ZodObject<{
         guildId: z.ZodOptional<z.ZodString>;
         dispatch: z.ZodOptional<z.ZodString>;
@@ -354,7 +365,7 @@ export declare class AdminService {
             [k: string]: Prisma.JsonValue;
         };
         allowedKeys: string[];
-        serverScoped: readonly ["team.structure", "team.rankOrder", "dashboard.defaultLayout", "theme.accent", "org.name", "teamchance"];
+        serverScoped: readonly ["team.structure", "team.rankOrder", "dashboard.defaultLayout", "theme.accent", "theme.customAccents", "org.name", "teamchance"];
     }>;
     /** `key@<guildId>`: Server-eigener Wert (nur für Einstellungen, die je Server getrennt sein dürfen). */
     setSetting(actor: Actor, key: string, value: unknown): Promise<{

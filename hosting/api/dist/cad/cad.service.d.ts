@@ -149,10 +149,10 @@ export declare class CadService {
         priority: string;
         status: string;
         title: string;
+        serverId: string | null;
         mapX: number | null;
         mapZ: number | null;
         source: string;
-        serverId: string | null;
         location: string | null;
         dispatcherId: string | null;
         supervisorId: string | null;
@@ -171,6 +171,7 @@ export declare class CadService {
             description: string | null;
             team: string | null;
             status: string;
+            serverId: string;
             callNumber: number;
             callerRobloxId: string | null;
             callerName: string | null;
@@ -181,7 +182,6 @@ export declare class CadService {
             claimedById: string | null;
             incidentId: string | null;
             source: string;
-            serverId: string;
         }[];
         names: {
             [k: string]: string;
@@ -221,10 +221,10 @@ export declare class CadService {
         priority: string;
         status: string;
         title: string;
+        serverId: string | null;
         mapX: number | null;
         mapZ: number | null;
         source: string;
-        serverId: string | null;
         location: string | null;
         dispatcherId: string | null;
         supervisorId: string | null;
@@ -250,10 +250,10 @@ export declare class CadService {
         priority: string;
         status: string;
         title: string;
+        serverId: string | null;
         mapX: number | null;
         mapZ: number | null;
         source: string;
-        serverId: string | null;
         location: string | null;
         dispatcherId: string | null;
         supervisorId: string | null;
@@ -278,10 +278,10 @@ export declare class CadService {
         priority: string;
         status: string;
         title: string;
+        serverId: string | null;
         mapX: number | null;
         mapZ: number | null;
         source: string;
-        serverId: string | null;
         location: string | null;
         dispatcherId: string | null;
         supervisorId: string | null;
@@ -306,10 +306,10 @@ export declare class CadService {
         priority: string;
         status: string;
         title: string;
+        serverId: string | null;
         mapX: number | null;
         mapZ: number | null;
         source: string;
-        serverId: string | null;
         location: string | null;
         dispatcherId: string | null;
         supervisorId: string | null;
@@ -383,9 +383,9 @@ export declare class CadService {
         icon: string | null;
         status: string;
         callsign: string;
+        notes: string | null;
         mapX: number | null;
         mapZ: number | null;
-        notes: string | null;
         discordRoleId: string | null;
         erlcTeam: string | null;
         operational: boolean;
@@ -403,9 +403,9 @@ export declare class CadService {
         icon: string | null;
         status: string;
         callsign: string;
+        notes: string | null;
         mapX: number | null;
         mapZ: number | null;
-        notes: string | null;
         discordRoleId: string | null;
         erlcTeam: string | null;
         operational: boolean;
@@ -422,9 +422,9 @@ export declare class CadService {
         icon: string | null;
         status: string;
         callsign: string;
+        notes: string | null;
         mapX: number | null;
         mapZ: number | null;
-        notes: string | null;
         discordRoleId: string | null;
         erlcTeam: string | null;
         operational: boolean;
@@ -443,9 +443,9 @@ export declare class CadService {
         icon: string | null;
         status: string;
         callsign: string;
+        notes: string | null;
         mapX: number | null;
         mapZ: number | null;
-        notes: string | null;
         discordRoleId: string | null;
         erlcTeam: string | null;
         operational: boolean;
@@ -470,6 +470,7 @@ export declare class CadService {
         description: string | null;
         team: string | null;
         status: string;
+        serverId: string;
         callNumber: number;
         callerRobloxId: string | null;
         callerName: string | null;
@@ -480,7 +481,6 @@ export declare class CadService {
         claimedById: string | null;
         incidentId: string | null;
         source: string;
-        serverId: string;
     }[]>;
     callAction(actor: CadActor, id: string, action: 'claim' | 'close' | 'reopen'): Promise<{
         id: string;
@@ -489,6 +489,7 @@ export declare class CadService {
         description: string | null;
         team: string | null;
         status: string;
+        serverId: string;
         callNumber: number;
         callerRobloxId: string | null;
         callerName: string | null;
@@ -499,7 +500,6 @@ export declare class CadService {
         claimedById: string | null;
         incidentId: string | null;
         source: string;
-        serverId: string;
     }>;
     /** Notruf → Einsatz (Position, Ort und Beschreibung werden übernommen; die Verknüpfung bleibt gespeichert). */
     incidentFromCall(actor: CadActor, callId: string, d: Partial<IncidentInput>): Promise<{
@@ -514,10 +514,10 @@ export declare class CadService {
         priority: string;
         status: string;
         title: string;
+        serverId: string | null;
         mapX: number | null;
         mapZ: number | null;
         source: string;
-        serverId: string | null;
         location: string | null;
         dispatcherId: string | null;
         supervisorId: string | null;
@@ -731,10 +731,10 @@ export declare class CadService {
             priority: string;
             status: string;
             title: string;
+            serverId: string | null;
             mapX: number | null;
             mapZ: number | null;
             source: string;
-            serverId: string | null;
             location: string | null;
             dispatcherId: string | null;
             supervisorId: string | null;
@@ -803,9 +803,9 @@ export declare class CadService {
             icon: string | null;
             status: string;
             callsign: string;
+            notes: string | null;
             mapX: number | null;
             mapZ: number | null;
-            notes: string | null;
             discordRoleId: string | null;
             erlcTeam: string | null;
             operational: boolean;
@@ -827,6 +827,7 @@ export declare class CadService {
             description: string | null;
             team: string | null;
             status: string;
+            serverId: string;
             callNumber: number;
             callerRobloxId: string | null;
             callerName: string | null;
@@ -837,7 +838,6 @@ export declare class CadService {
             claimedById: string | null;
             incidentId: string | null;
             source: string;
-            serverId: string;
         }[];
         radio: {
             authorName: string | null;
@@ -903,10 +903,10 @@ export declare class CadService {
             priority: string;
             status: string;
             title: string;
+            serverId: string | null;
             mapX: number | null;
             mapZ: number | null;
             source: string;
-            serverId: string | null;
             location: string | null;
             dispatcherId: string | null;
             supervisorId: string | null;
@@ -933,6 +933,7 @@ export declare class CadService {
             description: string | null;
             team: string | null;
             status: string;
+            serverId: string;
             callNumber: number;
             callerRobloxId: string | null;
             callerName: string | null;
@@ -943,7 +944,6 @@ export declare class CadService {
             claimedById: string | null;
             incidentId: string | null;
             source: string;
-            serverId: string;
         }[];
         units: {
             crew: {
@@ -1003,9 +1003,9 @@ export declare class CadService {
             icon: string | null;
             status: string;
             callsign: string;
+            notes: string | null;
             mapX: number | null;
             mapZ: number | null;
-            notes: string | null;
             discordRoleId: string | null;
             erlcTeam: string | null;
             operational: boolean;

@@ -23,7 +23,9 @@ export const SETTING_SCHEMAS = {
   'retention.readNotificationDays': z.number().int().min(7).max(3650),
   'dashboard.defaultLayout': z.array(z.object({ widget: z.string().max(40), visible: z.boolean(), order: z.number().int() })).max(50),
   'studio.customFields': customFieldsConfig,
-  'theme.accent': z.enum(ACCENTS),
+  'theme.accent': z.union([z.enum(ACCENTS), z.string().regex(/^#[0-9a-fA-F]{6}$/, 'Farbe als #rrggbb')]),
+  /** Eigene Akzentfarben (Studio → Design → „Eigene Farbe hinzufügen“). */
+  'theme.customAccents': z.array(z.object({ name: z.string().trim().min(1).max(30), hex: z.string().regex(/^#[0-9a-fA-F]{6}$/, 'Farbe als #rrggbb') })).max(24),
   'discord.channels': z.object({ guildId: idList(), dispatch: idList(), wanted: idList(), announcements: idList(), applications: idList(), danger: idList(), sek: idList(), qualifications: idList(), duty: idList(), teamlist: singleId(), tickets: singleId(), staffRole: singleId(), radioRole: singleId(), sekRole: singleId(), dutyRole: idList(), breakRole: idList(), trainingRole: idList(), adminDutyRole: idList() }),
   'team.rankOrder': z.array(z.string().trim().min(1).max(64)).max(50),
   /** Teams und Büros (Dienstgrade: `team.rankOrder`) – Auswahl in Personalakten und Filter der Teamliste. */

@@ -15,7 +15,8 @@ const common_1 = require("@nestjs/common");
 const prisma_service_1 = require("../prisma/prisma.service");
 const errors_1 = require("../common/errors");
 const custom_fields_1 = require("./custom-fields");
-exports.ACCENTS = ['blue', 'green', 'amber', 'red', 'cyan', 'violet'];
+/** Vorgaben (Namen); zusätzlich ist jede eigene Farbe `#rrggbb` erlaubt (Studio → Design). */
+exports.ACCENTS = ['blue', 'green', 'amber', 'red', 'cyan', 'violet', 'orange', 'pink', 'indigo', 'teal', 'lime', 'sky', 'rose', 'emerald', 'gold', 'slate'];
 let StudioService = class StudioService {
     prisma;
     constructor(prisma) {
@@ -27,12 +28,13 @@ let StudioService = class StudioService {
         return (own ?? (await this.prisma.systemSetting.findUnique({ where: { key } })))?.value ?? fallback;
     }
     async config() {
-        const [customFields, accent, name] = await Promise.all([
+        const [customFields, accent, name, customAccents] = await Promise.all([
             this.setting('studio.customFields', { persons: [], vehicles: [] }),
             this.setting('theme.accent', 'blue'),
             this.setting('org.name', 'EN Polizei'),
+            this.setting('theme.customAccents', []),
         ]);
-        return { org: { name }, theme: { accent }, customFields };
+        return { org: { name }, theme: { accent, customAccents }, customFields };
     }
     async defs(entity) {
         return (await this.setting('studio.customFields', { persons: [], vehicles: [] }))[entity] ?? [];

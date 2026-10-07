@@ -6,6 +6,7 @@ import { MediaService } from '../media/media.service';
 import { CadService, type CadActor } from './cad.service';
 import { CadConfigService } from './cad-config.service';
 import { ErlcService, erlcServerInput } from './erlc.service';
+import { ErlcSyncService } from './erlc-sync.service';
 declare const incidentBody: z.ZodObject<{
     title: z.ZodString;
     type: z.ZodOptional<z.ZodNullable<z.ZodTypeAny>>;
@@ -77,9 +78,9 @@ declare const unitBody: z.ZodObject<{
     color?: any;
     icon?: any;
     status?: string | undefined;
+    notes?: any;
     mapX?: any;
     mapZ?: any;
-    notes?: any;
     discordRoleId?: any;
     erlcTeam?: any;
     operational?: boolean | undefined;
@@ -93,9 +94,9 @@ declare const unitBody: z.ZodObject<{
     color?: any;
     icon?: any;
     status?: string | undefined;
+    notes?: any;
     mapX?: any;
     mapZ?: any;
-    notes?: any;
     discordRoleId?: any;
     erlcTeam?: any;
     operational?: boolean | undefined;
@@ -307,10 +308,10 @@ export declare class CadController {
             priority: string;
             status: string;
             title: string;
+            serverId: string | null;
             mapX: number | null;
             mapZ: number | null;
             source: string;
-            serverId: string | null;
             location: string | null;
             dispatcherId: string | null;
             supervisorId: string | null;
@@ -379,9 +380,9 @@ export declare class CadController {
             icon: string | null;
             status: string;
             callsign: string;
+            notes: string | null;
             mapX: number | null;
             mapZ: number | null;
-            notes: string | null;
             discordRoleId: string | null;
             erlcTeam: string | null;
             operational: boolean;
@@ -403,6 +404,7 @@ export declare class CadController {
             description: string | null;
             team: string | null;
             status: string;
+            serverId: string;
             callNumber: number;
             callerRobloxId: string | null;
             callerName: string | null;
@@ -413,7 +415,6 @@ export declare class CadController {
             claimedById: string | null;
             incidentId: string | null;
             source: string;
-            serverId: string;
         }[];
         radio: {
             authorName: string | null;
@@ -478,10 +479,10 @@ export declare class CadController {
             priority: string;
             status: string;
             title: string;
+            serverId: string | null;
             mapX: number | null;
             mapZ: number | null;
             source: string;
-            serverId: string | null;
             location: string | null;
             dispatcherId: string | null;
             supervisorId: string | null;
@@ -508,6 +509,7 @@ export declare class CadController {
             description: string | null;
             team: string | null;
             status: string;
+            serverId: string;
             callNumber: number;
             callerRobloxId: string | null;
             callerName: string | null;
@@ -518,7 +520,6 @@ export declare class CadController {
             claimedById: string | null;
             incidentId: string | null;
             source: string;
-            serverId: string;
         }[];
         units: {
             crew: {
@@ -578,9 +579,9 @@ export declare class CadController {
             icon: string | null;
             status: string;
             callsign: string;
+            notes: string | null;
             mapX: number | null;
             mapZ: number | null;
-            notes: string | null;
             discordRoleId: string | null;
             erlcTeam: string | null;
             operational: boolean;
@@ -653,10 +654,10 @@ export declare class CadController {
         priority: string;
         status: string;
         title: string;
+        serverId: string | null;
         mapX: number | null;
         mapZ: number | null;
         source: string;
-        serverId: string | null;
         location: string | null;
         dispatcherId: string | null;
         supervisorId: string | null;
@@ -677,6 +678,7 @@ export declare class CadController {
             description: string | null;
             team: string | null;
             status: string;
+            serverId: string;
             callNumber: number;
             callerRobloxId: string | null;
             callerName: string | null;
@@ -687,7 +689,6 @@ export declare class CadController {
             claimedById: string | null;
             incidentId: string | null;
             source: string;
-            serverId: string;
         }[];
         names: {
             [k: string]: string;
@@ -727,10 +728,10 @@ export declare class CadController {
         priority: string;
         status: string;
         title: string;
+        serverId: string | null;
         mapX: number | null;
         mapZ: number | null;
         source: string;
-        serverId: string | null;
         location: string | null;
         dispatcherId: string | null;
         supervisorId: string | null;
@@ -753,10 +754,10 @@ export declare class CadController {
         priority: string;
         status: string;
         title: string;
+        serverId: string | null;
         mapX: number | null;
         mapZ: number | null;
         source: string;
-        serverId: string | null;
         location: string | null;
         dispatcherId: string | null;
         supervisorId: string | null;
@@ -779,10 +780,10 @@ export declare class CadController {
         priority: string;
         status: string;
         title: string;
+        serverId: string | null;
         mapX: number | null;
         mapZ: number | null;
         source: string;
-        serverId: string | null;
         location: string | null;
         dispatcherId: string | null;
         supervisorId: string | null;
@@ -807,10 +808,10 @@ export declare class CadController {
         priority: string;
         status: string;
         title: string;
+        serverId: string | null;
         mapX: number | null;
         mapZ: number | null;
         source: string;
-        serverId: string | null;
         location: string | null;
         dispatcherId: string | null;
         supervisorId: string | null;
@@ -892,9 +893,9 @@ export declare class CadController {
         icon: string | null;
         status: string;
         callsign: string;
+        notes: string | null;
         mapX: number | null;
         mapZ: number | null;
-        notes: string | null;
         discordRoleId: string | null;
         erlcTeam: string | null;
         operational: boolean;
@@ -911,9 +912,9 @@ export declare class CadController {
         icon: string | null;
         status: string;
         callsign: string;
+        notes: string | null;
         mapX: number | null;
         mapZ: number | null;
-        notes: string | null;
         discordRoleId: string | null;
         erlcTeam: string | null;
         operational: boolean;
@@ -930,9 +931,9 @@ export declare class CadController {
         icon: string | null;
         status: string;
         callsign: string;
+        notes: string | null;
         mapX: number | null;
         mapZ: number | null;
-        notes: string | null;
         discordRoleId: string | null;
         erlcTeam: string | null;
         operational: boolean;
@@ -955,9 +956,9 @@ export declare class CadController {
         icon: string | null;
         status: string;
         callsign: string;
+        notes: string | null;
         mapX: number | null;
         mapZ: number | null;
-        notes: string | null;
         discordRoleId: string | null;
         erlcTeam: string | null;
         operational: boolean;
@@ -983,6 +984,7 @@ export declare class CadController {
         description: string | null;
         team: string | null;
         status: string;
+        serverId: string;
         callNumber: number;
         callerRobloxId: string | null;
         callerName: string | null;
@@ -993,7 +995,6 @@ export declare class CadController {
         claimedById: string | null;
         incidentId: string | null;
         source: string;
-        serverId: string;
     }[]>;
     callAction(a: CadActor & {
         roles: string[];
@@ -1004,6 +1005,7 @@ export declare class CadController {
         description: string | null;
         team: string | null;
         status: string;
+        serverId: string;
         callNumber: number;
         callerRobloxId: string | null;
         callerName: string | null;
@@ -1014,7 +1016,6 @@ export declare class CadController {
         claimedById: string | null;
         incidentId: string | null;
         source: string;
-        serverId: string;
     } | {
         number: string;
         id: string;
@@ -1027,10 +1028,10 @@ export declare class CadController {
         priority: string;
         status: string;
         title: string;
+        serverId: string | null;
         mapX: number | null;
         mapZ: number | null;
         source: string;
-        serverId: string | null;
         location: string | null;
         dispatcherId: string | null;
         supervisorId: string | null;
@@ -1269,7 +1270,77 @@ declare const commandBody: z.ZodObject<{
 export declare class ErlcController {
     private readonly s;
     private readonly perms;
-    constructor(s: ErlcService, perms: PermissionService);
+    private readonly records;
+    constructor(s: ErlcService, perms: PermissionService, records: ErlcSyncService);
+    /** Personen-/Fahrzeugseite: wer bzw. was gerade im Spiel ist (aus der ER:LC-API), mit Link zur Akte. */
+    livePersons(): Promise<{
+        servers: {
+            id: string;
+            name: string;
+            status: string;
+            lastSyncAt: Date | null;
+        }[];
+        items: {
+            personId: string | null;
+            serverName: string;
+            name: string;
+            robloxUserId: string | null;
+            team: string | null;
+            callsign: string | null;
+            wantedStars: number;
+        }[];
+    } | {
+        servers: {
+            id: string;
+            name: string;
+            status: string;
+            lastSyncAt: Date | null;
+        }[];
+        items: {
+            vehicleId: string | null;
+            ownerPersonId: string | null;
+            serverName: string;
+            name: string;
+            owner: string;
+            plate: string | null;
+            colorName: string | null;
+            colorHex: string | null;
+        }[];
+    }>;
+    liveVehicles(): Promise<{
+        servers: {
+            id: string;
+            name: string;
+            status: string;
+            lastSyncAt: Date | null;
+        }[];
+        items: {
+            personId: string | null;
+            serverName: string;
+            name: string;
+            robloxUserId: string | null;
+            team: string | null;
+            callsign: string | null;
+            wantedStars: number;
+        }[];
+    } | {
+        servers: {
+            id: string;
+            name: string;
+            status: string;
+            lastSyncAt: Date | null;
+        }[];
+        items: {
+            vehicleId: string | null;
+            ownerPersonId: string | null;
+            serverName: string;
+            name: string;
+            owner: string;
+            plate: string | null;
+            colorName: string | null;
+            colorHex: string | null;
+        }[];
+    }>;
     list(a: Actor): Promise<{
         id: string;
         name: string;
@@ -1493,9 +1564,9 @@ export declare class ErlcController {
         result: string | null;
         userId: string | null;
         discordId: string | null;
+        serverId: string;
         command: string;
         ok: boolean;
-        serverId: string;
         critical: boolean;
     }[]>;
     /** Event-Webhook von ER:LC (öffentlich, aber nur mit gültiger Ed25519-Signatur von PRC). */

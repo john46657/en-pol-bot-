@@ -34,7 +34,9 @@ exports.SETTING_SCHEMAS = {
     'retention.readNotificationDays': zod_1.z.number().int().min(7).max(3650),
     'dashboard.defaultLayout': zod_1.z.array(zod_1.z.object({ widget: zod_1.z.string().max(40), visible: zod_1.z.boolean(), order: zod_1.z.number().int() })).max(50),
     'studio.customFields': custom_fields_1.customFieldsConfig,
-    'theme.accent': zod_1.z.enum(studio_service_1.ACCENTS),
+    'theme.accent': zod_1.z.union([zod_1.z.enum(studio_service_1.ACCENTS), zod_1.z.string().regex(/^#[0-9a-fA-F]{6}$/, 'Farbe als #rrggbb')]),
+    /** Eigene Akzentfarben (Studio → Design → „Eigene Farbe hinzufügen“). */
+    'theme.customAccents': zod_1.z.array(zod_1.z.object({ name: zod_1.z.string().trim().min(1).max(30), hex: zod_1.z.string().regex(/^#[0-9a-fA-F]{6}$/, 'Farbe als #rrggbb') })).max(24),
     'discord.channels': zod_1.z.object({ guildId: idList(), dispatch: idList(), wanted: idList(), announcements: idList(), applications: idList(), danger: idList(), sek: idList(), qualifications: idList(), duty: idList(), teamlist: singleId(), tickets: singleId(), staffRole: singleId(), radioRole: singleId(), sekRole: singleId(), dutyRole: idList(), breakRole: idList(), trainingRole: idList(), adminDutyRole: idList() }),
     'team.rankOrder': zod_1.z.array(zod_1.z.string().trim().min(1).max(64)).max(50),
     /** Teams und Büros (Dienstgrade: `team.rankOrder`) – Auswahl in Personalakten und Filter der Teamliste. */

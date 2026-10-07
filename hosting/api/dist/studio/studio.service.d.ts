@@ -1,6 +1,7 @@
 import { PrismaService } from '../prisma/prisma.service';
 import { CustomEntity, CustomFieldDef } from './custom-fields';
-export declare const ACCENTS: readonly ["blue", "green", "amber", "red", "cyan", "violet"];
+/** Vorgaben (Namen); zusätzlich ist jede eigene Farbe `#rrggbb` erlaubt (Studio → Design). */
+export declare const ACCENTS: readonly ["blue", "green", "amber", "red", "cyan", "violet", "orange", "pink", "indigo", "teal", "lime", "sky", "rose", "emerald", "gold", "slate"];
 export declare class StudioService {
     private readonly prisma;
     constructor(prisma: PrismaService);
@@ -11,6 +12,10 @@ export declare class StudioService {
         };
         theme: {
             accent: string;
+            customAccents: {
+                name: string;
+                hex: string;
+            }[];
         };
         customFields: {
             persons: {

@@ -9,6 +9,10 @@ export declare class StudioController {
         };
         theme: {
             accent: string;
+            customAccents: {
+                name: string;
+                hex: string;
+            }[];
         };
         customFields: {
             persons: {

@@ -31,7 +31,7 @@ exports.GuildContextMiddleware = GuildContextMiddleware = __decorate([
     (0, common_1.Injectable)()
 ], GuildContextMiddleware);
 /** Zentrale Einstellungen, die je Server überschrieben werden können (`<key>@<guildId>`, sonst gilt der gemeinsame Wert). */
-exports.SERVER_SCOPED_SETTINGS = ['team.structure', 'team.rankOrder', 'dashboard.defaultLayout', 'theme.accent', 'org.name', 'teamchance'];
+exports.SERVER_SCOPED_SETTINGS = ['team.structure', 'team.rankOrder', 'dashboard.defaultLayout', 'theme.accent', 'theme.customAccents', 'org.name', 'teamchance'];
 const scopedKey = (key, guildId) => (guildId && exports.SERVER_SCOPED_SETTINGS.includes(key) ? `${key}@${guildId}` : key);
 exports.scopedKey = scopedKey;
 //# sourceMappingURL=guild-context.js.map

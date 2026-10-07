@@ -4,7 +4,8 @@ import { PrismaService } from '../prisma/prisma.service';
 import { AppError } from '../common/errors';
 import { CustomEntity, CustomFieldDef, CustomFieldsConfig, validateCustom } from './custom-fields';
 
-export const ACCENTS = ['blue', 'green', 'amber', 'red', 'cyan', 'violet'] as const;
+/** Vorgaben (Namen); zusätzlich ist jede eigene Farbe `#rrggbb` erlaubt (Studio → Design). */
+export const ACCENTS = ['blue', 'green', 'amber', 'red', 'cyan', 'violet', 'orange', 'pink', 'indigo', 'teal', 'lime', 'sky', 'rose', 'emerald', 'gold', 'slate'] as const;
 
 @Injectable()
 export class StudioService {
@@ -17,12 +18,13 @@ export class StudioService {
   }
 
   async config() {
-    const [customFields, accent, name] = await Promise.all([
+    const [customFields, accent, name, customAccents] = await Promise.all([
       this.setting<CustomFieldsConfig>('studio.customFields', { persons: [], vehicles: [] }),
       this.setting<string>('theme.accent', 'blue'),
       this.setting<string>('org.name', 'EN Polizei'),
+      this.setting<{ name: string; hex: string }[]>('theme.customAccents', []),
     ]);
-    return { org: { name }, theme: { accent }, customFields };
+    return { org: { name }, theme: { accent, customAccents }, customFields };
   }
 
   async defs(entity: CustomEntity): Promise<CustomFieldDef[]> {

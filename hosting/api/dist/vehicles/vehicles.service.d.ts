@@ -26,9 +26,9 @@ export declare class VehiclesService {
             custom: Prisma.JsonValue | null;
             serverId: string | null;
             notes: string | null;
-            ownerId: string | null;
             plate: string;
             model: string | null;
+            ownerId: string | null;
             erlcReference: string | null;
         })[];
         total: number;
@@ -48,8 +48,8 @@ export declare class VehiclesService {
                 status: string;
                 custom: Prisma.JsonValue | null;
                 serverId: string | null;
-                notes: string | null;
                 aliases: string[];
+                notes: string | null;
             } | null;
         } & {
             id: string;
@@ -61,9 +61,9 @@ export declare class VehiclesService {
             custom: Prisma.JsonValue | null;
             serverId: string | null;
             notes: string | null;
-            ownerId: string | null;
             plate: string;
             model: string | null;
+            ownerId: string | null;
             erlcReference: string | null;
         };
         timeline: {
@@ -94,9 +94,9 @@ export declare class VehiclesService {
         custom: Prisma.JsonValue | null;
         serverId: string | null;
         notes: string | null;
-        ownerId: string | null;
         plate: string;
         model: string | null;
+        ownerId: string | null;
         erlcReference: string | null;
     }>;
     archive(actor: Actor, id: string, reason: string): Promise<{
@@ -109,9 +109,9 @@ export declare class VehiclesService {
         custom: Prisma.JsonValue | null;
         serverId: string | null;
         notes: string | null;
-        ownerId: string | null;
         plate: string;
         model: string | null;
+        ownerId: string | null;
         erlcReference: string | null;
     }>;
 }

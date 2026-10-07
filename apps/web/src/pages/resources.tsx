@@ -1,3 +1,4 @@
+import { ErlcLiveCard } from '../components/ErlcLiveCard';
 import { DiscordChannelHint } from '../components/DiscordChannelHint';
 import { PersonnelTeamEditor } from '../components/PersonnelTeamEditor';
 import { Link } from 'react-router';
@@ -12,14 +13,14 @@ const status = (r: Row) => <StatusBadge status={String(r.status)} />;
 const date = (k: string) => (r: Row) => fmt(r[k] as string);
 
 export const persons: ResourceConfig<Row> = {
-  title: 'Personen', subtitle: 'Personenakten', customEntity: 'persons', endpoint: '/persons', queryKey: 'persons', emptyText: 'Keine Personen gefunden.', emptyHint: 'Lege eine Personenakte an, um loszulegen.',
+  title: 'Personen', subtitle: 'Personenakten', notice: <ErlcLiveCard kind="persons" />, customEntity: 'persons', endpoint: '/persons', queryKey: 'persons', emptyText: 'Keine Personen gefunden.', emptyHint: 'Lege eine Personenakte an, um loszulegen.',
   detailPath: (r) => `/persons/${r.id}`,
   columns: [{ key: 'robloxUsername', label: 'Roblox-Name' }, { key: 'robloxUserId', label: 'Roblox-ID', render: (r) => s(r.robloxUserId) }, { key: 'status', label: 'Status', render: status }, { key: 'createdAt', label: 'Erstellt', render: date('createdAt') }],
   create: { perm: 'persons.create', label: 'Neue Person', fields: [{ name: 'robloxUsername', label: 'Roblox-Name oder Roblox-ID', required: true, max: 64, hint: 'Eins reicht – das andere wird automatisch bei Roblox nachgeschlagen.' }, { name: 'robloxUserId', label: 'Roblox-Benutzer-ID (optional)', hint: 'Nur Ziffern. Nur nötig, wenn Roblox nicht erreichbar ist.' }, { name: 'notes', label: 'Notizen', type: 'textarea' }] },
 };
 
 export const vehicles: ResourceConfig<Row> = {
-  title: 'Fahrzeuge', customEntity: 'vehicles', endpoint: '/vehicles', queryKey: 'vehicles', emptyText: 'Keine Fahrzeuge gefunden.', detailPath: (r) => `/vehicles/${r.id}`,
+  title: 'Fahrzeuge', notice: <ErlcLiveCard kind="vehicles" />, customEntity: 'vehicles', endpoint: '/vehicles', queryKey: 'vehicles', emptyText: 'Keine Fahrzeuge gefunden.', detailPath: (r) => `/vehicles/${r.id}`,
   columns: [{ key: 'plate', label: 'Kennzeichen' }, { key: 'model', label: 'Modell', render: (r) => s(r.model) }, { key: 'color', label: 'Farbe', render: (r) => s(r.color) }, { key: 'owner', label: 'Halter', render: (r) => s((r.owner as Row | null)?.robloxUsername) }, { key: 'status', label: 'Status', render: status }],
   create: { perm: 'vehicles.create', label: 'Neues Fahrzeug', fields: [{ name: 'plate', label: 'Kennzeichen', required: true, max: 16 }, { name: 'model', label: 'Modell', max: 64 }, { name: 'color', label: 'Farbe', max: 32 }, { name: 'ownerId', label: 'Halter', type: 'person' }, { name: 'notes', label: 'Notizen', type: 'textarea' }] },
 };
