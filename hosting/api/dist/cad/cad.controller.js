@@ -130,6 +130,8 @@ let CadController = class CadController {
     }
     // Funk
     radio(q) { return this.s.listRadio(q); }
+    /** Einheiten, als die man funken darf (Leitstelle: alle; sonst nur die eigene). */
+    radioUnits(a) { return this.s.radioUnits(a); }
     sendRadio(a, b) { return this.s.sendRadio(a, b, a.roles); }
     announce(a, b) { return this.s.announce(a, b.text); }
     // Zuordnungen (Teamübersicht)
@@ -360,6 +362,14 @@ __decorate([
     __metadata("design:paramtypes", [Object]),
     __metadata("design:returntype", void 0)
 ], CadController.prototype, "radio", null);
+__decorate([
+    (0, common_1.Get)('radio/units'),
+    (0, decorators_1.RequirePermission)('cad.radio'),
+    __param(0, Cad()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object]),
+    __metadata("design:returntype", void 0)
+], CadController.prototype, "radioUnits", null);
 __decorate([
     (0, common_1.Post)('radio'),
     (0, decorators_1.RequirePermission)('cad.radio'),

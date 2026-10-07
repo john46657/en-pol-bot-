@@ -1,4 +1,4 @@
-import { useState, type ReactNode } from 'react';
+import { useEffect, useState, type ReactNode } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { api, ApiError } from '../../lib/api';
@@ -171,12 +171,17 @@ export function CadRadio() {
   const qc = useQueryClient();
   const [text, setText] = useState('');
   const [incidentId, setIncidentId] = useState('');
+  const [unitId, setUnitId] = useState('');
+  const [code, setCode] = useState<string>();
   const [announce, setAnnounce] = useState('');
   const [msg, setMsg] = useState<string>();
   const q = useQuery({ queryKey: ['cad-radio'], queryFn: () => api<CadRadioRow[]>('/cad/radio', { query: { take: 100 } }), refetchInterval: 15_000 });
   const inc = useQuery({ queryKey: ['cad-incidents', 'active', ''], queryFn: () => api<CadIncidentRow[]>('/cad/incidents', { query: { active: 'true' } }) });
   const codes = useQuery({ queryKey: ['radio-codes-cad'], queryFn: () => api<{ id: string; code: string; meaning: string; category: string | null }[]>('/radio-codes'), enabled: can('radio.view'), staleTime: 300_000 });
-  const send = useMutation({ mutationFn: () => api('/cad/radio', { body: { text, ...(incidentId ? { incidentId } : {}) } }), onSuccess: () => { setText(''); invalidateAll(qc); }, onError: (e) => setMsg(errText(e)) });
+  const myUnits = useQuery({ queryKey: ['cad-radio-units'], queryFn: () => api<{ units: { id: string; callsign: string; name: string | null }[]; mine: string | null; dispatcher: boolean }>('/cad/radio/units'), enabled: can('cad.radio') });
+  // Standard: eigene Einheit (bzw. die einzige, als die man funken darf)
+  useEffect(() => { const d = myUnits.data; if (d && !unitId) setUnitId(d.mine ?? (d.units.length === 1 ? d.units[0]!.id : '')); }, [myUnits.data, unitId]);
+  const send = useMutation({ mutationFn: () => api('/cad/radio', { body: { text, unitId, ...(incidentId ? { incidentId } : {}) } }), onSuccess: () => { setText(''); setCode(undefined); invalidateAll(qc); }, onError: (e) => setMsg(errText(e)) });
   const ann = useMutation({ mutationFn: () => api<{ channels: number }>('/cad/announcements', { body: { text: announce } }), onSuccess: (r) => { setAnnounce(''); setMsg(`Leitstellenmeldung an ${r.channels} Kanal/Kanäle gesendet.`); }, onError: (e) => setMsg(errText(e)) });
   return (
     <>
@@ -184,12 +189,18 @@ export function CadRadio() {
       {msg && <p role="status" className="mb-2 text-sm text-muted">{msg}</p>}
       <div className="grid gap-3 lg:grid-cols-3">
         <Card className="lg:col-span-2" title="Funkverkehr">
-          {can('cad.radio') && <form className="mb-3 flex flex-wrap gap-2" onSubmit={(e) => { e.preventDefault(); if (text.trim()) send.mutate(); }}>
-            <Input aria-label="Funkmeldung" className="min-w-48 flex-1" maxLength={500} placeholder="z. B. „Am Einsatzort.“" value={text} onChange={(e) => setText(e.target.value)} />
+          {can('cad.radio') && <form className="mb-3 flex flex-wrap gap-2" onSubmit={(e) => { e.preventDefault(); if (text.trim() && unitId) send.mutate(); }}>
+            <Select aria-label="Einheit" required className="w-auto" value={unitId} onChange={(e) => setUnitId(e.target.value)}>
+              <option value="">{myUnits.data && !myUnits.data.units.length ? 'Keine Einheit zugeordnet' : 'Einheit wählen…'}</option>
+              {(myUnits.data?.units ?? []).map((u) => <option key={u.id} value={u.id}>{u.callsign}{u.name ? ` · ${u.name}` : ''}</option>)}
+            </Select>
+            <Input aria-label="Funkmeldung" className="min-w-48 flex-1" maxLength={500} placeholder="z. B. „Am Einsatzort.“" value={text} onChange={(e) => { setText(e.target.value); setCode(undefined); }} />
             <Select aria-label="Einsatz" className="w-auto" value={incidentId} onChange={(e) => setIncidentId(e.target.value)}><option value="">Einsatz meiner Einheit / keiner</option>{(inc.data ?? []).map((i) => <option key={i.id} value={i.id}>{i.number} · {i.title}</option>)}</Select>
-            <Button type="submit" disabled={!text.trim() || send.isPending}>Senden</Button>
+            <Button type="submit" disabled={!text.trim() || !unitId || send.isPending}>Senden</Button>
           </form>}
-          {can('cad.radio') && !!codes.data?.length && <div className="mb-3 flex flex-wrap gap-1" aria-label="Funk-Codes">{codes.data.slice(0, 40).map((c) => <button key={c.id} type="button" title={c.meaning} className="rounded border border-line px-1.5 py-0.5 text-xs hover:bg-panel-2" onClick={() => setText((t) => `${t ? `${t} ` : ''}${c.code} (${c.meaning})`.slice(0, 500))}>{c.code}</button>)}</div>}
+          {can('cad.radio') && !!codes.data?.length && <div role="radiogroup" className="mb-3 flex flex-wrap gap-1" aria-label="Funk-Codes">{codes.data.slice(0, 40).map((c) => <button key={c.id} type="button" role="radio" aria-checked={code === c.id} title={c.meaning} className={`rounded border px-1.5 py-0.5 text-xs ${code === c.id ? 'border-primary bg-primary text-primary-fg' : 'border-line hover:bg-panel-2'}`}
+                // immer nur ein Code: Klick ersetzt den Text, erneuter Klick hebt die Auswahl auf
+                onClick={() => { if (code === c.id) { setCode(undefined); setText(''); } else { setCode(c.id); setText(`${c.code} (${c.meaning})`.slice(0, 500)); } }}>{c.code}</button>)}</div>}
           {q.isLoading ? <SkeletonRows /> : !q.data?.length ? <EmptyState text="Noch keine Funkmeldungen." /> : (
             <ul className="divide-y divide-line text-sm">{q.data.map((r) => <li key={r.id} className="py-1.5"><b>{r.callsign ?? r.authorName ?? 'Funk'}:</b> „{r.text}“<span className="block text-xs text-muted">{new Date(r.createdAt).toLocaleString('de-DE')}{r.incidentNumber ? ` · ${r.incidentNumber}` : ''}{r.authorName && r.callsign ? ` · ${r.authorName}` : ''}{r.guildId ? ' · Discord' : ''}</span></li>)}</ul>
           )}

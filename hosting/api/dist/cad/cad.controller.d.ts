@@ -1059,6 +1059,16 @@ export declare class CadController {
         unitId: string | null;
         authorId: string | null;
     }[]>;
+    /** Einheiten, als die man funken darf (Leitstelle: alle; sonst nur die eigene). */
+    radioUnits(a: CadActor): Promise<{
+        units: {
+            id: string;
+            name: string | null;
+            callsign: string;
+        }[];
+        mine: string | null;
+        dispatcher: boolean;
+    }>;
     sendRadio(a: CadActor & {
         roles: string[];
     }, b: z.infer<typeof radioBody>): Promise<{

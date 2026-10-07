@@ -549,6 +549,15 @@ export declare class CadService {
         authorId: string | null;
     }[]>;
     /** Funkmeldung (Dashboard oder Discord). Mit Einsatz → zusätzlich in der Einsatzchronik. */
+    radioUnits(actor: CadActor): Promise<{
+        units: {
+            id: string;
+            name: string | null;
+            callsign: string;
+        }[];
+        mine: string | null;
+        dispatcher: boolean;
+    }>;
     sendRadio(actor: CadActor, d: {
         text: string;
         unitId?: string | null;

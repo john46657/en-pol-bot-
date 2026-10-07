@@ -43,7 +43,7 @@ ER:LC → Command Center (Recht `cad.erlc_command`). Kritische Befehle (Liste je
 
 - Einsatznummer fortlaufend `E-2026-00421` (Präfix einstellbar). Einsatzarten, Prioritäten, Status (inkl. „schließt ab“), Einheitenstatus und Einheitentypen sind frei konfigurierbar.
 - Notruf → **Einsatz erstellen** übernimmt Ort, Text und Position; die Verknüpfung bleibt gespeichert (`ErlcEmergencyCall.incidentId`). Einheit direkt zum Notruf zuweisen legt den Einsatz automatisch an.
-- Funkmeldungen (Dashboard oder Discord `/cad funk`) mit Einsatz landen in der **Einsatzchronik**. Ohne Angabe wird der aktuelle Einsatz der eigenen Einheit genommen.
+- Funkmeldungen (Dashboard oder Discord `/cad funk`) mit Einsatz landen in der **Einsatzchronik**. Ohne Angabe wird der aktuelle Einsatz der eigenen Einheit genommen. Im Dashboard wählt man die **Einheit**, als die man funkt (Leitstelle mit `cad.assign_unit`: jede Einheit; alle anderen nur die eigene – der Server prüft das). Funk-Codes sind eine **Einzelauswahl**: ein Klick setzt genau diesen Code, ein zweiter Klick hebt ihn auf.
 - Discord: `/cad status`, `/cad funk`, `/cad einsaetze`; unter Notruf-Meldungen die Buttons Übernehmen / Einsatz erstellen / Einheit zuweisen / Schließen / Auf Karte anzeigen.
 
 ## Discord-Kanäle und Cross-Server
