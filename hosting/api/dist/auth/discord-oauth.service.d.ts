@@ -29,7 +29,14 @@ export declare class DiscordOAuthService {
     clientId(): string | null;
     enabled(): boolean;
     /** Link zum Einladen des Bots auf einen Server – mit Administrator-Rechten (so gewünscht; deckt Tickets, Rollen, Threads ab). */
-    inviteUrl(): string | null;
+    inviteUrl(guildId?: string): string | null;
+    /** Server, auf denen der Benutzer Discord-Administrator ist (beim letzten Discord-Login gemerkt) – für „Bot hinzufügen“. */
+    adminGuildsOf(userId: string): Promise<{
+        id: string;
+        name: string;
+        icon: string | null;
+        banner: string | null;
+    }[]>;
     /** Passwort-Login nur, solange Discord-Login nicht eingerichtet ist – oder im Notfall mit PASSWORD_LOGIN=true. */
     passwordLoginAllowed(): boolean;
     private isAdminId;
@@ -72,6 +79,8 @@ export declare class DiscordOAuthService {
     settings(): Promise<DiscordLoginSettings>;
     /** Code bei Discord einlösen (Login und Bot-Einladung). */
     private exchange;
+    /** Eigene Server mit Administrator-Recht (Scope `guilds`) merken. Fehler sind egal – dann fehlen nur die „Bot hinzufügen“-Karten. */
+    private rememberAdminGuilds;
     private discordUser;
     private createUser;
     private ensureAdmin;

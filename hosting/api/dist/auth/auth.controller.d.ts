@@ -119,6 +119,13 @@ export declare class AuthController {
             banner: string | null;
             memberCount: number | null;
         }[];
+        invite: {
+            inviteUrl: string | null;
+            id: string;
+            name: string;
+            icon: string | null;
+            banner: string | null;
+        }[];
     }>;
     me(user: AuthUser): Promise<{
         id: string;

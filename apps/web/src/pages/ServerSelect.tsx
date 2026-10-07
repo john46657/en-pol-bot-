@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Navigate, useLocation, useNavigate } from 'react-router';
-import { Check, Globe, LogOut, Search, Shield } from 'lucide-react';
+import { Check, Globe, LogOut, Plus, Search, Shield } from 'lucide-react';
 import { useAuth } from '../lib/auth';
 import { api } from '../lib/api';
 import { useServer } from '../lib/guilds';
@@ -9,7 +9,8 @@ import { markServerChosen, serverChosen } from '../lib/server';
 import { Button, ErrorState, Input, SkeletonRows } from '../components/ui';
 
 export interface ServerOption { id: string; name: string; icon: string | null; banner: string | null; memberCount: number | null }
-export interface ServerList { allServers: boolean; servers: ServerOption[] }
+export interface InviteOption { id: string; name: string; icon: string | null; banner: string | null; inviteUrl: string | null }
+export interface ServerList { allServers: boolean; servers: ServerOption[]; invite?: InviteOption[] }
 export const useServerList = (enabled = true) => useQuery({ queryKey: ['auth-servers'], queryFn: () => api<ServerList>('/auth/servers'), staleTime: 60_000, enabled });
 
 const greeting = (h = new Date().getHours()) => (h < 5 ? 'Gute Nacht' : h < 11 ? 'Guten Morgen' : h < 18 ? 'Guten Tag' : 'Guten Abend');
@@ -21,10 +22,9 @@ function ServerIcon({ icon, name, size = 'h-16 w-16' }: { icon: string | null; n
     : <span aria-hidden className={`${size} grid place-items-center rounded-full border border-line bg-panel-2 text-2xl font-medium text-muted shadow`}>{initials(name)}</span>;
 }
 
-function ServerCard({ name, icon, banner, sub, active, onClick, children }: { name: string; icon?: string | null; banner?: string | null; sub?: string; active: boolean; onClick: () => void; children?: React.ReactNode }) {
-  return (
-    <button type="button" onClick={onClick} aria-current={active || undefined} aria-label={`${name} öffnen`}
-      className={`group relative flex h-44 w-full flex-col items-center justify-center gap-3 overflow-hidden rounded-2xl border bg-panel text-center transition hover:-translate-y-0.5 hover:shadow-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary ${active ? 'border-primary ring-2 ring-primary/50' : 'border-line'}`}>
+function ServerCard({ name, icon, banner, sub, active, onClick, href, muted, children }: { name: string; icon?: string | null; banner?: string | null; sub?: string; active: boolean; onClick?: () => void; href?: string; muted?: boolean; children?: React.ReactNode }) {
+  const cls = `group relative flex h-44 w-full flex-col items-center justify-center gap-3 overflow-hidden rounded-2xl border bg-panel text-center transition hover:-translate-y-0.5 hover:shadow-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary ${active ? 'border-primary ring-2 ring-primary/50' : muted ? 'border-dashed border-line' : 'border-line'}`;
+  const body = <>
       {banner && <>
         <span aria-hidden className="absolute inset-0 scale-110 bg-cover bg-center blur-[6px] transition group-hover:blur-[3px]" style={{ backgroundImage: `url("${banner}")` }} />
         <span aria-hidden className="absolute inset-0 bg-black/15" />
@@ -35,8 +35,9 @@ function ServerCard({ name, icon, banner, sub, active, onClick, children }: { na
         <span className="max-w-full truncate rounded-lg bg-panel-2/90 px-3 py-1 text-base font-semibold text-fg backdrop-blur">{name}</span>
         {sub && <span className={`rounded px-1.5 text-xs ${banner ? 'bg-black/40 text-white' : 'text-muted'}`}>{sub}</span>}
       </span>
-    </button>
-  );
+    </>;
+  if (href) return <a href={href} target="_blank" rel="noreferrer" aria-label={`Bot zu ${name} hinzufügen`} className={`${cls} ${muted ? 'opacity-80 hover:opacity-100' : ''}`}>{body}</a>;
+  return <button type="button" onClick={onClick} aria-current={active || undefined} aria-label={`${name} öffnen`} className={cls}>{body}</button>;
 }
 
 /** Server-Auswahl nach dem Login (und über das Server-Menü): große Karten mit Icon und Banner. */
@@ -51,7 +52,8 @@ export function ServerSelect() {
   const back = (loc.state as { from?: string } | null)?.from;
   const pick = (id: string) => { setServer(id); markServerChosen(); nav(back && back !== '/servers' ? back : '/dashboard', { replace: true }); };
   if (!user) return <Navigate to="/login" replace />;
-  const total = (list.data?.servers.length ?? 0);
+  const total = (list.data?.servers.length ?? 0) + (list.data?.invite?.length ?? 0);
+  const invite = (list.data?.invite ?? []).filter((s) => s.inviteUrl && s.name.toLowerCase().includes(q.trim().toLowerCase()));
 
   return (
     <div className="min-h-full bg-bg">
@@ -76,7 +78,13 @@ export function ServerSelect() {
                 </ServerCard>
               )}
               {servers.map((s) => <ServerCard key={s.id} name={s.name} icon={s.icon} banner={s.banner} sub={s.memberCount != null ? `${s.memberCount.toLocaleString('de-DE')} Mitglieder` : undefined} active={current === s.id} onClick={() => pick(s.id)} />)}
-              {!servers.length && !list.data!.allServers && <p className="text-muted sm:col-span-2 lg:col-span-3">{q ? 'Kein Server gefunden.' : 'Du hast auf keinem Server Zugriff auf das Dashboard. Ist der Bot auf deinem Server und hast du die nötige Rolle?'}</p>}
+              {invite.map((s) => (
+                <ServerCard key={s.id} name={s.name} icon={s.icon} banner={s.banner} href={s.inviteUrl!} active={false} muted
+                  sub="Bot fehlt noch – tippen zum Hinzufügen">
+                  <span className="relative inline-block"><ServerIcon icon={s.icon} name={s.name} /><span className="absolute -bottom-1 -right-1 grid h-7 w-7 place-items-center rounded-full bg-primary text-primary-fg shadow"><Plus size={16} aria-hidden /></span></span>
+                </ServerCard>
+              ))}
+              {!servers.length && !invite.length && !list.data!.allServers && <p className="text-muted sm:col-span-2 lg:col-span-3">{q ? 'Kein Server gefunden.' : 'Du hast auf keinem Server Zugriff auf das Dashboard. Ist der Bot auf deinem Server und hast du die nötige Rolle?'}</p>}
             </div>
           )}
         </div>
@@ -91,7 +99,7 @@ export function StartRedirect() {
   const list = useServerList(!chosen);
   if (chosen) return <Navigate to="/dashboard" replace />;
   if (list.isLoading) return <div className="p-6"><SkeletonRows /></div>;
-  const options = (list.data?.servers.length ?? 0) + (list.data?.allServers ? 1 : 0);
+  const options = (list.data?.servers.length ?? 0) + (list.data?.allServers ? 1 : 0) + (list.data?.invite?.length ?? 0);
   if (options < 2) { markServerChosen(); return <Navigate to="/dashboard" replace />; }
   return <Navigate to="/servers" replace />;
 }

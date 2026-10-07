@@ -63,12 +63,17 @@ let DiscordOAuthService = class DiscordOAuthService {
     }
     enabled() { return !!(this.clientId() && this.env.DISCORD_CLIENT_SECRET); }
     /** Link zum Einladen des Bots auf einen Server – mit Administrator-Rechten (so gewünscht; deckt Tickets, Rollen, Threads ab). */
-    inviteUrl() {
+    inviteUrl(guildId) {
         const id = this.clientId();
         if (!id)
             return null;
         const perms = 8; // Administrator
-        return `https://discord.com/oauth2/authorize?client_id=${id}&scope=bot%20applications.commands&permissions=${perms}`;
+        return `https://discord.com/oauth2/authorize?client_id=${id}&scope=bot%20applications.commands&permissions=${perms}${guildId ? `&guild_id=${guildId}&disable_guild_select=true` : ''}`;
+    }
+    /** Server, auf denen der Benutzer Discord-Administrator ist (beim letzten Discord-Login gemerkt) – für „Bot hinzufügen“. */
+    async adminGuildsOf(userId) {
+        const v = (await this.prisma.systemSetting.findUnique({ where: { key: `auth.discordGuilds.${userId}` } }))?.value;
+        return Array.isArray(v) ? v : [];
     }
     /** Passwort-Login nur, solange Discord-Login nicht eingerichtet ist – oder im Notfall mit PASSWORD_LOGIN=true. */
     passwordLoginAllowed() { return !this.enabled() || process.env.PASSWORD_LOGIN === 'true'; }
@@ -87,7 +92,7 @@ let DiscordOAuthService = class DiscordOAuthService {
         // „install“: Bot auf einen Server holen – über den Code-Ablauf, funktioniert auch mit „OAuth2-Code-Erlaubnis benötigt“
         const q = mode === 'install'
             ? new URLSearchParams({ response_type: 'code', client_id: this.clientId(), scope: 'bot applications.commands', permissions: '8', redirect_uri: this.redirectUri(), state })
-            : new URLSearchParams({ response_type: 'code', client_id: this.clientId(), scope: 'identify', redirect_uri: this.redirectUri(), state, prompt: 'none' });
+            : new URLSearchParams({ response_type: 'code', client_id: this.clientId(), scope: 'identify guilds', redirect_uri: this.redirectUri(), state, prompt: 'none' });
         return { url: `https://discord.com/oauth2/authorize?${q}`, browser };
     }
     /** Schritt 2: Rücksprung von Discord. Liefert eine neue Session (Login) oder verknüpft das Konto (Link). */
@@ -106,7 +111,7 @@ let DiscordOAuthService = class DiscordOAuthService {
             await this.audit.record({ userId: p.userId ?? null, requestId: meta.requestId }, { action: 'discord.bot_installed', module: 'discord', entityType: 'Guild', entityId: guildId ?? 'unknown', after: { guildId, name: tok.guild?.name ?? null } });
             return { kind: 'installed', guildName: tok.guild?.name ?? null };
         }
-        const du = await this.discordUser(code);
+        const { user: du, token } = await this.discordUser(code);
         const settings = await this.settings();
         if (p.mode === 'link') {
             const other = await this.prisma.discordLink.findUnique({ where: { discordId: du.id } });
@@ -119,10 +124,11 @@ let DiscordOAuthService = class DiscordOAuthService {
             }
             return { kind: 'linked' };
         }
-        const member = await this.access.membership(du.id);
+        const member = await this.access.membership(du.id, true);
         const link = await this.prisma.discordLink.findUnique({ where: { discordId: du.id } });
         let user = link ? await this.prisma.user.findUnique({ where: { id: link.userId } }) : null;
-        const owner = this.isAdminId(du.id); // Besitzer/Admins aus ADMIN_DISCORD_IDS kommen immer rein
+        // Besitzer/Admins aus ADMIN_DISCORD_IDS und Discord-Administratoren eines Servers kommen immer rein
+        const owner = this.isAdminId(du.id) || (!!member && member !== 'unknown' && !!member.adminGuilds?.length);
         if (!owner && settings.requireGuild && member === 'unknown' && !user)
             throw new DiscordLoginFailure('cannot_verify');
         if (!owner && settings.requireGuild && member === null)
@@ -143,11 +149,14 @@ let DiscordOAuthService = class DiscordOAuthService {
                 throw new DiscordLoginFailure('no_account');
             user = await this.createUser(du, meta);
         }
-        if (owner)
+        if (this.isAdminId(du.id))
             await this.ensureAdmin(user.id);
-        if (member && member !== 'unknown')
+        if (member && member !== 'unknown') {
             await this.access.syncRoles(user.id, member.roles, settings);
+            await this.access.syncAdminRoles(user.id, member.adminGuilds ?? []);
+        }
         this.access.remember(user.id, true);
+        await this.rememberAdminGuilds(user.id, token);
         await this.prisma.loginHistory.create({ data: { userId: user.id, username: user.username, success: true, ip: meta.ip, reason: 'DISCORD' } });
         return { kind: 'login', ...(await this.auth.startSession(user, meta, 'auth.login.discord')) };
     }
@@ -172,6 +181,31 @@ let DiscordOAuthService = class DiscordOAuthService {
             throw new DiscordLoginFailure('failed');
         }
     }
+    /** Eigene Server mit Administrator-Recht (Scope `guilds`) merken. Fehler sind egal – dann fehlen nur die „Bot hinzufügen“-Karten. */
+    async rememberAdminGuilds(userId, token) {
+        try {
+            const r = await fetch(`${API}/users/@me/guilds`, { headers: { authorization: `Bearer ${token}` }, signal: AbortSignal.timeout(10_000) });
+            if (!r.ok)
+                return;
+            const list = (await r.json());
+            const admin = (g) => { try {
+                return !!g.owner || (BigInt(g.permissions ?? '0') & 8n) === 8n;
+            }
+            catch {
+                return false;
+            } };
+            const value = (Array.isArray(list) ? list : []).filter((g) => /^\d{15,25}$/.test(g.id) && admin(g)).slice(0, 100).map((g) => ({
+                id: g.id, name: String(g.name).slice(0, 100),
+                icon: g.icon && /^[a-z0-9_]+$/i.test(g.icon) ? `https://cdn.discordapp.com/icons/${g.id}/${g.icon}.png?size=256` : null,
+                banner: g.banner && /^[a-z0-9_]+$/i.test(g.banner) ? `https://cdn.discordapp.com/banners/${g.id}/${g.banner}.png?size=1024` : null,
+            }));
+            const key = `auth.discordGuilds.${userId}`;
+            await this.prisma.systemSetting.upsert({ where: { key }, create: { key, value }, update: { value } });
+        }
+        catch (e) {
+            this.log.warn(`guild list not loaded: ${e instanceof Error ? e.message : e}`);
+        }
+    }
     async discordUser(code) {
         const { access_token } = await this.exchange(code);
         try {
@@ -181,7 +215,7 @@ let DiscordOAuthService = class DiscordOAuthService {
             const u = (await me.json());
             if (!/^\d{15,25}$/.test(u.id))
                 throw new DiscordLoginFailure('failed');
-            return u;
+            return { user: u, token: access_token };
         }
         catch (e) {
             if (e instanceof DiscordLoginFailure)

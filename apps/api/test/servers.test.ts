@@ -20,7 +20,7 @@ describe('server selection', () => {
   it('lists only the servers the user may open, with banner and member count', async () => {
     const { agent } = await login(app, 'sv_a');
     const r = await agent.get('/api/v1/auth/servers').expect(200);
-    expect(r.body).toEqual({ allServers: false, servers: [{ id: A, name: 'Server A', icon: expect.any(String), banner: 'https://cdn.discordapp.com/banners/a.png', memberCount: 42 }] });
+    expect(r.body).toEqual({ allServers: false, invite: [], servers: [{ id: A, name: 'Server A', icon: expect.any(String), banner: 'https://cdn.discordapp.com/banners/a.png', memberCount: 42 }] });
   });
   it('global roles see every server and the "all servers" option', async () => {
     const { agent } = await login(app, 'sv_admin');

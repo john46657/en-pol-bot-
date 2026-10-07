@@ -147,6 +147,8 @@ export class AuthController {
     return {
       allServers: await runInGuild(null, () => this.perms.has(user.id, 'dashboard.view')),
       servers: all.filter((_, i) => allowed[i]).map((g) => ({ id: g.id, name: g.name, icon: g.icon, banner: g.banner ?? null, memberCount: g.memberCount ?? null })),
+      // eigene Admin-Server ohne den Bot → „Bot hinzufügen“
+      invite: (await this.discord.adminGuildsOf(user.id)).filter((g) => !all.some((b) => b.id === g.id)).map((g) => ({ ...g, inviteUrl: this.discord.inviteUrl(g.id) })),
     };
   }
 

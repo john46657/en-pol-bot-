@@ -3,6 +3,7 @@ import type { INestApplication } from '@nestjs/common';
 import request from 'supertest';
 import { createTestApp, login, makeUser } from './helpers';
 import type { PrismaService } from '../src/prisma/prisma.service';
+import { DiscordAccessService } from '../src/authz/discord-access.service';
 
 const APP_ID = '123456789012345678';
 const GUILD = '555555555555555555';
@@ -11,6 +12,9 @@ let app: INestApplication; let prisma: PrismaService;
 /** Nachgestelltes Discord: wer ist eingeloggt, wer ist auf dem Server (mit welchen Rollen). */
 const discord: { user: { id: string; username: string; global_name: string | null }; members: Map<string, string[]>; tokenOk: boolean } = { user: { id: '111111111111111111', username: 'Oscar.Officer', global_name: 'Oscar' }, members: new Map(), tokenOk: true };
 const realFetch = globalThis.fetch;
+/** Weitere Server des Bots: Besitzer und Rollen-Rechte; eigene Server des Benutzers (Scope `guilds`). */
+const OTHER = '565656565656565656', ADMIN_ROLE = '676767676767676767';
+const extra: { botGuilds: string[]; guildMeta: Map<string, { owner_id: string; roles: { id: string; permissions: string }[] }>; otherMembers: Map<string, string[]>; userGuilds: unknown[] } = { botGuilds: [GUILD], guildMeta: new Map(), otherMembers: new Map(), userGuilds: [] };
 
 beforeAll(async () => {
   process.env.DISCORD_CLIENT_SECRET = 'test-client-secret';
@@ -29,6 +33,11 @@ beforeAll(async () => {
       return discord.tokenOk ? json(200, { access_token: 'at' }) : json(400, { error: 'invalid_grant' });
     }
     if (url.endsWith('/users/@me')) return json(200, discord.user);
+    if (url.includes('/users/@me/guilds')) return String((init?.headers as Record<string, string>)?.authorization).startsWith('Bot ') ? json(200, extra.botGuilds.map((id) => ({ id }))) : json(200, extra.userGuilds);
+    const gm = url.match(/\/guilds\/(\d+)$/);
+    if (gm) { const meta = extra.guildMeta.get(gm[1]!); return meta ? json(200, meta) : json(404, {}); }
+    const om = url.match(/\/guilds\/(\d+)\/members\/(\d+)$/);
+    if (om && om[1] === OTHER) { const roles = extra.otherMembers.get(om[2]!); return roles ? json(200, { roles }) : json(404, {}); }
     const m = url.match(/\/guilds\/(\d+)\/members\/(\d+)$/);
     if (m) { const roles = m[1] === GUILD ? discord.members.get(m[2]!) : undefined; return roles ? json(200, { roles }) : json(404, { message: 'Unknown Member' }); }
     return json(404, {});
@@ -49,7 +58,7 @@ async function discordLogin(agent = request.agent(app.getHttpServer())) {
   expect(start.status).toBe(302);
   const to = new URL(start.headers.location as string);
   expect(to.origin + to.pathname).toBe('https://discord.com/oauth2/authorize');
-  expect(to.searchParams.get('scope')).toBe('identify');
+  expect(to.searchParams.get('scope')).toBe('identify guilds');
   const back = await agent.get(`/api/v1/auth/discord/callback?code=abc&state=${to.searchParams.get('state')}`);
   return { agent, location: String(back.headers.location), back };
 }
@@ -175,6 +184,39 @@ describe('login with Discord', () => {
     const ok = await discordLogin();
     expect((await ok.agent.get('/api/v1/auth/me')).body.username).toBe('dl_admin');
     expect((await request(app.getHttpServer()).get('/api/v1/auth/discord/link')).status).toBe(401);
+  });
+
+  it('Discord administrators of a server always get in and get a dashboard role for exactly that server', async () => {
+    const admin = (await login(app, 'dl_admin')).agent;
+    await admin.put('/api/v1/admin/settings/auth.discord').send({ value: { signup: false, requireGuild: true, roleMap: [], teamRoleIds: ['787878787878787878'] } });
+    extra.botGuilds = [GUILD, OTHER];
+    extra.guildMeta.set(OTHER, { owner_id: '1', roles: [{ id: OTHER, permissions: '0' }, { id: ADMIN_ROLE, permissions: String(8 | 32) }] });
+    const before = discord.user;
+    discord.user = { id: '232323232323232323', username: 'friend', global_name: 'Friend' };
+    // ohne Admin-Rolle: nicht auf dem Haupt-Server, Anmeldung neuer Konten aus → kein Zugang
+    extra.otherMembers.set(discord.user.id, []);
+    expect((await discordLogin()).location).toMatch(/discord=(not_member|no_team_role|no_account)$/);
+    // mit einer Discord-Rolle, die „Administrator“ hat → rein, eigene Rolle nur für diesen Server
+    extra.otherMembers.set(discord.user.id, [ADMIN_ROLE]);
+    extra.userGuilds = [{ id: OTHER, name: 'Other', icon: 'abc', owner: false, permissions: '8' }, { id: '989898989898989898', name: 'Ohne Bot', icon: null, banner: 'bnr', owner: true, permissions: '0' }, { id: '121212121212121212', name: 'Kein Admin', permissions: '32' }];
+    await prisma.systemSetting.upsert({ where: { key: 'discord.guilds' }, create: { key: 'discord.guilds', value: [{ id: OTHER, name: 'Other', icon: null, channels: [], roles: [] }] }, update: { value: [{ id: OTHER, name: 'Other', icon: null, channels: [], roles: [] }] } });
+    const ok = await discordLogin();
+    expect(ok.location).toMatch(/\/$/);
+    const me = await ok.agent.get('/api/v1/auth/me').set('x-guild-id', OTHER);
+    expect(me.body.roles).toEqual([expect.stringMatching(/^Discord-Admin · Other/)]);
+    expect(me.body.permissions).toContain('settings.manage');
+    expect(me.body.permissions).not.toContain('users.manage');
+    expect((await ok.agent.get('/api/v1/auth/me').set('x-guild-id', GUILD)).body.permissions).toEqual([]); // anderer Server: nichts
+    const sv = await ok.agent.get('/api/v1/auth/servers');
+    expect(sv.body.servers.map((g: { id: string }) => g.id)).toEqual([OTHER]);
+    expect(sv.body.invite).toEqual([{ id: '989898989898989898', name: 'Ohne Bot', icon: null, banner: 'https://cdn.discordapp.com/banners/989898989898989898/bnr.png?size=1024', inviteUrl: expect.stringContaining('guild_id=989898989898989898') }]);
+    // Admin-Recht weg → beim nächsten Abgleich Rolle weg und kein Zugang mehr
+    extra.otherMembers.set(discord.user.id, []);
+    await app.get(DiscordAccessService).verify((await prisma.discordLink.findUniqueOrThrow({ where: { discordId: discord.user.id } })).userId, true);
+    expect((await ok.agent.get('/api/v1/auth/me')).status).toBe(401);
+    discord.user = before;
+    extra.botGuilds = [GUILD];
+    await admin.put('/api/v1/admin/settings/auth.discord').send({ value: { signup: true, requireGuild: true, roleMap: [], teamRoleIds: [] } });
   });
 
   it('only Discord: password login is off once Discord is set up; ADMIN_DISCORD_IDS always get in as admin', async () => {
