@@ -39,7 +39,7 @@ export function PersonDetail() {
         {tab === 'Related records' && <Card>{links.length ? <ul className="divide-y divide-line">{links.map((l) => <li key={l.id} className="py-2 text-sm">{l.entityType} <code className="text-xs">{l.entityId.slice(0, 8)}</code> · {l.role} · {fmt(l.createdAt)}{ROUTES[l.entityType] ? <> · <Link className="text-primary underline" to={`/${ROUTES[l.entityType]}/${l.entityId}`}>open</Link></> : null}</li>)}</ul> : <EmptyState text="No linked records." />}</Card>}
         {tab === 'Timeline' && <Card><Timeline items={timeline} /></Card>}
       </div>
-      <FormModal open={editing} onClose={() => setEditing(false)} title="Edit person" endpoint={`/persons/${id}`} method="PATCH" invalidate={[['persons']]} defaults={{ robloxUsername: p.robloxUsername, notes: p.notes ?? '', ...Object.fromEntries(Object.entries(p.custom ?? {}).map(([k, v]) => [`cf_${k}`, String(v)])) }}
+      <FormModal open={editing} onClose={() => setEditing(false)} title="Edit person" endpoint={`/persons/${id}`} method="PATCH" lock={{ type: 'person', id }} invalidate={[['persons']]} defaults={{ robloxUsername: p.robloxUsername, notes: p.notes ?? '', ...Object.fromEntries(Object.entries(p.custom ?? {}).map(([k, v]) => [`cf_${k}`, String(v)])) }}
         fields={[{ name: 'robloxUsername', label: 'Roblox username', required: true }, { name: 'notes', label: 'Notes', type: 'textarea' }, ...customFormFields(defs).map((f) => ({ ...f, required: false }))]} toBody={(v) => ({ ...withCustom(v), version: p.version })} />
     </>
   );

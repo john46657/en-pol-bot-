@@ -10,12 +10,13 @@ import { linkPerson, linkVehicle } from '../common/links';
 import { makeNumber } from '../common/numbering';
 import { nextStatus } from '../common/transition';
 import { PageQuery, pageResult, skipTake } from '../common/pagination';
+import { LocksService } from '../locks/locks.service';
 
 const OPEN = ['CLOSED', 'CANCELLED'];
 
 @Injectable()
 export class DispatchService {
-  constructor(private readonly prisma: PrismaService, private readonly audit: AuditService, private readonly timeline: TimelineService, private readonly rt: RealtimeService, private readonly discord: DiscordService) {}
+  constructor(private readonly prisma: PrismaService, private readonly audit: AuditService, private readonly timeline: TimelineService, private readonly rt: RealtimeService, private readonly discord: DiscordService, private readonly locks: LocksService) {}
 
   // ---- Units ----
   listUnits() { return this.prisma.unit.findMany({ include: { members: true }, orderBy: { callsign: 'asc' } }); }
@@ -104,6 +105,7 @@ export class DispatchService {
   }
 
   async update(actor: Actor, id: string, version: number, d: { title?: string; description?: string; priority?: string; location?: string; supervisorId?: string | null }) {
+    await this.locks.assertFree('incident', id, actor.userId);
     return this.prisma.$transaction(async (tx) => {
       const before = await tx.incident.findUnique({ where: { id } });
       if (!before) throw new AppError('NOT_FOUND', 'Incident not found.');

@@ -44,6 +44,7 @@ model User {
   dutySessions  DutySession[]
   leaveRequests LeaveRequest[]
   settings      UserSettings?
+  editLocks     EditLock[]
 
   @@index([robloxUsername])
 }
@@ -1246,4 +1247,19 @@ model CadServerLink {
   updatedAt     DateTime @updatedAt
 
   @@unique([sourceGuildId, targetGuildId])
+}
+
+// ───────────── Datensatz-Sperre beim Bearbeiten ─────────────
+
+/// Wer gerade einen Datensatz bearbeitet. Läuft ohne Lebenszeichen nach kurzer Zeit ab.
+model EditLock {
+  entityType String
+  entityId   String   @db.Uuid
+  userId     String   @db.Uuid
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt  DateTime @default(now())
+  expiresAt  DateTime
+
+  @@id([entityType, entityId])
+  @@index([userId])
 }

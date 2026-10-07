@@ -5,6 +5,7 @@ import { MapPin, Star } from 'lucide-react';
 import { api, ApiError } from '../../lib/api';
 import { useAuth } from '../../lib/auth';
 import { ago, optColor, optLabel, useCadConfig, useCadPrefs, type CadConfig, type CadIncidentDetail, type CadIncidentRow, type CadRadioRow, type CadUnitRow } from '../../lib/cad';
+import { LockBanner, useEditLock } from '../../lib/locks';
 import { Button, Card, EmptyState, ErrorState, Field, Input, Modal, PageHeader, Select, SkeletonRows, Textarea } from '../../components/ui';
 
 export interface IncidentDraft { restrictRoleIds?: string[]; title?: string; type?: string; keyword?: string; priority?: string; status?: string; location?: string; description?: string; involved?: string; requiredUnits?: string; internalNotes?: string; mapX?: number | null; mapZ?: number | null }
@@ -16,6 +17,7 @@ export function IncidentForm({ cfg, initial, id, callId, onClose, onSaved }: { c
   const qc = useQueryClient();
   const [v, setV] = useState<IncidentDraft>({ priority: cfg.priorities[Math.floor(cfg.priorities.length / 2)]?.key, ...initial });
   const [err, setErr] = useState<string>();
+  const editLock = useEditLock('incident', id, !!id);
   const roles = useQuery({ queryKey: ['roles-list'], queryFn: () => api<{ id: string; name: string }[]>('/roles').catch(() => []) });
   const m = useMutation({
     mutationFn: () => {
@@ -30,6 +32,7 @@ export function IncidentForm({ cfg, initial, id, callId, onClose, onSaved }: { c
   return (
     <Modal open wide title={id ? 'Einsatz bearbeiten' : callId ? 'Einsatz aus Notruf erstellen' : 'Neuer Einsatz'} onClose={onClose}>
       <form className="grid gap-3 sm:grid-cols-2" onSubmit={(e) => { e.preventDefault(); m.mutate(); }}>
+        <div className="sm:col-span-2 empty:hidden"><LockBanner lock={editLock} /></div>
         <div className="sm:col-span-2"><Field label="Titel / Meldebild">{(fid) => <Input id={fid} required={!callId} minLength={2} maxLength={200} value={v.title ?? ''} onChange={(e) => upd({ title: e.target.value })} />}</Field></div>
         <Field label="Einsatzart">{(fid) => <Select id={fid} value={v.type ?? ''} onChange={(e) => upd({ type: e.target.value })}><option value="">—</option>{cfg.incidentTypes.map((t) => <option key={t.key} value={t.key}>{optLabel(cfg.incidentTypes, t.key)}</option>)}</Select>}</Field>
         <Field label="Stichwort">{(fid) => <Input id={fid} maxLength={80} value={v.keyword ?? ''} onChange={(e) => upd({ keyword: e.target.value })} />}</Field>
@@ -47,7 +50,7 @@ export function IncidentForm({ cfg, initial, id, callId, onClose, onSaved }: { c
         )}</Field></div>
         <div className="sm:col-span-2"><Field label="Interne Notizen (nur im CAD)">{(fid) => <Textarea id={fid} rows={2} maxLength={5000} value={v.internalNotes ?? ''} onChange={(e) => upd({ internalNotes: e.target.value })} />}</Field></div>
         {err && <p role="alert" className="text-sm text-danger sm:col-span-2">{err}</p>}
-        <div className="flex justify-end gap-2 sm:col-span-2"><Button variant="secondary" onClick={onClose}>Abbrechen</Button><Button type="submit" disabled={m.isPending}>{id ? 'Speichern' : 'Einsatz anlegen'}</Button></div>
+        <div className="flex justify-end gap-2 sm:col-span-2"><Button variant="secondary" onClick={onClose}>Abbrechen</Button><Button type="submit" disabled={m.isPending || editLock.blocked}>{id ? 'Speichern' : 'Einsatz anlegen'}</Button></div>
       </form>
     </Modal>
   );

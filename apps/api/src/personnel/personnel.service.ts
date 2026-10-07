@@ -4,10 +4,11 @@ import { AuditService, Actor } from '../audit/audit.service';
 import { TimelineService } from '../timeline/timeline.service';
 import { AppError } from '../common/errors';
 import { PageQuery, pageResult, skipTake } from '../common/pagination';
+import { LocksService } from '../locks/locks.service';
 
 @Injectable()
 export class PersonnelService {
-  constructor(private readonly prisma: PrismaService, private readonly audit: AuditService, private readonly timeline: TimelineService) {}
+  constructor(private readonly prisma: PrismaService, private readonly audit: AuditService, private readonly timeline: TimelineService, private readonly locks: LocksService) {}
 
   async list(p: PageQuery) {
     const where = p.q ? { OR: [{ callsign: { contains: p.q, mode: 'insensitive' as const } }, { rank: { contains: p.q, mode: 'insensitive' as const } }, { user: { displayName: { contains: p.q, mode: 'insensitive' as const } } }] } : {};
@@ -41,6 +42,7 @@ export class PersonnelService {
   }
 
   async update(actor: Actor, id: string, d: { team?: string; office?: string | null; serviceNumber?: string | null; callsign?: string; employmentStatus?: string; qualifications?: string[] }) {
+    await this.locks.assertFree('personnel', id, actor.userId);
     return this.prisma.$transaction(async (tx) => {
       const before = await tx.personnel.findUnique({ where: { id } });
       if (!before) throw new AppError('NOT_FOUND', 'Personnel file not found.');

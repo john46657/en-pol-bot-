@@ -8,6 +8,7 @@ import { Button, Field, Input, Modal, Select, Textarea } from './ui';
 import { useDebounced } from './DataTable';
 import { useAuth } from '../lib/auth';
 import { looksLikeRoblox, type RobloxProfile } from './RobloxCard';
+import { LockBanner, useEditLock, type LockType } from '../lib/locks';
 
 export interface FieldDef {
   name: string; label: string; type?: 'text' | 'textarea' | 'number' | 'select' | 'person' | 'legalCode' | 'datetime' | 'date' | 'password';
@@ -85,10 +86,13 @@ function serverText(e: ApiError, fields: FieldDef[]) {
   return details.slice(0, 5).map((d) => { const f = fields.find((x) => x.name === d.path?.split('.')[0]); return f ? `${f.label}: ${d.message}` : d.path ? `${d.path}: ${d.message}` : d.message; }).join(' · ');
 }
 
-export function FormModal({ open, onClose, title, fields, endpoint, method, toBody, invalidate, onDone, submitLabel = 'Save', defaults }: {
+export function FormModal({ open, onClose, title, fields, endpoint, method, toBody, invalidate, onDone, submitLabel = 'Save', defaults, lock }: {
   open: boolean; onClose: () => void; title: string; fields: FieldDef[]; endpoint: string; method?: string; toBody?: (v: Record<string, unknown>) => unknown;
   invalidate?: string[][]; onDone?: (result: unknown) => void; submitLabel?: string; defaults?: Record<string, unknown>;
+  /** Datensatz beim Bearbeiten sperren (andere sehen, wer gerade bearbeitet). */
+  lock?: { type: LockType; id: string };
 }) {
+  const editLock = useEditLock(lock?.type ?? 'person', lock?.id, open && !!lock);
   const schema = useMemo(() => buildSchema(fields), [fields]);
   const qc = useQueryClient();
   const { register, handleSubmit, setValue, watch, reset, formState: { errors } } = useForm<Record<string, unknown>>({ resolver: zodResolver(schema), defaultValues: defaults });
@@ -105,6 +109,7 @@ export function FormModal({ open, onClose, title, fields, endpoint, method, toBo
   return (
     <Modal open={open} title={title} onClose={onClose}>
       <form onSubmit={handleSubmit((v) => m.mutate(v))} className="space-y-3" noValidate>
+        <LockBanner lock={editLock} />
         {fields.map((f) => (
           <Field key={f.name} label={`${f.label}${f.required ? ' *' : ''}`} error={err(f.name)} hint={f.hint}>
             {(id) => f.type === 'textarea' ? <Textarea id={id} {...register(f.name)} />
@@ -115,7 +120,7 @@ export function FormModal({ open, onClose, title, fields, endpoint, method, toBo
           </Field>
         ))}
         {serverErr && <div role="alert" className="rounded border border-danger/40 bg-danger/10 p-2 text-sm text-danger">{serverText(serverErr, fields)}{serverErr.requestId && <span className="block text-xs opacity-70">Request ID: {serverErr.requestId}</span>}</div>}
-        <div className="flex justify-end gap-2 pt-2"><Button variant="secondary" onClick={onClose}>Cancel</Button><Button type="submit" disabled={m.isPending}>{m.isPending ? 'Saving…' : submitLabel}</Button></div>
+        <div className="flex justify-end gap-2 pt-2"><Button variant="secondary" onClick={onClose}>Cancel</Button><Button type="submit" disabled={m.isPending || editLock.blocked}>{m.isPending ? 'Saving…' : submitLabel}</Button></div>
       </form>
     </Modal>
   );

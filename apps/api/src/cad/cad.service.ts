@@ -11,6 +11,7 @@ import { webUrl } from '../common/web-url';
 import { CadConfigService } from './cad-config.service';
 import { CadNotifyService } from './cad-notify.service';
 import type { ErlcPlayer, ErlcSnapshot } from './erlc.service';
+import { LocksService } from '../locks/locks.service';
 
 /** Wer handelt und von welchem Discord-Server (Bot) bzw. mit welchem gewählten Server (Dashboard). */
 export type CadActor = Actor & { guildId?: string | null; discordId?: string | null };
@@ -42,7 +43,7 @@ export interface LinkInput {
 export class CadService {
   constructor(
     private readonly prisma: PrismaService, private readonly audit: AuditService, private readonly perms: PermissionService, private readonly rt: RealtimeService,
-    private readonly timeline: TimelineService, private readonly cfg: CadConfigService, private readonly notify: CadNotifyService,
+    private readonly timeline: TimelineService, private readonly cfg: CadConfigService, private readonly notify: CadNotifyService, private readonly locks: LocksService,
   ) {}
 
   // ───────── Hilfen ─────────
@@ -196,6 +197,7 @@ export class CadService {
 
   async updateIncident(actor: CadActor, id: string, d: Partial<IncidentInput>) {
     await this.assertVisible(actor, id);
+    await this.locks.assertFree('incident', id, actor.userId);
     const cfg = await this.validateIncident(d);
     const before = await this.prisma.incident.findUnique({ where: { id } });
     if (!before) throw new AppError('NOT_FOUND', 'Einsatz nicht gefunden.');

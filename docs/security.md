@@ -10,6 +10,7 @@
 - WebSockets: handshake authenticated by session cookie; every `subscribe` is authorized server-side and re-checks the session; unknown and forbidden rooms answer identically.
 - Security events (`/admin/security-events`): login failures, permission denials, invalid tokens. Secrets are never logged or audited (keys matching password/secret/token/hash are redacted).
 - 2FA (TOTP, RFC 6238) for password login: Persönliche Einstellungen → „Zwei-Faktor-Anmeldung“. Secret AES-256-GCM encrypted (same key as ER:LC keys), each code valid once (last time step stored), 10 one-time recovery codes stored as SHA-256 hashes, wrong codes count towards the account lockout. Password step only returns a signed 5-minute ticket, no session. Admins with `users.manage` can reset another account's 2FA (audited `auth.2fa.reset`). Discord login relies on Discord's own 2FA.
+- Record locking (`/locks/:type/:id`): opening an edit form for a person, incident (MDT + CAD), report or personnel file locks it (90 s, heartbeat every 30 s, released on close/logout). Others see who is editing and saves from anyone else are rejected with 409; a deliberate takeover is audited (`lock.takeover`) and the previous editor is notified. Works on top of the existing version checks (optimistic locking).
 - Not implemented: rate-limit security events, antivirus scanning.
 
 ## Review findings (Oct 2026) and status

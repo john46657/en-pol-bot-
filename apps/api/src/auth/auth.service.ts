@@ -76,6 +76,7 @@ export class AuthService {
   async logout(actor: Actor, sessionId: string) {
     await this.prisma.$transaction(async (tx) => {
       await tx.session.update({ where: { id: sessionId }, data: { revokedAt: new Date() } });
+      if (actor.userId) await tx.editLock.deleteMany({ where: { userId: actor.userId } }); // eigene Bearbeitungs-Sperren freigeben
       await this.audit.record(actor, { action: 'auth.logout', module: 'auth', entityType: 'User', entityId: actor.userId ?? undefined }, tx);
     });
   }
