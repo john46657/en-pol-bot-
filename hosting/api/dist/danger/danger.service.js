@@ -29,6 +29,7 @@ exports.dangerConfigSchema = zod_1.z.object({
     levels: zod_1.z.array(zod_1.z.object({
         key: zod_1.z.string().trim().regex(/^[A-Z0-9_]{1,24}$/), name: zod_1.z.string().trim().min(1).max(40), title: zod_1.z.string().trim().max(200), text: zod_1.z.string().max(3500),
         emoji: zod_1.z.string().max(16), color: zod_1.z.string().regex(/^#[0-9a-fA-F]{6}$/), buttonStyle: zod_1.z.enum(['primary', 'secondary', 'success', 'danger']),
+        pingRoleIds: zod_1.z.array(sf).max(10).default([]),
     })).min(2).max(10).refine((xs) => new Set(xs.map((x) => x.key)).size === xs.length, 'Schlüssel müssen eindeutig sein'),
 });
 /** Gefahrenstatus. Stufen/Texte/Farben/Pings kommen aus der Konfiguration (Dashboard); Änderungen sind auditiert und gehen live raus. */
@@ -86,7 +87,7 @@ let DangerService = class DangerService {
         if (storedKey !== def.key || !before.at) {
             await this.discord.enqueue('danger', 'danger.changed', {
                 level: def.key, name: def.name, title: def.title, text: def.text, emoji: def.emoji, color: def.color,
-                previous: before.at ? before.def.name : null, reason: state.reason, setBy: state.setByName, pingRoleIds: cfg.pingRoleIds,
+                previous: before.at ? before.def.name : null, reason: state.reason, setBy: state.setByName, pingRoleIds: [...new Set([...cfg.pingRoleIds, ...(def.pingRoleIds ?? [])])], // immer + nur bei dieser Stufe
             });
         }
         return this.get();

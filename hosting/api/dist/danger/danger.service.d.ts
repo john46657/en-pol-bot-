@@ -23,12 +23,14 @@ export declare const dangerConfigSchema: z.ZodObject<{
         emoji: z.ZodString;
         color: z.ZodString;
         buttonStyle: z.ZodEnum<["primary", "secondary", "success", "danger"]>;
+        pingRoleIds: z.ZodDefault<z.ZodArray<z.ZodString, "many">>;
     }, "strip", z.ZodTypeAny, {
         name: string;
         text: string;
         key: string;
         color: string;
         title: string;
+        pingRoleIds: string[];
         emoji: string;
         buttonStyle: "danger" | "success" | "primary" | "secondary";
     }, {
@@ -39,12 +41,14 @@ export declare const dangerConfigSchema: z.ZodObject<{
         title: string;
         emoji: string;
         buttonStyle: "danger" | "success" | "primary" | "secondary";
+        pingRoleIds?: string[] | undefined;
     }>, "many">, {
         name: string;
         text: string;
         key: string;
         color: string;
         title: string;
+        pingRoleIds: string[];
         emoji: string;
         buttonStyle: "danger" | "success" | "primary" | "secondary";
     }[], {
@@ -55,6 +59,7 @@ export declare const dangerConfigSchema: z.ZodObject<{
         title: string;
         emoji: string;
         buttonStyle: "danger" | "success" | "primary" | "secondary";
+        pingRoleIds?: string[] | undefined;
     }[]>;
 }, "strip", z.ZodTypeAny, {
     pingRoleIds: string[];
@@ -67,6 +72,7 @@ export declare const dangerConfigSchema: z.ZodObject<{
         key: string;
         color: string;
         title: string;
+        pingRoleIds: string[];
         emoji: string;
         buttonStyle: "danger" | "success" | "primary" | "secondary";
     }[];
@@ -83,6 +89,7 @@ export declare const dangerConfigSchema: z.ZodObject<{
         title: string;
         emoji: string;
         buttonStyle: "danger" | "success" | "primary" | "secondary";
+        pingRoleIds?: string[] | undefined;
     }[];
 }>;
 /** Gefahrenstatus. Stufen/Texte/Farben/Pings kommen aus der Konfiguration (Dashboard); Änderungen sind auditiert und gehen live raus. */

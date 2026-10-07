@@ -45,5 +45,5 @@ pnpm e2e         # Playwright (uses installed Google Chrome)
 | Studio: custom fields (persons/vehicles), accent theme, application form ([docs/studio.md](docs/studio.md)) | done |
 | Dashboard: Discord-Rollen laufend geprüft, Rollen-Hierarchie/-Editor/Matrix, Bereichsrechte, Server getrennt, persönliches Design + Widgets + Layouts, Teamliste (≥ 60 s) und Voice-Widget getrennt, automatisches Speichern: [docs/dashboard.md](docs/dashboard.md) | done; **Teamliste/Voice nicht gegen echtes Discord getestet** |
 | CAD-Leitstelle + ER:LC (`/cad`): Einsätze, Einheiten, Notrufe → Einsatz, Funk-Chronik, interaktive Karte mit Layern/POIs/Zonen, ER:LC Live, Command Center, Teamübersicht, Cross-Server, konfigurierbare Prioritäten/Status/Kanäle, `cad.*`-Rechte: [docs/cad.md](docs/cad.md) | done; **nicht gegen echten ER:LC-Server/Discord getestet** |
-| Abmeldungen wie Trident (`/leave manage`, Dauer 6h/4d/2w, Annehmen/Ablehnen mit Grund, DMs) · Gefahrenstatus Status 1–4 (Texte/Farben/Ping einstellbar) · Bewerbungs-Statistik | done |
+| Abmeldungen wie Trident (`/leave manage`, Dauer 6h/4d/2w, Annehmen/Ablehnen mit Grund, DMs) · Gefahrenstatus Status 1–4 (Texte/Farben/Ping einstellbar, Ping-Rollen auch je Stufe) · Bewerbungs-Statistik | done |
 | Studio workflows, virtualized tables, record locking | **not implemented** |

@@ -56,14 +56,15 @@ describe('danger level (Gefahrenstatus)', () => {
     const adm = (await login(app, 'f_admin')).agent;
     const cfg = (await adm.get('/api/v1/danger-level/config')).body;
     expect(cfg.levels.map((l: { name: string }) => l.name)).toEqual(['Status 1', 'Status 2', 'Status 3', 'Status 4']);
-    const levels = [{ ...cfg.levels[0], title: 'Ruhig.' }, { key: 'ALARM', name: 'Alarm', title: 'Großlage', text: 'Alle Einheiten!', emoji: '🚨', color: '#ff0000', buttonStyle: 'danger' }];
+    const levels = [{ ...cfg.levels[0], title: 'Ruhig.' }, { key: 'ALARM', name: 'Alarm', title: 'Großlage', text: 'Alle Einheiten!', emoji: '🚨', color: '#ff0000', buttonStyle: 'danger', pingRoleIds: ['500000000000000088', '500000000000000077'] }];
     expect((await adm.put('/api/v1/danger-level/config').send({ ...cfg, levels: [levels[0], levels[0]] })).status).toBe(400); // doppelte Schlüssel
     expect((await adm.put('/api/v1/danger-level/config').send({ ...cfg, levels, pingRoleIds: ['500000000000000077'] })).status).toBe(200);
     // alter Stand (STATUS_4 gibt es nicht mehr) → erste Stufe
     expect((await http().get('/api/v1/danger-level').set(bot(D_OFF))).body.def.title).toBe('Ruhig.');
     await http().put('/api/v1/danger-level').set(bot(D_DISP)).send({ level: 'alarm' });
     const out = await prisma.discordOutbox.findFirst({ where: { type: 'danger.changed' }, orderBy: { createdAt: 'desc' } });
-    expect(out!.payload).toMatchObject({ name: 'Alarm', title: 'Großlage', text: 'Alle Einheiten!', pingRoleIds: ['500000000000000077'] });
+    expect(out!.payload).toMatchObject({ name: 'Alarm', title: 'Großlage', text: 'Alle Einheiten!', pingRoleIds: ['500000000000000077', '500000000000000088'] }); // allgemeine + Stufen-Rollen, ohne Doppelte
+    expect((await adm.get('/api/v1/danger-level/config')).body.levels[0].pingRoleIds).toEqual([]);
   });
 });
 

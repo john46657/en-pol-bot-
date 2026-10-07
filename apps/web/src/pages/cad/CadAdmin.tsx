@@ -9,6 +9,7 @@ import { useAutosaveDraft } from '../../lib/autosave';
 import { useGuilds } from '../../lib/guilds';
 import { ago, ERLC_STATUS_TONE, optLabel, useCadConfig, type CadUnitRow, type ErlcServerView } from '../../lib/cad';
 import { Badge, Button, Card, ConfirmDialog, EmptyState, ErrorState, Field, Input, Modal, PageHeader, Select, SkeletonRows, Tabs, Textarea } from '../../components/ui';
+import { RolePicker } from '../../components/DiscordPickers';
 
 const errText = (e: unknown) => (e instanceof ApiError ? `${e.message}${Array.isArray(e.details) ? `: ${(e.details as { path: string; message: string }[]).map((d) => `${d.path} ${d.message}`).join(', ')}` : ''}` : 'Fehlgeschlagen');
 const GuildSelect = ({ value, onChange, label, allowEmpty = true }: { value: string | null | undefined; onChange: (v: string | null) => void; label: string; allowEmpty?: boolean }) => {
@@ -406,7 +407,7 @@ function DangerSettings() {
           <Field label="Titel">{(id) => <Input id={id} maxLength={200} value={d.panelTitle} onChange={(e) => setD({ ...d, panelTitle: e.target.value })} />}</Field>
           <Field label="Text (Markdown)">{(id) => <Textarea id={id} rows={5} maxLength={3000} value={d.panelText} onChange={(e) => setD({ ...d, panelText: e.target.value })} />}</Field>
           <Field label="Emoji auf den Buttons (leer = Emoji der Stufe)">{(id) => <Input id={id} maxLength={4} value={d.buttonEmoji} onChange={(e) => setD({ ...d, buttonEmoji: e.target.value })} />}</Field>
-          <Field label="Bei jeder Änderung pingen (z. B. @Im Dienst)" hint="Kanal: Einstellungen → Discord → Gefahrenstatus-Channel">{() => (
+          <Field label="Bei jeder Stufe pingen (z. B. @Im Dienst)" hint="Kanal: Einstellungen → Discord → Gefahrenstatus-Channel">{() => (
             <div className="flex flex-wrap items-center gap-1">
               {d.pingRoleIds.map((id) => { const r = guilds.data?.flatMap((g) => g.roles).find((x) => x.id === id); return <span key={id} className="inline-flex items-center gap-1 rounded border border-success/40 bg-success/10 px-1.5 py-0.5 text-xs">@{r?.name ?? id}<button type="button" aria-label="entfernen" onClick={() => setD({ ...d, pingRoleIds: d.pingRoleIds.filter((x) => x !== id) })}>×</button></span>; })}
               <Select aria-label="Rolle hinzufügen" className="w-auto py-1 text-xs" value="" onChange={(e) => e.target.value && setD({ ...d, pingRoleIds: [...new Set([...d.pingRoleIds, e.target.value])] })}><option value="">+ Rolle…</option>{(guilds.data ?? []).map((g) => <optgroup key={g.id} label={g.name}>{g.roles.map((r) => <option key={r.id} value={r.id}>@{r.name}</option>)}</optgroup>)}</Select>
@@ -433,8 +434,12 @@ function DangerSettings() {
               <Button size="sm" variant="ghost" aria-label="Entfernen" disabled={d.levels.length <= 2} onClick={() => setD({ ...d, levels: d.levels.filter((_, j) => j !== i) })}><Trash2 size={12} /></Button>
             </div>
             <Textarea aria-label="Text der Meldung (Markdown)" className="md:col-span-4" rows={3} maxLength={3500} value={l.text} onChange={(e) => setLevel(i, { text: e.target.value })} />
+            <div className="md:col-span-4">
+              <p className="mb-1 text-xs text-muted">🔔 Bei dieser Stufe zusätzlich pingen{d.pingRoleIds.length ? ' (die Rollen oben werden immer gepingt)' : ''}</p>
+              <RolePicker ariaLabel={`Rollen für ${l.name}`} max={10} value={l.pingRoleIds ?? []} onChange={(v) => setLevel(i, { pingRoleIds: v })} />
+            </div>
           </li>))}</ul>
-        <Button size="sm" variant="secondary" className="mt-2" disabled={d.levels.length >= 10} onClick={() => setD({ ...d, levels: [...d.levels, { key: `STATUS_${d.levels.length + 1}_${Math.random().toString(36).slice(2, 5).toUpperCase()}`, name: `Status ${d.levels.length + 1}`, title: '', text: '', emoji: '⚪', color: '#64748b', buttonStyle: 'danger' }] })}>+ Stufe</Button>
+        <Button size="sm" variant="secondary" className="mt-2" disabled={d.levels.length >= 10} onClick={() => setD({ ...d, levels: [...d.levels, { key: `STATUS_${d.levels.length + 1}_${Math.random().toString(36).slice(2, 5).toUpperCase()}`, name: `Status ${d.levels.length + 1}`, title: '', text: '', emoji: '⚪', color: '#64748b', buttonStyle: 'danger', pingRoleIds: [] }] })}>+ Stufe</Button>
       </Card>
     </div>
   );

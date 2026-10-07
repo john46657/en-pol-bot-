@@ -2,7 +2,7 @@
  * Gefahrenstatus (Kriminalitätslage) – Stufen, Texte, Farben, Buttons und Pings sind im Dashboard einstellbar.
  * Standard wie im alten Bot: „Status 1“ bis „Status 4“.
  */
-export interface DangerLevelDef { key: string; name: string; title: string; text: string; emoji: string; color: string; buttonStyle: 'primary' | 'secondary' | 'success' | 'danger' }
+export interface DangerLevelDef { key: string; name: string; title: string; text: string; emoji: string; color: string; buttonStyle: 'primary' | 'secondary' | 'success' | 'danger'; /** Zusätzlich nur bei dieser Stufe pingen (z. B. Status 4 → @Alle Einheiten). */ pingRoleIds?: string[] }
 export interface DangerConfig { panelTitle: string; panelText: string; buttonEmoji: string; levels: DangerLevelDef[]; pingRoleIds: string[] }
 
 export const DEFAULT_DANGER_CONFIG: DangerConfig = {

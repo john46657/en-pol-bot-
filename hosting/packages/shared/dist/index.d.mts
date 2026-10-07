@@ -647,7 +647,8 @@ interface DangerLevelDef {
     text: string;
     emoji: string;
     color: string;
-    buttonStyle: 'primary' | 'secondary' | 'success' | 'danger';
+    buttonStyle: 'primary' | 'secondary' | 'success' | 'danger'; /** Zusätzlich nur bei dieser Stufe pingen (z. B. Status 4 → @Alle Einheiten). */
+    pingRoleIds?: string[];
 }
 interface DangerConfig {
     panelTitle: string;
