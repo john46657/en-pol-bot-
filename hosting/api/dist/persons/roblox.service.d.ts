@@ -43,6 +43,11 @@ export declare class RobloxService {
         displayName: string;
         avatarUrl: string | null;
     } | null>;
+    /** Aktuelle Profilbeschreibung („Über mich“) – ohne Zwischenspeicher (Verifizierung). null = nicht erreichbar. */
+    description(id: string): Promise<string | null>;
+    /** Gruppen-Ränge eines Kontos (Gruppen-ID → Rang 0–255) für Rollen-Bindungen; 1 Minute zwischengespeichert. */
+    private ranks;
+    groupRanks(id: string): Promise<Record<string, number>>;
     private fetchProfile;
     private get;
 }

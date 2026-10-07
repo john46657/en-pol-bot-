@@ -11,6 +11,7 @@ const tickets_1 = require("./tickets");
 const voice_support_1 = require("../voice-support");
 const leave_1 = require("./leave");
 const cad_1 = require("./cad");
+const verify_1 = require("./verify");
 const str = (c, k) => String(c.opts[k] ?? '').trim();
 const choices = (m) => Object.keys(m).map((k) => ({ name: k.replace('_', ' '), value: k }));
 const needGuildAdmin = (c) => (!c.guildId ? (0, format_1.errorReply)('Das geht nur auf einem Server, nicht per Direktnachricht.') : !c.isGuildAdmin ? (0, format_1.errorReply)('Dafür brauchst du auf diesem Discord-Server das Recht „Server verwalten“.') : null);
@@ -213,6 +214,7 @@ exports.INTERACTIONS = [
     voice_support_1.VOICE_INTERACTION,
     leave_1.LEAVE_INTERACTION,
     cad_1.CAD_INTERACTION,
+    verify_1.VERIFY_INTERACTION,
     {
         prefix: 'danger',
         async run(c) {

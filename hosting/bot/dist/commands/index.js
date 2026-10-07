@@ -11,6 +11,7 @@ const leave_1 = require("./leave");
 const cad_1 = require("./cad");
 const features_2 = require("./features");
 const tickets_1 = require("./tickets");
+const verify_1 = require("./verify");
 const format_1 = require("../format");
 /** Minuten → „3 h 05 min“. */
 const hm = (min) => `${Math.floor(min / 60)} h ${String(Math.round(min % 60)).padStart(2, '0')} min`;
@@ -97,7 +98,7 @@ exports.COMMANDS = [
         name: 'hilfe', description: 'Zeigt alle Befehle',
         async run() {
             return { ephemeral: true, embeds: [{ title: 'EN Polizei — Befehle', color: format_1.COLORS.info, fields: [
-                            { name: 'Konto', value: '`/entverknuepfen` `/profil` `/benachrichtigungen`' },
+                            { name: 'Konto', value: '`/entverknuepfen` `/profil` `/benachrichtigungen` `/verifizieren` `/aktualisieren` `/whois`' },
                             { name: 'Abfragen', value: '`/person` `/kennzeichen` `/fahndungen` `/einsaetze` `/einsatzinfo` `/einheiten` `/team`' },
                             { name: 'Dienst & Leitstelle', value: '`/dienst` `/dienststunden` `/abmeldung` `/leave manage` `/einheitstatus` `/einsatz` `/einsatzstatus` `/einsatzzuweisen` `/funk` `/funkcode` `/cad`' },
                             { name: 'Erfassen', value: '`/ticket` `/bericht` `/beschwerde` `/ermittlung` `/fahndung` `/beweis`' },
@@ -556,6 +557,7 @@ exports.COMMANDS = [
     ...leave_1.LEAVE_COMMANDS,
     ...cad_1.CAD_COMMANDS,
     tickets_1.TICKET_COMMAND,
+    ...verify_1.VERIFY_COMMANDS,
 ];
 const byName = (n) => exports.COMMANDS.find((c) => c.name === n);
 exports.byName = byName;

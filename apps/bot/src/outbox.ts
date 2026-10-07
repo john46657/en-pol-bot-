@@ -55,7 +55,7 @@ export async function pollOnce(api: Api, send: Sender, log: (m: string) => void 
       }
       continue;
     }
-    if (item.type === 'application.ticket' || item.type === 'embed.post' || item.type === 'message.decided' || item.type === 'voice.effects') {
+    if (item.type === 'application.ticket' || item.type === 'embed.post' || item.type === 'message.decided' || item.type === 'voice.effects' || item.type.startsWith('verify.')) {
       try {
         if (!onTask || !(await onTask(item.type, item.payload))) throw new Error('tasks not supported');
         await api.service('POST', `/bot/outbox/${item.id}/ack`, { ok: true });

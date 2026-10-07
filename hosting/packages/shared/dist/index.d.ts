@@ -832,4 +832,55 @@ declare function localTime(d: Date, timeZone?: string): {
 /** Ist der Support gerade geöffnet? Ohne Zeiten immer; „bis“ vor „von“ = über Mitternacht. */
 declare function isSupportOpen(times: SupportTime[], d?: Date, timeZone?: string): boolean;
 
-export { ALL_PERMISSIONS, APPLICATION_STATUSES, APPLICATION_TRANSITIONS, APPLICATION_VARIABLES, AREA_PERMISSIONS, type AnswerCheck, type ApplicationStatus, type ApplicationVars, type ButtonStyleName, CAD_EVENTS, CAD_EVENT_LABELS, CAD_EVENT_SEND_TYPE, CAD_LINK_ACTIONS, CAD_LINK_LABELS, CAD_LINK_SEND_TYPES, CAD_WIDGETS, CAD_WIDGET_LABELS, CLAIM_MODES, CLOSE_REASON_MODES, CLOSE_REASON_SOURCES, COMPLAINT_STATUSES, COMPLAINT_TRANSITIONS, type CadConfig, type CadEvent, type CadField, type CadLayer, type CadMapConfig, type CadMarkerStyle, type CadOption, type CadRoute, type CadStatusOption, type CadUnitType, type ClaimMode, type CloseReasonMode, type CloseReasonSource, type ComplaintStatus, type ComponentButton, type ComponentSelect, DEFAULT_APPLICATION_MESSAGES, DEFAULT_CAD_CONFIG, DEFAULT_DANGER_CONFIG, DEFAULT_WELCOME_CONFIG, DISPATCH_STATUSES, DISPATCH_TRANSITIONS, DUTY_STATUSES, type DangerConfig, type DangerLevelDef, type DispatchStatus, type DutyStatus, ERLC_DEFAULT_BLOCKED, ERLC_DEFAULT_CRITICAL, ERLC_FEATURES, ERLC_FEATURE_LABELS, ERLC_MAP_SIZE, ERLC_POLL_OPTIONS, ERLC_STATUSES, ERLC_STATUS_LABEL, EVIDENCE_CUSTODY_STATES, EVIDENCE_TRANSITIONS, type Effect, type EmbedSpec, type ErlcFeature, type ErlcStatus, type EvidenceCustodyState, FORM_QUESTION_TYPES, type Field, type FormField, type FormOption, type FormQuestionType, INVESTIGATION_STATUSES, INVESTIGATION_TRANSITIONS, InvalidTransitionError, type InvestigationStatus, LEGACY_DANGER, MAX_FORM_OPTIONS, MAX_FORM_QUESTIONS, MUSIC_TRACKS, type MessageSpec, PERMISSION_CATALOG, PRIORITIES, PRIORITY_LABEL, type PermissionContext, type PermissionGrant, type PermissionKey, type Priority, QUESTION_TYPES, type QuestionType, REPORT_STATUSES, REPORT_TRANSITIONS, REPORT_TYPES, ROBLOX_NAME, ROBLOX_VERIFICATION_STATUSES, type ReportStatus, type ReportType, type Resolution, type ResolutionSource, type RobloxVerificationStatus, STATUS_KINDS, STATUS_LABEL, type StatusKind, type SupportTime, TICKET_ACTIONS, TICKET_ACTION_KEYS, TICKET_PLACEHOLDERS, TICKET_STATUSES, TICKET_TRANSITIONS, type TicketAction, type TicketButtonConfig, type TicketEffect, type TicketQuestion, type TicketStatus, type TicketVars, type TransitionMap, UNIT_STATUSES, type UnitStatus, VOICE_CASE_STATUS, type VoiceSupportRoom, WANTED_STATUSES, WANTED_TRANSITIONS, WEEKDAYS, WELCOME_VARIABLES, WORKFLOW_ACTION_LABELS, WORKFLOW_OPS, WORKFLOW_OP_LABELS, WORKFLOW_TRIGGERS, type WantedStatus, type WelcomeConfig, type WelcomeMember, type WelcomeMessageDef, type WorkflowAction, type WorkflowCondition, type WorkflowOp, type WorkflowTrigger, accountAge, areaGrantsFor, assertTransition, can, canDelegate, canTransition, checkAnswer, conditionMatches, dangerLevelOf, defaultTicketButtons, effectivePermissions, fieldValue, formatMinutes, freeFieldKey, gameToPixel, grantMatches, hexColor, isInputQuestion, isPermissionKey, isSupportOpen, isValidRobloxUserId, localTime, newVoiceRoom, normalizeField, parsePlayer, pixelToGame, renderApplicationText, renderTemplate, renderTicketText, renderWelcomeText, resolvePermission, rolesMatch, statusLabel, ticketChannelName, ticketNumber, triggerMatches };
+/** Roblox-Verifizierung wie bei RoVer: Code ins Roblox-Profil → Bot prüft → Rollen und Nickname. */
+/** Gruppen-Bindung: Rang in einer Roblox-Gruppe (von–bis, 1–255) → Discord-Rollen. */
+interface VerifyBind {
+    id: string;
+    groupId: string;
+    minRank: number;
+    maxRank: number;
+    roleIds: string[];
+}
+interface VerifyPanel {
+    channelId: string | null;
+    title: string;
+    message: string;
+    color: string;
+    buttonLabel: string;
+}
+interface VerifyConfig {
+    enabled: boolean;
+    /** Bekommt jeder Verifizierte. */
+    verifiedRoleIds: string[];
+    /** Bekommt, wer (noch) nicht verifiziert ist – fällt nach der Verifizierung weg. */
+    unverifiedRoleIds: string[];
+    /** Nickname-Vorlage; leer = Nickname nicht ändern. */
+    nickname: string;
+    /** Beim Beitritt: Verifizierte bekommen sofort Rollen + Nickname, alle anderen die „nicht verifiziert“-Rollen. */
+    autoOnJoin: boolean;
+    logChannelId: string | null;
+    panel: VerifyPanel;
+    binds: VerifyBind[];
+}
+declare const DEFAULT_VERIFY_CONFIG: VerifyConfig;
+interface VerifyNickVars {
+    robloxName: string;
+    displayName: string;
+    discordName: string;
+    robloxId: string;
+}
+declare const VERIFY_NICK_VARS: Record<string, string>;
+/** Nickname aus der Vorlage (Discord erlaubt höchstens 32 Zeichen). Leere Vorlage → null (nicht ändern). */
+declare function renderVerifyNickname(tpl: string, v: VerifyNickVars): string | null;
+/** Welche Bindungen passen zu den Gruppen-Rängen eines Roblox-Kontos? (Gruppen-ID → Rang) */
+declare function matchingBinds(binds: VerifyBind[], ranks: Record<string, number>): VerifyBind[];
+/** Rollen und Nickname für ein Mitglied: verifiziert (mit Gruppen-Rängen) oder nicht. */
+declare function verifyActions(cfg: VerifyConfig, link: (VerifyNickVars & {
+    ranks: Record<string, number>;
+}) | null): {
+    add: string[];
+    remove: string[];
+    nickname: string | null;
+};
+
+export { ALL_PERMISSIONS, APPLICATION_STATUSES, APPLICATION_TRANSITIONS, APPLICATION_VARIABLES, AREA_PERMISSIONS, type AnswerCheck, type ApplicationStatus, type ApplicationVars, type ButtonStyleName, CAD_EVENTS, CAD_EVENT_LABELS, CAD_EVENT_SEND_TYPE, CAD_LINK_ACTIONS, CAD_LINK_LABELS, CAD_LINK_SEND_TYPES, CAD_WIDGETS, CAD_WIDGET_LABELS, CLAIM_MODES, CLOSE_REASON_MODES, CLOSE_REASON_SOURCES, COMPLAINT_STATUSES, COMPLAINT_TRANSITIONS, type CadConfig, type CadEvent, type CadField, type CadLayer, type CadMapConfig, type CadMarkerStyle, type CadOption, type CadRoute, type CadStatusOption, type CadUnitType, type ClaimMode, type CloseReasonMode, type CloseReasonSource, type ComplaintStatus, type ComponentButton, type ComponentSelect, DEFAULT_APPLICATION_MESSAGES, DEFAULT_CAD_CONFIG, DEFAULT_DANGER_CONFIG, DEFAULT_VERIFY_CONFIG, DEFAULT_WELCOME_CONFIG, DISPATCH_STATUSES, DISPATCH_TRANSITIONS, DUTY_STATUSES, type DangerConfig, type DangerLevelDef, type DispatchStatus, type DutyStatus, ERLC_DEFAULT_BLOCKED, ERLC_DEFAULT_CRITICAL, ERLC_FEATURES, ERLC_FEATURE_LABELS, ERLC_MAP_SIZE, ERLC_POLL_OPTIONS, ERLC_STATUSES, ERLC_STATUS_LABEL, EVIDENCE_CUSTODY_STATES, EVIDENCE_TRANSITIONS, type Effect, type EmbedSpec, type ErlcFeature, type ErlcStatus, type EvidenceCustodyState, FORM_QUESTION_TYPES, type Field, type FormField, type FormOption, type FormQuestionType, INVESTIGATION_STATUSES, INVESTIGATION_TRANSITIONS, InvalidTransitionError, type InvestigationStatus, LEGACY_DANGER, MAX_FORM_OPTIONS, MAX_FORM_QUESTIONS, MUSIC_TRACKS, type MessageSpec, PERMISSION_CATALOG, PRIORITIES, PRIORITY_LABEL, type PermissionContext, type PermissionGrant, type PermissionKey, type Priority, QUESTION_TYPES, type QuestionType, REPORT_STATUSES, REPORT_TRANSITIONS, REPORT_TYPES, ROBLOX_NAME, ROBLOX_VERIFICATION_STATUSES, type ReportStatus, type ReportType, type Resolution, type ResolutionSource, type RobloxVerificationStatus, STATUS_KINDS, STATUS_LABEL, type StatusKind, type SupportTime, TICKET_ACTIONS, TICKET_ACTION_KEYS, TICKET_PLACEHOLDERS, TICKET_STATUSES, TICKET_TRANSITIONS, type TicketAction, type TicketButtonConfig, type TicketEffect, type TicketQuestion, type TicketStatus, type TicketVars, type TransitionMap, UNIT_STATUSES, type UnitStatus, VERIFY_NICK_VARS, VOICE_CASE_STATUS, type VerifyBind, type VerifyConfig, type VerifyNickVars, type VerifyPanel, type VoiceSupportRoom, WANTED_STATUSES, WANTED_TRANSITIONS, WEEKDAYS, WELCOME_VARIABLES, WORKFLOW_ACTION_LABELS, WORKFLOW_OPS, WORKFLOW_OP_LABELS, WORKFLOW_TRIGGERS, type WantedStatus, type WelcomeConfig, type WelcomeMember, type WelcomeMessageDef, type WorkflowAction, type WorkflowCondition, type WorkflowOp, type WorkflowTrigger, accountAge, areaGrantsFor, assertTransition, can, canDelegate, canTransition, checkAnswer, conditionMatches, dangerLevelOf, defaultTicketButtons, effectivePermissions, fieldValue, formatMinutes, freeFieldKey, gameToPixel, grantMatches, hexColor, isInputQuestion, isPermissionKey, isSupportOpen, isValidRobloxUserId, localTime, matchingBinds, newVoiceRoom, normalizeField, parsePlayer, pixelToGame, renderApplicationText, renderTemplate, renderTicketText, renderVerifyNickname, renderWelcomeText, resolvePermission, rolesMatch, statusLabel, ticketChannelName, ticketNumber, triggerMatches, verifyActions };

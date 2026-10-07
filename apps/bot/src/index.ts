@@ -20,6 +20,8 @@ import type { DiscordConfig, Platform } from './platform';
 import { robloxCheck, robloxLookup } from './roblox';
 import { createWelcome, type MemberEvent } from './welcome';
 import { createVoiceSupport } from './voice-support';
+import { createVerify, type VerifyActions } from './verify';
+import { hexColor, type VerifyPanel } from '@enrp/shared';
 
 loadDotEnv();
 const cfg = loadConfig();
@@ -157,6 +159,42 @@ const welcome = createWelcome(api, {
     if (ids.length) await (await guild.members.fetch(userId)).roles.add(ids, 'EN Polizei: Willkommen');
   },
 });
+/** Roblox-Verifizierung: Rollen und Nickname setzen (nur was nötig ist); liefert verständliche Hinweise, was nicht ging. */
+async function applyVerify(guildId: string, userId: string, a: VerifyActions): Promise<string[]> {
+  const guild = await client.guilds.fetch(guildId);
+  const member = await guild.members.fetch(userId);
+  const me = guild.members.me ?? await guild.members.fetchMe();
+  const problems: string[] = [];
+  const usable = (ids: string[]) => ids.filter((r) => {
+    const role = guild.roles.cache.get(r);
+    if (!role) return false;
+    if (role.position >= me.roles.highest.position) { problems.push(`Rolle „${role.name}“ steht über der Bot-Rolle`); return false; }
+    return true;
+  });
+  const remove = usable(a.remove.filter((r) => member.roles.cache.has(r)));
+  const add = usable(a.add.filter((r) => !member.roles.cache.has(r)));
+  try {
+    if (remove.length) await member.roles.remove(remove, 'EN Polizei: Roblox-Verifizierung');
+    if (add.length) await member.roles.add(add, 'EN Polizei: Roblox-Verifizierung');
+  } catch { problems.push('Rollen konnten nicht gesetzt werden (fehlt dem Bot „Rollen verwalten“?)'); }
+  if (a.nickname && member.nickname !== a.nickname && member.displayName !== a.nickname) {
+    if (member.id === guild.ownerId) problems.push('Den Server-Besitzer kann der Bot nicht umbenennen');
+    else if (!member.manageable) problems.push('Nickname nicht geändert (deine Rolle steht über der Bot-Rolle)');
+    else await member.setNickname(a.nickname, 'EN Polizei: Roblox-Verifizierung').catch(() => problems.push('Nickname nicht geändert (fehlt dem Bot „Spitznamen verwalten“?)'));
+  }
+  return [...new Set(problems)];
+}
+const verify = createVerify(api, {
+  apply: applyVerify,
+  async guildsOf(userId) {
+    const out: { guildId: string; displayName: string }[] = [];
+    for (const g of client.guilds.cache.values()) {
+      const m = await g.members.fetch(userId).catch(() => null);
+      if (m) out.push({ guildId: g.id, displayName: m.user.username });
+    }
+    return out;
+  },
+});
 /** Sprach-Support: Warteraum → Support-Fall → eigener Sprachkanal (braucht GuildVoiceStates, „Kanäle verwalten“, „Mitglieder verschieben“). */
 const VOICE_TALK = [PermissionFlagsBits.ViewChannel, PermissionFlagsBits.Connect, PermissionFlagsBits.Speak, PermissionFlagsBits.Stream, PermissionFlagsBits.UseVAD];
 const voiceSupport = createVoiceSupport(api, {
@@ -276,6 +314,7 @@ function baseCtx(i: ChatInputCommandInteraction | ButtonInteraction | ModalSubmi
     listCategories: (guildId) => tickets.listCategories(guildId),
     userNameOf: (id) => client.users.fetch(id).then((u) => u.username, () => null),
     voiceSupport,
+    verifyApply: (guildId, userId, a) => applyVerify(guildId, userId, a),
   };
 }
 
@@ -346,7 +385,12 @@ function wire(c: Client) {
     void voiceSupport.onVoiceState({ guildId: n.guild.id, userId: n.id, userName: n.member?.displayName ?? user.username, bot: user.bot, from: o.channelId, to: n.channelId })
       .catch((x) => console.error('voice support failed:', x instanceof Error ? x.message : x));
   });
-  c.on('guildMemberAdd', (m) => { const e = memberEvent(m); if (e) void welcome.joined(e).catch((x) => console.error('member join failed:', x instanceof Error ? x.message : x)); });
+  c.on('guildMemberAdd', (m) => {
+    const e = memberEvent(m);
+    if (!e) return;
+    void welcome.joined(e).catch((x) => console.error('member join failed:', x instanceof Error ? x.message : x));
+    void verify.joined({ guildId: e.guildId, id: e.id, bot: e.bot, displayName: e.username }).catch((x) => console.error('verify on join failed:', x instanceof Error ? x.message : x));
+  });
   c.on('guildMemberRemove', (m) => { const e = memberEvent(m); if (e) void welcome.left(e).catch((x) => console.error('member leave failed:', x instanceof Error ? x.message : x)); });
 
   // Direktnachrichten: Antworten auf Bewerbungsfragen (Bewerbung bei EN Polizei und Qualifikationen)
@@ -452,6 +496,20 @@ function wireReady(client0: Client) {
     async (kind, channelId) => { await live.refresh(kind, { channelId, force: true }); },
     async (type, p) => {
       if (type === 'voice.effects') { await voiceSupport.applyEffects(p as never); return true; }
+      if (type === 'verify.panel') {
+        // Verifizierungs-Panel posten oder aktualisieren, Ort ans System melden
+        const panel = p.panel as VerifyPanel;
+        const channelId = String(p.channelId ?? '');
+        const messageId = await platform.postOrEdit({ channelId, ...(typeof p.messageId === 'string' ? { messageId: p.messageId } : {}),
+          embed: { title: panel.title, description: panel.message, color: hexColor(panel.color, 0x22c55e) }, buttons: [{ id: 'verify:start', label: panel.buttonLabel, style: 'success', emoji: '✅' }] });
+        await api.service('POST', '/bot/verify/panel-posted', { guildId: p.guildId ?? null, channelId, messageId });
+        return true;
+      }
+      if (type === 'verify.log') {
+        await platform.postOrEdit({ channelId: String(p.channelId ?? ''), embed: { title: 'Roblox-Verifizierung', description: String(p.text ?? '').slice(0, 4000), color: typeof p.color === 'number' ? p.color : 0x3b82f6 } });
+        return true;
+      }
+      if (type === 'verify.member') { await verify.refreshEverywhere(String(p.discordId ?? '')); return true; }
       if (type === 'message.decided') {
         // Entscheidung (auch aus dem Dashboard): gemerkte Antrags-/Bewerbungsnachricht einfärben, Buttons entfernen
         const key = String(p.key ?? '');
