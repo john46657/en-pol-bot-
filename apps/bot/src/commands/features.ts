@@ -5,6 +5,7 @@ import { mapError } from './errors';
 import { SEK_INTERACTION } from './sek';
 import { QUALI_INTERACTION } from './qualifications';
 import { TICKET_INTERACTION } from './tickets';
+import { VOICE_INTERACTION } from '../voice-support';
 import { LEAVE_INTERACTION } from './leave';
 import { CAD_INTERACTION } from './cad';
 
@@ -168,6 +169,7 @@ export const INTERACTIONS: InteractionDef[] = [
   SEK_INTERACTION,
   QUALI_INTERACTION,
   TICKET_INTERACTION,
+  VOICE_INTERACTION,
   LEAVE_INTERACTION,
   CAD_INTERACTION,
   {

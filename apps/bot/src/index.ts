@@ -3,7 +3,7 @@ import {
   PermissionFlagsBits, SlashCommandBuilder, TextInputBuilder, TextInputStyle,
   type AnySelectMenuInteraction, type ButtonComponent, type ButtonInteraction, type ChatInputCommandInteraction, type Interaction, type Message, type ModalSubmitInteraction,
 } from 'discord.js';
-import { componentsOf, createTicketRuntime } from './discord-tickets';
+import { componentsOf, createTicketRuntime, payloadOf } from './discord-tickets';
 import { startGuildDirectory } from './guilds';
 import { startPresenceReporter } from './presence';
 import { guildScope, HttpApi, rolesScope } from './api';
@@ -18,6 +18,7 @@ import { startOutboxLoop } from './outbox';
 import type { DiscordConfig, Platform } from './platform';
 import { robloxCheck, robloxLookup } from './roblox';
 import { createWelcome, type MemberEvent } from './welcome';
+import { createVoiceSupport } from './voice-support';
 
 loadDotEnv();
 const cfg = loadConfig();
@@ -154,6 +155,63 @@ const welcome = createWelcome(api, {
     if (ids.length) await (await guild.members.fetch(userId)).roles.add(ids, 'EN Polizei: Willkommen');
   },
 });
+/** Sprach-Support: Warteraum → Support-Fall → eigener Sprachkanal (braucht GuildVoiceStates, „Kanäle verwalten“, „Mitglieder verschieben“). */
+const VOICE_TALK = [PermissionFlagsBits.ViewChannel, PermissionFlagsBits.Connect, PermissionFlagsBits.Speak, PermissionFlagsBits.Stream, PermissionFlagsBits.UseVAD];
+const voiceSupport = createVoiceSupport(api, {
+  async post(channelId, m) {
+    const ch = await client.channels.fetch(channelId);
+    if (!ch?.isSendable()) throw new Error(`channel ${channelId} is not a text channel the bot can post in`);
+    return (await ch.send(payloadOf(m))).id;
+  },
+  async edit(channelId, messageId, m) {
+    const ch = await client.channels.fetch(channelId);
+    if (!ch?.isTextBased() || !('messages' in ch)) return;
+    const msg = await ch.messages.fetch(messageId).catch(() => null);
+    if (msg) await msg.edit({ ...payloadOf(m), content: m.content ?? '' });
+  },
+  async dm(userId, m) { await (await client.users.fetch(userId)).send(payloadOf(m)); },
+  members(channelId) {
+    const ch = client.channels.cache.get(channelId);
+    return ch?.isVoiceBased() ? [...ch.members.keys()] : [];
+  },
+  voiceChannelOf(guildId, userId) { return client.guilds.cache.get(guildId)?.voiceStates.cache.get(userId)?.channelId ?? null; },
+  async createVoice({ guildId, name, nearChannelId, userId, teamRoleId }) {
+    const guild = await client.guilds.fetch(guildId);
+    const near = await guild.channels.fetch(nearChannelId).catch(() => null);
+    const ch = await guild.channels.create({
+      name, type: ChannelType.GuildVoice, ...(near?.parentId ? { parent: near.parentId } : {}), reason: 'EN Polizei: Sprach-Support',
+      permissionOverwrites: [
+        { id: guild.roles.everyone.id, type: OverwriteType.Role, deny: [PermissionFlagsBits.ViewChannel, PermissionFlagsBits.Connect] },
+        { id: userId, type: OverwriteType.Member, allow: VOICE_TALK },
+        ...(guild.roles.cache.has(teamRoleId) ? [{ id: teamRoleId, type: OverwriteType.Role, allow: [...VOICE_TALK, PermissionFlagsBits.MoveMembers] }] : []),
+        { id: client.user!.id, type: OverwriteType.Member, allow: [PermissionFlagsBits.ViewChannel, PermissionFlagsBits.Connect, PermissionFlagsBits.MoveMembers, PermissionFlagsBits.ManageChannels] },
+      ],
+    });
+    return ch.id;
+  },
+  async move(guildId, userId, channelId) {
+    const member = await (await client.guilds.fetch(guildId)).members.fetch(userId).catch(() => null);
+    if (!member?.voice.channelId) return false;
+    await member.voice.setChannel(channelId, 'EN Polizei: Sprach-Support');
+    return true;
+  },
+  async deleteChannel(channelId) {
+    const ch = await client.channels.fetch(channelId).catch(() => null);
+    // Sicherheitsnetz: nur Sprachkanäle (die das System als selbst angelegt meldet)
+    if (ch?.type === ChannelType.GuildVoice) await ch.delete('EN Polizei: Support-Fall geschlossen');
+  },
+  async thread(channelId, messageId, name) {
+    const ch = await client.channels.fetch(channelId);
+    if (!ch?.isTextBased() || !('messages' in ch)) return null;
+    const msg = await ch.messages.fetch(messageId);
+    return (await msg.startThread({ name: name.slice(0, 100), autoArchiveDuration: 1440 })).id;
+  },
+  async threadPost(threadId, text) {
+    const ch = await client.channels.fetch(threadId);
+    if (ch?.isSendable()) await ch.send({ content: text.slice(0, 2000), allowedMentions: { parse: [] } });
+  },
+});
+
 /** Mitglied (auch teilweise geladen) → Daten für Platzhalter. */
 function memberEvent(m: { id: string; user: { username: string; bot: boolean; createdAt: Date; displayAvatarURL(o: { size: number }): string } | null; displayName?: string | null; guild: { id: string; name: string; memberCount: number } }): MemberEvent | null {
   if (!m.user) return null;
@@ -215,6 +273,7 @@ function baseCtx(i: ChatInputCommandInteraction | ButtonInteraction | ModalSubmi
     applyEffects: (effects) => tickets.apply(effects),
     listCategories: (guildId) => tickets.listCategories(guildId),
     userNameOf: (id) => client.users.fetch(id).then((u) => u.username, () => null),
+    voiceSupport,
   };
 }
 
@@ -279,6 +338,12 @@ function wire(c: Client) {
     void task?.catch((e) => console.error('interaction failed:', e instanceof Error ? e.message : e));
   });
 
+  c.on('voiceStateUpdate', (o, n) => {
+    const user = n.member?.user ?? o.member?.user;
+    if (!user) return;
+    void voiceSupport.onVoiceState({ guildId: n.guild.id, userId: n.id, userName: n.member?.displayName ?? user.username, bot: user.bot, from: o.channelId, to: n.channelId })
+      .catch((x) => console.error('voice support failed:', x instanceof Error ? x.message : x));
+  });
   c.on('guildMemberAdd', (m) => { const e = memberEvent(m); if (e) void welcome.joined(e).catch((x) => console.error('member join failed:', x instanceof Error ? x.message : x)); });
   c.on('guildMemberRemove', (m) => { const e = memberEvent(m); if (e) void welcome.left(e).catch((x) => console.error('member leave failed:', x instanceof Error ? x.message : x)); });
 

@@ -3,6 +3,7 @@ import type { Reply } from '../format';
 import type { LiveKind } from '../live';
 import type { DiscordConfig, Platform } from '../platform';
 import type { TicketEffect } from '@enrp/shared';
+import type { VoiceSupportRuntime } from '../voice-support';
 
 export type Opts = Record<string, string | number | boolean | undefined>;
 export interface Ctx {
@@ -34,6 +35,8 @@ export interface Ctx {
   userNameOf?: (userId: string) => Promise<string | null>;
   /** Roblox-Namenssuche (öffentliche Roblox-API; in Tests ersetzbar). */
   robloxLookup?: (username: string) => Promise<{ id: number; name: string; displayName: string } | null>;
+  /** Sprach-Support (Buttons „Übernehmen“, „Ablehnen“, „Nachricht“ …). */
+  voiceSupport?: VoiceSupportRuntime;
 }
 export interface OptionDef { name: string; description: string; type: 'string' | 'integer' | 'number' | 'boolean' | 'user'; required?: boolean; choices?: { name: string; value: string }[]; maxLength?: number; min?: number; max?: number }
 /** Unterbefehl (`/leave manage`): Name landet in `opts._sub`, seine Optionen wie gewohnt in `opts`. */
