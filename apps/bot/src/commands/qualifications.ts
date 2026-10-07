@@ -16,7 +16,9 @@ export interface QualiConfig { title: string; intro: string; units: QualiUnit[];
 interface Question { text: string; key?: string; field: Field }
 /** Antworten: Text, gewählte Optionen (Auswahl/Rollen) oder `null` (übersprungen). */
 type Answer = string | string[] | null;
-interface Session { unit: string; unitName: string; questions: Question[]; answers: Answer[]; expiresAt: number; startedAt: number; joinedAt?: string; guildId?: string; settings: AppSettings; appName: string }
+interface Session { unit: string; unitName: string; questions: Question[]; answers: Answer[]; expiresAt: number; startedAt: number; joinedAt?: string; guildId?: string; settings: AppSettings; appName: string;
+  /** Frage „Roblox User“: gefundenes Konto, das noch bestätigt werden muss („Ja, das bin ich“). */
+  pendingRoblox?: string }
 type SendDm = (userId: string, m: { embed: EmbedData; buttons?: ButtonSpec[]; select?: SelectSpec }) => Promise<unknown>;
 type RobloxLookup = (name: string) => Promise<{ id: number; name: string } | null>;
 /** Frage „Roblox User“: Konto prüfen (null = gibt es nicht, undefined = Roblox nicht erreichbar). */
@@ -209,9 +211,16 @@ export async function handleDirectMessage(a: { userId: string; userName: string;
       const rb = await a.robloxCheck(r.text).catch(() => undefined);
       if (rb === null) { await say(`❌ Den Roblox-Benutzer **${plain(r.text)}** gibt es nicht. Bitte prüfe die Schreibweise und schicke ihn noch einmal.`, COLORS.warning); return; }
       if (rb) {
-        await a.sendDm(a.userId, { embed: { title: clip(s.unitName, 256), color: COLORS.success, description: `✅ Roblox-Konto gefunden: **${plain(rb.name)}**${rb.displayName && rb.displayName !== rb.name ? ` (${plain(rb.displayName)})` : ''}`, ...(rb.avatarUrl ? { thumbnail: rb.avatarUrl } : {}) } });
-        s.answers.push(rb.name);
-      } else s.answers.push(r.text); // Roblox gerade nicht erreichbar → der Server prüft beim Einreichen
+        // wie im Web: Konto mit Profilbild zeigen und auswählen lassen
+        s.pendingRoblox = rb.name;
+        const i = s.answers.length;
+        await a.sendDm(a.userId, {
+          embed: { title: clip(s.unitName, 256), color: COLORS.info, description: `Ist das dein Roblox-Konto?\n\n**${plain(rb.name)}**${rb.displayName && rb.displayName !== rb.name ? `\n${plain(rb.displayName)}` : ''}\n\n_Falls nicht: auf „Anderer Name“ tippen oder einfach den richtigen Namen schreiben._`, ...(rb.avatarUrl ? { thumbnail: rb.avatarUrl } : {}) },
+          buttons: [{ id: `quali:rb:${i}:yes`, label: 'Ja, das bin ich', style: 'success' }, { id: `quali:rb:${i}:no`, label: 'Anderer Name', style: 'secondary' }],
+        });
+        return;
+      }
+      s.answers.push(r.text); // Roblox gerade nicht erreichbar → der Server prüft beim Einreichen
     } else s.answers.push(text);
   }
   await proceed({ api: a.api, userId: a.userId, userName: a.userName, sendDm: a.sendDm, robloxLookup: a.robloxLookup, now }, s);
@@ -309,6 +318,24 @@ export const QUALI_INTERACTION: InteractionDef = {
         if (t.existing) return okReply(`Mit dieser Person gibt es schon ein offenes Ticket: <#${t.channelId}>`);
         await c.platform.postPanel({ channelId: t.channelId, embed: { title: `🎫 Ticket zur Bewerbung ${a.number}`, color: COLORS.info, description: `<@${a.discordId}>, das Team hat eine Rückfrage zu deiner Bewerbung **${a.number}**${a.unitName ? ` (${plain(a.unitName)})` : ''}. Bitte antworte hier.` }, buttons: [{ id: 'support:close', label: 'Ticket schließen', emoji: '🔒', style: 'danger' }] }).catch(() => undefined);
         return okReply(`Ticket geöffnet: <#${t.channelId}>`);
+      }
+      if (action === 'rb') {
+        const s = sessions.get(c.discordId);
+        if (!s || s.expiresAt <= Date.now()) return errorReply('Du hast gerade keine laufende Bewerbung. Starte sie über das Panel neu.');
+        const i = Number(rest[0]);
+        if (i !== s.answers.length || !s.pendingRoblox) return errorReply('Diese Frage hast du schon beantwortet.');
+        const q = s.questions[i]!;
+        if (rest[1] !== 'yes') {
+          s.pendingRoblox = undefined;
+          return { ...okReply('Okay.'), update: { embeds: [{ title: clip(s.unitName, 256), color: COLORS.neutral, description: clip(`**${i + 1}/${s.questions.length}.** ${plain(q.text)}\n\nSchreib deinen Roblox-Benutzernamen bitte noch einmal (genau wie in Roblox).`, 4000) }] } };
+        }
+        if (!c.platform) return errorReply('Direktnachrichten sind hier nicht verfügbar.');
+        const name = s.pendingRoblox;
+        s.pendingRoblox = undefined;
+        s.answers.push(name);
+        const platform = c.platform;
+        await proceed({ api: c.api, userId: c.discordId, userName: c.userName ?? c.discordId, sendDm: (u, m) => platform.sendDm(u, m), robloxLookup: c.robloxLookup, now: Date.now() }, s);
+        return { ...okReply('Gespeichert.'), update: { embeds: [{ title: clip(s.unitName, 256), color: COLORS.success, description: clip(`**${i + 1}/${s.questions.length}.** ${plain(q.text)}\n\n✅ ${plain(name)}`, 4000) }] } };
       }
       if (action === 'ans' || action === 'skip') {
         const s = sessions.get(c.discordId);

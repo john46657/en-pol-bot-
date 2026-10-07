@@ -160,9 +160,21 @@ describe('/bewerbung (Polizei-Bewerbung per Direktnachricht)', () => {
     await handleDirectMessage({ userId: ME, userName: 'john', content: 'gibtsnicht99', ...say });
     expect(out.at(-1)!.embed.description).toContain('gibt es nicht');
     await handleDirectMessage({ userId: ME, userName: 'john', content: 'John150210', ...say });
-    expect(out.at(-2)!.embed).toMatchObject({ thumbnail: 'https://tr.rbxcdn.com/x.png' });
-    expect(out.at(-2)!.embed.description).toContain('Roblox-Konto gefunden');
-    expect(out.at(-1)!.embed.description).toContain('**2/2.** Warum?');
+    // wie im Web: Konto mit Bild zeigen, per Button bestätigen
+    const confirm = out.at(-1)! as { embed: { description?: string; thumbnail?: string }; buttons?: { id: string }[] };
+    expect(confirm.embed).toMatchObject({ thumbnail: 'https://tr.rbxcdn.com/x.png' });
+    expect(confirm.embed.description).toContain('Ist das dein Roblox-Konto?');
+    expect(confirm.buttons?.map((b) => b.id)).toEqual(['quali:rb:0:yes', 'quali:rb:0:no']);
+    const { p: plat } = fakePlatform();
+    const no = interactionFor('quali:rb:0:no')!;
+    expect((await no.def.run({ ...ctx(api, { platform: plat }), args: no.args })).update?.embeds?.[0]?.description).toContain('noch einmal');
+    expect(text(await no.def.run({ ...ctx(api, { platform: plat }), args: no.args }))).toContain('schon beantwortet'); // nichts mehr offen
+    await handleDirectMessage({ userId: ME, userName: 'john', content: 'john150210', ...say });
+    const sent: { embed: { description?: string } }[] = [];
+    const yes = interactionFor('quali:rb:0:yes')!;
+    const r = await yes.def.run({ ...ctx(api, { platform: { ...plat, sendDm: async (_u: string, m: { embed: { description?: string } }) => { sent.push(m); return { channelId: 'D', messageId: 'M' }; } } }), args: yes.args });
+    expect(r.update?.embeds?.[0]?.description).toContain('✅ john150210');
+    expect(sent.at(-1)!.embed.description).toContain('**2/2.** Warum?');
     await handleDirectMessage({ userId: ME, userName: 'john', content: 'Weil ich helfen will', ...say });
     expect(calls.at(-1)).toMatchObject({ path: '/bot/application', body: { robloxUsername: 'john150210', robloxUserId: '42', answers: { rb: 'john150210', why: 'Weil ich helfen will' } } });
   });
