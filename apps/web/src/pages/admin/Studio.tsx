@@ -9,28 +9,30 @@ import { WorkflowEditor } from '../../components/WorkflowEditor';
 
 type CF = StudioConfig['customFields'];
 const TYPES: CustomFieldDef['type'][] = ['text', 'number', 'select', 'date'];
+const ACCENT_LABELS: Record<string, string> = { blue: 'Blau', green: 'Grün', amber: 'Bernstein', red: 'Rot', cyan: 'Cyan', violet: 'Violett' };
+const TYPE_LABELS: Record<CustomFieldDef['type'], string> = { text: 'Text', number: 'Zahl', select: 'Auswahl', date: 'Datum' };
 
 /** Studio: Custom Fields (Personen/Fahrzeuge), Theme-Akzent und Workflows (Automationen). Bewerbungsfragen: Applications → Setup. */
 export function Studio() {
   const { can } = useAuth();
   const manage = can('studio.manage') || can('settings.manage');
-  const [tab, setTab] = useState('Custom fields');
+  const [tab, setTab] = useState('Zusatzfelder');
   const [msg, setMsg] = useState<string>();
   const qc = useQueryClient();
   const save = useMutation({
     mutationFn: ({ key, value }: { key: string; value: unknown }) => api(`/admin/settings/${key}`, { method: 'PUT', body: { value } }),
-    onSuccess: () => { setMsg('Saved.'); void qc.invalidateQueries(); },
-    onError: (e) => setMsg(e instanceof ApiError ? `${e.message}${Array.isArray(e.details) ? ': ' + (e.details as { message: string }[]).map((d) => d.message).join('; ') : ''}` : 'Failed'),
+    onSuccess: () => { setMsg('Gespeichert.'); void qc.invalidateQueries(); },
+    onError: (e) => setMsg(e instanceof ApiError ? `${e.message}${Array.isArray(e.details) ? ': ' + (e.details as { message: string }[]).map((d) => d.message).join('; ') : ''}` : 'Fehlgeschlagen'),
   });
   return (
     <>
-      <PageHeader title="Studio" subtitle="Configure custom fields, the theme and workflows (automations). Every change is validated and audited. Application questions: Applications → Setup." />
+      <PageHeader title="Studio" subtitle="Zusatzfelder, Design und Workflows (Automationen) konfigurieren. Jede Änderung wird geprüft und im Audit-Log festgehalten. Bewerbungsfragen: Bewerbungen → Einrichtung." />
       {msg && <p role="status" className="mb-3 rounded border border-line bg-panel p-2 text-sm">{msg}</p>}
-      <Tabs tabs={['Custom fields', 'Theme', 'Workflows']} active={tab} onChange={(t) => { setTab(t); setMsg(undefined); }} />
+      <Tabs tabs={['Zusatzfelder', 'Design', 'Workflows']} active={tab} onChange={(t) => { setTab(t); setMsg(undefined); }} />
       <div className="mt-4">
-        {tab === 'Custom fields' && <CustomFields manage={manage} onSave={(v) => save.mutate({ key: 'studio.customFields', value: v })} busy={save.isPending} />}
+        {tab === 'Zusatzfelder' && <CustomFields manage={manage} onSave={(v) => save.mutate({ key: 'studio.customFields', value: v })} busy={save.isPending} />}
         {tab === 'Workflows' && <WorkflowEditor manage={can('studio.manage')} />}
-        {tab === 'Theme' && <Theme manage={manage} onSave={(v) => save.mutate({ key: 'theme.accent', value: v })} />}
+        {tab === 'Design' && <Theme manage={manage} onSave={(v) => save.mutate({ key: 'theme.accent', value: v })} />}
       </div>
     </>
   );
@@ -41,26 +43,26 @@ function CustomFields({ manage, onSave, busy }: { manage: boolean; onSave: (v: C
   const [cfg, setCfg] = useState<CF>({ persons: [], vehicles: [] });
   useEffect(() => { if (studio.data) setCfg(studio.data.customFields); }, [studio.data]);
   const valid = (c: CF) => [...c.persons, ...c.vehicles].every((f) => /^[a-z][a-z0-9_]{0,39}$/i.test(f.key) && f.label.trim());
-  useAutosaveDraft(manage && studio.data ? 'setting:studio.customFields' : null, cfg, (c) => (valid(c) ? { method: 'PUT', path: '/admin/settings/studio.customFields', body: { value: c }, label: 'Custom fields' } : null));
+  useAutosaveDraft(manage && studio.data ? 'setting:studio.customFields' : null, cfg, (c) => (valid(c) ? { method: 'PUT', path: '/admin/settings/studio.customFields', body: { value: c }, label: 'Zusatzfelder' } : null));
   if (studio.isLoading) return <SkeletonRows />;
   const upd = (e: keyof CF, i: number, p: Partial<CustomFieldDef>) => setCfg({ ...cfg, [e]: cfg[e].map((f, j) => (j === i ? { ...f, ...p } : f)) });
   return (
     <div className="space-y-4">
       {(['persons', 'vehicles'] as const).map((e) => (
-        <Card key={e} title={`${e[0]!.toUpperCase()}${e.slice(1)}`}>
+        <Card key={e} title={e === 'persons' ? 'Personen' : 'Fahrzeuge'}>
           <div className="space-y-2">
-            {cfg[e].length === 0 && <p className="text-sm text-muted">No custom fields defined.</p>}
+            {cfg[e].length === 0 && <p className="text-sm text-muted">Keine Zusatzfelder definiert.</p>}
             {cfg[e].map((f, i) => (
               <div key={i} className="grid items-center gap-2 sm:grid-cols-[1fr_1fr_110px_1fr_auto_auto]">
-                <Input aria-label={`${e} field key`} value={f.key} disabled={!manage} onChange={(x) => upd(e, i, { key: x.target.value })} placeholder="key" />
-                <Input aria-label={`${e} field label`} value={f.label} disabled={!manage} onChange={(x) => upd(e, i, { label: x.target.value })} placeholder="Label" />
-                <Select aria-label={`${e} field type`} value={f.type} disabled={!manage} onChange={(x) => upd(e, i, { type: x.target.value as CustomFieldDef['type'] })}>{TYPES.map((t) => <option key={t}>{t}</option>)}</Select>
-                {f.type === 'select' ? <Input aria-label={`${e} field options`} value={(f.options ?? []).join(', ')} disabled={!manage} onChange={(x) => upd(e, i, { options: x.target.value.split(',').map((o) => o.trim()).filter(Boolean) })} placeholder="A, B, C" /> : <span />}
-                <label className="flex items-center gap-1 text-xs"><input type="checkbox" checked={f.required} disabled={!manage} onChange={(x) => upd(e, i, { required: x.target.checked })} />required</label>
-                {manage && <Button variant="ghost" size="sm" onClick={() => setCfg({ ...cfg, [e]: cfg[e].filter((_, j) => j !== i) })}>Remove</Button>}
+                <Input aria-label={`${e === 'persons' ? 'Personen' : 'Fahrzeuge'}: Feldschlüssel`} value={f.key} disabled={!manage} onChange={(x) => upd(e, i, { key: x.target.value })} placeholder="schlüssel" />
+                <Input aria-label={`${e === 'persons' ? 'Personen' : 'Fahrzeuge'}: Feldname`} value={f.label} disabled={!manage} onChange={(x) => upd(e, i, { label: x.target.value })} placeholder="Bezeichnung" />
+                <Select aria-label={`${e === 'persons' ? 'Personen' : 'Fahrzeuge'}: Feldtyp`} value={f.type} disabled={!manage} onChange={(x) => upd(e, i, { type: x.target.value as CustomFieldDef['type'] })}>{TYPES.map((t) => <option key={t} value={t}>{TYPE_LABELS[t]}</option>)}</Select>
+                {f.type === 'select' ? <Input aria-label={`${e === 'persons' ? 'Personen' : 'Fahrzeuge'}: Feldoptionen`} value={(f.options ?? []).join(', ')} disabled={!manage} onChange={(x) => upd(e, i, { options: x.target.value.split(',').map((o) => o.trim()).filter(Boolean) })} placeholder="A, B, C" /> : <span />}
+                <label className="flex items-center gap-1 text-xs"><input type="checkbox" checked={f.required} disabled={!manage} onChange={(x) => upd(e, i, { required: x.target.checked })} />Pflichtfeld</label>
+                {manage && <Button variant="ghost" size="sm" onClick={() => setCfg({ ...cfg, [e]: cfg[e].filter((_, j) => j !== i) })}>Entfernen</Button>}
               </div>
             ))}
-            {manage && <Button variant="secondary" size="sm" onClick={() => setCfg({ ...cfg, [e]: [...cfg[e], { key: 'field' + (cfg[e].length + 1), label: 'New field', type: 'text', required: false }] })}>Add field</Button>}
+            {manage && <Button variant="secondary" size="sm" onClick={() => setCfg({ ...cfg, [e]: [...cfg[e], { key: 'field' + (cfg[e].length + 1), label: 'Neues Feld', type: 'text', required: false }] })}>Feld hinzufügen</Button>}
           </div>
         </Card>
       ))}
@@ -73,15 +75,15 @@ function Theme({ manage, onSave }: { manage: boolean; onSave: (v: string) => voi
   const studio = useStudio();
   const current = studio.data?.theme.accent ?? 'blue';
   return (
-    <Card title="Accent colour">
-      <div className="flex flex-wrap gap-2" role="radiogroup" aria-label="Accent colour">
+    <Card title="Akzentfarbe">
+      <div className="flex flex-wrap gap-2" role="radiogroup" aria-label="Akzentfarbe">
         {Object.entries(ACCENTS).map(([name, hex]) => (
           <button key={name} role="radio" aria-checked={current === name} disabled={!manage} onClick={() => onSave(name)} className={`flex items-center gap-2 rounded border px-3 py-1.5 text-sm ${current === name ? 'border-fg' : 'border-line'}`}>
-            <span aria-hidden className="size-3 rounded-full" style={{ background: hex }} />{name}
+            <span aria-hidden className="size-3 rounded-full" style={{ background: hex }} />{ACCENT_LABELS[name] ?? name}
           </button>
         ))}
       </div>
-      <p className="mt-3 text-xs text-muted">The UI is always dark; only the accent colour is configurable.</p>
+      <p className="mt-3 text-xs text-muted">Die Oberfläche ist immer dunkel; nur die Akzentfarbe ist einstellbar.</p>
     </Card>
   );
 }

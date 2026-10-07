@@ -57,8 +57,8 @@ export const CAD_EVENT_SEND_TYPE: Record<CadEvent, (typeof CAD_LINK_SEND_TYPES)[
 
 export const CAD_WIDGETS = ['activeIncidents', 'availableUnits', 'erlcPlayers', 'erlcQueue', 'activeCalls', 'staffOnline', 'erlcStatus', 'map', 'units', 'radio', 'persons', 'vehicles'] as const;
 export const CAD_WIDGET_LABELS: Record<string, string> = {
-  activeIncidents: 'Aktive Einsätze', availableUnits: 'Verfügbare Einheiten', erlcPlayers: 'ER:LC Spieler', erlcQueue: 'Queue', activeCalls: 'Aktive Notrufe',
-  staffOnline: 'Staff online', erlcStatus: 'ER:LC Status', map: 'Einsatzkarte', units: 'Einheiten', radio: 'Letzte Funkmeldungen', persons: 'Personen', vehicles: 'Fahrzeuge',
+  activeIncidents: 'Aktive Einsätze', availableUnits: 'Verfügbare Einheiten', erlcPlayers: 'ER:LC-Spieler', erlcQueue: 'Warteschlange', activeCalls: 'Aktive Notrufe',
+  staffOnline: 'Server-Team online', erlcStatus: 'ER:LC-Status', map: 'Einsatzkarte', units: 'Einheiten', radio: 'Letzte Funkmeldungen', persons: 'Personen', vehicles: 'Fahrzeuge',
 };
 
 /** Offizielle ER:LC-Kartenbilder sind 5355 × 5355 px, Spielkoordinate (0,0) liegt in der Mitte. */
@@ -136,8 +136,8 @@ export const pixelToGame = (m: CadMapConfig, px: number, py: number) => ({ x: (p
 export const ERLC_FEATURES = ['players', 'staff', 'queue', 'vehicles', 'emergencyCalls', 'modCalls', 'joinLogs', 'killLogs', 'commandLogs', 'commands', 'webhook'] as const;
 export type ErlcFeature = (typeof ERLC_FEATURES)[number];
 export const ERLC_FEATURE_LABELS: Record<ErlcFeature, string> = {
-  players: 'Spieler (inkl. Positionen)', staff: 'Staff', queue: 'Queue', vehicles: 'Fahrzeuge', emergencyCalls: 'Emergency Calls', modCalls: 'Mod Calls',
-  joinLogs: 'Join Logs', killLogs: 'Kill Logs', commandLogs: 'Command Logs', commands: 'Command Center (Befehle ausführen)', webhook: 'Event-Webhook',
+  players: 'Spieler (inkl. Positionen)', staff: 'Server-Team', queue: 'Warteschlange', vehicles: 'Fahrzeuge', emergencyCalls: 'Notrufe', modCalls: 'Mod-Rufe',
+  joinLogs: 'Beitritte', killLogs: 'Kills', commandLogs: 'Befehlsprotokoll', commands: 'Befehle ausführen', webhook: 'Ereignis-Webhook',
 };
 /** Update-Intervalle, die zu den API-Limits passen (ein Abruf liefert alle Daten auf einmal). */
 export const ERLC_POLL_OPTIONS = [5, 10, 15, 30, 60] as const;

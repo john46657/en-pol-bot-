@@ -12,8 +12,8 @@ interface LeaveRow {
   id: string; number: string; userId: string; name: string; startsAt: string; endsAt: string; reason: string; status: string; active: boolean;
   decidedByName: string | null; decisionReason: string | null; days: number; createdAt: string;
 }
-const TABS = [['PENDING', 'Pending'], ['ACTIVE', 'On leave now'], ['UPCOMING', 'Upcoming'], ['ALL', 'All']] as const;
-const STATUS: Record<string, [string, Tone]> = { PENDING: ['Pending', 'warning'], APPROVED: ['Approved', 'success'], DENIED: ['Denied', 'danger'], CANCELLED: ['Cancelled', 'neutral'], ENDED: ['Ended', 'neutral'] };
+const TABS = [['PENDING', 'Offen'], ['ACTIVE', 'Gerade abgemeldet'], ['UPCOMING', 'Bevorstehend'], ['ALL', 'Alle']] as const;
+const STATUS: Record<string, [string, Tone]> = { PENDING: ['Offen', 'warning'], APPROVED: ['Genehmigt', 'success'], DENIED: ['Abgelehnt', 'danger'], CANCELLED: ['Zurückgezogen', 'neutral'], ENDED: ['Beendet', 'neutral'] };
 const day = (d: Date) => d.toISOString().slice(0, 10);
 
 /** Organisation → Leave: Abmeldung beantragen, eigene/alle sehen, annehmen/ablehnen (leave.manage). */
@@ -22,7 +22,7 @@ export function Leave() {
   const qc = useQueryClient();
   const manage = can('leave.manage'), viewAll = can('leave.view');
   const [params] = useSearchParams();
-  const [tab, setTab] = useState(viewAll ? 'Pending' : 'All');
+  const [tab, setTab] = useState(viewAll ? 'Offen' : 'Alle');
   const status = TABS.find(([, l]) => l === tab)?.[0] ?? 'ALL';
   const [err, setErr] = useState<string>();
   const cfg = useQuery({ queryKey: ['leave-config'], queryFn: () => api<LeaveConfig>('/leave/config') });
@@ -35,26 +35,26 @@ export function Leave() {
 
   return (
     <>
-      <PageHeader title="Leave of Absence" subtitle="Request leave (also in Discord with /abmeldung). While it is approved and running you get the on-leave role." />
-      {cfg.data && !cfg.data.enabled && <p className="mb-3 rounded-md border border-warning/40 bg-warning/10 p-3 text-sm">Leave requests are switched off.{can('settings.view') && <> Turn them on under <Link className="underline" to="/admin/leave">Administration → Leave of Absences</Link>.</>}</p>}
+      <PageHeader title="Abmeldungen" subtitle="Abmeldung beantragen (auch in Discord mit /abmeldung). Solange sie genehmigt ist und läuft, bekommst du die Abgemeldet-Rolle." />
+      {cfg.data && !cfg.data.enabled && <p className="mb-3 rounded-md border border-warning/40 bg-warning/10 p-3 text-sm">Abmeldungen sind ausgeschaltet.{can('settings.view') && <> Schalte sie unter <Link className="underline" to="/admin/leave">Administration → Abmeldungen</Link> ein.</>}</p>}
       {can('leave.request') && cfg.data?.enabled && <RequestForm maxDays={cfg.data.maxDays} onDone={refresh} />}
       {err && <p role="alert" className="mb-3 text-sm text-danger">{err}</p>}
-      <Tabs tabs={viewAll ? TABS.map(([, l]) => l) : ['All', 'Pending']} active={tab} onChange={setTab} />
+      <Tabs tabs={viewAll ? TABS.map(([, l]) => l) : ['Alle', 'Offen']} active={tab} onChange={setTab} />
       <div className="mt-4">
-        {list.isLoading ? <SkeletonRows /> : list.error ? <ErrorState error={list.error} onRetry={() => void list.refetch()} /> : !items.length ? <EmptyState text="No leave requests here." /> : (
+        {list.isLoading ? <SkeletonRows /> : list.error ? <ErrorState error={list.error} onRetry={() => void list.refetch()} /> : !items.length ? <EmptyState text="Keine Abmeldungen." /> : (
           <div className="grid gap-3">{items.map((r) => {
             const [label, tone] = STATUS[r.status] ?? [r.status, 'neutral'];
             const mine = r.userId === user?.id;
             return (
               <Card key={r.id} className={focus === r.id ? 'ring-2 ring-primary' : undefined}
-                title={<span className="flex flex-wrap items-center gap-2">{r.name} · {r.number} <Badge tone={tone}>{label}</Badge>{r.active && <Badge tone="info">On leave now</Badge>}</span>}
+                title={<span className="flex flex-wrap items-center gap-2">{r.name} · {r.number} <Badge tone={tone}>{label}</Badge>{r.active && <Badge tone="info">Gerade abgemeldet</Badge>}</span>}
                 actions={<div className="flex flex-wrap gap-2">
                   {r.status === 'PENDING' && manage && <DecisionButtons busy={decide.isPending} onDecide={(s, reason) => decide.mutate({ id: r.id, status: s === 'ACCEPTED' ? 'APPROVED' : 'DENIED', reason })} />}
-                  {['PENDING', 'APPROVED'].includes(r.status) && (mine || manage) && <Button size="sm" variant="secondary" disabled={cancel.isPending} onClick={() => { if (confirm(r.active ? 'End this leave now?' : 'Withdraw this leave request?')) cancel.mutate(r.id); }}>{r.active ? 'End now' : 'Withdraw'}</Button>}
+                  {['PENDING', 'APPROVED'].includes(r.status) && (mine || manage) && <Button size="sm" variant="secondary" disabled={cancel.isPending} onClick={() => { if (confirm(r.active ? 'Diese Abmeldung jetzt beenden?' : 'Diese Abmeldung zurückziehen?')) cancel.mutate(r.id); }}>{r.active ? 'Jetzt beenden' : 'Zurückziehen'}</Button>}
                 </div>}>
-                <p className="text-sm"><b>{fmt(r.startsAt)}</b> – <b>{fmt(r.endsAt)}</b> <span className="text-muted">({r.days} {r.days === 1 ? 'day' : 'days'})</span></p>
+                <p className="text-sm"><b>{fmt(r.startsAt)}</b> – <b>{fmt(r.endsAt)}</b> <span className="text-muted">({r.days} {r.days === 1 ? 'Tag' : 'Tage'})</span></p>
                 <p className="mt-1 whitespace-pre-wrap text-sm">{r.reason}</p>
-                {(r.decidedByName || r.decisionReason) && <p className="mt-2 text-xs text-muted">{r.decidedByName && `Decided by ${r.decidedByName}`}{r.decisionReason && ` · ${r.decisionReason}`}</p>}
+                {(r.decidedByName || r.decisionReason) && <p className="mt-2 text-xs text-muted">{r.decidedByName && `Entschieden von ${r.decidedByName}`}{r.decisionReason && ` · ${r.decisionReason}`}</p>}
               </Card>
             );
           })}</div>
@@ -72,18 +72,18 @@ function RequestForm({ maxDays, onDone }: { maxDays: number; onDone: () => void 
   const send = useMutation({
     // ganze Tage in der Zeitzone des Browsers: Beginn 00:00, Ende 23:59
     mutationFn: () => api<LeaveRow>('/leave', { method: 'POST', body: { startsAt: new Date(`${from}T00:00`).toISOString(), endsAt: new Date(`${to}T23:59`).toISOString(), reason } }),
-    onSuccess: (r) => { setOk(`Requested (${r.number}). You will get a message when it is decided.`); setReason(''); onDone(); },
+    onSuccess: (r) => { setOk(`Beantragt (${r.number}). Du bekommst eine Nachricht, sobald entschieden wurde.`); setReason(''); onDone(); },
   });
   return (
-    <Card title="Request leave" className="mb-4">
+    <Card title="Abmeldung beantragen" className="mb-4">
       <div className="grid gap-3 md:grid-cols-[auto_auto_1fr]">
-        <Field label="From">{(id) => <Input id={id} type="date" value={from} onChange={(e) => setFrom(e.target.value)} />}</Field>
-        <Field label="Until">{(id) => <Input id={id} type="date" value={to} min={from} onChange={(e) => setTo(e.target.value)} />}</Field>
-        <Field label="Reason">{(id) => <Textarea id={id} rows={2} maxLength={1000} value={reason} onChange={(e) => setReason(e.target.value)} placeholder="e.g. holiday, exams, illness" />}</Field>
+        <Field label="Von">{(id) => <Input id={id} type="date" value={from} onChange={(e) => setFrom(e.target.value)} />}</Field>
+        <Field label="Bis">{(id) => <Input id={id} type="date" value={to} min={from} onChange={(e) => setTo(e.target.value)} />}</Field>
+        <Field label="Grund">{(id) => <Textarea id={id} rows={2} maxLength={1000} value={reason} onChange={(e) => setReason(e.target.value)} placeholder="z. B. Urlaub, Prüfungen, Krankheit" />}</Field>
       </div>
       <div className="mt-3 flex flex-wrap items-center gap-2">
-        <Button disabled={send.isPending || reason.trim().length < 3 || !from || !to} onClick={() => { setOk(undefined); send.mutate(); }}>Request leave</Button>
-        <span className="text-xs text-muted">At most {maxDays} days.</span>
+        <Button disabled={send.isPending || reason.trim().length < 3 || !from || !to} onClick={() => { setOk(undefined); send.mutate(); }}>Abmeldung beantragen</Button>
+        <span className="text-xs text-muted">Höchstens {maxDays} Tage.</span>
         {ok && <span role="status" className="text-sm text-success">{ok}</span>}
         {send.error && <span role="alert" className="text-sm text-danger">{errText(send.error)}</span>}
       </div>

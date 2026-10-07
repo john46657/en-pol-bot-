@@ -44,7 +44,7 @@ export function AppShell() {
     </div>
   );
   const sidebar = (
-    <nav aria-label="Main" className="flex h-full flex-col gap-4 overflow-y-auto p-3">
+    <nav aria-label="Hauptmenü" className="flex h-full flex-col gap-4 overflow-y-auto p-3">
       {favs.length > 0 && <div><p className="mb-1 px-2 text-[11px] font-semibold uppercase tracking-wider text-muted">{collapsed ? '★' : '⭐ Favoriten'}</p>{favs.map((i) => link(i, true))}</div>}
       {GROUPS.map((g) => {
         const gi = items.filter((i) => i.group === g);
@@ -54,9 +54,9 @@ export function AppShell() {
   );
   return (
     <div className="flex h-full">
-      <a href="#main" className="sr-only focus:not-sr-only focus:absolute focus:z-50 focus:bg-primary focus:p-2">Skip to content</a>
+      <a href="#main" className="sr-only focus:not-sr-only focus:absolute focus:z-50 focus:bg-primary focus:p-2">Zum Inhalt springen</a>
       {/* Tablet hochkant: schmale Symbol-Leiste; ☰ öffnet das volle Menü mit Beschriftungen */}
-      {tablet && <nav aria-label="Quick navigation" className="flex w-16 shrink-0 flex-col items-center gap-1 overflow-y-auto border-r border-line bg-panel py-2">
+      {tablet && <nav aria-label="Schnellnavigation" className="flex w-16 shrink-0 flex-col items-center gap-1 overflow-y-auto border-r border-line bg-panel py-2">
         <Shield size={20} className="mb-2 mt-2 text-primary" aria-hidden />
         {items.map((i) => (
           <NavLink key={i.path} to={i.path} title={L(i.label)} aria-label={L(i.label)} className={({ isActive }) => `grid h-11 w-11 shrink-0 place-items-center rounded-md ${isActive ? 'bg-primary/15 text-fg' : 'text-muted hover:bg-panel-2 hover:text-fg'}`}>
@@ -74,14 +74,14 @@ export function AppShell() {
       {open && <div className="fixed inset-0 z-40 bg-black/50 lg:hidden" onClick={() => setOpen(false)}><aside className="flex h-full w-64 max-w-[85vw] flex-col bg-panel" onClick={(e) => e.stopPropagation()}><div className="flex h-14 shrink-0 items-center border-b border-line px-2 font-semibold"><ServerSwitcher orgName={orgName} onPicked={() => setOpen(false)} /></div><div className="min-h-0 flex-1 overflow-y-auto">{sidebar}</div></aside></div>}
       <div className="flex min-w-0 flex-1 flex-col">
         <header className="flex h-14 items-center gap-2 border-b border-line bg-panel px-2 sm:gap-3 sm:px-4">
-          <Button variant="ghost" className="lg:hidden" aria-label="Open menu" onClick={() => setOpen(true)}><Menu size={18} /></Button>
+          <Button variant="ghost" className="lg:hidden" aria-label="Menü öffnen" onClick={() => setOpen(true)}><Menu size={18} /></Button>
           <GlobalSearch />
           <div className="ml-auto flex shrink-0 items-center gap-1 sm:gap-2">
             <SaveStatus />
             <DiscordLink />
             <NotificationCenter />
-            <div className="hidden text-right text-xs sm:block"><p className="font-medium">{user?.displayName}</p><p className="text-muted">{user?.roles.join(', ') || 'No role'}</p></div>
-            <Button variant="ghost" aria-label="Log out" onClick={() => void flush().finally(() => void logout())}><LogOut size={16} /></Button>
+            <div className="hidden text-right text-xs sm:block"><p className="font-medium">{user?.displayName}</p><p className="text-muted">{user?.roles.join(', ') || 'Keine Rolle'}</p></div>
+            <Button variant="ghost" aria-label="Abmelden" onClick={() => void flush().finally(() => void logout())}><LogOut size={16} /></Button>
           </div>
         </header>
         <main id="main" className="min-w-0 flex-1 overflow-y-auto p-3 sm:p-4 lg:p-6">{can('dashboard.view') ? <Outlet /> : <NoAccess />}</main>

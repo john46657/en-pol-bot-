@@ -2,7 +2,7 @@ import { EmptyState, fmt } from './ui';
 
 export interface TimelineItem { id: string; action: string; summary: string; createdAt: string }
 export function Timeline({ items }: { items: TimelineItem[] | undefined }) {
-  if (!items?.length) return <EmptyState text="No timeline events yet." />;
+  if (!items?.length) return <EmptyState text="Noch keine Ereignisse im Verlauf." />;
   return (
     <ol className="relative space-y-3 border-l border-line pl-4">
       {items.map((e) => (

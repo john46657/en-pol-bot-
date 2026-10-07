@@ -135,6 +135,7 @@ export function Roles() {
 const uniqueName = (base: string, roles: Role[]) => { let n = base; for (let i = 2; roles.some((r) => r.name === n); i++) n = `${base} ${i}`; return n; };
 const effectOf = (r: Role, k: string): Eff => (r.permissions.find((p) => p.permissionKey === k)?.effect as Eff | undefined) ?? 'NONE';
 const next = (e: Eff): Eff => (e === 'NONE' ? 'ALLOW' : e === 'ALLOW' ? 'DENY' : 'NONE');
+const EFF_LABEL: Record<Eff, string> = { ALLOW: 'erlaubt', DENY: 'verweigert', NONE: 'nicht gesetzt' };
 const cellCls = (e: Eff) => (e === 'ALLOW' ? 'border-success/40 bg-success/15 text-success' : e === 'DENY' ? 'border-danger/40 bg-danger/15 text-danger' : 'border-line text-muted');
 
 function RoleEditor({ role, editable, scope, onMeta, onPerm, onDuplicate, onDelete, canCreate }: { role: Role; editable: boolean; scope: string | null; onMeta: (m: Meta) => void; onPerm: (k: string, e: Eff) => void; onDuplicate: () => void; onDelete: () => void; canCreate: boolean }) {
@@ -166,9 +167,9 @@ function RoleEditor({ role, editable, scope, onMeta, onPerm, onDuplicate, onDele
           const all = effectOf(role, `${mod}.*`);
           return (
             <fieldset key={mod}><legend className="mb-1 flex items-center gap-2 text-xs font-semibold uppercase text-muted">{MODULE_LABELS[mod] ?? mod}
-              <button type="button" disabled={!editable} onClick={() => onPerm(`${mod}.*`, next(all))} className={`rounded border px-1.5 text-[10px] normal-case ${cellCls(all)}`} aria-label={`${mod}.*: ${all}`}>{all === 'ALLOW' ? '✓ alle' : all === 'DENY' ? '✕ alle' : 'alle'}</button></legend>
+              <button type="button" disabled={!editable} onClick={() => onPerm(`${mod}.*`, next(all))} className={`rounded border px-1.5 text-[10px] normal-case ${cellCls(all)}`} aria-label={`${mod}.*: ${EFF_LABEL[all]}`}>{all === 'ALLOW' ? '✓ alle' : all === 'DENY' ? '✕ alle' : 'alle'}</button></legend>
               <div className="flex flex-wrap gap-1.5">{actions.map((a) => { const k = `${mod}.${a}`; const st = effectOf(role, k); return (
-                <button key={k} type="button" title={k} disabled={!editable} aria-pressed={st !== 'NONE'} aria-label={`${k}: ${st}`} onClick={() => onPerm(k, next(st))} className={`rounded border px-2 py-0.5 text-xs ${cellCls(st)}`}>{st === 'ALLOW' ? '✓ ' : st === 'DENY' ? '✕ ' : ''}{ACTION_LABELS[a] ?? a}</button>); })}</div>
+                <button key={k} type="button" title={k} disabled={!editable} aria-pressed={st !== 'NONE'} aria-label={`${k}: ${EFF_LABEL[st]}`} onClick={() => onPerm(k, next(st))} className={`rounded border px-2 py-0.5 text-xs ${cellCls(st)}`}>{st === 'ALLOW' ? '✓ ' : st === 'DENY' ? '✕ ' : ''}{ACTION_LABELS[a] ?? a}</button>); })}</div>
             </fieldset>
           );
         })}
@@ -203,7 +204,7 @@ function Matrix({ roles, editable, onSet }: { roles: Role[]; editable: (r: Role)
                     const own = effectOf(r, k), eff = granted(r, k), inherited = own === 'NONE' && eff !== 'NONE';
                     return (
                       <td key={r.id} className="p-1 text-center">
-                        <button type="button" disabled={!editable(r)} onClick={() => onSet(r, k, next(own))} aria-label={`${r.name} – ${k}: ${eff}`} title={inherited ? 'geerbt über Wildcard' : undefined}
+                        <button type="button" disabled={!editable(r)} onClick={() => onSet(r, k, next(own))} aria-label={`${r.name} – ${k}: ${EFF_LABEL[eff]}`} title={inherited ? 'geerbt über Wildcard' : undefined}
                           className={`min-w-8 rounded border px-1.5 py-0.5 ${cellCls(eff)} ${inherited ? 'opacity-60' : ''} disabled:cursor-not-allowed`}>{eff === 'ALLOW' ? '✅' : eff === 'DENY' ? '❌' : '·'}</button>
                       </td>
                     );

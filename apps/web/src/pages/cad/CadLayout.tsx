@@ -8,7 +8,7 @@ import { onRealtime } from '../../lib/realtime';
 
 /** CAD-Navigation. Personen/Fahrzeuge/Reports verweisen auf die vorhandenen Akten (gleiche Daten, gleiche Rechte). */
 export const CAD_NAV: { to: string; label: string; perm?: string; area?: string }[] = [
-  { to: '/cad', label: 'Dashboard' },
+  { to: '/cad', label: 'Übersicht' },
   { to: '/cad/incidents', label: 'Einsätze' },
   { to: '/cad/map', label: 'Einsatzkarte' },
   { to: '/cad/units', label: 'Einheiten' },
@@ -19,7 +19,7 @@ export const CAD_NAV: { to: string; label: string; perm?: string; area?: string 
   { to: '/cad/erlc', label: 'ER:LC Live', perm: 'cad.view_erlc' },
   { to: '/cad/team', label: 'Teamübersicht' },
   { to: '/cad/cross-server', label: 'Cross-Server' },
-  { to: '/reports', label: 'Reports', perm: 'reports.view' },
+  { to: '/reports', label: 'Berichte', perm: 'reports.view' },
   { to: '/cad/logs', label: 'Protokolle', perm: 'cad.view_logs' },
   { to: '/cad/settings', label: 'Einstellungen', perm: 'cad.manage_settings' },
 ];
@@ -42,7 +42,7 @@ export function CadLayout() {
       </div>
       {down.length > 0 && (
         <div role="status" className="mb-3 rounded border border-warning/40 bg-warning/10 px-3 py-2 text-sm text-warning">
-          ⚠️ ER:LC API momentan nicht erreichbar oder eingeschränkt ({down.map((s) => s.name).join(', ')}). Bereits vorhandene CAD-Daten bleiben sichtbar.
+          ⚠️ ER:LC-API momentan nicht erreichbar oder eingeschränkt ({down.map((s) => s.name).join(', ')}). Bereits vorhandene CAD-Daten bleiben sichtbar.
         </div>
       )}
       <Outlet />

@@ -33,11 +33,11 @@ export function CadDashboard() {
     activeIncidents: () => d.incidents.length ? <ul className="divide-y divide-line">{d.incidents.slice(0, 8).map((i) => (
       <li key={i.id} className="flex flex-wrap items-center justify-between gap-2 py-1.5 text-sm"><Link to={`/cad/incidents?id=${i.id}`} className="hover:underline"><b>{i.number}</b> · {i.title}</Link><span className="flex gap-1 text-xs"><span>{optLabel(cfg.priorities, i.priority)}</span><span className="text-muted">{optLabel(cfg.incidentStatuses, i.status)}</span></span></li>))}</ul> : <EmptyState text="Keine aktiven Einsätze." />,
     availableUnits: () => stat('verfügbare Einheiten', available.length, '/cad/units', `${d.units.length} gesamt`),
-    erlcPlayers: () => stat('ER:LC Spieler', d.erlc.length ? `${sum('players')}${d.erlc[0]?.maxPlayers ? ` / ${d.erlc.reduce((n, s) => n + (s.maxPlayers ?? 0), 0)}` : ''}` : '—', '/cad/erlc'),
-    erlcQueue: () => stat('in der Queue', d.erlc.length ? sum('queue') : '—', '/cad/erlc'),
+    erlcPlayers: () => stat('ER:LC-Spieler', d.erlc.length ? `${sum('players')}${d.erlc[0]?.maxPlayers ? ` / ${d.erlc.reduce((n, s) => n + (s.maxPlayers ?? 0), 0)}` : ''}` : '—', '/cad/erlc'),
+    erlcQueue: () => stat('in der Warteschlange', d.erlc.length ? sum('queue') : '—', '/cad/erlc'),
     activeCalls: () => d.calls.length ? <ul className="space-y-1 text-sm">{d.calls.slice(0, 6).map((c) => <li key={c.id}><Link to={`/cad/calls?id=${c.id}`} className="hover:underline">🚨 #{c.callNumber} · {c.description ?? 'ohne Beschreibung'}</Link><span className="block text-xs text-muted">{c.positionDescriptor ?? '—'} · {ago(c.startedAt)}</span></li>)}</ul> : <EmptyState text="Keine offenen Notrufe." />,
-    staffOnline: () => stat('Staff online', d.erlc.length ? sum('staffOnline') : '—', '/cad/erlc'),
-    erlcStatus: () => d.erlc.length ? <ul className="space-y-1.5 text-sm">{d.erlc.map((s) => <li key={s.id} className="flex flex-wrap items-center justify-between gap-2"><span>{s.name}</span><Badge tone={ERLC_STATUS_TONE[s.status] ?? 'neutral'}>{STATUS_DE[s.status] ?? s.status}</Badge><span className="w-full text-xs text-muted">Sync {ago(s.lastSyncAt)}{s.latencyMs ? ` · ${s.latencyMs} ms` : ''}{s.lastError && s.status !== 'CONNECTED' ? ` · ${s.lastError}` : ''}</span></li>)}</ul> : <EmptyState text="Kein ER:LC-Server verbunden." hint={can('cad.manage_erlc') ? 'CAD → Einstellungen → ER:LC Integration' : undefined} />,
+    staffOnline: () => stat('Server-Team online', d.erlc.length ? sum('staffOnline') : '—', '/cad/erlc'),
+    erlcStatus: () => d.erlc.length ? <ul className="space-y-1.5 text-sm">{d.erlc.map((s) => <li key={s.id} className="flex flex-wrap items-center justify-between gap-2"><span>{s.name}</span><Badge tone={ERLC_STATUS_TONE[s.status] ?? 'neutral'}>{STATUS_DE[s.status] ?? s.status}</Badge><span className="w-full text-xs text-muted">Abgleich {ago(s.lastSyncAt)}{s.latencyMs ? ` · ${s.latencyMs} ms` : ''}{s.lastError && s.status !== 'CONNECTED' ? ` · ${s.lastError}` : ''}</span></li>)}</ul> : <EmptyState text="Kein ER:LC-Server verbunden." hint={can('cad.manage_erlc') ? 'CAD → Einstellungen → ER:LC Integration' : undefined} />,
     map: () => <MapView cfg={cfg} data={map.data} height="420px" compact />,
     units: () => d.units.length ? <ul className="grid gap-1 text-sm sm:grid-cols-2">{d.units.map((u) => <li key={u.id} className="flex items-center justify-between gap-2 rounded border border-line px-2 py-1"><span className="font-medium">{u.icon ?? cfg.unitTypes.find((t) => t.key === u.type)?.emoji ?? '🚔'} {u.callsign}</span><span className="text-xs">{optLabel(cfg.unitStatuses, u.status)}{u.current ? ` · ${u.current.number}` : ''}</span></li>)}</ul> : <EmptyState text="Keine Einheiten angelegt." />,
     radio: () => d.radio.length ? <ul className="space-y-1 text-sm">{d.radio.slice(0, 8).map((r) => <li key={r.id}><b>{r.callsign ?? r.authorName ?? 'Funk'}:</b> „{r.text}“<span className="block text-xs text-muted">{ago(r.createdAt)}{r.incidentNumber ? ` · ${r.incidentNumber}` : ''}</span></li>)}</ul> : <EmptyState text="Noch keine Funkmeldungen." />,
@@ -53,7 +53,7 @@ export function CadDashboard() {
         {widgets.map((w) => <Card key={w} title={CAD_WIDGET_LABELS[w]} className={wide.has(w) ? 'md:col-span-2 xl:col-span-2' : undefined}>{W[w]?.()}</Card>)}
       </div>
       <Modal open={editing} title="Meine CAD-Ansicht" onClose={() => setEditing(false)}>
-        <p className="mb-2 text-xs text-muted">Gilt nur für dich. Reihenfolge mit den Pfeilen, Widgets an-/abwählen.</p>
+        <p className="mb-2 text-xs text-muted">Gilt nur für dich. Reihenfolge mit den Pfeilen, Kacheln an-/abwählen.</p>
         <ul className="space-y-1">{widgets.map((w, i) => (
           <li key={w} className="flex items-center justify-between gap-2 rounded border border-line px-2 py-1 text-sm"><label className="flex items-center gap-2"><input type="checkbox" checked onChange={() => set({ widgets: widgets.filter((x) => x !== w) })} />{CAD_WIDGET_LABELS[w]}</label>
             <span className="flex gap-1"><Button size="sm" variant="ghost" aria-label="nach oben" disabled={i === 0} onClick={() => move(i, -1)}><ArrowUp size={12} /></Button><Button size="sm" variant="ghost" aria-label="nach unten" disabled={i === widgets.length - 1} onClick={() => move(i, 1)}><ArrowDown size={12} /></Button></span></li>))}</ul>
@@ -80,7 +80,7 @@ function SetupChecklist({ d }: { d: CadOverview }) {
   const cfg = d.config;
   const steps = [
     { done: !!cfg.homeGuildId, text: 'Discord-Server der Leitstelle auswählen', to: '/cad/settings?tab=Allgemein', hint: 'Einstellungen → Allgemein', perm: 'cad.manage_settings' },
-    { done: !!cfg.map.imageUrl, text: 'ER:LC-Karte hochladen', to: '/cad/settings?tab=Karte+%26+Layer', hint: 'Einstellungen → Karte & Layer', perm: 'cad.manage_map' },
+    { done: !!cfg.map.imageUrl, text: 'ER:LC-Karte hochladen', to: '/cad/settings?tab=Karte+%26+Ebenen', hint: 'Einstellungen → Karte & Ebenen', perm: 'cad.manage_map' },
     { done: d.erlc.length > 0, text: 'ER:LC-Server mit Server-Key verbinden', to: '/cad/settings?tab=ER%3ALC+Integration', hint: 'Einstellungen → ER:LC Integration', perm: 'cad.manage_erlc' },
     { done: d.erlc.some((s) => s.status === 'CONNECTED'), text: 'ER:LC-Verbindung erfolgreich getestet', to: '/cad/settings?tab=ER%3ALC+Integration', hint: '„Verbindung testen“ – Status 🟢 Verbunden', perm: 'cad.manage_erlc' },
     { done: d.units.length > 0, text: 'Einheiten anlegen (z. B. SEK-01, K9-01)', to: '/cad/units', hint: 'Einheiten → Neue Einheit', perm: 'cad.manage_units' },

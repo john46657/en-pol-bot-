@@ -21,7 +21,7 @@ const img = (u?: string | null) => (u && /^https:\/\//.test(u) ? u : undefined);
 /** Vorschau einer Discord-Nachricht (Embed, Buttons, Menü) wie im Discord-Client. */
 export function DiscordPreview({ message, botName = 'EN Polizei' }: { message: MessageSpec; botName?: string }) {
   return (
-    <div className="rounded-lg bg-[#313338] p-3 text-[14px] leading-snug text-[#dbdee1]" aria-label="Discord preview">
+    <div className="rounded-lg bg-[#313338] p-3 text-[14px] leading-snug text-[#dbdee1]" aria-label="Discord-Vorschau">
       <div className="flex gap-3">
         <div aria-hidden className="mt-0.5 h-10 w-10 shrink-0 rounded-full bg-[#5865f2]" />
         <div className="min-w-0 flex-1">
@@ -48,7 +48,7 @@ export function DiscordPreview({ message, botName = 'EN Polizei' }: { message: M
             </div>
           )}
           {message.select?.options && message.select.options.length > 0 && (
-            <ul className="mt-1 max-w-[520px] rounded bg-[#2b2d31] py-1 text-[13px]" aria-label="Dropdown options">
+            <ul className="mt-1 max-w-[520px] rounded bg-[#2b2d31] py-1 text-[13px]" aria-label="Auswahloptionen">
               {message.select.options.map((o) => <li key={o.value} className="px-3 py-1"><span>{o.emoji ? `${o.emoji} ` : ''}{o.label}</span>{o.description && <span className="block text-[11px] text-[#b5bac1]">{o.description}</span>}</li>)}
             </ul>
           )}

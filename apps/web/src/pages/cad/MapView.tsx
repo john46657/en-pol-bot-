@@ -141,7 +141,7 @@ export function MapView({ cfg, data, height = '70vh', focus, onCreateIncidentAt,
       if (unitNames.has(p.name.toLowerCase())) continue; // erscheint schon als Einheit
       const st = style(staff ? 'staff' : 'player');
       out.push({ id: `player:${p.serverId}:${p.name}`, layer: staff ? 'staff' : 'players', x: p.location.x, z: p.location.z, emoji: st.emoji, color: st.color, label: p.callsign ?? p.name, title: p.name,
-        body: <dl className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-0.5 text-xs"><dt className="text-muted">Team</dt><dd>{p.team ?? '—'}</dd>{p.callsign && <><dt className="text-muted">Callsign</dt><dd>{p.callsign}</dd></>}<dt className="text-muted">Rechte</dt><dd>{p.permission ?? '—'}</dd><dt className="text-muted">Ort</dt><dd>{[p.location.street, p.location.postal && `Postal ${p.location.postal}`].filter(Boolean).join(' · ') || '—'}</dd>{p.wantedStars > 0 && <><dt className="text-muted">Wanted</dt><dd>{'⭐'.repeat(p.wantedStars)}</dd></>}</dl> });
+        body: <dl className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-0.5 text-xs"><dt className="text-muted">Team</dt><dd>{p.team ?? '—'}</dd>{p.callsign && <><dt className="text-muted">Rufname</dt><dd>{p.callsign}</dd></>}<dt className="text-muted">Rechte</dt><dd>{p.permission ?? '—'}</dd><dt className="text-muted">Ort</dt><dd>{[p.location.street, p.location.postal && `PLZ ${p.location.postal}`].filter(Boolean).join(' · ') || '—'}</dd>{p.wantedStars > 0 && <><dt className="text-muted">Gesucht</dt><dd>{'⭐'.repeat(p.wantedStars)}</dd></>}</dl> });
     }
     for (const v of data.vehicles) out.push({ id: `vehicle:${v.serverId}:${v.owner}:${v.plate}`, layer: 'vehicles', x: v.x, z: v.z, emoji: style('vehicle').emoji, color: v.colorHex ?? style('vehicle').color, label: v.plate ?? v.name, title: v.name,
       body: <dl className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-0.5 text-xs"><dt className="text-muted">Kennzeichen</dt><dd>{v.plate ?? '—'}</dd><dt className="text-muted">Fahrer/Besitzer</dt><dd>{v.owner}</dd></dl> });
@@ -183,18 +183,18 @@ export function MapView({ cfg, data, height = '70vh', focus, onCreateIncidentAt,
         </div>
       )}
       {!m.imageUrl && <div data-ui className="pointer-events-none absolute inset-x-0 top-12 mx-auto w-fit rounded bg-black/70 px-3 py-1.5 text-xs text-white">Noch keine Karte hinterlegt – unter CAD → Einstellungen → Karte die ER:LC-Map hochladen.</div>}
-      {data?.stale && <div data-ui className="absolute left-2 bottom-2 rounded bg-warning/90 px-2 py-1 text-xs text-black">ER:LC API momentan nicht erreichbar – letzter bekannter Stand</div>}
+      {data?.stale && <div data-ui className="absolute left-2 bottom-2 rounded bg-warning/90 px-2 py-1 text-xs text-black">ER:LC-API momentan nicht erreichbar – letzter bekannter Stand</div>}
 
       {/* Steuerung */}
       <div data-ui className="absolute right-2 top-2 flex flex-col gap-1">
         <Button size="sm" variant="secondary" aria-label="Hineinzoomen" onClick={() => zoomAt(1.4, ...center())}><Plus size={14} /></Button>
         <Button size="sm" variant="secondary" aria-label="Herauszoomen" onClick={() => zoomAt(1 / 1.4, ...center())}><Minus size={14} /></Button>
         <Button size="sm" variant="secondary" aria-label="Ganze Karte" onClick={() => { const el = box.current!; const fit = Math.min(el.clientWidth / m.width, el.clientHeight / m.height); apply({ s: fit, tx: (el.clientWidth - m.width * fit) / 2, ty: (el.clientHeight - m.height * fit) / 2 }); }}><Locate size={14} /></Button>
-        <Button size="sm" variant="secondary" aria-label="Layer" aria-expanded={showLayers} onClick={() => setShowLayers((v) => !v)}><Layers size={14} /></Button>
+        <Button size="sm" variant="secondary" aria-label="Ebenen" aria-expanded={showLayers} onClick={() => setShowLayers((v) => !v)}><Layers size={14} /></Button>
       </div>
       {showLayers && (
         <div data-ui className="absolute right-12 top-2 max-h-[80%] w-56 overflow-auto rounded-md border border-line bg-panel p-2 text-sm shadow-lg">
-          <p className="mb-1 text-xs font-semibold text-muted">Layer</p>
+          <p className="mb-1 text-xs font-semibold text-muted">Ebenen</p>
           {cfg.layers.map((l) => <label key={l.key} className="flex items-center justify-between gap-2 py-0.5"><span className="flex items-center gap-2"><input type="checkbox" checked={!hidden.has(l.key)} onChange={() => toggleLayer(l.key)} />{l.label}</span><span className="text-xs text-muted">{counts(l.key)}</span></label>)}
         </div>
       )}
@@ -242,9 +242,9 @@ function MapObjectForm({ cfg, value, onClose }: { cfg: CadConfig; value: Partial
         <Field label="Name">{(id) => <Input id={id} value={v.name ?? ''} maxLength={80} onChange={(e) => upd({ name: e.target.value })} />}</Field>
         <Field label="Beschreibung">{(id) => <Textarea id={id} rows={2} value={v.description ?? ''} onChange={(e) => upd({ description: e.target.value })} />}</Field>
         <div className="grid grid-cols-2 gap-2">
-          <Field label="Layer">{(id) => <Select id={id} value={v.layer} onChange={(e) => upd({ layer: e.target.value })}>{cfg.layers.map((l) => <option key={l.key} value={l.key}>{l.label}</option>)}</Select>}</Field>
+          <Field label="Ebene">{(id) => <Select id={id} value={v.layer} onChange={(e) => upd({ layer: e.target.value })}>{cfg.layers.map((l) => <option key={l.key} value={l.key}>{l.label}</option>)}</Select>}</Field>
           <Field label="Kategorie">{(id) => <Input id={id} value={v.category ?? ''} maxLength={40} onChange={(e) => upd({ category: e.target.value })} />}</Field>
-          {v.kind === 'POI' && <Field label="Icon (Emoji)">{(id) => <Input id={id} value={v.icon ?? ''} maxLength={4} placeholder="📍" onChange={(e) => upd({ icon: e.target.value })} />}</Field>}
+          {v.kind === 'POI' && <Field label="Symbol (Emoji)">{(id) => <Input id={id} value={v.icon ?? ''} maxLength={4} placeholder="📍" onChange={(e) => upd({ icon: e.target.value })} />}</Field>}
           <Field label="Farbe">{(id) => <Input id={id} type="color" value={v.color ?? '#10b981'} onChange={(e) => upd({ color: e.target.value })} />}</Field>
           {v.kind === 'ZONE' && <Field label="Einsatzart (optional)">{(id) => <Select id={id} value={v.incidentType ?? ''} onChange={(e) => upd({ incidentType: e.target.value || null })}><option value="">—</option>{cfg.incidentTypes.map((t) => <option key={t.key} value={t.key}>{t.label}</option>)}</Select>}</Field>}
           {v.kind === 'ZONE' && <Field label="Automatische Aktion">{(id) => <Select id={id} value={v.autoAction ?? ''} onChange={(e) => upd({ autoAction: e.target.value || null })}><option value="">keine</option><option value="warn">Warnung bei Einsätzen in der Zone</option><option value="notify">Leitstelle benachrichtigen</option></Select>}</Field>}

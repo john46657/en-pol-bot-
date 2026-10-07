@@ -26,12 +26,12 @@ function useGuildList() {
 /** Channel auswählen (nach Server gruppiert). Ohne gemeldete Server: Eingabe der ID. */
 export function ChannelPicker({ value, onChange, kind = 'text', ariaLabel, disabled }: { value: string | null | undefined; onChange: (id: string | null) => void; kind?: 'text' | 'category'; ariaLabel: string; disabled?: boolean }) {
   const list = useGuildList();
-  if (!list.length) return <Input aria-label={ariaLabel} inputMode="numeric" disabled={disabled} value={value ?? ''} placeholder={kind === 'category' ? 'Discord category ID' : 'Discord channel ID'} onChange={(e) => onChange(idOf(e.target.value) || null)} />;
+  if (!list.length) return <Input aria-label={ariaLabel} inputMode="numeric" disabled={disabled} value={value ?? ''} placeholder={kind === 'category' ? 'Discord-Kategorie-ID' : 'Discord-Channel-ID'} onChange={(e) => onChange(idOf(e.target.value) || null)} />;
   const known = list.some((g) => g.channels.some((c) => c.id === value));
   return (
     <Select aria-label={ariaLabel} disabled={disabled} value={value ?? ''} onChange={(e) => onChange(e.target.value || null)}>
-      <option value="">— none —</option>
-      {value && !known && <option value={value}>Unknown ({value})</option>}
+      <option value="">— keiner —</option>
+      {value && !known && <option value={value}>Unbekannt ({value})</option>}
       {list.map((g) => <optgroup key={g.id} label={g.name}>{channelOptions(g, kind).map((c) => <option key={c.id} value={c.id}>{c.label}</option>)}</optgroup>)}
     </Select>
   );
@@ -53,18 +53,18 @@ export function RolePicker({ value, onChange, ariaLabel, disabled, max = 25 }: {
             <li key={id} className="inline-flex items-center gap-1.5 rounded border border-success/40 bg-success/10 px-2 py-0.5 text-xs">
               <span aria-hidden className="h-2 w-2 rounded-full" style={{ background: hexColor(r?.color ?? 0) }} />
               <span>@{r?.name ?? id}{all.length > 1 && r ? <span className="text-muted"> · {r.guild}</span> : null}</span>
-              {!disabled && <button type="button" aria-label={`Remove role ${r?.name ?? id}`} className="text-muted hover:text-danger" onClick={() => onChange(value.filter((x) => x !== id))}><X size={12} /></button>}
+              {!disabled && <button type="button" aria-label={`Rolle ${r?.name ?? id} entfernen`} className="text-muted hover:text-danger" onClick={() => onChange(value.filter((x) => x !== id))}><X size={12} /></button>}
             </li>
           );
         })}</ul>
       )}
       {!disabled && value.length < max && (list.length ? (
         <Select aria-label={ariaLabel} value="" onChange={(e) => add(e.target.value)}>
-          <option value="">Select some roles…</option>
+          <option value="">Rollen wählen…</option>
           {list.map((g) => <optgroup key={g.id} label={g.name}>{[...g.roles].sort((a, b) => b.position - a.position).filter((r) => !value.includes(r.id)).map((r) => <option key={r.id} value={r.id}>@{r.name}</option>)}</optgroup>)}
         </Select>
       ) : (
-        <Input aria-label={ariaLabel} value={typed} placeholder="Discord role ID + Enter" onChange={(e) => setTyped(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); add(idOf(typed)); setTyped(''); } }} onBlur={() => { add(idOf(typed)); setTyped(''); }} />
+        <Input aria-label={ariaLabel} value={typed} placeholder="Discord-Rollen-ID + Enter" onChange={(e) => setTyped(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); add(idOf(typed)); setTyped(''); } }} onBlur={() => { add(idOf(typed)); setTyped(''); }} />
       ))}
     </div>
   );

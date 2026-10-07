@@ -9,11 +9,11 @@ import { GuildTag, useGuilds, useServer } from '../../lib/guilds';
 import { duration, errText, hex, label, useTicketConfig, type RatingSummary, type TicketRow, type TicketStats } from '../../lib/tickets';
 const TicketSetup = lazy(() => import('./TicketSetup').then((m) => ({ default: m.TicketSetup })));
 
-const TAB = { list: 'Tickets', transcripts: 'Transcripts', ratings: 'Ratings', stats: 'Statistics', panels: 'Panels', categories: 'Categories', states: 'Statuses & priorities', settings: 'General' } as const;
+const TAB = { list: 'Tickets', transcripts: 'Transkripte', ratings: 'Bewertungen', stats: 'Statistik', panels: 'Panels', categories: 'Kategorien', states: 'Status & Prioritäten', settings: 'Allgemein' } as const;
 type TabKey = keyof typeof TAB;
 const SETUP: TabKey[] = ['panels', 'categories', 'states', 'settings'];
 
-/** Support-Tickets: Übersicht, Transcripts, Bewertungen, Statistik und die komplette Einrichtung des Ticket-Systems. */
+/** Support-Tickets: Übersicht, Transkripte, Bewertungen, Statistik und die komplette Einrichtung des Ticket-Systems. */
 export function SupportTickets() {
   const { can } = useAuth();
   const [search, setSearch] = useSearchParams();
@@ -22,7 +22,7 @@ export function SupportTickets() {
   const go = (k: TabKey) => setSearch(k === 'list' ? {} : { tab: k });
   return (
     <>
-      <PageHeader title="Support Tickets" subtitle="Discord ticket system – everything (panels, categories, questions, buttons, texts, roles) is configured here." />
+      <PageHeader title="Support-Tickets" subtitle="Discord-Ticketsystem – hier wird alles eingerichtet (Panels, Kategorien, Fragen, Buttons, Texte, Rollen)." />
       <Tabs tabs={keys.map((k) => TAB[k])} active={TAB[tab]} onChange={(t) => go(keys.find((k) => TAB[k] === t)!)} />
       <div className="mt-4">
         {tab === 'list' && <TicketList />}
@@ -35,7 +35,7 @@ export function SupportTickets() {
   );
 }
 
-const KINDS = [['open', 'Open'], ['closed', 'Closed'], ['escalated', 'Escalated'], ['archived', 'Archived'], ['deleted', 'Deleted'], ['all', 'All']] as const;
+const KINDS = [['open', 'Offen'], ['closed', 'Geschlossen'], ['escalated', 'Eskaliert'], ['archived', 'Archiviert'], ['deleted', 'Gelöscht'], ['all', 'Alle']] as const;
 
 export const StatusChip = ({ s }: { s: { name: string; emoji?: string | null; color: number } | null }) => (s
   ? <span className="inline-flex items-center gap-1 rounded border px-1.5 py-0.5 text-[11px] font-medium" style={{ borderColor: hex(s.color), color: hex(s.color) }}>{s.emoji && <span aria-hidden>{s.emoji}</span>}{s.name}</span>
@@ -63,31 +63,31 @@ function TicketList() {
       <DataTable<TicketRow>
         columns={[
           { key: 'number', label: '#', render: (t) => <span className="font-mono">#{t.number}</span> },
-          { key: 'name', label: 'Channel', render: (t) => <span>{t.name}{t.locked && <span className="ml-1" title="Locked">⛔</span>}{t.escalatedAt && !t.closedAt && <span className="ml-1" title="Escalated">🟠</span>}</span> },
+          { key: 'name', label: 'Kanal', render: (t) => <span>{t.name}{t.locked && <span className="ml-1" title="Gesperrt">⛔</span>}{t.escalatedAt && !t.closedAt && <span className="ml-1" title="Eskaliert">🟠</span>}</span> },
           ...(multi ? [{ key: 'guild', label: 'Server', render: (t: TicketRow) => <GuildTag id={t.guildId} /> }] : []),
-          { key: 'category', label: 'Category', render: (t) => label(t.category) },
+          { key: 'category', label: 'Kategorie', render: (t) => label(t.category) },
           { key: 'status', label: 'Status', render: (t) => <StatusChip s={t.status} /> },
-          { key: 'priority', label: 'Priority', render: (t) => <StatusChip s={t.priority} /> },
-          { key: 'creator', label: 'Creator', render: (t) => t.creatorName },
-          { key: 'claimers', label: 'Staff', render: (t) => (t.claimers.length ? `${t.claimers.length} claimed` : <span className="text-muted">unclaimed</span>) },
-          { key: 'createdAt', label: 'Created', render: (t) => fmt(t.createdAt) },
+          { key: 'priority', label: 'Priorität', render: (t) => <StatusChip s={t.priority} /> },
+          { key: 'creator', label: 'Ersteller', render: (t) => t.creatorName },
+          { key: 'claimers', label: 'Team', render: (t) => (t.claimers.length ? `${t.claimers.length} übernommen` : <span className="text-muted">nicht übernommen</span>) },
+          { key: 'createdAt', label: 'Erstellt', render: (t) => fmt(t.createdAt) },
         ]}
         rows={list.data?.items ?? []} total={list.data?.total ?? 0} page={page} pageSize={pageSize} onPage={setPage} onPageSize={(n) => { setPageSize(n); setPage(1); }}
         loading={list.isLoading} error={list.error} onRetry={() => void list.refetch()} onRowClick={(t) => void nav(`/support-tickets/${t.id}`)}
-        empty={{ text: 'No tickets.', hint: 'Tickets are opened via a ticket panel in Discord.' }}
+        empty={{ text: 'Keine Tickets.', hint: 'Tickets werden über ein Ticket-Panel in Discord geöffnet.' }}
         search={q} onSearch={(v) => { setQ(v); setPage(1); }}
         toolbar={(
           <div className="flex flex-wrap gap-2">
-            {multi && !server && <div className="w-40"><Select aria-label="Server" value={f.guildId} onChange={(e) => set({ guildId: e.target.value })}><option value="">All servers</option>{guilds.data!.map((g) => <option key={g.id} value={g.id}>{g.name}</option>)}</Select></div>}
-            <div className="w-36"><Select aria-label="Type" value={f.kind} onChange={(e) => set({ kind: e.target.value })}>{KINDS.map(([v, l]) => <option key={v} value={v}>{l}</option>)}</Select></div>
-            <div className="w-40"><Select aria-label="Category" value={f.categoryId} onChange={(e) => set({ categoryId: e.target.value })}><option value="">All categories</option>{c?.categories.map((x) => <option key={x.id} value={x.id}>{label(x)}</option>)}</Select></div>
-            <div className="w-36"><Select aria-label="Status" value={f.statusId} onChange={(e) => set({ statusId: e.target.value })}><option value="">All statuses</option>{c?.statuses.map((x) => <option key={x.id} value={x.id}>{label(x)}</option>)}</Select></div>
-            <div className="w-36"><Select aria-label="Priority" value={f.priorityId} onChange={(e) => set({ priorityId: e.target.value })}><option value="">All priorities</option>{c?.priorities.map((x) => <option key={x.id} value={x.id}>{label(x)}</option>)}</Select></div>
-            <div className="w-36"><Select aria-label="Staff" value={f.claimer} onChange={(e) => set({ claimer: e.target.value })}><option value="">Any staff</option><option value="me">Claimed by me</option></Select></div>
-            <div className="w-36"><Input aria-label="Creator" placeholder="Creator" value={f.creator} onChange={(e) => set({ creator: e.target.value })} /></div>
-            <div className="w-36"><Input aria-label="From" type="date" value={f.from} onChange={(e) => set({ from: e.target.value })} /></div>
-            <div className="w-36"><Input aria-label="To" type="date" value={f.to} onChange={(e) => set({ to: e.target.value })} /></div>
-            {can('ticket.create') && <Button variant="secondary" onClick={() => setOpen(true)}>Open ticket</Button>}
+            {multi && !server && <div className="w-40"><Select aria-label="Server" value={f.guildId} onChange={(e) => set({ guildId: e.target.value })}><option value="">Alle Server</option>{guilds.data!.map((g) => <option key={g.id} value={g.id}>{g.name}</option>)}</Select></div>}
+            <div className="w-36"><Select aria-label="Typ" value={f.kind} onChange={(e) => set({ kind: e.target.value })}>{KINDS.map(([v, l]) => <option key={v} value={v}>{l}</option>)}</Select></div>
+            <div className="w-40"><Select aria-label="Kategorie" value={f.categoryId} onChange={(e) => set({ categoryId: e.target.value })}><option value="">Alle Kategorien</option>{c?.categories.map((x) => <option key={x.id} value={x.id}>{label(x)}</option>)}</Select></div>
+            <div className="w-36"><Select aria-label="Status" value={f.statusId} onChange={(e) => set({ statusId: e.target.value })}><option value="">Alle Status</option>{c?.statuses.map((x) => <option key={x.id} value={x.id}>{label(x)}</option>)}</Select></div>
+            <div className="w-36"><Select aria-label="Priorität" value={f.priorityId} onChange={(e) => set({ priorityId: e.target.value })}><option value="">Alle Prioritäten</option>{c?.priorities.map((x) => <option key={x.id} value={x.id}>{label(x)}</option>)}</Select></div>
+            <div className="w-36"><Select aria-label="Team" value={f.claimer} onChange={(e) => set({ claimer: e.target.value })}><option value="">Alle Teammitglieder</option><option value="me">Von mir übernommen</option></Select></div>
+            <div className="w-36"><Input aria-label="Ersteller" placeholder="Ersteller" value={f.creator} onChange={(e) => set({ creator: e.target.value })} /></div>
+            <div className="w-36"><Input aria-label="Von" type="date" value={f.from} onChange={(e) => set({ from: e.target.value })} /></div>
+            <div className="w-36"><Input aria-label="Bis" type="date" value={f.to} onChange={(e) => set({ to: e.target.value })} /></div>
+            {can('ticket.create') && <Button variant="secondary" onClick={() => setOpen(true)}>Ticket öffnen</Button>}
           </div>
         )}
       />
@@ -103,13 +103,13 @@ function OpenTicket({ onClose }: { onClose: () => void }) {
   const [v, setV] = useState({ categoryId: '', discordId: '', discordName: '' });
   const m = useMutation({ mutationFn: () => api<{ ticket: { id: string } }>('/support-tickets', { method: 'POST', body: { ...v, discordName: v.discordName || undefined } }), onSuccess: (r) => { onClose(); void nav(`/support-tickets/${r.ticket.id}`); } });
   return (
-    <Modal open title="Open a ticket for a member" onClose={onClose}>
+    <Modal open title="Ticket für ein Mitglied öffnen" onClose={onClose}>
       <div className="grid gap-3">
-        <Field label="Category">{(id) => <Select id={id} value={v.categoryId} onChange={(e) => setV({ ...v, categoryId: e.target.value })}><option value="">Choose …</option>{cfg.data?.categories.filter((c) => c.active).map((c) => <option key={c.id} value={c.id}>{label(c)}</option>)}</Select>}</Field>
-        <Field label="Member's Discord ID">{(id) => <Input id={id} inputMode="numeric" value={v.discordId} onChange={(e) => setV({ ...v, discordId: e.target.value.trim() })} placeholder="123456789012345678" />}</Field>
+        <Field label="Kategorie">{(id) => <Select id={id} value={v.categoryId} onChange={(e) => setV({ ...v, categoryId: e.target.value })}><option value="">Auswählen …</option>{cfg.data?.categories.filter((c) => c.active).map((c) => <option key={c.id} value={c.id}>{label(c)}</option>)}</Select>}</Field>
+        <Field label="Discord-ID des Mitglieds">{(id) => <Input id={id} inputMode="numeric" value={v.discordId} onChange={(e) => setV({ ...v, discordId: e.target.value.trim() })} placeholder="123456789012345678" />}</Field>
         <Field label="Name (optional)">{(id) => <Input id={id} value={v.discordName} maxLength={100} onChange={(e) => setV({ ...v, discordName: e.target.value })} />}</Field>
         {m.error && <p role="alert" className="text-sm text-danger">{errText(m.error)}</p>}
-        <div className="flex justify-end gap-2"><Button variant="secondary" onClick={onClose}>Cancel</Button><Button disabled={!v.categoryId || !v.discordId || m.isPending} onClick={() => m.mutate()}>Open ticket</Button></div>
+        <div className="flex justify-end gap-2"><Button variant="secondary" onClick={onClose}>Abbrechen</Button><Button disabled={!v.categoryId || !v.discordId || m.isPending} onClick={() => m.mutate()}>Ticket öffnen</Button></div>
       </div>
     </Modal>
   );
@@ -137,33 +137,33 @@ function Transcripts() {
       <DataTable<TranscriptRow>
         columns={[
           { key: 'ticketNumber', label: 'Ticket', render: (t) => <span className="font-mono">#{t.ticketNumber}</span> },
-          { key: 'categoryName', label: 'Category' }, { key: 'creatorName', label: 'Creator' }, { key: 'statusName', label: 'Status' },
-          { key: 'createdAt', label: 'Created', render: (t) => `${fmt(t.createdAt)}${t.createdByName ? ` · ${t.createdByName}` : ''}` },
-          { key: 'size', label: 'Size', render: (t) => `${Math.max(1, Math.round(t.sizeBytes / 1024))} KB` },
-          { key: 'actions', label: 'Actions', render: (t) => (
+          { key: 'categoryName', label: 'Kategorie' }, { key: 'creatorName', label: 'Ersteller' }, { key: 'statusName', label: 'Status' },
+          { key: 'createdAt', label: 'Erstellt', render: (t) => `${fmt(t.createdAt)}${t.createdByName ? ` · ${t.createdByName}` : ''}` },
+          { key: 'size', label: 'Größe', render: (t) => `${Math.max(1, Math.round(t.sizeBytes / 1024))} KB` },
+          { key: 'actions', label: 'Aktionen', render: (t) => (
             <span className="flex flex-wrap gap-1" onClick={(e) => e.stopPropagation()}>
-              <a className="rounded border border-line px-2 py-0.5 text-xs hover:bg-panel-2" href={href(t.id)} target="_blank" rel="noreferrer">Open</a>
-              <a className="rounded border border-line px-2 py-0.5 text-xs hover:bg-panel-2" href={href(t.id, true)}>Download</a>
-              {can('ticket.transcript_delete') && <Button size="sm" variant="ghost" onClick={() => setDel(t)}>Delete</Button>}
+              <a className="rounded border border-line px-2 py-0.5 text-xs hover:bg-panel-2" href={href(t.id)} target="_blank" rel="noreferrer">Öffnen</a>
+              <a className="rounded border border-line px-2 py-0.5 text-xs hover:bg-panel-2" href={href(t.id, true)}>Herunterladen</a>
+              {can('ticket.transcript_delete') && <Button size="sm" variant="ghost" onClick={() => setDel(t)}>Löschen</Button>}
             </span>
           ) },
         ]}
         rows={list.data?.items ?? []} total={list.data?.total ?? 0} page={page} pageSize={pageSize} onPage={setPage} onPageSize={(n) => { setPageSize(n); setPage(1); }}
         loading={list.isLoading} error={list.error} onRetry={() => void list.refetch()}
-        empty={{ text: 'No transcripts.', hint: 'Transcripts are created when a ticket is closed (if enabled for the category) or via the Transcript button.' }}
+        empty={{ text: 'Keine Transkripte.', hint: 'Transkripte entstehen beim Schließen eines Tickets (falls für die Kategorie aktiviert) oder über den Transkript-Button.' }}
         search={q} onSearch={(v) => { setQ(v); setPage(1); }}
         toolbar={(
           <div className="flex flex-wrap gap-2">
-            <div className="w-40"><Select aria-label="Category" value={f.categoryName} onChange={(e) => set({ categoryName: e.target.value })}><option value="">All categories</option>{cfg.data?.categories.map((c) => <option key={c.id} value={c.name}>{label(c)}</option>)}</Select></div>
-            <div className="w-36"><Select aria-label="Status" value={f.status} onChange={(e) => set({ status: e.target.value })}><option value="">All statuses</option>{cfg.data?.statuses.map((s) => <option key={s.id} value={s.name}>{label(s)}</option>)}</Select></div>
-            <div className="w-36"><Input aria-label="Creator" placeholder="Creator" value={f.creator} onChange={(e) => set({ creator: e.target.value })} /></div>
-            <div className="w-44"><Input aria-label="Staff Discord ID" placeholder="Staff Discord ID" inputMode="numeric" value={f.staff} onChange={(e) => set({ staff: e.target.value.trim() })} /></div>
-            <div className="w-36"><Input aria-label="From" type="date" value={f.from} onChange={(e) => set({ from: e.target.value })} /></div>
-            <div className="w-36"><Input aria-label="To" type="date" value={f.to} onChange={(e) => set({ to: e.target.value })} /></div>
+            <div className="w-40"><Select aria-label="Kategorie" value={f.categoryName} onChange={(e) => set({ categoryName: e.target.value })}><option value="">Alle Kategorien</option>{cfg.data?.categories.map((c) => <option key={c.id} value={c.name}>{label(c)}</option>)}</Select></div>
+            <div className="w-36"><Select aria-label="Status" value={f.status} onChange={(e) => set({ status: e.target.value })}><option value="">Alle Status</option>{cfg.data?.statuses.map((s) => <option key={s.id} value={s.name}>{label(s)}</option>)}</Select></div>
+            <div className="w-36"><Input aria-label="Ersteller" placeholder="Ersteller" value={f.creator} onChange={(e) => set({ creator: e.target.value })} /></div>
+            <div className="w-44"><Input aria-label="Discord-ID des Teammitglieds" placeholder="Discord-ID Teammitglied" inputMode="numeric" value={f.staff} onChange={(e) => set({ staff: e.target.value.trim() })} /></div>
+            <div className="w-36"><Input aria-label="Von" type="date" value={f.from} onChange={(e) => set({ from: e.target.value })} /></div>
+            <div className="w-36"><Input aria-label="Bis" type="date" value={f.to} onChange={(e) => set({ to: e.target.value })} /></div>
           </div>
         )}
       />
-      <ConfirmDialog open={!!del} danger title="Delete transcript?" message={`The transcript of ticket #${del?.ticketNumber ?? ''} is deleted permanently.`} confirmLabel="Delete" busy={remove.isPending} onConfirm={() => del && remove.mutate(del.id)} onClose={() => setDel(undefined)} />
+      <ConfirmDialog open={!!del} danger title="Transkript löschen?" message={`Das Transkript von Ticket #${del?.ticketNumber ?? ''} wird endgültig gelöscht.`} confirmLabel="Löschen" busy={remove.isPending} onConfirm={() => del && remove.mutate(del.id)} onClose={() => setDel(undefined)} />
     </>
   );
 }
@@ -173,12 +173,12 @@ const stars = (n: number | null) => (n === null ? '—' : `${'★'.repeat(Math.r
 function RatingCards({ s, names = {} }: { s: RatingSummary; names?: Record<string, string> }) {
   return (
     <div className="grid gap-3 md:grid-cols-3">
-      <Card title="Overall">
+      <Card title="Gesamt">
         <p className="text-2xl font-semibold">{stars(s.average)}</p>
-        <p className="text-sm text-muted">{s.count} ratings · {s.positive} positive (4–5★) · {s.negative} negative (1–2★)</p>
+        <p className="text-sm text-muted">{s.count} Bewertungen · {s.positive} positiv (4–5★) · {s.negative} negativ (1–2★)</p>
       </Card>
-      <Card title="Per staff member">{s.perStaff.length ? <ul className="grid gap-1 text-sm">{s.perStaff.slice(0, 10).map((x) => <li key={x.discordId} className="flex justify-between gap-2"><Who id={x.discordId} names={names} /><span>{stars(x.average)} ({x.count})</span></li>)}</ul> : <p className="text-sm text-muted">—</p>}</Card>
-      <Card title="Per category">{s.perCategory.length ? <ul className="grid gap-1 text-sm">{s.perCategory.map((x) => <li key={x.id} className="flex justify-between gap-2"><span>{x.name}</span><span>{stars(x.average)} ({x.count})</span></li>)}</ul> : <p className="text-sm text-muted">—</p>}</Card>
+      <Card title="Pro Teammitglied">{s.perStaff.length ? <ul className="grid gap-1 text-sm">{s.perStaff.slice(0, 10).map((x) => <li key={x.discordId} className="flex justify-between gap-2"><Who id={x.discordId} names={names} /><span>{stars(x.average)} ({x.count})</span></li>)}</ul> : <p className="text-sm text-muted">—</p>}</Card>
+      <Card title="Pro Kategorie">{s.perCategory.length ? <ul className="grid gap-1 text-sm">{s.perCategory.map((x) => <li key={x.id} className="flex justify-between gap-2"><span>{x.name}</span><span>{stars(x.average)} ({x.count})</span></li>)}</ul> : <p className="text-sm text-muted">—</p>}</Card>
     </div>
   );
 }
@@ -198,17 +198,17 @@ function Ratings() {
       <DataTable<RatingRow>
         columns={[
           { key: 'ticket', label: 'Ticket', render: (x) => (x.ticket ? <span className="font-mono">#{x.ticket.number}</span> : '—') },
-          { key: 'stars', label: 'Rating', render: (x) => <span aria-label={`${x.stars} stars`}>{'★'.repeat(x.stars)}{'☆'.repeat(5 - x.stars)}</span> },
-          { key: 'comment', label: 'Comment', render: (x) => x.comment ?? <span className="text-muted">—</span> },
-          { key: 'category', label: 'Category' }, { key: 'creator', label: 'Creator', render: (x) => x.ticket?.creatorName ?? '—' },
-          { key: 'createdAt', label: 'Date', render: (x) => fmt(x.createdAt) },
+          { key: 'stars', label: 'Bewertung', render: (x) => <span aria-label={`${x.stars} Sterne`}>{'★'.repeat(x.stars)}{'☆'.repeat(5 - x.stars)}</span> },
+          { key: 'comment', label: 'Kommentar', render: (x) => x.comment ?? <span className="text-muted">—</span> },
+          { key: 'category', label: 'Kategorie' }, { key: 'creator', label: 'Ersteller', render: (x) => x.ticket?.creatorName ?? '—' },
+          { key: 'createdAt', label: 'Datum', render: (x) => fmt(x.createdAt) },
         ]}
         rows={r.data?.items ?? []} total={r.data?.total ?? 0} page={page} pageSize={pageSize} onPage={setPage} onPageSize={(n) => { setPageSize(n); setPage(1); }} loading={r.isLoading} error={r.error} onRetry={() => void r.refetch()}
-        onRowClick={(x) => void nav(`/support-tickets/${x.ticketId}`)} empty={{ text: 'No ratings yet.' }}
+        onRowClick={(x) => void nav(`/support-tickets/${x.ticketId}`)} empty={{ text: 'Noch keine Bewertungen.' }}
         toolbar={(
           <div className="flex flex-wrap gap-2">
-            <div className="w-32"><Select aria-label="Stars" value={f.stars} onChange={(e) => { setF({ ...f, stars: e.target.value }); setPage(1); }}><option value="">All stars</option>{[5, 4, 3, 2, 1].map((n) => <option key={n} value={n}>{n} ★</option>)}</Select></div>
-            <div className="w-40"><Select aria-label="Category" value={f.categoryId} onChange={(e) => { setF({ ...f, categoryId: e.target.value }); setPage(1); }}><option value="">All categories</option>{cfg.data?.categories.map((c) => <option key={c.id} value={c.id}>{label(c)}</option>)}</Select></div>
+            <div className="w-32"><Select aria-label="Sterne" value={f.stars} onChange={(e) => { setF({ ...f, stars: e.target.value }); setPage(1); }}><option value="">Alle Sterne</option>{[5, 4, 3, 2, 1].map((n) => <option key={n} value={n}>{n} ★</option>)}</Select></div>
+            <div className="w-40"><Select aria-label="Kategorie" value={f.categoryId} onChange={(e) => { setF({ ...f, categoryId: e.target.value }); setPage(1); }}><option value="">Alle Kategorien</option>{cfg.data?.categories.map((c) => <option key={c.id} value={c.id}>{label(c)}</option>)}</Select></div>
           </div>
         )}
       />
@@ -221,21 +221,21 @@ function Statistics() {
   if (s.isLoading) return <SkeletonRows />;
   if (s.error) return <ErrorState error={s.error} onRetry={() => void s.refetch()} />;
   const d = s.data!;
-  if (!d.total) return <EmptyState text="No tickets yet." hint="Statistics appear once the first ticket was opened." />;
-  const kpi: [string, string | number][] = [['Total', d.total], ['Open', d.open], ['Closed', d.closed], ['Archived', d.archived], ['Today', d.today], ['This week', d.week], ['This month', d.month], ['Escalations', d.escalations], ['Ø first response', duration(d.avgFirstResponseMinutes)], ['Ø time to close', duration(d.avgCloseMinutes)]];
+  if (!d.total) return <EmptyState text="Noch keine Tickets." hint="Die Statistik erscheint, sobald das erste Ticket geöffnet wurde." />;
+  const kpi: [string, string | number][] = [['Gesamt', d.total], ['Offen', d.open], ['Geschlossen', d.closed], ['Archiviert', d.archived], ['Heute', d.today], ['Diese Woche', d.week], ['Dieser Monat', d.month], ['Eskalationen', d.escalations], ['Ø erste Antwort', duration(d.avgFirstResponseMinutes)], ['Ø bis zum Schließen', duration(d.avgCloseMinutes)]];
   const max = Math.max(1, ...d.perCategory.map((c) => c.total));
   return (
     <div className="grid gap-4">
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">{kpi.map(([k, v]) => <Card key={k}><p className="text-xs text-muted">{k}</p><p className="text-xl font-semibold">{v}</p></Card>)}</div>
       <div className="grid gap-4 md:grid-cols-2">
-        <Card title="Tickets per category">
+        <Card title="Tickets pro Kategorie">
           <ul className="grid gap-2 text-sm">{d.perCategory.map((c) => (
-            <li key={c.id}><div className="flex justify-between"><span>{c.name}</span><span>{c.total} <span className="text-muted">({c.open} open)</span></span></div>
+            <li key={c.id}><div className="flex justify-between"><span>{c.name}</span><span>{c.total} <span className="text-muted">({c.open} offen)</span></span></div>
               <div className="mt-1 h-2 rounded bg-panel-2"><div className="h-2 rounded bg-primary" style={{ width: `${(c.total / max) * 100}%` }} /></div></li>
           ))}</ul>
         </Card>
-        <Card title="Most active staff (claimed tickets)">
-          {d.perStaff.length ? <ul className="grid gap-1 text-sm">{d.perStaff.slice(0, 15).map((x) => <li key={x.discordId} className="flex justify-between gap-2"><Who id={x.discordId} names={d.names} /><span>{x.tickets} <Badge tone="success">{x.closed} closed</Badge></span></li>)}</ul> : <p className="text-sm text-muted">No claimed tickets yet.</p>}
+        <Card title="Aktivste Teammitglieder (übernommene Tickets)">
+          {d.perStaff.length ? <ul className="grid gap-1 text-sm">{d.perStaff.slice(0, 15).map((x) => <li key={x.discordId} className="flex justify-between gap-2"><Who id={x.discordId} names={d.names} /><span>{x.tickets} <Badge tone="success">{x.closed} geschlossen</Badge></span></li>)}</ul> : <p className="text-sm text-muted">Noch keine übernommenen Tickets.</p>}
         </Card>
       </div>
       <RatingCards s={d.ratings} names={d.names} />

@@ -13,11 +13,11 @@ export function Academy() {
   const q = useQuery({ queryKey: ['academy'], queryFn: () => api<Course[]>('/academy/courses') });
   return (
     <>
-      <PageHeader title="Academy" actions={can('academy.manage') && <Button onClick={() => setCreating(true)}>New course</Button>} />
-      {q.isLoading ? <SkeletonRows /> : q.error ? <ErrorState error={q.error} onRetry={() => void q.refetch()} /> : !q.data?.length ? <EmptyState text="No courses yet." /> : (
-        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">{q.data.map((c) => <Card key={c.id} title={c.title}><p className="text-sm text-muted">{c.description ?? 'No description.'}</p><p className="mt-2 text-xs">Pass score {c.passScore} · {c._count.enrollments} enrolled</p></Card>)}</div>
+      <PageHeader title="Akademie" actions={can('academy.manage') && <Button onClick={() => setCreating(true)}>Neuer Kurs</Button>} />
+      {q.isLoading ? <SkeletonRows /> : q.error ? <ErrorState error={q.error} onRetry={() => void q.refetch()} /> : !q.data?.length ? <EmptyState text="Noch keine Kurse." /> : (
+        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">{q.data.map((c) => <Card key={c.id} title={c.title}><p className="text-sm text-muted">{c.description ?? 'Keine Beschreibung.'}</p><p className="mt-2 text-xs">Bestehensgrenze {c.passScore} · {c._count.enrollments} eingeschrieben</p></Card>)}</div>
       )}
-      <FormModal open={creating} onClose={() => setCreating(false)} title="New course" endpoint="/academy/courses" invalidate={[['academy']]} fields={[{ name: 'title', label: 'Title', required: true, min: 3 }, { name: 'description', label: 'Description', type: 'textarea' }, { name: 'passScore', label: 'Pass score (1-100)', type: 'number' }]} />
+      <FormModal open={creating} onClose={() => setCreating(false)} title="Neuer Kurs" endpoint="/academy/courses" invalidate={[['academy']]} fields={[{ name: 'title', label: 'Titel', required: true, min: 3 }, { name: 'description', label: 'Beschreibung', type: 'textarea' }, { name: 'passScore', label: 'Bestehensgrenze (1-100)', type: 'number' }]} />
     </>
   );
 }
