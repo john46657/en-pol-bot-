@@ -60,7 +60,7 @@ export class LeaveService {
     const active = r.status === 'APPROVED' && r.startsAt.getTime() <= now && r.endsAt.getTime() > now;
     return {
       id: r.id, number: r.number, userId: r.userId, name: r.user.displayName, discordId: r.discordId,
-      startsAt: r.startsAt, endsAt: r.endsAt, reason: r.reason, status: r.status, active, guildId: r.guildId,
+      startsAt: r.startsAt, endsAt: r.endsAt, reason: r.reason, type: r.type, comment: r.comment, status: r.status, active, guildId: r.guildId,
       decidedAt: r.decidedAt, decisionReason: r.decisionReason, decidedByName: r.decidedByName ?? null, endedAt: r.endedAt, createdAt: r.createdAt,
       days: Math.max(1, Math.round((r.endsAt.getTime() - r.startsAt.getTime()) / DAY)),
     };
@@ -92,7 +92,7 @@ export class LeaveService {
     await this.discord.enqueue('duty', 'member.roles', { discordId, add, remove, reason }, { always: true });
   }
 
-  async request(actor: Actor, d: { startsAt: Date; endsAt: Date; reason: string; guildId?: string }) {
+  async request(actor: Actor, d: { startsAt: Date; endsAt: Date; reason: string; guildId?: string; type?: string; comment?: string }) {
     const cfg = await this.config();
     if (!cfg.enabled) throw new AppError('CONFLICT', 'Abmeldungen sind gerade deaktiviert.');
     const now = Date.now();
@@ -103,7 +103,7 @@ export class LeaveService {
     const overlap = await this.prisma.leaveRequest.findFirst({ where: { userId: actor.userId!, status: { in: ['PENDING', 'APPROVED'] }, startsAt: { lt: d.endsAt }, endsAt: { gt: d.startsAt } } });
     if (overlap) throw new AppError('CONFLICT', `Für diesen Zeitraum gibt es schon eine Abmeldung (${overlap.number}).`, { existingId: overlap.id });
     const r = await this.prisma.$transaction(async (tx) => {
-      const row = await tx.leaveRequest.create({ data: { number: makeNumber('LOA'), userId: actor.userId!, startsAt: d.startsAt, endsAt: d.endsAt, reason: d.reason, guildId: d.guildId ?? null }, include });
+      const row = await tx.leaveRequest.create({ data: { number: makeNumber('LOA'), userId: actor.userId!, startsAt: d.startsAt, endsAt: d.endsAt, reason: d.reason, guildId: d.guildId ?? null, type: d.type ?? null, comment: d.comment || null }, include });
       await this.audit.record(actor, { action: 'leave.request', module: 'leave', entityType: 'LeaveRequest', entityId: row.id, after: { startsAt: row.startsAt, endsAt: row.endsAt } }, tx);
       return row;
     }).then((x) => this.one(x));

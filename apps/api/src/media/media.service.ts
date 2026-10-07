@@ -22,8 +22,8 @@ const SIGNATURES: Record<string, (b: Buffer) => boolean> = {
 };
 const EXT: Record<string, string> = { 'image/png': 'png', 'image/jpeg': 'jpg', 'image/gif': 'gif', 'image/webp': 'webp', 'application/pdf': 'pdf', 'text/plain': 'txt' };
 /** Welche Permission zum Anhängen/Ansehen an einem Entitätstyp nötig ist. */
-const WRITE: Record<string, string> = { WelcomeBanner: 'settings.manage', CadMap: 'cad.manage_map', Evidence: 'evidence.create', Report: 'reports.create', Complaint: 'complaints.create', Incident: 'incidents.edit', Person: 'persons.edit', Investigation: 'investigations.edit', Vehicle: 'vehicles.edit' };
-const READ: Record<string, string> = { WelcomeBanner: 'settings.view', CadMap: 'cad.view', Evidence: 'evidence.view', Report: 'reports.view', Complaint: 'complaints.view', Incident: 'incidents.view', Person: 'persons.view', Investigation: 'investigations.view', Vehicle: 'vehicles.view' };
+const WRITE: Record<string, string> = { WelcomeBanner: 'settings.manage', EmbedAsset: 'settings.manage', HrAttachment: 'personnel.view', CadMap: 'cad.manage_map', Evidence: 'evidence.create', Report: 'reports.create', Complaint: 'complaints.create', Incident: 'incidents.edit', Person: 'persons.edit', Investigation: 'investigations.edit', Vehicle: 'vehicles.edit' };
+const READ: Record<string, string> = { WelcomeBanner: 'settings.view', EmbedAsset: 'settings.view', HrAttachment: 'personnel.view', CadMap: 'cad.view', Evidence: 'evidence.view', Report: 'reports.view', Complaint: 'complaints.view', Incident: 'incidents.view', Person: 'persons.view', Investigation: 'investigations.view', Vehicle: 'vehicles.view' };
 
 @Injectable()
 export class MediaService {
@@ -35,7 +35,7 @@ export class MediaService {
     if (!need) throw new AppError('VALIDATION_FAILED', 'Dateien können hier nicht angehängt werden.');
     await this.perms.assert(actor.userId!, need);
     if (file.size > maxBytes || file.buffer.length > maxBytes) throw new AppError('VALIDATION_FAILED', `Die Datei ist zu groß (max. ${Math.round(maxBytes / 1048576)} MB).`);
-    if (link.linkedType === 'WelcomeBanner' && (!file.mimetype.startsWith('image/') || file.size > BANNER_BYTES)) throw new AppError('VALIDATION_FAILED', 'Als Banner gehen nur Bilder (PNG, JPG, GIF, WebP) bis 8 MB.');
+    if ((link.linkedType === 'WelcomeBanner' || link.linkedType === 'EmbedAsset') && (!file.mimetype.startsWith('image/') || file.size > BANNER_BYTES)) throw new AppError('VALIDATION_FAILED', 'Als Banner gehen nur Bilder (PNG, JPG, GIF, WebP) bis 8 MB.');
     const check = SIGNATURES[file.mimetype];
     if (!check || !check(file.buffer)) throw new AppError('VALIDATION_FAILED', 'Dieser Dateityp ist nicht erlaubt oder der Inhalt passt nicht zum Dateityp.');
     const hash = createHash('sha256').update(file.buffer).digest('hex');
@@ -63,9 +63,12 @@ export class MediaService {
   }
 
   /** Für den Bot (ohne Benutzer): nur als Willkommens-Banner hochgeladene Bilder. */
-  async welcomeBanner(id: string) {
+  welcomeBanner(id: string) { return this.botImage(id, ['WelcomeBanner'], 'banner', false); }
+  /** Für den Bot: im Embed-Baukasten hochgeladene Bilder (Banner, Thumbnail, Icons). */
+  embedAsset(id: string) { return this.botImage(id, ['EmbedAsset', 'WelcomeBanner'], 'bild'); }
+  private async botImage(id: string, types: string[], base: string, unique = true) {
     const m = await this.prisma.media.findUnique({ where: { id } });
-    if (!m || m.linkedType !== 'WelcomeBanner') throw new AppError('NOT_FOUND', 'Banner nicht gefunden.');
-    return { mime: m.mime, name: `banner.${EXT[m.mime] ?? 'png'}`, data: await readFile(path.join(this.dir, m.storageKey)) };
+    if (!m || !m.linkedType || !types.includes(m.linkedType) || !m.mime.startsWith('image/')) throw new AppError('NOT_FOUND', 'Bild nicht gefunden.');
+    return { mime: m.mime, name: `${base}${unique ? `-${m.id.slice(0, 8)}` : ''}.${EXT[m.mime] ?? 'png'}`, data: await readFile(path.join(this.dir, m.storageKey)) };
   }
 }

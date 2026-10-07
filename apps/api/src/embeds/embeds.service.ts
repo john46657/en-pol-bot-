@@ -10,6 +10,9 @@ import { AppError } from '../common/errors';
 const KEY = 'embeds.messages';
 const sf = z.string().regex(/^\d{15,25}$/, 'Discord-ID (15–25 Ziffern)');
 const https = z.union([z.string().trim().max(500).regex(/^https:\/\/\S+$/, 'Bild-URL muss mit https:// beginnen'), z.literal('')]).default('');
+/** Bild: https-URL oder hochgeladene Datei (`media:<id>`, der Bot hängt sie an). */
+export const imageRef = z.union([z.string().trim().max(500).regex(/^(https:\/\/\S+|media:[0-9a-f-]{36})$/, 'Bild: https://-Link oder hochgeladene Datei'), z.literal('')]).default('');
+const emoji = z.string().trim().min(1).max(64).regex(/^(<a?:\w{2,32}:\d{15,25}>|[^\s<>]{1,16})$/, 'Reaktion: ein Emoji');
 /** Ein Embed wie bei Sapphire: Titel, Text, Abschnitte (Feld-Name + Text), Farbe, Bilder, Fußzeile. */
 export const embedSchema = z.object({
   id: z.string().uuid(),
@@ -22,14 +25,24 @@ export const embedSchema = z.object({
   description: z.string().max(4096).default(''),
   color: z.string().regex(/^#[0-9a-fA-F]{6}$/).default('#8b5cf6'),
   author: z.string().max(256).default(''),
-  thumbnail: https, image: https,
+  authorIcon: imageRef,
+  thumbnail: imageRef, image: imageRef,
+  /** weitere große Bilder (Discord zeigt bis zu 4 als Galerie, wenn ein Titel-Link gesetzt ist) */
+  images: z.array(imageRef.pipe(z.string().min(1))).max(3).default([]),
   footer: z.string().max(2048).default(''),
+  footerIcon: imageRef,
   timestamp: z.boolean().default(true),
+  /** eigener Zeitpunkt (ISO); leer = Zeitpunkt des Sendens */
+  timestampAt: z.string().datetime({ offset: true }).nullable().default(null),
+  /** Reaktionen, die der Bot unter die Nachricht setzt (z. B. ✅ ❌ ⏳) */
+  reactions: z.array(emoji).max(20).default([]),
+  /** Rollen-Erwähnungen im Text oben wirklich pingen */
+  pingRoles: z.boolean().default(true),
   fields: z.array(z.object({ name: z.string().trim().min(1, 'Jeder Abschnitt braucht eine Überschrift.').max(256), value: z.string().trim().min(1, 'Jeder Abschnitt braucht Text.').max(1024), inline: z.boolean().default(false) })).max(25).default([]),
   /** Wo der Bot die Nachricht zuletzt gepostet hat (zum Aktualisieren). */
   posted: z.object({ channelId: sf, messageId: sf, at: z.string() }).nullable().default(null),
 }).superRefine((e, ctx) => {
-  if (!e.title && !e.description && !e.fields.length && !e.image) ctx.addIssue({ code: 'custom', path: ['description'], message: 'Das Embed braucht mindestens Titel, Text, einen Abschnitt oder ein Bild.' });
+  if (!e.title && !e.description && !e.fields.length && !e.image && !e.images.length) ctx.addIssue({ code: 'custom', path: ['description'], message: 'Das Embed braucht mindestens Titel, Text, einen Abschnitt oder ein Bild.' });
   const total = e.title.length + e.description.length + e.author.length + e.footer.length + e.fields.reduce((n, f) => n + f.name.length + f.value.length, 0);
   if (total > 6000) ctx.addIssue({ code: 'custom', path: ['description'], message: `Discord erlaubt höchstens 6000 Zeichen je Embed (gerade ${total}).` });
 });
@@ -77,14 +90,20 @@ export class EmbedsService {
   }
 
   message(e: EmbedDoc): MessageSpec {
+    const color = parseInt(e.color.slice(1), 16);
+    // Mehrere Bilder: mit Titel-Link als Galerie (gleiche URL), sonst als einzelne Bild-Embeds darunter
+    const extra = e.images.map((image) => ({ color, image, ...(e.url ? { url: e.url } : {}) }));
+    const roles = e.pingRoles ? [...new Set([...e.content.matchAll(/<@&(\d{15,25})>/g)].map((m) => m[1]!))] : [];
     return {
       ...(e.content ? { content: e.content } : {}),
+      ...(roles.length ? { mentionRoles: roles } : {}),
       embeds: [{
         ...(e.title ? { title: e.title } : {}), ...(e.url ? { url: e.url } : {}), ...(e.description ? { description: e.description } : {}),
-        color: parseInt(e.color.slice(1), 16), ...(e.author ? { author: e.author } : {}), ...(e.thumbnail ? { thumbnail: e.thumbnail } : {}), ...(e.image ? { image: e.image } : {}),
-        ...(e.footer ? { footer: e.footer } : {}), ...(e.timestamp ? { timestamp: new Date().toISOString() } : {}),
+        color, ...(e.author ? { author: e.author } : {}), ...(e.author && e.authorIcon ? { authorIcon: e.authorIcon } : {}), ...(e.thumbnail ? { thumbnail: e.thumbnail } : {}), ...(e.image ? { image: e.image } : {}),
+        ...(e.footer ? { footer: e.footer } : {}), ...(e.footer && e.footerIcon ? { footerIcon: e.footerIcon } : {}), ...(e.timestamp ? { timestamp: e.timestampAt ?? new Date().toISOString() } : {}),
         ...(e.fields.length ? { fields: e.fields.map((f) => ({ name: f.name, value: f.value, inline: f.inline })) } : {}),
-      }],
+      }, ...extra],
+      ...(e.reactions.length ? { reactions: e.reactions } : {}),
     };
   }
 

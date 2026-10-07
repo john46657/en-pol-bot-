@@ -55,6 +55,8 @@ export declare class LeaveService {
         endsAt: Date;
         reason: string;
         guildId?: string;
+        type?: string;
+        comment?: string;
     }): Promise<{
         id: string;
         number: string;
@@ -64,6 +66,8 @@ export declare class LeaveService {
         startsAt: Date;
         endsAt: Date;
         reason: string;
+        type: string | null;
+        comment: string | null;
         status: string;
         active: boolean;
         guildId: string | null;
@@ -88,6 +92,8 @@ export declare class LeaveService {
             startsAt: Date;
             endsAt: Date;
             reason: string;
+            type: string | null;
+            comment: string | null;
             status: string;
             active: boolean;
             guildId: string | null;
@@ -109,6 +115,8 @@ export declare class LeaveService {
         startsAt: Date;
         endsAt: Date;
         reason: string;
+        type: string | null;
+        comment: string | null;
         status: string;
         active: boolean;
         guildId: string | null;
@@ -129,6 +137,8 @@ export declare class LeaveService {
         startsAt: Date;
         endsAt: Date;
         reason: string;
+        type: string | null;
+        comment: string | null;
         status: string;
         active: boolean;
         guildId: string | null;

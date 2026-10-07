@@ -1,5 +1,6 @@
 import { EmbedsService, type EmbedDoc } from './embeds.service';
 import type { Actor } from '../audit/audit.service';
+import { MediaService } from '../media/media.service';
 /** Administration → Embeds. */
 export declare class EmbedsController {
     private readonly s;
@@ -9,21 +10,27 @@ export declare class EmbedsController {
         name: string;
         guildId: string | null;
         color: string;
-        description: string;
         channelId: string | null;
+        description: string;
         url: string;
         title: string;
         image: string;
-        content: string;
-        footer: string;
-        author: string;
         posted: {
             at: string;
             channelId: string;
             messageId: string;
         } | null;
+        content: string;
+        footer: string;
+        author: string;
+        reactions: string[];
+        authorIcon: string;
         thumbnail: string;
+        images: string[];
+        footerIcon: string;
         timestamp: boolean;
+        timestampAt: string | null;
+        pingRoles: boolean;
         fields: {
             name: string;
             value: string;
@@ -35,21 +42,27 @@ export declare class EmbedsController {
         name: string;
         guildId: string | null;
         color: string;
-        description: string;
         channelId: string | null;
+        description: string;
         url: string;
         title: string;
         image: string;
-        content: string;
-        footer: string;
-        author: string;
         posted: {
             at: string;
             channelId: string;
             messageId: string;
         } | null;
+        content: string;
+        footer: string;
+        author: string;
+        reactions: string[];
+        authorIcon: string;
         thumbnail: string;
+        images: string[];
+        footerIcon: string;
         timestamp: boolean;
+        timestampAt: string | null;
+        pingRoles: boolean;
         fields: {
             name: string;
             value: string;
@@ -61,21 +74,27 @@ export declare class EmbedsController {
         name: string;
         guildId: string | null;
         color: string;
-        description: string;
         channelId: string | null;
+        description: string;
         url: string;
         title: string;
         image: string;
-        content: string;
-        footer: string;
-        author: string;
         posted: {
             at: string;
             channelId: string;
             messageId: string;
         } | null;
+        content: string;
+        footer: string;
+        author: string;
+        reactions: string[];
+        authorIcon: string;
         thumbnail: string;
+        images: string[];
+        footerIcon: string;
         timestamp: boolean;
+        timestampAt: string | null;
+        pingRoles: boolean;
         fields: {
             name: string;
             value: string;
@@ -92,7 +111,14 @@ export declare class EmbedsController {
 }
 export declare class BotEmbedsController {
     private readonly s;
-    constructor(s: EmbedsService);
+    private readonly media;
+    constructor(s: EmbedsService, media: MediaService);
+    /** Hochgeladenes Bild (`media:<id>`) für Nachrichten des Bots – nur Embed-Bilder und Banner. */
+    asset(id: string): Promise<{
+        mime: string;
+        name: string;
+        data: string;
+    }>;
     posted(id: string, b: {
         channelId: string;
         messageId: string;

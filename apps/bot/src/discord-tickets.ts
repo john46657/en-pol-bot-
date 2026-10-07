@@ -8,7 +8,7 @@ import type { Api } from './api';
 const STYLE = { primary: ButtonStyle.Primary, secondary: ButtonStyle.Secondary, success: ButtonStyle.Success, danger: ButtonStyle.Danger } as const;
 const VIEW = [PermissionFlagsBits.ViewChannel, PermissionFlagsBits.ReadMessageHistory];
 const TALK = [PermissionFlagsBits.SendMessages, PermissionFlagsBits.AttachFiles, PermissionFlagsBits.EmbedLinks];
-const https = (u?: string | null) => (u && /^https:\/\//.test(u) ? u : undefined);
+const https = (u?: string | null) => (u && /^(https:\/\/|attachment:\/\/)/.test(u) ? u : undefined);
 
 /** `stamp`: ohne eigenen Zeitstempel Datum/Uhrzeit des Sendens unten anzeigen (nicht beim Embed-Baukasten – dort entscheidet der Schalter). */
 export function embedOf(e: EmbedSpec, stamp = true) {
@@ -23,7 +23,7 @@ export function embedOf(e: EmbedSpec, stamp = true) {
   if (e.fields?.length) b.addFields(e.fields.slice(0, 25).map((f) => ({ name: f.name.slice(0, 256) || '​', value: f.value.slice(0, 1024) || '​', inline: f.inline ?? false })));
   if (e.timestamp) b.setTimestamp(new Date(e.timestamp));
   else if (stamp) b.setTimestamp(new Date());
-  if (!e.title && !e.description && !e.fields?.length) b.setDescription('​');
+  if (!e.title && !e.description && !e.fields?.length && !https(e.image)) b.setDescription('​');
   return b;
 }
 

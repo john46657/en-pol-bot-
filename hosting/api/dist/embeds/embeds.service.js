@@ -9,7 +9,7 @@ var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.EmbedsService = exports.embedSchema = void 0;
+exports.EmbedsService = exports.embedSchema = exports.imageRef = void 0;
 const common_1 = require("@nestjs/common");
 const node_crypto_1 = require("node:crypto");
 const zod_1 = require("zod");
@@ -19,6 +19,9 @@ const errors_1 = require("../common/errors");
 const KEY = 'embeds.messages';
 const sf = zod_1.z.string().regex(/^\d{15,25}$/, 'Discord-ID (15–25 Ziffern)');
 const https = zod_1.z.union([zod_1.z.string().trim().max(500).regex(/^https:\/\/\S+$/, 'Bild-URL muss mit https:// beginnen'), zod_1.z.literal('')]).default('');
+/** Bild: https-URL oder hochgeladene Datei (`media:<id>`, der Bot hängt sie an). */
+exports.imageRef = zod_1.z.union([zod_1.z.string().trim().max(500).regex(/^(https:\/\/\S+|media:[0-9a-f-]{36})$/, 'Bild: https://-Link oder hochgeladene Datei'), zod_1.z.literal('')]).default('');
+const emoji = zod_1.z.string().trim().min(1).max(64).regex(/^(<a?:\w{2,32}:\d{15,25}>|[^\s<>]{1,16})$/, 'Reaktion: ein Emoji');
 /** Ein Embed wie bei Sapphire: Titel, Text, Abschnitte (Feld-Name + Text), Farbe, Bilder, Fußzeile. */
 exports.embedSchema = zod_1.z.object({
     id: zod_1.z.string().uuid(),
@@ -31,14 +34,24 @@ exports.embedSchema = zod_1.z.object({
     description: zod_1.z.string().max(4096).default(''),
     color: zod_1.z.string().regex(/^#[0-9a-fA-F]{6}$/).default('#8b5cf6'),
     author: zod_1.z.string().max(256).default(''),
-    thumbnail: https, image: https,
+    authorIcon: exports.imageRef,
+    thumbnail: exports.imageRef, image: exports.imageRef,
+    /** weitere große Bilder (Discord zeigt bis zu 4 als Galerie, wenn ein Titel-Link gesetzt ist) */
+    images: zod_1.z.array(exports.imageRef.pipe(zod_1.z.string().min(1))).max(3).default([]),
     footer: zod_1.z.string().max(2048).default(''),
+    footerIcon: exports.imageRef,
     timestamp: zod_1.z.boolean().default(true),
+    /** eigener Zeitpunkt (ISO); leer = Zeitpunkt des Sendens */
+    timestampAt: zod_1.z.string().datetime({ offset: true }).nullable().default(null),
+    /** Reaktionen, die der Bot unter die Nachricht setzt (z. B. ✅ ❌ ⏳) */
+    reactions: zod_1.z.array(emoji).max(20).default([]),
+    /** Rollen-Erwähnungen im Text oben wirklich pingen */
+    pingRoles: zod_1.z.boolean().default(true),
     fields: zod_1.z.array(zod_1.z.object({ name: zod_1.z.string().trim().min(1, 'Jeder Abschnitt braucht eine Überschrift.').max(256), value: zod_1.z.string().trim().min(1, 'Jeder Abschnitt braucht Text.').max(1024), inline: zod_1.z.boolean().default(false) })).max(25).default([]),
     /** Wo der Bot die Nachricht zuletzt gepostet hat (zum Aktualisieren). */
     posted: zod_1.z.object({ channelId: sf, messageId: sf, at: zod_1.z.string() }).nullable().default(null),
 }).superRefine((e, ctx) => {
-    if (!e.title && !e.description && !e.fields.length && !e.image)
+    if (!e.title && !e.description && !e.fields.length && !e.image && !e.images.length)
         ctx.addIssue({ code: 'custom', path: ['description'], message: 'Das Embed braucht mindestens Titel, Text, einen Abschnitt oder ein Bild.' });
     const total = e.title.length + e.description.length + e.author.length + e.footer.length + e.fields.reduce((n, f) => n + f.name.length + f.value.length, 0);
     if (total > 6000)
@@ -89,14 +102,20 @@ let EmbedsService = class EmbedsService {
         });
     }
     message(e) {
+        const color = parseInt(e.color.slice(1), 16);
+        // Mehrere Bilder: mit Titel-Link als Galerie (gleiche URL), sonst als einzelne Bild-Embeds darunter
+        const extra = e.images.map((image) => ({ color, image, ...(e.url ? { url: e.url } : {}) }));
+        const roles = e.pingRoles ? [...new Set([...e.content.matchAll(/<@&(\d{15,25})>/g)].map((m) => m[1]))] : [];
         return {
             ...(e.content ? { content: e.content } : {}),
+            ...(roles.length ? { mentionRoles: roles } : {}),
             embeds: [{
                     ...(e.title ? { title: e.title } : {}), ...(e.url ? { url: e.url } : {}), ...(e.description ? { description: e.description } : {}),
-                    color: parseInt(e.color.slice(1), 16), ...(e.author ? { author: e.author } : {}), ...(e.thumbnail ? { thumbnail: e.thumbnail } : {}), ...(e.image ? { image: e.image } : {}),
-                    ...(e.footer ? { footer: e.footer } : {}), ...(e.timestamp ? { timestamp: new Date().toISOString() } : {}),
+                    color, ...(e.author ? { author: e.author } : {}), ...(e.author && e.authorIcon ? { authorIcon: e.authorIcon } : {}), ...(e.thumbnail ? { thumbnail: e.thumbnail } : {}), ...(e.image ? { image: e.image } : {}),
+                    ...(e.footer ? { footer: e.footer } : {}), ...(e.footer && e.footerIcon ? { footerIcon: e.footerIcon } : {}), ...(e.timestamp ? { timestamp: e.timestampAt ?? new Date().toISOString() } : {}),
                     ...(e.fields.length ? { fields: e.fields.map((f) => ({ name: f.name, value: f.value, inline: f.inline })) } : {}),
-                }],
+                }, ...extra],
+            ...(e.reactions.length ? { reactions: e.reactions } : {}),
         };
     }
     /**

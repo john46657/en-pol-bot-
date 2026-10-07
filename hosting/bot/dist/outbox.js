@@ -45,7 +45,7 @@ async function pollOnce(api, send, log = console.log, dm, grantRole, syncRoles, 
             }
             continue;
         }
-        if (item.type === 'application.ticket' || item.type === 'embed.post' || item.type === 'message.decided' || item.type === 'voice.effects' || item.type.startsWith('verify.') || item.type === 'duty.reminder') {
+        if (item.type === 'application.ticket' || item.type === 'embed.post' || item.type === 'message.post' || item.type.startsWith('bot.') || item.type === 'message.decided' || item.type === 'voice.effects' || item.type.startsWith('verify.') || item.type === 'duty.reminder') {
             try {
                 if (!onTask || !(await onTask(item.type, item.payload)))
                     throw new Error('tasks not supported');

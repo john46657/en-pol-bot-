@@ -9,13 +9,15 @@ var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.RadioCodesService = exports.DEFAULT_RADIO_CODES = void 0;
+exports.RadioCodesService = exports.DEFAULT_RADIO_CODES = exports.DEFAULT_RADIO_DISCORD = void 0;
 const common_1 = require("@nestjs/common");
 const client_1 = require("@prisma/client");
 const prisma_service_1 = require("../prisma/prisma.service");
 const audit_service_1 = require("../audit/audit.service");
 const errors_1 = require("../common/errors");
 const guild_context_1 = require("../common/guild-context");
+const discord_service_1 = require("../discord/discord.service");
+exports.DEFAULT_RADIO_DISCORD = { channelId: null, title: '📡 Funk-Codes', description: '', color: '#3b82f6', groupByCategory: true, showDescription: false, autoUpdate: true };
 /** Gängige Funkcodes als Startpunkt („Standard-Codes einfügen“) – alles änderbar. */
 exports.DEFAULT_RADIO_CODES = [
     { code: '10-1', meaning: 'Schlechter Empfang', category: 'Funk' }, { code: '10-2', meaning: 'Guter Empfang', category: 'Funk' },
@@ -34,9 +36,77 @@ exports.DEFAULT_RADIO_CODES = [
 let RadioCodesService = class RadioCodesService {
     prisma;
     audit;
-    constructor(prisma, audit) {
+    discord;
+    constructor(prisma, audit, discord) {
         this.prisma = prisma;
         this.audit = audit;
+        this.discord = discord;
+    }
+    cfgKey(g = (0, guild_context_1.currentGuild)()) { return `radio.discord${g ? `@${g}` : ''}`; }
+    stateKey(g = (0, guild_context_1.currentGuild)()) { return `radio-${g ?? 'all'}`; }
+    async discordConfig() {
+        const v = (await this.prisma.systemSetting.findUnique({ where: { key: this.cfgKey() } }))?.value;
+        return { ...exports.DEFAULT_RADIO_DISCORD, ...(v ?? {}), posted: await this.discord.posted(this.stateKey()) };
+    }
+    async saveDiscordConfig(actor, c) {
+        const key = this.cfgKey();
+        await this.prisma.systemSetting.upsert({ where: { key }, create: { key, value: c }, update: { value: c } });
+        await this.audit.record(actor, { action: 'radiocode.discord.config', module: 'radio', entityType: 'SystemSetting', entityId: key, after: c });
+        return this.discordConfig();
+    }
+    /** Discord-Nachricht: je Kategorie ein Abschnitt (Discord: max. 25 Abschnitte à 1024 Zeichen, 6000 je Embed → bei Bedarf mehrere Embeds). */
+    message(codes, c) {
+        const color = parseInt(c.color.slice(1), 16);
+        const line = (r) => `\`${r.code}\` – ${r.meaning}${c.showDescription && r.description ? `\n> ${r.description}` : ''}`;
+        const groups = new Map();
+        for (const r of codes) {
+            const k = c.groupByCategory ? r.category || 'Allgemein' : 'Codes';
+            groups.set(k, [...(groups.get(k) ?? []), line(r)]);
+        }
+        const fields = [];
+        for (const [name, lines] of groups) {
+            let chunk = '';
+            for (const l of lines) {
+                if ((chunk + '\n' + l).length > 1024) {
+                    fields.push({ name: fields.at(-1)?.name.startsWith(name) ? `${name} (Forts.)` : name, value: chunk });
+                    chunk = '';
+                }
+                chunk = chunk ? `${chunk}\n${l}` : l.slice(0, 1024);
+            }
+            if (chunk)
+                fields.push({ name: fields.at(-1)?.name.startsWith(name) ? `${name} (Forts.)` : name, value: chunk });
+        }
+        const embeds = [];
+        let cur = { title: c.title || undefined, description: c.description || (codes.length ? undefined : 'Noch keine Funk-Codes.'), color, fields: [] };
+        let size = (c.title + c.description).length;
+        for (const f of fields) {
+            if (cur.fields.length >= 25 || size + f.name.length + f.value.length > 5800) {
+                embeds.push(cur);
+                cur = { color, fields: [] };
+                size = 0;
+            }
+            cur.fields.push(f);
+            size += f.name.length + f.value.length;
+        }
+        embeds.push(cur);
+        embeds.at(-1).timestamp = new Date().toISOString();
+        embeds.at(-1).footer = 'Zuletzt aktualisiert';
+        return { embeds: embeds.slice(0, 10) };
+    }
+    async sendToDiscord(actor, mode) {
+        const c = await this.discordConfig();
+        if (!c.channelId)
+            throw new errors_1.AppError('VALIDATION_FAILED', 'Wähle zuerst einen Kanal.');
+        await this.discord.postMessage(this.stateKey(), c.channelId, this.message(await this.list(), c), { forceNew: mode === 'new' });
+        if (actor)
+            await this.audit.record(actor, { action: 'radiocode.discord.send', module: 'radio', after: { channelId: c.channelId, mode } });
+        return { queued: true };
+    }
+    /** Nach Änderungen: schon gepostete Liste automatisch nachziehen (falls eingestellt). */
+    async autoUpdate() {
+        const c = await this.discordConfig().catch(() => null);
+        if (c?.autoUpdate && c.channelId && c.posted?.channelId === c.channelId)
+            await this.sendToDiscord(null, 'update').catch(() => undefined);
     }
     async list(q, guildId = (0, guild_context_1.currentGuild)()) {
         const t = q?.trim();
@@ -71,6 +141,7 @@ let RadioCodesService = class RadioCodesService {
         const position = ((await this.prisma.radioCode.aggregate({ where: { guildId }, _max: { position: true } }))._max.position ?? 0) + 1;
         const r = await this.prisma.radioCode.create({ data: { code: d.code, meaning: d.meaning, category: d.category ?? null, description: d.description ?? null, guildId, position } }).catch((e) => this.uniq(e));
         await this.audit.record(actor, { action: 'radiocode.create', module: 'radio', entityType: 'RadioCode', entityId: r.id, after: r });
+        void this.autoUpdate();
         return r;
     }
     async update(actor, id, d) {
@@ -80,18 +151,21 @@ let RadioCodesService = class RadioCodesService {
             await this.assertFree(before.guildId, data.code, id);
         const r = await this.prisma.radioCode.update({ where: { id }, data }).catch((e) => this.uniq(e));
         await this.audit.record(actor, { action: 'radiocode.update', module: 'radio', entityType: 'RadioCode', entityId: id, before, after: r });
+        void this.autoUpdate();
         return r;
     }
     async remove(actor, id) {
         const before = await this.load(id);
         await this.prisma.radioCode.delete({ where: { id } });
         await this.audit.record(actor, { action: 'radiocode.delete', module: 'radio', entityType: 'RadioCode', entityId: id, before });
+        void this.autoUpdate();
     }
     async reorder(actor, ids) {
         for (const id of ids)
             await this.load(id);
         await this.prisma.$transaction(ids.map((id, i) => this.prisma.radioCode.update({ where: { id }, data: { position: i + 1 } })));
         await this.audit.record(actor, { action: 'radiocode.reorder', module: 'radio', after: { count: ids.length } });
+        void this.autoUpdate();
         return this.list();
     }
     /** Standard-Codes für den gewählten Server (bzw. alle Server) einfügen – vorhandene Codes bleiben unverändert. */
@@ -103,12 +177,13 @@ let RadioCodesService = class RadioCodesService {
         if (add.length)
             await this.prisma.radioCode.createMany({ data: add.map((c, i) => ({ ...c, guildId, position: base + i })) });
         await this.audit.record(actor, { action: 'radiocode.defaults', module: 'radio', after: { added: add.length, guildId } });
+        void this.autoUpdate();
         return { added: add.length };
     }
 };
 exports.RadioCodesService = RadioCodesService;
 exports.RadioCodesService = RadioCodesService = __decorate([
     (0, common_1.Injectable)(),
-    __metadata("design:paramtypes", [prisma_service_1.PrismaService, audit_service_1.AuditService])
+    __metadata("design:paramtypes", [prisma_service_1.PrismaService, audit_service_1.AuditService, discord_service_1.DiscordService])
 ], RadioCodesService);
 //# sourceMappingURL=radio-codes.service.js.map

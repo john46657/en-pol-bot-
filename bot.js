@@ -26,9 +26,9 @@ var __export = (target, all) => {
 };
 var __copyProps = (to, from, except, desc) => {
   if (from && typeof from === "object" || typeof from === "function") {
-    for (let key of __getOwnPropNames(from))
-      if (!__hasOwnProp.call(to, key) && key !== except)
-        __defProp(to, key, { get: () => from[key], enumerable: !(desc = __getOwnPropDesc(from, key)) || desc.enumerable });
+    for (let key3 of __getOwnPropNames(from))
+      if (!__hasOwnProp.call(to, key3) && key3 !== except)
+        __defProp(to, key3, { get: () => from[key3], enumerable: !(desc = __getOwnPropDesc(from, key3)) || desc.enumerable });
   }
   return to;
 };
@@ -57,9 +57,9 @@ var require_dist = __commonJS({
     };
     var __copyProps2 = (to, from, except, desc) => {
       if (from && typeof from === "object" || typeof from === "function") {
-        for (let key of __getOwnPropNames2(from))
-          if (!__hasOwnProp2.call(to, key) && key !== except)
-            __defProp2(to, key, { get: () => from[key], enumerable: !(desc = __getOwnPropDesc2(from, key)) || desc.enumerable });
+        for (let key3 of __getOwnPropNames2(from))
+          if (!__hasOwnProp2.call(to, key3) && key3 !== except)
+            __defProp2(to, key3, { get: () => from[key3], enumerable: !(desc = __getOwnPropDesc2(from, key3)) || desc.enumerable });
       }
       return to;
     };
@@ -228,15 +228,15 @@ function __rest(s, e) {
     }
   return t;
 }
-function __decorate(decorators, target, key, desc) {
-  var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
-  if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
-  else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
-  return c > 3 && r && Object.defineProperty(target, key, r), r;
+function __decorate(decorators, target, key3, desc) {
+  var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key3) : desc, d;
+  if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key3, desc);
+  else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key3, r) : d(target, key3)) || r;
+  return c > 3 && r && Object.defineProperty(target, key3, r), r;
 }
 function __param(paramIndex, decorator) {
-  return function(target, key) {
-    decorator(target, key, paramIndex);
+  return function(target, key3) {
+    decorator(target, key3, paramIndex);
   };
 }
 function __esDecorate(ctor, descriptorIn, decorators, contextIn, initializers, extraInitializers) {
@@ -244,7 +244,7 @@ function __esDecorate(ctor, descriptorIn, decorators, contextIn, initializers, e
     if (f2 !== void 0 && typeof f2 !== "function") throw new TypeError("Function expected");
     return f2;
   }
-  var kind2 = contextIn.kind, key = kind2 === "getter" ? "get" : kind2 === "setter" ? "set" : "value";
+  var kind2 = contextIn.kind, key3 = kind2 === "getter" ? "get" : kind2 === "setter" ? "set" : "value";
   var target = !descriptorIn && ctor ? contextIn["static"] ? ctor : ctor.prototype : null;
   var descriptor = descriptorIn || (target ? Object.getOwnPropertyDescriptor(target, contextIn.name) : {});
   var _, done = false;
@@ -256,7 +256,7 @@ function __esDecorate(ctor, descriptorIn, decorators, contextIn, initializers, e
       if (done) throw new TypeError("Cannot add initializers after decoration has completed");
       extraInitializers.push(accept(f2 || null));
     };
-    var result = (0, decorators[i])(kind2 === "accessor" ? { get: descriptor.get, set: descriptor.set } : descriptor[key], context);
+    var result = (0, decorators[i])(kind2 === "accessor" ? { get: descriptor.get, set: descriptor.set } : descriptor[key3], context);
     if (kind2 === "accessor") {
       if (result === void 0) continue;
       if (result === null || typeof result !== "object") throw new TypeError("Object expected");
@@ -265,7 +265,7 @@ function __esDecorate(ctor, descriptorIn, decorators, contextIn, initializers, e
       if (_ = accept(result.init)) initializers.unshift(_);
     } else if (_ = accept(result)) {
       if (kind2 === "field") initializers.unshift(_);
-      else descriptor[key] = _;
+      else descriptor[key3] = _;
     }
   }
   if (target) Object.defineProperty(target, contextIn.name, descriptor);
@@ -1230,9 +1230,9 @@ var require_constants = __commonJS({
       "X-XSS-Protection"
     ];
     for (let i = 0; i < wellknownHeaderNames.length; ++i) {
-      const key = wellknownHeaderNames[i];
-      const lowerCasedKey = key.toLowerCase();
-      headerNameLowerCasedRecord[key] = headerNameLowerCasedRecord[lowerCasedKey] = lowerCasedKey;
+      const key3 = wellknownHeaderNames[i];
+      const lowerCasedKey = key3.toLowerCase();
+      headerNameLowerCasedRecord[key3] = headerNameLowerCasedRecord[lowerCasedKey] = lowerCasedKey;
     }
     Object.setPrototypeOf(headerNameLowerCasedRecord, null);
     module2.exports = {
@@ -1266,16 +1266,16 @@ var require_tree = __commonJS({
        * @param {any} value
        * @param {number} index
        */
-      constructor(key, value, index) {
-        if (index === void 0 || index >= key.length) {
+      constructor(key3, value, index) {
+        if (index === void 0 || index >= key3.length) {
           throw new TypeError("Unreachable");
         }
-        const code = this.code = key.charCodeAt(index);
+        const code = this.code = key3.charCodeAt(index);
         if (code > 127) {
           throw new TypeError("key must be ascii string");
         }
-        if (key.length !== ++index) {
-          this.middle = new _TstNode(key, value, index);
+        if (key3.length !== ++index) {
+          this.middle = new _TstNode(key3, value, index);
         } else {
           this.value = value;
         }
@@ -1284,15 +1284,15 @@ var require_tree = __commonJS({
        * @param {string} key
        * @param {any} value
        */
-      add(key, value) {
-        const length = key.length;
+      add(key3, value) {
+        const length = key3.length;
         if (length === 0) {
           throw new TypeError("Unreachable");
         }
         let index = 0;
         let node = this;
         while (true) {
-          const code = key.charCodeAt(index);
+          const code = key3.charCodeAt(index);
           if (code > 127) {
             throw new TypeError("key must be ascii string");
           }
@@ -1303,20 +1303,20 @@ var require_tree = __commonJS({
             } else if (node.middle !== null) {
               node = node.middle;
             } else {
-              node.middle = new _TstNode(key, value, index);
+              node.middle = new _TstNode(key3, value, index);
               break;
             }
           } else if (node.code < code) {
             if (node.left !== null) {
               node = node.left;
             } else {
-              node.left = new _TstNode(key, value, index);
+              node.left = new _TstNode(key3, value, index);
               break;
             }
           } else if (node.right !== null) {
             node = node.right;
           } else {
-            node.right = new _TstNode(key, value, index);
+            node.right = new _TstNode(key3, value, index);
             break;
           }
         }
@@ -1325,12 +1325,12 @@ var require_tree = __commonJS({
        * @param {Uint8Array} key
        * @return {TstNode | null}
        */
-      search(key) {
-        const keylength = key.length;
+      search(key3) {
+        const keylength = key3.length;
         let index = 0;
         let node = this;
         while (node !== null && index < keylength) {
-          let code = key[index];
+          let code = key3[index];
           if (code <= 90 && code >= 65) {
             code |= 32;
           }
@@ -1355,25 +1355,25 @@ var require_tree = __commonJS({
        * @param {string} key
        * @param {any} value
        * */
-      insert(key, value) {
+      insert(key3, value) {
         if (this.node === null) {
-          this.node = new TstNode(key, value, 0);
+          this.node = new TstNode(key3, value, 0);
         } else {
-          this.node.add(key, value);
+          this.node.add(key3, value);
         }
       }
       /**
        * @param {Uint8Array} key
        * @return {any}
        */
-      lookup(key) {
-        return this.node?.search(key)?.value ?? null;
+      lookup(key3) {
+        return this.node?.search(key3)?.value ?? null;
       }
     };
     var tree = new TernarySearchTree();
     for (let i = 0; i < wellknownHeaderNames.length; ++i) {
-      const key = headerNameLowerCasedRecord[wellknownHeaderNames[i]];
-      tree.insert(key, key);
+      const key3 = headerNameLowerCasedRecord[wellknownHeaderNames[i]];
+      tree.insert(key3, key3);
     }
     module2.exports = {
       TernarySearchTree,
@@ -1597,20 +1597,20 @@ var require_util = __commonJS({
     function parseHeaders(headers, obj) {
       if (obj === void 0) obj = {};
       for (let i = 0; i < headers.length; i += 2) {
-        const key = headerNameToString(headers[i]);
-        let val = obj[key];
+        const key3 = headerNameToString(headers[i]);
+        let val = obj[key3];
         if (val) {
           if (typeof val === "string") {
             val = [val];
-            obj[key] = val;
+            obj[key3] = val;
           }
           val.push(headers[i + 1].toString("utf8"));
         } else {
           const headersValue = headers[i + 1];
           if (typeof headersValue === "string") {
-            obj[key] = headersValue;
+            obj[key3] = headersValue;
           } else {
-            obj[key] = Array.isArray(headersValue) ? headersValue.map((x) => x.toString("utf8")) : headersValue.toString("utf8");
+            obj[key3] = Array.isArray(headersValue) ? headersValue.map((x) => x.toString("utf8")) : headersValue.toString("utf8");
           }
         }
       }
@@ -1624,21 +1624,21 @@ var require_util = __commonJS({
       const ret = new Array(len);
       let hasContentLength = false;
       let contentDispositionIdx = -1;
-      let key;
+      let key3;
       let val;
       let kLen = 0;
       for (let n = 0; n < headers.length; n += 2) {
-        key = headers[n];
+        key3 = headers[n];
         val = headers[n + 1];
-        typeof key !== "string" && (key = key.toString());
+        typeof key3 !== "string" && (key3 = key3.toString());
         typeof val !== "string" && (val = val.toString("utf8"));
-        kLen = key.length;
-        if (kLen === 14 && key[7] === "-" && (key === "content-length" || key.toLowerCase() === "content-length")) {
+        kLen = key3.length;
+        if (kLen === 14 && key3[7] === "-" && (key3 === "content-length" || key3.toLowerCase() === "content-length")) {
           hasContentLength = true;
-        } else if (kLen === 19 && key[7] === "-" && (key === "content-disposition" || key.toLowerCase() === "content-disposition")) {
+        } else if (kLen === 19 && key3[7] === "-" && (key3 === "content-disposition" || key3.toLowerCase() === "content-disposition")) {
           contentDispositionIdx = n + 1;
         }
-        ret[n] = key;
+        ret[n] = key3;
         ret[n + 1] = val;
       }
       if (hasContentLength && contentDispositionIdx !== -1) {
@@ -2379,20 +2379,20 @@ var require_request = __commonJS({
           this.endHandler = null;
         }
       }
-      addHeader(key, value) {
-        processHeader(this, key, value);
+      addHeader(key3, value) {
+        processHeader(this, key3, value);
         return this;
       }
     };
-    function processHeader(request, key, val) {
+    function processHeader(request, key3, val) {
       if (val && (typeof val === "object" && !Array.isArray(val))) {
-        throw new InvalidArgumentError(`invalid ${key} header`);
+        throw new InvalidArgumentError(`invalid ${key3} header`);
       } else if (val === void 0) {
         return;
       }
-      let headerName = headerNameLowerCasedRecord[key];
+      let headerName = headerNameLowerCasedRecord[key3];
       if (headerName === void 0) {
-        headerName = key.toLowerCase();
+        headerName = key3.toLowerCase();
         if (headerNameLowerCasedRecord[headerName] === void 0 && !isValidHTTPToken(headerName)) {
           throw new InvalidArgumentError("invalid header key");
         }
@@ -2402,17 +2402,17 @@ var require_request = __commonJS({
         for (let i = 0; i < val.length; i++) {
           if (typeof val[i] === "string") {
             if (!isValidHeaderValue(val[i])) {
-              throw new InvalidArgumentError(`invalid ${key} header`);
+              throw new InvalidArgumentError(`invalid ${key3} header`);
             }
             arr.push(val[i]);
           } else if (val[i] === null) {
             arr.push("");
           } else if (typeof val[i] === "object") {
-            throw new InvalidArgumentError(`invalid ${key} header`);
+            throw new InvalidArgumentError(`invalid ${key3} header`);
           } else {
             const str3 = `${val[i]}`;
             if (!isValidHeaderValue(str3)) {
-              throw new InvalidArgumentError(`invalid ${key} header`);
+              throw new InvalidArgumentError(`invalid ${key3} header`);
             }
             arr.push(str3);
           }
@@ -2420,14 +2420,14 @@ var require_request = __commonJS({
         val = arr;
       } else if (typeof val === "string") {
         if (!isValidHeaderValue(val)) {
-          throw new InvalidArgumentError(`invalid ${key} header`);
+          throw new InvalidArgumentError(`invalid ${key3} header`);
         }
       } else if (val === null) {
         val = "";
       } else {
         val = `${val}`;
         if (!isValidHeaderValue(val)) {
-          throw new InvalidArgumentError(`invalid ${key} header`);
+          throw new InvalidArgumentError(`invalid ${key3} header`);
         }
       }
       if (headerName === "host") {
@@ -2448,7 +2448,7 @@ var require_request = __commonJS({
         }
       } else if (request.contentType === null && headerName === "content-type") {
         request.contentType = val;
-        request.headers.push(key, val);
+        request.headers.push(key3, val);
       } else if (headerName === "transfer-encoding" || headerName === "keep-alive" || headerName === "upgrade") {
         throw new InvalidArgumentError(`invalid ${headerName} header`);
       } else if (headerName === "connection") {
@@ -2462,7 +2462,7 @@ var require_request = __commonJS({
       } else if (headerName === "expect") {
         throw new NotSupportedError("expect header not supported");
       } else {
-        request.headers.push(key, val);
+        request.headers.push(key3, val);
       }
     }
     module2.exports = Request;
@@ -2942,13 +2942,13 @@ var require_connect = __commonJS({
         constructor(maxCachedSessions) {
           this._maxCachedSessions = maxCachedSessions;
           this._sessionCache = /* @__PURE__ */ new Map();
-          this._sessionRegistry = new global.FinalizationRegistry((key) => {
+          this._sessionRegistry = new global.FinalizationRegistry((key3) => {
             if (this._sessionCache.size < this._maxCachedSessions) {
               return;
             }
-            const ref = this._sessionCache.get(key);
+            const ref = this._sessionCache.get(key3);
             if (ref !== void 0 && ref.deref() === void 0) {
-              this._sessionCache.delete(key);
+              this._sessionCache.delete(key3);
             }
           });
         }
@@ -3112,10 +3112,10 @@ var require_utils = __commonJS({
     exports2.enumToMap = void 0;
     function enumToMap(obj) {
       const res = {};
-      Object.keys(obj).forEach((key) => {
-        const value = obj[key];
+      Object.keys(obj).forEach((key3) => {
+        const value = obj[key3];
         if (typeof value === "number") {
-          res[key] = value;
+          res[key3] = value;
         }
       });
       return res;
@@ -3292,9 +3292,9 @@ var require_constants2 = __commonJS({
     ];
     exports2.METHOD_MAP = utils_1.enumToMap(METHODS);
     exports2.H_METHOD_MAP = {};
-    Object.keys(exports2.METHOD_MAP).forEach((key) => {
-      if (/^H/.test(key)) {
-        exports2.H_METHOD_MAP[key] = exports2.METHOD_MAP[key];
+    Object.keys(exports2.METHOD_MAP).forEach((key3) => {
+      if (/^H/.test(key3)) {
+        exports2.H_METHOD_MAP[key3] = exports2.METHOD_MAP[key3];
       }
     });
     var FINISH;
@@ -4265,19 +4265,19 @@ var require_webidl = __commonJS({
         const result = {};
         if (!types.isProxy(O)) {
           const keys2 = [...Object.getOwnPropertyNames(O), ...Object.getOwnPropertySymbols(O)];
-          for (const key of keys2) {
-            const typedKey = keyConverter(key, prefix, argument);
-            const typedValue = valueConverter(O[key], prefix, argument);
+          for (const key3 of keys2) {
+            const typedKey = keyConverter(key3, prefix, argument);
+            const typedValue = valueConverter(O[key3], prefix, argument);
             result[typedKey] = typedValue;
           }
           return result;
         }
         const keys = Reflect.ownKeys(O);
-        for (const key of keys) {
-          const desc = Reflect.getOwnPropertyDescriptor(O, key);
+        for (const key3 of keys) {
+          const desc = Reflect.getOwnPropertyDescriptor(O, key3);
           if (desc?.enumerable) {
-            const typedKey = keyConverter(key, prefix, argument);
-            const typedValue = valueConverter(O[key], prefix, argument);
+            const typedKey = keyConverter(key3, prefix, argument);
+            const typedValue = valueConverter(O[key3], prefix, argument);
             result[typedKey] = typedValue;
           }
         }
@@ -4308,29 +4308,29 @@ var require_webidl = __commonJS({
           });
         }
         for (const options2 of converters) {
-          const { key, defaultValue, required, converter } = options2;
+          const { key: key3, defaultValue, required, converter } = options2;
           if (required === true) {
-            if (!Object.hasOwn(dictionary, key)) {
+            if (!Object.hasOwn(dictionary, key3)) {
               throw webidl.errors.exception({
                 header: prefix,
-                message: `Missing required key "${key}".`
+                message: `Missing required key "${key3}".`
               });
             }
           }
-          let value = dictionary[key];
+          let value = dictionary[key3];
           const hasDefault = Object.hasOwn(options2, "defaultValue");
           if (hasDefault && value !== null) {
             value ??= defaultValue();
           }
           if (required || hasDefault || value !== void 0) {
-            value = converter(value, prefix, `${argument}.${key}`);
+            value = converter(value, prefix, `${argument}.${key3}`);
             if (options2.allowedValues && !options2.allowedValues.includes(value)) {
               throw webidl.errors.exception({
                 header: prefix,
                 message: `${value} is not an accepted type. Expected one of ${options2.allowedValues.join(", ")}.`
               });
             }
-            dict[key] = value;
+            dict[key3] = value;
           }
         }
         return dict;
@@ -4945,18 +4945,18 @@ var require_util2 = __commonJS({
               done: true
             };
           }
-          const { [keyIndex]: key, [valueIndex]: value } = values[index];
+          const { [keyIndex]: key3, [valueIndex]: value } = values[index];
           this.#index = index + 1;
           let result;
           switch (this.#kind) {
             case "key":
-              result = key;
+              result = key3;
               break;
             case "value":
               result = value;
               break;
             case "key+value":
-              result = [key, value];
+              result = [key3, value];
               break;
           }
           return {
@@ -5022,8 +5022,8 @@ var require_util2 = __commonJS({
                 `Failed to execute 'forEach' on '${name}': parameter 1 is not of type 'Function'.`
               );
             }
-            for (const { 0: key, 1: value } of makeIterator(this, "key+value")) {
-              callbackfn.call(thisArg, value, key, this);
+            for (const { 0: key3, 1: value } of makeIterator(this, "key+value")) {
+              callbackfn.call(thisArg, value, key3, this);
             }
           }
         }
@@ -5596,7 +5596,7 @@ var require_formdata_parser = __commonJS({
     var File = globalThis.File ?? NodeFile;
     var formDataNameBuffer = Buffer.from('form-data; name="');
     var filenameBuffer = Buffer.from("; filename");
-    var dd = Buffer.from("--");
+    var dd2 = Buffer.from("--");
     var ddcrlf = Buffer.from("--\r\n");
     function isAsciiString(chars) {
       for (let i = 0; i < chars.length; ++i) {
@@ -5644,7 +5644,7 @@ var require_formdata_parser = __commonJS({
         } else {
           return "failure";
         }
-        if (position.position === input.length - 2 && bufferStartsWith(input, dd, position) || position.position === input.length - 4 && bufferStartsWith(input, ddcrlf, position)) {
+        if (position.position === input.length - 2 && bufferStartsWith(input, dd2, position) || position.position === input.length - 4 && bufferStartsWith(input, ddcrlf, position)) {
           return entryList;
         }
         if (input[position.position] !== 13 || input[position.position + 1] !== 10) {
@@ -6466,15 +6466,15 @@ var require_client_h1 = __commonJS({
         } else {
           this.headers[len - 1] = Buffer.concat([this.headers[len - 1], buf]);
         }
-        const key = this.headers[len - 2];
-        if (key.length === 10) {
-          const headerName = util2.bufferToLowerCasedHeaderName(key);
+        const key3 = this.headers[len - 2];
+        if (key3.length === 10) {
+          const headerName = util2.bufferToLowerCasedHeaderName(key3);
           if (headerName === "keep-alive") {
             this.keepAlive += buf.toString();
           } else if (headerName === "connection") {
             this.connection += buf.toString();
           }
-        } else if (key.length === 14 && util2.bufferToLowerCasedHeaderName(key) === "content-length") {
+        } else if (key3.length === 14 && util2.bufferToLowerCasedHeaderName(key3) === "content-length") {
           this.contentLength += buf.toString();
         }
         this.trackHeader(buf.length);
@@ -6973,15 +6973,15 @@ upgrade: ${upgrade}\r
       }
       if (Array.isArray(headers)) {
         for (let n = 0; n < headers.length; n += 2) {
-          const key = headers[n + 0];
+          const key3 = headers[n + 0];
           const val = headers[n + 1];
           if (Array.isArray(val)) {
             for (let i = 0; i < val.length; i++) {
-              header += `${key}: ${val[i]}\r
+              header += `${key3}: ${val[i]}\r
 `;
             }
           } else {
-            header += `${key}: ${val}\r
+            header += `${key3}: ${val}\r
 `;
           }
         }
@@ -7448,8 +7448,8 @@ var require_client_h2 = __commonJS({
       this[kSocket][kError] = err;
       this[kClient][kOnError](err);
     }
-    function onHttp2FrameError(type, code, id) {
-      if (id === 0) {
+    function onHttp2FrameError(type, code, id2) {
+      if (id2 === 0) {
         const err = new InformationalError(`HTTP/2: "frameError" received - type ${type}, code ${code}`);
         this[kSocket][kError] = err;
         this[kClient][kOnError](err);
@@ -7493,18 +7493,18 @@ var require_client_h2 = __commonJS({
       }
       const headers = {};
       for (let n = 0; n < reqHeaders.length; n += 2) {
-        const key = reqHeaders[n + 0];
+        const key3 = reqHeaders[n + 0];
         const val = reqHeaders[n + 1];
         if (Array.isArray(val)) {
           for (let i = 0; i < val.length; i++) {
-            if (headers[key]) {
-              headers[key] += `,${val[i]}`;
+            if (headers[key3]) {
+              headers[key3] += `,${val[i]}`;
             } else {
-              headers[key] = val[i];
+              headers[key3] = val[i];
             }
           }
         } else {
-          headers[key] = val;
+          headers[key3] = val;
         }
       }
       let stream;
@@ -7999,9 +7999,9 @@ var require_redirect_handler = __commonJS({
           }
         }
       } else if (headers && typeof headers === "object") {
-        for (const key of Object.keys(headers)) {
-          if (!shouldRemoveHeader(key, removeContent, unknownOrigin)) {
-            ret.push(key, headers[key]);
+        for (const key3 of Object.keys(headers)) {
+          if (!shouldRemoveHeader(key3, removeContent, unknownOrigin)) {
+            ret.push(key3, headers[key3]);
           }
         }
       } else {
@@ -9078,16 +9078,16 @@ var require_agent = __commonJS({
         return ret;
       }
       [kDispatch](opts, handler) {
-        let key;
+        let key3;
         if (opts.origin && (typeof opts.origin === "string" || opts.origin instanceof URL)) {
-          key = String(opts.origin);
+          key3 = String(opts.origin);
         } else {
           throw new InvalidArgumentError("opts.origin must be a non-empty string or URL.");
         }
-        let dispatcher = this[kClients].get(key);
+        let dispatcher = this[kClients].get(key3);
         if (!dispatcher) {
           dispatcher = this[kFactory](opts.origin, this[kOptions]).on("drain", this[kOnDrain]).on("connect", this[kOnConnect]).on("disconnect", this[kOnDisconnect]).on("connectionError", this[kOnConnectionError]);
-          this[kClients].set(key, dispatcher);
+          this[kClients].set(key3, dispatcher);
         }
         return dispatcher.dispatch(opts, handler);
       }
@@ -9326,7 +9326,7 @@ var require_proxy_agent = __commonJS({
       return headers;
     }
     function throwIfProxyAuthIsSent(headers) {
-      const existProxyAuth = headers && Object.keys(headers).find((key) => key.toLowerCase() === "proxy-authorization");
+      const existProxyAuth = headers && Object.keys(headers).find((key3) => key3.toLowerCase() === "proxy-authorization");
       if (existProxyAuth) {
         throw new InvalidArgumentError("Proxy-Authorization should be sent in ProxyAgent constructor");
       }
@@ -11104,18 +11104,18 @@ var require_mock_utils = __commonJS({
         })
       );
     }
-    function getHeaderByName(headers, key) {
+    function getHeaderByName(headers, key3) {
       if (Array.isArray(headers)) {
         for (let i = 0; i < headers.length; i += 2) {
-          if (headers[i].toLocaleLowerCase() === key.toLocaleLowerCase()) {
+          if (headers[i].toLocaleLowerCase() === key3.toLocaleLowerCase()) {
             return headers[i + 1];
           }
         }
         return void 0;
       } else if (typeof headers.get === "function") {
-        return headers.get(key);
+        return headers.get(key3);
       } else {
-        return lowerCaseEntries(headers)[key.toLocaleLowerCase()];
+        return lowerCaseEntries(headers)[key3.toLocaleLowerCase()];
       }
     }
     function buildHeadersFromArray(headers) {
@@ -11179,41 +11179,41 @@ var require_mock_utils = __commonJS({
         return data.toString();
       }
     }
-    function getMockDispatch(mockDispatches, key) {
-      const basePath = key.query ? buildURL(key.path, key.query) : key.path;
+    function getMockDispatch(mockDispatches, key3) {
+      const basePath = key3.query ? buildURL(key3.path, key3.query) : key3.path;
       const resolvedPath = typeof basePath === "string" ? safeUrl(basePath) : basePath;
       let matchedMockDispatches = mockDispatches.filter(({ consumed }) => !consumed).filter(({ path: path2 }) => matchValue(safeUrl(path2), resolvedPath));
       if (matchedMockDispatches.length === 0) {
         throw new MockNotMatchedError(`Mock dispatch not matched for path '${resolvedPath}'`);
       }
-      matchedMockDispatches = matchedMockDispatches.filter(({ method }) => matchValue(method, key.method));
+      matchedMockDispatches = matchedMockDispatches.filter(({ method }) => matchValue(method, key3.method));
       if (matchedMockDispatches.length === 0) {
-        throw new MockNotMatchedError(`Mock dispatch not matched for method '${key.method}' on path '${resolvedPath}'`);
+        throw new MockNotMatchedError(`Mock dispatch not matched for method '${key3.method}' on path '${resolvedPath}'`);
       }
-      matchedMockDispatches = matchedMockDispatches.filter(({ body }) => typeof body !== "undefined" ? matchValue(body, key.body) : true);
+      matchedMockDispatches = matchedMockDispatches.filter(({ body }) => typeof body !== "undefined" ? matchValue(body, key3.body) : true);
       if (matchedMockDispatches.length === 0) {
-        throw new MockNotMatchedError(`Mock dispatch not matched for body '${key.body}' on path '${resolvedPath}'`);
+        throw new MockNotMatchedError(`Mock dispatch not matched for body '${key3.body}' on path '${resolvedPath}'`);
       }
-      matchedMockDispatches = matchedMockDispatches.filter((mockDispatch2) => matchHeaders(mockDispatch2, key.headers));
+      matchedMockDispatches = matchedMockDispatches.filter((mockDispatch2) => matchHeaders(mockDispatch2, key3.headers));
       if (matchedMockDispatches.length === 0) {
-        const headers = typeof key.headers === "object" ? JSON.stringify(key.headers) : key.headers;
+        const headers = typeof key3.headers === "object" ? JSON.stringify(key3.headers) : key3.headers;
         throw new MockNotMatchedError(`Mock dispatch not matched for headers '${headers}' on path '${resolvedPath}'`);
       }
       return matchedMockDispatches[0];
     }
-    function addMockDispatch(mockDispatches, key, data) {
+    function addMockDispatch(mockDispatches, key3, data) {
       const baseData = { timesInvoked: 0, times: 1, persist: false, consumed: false };
       const replyData = typeof data === "function" ? { callback: data } : { ...data };
-      const newMockDispatch = { ...baseData, ...key, pending: true, data: { error: null, ...replyData } };
+      const newMockDispatch = { ...baseData, ...key3, pending: true, data: { error: null, ...replyData } };
       mockDispatches.push(newMockDispatch);
       return newMockDispatch;
     }
-    function deleteMockDispatch(mockDispatches, key) {
+    function deleteMockDispatch(mockDispatches, key3) {
       const index = mockDispatches.findIndex((dispatch) => {
         if (!dispatch.consumed) {
           return false;
         }
-        return matchKey(dispatch, key);
+        return matchKey(dispatch, key3);
       });
       if (index !== -1) {
         mockDispatches.splice(index, 1);
@@ -11233,9 +11233,9 @@ var require_mock_utils = __commonJS({
       const keys = Object.keys(data);
       const result = [];
       for (let i = 0; i < keys.length; ++i) {
-        const key = keys[i];
-        const value = data[key];
-        const name = Buffer.from(`${key}`);
+        const key3 = keys[i];
+        const value = data[key3];
+        const name = Buffer.from(`${key3}`);
         if (Array.isArray(value)) {
           for (let j = 0; j < value.length; ++j) {
             result.push(name, Buffer.from(`${value[j]}`));
@@ -11257,8 +11257,8 @@ var require_mock_utils = __commonJS({
       return Buffer.concat(buffers).toString("utf8");
     }
     function mockDispatch(opts, handler) {
-      const key = buildKey(opts);
-      const mockDispatch2 = getMockDispatch(this[kDispatches], key);
+      const key3 = buildKey(opts);
+      const mockDispatch2 = getMockDispatch(this[kDispatches], key3);
       mockDispatch2.timesInvoked++;
       if (mockDispatch2.data.callback) {
         mockDispatch2.data = { ...mockDispatch2.data, ...mockDispatch2.data.callback(opts) };
@@ -11268,7 +11268,7 @@ var require_mock_utils = __commonJS({
       mockDispatch2.consumed = !persist && timesInvoked >= times;
       mockDispatch2.pending = timesInvoked < times;
       if (error !== null) {
-        deleteMockDispatch(this[kDispatches], key);
+        deleteMockDispatch(this[kDispatches], key3);
         handler.onError(error);
         return true;
       }
@@ -11293,7 +11293,7 @@ var require_mock_utils = __commonJS({
         handler.onHeaders?.(statusCode, responseHeaders, resume, getStatusText(statusCode));
         handler.onData?.(Buffer.from(responseData));
         handler.onComplete?.(responseTrailers);
-        deleteMockDispatch(mockDispatches, key);
+        deleteMockDispatch(mockDispatches, key3);
       }
       function resume() {
       }
@@ -13200,16 +13200,16 @@ var require_dispatcher_weakref = __commonJS({
       constructor(finalizer) {
         this.finalizer = finalizer;
       }
-      register(dispatcher, key) {
+      register(dispatcher, key3) {
         if (dispatcher.on) {
           dispatcher.on("disconnect", () => {
             if (dispatcher[kConnected] === 0 && dispatcher[kSize] === 0) {
-              this.finalizer(key);
+              this.finalizer(key3);
             }
           });
         }
       }
-      unregister(key) {
+      unregister(key3) {
       }
     };
     module2.exports = function() {
@@ -16696,8 +16696,8 @@ var require_util6 = __commonJS({
         if (!part.includes("=")) {
           throw new Error("Invalid unparsed");
         }
-        const [key, ...value] = part.split("=");
-        const trimmedKey = key.trim();
+        const [key3, ...value] = part.split("=");
+        const trimmedKey = key3.trim();
         const joinedValue = value.join("=");
         validateCookieName(trimmedKey);
         validateCookieValue(joinedValue);
@@ -18232,9 +18232,9 @@ var require_sender = __commonJS({
       constructor(socket) {
         this.#socket = socket;
       }
-      add(item, cb, hint) {
-        if (hint !== sendHints.blob) {
-          const frame = createFrame(item, hint);
+      add(item, cb, hint2) {
+        if (hint2 !== sendHints.blob) {
+          const frame = createFrame(item, hint2);
           if (!this.#running) {
             this.#socket.write(frame, cb);
           } else {
@@ -18250,7 +18250,7 @@ var require_sender = __commonJS({
         const node = {
           promise: item.arrayBuffer().then((ab) => {
             node.promise = null;
-            node.frame = createFrame(ab, hint);
+            node.frame = createFrame(ab, hint2);
           }),
           callback: cb,
           frame: null
@@ -18274,11 +18274,11 @@ var require_sender = __commonJS({
         this.#running = false;
       }
     };
-    function createFrame(data, hint) {
-      return new WebsocketFrameSend(toBuffer(data, hint)).createFrame(hint === sendHints.string ? opcodes.TEXT : opcodes.BINARY);
+    function createFrame(data, hint2) {
+      return new WebsocketFrameSend(toBuffer(data, hint2)).createFrame(hint2 === sendHints.string ? opcodes.TEXT : opcodes.BINARY);
     }
-    function toBuffer(data, hint) {
-      switch (hint) {
+    function toBuffer(data, hint2) {
+      switch (hint2) {
         case sendHints.string:
           return Buffer.from(data);
         case sendHints.arrayBuffer:
@@ -21801,8 +21801,8 @@ var require_v103 = __commonJS({
        *
        * **Note**: You need to URL encode the emoji yourself
        */
-      channelMessageOwnReaction(channelId, messageId, emoji) {
-        return `/channels/${channelId}/messages/${messageId}/reactions/${emoji}/@me`;
+      channelMessageOwnReaction(channelId, messageId, emoji2) {
+        return `/channels/${channelId}/messages/${messageId}/reactions/${emoji2}/@me`;
       },
       /**
        * Route for:
@@ -21810,8 +21810,8 @@ var require_v103 = __commonJS({
        *
        * **Note**: You need to URL encode the emoji yourself
        */
-      channelMessageUserReaction(channelId, messageId, emoji, userId) {
-        return `/channels/${channelId}/messages/${messageId}/reactions/${emoji}/${userId}`;
+      channelMessageUserReaction(channelId, messageId, emoji2, userId) {
+        return `/channels/${channelId}/messages/${messageId}/reactions/${emoji2}/${userId}`;
       },
       /**
        * Route for:
@@ -21820,8 +21820,8 @@ var require_v103 = __commonJS({
        *
        * **Note**: You need to URL encode the emoji yourself
        */
-      channelMessageReaction(channelId, messageId, emoji) {
-        return `/channels/${channelId}/messages/${messageId}/reactions/${emoji}`;
+      channelMessageReaction(channelId, messageId, emoji2) {
+        return `/channels/${channelId}/messages/${messageId}/reactions/${emoji2}`;
       },
       /**
        * Route for:
@@ -22743,8 +22743,8 @@ var require_v103 = __commonJS({
         return `/users/${userId}/application-identities/${applicationId}/${providerType}/${providerIssuedUserId}/delete`;
       }
     };
-    for (const [key, fn] of Object.entries(exports2.Routes)) {
-      exports2.Routes[key] = ((...args) => {
+    for (const [key3, fn] of Object.entries(exports2.Routes)) {
+      exports2.Routes[key3] = ((...args) => {
         const escaped = args.map((arg) => {
           if (arg) {
             if (internals_1.urlSafeCharacters.test(String(arg))) {
@@ -23001,8 +23001,8 @@ var require_v103 = __commonJS({
         return `/guild-tag-badges/${guildId}/${guildTagBadge}.${format}`;
       }
     };
-    for (const [key, fn] of Object.entries(exports2.CDNRoutes)) {
-      exports2.CDNRoutes[key] = ((...args) => {
+    for (const [key3, fn] of Object.entries(exports2.CDNRoutes)) {
+      exports2.CDNRoutes[key3] = ((...args) => {
         const escaped = args.map((arg) => {
           if (arg) {
             if (internals_1.urlSafeCharacters.test(String(arg))) {
@@ -23384,9 +23384,9 @@ var require_dist2 = __commonJS({
     };
     var __copyProps2 = (to, from, except, desc) => {
       if (from && typeof from === "object" || typeof from === "function") {
-        for (let key of __getOwnPropNames2(from))
-          if (!__hasOwnProp2.call(to, key) && key !== except)
-            __defProp2(to, key, { get: () => from[key], enumerable: !(desc = __getOwnPropDesc2(from, key)) || desc.enumerable });
+        for (let key3 of __getOwnPropNames2(from))
+          if (!__hasOwnProp2.call(to, key3) && key3 !== except)
+            __defProp2(to, key3, { get: () => from[key3], enumerable: !(desc = __getOwnPropDesc2(from, key3)) || desc.enumerable });
       }
       return to;
     };
@@ -23411,11 +23411,11 @@ var require_dist2 = __commonJS({
        * collection.ensure(guildId, () => defaultGuildConfig);
        * ```
        */
-      ensure(key, defaultValueGenerator) {
-        if (this.has(key)) return this.get(key);
+      ensure(key3, defaultValueGenerator) {
+        if (this.has(key3)) return this.get(key3);
         if (typeof defaultValueGenerator !== "function") throw new TypeError(`${defaultValueGenerator} is not a function`);
-        const defaultValue = defaultValueGenerator(key, this);
-        this.set(key, defaultValue);
+        const defaultValue = defaultValueGenerator(key3, this);
+        this.set(key3, defaultValue);
         return defaultValue;
       }
       /**
@@ -23425,7 +23425,7 @@ var require_dist2 = __commonJS({
        * @returns `true` if all of the elements exist, `false` if at least one does not exist.
        */
       hasAll(...keys) {
-        return keys.every((key) => super.has(key));
+        return keys.every((key3) => super.has(key3));
       }
       /**
        * Checks if any of the elements exist in the collection.
@@ -23434,7 +23434,7 @@ var require_dist2 = __commonJS({
        * @returns `true` if any of the elements exist, `false` if none exist.
        */
       hasAny(...keys) {
-        return keys.some((key) => super.has(key));
+        return keys.some((key3) => super.has(key3));
       }
       first(amount) {
         if (amount === void 0) return this.values().next().value;
@@ -23513,22 +23513,22 @@ var require_dist2 = __commonJS({
       reverse() {
         const entries = [...this.entries()].reverse();
         this.clear();
-        for (const [key, value] of entries) this.set(key, value);
+        for (const [key3, value] of entries) this.set(key3, value);
         return this;
       }
       find(fn, thisArg) {
         if (typeof fn !== "function") throw new TypeError(`${fn} is not a function`);
         if (thisArg !== void 0) fn = fn.bind(thisArg);
-        for (const [key, val] of this) {
-          if (fn(val, key, this)) return val;
+        for (const [key3, val] of this) {
+          if (fn(val, key3, this)) return val;
         }
         return void 0;
       }
       findKey(fn, thisArg) {
         if (typeof fn !== "function") throw new TypeError(`${fn} is not a function`);
         if (thisArg !== void 0) fn = fn.bind(thisArg);
-        for (const [key, val] of this) {
-          if (fn(val, key, this)) return key;
+        for (const [key3, val] of this) {
+          if (fn(val, key3, this)) return key3;
         }
         return void 0;
       }
@@ -23538,8 +23538,8 @@ var require_dist2 = __commonJS({
         const entries = [...this.entries()];
         for (let index = entries.length - 1; index >= 0; index--) {
           const val = entries[index][1];
-          const key = entries[index][0];
-          if (fn(val, key, this)) return val;
+          const key3 = entries[index][0];
+          if (fn(val, key3, this)) return val;
         }
         return void 0;
       }
@@ -23548,9 +23548,9 @@ var require_dist2 = __commonJS({
         if (thisArg !== void 0) fn = fn.bind(thisArg);
         const entries = [...this.entries()];
         for (let index = entries.length - 1; index >= 0; index--) {
-          const key = entries[index][0];
+          const key3 = entries[index][0];
           const val = entries[index][1];
-          if (fn(val, key, this)) return key;
+          if (fn(val, key3, this)) return key3;
         }
         return void 0;
       }
@@ -23558,8 +23558,8 @@ var require_dist2 = __commonJS({
         if (typeof fn !== "function") throw new TypeError(`${fn} is not a function`);
         if (thisArg !== void 0) fn = fn.bind(thisArg);
         const previousSize = this.size;
-        for (const [key, val] of this) {
-          if (fn(val, key, this)) this.delete(key);
+        for (const [key3, val] of this) {
+          if (fn(val, key3, this)) this.delete(key3);
         }
         return previousSize - this.size;
       }
@@ -23567,8 +23567,8 @@ var require_dist2 = __commonJS({
         if (typeof fn !== "function") throw new TypeError(`${fn} is not a function`);
         if (thisArg !== void 0) fn = fn.bind(thisArg);
         const results = new this.constructor[Symbol.species]();
-        for (const [key, val] of this) {
-          if (fn(val, key, this)) results.set(key, val);
+        for (const [key3, val] of this) {
+          if (fn(val, key3, this)) results.set(key3, val);
         }
         return results;
       }
@@ -23579,11 +23579,11 @@ var require_dist2 = __commonJS({
           new this.constructor[Symbol.species](),
           new this.constructor[Symbol.species]()
         ];
-        for (const [key, val] of this) {
-          if (fn(val, key, this)) {
-            results[0].set(key, val);
+        for (const [key3, val] of this) {
+          if (fn(val, key3, this)) {
+            results[0].set(key3, val);
           } else {
-            results[1].set(key, val);
+            results[1].set(key3, val);
           }
         }
         return results;
@@ -23597,30 +23597,30 @@ var require_dist2 = __commonJS({
         if (thisArg !== void 0) fn = fn.bind(thisArg);
         const iter = this.entries();
         return Array.from({ length: this.size }, () => {
-          const [key, value] = iter.next().value;
-          return fn(value, key, this);
+          const [key3, value] = iter.next().value;
+          return fn(value, key3, this);
         });
       }
       mapValues(fn, thisArg) {
         if (typeof fn !== "function") throw new TypeError(`${fn} is not a function`);
         if (thisArg !== void 0) fn = fn.bind(thisArg);
         const coll = new this.constructor[Symbol.species]();
-        for (const [key, val] of this) coll.set(key, fn(val, key, this));
+        for (const [key3, val] of this) coll.set(key3, fn(val, key3, this));
         return coll;
       }
       some(fn, thisArg) {
         if (typeof fn !== "function") throw new TypeError(`${fn} is not a function`);
         if (thisArg !== void 0) fn = fn.bind(thisArg);
-        for (const [key, val] of this) {
-          if (fn(val, key, this)) return true;
+        for (const [key3, val] of this) {
+          if (fn(val, key3, this)) return true;
         }
         return false;
       }
       every(fn, thisArg) {
         if (typeof fn !== "function") throw new TypeError(`${fn} is not a function`);
         if (thisArg !== void 0) fn = fn.bind(thisArg);
-        for (const [key, val] of this) {
-          if (!fn(val, key, this)) return false;
+        for (const [key3, val] of this) {
+          if (!fn(val, key3, this)) return false;
         }
         return true;
       }
@@ -23634,8 +23634,8 @@ var require_dist2 = __commonJS({
         } else {
           accumulator = initialValue;
         }
-        for (const [key, value] of iterator) {
-          accumulator = fn(accumulator, value, key, this);
+        for (const [key3, value] of iterator) {
+          accumulator = fn(accumulator, value, key3, this);
         }
         return accumulator;
       }
@@ -23653,17 +23653,17 @@ var require_dist2 = __commonJS({
           index = entries.length;
         }
         while (--index >= 0) {
-          const key = entries[index][0];
+          const key3 = entries[index][0];
           const val = entries[index][1];
-          accumulator = fn(accumulator, val, key, this);
+          accumulator = fn(accumulator, val, key3, this);
         }
         return accumulator;
       }
       each(fn, thisArg) {
         if (typeof fn !== "function") throw new TypeError(`${fn} is not a function`);
         if (thisArg !== void 0) fn = fn.bind(thisArg);
-        for (const [key, value] of this) {
-          fn(value, key, this);
+        for (const [key3, value] of this) {
+          fn(value, key3, this);
         }
         return this;
       }
@@ -23696,7 +23696,7 @@ var require_dist2 = __commonJS({
       concat(...collections) {
         const newColl = this.clone();
         for (const coll of collections) {
-          for (const [key, val] of coll) newColl.set(key, val);
+          for (const [key3, val] of coll) newColl.set(key3, val);
         }
         return newColl;
       }
@@ -23712,8 +23712,8 @@ var require_dist2 = __commonJS({
         if (!collection) return false;
         if (this === collection) return true;
         if (this.size !== collection.size) return false;
-        for (const [key, value] of this) {
-          if (!collection.has(key) || value !== collection.get(key)) {
+        for (const [key3, value] of this) {
+          if (!collection.has(key3) || value !== collection.get(key3)) {
             return false;
           }
         }
@@ -23735,8 +23735,8 @@ var require_dist2 = __commonJS({
         const entries = [...this.entries()];
         entries.sort((a, b) => compareFunction(a[1], b[1], a[0], b[0]));
         super.clear();
-        for (const [key, value] of entries) {
-          super.set(key, value);
+        for (const [key3, value] of entries) {
+          super.set(key3, value);
         }
         return this;
       }
@@ -23755,8 +23755,8 @@ var require_dist2 = __commonJS({
        */
       intersection(other) {
         const coll = new this.constructor[Symbol.species]();
-        for (const [key, value] of this) {
-          if (other.has(key)) coll.set(key, value);
+        for (const [key3, value] of this) {
+          if (other.has(key3)) coll.set(key3, value);
         }
         return coll;
       }
@@ -23778,8 +23778,8 @@ var require_dist2 = __commonJS({
        */
       union(other) {
         const coll = new this.constructor[Symbol.species](this);
-        for (const [key, value] of other) {
-          if (!coll.has(key)) coll.set(key, value);
+        for (const [key3, value] of other) {
+          if (!coll.has(key3)) coll.set(key3, value);
         }
         return coll;
       }
@@ -23799,8 +23799,8 @@ var require_dist2 = __commonJS({
        */
       difference(other) {
         const coll = new this.constructor[Symbol.species]();
-        for (const [key, value] of this) {
-          if (!other.has(key)) coll.set(key, value);
+        for (const [key3, value] of this) {
+          if (!other.has(key3)) coll.set(key3, value);
         }
         return coll;
       }
@@ -23819,11 +23819,11 @@ var require_dist2 = __commonJS({
        */
       symmetricDifference(other) {
         const coll = new this.constructor[Symbol.species]();
-        for (const [key, value] of this) {
-          if (!other.has(key)) coll.set(key, value);
+        for (const [key3, value] of this) {
+          if (!other.has(key3)) coll.set(key3, value);
         }
-        for (const [key, value] of other) {
-          if (!this.has(key)) coll.set(key, value);
+        for (const [key3, value] of other) {
+          if (!this.has(key3)) coll.set(key3, value);
         }
         return coll;
       }
@@ -23858,18 +23858,18 @@ var require_dist2 = __commonJS({
       merge(other, whenInSelf, whenInOther, whenInBoth) {
         const coll = new this.constructor[Symbol.species]();
         const keys = /* @__PURE__ */ new Set([...this.keys(), ...other.keys()]);
-        for (const key of keys) {
-          const hasInSelf = this.has(key);
-          const hasInOther = other.has(key);
+        for (const key3 of keys) {
+          const hasInSelf = this.has(key3);
+          const hasInOther = other.has(key3);
           if (hasInSelf && hasInOther) {
-            const result = whenInBoth(this.get(key), other.get(key), key);
-            if (result.keep) coll.set(key, result.value);
+            const result = whenInBoth(this.get(key3), other.get(key3), key3);
+            if (result.keep) coll.set(key3, result.value);
           } else if (hasInSelf) {
-            const result = whenInSelf(this.get(key), key);
-            if (result.keep) coll.set(key, result.value);
+            const result = whenInSelf(this.get(key3), key3);
+            if (result.keep) coll.set(key3, result.value);
           } else if (hasInOther) {
-            const result = whenInOther(other.get(key), key);
-            if (result.keep) coll.set(key, result.value);
+            const result = whenInOther(other.get(key3), key3);
+            if (result.keep) coll.set(key3, result.value);
           }
         }
         return coll;
@@ -23916,11 +23916,11 @@ var require_dist2 = __commonJS({
        */
       static combineEntries(entries, combine) {
         const coll = new _Collection();
-        for (const [key, value] of entries) {
-          if (coll.has(key)) {
-            coll.set(key, combine(coll.get(key), value, key));
+        for (const [key3, value] of entries) {
+          if (coll.has(key3)) {
+            coll.set(key3, combine(coll.get(key3), value, key3));
           } else {
-            coll.set(key, value);
+            coll.set(key3, value);
           }
         }
         return coll;
@@ -23935,9 +23935,9 @@ var require_cjs = __commonJS({
   "node_modules/.pnpm/@sapphire+snowflake@3.5.5/node_modules/@sapphire/snowflake/dist/cjs/index.cjs"(exports2) {
     "use strict";
     var __defProp2 = Object.defineProperty;
-    var __defNormalProp = (obj, key, value) => key in obj ? __defProp2(obj, key, { enumerable: true, configurable: true, writable: true, value }) : obj[key] = value;
+    var __defNormalProp = (obj, key3, value) => key3 in obj ? __defProp2(obj, key3, { enumerable: true, configurable: true, writable: true, value }) : obj[key3] = value;
     var __name = (target, value) => __defProp2(target, "name", { value, configurable: true });
-    var __publicField = (obj, key, value) => __defNormalProp(obj, typeof key !== "symbol" ? key + "" : key, value);
+    var __publicField = (obj, key3, value) => __defNormalProp(obj, typeof key3 !== "symbol" ? key3 + "" : key3, value);
     var IncrementSymbol = /* @__PURE__ */ Symbol("@sapphire/snowflake.increment");
     var EpochSymbol = /* @__PURE__ */ Symbol("@sapphire/snowflake.epoch");
     var EpochNumberSymbol = /* @__PURE__ */ Symbol("@sapphire/snowflake.epoch.number");
@@ -24044,8 +24044,8 @@ var require_cjs = __commonJS({
        * const snowflake = new Snowflake(epoch).deconstruct('3971046231244935168');
        * ```
        */
-      deconstruct(id) {
-        const bigIntId = BigInt(id);
+      deconstruct(id2) {
+        const bigIntId = BigInt(id2);
         const epoch = this[EpochSymbol];
         return {
           id: bigIntId,
@@ -24061,8 +24061,8 @@ var require_cjs = __commonJS({
        * @param id The snowflake to get the timestamp value from.
        * @returns The UNIX timestamp that is stored in `id`.
        */
-      timestampFrom(id) {
-        return Math.floor(Number(id) / TimestampFieldDivisor) + this[EpochNumberSymbol];
+      timestampFrom(id2) {
+        return Math.floor(Number(id2) / TimestampFieldDivisor) + this[EpochNumberSymbol];
       }
       /**
        * Returns a number indicating whether a reference snowflake comes before, or after, or is same as the given
@@ -24132,9 +24132,9 @@ var require_dist3 = __commonJS({
     };
     var __copyProps2 = (to, from, except, desc) => {
       if (from && typeof from === "object" || typeof from === "function") {
-        for (let key of __getOwnPropNames2(from))
-          if (!__hasOwnProp2.call(to, key) && key !== except)
-            __defProp2(to, key, { get: () => from[key], enumerable: !(desc = __getOwnPropDesc2(from, key)) || desc.enumerable });
+        for (let key3 of __getOwnPropNames2(from))
+          if (!__hasOwnProp2.call(to, key3) && key3 !== except)
+            __defProp2(to, key3, { get: () => from[key3], enumerable: !(desc = __getOwnPropDesc2(from, key3)) || desc.enumerable });
       }
       return to;
     };
@@ -26507,11 +26507,11 @@ Emitted 'error' event${ctorInfo} at:
           return this;
         }
         if (!event) {
-          for (const key of Reflect.ownKeys(events)) {
-            if (key === "removeListener") {
+          for (const key3 of Reflect.ownKeys(events)) {
+            if (key3 === "removeListener") {
               continue;
             }
-            this.removeAllListeners(key);
+            this.removeAllListeners(key3);
           }
           this.removeAllListeners("removeListener");
           this._events = { __proto__: null };
@@ -28198,11 +28198,11 @@ var require_dist4 = __commonJS({
       const seen = /* @__PURE__ */ new Set();
       const result = [];
       for (const guess of found) {
-        const key = JSON.stringify([guess.typename, guess.mime, guess.extension]);
-        if (seen.has(key)) {
+        const key3 = JSON.stringify([guess.typename, guess.mime, guess.extension]);
+        if (seen.has(key3)) {
           continue;
         }
-        seen.add(key);
+        seen.add(key3);
         result.push({ ...guess });
       }
       return result;
@@ -28248,9 +28248,9 @@ var require_cjs2 = __commonJS({
   "node_modules/.pnpm/@sapphire+async-queue@1.5.5/node_modules/@sapphire/async-queue/dist/cjs/index.cjs"(exports2) {
     "use strict";
     var __defProp2 = Object.defineProperty;
-    var __defNormalProp = (obj, key, value) => key in obj ? __defProp2(obj, key, { enumerable: true, configurable: true, writable: true, value }) : obj[key] = value;
+    var __defNormalProp = (obj, key3, value) => key3 in obj ? __defProp2(obj, key3, { enumerable: true, configurable: true, writable: true, value }) : obj[key3] = value;
     var __name = (target, value) => __defProp2(target, "name", { value, configurable: true });
-    var __publicField = (obj, key, value) => __defNormalProp(obj, typeof key !== "symbol" ? key + "" : key, value);
+    var __publicField = (obj, key3, value) => __defNormalProp(obj, typeof key3 !== "symbol" ? key3 + "" : key3, value);
     var _AsyncQueueEntry = class _AsyncQueueEntry {
       constructor(queue) {
         __publicField(this, "promise");
@@ -28390,9 +28390,9 @@ var require_dist5 = __commonJS({
     };
     var __copyProps2 = (to, from, except, desc) => {
       if (from && typeof from === "object" || typeof from === "function") {
-        for (let key of __getOwnPropNames2(from))
-          if (!__hasOwnProp2.call(to, key) && key !== except)
-            __defProp2(to, key, { get: () => from[key], enumerable: !(desc = __getOwnPropDesc2(from, key)) || desc.enumerable });
+        for (let key3 of __getOwnPropNames2(from))
+          if (!__hasOwnProp2.call(to, key3) && key3 !== except)
+            __defProp2(to, key3, { get: () => from[key3], enumerable: !(desc = __getOwnPropDesc2(from, key3)) || desc.enumerable });
       }
       return to;
     };
@@ -28632,7 +28632,7 @@ var require_dist5 = __commonJS({
       const params = new URLSearchParams();
       if (!parameters) return params;
       const { arrayFormat = "repeat" } = options2;
-      for (const [key, value] of Object.entries(parameters)) {
+      for (const [key3, value] of Object.entries(parameters)) {
         if (Array.isArray(value)) {
           const commaSeparatedElements = arrayFormat === "comma" ? [] : null;
           for (const element of value) {
@@ -28643,16 +28643,16 @@ var require_dist5 = __commonJS({
             if (commaSeparatedElements) {
               commaSeparatedElements.push(serialized2);
             } else {
-              params.append(key, serialized2);
+              params.append(key3, serialized2);
             }
           }
           if (commaSeparatedElements?.length) {
-            params.append(key, commaSeparatedElements.join(","));
+            params.append(key3, commaSeparatedElements.join(","));
           }
           continue;
         }
         const serialized = serializeSearchParam(value);
-        if (serialized !== null) params.append(key, serialized);
+        if (serialized !== null) params.append(key3, serialized);
       }
       return params;
     }
@@ -28669,7 +28669,7 @@ var require_dist5 = __commonJS({
         if (typeof body !== "object" || body === null) return false;
         if (method !== "PATCH") return false;
         const castedBody = body;
-        return ["name", "topic"].some((key) => Reflect.has(castedBody, key));
+        return ["name", "topic"].some((key3) => Reflect.has(castedBody, key3));
       }
       return true;
     }
@@ -28756,8 +28756,8 @@ var require_dist5 = __commonJS({
        * @param avatarHash - The hash provided by Discord for this avatar
        * @param options - Optional options for the avatar
        */
-      avatar(id, avatarHash, options2) {
-        return this.dynamicMakeURL(`/avatars/${id}/${avatarHash}`, avatarHash, options2);
+      avatar(id2, avatarHash, options2) {
+        return this.dynamicMakeURL(`/avatars/${id2}/${avatarHash}`, avatarHash, options2);
       }
       avatarDecoration(userIdOrAsset, userAvatarDecoration, options2) {
         if (userAvatarDecoration) {
@@ -28772,8 +28772,8 @@ var require_dist5 = __commonJS({
        * @param bannerHash - The hash provided by Discord for this banner
        * @param options - Optional options for the banner
        */
-      banner(id, bannerHash, options2) {
-        return this.dynamicMakeURL(`/banners/${id}/${bannerHash}`, bannerHash, options2);
+      banner(id2, bannerHash, options2) {
+        return this.dynamicMakeURL(`/banners/${id2}/${bannerHash}`, bannerHash, options2);
       }
       /**
        * Generates an icon URL for a channel, e.g. a group DM.
@@ -28850,8 +28850,8 @@ var require_dist5 = __commonJS({
        * @param iconHash - The hash provided by Discord for this icon
        * @param options - Optional options for the icon
        */
-      icon(id, iconHash, options2) {
-        return this.dynamicMakeURL(`/icons/${id}/${iconHash}`, iconHash, options2);
+      icon(id2, iconHash, options2) {
+        return this.dynamicMakeURL(`/icons/${id2}/${iconHash}`, iconHash, options2);
       }
       /**
        * Generates a URL for the icon of a role
@@ -29030,12 +29030,12 @@ ${flattened}` : error.message || flattened || "Unknown Error";
         }
         return error.error_description ?? "No Description";
       }
-      static *flattenDiscordError(obj, key = "") {
+      static *flattenDiscordError(obj, key3 = "") {
         if (isErrorResponse(obj)) {
-          return yield `${key.length ? `${key}[${obj.code}]` : `${obj.code}`}: ${obj.message}`.trim();
+          return yield `${key3.length ? `${key3}[${obj.code}]` : `${obj.code}`}: ${obj.message}`.trim();
         }
         for (const [otherKey, val] of Object.entries(obj)) {
-          const nextKey = otherKey.startsWith("_") ? key : key ? Number.isNaN(Number(otherKey)) ? `${key}.${otherKey}` : `${key}[${otherKey}]` : otherKey;
+          const nextKey = otherKey.startsWith("_") ? key3 : key3 ? Number.isNaN(Number(otherKey)) ? `${key3}.${otherKey}` : `${key3}[${otherKey}]` : otherKey;
           if (typeof val === "string") {
             yield val;
           } else if (isErrorGroupWrapper(val)) {
@@ -29609,12 +29609,12 @@ ${flattened}` : error.message || flattened || "Unknown Error";
           this.hashTimer = setInterval(() => {
             const sweptHashes = new import_collection.Collection();
             const currentDate = Date.now();
-            this.hashes.sweep((val, key) => {
+            this.hashes.sweep((val, key3) => {
               if (val.lastAccess === -1) return false;
               const shouldSweep = Math.floor(currentDate - val.lastAccess) > this.options.hashLifetime;
               if (shouldSweep) {
-                sweptHashes.set(key, val);
-                this.emit("restDebug", `Hash ${val.value} for ${key} swept due to lifetime being exceeded`);
+                sweptHashes.set(key3, val);
+                this.emit("restDebug", `Hash ${val.value} for ${key3} swept due to lifetime being exceeded`);
               }
               return shouldSweep;
             });
@@ -29626,11 +29626,11 @@ ${flattened}` : error.message || flattened || "Unknown Error";
           validateMaxInterval(this.options.handlerSweepInterval);
           this.handlerTimer = setInterval(() => {
             const sweptHandlers = new import_collection.Collection();
-            this.handlers.sweep((val, key) => {
+            this.handlers.sweep((val, key3) => {
               const { inactive } = val;
               if (inactive) {
-                sweptHandlers.set(key, val);
-                this.emit("restDebug", `Handler ${val.id} for ${key} swept due to being inactive`);
+                sweptHandlers.set(key3, val);
+                this.emit("restDebug", `Handler ${val.id} for ${key3} swept due to being inactive`);
               }
               return inactive;
             });
@@ -29818,8 +29818,8 @@ ${flattened}` : error.message || flattened || "Unknown Error";
           }
           if (request2.body != null) {
             if (request2.appendToFormData) {
-              for (const [key, value] of Object.entries(request2.body)) {
-                formData.append(key, value);
+              for (const [key3, value] of Object.entries(request2.body)) {
+                formData.append(key3, value);
               }
             } else {
               formData.append("payload_json", JSON.stringify(request2.body));
@@ -29879,8 +29879,8 @@ ${flattened}` : error.message || flattened || "Unknown Error";
         const baseRoute = endpoint.replaceAll(/\d{17,19}/g, ":id").replace(/\/reactions\/(.*)/, "/reactions/:reaction").replace(/\/webhooks\/:id\/[^/?]+/, "/webhooks/:id/:token");
         let exceptions = "";
         if (method === "DELETE" && baseRoute === "/channels/:id/messages/:id") {
-          const id = /\d{17,19}$/.exec(endpoint)[0];
-          const timestamp = import_snowflake.DiscordSnowflake.timestampFrom(id);
+          const id2 = /\d{17,19}$/.exec(endpoint)[0];
+          const timestamp = import_snowflake.DiscordSnowflake.timestampFrom(id2);
           if (Date.now() - timestamp > 1e3 * 60 * 60 * 24 * 14) {
             exceptions += "/Delete Old Message";
           }
@@ -30021,7 +30021,7 @@ var require_ErrorCodes = __commonJS({
       "BulkBanUsersOptionEmpty",
       "PollAlreadyExpired"
     ];
-    module2.exports = Object.fromEntries(keys.map((key) => [key, key]));
+    module2.exports = Object.fromEntries(keys.map((key3) => [key3, key3]));
   }
 });
 
@@ -30050,17 +30050,17 @@ var require_Messages = __commonJS({
       [DjsErrorCodes.ShardingNoShards]: "No shards have been spawned.",
       [DjsErrorCodes.ShardingInProcess]: "Shards are still being spawned.",
       [DjsErrorCodes.ShardingInvalidEvalBroadcast]: "Script to evaluate must be a function",
-      [DjsErrorCodes.ShardingShardNotFound]: (id) => `Shard ${id} could not be found.`,
+      [DjsErrorCodes.ShardingShardNotFound]: (id2) => `Shard ${id2} could not be found.`,
       [DjsErrorCodes.ShardingAlreadySpawned]: (count) => `Already spawned ${count} shards.`,
-      [DjsErrorCodes.ShardingProcessExists]: (id) => `Shard ${id} already has an active process.`,
-      [DjsErrorCodes.ShardingWorkerExists]: (id) => `Shard ${id} already has an active worker.`,
-      [DjsErrorCodes.ShardingReadyTimeout]: (id) => `Shard ${id}'s Client took too long to become ready.`,
-      [DjsErrorCodes.ShardingReadyDisconnected]: (id) => `Shard ${id}'s Client disconnected before becoming ready.`,
-      [DjsErrorCodes.ShardingReadyDied]: (id) => `Shard ${id}'s process exited before its Client became ready.`,
-      [DjsErrorCodes.ShardingNoChildExists]: (id) => `Shard ${id} has no active process or worker.`,
+      [DjsErrorCodes.ShardingProcessExists]: (id2) => `Shard ${id2} already has an active process.`,
+      [DjsErrorCodes.ShardingWorkerExists]: (id2) => `Shard ${id2} already has an active worker.`,
+      [DjsErrorCodes.ShardingReadyTimeout]: (id2) => `Shard ${id2}'s Client took too long to become ready.`,
+      [DjsErrorCodes.ShardingReadyDisconnected]: (id2) => `Shard ${id2}'s Client disconnected before becoming ready.`,
+      [DjsErrorCodes.ShardingReadyDied]: (id2) => `Shard ${id2}'s process exited before its Client became ready.`,
+      [DjsErrorCodes.ShardingNoChildExists]: (id2) => `Shard ${id2} has no active process or worker.`,
       [DjsErrorCodes.ShardingShardMiscalculation]: (shard, guild, count) => `Calculated invalid shard ${shard} for guild ${guild} with ${count} shards.`,
       [DjsErrorCodes.ColorRange]: "Color must be within the range 0 - 16777215 (0xFFFFFF).",
-      [DjsErrorCodes.ColorConvert]: (color) => `Unable to convert "${color}" to a number.`,
+      [DjsErrorCodes.ColorConvert]: (color3) => `Unable to convert "${color3}" to a number.`,
       [DjsErrorCodes.InviteOptionsMissingChannel]: "A valid guild channel must be provided when GuildScheduledEvent is EXTERNAL.",
       [DjsErrorCodes.ButtonLabel]: "MessageButton label must be a string",
       [DjsErrorCodes.ButtonURL]: "MessageButton URL must be a string",
@@ -30467,8 +30467,8 @@ var require_lodash = __commonJS({
       return string.match(reAsciiWord) || [];
     }
     function basePropertyOf(object) {
-      return function(key) {
-        return object == null ? void 0 : object[key];
+      return function(key3) {
+        return object == null ? void 0 : object[key3];
       };
     }
     var deburrLetter = basePropertyOf(deburredLetters);
@@ -30541,9 +30541,9 @@ var require_dist6 = __commonJS({
     };
     var __copyProps2 = (to, from, except, desc) => {
       if (from && typeof from === "object" || typeof from === "function") {
-        for (let key of __getOwnPropNames2(from))
-          if (!__hasOwnProp2.call(to, key) && key !== except)
-            __defProp2(to, key, { get: () => from[key], enumerable: !(desc = __getOwnPropDesc2(from, key)) || desc.enumerable });
+        for (let key3 of __getOwnPropNames2(from))
+          if (!__hasOwnProp2.call(to, key3) && key3 !== except)
+            __defProp2(to, key3, { get: () => from[key3], enumerable: !(desc = __getOwnPropDesc2(from, key3)) || desc.enumerable });
       }
       return to;
     };
@@ -30568,13 +30568,13 @@ var require_dist6 = __commonJS({
        * collection.ensure(guildId, () => defaultGuildConfig);
        * ```
        */
-      ensure(key, defaultValueGenerator) {
-        if (this.has(key))
-          return this.get(key);
+      ensure(key3, defaultValueGenerator) {
+        if (this.has(key3))
+          return this.get(key3);
         if (typeof defaultValueGenerator !== "function")
           throw new TypeError(`${defaultValueGenerator} is not a function`);
-        const defaultValue = defaultValueGenerator(key, this);
-        this.set(key, defaultValue);
+        const defaultValue = defaultValueGenerator(key3, this);
+        this.set(key3, defaultValue);
         return defaultValue;
       }
       /**
@@ -30584,7 +30584,7 @@ var require_dist6 = __commonJS({
        * @returns `true` if all of the elements exist, `false` if at least one does not exist.
        */
       hasAll(...keys) {
-        return keys.every((key) => super.has(key));
+        return keys.every((key3) => super.has(key3));
       }
       /**
        * Checks if any of the elements exist in the collection.
@@ -30593,7 +30593,7 @@ var require_dist6 = __commonJS({
        * @returns `true` if any of the elements exist, `false` if none exist.
        */
       hasAny(...keys) {
-        return keys.some((key) => super.has(key));
+        return keys.some((key3) => super.has(key3));
       }
       first(amount) {
         if (amount === void 0)
@@ -30686,8 +30686,8 @@ var require_dist6 = __commonJS({
       reverse() {
         const entries = [...this.entries()].reverse();
         this.clear();
-        for (const [key, value] of entries)
-          this.set(key, value);
+        for (const [key3, value] of entries)
+          this.set(key3, value);
         return this;
       }
       find(fn, thisArg) {
@@ -30695,8 +30695,8 @@ var require_dist6 = __commonJS({
           throw new TypeError(`${fn} is not a function`);
         if (thisArg !== void 0)
           fn = fn.bind(thisArg);
-        for (const [key, val] of this) {
-          if (fn(val, key, this))
+        for (const [key3, val] of this) {
+          if (fn(val, key3, this))
             return val;
         }
         return void 0;
@@ -30706,9 +30706,9 @@ var require_dist6 = __commonJS({
           throw new TypeError(`${fn} is not a function`);
         if (thisArg !== void 0)
           fn = fn.bind(thisArg);
-        for (const [key, val] of this) {
-          if (fn(val, key, this))
-            return key;
+        for (const [key3, val] of this) {
+          if (fn(val, key3, this))
+            return key3;
         }
         return void 0;
       }
@@ -30718,9 +30718,9 @@ var require_dist6 = __commonJS({
         if (thisArg !== void 0)
           fn = fn.bind(thisArg);
         const previousSize = this.size;
-        for (const [key, val] of this) {
-          if (fn(val, key, this))
-            this.delete(key);
+        for (const [key3, val] of this) {
+          if (fn(val, key3, this))
+            this.delete(key3);
         }
         return previousSize - this.size;
       }
@@ -30730,9 +30730,9 @@ var require_dist6 = __commonJS({
         if (thisArg !== void 0)
           fn = fn.bind(thisArg);
         const results = new this.constructor[Symbol.species]();
-        for (const [key, val] of this) {
-          if (fn(val, key, this))
-            results.set(key, val);
+        for (const [key3, val] of this) {
+          if (fn(val, key3, this))
+            results.set(key3, val);
         }
         return results;
       }
@@ -30745,11 +30745,11 @@ var require_dist6 = __commonJS({
           new this.constructor[Symbol.species](),
           new this.constructor[Symbol.species]()
         ];
-        for (const [key, val] of this) {
-          if (fn(val, key, this)) {
-            results[0].set(key, val);
+        for (const [key3, val] of this) {
+          if (fn(val, key3, this)) {
+            results[0].set(key3, val);
           } else {
-            results[1].set(key, val);
+            results[1].set(key3, val);
           }
         }
         return results;
@@ -30765,8 +30765,8 @@ var require_dist6 = __commonJS({
           fn = fn.bind(thisArg);
         const iter = this.entries();
         return Array.from({ length: this.size }, () => {
-          const [key, value] = iter.next().value;
-          return fn(value, key, this);
+          const [key3, value] = iter.next().value;
+          return fn(value, key3, this);
         });
       }
       mapValues(fn, thisArg) {
@@ -30775,8 +30775,8 @@ var require_dist6 = __commonJS({
         if (thisArg !== void 0)
           fn = fn.bind(thisArg);
         const coll = new this.constructor[Symbol.species]();
-        for (const [key, val] of this)
-          coll.set(key, fn(val, key, this));
+        for (const [key3, val] of this)
+          coll.set(key3, fn(val, key3, this));
         return coll;
       }
       some(fn, thisArg) {
@@ -30784,8 +30784,8 @@ var require_dist6 = __commonJS({
           throw new TypeError(`${fn} is not a function`);
         if (thisArg !== void 0)
           fn = fn.bind(thisArg);
-        for (const [key, val] of this) {
-          if (fn(val, key, this))
+        for (const [key3, val] of this) {
+          if (fn(val, key3, this))
             return true;
         }
         return false;
@@ -30795,8 +30795,8 @@ var require_dist6 = __commonJS({
           throw new TypeError(`${fn} is not a function`);
         if (thisArg !== void 0)
           fn = fn.bind(thisArg);
-        for (const [key, val] of this) {
-          if (!fn(val, key, this))
+        for (const [key3, val] of this) {
+          if (!fn(val, key3, this))
             return false;
         }
         return true;
@@ -30825,8 +30825,8 @@ var require_dist6 = __commonJS({
         } else {
           accumulator = initialValue;
         }
-        for (const [key, value] of iterator) {
-          accumulator = fn(accumulator, value, key, this);
+        for (const [key3, value] of iterator) {
+          accumulator = fn(accumulator, value, key3, this);
         }
         return accumulator;
       }
@@ -30835,8 +30835,8 @@ var require_dist6 = __commonJS({
           throw new TypeError(`${fn} is not a function`);
         if (thisArg !== void 0)
           fn = fn.bind(thisArg);
-        for (const [key, value] of this) {
-          fn(value, key, this);
+        for (const [key3, value] of this) {
+          fn(value, key3, this);
         }
         return this;
       }
@@ -30871,8 +30871,8 @@ var require_dist6 = __commonJS({
       concat(...collections) {
         const newColl = this.clone();
         for (const coll of collections) {
-          for (const [key, val] of coll)
-            newColl.set(key, val);
+          for (const [key3, val] of coll)
+            newColl.set(key3, val);
         }
         return newColl;
       }
@@ -30891,8 +30891,8 @@ var require_dist6 = __commonJS({
           return true;
         if (this.size !== collection.size)
           return false;
-        for (const [key, value] of this) {
-          if (!collection.has(key) || value !== collection.get(key)) {
+        for (const [key3, value] of this) {
+          if (!collection.has(key3) || value !== collection.get(key3)) {
             return false;
           }
         }
@@ -30914,8 +30914,8 @@ var require_dist6 = __commonJS({
         const entries = [...this.entries()];
         entries.sort((a, b) => compareFunction(a[1], b[1], a[0], b[0]));
         super.clear();
-        for (const [key, value] of entries) {
-          super.set(key, value);
+        for (const [key3, value] of entries) {
+          super.set(key3, value);
         }
         return this;
       }
@@ -30926,9 +30926,9 @@ var require_dist6 = __commonJS({
        */
       intersect(other) {
         const coll = new this.constructor[Symbol.species]();
-        for (const [key, value] of other) {
-          if (this.has(key) && Object.is(value, this.get(key))) {
-            coll.set(key, value);
+        for (const [key3, value] of other) {
+          if (this.has(key3) && Object.is(value, this.get(key3))) {
+            coll.set(key3, value);
           }
         }
         return coll;
@@ -30940,9 +30940,9 @@ var require_dist6 = __commonJS({
        */
       subtract(other) {
         const coll = new this.constructor[Symbol.species]();
-        for (const [key, value] of this) {
-          if (!other.has(key) || !Object.is(value, other.get(key))) {
-            coll.set(key, value);
+        for (const [key3, value] of this) {
+          if (!other.has(key3) || !Object.is(value, other.get(key3))) {
+            coll.set(key3, value);
           }
         }
         return coll;
@@ -30954,13 +30954,13 @@ var require_dist6 = __commonJS({
        */
       difference(other) {
         const coll = new this.constructor[Symbol.species]();
-        for (const [key, value] of other) {
-          if (!this.has(key))
-            coll.set(key, value);
+        for (const [key3, value] of other) {
+          if (!this.has(key3))
+            coll.set(key3, value);
         }
-        for (const [key, value] of this) {
-          if (!other.has(key))
-            coll.set(key, value);
+        for (const [key3, value] of this) {
+          if (!other.has(key3))
+            coll.set(key3, value);
         }
         return coll;
       }
@@ -30995,21 +30995,21 @@ var require_dist6 = __commonJS({
       merge(other, whenInSelf, whenInOther, whenInBoth) {
         const coll = new this.constructor[Symbol.species]();
         const keys = /* @__PURE__ */ new Set([...this.keys(), ...other.keys()]);
-        for (const key of keys) {
-          const hasInSelf = this.has(key);
-          const hasInOther = other.has(key);
+        for (const key3 of keys) {
+          const hasInSelf = this.has(key3);
+          const hasInOther = other.has(key3);
           if (hasInSelf && hasInOther) {
-            const result = whenInBoth(this.get(key), other.get(key), key);
+            const result = whenInBoth(this.get(key3), other.get(key3), key3);
             if (result.keep)
-              coll.set(key, result.value);
+              coll.set(key3, result.value);
           } else if (hasInSelf) {
-            const result = whenInSelf(this.get(key), key);
+            const result = whenInSelf(this.get(key3), key3);
             if (result.keep)
-              coll.set(key, result.value);
+              coll.set(key3, result.value);
           } else if (hasInOther) {
-            const result = whenInOther(other.get(key), key);
+            const result = whenInOther(other.get(key3), key3);
             if (result.keep)
-              coll.set(key, result.value);
+              coll.set(key3, result.value);
           }
         }
         return coll;
@@ -31049,11 +31049,11 @@ var require_dist6 = __commonJS({
        */
       static combineEntries(entries, combine) {
         const coll = new _Collection();
-        for (const [key, value] of entries) {
-          if (coll.has(key)) {
-            coll.set(key, combine(coll.get(key), value, key));
+        for (const [key3, value] of entries) {
+          if (coll.has(key3)) {
+            coll.set(key3, combine(coll.get(key3), value, key3));
           } else {
-            coll.set(key, value);
+            coll.set(key3, value);
           }
         }
         return coll;
@@ -31375,9 +31375,9 @@ var require_dist7 = __commonJS({
     };
     var __copyProps2 = (to, from, except, desc) => {
       if (from && typeof from === "object" || typeof from === "function") {
-        for (let key of __getOwnPropNames2(from))
-          if (!__hasOwnProp2.call(to, key) && key !== except)
-            __defProp2(to, key, { get: () => from[key], enumerable: !(desc = __getOwnPropDesc2(from, key)) || desc.enumerable });
+        for (let key3 of __getOwnPropNames2(from))
+          if (!__hasOwnProp2.call(to, key3) && key3 !== except)
+            __defProp2(to, key3, { get: () => from[key3], enumerable: !(desc = __getOwnPropDesc2(from, key3)) || desc.enumerable });
       }
       return to;
     };
@@ -31656,8 +31656,8 @@ ${content}
         id: emojiIdOrOptions,
         animated: animated ?? false
       } : emojiIdOrOptions;
-      const { id, animated: isAnimated, name: emojiName } = options2;
-      return `<${isAnimated ? "a" : ""}:${emojiName ?? "emoji"}:${id}>`;
+      const { id: id2, animated: isAnimated, name: emojiName } = options2;
+      return `<${isAnimated ? "a" : ""}:${emojiName ?? "emoji"}:${id2}>`;
     }
     __name(formatEmoji, "formatEmoji");
     function channelLink(channelId, guildId) {
@@ -31719,7 +31719,7 @@ ${content}
     function email(email2, headers) {
       if (headers) {
         const searchParams = new URLSearchParams(
-          Object.fromEntries(Object.entries(headers).map(([key, value]) => [key.toLowerCase(), value]))
+          Object.fromEntries(Object.entries(headers).map(([key3, value]) => [key3.toLowerCase(), value]))
         );
         return `<${email2}?${searchParams.toString()}>`;
       }
@@ -32207,8 +32207,8 @@ var require_CachedManager = __commonJS({
       get cache() {
         return this._cache;
       }
-      _add(data, cache = true, { id, extras = [] } = {}) {
-        const existing = this.cache.get(id ?? data.id);
+      _add(data, cache = true, { id: id2, extras = [] } = {}) {
+        const existing = this.cache.get(id2 ?? data.id);
         if (existing) {
           if (cache) {
             existing._patch(data);
@@ -32219,7 +32219,7 @@ var require_CachedManager = __commonJS({
           return clone;
         }
         const entry = this.holds ? new this.holds(this.client, data, ...extras) : data;
-        if (cache) this.cache.set(id ?? entry.id, entry);
+        if (cache) this.cache.set(id2 ?? entry.id, entry);
         return entry;
       }
     };
@@ -32543,8 +32543,8 @@ var require_Role = __commonJS({
        * @returns {Promise<Role>}
        * @deprecated Use {@link Role#setColors} instead.
        */
-      async setColor(color, reason) {
-        return this.edit({ color, reason });
+      async setColor(color3, reason) {
+        return this.edit({ color: color3, reason });
       }
       /**
        * Sets new colors for the role.
@@ -33086,10 +33086,10 @@ var require_GuildChannel = __commonJS({
           ...this.permissionOverwrites.cache.keys(),
           ...parent.permissionOverwrites.cache.keys()
         ]);
-        return [...overwriteIds].every((key) => {
-          const channelVal = this.permissionOverwrites.cache.get(key);
-          const parentVal = parent.permissionOverwrites.cache.get(key);
-          if (key === this.guildId && (!channelVal && parentVal.deny.bitfield === PermissionsBitField2.DefaultBit && parentVal.allow.bitfield === PermissionsBitField2.DefaultBit || !parentVal && channelVal.deny.bitfield === PermissionsBitField2.DefaultBit && channelVal.allow.bitfield === PermissionsBitField2.DefaultBit)) {
+        return [...overwriteIds].every((key3) => {
+          const channelVal = this.permissionOverwrites.cache.get(key3);
+          const parentVal = parent.permissionOverwrites.cache.get(key3);
+          if (key3 === this.guildId && (!channelVal && parentVal.deny.bitfield === PermissionsBitField2.DefaultBit && parentVal.allow.bitfield === PermissionsBitField2.DefaultBit || !parentVal && channelVal.deny.bitfield === PermissionsBitField2.DefaultBit && channelVal.allow.bitfield === PermissionsBitField2.DefaultBit)) {
             return true;
           }
           return channelVal !== void 0 && parentVal !== void 0 && channelVal.deny.bitfield === parentVal.deny.bitfield && channelVal.allow.bitfield === parentVal.allow.bitfield;
@@ -33430,7 +33430,7 @@ var require_Util = __commonJS({
     var deprecationEmittedForRemoveThreadMember = false;
     function flatten(obj, ...props) {
       if (!isObject(obj)) return obj;
-      const objProps = Object.keys(obj).filter((key) => !key.startsWith("_")).map((key) => ({ [key]: true }));
+      const objProps = Object.keys(obj).filter((key3) => !key3.startsWith("_")).map((key3) => ({ [key3]: true }));
       props = objProps.length ? Object.assign(...objProps, ...props) : Object.assign({}, ...props);
       const out = {};
       for (let [prop, newProp] of Object.entries(props)) {
@@ -33469,12 +33469,12 @@ var require_Util = __commonJS({
       const match = text.match(/<?(?:(a):)?(\w{2,32}):(\d{17,19})?>?/);
       return match && { animated: Boolean(match[1]), name: match[2], id: match[3] };
     }
-    function resolvePartialEmoji(emoji) {
-      if (!emoji) return null;
-      if (typeof emoji === "string") return /^\d{17,19}$/.test(emoji) ? { id: emoji } : parseEmoji(emoji);
-      const { id, name, animated } = emoji;
-      if (!id && !name) return null;
-      return { id, name, animated: Boolean(animated) };
+    function resolvePartialEmoji(emoji2) {
+      if (!emoji2) return null;
+      if (typeof emoji2 === "string") return /^\d{17,19}$/.test(emoji2) ? { id: emoji2 } : parseEmoji(emoji2);
+      const { id: id2, name, animated } = emoji2;
+      if (!id2 && !name) return null;
+      return { id: id2, name, animated: Boolean(animated) };
     }
     function makeError(obj) {
       const err = new Error(obj.message);
@@ -33527,20 +33527,20 @@ var require_Util = __commonJS({
       if (!allowEmpty && data.length === 0) throw new error(errorMessage);
       return data;
     }
-    function resolveColor(color) {
+    function resolveColor(color3) {
       let resolvedColor;
-      if (typeof color === "string") {
-        if (color === "Random") return Math.floor(Math.random() * (16777215 + 1));
-        if (color === "Default") return 0;
-        if (/^#?[\da-f]{6}$/i.test(color)) return parseInt(color.replace("#", ""), 16);
-        resolvedColor = Colors[color];
-      } else if (Array.isArray(color)) {
-        resolvedColor = (color[0] << 16) + (color[1] << 8) + color[2];
+      if (typeof color3 === "string") {
+        if (color3 === "Random") return Math.floor(Math.random() * (16777215 + 1));
+        if (color3 === "Default") return 0;
+        if (/^#?[\da-f]{6}$/i.test(color3)) return parseInt(color3.replace("#", ""), 16);
+        resolvedColor = Colors[color3];
+      } else if (Array.isArray(color3)) {
+        resolvedColor = (color3[0] << 16) + (color3[1] << 8) + color3[2];
       } else {
-        resolvedColor = color;
+        resolvedColor = color3;
       }
       if (!Number.isInteger(resolvedColor)) {
-        throw new DiscordjsTypeError2(ErrorCodes2.ColorConvert, color);
+        throw new DiscordjsTypeError2(ErrorCodes2.ColorConvert, color3);
       }
       if (resolvedColor < 0 || resolvedColor > 16777215) {
         throw new DiscordjsRangeError2(ErrorCodes2.ColorRange);
@@ -33568,26 +33568,26 @@ var require_Util = __commonJS({
       return str3.replaceAll(
         /* eslint-disable max-len */
         /<(?:(?<type>@[!&]?|#)|(?:\/(?<commandName>[-_\p{L}\p{N}\p{sc=Deva}\p{sc=Thai} ]+):)|(?:a?:(?<emojiName>[\w]+):))(?<id>\d{17,19})>/gu,
-        (match, type, commandName, emojiName, id) => {
+        (match, type, commandName, emojiName, id2) => {
           if (commandName) return `/${commandName}`;
           if (emojiName) return `:${emojiName}:`;
           switch (type) {
             case "@":
             case "@!": {
-              const member = channel.guild?.members.cache.get(id);
+              const member = channel.guild?.members.cache.get(id2);
               if (member) {
                 return `@${member.displayName}`;
               }
-              const user = channel.client.users.cache.get(id);
+              const user = channel.client.users.cache.get(id2);
               return user ? `@${user.displayName}` : match;
             }
             case "@&": {
               if (channel.type === ChannelType5.DM) return match;
-              const role = channel.guild.roles.cache.get(id);
+              const role = channel.guild.roles.cache.get(id2);
               return role ? `@${role.name}` : match;
             }
             case "#": {
-              const mentionedChannel = channel.client.channels.cache.get(id);
+              const mentionedChannel = channel.client.channels.cache.get(id2);
               return mentionedChannel ? `#${mentionedChannel.name}` : match;
             }
             default: {
@@ -33605,9 +33605,9 @@ var require_Util = __commonJS({
         /https?:\/\/(?:ptb\.|canary\.)?discord\.com\/api(?:\/v\d{1,2})?\/webhooks\/(\d{17,19})\/([\w-]{68})/i
       );
       if (!matches || matches.length <= 2) return null;
-      const [, id, token] = matches;
+      const [, id2, token] = matches;
       return {
-        id,
+        id: id2,
         token
       };
     }
@@ -33615,9 +33615,9 @@ var require_Util = __commonJS({
       const result = {};
       if (members) {
         result.members = new Collection2();
-        for (const [id, member] of Object.entries(members)) {
-          const user = users[id];
-          result.members.set(id, guild?.members._add({ user, ...member }) ?? member);
+        for (const [id2, member] of Object.entries(members)) {
+          const user = users[id2];
+          result.members.set(id2, guild?.members._add({ user, ...member }) ?? member);
         }
       }
       if (users) {
@@ -33755,11 +33755,11 @@ var require_Transformers = __commonJS({
       if (isJSONEncodable(obj)) return toSnakeCase(obj.toJSON());
       if (Array.isArray(obj)) return obj.map(toSnakeCase);
       return Object.fromEntries(
-        Object.entries(obj).map(([key, value]) => [
-          snakeCase(key),
+        Object.entries(obj).map(([key3, value]) => [
+          snakeCase(key3),
           // TODO: The special handling of 'emoji' is just a temporary fix for v14, will be dropped in v15.
           // See https://github.com/discordjs/discord.js/issues/10909
-          key === "emoji" && typeof value === "string" ? resolvePartialEmoji(value) : toSnakeCase(value)
+          key3 === "emoji" && typeof value === "string" ? resolvePartialEmoji(value) : toSnakeCase(value)
         ])
       );
     }
@@ -33963,9 +33963,9 @@ var require_LimitedCollection = __commonJS({
         this.maxSize = maxSize;
         this.keepOverLimit = keepOverLimit;
       }
-      set(key, value) {
-        if (this.maxSize === 0 && !this.keepOverLimit?.(value, key, this)) return this;
-        if (this.size >= this.maxSize && !this.has(key)) {
+      set(key3, value) {
+        if (this.maxSize === 0 && !this.keepOverLimit?.(value, key3, this)) return this;
+        if (this.size >= this.maxSize && !this.has(key3)) {
           for (const [k, v] of this.entries()) {
             const keep = this.keepOverLimit?.(v, k, this) ?? false;
             if (!keep) {
@@ -33974,7 +33974,7 @@ var require_LimitedCollection = __commonJS({
             }
           }
         }
-        return super.set(key, value);
+        return super.set(key3, value);
       }
       static get [Symbol.species]() {
         return Collection2;
@@ -34165,8 +34165,8 @@ var require_BaseClient = __commonJS({
        * @param {WebhookDeleteOptions} [options] Options for deleting the webhook
        * @returns {Promise<void>}
        */
-      async deleteWebhook(id, { token, reason } = {}) {
-        await this.rest.delete(Routes2.webhook(id, token), { auth: !token, reason });
+      async deleteWebhook(id2, { token, reason } = {}) {
+        await this.rest.delete(Routes2.webhook(id2, token), { auth: !token, reason });
       }
       /**
        * Increments max listeners by one, if they are not zero.
@@ -34209,11 +34209,11 @@ var require_Emoji = __commonJS({
     var Base = require_Base();
     var deprecationEmittedForURL = false;
     var Emoji = class extends Base {
-      constructor(client2, emoji) {
+      constructor(client2, emoji2) {
         super(client2);
-        this.animated = emoji.animated ?? null;
-        this.name = emoji.name ?? null;
-        this.id = emoji.id ?? null;
+        this.animated = emoji2.animated ?? null;
+        this.name = emoji2.name ?? null;
+        this.id = emoji2.id ?? null;
       }
       /**
        * The identifier of this emoji, used for message reactions
@@ -36990,8 +36990,8 @@ var require_fast_deep_equal = __commonJS({
         for (i = length; i-- !== 0; )
           if (!Object.prototype.hasOwnProperty.call(b, keys[i])) return false;
         for (i = length; i-- !== 0; ) {
-          var key = keys[i];
-          if (!equal(a[key], b[key])) return false;
+          var key3 = keys[i];
+          if (!equal(a[key3], b[key3])) return false;
         }
         return true;
       }
@@ -37477,15 +37477,15 @@ var require_ApplicationCommandManager = __commonJS({
        * @returns {string}
        * @private
        */
-      commandPath({ id, guildId } = {}) {
+      commandPath({ id: id2, guildId } = {}) {
         if (this.guild ?? guildId) {
-          if (id) {
-            return Routes2.applicationGuildCommand(this.client.application.id, this.guild?.id ?? guildId, id);
+          if (id2) {
+            return Routes2.applicationGuildCommand(this.client.application.id, this.guild?.id ?? guildId, id2);
           }
           return Routes2.applicationGuildCommands(this.client.application.id, this.guild?.id ?? guildId);
         }
-        if (id) {
-          return Routes2.applicationCommand(this.client.application.id, id);
+        if (id2) {
+          return Routes2.applicationCommand(this.client.application.id, id2);
         }
         return Routes2.applicationCommands(this.client.application.id);
       }
@@ -37528,15 +37528,15 @@ var require_ApplicationCommandManager = __commonJS({
        *   .then(commands => console.log(`Fetched ${commands.size} commands`))
        *   .catch(console.error);
        */
-      async fetch(id, { guildId, cache = true, force = false, locale, withLocalizations } = {}) {
-        if (typeof id === "object") {
-          ({ guildId, cache = true, locale, withLocalizations } = id);
-        } else if (id) {
+      async fetch(id2, { guildId, cache = true, force = false, locale, withLocalizations } = {}) {
+        if (typeof id2 === "object") {
+          ({ guildId, cache = true, locale, withLocalizations } = id2);
+        } else if (id2) {
           if (!force) {
-            const existing = this.cache.get(id);
+            const existing = this.cache.get(id2);
             if (existing) return existing;
           }
-          const command = await this.client.rest.get(this.commandPath({ id, guildId }));
+          const command = await this.client.rest.get(this.commandPath({ id: id2, guildId }));
           return this._add(command, cache);
         }
         const data = await this.client.rest.get(this.commandPath({ guildId }), {
@@ -37615,9 +37615,9 @@ var require_ApplicationCommandManager = __commonJS({
        *   .catch(console.error);
        */
       async edit(command, data, guildId) {
-        const id = this.resolveId(command);
-        if (!id) throw new DiscordjsTypeError2(ErrorCodes2.InvalidType, "command", "ApplicationCommandResolvable");
-        const patched = await this.client.rest.patch(this.commandPath({ id, guildId }), {
+        const id2 = this.resolveId(command);
+        if (!id2) throw new DiscordjsTypeError2(ErrorCodes2.InvalidType, "command", "ApplicationCommandResolvable");
+        const patched = await this.client.rest.patch(this.commandPath({ id: id2, guildId }), {
           body: this.constructor.transformCommand(data)
         });
         return this._add(patched, true, guildId);
@@ -37635,11 +37635,11 @@ var require_ApplicationCommandManager = __commonJS({
        *   .catch(console.error);
        */
       async delete(command, guildId) {
-        const id = this.resolveId(command);
-        if (!id) throw new DiscordjsTypeError2(ErrorCodes2.InvalidType, "command", "ApplicationCommandResolvable");
-        await this.client.rest.delete(this.commandPath({ id, guildId }));
-        const cached = this.cache.get(id);
-        this.cache.delete(id);
+        const id2 = this.resolveId(command);
+        if (!id2) throw new DiscordjsTypeError2(ErrorCodes2.InvalidType, "command", "ApplicationCommandResolvable");
+        await this.client.rest.delete(this.commandPath({ id: id2, guildId }));
+        const cached = this.cache.get(id2);
+        this.cache.delete(id2);
         return cached ?? null;
       }
       /**
@@ -37803,8 +37803,8 @@ var require_ApplicationEmojiManager = __commonJS({
         attachment = await resolveImage(attachment);
         if (!attachment) throw new DiscordjsTypeError2(ErrorCodes2.ReqResourceType);
         const body = { image: attachment, name };
-        const emoji = await this.client.rest.post(Routes2.applicationEmojis(this.application.id), { body });
-        return this._add(emoji);
+        const emoji2 = await this.client.rest.post(Routes2.applicationEmojis(this.application.id), { body });
+        return this._add(emoji2);
       }
       /**
        * Obtains one or more emojis from Discord, or the emoji cache if they're already available.
@@ -37822,18 +37822,18 @@ var require_ApplicationEmojiManager = __commonJS({
        *   .then(emoji => console.log(`The emoji name is: ${emoji.name}`))
        *   .catch(console.error);
        */
-      async fetch(id, { cache = true, force = false } = {}) {
-        if (id) {
+      async fetch(id2, { cache = true, force = false } = {}) {
+        if (id2) {
           if (!force) {
-            const existing = this.cache.get(id);
+            const existing = this.cache.get(id2);
             if (existing) return existing;
           }
-          const emoji = await this.client.rest.get(Routes2.applicationEmoji(this.application.id, id));
-          return this._add(emoji, cache);
+          const emoji2 = await this.client.rest.get(Routes2.applicationEmoji(this.application.id, id2));
+          return this._add(emoji2, cache);
         }
         const { items: data } = await this.client.rest.get(Routes2.applicationEmojis(this.application.id));
         const emojis = new Collection2();
-        for (const emoji of data) emojis.set(emoji.id, this._add(emoji, cache));
+        for (const emoji2 of data) emojis.set(emoji2.id, this._add(emoji2, cache));
         return emojis;
       }
       /**
@@ -37841,10 +37841,10 @@ var require_ApplicationEmojiManager = __commonJS({
        * @param {EmojiResolvable} emoji The Emoji resolvable to delete
        * @returns {Promise<void>}
        */
-      async delete(emoji) {
-        const id = this.resolveId(emoji);
-        if (!id) throw new DiscordjsTypeError2(ErrorCodes2.InvalidType, "emoji", "EmojiResolvable", true);
-        await this.client.rest.delete(Routes2.applicationEmoji(this.application.id, id));
+      async delete(emoji2) {
+        const id2 = this.resolveId(emoji2);
+        if (!id2) throw new DiscordjsTypeError2(ErrorCodes2.InvalidType, "emoji", "EmojiResolvable", true);
+        await this.client.rest.delete(Routes2.applicationEmoji(this.application.id, id2));
       }
       /**
        * Edits an emoji.
@@ -37852,15 +37852,15 @@ var require_ApplicationEmojiManager = __commonJS({
        * @param {ApplicationEmojiEditOptions} options The options to provide
        * @returns {Promise<ApplicationEmoji>}
        */
-      async edit(emoji, options2) {
-        const id = this.resolveId(emoji);
-        if (!id) throw new DiscordjsTypeError2(ErrorCodes2.InvalidType, "emoji", "EmojiResolvable", true);
-        const newData = await this.client.rest.patch(Routes2.applicationEmoji(this.application.id, id), {
+      async edit(emoji2, options2) {
+        const id2 = this.resolveId(emoji2);
+        if (!id2) throw new DiscordjsTypeError2(ErrorCodes2.InvalidType, "emoji", "EmojiResolvable", true);
+        const newData = await this.client.rest.patch(Routes2.applicationEmoji(this.application.id, id2), {
           body: {
             name: options2.name
           }
         });
-        const existing = this.cache.get(id);
+        const existing = this.cache.get(id2);
         if (existing) {
           existing._patch(newData);
           return existing;
@@ -37872,10 +37872,10 @@ var require_ApplicationEmojiManager = __commonJS({
        * @param {EmojiResolvable} emoji The emoji to fetch the author of
        * @returns {Promise<User>}
        */
-      async fetchAuthor(emoji) {
-        const id = this.resolveId(emoji);
-        if (!id) throw new DiscordjsTypeError2(ErrorCodes2.InvalidType, "emoji", "EmojiResolvable", true);
-        const data = await this.client.rest.get(Routes2.applicationEmoji(this.application.id, id));
+      async fetchAuthor(emoji2) {
+        const id2 = this.resolveId(emoji2);
+        if (!id2) throw new DiscordjsTypeError2(ErrorCodes2.InvalidType, "emoji", "EmojiResolvable", true);
+        const data = await this.client.rest.get(Routes2.applicationEmoji(this.application.id, id2));
         return this._add(data).author;
       }
     };
@@ -38338,7 +38338,7 @@ var require_ClientApplication = __commonJS({
         }
         if ("integration_types_config" in data) {
           this.integrationTypesConfig = Object.fromEntries(
-            Object.entries(data.integration_types_config).map(([key, config2]) => {
+            Object.entries(data.integration_types_config).map(([key3, config2]) => {
               let oauth2InstallParams = null;
               if (config2.oauth2_install_params) {
                 oauth2InstallParams = {
@@ -38349,7 +38349,7 @@ var require_ClientApplication = __commonJS({
               const context = {
                 oauth2InstallParams
               };
-              return [key, context];
+              return [key3, context];
             })
           );
         } else {
@@ -38811,8 +38811,8 @@ var require_baseIsNative = __commonJS({
 // node_modules/.pnpm/lodash@4.18.1/node_modules/lodash/_getValue.js
 var require_getValue = __commonJS({
   "node_modules/.pnpm/lodash@4.18.1/node_modules/lodash/_getValue.js"(exports2, module2) {
-    function getValue(object, key) {
-      return object == null ? void 0 : object[key];
+    function getValue(object, key3) {
+      return object == null ? void 0 : object[key3];
     }
     module2.exports = getValue;
   }
@@ -38823,8 +38823,8 @@ var require_getNative = __commonJS({
   "node_modules/.pnpm/lodash@4.18.1/node_modules/lodash/_getNative.js"(exports2, module2) {
     var baseIsNative = require_baseIsNative();
     var getValue = require_getValue();
-    function getNative(object, key) {
-      var value = getValue(object, key);
+    function getNative(object, key3) {
+      var value = getValue(object, key3);
       return baseIsNative(value) ? value : void 0;
     }
     module2.exports = getNative;
@@ -38855,8 +38855,8 @@ var require_hashClear = __commonJS({
 // node_modules/.pnpm/lodash@4.18.1/node_modules/lodash/_hashDelete.js
 var require_hashDelete = __commonJS({
   "node_modules/.pnpm/lodash@4.18.1/node_modules/lodash/_hashDelete.js"(exports2, module2) {
-    function hashDelete(key) {
-      var result = this.has(key) && delete this.__data__[key];
+    function hashDelete(key3) {
+      var result = this.has(key3) && delete this.__data__[key3];
       this.size -= result ? 1 : 0;
       return result;
     }
@@ -38871,13 +38871,13 @@ var require_hashGet = __commonJS({
     var HASH_UNDEFINED = "__lodash_hash_undefined__";
     var objectProto = Object.prototype;
     var hasOwnProperty = objectProto.hasOwnProperty;
-    function hashGet(key) {
+    function hashGet(key3) {
       var data = this.__data__;
       if (nativeCreate) {
-        var result = data[key];
+        var result = data[key3];
         return result === HASH_UNDEFINED ? void 0 : result;
       }
-      return hasOwnProperty.call(data, key) ? data[key] : void 0;
+      return hasOwnProperty.call(data, key3) ? data[key3] : void 0;
     }
     module2.exports = hashGet;
   }
@@ -38889,9 +38889,9 @@ var require_hashHas = __commonJS({
     var nativeCreate = require_nativeCreate();
     var objectProto = Object.prototype;
     var hasOwnProperty = objectProto.hasOwnProperty;
-    function hashHas(key) {
+    function hashHas(key3) {
       var data = this.__data__;
-      return nativeCreate ? data[key] !== void 0 : hasOwnProperty.call(data, key);
+      return nativeCreate ? data[key3] !== void 0 : hasOwnProperty.call(data, key3);
     }
     module2.exports = hashHas;
   }
@@ -38902,10 +38902,10 @@ var require_hashSet = __commonJS({
   "node_modules/.pnpm/lodash@4.18.1/node_modules/lodash/_hashSet.js"(exports2, module2) {
     var nativeCreate = require_nativeCreate();
     var HASH_UNDEFINED = "__lodash_hash_undefined__";
-    function hashSet(key, value) {
+    function hashSet(key3, value) {
       var data = this.__data__;
-      this.size += this.has(key) ? 0 : 1;
-      data[key] = nativeCreate && value === void 0 ? HASH_UNDEFINED : value;
+      this.size += this.has(key3) ? 0 : 1;
+      data[key3] = nativeCreate && value === void 0 ? HASH_UNDEFINED : value;
       return this;
     }
     module2.exports = hashSet;
@@ -38962,10 +38962,10 @@ var require_eq = __commonJS({
 var require_assocIndexOf = __commonJS({
   "node_modules/.pnpm/lodash@4.18.1/node_modules/lodash/_assocIndexOf.js"(exports2, module2) {
     var eq = require_eq();
-    function assocIndexOf(array, key) {
+    function assocIndexOf(array, key3) {
       var length = array.length;
       while (length--) {
-        if (eq(array[length][0], key)) {
+        if (eq(array[length][0], key3)) {
           return length;
         }
       }
@@ -38981,8 +38981,8 @@ var require_listCacheDelete = __commonJS({
     var assocIndexOf = require_assocIndexOf();
     var arrayProto = Array.prototype;
     var splice = arrayProto.splice;
-    function listCacheDelete(key) {
-      var data = this.__data__, index = assocIndexOf(data, key);
+    function listCacheDelete(key3) {
+      var data = this.__data__, index = assocIndexOf(data, key3);
       if (index < 0) {
         return false;
       }
@@ -39003,8 +39003,8 @@ var require_listCacheDelete = __commonJS({
 var require_listCacheGet = __commonJS({
   "node_modules/.pnpm/lodash@4.18.1/node_modules/lodash/_listCacheGet.js"(exports2, module2) {
     var assocIndexOf = require_assocIndexOf();
-    function listCacheGet(key) {
-      var data = this.__data__, index = assocIndexOf(data, key);
+    function listCacheGet(key3) {
+      var data = this.__data__, index = assocIndexOf(data, key3);
       return index < 0 ? void 0 : data[index][1];
     }
     module2.exports = listCacheGet;
@@ -39015,8 +39015,8 @@ var require_listCacheGet = __commonJS({
 var require_listCacheHas = __commonJS({
   "node_modules/.pnpm/lodash@4.18.1/node_modules/lodash/_listCacheHas.js"(exports2, module2) {
     var assocIndexOf = require_assocIndexOf();
-    function listCacheHas(key) {
-      return assocIndexOf(this.__data__, key) > -1;
+    function listCacheHas(key3) {
+      return assocIndexOf(this.__data__, key3) > -1;
     }
     module2.exports = listCacheHas;
   }
@@ -39026,11 +39026,11 @@ var require_listCacheHas = __commonJS({
 var require_listCacheSet = __commonJS({
   "node_modules/.pnpm/lodash@4.18.1/node_modules/lodash/_listCacheSet.js"(exports2, module2) {
     var assocIndexOf = require_assocIndexOf();
-    function listCacheSet(key, value) {
-      var data = this.__data__, index = assocIndexOf(data, key);
+    function listCacheSet(key3, value) {
+      var data = this.__data__, index = assocIndexOf(data, key3);
       if (index < 0) {
         ++this.size;
-        data.push([key, value]);
+        data.push([key3, value]);
       } else {
         data[index][1] = value;
       }
@@ -39108,9 +39108,9 @@ var require_isKeyable = __commonJS({
 var require_getMapData = __commonJS({
   "node_modules/.pnpm/lodash@4.18.1/node_modules/lodash/_getMapData.js"(exports2, module2) {
     var isKeyable = require_isKeyable();
-    function getMapData(map, key) {
+    function getMapData(map, key3) {
       var data = map.__data__;
-      return isKeyable(key) ? data[typeof key == "string" ? "string" : "hash"] : data.map;
+      return isKeyable(key3) ? data[typeof key3 == "string" ? "string" : "hash"] : data.map;
     }
     module2.exports = getMapData;
   }
@@ -39120,8 +39120,8 @@ var require_getMapData = __commonJS({
 var require_mapCacheDelete = __commonJS({
   "node_modules/.pnpm/lodash@4.18.1/node_modules/lodash/_mapCacheDelete.js"(exports2, module2) {
     var getMapData = require_getMapData();
-    function mapCacheDelete(key) {
-      var result = getMapData(this, key)["delete"](key);
+    function mapCacheDelete(key3) {
+      var result = getMapData(this, key3)["delete"](key3);
       this.size -= result ? 1 : 0;
       return result;
     }
@@ -39133,8 +39133,8 @@ var require_mapCacheDelete = __commonJS({
 var require_mapCacheGet = __commonJS({
   "node_modules/.pnpm/lodash@4.18.1/node_modules/lodash/_mapCacheGet.js"(exports2, module2) {
     var getMapData = require_getMapData();
-    function mapCacheGet(key) {
-      return getMapData(this, key).get(key);
+    function mapCacheGet(key3) {
+      return getMapData(this, key3).get(key3);
     }
     module2.exports = mapCacheGet;
   }
@@ -39144,8 +39144,8 @@ var require_mapCacheGet = __commonJS({
 var require_mapCacheHas = __commonJS({
   "node_modules/.pnpm/lodash@4.18.1/node_modules/lodash/_mapCacheHas.js"(exports2, module2) {
     var getMapData = require_getMapData();
-    function mapCacheHas(key) {
-      return getMapData(this, key).has(key);
+    function mapCacheHas(key3) {
+      return getMapData(this, key3).has(key3);
     }
     module2.exports = mapCacheHas;
   }
@@ -39155,9 +39155,9 @@ var require_mapCacheHas = __commonJS({
 var require_mapCacheSet = __commonJS({
   "node_modules/.pnpm/lodash@4.18.1/node_modules/lodash/_mapCacheSet.js"(exports2, module2) {
     var getMapData = require_getMapData();
-    function mapCacheSet(key, value) {
-      var data = getMapData(this, key), size = data.size;
-      data.set(key, value);
+    function mapCacheSet(key3, value) {
+      var data = getMapData(this, key3), size = data.size;
+      data.set(key3, value);
       this.size += data.size == size ? 0 : 1;
       return this;
     }
@@ -39200,12 +39200,12 @@ var require_memoize = __commonJS({
         throw new TypeError(FUNC_ERROR_TEXT);
       }
       var memoized = function() {
-        var args = arguments, key = resolver ? resolver.apply(this, args) : args[0], cache = memoized.cache;
-        if (cache.has(key)) {
-          return cache.get(key);
+        var args = arguments, key3 = resolver ? resolver.apply(this, args) : args[0], cache = memoized.cache;
+        if (cache.has(key3)) {
+          return cache.get(key3);
         }
         var result = func.apply(this, args);
-        memoized.cache = cache.set(key, result) || cache;
+        memoized.cache = cache.set(key3, result) || cache;
         return result;
       };
       memoized.cache = new (memoize.Cache || MapCache)();
@@ -39222,11 +39222,11 @@ var require_memoizeCapped = __commonJS({
     var memoize = require_memoize();
     var MAX_MEMOIZE_SIZE = 500;
     function memoizeCapped(func) {
-      var result = memoize(func, function(key) {
+      var result = memoize(func, function(key3) {
         if (cache.size === MAX_MEMOIZE_SIZE) {
           cache.clear();
         }
-        return key;
+        return key3;
       });
       var cache = result.cache;
       return result;
@@ -39415,8 +39415,8 @@ var require_es6 = __commonJS({
         for (i = length; i-- !== 0; )
           if (!Object.prototype.hasOwnProperty.call(b, keys[i])) return false;
         for (i = length; i-- !== 0; ) {
-          var key = keys[i];
-          if (!equal(a[key], b[key])) return false;
+          var key3 = keys[i];
+          if (!equal(a[key3], b[key3])) return false;
         }
         return true;
       }
@@ -39552,8 +39552,8 @@ var require_arrayIncludesWith = __commonJS({
 // node_modules/.pnpm/lodash@4.18.1/node_modules/lodash/_cacheHas.js
 var require_cacheHas = __commonJS({
   "node_modules/.pnpm/lodash@4.18.1/node_modules/lodash/_cacheHas.js"(exports2, module2) {
-    function cacheHas(cache, key) {
-      return cache.has(key);
+    function cacheHas(cache, key3) {
+      return cache.has(key3);
     }
     module2.exports = cacheHas;
   }
@@ -40506,7 +40506,7 @@ ${givenBlock}`;
     };
     __name(_Result, "Result");
     var Result = _Result;
-    function whenConstraint(key, options2, validator, validatorOptions) {
+    function whenConstraint(key3, options2, validator, validatorOptions) {
       return {
         run(input, parent) {
           if (!parent) {
@@ -40519,8 +40519,8 @@ ${givenBlock}`;
               )
             );
           }
-          const isKeyArray = Array.isArray(key);
-          const value = isKeyArray ? key.map((k2) => get__default.default(parent, k2)) : get__default.default(parent, key);
+          const isKeyArray = Array.isArray(key3);
+          const value = isKeyArray ? key3.map((k2) => get__default.default(parent, k2)) : get__default.default(parent, key3);
           const predicate = resolveBooleanIs(options2, value, isKeyArray) ? options2.then : options2.otherwise;
           if (predicate) {
             return predicate(validator).run(input);
@@ -40601,8 +40601,8 @@ ${givenBlock}`;
       default(value, options2 = this.validatorOptions) {
         return new DefaultValidator(this.clone(), value, options2);
       }
-      when(key, options2, validatorOptions) {
-        return this.addConstraint(whenConstraint(key, options2, this, validatorOptions));
+      when(key3, options2, validatorOptions) {
+        return this.addConstraint(whenConstraint(key3, options2, this, validatorOptions));
       }
       describe(description) {
         const clone = this.clone();
@@ -40788,8 +40788,8 @@ ${givenBlock}`;
   ${options2.stylize("|", "undefined")} `;
         const header = `${options2.stylize("CombinedPropertyError", "special")} (${options2.stylize(this.errors.length.toString(), "number")})`;
         const message = options2.stylize(this.message, "regexp");
-        const errors = this.errors.map(([key, error]) => {
-          const property = _CombinedPropertyError2.formatProperty(key, options2);
+        const errors = this.errors.map(([key3, error]) => {
+          const property = _CombinedPropertyError2.formatProperty(key3, options2);
           const body = error[customInspectSymbolStackLess](depth - 1, newOptions).replace(/\n/g, padding);
           return `  input${property}${padding}${body}`;
         }).join("\n\n");
@@ -40798,12 +40798,12 @@ ${givenBlock}`;
 
 ${errors}`;
       }
-      static formatProperty(key, options2) {
-        if (typeof key === "string")
-          return options2.stylize(`.${key}`, "symbol");
-        if (typeof key === "number")
-          return `[${options2.stylize(key.toString(), "number")}]`;
-        return `[${options2.stylize("Symbol", "symbol")}(${key.description})]`;
+      static formatProperty(key3, options2) {
+        if (typeof key3 === "string")
+          return options2.stylize(`.${key3}`, "symbol");
+        if (typeof key3 === "number")
+          return `[${options2.stylize(key3.toString(), "number")}]`;
+        return `[${options2.stylize("Symbol", "symbol")}(${key3.description})]`;
       }
     };
     __name(_CombinedPropertyError, "CombinedPropertyError");
@@ -41598,35 +41598,35 @@ ${errors}`;
             break;
         }
         const shapeEntries = Object.entries(shape);
-        this.keys = shapeEntries.map(([key]) => key);
-        for (const [key, validator] of shapeEntries) {
+        this.keys = shapeEntries.map(([key3]) => key3);
+        for (const [key3, validator] of shapeEntries) {
           if (validator instanceof UnionValidator) {
             const [possiblyLiteralOrNullishPredicate] = validator["validators"];
             if (possiblyLiteralOrNullishPredicate instanceof NullishValidator) {
-              this.possiblyUndefinedKeys.set(key, validator);
+              this.possiblyUndefinedKeys.set(key3, validator);
             } else if (possiblyLiteralOrNullishPredicate instanceof LiteralValidator) {
               if (possiblyLiteralOrNullishPredicate.expected === void 0) {
-                this.possiblyUndefinedKeys.set(key, validator);
+                this.possiblyUndefinedKeys.set(key3, validator);
               } else {
-                this.requiredKeys.set(key, validator);
+                this.requiredKeys.set(key3, validator);
               }
             } else if (validator instanceof DefaultValidator) {
-              this.possiblyUndefinedKeysWithDefaults.set(key, validator);
+              this.possiblyUndefinedKeysWithDefaults.set(key3, validator);
             } else {
-              this.requiredKeys.set(key, validator);
+              this.requiredKeys.set(key3, validator);
             }
           } else if (validator instanceof NullishValidator) {
-            this.possiblyUndefinedKeys.set(key, validator);
+            this.possiblyUndefinedKeys.set(key3, validator);
           } else if (validator instanceof LiteralValidator) {
             if (validator.expected === void 0) {
-              this.possiblyUndefinedKeys.set(key, validator);
+              this.possiblyUndefinedKeys.set(key3, validator);
             } else {
-              this.requiredKeys.set(key, validator);
+              this.requiredKeys.set(key3, validator);
             }
           } else if (validator instanceof DefaultValidator) {
-            this.possiblyUndefinedKeysWithDefaults.set(key, validator);
+            this.possiblyUndefinedKeysWithDefaults.set(key3, validator);
           } else {
-            this.requiredKeys.set(key, validator);
+            this.requiredKeys.set(key3, validator);
           }
         }
       }
@@ -41640,16 +41640,16 @@ ${errors}`;
         return Reflect.construct(this.constructor, [this.shape, 2, options2, this.constraints]);
       }
       partial(options2 = this.validatorOptions) {
-        const shape = Object.fromEntries(this.keys.map((key) => [key, this.shape[key].optional(options2)]));
+        const shape = Object.fromEntries(this.keys.map((key3) => [key3, this.shape[key3].optional(options2)]));
         return Reflect.construct(this.constructor, [shape, this.strategy, options2, this.constraints]);
       }
       required(options2 = this.validatorOptions) {
         const shape = Object.fromEntries(
-          this.keys.map((key) => {
-            let validator = this.shape[key];
+          this.keys.map((key3) => {
+            let validator = this.shape[key3];
             if (validator instanceof UnionValidator)
               validator = validator.required(options2);
-            return [key, validator];
+            return [key3, validator];
           })
         );
         return Reflect.construct(this.constructor, [shape, this.strategy, options2, this.constraints]);
@@ -41660,13 +41660,13 @@ ${errors}`;
       }
       pick(keys, options2 = this.validatorOptions) {
         const shape = Object.fromEntries(
-          keys.filter((key) => this.keys.includes(key)).map((key) => [key, this.shape[key]])
+          keys.filter((key3) => this.keys.includes(key3)).map((key3) => [key3, this.shape[key3]])
         );
         return Reflect.construct(this.constructor, [shape, this.strategy, options2, this.constraints]);
       }
       omit(keys, options2 = this.validatorOptions) {
         const shape = Object.fromEntries(
-          this.keys.filter((key) => !keys.includes(key)).map((key) => [key, this.shape[key]])
+          this.keys.filter((key3) => !keys.includes(key3)).map((key3) => [key3, this.shape[key3]])
         );
         return Reflect.construct(this.constructor, [shape, this.strategy, options2, this.constraints]);
       }
@@ -41702,41 +41702,41 @@ ${errors}`;
         const errors = [];
         const finalObject = {};
         const inputEntries = new Map(Object.entries(value));
-        const runPredicate = /* @__PURE__ */ __name((key, predicate) => {
-          const result = predicate.run(value[key]);
+        const runPredicate = /* @__PURE__ */ __name((key3, predicate) => {
+          const result = predicate.run(value[key3]);
           if (result.isOk()) {
-            finalObject[key] = result.value;
+            finalObject[key3] = result.value;
           } else {
             const error = result.error;
-            errors.push([key, error]);
+            errors.push([key3, error]);
           }
         }, "runPredicate");
-        for (const [key, predicate] of this.requiredKeys) {
-          if (inputEntries.delete(key)) {
-            runPredicate(key, predicate);
+        for (const [key3, predicate] of this.requiredKeys) {
+          if (inputEntries.delete(key3)) {
+            runPredicate(key3, predicate);
           } else {
-            errors.push([key, new MissingPropertyError(key, this.validatorOptions)]);
+            errors.push([key3, new MissingPropertyError(key3, this.validatorOptions)]);
           }
         }
-        for (const [key, validator] of this.possiblyUndefinedKeysWithDefaults) {
-          inputEntries.delete(key);
-          runPredicate(key, validator);
+        for (const [key3, validator] of this.possiblyUndefinedKeysWithDefaults) {
+          inputEntries.delete(key3);
+          runPredicate(key3, validator);
         }
         if (inputEntries.size === 0) {
           return errors.length === 0 ? Result.ok(finalObject) : Result.err(new CombinedPropertyError(errors, this.validatorOptions));
         }
         const checkInputEntriesInsteadOfSchemaKeys = this.possiblyUndefinedKeys.size > inputEntries.size;
         if (checkInputEntriesInsteadOfSchemaKeys) {
-          for (const [key] of inputEntries) {
-            const predicate = this.possiblyUndefinedKeys.get(key);
+          for (const [key3] of inputEntries) {
+            const predicate = this.possiblyUndefinedKeys.get(key3);
             if (predicate) {
-              runPredicate(key, predicate);
+              runPredicate(key3, predicate);
             }
           }
         } else {
-          for (const [key, predicate] of this.possiblyUndefinedKeys) {
-            if (inputEntries.delete(key)) {
-              runPredicate(key, predicate);
+          for (const [key3, predicate] of this.possiblyUndefinedKeys) {
+            if (inputEntries.delete(key3)) {
+              runPredicate(key3, predicate);
             }
           }
         }
@@ -41746,37 +41746,37 @@ ${errors}`;
         const errors = [];
         const finalResult = {};
         const inputEntries = new Map(Object.entries(value));
-        const runPredicate = /* @__PURE__ */ __name((key, predicate) => {
-          const result = predicate.run(value[key]);
+        const runPredicate = /* @__PURE__ */ __name((key3, predicate) => {
+          const result = predicate.run(value[key3]);
           if (result.isOk()) {
-            finalResult[key] = result.value;
+            finalResult[key3] = result.value;
           } else {
             const error = result.error;
-            errors.push([key, error]);
+            errors.push([key3, error]);
           }
         }, "runPredicate");
-        for (const [key, predicate] of this.requiredKeys) {
-          if (inputEntries.delete(key)) {
-            runPredicate(key, predicate);
+        for (const [key3, predicate] of this.requiredKeys) {
+          if (inputEntries.delete(key3)) {
+            runPredicate(key3, predicate);
           } else {
-            errors.push([key, new MissingPropertyError(key, this.validatorOptions)]);
+            errors.push([key3, new MissingPropertyError(key3, this.validatorOptions)]);
           }
         }
-        for (const [key, validator] of this.possiblyUndefinedKeysWithDefaults) {
-          inputEntries.delete(key);
-          runPredicate(key, validator);
+        for (const [key3, validator] of this.possiblyUndefinedKeysWithDefaults) {
+          inputEntries.delete(key3);
+          runPredicate(key3, validator);
         }
-        for (const [key, predicate] of this.possiblyUndefinedKeys) {
+        for (const [key3, predicate] of this.possiblyUndefinedKeys) {
           if (inputEntries.size === 0) {
             break;
           }
-          if (inputEntries.delete(key)) {
-            runPredicate(key, predicate);
+          if (inputEntries.delete(key3)) {
+            runPredicate(key3, predicate);
           }
         }
         if (inputEntries.size !== 0) {
-          for (const [key, value2] of inputEntries.entries()) {
-            errors.push([key, new UnknownPropertyError(key, value2, this.validatorOptions)]);
+          for (const [key3, value2] of inputEntries.entries()) {
+            errors.push([key3, new UnknownPropertyError(key3, value2, this.validatorOptions)]);
           }
         }
         return errors.length === 0 ? Result.ok(finalResult) : Result.err(new CombinedPropertyError(errors, this.validatorOptions));
@@ -41818,12 +41818,12 @@ ${errors}`;
         }
         const errors = [];
         const transformed = {};
-        for (const [key, val] of Object.entries(value)) {
+        for (const [key3, val] of Object.entries(value)) {
           const result = this.validator.run(val);
           if (result.isOk())
-            transformed[key] = result.value;
+            transformed[key3] = result.value;
           else
-            errors.push([key, result.error]);
+            errors.push([key3, result.error]);
         }
         return errors.length === 0 ? Result.ok(transformed) : Result.err(new CombinedPropertyError(errors, this.validatorOptions));
       }
@@ -42261,14 +42261,14 @@ ${givenBlock}`;
         }
         const errors = [];
         const transformed = /* @__PURE__ */ new Map();
-        for (const [key, val] of value.entries()) {
-          const keyResult = this.keyValidator.run(key);
+        for (const [key3, val] of value.entries()) {
+          const keyResult = this.keyValidator.run(key3);
           const valueResult = this.valueValidator.run(val);
           const { length } = errors;
           if (keyResult.isErr())
-            errors.push([key, keyResult.error]);
+            errors.push([key3, keyResult.error]);
           if (valueResult.isErr())
-            errors.push([key, valueResult.error]);
+            errors.push([key3, valueResult.error]);
           if (errors.length === length)
             transformed.set(keyResult.value, valueResult.value);
         }
@@ -42314,9 +42314,9 @@ ${givenBlock}`;
         }
         const padding = `
   ${options2.stylize("|", "undefined")} `;
-        const pairs = this.enumKeys.map((key) => {
-          const enumValue = this.enumMappings.get(key);
-          return `${options2.stylize(key, "string")} or ${options2.stylize(
+        const pairs = this.enumKeys.map((key3) => {
+          const enumValue = this.enumMappings.get(key3);
+          return `${options2.stylize(key3, "string")} or ${options2.stylize(
             enumValue.toString(),
             typeof enumValue === "number" ? "number" : "string"
           )}`;
@@ -42337,12 +42337,12 @@ ${pairsBlock}`;
         this.hasNumericElements = false;
         this.enumMapping = /* @__PURE__ */ new Map();
         this.enumShape = enumShape;
-        this.enumKeys = Object.keys(enumShape).filter((key) => {
-          return typeof enumShape[enumShape[key]] !== "number";
+        this.enumKeys = Object.keys(enumShape).filter((key3) => {
+          return typeof enumShape[enumShape[key3]] !== "number";
         });
-        for (const key of this.enumKeys) {
-          const enumValue = enumShape[key];
-          this.enumMapping.set(key, enumValue);
+        for (const key3 of this.enumKeys) {
+          const enumValue = enumShape[key3];
+          this.enumMapping.set(key3, enumValue);
           this.enumMapping.set(enumValue, enumValue);
           if (typeof enumValue === "number") {
             this.hasNumericElements = true;
@@ -42885,7 +42885,7 @@ var require_proxy = __commonJS({
         throw new Error("Cannot delete properties on Proxies created by ts-mixer");
       },
       ownKeys() {
-        return ingredients.map(Object.getOwnPropertyNames).reduce((prev, curr) => curr.concat(prev.filter((key) => curr.indexOf(key) < 0)));
+        return ingredients.map(Object.getOwnPropertyNames).reduce((prev, curr) => curr.concat(prev.filter((key3) => curr.indexOf(key3) < 0)));
       }
     });
     exports2.proxyMix = proxyMix;
@@ -42962,8 +42962,8 @@ var require_decorator = __commonJS({
       var _a, _b;
       const allKeys = (0, util_1.unique)([...Object.getOwnPropertyNames(o1), ...Object.getOwnPropertyNames(o2)]);
       const mergedObject = {};
-      for (let key of allKeys)
-        mergedObject[key] = (0, util_1.unique)([...(_a = o1 === null || o1 === void 0 ? void 0 : o1[key]) !== null && _a !== void 0 ? _a : [], ...(_b = o2 === null || o2 === void 0 ? void 0 : o2[key]) !== null && _b !== void 0 ? _b : []]);
+      for (let key3 of allKeys)
+        mergedObject[key3] = (0, util_1.unique)([...(_a = o1 === null || o1 === void 0 ? void 0 : o1[key3]) !== null && _a !== void 0 ? _a : [], ...(_b = o2 === null || o2 === void 0 ? void 0 : o2[key3]) !== null && _b !== void 0 ? _b : []]);
       return mergedObject;
     };
     var mergePropertyAndMethodDecorators = (d1, d2) => {
@@ -43037,20 +43037,20 @@ var require_decorator = __commonJS({
       classDecorators.push(decorator);
       return decorator(clazz);
     });
-    var decorateMember = (decorator) => ((object, key, ...otherArgs) => {
+    var decorateMember = (decorator) => ((object, key3, ...otherArgs) => {
       var _a, _b, _c;
       const decoratorTargetType = typeof object === "function" ? "static" : "instance";
-      const decoratorType = typeof object[key] === "function" ? "method" : "property";
+      const decoratorType = typeof object[key3] === "function" ? "method" : "property";
       const clazz = decoratorTargetType === "static" ? object : object.constructor;
       const decoratorsForClass = (0, exports2.getDecoratorsForClass)(clazz);
       const decoratorsForTargetType = (_a = decoratorsForClass === null || decoratorsForClass === void 0 ? void 0 : decoratorsForClass[decoratorTargetType]) !== null && _a !== void 0 ? _a : {};
       decoratorsForClass[decoratorTargetType] = decoratorsForTargetType;
       let decoratorsForType = (_b = decoratorsForTargetType === null || decoratorsForTargetType === void 0 ? void 0 : decoratorsForTargetType[decoratorType]) !== null && _b !== void 0 ? _b : {};
       decoratorsForTargetType[decoratorType] = decoratorsForType;
-      let decoratorsForKey = (_c = decoratorsForType === null || decoratorsForType === void 0 ? void 0 : decoratorsForType[key]) !== null && _c !== void 0 ? _c : [];
-      decoratorsForType[key] = decoratorsForKey;
+      let decoratorsForKey = (_c = decoratorsForType === null || decoratorsForType === void 0 ? void 0 : decoratorsForType[key3]) !== null && _c !== void 0 ? _c : [];
+      decoratorsForType[key3] = decoratorsForKey;
       decoratorsForKey.push(decorator);
-      return decorator(object, key, ...otherArgs);
+      return decorator(object, key3, ...otherArgs);
     });
     var decorate = (decorator) => ((...args) => {
       if (args.length === 1)
@@ -43113,13 +43113,13 @@ var require_mixins = __commonJS({
       const propDecorators = propAndMethodDecorators.property;
       const methodDecorators = propAndMethodDecorators.method;
       if (propDecorators)
-        for (let key in propDecorators)
-          for (let decorator of propDecorators[key])
-            decorator(target, key);
+        for (let key3 in propDecorators)
+          for (let decorator of propDecorators[key3])
+            decorator(target, key3);
       if (methodDecorators)
-        for (let key in methodDecorators)
-          for (let decorator of methodDecorators[key])
-            decorator(target, key, Object.getOwnPropertyDescriptor(target, key));
+        for (let key3 in methodDecorators)
+          for (let decorator of methodDecorators[key3])
+            decorator(target, key3, Object.getOwnPropertyDescriptor(target, key3));
     };
     var mix = (...ingredients) => (decoratedClass) => {
       const mixedClass = Mixin(...ingredients.concat([decoratedClass]));
@@ -43178,9 +43178,9 @@ var require_dist8 = __commonJS({
     };
     var __copyProps2 = (to, from, except, desc) => {
       if (from && typeof from === "object" || typeof from === "function") {
-        for (let key of __getOwnPropNames2(from))
-          if (!__hasOwnProp2.call(to, key) && key !== except)
-            __defProp2(to, key, { get: () => from[key], enumerable: !(desc = __getOwnPropDesc2(from, key)) || desc.enumerable });
+        for (let key3 of __getOwnPropNames2(from))
+          if (!__hasOwnProp2.call(to, key3) && key3 !== except)
+            __defProp2(to, key3, { get: () => from[key3], enumerable: !(desc = __getOwnPropDesc2(from, key3)) || desc.enumerable });
       }
       return to;
     };
@@ -43194,12 +43194,12 @@ var require_dist8 = __commonJS({
       mod
     ));
     var __toCommonJS2 = (mod) => __copyProps2(__defProp2({}, "__esModule", { value: true }), mod);
-    var __decorateClass = (decorators, target, key, kind2) => {
-      var result = kind2 > 1 ? void 0 : kind2 ? __getOwnPropDesc2(target, key) : target;
+    var __decorateClass = (decorators, target, key3, kind2) => {
+      var result = kind2 > 1 ? void 0 : kind2 ? __getOwnPropDesc2(target, key3) : target;
       for (var i = decorators.length - 1, decorator; i >= 0; i--)
         if (decorator = decorators[i])
-          result = (kind2 ? decorator(target, key, result) : decorator(result)) || result;
-      if (kind2 && result) __defProp2(target, key, result);
+          result = (kind2 ? decorator(target, key3, result) : decorator(result)) || result;
+      if (kind2 && result) __defProp2(target, key3, result);
       return result;
     };
     var index_exports = {};
@@ -43471,14 +43471,14 @@ var require_dist8 = __commonJS({
        *
        * @param color - The color to use
        */
-      setColor(color) {
-        colorPredicate.parse(color);
-        if (Array.isArray(color)) {
-          const [red, green, blue] = color;
+      setColor(color3) {
+        colorPredicate.parse(color3);
+        if (Array.isArray(color3)) {
+          const [red, green, blue] = color3;
           this.data.color = (red << 16) + (green << 8) + blue;
           return this;
         }
-        this.data.color = color ?? void 0;
+        this.data.color = color3 ?? void 0;
         return this;
       }
       /**
@@ -43661,8 +43661,8 @@ var require_dist8 = __commonJS({
        *
        * @param emoji - The emoji to use
        */
-      setEmoji(emoji) {
-        this.data.emoji = emojiValidator.parse(emoji);
+      setEmoji(emoji2) {
+        this.data.emoji = emojiValidator.parse(emoji2);
         return this;
       }
       /**
@@ -43713,12 +43713,12 @@ var require_dist8 = __commonJS({
     var urlValidator = import_shapeshift2.s.string().url({
       allowedProtocols: ["http:", "https:", "discord:"]
     }).setValidationEnabled(isValidationEnabled);
-    function validateRequiredButtonParameters(style, label2, emoji, customId, skuId, url) {
+    function validateRequiredButtonParameters(style, label2, emoji2, customId, skuId, url) {
       if (style === import_v10.ButtonStyle.Premium) {
         if (!skuId) {
           throw new RangeError("Premium buttons must have an SKU id.");
         }
-        if (customId || label2 || url || emoji) {
+        if (customId || label2 || url || emoji2) {
           throw new RangeError("Premium buttons cannot have a custom id, label, URL, or emoji.");
         }
       } else {
@@ -43728,7 +43728,7 @@ var require_dist8 = __commonJS({
         if (url && customId) {
           throw new RangeError("URL and custom id are mutually exclusive.");
         }
-        if (!label2 && !emoji) {
+        if (!label2 && !emoji2) {
           throw new RangeError("Non-premium buttons must have a label and/or an emoji.");
         }
         if (style === import_v10.ButtonStyle.Link) {
@@ -43763,8 +43763,8 @@ var require_dist8 = __commonJS({
        *
        * @param id - The id for this component
        */
-      setId(id) {
-        this.data.id = idValidator.parse(id);
+      setId(id2) {
+        this.data.id = idValidator.parse(id2);
         return this;
       }
       /**
@@ -43859,8 +43859,8 @@ var require_dist8 = __commonJS({
        *
        * @param emoji - The emoji to use
        */
-      setEmoji(emoji) {
-        this.data.emoji = emojiValidator.parse(emoji);
+      setEmoji(emoji2) {
+        this.data.emoji = emojiValidator.parse(emoji2);
         return this;
       }
       /**
@@ -44710,8 +44710,8 @@ var require_dist8 = __commonJS({
         optionsLengthValidator.parse((this.data.default_values?.length ?? 0) + normalizedValues.length);
         this.data.default_values ??= [];
         this.data.default_values.push(
-          ...normalizedValues.map((id) => ({
-            id,
+          ...normalizedValues.map((id2) => ({
+            id: id2,
             type: import_v1010.SelectMenuDefaultValueType.Channel
           }))
         );
@@ -44725,8 +44725,8 @@ var require_dist8 = __commonJS({
       setDefaultChannels(...channels) {
         const normalizedValues = normalizeArray(channels);
         optionsLengthValidator.parse(normalizedValues.length);
-        this.data.default_values = normalizedValues.map((id) => ({
-          id,
+        this.data.default_values = normalizedValues.map((id2) => ({
+          id: id2,
           type: import_v1010.SelectMenuDefaultValueType.Channel
         }));
         return this;
@@ -44781,8 +44781,8 @@ var require_dist8 = __commonJS({
         optionsLengthValidator.parse((this.data.default_values?.length ?? 0) + normalizedValues.length);
         this.data.default_values ??= [];
         this.data.default_values.push(
-          ...normalizedValues.map((id) => ({
-            id,
+          ...normalizedValues.map((id2) => ({
+            id: id2,
             type: import_v1011.SelectMenuDefaultValueType.Role
           }))
         );
@@ -44798,8 +44798,8 @@ var require_dist8 = __commonJS({
         optionsLengthValidator.parse((this.data.default_values?.length ?? 0) + normalizedValues.length);
         this.data.default_values ??= [];
         this.data.default_values.push(
-          ...normalizedValues.map((id) => ({
-            id,
+          ...normalizedValues.map((id2) => ({
+            id: id2,
             type: import_v1011.SelectMenuDefaultValueType.User
           }))
         );
@@ -44869,8 +44869,8 @@ var require_dist8 = __commonJS({
         optionsLengthValidator.parse((this.data.default_values?.length ?? 0) + normalizedValues.length);
         this.data.default_values ??= [];
         this.data.default_values.push(
-          ...normalizedValues.map((id) => ({
-            id,
+          ...normalizedValues.map((id2) => ({
+            id: id2,
             type: import_v1012.SelectMenuDefaultValueType.Role
           }))
         );
@@ -44884,8 +44884,8 @@ var require_dist8 = __commonJS({
       setDefaultRoles(...roles) {
         const normalizedValues = normalizeArray(roles);
         optionsLengthValidator.parse(normalizedValues.length);
-        this.data.default_values = normalizedValues.map((id) => ({
-          id,
+        this.data.default_values = normalizedValues.map((id2) => ({
+          id: id2,
           type: import_v1012.SelectMenuDefaultValueType.Role
         }));
         return this;
@@ -45111,8 +45111,8 @@ var require_dist8 = __commonJS({
         optionsLengthValidator.parse((this.data.default_values?.length ?? 0) + normalizedValues.length);
         this.data.default_values ??= [];
         this.data.default_values.push(
-          ...normalizedValues.map((id) => ({
-            id,
+          ...normalizedValues.map((id2) => ({
+            id: id2,
             type: import_v1015.SelectMenuDefaultValueType.User
           }))
         );
@@ -45126,8 +45126,8 @@ var require_dist8 = __commonJS({
       setDefaultUsers(...users) {
         const normalizedValues = normalizeArray(users);
         optionsLengthValidator.parse(normalizedValues.length);
-        this.data.default_values = normalizedValues.map((id) => ({
-          id,
+        this.data.default_values = normalizedValues.map((id2) => ({
+          id: id2,
           type: import_v1015.SelectMenuDefaultValueType.User
         }));
         return this;
@@ -45788,14 +45788,14 @@ var require_dist8 = __commonJS({
        *
        * @param color - The color to use
        */
-      setAccentColor(color) {
-        containerColorPredicate.parse(color);
-        if (Array.isArray(color)) {
-          const [red, green, blue] = color;
+      setAccentColor(color3) {
+        containerColorPredicate.parse(color3);
+        if (Array.isArray(color3)) {
+          const [red, green, blue] = color3;
           this.data.accent_color = (red << 16) + (green << 8) + blue;
           return this;
         }
-        this.data.accent_color = color;
+        this.data.accent_color = color3;
         return this;
       }
       /**
@@ -48530,10 +48530,10 @@ var require_GuildEmojiRoleManager = __commonJS({
     var { DiscordjsTypeError: DiscordjsTypeError2, ErrorCodes: ErrorCodes2 } = require_errors2();
     var { Role } = require_Role();
     var GuildEmojiRoleManager = class extends DataManager {
-      constructor(emoji) {
-        super(emoji.client, Role);
-        this.emoji = emoji;
-        this.guild = emoji.guild;
+      constructor(emoji2) {
+        super(emoji2.client, Role);
+        this.emoji = emoji2;
+        this.guild = emoji2.guild;
       }
       /**
        * The cache of roles belonging to this emoji
@@ -48583,7 +48583,7 @@ var require_GuildEmojiRoleManager = __commonJS({
           }
           resolvedRoleIds.push(roleId);
         }
-        const newRoles = [...this.cache.keys()].filter((id) => !resolvedRoleIds.includes(id));
+        const newRoles = [...this.cache.keys()].filter((id2) => !resolvedRoleIds.includes(id2));
         return this.set(newRoles);
       }
       /**
@@ -48741,8 +48741,8 @@ var require_ReactionEmoji = __commonJS({
     var { Emoji } = require_Emoji();
     var { flatten } = require_Util();
     var ReactionEmoji = class extends Emoji {
-      constructor(reaction, emoji) {
-        super(reaction.message.client, emoji);
+      constructor(reaction, emoji2) {
+        super(reaction.message.client, emoji2);
         this.reaction = reaction;
       }
       toJSON() {
@@ -48889,15 +48889,15 @@ var require_MessageReaction = __commonJS({
         if (this._emoji.id) {
           const applicationEmojis = this.message.client.application.emojis.cache;
           if (applicationEmojis.has(this._emoji.id)) {
-            const emoji = applicationEmojis.get(this._emoji.id);
-            this._emoji = emoji;
-            return emoji;
+            const emoji2 = applicationEmojis.get(this._emoji.id);
+            this._emoji = emoji2;
+            return emoji2;
           }
           const emojis = this.message.client.emojis.cache;
           if (emojis.has(this._emoji.id)) {
-            const emoji = emojis.get(this._emoji.id);
-            this._emoji = emoji;
-            return emoji;
+            const emoji2 = emojis.get(this._emoji.id);
+            this._emoji = emoji2;
+            return emoji2;
           }
         }
         return this._emoji;
@@ -49138,19 +49138,19 @@ var require_ButtonBuilder = __commonJS({
     var { toSnakeCase } = require_Transformers();
     var { resolvePartialEmoji } = require_Util();
     var ButtonBuilder3 = class extends BuildersButton {
-      constructor({ emoji, ...data } = {}) {
-        super(toSnakeCase({ ...data, emoji: emoji && typeof emoji === "string" ? resolvePartialEmoji(emoji) : emoji }));
+      constructor({ emoji: emoji2, ...data } = {}) {
+        super(toSnakeCase({ ...data, emoji: emoji2 && typeof emoji2 === "string" ? resolvePartialEmoji(emoji2) : emoji2 }));
       }
       /**
        * Sets the emoji to display on this button
        * @param {string|APIMessageComponentEmoji} emoji The emoji to display on this button
        * @returns {ButtonBuilder}
        */
-      setEmoji(emoji) {
-        if (typeof emoji === "string") {
-          return super.setEmoji(resolvePartialEmoji(emoji));
+      setEmoji(emoji2) {
+        if (typeof emoji2 === "string") {
+          return super.setEmoji(resolvePartialEmoji(emoji2));
         }
-        return super.setEmoji(emoji);
+        return super.setEmoji(emoji2);
       }
       /**
        * Creates a new button builder from JSON data
@@ -49667,9 +49667,9 @@ var require_StringSelectMenuBuilder = __commonJS({
         super(
           toSnakeCase({
             ...data,
-            options: options2?.map(({ emoji, ...option }) => ({
+            options: options2?.map(({ emoji: emoji2, ...option }) => ({
               ...option,
-              emoji: emoji && typeof emoji === "string" ? resolvePartialEmoji(emoji) : emoji
+              emoji: emoji2 && typeof emoji2 === "string" ? resolvePartialEmoji(emoji2) : emoji2
             }))
           })
         );
@@ -49684,10 +49684,10 @@ var require_StringSelectMenuBuilder = __commonJS({
         if (isJSONEncodable(selectMenuOption)) {
           return selectMenuOption;
         }
-        const { emoji, ...option } = selectMenuOption;
+        const { emoji: emoji2, ...option } = selectMenuOption;
         return {
           ...option,
-          emoji: typeof emoji === "string" ? resolvePartialEmoji(emoji) : emoji
+          emoji: typeof emoji2 === "string" ? resolvePartialEmoji(emoji2) : emoji2
         };
       }
       /**
@@ -50584,15 +50584,15 @@ var require_Message = __commonJS({
        *   .then(console.log)
        *   .catch(console.error);
        */
-      async react(emoji) {
+      async react(emoji2) {
         if (!this.channel) throw new DiscordjsError2(ErrorCodes2.ChannelNotCached);
-        await this.channel.messages.react(this.id, emoji);
+        await this.channel.messages.react(this.id, emoji2);
         return this.client.actions.MessageReactionAdd.handle(
           {
             [this.client.actions.injectedUser]: this.client.user,
             [this.client.actions.injectedChannel]: this.channel,
             [this.client.actions.injectedMessage]: this,
-            emoji: resolvePartialEmoji(emoji)
+            emoji: resolvePartialEmoji(emoji2)
           },
           true
         ).reaction;
@@ -51199,15 +51199,15 @@ var require_WebhookClient = __commonJS({
       constructor(data, options2) {
         super(options2);
         Object.defineProperty(this, "client", { value: this });
-        let { id, token } = data;
+        let { id: id2, token } = data;
         if ("url" in data) {
           const parsed = parseWebhookURL(data.url);
           if (!parsed) {
             throw new DiscordjsError2(ErrorCodes2.WebhookURLInvalid);
           }
-          ({ id, token } = parsed);
+          ({ id: id2, token } = parsed);
         }
-        this.id = id;
+        this.id = id2;
         Object.defineProperty(this, "token", { value: token, writable: true, configurable: true });
       }
       /**
@@ -52402,12 +52402,12 @@ var require_MessageManager = __commonJS({
        * @param {EmojiIdentifierResolvable} emoji The emoji to react with
        * @returns {Promise<void>}
        */
-      async react(message, emoji) {
+      async react(message, emoji2) {
         message = this.resolveId(message);
         if (!message) throw new DiscordjsTypeError2(ErrorCodes2.InvalidType, "message", "MessageResolvable");
-        emoji = resolvePartialEmoji(emoji);
-        if (!emoji) throw new DiscordjsTypeError2(ErrorCodes2.EmojiType, "emoji", "EmojiIdentifierResolvable");
-        const emojiId = emoji.id ? `${emoji.animated ? "a:" : ""}${emoji.name}:${emoji.id}` : encodeURIComponent(emoji.name);
+        emoji2 = resolvePartialEmoji(emoji2);
+        if (!emoji2) throw new DiscordjsTypeError2(ErrorCodes2.EmojiType, "emoji", "EmojiIdentifierResolvable");
+        const emojiId = emoji2.id ? `${emoji2.animated ? "a:" : ""}${emoji2.name}:${emoji2.id}` : encodeURIComponent(emoji2.name);
         await this.client.rest.put(Routes2.channelMessageOwnReaction(this.channel.id, message, emojiId));
       }
       /**
@@ -52462,9 +52462,9 @@ var require_InteractionWebhook = __commonJS({
        * @param {Snowflake} id The application's id
        * @param {string} token The interaction's token
        */
-      constructor(client2, id, token) {
+      constructor(client2, id2, token) {
         Object.defineProperty(this, "client", { value: client2 });
-        this.id = id;
+        this.id = id2;
         Object.defineProperty(this, "token", { value: token, writable: true, configurable: true });
       }
       // These are here only for documentation purposes - they are implemented by Webhook
@@ -53071,7 +53071,7 @@ var require_TextBasedChannel = __commonJS({
           let messageIds = messages instanceof Collection2 ? [...messages.keys()] : messages.map((message) => message.id ?? message);
           if (filterOld) {
             messageIds = messageIds.filter(
-              (id) => Date.now() - DiscordSnowflake.timestampFrom(id) < MaxBulkDeletableMessageAge
+              (id2) => Date.now() - DiscordSnowflake.timestampFrom(id2) < MaxBulkDeletableMessageAge
             );
           }
           if (messageIds.length === 0) return new Collection2();
@@ -53087,11 +53087,11 @@ var require_TextBasedChannel = __commonJS({
           }
           await this.client.rest.post(Routes2.channelBulkDelete(this.id), { body: { messages: messageIds } });
           return messageIds.reduce(
-            (col, id) => col.set(
-              id,
+            (col, id2) => col.set(
+              id2,
               this.client.actions.MessageDeleteBulk.getMessage(
                 {
-                  message_id: id
+                  message_id: id2
                 },
                 this
               )
@@ -53730,10 +53730,10 @@ var require_Enums = __commonJS({
     "use strict";
     function createEnum(keys) {
       const obj = {};
-      for (const [index, key] of keys.entries()) {
-        if (key === null) continue;
-        obj[key] = index;
-        obj[index] = key;
+      for (const [index, key3] of keys.entries()) {
+        if (key3 === null) continue;
+        obj[key3] = index;
+        obj[index] = key3;
       }
       return obj;
     }
@@ -53776,12 +53776,12 @@ var require_Action = __commonJS({
       handle(data) {
         return data;
       }
-      getPayload(data, manager, id, partialType, cache) {
-        return this.client.options.partials.includes(partialType) ? manager._add(data, cache) : manager.cache.get(id);
+      getPayload(data, manager, id2, partialType, cache) {
+        return this.client.options.partials.includes(partialType) ? manager._add(data, cache) : manager.cache.get(id2);
       }
       getChannel(data) {
         const payloadData = {};
-        const id = data.channel_id ?? data.id;
+        const id2 = data.channel_id ?? data.id;
         if ("recipients" in data) {
           const recipient = data.author ?? data.user ?? { id: data.user_id };
           if (!data.recipients.some((existingRecipient) => recipient.id === existingRecipient.id)) {
@@ -53791,19 +53791,19 @@ var require_Action = __commonJS({
           const recipient = data.author ?? data.user ?? { id: data.user_id };
           payloadData.recipients = [recipient];
         }
-        if (id !== void 0) payloadData.id = id;
-        return data[this.client.actions.injectedChannel] ?? this.getPayload({ ...data, ...payloadData }, this.client.channels, id, Partials2.Channel);
+        if (id2 !== void 0) payloadData.id = id2;
+        return data[this.client.actions.injectedChannel] ?? this.getPayload({ ...data, ...payloadData }, this.client.channels, id2, Partials2.Channel);
       }
       getMessage(data, channel, cache) {
-        const id = data.message_id ?? data.id;
+        const id2 = data.message_id ?? data.id;
         return data[this.client.actions.injectedMessage] ?? this.getPayload(
           {
-            id,
+            id: id2,
             channel_id: channel.id,
             guild_id: data.guild_id ?? channel.guild?.id
           },
           channel.messages,
-          id,
+          id2,
           Partials2.Message,
           cache
         );
@@ -53822,7 +53822,7 @@ var require_Action = __commonJS({
         return message.poll;
       }
       getReaction(data, message, user) {
-        const id = data.emoji.id ?? decodeURIComponent(data.emoji.name);
+        const id2 = data.emoji.id ?? decodeURIComponent(data.emoji.name);
         return this.getPayload(
           {
             emoji: data.emoji,
@@ -53830,7 +53830,7 @@ var require_Action = __commonJS({
             me: user?.id === this.client.user.id
           },
           message.reactions,
-          id,
+          id2,
           Partials2.Reaction
         );
       }
@@ -53838,8 +53838,8 @@ var require_Action = __commonJS({
         return this.getPayload(data, guild.members, data.user.id, Partials2.GuildMember);
       }
       getUser(data) {
-        const id = data.user_id;
-        return data[this.client.actions.injectedUser] ?? this.getPayload({ id }, this.client.users, id, Partials2.User);
+        const id2 = data.user_id;
+        return data[this.client.actions.injectedUser] ?? this.getPayload({ id: id2 }, this.client.users, id2, Partials2.User);
       }
       getUserFromMember(data) {
         if (data.guild_id && data.member?.user) {
@@ -53853,16 +53853,16 @@ var require_Action = __commonJS({
         return this.getUser(data);
       }
       getScheduledEvent(data, guild) {
-        const id = data.guild_scheduled_event_id ?? data.id;
+        const id2 = data.guild_scheduled_event_id ?? data.id;
         return this.getPayload(
-          { id, guild_id: data.guild_id ?? guild.id },
+          { id: id2, guild_id: data.guild_id ?? guild.id },
           guild.scheduledEvents,
-          id,
+          id2,
           Partials2.GuildScheduledEvent
         );
       }
-      getThreadMember(id, manager) {
-        return this.getPayload({ user_id: id }, manager, id, Partials2.ThreadMember, false);
+      getThreadMember(id2, manager) {
+        return this.getPayload({ user_id: id2 }, manager, id2, Partials2.ThreadMember, false);
       }
       getSoundboardSound(data, guild) {
         return this.getPayload(data, guild.soundboardSounds, data.sound_id, Partials2.SoundboardSound);
@@ -54755,10 +54755,10 @@ var require_ThreadMemberManager = __commonJS({
           );
           deprecationEmittedForAdd = true;
         }
-        const id = member === "@me" ? member : this.client.users.resolveId(member);
-        if (!id) throw new DiscordjsTypeError2(ErrorCodes2.InvalidType, "member", "UserResolvable");
-        await this.client.rest.put(Routes2.threadMembers(this.thread.id, id), { reason });
-        return id;
+        const id2 = member === "@me" ? member : this.client.users.resolveId(member);
+        if (!id2) throw new DiscordjsTypeError2(ErrorCodes2.InvalidType, "member", "UserResolvable");
+        await this.client.rest.put(Routes2.threadMembers(this.thread.id, id2), { reason });
+        return id2;
       }
       /**
        * Remove a user from the thread.
@@ -54771,10 +54771,10 @@ var require_ThreadMemberManager = __commonJS({
         if (reason !== void 0) {
           emitDeprecationWarningForRemoveThreadMember(this.constructor.name);
         }
-        const id = member === "@me" ? member : this.client.users.resolveId(member);
-        if (!id) throw new DiscordjsTypeError2(ErrorCodes2.InvalidType, "member", "UserResolvable");
-        await this.client.rest.delete(Routes2.threadMembers(this.thread.id, id), { reason });
-        return id;
+        const id2 = member === "@me" ? member : this.client.users.resolveId(member);
+        if (!id2) throw new DiscordjsTypeError2(ErrorCodes2.InvalidType, "member", "UserResolvable");
+        await this.client.rest.delete(Routes2.threadMembers(this.thread.id, id2), { reason });
+        return id2;
       }
       /**
        * Options used to fetch a thread member.
@@ -55405,13 +55405,13 @@ var require_ThreadManager = __commonJS({
           path2 = Routes2.channelJoinedArchivedThreads(this.channel.id);
         }
         let timestamp;
-        let id;
+        let id2;
         const query = makeURLSearchParams2({ limit });
         if (before !== void 0) {
           if (before instanceof ThreadChannel || /^\d{17,19}$/.test(String(before))) {
-            id = this.resolveId(before);
+            id2 = this.resolveId(before);
             timestamp = this.resolve(before)?.archivedAt?.toISOString();
-            const toUse = type === "private" && !fetchAll ? id : timestamp;
+            const toUse = type === "private" && !fetchAll ? id2 : timestamp;
             if (toUse) {
               query.set("before", toUse);
             }
@@ -56321,7 +56321,7 @@ var require_ChannelUpdate = __commonJS({
               return {};
             }
             if (channel.isTextBased() && newChannel.isTextBased()) {
-              for (const [id, message] of channel.messages.cache) newChannel.messages.cache.set(id, message);
+              for (const [id2, message] of channel.messages.cache) newChannel.messages.cache.set(id2, message);
             }
             channel = newChannel;
             this.client.channels.cache.set(channel.id, channel);
@@ -57062,7 +57062,7 @@ var require_GuildAuditLogsEntry = __commonJS({
             })
           );
         } else if (targetType === Targets.Invite) {
-          const inviteChange = this.changes.find(({ key }) => key === "code");
+          const inviteChange = this.changes.find(({ key: key3 }) => key3 === "code");
           this.target = guild.invites.cache.get(inviteChange.new ?? inviteChange.old) ?? new Invite2(guild.client, changesReduce(this.changes, { guild }));
         } else if (targetType === Targets.Message) {
           this.target = data.action_type === AuditLogEvent.MessageBulkDelete ? guild.channels.cache.get(data.target_id) ?? { id: data.target_id } : guild.client.users.cache.get(data.target_id) ?? null;
@@ -57397,9 +57397,9 @@ var require_GuildEmojiCreate = __commonJS({
     var GuildEmojiCreateAction = class extends Action {
       handle(guild, createdEmoji) {
         const already = guild.emojis.cache.has(createdEmoji.id);
-        const emoji = guild.emojis._add(createdEmoji);
-        if (!already) this.client.emit(Events2.GuildEmojiCreate, emoji);
-        return { emoji };
+        const emoji2 = guild.emojis._add(createdEmoji);
+        if (!already) this.client.emit(Events2.GuildEmojiCreate, emoji2);
+        return { emoji: emoji2 };
       }
     };
     module2.exports = GuildEmojiCreateAction;
@@ -57413,10 +57413,10 @@ var require_GuildEmojiDelete = __commonJS({
     var Action = require_Action();
     var Events2 = require_Events();
     var GuildEmojiDeleteAction = class extends Action {
-      handle(emoji) {
-        emoji.guild.emojis.cache.delete(emoji.id);
-        this.client.emit(Events2.GuildEmojiDelete, emoji);
-        return { emoji };
+      handle(emoji2) {
+        emoji2.guild.emojis.cache.delete(emoji2.id);
+        this.client.emit(Events2.GuildEmojiDelete, emoji2);
+        return { emoji: emoji2 };
       }
     };
     module2.exports = GuildEmojiDeleteAction;
@@ -57450,19 +57450,19 @@ var require_GuildEmojisUpdate = __commonJS({
         const guild = this.client.guilds.cache.get(data.guild_id);
         if (!guild?.emojis) return;
         const deletions = new Map(guild.emojis.cache);
-        for (const emoji of data.emojis) {
-          const cachedEmoji = guild.emojis.cache.get(emoji.id);
+        for (const emoji2 of data.emojis) {
+          const cachedEmoji = guild.emojis.cache.get(emoji2.id);
           if (cachedEmoji) {
-            deletions.delete(emoji.id);
-            if (!cachedEmoji.equals(emoji)) {
-              this.client.actions.GuildEmojiUpdate.handle(cachedEmoji, emoji);
+            deletions.delete(emoji2.id);
+            if (!cachedEmoji.equals(emoji2)) {
+              this.client.actions.GuildEmojiUpdate.handle(cachedEmoji, emoji2);
             }
           } else {
-            this.client.actions.GuildEmojiCreate.handle(guild, emoji);
+            this.client.actions.GuildEmojiCreate.handle(guild, emoji2);
           }
         }
-        for (const emoji of deletions.values()) {
-          this.client.actions.GuildEmojiDelete.handle(emoji);
+        for (const emoji2 of deletions.values()) {
+          this.client.actions.GuildEmojiDelete.handle(emoji2);
         }
       }
     };
@@ -58195,8 +58195,8 @@ var require_AutocompleteInteraction = __commonJS({
        * @type {?ApplicationCommand}
        */
       get command() {
-        const id = this.commandId;
-        return this.guild?.commands.cache.get(id) ?? this.client.application.commands.cache.get(id) ?? null;
+        const id2 = this.commandId;
+        return this.guild?.commands.cache.get(id2) ?? this.client.application.commands.cache.get(id2) ?? null;
       }
       /**
        * Sends results for the autocomplete of this interaction.
@@ -58317,9 +58317,9 @@ var require_InteractionResponse = __commonJS({
     var { InteractionType } = require_v106();
     var { DiscordjsError: DiscordjsError2, ErrorCodes: ErrorCodes2 } = require_errors2();
     var InteractionResponse = class {
-      constructor(interaction, id) {
+      constructor(interaction, id2) {
         this.interaction = interaction;
-        this.id = id ?? interaction.id;
+        this.id = id2 ?? interaction.id;
         this.client = interaction.client;
       }
       /**
@@ -58725,12 +58725,12 @@ var require_InteractionResponses = __commonJS({
        * @param {ShowModalOptions} [options={}] The options for sending this interaction response
        * @returns {Promise<InteractionCallbackResponse|undefined>}
        */
-      async showModal(modal, options2 = {}) {
+      async showModal(modal2, options2 = {}) {
         if (this.deferred || this.replied) throw new DiscordjsError2(ErrorCodes2.InteractionAlreadyReplied);
         const response = await this.client.rest.post(Routes2.interactionCallback(this.id, this.token), {
           body: {
             type: InteractionResponseType.Modal,
-            data: isJSONEncodable(modal) ? modal.toJSON() : this.client.options.jsonTransformer(modal)
+            data: isJSONEncodable(modal2) ? modal2.toJSON() : this.client.options.jsonTransformer(modal2)
           },
           auth: false,
           query: makeURLSearchParams2({ with_response: options2.withResponse ?? false })
@@ -58947,8 +58947,8 @@ var require_CommandInteraction = __commonJS({
        * @type {?ApplicationCommand}
        */
       get command() {
-        const id = this.commandId;
-        return this.guild?.commands.cache.get(id) ?? this.client.application.commands.cache.get(id) ?? null;
+        const id2 = this.commandId;
+        return this.guild?.commands.cache.get(id2) ?? this.client.application.commands.cache.get(id2) ?? null;
       }
       /**
        * @typedef {Object} BaseInteractionResolvedData
@@ -59089,16 +59089,16 @@ var require_MentionableSelectMenuInteraction = __commonJS({
         this.members = new Collection2();
         this.roles = new Collection2();
         if (members) {
-          for (const [id, member] of Object.entries(members)) {
-            const user = users[id];
+          for (const [id2, member] of Object.entries(members)) {
+            const user = users[id2];
             if (!user) {
               this.client.emit(
                 Events2.Debug,
-                `[MentionableSelectMenuInteraction] Received a member without a user, skipping ${id}`
+                `[MentionableSelectMenuInteraction] Received a member without a user, skipping ${id2}`
               );
               continue;
             }
-            this.members.set(id, this.guild?.members._add({ user, ...member }) ?? { user, ...member });
+            this.members.set(id2, this.guild?.members._add({ user, ...member }) ?? { user, ...member });
           }
         }
         if (users) {
@@ -59474,42 +59474,42 @@ var require_ModalSubmitInteraction = __commonJS({
             const valueSet = new Set(rawComponent.values);
             if (users) {
               data.users = new Collection2();
-              for (const [id, user] of Object.entries(users)) {
-                if (valueSet.has(id)) {
-                  data.users.set(id, client2.users._add(user));
+              for (const [id2, user] of Object.entries(users)) {
+                if (valueSet.has(id2)) {
+                  data.users.set(id2, client2.users._add(user));
                 }
               }
             }
             if (channels) {
               data.channels = new Collection2();
-              for (const [id, apiChannel] of Object.entries(channels)) {
-                if (valueSet.has(id)) {
-                  data.channels.set(id, client2.channels._add(apiChannel, guild) ?? apiChannel);
+              for (const [id2, apiChannel] of Object.entries(channels)) {
+                if (valueSet.has(id2)) {
+                  data.channels.set(id2, client2.channels._add(apiChannel, guild) ?? apiChannel);
                 }
               }
             }
             if (members) {
               data.members = new Collection2();
-              for (const [id, member] of Object.entries(members)) {
-                if (valueSet.has(id)) {
-                  const user = users?.[id];
-                  data.members.set(id, guild?.members._add({ user, ...member }) ?? member);
+              for (const [id2, member] of Object.entries(members)) {
+                if (valueSet.has(id2)) {
+                  const user = users?.[id2];
+                  data.members.set(id2, guild?.members._add({ user, ...member }) ?? member);
                 }
               }
             }
             if (roles) {
               data.roles = new Collection2();
-              for (const [id, role] of Object.entries(roles)) {
-                if (valueSet.has(id)) {
-                  data.roles.set(id, guild?.roles._add(role) ?? role);
+              for (const [id2, role] of Object.entries(roles)) {
+                if (valueSet.has(id2)) {
+                  data.roles.set(id2, guild?.roles._add(role) ?? role);
                 }
               }
             }
             if (attachments) {
               data.attachments = new Collection2();
-              for (const [id, attachment] of Object.entries(attachments)) {
-                if (valueSet.has(id)) {
-                  data.attachments.set(id, new (getAttachment())(attachment));
+              for (const [id2, attachment] of Object.entries(attachments)) {
+                if (valueSet.has(id2)) {
+                  data.attachments.set(id2, new (getAttachment())(attachment));
                 }
               }
             }
@@ -59643,13 +59643,13 @@ var require_UserSelectMenuInteraction = __commonJS({
         for (const user of Object.values(resolved?.users ?? {})) {
           this.users.set(user.id, this.client.users._add(user));
         }
-        for (const [id, member] of Object.entries(resolved?.members ?? {})) {
-          const user = resolved.users[id];
+        for (const [id2, member] of Object.entries(resolved?.members ?? {})) {
+          const user = resolved.users[id2];
           if (!user) {
-            this.client.emit(Events2.Debug, `[UserSelectMenuInteraction] Received a member without a user, skipping ${id}`);
+            this.client.emit(Events2.Debug, `[UserSelectMenuInteraction] Received a member without a user, skipping ${id2}`);
             continue;
           }
-          this.members.set(id, this.guild?.members._add({ user, ...member }) ?? { user, ...member });
+          this.members.set(id2, this.guild?.members._add({ user, ...member }) ?? { user, ...member });
         }
       }
     };
@@ -59876,10 +59876,10 @@ var require_MessageDeleteBulk = __commonJS({
           if (channel.isThread()) channel.messageCount -= data.ids.length;
           const ids = data.ids;
           const messages = new Collection2();
-          for (const id of ids) {
+          for (const id2 of ids) {
             const message = this.getMessage(
               {
-                id,
+                id: id2,
                 guild_id: data.guild_id
               },
               channel,
@@ -59887,7 +59887,7 @@ var require_MessageDeleteBulk = __commonJS({
             );
             if (message) {
               messages.set(message.id, message);
-              channel.messages.cache.delete(id);
+              channel.messages.cache.delete(id2);
             }
           }
           if (messages.size > 0) client2.emit(Events2.MessageBulkDelete, messages, channel);
@@ -60082,8 +60082,8 @@ var require_MessageUpdate = __commonJS({
         const channel = this.getChannel({ id: data.channel_id, ..."guild_id" in data && { guild_id: data.guild_id } });
         if (channel) {
           if (!channel.isTextBased()) return {};
-          const { id, channel_id, guild_id, author, timestamp, type } = data;
-          const message = this.getMessage({ id, channel_id, guild_id, author, timestamp, type }, channel);
+          const { id: id2, channel_id, guild_id, author, timestamp, type } = data;
+          const message = this.getMessage({ id: id2, channel_id, guild_id, author, timestamp, type }, channel);
           if (message) {
             const old = message._update(data);
             return {
@@ -60263,8 +60263,8 @@ var require_ThreadListSync = __commonJS({
         const guild = client2.guilds.cache.get(data.guild_id);
         if (!guild) return {};
         if (data.channel_ids) {
-          for (const id of data.channel_ids) {
-            const channel = client2.channels.cache.get(id);
+          for (const id2 of data.channel_ids) {
+            const channel = client2.channels.cache.get(id2);
             if (channel) this.removeStale(channel);
           }
         } else {
@@ -60972,44 +60972,44 @@ var require_permessage_deflate2 = __commonJS({
        */
       normalizeParams(configurations) {
         configurations.forEach((params) => {
-          Object.keys(params).forEach((key) => {
-            let value = params[key];
+          Object.keys(params).forEach((key3) => {
+            let value = params[key3];
             if (value.length > 1) {
-              throw new Error(`Parameter "${key}" must have only a single value`);
+              throw new Error(`Parameter "${key3}" must have only a single value`);
             }
             value = value[0];
-            if (key === "client_max_window_bits") {
+            if (key3 === "client_max_window_bits") {
               if (value !== true) {
                 const num = +value;
                 if (!Number.isInteger(num) || num < 8 || num > 15) {
                   throw new TypeError(
-                    `Invalid value for parameter "${key}": ${value}`
+                    `Invalid value for parameter "${key3}": ${value}`
                   );
                 }
                 value = num;
               } else if (!this._isServer) {
                 throw new TypeError(
-                  `Invalid value for parameter "${key}": ${value}`
+                  `Invalid value for parameter "${key3}": ${value}`
                 );
               }
-            } else if (key === "server_max_window_bits") {
+            } else if (key3 === "server_max_window_bits") {
               const num = +value;
               if (!Number.isInteger(num) || num < 8 || num > 15) {
                 throw new TypeError(
-                  `Invalid value for parameter "${key}": ${value}`
+                  `Invalid value for parameter "${key3}": ${value}`
                 );
               }
               value = num;
-            } else if (key === "client_no_context_takeover" || key === "server_no_context_takeover") {
+            } else if (key3 === "client_no_context_takeover" || key3 === "server_no_context_takeover") {
               if (value !== true) {
                 throw new TypeError(
-                  `Invalid value for parameter "${key}": ${value}`
+                  `Invalid value for parameter "${key3}": ${value}`
                 );
               }
             } else {
-              throw new Error(`Unknown parameter "${key}"`);
+              throw new Error(`Unknown parameter "${key3}"`);
             }
-            params[key] = value;
+            params[key3] = value;
           });
         });
         return configurations;
@@ -61057,8 +61057,8 @@ var require_permessage_deflate2 = __commonJS({
       _decompress(data, fin, callback) {
         const endpoint = this._isServer ? "client" : "server";
         if (!this._inflate) {
-          const key = `${endpoint}_max_window_bits`;
-          const windowBits = typeof this.params[key] !== "number" ? zlib.Z_DEFAULT_WINDOWBITS : this.params[key];
+          const key3 = `${endpoint}_max_window_bits`;
+          const windowBits = typeof this.params[key3] !== "number" ? zlib.Z_DEFAULT_WINDOWBITS : this.params[key3];
           this._inflate = zlib.createInflateRaw({
             ...this._options.zlibInflateOptions,
             windowBits
@@ -61108,8 +61108,8 @@ var require_permessage_deflate2 = __commonJS({
       _compress(data, fin, callback) {
         const endpoint = this._isServer ? "server" : "client";
         if (!this._deflate) {
-          const key = `${endpoint}_max_window_bits`;
-          const windowBits = typeof this.params[key] !== "number" ? zlib.Z_DEFAULT_WINDOWBITS : this.params[key];
+          const key3 = `${endpoint}_max_window_bits`;
+          const windowBits = typeof this.params[key3] !== "number" ? zlib.Z_DEFAULT_WINDOWBITS : this.params[key3];
           this._deflate = zlib.createDeflateRaw({
             ...this._options.zlibDeflateOptions,
             windowBits
@@ -63416,7 +63416,7 @@ var require_websocket2 = __commonJS({
         }
       }
       const defaultPort = isSecure ? 443 : 80;
-      const key = randomBytes(16).toString("base64");
+      const key3 = randomBytes(16).toString("base64");
       const request = isSecure ? https2.request : http.request;
       const protocolSet = /* @__PURE__ */ new Set();
       let perMessageDeflate;
@@ -63427,7 +63427,7 @@ var require_websocket2 = __commonJS({
       opts.headers = {
         ...opts.headers,
         "Sec-WebSocket-Version": opts.protocolVersion,
-        "Sec-WebSocket-Key": key,
+        "Sec-WebSocket-Key": key3,
         Connection: "Upgrade",
         Upgrade: "websocket"
       };
@@ -63478,8 +63478,8 @@ var require_websocket2 = __commonJS({
           const headers = options2 && options2.headers;
           options2 = { ...options2, headers: {} };
           if (headers) {
-            for (const [key2, value] of Object.entries(headers)) {
-              options2.headers[key2.toLowerCase()] = value;
+            for (const [key4, value] of Object.entries(headers)) {
+              options2.headers[key4.toLowerCase()] = value;
             }
           }
         } else if (websocket.listenerCount("redirect") === 0) {
@@ -63546,7 +63546,7 @@ var require_websocket2 = __commonJS({
           abortHandshake(websocket, socket, "Invalid Upgrade header");
           return;
         }
-        const digest = createHash("sha1").update(key + GUID).digest("base64");
+        const digest = createHash("sha1").update(key3 + GUID).digest("base64");
         if (res.headers["sec-websocket-accept"] !== digest) {
           abortHandshake(websocket, socket, "Invalid Sec-WebSocket-Accept header");
           return;
@@ -64114,7 +64114,7 @@ var require_websocket_server = __commonJS({
        */
       handleUpgrade(req, socket, head, cb) {
         socket.on("error", socketOnError);
-        const key = req.headers["sec-websocket-key"];
+        const key3 = req.headers["sec-websocket-key"];
         const upgrade = req.headers.upgrade;
         const version = +req.headers["sec-websocket-version"];
         if (req.method !== "GET") {
@@ -64127,7 +64127,7 @@ var require_websocket_server = __commonJS({
           abortHandshakeOrEmitwsClientError(this, req, socket, 400, message);
           return;
         }
-        if (key === void 0 || !keyRegex.test(key)) {
+        if (key3 === void 0 || !keyRegex.test(key3)) {
           const message = "Missing or invalid Sec-WebSocket-Key header";
           abortHandshakeOrEmitwsClientError(this, req, socket, 400, message);
           return;
@@ -64187,7 +64187,7 @@ var require_websocket_server = __commonJS({
               }
               this.completeUpgrade(
                 extensions,
-                key,
+                key3,
                 protocols,
                 req,
                 socket,
@@ -64199,7 +64199,7 @@ var require_websocket_server = __commonJS({
           }
           if (!this.options.verifyClient(info)) return abortHandshake(socket, 401);
         }
-        this.completeUpgrade(extensions, key, protocols, req, socket, head, cb);
+        this.completeUpgrade(extensions, key3, protocols, req, socket, head, cb);
       }
       /**
        * Upgrade the connection to WebSocket.
@@ -64214,7 +64214,7 @@ var require_websocket_server = __commonJS({
        * @throws {Error} If called more than once with the same socket
        * @private
        */
-      completeUpgrade(extensions, key, protocols, req, socket, head, cb) {
+      completeUpgrade(extensions, key3, protocols, req, socket, head, cb) {
         if (!socket.readable || !socket.writable) return socket.destroy();
         if (socket[kWebSocket]) {
           throw new Error(
@@ -64222,7 +64222,7 @@ var require_websocket_server = __commonJS({
           );
         }
         if (this._state > RUNNING) return abortHandshake(socket, 503);
-        const digest = createHash("sha1").update(key + GUID).digest("base64");
+        const digest = createHash("sha1").update(key3 + GUID).digest("base64");
         const headers = [
           "HTTP/1.1 101 Switching Protocols",
           "Upgrade: websocket",
@@ -64351,9 +64351,9 @@ var require_dist9 = __commonJS({
     };
     var __copyProps2 = (to, from, except, desc) => {
       if (from && typeof from === "object" || typeof from === "function") {
-        for (let key of __getOwnPropNames2(from))
-          if (!__hasOwnProp2.call(to, key) && key !== except)
-            __defProp2(to, key, { get: () => from[key], enumerable: !(desc = __getOwnPropDesc2(from, key)) || desc.enumerable });
+        for (let key3 of __getOwnPropNames2(from))
+          if (!__hasOwnProp2.call(to, key3) && key3 !== except)
+            __defProp2(to, key3, { get: () => from[key3], enumerable: !(desc = __getOwnPropDesc2(from, key3)) || desc.enumerable });
       }
       return to;
     };
@@ -64808,8 +64808,8 @@ var require_dist9 = __commonJS({
        * {@inheritDoc IIdentifyThrottler.waitForIdentify}
        */
       async waitForIdentify(shardId, signal) {
-        const key = shardId % this.maxConcurrency;
-        const state = this.states.ensure(key, () => {
+        const key3 = shardId % this.maxConcurrency;
+        const state = this.states.ensure(key3, () => {
           return {
             queue: new import_async_queue.AsyncQueue(),
             resetsAt: Number.POSITIVE_INFINITY
@@ -64941,10 +64941,10 @@ var require_dist9 = __commonJS({
       get status() {
         return this.#status;
       }
-      constructor(strategy, id) {
+      constructor(strategy, id2) {
         super();
         this.strategy = strategy;
-        this.id = id;
+        this.id = id2;
       }
       async connect() {
         const controller = new AbortController();
@@ -65867,10 +65867,10 @@ var require_WebSocketShard = __commonJS({
     var WebSocketShardEvents = require_WebSocketShardEvents();
     var deprecationEmittedForImportant = false;
     var WebSocketShard = class extends EventEmitter {
-      constructor(manager, id) {
+      constructor(manager, id2) {
         super();
         this.manager = manager;
-        this.id = id;
+        this.id = id2;
         this.status = Status2.Idle;
         this.closeSequence = 0;
         this.ping = -1;
@@ -67278,10 +67278,10 @@ var require_WebSocketManager = __commonJS({
         this.client.options.shardCount = await this._ws.getShardCount();
         this.client.options.shards = await this._ws.getShardIds();
         this.totalShards = this.client.options.shards.length;
-        for (const id of this.client.options.shards) {
-          if (!this.shards.has(id)) {
-            const shard = new WebSocketShard(this, id);
-            this.shards.set(id, shard);
+        for (const id2 of this.client.options.shards) {
+          if (!this.shards.has(id2)) {
+            const shard = new WebSocketShard(this, id2);
+            this.shards.set(id2, shard);
             shard.on(WebSocketShardEvents.AllReady, (unavailableGuilds) => {
               this.client.emit(Events2.ShardReady, shard.id, unavailableGuilds);
               this.checkShardsReady();
@@ -67469,20 +67469,20 @@ var require_BaseGuildEmojiManager = __commonJS({
        * @param {EmojiResolvable} emoji The Emoji resolvable to identify
        * @returns {?GuildEmoji}
        */
-      resolve(emoji) {
-        if (emoji instanceof ReactionEmoji) return this.cache.get(emoji.id) ?? null;
-        if (emoji instanceof ApplicationEmoji) return this.cache.get(emoji.id) ?? null;
-        return super.resolve(emoji);
+      resolve(emoji2) {
+        if (emoji2 instanceof ReactionEmoji) return this.cache.get(emoji2.id) ?? null;
+        if (emoji2 instanceof ApplicationEmoji) return this.cache.get(emoji2.id) ?? null;
+        return super.resolve(emoji2);
       }
       /**
        * Resolves an EmojiResolvable to an Emoji id string.
        * @param {EmojiResolvable} emoji The Emoji resolvable to identify
        * @returns {?Snowflake}
        */
-      resolveId(emoji) {
-        if (emoji instanceof ReactionEmoji) return emoji.id;
-        if (emoji instanceof ApplicationEmoji) return emoji.id;
-        return super.resolveId(emoji);
+      resolveId(emoji2) {
+        if (emoji2 instanceof ReactionEmoji) return emoji2.id;
+        if (emoji2 instanceof ApplicationEmoji) return emoji2.id;
+        return super.resolveId(emoji2);
       }
       /**
        * Data that can be resolved to give an emoji identifier. This can be:
@@ -67496,18 +67496,18 @@ var require_BaseGuildEmojiManager = __commonJS({
        * @param {EmojiIdentifierResolvable} emoji The emoji resolvable to resolve
        * @returns {?string}
        */
-      resolveIdentifier(emoji) {
-        const emojiResolvable = this.resolve(emoji);
+      resolveIdentifier(emoji2) {
+        const emojiResolvable = this.resolve(emoji2);
         if (emojiResolvable) return emojiResolvable.identifier;
-        if (emoji instanceof ReactionEmoji) return emoji.identifier;
-        if (emoji instanceof ApplicationEmoji) return emoji.identifier;
-        if (typeof emoji === "string") {
-          const res = parseEmoji(emoji);
+        if (emoji2 instanceof ReactionEmoji) return emoji2.identifier;
+        if (emoji2 instanceof ApplicationEmoji) return emoji2.identifier;
+        if (typeof emoji2 === "string") {
+          const res = parseEmoji(emoji2);
           if (res?.name.length) {
-            emoji = `${res.animated ? "a:" : ""}${res.name}${res.id ? `:${res.id}` : ""}`;
+            emoji2 = `${res.animated ? "a:" : ""}${res.name}${res.id ? `:${res.id}` : ""}`;
           }
-          if (!emoji.includes("%")) return encodeURIComponent(emoji);
-          return emoji;
+          if (!emoji2.includes("%")) return encodeURIComponent(emoji2);
+          return emoji2;
         }
         return null;
       }
@@ -67563,14 +67563,14 @@ var require_ChannelManager = __commonJS({
         if (cache && !allowUnknownGuild) this.cache.set(channel.id, channel);
         return channel;
       }
-      _remove(id) {
-        const channel = this.cache.get(id);
-        channel?.guild?.channels.cache.delete(id);
+      _remove(id2) {
+        const channel = this.cache.get(id2);
+        channel?.guild?.channels.cache.delete(id2);
         for (const [code, invite] of channel?.guild?.invites.cache ?? []) {
-          if (invite.channelId === id) channel.guild.invites.cache.delete(code);
+          if (invite.channelId === id2) channel.guild.invites.cache.delete(code);
         }
-        channel?.parent?.threads?.cache.delete(id);
-        this.cache.delete(id);
+        channel?.parent?.threads?.cache.delete(id2);
+        this.cache.delete(id2);
         if (channel?.threads) {
           for (const threadId of channel.threads.cache.keys()) {
             this.cache.delete(threadId);
@@ -67617,12 +67617,12 @@ var require_ChannelManager = __commonJS({
        *   .then(channel => console.log(channel.name))
        *   .catch(console.error);
        */
-      async fetch(id, { allowUnknownGuild = false, cache = true, force = false } = {}) {
+      async fetch(id2, { allowUnknownGuild = false, cache = true, force = false } = {}) {
         if (!force) {
-          const existing = this.cache.get(id);
+          const existing = this.cache.get(id2);
           if (existing && !existing.partial) return existing;
         }
-        const data = await this.client.rest.get(Routes2.channel(id));
+        const data = await this.client.rest.get(Routes2.channel(id2));
         return this._add(data, null, { cache, allowUnknownGuild });
       }
     };
@@ -68041,8 +68041,8 @@ var require_GuildPreview = __commonJS({
         } else {
           this.emojis.clear();
         }
-        for (const emoji of data.emojis) {
-          this.emojis.set(emoji.id, new GuildPreviewEmoji(this.client, emoji, this));
+        for (const emoji2 of data.emojis) {
+          this.emojis.set(emoji2.id, new GuildPreviewEmoji(this.client, emoji2, this));
         }
         this.stickers = data.stickers.reduce(
           (stickers, sticker) => stickers.set(sticker.id, new Sticker2(this.client, sticker)),
@@ -68527,8 +68527,8 @@ var require_GuildBanManager = __commonJS({
        */
       async create(user, options2 = {}) {
         if (typeof options2 !== "object") throw new DiscordjsTypeError2(ErrorCodes2.InvalidType, "options", "object", true);
-        const id = this.client.users.resolveId(user);
-        if (!id) throw new DiscordjsError2(ErrorCodes2.BanResolveId, true);
+        const id2 = this.client.users.resolveId(user);
+        if (!id2) throw new DiscordjsError2(ErrorCodes2.BanResolveId, true);
         if (options2.deleteMessageDays !== void 0 && !deprecationEmittedForDeleteMessageDays) {
           process2.emitWarning(
             // eslint-disable-next-line max-len
@@ -68537,18 +68537,18 @@ var require_GuildBanManager = __commonJS({
           );
           deprecationEmittedForDeleteMessageDays = true;
         }
-        await this.client.rest.put(Routes2.guildBan(this.guild.id, id), {
+        await this.client.rest.put(Routes2.guildBan(this.guild.id, id2), {
           body: {
             delete_message_seconds: options2.deleteMessageSeconds ?? (options2.deleteMessageDays ? options2.deleteMessageDays * 24 * 60 * 60 : void 0)
           },
           reason: options2.reason
         });
         if (user instanceof GuildMember) return user;
-        const _user = this.client.users.cache.get(id);
+        const _user = this.client.users.cache.get(id2);
         if (_user) {
           return this.guild.members.resolve(_user) ?? _user;
         }
-        return id;
+        return id2;
       }
       /**
        * Unbans a user from the guild.
@@ -68562,9 +68562,9 @@ var require_GuildBanManager = __commonJS({
        *   .catch(console.error);
        */
       async remove(user, reason) {
-        const id = this.client.users.resolveId(user);
-        if (!id) throw new DiscordjsError2(ErrorCodes2.BanResolveId);
-        await this.client.rest.delete(Routes2.guildBan(this.guild.id, id), { reason });
+        const id2 = this.client.users.resolveId(user);
+        if (!id2) throw new DiscordjsError2(ErrorCodes2.BanResolveId);
+        await this.client.rest.delete(Routes2.guildBan(this.guild.id, id2), { reason });
         return this.client.users.resolve(user);
       }
       /**
@@ -68817,10 +68817,10 @@ var require_GuildChannelManager = __commonJS({
        *   .catch(console.error)
        */
       async createWebhook({ channel, name, avatar, reason }) {
-        const id = this.resolveId(channel);
-        if (!id) throw new DiscordjsTypeError2(ErrorCodes2.InvalidType, "channel", "GuildChannelResolvable");
+        const id2 = this.resolveId(channel);
+        if (!id2) throw new DiscordjsTypeError2(ErrorCodes2.InvalidType, "channel", "GuildChannelResolvable");
         const resolvedImage = await resolveImage(avatar);
-        const data = await this.client.rest.post(Routes2.channelWebhooks(id), {
+        const data = await this.client.rest.post(Routes2.channelWebhooks(id2), {
           body: {
             name,
             avatar: resolvedImage
@@ -68964,13 +68964,13 @@ var require_GuildChannelManager = __commonJS({
        *   .then(channel => console.log(`The channel name is: ${channel.name}`))
        *   .catch(console.error);
        */
-      async fetch(id, { cache = true, force = false } = {}) {
-        if (id && !force) {
-          const existing = this.cache.get(id);
+      async fetch(id2, { cache = true, force = false } = {}) {
+        if (id2 && !force) {
+          const existing = this.cache.get(id2);
           if (existing) return existing;
         }
-        if (id) {
-          const data2 = await this.client.rest.get(Routes2.channel(id));
+        if (id2) {
+          const data2 = await this.client.rest.get(Routes2.channel(id2));
           if (this.guild.id !== data2.guild_id) throw new DiscordjsError2(ErrorCodes2.GuildChannelUnowned);
           return this.client.channels._add(data2, this.guild, { cache });
         }
@@ -68990,9 +68990,9 @@ var require_GuildChannelManager = __commonJS({
        *   .catch(console.error);
        */
       async fetchWebhooks(channel) {
-        const id = this.resolveId(channel);
-        if (!id) throw new DiscordjsTypeError2(ErrorCodes2.InvalidType, "channel", "GuildChannelResolvable");
-        const data = await this.client.rest.get(Routes2.channelWebhooks(id));
+        const id2 = this.resolveId(channel);
+        if (!id2) throw new DiscordjsTypeError2(ErrorCodes2.InvalidType, "channel", "GuildChannelResolvable");
+        const data = await this.client.rest.get(Routes2.channelWebhooks(id2));
         return data.reduce((hooks, hook) => hooks.set(hook.id, new Webhook2(this.client, hook)), new Collection2());
       }
       /**
@@ -69072,10 +69072,10 @@ var require_GuildChannelManager = __commonJS({
        *   .catch(console.error);
        */
       async delete(channel, reason) {
-        const id = this.resolveId(channel);
-        if (!id) throw new DiscordjsTypeError2(ErrorCodes2.InvalidType, "channel", "GuildChannelResolvable");
-        await this.client.rest.delete(Routes2.channel(id), { reason });
-        this.client.actions.ChannelDelete.handle({ id });
+        const id2 = this.resolveId(channel);
+        if (!id2) throw new DiscordjsTypeError2(ErrorCodes2.InvalidType, "channel", "GuildChannelResolvable");
+        await this.client.rest.delete(Routes2.channel(id2), { reason });
+        this.client.actions.ChannelDelete.handle({ id: id2 });
       }
     };
     module2.exports = GuildChannelManager;
@@ -69144,8 +69144,8 @@ var require_GuildEmojiManager = __commonJS({
             body.roles.push(resolvedRole);
           }
         }
-        const emoji = await this.client.rest.post(Routes2.guildEmojis(this.guild.id), { body, reason });
-        return this.client.actions.GuildEmojiCreate.handle(this.guild, emoji).emoji;
+        const emoji2 = await this.client.rest.post(Routes2.guildEmojis(this.guild.id), { body, reason });
+        return this.client.actions.GuildEmojiCreate.handle(this.guild, emoji2).emoji;
       }
       /**
        * Obtains one or more emojis from Discord, or the emoji cache if they're already available.
@@ -69163,18 +69163,18 @@ var require_GuildEmojiManager = __commonJS({
        *   .then(emoji => console.log(`The emoji name is: ${emoji.name}`))
        *   .catch(console.error);
        */
-      async fetch(id, { cache = true, force = false } = {}) {
-        if (id) {
+      async fetch(id2, { cache = true, force = false } = {}) {
+        if (id2) {
           if (!force) {
-            const existing = this.cache.get(id);
+            const existing = this.cache.get(id2);
             if (existing) return existing;
           }
-          const emoji = await this.client.rest.get(Routes2.guildEmoji(this.guild.id, id));
-          return this._add(emoji, cache);
+          const emoji2 = await this.client.rest.get(Routes2.guildEmoji(this.guild.id, id2));
+          return this._add(emoji2, cache);
         }
         const data = await this.client.rest.get(Routes2.guildEmojis(this.guild.id));
         const emojis = new Collection2();
-        for (const emoji of data) emojis.set(emoji.id, this._add(emoji, cache));
+        for (const emoji2 of data) emojis.set(emoji2.id, this._add(emoji2, cache));
         return emojis;
       }
       /**
@@ -69183,10 +69183,10 @@ var require_GuildEmojiManager = __commonJS({
        * @param {string} [reason] Reason for deleting the emoji
        * @returns {Promise<void>}
        */
-      async delete(emoji, reason) {
-        const id = this.resolveId(emoji);
-        if (!id) throw new DiscordjsTypeError2(ErrorCodes2.InvalidType, "emoji", "EmojiResolvable", true);
-        await this.client.rest.delete(Routes2.guildEmoji(this.guild.id, id), { reason });
+      async delete(emoji2, reason) {
+        const id2 = this.resolveId(emoji2);
+        if (!id2) throw new DiscordjsTypeError2(ErrorCodes2.InvalidType, "emoji", "EmojiResolvable", true);
+        await this.client.rest.delete(Routes2.guildEmoji(this.guild.id, id2), { reason });
       }
       /**
        * Edits an emoji.
@@ -69194,18 +69194,18 @@ var require_GuildEmojiManager = __commonJS({
        * @param {GuildEmojiEditOptions} options The options to provide
        * @returns {Promise<GuildEmoji>}
        */
-      async edit(emoji, options2) {
-        const id = this.resolveId(emoji);
-        if (!id) throw new DiscordjsTypeError2(ErrorCodes2.InvalidType, "emoji", "EmojiResolvable", true);
+      async edit(emoji2, options2) {
+        const id2 = this.resolveId(emoji2);
+        if (!id2) throw new DiscordjsTypeError2(ErrorCodes2.InvalidType, "emoji", "EmojiResolvable", true);
         const roles = options2.roles?.map((role) => this.guild.roles.resolveId(role));
-        const newData = await this.client.rest.patch(Routes2.guildEmoji(this.guild.id, id), {
+        const newData = await this.client.rest.patch(Routes2.guildEmoji(this.guild.id, id2), {
           body: {
             name: options2.name,
             roles
           },
           reason: options2.reason
         });
-        const existing = this.cache.get(id);
+        const existing = this.cache.get(id2);
         if (existing) {
           const clone = existing._clone();
           clone._patch(newData);
@@ -69218,10 +69218,10 @@ var require_GuildEmojiManager = __commonJS({
        * @param {EmojiResolvable} emoji The emoji to fetch the author of
        * @returns {Promise<User>}
        */
-      async fetchAuthor(emoji) {
-        emoji = this.resolve(emoji);
-        if (!emoji) throw new DiscordjsTypeError2(ErrorCodes2.InvalidType, "emoji", "EmojiResolvable", true);
-        if (emoji.managed) {
+      async fetchAuthor(emoji2) {
+        emoji2 = this.resolve(emoji2);
+        if (!emoji2) throw new DiscordjsTypeError2(ErrorCodes2.InvalidType, "emoji", "EmojiResolvable", true);
+        if (emoji2.managed) {
           throw new DiscordjsError2(ErrorCodes2.EmojiManaged);
         }
         const { me } = this.guild.members;
@@ -69229,9 +69229,9 @@ var require_GuildEmojiManager = __commonJS({
         if (!me.permissions.any(PermissionFlagsBits3.CreateGuildExpressions | PermissionFlagsBits3.ManageGuildExpressions)) {
           throw new DiscordjsError2(ErrorCodes2.MissingManageGuildExpressionsPermission, this.guild);
         }
-        const data = await this.client.rest.get(Routes2.guildEmoji(this.guild.id, emoji.id));
-        emoji._patch(data);
-        return emoji.author;
+        const data = await this.client.rest.get(Routes2.guildEmoji(this.guild.id, emoji2.id));
+        emoji2._patch(data);
+        return emoji2.author;
       }
     };
     module2.exports = GuildEmojiManager;
@@ -69353,9 +69353,9 @@ var require_GuildInviteManager = __commonJS({
         }
         if (!options2.code) {
           if (options2.channelId) {
-            const id = this.guild.channels.resolveId(options2.channelId);
-            if (!id) throw new DiscordjsError2(ErrorCodes2.GuildChannelResolve);
-            return this._fetchChannelMany(id, options2.cache);
+            const id2 = this.guild.channels.resolveId(options2.channelId);
+            if (!id2) throw new DiscordjsError2(ErrorCodes2.GuildChannelResolve);
+            return this._fetchChannelMany(id2, options2.cache);
           }
           if ("cache" in options2) return this._fetchMany(options2.cache);
           throw new DiscordjsError2(ErrorCodes2.InviteResolveCode);
@@ -69395,9 +69395,9 @@ var require_GuildInviteManager = __commonJS({
        *   .catch(console.error);
        */
       async create(channel, { temporary, maxAge, maxUses, unique, targetUser, targetApplication, targetType, reason } = {}) {
-        const id = this.guild.channels.resolveId(channel);
-        if (!id) throw new DiscordjsError2(ErrorCodes2.GuildChannelResolve);
-        const invite = await this.client.rest.post(Routes2.channelInvites(id), {
+        const id2 = this.guild.channels.resolveId(channel);
+        if (!id2) throw new DiscordjsError2(ErrorCodes2.GuildChannelResolve);
+        const invite = await this.client.rest.post(Routes2.channelInvites(id2), {
           body: {
             temporary,
             max_age: maxAge,
@@ -69747,8 +69747,8 @@ var require_GuildMemberManager = __commonJS({
        * @returns {Promise<GuildMember>}
        */
       async edit(user, { reason, ...options2 }) {
-        const id = this.client.users.resolveId(user);
-        if (!id) throw new DiscordjsTypeError2(ErrorCodes2.InvalidType, "user", "UserResolvable");
+        const id2 = this.client.users.resolveId(user);
+        if (!id2) throw new DiscordjsTypeError2(ErrorCodes2.InvalidType, "user", "UserResolvable");
         if (options2.channel) {
           options2.channel = this.guild.channels.resolve(options2.channel);
           if (!(options2.channel instanceof BaseGuildVoiceChannel)) {
@@ -69769,7 +69769,7 @@ var require_GuildMemberManager = __commonJS({
           options2.flags = GuildMemberFlagsBitField.resolve(options2.flags);
         }
         let endpoint;
-        if (id === this.client.user.id) {
+        if (id2 === this.client.user.id) {
           const keys = Object.keys(options2);
           if (keys.length === 1 && keys[0] === "nick") {
             endpoint = Routes2.guildMember(this.guild.id, "@me");
@@ -69783,9 +69783,9 @@ var require_GuildMemberManager = __commonJS({
             }
           }
         }
-        endpoint ??= Routes2.guildMember(this.guild.id, id);
+        endpoint ??= Routes2.guildMember(this.guild.id, id2);
         const d = await this.client.rest.patch(endpoint, { body: options2, reason });
-        const clone = this.cache.get(id)?._clone();
+        const clone = this.cache.get(id2)?._clone();
         clone?._patch(d);
         return clone ?? this._add(d, false);
       }
@@ -69882,10 +69882,10 @@ var require_GuildMemberManager = __commonJS({
        *   .catch(console.error);
        */
       async kick(user, reason) {
-        const id = this.client.users.resolveId(user);
-        if (!id) throw new DiscordjsTypeError2(ErrorCodes2.InvalidType, "user", "UserResolvable");
-        await this.client.rest.delete(Routes2.guildMember(this.guild.id, id), { reason });
-        return this.resolve(user) ?? this.client.users.resolve(user) ?? id;
+        const id2 = this.client.users.resolveId(user);
+        if (!id2) throw new DiscordjsTypeError2(ErrorCodes2.InvalidType, "user", "UserResolvable");
+        await this.client.rest.delete(Routes2.guildMember(this.guild.id, id2), { reason });
+        return this.resolve(user) ?? this.client.users.resolve(user) ?? id2;
       }
       /**
        * Bans a user from the guild.
@@ -70104,13 +70104,13 @@ var require_GuildScheduledEventManager = __commonJS({
        * @returns {Promise<GuildScheduledEvent|Collection<Snowflake, GuildScheduledEvent>>}
        */
       async fetch(options2 = {}) {
-        const id = this.resolveId(options2.guildScheduledEvent ?? options2);
-        if (id) {
+        const id2 = this.resolveId(options2.guildScheduledEvent ?? options2);
+        if (id2) {
           if (!options2.force) {
-            const existing = this.cache.get(id);
+            const existing = this.cache.get(id2);
             if (existing) return existing;
           }
-          const data2 = await this.client.rest.get(Routes2.guildScheduledEvent(this.guild.id, id), {
+          const data2 = await this.client.rest.get(Routes2.guildScheduledEvent(this.guild.id, id2), {
             query: makeURLSearchParams2({ with_user_count: options2.withUserCount ?? true })
           });
           return this._add(data2, options2.cache);
@@ -70689,13 +70689,13 @@ var require_GuildStickerManager = __commonJS({
        *   .then(sticker => console.log(`The sticker name is: ${sticker.name}`))
        *   .catch(console.error);
        */
-      async fetch(id, { cache = true, force = false } = {}) {
-        if (id) {
+      async fetch(id2, { cache = true, force = false } = {}) {
+        if (id2) {
           if (!force) {
-            const existing = this.cache.get(id);
+            const existing = this.cache.get(id2);
             if (existing) return existing;
           }
-          const sticker = await this.client.rest.get(Routes2.guildSticker(this.guild.id, id));
+          const sticker = await this.client.rest.get(Routes2.guildSticker(this.guild.id, id2));
           return this._add(sticker, cache);
         }
         const data = await this.client.rest.get(Routes2.guildStickers(this.guild.id));
@@ -70866,10 +70866,10 @@ var require_Presence = __commonJS({
       smallImageURL(options2 = {}) {
         if (!this.smallImage) return null;
         if (this.smallImage.includes(":")) {
-          const [platform2, id] = this.smallImage.split(":");
+          const [platform2, id2] = this.smallImage.split(":");
           switch (platform2) {
             case "mp":
-              return `https://media.discordapp.net/${id}`;
+              return `https://media.discordapp.net/${id2}`;
             default:
               return null;
           }
@@ -70884,16 +70884,16 @@ var require_Presence = __commonJS({
       largeImageURL(options2 = {}) {
         if (!this.largeImage) return null;
         if (this.largeImage.includes(":")) {
-          const [platform2, id] = this.largeImage.split(":");
+          const [platform2, id2] = this.largeImage.split(":");
           switch (platform2) {
             case "mp":
-              return `https://media.discordapp.net/${id}`;
+              return `https://media.discordapp.net/${id2}`;
             case "spotify":
-              return `https://i.scdn.co/image/${id}`;
+              return `https://i.scdn.co/image/${id2}`;
             case "youtube":
-              return `https://i.ytimg.com/vi/${id}/hqdefault_live.jpg`;
+              return `https://i.ytimg.com/vi/${id2}/hqdefault_live.jpg`;
             case "twitch":
-              return `https://static-cdn.jtvnw.net/previews-ttv/live_user_${id}.png`;
+              return `https://static-cdn.jtvnw.net/previews-ttv/live_user_${id2}.png`;
             default:
               return null;
           }
@@ -71012,19 +71012,19 @@ var require_RoleManager = __commonJS({
        *   .then(role => console.log(`The role color is: ${role.colors.primaryColor}`))
        *   .catch(console.error);
        */
-      async fetch(id, { cache = true, force = false } = {}) {
-        if (!id) {
+      async fetch(id2, { cache = true, force = false } = {}) {
+        if (!id2) {
           const data = await this.client.rest.get(Routes2.guildRoles(this.guild.id));
           const roles = new Collection2();
           for (const role of data) roles.set(role.id, this._add(role, cache));
           return roles;
         }
         if (!force) {
-          const existing = this.cache.get(id);
+          const existing = this.cache.get(id2);
           if (existing) return existing;
         }
         try {
-          const data = await this.client.rest.get(Routes2.guildRole(this.guild.id, id));
+          const data = await this.client.rest.get(Routes2.guildRole(this.guild.id, id2));
           return this._add(data, cache);
         } catch (error) {
           if (error instanceof DiscordAPIError && error.code === RESTJSONErrorCodes.UnknownRole) {
@@ -71139,7 +71139,7 @@ var require_RoleManager = __commonJS({
        */
       async create(options2 = {}) {
         let { permissions, icon } = options2;
-        const { name, color, hoist, position, mentionable, reason, unicodeEmoji } = options2;
+        const { name, color: color3, hoist, position, mentionable, reason, unicodeEmoji } = options2;
         if (permissions !== void 0) permissions = new PermissionsBitField2(permissions);
         if (icon) {
           const guildEmojiURL = this.guild.emojis.resolve(icon)?.imageURL();
@@ -71151,13 +71151,13 @@ var require_RoleManager = __commonJS({
           secondary_color: options2.colors.secondaryColor && resolveColor(options2.colors.secondaryColor),
           tertiary_color: options2.colors.tertiaryColor && resolveColor(options2.colors.tertiaryColor)
         };
-        if (color !== void 0) {
+        if (color3 !== void 0) {
           if (!deprecationEmittedForCreate) {
             process2.emitWarning(`Passing "color" to RoleManager#create() is deprecated. Use "colors" instead.`);
           }
           deprecationEmittedForCreate = true;
           colors = {
-            primary_color: resolveColor(color),
+            primary_color: resolveColor(color3),
             secondary_color: null,
             tertiary_color: null
           };
@@ -71252,9 +71252,9 @@ var require_RoleManager = __commonJS({
        *   .catch(console.error);
        */
       async delete(role, reason) {
-        const id = this.resolveId(role);
-        await this.client.rest.delete(Routes2.guildRole(this.guild.id, id), { reason });
-        this.client.actions.GuildRoleDelete.handle({ guild_id: this.guild.id, role_id: id });
+        const id2 = this.resolveId(role);
+        await this.client.rest.delete(Routes2.guildRole(this.guild.id, id2), { reason });
+        this.client.actions.GuildRoleDelete.handle({ guild_id: this.guild.id, role_id: id2 });
       }
       /**
        * Sets the new position of the role.
@@ -71543,12 +71543,12 @@ var require_VoiceStateManager = __commonJS({
        *    .catch(console.error);
        */
       async fetch(member, { cache = true, force = false } = {}) {
-        const id = member === "@me" ? member : this.guild.members.resolveId(member);
+        const id2 = member === "@me" ? member : this.guild.members.resolveId(member);
         if (!force) {
-          const existing = this.cache.get(id === "@me" ? this.client.user.id : id);
+          const existing = this.cache.get(id2 === "@me" ? this.client.user.id : id2);
           if (existing) return existing;
         }
-        const data = await this.client.rest.get(Routes2.guildVoiceState(this.guild.id, id));
+        const data = await this.client.rest.get(Routes2.guildVoiceState(this.guild.id, id2));
         return this._add(data, cache);
       }
     };
@@ -71796,7 +71796,7 @@ var require_Guild = __commonJS({
         }
         if (!this.emojis) {
           this.emojis = new GuildEmojiManager(this);
-          if (data.emojis) for (const emoji of data.emojis) this.emojis._add(emoji);
+          if (data.emojis) for (const emoji2 of data.emojis) this.emojis._add(emoji2);
         } else if (data.emojis) {
           this.client.actions.GuildEmojisUpdate.handle({
             guild_id: this.id,
@@ -71954,8 +71954,8 @@ var require_Guild = __commonJS({
        * @returns {Promise<Collection<string, GuildTemplate>>}
        */
       async fetchTemplates() {
-        const templates = await this.client.rest.get(Routes2.guildTemplates(this.id));
-        return templates.reduce((col, data) => col.set(data.code, new GuildTemplate2(this.client, data)), new Collection2());
+        const templates2 = await this.client.rest.get(Routes2.guildTemplates(this.id));
+        return templates2.reduce((col, data) => col.set(data.code, new GuildTemplate2(this.client, data)), new Collection2());
       }
       /**
        * Fetches the welcome screen for this guild.
@@ -72264,16 +72264,16 @@ var require_Guild = __commonJS({
               in_onboarding: prompt.inOnboarding,
               type: prompt.type,
               options: prompt.options.map((option) => {
-                const emoji = resolvePartialEmoji(option.emoji);
+                const emoji2 = resolvePartialEmoji(option.emoji);
                 return {
                   id: option.id,
                   channel_ids: option.channels?.map((channel) => this.channels.resolveId(channel)),
                   role_ids: option.roles?.map((role) => this.roles.resolveId(role)),
                   title: option.title,
                   description: option.description,
-                  emoji_animated: emoji?.animated,
-                  emoji_id: emoji?.id,
-                  emoji_name: emoji?.name
+                  emoji_animated: emoji2?.animated,
+                  emoji_id: emoji2?.id,
+                  emoji_name: emoji2?.name
                 };
               })
             })),
@@ -72333,10 +72333,10 @@ var require_Guild = __commonJS({
       async editWelcomeScreen(options2) {
         const { enabled, description, welcomeChannels } = options2;
         const welcome_channels = welcomeChannels?.map((welcomeChannelData) => {
-          const emoji = this.emojis.resolve(welcomeChannelData.emoji);
+          const emoji2 = this.emojis.resolve(welcomeChannelData.emoji);
           return {
-            emoji_id: emoji?.id,
-            emoji_name: emoji?.name ?? welcomeChannelData.emoji,
+            emoji_id: emoji2?.id,
+            emoji_name: emoji2?.name ?? welcomeChannelData.emoji,
             channel_id: this.channels.resolveId(welcomeChannelData.channel),
             description: welcomeChannelData.description
           };
@@ -72910,9 +72910,9 @@ var require_GuildManager = __commonJS({
             verification_level: verificationLevel,
             default_message_notifications: defaultMessageNotifications,
             explicit_content_filter: explicitContentFilter,
-            roles: roles.map(({ color, permissions, ...options2 }) => ({
+            roles: roles.map(({ color: color3, permissions, ...options2 }) => ({
               ...options2,
-              color: color && resolveColor(color),
+              color: color3 && resolveColor(color3),
               permissions: permissions === void 0 ? void 0 : PermissionsBitField2.resolve(permissions).toString()
             })),
             channels: channels.map(
@@ -72980,16 +72980,16 @@ var require_GuildManager = __commonJS({
        * @returns {Promise<Guild|Collection<Snowflake, OAuth2Guild>>}
        */
       async fetch(options2 = {}) {
-        const id = this.resolveId(options2) ?? this.resolveId(options2.guild);
-        if (id) {
+        const id2 = this.resolveId(options2) ?? this.resolveId(options2.guild);
+        if (id2) {
           if (!options2.force) {
-            const existing = this.cache.get(id);
+            const existing = this.cache.get(id2);
             if (existing) return existing;
           }
-          const data2 = await this.client.rest.get(Routes2.guild(id), {
+          const data2 = await this.client.rest.get(Routes2.guild(id2), {
             query: makeURLSearchParams2({ with_counts: options2.withCounts ?? true })
           });
-          data2.shardId = ShardClientUtil2.shardIdForGuildId(id, this.client.options.shardCount);
+          data2.shardId = ShardClientUtil2.shardIdForGuildId(id2, this.client.options.shardCount);
           return this._add(data2, options2.cache);
         }
         const data = await this.client.rest.get(Routes2.userGuilds(), { query: makeURLSearchParams2(options2) });
@@ -73134,7 +73134,7 @@ var require_UserManager = __commonJS({
       dmChannel(userId) {
         const expectedRecipientIds = [userId, this.client.user.id];
         return this.client.channels.cache.find(
-          (channel) => channel.type === ChannelType5.DM && channel.recipientId === userId && channel.recipientIds.every((id) => expectedRecipientIds.includes(id))
+          (channel) => channel.type === ChannelType5.DM && channel.recipientId === userId && channel.recipientIds.every((id2) => expectedRecipientIds.includes(id2))
         ) ?? null;
       }
       /**
@@ -73144,12 +73144,12 @@ var require_UserManager = __commonJS({
        * @returns {Promise<DMChannel>}
        */
       async createDM(user, { cache = true, force = false } = {}) {
-        const id = this.resolveId(user);
+        const id2 = this.resolveId(user);
         if (!force) {
-          const dmChannel = this.dmChannel(id);
+          const dmChannel = this.dmChannel(id2);
           if (dmChannel && !dmChannel.partial) return dmChannel;
         }
-        const data = await this.client.rest.post(Routes2.userChannels(), { body: { recipient_id: id } });
+        const data = await this.client.rest.post(Routes2.userChannels(), { body: { recipient_id: id2 } });
         return this.client.channels._add(data, null, { cache });
       }
       /**
@@ -73158,8 +73158,8 @@ var require_UserManager = __commonJS({
        * @returns {Promise<DMChannel>}
        */
       async deleteDM(user) {
-        const id = this.resolveId(user);
-        const dmChannel = this.dmChannel(id);
+        const id2 = this.resolveId(user);
+        const dmChannel = this.dmChannel(id2);
         if (!dmChannel) throw new DiscordjsError2(ErrorCodes2.UserNoDMChannel);
         await this.client.rest.delete(Routes2.channel(dmChannel.id));
         this.client.channels._remove(dmChannel.id);
@@ -73172,12 +73172,12 @@ var require_UserManager = __commonJS({
        * @returns {Promise<User>}
        */
       async fetch(user, { cache = true, force = false } = {}) {
-        const id = this.resolveId(user);
+        const id2 = this.resolveId(user);
         if (!force) {
-          const existing = this.cache.get(id);
+          const existing = this.cache.get(id2);
           if (existing && !existing.partial) return existing;
         }
-        const data = await this.client.rest.get(Routes2.user(id));
+        const data = await this.client.rest.get(Routes2.user(id2));
         return this._add(data, cache);
       }
       /**
@@ -73505,13 +73505,13 @@ var require_Sweepers = __commonJS({
       constructor(client2, options2) {
         Object.defineProperty(this, "client", { value: client2 });
         this.options = options2;
-        this.intervals = Object.fromEntries(SweeperKeys.map((key) => [key, null]));
-        for (const key of SweeperKeys) {
-          if (!(key in options2)) continue;
-          this._validateProperties(key);
-          const clonedOptions = { ...this.options[key] };
+        this.intervals = Object.fromEntries(SweeperKeys.map((key3) => [key3, null]));
+        for (const key3 of SweeperKeys) {
+          if (!(key3 in options2)) continue;
+          this._validateProperties(key3);
+          const clonedOptions = { ...this.options[key3] };
           if (!("filter" in clonedOptions)) {
-            switch (key) {
+            switch (key3) {
               case "invites":
                 clonedOptions.filter = this.constructor.expiredInviteSweepFilter(clonedOptions.lifetime);
                 break;
@@ -73522,7 +73522,7 @@ var require_Sweepers = __commonJS({
                 clonedOptions.filter = this.constructor.archivedThreadSweepFilter(clonedOptions.lifetime);
             }
           }
-          this._initInterval(key, `sweep${key[0].toUpperCase()}${key.slice(1)}`, clonedOptions);
+          this._initInterval(key3, `sweep${key3[0].toUpperCase()}${key3.slice(1)}`, clonedOptions);
         }
       }
       /**
@@ -73711,11 +73711,11 @@ var require_Sweepers = __commonJS({
           throw new DiscordjsTypeError2(ErrorCodes2.InvalidType, "filter", "function");
         }
         let threads = 0;
-        for (const [key, val] of this.client.channels.cache.entries()) {
+        for (const [key3, val] of this.client.channels.cache.entries()) {
           if (!ThreadChannelTypes.includes(val.type)) continue;
-          if (filter(val, key, this.client.channels.cache)) {
+          if (filter(val, key3, this.client.channels.cache)) {
             threads++;
-            this.client.channels._remove(key);
+            this.client.channels._remove(key3);
           }
         }
         this.client.emit(Events2.CacheSweep, `Swept ${threads} threads.`);
@@ -73747,8 +73747,8 @@ var require_Sweepers = __commonJS({
        * @returns {void}
        */
       destroy() {
-        for (const key of SweeperKeys) {
-          if (this.intervals[key]) clearInterval2(this.intervals[key]);
+        for (const key3 of SweeperKeys) {
+          if (this.intervals[key3]) clearInterval2(this.intervals[key3]);
         }
       }
       /**
@@ -73784,11 +73784,11 @@ var require_Sweepers = __commonJS({
           if (lifetime <= 0) return null;
           const lifetimeMs = lifetime * 1e3;
           const now = Date.now();
-          return (entry, key, coll) => {
-            if (excludeFromSweep(entry, key, coll)) {
+          return (entry, key3, coll) => {
+            if (excludeFromSweep(entry, key3, coll)) {
               return false;
             }
-            const comparisonTimestamp = getComparisonTimestamp(entry, key, coll);
+            const comparisonTimestamp = getComparisonTimestamp(entry, key3, coll);
             if (!comparisonTimestamp || typeof comparisonTimestamp !== "number") return false;
             return now - comparisonTimestamp > lifetimeMs;
           };
@@ -73843,7 +73843,7 @@ var require_Sweepers = __commonJS({
        * @returns {Object} Object containing the number of guilds swept and the number of items swept
        * @private
        */
-      _sweepGuildDirectProp(key, filter, { emit = true, outputName } = {}) {
+      _sweepGuildDirectProp(key3, filter, { emit = true, outputName } = {}) {
         if (typeof filter !== "function") {
           throw new DiscordjsTypeError2(ErrorCodes2.InvalidType, "filter", "function");
         }
@@ -73851,12 +73851,12 @@ var require_Sweepers = __commonJS({
         let items = 0;
         for (const guild of this.client.guilds.cache.values()) {
           if (!guild.available) continue;
-          const { cache } = guild[key];
+          const { cache } = guild[key3];
           guilds++;
           items += cache.sweep(filter);
         }
         if (emit) {
-          this.client.emit(Events2.CacheSweep, `Swept ${items} ${outputName ?? key} in ${guilds} guilds.`);
+          this.client.emit(Events2.CacheSweep, `Swept ${items} ${outputName ?? key3} in ${guilds} guilds.`);
         }
         return { guilds, items };
       }
@@ -73865,22 +73865,22 @@ var require_Sweepers = __commonJS({
        * @param {string} key Key of the options object to check
        * @private
        */
-      _validateProperties(key) {
-        const props = this.options[key];
+      _validateProperties(key3) {
+        const props = this.options[key3];
         if (typeof props !== "object") {
-          throw new DiscordjsTypeError2(ErrorCodes2.InvalidType, `sweepers.${key}`, "object", true);
+          throw new DiscordjsTypeError2(ErrorCodes2.InvalidType, `sweepers.${key3}`, "object", true);
         }
         if (typeof props.interval !== "number") {
-          throw new DiscordjsTypeError2(ErrorCodes2.InvalidType, `sweepers.${key}.interval`, "number");
+          throw new DiscordjsTypeError2(ErrorCodes2.InvalidType, `sweepers.${key3}.interval`, "number");
         }
-        if (["invites", "messages", "threads"].includes(key) && !("filter" in props)) {
+        if (["invites", "messages", "threads"].includes(key3) && !("filter" in props)) {
           if (typeof props.lifetime !== "number") {
-            throw new DiscordjsTypeError2(ErrorCodes2.InvalidType, `sweepers.${key}.lifetime`, "number");
+            throw new DiscordjsTypeError2(ErrorCodes2.InvalidType, `sweepers.${key3}.lifetime`, "number");
           }
           return;
         }
         if (typeof props.filter !== "function") {
-          throw new DiscordjsTypeError2(ErrorCodes2.InvalidType, `sweepers.${key}.filter`, "function");
+          throw new DiscordjsTypeError2(ErrorCodes2.InvalidType, `sweepers.${key3}.filter`, "function");
         }
       }
       /**
@@ -74000,7 +74000,7 @@ var require_Client = __commonJS({
       get emojis() {
         const emojis = new BaseGuildEmojiManager(this);
         for (const guild of this.guilds.cache.values()) {
-          if (guild.available) for (const emoji of guild.emojis.cache.values()) emojis.cache.set(emoji.id, emoji);
+          if (guild.available) for (const emoji2 of guild.emojis.cache.values()) emojis.cache.set(emoji2.id, emoji2);
         }
         return emojis;
       }
@@ -74113,8 +74113,8 @@ var require_Client = __commonJS({
        *   .then(webhook => console.log(`Obtained webhook with name: ${webhook.name}`))
        *   .catch(console.error);
        */
-      async fetchWebhook(id, token) {
-        const data = await this.rest.get(Routes.webhook(id, token), { auth: token === void 0 });
+      async fetchWebhook(id2, token) {
+        const data = await this.rest.get(Routes.webhook(id2, token), { auth: token === void 0 });
         return new Webhook(this, { token, ...data });
       }
       /**
@@ -74140,8 +74140,8 @@ var require_Client = __commonJS({
        *   .then(sticker => console.log(`Obtained sticker with name: ${sticker.name}`))
        *   .catch(console.error);
        */
-      async fetchSticker(id) {
-        const data = await this.rest.get(Routes.sticker(id));
+      async fetchSticker(id2) {
+        const data = await this.rest.get(Routes.sticker(id2));
         return new Sticker(this, data);
       }
       /**
@@ -74204,9 +74204,9 @@ var require_Client = __commonJS({
        * @returns {Promise<GuildPreview>}
        */
       async fetchGuildPreview(guild) {
-        const id = this.guilds.resolveId(guild);
-        if (!id) throw new DiscordjsTypeError(ErrorCodes.InvalidType, "guild", "GuildResolvable");
-        const data = await this.rest.get(Routes.guildPreview(id));
+        const id2 = this.guilds.resolveId(guild);
+        if (!id2) throw new DiscordjsTypeError(ErrorCodes.InvalidType, "guild", "GuildResolvable");
+        const data = await this.rest.get(Routes.guildPreview(id2));
         return new GuildPreview(this, data);
       }
       /**
@@ -74215,9 +74215,9 @@ var require_Client = __commonJS({
        * @returns {Promise<Widget>}
        */
       async fetchGuildWidget(guild) {
-        const id = this.guilds.resolveId(guild);
-        if (!id) throw new DiscordjsTypeError(ErrorCodes.InvalidType, "guild", "GuildResolvable");
-        const data = await this.rest.get(Routes.guildWidgetJSON(id));
+        const id2 = this.guilds.resolveId(guild);
+        if (!id2) throw new DiscordjsTypeError(ErrorCodes.InvalidType, "guild", "GuildResolvable");
+        const data = await this.rest.get(Routes.guildWidgetJSON(id2));
         return new Widget(this, data);
       }
       /**
@@ -74401,7 +74401,7 @@ var require_Shard = __commonJS({
     var childProcess = null;
     var Worker = null;
     var Shard = class extends EventEmitter {
-      constructor(manager, id) {
+      constructor(manager, id2) {
         super();
         switch (manager.mode) {
           case "process":
@@ -74412,7 +74412,7 @@ var require_Shard = __commonJS({
             break;
         }
         this.manager = manager;
-        this.id = id;
+        this.id = id2;
         this.silent = manager.silent;
         this.args = manager.shardArgs ?? [];
         this.execArgv = manager.execArgv;
@@ -74807,9 +74807,9 @@ var require_ShardingManager = __commonJS({
        * <info>This is usually not necessary to manually specify.</info>
        * @returns {Shard} Note that the created shard needs to be explicitly spawned using its spawn method.
        */
-      createShard(id = this.shards.size) {
-        const shard = new Shard(this, id);
-        this.shards.set(id, shard);
+      createShard(id2 = this.shards.size) {
+        const shard = new Shard(this, id2);
+        this.shards.set(id2, shard);
         this.emit("shardCreate", shard);
         return shard;
       }
@@ -75203,8 +75203,8 @@ var require_EmbedBuilder = __commonJS({
        * @param {?ColorResolvable} color The color of the embed
        * @returns {EmbedBuilder}
        */
-      setColor(color) {
-        return super.setColor(color && resolveColor(color));
+      setColor(color3) {
+        return super.setColor(color3 && resolveColor(color3));
       }
       /**
        * Creates a new embed builder from JSON data
@@ -75232,7 +75232,7 @@ var require_AttachmentBuilder = __commonJS({
   "node_modules/.pnpm/discord.js@14.27.0/node_modules/discord.js/src/structures/AttachmentBuilder.js"(exports2, module2) {
     "use strict";
     var { basename, flatten } = require_Util();
-    var AttachmentBuilder2 = class _AttachmentBuilder {
+    var AttachmentBuilder3 = class _AttachmentBuilder {
       /**
        * @param {BufferResolvable|Stream} attachment The file
        * @param {AttachmentData} [data] Extra data
@@ -75343,7 +75343,7 @@ var require_AttachmentBuilder = __commonJS({
         });
       }
     };
-    module2.exports = AttachmentBuilder2;
+    module2.exports = AttachmentBuilder3;
   }
 });
 
@@ -75454,11 +75454,11 @@ var require_StringSelectMenuOptionBuilder = __commonJS({
     var { toSnakeCase } = require_Transformers();
     var { resolvePartialEmoji } = require_Util();
     var StringSelectMenuOptionBuilder = class extends BuildersSelectMenuOption {
-      constructor({ emoji, ...data } = {}) {
+      constructor({ emoji: emoji2, ...data } = {}) {
         super(
           toSnakeCase({
             ...data,
-            emoji: emoji && typeof emoji === "string" ? resolvePartialEmoji(emoji) : emoji
+            emoji: emoji2 && typeof emoji2 === "string" ? resolvePartialEmoji(emoji2) : emoji2
           })
         );
       }
@@ -75467,11 +75467,11 @@ var require_StringSelectMenuOptionBuilder = __commonJS({
        * @param {ComponentEmojiResolvable} emoji The emoji to display on this option
        * @returns {StringSelectMenuOptionBuilder}
        */
-      setEmoji(emoji) {
-        if (typeof emoji === "string") {
-          return super.setEmoji(resolvePartialEmoji(emoji));
+      setEmoji(emoji2) {
+        if (typeof emoji2 === "string") {
+          return super.setEmoji(resolvePartialEmoji(emoji2));
         }
-        return super.setEmoji(emoji);
+        return super.setEmoji(emoji2);
       }
       /**
        * Creates a new select menu option builder from JSON data
@@ -75758,14 +75758,14 @@ var require_src = __commonJS({
 });
 
 // apps/bot/src/index.ts
-var import_discord4 = __toESM(require_src());
+var import_discord5 = __toESM(require_src());
 
 // apps/bot/src/discord-tickets.ts
 var import_discord = __toESM(require_src());
 var STYLE = { primary: import_discord.ButtonStyle.Primary, secondary: import_discord.ButtonStyle.Secondary, success: import_discord.ButtonStyle.Success, danger: import_discord.ButtonStyle.Danger };
 var VIEW = [import_discord.PermissionFlagsBits.ViewChannel, import_discord.PermissionFlagsBits.ReadMessageHistory];
 var TALK = [import_discord.PermissionFlagsBits.SendMessages, import_discord.PermissionFlagsBits.AttachFiles, import_discord.PermissionFlagsBits.EmbedLinks];
-var https = (u) => u && /^https:\/\//.test(u) ? u : void 0;
+var https = (u) => u && /^(https:\/\/|attachment:\/\/)/.test(u) ? u : void 0;
 function embedOf(e, stamp = true) {
   const b = new import_discord.EmbedBuilder();
   if (e.title) b.setTitle(e.title.slice(0, 256));
@@ -75778,7 +75778,7 @@ function embedOf(e, stamp = true) {
   if (e.fields?.length) b.addFields(e.fields.slice(0, 25).map((f2) => ({ name: f2.name.slice(0, 256) || "\u200B", value: f2.value.slice(0, 1024) || "\u200B", inline: f2.inline ?? false })));
   if (e.timestamp) b.setTimestamp(new Date(e.timestamp));
   else if (stamp) b.setTimestamp(/* @__PURE__ */ new Date());
-  if (!e.title && !e.description && !e.fields?.length) b.setDescription("\u200B");
+  if (!e.title && !e.description && !e.fields?.length && !https(e.image)) b.setDescription("\u200B");
   return b;
 }
 function componentsOf(buttons = [], selects = []) {
@@ -75819,8 +75819,8 @@ function payloadOf(m, stamp = true) {
 }
 function createTicketRuntime(client2, api2, log = console.log) {
   const channels = /* @__PURE__ */ new Set();
-  const text = async (id) => {
-    const ch = await client2().channels.fetch(id).catch(() => null);
+  const text = async (id2) => {
+    const ch = await client2().channels.fetch(id2).catch(() => null);
     return ch && ch.type === import_discord.ChannelType.GuildText ? ch : null;
   };
   async function create(e) {
@@ -75854,9 +75854,9 @@ function createTicketRuntime(client2, api2, log = console.log) {
     const { html } = await api2.service("GET", `/bot/support-tickets/transcripts/${e.transcriptId}`);
     const file = () => new import_discord.AttachmentBuilder(Buffer.from(html, "utf8"), { name: e.filename });
     const extra = e.message ? payloadOf(e.message) : { allowedMentions: { parse: [] } };
-    for (const id of e.channelIds) {
-      const ch = await text(id);
-      if (ch) await ch.send({ ...extra, files: [file()] }).catch((err) => log(`transcript to ${id} failed: ${err instanceof Error ? err.message : err}`));
+    for (const id2 of e.channelIds) {
+      const ch = await text(id2);
+      if (ch) await ch.send({ ...extra, files: [file()] }).catch((err) => log(`transcript to ${id2} failed: ${err instanceof Error ? err.message : err}`));
     }
     if (e.userId) await (await client2().users.fetch(e.userId)).send({ ...extra, files: [file()] }).catch(() => log(`transcript DM to ${e.userId} failed (DMs closed?)`));
   }
@@ -75973,2628 +75973,82 @@ function createTicketRuntime(client2, api2, log = console.log) {
     const guild = await client2().guilds.fetch(guildId);
     return [...(await guild.channels.fetch()).values()].filter((c) => c?.type === import_discord.ChannelType.GuildCategory).map((c) => ({ id: c.id, name: c.name })).sort((a, b) => a.name.localeCompare(b.name));
   }
-  return { apply, refresh, onMessage, listCategories, isTicketChannel: (id) => channels.has(id) };
+  return { apply, refresh, onMessage, listCategories, isTicketChannel: (id2) => channels.has(id2) };
 }
 
-// apps/bot/src/guilds.ts
+// apps/bot/src/messages.ts
 var import_discord2 = __toESM(require_src());
-var kind = (t) => t === import_discord2.ChannelType.GuildText || t === import_discord2.ChannelType.GuildAnnouncement ? "text" : t === import_discord2.ChannelType.GuildCategory ? "category" : t === import_discord2.ChannelType.GuildVoice || t === import_discord2.ChannelType.GuildStageVoice ? "voice" : "other";
-function guildInfo(g) {
-  return {
-    id: g.id,
-    name: g.name.slice(0, 100),
-    icon: g.iconURL({ size: 64 }) ?? null,
-    channels: [...g.channels.cache.values()].filter((c) => !c.isThread()).slice(0, 500).map((c) => ({ id: c.id, name: c.name.slice(0, 100), type: kind(c.type), parentId: "parentId" in c ? c.parentId ?? null : null, position: "rawPosition" in c ? c.rawPosition : 0 })),
-    // @everyone und Rollen von Bots/Integrationen sind keine sinnvolle Auswahl
-    roles: [...g.roles.cache.values()].filter((r) => r.id !== g.id && !r.managed).slice(0, 250).map((r) => ({ id: r.id, name: r.name.slice(0, 100), color: r.color, position: r.position }))
-  };
-}
-function startGuildDirectory(client2, api2, log = console.log) {
-  let timer;
-  const push = async () => {
-    const guilds = [...client2().guilds.cache.values()].slice(0, 50).map(guildInfo);
-    await api2.service("PUT", "/bot/guilds", { guilds }).catch((e) => log(`guild directory not sent: ${e instanceof Error ? e.message : e}`));
-  };
-  const soon = () => {
-    clearTimeout(timer);
-    timer = setTimeout(() => void push(), 5e3);
-    timer.unref?.();
-  };
-  const c = client2();
-  for (const ev of ["guildCreate", "guildDelete", "guildUpdate", "channelCreate", "channelDelete", "channelUpdate", "roleCreate", "roleDelete", "roleUpdate"]) c.on(ev, soon);
-  void push();
-  setInterval(() => void push(), 10 * 6e4).unref();
-  return { push };
-}
-
-// apps/bot/src/presence.ts
-var import_discord3 = __toESM(require_src());
-var STATUS = /* @__PURE__ */ new Set(["online", "idle", "dnd", "offline"]);
-function memberReport(m, presences) {
-  const raw = m.presence?.status;
-  return {
-    id: m.id,
-    guildId: m.guild.id,
-    username: m.user.username.slice(0, 100),
-    displayName: m.displayName.slice(0, 100),
-    avatar: m.displayAvatarURL({ size: 128 }) ?? null,
-    status: !presences ? "unknown" : raw && STATUS.has(raw) ? raw : "offline",
-    // ohne Presence = offline/unsichtbar
-    roleIds: [...m.roles.cache.keys()].filter((r) => r !== m.guild.id).slice(0, 250),
-    joinedAt: m.joinedAt?.toISOString() ?? null
-  };
-}
-function teamMembers(guilds, teamRoleIds, presences) {
-  if (!teamRoleIds.length) return [];
-  const out = /* @__PURE__ */ new Map();
-  for (const g of guilds) for (const m of g.members.cache.values()) {
-    if (m.user.bot || !teamRoleIds.some((r2) => m.roles.cache.has(r2))) continue;
-    const prev = out.get(m.id);
-    const r = memberReport(m, presences);
-    out.set(m.id, prev ? { ...prev, roleIds: [.../* @__PURE__ */ new Set([...prev.roleIds, ...r.roleIds])], status: prev.status === "online" ? prev.status : r.status } : r);
-  }
-  return [...out.values()].slice(0, 5e3);
-}
-function voiceReport(guilds, since) {
-  const out = [];
-  for (const g of guilds) {
-    const voice = [...g.channels.cache.values()].filter((c) => c.type === import_discord3.ChannelType.GuildVoice || c.type === import_discord3.ChannelType.GuildStageVoice);
-    for (const c of voice) {
-      out.push({
-        id: c.id,
-        guildId: g.id,
-        name: c.name.slice(0, 100),
-        parentId: c.parentId ?? null,
-        parentName: c.parent?.name.slice(0, 100) ?? null,
-        position: c.rawPosition,
-        members: [...c.members.values()].slice(0, 500).map((m) => {
-          const v = m.voice;
-          const t = since.get(`${g.id}:${m.id}`);
-          return { id: m.id, displayName: m.displayName.slice(0, 100), avatar: m.displayAvatarURL({ size: 64 }) ?? null, selfMute: !!v.selfMute, selfDeaf: !!v.selfDeaf, serverMute: !!v.serverMute, serverDeaf: !!v.serverDeaf, video: !!v.selfVideo, streaming: !!v.streaming, since: t ? new Date(t).toISOString() : null };
-        })
-      });
+var IMAGE_KEYS = ["image", "thumbnail", "authorIcon", "footerIcon"];
+var MEDIA = /^media:([0-9a-f-]{36})$/;
+async function resolveAssets(api2, m) {
+  const files = /* @__PURE__ */ new Map();
+  const load2 = async (ref) => {
+    const id2 = ref ? MEDIA.exec(ref)?.[1] : void 0;
+    if (!id2) return ref;
+    if (!files.has(id2)) {
+      const f2 = await api2.service("GET", `/bot/embeds/asset/${id2}`);
+      const name = f2.name.replace(/[^\w.-]/g, "") || `bild-${id2.slice(0, 8)}.png`;
+      files.set(id2, new import_discord2.AttachmentBuilder(Buffer.from(f2.data, "base64"), { name }));
     }
-  }
-  return out.slice(0, 500);
-}
-function startPresenceReporter(client2, api2, opts, log = console.log) {
-  const since = /* @__PURE__ */ new Map();
-  let teamRoles = [];
-  let lastError;
-  const guilds = () => [...client2().guilds.cache.values()].slice(0, 50);
-  const fail3 = (what) => (e) => {
-    const msg = `${what}: ${e instanceof Error ? e.message : e}`;
-    if (msg !== lastError) {
-      log(`team/voice report failed \u2013 ${msg} (will keep retrying quietly)`);
-      lastError = msg;
-    }
+    return `attachment://${files.get(id2).name}`;
   };
-  const pushMembers = async () => {
-    teamRoles = (await api2.service("GET", "/bot/team-roles")).roleIds;
-    await api2.service("PUT", "/bot/members", { members: teamMembers(guilds(), teamRoles, opts.presences) });
-    lastError = void 0;
-  };
-  const pushVoice = async () => {
-    await api2.service("PUT", "/bot/voice", { channels: voiceReport(guilds(), since) });
-  };
-  let mt, vt;
-  const membersSoon = () => {
-    clearTimeout(mt);
-    mt = setTimeout(() => void pushMembers().catch(fail3("members")), 1500);
-    mt.unref?.();
-  };
-  const voiceSoon = () => {
-    clearTimeout(vt);
-    vt = setTimeout(() => void pushVoice().catch(fail3("voice")), 1500);
-    vt.unref?.();
-  };
-  const c = client2();
-  for (const g of guilds()) for (const s of g.voiceStates.cache.values()) if (s.channelId) since.set(`${g.id}:${s.id}`, Date.now());
-  c.on("voiceStateUpdate", (before, after) => {
-    const key = `${after.guild.id}:${after.id}`;
-    if (!after.channelId) since.delete(key);
-    else if (before.channelId !== after.channelId) since.set(key, Date.now());
-    voiceSoon();
-  });
-  for (const ev of ["guildMemberAdd", "guildMemberRemove", "guildMemberUpdate", "userUpdate", ...opts.presences ? ["presenceUpdate"] : []]) c.on(ev, membersSoon);
-  c.on("channelCreate", voiceSoon);
-  c.on("channelDelete", voiceSoon);
-  c.on("channelUpdate", voiceSoon);
-  const loadMembers = async () => {
-    if (!opts.members) {
-      log('Discord: "Server Members Intent" is off \u2013 the dashboard team list only shows members the bot has seen (enable it in the Developer Portal \u2192 Bot).');
-      return;
-    }
-    for (const g of guilds()) await g.members.fetch().catch((e) => log(`could not load members of ${g.name}: ${e instanceof Error ? e.message : e}`));
-  };
-  void loadMembers().then(() => Promise.all([pushMembers().catch(fail3("members")), pushVoice().catch(fail3("voice"))]));
-  setInterval(() => void pushMembers().catch(fail3("members")), 5e3).unref();
-  setInterval(() => void pushVoice().catch(fail3("voice")), 5e3).unref();
-  c.on("guildCreate", (g) => {
-    if (opts.members) void g.members.fetch().catch(() => void 0).then(membersSoon);
-  });
-  return { sync: () => Promise.all([pushMembers(), pushVoice()]).then(() => void 0) };
-}
-
-// apps/bot/src/api.ts
-var import_node_async_hooks = require("node:async_hooks");
-var guildScope = new import_node_async_hooks.AsyncLocalStorage();
-var rolesScope = new import_node_async_hooks.AsyncLocalStorage();
-var BotApiError = class extends Error {
-  constructor(status, code, message, requestId, reason) {
-    super(message);
-    this.status = status;
-    this.code = code;
-    this.requestId = requestId;
-    this.reason = reason;
-  }
-  status;
-  code;
-  requestId;
-  reason;
-};
-var HttpApi = class {
-  constructor(baseUrl, token, doFetch = fetch) {
-    this.baseUrl = baseUrl;
-    this.token = token;
-    this.doFetch = doFetch;
-  }
-  baseUrl;
-  token;
-  doFetch;
-  async call(method, path2, discordId, body) {
-    const ctl = new AbortController();
-    const timer = setTimeout(() => ctl.abort(), 1e4);
-    try {
-      const res = await this.doFetch(`${this.baseUrl}/api/v1${path2}`, {
-        method,
-        signal: ctl.signal,
-        headers: { authorization: `Bot ${this.token}`, ...discordId ? { "x-discord-user": discordId } : {}, ...discordId && guildScope.getStore() ? { "x-guild-id": guildScope.getStore() } : {}, ...discordId && rolesScope.getStore()?.length ? { "x-discord-roles": rolesScope.getStore().slice(0, 100).join(",") } : {}, ...body ? { "content-type": "application/json" } : {} },
-        body: body ? JSON.stringify(body) : void 0
-      });
-      const text = await res.text();
-      let json;
-      try {
-        json = text ? JSON.parse(text) : void 0;
-      } catch {
-        json = void 0;
-      }
-      if (res.status >= 400) {
-        const details = json?.details;
-        throw new BotApiError(res.status, String(json?.code ?? "ERROR"), String(json?.message ?? `HTTP ${res.status}`), json?.requestId, details?.reason);
-      }
-      return json;
-    } catch (e) {
-      if (e instanceof BotApiError) throw e;
-      throw new BotApiError(0, "UNREACHABLE", "The EN Polizei API is not reachable.");
-    } finally {
-      clearTimeout(timer);
-    }
-  }
-  asUser(discordId, method, path2, body) {
-    return this.call(method, path2, discordId, body);
-  }
-  service(method, path2, body) {
-    return this.call(method, path2, null, body);
-  }
-};
-
-// apps/bot/src/format.ts
-var COLORS = { info: 3900150, success: 2278750, warning: 16096779, danger: 15680580, neutral: 6583435 };
-var PRIORITY_COLOR = { LOW: COLORS.neutral, MEDIUM: COLORS.info, HIGH: COLORS.warning, URGENT: COLORS.danger, CRITICAL: COLORS.danger };
-var clip = (s, max) => {
-  const t = String(s ?? "\u2014");
-  return t.length > max ? `${t.slice(0, max - 1)}\u2026` : t;
-};
-var label = (s) => String(s ?? "\u2014").replace(/_/g, " ");
-var plain = (s) => String(s ?? "\u2014").replace(/[*_`~|>\\]/g, "\\$&").replace(/@(everyone|here)/g, "@\u200B$1");
-var errorReply = (text) => ({ content: `\u274C ${text}`, ephemeral: true });
-var okReply = (text) => ({ content: `\u2705 ${text}`, ephemeral: true });
-function personEmbed(p, extra = {}) {
-  return {
-    title: clip(`\u{1F464} ${p.robloxUsername}`, 256),
-    color: extra.wanted ? COLORS.warning : COLORS.info,
-    fields: [
-      { name: "Roblox-ID", value: clip(p.robloxUserId ?? "unbekannt", 1024), inline: true },
-      { name: "Status", value: label(p.status), inline: true },
-      ...extra.tickets !== void 0 ? [{ name: "Tickets", value: String(extra.tickets), inline: true }] : [],
-      ...p.aliases?.length ? [{ name: "Aliase", value: clip(p.aliases.map(plain).join(", "), 1024) }] : [],
-      ...p.notes ? [{ name: "Notizen", value: clip(plain(p.notes), 1024) }] : []
-    ],
-    footer: extra.wanted ? "\u26A0\uFE0F Mit Fahndungseintrag verkn\xFCpft (ggf. erledigt) \u2014 Status im System pr\xFCfen" : void 0
-  };
-}
-var vehicleEmbed = (v) => ({
-  title: clip(`\u{1F697} ${v.plate}`, 256),
-  color: COLORS.info,
-  fields: [
-    { name: "Modell", value: clip(plain(v.model), 1024), inline: true },
-    { name: "Farbe", value: clip(plain(v.color), 1024), inline: true },
-    { name: "Halter", value: clip(plain(v.owner?.robloxUsername), 1024), inline: true },
-    { name: "Status", value: label(v.status), inline: true }
-  ]
-});
-var incidentLine = (i) => `**${i.number}** \xB7 ${plain(i.title)} \u2014 ${label(i.priority)} / ${label(i.status)}${i.location ? ` \xB7 ${plain(i.location)}` : ""}`;
-function listEmbed(title, lines, empty) {
-  return { title: clip(title, 256), description: clip(lines.length ? lines.join("\n") : empty, 4e3), color: COLORS.info };
-}
-function renderOutbox(type, p) {
-  switch (type) {
-    case "workflow.message": {
-      const color = typeof p.color === "string" && /^#[0-9a-f]{6}$/i.test(p.color) ? parseInt(p.color.slice(1), 16) : COLORS.info;
-      return { title: clip(plain(p.title), 256), ...p.text ? { description: clip(plain(p.text), 4e3) } : {}, color, footer: clip(`Workflow: ${String(p.workflow ?? "")}`, 200) };
-    }
-    case "incident.created":
-      return { title: `\u{1F6A8} Neuer Einsatz: ${clip(plain(p.title), 200)}`, color: PRIORITY_COLOR[String(p.priority)] ?? COLORS.info, fields: [{ name: "Nummer", value: String(p.number), inline: true }, { name: "Priorit\xE4t", value: label(p.priority), inline: true }, { name: "Ort", value: clip(plain(p.location ?? "unbekannt"), 1024), inline: true }] };
-    case "incident.assigned":
-      return { title: `\u{1F4FB} ${plain(p.callsign)} \u2192 ${p.number}`, description: clip(plain(p.title), 4e3), color: PRIORITY_COLOR[String(p.priority)] ?? COLORS.info, fields: [{ name: "Ort", value: clip(plain(p.location ?? "unbekannt"), 1024), inline: true }] };
-    case "wanted.created":
-      return {
-        title: `\u{1F6A8} Neue Fahndung (${p.kind === "vehicle" ? "Fahrzeug" : "Person"})`,
-        description: `**${clip(plain(p.subject), 200)}**
-${clip(plain(p.reason), 1500)}${p.description ? `
-
-${clip(plain(p.description), 2e3)}` : ""}`,
-        color: PRIORITY_COLOR[String(p.priority)] ?? COLORS.danger,
-        fields: [{ name: "Priorit\xE4t", value: label(p.priority), inline: true }, { name: "G\xFCltig bis", value: p.expiresAt ? `<t:${Math.floor(Date.parse(String(p.expiresAt)) / 1e3)}:f>` : "unbefristet", inline: true }, ...p.createdBy ? [{ name: "Ausgestellt von", value: clip(plain(p.createdBy), 200), inline: true }] : []]
-      };
-    case "wanted.status": {
-      const st = { CLEARED: ["\u2705 Fahndung aufgehoben", COLORS.success], CANCELLED: ["\u26AA Fahndung abgebrochen", COLORS.info], ACTIVE: ["\u{1F6A8} Fahndung wieder aktiv", COLORS.danger], EXPIRED: ["\u231B Fahndung abgelaufen", COLORS.info] };
-      const [title, color] = st[String(p.status)] ?? [`Fahndung: ${label(p.status)}`, COLORS.info];
-      return { title, description: `**${clip(plain(p.subject), 200)}** \u2013 ${clip(plain(p.reason), 1e3)}${p.note ? `
-**Grund:** ${clip(plain(p.note), 1e3)}` : ""}`, color, ...p.by ? { footer: `von ${clip(plain(p.by), 100)}` } : {} };
-    }
-    case "teamchance.changed":
-      return p.open ? {
-        title: `\u{1F4E3} ${clip(plain(p.title ?? "Team-Chance"), 200)} \u2013 jetzt offen!`,
-        description: clip(plain(p.description ?? ""), 3500) || void 0,
-        color: COLORS.success,
-        fields: [...p.closesAt ? [{ name: "Bewerbungsschluss", value: `<t:${Math.floor(Date.parse(String(p.closesAt)) / 1e3)}:f>`, inline: true }] : [], ...Number(p.slots) > 0 ? [{ name: "Pl\xE4tze", value: String(p.slots), inline: true }] : []]
-      } : { title: `\u{1F512} ${clip(plain(p.title ?? "Team-Chance"), 200)} \u2013 geschlossen`, description: "Vielen Dank f\xFCr alle Bewerbungen!", color: COLORS.danger };
-    case "announcement":
-      return { title: "\u{1F4E2} Ank\xFCndigung", description: clip(plain(p.body), 4e3), color: COLORS.warning, footer: `von ${clip(p.author, 100)}` };
-    case "danger.changed": {
-      return {
-        title: clip(`${String(p.name ?? p.level)}${p.title ? `: ${String(p.title)}` : ""}`, 256),
-        color: hexColor(p.color, COLORS.warning),
-        description: clip(`${String(p.text ?? "")}${p.reason ? `
-
-**Hinweis:** ${plain(p.reason)}` : ""}`, 4e3) || void 0,
-        footer: clip(`${p.previous ? `Vorher: ${String(p.previous)} \xB7 ` : ""}Gesetzt von ${String(p.setBy ?? "System")}`, 200)
-      };
-    }
-    case "duty.changed": {
-      const st = String(p.status), prev = String(p.previous ?? "OFF_DUTY");
-      const who = `${p.callsign ? `${plain(p.callsign)} \xB7 ` : ""}${plain(p.name)}`;
-      const mins = typeof p.previousMinutes === "number" && prev !== "OFF_DUTY" ? ` \u2013 ${fmtDuration(p.previousMinutes * 60)}` : "";
-      return {
-        title: clip(`${DUTY_DE[st]?.emoji ?? "\u2022"} ${who} ist jetzt ${DUTY_DE[st]?.label ?? label(st)}`, 256),
-        color: DUTY_DE[st]?.color ?? COLORS.neutral,
-        description: clip([p.discordId ? `<@${String(p.discordId)}>` : null, p.shiftType ? `Schicht: **${plain(p.shiftType)}**` : null, `Vorher: ${DUTY_DE[prev]?.label ?? label(prev)}${mins}`, p.setBy ? `Gesetzt von: ${plain(p.setBy)}` : null].filter(Boolean).join("\n"), 1e3)
-      };
-    }
-    case "leave.requested":
-      return {
-        title: "Abmeldeantrag",
-        color: COLORS.warning,
-        description: clip(`${p.discordId ? `<@${String(p.discordId)}>` : plain(p.name)} m\xF6chte sich abmelden.`, 4e3),
-        fields: [{ name: "Grund", value: clip(plain(p.reason), 1024) }, { name: "Dauer", value: leaveSpan(p) }, { name: "Zeitraum", value: `<t:${unixOf(p.startsAt)}:f> \u2013 <t:${unixOf(p.endsAt)}:f>` }],
-        footer: `ID: ${String(p.number)}`
-      };
-    case "leave.log": {
-      const ev = LEAVE_EVENTS[String(p.event)] ?? { text: String(p.event), color: COLORS.neutral };
-      return {
-        title: clip(`${ev.text}: ${plain(p.name)} (${String(p.number)})`, 256),
-        color: ev.color,
-        description: clip([p.discordId ? `<@${String(p.discordId)}>` : null, `**Zeitraum:** ${berlinDate(p.startsAt)} \u2013 ${berlinDate(p.endsAt)} (${leaveSpan(p)})`, `**Grund:** ${plain(p.reason)}`, p.decidedByName ? `**Entschieden von:** ${plain(p.decidedByName)}` : null, p.decisionReason ? `**Begr\xFCndung:** ${plain(p.decisionReason)}` : null].filter(Boolean).join("\n"), 4e3)
-      };
-    }
-    case "sek.report":
-      return { title: `\u{1F3AF} SEK-Einsatzbericht ${p.number}`, color: COLORS.neutral, description: clip(plain(p.description), 3500), fields: [
-        { name: "Einsatzart", value: clip(plain(p.missionType), 200), inline: true },
-        { name: "Datum", value: new Date(String(p.occurredAt)).toLocaleString("de-DE", { timeZone: "Europe/Berlin" }), inline: true },
-        { name: "Beamter", value: clip(plain(p.author), 200), inline: true }
-      ] };
-    default:
-      return null;
-  }
-}
-var unix = (iso) => {
-  const t = Date.parse(String(iso ?? ""));
-  return Number.isFinite(t) ? Math.floor(t / 1e3) : null;
-};
-var fmtDuration = (sec) => sec < 60 ? `${sec}s` : sec < 3600 ? `${Math.floor(sec / 60)} min ${sec % 60}s` : `${Math.floor(sec / 3600)} h ${Math.floor(sec % 3600 / 60)} min`;
-var BUDGET = 4800;
-function applicationEmbeds(p, kind2) {
-  const qa = Array.isArray(p.answers) ? p.answers : [];
-  const id = String(p.discordId ?? "");
-  const joined = unix(p.joinedAt), submitted = unix(p.createdAt);
-  const stats = [
-    "**Bewerber-Infos**",
-    ...id ? [`Discord-ID: \`${id}\``, `Benutzername: \`${plain(p.discordName ?? "\u2014")}\``, `Benutzer: <@${id}>`] : ["Quelle: Web-Formular (kein Discord)"],
-    ...kind2 === "p" ? [`Roblox: \`${plain(p.robloxUsername)}\`${p.robloxUserId ? ` (\`${String(p.robloxUserId)}\`)` : ""}`] : [p.linkedName ? `Im System: **${plain(p.linkedName)}**` : "Im System: nicht verkn\xFCpft"],
-    ...typeof p.durationSec === "number" ? [`Dauer: \`${fmtDuration(p.durationSec)}\``] : [],
-    ...joined ? [`Server beigetreten: <t:${joined}:R>`] : [],
-    ...submitted ? [`Eingereicht: <t:${submitted}:R>`] : [],
-    ...p.guildName ? [`Server: \`${plain(p.guildName)}\``] : []
-  ].join("\n");
-  const section = (q2, i, max) => {
-    const a = plain(q2.answer) || "\u2014";
-    return `**${i + 1}. ${clip(plain(q2.question), 200)}**
-${max !== void 0 && a.length > max ? `${a.slice(0, max)}\u2026 *(gek\xFCrzt)*` : a}`;
-  };
-  let sections = qa.map((q2, i) => section(q2, i));
-  const who = p.discordName ? `${plain(p.discordName)}s ` : "";
-  const title = clip(kind2 === "p" ? `\u{1F4CB} ${who}Bewerbung bei EN Polizei eingereicht \xB7 ${p.number}` : `\u{1F4CB} ${who}Bewerbung \u201E${plain(p.unitName)}\u201C eingereicht \xB7 ${p.number}`, 256);
-  const room = BUDGET - stats.length - (title.length + 20) * 3;
-  const size = (xs) => xs.reduce((n, x) => n + x.length + 2, 0);
-  if (size(sections) > room) {
-    const questions = qa.reduce((n, q2, i) => n + section({ question: q2.question, answer: "" }, i).length + 15, 0);
-    const per = Math.max(40, Math.floor((room - questions) / Math.max(1, qa.length)));
-    sections = qa.map((q2, i) => section(q2, i, per));
-  }
-  if (size(sections) > room) {
-    const kept = [];
-    for (const x of sections) {
-      if (size(kept) + x.length + 2 > room - 120) break;
-      kept.push(x);
-    }
-    kept.push(`*\u2026 und ${sections.length - kept.length} weitere Antworten \u2013 vollst\xE4ndig im Dashboard.*`);
-    sections = kept;
-  }
   const embeds = [];
-  let cur = "";
-  for (const piece of [...sections, stats]) {
-    if (cur && cur.length + piece.length + 2 > 4e3) {
-      embeds.push({ title: embeds.length ? `${title} (Fortsetzung)` : title, color: COLORS.warning, description: cur });
-      cur = "";
+  for (const e of m.embeds ?? []) {
+    const out = { ...e };
+    for (const k of IMAGE_KEYS) {
+      out[k] = await load2(e[k]).catch(() => void 0);
     }
-    cur = cur ? `${cur}
-
-${piece}` : clip(piece, 4e3);
+    embeds.push(out);
   }
-  embeds.push({ title: embeds.length ? `${title} (Fortsetzung)` : title, color: COLORS.warning, description: cur });
-  return embeds.slice(0, 10);
+  return { message: { ...m, embeds }, files: [...files.values()] };
 }
-var berlinDate = (v) => {
-  const d = new Date(String(v));
-  return Number.isNaN(d.getTime()) ? "\u2014" : d.toLocaleString("de-DE", { timeZone: "Europe/Berlin", day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" });
-};
-var LEAVE_EVENTS = {
-  approved: { text: "\u2705 Abmeldung angenommen", color: COLORS.success },
-  denied: { text: "\u274C Abmeldung abgelehnt", color: COLORS.danger },
-  started: { text: "\u{1F3DD}\uFE0F Abmeldung beginnt", color: COLORS.info },
-  ended: { text: "\u{1F44B} Abmeldung beendet", color: COLORS.neutral },
-  ended_early: { text: "\u21A9\uFE0F Abmeldung vorzeitig beendet", color: COLORS.neutral },
-  cancelled: { text: "\u21A9\uFE0F Abmeldung zur\xFCckgezogen", color: COLORS.neutral }
-};
-var unixOf = (v) => Math.floor(new Date(String(v)).getTime() / 1e3);
-function humanDuration(ms) {
-  const H = 36e5, D = 24 * H, W = 7 * D;
-  const n = (v, one, many) => `${v} ${v === 1 ? one : many}`;
-  const parts = [];
-  let rest = Math.max(H, Math.round(ms / H) * H);
-  if (rest >= W && rest % D === 0) {
-    parts.push(n(Math.floor(rest / W), "Woche", "Wochen"));
-    rest %= W;
-  }
-  if (rest >= D) {
-    parts.push(n(Math.floor(rest / D), "Tag", "Tage"));
-    rest %= D;
-  }
-  if (rest >= H) parts.push(n(Math.round(rest / H), "Stunde", "Stunden"));
-  return parts.join(", ");
-}
-var leaveSpan = (p) => humanDuration(new Date(String(p.endsAt)).getTime() - new Date(String(p.startsAt)).getTime());
-var guildAuthor = (p) => p.guildName ? { name: clip(String(p.guildName), 200), ...typeof p.guildIcon === "string" && /^https:\/\//.test(p.guildIcon) ? { iconUrl: p.guildIcon } : {} } : void 0;
-function leaveDirectEmbed(type, p) {
-  const author = guildAuthor(p);
-  const server = plain(p.guildName ?? "dem Server");
-  const end = unixOf(p.endsAt);
-  const base = { ...author ? { author } : {}, footer: `ID: ${String(p.number)}` };
-  if (type === "leave.pending") return {
-    ...base,
-    title: "Abmeldung ausstehend",
-    color: COLORS.warning,
-    description: `Deine Abmeldung wurde der Leitung zur Freigabe vorgelegt.
-Wenn sie angenommen wird, endet sie ungef\xE4hr <t:${end}:F> (<t:${end}:R>).
-Um deine Abmeldung zu verwalten, nutze \`/leave manage\` auf **${server}**.`
-  };
-  if (p.status === "APPROVED") return {
-    ...base,
-    title: "Abmeldung angenommen",
-    color: COLORS.success,
-    description: `Deine Abmeldung endet ungef\xE4hr <t:${end}:F> (<t:${end}:R>).
-Um deine Abmeldung zu verwalten, nutze \`/leave manage\` auf **${server}**.`,
-    ...p.decisionReason ? { fields: [{ name: "Hinweis", value: clip(plain(p.decisionReason), 1024) }] } : {}
-  };
-  return {
-    ...base,
-    title: "Abmeldung abgelehnt",
-    color: COLORS.danger,
-    description: `Falls du denkst, dass das ein Fehler war, wende dich an die Leitung von **${server}**.`,
-    ...p.decisionReason ? { fields: [{ name: "Grund", value: clip(plain(p.decisionReason), 1024) }] } : {}
-  };
-}
-function renderOutboxEmbeds(type, p) {
-  if (type === "qualification.submitted") return applicationEmbeds(p, "q");
-  if (type === "application.submitted") return applicationEmbeds(p, "p");
-  if (type === "qualification.archived" || type === "application.archived") {
-    const accepted = p.status === "ACCEPTED";
-    const embeds = applicationEmbeds(p, type === "application.archived" ? "p" : "q").map((e2) => ({ ...e2, color: accepted ? COLORS.success : COLORS.danger }));
-    const last = embeds[embeds.length - 1];
-    last.fields = [{ name: "Entscheidung", value: clip(`${accepted ? "\u2705 Angenommen" : "\u274C Abgelehnt"}${p.decidedByName ? ` von ${plain(p.decidedByName)}` : ""}${p.reason ? `
-**Grund:** ${plain(p.reason)}` : ""}`, 1024) }];
-    return embeds;
-  }
-  if (type === "academy.course") return [academyCourseEmbed(p)];
-  const e = renderOutbox(type, p);
-  return e ? [e] : null;
-}
-function academyCourseEmbed(p) {
-  const when = typeof p.when === "string" && !Number.isNaN(Date.parse(p.when)) ? Math.floor(Date.parse(p.when) / 1e3) : null;
-  const fields = [
-    ...when ? [{ name: "\u{1F552} Termin", value: `<t:${when}:F> (<t:${when}:R>)`, inline: true }] : [],
-    ...p.location ? [{ name: "\u{1F4CD} Ort", value: clip(plain(p.location), 1024), inline: true }] : [],
-    { name: "\u{1F3AF} Bestehensgrenze", value: `${Number(p.passScore) || 0} Punkte`, inline: true },
-    ...p.instructorName ? [{ name: "\u{1F46E} Ausbilder", value: clip(plain(p.instructorName), 1024), inline: true }] : []
-  ];
-  return { title: clip(`\u{1F393} Akademie: ${String(p.title ?? "Kurs")}`, 256), color: COLORS.info, ...p.description ? { description: clip(String(p.description), 4e3) } : {}, fields, footer: "Akademie \xB7 EN Polizei" };
-}
-function outboxButtons(type, p) {
-  if (type === "leave.requested" && typeof p.id === "string") return [
-    { id: `leave:decide:${p.id}:APPROVED`, label: "Annehmen", style: "success", emoji: "\u2714\uFE0F" },
-    { id: `leave:reason:${p.id}:DENIED`, label: "Ablehnen", style: "danger", emoji: "\u2716\uFE0F" },
-    ...typeof p.dashboardUrl === "string" && /^https?:\/\//.test(p.dashboardUrl) ? [{ id: "link", label: "Im Dashboard ansehen", style: "secondary", url: p.dashboardUrl }] : []
-  ];
-  if (type === "academy.course" && typeof p.dashboardUrl === "string" && /^https?:\/\//.test(p.dashboardUrl)) return [{ id: "link", label: "Im Dashboard ansehen", style: "secondary", url: p.dashboardUrl }];
-  if (/^wanted\./.test(type) && typeof p.dashboardUrl === "string" && /^https?:\/\//.test(p.dashboardUrl)) return [{ id: "link", label: "Im Dashboard ansehen", style: "secondary", url: p.dashboardUrl }];
-  const kind2 = type === "qualification.submitted" ? "q" : type === "application.submitted" ? "p" : null;
-  if (!kind2 || typeof p.id !== "string") return void 0;
-  const id = p.id, discordId = typeof p.discordId === "string" && /^\d{15,25}$/.test(p.discordId) ? p.discordId : null;
-  return [
-    { id: `quali:decide:${kind2}:${id}:ACCEPTED`, label: "Annehmen", style: "success" },
-    { id: `quali:decide:${kind2}:${id}:REJECTED`, label: "Ablehnen", style: "danger" },
-    { id: `quali:reason:${kind2}:${id}:ACCEPTED`, label: "Annehmen mit Grund", style: "success" },
-    { id: `quali:reason:${kind2}:${id}:REJECTED`, label: "Ablehnen mit Grund", style: "danger" },
-    ...discordId ? [{ id: `quali:history:${discordId}`, label: "Verlauf", style: "primary" }, { id: `quali:ticket:${kind2}:${id}`, label: "Ticket mit Bewerber \xF6ffnen", emoji: "\u{1F3AB}", style: "secondary" }] : [],
-    ...typeof p.dashboardUrl === "string" && /^https?:\/\//.test(p.dashboardUrl) ? [{ id: "link", label: "Im Dashboard ansehen", style: "secondary", url: p.dashboardUrl }] : []
-  ];
-}
-var reasonText = (p) => p.reason ? `
-
-**Begr\xFCndung:** ${clip(plain(p.reason), 1e3)}` : "";
-function qualificationDecisionText(p) {
-  if (typeof p.message === "string" && p.message.trim()) return clip(p.message, 2e3);
-  return p.status === "ACCEPTED" ? `\u{1F389} Deine Bewerbung f\xFCr **${plain(p.unitName)}** (${p.number}) wurde **angenommen** \u2013 willkommen! Ein Teammitglied meldet sich bei dir.${reasonText(p)}` : `Deine Bewerbung f\xFCr **${plain(p.unitName)}** (${p.number}) wurde diesmal leider **nicht angenommen**. Du kannst dich sp\xE4ter gerne erneut bewerben.${reasonText(p)}`;
-}
-function applicationDecisionText(p) {
-  if (typeof p.message === "string" && p.message.trim()) return clip(p.message, 2e3);
-  return p.status === "ACCEPTED" ? `\u{1F389} Deine Bewerbung **${p.number}** bei EN Polizei wurde **angenommen**! Ein Teammitglied meldet sich bei dir f\xFCr die n\xE4chsten Schritte.${reasonText(p)}` : `Deine Bewerbung **${p.number}** bei EN Polizei wurde diesmal leider **nicht angenommen**. Du kannst dich gerne sp\xE4ter erneut bewerben.${reasonText(p)}`;
-}
-var hexColor = (v, fallback) => typeof v === "string" && /^#[0-9a-f]{6}$/i.test(v) ? parseInt(v.slice(1), 16) : fallback;
-function dangerEmbed(s) {
-  const d = s.def;
-  const current = d ? `**Aktuell:** ${d.emoji} ${plain(d.name)}${d.title ? ` \u2013 ${plain(d.title)}` : ""}${s.reason ? `
-${clip(plain(s.reason), 300)}` : ""}` : "";
-  const when = s.at ? `
-<t:${Math.floor(new Date(s.at).getTime() / 1e3)}:f>` : "";
-  return {
-    title: clip(s.panel?.title ?? "Gefahrenstatus", 256),
-    color: hexColor(d?.color, COLORS.danger),
-    description: clip(`${s.panel?.text ?? ""}${current ? `
-
-${current}` : ""}${when}`, 4e3),
-    ...s.setByName ? { footer: `Gesetzt von ${clip(s.setByName, 100)}` } : {}
-  };
-}
-function dangerButtons(s) {
-  return (s.levels ?? []).slice(0, 10).map((l) => ({ id: `danger:set:${l.key}`, label: clip(l.name, 80), emoji: s.panel?.buttonEmoji || l.emoji || void 0, style: l.buttonStyle ?? "danger" }));
-}
-var DUTY_EMOJI = { ON_DUTY: "\u{1F7E2}", BREAK: "\u{1F7E1}", TRAINING: "\u{1F535}", ADMINISTRATIVE: "\u{1F535}", OFF_DUTY: "\u26AA" };
-var DUTY_DE = {
-  ON_DUTY: { label: "im Dienst", emoji: "\u{1F7E2}", color: 2278750 },
-  BREAK: { label: "in Pause", emoji: "\u{1F7E1}", color: 16096779 },
-  TRAINING: { label: "im Training", emoji: "\u{1F535}", color: 3900150 },
-  ADMINISTRATIVE: { label: "in der Verwaltung", emoji: "\u{1F535}", color: 440020 },
-  OFF_DUTY: { label: "au\xDFer Dienst", emoji: "\u26AA", color: 6583435 }
-};
-function teamlistEmbed(members, rankOrder) {
-  const rankOf = (m) => m.rank ?? "Ohne Rang";
-  const known = rankOrder.filter((r) => members.some((m) => rankOf(m) === r));
-  const rest = [...new Set(members.map(rankOf))].filter((r) => !rankOrder.includes(r)).sort((a, b) => a.localeCompare(b));
-  const fields = [];
-  for (const rank of [...known, ...rest]) {
-    const people = members.filter((m) => rankOf(m) === rank).sort((a, b) => (a.callsign ?? "~").localeCompare(b.callsign ?? "~"));
-    const lines = people.map((m) => `${DUTY_EMOJI[m.dutyStatus] ?? "\u26AA"} ${m.callsign ? `**${plain(m.callsign)}** ` : ""}${plain(m.name)}${m.unit ? ` \xB7 ${plain(m.unit)}` : ""}`);
-    let chunk = "";
-    let part = 0;
-    for (const l of lines) {
-      if ((chunk + "\n" + l).length > 1e3) {
-        fields.push({ name: part ? `${rank} (Forts.)` : `${rank} (${people.length})`, value: chunk });
-        chunk = "";
-        part++;
-      }
-      chunk += (chunk ? "\n" : "") + l;
-    }
-    if (chunk) fields.push({ name: part ? `${rank} (Forts.)` : `${rank} (${people.length})`, value: chunk });
-  }
-  const onDuty = members.filter((m) => m.dutyStatus === "ON_DUTY").length;
-  return { title: "\u{1F4CB} Teamliste \u2013 EN Polizei", color: COLORS.neutral, fields: fields.slice(0, 25), description: members.length ? void 0 : "Noch keine Personalakten angelegt.", footer: `${members.length} Mitglieder \xB7 ${onDuty} im Dienst \xB7 wird automatisch aktualisiert` };
-}
-function dutyReminderDm(p) {
-  const idle = Number(p.idleMinutes ?? 0), auto = Number(p.autoOffMinutes ?? 0);
-  if (p.kind === "ended") return { embed: { title: "\u26AA Schicht automatisch beendet", color: COLORS.neutral, description: `Du warst seit **${idle} Minuten** nicht aktiv und hast auf die Erinnerung nicht reagiert \u2013 deshalb bist du jetzt **au\xDFer Dienst**.${p.shiftMinutes ? `
-Deine Schicht lief ${Number(p.shiftMinutes)} Minuten.` : ""}
-
-Neu starten: Dienst-Panel, \`/dienst an\` oder im Dashboard.` } };
-  return {
-    embed: { title: "\u23F0 Bist du noch im Dienst?", color: COLORS.warning, description: `Du bist **im Dienst**, hast aber seit **${idle} Minuten** nichts gemacht (Dashboard/MDT, Discord).${auto ? `
-Ohne Reaktion endet deine Schicht in **${auto} Minuten** automatisch.` : ""}` },
-    buttons: [{ id: "duty:still", label: "Bin noch im Dienst", style: "success", emoji: "\u2705" }, { id: "duty:OFF_DUTY", label: "Au\xDFer Dienst", style: "danger", emoji: "\u26AA" }]
-  };
-}
-
-// apps/bot/src/commands/errors.ts
-function mapError(e) {
-  if (!(e instanceof BotApiError)) return errorReply("Unerwarteter Fehler im Bot.");
-  const rid = e.requestId ? ` (Request-ID \`${e.requestId}\`)` : "";
-  if (e.status === 0) return errorReply("Das System ist gerade nicht erreichbar. Bitte sp\xE4ter erneut versuchen.");
-  if (e.status === 401 && e.reason === "NOT_LINKED") return errorReply("Dein Discord-Konto ist nicht verkn\xFCpft. Verkn\xFCpfe es im Dashboard (Chat-Symbol oben rechts \u2192 \u201EMit Discord verkn\xFCpfen\u201C).");
-  if (e.status === 401) return errorReply(`Authentifizierung fehlgeschlagen.${rid}`);
-  if (e.status === 403) return errorReply(/[äöüß]|Server|Einheit|Leitstelle/.test(e.message) && !/^You do not have permission|^This route|^Dafür fehlt dir die Berechtigung|steht dem Bot nicht zur Verfügung/.test(e.message) ? `Dazu hast du keine Berechtigung: ${e.message}` : "Dazu hast du keine Berechtigung.");
-  if (e.status === 404) return errorReply("Nicht gefunden.");
-  if (e.status === 429) return errorReply("Zu viele Anfragen \u2013 bitte kurz warten.");
-  if (e.status === 400 || e.status === 409) return errorReply(`${e.message}${rid}`);
-  return errorReply(`Serverfehler.${rid}`);
-}
-
-// packages/shared/dist/index.mjs
-var PERMISSION_CATALOG = {
-  /** `dashboard.<bereich>.view`: Sichtbarkeit ganzer Bereiche im Menü und auf der Startseite (zusätzlich zur Modul-Permission). */
-  dashboard: ["view", "customize", "tickets.view", "applications.view", "team.view", "offices.view", "voice.view", "radio.view", "teamchance.view", "logs.view", "settings.view", "cad.view"],
-  team: ["view", "manage"],
-  dispatch: ["view", "create", "edit", "assign", "close", "manage"],
-  /** CAD-Leitstelle + ER:LC-Integration (deny-by-default; kritische ER:LC-Befehle brauchen ein eigenes Recht). */
-  cad: ["view", "create_incident", "edit_incident", "close_incident", "assign_unit", "manage_units", "view_persons", "view_vehicles", "manage_map", "view_erlc", "manage_erlc", "erlc_command", "erlc_command_critical", "manage_cross_server", "view_logs", "manage_settings", "radio"],
-  incidents: ["view", "create", "edit", "close", "delete"],
-  persons: ["view", "create", "edit", "archive", "merge"],
-  vehicles: ["view", "create", "edit", "archive"],
-  reports: ["view", "create", "edit", "submit", "review", "approve", "reject", "archive"],
-  tickets: ["view", "create", "edit", "void"],
-  complaints: ["view", "create", "assign", "investigate", "resolve", "close"],
-  investigations: ["view", "create", "edit", "close"],
-  wanted: ["view", "create", "edit", "activate", "clear"],
-  evidence: ["view", "create", "transfer", "release"],
-  personnel: ["view", "create", "edit", "promote", "discipline"],
-  leave: ["view", "request", "manage"],
-  applications: ["view", "review", "decide"],
-  academy: ["view", "manage"],
-  sek: ["view", "report", "manage"],
-  qualifications: ["view", "decide", "manage"],
-  ticket: ["view", "create", "claim", "close", "reopen", "delete", "add_user", "remove_user", "change_status", "change_priority", "change_category", "rename", "move", "lock", "escalate", "transcript", "transcript_delete", "internal_notes", "rate", "manage", "settings"],
-  /** Funk-Codes (Liste der Funkcodes, z. B. 10-4) */
-  radio: ["view", "manage"],
-  /** Team-Chance: Bewerbungsphase für das Team öffnen/schließen */
-  teamchance: ["view", "manage"],
-  communication: ["view", "send", "moderate"],
-  analytics: ["view"],
-  audit: ["view", "export"],
-  studio: ["view", "manage"],
-  settings: ["view", "manage"],
-  users: ["view", "manage"],
-  roles: ["view", "manage"]
-};
-var ALL_PERMISSIONS = Object.entries(PERMISSION_CATALOG).flatMap(
-  ([module2, actions]) => actions.map((a) => `${module2}.${a}`)
-);
-var PERMISSION_SET = new Set(ALL_PERMISSIONS);
-var TICKET_ACTIONS = {
-  close: { label: "Schlie\xDFen", emoji: "\u{1F512}", style: "danger", state: "open", permission: "ticket.close" },
-  /** Team fragt den Ersteller, ob das Ticket geschlossen werden kann (wie GalaxyBot „Close-Request“). */
-  close_request: { label: "Schlie\xDFen anfragen", emoji: "\u2753", style: "secondary", state: "open", permission: "ticket.close" },
-  reopen: { label: "Wieder \xF6ffnen", emoji: "\u{1F513}", style: "success", state: "closed", permission: "ticket.reopen" },
-  claim: { label: "\xDCbernehmen", emoji: "\u{1F464}", style: "primary", state: "open", permission: "ticket.claim" },
-  unclaim: { label: "Freigeben", emoji: "\u21A9\uFE0F", style: "secondary", state: "open", permission: "ticket.claim" },
-  add_user: { label: "Hinzuf\xFCgen", emoji: "\u2795", style: "secondary", state: "open", permission: "ticket.add_user" },
-  remove_user: { label: "Entfernen", emoji: "\u2796", style: "secondary", state: "open", permission: "ticket.remove_user" },
-  priority: { label: "Priorit\xE4t", emoji: "\u{1F514}", style: "secondary", state: "open", permission: "ticket.change_priority" },
-  status: { label: "Status", emoji: "\u{1F3F7}\uFE0F", style: "secondary", state: "open", permission: "ticket.change_status" },
-  category: { label: "Kategorie", emoji: "\u{1F5C2}\uFE0F", style: "secondary", state: "open", permission: "ticket.change_category" },
-  rename: { label: "Umbenennen", emoji: "\u270F\uFE0F", style: "secondary", state: "open", permission: "ticket.rename" },
-  move: { label: "Verschieben", emoji: "\u{1F4C1}", style: "secondary", state: "both", permission: "ticket.move" },
-  transcript: { label: "Transcript", emoji: "\u{1F4CB}", style: "secondary", state: "both", permission: "ticket.transcript" },
-  lock: { label: "Sperren", emoji: "\u26D4", style: "secondary", state: "open", permission: "ticket.lock" },
-  unlock: { label: "Entsperren", emoji: "\u2705", style: "secondary", state: "open", permission: "ticket.lock" },
-  escalate: { label: "Eskalieren", emoji: "\u{1F7E0}", style: "danger", state: "open", permission: "ticket.escalate" },
-  note: { label: "Notiz", emoji: "\u{1F5D2}\uFE0F", style: "secondary", state: "both", permission: "ticket.internal_notes" },
-  rating: { label: "Bewertung", emoji: "\u2B50", style: "secondary", state: "closed", permission: "ticket.rate" },
-  delete: { label: "L\xF6schen", emoji: "\u{1F5D1}\uFE0F", style: "danger", state: "closed", permission: "ticket.delete" }
-};
-var TICKET_ACTION_KEYS = Object.keys(TICKET_ACTIONS);
-var ROBLOX_NAME = /^[A-Za-z0-9_]{3,20}$/;
-var isInputQuestion = (t) => !t || t === "TEXT" || t === "ROBLOX";
-var MAX_FORM_OPTIONS = 25;
-function normalizeField(f2) {
-  const type = f2.type ?? "TEXT";
-  const input = isInputQuestion(type);
-  return {
-    key: f2.key,
-    label: f2.label,
-    required: f2.required,
-    type,
-    minLength: type === "TEXT" ? Math.max(0, f2.minLength ?? 0) : 0,
-    maxLength: type === "ROBLOX" ? 20 : f2.maxLength,
-    options: input ? [] : (f2.options ?? []).slice(0, MAX_FORM_OPTIONS),
-    multiple: !input && !!f2.multiple
-  };
-}
-function checkAnswer(field2, value) {
-  const f2 = normalizeField(field2);
-  if (f2.type === "ROBLOX") {
-    const v = (Array.isArray(value) ? value[0] ?? "" : value ?? "").trim().replace(/^@/, "");
-    if (!v) return f2.required ? { ok: false, error: `\u201E${f2.label}\u201C ist eine Pflichtfrage.` } : { ok: true, text: "", roleIds: [] };
-    if (!ROBLOX_NAME.test(v)) return { ok: false, error: `Bei \u201E${f2.label}\u201C bitte einen g\xFCltigen Roblox-Benutzernamen angeben (3\u201320 Zeichen, Buchstaben, Ziffern, _).` };
-    return { ok: true, text: v, roleIds: [] };
-  }
-  if (f2.type === "TEXT") {
-    const v = (Array.isArray(value) ? value.join("\n") : value ?? "").trim();
-    if (!v) return f2.required ? { ok: false, error: `\u201E${f2.label}\u201C ist eine Pflichtfrage.` } : { ok: true, text: "", roleIds: [] };
-    if (v.length < f2.minLength) return { ok: false, error: `Die Antwort auf \u201E${f2.label}\u201C ist zu kurz (mindestens ${f2.minLength} Zeichen).` };
-    if (v.length > f2.maxLength) return { ok: false, error: `Die Antwort auf \u201E${f2.label}\u201C ist zu lang (h\xF6chstens ${f2.maxLength} Zeichen).` };
-    return { ok: true, text: v, roleIds: [] };
-  }
-  const picked = [...new Set((Array.isArray(value) ? value : value ? [value] : []).map((x) => x.trim()).filter(Boolean))];
-  if (!picked.length) return f2.required ? { ok: false, error: `Bitte bei \u201E${f2.label}\u201C etwas ausw\xE4hlen.` } : { ok: true, text: "", roleIds: [] };
-  if (!f2.multiple && picked.length > 1) return { ok: false, error: `Bei \u201E${f2.label}\u201C ist nur eine Auswahl erlaubt.` };
-  const opts = picked.map((p) => f2.options.find((o) => o.label === p));
-  if (opts.some((o) => !o)) return { ok: false, error: `Ung\xFCltige Auswahl bei \u201E${f2.label}\u201C.` };
-  return { ok: true, text: picked.join(", "), roleIds: f2.type === "ROLE" ? opts.map((o) => o.roleId).filter((r) => !!r && /^\d{15,25}$/.test(r)) : [] };
-}
-var DEFAULT_APPLICATION_MESSAGES = {
-  accepted: "\u{1F389} Deine Bewerbung als `{applicationName}` ({number}) wurde von {user} **angenommen**!",
-  denied: "Deine Bewerbung als `{applicationName}` ({number}) wurde von {user} leider **abgelehnt**. Du kannst dich sp\xE4ter gerne erneut bewerben.",
-  confirmation: "Bist du sicher, dass du dich bewerben m\xF6chtest?\n\nSobald du startest, schicke ich dir nacheinander **{questionCount} Fragen**. Du hast **{timeLimit}** Zeit, die Bewerbung abzuschlie\xDFen \u2013 sonst musst du neu starten. Abbrechen kannst du jederzeit, indem du **abbrechen** schreibst.",
-  completion: "\u2705 Deine Bewerbung **{number}** ist eingegangen! Das Team pr\xFCft sie \u2013 die Entscheidung bekommst du hier per Direktnachricht."
-};
-function renderApplicationText(text, vars, appendReason = false) {
-  const out = text.replace(/\{[a-zA-Z]+\}/g, (m) => m in vars ? vars[m] ?? "" : m);
-  return appendReason && vars["{reason}"] && !text.includes("{reason}") ? `${out}
-
-**Grund:** ${vars["{reason}"]}` : out;
-}
-var formatMinutes = (min) => {
-  const d = Math.floor(min / 1440), h = Math.floor(min % 1440 / 60), m = min % 60;
-  return [d ? `${d} ${d === 1 ? "Tag" : "Tage"}` : "", h ? `${h} ${h === 1 ? "Stunde" : "Stunden"}` : "", m ? `${m} ${m === 1 ? "Minute" : "Minuten"}` : ""].filter(Boolean).join(" ") || "0 Minuten";
-};
-var rolesMatch = (have, ids, mode) => mode === "ALL" ? ids.every((r) => have.includes(r)) : ids.some((r) => have.includes(r));
-var ERLC_MAP_SIZE = 5355;
-var DEFAULT_CAD_CONFIG = {
-  homeGuildId: null,
-  incidentNumberPrefix: "E",
-  incidentTypes: [
-    { key: "ROBBERY", label: "Raub", emoji: "\u{1F4B0}" },
-    { key: "SHOTS", label: "Schussabgabe", emoji: "\u{1F52B}" },
-    { key: "TRAFFIC", label: "Verkehrsunfall", emoji: "\u{1F697}" },
-    { key: "HOSTAGE", label: "Geiselnahme", emoji: "\u{1F9F7}" },
-    { key: "PURSUIT", label: "Verfolgung", emoji: "\u{1F693}" },
-    { key: "OTHER", label: "Sonstiges", emoji: "\u{1F4CB}" }
-  ],
-  priorities: [
-    { key: "HIGH", label: "Hoch", emoji: "\u{1F534}", color: "#ef4444", order: 0 },
-    { key: "MEDIUM", label: "Mittel", emoji: "\u{1F7E0}", color: "#f97316", order: 1 },
-    { key: "LOW", label: "Niedrig", emoji: "\u{1F7E2}", color: "#22c55e", order: 2 }
-  ],
-  incidentStatuses: [
-    { key: "NEW", label: "Neu", emoji: "\u{1F195}", color: "#3b82f6" },
-    { key: "ACKNOWLEDGED", label: "Angenommen", emoji: "\u{1F4E5}", color: "#6366f1" },
-    { key: "EN_ROUTE", label: "Einheiten unterwegs", emoji: "\u{1F693}", color: "#0ea5e9" },
-    { key: "ON_SCENE", label: "Am Einsatzort", emoji: "\u{1F4CD}", color: "#f97316" },
-    { key: "CRITICAL", label: "Kritisch", emoji: "\u{1F6A8}", color: "#ef4444" },
-    { key: "UNDER_CONTROL", label: "Unter Kontrolle", emoji: "\u{1F6E1}\uFE0F", color: "#22c55e" },
-    { key: "CLOSED", label: "Abgeschlossen", emoji: "\u2705", color: "#64748b", closed: true },
-    { key: "CANCELLED", label: "Abgebrochen", emoji: "\u2716\uFE0F", color: "#64748b", closed: true }
-  ],
-  unitStatuses: [
-    { key: "AVAILABLE", label: "Verf\xFCgbar", emoji: "\u{1F7E2}", color: "#22c55e" },
-    { key: "PATROL", label: "Auf Streife", emoji: "\u{1F7E1}", color: "#eab308" },
-    { key: "EN_ROUTE", label: "Unterwegs", emoji: "\u{1F535}", color: "#3b82f6" },
-    { key: "ON_SCENE", label: "Am Einsatzort", emoji: "\u{1F7E0}", color: "#f97316" },
-    { key: "BUSY", label: "Im Einsatz", emoji: "\u{1F534}", color: "#ef4444" },
-    { key: "UNAVAILABLE", label: "Nicht verf\xFCgbar", emoji: "\u26AB", color: "#475569" },
-    { key: "OFF_DUTY", label: "Au\xDFer Dienst", emoji: "\u26AA", color: "#94a3b8" }
-  ],
-  unitTypes: [
-    { key: "SEK", label: "SEK", emoji: "\u{1F693}", color: "#1d4ed8", layer: "sek" },
-    { key: "K9", label: "K9", emoji: "\u{1F415}", color: "#a16207", layer: "k9" },
-    { key: "PATROL", label: "Streife", emoji: "\u{1F694}", color: "#0891b2", layer: "units" }
-  ],
-  layers: [
-    { key: "incidents", label: "Eins\xE4tze", builtin: true, enabledByDefault: true },
-    { key: "calls", label: "ER:LC Notrufe", builtin: true, enabledByDefault: true },
-    { key: "sek", label: "SEK-Einheiten", builtin: true, enabledByDefault: true },
-    { key: "k9", label: "K9-Einheiten", builtin: true, enabledByDefault: true },
-    { key: "units", label: "Weitere Einheiten", builtin: true, enabledByDefault: true },
-    { key: "vehicles", label: "Fahrzeuge", builtin: true, enabledByDefault: false },
-    { key: "staff", label: "Staff", builtin: true, enabledByDefault: false },
-    { key: "players", label: "Alle Spieler", builtin: true, enabledByDefault: false },
-    { key: "pois", label: "Eigene POIs", builtin: true, enabledByDefault: true },
-    { key: "zones", label: "Eigene Zonen", builtin: true, enabledByDefault: true },
-    { key: "restricted", label: "Sperrbereiche", builtin: true, enabledByDefault: true }
-  ],
-  markers: [
-    { key: "incident", label: "Einsatz", emoji: "\u{1F534}", color: "#ef4444" },
-    { key: "call", label: "Emergency Call", emoji: "\u{1F6A8}", color: "#f43f5e" },
-    { key: "unit", label: "Einheit", emoji: "\u{1F694}", color: "#0891b2" },
-    { key: "vehicle", label: "Fahrzeug", emoji: "\u{1F697}", color: "#a855f7" },
-    { key: "staff", label: "Staff", emoji: "\u{1F46E}", color: "#f59e0b" },
-    { key: "player", label: "Spieler", emoji: "\u2022", color: "#94a3b8" },
-    { key: "poi", label: "POI", emoji: "\u{1F4CD}", color: "#10b981" }
-  ],
-  map: { imageUrl: null, width: ERLC_MAP_SIZE, height: ERLC_MAP_SIZE, originX: ERLC_MAP_SIZE / 2, originY: ERLC_MAP_SIZE / 2, scale: 1 },
-  routes: [],
-  memberFields: [],
-  widgets: ["activeIncidents", "availableUnits", "activeCalls", "dutyActivity", "erlcStatus", "erlcPlayers", "erlcQueue", "staffOnline", "map", "radio"]
-};
-function accountAge(created, now = Date.now()) {
-  const t = created ? new Date(created).getTime() : NaN;
-  if (!Number.isFinite(t)) return "\u2014";
-  const days = Math.max(0, Math.floor((now - t) / 864e5));
-  if (days === 0) return "heute erstellt";
-  if (days < 60) return `${days} ${days === 1 ? "Tag" : "Tage"}`;
-  if (days < 730) return `${Math.floor(days / 30)} Monate`;
-  return `${Math.floor(days / 365)} Jahre`;
-}
-function renderWelcomeText(text, m, now = Date.now()) {
-  const vars = {
-    "{user}": `<@${m.id}>`,
-    "{username}": m.username,
-    "{displayName}": m.displayName,
-    "{server}": m.server,
-    "{memberCount}": String(m.memberCount),
-    "{accountAge}": accountAge(m.createdAt, now)
-  };
-  return text.replace(/\{[a-zA-Z]+\}/g, (k) => vars[k] ?? k);
-}
-var hexColor2 = (c, fallback = 3900150) => /^#[0-9a-fA-F]{6}$/.test(c) ? parseInt(c.slice(1), 16) : fallback;
-
-// apps/bot/src/commands/qualifications.ts
-var POLICE = "@polizei";
-var POLICE_NAME = "Bewerbung \u2013 EN Polizei";
-var ROBLOX_KEY = "@roblox";
-var SKIP = "-";
-var APPLICATION_MS = 3 * 60 * 6e4;
-var limitMs = (st) => (st.timeLimitMinutes ?? 180) * 6e4;
-function roleBlock(st, roles) {
-  if (!roles) return null;
-  const req = st.roles?.required, res = st.roles?.restricted;
-  if (req?.ids.length && !rolesMatch(roles, req.ids, req.mode)) return `Dir fehlt ${req.mode === "ALL" ? "eine der n\xF6tigen Rollen" : "die n\xF6tige Rolle"} f\xFCr diese Bewerbung.`;
-  if (res?.ids.length && rolesMatch(roles, res.ids, res.mode)) return "Mit deinen Rollen kannst du dich hierf\xFCr nicht bewerben.";
-  return null;
-}
-var MAX_ANSWER = 1e3;
-var sessions = /* @__PURE__ */ new Map();
-var joinedAtOf = /* @__PURE__ */ new Map();
-var guildOf = /* @__PURE__ */ new Map();
-var sweepSessions = (now = Date.now()) => {
-  for (const [k, s] of sessions) if (s.expiresAt <= now) sessions.delete(k);
-};
-var CANCEL_WORD = "abbrechen";
-var getConfig = (api2, guildId) => api2.service("GET", `/bot/qualifications${guildId ? `?guildId=${guildId}` : ""}`);
-var field = (f2) => {
-  const n = normalizeField(f2);
-  return { ...n, maxLength: Math.min(n.maxLength, 2e3) };
-};
-var asField = (q2, i) => typeof q2 === "string" ? { key: `q${i + 1}`, label: q2, required: true, maxLength: MAX_ANSWER } : q2;
-var questionMessage = (s) => {
-  const i = s.answers.length;
-  const q2 = s.questions[i];
-  const f2 = q2.field;
-  const head = `**${i + 1}/${s.questions.length}.** ${plain(q2.text)}`;
-  if (f2.type === "ROBLOX") {
-    return { embed: { title: clip(s.unitName, 256), color: COLORS.info, description: clip(`${head}
-
-_Schreibe deinen **Roblox-Benutzernamen** (genau wie in Roblox, nicht den Anzeigenamen) hier in den Chat \u2013 ich pr\xFCfe, ob es das Konto gibt.${f2.required ? "" : ` Optional \u2013 \u201E${SKIP}\u201C zum \xDCberspringen.`}_`, 4e3) } };
-  }
-  if (f2.type === "TEXT") {
-    const hints = [f2.minLength ? `mindestens ${f2.minLength} Zeichen` : "", !f2.required ? `optional \u2013 schreibe \u201E${SKIP}\u201C, um zu \xFCberspringen` : ""].filter(Boolean).join(" \xB7 ");
-    return { embed: { title: clip(s.unitName, 256), color: COLORS.info, description: clip(`${head}
-
-_Antworte einfach mit einer Nachricht hier im Chat.${hints ? ` (${hints})` : ""}_`, 4e3) } };
-  }
-  return {
-    embed: { title: clip(s.unitName, 256), color: COLORS.info, description: clip(`${head}
-
-_W\xE4hle unten ${f2.multiple ? "eine oder mehrere Optionen" : "eine Option"} aus.${f2.required ? "" : " Optional."}_`, 4e3) },
-    select: { id: `quali:ans:${i}`, placeholder: f2.multiple ? "Optionen w\xE4hlen \u2026" : "Option w\xE4hlen \u2026", min: 1, max: f2.multiple ? f2.options.length : 1, options: f2.options.map((o, j) => ({ label: clip(o.label, 100), value: String(j) })) },
-    buttons: f2.required ? [] : [{ id: `quali:skip:${i}`, label: "\xDCberspringen", style: "secondary" }]
-  };
-};
-var answerText = (a) => a === null ? "\u2014 (\xFCbersprungen)" : Array.isArray(a) ? a.join(", ") : a;
-async function loadFlow(api2, key, guildId) {
-  if (!key) return null;
-  if (key === POLICE) {
-    const [form, cfg2] = await Promise.all([api2.service("GET", `/applications/form${guildId ? `?guildId=${guildId}` : ""}`), getConfig(api2, guildId).catch(() => void 0)]);
-    return { key, name: cfg2?.police?.name ? `Bewerbung \u2013 ${cfg2.police.name}` : POLICE_NAME, appName: cfg2?.police?.name ?? "EN Polizei", enabled: cfg2?.police?.enabled !== false, settings: cfg2?.police?.settings ?? {}, questions: [
-      // Roblox-Name: eigene Frage „Roblox User“ im Formular ersetzt die eingebaute erste Frage
-      ...form.some((f2) => f2.type === "ROBLOX") ? [] : [{ text: "Wie ist dein Roblox-Benutzername?", key: ROBLOX_KEY, field: field({ key: ROBLOX_KEY, label: "Roblox", required: true, maxLength: 20, type: "ROBLOX" }) }],
-      ...form.map((f2) => ({ text: f2.label, key: f2.key, field: field(f2) }))
-    ] };
-  }
-  const unit = (await getConfig(api2, guildId)).units.find((u) => u.key === key);
-  return unit ? { key: unit.key, name: unit.name, appName: unit.name, enabled: unit.enabled !== false, settings: unit.settings ?? {}, questions: unit.questions.map(asField).map((f2) => ({ text: f2.label, key: f2.key, field: field(f2) })) } : null;
-}
-async function openApplication(api2, key, discordId) {
-  return key === POLICE ? api2.service("GET", `/bot/application/open?discordId=${discordId}`) : api2.service("GET", `/bot/qualifications/open?discordId=${discordId}&unit=${encodeURIComponent(key)}`);
-}
-async function submitSession(api2, s, userId, userName, robloxLookup2, now = Date.now()) {
-  const meta = { durationSec: Math.max(0, Math.round((now - s.startedAt) / 1e3)), ...s.joinedAt ? { joinedAt: s.joinedAt } : {}, ...s.guildId ? { guildId: s.guildId } : {} };
-  if (s.unit === POLICE) {
-    const rbIndex = s.questions.findIndex((q2) => q2.field.type === "ROBLOX");
-    const roblox = String(rbIndex >= 0 ? s.answers[rbIndex] ?? "" : "").trim();
-    const rb = roblox ? await robloxLookup2?.(roblox).catch(() => null) : null;
-    const answers = Object.fromEntries(s.questions.flatMap((q2, i) => {
-      const a = s.answers[i];
-      return q2.key === ROBLOX_KEY || a === null || a === void 0 ? [] : [[q2.key, a]];
-    }));
-    return (await api2.service("POST", "/bot/application", { robloxUsername: rb?.name ?? roblox, ...rb ? { robloxUserId: String(rb.id) } : {}, discordId: userId, discordName: userName, answers, ...meta })).number;
-  }
-  return (await api2.service("POST", "/bot/qualifications/applications", { unit: s.unit, discordId: userId, discordName: userName, answers: s.questions.map((q2, i) => ({ question: q2.text, answer: s.answers[i] ?? null })), ...meta })).number;
-}
-var POLICE_PANEL = { title: "\u{1F4CB} Bewerbung bei EN Polizei", color: COLORS.info, description: "Du m\xF6chtest Teil der **EN Polizei** werden? Klicke auf **Jetzt bewerben** \u2013 der Bot stellt dir die Fragen nacheinander per **Direktnachricht**.\n\nDu brauchst deinen **Roblox-Namen** und etwa 10 Minuten Zeit. Die Entscheidung bekommst du ebenfalls per Direktnachricht." };
-async function offer(c, key) {
-  const running = sessions.get(c.discordId);
-  if (running && running.expiresAt > Date.now()) return errorReply(`Du hast bereits eine laufende Bewerbung (**${plain(running.unitName)}**) in deinen Direktnachrichten. Beende oder brich sie dort zuerst ab.`);
-  const flow = await loadFlow(c.api, key, c.guildId);
-  if (!flow) return errorReply("Diese Auswahl gibt es nicht mehr. Bitte das Panel neu laden.");
-  if (!flow.enabled) return errorReply(`Bewerbungen f\xFCr **${plain(flow.name)}** sind derzeit geschlossen.`);
-  const blocked = roleBlock(flow.settings, c.guildId ? c.memberRoleIds ?? [] : void 0);
-  if (blocked) return errorReply(blocked);
-  const open = await openApplication(c.api, flow.key, c.discordId);
-  if (open.open) return errorReply(`Du hast f\xFCr **${plain(flow.name)}** bereits eine offene Bewerbung (${open.number}). Bitte warte auf die Entscheidung.`);
-  if (!c.platform) return errorReply("Direktnachrichten sind hier nicht verf\xFCgbar.");
-  if (c.memberJoinedAt) joinedAtOf.set(c.discordId, c.memberJoinedAt);
-  if (c.guildId) guildOf.set(c.discordId, c.guildId);
-  let dm;
-  try {
-    dm = await c.platform.sendDm(c.discordId, {
-      embed: { title: clip(flow.name, 256), color: COLORS.info, description: clip(renderApplicationText(flow.settings.messages?.confirmation ?? DEFAULT_APPLICATION_MESSAGES.confirmation, { "{questionCount}": String(flow.questions.length), "{timeLimit}": formatMinutes(Math.round(limitMs(flow.settings) / 6e4)), "{applicationName}": flow.appName }), 4e3) },
-      buttons: [{ id: `quali:start:${flow.key}`, label: "Bewerbung starten", style: "success" }, { id: "quali:cancel", label: "Abbrechen", style: "danger" }]
-    });
-  } catch {
-    return errorReply("Ich kann dir keine Direktnachricht schicken. Bitte erlaube Direktnachrichten von Servermitgliedern (Server-Men\xFC \u2192 Privatsph\xE4re-Einstellungen) und versuche es erneut.");
-  }
-  return { ephemeral: true, embeds: [{ title: "Bewerbung gestartet", description: "Die Bewerbung wurde in deinen **Direktnachrichten** gestartet!", color: COLORS.success }], buttons: [{ id: "quali:link", label: "Zur Bewerbung", style: "secondary", url: `https://discord.com/channels/@me/${dm.channelId}/${dm.messageId}` }] };
-}
-function panelEmbed(cfg2) {
-  const parts = [cfg2.intro, ...cfg2.units.map((u) => `**__${plain(u.name)}:__**
-${u.description}`)].filter(Boolean);
-  return { title: clip(cfg2.title, 256), color: COLORS.info, description: clip(parts.join("\n\n"), 4e3) };
-}
-var QUALI_COMMANDS = [
-  {
-    name: "bewerbung",
-    description: "Bewirb dich bei EN Polizei (Fragen per Direktnachricht)",
-    async run(c) {
-      try {
-        return await offer(c, POLICE);
-      } catch (e) {
-        return mapError(e);
-      }
-    }
-  },
-  {
-    name: "bewerbungspanel",
-    description: "Postet das Bewerbungs-Panel (\u201EJetzt bewerben\u201C) in diesen Kanal",
-    async run(c) {
-      if (!c.guildId) return errorReply("Das geht nur auf einem Server, nicht per Direktnachricht.");
-      if (!c.isGuildAdmin) return errorReply("Daf\xFCr brauchst du auf diesem Discord-Server das Recht \u201EServer verwalten\u201C.");
-      if (!c.channelId || !c.platform) return errorReply("Panel kann hier nicht gepostet werden.");
-      try {
-        const police = (await getConfig(c.api, c.guildId).catch(() => void 0))?.police;
-        const embed = police ? { title: clip(police.title, 256), color: COLORS.info, description: clip(police.description, 4e3) } : POLICE_PANEL;
-        await c.platform.postPanel({ channelId: c.channelId, embed, buttons: [{ id: `quali:pick:${POLICE}`, label: "Jetzt bewerben", emoji: "\u{1F4CB}", style: "primary" }] });
-      } catch {
-        return errorReply("Panel konnte nicht gepostet werden (fehlen dem Bot Rechte in diesem Kanal?).");
-      }
-      return okReply("Bewerbungs-Panel gepostet. Neue Bewerbungen erscheinen im System unter *Applications* (und im Bewerbungs-Kanal, falls eingestellt).");
-    }
-  },
-  {
-    name: "qualipanel",
-    description: "Postet das Qualifikations-Panel (SEK, Flugstaffel, Ausbilder \u2026) in diesen Kanal",
-    async run(c) {
-      if (!c.guildId) return errorReply("Das geht nur auf einem Server, nicht per Direktnachricht.");
-      if (!c.isGuildAdmin) return errorReply("Daf\xFCr brauchst du auf diesem Discord-Server das Recht \u201EServer verwalten\u201C.");
-      if (!c.channelId || !c.platform) return errorReply("Panel kann hier nicht gepostet werden.");
-      try {
-        const cfg2 = await getConfig(c.api, c.guildId);
-        await c.platform.postPanel({ channelId: c.channelId, embed: panelEmbed(cfg2), select: { id: "quali:pick", placeholder: "Triff eine Auswahl", options: cfg2.units.map((u) => ({ label: clip(`${u.name}${u.enabled === false ? " (geschlossen)" : ""}`, 100), value: u.key, ...u.description ? { description: clip(plain(u.description).replace(/\*|_/g, ""), 100) } : {} })) } });
-        const ch = await c.config?.().catch(() => void 0);
-        return okReply(`Qualifikations-Panel gepostet.${ch?.qualifications ? "" : " Tipp: In den Einstellungen einen **Qualifications channel** hinterlegen \u2013 dort landen die Bewerbungen mit Annehmen/Ablehnen-Buttons."}`);
-      } catch (e) {
-        if (e instanceof BotApiError) return mapError(e);
-        return errorReply("Panel konnte nicht gepostet werden (fehlen dem Bot Rechte in diesem Kanal?).");
-      }
-    }
-  }
-];
-async function handleDirectMessage(a) {
-  const now = a.now ?? Date.now();
-  const s = sessions.get(a.userId);
-  const say = (description, color = COLORS.info, buttons) => a.sendDm(a.userId, { embed: { title: s ? clip(s.unitName, 256) : "Bewerbung", description, color }, buttons });
-  if (!s) {
-    await say("Du hast gerade keine laufende Bewerbung. Starte eine \xFCber das Bewerbungs- oder Qualifikations-Panel auf dem Server (oder mit `/bewerbung`).", COLORS.neutral);
-    return;
-  }
-  if (s.expiresAt <= now) {
-    sessions.delete(a.userId);
-    await say(`\u23F0 Die Zeit f\xFCr deine Bewerbung ist abgelaufen (${formatMinutes(Math.round(limitMs(s.settings) / 6e4))}). Bitte starte sie \xFCber das Panel neu.`, COLORS.warning);
-    return;
-  }
-  if (a.content.trim().toLowerCase() === CANCEL_WORD) {
-    sessions.delete(a.userId);
-    await say("Bewerbung abgebrochen. Du kannst jederzeit \xFCber das Panel neu starten.", COLORS.neutral);
-    return;
-  }
-  const q2 = s.questions[s.answers.length];
-  if (q2.field.type !== "TEXT" && q2.field.type !== "ROBLOX") {
-    await say("Bitte w\xE4hle die Antwort im **Men\xFC** der letzten Frage aus.", COLORS.warning);
-    await a.sendDm(a.userId, questionMessage(s));
-    return;
-  }
-  const text = a.content.trim();
-  if (!text) {
-    await say("Bitte antworte mit Text.", COLORS.warning);
-    return;
-  }
-  if (!q2.field.required && text === SKIP) s.answers.push(null);
-  else {
-    const r = checkAnswer(q2.field, text);
-    if (!r.ok) {
-      await say(r.error, COLORS.warning);
-      return;
-    }
-    if (q2.field.type === "ROBLOX" && a.robloxCheck) {
-      const rb = await a.robloxCheck(r.text).catch(() => void 0);
-      if (rb === null) {
-        await say(`\u274C Den Roblox-Benutzer **${plain(r.text)}** gibt es nicht. Bitte pr\xFCfe die Schreibweise und schicke ihn noch einmal.`, COLORS.warning);
-        return;
-      }
-      if (rb) {
-        s.pendingRoblox = rb.name;
-        const i = s.answers.length;
-        await a.sendDm(a.userId, {
-          embed: { title: clip(s.unitName, 256), color: COLORS.info, description: `Ist das dein Roblox-Konto?
-
-**${plain(rb.name)}**${rb.displayName && rb.displayName !== rb.name ? `
-${plain(rb.displayName)}` : ""}
-
-_Falls nicht: auf \u201EAnderer Name\u201C tippen oder einfach den richtigen Namen schreiben._`, ...rb.avatarUrl ? { thumbnail: rb.avatarUrl } : {} },
-          buttons: [{ id: `quali:rb:${i}:yes`, label: "Ja, das bin ich", style: "success" }, { id: `quali:rb:${i}:no`, label: "Anderer Name", style: "secondary" }]
-        });
-        return;
-      }
-      s.answers.push(r.text);
-    } else s.answers.push(text);
-  }
-  await proceed({ api: a.api, userId: a.userId, userName: a.userName, sendDm: a.sendDm, robloxLookup: a.robloxLookup, now }, s);
-}
-async function proceed(o, s) {
-  const say = (description, color = COLORS.info, buttons) => o.sendDm(o.userId, { embed: { title: clip(s.unitName, 256), description, color }, buttons });
-  if (s.answers.length < s.questions.length) {
-    await o.sendDm(o.userId, questionMessage(s));
-    return;
-  }
-  try {
-    const number = await submitSession(o.api, s, o.userId, o.userName, o.robloxLookup, o.now);
-    sessions.delete(o.userId);
-    await say(clip(renderApplicationText(s.settings.messages?.completion ?? DEFAULT_APPLICATION_MESSAGES.completion, { "{number}": number, "{applicationName}": s.appName }), 4e3), COLORS.success);
-  } catch (e) {
-    if (e instanceof BotApiError && (e.status === 409 || e.status === 400 || e.status === 404)) {
-      sessions.delete(o.userId);
-      await say(e.status === 409 ? "Du hast hierf\xFCr bereits eine offene Bewerbung. Bitte warte auf die Entscheidung." : "Die Fragen wurden inzwischen ge\xE4ndert. Bitte starte die Bewerbung neu.", COLORS.warning);
-      return;
-    }
-    const last = s.questions[s.answers.length - 1];
-    s.answers.pop();
-    if (last.field.type === "TEXT") await say("\u26A0\uFE0F Deine Bewerbung konnte gerade nicht gespeichert werden (System nicht erreichbar). Schicke deine **letzte Antwort** gleich noch einmal, um es erneut zu versuchen.", COLORS.warning);
-    else {
-      await say("\u26A0\uFE0F Deine Bewerbung konnte gerade nicht gespeichert werden (System nicht erreichbar). W\xE4hle deine letzte Antwort gleich noch einmal aus.", COLORS.warning);
-      await o.sendDm(o.userId, questionMessage(s));
-    }
+async function react(msg, emojis = []) {
+  for (const e of emojis) {
+    if (msg.reactions.cache.some((r) => r.me && (r.emoji.toString() === e || r.emoji.name === e))) continue;
+    await msg.react(e).catch(() => void 0);
   }
 }
-var STATUS2 = /* @__PURE__ */ new Set(["ACCEPTED", "REJECTED"]);
-var parseDecision = (rest) => {
-  const [kind2, id, status] = rest.length === 2 ? ["q", rest[0], rest[1]] : rest;
-  return (kind2 === "q" || kind2 === "p") && id && status && STATUS2.has(status) ? { kind: kind2, id, status } : null;
-};
-async function decide(c, d, reason) {
-  const cfg2 = await getConfig(c.api, c.guildId).catch(() => void 0);
-  let managers = d.kind === "p" ? cfg2?.police?.settings?.roles?.managers : void 0;
-  if (d.kind === "q" && cfg2?.units.some((u) => u.settings?.roles?.managers?.length)) {
-    const app = await c.api.asUser(c.discordId, "GET", `/qualifications/applications/${d.id}`);
-    managers = cfg2.units.find((u) => u.key === app.unit)?.settings?.roles?.managers;
+async function postOrUpdate(client2, api2, o) {
+  const ch = await client2.channels.fetch(o.channelId);
+  if (!ch?.isSendable() || !("messages" in ch)) throw new Error(`channel ${o.channelId} is not a text channel the bot can post in`);
+  let messageId = o.messageId ?? null;
+  if (o.stateKey && !messageId && !o.forceNew) {
+    const prev = await api2.service("GET", `/bot/state/${o.stateKey}`).then((r) => r.value, () => null);
+    if (prev?.channelId === o.channelId && prev.messageId) messageId = prev.messageId;
   }
-  if (managers?.length && !managers.some((r2) => (c.memberRoleIds ?? []).includes(r2))) return errorReply("\xDCber diese Bewerbung d\xFCrfen nur die eingestellten Manager-Rollen entscheiden.");
-  const path2 = d.kind === "p" ? `/applications/${d.id}/discord-decision` : `/qualifications/applications/${d.id}/decision`;
-  const r = await c.api.asUser(c.discordId, "POST", path2, { status: d.status, ...reason ? { reason } : {} });
-  const accepted = d.status === "ACCEPTED";
-  const what = `Bewerbung **${r.number}**${r.unitName ? ` (${plain(r.unitName)})` : ""}`;
-  return {
-    ...okReply(`${what} ${accepted ? "**angenommen**" : "**abgelehnt**"}. Die Person wird per Direktnachricht informiert${accepted && d.kind === "q" ? " (und bekommt ggf. die Rolle)" : ""}.${r.addedToSek ? " Au\xDFerdem ins SEK aufgenommen." : ""}`),
-    decided: { color: accepted ? COLORS.success : COLORS.danger, text: clip(`${accepted ? "\u2705 Angenommen" : "\u274C Abgelehnt"} von <@${c.discordId}>${r.decidedByName ? ` (${plain(r.decidedByName)})` : ""}${reason ? `
-**Grund:** ${plain(reason)}` : ""}`, 1024) }
-  };
+  const { message, files } = await resolveAssets(api2, o.message);
+  const payload = { ...payloadOf(message, false), ...files.length ? { files } : {} };
+  const old = messageId && !o.forceNew ? await ch.messages.fetch(messageId).catch(() => null) : null;
+  const msg = old ? await old.edit({ ...payload, content: payload.content ?? "", attachments: [] }) : await ch.send(payload);
+  await react(msg, message.reactions);
+  if (o.stateKey) await api2.service("PUT", `/bot/state/${o.stateKey}`, { value: { channelId: o.channelId, messageId: msg.id } }).catch(() => void 0);
+  return { channelId: o.channelId, messageId: msg.id };
 }
-var STATUS_DE = { OPEN: "\u{1F7E1} offen", SUBMITTED: "\u{1F7E1} eingereicht", SCREENING: "\u{1F7E1} in Pr\xFCfung", INTERVIEW: "\u{1F7E1} Gespr\xE4ch", PENDING_DECISION: "\u{1F7E1} Entscheidung offen", ACCEPTED: "\u2705 angenommen", REJECTED: "\u274C abgelehnt", WITHDRAWN: "\u21A9\uFE0F zur\xFCckgezogen" };
-var QUALI_INTERACTION = {
-  prefix: "quali",
-  opensModal: (args) => args[0] === "reason",
-  async run(c) {
-    const [action, ...rest] = c.args;
+async function postAsUser(client2, api2, channelId, m, as) {
+  const ch = await client2.channels.fetch(channelId);
+  if (!ch?.isSendable() || !("messages" in ch)) throw new Error(`channel ${channelId} is not a text channel the bot can post in`);
+  const { message, files } = await resolveAssets(api2, m);
+  const payload = { ...payloadOf(message, false), ...files.length ? { files } : {} };
+  let msg = null;
+  if ("fetchWebhooks" in ch && "createWebhook" in ch) {
     try {
-      if (action === "reason") {
-        const d = parseDecision(rest);
-        if (!d) return errorReply("Unbekannte Aktion.");
-        return { modal: { id: `quali:reasonsubmit:${d.kind}:${d.id}:${d.status}`, title: d.status === "ACCEPTED" ? "Annehmen mit Grund" : "Ablehnen mit Grund", fields: [{ id: "reason", label: "Grund (geht per DM an die Person)", paragraph: true, required: true, maxLength: 1e3 }] } };
-      }
-      if (action === "reasonsubmit") {
-        const d = parseDecision(rest);
-        const reason = (c.fields?.reason ?? "").trim();
-        if (!d || !reason) return errorReply("Bitte einen Grund angeben.");
-        return await decide(c, d, reason);
-      }
-      if (action === "history") {
-        const id = rest[0] ?? "";
-        if (!/^\d{15,25}$/.test(id)) return errorReply("Unbekannte Person.");
-        const get = (path2) => c.api.asUser(c.discordId, "GET", path2).then((x) => x, (e) => e instanceof BotApiError && e.status === 403 ? null : Promise.reject(e));
-        const [quali, police] = await Promise.all([get(`/qualifications/history?discordId=${id}`), get(`/applications/history?discordId=${id}`)]);
-        if (!quali && !police) return errorReply("Du hast keine Berechtigung, Bewerbungen anzusehen.");
-        const rows = [...(police ?? []).map((r) => ({ ...r, unitName: "EN Polizei" })), ...quali ?? []].sort((a, b) => Date.parse(b.createdAt) - Date.parse(a.createdAt));
-        const lines = rows.slice(0, 20).map((r) => `\u2022 **${r.number}** \xB7 ${plain(r.unitName)} \xB7 ${STATUS_DE[r.status] ?? r.status} \xB7 <t:${Math.floor(Date.parse(r.createdAt) / 1e3)}:d>${r.decisionReason ? `
-  \u21B3 ${clip(plain(r.decisionReason), 150)}` : ""}`);
-        return { ephemeral: true, embeds: [{ title: "\u{1F5C2}\uFE0F Bewerbungs-Verlauf", color: COLORS.info, description: clip(`<@${id}>
-
-${lines.join("\n") || "Keine Bewerbungen."}`, 4e3) }] };
-      }
-      if (action === "ticket") {
-        const [kind2, id] = rest;
-        if (kind2 !== "q" && kind2 !== "p" || !id) return errorReply("Unbekannte Aktion.");
-        if (!c.guildId || !c.platform) return errorReply("Das geht nur auf einem Server.");
-        const a = await c.api.asUser(c.discordId, "GET", kind2 === "p" ? `/applications/${id}` : `/qualifications/applications/${id}`);
-        if (!a.discordId) return errorReply("Diese Bewerbung kam nicht \xFCber Discord \u2013 es gibt keinen Discord-Benutzer f\xFCr ein Ticket.");
-        const cfg2 = await c.config?.().catch(() => void 0);
-        let t;
-        try {
-          t = await openApplicantTicket(c.platform, cfg2, { guildId: c.guildId, discordId: a.discordId, userName: a.discordName ?? a.robloxUsername ?? a.discordId, number: a.number, unitName: a.unitName, requesterId: c.discordId });
-        } catch {
-          return errorReply("Ticket konnte nicht angelegt werden (fehlen dem Bot die Rechte \u201EKan\xE4le verwalten\u201C, oder ist die Person nicht mehr auf dem Server?).");
-        }
-        return okReply(t.existing ? `Mit dieser Person gibt es schon ein offenes Ticket: <#${t.channelId}>` : `Ticket ge\xF6ffnet: <#${t.channelId}>`);
-      }
-      if (action === "rb") {
-        const s2 = sessions.get(c.discordId);
-        if (!s2 || s2.expiresAt <= Date.now()) return errorReply("Du hast gerade keine laufende Bewerbung. Starte sie \xFCber das Panel neu.");
-        const i = Number(rest[0]);
-        if (i !== s2.answers.length || !s2.pendingRoblox) return errorReply("Diese Frage hast du schon beantwortet.");
-        const q2 = s2.questions[i];
-        if (rest[1] !== "yes") {
-          s2.pendingRoblox = void 0;
-          return { ...okReply("Okay."), update: { embeds: [{ title: clip(s2.unitName, 256), color: COLORS.neutral, description: clip(`**${i + 1}/${s2.questions.length}.** ${plain(q2.text)}
-
-Schreib deinen Roblox-Benutzernamen bitte noch einmal (genau wie in Roblox).`, 4e3) }] } };
-        }
-        if (!c.platform) return errorReply("Direktnachrichten sind hier nicht verf\xFCgbar.");
-        const name = s2.pendingRoblox;
-        s2.pendingRoblox = void 0;
-        s2.answers.push(name);
-        const platform2 = c.platform;
-        await proceed({ api: c.api, userId: c.discordId, userName: c.userName ?? c.discordId, sendDm: (u, m) => platform2.sendDm(u, m), robloxLookup: c.robloxLookup, now: Date.now() }, s2);
-        return { ...okReply("Gespeichert."), update: { embeds: [{ title: clip(s2.unitName, 256), color: COLORS.success, description: clip(`**${i + 1}/${s2.questions.length}.** ${plain(q2.text)}
-
-\u2705 ${plain(name)}`, 4e3) }] } };
-      }
-      if (action === "ans" || action === "skip") {
-        const s2 = sessions.get(c.discordId);
-        if (!s2 || s2.expiresAt <= Date.now()) return errorReply("Du hast gerade keine laufende Bewerbung. Starte sie \xFCber das Panel neu.");
-        const i = Number(rest[0]);
-        if (i !== s2.answers.length) return errorReply("Diese Frage hast du schon beantwortet.");
-        const q2 = s2.questions[i];
-        let value = null;
-        if (action === "skip") {
-          if (q2.field.required) return errorReply("Diese Frage ist eine Pflichtfrage.");
-        } else {
-          const labels = (c.values ?? []).map((v) => q2.field.options[Number(v)]?.label).filter((x) => !!x);
-          const r = checkAnswer(q2.field, labels);
-          if (!r.ok) return errorReply(r.error);
-          value = labels;
-        }
-        if (!c.platform) return errorReply("Direktnachrichten sind hier nicht verf\xFCgbar.");
-        s2.answers.push(value);
-        const platform2 = c.platform;
-        await proceed({ api: c.api, userId: c.discordId, userName: c.userName ?? c.discordId, sendDm: (u, m) => platform2.sendDm(u, m), robloxLookup: c.robloxLookup, now: Date.now() }, s2);
-        return { ...okReply("Gespeichert."), update: { embeds: [{ title: clip(s2.unitName, 256), color: COLORS.success, description: clip(`**${i + 1}/${s2.questions.length}.** ${plain(q2.text)}
-
-\u2705 ${plain(answerText(value))}`, 4e3) }] } };
-      }
-      if (action === "cancel") {
-        const had = sessions.delete(c.discordId);
-        return okReply(had ? "Bewerbung abgebrochen. Du kannst jederzeit \xFCber das Panel neu starten." : "Es l\xE4uft keine Bewerbung.");
-      }
-      if (action === "decide") {
-        const d = parseDecision(rest);
-        return d ? await decide(c, d) : errorReply("Unbekannte Aktion.");
-      }
-      if (action === "pick") return await offer(c, c.values?.[0] ?? rest[0]);
-      if (action !== "start") return errorReply("Unbekannte Aktion.");
-      const running = sessions.get(c.discordId);
-      if (running && running.expiresAt > Date.now()) {
-        if (running.unit === rest[0]) return okReply(`Deine Bewerbung l\xE4uft bereits \u2013 Frage ${running.answers.length + 1}/${running.questions.length}: ${plain(running.questions[running.answers.length].text)}`);
-        return errorReply(`Du hast bereits eine laufende Bewerbung (**${plain(running.unitName)}**). Beende oder brich sie zuerst ab.`);
-      }
-      const flow = await loadFlow(c.api, rest[0], c.guildId ?? guildOf.get(c.discordId));
-      if (!flow) return errorReply("Diese Auswahl gibt es nicht mehr. Bitte das Panel neu laden.");
-      if (!flow.enabled) return errorReply(`Bewerbungen f\xFCr **${plain(flow.name)}** sind derzeit geschlossen.`);
-      const open = await openApplication(c.api, flow.key, c.discordId);
-      if (open.open) return errorReply(`Du hast f\xFCr **${plain(flow.name)}** bereits eine offene Bewerbung (${open.number}). Bitte warte auf die Entscheidung.`);
-      if (!c.platform) return errorReply("Direktnachrichten sind hier nicht verf\xFCgbar.");
-      const blocked = roleBlock(flow.settings, c.guildId ? c.memberRoleIds ?? [] : void 0);
-      if (blocked) return errorReply(blocked);
-      const s = { unit: flow.key, unitName: flow.name, appName: flow.appName, settings: flow.settings, questions: flow.questions, answers: [], startedAt: Date.now(), expiresAt: Date.now() + limitMs(flow.settings), joinedAt: joinedAtOf.get(c.discordId), guildId: c.guildId ?? guildOf.get(c.discordId) };
-      sessions.set(c.discordId, s);
-      try {
-        await c.platform.sendDm(c.discordId, questionMessage(s));
-      } catch {
-        sessions.delete(c.discordId);
-        return errorReply("Ich kann dir keine Direktnachricht schicken. Bitte erlaube Direktnachrichten und versuche es erneut.");
-      }
-      return okReply("Los geht\u2019s \u2013 beantworte die Fragen einfach hier im Chat.");
-    } catch (e) {
-      if (e instanceof BotApiError && e.status === 409) return errorReply("\xDCber diese Bewerbung wurde bereits entschieden.");
-      return mapError(e);
+      const hooks = await ch.fetchWebhooks();
+      const hook = hooks.find((h) => h.owner?.id === client2.user?.id && h.name === "EN Polizei Panels") ?? await ch.createWebhook({ name: "EN Polizei Panels" });
+      msg = await hook.send({ ...payload, components: [], username: as.username.slice(0, 80), ...as.avatarURL ? { avatarURL: as.avatarURL } : {} });
+    } catch {
+      msg = null;
     }
   }
-};
-async function openApplicantTicket(platform2, cfg2, a) {
-  const t = await platform2.createTicketChannel({ guildId: a.guildId, userId: a.discordId, userName: a.userName, categoryId: cfg2?.tickets, staffRoleId: cfg2?.staffRole, extraUserIds: a.requesterId ? [a.requesterId] : [] });
-  if (!t.existing) {
-    await platform2.postPanel({ channelId: t.channelId, embed: { title: `\u{1F3AB} Ticket zur Bewerbung ${a.number}`, color: COLORS.info, description: `<@${a.discordId}>, das Team hat eine R\xFCckfrage zu deiner Bewerbung **${a.number}**${a.unitName ? ` (${plain(a.unitName)})` : ""}. Bitte antworte hier.` }, buttons: [{ id: "support:close", label: "Ticket schlie\xDFen", emoji: "\u{1F512}", style: "danger" }] }).catch(() => void 0);
-  }
-  return t;
+  if (!msg) msg = await ch.send(payload);
+  const real = await ch.messages.fetch(msg.id).catch(() => msg);
+  await react(real, message.reactions);
+  return { channelId, messageId: msg.id };
 }
-
-// apps/bot/src/commands/tickets.ts
-var UUID = /^[0-9a-f-]{36}$/;
-var emojiOf = (e) => e && e.length <= 64 ? e : void 0;
-function fail(e) {
-  if (e instanceof BotApiError && [400, 403, 404, 409].includes(e.status) && e.message && !/^You |permission|^Dafür fehlt dir die Berechtigung|steht dem Bot nicht zur Verfügung/i.test(e.message)) return errorReply(clip(e.message, 500));
-  return mapError(e);
+async function deleteMessage(client2, channelId, messageId) {
+  const ch = await client2.channels.fetch(channelId).catch(() => null);
+  if (!ch?.isTextBased() || !("messages" in ch)) return;
+  await ch.messages.delete(messageId).catch(() => void 0);
 }
-async function run(c, r, text) {
-  if (r.effects?.length && c.applyEffects) await c.applyEffects(r.effects);
-  return okReply(text ?? r.message ?? "Erledigt.");
-}
-var staff = (c, id, body) => c.api.asUser(c.discordId, "POST", `/support-tickets/${id}/actions`, body);
-var options = (c, id) => c.api.asUser(c.discordId, "GET", `/support-tickets/${id}/options`);
-async function close(c, id, reason) {
-  try {
-    return await run(c, await staff(c, id, { action: "close", ...reason ? { reason } : {} }));
-  } catch (e) {
-    if (!(e instanceof BotApiError) || e.status !== 401 && e.status !== 403) return fail(e);
-    try {
-      return await run(c, await c.api.service("POST", `/bot/support-tickets/${id}/creator-close`, { discordId: c.discordId, ...reason ? { reason } : {} }));
-    } catch (e2) {
-      return fail(e2);
-    }
-  }
-}
-async function answer(c, id, questionId, values) {
-  try {
-    const r = await c.api.service("POST", `/bot/support-tickets/${id}/answer`, { discordId: c.discordId, questionId, values });
-    if (r.effects?.length && c.applyEffects) await c.applyEffects(r.effects);
-    return { ...okReply(r.done ? "Danke! Alle Fragen sind beantwortet \u2013 das Team meldet sich." : "Gespeichert."), update: { embeds: [{ title: "\u2705 Beantwortet", description: clip(plain(r.answer), 1e3), color: COLORS.success }] } };
-  } catch (e) {
-    return fail(e);
-  }
-}
-var durationButtons = (id, minutes) => [
-  { id: `tk:addt:${id}:0`, label: "Dauerhaft", style: minutes === 0 ? "primary" : "secondary" },
-  { id: `tk:addt:${id}:60`, label: "\u23F1\uFE0F 1 Stunde", style: minutes === 60 ? "primary" : "secondary" },
-  { id: `tk:addt:${id}:1440`, label: "\u23F1\uFE0F 24 Stunden", style: minutes === 1440 ? "primary" : "secondary" }
-];
-var addPicker = (id, minutes) => ({
-  ephemeral: true,
-  embeds: [{ title: "\u2795 Zum Ticket hinzuf\xFCgen", description: `W\xE4hle Benutzer oder Rollen.${minutes ? ` Zugriff ist **befristet** (${minutes >= 60 ? `${minutes / 60} Std.` : `${minutes} Min.`}).` : ""}`, color: COLORS.info }],
-  selects: [{ id: `tk:addu:${id}:${minutes}`, placeholder: "Benutzer w\xE4hlen \u2026", kind: "user", min: 1, max: 10, options: [] }, { id: `tk:addr:${id}:${minutes}`, placeholder: "Rolle w\xE4hlen \u2026", kind: "role", min: 1, max: 5, options: [] }],
-  buttons: durationButtons(id, minutes)
-});
-var TICKET_INTERACTION = {
-  prefix: "tk",
-  opensModal: (a) => ["ans", "rename", "note", "ratec", "closem"].includes(a[0] ?? "") || a[0] === "close" && a[2] === "m",
-  async run(c) {
-    const [action, id = "", ...rest] = c.args;
-    const f2 = c.fields ?? {};
-    try {
-      switch (action) {
-        // ---- Ticket öffnen (Panel: Button oder Dropdown) ----
-        case "open": {
-          const categoryId = rest[0] ?? c.values?.[0];
-          if (!categoryId || !UUID.test(categoryId) || !c.guildId) return errorReply("Bitte eine Ticket-Art ausw\xE4hlen.");
-          const r = await c.api.service("POST", "/bot/support-tickets/open", { categoryId, panelId: UUID.test(id) ? id : void 0, guildId: c.guildId, discordId: c.discordId, discordName: c.userName ?? c.discordId, memberRoleIds: c.memberRoleIds ?? [] });
-          if (!c.applyEffects) return errorReply("Tickets sind hier nicht verf\xFCgbar.");
-          const done = await c.applyEffects(r.effects ?? []);
-          return okReply(done.channelId ? `Dein Ticket wurde erstellt: <#${done.channelId}>` : "Dein Ticket wird erstellt \u2026");
-        }
-        // ---- Ticket für ein anderes Mitglied öffnen (Team, Recht ticket.create): /support mitglied:… ----
-        case "for": {
-          const categoryId = c.values?.[0];
-          if (!/^\d{15,25}$/.test(id) || !categoryId || !UUID.test(categoryId) || !c.guildId) return errorReply("Bitte eine Ticket-Art ausw\xE4hlen.");
-          const name = await c.userNameOf?.(id).catch(() => null) ?? id;
-          const r = await c.api.asUser(c.discordId, "POST", "/support-tickets", { categoryId, discordId: id, discordName: name, guildId: c.guildId });
-          if (!c.applyEffects) return errorReply("Tickets sind hier nicht verf\xFCgbar.");
-          const done = await c.applyEffects(r.effects ?? []);
-          return okReply(done.channelId ? `Ticket f\xFCr <@${id}> erstellt: <#${done.channelId}>` : "Ticket wird erstellt \u2026");
-        }
-        // ---- Fragen ----
-        case "ans": {
-          const [qid, kind2, limits] = rest;
-          const [min, max] = (limits ?? "").split("-").map(Number);
-          const maxLength = Math.min(4e3, max || (kind2 === "l" ? 2e3 : 200));
-          return { modal: { id: `tk:ansm:${id}:${qid}`, title: "Antwort", fields: [{ id: "value", label: "Deine Antwort", paragraph: kind2 === "l", required: true, maxLength, ...min ? { minLength: Math.min(min, maxLength) } : {} }] } };
-        }
-        case "ansm":
-          return answer(c, id, rest[0] ?? "", [f2.value ?? ""]);
-        case "ansv":
-          return answer(c, id, rest[0] ?? "", [rest[1] ?? ""]);
-        case "anss":
-          return answer(c, id, rest[0] ?? "", c.values ?? []);
-        case "skip":
-          return answer(c, id, rest[0] ?? "", null);
-        // ---- Schließen ----
-        case "close": {
-          if (rest[0] === "n") return close(c, id);
-          if (rest[0] === "m") return { modal: { id: `tk:closemodal:${id}`, title: "Ticket schlie\xDFen", fields: [{ id: "reason", label: "Warum wird dieses Ticket geschlossen?", paragraph: true, required: false, maxLength: 500 }] } };
-          const o = await c.api.service("GET", `/bot/support-tickets/${id}/close-options`);
-          if (o.closed) return errorReply("Das Ticket ist bereits geschlossen.");
-          if (!o.reasons.length && o.mode !== "NONE") return { modal: { id: `tk:closemodal:${id}`, title: "Ticket schlie\xDFen", fields: [{ id: "reason", label: "Warum wird dieses Ticket geschlossen?", paragraph: true, required: o.mode === "REQUIRED", maxLength: 500 }] } };
-          const buttons = [
-            ...o.source === "BOTH" ? [{ id: `tk:closem:${id}`, label: "Eigener Grund", emoji: "\u270F\uFE0F", style: "secondary" }] : [],
-            ...o.mode === "OPTIONAL" ? [{ id: `tk:closen:${id}`, label: "Ohne Grund schlie\xDFen", style: "secondary" }] : []
-          ];
-          return { ephemeral: true, embeds: [{ title: "\u{1F512} Ticket schlie\xDFen", description: "Warum wird dieses Ticket geschlossen?", color: COLORS.danger }], select: { id: `tk:closer:${id}`, placeholder: "Grund ausw\xE4hlen \u2026", options: o.reasons.slice(0, 25).map((r) => ({ label: clip(r, 100), value: clip(r, 100) })) }, buttons };
-        }
-        case "closem":
-          return { modal: { id: `tk:closemodal:${id}`, title: "Ticket schlie\xDFen", fields: [{ id: "reason", label: "Warum wird dieses Ticket geschlossen?", paragraph: true, required: true, maxLength: 500 }] } };
-        case "closemodal":
-          return close(c, id, (f2.reason ?? "").trim() || void 0);
-        case "closer":
-          return close(c, id, c.values?.[0]);
-        case "closen":
-          return close(c, id);
-        // ---- Einfache Mitarbeiter-Aktionen ----
-        case "claim":
-        case "unclaim":
-        case "lock":
-        case "unlock":
-        case "escalate":
-        case "transcript":
-        case "reopen":
-        case "rating":
-        case "close_request":
-          return run(c, await staff(c, id, { action }));
-        // ---- Antwort des Erstellers auf „Schließen anfragen“ ----
-        case "creq": {
-          const r = await c.api.service("POST", `/bot/support-tickets/${id}/close-request`, { discordId: c.discordId, accept: rest[0] === "yes" });
-          if (r.effects?.length && c.applyEffects) await c.applyEffects(r.effects);
-          return { ...okReply(r.message ?? "Erledigt."), update: { embeds: [{ title: rest[0] === "yes" ? "\u2705 Schlie\xDFen best\xE4tigt" : "\u2716\uFE0F Ticket bleibt offen", color: rest[0] === "yes" ? COLORS.success : COLORS.neutral }] } };
-        }
-        case "delete":
-          return { ephemeral: true, embeds: [{ title: "\u{1F5D1}\uFE0F Ticket l\xF6schen?", description: "Der Kanal wird gel\xF6scht (ein Transcript wird vorher gesichert, falls eingestellt).", color: COLORS.danger }], buttons: [{ id: `tk:delyes:${id}`, label: "Endg\xFCltig l\xF6schen", style: "danger" }] };
-        case "delyes":
-          return run(c, await staff(c, id, { action: "delete" }));
-        // ---- Benutzer/Rollen ----
-        case "add_user":
-          return addPicker(id, 0);
-        case "addt":
-          return addPicker(id, Number(rest[0]) || 0);
-        case "addu":
-        case "addr": {
-          const minutes = Number(rest[0]) || 0;
-          let n = 0;
-          for (const target of c.values ?? []) {
-            const r = await staff(c, id, { action: "add_access", targetId: target, kind: action === "addu" ? "USER" : "ROLE", ...minutes ? { minutes } : {} }).catch((e) => {
-              if (action === "addu" && e instanceof BotApiError && (e.status === 401 || e.status === 403)) return c.api.service("POST", `/bot/support-tickets/${id}/creator-add`, { discordId: c.discordId, targetId: target });
-              throw e;
-            });
-            if (r.effects?.length && c.applyEffects) await c.applyEffects(r.effects);
-            n++;
-          }
-          return okReply(`${n} ${action === "addu" ? "Benutzer" : "Rolle(n)"} hinzugef\xFCgt.`);
-        }
-        case "remove_user":
-          return { ephemeral: true, embeds: [{ title: "\u2796 Aus dem Ticket entfernen", description: "W\xE4hle Benutzer oder Rollen, die hinzugef\xFCgt wurden.", color: COLORS.info }], selects: [{ id: `tk:rmu:${id}`, placeholder: "Benutzer w\xE4hlen \u2026", kind: "user", min: 1, max: 10, options: [] }, { id: `tk:rmr:${id}`, placeholder: "Rolle w\xE4hlen \u2026", kind: "role", min: 1, max: 5, options: [] }] };
-        case "rmu":
-        case "rmr": {
-          let n = 0;
-          for (const target of c.values ?? []) {
-            const r = await staff(c, id, { action: "remove_access", targetId: target });
-            if (r.effects?.length && c.applyEffects) await c.applyEffects(r.effects);
-            n++;
-          }
-          return okReply(`${n} entfernt.`);
-        }
-        // ---- Auswahl: Priorität, Status, Kategorie, Verschieben ----
-        case "priority": {
-          const o = await options(c, id);
-          return pick(`tk:prio:${id}`, "\u{1F514} Priorit\xE4t \xE4ndern", o.priorities.map((p) => ({ label: p.name, value: p.id, emoji: emojiOf(p.emoji) })));
-        }
-        case "status": {
-          const o = await options(c, id);
-          return pick(`tk:stat:${id}`, "\u{1F3F7}\uFE0F Status \xE4ndern", o.statuses.map((s) => ({ label: s.name, value: s.id, emoji: emojiOf(s.emoji) })));
-        }
-        case "category": {
-          const o = await options(c, id);
-          return pick(`tk:cat:${id}`, "\u{1F5C2}\uFE0F Kategorie \xE4ndern", o.categories.map((x) => ({ label: x.name, value: x.id, emoji: emojiOf(x.emoji) })));
-        }
-        case "move": {
-          if (!c.guildId || !c.listCategories) return errorReply("Das geht nur auf einem Server.");
-          await options(c, id);
-          const cats = await c.listCategories(c.guildId);
-          return pick(`tk:movesel:${id}`, "\u{1F4C1} In Discord-Kategorie verschieben", [{ label: "(keine Kategorie)", value: "none" }, ...cats.slice(0, 24).map((x) => ({ label: x.name, value: x.id }))]);
-        }
-        case "prio":
-          return run(c, await staff(c, id, { action: "priority", priorityId: c.values?.[0] }));
-        case "stat":
-          return run(c, await staff(c, id, { action: "status", statusId: c.values?.[0] }));
-        case "cat":
-          return run(c, await staff(c, id, { action: "category", categoryId: c.values?.[0] }));
-        case "movesel":
-          return run(c, await staff(c, id, { action: "move", parentId: c.values?.[0] === "none" ? null : c.values?.[0] }));
-        // ---- Formulare ----
-        case "rename":
-          return { modal: { id: `tk:renm:${id}`, title: "Ticket umbenennen", fields: [{ id: "name", label: "Neuer Name (Platzhalter erlaubt)", required: true, maxLength: 90, placeholder: "z. B. support-{username}" }] } };
-        case "renm":
-          return run(c, await staff(c, id, { action: "rename", name: f2.name ?? "" }));
-        case "note":
-          return { modal: { id: `tk:notem:${id}`, title: "Interne Notiz", fields: [{ id: "text", label: "Nur f\xFCr berechtigte Mitarbeiter sichtbar", paragraph: true, required: true, maxLength: 4e3 }] } };
-        case "notem":
-          return run(c, await staff(c, id, { action: "note", text: f2.text ?? "" }));
-        // ---- Bewertung (per DM an den Ersteller) ----
-        case "rate": {
-          const r = await c.api.service("POST", `/bot/support-tickets/${id}/rating`, { discordId: c.discordId, stars: Number(rest[0]) });
-          return { ...okReply(r.thanks), buttons: [{ id: `tk:ratec:${id}`, label: "Kommentar hinzuf\xFCgen", emoji: "\u{1F4AC}", style: "secondary" }], update: { embeds: [{ title: `\u2B50 ${"\u2B50".repeat(Math.max(0, Number(rest[0]) - 1))} bewertet`, description: "Danke f\xFCr dein Feedback!", color: COLORS.success }] } };
-        }
-        case "ratec":
-          return { modal: { id: `tk:ratecm:${id}`, title: "Kommentar zur Bewertung", fields: [{ id: "comment", label: "Wie zufrieden warst du mit dem Support?", paragraph: true, required: true, maxLength: 1e3 }] } };
-        case "ratecm": {
-          await c.api.service("POST", `/bot/support-tickets/${id}/rating-comment`, { discordId: c.discordId, comment: f2.comment ?? "" });
-          return okReply("Danke f\xFCr deinen Kommentar!");
-        }
-        default:
-          return errorReply("Unbekannte Aktion.");
-      }
-    } catch (e) {
-      return fail(e);
-    }
-  }
-};
-var pick = (id, title, opts) => opts.length ? { ephemeral: true, embeds: [{ title, color: COLORS.info }], select: { id, placeholder: "Bitte ausw\xE4hlen \u2026", options: opts.slice(0, 25).map((o) => ({ ...o, label: clip(o.label, 100) })) } } : errorReply("Keine Auswahl verf\xFCgbar.");
-var TICKET_COMMAND = {
-  name: "support",
-  description: "Ein Support-Ticket \xF6ffnen (Team: auch f\xFCr ein anderes Mitglied)",
-  options: [{ name: "mitglied", description: "Nur Team: Ticket f\xFCr dieses Mitglied \xF6ffnen", type: "user" }],
-  async run(c) {
-    if (!c.guildId) return errorReply("Tickets gehen nur auf einem Server, nicht per Direktnachricht.");
-    const member = typeof c.opts.mitglied === "string" && c.opts.mitglied !== c.discordId ? c.opts.mitglied : null;
-    try {
-      const all = await c.api.service("GET", `/bot/support-tickets/categories?guildId=${c.guildId}`);
-      const roles = c.memberRoleIds ?? [];
-      const cats = member ? all : all.filter((x) => (!x.requiredRoleIds.length || x.requiredRoleIds.some((r) => roles.includes(r))) && (!x.allowedUserIds.length || x.allowedUserIds.includes(c.discordId)));
-      if (!cats.length) return errorReply(all.length ? "Du darfst derzeit keine Ticket-Art \xF6ffnen." : "Es ist noch keine Ticket-Art eingerichtet (Dashboard \u2192 Support Tickets \u2192 Categories).");
-      const options2 = cats.slice(0, 25).map((x) => ({ label: clip(x.name, 100), value: x.id, ...x.description ? { description: clip(x.description, 100) } : {}, ...emojiOf(x.emoji) ? { emoji: emojiOf(x.emoji) } : {} }));
-      if (!member && cats.length === 1) return await TICKET_INTERACTION.run({ ...c, args: ["open", "cmd", cats[0].id] });
-      return {
-        ephemeral: true,
-        embeds: [{ title: member ? "\u{1F3AB} Ticket f\xFCr ein Mitglied \xF6ffnen" : "\u{1F3AB} Ticket \xF6ffnen", description: member ? `F\xFCr <@${member}> \u2013 w\xE4hle die Ticket-Art.` : "W\xE4hle die passende Ticket-Art.", color: COLORS.info }],
-        select: { id: member ? `tk:for:${member}` : "tk:open:cmd", placeholder: "Ticket-Art w\xE4hlen \u2026", options: options2 }
-      };
-    } catch (e) {
-      return fail(e);
-    }
-  }
-};
-
-// apps/bot/src/voice-support.ts
-var ROOMS_MS = 6e4;
-var note = (text) => ({ content: text, ephemeral: true });
-var fail2 = (e) => e instanceof BotApiError && [400, 403, 404, 409].includes(e.status) && e.message ? errorReply(clip(e.message, 500)) : mapError(e);
-function createVoiceSupport(api2, ops, log = console.error) {
-  const rooms = /* @__PURE__ */ new Map();
-  const roomsOf = async (guildId) => {
-    const hit = rooms.get(guildId);
-    if (hit && Date.now() - hit.at < ROOMS_MS) return hit.list;
-    const list = await api2.service("GET", `/bot/voice-support/rooms?guildId=${guildId}`).catch(() => hit?.list ?? []);
-    rooms.set(guildId, { at: Date.now(), list });
-    return list;
-  };
-  const safe = (label2, p) => p.catch((e) => log(`voice support: ${label2} failed: ${e instanceof Error ? e.message : e}`));
-  const applyEdit = (e) => e ? safe("update message", ops.edit(e.channelId, e.messageId, e.message)) : Promise.resolve();
-  async function finished(r) {
-    await applyEdit(r.edit);
-    if (r.deleteChannelId) await safe("delete channel", ops.deleteChannel(r.deleteChannelId));
-    if (r.ratingDm) await safe("rating DM", ops.dm(r.userId, r.ratingDm));
-  }
-  async function onVoiceState(e) {
-    if (e.bot || e.from === e.to) return;
-    const list = await roomsOf(e.guildId);
-    if (!list.length) return;
-    if (e.from) {
-      if (list.some((r) => r.waitingChannelId === e.from)) {
-        const r = await api2.service("POST", "/bot/voice-support/left", { guildId: e.guildId, channelId: e.from, discordId: e.userId, userName: e.userName });
-        for (const x of r.edits) await applyEdit(x);
-      } else if (!ops.members(e.from).length) {
-        const r = await api2.service("POST", "/bot/voice-support/empty", { channelId: e.from });
-        if (r.closed) await finished(r);
-      }
-    }
-    if (e.to && list.some((r) => r.enabled && r.waitingChannelId === e.to)) {
-      const r = await api2.service("POST", "/bot/voice-support/join", { guildId: e.guildId, channelId: e.to, discordId: e.userId, userName: e.userName });
-      if (r.action === "closed" && r.dm) await safe("closed DM", ops.dm(e.userId, r.dm));
-      if (r.action === "notify" && r.caseId && r.channelId && r.message) {
-        const messageId = await ops.post(r.channelId, r.message);
-        await api2.service("POST", `/bot/voice-support/cases/${r.caseId}/posted`, { messageId });
-      }
-    }
-  }
-  async function provision(r, staffId) {
-    await applyEdit(r.edit);
-    const { case: c, room } = r;
-    if (!room) return "\xDCbernommen.";
-    let channelId = null, created = false;
-    try {
-      if (room.ownChannels) channelId = room.ownChannelIds.find((x) => !ops.members(x).length) ?? null;
-      else {
-        channelId = await ops.createVoice({ guildId: c.guildId, name: clip(`${room.channelPrefix}${c.userName}`, 100), nearChannelId: room.waitingChannelId, userId: c.userId, teamRoleId: room.teamRoleId });
-        created = true;
-      }
-    } catch (e) {
-      log(`voice support: channel failed: ${e instanceof Error ? e.message : e}`);
-    }
-    const moved = channelId ? await ops.move(c.guildId, c.userId, channelId).catch(() => false) : false;
-    if (channelId && staffId && ops.voiceChannelOf(c.guildId, staffId)) await ops.move(c.guildId, staffId, channelId).catch(() => false);
-    const threadId = room.notes && r.edit ? await ops.thread(r.edit.channelId, r.edit.messageId, `Notizen #${c.number}`).catch(() => null) : null;
-    const done = await api2.service("POST", `/bot/voice-support/cases/${c.id}/channel`, { channelId, created, threadId });
-    await applyEdit(done.edit);
-    if (!channelId) throw new Error(room.ownChannels ? "\u26A0\uFE0F \xDCbernommen \u2013 aber gerade ist keiner der eigenen Support-Kan\xE4le frei. Sprich die Person im Warteraum an." : "\u26A0\uFE0F \xDCbernommen \u2013 der Sprachkanal konnte nicht angelegt werden (fehlt dem Bot \u201EKan\xE4le verwalten\u201C?).");
-    return `\xDCbernommen: <#${channelId}>${moved ? "" : " \u2013 die Person ist nicht mehr im Sprachkanal und wurde nicht verschoben."}`;
-  }
-  async function claim(id, s) {
-    const r = await api2.service("POST", `/bot/voice-support/cases/${id}/claim`, s);
-    return provision(r, s.discordId).then((t) => okReply(t), (e) => note(e.message));
-  }
-  async function applyEffects(p) {
-    if (p.provision) await provision(p.provision, p.staffDiscordId ?? null).catch((e) => log(`voice support: ${e.message}`));
-    if (p.edit) await applyEdit(p.edit);
-    if (p.dm) await safe("DM", ops.dm(p.dm.userId, p.dm.message));
-    if (p.threadPost) await safe("thread log", ops.threadPost(p.threadPost.threadId, p.threadPost.text));
-    if (p.deleteChannelId) await safe("delete channel", ops.deleteChannel(p.deleteChannelId));
-  }
-  async function interact(c) {
-    const [action, id = "", extra] = c.args;
-    if (!/^[0-9a-f-]{36}$/.test(id)) return errorReply("Unbekannter Support-Fall.");
-    const s = { discordId: c.discordId, name: c.userName ?? c.discordId, roleIds: c.memberRoleIds ?? [], admin: !!c.isGuildAdmin };
-    try {
-      switch (action) {
-        case "claim":
-          return await claim(id, s);
-        case "decline":
-          return { modal: { id: `vs:declinesubmit:${id}`, title: "Support-Fall ablehnen", fields: [{ id: "reason", label: "Grund (optional, geht per DM an die Person)", paragraph: true, required: false, maxLength: 500 }] } };
-        case "declinesubmit": {
-          const r = await api2.service("POST", `/bot/voice-support/cases/${id}/decline`, { ...s, ...c.fields?.reason?.trim() ? { reason: c.fields.reason.trim() } : {} });
-          await applyEdit(r.edit);
-          const sent = await ops.dm(r.userId, r.dm).then(() => true, () => false);
-          return okReply(`Abgelehnt.${sent ? " Die Person wurde per DM informiert." : " (Die DM kam nicht an \u2013 Direktnachrichten sind bei der Person aus.)"}`);
-        }
-        case "msg":
-          return { modal: { id: `vs:msgsubmit:${id}`, title: "Nachricht an die Person", fields: [{ id: "text", label: "Nachricht (per DM)", paragraph: true, required: true, maxLength: 2e3 }] } };
-        case "msgsubmit": {
-          const text = (c.fields?.text ?? "").trim();
-          if (!text) return errorReply("Bitte eine Nachricht eingeben.");
-          const r = await api2.service("POST", `/bot/voice-support/cases/${id}/message`, { ...s, text });
-          const sent = await ops.dm(r.userId, r.dm).then(() => true, () => false);
-          if (!sent) return errorReply("Die Nachricht kam nicht an \u2013 die Person hat Direktnachrichten ausgeschaltet.");
-          await applyEdit(r.edit);
-          if (r.threadId) await safe("thread log", ops.threadPost(r.threadId, r.log));
-          return note("\u{1F4AC} Nachricht gesendet.");
-        }
-        case "close": {
-          await finished(await api2.service("POST", `/bot/voice-support/cases/${id}/close`, s));
-          return note("\u{1F512} Support-Fall geschlossen.");
-        }
-        case "rate": {
-          const stars = Number(extra);
-          if (!(stars >= 1 && stars <= 5)) return errorReply("Ung\xFCltige Bewertung.");
-          const r = await api2.service("POST", `/bot/voice-support/cases/${id}/rating`, { discordId: c.discordId, stars });
-          await applyEdit(r.edit);
-          return { ...okReply("Danke f\xFCr deine Bewertung! \u2B50"), update: { embeds: [{ title: "\u2B50 Danke!", description: `Du hast ${"\u2B50".repeat(stars)} vergeben.`, color: 16436245 }] } };
-        }
-        default:
-          return errorReply("Unbekannte Aktion.");
-      }
-    } catch (e) {
-      return fail2(e);
-    }
-  }
-  return { onVoiceState, interact, applyEffects, clear: () => rooms.clear() };
-}
-var VOICE_INTERACTION = {
-  prefix: "vs",
-  opensModal: (a) => a[0] === "decline" || a[0] === "msg",
-  async run(c) {
-    return c.voiceSupport ? c.voiceSupport.interact(c) : errorReply("Der Sprach-Support ist hier nicht verf\xFCgbar.");
-  }
-};
-
-// apps/bot/src/commands/leave.ts
-function berlinTime(y, m, d, h, min) {
-  const guess = Date.UTC(y, m - 1, d, h, min);
-  const parts = Object.fromEntries(new Intl.DateTimeFormat("en-US", { timeZone: "Europe/Berlin", hourCycle: "h23", year: "numeric", month: "numeric", day: "numeric", hour: "numeric", minute: "numeric" }).formatToParts(new Date(guess)).map((p) => [p.type, p.value]));
-  const shown = Date.UTC(Number(parts.year), Number(parts.month) - 1, Number(parts.day), Number(parts.hour), Number(parts.minute));
-  return new Date(guess - (shown - guess));
-}
-function parseLeaveDate(input, end, now = /* @__PURE__ */ new Date()) {
-  const t = input.trim().toLowerCase();
-  const today = new Intl.DateTimeFormat("en-CA", { timeZone: "Europe/Berlin" }).format(now).split("-").map(Number);
-  let y, m, d, rest = "";
-  const rel = t.match(/^(heute|morgen|übermorgen)(.*)$/);
-  if (rel) {
-    const add = rel[1] === "heute" ? 0 : rel[1] === "morgen" ? 1 : 2;
-    const base = new Date(Date.UTC(today[0], today[1] - 1, today[2] + add));
-    [y, m, d] = [base.getUTCFullYear(), base.getUTCMonth() + 1, base.getUTCDate()];
-    rest = rel[2] ?? "";
-  } else {
-    const x = t.match(/^(\d{1,2})\.(\d{1,2})\.(\d{2,4})?(.*)$/);
-    if (!x) return null;
-    d = Number(x[1]);
-    m = Number(x[2]);
-    y = x[3] ? x[3].length === 2 ? 2e3 + Number(x[3]) : Number(x[3]) : today[0];
-    rest = x[4] ?? "";
-    if (!x[3] && Date.UTC(y, m - 1, d) < Date.UTC(today[0], today[1] - 1, today[2])) y++;
-  }
-  const time = rest.trim().replace(/^(um|,)\s*/, "").replace(/\s*uhr$/, "");
-  let h = end ? 23 : 0, min = end ? 59 : 0;
-  if (time) {
-    const tm = time.match(/^(\d{1,2})(?::(\d{2}))?$/);
-    if (!tm) return null;
-    h = Number(tm[1]);
-    min = Number(tm[2] ?? 0);
-    if (h > 23 || min > 59) return null;
-  }
-  if (m < 1 || m > 12 || d < 1 || d > 31) return null;
-  const check = new Date(Date.UTC(y, m - 1, d));
-  if (check.getUTCMonth() !== m - 1) return null;
-  return berlinTime(y, m, d, h, min);
-}
-var fmt = (iso) => new Date(iso).toLocaleString("de-DE", { timeZone: "Europe/Berlin", day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" });
-var HOUR = 36e5;
-var UNIT_MS = { m: 6e4, min: 6e4, h: HOUR, std: HOUR, d: 24 * HOUR, t: 24 * HOUR, w: 168 * HOUR };
-function parseDuration(input) {
-  const t = input.trim().toLowerCase().replace(/\s+/g, "");
-  if (!t || !/^(\d+(?:[.,]\d+)?(?:min|std|m|h|d|t|w))+$/.test(t)) return null;
-  let ms = 0;
-  for (const [, n, u] of t.matchAll(/(\d+(?:[.,]\d+)?)(min|std|m|h|d|t|w)/g)) ms += Number(n.replace(",", ".")) * UNIT_MS[u];
-  return ms >= HOUR && Number.isFinite(ms) ? Math.round(ms) : null;
-}
-var ts = (iso, style = "F") => `<t:${Math.floor(new Date(iso).getTime() / 1e3)}:${style}>`;
-async function manageReply(c) {
-  const { items } = await c.api.asUser(c.discordId, "GET", "/leave?mine=true");
-  const now = Date.now();
-  const pending = items.find((r) => r.status === "PENDING");
-  const active = items.find((r) => r.status === "APPROVED" && r.active);
-  const upcoming = items.find((r) => r.status === "APPROVED" && new Date(r.startsAt).getTime() > now);
-  const last = items.find((r) => r.status === "ENDED");
-  const head = c.userName ? { author: { name: `@${c.userName}`, ...c.userAvatar ? { iconUrl: c.userAvatar } : {} } } : {};
-  const embed = (description, color = COLORS.neutral, fields, footer) => ({ ...head, title: "Abmeldungen verwalten", description, color, ...fields ? { fields } : {}, ...footer ? { footer } : {} });
-  const reason = (r) => [{ name: "Grund", value: clip(plain(r.reason), 1024) }];
-  if (active) return {
-    ephemeral: true,
-    embeds: [embed(`Du bist gerade abgemeldet \u2013 bis ungef\xE4hr ${ts(active.endsAt)} (${ts(active.endsAt, "R")}).
-Du kannst die Abmeldung jederzeit vorzeitig beenden.`, COLORS.success, reason(active), `ID: ${active.number}`)],
-    buttons: [{ id: `leave:cancel:${active.id}`, label: "Vorzeitig beenden", style: "danger", emoji: "\u23F9\uFE0F" }]
-  };
-  if (pending) return {
-    ephemeral: true,
-    embeds: [embed(`Deine Abmeldung wartet auf die Freigabe durch die Leitung.
-Wenn sie angenommen wird, endet sie ungef\xE4hr ${ts(pending.endsAt)}.`, COLORS.warning, reason(pending), `ID: ${pending.number}`)],
-    buttons: [{ id: `leave:cancel:${pending.id}`, label: "Antrag zur\xFCckziehen", style: "danger", emoji: "\u21A9\uFE0F" }]
-  };
-  if (upcoming) return {
-    ephemeral: true,
-    embeds: [embed(`Deine Abmeldung beginnt ${ts(upcoming.startsAt)} und endet ${ts(upcoming.endsAt)}.`, COLORS.info, reason(upcoming), `ID: ${upcoming.number}`)],
-    buttons: [{ id: `leave:cancel:${upcoming.id}`, label: "Absagen", style: "danger", emoji: "\u21A9\uFE0F" }]
-  };
-  const start2 = [{ id: "leave:start", label: "Start", style: "primary", emoji: "\u{1F552}" }];
-  if (!items.length) return { ephemeral: true, embeds: [embed("Du warst noch nie abgemeldet.\nUm jetzt eine Abmeldung zu starten, klicke auf `Start`.")], buttons: start2 };
-  return { ephemeral: true, embeds: [embed(`${last ? `Deine letzte Abmeldung endete ${ts(last.endedAt ?? last.endsAt)}.` : "Du hast gerade keine Abmeldung."}
-Um eine neue Abmeldung zu starten, klicke auf \`Start\`.`)], buttons: start2 };
-}
-var LEAVE_COMMANDS = [
-  {
-    name: "abmeldung",
-    description: "Abmeldung (Urlaub, Abwesenheit) beantragen \u2013 die Leitung entscheidet",
-    options: [
-      { name: "von", description: "Beginn, z. B. heute, 24.12. oder 24.12.2026 18:00", type: "string", required: true, maxLength: 30 },
-      { name: "bis", description: "Ende, z. B. 31.12. oder 02.01.2027", type: "string", required: true, maxLength: 30 },
-      { name: "grund", description: "Grund der Abmeldung", type: "string", required: true, maxLength: 1e3 }
-    ],
-    async run(c) {
-      const from = parseLeaveDate(String(c.opts.von ?? ""), false), to = parseLeaveDate(String(c.opts.bis ?? ""), true);
-      if (!from) return errorReply("\u201Evon\u201C verstehe ich nicht. Beispiele: `heute`, `24.12.`, `24.12.2026 18:00`.");
-      if (!to) return errorReply("\u201Ebis\u201C verstehe ich nicht. Beispiele: `31.12.`, `02.01.2027`, `morgen 20:00`.");
-      try {
-        const r = await c.api.asUser(c.discordId, "POST", "/leave", { startsAt: from.toISOString(), endsAt: to.toISOString(), reason: String(c.opts.grund ?? ""), ...c.guildId ? { guildId: c.guildId } : {} });
-        return { ephemeral: true, embeds: [{
-          title: `\u{1F4C5} Abmeldung ${r.number} beantragt`,
-          color: COLORS.info,
-          description: `**${fmt(r.startsAt)}** bis **${fmt(r.endsAt)}** (${r.days} ${r.days === 1 ? "Tag" : "Tage"})
-
-Die Leitung entscheidet \u2013 du bekommst eine Direktnachricht.`
-        }] };
-      } catch (e) {
-        return mapError(e);
-      }
-    }
-  },
-  {
-    name: "leave",
-    description: "Abmeldungen (Leave of Absence)",
-    subcommands: [{ name: "manage", description: "Eigene Abmeldung ansehen, starten oder beenden" }],
-    async run(c) {
-      try {
-        return await manageReply(c);
-      } catch (e) {
-        return mapError(e);
-      }
-    }
-  }
-];
-async function decide2(c, id, status, reason) {
-  try {
-    const r = await c.api.asUser(c.discordId, "POST", `/leave/${id}/decision`, { status, ...reason ? { reason } : {} });
-    const ok = status === "APPROVED";
-    return {
-      ...okReply(`Abmeldung **${r.number}** von ${plain(r.name)} ${ok ? "**angenommen**" : "**abgelehnt**"}. Die Person bekommt eine Direktnachricht.`),
-      decided: { color: ok ? COLORS.success : COLORS.danger, text: clip(`${ok ? "\u2705 Angenommen" : "\u274C Abgelehnt"} von <@${c.discordId}>${r.decidedByName ? ` (${plain(r.decidedByName)})` : ""}${reason ? `
-**Grund:** ${plain(reason)}` : ""}`, 1024) }
-    };
-  } catch (e) {
-    return mapError(e);
-  }
-}
-var LEAVE_INTERACTION = {
-  prefix: "leave",
-  opensModal: (args) => args[0] === "reason" || args[0] === "start",
-  async run(c) {
-    const [action, id, st] = c.args;
-    if (action === "start") return { modal: { id: "leave:create", title: "Abmeldung erstellen", fields: [
-      { id: "duration", label: "Dauer", required: true, maxLength: 20, placeholder: "Format: '6h', '4d' oder '2w'" },
-      { id: "reason", label: "Grund", paragraph: true, required: true, minLength: 3, maxLength: 1e3, placeholder: "z. B. Urlaub, Pr\xFCfungsphase" }
-    ] } };
-    if (action === "create") {
-      const ms = parseDuration(c.fields?.duration ?? "");
-      if (!ms) return errorReply("Die Dauer verstehe ich nicht. Beispiele: `6h`, `4d`, `2w` oder `1w 2d` (mindestens 1 Stunde).");
-      const reason = (c.fields?.reason ?? "").trim();
-      if (reason.length < 3) return errorReply("Bitte einen Grund angeben.");
-      const now = Date.now();
-      try {
-        const r = await c.api.asUser(c.discordId, "POST", "/leave", { startsAt: new Date(now).toISOString(), endsAt: new Date(now + ms).toISOString(), reason, ...c.guildId ? { guildId: c.guildId } : {} });
-        return { ephemeral: true, embeds: [{
-          title: `Abmeldung eingereicht \xB7 ${humanDuration(ms)}`,
-          color: COLORS.neutral,
-          footer: `ID: ${r.number}`,
-          description: `Deine Abmeldung wurde der Leitung zur Freigabe vorgelegt.
-Wenn sie angenommen wird, endet sie ungef\xE4hr ${ts(r.endsAt)}.
-Um benachrichtigt zu werden, ob sie angenommen oder abgelehnt wird, lass bitte deine DMs offen.`
-        }] };
-      } catch (e) {
-        return mapError(e);
-      }
-    }
-    if (!id || !/^[0-9a-f-]{36}$/.test(id)) return errorReply("Unbekannte Aktion.");
-    if (action === "cancel") {
-      try {
-        const r = await c.api.asUser(c.discordId, "POST", `/leave/${id}/cancel`);
-        return okReply(r.status === "ENDED" ? `Deine Abmeldung **${r.number}** ist beendet \u2013 willkommen zur\xFCck!` : `Abmeldung **${r.number}** zur\xFCckgezogen.`);
-      } catch (e) {
-        return mapError(e);
-      }
-    }
-    const status = st === "APPROVED" || st === "DENIED" ? st : null;
-    if (!status) return errorReply("Unbekannte Aktion.");
-    if (action === "decide") return decide2(c, id, status);
-    if (action === "reason") return { modal: { id: `leave:reasonsubmit:${id}:${status}`, title: status === "APPROVED" ? "Abmeldung annehmen" : "Abmeldung ablehnen", fields: [{ id: "reason", label: "Grund", paragraph: true, required: true, maxLength: 1e3 }] } };
-    if (action === "reasonsubmit") {
-      const reason = (c.fields?.reason ?? "").trim();
-      return reason ? decide2(c, id, status, reason) : errorReply("Bitte einen Grund angeben.");
-    }
-    return errorReply("Unbekannte Aktion.");
-  }
-};
-
-// apps/bot/src/commands/cad.ts
-var lbl = (list, key) => {
-  const o = list.find((x) => x.key === key);
-  return o ? `${o.emoji ? `${o.emoji} ` : ""}${o.label}` : key;
-};
-var norm = (s) => s.trim().toLowerCase().replace(/[\s_-]+/g, "");
-var config = (c) => c.api.asUser(c.discordId, "GET", "/cad/config");
-async function myUnit(c, callsign) {
-  const units = await c.api.asUser(c.discordId, "GET", "/cad/units");
-  if (callsign) return units.find((u) => norm(u.callsign) === norm(callsign)) ?? null;
-  return units.find((u) => u.crew.some((m) => m.discordId === c.discordId)) ?? null;
-}
-var CAD_COMMANDS = [{
-  name: "cad",
-  description: "CAD-Leitstelle: Einheitenstatus, Funkmeldung, aktive Eins\xE4tze",
-  subcommands: [
-    { name: "status", description: "Status deiner Einheit an die Leitstelle melden", options: [
-      { name: "status", description: "z. B. Verf\xFCgbar, Unterwegs, Am Einsatzort", type: "string", required: true, maxLength: 40 },
-      { name: "einheit", description: "Rufname (leer = deine Einheit)", type: "string", maxLength: 16 }
-    ] },
-    { name: "funk", description: "Funkmeldung an die Leitstelle (landet in der Einsatzchronik)", options: [
-      { name: "text", description: "z. B. \u201EAm Einsatzort.\u201C", type: "string", required: true, maxLength: 500 },
-      { name: "einsatz", description: "Einsatznummer (leer = aktueller Einsatz deiner Einheit)", type: "string", maxLength: 32 }
-    ] },
-    { name: "einsaetze", description: "Aktive Eins\xE4tze der Leitstelle" }
-  ],
-  async run(c) {
-    try {
-      const sub = String(c.opts._sub ?? "");
-      if (sub === "status") {
-        const cfg2 = await config(c);
-        const want = String(c.opts.status ?? "");
-        const st = cfg2.unitStatuses.find((s) => norm(s.key) === norm(want) || norm(s.label) === norm(want));
-        if (!st) return errorReply(`Unbekannter Status. M\xF6glich: ${cfg2.unitStatuses.map((s) => `\`${s.label}\``).join(", ")}`);
-        const unit = await myUnit(c, c.opts.einheit ? String(c.opts.einheit) : void 0);
-        if (!unit) return errorReply(c.opts.einheit ? "Diese Einheit gibt es nicht." : "Du bist keiner Einheit zugeordnet. Gib den Rufnamen mit `einheit:` an.");
-        await c.api.asUser(c.discordId, "POST", `/cad/units/${unit.id}/status`, { status: st.key });
-        return okReply(`**${plain(unit.callsign)}** ist jetzt ${lbl(cfg2.unitStatuses, st.key)}.`);
-      }
-      if (sub === "funk") {
-        const r = await c.api.asUser(c.discordId, "POST", "/cad/radio", { text: String(c.opts.text ?? ""), ...c.opts.einsatz ? { incidentNumber: String(c.opts.einsatz) } : {} });
-        return okReply(`\u{1F4FB} ${r.callsign ? `**${plain(r.callsign)}**: ` : ""}\u201E${plain(c.opts.text)}\u201C gesendet${r.incidentNumber ? ` \u2013 Einsatz **${plain(r.incidentNumber)}**` : ""}.`);
-      }
-      if (sub === "einsaetze") {
-        const [cfg2, list] = await Promise.all([config(c), c.api.asUser(c.discordId, "GET", "/cad/incidents?active=true&take=20")]);
-        const lines = list.map((i) => `**${plain(i.number)}** \xB7 ${clip(plain(i.title), 80)} \u2014 ${lbl(cfg2.priorities, i.priority)} / ${lbl(cfg2.incidentStatuses, i.status)}${i.location ? ` \xB7 ${clip(plain(i.location), 60)}` : ""}${i.units.filter((u) => !u.clearedAt).length ? `
-   \u21B3 ${i.units.filter((u) => !u.clearedAt).map((u) => plain(u.unit.callsign)).join(", ")}` : ""}`);
-        return { ephemeral: true, embeds: [{ title: `\u{1F6A8} Aktive Eins\xE4tze (${list.length})`, description: clip(lines.join("\n") || "Keine aktiven Eins\xE4tze.", 4e3), color: COLORS.info }] };
-      }
-      return errorReply("Unbekannter Unterbefehl.");
-    } catch (e) {
-      return mapError(e);
-    }
-  }
-}];
-var CAD_INTERACTION = {
-  prefix: "cad",
-  async run(c) {
-    const [kind2, id, action] = c.args;
-    if (!id || !/^[0-9a-f-]{36}$/.test(id)) return errorReply("Unbekannte Aktion.");
-    try {
-      if (kind2 === "call") {
-        if (action === "claim") {
-          await c.api.asUser(c.discordId, "POST", `/cad/calls/${id}/claim`);
-          return okReply("Notruf \xFCbernommen.");
-        }
-        if (action === "close") {
-          await c.api.asUser(c.discordId, "POST", `/cad/calls/${id}/close`);
-          return okReply("Notruf geschlossen.");
-        }
-        if (action === "incident") {
-          const r = await c.api.asUser(c.discordId, "POST", `/cad/calls/${id}/incident`, {});
-          return okReply(`Einsatz **${plain(r.number)}** aus dem Notruf erstellt.`);
-        }
-        if (action === "units") {
-          const units = (await c.api.asUser(c.discordId, "GET", "/cad/units")).filter((u) => u.operational && !["OFF_DUTY", "UNAVAILABLE"].includes(u.status));
-          if (!units.length) return errorReply("Gerade ist keine Einheit verf\xFCgbar.");
-          return { ephemeral: true, content: "Welche Einheit soll den Notruf \xFCbernehmen?", select: { id: `cad:assign:${id}`, placeholder: "Einheit w\xE4hlen \u2026", options: units.slice(0, 25).map((u) => ({ label: clip(u.callsign, 100), value: u.id, ...u.current ? { description: clip(`im Einsatz ${u.current.number}`, 100) } : u.name ? { description: clip(u.name, 100) } : {} })) } };
-        }
-      }
-      if (kind2 === "assign") {
-        const unitId = c.values?.[0];
-        if (!unitId) return errorReply("Keine Einheit gew\xE4hlt.");
-        await c.api.asUser(c.discordId, "POST", `/cad/calls/${id}/assign`, { unitId });
-        return okReply("Einheit zugewiesen \u2013 der Einsatz steht im CAD.");
-      }
-      return errorReply("Unbekannte Aktion.");
-    } catch (e) {
-      return mapError(e);
-    }
-  }
-};
-var hex = (v) => typeof v === "string" && /^#[0-9a-f]{6}$/i.test(v) ? parseInt(v.slice(1), 16) : void 0;
-var f = (name, value, inline = true) => value === null || value === void 0 || value === "" ? [] : [{ name, value: clip(plain(value), 1024), inline }];
-function renderCadOutbox(type, p) {
-  const head = `${p.number ? `${String(p.number)} \xB7 ` : ""}${clip(plain(p.title ?? ""), 180)}`;
-  const base = [...f("Stichwort", p.keyword), ...f("Einsatzart", p.type), ...f("Priorit\xE4t", p.priority), ...f("Status", p.status), ...f("Ort", p.location)];
-  switch (type) {
-    case "cad.incident.created":
-      return { title: clip(`\u{1F6A8} Neuer Einsatz: ${head}`, 256), color: hex(p.priorityColor) ?? COLORS.danger, description: p.description ? clip(plain(p.description), 1500) : void 0, fields: base };
-    case "cad.incident.status":
-      return { title: clip(`\u{1F504} ${head}`, 256), color: hex(p.priorityColor) ?? COLORS.info, description: `Status: **${plain(p.previous ?? "\u2014")}** \u2192 **${plain(p.status)}**${p.note ? `
-${clip(plain(p.note), 500)}` : ""}`, fields: [...f("Ort", p.location)] };
-    case "cad.incident.assigned":
-      return { title: clip(`\u{1F4FB} ${plain(p.callsign)} \u2192 ${head}`, 256), color: hex(p.priorityColor) ?? COLORS.warning, description: p.unitRoleId ? `<@&${String(p.unitRoleId)}>` : void 0, fields: base };
-    case "cad.incident.closed":
-      return { title: clip(`\u2705 Einsatz abgeschlossen: ${head}`, 256), color: COLORS.success, fields: [...f("Status", p.status), ...f("Ort", p.location)] };
-    case "cad.call.received":
-      return {
-        title: clip(`\u{1F6A8} NOTRUF #${String(p.callNumber ?? "?")}`, 256),
-        color: COLORS.danger,
-        description: p.description ? clip(plain(p.description), 1500) : void 0,
-        fields: [...f("Ort", p.location), ...f("Team", p.team), ...p.startedAt ? [{ name: "Zeit", value: `<t:${Math.floor(Date.parse(String(p.startedAt)) / 1e3)}:t>`, inline: true }] : [], { name: "Status", value: "Offen", inline: true }, ...f("Server", p.server)]
-      };
-    case "cad.announcement":
-      return { title: "\u{1F4E2} Leitstellenmeldung", description: clip(plain(p.text), 4e3), color: COLORS.warning, ...p.from ? { footer: `von ${clip(String(p.from), 100)}` } : {} };
-    case "cad.radio":
-      return { title: clip(`\u{1F4FB} ${plain(p.callsign ?? "Funk")}${p.incidentNumber ? ` \xB7 ${String(p.incidentNumber)}` : ""}`, 256), description: `\u201E${clip(plain(p.text), 1500)}\u201C`, color: COLORS.neutral };
-    default:
-      return null;
-  }
-}
-function cadButtons(type, p) {
-  const link = typeof p.dashboardUrl === "string" && /^https?:\/\//.test(p.dashboardUrl) ? [{ id: "link", label: "Im CAD \xF6ffnen", style: "secondary", url: p.dashboardUrl }] : [];
-  if (type === "cad.call.received" && typeof p.id === "string") return [
-    { id: `cad:call:${p.id}:claim`, label: "\xDCbernehmen", style: "primary", emoji: "\u270B" },
-    { id: `cad:call:${p.id}:incident`, label: "Einsatz erstellen", style: "success", emoji: "\u{1F6A8}" },
-    { id: `cad:call:${p.id}:units`, label: "Einheit zuweisen", style: "secondary", emoji: "\u{1F693}" },
-    { id: `cad:call:${p.id}:close`, label: "Schlie\xDFen", style: "danger", emoji: "\u2716\uFE0F" },
-    ...typeof p.mapUrl === "string" && /^https?:\/\//.test(p.mapUrl) ? [{ id: "map", label: "Auf Karte anzeigen", style: "secondary", url: p.mapUrl }] : []
-  ];
-  if (type.startsWith("cad.incident.")) return link.length ? link : void 0;
-  return void 0;
-}
-
-// apps/bot/src/commands/features.ts
-var str = (c, k) => String(c.opts[k] ?? "").trim();
-var choices = (m) => Object.keys(m).map((k) => ({ name: k.replace("_", " "), value: k }));
-var needGuildAdmin = (c) => !c.guildId ? errorReply("Das geht nur auf einem Server, nicht per Direktnachricht.") : !c.isGuildAdmin ? errorReply("Daf\xFCr brauchst du auf diesem Discord-Server das Recht \u201EServer verwalten\u201C.") : null;
-var LEGACY = { gruen: "STATUS_1", "gr\xFCn": "STATUS_1", gelb: "STATUS_2", rot: "STATUS_4" };
-async function setDanger(c, level, reason) {
-  try {
-    const s = await c.api.asUser(c.discordId, "PUT", "/danger-level", { level, ...reason ? { reason } : {} });
-    await c.refreshLive?.("danger").catch(() => void 0);
-    return okReply(`Gefahrenstatus: ${s.def?.emoji ?? ""} **${plain(s.def?.name ?? s.level)}**${s.def?.title ? ` \u2013 ${plain(s.def.title)}` : ""}`);
-  } catch (e) {
-    return mapError(e);
-  }
-}
-var DUTY_PANEL = { title: "\u{1F693} Dienststatus", color: COLORS.info, description: "Melde dich hier mit einem Klick **in den Dienst**, in die **Pause** oder **au\xDFer Dienst**.\nDein Status erscheint sofort im Dashboard, in der Teamliste und \u2013 falls eingestellt \u2013 als Discord-Rolle.\n\n*Dein Discord-Konto muss im Dashboard verkn\xFCpft sein.*" };
-var DUTY_BUTTONS = [
-  { id: "duty:ON_DUTY", label: "Im Dienst", emoji: "\u{1F7E2}", style: "success" },
-  { id: "duty:BREAK", label: "Pause", emoji: "\u{1F7E1}", style: "secondary" },
-  { id: "duty:OFF_DUTY", label: "Au\xDFer Dienst", emoji: "\u26AA", style: "danger" }
-];
-var RADIO = { hinzufuegen: "add", entfernen: "remove", pruefen: "check", liste: "list" };
-var FEATURE_COMMANDS = [
-  {
-    name: "gefahrenstatus",
-    description: "Gefahrenstatus anzeigen, setzen oder als Panel posten",
-    options: [
-      { name: "aktion", description: "Was m\xF6chtest du tun? (Standard: anzeigen)", type: "string", choices: [{ name: "anzeigen", value: "anzeigen" }, { name: "setzen", value: "setzen" }, { name: "panel hier posten", value: "panel" }] },
-      { name: "stufe", description: "Neue Stufe (bei \u201Esetzen\u201C), z. B. Status 2", type: "string", maxLength: 40 },
-      { name: "grund", description: "Grund (optional, bei \u201Esetzen\u201C)", type: "string", maxLength: 200 }
-    ],
-    async run(c) {
-      const action = str(c, "aktion") || "anzeigen";
-      if (action === "setzen") {
-        const level = str(c, "stufe");
-        return level ? setDanger(c, LEGACY[level.toLowerCase()] ?? level, str(c, "grund") || void 0) : errorReply("Bitte eine Stufe angeben (z. B. \u201EStatus 2\u201C).");
-      }
-      if (action === "panel") {
-        const denied = needGuildAdmin(c);
-        if (denied) return denied;
-        if (!c.channelId || !c.refreshLive) return errorReply("Panel kann hier nicht gepostet werden.");
-        try {
-          await c.api.asUser(c.discordId, "GET", "/danger-level");
-          await c.refreshLive("danger", { channelId: c.channelId, force: true });
-          return okReply("Gefahrenstatus-Panel gepostet. Es aktualisiert sich selbst; ein \xE4lteres Panel wird nicht mehr bearbeitet.");
-        } catch (e) {
-          return mapError(e);
-        }
-      }
-      try {
-        return { ephemeral: true, embeds: [dangerEmbed(await c.api.asUser(c.discordId, "GET", "/danger-level"))] };
-      } catch (e) {
-        return mapError(e);
-      }
-    }
-  },
-  {
-    name: "teamliste",
-    description: "Richtet die selbst aktualisierende Teamliste ein bzw. aktualisiert sie sofort",
-    async run(c) {
-      const denied = needGuildAdmin(c);
-      if (denied) return denied;
-      if (!c.refreshLive) return errorReply("Teamliste ist hier nicht verf\xFCgbar.");
-      try {
-        await c.api.asUser(c.discordId, "GET", "/team/overview");
-        const cfg2 = await c.config?.();
-        const p = await c.refreshLive("teamlist", { channelId: cfg2?.teamlist ? void 0 : c.channelId, force: true });
-        return p ? okReply(`Teamliste steht in <#${p.channelId}> und aktualisiert sich automatisch.`) : errorReply("Kein Kanal f\xFCr die Teamliste gefunden.");
-      } catch (e) {
-        return mapError(e);
-      }
-    }
-  },
-  {
-    name: "funkfreigabe",
-    description: "Funk-Whitelist verwalten (hinzuf\xFCgen, entfernen, pr\xFCfen, Liste)",
-    options: [
-      { name: "aktion", description: "Aktion", type: "string", required: true, choices: choices(RADIO) },
-      { name: "mitglied", description: "Discord-Mitglied (nicht bei \u201Eliste\u201C)", type: "user" }
-    ],
-    async run(c) {
-      const action = RADIO[str(c, "aktion")];
-      if (!action) return errorReply("Unbekannte Aktion.");
-      try {
-        if (action === "list") {
-          const rows = await c.api.asUser(c.discordId, "GET", "/radio-whitelist");
-          return { ephemeral: true, embeds: [listEmbed(`\u{1F4FB} Funk-Freigabe (${rows.length})`, rows.map((r2) => `\u2022 ${r2.callsign ? `**${plain(r2.callsign)}** ` : ""}${plain(r2.displayName)}`), "Noch niemand freigegeben.")] };
-        }
-        const target = str(c, "mitglied");
-        if (!/^\d{15,25}$/.test(target)) return errorReply("Bitte ein Mitglied angeben.");
-        if (action === "check") {
-          const r2 = await c.api.asUser(c.discordId, "GET", `/radio-whitelist/check?discordId=${target}`);
-          return r2.whitelisted ? okReply(`**${plain(r2.displayName)}** ist f\xFCr den Funk freigegeben.`) : errorReply(`**${plain(r2.displayName)}** ist **nicht** f\xFCr den Funk freigegeben.`);
-        }
-        const r = await c.api.asUser(c.discordId, "POST", action === "add" ? "/radio-whitelist" : "/radio-whitelist/remove", { discordId: target });
-        let note2 = "";
-        const cfg2 = await c.config?.().catch(() => void 0);
-        if (cfg2?.radioRole && c.guildId && c.platform) {
-          try {
-            await c.platform.setRole(c.guildId, target, cfg2.radioRole, action === "add");
-            note2 = ` Rolle <@&${cfg2.radioRole}> ${action === "add" ? "vergeben" : "entzogen"}.`;
-          } catch {
-            note2 = " \u26A0\uFE0F Die Discord-Rolle konnte nicht ge\xE4ndert werden (Bot-Rolle muss \xFCber der Funkrolle stehen und \u201ERollen verwalten\u201C haben).";
-          }
-        }
-        return okReply(`**${plain(r.displayName)}** ${action === "add" ? "ist jetzt f\xFCr den Funk freigegeben" : "wurde von der Funk-Freigabe entfernt"}.${note2}`);
-      } catch (e) {
-        if (e instanceof BotApiError && e.status === 404) return errorReply("Dieses Discord-Konto ist mit keinem aktiven Benutzer verkn\xFCpft (oder steht nicht auf der Liste).");
-        return mapError(e);
-      }
-    }
-  },
-  {
-    name: "dienstpanel",
-    description: "Postet das Dienst-Panel (Im Dienst / Pause / Au\xDFer Dienst per Button) in diesen Kanal",
-    async run(c) {
-      const denied = needGuildAdmin(c);
-      if (denied) return denied;
-      if (!c.channelId || !c.platform) return errorReply("Panel kann hier nicht gepostet werden.");
-      try {
-        await c.platform.postPanel({ channelId: c.channelId, embed: DUTY_PANEL, buttons: DUTY_BUTTONS });
-      } catch {
-        return errorReply("Panel konnte nicht gepostet werden (fehlen dem Bot Rechte in diesem Kanal?).");
-      }
-      const cfg2 = await c.config?.().catch(() => void 0);
-      return okReply(`Dienst-Panel gepostet.${cfg2?.dutyRole || cfg2?.duty ? "" : " Tipp: In den Einstellungen einen **Dienst-Kanal** (Meldungen) und eine **Dienst-Rolle** hinterlegen."}`);
-    }
-  },
-  {
-    name: "roblox",
-    description: "Sucht einen Roblox-Benutzer (Name \u2192 ID)",
-    options: [{ name: "name", description: "Roblox-Benutzername", type: "string", required: true, maxLength: 20 }],
-    async run(c) {
-      if (!c.robloxLookup) return errorReply("Roblox-Suche ist nicht verf\xFCgbar.");
-      const u = await c.robloxLookup(str(c, "name"));
-      if (!u) return errorReply(`Kein Roblox-Benutzer \u201E${plain(str(c, "name"))}\u201C gefunden (oder Roblox ist gerade nicht erreichbar).`);
-      return { ephemeral: true, embeds: [{ title: clip(`\u{1F3AE} ${plain(u.name)}`, 256), color: COLORS.info, fields: [
-        { name: "Roblox-ID", value: String(u.id), inline: true },
-        { name: "Anzeigename", value: clip(plain(u.displayName), 1024), inline: true },
-        { name: "Profil", value: `https://www.roblox.com/users/${u.id}/profile` }
-      ] }] };
-    }
-  }
-];
-async function shiftTypes(c) {
-  const cfg2 = await c.api.service("GET", "/bot/shifts").catch(() => null);
-  return cfg2?.enabled ? cfg2.types : null;
-}
-async function shiftPicker(c) {
-  const types = await shiftTypes(c);
-  if (!types || types.length < 2) return null;
-  return { ephemeral: true, content: "Welche Schicht beginnst du?", select: { id: "duty:type", placeholder: "Schicht w\xE4hlen \u2026", options: types.slice(0, 25).map((t) => ({ label: clip(t.name, 100), value: t.id, ...t.isDefault ? { description: "Standard" } : {} })) } };
-}
-var INTERACTIONS = [
-  {
-    prefix: "duty",
-    async run(c) {
-      if (c.args[0] === "still") {
-        try {
-          const r = await c.api.asUser(c.discordId, "POST", "/team/me/active");
-          return r.onDuty ? okReply("Danke! Deine Schicht l\xE4uft weiter.") : okReply("Du bist gerade nicht im Dienst.");
-        } catch (e) {
-          return mapError(e);
-        }
-      }
-      const shiftType = c.args[0] === "type" ? c.values?.[0] : void 0;
-      const status = c.args[0] === "type" ? "ON_DUTY" : c.args[0] ?? "";
-      if (!DUTY_DE[status]) return errorReply("Unbekannter Status.");
-      if (status === "ON_DUTY" && !shiftType) {
-        const pick2 = await shiftPicker(c);
-        if (pick2) return pick2;
-      }
-      try {
-        const r = await c.api.asUser(c.discordId, "PUT", "/team/me/status", { status, ...shiftType ? { shiftType } : {} });
-        const name = shiftType ? (await shiftTypes(c))?.find((t) => t.id === (r.shiftType ?? shiftType))?.name : void 0;
-        return okReply(`${DUTY_DE[status].emoji} Du bist jetzt **${DUTY_DE[status].label}**${name ? ` (Schicht: **${plain(name)}**)` : ""}.`);
-      } catch (e) {
-        if (e instanceof BotApiError && e.status === 409) return okReply(`Du bist bereits **${DUTY_DE[status].label}**.`);
-        return mapError(e);
-      }
-    }
-  },
-  QUALI_INTERACTION,
-  TICKET_INTERACTION,
-  VOICE_INTERACTION,
-  LEAVE_INTERACTION,
-  CAD_INTERACTION,
-  // Roblox-Verifizierung ist vorerst abgeschaltet (Code in ./verify bleibt für später); alte Panel-Buttons bekommen einen Hinweis
-  { prefix: "verify", async run() {
-    return errorReply("Die Roblox-Verifizierung ist gerade abgeschaltet.");
-  } },
-  {
-    prefix: "danger",
-    async run(c) {
-      const level = c.args[0] === "set" ? c.args[1] : void 0;
-      return level ? setDanger(c, level) : errorReply("Unbekannte Aktion.");
-    }
-  },
-  {
-    prefix: "support",
-    async run(c) {
-      if (!c.guildId || !c.platform) return errorReply("Das geht nur auf einem Server.");
-      if (c.args[0] === "close") {
-        if (!c.channelId) return errorReply("Unbekannter Channel.");
-        await c.platform.deleteChannel(c.channelId, 5e3);
-        return okReply("Ticket wird in 5 Sekunden geschlossen.");
-      }
-      return errorReply("Dieses alte Support-Panel wird nicht mehr unterst\xFCtzt. Bitte das neue Ticket-Panel benutzen.");
-    }
-  }
-];
-var interactionFor = (customId) => {
-  const [prefix, ...args] = customId.split(":");
-  const def = INTERACTIONS.find((d) => d.prefix === prefix);
-  return def ? { def, args } : void 0;
-};
-
-// apps/bot/src/commands/index.ts
-var hm = (min) => `${Math.floor(min / 60)} h ${String(Math.round(min % 60)).padStart(2, "0")} min`;
-var q = (s) => encodeURIComponent(s.trim());
-var str2 = (c, k) => String(c.opts[k] ?? "").trim();
-async function resolvePerson(c, term, opts = {}) {
-  const page = await c.api.asUser(c.discordId, "GET", `/persons?q=${q(term)}&pageSize=10`);
-  const exact = page.items.filter((p) => String(p.robloxUsername).toLowerCase() === term.toLowerCase() || p.robloxUserId === term);
-  if (exact.length === 1) return { person: exact[0] };
-  if (exact.length === 0 && page.items.length === 0) {
-    if (opts.create && c.robloxLookup) {
-      const u = await c.robloxLookup(term);
-      if (!u) return { reply: errorReply(`Keine Person zu \u201E${plain(term)}\u201C gefunden \u2013 und bei Roblox gibt es keinen Benutzer mit diesem Namen (oder Roblox ist gerade nicht erreichbar).`) };
-      try {
-        const created = await c.api.asUser(c.discordId, "POST", "/persons", { robloxUsername: u.name, robloxUserId: String(u.id) });
-        return { person: created, created: true };
-      } catch (e) {
-        if (e instanceof BotApiError && e.status === 403) return { reply: errorReply(`\u201E${plain(u.name)}\u201C ist noch nicht im System, und dir fehlt das Recht, Personen anzulegen. Bitte lass die Person von jemandem mit Berechtigung anlegen.`) };
-        throw e;
-      }
-    }
-    return { reply: errorReply(`Keine Person zu \u201E${plain(term)}\u201C gefunden.`) };
-  }
-  const names = (exact.length ? exact : page.items).slice(0, 8).map((p) => `${plain(p.robloxUsername)} (${p.robloxUserId ?? "ohne ID"})`).join(", ");
-  return { reply: errorReply(`Nicht eindeutig. Treffer: ${names}. Bitte exakten Namen oder die Roblox-ID angeben.`) };
-}
-var DUTY = { an: "ON_DUTY", pause: "BREAK", aus: "OFF_DUTY" };
-var UNIT = { verfuegbar: "AVAILABLE", beschaeftigt: "BUSY", unterwegs: "EN_ROUTE", vor_ort: "ON_SCENE", nicht_verfuegbar: "UNAVAILABLE", ausser_dienst: "OFF_DUTY" };
-var PRIO = { niedrig: "LOW", mittel: "MEDIUM", hoch: "HIGH", dringend: "URGENT", kritisch: "CRITICAL" };
-var choices2 = (m) => Object.keys(m).map((k) => ({ name: k.replace("_", " "), value: k }));
-var INC_STATUS = { bestaetigt: "ACKNOWLEDGED", unterwegs: "EN_ROUTE", vor_ort: "ON_SCENE", in_bearbeitung: "PROCESSING", abschluss: "CLEARING", abgebrochen: "CANCELLED", geschlossen: "CLOSED" };
-var REPORT = { patrouille: "PATROL", vorfall: "INCIDENT", verkehr: "TRAFFIC", festnahme: "ARREST", zitation: "CITATION", kollision: "COLLISION", ermittlung: "INVESTIGATION", allgemein: "GENERAL" };
-var CHANNEL = { team: "TEAM", dispatch: "DISPATCH" };
-async function resolveIncident(c, number) {
-  const page = await c.api.asUser(c.discordId, "GET", `/incidents?q=${q(number)}&pageSize=10`);
-  const hit = page.items.find((i) => String(i.number).toLowerCase() === number.toLowerCase()) ?? (page.items.length === 1 ? page.items[0] : void 0);
-  return hit ? { incident: hit } : { reply: errorReply(page.items.length ? "Nicht eindeutig \u2013 bitte die vollst\xE4ndige Einsatznummer angeben (z. B. I-2026-ABC123)." : `Einsatz \u201E${plain(number)}\u201C nicht gefunden.`) };
-}
-var COMMANDS = [
-  {
-    name: "funkcode",
-    description: "Funk-Codes nachschlagen (z. B. 10-4)",
-    options: [{ name: "suche", description: "Code oder Bedeutung (leer = alle)", type: "string", maxLength: 64 }],
-    async run(c) {
-      try {
-        const term = str2(c, "suche");
-        const rows = await c.api.asUser(c.discordId, "GET", `/radio-codes${term ? `?q=${q(term)}` : ""}`);
-        if (!rows.length) return errorReply(term ? `Kein Funk-Code zu \u201E${plain(term)}\u201C gefunden.` : "Es sind noch keine Funk-Codes hinterlegt.");
-        const exact = term ? rows.find((r) => r.code.toLowerCase() === term.toLowerCase()) : void 0;
-        if (exact) return { ephemeral: true, embeds: [{ title: `\u{1F4E1} ${plain(exact.code)}`, description: `**${plain(exact.meaning)}**${exact.description ? `
-${plain(exact.description)}` : ""}`, color: 3900150, footer: exact.category ? plain(exact.category) : void 0 }] };
-        const lines = rows.slice(0, 40).map((r) => `\`${plain(r.code)}\` \u2013 ${plain(r.meaning)}`);
-        return { ephemeral: true, embeds: [{ title: "\u{1F4E1} Funk-Codes", description: lines.join("\n").slice(0, 4e3), color: 3900150, footer: rows.length > 40 ? `${rows.length - 40} weitere \u2013 Suche eingrenzen` : void 0 }] };
-      } catch (e) {
-        return mapError(e);
-      }
-    }
-  },
-  {
-    name: "teamchance",
-    description: "Zeigt, ob gerade eine Team-Chance (Bewerbungsphase f\xFCrs Team) offen ist",
-    async run(c) {
-      try {
-        const s = await c.api.service("GET", `/bot/teamchance${c.guildId ? `?guildId=${c.guildId}` : ""}`);
-        const when = (iso) => iso ? `<t:${Math.floor(Date.parse(iso) / 1e3)}:f>` : null;
-        if (s.isOpen) return { ephemeral: true, embeds: [{ title: `\u{1F4E3} ${plain(s.title)} \u2013 offen`, description: `${plain(s.description)}
-
-Bewerben: \`/bewerbung\``.slice(0, 4e3), color: 2278750, fields: [...s.closesAt ? [{ name: "Bewerbungsschluss", value: when(s.closesAt), inline: true }] : [], ...s.remaining !== null ? [{ name: "Freie Pl\xE4tze", value: String(s.remaining), inline: true }] : []] }] };
-        const why = s.reason === "not_started" && s.opensAt ? `Startet ${when(s.opensAt)}.` : s.reason === "full" ? "Alle Pl\xE4tze sind vergeben." : "Derzeit ist keine Team-Chance offen.";
-        return { ephemeral: true, embeds: [{ title: `\u{1F512} ${plain(s.title)}`, description: why, color: 15680580 }] };
-      } catch (e) {
-        return mapError(e);
-      }
-    }
-  },
-  {
-    name: "hilfe",
-    description: "Zeigt alle Befehle",
-    async run() {
-      return { ephemeral: true, embeds: [{ title: "EN Polizei \u2014 Befehle", color: COLORS.info, fields: [
-        { name: "Konto", value: "`/entverknuepfen` `/profil` `/benachrichtigungen`" },
-        { name: "Abfragen", value: "`/person` `/kennzeichen` `/fahndungen` `/einsaetze` `/einsatzinfo` `/einheiten` `/team`" },
-        { name: "Dienst & Leitstelle", value: "`/dienst` `/dienststunden` `/abmeldung` `/leave manage` `/einheitstatus` `/einsatz` `/einsatzstatus` `/einsatzzuweisen` `/funk` `/funkcode` `/cad`" },
-        { name: "Erfassen", value: "`/ticket` `/bericht` `/beschwerde` `/ermittlung` `/fahndung` `/beweis`" },
-        { name: "Leitung & Team", value: "`/gefahrenstatus` `/funkfreigabe` `/teamliste` `/dienstpanel` `/bewerbungspanel` `/qualipanel` `/teamchance` `/roblox`" },
-        { name: "Support-Tickets", value: "`/support` \xF6ffnet ein Ticket (Team: `/support mitglied:@\u2026` f\xFCr jemand anderen). Ticket-Panels, Kategorien, Fragen und Buttons werden im Dashboard eingerichtet und von dort in Discord gesendet." },
-        { name: "F\xFCr alle", value: "`/bewerbung` (auch ohne Verkn\xFCpfung; Fragen per Direktnachricht) \xB7 SEK/Flugstaffel/Ausbilder \xFCber das Qualifikations-Panel" },
-        { name: "Hinweis", value: "Alle Befehle laufen mit **deinen** Rechten im System. Antworten sind nur f\xFCr dich sichtbar." }
-      ] }] };
-    }
-  },
-  {
-    name: "person",
-    description: "Sucht eine Person (Roblox-Name oder -ID)",
-    options: [{ name: "suche", description: "Name oder Roblox-ID", type: "string", required: true, maxLength: 64 }],
-    async run(c) {
-      try {
-        const page = await c.api.asUser(c.discordId, "GET", `/persons?q=${q(str2(c, "suche"))}&pageSize=5`);
-        if (!page.items.length) return errorReply("Keine Person gefunden.");
-        if (page.items.length > 1 && !page.items.some((p) => String(p.robloxUsername).toLowerCase() === str2(c, "suche").toLowerCase())) {
-          return { ephemeral: true, embeds: [listEmbed(`\u{1F465} ${page.total} Treffer`, page.items.map((p) => `\u2022 **${plain(p.robloxUsername)}** (${p.robloxUserId ?? "ohne ID"})`), "")] };
-        }
-        const hit = page.items.find((p) => String(p.robloxUsername).toLowerCase() === str2(c, "suche").toLowerCase()) ?? page.items[0];
-        const ov = await c.api.asUser(c.discordId, "GET", `/persons/${hit.id}`);
-        const wanted = ov.links.some((l) => l.entityType === "Wanted");
-        return { ephemeral: true, embeds: [personEmbed(ov.person, { tickets: ov.tickets.length, wanted })] };
-      } catch (e) {
-        return mapError(e);
-      }
-    }
-  },
-  {
-    name: "kennzeichen",
-    description: "Sucht ein Fahrzeug nach Kennzeichen",
-    options: [{ name: "kennzeichen", description: "z. B. LC 1001", type: "string", required: true, maxLength: 16 }],
-    async run(c) {
-      try {
-        const page = await c.api.asUser(c.discordId, "GET", `/vehicles?q=${q(str2(c, "kennzeichen"))}&pageSize=5`);
-        return page.items.length ? { ephemeral: true, embeds: page.items.map(vehicleEmbed) } : errorReply("Kein Fahrzeug gefunden.");
-      } catch (e) {
-        return mapError(e);
-      }
-    }
-  },
-  {
-    name: "fahndungen",
-    description: "Zeigt aktive Fahndungen",
-    async run(c) {
-      try {
-        const page = await c.api.asUser(c.discordId, "GET", "/wanted?pageSize=10");
-        return { ephemeral: true, embeds: [listEmbed(`\u{1F534} Aktive Fahndungen (${page.total})`, page.items.map((w) => `\u2022 **${plain(w.reason)}** \u2014 ${label(w.priority)}${w.personId ? "" : " (Fahrzeug)"}`), "Keine aktiven Fahndungen.")] };
-      } catch (e) {
-        return mapError(e);
-      }
-    }
-  },
-  {
-    name: "dienst",
-    description: "Setzt deinen Dienststatus",
-    options: [{ name: "status", description: "Neuer Status", type: "string", required: true, choices: choices2(DUTY) }],
-    async run(c) {
-      const status = DUTY[str2(c, "status")];
-      if (!status) return errorReply("Unbekannter Status.");
-      if (status === "ON_DUTY") {
-        const pick2 = await shiftPicker(c);
-        if (pick2) return pick2;
-      }
-      try {
-        await c.api.asUser(c.discordId, "PUT", "/team/me/status", { status });
-        return okReply(`Dienststatus: **${label(status)}**`);
-      } catch (e) {
-        return mapError(e);
-      }
-    }
-  },
-  {
-    name: "dienststunden",
-    description: "Zeigt deine Dienststunden (oder mit \u201Ealle\u201C die des Teams)",
-    options: [
-      { name: "tage", description: "Zeitraum in Tagen (Standard: 7)", type: "integer", min: 1, max: 90 },
-      { name: "alle", description: "Alle Beamten anzeigen (nur Schichtleitung)", type: "boolean" }
-    ],
-    async run(c) {
-      const days = Number(c.opts.tage ?? 7);
-      const all = c.opts.alle === true;
-      try {
-        const r = await c.api.asUser(c.discordId, "GET", `${all ? "/team/hours" : "/team/me/hours"}?days=${days}`);
-        const period = days === 1 ? "letzte 24 Stunden" : `letzte ${days} Tage`;
-        if (all) {
-          const lines2 = r.users.slice(0, 25).map((u, i) => `${i + 1}. **${plain(u.callsign ?? u.name)}** ${u.callsign ? `(${plain(u.name)}) ` : ""}\u2014 ${hm(u.minutes)} \xB7 im Dienst ${hm(u.byStatus.ON_DUTY ?? 0)}`);
-          return { ephemeral: true, embeds: [listEmbed(`\u23F1\uFE0F Dienststunden Team (${period})`, lines2, "Im Zeitraum war niemand im Dienst.")] };
-        }
-        const me = r.users[0];
-        if (!me) return { ephemeral: true, embeds: [listEmbed(`\u23F1\uFE0F Deine Dienststunden (${period})`, [], "Im Zeitraum warst du nicht im Dienst.")] };
-        const lines = Object.entries(me.byStatus).sort((a, b) => b[1] - a[1]).map(([s, m]) => `\u2022 ${label(s)}: ${hm(m)}`);
-        return { ephemeral: true, embeds: [listEmbed(`\u23F1\uFE0F Deine Dienststunden (${period})`, [`**Gesamt: ${hm(me.minutes)}** in ${me.sessions} Abschnitt${me.sessions === 1 ? "" : "en"}`, ...lines], "")] };
-      } catch (e) {
-        return mapError(e);
-      }
-    }
-  },
-  {
-    name: "einheiten",
-    description: "Zeigt alle Einheiten und ihren Status",
-    async run(c) {
-      try {
-        const units = await c.api.asUser(c.discordId, "GET", "/dispatch/units");
-        return { ephemeral: true, embeds: [listEmbed("\u{1F4FB} Einheiten", units.map((u) => `\u2022 **${plain(u.callsign)}** \u2014 ${label(u.status)}`), "Keine Einheiten angelegt.")] };
-      } catch (e) {
-        return mapError(e);
-      }
-    }
-  },
-  {
-    name: "einheitstatus",
-    description: "\xC4ndert den Status einer Einheit",
-    options: [
-      { name: "rufzeichen", description: "z. B. ADAM-1", type: "string", required: true, maxLength: 16 },
-      { name: "status", description: "Neuer Status", type: "string", required: true, choices: choices2(UNIT) }
-    ],
-    async run(c) {
-      const status = UNIT[str2(c, "status")];
-      if (!status) return errorReply("Unbekannter Status.");
-      try {
-        const units = await c.api.asUser(c.discordId, "GET", "/dispatch/units");
-        const unit = units.find((u) => String(u.callsign).toLowerCase() === str2(c, "rufzeichen").toLowerCase());
-        if (!unit) return errorReply("Einheit nicht gefunden.");
-        await c.api.asUser(c.discordId, "PUT", `/dispatch/units/${unit.id}/status`, { status });
-        return okReply(`**${plain(unit.callsign)}** \u2192 ${label(status)}`);
-      } catch (e) {
-        return mapError(e);
-      }
-    }
-  },
-  {
-    name: "einsaetze",
-    description: "Zeigt offene Eins\xE4tze",
-    async run(c) {
-      try {
-        const page = await c.api.asUser(c.discordId, "GET", "/incidents?active=true&pageSize=10");
-        return { ephemeral: true, embeds: [listEmbed(`\u{1F6A8} Offene Eins\xE4tze (${page.total})`, page.items.map(incidentLine), "Keine offenen Eins\xE4tze.")] };
-      } catch (e) {
-        return mapError(e);
-      }
-    }
-  },
-  {
-    name: "einsatz",
-    description: "Legt einen neuen Einsatz an",
-    options: [
-      { name: "titel", description: "Kurzbeschreibung", type: "string", required: true, maxLength: 200 },
-      { name: "prioritaet", description: "Priorit\xE4t (Standard: mittel)", type: "string", choices: choices2(PRIO) },
-      { name: "ort", description: "Einsatzort", type: "string", maxLength: 200 }
-    ],
-    async run(c) {
-      const title = str2(c, "titel");
-      if (title.length < 3) return errorReply("Der Titel ist zu kurz (mindestens 3 Zeichen).");
-      try {
-        const prio = PRIO[str2(c, "prioritaet")] ?? "MEDIUM";
-        const inc = await c.api.asUser(c.discordId, "POST", "/incidents", { title, priority: prio, location: str2(c, "ort") || void 0 });
-        return okReply(`Einsatz **${inc.number}** angelegt (${label(prio)}).`);
-      } catch (e) {
-        return mapError(e);
-      }
-    }
-  },
-  {
-    name: "ticket",
-    description: "Stellt ein Ticket aus",
-    options: [
-      { name: "person", description: "Roblox-Name oder -ID", type: "string", required: true, maxLength: 64 },
-      { name: "grund", description: "Grund", type: "string", required: true, maxLength: 500 },
-      { name: "betrag", description: "Betrag", type: "number", min: 0, max: 1e6 }
-    ],
-    async run(c) {
-      const reason = str2(c, "grund");
-      if (reason.length < 3) return errorReply("Der Grund ist zu kurz (mindestens 3 Zeichen).");
-      try {
-        const { person, reply, created } = await resolvePerson(c, str2(c, "person"), { create: true });
-        if (!person) return reply;
-        const amount = typeof c.opts.betrag === "number" ? c.opts.betrag : void 0;
-        const t = await c.api.asUser(c.discordId, "POST", "/tickets", { personId: person.id, reason, ...amount !== void 0 ? { amount } : {} });
-        return okReply(`Ticket **${t.number}** f\xFCr **${plain(person.robloxUsername)}** ausgestellt.${created ? " Die Person war noch nicht im System und wurde nach Roblox-Pr\xFCfung neu angelegt." : ""}`);
-      } catch (e) {
-        return mapError(e);
-      }
-    }
-  },
-  {
-    name: "profil",
-    description: "Zeigt dein verkn\xFCpftes Konto und deine Rollen",
-    async run(c) {
-      try {
-        const me = await c.api.asUser(c.discordId, "GET", "/auth/me");
-        return { ephemeral: true, embeds: [{ title: `\u{1FAAA} ${plain(me.displayName)}`, color: COLORS.info, fields: [
-          { name: "Benutzer", value: `@${plain(me.username)}`, inline: true },
-          { name: "Roblox-ID", value: String(me.robloxUserId ?? "nicht hinterlegt"), inline: true },
-          { name: "Rollen", value: clip(me.roles.map(plain).join(", ") || "keine", 1024) },
-          { name: "Berechtigungen", value: `${me.permissions.length} aktiv`, inline: true }
-        ] }] };
-      } catch (e) {
-        return mapError(e);
-      }
-    }
-  },
-  {
-    name: "entverknuepfen",
-    description: "L\xF6st die Verkn\xFCpfung deines Discord-Kontos",
-    async run(c) {
-      try {
-        await c.api.asUser(c.discordId, "DELETE", "/discord/link");
-        return okReply("Verkn\xFCpfung gel\xF6st. Im Dashboard (Chat-Symbol oben rechts) kannst du sie jederzeit neu herstellen.");
-      } catch (e) {
-        return mapError(e);
-      }
-    }
-  },
-  {
-    name: "team",
-    description: "Zeigt, wer im Dienst ist",
-    async run(c) {
-      try {
-        const rows = await c.api.asUser(c.discordId, "GET", "/team/overview");
-        const on = rows.filter((r) => r.dutyStatus !== "OFF_DUTY");
-        const lines = on.slice(0, 25).map((r) => `\u2022 **${plain(r.callsign ?? "\u2014")}** ${plain(r.name)} \u2014 ${label(r.dutyStatus)}${r.unit ? ` \xB7 ${plain(r.unit.callsign)}` : ""}${r.currentIncident ? ` \xB7 \u{1F6A8} ${r.currentIncident.number}` : ""}`);
-        return { ephemeral: true, embeds: [listEmbed(`\u{1F46E} Im Dienst (${on.length} von ${rows.length})`, lines, "Aktuell ist niemand im Dienst.")] };
-      } catch (e) {
-        return mapError(e);
-      }
-    }
-  },
-  {
-    name: "einsatzinfo",
-    description: "Zeigt Details zu einem Einsatz",
-    options: [{ name: "nummer", description: "Einsatznummer, z. B. I-2026-ABC123", type: "string", required: true, maxLength: 32 }],
-    async run(c) {
-      try {
-        const { incident, reply } = await resolveIncident(c, str2(c, "nummer"));
-        if (!incident) return reply;
-        const d = await c.api.asUser(c.discordId, "GET", `/incidents/${incident.id}`);
-        const i = d.incident;
-        const units = (i.units ?? []).filter((u) => !u.clearedAt).map((u) => plain(u.unit.callsign)).join(", ") || "keine";
-        return { ephemeral: true, embeds: [{ title: clip(`\u{1F6A8} ${i.number} \u2014 ${plain(i.title)}`, 256), color: COLORS.info, description: i.description ? clip(plain(i.description), 1500) : void 0, fields: [
-          { name: "Priorit\xE4t", value: label(i.priority), inline: true },
-          { name: "Status", value: label(i.status), inline: true },
-          { name: "Ort", value: clip(plain(i.location), 1024), inline: true },
-          { name: "Einheiten", value: clip(units, 1024) },
-          { name: "Verlauf", value: clip(d.timeline.slice(0, 5).map((t) => `\u2022 ${plain(t.summary)}`).join("\n") || "\u2014", 1024) }
-        ] }] };
-      } catch (e) {
-        return mapError(e);
-      }
-    }
-  },
-  {
-    name: "einsatzstatus",
-    description: "\xC4ndert den Status eines Einsatzes",
-    options: [
-      { name: "nummer", description: "Einsatznummer", type: "string", required: true, maxLength: 32 },
-      { name: "status", description: "Neuer Status", type: "string", required: true, choices: choices2(INC_STATUS) }
-    ],
-    async run(c) {
-      const status = INC_STATUS[str2(c, "status")];
-      if (!status) return errorReply("Unbekannter Status.");
-      try {
-        const { incident, reply } = await resolveIncident(c, str2(c, "nummer"));
-        if (!incident) return reply;
-        if (status === "CLOSED") await c.api.asUser(c.discordId, "POST", `/dispatch/incidents/${incident.id}/close`);
-        else await c.api.asUser(c.discordId, "PUT", `/dispatch/incidents/${incident.id}/status`, { status });
-        return okReply(`**${incident.number}** \u2192 ${label(status)}`);
-      } catch (e) {
-        return mapError(e);
-      }
-    }
-  },
-  {
-    name: "einsatzzuweisen",
-    description: "Weist eine Einheit einem Einsatz zu",
-    options: [
-      { name: "nummer", description: "Einsatznummer", type: "string", required: true, maxLength: 32 },
-      { name: "rufzeichen", description: "z. B. ADAM-1", type: "string", required: true, maxLength: 16 }
-    ],
-    async run(c) {
-      try {
-        const { incident, reply } = await resolveIncident(c, str2(c, "nummer"));
-        if (!incident) return reply;
-        const units = await c.api.asUser(c.discordId, "GET", "/dispatch/units");
-        const unit = units.find((u) => String(u.callsign).toLowerCase() === str2(c, "rufzeichen").toLowerCase());
-        if (!unit) return errorReply("Einheit nicht gefunden.");
-        await c.api.asUser(c.discordId, "POST", `/dispatch/incidents/${incident.id}/assign`, { unitId: unit.id });
-        return okReply(`**${plain(unit.callsign)}** wurde **${incident.number}** zugewiesen.`);
-      } catch (e) {
-        return mapError(e);
-      }
-    }
-  },
-  {
-    name: "bericht",
-    description: "Schreibt einen Polizeibericht (Entwurf oder direkt einreichen)",
-    options: [
-      { name: "titel", description: "Titel", type: "string", required: true, maxLength: 200 },
-      { name: "text", description: "Berichtstext", type: "string", required: true, maxLength: 4e3 },
-      { name: "typ", description: "Berichtstyp (Standard: allgemein)", type: "string", choices: choices2(REPORT) },
-      { name: "einreichen", description: "Direkt zur Pr\xFCfung einreichen", type: "boolean" }
-    ],
-    async run(c) {
-      if (str2(c, "titel").length < 3) return errorReply("Der Titel ist zu kurz (mindestens 3 Zeichen).");
-      try {
-        const type = REPORT[str2(c, "typ")] ?? "GENERAL";
-        const r = await c.api.asUser(c.discordId, "POST", "/reports", { type, title: str2(c, "titel"), content: { body: str2(c, "text") } });
-        if (c.opts.einreichen === true) {
-          await c.api.asUser(c.discordId, "POST", `/reports/${r.id}/submit`);
-          return okReply(`Bericht **${r.number}** angelegt und **eingereicht**.`);
-        }
-        return okReply(`Bericht **${r.number}** als **Entwurf** gespeichert (im Web bearbeiten/einreichen).`);
-      } catch (e) {
-        return mapError(e);
-      }
-    }
-  },
-  {
-    name: "beschwerde",
-    description: "Erfasst eine Beschwerde",
-    options: [
-      { name: "kategorie", description: "z. B. Verhalten", type: "string", required: true, maxLength: 64 },
-      { name: "beschreibung", description: "Was ist passiert? (mind. 10 Zeichen)", type: "string", required: true, maxLength: 4e3 },
-      { name: "person", description: "Betroffene Person (Roblox-Name oder -ID)", type: "string", maxLength: 64 }
-    ],
-    async run(c) {
-      if (str2(c, "kategorie").length < 2) return errorReply("Die Kategorie ist zu kurz.");
-      if (str2(c, "beschreibung").length < 10) return errorReply("Die Beschreibung ist zu kurz (mindestens 10 Zeichen).");
-      try {
-        let subjectId;
-        if (str2(c, "person")) {
-          const r = await resolvePerson(c, str2(c, "person"));
-          if (!r.person) return r.reply;
-          subjectId = r.person.id;
-        }
-        const res = await c.api.asUser(c.discordId, "POST", "/complaints", { category: str2(c, "kategorie"), description: str2(c, "beschreibung"), ...subjectId ? { subjectId } : {} });
-        return okReply(`Beschwerde **${res.number}** erfasst.`);
-      } catch (e) {
-        return mapError(e);
-      }
-    }
-  },
-  {
-    name: "ermittlung",
-    description: "Er\xF6ffnet einen Ermittlungsfall",
-    options: [
-      { name: "titel", description: "Titel des Falls", type: "string", required: true, maxLength: 200 },
-      { name: "beschreibung", description: "Beschreibung", type: "string", maxLength: 4e3 }
-    ],
-    async run(c) {
-      if (str2(c, "titel").length < 3) return errorReply("Der Titel ist zu kurz (mindestens 3 Zeichen).");
-      try {
-        const r = await c.api.asUser(c.discordId, "POST", "/investigations", { title: str2(c, "titel"), ...str2(c, "beschreibung") ? { description: str2(c, "beschreibung") } : {} });
-        return okReply(`Fall **${r.caseNumber}** er\xF6ffnet.`);
-      } catch (e) {
-        return mapError(e);
-      }
-    }
-  },
-  {
-    name: "fahndung",
-    description: "Schreibt eine Person zur Fahndung aus",
-    options: [
-      { name: "person", description: "Roblox-Name oder -ID", type: "string", required: true, maxLength: 64 },
-      { name: "grund", description: "Fahndungsgrund", type: "string", required: true, maxLength: 500 },
-      { name: "prioritaet", description: "Priorit\xE4t (Standard: mittel)", type: "string", choices: choices2(PRIO) }
-    ],
-    async run(c) {
-      if (str2(c, "grund").length < 3) return errorReply("Der Grund ist zu kurz (mindestens 3 Zeichen).");
-      try {
-        const { person, reply } = await resolvePerson(c, str2(c, "person"));
-        if (!person) return reply;
-        const priority = PRIO[str2(c, "prioritaet")] ?? "MEDIUM";
-        await c.api.asUser(c.discordId, "POST", "/wanted", { personId: person.id, reason: str2(c, "grund"), priority });
-        return okReply(`**${plain(person.robloxUsername)}** ist zur Fahndung ausgeschrieben (${label(priority)}).`);
-      } catch (e) {
-        return mapError(e);
-      }
-    }
-  },
-  {
-    name: "beweis",
-    description: "Erfasst ein Beweisst\xFCck",
-    options: [
-      { name: "typ", description: "z. B. Waffe, Foto", type: "string", required: true, maxLength: 64 },
-      { name: "beschreibung", description: "Beschreibung", type: "string", required: true, maxLength: 2e3 },
-      { name: "fall", description: "Fallnummer, z. B. CASE-2026-ABC123", type: "string", maxLength: 40 }
-    ],
-    async run(c) {
-      if (str2(c, "typ").length < 2 || str2(c, "beschreibung").length < 3) return errorReply("Typ oder Beschreibung sind zu kurz.");
-      try {
-        const e = await c.api.asUser(c.discordId, "POST", "/evidence", { type: str2(c, "typ"), description: str2(c, "beschreibung"), ...str2(c, "fall") ? { caseRef: str2(c, "fall").toUpperCase() } : {} });
-        return okReply(`Beweis **${e.number}** erfasst.`);
-      } catch (err) {
-        return mapError(err);
-      }
-    }
-  },
-  {
-    name: "funk",
-    description: "Sendet eine Nachricht in einen Systemkanal",
-    options: [
-      { name: "kanal", description: "Kanal", type: "string", required: true, choices: choices2(CHANNEL) },
-      { name: "text", description: "Nachricht", type: "string", required: true, maxLength: 1500 }
-    ],
-    async run(c) {
-      const ch = CHANNEL[str2(c, "kanal")];
-      if (!ch) return errorReply("Unbekannter Kanal.");
-      try {
-        await c.api.asUser(c.discordId, "POST", `/communication/channels/${ch}/messages`, { body: str2(c, "text") });
-        return okReply(`Nachricht an **${ch}** gesendet.`);
-      } catch (e) {
-        return mapError(e);
-      }
-    }
-  },
-  {
-    name: "benachrichtigungen",
-    description: "Zeigt deine ungelesenen Benachrichtigungen",
-    async run(c) {
-      try {
-        const r = await c.api.asUser(c.discordId, "GET", "/notifications?filter=unread&pageSize=10");
-        return { ephemeral: true, embeds: [listEmbed(`\u{1F514} Ungelesen (${r.unread})`, r.items.map((n) => `\u2022 ${plain(n.title)}`), "Keine ungelesenen Benachrichtigungen.")] };
-      } catch (e) {
-        return mapError(e);
-      }
-    }
-  },
-  ...FEATURE_COMMANDS,
-  ...QUALI_COMMANDS,
-  ...LEAVE_COMMANDS,
-  ...CAD_COMMANDS,
-  TICKET_COMMAND
-];
-var byName = (n) => COMMANDS.find((c) => c.name === n);
-
-// apps/bot/src/config.ts
-var import_node_fs = require("node:fs");
-var import_node_path = __toESM(require("node:path"));
 
 // node_modules/.pnpm/zod@3.25.76/node_modules/zod/v3/external.js
 var external_exports = {};
@@ -78742,9 +76196,9 @@ var util;
   };
   util2.objectKeys = typeof Object.keys === "function" ? (obj) => Object.keys(obj) : (object) => {
     const keys = [];
-    for (const key in object) {
-      if (Object.prototype.hasOwnProperty.call(object, key)) {
-        keys.push(key);
+    for (const key3 in object) {
+      if (Object.prototype.hasOwnProperty.call(object, key3)) {
+        keys.push(key3);
       }
     }
     return keys;
@@ -79144,10 +76598,10 @@ var ParseStatus = class _ParseStatus {
   static async mergeObjectAsync(status, pairs) {
     const syncPairs = [];
     for (const pair of pairs) {
-      const key = await pair.key;
+      const key3 = await pair.key;
       const value = await pair.value;
       syncPairs.push({
-        key,
+        key: key3,
         value
       });
     }
@@ -79156,17 +76610,17 @@ var ParseStatus = class _ParseStatus {
   static mergeObjectSync(status, pairs) {
     const finalObject = {};
     for (const pair of pairs) {
-      const { key, value } = pair;
-      if (key.status === "aborted")
+      const { key: key3, value } = pair;
+      if (key3.status === "aborted")
         return INVALID;
       if (value.status === "aborted")
         return INVALID;
-      if (key.status === "dirty")
+      if (key3.status === "dirty")
         status.dirty();
       if (value.status === "dirty")
         status.dirty();
-      if (key.value !== "__proto__" && (typeof value.value !== "undefined" || pair.alwaysSet)) {
-        finalObject[key.value] = value.value;
+      if (key3.value !== "__proto__" && (typeof value.value !== "undefined" || pair.alwaysSet)) {
+        finalObject[key3.value] = value.value;
       }
     }
     return { status: status.value, value: finalObject };
@@ -79191,12 +76645,12 @@ var errorUtil;
 
 // node_modules/.pnpm/zod@3.25.76/node_modules/zod/v3/types.js
 var ParseInputLazyPath = class {
-  constructor(parent, value, path2, key) {
+  constructor(parent, value, path2, key3) {
     this._cachedPath = [];
     this.parent = parent;
     this.data = value;
     this._path = path2;
-    this._key = key;
+    this._key = key3;
   }
   get path() {
     if (!this._cachedPath.length) {
@@ -80941,9 +78395,9 @@ ZodArray.create = (schema2, params) => {
 function deepPartialify(schema2) {
   if (schema2 instanceof ZodObject) {
     const newShape = {};
-    for (const key in schema2.shape) {
-      const fieldSchema = schema2.shape[key];
-      newShape[key] = ZodOptional.create(deepPartialify(fieldSchema));
+    for (const key3 in schema2.shape) {
+      const fieldSchema = schema2.shape[key3];
+      newShape[key3] = ZodOptional.create(deepPartialify(fieldSchema));
     }
     return new ZodObject({
       ...schema2._def,
@@ -80994,29 +78448,29 @@ var ZodObject = class _ZodObject extends ZodType {
     const { shape, keys: shapeKeys } = this._getCached();
     const extraKeys = [];
     if (!(this._def.catchall instanceof ZodNever && this._def.unknownKeys === "strip")) {
-      for (const key in ctx.data) {
-        if (!shapeKeys.includes(key)) {
-          extraKeys.push(key);
+      for (const key3 in ctx.data) {
+        if (!shapeKeys.includes(key3)) {
+          extraKeys.push(key3);
         }
       }
     }
     const pairs = [];
-    for (const key of shapeKeys) {
-      const keyValidator = shape[key];
-      const value = ctx.data[key];
+    for (const key3 of shapeKeys) {
+      const keyValidator = shape[key3];
+      const value = ctx.data[key3];
       pairs.push({
-        key: { status: "valid", value: key },
-        value: keyValidator._parse(new ParseInputLazyPath(ctx, value, ctx.path, key)),
-        alwaysSet: key in ctx.data
+        key: { status: "valid", value: key3 },
+        value: keyValidator._parse(new ParseInputLazyPath(ctx, value, ctx.path, key3)),
+        alwaysSet: key3 in ctx.data
       });
     }
     if (this._def.catchall instanceof ZodNever) {
       const unknownKeys = this._def.unknownKeys;
       if (unknownKeys === "passthrough") {
-        for (const key of extraKeys) {
+        for (const key3 of extraKeys) {
           pairs.push({
-            key: { status: "valid", value: key },
-            value: { status: "valid", value: ctx.data[key] }
+            key: { status: "valid", value: key3 },
+            value: { status: "valid", value: ctx.data[key3] }
           });
         }
       } else if (unknownKeys === "strict") {
@@ -81033,15 +78487,15 @@ var ZodObject = class _ZodObject extends ZodType {
       }
     } else {
       const catchall = this._def.catchall;
-      for (const key of extraKeys) {
-        const value = ctx.data[key];
+      for (const key3 of extraKeys) {
+        const value = ctx.data[key3];
         pairs.push({
-          key: { status: "valid", value: key },
+          key: { status: "valid", value: key3 },
           value: catchall._parse(
-            new ParseInputLazyPath(ctx, value, ctx.path, key)
+            new ParseInputLazyPath(ctx, value, ctx.path, key3)
             //, ctx.child(key), value, getParsedType(value)
           ),
-          alwaysSet: key in ctx.data
+          alwaysSet: key3 in ctx.data
         });
       }
     }
@@ -81049,10 +78503,10 @@ var ZodObject = class _ZodObject extends ZodType {
       return Promise.resolve().then(async () => {
         const syncPairs = [];
         for (const pair of pairs) {
-          const key = await pair.key;
+          const key3 = await pair.key;
           const value = await pair.value;
           syncPairs.push({
-            key,
+            key: key3,
             value,
             alwaysSet: pair.alwaysSet
           });
@@ -81177,8 +78631,8 @@ var ZodObject = class _ZodObject extends ZodType {
   //   }) as any;
   //   return merged;
   // }
-  setKey(key, schema2) {
-    return this.augment({ [key]: schema2 });
+  setKey(key3, schema2) {
+    return this.augment({ [key3]: schema2 });
   }
   // merge<Incoming extends AnyZodObject>(
   //   merging: Incoming
@@ -81209,9 +78663,9 @@ var ZodObject = class _ZodObject extends ZodType {
   }
   pick(mask) {
     const shape = {};
-    for (const key of util.objectKeys(mask)) {
-      if (mask[key] && this.shape[key]) {
-        shape[key] = this.shape[key];
+    for (const key3 of util.objectKeys(mask)) {
+      if (mask[key3] && this.shape[key3]) {
+        shape[key3] = this.shape[key3];
       }
     }
     return new _ZodObject({
@@ -81221,9 +78675,9 @@ var ZodObject = class _ZodObject extends ZodType {
   }
   omit(mask) {
     const shape = {};
-    for (const key of util.objectKeys(this.shape)) {
-      if (!mask[key]) {
-        shape[key] = this.shape[key];
+    for (const key3 of util.objectKeys(this.shape)) {
+      if (!mask[key3]) {
+        shape[key3] = this.shape[key3];
       }
     }
     return new _ZodObject({
@@ -81239,12 +78693,12 @@ var ZodObject = class _ZodObject extends ZodType {
   }
   partial(mask) {
     const newShape = {};
-    for (const key of util.objectKeys(this.shape)) {
-      const fieldSchema = this.shape[key];
-      if (mask && !mask[key]) {
-        newShape[key] = fieldSchema;
+    for (const key3 of util.objectKeys(this.shape)) {
+      const fieldSchema = this.shape[key3];
+      if (mask && !mask[key3]) {
+        newShape[key3] = fieldSchema;
       } else {
-        newShape[key] = fieldSchema.optional();
+        newShape[key3] = fieldSchema.optional();
       }
     }
     return new _ZodObject({
@@ -81254,16 +78708,16 @@ var ZodObject = class _ZodObject extends ZodType {
   }
   required(mask) {
     const newShape = {};
-    for (const key of util.objectKeys(this.shape)) {
-      if (mask && !mask[key]) {
-        newShape[key] = this.shape[key];
+    for (const key3 of util.objectKeys(this.shape)) {
+      if (mask && !mask[key3]) {
+        newShape[key3] = this.shape[key3];
       } else {
-        const fieldSchema = this.shape[key];
+        const fieldSchema = this.shape[key3];
         let newField = fieldSchema;
         while (newField instanceof ZodOptional) {
           newField = newField._def.innerType;
         }
-        newShape[key] = newField;
+        newShape[key3] = newField;
       }
     }
     return new _ZodObject({
@@ -81507,14 +78961,14 @@ function mergeValues(a, b) {
     return { valid: true, data: a };
   } else if (aType === ZodParsedType.object && bType === ZodParsedType.object) {
     const bKeys = util.objectKeys(b);
-    const sharedKeys = util.objectKeys(a).filter((key) => bKeys.indexOf(key) !== -1);
+    const sharedKeys = util.objectKeys(a).filter((key3) => bKeys.indexOf(key3) !== -1);
     const newObj = { ...a, ...b };
-    for (const key of sharedKeys) {
-      const sharedValue = mergeValues(a[key], b[key]);
+    for (const key3 of sharedKeys) {
+      const sharedValue = mergeValues(a[key3], b[key3]);
       if (!sharedValue.valid) {
         return { valid: false };
       }
-      newObj[key] = sharedValue.data;
+      newObj[key3] = sharedValue.data;
     }
     return { valid: true, data: newObj };
   } else if (aType === ZodParsedType.array && bType === ZodParsedType.array) {
@@ -81678,11 +79132,11 @@ var ZodRecord = class _ZodRecord extends ZodType {
     const pairs = [];
     const keyType = this._def.keyType;
     const valueType = this._def.valueType;
-    for (const key in ctx.data) {
+    for (const key3 in ctx.data) {
       pairs.push({
-        key: keyType._parse(new ParseInputLazyPath(ctx, key, ctx.path, key)),
-        value: valueType._parse(new ParseInputLazyPath(ctx, ctx.data[key], ctx.path, key)),
-        alwaysSet: key in ctx.data
+        key: keyType._parse(new ParseInputLazyPath(ctx, key3, ctx.path, key3)),
+        value: valueType._parse(new ParseInputLazyPath(ctx, ctx.data[key3], ctx.path, key3)),
+        alwaysSet: key3 in ctx.data
       });
     }
     if (ctx.common.async) {
@@ -81730,9 +79184,9 @@ var ZodMap = class extends ZodType {
     }
     const keyType = this._def.keyType;
     const valueType = this._def.valueType;
-    const pairs = [...ctx.data.entries()].map(([key, value], index) => {
+    const pairs = [...ctx.data.entries()].map(([key3, value], index) => {
       return {
-        key: keyType._parse(new ParseInputLazyPath(ctx, key, ctx.path, [index, "key"])),
+        key: keyType._parse(new ParseInputLazyPath(ctx, key3, ctx.path, [index, "key"])),
         value: valueType._parse(new ParseInputLazyPath(ctx, value, ctx.path, [index, "value"]))
       };
     });
@@ -81740,30 +79194,30 @@ var ZodMap = class extends ZodType {
       const finalMap = /* @__PURE__ */ new Map();
       return Promise.resolve().then(async () => {
         for (const pair of pairs) {
-          const key = await pair.key;
+          const key3 = await pair.key;
           const value = await pair.value;
-          if (key.status === "aborted" || value.status === "aborted") {
+          if (key3.status === "aborted" || value.status === "aborted") {
             return INVALID;
           }
-          if (key.status === "dirty" || value.status === "dirty") {
+          if (key3.status === "dirty" || value.status === "dirty") {
             status.dirty();
           }
-          finalMap.set(key.value, value.value);
+          finalMap.set(key3.value, value.value);
         }
         return { status: status.value, value: finalMap };
       });
     } else {
       const finalMap = /* @__PURE__ */ new Map();
       for (const pair of pairs) {
-        const key = pair.key;
+        const key3 = pair.key;
         const value = pair.value;
-        if (key.status === "aborted" || value.status === "aborted") {
+        if (key3.status === "aborted" || value.status === "aborted") {
           return INVALID;
         }
-        if (key.status === "dirty" || value.status === "dirty") {
+        if (key3.status === "dirty" || value.status === "dirty") {
           status.dirty();
         }
-        finalMap.set(key.value, value.value);
+        finalMap.set(key3.value, value.value);
       }
       return { status: status.value, value: finalMap };
     }
@@ -82637,7 +80091,3171 @@ var coerce = {
 };
 var NEVER = INVALID;
 
+// packages/shared/dist/index.mjs
+var PERMISSION_CATALOG = {
+  /** `dashboard.<bereich>.view`: Sichtbarkeit ganzer Bereiche im Menü und auf der Startseite (zusätzlich zur Modul-Permission). */
+  dashboard: ["view", "customize", "tickets.view", "applications.view", "team.view", "offices.view", "voice.view", "radio.view", "teamchance.view", "logs.view", "settings.view", "cad.view"],
+  team: ["view", "manage"],
+  dispatch: ["view", "create", "edit", "assign", "close", "manage"],
+  /** CAD-Leitstelle + ER:LC-Integration (deny-by-default; kritische ER:LC-Befehle brauchen ein eigenes Recht). */
+  cad: ["view", "create_incident", "edit_incident", "close_incident", "assign_unit", "manage_units", "view_persons", "view_vehicles", "manage_map", "view_erlc", "manage_erlc", "erlc_command", "erlc_command_critical", "manage_cross_server", "view_logs", "manage_settings", "radio"],
+  incidents: ["view", "create", "edit", "close", "delete"],
+  persons: ["view", "create", "edit", "archive", "merge"],
+  vehicles: ["view", "create", "edit", "archive"],
+  reports: ["view", "create", "edit", "submit", "review", "approve", "reject", "archive"],
+  tickets: ["view", "create", "edit", "void"],
+  complaints: ["view", "create", "assign", "investigate", "resolve", "close"],
+  investigations: ["view", "create", "edit", "close"],
+  wanted: ["view", "create", "edit", "activate", "clear"],
+  evidence: ["view", "create", "transfer", "release"],
+  /** view_sensitive: geschützte Daten (Verwarnungen, interne Notizen, Abwesenheitsgründe, Historie) */
+  personnel: ["view", "view_sensitive", "create", "edit", "delete", "promote", "discipline"],
+  /** Beförderungssystem */
+  promotion: ["view", "create", "edit", "review", "approve", "reject", "execute", "manage_ranks", "manage_requirements", "view_history", "manage_settings", "manage"],
+  /** Versetzungen zwischen Abteilungen */
+  transfer: ["view", "create", "approve", "reject"],
+  /** Ausbildungen und Zertifikate */
+  training: ["view", "create", "manage"],
+  /** Prüfungen */
+  exam: ["view", "create", "manage", "grade"],
+  warning: ["view", "create", "manage"],
+  awards: ["view", "create", "manage"],
+  /** Interne Meldungen mit Lesebestätigung */
+  announcements: ["view", "create", "manage"],
+  /** Interne Abstimmungen */
+  polls: ["view", "create", "manage"],
+  /** Dienstnummern-System */
+  dienstnummer: ["view", "create", "assign", "edit", "release", "block", "history", "manage_ranges", "manage_settings"],
+  leave: ["view", "request", "manage"],
+  applications: ["view", "review", "decide", "auto_assign_dienstnummer"],
+  academy: ["view", "manage"],
+  sek: ["view", "report", "manage"],
+  qualifications: ["view", "decide", "manage"],
+  ticket: ["view", "create", "claim", "close", "reopen", "delete", "add_user", "remove_user", "change_status", "change_priority", "change_category", "rename", "move", "lock", "escalate", "transcript", "transcript_delete", "internal_notes", "rate", "manage", "settings"],
+  /** Funk-Codes (Liste der Funkcodes, z. B. 10-4) */
+  radio: ["view", "manage"],
+  /** Team-Chance: Bewerbungsphase für das Team öffnen/schließen */
+  teamchance: ["view", "manage"],
+  /** Tages-/Wochenberichte nach Vorlagen (Dashboard + Discord) */
+  dutyreports: ["view", "create", "view_all", "edit_all", "review", "manage"],
+  communication: ["view", "send", "moderate"],
+  analytics: ["view"],
+  audit: ["view", "export"],
+  studio: ["view", "manage"],
+  settings: ["view", "manage"],
+  users: ["view", "manage"],
+  roles: ["view", "manage"]
+};
+var ALL_PERMISSIONS = Object.entries(PERMISSION_CATALOG).flatMap(
+  ([module2, actions]) => actions.map((a) => `${module2}.${a}`)
+);
+var PERMISSION_SET = new Set(ALL_PERMISSIONS);
+var TICKET_ACTIONS = {
+  close: { label: "Schlie\xDFen", emoji: "\u{1F512}", style: "danger", state: "open", permission: "ticket.close" },
+  /** Team fragt den Ersteller, ob das Ticket geschlossen werden kann (wie GalaxyBot „Close-Request“). */
+  close_request: { label: "Schlie\xDFen anfragen", emoji: "\u2753", style: "secondary", state: "open", permission: "ticket.close" },
+  reopen: { label: "Wieder \xF6ffnen", emoji: "\u{1F513}", style: "success", state: "closed", permission: "ticket.reopen" },
+  claim: { label: "\xDCbernehmen", emoji: "\u{1F464}", style: "primary", state: "open", permission: "ticket.claim" },
+  unclaim: { label: "Freigeben", emoji: "\u21A9\uFE0F", style: "secondary", state: "open", permission: "ticket.claim" },
+  add_user: { label: "Hinzuf\xFCgen", emoji: "\u2795", style: "secondary", state: "open", permission: "ticket.add_user" },
+  remove_user: { label: "Entfernen", emoji: "\u2796", style: "secondary", state: "open", permission: "ticket.remove_user" },
+  priority: { label: "Priorit\xE4t", emoji: "\u{1F514}", style: "secondary", state: "open", permission: "ticket.change_priority" },
+  status: { label: "Status", emoji: "\u{1F3F7}\uFE0F", style: "secondary", state: "open", permission: "ticket.change_status" },
+  category: { label: "Kategorie", emoji: "\u{1F5C2}\uFE0F", style: "secondary", state: "open", permission: "ticket.change_category" },
+  rename: { label: "Umbenennen", emoji: "\u270F\uFE0F", style: "secondary", state: "open", permission: "ticket.rename" },
+  move: { label: "Verschieben", emoji: "\u{1F4C1}", style: "secondary", state: "both", permission: "ticket.move" },
+  transcript: { label: "Transcript", emoji: "\u{1F4CB}", style: "secondary", state: "both", permission: "ticket.transcript" },
+  lock: { label: "Sperren", emoji: "\u26D4", style: "secondary", state: "open", permission: "ticket.lock" },
+  unlock: { label: "Entsperren", emoji: "\u2705", style: "secondary", state: "open", permission: "ticket.lock" },
+  escalate: { label: "Eskalieren", emoji: "\u{1F7E0}", style: "danger", state: "open", permission: "ticket.escalate" },
+  note: { label: "Notiz", emoji: "\u{1F5D2}\uFE0F", style: "secondary", state: "both", permission: "ticket.internal_notes" },
+  rating: { label: "Bewertung", emoji: "\u2B50", style: "secondary", state: "closed", permission: "ticket.rate" },
+  delete: { label: "L\xF6schen", emoji: "\u{1F5D1}\uFE0F", style: "danger", state: "closed", permission: "ticket.delete" }
+};
+var TICKET_ACTION_KEYS = Object.keys(TICKET_ACTIONS);
+var ROBLOX_NAME = /^[A-Za-z0-9_]{3,20}$/;
+var isInputQuestion = (t) => !t || t === "TEXT" || t === "ROBLOX";
+var MAX_FORM_OPTIONS = 25;
+function normalizeField(f2) {
+  const type = f2.type ?? "TEXT";
+  const input = isInputQuestion(type);
+  return {
+    key: f2.key,
+    label: f2.label,
+    required: f2.required,
+    type,
+    minLength: type === "TEXT" ? Math.max(0, f2.minLength ?? 0) : 0,
+    maxLength: type === "ROBLOX" ? 20 : f2.maxLength,
+    options: input ? [] : (f2.options ?? []).slice(0, MAX_FORM_OPTIONS),
+    multiple: !input && !!f2.multiple
+  };
+}
+function checkAnswer(field2, value) {
+  const f2 = normalizeField(field2);
+  if (f2.type === "ROBLOX") {
+    const v = (Array.isArray(value) ? value[0] ?? "" : value ?? "").trim().replace(/^@/, "");
+    if (!v) return f2.required ? { ok: false, error: `\u201E${f2.label}\u201C ist eine Pflichtfrage.` } : { ok: true, text: "", roleIds: [] };
+    if (!ROBLOX_NAME.test(v)) return { ok: false, error: `Bei \u201E${f2.label}\u201C bitte einen g\xFCltigen Roblox-Benutzernamen angeben (3\u201320 Zeichen, Buchstaben, Ziffern, _).` };
+    return { ok: true, text: v, roleIds: [] };
+  }
+  if (f2.type === "TEXT") {
+    const v = (Array.isArray(value) ? value.join("\n") : value ?? "").trim();
+    if (!v) return f2.required ? { ok: false, error: `\u201E${f2.label}\u201C ist eine Pflichtfrage.` } : { ok: true, text: "", roleIds: [] };
+    if (v.length < f2.minLength) return { ok: false, error: `Die Antwort auf \u201E${f2.label}\u201C ist zu kurz (mindestens ${f2.minLength} Zeichen).` };
+    if (v.length > f2.maxLength) return { ok: false, error: `Die Antwort auf \u201E${f2.label}\u201C ist zu lang (h\xF6chstens ${f2.maxLength} Zeichen).` };
+    return { ok: true, text: v, roleIds: [] };
+  }
+  const picked = [...new Set((Array.isArray(value) ? value : value ? [value] : []).map((x) => x.trim()).filter(Boolean))];
+  if (!picked.length) return f2.required ? { ok: false, error: `Bitte bei \u201E${f2.label}\u201C etwas ausw\xE4hlen.` } : { ok: true, text: "", roleIds: [] };
+  if (!f2.multiple && picked.length > 1) return { ok: false, error: `Bei \u201E${f2.label}\u201C ist nur eine Auswahl erlaubt.` };
+  const opts = picked.map((p) => f2.options.find((o) => o.label === p));
+  if (opts.some((o) => !o)) return { ok: false, error: `Ung\xFCltige Auswahl bei \u201E${f2.label}\u201C.` };
+  return { ok: true, text: picked.join(", "), roleIds: f2.type === "ROLE" ? opts.map((o) => o.roleId).filter((r) => !!r && /^\d{15,25}$/.test(r)) : [] };
+}
+var DEFAULT_APPLICATION_MESSAGES = {
+  accepted: "\u{1F389} Deine Bewerbung als `{applicationName}` ({number}) wurde von {user} **angenommen**!",
+  denied: "Deine Bewerbung als `{applicationName}` ({number}) wurde von {user} leider **abgelehnt**. Du kannst dich sp\xE4ter gerne erneut bewerben.",
+  confirmation: "Bist du sicher, dass du dich bewerben m\xF6chtest?\n\nSobald du startest, schicke ich dir nacheinander **{questionCount} Fragen**. Du hast **{timeLimit}** Zeit, die Bewerbung abzuschlie\xDFen \u2013 sonst musst du neu starten. Abbrechen kannst du jederzeit, indem du **abbrechen** schreibst.",
+  completion: "\u2705 Deine Bewerbung **{number}** ist eingegangen! Das Team pr\xFCft sie \u2013 die Entscheidung bekommst du hier per Direktnachricht."
+};
+function renderApplicationText(text, vars, appendReason = false) {
+  const out = text.replace(/\{[a-zA-Z]+\}/g, (m) => m in vars ? vars[m] ?? "" : m);
+  return appendReason && vars["{reason}"] && !text.includes("{reason}") ? `${out}
+
+**Grund:** ${vars["{reason}"]}` : out;
+}
+var formatMinutes = (min) => {
+  const d = Math.floor(min / 1440), h = Math.floor(min % 1440 / 60), m = min % 60;
+  return [d ? `${d} ${d === 1 ? "Tag" : "Tage"}` : "", h ? `${h} ${h === 1 ? "Stunde" : "Stunden"}` : "", m ? `${m} ${m === 1 ? "Minute" : "Minuten"}` : ""].filter(Boolean).join(" ") || "0 Minuten";
+};
+var rolesMatch = (have, ids, mode) => mode === "ALL" ? ids.every((r) => have.includes(r)) : ids.some((r) => have.includes(r));
+var ERLC_MAP_SIZE = 5355;
+var DEFAULT_CAD_CONFIG = {
+  homeGuildId: null,
+  incidentNumberPrefix: "E",
+  incidentTypes: [
+    { key: "ROBBERY", label: "Raub", emoji: "\u{1F4B0}" },
+    { key: "SHOTS", label: "Schussabgabe", emoji: "\u{1F52B}" },
+    { key: "TRAFFIC", label: "Verkehrsunfall", emoji: "\u{1F697}" },
+    { key: "HOSTAGE", label: "Geiselnahme", emoji: "\u{1F9F7}" },
+    { key: "PURSUIT", label: "Verfolgung", emoji: "\u{1F693}" },
+    { key: "OTHER", label: "Sonstiges", emoji: "\u{1F4CB}" }
+  ],
+  priorities: [
+    { key: "HIGH", label: "Hoch", emoji: "\u{1F534}", color: "#ef4444", order: 0 },
+    { key: "MEDIUM", label: "Mittel", emoji: "\u{1F7E0}", color: "#f97316", order: 1 },
+    { key: "LOW", label: "Niedrig", emoji: "\u{1F7E2}", color: "#22c55e", order: 2 }
+  ],
+  incidentStatuses: [
+    { key: "NEW", label: "Neu", emoji: "\u{1F195}", color: "#3b82f6" },
+    { key: "ACKNOWLEDGED", label: "Angenommen", emoji: "\u{1F4E5}", color: "#6366f1" },
+    { key: "EN_ROUTE", label: "Einheiten unterwegs", emoji: "\u{1F693}", color: "#0ea5e9" },
+    { key: "ON_SCENE", label: "Am Einsatzort", emoji: "\u{1F4CD}", color: "#f97316" },
+    { key: "CRITICAL", label: "Kritisch", emoji: "\u{1F6A8}", color: "#ef4444" },
+    { key: "UNDER_CONTROL", label: "Unter Kontrolle", emoji: "\u{1F6E1}\uFE0F", color: "#22c55e" },
+    { key: "CLOSED", label: "Abgeschlossen", emoji: "\u2705", color: "#64748b", closed: true },
+    { key: "CANCELLED", label: "Abgebrochen", emoji: "\u2716\uFE0F", color: "#64748b", closed: true }
+  ],
+  unitStatuses: [
+    { key: "AVAILABLE", label: "Verf\xFCgbar", emoji: "\u{1F7E2}", color: "#22c55e" },
+    { key: "PATROL", label: "Auf Streife", emoji: "\u{1F7E1}", color: "#eab308" },
+    { key: "EN_ROUTE", label: "Unterwegs", emoji: "\u{1F535}", color: "#3b82f6" },
+    { key: "ON_SCENE", label: "Am Einsatzort", emoji: "\u{1F7E0}", color: "#f97316" },
+    { key: "BUSY", label: "Im Einsatz", emoji: "\u{1F534}", color: "#ef4444" },
+    { key: "UNAVAILABLE", label: "Nicht verf\xFCgbar", emoji: "\u26AB", color: "#475569" },
+    { key: "OFF_DUTY", label: "Au\xDFer Dienst", emoji: "\u26AA", color: "#94a3b8" }
+  ],
+  unitTypes: [
+    { key: "SEK", label: "SEK", emoji: "\u{1F693}", color: "#1d4ed8", layer: "sek" },
+    { key: "K9", label: "K9", emoji: "\u{1F415}", color: "#a16207", layer: "k9" },
+    { key: "PATROL", label: "Streife", emoji: "\u{1F694}", color: "#0891b2", layer: "units" }
+  ],
+  layers: [
+    { key: "incidents", label: "Eins\xE4tze", builtin: true, enabledByDefault: true },
+    { key: "calls", label: "ER:LC Notrufe", builtin: true, enabledByDefault: true },
+    { key: "sek", label: "SEK-Einheiten", builtin: true, enabledByDefault: true },
+    { key: "k9", label: "K9-Einheiten", builtin: true, enabledByDefault: true },
+    { key: "units", label: "Weitere Einheiten", builtin: true, enabledByDefault: true },
+    { key: "vehicles", label: "Fahrzeuge", builtin: true, enabledByDefault: false },
+    { key: "staff", label: "Staff", builtin: true, enabledByDefault: false },
+    { key: "players", label: "Alle Spieler", builtin: true, enabledByDefault: false },
+    { key: "pois", label: "Eigene POIs", builtin: true, enabledByDefault: true },
+    { key: "zones", label: "Eigene Zonen", builtin: true, enabledByDefault: true },
+    { key: "restricted", label: "Sperrbereiche", builtin: true, enabledByDefault: true }
+  ],
+  markers: [
+    { key: "incident", label: "Einsatz", emoji: "\u{1F534}", color: "#ef4444" },
+    { key: "call", label: "Emergency Call", emoji: "\u{1F6A8}", color: "#f43f5e" },
+    { key: "unit", label: "Einheit", emoji: "\u{1F694}", color: "#0891b2" },
+    { key: "vehicle", label: "Fahrzeug", emoji: "\u{1F697}", color: "#a855f7" },
+    { key: "staff", label: "Staff", emoji: "\u{1F46E}", color: "#f59e0b" },
+    { key: "player", label: "Spieler", emoji: "\u2022", color: "#94a3b8" },
+    { key: "poi", label: "POI", emoji: "\u{1F4CD}", color: "#10b981" }
+  ],
+  map: { imageUrl: null, width: ERLC_MAP_SIZE, height: ERLC_MAP_SIZE, originX: ERLC_MAP_SIZE / 2, originY: ERLC_MAP_SIZE / 2, scale: 1 },
+  routes: [],
+  memberFields: [],
+  widgets: ["activeIncidents", "availableUnits", "activeCalls", "dutyActivity", "erlcStatus", "erlcPlayers", "erlcQueue", "staffOnline", "map", "radio"]
+};
+function accountAge(created, now = Date.now()) {
+  const t = created ? new Date(created).getTime() : NaN;
+  if (!Number.isFinite(t)) return "\u2014";
+  const days = Math.max(0, Math.floor((now - t) / 864e5));
+  if (days === 0) return "heute erstellt";
+  if (days < 60) return `${days} ${days === 1 ? "Tag" : "Tage"}`;
+  if (days < 730) return `${Math.floor(days / 30)} Monate`;
+  return `${Math.floor(days / 365)} Jahre`;
+}
+function renderWelcomeText(text, m, now = Date.now()) {
+  const vars = {
+    "{user}": `<@${m.id}>`,
+    "{username}": m.username,
+    "{displayName}": m.displayName,
+    "{server}": m.server,
+    "{memberCount}": String(m.memberCount),
+    "{accountAge}": accountAge(m.createdAt, now)
+  };
+  return text.replace(/\{[a-zA-Z]+\}/g, (k) => vars[k] ?? k);
+}
+var hexColor = (c, fallback = 3900150) => /^#[0-9a-fA-F]{6}$/.test(c) ? parseInt(c.slice(1), 16) : fallback;
+var sf = external_exports.string().regex(/^\d{15,25}$/, "Discord-ID (15\u201325 Ziffern)");
+var color = external_exports.string().regex(/^#[0-9a-fA-F]{6}$/);
+var emoji = external_exports.string().trim().max(64);
+var imageRef = external_exports.union([external_exports.string().trim().max(500).regex(/^(https:\/\/\S+|media:[0-9a-f-]{36})$/, "Bild: https://-Link oder hochgeladene Datei"), external_exports.literal("")]).default("");
+var toInt = (hex2) => parseInt(hex2.slice(1), 16);
+var staffSectionSchema = external_exports.object({
+  roleId: sf,
+  /** eigene Überschrift statt der Rollen-Erwähnung (leer = @Rolle) */
+  label: external_exports.string().max(100).default(""),
+  /** Trennlinie nach diesem Abschnitt */
+  divider: external_exports.boolean().default(true)
+});
+var staffListSchema = external_exports.object({
+  id: external_exports.string().uuid(),
+  name: external_exports.string().trim().min(1).max(80),
+  guildId: sf.nullable().default(null),
+  channelId: sf.nullable().default(null),
+  title: external_exports.string().max(256).default("EN | Staff-Team"),
+  intro: external_exports.string().max(1e3).default(""),
+  color: color.default("#2b2d31"),
+  sections: external_exports.array(staffSectionSchema).max(40).default([]),
+  /** Text, wenn niemand die Rolle hat */
+  emptyText: external_exports.string().max(50).default("/"),
+  dividerText: external_exports.string().max(60).default("\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501"),
+  /** Mitglieder als Erwähnung (@Name, wie im Screenshot) oder als Anzeigename */
+  mention: external_exports.boolean().default(true),
+  /** wer mehrere Rollen der Liste hat, steht nur unter der obersten */
+  onlyHighest: external_exports.boolean().default(false),
+  bullet: external_exports.string().max(8).default("\u2022"),
+  footer: external_exports.string().max(200).default(""),
+  timestamp: external_exports.boolean().default(true),
+  /** automatisch aktualisieren, sobald sich Rollen ändern */
+  autoUpdate: external_exports.boolean().default(true),
+  image: imageRef
+});
+function renderStaffList(l, members, roleName = (id2) => `<@&${id2}>`, now = /* @__PURE__ */ new Date()) {
+  const used = /* @__PURE__ */ new Set();
+  const blocks = [];
+  l.sections.forEach((s, i) => {
+    let list = members.filter((m) => m.roleIds.includes(s.roleId));
+    if (l.onlyHighest) {
+      list = list.filter((m) => !used.has(m.id));
+      list.forEach((m) => used.add(m.id));
+    }
+    list.sort((a, b) => a.name.localeCompare(b.name, "de"));
+    const head = s.label ? `**${s.label}**` : roleName(s.roleId);
+    const lines = list.length ? list.map((m) => `${l.bullet} ${l.mention ? `<@${m.id}>` : m.name}`) : [`${l.bullet} ${l.emptyText || "/"}`];
+    blocks.push(`${head}
+${lines.join("\n")}${s.divider && i < l.sections.length - 1 ? `
+
+${l.dividerText}` : ""}`);
+  });
+  const texts = [];
+  let cur = l.intro ? `${l.intro}
+
+${l.dividerText}
+
+` : "";
+  for (const b of blocks) {
+    if ((cur + b).length > 3900 && cur) {
+      texts.push(cur);
+      cur = "";
+    }
+    cur += `${b}
+
+`;
+  }
+  texts.push(cur || (l.sections.length ? "" : "Noch keine Rollen eingetragen."));
+  const c = toInt(l.color);
+  const embeds = texts.map((t, i) => ({ color: c, ...i === 0 && l.title ? { title: l.title } : {}, description: t.trim() || "\u200B" }));
+  const last = embeds.at(-1);
+  if (l.image) last.image = l.image;
+  if (l.footer) last.footer = l.footer;
+  if (l.timestamp) last.timestamp = now.toISOString();
+  return { embeds: embeds.slice(0, 10) };
+}
+var panelFieldSchema = external_exports.object({
+  id: external_exports.string().regex(/^[a-z0-9_]{1,30}$/, "K\xFCrzel: a\u2013z, 0\u20139, _"),
+  label: external_exports.string().trim().min(1).max(45),
+  placeholder: external_exports.string().max(100).default(""),
+  long: external_exports.boolean().default(false),
+  required: external_exports.boolean().default(true),
+  maxLength: external_exports.number().int().min(1).max(4e3).default(200)
+});
+var formPanelSchema = external_exports.object({
+  id: external_exports.string().uuid(),
+  name: external_exports.string().trim().min(1).max(80),
+  guildId: sf.nullable().default(null),
+  active: external_exports.boolean().default(true),
+  /** Panel-Nachricht mit Button */
+  channelId: sf.nullable().default(null),
+  panelTitle: external_exports.string().max(256).default("Funk- und Roblox-Daten"),
+  panelText: external_exports.string().max(4e3).default("Klicke unten auf den Button und trage deine Daten ein."),
+  panelColor: color.default("#22c55e"),
+  panelImage: imageRef,
+  buttonLabel: external_exports.string().trim().min(1).max(80).default("Daten eintragen"),
+  buttonEmoji: emoji.default("\u{1F4DD}"),
+  buttonStyle: external_exports.enum(["primary", "secondary", "success", "danger"]).default("success"),
+  /** Formular */
+  modalTitle: external_exports.string().trim().min(1).max(45).default("Deine Daten"),
+  fields: external_exports.array(panelFieldSchema).min(1).max(5).default([{ id: "zello", label: "Zello Funk", placeholder: "Zello-Name", long: false, required: true, maxLength: 100 }, { id: "roblox", label: "Roblox User", placeholder: "Roblox-Name", long: false, required: true, maxLength: 100 }]),
+  /** Ergebnis-Nachricht */
+  targetChannelId: sf.nullable().default(null),
+  template: external_exports.string().min(1).max(2e3).default("Zello Funk: {zello}\n\nRoblox User: {roblox}"),
+  /** als Embed statt Text */
+  asEmbed: external_exports.boolean().default(false),
+  embedTitle: external_exports.string().max(256).default(""),
+  embedColor: color.default("#3b82f6"),
+  /** Nachricht mit Namen und Profilbild der Person posten (Webhook – der Bot braucht „Webhooks verwalten“) */
+  asUser: external_exports.boolean().default(true),
+  reactions: external_exports.array(emoji.min(1)).max(10).default(["\u2705"]),
+  pingRoleIds: external_exports.array(sf).max(10).default([]),
+  /** jede Person nur einmal (erneutes Absenden ersetzt die alte Nachricht) */
+  onePerUser: external_exports.boolean().default(true),
+  confirmText: external_exports.string().max(500).default("\u2705 Danke! Deine Angaben wurden gepostet."),
+  /** Rollen, die man nach dem Absenden bekommt */
+  grantRoleIds: external_exports.array(sf).max(10).default([])
+});
+var sf2 = external_exports.string().regex(/^\d{15,25}$/, "Discord-ID (15\u201325 Ziffern)");
+var REPORT_FIELD_TYPES = ["short", "long", "number", "select"];
+var reportFieldSchema = external_exports.object({
+  id: external_exports.string().regex(/^[a-z0-9_]{1,30}$/, "K\xFCrzel: a\u2013z, 0\u20139, _"),
+  label: external_exports.string().trim().min(1).max(45),
+  type: external_exports.enum(REPORT_FIELD_TYPES).default("short"),
+  placeholder: external_exports.string().max(100).default(""),
+  required: external_exports.boolean().default(true),
+  /** nur bei Auswahl */
+  options: external_exports.array(external_exports.string().trim().min(1).max(100)).max(25).default([]),
+  maxLength: external_exports.number().int().min(1).max(4e3).default(1e3),
+  /** in Discord nebeneinander anzeigen */
+  inline: external_exports.boolean().default(false)
+});
+var reportTemplateSchema = external_exports.object({
+  id: external_exports.string().uuid(),
+  name: external_exports.string().trim().min(1).max(60),
+  emoji: external_exports.string().max(16).default("\u{1F4DD}"),
+  description: external_exports.string().max(500).default(""),
+  period: external_exports.enum(["DAILY", "WEEKLY", "FREE"]).default("DAILY"),
+  active: external_exports.boolean().default(true),
+  guildId: sf2.nullable().default(null),
+  /** Kanal, in den jeder Bericht gepostet wird (leer = nur Dashboard) */
+  channelId: sf2.nullable().default(null),
+  color: external_exports.string().regex(/^#[0-9a-fA-F]{6}$/).default("#3b82f6"),
+  fields: external_exports.array(reportFieldSchema).min(1).max(20),
+  /** pro Person und Zeitraum nur ein Bericht (erneutes Ausfüllen bearbeitet den vorhandenen) */
+  onePerPeriod: external_exports.boolean().default(true),
+  /** Verfasser darf nach dem Einreichen noch bearbeiten */
+  authorCanEdit: external_exports.boolean().default(true),
+  /** Rollen, die beim neuen Bericht erwähnt werden */
+  pingRoleIds: external_exports.array(sf2).max(10).default([])
+});
+var dd = (d) => d.toLocaleDateString("de-DE", { timeZone: "UTC", day: "2-digit", month: "2-digit", year: "numeric" });
+function isoWeek(d) {
+  const t = new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate()));
+  t.setUTCDate(t.getUTCDate() + 4 - (t.getUTCDay() || 7));
+  return Math.ceil(((t.getTime() - Date.UTC(t.getUTCFullYear(), 0, 1)) / 864e5 + 1) / 7);
+}
+function periodLabel(period, start2) {
+  const s = new Date(start2);
+  if (period === "WEEKLY") {
+    const e = new Date(s);
+    e.setUTCDate(e.getUTCDate() + 6);
+    return `KW ${isoWeek(s)} (${dd(s).slice(0, 6)}\u2013${dd(e)})`;
+  }
+  return dd(s);
+}
+var sf3 = external_exports.string().regex(/^\d{15,25}$/, "Discord-ID (15\u201325 Ziffern)");
+var color2 = external_exports.string().regex(/^#[0-9a-fA-F]{6}$/);
+var key = external_exports.string().regex(/^[A-Z0-9_]{1,32}$/, "Schl\xFCssel: A\u2013Z, 0\u20139, _");
+var uuid = external_exports.string().uuid();
+var hrStatusSchema = external_exports.object({ key, label: external_exports.string().trim().min(1).max(40), emoji: external_exports.string().max(16).default(""), color: color2.default("#64748b"), active: external_exports.boolean().default(true) });
+var departmentSchema = external_exports.object({ id: uuid, name: external_exports.string().trim().min(1).max(64), color: color2.default("#3b82f6"), discordRoleIds: external_exports.array(sf3).max(10).default([]), dashboardRoleIds: external_exports.array(uuid).max(10).default([]), description: external_exports.string().max(300).default("") });
+var severitySchema = external_exports.object({ key, label: external_exports.string().trim().min(1).max(40), emoji: external_exports.string().max(16).default("\u26A0\uFE0F"), color: color2.default("#f59e0b"), defaultDays: external_exports.number().int().min(0).max(3650).default(30) });
+var awardDefSchema = external_exports.object({
+  id: uuid,
+  name: external_exports.string().trim().min(1).max(60),
+  icon: external_exports.string().max(16).default("\u{1F3C5}"),
+  description: external_exports.string().max(500).default(""),
+  color: color2.default("#eab308"),
+  requirements: external_exports.string().max(500).default(""),
+  public: external_exports.boolean().default(true),
+  discordRoleId: sf3.nullable().default(null),
+  active: external_exports.boolean().default(true)
+});
+var absenceTypeSchema = external_exports.object({ key, label: external_exports.string().trim().min(1).max(40), emoji: external_exports.string().max(16).default("") });
+var PROFILE_SECTIONS = ["overview", "rank", "promotions", "trainings", "exams", "awards", "warnings", "absences", "transfers", "servicenumbers", "notes", "history"];
+var PROFILE_FIELDS = ["discordName", "discordId", "avatar", "robloxName", "robloxId", "rank", "department", "joinDate", "status", "serviceNumber", "callsign"];
+var notifyRuleSchema = external_exports.object({ dashboard: external_exports.boolean().default(true), channelId: sf3.nullable().default(null), dm: external_exports.boolean().default(false), roleIds: external_exports.array(uuid).max(20).default([]) });
+var HR_EVENTS = ["promotion.requested", "promotion.approved", "promotion.rejected", "promotion.executed", "transfer.requested", "transfer.approved", "transfer.rejected", "warning.created", "award.granted", "training.passed", "exam.passed"];
+var stageSchema = external_exports.object({ id: uuid, name: external_exports.string().trim().min(1).max(60), roleIds: external_exports.array(uuid).max(20).default([]) });
+var REQUEST_STATUSES = ["OPEN", "IN_REVIEW", "APPROVED", "REJECTED", "DEFERRED", "EXECUTED", "CANCELLED"];
+var requestStatusDefSchema = external_exports.object({ label: external_exports.string().max(40), emoji: external_exports.string().max(16) });
+var hrConfigSchema = external_exports.object({
+  statuses: external_exports.array(hrStatusSchema).max(30).default([]),
+  departments: external_exports.array(departmentSchema).max(50).default([]),
+  absenceTypes: external_exports.array(absenceTypeSchema).max(30).default([]),
+  warningSeverities: external_exports.array(severitySchema).max(20).default([]),
+  warningCategories: external_exports.array(external_exports.string().trim().min(1).max(60)).max(50).default([]),
+  awards: external_exports.array(awardDefSchema).max(100).default([]),
+  /** Bereiche der Personalakte */
+  sections: external_exports.record(external_exports.enum(PROFILE_SECTIONS), external_exports.object({ visible: external_exports.boolean(), sensitive: external_exports.boolean() })).default({}),
+  /** Felder der Übersicht/Akte */
+  fields: external_exports.record(external_exports.enum(PROFILE_FIELDS), external_exports.object({ visible: external_exports.boolean(), sensitive: external_exports.boolean() })).default({}),
+  /** Abwesenheiten im Teamprofil anzeigen */
+  showAbsenceInTeam: external_exports.boolean().default(true),
+  promotion: external_exports.object({
+    stages: external_exports.array(stageSchema).max(10).default([]),
+    approvalsRequired: external_exports.number().int().min(1).max(10).default(1),
+    requireReason: external_exports.boolean().default(true),
+    /** Antrag nur, wenn alle Voraussetzungen erfüllt sind */
+    requireRequirements: external_exports.boolean().default(false),
+    /** nach letzter Genehmigung automatisch durchführen */
+    autoExecute: external_exports.boolean().default(false),
+    discordRoles: external_exports.boolean().default(true),
+    dashboardRoles: external_exports.boolean().default(false),
+    announceChannelId: sf3.nullable().default(null),
+    announceTemplate: external_exports.string().max(2e3).default("\u{1F396}\uFE0F **BEF\xD6RDERUNG**\n\n{mitglied} wurde bef\xF6rdert.\n\n**Alter Rang:** {alter_rang}\n**Neuer Rang:** {neuer_rang}\n\n**Begr\xFCndung:** {begruendung}\n\n**Bef\xF6rdert durch:** {durch}\n**Datum:** {datum}"),
+    announceColor: color2.default("#eab308"),
+    /** eigene Namen/Emojis für die Status */
+    statusLabels: external_exports.record(external_exports.enum(REQUEST_STATUSES), requestStatusDefSchema).default({})
+  }).default({}),
+  transfer: external_exports.object({
+    approvalsRequired: external_exports.number().int().min(1).max(10).default(1),
+    stages: external_exports.array(stageSchema).max(10).default([]),
+    discordRoles: external_exports.boolean().default(true),
+    dashboardRoles: external_exports.boolean().default(false),
+    autoExecute: external_exports.boolean().default(true),
+    announceChannelId: sf3.nullable().default(null)
+  }).default({}),
+  notifications: external_exports.record(external_exports.enum(HR_EVENTS), notifyRuleSchema).default({}),
+  /** Zertifikate */
+  certificate: external_exports.object({ organisation: external_exports.string().max(100).default("EN Polizei"), logo: external_exports.string().max(500).default(""), signature: external_exports.string().max(100).default("") }).default({})
+});
+var id = (n) => `00000000-0000-4000-8000-${String(n).padStart(12, "0")}`;
+var DEFAULT_HR_CONFIG = hrConfigSchema.parse({
+  statuses: [
+    { key: "ACTIVE", label: "Aktiv", emoji: "\u{1F7E2}", color: "#22c55e" },
+    { key: "ABSENT", label: "Abwesend", emoji: "\u{1F7E1}", color: "#eab308" },
+    { key: "TRAINING", label: "In Ausbildung", emoji: "\u{1F535}", color: "#3b82f6" },
+    { key: "LOA", label: "Beurlaubt", emoji: "\u{1F7E0}", color: "#f97316" },
+    { key: "SUSPENDED", label: "Suspendiert", emoji: "\u26D4", color: "#b91c1c" },
+    { key: "INACTIVE", label: "Inaktiv", emoji: "\u{1F534}", color: "#ef4444" },
+    { key: "RESIGNED", label: "Ausgetreten", emoji: "\u26AB", color: "#475569" },
+    { key: "TERMINATED", label: "Entlassen", emoji: "\u26AB", color: "#334155" }
+  ],
+  departments: [{ id: id(1), name: "Polizei", color: "#3b82f6" }, { id: id(2), name: "Leitstelle", color: "#a855f7" }],
+  absenceTypes: [{ key: "VACATION", label: "Urlaub", emoji: "\u{1F3D6}\uFE0F" }, { key: "SICK", label: "Krank", emoji: "\u{1F912}" }, { key: "PRIVATE", label: "Privat", emoji: "\u{1F3E0}" }, { key: "OTHER", label: "Sonstige", emoji: "\u{1F4CB}" }],
+  warningSeverities: [
+    { key: "WARNING", label: "Verwarnung", emoji: "\u{1F7E1}", color: "#eab308", defaultDays: 30 },
+    { key: "REPRIMAND", label: "Abmahnung", emoji: "\u{1F7E0}", color: "#f97316", defaultDays: 60 },
+    { key: "SEVERE", label: "Schwerwiegender Versto\xDF", emoji: "\u{1F534}", color: "#ef4444", defaultDays: 180 }
+  ],
+  warningCategories: ["Verhalten", "Dienstvergehen", "Funk", "Regelversto\xDF", "Sonstiges"],
+  awards: [{ id: id(10), name: "Besondere Leistung", icon: "\u{1F3C5}", description: "F\xFCr au\xDFergew\xF6hnliche Leistungen.", color: "#eab308" }],
+  sections: Object.fromEntries(PROFILE_SECTIONS.map((s) => [s, { visible: true, sensitive: ["warnings", "notes", "history"].includes(s) }])),
+  fields: Object.fromEntries(PROFILE_FIELDS.map((f2) => [f2, { visible: true, sensitive: f2 === "discordId" || f2 === "robloxId" }])),
+  notifications: {
+    "promotion.requested": { dashboard: true },
+    "promotion.approved": { dashboard: true },
+    "promotion.rejected": { dashboard: true, dm: true },
+    "promotion.executed": { dashboard: true, dm: true },
+    "transfer.approved": { dashboard: true, dm: true },
+    "award.granted": { dashboard: true, dm: true },
+    "warning.created": { dashboard: true }
+  }
+});
+var REQUIREMENT_TYPES = ["MIN_DAYS_IN_RANK", "MIN_DUTY_HOURS", "MIN_INCIDENTS", "TRAINING", "EXAM", "DISCORD_ROLE", "RECOMMENDATION", "CUSTOM"];
+var requirementSchema = external_exports.object({ id: uuid, type: external_exports.enum(REQUIREMENT_TYPES), label: external_exports.string().max(120).default(""), value: external_exports.number().min(0).max(1e5).default(0), ref: external_exports.string().max(64).nullable().default(null) });
+var rankSchema = external_exports.object({
+  id: uuid.optional(),
+  name: external_exports.string().trim().min(1).max(64),
+  description: external_exports.string().max(500).nullable().default(null),
+  icon: external_exports.string().max(16).nullable().default(null),
+  color: color2.default("#64748b"),
+  discordRoleIds: external_exports.array(sf3).max(10).default([]),
+  dashboardRoleIds: external_exports.array(uuid).max(10).default([]),
+  nextRankIds: external_exports.array(uuid).max(20).default([]),
+  approverRankIds: external_exports.array(uuid).max(20).default([]),
+  requirements: external_exports.array(requirementSchema).max(30).default([]),
+  active: external_exports.boolean().default(true)
+});
+var EXAM_QUESTION_TYPES = ["SINGLE", "MULTI", "YESNO", "TEXT", "NUMBER"];
+var questionSchema = external_exports.object({
+  id: external_exports.string().min(1).max(40),
+  type: external_exports.enum(EXAM_QUESTION_TYPES),
+  text: external_exports.string().trim().min(1).max(1e3),
+  options: external_exports.array(external_exports.string().trim().min(1).max(200)).max(10).default([]),
+  /** richtige Antwort(en): Option-Index als Text, „ja“/„nein“, Zahl oder Stichworte (Freitext → manuell) */
+  correct: external_exports.array(external_exports.string().max(200)).max(10).default([]),
+  points: external_exports.number().min(0).max(100).default(1)
+});
+var rangeSchema = external_exports.object({
+  name: external_exports.string().trim().min(1).max(60),
+  prefix: external_exports.string().max(10).default(""),
+  suffix: external_exports.string().max(10).default(""),
+  start: external_exports.number().int().min(0).max(9999999),
+  end: external_exports.number().int().min(0).max(9999999),
+  padLength: external_exports.number().int().min(0).max(10).default(0),
+  order: external_exports.enum(["LOWEST_FREE", "SEQUENTIAL"]).default("LOWEST_FREE"),
+  autoAssign: external_exports.boolean().default(true),
+  manual: external_exports.boolean().default(true),
+  reuse: external_exports.boolean().default(true),
+  releaseAs: external_exports.enum(["FREE", "FORMER", "BLOCKED"]).default("FORMER"),
+  department: external_exports.string().max(64).nullable().default(null),
+  active: external_exports.boolean().default(true)
+}).refine((r) => r.end >= r.start, { message: "Endnummer muss \u2265 Startnummer sein.", path: ["end"] }).refine((r) => r.end - r.start <= 1e5, { message: "H\xF6chstens 100 000 Nummern je Kreis.", path: ["end"] });
+var hireMappingSchema = external_exports.object({
+  /** 'police' = Polizei-Bewerbung, sonst Name der Einheit (Qualifikation) */
+  kind: external_exports.string().trim().min(1).max(64),
+  /** Nummernkreis (leer = keine automatische Dienstnummer) */
+  rangeId: uuid.nullable().default(null),
+  department: external_exports.string().max(64).nullable().default(null),
+  rankId: uuid.nullable().default(null),
+  /** Personalakte anlegen */
+  createProfile: external_exports.boolean().default(true),
+  /** zusätzliche Discord-Rollen */
+  roleIds: external_exports.array(sf3).max(10).default([])
+});
+var dnSettingsSchema = external_exports.object({
+  /** ACCEPT: direkt bei Annahme · COMPLETE: wenn die Person im Discord verknüpft/erreichbar ist (Einstellung abgeschlossen) · MANUAL: Bestätigung durch berechtigte Person */
+  timing: external_exports.enum(["ACCEPT", "COMPLETE", "MANUAL"]).default("ACCEPT"),
+  mappings: external_exports.array(hireMappingSchema).max(50).default([{ kind: "police", rangeId: null, department: "Polizei", rankId: null, createProfile: true, roleIds: [] }]),
+  nickname: external_exports.object({ enabled: external_exports.boolean().default(false), format: external_exports.string().max(60).default("[{dienstnummer}] {name}") }).default({}),
+  dm: external_exports.object({ enabled: external_exports.boolean().default(true), title: external_exports.string().max(256).default("\u{1F389} BEWERBUNG ANGENOMMEN"), template: external_exports.string().max(3e3).default("Herzlichen Gl\xFCckwunsch {user}!\n\nDeine Bewerbung wurde angenommen.\n\n\u{1FAAA} **Dienstnummer:** {dienstnummer}\n\u{1F46E} **Rang:** {rang}\n\u{1F3E2} **Abteilung:** {abteilung}\n\nBitte merke dir deine Dienstnummer."), color: color2.default("#22c55e") }).default({}),
+  rankRoles: external_exports.boolean().default(true),
+  departmentRoles: external_exports.boolean().default(true),
+  /** Wechsel der Nummer braucht eine zweite Person (Genehmiger) */
+  changeNeedsApprover: external_exports.boolean().default(false)
+});
+
+// apps/bot/src/staff-lists.ts
+function createStaffLists(client2, api2, log = console.log) {
+  const last = /* @__PURE__ */ new Map();
+  let timer;
+  async function render(l) {
+    const c = client2();
+    const guilds = l.guildId ? [c.guilds.cache.get(l.guildId)].filter((g) => !!g) : [...c.guilds.cache.values()];
+    const members = /* @__PURE__ */ new Map();
+    for (const g of guilds) {
+      for (const s of l.sections) {
+        const role = g.roles.cache.get(s.roleId);
+        if (!role) continue;
+        for (const m of role.members.values()) {
+          if (m.user.bot) continue;
+          const prev = members.get(m.id);
+          members.set(m.id, { id: m.id, name: m.displayName, roleIds: [.../* @__PURE__ */ new Set([...prev?.roleIds ?? [], ...m.roles.cache.keys()])] });
+        }
+      }
+    }
+    return renderStaffList(l, [...members.values()]);
+  }
+  async function refresh(o = {}) {
+    const lists = await api2.service("GET", "/bot/panels/staff");
+    for (const l of lists) {
+      if (o.id && l.id !== o.id || !l.channelId || !o.id && !l.autoUpdate) continue;
+      const message = await render(l);
+      const sig = `${l.channelId}|${JSON.stringify({ ...message, embeds: message.embeds?.map((e) => ({ ...e, timestamp: void 0 })) })}`;
+      if (!o.force && !o.forceNew && last.get(l.id) === sig) continue;
+      await postOrUpdate(client2(), api2, { channelId: l.channelId, message, stateKey: `staff-${l.id}`, forceNew: !!o.forceNew });
+      last.set(l.id, sig);
+    }
+  }
+  function changed() {
+    clearTimeout(timer);
+    timer = setTimeout(() => void refresh().catch((e) => log(`staff lists: ${e instanceof Error ? e.message : e}`)), 1e4);
+    timer.unref?.();
+  }
+  function start2(seconds = 300) {
+    let lastError;
+    const tick = () => void refresh().then(() => {
+      lastError = void 0;
+    }, (e) => {
+      const msg = e instanceof Error ? e.message : String(e);
+      if (msg !== lastError) {
+        log(`staff lists: refresh failed: ${msg}`);
+        lastError = msg;
+      }
+    });
+    setTimeout(tick, 15e3).unref?.();
+    setInterval(tick, seconds * 1e3).unref?.();
+  }
+  return { refresh, changed, start: start2 };
+}
+
+// apps/bot/src/guilds.ts
+var import_discord3 = __toESM(require_src());
+var kind = (t) => t === import_discord3.ChannelType.GuildText || t === import_discord3.ChannelType.GuildAnnouncement ? "text" : t === import_discord3.ChannelType.GuildCategory ? "category" : t === import_discord3.ChannelType.GuildVoice || t === import_discord3.ChannelType.GuildStageVoice ? "voice" : "other";
+function guildInfo(g) {
+  return {
+    id: g.id,
+    name: g.name.slice(0, 100),
+    icon: g.iconURL({ size: 64 }) ?? null,
+    channels: [...g.channels.cache.values()].filter((c) => !c.isThread()).slice(0, 500).map((c) => ({ id: c.id, name: c.name.slice(0, 100), type: kind(c.type), parentId: "parentId" in c ? c.parentId ?? null : null, position: "rawPosition" in c ? c.rawPosition : 0 })),
+    // @everyone und Rollen von Bots/Integrationen sind keine sinnvolle Auswahl
+    roles: [...g.roles.cache.values()].filter((r) => r.id !== g.id && !r.managed).slice(0, 250).map((r) => ({ id: r.id, name: r.name.slice(0, 100), color: r.color, position: r.position }))
+  };
+}
+function startGuildDirectory(client2, api2, log = console.log) {
+  let timer;
+  const push = async () => {
+    const guilds = [...client2().guilds.cache.values()].slice(0, 50).map(guildInfo);
+    await api2.service("PUT", "/bot/guilds", { guilds }).catch((e) => log(`guild directory not sent: ${e instanceof Error ? e.message : e}`));
+  };
+  const soon = () => {
+    clearTimeout(timer);
+    timer = setTimeout(() => void push(), 5e3);
+    timer.unref?.();
+  };
+  const c = client2();
+  for (const ev of ["guildCreate", "guildDelete", "guildUpdate", "channelCreate", "channelDelete", "channelUpdate", "roleCreate", "roleDelete", "roleUpdate"]) c.on(ev, soon);
+  void push();
+  setInterval(() => void push(), 10 * 6e4).unref();
+  return { push };
+}
+
+// apps/bot/src/presence.ts
+var import_discord4 = __toESM(require_src());
+var STATUS = /* @__PURE__ */ new Set(["online", "idle", "dnd", "offline"]);
+function memberReport(m, presences) {
+  const raw = m.presence?.status;
+  return {
+    id: m.id,
+    guildId: m.guild.id,
+    username: m.user.username.slice(0, 100),
+    displayName: m.displayName.slice(0, 100),
+    avatar: m.displayAvatarURL({ size: 128 }) ?? null,
+    status: !presences ? "unknown" : raw && STATUS.has(raw) ? raw : "offline",
+    // ohne Presence = offline/unsichtbar
+    roleIds: [...m.roles.cache.keys()].filter((r) => r !== m.guild.id).slice(0, 250),
+    joinedAt: m.joinedAt?.toISOString() ?? null
+  };
+}
+function teamMembers(guilds, teamRoleIds, presences) {
+  if (!teamRoleIds.length) return [];
+  const out = /* @__PURE__ */ new Map();
+  for (const g of guilds) for (const m of g.members.cache.values()) {
+    if (m.user.bot || !teamRoleIds.some((r2) => m.roles.cache.has(r2))) continue;
+    const prev = out.get(m.id);
+    const r = memberReport(m, presences);
+    out.set(m.id, prev ? { ...prev, roleIds: [.../* @__PURE__ */ new Set([...prev.roleIds, ...r.roleIds])], status: prev.status === "online" ? prev.status : r.status } : r);
+  }
+  return [...out.values()].slice(0, 5e3);
+}
+function voiceReport(guilds, since) {
+  const out = [];
+  for (const g of guilds) {
+    const voice = [...g.channels.cache.values()].filter((c) => c.type === import_discord4.ChannelType.GuildVoice || c.type === import_discord4.ChannelType.GuildStageVoice);
+    for (const c of voice) {
+      out.push({
+        id: c.id,
+        guildId: g.id,
+        name: c.name.slice(0, 100),
+        parentId: c.parentId ?? null,
+        parentName: c.parent?.name.slice(0, 100) ?? null,
+        position: c.rawPosition,
+        members: [...c.members.values()].slice(0, 500).map((m) => {
+          const v = m.voice;
+          const t = since.get(`${g.id}:${m.id}`);
+          return { id: m.id, displayName: m.displayName.slice(0, 100), avatar: m.displayAvatarURL({ size: 64 }) ?? null, selfMute: !!v.selfMute, selfDeaf: !!v.selfDeaf, serverMute: !!v.serverMute, serverDeaf: !!v.serverDeaf, video: !!v.selfVideo, streaming: !!v.streaming, since: t ? new Date(t).toISOString() : null };
+        })
+      });
+    }
+  }
+  return out.slice(0, 500);
+}
+function startPresenceReporter(client2, api2, opts, log = console.log) {
+  const since = /* @__PURE__ */ new Map();
+  let teamRoles = [];
+  let lastError;
+  const guilds = () => [...client2().guilds.cache.values()].slice(0, 50);
+  const fail3 = (what) => (e) => {
+    const msg = `${what}: ${e instanceof Error ? e.message : e}`;
+    if (msg !== lastError) {
+      log(`team/voice report failed \u2013 ${msg} (will keep retrying quietly)`);
+      lastError = msg;
+    }
+  };
+  const pushMembers = async () => {
+    teamRoles = (await api2.service("GET", "/bot/team-roles")).roleIds;
+    await api2.service("PUT", "/bot/members", { members: teamMembers(guilds(), teamRoles, opts.presences) });
+    lastError = void 0;
+  };
+  const pushVoice = async () => {
+    await api2.service("PUT", "/bot/voice", { channels: voiceReport(guilds(), since) });
+  };
+  let mt, vt;
+  const membersSoon = () => {
+    clearTimeout(mt);
+    mt = setTimeout(() => void pushMembers().catch(fail3("members")), 1500);
+    mt.unref?.();
+  };
+  const voiceSoon = () => {
+    clearTimeout(vt);
+    vt = setTimeout(() => void pushVoice().catch(fail3("voice")), 1500);
+    vt.unref?.();
+  };
+  const c = client2();
+  for (const g of guilds()) for (const s of g.voiceStates.cache.values()) if (s.channelId) since.set(`${g.id}:${s.id}`, Date.now());
+  c.on("voiceStateUpdate", (before, after) => {
+    const key3 = `${after.guild.id}:${after.id}`;
+    if (!after.channelId) since.delete(key3);
+    else if (before.channelId !== after.channelId) since.set(key3, Date.now());
+    voiceSoon();
+  });
+  for (const ev of ["guildMemberAdd", "guildMemberRemove", "guildMemberUpdate", "userUpdate", ...opts.presences ? ["presenceUpdate"] : []]) c.on(ev, membersSoon);
+  c.on("channelCreate", voiceSoon);
+  c.on("channelDelete", voiceSoon);
+  c.on("channelUpdate", voiceSoon);
+  const loadMembers = async () => {
+    if (!opts.members) {
+      log('Discord: "Server Members Intent" is off \u2013 the dashboard team list only shows members the bot has seen (enable it in the Developer Portal \u2192 Bot).');
+      return;
+    }
+    for (const g of guilds()) await g.members.fetch().catch((e) => log(`could not load members of ${g.name}: ${e instanceof Error ? e.message : e}`));
+  };
+  void loadMembers().then(() => Promise.all([pushMembers().catch(fail3("members")), pushVoice().catch(fail3("voice"))]));
+  setInterval(() => void pushMembers().catch(fail3("members")), 5e3).unref();
+  setInterval(() => void pushVoice().catch(fail3("voice")), 5e3).unref();
+  c.on("guildCreate", (g) => {
+    if (opts.members) void g.members.fetch().catch(() => void 0).then(membersSoon);
+  });
+  return { sync: () => Promise.all([pushMembers(), pushVoice()]).then(() => void 0) };
+}
+
+// apps/bot/src/api.ts
+var import_node_async_hooks = require("node:async_hooks");
+var guildScope = new import_node_async_hooks.AsyncLocalStorage();
+var rolesScope = new import_node_async_hooks.AsyncLocalStorage();
+var BotApiError = class extends Error {
+  constructor(status, code, message, requestId, reason) {
+    super(message);
+    this.status = status;
+    this.code = code;
+    this.requestId = requestId;
+    this.reason = reason;
+  }
+  status;
+  code;
+  requestId;
+  reason;
+};
+var HttpApi = class {
+  constructor(baseUrl, token, doFetch = fetch) {
+    this.baseUrl = baseUrl;
+    this.token = token;
+    this.doFetch = doFetch;
+  }
+  baseUrl;
+  token;
+  doFetch;
+  async call(method, path2, discordId, body) {
+    const ctl = new AbortController();
+    const timer = setTimeout(() => ctl.abort(), 1e4);
+    try {
+      const res = await this.doFetch(`${this.baseUrl}/api/v1${path2}`, {
+        method,
+        signal: ctl.signal,
+        headers: { authorization: `Bot ${this.token}`, ...discordId ? { "x-discord-user": discordId } : {}, ...discordId && guildScope.getStore() ? { "x-guild-id": guildScope.getStore() } : {}, ...discordId && rolesScope.getStore()?.length ? { "x-discord-roles": rolesScope.getStore().slice(0, 100).join(",") } : {}, ...body ? { "content-type": "application/json" } : {} },
+        body: body ? JSON.stringify(body) : void 0
+      });
+      const text = await res.text();
+      let json;
+      try {
+        json = text ? JSON.parse(text) : void 0;
+      } catch {
+        json = void 0;
+      }
+      if (res.status >= 400) {
+        const details = json?.details;
+        throw new BotApiError(res.status, String(json?.code ?? "ERROR"), String(json?.message ?? `HTTP ${res.status}`), json?.requestId, details?.reason);
+      }
+      return json;
+    } catch (e) {
+      if (e instanceof BotApiError) throw e;
+      throw new BotApiError(0, "UNREACHABLE", "The EN Polizei API is not reachable.");
+    } finally {
+      clearTimeout(timer);
+    }
+  }
+  asUser(discordId, method, path2, body) {
+    return this.call(method, path2, discordId, body);
+  }
+  service(method, path2, body) {
+    return this.call(method, path2, null, body);
+  }
+};
+
+// apps/bot/src/format.ts
+var COLORS = { info: 3900150, success: 2278750, warning: 16096779, danger: 15680580, neutral: 6583435 };
+var PRIORITY_COLOR = { LOW: COLORS.neutral, MEDIUM: COLORS.info, HIGH: COLORS.warning, URGENT: COLORS.danger, CRITICAL: COLORS.danger };
+var clip = (s, max) => {
+  const t = String(s ?? "\u2014");
+  return t.length > max ? `${t.slice(0, max - 1)}\u2026` : t;
+};
+var label = (s) => String(s ?? "\u2014").replace(/_/g, " ");
+var plain = (s) => String(s ?? "\u2014").replace(/[*_`~|>\\]/g, "\\$&").replace(/@(everyone|here)/g, "@\u200B$1");
+var errorReply = (text) => ({ content: `\u274C ${text}`, ephemeral: true });
+var okReply = (text) => ({ content: `\u2705 ${text}`, ephemeral: true });
+function personEmbed(p, extra = {}) {
+  return {
+    title: clip(`\u{1F464} ${p.robloxUsername}`, 256),
+    color: extra.wanted ? COLORS.warning : COLORS.info,
+    fields: [
+      { name: "Roblox-ID", value: clip(p.robloxUserId ?? "unbekannt", 1024), inline: true },
+      { name: "Status", value: label(p.status), inline: true },
+      ...extra.tickets !== void 0 ? [{ name: "Tickets", value: String(extra.tickets), inline: true }] : [],
+      ...p.aliases?.length ? [{ name: "Aliase", value: clip(p.aliases.map(plain).join(", "), 1024) }] : [],
+      ...p.notes ? [{ name: "Notizen", value: clip(plain(p.notes), 1024) }] : []
+    ],
+    footer: extra.wanted ? "\u26A0\uFE0F Mit Fahndungseintrag verkn\xFCpft (ggf. erledigt) \u2014 Status im System pr\xFCfen" : void 0
+  };
+}
+var vehicleEmbed = (v) => ({
+  title: clip(`\u{1F697} ${v.plate}`, 256),
+  color: COLORS.info,
+  fields: [
+    { name: "Modell", value: clip(plain(v.model), 1024), inline: true },
+    { name: "Farbe", value: clip(plain(v.color), 1024), inline: true },
+    { name: "Halter", value: clip(plain(v.owner?.robloxUsername), 1024), inline: true },
+    { name: "Status", value: label(v.status), inline: true }
+  ]
+});
+var incidentLine = (i) => `**${i.number}** \xB7 ${plain(i.title)} \u2014 ${label(i.priority)} / ${label(i.status)}${i.location ? ` \xB7 ${plain(i.location)}` : ""}`;
+function listEmbed(title, lines, empty) {
+  return { title: clip(title, 256), description: clip(lines.length ? lines.join("\n") : empty, 4e3), color: COLORS.info };
+}
+function renderOutbox(type, p) {
+  switch (type) {
+    case "workflow.message": {
+      const color3 = typeof p.color === "string" && /^#[0-9a-f]{6}$/i.test(p.color) ? parseInt(p.color.slice(1), 16) : COLORS.info;
+      return { title: clip(plain(p.title), 256), ...p.text ? { description: clip(plain(p.text), 4e3) } : {}, color: color3, footer: clip(`Workflow: ${String(p.workflow ?? "")}`, 200) };
+    }
+    case "incident.created":
+      return { title: `\u{1F6A8} Neuer Einsatz: ${clip(plain(p.title), 200)}`, color: PRIORITY_COLOR[String(p.priority)] ?? COLORS.info, fields: [{ name: "Nummer", value: String(p.number), inline: true }, { name: "Priorit\xE4t", value: label(p.priority), inline: true }, { name: "Ort", value: clip(plain(p.location ?? "unbekannt"), 1024), inline: true }] };
+    case "incident.assigned":
+      return { title: `\u{1F4FB} ${plain(p.callsign)} \u2192 ${p.number}`, description: clip(plain(p.title), 4e3), color: PRIORITY_COLOR[String(p.priority)] ?? COLORS.info, fields: [{ name: "Ort", value: clip(plain(p.location ?? "unbekannt"), 1024), inline: true }] };
+    case "wanted.created":
+      return {
+        title: `\u{1F6A8} Neue Fahndung (${p.kind === "vehicle" ? "Fahrzeug" : "Person"})`,
+        description: `**${clip(plain(p.subject), 200)}**
+${clip(plain(p.reason), 1500)}${p.description ? `
+
+${clip(plain(p.description), 2e3)}` : ""}`,
+        color: PRIORITY_COLOR[String(p.priority)] ?? COLORS.danger,
+        fields: [{ name: "Priorit\xE4t", value: label(p.priority), inline: true }, { name: "G\xFCltig bis", value: p.expiresAt ? `<t:${Math.floor(Date.parse(String(p.expiresAt)) / 1e3)}:f>` : "unbefristet", inline: true }, ...p.createdBy ? [{ name: "Ausgestellt von", value: clip(plain(p.createdBy), 200), inline: true }] : []]
+      };
+    case "wanted.status": {
+      const st = { CLEARED: ["\u2705 Fahndung aufgehoben", COLORS.success], CANCELLED: ["\u26AA Fahndung abgebrochen", COLORS.info], ACTIVE: ["\u{1F6A8} Fahndung wieder aktiv", COLORS.danger], EXPIRED: ["\u231B Fahndung abgelaufen", COLORS.info] };
+      const [title, color3] = st[String(p.status)] ?? [`Fahndung: ${label(p.status)}`, COLORS.info];
+      return { title, description: `**${clip(plain(p.subject), 200)}** \u2013 ${clip(plain(p.reason), 1e3)}${p.note ? `
+**Grund:** ${clip(plain(p.note), 1e3)}` : ""}`, color: color3, ...p.by ? { footer: `von ${clip(plain(p.by), 100)}` } : {} };
+    }
+    case "teamchance.changed":
+      return p.open ? {
+        title: `\u{1F4E3} ${clip(plain(p.title ?? "Team-Chance"), 200)} \u2013 jetzt offen!`,
+        description: clip(plain(p.description ?? ""), 3500) || void 0,
+        color: COLORS.success,
+        fields: [...p.closesAt ? [{ name: "Bewerbungsschluss", value: `<t:${Math.floor(Date.parse(String(p.closesAt)) / 1e3)}:f>`, inline: true }] : [], ...Number(p.slots) > 0 ? [{ name: "Pl\xE4tze", value: String(p.slots), inline: true }] : []]
+      } : { title: `\u{1F512} ${clip(plain(p.title ?? "Team-Chance"), 200)} \u2013 geschlossen`, description: "Vielen Dank f\xFCr alle Bewerbungen!", color: COLORS.danger };
+    case "announcement":
+      return { title: "\u{1F4E2} Ank\xFCndigung", description: clip(plain(p.body), 4e3), color: COLORS.warning, footer: `von ${clip(p.author, 100)}` };
+    case "danger.changed": {
+      return {
+        title: clip(`${String(p.name ?? p.level)}${p.title ? `: ${String(p.title)}` : ""}`, 256),
+        color: hexColor2(p.color, COLORS.warning),
+        description: clip(`${String(p.text ?? "")}${p.reason ? `
+
+**Hinweis:** ${plain(p.reason)}` : ""}`, 4e3) || void 0,
+        footer: clip(`${p.previous ? `Vorher: ${String(p.previous)} \xB7 ` : ""}Gesetzt von ${String(p.setBy ?? "System")}`, 200)
+      };
+    }
+    case "duty.changed": {
+      const st = String(p.status), prev = String(p.previous ?? "OFF_DUTY");
+      const who = `${p.callsign ? `${plain(p.callsign)} \xB7 ` : ""}${plain(p.name)}`;
+      const mins = typeof p.previousMinutes === "number" && prev !== "OFF_DUTY" ? ` \u2013 ${fmtDuration(p.previousMinutes * 60)}` : "";
+      return {
+        title: clip(`${DUTY_DE[st]?.emoji ?? "\u2022"} ${who} ist jetzt ${DUTY_DE[st]?.label ?? label(st)}`, 256),
+        color: DUTY_DE[st]?.color ?? COLORS.neutral,
+        description: clip([p.discordId ? `<@${String(p.discordId)}>` : null, p.shiftType ? `Schicht: **${plain(p.shiftType)}**` : null, `Vorher: ${DUTY_DE[prev]?.label ?? label(prev)}${mins}`, p.setBy ? `Gesetzt von: ${plain(p.setBy)}` : null].filter(Boolean).join("\n"), 1e3)
+      };
+    }
+    case "leave.requested":
+      return {
+        title: "Abmeldeantrag",
+        color: COLORS.warning,
+        description: clip(`${p.discordId ? `<@${String(p.discordId)}>` : plain(p.name)} m\xF6chte sich abmelden.`, 4e3),
+        fields: [{ name: "Grund", value: clip(plain(p.reason), 1024) }, { name: "Dauer", value: leaveSpan(p) }, { name: "Zeitraum", value: `<t:${unixOf(p.startsAt)}:f> \u2013 <t:${unixOf(p.endsAt)}:f>` }],
+        footer: `ID: ${String(p.number)}`
+      };
+    case "leave.log": {
+      const ev = LEAVE_EVENTS[String(p.event)] ?? { text: String(p.event), color: COLORS.neutral };
+      return {
+        title: clip(`${ev.text}: ${plain(p.name)} (${String(p.number)})`, 256),
+        color: ev.color,
+        description: clip([p.discordId ? `<@${String(p.discordId)}>` : null, `**Zeitraum:** ${berlinDate(p.startsAt)} \u2013 ${berlinDate(p.endsAt)} (${leaveSpan(p)})`, `**Grund:** ${plain(p.reason)}`, p.decidedByName ? `**Entschieden von:** ${plain(p.decidedByName)}` : null, p.decisionReason ? `**Begr\xFCndung:** ${plain(p.decisionReason)}` : null].filter(Boolean).join("\n"), 4e3)
+      };
+    }
+    case "sek.report":
+      return { title: `\u{1F3AF} SEK-Einsatzbericht ${p.number}`, color: COLORS.neutral, description: clip(plain(p.description), 3500), fields: [
+        { name: "Einsatzart", value: clip(plain(p.missionType), 200), inline: true },
+        { name: "Datum", value: new Date(String(p.occurredAt)).toLocaleString("de-DE", { timeZone: "Europe/Berlin" }), inline: true },
+        { name: "Beamter", value: clip(plain(p.author), 200), inline: true }
+      ] };
+    default:
+      return null;
+  }
+}
+var unix = (iso) => {
+  const t = Date.parse(String(iso ?? ""));
+  return Number.isFinite(t) ? Math.floor(t / 1e3) : null;
+};
+var fmtDuration = (sec) => sec < 60 ? `${sec}s` : sec < 3600 ? `${Math.floor(sec / 60)} min ${sec % 60}s` : `${Math.floor(sec / 3600)} h ${Math.floor(sec % 3600 / 60)} min`;
+var BUDGET = 4800;
+function applicationEmbeds(p, kind2) {
+  const qa = Array.isArray(p.answers) ? p.answers : [];
+  const id2 = String(p.discordId ?? "");
+  const joined = unix(p.joinedAt), submitted = unix(p.createdAt);
+  const stats = [
+    "**Bewerber-Infos**",
+    ...id2 ? [`Discord-ID: \`${id2}\``, `Benutzername: \`${plain(p.discordName ?? "\u2014")}\``, `Benutzer: <@${id2}>`] : ["Quelle: Web-Formular (kein Discord)"],
+    ...kind2 === "p" ? [`Roblox: \`${plain(p.robloxUsername)}\`${p.robloxUserId ? ` (\`${String(p.robloxUserId)}\`)` : ""}`] : [p.linkedName ? `Im System: **${plain(p.linkedName)}**` : "Im System: nicht verkn\xFCpft"],
+    ...typeof p.durationSec === "number" ? [`Dauer: \`${fmtDuration(p.durationSec)}\``] : [],
+    ...joined ? [`Server beigetreten: <t:${joined}:R>`] : [],
+    ...submitted ? [`Eingereicht: <t:${submitted}:R>`] : [],
+    ...p.guildName ? [`Server: \`${plain(p.guildName)}\``] : []
+  ].join("\n");
+  const section = (q2, i, max) => {
+    const a = plain(q2.answer) || "\u2014";
+    return `**${i + 1}. ${clip(plain(q2.question), 200)}**
+${max !== void 0 && a.length > max ? `${a.slice(0, max)}\u2026 *(gek\xFCrzt)*` : a}`;
+  };
+  let sections = qa.map((q2, i) => section(q2, i));
+  const who = p.discordName ? `${plain(p.discordName)}s ` : "";
+  const title = clip(kind2 === "p" ? `\u{1F4CB} ${who}Bewerbung bei EN Polizei eingereicht \xB7 ${p.number}` : `\u{1F4CB} ${who}Bewerbung \u201E${plain(p.unitName)}\u201C eingereicht \xB7 ${p.number}`, 256);
+  const room = BUDGET - stats.length - (title.length + 20) * 3;
+  const size = (xs) => xs.reduce((n, x) => n + x.length + 2, 0);
+  if (size(sections) > room) {
+    const questions = qa.reduce((n, q2, i) => n + section({ question: q2.question, answer: "" }, i).length + 15, 0);
+    const per = Math.max(40, Math.floor((room - questions) / Math.max(1, qa.length)));
+    sections = qa.map((q2, i) => section(q2, i, per));
+  }
+  if (size(sections) > room) {
+    const kept = [];
+    for (const x of sections) {
+      if (size(kept) + x.length + 2 > room - 120) break;
+      kept.push(x);
+    }
+    kept.push(`*\u2026 und ${sections.length - kept.length} weitere Antworten \u2013 vollst\xE4ndig im Dashboard.*`);
+    sections = kept;
+  }
+  const embeds = [];
+  let cur = "";
+  for (const piece of [...sections, stats]) {
+    if (cur && cur.length + piece.length + 2 > 4e3) {
+      embeds.push({ title: embeds.length ? `${title} (Fortsetzung)` : title, color: COLORS.warning, description: cur });
+      cur = "";
+    }
+    cur = cur ? `${cur}
+
+${piece}` : clip(piece, 4e3);
+  }
+  embeds.push({ title: embeds.length ? `${title} (Fortsetzung)` : title, color: COLORS.warning, description: cur });
+  return embeds.slice(0, 10);
+}
+var berlinDate = (v) => {
+  const d = new Date(String(v));
+  return Number.isNaN(d.getTime()) ? "\u2014" : d.toLocaleString("de-DE", { timeZone: "Europe/Berlin", day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" });
+};
+var LEAVE_EVENTS = {
+  approved: { text: "\u2705 Abmeldung angenommen", color: COLORS.success },
+  denied: { text: "\u274C Abmeldung abgelehnt", color: COLORS.danger },
+  started: { text: "\u{1F3DD}\uFE0F Abmeldung beginnt", color: COLORS.info },
+  ended: { text: "\u{1F44B} Abmeldung beendet", color: COLORS.neutral },
+  ended_early: { text: "\u21A9\uFE0F Abmeldung vorzeitig beendet", color: COLORS.neutral },
+  cancelled: { text: "\u21A9\uFE0F Abmeldung zur\xFCckgezogen", color: COLORS.neutral }
+};
+var unixOf = (v) => Math.floor(new Date(String(v)).getTime() / 1e3);
+function humanDuration(ms) {
+  const H = 36e5, D = 24 * H, W = 7 * D;
+  const n = (v, one, many) => `${v} ${v === 1 ? one : many}`;
+  const parts = [];
+  let rest = Math.max(H, Math.round(ms / H) * H);
+  if (rest >= W && rest % D === 0) {
+    parts.push(n(Math.floor(rest / W), "Woche", "Wochen"));
+    rest %= W;
+  }
+  if (rest >= D) {
+    parts.push(n(Math.floor(rest / D), "Tag", "Tage"));
+    rest %= D;
+  }
+  if (rest >= H) parts.push(n(Math.round(rest / H), "Stunde", "Stunden"));
+  return parts.join(", ");
+}
+var leaveSpan = (p) => humanDuration(new Date(String(p.endsAt)).getTime() - new Date(String(p.startsAt)).getTime());
+var guildAuthor = (p) => p.guildName ? { name: clip(String(p.guildName), 200), ...typeof p.guildIcon === "string" && /^https:\/\//.test(p.guildIcon) ? { iconUrl: p.guildIcon } : {} } : void 0;
+function leaveDirectEmbed(type, p) {
+  const author = guildAuthor(p);
+  const server = plain(p.guildName ?? "dem Server");
+  const end = unixOf(p.endsAt);
+  const base = { ...author ? { author } : {}, footer: `ID: ${String(p.number)}` };
+  if (type === "leave.pending") return {
+    ...base,
+    title: "Abmeldung ausstehend",
+    color: COLORS.warning,
+    description: `Deine Abmeldung wurde der Leitung zur Freigabe vorgelegt.
+Wenn sie angenommen wird, endet sie ungef\xE4hr <t:${end}:F> (<t:${end}:R>).
+Um deine Abmeldung zu verwalten, nutze \`/leave manage\` auf **${server}**.`
+  };
+  if (p.status === "APPROVED") return {
+    ...base,
+    title: "Abmeldung angenommen",
+    color: COLORS.success,
+    description: `Deine Abmeldung endet ungef\xE4hr <t:${end}:F> (<t:${end}:R>).
+Um deine Abmeldung zu verwalten, nutze \`/leave manage\` auf **${server}**.`,
+    ...p.decisionReason ? { fields: [{ name: "Hinweis", value: clip(plain(p.decisionReason), 1024) }] } : {}
+  };
+  return {
+    ...base,
+    title: "Abmeldung abgelehnt",
+    color: COLORS.danger,
+    description: `Falls du denkst, dass das ein Fehler war, wende dich an die Leitung von **${server}**.`,
+    ...p.decisionReason ? { fields: [{ name: "Grund", value: clip(plain(p.decisionReason), 1024) }] } : {}
+  };
+}
+function renderOutboxEmbeds(type, p) {
+  if (type === "qualification.submitted") return applicationEmbeds(p, "q");
+  if (type === "application.submitted") return applicationEmbeds(p, "p");
+  if (type === "qualification.archived" || type === "application.archived") {
+    const accepted = p.status === "ACCEPTED";
+    const embeds = applicationEmbeds(p, type === "application.archived" ? "p" : "q").map((e2) => ({ ...e2, color: accepted ? COLORS.success : COLORS.danger }));
+    const last = embeds[embeds.length - 1];
+    last.fields = [{ name: "Entscheidung", value: clip(`${accepted ? "\u2705 Angenommen" : "\u274C Abgelehnt"}${p.decidedByName ? ` von ${plain(p.decidedByName)}` : ""}${p.reason ? `
+**Grund:** ${plain(p.reason)}` : ""}`, 1024) }];
+    return embeds;
+  }
+  if (type === "academy.course") return [academyCourseEmbed(p)];
+  const e = renderOutbox(type, p);
+  return e ? [e] : null;
+}
+function academyCourseEmbed(p) {
+  const when = typeof p.when === "string" && !Number.isNaN(Date.parse(p.when)) ? Math.floor(Date.parse(p.when) / 1e3) : null;
+  const fields = [
+    ...when ? [{ name: "\u{1F552} Termin", value: `<t:${when}:F> (<t:${when}:R>)`, inline: true }] : [],
+    ...p.location ? [{ name: "\u{1F4CD} Ort", value: clip(plain(p.location), 1024), inline: true }] : [],
+    { name: "\u{1F3AF} Bestehensgrenze", value: `${Number(p.passScore) || 0} Punkte`, inline: true },
+    ...p.instructorName ? [{ name: "\u{1F46E} Ausbilder", value: clip(plain(p.instructorName), 1024), inline: true }] : []
+  ];
+  return { title: clip(`\u{1F393} Akademie: ${String(p.title ?? "Kurs")}`, 256), color: COLORS.info, ...p.description ? { description: clip(String(p.description), 4e3) } : {}, fields, footer: "Akademie \xB7 EN Polizei" };
+}
+function outboxButtons(type, p) {
+  if (type === "leave.requested" && typeof p.id === "string") return [
+    { id: `leave:decide:${p.id}:APPROVED`, label: "Annehmen", style: "success", emoji: "\u2714\uFE0F" },
+    { id: `leave:reason:${p.id}:DENIED`, label: "Ablehnen", style: "danger", emoji: "\u2716\uFE0F" },
+    ...typeof p.dashboardUrl === "string" && /^https?:\/\//.test(p.dashboardUrl) ? [{ id: "link", label: "Im Dashboard ansehen", style: "secondary", url: p.dashboardUrl }] : []
+  ];
+  if (type === "academy.course" && typeof p.dashboardUrl === "string" && /^https?:\/\//.test(p.dashboardUrl)) return [{ id: "link", label: "Im Dashboard ansehen", style: "secondary", url: p.dashboardUrl }];
+  if (/^wanted\./.test(type) && typeof p.dashboardUrl === "string" && /^https?:\/\//.test(p.dashboardUrl)) return [{ id: "link", label: "Im Dashboard ansehen", style: "secondary", url: p.dashboardUrl }];
+  const kind2 = type === "qualification.submitted" ? "q" : type === "application.submitted" ? "p" : null;
+  if (!kind2 || typeof p.id !== "string") return void 0;
+  const id2 = p.id, discordId = typeof p.discordId === "string" && /^\d{15,25}$/.test(p.discordId) ? p.discordId : null;
+  return [
+    { id: `quali:decide:${kind2}:${id2}:ACCEPTED`, label: "Annehmen", style: "success" },
+    { id: `quali:decide:${kind2}:${id2}:REJECTED`, label: "Ablehnen", style: "danger" },
+    { id: `quali:reason:${kind2}:${id2}:ACCEPTED`, label: "Annehmen mit Grund", style: "success" },
+    { id: `quali:reason:${kind2}:${id2}:REJECTED`, label: "Ablehnen mit Grund", style: "danger" },
+    ...discordId ? [{ id: `quali:history:${discordId}`, label: "Verlauf", style: "primary" }, { id: `quali:ticket:${kind2}:${id2}`, label: "Ticket mit Bewerber \xF6ffnen", emoji: "\u{1F3AB}", style: "secondary" }] : [],
+    ...typeof p.dashboardUrl === "string" && /^https?:\/\//.test(p.dashboardUrl) ? [{ id: "link", label: "Im Dashboard ansehen", style: "secondary", url: p.dashboardUrl }] : []
+  ];
+}
+var reasonText = (p) => p.reason ? `
+
+**Begr\xFCndung:** ${clip(plain(p.reason), 1e3)}` : "";
+function qualificationDecisionText(p) {
+  if (typeof p.message === "string" && p.message.trim()) return clip(p.message, 2e3);
+  return p.status === "ACCEPTED" ? `\u{1F389} Deine Bewerbung f\xFCr **${plain(p.unitName)}** (${p.number}) wurde **angenommen** \u2013 willkommen! Ein Teammitglied meldet sich bei dir.${reasonText(p)}` : `Deine Bewerbung f\xFCr **${plain(p.unitName)}** (${p.number}) wurde diesmal leider **nicht angenommen**. Du kannst dich sp\xE4ter gerne erneut bewerben.${reasonText(p)}`;
+}
+function applicationDecisionText(p) {
+  if (typeof p.message === "string" && p.message.trim()) return clip(p.message, 2e3);
+  return p.status === "ACCEPTED" ? `\u{1F389} Deine Bewerbung **${p.number}** bei EN Polizei wurde **angenommen**! Ein Teammitglied meldet sich bei dir f\xFCr die n\xE4chsten Schritte.${reasonText(p)}` : `Deine Bewerbung **${p.number}** bei EN Polizei wurde diesmal leider **nicht angenommen**. Du kannst dich gerne sp\xE4ter erneut bewerben.${reasonText(p)}`;
+}
+var hexColor2 = (v, fallback) => typeof v === "string" && /^#[0-9a-f]{6}$/i.test(v) ? parseInt(v.slice(1), 16) : fallback;
+function dangerEmbed(s) {
+  const d = s.def;
+  const current = d ? `**Aktuell:** ${d.emoji} ${plain(d.name)}${d.title ? ` \u2013 ${plain(d.title)}` : ""}${s.reason ? `
+${clip(plain(s.reason), 300)}` : ""}` : "";
+  const when = s.at ? `
+<t:${Math.floor(new Date(s.at).getTime() / 1e3)}:f>` : "";
+  return {
+    title: clip(s.panel?.title ?? "Gefahrenstatus", 256),
+    color: hexColor2(d?.color, COLORS.danger),
+    description: clip(`${s.panel?.text ?? ""}${current ? `
+
+${current}` : ""}${when}`, 4e3),
+    ...s.setByName ? { footer: `Gesetzt von ${clip(s.setByName, 100)}` } : {}
+  };
+}
+function dangerButtons(s) {
+  return (s.levels ?? []).slice(0, 10).map((l) => ({ id: `danger:set:${l.key}`, label: clip(l.name, 80), emoji: s.panel?.buttonEmoji || l.emoji || void 0, style: l.buttonStyle ?? "danger" }));
+}
+var DUTY_EMOJI = { ON_DUTY: "\u{1F7E2}", BREAK: "\u{1F7E1}", TRAINING: "\u{1F535}", ADMINISTRATIVE: "\u{1F535}", OFF_DUTY: "\u26AA" };
+var DUTY_DE = {
+  ON_DUTY: { label: "im Dienst", emoji: "\u{1F7E2}", color: 2278750 },
+  BREAK: { label: "in Pause", emoji: "\u{1F7E1}", color: 16096779 },
+  TRAINING: { label: "im Training", emoji: "\u{1F535}", color: 3900150 },
+  ADMINISTRATIVE: { label: "in der Verwaltung", emoji: "\u{1F535}", color: 440020 },
+  OFF_DUTY: { label: "au\xDFer Dienst", emoji: "\u26AA", color: 6583435 }
+};
+function teamlistEmbed(members, rankOrder) {
+  const rankOf = (m) => m.rank ?? "Ohne Rang";
+  const known = rankOrder.filter((r) => members.some((m) => rankOf(m) === r));
+  const rest = [...new Set(members.map(rankOf))].filter((r) => !rankOrder.includes(r)).sort((a, b) => a.localeCompare(b));
+  const fields = [];
+  for (const rank of [...known, ...rest]) {
+    const people = members.filter((m) => rankOf(m) === rank).sort((a, b) => (a.callsign ?? "~").localeCompare(b.callsign ?? "~"));
+    const lines = people.map((m) => `${DUTY_EMOJI[m.dutyStatus] ?? "\u26AA"} ${m.callsign ? `**${plain(m.callsign)}** ` : ""}${plain(m.name)}${m.unit ? ` \xB7 ${plain(m.unit)}` : ""}`);
+    let chunk = "";
+    let part = 0;
+    for (const l of lines) {
+      if ((chunk + "\n" + l).length > 1e3) {
+        fields.push({ name: part ? `${rank} (Forts.)` : `${rank} (${people.length})`, value: chunk });
+        chunk = "";
+        part++;
+      }
+      chunk += (chunk ? "\n" : "") + l;
+    }
+    if (chunk) fields.push({ name: part ? `${rank} (Forts.)` : `${rank} (${people.length})`, value: chunk });
+  }
+  const onDuty = members.filter((m) => m.dutyStatus === "ON_DUTY").length;
+  return { title: "\u{1F4CB} Teamliste \u2013 EN Polizei", color: COLORS.neutral, fields: fields.slice(0, 25), description: members.length ? void 0 : "Noch keine Personalakten angelegt.", footer: `${members.length} Mitglieder \xB7 ${onDuty} im Dienst \xB7 wird automatisch aktualisiert` };
+}
+function dutyReminderDm(p) {
+  const idle = Number(p.idleMinutes ?? 0), auto = Number(p.autoOffMinutes ?? 0);
+  if (p.kind === "ended") return { embed: { title: "\u26AA Schicht automatisch beendet", color: COLORS.neutral, description: `Du warst seit **${idle} Minuten** nicht aktiv und hast auf die Erinnerung nicht reagiert \u2013 deshalb bist du jetzt **au\xDFer Dienst**.${p.shiftMinutes ? `
+Deine Schicht lief ${Number(p.shiftMinutes)} Minuten.` : ""}
+
+Neu starten: Dienst-Panel, \`/dienst an\` oder im Dashboard.` } };
+  return {
+    embed: { title: "\u23F0 Bist du noch im Dienst?", color: COLORS.warning, description: `Du bist **im Dienst**, hast aber seit **${idle} Minuten** nichts gemacht (Dashboard/MDT, Discord).${auto ? `
+Ohne Reaktion endet deine Schicht in **${auto} Minuten** automatisch.` : ""}` },
+    buttons: [{ id: "duty:still", label: "Bin noch im Dienst", style: "success", emoji: "\u2705" }, { id: "duty:OFF_DUTY", label: "Au\xDFer Dienst", style: "danger", emoji: "\u26AA" }]
+  };
+}
+
+// apps/bot/src/commands/errors.ts
+function mapError(e) {
+  if (!(e instanceof BotApiError)) return errorReply("Unerwarteter Fehler im Bot.");
+  const rid = e.requestId ? ` (Request-ID \`${e.requestId}\`)` : "";
+  if (e.status === 0) return errorReply("Das System ist gerade nicht erreichbar. Bitte sp\xE4ter erneut versuchen.");
+  if (e.status === 401 && e.reason === "NOT_LINKED") return errorReply("Dein Discord-Konto ist nicht verkn\xFCpft. Verkn\xFCpfe es im Dashboard (Chat-Symbol oben rechts \u2192 \u201EMit Discord verkn\xFCpfen\u201C).");
+  if (e.status === 401) return errorReply(`Authentifizierung fehlgeschlagen.${rid}`);
+  if (e.status === 403) return errorReply(/[äöüß]|Server|Einheit|Leitstelle/.test(e.message) && !/^You do not have permission|^This route|^Dafür fehlt dir die Berechtigung|steht dem Bot nicht zur Verfügung/.test(e.message) ? `Dazu hast du keine Berechtigung: ${e.message}` : "Dazu hast du keine Berechtigung.");
+  if (e.status === 404) return errorReply("Nicht gefunden.");
+  if (e.status === 429) return errorReply("Zu viele Anfragen \u2013 bitte kurz warten.");
+  if (e.status === 400 || e.status === 409) return errorReply(`${e.message}${rid}`);
+  return errorReply(`Serverfehler.${rid}`);
+}
+
+// apps/bot/src/commands/qualifications.ts
+var POLICE = "@polizei";
+var POLICE_NAME = "Bewerbung \u2013 EN Polizei";
+var ROBLOX_KEY = "@roblox";
+var SKIP = "-";
+var APPLICATION_MS = 3 * 60 * 6e4;
+var limitMs = (st) => (st.timeLimitMinutes ?? 180) * 6e4;
+function roleBlock(st, roles) {
+  if (!roles) return null;
+  const req = st.roles?.required, res = st.roles?.restricted;
+  if (req?.ids.length && !rolesMatch(roles, req.ids, req.mode)) return `Dir fehlt ${req.mode === "ALL" ? "eine der n\xF6tigen Rollen" : "die n\xF6tige Rolle"} f\xFCr diese Bewerbung.`;
+  if (res?.ids.length && rolesMatch(roles, res.ids, res.mode)) return "Mit deinen Rollen kannst du dich hierf\xFCr nicht bewerben.";
+  return null;
+}
+var MAX_ANSWER = 1e3;
+var sessions = /* @__PURE__ */ new Map();
+var joinedAtOf = /* @__PURE__ */ new Map();
+var guildOf = /* @__PURE__ */ new Map();
+var sweepSessions = (now = Date.now()) => {
+  for (const [k, s] of sessions) if (s.expiresAt <= now) sessions.delete(k);
+};
+var CANCEL_WORD = "abbrechen";
+var getConfig = (api2, guildId) => api2.service("GET", `/bot/qualifications${guildId ? `?guildId=${guildId}` : ""}`);
+var field = (f2) => {
+  const n = normalizeField(f2);
+  return { ...n, maxLength: Math.min(n.maxLength, 2e3) };
+};
+var asField = (q2, i) => typeof q2 === "string" ? { key: `q${i + 1}`, label: q2, required: true, maxLength: MAX_ANSWER } : q2;
+var questionMessage = (s) => {
+  const i = s.answers.length;
+  const q2 = s.questions[i];
+  const f2 = q2.field;
+  const head = `**${i + 1}/${s.questions.length}.** ${plain(q2.text)}`;
+  if (f2.type === "ROBLOX") {
+    return { embed: { title: clip(s.unitName, 256), color: COLORS.info, description: clip(`${head}
+
+_Schreibe deinen **Roblox-Benutzernamen** (genau wie in Roblox, nicht den Anzeigenamen) hier in den Chat \u2013 ich pr\xFCfe, ob es das Konto gibt.${f2.required ? "" : ` Optional \u2013 \u201E${SKIP}\u201C zum \xDCberspringen.`}_`, 4e3) } };
+  }
+  if (f2.type === "TEXT") {
+    const hints = [f2.minLength ? `mindestens ${f2.minLength} Zeichen` : "", !f2.required ? `optional \u2013 schreibe \u201E${SKIP}\u201C, um zu \xFCberspringen` : ""].filter(Boolean).join(" \xB7 ");
+    return { embed: { title: clip(s.unitName, 256), color: COLORS.info, description: clip(`${head}
+
+_Antworte einfach mit einer Nachricht hier im Chat.${hints ? ` (${hints})` : ""}_`, 4e3) } };
+  }
+  return {
+    embed: { title: clip(s.unitName, 256), color: COLORS.info, description: clip(`${head}
+
+_W\xE4hle unten ${f2.multiple ? "eine oder mehrere Optionen" : "eine Option"} aus.${f2.required ? "" : " Optional."}_`, 4e3) },
+    select: { id: `quali:ans:${i}`, placeholder: f2.multiple ? "Optionen w\xE4hlen \u2026" : "Option w\xE4hlen \u2026", min: 1, max: f2.multiple ? f2.options.length : 1, options: f2.options.map((o, j) => ({ label: clip(o.label, 100), value: String(j) })) },
+    buttons: f2.required ? [] : [{ id: `quali:skip:${i}`, label: "\xDCberspringen", style: "secondary" }]
+  };
+};
+var answerText = (a) => a === null ? "\u2014 (\xFCbersprungen)" : Array.isArray(a) ? a.join(", ") : a;
+async function loadFlow(api2, key3, guildId) {
+  if (!key3) return null;
+  if (key3 === POLICE) {
+    const [form, cfg2] = await Promise.all([api2.service("GET", `/applications/form${guildId ? `?guildId=${guildId}` : ""}`), getConfig(api2, guildId).catch(() => void 0)]);
+    return { key: key3, name: cfg2?.police?.name ? `Bewerbung \u2013 ${cfg2.police.name}` : POLICE_NAME, appName: cfg2?.police?.name ?? "EN Polizei", enabled: cfg2?.police?.enabled !== false, settings: cfg2?.police?.settings ?? {}, questions: [
+      // Roblox-Name: eigene Frage „Roblox User“ im Formular ersetzt die eingebaute erste Frage
+      ...form.some((f2) => f2.type === "ROBLOX") ? [] : [{ text: "Wie ist dein Roblox-Benutzername?", key: ROBLOX_KEY, field: field({ key: ROBLOX_KEY, label: "Roblox", required: true, maxLength: 20, type: "ROBLOX" }) }],
+      ...form.map((f2) => ({ text: f2.label, key: f2.key, field: field(f2) }))
+    ] };
+  }
+  const unit = (await getConfig(api2, guildId)).units.find((u) => u.key === key3);
+  return unit ? { key: unit.key, name: unit.name, appName: unit.name, enabled: unit.enabled !== false, settings: unit.settings ?? {}, questions: unit.questions.map(asField).map((f2) => ({ text: f2.label, key: f2.key, field: field(f2) })) } : null;
+}
+async function openApplication(api2, key3, discordId) {
+  return key3 === POLICE ? api2.service("GET", `/bot/application/open?discordId=${discordId}`) : api2.service("GET", `/bot/qualifications/open?discordId=${discordId}&unit=${encodeURIComponent(key3)}`);
+}
+async function submitSession(api2, s, userId, userName, robloxLookup2, now = Date.now()) {
+  const meta = { durationSec: Math.max(0, Math.round((now - s.startedAt) / 1e3)), ...s.joinedAt ? { joinedAt: s.joinedAt } : {}, ...s.guildId ? { guildId: s.guildId } : {} };
+  if (s.unit === POLICE) {
+    const rbIndex = s.questions.findIndex((q2) => q2.field.type === "ROBLOX");
+    const roblox = String(rbIndex >= 0 ? s.answers[rbIndex] ?? "" : "").trim();
+    const rb = roblox ? await robloxLookup2?.(roblox).catch(() => null) : null;
+    const answers = Object.fromEntries(s.questions.flatMap((q2, i) => {
+      const a = s.answers[i];
+      return q2.key === ROBLOX_KEY || a === null || a === void 0 ? [] : [[q2.key, a]];
+    }));
+    return (await api2.service("POST", "/bot/application", { robloxUsername: rb?.name ?? roblox, ...rb ? { robloxUserId: String(rb.id) } : {}, discordId: userId, discordName: userName, answers, ...meta })).number;
+  }
+  return (await api2.service("POST", "/bot/qualifications/applications", { unit: s.unit, discordId: userId, discordName: userName, answers: s.questions.map((q2, i) => ({ question: q2.text, answer: s.answers[i] ?? null })), ...meta })).number;
+}
+var POLICE_PANEL = { title: "\u{1F4CB} Bewerbung bei EN Polizei", color: COLORS.info, description: "Du m\xF6chtest Teil der **EN Polizei** werden? Klicke auf **Jetzt bewerben** \u2013 der Bot stellt dir die Fragen nacheinander per **Direktnachricht**.\n\nDu brauchst deinen **Roblox-Namen** und etwa 10 Minuten Zeit. Die Entscheidung bekommst du ebenfalls per Direktnachricht." };
+async function offer(c, key3) {
+  const running = sessions.get(c.discordId);
+  if (running && running.expiresAt > Date.now()) return errorReply(`Du hast bereits eine laufende Bewerbung (**${plain(running.unitName)}**) in deinen Direktnachrichten. Beende oder brich sie dort zuerst ab.`);
+  const flow = await loadFlow(c.api, key3, c.guildId);
+  if (!flow) return errorReply("Diese Auswahl gibt es nicht mehr. Bitte das Panel neu laden.");
+  if (!flow.enabled) return errorReply(`Bewerbungen f\xFCr **${plain(flow.name)}** sind derzeit geschlossen.`);
+  const blocked = roleBlock(flow.settings, c.guildId ? c.memberRoleIds ?? [] : void 0);
+  if (blocked) return errorReply(blocked);
+  const open = await openApplication(c.api, flow.key, c.discordId);
+  if (open.open) return errorReply(`Du hast f\xFCr **${plain(flow.name)}** bereits eine offene Bewerbung (${open.number}). Bitte warte auf die Entscheidung.`);
+  if (!c.platform) return errorReply("Direktnachrichten sind hier nicht verf\xFCgbar.");
+  if (c.memberJoinedAt) joinedAtOf.set(c.discordId, c.memberJoinedAt);
+  if (c.guildId) guildOf.set(c.discordId, c.guildId);
+  let dm;
+  try {
+    dm = await c.platform.sendDm(c.discordId, {
+      embed: { title: clip(flow.name, 256), color: COLORS.info, description: clip(renderApplicationText(flow.settings.messages?.confirmation ?? DEFAULT_APPLICATION_MESSAGES.confirmation, { "{questionCount}": String(flow.questions.length), "{timeLimit}": formatMinutes(Math.round(limitMs(flow.settings) / 6e4)), "{applicationName}": flow.appName }), 4e3) },
+      buttons: [{ id: `quali:start:${flow.key}`, label: "Bewerbung starten", style: "success" }, { id: "quali:cancel", label: "Abbrechen", style: "danger" }]
+    });
+  } catch {
+    return errorReply("Ich kann dir keine Direktnachricht schicken. Bitte erlaube Direktnachrichten von Servermitgliedern (Server-Men\xFC \u2192 Privatsph\xE4re-Einstellungen) und versuche es erneut.");
+  }
+  return { ephemeral: true, embeds: [{ title: "Bewerbung gestartet", description: "Die Bewerbung wurde in deinen **Direktnachrichten** gestartet!", color: COLORS.success }], buttons: [{ id: "quali:link", label: "Zur Bewerbung", style: "secondary", url: `https://discord.com/channels/@me/${dm.channelId}/${dm.messageId}` }] };
+}
+function panelEmbed(cfg2) {
+  const parts = [cfg2.intro, ...cfg2.units.map((u) => `**__${plain(u.name)}:__**
+${u.description}`)].filter(Boolean);
+  return { title: clip(cfg2.title, 256), color: COLORS.info, description: clip(parts.join("\n\n"), 4e3) };
+}
+var QUALI_COMMANDS = [
+  {
+    name: "bewerbung",
+    description: "Bewirb dich bei EN Polizei (Fragen per Direktnachricht)",
+    async run(c) {
+      try {
+        return await offer(c, POLICE);
+      } catch (e) {
+        return mapError(e);
+      }
+    }
+  },
+  {
+    name: "bewerbungspanel",
+    description: "Postet das Bewerbungs-Panel (\u201EJetzt bewerben\u201C) in diesen Kanal",
+    async run(c) {
+      if (!c.guildId) return errorReply("Das geht nur auf einem Server, nicht per Direktnachricht.");
+      if (!c.isGuildAdmin) return errorReply("Daf\xFCr brauchst du auf diesem Discord-Server das Recht \u201EServer verwalten\u201C.");
+      if (!c.channelId || !c.platform) return errorReply("Panel kann hier nicht gepostet werden.");
+      try {
+        const police = (await getConfig(c.api, c.guildId).catch(() => void 0))?.police;
+        const embed = police ? { title: clip(police.title, 256), color: COLORS.info, description: clip(police.description, 4e3) } : POLICE_PANEL;
+        await c.platform.postPanel({ channelId: c.channelId, embed, buttons: [{ id: `quali:pick:${POLICE}`, label: "Jetzt bewerben", emoji: "\u{1F4CB}", style: "primary" }] });
+      } catch {
+        return errorReply("Panel konnte nicht gepostet werden (fehlen dem Bot Rechte in diesem Kanal?).");
+      }
+      return okReply("Bewerbungs-Panel gepostet. Neue Bewerbungen erscheinen im System unter *Applications* (und im Bewerbungs-Kanal, falls eingestellt).");
+    }
+  },
+  {
+    name: "qualipanel",
+    description: "Postet das Qualifikations-Panel (SEK, Flugstaffel, Ausbilder \u2026) in diesen Kanal",
+    async run(c) {
+      if (!c.guildId) return errorReply("Das geht nur auf einem Server, nicht per Direktnachricht.");
+      if (!c.isGuildAdmin) return errorReply("Daf\xFCr brauchst du auf diesem Discord-Server das Recht \u201EServer verwalten\u201C.");
+      if (!c.channelId || !c.platform) return errorReply("Panel kann hier nicht gepostet werden.");
+      try {
+        const cfg2 = await getConfig(c.api, c.guildId);
+        await c.platform.postPanel({ channelId: c.channelId, embed: panelEmbed(cfg2), select: { id: "quali:pick", placeholder: "Triff eine Auswahl", options: cfg2.units.map((u) => ({ label: clip(`${u.name}${u.enabled === false ? " (geschlossen)" : ""}`, 100), value: u.key, ...u.description ? { description: clip(plain(u.description).replace(/\*|_/g, ""), 100) } : {} })) } });
+        const ch = await c.config?.().catch(() => void 0);
+        return okReply(`Qualifikations-Panel gepostet.${ch?.qualifications ? "" : " Tipp: In den Einstellungen einen **Qualifications channel** hinterlegen \u2013 dort landen die Bewerbungen mit Annehmen/Ablehnen-Buttons."}`);
+      } catch (e) {
+        if (e instanceof BotApiError) return mapError(e);
+        return errorReply("Panel konnte nicht gepostet werden (fehlen dem Bot Rechte in diesem Kanal?).");
+      }
+    }
+  }
+];
+async function handleDirectMessage(a) {
+  const now = a.now ?? Date.now();
+  const s = sessions.get(a.userId);
+  const say = (description, color3 = COLORS.info, buttons) => a.sendDm(a.userId, { embed: { title: s ? clip(s.unitName, 256) : "Bewerbung", description, color: color3 }, buttons });
+  if (!s) {
+    await say("Du hast gerade keine laufende Bewerbung. Starte eine \xFCber das Bewerbungs- oder Qualifikations-Panel auf dem Server (oder mit `/bewerbung`).", COLORS.neutral);
+    return;
+  }
+  if (s.expiresAt <= now) {
+    sessions.delete(a.userId);
+    await say(`\u23F0 Die Zeit f\xFCr deine Bewerbung ist abgelaufen (${formatMinutes(Math.round(limitMs(s.settings) / 6e4))}). Bitte starte sie \xFCber das Panel neu.`, COLORS.warning);
+    return;
+  }
+  if (a.content.trim().toLowerCase() === CANCEL_WORD) {
+    sessions.delete(a.userId);
+    await say("Bewerbung abgebrochen. Du kannst jederzeit \xFCber das Panel neu starten.", COLORS.neutral);
+    return;
+  }
+  const q2 = s.questions[s.answers.length];
+  if (q2.field.type !== "TEXT" && q2.field.type !== "ROBLOX") {
+    await say("Bitte w\xE4hle die Antwort im **Men\xFC** der letzten Frage aus.", COLORS.warning);
+    await a.sendDm(a.userId, questionMessage(s));
+    return;
+  }
+  const text = a.content.trim();
+  if (!text) {
+    await say("Bitte antworte mit Text.", COLORS.warning);
+    return;
+  }
+  if (!q2.field.required && text === SKIP) s.answers.push(null);
+  else {
+    const r = checkAnswer(q2.field, text);
+    if (!r.ok) {
+      await say(r.error, COLORS.warning);
+      return;
+    }
+    if (q2.field.type === "ROBLOX" && a.robloxCheck) {
+      const rb = await a.robloxCheck(r.text).catch(() => void 0);
+      if (rb === null) {
+        await say(`\u274C Den Roblox-Benutzer **${plain(r.text)}** gibt es nicht. Bitte pr\xFCfe die Schreibweise und schicke ihn noch einmal.`, COLORS.warning);
+        return;
+      }
+      if (rb) {
+        s.pendingRoblox = rb.name;
+        const i = s.answers.length;
+        await a.sendDm(a.userId, {
+          embed: { title: clip(s.unitName, 256), color: COLORS.info, description: `Ist das dein Roblox-Konto?
+
+**${plain(rb.name)}**${rb.displayName && rb.displayName !== rb.name ? `
+${plain(rb.displayName)}` : ""}
+
+_Falls nicht: auf \u201EAnderer Name\u201C tippen oder einfach den richtigen Namen schreiben._`, ...rb.avatarUrl ? { thumbnail: rb.avatarUrl } : {} },
+          buttons: [{ id: `quali:rb:${i}:yes`, label: "Ja, das bin ich", style: "success" }, { id: `quali:rb:${i}:no`, label: "Anderer Name", style: "secondary" }]
+        });
+        return;
+      }
+      s.answers.push(r.text);
+    } else s.answers.push(text);
+  }
+  await proceed({ api: a.api, userId: a.userId, userName: a.userName, sendDm: a.sendDm, robloxLookup: a.robloxLookup, now }, s);
+}
+async function proceed(o, s) {
+  const say = (description, color3 = COLORS.info, buttons) => o.sendDm(o.userId, { embed: { title: clip(s.unitName, 256), description, color: color3 }, buttons });
+  if (s.answers.length < s.questions.length) {
+    await o.sendDm(o.userId, questionMessage(s));
+    return;
+  }
+  try {
+    const number = await submitSession(o.api, s, o.userId, o.userName, o.robloxLookup, o.now);
+    sessions.delete(o.userId);
+    await say(clip(renderApplicationText(s.settings.messages?.completion ?? DEFAULT_APPLICATION_MESSAGES.completion, { "{number}": number, "{applicationName}": s.appName }), 4e3), COLORS.success);
+  } catch (e) {
+    if (e instanceof BotApiError && (e.status === 409 || e.status === 400 || e.status === 404)) {
+      sessions.delete(o.userId);
+      await say(e.status === 409 ? "Du hast hierf\xFCr bereits eine offene Bewerbung. Bitte warte auf die Entscheidung." : "Die Fragen wurden inzwischen ge\xE4ndert. Bitte starte die Bewerbung neu.", COLORS.warning);
+      return;
+    }
+    const last = s.questions[s.answers.length - 1];
+    s.answers.pop();
+    if (last.field.type === "TEXT") await say("\u26A0\uFE0F Deine Bewerbung konnte gerade nicht gespeichert werden (System nicht erreichbar). Schicke deine **letzte Antwort** gleich noch einmal, um es erneut zu versuchen.", COLORS.warning);
+    else {
+      await say("\u26A0\uFE0F Deine Bewerbung konnte gerade nicht gespeichert werden (System nicht erreichbar). W\xE4hle deine letzte Antwort gleich noch einmal aus.", COLORS.warning);
+      await o.sendDm(o.userId, questionMessage(s));
+    }
+  }
+}
+var STATUS2 = /* @__PURE__ */ new Set(["ACCEPTED", "REJECTED"]);
+var parseDecision = (rest) => {
+  const [kind2, id2, status] = rest.length === 2 ? ["q", rest[0], rest[1]] : rest;
+  return (kind2 === "q" || kind2 === "p") && id2 && status && STATUS2.has(status) ? { kind: kind2, id: id2, status } : null;
+};
+async function decide(c, d, reason) {
+  const cfg2 = await getConfig(c.api, c.guildId).catch(() => void 0);
+  let managers = d.kind === "p" ? cfg2?.police?.settings?.roles?.managers : void 0;
+  if (d.kind === "q" && cfg2?.units.some((u) => u.settings?.roles?.managers?.length)) {
+    const app = await c.api.asUser(c.discordId, "GET", `/qualifications/applications/${d.id}`);
+    managers = cfg2.units.find((u) => u.key === app.unit)?.settings?.roles?.managers;
+  }
+  if (managers?.length && !managers.some((r2) => (c.memberRoleIds ?? []).includes(r2))) return errorReply("\xDCber diese Bewerbung d\xFCrfen nur die eingestellten Manager-Rollen entscheiden.");
+  const path2 = d.kind === "p" ? `/applications/${d.id}/discord-decision` : `/qualifications/applications/${d.id}/decision`;
+  const r = await c.api.asUser(c.discordId, "POST", path2, { status: d.status, ...reason ? { reason } : {} });
+  const accepted = d.status === "ACCEPTED";
+  const what = `Bewerbung **${r.number}**${r.unitName ? ` (${plain(r.unitName)})` : ""}`;
+  return {
+    ...okReply(`${what} ${accepted ? "**angenommen**" : "**abgelehnt**"}. Die Person wird per Direktnachricht informiert${accepted && d.kind === "q" ? " (und bekommt ggf. die Rolle)" : ""}.${r.addedToSek ? " Au\xDFerdem ins SEK aufgenommen." : ""}`),
+    decided: { color: accepted ? COLORS.success : COLORS.danger, text: clip(`${accepted ? "\u2705 Angenommen" : "\u274C Abgelehnt"} von <@${c.discordId}>${r.decidedByName ? ` (${plain(r.decidedByName)})` : ""}${reason ? `
+**Grund:** ${plain(reason)}` : ""}`, 1024) }
+  };
+}
+var STATUS_DE = { OPEN: "\u{1F7E1} offen", SUBMITTED: "\u{1F7E1} eingereicht", SCREENING: "\u{1F7E1} in Pr\xFCfung", INTERVIEW: "\u{1F7E1} Gespr\xE4ch", PENDING_DECISION: "\u{1F7E1} Entscheidung offen", ACCEPTED: "\u2705 angenommen", REJECTED: "\u274C abgelehnt", WITHDRAWN: "\u21A9\uFE0F zur\xFCckgezogen" };
+var QUALI_INTERACTION = {
+  prefix: "quali",
+  opensModal: (args) => args[0] === "reason",
+  async run(c) {
+    const [action, ...rest] = c.args;
+    try {
+      if (action === "reason") {
+        const d = parseDecision(rest);
+        if (!d) return errorReply("Unbekannte Aktion.");
+        return { modal: { id: `quali:reasonsubmit:${d.kind}:${d.id}:${d.status}`, title: d.status === "ACCEPTED" ? "Annehmen mit Grund" : "Ablehnen mit Grund", fields: [{ id: "reason", label: "Grund (geht per DM an die Person)", paragraph: true, required: true, maxLength: 1e3 }] } };
+      }
+      if (action === "reasonsubmit") {
+        const d = parseDecision(rest);
+        const reason = (c.fields?.reason ?? "").trim();
+        if (!d || !reason) return errorReply("Bitte einen Grund angeben.");
+        return await decide(c, d, reason);
+      }
+      if (action === "history") {
+        const id2 = rest[0] ?? "";
+        if (!/^\d{15,25}$/.test(id2)) return errorReply("Unbekannte Person.");
+        const get = (path2) => c.api.asUser(c.discordId, "GET", path2).then((x) => x, (e) => e instanceof BotApiError && e.status === 403 ? null : Promise.reject(e));
+        const [quali, police] = await Promise.all([get(`/qualifications/history?discordId=${id2}`), get(`/applications/history?discordId=${id2}`)]);
+        if (!quali && !police) return errorReply("Du hast keine Berechtigung, Bewerbungen anzusehen.");
+        const rows = [...(police ?? []).map((r) => ({ ...r, unitName: "EN Polizei" })), ...quali ?? []].sort((a, b) => Date.parse(b.createdAt) - Date.parse(a.createdAt));
+        const lines = rows.slice(0, 20).map((r) => `\u2022 **${r.number}** \xB7 ${plain(r.unitName)} \xB7 ${STATUS_DE[r.status] ?? r.status} \xB7 <t:${Math.floor(Date.parse(r.createdAt) / 1e3)}:d>${r.decisionReason ? `
+  \u21B3 ${clip(plain(r.decisionReason), 150)}` : ""}`);
+        return { ephemeral: true, embeds: [{ title: "\u{1F5C2}\uFE0F Bewerbungs-Verlauf", color: COLORS.info, description: clip(`<@${id2}>
+
+${lines.join("\n") || "Keine Bewerbungen."}`, 4e3) }] };
+      }
+      if (action === "ticket") {
+        const [kind2, id2] = rest;
+        if (kind2 !== "q" && kind2 !== "p" || !id2) return errorReply("Unbekannte Aktion.");
+        if (!c.guildId || !c.platform) return errorReply("Das geht nur auf einem Server.");
+        const a = await c.api.asUser(c.discordId, "GET", kind2 === "p" ? `/applications/${id2}` : `/qualifications/applications/${id2}`);
+        if (!a.discordId) return errorReply("Diese Bewerbung kam nicht \xFCber Discord \u2013 es gibt keinen Discord-Benutzer f\xFCr ein Ticket.");
+        const cfg2 = await c.config?.().catch(() => void 0);
+        let t;
+        try {
+          t = await openApplicantTicket(c.platform, cfg2, { guildId: c.guildId, discordId: a.discordId, userName: a.discordName ?? a.robloxUsername ?? a.discordId, number: a.number, unitName: a.unitName, requesterId: c.discordId });
+        } catch {
+          return errorReply("Ticket konnte nicht angelegt werden (fehlen dem Bot die Rechte \u201EKan\xE4le verwalten\u201C, oder ist die Person nicht mehr auf dem Server?).");
+        }
+        return okReply(t.existing ? `Mit dieser Person gibt es schon ein offenes Ticket: <#${t.channelId}>` : `Ticket ge\xF6ffnet: <#${t.channelId}>`);
+      }
+      if (action === "rb") {
+        const s2 = sessions.get(c.discordId);
+        if (!s2 || s2.expiresAt <= Date.now()) return errorReply("Du hast gerade keine laufende Bewerbung. Starte sie \xFCber das Panel neu.");
+        const i = Number(rest[0]);
+        if (i !== s2.answers.length || !s2.pendingRoblox) return errorReply("Diese Frage hast du schon beantwortet.");
+        const q2 = s2.questions[i];
+        if (rest[1] !== "yes") {
+          s2.pendingRoblox = void 0;
+          return { ...okReply("Okay."), update: { embeds: [{ title: clip(s2.unitName, 256), color: COLORS.neutral, description: clip(`**${i + 1}/${s2.questions.length}.** ${plain(q2.text)}
+
+Schreib deinen Roblox-Benutzernamen bitte noch einmal (genau wie in Roblox).`, 4e3) }] } };
+        }
+        if (!c.platform) return errorReply("Direktnachrichten sind hier nicht verf\xFCgbar.");
+        const name = s2.pendingRoblox;
+        s2.pendingRoblox = void 0;
+        s2.answers.push(name);
+        const platform2 = c.platform;
+        await proceed({ api: c.api, userId: c.discordId, userName: c.userName ?? c.discordId, sendDm: (u, m) => platform2.sendDm(u, m), robloxLookup: c.robloxLookup, now: Date.now() }, s2);
+        return { ...okReply("Gespeichert."), update: { embeds: [{ title: clip(s2.unitName, 256), color: COLORS.success, description: clip(`**${i + 1}/${s2.questions.length}.** ${plain(q2.text)}
+
+\u2705 ${plain(name)}`, 4e3) }] } };
+      }
+      if (action === "ans" || action === "skip") {
+        const s2 = sessions.get(c.discordId);
+        if (!s2 || s2.expiresAt <= Date.now()) return errorReply("Du hast gerade keine laufende Bewerbung. Starte sie \xFCber das Panel neu.");
+        const i = Number(rest[0]);
+        if (i !== s2.answers.length) return errorReply("Diese Frage hast du schon beantwortet.");
+        const q2 = s2.questions[i];
+        let value = null;
+        if (action === "skip") {
+          if (q2.field.required) return errorReply("Diese Frage ist eine Pflichtfrage.");
+        } else {
+          const labels = (c.values ?? []).map((v) => q2.field.options[Number(v)]?.label).filter((x) => !!x);
+          const r = checkAnswer(q2.field, labels);
+          if (!r.ok) return errorReply(r.error);
+          value = labels;
+        }
+        if (!c.platform) return errorReply("Direktnachrichten sind hier nicht verf\xFCgbar.");
+        s2.answers.push(value);
+        const platform2 = c.platform;
+        await proceed({ api: c.api, userId: c.discordId, userName: c.userName ?? c.discordId, sendDm: (u, m) => platform2.sendDm(u, m), robloxLookup: c.robloxLookup, now: Date.now() }, s2);
+        return { ...okReply("Gespeichert."), update: { embeds: [{ title: clip(s2.unitName, 256), color: COLORS.success, description: clip(`**${i + 1}/${s2.questions.length}.** ${plain(q2.text)}
+
+\u2705 ${plain(answerText(value))}`, 4e3) }] } };
+      }
+      if (action === "cancel") {
+        const had = sessions.delete(c.discordId);
+        return okReply(had ? "Bewerbung abgebrochen. Du kannst jederzeit \xFCber das Panel neu starten." : "Es l\xE4uft keine Bewerbung.");
+      }
+      if (action === "decide") {
+        const d = parseDecision(rest);
+        return d ? await decide(c, d) : errorReply("Unbekannte Aktion.");
+      }
+      if (action === "pick") return await offer(c, c.values?.[0] ?? rest[0]);
+      if (action !== "start") return errorReply("Unbekannte Aktion.");
+      const running = sessions.get(c.discordId);
+      if (running && running.expiresAt > Date.now()) {
+        if (running.unit === rest[0]) return okReply(`Deine Bewerbung l\xE4uft bereits \u2013 Frage ${running.answers.length + 1}/${running.questions.length}: ${plain(running.questions[running.answers.length].text)}`);
+        return errorReply(`Du hast bereits eine laufende Bewerbung (**${plain(running.unitName)}**). Beende oder brich sie zuerst ab.`);
+      }
+      const flow = await loadFlow(c.api, rest[0], c.guildId ?? guildOf.get(c.discordId));
+      if (!flow) return errorReply("Diese Auswahl gibt es nicht mehr. Bitte das Panel neu laden.");
+      if (!flow.enabled) return errorReply(`Bewerbungen f\xFCr **${plain(flow.name)}** sind derzeit geschlossen.`);
+      const open = await openApplication(c.api, flow.key, c.discordId);
+      if (open.open) return errorReply(`Du hast f\xFCr **${plain(flow.name)}** bereits eine offene Bewerbung (${open.number}). Bitte warte auf die Entscheidung.`);
+      if (!c.platform) return errorReply("Direktnachrichten sind hier nicht verf\xFCgbar.");
+      const blocked = roleBlock(flow.settings, c.guildId ? c.memberRoleIds ?? [] : void 0);
+      if (blocked) return errorReply(blocked);
+      const s = { unit: flow.key, unitName: flow.name, appName: flow.appName, settings: flow.settings, questions: flow.questions, answers: [], startedAt: Date.now(), expiresAt: Date.now() + limitMs(flow.settings), joinedAt: joinedAtOf.get(c.discordId), guildId: c.guildId ?? guildOf.get(c.discordId) };
+      sessions.set(c.discordId, s);
+      try {
+        await c.platform.sendDm(c.discordId, questionMessage(s));
+      } catch {
+        sessions.delete(c.discordId);
+        return errorReply("Ich kann dir keine Direktnachricht schicken. Bitte erlaube Direktnachrichten und versuche es erneut.");
+      }
+      return okReply("Los geht\u2019s \u2013 beantworte die Fragen einfach hier im Chat.");
+    } catch (e) {
+      if (e instanceof BotApiError && e.status === 409) return errorReply("\xDCber diese Bewerbung wurde bereits entschieden.");
+      return mapError(e);
+    }
+  }
+};
+async function openApplicantTicket(platform2, cfg2, a) {
+  const t = await platform2.createTicketChannel({ guildId: a.guildId, userId: a.discordId, userName: a.userName, categoryId: cfg2?.tickets, staffRoleId: cfg2?.staffRole, extraUserIds: a.requesterId ? [a.requesterId] : [] });
+  if (!t.existing) {
+    await platform2.postPanel({ channelId: t.channelId, embed: { title: `\u{1F3AB} Ticket zur Bewerbung ${a.number}`, color: COLORS.info, description: `<@${a.discordId}>, das Team hat eine R\xFCckfrage zu deiner Bewerbung **${a.number}**${a.unitName ? ` (${plain(a.unitName)})` : ""}. Bitte antworte hier.` }, buttons: [{ id: "support:close", label: "Ticket schlie\xDFen", emoji: "\u{1F512}", style: "danger" }] }).catch(() => void 0);
+  }
+  return t;
+}
+
+// apps/bot/src/commands/tickets.ts
+var UUID = /^[0-9a-f-]{36}$/;
+var emojiOf = (e) => e && e.length <= 64 ? e : void 0;
+function fail(e) {
+  if (e instanceof BotApiError && [400, 403, 404, 409].includes(e.status) && e.message && !/^You |permission|^Dafür fehlt dir die Berechtigung|steht dem Bot nicht zur Verfügung/i.test(e.message)) return errorReply(clip(e.message, 500));
+  return mapError(e);
+}
+async function run(c, r, text) {
+  if (r.effects?.length && c.applyEffects) await c.applyEffects(r.effects);
+  return okReply(text ?? r.message ?? "Erledigt.");
+}
+var staff = (c, id2, body) => c.api.asUser(c.discordId, "POST", `/support-tickets/${id2}/actions`, body);
+var options = (c, id2) => c.api.asUser(c.discordId, "GET", `/support-tickets/${id2}/options`);
+async function close(c, id2, reason) {
+  try {
+    return await run(c, await staff(c, id2, { action: "close", ...reason ? { reason } : {} }));
+  } catch (e) {
+    if (!(e instanceof BotApiError) || e.status !== 401 && e.status !== 403) return fail(e);
+    try {
+      return await run(c, await c.api.service("POST", `/bot/support-tickets/${id2}/creator-close`, { discordId: c.discordId, ...reason ? { reason } : {} }));
+    } catch (e2) {
+      return fail(e2);
+    }
+  }
+}
+async function answer(c, id2, questionId, values) {
+  try {
+    const r = await c.api.service("POST", `/bot/support-tickets/${id2}/answer`, { discordId: c.discordId, questionId, values });
+    if (r.effects?.length && c.applyEffects) await c.applyEffects(r.effects);
+    return { ...okReply(r.done ? "Danke! Alle Fragen sind beantwortet \u2013 das Team meldet sich." : "Gespeichert."), update: { embeds: [{ title: "\u2705 Beantwortet", description: clip(plain(r.answer), 1e3), color: COLORS.success }] } };
+  } catch (e) {
+    return fail(e);
+  }
+}
+var durationButtons = (id2, minutes) => [
+  { id: `tk:addt:${id2}:0`, label: "Dauerhaft", style: minutes === 0 ? "primary" : "secondary" },
+  { id: `tk:addt:${id2}:60`, label: "\u23F1\uFE0F 1 Stunde", style: minutes === 60 ? "primary" : "secondary" },
+  { id: `tk:addt:${id2}:1440`, label: "\u23F1\uFE0F 24 Stunden", style: minutes === 1440 ? "primary" : "secondary" }
+];
+var addPicker = (id2, minutes) => ({
+  ephemeral: true,
+  embeds: [{ title: "\u2795 Zum Ticket hinzuf\xFCgen", description: `W\xE4hle Benutzer oder Rollen.${minutes ? ` Zugriff ist **befristet** (${minutes >= 60 ? `${minutes / 60} Std.` : `${minutes} Min.`}).` : ""}`, color: COLORS.info }],
+  selects: [{ id: `tk:addu:${id2}:${minutes}`, placeholder: "Benutzer w\xE4hlen \u2026", kind: "user", min: 1, max: 10, options: [] }, { id: `tk:addr:${id2}:${minutes}`, placeholder: "Rolle w\xE4hlen \u2026", kind: "role", min: 1, max: 5, options: [] }],
+  buttons: durationButtons(id2, minutes)
+});
+var TICKET_INTERACTION = {
+  prefix: "tk",
+  opensModal: (a) => ["ans", "rename", "note", "ratec", "closem"].includes(a[0] ?? "") || a[0] === "close" && a[2] === "m",
+  async run(c) {
+    const [action, id2 = "", ...rest] = c.args;
+    const f2 = c.fields ?? {};
+    try {
+      switch (action) {
+        // ---- Ticket öffnen (Panel: Button oder Dropdown) ----
+        case "open": {
+          const categoryId = rest[0] ?? c.values?.[0];
+          if (!categoryId || !UUID.test(categoryId) || !c.guildId) return errorReply("Bitte eine Ticket-Art ausw\xE4hlen.");
+          const r = await c.api.service("POST", "/bot/support-tickets/open", { categoryId, panelId: UUID.test(id2) ? id2 : void 0, guildId: c.guildId, discordId: c.discordId, discordName: c.userName ?? c.discordId, memberRoleIds: c.memberRoleIds ?? [] });
+          if (!c.applyEffects) return errorReply("Tickets sind hier nicht verf\xFCgbar.");
+          const done = await c.applyEffects(r.effects ?? []);
+          return okReply(done.channelId ? `Dein Ticket wurde erstellt: <#${done.channelId}>` : "Dein Ticket wird erstellt \u2026");
+        }
+        // ---- Ticket für ein anderes Mitglied öffnen (Team, Recht ticket.create): /support mitglied:… ----
+        case "for": {
+          const categoryId = c.values?.[0];
+          if (!/^\d{15,25}$/.test(id2) || !categoryId || !UUID.test(categoryId) || !c.guildId) return errorReply("Bitte eine Ticket-Art ausw\xE4hlen.");
+          const name = await c.userNameOf?.(id2).catch(() => null) ?? id2;
+          const r = await c.api.asUser(c.discordId, "POST", "/support-tickets", { categoryId, discordId: id2, discordName: name, guildId: c.guildId });
+          if (!c.applyEffects) return errorReply("Tickets sind hier nicht verf\xFCgbar.");
+          const done = await c.applyEffects(r.effects ?? []);
+          return okReply(done.channelId ? `Ticket f\xFCr <@${id2}> erstellt: <#${done.channelId}>` : "Ticket wird erstellt \u2026");
+        }
+        // ---- Fragen ----
+        case "ans": {
+          const [qid, kind2, limits] = rest;
+          const [min, max] = (limits ?? "").split("-").map(Number);
+          const maxLength = Math.min(4e3, max || (kind2 === "l" ? 2e3 : 200));
+          return { modal: { id: `tk:ansm:${id2}:${qid}`, title: "Antwort", fields: [{ id: "value", label: "Deine Antwort", paragraph: kind2 === "l", required: true, maxLength, ...min ? { minLength: Math.min(min, maxLength) } : {} }] } };
+        }
+        case "ansm":
+          return answer(c, id2, rest[0] ?? "", [f2.value ?? ""]);
+        case "ansv":
+          return answer(c, id2, rest[0] ?? "", [rest[1] ?? ""]);
+        case "anss":
+          return answer(c, id2, rest[0] ?? "", c.values ?? []);
+        case "skip":
+          return answer(c, id2, rest[0] ?? "", null);
+        // ---- Schließen ----
+        case "close": {
+          if (rest[0] === "n") return close(c, id2);
+          if (rest[0] === "m") return { modal: { id: `tk:closemodal:${id2}`, title: "Ticket schlie\xDFen", fields: [{ id: "reason", label: "Warum wird dieses Ticket geschlossen?", paragraph: true, required: false, maxLength: 500 }] } };
+          const o = await c.api.service("GET", `/bot/support-tickets/${id2}/close-options`);
+          if (o.closed) return errorReply("Das Ticket ist bereits geschlossen.");
+          if (!o.reasons.length && o.mode !== "NONE") return { modal: { id: `tk:closemodal:${id2}`, title: "Ticket schlie\xDFen", fields: [{ id: "reason", label: "Warum wird dieses Ticket geschlossen?", paragraph: true, required: o.mode === "REQUIRED", maxLength: 500 }] } };
+          const buttons = [
+            ...o.source === "BOTH" ? [{ id: `tk:closem:${id2}`, label: "Eigener Grund", emoji: "\u270F\uFE0F", style: "secondary" }] : [],
+            ...o.mode === "OPTIONAL" ? [{ id: `tk:closen:${id2}`, label: "Ohne Grund schlie\xDFen", style: "secondary" }] : []
+          ];
+          return { ephemeral: true, embeds: [{ title: "\u{1F512} Ticket schlie\xDFen", description: "Warum wird dieses Ticket geschlossen?", color: COLORS.danger }], select: { id: `tk:closer:${id2}`, placeholder: "Grund ausw\xE4hlen \u2026", options: o.reasons.slice(0, 25).map((r) => ({ label: clip(r, 100), value: clip(r, 100) })) }, buttons };
+        }
+        case "closem":
+          return { modal: { id: `tk:closemodal:${id2}`, title: "Ticket schlie\xDFen", fields: [{ id: "reason", label: "Warum wird dieses Ticket geschlossen?", paragraph: true, required: true, maxLength: 500 }] } };
+        case "closemodal":
+          return close(c, id2, (f2.reason ?? "").trim() || void 0);
+        case "closer":
+          return close(c, id2, c.values?.[0]);
+        case "closen":
+          return close(c, id2);
+        // ---- Einfache Mitarbeiter-Aktionen ----
+        case "claim":
+        case "unclaim":
+        case "lock":
+        case "unlock":
+        case "escalate":
+        case "transcript":
+        case "reopen":
+        case "rating":
+        case "close_request":
+          return run(c, await staff(c, id2, { action }));
+        // ---- Antwort des Erstellers auf „Schließen anfragen“ ----
+        case "creq": {
+          const r = await c.api.service("POST", `/bot/support-tickets/${id2}/close-request`, { discordId: c.discordId, accept: rest[0] === "yes" });
+          if (r.effects?.length && c.applyEffects) await c.applyEffects(r.effects);
+          return { ...okReply(r.message ?? "Erledigt."), update: { embeds: [{ title: rest[0] === "yes" ? "\u2705 Schlie\xDFen best\xE4tigt" : "\u2716\uFE0F Ticket bleibt offen", color: rest[0] === "yes" ? COLORS.success : COLORS.neutral }] } };
+        }
+        case "delete":
+          return { ephemeral: true, embeds: [{ title: "\u{1F5D1}\uFE0F Ticket l\xF6schen?", description: "Der Kanal wird gel\xF6scht (ein Transcript wird vorher gesichert, falls eingestellt).", color: COLORS.danger }], buttons: [{ id: `tk:delyes:${id2}`, label: "Endg\xFCltig l\xF6schen", style: "danger" }] };
+        case "delyes":
+          return run(c, await staff(c, id2, { action: "delete" }));
+        // ---- Benutzer/Rollen ----
+        case "add_user":
+          return addPicker(id2, 0);
+        case "addt":
+          return addPicker(id2, Number(rest[0]) || 0);
+        case "addu":
+        case "addr": {
+          const minutes = Number(rest[0]) || 0;
+          let n = 0;
+          for (const target of c.values ?? []) {
+            const r = await staff(c, id2, { action: "add_access", targetId: target, kind: action === "addu" ? "USER" : "ROLE", ...minutes ? { minutes } : {} }).catch((e) => {
+              if (action === "addu" && e instanceof BotApiError && (e.status === 401 || e.status === 403)) return c.api.service("POST", `/bot/support-tickets/${id2}/creator-add`, { discordId: c.discordId, targetId: target });
+              throw e;
+            });
+            if (r.effects?.length && c.applyEffects) await c.applyEffects(r.effects);
+            n++;
+          }
+          return okReply(`${n} ${action === "addu" ? "Benutzer" : "Rolle(n)"} hinzugef\xFCgt.`);
+        }
+        case "remove_user":
+          return { ephemeral: true, embeds: [{ title: "\u2796 Aus dem Ticket entfernen", description: "W\xE4hle Benutzer oder Rollen, die hinzugef\xFCgt wurden.", color: COLORS.info }], selects: [{ id: `tk:rmu:${id2}`, placeholder: "Benutzer w\xE4hlen \u2026", kind: "user", min: 1, max: 10, options: [] }, { id: `tk:rmr:${id2}`, placeholder: "Rolle w\xE4hlen \u2026", kind: "role", min: 1, max: 5, options: [] }] };
+        case "rmu":
+        case "rmr": {
+          let n = 0;
+          for (const target of c.values ?? []) {
+            const r = await staff(c, id2, { action: "remove_access", targetId: target });
+            if (r.effects?.length && c.applyEffects) await c.applyEffects(r.effects);
+            n++;
+          }
+          return okReply(`${n} entfernt.`);
+        }
+        // ---- Auswahl: Priorität, Status, Kategorie, Verschieben ----
+        case "priority": {
+          const o = await options(c, id2);
+          return pick(`tk:prio:${id2}`, "\u{1F514} Priorit\xE4t \xE4ndern", o.priorities.map((p) => ({ label: p.name, value: p.id, emoji: emojiOf(p.emoji) })));
+        }
+        case "status": {
+          const o = await options(c, id2);
+          return pick(`tk:stat:${id2}`, "\u{1F3F7}\uFE0F Status \xE4ndern", o.statuses.map((s) => ({ label: s.name, value: s.id, emoji: emojiOf(s.emoji) })));
+        }
+        case "category": {
+          const o = await options(c, id2);
+          return pick(`tk:cat:${id2}`, "\u{1F5C2}\uFE0F Kategorie \xE4ndern", o.categories.map((x) => ({ label: x.name, value: x.id, emoji: emojiOf(x.emoji) })));
+        }
+        case "move": {
+          if (!c.guildId || !c.listCategories) return errorReply("Das geht nur auf einem Server.");
+          await options(c, id2);
+          const cats = await c.listCategories(c.guildId);
+          return pick(`tk:movesel:${id2}`, "\u{1F4C1} In Discord-Kategorie verschieben", [{ label: "(keine Kategorie)", value: "none" }, ...cats.slice(0, 24).map((x) => ({ label: x.name, value: x.id }))]);
+        }
+        case "prio":
+          return run(c, await staff(c, id2, { action: "priority", priorityId: c.values?.[0] }));
+        case "stat":
+          return run(c, await staff(c, id2, { action: "status", statusId: c.values?.[0] }));
+        case "cat":
+          return run(c, await staff(c, id2, { action: "category", categoryId: c.values?.[0] }));
+        case "movesel":
+          return run(c, await staff(c, id2, { action: "move", parentId: c.values?.[0] === "none" ? null : c.values?.[0] }));
+        // ---- Formulare ----
+        case "rename":
+          return { modal: { id: `tk:renm:${id2}`, title: "Ticket umbenennen", fields: [{ id: "name", label: "Neuer Name (Platzhalter erlaubt)", required: true, maxLength: 90, placeholder: "z. B. support-{username}" }] } };
+        case "renm":
+          return run(c, await staff(c, id2, { action: "rename", name: f2.name ?? "" }));
+        case "note":
+          return { modal: { id: `tk:notem:${id2}`, title: "Interne Notiz", fields: [{ id: "text", label: "Nur f\xFCr berechtigte Mitarbeiter sichtbar", paragraph: true, required: true, maxLength: 4e3 }] } };
+        case "notem":
+          return run(c, await staff(c, id2, { action: "note", text: f2.text ?? "" }));
+        // ---- Bewertung (per DM an den Ersteller) ----
+        case "rate": {
+          const r = await c.api.service("POST", `/bot/support-tickets/${id2}/rating`, { discordId: c.discordId, stars: Number(rest[0]) });
+          return { ...okReply(r.thanks), buttons: [{ id: `tk:ratec:${id2}`, label: "Kommentar hinzuf\xFCgen", emoji: "\u{1F4AC}", style: "secondary" }], update: { embeds: [{ title: `\u2B50 ${"\u2B50".repeat(Math.max(0, Number(rest[0]) - 1))} bewertet`, description: "Danke f\xFCr dein Feedback!", color: COLORS.success }] } };
+        }
+        case "ratec":
+          return { modal: { id: `tk:ratecm:${id2}`, title: "Kommentar zur Bewertung", fields: [{ id: "comment", label: "Wie zufrieden warst du mit dem Support?", paragraph: true, required: true, maxLength: 1e3 }] } };
+        case "ratecm": {
+          await c.api.service("POST", `/bot/support-tickets/${id2}/rating-comment`, { discordId: c.discordId, comment: f2.comment ?? "" });
+          return okReply("Danke f\xFCr deinen Kommentar!");
+        }
+        default:
+          return errorReply("Unbekannte Aktion.");
+      }
+    } catch (e) {
+      return fail(e);
+    }
+  }
+};
+var pick = (id2, title, opts) => opts.length ? { ephemeral: true, embeds: [{ title, color: COLORS.info }], select: { id: id2, placeholder: "Bitte ausw\xE4hlen \u2026", options: opts.slice(0, 25).map((o) => ({ ...o, label: clip(o.label, 100) })) } } : errorReply("Keine Auswahl verf\xFCgbar.");
+var TICKET_COMMAND = {
+  name: "support",
+  description: "Ein Support-Ticket \xF6ffnen (Team: auch f\xFCr ein anderes Mitglied)",
+  options: [{ name: "mitglied", description: "Nur Team: Ticket f\xFCr dieses Mitglied \xF6ffnen", type: "user" }],
+  async run(c) {
+    if (!c.guildId) return errorReply("Tickets gehen nur auf einem Server, nicht per Direktnachricht.");
+    const member = typeof c.opts.mitglied === "string" && c.opts.mitglied !== c.discordId ? c.opts.mitglied : null;
+    try {
+      const all = await c.api.service("GET", `/bot/support-tickets/categories?guildId=${c.guildId}`);
+      const roles = c.memberRoleIds ?? [];
+      const cats = member ? all : all.filter((x) => (!x.requiredRoleIds.length || x.requiredRoleIds.some((r) => roles.includes(r))) && (!x.allowedUserIds.length || x.allowedUserIds.includes(c.discordId)));
+      if (!cats.length) return errorReply(all.length ? "Du darfst derzeit keine Ticket-Art \xF6ffnen." : "Es ist noch keine Ticket-Art eingerichtet (Dashboard \u2192 Support Tickets \u2192 Categories).");
+      const options2 = cats.slice(0, 25).map((x) => ({ label: clip(x.name, 100), value: x.id, ...x.description ? { description: clip(x.description, 100) } : {}, ...emojiOf(x.emoji) ? { emoji: emojiOf(x.emoji) } : {} }));
+      if (!member && cats.length === 1) return await TICKET_INTERACTION.run({ ...c, args: ["open", "cmd", cats[0].id] });
+      return {
+        ephemeral: true,
+        embeds: [{ title: member ? "\u{1F3AB} Ticket f\xFCr ein Mitglied \xF6ffnen" : "\u{1F3AB} Ticket \xF6ffnen", description: member ? `F\xFCr <@${member}> \u2013 w\xE4hle die Ticket-Art.` : "W\xE4hle die passende Ticket-Art.", color: COLORS.info }],
+        select: { id: member ? `tk:for:${member}` : "tk:open:cmd", placeholder: "Ticket-Art w\xE4hlen \u2026", options: options2 }
+      };
+    } catch (e) {
+      return fail(e);
+    }
+  }
+};
+
+// apps/bot/src/voice-support.ts
+var ROOMS_MS = 6e4;
+var note = (text) => ({ content: text, ephemeral: true });
+var fail2 = (e) => e instanceof BotApiError && [400, 403, 404, 409].includes(e.status) && e.message ? errorReply(clip(e.message, 500)) : mapError(e);
+function createVoiceSupport(api2, ops, log = console.error) {
+  const rooms = /* @__PURE__ */ new Map();
+  const roomsOf = async (guildId) => {
+    const hit = rooms.get(guildId);
+    if (hit && Date.now() - hit.at < ROOMS_MS) return hit.list;
+    const list = await api2.service("GET", `/bot/voice-support/rooms?guildId=${guildId}`).catch(() => hit?.list ?? []);
+    rooms.set(guildId, { at: Date.now(), list });
+    return list;
+  };
+  const safe = (label2, p) => p.catch((e) => log(`voice support: ${label2} failed: ${e instanceof Error ? e.message : e}`));
+  const applyEdit = (e) => e ? safe("update message", ops.edit(e.channelId, e.messageId, e.message)) : Promise.resolve();
+  async function finished(r) {
+    await applyEdit(r.edit);
+    if (r.deleteChannelId) await safe("delete channel", ops.deleteChannel(r.deleteChannelId));
+    if (r.ratingDm) await safe("rating DM", ops.dm(r.userId, r.ratingDm));
+  }
+  async function onVoiceState(e) {
+    if (e.bot || e.from === e.to) return;
+    const list = await roomsOf(e.guildId);
+    if (!list.length) return;
+    if (e.from) {
+      if (list.some((r) => r.waitingChannelId === e.from)) {
+        const r = await api2.service("POST", "/bot/voice-support/left", { guildId: e.guildId, channelId: e.from, discordId: e.userId, userName: e.userName });
+        for (const x of r.edits) await applyEdit(x);
+      } else if (!ops.members(e.from).length) {
+        const r = await api2.service("POST", "/bot/voice-support/empty", { channelId: e.from });
+        if (r.closed) await finished(r);
+      }
+    }
+    if (e.to && list.some((r) => r.enabled && r.waitingChannelId === e.to)) {
+      const r = await api2.service("POST", "/bot/voice-support/join", { guildId: e.guildId, channelId: e.to, discordId: e.userId, userName: e.userName });
+      if (r.action === "closed" && r.dm) await safe("closed DM", ops.dm(e.userId, r.dm));
+      if (r.action === "notify" && r.caseId && r.channelId && r.message) {
+        const messageId = await ops.post(r.channelId, r.message);
+        await api2.service("POST", `/bot/voice-support/cases/${r.caseId}/posted`, { messageId });
+      }
+    }
+  }
+  async function provision(r, staffId) {
+    await applyEdit(r.edit);
+    const { case: c, room } = r;
+    if (!room) return "\xDCbernommen.";
+    let channelId = null, created = false;
+    try {
+      if (room.ownChannels) channelId = room.ownChannelIds.find((x) => !ops.members(x).length) ?? null;
+      else {
+        channelId = await ops.createVoice({ guildId: c.guildId, name: clip(`${room.channelPrefix}${c.userName}`, 100), nearChannelId: room.waitingChannelId, userId: c.userId, teamRoleId: room.teamRoleId });
+        created = true;
+      }
+    } catch (e) {
+      log(`voice support: channel failed: ${e instanceof Error ? e.message : e}`);
+    }
+    const moved = channelId ? await ops.move(c.guildId, c.userId, channelId).catch(() => false) : false;
+    if (channelId && staffId && ops.voiceChannelOf(c.guildId, staffId)) await ops.move(c.guildId, staffId, channelId).catch(() => false);
+    const threadId = room.notes && r.edit ? await ops.thread(r.edit.channelId, r.edit.messageId, `Notizen #${c.number}`).catch(() => null) : null;
+    const done = await api2.service("POST", `/bot/voice-support/cases/${c.id}/channel`, { channelId, created, threadId });
+    await applyEdit(done.edit);
+    if (!channelId) throw new Error(room.ownChannels ? "\u26A0\uFE0F \xDCbernommen \u2013 aber gerade ist keiner der eigenen Support-Kan\xE4le frei. Sprich die Person im Warteraum an." : "\u26A0\uFE0F \xDCbernommen \u2013 der Sprachkanal konnte nicht angelegt werden (fehlt dem Bot \u201EKan\xE4le verwalten\u201C?).");
+    return `\xDCbernommen: <#${channelId}>${moved ? "" : " \u2013 die Person ist nicht mehr im Sprachkanal und wurde nicht verschoben."}`;
+  }
+  async function claim(id2, s) {
+    const r = await api2.service("POST", `/bot/voice-support/cases/${id2}/claim`, s);
+    return provision(r, s.discordId).then((t) => okReply(t), (e) => note(e.message));
+  }
+  async function applyEffects(p) {
+    if (p.provision) await provision(p.provision, p.staffDiscordId ?? null).catch((e) => log(`voice support: ${e.message}`));
+    if (p.edit) await applyEdit(p.edit);
+    if (p.dm) await safe("DM", ops.dm(p.dm.userId, p.dm.message));
+    if (p.threadPost) await safe("thread log", ops.threadPost(p.threadPost.threadId, p.threadPost.text));
+    if (p.deleteChannelId) await safe("delete channel", ops.deleteChannel(p.deleteChannelId));
+  }
+  async function interact(c) {
+    const [action, id2 = "", extra] = c.args;
+    if (!/^[0-9a-f-]{36}$/.test(id2)) return errorReply("Unbekannter Support-Fall.");
+    const s = { discordId: c.discordId, name: c.userName ?? c.discordId, roleIds: c.memberRoleIds ?? [], admin: !!c.isGuildAdmin };
+    try {
+      switch (action) {
+        case "claim":
+          return await claim(id2, s);
+        case "decline":
+          return { modal: { id: `vs:declinesubmit:${id2}`, title: "Support-Fall ablehnen", fields: [{ id: "reason", label: "Grund (optional, geht per DM an die Person)", paragraph: true, required: false, maxLength: 500 }] } };
+        case "declinesubmit": {
+          const r = await api2.service("POST", `/bot/voice-support/cases/${id2}/decline`, { ...s, ...c.fields?.reason?.trim() ? { reason: c.fields.reason.trim() } : {} });
+          await applyEdit(r.edit);
+          const sent = await ops.dm(r.userId, r.dm).then(() => true, () => false);
+          return okReply(`Abgelehnt.${sent ? " Die Person wurde per DM informiert." : " (Die DM kam nicht an \u2013 Direktnachrichten sind bei der Person aus.)"}`);
+        }
+        case "msg":
+          return { modal: { id: `vs:msgsubmit:${id2}`, title: "Nachricht an die Person", fields: [{ id: "text", label: "Nachricht (per DM)", paragraph: true, required: true, maxLength: 2e3 }] } };
+        case "msgsubmit": {
+          const text = (c.fields?.text ?? "").trim();
+          if (!text) return errorReply("Bitte eine Nachricht eingeben.");
+          const r = await api2.service("POST", `/bot/voice-support/cases/${id2}/message`, { ...s, text });
+          const sent = await ops.dm(r.userId, r.dm).then(() => true, () => false);
+          if (!sent) return errorReply("Die Nachricht kam nicht an \u2013 die Person hat Direktnachrichten ausgeschaltet.");
+          await applyEdit(r.edit);
+          if (r.threadId) await safe("thread log", ops.threadPost(r.threadId, r.log));
+          return note("\u{1F4AC} Nachricht gesendet.");
+        }
+        case "close": {
+          await finished(await api2.service("POST", `/bot/voice-support/cases/${id2}/close`, s));
+          return note("\u{1F512} Support-Fall geschlossen.");
+        }
+        case "rate": {
+          const stars = Number(extra);
+          if (!(stars >= 1 && stars <= 5)) return errorReply("Ung\xFCltige Bewertung.");
+          const r = await api2.service("POST", `/bot/voice-support/cases/${id2}/rating`, { discordId: c.discordId, stars });
+          await applyEdit(r.edit);
+          return { ...okReply("Danke f\xFCr deine Bewertung! \u2B50"), update: { embeds: [{ title: "\u2B50 Danke!", description: `Du hast ${"\u2B50".repeat(stars)} vergeben.`, color: 16436245 }] } };
+        }
+        default:
+          return errorReply("Unbekannte Aktion.");
+      }
+    } catch (e) {
+      return fail2(e);
+    }
+  }
+  return { onVoiceState, interact, applyEffects, clear: () => rooms.clear() };
+}
+var VOICE_INTERACTION = {
+  prefix: "vs",
+  opensModal: (a) => a[0] === "decline" || a[0] === "msg",
+  async run(c) {
+    return c.voiceSupport ? c.voiceSupport.interact(c) : errorReply("Der Sprach-Support ist hier nicht verf\xFCgbar.");
+  }
+};
+
+// apps/bot/src/commands/leave.ts
+function berlinTime(y, m, d, h, min) {
+  const guess = Date.UTC(y, m - 1, d, h, min);
+  const parts = Object.fromEntries(new Intl.DateTimeFormat("en-US", { timeZone: "Europe/Berlin", hourCycle: "h23", year: "numeric", month: "numeric", day: "numeric", hour: "numeric", minute: "numeric" }).formatToParts(new Date(guess)).map((p) => [p.type, p.value]));
+  const shown = Date.UTC(Number(parts.year), Number(parts.month) - 1, Number(parts.day), Number(parts.hour), Number(parts.minute));
+  return new Date(guess - (shown - guess));
+}
+function parseLeaveDate(input, end, now = /* @__PURE__ */ new Date()) {
+  const t = input.trim().toLowerCase();
+  const today = new Intl.DateTimeFormat("en-CA", { timeZone: "Europe/Berlin" }).format(now).split("-").map(Number);
+  let y, m, d, rest = "";
+  const rel = t.match(/^(heute|morgen|übermorgen)(.*)$/);
+  if (rel) {
+    const add = rel[1] === "heute" ? 0 : rel[1] === "morgen" ? 1 : 2;
+    const base = new Date(Date.UTC(today[0], today[1] - 1, today[2] + add));
+    [y, m, d] = [base.getUTCFullYear(), base.getUTCMonth() + 1, base.getUTCDate()];
+    rest = rel[2] ?? "";
+  } else {
+    const x = t.match(/^(\d{1,2})\.(\d{1,2})\.(\d{2,4})?(.*)$/);
+    if (!x) return null;
+    d = Number(x[1]);
+    m = Number(x[2]);
+    y = x[3] ? x[3].length === 2 ? 2e3 + Number(x[3]) : Number(x[3]) : today[0];
+    rest = x[4] ?? "";
+    if (!x[3] && Date.UTC(y, m - 1, d) < Date.UTC(today[0], today[1] - 1, today[2])) y++;
+  }
+  const time = rest.trim().replace(/^(um|,)\s*/, "").replace(/\s*uhr$/, "");
+  let h = end ? 23 : 0, min = end ? 59 : 0;
+  if (time) {
+    const tm = time.match(/^(\d{1,2})(?::(\d{2}))?$/);
+    if (!tm) return null;
+    h = Number(tm[1]);
+    min = Number(tm[2] ?? 0);
+    if (h > 23 || min > 59) return null;
+  }
+  if (m < 1 || m > 12 || d < 1 || d > 31) return null;
+  const check = new Date(Date.UTC(y, m - 1, d));
+  if (check.getUTCMonth() !== m - 1) return null;
+  return berlinTime(y, m, d, h, min);
+}
+var fmt = (iso) => new Date(iso).toLocaleString("de-DE", { timeZone: "Europe/Berlin", day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" });
+var HOUR = 36e5;
+var UNIT_MS = { m: 6e4, min: 6e4, h: HOUR, std: HOUR, d: 24 * HOUR, t: 24 * HOUR, w: 168 * HOUR };
+function parseDuration(input) {
+  const t = input.trim().toLowerCase().replace(/\s+/g, "");
+  if (!t || !/^(\d+(?:[.,]\d+)?(?:min|std|m|h|d|t|w))+$/.test(t)) return null;
+  let ms = 0;
+  for (const [, n, u] of t.matchAll(/(\d+(?:[.,]\d+)?)(min|std|m|h|d|t|w)/g)) ms += Number(n.replace(",", ".")) * UNIT_MS[u];
+  return ms >= HOUR && Number.isFinite(ms) ? Math.round(ms) : null;
+}
+var ts = (iso, style = "F") => `<t:${Math.floor(new Date(iso).getTime() / 1e3)}:${style}>`;
+async function manageReply(c) {
+  const { items } = await c.api.asUser(c.discordId, "GET", "/leave?mine=true");
+  const now = Date.now();
+  const pending = items.find((r) => r.status === "PENDING");
+  const active = items.find((r) => r.status === "APPROVED" && r.active);
+  const upcoming = items.find((r) => r.status === "APPROVED" && new Date(r.startsAt).getTime() > now);
+  const last = items.find((r) => r.status === "ENDED");
+  const head = c.userName ? { author: { name: `@${c.userName}`, ...c.userAvatar ? { iconUrl: c.userAvatar } : {} } } : {};
+  const embed = (description, color3 = COLORS.neutral, fields, footer) => ({ ...head, title: "Abmeldungen verwalten", description, color: color3, ...fields ? { fields } : {}, ...footer ? { footer } : {} });
+  const reason = (r) => [{ name: "Grund", value: clip(plain(r.reason), 1024) }];
+  if (active) return {
+    ephemeral: true,
+    embeds: [embed(`Du bist gerade abgemeldet \u2013 bis ungef\xE4hr ${ts(active.endsAt)} (${ts(active.endsAt, "R")}).
+Du kannst die Abmeldung jederzeit vorzeitig beenden.`, COLORS.success, reason(active), `ID: ${active.number}`)],
+    buttons: [{ id: `leave:cancel:${active.id}`, label: "Vorzeitig beenden", style: "danger", emoji: "\u23F9\uFE0F" }]
+  };
+  if (pending) return {
+    ephemeral: true,
+    embeds: [embed(`Deine Abmeldung wartet auf die Freigabe durch die Leitung.
+Wenn sie angenommen wird, endet sie ungef\xE4hr ${ts(pending.endsAt)}.`, COLORS.warning, reason(pending), `ID: ${pending.number}`)],
+    buttons: [{ id: `leave:cancel:${pending.id}`, label: "Antrag zur\xFCckziehen", style: "danger", emoji: "\u21A9\uFE0F" }]
+  };
+  if (upcoming) return {
+    ephemeral: true,
+    embeds: [embed(`Deine Abmeldung beginnt ${ts(upcoming.startsAt)} und endet ${ts(upcoming.endsAt)}.`, COLORS.info, reason(upcoming), `ID: ${upcoming.number}`)],
+    buttons: [{ id: `leave:cancel:${upcoming.id}`, label: "Absagen", style: "danger", emoji: "\u21A9\uFE0F" }]
+  };
+  const start2 = [{ id: "leave:start", label: "Start", style: "primary", emoji: "\u{1F552}" }];
+  if (!items.length) return { ephemeral: true, embeds: [embed("Du warst noch nie abgemeldet.\nUm jetzt eine Abmeldung zu starten, klicke auf `Start`.")], buttons: start2 };
+  return { ephemeral: true, embeds: [embed(`${last ? `Deine letzte Abmeldung endete ${ts(last.endedAt ?? last.endsAt)}.` : "Du hast gerade keine Abmeldung."}
+Um eine neue Abmeldung zu starten, klicke auf \`Start\`.`)], buttons: start2 };
+}
+var LEAVE_COMMANDS = [
+  {
+    name: "abmeldung",
+    description: "Abmeldung (Urlaub, Abwesenheit) beantragen \u2013 die Leitung entscheidet",
+    options: [
+      { name: "von", description: "Beginn, z. B. heute, 24.12. oder 24.12.2026 18:00", type: "string", required: true, maxLength: 30 },
+      { name: "bis", description: "Ende, z. B. 31.12. oder 02.01.2027", type: "string", required: true, maxLength: 30 },
+      { name: "grund", description: "Grund der Abmeldung", type: "string", required: true, maxLength: 1e3 }
+    ],
+    async run(c) {
+      const from = parseLeaveDate(String(c.opts.von ?? ""), false), to = parseLeaveDate(String(c.opts.bis ?? ""), true);
+      if (!from) return errorReply("\u201Evon\u201C verstehe ich nicht. Beispiele: `heute`, `24.12.`, `24.12.2026 18:00`.");
+      if (!to) return errorReply("\u201Ebis\u201C verstehe ich nicht. Beispiele: `31.12.`, `02.01.2027`, `morgen 20:00`.");
+      try {
+        const r = await c.api.asUser(c.discordId, "POST", "/leave", { startsAt: from.toISOString(), endsAt: to.toISOString(), reason: String(c.opts.grund ?? ""), ...c.guildId ? { guildId: c.guildId } : {} });
+        return { ephemeral: true, embeds: [{
+          title: `\u{1F4C5} Abmeldung ${r.number} beantragt`,
+          color: COLORS.info,
+          description: `**${fmt(r.startsAt)}** bis **${fmt(r.endsAt)}** (${r.days} ${r.days === 1 ? "Tag" : "Tage"})
+
+Die Leitung entscheidet \u2013 du bekommst eine Direktnachricht.`
+        }] };
+      } catch (e) {
+        return mapError(e);
+      }
+    }
+  },
+  {
+    name: "leave",
+    description: "Abmeldungen (Leave of Absence)",
+    subcommands: [{ name: "manage", description: "Eigene Abmeldung ansehen, starten oder beenden" }],
+    async run(c) {
+      try {
+        return await manageReply(c);
+      } catch (e) {
+        return mapError(e);
+      }
+    }
+  }
+];
+async function decide2(c, id2, status, reason) {
+  try {
+    const r = await c.api.asUser(c.discordId, "POST", `/leave/${id2}/decision`, { status, ...reason ? { reason } : {} });
+    const ok = status === "APPROVED";
+    return {
+      ...okReply(`Abmeldung **${r.number}** von ${plain(r.name)} ${ok ? "**angenommen**" : "**abgelehnt**"}. Die Person bekommt eine Direktnachricht.`),
+      decided: { color: ok ? COLORS.success : COLORS.danger, text: clip(`${ok ? "\u2705 Angenommen" : "\u274C Abgelehnt"} von <@${c.discordId}>${r.decidedByName ? ` (${plain(r.decidedByName)})` : ""}${reason ? `
+**Grund:** ${plain(reason)}` : ""}`, 1024) }
+    };
+  } catch (e) {
+    return mapError(e);
+  }
+}
+var LEAVE_INTERACTION = {
+  prefix: "leave",
+  opensModal: (args) => args[0] === "reason" || args[0] === "start",
+  async run(c) {
+    const [action, id2, st] = c.args;
+    if (action === "start") return { modal: { id: "leave:create", title: "Abmeldung erstellen", fields: [
+      { id: "duration", label: "Dauer", required: true, maxLength: 20, placeholder: "Format: '6h', '4d' oder '2w'" },
+      { id: "reason", label: "Grund", paragraph: true, required: true, minLength: 3, maxLength: 1e3, placeholder: "z. B. Urlaub, Pr\xFCfungsphase" }
+    ] } };
+    if (action === "create") {
+      const ms = parseDuration(c.fields?.duration ?? "");
+      if (!ms) return errorReply("Die Dauer verstehe ich nicht. Beispiele: `6h`, `4d`, `2w` oder `1w 2d` (mindestens 1 Stunde).");
+      const reason = (c.fields?.reason ?? "").trim();
+      if (reason.length < 3) return errorReply("Bitte einen Grund angeben.");
+      const now = Date.now();
+      try {
+        const r = await c.api.asUser(c.discordId, "POST", "/leave", { startsAt: new Date(now).toISOString(), endsAt: new Date(now + ms).toISOString(), reason, ...c.guildId ? { guildId: c.guildId } : {} });
+        return { ephemeral: true, embeds: [{
+          title: `Abmeldung eingereicht \xB7 ${humanDuration(ms)}`,
+          color: COLORS.neutral,
+          footer: `ID: ${r.number}`,
+          description: `Deine Abmeldung wurde der Leitung zur Freigabe vorgelegt.
+Wenn sie angenommen wird, endet sie ungef\xE4hr ${ts(r.endsAt)}.
+Um benachrichtigt zu werden, ob sie angenommen oder abgelehnt wird, lass bitte deine DMs offen.`
+        }] };
+      } catch (e) {
+        return mapError(e);
+      }
+    }
+    if (!id2 || !/^[0-9a-f-]{36}$/.test(id2)) return errorReply("Unbekannte Aktion.");
+    if (action === "cancel") {
+      try {
+        const r = await c.api.asUser(c.discordId, "POST", `/leave/${id2}/cancel`);
+        return okReply(r.status === "ENDED" ? `Deine Abmeldung **${r.number}** ist beendet \u2013 willkommen zur\xFCck!` : `Abmeldung **${r.number}** zur\xFCckgezogen.`);
+      } catch (e) {
+        return mapError(e);
+      }
+    }
+    const status = st === "APPROVED" || st === "DENIED" ? st : null;
+    if (!status) return errorReply("Unbekannte Aktion.");
+    if (action === "decide") return decide2(c, id2, status);
+    if (action === "reason") return { modal: { id: `leave:reasonsubmit:${id2}:${status}`, title: status === "APPROVED" ? "Abmeldung annehmen" : "Abmeldung ablehnen", fields: [{ id: "reason", label: "Grund", paragraph: true, required: true, maxLength: 1e3 }] } };
+    if (action === "reasonsubmit") {
+      const reason = (c.fields?.reason ?? "").trim();
+      return reason ? decide2(c, id2, status, reason) : errorReply("Bitte einen Grund angeben.");
+    }
+    return errorReply("Unbekannte Aktion.");
+  }
+};
+
+// apps/bot/src/commands/cad.ts
+var lbl = (list, key3) => {
+  const o = list.find((x) => x.key === key3);
+  return o ? `${o.emoji ? `${o.emoji} ` : ""}${o.label}` : key3;
+};
+var norm = (s) => s.trim().toLowerCase().replace(/[\s_-]+/g, "");
+var config = (c) => c.api.asUser(c.discordId, "GET", "/cad/config");
+async function myUnit(c, callsign) {
+  const units = await c.api.asUser(c.discordId, "GET", "/cad/units");
+  if (callsign) return units.find((u) => norm(u.callsign) === norm(callsign)) ?? null;
+  return units.find((u) => u.crew.some((m) => m.discordId === c.discordId)) ?? null;
+}
+var CAD_COMMANDS = [{
+  name: "cad",
+  description: "CAD-Leitstelle: Einheitenstatus, Funkmeldung, aktive Eins\xE4tze",
+  subcommands: [
+    { name: "status", description: "Status deiner Einheit an die Leitstelle melden", options: [
+      { name: "status", description: "z. B. Verf\xFCgbar, Unterwegs, Am Einsatzort", type: "string", required: true, maxLength: 40 },
+      { name: "einheit", description: "Rufname (leer = deine Einheit)", type: "string", maxLength: 16 }
+    ] },
+    { name: "funk", description: "Funkmeldung an die Leitstelle (landet in der Einsatzchronik)", options: [
+      { name: "text", description: "z. B. \u201EAm Einsatzort.\u201C", type: "string", required: true, maxLength: 500 },
+      { name: "einsatz", description: "Einsatznummer (leer = aktueller Einsatz deiner Einheit)", type: "string", maxLength: 32 }
+    ] },
+    { name: "einsaetze", description: "Aktive Eins\xE4tze der Leitstelle" }
+  ],
+  async run(c) {
+    try {
+      const sub = String(c.opts._sub ?? "");
+      if (sub === "status") {
+        const cfg2 = await config(c);
+        const want = String(c.opts.status ?? "");
+        const st = cfg2.unitStatuses.find((s) => norm(s.key) === norm(want) || norm(s.label) === norm(want));
+        if (!st) return errorReply(`Unbekannter Status. M\xF6glich: ${cfg2.unitStatuses.map((s) => `\`${s.label}\``).join(", ")}`);
+        const unit = await myUnit(c, c.opts.einheit ? String(c.opts.einheit) : void 0);
+        if (!unit) return errorReply(c.opts.einheit ? "Diese Einheit gibt es nicht." : "Du bist keiner Einheit zugeordnet. Gib den Rufnamen mit `einheit:` an.");
+        await c.api.asUser(c.discordId, "POST", `/cad/units/${unit.id}/status`, { status: st.key });
+        return okReply(`**${plain(unit.callsign)}** ist jetzt ${lbl(cfg2.unitStatuses, st.key)}.`);
+      }
+      if (sub === "funk") {
+        const r = await c.api.asUser(c.discordId, "POST", "/cad/radio", { text: String(c.opts.text ?? ""), ...c.opts.einsatz ? { incidentNumber: String(c.opts.einsatz) } : {} });
+        return okReply(`\u{1F4FB} ${r.callsign ? `**${plain(r.callsign)}**: ` : ""}\u201E${plain(c.opts.text)}\u201C gesendet${r.incidentNumber ? ` \u2013 Einsatz **${plain(r.incidentNumber)}**` : ""}.`);
+      }
+      if (sub === "einsaetze") {
+        const [cfg2, list] = await Promise.all([config(c), c.api.asUser(c.discordId, "GET", "/cad/incidents?active=true&take=20")]);
+        const lines = list.map((i) => `**${plain(i.number)}** \xB7 ${clip(plain(i.title), 80)} \u2014 ${lbl(cfg2.priorities, i.priority)} / ${lbl(cfg2.incidentStatuses, i.status)}${i.location ? ` \xB7 ${clip(plain(i.location), 60)}` : ""}${i.units.filter((u) => !u.clearedAt).length ? `
+   \u21B3 ${i.units.filter((u) => !u.clearedAt).map((u) => plain(u.unit.callsign)).join(", ")}` : ""}`);
+        return { ephemeral: true, embeds: [{ title: `\u{1F6A8} Aktive Eins\xE4tze (${list.length})`, description: clip(lines.join("\n") || "Keine aktiven Eins\xE4tze.", 4e3), color: COLORS.info }] };
+      }
+      return errorReply("Unbekannter Unterbefehl.");
+    } catch (e) {
+      return mapError(e);
+    }
+  }
+}];
+var CAD_INTERACTION = {
+  prefix: "cad",
+  async run(c) {
+    const [kind2, id2, action] = c.args;
+    if (!id2 || !/^[0-9a-f-]{36}$/.test(id2)) return errorReply("Unbekannte Aktion.");
+    try {
+      if (kind2 === "call") {
+        if (action === "claim") {
+          await c.api.asUser(c.discordId, "POST", `/cad/calls/${id2}/claim`);
+          return okReply("Notruf \xFCbernommen.");
+        }
+        if (action === "close") {
+          await c.api.asUser(c.discordId, "POST", `/cad/calls/${id2}/close`);
+          return okReply("Notruf geschlossen.");
+        }
+        if (action === "incident") {
+          const r = await c.api.asUser(c.discordId, "POST", `/cad/calls/${id2}/incident`, {});
+          return okReply(`Einsatz **${plain(r.number)}** aus dem Notruf erstellt.`);
+        }
+        if (action === "units") {
+          const units = (await c.api.asUser(c.discordId, "GET", "/cad/units")).filter((u) => u.operational && !["OFF_DUTY", "UNAVAILABLE"].includes(u.status));
+          if (!units.length) return errorReply("Gerade ist keine Einheit verf\xFCgbar.");
+          return { ephemeral: true, content: "Welche Einheit soll den Notruf \xFCbernehmen?", select: { id: `cad:assign:${id2}`, placeholder: "Einheit w\xE4hlen \u2026", options: units.slice(0, 25).map((u) => ({ label: clip(u.callsign, 100), value: u.id, ...u.current ? { description: clip(`im Einsatz ${u.current.number}`, 100) } : u.name ? { description: clip(u.name, 100) } : {} })) } };
+        }
+      }
+      if (kind2 === "assign") {
+        const unitId = c.values?.[0];
+        if (!unitId) return errorReply("Keine Einheit gew\xE4hlt.");
+        await c.api.asUser(c.discordId, "POST", `/cad/calls/${id2}/assign`, { unitId });
+        return okReply("Einheit zugewiesen \u2013 der Einsatz steht im CAD.");
+      }
+      return errorReply("Unbekannte Aktion.");
+    } catch (e) {
+      return mapError(e);
+    }
+  }
+};
+var hex = (v) => typeof v === "string" && /^#[0-9a-f]{6}$/i.test(v) ? parseInt(v.slice(1), 16) : void 0;
+var f = (name, value, inline = true) => value === null || value === void 0 || value === "" ? [] : [{ name, value: clip(plain(value), 1024), inline }];
+function renderCadOutbox(type, p) {
+  const head = `${p.number ? `${String(p.number)} \xB7 ` : ""}${clip(plain(p.title ?? ""), 180)}`;
+  const base = [...f("Stichwort", p.keyword), ...f("Einsatzart", p.type), ...f("Priorit\xE4t", p.priority), ...f("Status", p.status), ...f("Ort", p.location)];
+  switch (type) {
+    case "cad.incident.created":
+      return { title: clip(`\u{1F6A8} Neuer Einsatz: ${head}`, 256), color: hex(p.priorityColor) ?? COLORS.danger, description: p.description ? clip(plain(p.description), 1500) : void 0, fields: base };
+    case "cad.incident.status":
+      return { title: clip(`\u{1F504} ${head}`, 256), color: hex(p.priorityColor) ?? COLORS.info, description: `Status: **${plain(p.previous ?? "\u2014")}** \u2192 **${plain(p.status)}**${p.note ? `
+${clip(plain(p.note), 500)}` : ""}`, fields: [...f("Ort", p.location)] };
+    case "cad.incident.assigned":
+      return { title: clip(`\u{1F4FB} ${plain(p.callsign)} \u2192 ${head}`, 256), color: hex(p.priorityColor) ?? COLORS.warning, description: p.unitRoleId ? `<@&${String(p.unitRoleId)}>` : void 0, fields: base };
+    case "cad.incident.closed":
+      return { title: clip(`\u2705 Einsatz abgeschlossen: ${head}`, 256), color: COLORS.success, fields: [...f("Status", p.status), ...f("Ort", p.location)] };
+    case "cad.call.received":
+      return {
+        title: clip(`\u{1F6A8} NOTRUF #${String(p.callNumber ?? "?")}`, 256),
+        color: COLORS.danger,
+        description: p.description ? clip(plain(p.description), 1500) : void 0,
+        fields: [...f("Ort", p.location), ...f("Team", p.team), ...p.startedAt ? [{ name: "Zeit", value: `<t:${Math.floor(Date.parse(String(p.startedAt)) / 1e3)}:t>`, inline: true }] : [], { name: "Status", value: "Offen", inline: true }, ...f("Server", p.server)]
+      };
+    case "cad.announcement":
+      return { title: "\u{1F4E2} Leitstellenmeldung", description: clip(plain(p.text), 4e3), color: COLORS.warning, ...p.from ? { footer: `von ${clip(String(p.from), 100)}` } : {} };
+    case "cad.radio":
+      return { title: clip(`\u{1F4FB} ${plain(p.callsign ?? "Funk")}${p.incidentNumber ? ` \xB7 ${String(p.incidentNumber)}` : ""}`, 256), description: `\u201E${clip(plain(p.text), 1500)}\u201C`, color: COLORS.neutral };
+    default:
+      return null;
+  }
+}
+function cadButtons(type, p) {
+  const link = typeof p.dashboardUrl === "string" && /^https?:\/\//.test(p.dashboardUrl) ? [{ id: "link", label: "Im CAD \xF6ffnen", style: "secondary", url: p.dashboardUrl }] : [];
+  if (type === "cad.call.received" && typeof p.id === "string") return [
+    { id: `cad:call:${p.id}:claim`, label: "\xDCbernehmen", style: "primary", emoji: "\u270B" },
+    { id: `cad:call:${p.id}:incident`, label: "Einsatz erstellen", style: "success", emoji: "\u{1F6A8}" },
+    { id: `cad:call:${p.id}:units`, label: "Einheit zuweisen", style: "secondary", emoji: "\u{1F693}" },
+    { id: `cad:call:${p.id}:close`, label: "Schlie\xDFen", style: "danger", emoji: "\u2716\uFE0F" },
+    ...typeof p.mapUrl === "string" && /^https?:\/\//.test(p.mapUrl) ? [{ id: "map", label: "Auf Karte anzeigen", style: "secondary", url: p.mapUrl }] : []
+  ];
+  if (type.startsWith("cad.incident.")) return link.length ? link : void 0;
+  return void 0;
+}
+
+// apps/bot/src/commands/panels.ts
+var FORM_PANEL_INTERACTION = {
+  prefix: "fpanel",
+  opensModal: (args) => args.length === 1,
+  async run(c) {
+    const id2 = c.args[0] ?? "";
+    if (!/^[0-9a-f-]{36}$/.test(id2)) return errorReply("Unbekanntes Panel.");
+    try {
+      if (c.args[1] !== "submit") {
+        const p = await c.api.service("GET", `/bot/panels/forms/${id2}`);
+        return { modal: { id: `fpanel:${id2}:submit`, title: p.modalTitle, fields: p.fields.map((f2) => ({ id: f2.id, label: f2.label, paragraph: f2.long, required: f2.required, maxLength: Math.min(f2.maxLength, 4e3), ...f2.placeholder ? { placeholder: f2.placeholder } : {} })) } };
+      }
+      const r = await c.api.service("POST", `/bot/panels/forms/${id2}/submit`, { guildId: c.guildId ?? null, discordId: c.discordId, userName: c.userDisplayName ?? c.userName ?? c.discordId, ...c.userAvatar ? { avatar: c.userAvatar } : {}, values: c.fields ?? {} });
+      const channelId = r.channelId ?? c.channelId;
+      if (!channelId || !c.discord) return errorReply("F\xFCr dieses Panel ist kein Zielkanal eingestellt.");
+      if (r.previous) await c.discord.deleteMessage(r.previous.channelId, r.previous.messageId);
+      const spot = await c.discord.post(channelId, r.message, r.asUser ? { username: c.userDisplayName ?? c.userName ?? "Mitglied", ...c.userAvatar ? { avatarURL: c.userAvatar } : {} } : void 0);
+      await c.api.service("POST", `/bot/panels/submissions/${r.submissionId}/posted`, spot).catch(() => void 0);
+      if (r.grantRoleIds.length && c.guildId) await c.discord.addRoles(c.guildId, c.discordId, r.grantRoleIds).catch(() => void 0);
+      return { ephemeral: true, content: r.confirmText || "\u2705 Gepostet." };
+    } catch (e) {
+      return mapError(e);
+    }
+  }
+};
+
+// apps/bot/src/commands/duty-reports.ts
+var drafts = /* @__PURE__ */ new Map();
+var key2 = (c, mode, id2) => `${c.discordId}:${mode}:${id2}`;
+var sweep = () => {
+  for (const [k, v] of drafts) if (Date.now() - v.at > 30 * 6e4) drafts.delete(k);
+};
+var PAGE = 5;
+var pages = (t) => Math.max(1, Math.ceil(t.fields.length / PAGE));
+var hint = (f2) => (f2.type === "select" && f2.options.length ? `z. B. ${f2.options.join(" / ")}` : f2.type === "number" ? "Zahl" : f2.placeholder).slice(0, 100);
+function modal(t, mode, id2, page, values) {
+  const n = pages(t);
+  return {
+    id: `drep:sub:${mode}:${id2}:${page}`,
+    title: `${t.name}${n > 1 ? ` (${page + 1}/${n})` : ""}`.slice(0, 45),
+    fields: t.fields.slice(page * PAGE, page * PAGE + PAGE).map((f2) => ({ id: f2.id, label: f2.label, paragraph: f2.type === "long", required: f2.required, maxLength: Math.min(f2.maxLength, 4e3), ...hint(f2) ? { placeholder: hint(f2) } : {}, ...values[f2.id] ? { value: values[f2.id].slice(0, 4e3) } : {} }))
+  };
+}
+async function templates(c) {
+  return c.api.asUser(c.discordId, "GET", "/duty-reports/templates?active=1");
+}
+async function load(c, mode, id2) {
+  if (mode === "n") {
+    const t = (await templates(c)).find((x) => x.id === id2);
+    if (!t) throw new Error("Vorlage nicht gefunden oder deaktiviert.");
+    return { t, values: {} };
+  }
+  const r = await c.api.asUser(c.discordId, "GET", `/duty-reports/${id2}`);
+  if (!r.template) throw new Error("Die Vorlage dieses Berichts gibt es nicht mehr \u2013 bitte im Dashboard bearbeiten.");
+  if (!r.canEdit) throw new Error("Diesen Bericht darfst du nicht bearbeiten.");
+  return { t: r.template, values: r.values, report: r };
+}
+function openModal(c, t, mode, id2, page, base) {
+  const k = key2(c, mode, id2);
+  if (page === 0) drafts.set(k, { values: { ...base }, at: Date.now() });
+  return { modal: modal(t, mode, id2, page, drafts.get(k)?.values ?? base) };
+}
+var DUTY_REPORT_COMMANDS = [{
+  name: "dienstbericht",
+  description: "Tages-/Wochenbericht ausf\xFCllen, ansehen oder bearbeiten",
+  subcommands: [
+    { name: "ausfuellen", description: "Neuen Bericht nach einer Vorlage ausf\xFCllen" },
+    { name: "meine", description: "Deine letzten Berichte" },
+    { name: "anzeigen", description: "Einen Bericht ansehen (und bearbeiten)", options: [{ name: "nummer", description: "Berichtsnummer, z. B. TB-2026-K7M2QX", type: "string", required: true, maxLength: 40 }] }
+  ],
+  opensModal: true,
+  async run(c) {
+    sweep();
+    try {
+      const sub = String(c.opts._sub ?? "ausfuellen");
+      if (sub === "meine") {
+        const r = await c.api.asUser(c.discordId, "GET", "/duty-reports?mine=true&pageSize=10");
+        return { ephemeral: true, embeds: [listEmbed("\u{1F5D3}\uFE0F Deine Berichte", r.items.map((x) => `**${x.number}** \xB7 ${plain(x.templateName)} \u2013 ${periodLabel(x.period, x.periodStart)}${x.status === "REVIEWED" ? " \u2705" : ""}`), "Noch keine Berichte.")] };
+      }
+      if (sub === "anzeigen") {
+        const r = await c.api.asUser(c.discordId, "GET", `/duty-reports/${encodeURIComponent(String(c.opts.nummer ?? "").trim())}`);
+        const t = r.template;
+        return {
+          ephemeral: true,
+          embeds: [{ title: `${t?.emoji ?? "\u{1F4DD}"} ${r.templateName} \u2013 ${periodLabel(r.period, r.periodStart)}`, color: COLORS.info, description: `**${r.number}**${r.status === "REVIEWED" ? " \xB7 \u2705 gepr\xFCft" : ""}`, fields: (t?.fields ?? Object.keys(r.values).map((id2) => ({ id: id2, label: id2 }))).filter((f2) => r.values[f2.id]).map((f2) => ({ name: f2.label, value: r.values[f2.id].slice(0, 1024) })) }],
+          ...r.canEdit ? { buttons: [{ id: `drep:edit:${r.id}`, label: "Bearbeiten", emoji: "\u270F\uFE0F", style: "secondary" }] } : {}
+        };
+      }
+      const list = await templates(c);
+      if (!list.length) return errorReply("Es gibt noch keine aktive Berichtsvorlage. Vorlagen legt man im Dashboard unter \u201ETages-/Wochenberichte\u201C an.");
+      if (list.length === 1) return openModal(c, list[0], "n", list[0].id, 0, {});
+      return { ephemeral: true, content: "Welchen Bericht m\xF6chtest du ausf\xFCllen?", select: { id: "drep:pick", placeholder: "Vorlage w\xE4hlen \u2026", options: list.slice(0, 25).map((t) => ({ label: t.name.slice(0, 100), value: t.id, ...t.emoji ? { emoji: t.emoji } : {}, ...t.description ? { description: t.description.slice(0, 100) } : {} })) } };
+    } catch (e) {
+      return mapError(e);
+    }
+  }
+}];
+var DUTY_REPORT_INTERACTION = {
+  prefix: "drep",
+  opensModal: (args) => ["pick", "edit", "next"].includes(args[0] ?? ""),
+  async run(c) {
+    const [action, a1, a2, a3] = c.args;
+    try {
+      if (action === "pick") {
+        const id3 = c.values?.[0] ?? "";
+        const { t: t2 } = await load(c, "n", id3);
+        return openModal(c, t2, "n", id3, 0, {});
+      }
+      if (action === "edit") {
+        const { t: t2, values } = await load(c, "e", a1 ?? "");
+        return openModal(c, t2, "e", a1 ?? "", 0, values);
+      }
+      const mode = a1 === "e" ? "e" : "n", id2 = a2 ?? "", page = Number(a3 ?? 0);
+      if (!/^[0-9a-f-]{36}$/.test(id2) || !Number.isInteger(page) || page < 0) return errorReply("Ung\xFCltige Anfrage.");
+      const k = key2(c, mode, id2);
+      if (action === "next") {
+        const d2 = drafts.get(k);
+        if (!d2) return errorReply("Die Eingabe ist abgelaufen \u2013 bitte neu beginnen.");
+        const { t: t2 } = await load(c, mode, id2);
+        return openModal(c, t2, mode, id2, page, d2.values);
+      }
+      if (action !== "sub") return errorReply("Unbekannte Aktion.");
+      const { t, report } = await load(c, mode, id2);
+      const d = drafts.get(k) ?? { values: { ...report?.values ?? {} }, at: Date.now() };
+      d.values = { ...d.values, ...c.fields ?? {} };
+      d.at = Date.now();
+      drafts.set(k, d);
+      if (page + 1 < pages(t)) return { ephemeral: true, content: `Seite ${page + 1} von ${pages(t)} gespeichert.`, buttons: [{ id: `drep:next:${mode}:${id2}:${page + 1}`, label: `Weiter (${page + 2}/${pages(t)})`, emoji: "\u27A1\uFE0F", style: "primary" }] };
+      drafts.delete(k);
+      if (mode === "e") {
+        const r2 = await c.api.asUser(c.discordId, "PATCH", `/duty-reports/${id2}`, { values: d.values });
+        return okReply(`Bericht **${r2.number}** aktualisiert \u2013 auch im Dashboard und in Discord.`);
+      }
+      const r = await c.api.asUser(c.discordId, "POST", "/duty-reports", { templateId: id2, values: d.values, source: "DISCORD", guildId: c.guildId ?? null });
+      return okReply(r.merged ? `F\xFCr diesen Zeitraum gab es schon deinen Bericht **${r.number}** \u2013 er wurde aktualisiert.` : `Bericht **${r.number}** eingereicht. Du findest ihn auch im Dashboard; mit \u201EBearbeiten\u201C kannst du ihn \xE4ndern.`);
+    } catch (e) {
+      return e instanceof Error && !("status" in e) ? errorReply(e.message) : mapError(e);
+    }
+  }
+};
+
+// apps/bot/src/commands/features.ts
+var str = (c, k) => String(c.opts[k] ?? "").trim();
+var choices = (m) => Object.keys(m).map((k) => ({ name: k.replace("_", " "), value: k }));
+var needGuildAdmin = (c) => !c.guildId ? errorReply("Das geht nur auf einem Server, nicht per Direktnachricht.") : !c.isGuildAdmin ? errorReply("Daf\xFCr brauchst du auf diesem Discord-Server das Recht \u201EServer verwalten\u201C.") : null;
+var LEGACY = { gruen: "STATUS_1", "gr\xFCn": "STATUS_1", gelb: "STATUS_2", rot: "STATUS_4" };
+async function setDanger(c, level, reason) {
+  try {
+    const s = await c.api.asUser(c.discordId, "PUT", "/danger-level", { level, ...reason ? { reason } : {} });
+    await c.refreshLive?.("danger").catch(() => void 0);
+    return okReply(`Gefahrenstatus: ${s.def?.emoji ?? ""} **${plain(s.def?.name ?? s.level)}**${s.def?.title ? ` \u2013 ${plain(s.def.title)}` : ""}`);
+  } catch (e) {
+    return mapError(e);
+  }
+}
+var DUTY_PANEL = { title: "\u{1F693} Dienststatus", color: COLORS.info, description: "Melde dich hier mit einem Klick **in den Dienst**, in die **Pause** oder **au\xDFer Dienst**.\nDein Status erscheint sofort im Dashboard, in der Teamliste und \u2013 falls eingestellt \u2013 als Discord-Rolle.\n\n*Dein Discord-Konto muss im Dashboard verkn\xFCpft sein.*" };
+var DUTY_BUTTONS = [
+  { id: "duty:ON_DUTY", label: "Im Dienst", emoji: "\u{1F7E2}", style: "success" },
+  { id: "duty:BREAK", label: "Pause", emoji: "\u{1F7E1}", style: "secondary" },
+  { id: "duty:OFF_DUTY", label: "Au\xDFer Dienst", emoji: "\u26AA", style: "danger" }
+];
+var RADIO = { hinzufuegen: "add", entfernen: "remove", pruefen: "check", liste: "list" };
+var FEATURE_COMMANDS = [
+  {
+    name: "gefahrenstatus",
+    description: "Gefahrenstatus anzeigen, setzen oder als Panel posten",
+    options: [
+      { name: "aktion", description: "Was m\xF6chtest du tun? (Standard: anzeigen)", type: "string", choices: [{ name: "anzeigen", value: "anzeigen" }, { name: "setzen", value: "setzen" }, { name: "panel hier posten", value: "panel" }] },
+      { name: "stufe", description: "Neue Stufe (bei \u201Esetzen\u201C), z. B. Status 2", type: "string", maxLength: 40 },
+      { name: "grund", description: "Grund (optional, bei \u201Esetzen\u201C)", type: "string", maxLength: 200 }
+    ],
+    async run(c) {
+      const action = str(c, "aktion") || "anzeigen";
+      if (action === "setzen") {
+        const level = str(c, "stufe");
+        return level ? setDanger(c, LEGACY[level.toLowerCase()] ?? level, str(c, "grund") || void 0) : errorReply("Bitte eine Stufe angeben (z. B. \u201EStatus 2\u201C).");
+      }
+      if (action === "panel") {
+        const denied = needGuildAdmin(c);
+        if (denied) return denied;
+        if (!c.channelId || !c.refreshLive) return errorReply("Panel kann hier nicht gepostet werden.");
+        try {
+          await c.api.asUser(c.discordId, "GET", "/danger-level");
+          await c.refreshLive("danger", { channelId: c.channelId, force: true });
+          return okReply("Gefahrenstatus-Panel gepostet. Es aktualisiert sich selbst; ein \xE4lteres Panel wird nicht mehr bearbeitet.");
+        } catch (e) {
+          return mapError(e);
+        }
+      }
+      try {
+        return { ephemeral: true, embeds: [dangerEmbed(await c.api.asUser(c.discordId, "GET", "/danger-level"))] };
+      } catch (e) {
+        return mapError(e);
+      }
+    }
+  },
+  {
+    name: "teamliste",
+    description: "Richtet die selbst aktualisierende Teamliste ein bzw. aktualisiert sie sofort",
+    async run(c) {
+      const denied = needGuildAdmin(c);
+      if (denied) return denied;
+      if (!c.refreshLive) return errorReply("Teamliste ist hier nicht verf\xFCgbar.");
+      try {
+        await c.api.asUser(c.discordId, "GET", "/team/overview");
+        const cfg2 = await c.config?.();
+        const p = await c.refreshLive("teamlist", { channelId: cfg2?.teamlist ? void 0 : c.channelId, force: true });
+        return p ? okReply(`Teamliste steht in <#${p.channelId}> und aktualisiert sich automatisch.`) : errorReply("Kein Kanal f\xFCr die Teamliste gefunden.");
+      } catch (e) {
+        return mapError(e);
+      }
+    }
+  },
+  {
+    name: "funkfreigabe",
+    description: "Funk-Whitelist verwalten (hinzuf\xFCgen, entfernen, pr\xFCfen, Liste)",
+    options: [
+      { name: "aktion", description: "Aktion", type: "string", required: true, choices: choices(RADIO) },
+      { name: "mitglied", description: "Discord-Mitglied (nicht bei \u201Eliste\u201C)", type: "user" }
+    ],
+    async run(c) {
+      const action = RADIO[str(c, "aktion")];
+      if (!action) return errorReply("Unbekannte Aktion.");
+      try {
+        if (action === "list") {
+          const rows = await c.api.asUser(c.discordId, "GET", "/radio-whitelist");
+          return { ephemeral: true, embeds: [listEmbed(`\u{1F4FB} Funk-Freigabe (${rows.length})`, rows.map((r2) => `\u2022 ${r2.callsign ? `**${plain(r2.callsign)}** ` : ""}${plain(r2.displayName)}`), "Noch niemand freigegeben.")] };
+        }
+        const target = str(c, "mitglied");
+        if (!/^\d{15,25}$/.test(target)) return errorReply("Bitte ein Mitglied angeben.");
+        if (action === "check") {
+          const r2 = await c.api.asUser(c.discordId, "GET", `/radio-whitelist/check?discordId=${target}`);
+          return r2.whitelisted ? okReply(`**${plain(r2.displayName)}** ist f\xFCr den Funk freigegeben.`) : errorReply(`**${plain(r2.displayName)}** ist **nicht** f\xFCr den Funk freigegeben.`);
+        }
+        const r = await c.api.asUser(c.discordId, "POST", action === "add" ? "/radio-whitelist" : "/radio-whitelist/remove", { discordId: target });
+        let note2 = "";
+        const cfg2 = await c.config?.().catch(() => void 0);
+        if (cfg2?.radioRole && c.guildId && c.platform) {
+          try {
+            await c.platform.setRole(c.guildId, target, cfg2.radioRole, action === "add");
+            note2 = ` Rolle <@&${cfg2.radioRole}> ${action === "add" ? "vergeben" : "entzogen"}.`;
+          } catch {
+            note2 = " \u26A0\uFE0F Die Discord-Rolle konnte nicht ge\xE4ndert werden (Bot-Rolle muss \xFCber der Funkrolle stehen und \u201ERollen verwalten\u201C haben).";
+          }
+        }
+        return okReply(`**${plain(r.displayName)}** ${action === "add" ? "ist jetzt f\xFCr den Funk freigegeben" : "wurde von der Funk-Freigabe entfernt"}.${note2}`);
+      } catch (e) {
+        if (e instanceof BotApiError && e.status === 404) return errorReply("Dieses Discord-Konto ist mit keinem aktiven Benutzer verkn\xFCpft (oder steht nicht auf der Liste).");
+        return mapError(e);
+      }
+    }
+  },
+  {
+    name: "dienstpanel",
+    description: "Postet das Dienst-Panel (Im Dienst / Pause / Au\xDFer Dienst per Button) in diesen Kanal",
+    async run(c) {
+      const denied = needGuildAdmin(c);
+      if (denied) return denied;
+      if (!c.channelId || !c.platform) return errorReply("Panel kann hier nicht gepostet werden.");
+      try {
+        await c.platform.postPanel({ channelId: c.channelId, embed: DUTY_PANEL, buttons: DUTY_BUTTONS });
+      } catch {
+        return errorReply("Panel konnte nicht gepostet werden (fehlen dem Bot Rechte in diesem Kanal?).");
+      }
+      const cfg2 = await c.config?.().catch(() => void 0);
+      return okReply(`Dienst-Panel gepostet.${cfg2?.dutyRole || cfg2?.duty ? "" : " Tipp: In den Einstellungen einen **Dienst-Kanal** (Meldungen) und eine **Dienst-Rolle** hinterlegen."}`);
+    }
+  },
+  {
+    name: "roblox",
+    description: "Sucht einen Roblox-Benutzer (Name \u2192 ID)",
+    options: [{ name: "name", description: "Roblox-Benutzername", type: "string", required: true, maxLength: 20 }],
+    async run(c) {
+      if (!c.robloxLookup) return errorReply("Roblox-Suche ist nicht verf\xFCgbar.");
+      const u = await c.robloxLookup(str(c, "name"));
+      if (!u) return errorReply(`Kein Roblox-Benutzer \u201E${plain(str(c, "name"))}\u201C gefunden (oder Roblox ist gerade nicht erreichbar).`);
+      return { ephemeral: true, embeds: [{ title: clip(`\u{1F3AE} ${plain(u.name)}`, 256), color: COLORS.info, fields: [
+        { name: "Roblox-ID", value: String(u.id), inline: true },
+        { name: "Anzeigename", value: clip(plain(u.displayName), 1024), inline: true },
+        { name: "Profil", value: `https://www.roblox.com/users/${u.id}/profile` }
+      ] }] };
+    }
+  }
+];
+async function shiftTypes(c) {
+  const cfg2 = await c.api.service("GET", "/bot/shifts").catch(() => null);
+  return cfg2?.enabled ? cfg2.types : null;
+}
+async function shiftPicker(c) {
+  const types = await shiftTypes(c);
+  if (!types || types.length < 2) return null;
+  return { ephemeral: true, content: "Welche Schicht beginnst du?", select: { id: "duty:type", placeholder: "Schicht w\xE4hlen \u2026", options: types.slice(0, 25).map((t) => ({ label: clip(t.name, 100), value: t.id, ...t.isDefault ? { description: "Standard" } : {} })) } };
+}
+var INTERACTIONS = [
+  {
+    prefix: "duty",
+    async run(c) {
+      if (c.args[0] === "still") {
+        try {
+          const r = await c.api.asUser(c.discordId, "POST", "/team/me/active");
+          return r.onDuty ? okReply("Danke! Deine Schicht l\xE4uft weiter.") : okReply("Du bist gerade nicht im Dienst.");
+        } catch (e) {
+          return mapError(e);
+        }
+      }
+      const shiftType = c.args[0] === "type" ? c.values?.[0] : void 0;
+      const status = c.args[0] === "type" ? "ON_DUTY" : c.args[0] ?? "";
+      if (!DUTY_DE[status]) return errorReply("Unbekannter Status.");
+      if (status === "ON_DUTY" && !shiftType) {
+        const pick2 = await shiftPicker(c);
+        if (pick2) return pick2;
+      }
+      try {
+        const r = await c.api.asUser(c.discordId, "PUT", "/team/me/status", { status, ...shiftType ? { shiftType } : {} });
+        const name = shiftType ? (await shiftTypes(c))?.find((t) => t.id === (r.shiftType ?? shiftType))?.name : void 0;
+        return okReply(`${DUTY_DE[status].emoji} Du bist jetzt **${DUTY_DE[status].label}**${name ? ` (Schicht: **${plain(name)}**)` : ""}.`);
+      } catch (e) {
+        if (e instanceof BotApiError && e.status === 409) return okReply(`Du bist bereits **${DUTY_DE[status].label}**.`);
+        return mapError(e);
+      }
+    }
+  },
+  QUALI_INTERACTION,
+  TICKET_INTERACTION,
+  VOICE_INTERACTION,
+  LEAVE_INTERACTION,
+  CAD_INTERACTION,
+  // Roblox-Verifizierung ist vorerst abgeschaltet (Code in ./verify bleibt für später); alte Panel-Buttons bekommen einen Hinweis
+  { prefix: "verify", async run() {
+    return errorReply("Die Roblox-Verifizierung ist gerade abgeschaltet.");
+  } },
+  {
+    prefix: "danger",
+    async run(c) {
+      const level = c.args[0] === "set" ? c.args[1] : void 0;
+      return level ? setDanger(c, level) : errorReply("Unbekannte Aktion.");
+    }
+  },
+  {
+    prefix: "support",
+    async run(c) {
+      if (!c.guildId || !c.platform) return errorReply("Das geht nur auf einem Server.");
+      if (c.args[0] === "close") {
+        if (!c.channelId) return errorReply("Unbekannter Channel.");
+        await c.platform.deleteChannel(c.channelId, 5e3);
+        return okReply("Ticket wird in 5 Sekunden geschlossen.");
+      }
+      return errorReply("Dieses alte Support-Panel wird nicht mehr unterst\xFCtzt. Bitte das neue Ticket-Panel benutzen.");
+    }
+  },
+  FORM_PANEL_INTERACTION,
+  DUTY_REPORT_INTERACTION
+];
+var interactionFor = (customId) => {
+  const [prefix, ...args] = customId.split(":");
+  const def = INTERACTIONS.find((d) => d.prefix === prefix);
+  return def ? { def, args } : void 0;
+};
+
+// apps/bot/src/commands/index.ts
+var hm = (min) => `${Math.floor(min / 60)} h ${String(Math.round(min % 60)).padStart(2, "0")} min`;
+var q = (s) => encodeURIComponent(s.trim());
+var str2 = (c, k) => String(c.opts[k] ?? "").trim();
+async function resolvePerson(c, term, opts = {}) {
+  const page = await c.api.asUser(c.discordId, "GET", `/persons?q=${q(term)}&pageSize=10`);
+  const exact = page.items.filter((p) => String(p.robloxUsername).toLowerCase() === term.toLowerCase() || p.robloxUserId === term);
+  if (exact.length === 1) return { person: exact[0] };
+  if (exact.length === 0 && page.items.length === 0) {
+    if (opts.create && c.robloxLookup) {
+      const u = await c.robloxLookup(term);
+      if (!u) return { reply: errorReply(`Keine Person zu \u201E${plain(term)}\u201C gefunden \u2013 und bei Roblox gibt es keinen Benutzer mit diesem Namen (oder Roblox ist gerade nicht erreichbar).`) };
+      try {
+        const created = await c.api.asUser(c.discordId, "POST", "/persons", { robloxUsername: u.name, robloxUserId: String(u.id) });
+        return { person: created, created: true };
+      } catch (e) {
+        if (e instanceof BotApiError && e.status === 403) return { reply: errorReply(`\u201E${plain(u.name)}\u201C ist noch nicht im System, und dir fehlt das Recht, Personen anzulegen. Bitte lass die Person von jemandem mit Berechtigung anlegen.`) };
+        throw e;
+      }
+    }
+    return { reply: errorReply(`Keine Person zu \u201E${plain(term)}\u201C gefunden.`) };
+  }
+  const names = (exact.length ? exact : page.items).slice(0, 8).map((p) => `${plain(p.robloxUsername)} (${p.robloxUserId ?? "ohne ID"})`).join(", ");
+  return { reply: errorReply(`Nicht eindeutig. Treffer: ${names}. Bitte exakten Namen oder die Roblox-ID angeben.`) };
+}
+var DUTY = { an: "ON_DUTY", pause: "BREAK", aus: "OFF_DUTY" };
+var UNIT = { verfuegbar: "AVAILABLE", beschaeftigt: "BUSY", unterwegs: "EN_ROUTE", vor_ort: "ON_SCENE", nicht_verfuegbar: "UNAVAILABLE", ausser_dienst: "OFF_DUTY" };
+var PRIO = { niedrig: "LOW", mittel: "MEDIUM", hoch: "HIGH", dringend: "URGENT", kritisch: "CRITICAL" };
+var choices2 = (m) => Object.keys(m).map((k) => ({ name: k.replace("_", " "), value: k }));
+var INC_STATUS = { bestaetigt: "ACKNOWLEDGED", unterwegs: "EN_ROUTE", vor_ort: "ON_SCENE", in_bearbeitung: "PROCESSING", abschluss: "CLEARING", abgebrochen: "CANCELLED", geschlossen: "CLOSED" };
+var REPORT = { patrouille: "PATROL", vorfall: "INCIDENT", verkehr: "TRAFFIC", festnahme: "ARREST", zitation: "CITATION", kollision: "COLLISION", ermittlung: "INVESTIGATION", allgemein: "GENERAL" };
+var CHANNEL = { team: "TEAM", dispatch: "DISPATCH" };
+async function resolveIncident(c, number) {
+  const page = await c.api.asUser(c.discordId, "GET", `/incidents?q=${q(number)}&pageSize=10`);
+  const hit = page.items.find((i) => String(i.number).toLowerCase() === number.toLowerCase()) ?? (page.items.length === 1 ? page.items[0] : void 0);
+  return hit ? { incident: hit } : { reply: errorReply(page.items.length ? "Nicht eindeutig \u2013 bitte die vollst\xE4ndige Einsatznummer angeben (z. B. I-2026-ABC123)." : `Einsatz \u201E${plain(number)}\u201C nicht gefunden.`) };
+}
+var COMMANDS = [
+  {
+    name: "funkcode",
+    description: "Funk-Codes nachschlagen (z. B. 10-4)",
+    options: [{ name: "suche", description: "Code oder Bedeutung (leer = alle)", type: "string", maxLength: 64 }],
+    async run(c) {
+      try {
+        const term = str2(c, "suche");
+        const rows = await c.api.asUser(c.discordId, "GET", `/radio-codes${term ? `?q=${q(term)}` : ""}`);
+        if (!rows.length) return errorReply(term ? `Kein Funk-Code zu \u201E${plain(term)}\u201C gefunden.` : "Es sind noch keine Funk-Codes hinterlegt.");
+        const exact = term ? rows.find((r) => r.code.toLowerCase() === term.toLowerCase()) : void 0;
+        if (exact) return { ephemeral: true, embeds: [{ title: `\u{1F4E1} ${plain(exact.code)}`, description: `**${plain(exact.meaning)}**${exact.description ? `
+${plain(exact.description)}` : ""}`, color: 3900150, footer: exact.category ? plain(exact.category) : void 0 }] };
+        const lines = rows.slice(0, 40).map((r) => `\`${plain(r.code)}\` \u2013 ${plain(r.meaning)}`);
+        return { ephemeral: true, embeds: [{ title: "\u{1F4E1} Funk-Codes", description: lines.join("\n").slice(0, 4e3), color: 3900150, footer: rows.length > 40 ? `${rows.length - 40} weitere \u2013 Suche eingrenzen` : void 0 }] };
+      } catch (e) {
+        return mapError(e);
+      }
+    }
+  },
+  {
+    name: "teamchance",
+    description: "Zeigt, ob gerade eine Team-Chance (Bewerbungsphase f\xFCrs Team) offen ist",
+    async run(c) {
+      try {
+        const s = await c.api.service("GET", `/bot/teamchance${c.guildId ? `?guildId=${c.guildId}` : ""}`);
+        const when = (iso) => iso ? `<t:${Math.floor(Date.parse(iso) / 1e3)}:f>` : null;
+        if (s.isOpen) return { ephemeral: true, embeds: [{ title: `\u{1F4E3} ${plain(s.title)} \u2013 offen`, description: `${plain(s.description)}
+
+Bewerben: \`/bewerbung\``.slice(0, 4e3), color: 2278750, fields: [...s.closesAt ? [{ name: "Bewerbungsschluss", value: when(s.closesAt), inline: true }] : [], ...s.remaining !== null ? [{ name: "Freie Pl\xE4tze", value: String(s.remaining), inline: true }] : []] }] };
+        const why = s.reason === "not_started" && s.opensAt ? `Startet ${when(s.opensAt)}.` : s.reason === "full" ? "Alle Pl\xE4tze sind vergeben." : "Derzeit ist keine Team-Chance offen.";
+        return { ephemeral: true, embeds: [{ title: `\u{1F512} ${plain(s.title)}`, description: why, color: 15680580 }] };
+      } catch (e) {
+        return mapError(e);
+      }
+    }
+  },
+  {
+    name: "hilfe",
+    description: "Zeigt alle Befehle",
+    async run() {
+      return { ephemeral: true, embeds: [{ title: "EN Polizei \u2014 Befehle", color: COLORS.info, fields: [
+        { name: "Konto", value: "`/entverknuepfen` `/profil` `/benachrichtigungen`" },
+        { name: "Abfragen", value: "`/person` `/kennzeichen` `/fahndungen` `/einsaetze` `/einsatzinfo` `/einheiten` `/team`" },
+        { name: "Dienst & Leitstelle", value: "`/dienst` `/dienststunden` `/abmeldung` `/leave manage` `/einheitstatus` `/einsatz` `/einsatzstatus` `/einsatzzuweisen` `/funk` `/funkcode` `/cad`" },
+        { name: "Erfassen", value: "`/ticket` `/bericht` `/dienstbericht` `/beschwerde` `/ermittlung` `/fahndung` `/beweis`" },
+        { name: "Leitung & Team", value: "`/gefahrenstatus` `/funkfreigabe` `/teamliste` `/dienstpanel` `/bewerbungspanel` `/qualipanel` `/teamchance` `/roblox`" },
+        { name: "Support-Tickets", value: "`/support` \xF6ffnet ein Ticket (Team: `/support mitglied:@\u2026` f\xFCr jemand anderen). Ticket-Panels, Kategorien, Fragen und Buttons werden im Dashboard eingerichtet und von dort in Discord gesendet." },
+        { name: "F\xFCr alle", value: "`/bewerbung` (auch ohne Verkn\xFCpfung; Fragen per Direktnachricht) \xB7 SEK/Flugstaffel/Ausbilder \xFCber das Qualifikations-Panel" },
+        { name: "Hinweis", value: "Alle Befehle laufen mit **deinen** Rechten im System. Antworten sind nur f\xFCr dich sichtbar." }
+      ] }] };
+    }
+  },
+  {
+    name: "person",
+    description: "Sucht eine Person (Roblox-Name oder -ID)",
+    options: [{ name: "suche", description: "Name oder Roblox-ID", type: "string", required: true, maxLength: 64 }],
+    async run(c) {
+      try {
+        const page = await c.api.asUser(c.discordId, "GET", `/persons?q=${q(str2(c, "suche"))}&pageSize=5`);
+        if (!page.items.length) return errorReply("Keine Person gefunden.");
+        if (page.items.length > 1 && !page.items.some((p) => String(p.robloxUsername).toLowerCase() === str2(c, "suche").toLowerCase())) {
+          return { ephemeral: true, embeds: [listEmbed(`\u{1F465} ${page.total} Treffer`, page.items.map((p) => `\u2022 **${plain(p.robloxUsername)}** (${p.robloxUserId ?? "ohne ID"})`), "")] };
+        }
+        const hit = page.items.find((p) => String(p.robloxUsername).toLowerCase() === str2(c, "suche").toLowerCase()) ?? page.items[0];
+        const ov = await c.api.asUser(c.discordId, "GET", `/persons/${hit.id}`);
+        const wanted = ov.links.some((l) => l.entityType === "Wanted");
+        return { ephemeral: true, embeds: [personEmbed(ov.person, { tickets: ov.tickets.length, wanted })] };
+      } catch (e) {
+        return mapError(e);
+      }
+    }
+  },
+  {
+    name: "kennzeichen",
+    description: "Sucht ein Fahrzeug nach Kennzeichen",
+    options: [{ name: "kennzeichen", description: "z. B. LC 1001", type: "string", required: true, maxLength: 16 }],
+    async run(c) {
+      try {
+        const page = await c.api.asUser(c.discordId, "GET", `/vehicles?q=${q(str2(c, "kennzeichen"))}&pageSize=5`);
+        return page.items.length ? { ephemeral: true, embeds: page.items.map(vehicleEmbed) } : errorReply("Kein Fahrzeug gefunden.");
+      } catch (e) {
+        return mapError(e);
+      }
+    }
+  },
+  {
+    name: "fahndungen",
+    description: "Zeigt aktive Fahndungen",
+    async run(c) {
+      try {
+        const page = await c.api.asUser(c.discordId, "GET", "/wanted?pageSize=10");
+        return { ephemeral: true, embeds: [listEmbed(`\u{1F534} Aktive Fahndungen (${page.total})`, page.items.map((w) => `\u2022 **${plain(w.reason)}** \u2014 ${label(w.priority)}${w.personId ? "" : " (Fahrzeug)"}`), "Keine aktiven Fahndungen.")] };
+      } catch (e) {
+        return mapError(e);
+      }
+    }
+  },
+  {
+    name: "dienst",
+    description: "Setzt deinen Dienststatus",
+    options: [{ name: "status", description: "Neuer Status", type: "string", required: true, choices: choices2(DUTY) }],
+    async run(c) {
+      const status = DUTY[str2(c, "status")];
+      if (!status) return errorReply("Unbekannter Status.");
+      if (status === "ON_DUTY") {
+        const pick2 = await shiftPicker(c);
+        if (pick2) return pick2;
+      }
+      try {
+        await c.api.asUser(c.discordId, "PUT", "/team/me/status", { status });
+        return okReply(`Dienststatus: **${label(status)}**`);
+      } catch (e) {
+        return mapError(e);
+      }
+    }
+  },
+  {
+    name: "dienststunden",
+    description: "Zeigt deine Dienststunden (oder mit \u201Ealle\u201C die des Teams)",
+    options: [
+      { name: "tage", description: "Zeitraum in Tagen (Standard: 7)", type: "integer", min: 1, max: 90 },
+      { name: "alle", description: "Alle Beamten anzeigen (nur Schichtleitung)", type: "boolean" }
+    ],
+    async run(c) {
+      const days = Number(c.opts.tage ?? 7);
+      const all = c.opts.alle === true;
+      try {
+        const r = await c.api.asUser(c.discordId, "GET", `${all ? "/team/hours" : "/team/me/hours"}?days=${days}`);
+        const period = days === 1 ? "letzte 24 Stunden" : `letzte ${days} Tage`;
+        if (all) {
+          const lines2 = r.users.slice(0, 25).map((u, i) => `${i + 1}. **${plain(u.callsign ?? u.name)}** ${u.callsign ? `(${plain(u.name)}) ` : ""}\u2014 ${hm(u.minutes)} \xB7 im Dienst ${hm(u.byStatus.ON_DUTY ?? 0)}`);
+          return { ephemeral: true, embeds: [listEmbed(`\u23F1\uFE0F Dienststunden Team (${period})`, lines2, "Im Zeitraum war niemand im Dienst.")] };
+        }
+        const me = r.users[0];
+        if (!me) return { ephemeral: true, embeds: [listEmbed(`\u23F1\uFE0F Deine Dienststunden (${period})`, [], "Im Zeitraum warst du nicht im Dienst.")] };
+        const lines = Object.entries(me.byStatus).sort((a, b) => b[1] - a[1]).map(([s, m]) => `\u2022 ${label(s)}: ${hm(m)}`);
+        return { ephemeral: true, embeds: [listEmbed(`\u23F1\uFE0F Deine Dienststunden (${period})`, [`**Gesamt: ${hm(me.minutes)}** in ${me.sessions} Abschnitt${me.sessions === 1 ? "" : "en"}`, ...lines], "")] };
+      } catch (e) {
+        return mapError(e);
+      }
+    }
+  },
+  {
+    name: "einheiten",
+    description: "Zeigt alle Einheiten und ihren Status",
+    async run(c) {
+      try {
+        const units = await c.api.asUser(c.discordId, "GET", "/dispatch/units");
+        return { ephemeral: true, embeds: [listEmbed("\u{1F4FB} Einheiten", units.map((u) => `\u2022 **${plain(u.callsign)}** \u2014 ${label(u.status)}`), "Keine Einheiten angelegt.")] };
+      } catch (e) {
+        return mapError(e);
+      }
+    }
+  },
+  {
+    name: "einheitstatus",
+    description: "\xC4ndert den Status einer Einheit",
+    options: [
+      { name: "rufzeichen", description: "z. B. ADAM-1", type: "string", required: true, maxLength: 16 },
+      { name: "status", description: "Neuer Status", type: "string", required: true, choices: choices2(UNIT) }
+    ],
+    async run(c) {
+      const status = UNIT[str2(c, "status")];
+      if (!status) return errorReply("Unbekannter Status.");
+      try {
+        const units = await c.api.asUser(c.discordId, "GET", "/dispatch/units");
+        const unit = units.find((u) => String(u.callsign).toLowerCase() === str2(c, "rufzeichen").toLowerCase());
+        if (!unit) return errorReply("Einheit nicht gefunden.");
+        await c.api.asUser(c.discordId, "PUT", `/dispatch/units/${unit.id}/status`, { status });
+        return okReply(`**${plain(unit.callsign)}** \u2192 ${label(status)}`);
+      } catch (e) {
+        return mapError(e);
+      }
+    }
+  },
+  {
+    name: "einsaetze",
+    description: "Zeigt offene Eins\xE4tze",
+    async run(c) {
+      try {
+        const page = await c.api.asUser(c.discordId, "GET", "/incidents?active=true&pageSize=10");
+        return { ephemeral: true, embeds: [listEmbed(`\u{1F6A8} Offene Eins\xE4tze (${page.total})`, page.items.map(incidentLine), "Keine offenen Eins\xE4tze.")] };
+      } catch (e) {
+        return mapError(e);
+      }
+    }
+  },
+  {
+    name: "einsatz",
+    description: "Legt einen neuen Einsatz an",
+    options: [
+      { name: "titel", description: "Kurzbeschreibung", type: "string", required: true, maxLength: 200 },
+      { name: "prioritaet", description: "Priorit\xE4t (Standard: mittel)", type: "string", choices: choices2(PRIO) },
+      { name: "ort", description: "Einsatzort", type: "string", maxLength: 200 }
+    ],
+    async run(c) {
+      const title = str2(c, "titel");
+      if (title.length < 3) return errorReply("Der Titel ist zu kurz (mindestens 3 Zeichen).");
+      try {
+        const prio = PRIO[str2(c, "prioritaet")] ?? "MEDIUM";
+        const inc = await c.api.asUser(c.discordId, "POST", "/incidents", { title, priority: prio, location: str2(c, "ort") || void 0 });
+        return okReply(`Einsatz **${inc.number}** angelegt (${label(prio)}).`);
+      } catch (e) {
+        return mapError(e);
+      }
+    }
+  },
+  {
+    name: "ticket",
+    description: "Stellt ein Ticket aus",
+    options: [
+      { name: "person", description: "Roblox-Name oder -ID", type: "string", required: true, maxLength: 64 },
+      { name: "grund", description: "Grund", type: "string", required: true, maxLength: 500 },
+      { name: "betrag", description: "Betrag", type: "number", min: 0, max: 1e6 }
+    ],
+    async run(c) {
+      const reason = str2(c, "grund");
+      if (reason.length < 3) return errorReply("Der Grund ist zu kurz (mindestens 3 Zeichen).");
+      try {
+        const { person, reply, created } = await resolvePerson(c, str2(c, "person"), { create: true });
+        if (!person) return reply;
+        const amount = typeof c.opts.betrag === "number" ? c.opts.betrag : void 0;
+        const t = await c.api.asUser(c.discordId, "POST", "/tickets", { personId: person.id, reason, ...amount !== void 0 ? { amount } : {} });
+        return okReply(`Ticket **${t.number}** f\xFCr **${plain(person.robloxUsername)}** ausgestellt.${created ? " Die Person war noch nicht im System und wurde nach Roblox-Pr\xFCfung neu angelegt." : ""}`);
+      } catch (e) {
+        return mapError(e);
+      }
+    }
+  },
+  {
+    name: "profil",
+    description: "Zeigt dein verkn\xFCpftes Konto und deine Rollen",
+    async run(c) {
+      try {
+        const me = await c.api.asUser(c.discordId, "GET", "/auth/me");
+        return { ephemeral: true, embeds: [{ title: `\u{1FAAA} ${plain(me.displayName)}`, color: COLORS.info, fields: [
+          { name: "Benutzer", value: `@${plain(me.username)}`, inline: true },
+          { name: "Roblox-ID", value: String(me.robloxUserId ?? "nicht hinterlegt"), inline: true },
+          { name: "Rollen", value: clip(me.roles.map(plain).join(", ") || "keine", 1024) },
+          { name: "Berechtigungen", value: `${me.permissions.length} aktiv`, inline: true }
+        ] }] };
+      } catch (e) {
+        return mapError(e);
+      }
+    }
+  },
+  {
+    name: "entverknuepfen",
+    description: "L\xF6st die Verkn\xFCpfung deines Discord-Kontos",
+    async run(c) {
+      try {
+        await c.api.asUser(c.discordId, "DELETE", "/discord/link");
+        return okReply("Verkn\xFCpfung gel\xF6st. Im Dashboard (Chat-Symbol oben rechts) kannst du sie jederzeit neu herstellen.");
+      } catch (e) {
+        return mapError(e);
+      }
+    }
+  },
+  {
+    name: "team",
+    description: "Zeigt, wer im Dienst ist",
+    async run(c) {
+      try {
+        const rows = await c.api.asUser(c.discordId, "GET", "/team/overview");
+        const on = rows.filter((r) => r.dutyStatus !== "OFF_DUTY");
+        const lines = on.slice(0, 25).map((r) => `\u2022 **${plain(r.callsign ?? "\u2014")}** ${plain(r.name)} \u2014 ${label(r.dutyStatus)}${r.unit ? ` \xB7 ${plain(r.unit.callsign)}` : ""}${r.currentIncident ? ` \xB7 \u{1F6A8} ${r.currentIncident.number}` : ""}`);
+        return { ephemeral: true, embeds: [listEmbed(`\u{1F46E} Im Dienst (${on.length} von ${rows.length})`, lines, "Aktuell ist niemand im Dienst.")] };
+      } catch (e) {
+        return mapError(e);
+      }
+    }
+  },
+  {
+    name: "einsatzinfo",
+    description: "Zeigt Details zu einem Einsatz",
+    options: [{ name: "nummer", description: "Einsatznummer, z. B. I-2026-ABC123", type: "string", required: true, maxLength: 32 }],
+    async run(c) {
+      try {
+        const { incident, reply } = await resolveIncident(c, str2(c, "nummer"));
+        if (!incident) return reply;
+        const d = await c.api.asUser(c.discordId, "GET", `/incidents/${incident.id}`);
+        const i = d.incident;
+        const units = (i.units ?? []).filter((u) => !u.clearedAt).map((u) => plain(u.unit.callsign)).join(", ") || "keine";
+        return { ephemeral: true, embeds: [{ title: clip(`\u{1F6A8} ${i.number} \u2014 ${plain(i.title)}`, 256), color: COLORS.info, description: i.description ? clip(plain(i.description), 1500) : void 0, fields: [
+          { name: "Priorit\xE4t", value: label(i.priority), inline: true },
+          { name: "Status", value: label(i.status), inline: true },
+          { name: "Ort", value: clip(plain(i.location), 1024), inline: true },
+          { name: "Einheiten", value: clip(units, 1024) },
+          { name: "Verlauf", value: clip(d.timeline.slice(0, 5).map((t) => `\u2022 ${plain(t.summary)}`).join("\n") || "\u2014", 1024) }
+        ] }] };
+      } catch (e) {
+        return mapError(e);
+      }
+    }
+  },
+  {
+    name: "einsatzstatus",
+    description: "\xC4ndert den Status eines Einsatzes",
+    options: [
+      { name: "nummer", description: "Einsatznummer", type: "string", required: true, maxLength: 32 },
+      { name: "status", description: "Neuer Status", type: "string", required: true, choices: choices2(INC_STATUS) }
+    ],
+    async run(c) {
+      const status = INC_STATUS[str2(c, "status")];
+      if (!status) return errorReply("Unbekannter Status.");
+      try {
+        const { incident, reply } = await resolveIncident(c, str2(c, "nummer"));
+        if (!incident) return reply;
+        if (status === "CLOSED") await c.api.asUser(c.discordId, "POST", `/dispatch/incidents/${incident.id}/close`);
+        else await c.api.asUser(c.discordId, "PUT", `/dispatch/incidents/${incident.id}/status`, { status });
+        return okReply(`**${incident.number}** \u2192 ${label(status)}`);
+      } catch (e) {
+        return mapError(e);
+      }
+    }
+  },
+  {
+    name: "einsatzzuweisen",
+    description: "Weist eine Einheit einem Einsatz zu",
+    options: [
+      { name: "nummer", description: "Einsatznummer", type: "string", required: true, maxLength: 32 },
+      { name: "rufzeichen", description: "z. B. ADAM-1", type: "string", required: true, maxLength: 16 }
+    ],
+    async run(c) {
+      try {
+        const { incident, reply } = await resolveIncident(c, str2(c, "nummer"));
+        if (!incident) return reply;
+        const units = await c.api.asUser(c.discordId, "GET", "/dispatch/units");
+        const unit = units.find((u) => String(u.callsign).toLowerCase() === str2(c, "rufzeichen").toLowerCase());
+        if (!unit) return errorReply("Einheit nicht gefunden.");
+        await c.api.asUser(c.discordId, "POST", `/dispatch/incidents/${incident.id}/assign`, { unitId: unit.id });
+        return okReply(`**${plain(unit.callsign)}** wurde **${incident.number}** zugewiesen.`);
+      } catch (e) {
+        return mapError(e);
+      }
+    }
+  },
+  {
+    name: "bericht",
+    description: "Schreibt einen Polizeibericht (Entwurf oder direkt einreichen)",
+    options: [
+      { name: "titel", description: "Titel", type: "string", required: true, maxLength: 200 },
+      { name: "text", description: "Berichtstext", type: "string", required: true, maxLength: 4e3 },
+      { name: "typ", description: "Berichtstyp (Standard: allgemein)", type: "string", choices: choices2(REPORT) },
+      { name: "einreichen", description: "Direkt zur Pr\xFCfung einreichen", type: "boolean" }
+    ],
+    async run(c) {
+      if (str2(c, "titel").length < 3) return errorReply("Der Titel ist zu kurz (mindestens 3 Zeichen).");
+      try {
+        const type = REPORT[str2(c, "typ")] ?? "GENERAL";
+        const r = await c.api.asUser(c.discordId, "POST", "/reports", { type, title: str2(c, "titel"), content: { body: str2(c, "text") } });
+        if (c.opts.einreichen === true) {
+          await c.api.asUser(c.discordId, "POST", `/reports/${r.id}/submit`);
+          return okReply(`Bericht **${r.number}** angelegt und **eingereicht**.`);
+        }
+        return okReply(`Bericht **${r.number}** als **Entwurf** gespeichert (im Web bearbeiten/einreichen).`);
+      } catch (e) {
+        return mapError(e);
+      }
+    }
+  },
+  {
+    name: "beschwerde",
+    description: "Erfasst eine Beschwerde",
+    options: [
+      { name: "kategorie", description: "z. B. Verhalten", type: "string", required: true, maxLength: 64 },
+      { name: "beschreibung", description: "Was ist passiert? (mind. 10 Zeichen)", type: "string", required: true, maxLength: 4e3 },
+      { name: "person", description: "Betroffene Person (Roblox-Name oder -ID)", type: "string", maxLength: 64 }
+    ],
+    async run(c) {
+      if (str2(c, "kategorie").length < 2) return errorReply("Die Kategorie ist zu kurz.");
+      if (str2(c, "beschreibung").length < 10) return errorReply("Die Beschreibung ist zu kurz (mindestens 10 Zeichen).");
+      try {
+        let subjectId;
+        if (str2(c, "person")) {
+          const r = await resolvePerson(c, str2(c, "person"));
+          if (!r.person) return r.reply;
+          subjectId = r.person.id;
+        }
+        const res = await c.api.asUser(c.discordId, "POST", "/complaints", { category: str2(c, "kategorie"), description: str2(c, "beschreibung"), ...subjectId ? { subjectId } : {} });
+        return okReply(`Beschwerde **${res.number}** erfasst.`);
+      } catch (e) {
+        return mapError(e);
+      }
+    }
+  },
+  {
+    name: "ermittlung",
+    description: "Er\xF6ffnet einen Ermittlungsfall",
+    options: [
+      { name: "titel", description: "Titel des Falls", type: "string", required: true, maxLength: 200 },
+      { name: "beschreibung", description: "Beschreibung", type: "string", maxLength: 4e3 }
+    ],
+    async run(c) {
+      if (str2(c, "titel").length < 3) return errorReply("Der Titel ist zu kurz (mindestens 3 Zeichen).");
+      try {
+        const r = await c.api.asUser(c.discordId, "POST", "/investigations", { title: str2(c, "titel"), ...str2(c, "beschreibung") ? { description: str2(c, "beschreibung") } : {} });
+        return okReply(`Fall **${r.caseNumber}** er\xF6ffnet.`);
+      } catch (e) {
+        return mapError(e);
+      }
+    }
+  },
+  {
+    name: "fahndung",
+    description: "Schreibt eine Person zur Fahndung aus",
+    options: [
+      { name: "person", description: "Roblox-Name oder -ID", type: "string", required: true, maxLength: 64 },
+      { name: "grund", description: "Fahndungsgrund", type: "string", required: true, maxLength: 500 },
+      { name: "prioritaet", description: "Priorit\xE4t (Standard: mittel)", type: "string", choices: choices2(PRIO) }
+    ],
+    async run(c) {
+      if (str2(c, "grund").length < 3) return errorReply("Der Grund ist zu kurz (mindestens 3 Zeichen).");
+      try {
+        const { person, reply } = await resolvePerson(c, str2(c, "person"));
+        if (!person) return reply;
+        const priority = PRIO[str2(c, "prioritaet")] ?? "MEDIUM";
+        await c.api.asUser(c.discordId, "POST", "/wanted", { personId: person.id, reason: str2(c, "grund"), priority });
+        return okReply(`**${plain(person.robloxUsername)}** ist zur Fahndung ausgeschrieben (${label(priority)}).`);
+      } catch (e) {
+        return mapError(e);
+      }
+    }
+  },
+  {
+    name: "beweis",
+    description: "Erfasst ein Beweisst\xFCck",
+    options: [
+      { name: "typ", description: "z. B. Waffe, Foto", type: "string", required: true, maxLength: 64 },
+      { name: "beschreibung", description: "Beschreibung", type: "string", required: true, maxLength: 2e3 },
+      { name: "fall", description: "Fallnummer, z. B. CASE-2026-ABC123", type: "string", maxLength: 40 }
+    ],
+    async run(c) {
+      if (str2(c, "typ").length < 2 || str2(c, "beschreibung").length < 3) return errorReply("Typ oder Beschreibung sind zu kurz.");
+      try {
+        const e = await c.api.asUser(c.discordId, "POST", "/evidence", { type: str2(c, "typ"), description: str2(c, "beschreibung"), ...str2(c, "fall") ? { caseRef: str2(c, "fall").toUpperCase() } : {} });
+        return okReply(`Beweis **${e.number}** erfasst.`);
+      } catch (err) {
+        return mapError(err);
+      }
+    }
+  },
+  {
+    name: "funk",
+    description: "Sendet eine Nachricht in einen Systemkanal",
+    options: [
+      { name: "kanal", description: "Kanal", type: "string", required: true, choices: choices2(CHANNEL) },
+      { name: "text", description: "Nachricht", type: "string", required: true, maxLength: 1500 }
+    ],
+    async run(c) {
+      const ch = CHANNEL[str2(c, "kanal")];
+      if (!ch) return errorReply("Unbekannter Kanal.");
+      try {
+        await c.api.asUser(c.discordId, "POST", `/communication/channels/${ch}/messages`, { body: str2(c, "text") });
+        return okReply(`Nachricht an **${ch}** gesendet.`);
+      } catch (e) {
+        return mapError(e);
+      }
+    }
+  },
+  {
+    name: "benachrichtigungen",
+    description: "Zeigt deine ungelesenen Benachrichtigungen",
+    async run(c) {
+      try {
+        const r = await c.api.asUser(c.discordId, "GET", "/notifications?filter=unread&pageSize=10");
+        return { ephemeral: true, embeds: [listEmbed(`\u{1F514} Ungelesen (${r.unread})`, r.items.map((n) => `\u2022 ${plain(n.title)}`), "Keine ungelesenen Benachrichtigungen.")] };
+      } catch (e) {
+        return mapError(e);
+      }
+    }
+  },
+  ...FEATURE_COMMANDS,
+  ...QUALI_COMMANDS,
+  ...LEAVE_COMMANDS,
+  ...CAD_COMMANDS,
+  ...DUTY_REPORT_COMMANDS,
+  TICKET_COMMAND
+];
+var byName = (n) => COMMANDS.find((c) => c.name === n);
+
 // apps/bot/src/config.ts
+var import_node_fs = require("node:fs");
+var import_node_path = __toESM(require("node:path"));
 var schema = external_exports.object({
   DISCORD_TOKEN: external_exports.string().min(20, "DISCORD_TOKEN missing"),
   /** Optional: eine oder MEHRERE Server-IDs (mit Komma getrennt). Mit Wert werden Slash-Commands sofort (nur dort) registriert, sonst global (dauert bis zu 1 h). */
@@ -82763,7 +83381,7 @@ async function pollOnce(api2, send, log = console.log, dm, grantRole, syncRoles,
       }
       continue;
     }
-    if (item.type === "application.ticket" || item.type === "embed.post" || item.type === "message.decided" || item.type === "voice.effects" || item.type.startsWith("verify.") || item.type === "duty.reminder") {
+    if (item.type === "application.ticket" || item.type === "embed.post" || item.type === "message.post" || item.type.startsWith("bot.") || item.type === "message.decided" || item.type === "voice.effects" || item.type.startsWith("verify.") || item.type === "duty.reminder") {
       try {
         if (!onTask || !await onTask(item.type, item.payload)) throw new Error("tasks not supported");
         await api2.service("POST", `/bot/outbox/${item.id}/ack`, { ok: true });
@@ -82866,7 +83484,7 @@ async function pollOnce(api2, send, log = console.log, dm, grantRole, syncRoles,
       const trackKind = { "leave.requested": "l", "application.submitted": "a", "qualification.submitted": "q" }[item.type];
       const trackKey = trackKind && typeof item.payload.id === "string" && /^[0-9a-f-]{36}$/.test(item.payload.id) ? `msg-${trackKind}-${item.payload.id}` : void 0;
       const opts = pingRoleIds.length || avatarUserId || thread || authorUserId || replaceKey || trackKey ? { ...pingRoleIds.length ? { pingRoleIds } : {}, ...avatarUserId ? { avatarUserId } : {}, ...thread ? { thread } : {}, ...authorUserId ? { authorUserId } : {}, ...replaceKey ? { replaceKey } : {}, ...trackKey ? { trackKey } : {} } : void 0;
-      const results = await Promise.allSettled(channelIds.map((id) => opts ? send(id, embeds, buttons, opts) : send(id, embeds, buttons)));
+      const results = await Promise.allSettled(channelIds.map((id2) => opts ? send(id2, embeds, buttons, opts) : send(id2, embeds, buttons)));
       const failed = results.flatMap((r, i) => r.status === "rejected" ? [`${channelIds[i]}: ${r.reason instanceof Error ? r.reason.message : r.reason}`] : []);
       failed.forEach((f2) => log(`outbox ${item.id}: send failed for channel ${f2}`));
       if (failed.length === channelIds.length) throw new Error(failed[0]);
@@ -82957,7 +83575,7 @@ function welcomeEmbed(def, m, now = Date.now(), bannerFile) {
   const title = renderWelcomeText(def.title, m, now).slice(0, 256);
   const description = renderWelcomeText(def.message, m, now).slice(0, 4e3);
   const image = bannerFile ? `attachment://${bannerFile}` : def.image;
-  return { title: title || "\u200B", ...description ? { description } : {}, color: hexColor2(def.color), ...def.showAvatar && m.avatar ? { thumbnail: m.avatar } : {}, ...image ? { image } : {} };
+  return { title: title || "\u200B", ...description ? { description } : {}, color: hexColor(def.color), ...def.showAvatar && m.avatar ? { thumbnail: m.avatar } : {}, ...image ? { image } : {} };
 }
 function createWelcome(api2, actions, log = console.error) {
   const cache = /* @__PURE__ */ new Map();
@@ -82970,13 +83588,13 @@ function createWelcome(api2, actions, log = console.error) {
   };
   const step = (label2, p) => p.catch((e) => log(`${label2} failed: ${e instanceof Error ? e.message : e}`));
   const banners = /* @__PURE__ */ new Map();
-  const banner = async (id) => {
-    if (!banners.has(id)) {
-      const b = await api2.service("GET", `/bot/welcome/banner/${id}`);
+  const banner = async (id2) => {
+    if (!banners.has(id2)) {
+      const b = await api2.service("GET", `/bot/welcome/banner/${id2}`);
       if (banners.size > 20) banners.clear();
-      banners.set(id, { name: b.name.replace(/[^\w.-]/g, "") || "banner.png", data: Buffer.from(b.data, "base64") });
+      banners.set(id2, { name: b.name.replace(/[^\w.-]/g, "") || "banner.png", data: Buffer.from(b.data, "base64") });
     }
-    return banners.get(id);
+    return banners.get(id2);
   };
   const say = async (def, m) => {
     if (!def.enabled || !def.channelId) return;
@@ -83070,17 +83688,17 @@ function createVerify(api2, ops, log = console.error) {
 loadDotEnv();
 var cfg = loadConfig();
 var api = new HttpApi(cfg.API_URL, cfg.BOT_API_TOKEN);
-var makeClient = (i) => new import_discord4.Client({
+var makeClient = (i) => new import_discord5.Client({
   intents: [
-    import_discord4.GatewayIntentBits.Guilds,
-    import_discord4.GatewayIntentBits.DirectMessages,
-    import_discord4.GatewayIntentBits.GuildMessages,
-    import_discord4.GatewayIntentBits.GuildVoiceStates,
-    ...i.content ? [import_discord4.GatewayIntentBits.MessageContent] : [],
-    ...i.members ? [import_discord4.GatewayIntentBits.GuildMembers] : [],
-    ...i.presences ? [import_discord4.GatewayIntentBits.GuildPresences] : []
+    import_discord5.GatewayIntentBits.Guilds,
+    import_discord5.GatewayIntentBits.DirectMessages,
+    import_discord5.GatewayIntentBits.GuildMessages,
+    import_discord5.GatewayIntentBits.GuildVoiceStates,
+    ...i.content ? [import_discord5.GatewayIntentBits.MessageContent] : [],
+    ...i.members ? [import_discord5.GatewayIntentBits.GuildMembers] : [],
+    ...i.presences ? [import_discord5.GatewayIntentBits.GuildPresences] : []
   ],
-  partials: [import_discord4.Partials.Channel, import_discord4.Partials.GuildMember]
+  partials: [import_discord5.Partials.Channel, import_discord5.Partials.GuildMember]
   // GuildMember: Austritt auch von Mitgliedern, die nicht im Cache sind
 });
 var INTENT_STEPS = [
@@ -83094,7 +83712,7 @@ var intents = INTENT_STEPS[0];
 var client = makeClient(intents);
 var tickets = createTicketRuntime(() => client, api);
 var toEmbed = (e) => {
-  const b = new import_discord4.EmbedBuilder().setTitle(e.title);
+  const b = new import_discord5.EmbedBuilder().setTitle(e.title);
   if (e.description) b.setDescription(e.description);
   if (e.color !== void 0) b.setColor(e.color);
   if (e.fields?.length) b.addFields(e.fields.map((f2) => ({ name: f2.name, value: f2.value, inline: f2.inline ?? false })));
@@ -83105,12 +83723,12 @@ var toEmbed = (e) => {
   b.setTimestamp(/* @__PURE__ */ new Date());
   return b;
 };
-var STYLE2 = { primary: import_discord4.ButtonStyle.Primary, secondary: import_discord4.ButtonStyle.Secondary, success: import_discord4.ButtonStyle.Success, danger: import_discord4.ButtonStyle.Danger };
+var STYLE2 = { primary: import_discord5.ButtonStyle.Primary, secondary: import_discord5.ButtonStyle.Secondary, success: import_discord5.ButtonStyle.Success, danger: import_discord5.ButtonStyle.Danger };
 var toRows = (buttons = []) => {
   const rows = [];
   for (let i = 0; i < buttons.length && rows.length < 5; i += 5) {
-    rows.push(new import_discord4.ActionRowBuilder().addComponents(buttons.slice(i, i + 5).map((b) => {
-      const x = b.url ? new import_discord4.ButtonBuilder().setURL(b.url).setLabel(b.label).setStyle(import_discord4.ButtonStyle.Link) : new import_discord4.ButtonBuilder().setCustomId(b.id).setLabel(b.label).setStyle(STYLE2[b.style]);
+    rows.push(new import_discord5.ActionRowBuilder().addComponents(buttons.slice(i, i + 5).map((b) => {
+      const x = b.url ? new import_discord5.ButtonBuilder().setURL(b.url).setLabel(b.label).setStyle(import_discord5.ButtonStyle.Link) : new import_discord5.ButtonBuilder().setCustomId(b.id).setLabel(b.label).setStyle(STYLE2[b.style]);
       if (b.emoji) x.setEmoji(b.emoji);
       return x;
     })));
@@ -83118,12 +83736,13 @@ var toRows = (buttons = []) => {
   return rows;
 };
 var toComponents = (buttons, select, selects = []) => componentsOf(buttons, [...select ? [select] : [], ...selects]);
-var toModal = (m) => new import_discord4.ModalBuilder().setCustomId(m.id).setTitle(m.title.slice(0, 45)).addComponents(m.fields.map((f2) => {
-  const input = new import_discord4.TextInputBuilder().setCustomId(f2.id).setLabel(f2.label.slice(0, 45)).setStyle(f2.paragraph ? import_discord4.TextInputStyle.Paragraph : import_discord4.TextInputStyle.Short).setRequired(!!f2.required);
+var toModal = (m) => new import_discord5.ModalBuilder().setCustomId(m.id).setTitle(m.title.slice(0, 45)).addComponents(m.fields.map((f2) => {
+  const input = new import_discord5.TextInputBuilder().setCustomId(f2.id).setLabel(f2.label.slice(0, 45)).setStyle(f2.paragraph ? import_discord5.TextInputStyle.Paragraph : import_discord5.TextInputStyle.Short).setRequired(!!f2.required);
   if (f2.maxLength) input.setMaxLength(f2.maxLength);
   if (f2.minLength) input.setMinLength(Math.min(f2.minLength, f2.maxLength ?? 4e3));
   if (f2.placeholder) input.setPlaceholder(f2.placeholder.slice(0, 100));
-  return new import_discord4.ActionRowBuilder().addComponents(input);
+  if (f2.value) input.setValue(f2.value.slice(0, f2.maxLength ?? 4e3));
+  return new import_discord5.ActionRowBuilder().addComponents(input);
 }));
 var replyPayload = (r) => ({ content: r.content ?? "", embeds: (r.embeds ?? []).map(toEmbed), components: toComponents(r.buttons, r.select, r.selects), allowedMentions: { parse: [] } });
 var TICKET_PREFIX = "ticket-";
@@ -83137,27 +83756,27 @@ var platform = {
   async createTicketChannel({ guildId, userId, userName, categoryId, staffRoleId, extraUserIds = [] }) {
     const guild = await client.guilds.fetch(guildId);
     const channels = await guild.channels.fetch();
-    const existing = channels.find((c) => c?.type === import_discord4.ChannelType.GuildText && c.name.startsWith(TICKET_PREFIX) && c.topic?.includes(`(${userId})`));
+    const existing = channels.find((c) => c?.type === import_discord5.ChannelType.GuildText && c.name.startsWith(TICKET_PREFIX) && c.topic?.includes(`(${userId})`));
     if (existing) return { channelId: existing.id, existing: true };
-    const view = [import_discord4.PermissionFlagsBits.ViewChannel, import_discord4.PermissionFlagsBits.SendMessages, import_discord4.PermissionFlagsBits.ReadMessageHistory, import_discord4.PermissionFlagsBits.AttachFiles];
+    const view = [import_discord5.PermissionFlagsBits.ViewChannel, import_discord5.PermissionFlagsBits.SendMessages, import_discord5.PermissionFlagsBits.ReadMessageHistory, import_discord5.PermissionFlagsBits.AttachFiles];
     const ch = await guild.channels.create({
       name: ticketName(userName, userId),
-      type: import_discord4.ChannelType.GuildText,
+      type: import_discord5.ChannelType.GuildText,
       topic: `Support-Ticket von ${userName} (${userId})`,
-      ...categoryId && channels.get(categoryId)?.type === import_discord4.ChannelType.GuildCategory ? { parent: categoryId } : {},
+      ...categoryId && channels.get(categoryId)?.type === import_discord5.ChannelType.GuildCategory ? { parent: categoryId } : {},
       permissionOverwrites: [
-        { id: guild.roles.everyone.id, type: import_discord4.OverwriteType.Role, deny: [import_discord4.PermissionFlagsBits.ViewChannel] },
-        { id: userId, type: import_discord4.OverwriteType.Member, allow: view },
-        { id: client.user.id, type: import_discord4.OverwriteType.Member, allow: [...view, import_discord4.PermissionFlagsBits.ManageChannels] },
-        ...staffRoleId ? [{ id: staffRoleId, type: import_discord4.OverwriteType.Role, allow: view }] : [],
-        ...extraUserIds.filter((id) => id !== userId).map((id) => ({ id, type: import_discord4.OverwriteType.Member, allow: view }))
+        { id: guild.roles.everyone.id, type: import_discord5.OverwriteType.Role, deny: [import_discord5.PermissionFlagsBits.ViewChannel] },
+        { id: userId, type: import_discord5.OverwriteType.Member, allow: view },
+        { id: client.user.id, type: import_discord5.OverwriteType.Member, allow: [...view, import_discord5.PermissionFlagsBits.ManageChannels] },
+        ...staffRoleId ? [{ id: staffRoleId, type: import_discord5.OverwriteType.Role, allow: view }] : [],
+        ...extraUserIds.filter((id2) => id2 !== userId).map((id2) => ({ id: id2, type: import_discord5.OverwriteType.Member, allow: view }))
       ]
     });
     return { channelId: ch.id, existing: false };
   },
   async deleteChannel(channelId, delayMs = 0) {
     const ch = await client.channels.fetch(channelId);
-    if (!ch || ch.type !== import_discord4.ChannelType.GuildText || !ch.name.startsWith(TICKET_PREFIX)) throw new Error("not a ticket channel");
+    if (!ch || ch.type !== import_discord5.ChannelType.GuildText || !ch.name.startsWith(TICKET_PREFIX)) throw new Error("not a ticket channel");
     setTimeout(() => void ch.delete("Support-Ticket geschlossen").catch((e) => console.error("ticket delete failed:", e instanceof Error ? e.message : e)), delayMs);
   },
   async sendDirectMessage(userId, text) {
@@ -83191,6 +83810,7 @@ var platform = {
   }
 };
 var live = createLive(api, platform);
+var staffLists = createStaffLists(() => client, api);
 var welcome = createWelcome(api, {
   async post(channelId, m) {
     const ch = await client.channels.fetch(channelId);
@@ -83246,7 +83866,7 @@ var verify = createVerify(api, {
     return out;
   }
 });
-var VOICE_TALK = [import_discord4.PermissionFlagsBits.ViewChannel, import_discord4.PermissionFlagsBits.Connect, import_discord4.PermissionFlagsBits.Speak, import_discord4.PermissionFlagsBits.Stream, import_discord4.PermissionFlagsBits.UseVAD];
+var VOICE_TALK = [import_discord5.PermissionFlagsBits.ViewChannel, import_discord5.PermissionFlagsBits.Connect, import_discord5.PermissionFlagsBits.Speak, import_discord5.PermissionFlagsBits.Stream, import_discord5.PermissionFlagsBits.UseVAD];
 var voiceSupport = createVoiceSupport(api, {
   async post(channelId, m) {
     const ch = await client.channels.fetch(channelId);
@@ -83274,14 +83894,14 @@ var voiceSupport = createVoiceSupport(api, {
     const near = await guild.channels.fetch(nearChannelId).catch(() => null);
     const ch = await guild.channels.create({
       name,
-      type: import_discord4.ChannelType.GuildVoice,
+      type: import_discord5.ChannelType.GuildVoice,
       ...near?.parentId ? { parent: near.parentId } : {},
       reason: "EN Polizei: Sprach-Support",
       permissionOverwrites: [
-        { id: guild.roles.everyone.id, type: import_discord4.OverwriteType.Role, deny: [import_discord4.PermissionFlagsBits.ViewChannel, import_discord4.PermissionFlagsBits.Connect] },
-        { id: userId, type: import_discord4.OverwriteType.Member, allow: VOICE_TALK },
-        ...guild.roles.cache.has(teamRoleId) ? [{ id: teamRoleId, type: import_discord4.OverwriteType.Role, allow: [...VOICE_TALK, import_discord4.PermissionFlagsBits.MoveMembers] }] : [],
-        { id: client.user.id, type: import_discord4.OverwriteType.Member, allow: [import_discord4.PermissionFlagsBits.ViewChannel, import_discord4.PermissionFlagsBits.Connect, import_discord4.PermissionFlagsBits.MoveMembers, import_discord4.PermissionFlagsBits.ManageChannels] }
+        { id: guild.roles.everyone.id, type: import_discord5.OverwriteType.Role, deny: [import_discord5.PermissionFlagsBits.ViewChannel, import_discord5.PermissionFlagsBits.Connect] },
+        { id: userId, type: import_discord5.OverwriteType.Member, allow: VOICE_TALK },
+        ...guild.roles.cache.has(teamRoleId) ? [{ id: teamRoleId, type: import_discord5.OverwriteType.Role, allow: [...VOICE_TALK, import_discord5.PermissionFlagsBits.MoveMembers] }] : [],
+        { id: client.user.id, type: import_discord5.OverwriteType.Member, allow: [import_discord5.PermissionFlagsBits.ViewChannel, import_discord5.PermissionFlagsBits.Connect, import_discord5.PermissionFlagsBits.MoveMembers, import_discord5.PermissionFlagsBits.ManageChannels] }
       ]
     });
     return ch.id;
@@ -83294,7 +83914,7 @@ var voiceSupport = createVoiceSupport(api, {
   },
   async deleteChannel(channelId) {
     const ch = await client.channels.fetch(channelId).catch(() => null);
-    if (ch?.type === import_discord4.ChannelType.GuildVoice) await ch.delete("EN Polizei: Support-Fall geschlossen");
+    if (ch?.type === import_discord5.ChannelType.GuildVoice) await ch.delete("EN Polizei: Support-Fall geschlossen");
   },
   async thread(channelId, messageId, name) {
     const ch = await client.channels.fetch(channelId);
@@ -83347,7 +83967,7 @@ function addOptions(b, options2 = []) {
   }
 }
 function toBuilder(def) {
-  const b = new import_discord4.SlashCommandBuilder().setName(def.name).setDescription(def.description);
+  const b = new import_discord5.SlashCommandBuilder().setName(def.name).setDescription(def.description);
   if (def.subcommands?.length) for (const sc of def.subcommands) b.addSubcommand((x) => {
     x.setName(sc.name).setDescription(sc.description);
     addOptions(x, sc.options);
@@ -83363,15 +83983,15 @@ function joinedAtOf2(m) {
 }
 async function markDecided(message, d) {
   const embeds = message.embeds.map((e, i, all) => {
-    const b = import_discord4.EmbedBuilder.from(e).setColor(d.color);
+    const b = import_discord5.EmbedBuilder.from(e).setColor(d.color);
     if (i === all.length - 1) b.setFields([...(e.fields ?? []).filter((f2) => f2.name !== "Entscheidung"), { name: "Entscheidung", value: d.text.slice(0, 1024) }]);
     return b;
   });
   const rows = [];
   for (const row of message.components) {
     if (!("components" in row)) continue;
-    const kept = row.components.filter((c) => c.type === import_discord4.ComponentType.Button && !/^(quali|leave):(decide|reason):/.test(c.customId ?? ""));
-    if (kept.length) rows.push(new import_discord4.ActionRowBuilder().addComponents(kept.map((c) => import_discord4.ButtonBuilder.from(c))));
+    const kept = row.components.filter((c) => c.type === import_discord5.ComponentType.Button && !/^(quali|leave):(decide|reason):/.test(c.customId ?? ""));
+    if (kept.length) rows.push(new import_discord5.ActionRowBuilder().addComponents(kept.map((c) => import_discord5.ButtonBuilder.from(c))));
   }
   await message.edit({ embeds, components: rows, allowedMentions: { parse: [] } });
 }
@@ -83386,17 +84006,32 @@ function baseCtx(i) {
     memberJoinedAt: joinedAtOf2(i.member),
     guildId: i.guildId ?? void 0,
     channelId: i.channelId ?? void 0,
-    isGuildAdmin: !!perms && (perms.has(import_discord4.PermissionFlagsBits.ManageGuild) || perms.has(import_discord4.PermissionFlagsBits.Administrator)),
+    isGuildAdmin: !!perms && (perms.has(import_discord5.PermissionFlagsBits.ManageGuild) || perms.has(import_discord5.PermissionFlagsBits.Administrator)),
     config: () => api.service("GET", "/bot/config"),
     refreshLive: (kind2, o) => live.refresh(kind2, o),
     robloxLookup: (name) => robloxLookup(name),
     memberRoleIds: rolesOf(i.member),
     applyEffects: (effects) => tickets.apply(effects),
     listCategories: (guildId) => tickets.listCategories(guildId),
-    userNameOf: (id) => client.users.fetch(id).then((u) => u.username, () => null),
+    userNameOf: (id2) => client.users.fetch(id2).then((u) => u.username, () => null),
     voiceSupport,
-    verifyApply: (guildId, userId, a) => applyVerify(guildId, userId, a)
+    verifyApply: (guildId, userId, a) => applyVerify(guildId, userId, a),
+    userDisplayName: displayNameOf(i.member) ?? i.user.globalName ?? i.user.username,
+    discord: {
+      post: (channelId, message, asUser) => asUser ? postAsUser(client, api, channelId, message, asUser) : postOrUpdate(client, api, { channelId, message, forceNew: true }),
+      deleteMessage: (channelId, messageId) => deleteMessage(client, channelId, messageId),
+      addRoles: async (guildId, userId, roleIds) => {
+        const g = client.guilds.cache.get(guildId);
+        const m = await g?.members.fetch(userId).catch(() => null);
+        const add = roleIds.filter((r) => g?.roles.cache.has(r) && !m?.roles.cache.has(r));
+        if (m && add.length) await m.roles.add(add, "EN Polizei: Formular-Panel");
+      }
+    }
   };
+}
+function displayNameOf(m) {
+  const x = m;
+  return x?.displayName ?? x?.nick ?? void 0;
 }
 function rolesOf(m) {
   const x = m;
@@ -83424,24 +84059,24 @@ async function handleCommand(i) {
   if (def.opensModal) {
     const reply2 = await safeRun(`command ${def.name}`, () => def.run({ ...baseCtx(i), opts }));
     if (reply2.modal) await i.showModal(toModal(reply2.modal));
-    else await i.reply({ ...replyPayload(reply2), flags: import_discord4.MessageFlags.Ephemeral });
+    else await i.reply({ ...replyPayload(reply2), flags: import_discord5.MessageFlags.Ephemeral });
     return;
   }
-  await i.deferReply({ flags: import_discord4.MessageFlags.Ephemeral });
+  await i.deferReply({ flags: import_discord5.MessageFlags.Ephemeral });
   const reply = await safeRun(`command ${def.name}`, () => def.run({ ...baseCtx(i), opts }));
   await i.editReply(replyPayload(reply));
 }
 async function handleComponent(i) {
   const hit = interactionFor(i.customId);
   if (!hit) return;
-  if (i.isButton() && hit.def.opensModal?.(hit.args)) {
-    const reply2 = await safeRun(`interaction ${i.customId}`, () => hit.def.run({ ...baseCtx(i), opts: {}, args: hit.args }));
+  if ((i.isButton() || i.isAnySelectMenu()) && hit.def.opensModal?.(hit.args)) {
+    const reply2 = await safeRun(`interaction ${i.customId}`, () => hit.def.run({ ...baseCtx(i), opts: {}, args: hit.args, ...i.isAnySelectMenu() ? { values: i.values } : {} }));
     if (reply2.modal) await i.showModal(toModal(reply2.modal));
-    else await i.reply({ ...replyPayload(reply2), flags: import_discord4.MessageFlags.Ephemeral });
+    else await i.reply({ ...replyPayload(reply2), flags: import_discord5.MessageFlags.Ephemeral });
     return;
   }
-  await i.deferReply({ flags: import_discord4.MessageFlags.Ephemeral });
-  const fields = i.isModalSubmit() ? Object.fromEntries(i.fields.fields.map((f2, id) => [id, "value" in f2 ? String(f2.value) : ""])) : void 0;
+  await i.deferReply({ flags: import_discord5.MessageFlags.Ephemeral });
+  const fields = i.isModalSubmit() ? Object.fromEntries(i.fields.fields.map((f2, id2) => [id2, "value" in f2 ? String(f2.value) : ""])) : void 0;
   const values = i.isAnySelectMenu() ? i.values : void 0;
   const reply = await safeRun(`interaction ${i.customId}`, () => hit.def.run({ ...baseCtx(i), opts: {}, args: hit.args, fields, values }));
   await i.editReply(replyPayload(reply));
@@ -83465,8 +84100,12 @@ function wire(c) {
     void welcome.joined(e).catch((x) => console.error("member join failed:", x instanceof Error ? x.message : x));
   });
   c.on("guildMemberRemove", (m) => {
+    staffLists.changed();
     const e = memberEvent(m);
     if (e) void welcome.left(e).catch((x) => console.error("member leave failed:", x instanceof Error ? x.message : x));
+  });
+  c.on("guildMemberUpdate", (o, n) => {
+    if (o.roles.cache.size !== n.roles.cache.size || o.displayName !== n.displayName || ![...o.roles.cache.keys()].every((r) => n.roles.cache.has(r))) staffLists.changed();
   });
   c.on("messageCreate", (m) => {
     if (m.inGuild()) {
@@ -83531,7 +84170,7 @@ function wireReady(client0) {
     };
     const all = new Map([...c.guilds.cache.values()].map((g) => [g.id, g.name]));
     for (const g of guildIds(cfg)) if (!all.has(g)) all.set(g, g);
-    for (const [id, name] of all) await register(id, name);
+    for (const [id2, name] of all) await register(id2, name);
     c.on("guildCreate", (g) => {
       console.log(`added to server ${g.name}`);
       void register(g.id, g.name);
@@ -83551,15 +84190,15 @@ function wireReady(client0) {
         const roles = opts?.pingRoleIds ?? [];
         const msg = await ch.send({ ...roles.length ? { content: roles.map((r) => `<@&${r}>`).join(" ") } : {}, embeds: list.map(toEmbed), components: toRows(buttons), allowedMentions: { parse: [], roles } });
         if (opts?.replaceKey) {
-          const key = `last-${opts.replaceKey}-${channelId}`;
-          const old = await api.service("GET", `/bot/state/${key}`).then((r) => r.value, () => null);
+          const key3 = `last-${opts.replaceKey}-${channelId}`;
+          const old = await api.service("GET", `/bot/state/${key3}`).then((r) => r.value, () => null);
           if (old && old !== msg.id) await ch.messages.delete(old).catch(() => void 0);
-          await api.service("PUT", `/bot/state/${key}`, { value: msg.id }).catch((e) => console.error("could not remember message:", e instanceof Error ? e.message : e));
+          await api.service("PUT", `/bot/state/${key3}`, { value: msg.id }).catch((e) => console.error("could not remember message:", e instanceof Error ? e.message : e));
         }
         if (opts?.trackKey) {
-          const key = opts.trackKey;
-          const prev = await api.service("GET", `/bot/state/${key}`).then((r) => Array.isArray(r.value) ? r.value : [], () => []);
-          await api.service("PUT", `/bot/state/${key}`, { value: [...prev, { channelId, messageId: msg.id }].slice(-10) }).catch((e) => console.error("could not remember message:", e instanceof Error ? e.message : e));
+          const key3 = opts.trackKey;
+          const prev = await api.service("GET", `/bot/state/${key3}`).then((r) => Array.isArray(r.value) ? r.value : [], () => []);
+          await api.service("PUT", `/bot/state/${key3}`, { value: [...prev, { channelId, messageId: msg.id }].slice(-10) }).catch((e) => console.error("could not remember message:", e instanceof Error ? e.message : e));
         }
         if (opts?.thread) await msg.startThread({ name: opts.thread, autoArchiveDuration: 10080 }).catch((e) => console.error("could not create staff thread:", e instanceof Error ? e.message : e));
       },
@@ -83585,7 +84224,7 @@ function wireReady(client0) {
           const messageId = await platform.postOrEdit({
             channelId,
             ...typeof p.messageId === "string" ? { messageId: p.messageId } : {},
-            embed: { title: panel.title, description: panel.message, color: hexColor2(panel.color, 2278750) },
+            embed: { title: panel.title, description: panel.message, color: hexColor(panel.color, 2278750) },
             buttons: [{ id: "verify:start", label: panel.buttonLabel, style: "success", emoji: "\u2705" }]
           });
           await api.service("POST", "/bot/verify/panel-posted", { guildId: p.guildId ?? null, channelId, messageId });
@@ -83606,9 +84245,9 @@ function wireReady(client0) {
           return true;
         }
         if (type === "message.decided") {
-          const key = String(p.key ?? "");
-          if (!/^msg-[laq]-[0-9a-f-]{36}$/.test(key)) throw new Error("invalid key");
-          const spots = await api.service("GET", `/bot/state/${key}`).then((r) => Array.isArray(r.value) ? r.value : []);
+          const key3 = String(p.key ?? "");
+          if (!/^msg-[laq]-[0-9a-f-]{36}$/.test(key3)) throw new Error("invalid key");
+          const spots = await api.service("GET", `/bot/state/${key3}`).then((r) => Array.isArray(r.value) ? r.value : []);
           for (const spot of spots) {
             const ch = spot.channelId ? await client.channels.fetch(spot.channelId).catch(() => null) : null;
             if (!ch?.isTextBased() || !("messages" in ch) || !spot.messageId) continue;
@@ -83619,12 +84258,39 @@ function wireReady(client0) {
         }
         if (type === "embed.post") {
           const channelId = typeof p.channelId === "string" ? p.channelId : "";
-          const ch = await client.channels.fetch(channelId);
-          if (!ch?.isSendable() || !("messages" in ch)) throw new Error(`channel ${channelId} is not a text channel the bot can post in`);
-          const payload = payloadOf(p.message, false);
-          const old = typeof p.messageId === "string" ? await ch.messages.fetch(p.messageId).catch(() => null) : null;
-          const msg = old ? await old.edit({ ...payload, content: payload.content ?? "" }) : await ch.send(payload);
-          await api.service("POST", `/bot/embeds/${String(p.embedId)}/posted`, { channelId, messageId: msg.id });
+          const r = await postOrUpdate(client, api, { channelId, message: p.message, messageId: typeof p.messageId === "string" ? p.messageId : null, forceNew: typeof p.messageId !== "string" });
+          await api.service("POST", `/bot/embeds/${String(p.embedId)}/posted`, r);
+          return true;
+        }
+        if (type === "bot.stafflist") {
+          await staffLists.refresh({ id: String(p.id ?? ""), force: true, forceNew: p.forceNew === true });
+          return true;
+        }
+        if (type === "bot.dm") {
+          const userId = String(p.discordId ?? "");
+          if (!/^\d{15,25}$/.test(userId)) throw new Error("no Discord user id");
+          const { message, files } = await resolveAssets(api, p.message);
+          await (await client.users.fetch(userId)).send({ ...payloadOf(message, false), ...files.length ? { files } : {} });
+          return true;
+        }
+        if (type === "bot.nickname") {
+          const userId = String(p.discordId ?? ""), nick = String(p.nickname ?? "").slice(0, 32);
+          if (!/^\d{15,25}$/.test(userId) || !nick) throw new Error("invalid nickname task");
+          let done = 0;
+          for (const g of client.guilds.cache.values()) {
+            const m = await g.members.fetch(userId).catch(() => null);
+            if (m && m.id !== g.ownerId && await m.setNickname(nick, "EN Polizei: Dienstnummer").then(() => true, () => false)) done++;
+          }
+          if (!done) console.warn(`nickname for ${userId} could not be set (missing permission, owner or not on a server)`);
+          return true;
+        }
+        if (type === "bot.delete") {
+          await deleteMessage(client, String(p.channelId ?? ""), String(p.messageId ?? ""));
+          return true;
+        }
+        if (type === "message.post") {
+          const stateKey = typeof p.stateKey === "string" && /^[a-z0-9:_-]{1,64}$/.test(p.stateKey) ? p.stateKey : void 0;
+          await postOrUpdate(client, api, { channelId: String(p.channelId ?? ""), message: p.message, ...stateKey ? { stateKey } : {}, forceNew: p.forceNew === true });
           return true;
         }
         if (type !== "application.ticket") return false;
@@ -83637,6 +84303,7 @@ function wireReady(client0) {
       }
     );
     live.start(cfg.LIVE_REFRESH_SECONDS);
+    staffLists.start(300);
     void tickets.refresh();
     startGuildDirectory(() => client, api);
     setInterval(() => void tickets.refresh(), 12e4).unref();

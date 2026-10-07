@@ -6,7 +6,60 @@ import { api, ApiError } from '../lib/api';
 import { useAuth } from '../lib/auth';
 import { hasPending, onSaved, pendingBody, queueSave } from '../lib/autosave';
 import { guildName, useGuilds, useServer } from '../lib/guilds';
-import { Badge, Button, Card, ConfirmDialog, EmptyState, ErrorState, Input, PageHeader, SkeletonRows } from '../components/ui';
+import { Badge, Button, Card, ConfirmDialog, EmptyState, ErrorState, Input, PageHeader, SkeletonRows, Textarea } from '../components/ui';
+import { useAutosaveDraft } from '../lib/autosave';
+import { errText } from '../lib/tickets';
+import { ChannelPicker } from '../components/DiscordPickers';
+import { Toggle } from '../components/ApplicationSettings';
+import { Send } from 'lucide-react';
+
+interface DiscordCfg { channelId: string | null; title: string; description: string; color: string; groupByCategory: boolean; showDescription: boolean; autoUpdate: boolean; posted?: { channelId: string; messageId: string } | null }
+
+const strip = (c: DiscordCfg) => ({ channelId: c.channelId, title: c.title, description: c.description, color: c.color, groupByCategory: c.groupByCategory, showDescription: c.showDescription, autoUpdate: c.autoUpdate });
+
+/** Funk-Codes als Nachricht in einen Discord-Kanal senden (und später dieselbe Nachricht aktualisieren). */
+function RadioDiscordCard({ manage }: { manage: boolean }) {
+  const [server] = useServer();
+  const qc = useQueryClient();
+  const q = useQuery({ queryKey: ['radio-discord', server], queryFn: () => api<DiscordCfg>('/radio-codes/discord') });
+  const [cfg, setCfg] = useState<DiscordCfg>();
+  const [msg, setMsg] = useState<{ ok: boolean; text: string }>();
+  useEffect(() => { if (q.data) setCfg((c) => c ?? q.data); }, [q.data]);
+  useEffect(() => setCfg(undefined), [server]);
+  useAutosaveDraft(manage && cfg ? `radio-discord:${server || 'all'}` : null, cfg, (c) => ({ method: 'PUT', path: '/radio-codes/discord', body: strip(c), label: 'Funk-Codes in Discord' }));
+  const send = useMutation({
+    mutationFn: async (mode: 'update' | 'new') => { await api('/radio-codes/discord', { method: 'PUT', body: strip(cfg!) }); return api('/radio-codes/discord/send', { method: 'POST', body: { mode } }); },
+    onSuccess: (_r, mode) => { setMsg({ ok: true, text: mode === 'update' && cfg?.posted ? 'Wird aktualisiert …' : 'Wird gesendet …' }); setTimeout(() => void qc.invalidateQueries({ queryKey: ['radio-discord', server] }), 4000); },
+    onError: (e) => setMsg({ ok: false, text: errText(e) }),
+  });
+  if (!cfg) return null;
+  const set = (p: Partial<DiscordCfg>) => setCfg({ ...cfg, ...p });
+  const posted = q.data?.posted;
+  return (
+    <Card title="In Discord senden" className="mb-3">
+      <div className="grid gap-3 md:grid-cols-2">
+        <label className="grid gap-1 text-sm">Kanal<ChannelPicker ariaLabel="Kanal für Funk-Codes" disabled={!manage} value={cfg.channelId} onChange={(id) => set({ channelId: id })} /></label>
+        <div className="grid grid-cols-[1fr_auto] gap-2">
+          <label className="grid gap-1 text-sm">Titel<Input aria-label="Titel der Funk-Code-Nachricht" disabled={!manage} maxLength={256} value={cfg.title} onChange={(e) => set({ title: e.target.value })} /></label>
+          <label className="grid gap-1 text-sm">Farbe<input type="color" aria-label="Farbe" disabled={!manage} value={cfg.color} onChange={(e) => set({ color: e.target.value })} className="h-9 w-16 rounded border border-line bg-transparent" /></label>
+        </div>
+        <label className="grid gap-1 text-sm md:col-span-2">Text oben (optional)<Textarea aria-label="Text oben" rows={2} disabled={!manage} maxLength={2000} value={cfg.description} onChange={(e) => set({ description: e.target.value })} /></label>
+        <div className="flex flex-wrap gap-4 text-sm md:col-span-2">
+          <label className="flex items-center gap-2"><Toggle label="Nach Kategorie gruppieren" checked={cfg.groupByCategory} onChange={(v) => set({ groupByCategory: v })} />Nach Kategorie gruppieren</label>
+          <label className="flex items-center gap-2"><Toggle label="Beschreibung anzeigen" checked={cfg.showDescription} onChange={(v) => set({ showDescription: v })} />Beschreibung anzeigen</label>
+          <label className="flex items-center gap-2"><Toggle label="Automatisch aktualisieren" checked={cfg.autoUpdate} onChange={(v) => set({ autoUpdate: v })} />Bei Änderungen automatisch aktualisieren</label>
+        </div>
+      </div>
+      <div className="mt-3 flex flex-wrap items-center gap-2">
+        {posted && posted.channelId === cfg.channelId
+          ? <><Button disabled={!manage || send.isPending} onClick={() => send.mutate('update')}><Send size={14} className="mr-1" />Nachricht aktualisieren</Button><Button variant="secondary" disabled={!manage || send.isPending} onClick={() => send.mutate('new')}>Neu senden</Button></>
+          : <Button disabled={!manage || send.isPending || !cfg.channelId} onClick={() => send.mutate('new')}><Send size={14} className="mr-1" />{cfg.channelId ? 'In Discord senden' : 'Erst Kanal wählen'}</Button>}
+        {posted && <span className="text-xs text-muted">Steht in <code>#{posted.channelId}</code> · Nachricht {posted.messageId}</span>}
+      </div>
+      {msg && <p role={msg.ok ? 'status' : 'alert'} className={`mt-2 text-sm ${msg.ok ? 'text-success' : 'text-danger'}`}>{msg.text}</p>}
+    </Card>
+  );
+}
 
 export interface RadioCode { id: string; guildId: string | null; code: string; meaning: string; category: string | null; description: string | null; position: number }
 type Patch = Partial<Pick<RadioCode, 'code' | 'meaning' | 'category' | 'description'>>;
@@ -69,6 +122,7 @@ export function RadioCodes() {
       <PageHeader title="📡 Funk-Codes" subtitle={`${server ? `Server ${guildName(guilds.data, server)}: eigene Codes überdecken gemeinsame.` : 'Gemeinsame Codes für alle Server.'}${manage ? ' Änderungen werden automatisch gespeichert.' : ''} In Discord: /funkcode`}
         actions={manage && <Button variant="secondary" onClick={() => defaults.mutate()} disabled={defaults.isPending}>Standard-Codes einfügen</Button>} />
       {err && <div role="alert" className="mb-3 rounded border border-danger/40 bg-danger/10 p-2 text-sm text-danger">{err}</div>}
+      {manage && <RadioDiscordCard manage={manage} />}
       <Card>
         <Input aria-label="Funk-Codes durchsuchen" placeholder="🔍 Code, Bedeutung oder Kategorie" className="mb-3" value={t} onChange={(e) => setT(e.target.value)} />
         {manage && (

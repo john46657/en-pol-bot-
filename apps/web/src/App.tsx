@@ -14,7 +14,6 @@ import { Dispatch } from './pages/Dispatch';
 import { Team } from './pages/Team';
 const Communication = lazy(() => import('./pages/Communication').then((m) => ({ default: m.Communication })));
 const Analytics = lazy(() => import('./pages/Analytics').then((m) => ({ default: m.Analytics })));
-const ApplicationAnalytics = lazy(() => import('./pages/ApplicationAnalytics').then((m) => ({ default: m.ApplicationAnalytics })));
 const Applications = lazy(() => import('./pages/Applications').then((m) => ({ default: m.Applications })));
 const Qualifications = lazy(() => import('./pages/Qualifications').then((m) => ({ default: m.Qualifications })));
 const SupportTickets = lazy(() => import('./pages/tickets/SupportTickets').then((m) => ({ default: m.SupportTickets })));
@@ -36,6 +35,17 @@ const Leave = lazy(() => import('./pages/Leave').then((m) => ({ default: m.Leave
 const TeamList = lazy(() => import('./pages/TeamList').then((m) => ({ default: m.TeamList })));
 const RadioCodes = lazy(() => import('./pages/RadioCodes').then((m) => ({ default: m.RadioCodes })));
 const TeamChance = lazy(() => import('./pages/TeamChance').then((m) => ({ default: m.TeamChance })));
+const StaffLists = lazy(() => import('./pages/DiscordPanels').then((m) => ({ default: m.StaffLists })));
+const FormPanels = lazy(() => import('./pages/DiscordPanels').then((m) => ({ default: m.FormPanels })));
+const PersonnelOverview = lazy(() => import('./pages/hr/PersonnelOverview').then((m) => ({ default: m.PersonnelOverview })));
+const PersonnelFile = lazy(() => import('./pages/hr/PersonnelFile').then((m) => ({ default: m.PersonnelFile })));
+const Promotions = lazy(() => import('./pages/hr/Promotions').then((m) => ({ default: m.Promotions })));
+const HrSettings = lazy(() => import('./pages/hr/HrSettings').then((m) => ({ default: m.HrSettings })));
+const Trainings = lazy(() => import('./pages/hr/Trainings').then((m) => ({ default: m.Trainings })));
+const Certificate = lazy(() => import('./pages/hr/Trainings').then((m) => ({ default: m.Certificate })));
+const HrComms = lazy(() => import('./pages/hr/HrComms').then((m) => ({ default: m.HrComms })));
+const ServiceNumbers = lazy(() => import('./pages/hr/ServiceNumbers').then((m) => ({ default: m.ServiceNumbers })));
+const DutyReports = lazy(() => import('./pages/DutyReports').then((m) => ({ default: m.DutyReports })));
 const Offices = lazy(() => import('./pages/Offices').then((m) => ({ default: m.Offices })));
 const PersonalSettings = lazy(() => import('./pages/PersonalSettings').then((m) => ({ default: m.PersonalSettings })));
 const Studio = lazy(() => import('./pages/admin/Studio').then((m) => ({ default: m.Studio })));
@@ -52,6 +62,12 @@ const CadSettings = lazy(() => import('./pages/cad/CadAdmin').then((m) => ({ def
 const CadTeam = lazy(() => import('./pages/cad/CadAdmin').then((m) => ({ default: m.CadTeam })));
 const CadCrossServer = lazy(() => import('./pages/cad/CadAdmin').then((m) => ({ default: m.CadCrossServer })));
 const CadLogs = lazy(() => import('./pages/cad/CadAdmin').then((m) => ({ default: m.CadLogs })));
+
+/** Statistik: allgemeine Statistik ODER Bewerbungs-Statistik genügt. */
+function AnalyticsGate() {
+  const { can } = useAuth();
+  return can('analytics.view') || (can('applications.view') && can('dashboard.applications.view')) ? <Analytics /> : <Forbidden />;
+}
 
 /** UI-seitige Routenprüfung (Komfort). Das Backend erzwingt dieselben Rechte unabhängig davon. */
 function Guard({ perm, area, children }: { perm?: string; area?: string; children: ReactNode }) {
@@ -80,6 +96,9 @@ export function App() {
           <Route path="dashboard" element={<Guard perm="dashboard.view"><Dashboard /></Guard>} />
           <Route path="team" element={<Guard perm="team.view" area="dashboard.team.view"><Team /></Guard>} />
           <Route path="teamlist" element={<Guard perm="team.view" area="dashboard.team.view"><TeamList /></Guard>} />
+          <Route path="staff-lists" element={<Guard perm="team.view" area="dashboard.team.view"><StaffLists /></Guard>} />
+          <Route path="admin/form-panels" element={<Guard perm="settings.view" area="dashboard.settings.view"><FormPanels /></Guard>} />
+          <Route path="duty-reports" element={<Guard perm="dutyreports.view"><DutyReports /></Guard>} />
           <Route path="offices" element={<Guard perm="team.view" area="dashboard.offices.view"><Offices /></Guard>} />
           <Route path="radio-codes" element={<Guard perm="radio.view" area="dashboard.radio.view"><RadioCodes /></Guard>} />
           <Route path="teamchance" element={<Guard perm="teamchance.view" area="dashboard.teamchance.view"><TeamChance /></Guard>} />
@@ -117,17 +136,22 @@ export function App() {
           <Route path="investigations/:id" element={rec('investigations', 'investigations.view')} />
           <Route path="wanted" element={list(R.wanted as never, 'wanted.view')} />
           <Route path="wanted/:id" element={rec('wanted', 'wanted.view')} />
-          <Route path="evidence" element={list(R.evidence as never, 'evidence.view')} />
-          <Route path="evidence/:id" element={rec('evidence', 'evidence.view')} />
-          <Route path="personnel" element={list(R.personnel as never, 'personnel.view')} />
-          <Route path="personnel/:id" element={rec('personnel', 'personnel.view')} />
+          <Route path="evidence/*" element={<Navigate to="/dashboard" replace />} />
+          <Route path="personnel" element={<Guard perm="personnel.view"><PersonnelOverview /></Guard>} />
+          <Route path="personnel/:id" element={<Guard perm="personnel.view"><PersonnelFile /></Guard>} />
+          <Route path="promotions" element={<Guard perm="promotion.view"><Promotions /></Guard>} />
+          <Route path="trainings" element={<Guard perm="training.view"><Trainings /></Guard>} />
+          <Route path="certificates/:no" element={<Guard perm="dashboard.view"><Certificate /></Guard>} />
+          <Route path="announcements" element={<Guard perm="announcements.view"><HrComms /></Guard>} />
+          <Route path="service-numbers" element={<Guard perm="dienstnummer.view"><ServiceNumbers /></Guard>} />
+          <Route path="admin/personnel" element={<Guard perm="personnel.view" area="dashboard.settings.view"><HrSettings /></Guard>} />
           <Route path="applications" element={<Guard perm="applications.view" area="dashboard.applications.view"><Applications /></Guard>} />
-          <Route path="applications/analytics" element={<Guard perm="applications.view" area="dashboard.applications.view"><ApplicationAnalytics /></Guard>} />
+          <Route path="applications/analytics" element={<Navigate to="/analytics?tab=bewerbungen" replace />} />
           <Route path="applications/:id" element={rec('applications', 'applications.view')} />
           <Route path="qualifications" element={<Guard perm="qualifications.view" area="dashboard.applications.view"><Qualifications /></Guard>} />
           <Route path="academy" element={<Guard perm="academy.view"><Academy /></Guard>} />
           <Route path="communication" element={<Guard perm="communication.view"><Communication /></Guard>} />
-          <Route path="analytics" element={<Guard perm="analytics.view"><Analytics /></Guard>} />
+          <Route path="analytics" element={<Guard><AnalyticsGate /></Guard>} />
           <Route path="admin/users" element={<Guard perm="users.view" area="dashboard.settings.view"><Users /></Guard>} />
           <Route path="admin/roles" element={<Guard perm="roles.view" area="dashboard.settings.view"><Roles /></Guard>} />
           <Route path="admin/overrides" element={<Navigate to="/admin/users" replace />} />

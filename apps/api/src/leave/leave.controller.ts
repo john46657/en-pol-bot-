@@ -6,7 +6,7 @@ import { CurrentActor, RequirePermission } from '../authz/decorators';
 import type { Actor } from '../audit/audit.service';
 import { zodBody } from '../common/zod.pipe';
 
-const requestBody = z.object({ startsAt: z.coerce.date(), endsAt: z.coerce.date(), reason: z.string().trim().min(3).max(1000), guildId: z.string().regex(/^\d{15,25}$/).optional() });
+const requestBody = z.object({ startsAt: z.coerce.date(), endsAt: z.coerce.date(), reason: z.string().trim().min(3).max(1000), guildId: z.string().regex(/^\d{15,25}$/).optional(), type: z.string().regex(/^[A-Z0-9_]{1,32}$/).optional(), comment: z.string().trim().max(1000).optional() });
 const listQ = z.object({ status: z.enum([...LEAVE_STATUSES, 'ACTIVE', 'UPCOMING', 'ALL']).optional(), mine: z.enum(['true', 'false']).optional() });
 const decision = z.object({ status: z.enum(['APPROVED', 'DENIED']), reason: z.string().trim().max(1000).optional() });
 

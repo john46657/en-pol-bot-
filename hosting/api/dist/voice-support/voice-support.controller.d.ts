@@ -27,8 +27,8 @@ declare const voice: z.ZodObject<{
 }, "strip", z.ZodTypeAny, {
     discordId: string;
     guildId: string;
-    userName: string;
     channelId: string;
+    userName: string;
 }, {
     discordId: string;
     guildId: string;
@@ -94,9 +94,9 @@ export declare class VoiceSupportController {
         createdAt: Date;
         userId: string;
         guildId: string;
+        channelId: string | null;
         userName: string;
         status: string;
-        channelId: string | null;
         claimedById: string | null;
         closedAt: Date | null;
         messages: number;
@@ -120,9 +120,9 @@ export declare class VoiceSupportController {
         createdAt: Date;
         userId: string;
         guildId: string;
+        channelId: string | null;
         userName: string;
         status: string;
-        channelId: string | null;
         claimedById: string | null;
         closedAt: Date | null;
         messages: number;

@@ -21,6 +21,7 @@ const decorators_1 = require("../authz/decorators");
 const zod_pipe_1 = require("../common/zod.pipe");
 const guild_context_1 = require("../common/guild-context");
 const errors_1 = require("../common/errors");
+const media_service_1 = require("../media/media.service");
 const sf = zod_1.z.string().regex(/^\d{15,25}$/);
 /** Administration → Embeds. */
 let EmbedsController = class EmbedsController {
@@ -93,12 +94,24 @@ exports.EmbedsController = EmbedsController = __decorate([
 ], EmbedsController);
 let BotEmbedsController = class BotEmbedsController {
     s;
-    constructor(s) {
+    media;
+    constructor(s, media) {
         this.s = s;
+        this.media = media;
     }
+    /** Hochgeladenes Bild (`media:<id>`) für Nachrichten des Bots – nur Embed-Bilder und Banner. */
+    async asset(id) { const f = await this.media.embedAsset(id); return { mime: f.mime, name: f.name, data: f.data.toString('base64') }; }
     async posted(id, b) { await this.s.posted(id, b.channelId, b.messageId); }
 };
 exports.BotEmbedsController = BotEmbedsController;
+__decorate([
+    (0, decorators_1.BotService)(),
+    (0, common_1.Get)('asset/:id'),
+    __param(0, (0, common_1.Param)('id', common_1.ParseUUIDPipe)),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String]),
+    __metadata("design:returntype", Promise)
+], BotEmbedsController.prototype, "asset", null);
 __decorate([
     (0, decorators_1.BotService)(),
     (0, common_1.Post)(':id/posted'),
@@ -112,6 +125,6 @@ __decorate([
 exports.BotEmbedsController = BotEmbedsController = __decorate([
     (0, swagger_1.ApiTags)('bot'),
     (0, common_1.Controller)('bot/embeds'),
-    __metadata("design:paramtypes", [embeds_service_1.EmbedsService])
+    __metadata("design:paramtypes", [embeds_service_1.EmbedsService, media_service_1.MediaService])
 ], BotEmbedsController);
 //# sourceMappingURL=embeds.controller.js.map

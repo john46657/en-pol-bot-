@@ -360,9 +360,9 @@ export declare class VoiceSupportService {
         createdAt: Date;
         userId: string;
         guildId: string;
+        channelId: string | null;
         userName: string;
         status: string;
-        channelId: string | null;
         claimedById: string | null;
         closedAt: Date | null;
         messages: number;
@@ -569,9 +569,9 @@ export declare class VoiceSupportService {
         createdAt: Date;
         userId: string;
         guildId: string;
+        channelId: string | null;
         userName: string;
         status: string;
-        channelId: string | null;
         claimedById: string | null;
         closedAt: Date | null;
         messages: number;

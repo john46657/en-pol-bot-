@@ -10,21 +10,30 @@ import { ChannelPicker } from '../../components/DiscordPickers';
 import { DiscordPreview } from '../../components/DiscordPreview';
 import { Toggle } from '../../components/ApplicationSettings';
 import { useRoster } from '../../components/TeamRoster';
+import { ImageInput, useImageUrls } from '../../components/ImageInput';
 import { Badge, Button, Card, ConfirmDialog, EmptyState, ErrorState, fmt, Input, PageHeader, SkeletonRows, Textarea } from '../../components/ui';
 
 interface Field { name: string; value: string; inline: boolean }
 interface EmbedDoc {
   id: string; name: string; guildId: string | null; channelId: string | null; content: string; title: string; url: string; description: string; color: string;
-  author: string; thumbnail: string; image: string; footer: string; timestamp: boolean; fields: Field[]; posted: { channelId: string; messageId: string; at: string } | null;
+  author: string; authorIcon: string; thumbnail: string; image: string; images: string[]; footer: string; footerIcon: string; timestamp: boolean; timestampAt: string | null;
+  reactions: string[]; pingRoles: boolean; fields: Field[]; posted: { channelId: string; messageId: string; at: string } | null;
 }
-const blank = (guildId: string | null): EmbedDoc => ({ id: crypto.randomUUID(), name: 'Neues Embed', guildId, channelId: null, content: '', title: 'Rang Ordnung und Aufgaben', url: '', description: '', color: '#8b5cf6', author: '', thumbnail: '', image: '', footer: '', timestamp: true, fields: [{ name: '👑 | Kommandant:', value: 'Trägt die Gesamtverantwortung …', inline: false }], posted: null });
-const https = (u: string) => !u || /^https:\/\/\S+$/.test(u);
+/** Ältere gespeicherte Embeds ohne die neuen Felder. */
+const withDefaults = (d: Partial<EmbedDoc> & { id: string }): EmbedDoc => ({ authorIcon: '', images: [], footerIcon: '', timestampAt: null, reactions: [], pingRoles: true, ...d } as EmbedDoc);
+const pad = (n: number) => String(n).padStart(2, '0');
+const localDate = (iso: string) => { const d = new Date(iso); return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`; };
+const localTime = (iso: string) => { const d = new Date(iso); return `${pad(d.getHours())}:${pad(d.getMinutes())}`; };
+const joinStamp = (date: string, time: string) => (date ? new Date(`${date}T${time}`).toISOString() : null);
+const blank = (guildId: string | null): EmbedDoc => ({ id: crypto.randomUUID(), name: 'Neues Embed', guildId, channelId: null, content: '', title: 'Rang Ordnung und Aufgaben', url: '', description: '', color: '#8b5cf6', author: '', authorIcon: '', thumbnail: '', image: '', images: [], footer: '', footerIcon: '', timestamp: true, timestampAt: null, reactions: [], pingRoles: true, fields: [{ name: '👑 | Kommandant:', value: 'Trägt die Gesamtverantwortung …', inline: false }], posted: null });
+const https = (u: string) => !u || /^(https:\/\/\S+|media:[0-9a-f-]{36})$/.test(u);
 const total = (e: EmbedDoc) => e.title.length + e.description.length + e.author.length + e.footer.length + e.fields.reduce((n, f) => n + f.name.length + f.value.length, 0);
 const problems = (e: EmbedDoc) => [
   !e.name.trim() && 'Name fehlt',
-  !e.title && !e.description && !e.fields.length && !e.image && 'Titel, Text, Abschnitt oder Bild nötig',
+  !e.title && !e.description && !e.fields.length && !e.image && !e.images.length && 'Titel, Text, Abschnitt oder Bild nötig',
   e.fields.some((f) => !f.name.trim() || !f.value.trim()) && 'Jeder Abschnitt braucht Überschrift und Text',
-  ![e.url, e.thumbnail, e.image].every(https) && 'Links/Bilder müssen mit https:// beginnen',
+  ![e.url, e.thumbnail, e.image, e.authorIcon, e.footerIcon, ...e.images].every(https) && 'Links/Bilder müssen mit https:// beginnen',
+  e.images.some((i) => !i) && 'Leeres Zusatzbild entfernen',
   total(e) > 6000 && `Zu lang (${total(e)}/6000 Zeichen)`,
 ].filter(Boolean) as string[];
 
@@ -34,7 +43,7 @@ function Editor({ doc, onChange, manage }: { doc: EmbedDoc; onChange: (d: EmbedD
   const move = (i: number, d: -1 | 1) => { const f = [...doc.fields]; const [x] = f.splice(i, 1); f.splice(i + d, 0, x!); set({ fields: f }); };
   const roster = useRoster();
   const ranks = roster.data?.structure.ranks ?? [];
-  const txt = (label: string, key: 'title' | 'author' | 'footer' | 'url' | 'thumbnail' | 'image', max: number, placeholder?: string) => (
+  const txt = (label: string, key: 'title' | 'author' | 'url', max: number, placeholder?: string) => (
     <label className="grid gap-1 text-sm">{label}<Input aria-label={label} disabled={!manage} maxLength={max} placeholder={placeholder} value={doc[key]} onChange={(e) => set({ [key]: e.target.value })} /></label>
   );
   return (
@@ -70,18 +79,63 @@ function Editor({ doc, onChange, manage }: { doc: EmbedDoc; onChange: (d: EmbedD
           </div>
         ))}
       </section>
+      <details open className="rounded-lg border border-line p-2">
+        <summary className="cursor-pointer text-sm font-semibold">Bilder</summary>
+        <div className="mt-2 grid gap-3">
+          <ImageInput label="Großes Bild URL" disabled={!manage} value={doc.image} onChange={(v) => set({ image: v })} />
+          {doc.images.map((img, i) => (
+            <div key={i} className="grid gap-1">
+              <ImageInput label={`Weiteres Bild ${i + 2}`} disabled={!manage} value={img} onChange={(v) => set({ images: doc.images.map((x, j) => (j === i ? v : x)) })} />
+              <Button size="sm" variant="ghost" className="w-fit" disabled={!manage} onClick={() => set({ images: doc.images.filter((_, j) => j !== i) })}><Trash2 size={14} className="mr-1" />Bild {i + 2} entfernen</Button>
+            </div>
+          ))}
+          <Button size="sm" variant="secondary" className="w-fit" disabled={!manage || doc.images.length >= 3 || !doc.image} onClick={() => set({ images: [...doc.images, ''] })}><Plus size={14} className="mr-1" />Weiteres hinzufügen</Button>
+          {doc.images.length > 0 && !doc.url && <p className="text-xs text-muted">Tipp: Mit „Link des Titels“ zeigt Discord bis zu 4 Bilder als Galerie; ohne Link erscheinen sie einzeln untereinander.</p>}
+          <ImageInput label="Thumbnail URL" disabled={!manage} value={doc.thumbnail} onChange={(v) => set({ thumbnail: v })} />
+        </div>
+      </details>
+      <details open className="rounded-lg border border-line p-2">
+        <summary className="cursor-pointer text-sm font-semibold">Fußzeile</summary>
+        <div className="mt-2 grid gap-3">
+          <label className="grid gap-1 text-sm">Text <span className="text-xs italic text-muted">{doc.footer.length}/2048</span><Textarea aria-label="Fußzeile" disabled={!manage} rows={2} maxLength={2048} value={doc.footer} onChange={(e) => set({ footer: e.target.value })} /></label>
+          <ImageInput label="Icon" disabled={!manage || !doc.footer} value={doc.footerIcon} onChange={(v) => set({ footerIcon: v })} />
+          <div className="grid gap-3 md:grid-cols-[auto_1fr_1fr] md:items-end">
+            <label className="flex items-center gap-2 text-sm"><Toggle label="Zeitstempel" checked={doc.timestamp} onChange={(v) => set({ timestamp: v })} />Zeitstempel</label>
+            <label className="grid gap-1 text-sm">Datum<Input type="date" aria-label="Datum" disabled={!manage || !doc.timestamp} value={doc.timestampAt ? localDate(doc.timestampAt) : ''} onChange={(e) => set({ timestampAt: joinStamp(e.target.value, doc.timestampAt ? localTime(doc.timestampAt) : '12:00') })} /></label>
+            <label className="grid gap-1 text-sm">Zeit<Input type="time" aria-label="Zeit" disabled={!manage || !doc.timestamp || !doc.timestampAt} value={doc.timestampAt ? localTime(doc.timestampAt) : ''} onChange={(e) => doc.timestampAt && set({ timestampAt: joinStamp(localDate(doc.timestampAt), e.target.value || '00:00') })} /></label>
+          </div>
+          <p className="text-xs text-muted">{doc.timestamp ? (doc.timestampAt ? 'Eigener Zeitpunkt – Datum leeren für „Zeitpunkt des Sendens“.' : 'Ohne Datum: Zeitpunkt des Sendens.') : 'Kein Zeitstempel.'}{doc.timestampAt && <Button size="sm" variant="ghost" className="ml-2" disabled={!manage} onClick={() => set({ timestampAt: null })}>Datum leeren</Button>}</p>
+        </div>
+      </details>
       <details className="rounded-lg border border-line p-2">
-        <summary className="cursor-pointer text-sm font-semibold">Mehr: Autor, Bilder, Link, Fußzeile</summary>
+        <summary className="cursor-pointer text-sm font-semibold">Autor, Link, Reaktionen</summary>
         <div className="mt-2 grid gap-3 md:grid-cols-2">
           {txt('Autor (Zeile über dem Titel)', 'author', 256)}
           {txt('Link des Titels', 'url', 500, 'https://…')}
-          {txt('Kleines Bild rechts', 'thumbnail', 500, 'https://…')}
-          {txt('Großes Bild (Banner)', 'image', 500, 'https://…')}
-          {txt('Fußzeile', 'footer', 2048)}
-          <label className="flex items-center gap-2 text-sm"><Toggle label="Zeitstempel" checked={doc.timestamp} onChange={(v) => set({ timestamp: v })} />Zeitstempel</label>
+          <div className="md:col-span-2"><ImageInput label="Autor-Icon" disabled={!manage || !doc.author} value={doc.authorIcon} onChange={(v) => set({ authorIcon: v })} /></div>
+          <label className="grid gap-1 text-sm md:col-span-2">Reaktionen unter der Nachricht (Emojis mit Leerzeichen getrennt, z. B. ✅ ❌ ⏳)
+            <Input aria-label="Reaktionen" disabled={!manage} placeholder="✅ ❌ ⏳" value={doc.reactions.join(' ')} onChange={(e) => set({ reactions: e.target.value.split(/\s+/).filter(Boolean).slice(0, 20) })} />
+          </label>
+          <label className="flex items-center gap-2 text-sm md:col-span-2"><Toggle label="Rollen pingen" checked={doc.pingRoles} onChange={(v) => set({ pingRoles: v })} />Rollen-Erwähnungen im Text oben (&lt;@&amp;ID&gt;) wirklich pingen</label>
         </div>
       </details>
       <p className="text-xs text-muted">{total(doc)} / 6000 Zeichen · Markdown wie in Discord (**fett**, *kursiv*, `Code`, Erwähnungen wie &lt;@&amp;Rollen-ID&gt;).</p>
+    </div>
+  );
+}
+
+/** Vorschau mit hochgeladenen Bildern, Zusatzbildern und Reaktionen. */
+function EmbedPreview({ doc }: { doc: EmbedDoc }) {
+  const urls = useImageUrls([doc.image, doc.thumbnail, doc.authorIcon, doc.footerIcon, ...doc.images]);
+  const u = (r: string) => (r ? urls[r] : undefined);
+  const color = parseInt(doc.color.slice(1), 16);
+  return (
+    <div className="grid gap-1">
+      <DiscordPreview message={{ content: doc.content || undefined, embeds: [
+        { title: doc.title || undefined, description: doc.description || undefined, color, author: doc.author || undefined, authorIcon: u(doc.authorIcon), thumbnail: u(doc.thumbnail), image: u(doc.image), footer: [doc.footer, doc.timestamp ? new Date(doc.timestampAt ?? Date.now()).toLocaleString('de-DE', { dateStyle: 'short', timeStyle: 'short' }) : ''].filter(Boolean).join(' • ') || undefined, footerIcon: doc.footer ? u(doc.footerIcon) : undefined, fields: doc.fields },
+        ...doc.images.filter(Boolean).map((r) => ({ color, image: u(r) })),
+      ] }} />
+      {doc.reactions.length > 0 && <div className="flex flex-wrap gap-1 pl-14">{doc.reactions.map((r, i) => <span key={i} className="rounded-md bg-[#2b2d31] px-2 py-0.5 text-sm">{r} 1</span>)}</div>}
     </div>
   );
 }
@@ -95,7 +149,7 @@ export function Embeds() {
   const guilds = useGuilds();
   const key = ['embeds', server];
   const [waiting, setWaiting] = useState(false);
-  const q = useQuery({ queryKey: key, queryFn: () => api<EmbedDoc[]>('/embeds'), refetchInterval: waiting ? 3000 : false });
+  const q = useQuery({ queryKey: key, queryFn: () => api<EmbedDoc[]>('/embeds').then((l) => l.map(withDefaults)), refetchInterval: waiting ? 3000 : false });
   const [docs, setDocs] = useState<EmbedDoc[]>();
   const [open, setOpen] = useState<string>();
   const [del, setDel] = useState<string>();
@@ -151,7 +205,7 @@ export function Embeds() {
             <Editor doc={current} onChange={update} manage={manage} />
           </Card>
           <div className="grid content-start gap-3 xl:sticky xl:top-4">
-            <DiscordPreview message={{ content: current.content || undefined, embeds: [{ title: current.title || undefined, description: current.description || undefined, color: parseInt(current.color.slice(1), 16), author: current.author || undefined, thumbnail: current.thumbnail || undefined, image: current.image || undefined, footer: current.footer || undefined, fields: current.fields }] }} />
+            <EmbedPreview doc={current} />
             <Card title="Senden">
               {problems(current).length > 0 && <p role="alert" className="mb-2 text-sm text-warning">{problems(current).join(' · ')}</p>}
               {current.posted ? <p className="mb-2 text-sm text-muted">Zuletzt gesendet in <b>{chName(current.posted.channelId)}</b> am {fmt(current.posted.at)}.</p> : <p className="mb-2 text-sm text-muted">Noch nicht gesendet.</p>}

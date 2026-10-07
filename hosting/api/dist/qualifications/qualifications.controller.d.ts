@@ -141,8 +141,8 @@ export declare class QualificationsController {
             enabled: boolean;
             pingRoleIds: string[];
             questions: import("@enrp/shared").FormField[];
-            roleId?: string | undefined;
             channelId?: string | undefined;
+            roleId?: string | undefined;
             acceptedChannelId?: string | undefined;
             deniedChannelId?: string | undefined;
         }[];
@@ -227,8 +227,8 @@ export declare class QualificationsController {
             enabled: boolean;
             pingRoleIds: string[];
             questions: import("@enrp/shared").FormField[];
-            roleId?: string | undefined;
             channelId?: string | undefined;
+            roleId?: string | undefined;
             acceptedChannelId?: string | undefined;
             deniedChannelId?: string | undefined;
         }[];
@@ -314,8 +314,8 @@ export declare class QualificationsController {
             enabled: boolean;
             pingRoleIds: string[];
             questions: import("@enrp/shared").FormField[];
-            roleId?: string | undefined;
             channelId?: string | undefined;
+            roleId?: string | undefined;
             acceptedChannelId?: string | undefined;
             deniedChannelId?: string | undefined;
         }[];
@@ -466,8 +466,8 @@ export declare class BotQualificationsController {
             enabled: boolean;
             pingRoleIds: string[];
             questions: import("@enrp/shared").FormField[];
-            roleId?: string | undefined;
             channelId?: string | undefined;
+            roleId?: string | undefined;
             acceptedChannelId?: string | undefined;
             deniedChannelId?: string | undefined;
         }[];

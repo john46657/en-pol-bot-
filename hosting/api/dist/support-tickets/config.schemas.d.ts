@@ -419,8 +419,8 @@ export declare const panelSchema: z.ZodObject<{
     name: string;
     guildId: string | null;
     color: number;
-    description: string;
     channelId: string | null;
+    description: string;
     emoji: string | null;
     title: string;
     categoryIds: string[];
@@ -440,8 +440,8 @@ export declare const panelSchema: z.ZodObject<{
     name: string;
     guildId?: string | null | undefined;
     color?: number | undefined;
-    description?: string | undefined;
     channelId?: string | null | undefined;
+    description?: string | undefined;
     emoji?: string | null | undefined;
     title?: string | undefined;
     categoryIds?: string[] | undefined;
@@ -555,7 +555,7 @@ export declare const settingsSchema: z.ZodObject<{
     transcriptRetentionDays: number;
     ratingChannelId: string | null;
     ratingPublicChannelId: string | null;
-    ratingPublicFields: ("category" | "duration" | "staff" | "creator" | "comment")[];
+    ratingPublicFields: ("category" | "comment" | "duration" | "staff" | "creator")[];
     memberLeaveAction: "NONE" | "CLOSE";
     memberLeaveReason: string;
 }, {
@@ -570,7 +570,7 @@ export declare const settingsSchema: z.ZodObject<{
     transcriptRetentionDays?: number | undefined;
     ratingChannelId?: string | null | undefined;
     ratingPublicChannelId?: string | null | undefined;
-    ratingPublicFields?: ("category" | "duration" | "staff" | "creator" | "comment")[] | undefined;
+    ratingPublicFields?: ("category" | "comment" | "duration" | "staff" | "creator")[] | undefined;
     memberLeaveAction?: "NONE" | "CLOSE" | undefined;
     memberLeaveReason?: string | undefined;
 }>;

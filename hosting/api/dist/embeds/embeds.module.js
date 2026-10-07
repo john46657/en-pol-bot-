@@ -10,10 +10,11 @@ exports.EmbedsModule = void 0;
 const common_1 = require("@nestjs/common");
 const embeds_controller_1 = require("./embeds.controller");
 const embeds_service_1 = require("./embeds.service");
+const media_module_1 = require("../media/media.module");
 let EmbedsModule = class EmbedsModule {
 };
 exports.EmbedsModule = EmbedsModule;
 exports.EmbedsModule = EmbedsModule = __decorate([
-    (0, common_1.Module)({ controllers: [embeds_controller_1.EmbedsController, embeds_controller_1.BotEmbedsController], providers: [embeds_service_1.EmbedsService] })
+    (0, common_1.Module)({ imports: [media_module_1.MediaModule], exports: [embeds_service_1.EmbedsService], controllers: [embeds_controller_1.EmbedsController, embeds_controller_1.BotEmbedsController], providers: [embeds_service_1.EmbedsService] })
 ], EmbedsModule);
 //# sourceMappingURL=embeds.module.js.map

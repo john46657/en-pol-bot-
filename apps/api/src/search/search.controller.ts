@@ -42,7 +42,8 @@ export class SearchController {
     if (allowed('complaints.view')) jobs.push(this.prisma.complaint.findMany({ where: { number: { contains: upper } }, take }).then((r) => r.map((x) => ({ type: 'complaint', id: x.id, label: x.number, sub: x.category }))));
     if (allowed('investigations.view')) jobs.push(this.prisma.investigation.findMany({ where: { OR: [{ caseNumber: { contains: upper } }, { title: ci(term) }] }, take }).then((r) => r.map((x) => ({ type: 'investigation', id: x.id, label: x.caseNumber, sub: x.title }))));
     if (allowed('wanted.view')) jobs.push(this.prisma.wantedRecord.findMany({ where: { status: 'ACTIVE', reason: ci(term) }, take }).then((r) => r.map((x) => ({ type: 'wanted', id: x.id, label: x.reason }))));
-    if (allowed('evidence.view')) jobs.push(this.prisma.evidence.findMany({ where: { OR: [{ number: { contains: upper } }, { description: ci(term) }] }, take }).then((r) => r.map((x) => ({ type: 'evidence', id: x.id, label: x.number, sub: x.description }))));
+    // Beweismittel sind im Dashboard ausgeblendet – nicht mehr in der Suche anbieten
+    // (evidence.view-Suche entfernt)
     if (allowed('personnel.view')) jobs.push(this.prisma.personnel.findMany({ where: { OR: [{ callsign: ci(term) }, { user: { displayName: ci(term) } }] }, include: { user: true }, take }).then((r) => r.map((x) => ({ type: 'personnel', id: x.id, label: x.user.displayName, sub: x.callsign ?? undefined }))));
     // Teamliste: Name, Dienstnummer, Team, Dienstgrad, Büro (+ Discord-Teammitglieder ohne Personalakte)
     if (allowed('team.view')) {

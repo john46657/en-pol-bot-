@@ -1,3 +1,5 @@
+import { z } from 'zod';
+
 /** Zentraler Permission-Katalog. Einzige Quelle der Wahrheit für Backend und Frontend. */
 declare const PERMISSION_CATALOG: {
     /** `dashboard.<bereich>.view`: Sichtbarkeit ganzer Bereiche im Menü und auf der Startseite (zusätzlich zur Modul-Permission). */
@@ -15,9 +17,26 @@ declare const PERMISSION_CATALOG: {
     readonly investigations: readonly ["view", "create", "edit", "close"];
     readonly wanted: readonly ["view", "create", "edit", "activate", "clear"];
     readonly evidence: readonly ["view", "create", "transfer", "release"];
-    readonly personnel: readonly ["view", "create", "edit", "promote", "discipline"];
+    /** view_sensitive: geschützte Daten (Verwarnungen, interne Notizen, Abwesenheitsgründe, Historie) */
+    readonly personnel: readonly ["view", "view_sensitive", "create", "edit", "delete", "promote", "discipline"];
+    /** Beförderungssystem */
+    readonly promotion: readonly ["view", "create", "edit", "review", "approve", "reject", "execute", "manage_ranks", "manage_requirements", "view_history", "manage_settings", "manage"];
+    /** Versetzungen zwischen Abteilungen */
+    readonly transfer: readonly ["view", "create", "approve", "reject"];
+    /** Ausbildungen und Zertifikate */
+    readonly training: readonly ["view", "create", "manage"];
+    /** Prüfungen */
+    readonly exam: readonly ["view", "create", "manage", "grade"];
+    readonly warning: readonly ["view", "create", "manage"];
+    readonly awards: readonly ["view", "create", "manage"];
+    /** Interne Meldungen mit Lesebestätigung */
+    readonly announcements: readonly ["view", "create", "manage"];
+    /** Interne Abstimmungen */
+    readonly polls: readonly ["view", "create", "manage"];
+    /** Dienstnummern-System */
+    readonly dienstnummer: readonly ["view", "create", "assign", "edit", "release", "block", "history", "manage_ranges", "manage_settings"];
     readonly leave: readonly ["view", "request", "manage"];
-    readonly applications: readonly ["view", "review", "decide"];
+    readonly applications: readonly ["view", "review", "decide", "auto_assign_dienstnummer"];
     readonly academy: readonly ["view", "manage"];
     readonly sek: readonly ["view", "report", "manage"];
     readonly qualifications: readonly ["view", "decide", "manage"];
@@ -26,6 +45,8 @@ declare const PERMISSION_CATALOG: {
     readonly radio: readonly ["view", "manage"];
     /** Team-Chance: Bewerbungsphase für das Team öffnen/schließen */
     readonly teamchance: readonly ["view", "manage"];
+    /** Tages-/Wochenberichte nach Vorlagen (Dashboard + Discord) */
+    readonly dutyreports: readonly ["view", "create", "view_all", "edit_all", "review", "manage"];
     readonly communication: readonly ["view", "send", "moderate"];
     readonly analytics: readonly ["view"];
     readonly audit: readonly ["view", "export"];
@@ -385,6 +406,7 @@ interface ComponentSelect {
         emoji?: string;
     }[];
 }
+/** Bilder in Embeds dürfen `media:<id>` sein (hochgeladene Datei – der Bot lädt sie und hängt sie an). `reactions`: Emojis, die der Bot nach dem Senden setzt. */
 interface MessageSpec {
     content?: string;
     embeds?: EmbedSpec[];
@@ -392,6 +414,7 @@ interface MessageSpec {
     select?: ComponentSelect;
     mentionUsers?: string[];
     mentionRoles?: string[];
+    reactions?: string[];
 }
 type TicketEffect = {
     type: 'create';
@@ -883,4 +906,1428 @@ declare function verifyActions(cfg: VerifyConfig, link: (VerifyNickVars & {
     nickname: string | null;
 };
 
-export { ALL_PERMISSIONS, APPLICATION_STATUSES, APPLICATION_TRANSITIONS, APPLICATION_VARIABLES, AREA_PERMISSIONS, type AnswerCheck, type ApplicationStatus, type ApplicationVars, type ButtonStyleName, CAD_EVENTS, CAD_EVENT_LABELS, CAD_EVENT_SEND_TYPE, CAD_LINK_ACTIONS, CAD_LINK_LABELS, CAD_LINK_SEND_TYPES, CAD_WIDGETS, CAD_WIDGET_LABELS, CLAIM_MODES, CLOSE_REASON_MODES, CLOSE_REASON_SOURCES, COMPLAINT_STATUSES, COMPLAINT_TRANSITIONS, type CadConfig, type CadEvent, type CadField, type CadLayer, type CadMapConfig, type CadMarkerStyle, type CadOption, type CadRoute, type CadStatusOption, type CadUnitType, type ClaimMode, type CloseReasonMode, type CloseReasonSource, type ComplaintStatus, type ComponentButton, type ComponentSelect, DEFAULT_APPLICATION_MESSAGES, DEFAULT_CAD_CONFIG, DEFAULT_DANGER_CONFIG, DEFAULT_VERIFY_CONFIG, DEFAULT_WELCOME_CONFIG, DISPATCH_STATUSES, DISPATCH_TRANSITIONS, DUTY_STATUSES, type DangerConfig, type DangerLevelDef, type DispatchStatus, type DutyStatus, ERLC_DEFAULT_BLOCKED, ERLC_DEFAULT_CRITICAL, ERLC_FEATURES, ERLC_FEATURE_LABELS, ERLC_MAP_SIZE, ERLC_POLL_OPTIONS, ERLC_STATUSES, ERLC_STATUS_LABEL, EVIDENCE_CUSTODY_STATES, EVIDENCE_TRANSITIONS, type Effect, type EmbedSpec, type ErlcFeature, type ErlcStatus, type EvidenceCustodyState, FORM_QUESTION_TYPES, type Field, type FormField, type FormOption, type FormQuestionType, INVESTIGATION_STATUSES, INVESTIGATION_TRANSITIONS, InvalidTransitionError, type InvestigationStatus, LEGACY_DANGER, MAX_FORM_OPTIONS, MAX_FORM_QUESTIONS, MUSIC_TRACKS, type MessageSpec, PERMISSION_CATALOG, PRIORITIES, PRIORITY_LABEL, type PermissionContext, type PermissionGrant, type PermissionKey, type Priority, QUESTION_TYPES, type QuestionType, REPORT_STATUSES, REPORT_TRANSITIONS, REPORT_TYPES, ROBLOX_NAME, ROBLOX_VERIFICATION_STATUSES, type ReportStatus, type ReportType, type Resolution, type ResolutionSource, type RobloxVerificationStatus, STATUS_KINDS, STATUS_LABEL, type StatusKind, type SupportTime, TICKET_ACTIONS, TICKET_ACTION_KEYS, TICKET_PLACEHOLDERS, TICKET_STATUSES, TICKET_TRANSITIONS, type TicketAction, type TicketButtonConfig, type TicketEffect, type TicketQuestion, type TicketStatus, type TicketVars, type TransitionMap, UNIT_STATUSES, type UnitStatus, VERIFY_NICK_VARS, VOICE_CASE_STATUS, type VerifyBind, type VerifyConfig, type VerifyNickVars, type VerifyPanel, type VoiceSupportRoom, WANTED_STATUSES, WANTED_TRANSITIONS, WEEKDAYS, WELCOME_VARIABLES, WORKFLOW_ACTION_LABELS, WORKFLOW_OPS, WORKFLOW_OP_LABELS, WORKFLOW_TRIGGERS, type WantedStatus, type WelcomeConfig, type WelcomeMember, type WelcomeMessageDef, type WorkflowAction, type WorkflowCondition, type WorkflowOp, type WorkflowTrigger, accountAge, areaGrantsFor, assertTransition, can, canDelegate, canTransition, checkAnswer, conditionMatches, dangerLevelOf, defaultTicketButtons, effectivePermissions, fieldValue, formatMinutes, freeFieldKey, gameToPixel, grantMatches, hexColor, isInputQuestion, isPermissionKey, isSupportOpen, isValidRobloxUserId, localTime, matchingBinds, newVoiceRoom, normalizeField, parsePlayer, pixelToGame, renderApplicationText, renderTemplate, renderTicketText, renderVerifyNickname, renderWelcomeText, resolvePermission, rolesMatch, statusLabel, ticketChannelName, ticketNumber, triggerMatches, verifyActions };
+declare const staffSectionSchema: z.ZodObject<{
+    roleId: z.ZodString;
+    /** eigene Überschrift statt der Rollen-Erwähnung (leer = @Rolle) */
+    label: z.ZodDefault<z.ZodString>;
+    /** Trennlinie nach diesem Abschnitt */
+    divider: z.ZodDefault<z.ZodBoolean>;
+}, "strip", z.ZodTypeAny, {
+    label: string;
+    roleId: string;
+    divider: boolean;
+}, {
+    roleId: string;
+    label?: string | undefined;
+    divider?: boolean | undefined;
+}>;
+declare const staffListSchema: z.ZodObject<{
+    id: z.ZodString;
+    name: z.ZodString;
+    guildId: z.ZodDefault<z.ZodNullable<z.ZodString>>;
+    channelId: z.ZodDefault<z.ZodNullable<z.ZodString>>;
+    title: z.ZodDefault<z.ZodString>;
+    intro: z.ZodDefault<z.ZodString>;
+    color: z.ZodDefault<z.ZodString>;
+    sections: z.ZodDefault<z.ZodArray<z.ZodObject<{
+        roleId: z.ZodString;
+        /** eigene Überschrift statt der Rollen-Erwähnung (leer = @Rolle) */
+        label: z.ZodDefault<z.ZodString>;
+        /** Trennlinie nach diesem Abschnitt */
+        divider: z.ZodDefault<z.ZodBoolean>;
+    }, "strip", z.ZodTypeAny, {
+        label: string;
+        roleId: string;
+        divider: boolean;
+    }, {
+        roleId: string;
+        label?: string | undefined;
+        divider?: boolean | undefined;
+    }>, "many">>;
+    /** Text, wenn niemand die Rolle hat */
+    emptyText: z.ZodDefault<z.ZodString>;
+    dividerText: z.ZodDefault<z.ZodString>;
+    /** Mitglieder als Erwähnung (@Name, wie im Screenshot) oder als Anzeigename */
+    mention: z.ZodDefault<z.ZodBoolean>;
+    /** wer mehrere Rollen der Liste hat, steht nur unter der obersten */
+    onlyHighest: z.ZodDefault<z.ZodBoolean>;
+    bullet: z.ZodDefault<z.ZodString>;
+    footer: z.ZodDefault<z.ZodString>;
+    timestamp: z.ZodDefault<z.ZodBoolean>;
+    /** automatisch aktualisieren, sobald sich Rollen ändern */
+    autoUpdate: z.ZodDefault<z.ZodBoolean>;
+    image: z.ZodDefault<z.ZodUnion<[z.ZodString, z.ZodLiteral<"">]>>;
+}, "strip", z.ZodTypeAny, {
+    title: string;
+    id: string;
+    name: string;
+    guildId: string | null;
+    channelId: string | null;
+    intro: string;
+    color: string;
+    sections: {
+        label: string;
+        roleId: string;
+        divider: boolean;
+    }[];
+    emptyText: string;
+    dividerText: string;
+    mention: boolean;
+    onlyHighest: boolean;
+    bullet: string;
+    footer: string;
+    timestamp: boolean;
+    autoUpdate: boolean;
+    image: string;
+}, {
+    id: string;
+    name: string;
+    title?: string | undefined;
+    guildId?: string | null | undefined;
+    channelId?: string | null | undefined;
+    intro?: string | undefined;
+    color?: string | undefined;
+    sections?: {
+        roleId: string;
+        label?: string | undefined;
+        divider?: boolean | undefined;
+    }[] | undefined;
+    emptyText?: string | undefined;
+    dividerText?: string | undefined;
+    mention?: boolean | undefined;
+    onlyHighest?: boolean | undefined;
+    bullet?: string | undefined;
+    footer?: string | undefined;
+    timestamp?: boolean | undefined;
+    autoUpdate?: boolean | undefined;
+    image?: string | undefined;
+}>;
+type StaffList = z.infer<typeof staffListSchema>;
+interface StaffMember {
+    id: string;
+    name: string;
+    roleIds: string[];
+}
+/** Staff-Liste als Discord-Nachricht (wird vom Bot und von der Vorschau im Dashboard gleich gerechnet). */
+declare function renderStaffList(l: StaffList, members: StaffMember[], roleName?: (id: string) => string, now?: Date): MessageSpec;
+declare const panelFieldSchema: z.ZodObject<{
+    id: z.ZodString;
+    label: z.ZodString;
+    placeholder: z.ZodDefault<z.ZodString>;
+    long: z.ZodDefault<z.ZodBoolean>;
+    required: z.ZodDefault<z.ZodBoolean>;
+    maxLength: z.ZodDefault<z.ZodNumber>;
+}, "strip", z.ZodTypeAny, {
+    label: string;
+    required: boolean;
+    maxLength: number;
+    long: boolean;
+    id: string;
+    placeholder: string;
+}, {
+    label: string;
+    id: string;
+    required?: boolean | undefined;
+    maxLength?: number | undefined;
+    long?: boolean | undefined;
+    placeholder?: string | undefined;
+}>;
+declare const formPanelSchema: z.ZodObject<{
+    id: z.ZodString;
+    name: z.ZodString;
+    guildId: z.ZodDefault<z.ZodNullable<z.ZodString>>;
+    active: z.ZodDefault<z.ZodBoolean>;
+    /** Panel-Nachricht mit Button */
+    channelId: z.ZodDefault<z.ZodNullable<z.ZodString>>;
+    panelTitle: z.ZodDefault<z.ZodString>;
+    panelText: z.ZodDefault<z.ZodString>;
+    panelColor: z.ZodDefault<z.ZodString>;
+    panelImage: z.ZodDefault<z.ZodUnion<[z.ZodString, z.ZodLiteral<"">]>>;
+    buttonLabel: z.ZodDefault<z.ZodString>;
+    buttonEmoji: z.ZodDefault<z.ZodString>;
+    buttonStyle: z.ZodDefault<z.ZodEnum<["primary", "secondary", "success", "danger"]>>;
+    /** Formular */
+    modalTitle: z.ZodDefault<z.ZodString>;
+    fields: z.ZodDefault<z.ZodArray<z.ZodObject<{
+        id: z.ZodString;
+        label: z.ZodString;
+        placeholder: z.ZodDefault<z.ZodString>;
+        long: z.ZodDefault<z.ZodBoolean>;
+        required: z.ZodDefault<z.ZodBoolean>;
+        maxLength: z.ZodDefault<z.ZodNumber>;
+    }, "strip", z.ZodTypeAny, {
+        label: string;
+        required: boolean;
+        maxLength: number;
+        long: boolean;
+        id: string;
+        placeholder: string;
+    }, {
+        label: string;
+        id: string;
+        required?: boolean | undefined;
+        maxLength?: number | undefined;
+        long?: boolean | undefined;
+        placeholder?: string | undefined;
+    }>, "many">>;
+    /** Ergebnis-Nachricht */
+    targetChannelId: z.ZodDefault<z.ZodNullable<z.ZodString>>;
+    template: z.ZodDefault<z.ZodString>;
+    /** als Embed statt Text */
+    asEmbed: z.ZodDefault<z.ZodBoolean>;
+    embedTitle: z.ZodDefault<z.ZodString>;
+    embedColor: z.ZodDefault<z.ZodString>;
+    /** Nachricht mit Namen und Profilbild der Person posten (Webhook – der Bot braucht „Webhooks verwalten“) */
+    asUser: z.ZodDefault<z.ZodBoolean>;
+    reactions: z.ZodDefault<z.ZodArray<z.ZodString, "many">>;
+    pingRoleIds: z.ZodDefault<z.ZodArray<z.ZodString, "many">>;
+    /** jede Person nur einmal (erneutes Absenden ersetzt die alte Nachricht) */
+    onePerUser: z.ZodDefault<z.ZodBoolean>;
+    confirmText: z.ZodDefault<z.ZodString>;
+    /** Rollen, die man nach dem Absenden bekommt */
+    grantRoleIds: z.ZodDefault<z.ZodArray<z.ZodString, "many">>;
+}, "strip", z.ZodTypeAny, {
+    id: string;
+    name: string;
+    guildId: string | null;
+    channelId: string | null;
+    active: boolean;
+    panelTitle: string;
+    panelText: string;
+    panelColor: string;
+    panelImage: string;
+    buttonLabel: string;
+    buttonEmoji: string;
+    buttonStyle: "danger" | "secondary" | "success" | "primary";
+    modalTitle: string;
+    fields: {
+        label: string;
+        required: boolean;
+        maxLength: number;
+        long: boolean;
+        id: string;
+        placeholder: string;
+    }[];
+    targetChannelId: string | null;
+    template: string;
+    asEmbed: boolean;
+    embedTitle: string;
+    embedColor: string;
+    asUser: boolean;
+    reactions: string[];
+    pingRoleIds: string[];
+    onePerUser: boolean;
+    confirmText: string;
+    grantRoleIds: string[];
+}, {
+    id: string;
+    name: string;
+    guildId?: string | null | undefined;
+    channelId?: string | null | undefined;
+    active?: boolean | undefined;
+    panelTitle?: string | undefined;
+    panelText?: string | undefined;
+    panelColor?: string | undefined;
+    panelImage?: string | undefined;
+    buttonLabel?: string | undefined;
+    buttonEmoji?: string | undefined;
+    buttonStyle?: "danger" | "secondary" | "success" | "primary" | undefined;
+    modalTitle?: string | undefined;
+    fields?: {
+        label: string;
+        id: string;
+        required?: boolean | undefined;
+        maxLength?: number | undefined;
+        long?: boolean | undefined;
+        placeholder?: string | undefined;
+    }[] | undefined;
+    targetChannelId?: string | null | undefined;
+    template?: string | undefined;
+    asEmbed?: boolean | undefined;
+    embedTitle?: string | undefined;
+    embedColor?: string | undefined;
+    asUser?: boolean | undefined;
+    reactions?: string[] | undefined;
+    pingRoleIds?: string[] | undefined;
+    onePerUser?: boolean | undefined;
+    confirmText?: string | undefined;
+    grantRoleIds?: string[] | undefined;
+}>;
+type FormPanel = z.infer<typeof formPanelSchema>;
+declare const FORM_PANEL_VARIABLES: readonly ["{user}", "{user.name}", "{datum}", "{zeit}"];
+/** Platzhalter füllen: Formularfelder ({kürzel}) und {user}, {user.name}, {datum}, {zeit}. */
+declare function renderPanelTemplate(tpl: string, values: Record<string, string>, user: {
+    id: string;
+    name: string;
+}, now?: Date): string;
+declare function formPanelMessage(p: FormPanel): MessageSpec;
+declare function formPanelResult(p: FormPanel, values: Record<string, string>, user: {
+    id: string;
+    name: string;
+    avatar?: string;
+}, now?: Date): MessageSpec;
+
+declare const REPORT_FIELD_TYPES: readonly ["short", "long", "number", "select"];
+declare const reportFieldSchema: z.ZodObject<{
+    id: z.ZodString;
+    label: z.ZodString;
+    type: z.ZodDefault<z.ZodEnum<["short", "long", "number", "select"]>>;
+    placeholder: z.ZodDefault<z.ZodString>;
+    required: z.ZodDefault<z.ZodBoolean>;
+    /** nur bei Auswahl */
+    options: z.ZodDefault<z.ZodArray<z.ZodString, "many">>;
+    maxLength: z.ZodDefault<z.ZodNumber>;
+    /** in Discord nebeneinander anzeigen */
+    inline: z.ZodDefault<z.ZodBoolean>;
+}, "strip", z.ZodTypeAny, {
+    options: string[];
+    label: string;
+    required: boolean;
+    maxLength: number;
+    type: "number" | "select" | "long" | "short";
+    id: string;
+    placeholder: string;
+    inline: boolean;
+}, {
+    label: string;
+    id: string;
+    options?: string[] | undefined;
+    required?: boolean | undefined;
+    maxLength?: number | undefined;
+    type?: "number" | "select" | "long" | "short" | undefined;
+    placeholder?: string | undefined;
+    inline?: boolean | undefined;
+}>;
+declare const reportTemplateSchema: z.ZodObject<{
+    id: z.ZodString;
+    name: z.ZodString;
+    emoji: z.ZodDefault<z.ZodString>;
+    description: z.ZodDefault<z.ZodString>;
+    period: z.ZodDefault<z.ZodEnum<["DAILY", "WEEKLY", "FREE"]>>;
+    active: z.ZodDefault<z.ZodBoolean>;
+    guildId: z.ZodDefault<z.ZodNullable<z.ZodString>>;
+    /** Kanal, in den jeder Bericht gepostet wird (leer = nur Dashboard) */
+    channelId: z.ZodDefault<z.ZodNullable<z.ZodString>>;
+    color: z.ZodDefault<z.ZodString>;
+    fields: z.ZodArray<z.ZodObject<{
+        id: z.ZodString;
+        label: z.ZodString;
+        type: z.ZodDefault<z.ZodEnum<["short", "long", "number", "select"]>>;
+        placeholder: z.ZodDefault<z.ZodString>;
+        required: z.ZodDefault<z.ZodBoolean>;
+        /** nur bei Auswahl */
+        options: z.ZodDefault<z.ZodArray<z.ZodString, "many">>;
+        maxLength: z.ZodDefault<z.ZodNumber>;
+        /** in Discord nebeneinander anzeigen */
+        inline: z.ZodDefault<z.ZodBoolean>;
+    }, "strip", z.ZodTypeAny, {
+        options: string[];
+        label: string;
+        required: boolean;
+        maxLength: number;
+        type: "number" | "select" | "long" | "short";
+        id: string;
+        placeholder: string;
+        inline: boolean;
+    }, {
+        label: string;
+        id: string;
+        options?: string[] | undefined;
+        required?: boolean | undefined;
+        maxLength?: number | undefined;
+        type?: "number" | "select" | "long" | "short" | undefined;
+        placeholder?: string | undefined;
+        inline?: boolean | undefined;
+    }>, "many">;
+    /** pro Person und Zeitraum nur ein Bericht (erneutes Ausfüllen bearbeitet den vorhandenen) */
+    onePerPeriod: z.ZodDefault<z.ZodBoolean>;
+    /** Verfasser darf nach dem Einreichen noch bearbeiten */
+    authorCanEdit: z.ZodDefault<z.ZodBoolean>;
+    /** Rollen, die beim neuen Bericht erwähnt werden */
+    pingRoleIds: z.ZodDefault<z.ZodArray<z.ZodString, "many">>;
+}, "strip", z.ZodTypeAny, {
+    description: string;
+    id: string;
+    name: string;
+    guildId: string | null;
+    channelId: string | null;
+    color: string;
+    active: boolean;
+    fields: {
+        options: string[];
+        label: string;
+        required: boolean;
+        maxLength: number;
+        type: "number" | "select" | "long" | "short";
+        id: string;
+        placeholder: string;
+        inline: boolean;
+    }[];
+    pingRoleIds: string[];
+    emoji: string;
+    period: "DAILY" | "WEEKLY" | "FREE";
+    onePerPeriod: boolean;
+    authorCanEdit: boolean;
+}, {
+    id: string;
+    name: string;
+    fields: {
+        label: string;
+        id: string;
+        options?: string[] | undefined;
+        required?: boolean | undefined;
+        maxLength?: number | undefined;
+        type?: "number" | "select" | "long" | "short" | undefined;
+        placeholder?: string | undefined;
+        inline?: boolean | undefined;
+    }[];
+    description?: string | undefined;
+    guildId?: string | null | undefined;
+    channelId?: string | null | undefined;
+    color?: string | undefined;
+    active?: boolean | undefined;
+    pingRoleIds?: string[] | undefined;
+    emoji?: string | undefined;
+    period?: "DAILY" | "WEEKLY" | "FREE" | undefined;
+    onePerPeriod?: boolean | undefined;
+    authorCanEdit?: boolean | undefined;
+}>;
+type ReportTemplate = z.infer<typeof reportTemplateSchema>;
+type ReportField = z.infer<typeof reportFieldSchema>;
+declare const PERIOD_LABEL: Record<ReportTemplate['period'], string>;
+/** Beginn des Zeitraums (Europe/Berlin-nah: lokale Mitternacht des Servers; Woche ab Montag). */
+declare function periodStart(period: ReportTemplate['period'], d?: Date): Date;
+/** ISO-Kalenderwoche */
+declare function isoWeek(d: Date): number;
+declare function periodLabel(period: ReportTemplate['period'], start: Date | string): string;
+/** Werte prüfen/zuschneiden; liefert Fehlertext oder die bereinigten Werte. */
+declare function cleanReportValues(t: ReportTemplate, input: Record<string, unknown>): {
+    values: Record<string, string>;
+} | {
+    error: string;
+};
+interface ReportView {
+    number: string;
+    period: ReportTemplate['period'];
+    periodStart: string | Date;
+    values: Record<string, string>;
+    authorName: string;
+    authorDiscordId?: string | null;
+    status: string;
+    updatedAt: string | Date;
+    edited: boolean;
+}
+/** Bericht als Discord-Nachricht (mit „Bearbeiten“-Button). */
+declare function reportMessage(t: ReportTemplate, r: ReportView, id: string): MessageSpec;
+
+declare const hrStatusSchema: z.ZodObject<{
+    key: z.ZodString;
+    label: z.ZodString;
+    emoji: z.ZodDefault<z.ZodString>;
+    color: z.ZodDefault<z.ZodString>;
+    active: z.ZodDefault<z.ZodBoolean>;
+}, "strip", z.ZodTypeAny, {
+    key: string;
+    label: string;
+    color: string;
+    active: boolean;
+    emoji: string;
+}, {
+    key: string;
+    label: string;
+    color?: string | undefined;
+    active?: boolean | undefined;
+    emoji?: string | undefined;
+}>;
+declare const departmentSchema: z.ZodObject<{
+    id: z.ZodString;
+    name: z.ZodString;
+    color: z.ZodDefault<z.ZodString>;
+    discordRoleIds: z.ZodDefault<z.ZodArray<z.ZodString, "many">>;
+    dashboardRoleIds: z.ZodDefault<z.ZodArray<z.ZodString, "many">>;
+    description: z.ZodDefault<z.ZodString>;
+}, "strip", z.ZodTypeAny, {
+    description: string;
+    id: string;
+    name: string;
+    color: string;
+    discordRoleIds: string[];
+    dashboardRoleIds: string[];
+}, {
+    id: string;
+    name: string;
+    description?: string | undefined;
+    color?: string | undefined;
+    discordRoleIds?: string[] | undefined;
+    dashboardRoleIds?: string[] | undefined;
+}>;
+declare const severitySchema: z.ZodObject<{
+    key: z.ZodString;
+    label: z.ZodString;
+    emoji: z.ZodDefault<z.ZodString>;
+    color: z.ZodDefault<z.ZodString>;
+    defaultDays: z.ZodDefault<z.ZodNumber>;
+}, "strip", z.ZodTypeAny, {
+    key: string;
+    label: string;
+    color: string;
+    emoji: string;
+    defaultDays: number;
+}, {
+    key: string;
+    label: string;
+    color?: string | undefined;
+    emoji?: string | undefined;
+    defaultDays?: number | undefined;
+}>;
+declare const awardDefSchema: z.ZodObject<{
+    id: z.ZodString;
+    name: z.ZodString;
+    icon: z.ZodDefault<z.ZodString>;
+    description: z.ZodDefault<z.ZodString>;
+    color: z.ZodDefault<z.ZodString>;
+    requirements: z.ZodDefault<z.ZodString>;
+    public: z.ZodDefault<z.ZodBoolean>;
+    discordRoleId: z.ZodDefault<z.ZodNullable<z.ZodString>>;
+    active: z.ZodDefault<z.ZodBoolean>;
+}, "strip", z.ZodTypeAny, {
+    description: string;
+    id: string;
+    name: string;
+    color: string;
+    active: boolean;
+    icon: string;
+    requirements: string;
+    public: boolean;
+    discordRoleId: string | null;
+}, {
+    id: string;
+    name: string;
+    description?: string | undefined;
+    color?: string | undefined;
+    active?: boolean | undefined;
+    icon?: string | undefined;
+    requirements?: string | undefined;
+    public?: boolean | undefined;
+    discordRoleId?: string | null | undefined;
+}>;
+declare const absenceTypeSchema: z.ZodObject<{
+    key: z.ZodString;
+    label: z.ZodString;
+    emoji: z.ZodDefault<z.ZodString>;
+}, "strip", z.ZodTypeAny, {
+    key: string;
+    label: string;
+    emoji: string;
+}, {
+    key: string;
+    label: string;
+    emoji?: string | undefined;
+}>;
+/** Bereiche der Personalakte: sichtbar ja/nein und ob sie geschützt sind (nur mit personnel.view_sensitive). */
+declare const PROFILE_SECTIONS: readonly ["overview", "rank", "promotions", "trainings", "exams", "awards", "warnings", "absences", "transfers", "servicenumbers", "notes", "history"];
+type ProfileSection = (typeof PROFILE_SECTIONS)[number];
+declare const PROFILE_SECTION_LABEL: Record<ProfileSection, string>;
+declare const PROFILE_FIELDS: readonly ["discordName", "discordId", "avatar", "robloxName", "robloxId", "rank", "department", "joinDate", "status", "serviceNumber", "callsign"];
+declare const PROFILE_FIELD_LABEL: Record<(typeof PROFILE_FIELDS)[number], string>;
+/** Benachrichtigung je Ereignis: Dashboard, Discord-Kanal, Direktnachricht; welche Dashboard-Rollen sie bekommen. */
+declare const notifyRuleSchema: z.ZodObject<{
+    dashboard: z.ZodDefault<z.ZodBoolean>;
+    channelId: z.ZodDefault<z.ZodNullable<z.ZodString>>;
+    dm: z.ZodDefault<z.ZodBoolean>;
+    roleIds: z.ZodDefault<z.ZodArray<z.ZodString, "many">>;
+}, "strip", z.ZodTypeAny, {
+    dashboard: boolean;
+    dm: boolean;
+    roleIds: string[];
+    channelId: string | null;
+}, {
+    dashboard?: boolean | undefined;
+    dm?: boolean | undefined;
+    roleIds?: string[] | undefined;
+    channelId?: string | null | undefined;
+}>;
+declare const HR_EVENTS: readonly ["promotion.requested", "promotion.approved", "promotion.rejected", "promotion.executed", "transfer.requested", "transfer.approved", "transfer.rejected", "warning.created", "award.granted", "training.passed", "exam.passed"];
+type HrEvent = (typeof HR_EVENTS)[number];
+declare const HR_EVENT_LABEL: Record<HrEvent, string>;
+declare const stageSchema: z.ZodObject<{
+    id: z.ZodString;
+    name: z.ZodString;
+    roleIds: z.ZodDefault<z.ZodArray<z.ZodString, "many">>;
+}, "strip", z.ZodTypeAny, {
+    roleIds: string[];
+    id: string;
+    name: string;
+}, {
+    id: string;
+    name: string;
+    roleIds?: string[] | undefined;
+}>;
+declare const REQUEST_STATUSES: readonly ["OPEN", "IN_REVIEW", "APPROVED", "REJECTED", "DEFERRED", "EXECUTED", "CANCELLED"];
+type RequestStatus = (typeof REQUEST_STATUSES)[number];
+declare const requestStatusDefSchema: z.ZodObject<{
+    label: z.ZodString;
+    emoji: z.ZodString;
+}, "strip", z.ZodTypeAny, {
+    label: string;
+    emoji: string;
+}, {
+    label: string;
+    emoji: string;
+}>;
+declare const hrConfigSchema: z.ZodObject<{
+    statuses: z.ZodDefault<z.ZodArray<z.ZodObject<{
+        key: z.ZodString;
+        label: z.ZodString;
+        emoji: z.ZodDefault<z.ZodString>;
+        color: z.ZodDefault<z.ZodString>;
+        active: z.ZodDefault<z.ZodBoolean>;
+    }, "strip", z.ZodTypeAny, {
+        key: string;
+        label: string;
+        color: string;
+        active: boolean;
+        emoji: string;
+    }, {
+        key: string;
+        label: string;
+        color?: string | undefined;
+        active?: boolean | undefined;
+        emoji?: string | undefined;
+    }>, "many">>;
+    departments: z.ZodDefault<z.ZodArray<z.ZodObject<{
+        id: z.ZodString;
+        name: z.ZodString;
+        color: z.ZodDefault<z.ZodString>;
+        discordRoleIds: z.ZodDefault<z.ZodArray<z.ZodString, "many">>;
+        dashboardRoleIds: z.ZodDefault<z.ZodArray<z.ZodString, "many">>;
+        description: z.ZodDefault<z.ZodString>;
+    }, "strip", z.ZodTypeAny, {
+        description: string;
+        id: string;
+        name: string;
+        color: string;
+        discordRoleIds: string[];
+        dashboardRoleIds: string[];
+    }, {
+        id: string;
+        name: string;
+        description?: string | undefined;
+        color?: string | undefined;
+        discordRoleIds?: string[] | undefined;
+        dashboardRoleIds?: string[] | undefined;
+    }>, "many">>;
+    absenceTypes: z.ZodDefault<z.ZodArray<z.ZodObject<{
+        key: z.ZodString;
+        label: z.ZodString;
+        emoji: z.ZodDefault<z.ZodString>;
+    }, "strip", z.ZodTypeAny, {
+        key: string;
+        label: string;
+        emoji: string;
+    }, {
+        key: string;
+        label: string;
+        emoji?: string | undefined;
+    }>, "many">>;
+    warningSeverities: z.ZodDefault<z.ZodArray<z.ZodObject<{
+        key: z.ZodString;
+        label: z.ZodString;
+        emoji: z.ZodDefault<z.ZodString>;
+        color: z.ZodDefault<z.ZodString>;
+        defaultDays: z.ZodDefault<z.ZodNumber>;
+    }, "strip", z.ZodTypeAny, {
+        key: string;
+        label: string;
+        color: string;
+        emoji: string;
+        defaultDays: number;
+    }, {
+        key: string;
+        label: string;
+        color?: string | undefined;
+        emoji?: string | undefined;
+        defaultDays?: number | undefined;
+    }>, "many">>;
+    warningCategories: z.ZodDefault<z.ZodArray<z.ZodString, "many">>;
+    awards: z.ZodDefault<z.ZodArray<z.ZodObject<{
+        id: z.ZodString;
+        name: z.ZodString;
+        icon: z.ZodDefault<z.ZodString>;
+        description: z.ZodDefault<z.ZodString>;
+        color: z.ZodDefault<z.ZodString>;
+        requirements: z.ZodDefault<z.ZodString>;
+        public: z.ZodDefault<z.ZodBoolean>;
+        discordRoleId: z.ZodDefault<z.ZodNullable<z.ZodString>>;
+        active: z.ZodDefault<z.ZodBoolean>;
+    }, "strip", z.ZodTypeAny, {
+        description: string;
+        id: string;
+        name: string;
+        color: string;
+        active: boolean;
+        icon: string;
+        requirements: string;
+        public: boolean;
+        discordRoleId: string | null;
+    }, {
+        id: string;
+        name: string;
+        description?: string | undefined;
+        color?: string | undefined;
+        active?: boolean | undefined;
+        icon?: string | undefined;
+        requirements?: string | undefined;
+        public?: boolean | undefined;
+        discordRoleId?: string | null | undefined;
+    }>, "many">>;
+    /** Bereiche der Personalakte */
+    sections: z.ZodDefault<z.ZodRecord<z.ZodEnum<["overview", "rank", "promotions", "trainings", "exams", "awards", "warnings", "absences", "transfers", "servicenumbers", "notes", "history"]>, z.ZodObject<{
+        visible: z.ZodBoolean;
+        sensitive: z.ZodBoolean;
+    }, "strip", z.ZodTypeAny, {
+        visible: boolean;
+        sensitive: boolean;
+    }, {
+        visible: boolean;
+        sensitive: boolean;
+    }>>>;
+    /** Felder der Übersicht/Akte */
+    fields: z.ZodDefault<z.ZodRecord<z.ZodEnum<["discordName", "discordId", "avatar", "robloxName", "robloxId", "rank", "department", "joinDate", "status", "serviceNumber", "callsign"]>, z.ZodObject<{
+        visible: z.ZodBoolean;
+        sensitive: z.ZodBoolean;
+    }, "strip", z.ZodTypeAny, {
+        visible: boolean;
+        sensitive: boolean;
+    }, {
+        visible: boolean;
+        sensitive: boolean;
+    }>>>;
+    /** Abwesenheiten im Teamprofil anzeigen */
+    showAbsenceInTeam: z.ZodDefault<z.ZodBoolean>;
+    promotion: z.ZodDefault<z.ZodObject<{
+        stages: z.ZodDefault<z.ZodArray<z.ZodObject<{
+            id: z.ZodString;
+            name: z.ZodString;
+            roleIds: z.ZodDefault<z.ZodArray<z.ZodString, "many">>;
+        }, "strip", z.ZodTypeAny, {
+            roleIds: string[];
+            id: string;
+            name: string;
+        }, {
+            id: string;
+            name: string;
+            roleIds?: string[] | undefined;
+        }>, "many">>;
+        approvalsRequired: z.ZodDefault<z.ZodNumber>;
+        requireReason: z.ZodDefault<z.ZodBoolean>;
+        /** Antrag nur, wenn alle Voraussetzungen erfüllt sind */
+        requireRequirements: z.ZodDefault<z.ZodBoolean>;
+        /** nach letzter Genehmigung automatisch durchführen */
+        autoExecute: z.ZodDefault<z.ZodBoolean>;
+        discordRoles: z.ZodDefault<z.ZodBoolean>;
+        dashboardRoles: z.ZodDefault<z.ZodBoolean>;
+        announceChannelId: z.ZodDefault<z.ZodNullable<z.ZodString>>;
+        announceTemplate: z.ZodDefault<z.ZodString>;
+        announceColor: z.ZodDefault<z.ZodString>;
+        /** eigene Namen/Emojis für die Status */
+        statusLabels: z.ZodDefault<z.ZodRecord<z.ZodEnum<["OPEN", "IN_REVIEW", "APPROVED", "REJECTED", "DEFERRED", "EXECUTED", "CANCELLED"]>, z.ZodObject<{
+            label: z.ZodString;
+            emoji: z.ZodString;
+        }, "strip", z.ZodTypeAny, {
+            label: string;
+            emoji: string;
+        }, {
+            label: string;
+            emoji: string;
+        }>>>;
+    }, "strip", z.ZodTypeAny, {
+        stages: {
+            roleIds: string[];
+            id: string;
+            name: string;
+        }[];
+        approvalsRequired: number;
+        requireReason: boolean;
+        requireRequirements: boolean;
+        autoExecute: boolean;
+        discordRoles: boolean;
+        dashboardRoles: boolean;
+        announceChannelId: string | null;
+        announceTemplate: string;
+        announceColor: string;
+        statusLabels: Partial<Record<"CANCELLED" | "APPROVED" | "REJECTED" | "OPEN" | "IN_REVIEW" | "DEFERRED" | "EXECUTED", {
+            label: string;
+            emoji: string;
+        }>>;
+    }, {
+        stages?: {
+            id: string;
+            name: string;
+            roleIds?: string[] | undefined;
+        }[] | undefined;
+        approvalsRequired?: number | undefined;
+        requireReason?: boolean | undefined;
+        requireRequirements?: boolean | undefined;
+        autoExecute?: boolean | undefined;
+        discordRoles?: boolean | undefined;
+        dashboardRoles?: boolean | undefined;
+        announceChannelId?: string | null | undefined;
+        announceTemplate?: string | undefined;
+        announceColor?: string | undefined;
+        statusLabels?: Partial<Record<"CANCELLED" | "APPROVED" | "REJECTED" | "OPEN" | "IN_REVIEW" | "DEFERRED" | "EXECUTED", {
+            label: string;
+            emoji: string;
+        }>> | undefined;
+    }>>;
+    transfer: z.ZodDefault<z.ZodObject<{
+        approvalsRequired: z.ZodDefault<z.ZodNumber>;
+        stages: z.ZodDefault<z.ZodArray<z.ZodObject<{
+            id: z.ZodString;
+            name: z.ZodString;
+            roleIds: z.ZodDefault<z.ZodArray<z.ZodString, "many">>;
+        }, "strip", z.ZodTypeAny, {
+            roleIds: string[];
+            id: string;
+            name: string;
+        }, {
+            id: string;
+            name: string;
+            roleIds?: string[] | undefined;
+        }>, "many">>;
+        discordRoles: z.ZodDefault<z.ZodBoolean>;
+        dashboardRoles: z.ZodDefault<z.ZodBoolean>;
+        autoExecute: z.ZodDefault<z.ZodBoolean>;
+        announceChannelId: z.ZodDefault<z.ZodNullable<z.ZodString>>;
+    }, "strip", z.ZodTypeAny, {
+        stages: {
+            roleIds: string[];
+            id: string;
+            name: string;
+        }[];
+        approvalsRequired: number;
+        autoExecute: boolean;
+        discordRoles: boolean;
+        dashboardRoles: boolean;
+        announceChannelId: string | null;
+    }, {
+        stages?: {
+            id: string;
+            name: string;
+            roleIds?: string[] | undefined;
+        }[] | undefined;
+        approvalsRequired?: number | undefined;
+        autoExecute?: boolean | undefined;
+        discordRoles?: boolean | undefined;
+        dashboardRoles?: boolean | undefined;
+        announceChannelId?: string | null | undefined;
+    }>>;
+    notifications: z.ZodDefault<z.ZodRecord<z.ZodEnum<["promotion.requested", "promotion.approved", "promotion.rejected", "promotion.executed", "transfer.requested", "transfer.approved", "transfer.rejected", "warning.created", "award.granted", "training.passed", "exam.passed"]>, z.ZodObject<{
+        dashboard: z.ZodDefault<z.ZodBoolean>;
+        channelId: z.ZodDefault<z.ZodNullable<z.ZodString>>;
+        dm: z.ZodDefault<z.ZodBoolean>;
+        roleIds: z.ZodDefault<z.ZodArray<z.ZodString, "many">>;
+    }, "strip", z.ZodTypeAny, {
+        dashboard: boolean;
+        dm: boolean;
+        roleIds: string[];
+        channelId: string | null;
+    }, {
+        dashboard?: boolean | undefined;
+        dm?: boolean | undefined;
+        roleIds?: string[] | undefined;
+        channelId?: string | null | undefined;
+    }>>>;
+    /** Zertifikate */
+    certificate: z.ZodDefault<z.ZodObject<{
+        organisation: z.ZodDefault<z.ZodString>;
+        logo: z.ZodDefault<z.ZodString>;
+        signature: z.ZodDefault<z.ZodString>;
+    }, "strip", z.ZodTypeAny, {
+        organisation: string;
+        logo: string;
+        signature: string;
+    }, {
+        organisation?: string | undefined;
+        logo?: string | undefined;
+        signature?: string | undefined;
+    }>>;
+}, "strip", z.ZodTypeAny, {
+    transfer: {
+        stages: {
+            roleIds: string[];
+            id: string;
+            name: string;
+        }[];
+        approvalsRequired: number;
+        autoExecute: boolean;
+        discordRoles: boolean;
+        dashboardRoles: boolean;
+        announceChannelId: string | null;
+    };
+    promotion: {
+        stages: {
+            roleIds: string[];
+            id: string;
+            name: string;
+        }[];
+        approvalsRequired: number;
+        requireReason: boolean;
+        requireRequirements: boolean;
+        autoExecute: boolean;
+        discordRoles: boolean;
+        dashboardRoles: boolean;
+        announceChannelId: string | null;
+        announceTemplate: string;
+        announceColor: string;
+        statusLabels: Partial<Record<"CANCELLED" | "APPROVED" | "REJECTED" | "OPEN" | "IN_REVIEW" | "DEFERRED" | "EXECUTED", {
+            label: string;
+            emoji: string;
+        }>>;
+    };
+    awards: {
+        description: string;
+        id: string;
+        name: string;
+        color: string;
+        active: boolean;
+        icon: string;
+        requirements: string;
+        public: boolean;
+        discordRoleId: string | null;
+    }[];
+    sections: Partial<Record<"history" | "awards" | "rank" | "overview" | "promotions" | "trainings" | "exams" | "warnings" | "absences" | "transfers" | "servicenumbers" | "notes", {
+        visible: boolean;
+        sensitive: boolean;
+    }>>;
+    fields: Partial<Record<"status" | "rank" | "callsign" | "discordName" | "discordId" | "avatar" | "robloxName" | "robloxId" | "department" | "joinDate" | "serviceNumber", {
+        visible: boolean;
+        sensitive: boolean;
+    }>>;
+    statuses: {
+        key: string;
+        label: string;
+        color: string;
+        active: boolean;
+        emoji: string;
+    }[];
+    departments: {
+        description: string;
+        id: string;
+        name: string;
+        color: string;
+        discordRoleIds: string[];
+        dashboardRoleIds: string[];
+    }[];
+    absenceTypes: {
+        key: string;
+        label: string;
+        emoji: string;
+    }[];
+    warningSeverities: {
+        key: string;
+        label: string;
+        color: string;
+        emoji: string;
+        defaultDays: number;
+    }[];
+    warningCategories: string[];
+    showAbsenceInTeam: boolean;
+    notifications: Partial<Record<"promotion.requested" | "promotion.approved" | "promotion.rejected" | "promotion.executed" | "transfer.requested" | "transfer.approved" | "transfer.rejected" | "warning.created" | "award.granted" | "training.passed" | "exam.passed", {
+        dashboard: boolean;
+        dm: boolean;
+        roleIds: string[];
+        channelId: string | null;
+    }>>;
+    certificate: {
+        organisation: string;
+        logo: string;
+        signature: string;
+    };
+}, {
+    transfer?: {
+        stages?: {
+            id: string;
+            name: string;
+            roleIds?: string[] | undefined;
+        }[] | undefined;
+        approvalsRequired?: number | undefined;
+        autoExecute?: boolean | undefined;
+        discordRoles?: boolean | undefined;
+        dashboardRoles?: boolean | undefined;
+        announceChannelId?: string | null | undefined;
+    } | undefined;
+    promotion?: {
+        stages?: {
+            id: string;
+            name: string;
+            roleIds?: string[] | undefined;
+        }[] | undefined;
+        approvalsRequired?: number | undefined;
+        requireReason?: boolean | undefined;
+        requireRequirements?: boolean | undefined;
+        autoExecute?: boolean | undefined;
+        discordRoles?: boolean | undefined;
+        dashboardRoles?: boolean | undefined;
+        announceChannelId?: string | null | undefined;
+        announceTemplate?: string | undefined;
+        announceColor?: string | undefined;
+        statusLabels?: Partial<Record<"CANCELLED" | "APPROVED" | "REJECTED" | "OPEN" | "IN_REVIEW" | "DEFERRED" | "EXECUTED", {
+            label: string;
+            emoji: string;
+        }>> | undefined;
+    } | undefined;
+    awards?: {
+        id: string;
+        name: string;
+        description?: string | undefined;
+        color?: string | undefined;
+        active?: boolean | undefined;
+        icon?: string | undefined;
+        requirements?: string | undefined;
+        public?: boolean | undefined;
+        discordRoleId?: string | null | undefined;
+    }[] | undefined;
+    sections?: Partial<Record<"history" | "awards" | "rank" | "overview" | "promotions" | "trainings" | "exams" | "warnings" | "absences" | "transfers" | "servicenumbers" | "notes", {
+        visible: boolean;
+        sensitive: boolean;
+    }>> | undefined;
+    fields?: Partial<Record<"status" | "rank" | "callsign" | "discordName" | "discordId" | "avatar" | "robloxName" | "robloxId" | "department" | "joinDate" | "serviceNumber", {
+        visible: boolean;
+        sensitive: boolean;
+    }>> | undefined;
+    statuses?: {
+        key: string;
+        label: string;
+        color?: string | undefined;
+        active?: boolean | undefined;
+        emoji?: string | undefined;
+    }[] | undefined;
+    departments?: {
+        id: string;
+        name: string;
+        description?: string | undefined;
+        color?: string | undefined;
+        discordRoleIds?: string[] | undefined;
+        dashboardRoleIds?: string[] | undefined;
+    }[] | undefined;
+    absenceTypes?: {
+        key: string;
+        label: string;
+        emoji?: string | undefined;
+    }[] | undefined;
+    warningSeverities?: {
+        key: string;
+        label: string;
+        color?: string | undefined;
+        emoji?: string | undefined;
+        defaultDays?: number | undefined;
+    }[] | undefined;
+    warningCategories?: string[] | undefined;
+    showAbsenceInTeam?: boolean | undefined;
+    notifications?: Partial<Record<"promotion.requested" | "promotion.approved" | "promotion.rejected" | "promotion.executed" | "transfer.requested" | "transfer.approved" | "transfer.rejected" | "warning.created" | "award.granted" | "training.passed" | "exam.passed", {
+        dashboard?: boolean | undefined;
+        dm?: boolean | undefined;
+        roleIds?: string[] | undefined;
+        channelId?: string | null | undefined;
+    }>> | undefined;
+    certificate?: {
+        organisation?: string | undefined;
+        logo?: string | undefined;
+        signature?: string | undefined;
+    } | undefined;
+}>;
+type HrConfig = z.infer<typeof hrConfigSchema>;
+declare const DEFAULT_HR_CONFIG: HrConfig;
+/** Gespeicherte (evtl. ältere) Einstellungen mit den Standardwerten auffüllen. */
+declare function withHrDefaults(v: unknown): HrConfig;
+declare const REQUEST_STATUS_DEFAULT: Record<RequestStatus, {
+    label: string;
+    emoji: string;
+}>;
+declare const REQUIREMENT_TYPES: readonly ["MIN_DAYS_IN_RANK", "MIN_DUTY_HOURS", "MIN_INCIDENTS", "TRAINING", "EXAM", "DISCORD_ROLE", "RECOMMENDATION", "CUSTOM"];
+type RequirementType = (typeof REQUIREMENT_TYPES)[number];
+declare const REQUIREMENT_LABEL: Record<RequirementType, string>;
+declare const requirementSchema: z.ZodObject<{
+    id: z.ZodString;
+    type: z.ZodEnum<["MIN_DAYS_IN_RANK", "MIN_DUTY_HOURS", "MIN_INCIDENTS", "TRAINING", "EXAM", "DISCORD_ROLE", "RECOMMENDATION", "CUSTOM"]>;
+    label: z.ZodDefault<z.ZodString>;
+    value: z.ZodDefault<z.ZodNumber>;
+    ref: z.ZodDefault<z.ZodNullable<z.ZodString>>;
+}, "strip", z.ZodTypeAny, {
+    label: string;
+    type: "TRAINING" | "MIN_DAYS_IN_RANK" | "MIN_DUTY_HOURS" | "MIN_INCIDENTS" | "EXAM" | "DISCORD_ROLE" | "RECOMMENDATION" | "CUSTOM";
+    value: number;
+    id: string;
+    ref: string | null;
+}, {
+    type: "TRAINING" | "MIN_DAYS_IN_RANK" | "MIN_DUTY_HOURS" | "MIN_INCIDENTS" | "EXAM" | "DISCORD_ROLE" | "RECOMMENDATION" | "CUSTOM";
+    id: string;
+    label?: string | undefined;
+    value?: number | undefined;
+    ref?: string | null | undefined;
+}>;
+type Requirement = z.infer<typeof requirementSchema>;
+declare const rankSchema: z.ZodObject<{
+    id: z.ZodOptional<z.ZodString>;
+    name: z.ZodString;
+    description: z.ZodDefault<z.ZodNullable<z.ZodString>>;
+    icon: z.ZodDefault<z.ZodNullable<z.ZodString>>;
+    color: z.ZodDefault<z.ZodString>;
+    discordRoleIds: z.ZodDefault<z.ZodArray<z.ZodString, "many">>;
+    dashboardRoleIds: z.ZodDefault<z.ZodArray<z.ZodString, "many">>;
+    nextRankIds: z.ZodDefault<z.ZodArray<z.ZodString, "many">>;
+    approverRankIds: z.ZodDefault<z.ZodArray<z.ZodString, "many">>;
+    requirements: z.ZodDefault<z.ZodArray<z.ZodObject<{
+        id: z.ZodString;
+        type: z.ZodEnum<["MIN_DAYS_IN_RANK", "MIN_DUTY_HOURS", "MIN_INCIDENTS", "TRAINING", "EXAM", "DISCORD_ROLE", "RECOMMENDATION", "CUSTOM"]>;
+        label: z.ZodDefault<z.ZodString>;
+        value: z.ZodDefault<z.ZodNumber>;
+        ref: z.ZodDefault<z.ZodNullable<z.ZodString>>;
+    }, "strip", z.ZodTypeAny, {
+        label: string;
+        type: "TRAINING" | "MIN_DAYS_IN_RANK" | "MIN_DUTY_HOURS" | "MIN_INCIDENTS" | "EXAM" | "DISCORD_ROLE" | "RECOMMENDATION" | "CUSTOM";
+        value: number;
+        id: string;
+        ref: string | null;
+    }, {
+        type: "TRAINING" | "MIN_DAYS_IN_RANK" | "MIN_DUTY_HOURS" | "MIN_INCIDENTS" | "EXAM" | "DISCORD_ROLE" | "RECOMMENDATION" | "CUSTOM";
+        id: string;
+        label?: string | undefined;
+        value?: number | undefined;
+        ref?: string | null | undefined;
+    }>, "many">>;
+    active: z.ZodDefault<z.ZodBoolean>;
+}, "strip", z.ZodTypeAny, {
+    description: string | null;
+    name: string;
+    color: string;
+    active: boolean;
+    discordRoleIds: string[];
+    dashboardRoleIds: string[];
+    icon: string | null;
+    requirements: {
+        label: string;
+        type: "TRAINING" | "MIN_DAYS_IN_RANK" | "MIN_DUTY_HOURS" | "MIN_INCIDENTS" | "EXAM" | "DISCORD_ROLE" | "RECOMMENDATION" | "CUSTOM";
+        value: number;
+        id: string;
+        ref: string | null;
+    }[];
+    nextRankIds: string[];
+    approverRankIds: string[];
+    id?: string | undefined;
+}, {
+    name: string;
+    description?: string | null | undefined;
+    id?: string | undefined;
+    color?: string | undefined;
+    active?: boolean | undefined;
+    discordRoleIds?: string[] | undefined;
+    dashboardRoleIds?: string[] | undefined;
+    icon?: string | null | undefined;
+    requirements?: {
+        type: "TRAINING" | "MIN_DAYS_IN_RANK" | "MIN_DUTY_HOURS" | "MIN_INCIDENTS" | "EXAM" | "DISCORD_ROLE" | "RECOMMENDATION" | "CUSTOM";
+        id: string;
+        label?: string | undefined;
+        value?: number | undefined;
+        ref?: string | null | undefined;
+    }[] | undefined;
+    nextRankIds?: string[] | undefined;
+    approverRankIds?: string[] | undefined;
+}>;
+type RankInput = z.infer<typeof rankSchema>;
+interface RequirementResult {
+    id: string;
+    type: RequirementType;
+    label: string;
+    met: boolean;
+    current: string;
+    needed: string;
+    manual: boolean;
+}
+/** Ergebnis der automatischen Prüfung für den nächsten Rang. */
+interface PromotionCheck {
+    rankId: string;
+    rankName: string;
+    results: RequirementResult[];
+    met: number;
+    total: number;
+    eligible: boolean;
+}
+declare const EXAM_QUESTION_TYPES: readonly ["SINGLE", "MULTI", "YESNO", "TEXT", "NUMBER"];
+declare const EXAM_QUESTION_TYPE_LABEL: Record<(typeof EXAM_QUESTION_TYPES)[number], string>;
+declare const questionSchema: z.ZodObject<{
+    id: z.ZodString;
+    type: z.ZodEnum<["SINGLE", "MULTI", "YESNO", "TEXT", "NUMBER"]>;
+    text: z.ZodString;
+    options: z.ZodDefault<z.ZodArray<z.ZodString, "many">>;
+    /** richtige Antwort(en): Option-Index als Text, „ja“/„nein“, Zahl oder Stichworte (Freitext → manuell) */
+    correct: z.ZodDefault<z.ZodArray<z.ZodString, "many">>;
+    points: z.ZodDefault<z.ZodNumber>;
+}, "strip", z.ZodTypeAny, {
+    options: string[];
+    type: "YESNO" | "MULTI" | "TEXT" | "SINGLE" | "NUMBER";
+    text: string;
+    id: string;
+    correct: string[];
+    points: number;
+}, {
+    type: "YESNO" | "MULTI" | "TEXT" | "SINGLE" | "NUMBER";
+    text: string;
+    id: string;
+    options?: string[] | undefined;
+    correct?: string[] | undefined;
+    points?: number | undefined;
+}>;
+type Question = z.infer<typeof questionSchema>;
+/** Automatische Auswertung einer Antwort; `null` = muss manuell bewertet werden (Freitext ohne Musterlösung). */
+declare function gradeAnswer(q: Question, a: unknown): number | null;
+declare const DN_STATUSES: readonly ["ACTIVE", "RESERVED", "FREE", "BLOCKED", "FORMER"];
+type DnStatus = (typeof DN_STATUSES)[number];
+declare const DN_STATUS_LABEL: Record<DnStatus, {
+    label: string;
+    emoji: string;
+}>;
+declare const rangeSchema: z.ZodEffects<z.ZodEffects<z.ZodObject<{
+    name: z.ZodString;
+    prefix: z.ZodDefault<z.ZodString>;
+    suffix: z.ZodDefault<z.ZodString>;
+    start: z.ZodNumber;
+    end: z.ZodNumber;
+    padLength: z.ZodDefault<z.ZodNumber>;
+    order: z.ZodDefault<z.ZodEnum<["LOWEST_FREE", "SEQUENTIAL"]>>;
+    autoAssign: z.ZodDefault<z.ZodBoolean>;
+    manual: z.ZodDefault<z.ZodBoolean>;
+    reuse: z.ZodDefault<z.ZodBoolean>;
+    releaseAs: z.ZodDefault<z.ZodEnum<["FREE", "FORMER", "BLOCKED"]>>;
+    department: z.ZodDefault<z.ZodNullable<z.ZodString>>;
+    active: z.ZodDefault<z.ZodBoolean>;
+}, "strip", z.ZodTypeAny, {
+    name: string;
+    active: boolean;
+    department: string | null;
+    prefix: string;
+    suffix: string;
+    start: number;
+    end: number;
+    padLength: number;
+    order: "LOWEST_FREE" | "SEQUENTIAL";
+    autoAssign: boolean;
+    manual: boolean;
+    reuse: boolean;
+    releaseAs: "FREE" | "BLOCKED" | "FORMER";
+}, {
+    name: string;
+    start: number;
+    end: number;
+    active?: boolean | undefined;
+    department?: string | null | undefined;
+    prefix?: string | undefined;
+    suffix?: string | undefined;
+    padLength?: number | undefined;
+    order?: "LOWEST_FREE" | "SEQUENTIAL" | undefined;
+    autoAssign?: boolean | undefined;
+    manual?: boolean | undefined;
+    reuse?: boolean | undefined;
+    releaseAs?: "FREE" | "BLOCKED" | "FORMER" | undefined;
+}>, {
+    name: string;
+    active: boolean;
+    department: string | null;
+    prefix: string;
+    suffix: string;
+    start: number;
+    end: number;
+    padLength: number;
+    order: "LOWEST_FREE" | "SEQUENTIAL";
+    autoAssign: boolean;
+    manual: boolean;
+    reuse: boolean;
+    releaseAs: "FREE" | "BLOCKED" | "FORMER";
+}, {
+    name: string;
+    start: number;
+    end: number;
+    active?: boolean | undefined;
+    department?: string | null | undefined;
+    prefix?: string | undefined;
+    suffix?: string | undefined;
+    padLength?: number | undefined;
+    order?: "LOWEST_FREE" | "SEQUENTIAL" | undefined;
+    autoAssign?: boolean | undefined;
+    manual?: boolean | undefined;
+    reuse?: boolean | undefined;
+    releaseAs?: "FREE" | "BLOCKED" | "FORMER" | undefined;
+}>, {
+    name: string;
+    active: boolean;
+    department: string | null;
+    prefix: string;
+    suffix: string;
+    start: number;
+    end: number;
+    padLength: number;
+    order: "LOWEST_FREE" | "SEQUENTIAL";
+    autoAssign: boolean;
+    manual: boolean;
+    reuse: boolean;
+    releaseAs: "FREE" | "BLOCKED" | "FORMER";
+}, {
+    name: string;
+    start: number;
+    end: number;
+    active?: boolean | undefined;
+    department?: string | null | undefined;
+    prefix?: string | undefined;
+    suffix?: string | undefined;
+    padLength?: number | undefined;
+    order?: "LOWEST_FREE" | "SEQUENTIAL" | undefined;
+    autoAssign?: boolean | undefined;
+    manual?: boolean | undefined;
+    reuse?: boolean | undefined;
+    releaseAs?: "FREE" | "BLOCKED" | "FORMER" | undefined;
+}>;
+type RangeInput = z.infer<typeof rangeSchema>;
+declare const formatServiceNumber: (r: {
+    prefix: string;
+    suffix: string;
+    padLength: number;
+}, value: number) => string;
+declare const hireMappingSchema: z.ZodObject<{
+    /** 'police' = Polizei-Bewerbung, sonst Name der Einheit (Qualifikation) */
+    kind: z.ZodString;
+    /** Nummernkreis (leer = keine automatische Dienstnummer) */
+    rangeId: z.ZodDefault<z.ZodNullable<z.ZodString>>;
+    department: z.ZodDefault<z.ZodNullable<z.ZodString>>;
+    rankId: z.ZodDefault<z.ZodNullable<z.ZodString>>;
+    /** Personalakte anlegen */
+    createProfile: z.ZodDefault<z.ZodBoolean>;
+    /** zusätzliche Discord-Rollen */
+    roleIds: z.ZodDefault<z.ZodArray<z.ZodString, "many">>;
+}, "strip", z.ZodTypeAny, {
+    roleIds: string[];
+    kind: string;
+    department: string | null;
+    rangeId: string | null;
+    rankId: string | null;
+    createProfile: boolean;
+}, {
+    kind: string;
+    roleIds?: string[] | undefined;
+    department?: string | null | undefined;
+    rangeId?: string | null | undefined;
+    rankId?: string | null | undefined;
+    createProfile?: boolean | undefined;
+}>;
+declare const dnSettingsSchema: z.ZodObject<{
+    /** ACCEPT: direkt bei Annahme · COMPLETE: wenn die Person im Discord verknüpft/erreichbar ist (Einstellung abgeschlossen) · MANUAL: Bestätigung durch berechtigte Person */
+    timing: z.ZodDefault<z.ZodEnum<["ACCEPT", "COMPLETE", "MANUAL"]>>;
+    mappings: z.ZodDefault<z.ZodArray<z.ZodObject<{
+        /** 'police' = Polizei-Bewerbung, sonst Name der Einheit (Qualifikation) */
+        kind: z.ZodString;
+        /** Nummernkreis (leer = keine automatische Dienstnummer) */
+        rangeId: z.ZodDefault<z.ZodNullable<z.ZodString>>;
+        department: z.ZodDefault<z.ZodNullable<z.ZodString>>;
+        rankId: z.ZodDefault<z.ZodNullable<z.ZodString>>;
+        /** Personalakte anlegen */
+        createProfile: z.ZodDefault<z.ZodBoolean>;
+        /** zusätzliche Discord-Rollen */
+        roleIds: z.ZodDefault<z.ZodArray<z.ZodString, "many">>;
+    }, "strip", z.ZodTypeAny, {
+        roleIds: string[];
+        kind: string;
+        department: string | null;
+        rangeId: string | null;
+        rankId: string | null;
+        createProfile: boolean;
+    }, {
+        kind: string;
+        roleIds?: string[] | undefined;
+        department?: string | null | undefined;
+        rangeId?: string | null | undefined;
+        rankId?: string | null | undefined;
+        createProfile?: boolean | undefined;
+    }>, "many">>;
+    nickname: z.ZodDefault<z.ZodObject<{
+        enabled: z.ZodDefault<z.ZodBoolean>;
+        format: z.ZodDefault<z.ZodString>;
+    }, "strip", z.ZodTypeAny, {
+        enabled: boolean;
+        format: string;
+    }, {
+        enabled?: boolean | undefined;
+        format?: string | undefined;
+    }>>;
+    dm: z.ZodDefault<z.ZodObject<{
+        enabled: z.ZodDefault<z.ZodBoolean>;
+        title: z.ZodDefault<z.ZodString>;
+        template: z.ZodDefault<z.ZodString>;
+        color: z.ZodDefault<z.ZodString>;
+    }, "strip", z.ZodTypeAny, {
+        title: string;
+        color: string;
+        template: string;
+        enabled: boolean;
+    }, {
+        title?: string | undefined;
+        color?: string | undefined;
+        template?: string | undefined;
+        enabled?: boolean | undefined;
+    }>>;
+    rankRoles: z.ZodDefault<z.ZodBoolean>;
+    departmentRoles: z.ZodDefault<z.ZodBoolean>;
+    /** Wechsel der Nummer braucht eine zweite Person (Genehmiger) */
+    changeNeedsApprover: z.ZodDefault<z.ZodBoolean>;
+}, "strip", z.ZodTypeAny, {
+    dm: {
+        title: string;
+        color: string;
+        template: string;
+        enabled: boolean;
+    };
+    timing: "MANUAL" | "ACCEPT" | "COMPLETE";
+    mappings: {
+        roleIds: string[];
+        kind: string;
+        department: string | null;
+        rangeId: string | null;
+        rankId: string | null;
+        createProfile: boolean;
+    }[];
+    nickname: {
+        enabled: boolean;
+        format: string;
+    };
+    rankRoles: boolean;
+    departmentRoles: boolean;
+    changeNeedsApprover: boolean;
+}, {
+    dm?: {
+        title?: string | undefined;
+        color?: string | undefined;
+        template?: string | undefined;
+        enabled?: boolean | undefined;
+    } | undefined;
+    timing?: "MANUAL" | "ACCEPT" | "COMPLETE" | undefined;
+    mappings?: {
+        kind: string;
+        roleIds?: string[] | undefined;
+        department?: string | null | undefined;
+        rangeId?: string | null | undefined;
+        rankId?: string | null | undefined;
+        createProfile?: boolean | undefined;
+    }[] | undefined;
+    nickname?: {
+        enabled?: boolean | undefined;
+        format?: string | undefined;
+    } | undefined;
+    rankRoles?: boolean | undefined;
+    departmentRoles?: boolean | undefined;
+    changeNeedsApprover?: boolean | undefined;
+}>;
+type DnSettings = z.infer<typeof dnSettingsSchema>;
+declare const DN_VARIABLES: readonly ["{user}", "{name}", "{dienstnummer}", "{rang}", "{abteilung}", "{bewerbung}", "{datum}"];
+/** Platzhalter füllen (DM, Nickname, Ankündigungen). Unbekannte Platzhalter bleiben stehen. */
+declare function fillTemplate(tpl: string, vars: Record<string, string | null | undefined>): string;
+
+export { ALL_PERMISSIONS, APPLICATION_STATUSES, APPLICATION_TRANSITIONS, APPLICATION_VARIABLES, AREA_PERMISSIONS, type AnswerCheck, type ApplicationStatus, type ApplicationVars, type ButtonStyleName, CAD_EVENTS, CAD_EVENT_LABELS, CAD_EVENT_SEND_TYPE, CAD_LINK_ACTIONS, CAD_LINK_LABELS, CAD_LINK_SEND_TYPES, CAD_WIDGETS, CAD_WIDGET_LABELS, CLAIM_MODES, CLOSE_REASON_MODES, CLOSE_REASON_SOURCES, COMPLAINT_STATUSES, COMPLAINT_TRANSITIONS, type CadConfig, type CadEvent, type CadField, type CadLayer, type CadMapConfig, type CadMarkerStyle, type CadOption, type CadRoute, type CadStatusOption, type CadUnitType, type ClaimMode, type CloseReasonMode, type CloseReasonSource, type ComplaintStatus, type ComponentButton, type ComponentSelect, DEFAULT_APPLICATION_MESSAGES, DEFAULT_CAD_CONFIG, DEFAULT_DANGER_CONFIG, DEFAULT_HR_CONFIG, DEFAULT_VERIFY_CONFIG, DEFAULT_WELCOME_CONFIG, DISPATCH_STATUSES, DISPATCH_TRANSITIONS, DN_STATUSES, DN_STATUS_LABEL, DN_VARIABLES, DUTY_STATUSES, type DangerConfig, type DangerLevelDef, type DispatchStatus, type DnSettings, type DnStatus, type DutyStatus, ERLC_DEFAULT_BLOCKED, ERLC_DEFAULT_CRITICAL, ERLC_FEATURES, ERLC_FEATURE_LABELS, ERLC_MAP_SIZE, ERLC_POLL_OPTIONS, ERLC_STATUSES, ERLC_STATUS_LABEL, EVIDENCE_CUSTODY_STATES, EVIDENCE_TRANSITIONS, EXAM_QUESTION_TYPES, EXAM_QUESTION_TYPE_LABEL, type Effect, type EmbedSpec, type ErlcFeature, type ErlcStatus, type EvidenceCustodyState, FORM_PANEL_VARIABLES, FORM_QUESTION_TYPES, type Field, type FormField, type FormOption, type FormPanel, type FormQuestionType, HR_EVENTS, HR_EVENT_LABEL, type HrConfig, type HrEvent, INVESTIGATION_STATUSES, INVESTIGATION_TRANSITIONS, InvalidTransitionError, type InvestigationStatus, LEGACY_DANGER, MAX_FORM_OPTIONS, MAX_FORM_QUESTIONS, MUSIC_TRACKS, type MessageSpec, PERIOD_LABEL, PERMISSION_CATALOG, PRIORITIES, PRIORITY_LABEL, PROFILE_FIELDS, PROFILE_FIELD_LABEL, PROFILE_SECTIONS, PROFILE_SECTION_LABEL, type PermissionContext, type PermissionGrant, type PermissionKey, type Priority, type ProfileSection, type PromotionCheck, QUESTION_TYPES, type Question, type QuestionType, REPORT_FIELD_TYPES, REPORT_STATUSES, REPORT_TRANSITIONS, REPORT_TYPES, REQUEST_STATUSES, REQUEST_STATUS_DEFAULT, REQUIREMENT_LABEL, REQUIREMENT_TYPES, ROBLOX_NAME, ROBLOX_VERIFICATION_STATUSES, type RangeInput, type RankInput, type ReportField, type ReportStatus, type ReportTemplate, type ReportType, type ReportView, type RequestStatus, type Requirement, type RequirementResult, type RequirementType, type Resolution, type ResolutionSource, type RobloxVerificationStatus, STATUS_KINDS, STATUS_LABEL, type StaffList, type StaffMember, type StatusKind, type SupportTime, TICKET_ACTIONS, TICKET_ACTION_KEYS, TICKET_PLACEHOLDERS, TICKET_STATUSES, TICKET_TRANSITIONS, type TicketAction, type TicketButtonConfig, type TicketEffect, type TicketQuestion, type TicketStatus, type TicketVars, type TransitionMap, UNIT_STATUSES, type UnitStatus, VERIFY_NICK_VARS, VOICE_CASE_STATUS, type VerifyBind, type VerifyConfig, type VerifyNickVars, type VerifyPanel, type VoiceSupportRoom, WANTED_STATUSES, WANTED_TRANSITIONS, WEEKDAYS, WELCOME_VARIABLES, WORKFLOW_ACTION_LABELS, WORKFLOW_OPS, WORKFLOW_OP_LABELS, WORKFLOW_TRIGGERS, type WantedStatus, type WelcomeConfig, type WelcomeMember, type WelcomeMessageDef, type WorkflowAction, type WorkflowCondition, type WorkflowOp, type WorkflowTrigger, absenceTypeSchema, accountAge, areaGrantsFor, assertTransition, awardDefSchema, can, canDelegate, canTransition, checkAnswer, cleanReportValues, conditionMatches, dangerLevelOf, defaultTicketButtons, departmentSchema, dnSettingsSchema, effectivePermissions, fieldValue, fillTemplate, formPanelMessage, formPanelResult, formPanelSchema, formatMinutes, formatServiceNumber, freeFieldKey, gameToPixel, gradeAnswer, grantMatches, hexColor, hireMappingSchema, hrConfigSchema, hrStatusSchema, isInputQuestion, isPermissionKey, isSupportOpen, isValidRobloxUserId, isoWeek, localTime, matchingBinds, newVoiceRoom, normalizeField, notifyRuleSchema, panelFieldSchema, parsePlayer, periodLabel, periodStart, pixelToGame, questionSchema, rangeSchema, rankSchema, renderApplicationText, renderPanelTemplate, renderStaffList, renderTemplate, renderTicketText, renderVerifyNickname, renderWelcomeText, reportFieldSchema, reportMessage, reportTemplateSchema, requestStatusDefSchema, requirementSchema, resolvePermission, rolesMatch, severitySchema, staffListSchema, staffSectionSchema, stageSchema, statusLabel, ticketChannelName, ticketNumber, triggerMatches, verifyActions, withHrDefaults };

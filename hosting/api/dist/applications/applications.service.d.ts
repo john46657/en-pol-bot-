@@ -106,6 +106,8 @@ export declare class ApplicationsService {
         decidedByName: string | null;
         reason: string | null;
     }>;
+    /** Angenommen → Personal-/Dienstnummern-Automatik (Einstellungen → Dienstnummern). */
+    private hire;
     /** „Action On User Leave“ der Polizei-Bewerbung: offene Bewerbungen einer Person, die den Discord-Server verlassen hat. */
     memberLeft(guildId: string, discordId: string): Promise<{
         denied: number;

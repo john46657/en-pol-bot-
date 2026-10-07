@@ -81,8 +81,9 @@ export declare class TicketConfigService {
             updatedAt: Date;
             guildId: string | null;
             color: number;
-            description: string;
             channelId: string | null;
+            messageId: string | null;
+            description: string;
             emoji: string | null;
             title: string;
             categoryIds: string[];
@@ -99,7 +100,6 @@ export declare class TicketConfigService {
             allowedRoleIds: string[];
             showLoad: boolean;
             messageChannelId: string | null;
-            messageId: string | null;
         }[];
         statuses: {
             id: string;
@@ -140,7 +140,7 @@ export declare class TicketConfigService {
             transcriptRetentionDays: number;
             ratingChannelId: string | null;
             ratingPublicChannelId: string | null;
-            ratingPublicFields: ("category" | "duration" | "staff" | "creator" | "comment")[];
+            ratingPublicFields: ("category" | "comment" | "duration" | "staff" | "creator")[];
             memberLeaveAction: "NONE" | "CLOSE";
             memberLeaveReason: string;
         };
@@ -371,8 +371,9 @@ export declare class TicketConfigService {
         updatedAt: Date;
         guildId: string | null;
         color: number;
-        description: string;
         channelId: string | null;
+        messageId: string | null;
+        description: string;
         emoji: string | null;
         title: string;
         categoryIds: string[];
@@ -389,7 +390,6 @@ export declare class TicketConfigService {
         allowedRoleIds: string[];
         showLoad: boolean;
         messageChannelId: string | null;
-        messageId: string | null;
     }>;
     duplicatePanel(actor: Actor, id: string): Promise<{
         id: string;
@@ -398,8 +398,9 @@ export declare class TicketConfigService {
         updatedAt: Date;
         guildId: string | null;
         color: number;
-        description: string;
         channelId: string | null;
+        messageId: string | null;
+        description: string;
         emoji: string | null;
         title: string;
         categoryIds: string[];
@@ -416,7 +417,6 @@ export declare class TicketConfigService {
         allowedRoleIds: string[];
         showLoad: boolean;
         messageChannelId: string | null;
-        messageId: string | null;
     }>;
     deletePanel(actor: Actor, id: string): Promise<void>;
     saveStatus(actor: Actor, id: string | null, d: z.infer<typeof statusSchema>): Promise<{
@@ -461,7 +461,7 @@ export declare class TicketConfigService {
         transcriptRetentionDays: number;
         ratingChannelId: string | null;
         ratingPublicChannelId: string | null;
-        ratingPublicFields: ("category" | "duration" | "staff" | "creator" | "comment")[];
+        ratingPublicFields: ("category" | "comment" | "duration" | "staff" | "creator")[];
         memberLeaveAction: "NONE" | "CLOSE";
         memberLeaveReason: string;
     }>;

@@ -23,6 +23,7 @@ const fields = { meaning: zod_1.z.string().trim().min(1).max(200), category: zod
 const create = zod_1.z.object({ code: zod_1.z.string().trim().min(1).max(32), ...fields, guildId: zod_1.z.string().regex(/^\d{15,25}$/).nullable().optional() });
 const update = zod_1.z.object({ code: zod_1.z.string().trim().min(1).max(32).optional(), meaning: fields.meaning.optional(), category: fields.category, description: fields.description });
 const listQ = zod_1.z.object({ q: zod_1.z.string().max(64).optional() });
+const discordCfg = zod_1.z.object({ channelId: zod_1.z.string().regex(/^\d{15,25}$/).nullable(), title: zod_1.z.string().max(256), description: zod_1.z.string().max(2000), color: zod_1.z.string().regex(/^#[0-9a-fA-F]{6}$/), groupByCategory: zod_1.z.boolean(), showDescription: zod_1.z.boolean(), autoUpdate: zod_1.z.boolean() });
 const order = zod_1.z.object({ ids: zod_1.z.array(zod_1.z.string().uuid()).min(1).max(500) });
 let RadioCodesController = class RadioCodesController {
     s;
@@ -30,6 +31,9 @@ let RadioCodesController = class RadioCodesController {
         this.s = s;
     }
     list(q) { return this.s.list(q.q); }
+    discord() { return this.s.discordConfig(); }
+    saveDiscord(a, b) { return this.s.saveDiscordConfig(a, b); }
+    send(a, b) { return this.s.sendToDiscord(a, b.mode); }
     create(a, b) { return this.s.create(a, b); }
     defaults(a) { return this.s.insertDefaults(a); }
     reorder(a, b) { return this.s.reorder(a, b.ids); }
@@ -45,6 +49,32 @@ __decorate([
     __metadata("design:paramtypes", [void 0]),
     __metadata("design:returntype", void 0)
 ], RadioCodesController.prototype, "list", null);
+__decorate([
+    (0, common_1.Get)('discord'),
+    (0, decorators_1.RequirePermission)('radio.view'),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", []),
+    __metadata("design:returntype", void 0)
+], RadioCodesController.prototype, "discord", null);
+__decorate([
+    (0, common_1.Put)('discord'),
+    (0, decorators_1.RequirePermission)('radio.manage'),
+    __param(0, (0, decorators_1.CurrentActor)()),
+    __param(1, (0, common_1.Body)((0, zod_pipe_1.zodBody)(discordCfg))),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, void 0]),
+    __metadata("design:returntype", void 0)
+], RadioCodesController.prototype, "saveDiscord", null);
+__decorate([
+    (0, common_1.Post)('discord/send'),
+    (0, common_1.HttpCode)(202),
+    (0, decorators_1.RequirePermission)('radio.manage'),
+    __param(0, (0, decorators_1.CurrentActor)()),
+    __param(1, (0, common_1.Body)((0, zod_pipe_1.zodBody)(zod_1.z.object({ mode: zod_1.z.enum(['update', 'new']).default('update') })))),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, Object]),
+    __metadata("design:returntype", void 0)
+], RadioCodesController.prototype, "send", null);
 __decorate([
     (0, common_1.Post)(),
     (0, decorators_1.RequirePermission)('radio.manage'),

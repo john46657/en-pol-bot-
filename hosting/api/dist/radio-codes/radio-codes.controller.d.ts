@@ -43,6 +43,31 @@ declare const listQ: z.ZodObject<{
 }, {
     q?: string | undefined;
 }>;
+declare const discordCfg: z.ZodObject<{
+    channelId: z.ZodNullable<z.ZodString>;
+    title: z.ZodString;
+    description: z.ZodString;
+    color: z.ZodString;
+    groupByCategory: z.ZodBoolean;
+    showDescription: z.ZodBoolean;
+    autoUpdate: z.ZodBoolean;
+}, "strip", z.ZodTypeAny, {
+    color: string;
+    channelId: string | null;
+    description: string;
+    title: string;
+    groupByCategory: boolean;
+    showDescription: boolean;
+    autoUpdate: boolean;
+}, {
+    color: string;
+    channelId: string | null;
+    description: string;
+    title: string;
+    groupByCategory: boolean;
+    showDescription: boolean;
+    autoUpdate: boolean;
+}>;
 declare const order: z.ZodObject<{
     ids: z.ZodArray<z.ZodString, "many">;
 }, "strip", z.ZodTypeAny, {
@@ -64,6 +89,37 @@ export declare class RadioCodesController {
         position: number;
         meaning: string;
     }[]>;
+    discord(): Promise<{
+        posted: {
+            channelId: string;
+            messageId: string;
+        } | null;
+        channelId: string | null;
+        title: string;
+        description: string;
+        color: string;
+        groupByCategory: boolean;
+        showDescription: boolean;
+        autoUpdate: boolean;
+    }>;
+    saveDiscord(a: Actor, b: z.infer<typeof discordCfg>): Promise<{
+        posted: {
+            channelId: string;
+            messageId: string;
+        } | null;
+        channelId: string | null;
+        title: string;
+        description: string;
+        color: string;
+        groupByCategory: boolean;
+        showDescription: boolean;
+        autoUpdate: boolean;
+    }>;
+    send(a: Actor, b: {
+        mode: 'update' | 'new';
+    }): Promise<{
+        queued: boolean;
+    }>;
     create(a: Actor, b: z.infer<typeof create>): Promise<{
         id: string;
         createdAt: Date;

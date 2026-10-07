@@ -504,12 +504,12 @@ export declare class SupportTicketsService {
             discordId: string | null;
             authorId: string;
             content: string;
+            attachments: Prisma.JsonValue;
             authorName: string;
             ticketId: string;
             authorAvatar: string | null;
             isStaff: boolean;
             isBot: boolean;
-            attachments: Prisma.JsonValue;
             embeds: Prisma.JsonValue;
         }[];
         notes: {
@@ -554,10 +554,10 @@ export declare class SupportTicketsService {
         guildId: string;
         channelId: string | null;
         closedAt: Date | null;
+        deletedAt: Date | null;
         lastActivityAt: Date;
         answers: Prisma.JsonValue;
         categoryId: string;
-        deletedAt: Date | null;
         statusId: string;
         priorityId: string | null;
         panelId: string | null;

@@ -17,8 +17,8 @@ export declare const teamChanceSchema: z.ZodEffects<z.ZodObject<{
     /** Bewerbungen nur während einer offenen Team-Chance annehmen */
     restrictApplications: z.ZodBoolean;
 }, "strip", z.ZodTypeAny, {
-    description: string;
     channelId: string | null;
+    description: string;
     title: string;
     open: boolean;
     opensAt: string | null;
@@ -27,8 +27,8 @@ export declare const teamChanceSchema: z.ZodEffects<z.ZodObject<{
     pingRoleIds: string[];
     restrictApplications: boolean;
 }, {
-    description: string;
     channelId: string | null;
+    description: string;
     title: string;
     open: boolean;
     opensAt: string | null;
@@ -37,8 +37,8 @@ export declare const teamChanceSchema: z.ZodEffects<z.ZodObject<{
     pingRoleIds: string[];
     restrictApplications: boolean;
 }>, {
-    description: string;
     channelId: string | null;
+    description: string;
     title: string;
     open: boolean;
     opensAt: string | null;
@@ -47,8 +47,8 @@ export declare const teamChanceSchema: z.ZodEffects<z.ZodObject<{
     pingRoleIds: string[];
     restrictApplications: boolean;
 }, {
-    description: string;
     channelId: string | null;
+    description: string;
     title: string;
     open: boolean;
     opensAt: string | null;
@@ -78,8 +78,8 @@ export declare class TeamChanceService {
         reason: string | null;
         used: number;
         remaining: number | null;
-        description: string;
         channelId: string | null;
+        description: string;
         title: string;
         open: boolean;
         opensAt: string | null;
@@ -96,8 +96,8 @@ export declare class TeamChanceService {
         reason: string | null;
         used: number;
         remaining: number | null;
-        description: string;
         channelId: string | null;
+        description: string;
         title: string;
         open: boolean;
         opensAt: string | null;
