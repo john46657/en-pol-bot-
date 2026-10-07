@@ -21,6 +21,7 @@ const duty_service_1 = require("./duty.service");
 const decorators_1 = require("../authz/decorators");
 const zod_pipe_1 = require("../common/zod.pipe");
 const hoursQuery = zod_1.z.object({ days: zod_1.z.coerce.number().int().min(1).max(90).default(7) });
+const logQuery = zod_1.z.object({ days: zod_1.z.coerce.number().int().min(1).max(90).default(7), userId: zod_1.z.string().uuid().optional(), shiftType: zod_1.z.string().regex(/^[a-z0-9-]{1,40}$/).optional() });
 const body = zod_1.z.object({ status: zod_1.z.enum(shared_1.DUTY_STATUSES), unitId: zod_1.z.string().uuid().optional(), callsign: zod_1.z.string().max(16).optional(), shiftType: zod_1.z.string().regex(/^[a-z0-9-]{1,40}$/).optional() });
 let DutyController = class DutyController {
     d;
@@ -34,6 +35,8 @@ let DutyController = class DutyController {
     myHours(a, f) { return this.d.hours(f.days, a.userId); }
     /** Dienststunden aller Beamten (Schichtleitung). */
     hours(f) { return this.d.hours(f.days); }
+    /** Schicht-Logs: wer wann welche Schicht gestartet/beendet hat (Schichtleitung). */
+    shiftLog(f) { return this.d.shiftLog(f); }
     set(a, b) { return this.d.setStatus(a, b.status, b); }
     /** Muss NACH `me/status` stehen, sonst würde `:userId` den Pfad `me` verschlucken. */
     setFor(a, userId, b) { return this.d.setStatus(a, b.status, b, userId); }
@@ -78,6 +81,14 @@ __decorate([
     __metadata("design:paramtypes", [void 0]),
     __metadata("design:returntype", void 0)
 ], DutyController.prototype, "hours", null);
+__decorate([
+    (0, common_1.Get)('shifts'),
+    (0, decorators_1.RequirePermission)('team.manage'),
+    __param(0, (0, common_1.Query)((0, zod_pipe_1.zodBody)(logQuery))),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [void 0]),
+    __metadata("design:returntype", void 0)
+], DutyController.prototype, "shiftLog", null);
 __decorate([
     (0, common_1.Put)('me/status'),
     (0, decorators_1.RequirePermission)('team.view'),

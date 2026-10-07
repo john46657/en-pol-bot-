@@ -8,6 +8,19 @@ declare const hoursQuery: z.ZodObject<{
 }, {
     days?: number | undefined;
 }>;
+declare const logQuery: z.ZodObject<{
+    days: z.ZodDefault<z.ZodNumber>;
+    userId: z.ZodOptional<z.ZodString>;
+    shiftType: z.ZodOptional<z.ZodString>;
+}, "strip", z.ZodTypeAny, {
+    days: number;
+    userId?: string | undefined;
+    shiftType?: string | undefined;
+}, {
+    userId?: string | undefined;
+    shiftType?: string | undefined;
+    days?: number | undefined;
+}>;
 declare const body: z.ZodObject<{
     status: z.ZodEnum<["OFF_DUTY", "ON_DUTY", "BREAK", "TRAINING", "ADMINISTRATIVE"]>;
     unitId: z.ZodOptional<z.ZodString>;
@@ -100,6 +113,29 @@ export declare class DutyController {
             byStatus: {
                 [k: string]: number;
             };
+        }[];
+    }>;
+    /** Schicht-Logs: wer wann welche Schicht gestartet/beendet hat (Schichtleitung). */
+    shiftLog(f: z.infer<typeof logQuery>): Promise<{
+        days: number;
+        since: Date;
+        items: {
+            id: string;
+            userId: string;
+            name: string;
+            rank: string | null;
+            callsign: string | null;
+            shiftType: string | null;
+            shiftTypeNames: string[];
+            startedAt: Date;
+            endedAt: Date | null;
+            active: boolean;
+            status: string;
+            minutes: number;
+            breakMinutes: number;
+            breaks: number;
+            startedBy: string | null;
+            endedBy: string | null;
         }[];
     }>;
     set(a: Actor, b: z.infer<typeof body>): Promise<{
