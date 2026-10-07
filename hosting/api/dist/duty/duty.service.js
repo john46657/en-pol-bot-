@@ -41,14 +41,14 @@ let DutyService = class DutyService {
             type = status === 'OFF_DUTY' ? (cfg.types.find((t) => t.id === open?.shiftType) ?? null) : await this.shifts.resolve(cfg, d.shiftType, open?.shiftType);
             const sameType = !type || status === 'OFF_DUTY' || type.id === open?.shiftType;
             if ((open?.status ?? 'OFF_DUTY') === status && !d.unitId && sameType)
-                throw new errors_1.AppError('CONFLICT', `Already ${status}.`);
+                throw new errors_1.AppError('CONFLICT', `Dieser Status ist bereits gesetzt (${status}).`);
             if (targetUserId && !(await tx.user.findUnique({ where: { id: targetUserId, active: true } })))
-                throw new errors_1.AppError('NOT_FOUND', 'User not found.');
+                throw new errors_1.AppError('NOT_FOUND', 'Benutzer nicht gefunden.');
             if (open)
                 await tx.dutySession.update({ where: { id: open.id }, data: { endedAt: new Date() } });
             previous = open ? { status: open.status, startedAt: open.startedAt, shiftType: open.shiftType } : null;
             if (d.unitId && !(await tx.unit.findUnique({ where: { id: d.unitId } })))
-                throw new errors_1.AppError('NOT_FOUND', 'Unit not found.');
+                throw new errors_1.AppError('NOT_FOUND', 'Einheit nicht gefunden.');
             let created = null;
             if (status !== 'OFF_DUTY') {
                 const pers = await tx.personnel.findUnique({ where: { userId } });

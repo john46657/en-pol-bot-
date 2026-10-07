@@ -19,7 +19,7 @@ const zod_1 = require("zod");
 const radio_service_1 = require("./radio.service");
 const decorators_1 = require("../authz/decorators");
 const zod_pipe_1 = require("../common/zod.pipe");
-const target = zod_1.z.object({ userId: zod_1.z.string().uuid().optional(), discordId: zod_1.z.string().regex(/^\d{15,25}$/).optional() }).refine((v) => !!v.userId !== !!v.discordId, 'Provide exactly one of userId or discordId.');
+const target = zod_1.z.object({ userId: zod_1.z.string().uuid().optional(), discordId: zod_1.z.string().regex(/^\d{15,25}$/).optional() }).refine((v) => !!v.userId !== !!v.discordId, 'Bitte genau einen Benutzer oder eine Discord-ID angeben.');
 let RadioController = class RadioController {
     r;
     constructor(r) {

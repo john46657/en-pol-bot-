@@ -71,7 +71,7 @@ let AuthGuard = class AuthGuard {
     }
     async botFailure(req, detail) {
         await this.prisma.securityEvent.create({ data: { type: 'INVALID_TOKEN', detail, requestId: req.requestId, ip: req.ip } }).catch(() => undefined);
-        throw new errors_1.AppError('UNAUTHENTICATED', 'Authentication required.');
+        throw new errors_1.AppError('UNAUTHENTICATED', 'Bitte melde dich an.');
     }
     async canActivate(ctx) {
         if (ctx.getType() !== 'http')
@@ -92,27 +92,27 @@ let AuthGuard = class AuthGuard {
                 await this.botFailure(req, 'bot user token');
             const path = req.path.replace(/^\/api\/v1/, '');
             if (!BOT_USER_ROUTES.some(([m, re]) => m === req.method && re.test(path)))
-                throw new errors_1.AppError('PERMISSION_DENIED', 'This route is not available to the bot.');
+                throw new errors_1.AppError('PERMISSION_DENIED', 'Diese Funktion steht dem Bot nicht zur Verfügung.');
             const discordId = req.headers['x-discord-user'];
             if (typeof discordId !== 'string' || !/^\d{15,25}$/.test(discordId))
-                throw new errors_1.AppError('VALIDATION_FAILED', 'X-Discord-User header required.');
+                throw new errors_1.AppError('VALIDATION_FAILED', 'Der Header X-Discord-User fehlt.');
             const user = await this.discord.resolveUser(discordId);
             if (!user)
-                throw new errors_1.AppError('UNAUTHENTICATED', 'Discord account is not linked.', { reason: 'NOT_LINKED' });
+                throw new errors_1.AppError('UNAUTHENTICATED', 'Dein Discord-Konto ist nicht verknüpft.', { reason: 'NOT_LINKED' });
             req.user = { id: user.id, username: user.username, displayName: user.displayName, robloxUserId: user.robloxUserId, sessionId: 'bot' };
             return true;
         }
         const token = req.cookies?.[exports.SESSION_COOKIE];
         if (!token)
-            throw new errors_1.AppError('UNAUTHENTICATED', 'Authentication required.');
+            throw new errors_1.AppError('UNAUTHENTICATED', 'Bitte melde dich an.');
         const session = await this.prisma.session.findUnique({ where: { tokenHash: (0, exports.hashToken)(token) }, include: { user: true } });
         if (!session || session.revokedAt || session.expiresAt < new Date() || !session.user.active) {
             await this.prisma.securityEvent.create({ data: { type: 'INVALID_TOKEN', requestId: req.requestId, ip: req.ip } }).catch(() => undefined);
-            throw new errors_1.AppError('UNAUTHENTICATED', 'Authentication required.');
+            throw new errors_1.AppError('UNAUTHENTICATED', 'Bitte melde dich an.');
         }
         // Discord-Rollen laufend prüfen (nicht nur beim Login): ohne freigeschaltete Rolle ist die Session sofort beendet
         if (!(await this.access.verify(session.user.id)))
-            throw new errors_1.AppError('UNAUTHENTICATED', 'Your Discord roles no longer grant access to this dashboard.', { reason: 'NO_ACCESS' });
+            throw new errors_1.AppError('UNAUTHENTICATED', 'Deine Discord-Rollen geben dir keinen Zugang mehr zu diesem Dashboard.', { reason: 'NO_ACCESS' });
         req.user = { id: session.user.id, username: session.user.username, displayName: session.user.displayName, robloxUserId: session.user.robloxUserId, sessionId: session.id };
         return true;
     }
@@ -139,12 +139,12 @@ let PermissionGuard = class PermissionGuard {
             return true;
         const req = ctx.switchToHttp().getRequest();
         if (!req.user)
-            throw new errors_1.AppError('UNAUTHENTICATED', 'Authentication required.');
+            throw new errors_1.AppError('UNAUTHENTICATED', 'Bitte melde dich an.');
         const pctx = await this.perms.contextFor(req.user.id);
         for (const p of required) {
             if (!(0, shared_1.resolvePermission)(pctx, p).allowed) {
                 await this.prisma.securityEvent.create({ data: { type: 'PERMISSION_DENIED', userId: req.user.id, detail: p, requestId: req.requestId, ip: req.ip } }).catch(() => undefined);
-                throw new errors_1.AppError('PERMISSION_DENIED', 'You do not have permission to perform this action.');
+                throw new errors_1.AppError('PERMISSION_DENIED', 'Dafür fehlt dir die Berechtigung.');
             }
         }
         return true;

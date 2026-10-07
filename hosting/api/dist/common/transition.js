@@ -5,7 +5,7 @@ const shared_1 = require("@enrp/shared");
 const errors_1 = require("./errors");
 function nextStatus(map, from, to) {
     if (!(from in map))
-        throw new errors_1.AppError('INVALID_TRANSITION', `Unknown status ${from}`);
+        throw new errors_1.AppError('INVALID_TRANSITION', `Unbekannter Status „${from}“.`);
     (0, shared_1.assertTransition)(map, from, to);
     return to;
 }

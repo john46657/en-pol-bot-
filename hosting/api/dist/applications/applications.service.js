@@ -60,7 +60,7 @@ let ApplicationsService = class ApplicationsService {
     /** Öffentliche Bewerbung (kein Account nötig). Antworten werden strikt gegen das konfigurierte Formular validiert. */
     async submit(d, meta = {}) {
         if (d.robloxUserId && !(0, shared_1.isValidRobloxUserId)(d.robloxUserId))
-            throw new errors_1.AppError('VALIDATION_FAILED', 'Invalid Roblox user id.');
+            throw new errors_1.AppError('VALIDATION_FAILED', 'Ungültige Roblox-Benutzer-ID.');
         const [form, police] = await Promise.all([this.form(meta.guildId), this.police(meta.guildId)]);
         if (!police.enabled)
             throw new errors_1.AppError('CONFLICT', 'Bewerbungen sind derzeit geschlossen.');
@@ -88,10 +88,10 @@ let ApplicationsService = class ApplicationsService {
             r.roleIds.forEach((x) => grantRoleIds.add(x));
         }
         if (d.robloxUserId && (await this.prisma.application.count({ where: { robloxUserId: d.robloxUserId, status: { in: OPEN_STATUSES } } }))) {
-            throw new errors_1.AppError('CONFLICT', 'An open application already exists for this Roblox user.');
+            throw new errors_1.AppError('CONFLICT', 'Für diesen Roblox-Benutzer gibt es schon eine offene Bewerbung.');
         }
         if (meta.discordId && (await this.openForDiscord(meta.discordId)).open)
-            throw new errors_1.AppError('CONFLICT', 'An open application already exists for this Discord account.');
+            throw new errors_1.AppError('CONFLICT', 'Für dieses Discord-Konto gibt es schon eine offene Bewerbung.');
         if (meta.discordId) {
             const last = await this.prisma.application.findFirst({ where: { discordId: meta.discordId }, orderBy: { createdAt: 'desc' }, select: { createdAt: true } });
             const wait = (0, decision_1.cooldownLeft)(police.settings, last?.createdAt);
@@ -165,12 +165,12 @@ let ApplicationsService = class ApplicationsService {
         const after = await this.prisma.$transaction(async (tx) => {
             const a = await tx.application.findUnique({ where: { id } });
             if (!a)
-                throw new errors_1.AppError('NOT_FOUND', 'Application not found.');
+                throw new errors_1.AppError('NOT_FOUND', 'Bewerbung nicht gefunden.');
             if (!OPEN_STATUSES.includes(a.status))
-                throw new errors_1.AppError('CONFLICT', 'This application has already been decided.');
+                throw new errors_1.AppError('CONFLICT', 'Über diese Bewerbung wurde schon entschieden.');
             const claimed = await tx.application.updateMany({ where: { id, status: a.status, version: a.version }, data: { status: to, decidedById: actor.userId, decidedAt: new Date(), decisionReason: reason || null, version: { increment: 1 } } });
             if (claimed.count === 0)
-                throw new errors_1.AppError('CONFLICT', 'This application has already been decided.');
+                throw new errors_1.AppError('CONFLICT', 'Über diese Bewerbung wurde schon entschieden.');
             await this.audit.record(actor, { action: `application.${to.toLowerCase()}`, module: 'applications', entityType: 'Application', entityId: id, before: { status: a.status }, after: { status: to }, reason: reason || 'Entschieden über Discord' }, tx);
             return { ...a, status: to };
         });
@@ -190,17 +190,17 @@ let ApplicationsService = class ApplicationsService {
     async get(id) {
         const a = await this.prisma.application.findUnique({ where: { id } });
         if (!a)
-            throw new errors_1.AppError('NOT_FOUND', 'Application not found.');
+            throw new errors_1.AppError('NOT_FOUND', 'Bewerbung nicht gefunden.');
         return a;
     }
     async transition(actor, id, to, reason) {
         return this.prisma.$transaction(async (tx) => {
             const a = await tx.application.findUnique({ where: { id } });
             if (!a)
-                throw new errors_1.AppError('NOT_FOUND', 'Application not found.');
+                throw new errors_1.AppError('NOT_FOUND', 'Bewerbung nicht gefunden.');
             (0, transition_1.nextStatus)(shared_1.APPLICATION_TRANSITIONS, a.status, to);
             if ((to === 'ACCEPTED' || to === 'REJECTED') && !reason)
-                throw new errors_1.AppError('VALIDATION_FAILED', 'A reason is required.');
+                throw new errors_1.AppError('VALIDATION_FAILED', 'Bitte eine Begründung angeben.');
             const after = await tx.application.update({ where: { id }, data: { status: to, decidedById: to === 'ACCEPTED' || to === 'REJECTED' ? actor.userId : a.decidedById, ...(to === 'ACCEPTED' || to === 'REJECTED' ? { decidedAt: new Date() } : {}), version: { increment: 1 } } });
             await this.audit.record(actor, { action: `application.${to.toLowerCase()}`, module: 'applications', entityType: 'Application', entityId: id, before: { status: a.status }, after: { status: to }, reason }, tx);
             return after;

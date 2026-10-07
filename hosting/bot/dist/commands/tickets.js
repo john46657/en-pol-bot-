@@ -8,7 +8,7 @@ const UUID = /^[0-9a-f-]{36}$/;
 const emojiOf = (e) => (e && e.length <= 64 ? e : undefined);
 /** API-Fehler mit deutscher Meldung direkt anzeigen (Limits, Voraussetzungen …); sonst die Standard-Fehlerbehandlung. */
 function fail(e) {
-    if (e instanceof api_1.BotApiError && [400, 403, 404, 409].includes(e.status) && e.message && !/^You |permission/i.test(e.message))
+    if (e instanceof api_1.BotApiError && [400, 403, 404, 409].includes(e.status) && e.message && !/^You |permission|^Dafür fehlt dir die Berechtigung|steht dem Bot nicht zur Verfügung/i.test(e.message))
         return (0, format_1.errorReply)((0, format_1.clip)(e.message, 500));
     return (0, errors_1.mapError)(e);
 }

@@ -51,7 +51,7 @@ let RadioCodesService = class RadioCodesService {
         const r = await this.prisma.radioCode.findUnique({ where: { id } });
         const g = (0, guild_context_1.currentGuild)();
         if (!r || (g && r.guildId && r.guildId !== g))
-            throw new errors_1.AppError('NOT_FOUND', 'Radio code not found.');
+            throw new errors_1.AppError('NOT_FOUND', 'Funk-Code nicht gefunden.');
         return r;
     }
     uniq(e) {

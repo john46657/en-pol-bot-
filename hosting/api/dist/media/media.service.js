@@ -49,13 +49,13 @@ let MediaService = class MediaService {
     async upload(actor, file, link, maxBytes = exports.MAX_BYTES) {
         const need = WRITE[link.linkedType];
         if (!need)
-            throw new errors_1.AppError('VALIDATION_FAILED', 'Unsupported linkedType.');
+            throw new errors_1.AppError('VALIDATION_FAILED', 'Dateien können hier nicht angehängt werden.');
         await this.perms.assert(actor.userId, need);
         if (file.size > maxBytes || file.buffer.length > maxBytes)
-            throw new errors_1.AppError('VALIDATION_FAILED', `File too large (max ${Math.round(maxBytes / 1048576)} MB).`);
+            throw new errors_1.AppError('VALIDATION_FAILED', `Die Datei ist zu groß (max. ${Math.round(maxBytes / 1048576)} MB).`);
         const check = SIGNATURES[file.mimetype];
         if (!check || !check(file.buffer))
-            throw new errors_1.AppError('VALIDATION_FAILED', 'File type not allowed or content does not match its type.');
+            throw new errors_1.AppError('VALIDATION_FAILED', 'Dieser Dateityp ist nicht erlaubt oder der Inhalt passt nicht zum Dateityp.');
         const hash = (0, node_crypto_1.createHash)('sha256').update(file.buffer).digest('hex');
         const storageKey = `${(0, node_crypto_1.randomUUID)()}.${EXT[file.mimetype]}`; // Zufallsname + feste Endung: Dateinamen des Clients landen nie im Dateisystem
         await (0, promises_1.mkdir)(this.dir, { recursive: true });
@@ -72,7 +72,7 @@ let MediaService = class MediaService {
         const need = m?.linkedType ? READ[m.linkedType] : undefined;
         // Ohne Leserecht auf die verknüpfte Entität verhält sich die Datei wie nicht vorhanden.
         if (!m || !need || !(await this.perms.has(actor.userId, need)))
-            throw new errors_1.AppError('NOT_FOUND', 'File not found.');
+            throw new errors_1.AppError('NOT_FOUND', 'Datei nicht gefunden.');
         return { media: m, data: await (0, promises_1.readFile)(node_path_1.default.join(this.dir, m.storageKey)) };
     }
     list(actor, linkedType, linkedId) {

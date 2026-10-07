@@ -58,10 +58,10 @@ let ExportController = class ExportController {
     async export(actor, entity, f, res) {
         const src = SOURCES[entity];
         if (!src)
-            throw new errors_1.AppError('NOT_FOUND', 'Unknown export.');
+            throw new errors_1.AppError('NOT_FOUND', 'Unbekannter Export.');
         const ctx = await this.perms.contextFor(actor.userId);
         if (!(0, shared_1.can)(ctx, src.permission))
-            throw new errors_1.AppError('PERMISSION_DENIED', 'You do not have permission to perform this action.');
+            throw new errors_1.AppError('PERMISSION_DENIED', 'Dafür fehlt dir die Berechtigung.');
         const rows = await src.load(this.prisma, f.q);
         await this.audit.record(actor, { action: 'export', module: 'export', entityType: entity, after: { format: f.format, rows: rows.length } });
         const name = `${entity}-${new Date().toISOString().slice(0, 10)}.${f.format}`;

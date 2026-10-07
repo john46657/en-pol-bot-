@@ -45,7 +45,7 @@ exports.SETTING_SCHEMAS = {
         signup: zod_1.z.boolean(), requireGuild: zod_1.z.boolean(),
         roleMap: zod_1.z.array(zod_1.z.object({ discordRoleId: zod_1.z.string().regex(/^\d{15,25}$/), role: zod_1.z.string().trim().min(1).max(64) })).max(50),
         /** Team-Rolle(n): nur wer eine davon auf dem Discord-Server hat, kommt ins MDT/Dashboard (leer = alle Mitglieder). */
-        teamRoleIds: zod_1.z.array(zod_1.z.string().regex(/^\d{15,25}$/, 'Discord role ID (15–25 digits)')).max(20).default([]),
+        teamRoleIds: zod_1.z.array(zod_1.z.string().regex(/^\d{15,25}$/, 'Discord-Rollen-ID (15–25 Ziffern)')).max(20).default([]),
     }),
 };
 let AdminService = class AdminService {
@@ -63,13 +63,13 @@ let AdminService = class AdminService {
     async setSetting(actor, key, value) {
         const [base, guild] = key.split('@');
         if (guild !== undefined && (!/^\d{15,25}$/.test(guild) || !guild_context_1.SERVER_SCOPED_SETTINGS.includes(base)))
-            throw new errors_1.AppError('VALIDATION_FAILED', `Setting "${base}" cannot be set per server.`);
+            throw new errors_1.AppError('VALIDATION_FAILED', `Die Einstellung „${base}“ kann nicht je Server gesetzt werden.`);
         const schema = exports.SETTING_SCHEMAS[base];
         if (!schema)
-            throw new errors_1.AppError('VALIDATION_FAILED', `Unknown setting "${key}".`);
+            throw new errors_1.AppError('VALIDATION_FAILED', `Unbekannte Einstellung „${key}“.`);
         const parsed = schema.safeParse(value);
         if (!parsed.success)
-            throw new errors_1.AppError('VALIDATION_FAILED', 'Invalid setting value.', parsed.error.issues.map((i) => ({ path: i.path.join('.'), message: i.message })));
+            throw new errors_1.AppError('VALIDATION_FAILED', 'Ungültiger Wert für diese Einstellung.', parsed.error.issues.map((i) => ({ path: i.path.join('.'), message: i.message })));
         return this.prisma.$transaction(async (tx) => {
             const before = await tx.systemSetting.findUnique({ where: { key } });
             const row = await tx.systemSetting.upsert({ where: { key }, create: { key, value: parsed.data }, update: { value: parsed.data } });

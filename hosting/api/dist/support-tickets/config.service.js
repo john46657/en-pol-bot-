@@ -61,28 +61,28 @@ let TicketConfigService = class TicketConfigService {
     async category(id) {
         const c = await this.prisma.ticketCategory.findUnique({ where: { id } });
         if (!c)
-            throw new errors_1.AppError('NOT_FOUND', 'Ticket category not found.');
+            throw new errors_1.AppError('NOT_FOUND', 'Ticket-Art nicht gefunden.');
         return this.categoryOut(c);
     }
     // ---- Kategorien ----
     async saveCategory(actor, id, d) {
         await this.checkRefs(d.defaultPriorityId, d.escalationPriorityId);
         const data = { ...d, questions: json(d.questions), buttons: json(d.buttons.length ? d.buttons : (0, shared_1.defaultTicketButtons)()) };
-        const c = id ? await this.prisma.ticketCategory.update({ where: { id }, data }).catch(() => { throw new errors_1.AppError('NOT_FOUND', 'Ticket category not found.'); })
+        const c = id ? await this.prisma.ticketCategory.update({ where: { id }, data }).catch(() => { throw new errors_1.AppError('NOT_FOUND', 'Ticket-Art nicht gefunden.'); })
             : await this.prisma.ticketCategory.create({ data });
         await this.record(actor, id ? 'category.update' : 'category.create', 'TicketCategory', c.id, { name: c.name });
         return this.categoryOut(c);
     }
     async duplicateCategory(actor, id) {
-        const rest = omit(await this.prisma.ticketCategory.findUniqueOrThrow({ where: { id } }).catch(() => { throw new errors_1.AppError('NOT_FOUND', 'Ticket category not found.'); }), ['id', 'createdAt', 'updatedAt']);
+        const rest = omit(await this.prisma.ticketCategory.findUniqueOrThrow({ where: { id } }).catch(() => { throw new errors_1.AppError('NOT_FOUND', 'Ticket-Art nicht gefunden.'); }), ['id', 'createdAt', 'updatedAt']);
         const c = await this.prisma.ticketCategory.create({ data: { ...rest, name: `${rest.name} (Kopie)`, questions: json(rest.questions), buttons: json(rest.buttons) } });
         await this.record(actor, 'category.duplicate', 'TicketCategory', c.id, { from: id });
         return this.categoryOut(c);
     }
     async deleteCategory(actor, id) {
         if (await this.prisma.supportTicket.count({ where: { categoryId: id, deletedAt: null, closedAt: null } }))
-            throw new errors_1.AppError('CONFLICT', 'This category still has open tickets. Close them or deactivate the category instead.');
-        await this.prisma.ticketCategory.delete({ where: { id } }).catch(() => { throw new errors_1.AppError('NOT_FOUND', 'Ticket category not found.'); });
+            throw new errors_1.AppError('CONFLICT', 'Diese Ticket-Art hat noch offene Tickets. Schließe sie zuerst oder deaktiviere die Ticket-Art stattdessen.');
+        await this.prisma.ticketCategory.delete({ where: { id } }).catch(() => { throw new errors_1.AppError('NOT_FOUND', 'Ticket-Art nicht gefunden.'); });
         const panels = await this.prisma.ticketPanel.findMany({ where: { categoryIds: { has: id } } });
         for (const p of panels)
             await this.prisma.ticketPanel.update({ where: { id: p.id }, data: { categoryIds: p.categoryIds.filter((c) => c !== id) } });
@@ -91,20 +91,20 @@ let TicketConfigService = class TicketConfigService {
     // ---- Panels ----
     async savePanel(actor, id, d) {
         if (d.categoryIds.length && (await this.prisma.ticketCategory.count({ where: { id: { in: d.categoryIds } } })) !== new Set(d.categoryIds).size)
-            throw new errors_1.AppError('VALIDATION_FAILED', 'Unknown ticket category in panel.');
-        const p = id ? await this.prisma.ticketPanel.update({ where: { id }, data: d }).catch(() => { throw new errors_1.AppError('NOT_FOUND', 'Panel not found.'); })
+            throw new errors_1.AppError('VALIDATION_FAILED', 'Das Panel enthält eine unbekannte Ticket-Art.');
+        const p = id ? await this.prisma.ticketPanel.update({ where: { id }, data: d }).catch(() => { throw new errors_1.AppError('NOT_FOUND', 'Panel nicht gefunden.'); })
             : await this.prisma.ticketPanel.create({ data: d });
         await this.record(actor, id ? 'panel.update' : 'panel.create', 'TicketPanel', p.id, { name: p.name });
         return p;
     }
     async duplicatePanel(actor, id) {
-        const rest = omit(await this.prisma.ticketPanel.findUniqueOrThrow({ where: { id } }).catch(() => { throw new errors_1.AppError('NOT_FOUND', 'Panel not found.'); }), ['id', 'createdAt', 'updatedAt', 'messageId', 'messageChannelId']);
+        const rest = omit(await this.prisma.ticketPanel.findUniqueOrThrow({ where: { id } }).catch(() => { throw new errors_1.AppError('NOT_FOUND', 'Panel nicht gefunden.'); }), ['id', 'createdAt', 'updatedAt', 'messageId', 'messageChannelId']);
         const p = await this.prisma.ticketPanel.create({ data: { ...rest, name: `${rest.name} (Kopie)` } });
         await this.record(actor, 'panel.duplicate', 'TicketPanel', p.id, { from: id });
         return p;
     }
     async deletePanel(actor, id) {
-        await this.prisma.ticketPanel.delete({ where: { id } }).catch(() => { throw new errors_1.AppError('NOT_FOUND', 'Panel not found.'); });
+        await this.prisma.ticketPanel.delete({ where: { id } }).catch(() => { throw new errors_1.AppError('NOT_FOUND', 'Panel nicht gefunden.'); });
         await this.record(actor, 'panel.delete', 'TicketPanel', id);
     }
     // ---- Status / Prioritäten / Schließungsgründe ----
@@ -115,9 +115,9 @@ let TicketConfigService = class TicketConfigService {
                 if (d[flag])
                     await tx.ticketStatus.updateMany({ where: { [flag]: true, ...(id ? { id: { not: id } } : {}) }, data: { [flag]: false } });
             if (d.isDefault && d.kind !== 'OPEN')
-                throw new errors_1.AppError('VALIDATION_FAILED', 'The default status must be an open status.');
+                throw new errors_1.AppError('VALIDATION_FAILED', 'Der Standardstatus muss ein offener Status sein.');
             if (d.isClose && d.kind !== 'CLOSED')
-                throw new errors_1.AppError('VALIDATION_FAILED', 'The close status must be a closed status.');
+                throw new errors_1.AppError('VALIDATION_FAILED', 'Der Schließen-Status muss ein geschlossener Status sein.');
             return id ? tx.ticketStatus.update({ where: { id }, data: d }) : tx.ticketStatus.create({ data: d });
         });
         await this.record(actor, id ? 'status.update' : 'status.create', 'TicketStatus', s.id, { name: s.name });
@@ -125,12 +125,12 @@ let TicketConfigService = class TicketConfigService {
     }
     async deleteStatus(actor, id) {
         if (await this.prisma.supportTicket.count({ where: { statusId: id } }))
-            throw new errors_1.AppError('CONFLICT', 'Status is in use by tickets.');
+            throw new errors_1.AppError('CONFLICT', 'Dieser Status wird noch von Tickets verwendet.');
         const s = await this.prisma.ticketStatus.findUnique({ where: { id } });
         if (!s)
-            throw new errors_1.AppError('NOT_FOUND', 'Status not found.');
+            throw new errors_1.AppError('NOT_FOUND', 'Status nicht gefunden.');
         if (s.isDefault || s.isClose)
-            throw new errors_1.AppError('CONFLICT', 'Choose another default/close status first.');
+            throw new errors_1.AppError('CONFLICT', 'Wähle zuerst einen anderen Standard- bzw. Schließen-Status.');
         await this.prisma.ticketStatus.delete({ where: { id } });
         await this.record(actor, 'status.delete', 'TicketStatus', id);
     }
@@ -149,7 +149,7 @@ let TicketConfigService = class TicketConfigService {
             await tx.ticketCategory.updateMany({ where: { defaultPriorityId: id }, data: { defaultPriorityId: null } });
             await tx.ticketCategory.updateMany({ where: { escalationPriorityId: id }, data: { escalationPriorityId: null } });
             await tx.ticketPriority.delete({ where: { id } });
-        }).catch((e) => { throw e instanceof errors_1.AppError ? e : new errors_1.AppError('NOT_FOUND', 'Priority not found.'); });
+        }).catch((e) => { throw e instanceof errors_1.AppError ? e : new errors_1.AppError('NOT_FOUND', 'Priorität nicht gefunden.'); });
         await this.record(actor, 'priority.delete', 'TicketPriority', id);
     }
     async saveReason(actor, id, d) {
@@ -158,7 +158,7 @@ let TicketConfigService = class TicketConfigService {
         return r;
     }
     async deleteReason(actor, id) {
-        await this.prisma.ticketCloseReason.delete({ where: { id } }).catch(() => { throw new errors_1.AppError('NOT_FOUND', 'Reason not found.'); });
+        await this.prisma.ticketCloseReason.delete({ where: { id } }).catch(() => { throw new errors_1.AppError('NOT_FOUND', 'Grund nicht gefunden.'); });
         await this.record(actor, 'reason.delete', 'TicketCloseReason', id);
     }
     async saveSettings(actor, s) {
@@ -169,7 +169,7 @@ let TicketConfigService = class TicketConfigService {
     async checkRefs(...ids) {
         const want = ids.filter((x) => !!x);
         if (want.length && (await this.prisma.ticketPriority.count({ where: { id: { in: want } } })) !== new Set(want).size)
-            throw new errors_1.AppError('VALIDATION_FAILED', 'Unknown priority.');
+            throw new errors_1.AppError('VALIDATION_FAILED', 'Unbekannte Priorität.');
     }
 };
 exports.TicketConfigService = TicketConfigService;

@@ -32,7 +32,7 @@ exports.teamChanceSchema = zod_1.z.object({
     pingRoleIds: zod_1.z.array(sf).max(10),
     /** Bewerbungen nur während einer offenen Team-Chance annehmen */
     restrictApplications: zod_1.z.boolean(),
-}).refine((c) => !c.opensAt || !c.closesAt || c.opensAt < c.closesAt, 'closesAt must be after opensAt');
+}).refine((c) => !c.opensAt || !c.closesAt || c.opensAt < c.closesAt, 'Das Ende muss nach dem Start liegen.');
 exports.DEFAULT_TEAMCHANCE = { open: false, title: 'Team-Chance', description: 'Wir suchen Verstärkung für unser Team! Bewirb dich jetzt.', opensAt: null, closesAt: null, slots: 0, channelId: null, pingRoleIds: [], restrictApplications: false, openedAt: null };
 const KEY = 'teamchance';
 /**

@@ -77,7 +77,7 @@ let SupportTicketsService = class SupportTicketsService {
     async load(id) {
         const t = await this.prisma.supportTicket.findUnique({ where: { id } });
         if (!t || t.deletedAt)
-            throw new errors_1.AppError('NOT_FOUND', 'Ticket not found.');
+            throw new errors_1.AppError('NOT_FOUND', 'Ticket nicht gefunden.');
         const [cat, status, priority, settings, tz] = await Promise.all([
             this.config.category(t.categoryId), this.prisma.ticketStatus.findUniqueOrThrow({ where: { id: t.statusId } }),
             t.priorityId ? this.prisma.ticketPriority.findUnique({ where: { id: t.priorityId } }) : Promise.resolve(null), this.config.settings(), this.timezone(),
@@ -175,13 +175,13 @@ let SupportTicketsService = class SupportTicketsService {
         if (actor.system)
             return;
         if (!actor.userId)
-            throw new errors_1.AppError('PERMISSION_DENIED', 'Your Discord account is not linked to a staff account.');
+            throw new errors_1.AppError('PERMISSION_DENIED', 'Dein Discord-Konto ist mit keinem Team-Konto verknüpft.');
         if (await this.perms.has(actor.userId, 'ticket.manage'))
             return;
         if (!(await this.perms.has(actor.userId, perm)))
-            throw new errors_1.AppError('PERMISSION_DENIED', 'You do not have permission to perform this action.');
+            throw new errors_1.AppError('PERMISSION_DENIED', 'Dafür fehlt dir die Berechtigung.');
         if (!(await this.categoryVisible(actor.userId, cat)))
-            throw new errors_1.AppError('PERMISSION_DENIED', 'You have no access to tickets of this category.');
+            throw new errors_1.AppError('PERMISSION_DENIED', 'Du hast keinen Zugriff auf Tickets dieser Art.');
     }
     async categoryVisible(userId, cat) {
         if (!cat.accessRoleNames.length)
@@ -275,7 +275,7 @@ let SupportTicketsService = class SupportTicketsService {
         const cat = await this.config.category(d.categoryId);
         const guildId = d.guildId ?? cat.guildId ?? (ch.guildId ?? process.env.DISCORD_GUILD_ID ?? '').split(/[\s,;]+/).find((g) => /^\d{15,25}$/.test(g));
         if (!guildId)
-            throw new errors_1.AppError('VALIDATION_FAILED', 'Set the Discord server (guild) ID in Settings → Discord bot channels first.');
+            throw new errors_1.AppError('VALIDATION_FAILED', 'Trage zuerst die Discord-Server-ID unter Einstellungen → Discord-Bot-Kanäle ein.');
         return this.open({ categoryId: d.categoryId, guildId, discordId: d.discordId, discordName: d.discordName || d.discordId, memberRoleIds: [] }, actor, true);
     }
     /** Für /ticket im Discord: aktive Ticket-Arten (Voraussetzungen prüft der Bot vorab, das System beim Öffnen erneut). */
@@ -285,7 +285,7 @@ let SupportTicketsService = class SupportTicketsService {
     }
     /** Bot meldet: Channel und Ticket-Embed sind angelegt. */
     async attachChannel(id, channelId, controlMessageId) {
-        await this.prisma.supportTicket.update({ where: { id }, data: { channelId, controlMessageId, lastActivityAt: new Date() } }).catch(() => { throw new errors_1.AppError('NOT_FOUND', 'Ticket not found.'); });
+        await this.prisma.supportTicket.update({ where: { id }, data: { channelId, controlMessageId, lastActivityAt: new Date() } }).catch(() => { throw new errors_1.AppError('NOT_FOUND', 'Ticket nicht gefunden.'); });
         return { ok: true };
     }
     /** Bot meldet: Channel konnte nicht angelegt werden → Ticket verwerfen. */
@@ -785,14 +785,14 @@ let SupportTicketsService = class SupportTicketsService {
     /** Anhang ausliefern (nur mit Zugriff auf das Ticket). Nur Bilder inline, alles andere als Download. */
     async attachment(userId, key) {
         if (!/^[0-9a-f-]{36}\.[a-z0-9]{1,9}$/.test(key))
-            throw new errors_1.AppError('NOT_FOUND', 'Attachment not found.');
+            throw new errors_1.AppError('NOT_FOUND', 'Anhang nicht gefunden.');
         const msg = await this.prisma.ticketMessage.findFirst({ where: { attachments: { array_contains: [{ storageKey: key }] } } });
         if (!msg)
-            throw new errors_1.AppError('NOT_FOUND', 'Attachment not found.');
+            throw new errors_1.AppError('NOT_FOUND', 'Anhang nicht gefunden.');
         const t = await this.prisma.supportTicket.findUniqueOrThrow({ where: { id: msg.ticketId } });
         await this.assertCan({ userId, discordId: null, name: '', viaBot: false }, 'ticket.view', await this.config.category(t.categoryId));
         const meta = msg.attachments.find((a) => a.storageKey === key);
-        const data = await (0, promises_1.readFile)(node_path_1.default.join(this.dir, key)).catch(() => { throw new errors_1.AppError('NOT_FOUND', 'Attachment file missing.'); });
+        const data = await (0, promises_1.readFile)(node_path_1.default.join(this.dir, key)).catch(() => { throw new errors_1.AppError('NOT_FOUND', 'Die Datei des Anhangs fehlt.'); });
         const image = !!meta.contentType && IMAGE_TYPES.includes(meta.contentType);
         return { data, name: meta.name, contentType: image ? meta.contentType : 'application/octet-stream', inline: image };
     }
@@ -892,7 +892,7 @@ let SupportTicketsService = class SupportTicketsService {
     async detail(userId, id) {
         const t = await this.prisma.supportTicket.findUnique({ where: { id } });
         if (!t)
-            throw new errors_1.AppError('NOT_FOUND', 'Ticket not found.');
+            throw new errors_1.AppError('NOT_FOUND', 'Ticket nicht gefunden.');
         const cat = await this.config.category(t.categoryId);
         await this.assertCan({ userId, discordId: null, name: '', viaBot: false }, 'ticket.view', cat);
         const [canNotes, canTranscripts] = await Promise.all([this.perms.has(userId, 'ticket.internal_notes'), this.perms.has(userId, 'ticket.transcript')]);
@@ -946,7 +946,7 @@ let SupportTicketsService = class SupportTicketsService {
     async transcript(userId, id) {
         const tr = await this.prisma.ticketTranscript.findUnique({ where: { id } });
         if (!tr)
-            throw new errors_1.AppError('NOT_FOUND', 'Transcript not found.');
+            throw new errors_1.AppError('NOT_FOUND', 'Transkript nicht gefunden.');
         if (userId) {
             const t = await this.prisma.supportTicket.findUnique({ where: { id: tr.ticketId } });
             if (t)
@@ -1029,7 +1029,7 @@ let SupportTicketsService = class SupportTicketsService {
     async panelMessage(id) {
         const p = await this.prisma.ticketPanel.findUnique({ where: { id } });
         if (!p)
-            throw new errors_1.AppError('NOT_FOUND', 'Panel not found.');
+            throw new errors_1.AppError('NOT_FOUND', 'Panel nicht gefunden.');
         const cats = (await this.prisma.ticketCategory.findMany({ where: { id: { in: p.categoryIds }, active: true } })).sort((a, b) => p.categoryIds.indexOf(a.id) - p.categoryIds.indexOf(b.id));
         const embed = { title: [p.emoji, p.title].filter(Boolean).join(' ') || undefined, description: p.description || undefined, color: p.color, thumbnail: p.thumbnailUrl ?? undefined, image: p.bannerUrl ?? p.imageUrl ?? undefined, footer: p.footer ?? undefined, footerIcon: p.footerIconUrl ?? undefined, author: p.authorName ?? undefined, authorIcon: p.authorIconUrl ?? undefined };
         if (p.showLoad && cats.length) {
@@ -1052,13 +1052,13 @@ let SupportTicketsService = class SupportTicketsService {
             await this.perms.assert(actor.userId, 'ticket.settings');
         const p = await this.prisma.ticketPanel.findUnique({ where: { id } });
         if (!p)
-            throw new errors_1.AppError('NOT_FOUND', 'Panel not found.');
+            throw new errors_1.AppError('NOT_FOUND', 'Panel nicht gefunden.');
         const target = channelId ?? p.channelId;
         if (!target)
-            throw new errors_1.AppError('VALIDATION_FAILED', 'Choose a Discord channel for this panel first.');
+            throw new errors_1.AppError('VALIDATION_FAILED', 'Wähle zuerst einen Discord-Kanal für dieses Panel.');
         const message = await this.panelMessage(id);
         if (!message.buttons?.length && !message.select?.options?.length)
-            throw new errors_1.AppError('VALIDATION_FAILED', 'Add at least one active ticket category to the panel.');
+            throw new errors_1.AppError('VALIDATION_FAILED', 'Füge dem Panel mindestens eine aktive Ticket-Art hinzu.');
         const update = p.messageId && p.messageChannelId === target ? p.messageId : null;
         await this.discord.enqueue('tickets', 'ticket.effects', { effects: [{ type: 'panel', panelId: id, channelId: target, messageId: update, message }] }, { always: true });
         return { ok: true, updating: !!update };

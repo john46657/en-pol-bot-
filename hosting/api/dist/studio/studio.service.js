@@ -44,7 +44,7 @@ let StudioService = class StudioService {
             return undefined;
         const r = (0, custom_fields_1.validateCustom)(defs, values, existing);
         if (!r.ok)
-            throw new errors_1.AppError('VALIDATION_FAILED', 'Custom field validation failed.', r.errors.map((m) => ({ path: 'custom', message: m })));
+            throw new errors_1.AppError('VALIDATION_FAILED', 'Die Zusatzfelder sind ungültig.', r.errors.map((m) => ({ path: 'custom', message: m })));
         return r.value;
     }
 };

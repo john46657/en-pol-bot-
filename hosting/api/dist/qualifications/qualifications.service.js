@@ -94,11 +94,11 @@ let QualificationsService = class QualificationsService {
         const cfg = await this.config(d.guildId);
         const unit = cfg.units.find((u) => u.key === d.unit);
         if (!unit)
-            throw new errors_1.AppError('NOT_FOUND', 'Unknown unit.');
+            throw new errors_1.AppError('NOT_FOUND', 'Unbekannte Einheit.');
         if (!unit.enabled)
             throw new errors_1.AppError('CONFLICT', `Bewerbungen für ${unit.name} sind derzeit geschlossen.`);
         if (d.answers.length !== unit.questions.length)
-            throw new errors_1.AppError('VALIDATION_FAILED', `Expected ${unit.questions.length} answers.`);
+            throw new errors_1.AppError('VALIDATION_FAILED', `Es werden ${unit.questions.length} Antworten erwartet.`);
         // jede Antwort gegen ihre Frage prüfen (Pflicht, Länge, gültige Auswahl); gewählte Rollen merken
         const answers = [];
         const grantRoleIds = new Set();
@@ -118,7 +118,7 @@ let QualificationsService = class QualificationsService {
             r.roleIds.forEach((x) => grantRoleIds.add(x));
         }
         if ((await this.openFor(d.discordId, unit.key)).open)
-            throw new errors_1.AppError('CONFLICT', `There is already an open application for ${unit.name}.`);
+            throw new errors_1.AppError('CONFLICT', `Für ${unit.name} gibt es schon eine offene Bewerbung.`);
         const last = await this.prisma.qualificationApplication.findFirst({ where: { discordId: d.discordId, unit: unit.key }, orderBy: { createdAt: 'desc' }, select: { createdAt: true } });
         const wait = (0, decision_1.cooldownLeft)(unit.settings, last?.createdAt);
         if (wait)
@@ -149,7 +149,7 @@ let QualificationsService = class QualificationsService {
     async get(id) {
         const a = await this.prisma.qualificationApplication.findUnique({ where: { id } });
         if (!a)
-            throw new errors_1.AppError('NOT_FOUND', 'Application not found.');
+            throw new errors_1.AppError('NOT_FOUND', 'Bewerbung nicht gefunden.');
         return a;
     }
     /** Bisherige Qualifikations-Bewerbungen einer Discord-ID (Button „Verlauf“). */
@@ -159,18 +159,18 @@ let QualificationsService = class QualificationsService {
     async decide(actor, id, status, reason) {
         const a = await this.prisma.qualificationApplication.findUnique({ where: { id } });
         if (!a)
-            throw new errors_1.AppError('NOT_FOUND', 'Application not found.');
+            throw new errors_1.AppError('NOT_FOUND', 'Bewerbung nicht gefunden.');
         if (a.status !== 'OPEN')
-            throw new errors_1.AppError('CONFLICT', 'This application has already been decided.');
+            throw new errors_1.AppError('CONFLICT', 'Über diese Bewerbung wurde schon entschieden.');
         const ownLink = actor.userId ? await this.prisma.discordLink.findUnique({ where: { userId: actor.userId } }) : null;
         if ((a.userId && a.userId === actor.userId) || ownLink?.discordId === a.discordId)
-            throw new errors_1.AppError('PERMISSION_DENIED', 'You cannot decide on your own application.');
+            throw new errors_1.AppError('PERMISSION_DENIED', 'Über deine eigene Bewerbung kannst du nicht entscheiden.');
         const unit = (await this.config(a.guildId)).units.find((u) => u.key === a.unit);
         let addedToSek = false;
         await this.prisma.$transaction(async (tx) => {
             const claimed = await tx.qualificationApplication.updateMany({ where: { id, status: 'OPEN' }, data: { status, decidedById: actor.userId, decidedAt: new Date(), decisionReason: reason || null } });
             if (claimed.count === 0)
-                throw new errors_1.AppError('CONFLICT', 'This application has already been decided.');
+                throw new errors_1.AppError('CONFLICT', 'Über diese Bewerbung wurde schon entschieden.');
             if (status === 'ACCEPTED' && a.unit === 'sek' && a.userId) {
                 await tx.sekMember.upsert({ where: { userId: a.userId }, create: { userId: a.userId, addedById: actor.userId }, update: {} });
                 // System-Rolle „SEK“ (Einsatzberichte schreiben), falls vorhanden
@@ -180,7 +180,7 @@ let QualificationsService = class QualificationsService {
                 addedToSek = true;
             }
             if (a.userId)
-                await tx.notification.create({ data: { userId: a.userId, type: 'QUALIFICATION', title: `Your ${a.unitName} application ${a.number} was ${status === 'ACCEPTED' ? 'accepted' : 'not accepted'}` } });
+                await tx.notification.create({ data: { userId: a.userId, type: 'QUALIFICATION', title: `Deine Bewerbung ${a.number} (${a.unitName}) wurde ${status === 'ACCEPTED' ? 'angenommen' : 'nicht angenommen'}` } });
             await this.audit.record(actor, { action: `qualifications.application.${status === 'ACCEPTED' ? 'accept' : 'reject'}`, module: 'qualifications', entityType: 'QualificationApplication', entityId: id, before: { status: 'OPEN' }, after: { status }, reason }, tx);
         });
         // wie bei Appy: entschiedene Bewerbung in den Channel für angenommene/abgelehnte Bewerbungen posten

@@ -258,8 +258,8 @@ export declare const categorySchema: z.ZodObject<{
     guildId: string | null;
     description: string;
     color: number;
-    position: number;
     emoji: string | null;
+    position: number;
     cooldownMinutes: number;
     questions: {
         id: string;
@@ -328,8 +328,8 @@ export declare const categorySchema: z.ZodObject<{
     guildId?: string | null | undefined;
     description?: string | undefined;
     color?: number | undefined;
-    position?: number | undefined;
     emoji?: string | null | undefined;
+    position?: number | undefined;
     cooldownMinutes?: number | undefined;
     questions?: {
         id: string;
@@ -421,10 +421,10 @@ export declare const panelSchema: z.ZodObject<{
     description: string;
     color: number;
     channelId: string | null;
+    emoji: string | null;
     title: string;
     categoryIds: string[];
     position: number;
-    emoji: string | null;
     imageUrl: string | null;
     placeholder: string;
     style: "BUTTONS" | "DROPDOWN";
@@ -442,10 +442,10 @@ export declare const panelSchema: z.ZodObject<{
     description?: string | undefined;
     color?: number | undefined;
     channelId?: string | null | undefined;
+    emoji?: string | null | undefined;
     title?: string | undefined;
     categoryIds?: string[] | undefined;
     position?: number | undefined;
-    emoji?: string | null | undefined;
     imageUrl?: string | null | undefined;
     placeholder?: string | undefined;
     style?: "BUTTONS" | "DROPDOWN" | undefined;
@@ -472,8 +472,8 @@ export declare const statusSchema: z.ZodObject<{
 }, "strip", z.ZodTypeAny, {
     name: string;
     color: number;
-    position: number;
     emoji: string;
+    position: number;
     kind: "CLOSED" | "OPEN" | "ARCHIVED";
     isDefault: boolean;
     isClaimed: boolean;
@@ -482,8 +482,8 @@ export declare const statusSchema: z.ZodObject<{
 }, {
     name: string;
     color?: number | undefined;
-    position?: number | undefined;
     emoji?: string | undefined;
+    position?: number | undefined;
     kind?: "CLOSED" | "OPEN" | "ARCHIVED" | undefined;
     isDefault?: boolean | undefined;
     isClaimed?: boolean | undefined;
@@ -501,16 +501,16 @@ export declare const prioritySchema: z.ZodObject<{
 }, "strip", z.ZodTypeAny, {
     name: string;
     color: number;
-    position: number;
     emoji: string;
+    position: number;
     isDefault: boolean;
     allowedRoleNames: string[];
     notifyRoleIds: string[];
 }, {
     name: string;
     color?: number | undefined;
-    position?: number | undefined;
     emoji?: string | undefined;
+    position?: number | undefined;
     isDefault?: boolean | undefined;
     allowedRoleNames?: string[] | undefined;
     notifyRoleIds?: string[] | undefined;
@@ -552,7 +552,7 @@ export declare const settingsSchema: z.ZodObject<{
     transcriptRetentionDays: number;
     ratingChannelId: string | null;
     ratingPublicChannelId: string | null;
-    ratingPublicFields: ("category" | "staff" | "creator" | "duration" | "comment")[];
+    ratingPublicFields: ("category" | "duration" | "staff" | "creator" | "comment")[];
 }, {
     logChannelId?: string | null | undefined;
     transcriptChannelId?: string | null | undefined;
@@ -565,7 +565,7 @@ export declare const settingsSchema: z.ZodObject<{
     transcriptRetentionDays?: number | undefined;
     ratingChannelId?: string | null | undefined;
     ratingPublicChannelId?: string | null | undefined;
-    ratingPublicFields?: ("category" | "staff" | "creator" | "duration" | "comment")[] | undefined;
+    ratingPublicFields?: ("category" | "duration" | "staff" | "creator" | "comment")[] | undefined;
 }>;
 export type TicketSettings = z.infer<typeof settingsSchema>;
 export declare const DEFAULT_SETTINGS: TicketSettings;

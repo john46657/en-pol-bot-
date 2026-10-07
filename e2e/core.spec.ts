@@ -106,10 +106,10 @@ test('public application → staff review workflow', async ({ page, browser }) =
   // Entscheidung direkt in der Liste (wie die Buttons in Discord), mit Grund per DM
   const card = page.locator('div').filter({ has: page.getByText('E2E_Applicant', { exact: true }) }).filter({ has: page.getByRole('button', { name: 'Annehmen mit Grund' }) }).last();
   await card.getByRole('button', { name: 'Annehmen mit Grund' }).click();
-  await page.getByLabel(/Grund/).fill('Strong interview');
+  await page.getByLabel(/^Grund/).fill('Strong interview');
   await page.getByRole('button', { name: 'Bestätigen' }).click();
   await page.getByLabel('Status').selectOption({ label: 'Angenommen' });
-  await expect(page.getByText('Angenommen', { exact: true })).toBeVisible();
+  await expect(page.locator('h2').getByText('Angenommen', { exact: true })).toBeVisible();
 });
 
 

@@ -3,7 +3,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.DEFAULT_SETTINGS = exports.settingsSchema = exports.reasonSchema = exports.prioritySchema = exports.statusSchema = exports.panelSchema = exports.categorySchema = exports.buttonSchema = exports.questionSchema = void 0;
 const zod_1 = require("zod");
 const shared_1 = require("@enrp/shared");
-const snowflake = zod_1.z.string().regex(/^\d{15,25}$/, 'Discord ID (15–25 digits)');
+const snowflake = zod_1.z.string().regex(/^\d{15,25}$/, 'Discord-ID (15–25 Ziffern)');
 const ids = zod_1.z.array(snowflake).max(50).default([]);
 const color = zod_1.z.number().int().min(0).max(0xffffff);
 const url = zod_1.z.union([zod_1.z.string().trim().url().max(500), zod_1.z.literal(''), zod_1.z.null()]).optional().transform((v) => v || null);
@@ -17,8 +17,8 @@ exports.questionSchema = zod_1.z.object({
     options: zod_1.z.array(zod_1.z.string().trim().min(1).max(100)).max(25).default([]), placeholder: zod_1.z.string().trim().max(100).optional(),
     description: zod_1.z.string().trim().max(200).optional(),
     minLength: zod_1.z.number().int().min(0).max(4000).optional(), maxLength: zod_1.z.number().int().min(1).max(4000).optional(),
-}).refine((q) => !['SELECT', 'MULTI'].includes(q.type) || q.options.length >= 2, 'Selection questions need at least 2 options.')
-    .refine((q) => q.minLength === undefined || q.maxLength === undefined || q.minLength <= q.maxLength, { message: 'Minimum length must not exceed the maximum.', path: ['minLength'] });
+}).refine((q) => !['SELECT', 'MULTI'].includes(q.type) || q.options.length >= 2, 'Auswahlfragen brauchen mindestens 2 Optionen.')
+    .refine((q) => q.minLength === undefined || q.maxLength === undefined || q.minLength <= q.maxLength, { message: 'Die Mindestlänge darf nicht größer als die Höchstlänge sein.', path: ['minLength'] });
 exports.buttonSchema = zod_1.z.object({
     action: zod_1.z.enum(shared_1.TICKET_ACTION_KEYS), label: zod_1.z.string().trim().min(1).max(80), emoji: zod_1.z.string().trim().max(64).optional(), style, enabled: zod_1.z.boolean(),
 });
@@ -34,7 +34,7 @@ exports.categorySchema = zod_1.z.object({
     accessRoleNames: zod_1.z.array(zod_1.z.string().trim().min(1).max(64)).max(30).default([]),
     maxOpen: zod_1.z.number().int().min(0).max(100).default(1), cooldownMinutes: zod_1.z.number().int().min(0).max(60 * 24 * 30).default(0),
     defaultPriorityId: zod_1.z.string().uuid().nullable().optional(),
-    questions: zod_1.z.array(exports.questionSchema).max(25).default([]).refine((q) => new Set(q.map((x) => x.id)).size === q.length, 'Question ids must be unique.'),
+    questions: zod_1.z.array(exports.questionSchema).max(25).default([]).refine((q) => new Set(q.map((x) => x.id)).size === q.length, 'Die IDs der Fragen müssen eindeutig sein.'),
     welcomeTitle: zod_1.z.string().trim().max(256).default('🎫 {category}'), welcomeMessage: zod_1.z.string().trim().max(4000).default(''),
     mentionStaff: zod_1.z.boolean().default(true), mentionText: zod_1.z.string().trim().max(1000).default(''),
     buttons: zod_1.z.array(exports.buttonSchema).max(20).default([]),

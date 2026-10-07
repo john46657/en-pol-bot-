@@ -55,7 +55,7 @@ let ReportsService = class ReportsService {
         const r = await this.prisma.report.findUnique({ where: { id }, include: { versions: { orderBy: { version: 'desc' } } } });
         // Nicht sichtbare Berichte verhalten sich wie nicht existent (keine Existenz-Leaks).
         if (!r || !(await this.visible(actor.userId, r)))
-            throw new errors_1.AppError('NOT_FOUND', 'Report not found.');
+            throw new errors_1.AppError('NOT_FOUND', 'Bericht nicht gefunden.');
         return { report: r, timeline: await this.timeline.list('Report', id) };
     }
     async visible(userId, r) {
@@ -68,11 +68,11 @@ let ReportsService = class ReportsService {
             await tx.reportVersion.create({ data: { reportId: r.id, version: 1, authorId: userId, changeSummary: 'Initial draft', content: d.content, contentHash: (0, exports.hashContent)(d.content) } });
             for (const pid of new Set(d.personIds ?? [])) {
                 if (!(await tx.person.findUnique({ where: { id: pid } })))
-                    throw new errors_1.AppError('NOT_FOUND', 'Person not found.');
+                    throw new errors_1.AppError('NOT_FOUND', 'Person nicht gefunden.');
                 await (0, links_1.linkPerson)(tx, pid, 'Report', r.id, 'SUBJECT');
-                await this.timeline.add(tx, { entityType: 'Person', entityId: pid, action: 'report.created', summary: `Report ${r.number} created`, actorId: userId });
+                await this.timeline.add(tx, { entityType: 'Person', entityId: pid, action: 'report.created', summary: `Bericht ${r.number} angelegt`, actorId: userId });
             }
-            await this.timeline.add(tx, { entityType: 'Report', entityId: r.id, action: 'report.created', summary: `Report ${r.number} created`, actorId: userId });
+            await this.timeline.add(tx, { entityType: 'Report', entityId: r.id, action: 'report.created', summary: `Bericht ${r.number} angelegt`, actorId: userId });
             await this.audit.record(actor, { action: 'report.create', module: 'reports', entityType: 'Report', entityId: r.id, after: { number: r.number, type: r.type } }, tx);
             return r;
         });
@@ -84,14 +84,14 @@ let ReportsService = class ReportsService {
         return this.prisma.$transaction(async (tx) => {
             const r = await tx.report.findUnique({ where: { id } });
             if (!r || !(await this.visible(userId, r)))
-                throw new errors_1.AppError('NOT_FOUND', 'Report not found.');
+                throw new errors_1.AppError('NOT_FOUND', 'Bericht nicht gefunden.');
             if (r.status !== 'DRAFT' && r.status !== 'REJECTED')
-                throw new errors_1.AppError('CONFLICT', 'Only draft or rejected reports can be edited.');
+                throw new errors_1.AppError('CONFLICT', 'Nur Entwürfe und abgelehnte Berichte können bearbeitet werden.');
             if (r.authorId !== userId && !(await this.perms.has(userId, 'reports.edit')))
-                throw new errors_1.AppError('PERMISSION_DENIED', 'You do not have permission to perform this action.');
+                throw new errors_1.AppError('PERMISSION_DENIED', 'Dafür fehlt dir die Berechtigung.');
             const upd = await tx.report.updateMany({ where: { id, version: d.version }, data: { currentVersion: { increment: 1 }, version: { increment: 1 }, ...(d.title ? { title: d.title } : {}) } });
             if (upd.count === 0)
-                throw new errors_1.AppError('CONFLICT', 'The record was modified by someone else. Reload and retry.');
+                throw new errors_1.AppError('CONFLICT', 'Der Datensatz wurde inzwischen von jemand anderem geändert. Bitte neu laden und erneut versuchen.');
             const next = r.currentVersion + 1;
             await tx.reportVersion.create({ data: { reportId: id, version: next, authorId: userId, changeSummary: d.changeSummary, content: d.content, contentHash: (0, exports.hashContent)(d.content) } });
             await this.timeline.add(tx, { entityType: 'Report', entityId: id, action: 'report.edited', summary: `Version ${next}: ${d.changeSummary}`, actorId: userId });
@@ -104,17 +104,17 @@ let ReportsService = class ReportsService {
         return this.prisma.$transaction(async (tx) => {
             const r = await tx.report.findUnique({ where: { id } });
             if (!r || !(await this.visible(userId, r)))
-                throw new errors_1.AppError('NOT_FOUND', 'Report not found.');
+                throw new errors_1.AppError('NOT_FOUND', 'Bericht nicht gefunden.');
             (0, transition_1.nextStatus)(shared_1.REPORT_TRANSITIONS, r.status, to);
             if (to === 'REJECTED' && !reason)
-                throw new errors_1.AppError('VALIDATION_FAILED', 'A reason is required to reject a report.');
+                throw new errors_1.AppError('VALIDATION_FAILED', 'Zum Ablehnen eines Berichts bitte eine Begründung angeben.');
             if ((to === 'APPROVED' || to === 'REJECTED') && r.authorId === userId)
-                throw new errors_1.AppError('CONFLICT', 'Authors cannot review their own reports.');
+                throw new errors_1.AppError('CONFLICT', 'Eigene Berichte kannst du nicht prüfen.');
             const after = await tx.report.update({ where: { id }, data: { status: to, version: { increment: 1 } } });
-            await this.timeline.add(tx, { entityType: 'Report', entityId: id, action: `report.${to.toLowerCase()}`, summary: `Report ${r.number} ${to}`, actorId: userId });
+            await this.timeline.add(tx, { entityType: 'Report', entityId: id, action: `report.${to.toLowerCase()}`, summary: `Bericht ${r.number}: ${(0, shared_1.statusLabel)(to)}`, actorId: userId });
             await this.audit.record(actor, { action: `report.${to.toLowerCase()}`, module: 'reports', entityType: 'Report', entityId: id, before: { status: r.status }, after: { status: to }, reason }, tx);
             if (to === 'APPROVED' || to === 'REJECTED' || to === 'UNDER_REVIEW') {
-                await tx.notification.create({ data: { userId: r.authorId, type: 'REPORT_REVIEW', title: `Report ${r.number} ${to}`, body: reason, entityType: 'Report', entityId: id } });
+                await tx.notification.create({ data: { userId: r.authorId, type: 'REPORT_REVIEW', title: `Bericht ${r.number}: ${(0, shared_1.statusLabel)(to)}`, body: reason, entityType: 'Report', entityId: id } });
             }
             return after;
         });

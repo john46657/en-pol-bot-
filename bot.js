@@ -76517,7 +76517,7 @@ function mapError(e) {
   if (e.status === 0) return errorReply("Das System ist gerade nicht erreichbar. Bitte sp\xE4ter erneut versuchen.");
   if (e.status === 401 && e.reason === "NOT_LINKED") return errorReply("Dein Discord-Konto ist nicht verkn\xFCpft. Erzeuge im Web (Men\xFC \u2192 \u201EDiscord verkn\xFCpfen\u201C) einen Code und nutze `/verknuepfen`.");
   if (e.status === 401) return errorReply(`Authentifizierung fehlgeschlagen.${rid}`);
-  if (e.status === 403) return errorReply(/[äöüß]|Server|Einheit|Leitstelle/.test(e.message) && !/^You do not have permission|^This route/.test(e.message) ? `Dazu hast du keine Berechtigung: ${e.message}` : "Dazu hast du keine Berechtigung.");
+  if (e.status === 403) return errorReply(/[äöüß]|Server|Einheit|Leitstelle/.test(e.message) && !/^You do not have permission|^This route|^Dafür fehlt dir die Berechtigung|steht dem Bot nicht zur Verfügung/.test(e.message) ? `Dazu hast du keine Berechtigung: ${e.message}` : "Dazu hast du keine Berechtigung.");
   if (e.status === 404) return errorReply("Nicht gefunden.");
   if (e.status === 429) return errorReply("Zu viele Anfragen \u2013 bitte kurz warten.");
   if (e.status === 400 || e.status === 409) return errorReply(`${e.message}${rid}`);
@@ -76722,7 +76722,7 @@ function checkAnswer(field2, value) {
 var DEFAULT_APPLICATION_MESSAGES = {
   accepted: "\u{1F389} Deine Bewerbung als `{applicationName}` ({number}) wurde von {user} **angenommen**!",
   denied: "Deine Bewerbung als `{applicationName}` ({number}) wurde von {user} leider **abgelehnt**. Du kannst dich sp\xE4ter gerne erneut bewerben.",
-  confirmation: "Bist du sicher, dass du dich bewerben m\xF6chtest?\n\nSobald du startest, schicke ich dir nacheinander **{questionCount} Fragen**. Du hast **{timeLimit}** Zeit, die Bewerbung abzuschlie\xDFen \u2013 sonst musst du neu starten. Abbrechen kannst du jederzeit \xFCber den Button.",
+  confirmation: "Bist du sicher, dass du dich bewerben m\xF6chtest?\n\nSobald du startest, schicke ich dir nacheinander **{questionCount} Fragen**. Du hast **{timeLimit}** Zeit, die Bewerbung abzuschlie\xDFen \u2013 sonst musst du neu starten. Abbrechen kannst du jederzeit, indem du **abbrechen** schreibst.",
   completion: "\u2705 Deine Bewerbung **{number}** ist eingegangen! Das Team pr\xFCft sie \u2013 die Entscheidung bekommst du hier per Direktnachricht."
 };
 function renderApplicationText(text, vars, appendReason = false) {
@@ -76826,7 +76826,7 @@ var guildOf = /* @__PURE__ */ new Map();
 var sweepSessions = (now = Date.now()) => {
   for (const [k, s] of sessions) if (s.expiresAt <= now) sessions.delete(k);
 };
-var CANCEL = { id: "quali:cancel", label: "Bewerbung abbrechen", style: "danger" };
+var CANCEL_WORD = "abbrechen";
 var getConfig = (api2, guildId) => api2.service("GET", `/bot/qualifications${guildId ? `?guildId=${guildId}` : ""}`);
 var field = (f2) => {
   const n = normalizeField(f2);
@@ -76841,20 +76841,20 @@ var questionMessage = (s) => {
   if (f2.type === "ROBLOX") {
     return { embed: { title: clip(s.unitName, 256), color: COLORS.info, description: clip(`${head}
 
-_Schreibe deinen **Roblox-Benutzernamen** (genau wie in Roblox, nicht den Anzeigenamen) hier in den Chat \u2013 ich pr\xFCfe, ob es das Konto gibt.${f2.required ? "" : ` Optional \u2013 \u201E${SKIP}\u201C zum \xDCberspringen.`}_`, 4e3) }, buttons: [CANCEL] };
+_Schreibe deinen **Roblox-Benutzernamen** (genau wie in Roblox, nicht den Anzeigenamen) hier in den Chat \u2013 ich pr\xFCfe, ob es das Konto gibt.${f2.required ? "" : ` Optional \u2013 \u201E${SKIP}\u201C zum \xDCberspringen.`}_`, 4e3) } };
   }
   if (f2.type === "TEXT") {
     const hints = [f2.minLength ? `mindestens ${f2.minLength} Zeichen` : "", !f2.required ? `optional \u2013 schreibe \u201E${SKIP}\u201C, um zu \xFCberspringen` : ""].filter(Boolean).join(" \xB7 ");
     return { embed: { title: clip(s.unitName, 256), color: COLORS.info, description: clip(`${head}
 
-_Antworte einfach mit einer Nachricht hier im Chat.${hints ? ` (${hints})` : ""}_`, 4e3) }, buttons: [CANCEL] };
+_Antworte einfach mit einer Nachricht hier im Chat.${hints ? ` (${hints})` : ""}_`, 4e3) } };
   }
   return {
     embed: { title: clip(s.unitName, 256), color: COLORS.info, description: clip(`${head}
 
 _W\xE4hle unten ${f2.multiple ? "eine oder mehrere Optionen" : "eine Option"} aus.${f2.required ? "" : " Optional."}_`, 4e3) },
     select: { id: `quali:ans:${i}`, placeholder: f2.multiple ? "Optionen w\xE4hlen \u2026" : "Option w\xE4hlen \u2026", min: 1, max: f2.multiple ? f2.options.length : 1, options: f2.options.map((o, j) => ({ label: clip(o.label, 100), value: String(j) })) },
-    buttons: [...f2.required ? [] : [{ id: `quali:skip:${i}`, label: "\xDCberspringen", style: "secondary" }], CANCEL]
+    buttons: f2.required ? [] : [{ id: `quali:skip:${i}`, label: "\xDCberspringen", style: "secondary" }]
   };
 };
 var answerText = (a) => a === null ? "\u2014 (\xFCbersprungen)" : Array.isArray(a) ? a.join(", ") : a;
@@ -76979,6 +76979,11 @@ async function handleDirectMessage(a) {
     await say(`\u23F0 Die Zeit f\xFCr deine Bewerbung ist abgelaufen (${formatMinutes(Math.round(limitMs(s.settings) / 6e4))}). Bitte starte sie \xFCber das Panel neu.`, COLORS.warning);
     return;
   }
+  if (a.content.trim().toLowerCase() === CANCEL_WORD) {
+    sessions.delete(a.userId);
+    await say("Bewerbung abgebrochen. Du kannst jederzeit \xFCber das Panel neu starten.", COLORS.neutral);
+    return;
+  }
   const q2 = s.questions[s.answers.length];
   if (q2.field.type !== "TEXT" && q2.field.type !== "ROBLOX") {
     await say("Bitte w\xE4hle die Antwort im **Men\xFC** der letzten Frage aus.", COLORS.warning);
@@ -76987,26 +76992,37 @@ async function handleDirectMessage(a) {
   }
   const text = a.content.trim();
   if (!text) {
-    await say("Bitte antworte mit Text.", COLORS.warning, [CANCEL]);
+    await say("Bitte antworte mit Text.", COLORS.warning);
     return;
   }
   if (!q2.field.required && text === SKIP) s.answers.push(null);
   else {
     const r = checkAnswer(q2.field, text);
     if (!r.ok) {
-      await say(r.error, COLORS.warning, [CANCEL]);
+      await say(r.error, COLORS.warning);
       return;
     }
     if (q2.field.type === "ROBLOX" && a.robloxCheck) {
       const rb = await a.robloxCheck(r.text).catch(() => void 0);
       if (rb === null) {
-        await say(`\u274C Den Roblox-Benutzer **${plain(r.text)}** gibt es nicht. Bitte pr\xFCfe die Schreibweise und schicke ihn noch einmal.`, COLORS.warning, [CANCEL]);
+        await say(`\u274C Den Roblox-Benutzer **${plain(r.text)}** gibt es nicht. Bitte pr\xFCfe die Schreibweise und schicke ihn noch einmal.`, COLORS.warning);
         return;
       }
       if (rb) {
-        await a.sendDm(a.userId, { embed: { title: clip(s.unitName, 256), color: COLORS.success, description: `\u2705 Roblox-Konto gefunden: **${plain(rb.name)}**${rb.displayName && rb.displayName !== rb.name ? ` (${plain(rb.displayName)})` : ""}`, ...rb.avatarUrl ? { thumbnail: rb.avatarUrl } : {} } });
-        s.answers.push(rb.name);
-      } else s.answers.push(r.text);
+        s.pendingRoblox = rb.name;
+        const i = s.answers.length;
+        await a.sendDm(a.userId, {
+          embed: { title: clip(s.unitName, 256), color: COLORS.info, description: `Ist das dein Roblox-Konto?
+
+**${plain(rb.name)}**${rb.displayName && rb.displayName !== rb.name ? `
+${plain(rb.displayName)}` : ""}
+
+_Falls nicht: auf \u201EAnderer Name\u201C tippen oder einfach den richtigen Namen schreiben._`, ...rb.avatarUrl ? { thumbnail: rb.avatarUrl } : {} },
+          buttons: [{ id: `quali:rb:${i}:yes`, label: "Ja, das bin ich", style: "success" }, { id: `quali:rb:${i}:no`, label: "Anderer Name", style: "secondary" }]
+        });
+        return;
+      }
+      s.answers.push(r.text);
     } else s.answers.push(text);
   }
   await proceed({ api: a.api, userId: a.userId, userName: a.userName, sendDm: a.sendDm, robloxLookup: a.robloxLookup, now }, s);
@@ -77029,7 +77045,7 @@ async function proceed(o, s) {
     }
     const last = s.questions[s.answers.length - 1];
     s.answers.pop();
-    if (last.field.type === "TEXT") await say("\u26A0\uFE0F Deine Bewerbung konnte gerade nicht gespeichert werden (System nicht erreichbar). Schicke deine **letzte Antwort** gleich noch einmal, um es erneut zu versuchen.", COLORS.warning, [CANCEL]);
+    if (last.field.type === "TEXT") await say("\u26A0\uFE0F Deine Bewerbung konnte gerade nicht gespeichert werden (System nicht erreichbar). Schicke deine **letzte Antwort** gleich noch einmal, um es erneut zu versuchen.", COLORS.warning);
     else {
       await say("\u26A0\uFE0F Deine Bewerbung konnte gerade nicht gespeichert werden (System nicht erreichbar). W\xE4hle deine letzte Antwort gleich noch einmal aus.", COLORS.warning);
       await o.sendDm(o.userId, questionMessage(s));
@@ -77107,6 +77123,28 @@ ${lines.join("\n") || "Keine Bewerbungen."}`, 4e3) }] };
         await c.platform.postPanel({ channelId: t.channelId, embed: { title: `\u{1F3AB} Ticket zur Bewerbung ${a.number}`, color: COLORS.info, description: `<@${a.discordId}>, das Team hat eine R\xFCckfrage zu deiner Bewerbung **${a.number}**${a.unitName ? ` (${plain(a.unitName)})` : ""}. Bitte antworte hier.` }, buttons: [{ id: "support:close", label: "Ticket schlie\xDFen", emoji: "\u{1F512}", style: "danger" }] }).catch(() => void 0);
         return okReply(`Ticket ge\xF6ffnet: <#${t.channelId}>`);
       }
+      if (action === "rb") {
+        const s2 = sessions.get(c.discordId);
+        if (!s2 || s2.expiresAt <= Date.now()) return errorReply("Du hast gerade keine laufende Bewerbung. Starte sie \xFCber das Panel neu.");
+        const i = Number(rest[0]);
+        if (i !== s2.answers.length || !s2.pendingRoblox) return errorReply("Diese Frage hast du schon beantwortet.");
+        const q2 = s2.questions[i];
+        if (rest[1] !== "yes") {
+          s2.pendingRoblox = void 0;
+          return { ...okReply("Okay."), update: { embeds: [{ title: clip(s2.unitName, 256), color: COLORS.neutral, description: clip(`**${i + 1}/${s2.questions.length}.** ${plain(q2.text)}
+
+Schreib deinen Roblox-Benutzernamen bitte noch einmal (genau wie in Roblox).`, 4e3) }] } };
+        }
+        if (!c.platform) return errorReply("Direktnachrichten sind hier nicht verf\xFCgbar.");
+        const name = s2.pendingRoblox;
+        s2.pendingRoblox = void 0;
+        s2.answers.push(name);
+        const platform2 = c.platform;
+        await proceed({ api: c.api, userId: c.discordId, userName: c.userName ?? c.discordId, sendDm: (u, m) => platform2.sendDm(u, m), robloxLookup: c.robloxLookup, now: Date.now() }, s2);
+        return { ...okReply("Gespeichert."), update: { embeds: [{ title: clip(s2.unitName, 256), color: COLORS.success, description: clip(`**${i + 1}/${s2.questions.length}.** ${plain(q2.text)}
+
+\u2705 ${plain(name)}`, 4e3) }] } };
+      }
       if (action === "ans" || action === "skip") {
         const s2 = sessions.get(c.discordId);
         if (!s2 || s2.expiresAt <= Date.now()) return errorReply("Du hast gerade keine laufende Bewerbung. Starte sie \xFCber das Panel neu.");
@@ -77173,7 +77211,7 @@ ${lines.join("\n") || "Keine Bewerbungen."}`, 4e3) }] };
 var UUID = /^[0-9a-f-]{36}$/;
 var emojiOf = (e) => e && e.length <= 64 ? e : void 0;
 function fail(e) {
-  if (e instanceof BotApiError && [400, 403, 404, 409].includes(e.status) && e.message && !/^You |permission/i.test(e.message)) return errorReply(clip(e.message, 500));
+  if (e instanceof BotApiError && [400, 403, 404, 409].includes(e.status) && e.message && !/^You |permission|^Dafür fehlt dir die Berechtigung|steht dem Bot nicht zur Verfügung/i.test(e.message)) return errorReply(clip(e.message, 500));
   return mapError(e);
 }
 async function run(c, r, text) {

@@ -102,7 +102,7 @@ let AuthController = class AuthController {
     async login(body, req, res) {
         // Ist „Mit Discord anmelden“ eingerichtet, gibt es nur noch Discord (Notfall: PASSWORD_LOGIN=true)
         if (!this.discord.passwordLoginAllowed())
-            throw new errors_1.AppError('PERMISSION_DENIED', 'Password login is disabled – sign in with Discord.');
+            throw new errors_1.AppError('PERMISSION_DENIED', 'Die Anmeldung mit Passwort ist deaktiviert – bitte mit Discord anmelden.');
         const r = await this.auth.login(body.username, body.password, { ip: req.ip, userAgent: req.headers['user-agent'], requestId: req.requestId });
         if ('twoFactorRequired' in r)
             return r;
@@ -112,7 +112,7 @@ let AuthController = class AuthController {
     /** Zweiter Anmeldeschritt (Code aus der Authenticator-App oder Wiederherstellungscode). */
     async login2fa(body, req, res) {
         if (!this.discord.passwordLoginAllowed())
-            throw new errors_1.AppError('PERMISSION_DENIED', 'Password login is disabled – sign in with Discord.');
+            throw new errors_1.AppError('PERMISSION_DENIED', 'Die Anmeldung mit Passwort ist deaktiviert – bitte mit Discord anmelden.');
         const r = await this.auth.loginTwoFactor(body.ticket, body.code, { ip: req.ip, userAgent: req.headers['user-agent'], requestId: req.requestId });
         res.cookie(guards_1.SESSION_COOKIE, r.token, { httpOnly: true, sameSite: 'strict', secure: this.secure(), expires: r.expiresAt, path: '/' });
         return r.user;

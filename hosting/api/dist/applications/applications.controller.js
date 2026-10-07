@@ -26,7 +26,7 @@ const zod_pipe_1 = require("../common/zod.pipe");
 const roblox_service_1 = require("../persons/roblox.service");
 const pagination_1 = require("../common/pagination");
 const submit = zod_1.z.object({ robloxUsername: zod_1.z.string().trim().min(1).max(64), robloxUserId: zod_1.z.string().max(20).optional(), answers: zod_1.z.record(zod_1.z.string(), zod_1.z.union([zod_1.z.string().max(5000), zod_1.z.array(zod_1.z.string().max(100)).max(25)])) });
-const move = zod_1.z.object({ status: zod_1.z.enum(shared_1.APPLICATION_STATUSES).refine((s) => s !== 'ACCEPTED' && s !== 'REJECTED', 'Use the decide endpoint.'), reason: zod_1.z.string().trim().min(3).max(1000).optional() });
+const move = zod_1.z.object({ status: zod_1.z.enum(shared_1.APPLICATION_STATUSES).refine((s) => s !== 'ACCEPTED' && s !== 'REJECTED', 'Annehmen oder Ablehnen bitte über die Entscheidung.'), reason: zod_1.z.string().trim().min(3).max(1000).optional() });
 /** `OPEN` = alle noch nicht entschiedenen (eingereicht, Prüfung, Gespräch, Entscheidung offen). */
 const listQ = pagination_1.pageQuery.extend({ status: zod_1.z.union([zod_1.z.enum(shared_1.APPLICATION_STATUSES), zod_1.z.literal('OPEN')]).optional(), guildId: zod_1.z.string().regex(/^\d{15,25}$/).optional() });
 const guildQ = zod_1.z.object({ guildId: zod_1.z.string().regex(/^\d{15,25}$/).optional() });

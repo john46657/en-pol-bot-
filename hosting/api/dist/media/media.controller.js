@@ -29,7 +29,7 @@ let MediaController = class MediaController {
     }
     upload(a, file, b) {
         if (!file)
-            throw new errors_1.AppError('VALIDATION_FAILED', 'file is required.');
+            throw new errors_1.AppError('VALIDATION_FAILED', 'Bitte eine Datei auswählen.');
         return this.m.upload(a, file, b);
     }
     list(a, q) { return this.m.list(a, q.linkedType, q.linkedId); }

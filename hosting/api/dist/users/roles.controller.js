@@ -19,7 +19,7 @@ const zod_1 = require("zod");
 const roles_service_1 = require("./roles.service");
 const decorators_1 = require("../authz/decorators");
 const zod_pipe_1 = require("../common/zod.pipe");
-const discordId = zod_1.z.string().regex(/^\d{15,25}$/, 'Discord role ID (15–25 digits)');
+const discordId = zod_1.z.string().regex(/^\d{15,25}$/, 'Discord-Rollen-ID (15–25 Ziffern)');
 const fields = {
     description: zod_1.z.string().max(500).nullable().optional(),
     color: zod_1.z.string().regex(/^#[0-9a-fA-F]{6}$/).nullable().optional(),

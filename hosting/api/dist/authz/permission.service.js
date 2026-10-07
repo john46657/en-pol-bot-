@@ -57,7 +57,7 @@ let PermissionService = class PermissionService {
     }
     async assert(userId, permission) {
         if (!(await this.has(userId, permission)))
-            throw new errors_1.AppError('PERMISSION_DENIED', 'You do not have permission to perform this action.');
+            throw new errors_1.AppError('PERMISSION_DENIED', 'Dafür fehlt dir die Berechtigung.');
     }
     async effective(userId) {
         return (0, shared_1.effectivePermissions)(await this.contextFor(userId));
@@ -81,7 +81,7 @@ let PermissionService = class PermissionService {
         if (await this.isOwner(actorId))
             return;
         if ((await this.rankOf(actorId)) >= rolePriority)
-            throw new errors_1.AppError('PERMISSION_DENIED', `You can only manage roles ranked below your own${roleName ? ` ("${roleName}" is not)` : ''}.`);
+            throw new errors_1.AppError('PERMISSION_DENIED', `Du kannst nur Rollen verwalten, die unter deinem eigenen Rang stehen${roleName ? ` („${roleName}“ tut das nicht)` : ''}.`);
     }
     /** Andere Benutzer nur verwalten, wenn man sie im Rang übertrifft (Benutzer ohne Rolle: jeder mit Rang). */
     async assertOutranksUser(actorId, targetId) {
@@ -89,7 +89,7 @@ let PermissionService = class PermissionService {
             return;
         const [a, t] = await Promise.all([this.rankOf(actorId), this.rankOf(targetId)]);
         if (a === exports.NO_RANK || (t !== exports.NO_RANK && a >= t))
-            throw new errors_1.AppError('PERMISSION_DENIED', 'You can only manage users ranked below you.');
+            throw new errors_1.AppError('PERMISSION_DENIED', 'Du kannst nur Benutzer verwalten, die unter deinem Rang stehen.');
     }
     /** Erlauben darf man nur, was man selbst besitzt (keine Rechteausweitung über den Editor). */
     async assertCanDelegate(actorId, permissions) {
@@ -98,7 +98,7 @@ let PermissionService = class PermissionService {
         const ctx = await this.contextFor(actorId);
         const bad = permissions.filter((p) => !(0, shared_1.canDelegate)(ctx, p));
         if (bad.length)
-            throw new errors_1.AppError('PERMISSION_DENIED', `You cannot grant permissions you do not have yourself: ${bad.slice(0, 5).join(', ')}.`);
+            throw new errors_1.AppError('PERMISSION_DENIED', `Du kannst keine Berechtigungen vergeben, die du selbst nicht hast: ${bad.slice(0, 5).join(', ')}.`);
     }
 };
 exports.PermissionService = PermissionService;
