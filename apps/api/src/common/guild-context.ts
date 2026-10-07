@@ -22,4 +22,18 @@ export class GuildContextMiddleware implements NestMiddleware {
 
 /** Zentrale Einstellungen, die je Server überschrieben werden können (`<key>@<guildId>`, sonst gilt der gemeinsame Wert). */
 export const SERVER_SCOPED_SETTINGS = ['team.structure', 'team.rankOrder', 'dashboard.defaultLayout', 'theme.accent', 'theme.customAccents', 'org.name', 'teamchance'] as const;
-export const scopedKey = (key: string, guildId: string | null) => (guildId && (SERVER_SCOPED_SETTINGS as readonly string[]).includes(key) ? `${key}@${guildId}` : key);
+export const scopedKey = (key: string, guildId: string | null) => { const g = settingsGuild(guildId); return g && (SERVER_SCOPED_SETTINGS as readonly string[]).includes(key) ? `${key}@${g}` : key; };
+
+// ---- Server-Verbund (Administration → Server-Verbund; gesetzt vom ServerLinksService) ----
+let settingsOf: (guildId: string) => string = (g) => g;
+let spaceOf: (guildId: string) => string | null = () => null;
+export function setServerLinkResolvers(settings: (guildId: string) => string, space: (guildId: string) => string | null) { settingsOf = settings; spaceOf = space; }
+/** Server, dessen Einstellungen gelten: in einer Gruppe mit „Einstellungen teilen“ der Haupt-Server der Gruppe, sonst der Server selbst. */
+export const settingsGuild = (guildId: string | null | undefined): string | null => (guildId ? settingsOf(guildId) : null);
+/**
+ * Akten-Bereich (Personen/Fahrzeuge, Spalte `serverId`): `null` = gemeinsamer Bestand (Standard), sonst eigener Bereich
+ * des Servers bzw. der Gruppe. `undefined` = kein Server gewählt („Alle Server“) → kein Filter.
+ */
+export const recordSpace = (guildId: string | null | undefined = currentGuild()): string | null | undefined => (guildId ? spaceOf(guildId) : undefined);
+/** Prisma-Filter für Akten des gewählten Servers (ohne Server: alle). */
+export const recordWhere = (guildId: string | null | undefined = currentGuild()) => { const s = recordSpace(guildId); return s === undefined ? {} : { serverId: s }; };

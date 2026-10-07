@@ -10,6 +10,7 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.VehiclesService = void 0;
+const guild_context_1 = require("../common/guild-context");
 const common_1 = require("@nestjs/common");
 const prisma_service_1 = require("../prisma/prisma.service");
 const audit_service_1 = require("../audit/audit.service");
@@ -30,7 +31,7 @@ let VehiclesService = class VehiclesService {
         this.studio = studio;
     }
     async list(p) {
-        const where = p.q ? { OR: [{ plate: { contains: normPlate(p.q) } }, { model: { contains: p.q, mode: 'insensitive' } }] } : {};
+        const where = { ...(0, guild_context_1.recordWhere)(), ...(p.q ? { OR: [{ plate: { contains: normPlate(p.q) } }, { model: { contains: p.q, mode: 'insensitive' } }] } : {}) };
         const [items, total] = await Promise.all([
             this.prisma.vehicle.findMany({ where, include: { owner: { select: { id: true, robloxUsername: true } } }, orderBy: { plate: 'asc' }, ...(0, pagination_1.skipTake)(p) }),
             this.prisma.vehicle.count({ where }),
@@ -48,12 +49,13 @@ let VehiclesService = class VehiclesService {
         const { custom: _c, ...rest } = d;
         void _c;
         const plate = normPlate(d.plate);
-        if (await this.prisma.vehicle.findFirst({ where: { plate } }))
+        const serverId = (0, guild_context_1.recordSpace)() ?? null;
+        if (await this.prisma.vehicle.findFirst({ where: { plate, serverId } }))
             throw new errors_1.AppError('CONFLICT', 'Es gibt schon ein Fahrzeug mit diesem Kennzeichen.');
         return this.prisma.$transaction(async (tx) => {
             if (d.ownerId && !(await tx.person.findUnique({ where: { id: d.ownerId } })))
                 throw new errors_1.AppError('NOT_FOUND', 'Halter nicht gefunden.');
-            const v = await tx.vehicle.create({ data: { ...rest, plate, custom: custom } });
+            const v = await tx.vehicle.create({ data: { ...rest, plate, serverId, custom: custom } });
             await this.timeline.add(tx, { entityType: 'Vehicle', entityId: v.id, action: 'vehicle.created', summary: `Fahrzeug ${plate} erfasst`, actorId: actor.userId });
             if (d.ownerId)
                 await this.timeline.add(tx, { entityType: 'Person', entityId: d.ownerId, action: 'vehicle.linked', summary: `Fahrzeug ${plate} als Besitzer verknüpft`, actorId: actor.userId });

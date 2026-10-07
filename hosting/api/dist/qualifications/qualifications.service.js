@@ -10,6 +10,7 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.QualificationsService = void 0;
+const guild_context_1 = require("../common/guild-context");
 const common_1 = require("@nestjs/common");
 const prisma_service_1 = require("../prisma/prisma.service");
 const audit_service_1 = require("../audit/audit.service");
@@ -41,7 +42,7 @@ let QualificationsService = class QualificationsService {
         this.roblox = roblox;
     }
     /** Einstellungen eines Servers (`@<guildId>`) – ohne eigene gilt die gemeinsame Grundeinstellung. */
-    keyOf(base, guildId) { return guildId ? `${base}@${guildId}` : base; }
+    keyOf(base, guildId) { const g = (0, guild_context_1.settingsGuild)(guildId); return g ? `${base}@${g}` : base; } // Gruppe mit geteilten Einstellungen → Haupt-Server
     async read(base, guildId) {
         if (guildId) {
             const own = await this.prisma.systemSetting.findUnique({ where: { key: this.keyOf(base, guildId) } });

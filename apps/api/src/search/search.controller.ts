@@ -9,7 +9,7 @@ import type { AuthUser } from '../common/request-context';
 import { zodBody } from '../common/zod.pipe';
 import { SupportTicketsService } from '../support-tickets/tickets.service';
 import { DiscordLiveService } from '../discord/discord-live.service';
-import { currentGuild } from '../common/guild-context';
+import { currentGuild, recordWhere } from '../common/guild-context';
 
 const q = z.object({ q: z.string().trim().min(2).max(64) });
 interface Hit { type: string; id: string; label: string; sub?: string }
@@ -31,8 +31,8 @@ export class SearchController {
     const upper = term.toUpperCase();
     const take = 8;
     const jobs: Promise<Hit[]>[] = [];
-    if (allowed('persons.view')) jobs.push(this.prisma.person.findMany({ where: { status: 'ACTIVE', OR: [{ robloxUsername: ci(term) }, { robloxUserId: term }, { aliases: { has: term } }] }, take }).then((r) => r.map((x) => ({ type: 'person', id: x.id, label: x.robloxUsername, sub: x.robloxUserId ?? undefined }))));
-    if (allowed('vehicles.view')) jobs.push(this.prisma.vehicle.findMany({ where: { plate: { contains: upper.replace(/\s+/g, '') } }, take }).then((r) => r.map((x) => ({ type: 'vehicle', id: x.id, label: x.plate, sub: x.model ?? undefined }))));
+    if (allowed('persons.view')) jobs.push(this.prisma.person.findMany({ where: { ...recordWhere(), status: 'ACTIVE', OR: [{ robloxUsername: ci(term) }, { robloxUserId: term }, { aliases: { has: term } }] }, take }).then((r) => r.map((x) => ({ type: 'person', id: x.id, label: x.robloxUsername, sub: x.robloxUserId ?? undefined }))));
+    if (allowed('vehicles.view')) jobs.push(this.prisma.vehicle.findMany({ where: { ...recordWhere(), plate: { contains: upper.replace(/\s+/g, '') } }, take }).then((r) => r.map((x) => ({ type: 'vehicle', id: x.id, label: x.plate, sub: x.model ?? undefined }))));
     if (allowed('incidents.view')) jobs.push(this.prisma.incident.findMany({ where: { OR: [{ number: { contains: upper } }, { title: ci(term) }] }, take }).then((r) => r.map((x) => ({ type: 'incident', id: x.id, label: x.number, sub: x.title }))));
     if (allowed('reports.view')) {
       const all = allowed('reports.review') || allowed('reports.approve');

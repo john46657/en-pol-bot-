@@ -10,6 +10,7 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.WelcomeService = exports.welcomeConfigSchema = void 0;
+const guild_context_1 = require("../common/guild-context");
 const common_1 = require("@nestjs/common");
 const zod_1 = require("zod");
 const shared_1 = require("@enrp/shared");
@@ -60,7 +61,7 @@ let WelcomeService = class WelcomeService {
         this.tickets = tickets;
         this.media = media;
     }
-    keyOf(guildId) { return guildId ? `${KEY}@${guildId}` : KEY; }
+    keyOf(guildId) { const g = (0, guild_context_1.settingsGuild)(guildId); return g ? `${KEY}@${g}` : KEY; } // Gruppe mit geteilten Einstellungen → Haupt-Server
     /** `own` = dieser Server hat eigene Einstellungen (sonst gilt die gemeinsame). */
     async config(guildId) {
         const own = guildId ? await this.prisma.systemSetting.findUnique({ where: { key: this.keyOf(guildId) } }) : null;

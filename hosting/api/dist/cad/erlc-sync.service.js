@@ -16,6 +16,7 @@ const prisma_service_1 = require("../prisma/prisma.service");
 const audit_service_1 = require("../audit/audit.service");
 const timeline_service_1 = require("../timeline/timeline.service");
 const realtime_service_1 = require("../realtime/realtime.service");
+const guild_context_1 = require("../common/guild-context");
 const SYSTEM = { userId: null };
 const NOTE = 'Automatisch aus ER:LC übernommen.';
 const lc = (s) => s.trim().toLowerCase();
@@ -38,17 +39,19 @@ let ErlcSyncService = class ErlcSyncService {
         this.timeline = timeline;
         this.rt = rt;
     }
-    async sync(serverId, snap) {
+    /** `guildId`: Discord-Server des ER:LC-Servers → Akten-Bereich (Server-Verbund); ohne = gemeinsamer Bestand. */
+    async sync(serverId, snap, guildId = null) {
+        const space = (0, guild_context_1.recordSpace)(guildId) ?? null;
         const players = (snap.players ?? []).filter((p) => p.name && p.id && /^\d{1,20}$/.test(p.id));
         const vehicles = (snap.vehicles ?? []).filter((v) => v.plate && v.plate.trim().length >= 2);
-        const sig = JSON.stringify([players.map((p) => `${p.id}:${p.name}`).sort(), vehicles.map((v) => `${v.plate}|${v.name}|${v.owner}|${v.colorName}`).sort()]);
+        const sig = JSON.stringify([space, players.map((p) => `${p.id}:${p.name}`).sort(), vehicles.map((v) => `${v.plate}|${v.name}|${v.owner}|${v.colorName}`).sort()]);
         if (this.last.get(serverId) === sig)
             return { persons: 0, vehicles: 0 };
         let persons = 0, cars = 0;
         try {
             // ---- Personen ----
             const ids = players.map((p) => p.id);
-            const known = await this.prisma.person.findMany({ where: { OR: [{ robloxUserId: { in: ids } }, { robloxUsername: { in: [...players.map((p) => p.name), ...vehicles.map((v) => v.owner)], mode: 'insensitive' } }] }, select: { id: true, robloxUserId: true, robloxUsername: true } });
+            const known = await this.prisma.person.findMany({ where: { serverId: space, OR: [{ robloxUserId: { in: ids } }, { robloxUsername: { in: [...players.map((p) => p.name), ...vehicles.map((v) => v.owner)], mode: 'insensitive' } }] }, select: { id: true, robloxUserId: true, robloxUsername: true } });
             const byId = new Map(known.filter((k) => k.robloxUserId).map((k) => [k.robloxUserId, k]));
             const byName = new Map(known.map((k) => [lc(k.robloxUsername), k]));
             for (const p of players) {
@@ -62,7 +65,7 @@ let ErlcSyncService = class ErlcSyncService {
                     continue;
                 }
                 const created = await this.prisma.$transaction(async (tx) => {
-                    const c = await tx.person.create({ data: { robloxUsername: p.name, robloxUserId: p.id, notes: NOTE } });
+                    const c = await tx.person.create({ data: { serverId: space, robloxUsername: p.name, robloxUserId: p.id, notes: NOTE } });
                     await this.timeline.add(tx, { entityType: 'Person', entityId: c.id, action: 'person.created', summary: 'Personenakte aus ER:LC angelegt', actorId: null });
                     await this.audit.record(SYSTEM, { action: 'person.create', module: 'persons', entityType: 'Person', entityId: c.id, after: { robloxUsername: c.robloxUsername, robloxUserId: c.robloxUserId, source: 'ERLC' } }, tx);
                     return c;
@@ -75,7 +78,7 @@ let ErlcSyncService = class ErlcSyncService {
             }
             // ---- Fahrzeuge ----
             const plates = vehicles.map((v) => v.plate.trim());
-            const existing = await this.prisma.vehicle.findMany({ where: { plate: { in: plates, mode: 'insensitive' } }, select: { id: true, plate: true, model: true, color: true, ownerId: true, erlcReference: true } });
+            const existing = await this.prisma.vehicle.findMany({ where: { serverId: space, plate: { in: plates, mode: 'insensitive' } }, select: { id: true, plate: true, model: true, color: true, ownerId: true, erlcReference: true } });
             const byPlate = new Map(existing.map((v) => [lc(v.plate), v]));
             for (const v of vehicles) {
                 const plate = v.plate.trim().slice(0, 16);
@@ -90,7 +93,7 @@ let ErlcSyncService = class ErlcSyncService {
                     continue;
                 }
                 await this.prisma.$transaction(async (tx) => {
-                    const c = await tx.vehicle.create({ data: { plate, ...data, notes: NOTE } });
+                    const c = await tx.vehicle.create({ data: { serverId: space, plate, ...data, notes: NOTE } });
                     await this.audit.record(SYSTEM, { action: 'vehicle.create', module: 'vehicles', entityType: 'Vehicle', entityId: c.id, after: { plate, model: c.model, owner: v.owner, source: 'ERLC' } }, tx);
                 }).then(() => { cars++; }, (e) => { if (!(e instanceof client_1.Prisma.PrismaClientKnownRequestError && e.code === 'P2002'))
                     throw e; });
@@ -111,14 +114,14 @@ let ErlcSyncService = class ErlcSyncService {
         if (kind === 'persons') {
             const rows = servers.flatMap((s) => (s.snapshot?.players ?? []).map((p) => ({ serverName: s.name, name: p.name, robloxUserId: p.id, team: p.team, callsign: p.callsign, wantedStars: p.wantedStars })));
             const ids = rows.map((r) => r.robloxUserId).filter((x) => !!x);
-            const people = await this.prisma.person.findMany({ where: { OR: [{ robloxUserId: { in: ids } }, { robloxUsername: { in: rows.map((r) => r.name), mode: 'insensitive' } }] }, select: { id: true, robloxUserId: true, robloxUsername: true } });
+            const people = await this.prisma.person.findMany({ where: { ...(0, guild_context_1.recordWhere)(guildId), OR: [{ robloxUserId: { in: ids } }, { robloxUsername: { in: rows.map((r) => r.name), mode: 'insensitive' } }] }, select: { id: true, robloxUserId: true, robloxUsername: true } });
             return { servers: meta, items: rows.map((r) => ({ ...r, personId: people.find((x) => (r.robloxUserId && x.robloxUserId === r.robloxUserId) || lc(x.robloxUsername) === lc(r.name))?.id ?? null })) };
         }
         const rows = servers.flatMap((s) => (s.snapshot?.vehicles ?? []).map((v) => ({ serverName: s.name, name: v.name, owner: v.owner, plate: v.plate, colorName: v.colorName, colorHex: v.colorHex })));
         const plates = rows.map((r) => r.plate).filter((x) => !!x);
         const [cars, owners] = await Promise.all([
-            this.prisma.vehicle.findMany({ where: { plate: { in: plates, mode: 'insensitive' } }, select: { id: true, plate: true } }),
-            this.prisma.person.findMany({ where: { robloxUsername: { in: rows.map((r) => r.owner), mode: 'insensitive' } }, select: { id: true, robloxUsername: true } }),
+            this.prisma.vehicle.findMany({ where: { ...(0, guild_context_1.recordWhere)(guildId), plate: { in: plates, mode: 'insensitive' } }, select: { id: true, plate: true } }),
+            this.prisma.person.findMany({ where: { ...(0, guild_context_1.recordWhere)(guildId), robloxUsername: { in: rows.map((r) => r.owner), mode: 'insensitive' } }, select: { id: true, robloxUsername: true } }),
         ]);
         return { servers: meta, items: rows.map((r) => ({ ...r, vehicleId: r.plate ? cars.find((c) => lc(c.plate) === lc(r.plate))?.id ?? null : null, ownerPersonId: owners.find((o) => lc(o.robloxUsername) === lc(r.owner))?.id ?? null })) };
     }

@@ -49,9 +49,9 @@ export declare class VehiclesController {
             updatedAt: Date;
             version: number;
             color: string | null;
+            serverId: string | null;
             status: string;
             custom: import("@prisma/client/runtime/library").JsonValue | null;
-            serverId: string | null;
             notes: string | null;
             plate: string;
             model: string | null;
@@ -71,10 +71,10 @@ export declare class VehiclesController {
                 robloxUsername: string;
                 updatedAt: Date;
                 version: number;
+                serverId: string | null;
                 createdById: string | null;
                 status: string;
                 custom: import("@prisma/client/runtime/library").JsonValue | null;
-                serverId: string | null;
                 aliases: string[];
                 notes: string | null;
             } | null;
@@ -84,9 +84,9 @@ export declare class VehiclesController {
             updatedAt: Date;
             version: number;
             color: string | null;
+            serverId: string | null;
             status: string;
             custom: import("@prisma/client/runtime/library").JsonValue | null;
-            serverId: string | null;
             notes: string | null;
             plate: string;
             model: string | null;
@@ -109,9 +109,9 @@ export declare class VehiclesController {
         updatedAt: Date;
         version: number;
         color: string | null;
+        serverId: string | null;
         status: string;
         custom: import("@prisma/client/runtime/library").JsonValue | null;
-        serverId: string | null;
         notes: string | null;
         plate: string;
         model: string | null;
@@ -124,9 +124,9 @@ export declare class VehiclesController {
         updatedAt: Date;
         version: number;
         color: string | null;
+        serverId: string | null;
         status: string;
         custom: import("@prisma/client/runtime/library").JsonValue | null;
-        serverId: string | null;
         notes: string | null;
         plate: string;
         model: string | null;

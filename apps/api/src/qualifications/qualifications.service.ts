@@ -1,3 +1,4 @@
+import { settingsGuild } from '../common/guild-context';
 import { Injectable } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
@@ -26,7 +27,7 @@ export class QualificationsService {
   constructor(private readonly prisma: PrismaService, private readonly audit: AuditService, private readonly discord: DiscordService, private readonly roblox: RobloxService) {}
 
   /** Einstellungen eines Servers (`@<guildId>`) – ohne eigene gilt die gemeinsame Grundeinstellung. */
-  private keyOf(base: string, guildId?: string | null) { return guildId ? `${base}@${guildId}` : base; }
+  private keyOf(base: string, guildId?: string | null) { const g = settingsGuild(guildId); return g ? `${base}@${g}` : base; } // Gruppe mit geteilten Einstellungen → Haupt-Server
   private async read(base: string, guildId?: string | null) {
     if (guildId) { const own = await this.prisma.systemSetting.findUnique({ where: { key: this.keyOf(base, guildId) } }); if (own) return { value: own.value, own: true }; }
     return { value: (await this.prisma.systemSetting.findUnique({ where: { key: base } }))?.value, own: false };

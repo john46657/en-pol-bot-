@@ -1,3 +1,4 @@
+import { settingsGuild } from '../common/guild-context';
 import { TeamChanceService } from '../teamchance/teamchance.service';
 import { NotifyService } from '../notifications/notify.service';
 import { Injectable } from '@nestjs/common';
@@ -33,7 +34,8 @@ export class ApplicationsService {
 
   /** Formular eines Servers (`application.form@<guildId>`), sonst das gemeinsame. */
   async form(guildId?: string | null): Promise<FormField[]> {
-    const own = guildId ? await this.prisma.systemSetting.findUnique({ where: { key: `application.form@${guildId}` } }) : null;
+    const g = settingsGuild(guildId);
+    const own = g ? await this.prisma.systemSetting.findUnique({ where: { key: `application.form@${g}` } }) : null;
     const s = own ?? await this.prisma.systemSetting.findUnique({ where: { key: 'application.form' } });
     return (s?.value as unknown as FormField[] | undefined) ?? DEFAULT_FORM;
   }
@@ -88,7 +90,8 @@ export class ApplicationsService {
 
   /** Einstellungen der Polizei-Bewerbung (Qualifications/Applications → Setup). */
   async police(guildId?: string | null) {
-    const own = guildId ? await this.prisma.systemSetting.findUnique({ where: { key: `qualifications.config@${guildId}` } }) : null;
+    const g = settingsGuild(guildId);
+    const own = g ? await this.prisma.systemSetting.findUnique({ where: { key: `qualifications.config@${g}` } }) : null;
     const v = (own ?? await this.prisma.systemSetting.findUnique({ where: { key: 'qualifications.config' } }))?.value as { police?: unknown } | undefined;
     const p = policeSchema.safeParse(v?.police ?? {});
     return p.success ? p.data : policeSchema.parse({});

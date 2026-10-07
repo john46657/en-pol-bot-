@@ -10,6 +10,7 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.PersonsService = void 0;
+const guild_context_1 = require("../common/guild-context");
 const common_1 = require("@nestjs/common");
 const shared_1 = require("@enrp/shared");
 const prisma_service_1 = require("../prisma/prisma.service");
@@ -37,6 +38,7 @@ let PersonsService = class PersonsService {
     }
     async list(p, includeArchived = false) {
         const where = {
+            ...(0, guild_context_1.recordWhere)(), // Akten-Bereich des gewählten Servers (Server-Verbund)
             ...(includeArchived ? {} : { status: 'ACTIVE' }),
             ...(p.q ? { OR: [{ robloxUsername: { contains: p.q, mode: 'insensitive' } }, { robloxUserId: p.q }, { aliases: { has: p.q } }] } : {}),
         };
@@ -64,7 +66,7 @@ let PersonsService = class PersonsService {
     /** Mögliche Duplikate: gleiche Roblox-ID (hart, Unique) oder gleicher Username (weich → Hinweis, kein Auto-Merge). */
     async findDuplicates(robloxUsername, robloxUserId) {
         return this.prisma.person.findMany({
-            where: { OR: [...(robloxUserId ? [{ robloxUserId }] : []), { robloxUsername: { equals: robloxUsername, mode: 'insensitive' } }] },
+            where: { ...(0, guild_context_1.recordWhere)(), OR: [...(robloxUserId ? [{ robloxUserId }] : []), { robloxUsername: { equals: robloxUsername, mode: 'insensitive' } }] },
             select: { id: true, robloxUsername: true, robloxUserId: true, status: true },
         });
     }
@@ -83,7 +85,7 @@ let PersonsService = class PersonsService {
         if (hard)
             throw new errors_1.AppError('CONFLICT', 'Es gibt schon eine Person mit dieser Roblox-Benutzer-ID.', { existingId: hard.id });
         const person = await this.prisma.$transaction(async (tx) => {
-            const created = await tx.person.create({ data: { robloxUsername: d.robloxUsername, robloxUserId: d.robloxUserId ?? null, aliases: d.aliases ?? [], notes: d.notes, custom: custom, createdById: actor.userId } });
+            const created = await tx.person.create({ data: { serverId: (0, guild_context_1.recordSpace)() ?? null, robloxUsername: d.robloxUsername, robloxUserId: d.robloxUserId ?? null, aliases: d.aliases ?? [], notes: d.notes, custom: custom, createdById: actor.userId } });
             await this.timeline.add(tx, { entityType: 'Person', entityId: created.id, action: 'person.created', summary: 'Personenakte angelegt', actorId: actor.userId });
             await this.audit.record(actor, { action: 'person.create', module: 'persons', entityType: 'Person', entityId: created.id, after: created }, tx);
             return created;

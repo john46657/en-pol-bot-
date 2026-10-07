@@ -17,7 +17,8 @@ export declare class ErlcSyncService {
     /** Letzter Stand je Server – unveränderte Abrufe kosten keine Datenbank-Abfrage. */
     private readonly last;
     constructor(prisma: PrismaService, audit: AuditService, timeline: TimelineService, rt: RealtimeService);
-    sync(serverId: string, snap: ErlcSnapshot): Promise<{
+    /** `guildId`: Discord-Server des ER:LC-Servers → Akten-Bereich (Server-Verbund); ohne = gemeinsamer Bestand. */
+    sync(serverId: string, snap: ErlcSnapshot, guildId?: string | null): Promise<{
         persons: number;
         vehicles: number;
     }>;

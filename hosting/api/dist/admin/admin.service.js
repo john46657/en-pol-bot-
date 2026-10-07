@@ -62,8 +62,11 @@ let AdminService = class AdminService {
         return { settings: Object.fromEntries(rows.map((r) => [r.key, r.value])), allowedKeys: Object.keys(exports.SETTING_SCHEMAS), serverScoped: guild_context_1.SERVER_SCOPED_SETTINGS };
     }
     /** `key@<guildId>`: Server-eigener Wert (nur für Einstellungen, die je Server getrennt sein dürfen). */
-    async setSetting(actor, key, value) {
-        const [base, guild] = key.split('@');
+    async setSetting(actor, rawKey, value) {
+        const [base, rawGuild] = rawKey.split('@');
+        // Gruppe mit geteilten Einstellungen (Server-Verbund): gespeichert wird beim Haupt-Server der Gruppe
+        const guild = rawGuild !== undefined && /^\d{15,25}$/.test(rawGuild) ? (0, guild_context_1.settingsGuild)(rawGuild) ?? rawGuild : rawGuild;
+        const key = guild !== undefined ? `${base}@${guild}` : base;
         if (guild !== undefined && (!/^\d{15,25}$/.test(guild) || !guild_context_1.SERVER_SCOPED_SETTINGS.includes(base)))
             throw new errors_1.AppError('VALIDATION_FAILED', `Die Einstellung „${base}“ kann nicht je Server gesetzt werden.`);
         const schema = exports.SETTING_SCHEMAS[base];

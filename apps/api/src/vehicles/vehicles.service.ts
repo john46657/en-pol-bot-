@@ -1,3 +1,4 @@
+import { recordSpace, recordWhere } from '../common/guild-context';
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { AuditService, Actor } from '../audit/audit.service';
@@ -14,7 +15,7 @@ export class VehiclesService {
   constructor(private readonly prisma: PrismaService, private readonly audit: AuditService, private readonly timeline: TimelineService, private readonly studio: StudioService) {}
 
   async list(p: PageQuery) {
-    const where = p.q ? { OR: [{ plate: { contains: normPlate(p.q) } }, { model: { contains: p.q, mode: 'insensitive' as const } }] } : {};
+    const where = { ...recordWhere(), ...(p.q ? { OR: [{ plate: { contains: normPlate(p.q) } }, { model: { contains: p.q, mode: 'insensitive' as const } }] } : {}) };
     const [items, total] = await Promise.all([
       this.prisma.vehicle.findMany({ where, include: { owner: { select: { id: true, robloxUsername: true } } }, orderBy: { plate: 'asc' }, ...skipTake(p) }),
       this.prisma.vehicle.count({ where }),
@@ -32,10 +33,11 @@ export class VehiclesService {
     const custom = await this.studio.check('vehicles', d.custom);
     const { custom: _c, ...rest } = d; void _c;
     const plate = normPlate(d.plate);
-    if (await this.prisma.vehicle.findFirst({ where: { plate } })) throw new AppError('CONFLICT', 'Es gibt schon ein Fahrzeug mit diesem Kennzeichen.');
+    const serverId = recordSpace() ?? null;
+    if (await this.prisma.vehicle.findFirst({ where: { plate, serverId } })) throw new AppError('CONFLICT', 'Es gibt schon ein Fahrzeug mit diesem Kennzeichen.');
     return this.prisma.$transaction(async (tx) => {
       if (d.ownerId && !(await tx.person.findUnique({ where: { id: d.ownerId } }))) throw new AppError('NOT_FOUND', 'Halter nicht gefunden.');
-      const v = await tx.vehicle.create({ data: { ...rest, plate, custom: custom as Prisma.InputJsonValue | undefined } });
+      const v = await tx.vehicle.create({ data: { ...rest, plate, serverId, custom: custom as Prisma.InputJsonValue | undefined } });
       await this.timeline.add(tx, { entityType: 'Vehicle', entityId: v.id, action: 'vehicle.created', summary: `Fahrzeug ${plate} erfasst`, actorId: actor.userId });
       if (d.ownerId) await this.timeline.add(tx, { entityType: 'Person', entityId: d.ownerId, action: 'vehicle.linked', summary: `Fahrzeug ${plate} als Besitzer verknüpft`, actorId: actor.userId });
       await this.audit.record(actor, { action: 'vehicle.create', module: 'vehicles', entityType: 'Vehicle', entityId: v.id, after: v }, tx);

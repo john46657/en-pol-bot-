@@ -16,6 +16,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.ExportController = exports.toCsv = void 0;
+const guild_context_1 = require("../common/guild-context");
 const common_1 = require("@nestjs/common");
 const swagger_1 = require("@nestjs/swagger");
 const pdfkit_1 = __importDefault(require("pdfkit"));
@@ -31,8 +32,8 @@ const q = zod_1.z.object({ format: zod_1.z.enum(['csv', 'json', 'pdf']).default(
 const MAX_ROWS = 1000;
 /** Spaltenwhitelist je Entität – keine Roh-Dumps, keine internen Felder. */
 const SOURCES = {
-    persons: { permission: 'persons.view', load: async (p, t) => (await p.person.findMany({ where: { status: 'ACTIVE', ...(t ? { robloxUsername: { contains: t, mode: 'insensitive' } } : {}) }, take: MAX_ROWS, orderBy: { robloxUsername: 'asc' } })).map((x) => ({ id: x.id, robloxUsername: x.robloxUsername, robloxUserId: x.robloxUserId, createdAt: x.createdAt.toISOString() })) },
-    vehicles: { permission: 'vehicles.view', load: async (p) => (await p.vehicle.findMany({ take: MAX_ROWS, orderBy: { plate: 'asc' } })).map((x) => ({ id: x.id, plate: x.plate, model: x.model, color: x.color, status: x.status })) },
+    persons: { permission: 'persons.view', load: async (p, t) => (await p.person.findMany({ where: { ...(0, guild_context_1.recordWhere)(), status: 'ACTIVE', ...(t ? { robloxUsername: { contains: t, mode: 'insensitive' } } : {}) }, take: MAX_ROWS, orderBy: { robloxUsername: 'asc' } })).map((x) => ({ id: x.id, robloxUsername: x.robloxUsername, robloxUserId: x.robloxUserId, createdAt: x.createdAt.toISOString() })) },
+    vehicles: { permission: 'vehicles.view', load: async (p) => (await p.vehicle.findMany({ where: (0, guild_context_1.recordWhere)(), take: MAX_ROWS, orderBy: { plate: 'asc' } })).map((x) => ({ id: x.id, plate: x.plate, model: x.model, color: x.color, status: x.status })) },
     tickets: { permission: 'tickets.view', load: async (p) => (await p.ticket.findMany({ take: MAX_ROWS, orderBy: { issuedAt: 'desc' } })).map((x) => ({ number: x.number, personId: x.personId, reason: x.reason, amount: Number(x.amount), status: x.status, issuedAt: x.issuedAt.toISOString() })) },
     incidents: { permission: 'incidents.view', load: async (p) => (await p.incident.findMany({ take: MAX_ROWS, orderBy: { createdAt: 'desc' } })).map((x) => ({ number: x.number, title: x.title, priority: x.priority, status: x.status, location: x.location, createdAt: x.createdAt.toISOString() })) },
     audit: { permission: 'audit.export', load: async (p) => (await p.auditLog.findMany({ take: MAX_ROWS, orderBy: { createdAt: 'desc' } })).map((x) => ({ createdAt: x.createdAt.toISOString(), actorUserId: x.actorUserId, action: x.action, module: x.module, entityType: x.entityType, entityId: x.entityId, reason: x.reason, requestId: x.requestId })) },

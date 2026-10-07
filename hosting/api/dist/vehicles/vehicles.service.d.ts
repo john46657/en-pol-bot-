@@ -22,9 +22,9 @@ export declare class VehiclesService {
             updatedAt: Date;
             version: number;
             color: string | null;
+            serverId: string | null;
             status: string;
             custom: Prisma.JsonValue | null;
-            serverId: string | null;
             notes: string | null;
             plate: string;
             model: string | null;
@@ -44,10 +44,10 @@ export declare class VehiclesService {
                 robloxUsername: string;
                 updatedAt: Date;
                 version: number;
+                serverId: string | null;
                 createdById: string | null;
                 status: string;
                 custom: Prisma.JsonValue | null;
-                serverId: string | null;
                 aliases: string[];
                 notes: string | null;
             } | null;
@@ -57,9 +57,9 @@ export declare class VehiclesService {
             updatedAt: Date;
             version: number;
             color: string | null;
+            serverId: string | null;
             status: string;
             custom: Prisma.JsonValue | null;
-            serverId: string | null;
             notes: string | null;
             plate: string;
             model: string | null;
@@ -90,9 +90,9 @@ export declare class VehiclesService {
         updatedAt: Date;
         version: number;
         color: string | null;
+        serverId: string | null;
         status: string;
         custom: Prisma.JsonValue | null;
-        serverId: string | null;
         notes: string | null;
         plate: string;
         model: string | null;
@@ -105,9 +105,9 @@ export declare class VehiclesService {
         updatedAt: Date;
         version: number;
         color: string | null;
+        serverId: string | null;
         status: string;
         custom: Prisma.JsonValue | null;
-        serverId: string | null;
         notes: string | null;
         plate: string;
         model: string | null;

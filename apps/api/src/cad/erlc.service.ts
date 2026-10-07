@@ -247,7 +247,7 @@ export class ErlcService {
       if (prev?.webhookEvents) snap.webhookEvents = prev.webhookEvents;
       await this.prisma.erlcServer.update({ where: { id }, data: { status: 'CONNECTED', lastSyncAt: new Date(), latencyMs: res.latencyMs, snapshot: snap as unknown as Prisma.InputJsonValue, rateLimit: this.client.rate(id) as unknown as Prisma.InputJsonValue } });
       if (snap.emergencyCalls) await this.syncCalls(s, snap.emergencyCalls, 'API');
-      await this.records.sync(id, snap); // Personen + Fahrzeuge ins System übernehmen
+      await this.records.sync(id, snap, s.guildId); // Personen + Fahrzeuge ins System übernehmen (Akten-Bereich des Discord-Servers)
       this.realtime.publish('cad', 'erlc.snapshot', { serverId: id });
       return { ok: true, status: 'CONNECTED', latencyMs: res.latencyMs };
     } finally { r.inFlight = false; }
