@@ -3,7 +3,7 @@ import { useNavigate, useSearchParams } from 'react-router';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { api, type Page } from '../../lib/api';
 import { useAuth } from '../../lib/auth';
-import { DataTable, useDebounced } from '../../components/DataTable';
+import { DataTable, useDebounced, useTablePageSize } from '../../components/DataTable';
 import { Badge, Button, Card, ConfirmDialog, EmptyState, ErrorState, Field, fmt, Input, Modal, PageHeader, Select, SkeletonRows, Tabs } from '../../components/ui';
 import { GuildTag, useGuilds, useServer } from '../../lib/guilds';
 import { duration, errText, hex, label, useTicketConfig, type RatingSummary, type TicketRow, type TicketStats } from '../../lib/tickets';
@@ -51,9 +51,10 @@ function TicketList() {
   const [f, setF] = useState({ kind: 'open', statusId: '', priorityId: '', categoryId: '', claimer: '', creator: '', from: '', to: '', guildId: '' });
   const [q, setQ] = useState('');
   const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useTablePageSize();
   const [open, setOpen] = useState(false);
   const dq = useDebounced(q), dCreator = useDebounced(f.creator);
-  const query = { ...f, guildId: server || f.guildId, creator: dCreator, q: dq, page, pageSize: 25, from: f.from ? new Date(f.from).toISOString() : undefined, to: f.to ? new Date(`${f.to}T23:59:59`).toISOString() : undefined };
+  const query = { ...f, guildId: server || f.guildId, creator: dCreator, q: dq, page, pageSize, from: f.from ? new Date(f.from).toISOString() : undefined, to: f.to ? new Date(`${f.to}T23:59:59`).toISOString() : undefined };
   const list = useQuery({ queryKey: ['support-tickets', query], queryFn: () => api<Page<TicketRow>>('/support-tickets', { query }) });
   const set = (p: Partial<typeof f>) => { setF({ ...f, ...p }); setPage(1); };
   const c = cfg.data;
@@ -71,7 +72,7 @@ function TicketList() {
           { key: 'claimers', label: 'Staff', render: (t) => (t.claimers.length ? `${t.claimers.length} claimed` : <span className="text-muted">unclaimed</span>) },
           { key: 'createdAt', label: 'Created', render: (t) => fmt(t.createdAt) },
         ]}
-        rows={list.data?.items ?? []} total={list.data?.total ?? 0} page={page} pageSize={25} onPage={setPage}
+        rows={list.data?.items ?? []} total={list.data?.total ?? 0} page={page} pageSize={pageSize} onPage={setPage} onPageSize={(n) => { setPageSize(n); setPage(1); }}
         loading={list.isLoading} error={list.error} onRetry={() => void list.refetch()} onRowClick={(t) => void nav(`/support-tickets/${t.id}`)}
         empty={{ text: 'No tickets.', hint: 'Tickets are opened via a ticket panel in Discord.' }}
         search={q} onSearch={(v) => { setQ(v); setPage(1); }}
@@ -123,9 +124,10 @@ function Transcripts() {
   const [f, setF] = useState({ categoryName: '', creator: '', staff: '', status: '', from: '', to: '' });
   const [q, setQ] = useState('');
   const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useTablePageSize();
   const [del, setDel] = useState<TranscriptRow>();
   const dq = useDebounced(q), dc = useDebounced(f.creator), ds = useDebounced(f.staff);
-  const query = { ...f, creator: dc, staff: /^\d{15,25}$/.test(ds) ? ds : undefined, q: dq, page, pageSize: 25, from: f.from ? new Date(f.from).toISOString() : undefined, to: f.to ? new Date(`${f.to}T23:59:59`).toISOString() : undefined };
+  const query = { ...f, creator: dc, staff: /^\d{15,25}$/.test(ds) ? ds : undefined, q: dq, page, pageSize, from: f.from ? new Date(f.from).toISOString() : undefined, to: f.to ? new Date(`${f.to}T23:59:59`).toISOString() : undefined };
   const list = useQuery({ queryKey: ['ticket-transcripts', query], queryFn: () => api<Page<TranscriptRow>>('/support-tickets/transcripts', { query }) });
   const remove = useMutation({ mutationFn: (id: string) => api(`/support-tickets/transcripts/${id}`, { method: 'DELETE' }), onSuccess: () => { setDel(undefined); void qc.invalidateQueries({ queryKey: ['ticket-transcripts'] }); } });
   const set = (p: Partial<typeof f>) => { setF({ ...f, ...p }); setPage(1); };
@@ -146,7 +148,7 @@ function Transcripts() {
             </span>
           ) },
         ]}
-        rows={list.data?.items ?? []} total={list.data?.total ?? 0} page={page} pageSize={25} onPage={setPage}
+        rows={list.data?.items ?? []} total={list.data?.total ?? 0} page={page} pageSize={pageSize} onPage={setPage} onPageSize={(n) => { setPageSize(n); setPage(1); }}
         loading={list.isLoading} error={list.error} onRetry={() => void list.refetch()}
         empty={{ text: 'No transcripts.', hint: 'Transcripts are created when a ticket is closed (if enabled for the category) or via the Transcript button.' }}
         search={q} onSearch={(v) => { setQ(v); setPage(1); }}
@@ -187,7 +189,8 @@ function Ratings() {
   const cfg = useTicketConfig();
   const [f, setF] = useState({ stars: '', categoryId: '' });
   const [page, setPage] = useState(1);
-  const query = { ...f, page, pageSize: 25 };
+  const [pageSize, setPageSize] = useTablePageSize();
+  const query = { ...f, page, pageSize };
   const r = useQuery({ queryKey: ['ticket-ratings', query], queryFn: () => api<{ total: number; summary: RatingSummary; names: Record<string, string>; items: RatingRow[] }>('/support-tickets/ratings', { query }) });
   return (
     <div className="grid gap-4">
@@ -200,7 +203,7 @@ function Ratings() {
           { key: 'category', label: 'Category' }, { key: 'creator', label: 'Creator', render: (x) => x.ticket?.creatorName ?? '—' },
           { key: 'createdAt', label: 'Date', render: (x) => fmt(x.createdAt) },
         ]}
-        rows={r.data?.items ?? []} total={r.data?.total ?? 0} page={page} pageSize={25} onPage={setPage} loading={r.isLoading} error={r.error} onRetry={() => void r.refetch()}
+        rows={r.data?.items ?? []} total={r.data?.total ?? 0} page={page} pageSize={pageSize} onPage={setPage} onPageSize={(n) => { setPageSize(n); setPage(1); }} loading={r.isLoading} error={r.error} onRetry={() => void r.refetch()}
         onRowClick={(x) => void nav(`/support-tickets/${x.ticketId}`)} empty={{ text: 'No ratings yet.' }}
         toolbar={(
           <div className="flex flex-wrap gap-2">

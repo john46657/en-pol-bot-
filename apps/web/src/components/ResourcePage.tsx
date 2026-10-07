@@ -5,7 +5,7 @@ import { Plus } from 'lucide-react';
 import { api, type Page } from '../lib/api';
 import { useAuth } from '../lib/auth';
 import { customFormFields, useStudio, withCustom } from '../lib/studio';
-import { DataTable, useDebounced, type Column } from './DataTable';
+import { DataTable, useDebounced, useTablePageSize, type Column } from './DataTable';
 import { FormModal, type FieldDef } from './FormModal';
 import { Button, PageHeader, Select } from './ui';
 
@@ -25,15 +25,16 @@ export function ResourcePage<T extends { id?: string }>({ cfg }: { cfg: Resource
   const [status, setStatus] = useState('');
   const [creating, setCreating] = useState(false);
   const q = useDebounced(search, 300);
+  const [pageSize, setPageSize] = useTablePageSize();
   const studio = useStudio();
   const cf = cfg.customEntity ? customFormFields(studio.data?.customFields[cfg.customEntity]) : [];
-  const res = useQuery({ queryKey: [cfg.queryKey, page, q, status], queryFn: () => api<Page<T>>(cfg.endpoint, { query: { page, pageSize: 25, q: q || undefined, status: status || undefined, ...cfg.extraQuery } }), placeholderData: (p) => p });
+  const res = useQuery({ queryKey: [cfg.queryKey, page, pageSize, q, status], queryFn: () => api<Page<T>>(cfg.endpoint, { query: { page, pageSize, q: q || undefined, status: status || undefined, ...cfg.extraQuery } }), placeholderData: (p) => p });
   const canCreate = cfg.create && can(cfg.create.perm);
   return (
     <>
       <PageHeader title={cfg.title} subtitle={cfg.subtitle} actions={<>{cfg.headerExtra}{canCreate && <Button onClick={() => setCreating(true)}><Plus size={14} />{cfg.create!.label}</Button>}</>} />
       {cfg.notice}
-      <DataTable<T> columns={cfg.columns} rows={res.data?.items} total={res.data?.total ?? 0} page={page} pageSize={25} onPage={setPage}
+      <DataTable<T> columns={cfg.columns} rows={res.data?.items} total={res.data?.total ?? 0} page={page} pageSize={pageSize} onPage={setPage} onPageSize={(n) => { setPageSize(n); setPage(1); }}
         loading={res.isLoading} error={res.error} onRetry={() => void res.refetch()} search={search} onSearch={(s) => { setSearch(s); setPage(1); }}
         onRowClick={cfg.detailPath ? (r) => nav(cfg.detailPath!(r)) : undefined} empty={{ text: cfg.emptyText, hint: cfg.emptyHint }}
         toolbar={cfg.statusFilter && <Select aria-label="Status filter" className="w-auto" value={status} onChange={(e) => { setStatus(e.target.value); setPage(1); }}><option value="">All statuses</option>{cfg.statusFilter.map((s) => <option key={s}>{s}</option>)}</Select>} />
