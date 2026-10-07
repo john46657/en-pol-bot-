@@ -17,13 +17,13 @@ declare const submit: z.ZodObject<{
     robloxUserId?: string | undefined;
 }>;
 declare const move: z.ZodObject<{
-    status: z.ZodEffects<z.ZodEnum<["SUBMITTED", "SCREENING", "INTERVIEW", "PENDING_DECISION", "ACCEPTED", "REJECTED", "WITHDRAWN"]>, "SUBMITTED" | "SCREENING" | "INTERVIEW" | "PENDING_DECISION" | "WITHDRAWN", "SUBMITTED" | "REJECTED" | "SCREENING" | "INTERVIEW" | "PENDING_DECISION" | "ACCEPTED" | "WITHDRAWN">;
+    status: z.ZodEffects<z.ZodEnum<["SUBMITTED", "SCREENING", "INTERVIEW", "PENDING_DECISION", "ACCEPTED", "REJECTED", "WITHDRAWN"]>, "WITHDRAWN" | "SUBMITTED" | "SCREENING" | "INTERVIEW" | "PENDING_DECISION", "ACCEPTED" | "REJECTED" | "WITHDRAWN" | "SUBMITTED" | "SCREENING" | "INTERVIEW" | "PENDING_DECISION">;
     reason: z.ZodOptional<z.ZodString>;
 }, "strip", z.ZodTypeAny, {
-    status: "SUBMITTED" | "SCREENING" | "INTERVIEW" | "PENDING_DECISION" | "WITHDRAWN";
+    status: "WITHDRAWN" | "SUBMITTED" | "SCREENING" | "INTERVIEW" | "PENDING_DECISION";
     reason?: string | undefined;
 }, {
-    status: "SUBMITTED" | "REJECTED" | "SCREENING" | "INTERVIEW" | "PENDING_DECISION" | "ACCEPTED" | "WITHDRAWN";
+    status: "ACCEPTED" | "REJECTED" | "WITHDRAWN" | "SUBMITTED" | "SCREENING" | "INTERVIEW" | "PENDING_DECISION";
     reason?: string | undefined;
 }>;
 /** `OPEN` = alle noch nicht entschiedenen (eingereicht, Prüfung, Gespräch, Entscheidung offen). */
@@ -38,11 +38,11 @@ declare const listQ: z.ZodObject<{
     page: number;
     pageSize: number;
     guildId?: string | undefined;
-    status?: "OPEN" | "SUBMITTED" | "REJECTED" | "SCREENING" | "INTERVIEW" | "PENDING_DECISION" | "ACCEPTED" | "WITHDRAWN" | undefined;
+    status?: "ACCEPTED" | "REJECTED" | "WITHDRAWN" | "OPEN" | "SUBMITTED" | "SCREENING" | "INTERVIEW" | "PENDING_DECISION" | undefined;
     q?: string | undefined;
 }, {
     guildId?: string | undefined;
-    status?: "OPEN" | "SUBMITTED" | "REJECTED" | "SCREENING" | "INTERVIEW" | "PENDING_DECISION" | "ACCEPTED" | "WITHDRAWN" | undefined;
+    status?: "ACCEPTED" | "REJECTED" | "WITHDRAWN" | "OPEN" | "SUBMITTED" | "SCREENING" | "INTERVIEW" | "PENDING_DECISION" | undefined;
     q?: string | undefined;
     page?: number | undefined;
     pageSize?: number | undefined;
@@ -62,11 +62,11 @@ declare const analyticsQ: z.ZodObject<{
 }, "strip", z.ZodTypeAny, {
     days: number;
     type?: string | undefined;
-    status?: "PENDING" | "APPROVED" | "REJECTED" | undefined;
+    status?: "REJECTED" | "PENDING" | "APPROVED" | undefined;
     reviewer?: string | undefined;
 }, {
     type?: string | undefined;
-    status?: "PENDING" | "APPROVED" | "REJECTED" | undefined;
+    status?: "REJECTED" | "PENDING" | "APPROVED" | undefined;
     days?: number | undefined;
     reviewer?: string | undefined;
 }>;
@@ -242,7 +242,7 @@ export declare class ApplicationsController {
     }): Promise<{
         id: string;
         number: string;
-        status: "REJECTED" | "ACCEPTED";
+        status: "ACCEPTED" | "REJECTED";
         decidedByName: string | null;
         reason: string | null;
     }>;

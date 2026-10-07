@@ -180,6 +180,7 @@ let ApplicationsService = class ApplicationsService {
         await this.decided(actor, after, to, reason || null);
         const by = actor.userId ? await this.prisma.user.findUnique({ where: { id: actor.userId }, select: { displayName: true } }) : null;
         await this.archive(after, to, reason || null, by?.displayName ?? null);
+        await this.discord.markDecided('application', id, actor, to, reason || null);
         return { id, number: after.number, status: to, decidedByName: by?.displayName ?? null, reason: reason || null };
     }
     /** „Action On User Leave“ der Polizei-Bewerbung: offene Bewerbungen einer Person, die den Discord-Server verlassen hat. */
@@ -227,6 +228,9 @@ let ApplicationsService = class ApplicationsService {
                 const by = actor.userId ? await this.prisma.user.findUnique({ where: { id: actor.userId }, select: { displayName: true } }) : null;
                 await this.archive(after, to, null, by?.displayName ?? null); // der interne Grund aus dem Web bleibt intern
             }
+            // Discord-Nachricht anpassen (der interne Grund aus dem Web bleibt intern)
+            if (to === 'ACCEPTED' || to === 'REJECTED' || to === 'WITHDRAWN')
+                await this.discord.markDecided('application', id, actor, to, to === 'WITHDRAWN' ? reason ?? null : null);
             return after;
         });
     }

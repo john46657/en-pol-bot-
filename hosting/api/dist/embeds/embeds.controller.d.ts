@@ -8,8 +8,8 @@ export declare class EmbedsController {
         id: string;
         name: string;
         guildId: string | null;
-        description: string;
         color: string;
+        description: string;
         channelId: string | null;
         url: string;
         title: string;
@@ -34,8 +34,8 @@ export declare class EmbedsController {
         id: string;
         name: string;
         guildId: string | null;
-        description: string;
         color: string;
+        description: string;
         channelId: string | null;
         url: string;
         title: string;
@@ -60,8 +60,8 @@ export declare class EmbedsController {
         id: string;
         name: string;
         guildId: string | null;
-        description: string;
         color: string;
+        description: string;
         channelId: string | null;
         url: string;
         title: string;

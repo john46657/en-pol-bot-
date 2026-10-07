@@ -276,8 +276,8 @@ export declare class SupportTicketsController {
             active: boolean;
             updatedAt: Date;
             guildId: string | null;
-            description: string;
             color: number;
+            description: string;
             emoji: string | null;
             position: number;
             cooldownMinutes: number;
@@ -336,8 +336,8 @@ export declare class SupportTicketsController {
             name: string;
             updatedAt: Date;
             guildId: string | null;
-            description: string;
             color: number;
+            description: string;
             channelId: string | null;
             emoji: string | null;
             title: string;
@@ -424,8 +424,8 @@ export declare class SupportTicketsController {
         active: boolean;
         updatedAt: Date;
         guildId: string | null;
-        description: string;
         color: number;
+        description: string;
         emoji: string | null;
         position: number;
         cooldownMinutes: number;
@@ -485,8 +485,8 @@ export declare class SupportTicketsController {
         active: boolean;
         updatedAt: Date;
         guildId: string | null;
-        description: string;
         color: number;
+        description: string;
         emoji: string | null;
         position: number;
         cooldownMinutes: number;
@@ -546,8 +546,8 @@ export declare class SupportTicketsController {
         active: boolean;
         updatedAt: Date;
         guildId: string | null;
-        description: string;
         color: number;
+        description: string;
         emoji: string | null;
         position: number;
         cooldownMinutes: number;
@@ -607,8 +607,8 @@ export declare class SupportTicketsController {
         name: string;
         updatedAt: Date;
         guildId: string | null;
-        description: string;
         color: number;
+        description: string;
         channelId: string | null;
         emoji: string | null;
         title: string;
@@ -634,8 +634,8 @@ export declare class SupportTicketsController {
         name: string;
         updatedAt: Date;
         guildId: string | null;
-        description: string;
         color: number;
+        description: string;
         channelId: string | null;
         emoji: string | null;
         title: string;
@@ -661,8 +661,8 @@ export declare class SupportTicketsController {
         name: string;
         updatedAt: Date;
         guildId: string | null;
-        description: string;
         color: number;
+        description: string;
         channelId: string | null;
         emoji: string | null;
         title: string;

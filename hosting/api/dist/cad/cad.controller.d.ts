@@ -163,8 +163,8 @@ declare const mapObjectBody: z.ZodObject<{
     layer: string;
     kind: "POI" | "ZONE";
     category?: any;
-    description?: any;
     color?: any;
+    description?: any;
     icon?: any;
     roleIds?: string[] | undefined;
     x?: any;
@@ -177,8 +177,8 @@ declare const mapObjectBody: z.ZodObject<{
     layer: string;
     kind: "POI" | "ZONE";
     category?: any;
-    description?: any;
     color?: any;
+    description?: any;
     icon?: any;
     roleIds?: string[] | undefined;
     x?: any;
@@ -592,8 +592,8 @@ export declare class CadController {
             name: string;
             category: string | null;
             updatedAt: Date;
-            description: string | null;
             color: string | null;
+            description: string | null;
             icon: string | null;
             createdById: string | null;
             roleIds: string[];
@@ -1150,8 +1150,8 @@ export declare class CadController {
         name: string;
         category: string | null;
         updatedAt: Date;
-        description: string | null;
         color: string | null;
+        description: string | null;
         icon: string | null;
         createdById: string | null;
         roleIds: string[];
@@ -1169,8 +1169,8 @@ export declare class CadController {
         name: string;
         category: string | null;
         updatedAt: Date;
-        description: string | null;
         color: string | null;
+        description: string | null;
         icon: string | null;
         createdById: string | null;
         roleIds: string[];
@@ -1188,8 +1188,8 @@ export declare class CadController {
         name: string;
         category: string | null;
         updatedAt: Date;
-        description: string | null;
         color: string | null;
+        description: string | null;
         icon: string | null;
         createdById: string | null;
         roleIds: string[];

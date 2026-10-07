@@ -1,19 +1,47 @@
 import { z } from 'zod';
-import { AcademyService } from './academy.service';
+import { AcademyService, type AcademyConfig, type Announce } from './academy.service';
 import type { Actor } from '../audit/audit.service';
 declare const course: z.ZodObject<{
     title: z.ZodString;
     description: z.ZodOptional<z.ZodString>;
     passScore: z.ZodOptional<z.ZodNumber>;
     instructorId: z.ZodOptional<z.ZodString>;
+    announce: z.ZodOptional<z.ZodObject<{
+        channelId: z.ZodOptional<z.ZodNullable<z.ZodString>>;
+        pingRoleIds: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
+        when: z.ZodOptional<z.ZodDate>;
+        location: z.ZodOptional<z.ZodString>;
+    }, "strip", z.ZodTypeAny, {
+        channelId?: string | null | undefined;
+        pingRoleIds?: string[] | undefined;
+        location?: string | undefined;
+        when?: Date | undefined;
+    }, {
+        channelId?: string | null | undefined;
+        pingRoleIds?: string[] | undefined;
+        location?: string | undefined;
+        when?: Date | undefined;
+    }>>;
 }, "strip", z.ZodTypeAny, {
     title: string;
     description?: string | undefined;
+    announce?: {
+        channelId?: string | null | undefined;
+        pingRoleIds?: string[] | undefined;
+        location?: string | undefined;
+        when?: Date | undefined;
+    } | undefined;
     passScore?: number | undefined;
     instructorId?: string | undefined;
 }, {
     title: string;
     description?: string | undefined;
+    announce?: {
+        channelId?: string | null | undefined;
+        pingRoleIds?: string[] | undefined;
+        location?: string | undefined;
+        when?: Date | undefined;
+    } | undefined;
     passScore?: number | undefined;
     instructorId?: string | undefined;
 }>;
@@ -32,11 +60,28 @@ export declare class AcademyController {
         instructorId: string | null;
     })[]>;
     create(ac: Actor, b: z.infer<typeof course>): Promise<{
+        announced: {
+            channelId: string | null;
+            pingRoleIds: string[];
+        } | null;
         id: string;
         description: string | null;
         title: string;
         passScore: number;
         instructorId: string | null;
+    }>;
+    /** Standard-Kanal und Ping-Rollen für Ankündigungen. */
+    config(): Promise<{
+        channelId: string | null;
+        pingRoleIds: string[];
+    }>;
+    saveConfig(ac: Actor, b: AcademyConfig): Promise<{
+        channelId: string | null;
+        pingRoleIds: string[];
+    }>;
+    announce(ac: Actor, id: string, b: Announce): Promise<{
+        channelId: string | null;
+        pingRoleIds: string[];
     }>;
     enroll(ac: Actor, id: string, b: {
         personnelId: string;

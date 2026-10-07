@@ -668,3 +668,14 @@ describe('decision from the dashboard updates the Discord message', () => {
     expect(tasks).toEqual([`message.decided msg-l-${LEAVE}`]);
   });
 });
+
+describe('academy course announcement', () => {
+  it('shows date, place, pass score and instructor; link to the dashboard', async () => {
+    const { academyCourseEmbed, outboxButtons } = await import('../src/format');
+    const e = academyCourseEmbed({ title: 'Verkehrskontrolle', description: 'Grundkurs', passScore: 80, when: '2026-10-08T18:00:00.000Z', location: 'Wache', instructorName: 'John' });
+    expect(e.title).toBe('🎓 Akademie: Verkehrskontrolle');
+    expect(e.fields?.map((f) => f.name)).toEqual(['🕒 Termin', '📍 Ort', '🎯 Bestehensgrenze', '👮 Ausbilder']);
+    expect(e.fields?.[0]?.value).toContain(`<t:${Date.parse('2026-10-08T18:00:00.000Z') / 1000}:F>`);
+    expect(outboxButtons('academy.course', { dashboardUrl: 'https://x.de/academy' })?.[0]?.url).toBe('https://x.de/academy');
+  });
+});

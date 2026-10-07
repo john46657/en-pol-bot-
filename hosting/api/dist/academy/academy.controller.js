@@ -19,14 +19,18 @@ const zod_1 = require("zod");
 const academy_service_1 = require("./academy.service");
 const decorators_1 = require("../authz/decorators");
 const zod_pipe_1 = require("../common/zod.pipe");
-const course = zod_1.z.object({ title: zod_1.z.string().trim().min(3).max(120), description: zod_1.z.string().max(2000).optional(), passScore: zod_1.z.number().int().min(1).max(100).optional(), instructorId: zod_1.z.string().uuid().optional() });
+const course = zod_1.z.object({ title: zod_1.z.string().trim().min(3).max(120), description: zod_1.z.string().max(2000).optional(), passScore: zod_1.z.number().int().min(1).max(100).optional(), instructorId: zod_1.z.string().uuid().optional(), announce: academy_service_1.announceSchema.optional() });
 let AcademyController = class AcademyController {
     a;
     constructor(a) {
         this.a = a;
     }
     courses() { return this.a.courses(); }
-    create(ac, b) { return this.a.createCourse(ac, b); }
+    create(ac, b) { const { announce, ...d } = b; return this.a.createCourse(ac, d, announce); }
+    /** Standard-Kanal und Ping-Rollen für Ankündigungen. */
+    config() { return this.a.config(); }
+    saveConfig(ac, b) { return this.a.saveConfig(ac, b); }
+    announce(ac, id, b) { return this.a.announce(ac, id, b); }
     enroll(ac, id, b) { return this.a.enroll(ac, id, b.personnelId); }
     grade(ac, id, b) { return this.a.grade(ac, id, b.score); }
 };
@@ -47,6 +51,33 @@ __decorate([
     __metadata("design:paramtypes", [Object, void 0]),
     __metadata("design:returntype", void 0)
 ], AcademyController.prototype, "create", null);
+__decorate([
+    (0, common_1.Get)('config'),
+    (0, decorators_1.RequirePermission)('academy.view'),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", []),
+    __metadata("design:returntype", void 0)
+], AcademyController.prototype, "config", null);
+__decorate([
+    (0, common_1.Put)('config'),
+    (0, decorators_1.RequirePermission)('academy.manage'),
+    __param(0, (0, decorators_1.CurrentActor)()),
+    __param(1, (0, common_1.Body)((0, zod_pipe_1.zodBody)(academy_service_1.academyConfigSchema))),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, Object]),
+    __metadata("design:returntype", void 0)
+], AcademyController.prototype, "saveConfig", null);
+__decorate([
+    (0, common_1.Post)('courses/:id/announce'),
+    (0, common_1.HttpCode)(202),
+    (0, decorators_1.RequirePermission)('academy.manage'),
+    __param(0, (0, decorators_1.CurrentActor)()),
+    __param(1, (0, common_1.Param)('id', common_1.ParseUUIDPipe)),
+    __param(2, (0, common_1.Body)((0, zod_pipe_1.zodBody)(academy_service_1.announceSchema))),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, String, Object]),
+    __metadata("design:returntype", void 0)
+], AcademyController.prototype, "announce", null);
 __decorate([
     (0, common_1.Post)('courses/:id/enroll'),
     (0, decorators_1.RequirePermission)('academy.manage'),

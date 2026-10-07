@@ -49,8 +49,8 @@ export declare const embedSchema: z.ZodEffects<z.ZodObject<{
     id: string;
     name: string;
     guildId: string | null;
-    description: string;
     color: string;
+    description: string;
     channelId: string | null;
     url: string;
     title: string;
@@ -74,8 +74,8 @@ export declare const embedSchema: z.ZodEffects<z.ZodObject<{
     id: string;
     name: string;
     guildId?: string | null | undefined;
-    description?: string | undefined;
     color?: string | undefined;
+    description?: string | undefined;
     channelId?: string | null | undefined;
     url?: string | undefined;
     title?: string | undefined;
@@ -99,8 +99,8 @@ export declare const embedSchema: z.ZodEffects<z.ZodObject<{
     id: string;
     name: string;
     guildId: string | null;
-    description: string;
     color: string;
+    description: string;
     channelId: string | null;
     url: string;
     title: string;
@@ -124,8 +124,8 @@ export declare const embedSchema: z.ZodEffects<z.ZodObject<{
     id: string;
     name: string;
     guildId?: string | null | undefined;
-    description?: string | undefined;
     color?: string | undefined;
+    description?: string | undefined;
     channelId?: string | null | undefined;
     url?: string | undefined;
     title?: string | undefined;
@@ -160,8 +160,8 @@ export declare class EmbedsService {
         id: string;
         name: string;
         guildId: string | null;
-        description: string;
         color: string;
+        description: string;
         channelId: string | null;
         url: string;
         title: string;
@@ -186,8 +186,8 @@ export declare class EmbedsService {
         id: string;
         name: string;
         guildId: string | null;
-        description: string;
         color: string;
+        description: string;
         channelId: string | null;
         url: string;
         title: string;

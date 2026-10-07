@@ -9,20 +9,20 @@ declare const list: z.ZodObject<{
 }, "strip", z.ZodTypeAny, {
     unit?: string | undefined;
     guildId?: string | undefined;
-    status?: "OPEN" | "REJECTED" | "ACCEPTED" | "WITHDRAWN" | undefined;
+    status?: "ACCEPTED" | "REJECTED" | "WITHDRAWN" | "OPEN" | undefined;
 }, {
     unit?: string | undefined;
     guildId?: string | undefined;
-    status?: "OPEN" | "REJECTED" | "ACCEPTED" | "WITHDRAWN" | undefined;
+    status?: "ACCEPTED" | "REJECTED" | "WITHDRAWN" | "OPEN" | undefined;
 }>;
 declare const decision: z.ZodObject<{
     status: z.ZodEnum<["ACCEPTED", "REJECTED"]>;
     reason: z.ZodOptional<z.ZodString>;
 }, "strip", z.ZodTypeAny, {
-    status: "REJECTED" | "ACCEPTED";
+    status: "ACCEPTED" | "REJECTED";
     reason?: string | undefined;
 }, {
-    status: "REJECTED" | "ACCEPTED";
+    status: "ACCEPTED" | "REJECTED";
     reason?: string | undefined;
 }>;
 declare const historyQ: z.ZodObject<{
@@ -413,7 +413,7 @@ export declare class QualificationsController {
         id: string;
         number: string;
         unitName: string;
-        status: "REJECTED" | "ACCEPTED";
+        status: "ACCEPTED" | "REJECTED";
         addedToSek: boolean;
         decidedByName: string | null;
         reason: string | null;

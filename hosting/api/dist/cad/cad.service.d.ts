@@ -624,8 +624,8 @@ export declare class CadService {
         name: string;
         category: string | null;
         updatedAt: Date;
-        description: string | null;
         color: string | null;
+        description: string | null;
         icon: string | null;
         createdById: string | null;
         roleIds: string[];
@@ -644,8 +644,8 @@ export declare class CadService {
         name: string;
         category: string | null;
         updatedAt: Date;
-        description: string | null;
         color: string | null;
+        description: string | null;
         icon: string | null;
         createdById: string | null;
         roleIds: string[];
@@ -1017,8 +1017,8 @@ export declare class CadService {
             name: string;
             category: string | null;
             updatedAt: Date;
-            description: string | null;
             color: string | null;
+            description: string | null;
             icon: string | null;
             createdById: string | null;
             roleIds: string[];

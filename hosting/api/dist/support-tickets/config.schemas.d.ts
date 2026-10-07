@@ -256,8 +256,8 @@ export declare const categorySchema: z.ZodObject<{
     name: string;
     active: boolean;
     guildId: string | null;
-    description: string;
     color: number;
+    description: string;
     emoji: string | null;
     position: number;
     cooldownMinutes: number;
@@ -326,8 +326,8 @@ export declare const categorySchema: z.ZodObject<{
     name: string;
     active?: boolean | undefined;
     guildId?: string | null | undefined;
-    description?: string | undefined;
     color?: number | undefined;
+    description?: string | undefined;
     emoji?: string | null | undefined;
     position?: number | undefined;
     cooldownMinutes?: number | undefined;
@@ -418,8 +418,8 @@ export declare const panelSchema: z.ZodObject<{
 }, "strip", z.ZodTypeAny, {
     name: string;
     guildId: string | null;
-    description: string;
     color: number;
+    description: string;
     channelId: string | null;
     emoji: string | null;
     title: string;
@@ -439,8 +439,8 @@ export declare const panelSchema: z.ZodObject<{
 }, {
     name: string;
     guildId?: string | null | undefined;
-    description?: string | undefined;
     color?: number | undefined;
+    description?: string | undefined;
     channelId?: string | null | undefined;
     emoji?: string | null | undefined;
     title?: string | undefined;
