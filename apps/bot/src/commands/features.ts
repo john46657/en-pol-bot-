@@ -6,6 +6,7 @@ import { SEK_INTERACTION } from './sek';
 import { QUALI_INTERACTION } from './qualifications';
 import { TICKET_INTERACTION } from './tickets';
 import { LEAVE_INTERACTION } from './leave';
+import { CAD_INTERACTION } from './cad';
 
 const str = (c: Ctx, k: string) => String(c.opts[k] ?? '').trim();
 const choices = (m: Record<string, string>) => Object.keys(m).map((k) => ({ name: k.replace('_', ' '), value: k }));
@@ -167,6 +168,7 @@ export const INTERACTIONS: InteractionDef[] = [
   QUALI_INTERACTION,
   TICKET_INTERACTION,
   LEAVE_INTERACTION,
+  CAD_INTERACTION,
   {
     prefix: 'danger',
     async run(c) {

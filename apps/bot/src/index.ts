@@ -6,7 +6,7 @@ import {
 import { componentsOf, createTicketRuntime } from './discord-tickets';
 import { startGuildDirectory } from './guilds';
 import { startPresenceReporter } from './presence';
-import { guildScope, HttpApi } from './api';
+import { guildScope, HttpApi, rolesScope } from './api';
 import { byName, COMMANDS, mapError } from './commands';
 import { interactionFor } from './commands/features';
 import { handleDirectMessage, sweepSessions } from './commands/qualifications';
@@ -251,7 +251,7 @@ async function handleComponent(i: ButtonInteraction | ModalSubmitInteraction | A
 function wire(c: Client) {
   c.on('interactionCreate', (i: Interaction) => {
     // Server der Interaktion → API prüft Rechte für genau diesen Server (Server laufen getrennt)
-    const task = guildScope.run(i.guildId ?? null, () => (i.isChatInputCommand() ? handleCommand(i) : i.isButton() || i.isModalSubmit() || i.isAnySelectMenu() ? handleComponent(i) : undefined));
+    const task = guildScope.run(i.guildId ?? null, () => rolesScope.run(rolesOf(i.member), () => i.isChatInputCommand() ? handleCommand(i) : i.isButton() || i.isModalSubmit() || i.isAnySelectMenu() ? handleComponent(i) : undefined));
     void task?.catch((e) => console.error('interaction failed:', e instanceof Error ? e.message : e));
   });
 

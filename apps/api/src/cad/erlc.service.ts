@@ -8,6 +8,7 @@ import { AuditService, type Actor } from '../audit/audit.service';
 import { PermissionService } from '../authz/permission.service';
 import { RealtimeService } from '../realtime/realtime.service';
 import { AppError } from '../common/errors';
+import { webUrl } from '../common/web-url';
 import { ErlcClient, type ErlcResult } from './erlc-client';
 import { decryptSecret, encryptSecret } from './erlc-crypto';
 import { CadNotifyService } from './cad-notify.service';
@@ -260,7 +261,7 @@ export class ErlcService {
       try {
         const row = await this.prisma.erlcEmergencyCall.create({ data: { serverId: s.id, callNumber: c.callNumber, team: c.team, callerRobloxId: c.caller, description: c.description, positionDescriptor: c.positionDescriptor, mapX: c.x, mapZ: c.z, startedAt, source } });
         created++;
-        await this.notify.emit('call.received', { id: row.id, callNumber: row.callNumber, team: row.team, description: row.description, location: row.positionDescriptor, server: s.name, startedAt: row.startedAt.toISOString() }, s.guildId);
+        await this.notify.emit('call.received', { id: row.id, callNumber: row.callNumber, team: row.team, description: row.description, location: row.positionDescriptor, server: s.name, startedAt: row.startedAt.toISOString(), mapUrl: webUrl(`/cad/map?call=${row.id}`), dashboardUrl: webUrl(`/cad/calls?id=${row.id}`) }, s.guildId);
       } catch (e) {
         if (!(e instanceof Prisma.PrismaClientKnownRequestError && e.code === 'P2002')) throw e; // gleichzeitig angelegt
       }

@@ -1,5 +1,6 @@
 import type { Api } from './api';
 import type { TicketEffect } from '@enrp/shared';
+import { cadButtons, renderCadOutbox } from './commands/cad';
 import { applicationDecisionText, leaveDirectEmbed, outboxButtons, qualificationDecisionText, renderOutboxEmbeds, type ButtonSpec, type EmbedData } from './format';
 
 interface OutboxItem { id: string; type: string; channelKey: string; payload: Record<string, unknown> }
@@ -113,12 +114,15 @@ export async function pollOnce(api: Api, send: Sender, log: (m: string) => void 
     }
     // eigener Channel im Eintrag (z. B. Bewerbungen einer Einheit) hat Vorrang
     const own = typeof item.payload.channelId === 'string' && /^\d{15,25}$/.test(item.payload.channelId) ? item.payload.channelId : null;
-    const channelIds = own ? [own] : (channels[item.channelKey] ?? '').split(/[\s,;]+/).filter(Boolean);
-    const embeds = renderOutboxEmbeds(item.type, item.payload);
+    // CAD: Zielkanäle kommen fertig aus der API (Kanalzuordnungen + Server-Verbindungen)
+    const many = Array.isArray(item.payload.channelIds) ? item.payload.channelIds.map(String).filter((c) => /^\d{15,25}$/.test(c)) : null;
+    const channelIds = own ? [own] : many ?? (channels[item.channelKey] ?? '').split(/[\s,;]+/).filter(Boolean);
+    const cad = item.type.startsWith('cad.') ? renderCadOutbox(item.type, item.payload) : null;
+    const embeds = item.type.startsWith('cad.') ? (cad ? [cad] : null) : renderOutboxEmbeds(item.type, item.payload);
     try {
       if (!channelIds.length) throw new Error(`channel "${item.channelKey}" not configured`);
       if (!embeds) throw new Error(`unknown type "${item.type}"`);
-      const buttons = outboxButtons(item.type, item.payload);
+      const buttons = item.type.startsWith('cad.') ? cadButtons(item.type, item.payload) : outboxButtons(item.type, item.payload);
       const pingRoleIds = Array.isArray(item.payload.pingRoleIds) ? item.payload.pingRoleIds.map(String).filter((r) => /^\d{15,25}$/.test(r)) : [];
       const avatarUserId = /\.(submitted|archived)$/.test(item.type) && /^(qualification|application)\./.test(item.type) && typeof item.payload.discordId === 'string' && /^\d{15,25}$/.test(item.payload.discordId) ? item.payload.discordId : undefined;
       // Staff-Thread je Bewerbung (wie bei Appy)

@@ -4,6 +4,7 @@ import { FEATURE_COMMANDS } from './features';
 import { SEK_COMMANDS } from './sek';
 import { QUALI_COMMANDS } from './qualifications';
 import { LEAVE_COMMANDS } from './leave';
+import { CAD_COMMANDS } from './cad';
 import { shiftPicker } from './features';
 import { TICKET_COMMAND } from './tickets';
 import { clip, COLORS, EmbedData, errorReply, incidentLine, label, listEmbed, okReply, personEmbed, plain, Reply, Row, vehicleEmbed } from '../format';
@@ -109,7 +110,7 @@ export const COMMANDS: CommandDef[] = [
       return { ephemeral: true, embeds: [{ title: 'EN Polizei — Befehle', color: COLORS.info, fields: [
         { name: 'Konto', value: '`/verknuepfen` `/entverknuepfen` `/profil` `/benachrichtigungen`' },
         { name: 'Abfragen', value: '`/person` `/kennzeichen` `/fahndungen` `/einsaetze` `/einsatzinfo` `/einheiten` `/team`' },
-        { name: 'Dienst & Leitstelle', value: '`/dienst` `/dienststunden` `/abmeldung` `/leave manage` `/einheitstatus` `/einsatz` `/einsatzstatus` `/einsatzzuweisen` `/funk` `/funkcode`' },
+        { name: 'Dienst & Leitstelle', value: '`/dienst` `/dienststunden` `/abmeldung` `/leave manage` `/einheitstatus` `/einsatz` `/einsatzstatus` `/einsatzzuweisen` `/funk` `/funkcode` `/cad`' },
         { name: 'Erfassen', value: '`/ticket` `/bericht` `/beschwerde` `/ermittlung` `/fahndung` `/beweis`' },
         { name: 'Leitung & Team', value: '`/gefahrenstatus` `/funkfreigabe` `/teamliste` `/dienstpanel` `/bewerbungspanel` `/qualipanel` `/teamchance` `/roblox`' },
         { name: 'SEK', value: '`/sek` `/sek-bericht`' },
@@ -457,6 +458,7 @@ export const COMMANDS: CommandDef[] = [
   ...SEK_COMMANDS,
   ...QUALI_COMMANDS,
   ...LEAVE_COMMANDS,
+  ...CAD_COMMANDS,
   TICKET_COMMAND,
 ];
 
