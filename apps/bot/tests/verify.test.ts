@@ -26,18 +26,25 @@ const link = { discordId: ME, discordName: 'me', robloxId: '156', robloxName: 'b
 const actions: VerifyActions = { add: ['R1'], remove: ['R0'], nickname: 'Builder (@builderman)' };
 
 describe('Roblox verification in Discord', () => {
-  it('panel button / command open the form; name → code with steps and check button', async () => {
+  it('panel button / command: direct Roblox login link; only without OAuth the code form', async () => {
     const start = interactionFor('verify:start')!;
-    expect(start.def.opensModal?.(start.args)).toBe(true);
-    const modal = await start.def.run({ discordId: ME, opts: {}, api: fakeApi({}).api, args: start.args });
-    expect(modal.modal).toMatchObject({ id: 'verify:name', fields: [{ id: 'roblox' }] });
-    expect((await byName('verifizieren')!.run({ discordId: ME, opts: {}, api: fakeApi({}).api })).modal?.id).toBe('verify:name');
+    expect(start.def.opensModal?.(start.args)).toBe(false);
+    const oauth = fakeApi({ 'POST /bot/verify/oauth': { enabled: true, url: 'https://apis.roblox.com/oauth/v1/authorize?state=x', expiresAt: new Date(Date.now() + 600_000).toISOString() } });
+    const r1 = await start.def.run({ discordId: ME, opts: {}, api: oauth.api, guildId: GUILD, userName: 'me', args: start.args });
+    expect(oauth.calls[0]!.body).toEqual({ guildId: GUILD, discordId: ME, discordName: 'me' });
+    expect(r1.buttons).toEqual([{ id: 'link', label: 'Mit Roblox anmelden', style: 'secondary', url: 'https://apis.roblox.com/oauth/v1/authorize?state=x' }]);
+    expect((await byName('verifizieren')!.run({ discordId: ME, opts: {}, api: oauth.api })).buttons?.[0]?.url).toContain('apis.roblox.com');
+    const off = fakeApi({ 'POST /bot/verify/oauth': { enabled: false } });
+    expect((await start.def.run({ discordId: ME, opts: {}, api: off.api, args: start.args })).buttons?.[0]?.id).toBe('verify:code');
+    const code = interactionFor('verify:code')!;
+    expect(code.def.opensModal?.(code.args)).toBe(true);
+    expect((await code.def.run({ discordId: ME, opts: {}, api: off.api, args: code.args })).modal).toMatchObject({ id: 'verify:name', fields: [{ id: 'roblox' }] });
     const { api, calls } = fakeApi({ 'POST /bot/verify/start': { code: 'apple blue tiger moon star', expiresAt: new Date(Date.now() + 900_000).toISOString(), roblox: { id: '156', name: 'builderman', displayName: 'Builder', avatarUrl: null, profileUrl: '' } } });
     const name = interactionFor('verify:name')!;
     const r = await name.def.run({ discordId: ME, opts: {}, api, guildId: GUILD, args: name.args, fields: { roblox: ' builderman ' } });
     expect(calls[0]!.body).toEqual({ guildId: GUILD, discordId: ME, roblox: 'builderman' });
     expect(text(r)).toContain('apple blue tiger moon star');
-    expect(r.buttons?.map((b) => b.id)).toEqual(['verify:check', 'verify:start']);
+    expect(r.buttons?.map((b) => b.id)).toEqual(['verify:check', 'verify:code']);
     // fachliche Fehler (z. B. Konto nicht gefunden) im Klartext
     const nf = fakeApi({ 'POST /bot/verify/start': new BotApiError(404, 'NOT_FOUND', 'Kein Roblox-Konto „xy“ gefunden.') });
     expect(text(await name.def.run({ discordId: ME, opts: {}, api: nf.api, args: name.args, fields: { roblox: 'xy' } }))).toContain('Kein Roblox-Konto');

@@ -10,11 +10,12 @@ exports.VerificationModule = void 0;
 const common_1 = require("@nestjs/common");
 const persons_module_1 = require("../persons/persons.module");
 const verification_controller_1 = require("./verification.controller");
+const roblox_oauth_service_1 = require("./roblox-oauth.service");
 const verification_service_1 = require("./verification.service");
 let VerificationModule = class VerificationModule {
 };
 exports.VerificationModule = VerificationModule;
 exports.VerificationModule = VerificationModule = __decorate([
-    (0, common_1.Module)({ imports: [persons_module_1.PersonsModule], controllers: [verification_controller_1.VerificationController, verification_controller_1.BotVerificationController], providers: [verification_service_1.VerificationService], exports: [verification_service_1.VerificationService] })
+    (0, common_1.Module)({ imports: [persons_module_1.PersonsModule], controllers: [verification_controller_1.VerificationController, verification_controller_1.BotVerificationController, verification_controller_1.RobloxOAuthController], providers: [verification_service_1.VerificationService, roblox_oauth_service_1.RobloxOAuthService], exports: [verification_service_1.VerificationService] })
 ], VerificationModule);
 //# sourceMappingURL=verification.module.js.map

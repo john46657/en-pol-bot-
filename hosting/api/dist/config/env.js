@@ -27,6 +27,9 @@ const schema = zod_1.z.object({
     DISCORD_CLIENT_SECRET: zod_1.z.string().min(8).optional(),
     /** Application/Client-ID; wird sonst aus DISCORD_TOKEN abgeleitet (gleiche Anwendung wie der Bot). */
     DISCORD_CLIENT_ID: zod_1.z.string().regex(/^\d{15,25}$/).optional(),
+    /** „Mit Roblox anmelden“ (Roblox-Verifizierung): OAuth-App von create.roblox.com → Zugangsdaten. Geht auch im Dashboard. */
+    ROBLOX_CLIENT_ID: zod_1.z.string().regex(/^\d{5,25}$/).optional(),
+    ROBLOX_CLIENT_SECRET: zod_1.z.string().min(8).optional(),
     /** Bot-Token (für Server-Mitgliedschaft und Rollen beim Discord-Login). */
     DISCORD_TOKEN: zod_1.z.string().min(20).optional(),
     DISCORD_GUILD_ID: zod_1.z.string().optional(),

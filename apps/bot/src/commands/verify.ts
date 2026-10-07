@@ -8,6 +8,19 @@ import { mapError } from './errors';
 const fail = (e: unknown): Reply => (e instanceof BotApiError && [400, 404, 409, 503].includes(e.status) ? errorReply(e.message) : mapError(e));
 const ts = (iso: string) => `<t:${Math.floor(Date.parse(iso) / 1000)}:R>`;
 
+/** „Verifizieren“: direkt mit Roblox anmelden (OAuth). Nur wenn das noch nicht eingerichtet ist, geht es über den Code im Profil. */
+async function startVerify(c: Ctx): Promise<Reply> {
+  try {
+    const r = await c.api.service<{ enabled: boolean; url?: string; expiresAt?: string }>('POST', '/bot/verify/oauth', { ...(c.guildId ? { guildId: c.guildId } : {}), discordId: c.discordId, ...(c.userName ? { discordName: c.userName } : {}) });
+    if (!r.enabled || !r.url) return { ephemeral: true, content: 'Bestätige dein Roblox-Konto mit einem Code in deinem Profil:', buttons: [{ id: 'verify:code', label: 'Roblox-Namen eingeben', style: 'success', emoji: '✅' }] };
+    return {
+      ephemeral: true,
+      embeds: [{ title: '✅ Mit Roblox verifizieren', color: COLORS.success, description: `Klick auf **Mit Roblox anmelden**, melde dich bei Roblox an und bestätige den Zugriff.\nDanach bekommst du hier automatisch deine Rollen und deinen Nickname.\n\nDer Link gilt nur für dich und läuft ${ts(r.expiresAt!)} ab.` }],
+      buttons: [{ id: 'link', label: 'Mit Roblox anmelden', style: 'secondary', url: r.url }],
+    };
+  } catch (e) { return fail(e); }
+}
+
 const nameModal = (): Reply => ({ modal: { id: 'verify:name', title: 'Roblox-Verifizierung', fields: [{ id: 'roblox', label: 'Dein Roblox-Benutzername', required: true, minLength: 3, maxLength: 20, placeholder: 'z. B. Builderman' }] } });
 
 /** Rollen/Nickname auf diesem Server setzen und das Ergebnis als Text zurückgeben. */
@@ -27,10 +40,11 @@ const linkFields = (l: VerifyLink) => [
 
 export const VERIFY_INTERACTION: InteractionDef = {
   prefix: 'verify',
-  opensModal: (args) => args[0] === 'start',
+  opensModal: (args) => args[0] === 'code',
   async run(c): Promise<Reply> {
     const action = c.args[0];
-    if (action === 'start') return nameModal();
+    if (action === 'start') return startVerify(c);
+    if (action === 'code') return nameModal();
     if (action === 'name') {
       try {
         const r = await c.api.service<{ code: string; expiresAt: string; roblox: { id: string; name: string; displayName: string; avatarUrl: string | null; profileUrl: string } }>('POST', '/bot/verify/start', { ...(c.guildId ? { guildId: c.guildId } : {}), discordId: c.discordId, roblox: (c.fields?.roblox ?? '').trim() });
@@ -51,7 +65,7 @@ export const VERIFY_INTERACTION: InteractionDef = {
           }],
           buttons: [
             { id: 'verify:check', label: 'Fertig – prüfen', style: 'success', emoji: '✅' },
-            { id: 'verify:start', label: 'Anderes Konto', style: 'secondary' },
+            { id: 'verify:code', label: 'Anderes Konto', style: 'secondary' },
           ],
         };
       } catch (e) { return fail(e); }
@@ -82,7 +96,7 @@ async function update(c: Ctx, userId = c.discordId): Promise<Reply> {
 const nameModalHint = (): Reply => ({ content: 'Du bist noch nicht verifiziert.', buttons: [{ id: 'verify:start', label: 'Jetzt verifizieren', style: 'success', emoji: '✅' }] });
 
 export const VERIFY_COMMANDS: CommandDef[] = [
-  { name: 'verifizieren', description: 'Verknüpft dein Roblox-Konto mit Discord (Rollen und Nickname)', opensModal: true, async run() { return nameModal(); } },
+  { name: 'verifizieren', description: 'Verknüpft dein Roblox-Konto mit Discord (Rollen und Nickname)', async run(c) { return startVerify(c); } },
   {
     name: 'aktualisieren', description: 'Setzt Rollen und Nickname aus deiner Roblox-Verifizierung neu',
     options: [{ name: 'mitglied', description: 'Anderes Mitglied (nur mit „Server verwalten“)', type: 'user' }],

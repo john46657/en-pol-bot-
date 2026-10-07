@@ -64,10 +64,11 @@ export function Verification() {
       <PageHeader title="Roblox-Verifizierung" subtitle="Wie bei RoVer: Mitglieder verknüpfen ihr Roblox-Konto mit Discord und bekommen automatisch Rollen und ihren Roblox-Namen als Nickname." />
       <p className="mb-4 rounded-lg border border-line bg-panel-2/40 p-3 text-sm text-muted">
         {server ? (cfg.own ? <>Eigene Einstellungen für <b>{serverName}</b>.</> : <>{serverName} nutzt die gemeinsamen Einstellungen – beim Speichern entstehen eigene für diesen Server.</>) : <>Gemeinsame Einstellungen für alle Server ohne eigene.</>}
-        {' '}So läuft es: Mitglied klickt <b>Verifizieren</b> (Panel oder <code>/verifizieren</code>) → gibt seinen Roblox-Namen ein → trägt ein paar Wörter in „Über mich“ im Roblox-Profil ein → <b>Fertig – prüfen</b>. Eine Verifizierung gilt auf allen Servern.
+        {' '}So läuft es: Mitglied klickt <b>Verifizieren</b> (Panel oder <code>/verifizieren</code>) → <b>Mit Roblox anmelden</b> → meldet sich direkt bei Roblox an → bekommt Rollen und Nickname. Eine Verifizierung gilt auf allen Servern.
       </p>
       {msg && <p role={msg.ok ? 'status' : 'alert'} className={`mb-3 text-sm ${msg.ok ? 'text-success' : 'text-danger'}`}>{msg.text}</p>}
       <div className="grid gap-4">
+        <OAuthCard manage={manage} />
         <Card title="Grundeinstellungen">
           <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
             <Box title="Verifizierung" desc="An: Panel, /verifizieren und automatische Rollen funktionieren auf diesem Server.">
@@ -134,6 +135,41 @@ export function Verification() {
         </div>
       )}
     </>
+  );
+}
+
+interface OAuth { enabled: boolean; fromEnv: boolean; clientId: string; hasSecret: boolean; redirectUri: string }
+/** „Mit Roblox anmelden“ einrichten: OAuth-App bei Roblox, Client-ID + Secret hier (das Secret wird nie wieder angezeigt). */
+function OAuthCard({ manage }: { manage: boolean }) {
+  const qc = useQueryClient();
+  const q = useQuery({ queryKey: ['verify-oauth'], queryFn: () => api<OAuth>('/verification/oauth') });
+  const [id, setId] = useState<string>();
+  const [secret, setSecret] = useState('');
+  const [copied, setCopied] = useState(false);
+  const save = useMutation({ mutationFn: () => api<OAuth>('/verification/oauth', { method: 'PUT', body: { clientId: (id ?? q.data?.clientId ?? '').trim(), ...(secret.trim() ? { clientSecret: secret.trim() } : {}) } }), onSuccess: (r) => { qc.setQueryData(['verify-oauth'], r); setSecret(''); setId(undefined); } });
+  if (!q.data) return q.error ? <ErrorState error={q.error} onRetry={() => void q.refetch()} /> : <SkeletonRows rows={2} />;
+  const o = q.data, clientId = id ?? o.clientId;
+  return (
+    <Card title={<span className="flex items-center gap-2">Mit Roblox anmelden {o.enabled ? <Badge tone="success">eingerichtet</Badge> : <Badge tone="warning">nicht eingerichtet</Badge>}</span>}>
+      {!o.enabled && <p className="mb-3 rounded-lg border border-warning/40 bg-warning/10 p-3 text-sm text-warning">Bis die Roblox-Anmeldung eingerichtet ist, verifizieren sich Mitglieder über einen Code in ihrem Roblox-Profil.</p>}
+      <ol className="mb-3 list-decimal space-y-1 pl-5 text-sm text-muted">
+        <li>Auf <a className="text-fg underline" href="https://create.roblox.com/dashboard/credentials?activeTab=OAuthTab" target="_blank" rel="noreferrer">create.roblox.com → Zugangsdaten → OAuth 2.0-Apps</a> eine App anlegen.</li>
+        <li>Berechtigungen (Scopes) <b className="text-fg">openid</b> und <b className="text-fg">profile</b> wählen.</li>
+        <li>Als Weiterleitungs-URL (Redirect URL) diese Adresse eintragen:</li>
+      </ol>
+      <div className="mb-3 flex flex-wrap items-center gap-2">
+        <code className="min-w-0 flex-1 break-all rounded border border-line bg-bg px-2 py-1.5 text-xs">{o.redirectUri}</code>
+        <Button size="sm" variant="secondary" onClick={() => { void navigator.clipboard?.writeText(o.redirectUri).then(() => { setCopied(true); setTimeout(() => setCopied(false), 1500); }); }}>{copied ? 'Kopiert' : 'Kopieren'}</Button>
+      </div>
+      {o.fromEnv ? <p className="text-sm text-muted">Client-ID und Secret kommen aus den Umgebungsvariablen <code>ROBLOX_CLIENT_ID</code>/<code>ROBLOX_CLIENT_SECRET</code>.</p> : (
+        <div className="grid gap-3 md:grid-cols-[1fr_1fr_auto] md:items-end">
+          <label className="grid gap-1 text-xs text-muted">Client-ID<Input aria-label="Roblox Client-ID" disabled={!manage} inputMode="numeric" placeholder="z. B. 1234567890123456789" value={clientId} onChange={(e) => setId(e.target.value.replace(/\D/g, ''))} /></label>
+          <label className="grid gap-1 text-xs text-muted">Client-Secret<Input aria-label="Roblox Client-Secret" type="password" autoComplete="off" disabled={!manage} placeholder={o.hasSecret ? '•••••• (gespeichert – leer lassen zum Behalten)' : 'Secret einfügen'} value={secret} onChange={(e) => setSecret(e.target.value)} /></label>
+          {manage && <Button disabled={save.isPending || (clientId === o.clientId && !secret.trim()) || (!!clientId && !o.hasSecret && !secret.trim())} onClick={() => save.mutate()}>Speichern</Button>}
+        </div>
+      )}
+      {save.error && <p role="alert" className="mt-2 text-sm text-danger">{errText(save.error)}</p>}
+    </Card>
   );
 }
 

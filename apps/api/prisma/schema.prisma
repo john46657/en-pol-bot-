@@ -1357,3 +1357,15 @@ model RobloxVerifyCode {
   expiresAt   DateTime
   createdAt   DateTime @default(now())
 }
+
+/// „Mit Roblox anmelden“ (OAuth): offener Vorgang, gehört zu einem Discord-Mitglied (einmal verwendbar, 10 Minuten gültig).
+model RobloxOAuthState {
+  state       String   @id
+  discordId   String
+  discordName String?
+  guildId     String?
+  expiresAt   DateTime
+  createdAt   DateTime @default(now())
+
+  @@index([discordId])
+}

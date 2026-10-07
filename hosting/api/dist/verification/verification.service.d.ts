@@ -188,6 +188,20 @@ export declare class VerificationService {
             nickname: string | null;
         } | null;
     }>;
+    /** Discord ↔ Roblox verknüpfen (nach Code-Prüfung oder „Mit Roblox anmelden“): Dashboard-Konto/CAD abgleichen, Log. */
+    linkAccount(guildId: string | null | undefined, discordId: string, discordName: string | null | undefined, roblox: {
+        id: string;
+        name: string;
+        displayName: string;
+    }, method: string): Promise<{
+        discordId: string;
+        displayName: string;
+        updatedAt: Date;
+        discordName: string | null;
+        robloxName: string;
+        robloxId: string;
+        verifiedAt: Date;
+    }>;
     /** Verknüpfung + was der Bot auf diesem Server tun soll (Rollen, Nickname). */
     status(guildId: string | undefined, discordId: string, discordName?: string): Promise<{
         enabled: boolean;

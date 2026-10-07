@@ -28,6 +28,7 @@ afterAll(async () => {
   await prisma.robloxLink.deleteMany({ where: { discordId: { in: [U1, U2] } } });
   await prisma.robloxVerifyCode.deleteMany({ where: { discordId: { in: [U1, U2] } } });
   await prisma.systemSetting.deleteMany({ where: { key: { startsWith: `verify.` } } });
+  await prisma.robloxOAuthState.deleteMany({});
   delete process.env.BOT_API_TOKEN; await app.close();
 });
 
@@ -69,6 +70,45 @@ describe('Roblox verification (like RoVer)', () => {
     expect(ok.body.actions.remove.sort()).toEqual([R.unverified, R.officer].sort());
     expect((await http().post('/api/v1/bot/verify/check').set(bot).send({ guildId: G, discordId: U1 })).status).toBe(404); // Code verbraucht
     expect((await prisma.discordOutbox.findFirst({ where: { type: 'verify.log' }, orderBy: { createdAt: 'desc' } }))?.payload).toMatchObject({ channelId: '630000000000000001', text: expect.stringContaining('builderman_vf') });
+  });
+
+  it('„Mit Roblox anmelden“: settings (secret never returned), link, callback verifies and queues roles', async () => {
+    const admin = (await login(app, 'vf_admin')).agent;
+    expect((await http().post('/api/v1/bot/verify/oauth').set(bot).send({ guildId: G, discordId: U2 })).body).toEqual({ enabled: false });
+    expect((await (await login(app, 'vf_off')).agent.put('/api/v1/verification/oauth').send({ clientId: '123456789', clientSecret: 'geheim-123456' })).status).toBe(403);
+    const saved = await admin.put('/api/v1/verification/oauth').send({ clientId: '123456789', clientSecret: 'geheim-123456' });
+    expect(saved.body).toMatchObject({ enabled: true, clientId: '123456789', hasSecret: true, redirectUri: expect.stringContaining('/api/v1/verify/roblox/callback') });
+    expect(JSON.stringify(saved.body)).not.toContain('geheim');
+    // Client-ID ändern ohne Secret → Secret bleibt
+    expect((await admin.put('/api/v1/verification/oauth').send({ clientId: '987654321' })).body).toMatchObject({ enabled: true, hasSecret: true });
+    const l = await http().post('/api/v1/bot/verify/oauth').set(bot).send({ guildId: G, discordId: U2, discordName: 'oauth_user' });
+    expect(l.body.enabled).toBe(true);
+    const url = new URL(l.body.url);
+    expect(url.origin + url.pathname).toBe('https://apis.roblox.com/oauth/v1/authorize');
+    expect(url.searchParams.get('client_id')).toBe('987654321');
+    expect(url.searchParams.get('scope')).toBe('openid profile');
+    const state = url.searchParams.get('state')!;
+    // Roblox nachbauen
+    const real = globalThis.fetch;
+    const seen: string[] = [];
+    globalThis.fetch = (async (input: string | URL | Request, init?: RequestInit) => {
+      const u = String(input instanceof Request ? input.url : input);
+      if (u.startsWith('https://apis.roblox.com/oauth/v1/token')) { seen.push(String(init?.body)); return new Response(JSON.stringify({ access_token: 'tok' }), { status: 200 }); }
+      if (u.startsWith('https://apis.roblox.com/oauth/v1/userinfo')) return new Response(JSON.stringify({ sub: '2034', preferred_username: 'LenaPolice', nickname: 'Lena' }), { status: 200 });
+      return real(input, init);
+    }) as typeof fetch;
+    try {
+      expect((await http().get('/api/v1/verify/roblox/callback?code=c&state=falsch')).status).toBe(400);
+      const ok = await http().get(`/api/v1/verify/roblox/callback?code=abc&state=${state}`);
+      expect(ok.status).toBe(200);
+      expect(ok.text).toContain('Verifiziert als LenaPolice');
+      expect(seen[0]).toContain('client_secret=geheim-123456');
+      expect((await http().get(`/api/v1/verify/roblox/callback?code=abc&state=${state}`)).status).toBe(400); // nur einmal
+      expect((await http().get('/api/v1/verify/roblox/callback?error=access_denied')).text).toContain('abgebrochen');
+    } finally { globalThis.fetch = real; }
+    expect(await prisma.robloxLink.findUnique({ where: { discordId: U2 } })).toMatchObject({ robloxId: '2034', robloxName: 'LenaPolice', displayName: 'Lena', discordName: 'oauth_user' });
+    expect((await prisma.discordOutbox.findFirst({ where: { type: 'verify.member' }, orderBy: { createdAt: 'desc' } }))?.payload).toEqual({ discordId: U2 });
+    await prisma.robloxLink.delete({ where: { discordId: U2 } });
   });
 
   it('status for unverified members; whois; dashboard list and unlink', async () => {

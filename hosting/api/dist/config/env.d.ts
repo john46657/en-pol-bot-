@@ -24,6 +24,9 @@ declare const schema: z.ZodObject<{
     DISCORD_CLIENT_SECRET: z.ZodOptional<z.ZodString>;
     /** Application/Client-ID; wird sonst aus DISCORD_TOKEN abgeleitet (gleiche Anwendung wie der Bot). */
     DISCORD_CLIENT_ID: z.ZodOptional<z.ZodString>;
+    /** „Mit Roblox anmelden“ (Roblox-Verifizierung): OAuth-App von create.roblox.com → Zugangsdaten. Geht auch im Dashboard. */
+    ROBLOX_CLIENT_ID: z.ZodOptional<z.ZodString>;
+    ROBLOX_CLIENT_SECRET: z.ZodOptional<z.ZodString>;
     /** Bot-Token (für Server-Mitgliedschaft und Rollen beim Discord-Login). */
     DISCORD_TOKEN: z.ZodOptional<z.ZodString>;
     DISCORD_GUILD_ID: z.ZodOptional<z.ZodString>;
@@ -50,6 +53,8 @@ declare const schema: z.ZodObject<{
     WEB_DIST?: string | undefined;
     DISCORD_CLIENT_SECRET?: string | undefined;
     DISCORD_CLIENT_ID?: string | undefined;
+    ROBLOX_CLIENT_ID?: string | undefined;
+    ROBLOX_CLIENT_SECRET?: string | undefined;
     DISCORD_TOKEN?: string | undefined;
     DISCORD_GUILD_ID?: string | undefined;
     ADMIN_DISCORD_IDS?: string | undefined;
@@ -72,6 +77,8 @@ declare const schema: z.ZodObject<{
     STORAGE_DIR?: string | undefined;
     DISCORD_CLIENT_SECRET?: string | undefined;
     DISCORD_CLIENT_ID?: string | undefined;
+    ROBLOX_CLIENT_ID?: string | undefined;
+    ROBLOX_CLIENT_SECRET?: string | undefined;
     DISCORD_TOKEN?: string | undefined;
     DISCORD_GUILD_ID?: string | undefined;
     ADMIN_DISCORD_IDS?: string | undefined;
