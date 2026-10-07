@@ -3,9 +3,9 @@ import { ADMIN_PASSWORD, API_URL } from '../playwright.config';
 
 export async function uiLogin(page: Page, username: string, password: string, opts: { expectSuccess?: boolean } = {}) {
   await page.goto('/login');
-  await page.getByLabel('Username').fill(username);
-  await page.getByLabel('Password').fill(password);
-  await page.getByRole('button', { name: 'Sign in' }).click();
+  await page.getByLabel('Benutzername').fill(username);
+  await page.getByLabel('Passwort').fill(password);
+  await page.getByRole('button', { name: 'Anmelden' }).click();
   if (opts.expectSuccess ?? true) await page.waitForURL((u) => !u.pathname.startsWith('/login'));
 }
 
