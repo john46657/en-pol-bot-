@@ -286,6 +286,8 @@ model Unit {
   /// Manuell gesetzte Kartenposition (ER:LC-Koordinaten), falls kein verknüpfter Spieler im Spiel ist
   mapX          Float?
   mapZ          Float?
+  /// Discord-Rollen, die den Status dieser Einheit melden dürfen (zusätzlich zu Leitstelle, Besatzung und discordRoleId)
+  statusRoleIds String[]       @default([])
   members       UnitMember[]
   incidents     IncidentUnit[]
   updatedAt     DateTime       @updatedAt
@@ -300,33 +302,35 @@ model UnitMember {
 }
 
 model Incident {
-  id            String           @id @default(uuid()) @db.Uuid
-  serverId      String?          @db.Uuid
-  number        String           @unique
-  title         String
-  description   String?
-  priority      String           @default("MEDIUM")
-  location      String?
-  source        String           @default("MANUAL") // MANUAL
-  status        String           @default("NEW")
-  dispatcherId  String?          @db.Uuid
-  supervisorId  String?          @db.Uuid
-  createdAt     DateTime         @default(now())
-  updatedAt     DateTime         @updatedAt
-  closedAt      DateTime?
-  version       Int              @default(1)
-  units         IncidentUnit[]
+  id              String           @id @default(uuid()) @db.Uuid
+  serverId        String?          @db.Uuid
+  number          String           @unique
+  title           String
+  description     String?
+  priority        String           @default("MEDIUM")
+  location        String?
+  source          String           @default("MANUAL") // MANUAL
+  status          String           @default("NEW")
+  dispatcherId    String?          @db.Uuid
+  supervisorId    String?          @db.Uuid
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+  closedAt        DateTime?
+  version         Int              @default(1)
+  units           IncidentUnit[]
   /// CAD-Felder: Einsatzart, Stichwort, Kartenposition (ER:LC-Koordinaten), Beteiligte, benötigte Einheiten, interne Notizen
-  type          String?
-  keyword       String?
-  mapX          Float?
-  mapZ          Float?
-  involved      String?
-  requiredUnits String?
-  internalNotes String?
+  type            String?
+  keyword         String?
+  mapX            Float?
+  mapZ            Float?
+  involved        String?
+  requiredUnits   String?
+  internalNotes   String?
   /// Discord-Server, auf dem der Einsatz geführt wird (Leitstelle)
-  guildId       String?
-  log           CadIncidentLog[]
+  guildId         String?
+  /// Vertraulich: nur diese Dashboard-Rollen (und CAD-Verwaltung/Disponent) sehen den Einsatz; leer = alle mit cad.view
+  restrictRoleIds String[]         @default([])
+  log             CadIncidentLog[]
 
   @@index([status, priority])
 }

@@ -58,6 +58,11 @@ ER:LC → Command Center (Recht `cad.erlc_command`). Kritische Befehle (Liste je
 
 `cad.view`, `cad.create_incident`, `cad.edit_incident`, `cad.close_incident`, `cad.assign_unit`, `cad.manage_units`, `cad.view_persons`, `cad.view_vehicles`, `cad.manage_map`, `cad.view_erlc`, `cad.manage_erlc`, `cad.erlc_command`, `cad.erlc_command_critical`, `cad.manage_cross_server`, `cad.view_logs`, `cad.manage_settings`, `cad.radio` + Bereich `dashboard.cad.view`. Rechte gelten wie überall je Discord-Server (Rollen-Editor). Die Migration gibt bestehenden Rollen passende Rechte (Leitstelle → Einsatzrechte, Einstellungen → Verwaltung); **kritische ER:LC-Befehle bekommt niemand automatisch**.
 
+## Rechte pro Einsatz und pro Einheit
+
+- **Vertrauliche Einsätze:** Im Einsatz-Formular „Vertraulich – nur diese Rollen“. Dann sehen und bearbeiten ihn nur diese Dashboard-Rollen, der Disponent des Einsatzes und wer `cad.manage_settings` hat (🔒 in der Liste). Vertrauliche Einsätze werden nicht nach Discord gemeldet.
+- **Einheiten:** Den Status einer Einheit melden die Leitstelle (`cad.assign_unit`), die Besatzung und – aus Discord – Mitglieder mit der Discord-Rolle der Einheit oder einer der „weiteren Status-Rollen“ (Einheit bearbeiten).
+
 ## Persönliche Ansicht
 
 Jeder Benutzer stellt für sich ein: Widgets und Reihenfolge der Startseite, kompakte Ansicht, Kartenausschnitt/Zoom, sichtbare Layer, Favoriten-Einsätze, bevorzugter ER:LC-Server. Gespeichert in den persönlichen Einstellungen – andere Benutzer sind nicht betroffen.
@@ -68,7 +73,6 @@ Alles mit `module: cad` oder `erlc`: Verbindung angelegt/geändert/Key geändert
 
 ## Grenzen / offen
 
-- Rechte pro einzelnem Einsatz bzw. einzelner Einheit gibt es nicht – Steuerung über `cad.*`-Rechte und Server-Verbindungen.
 - Die Webhook-Nutzlast ist von PRC nur teilweise dokumentiert; Notrufe werden erkannt, andere Ereignisse nur protokolliert.
 - Zonen-„automatische Aktion“: „warn“ schreibt einen Hinweis in die Chronik, „notify“ zusätzlich eine Leitstellenmeldung – geprüft beim Anlegen eines Einsatzes mit Kartenposition.
 - Gegen den echten ER:LC-Server und echtes Discord nicht getestet (nur mit nachgebauter API und Tests).

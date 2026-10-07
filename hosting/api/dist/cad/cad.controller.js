@@ -44,12 +44,12 @@ const coord = zod_1.z.number().finite().min(-100000).max(100000);
 const incidentBody = zod_1.z.object({
     title: zod_1.z.string().trim().min(2).max(200), type: opt(text(32)), keyword: opt(text(80)), priority: zod_1.z.string().max(32).optional(), status: zod_1.z.string().max(32).optional(),
     location: opt(text(200)), description: opt(text(5000)), involved: opt(text(2000)), requiredUnits: opt(text(500)), internalNotes: opt(text(5000)),
-    mapX: opt(coord), mapZ: opt(coord), dispatcherId: opt(zod_1.z.string().uuid()),
+    mapX: opt(coord), mapZ: opt(coord), dispatcherId: opt(zod_1.z.string().uuid()), restrictRoleIds: zod_1.z.array(zod_1.z.string().uuid()).max(20).optional(),
 });
 const unitBody = zod_1.z.object({
     callsign: zod_1.z.string().trim().min(2).max(16).regex(/^[A-Za-z0-9-_ ]+$/), name: opt(text(60)), type: opt(text(32)), color: opt(zod_1.z.string().regex(/^#[0-9a-fA-F]{6}$/)), icon: opt(text(16)),
     status: zod_1.z.string().max(32).optional(), discordRoleId: opt(sf), guildId: opt(sf), erlcTeam: opt(text(40)), operational: zod_1.z.boolean().optional(), vehicle: opt(text(64)), notes: opt(text(1000)),
-    mapX: opt(coord), mapZ: opt(coord),
+    mapX: opt(coord), mapZ: opt(coord), statusRoleIds: zod_1.z.array(sf).max(20).optional(),
 });
 const memberBody = zod_1.z.object({
     userId: opt(zod_1.z.string().uuid()), discordId: opt(sf), discordName: opt(text(64)), robloxName: opt(text(40)), robloxId: opt(zod_1.z.string().regex(/^\d{1,20}$/)), erlcName: opt(text(40)),
@@ -94,8 +94,8 @@ let CadController = class CadController {
     overview(a) { return this.s.overview(a); }
     map(a) { return this.s.mapData(a); }
     // Einsätze
-    async incidents(a, q) { await this.s.assertCrossServer(a, 'view_incidents', a.roles); return this.s.listIncidents({ active: q.active === 'true', q: q.q, take: q.take }); }
-    async incident(a, id) { await this.s.assertCrossServer(a, 'view_incidents', a.roles); return this.s.getIncident(id); }
+    async incidents(a, q) { await this.s.assertCrossServer(a, 'view_incidents', a.roles); return this.s.listIncidents({ active: q.active === 'true', q: q.q, take: q.take }, a); }
+    async incident(a, id) { await this.s.assertCrossServer(a, 'view_incidents', a.roles); return this.s.getIncident(id, a); }
     createIncident(a, b) { return this.s.createIncident(a, b); }
     updateIncident(a, id, b) { return this.s.updateIncident(a, id, b); }
     async status(a, id, b) { await this.s.assertCrossServer(a, 'dispatch', a.roles); return this.s.setStatus(a, id, b.status, b.note); }

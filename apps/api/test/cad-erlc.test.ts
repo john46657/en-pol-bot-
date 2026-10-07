@@ -284,3 +284,32 @@ describe('CAD', () => {
     expect((await admin.get('/api/v1/cad/logs')).body.length).toBeGreaterThan(5);
   });
 });
+
+describe('CAD – Rechte pro Einsatz und pro Einheit', () => {
+  it('vertrauliche Einsätze sehen nur freigegebene Rollen, die Verwaltung und der Disponent; keine Discord-Meldung', async () => {
+    const admin = (await login(app, 'cad_admin')).agent;
+    const disp = (await login(app, 'cad_disp')).agent;
+    const adminRole = await prisma.role.findUniqueOrThrow({ where: { name: 'System Administrator' } });
+    const before = await prisma.discordOutbox.count({ where: { type: 'cad.incident.created' } });
+    const secret = await admin.post('/api/v1/cad/incidents').send({ title: 'Verdeckte Ermittlung', restrictRoleIds: [adminRole.id] });
+    expect(secret.status).toBe(201);
+    expect(await prisma.discordOutbox.count({ where: { type: 'cad.incident.created' } })).toBe(before);
+    expect((await disp.get('/api/v1/cad/incidents')).body.some((i: { id: string }) => i.id === secret.body.id)).toBe(false);
+    expect((await disp.get(`/api/v1/cad/incidents/${secret.body.id}`)).status).toBe(404);
+    expect((await disp.post(`/api/v1/cad/incidents/${secret.body.id}/status`).send({ status: 'ON_SCENE' })).status).toBe(404);
+    expect((await admin.get(`/api/v1/cad/incidents/${secret.body.id}`)).status).toBe(200);
+    // Disponent mit Leitstellen-Rolle freigeben → sichtbar
+    const dispRole = await prisma.role.findUniqueOrThrow({ where: { name: 'Dispatch' } });
+    await admin.patch(`/api/v1/cad/incidents/${secret.body.id}`).send({ restrictRoleIds: [dispRole.id] });
+    expect((await disp.get(`/api/v1/cad/incidents/${secret.body.id}`)).status).toBe(200);
+  });
+  it('Status-Rollen einer Einheit dürfen den Status melden (aus Discord)', async () => {
+    const admin = (await login(app, 'cad_admin')).agent;
+    const ROLE = '640000000000000001';
+    const u = await admin.post('/api/v1/cad/units').send({ callsign: 'K9-02', type: 'K9', statusRoleIds: [ROLE] });
+    expect(u.status).toBe(201);
+    const roles = (r: string) => ({ ...bot(SEK_D, SEK_GUILD), 'X-Discord-Roles': r });
+    expect((await http().post(`/api/v1/cad/units/${u.body.id}/status`).set(roles('640000000000000099')).send({ status: 'ON_SCENE' })).status).toBe(403);
+    expect((await http().post(`/api/v1/cad/units/${u.body.id}/status`).set(roles(ROLE)).send({ status: 'ON_SCENE' })).status).toBe(200);
+  });
+});

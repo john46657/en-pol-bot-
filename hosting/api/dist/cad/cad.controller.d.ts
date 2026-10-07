@@ -20,6 +20,7 @@ declare const incidentBody: z.ZodObject<{
     mapX: z.ZodOptional<z.ZodNullable<z.ZodTypeAny>>;
     mapZ: z.ZodOptional<z.ZodNullable<z.ZodTypeAny>>;
     dispatcherId: z.ZodOptional<z.ZodNullable<z.ZodTypeAny>>;
+    restrictRoleIds: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
 }, "strip", z.ZodTypeAny, {
     title: string;
     type?: any;
@@ -34,6 +35,7 @@ declare const incidentBody: z.ZodObject<{
     involved?: any;
     requiredUnits?: any;
     internalNotes?: any;
+    restrictRoleIds?: string[] | undefined;
 }, {
     title: string;
     type?: any;
@@ -48,6 +50,7 @@ declare const incidentBody: z.ZodObject<{
     involved?: any;
     requiredUnits?: any;
     internalNotes?: any;
+    restrictRoleIds?: string[] | undefined;
 }>;
 declare const unitBody: z.ZodObject<{
     callsign: z.ZodString;
@@ -64,6 +67,7 @@ declare const unitBody: z.ZodObject<{
     notes: z.ZodOptional<z.ZodNullable<z.ZodTypeAny>>;
     mapX: z.ZodOptional<z.ZodNullable<z.ZodTypeAny>>;
     mapZ: z.ZodOptional<z.ZodNullable<z.ZodTypeAny>>;
+    statusRoleIds: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
 }, "strip", z.ZodTypeAny, {
     callsign: string;
     vehicle?: any;
@@ -79,6 +83,7 @@ declare const unitBody: z.ZodObject<{
     discordRoleId?: any;
     erlcTeam?: any;
     operational?: boolean | undefined;
+    statusRoleIds?: string[] | undefined;
 }, {
     callsign: string;
     vehicle?: any;
@@ -94,6 +99,7 @@ declare const unitBody: z.ZodObject<{
     discordRoleId?: any;
     erlcTeam?: any;
     operational?: boolean | undefined;
+    statusRoleIds?: string[] | undefined;
 }>;
 declare const memberBody: z.ZodObject<{
     userId: z.ZodOptional<z.ZodNullable<z.ZodTypeAny>>;
@@ -313,6 +319,7 @@ export declare class CadController {
             involved: string | null;
             requiredUnits: string | null;
             internalNotes: string | null;
+            restrictRoleIds: string[];
         }[];
         units: {
             crew: {
@@ -378,6 +385,7 @@ export declare class CadController {
             discordRoleId: string | null;
             erlcTeam: string | null;
             operational: boolean;
+            statusRoleIds: string[];
         }[];
         calls: {
             incident: {
@@ -482,6 +490,7 @@ export declare class CadController {
             involved: string | null;
             requiredUnits: string | null;
             internalNotes: string | null;
+            restrictRoleIds: string[];
         }[];
         calls: {
             incident: {
@@ -575,6 +584,7 @@ export declare class CadController {
             discordRoleId: string | null;
             erlcTeam: string | null;
             operational: boolean;
+            statusRoleIds: string[];
         }[];
         objects: {
             id: string;
@@ -655,6 +665,7 @@ export declare class CadController {
         involved: string | null;
         requiredUnits: string | null;
         internalNotes: string | null;
+        restrictRoleIds: string[];
     }[]>;
     incident(a: CadActor & {
         roles: string[];
@@ -728,6 +739,7 @@ export declare class CadController {
         involved: string | null;
         requiredUnits: string | null;
         internalNotes: string | null;
+        restrictRoleIds: string[];
     }>;
     createIncident(a: CadActor, b: z.infer<typeof incidentBody>): Promise<{
         number: string;
@@ -753,6 +765,7 @@ export declare class CadController {
         involved: string | null;
         requiredUnits: string | null;
         internalNotes: string | null;
+        restrictRoleIds: string[];
     }>;
     updateIncident(a: CadActor, id: string, b: Partial<z.infer<typeof incidentBody>>): Promise<{
         number: string;
@@ -778,6 +791,7 @@ export declare class CadController {
         involved: string | null;
         requiredUnits: string | null;
         internalNotes: string | null;
+        restrictRoleIds: string[];
     }>;
     status(a: CadActor & {
         roles: string[];
@@ -805,6 +819,7 @@ export declare class CadController {
         involved: string | null;
         requiredUnits: string | null;
         internalNotes: string | null;
+        restrictRoleIds: string[];
     }>;
     note(a: CadActor, id: string, b: {
         text: string;
@@ -883,6 +898,7 @@ export declare class CadController {
         discordRoleId: string | null;
         erlcTeam: string | null;
         operational: boolean;
+        statusRoleIds: string[];
     }[]>;
     createUnit(a: CadActor, b: z.infer<typeof unitBody>): Promise<{
         vehicle: string | null;
@@ -901,6 +917,7 @@ export declare class CadController {
         discordRoleId: string | null;
         erlcTeam: string | null;
         operational: boolean;
+        statusRoleIds: string[];
     }>;
     updateUnit(a: CadActor, id: string, b: Partial<z.infer<typeof unitBody>>): Promise<{
         vehicle: string | null;
@@ -919,6 +936,7 @@ export declare class CadController {
         discordRoleId: string | null;
         erlcTeam: string | null;
         operational: boolean;
+        statusRoleIds: string[];
     }>;
     deleteUnit(a: CadActor, id: string): Promise<void>;
     /** Leitstelle oder die Besatzung selbst (auch vom verbundenen SEK/K9-Server, falls freigegeben). */
@@ -943,6 +961,7 @@ export declare class CadController {
         discordRoleId: string | null;
         erlcTeam: string | null;
         operational: boolean;
+        statusRoleIds: string[];
     }>;
     calls(a: CadActor & {
         roles: string[];
@@ -1020,6 +1039,7 @@ export declare class CadController {
         involved: string | null;
         requiredUnits: string | null;
         internalNotes: string | null;
+        restrictRoleIds: string[];
     } | {
         incidentId: string;
     }>;

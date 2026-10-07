@@ -7,7 +7,7 @@ import { useAuth } from '../../lib/auth';
 import { ago, optColor, optLabel, useCadConfig, useCadPrefs, type CadConfig, type CadIncidentDetail, type CadIncidentRow, type CadRadioRow, type CadUnitRow } from '../../lib/cad';
 import { Button, Card, EmptyState, ErrorState, Field, Input, Modal, PageHeader, Select, SkeletonRows, Textarea } from '../../components/ui';
 
-export interface IncidentDraft { title?: string; type?: string; keyword?: string; priority?: string; status?: string; location?: string; description?: string; involved?: string; requiredUnits?: string; internalNotes?: string; mapX?: number | null; mapZ?: number | null }
+export interface IncidentDraft { restrictRoleIds?: string[]; title?: string; type?: string; keyword?: string; priority?: string; status?: string; location?: string; description?: string; involved?: string; requiredUnits?: string; internalNotes?: string; mapX?: number | null; mapZ?: number | null }
 
 const errText = (e: unknown) => (e instanceof ApiError ? `${e.message}${Array.isArray(e.details) ? `: ${(e.details as { path: string; message: string }[]).map((d) => `${d.path} ${d.message}`).join(', ')}` : ''}` : 'Fehlgeschlagen');
 
@@ -16,6 +16,7 @@ export function IncidentForm({ cfg, initial, id, callId, onClose, onSaved }: { c
   const qc = useQueryClient();
   const [v, setV] = useState<IncidentDraft>({ priority: cfg.priorities[Math.floor(cfg.priorities.length / 2)]?.key, ...initial });
   const [err, setErr] = useState<string>();
+  const roles = useQuery({ queryKey: ['roles-list'], queryFn: () => api<{ id: string; name: string }[]>('/roles').catch(() => []) });
   const m = useMutation({
     mutationFn: () => {
       const body = Object.fromEntries(Object.entries(v).map(([k, x]) => [k, x === '' ? null : x])) as Record<string, unknown>;
@@ -41,6 +42,9 @@ export function IncidentForm({ cfg, initial, id, callId, onClose, onSaved }: { c
         <div className="sm:col-span-2"><Field label="Beschreibung">{(fid) => <Textarea id={fid} rows={3} maxLength={5000} value={v.description ?? ''} onChange={(e) => upd({ description: e.target.value })} />}</Field></div>
         <Field label="Beteiligte Personen">{(fid) => <Textarea id={fid} rows={2} maxLength={2000} value={v.involved ?? ''} onChange={(e) => upd({ involved: e.target.value })} />}</Field>
         <Field label="Benötigte Einheiten">{(fid) => <Textarea id={fid} rows={2} maxLength={500} value={v.requiredUnits ?? ''} onChange={(e) => upd({ requiredUnits: e.target.value })} />}</Field>
+        <div className="sm:col-span-2"><Field label="Vertraulich – nur diese Rollen sehen den Einsatz (leer = alle mit CAD-Zugriff; wird dann nicht nach Discord gemeldet)">{(fid) => (
+          <Select id={fid} multiple className="h-20" value={v.restrictRoleIds ?? []} onChange={(e) => upd({ restrictRoleIds: [...e.target.selectedOptions].map((o) => o.value) })}>{(roles.data ?? []).map((r) => <option key={r.id} value={r.id}>{r.name}</option>)}</Select>
+        )}</Field></div>
         <div className="sm:col-span-2"><Field label="Interne Notizen (nur im CAD)">{(fid) => <Textarea id={fid} rows={2} maxLength={5000} value={v.internalNotes ?? ''} onChange={(e) => upd({ internalNotes: e.target.value })} />}</Field></div>
         {err && <p role="alert" className="text-sm text-danger sm:col-span-2">{err}</p>}
         <div className="flex justify-end gap-2 sm:col-span-2"><Button variant="secondary" onClick={onClose}>Abbrechen</Button><Button type="submit" disabled={m.isPending}>{id ? 'Speichern' : 'Einsatz anlegen'}</Button></div>
@@ -74,7 +78,7 @@ export function CadIncidents() {
               <li key={i.id} className={`flex items-start gap-2 py-2 ${selected === i.id ? 'bg-primary/10' : ''}`}>
                 <button aria-label={fav.has(i.id) ? 'Favorit entfernen' : 'Als Favorit merken'} onClick={() => toggleFav(i.id)} className={fav.has(i.id) ? 'text-warning' : 'text-muted'}><Star size={14} fill={fav.has(i.id) ? 'currentColor' : 'none'} /></button>
                 <button className="min-w-0 flex-1 text-left" onClick={() => setSp({ id: i.id })}>
-                  <p className="truncate text-sm font-medium"><span className="mr-1 inline-block h-2 w-2 rounded-full" style={{ background: optColor(cfg.priorities, i.priority) ?? '#64748b' }} />{i.number} · {i.title}</p>
+                  <p className="truncate text-sm font-medium"><span className="mr-1 inline-block h-2 w-2 rounded-full" style={{ background: optColor(cfg.priorities, i.priority) ?? "#64748b" }} />{i.restrictRoleIds?.length ? "🔒 " : ""}{i.number} · {i.title}</p>
                   <p className="truncate text-xs text-muted">{optLabel(cfg.incidentStatuses, i.status)} · {i.keyword ?? optLabel(cfg.incidentTypes, i.type)} · {i.location ?? 'ohne Ort'} · {ago(i.createdAt)}</p>
                 </button>
               </li>))}</ul>
@@ -142,7 +146,7 @@ export function IncidentDetail({ id, cfg }: { id: string; cfg: CadConfig }) {
         {can('cad.radio') && <form className="flex gap-1" onSubmit={(e) => { e.preventDefault(); if (radio.trim()) sendRadio.mutate(); }}><Input aria-label="Funkmeldung" placeholder="📻 Funkmeldung zum Einsatz…" maxLength={500} value={radio} onChange={(e) => setRadio(e.target.value)} /><Button type="submit" size="sm" disabled={!radio.trim()}>Senden</Button></form>}
         {can('cad.edit_incident') && <form className="flex gap-1" onSubmit={(e) => { e.preventDefault(); if (note.trim()) addNote.mutate(); }}><Input aria-label="Notiz" placeholder="📝 Notiz zur Chronik…" maxLength={2000} value={note} onChange={(e) => setNote(e.target.value)} /><Button type="submit" size="sm" variant="secondary" disabled={!note.trim()}>Notiz</Button></form>}
       </div>
-      {edit && <IncidentForm cfg={cfg} id={i.id} initial={{ title: i.title, type: i.type ?? '', keyword: i.keyword ?? '', priority: i.priority, location: i.location ?? '', description: i.description ?? '', involved: i.involved ?? '', requiredUnits: i.requiredUnits ?? '', internalNotes: i.internalNotes ?? '', mapX: i.mapX, mapZ: i.mapZ }} onClose={() => setEdit(false)} />}
+      {edit && <IncidentForm cfg={cfg} id={i.id} initial={{ restrictRoleIds: i.restrictRoleIds ?? [], title: i.title, type: i.type ?? '', keyword: i.keyword ?? '', priority: i.priority, location: i.location ?? '', description: i.description ?? '', involved: i.involved ?? '', requiredUnits: i.requiredUnits ?? '', internalNotes: i.internalNotes ?? '', mapX: i.mapX, mapZ: i.mapZ }} onClose={() => setEdit(false)} />}
     </Card>
   );
 }

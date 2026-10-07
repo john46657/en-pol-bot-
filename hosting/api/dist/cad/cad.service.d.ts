@@ -27,6 +27,7 @@ export interface IncidentInput {
     mapX?: number | null;
     mapZ?: number | null;
     dispatcherId?: string | null;
+    restrictRoleIds?: string[];
 }
 export interface UnitInput {
     callsign: string;
@@ -43,6 +44,7 @@ export interface UnitInput {
     notes?: string | null;
     mapX?: number | null;
     mapZ?: number | null;
+    statusRoleIds?: string[];
 }
 export interface MemberInput {
     userId?: string | null;
@@ -107,11 +109,14 @@ export declare class CadService {
     private nextNumber;
     private log;
     private incidentPayload;
+    /** Sichtbarkeit vertraulicher Einsätze: CAD-Verwaltung, Disponent des Einsatzes oder eine der freigegebenen Rollen. */
+    private visibility;
+    assertVisible(actor: CadActor, id: string): Promise<void>;
     listIncidents(f: {
         active?: boolean;
         q?: string;
         take?: number;
-    }): Promise<{
+    }, actor?: CadActor): Promise<{
         calls: {
             id: string;
             callNumber: number;
@@ -154,8 +159,9 @@ export declare class CadService {
         involved: string | null;
         requiredUnits: string | null;
         internalNotes: string | null;
+        restrictRoleIds: string[];
     }[]>;
-    getIncident(id: string): Promise<{
+    getIncident(id: string, actor?: CadActor): Promise<{
         calls: {
             id: string;
             createdAt: Date;
@@ -225,6 +231,7 @@ export declare class CadService {
         involved: string | null;
         requiredUnits: string | null;
         internalNotes: string | null;
+        restrictRoleIds: string[];
     }>;
     private validateIncident;
     createIncident(actor: CadActor, d: IncidentInput, opts?: {
@@ -253,6 +260,7 @@ export declare class CadService {
         involved: string | null;
         requiredUnits: string | null;
         internalNotes: string | null;
+        restrictRoleIds: string[];
     }>;
     /** Zonen mit automatischer Aktion: Einsatz liegt in der Zone → Hinweis in der Chronik („warn“) bzw. zusätzlich Leitstellenmeldung („notify“). */
     private zoneActions;
@@ -280,6 +288,7 @@ export declare class CadService {
         involved: string | null;
         requiredUnits: string | null;
         internalNotes: string | null;
+        restrictRoleIds: string[];
     }>;
     /** Abschließen und Wiederöffnen eines abgeschlossenen Einsatzes brauchen cad.close_incident. */
     private assertStatusAllowed;
@@ -307,6 +316,7 @@ export declare class CadService {
         involved: string | null;
         requiredUnits: string | null;
         internalNotes: string | null;
+        restrictRoleIds: string[];
     }>;
     addNote(actor: CadActor, id: string, text: string): Promise<void>;
     assignUnit(actor: CadActor, id: string, unitId: string): Promise<{
@@ -377,6 +387,7 @@ export declare class CadService {
         discordRoleId: string | null;
         erlcTeam: string | null;
         operational: boolean;
+        statusRoleIds: string[];
     }[]>;
     private validateUnit;
     createUnit(actor: CadActor, d: UnitInput): Promise<{
@@ -396,6 +407,7 @@ export declare class CadService {
         discordRoleId: string | null;
         erlcTeam: string | null;
         operational: boolean;
+        statusRoleIds: string[];
     }>;
     updateUnit(actor: CadActor, id: string, d: Partial<UnitInput>): Promise<{
         vehicle: string | null;
@@ -414,6 +426,7 @@ export declare class CadService {
         discordRoleId: string | null;
         erlcTeam: string | null;
         operational: boolean;
+        statusRoleIds: string[];
     }>;
     deleteUnit(actor: CadActor, id: string): Promise<void>;
     /** Status einer Einheit: Leitstelle (cad.assign_unit) oder ein Besatzungsmitglied selbst (auch vom verbundenen SEK/K9-Server). */
@@ -434,6 +447,7 @@ export declare class CadService {
         discordRoleId: string | null;
         erlcTeam: string | null;
         operational: boolean;
+        statusRoleIds: string[];
     }>;
     listCalls(f: {
         status?: string;
@@ -510,6 +524,7 @@ export declare class CadService {
         involved: string | null;
         requiredUnits: string | null;
         internalNotes: string | null;
+        restrictRoleIds: string[];
     }>;
     /** Einheit direkt zu einem Notruf: legt bei Bedarf den Einsatz an. */
     assignToCall(actor: CadActor, callId: string, unitId: string): Promise<{
@@ -717,6 +732,7 @@ export declare class CadService {
             involved: string | null;
             requiredUnits: string | null;
             internalNotes: string | null;
+            restrictRoleIds: string[];
         }[];
         units: {
             crew: {
@@ -782,6 +798,7 @@ export declare class CadService {
             discordRoleId: string | null;
             erlcTeam: string | null;
             operational: boolean;
+            statusRoleIds: string[];
         }[];
         calls: {
             incident: {
@@ -887,6 +904,7 @@ export declare class CadService {
             involved: string | null;
             requiredUnits: string | null;
             internalNotes: string | null;
+            restrictRoleIds: string[];
         }[];
         calls: {
             incident: {
@@ -980,6 +998,7 @@ export declare class CadService {
             discordRoleId: string | null;
             erlcTeam: string | null;
             operational: boolean;
+            statusRoleIds: string[];
         }[];
         objects: {
             id: string;

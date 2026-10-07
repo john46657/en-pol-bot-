@@ -33,12 +33,12 @@ const coord = z.number().finite().min(-100000).max(100000);
 const incidentBody = z.object({
   title: z.string().trim().min(2).max(200), type: opt(text(32)), keyword: opt(text(80)), priority: z.string().max(32).optional(), status: z.string().max(32).optional(),
   location: opt(text(200)), description: opt(text(5000)), involved: opt(text(2000)), requiredUnits: opt(text(500)), internalNotes: opt(text(5000)),
-  mapX: opt(coord), mapZ: opt(coord), dispatcherId: opt(z.string().uuid()),
+  mapX: opt(coord), mapZ: opt(coord), dispatcherId: opt(z.string().uuid()), restrictRoleIds: z.array(z.string().uuid()).max(20).optional(),
 });
 const unitBody = z.object({
   callsign: z.string().trim().min(2).max(16).regex(/^[A-Za-z0-9-_ ]+$/), name: opt(text(60)), type: opt(text(32)), color: opt(z.string().regex(/^#[0-9a-fA-F]{6}$/)), icon: opt(text(16)),
   status: z.string().max(32).optional(), discordRoleId: opt(sf), guildId: opt(sf), erlcTeam: opt(text(40)), operational: z.boolean().optional(), vehicle: opt(text(64)), notes: opt(text(1000)),
-  mapX: opt(coord), mapZ: opt(coord),
+  mapX: opt(coord), mapZ: opt(coord), statusRoleIds: z.array(sf).max(20).optional(),
 });
 const memberBody = z.object({
   userId: opt(z.string().uuid()), discordId: opt(sf), discordName: opt(text(64)), robloxName: opt(text(40)), robloxId: opt(z.string().regex(/^\d{1,20}$/)), erlcName: opt(text(40)),
@@ -86,9 +86,9 @@ export class CadController {
 
   // Einsätze
   @Get('incidents') @RequirePermission('cad.view')
-  async incidents(@Cad() a: CadActor & { roles: string[] }, @Query(zodBody(listQ)) q: z.infer<typeof listQ>) { await this.s.assertCrossServer(a, 'view_incidents', a.roles); return this.s.listIncidents({ active: q.active === 'true', q: q.q, take: q.take }); }
+  async incidents(@Cad() a: CadActor & { roles: string[] }, @Query(zodBody(listQ)) q: z.infer<typeof listQ>) { await this.s.assertCrossServer(a, 'view_incidents', a.roles); return this.s.listIncidents({ active: q.active === 'true', q: q.q, take: q.take }, a); }
   @Get('incidents/:id') @RequirePermission('cad.view')
-  async incident(@Cad() a: CadActor & { roles: string[] }, @Param('id', ParseUUIDPipe) id: string) { await this.s.assertCrossServer(a, 'view_incidents', a.roles); return this.s.getIncident(id); }
+  async incident(@Cad() a: CadActor & { roles: string[] }, @Param('id', ParseUUIDPipe) id: string) { await this.s.assertCrossServer(a, 'view_incidents', a.roles); return this.s.getIncident(id, a); }
   @Post('incidents') @RequirePermission('cad.create_incident')
   createIncident(@Cad() a: CadActor, @Body(zodBody(incidentBody)) b: z.infer<typeof incidentBody>) { return this.s.createIncident(a, b); }
   @Patch('incidents/:id') @RequirePermission('cad.edit_incident')

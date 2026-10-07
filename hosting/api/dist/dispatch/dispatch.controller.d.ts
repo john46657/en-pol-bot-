@@ -141,6 +141,7 @@ export declare class IncidentsController {
             involved: string | null;
             requiredUnits: string | null;
             internalNotes: string | null;
+            restrictRoleIds: string[];
         })[];
         total: number;
         page: number;
@@ -166,6 +167,7 @@ export declare class IncidentsController {
                     discordRoleId: string | null;
                     erlcTeam: string | null;
                     operational: boolean;
+                    statusRoleIds: string[];
                 };
             } & {
                 incidentId: string;
@@ -197,6 +199,7 @@ export declare class IncidentsController {
             involved: string | null;
             requiredUnits: string | null;
             internalNotes: string | null;
+            restrictRoleIds: string[];
         };
         links: {
             role: string;
@@ -241,6 +244,7 @@ export declare class IncidentsController {
         involved: string | null;
         requiredUnits: string | null;
         internalNotes: string | null;
+        restrictRoleIds: string[];
     }>;
     update(a: Actor, id: string, b: z.infer<typeof update>): Promise<{
         number: string;
@@ -266,6 +270,7 @@ export declare class IncidentsController {
         involved: string | null;
         requiredUnits: string | null;
         internalNotes: string | null;
+        restrictRoleIds: string[];
     }>;
     attach(a: Actor, id: string, b: z.infer<typeof attach>): Promise<void>;
 }
@@ -294,6 +299,7 @@ export declare class DispatchController {
         discordRoleId: string | null;
         erlcTeam: string | null;
         operational: boolean;
+        statusRoleIds: string[];
     })[]>;
     createUnit(a: Actor, b: z.infer<typeof unit>): Promise<{
         vehicle: string | null;
@@ -312,6 +318,7 @@ export declare class DispatchController {
         discordRoleId: string | null;
         erlcTeam: string | null;
         operational: boolean;
+        statusRoleIds: string[];
     }>;
     unitStatus(a: Actor, id: string, b: {
         status: (typeof UNIT_STATUSES)[number];
@@ -332,6 +339,7 @@ export declare class DispatchController {
         discordRoleId: string | null;
         erlcTeam: string | null;
         operational: boolean;
+        statusRoleIds: string[];
     }>;
     members(a: Actor, id: string, b: {
         userIds: string[];
@@ -357,6 +365,7 @@ export declare class DispatchController {
         discordRoleId: string | null;
         erlcTeam: string | null;
         operational: boolean;
+        statusRoleIds: string[];
     }>;
     assign(a: Actor, id: string, b: {
         unitId: string;
@@ -391,6 +400,7 @@ export declare class DispatchController {
         involved: string | null;
         requiredUnits: string | null;
         internalNotes: string | null;
+        restrictRoleIds: string[];
     }>;
     setStatus(a: Actor, id: string, b: z.infer<typeof status>): Promise<{
         number: string;
@@ -416,6 +426,7 @@ export declare class DispatchController {
         involved: string | null;
         requiredUnits: string | null;
         internalNotes: string | null;
+        restrictRoleIds: string[];
     }>;
     close(a: Actor, id: string): Promise<{
         number: string;
@@ -441,6 +452,7 @@ export declare class DispatchController {
         involved: string | null;
         requiredUnits: string | null;
         internalNotes: string | null;
+        restrictRoleIds: string[];
     }>;
 }
 export {};

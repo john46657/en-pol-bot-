@@ -7,7 +7,7 @@ import { useRealtime } from './realtime';
 export type { CadConfig, CadOption };
 export interface CadUnitRow {
   id: string; callsign: string; name: string | null; type: string | null; color: string | null; icon: string | null; status: string; discordRoleId: string | null; guildId: string | null;
-  erlcTeam: string | null; operational: boolean; vehicle: string | null; notes: string | null; mapX: number | null; mapZ: number | null;
+  erlcTeam: string | null; operational: boolean; vehicle: string | null; notes: string | null; mapX: number | null; mapZ: number | null; statusRoleIds?: string[];
   crew: { id: string; discordName: string | null; discordId: string | null; robloxName: string | null; erlcName: string | null; callsign: string | null; team: string | null; inGame: boolean }[];
   memberNames: string[]; current: { id: string; number: string; title: string; status: string } | null;
   position: { x: number; z: number; source: 'erlc' | 'manual'; street: string | null; postal: string | null } | null;
@@ -15,7 +15,7 @@ export interface CadUnitRow {
 export interface CadIncidentRow {
   id: string; number: string; title: string; type: string | null; keyword: string | null; priority: string; status: string; location: string | null; description: string | null;
   involved: string | null; requiredUnits: string | null; internalNotes: string | null; mapX: number | null; mapZ: number | null; dispatcherId: string | null; guildId: string | null;
-  source: string; createdAt: string; updatedAt: string; closedAt: string | null;
+  source: string; createdAt: string; updatedAt: string; closedAt: string | null; restrictRoleIds?: string[];
   units: { unitId: string; clearedAt: string | null; assignedAt: string; unit: { id: string; callsign: string; name: string | null; type: string | null; status: string } }[];
   calls?: { id: string; callNumber: number }[];
 }

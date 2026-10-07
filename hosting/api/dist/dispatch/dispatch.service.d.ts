@@ -34,6 +34,7 @@ export declare class DispatchService {
         discordRoleId: string | null;
         erlcTeam: string | null;
         operational: boolean;
+        statusRoleIds: string[];
     })[]>;
     createUnit(actor: Actor, d: {
         callsign: string;
@@ -57,6 +58,7 @@ export declare class DispatchService {
         discordRoleId: string | null;
         erlcTeam: string | null;
         operational: boolean;
+        statusRoleIds: string[];
     }>;
     setUnitStatus(actor: Actor, id: string, status: UnitStatus): Promise<{
         vehicle: string | null;
@@ -75,6 +77,7 @@ export declare class DispatchService {
         discordRoleId: string | null;
         erlcTeam: string | null;
         operational: boolean;
+        statusRoleIds: string[];
     }>;
     /** Besetzung einer Einheit (Supervisor/Leitstelle). Nur aktive Benutzer; ersetzt die bisherige Besetzung vollständig. */
     setUnitMembers(actor: Actor, id: string, userIds: string[]): Promise<{
@@ -99,6 +102,7 @@ export declare class DispatchService {
         discordRoleId: string | null;
         erlcTeam: string | null;
         operational: boolean;
+        statusRoleIds: string[];
     }>;
     list(p: PageQuery, status?: string, activeOnly?: boolean): Promise<{
         items: ({
@@ -136,6 +140,7 @@ export declare class DispatchService {
             involved: string | null;
             requiredUnits: string | null;
             internalNotes: string | null;
+            restrictRoleIds: string[];
         })[];
         total: number;
         page: number;
@@ -161,6 +166,7 @@ export declare class DispatchService {
                     discordRoleId: string | null;
                     erlcTeam: string | null;
                     operational: boolean;
+                    statusRoleIds: string[];
                 };
             } & {
                 incidentId: string;
@@ -192,6 +198,7 @@ export declare class DispatchService {
             involved: string | null;
             requiredUnits: string | null;
             internalNotes: string | null;
+            restrictRoleIds: string[];
         };
         links: {
             role: string;
@@ -243,6 +250,7 @@ export declare class DispatchService {
         involved: string | null;
         requiredUnits: string | null;
         internalNotes: string | null;
+        restrictRoleIds: string[];
     }>;
     attach(tx: Tx, incidentId: string, personIds: string[] | undefined, vehicleIds: string[] | undefined, actor: Actor): Promise<void>;
     attachRecords(actor: Actor, id: string, d: {
@@ -279,6 +287,7 @@ export declare class DispatchService {
         involved: string | null;
         requiredUnits: string | null;
         internalNotes: string | null;
+        restrictRoleIds: string[];
     }>;
     setStatus(actor: Actor, id: string, to: DispatchStatus, note?: string): Promise<{
         number: string;
@@ -304,6 +313,7 @@ export declare class DispatchService {
         involved: string | null;
         requiredUnits: string | null;
         internalNotes: string | null;
+        restrictRoleIds: string[];
     }>;
     assignUnit(actor: Actor, id: string, unitId: string): Promise<{
         units: {
@@ -336,5 +346,6 @@ export declare class DispatchService {
         involved: string | null;
         requiredUnits: string | null;
         internalNotes: string | null;
+        restrictRoleIds: string[];
     }>;
 }

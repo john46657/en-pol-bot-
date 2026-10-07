@@ -95,7 +95,7 @@ export function CadCalls() {
 }
 
 // ───────── Einheiten ─────────
-interface UnitDraft { id?: string; callsign: string; name?: string | null; type?: string | null; color?: string | null; icon?: string | null; status?: string; discordRoleId?: string | null; guildId?: string | null; erlcTeam?: string | null; operational?: boolean; vehicle?: string | null; notes?: string | null; mapX?: number | null; mapZ?: number | null }
+interface UnitDraft { id?: string; callsign: string; name?: string | null; type?: string | null; color?: string | null; icon?: string | null; status?: string; discordRoleId?: string | null; guildId?: string | null; erlcTeam?: string | null; operational?: boolean; vehicle?: string | null; notes?: string | null; mapX?: number | null; mapZ?: number | null; statusRoleIds?: string[] }
 
 export function CadUnits() {
   const { can } = useAuth();
@@ -154,6 +154,7 @@ export function CadUnits() {
             <Field label="Discord-Rolle (wird bei Zuweisung erwähnt)">{(id) => <Select id={id} value={edit.discordRoleId ?? ''} onChange={(e) => setEdit({ ...edit, discordRoleId: e.target.value || null })}><option value="">—</option>{(guilds.data ?? []).filter((g) => !edit.guildId || g.id === edit.guildId).map((g) => <optgroup key={g.id} label={g.name}>{g.roles.map((r) => <option key={r.id} value={r.id}>@{r.name}</option>)}</optgroup>)}</Select>}</Field>
             <Field label="ER:LC-Team">{(id) => <Input id={id} maxLength={40} placeholder="z. B. Police, Sheriff" value={edit.erlcTeam ?? ''} onChange={(e) => setEdit({ ...edit, erlcTeam: e.target.value })} />}</Field>
             <Field label="Fahrzeug">{(id) => <Input id={id} maxLength={64} value={edit.vehicle ?? ''} onChange={(e) => setEdit({ ...edit, vehicle: e.target.value })} />}</Field>
+            <Field label="Weitere Discord-Rollen, die den Status melden dürfen">{(id) => <Select id={id} multiple className="h-20" value={edit.statusRoleIds ?? []} onChange={(e) => setEdit({ ...edit, statusRoleIds: [...e.target.selectedOptions].map((o) => o.value) })}>{(guilds.data ?? []).filter((g) => !edit.guildId || g.id === edit.guildId).map((g) => <optgroup key={g.id} label={g.name}>{g.roles.map((r) => <option key={r.id} value={r.id}>@{r.name}</option>)}</optgroup>)}</Select>}</Field>
             <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={edit.operational !== false} onChange={(e) => setEdit({ ...edit, operational: e.target.checked })} />Einsatzfähig</label>
             <div className="sm:col-span-2"><Field label="Notizen">{(id) => <Textarea id={id} rows={2} maxLength={1000} value={edit.notes ?? ''} onChange={(e) => setEdit({ ...edit, notes: e.target.value })} />}</Field></div>
             <div className="flex justify-between gap-2 sm:col-span-2">{edit.id ? <Button variant="danger" onClick={() => del.mutate(edit.id!)}>Löschen</Button> : <span />}<div className="flex gap-2"><Button variant="secondary" onClick={() => setEdit(null)}>Abbrechen</Button><Button type="submit" disabled={save.isPending}>Speichern</Button></div></div>

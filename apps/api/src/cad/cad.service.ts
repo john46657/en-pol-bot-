@@ -20,11 +20,11 @@ const incidentInclude = { units: { include: { unit: { select: { id: true, callsi
 
 export interface IncidentInput {
   title: string; type?: string | null; keyword?: string | null; priority?: string; status?: string; location?: string | null; description?: string | null;
-  involved?: string | null; requiredUnits?: string | null; internalNotes?: string | null; mapX?: number | null; mapZ?: number | null; dispatcherId?: string | null;
+  involved?: string | null; requiredUnits?: string | null; internalNotes?: string | null; mapX?: number | null; mapZ?: number | null; dispatcherId?: string | null; restrictRoleIds?: string[];
 }
 export interface UnitInput {
   callsign: string; name?: string | null; type?: string | null; color?: string | null; icon?: string | null; status?: string; discordRoleId?: string | null;
-  guildId?: string | null; erlcTeam?: string | null; operational?: boolean; vehicle?: string | null; notes?: string | null; mapX?: number | null; mapZ?: number | null;
+  guildId?: string | null; erlcTeam?: string | null; operational?: boolean; vehicle?: string | null; notes?: string | null; mapX?: number | null; mapZ?: number | null; statusRoleIds?: string[];
 }
 export interface MemberInput {
   userId?: string | null; discordId?: string | null; discordName?: string | null; robloxName?: string | null; robloxId?: string | null; erlcName?: string | null;
@@ -93,10 +93,23 @@ export class CadService {
   }
 
   // ───────── Einsätze ─────────
-  async listIncidents(f: { active?: boolean; q?: string; take?: number }) {
+  /** Sichtbarkeit vertraulicher Einsätze: CAD-Verwaltung, Disponent des Einsatzes oder eine der freigegebenen Rollen. */
+  private async visibility(actor: CadActor | undefined): Promise<Prisma.IncidentWhereInput> {
+    if (!actor?.userId || (await this.perms.has(actor.userId, 'cad.manage_settings'))) return {};
+    const roles = (await this.prisma.userRole.findMany({ where: { userId: actor.userId }, select: { roleId: true } })).map((r) => r.roleId);
+    return { OR: [{ restrictRoleIds: { isEmpty: true } }, { dispatcherId: actor.userId }, ...(roles.length ? [{ restrictRoleIds: { hasSome: roles } }] : [])] };
+  }
+  async assertVisible(actor: CadActor, id: string) {
+    const ok = await this.prisma.incident.findFirst({ where: { id, ...(await this.visibility(actor)) }, select: { id: true } });
+    if (!ok) throw new AppError('NOT_FOUND', 'Einsatz nicht gefunden.');
+  }
+
+  async listIncidents(f: { active?: boolean; q?: string; take?: number }, actor?: CadActor) {
     const cfg = await this.cfg.get();
     const closed = cfg.incidentStatuses.filter((s) => s.closed).map((s) => s.key);
+    const vis = await this.visibility(actor);
     const where: Prisma.IncidentWhereInput = {
+      AND: [vis],
       ...(f.active ? { status: { notIn: closed } } : {}),
       ...(f.q ? { OR: [{ number: { contains: f.q, mode: 'insensitive' } }, { title: { contains: f.q, mode: 'insensitive' } }, { keyword: { contains: f.q, mode: 'insensitive' } }, { location: { contains: f.q, mode: 'insensitive' } }] } : {}),
     };
@@ -108,7 +121,8 @@ export class CadService {
       .sort((a, b) => (f.active ? (order.get(a.priority) ?? 99) - (order.get(b.priority) ?? 99) : 0) || b.createdAt.getTime() - a.createdAt.getTime());
   }
 
-  async getIncident(id: string) {
+  async getIncident(id: string, actor?: CadActor) {
+    if (actor) await this.assertVisible(actor, id);
     const i = await this.prisma.incident.findUnique({ where: { id }, include: { ...incidentInclude, log: { orderBy: { createdAt: 'asc' }, take: 500 } } });
     if (!i) throw new AppError('NOT_FOUND', 'Einsatz nicht gefunden.');
     const [calls, users] = await Promise.all([
@@ -139,7 +153,7 @@ export class CadService {
           const row = await tx.incident.create({ data: {
             number: await this.nextNumber(tx, cfg.incidentNumberPrefix), title: d.title, type: d.type ?? null, keyword: d.keyword ?? null, priority, status, location: d.location ?? null,
             description: d.description ?? null, involved: d.involved ?? null, requiredUnits: d.requiredUnits ?? null, internalNotes: d.internalNotes ?? null, mapX: d.mapX ?? null, mapZ: d.mapZ ?? null,
-            dispatcherId: d.dispatcherId ?? actor.userId, source: opts.callId ? 'ERLC_CALL' : 'CAD', guildId,
+            restrictRoleIds: d.restrictRoleIds ?? [], dispatcherId: d.dispatcherId ?? actor.userId, source: opts.callId ? 'ERLC_CALL' : 'CAD', guildId,
           } });
           await this.log(tx, row.id, 'CREATED', `Einsatz ${row.number} angelegt`, actor);
           if (opts.callId) {
@@ -164,7 +178,7 @@ export class CadService {
     await this.zoneActions(actor, inc);
     this.changed('incident', inc.id);
     this.rt.publish('incidents', 'incident.created', { id: inc.id, number: inc.number });
-    await this.notify.emit('incident.created', this.incidentPayload(cfg, inc), inc.guildId);
+    if (!inc.restrictRoleIds.length) await this.notify.emit('incident.created', this.incidentPayload(cfg, inc), inc.guildId); // vertrauliche Einsätze nicht nach Discord
     return inc;
   }
 
@@ -181,6 +195,7 @@ export class CadService {
   }
 
   async updateIncident(actor: CadActor, id: string, d: Partial<IncidentInput>) {
+    await this.assertVisible(actor, id);
     const cfg = await this.validateIncident(d);
     const before = await this.prisma.incident.findUnique({ where: { id } });
     if (!before) throw new AppError('NOT_FOUND', 'Einsatz nicht gefunden.');
@@ -206,6 +221,7 @@ export class CadService {
   }
 
   async setStatus(actor: CadActor, id: string, status: string, note?: string) {
+    await this.assertVisible(actor, id);
     const cfg = await this.validateIncident({ status });
     const st = cfg.incidentStatuses.find((s) => s.key === status)!;
     const inc = await this.prisma.incident.findUnique({ where: { id } });
@@ -227,11 +243,12 @@ export class CadService {
     this.changed('incident', id);
     this.rt.publish('incidents', 'incident.status', { id, status });
     const event: CadEvent = st.closed ? 'incident.closed' : 'incident.status';
-    await this.notify.emit(event, this.incidentPayload(cfg, after, { previous: this.label(cfg.incidentStatuses, inc.status), note: note ?? null }), after.guildId);
+    if (!after.restrictRoleIds.length) await this.notify.emit(event, this.incidentPayload(cfg, after, { previous: this.label(cfg.incidentStatuses, inc.status), note: note ?? null }), after.guildId);
     return after;
   }
 
   async addNote(actor: CadActor, id: string, text: string) {
+    await this.assertVisible(actor, id);
     if (!(await this.prisma.incident.findUnique({ where: { id }, select: { id: true } }))) throw new AppError('NOT_FOUND', 'Einsatz nicht gefunden.');
     await this.log(this.prisma, id, 'NOTE', text, actor);
     await this.audit.record(actor, { action: 'cad.incident.note', module: 'cad', entityType: 'Incident', entityId: id });
@@ -239,6 +256,7 @@ export class CadService {
   }
 
   async assignUnit(actor: CadActor, id: string, unitId: string) {
+    await this.assertVisible(actor, id);
     const cfg = await this.cfg.get();
     const closed = cfg.incidentStatuses.filter((s) => s.closed).map((s) => s.key);
     const { inc, unit } = await this.prisma.$transaction(async (tx) => {
@@ -258,7 +276,7 @@ export class CadService {
     });
     this.changed('incident', id);
     this.rt.publish('dispatch', 'unit.assigned', { incidentId: id, unitId });
-    await this.notify.emit('incident.assigned', this.incidentPayload(cfg, inc, { callsign: unit.callsign, unitName: unit.name, unitType: unit.type ? this.label(cfg.unitTypes, unit.type) : null, unitRoleId: unit.discordRoleId }), inc.guildId);
+    if (!inc.restrictRoleIds.length) await this.notify.emit('incident.assigned', this.incidentPayload(cfg, inc, { callsign: unit.callsign, unitName: unit.name, unitType: unit.type ? this.label(cfg.unitTypes, unit.type) : null, unitRoleId: unit.discordRoleId }), inc.guildId);
     return { ok: true };
   }
 
@@ -356,7 +374,9 @@ export class CadService {
     if (dispatcher) await this.assertCrossServer(actor, 'dispatch', memberRoleIds);
     else {
       const crew = u.members.some((m) => m.userId === actor.userId) || !!(await this.prisma.cadMember.findFirst({ where: { unitId: id, OR: [{ userId: actor.userId }, ...(actor.discordId ? [{ discordId: actor.discordId }] : [])] } }));
-      if (!crew) throw new AppError('PERMISSION_DENIED', 'Nur die Leitstelle oder die Besatzung darf den Status dieser Einheit ändern.');
+      // Einheiten-Rechte: Discord-Rolle der Einheit bzw. freigegebene Status-Rollen (aus Discord übermittelt)
+      const byRole = memberRoleIds.some((r) => r === u.discordRoleId || u.statusRoleIds.includes(r));
+      if (!crew && !byRole) throw new AppError('PERMISSION_DENIED', 'Nur die Leitstelle, die Besatzung oder freigegebene Rollen dürfen den Status dieser Einheit ändern.');
       await this.assertCrossServer(actor, 'status_report', memberRoleIds);
     }
     if (u.status === status) return u;
@@ -583,7 +603,7 @@ export class CadService {
   /** Daten für die Leitstellen-Startseite in einem Abruf. ER:LC-Ausfall → letzter Stand + Hinweis, CAD läuft weiter. */
   async overview(actor: CadActor) {
     const [cfg, incidents, units, calls, radio, servers] = await Promise.all([
-      this.cfg.get(), this.listIncidents({ active: true, take: 50 }), this.listUnits(), this.listCalls({ status: 'OPEN', take: 50 }), this.listRadio({ take: 15 }),
+      this.cfg.get(), this.listIncidents({ active: true, take: 50 }, actor), this.listUnits(), this.listCalls({ status: 'OPEN', take: 50 }), this.listRadio({ take: 15 }),
       this.prisma.erlcServer.findMany({ orderBy: { name: 'asc' } }),
     ]);
     const can = async (p: string) => this.perms.has(actor.userId!, p);
@@ -604,7 +624,7 @@ export class CadService {
   /** Kartendaten: Einsätze, Notrufe, Einheiten, Spieler/Staff/Fahrzeuge (live), eigene POIs/Zonen. */
   async mapData(actor: CadActor) {
     const [incidents, units, calls, objects, servers] = await Promise.all([
-      this.listIncidents({ active: true, take: 200 }), this.listUnits(), this.listCalls({ status: 'OPEN', take: 200 }), this.listMapObjects(actor),
+      this.listIncidents({ active: true, take: 200 }, actor), this.listUnits(), this.listCalls({ status: 'OPEN', take: 200 }), this.listMapObjects(actor),
       this.prisma.erlcServer.findMany({ where: { active: true } }),
     ]);
     const erlcAllowed = await this.perms.has(actor.userId!, 'cad.view_erlc');
