@@ -7,6 +7,7 @@ import { AuditService, type Actor } from '../audit/audit.service';
 import { ApplicationsService } from '../applications/applications.service';
 import { QualificationsService } from '../qualifications/qualifications.service';
 import { SupportTicketsService } from '../support-tickets/tickets.service';
+import { MediaService } from '../media/media.service';
 
 const KEY = 'welcome.config';
 const sf = z.string().regex(/^\d{15,25}$/, 'Discord-ID (15–25 Ziffern)');
@@ -18,6 +19,8 @@ const message = (d: WelcomeConfig['welcome']) => z.object({
   color: z.string().regex(/^#[0-9a-fA-F]{6}$/).default(d.color),
   showAvatar: z.boolean().default(d.showAvatar),
   pingUser: z.boolean().default(d.pingUser),
+  image: z.union([z.string().trim().max(500).regex(/^https:\/\/\S+$/, 'Bild-URL muss mit https:// beginnen'), z.literal('')]).default(''),
+  imageMediaId: z.union([z.string().uuid(), z.literal('')]).default(''),
 }).default({});
 export const welcomeConfigSchema = z.object({
   welcome: message(DEFAULT_WELCOME_CONFIG.welcome),
@@ -33,7 +36,7 @@ export const welcomeConfigSchema = z.object({
 @Injectable()
 export class WelcomeService {
   private readonly log = new Logger('Welcome');
-  constructor(private readonly prisma: PrismaService, private readonly audit: AuditService, private readonly applications: ApplicationsService, private readonly qualifications: QualificationsService, private readonly tickets: SupportTicketsService) {}
+  constructor(private readonly prisma: PrismaService, private readonly audit: AuditService, private readonly applications: ApplicationsService, private readonly qualifications: QualificationsService, private readonly tickets: SupportTicketsService, private readonly media: MediaService) {}
 
   private keyOf(guildId?: string | null) { return guildId ? `${KEY}@${guildId}` : KEY; }
 
@@ -60,6 +63,12 @@ export class WelcomeService {
     await this.prisma.systemSetting.deleteMany({ where: { key: this.keyOf(guildId) } });
     await this.audit.record(actor, { action: 'welcome.config.reset', module: 'settings', entityType: 'SystemSetting', entityId: this.keyOf(guildId) });
     return this.config(guildId);
+  }
+
+  /** Hochgeladener Banner für den Bot (nur Bilder, die als Willkommens-Banner hochgeladen wurden). */
+  async banner(id: string) {
+    const f = await this.media.welcomeBanner(id);
+    return { mime: f.mime, name: f.name, data: f.data.toString('base64') };
   }
 
   /** Vom Bot: Mitglied hat den Server verlassen → offene Bewerbungen und Tickets nach Einstellung behandeln. Fehler eines Bereichs stoppen die anderen nicht. */

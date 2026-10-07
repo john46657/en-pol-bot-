@@ -4,7 +4,7 @@ import type { EmbedData } from './format';
 
 /** Was der Bot für Willkommen/Abschied in Discord tut (echte Umsetzung in index.ts, in Tests ein Fake). */
 export interface WelcomeActions {
-  post(channelId: string, m: { content?: string; mentionUserIds?: string[]; embed: EmbedData }): Promise<void>;
+  post(channelId: string, m: { content?: string; mentionUserIds?: string[]; embed: EmbedData; file?: { name: string; data: Buffer } }): Promise<void>;
   dm(userId: string, text: string): Promise<void>;
   addRoles(guildId: string, userId: string, roleIds: string[]): Promise<void>;
 }
@@ -13,10 +13,11 @@ export interface MemberEvent extends WelcomeMember { guildId: string; bot: boole
 const CACHE_MS = 30_000;
 
 /** Nachricht (Willkommen oder Abschied) als Embed – leere Titel/Texte fallen weg. */
-export function welcomeEmbed(def: WelcomeMessageDef, m: MemberEvent, now = Date.now()): EmbedData {
+export function welcomeEmbed(def: WelcomeMessageDef, m: MemberEvent, now = Date.now(), bannerFile?: string): EmbedData {
   const title = renderWelcomeText(def.title, m, now).slice(0, 256);
   const description = renderWelcomeText(def.message, m, now).slice(0, 4000);
-  return { title: title || '​', ...(description ? { description } : {}), color: hexColor(def.color), ...(def.showAvatar && m.avatar ? { thumbnail: m.avatar } : {}) };
+  const image = bannerFile ? `attachment://${bannerFile}` : def.image;
+  return { title: title || '​', ...(description ? { description } : {}), color: hexColor(def.color), ...(def.showAvatar && m.avatar ? { thumbnail: m.avatar } : {}), ...(image ? { image } : {}) };
 }
 
 /**
@@ -33,9 +34,21 @@ export function createWelcome(api: Api, actions: WelcomeActions, log: (m: string
     return cfg;
   };
   const step = (label: string, p: Promise<unknown>) => p.catch((e) => log(`${label} failed: ${e instanceof Error ? e.message : e}`));
-  const say = (def: WelcomeMessageDef, m: MemberEvent) => (def.enabled && def.channelId
-    ? actions.post(def.channelId, { ...(def.pingUser ? { content: `<@${m.id}>`, mentionUserIds: [m.id] } : {}), embed: welcomeEmbed(def, m) })
-    : Promise.resolve());
+  // hochgeladene Banner (Datei bleibt gleich, solange die ID gleich ist)
+  const banners = new Map<string, { name: string; data: Buffer }>();
+  const banner = async (id: string) => {
+    if (!banners.has(id)) {
+      const b = await api.service<{ name: string; data: string }>('GET', `/bot/welcome/banner/${id}`);
+      if (banners.size > 20) banners.clear();
+      banners.set(id, { name: b.name.replace(/[^\w.-]/g, '') || 'banner.png', data: Buffer.from(b.data, 'base64') });
+    }
+    return banners.get(id)!;
+  };
+  const say = async (def: WelcomeMessageDef, m: MemberEvent) => {
+    if (!def.enabled || !def.channelId) return;
+    const file = def.imageMediaId ? await banner(def.imageMediaId).catch((e) => { log(`banner not loaded: ${e instanceof Error ? e.message : e}`); return undefined; }) : undefined;
+    await actions.post(def.channelId, { ...(def.pingUser ? { content: `<@${m.id}>`, mentionUserIds: [m.id] } : {}), embed: welcomeEmbed(def, m, Date.now(), file?.name), ...(file ? { file } : {}) });
+  };
 
   return {
     async joined(m: MemberEvent) {

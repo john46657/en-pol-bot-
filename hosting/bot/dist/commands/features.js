@@ -8,6 +8,7 @@ const errors_1 = require("./errors");
 const sek_1 = require("./sek");
 const qualifications_1 = require("./qualifications");
 const tickets_1 = require("./tickets");
+const voice_support_1 = require("../voice-support");
 const leave_1 = require("./leave");
 const cad_1 = require("./cad");
 const str = (c, k) => String(c.opts[k] ?? '').trim();
@@ -209,6 +210,7 @@ exports.INTERACTIONS = [
     sek_1.SEK_INTERACTION,
     qualifications_1.QUALI_INTERACTION,
     tickets_1.TICKET_INTERACTION,
+    voice_support_1.VOICE_INTERACTION,
     leave_1.LEAVE_INTERACTION,
     cad_1.CAD_INTERACTION,
     {

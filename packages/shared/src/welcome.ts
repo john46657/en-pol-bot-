@@ -1,5 +1,6 @@
 /** Willkommens- und Abschiedsnachrichten (je Discord-Server einstellbar, Admin → Welcome & Goodbye). */
-export interface WelcomeMessageDef { enabled: boolean; channelId: string | null; title: string; message: string; color: string; showAvatar: boolean; pingUser: boolean }
+/** Banner: hochgeladenes Bild (`imageMediaId`, der Bot hängt es an) oder Bild-URL (`image`, https). */
+export interface WelcomeMessageDef { enabled: boolean; channelId: string | null; title: string; message: string; color: string; showAvatar: boolean; pingUser: boolean; image: string; imageMediaId: string }
 export interface WelcomeConfig {
   welcome: WelcomeMessageDef;
   /** Direktnachricht an neue Mitglieder. */
@@ -11,12 +12,12 @@ export interface WelcomeConfig {
 
 export const DEFAULT_WELCOME_CONFIG: WelcomeConfig = {
   welcome: {
-    enabled: false, channelId: null, title: '👋 Willkommen auf {server}!', color: '#3b82f6', showAvatar: true, pingUser: true,
+    enabled: false, channelId: null, title: '👋 Willkommen auf {server}!', color: '#3b82f6', showAvatar: true, pingUser: true, image: '', imageMediaId: '',
     message: 'Hey {user}, schön, dass du da bist! Du bist Mitglied **#{memberCount}**.\n\nLies dir bitte die Regeln durch. Bewerben kannst du dich jederzeit über das Bewerbungs-Panel.',
   },
   dm: { enabled: false, message: 'Willkommen auf **{server}**, {username}! Bei Fragen öffne einfach ein Support-Ticket.' },
   autoRoleIds: [],
-  goodbye: { enabled: false, channelId: null, title: 'Auf Wiedersehen', color: '#64748b', showAvatar: true, pingUser: false, message: '**{username}** hat den Server verlassen. Wir sind jetzt {memberCount} Mitglieder.' },
+  goodbye: { enabled: false, channelId: null, title: 'Auf Wiedersehen', color: '#64748b', showAvatar: true, pingUser: false, image: '', imageMediaId: '', message: '**{username}** hat den Server verlassen. Wir sind jetzt {memberCount} Mitglieder.' },
 };
 
 /** Platzhalter für Titel und Texte (Anzeige im Dashboard). */

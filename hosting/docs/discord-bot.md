@@ -141,7 +141,7 @@ Ist weder Channel noch Rolle eingestellt, wird nichts eingereiht. Fällt der Bot
 
 ## Willkommen & Abschied
 *Administration → Willkommen & Abschied* (je Server – oben links wählen; „Alle Server“ = gemeinsame Grundeinstellung):
-- **Willkommensnachricht** in einem Kanal (Titel, Text, Farbe, Profilbild, Erwähnung des neuen Mitglieds) mit Vorschau.
+- **Willkommensnachricht** in einem Kanal (Titel, Text, Farbe, Profilbild, Erwähnung des neuen Mitglieds, **Banner**) mit Vorschau. Banner: Bild hochladen (PNG/JPG/GIF/WebP bis 8 MB – der Bot hängt es an die Nachricht an) oder eine Bild-URL (https://). Die Abschiedsnachricht kann ebenfalls einen Banner haben.
 - **Willkommens-DM** und **automatische Rollen** für neue Mitglieder (keine Bots; die Bot-Rolle muss über diesen Rollen stehen).
 - **Abschiedsnachricht**, wenn jemand den Server verlässt.
 - Platzhalter: `{user}`, `{username}`, `{displayName}`, `{server}`, `{memberCount}`, `{accountAge}`.

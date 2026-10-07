@@ -5,6 +5,7 @@ import { AuditService, type Actor } from '../audit/audit.service';
 import { ApplicationsService } from '../applications/applications.service';
 import { QualificationsService } from '../qualifications/qualifications.service';
 import { SupportTicketsService } from '../support-tickets/tickets.service';
+import { MediaService } from '../media/media.service';
 export declare const welcomeConfigSchema: z.ZodEffects<z.ZodObject<{
     welcome: z.ZodDefault<z.ZodObject<{
         enabled: z.ZodDefault<z.ZodBoolean>;
@@ -14,22 +15,28 @@ export declare const welcomeConfigSchema: z.ZodEffects<z.ZodObject<{
         color: z.ZodDefault<z.ZodString>;
         showAvatar: z.ZodDefault<z.ZodBoolean>;
         pingUser: z.ZodDefault<z.ZodBoolean>;
+        image: z.ZodDefault<z.ZodUnion<[z.ZodString, z.ZodLiteral<"">]>>;
+        imageMediaId: z.ZodDefault<z.ZodUnion<[z.ZodString, z.ZodLiteral<"">]>>;
     }, "strip", z.ZodTypeAny, {
         message: string;
         color: string;
         enabled: boolean;
         channelId: string | null;
         title: string;
+        image: string;
         showAvatar: boolean;
         pingUser: boolean;
+        imageMediaId: string;
     }, {
         message?: string | undefined;
         color?: string | undefined;
         enabled?: boolean | undefined;
         channelId?: string | null | undefined;
         title?: string | undefined;
+        image?: string | undefined;
         showAvatar?: boolean | undefined;
         pingUser?: boolean | undefined;
+        imageMediaId?: string | undefined;
     }>>;
     dm: z.ZodDefault<z.ZodObject<{
         enabled: z.ZodDefault<z.ZodBoolean>;
@@ -50,22 +57,28 @@ export declare const welcomeConfigSchema: z.ZodEffects<z.ZodObject<{
         color: z.ZodDefault<z.ZodString>;
         showAvatar: z.ZodDefault<z.ZodBoolean>;
         pingUser: z.ZodDefault<z.ZodBoolean>;
+        image: z.ZodDefault<z.ZodUnion<[z.ZodString, z.ZodLiteral<"">]>>;
+        imageMediaId: z.ZodDefault<z.ZodUnion<[z.ZodString, z.ZodLiteral<"">]>>;
     }, "strip", z.ZodTypeAny, {
         message: string;
         color: string;
         enabled: boolean;
         channelId: string | null;
         title: string;
+        image: string;
         showAvatar: boolean;
         pingUser: boolean;
+        imageMediaId: string;
     }, {
         message?: string | undefined;
         color?: string | undefined;
         enabled?: boolean | undefined;
         channelId?: string | null | undefined;
         title?: string | undefined;
+        image?: string | undefined;
         showAvatar?: boolean | undefined;
         pingUser?: boolean | undefined;
+        imageMediaId?: string | undefined;
     }>>;
 }, "strip", z.ZodTypeAny, {
     dm: {
@@ -78,8 +91,10 @@ export declare const welcomeConfigSchema: z.ZodEffects<z.ZodObject<{
         enabled: boolean;
         channelId: string | null;
         title: string;
+        image: string;
         showAvatar: boolean;
         pingUser: boolean;
+        imageMediaId: string;
     };
     autoRoleIds: string[];
     goodbye: {
@@ -88,8 +103,10 @@ export declare const welcomeConfigSchema: z.ZodEffects<z.ZodObject<{
         enabled: boolean;
         channelId: string | null;
         title: string;
+        image: string;
         showAvatar: boolean;
         pingUser: boolean;
+        imageMediaId: string;
     };
 }, {
     dm?: {
@@ -102,8 +119,10 @@ export declare const welcomeConfigSchema: z.ZodEffects<z.ZodObject<{
         enabled?: boolean | undefined;
         channelId?: string | null | undefined;
         title?: string | undefined;
+        image?: string | undefined;
         showAvatar?: boolean | undefined;
         pingUser?: boolean | undefined;
+        imageMediaId?: string | undefined;
     } | undefined;
     autoRoleIds?: string[] | undefined;
     goodbye?: {
@@ -112,8 +131,10 @@ export declare const welcomeConfigSchema: z.ZodEffects<z.ZodObject<{
         enabled?: boolean | undefined;
         channelId?: string | null | undefined;
         title?: string | undefined;
+        image?: string | undefined;
         showAvatar?: boolean | undefined;
         pingUser?: boolean | undefined;
+        imageMediaId?: string | undefined;
     } | undefined;
 }>, {
     dm: {
@@ -126,8 +147,10 @@ export declare const welcomeConfigSchema: z.ZodEffects<z.ZodObject<{
         enabled: boolean;
         channelId: string | null;
         title: string;
+        image: string;
         showAvatar: boolean;
         pingUser: boolean;
+        imageMediaId: string;
     };
     autoRoleIds: string[];
     goodbye: {
@@ -136,8 +159,10 @@ export declare const welcomeConfigSchema: z.ZodEffects<z.ZodObject<{
         enabled: boolean;
         channelId: string | null;
         title: string;
+        image: string;
         showAvatar: boolean;
         pingUser: boolean;
+        imageMediaId: string;
     };
 }, {
     dm?: {
@@ -150,8 +175,10 @@ export declare const welcomeConfigSchema: z.ZodEffects<z.ZodObject<{
         enabled?: boolean | undefined;
         channelId?: string | null | undefined;
         title?: string | undefined;
+        image?: string | undefined;
         showAvatar?: boolean | undefined;
         pingUser?: boolean | undefined;
+        imageMediaId?: string | undefined;
     } | undefined;
     autoRoleIds?: string[] | undefined;
     goodbye?: {
@@ -160,8 +187,10 @@ export declare const welcomeConfigSchema: z.ZodEffects<z.ZodObject<{
         enabled?: boolean | undefined;
         channelId?: string | null | undefined;
         title?: string | undefined;
+        image?: string | undefined;
         showAvatar?: boolean | undefined;
         pingUser?: boolean | undefined;
+        imageMediaId?: string | undefined;
     } | undefined;
 }>;
 /** Willkommen & Abschied je Discord-Server (`welcome.config@<guildId>`, sonst die gemeinsame Grundeinstellung) und was beim Verlassen passiert. */
@@ -171,8 +200,9 @@ export declare class WelcomeService {
     private readonly applications;
     private readonly qualifications;
     private readonly tickets;
+    private readonly media;
     private readonly log;
-    constructor(prisma: PrismaService, audit: AuditService, applications: ApplicationsService, qualifications: QualificationsService, tickets: SupportTicketsService);
+    constructor(prisma: PrismaService, audit: AuditService, applications: ApplicationsService, qualifications: QualificationsService, tickets: SupportTicketsService, media: MediaService);
     private keyOf;
     /** `own` = dieser Server hat eigene Einstellungen (sonst gilt die gemeinsame). */
     config(guildId?: string | null): Promise<WelcomeConfig & {
@@ -184,6 +214,12 @@ export declare class WelcomeService {
     /** Eigene Einstellungen eines Servers löschen – danach gilt wieder die gemeinsame. */
     reset(actor: Actor, guildId: string): Promise<WelcomeConfig & {
         own: boolean;
+    }>;
+    /** Hochgeladener Banner für den Bot (nur Bilder, die als Willkommens-Banner hochgeladen wurden). */
+    banner(id: string): Promise<{
+        mime: string;
+        name: string;
+        data: string;
     }>;
     /** Vom Bot: Mitglied hat den Server verlassen → offene Bewerbungen und Tickets nach Einstellung behandeln. Fehler eines Bereichs stoppen die anderen nicht. */
     memberLeft(guildId: string, discordId: string): Promise<{

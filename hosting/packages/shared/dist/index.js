@@ -62,6 +62,7 @@ __export(index_exports, {
   LEGACY_DANGER: () => LEGACY_DANGER,
   MAX_FORM_OPTIONS: () => MAX_FORM_OPTIONS,
   MAX_FORM_QUESTIONS: () => MAX_FORM_QUESTIONS,
+  MUSIC_TRACKS: () => MUSIC_TRACKS,
   PERMISSION_CATALOG: () => PERMISSION_CATALOG,
   PRIORITIES: () => PRIORITIES,
   PRIORITY_LABEL: () => PRIORITY_LABEL,
@@ -79,8 +80,10 @@ __export(index_exports, {
   TICKET_STATUSES: () => TICKET_STATUSES,
   TICKET_TRANSITIONS: () => TICKET_TRANSITIONS,
   UNIT_STATUSES: () => UNIT_STATUSES,
+  VOICE_CASE_STATUS: () => VOICE_CASE_STATUS,
   WANTED_STATUSES: () => WANTED_STATUSES,
   WANTED_TRANSITIONS: () => WANTED_TRANSITIONS,
+  WEEKDAYS: () => WEEKDAYS,
   WELCOME_VARIABLES: () => WELCOME_VARIABLES,
   WORKFLOW_ACTION_LABELS: () => WORKFLOW_ACTION_LABELS,
   WORKFLOW_OPS: () => WORKFLOW_OPS,
@@ -105,7 +108,10 @@ __export(index_exports, {
   hexColor: () => hexColor,
   isInputQuestion: () => isInputQuestion,
   isPermissionKey: () => isPermissionKey,
+  isSupportOpen: () => isSupportOpen,
   isValidRobloxUserId: () => isValidRobloxUserId,
+  localTime: () => localTime,
+  newVoiceRoom: () => newVoiceRoom,
   normalizeField: () => normalizeField,
   parsePlayer: () => parsePlayer,
   pixelToGame: () => pixelToGame,
@@ -775,11 +781,13 @@ var DEFAULT_WELCOME_CONFIG = {
     color: "#3b82f6",
     showAvatar: true,
     pingUser: true,
+    image: "",
+    imageMediaId: "",
     message: "Hey {user}, sch\xF6n, dass du da bist! Du bist Mitglied **#{memberCount}**.\n\nLies dir bitte die Regeln durch. Bewerben kannst du dich jederzeit \xFCber das Bewerbungs-Panel."
   },
   dm: { enabled: false, message: "Willkommen auf **{server}**, {username}! Bei Fragen \xF6ffne einfach ein Support-Ticket." },
   autoRoleIds: [],
-  goodbye: { enabled: false, channelId: null, title: "Auf Wiedersehen", color: "#64748b", showAvatar: true, pingUser: false, message: "**{username}** hat den Server verlassen. Wir sind jetzt {memberCount} Mitglieder." }
+  goodbye: { enabled: false, channelId: null, title: "Auf Wiedersehen", color: "#64748b", showAvatar: true, pingUser: false, image: "", imageMediaId: "", message: "**{username}** hat den Server verlassen. Wir sind jetzt {memberCount} Mitglieder." }
 };
 var WELCOME_VARIABLES = {
   "{user}": "Erw\xE4hnung des Mitglieds (@Name)",
@@ -810,6 +818,46 @@ function renderWelcomeText(text, m, now = Date.now()) {
   return text.replace(/\{[a-zA-Z]+\}/g, (k) => vars[k] ?? k);
 }
 var hexColor = (c, fallback = 3900150) => /^#[0-9a-fA-F]{6}$/.test(c) ? parseInt(c.slice(1), 16) : fallback;
+
+// src/voice-support.ts
+var WEEKDAYS = ["So", "Mo", "Di", "Mi", "Do", "Fr", "Sa"];
+var MUSIC_TRACKS = { "": "Track w\xE4hlen", lofi: "Lo-Fi", piano: "Klavier", elevator: "Fahrstuhlmusik", custom: "Eigenes Audio" };
+var VOICE_CASE_STATUS = { WAITING: "Wartet", CLAIMED: "\xDCbernommen", DECLINED: "Abgelehnt", ABANDONED: "Warteraum verlassen", CLOSED: "Geschlossen" };
+var newVoiceRoom = (id, guildId = "") => ({
+  id,
+  guildId,
+  name: "Support",
+  enabled: true,
+  waitingChannelId: "",
+  notifyChannelId: "",
+  teamRoleId: "",
+  channelPrefix: "\u{1F3A7} ",
+  notes: true,
+  ownChannels: false,
+  ownChannelIds: [],
+  times: [],
+  rating: false,
+  music: { enabled: false, openTrack: "", closedTrack: "" },
+  primary: false
+});
+var minutes = (hhmm) => {
+  const [h, m] = hhmm.split(":").map(Number);
+  return (h ?? 0) * 60 + (m ?? 0);
+};
+function localTime(d, timeZone = "Europe/Berlin") {
+  const parts = new Intl.DateTimeFormat("en-US", { timeZone, weekday: "short", hour: "2-digit", minute: "2-digit", hourCycle: "h23" }).formatToParts(d);
+  const get = (t) => parts.find((p) => p.type === t)?.value ?? "";
+  return { day: ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].indexOf(get("weekday")), minute: Number(get("hour")) * 60 + Number(get("minute")) };
+}
+function isSupportOpen(times, d = /* @__PURE__ */ new Date(), timeZone = "Europe/Berlin") {
+  if (!times.length) return true;
+  const { day, minute } = localTime(d, timeZone);
+  return times.some((t) => {
+    const from = minutes(t.from), to = minutes(t.to);
+    if (from <= to) return t.days.includes(day) && minute >= from && minute < to;
+    return t.days.includes(day) && minute >= from || t.days.includes((day + 6) % 7) && minute < to;
+  });
+}
 // Annotate the CommonJS export names for ESM import in node:
 0 && (module.exports = {
   ALL_PERMISSIONS,
@@ -854,6 +902,7 @@ var hexColor = (c, fallback = 3900150) => /^#[0-9a-fA-F]{6}$/.test(c) ? parseInt
   LEGACY_DANGER,
   MAX_FORM_OPTIONS,
   MAX_FORM_QUESTIONS,
+  MUSIC_TRACKS,
   PERMISSION_CATALOG,
   PRIORITIES,
   PRIORITY_LABEL,
@@ -871,8 +920,10 @@ var hexColor = (c, fallback = 3900150) => /^#[0-9a-fA-F]{6}$/.test(c) ? parseInt
   TICKET_STATUSES,
   TICKET_TRANSITIONS,
   UNIT_STATUSES,
+  VOICE_CASE_STATUS,
   WANTED_STATUSES,
   WANTED_TRANSITIONS,
+  WEEKDAYS,
   WELCOME_VARIABLES,
   WORKFLOW_ACTION_LABELS,
   WORKFLOW_OPS,
@@ -897,7 +948,10 @@ var hexColor = (c, fallback = 3900150) => /^#[0-9a-fA-F]{6}$/.test(c) ? parseInt
   hexColor,
   isInputQuestion,
   isPermissionKey,
+  isSupportOpen,
   isValidRobloxUserId,
+  localTime,
+  newVoiceRoom,
   normalizeField,
   parsePlayer,
   pixelToGame,

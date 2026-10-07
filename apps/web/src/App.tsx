@@ -18,7 +18,6 @@ const Applications = lazy(() => import('./pages/Applications').then((m) => ({ de
 const Qualifications = lazy(() => import('./pages/Qualifications').then((m) => ({ default: m.Qualifications })));
 const Sek = lazy(() => import('./pages/Sek').then((m) => ({ default: m.Sek })));
 const SupportTickets = lazy(() => import('./pages/tickets/SupportTickets').then((m) => ({ default: m.SupportTickets })));
-const VoiceSupport = lazy(() => import('./pages/tickets/VoiceSupport').then((m) => ({ default: m.VoiceSupport })));
 const TicketDetail = lazy(() => import('./pages/tickets/TicketDetail').then((m) => ({ default: m.TicketDetail })));
 const Academy = lazy(() => import('./pages/Academy').then((m) => ({ default: m.Academy })));
 import { PersonDetail } from './pages/PersonDetail';
@@ -96,7 +95,7 @@ export function App() {
           </Route>
           <Route path="dispatch" element={<Guard perm="dispatch.view"><Dispatch /></Guard>} />
           <Route path="support-tickets" element={<Guard perm="ticket.view" area="dashboard.tickets.view"><SupportTickets /></Guard>} />
-          <Route path="voice-support" element={<Guard perm="ticket.view" area="dashboard.tickets.view"><VoiceSupport /></Guard>} />
+          <Route path="voice-support" element={<Navigate to="/offices#support" replace />} />
           <Route path="support-tickets/:id" element={<Guard perm="ticket.view" area="dashboard.tickets.view"><TicketDetail /></Guard>} />
           <Route path="incidents" element={list(R.incidents as never, 'incidents.view')} />
           <Route path="incidents/:id" element={rec('incidents', 'incidents.view')} />

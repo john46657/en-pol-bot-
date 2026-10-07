@@ -575,7 +575,7 @@ function __addDisposableResource(env, value, async) {
   return value;
 }
 function __disposeResources(env) {
-  function fail2(e) {
+  function fail3(e) {
     env.error = env.hasError ? new _SuppressedError(e, env.error, "An error was suppressed during disposal.") : e;
     env.hasError = true;
   }
@@ -587,12 +587,12 @@ function __disposeResources(env) {
         if (r.dispose) {
           var result = r.dispose.call(r.value);
           if (r.async) return s |= 2, Promise.resolve(result).then(next, function(e) {
-            fail2(e);
+            fail3(e);
             return next();
           });
         } else s |= 1;
       } catch (e) {
-        fail2(e);
+        fail3(e);
       }
     }
     if (s === 1) return env.hasError ? Promise.reject(env.error) : Promise.resolve();
@@ -76061,7 +76061,7 @@ function startPresenceReporter(client2, api2, opts, log = console.log) {
   let teamRoles = [];
   let lastError;
   const guilds = () => [...client2().guilds.cache.values()].slice(0, 50);
-  const fail2 = (what) => (e) => {
+  const fail3 = (what) => (e) => {
     const msg = `${what}: ${e instanceof Error ? e.message : e}`;
     if (msg !== lastError) {
       log(`team/voice report failed \u2013 ${msg} (will keep retrying quietly)`);
@@ -76079,12 +76079,12 @@ function startPresenceReporter(client2, api2, opts, log = console.log) {
   let mt, vt;
   const membersSoon = () => {
     clearTimeout(mt);
-    mt = setTimeout(() => void pushMembers().catch(fail2("members")), 5e3);
+    mt = setTimeout(() => void pushMembers().catch(fail3("members")), 5e3);
     mt.unref?.();
   };
   const voiceSoon = () => {
     clearTimeout(vt);
-    vt = setTimeout(() => void pushVoice().catch(fail2("voice")), 1500);
+    vt = setTimeout(() => void pushVoice().catch(fail3("voice")), 1500);
     vt.unref?.();
   };
   const c = client2();
@@ -76106,9 +76106,9 @@ function startPresenceReporter(client2, api2, opts, log = console.log) {
     }
     for (const g of guilds()) await g.members.fetch().catch((e) => log(`could not load members of ${g.name}: ${e instanceof Error ? e.message : e}`));
   };
-  void loadMembers().then(() => Promise.all([pushMembers().catch(fail2("members")), pushVoice().catch(fail2("voice"))]));
-  setInterval(() => void pushMembers().catch(fail2("members")), 6e4).unref();
-  setInterval(() => void pushVoice().catch(fail2("voice")), 6e4).unref();
+  void loadMembers().then(() => Promise.all([pushMembers().catch(fail3("members")), pushVoice().catch(fail3("voice"))]));
+  setInterval(() => void pushMembers().catch(fail3("members")), 6e4).unref();
+  setInterval(() => void pushVoice().catch(fail3("voice")), 6e4).unref();
   c.on("guildCreate", (g) => {
     if (opts.members) void g.members.fetch().catch(() => void 0).then(membersSoon);
   });
@@ -76574,8 +76574,8 @@ var SEK_COMMANDS = [
         const target = str(c, "mitglied");
         if (!/^\d{15,25}$/.test(target)) return errorReply("Bitte ein Mitglied angeben.");
         const r = await c.api.asUser(c.discordId, "POST", action === "add" ? "/sek/members" : "/sek/members/remove", { discordId: target });
-        const note = await setSekRole(c, target, action === "add");
-        return okReply(`**${plain(r.displayName)}** ${action === "add" ? "ist jetzt Mitglied im SEK" : "wurde aus dem SEK entfernt"}.${note}`);
+        const note2 = await setSekRole(c, target, action === "add");
+        return okReply(`**${plain(r.displayName)}** ${action === "add" ? "ist jetzt Mitglied im SEK" : "wurde aus dem SEK entfernt"}.${note2}`);
       } catch (e) {
         if (e instanceof BotApiError && e.status === 404) return errorReply("Dieses Discord-Konto ist mit keinem aktiven Benutzer verkn\xFCpft (oder ist kein SEK-Mitglied).");
         if (e instanceof BotApiError && e.status === 409) return errorReply("Diese Person ist bereits Mitglied im SEK.");
@@ -77474,6 +77474,127 @@ var TICKET_COMMAND = {
   }
 };
 
+// apps/bot/src/voice-support.ts
+var ROOMS_MS = 6e4;
+var note = (text) => ({ content: text, ephemeral: true });
+var fail2 = (e) => e instanceof BotApiError && [400, 403, 404, 409].includes(e.status) && e.message ? errorReply(clip(e.message, 500)) : mapError(e);
+function createVoiceSupport(api2, ops, log = console.error) {
+  const rooms = /* @__PURE__ */ new Map();
+  const roomsOf = async (guildId) => {
+    const hit = rooms.get(guildId);
+    if (hit && Date.now() - hit.at < ROOMS_MS) return hit.list;
+    const list = await api2.service("GET", `/bot/voice-support/rooms?guildId=${guildId}`).catch(() => hit?.list ?? []);
+    rooms.set(guildId, { at: Date.now(), list });
+    return list;
+  };
+  const safe = (label2, p) => p.catch((e) => log(`voice support: ${label2} failed: ${e instanceof Error ? e.message : e}`));
+  const applyEdit = (e) => e ? safe("update message", ops.edit(e.channelId, e.messageId, e.message)) : Promise.resolve();
+  async function finished(r) {
+    await applyEdit(r.edit);
+    if (r.deleteChannelId) await safe("delete channel", ops.deleteChannel(r.deleteChannelId));
+    if (r.ratingDm) await safe("rating DM", ops.dm(r.userId, r.ratingDm));
+  }
+  async function onVoiceState(e) {
+    if (e.bot || e.from === e.to) return;
+    const list = await roomsOf(e.guildId);
+    if (!list.length) return;
+    if (e.from) {
+      if (list.some((r) => r.waitingChannelId === e.from)) {
+        const r = await api2.service("POST", "/bot/voice-support/left", { guildId: e.guildId, channelId: e.from, discordId: e.userId, userName: e.userName });
+        for (const x of r.edits) await applyEdit(x);
+      } else if (!ops.members(e.from).length) {
+        const r = await api2.service("POST", "/bot/voice-support/empty", { channelId: e.from });
+        if (r.closed) await finished(r);
+      }
+    }
+    if (e.to && list.some((r) => r.enabled && r.waitingChannelId === e.to)) {
+      const r = await api2.service("POST", "/bot/voice-support/join", { guildId: e.guildId, channelId: e.to, discordId: e.userId, userName: e.userName });
+      if (r.action === "closed" && r.dm) await safe("closed DM", ops.dm(e.userId, r.dm));
+      if (r.action === "notify" && r.caseId && r.channelId && r.message) {
+        const messageId = await ops.post(r.channelId, r.message);
+        await api2.service("POST", `/bot/voice-support/cases/${r.caseId}/posted`, { messageId });
+      }
+    }
+  }
+  async function claim(id, s) {
+    const r = await api2.service("POST", `/bot/voice-support/cases/${id}/claim`, s);
+    await applyEdit(r.edit);
+    const { case: c, room } = r;
+    if (!room) return okReply("\xDCbernommen.");
+    let channelId = null, created = false;
+    try {
+      if (room.ownChannels) channelId = room.ownChannelIds.find((x) => !ops.members(x).length) ?? null;
+      else {
+        channelId = await ops.createVoice({ guildId: c.guildId, name: clip(`${room.channelPrefix}${c.userName}`, 100), nearChannelId: room.waitingChannelId, userId: c.userId, teamRoleId: room.teamRoleId });
+        created = true;
+      }
+    } catch (e) {
+      log(`voice support: channel failed: ${e instanceof Error ? e.message : e}`);
+    }
+    const moved = channelId ? await ops.move(c.guildId, c.userId, channelId).catch(() => false) : false;
+    if (channelId && ops.voiceChannelOf(c.guildId, s.discordId)) await ops.move(c.guildId, s.discordId, channelId).catch(() => false);
+    const threadId = room.notes && r.edit ? await ops.thread(r.edit.channelId, r.edit.messageId, `Notizen #${c.number}`).catch(() => null) : null;
+    const done = await api2.service("POST", `/bot/voice-support/cases/${id}/channel`, { channelId, created, threadId });
+    await applyEdit(done.edit);
+    if (!channelId) return note(room.ownChannels ? "\u26A0\uFE0F \xDCbernommen \u2013 aber gerade ist keiner der eigenen Support-Kan\xE4le frei. Sprich die Person im Warteraum an." : "\u26A0\uFE0F \xDCbernommen \u2013 der Sprachkanal konnte nicht angelegt werden (fehlt dem Bot \u201EKan\xE4le verwalten\u201C?).");
+    return okReply(`\xDCbernommen: <#${channelId}>${moved ? "" : " \u2013 die Person ist nicht mehr im Sprachkanal und wurde nicht verschoben."}`);
+  }
+  async function interact(c) {
+    const [action, id = "", extra] = c.args;
+    if (!/^[0-9a-f-]{36}$/.test(id)) return errorReply("Unbekannter Support-Fall.");
+    const s = { discordId: c.discordId, name: c.userName ?? c.discordId, roleIds: c.memberRoleIds ?? [], admin: !!c.isGuildAdmin };
+    try {
+      switch (action) {
+        case "claim":
+          return await claim(id, s);
+        case "decline":
+          return { modal: { id: `vs:declinesubmit:${id}`, title: "Support-Fall ablehnen", fields: [{ id: "reason", label: "Grund (optional, geht per DM an die Person)", paragraph: true, required: false, maxLength: 500 }] } };
+        case "declinesubmit": {
+          const r = await api2.service("POST", `/bot/voice-support/cases/${id}/decline`, { ...s, ...c.fields?.reason?.trim() ? { reason: c.fields.reason.trim() } : {} });
+          await applyEdit(r.edit);
+          const sent = await ops.dm(r.userId, r.dm).then(() => true, () => false);
+          return okReply(`Abgelehnt.${sent ? " Die Person wurde per DM informiert." : " (Die DM kam nicht an \u2013 Direktnachrichten sind bei der Person aus.)"}`);
+        }
+        case "msg":
+          return { modal: { id: `vs:msgsubmit:${id}`, title: "Nachricht an die Person", fields: [{ id: "text", label: "Nachricht (per DM)", paragraph: true, required: true, maxLength: 2e3 }] } };
+        case "msgsubmit": {
+          const text = (c.fields?.text ?? "").trim();
+          if (!text) return errorReply("Bitte eine Nachricht eingeben.");
+          const r = await api2.service("POST", `/bot/voice-support/cases/${id}/message`, { ...s, text });
+          const sent = await ops.dm(r.userId, r.dm).then(() => true, () => false);
+          if (!sent) return errorReply("Die Nachricht kam nicht an \u2013 die Person hat Direktnachrichten ausgeschaltet.");
+          await applyEdit(r.edit);
+          if (r.threadId) await safe("thread log", ops.threadPost(r.threadId, r.log));
+          return note("\u{1F4AC} Nachricht gesendet.");
+        }
+        case "close": {
+          await finished(await api2.service("POST", `/bot/voice-support/cases/${id}/close`, s));
+          return note("\u{1F512} Support-Fall geschlossen.");
+        }
+        case "rate": {
+          const stars = Number(extra);
+          if (!(stars >= 1 && stars <= 5)) return errorReply("Ung\xFCltige Bewertung.");
+          const r = await api2.service("POST", `/bot/voice-support/cases/${id}/rating`, { discordId: c.discordId, stars });
+          await applyEdit(r.edit);
+          return { ...okReply("Danke f\xFCr deine Bewertung! \u2B50"), update: { embeds: [{ title: "\u2B50 Danke!", description: `Du hast ${"\u2B50".repeat(stars)} vergeben.`, color: 16436245 }] } };
+        }
+        default:
+          return errorReply("Unbekannte Aktion.");
+      }
+    } catch (e) {
+      return fail2(e);
+    }
+  }
+  return { onVoiceState, interact, clear: () => rooms.clear() };
+}
+var VOICE_INTERACTION = {
+  prefix: "vs",
+  opensModal: (a) => a[0] === "decline" || a[0] === "msg",
+  async run(c) {
+    return c.voiceSupport ? c.voiceSupport.interact(c) : errorReply("Der Sprach-Support ist hier nicht verf\xFCgbar.");
+  }
+};
+
 // apps/bot/src/commands/leave.ts
 function berlinTime(y, m, d, h, min) {
   const guess = Date.UTC(y, m - 1, d, h, min);
@@ -77891,17 +78012,17 @@ var FEATURE_COMMANDS = [
           return r2.whitelisted ? okReply(`**${plain(r2.displayName)}** ist f\xFCr den Funk freigegeben.`) : errorReply(`**${plain(r2.displayName)}** ist **nicht** f\xFCr den Funk freigegeben.`);
         }
         const r = await c.api.asUser(c.discordId, "POST", action === "add" ? "/radio-whitelist" : "/radio-whitelist/remove", { discordId: target });
-        let note = "";
+        let note2 = "";
         const cfg2 = await c.config?.().catch(() => void 0);
         if (cfg2?.radioRole && c.guildId && c.platform) {
           try {
             await c.platform.setRole(c.guildId, target, cfg2.radioRole, action === "add");
-            note = ` Rolle <@&${cfg2.radioRole}> ${action === "add" ? "vergeben" : "entzogen"}.`;
+            note2 = ` Rolle <@&${cfg2.radioRole}> ${action === "add" ? "vergeben" : "entzogen"}.`;
           } catch {
-            note = " \u26A0\uFE0F Die Discord-Rolle konnte nicht ge\xE4ndert werden (Bot-Rolle muss \xFCber der Funkrolle stehen und \u201ERollen verwalten\u201C haben).";
+            note2 = " \u26A0\uFE0F Die Discord-Rolle konnte nicht ge\xE4ndert werden (Bot-Rolle muss \xFCber der Funkrolle stehen und \u201ERollen verwalten\u201C haben).";
           }
         }
-        return okReply(`**${plain(r.displayName)}** ${action === "add" ? "ist jetzt f\xFCr den Funk freigegeben" : "wurde von der Funk-Freigabe entfernt"}.${note}`);
+        return okReply(`**${plain(r.displayName)}** ${action === "add" ? "ist jetzt f\xFCr den Funk freigegeben" : "wurde von der Funk-Freigabe entfernt"}.${note2}`);
       } catch (e) {
         if (e instanceof BotApiError && e.status === 404) return errorReply("Dieses Discord-Konto ist mit keinem aktiven Benutzer verkn\xFCpft (oder steht nicht auf der Liste).");
         return mapError(e);
@@ -77973,6 +78094,7 @@ var INTERACTIONS = [
   SEK_INTERACTION,
   QUALI_INTERACTION,
   TICKET_INTERACTION,
+  VOICE_INTERACTION,
   LEAVE_INTERACTION,
   CAD_INTERACTION,
   {
@@ -82895,10 +83017,11 @@ async function robloxCheck(username, doFetch = fetch) {
 
 // apps/bot/src/welcome.ts
 var CACHE_MS = 3e4;
-function welcomeEmbed(def, m, now = Date.now()) {
+function welcomeEmbed(def, m, now = Date.now(), bannerFile) {
   const title = renderWelcomeText(def.title, m, now).slice(0, 256);
   const description = renderWelcomeText(def.message, m, now).slice(0, 4e3);
-  return { title: title || "\u200B", ...description ? { description } : {}, color: hexColor2(def.color), ...def.showAvatar && m.avatar ? { thumbnail: m.avatar } : {} };
+  const image = bannerFile ? `attachment://${bannerFile}` : def.image;
+  return { title: title || "\u200B", ...description ? { description } : {}, color: hexColor2(def.color), ...def.showAvatar && m.avatar ? { thumbnail: m.avatar } : {}, ...image ? { image } : {} };
 }
 function createWelcome(api2, actions, log = console.error) {
   const cache = /* @__PURE__ */ new Map();
@@ -82910,7 +83033,23 @@ function createWelcome(api2, actions, log = console.error) {
     return cfg2;
   };
   const step = (label2, p) => p.catch((e) => log(`${label2} failed: ${e instanceof Error ? e.message : e}`));
-  const say = (def, m) => def.enabled && def.channelId ? actions.post(def.channelId, { ...def.pingUser ? { content: `<@${m.id}>`, mentionUserIds: [m.id] } : {}, embed: welcomeEmbed(def, m) }) : Promise.resolve();
+  const banners = /* @__PURE__ */ new Map();
+  const banner = async (id) => {
+    if (!banners.has(id)) {
+      const b = await api2.service("GET", `/bot/welcome/banner/${id}`);
+      if (banners.size > 20) banners.clear();
+      banners.set(id, { name: b.name.replace(/[^\w.-]/g, "") || "banner.png", data: Buffer.from(b.data, "base64") });
+    }
+    return banners.get(id);
+  };
+  const say = async (def, m) => {
+    if (!def.enabled || !def.channelId) return;
+    const file = def.imageMediaId ? await banner(def.imageMediaId).catch((e) => {
+      log(`banner not loaded: ${e instanceof Error ? e.message : e}`);
+      return void 0;
+    }) : void 0;
+    await actions.post(def.channelId, { ...def.pingUser ? { content: `<@${m.id}>`, mentionUserIds: [m.id] } : {}, embed: welcomeEmbed(def, m, Date.now(), file?.name), ...file ? { file } : {} });
+  };
   return {
     async joined(m) {
       if (m.bot) return;
@@ -82977,6 +83116,7 @@ var toEmbed = (e) => {
   if (e.fields?.length) b.addFields(e.fields.map((f2) => ({ name: f2.name, value: f2.value, inline: f2.inline ?? false })));
   if (e.footer) b.setFooter({ text: e.footer });
   if (e.thumbnail && /^https:\/\//.test(e.thumbnail)) b.setThumbnail(e.thumbnail);
+  if (e.image && /^(https|attachment):\/\//.test(e.image)) b.setImage(e.image);
   if (e.author?.name) b.setAuthor({ name: e.author.name.slice(0, 256), ...e.author.iconUrl && /^https:\/\//.test(e.author.iconUrl) ? { iconURL: e.author.iconUrl } : {} });
   return b;
 };
@@ -83070,7 +83210,7 @@ var welcome = createWelcome(api, {
   async post(channelId, m) {
     const ch = await client.channels.fetch(channelId);
     if (!ch?.isSendable()) throw new Error(`channel ${channelId} is not a text channel the bot can post in`);
-    await ch.send({ ...m.content ? { content: m.content } : {}, embeds: [toEmbed(m.embed)], allowedMentions: { parse: [], users: m.mentionUserIds ?? [] } });
+    await ch.send({ ...m.content ? { content: m.content } : {}, embeds: [toEmbed(m.embed)], ...m.file ? { files: [{ attachment: m.file.data, name: m.file.name }] } : {}, allowedMentions: { parse: [], users: m.mentionUserIds ?? [] } });
   },
   async dm(userId, text) {
     await platform.sendDirectMessage(userId, text);
@@ -83079,6 +83219,67 @@ var welcome = createWelcome(api, {
     const guild = await client.guilds.fetch(guildId);
     const ids = roleIds.filter((r) => guild.roles.cache.has(r));
     if (ids.length) await (await guild.members.fetch(userId)).roles.add(ids, "EN Polizei: Willkommen");
+  }
+});
+var VOICE_TALK = [import_discord4.PermissionFlagsBits.ViewChannel, import_discord4.PermissionFlagsBits.Connect, import_discord4.PermissionFlagsBits.Speak, import_discord4.PermissionFlagsBits.Stream, import_discord4.PermissionFlagsBits.UseVAD];
+var voiceSupport = createVoiceSupport(api, {
+  async post(channelId, m) {
+    const ch = await client.channels.fetch(channelId);
+    if (!ch?.isSendable()) throw new Error(`channel ${channelId} is not a text channel the bot can post in`);
+    return (await ch.send(payloadOf(m))).id;
+  },
+  async edit(channelId, messageId, m) {
+    const ch = await client.channels.fetch(channelId);
+    if (!ch?.isTextBased() || !("messages" in ch)) return;
+    const msg = await ch.messages.fetch(messageId).catch(() => null);
+    if (msg) await msg.edit({ ...payloadOf(m), content: m.content ?? "" });
+  },
+  async dm(userId, m) {
+    await (await client.users.fetch(userId)).send(payloadOf(m));
+  },
+  members(channelId) {
+    const ch = client.channels.cache.get(channelId);
+    return ch?.isVoiceBased() ? [...ch.members.keys()] : [];
+  },
+  voiceChannelOf(guildId, userId) {
+    return client.guilds.cache.get(guildId)?.voiceStates.cache.get(userId)?.channelId ?? null;
+  },
+  async createVoice({ guildId, name, nearChannelId, userId, teamRoleId }) {
+    const guild = await client.guilds.fetch(guildId);
+    const near = await guild.channels.fetch(nearChannelId).catch(() => null);
+    const ch = await guild.channels.create({
+      name,
+      type: import_discord4.ChannelType.GuildVoice,
+      ...near?.parentId ? { parent: near.parentId } : {},
+      reason: "EN Polizei: Sprach-Support",
+      permissionOverwrites: [
+        { id: guild.roles.everyone.id, type: import_discord4.OverwriteType.Role, deny: [import_discord4.PermissionFlagsBits.ViewChannel, import_discord4.PermissionFlagsBits.Connect] },
+        { id: userId, type: import_discord4.OverwriteType.Member, allow: VOICE_TALK },
+        ...guild.roles.cache.has(teamRoleId) ? [{ id: teamRoleId, type: import_discord4.OverwriteType.Role, allow: [...VOICE_TALK, import_discord4.PermissionFlagsBits.MoveMembers] }] : [],
+        { id: client.user.id, type: import_discord4.OverwriteType.Member, allow: [import_discord4.PermissionFlagsBits.ViewChannel, import_discord4.PermissionFlagsBits.Connect, import_discord4.PermissionFlagsBits.MoveMembers, import_discord4.PermissionFlagsBits.ManageChannels] }
+      ]
+    });
+    return ch.id;
+  },
+  async move(guildId, userId, channelId) {
+    const member = await (await client.guilds.fetch(guildId)).members.fetch(userId).catch(() => null);
+    if (!member?.voice.channelId) return false;
+    await member.voice.setChannel(channelId, "EN Polizei: Sprach-Support");
+    return true;
+  },
+  async deleteChannel(channelId) {
+    const ch = await client.channels.fetch(channelId).catch(() => null);
+    if (ch?.type === import_discord4.ChannelType.GuildVoice) await ch.delete("EN Polizei: Support-Fall geschlossen");
+  },
+  async thread(channelId, messageId, name) {
+    const ch = await client.channels.fetch(channelId);
+    if (!ch?.isTextBased() || !("messages" in ch)) return null;
+    const msg = await ch.messages.fetch(messageId);
+    return (await msg.startThread({ name: name.slice(0, 100), autoArchiveDuration: 1440 })).id;
+  },
+  async threadPost(threadId, text) {
+    const ch = await client.channels.fetch(threadId);
+    if (ch?.isSendable()) await ch.send({ content: text.slice(0, 2e3), allowedMentions: { parse: [] } });
   }
 });
 function memberEvent(m) {
@@ -83167,7 +83368,8 @@ function baseCtx(i) {
     memberRoleIds: rolesOf(i.member),
     applyEffects: (effects) => tickets.apply(effects),
     listCategories: (guildId) => tickets.listCategories(guildId),
-    userNameOf: (id) => client.users.fetch(id).then((u) => u.username, () => null)
+    userNameOf: (id) => client.users.fetch(id).then((u) => u.username, () => null),
+    voiceSupport
   };
 }
 function rolesOf(m) {
@@ -83225,6 +83427,11 @@ function wire(c) {
   c.on("interactionCreate", (i) => {
     const task = guildScope.run(i.guildId ?? null, () => rolesScope.run(rolesOf(i.member), () => i.isChatInputCommand() ? handleCommand(i) : i.isButton() || i.isModalSubmit() || i.isAnySelectMenu() ? handleComponent(i) : void 0));
     void task?.catch((e) => console.error("interaction failed:", e instanceof Error ? e.message : e));
+  });
+  c.on("voiceStateUpdate", (o, n) => {
+    const user = n.member?.user ?? o.member?.user;
+    if (!user) return;
+    void voiceSupport.onVoiceState({ guildId: n.guild.id, userId: n.id, userName: n.member?.displayName ?? user.username, bot: user.bot, from: o.channelId, to: n.channelId }).catch((x) => console.error("voice support failed:", x instanceof Error ? x.message : x));
   });
   c.on("guildMemberAdd", (m) => {
     const e = memberEvent(m);

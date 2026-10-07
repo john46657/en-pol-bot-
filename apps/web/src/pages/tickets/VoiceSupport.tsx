@@ -119,7 +119,7 @@ function RoomEditor({ room, onChange, onBack, onDelete, onPrimary, canManage }: 
 const missing = (r: VoiceSupportRoom) => [!/^\d{15,25}$/.test(r.guildId) && 'Server', !r.name.trim() && 'Name', !r.waitingChannelId && 'Warteraum', !r.notifyChannelId && 'Benachrichtigungs-Kanal', !r.teamRoleId && 'Team Rolle', r.ownChannels && !r.ownChannelIds.length && 'eigene Kanäle'].filter(Boolean) as string[];
 
 /** Support → Sprach-Support: Räume einrichten und Fälle ansehen. */
-export function VoiceSupport() {
+export function VoiceSupport({ embedded = false }: { embedded?: boolean } = {}) {
   const { can } = useAuth();
   const manage = can('ticket.settings');
   const qc = useQueryClient();
@@ -147,7 +147,8 @@ export function VoiceSupport() {
   const problems = rooms.filter((r) => missing(r).length);
   return (
     <>
-      <PageHeader title="🎧 Sprach-Support" subtitle="Wer den Warteraum betritt, eröffnet einen Support-Fall. Das Team bekommt eine Meldung mit Übernehmen / Ablehnen / Nachricht; Übernehmen verschiebt die Person in einen eigenen Sprachkanal." />
+      {!embedded && <PageHeader title="🎧 Sprach-Support" subtitle="Wer den Warteraum betritt, eröffnet einen Support-Fall. Das Team bekommt eine Meldung mit Übernehmen / Ablehnen / Nachricht; Übernehmen verschiebt die Person in einen eigenen Sprachkanal." />}
+      {embedded && <p className="mb-3 text-sm text-muted">Wer den Warteraum betritt, eröffnet einen Support-Fall. Das Team bekommt eine Meldung mit <b>Übernehmen</b> / <b>Ablehnen</b> / <b>Nachricht</b>; Übernehmen verschiebt die Person in einen eigenen Sprachkanal.</p>}
       <Tabs tabs={['Räume', 'Fälle']} active={tab} onChange={setTab} />
       <div className="mt-4">
         {tab === 'Räume' && (current ? (

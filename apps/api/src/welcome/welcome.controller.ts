@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, HttpCode, Post, Put, Query } from '@nestjs/common';
+import { Body, Controller, Delete, Get, HttpCode, Param, ParseUUIDPipe, Post, Put, Query } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { Throttle } from '@nestjs/throttler';
 import { z } from 'zod';
@@ -38,6 +38,7 @@ export class BotWelcomeController {
   constructor(private readonly s: WelcomeService) {}
   @BotService() @Get('welcome')
   config(@Query(zodBody(z.object({ guildId: sf }))) q: { guildId: string }) { return this.s.config(q.guildId); }
+  @BotService() @Get('welcome/banner/:id') banner(@Param('id', ParseUUIDPipe) id: string) { return this.s.banner(id); }
   @BotService() @Throttle({ default: { limit: process.env.NODE_ENV === 'test' ? 10_000 : 120, ttl: 60_000 } }) @Post('member-left') @HttpCode(200)
   memberLeft(@Body(zodBody(memberBody)) b: z.infer<typeof memberBody>) { return this.s.memberLeft(b.guildId, b.discordId); }
 }

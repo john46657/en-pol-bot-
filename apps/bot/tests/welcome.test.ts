@@ -60,3 +60,24 @@ describe('member join / leave', () => {
     expect(calls.filter((c) => c.startsWith('GET')).length).toBe(1);
   });
 });
+
+describe('welcome banner', () => {
+  it('uses an uploaded banner as attachment, otherwise the image URL', async () => {
+    const ID = '11111111-2222-3333-4444-555555555555';
+    const posted: { file?: { name: string; data: Buffer }; image?: string }[] = [];
+    let loads = 0;
+    const api: Api = {
+      async asUser() { throw new Error('unused'); },
+      async service(method, path) {
+        if (path.startsWith('/bot/welcome/banner/')) { loads++; return { name: 'banner.png', mime: 'image/png', data: Buffer.from('PNG').toString('base64') } as never; }
+        return { ...DEFAULT_WELCOME_CONFIG, welcome: { ...DEFAULT_WELCOME_CONFIG.welcome, enabled: true, channelId: CH, imageMediaId: ID }, goodbye: { ...DEFAULT_WELCOME_CONFIG.goodbye, enabled: true, channelId: CH, image: 'https://cdn.example/bye.png' } } as never;
+      },
+    };
+    const w = createWelcome(api, { async post(_c, m) { posted.push({ file: m.file, image: m.embed.image }); }, async dm() {}, async addRoles() {} }, () => undefined);
+    await w.joined(member()); await w.joined(member());
+    await w.left(member());
+    expect(posted[0]).toEqual({ file: { name: 'banner.png', data: Buffer.from('PNG') }, image: 'attachment://banner.png' });
+    expect(loads).toBe(1); // Banner wird nur einmal geladen
+    expect(posted[2]).toEqual({ file: undefined, image: 'https://cdn.example/bye.png' });
+  });
+});

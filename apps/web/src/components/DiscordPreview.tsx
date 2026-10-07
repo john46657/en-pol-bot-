@@ -16,7 +16,7 @@ function md(text: string): ReactNode[] {
     return <span key={i}>{i > 0 && <br />}{parts}</span>;
   });
 }
-const img = (u?: string | null) => (u && /^https:\/\//.test(u) ? u : undefined);
+const img = (u?: string | null) => (u && /^(https:\/\/|blob:)/.test(u) ? u : undefined); // blob: = hochgeladenes Bild (nur lokale Vorschau)
 
 /** Vorschau einer Discord-Nachricht (Embed, Buttons, Menü) wie im Discord-Client. */
 export function DiscordPreview({ message, botName = 'EN Polizei' }: { message: MessageSpec; botName?: string }) {

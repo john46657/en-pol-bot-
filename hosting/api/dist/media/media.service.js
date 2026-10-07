@@ -23,6 +23,8 @@ const permission_service_1 = require("../authz/permission.service");
 const errors_1 = require("../common/errors");
 const env_1 = require("../config/env");
 exports.MAX_BYTES = 10 * 1024 * 1024;
+/** Discord nimmt ohne Boost höchstens 8 MB je Datei an. */
+const BANNER_BYTES = 8 * 1024 * 1024;
 /** MIME-Allowlist inkl. Magic-Byte-Signatur. Der vom Client gemeldete Typ allein wird NIE vertraut. */
 const SIGNATURES = {
     'image/png': (b) => b.subarray(0, 8).equals(Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a])),
@@ -34,8 +36,8 @@ const SIGNATURES = {
 };
 const EXT = { 'image/png': 'png', 'image/jpeg': 'jpg', 'image/gif': 'gif', 'image/webp': 'webp', 'application/pdf': 'pdf', 'text/plain': 'txt' };
 /** Welche Permission zum Anhängen/Ansehen an einem Entitätstyp nötig ist. */
-const WRITE = { CadMap: 'cad.manage_map', Evidence: 'evidence.create', Report: 'reports.create', Complaint: 'complaints.create', Incident: 'incidents.edit', Person: 'persons.edit', Investigation: 'investigations.edit', Vehicle: 'vehicles.edit' };
-const READ = { CadMap: 'cad.view', Evidence: 'evidence.view', Report: 'reports.view', Complaint: 'complaints.view', Incident: 'incidents.view', Person: 'persons.view', Investigation: 'investigations.view', Vehicle: 'vehicles.view' };
+const WRITE = { WelcomeBanner: 'settings.manage', CadMap: 'cad.manage_map', Evidence: 'evidence.create', Report: 'reports.create', Complaint: 'complaints.create', Incident: 'incidents.edit', Person: 'persons.edit', Investigation: 'investigations.edit', Vehicle: 'vehicles.edit' };
+const READ = { WelcomeBanner: 'settings.view', CadMap: 'cad.view', Evidence: 'evidence.view', Report: 'reports.view', Complaint: 'complaints.view', Incident: 'incidents.view', Person: 'persons.view', Investigation: 'investigations.view', Vehicle: 'vehicles.view' };
 let MediaService = class MediaService {
     prisma;
     audit;
@@ -53,6 +55,8 @@ let MediaService = class MediaService {
         await this.perms.assert(actor.userId, need);
         if (file.size > maxBytes || file.buffer.length > maxBytes)
             throw new errors_1.AppError('VALIDATION_FAILED', `Die Datei ist zu groß (max. ${Math.round(maxBytes / 1048576)} MB).`);
+        if (link.linkedType === 'WelcomeBanner' && (!file.mimetype.startsWith('image/') || file.size > BANNER_BYTES))
+            throw new errors_1.AppError('VALIDATION_FAILED', 'Als Banner gehen nur Bilder (PNG, JPG, GIF, WebP) bis 8 MB.');
         const check = SIGNATURES[file.mimetype];
         if (!check || !check(file.buffer))
             throw new errors_1.AppError('VALIDATION_FAILED', 'Dieser Dateityp ist nicht erlaubt oder der Inhalt passt nicht zum Dateityp.');
@@ -77,6 +81,13 @@ let MediaService = class MediaService {
     }
     list(actor, linkedType, linkedId) {
         return this.perms.assert(actor.userId, READ[linkedType] ?? '!none').then(() => this.prisma.media.findMany({ where: { linkedType, linkedId }, select: { id: true, originalName: true, mime: true, size: true, hash: true, createdAt: true }, orderBy: { createdAt: 'desc' } }));
+    }
+    /** Für den Bot (ohne Benutzer): nur als Willkommens-Banner hochgeladene Bilder. */
+    async welcomeBanner(id) {
+        const m = await this.prisma.media.findUnique({ where: { id } });
+        if (!m || m.linkedType !== 'WelcomeBanner')
+            throw new errors_1.AppError('NOT_FOUND', 'Banner nicht gefunden.');
+        return { mime: m.mime, name: `banner.${EXT[m.mime] ?? 'png'}`, data: await (0, promises_1.readFile)(node_path_1.default.join(this.dir, m.storageKey)) };
     }
 };
 exports.MediaService = MediaService;

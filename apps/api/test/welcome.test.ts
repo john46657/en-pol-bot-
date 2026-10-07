@@ -54,6 +54,26 @@ describe('welcome & goodbye settings', () => {
   });
 });
 
+describe('welcome banner', () => {
+  it('only images up to 8 MB; the bot gets uploaded banners (and nothing else)', async () => {
+    const admin = (await login(app, 'wel_admin')).agent;
+    const off = (await login(app, 'wel_off')).agent;
+    const png = Buffer.concat([Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]), Buffer.alloc(32)]);
+    expect((await off.post('/api/v1/media').field('linkedType', 'WelcomeBanner').field('linkedId', 'shared').attach('file', png, { filename: 'b.png', contentType: 'image/png' })).status).toBe(403);
+    expect((await admin.post('/api/v1/media').field('linkedType', 'WelcomeBanner').field('linkedId', 'shared').attach('file', Buffer.from('hello'), { filename: 'a.txt', contentType: 'text/plain' })).status).toBe(400);
+    const up = await admin.post('/api/v1/media').field('linkedType', 'WelcomeBanner').field('linkedId', 'shared').attach('file', png, { filename: 'b.png', contentType: 'image/png' });
+    expect(up.status).toBe(201);
+    const b = await http().get(`/api/v1/bot/welcome/banner/${up.body.id}`).set(bot());
+    expect(b.body).toEqual({ mime: 'image/png', name: 'banner.png', data: png.toString('base64') });
+    expect((await http().get(`/api/v1/bot/welcome/banner/${up.body.id}`)).status).toBe(401);
+    // gespeichert wird die ID; eine falsche URL wird abgelehnt
+    const cfg = (await admin.get('/api/v1/welcome/config')).body;
+    delete cfg.own;
+    expect((await admin.put('/api/v1/welcome/config').send({ ...cfg, welcome: { ...cfg.welcome, image: 'http://x.de/a.png' } })).status).toBe(400);
+    expect((await admin.put('/api/v1/welcome/config').send({ ...cfg, welcome: { ...cfg.welcome, imageMediaId: up.body.id } })).body.welcome.imageMediaId).toBe(up.body.id);
+  });
+});
+
 describe('action on user leave', () => {
   it('denies or withdraws open applications as configured; other people and servers stay untouched', async () => {
     const admin = (await login(app, 'wel_admin')).agent;

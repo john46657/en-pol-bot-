@@ -1,6 +1,8 @@
 # Sprach-Support (Warteraum wie bei GalaxyBot)
 
-*Betrieb → Sprach-Support* (Recht `ticket.view`; einrichten: `ticket.settings`).
+*Betrieb → Büros → Tab „Sprach-Support“* (Recht `ticket.view`; einrichten: `ticket.settings`) – der Warteraum fürs Büro.
+
+Im Tab **Büros** steht neben jeder Person, in welchem Talk (Sprachkanal) sie gerade ist; der Tab **Wer ist in welchem Talk?** zeigt alle Sprachkanäle mit Personen (Recht `dashboard.voice.view`, live vom Bot).
 
 ## Ablauf
 1. Jemand betritt den **Warteraum** (Sprachkanal) eines Raums.

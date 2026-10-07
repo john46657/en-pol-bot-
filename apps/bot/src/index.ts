@@ -51,6 +51,7 @@ const toEmbed = (e: EmbedData) => {
   if (e.fields?.length) b.addFields(e.fields.map((f) => ({ name: f.name, value: f.value, inline: f.inline ?? false })));
   if (e.footer) b.setFooter({ text: e.footer });
   if (e.thumbnail && /^https:\/\//.test(e.thumbnail)) b.setThumbnail(e.thumbnail);
+  if (e.image && /^(https|attachment):\/\//.test(e.image)) b.setImage(e.image);
   if (e.author?.name) b.setAuthor({ name: e.author.name.slice(0, 256), ...(e.author.iconUrl && /^https:\/\//.test(e.author.iconUrl) ? { iconURL: e.author.iconUrl } : {}) });
   return b;
 };
@@ -146,7 +147,7 @@ const welcome = createWelcome(api, {
   async post(channelId, m) {
     const ch = await client.channels.fetch(channelId);
     if (!ch?.isSendable()) throw new Error(`channel ${channelId} is not a text channel the bot can post in`);
-    await ch.send({ ...(m.content ? { content: m.content } : {}), embeds: [toEmbed(m.embed)], allowedMentions: { parse: [], users: m.mentionUserIds ?? [] } });
+    await ch.send({ ...(m.content ? { content: m.content } : {}), embeds: [toEmbed(m.embed)], ...(m.file ? { files: [{ attachment: m.file.data, name: m.file.name }] } : {}), allowedMentions: { parse: [], users: m.mentionUserIds ?? [] } });
   },
   async dm(userId, text) { await platform.sendDirectMessage(userId, text); },
   async addRoles(guildId, userId, roleIds) {

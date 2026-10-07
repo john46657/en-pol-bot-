@@ -5,10 +5,11 @@ exports.createWelcome = createWelcome;
 const shared_1 = require("@enrp/shared");
 const CACHE_MS = 30_000;
 /** Nachricht (Willkommen oder Abschied) als Embed – leere Titel/Texte fallen weg. */
-function welcomeEmbed(def, m, now = Date.now()) {
+function welcomeEmbed(def, m, now = Date.now(), bannerFile) {
     const title = (0, shared_1.renderWelcomeText)(def.title, m, now).slice(0, 256);
     const description = (0, shared_1.renderWelcomeText)(def.message, m, now).slice(0, 4000);
-    return { title: title || '​', ...(description ? { description } : {}), color: (0, shared_1.hexColor)(def.color), ...(def.showAvatar && m.avatar ? { thumbnail: m.avatar } : {}) };
+    const image = bannerFile ? `attachment://${bannerFile}` : def.image;
+    return { title: title || '​', ...(description ? { description } : {}), color: (0, shared_1.hexColor)(def.color), ...(def.showAvatar && m.avatar ? { thumbnail: m.avatar } : {}), ...(image ? { image } : {}) };
 }
 /**
  * Beitritt: Willkommensnachricht, DM, automatische Rollen. Austritt: Abschiedsnachricht und Meldung an das System
@@ -25,9 +26,23 @@ function createWelcome(api, actions, log = console.error) {
         return cfg;
     };
     const step = (label, p) => p.catch((e) => log(`${label} failed: ${e instanceof Error ? e.message : e}`));
-    const say = (def, m) => (def.enabled && def.channelId
-        ? actions.post(def.channelId, { ...(def.pingUser ? { content: `<@${m.id}>`, mentionUserIds: [m.id] } : {}), embed: welcomeEmbed(def, m) })
-        : Promise.resolve());
+    // hochgeladene Banner (Datei bleibt gleich, solange die ID gleich ist)
+    const banners = new Map();
+    const banner = async (id) => {
+        if (!banners.has(id)) {
+            const b = await api.service('GET', `/bot/welcome/banner/${id}`);
+            if (banners.size > 20)
+                banners.clear();
+            banners.set(id, { name: b.name.replace(/[^\w.-]/g, '') || 'banner.png', data: Buffer.from(b.data, 'base64') });
+        }
+        return banners.get(id);
+    };
+    const say = async (def, m) => {
+        if (!def.enabled || !def.channelId)
+            return;
+        const file = def.imageMediaId ? await banner(def.imageMediaId).catch((e) => { log(`banner not loaded: ${e instanceof Error ? e.message : e}`); return undefined; }) : undefined;
+        await actions.post(def.channelId, { ...(def.pingUser ? { content: `<@${m.id}>`, mentionUserIds: [m.id] } : {}), embed: welcomeEmbed(def, m, Date.now(), file?.name), ...(file ? { file } : {}) });
+    };
     return {
         async joined(m) {
             if (m.bot)

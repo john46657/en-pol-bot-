@@ -18,6 +18,7 @@ const audit_service_1 = require("../audit/audit.service");
 const applications_service_1 = require("../applications/applications.service");
 const qualifications_service_1 = require("../qualifications/qualifications.service");
 const tickets_service_1 = require("../support-tickets/tickets.service");
+const media_service_1 = require("../media/media.service");
 const KEY = 'welcome.config';
 const sf = zod_1.z.string().regex(/^\d{15,25}$/, 'Discord-ID (15–25 Ziffern)');
 const message = (d) => zod_1.z.object({
@@ -28,6 +29,8 @@ const message = (d) => zod_1.z.object({
     color: zod_1.z.string().regex(/^#[0-9a-fA-F]{6}$/).default(d.color),
     showAvatar: zod_1.z.boolean().default(d.showAvatar),
     pingUser: zod_1.z.boolean().default(d.pingUser),
+    image: zod_1.z.union([zod_1.z.string().trim().max(500).regex(/^https:\/\/\S+$/, 'Bild-URL muss mit https:// beginnen'), zod_1.z.literal('')]).default(''),
+    imageMediaId: zod_1.z.union([zod_1.z.string().uuid(), zod_1.z.literal('')]).default(''),
 }).default({});
 exports.welcomeConfigSchema = zod_1.z.object({
     welcome: message(shared_1.DEFAULT_WELCOME_CONFIG.welcome),
@@ -47,13 +50,15 @@ let WelcomeService = class WelcomeService {
     applications;
     qualifications;
     tickets;
+    media;
     log = new common_1.Logger('Welcome');
-    constructor(prisma, audit, applications, qualifications, tickets) {
+    constructor(prisma, audit, applications, qualifications, tickets, media) {
         this.prisma = prisma;
         this.audit = audit;
         this.applications = applications;
         this.qualifications = qualifications;
         this.tickets = tickets;
+        this.media = media;
     }
     keyOf(guildId) { return guildId ? `${KEY}@${guildId}` : KEY; }
     /** `own` = dieser Server hat eigene Einstellungen (sonst gilt die gemeinsame). */
@@ -78,6 +83,11 @@ let WelcomeService = class WelcomeService {
         await this.audit.record(actor, { action: 'welcome.config.reset', module: 'settings', entityType: 'SystemSetting', entityId: this.keyOf(guildId) });
         return this.config(guildId);
     }
+    /** Hochgeladener Banner für den Bot (nur Bilder, die als Willkommens-Banner hochgeladen wurden). */
+    async banner(id) {
+        const f = await this.media.welcomeBanner(id);
+        return { mime: f.mime, name: f.name, data: f.data.toString('base64') };
+    }
     /** Vom Bot: Mitglied hat den Server verlassen → offene Bewerbungen und Tickets nach Einstellung behandeln. Fehler eines Bereichs stoppen die anderen nicht. */
     async memberLeft(guildId, discordId) {
         const safe = (label, p, empty) => p.catch((e) => { this.log.warn(`member left (${label}): ${e.message}`); return empty; });
@@ -92,6 +102,6 @@ let WelcomeService = class WelcomeService {
 exports.WelcomeService = WelcomeService;
 exports.WelcomeService = WelcomeService = __decorate([
     (0, common_1.Injectable)(),
-    __metadata("design:paramtypes", [prisma_service_1.PrismaService, audit_service_1.AuditService, applications_service_1.ApplicationsService, qualifications_service_1.QualificationsService, tickets_service_1.SupportTicketsService])
+    __metadata("design:paramtypes", [prisma_service_1.PrismaService, audit_service_1.AuditService, applications_service_1.ApplicationsService, qualifications_service_1.QualificationsService, tickets_service_1.SupportTicketsService, media_service_1.MediaService])
 ], WelcomeService);
 //# sourceMappingURL=welcome.service.js.map

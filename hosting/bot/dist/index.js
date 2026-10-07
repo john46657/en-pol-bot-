@@ -13,6 +13,7 @@ const live_1 = require("./live");
 const outbox_1 = require("./outbox");
 const roblox_1 = require("./roblox");
 const welcome_1 = require("./welcome");
+const voice_support_1 = require("./voice-support");
 (0, config_1.loadDotEnv)();
 const cfg = (0, config_1.loadConfig)();
 const api = new api_1.HttpApi(cfg.API_URL, cfg.BOT_API_TOKEN);
@@ -41,6 +42,8 @@ const toEmbed = (e) => {
         b.setFooter({ text: e.footer });
     if (e.thumbnail && /^https:\/\//.test(e.thumbnail))
         b.setThumbnail(e.thumbnail);
+    if (e.image && /^(https|attachment):\/\//.test(e.image))
+        b.setImage(e.image);
     if (e.author?.name)
         b.setAuthor({ name: e.author.name.slice(0, 256), ...(e.author.iconUrl && /^https:\/\//.test(e.author.iconUrl) ? { iconURL: e.author.iconUrl } : {}) });
     return b;
@@ -151,7 +154,7 @@ const welcome = (0, welcome_1.createWelcome)(api, {
         const ch = await client.channels.fetch(channelId);
         if (!ch?.isSendable())
             throw new Error(`channel ${channelId} is not a text channel the bot can post in`);
-        await ch.send({ ...(m.content ? { content: m.content } : {}), embeds: [toEmbed(m.embed)], allowedMentions: { parse: [], users: m.mentionUserIds ?? [] } });
+        await ch.send({ ...(m.content ? { content: m.content } : {}), embeds: [toEmbed(m.embed)], ...(m.file ? { files: [{ attachment: m.file.data, name: m.file.name }] } : {}), allowedMentions: { parse: [], users: m.mentionUserIds ?? [] } });
     },
     async dm(userId, text) { await platform.sendDirectMessage(userId, text); },
     async addRoles(guildId, userId, roleIds) {
@@ -159,6 +162,69 @@ const welcome = (0, welcome_1.createWelcome)(api, {
         const ids = roleIds.filter((r) => guild.roles.cache.has(r));
         if (ids.length)
             await (await guild.members.fetch(userId)).roles.add(ids, 'EN Polizei: Willkommen');
+    },
+});
+/** Sprach-Support: Warteraum → Support-Fall → eigener Sprachkanal (braucht GuildVoiceStates, „Kanäle verwalten“, „Mitglieder verschieben“). */
+const VOICE_TALK = [discord_js_1.PermissionFlagsBits.ViewChannel, discord_js_1.PermissionFlagsBits.Connect, discord_js_1.PermissionFlagsBits.Speak, discord_js_1.PermissionFlagsBits.Stream, discord_js_1.PermissionFlagsBits.UseVAD];
+const voiceSupport = (0, voice_support_1.createVoiceSupport)(api, {
+    async post(channelId, m) {
+        const ch = await client.channels.fetch(channelId);
+        if (!ch?.isSendable())
+            throw new Error(`channel ${channelId} is not a text channel the bot can post in`);
+        return (await ch.send((0, discord_tickets_1.payloadOf)(m))).id;
+    },
+    async edit(channelId, messageId, m) {
+        const ch = await client.channels.fetch(channelId);
+        if (!ch?.isTextBased() || !('messages' in ch))
+            return;
+        const msg = await ch.messages.fetch(messageId).catch(() => null);
+        if (msg)
+            await msg.edit({ ...(0, discord_tickets_1.payloadOf)(m), content: m.content ?? '' });
+    },
+    async dm(userId, m) { await (await client.users.fetch(userId)).send((0, discord_tickets_1.payloadOf)(m)); },
+    members(channelId) {
+        const ch = client.channels.cache.get(channelId);
+        return ch?.isVoiceBased() ? [...ch.members.keys()] : [];
+    },
+    voiceChannelOf(guildId, userId) { return client.guilds.cache.get(guildId)?.voiceStates.cache.get(userId)?.channelId ?? null; },
+    async createVoice({ guildId, name, nearChannelId, userId, teamRoleId }) {
+        const guild = await client.guilds.fetch(guildId);
+        const near = await guild.channels.fetch(nearChannelId).catch(() => null);
+        const ch = await guild.channels.create({
+            name, type: discord_js_1.ChannelType.GuildVoice, ...(near?.parentId ? { parent: near.parentId } : {}), reason: 'EN Polizei: Sprach-Support',
+            permissionOverwrites: [
+                { id: guild.roles.everyone.id, type: discord_js_1.OverwriteType.Role, deny: [discord_js_1.PermissionFlagsBits.ViewChannel, discord_js_1.PermissionFlagsBits.Connect] },
+                { id: userId, type: discord_js_1.OverwriteType.Member, allow: VOICE_TALK },
+                ...(guild.roles.cache.has(teamRoleId) ? [{ id: teamRoleId, type: discord_js_1.OverwriteType.Role, allow: [...VOICE_TALK, discord_js_1.PermissionFlagsBits.MoveMembers] }] : []),
+                { id: client.user.id, type: discord_js_1.OverwriteType.Member, allow: [discord_js_1.PermissionFlagsBits.ViewChannel, discord_js_1.PermissionFlagsBits.Connect, discord_js_1.PermissionFlagsBits.MoveMembers, discord_js_1.PermissionFlagsBits.ManageChannels] },
+            ],
+        });
+        return ch.id;
+    },
+    async move(guildId, userId, channelId) {
+        const member = await (await client.guilds.fetch(guildId)).members.fetch(userId).catch(() => null);
+        if (!member?.voice.channelId)
+            return false;
+        await member.voice.setChannel(channelId, 'EN Polizei: Sprach-Support');
+        return true;
+    },
+    async deleteChannel(channelId) {
+        const ch = await client.channels.fetch(channelId).catch(() => null);
+        // Sicherheitsnetz: nur Sprachkanäle (die das System als selbst angelegt meldet)
+        if (ch?.type === discord_js_1.ChannelType.GuildVoice)
+            await ch.delete('EN Polizei: Support-Fall geschlossen');
+    },
+    async thread(channelId, messageId, name) {
+        const ch = await client.channels.fetch(channelId);
+        if (!ch?.isTextBased() || !('messages' in ch))
+            return null;
+        const msg = await ch.messages.fetch(messageId);
+        return (await msg.startThread({ name: name.slice(0, 100), autoArchiveDuration: 1440 })).id;
+    },
+    async threadPost(threadId, text) {
+        const ch = await client.channels.fetch(threadId);
+        if (ch?.isSendable())
+            await ch.send({ content: text.slice(0, 2000), allowedMentions: { parse: [] } });
     },
 });
 /** Mitglied (auch teilweise geladen) → Daten für Platzhalter. */
@@ -235,6 +301,7 @@ function baseCtx(i) {
         applyEffects: (effects) => tickets.apply(effects),
         listCategories: (guildId) => tickets.listCategories(guildId),
         userNameOf: (id) => client.users.fetch(id).then((u) => u.username, () => null),
+        voiceSupport,
     };
 }
 /** Rollen-IDs des Mitglieds (voller GuildMember oder rohe API-Daten). */
@@ -308,6 +375,13 @@ function wire(c) {
         // Server der Interaktion → API prüft Rechte für genau diesen Server (Server laufen getrennt)
         const task = api_1.guildScope.run(i.guildId ?? null, () => api_1.rolesScope.run(rolesOf(i.member), () => i.isChatInputCommand() ? handleCommand(i) : i.isButton() || i.isModalSubmit() || i.isAnySelectMenu() ? handleComponent(i) : undefined));
         void task?.catch((e) => console.error('interaction failed:', e instanceof Error ? e.message : e));
+    });
+    c.on('voiceStateUpdate', (o, n) => {
+        const user = n.member?.user ?? o.member?.user;
+        if (!user)
+            return;
+        void voiceSupport.onVoiceState({ guildId: n.guild.id, userId: n.id, userName: n.member?.displayName ?? user.username, bot: user.bot, from: o.channelId, to: n.channelId })
+            .catch((x) => console.error('voice support failed:', x instanceof Error ? x.message : x));
     });
     c.on('guildMemberAdd', (m) => { const e = memberEvent(m); if (e)
         void welcome.joined(e).catch((x) => console.error('member join failed:', x instanceof Error ? x.message : x)); });

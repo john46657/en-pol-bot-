@@ -42,6 +42,11 @@ export declare class BotWelcomeController {
     }): Promise<WelcomeConfig & {
         own: boolean;
     }>;
+    banner(id: string): Promise<{
+        mime: string;
+        name: string;
+        data: string;
+    }>;
     memberLeft(b: z.infer<typeof memberBody>): Promise<{
         applications: {
             denied: number;

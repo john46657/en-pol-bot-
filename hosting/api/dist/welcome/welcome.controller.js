@@ -80,6 +80,7 @@ let BotWelcomeController = class BotWelcomeController {
         this.s = s;
     }
     config(q) { return this.s.config(q.guildId); }
+    banner(id) { return this.s.banner(id); }
     memberLeft(b) { return this.s.memberLeft(b.guildId, b.discordId); }
 };
 exports.BotWelcomeController = BotWelcomeController;
@@ -91,6 +92,14 @@ __decorate([
     __metadata("design:paramtypes", [Object]),
     __metadata("design:returntype", void 0)
 ], BotWelcomeController.prototype, "config", null);
+__decorate([
+    (0, decorators_1.BotService)(),
+    (0, common_1.Get)('welcome/banner/:id'),
+    __param(0, (0, common_1.Param)('id', common_1.ParseUUIDPipe)),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String]),
+    __metadata("design:returntype", void 0)
+], BotWelcomeController.prototype, "banner", null);
 __decorate([
     (0, decorators_1.BotService)(),
     (0, throttler_1.Throttle)({ default: { limit: process.env.NODE_ENV === 'test' ? 10_000 : 120, ttl: 60_000 } }),
