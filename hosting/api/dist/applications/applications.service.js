@@ -153,7 +153,7 @@ let ApplicationsService = class ApplicationsService {
                 throw new errors_1.AppError('NOT_FOUND', 'Application not found.');
             if (!OPEN_STATUSES.includes(a.status))
                 throw new errors_1.AppError('CONFLICT', 'This application has already been decided.');
-            const claimed = await tx.application.updateMany({ where: { id, status: a.status, version: a.version }, data: { status: to, decidedById: actor.userId, decisionReason: reason || null, version: { increment: 1 } } });
+            const claimed = await tx.application.updateMany({ where: { id, status: a.status, version: a.version }, data: { status: to, decidedById: actor.userId, decidedAt: new Date(), decisionReason: reason || null, version: { increment: 1 } } });
             if (claimed.count === 0)
                 throw new errors_1.AppError('CONFLICT', 'This application has already been decided.');
             await this.audit.record(actor, { action: `application.${to.toLowerCase()}`, module: 'applications', entityType: 'Application', entityId: id, before: { status: a.status }, after: { status: to }, reason: reason || 'Entschieden über Discord' }, tx);
@@ -186,7 +186,7 @@ let ApplicationsService = class ApplicationsService {
             (0, transition_1.nextStatus)(shared_1.APPLICATION_TRANSITIONS, a.status, to);
             if ((to === 'ACCEPTED' || to === 'REJECTED') && !reason)
                 throw new errors_1.AppError('VALIDATION_FAILED', 'A reason is required.');
-            const after = await tx.application.update({ where: { id }, data: { status: to, decidedById: to === 'ACCEPTED' || to === 'REJECTED' ? actor.userId : a.decidedById, version: { increment: 1 } } });
+            const after = await tx.application.update({ where: { id }, data: { status: to, decidedById: to === 'ACCEPTED' || to === 'REJECTED' ? actor.userId : a.decidedById, ...(to === 'ACCEPTED' || to === 'REJECTED' ? { decidedAt: new Date() } : {}), version: { increment: 1 } } });
             await this.audit.record(actor, { action: `application.${to.toLowerCase()}`, module: 'applications', entityType: 'Application', entityId: id, before: { status: a.status }, after: { status: to }, reason }, tx);
             return after;
         }).then(async (after) => {

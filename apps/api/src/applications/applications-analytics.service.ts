@@ -22,12 +22,12 @@ export class ApplicationsAnalyticsService {
     const g = guildId ? { guildId } : {};
     const policeName = 'Polizei-Bewerbung';
     const [apps, qualis] = await Promise.all([
-      this.prisma.application.findMany({ where: { ...g, createdAt: { gte: since } }, select: { status: true, createdAt: true, updatedAt: true, decidedById: true } }),
+      this.prisma.application.findMany({ where: { ...g, createdAt: { gte: since } }, select: { status: true, createdAt: true, updatedAt: true, decidedAt: true, decidedById: true } }),
       this.prisma.qualificationApplication.findMany({ where: { ...g, createdAt: { gte: since } }, select: { unitName: true, status: true, createdAt: true, decidedAt: true, decidedById: true } }),
     ]);
     return [
-      // Polizei-Bewerbungen haben keinen eigenen Entscheidungszeitpunkt: letzte Änderung bei entschiedenen Bewerbungen
-      ...apps.map((a) => ({ type: policeName, bucket: bucket(a.status), createdAt: a.createdAt, decidedAt: ['ACCEPTED', 'REJECTED'].includes(a.status) ? a.updatedAt : null, reviewerId: a.decidedById })),
+      // ältere Entscheidungen ohne gespeicherten Zeitpunkt: letzte Änderung als Näherung
+      ...apps.map((a) => ({ type: policeName, bucket: bucket(a.status), createdAt: a.createdAt, decidedAt: a.decidedAt ?? (['ACCEPTED', 'REJECTED'].includes(a.status) ? a.updatedAt : null), reviewerId: a.decidedById })),
       ...qualis.map((q) => ({ type: q.unitName, bucket: bucket(q.status), createdAt: q.createdAt, decidedAt: q.decidedAt, reviewerId: q.decidedById })),
     ];
   }

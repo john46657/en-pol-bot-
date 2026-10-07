@@ -532,6 +532,8 @@ model Application {
   robloxUsername String
   robloxUserId   String?
   decidedById    String?   @db.Uuid
+  /// Zeitpunkt der Annahme/Ablehnung (für die Statistik)
+  decidedAt      DateTime?
   discordId      String? // Bewerber-Discord-ID (bei Bewerbung über den Bot) – für die Entscheidungs-DM
   discordName    String?
   source         String    @default("WEB") // WEB | DISCORD

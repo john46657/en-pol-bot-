@@ -113,6 +113,7 @@ export declare class ApplicationsService {
             guildId: string | null;
             status: string;
             decidedById: string | null;
+            decidedAt: Date | null;
             decisionReason: string | null;
             source: string;
             discordName: string | null;
@@ -137,6 +138,7 @@ export declare class ApplicationsService {
         guildId: string | null;
         status: string;
         decidedById: string | null;
+        decidedAt: Date | null;
         decisionReason: string | null;
         source: string;
         discordName: string | null;
@@ -157,6 +159,7 @@ export declare class ApplicationsService {
         guildId: string | null;
         status: string;
         decidedById: string | null;
+        decidedAt: Date | null;
         decisionReason: string | null;
         source: string;
         discordName: string | null;

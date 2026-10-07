@@ -131,7 +131,7 @@ export class ApplicationsService {
       const a = await tx.application.findUnique({ where: { id } });
       if (!a) throw new AppError('NOT_FOUND', 'Application not found.');
       if (!OPEN_STATUSES.includes(a.status)) throw new AppError('CONFLICT', 'This application has already been decided.');
-      const claimed = await tx.application.updateMany({ where: { id, status: a.status, version: a.version }, data: { status: to, decidedById: actor.userId, decisionReason: reason || null, version: { increment: 1 } } });
+      const claimed = await tx.application.updateMany({ where: { id, status: a.status, version: a.version }, data: { status: to, decidedById: actor.userId, decidedAt: new Date(), decisionReason: reason || null, version: { increment: 1 } } });
       if (claimed.count === 0) throw new AppError('CONFLICT', 'This application has already been decided.');
       await this.audit.record(actor, { action: `application.${to.toLowerCase()}`, module: 'applications', entityType: 'Application', entityId: id, before: { status: a.status }, after: { status: to }, reason: reason || 'Entschieden über Discord' }, tx);
       return { ...a, status: to };
@@ -163,7 +163,7 @@ export class ApplicationsService {
       if (!a) throw new AppError('NOT_FOUND', 'Application not found.');
       nextStatus(APPLICATION_TRANSITIONS, a.status, to);
       if ((to === 'ACCEPTED' || to === 'REJECTED') && !reason) throw new AppError('VALIDATION_FAILED', 'A reason is required.');
-      const after = await tx.application.update({ where: { id }, data: { status: to, decidedById: to === 'ACCEPTED' || to === 'REJECTED' ? actor.userId : a.decidedById, version: { increment: 1 } } });
+      const after = await tx.application.update({ where: { id }, data: { status: to, decidedById: to === 'ACCEPTED' || to === 'REJECTED' ? actor.userId : a.decidedById, ...(to === 'ACCEPTED' || to === 'REJECTED' ? { decidedAt: new Date() } : {}), version: { increment: 1 } } });
       await this.audit.record(actor, { action: `application.${to.toLowerCase()}`, module: 'applications', entityType: 'Application', entityId: id, before: { status: a.status }, after: { status: to }, reason }, tx);
       return after;
     }).then(async (after) => {

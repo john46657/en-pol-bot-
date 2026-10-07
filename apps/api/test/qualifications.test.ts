@@ -45,9 +45,11 @@ describe('qualification applications', () => {
     expect(stranger.status).toBe(201);
     const posted = await prisma.discordOutbox.findMany({ where: { type: 'qualification.submitted' } });
     expect(posted).toHaveLength(2);
-    expect(posted[0]!.payload).toMatchObject({ number: r.body.number, linkedName: 'q_off' });
+    // Reihenfolge der Outbox-Zeilen ist ohne Sortierung nicht festgelegt → über die Nummer suchen
+    const mine = posted.find((x) => (x.payload as { number?: string }).number === r.body.number)!;
+    expect(mine.payload).toMatchObject({ number: r.body.number, linkedName: 'q_off' });
     // die Fragen kommen aus der Einrichtung (nicht vom Bot), die Antworten wie eingereicht
-    expect((posted[0]!.payload as { answers: { answer: string }[] }).answers.map((a) => a.answer)).toEqual(answers(n).map((a) => a.answer));
+    expect((mine.payload as { answers: { answer: string }[] }).answers.map((a) => a.answer)).toEqual(answers(n).map((a) => a.answer));
   });
 
   it('decisions need qualifications.decide (web or bot button), accept adds SEK roster + DM with role', async () => {
