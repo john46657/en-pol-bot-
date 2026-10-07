@@ -74,7 +74,7 @@ describe('Roblox verification (like RoVer)', () => {
 
   it('„Mit Roblox anmelden“: settings (secret never returned), link, callback verifies and queues roles', async () => {
     const admin = (await login(app, 'vf_admin')).agent;
-    expect((await http().post('/api/v1/bot/verify/oauth').set(bot).send({ guildId: G, discordId: U2 })).body).toEqual({ enabled: false });
+    expect((await http().post('/api/v1/bot/verify/oauth').set(bot).send({ guildId: G, discordId: U2 })).body).toEqual({ enabled: false, allowCode: true });
     expect((await (await login(app, 'vf_off')).agent.put('/api/v1/verification/oauth').send({ clientId: '123456789', clientSecret: 'geheim-123456' })).status).toBe(403);
     const saved = await admin.put('/api/v1/verification/oauth').send({ clientId: '123456789', clientSecret: 'geheim-123456' });
     expect(saved.body).toMatchObject({ enabled: true, clientId: '123456789', hasSecret: true, redirectUri: expect.stringContaining('/api/v1/verify/roblox/callback') });
@@ -82,7 +82,9 @@ describe('Roblox verification (like RoVer)', () => {
     // Client-ID ändern ohne Secret → Secret bleibt
     expect((await admin.put('/api/v1/verification/oauth').send({ clientId: '987654321' })).body).toMatchObject({ enabled: true, hasSecret: true });
     const l = await http().post('/api/v1/bot/verify/oauth').set(bot).send({ guildId: G, discordId: U2, discordName: 'oauth_user' });
-    expect(l.body.enabled).toBe(true);
+    expect(l.body).toMatchObject({ enabled: true, allowCode: true });
+    expect((await admin.put('/api/v1/verification/oauth').send({ clientId: '987654321', allowCode: false })).body).toMatchObject({ allowCode: false, hasSecret: true });
+    expect((await http().post('/api/v1/bot/verify/oauth').set(bot).send({ guildId: G, discordId: U1 })).body.allowCode).toBe(false);
     const url = new URL(l.body.url);
     expect(url.origin + url.pathname).toBe('https://apis.roblox.com/oauth/v1/authorize');
     expect(url.searchParams.get('client_id')).toBe('987654321');
