@@ -4,9 +4,9 @@ import { createTestApp, login, makeUser } from './helpers';
 import type { PrismaService } from '../src/prisma/prisma.service';
 import { RobloxService } from '../src/persons/roblox.service';
 
-let app: INestApplication; let prisma: PrismaService; let http: () => ReturnType<typeof import('supertest').default>;
+let app: INestApplication; let prisma: PrismaService; let http: Awaited<ReturnType<typeof createTestApp>>['http'];
 beforeAll(async () => {
-  ({ app, prisma, http } = await createTestApp() as never);
+  ({ app, prisma, http } = await createTestApp());
   await makeUser(prisma, 'rq_admin', ['System Administrator']);
 });
 afterAll(async () => { await app.close(); });

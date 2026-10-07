@@ -127,7 +127,7 @@ export function useApplyPrefs(p: Preferences, studioAccent: string) {
     root.dataset.glow = p.glow ? 'on' : 'off';
     root.dataset.motion = p.animations ? 'on' : 'off';
     root.dataset.density = p.density;
-    root.lang = p.language;
+    root.lang = 'de'; // Dashboard ist immer deutsch
     const bg = p.background;
     root.style.setProperty('--app-bg', bg.type === 'color' && /^#[0-9a-f]{6}$/i.test(bg.value) ? bg.value
       : bg.type === 'gradient' ? GRADIENTS[bg.value] ?? 'var(--color-bg)'

@@ -14,7 +14,7 @@ const NOTIFICATION_TYPES: [string, string][] = [
   ['SYSTEM', '⚠️ Systemhinweis'], ['TEAMCHANCE', '📣 Team-Chance geöffnet'],
   ['QUALIFICATION', '🏅 Qualifikationen'], ['TICKET_ISSUED', '🧾 Strafzettel'], ['PERSONNEL', '🪪 Dienstgrad / Personal'],
   ['INCIDENT_ASSIGNMENT', '🚨 Einsatz zugewiesen'], ['REPORT_REVIEW', '📄 Bericht zur Prüfung'], ['COMPLAINT_ASSIGNMENT', '⚖️ Beschwerde zugewiesen'],
-  ['ACADEMY_ASSIGNMENT', '🎓 Academy'], ['SEK', '🎯 SEK'], ['RADIO', '📡 Funk'], ['WORKFLOW', '⚙️ Workflows'],
+  ['ACADEMY_ASSIGNMENT', '🎓 Akademie'], ['SEK', '🎯 SEK'], ['RADIO', '📡 Funk'], ['WORKFLOW', '⚙️ Workflows'],
 ];
 const TIMEZONES = ['Europe/Berlin', 'Europe/Vienna', 'Europe/Zurich', 'Europe/London', 'UTC', 'America/New_York', 'America/Chicago', 'America/Los_Angeles'];
 
@@ -56,7 +56,7 @@ export function PersonalSettings() {
           <Row label={`Transparenz (${p.transparency} %)`}><input type="range" aria-label="Transparenz" min={0} max={90} step={5} value={p.transparency} onChange={(e) => update({ transparency: Number(e.target.value) })} className="w-56" /></Row>
           <Row label={`Eckenradius (${p.radius} px)`}><input type="range" aria-label="Eckenradius" min={0} max={24} value={p.radius} onChange={(e) => update({ radius: Number(e.target.value) })} className="w-56" /></Row>
           <Row label="Schatten"><Seg label="Schatten" value={p.shadow} onChange={set('shadow')} options={[['none', 'Kein'], ['soft', 'Weich'], ['strong', 'Stark']]} /></Row>
-          <Row label="Effekte"><Toggle label="Glow" checked={p.glow} onChange={set('glow')} /><Toggle label="Animationen" checked={p.animations} onChange={set('animations')} /></Row>
+          <Row label="Effekte"><Toggle label="Leuchteffekt" checked={p.glow} onChange={set('glow')} /><Toggle label="Animationen" checked={p.animations} onChange={set('animations')} /></Row>
         </Card>
         <Card title="🧭 Darstellung & Navigation">
           <Row label="Sidebar-Größe"><Seg label="Sidebar-Größe" value={p.sidebarWidth} onChange={set('sidebarWidth')} options={[['narrow', 'Schmal'], ['normal', 'Normal'], ['wide', 'Breit']]} /></Row>
@@ -64,7 +64,6 @@ export function PersonalSettings() {
           <Row label={`Schriftgröße (${p.fontSize} px)`}><input type="range" aria-label="Schriftgröße" min={12} max={18} value={p.fontSize} onChange={(e) => update({ fontSize: Number(e.target.value) })} className="w-56" /></Row>
           <Row label="Darstellung"><Seg label="Darstellung" value={p.density} onChange={set('density')} options={[['comfortable', 'Komfortabel'], ['compact', 'Kompakt']]} /></Row>
           <Row label="Teamliste"><Seg label="Teamlisten-Ansicht" value={p.teamList.view} onChange={(v) => update({ teamList: { ...p.teamList, view: v } })} options={[['cards', 'Karten'], ['table', 'Tabelle']]} /></Row>
-          <Row label="Sprache" hint="Datumsformat/Anzeige; Texte sind teils noch englisch"><Seg label="Sprache" value={p.language} onChange={set('language')} options={[['de', 'Deutsch'], ['en', 'English']]} /></Row>
           <Row label="Zeitzone"><Select aria-label="Zeitzone" className="w-auto" value={p.timezone ?? ''} onChange={(e) => update({ timezone: e.target.value || undefined })}><option value="">Wie dieses Gerät</option>{TIMEZONES.map((z) => <option key={z}>{z}</option>)}</Select></Row>
           <Row label="Datumsformat"><Select aria-label="Datumsformat" className="w-auto" value={p.dateFormat} onChange={(e) => update({ dateFormat: e.target.value as Preferences['dateFormat'] })}><option>DD.MM.YYYY</option><option>YYYY-MM-DD</option><option>MM/DD/YYYY</option></Select></Row>
         </Card>

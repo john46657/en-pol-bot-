@@ -25,7 +25,7 @@ export function Sek() {
   const reports = useQuery({ queryKey: ['sek-reports'], queryFn: () => api<Report[]>('/sek/reports?limit=100'), enabled: view && tab === 'Einsatzberichte' });
   const officers = useQuery({ queryKey: ['team-overview'], queryFn: () => api<Officer[]>('/team/overview'), enabled: manage && tab === 'Mitglieder' });
   const refresh = () => { setErr(undefined); for (const k of ['sek-me', 'sek-members', 'sek-reports']) void qc.invalidateQueries({ queryKey: [k] }); };
-  const onError = (e: unknown) => setErr(e instanceof ApiError ? `${e.message}${e.requestId ? ` (Request ID ${e.requestId})` : ''}` : 'Fehlgeschlagen');
+  const onError = (e: unknown) => setErr(e instanceof ApiError ? `${e.message}${e.requestId ? ` (Anfrage-ID ${e.requestId})` : ''}` : 'Fehlgeschlagen');
   const add = useMutation({ mutationFn: (userId: string) => api('/sek/members', { method: 'POST', body: { userId } }), onSuccess: () => { setPick(''); refresh(); }, onError });
   const remove = useMutation({ mutationFn: (userId: string) => api('/sek/members/remove', { method: 'POST', body: { userId } }), onSuccess: refresh, onError });
 

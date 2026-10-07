@@ -31,7 +31,7 @@ export function Team() {
   const assign = can('dispatch.assign');
   const units = useQuery({ queryKey: ['team-units'], queryFn: () => api<Unit[]>('/dispatch/units'), enabled: assign || manage });
   const refresh = () => { setErr(undefined); void qc.invalidateQueries({ queryKey: ['team-overview'] }); void qc.invalidateQueries({ queryKey: ['my-duty'] }); void qc.invalidateQueries({ queryKey: ['team-units'] }); };
-  const onError = (e: unknown) => setErr(e instanceof ApiError ? `${e.message}${e.requestId ? ` (Request ID ${e.requestId})` : ''}` : 'Fehlgeschlagen');
+  const onError = (e: unknown) => setErr(e instanceof ApiError ? `${e.message}${e.requestId ? ` (Anfrage-ID ${e.requestId})` : ''}` : 'Fehlgeschlagen');
   // Schicht-Arten (Admin → Shifts): bei mehreren wird beim Dienstbeginn gewählt
   const shifts = useQuery({ queryKey: ['shifts-config'], queryFn: () => api<ShiftsConfig>('/shifts/config') });
   const types = shifts.data?.enabled ? shifts.data.types : [];
