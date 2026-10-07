@@ -442,7 +442,6 @@ function wire(c) {
         if (!e)
             return;
         void welcome.joined(e).catch((x) => console.error('member join failed:', x instanceof Error ? x.message : x));
-        void verify.joined({ guildId: e.guildId, id: e.id, bot: e.bot, displayName: e.username }).catch((x) => console.error('verify on join failed:', x instanceof Error ? x.message : x));
     });
     c.on('guildMemberRemove', (m) => { const e = memberEvent(m); if (e)
         void welcome.left(e).catch((x) => console.error('member leave failed:', x instanceof Error ? x.message : x)); });

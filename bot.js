@@ -575,7 +575,7 @@ function __addDisposableResource(env, value, async) {
   return value;
 }
 function __disposeResources(env) {
-  function fail4(e) {
+  function fail3(e) {
     env.error = env.hasError ? new _SuppressedError(e, env.error, "An error was suppressed during disposal.") : e;
     env.hasError = true;
   }
@@ -587,12 +587,12 @@ function __disposeResources(env) {
         if (r.dispose) {
           var result = r.dispose.call(r.value);
           if (r.async) return s |= 2, Promise.resolve(result).then(next, function(e) {
-            fail4(e);
+            fail3(e);
             return next();
           });
         } else s |= 1;
       } catch (e) {
-        fail4(e);
+        fail3(e);
       }
     }
     if (s === 1) return env.hasError ? Promise.reject(env.error) : Promise.resolve();
@@ -76062,7 +76062,7 @@ function startPresenceReporter(client2, api2, opts, log = console.log) {
   let teamRoles = [];
   let lastError;
   const guilds = () => [...client2().guilds.cache.values()].slice(0, 50);
-  const fail4 = (what) => (e) => {
+  const fail3 = (what) => (e) => {
     const msg = `${what}: ${e instanceof Error ? e.message : e}`;
     if (msg !== lastError) {
       log(`team/voice report failed \u2013 ${msg} (will keep retrying quietly)`);
@@ -76080,12 +76080,12 @@ function startPresenceReporter(client2, api2, opts, log = console.log) {
   let mt, vt;
   const membersSoon = () => {
     clearTimeout(mt);
-    mt = setTimeout(() => void pushMembers().catch(fail4("members")), 1500);
+    mt = setTimeout(() => void pushMembers().catch(fail3("members")), 1500);
     mt.unref?.();
   };
   const voiceSoon = () => {
     clearTimeout(vt);
-    vt = setTimeout(() => void pushVoice().catch(fail4("voice")), 1500);
+    vt = setTimeout(() => void pushVoice().catch(fail3("voice")), 1500);
     vt.unref?.();
   };
   const c = client2();
@@ -76107,9 +76107,9 @@ function startPresenceReporter(client2, api2, opts, log = console.log) {
     }
     for (const g of guilds()) await g.members.fetch().catch((e) => log(`could not load members of ${g.name}: ${e instanceof Error ? e.message : e}`));
   };
-  void loadMembers().then(() => Promise.all([pushMembers().catch(fail4("members")), pushVoice().catch(fail4("voice"))]));
-  setInterval(() => void pushMembers().catch(fail4("members")), 5e3).unref();
-  setInterval(() => void pushVoice().catch(fail4("voice")), 5e3).unref();
+  void loadMembers().then(() => Promise.all([pushMembers().catch(fail3("members")), pushVoice().catch(fail3("voice"))]));
+  setInterval(() => void pushMembers().catch(fail3("members")), 5e3).unref();
+  setInterval(() => void pushVoice().catch(fail3("voice")), 5e3).unref();
   c.on("guildCreate", (g) => {
     if (opts.members) void g.members.fetch().catch(() => void 0).then(membersSoon);
   });
@@ -77858,133 +77858,6 @@ function cadButtons(type, p) {
   return void 0;
 }
 
-// apps/bot/src/commands/verify.ts
-var fail3 = (e) => e instanceof BotApiError && [400, 404, 409, 503].includes(e.status) ? errorReply(e.message) : mapError(e);
-var ts2 = (iso) => `<t:${Math.floor(Date.parse(iso) / 1e3)}:R>`;
-async function startVerify(c) {
-  try {
-    const r = await c.api.service("POST", "/bot/verify/oauth", { ...c.guildId ? { guildId: c.guildId } : {}, discordId: c.discordId, ...c.userName ? { discordName: c.userName } : {} });
-    if (!r.enabled || !r.url) return { ephemeral: true, content: "Best\xE4tige dein Roblox-Konto mit einem Code in deinem Profil:", buttons: [{ id: "verify:code", label: "Roblox-Namen eingeben", style: "success", emoji: "\u2705" }] };
-    return {
-      ephemeral: true,
-      embeds: [{ title: "\u2705 Mit Roblox verifizieren", color: COLORS.success, description: `Klick auf **Mit Roblox anmelden**, melde dich bei Roblox an und best\xE4tige den Zugriff.
-Danach bekommst du hier automatisch deine Rollen und deinen Nickname.${r.allowCode !== false ? "\nKlappt das nicht, nimm **Mit Code verifizieren**." : ""}
-
-Der Link gilt nur f\xFCr dich und l\xE4uft ${ts2(r.expiresAt)} ab.` }],
-      buttons: [{ id: "link", label: "Mit Roblox anmelden", style: "secondary", url: r.url }, ...r.allowCode !== false ? [{ id: "verify:code", label: "Mit Code verifizieren", style: "secondary" }] : []]
-    };
-  } catch (e) {
-    return fail3(e);
-  }
-}
-var nameModal = () => ({ modal: { id: "verify:name", title: "Roblox-Verifizierung", fields: [{ id: "roblox", label: "Dein Roblox-Benutzername", required: true, minLength: 3, maxLength: 20, placeholder: "z. B. Builderman" }] } });
-async function applyHere(c, s) {
-  if (!c.guildId || !s.enabled || !s.actions || !c.verifyApply) return "";
-  const problems = await c.verifyApply(c.guildId, c.discordId, s.actions).catch((e) => [e instanceof Error ? e.message : "Rollen konnten nicht gesetzt werden"]);
-  const parts = [s.actions.add.length ? `Rollen: ${s.actions.add.map((r) => `<@&${r}>`).join(" ")}` : "", s.actions.nickname ? `Nickname: **${plain(s.actions.nickname)}**` : ""].filter(Boolean);
-  return [parts.join("\n"), problems.length ? `\u26A0\uFE0F ${problems.join(" \xB7 ")}` : ""].filter(Boolean).join("\n");
-}
-var linkFields = (l) => [
-  { name: "Roblox", value: `[${plain(l.robloxName)}](${l.profileUrl})`, inline: true },
-  { name: "Anzeigename", value: plain(l.displayName), inline: true },
-  { name: "Roblox-ID", value: l.robloxId, inline: true },
-  { name: "Verifiziert", value: ts2(l.verifiedAt), inline: true }
-];
-var VERIFY_INTERACTION = {
-  prefix: "verify",
-  opensModal: (args) => args[0] === "code",
-  async run(c) {
-    const action = c.args[0];
-    if (action === "start") return startVerify(c);
-    if (action === "code") return nameModal();
-    if (action === "name") {
-      try {
-        const r = await c.api.service("POST", "/bot/verify/start", { ...c.guildId ? { guildId: c.guildId } : {}, discordId: c.discordId, roblox: (c.fields?.roblox ?? "").trim() });
-        return {
-          ephemeral: true,
-          embeds: [{
-            title: `Bist du ${plain(r.roblox.name)}?`,
-            color: COLORS.info,
-            ...r.roblox.avatarUrl ? { thumbnail: r.roblox.avatarUrl } : {},
-            description: [
-              "Damit wir wissen, dass das Konto dir geh\xF6rt:",
-              `**1.** \xD6ffne dein [Roblox-Profil](https://www.roblox.com/users/${r.roblox.id}/profile) \u2192 **Bearbeiten** (Stift bei \u201E\xDCber mich\u201C).`,
-              "**2.** F\xFCge diese W\xF6rter irgendwo in **\u201E\xDCber mich\u201C** ein und speichere:",
-              `\`\`\`${r.code}\`\`\``,
-              "**3.** Klick unten auf **Fertig \u2013 pr\xFCfen**.",
-              "",
-              `Der Code l\xE4uft ${ts2(r.expiresAt)} ab. Danach kannst du die W\xF6rter wieder l\xF6schen.`
-            ].join("\n"),
-            footer: `Anzeigename: ${r.roblox.displayName} \xB7 ID ${r.roblox.id}`
-          }],
-          buttons: [
-            { id: "verify:check", label: "Fertig \u2013 pr\xFCfen", style: "success", emoji: "\u2705" },
-            { id: "verify:code", label: "Anderes Konto", style: "secondary" }
-          ]
-        };
-      } catch (e) {
-        return fail3(e);
-      }
-    }
-    if (action === "check") {
-      try {
-        const s = await c.api.service("POST", "/bot/verify/check", { ...c.guildId ? { guildId: c.guildId } : {}, discordId: c.discordId, ...c.userName ? { discordName: c.userName } : {} });
-        const done = await applyHere(c, s);
-        return { ephemeral: true, embeds: [{ title: `\u2705 Verifiziert als ${plain(s.link.robloxName)}`, color: COLORS.success, description: ["Dein Roblox-Konto ist jetzt mit Discord verkn\xFCpft. Die W\xF6rter kannst du wieder aus deinem Profil l\xF6schen.", done].filter(Boolean).join("\n\n"), fields: linkFields(s.link) }] };
-      } catch (e) {
-        return fail3(e);
-      }
-    }
-    if (action === "update") return update(c);
-    return errorReply("Unbekannte Aktion.");
-  }
-};
-async function update(c, userId = c.discordId) {
-  if (!c.guildId) return errorReply("Das geht nur auf einem Server.");
-  try {
-    const s = await c.api.service("POST", "/bot/verify/status", { guildId: c.guildId, discordId: userId, ...userId === c.discordId && c.userName ? { discordName: c.userName } : {} });
-    if (!s.enabled) return errorReply("Die Roblox-Verifizierung ist auf diesem Server nicht aktiviert.");
-    if (!s.link && userId === c.discordId) return { ...nameModalHint(), ephemeral: true };
-    const problems = s.actions && c.verifyApply ? await c.verifyApply(c.guildId, userId, s.actions).catch((e) => [e instanceof Error ? e.message : "fehlgeschlagen"]) : [];
-    const who = userId === c.discordId ? "Deine" : `Die von <@${userId}>`;
-    return okReply(`${who} Rollen${s.actions?.nickname ? " und Nickname" : ""} sind aktualisiert${s.link ? ` (Roblox: **${plain(s.link.robloxName)}**)` : " (nicht verifiziert)"}.${problems.length ? `
-\u26A0\uFE0F ${problems.join(" \xB7 ")}` : ""}`);
-  } catch (e) {
-    return fail3(e);
-  }
-}
-var nameModalHint = () => ({ content: "Du bist noch nicht verifiziert.", buttons: [{ id: "verify:start", label: "Jetzt verifizieren", style: "success", emoji: "\u2705" }] });
-var VERIFY_COMMANDS = [
-  { name: "verifizieren", description: "Verkn\xFCpft dein Roblox-Konto mit Discord (Rollen und Nickname)", async run(c) {
-    return startVerify(c);
-  } },
-  {
-    name: "aktualisieren",
-    description: "Setzt Rollen und Nickname aus deiner Roblox-Verifizierung neu",
-    options: [{ name: "mitglied", description: "Anderes Mitglied (nur mit \u201EServer verwalten\u201C)", type: "user" }],
-    async run(c) {
-      const other = typeof c.opts.mitglied === "string" && c.opts.mitglied !== c.discordId ? c.opts.mitglied : void 0;
-      if (other && !c.isGuildAdmin) return errorReply("Andere Mitglieder aktualisieren d\xFCrfen nur Leute mit \u201EServer verwalten\u201C.");
-      return update(c, other);
-    }
-  },
-  {
-    name: "whois",
-    description: "Zeigt das verifizierte Roblox-Konto eines Mitglieds",
-    options: [{ name: "mitglied", description: "Discord-Mitglied", type: "user", required: true }],
-    async run(c) {
-      const id = String(c.opts.mitglied ?? "");
-      try {
-        const { link } = await c.api.service("GET", `/bot/verify/whois?discordId=${id}`);
-        if (!link) return { ephemeral: true, content: `<@${id}> ist nicht mit Roblox verifiziert.` };
-        return { ephemeral: true, embeds: [{ title: `\u{1F50E} ${plain(link.robloxName)}`, color: COLORS.info, description: `<@${id}>`, fields: linkFields(link) }] };
-      } catch (e) {
-        return fail3(e);
-      }
-    }
-  }
-];
-
 // apps/bot/src/commands/features.ts
 var str = (c, k) => String(c.opts[k] ?? "").trim();
 var choices = (m) => Object.keys(m).map((k) => ({ name: k.replace("_", " "), value: k }));
@@ -78171,7 +78044,10 @@ var INTERACTIONS = [
   VOICE_INTERACTION,
   LEAVE_INTERACTION,
   CAD_INTERACTION,
-  VERIFY_INTERACTION,
+  // Roblox-Verifizierung ist vorerst abgeschaltet (Code in ./verify bleibt für später); alte Panel-Buttons bekommen einen Hinweis
+  { prefix: "verify", async run() {
+    return errorReply("Die Roblox-Verifizierung ist gerade abgeschaltet.");
+  } },
   {
     prefix: "danger",
     async run(c) {
@@ -78277,7 +78153,7 @@ Bewerben: \`/bewerbung\``.slice(0, 4e3), color: 2278750, fields: [...s.closesAt 
     description: "Zeigt alle Befehle",
     async run() {
       return { ephemeral: true, embeds: [{ title: "EN Polizei \u2014 Befehle", color: COLORS.info, fields: [
-        { name: "Konto", value: "`/entverknuepfen` `/profil` `/benachrichtigungen` `/verifizieren` `/aktualisieren` `/whois`" },
+        { name: "Konto", value: "`/entverknuepfen` `/profil` `/benachrichtigungen`" },
         { name: "Abfragen", value: "`/person` `/kennzeichen` `/fahndungen` `/einsaetze` `/einsatzinfo` `/einheiten` `/team`" },
         { name: "Dienst & Leitstelle", value: "`/dienst` `/dienststunden` `/abmeldung` `/leave manage` `/einheitstatus` `/einsatz` `/einsatzstatus` `/einsatzzuweisen` `/funk` `/funkcode` `/cad`" },
         { name: "Erfassen", value: "`/ticket` `/bericht` `/beschwerde` `/ermittlung` `/fahndung` `/beweis`" },
@@ -78712,8 +78588,7 @@ Bewerben: \`/bewerbung\``.slice(0, 4e3), color: 2278750, fields: [...s.closesAt 
   ...QUALI_COMMANDS,
   ...LEAVE_COMMANDS,
   ...CAD_COMMANDS,
-  TICKET_COMMAND,
-  ...VERIFY_COMMANDS
+  TICKET_COMMAND
 ];
 var byName = (n) => COMMANDS.find((c) => c.name === n);
 
@@ -83588,7 +83463,6 @@ function wire(c) {
     const e = memberEvent(m);
     if (!e) return;
     void welcome.joined(e).catch((x) => console.error("member join failed:", x instanceof Error ? x.message : x));
-    void verify.joined({ guildId: e.guildId, id: e.id, bot: e.bot, displayName: e.username }).catch((x) => console.error("verify on join failed:", x instanceof Error ? x.message : x));
   });
   c.on("guildMemberRemove", (m) => {
     const e = memberEvent(m);

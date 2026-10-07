@@ -7,7 +7,6 @@ import { TICKET_INTERACTION } from './tickets';
 import { VOICE_INTERACTION } from '../voice-support';
 import { LEAVE_INTERACTION } from './leave';
 import { CAD_INTERACTION } from './cad';
-import { VERIFY_INTERACTION } from './verify';
 
 const str = (c: Ctx, k: string) => String(c.opts[k] ?? '').trim();
 const choices = (m: Record<string, string>) => Object.keys(m).map((k) => ({ name: k.replace('_', ' '), value: k }));
@@ -177,7 +176,8 @@ export const INTERACTIONS: InteractionDef[] = [
   VOICE_INTERACTION,
   LEAVE_INTERACTION,
   CAD_INTERACTION,
-  VERIFY_INTERACTION,
+  // Roblox-Verifizierung ist vorerst abgeschaltet (Code in ./verify bleibt für später); alte Panel-Buttons bekommen einen Hinweis
+  { prefix: 'verify', async run() { return errorReply('Die Roblox-Verifizierung ist gerade abgeschaltet.'); } },
   {
     prefix: 'danger',
     async run(c) {

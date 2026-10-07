@@ -1,8 +1,11 @@
 import { describe, expect, it } from 'vitest';
 import { BotApiError, type Api } from '../src/api';
-import { byName } from '../src/commands';
-import { interactionFor } from '../src/commands/features';
+import { VERIFY_COMMANDS, VERIFY_INTERACTION } from '../src/commands/verify';
+import { byName as registered } from '../src/commands';
+import { interactionFor as realInteraction } from '../src/commands/features';
 import type { Ctx } from '../src/commands/types';
+const byName = (n: string) => VERIFY_COMMANDS.find((c) => c.name === n);
+const interactionFor = (id: string) => { const [p, ...args] = id.split(':'); return p === 'verify' ? { def: VERIFY_INTERACTION, args } : undefined; };
 import type { Reply } from '../src/format';
 import { createVerify, type VerifyActions } from '../src/verify';
 
@@ -25,7 +28,12 @@ const text = (r: Reply) => [r.content ?? '', ...(r.embeds ?? []).map((e) => `${e
 const link = { discordId: ME, discordName: 'me', robloxId: '156', robloxName: 'builderman', displayName: 'Builder', verifiedAt: new Date().toISOString(), profileUrl: 'https://www.roblox.com/users/156/profile' };
 const actions: VerifyActions = { add: ['R1'], remove: ['R0'], nickname: 'Builder (@builderman)' };
 
-describe('Roblox verification in Discord', () => {
+describe('Roblox verification in Discord (currently switched off)', () => {
+  it('is not registered; old panel buttons get a notice', async () => {
+    expect(registered('verifizieren')).toBeUndefined();
+    expect((await realInteraction('verify:start')!.def.run({ discordId: ME, opts: {}, api: fakeApi({}).api, args: ['start'] })).content).toContain('abgeschaltet');
+  });
+
   it('panel button / command: direct Roblox login link; only without OAuth the code form', async () => {
     const start = interactionFor('verify:start')!;
     expect(start.def.opensModal?.(start.args)).toBe(false);

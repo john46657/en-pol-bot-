@@ -6,7 +6,6 @@ import { LEAVE_COMMANDS } from './leave';
 import { CAD_COMMANDS } from './cad';
 import { shiftPicker } from './features';
 import { TICKET_COMMAND } from './tickets';
-import { VERIFY_COMMANDS } from './verify';
 import { clip, COLORS, EmbedData, errorReply, incidentLine, label, listEmbed, okReply, personEmbed, plain, Reply, Row, vehicleEmbed } from '../format';
 import type { CommandDef, Ctx } from './types';
 
@@ -94,7 +93,7 @@ export const COMMANDS: CommandDef[] = [
     name: 'hilfe', description: 'Zeigt alle Befehle',
     async run() {
       return { ephemeral: true, embeds: [{ title: 'EN Polizei — Befehle', color: COLORS.info, fields: [
-        { name: 'Konto', value: '`/entverknuepfen` `/profil` `/benachrichtigungen` `/verifizieren` `/aktualisieren` `/whois`' },
+        { name: 'Konto', value: '`/entverknuepfen` `/profil` `/benachrichtigungen`' },
         { name: 'Abfragen', value: '`/person` `/kennzeichen` `/fahndungen` `/einsaetze` `/einsatzinfo` `/einheiten` `/team`' },
         { name: 'Dienst & Leitstelle', value: '`/dienst` `/dienststunden` `/abmeldung` `/leave manage` `/einheitstatus` `/einsatz` `/einsatzstatus` `/einsatzzuweisen` `/funk` `/funkcode` `/cad`' },
         { name: 'Erfassen', value: '`/ticket` `/bericht` `/beschwerde` `/ermittlung` `/fahndung` `/beweis`' },
@@ -444,7 +443,6 @@ export const COMMANDS: CommandDef[] = [
   ...LEAVE_COMMANDS,
   ...CAD_COMMANDS,
   TICKET_COMMAND,
-  ...VERIFY_COMMANDS,
 ];
 
 export { mapError };

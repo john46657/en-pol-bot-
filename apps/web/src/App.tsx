@@ -30,7 +30,6 @@ const LegalCodes = lazy(() => import('./pages/admin/LegalCodes').then((m) => ({ 
 const Shifts = lazy(() => import('./pages/admin/Shifts').then((m) => ({ default: m.Shifts })));
 const ServerLinks = lazy(() => import('./pages/admin/ServerLinks').then((m) => ({ default: m.ServerLinks })));
 const Embeds = lazy(() => import('./pages/admin/Embeds').then((m) => ({ default: m.Embeds })));
-const Verification = lazy(() => import('./pages/admin/Verification').then((m) => ({ default: m.Verification })));
 const WelcomeSettings = lazy(() => import('./pages/admin/WelcomeSettings').then((m) => ({ default: m.WelcomeSettings })));
 const LeaveSettings = lazy(() => import('./pages/admin/LeaveSettings').then((m) => ({ default: m.LeaveSettings })));
 const Leave = lazy(() => import('./pages/Leave').then((m) => ({ default: m.Leave })));
@@ -137,7 +136,6 @@ export function App() {
           <Route path="admin/shifts" element={<Guard perm="settings.view"><Shifts /></Guard>} />
           <Route path="admin/servers" element={<Guard perm="settings.view"><ServerLinks /></Guard>} />
           <Route path="admin/embeds" element={<Guard perm="settings.view"><Embeds /></Guard>} />
-          <Route path="admin/verification" element={<Guard perm="settings.view"><Verification /></Guard>} />
           <Route path="admin/welcome" element={<Guard perm="settings.view"><WelcomeSettings /></Guard>} />
           <Route path="admin/leave" element={<Guard perm="settings.view"><LeaveSettings /></Guard>} />
           <Route path="leave" element={<Guard perm="leave.request"><Leave /></Guard>} />
