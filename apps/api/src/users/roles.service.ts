@@ -42,24 +42,24 @@ export class RolesService {
 
   private async load(id: string, tx: Tx | PrismaService = this.prisma) {
     const role = await tx.role.findUnique({ where: { id }, include: { permissions: true } });
-    if (!role) throw new AppError('NOT_FOUND', 'Role not found.');
+    if (!role) throw new AppError('NOT_FOUND', 'Rolle nicht gefunden.');
     return role;
   }
 
   private async guard(actor: Actor, role: { name: string; priority: number; guildId?: string | null }) {
     const g = currentGuild();
-    if (g && role.guildId && role.guildId !== g) throw new AppError('NOT_FOUND', 'Role not found.'); // Rollen anderer Server sind hier unsichtbar
-    if (role.name === ADMIN_ROLE) throw new AppError('PERMISSION_DENIED', 'The system administrator role cannot be changed in the dashboard.');
+    if (g && role.guildId && role.guildId !== g) throw new AppError('NOT_FOUND', 'Rolle nicht gefunden.'); // Rollen anderer Server sind hier unsichtbar
+    if (role.name === ADMIN_ROLE) throw new AppError('PERMISSION_DENIED', 'Die Rolle „System Administrator“ kann im Dashboard nicht geändert werden.');
     await this.perms.assertOutranksRole(actor.userId!, role.priority, role.name);
   }
 
   private async assertPriority(actor: Actor, priority: number) {
-    if ((await this.perms.rankOf(actor.userId!)) >= priority) throw new AppError('PERMISSION_DENIED', 'A role must stay below your own rank.');
+    if ((await this.perms.rankOf(actor.userId!)) >= priority) throw new AppError('PERMISSION_DENIED', 'Eine Rolle muss unter deinem eigenen Rang bleiben.');
   }
 
   private async uniqueName(tx: Tx, name: string, exceptId?: string) {
     const other = await tx.role.findUnique({ where: { name } });
-    if (other && other.id !== exceptId) throw new AppError('CONFLICT', `A role named "${name}" already exists.`);
+    if (other && other.id !== exceptId) throw new AppError('CONFLICT', `Es gibt schon eine Rolle namens „${name}“.`);
   }
 
   async create(actor: Actor, d: RoleInput & { name: string }) {
@@ -71,7 +71,7 @@ export class RolesService {
       // Server-Rolle: gilt nur auf ihrem Server (Standard: der gerade gewählte Server)
       const guildId = d.guildId === undefined ? currentGuild() : d.guildId;
       // Rollen für andere Server oder alle Server: nur der Serverbesitzer bzw. aus „Alle Server“ heraus
-      if (currentGuild() && guildId !== currentGuild() && !(await this.perms.isOwner(actor.userId!))) throw new AppError('PERMISSION_DENIED', 'In a server view you can only create roles for this server.');
+      if (currentGuild() && guildId !== currentGuild() && !(await this.perms.isOwner(actor.userId!))) throw new AppError('PERMISSION_DENIED', 'In der Server-Ansicht kannst du nur Rollen für diesen Server anlegen.');
       const r = await tx.role.create({ data: { guildId, name: d.name, description: d.description ?? null, color: d.color ?? null, icon: d.icon ?? null, active: d.active ?? true, priority, discordRoleIds: d.discordRoleIds ?? [] }, include });
       await this.audit.record(actor, { action: 'role.create', module: 'permissions', entityType: 'Role', entityId: r.id, after: { name: r.name, guildId: r.guildId, priority: r.priority, discordRoleIds: r.discordRoleIds } }, tx);
       return r;
@@ -110,7 +110,7 @@ export class RolesService {
   /** Kopie einer Rolle (ohne Mitglieder und ohne Discord-Verknüpfung), direkt unterhalb des Originals. */
   async duplicate(actor: Actor, id: string, name?: string) {
     const src = await this.load(id);
-    if (src.name === ADMIN_ROLE) throw new AppError('PERMISSION_DENIED', 'The system administrator role cannot be duplicated.');
+    if (src.name === ADMIN_ROLE) throw new AppError('PERMISSION_DENIED', 'Die Rolle „System Administrator“ kann nicht dupliziert werden.');
     await this.perms.assertCanDelegate(actor.userId!, src.permissions.filter((p) => p.effect === 'ALLOW').map((p) => p.permissionKey));
     const rank = await this.perms.rankOf(actor.userId!);
     const priority = Math.max(src.priority, rank + 1);
@@ -128,12 +128,12 @@ export class RolesService {
   async reorder(actor: Actor, ids: string[]) {
     const rank = await this.perms.rankOf(actor.userId!);
     const roles = await this.prisma.role.findMany({ where: { id: { in: ids } } });
-    if (roles.length !== new Set(ids).size) throw new AppError('NOT_FOUND', 'Role not found.');
+    if (roles.length !== new Set(ids).size) throw new AppError('NOT_FOUND', 'Rolle nicht gefunden.');
     for (const r of roles) await this.guard(actor, r);
     // Neue Plätze: die bisherigen Prioritäten der Rollen in neuer Reihenfolge (bleiben so unter dem eigenen Rang)
     const slots = roles.map((r) => r.priority).sort((a, b) => a - b);
     for (let i = 1; i < slots.length; i++) if (slots[i]! <= slots[i - 1]!) slots[i] = slots[i - 1]! + 1;
-    if (slots[0]! <= rank) throw new AppError('PERMISSION_DENIED', 'A role must stay below your own rank.');
+    if (slots[0]! <= rank) throw new AppError('PERMISSION_DENIED', 'Eine Rolle muss unter deinem eigenen Rang bleiben.');
     return this.changed(await this.prisma.$transaction(async (tx) => {
       const before = roles.map((r) => ({ name: r.name, priority: r.priority }));
       for (const [i, id] of ids.entries()) await tx.role.update({ where: { id }, data: { priority: slots[i]! } });
@@ -144,7 +144,7 @@ export class RolesService {
 
   /** Alle Rechte einer Rolle auf einmal (Rollen-Editor). Geändert wird nur der Unterschied; jede Änderung einzeln protokolliert. */
   async setPermissions(actor: Actor, id: string, grants: { permission: string; effect: Effect }[]) {
-    for (const g of grants) if (!validPermission(g.permission)) throw new AppError('VALIDATION_FAILED', `Unknown permission "${g.permission}".`);
+    for (const g of grants) if (!validPermission(g.permission)) throw new AppError('VALIDATION_FAILED', `Unbekannte Berechtigung „${g.permission}“.`);
     const role = await this.load(id);
     await this.guard(actor, role);
     const want = new Map(grants.map((g) => [g.permission, g.effect]));
@@ -169,7 +169,7 @@ export class RolesService {
 
   /** Ein einzelnes Recht setzen (Matrix, automatisches Speichern). `NONE` = nicht gesetzt. */
   async setPermission(actor: Actor, id: string, permission: string, effect: Effect | 'NONE') {
-    if (!validPermission(permission)) throw new AppError('VALIDATION_FAILED', `Unknown permission "${permission}".`);
+    if (!validPermission(permission)) throw new AppError('VALIDATION_FAILED', `Unbekannte Berechtigung „${permission}“.`);
     const role = await this.load(id);
     await this.guard(actor, role);
     if (effect === 'ALLOW') await this.perms.assertCanDelegate(actor.userId!, [permission]);

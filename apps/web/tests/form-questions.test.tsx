@@ -21,33 +21,33 @@ describe('application questions editor (like Appy)', () => {
     render(<Host initial={[q('experience', 'Erfahrung?'), q('frage1', 'Warum?')]} />);
     expect(screen.getByText('2/50')).toBeTruthy();
     // neue Frage als Auswahl mit zwei Optionen, mehrere erlaubt
-    await u.click(screen.getByRole('button', { name: 'Add question' }));
-    await u.type(screen.getByLabelText('Text of question 3'), 'Welche Schicht?');
-    await u.selectOptions(screen.getByLabelText('Type of question 3'), 'CHOICE');
-    const third = screen.getByRole('region', { name: 'Question 3' });
+    await u.click(screen.getByRole('button', { name: 'Frage hinzufügen' }));
+    await u.type(screen.getByLabelText('Text von Frage 3'), 'Welche Schicht?');
+    await u.selectOptions(screen.getByLabelText('Typ von Frage 3'), 'CHOICE');
+    const third = screen.getByRole('region', { name: 'Frage 3' });
     await u.type(within(third).getByLabelText('Option 1'), 'Früh');
     await u.type(within(third).getByLabelText('Option 2'), 'Spät');
-    await u.click(within(third).getByLabelText('Allow multiple selections'));
+    await u.click(within(third).getByLabelText('Mehrfachauswahl erlauben'));
     expect(latest[2]).toMatchObject({ key: 'frage2', label: 'Welche Schicht?', type: 'CHOICE', multiple: true, options: [{ label: 'Früh' }, { label: 'Spät' }] });
     // Rollen-Auswahl (Liste der Discord-Rollen; ohne gemeldete Server: ID/Erwähnung eintippen)
-    await u.selectOptions(screen.getByLabelText('Type of question 2'), 'ROLE');
-    const second = screen.getByRole('region', { name: 'Question 2' });
+    await u.selectOptions(screen.getByLabelText('Typ von Frage 2'), 'ROLE');
+    const second = screen.getByRole('region', { name: 'Frage 2' });
     await u.type(within(second).getByLabelText('Option 1'), 'Hubschrauber');
-    await u.type(within(second).getByLabelText('Role of option 1'), '<@&510000000000000001>{Enter}');
+    await u.type(within(second).getByLabelText('Rolle von Option 1'), '<@&510000000000000001>{Enter}');
     expect(latest[1]!.options![0]).toEqual({ label: 'Hubschrauber', roleId: '510000000000000001' });
     // Text: Mindestlänge + optional
-    const first = screen.getByRole('region', { name: 'Question 1' });
-    await u.click(within(first).getByRole('button', { name: /Validation settings/ }));
-    await u.clear(within(first).getByLabelText('Min. length (characters)'));
-    await u.type(within(first).getByLabelText('Min. length (characters)'), '20');
-    await u.click(within(first).getByLabelText(/Required/));
+    const first = screen.getByRole('region', { name: 'Frage 1' });
+    await u.click(within(first).getByRole('button', { name: /Prüf-Einstellungen/ }));
+    await u.clear(within(first).getByLabelText('Min. Länge (Zeichen)'));
+    await u.type(within(first).getByLabelText('Min. Länge (Zeichen)'), '20');
+    await u.click(within(first).getByLabelText(/Pflichtfrage/));
     expect(latest[0]).toMatchObject({ minLength: 20, required: false });
     // duplizieren (neuer Schlüssel), verschieben, löschen
-    await u.click(screen.getByRole('button', { name: 'Duplicate question 1' }));
+    await u.click(screen.getByRole('button', { name: 'Frage 1 duplizieren' }));
     expect(latest.map((x) => x.key)).toEqual(['experience', 'frage3', 'frage1', 'frage2']);
-    await u.click(screen.getByRole('button', { name: 'Move question 4 up' }));
+    await u.click(screen.getByRole('button', { name: 'Frage 4 nach oben' }));
     expect(latest.map((x) => x.key)).toEqual(['experience', 'frage3', 'frage2', 'frage1']);
-    await u.click(screen.getByRole('button', { name: 'Delete question 2' }));
+    await u.click(screen.getByRole('button', { name: 'Frage 2 löschen' }));
     expect(latest.map((x) => x.key)).toEqual(['experience', 'frage2', 'frage1']);
     expect(screen.getByText('3/50')).toBeTruthy();
   });

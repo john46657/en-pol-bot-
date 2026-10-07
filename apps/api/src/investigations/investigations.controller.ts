@@ -11,7 +11,7 @@ import { pageQuery } from '../common/pagination';
 const role = z.enum(INVESTIGATION_ROLES);
 const create = z.object({ title: z.string().trim().min(3).max(200), description: z.string().max(10000).optional(), leadId: z.string().uuid().optional(), persons: z.array(z.object({ personId: z.string().uuid(), role })).max(100).optional() });
 const addPerson = z.object({ personId: z.string().uuid(), role });
-const status = z.object({ status: z.enum(INVESTIGATION_STATUSES).refine((s) => s !== 'CLOSED', 'Use the close endpoint.'), reason: z.string().max(500).optional() });
+const status = z.object({ status: z.enum(INVESTIGATION_STATUSES).refine((s) => s !== 'CLOSED', 'Abschließen bitte über die Abschließen-Aktion.'), reason: z.string().max(500).optional() });
 const listQ = pageQuery.extend({ status: z.enum(INVESTIGATION_STATUSES).optional() });
 
 @ApiTags('investigations')

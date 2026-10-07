@@ -9,7 +9,7 @@ import { zodBody } from '../common/zod.pipe';
 import { pageQuery } from '../common/pagination';
 
 const create = z.object({ type: z.string().trim().min(2).max(64), description: z.string().trim().min(3).max(5000), source: z.string().max(200).optional(), caseRef: z.string().max(40).optional(), storageLocation: z.string().max(200).optional(), personIds: z.array(z.string().uuid()).max(50).optional() });
-const transfer = z.object({ to: z.enum(EVIDENCE_CUSTODY_STATES).refine((s) => s !== 'RELEASED', 'Use the release endpoint.'), toUserId: z.string().uuid().optional(), reason: z.string().trim().min(3).max(500), storageLocation: z.string().max(200).optional() });
+const transfer = z.object({ to: z.enum(EVIDENCE_CUSTODY_STATES).refine((s) => s !== 'RELEASED', 'Freigeben bitte über die Freigabe-Aktion.'), toUserId: z.string().uuid().optional(), reason: z.string().trim().min(3).max(500), storageLocation: z.string().max(200).optional() });
 
 @ApiTags('evidence')
 @Controller('evidence')

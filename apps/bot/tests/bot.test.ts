@@ -42,6 +42,9 @@ describe('error mapping', () => {
   it('explains unlinked accounts, permission problems and hides internals', () => {
     expect(text(mapError(new BotApiError(401, 'UNAUTHENTICATED', 'x', 'r1', 'NOT_LINKED')))).toContain('/verknuepfen');
     expect(text(mapError(new BotApiError(403, 'PERMISSION_DENIED', 'secret internal detail')))).toContain('keine Berechtigung');
+    // allgemeine (deutsche) Rechte-Meldung der API nicht doppelt anhängen
+    expect(text(mapError(new BotApiError(403, 'PERMISSION_DENIED', 'Dafür fehlt dir die Berechtigung.')))).not.toContain(':');
+    expect(text(mapError(new BotApiError(403, 'PERMISSION_DENIED', 'Diese Funktion steht dem Bot nicht zur Verfügung.')))).not.toContain('Verfügung');
     expect(text(mapError(new BotApiError(403, 'PERMISSION_DENIED', 'secret internal detail')))).not.toContain('secret');
     expect(text(mapError(new BotApiError(500, 'INTERNAL_ERROR', 'stack trace here', 'req-9')))).toContain('req-9');
     expect(text(mapError(new BotApiError(500, 'INTERNAL_ERROR', 'stack trace here', 'req-9')))).not.toContain('stack trace');

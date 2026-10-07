@@ -19,8 +19,8 @@ const json = (status: number, body: unknown) => Promise.resolve(new Response(JSO
 describe('badges', () => {
   it('shows status and priority as text, not colour only', () => {
     render(<><StatusBadge status="EN_ROUTE" /><PriorityBadge priority="CRITICAL" /></>);
-    expect(screen.getByText('EN ROUTE')).toBeInTheDocument();
-    expect(screen.getByText('CRITICAL')).toBeInTheDocument();
+    expect(screen.getByText('Anfahrt')).toBeInTheDocument();
+    expect(screen.getByText('Kritisch')).toBeInTheDocument();
   });
 });
 
@@ -33,7 +33,7 @@ describe('states', () => {
     const retry = vi.fn();
     render(<ErrorState error={new ApiError(500, 'INTERNAL_ERROR', 'Boom', 'req-123')} onRetry={retry} />);
     expect(screen.getByText(/req-123/)).toBeInTheDocument();
-    await userEvent.click(screen.getByRole('button', { name: 'Retry' }));
+    await userEvent.click(screen.getByRole('button', { name: 'Erneut versuchen' }));
     expect(retry).toHaveBeenCalled();
   });
   it('empty state has a message, not a blank table', () => {
@@ -42,7 +42,7 @@ describe('states', () => {
   });
   it('loading shows skeletons instead of a blank page', () => {
     render(<DataTable columns={[{ key: 'a', label: 'A' }]} rows={undefined} total={0} page={1} pageSize={25} onPage={() => undefined} loading empty={{ text: 'x' }} />);
-    expect(screen.getByRole('status', { name: 'Loading' })).toBeInTheDocument();
+    expect(screen.getByRole('status', { name: 'Wird geladen' })).toBeInTheDocument();
   });
   it('ConfirmDialog is an accessible modal that closes on Escape', async () => {
     const close = vi.fn();
@@ -53,7 +53,7 @@ describe('states', () => {
   });
   it('Forbidden page explains itself', () => {
     render(<Forbidden />);
-    expect(screen.getByRole('alert')).toHaveTextContent(/do not have permission/i);
+    expect(screen.getByRole('alert')).toHaveTextContent(/keine Berechtigung/i);
   });
 });
 
@@ -76,10 +76,10 @@ describe('login', () => {
   it('shows a generic error on bad credentials (no user enumeration)', async () => {
     vi.spyOn(globalThis, 'fetch').mockImplementation((url) => String(url).includes('/auth/me') ? json(401, { code: 'UNAUTHENTICATED', message: 'x', requestId: 'r' }) : json(401, { code: 'UNAUTHENTICATED', message: 'Invalid credentials.', requestId: 'r' }));
     render(wrap(<AuthProvider><Login /></AuthProvider>, '/login'));
-    await userEvent.type(await screen.findByLabelText('Username'), 'ghost');
-    await userEvent.type(screen.getByLabelText('Password'), 'wrong');
-    await userEvent.click(screen.getByRole('button', { name: 'Sign in' }));
-    await waitFor(() => expect(screen.getByRole('alert')).toHaveTextContent('Invalid username or password.'));
+    await userEvent.type(await screen.findByLabelText('Benutzername'), 'ghost');
+    await userEvent.type(screen.getByLabelText('Passwort'), 'wrong');
+    await userEvent.click(screen.getByRole('button', { name: 'Anmelden' }));
+    await waitFor(() => expect(screen.getByRole('alert')).toHaveTextContent('Benutzername oder Passwort ist falsch.'));
   });
 });
 

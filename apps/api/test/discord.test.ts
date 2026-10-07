@@ -86,7 +86,7 @@ describe('bot authentication & authorization', () => {
     for (const [m, p] of [['get', '/api/v1/users'], ['get', '/api/v1/audit'], ['post', '/api/v1/auth/logout'], ['put', '/api/v1/users/00000000-0000-4000-8000-000000000000/roles'], ['post', '/api/v1/roles'], ['put', '/api/v1/admin/settings/org.name'], ['get', '/api/v1/admin/settings'], ['get', '/api/v1/personnel'], ['post', '/api/v1/communication/channels/ANNOUNCEMENT/messages'], ['delete', '/api/v1/users/00000000-0000-4000-8000-000000000000/overrides/audit.view']] as const) {
       const r = await http()[m](p).set(bot(D1)).send({});
       expect(r.status, `${m} ${p}`).toBe(403);
-      expect(r.body.message).toMatch(/not available to the bot/);
+      expect(r.body.message).toMatch(/steht dem Bot nicht zur Verfügung/);
     }
   });
   it('writes through the bot are attributed to the linked user and audited', async () => {

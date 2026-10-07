@@ -16,7 +16,7 @@ export class OriginMiddleware implements NestMiddleware {
     const origin = req.headers.origin;
     // Erlaubt: konfigurierte Origins ODER dieselbe Origin wie der aufgerufene Host (same-origin, z. B. Ein-Prozess-Betrieb).
     // Cross-Site-Anfragen tragen die fremde Origin, aber den Ziel-Host → werden abgelehnt.
-    if (origin && !this.allowed.includes(origin) && !this.sameHost(origin, req.headers.host)) throw new AppError('ORIGIN_REJECTED', 'Request origin is not allowed.');
+    if (origin && !this.allowed.includes(origin) && !this.sameHost(origin, req.headers.host)) throw new AppError('ORIGIN_REJECTED', 'Anfragen von dieser Herkunft sind nicht erlaubt.');
     next();
   }
 }

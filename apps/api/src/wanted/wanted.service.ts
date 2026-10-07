@@ -1,6 +1,6 @@
 import { webUrl } from '../common/web-url';
 import { Injectable } from '@nestjs/common';
-import { WANTED_TRANSITIONS, WantedStatus } from '@enrp/shared';
+import { WANTED_TRANSITIONS, WantedStatus, statusLabel } from '@enrp/shared';
 import { PrismaService } from '../prisma/prisma.service';
 import { AuditService, Actor } from '../audit/audit.service';
 import { TimelineService } from '../timeline/timeline.service';
@@ -28,24 +28,24 @@ export class WantedService {
   async get(id: string) {
     await this.expireDue();
     const w = await this.prisma.wantedRecord.findUnique({ where: { id } });
-    if (!w) throw new AppError('NOT_FOUND', 'Wanted record not found.');
+    if (!w) throw new AppError('NOT_FOUND', 'Fahndung nicht gefunden.');
     return { wanted: w, timeline: await this.timeline.list('Wanted', id) };
   }
 
   async create(actor: Actor, d: { personId?: string; vehicleId?: string; reason: string; description?: string; priority?: string; expiresAt?: Date }) {
-    if (!!d.personId === !!d.vehicleId) throw new AppError('VALIDATION_FAILED', 'Provide exactly one of personId or vehicleId.');
-    if (d.expiresAt && d.expiresAt <= new Date()) throw new AppError('VALIDATION_FAILED', 'expiresAt must be in the future.');
+    if (!!d.personId === !!d.vehicleId) throw new AppError('VALIDATION_FAILED', 'Bitte genau eine Person oder ein Fahrzeug angeben.');
+    if (d.expiresAt && d.expiresAt <= new Date()) throw new AppError('VALIDATION_FAILED', 'Das Ablaufdatum muss in der Zukunft liegen.');
     return this.prisma.$transaction(async (tx) => {
-      if (d.personId && !(await tx.person.findUnique({ where: { id: d.personId } }))) throw new AppError('NOT_FOUND', 'Person not found.');
-      if (d.vehicleId && !(await tx.vehicle.findUnique({ where: { id: d.vehicleId } }))) throw new AppError('NOT_FOUND', 'Vehicle not found.');
+      if (d.personId && !(await tx.person.findUnique({ where: { id: d.personId } }))) throw new AppError('NOT_FOUND', 'Person nicht gefunden.');
+      if (d.vehicleId && !(await tx.vehicle.findUnique({ where: { id: d.vehicleId } }))) throw new AppError('NOT_FOUND', 'Fahrzeug nicht gefunden.');
       const dup = await tx.wantedRecord.findFirst({ where: { status: 'ACTIVE', personId: d.personId ?? undefined, vehicleId: d.vehicleId ?? undefined } });
-      if (dup) throw new AppError('CONFLICT', 'An active wanted record already exists.', { existingId: dup.id });
+      if (dup) throw new AppError('CONFLICT', 'Es gibt schon eine aktive Fahndung.', { existingId: dup.id });
       const w = await tx.wantedRecord.create({ data: { ...d, priority: d.priority ?? 'MEDIUM', createdById: actor.userId! } });
       if (d.personId) {
         await tx.recordLink.upsert({ where: { personId_entityType_entityId_role: { personId: d.personId, entityType: 'Wanted', entityId: w.id, role: 'SUBJECT' } }, create: { personId: d.personId, entityType: 'Wanted', entityId: w.id, role: 'SUBJECT' }, update: {} });
-        await this.timeline.add(tx, { entityType: 'Person', entityId: d.personId, action: 'wanted.created', summary: `Wanted: ${d.reason}`, actorId: actor.userId });
+        await this.timeline.add(tx, { entityType: 'Person', entityId: d.personId, action: 'wanted.created', summary: `Fahndung: ${d.reason}`, actorId: actor.userId });
       }
-      await this.timeline.add(tx, { entityType: 'Wanted', entityId: w.id, action: 'wanted.created', summary: 'Wanted record activated', actorId: actor.userId });
+      await this.timeline.add(tx, { entityType: 'Wanted', entityId: w.id, action: 'wanted.created', summary: 'Fahndung aktiviert', actorId: actor.userId });
       await this.audit.record(actor, { action: 'wanted.create', module: 'wanted', entityType: 'Wanted', entityId: w.id, after: w }, tx);
       return w;
     }).then(async (w) => {
@@ -61,11 +61,11 @@ export class WantedService {
     await this.expireDue();
     return this.prisma.$transaction(async (tx) => {
       const w = await tx.wantedRecord.findUnique({ where: { id } });
-      if (!w) throw new AppError('NOT_FOUND', 'Wanted record not found.');
+      if (!w) throw new AppError('NOT_FOUND', 'Fahndung nicht gefunden.');
       nextStatus(WANTED_TRANSITIONS, w.status, to);
       const after = await tx.wantedRecord.update({ where: { id }, data: { status: to, expiresAt: to === 'ACTIVE' ? null : w.expiresAt, version: { increment: 1 } } });
-      await this.timeline.add(tx, { entityType: 'Wanted', entityId: id, action: `wanted.${to.toLowerCase()}`, summary: `${w.status} → ${to}`, actorId: actor.userId });
-      if (w.personId) await this.timeline.add(tx, { entityType: 'Person', entityId: w.personId, action: `wanted.${to.toLowerCase()}`, summary: `Wanted record ${to}`, actorId: actor.userId });
+      await this.timeline.add(tx, { entityType: 'Wanted', entityId: id, action: `wanted.${to.toLowerCase()}`, summary: `${statusLabel(w.status)} → ${statusLabel(to)}`, actorId: actor.userId });
+      if (w.personId) await this.timeline.add(tx, { entityType: 'Person', entityId: w.personId, action: `wanted.${to.toLowerCase()}`, summary: `Fahndung: ${statusLabel(to)}`, actorId: actor.userId });
       await this.audit.record(actor, { action: `wanted.${to.toLowerCase()}`, module: 'wanted', entityType: 'Wanted', entityId: id, before: { status: w.status }, after: { status: to }, reason }, tx);
       return after;
     }).then(async (after) => {

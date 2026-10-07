@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import { TICKET_ACTION_KEYS, QUESTION_TYPES, CLAIM_MODES, CLOSE_REASON_MODES, CLOSE_REASON_SOURCES, STATUS_KINDS } from '@enrp/shared';
 
-const snowflake = z.string().regex(/^\d{15,25}$/, 'Discord ID (15–25 digits)');
+const snowflake = z.string().regex(/^\d{15,25}$/, 'Discord-ID (15–25 Ziffern)');
 const ids = z.array(snowflake).max(50).default([]);
 const color = z.number().int().min(0).max(0xffffff);
 const url = z.union([z.string().trim().url().max(500), z.literal(''), z.null()]).optional().transform((v) => v || null);
@@ -16,8 +16,8 @@ export const questionSchema = z.object({
   options: z.array(z.string().trim().min(1).max(100)).max(25).default([]), placeholder: z.string().trim().max(100).optional(),
   description: z.string().trim().max(200).optional(),
   minLength: z.number().int().min(0).max(4000).optional(), maxLength: z.number().int().min(1).max(4000).optional(),
-}).refine((q) => !['SELECT', 'MULTI'].includes(q.type) || q.options.length >= 2, 'Selection questions need at least 2 options.')
-  .refine((q) => q.minLength === undefined || q.maxLength === undefined || q.minLength <= q.maxLength, { message: 'Minimum length must not exceed the maximum.', path: ['minLength'] });
+}).refine((q) => !['SELECT', 'MULTI'].includes(q.type) || q.options.length >= 2, 'Auswahlfragen brauchen mindestens 2 Optionen.')
+  .refine((q) => q.minLength === undefined || q.maxLength === undefined || q.minLength <= q.maxLength, { message: 'Die Mindestlänge darf nicht größer als die Höchstlänge sein.', path: ['minLength'] });
 
 export const buttonSchema = z.object({
   action: z.enum(TICKET_ACTION_KEYS as [string, ...string[]]), label: z.string().trim().min(1).max(80), emoji: z.string().trim().max(64).optional(), style, enabled: z.boolean(),
@@ -35,7 +35,7 @@ export const categorySchema = z.object({
   accessRoleNames: z.array(z.string().trim().min(1).max(64)).max(30).default([]),
   maxOpen: z.number().int().min(0).max(100).default(1), cooldownMinutes: z.number().int().min(0).max(60 * 24 * 30).default(0),
   defaultPriorityId: z.string().uuid().nullable().optional(),
-  questions: z.array(questionSchema).max(25).default([]).refine((q) => new Set(q.map((x) => x.id)).size === q.length, 'Question ids must be unique.'),
+  questions: z.array(questionSchema).max(25).default([]).refine((q) => new Set(q.map((x) => x.id)).size === q.length, 'Die IDs der Fragen müssen eindeutig sein.'),
   welcomeTitle: z.string().trim().max(256).default('🎫 {category}'), welcomeMessage: z.string().trim().max(4000).default(''),
   mentionStaff: z.boolean().default(true), mentionText: z.string().trim().max(1000).default(''),
   buttons: z.array(buttonSchema).max(20).default([]),

@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import { DEFAULT_APPLICATION_MESSAGES, FORM_QUESTION_TYPES, MAX_FORM_OPTIONS, MAX_FORM_QUESTIONS, type FormField } from '@enrp/shared';
 
-const roleIdOpt = z.union([z.string().regex(/^\d{15,25}$/, 'Discord role ID (15–25 digits)'), z.literal('')]).optional().transform((v) => v || undefined);
+const roleIdOpt = z.union([z.string().regex(/^\d{15,25}$/, 'Discord-Rollen-ID (15–25 Ziffern)'), z.literal('')]).optional().transform((v) => v || undefined);
 /** Eine Bewerbungsfrage wie bei Appy: Text, Auswahl oder Rollen-Auswahl – mit Prüf-Einstellungen. */
 export const formFieldSchema = z.object({
   key: z.string().regex(/^[a-zA-Z][\w]{0,40}$/), label: z.string().trim().min(1).max(300), required: z.boolean(),
@@ -10,21 +10,21 @@ export const formFieldSchema = z.object({
   options: z.array(z.object({ label: z.string().trim().min(1).max(100), roleId: roleIdOpt })).max(MAX_FORM_OPTIONS).default([]),
   multiple: z.boolean().default(false),
 }).superRefine((f, ctx) => {
-  if (f.minLength > f.maxLength) ctx.addIssue({ code: 'custom', path: ['minLength'], message: 'Min length is larger than max length.' });
-  if (f.type !== 'TEXT' && f.type !== 'ROBLOX' && f.options.length < 1) ctx.addIssue({ code: 'custom', path: ['options'], message: 'Add at least one option.' });
-  if (f.type === 'ROLE' && f.options.some((o) => !o.roleId)) ctx.addIssue({ code: 'custom', path: ['options'], message: 'Every option of a role select needs a Discord role ID.' });
-  if (new Set(f.options.map((o) => o.label)).size !== f.options.length) ctx.addIssue({ code: 'custom', path: ['options'], message: 'Options must be unique.' });
+  if (f.minLength > f.maxLength) ctx.addIssue({ code: 'custom', path: ['minLength'], message: 'Die Mindestlänge ist größer als die Höchstlänge.' });
+  if (f.type !== 'TEXT' && f.type !== 'ROBLOX' && f.options.length < 1) ctx.addIssue({ code: 'custom', path: ['options'], message: 'Füge mindestens eine Option hinzu.' });
+  if (f.type === 'ROLE' && f.options.some((o) => !o.roleId)) ctx.addIssue({ code: 'custom', path: ['options'], message: 'Jede Option einer Rollenauswahl braucht eine Discord-Rollen-ID.' });
+  if (new Set(f.options.map((o) => o.label)).size !== f.options.length) ctx.addIssue({ code: 'custom', path: ['options'], message: 'Die Optionen müssen eindeutig sein.' });
 });
-export const formSchema = z.array(formFieldSchema).min(1).max(MAX_FORM_QUESTIONS).refine((f) => new Set(f.map((x) => x.key)).size === f.length, 'Question keys must be unique.');
+export const formSchema = z.array(formFieldSchema).min(1).max(MAX_FORM_QUESTIONS).refine((f) => new Set(f.map((x) => x.key)).size === f.length, 'Die Schlüssel der Fragen müssen eindeutig sein.');
 /** Fragen einer Einheit: früher nur Text (eine Zeile pro Frage) – alte Einträge werden zu Text-Fragen. */
 const unitQuestions = z.array(z.union([z.string().trim().min(3).max(300), formFieldSchema])).min(1).max(MAX_FORM_QUESTIONS)
   .transform((qs): FormField[] => qs.map((q, i) => (typeof q === 'string' ? { key: `q${i + 1}`, label: q, required: true, type: 'TEXT' as const, minLength: 0, maxLength: 1000, options: [], multiple: false } : q)))
-  .refine((f) => new Set(f.map((x) => x.key)).size === f.length, 'Question keys must be unique.');
+  .refine((f) => new Set(f.map((x) => x.key)).size === f.length, 'Die Schlüssel der Fragen müssen eindeutig sein.');
 
 
 /** Wie bei Appy: Bewerbung offen/geschlossen, Channels für angenommene/abgelehnte Bewerbungen. */
-const channelOpt = z.union([z.string().regex(/^\d{15,25}$/, 'Discord channel ID (15–25 digits)'), z.literal('')]).optional();
-const roleList = z.array(z.string().regex(/^\d{15,25}$/, 'Discord role ID (15–25 digits)')).max(25).default([]);
+const channelOpt = z.union([z.string().regex(/^\d{15,25}$/, 'Discord-Kanal-ID (15–25 Ziffern)'), z.literal('')]).optional();
+const roleList = z.array(z.string().regex(/^\d{15,25}$/, 'Discord-Rollen-ID (15–25 Ziffern)')).max(25).default([]);
 const roleRule = z.object({ ids: roleList, mode: z.enum(['ALL', 'ANY']).default('ANY') }).default({});
 /** Texte, Rollen und Sonstiges je Bewerbung (wie Appy: Embed Customization, Role Config, Other). */
 export const appSettingsSchema = z.object({
@@ -48,7 +48,7 @@ export type AppSettings = z.infer<typeof appSettingsSchema>;
 const requirements = { enabled: z.boolean().default(true), acceptedChannelId: channelOpt, deniedChannelId: channelOpt, settings: appSettingsSchema };
 /** Eine Einheit/Qualifikation, für die man sich über das Discord-Panel bewerben kann. */
 export const unitSchema = z.object({
-  key: z.string().trim().regex(/^[a-z0-9_-]{2,24}$/, 'Key: 2–24 characters a-z, 0-9, - or _'),
+  key: z.string().trim().regex(/^[a-z0-9_-]{2,24}$/, 'Schlüssel: 2–24 Zeichen a-z, 0-9, - oder _'),
   name: z.string().trim().min(2).max(60),
   description: z.string().trim().max(600).default(''),
   /** Discord-Rolle, die bei Annahme vergeben wird (optional). */
@@ -58,7 +58,7 @@ export const unitSchema = z.object({
   ...requirements,
   questions: unitQuestions,
   /** Discord-Rolle(n), die bei einer neuen Bewerbung im Channel erwähnt werden (z. B. @Staffelkommandant). */
-  pingRoleIds: z.array(z.string().regex(/^\d{15,25}$/, 'Discord role ID (15–25 digits)')).max(10).default([]),
+  pingRoleIds: z.array(z.string().regex(/^\d{15,25}$/, 'Discord-Rollen-ID (15–25 Ziffern)')).max(10).default([]),
 });
 /** Texte des Panels für die normale Bewerbung bei EN Polizei (/bewerbungspanel); die Fragen sind das Bewerbungsformular (`application.form`). */
 export const policeSchema = z.object({
@@ -66,14 +66,14 @@ export const policeSchema = z.object({
   name: z.string().trim().min(2).max(60).default('Polizeianwärter'),
   /** Channel für neue Bewerbungen (sonst der Applications-Channel aus den Einstellungen). */
   channelId: channelOpt,
-  pingRoleIds: z.array(z.string().regex(/^\d{15,25}$/, 'Discord role ID (15–25 digits)')).max(10).default([]),
+  pingRoleIds: z.array(z.string().regex(/^\d{15,25}$/, 'Discord-Rollen-ID (15–25 Ziffern)')).max(10).default([]),
   title: z.string().trim().min(2).max(100).default('📋 Bewerbung bei EN Polizei'),
   description: z.string().trim().max(1500).default('Du möchtest Teil der **EN Polizei** werden? Klicke auf **Jetzt bewerben** – der Bot stellt dir die Fragen nacheinander per **Direktnachricht**.\n\nDu brauchst deinen **Roblox-Namen** und etwa 10 Minuten Zeit. Die Entscheidung bekommst du ebenfalls per Direktnachricht.'),
 });
 export const configSchema = z.object({
   title: z.string().trim().min(2).max(100).default('Qualifikationen'),
   intro: z.string().trim().max(1500).default(''),
-  units: z.array(unitSchema).min(1).max(10).refine((u) => new Set(u.map((x) => x.key)).size === u.length, 'Unit keys must be unique.'),
+  units: z.array(unitSchema).min(1).max(10).refine((u) => new Set(u.map((x) => x.key)).size === u.length, 'Die Schlüssel der Einheiten müssen eindeutig sein.'),
   police: policeSchema.default({}),
 });
 /** Speichern aus „Qualifications → Setup“: Panels + Einheiten und optional die Fragen der Polizei-Bewerbung. */

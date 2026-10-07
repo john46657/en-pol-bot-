@@ -22,7 +22,7 @@ export const teamChanceSchema = z.object({
   pingRoleIds: z.array(sf).max(10),
   /** Bewerbungen nur während einer offenen Team-Chance annehmen */
   restrictApplications: z.boolean(),
-}).refine((c) => !c.opensAt || !c.closesAt || c.opensAt < c.closesAt, 'closesAt must be after opensAt');
+}).refine((c) => !c.opensAt || !c.closesAt || c.opensAt < c.closesAt, 'Das Ende muss nach dem Start liegen.');
 export type TeamChanceCfg = z.infer<typeof teamChanceSchema> & { openedAt?: string | null };
 
 export const DEFAULT_TEAMCHANCE: TeamChanceCfg = { open: false, title: 'Team-Chance', description: 'Wir suchen Verstärkung für unser Team! Bewirb dich jetzt.', opensAt: null, closesAt: null, slots: 0, channelId: null, pingRoleIds: [], restrictApplications: false, openedAt: null };

@@ -23,7 +23,7 @@ export class UsersService {
 
   /** Rollen-/Rechteänderungen an sich selbst sind verboten (Vier-Augen-Prinzip, verhindert Selbst-Eskalation). */
   private assertNotSelf(actor: Actor, id: string) {
-    if (actor.userId === id) throw new AppError('CONFLICT', 'You cannot change your own roles or permission overrides.');
+    if (actor.userId === id) throw new AppError('CONFLICT', 'Deine eigenen Rollen und Sonderrechte kannst du nicht ändern.');
   }
 
   /** Mindestens ein aktiver System Administrator muss bestehen bleiben. */
@@ -32,7 +32,7 @@ export class UsersService {
     if (!role) return;
     const others = await tx.userRole.count({ where: { roleId: role.id, userId: { not: targetId }, user: { active: true } } });
     const targetIsAdmin = await tx.userRole.count({ where: { roleId: role.id, userId: targetId } });
-    if (targetIsAdmin && others === 0) throw new AppError('CONFLICT', 'At least one active System Administrator must remain.');
+    if (targetIsAdmin && others === 0) throw new AppError('CONFLICT', 'Mindestens ein aktiver System Administrator muss bleiben.');
   }
 
   async list(p: PageQuery) {
@@ -46,7 +46,7 @@ export class UsersService {
 
   async get(id: string) {
     const u = await this.prisma.user.findUnique({ where: { id }, select: publicSelect });
-    if (!u) throw new AppError('NOT_FOUND', 'User not found.');
+    if (!u) throw new AppError('NOT_FOUND', 'Benutzer nicht gefunden.');
     return u;
   }
 
@@ -68,7 +68,7 @@ export class UsersService {
 
   /** Manuelle Roblox-ID-Hinterlegung durch Administratoren. Keine Identität wird geraten. */
   async setRoblox(actor: Actor, id: string, d: { robloxUserId: string | null; robloxUsername?: string }) {
-    if (d.robloxUserId !== null && !isValidRobloxUserId(d.robloxUserId)) throw new AppError('VALIDATION_FAILED', 'Invalid Roblox user id.');
+    if (d.robloxUserId !== null && !isValidRobloxUserId(d.robloxUserId)) throw new AppError('VALIDATION_FAILED', 'Ungültige Roblox-Benutzer-ID.');
     const before = await this.get(id);
     return this.prisma.$transaction(async (tx) => {
       const u = await tx.user.update({
@@ -84,7 +84,7 @@ export class UsersService {
   }
 
   async setActive(actor: Actor, id: string, active: boolean, reason?: string) {
-    if (!active && id === actor.userId) throw new AppError('CONFLICT', 'You cannot disable your own account.');
+    if (!active && id === actor.userId) throw new AppError('CONFLICT', 'Du kannst dein eigenes Konto nicht deaktivieren.');
     await this.get(id);
     await this.perms.assertOutranksUser(actor.userId!, id); // Sperren/Entsperren nur unterhalb des eigenen Rangs
     const u = await this.prisma.$transaction(async (tx) => {
@@ -105,10 +105,10 @@ export class UsersService {
     const old = before.roles.map((r) => r.role.id);
     const touched = [...roleIds.filter((r) => !old.includes(r)), ...old.filter((r) => !roleIds.includes(r))];
     const roles = await this.prisma.role.findMany({ where: { id: { in: touched } } });
-    if (roles.length !== new Set(touched).size) throw new AppError('NOT_FOUND', 'Role not found.');
+    if (roles.length !== new Set(touched).size) throw new AppError('NOT_FOUND', 'Rolle nicht gefunden.');
     const g = currentGuild();
     for (const r of roles) {
-      if (g && r.guildId && r.guildId !== g) throw new AppError('NOT_FOUND', 'Role not found.'); // Server getrennt
+      if (g && r.guildId && r.guildId !== g) throw new AppError('NOT_FOUND', 'Rolle nicht gefunden.'); // Server getrennt
       await this.perms.assertOutranksRole(actor.userId!, r.priority, r.name);
     }
     return this.prisma.$transaction(async (tx) => {
@@ -125,7 +125,7 @@ export class UsersService {
 
   async setOverride(actor: Actor, id: string, d: { permission: string; effect: 'ALLOW' | 'DENY'; reason?: string }) {
     this.assertNotSelf(actor, id);
-    if (!isPermissionKey(d.permission)) throw new AppError('VALIDATION_FAILED', `Unknown permission "${d.permission}".`);
+    if (!isPermissionKey(d.permission)) throw new AppError('VALIDATION_FAILED', `Unbekannte Berechtigung „${d.permission}“.`);
     await this.get(id);
     await this.perms.assertOutranksUser(actor.userId!, id);
     if (d.effect === 'ALLOW') await this.perms.assertCanDelegate(actor.userId!, [d.permission]);
@@ -147,7 +147,7 @@ export class UsersService {
     await this.perms.assertOutranksUser(actor.userId!, id); // auch das Aufheben einer Sperre (DENY) nur von oben
     await this.prisma.$transaction(async (tx) => {
       const prev = await tx.userPermissionOverride.findUnique({ where: { userId_permissionKey: { userId: id, permissionKey: permission } } });
-      if (!prev) throw new AppError('NOT_FOUND', 'Override not found.');
+      if (!prev) throw new AppError('NOT_FOUND', 'Sonderrecht nicht gefunden.');
       await tx.userPermissionOverride.delete({ where: { id: prev.id } });
       this.rt.publishToUser(id, 'permissions.changed', {});
       await this.audit.record(actor, { action: 'user.override.remove', module: 'permissions', entityType: 'User', entityId: id, before: prev }, tx);

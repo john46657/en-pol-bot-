@@ -30,11 +30,11 @@ export class MediaService {
 
   async upload(actor: Actor, file: { originalname: string; mimetype: string; buffer: Buffer; size: number }, link: { linkedType: string; linkedId: string }, maxBytes = MAX_BYTES) {
     const need = WRITE[link.linkedType];
-    if (!need) throw new AppError('VALIDATION_FAILED', 'Unsupported linkedType.');
+    if (!need) throw new AppError('VALIDATION_FAILED', 'Dateien können hier nicht angehängt werden.');
     await this.perms.assert(actor.userId!, need);
-    if (file.size > maxBytes || file.buffer.length > maxBytes) throw new AppError('VALIDATION_FAILED', `File too large (max ${Math.round(maxBytes / 1048576)} MB).`);
+    if (file.size > maxBytes || file.buffer.length > maxBytes) throw new AppError('VALIDATION_FAILED', `Die Datei ist zu groß (max. ${Math.round(maxBytes / 1048576)} MB).`);
     const check = SIGNATURES[file.mimetype];
-    if (!check || !check(file.buffer)) throw new AppError('VALIDATION_FAILED', 'File type not allowed or content does not match its type.');
+    if (!check || !check(file.buffer)) throw new AppError('VALIDATION_FAILED', 'Dieser Dateityp ist nicht erlaubt oder der Inhalt passt nicht zum Dateityp.');
     const hash = createHash('sha256').update(file.buffer).digest('hex');
     const storageKey = `${randomUUID()}.${EXT[file.mimetype]}`; // Zufallsname + feste Endung: Dateinamen des Clients landen nie im Dateisystem
     await mkdir(this.dir, { recursive: true });
@@ -51,7 +51,7 @@ export class MediaService {
     const m = await this.prisma.media.findUnique({ where: { id } });
     const need = m?.linkedType ? READ[m.linkedType] : undefined;
     // Ohne Leserecht auf die verknüpfte Entität verhält sich die Datei wie nicht vorhanden.
-    if (!m || !need || !(await this.perms.has(actor.userId!, need))) throw new AppError('NOT_FOUND', 'File not found.');
+    if (!m || !need || !(await this.perms.has(actor.userId!, need))) throw new AppError('NOT_FOUND', 'Datei nicht gefunden.');
     return { media: m, data: await readFile(path.join(this.dir, m.storageKey)) };
   }
 

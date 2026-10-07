@@ -6,7 +6,7 @@ import { CurrentActor, RequirePermission } from '../authz/decorators';
 import type { Actor } from '../audit/audit.service';
 import { zodBody } from '../common/zod.pipe';
 
-const discordId = z.string().regex(/^\d{15,25}$/, 'Discord role ID (15–25 digits)');
+const discordId = z.string().regex(/^\d{15,25}$/, 'Discord-Rollen-ID (15–25 Ziffern)');
 const fields = {
   description: z.string().max(500).nullable().optional(),
   color: z.string().regex(/^#[0-9a-fA-F]{6}$/).nullable().optional(),

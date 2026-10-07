@@ -30,7 +30,7 @@ export class LocksService {
 
   private async assertAny(userId: string, keys: readonly string[]) {
     for (const k of keys) if (await this.perms.has(userId, k)) return;
-    throw new AppError('PERMISSION_DENIED', 'You do not have permission to perform this action.');
+    throw new AppError('PERMISSION_DENIED', 'Dafür fehlt dir die Berechtigung.');
   }
 
   private async holder(type: LockType, id: string) {

@@ -35,7 +35,7 @@ export class AuthService {
         await this.prisma.user.update({ where: { id: user.id }, data: { failedLogins: fails, lockedUntil: fails >= MAX_FAILS ? new Date(Date.now() + LOCK_MS) : null } });
       }
       await this.prisma.securityEvent.create({ data: { type: 'LOGIN_FAILURE', userId: user?.id, ip: meta.ip, detail: `username=${username.slice(0, 64)}`, requestId: meta.requestId } });
-      throw new AppError('UNAUTHENTICATED', 'Invalid credentials.');
+      throw new AppError('UNAUTHENTICATED', 'Benutzername oder Passwort falsch.');
     }
 
     // Zwei-Faktor aktiv → erst nach dem Code eine Sitzung

@@ -18,7 +18,7 @@ export class MediaController {
 
   @Post() @UseInterceptors(FileInterceptor('file', { limits: { fileSize: MAX_BYTES, files: 1 } }))
   upload(@CurrentActor() a: Actor, @UploadedFile() file: Express.Multer.File | undefined, @Body(zodBody(link)) b: z.infer<typeof link>) {
-    if (!file) throw new AppError('VALIDATION_FAILED', 'file is required.');
+    if (!file) throw new AppError('VALIDATION_FAILED', 'Bitte eine Datei auswählen.');
     return this.m.upload(a, file, b);
   }
 

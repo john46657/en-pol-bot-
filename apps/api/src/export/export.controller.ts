@@ -40,9 +40,9 @@ export class ExportController {
   @Get(':entity')
   async export(@CurrentActor() actor: Actor, @Param('entity') entity: string, @Query(zodBody(q)) f: z.infer<typeof q>, @Res() res: Response) {
     const src = SOURCES[entity];
-    if (!src) throw new AppError('NOT_FOUND', 'Unknown export.');
+    if (!src) throw new AppError('NOT_FOUND', 'Unbekannter Export.');
     const ctx = await this.perms.contextFor(actor.userId!);
-    if (!can(ctx, src.permission)) throw new AppError('PERMISSION_DENIED', 'You do not have permission to perform this action.');
+    if (!can(ctx, src.permission)) throw new AppError('PERMISSION_DENIED', 'Dafür fehlt dir die Berechtigung.');
     const rows = await src.load(this.prisma, f.q);
     await this.audit.record(actor, { action: 'export', module: 'export', entityType: entity, after: { format: f.format, rows: rows.length } });
     const name = `${entity}-${new Date().toISOString().slice(0, 10)}.${f.format}`;

@@ -26,7 +26,7 @@ export class DiscordService {
   // ---- Verknüpfung (Web-Benutzer erzeugt Code, Bot löst ihn ein) ----
   async createLinkCode(actor: Actor) {
     const userId = actor.userId!;
-    if (await this.prisma.discordLink.findUnique({ where: { userId } })) throw new AppError('CONFLICT', 'Your account is already linked to Discord. Unlink it first.');
+    if (await this.prisma.discordLink.findUnique({ where: { userId } })) throw new AppError('CONFLICT', 'Dein Konto ist bereits mit Discord verknüpft. Hebe die Verknüpfung zuerst auf.');
     let raw = '';
     for (let i = 0; i < 8; i++) raw += ALPHABET[randomInt(ALPHABET.length)];
     const expiresAt = new Date(Date.now() + CODE_TTL_MS);
@@ -41,18 +41,18 @@ export class DiscordService {
   /** Vom Bot aufgerufen. Einmalig, zeitlich begrenzt; ein Discord-Konto kann nur mit einem Benutzer verknüpft sein. */
   async redeem(code: string, discordId: string) {
     const row = await this.prisma.discordLinkCode.findUnique({ where: { codeHash: hash(code) }, });
-    if (!row || row.usedAt || row.expiresAt < new Date()) throw new AppError('VALIDATION_FAILED', 'Invalid or expired code.');
+    if (!row || row.usedAt || row.expiresAt < new Date()) throw new AppError('VALIDATION_FAILED', 'Der Code ist ungültig oder abgelaufen.');
     const user = await this.prisma.user.findUnique({ where: { id: row.userId } });
-    if (!user?.active) throw new AppError('VALIDATION_FAILED', 'Invalid or expired code.');
+    if (!user?.active) throw new AppError('VALIDATION_FAILED', 'Der Code ist ungültig oder abgelaufen.');
     try {
       await this.prisma.$transaction(async (tx) => {
         const claimed = await tx.discordLinkCode.updateMany({ where: { id: row.id, usedAt: null }, data: { usedAt: new Date() } });
-        if (claimed.count === 0) throw new AppError('VALIDATION_FAILED', 'Invalid or expired code.');
+        if (claimed.count === 0) throw new AppError('VALIDATION_FAILED', 'Der Code ist ungültig oder abgelaufen.');
         await tx.discordLink.create({ data: { userId: row.userId, discordId } });
         await this.audit.record({ userId: row.userId, robloxUserId: user.robloxUserId }, { action: 'discord.link', module: 'discord', entityType: 'User', entityId: row.userId, after: { discordId } }, tx);
       });
     } catch (e) {
-      if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === 'P2002') throw new AppError('CONFLICT', 'This Discord account or user is already linked.');
+      if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === 'P2002') throw new AppError('CONFLICT', 'Dieses Discord-Konto bzw. dieser Benutzer ist bereits verknüpft.');
       throw e;
     }
     return { displayName: user.displayName, username: user.username };
@@ -60,7 +60,7 @@ export class DiscordService {
 
   async unlink(actor: Actor, userId: string) {
     const link = await this.prisma.discordLink.findUnique({ where: { userId } });
-    if (!link) throw new AppError('NOT_FOUND', 'No Discord link.');
+    if (!link) throw new AppError('NOT_FOUND', 'Keine Discord-Verknüpfung vorhanden.');
     await this.prisma.$transaction(async (tx) => {
       await tx.discordLink.delete({ where: { userId } });
       await this.audit.record(actor, { action: 'discord.unlink', module: 'discord', entityType: 'User', entityId: userId, before: { discordId: link.discordId } }, tx);
@@ -120,6 +120,6 @@ export class DiscordService {
     const r = ok
       ? await this.prisma.discordOutbox.updateMany({ where: { id, sentAt: null }, data: { sentAt: new Date() } })
       : await this.prisma.discordOutbox.updateMany({ where: { id, sentAt: null }, data: { attempts: { increment: 1 }, lastError: (error ?? 'failed').slice(0, 300) } });
-    if (r.count === 0) throw new AppError('NOT_FOUND', 'Outbox entry not found.');
+    if (r.count === 0) throw new AppError('NOT_FOUND', 'Ausgangseintrag nicht gefunden.');
   }
 }
