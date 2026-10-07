@@ -19,7 +19,7 @@ const zod_1 = require("zod");
 const leave_service_1 = require("./leave.service");
 const decorators_1 = require("../authz/decorators");
 const zod_pipe_1 = require("../common/zod.pipe");
-const requestBody = zod_1.z.object({ startsAt: zod_1.z.coerce.date(), endsAt: zod_1.z.coerce.date(), reason: zod_1.z.string().trim().min(3).max(1000), guildId: zod_1.z.string().regex(/^\d{15,25}$/).optional() });
+const requestBody = zod_1.z.object({ startsAt: zod_1.z.coerce.date(), endsAt: zod_1.z.coerce.date(), reason: zod_1.z.string().trim().min(3).max(1000), guildId: zod_1.z.string().regex(/^\d{15,25}$/).optional(), type: zod_1.z.string().regex(/^[A-Z0-9_]{1,32}$/).optional(), comment: zod_1.z.string().trim().max(1000).optional() });
 const listQ = zod_1.z.object({ status: zod_1.z.enum([...leave_service_1.LEAVE_STATUSES, 'ACTIVE', 'UPCOMING', 'ALL']).optional(), mine: zod_1.z.enum(['true', 'false']).optional() });
 const decision = zod_1.z.object({ status: zod_1.z.enum(['APPROVED', 'DENIED']), reason: zod_1.z.string().trim().max(1000).optional() });
 /** Abmeldungen (Leave of Absences). Beantragen: leave.request · alle sehen: leave.view · entscheiden: leave.manage. */

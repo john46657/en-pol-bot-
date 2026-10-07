@@ -173,7 +173,7 @@ declare const listQ: z.ZodObject<{
     pageSize: number;
     guildId?: string | undefined;
     q?: string | undefined;
-    kind?: "open" | "closed" | "archived" | "all" | "escalated" | "deleted" | undefined;
+    kind?: "all" | "open" | "closed" | "archived" | "escalated" | "deleted" | undefined;
     from?: Date | undefined;
     to?: Date | undefined;
     creator?: string | undefined;
@@ -184,7 +184,7 @@ declare const listQ: z.ZodObject<{
 }, {
     guildId?: string | undefined;
     q?: string | undefined;
-    kind?: "open" | "closed" | "archived" | "all" | "escalated" | "deleted" | undefined;
+    kind?: "all" | "open" | "closed" | "archived" | "escalated" | "deleted" | undefined;
     from?: Date | undefined;
     page?: number | undefined;
     pageSize?: number | undefined;
@@ -337,8 +337,9 @@ export declare class SupportTicketsController {
             updatedAt: Date;
             guildId: string | null;
             color: number;
-            description: string;
             channelId: string | null;
+            messageId: string | null;
+            description: string;
             emoji: string | null;
             title: string;
             categoryIds: string[];
@@ -355,7 +356,6 @@ export declare class SupportTicketsController {
             allowedRoleIds: string[];
             showLoad: boolean;
             messageChannelId: string | null;
-            messageId: string | null;
         }[];
         statuses: {
             id: string;
@@ -396,7 +396,7 @@ export declare class SupportTicketsController {
             transcriptRetentionDays: number;
             ratingChannelId: string | null;
             ratingPublicChannelId: string | null;
-            ratingPublicFields: ("category" | "duration" | "staff" | "creator" | "comment")[];
+            ratingPublicFields: ("category" | "comment" | "duration" | "staff" | "creator")[];
             memberLeaveAction: "NONE" | "CLOSE";
             memberLeaveReason: string;
         };
@@ -413,7 +413,7 @@ export declare class SupportTicketsController {
         transcriptRetentionDays: number;
         ratingChannelId: string | null;
         ratingPublicChannelId: string | null;
-        ratingPublicFields: ("category" | "duration" | "staff" | "creator" | "comment")[];
+        ratingPublicFields: ("category" | "comment" | "duration" | "staff" | "creator")[];
         memberLeaveAction: "NONE" | "CLOSE";
         memberLeaveReason: string;
     }>;
@@ -608,8 +608,9 @@ export declare class SupportTicketsController {
         updatedAt: Date;
         guildId: string | null;
         color: number;
-        description: string;
         channelId: string | null;
+        messageId: string | null;
+        description: string;
         emoji: string | null;
         title: string;
         categoryIds: string[];
@@ -626,7 +627,6 @@ export declare class SupportTicketsController {
         allowedRoleIds: string[];
         showLoad: boolean;
         messageChannelId: string | null;
-        messageId: string | null;
     }>;
     updatePanel(u: AuthUser, id: string, b: z.infer<typeof panelSchema>): Promise<{
         id: string;
@@ -635,8 +635,9 @@ export declare class SupportTicketsController {
         updatedAt: Date;
         guildId: string | null;
         color: number;
-        description: string;
         channelId: string | null;
+        messageId: string | null;
+        description: string;
         emoji: string | null;
         title: string;
         categoryIds: string[];
@@ -653,7 +654,6 @@ export declare class SupportTicketsController {
         allowedRoleIds: string[];
         showLoad: boolean;
         messageChannelId: string | null;
-        messageId: string | null;
     }>;
     dupPanel(u: AuthUser, id: string): Promise<{
         id: string;
@@ -662,8 +662,9 @@ export declare class SupportTicketsController {
         updatedAt: Date;
         guildId: string | null;
         color: number;
-        description: string;
         channelId: string | null;
+        messageId: string | null;
+        description: string;
         emoji: string | null;
         title: string;
         categoryIds: string[];
@@ -680,7 +681,6 @@ export declare class SupportTicketsController {
         allowedRoleIds: string[];
         showLoad: boolean;
         messageChannelId: string | null;
-        messageId: string | null;
     }>;
     delPanel(u: AuthUser, id: string): Promise<void>;
     preview(id: string): Promise<import("@enrp/shared").MessageSpec>;
@@ -983,12 +983,12 @@ export declare class SupportTicketsController {
             discordId: string | null;
             authorId: string;
             content: string;
+            attachments: import("@prisma/client/runtime/library").JsonValue;
             authorName: string;
             ticketId: string;
             authorAvatar: string | null;
             isStaff: boolean;
             isBot: boolean;
-            attachments: import("@prisma/client/runtime/library").JsonValue;
             embeds: import("@prisma/client/runtime/library").JsonValue;
         }[];
         notes: {
@@ -1033,10 +1033,10 @@ export declare class SupportTicketsController {
         guildId: string;
         channelId: string | null;
         closedAt: Date | null;
+        deletedAt: Date | null;
         lastActivityAt: Date;
         answers: import("@prisma/client/runtime/library").JsonValue;
         categoryId: string;
-        deletedAt: Date | null;
         statusId: string;
         priorityId: string | null;
         panelId: string | null;
@@ -1211,14 +1211,14 @@ declare const botMessage: z.ZodObject<{
     channelId: string;
     authorId: string;
     content: string;
-    authorName: string;
-    isBot: boolean;
     attachments: {
         name: string;
         url: string;
         size: number;
         contentType?: string | null | undefined;
     }[];
+    authorName: string;
+    isBot: boolean;
     embeds: {
         description?: string | undefined;
         title?: string | undefined;
@@ -1232,13 +1232,13 @@ declare const botMessage: z.ZodObject<{
     authorName: string;
     isBot: boolean;
     discordMessageId: string;
-    authorAvatar?: string | null | undefined;
     attachments?: {
         name: string;
         url: string;
         size: number;
         contentType?: string | null | undefined;
     }[] | undefined;
+    authorAvatar?: string | null | undefined;
     embeds?: {
         description?: string | undefined;
         title?: string | undefined;

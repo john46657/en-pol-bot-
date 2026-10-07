@@ -69,7 +69,7 @@ let LeaveService = class LeaveService {
         const active = r.status === 'APPROVED' && r.startsAt.getTime() <= now && r.endsAt.getTime() > now;
         return {
             id: r.id, number: r.number, userId: r.userId, name: r.user.displayName, discordId: r.discordId,
-            startsAt: r.startsAt, endsAt: r.endsAt, reason: r.reason, status: r.status, active, guildId: r.guildId,
+            startsAt: r.startsAt, endsAt: r.endsAt, reason: r.reason, type: r.type, comment: r.comment, status: r.status, active, guildId: r.guildId,
             decidedAt: r.decidedAt, decisionReason: r.decisionReason, decidedByName: r.decidedByName ?? null, endedAt: r.endedAt, createdAt: r.createdAt,
             days: Math.max(1, Math.round((r.endsAt.getTime() - r.startsAt.getTime()) / DAY)),
         };
@@ -117,7 +117,7 @@ let LeaveService = class LeaveService {
         if (overlap)
             throw new errors_1.AppError('CONFLICT', `Für diesen Zeitraum gibt es schon eine Abmeldung (${overlap.number}).`, { existingId: overlap.id });
         const r = await this.prisma.$transaction(async (tx) => {
-            const row = await tx.leaveRequest.create({ data: { number: (0, numbering_1.makeNumber)('LOA'), userId: actor.userId, startsAt: d.startsAt, endsAt: d.endsAt, reason: d.reason, guildId: d.guildId ?? null }, include });
+            const row = await tx.leaveRequest.create({ data: { number: (0, numbering_1.makeNumber)('LOA'), userId: actor.userId, startsAt: d.startsAt, endsAt: d.endsAt, reason: d.reason, guildId: d.guildId ?? null, type: d.type ?? null, comment: d.comment || null }, include });
             await this.audit.record(actor, { action: 'leave.request', module: 'leave', entityType: 'LeaveRequest', entityId: row.id, after: { startsAt: row.startsAt, endsAt: row.endsAt } }, tx);
             return row;
         }).then((x) => this.one(x));

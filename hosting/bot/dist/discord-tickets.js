@@ -8,7 +8,7 @@ const discord_js_1 = require("discord.js");
 const STYLE = { primary: discord_js_1.ButtonStyle.Primary, secondary: discord_js_1.ButtonStyle.Secondary, success: discord_js_1.ButtonStyle.Success, danger: discord_js_1.ButtonStyle.Danger };
 const VIEW = [discord_js_1.PermissionFlagsBits.ViewChannel, discord_js_1.PermissionFlagsBits.ReadMessageHistory];
 const TALK = [discord_js_1.PermissionFlagsBits.SendMessages, discord_js_1.PermissionFlagsBits.AttachFiles, discord_js_1.PermissionFlagsBits.EmbedLinks];
-const https = (u) => (u && /^https:\/\//.test(u) ? u : undefined);
+const https = (u) => (u && /^(https:\/\/|attachment:\/\/)/.test(u) ? u : undefined);
 /** `stamp`: ohne eigenen Zeitstempel Datum/Uhrzeit des Sendens unten anzeigen (nicht beim Embed-Baukasten – dort entscheidet der Schalter). */
 function embedOf(e, stamp = true) {
     const b = new discord_js_1.EmbedBuilder();
@@ -32,7 +32,7 @@ function embedOf(e, stamp = true) {
         b.setTimestamp(new Date(e.timestamp));
     else if (stamp)
         b.setTimestamp(new Date());
-    if (!e.title && !e.description && !e.fields?.length)
+    if (!e.title && !e.description && !e.fields?.length && !https(e.image))
         b.setDescription('​');
     return b;
 }

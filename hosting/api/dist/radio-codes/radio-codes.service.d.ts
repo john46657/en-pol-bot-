@@ -1,5 +1,18 @@
 import { PrismaService } from '../prisma/prisma.service';
 import { AuditService, Actor } from '../audit/audit.service';
+import type { MessageSpec } from '@enrp/shared';
+import { DiscordService } from '../discord/discord.service';
+/** Wie die Funk-Codes als Discord-Nachricht aussehen (je Server bzw. gemeinsam). */
+export interface RadioDiscordConfig {
+    channelId: string | null;
+    title: string;
+    description: string;
+    color: string;
+    groupByCategory: boolean;
+    showDescription: boolean;
+    autoUpdate: boolean;
+}
+export declare const DEFAULT_RADIO_DISCORD: RadioDiscordConfig;
 export interface RadioCodeInput {
     code?: string;
     meaning?: string;
@@ -20,7 +33,48 @@ export declare const DEFAULT_RADIO_CODES: {
 export declare class RadioCodesService {
     private readonly prisma;
     private readonly audit;
-    constructor(prisma: PrismaService, audit: AuditService);
+    private readonly discord;
+    constructor(prisma: PrismaService, audit: AuditService, discord: DiscordService);
+    private cfgKey;
+    private stateKey;
+    discordConfig(): Promise<{
+        posted: {
+            channelId: string;
+            messageId: string;
+        } | null;
+        channelId: string | null;
+        title: string;
+        description: string;
+        color: string;
+        groupByCategory: boolean;
+        showDescription: boolean;
+        autoUpdate: boolean;
+    }>;
+    saveDiscordConfig(actor: Actor, c: RadioDiscordConfig): Promise<{
+        posted: {
+            channelId: string;
+            messageId: string;
+        } | null;
+        channelId: string | null;
+        title: string;
+        description: string;
+        color: string;
+        groupByCategory: boolean;
+        showDescription: boolean;
+        autoUpdate: boolean;
+    }>;
+    /** Discord-Nachricht: je Kategorie ein Abschnitt (Discord: max. 25 Abschnitte à 1024 Zeichen, 6000 je Embed → bei Bedarf mehrere Embeds). */
+    message(codes: {
+        code: string;
+        meaning: string;
+        category: string | null;
+        description: string | null;
+    }[], c: RadioDiscordConfig): MessageSpec;
+    sendToDiscord(actor: Actor | null, mode: 'update' | 'new'): Promise<{
+        queued: boolean;
+    }>;
+    /** Nach Änderungen: schon gepostete Liste automatisch nachziehen (falls eingestellt). */
+    private autoUpdate;
     list(q?: string, guildId?: string | null): Promise<{
         id: string;
         createdAt: Date;

@@ -1,3 +1,4 @@
+import type { MessageSpec } from '@enrp/shared';
 import { Prisma } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { AuditService, Actor } from '../audit/audit.service';
@@ -116,6 +117,18 @@ export declare class DiscordService {
     /** Server des Bots mit Channels und Rollen (meldet der Bot regelmäßig) – für Namen und Auswahllisten im Dashboard. */
     guilds(): Promise<DiscordGuildInfo[]>;
     saveGuilds(guilds: DiscordGuildInfo[]): Promise<void>;
+    /**
+     * Nachricht in einen Kanal setzen oder die dort zuletzt unter `stateKey` gepostete bearbeiten (Funk-Codes, Staff-Liste, Panels …).
+     * Der Bot merkt sich den Ort unter `bot.state.<stateKey>`; `posted()` liest ihn wieder.
+     */
+    postMessage(stateKey: string, channelId: string, message: MessageSpec, opts?: {
+        forceNew?: boolean;
+        tx?: Prisma.TransactionClient;
+    }): Promise<void>;
+    posted(stateKey: string): Promise<{
+        channelId: string;
+        messageId: string;
+    } | null>;
     getState(key: string): Promise<unknown>;
     setState(key: string, value: unknown): Promise<void>;
     pending(limit: number): Prisma.PrismaPromise<{

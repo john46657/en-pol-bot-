@@ -37,6 +37,14 @@ const RadioCodes = lazy(() => import('./pages/RadioCodes').then((m) => ({ defaul
 const TeamChance = lazy(() => import('./pages/TeamChance').then((m) => ({ default: m.TeamChance })));
 const StaffLists = lazy(() => import('./pages/DiscordPanels').then((m) => ({ default: m.StaffLists })));
 const FormPanels = lazy(() => import('./pages/DiscordPanels').then((m) => ({ default: m.FormPanels })));
+const PersonnelOverview = lazy(() => import('./pages/hr/PersonnelOverview').then((m) => ({ default: m.PersonnelOverview })));
+const PersonnelFile = lazy(() => import('./pages/hr/PersonnelFile').then((m) => ({ default: m.PersonnelFile })));
+const Promotions = lazy(() => import('./pages/hr/Promotions').then((m) => ({ default: m.Promotions })));
+const HrSettings = lazy(() => import('./pages/hr/HrSettings').then((m) => ({ default: m.HrSettings })));
+const Trainings = lazy(() => import('./pages/hr/Trainings').then((m) => ({ default: m.Trainings })));
+const Certificate = lazy(() => import('./pages/hr/Trainings').then((m) => ({ default: m.Certificate })));
+const HrComms = lazy(() => import('./pages/hr/HrComms').then((m) => ({ default: m.HrComms })));
+const ServiceNumbers = lazy(() => import('./pages/hr/ServiceNumbers').then((m) => ({ default: m.ServiceNumbers })));
 const DutyReports = lazy(() => import('./pages/DutyReports').then((m) => ({ default: m.DutyReports })));
 const Offices = lazy(() => import('./pages/Offices').then((m) => ({ default: m.Offices })));
 const PersonalSettings = lazy(() => import('./pages/PersonalSettings').then((m) => ({ default: m.PersonalSettings })));
@@ -129,8 +137,14 @@ export function App() {
           <Route path="wanted" element={list(R.wanted as never, 'wanted.view')} />
           <Route path="wanted/:id" element={rec('wanted', 'wanted.view')} />
           <Route path="evidence/*" element={<Navigate to="/dashboard" replace />} />
-          <Route path="personnel" element={list(R.personnel as never, 'personnel.view')} />
-          <Route path="personnel/:id" element={rec('personnel', 'personnel.view')} />
+          <Route path="personnel" element={<Guard perm="personnel.view"><PersonnelOverview /></Guard>} />
+          <Route path="personnel/:id" element={<Guard perm="personnel.view"><PersonnelFile /></Guard>} />
+          <Route path="promotions" element={<Guard perm="promotion.view"><Promotions /></Guard>} />
+          <Route path="trainings" element={<Guard perm="training.view"><Trainings /></Guard>} />
+          <Route path="certificates/:no" element={<Guard perm="dashboard.view"><Certificate /></Guard>} />
+          <Route path="announcements" element={<Guard perm="announcements.view"><HrComms /></Guard>} />
+          <Route path="service-numbers" element={<Guard perm="dienstnummer.view"><ServiceNumbers /></Guard>} />
+          <Route path="admin/personnel" element={<Guard perm="personnel.view" area="dashboard.settings.view"><HrSettings /></Guard>} />
           <Route path="applications" element={<Guard perm="applications.view" area="dashboard.applications.view"><Applications /></Guard>} />
           <Route path="applications/analytics" element={<Navigate to="/analytics?tab=bewerbungen" replace />} />
           <Route path="applications/:id" element={rec('applications', 'applications.view')} />

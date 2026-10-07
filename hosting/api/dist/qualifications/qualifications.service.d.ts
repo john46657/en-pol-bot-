@@ -66,8 +66,8 @@ export declare class QualificationsService {
             enabled: boolean;
             pingRoleIds: string[];
             questions: FormField[];
-            roleId?: string | undefined;
             channelId?: string | undefined;
+            roleId?: string | undefined;
             acceptedChannelId?: string | undefined;
             deniedChannelId?: string | undefined;
         }[];
@@ -154,8 +154,8 @@ export declare class QualificationsService {
             enabled: boolean;
             pingRoleIds: string[];
             questions: FormField[];
-            roleId?: string | undefined;
             channelId?: string | undefined;
+            roleId?: string | undefined;
             acceptedChannelId?: string | undefined;
             deniedChannelId?: string | undefined;
         }[];
@@ -241,8 +241,8 @@ export declare class QualificationsService {
             enabled: boolean;
             pingRoleIds: string[];
             questions: FormField[];
-            roleId?: string | undefined;
             channelId?: string | undefined;
+            roleId?: string | undefined;
             acceptedChannelId?: string | undefined;
             deniedChannelId?: string | undefined;
         }[];

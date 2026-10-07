@@ -10,6 +10,7 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.ApplicationsService = exports.DEFAULT_FORM = void 0;
+const hire_events_1 = require("../common/hire-events");
 const guild_context_1 = require("../common/guild-context");
 const teamchance_service_1 = require("../teamchance/teamchance.service");
 const notify_service_1 = require("../notifications/notify.service");
@@ -184,7 +185,13 @@ let ApplicationsService = class ApplicationsService {
         const by = actor.userId ? await this.prisma.user.findUnique({ where: { id: actor.userId }, select: { displayName: true } }) : null;
         await this.archive(after, to, reason || null, by?.displayName ?? null);
         await this.discord.markDecided('application', id, actor, to, reason || null);
+        if (to === 'ACCEPTED')
+            await this.hire(actor, after);
         return { id, number: after.number, status: to, decidedByName: by?.displayName ?? null, reason: reason || null };
+    }
+    /** Angenommen → Personal-/Dienstnummern-Automatik (Einstellungen → Dienstnummern). */
+    hire(actor, a) {
+        return hire_events_1.hireEvents.accepted(actor, { applicationId: a.id, number: a.number, kind: 'police', discordId: a.discordId, name: a.discordName || a.robloxUsername, robloxUsername: a.robloxUsername, robloxUserId: a.robloxUserId });
     }
     /** „Action On User Leave“ der Polizei-Bewerbung: offene Bewerbungen einer Person, die den Discord-Server verlassen hat. */
     async memberLeft(guildId, discordId) {
@@ -234,6 +241,8 @@ let ApplicationsService = class ApplicationsService {
             // Discord-Nachricht anpassen (der interne Grund aus dem Web bleibt intern)
             if (to === 'ACCEPTED' || to === 'REJECTED' || to === 'WITHDRAWN')
                 await this.discord.markDecided('application', id, actor, to, to === 'WITHDRAWN' ? reason ?? null : null);
+            if (to === 'ACCEPTED')
+                await this.hire(actor, after);
             return after;
         });
     }

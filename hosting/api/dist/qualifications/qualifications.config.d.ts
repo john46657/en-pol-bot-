@@ -584,8 +584,8 @@ export declare const unitSchema: z.ZodObject<{
     enabled: boolean;
     pingRoleIds: string[];
     questions: FormField[];
-    roleId?: string | undefined;
     channelId?: string | undefined;
+    roleId?: string | undefined;
     acceptedChannelId?: string | undefined;
     deniedChannelId?: string | undefined;
 }, {
@@ -633,10 +633,10 @@ export declare const unitSchema: z.ZodObject<{
         timeLimitMinutes?: number | undefined;
         onLeave?: "DENY" | "NONE" | "WITHDRAW" | undefined;
     } | undefined;
+    channelId?: string | undefined;
     roleId?: string | undefined;
     description?: string | undefined;
     enabled?: boolean | undefined;
-    channelId?: string | undefined;
     pingRoleIds?: string[] | undefined;
     acceptedChannelId?: string | undefined;
     deniedChannelId?: string | undefined;
@@ -862,9 +862,9 @@ export declare const policeSchema: z.ZodObject<{
         timeLimitMinutes?: number | undefined;
         onLeave?: "DENY" | "NONE" | "WITHDRAW" | undefined;
     } | undefined;
+    channelId?: string | undefined;
     description?: string | undefined;
     enabled?: boolean | undefined;
-    channelId?: string | undefined;
     title?: string | undefined;
     pingRoleIds?: string[] | undefined;
     acceptedChannelId?: string | undefined;
@@ -1154,8 +1154,8 @@ export declare const configSchema: z.ZodObject<{
         enabled: boolean;
         pingRoleIds: string[];
         questions: FormField[];
-        roleId?: string | undefined;
         channelId?: string | undefined;
+        roleId?: string | undefined;
         acceptedChannelId?: string | undefined;
         deniedChannelId?: string | undefined;
     }, {
@@ -1203,10 +1203,10 @@ export declare const configSchema: z.ZodObject<{
             timeLimitMinutes?: number | undefined;
             onLeave?: "DENY" | "NONE" | "WITHDRAW" | undefined;
         } | undefined;
+        channelId?: string | undefined;
         roleId?: string | undefined;
         description?: string | undefined;
         enabled?: boolean | undefined;
-        channelId?: string | undefined;
         pingRoleIds?: string[] | undefined;
         acceptedChannelId?: string | undefined;
         deniedChannelId?: string | undefined;
@@ -1246,8 +1246,8 @@ export declare const configSchema: z.ZodObject<{
         enabled: boolean;
         pingRoleIds: string[];
         questions: FormField[];
-        roleId?: string | undefined;
         channelId?: string | undefined;
+        roleId?: string | undefined;
         acceptedChannelId?: string | undefined;
         deniedChannelId?: string | undefined;
     }[], {
@@ -1295,10 +1295,10 @@ export declare const configSchema: z.ZodObject<{
             timeLimitMinutes?: number | undefined;
             onLeave?: "DENY" | "NONE" | "WITHDRAW" | undefined;
         } | undefined;
+        channelId?: string | undefined;
         roleId?: string | undefined;
         description?: string | undefined;
         enabled?: boolean | undefined;
-        channelId?: string | undefined;
         pingRoleIds?: string[] | undefined;
         acceptedChannelId?: string | undefined;
         deniedChannelId?: string | undefined;
@@ -1523,9 +1523,9 @@ export declare const configSchema: z.ZodObject<{
             timeLimitMinutes?: number | undefined;
             onLeave?: "DENY" | "NONE" | "WITHDRAW" | undefined;
         } | undefined;
+        channelId?: string | undefined;
         description?: string | undefined;
         enabled?: boolean | undefined;
-        channelId?: string | undefined;
         title?: string | undefined;
         pingRoleIds?: string[] | undefined;
         acceptedChannelId?: string | undefined;
@@ -1569,8 +1569,8 @@ export declare const configSchema: z.ZodObject<{
         enabled: boolean;
         pingRoleIds: string[];
         questions: FormField[];
-        roleId?: string | undefined;
         channelId?: string | undefined;
+        roleId?: string | undefined;
         acceptedChannelId?: string | undefined;
         deniedChannelId?: string | undefined;
     }[];
@@ -1660,10 +1660,10 @@ export declare const configSchema: z.ZodObject<{
             timeLimitMinutes?: number | undefined;
             onLeave?: "DENY" | "NONE" | "WITHDRAW" | undefined;
         } | undefined;
+        channelId?: string | undefined;
         roleId?: string | undefined;
         description?: string | undefined;
         enabled?: boolean | undefined;
-        channelId?: string | undefined;
         pingRoleIds?: string[] | undefined;
         acceptedChannelId?: string | undefined;
         deniedChannelId?: string | undefined;
@@ -1701,9 +1701,9 @@ export declare const configSchema: z.ZodObject<{
             timeLimitMinutes?: number | undefined;
             onLeave?: "DENY" | "NONE" | "WITHDRAW" | undefined;
         } | undefined;
+        channelId?: string | undefined;
         description?: string | undefined;
         enabled?: boolean | undefined;
-        channelId?: string | undefined;
         title?: string | undefined;
         pingRoleIds?: string[] | undefined;
         acceptedChannelId?: string | undefined;
@@ -1995,8 +1995,8 @@ export declare const saveSchema: z.ZodObject<{
         enabled: boolean;
         pingRoleIds: string[];
         questions: FormField[];
-        roleId?: string | undefined;
         channelId?: string | undefined;
+        roleId?: string | undefined;
         acceptedChannelId?: string | undefined;
         deniedChannelId?: string | undefined;
     }, {
@@ -2044,10 +2044,10 @@ export declare const saveSchema: z.ZodObject<{
             timeLimitMinutes?: number | undefined;
             onLeave?: "DENY" | "NONE" | "WITHDRAW" | undefined;
         } | undefined;
+        channelId?: string | undefined;
         roleId?: string | undefined;
         description?: string | undefined;
         enabled?: boolean | undefined;
-        channelId?: string | undefined;
         pingRoleIds?: string[] | undefined;
         acceptedChannelId?: string | undefined;
         deniedChannelId?: string | undefined;
@@ -2087,8 +2087,8 @@ export declare const saveSchema: z.ZodObject<{
         enabled: boolean;
         pingRoleIds: string[];
         questions: FormField[];
-        roleId?: string | undefined;
         channelId?: string | undefined;
+        roleId?: string | undefined;
         acceptedChannelId?: string | undefined;
         deniedChannelId?: string | undefined;
     }[], {
@@ -2136,10 +2136,10 @@ export declare const saveSchema: z.ZodObject<{
             timeLimitMinutes?: number | undefined;
             onLeave?: "DENY" | "NONE" | "WITHDRAW" | undefined;
         } | undefined;
+        channelId?: string | undefined;
         roleId?: string | undefined;
         description?: string | undefined;
         enabled?: boolean | undefined;
-        channelId?: string | undefined;
         pingRoleIds?: string[] | undefined;
         acceptedChannelId?: string | undefined;
         deniedChannelId?: string | undefined;
@@ -2364,9 +2364,9 @@ export declare const saveSchema: z.ZodObject<{
             timeLimitMinutes?: number | undefined;
             onLeave?: "DENY" | "NONE" | "WITHDRAW" | undefined;
         } | undefined;
+        channelId?: string | undefined;
         description?: string | undefined;
         enabled?: boolean | undefined;
-        channelId?: string | undefined;
         title?: string | undefined;
         pingRoleIds?: string[] | undefined;
         acceptedChannelId?: string | undefined;
@@ -2502,8 +2502,8 @@ export declare const saveSchema: z.ZodObject<{
         enabled: boolean;
         pingRoleIds: string[];
         questions: FormField[];
-        roleId?: string | undefined;
         channelId?: string | undefined;
+        roleId?: string | undefined;
         acceptedChannelId?: string | undefined;
         deniedChannelId?: string | undefined;
     }[];
@@ -2606,10 +2606,10 @@ export declare const saveSchema: z.ZodObject<{
             timeLimitMinutes?: number | undefined;
             onLeave?: "DENY" | "NONE" | "WITHDRAW" | undefined;
         } | undefined;
+        channelId?: string | undefined;
         roleId?: string | undefined;
         description?: string | undefined;
         enabled?: boolean | undefined;
-        channelId?: string | undefined;
         pingRoleIds?: string[] | undefined;
         acceptedChannelId?: string | undefined;
         deniedChannelId?: string | undefined;
@@ -2647,9 +2647,9 @@ export declare const saveSchema: z.ZodObject<{
             timeLimitMinutes?: number | undefined;
             onLeave?: "DENY" | "NONE" | "WITHDRAW" | undefined;
         } | undefined;
+        channelId?: string | undefined;
         description?: string | undefined;
         enabled?: boolean | undefined;
-        channelId?: string | undefined;
         title?: string | undefined;
         pingRoleIds?: string[] | undefined;
         acceptedChannelId?: string | undefined;

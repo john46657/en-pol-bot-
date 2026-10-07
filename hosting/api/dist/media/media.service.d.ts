@@ -52,4 +52,11 @@ export declare class MediaService {
         name: string;
         data: NonSharedBuffer;
     }>;
+    /** Für den Bot: im Embed-Baukasten hochgeladene Bilder (Banner, Thumbnail, Icons). */
+    embedAsset(id: string): Promise<{
+        mime: string;
+        name: string;
+        data: NonSharedBuffer;
+    }>;
+    private botImage;
 }

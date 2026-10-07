@@ -6,16 +6,22 @@ declare const requestBody: z.ZodObject<{
     endsAt: z.ZodDate;
     reason: z.ZodString;
     guildId: z.ZodOptional<z.ZodString>;
+    type: z.ZodOptional<z.ZodString>;
+    comment: z.ZodOptional<z.ZodString>;
 }, "strip", z.ZodTypeAny, {
     reason: string;
     startsAt: Date;
     endsAt: Date;
     guildId?: string | undefined;
+    type?: string | undefined;
+    comment?: string | undefined;
 }, {
     reason: string;
     startsAt: Date;
     endsAt: Date;
     guildId?: string | undefined;
+    type?: string | undefined;
+    comment?: string | undefined;
 }>;
 declare const listQ: z.ZodObject<{
     status: z.ZodOptional<z.ZodEnum<["PENDING", "APPROVED", "DENIED", "CANCELLED", "ENDED", "ACTIVE", "UPCOMING", "ALL"]>>;
@@ -66,6 +72,8 @@ export declare class LeaveController {
             startsAt: Date;
             endsAt: Date;
             reason: string;
+            type: string | null;
+            comment: string | null;
             status: string;
             active: boolean;
             guildId: string | null;
@@ -86,6 +94,8 @@ export declare class LeaveController {
         startsAt: Date;
         endsAt: Date;
         reason: string;
+        type: string | null;
+        comment: string | null;
         status: string;
         active: boolean;
         guildId: string | null;
@@ -105,6 +115,8 @@ export declare class LeaveController {
         startsAt: Date;
         endsAt: Date;
         reason: string;
+        type: string | null;
+        comment: string | null;
         status: string;
         active: boolean;
         guildId: string | null;
@@ -125,6 +137,8 @@ export declare class LeaveController {
         startsAt: Date;
         endsAt: Date;
         reason: string;
+        type: string | null;
+        comment: string | null;
         status: string;
         active: boolean;
         guildId: string | null;

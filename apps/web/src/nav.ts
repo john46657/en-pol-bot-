@@ -1,4 +1,4 @@
-import { CalendarCheck, FormInput, ListOrdered, Link2, PanelTop, DoorOpen, MapPinned, Building2, Megaphone, RadioTower, Contact, Palette, CalendarOff, Clock, LifeBuoy, Monitor, BarChart3, BookOpen, Award, Car, ClipboardList, FileText, Fingerprint, Flag, Gavel, LayoutDashboard, MessageSquare, Radio, Scale, Search, Settings, Shield, Siren, Ticket, UserCheck, Users, Wrench, type LucideIcon } from 'lucide-react';
+import { BellRing, GraduationCap, IdCard, Medal, SlidersHorizontal, CalendarCheck, FormInput, ListOrdered, Link2, PanelTop, DoorOpen, MapPinned, Building2, Megaphone, RadioTower, Contact, Palette, CalendarOff, Clock, LifeBuoy, Monitor, BarChart3, BookOpen, Award, Car, ClipboardList, FileText, Fingerprint, Flag, Gavel, LayoutDashboard, MessageSquare, Radio, Scale, Search, Settings, Shield, Siren, Ticket, UserCheck, Users, Wrench, type LucideIcon } from 'lucide-react';
 
 /** `area`: Bereichs-Sichtbarkeit (dashboard.<bereich>.view) – ohne sie erscheint der Menüpunkt nicht, auch mit Modul-Recht. */
 export interface NavItem { path: string; label: string; icon: LucideIcon; perm?: string; area?: string; group: 'Operations' | 'Records' | 'Organisation' | 'Administration' }
@@ -25,6 +25,10 @@ export const NAV: NavItem[] = [
   { path: '/investigations', label: 'Ermittlungen', icon: Search, perm: 'investigations.view', group: 'Records' },
   { path: '/wanted', label: 'Fahndungen', icon: Flag, perm: 'wanted.view', group: 'Records' },
   { path: '/personnel', label: 'Personal', icon: UserCheck, perm: 'personnel.view', group: 'Organisation' },
+  { path: '/promotions', label: 'Beförderungen', icon: Medal, perm: 'promotion.view', group: 'Organisation' },
+  { path: '/trainings', label: 'Ausbildungen & Prüfungen', icon: GraduationCap, perm: 'training.view', group: 'Organisation' },
+  { path: '/service-numbers', label: 'Dienstnummern', icon: IdCard, perm: 'dienstnummer.view', group: 'Organisation' },
+  { path: '/announcements', label: 'Meldungen & Abstimmungen', icon: BellRing, perm: 'announcements.view', group: 'Organisation' },
   { path: '/applications', label: 'Bewerbungen', icon: ClipboardList, perm: 'applications.view', area: 'dashboard.applications.view', group: 'Organisation' },
   { path: '/qualifications', label: 'Qualifikationen', icon: Award, perm: 'qualifications.view', area: 'dashboard.applications.view', group: 'Organisation' },
   { path: '/teamchance', label: 'Team-Chance', icon: Megaphone, perm: 'teamchance.view', area: 'dashboard.teamchance.view', group: 'Organisation' },
@@ -39,6 +43,7 @@ export const NAV: NavItem[] = [
   { path: '/admin/shifts', label: 'Schichten', icon: Clock, perm: 'settings.view', area: 'dashboard.settings.view', group: 'Administration' },
   { path: '/admin/servers', label: 'Server-Verbund', icon: Link2, perm: 'settings.view', area: 'dashboard.settings.view', group: 'Administration' },
   { path: '/admin/embeds', label: 'Embeds', icon: PanelTop, perm: 'settings.view', area: 'dashboard.settings.view', group: 'Administration' },
+  { path: '/admin/personnel', label: 'Personal-Einstellungen', icon: SlidersHorizontal, perm: 'promotion.manage_settings', area: 'dashboard.settings.view', group: 'Administration' },
   { path: '/admin/form-panels', label: 'Formular-Panels', icon: FormInput, perm: 'settings.view', area: 'dashboard.settings.view', group: 'Administration' },
   { path: '/admin/welcome', label: 'Willkommen & Abschied', icon: DoorOpen, perm: 'settings.view', area: 'dashboard.settings.view', group: 'Administration' },
   { path: '/admin/leave', label: 'Abmeldungen (Einrichtung)', icon: CalendarOff, perm: 'settings.view', area: 'dashboard.settings.view', group: 'Administration' },

@@ -2,6 +2,8 @@ import { z } from 'zod';
 import type { MessageSpec } from '@enrp/shared';
 import { PrismaService } from '../prisma/prisma.service';
 import { AuditService, type Actor } from '../audit/audit.service';
+/** Bild: https-URL oder hochgeladene Datei (`media:<id>`, der Bot hängt sie an). */
+export declare const imageRef: z.ZodDefault<z.ZodUnion<[z.ZodString, z.ZodLiteral<"">]>>;
 /** Ein Embed wie bei Sapphire: Titel, Text, Abschnitte (Feld-Name + Text), Farbe, Bilder, Fußzeile. */
 export declare const embedSchema: z.ZodEffects<z.ZodObject<{
     id: z.ZodString;
@@ -14,10 +16,20 @@ export declare const embedSchema: z.ZodEffects<z.ZodObject<{
     description: z.ZodDefault<z.ZodString>;
     color: z.ZodDefault<z.ZodString>;
     author: z.ZodDefault<z.ZodString>;
+    authorIcon: z.ZodDefault<z.ZodUnion<[z.ZodString, z.ZodLiteral<"">]>>;
     thumbnail: z.ZodDefault<z.ZodUnion<[z.ZodString, z.ZodLiteral<"">]>>;
     image: z.ZodDefault<z.ZodUnion<[z.ZodString, z.ZodLiteral<"">]>>;
+    /** weitere große Bilder (Discord zeigt bis zu 4 als Galerie, wenn ein Titel-Link gesetzt ist) */
+    images: z.ZodDefault<z.ZodArray<z.ZodPipeline<z.ZodDefault<z.ZodUnion<[z.ZodString, z.ZodLiteral<"">]>>, z.ZodString>, "many">>;
     footer: z.ZodDefault<z.ZodString>;
+    footerIcon: z.ZodDefault<z.ZodUnion<[z.ZodString, z.ZodLiteral<"">]>>;
     timestamp: z.ZodDefault<z.ZodBoolean>;
+    /** eigener Zeitpunkt (ISO); leer = Zeitpunkt des Sendens */
+    timestampAt: z.ZodDefault<z.ZodNullable<z.ZodString>>;
+    /** Reaktionen, die der Bot unter die Nachricht setzt (z. B. ✅ ❌ ⏳) */
+    reactions: z.ZodDefault<z.ZodArray<z.ZodString, "many">>;
+    /** Rollen-Erwähnungen im Text oben wirklich pingen */
+    pingRoles: z.ZodDefault<z.ZodBoolean>;
     fields: z.ZodDefault<z.ZodArray<z.ZodObject<{
         name: z.ZodString;
         value: z.ZodString;
@@ -50,21 +62,27 @@ export declare const embedSchema: z.ZodEffects<z.ZodObject<{
     name: string;
     guildId: string | null;
     color: string;
-    description: string;
     channelId: string | null;
+    description: string;
     url: string;
     title: string;
     image: string;
-    content: string;
-    footer: string;
-    author: string;
     posted: {
         at: string;
         channelId: string;
         messageId: string;
     } | null;
+    content: string;
+    footer: string;
+    author: string;
+    reactions: string[];
+    authorIcon: string;
     thumbnail: string;
+    images: string[];
+    footerIcon: string;
     timestamp: boolean;
+    timestampAt: string | null;
+    pingRoles: boolean;
     fields: {
         name: string;
         value: string;
@@ -75,21 +93,27 @@ export declare const embedSchema: z.ZodEffects<z.ZodObject<{
     name: string;
     guildId?: string | null | undefined;
     color?: string | undefined;
-    description?: string | undefined;
     channelId?: string | null | undefined;
+    description?: string | undefined;
     url?: string | undefined;
     title?: string | undefined;
     image?: string | undefined;
-    content?: string | undefined;
-    footer?: string | undefined;
-    author?: string | undefined;
     posted?: {
         at: string;
         channelId: string;
         messageId: string;
     } | null | undefined;
+    content?: string | undefined;
+    footer?: string | undefined;
+    author?: string | undefined;
+    reactions?: string[] | undefined;
+    authorIcon?: string | undefined;
     thumbnail?: string | undefined;
+    images?: (string | undefined)[] | undefined;
+    footerIcon?: string | undefined;
     timestamp?: boolean | undefined;
+    timestampAt?: string | null | undefined;
+    pingRoles?: boolean | undefined;
     fields?: {
         name: string;
         value: string;
@@ -100,21 +124,27 @@ export declare const embedSchema: z.ZodEffects<z.ZodObject<{
     name: string;
     guildId: string | null;
     color: string;
-    description: string;
     channelId: string | null;
+    description: string;
     url: string;
     title: string;
     image: string;
-    content: string;
-    footer: string;
-    author: string;
     posted: {
         at: string;
         channelId: string;
         messageId: string;
     } | null;
+    content: string;
+    footer: string;
+    author: string;
+    reactions: string[];
+    authorIcon: string;
     thumbnail: string;
+    images: string[];
+    footerIcon: string;
     timestamp: boolean;
+    timestampAt: string | null;
+    pingRoles: boolean;
     fields: {
         name: string;
         value: string;
@@ -125,21 +155,27 @@ export declare const embedSchema: z.ZodEffects<z.ZodObject<{
     name: string;
     guildId?: string | null | undefined;
     color?: string | undefined;
-    description?: string | undefined;
     channelId?: string | null | undefined;
+    description?: string | undefined;
     url?: string | undefined;
     title?: string | undefined;
     image?: string | undefined;
-    content?: string | undefined;
-    footer?: string | undefined;
-    author?: string | undefined;
     posted?: {
         at: string;
         channelId: string;
         messageId: string;
     } | null | undefined;
+    content?: string | undefined;
+    footer?: string | undefined;
+    author?: string | undefined;
+    reactions?: string[] | undefined;
+    authorIcon?: string | undefined;
     thumbnail?: string | undefined;
+    images?: (string | undefined)[] | undefined;
+    footerIcon?: string | undefined;
     timestamp?: boolean | undefined;
+    timestampAt?: string | null | undefined;
+    pingRoles?: boolean | undefined;
     fields?: {
         name: string;
         value: string;
@@ -161,21 +197,27 @@ export declare class EmbedsService {
         name: string;
         guildId: string | null;
         color: string;
-        description: string;
         channelId: string | null;
+        description: string;
         url: string;
         title: string;
         image: string;
-        content: string;
-        footer: string;
-        author: string;
         posted: {
             at: string;
             channelId: string;
             messageId: string;
         } | null;
+        content: string;
+        footer: string;
+        author: string;
+        reactions: string[];
+        authorIcon: string;
         thumbnail: string;
+        images: string[];
+        footerIcon: string;
         timestamp: boolean;
+        timestampAt: string | null;
+        pingRoles: boolean;
         fields: {
             name: string;
             value: string;
@@ -187,21 +229,27 @@ export declare class EmbedsService {
         name: string;
         guildId: string | null;
         color: string;
-        description: string;
         channelId: string | null;
+        description: string;
         url: string;
         title: string;
         image: string;
-        content: string;
-        footer: string;
-        author: string;
         posted: {
             at: string;
             channelId: string;
             messageId: string;
         } | null;
+        content: string;
+        footer: string;
+        author: string;
+        reactions: string[];
+        authorIcon: string;
         thumbnail: string;
+        images: string[];
+        footerIcon: string;
         timestamp: boolean;
+        timestampAt: string | null;
+        pingRoles: boolean;
         fields: {
             name: string;
             value: string;

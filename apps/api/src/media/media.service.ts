@@ -63,12 +63,12 @@ export class MediaService {
   }
 
   /** Für den Bot (ohne Benutzer): nur als Willkommens-Banner hochgeladene Bilder. */
-  welcomeBanner(id: string) { return this.botImage(id, ['WelcomeBanner'], 'banner'); }
+  welcomeBanner(id: string) { return this.botImage(id, ['WelcomeBanner'], 'banner', false); }
   /** Für den Bot: im Embed-Baukasten hochgeladene Bilder (Banner, Thumbnail, Icons). */
   embedAsset(id: string) { return this.botImage(id, ['EmbedAsset', 'WelcomeBanner'], 'bild'); }
-  private async botImage(id: string, types: string[], base: string) {
+  private async botImage(id: string, types: string[], base: string, unique = true) {
     const m = await this.prisma.media.findUnique({ where: { id } });
     if (!m || !m.linkedType || !types.includes(m.linkedType) || !m.mime.startsWith('image/')) throw new AppError('NOT_FOUND', 'Bild nicht gefunden.');
-    return { mime: m.mime, name: `${base}-${m.id.slice(0, 8)}.${EXT[m.mime] ?? 'png'}`, data: await readFile(path.join(this.dir, m.storageKey)) };
+    return { mime: m.mime, name: `${base}${unique ? `-${m.id.slice(0, 8)}` : ''}.${EXT[m.mime] ?? 'png'}`, data: await readFile(path.join(this.dir, m.storageKey)) };
   }
 }

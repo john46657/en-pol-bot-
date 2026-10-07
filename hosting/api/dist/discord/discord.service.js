@@ -145,6 +145,17 @@ let DiscordService = class DiscordService {
         const value = guilds;
         await this.prisma.systemSetting.upsert({ where: { key: GUILDS_KEY }, create: { key: GUILDS_KEY, value }, update: { value } });
     }
+    /**
+     * Nachricht in einen Kanal setzen oder die dort zuletzt unter `stateKey` gepostete bearbeiten (Funk-Codes, Staff-Liste, Panels …).
+     * Der Bot merkt sich den Ort unter `bot.state.<stateKey>`; `posted()` liest ihn wieder.
+     */
+    async postMessage(stateKey, channelId, message, opts = {}) {
+        await (opts.tx ?? this.prisma).discordOutbox.create({ data: { type: 'message.post', channelKey: 'announcements', payload: { stateKey, channelId, message, forceNew: !!opts.forceNew } } });
+    }
+    async posted(stateKey) {
+        const v = (await this.getState(stateKey));
+        return v && typeof v.channelId === 'string' && typeof v.messageId === 'string' ? { channelId: v.channelId, messageId: v.messageId } : null;
+    }
     async getState(key) {
         return (await this.prisma.systemSetting.findUnique({ where: { key: `bot.state.${key}` } }))?.value ?? null;
     }

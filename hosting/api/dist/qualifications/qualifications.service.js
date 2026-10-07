@@ -10,6 +10,7 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.QualificationsService = void 0;
+const hire_events_1 = require("../common/hire-events");
 const guild_context_1 = require("../common/guild-context");
 const common_1 = require("@nestjs/common");
 const prisma_service_1 = require("../prisma/prisma.service");
@@ -229,6 +230,9 @@ let QualificationsService = class QualificationsService {
             message: (0, decision_1.decisionMessage)(settings, status === 'ACCEPTED', { applicationName: a.unitName, number: a.number, decider, applicantId: a.discordId, reason }),
         }, { always: true });
         await this.discord.markDecided('qualification', id, actor, status, reason || null);
+        // Personal/Dienstnummer-Automatik (falls für diese Einheit eingerichtet)
+        if (status === 'ACCEPTED')
+            await hire_events_1.hireEvents.accepted(actor, { applicationId: a.id, number: a.number, kind: a.unitName, discordId: a.discordId, name: a.discordName });
         return { id, number: a.number, unitName: a.unitName, status, addedToSek, decidedByName: by?.displayName ?? null, reason: reason || null };
     }
 };
