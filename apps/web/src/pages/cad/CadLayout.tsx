@@ -28,7 +28,7 @@ export function CadLayout() {
   // Hinweis bei ER:LC-Ausfall – das CAD selbst läuft weiter
   const ov = useQuery({ queryKey: ['cad-overview'], queryFn: () => api<CadOverview>('/cad/overview'), refetchInterval: 30_000 });
   const down = (ov.data?.erlc ?? []).filter((s) => s.status !== 'CONNECTED' && s.status !== 'DISABLED');
-  const items = CAD_NAV.filter((n) => !n.perm || can(n.perm) || (n.to === '/cad/settings' && (can('cad.manage_map') || can('cad.manage_erlc') || can('cad.manage_cross_server'))));
+  const items = CAD_NAV.filter((n) => !n.perm || can(n.perm) || (n.to === '/cad/settings' && (can('cad.manage_map') || can('cad.manage_erlc') || can('settings.manage'))));
   return (
     <div>
       <div className="mb-3">

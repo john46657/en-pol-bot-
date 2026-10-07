@@ -36,19 +36,34 @@ describe('danger level (Gefahrenstatus)', () => {
     const adm = (await login(app, 'f_admin')).agent;
     await prisma.discordOutbox.deleteMany();
     expect((await adm.put('/api/v1/admin/settings/discord.channels').send({ value: { danger: '500000000000000001' } })).status).toBe(200);
-    expect((await http().get('/api/v1/danger-level').set(bot(D_OFF))).body.level).toBe('GREEN');
-    expect((await http().put('/api/v1/danger-level').set(bot(D_OFF)).send({ level: 'RED' })).status).toBe(403); // Police Member darf nicht
-    const res = await http().put('/api/v1/danger-level').set(bot(D_DISP)).send({ level: 'RED', reason: 'Bank robbery in progress' });
+    expect((await http().get('/api/v1/danger-level').set(bot(D_OFF))).body.level).toBe('STATUS_1');
+    expect((await http().put('/api/v1/danger-level').set(bot(D_OFF)).send({ level: 'STATUS_4' })).status).toBe(403); // Police Member darf nicht
+    // Stufe per Schlüssel oder Name („Status 4“)
+    const res = await http().put('/api/v1/danger-level').set(bot(D_DISP)).send({ level: 'Status 4', reason: 'Bank robbery in progress' });
     expect(res.status).toBe(200);
-    expect(res.body).toMatchObject({ level: 'RED', reason: 'Bank robbery in progress' });
+    expect(res.body).toMatchObject({ level: 'STATUS_4', reason: 'Bank robbery in progress', def: { name: 'Status 4', title: 'Extreme Kriminalität.' } });
     expect((await http().put('/api/v1/danger-level').set(bot(D_DISP)).send({ level: 'PURPLE' })).status).toBe(400);
     expect(await prisma.auditLog.count({ where: { action: 'danger.set' } })).toBe(1);
     const out = await prisma.discordOutbox.findMany({ where: { type: 'danger.changed' } });
     expect(out).toHaveLength(1);
-    expect(out[0]!.payload).toMatchObject({ level: 'RED', previous: 'GREEN', setBy: 'f_disp' });
-    await http().put('/api/v1/danger-level').set(bot(D_DISP)).send({ level: 'RED' }); // unverändert -> keine zweite Meldung
+    expect(out[0]!.payload).toMatchObject({ level: 'STATUS_4', name: 'Status 4', previous: null, setBy: 'f_disp' });
+    await http().put('/api/v1/danger-level').set(bot(D_DISP)).send({ level: 'STATUS_4' }); // unverändert -> keine zweite Meldung
     expect(await prisma.discordOutbox.count({ where: { type: 'danger.changed' } })).toBe(1);
-    expect((await http().get('/api/v1/bot/danger').set(bot())).body.level).toBe('RED');
+    expect((await http().get('/api/v1/bot/danger').set(bot())).body.level).toBe('STATUS_4');
+  });
+
+  it('levels, texts, colours and the ping role are configured in the dashboard', async () => {
+    const adm = (await login(app, 'f_admin')).agent;
+    const cfg = (await adm.get('/api/v1/danger-level/config')).body;
+    expect(cfg.levels.map((l: { name: string }) => l.name)).toEqual(['Status 1', 'Status 2', 'Status 3', 'Status 4']);
+    const levels = [{ ...cfg.levels[0], title: 'Ruhig.' }, { key: 'ALARM', name: 'Alarm', title: 'Großlage', text: 'Alle Einheiten!', emoji: '🚨', color: '#ff0000', buttonStyle: 'danger' }];
+    expect((await adm.put('/api/v1/danger-level/config').send({ ...cfg, levels: [levels[0], levels[0]] })).status).toBe(400); // doppelte Schlüssel
+    expect((await adm.put('/api/v1/danger-level/config').send({ ...cfg, levels, pingRoleIds: ['500000000000000077'] })).status).toBe(200);
+    // alter Stand (STATUS_4 gibt es nicht mehr) → erste Stufe
+    expect((await http().get('/api/v1/danger-level').set(bot(D_OFF))).body.def.title).toBe('Ruhig.');
+    await http().put('/api/v1/danger-level').set(bot(D_DISP)).send({ level: 'alarm' });
+    const out = await prisma.discordOutbox.findFirst({ where: { type: 'danger.changed' }, orderBy: { createdAt: 'desc' } });
+    expect(out!.payload).toMatchObject({ name: 'Alarm', title: 'Großlage', text: 'Alle Einheiten!', pingRoleIds: ['500000000000000077'] });
   });
 });
 

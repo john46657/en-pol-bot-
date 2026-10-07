@@ -4,27 +4,27 @@ import { useAuth } from '../lib/auth';
 import { useRealtime } from '../lib/realtime';
 import { Button } from './ui';
 
-interface DangerState { level: 'GREEN' | 'YELLOW' | 'RED'; reason: string | null; setByName: string | null; at: string | null }
-const LEVELS = { GREEN: { label: 'Green – normal duty', cls: 'border-emerald-500/40 bg-emerald-500/10' }, YELLOW: { label: 'Yellow – increased caution', cls: 'border-amber-500/40 bg-amber-500/10' }, RED: { label: 'Red – acute danger', cls: 'border-red-500/40 bg-red-500/10' } } as const;
+interface Level { key: string; name: string; title: string; emoji: string; color: string }
+interface DangerState { level: string; reason: string | null; setByName: string | null; at: string | null; def: Level; levels: Level[] }
 
-/** Gefahrenstatus (Grün/Gelb/Rot) – live; Ändern mit dispatch.manage. Dieselbe Quelle wie das Discord-Panel. */
+/** Gefahrenstatus – live; Ändern mit dispatch.manage. Stufen und Texte kommen aus den Einstellungen (dieselbe Quelle wie das Discord-Panel). */
 export function DangerLevel() {
   const { can } = useAuth();
   const qc = useQueryClient();
   useRealtime('dispatch', ['danger.changed'], [['danger-level']]);
   const q = useQuery({ queryKey: ['danger-level'], queryFn: () => api<DangerState>('/danger-level') });
   const set = useMutation({
-    mutationFn: (level: DangerState['level']) => api<DangerState>('/danger-level', { method: 'PUT', body: { level } }),
+    mutationFn: (level: string) => api<DangerState>('/danger-level', { method: 'PUT', body: { level } }),
     onSuccess: (s) => qc.setQueryData(['danger-level'], s),
   });
-  if (!q.data) return null;
-  const cur = LEVELS[q.data.level];
+  if (!q.data?.def) return null;
+  const cur = q.data.def;
   return (
-    <div role="status" aria-label="Danger level" className={`mb-3 flex flex-wrap items-center gap-2 rounded border p-2 text-sm ${cur.cls}`}>
-      <strong>Danger level: {cur.label}</strong>
+    <div role="status" aria-label="Gefahrenstatus" className="mb-3 flex flex-wrap items-center gap-2 rounded border p-2 text-sm" style={{ borderColor: `${cur.color}66`, background: `${cur.color}1a` }}>
+      <strong>{cur.emoji} {cur.name}{cur.title ? `: ${cur.title}` : ''}</strong>
       {q.data.reason && <span className="text-muted">— {q.data.reason}</span>}
-      {q.data.setByName && <span className="text-xs text-muted">(set by {q.data.setByName})</span>}
-      {can('dispatch.manage') && <span className="ml-auto flex gap-1">{(Object.keys(LEVELS) as DangerState['level'][]).filter((l) => l !== q.data!.level).map((l) => <Button key={l} size="sm" variant="secondary" disabled={set.isPending} onClick={() => set.mutate(l)}>{l.charAt(0) + l.slice(1).toLowerCase()}</Button>)}</span>}
+      {q.data.setByName && <span className="text-xs text-muted">(gesetzt von {q.data.setByName})</span>}
+      {can('dispatch.manage') && <span className="ml-auto flex flex-wrap gap-1">{q.data.levels.filter((l) => l.key !== q.data!.level).map((l) => <Button key={l.key} size="sm" variant="secondary" disabled={set.isPending} onClick={() => set.mutate(l.key)}>{l.emoji} {l.name}</Button>)}</span>}
     </div>
   );
 }

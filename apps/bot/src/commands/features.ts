@@ -1,5 +1,5 @@
 import { BotApiError } from '../api';
-import { clip, COLORS, DANGER, DUTY_DE, dangerEmbed, errorReply, listEmbed, okReply, plain, type ButtonSpec, type DangerState, type EmbedData, type Reply, type Row } from '../format';
+import { clip, COLORS, DUTY_DE, dangerEmbed, errorReply, listEmbed, okReply, plain, type ButtonSpec, type DangerState, type EmbedData, type Reply, type Row } from '../format';
 import type { CommandDef, Ctx, InteractionDef } from './types';
 import { mapError } from './errors';
 import { SEK_INTERACTION } from './sek';
@@ -13,13 +13,14 @@ const choices = (m: Record<string, string>) => Object.keys(m).map((k) => ({ name
 const needGuildAdmin = (c: Ctx) => (!c.guildId ? errorReply('Das geht nur auf einem Server, nicht per Direktnachricht.') : !c.isGuildAdmin ? errorReply('Dafür brauchst du auf diesem Discord-Server das Recht „Server verwalten“.') : null);
 
 // ---------------- Gefahrenstatus ----------------
-const LEVEL = { gruen: 'GREEN', gelb: 'YELLOW', rot: 'RED' } as const;
+/** Alte Eingaben (grün/gelb/rot) weiter verstehen; sonst entscheidet die API anhand der eingestellten Stufen. */
+const LEGACY: Record<string, string> = { gruen: 'STATUS_1', 'grün': 'STATUS_1', gelb: 'STATUS_2', rot: 'STATUS_4' };
 
 async function setDanger(c: Ctx, level: string, reason?: string): Promise<Reply> {
   try {
     const s = await c.api.asUser<DangerState>(c.discordId, 'PUT', '/danger-level', { level, ...(reason ? { reason } : {}) });
     await c.refreshLive?.('danger').catch(() => undefined); // Panel sofort nachziehen (sonst spätestens beim nächsten Abgleich)
-    return okReply(`Gefahrenstatus: ${DANGER[s.level]?.emoji ?? ''} **${DANGER[s.level]?.label ?? s.level}**`);
+    return okReply(`Gefahrenstatus: ${s.def?.emoji ?? ''} **${plain(s.def?.name ?? s.level)}**${s.def?.title ? ` – ${plain(s.def.title)}` : ''}`);
   } catch (e) { return mapError(e); }
 }
 
@@ -39,14 +40,14 @@ export const FEATURE_COMMANDS: CommandDef[] = [
     name: 'gefahrenstatus', description: 'Gefahrenstatus anzeigen, setzen oder als Panel posten',
     options: [
       { name: 'aktion', description: 'Was möchtest du tun? (Standard: anzeigen)', type: 'string', choices: [{ name: 'anzeigen', value: 'anzeigen' }, { name: 'setzen', value: 'setzen' }, { name: 'panel hier posten', value: 'panel' }] },
-      { name: 'stufe', description: 'Neue Stufe (bei „setzen“)', type: 'string', choices: choices(LEVEL) },
+      { name: 'stufe', description: 'Neue Stufe (bei „setzen“), z. B. Status 2', type: 'string', maxLength: 40 },
       { name: 'grund', description: 'Grund (optional, bei „setzen“)', type: 'string', maxLength: 200 },
     ],
     async run(c) {
       const action = str(c, 'aktion') || 'anzeigen';
       if (action === 'setzen') {
-        const level = LEVEL[str(c, 'stufe') as keyof typeof LEVEL];
-        return level ? setDanger(c, level, str(c, 'grund') || undefined) : errorReply('Bitte eine Stufe wählen (grün, gelb, rot).');
+        const level = str(c, 'stufe');
+        return level ? setDanger(c, LEGACY[level.toLowerCase()] ?? level, str(c, 'grund') || undefined) : errorReply('Bitte eine Stufe angeben (z. B. „Status 2“).');
       }
       if (action === 'panel') {
         const denied = needGuildAdmin(c); if (denied) return denied;
@@ -173,7 +174,7 @@ export const INTERACTIONS: InteractionDef[] = [
     prefix: 'danger',
     async run(c) {
       const level = c.args[0] === 'set' ? c.args[1] : undefined;
-      return level && level in DANGER ? setDanger(c, level) : errorReply('Unbekannte Aktion.');
+      return level ? setDanger(c, level) : errorReply('Unbekannte Aktion.');
     },
   },
   {
