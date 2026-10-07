@@ -183,7 +183,7 @@ model UserSettings {
 model Person {
   id             String   @id @default(uuid()) @db.Uuid
   serverId       String?  @db.Uuid
-  robloxUserId   String?  @unique
+  robloxUserId   String? // eindeutig je Akten-Bereich (serverId), siehe Server-Verbund
   robloxUsername String
   aliases        String[] @default([])
   status         String   @default("ACTIVE") // ACTIVE | ARCHIVED
@@ -198,6 +198,7 @@ model Person {
   links    RecordLink[]
   tickets  Ticket[]
 
+  @@unique([serverId, robloxUserId])
   @@index([robloxUsername])
 }
 

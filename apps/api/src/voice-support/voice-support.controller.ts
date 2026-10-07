@@ -12,6 +12,11 @@ const sf = z.string().regex(/^\d{15,25}$/);
 const guildQ = z.object({ guildId: sf.optional() });
 const casesQ = z.object({ guildId: sf.optional(), status: z.enum(['OPEN', 'WAITING', 'CLAIMED', 'DECLINED', 'ABANDONED', 'CLOSED']).optional() });
 const voice = z.object({ guildId: sf, channelId: sf, discordId: sf, userName: z.string().trim().min(1).max(100).default('?') });
+const webAction = z.discriminatedUnion('action', [
+  z.object({ action: z.literal('claim') }), z.object({ action: z.literal('close') }),
+  z.object({ action: z.literal('decline'), reason: z.string().trim().max(500).optional() }),
+  z.object({ action: z.literal('message'), text: z.string().trim().min(1).max(2000) }),
+]);
 const staff = z.object({ discordId: sf, name: z.string().trim().min(1).max(100), roleIds: z.array(sf).max(250).default([]), admin: z.boolean().default(false) });
 
 /** Dashboard: Räume (Tickets → Sprach-Support) und Fälle. */
@@ -25,6 +30,9 @@ export class VoiceSupportController {
   save(@CurrentActor() a: Actor, @Query(zodBody(guildQ)) q: z.infer<typeof guildQ>, @Body(zodBody(roomsSchema)) b: VoiceSupportRoom[]) { return this.s.saveRooms(a, b, q.guildId ?? currentGuild()); }
   @Get('cases') @RequirePermission('ticket.view')
   cases(@Query(zodBody(casesQ)) q: z.infer<typeof casesQ>) { return this.s.cases({ guildId: q.guildId ?? currentGuild(), status: q.status }); }
+  /** Übernehmen / Ablehnen / Nachricht / Schließen aus dem Dashboard (Recht ticket.claim). */
+  @Post('cases/:id/action') @HttpCode(200) @RequirePermission('ticket.claim')
+  action(@CurrentActor() a: Actor, @Param('id', ParseUUIDPipe) id: string, @Body(zodBody(webAction)) b: z.infer<typeof webAction>) { return this.s.webAction(a, id, b); }
 }
 
 /** Dienstweg des Bots. Team-Aktionen tragen Discord-ID, Name und Rollen der klickenden Person (Team-Rolle des Raums). */

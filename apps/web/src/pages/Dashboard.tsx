@@ -80,18 +80,18 @@ function Favorites() {
 }
 
 function Notifications() {
-  const q = useQuery({ queryKey: ['notifications', 'widget'], queryFn: () => api<Page<{ id: string; title: string; body: string | null; createdAt: string; type: string }>>('/notifications', { query: { filter: 'unread', pageSize: 6 } }), refetchInterval: 60_000 });
+  const q = useQuery({ queryKey: ['notifications', 'widget'], queryFn: () => api<Page<{ id: string; title: string; body: string | null; createdAt: string; type: string }>>('/notifications', { query: { filter: 'unread', pageSize: 6 } }), refetchInterval: 5_000 });
   return <Q q={q} empty={!q.data?.items.length}><ul className="space-y-1.5 text-sm">{q.data?.items.map((n) => <li key={n.id}><p className="font-medium">🔔 {n.title}</p><p className="text-xs text-muted">{fmt(n.createdAt)}</p></li>)}</ul></Q>;
 }
 
 interface TicketRow { id: string; number: string; name: string; creatorName: string; createdAt: string; status: { name: string; emoji?: string | null } | null; priority: { name: string } | null }
 function Tickets({ query }: { query: Record<string, string | number> }) {
-  const q = useQuery({ queryKey: ['w-tickets', query], queryFn: () => api<Page<TicketRow>>('/support-tickets', { query: { pageSize: 6, ...query } }), refetchInterval: 60_000 });
+  const q = useQuery({ queryKey: ['w-tickets', query], queryFn: () => api<Page<TicketRow>>('/support-tickets', { query: { pageSize: 6, ...query } }), refetchInterval: 5_000 });
   return <Q q={q} empty={!q.data?.items.length}><ul className="space-y-1.5 text-sm">{q.data?.items.map((t) => <li key={t.id} className="flex items-center justify-between gap-2"><Link to={`/support-tickets/${t.id}`} className="min-w-0 truncate hover:underline">🎫 {t.number} · {t.name}</Link><span className="shrink-0 text-xs text-muted">{t.status?.name ?? ''}</span></li>)}</ul></Q>;
 }
 
 function Activity() {
-  const q = useQuery({ queryKey: ['team-activity'], queryFn: () => api<{ at: string; name: string; kind: string; detail?: string }[]>('/team/activity', { query: { limit: 10 } }), refetchInterval: 60_000 });
+  const q = useQuery({ queryKey: ['team-activity'], queryFn: () => api<{ at: string; name: string; kind: string; detail?: string }[]>('/team/activity', { query: { limit: 10 } }), refetchInterval: 5_000 });
   const K: Record<string, string> = { joined: '➕ neu im Team', left: '➖ nicht mehr im Team', roles: '🛡️ Rollen geändert', name: '✏️ Name geändert', avatar: '🖼️ Avatar geändert', status: '🔄 Status' };
   return <Q q={q} empty={!q.data?.length}><ul className="space-y-1 text-sm">{q.data?.map((a, i) => <li key={i}><span className="font-medium">{a.name}</span> <span className="text-muted">{K[a.kind] ?? a.kind}{a.detail ? ` (${a.detail})` : ''} · {fmt(a.at)}</span></li>)}</ul></Q>;
 }

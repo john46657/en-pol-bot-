@@ -14,18 +14,18 @@ declare const createRole: z.ZodObject<{
     name: string;
     active?: boolean | undefined;
     guildId?: string | null | undefined;
+    color?: string | null | undefined;
     description?: string | null | undefined;
     priority?: number | undefined;
-    color?: string | null | undefined;
     icon?: string | null | undefined;
     discordRoleIds?: string[] | undefined;
 }, {
     name: string;
     active?: boolean | undefined;
     guildId?: string | null | undefined;
+    color?: string | null | undefined;
     description?: string | null | undefined;
     priority?: number | undefined;
-    color?: string | null | undefined;
     icon?: string | null | undefined;
     discordRoleIds?: string[] | undefined;
 }>;
@@ -40,17 +40,17 @@ declare const updateRole: z.ZodObject<{
 }, "strip", z.ZodTypeAny, {
     name?: string | undefined;
     active?: boolean | undefined;
+    color?: string | null | undefined;
     description?: string | null | undefined;
     priority?: number | undefined;
-    color?: string | null | undefined;
     icon?: string | null | undefined;
     discordRoleIds?: string[] | undefined;
 }, {
     name?: string | undefined;
     active?: boolean | undefined;
+    color?: string | null | undefined;
     description?: string | null | undefined;
     priority?: number | undefined;
-    color?: string | null | undefined;
     icon?: string | null | undefined;
     discordRoleIds?: string[] | undefined;
 }>;
@@ -118,10 +118,10 @@ export declare class RolesController {
         active: boolean;
         updatedAt: Date;
         guildId: string | null;
+        color: string | null;
         description: string | null;
         system: boolean;
         priority: number;
-        color: string | null;
         icon: string | null;
         discordRoleIds: string[];
     })[]>;
@@ -144,10 +144,10 @@ export declare class RolesController {
         active: boolean;
         updatedAt: Date;
         guildId: string | null;
+        color: string | null;
         description: string | null;
         system: boolean;
         priority: number;
-        color: string | null;
         icon: string | null;
         discordRoleIds: string[];
     }>;
@@ -166,10 +166,10 @@ export declare class RolesController {
         active: boolean;
         updatedAt: Date;
         guildId: string | null;
+        color: string | null;
         description: string | null;
         system: boolean;
         priority: number;
-        color: string | null;
         icon: string | null;
         discordRoleIds: string[];
     })[]>;
@@ -188,10 +188,10 @@ export declare class RolesController {
         active: boolean;
         updatedAt: Date;
         guildId: string | null;
+        color: string | null;
         description: string | null;
         system: boolean;
         priority: number;
-        color: string | null;
         icon: string | null;
         discordRoleIds: string[];
     }>;
@@ -211,10 +211,10 @@ export declare class RolesController {
         active: boolean;
         updatedAt: Date;
         guildId: string | null;
+        color: string | null;
         description: string | null;
         system: boolean;
         priority: number;
-        color: string | null;
         icon: string | null;
         discordRoleIds: string[];
     }>;
@@ -233,10 +233,10 @@ export declare class RolesController {
         active: boolean;
         updatedAt: Date;
         guildId: string | null;
+        color: string | null;
         description: string | null;
         system: boolean;
         priority: number;
-        color: string | null;
         icon: string | null;
         discordRoleIds: string[];
     }>;
@@ -255,10 +255,10 @@ export declare class RolesController {
         active: boolean;
         updatedAt: Date;
         guildId: string | null;
+        color: string | null;
         description: string | null;
         system: boolean;
         priority: number;
-        color: string | null;
         icon: string | null;
         discordRoleIds: string[];
     }>;

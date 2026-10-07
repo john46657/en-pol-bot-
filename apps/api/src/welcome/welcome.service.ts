@@ -1,3 +1,4 @@
+import { settingsGuild } from '../common/guild-context';
 import { Injectable, Logger } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import { z } from 'zod';
@@ -38,7 +39,7 @@ export class WelcomeService {
   private readonly log = new Logger('Welcome');
   constructor(private readonly prisma: PrismaService, private readonly audit: AuditService, private readonly applications: ApplicationsService, private readonly qualifications: QualificationsService, private readonly tickets: SupportTicketsService, private readonly media: MediaService) {}
 
-  private keyOf(guildId?: string | null) { return guildId ? `${KEY}@${guildId}` : KEY; }
+  private keyOf(guildId?: string | null) { const g = settingsGuild(guildId); return g ? `${KEY}@${g}` : KEY; } // Gruppe mit geteilten Einstellungen → Haupt-Server
 
   /** `own` = dieser Server hat eigene Einstellungen (sonst gilt die gemeinsame). */
   async config(guildId?: string | null): Promise<WelcomeConfig & { own: boolean }> {

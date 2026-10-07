@@ -107,6 +107,31 @@ export function formatDate(iso: string | Date, withTime = true) {
   return withTime ? `${date} ${parts.hour}:${parts.minute}` : date;
 }
 
+/** Relative Helligkeit (0 = schwarz, 1 = weiß) einer Farbe #rrggbb; `null` bei anderem Format. */
+function luminance(hex: string): number | null {
+  const m = /^#?([0-9a-f]{6})$/i.exec(hex.trim());
+  if (!m) return null;
+  const [r, g, b] = [0, 2, 4].map((i) => { const c = parseInt(m[1]!.slice(i, i + 2), 16) / 255; return c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4; });
+  return 0.2126 * r! + 0.7152 * g! + 0.0722 * b!;
+}
+/**
+ * Ist der gewählte Hintergrund hell (true) oder dunkel (false)? Für Farbe und Verlauf (Mittel der Verlaufsfarben);
+ * bei „Standard“ und eigenem Bild unbekannt (`null`) – dann gilt der gewählte Modus.
+ */
+export function backgroundIsLight(bg: { type: string; value: string }): boolean | null {
+  const css = bg.type === 'color' ? bg.value : bg.type === 'gradient' ? GRADIENTS[bg.value] ?? '' : '';
+  const lums = (css.match(/#[0-9a-f]{6}/gi) ?? []).map(luminance).filter((x): x is number => x !== null);
+  return lums.length ? lums.reduce((a, b) => a + b, 0) / lums.length > 0.4 : null;
+}
+
+/** Lesbare Schriftfarbe auf einer Hintergrundfarbe (#rrggbb): dunkel auf hellen Farben (Weiß, Gelb, Hellgrün …), sonst weiß. */
+export function readableOn(hex: string): string {
+  const lum = luminance(hex);
+  if (lum === null) return '#ffffff';
+  // Weiß bleibt, solange es gut lesbar ist (Kontrast ≥ 3, z. B. Standard-Blau); sonst dunkle Schrift
+  return 1.05 / (lum + 0.05) >= 3 ? '#ffffff' : '#111827';
+}
+
 const SHADOWS = { none: 'none', soft: '0 4px 14px rgb(0 0 0 / 0.18)', strong: '0 10px 30px rgb(0 0 0 / 0.35)' } as const;
 const SIDEBAR = { narrow: '13rem', normal: '15rem', wide: '18rem' } as const;
 
@@ -114,9 +139,13 @@ const SIDEBAR = { narrow: '13rem', normal: '15rem', wide: '18rem' } as const;
 export function useApplyPrefs(p: Preferences, studioAccent: string) {
   useEffect(() => {
     const root = document.documentElement;
-    const dark = p.theme === 'system' ? window.matchMedia('(prefers-color-scheme: dark)').matches : p.theme !== 'light';
+    // Heller Hintergrund → helle Darstellung (dunkle Schrift), dunkler → dunkle; sonst der gewählte Modus
+    const light = backgroundIsLight(p.background);
+    const dark = light !== null ? !light : p.theme === 'system' ? window.matchMedia('(prefers-color-scheme: dark)').matches : p.theme !== 'light';
     root.dataset.theme = dark ? 'dark' : 'light';
-    root.style.setProperty('--color-primary', p.accent ?? studioAccent);
+    const accent = p.accent ?? studioAccent;
+    root.style.setProperty('--color-primary', accent);
+    root.style.setProperty('--color-primary-fg', readableOn(accent)); // z. B. Weiß als Akzent → dunkle Schrift
     root.style.setProperty('--card-radius', `${p.radius}px`);
     root.style.setProperty('--radius-lg', `${p.radius}px`);
     root.style.setProperty('--card-alpha', `${100 - p.transparency}%`);

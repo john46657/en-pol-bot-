@@ -4,7 +4,7 @@ import { ChevronsLeft, ChevronsRight, LogOut, Menu, Shield, Star } from 'lucide-
 import { ServerSwitcher } from './ServerSwitcher';
 import { useAuth } from '../lib/auth';
 import { useMediaQuery } from '../lib/media';
-import { ACCENTS, useStudio } from '../lib/studio';
+import { accentHex, useStudio } from '../lib/studio';
 import { useApplyPrefs, usePrefs } from '../lib/prefs';
 import { flush } from '../lib/autosave';
 import { GROUPS, NAV, tr, visible, type NavItem } from '../nav';
@@ -22,7 +22,7 @@ export function AppShell() {
   const { prefs, update } = usePrefs();
   const loc = useLocation();
   const orgName = studio.data?.org?.name ?? 'EN Polizei';
-  useApplyPrefs(prefs, ACCENTS[studio.data?.theme?.accent ?? 'blue'] ?? ACCENTS.blue!);
+  useApplyPrefs(prefs, accentHex(studio.data?.theme?.accent));
   useEffect(() => { document.title = orgName; }, [orgName]);
   // Seitenwechsel: offene Änderungen sofort senden (sie liegen ohnehin schon lokal vor)
   useEffect(() => { void flush(); }, [loc.pathname]);

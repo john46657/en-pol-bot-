@@ -13,7 +13,7 @@ export interface TeamChanceCfg { open: boolean; title: string; description: stri
 type Status = TeamChanceCfg & { isOpen: boolean; reason: 'closed' | 'not_started' | 'ended' | 'full' | null; used: number; remaining: number | null; openedAt?: string | null };
 const REASON: Record<string, string> = { closed: 'geschlossen', not_started: 'startet später', ended: 'abgelaufen', full: 'alle Plätze vergeben' };
 
-export const useTeamChance = () => useQuery({ queryKey: ['teamchance'], queryFn: () => api<Status>('/teamchance'), refetchInterval: 60_000 });
+export const useTeamChance = () => useQuery({ queryKey: ['teamchance'], queryFn: () => api<Status>('/teamchance'), refetchInterval: 5_000 });
 
 export function TeamChanceBadge({ s }: { s: Status }) {
   return s.isOpen ? <Badge tone="success">📣 offen</Badge> : <Badge tone="danger">🔒 {REASON[s.reason ?? 'closed']}</Badge>;

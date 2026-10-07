@@ -167,6 +167,7 @@ let LeaveService = class LeaveService {
         if (updated.discordId)
             await this.discord.enqueue('duty', 'leave.decided', this.payload(updated, { ...extra, ...(await this.server(updated.guildId)) }), { always: true });
         await this.log(cfg, updated, status === 'APPROVED' ? 'approved' : 'denied', extra);
+        await this.discord.markDecided('leave', id, actor, status === 'APPROVED' ? 'ACCEPTED' : 'REJECTED', reason);
         if (status === 'APPROVED')
             await this.tick();
         return { ...this.view({ ...updated, decidedByName: by?.displayName ?? null }) };
@@ -189,6 +190,8 @@ let LeaveService = class LeaveService {
         if (r.roleApplied)
             await this.roles(updated, [], cfg.roleIds, `Abmeldung ${r.number} beendet`);
         await this.log(cfg, updated, running ? 'ended_early' : 'cancelled');
+        if (r.status === 'PENDING')
+            await this.discord.markDecided('leave', id, actor, 'WITHDRAWN'); // offener Antrag zurückgezogen → Buttons weg
         return this.view(updated);
     }
     /** Jede Minute: Rolle zu Beginn vergeben, am Ende entfernen und die Abmeldung abschließen. */

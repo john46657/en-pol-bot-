@@ -28,7 +28,7 @@ Nur für einen selbst, je Benutzer (Discord-Konto) in der Datenbank – auf PC u
 
 ## Teamliste (Menü → Teamliste, Widget „👥 Teamliste“)
 - Aus den Discord-Teamrollen (Zugangsrollen + mit Dashboard-Rollen verknüpfte Rollen) und den Personalakten: Avatar, Name, Team, Dienstgrad, Online-Status, Büro, Dienstnummer, Beitritt. **Keine Voice-Daten.**
-- Aktualisiert sich **verbindlich mindestens alle 60 Sekunden** (auch im Hintergrund-Tab), zusätzlich sofort bei Änderungen (Echtzeit) und per „🔄 Jetzt aktualisieren“ (der Bot meldet dann sofort neu). Erkannt werden neue/entfernte Mitglieder, Rollen-, Namens-, Avatar- und Statuswechsel (Team-Aktivität); Team, Dienstgrad, Büro und Dienstnummer kommen aus der Personalakte.
+- Aktualisiert sich **verbindlich alle 5 Sekunden** (auch im Hintergrund-Tab), zusätzlich sofort bei Änderungen (Echtzeit) und per „🔄 Jetzt aktualisieren“ (der Bot meldet dann sofort neu). Erkannt werden neue/entfernte Mitglieder, Rollen-, Namens-, Avatar- und Statuswechsel (Team-Aktivität); Team, Dienstgrad, Büro und Dienstnummer kommen aus der Personalakte.
 - Suche (Name, Benutzername, Dienstnummer, Team, Dienstgrad, Büro), Filter (Team, Dienstgrad, Büro, Status – Werte aus Einstellungen → Teamstruktur), Karten- oder Tabellenansicht, Profil per Klick (Discord-ID, Rollen, Beitritt nur mit `personnel.view`/`users.view`).
 - Team/Büro/Dienstnummer pflegen: Personalakte (wird automatisch gespeichert).
 
@@ -63,3 +63,12 @@ Persönlich → Sprache: Deutsch (Standard) oder Englisch für Menü und Navigat
 
 ## Bot-Voraussetzungen
 Developer Portal → Bot → Privileged Gateway Intents: **Server Members** (vollständige Teamliste) und **Presence** (Online-Status). Fehlen sie, startet der Bot trotzdem (Teamliste dann nur mit bekannten Mitgliedern bzw. Status „unbekannt“). Voice braucht kein privilegiertes Recht.
+
+## Server-Verbund (mehrere Discord-Server)
+*Administration → Server-Verbund* (ansehen `settings.view`, ändern `settings.manage`): Discord-Server **können zusammen sein, müssen aber nicht**.
+- **Gruppe** (z. B. Polizei + SEK): mindestens zwei Server. Je Gruppe wählbar:
+  - **Akten teilen** – alle Server der Gruppe sehen dieselben Personen- und Fahrzeugakten (sonst hat jeder Server eigene).
+  - **Einstellungen teilen** – Bewerbungen/Qualifikationen (Panels, Fragen, Rollen), Willkommen & Abschied, Design (Akzentfarbe), Name und Teamstruktur kommen vom **Haupt-Server** der Gruppe; wer auf einem anderen Server der Gruppe etwas ändert, ändert es für alle.
+- **Server ohne Gruppe**: *gemeinsame Akten* (Standard, wie bisher – ein Bestand für alle Server ohne eigene) oder *eigene Akten* (getrennt). „Gemeinsame Akten hierher verschieben“ übernimmt den bisherigen gemeinsamen Bestand in die eigenen Akten.
+- Neue Akten – von Hand oder automatisch aus ER:LC – landen im Bereich des Servers, auf dem sie entstehen (bei ER:LC: der Discord-Server, dem der ER:LC-Server zugeordnet ist). Die Roblox-ID ist je Bereich eindeutig. Mit „Alle Server“ oben links sieht man alle Akten.
+- Was schon immer je Server getrennt ist (Rollen/Rechte, Teamliste, Support-Tickets, Sprach-Support-Räume, CAD-Server-Verbindungen), bleibt so.

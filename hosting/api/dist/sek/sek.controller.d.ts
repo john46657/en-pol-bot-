@@ -51,6 +51,14 @@ export declare class SekController {
         rank: string | null;
         userId: string;
     }[]>;
+    candidates(): Promise<{
+        userId: string;
+        name: string;
+        username: string;
+        callsign: string | null;
+        rank: string | null;
+        discordLinked: boolean;
+    }[]>;
     add(a: Actor, b: z.infer<typeof target>): Promise<{
         userId: string;
         displayName: string;

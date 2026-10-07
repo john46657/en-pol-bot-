@@ -76079,7 +76079,7 @@ function startPresenceReporter(client2, api2, opts, log = console.log) {
   let mt, vt;
   const membersSoon = () => {
     clearTimeout(mt);
-    mt = setTimeout(() => void pushMembers().catch(fail3("members")), 5e3);
+    mt = setTimeout(() => void pushMembers().catch(fail3("members")), 1500);
     mt.unref?.();
   };
   const voiceSoon = () => {
@@ -76107,8 +76107,8 @@ function startPresenceReporter(client2, api2, opts, log = console.log) {
     for (const g of guilds()) await g.members.fetch().catch((e) => log(`could not load members of ${g.name}: ${e instanceof Error ? e.message : e}`));
   };
   void loadMembers().then(() => Promise.all([pushMembers().catch(fail3("members")), pushVoice().catch(fail3("voice"))]));
-  setInterval(() => void pushMembers().catch(fail3("members")), 6e4).unref();
-  setInterval(() => void pushVoice().catch(fail3("voice")), 6e4).unref();
+  setInterval(() => void pushMembers().catch(fail3("members")), 5e3).unref();
+  setInterval(() => void pushVoice().catch(fail3("voice")), 5e3).unref();
   c.on("guildCreate", (g) => {
     if (opts.members) void g.members.fetch().catch(() => void 0).then(membersSoon);
   });
@@ -76426,8 +76426,19 @@ function renderOutboxEmbeds(type, p) {
 **Grund:** ${plain(p.reason)}` : ""}`, 1024) }];
     return embeds;
   }
+  if (type === "academy.course") return [academyCourseEmbed(p)];
   const e = renderOutbox(type, p);
   return e ? [e] : null;
+}
+function academyCourseEmbed(p) {
+  const when = typeof p.when === "string" && !Number.isNaN(Date.parse(p.when)) ? Math.floor(Date.parse(p.when) / 1e3) : null;
+  const fields = [
+    ...when ? [{ name: "\u{1F552} Termin", value: `<t:${when}:F> (<t:${when}:R>)`, inline: true }] : [],
+    ...p.location ? [{ name: "\u{1F4CD} Ort", value: clip(plain(p.location), 1024), inline: true }] : [],
+    { name: "\u{1F3AF} Bestehensgrenze", value: `${Number(p.passScore) || 0} Punkte`, inline: true },
+    ...p.instructorName ? [{ name: "\u{1F46E} Ausbilder", value: clip(plain(p.instructorName), 1024), inline: true }] : []
+  ];
+  return { title: clip(`\u{1F393} Akademie: ${String(p.title ?? "Kurs")}`, 256), color: COLORS.info, ...p.description ? { description: clip(String(p.description), 4e3) } : {}, fields, footer: "Akademie \xB7 EN Polizei" };
 }
 function outboxButtons(type, p) {
   if (type === "leave.requested" && typeof p.id === "string") return [
@@ -76435,6 +76446,7 @@ function outboxButtons(type, p) {
     { id: `leave:reason:${p.id}:DENIED`, label: "Ablehnen", style: "danger", emoji: "\u2716\uFE0F" },
     ...typeof p.dashboardUrl === "string" && /^https?:\/\//.test(p.dashboardUrl) ? [{ id: "link", label: "Im Dashboard ansehen", style: "secondary", url: p.dashboardUrl }] : []
   ];
+  if (type === "academy.course" && typeof p.dashboardUrl === "string" && /^https?:\/\//.test(p.dashboardUrl)) return [{ id: "link", label: "Im Dashboard ansehen", style: "secondary", url: p.dashboardUrl }];
   if (/^wanted\./.test(type) && typeof p.dashboardUrl === "string" && /^https?:\/\//.test(p.dashboardUrl)) return [{ id: "link", label: "Im Dashboard ansehen", style: "secondary", url: p.dashboardUrl }];
   const kind2 = type === "qualification.submitted" ? "q" : type === "application.submitted" ? "p" : null;
   if (!kind2 || typeof p.id !== "string") return void 0;
@@ -77516,11 +77528,10 @@ function createVoiceSupport(api2, ops, log = console.error) {
       }
     }
   }
-  async function claim(id, s) {
-    const r = await api2.service("POST", `/bot/voice-support/cases/${id}/claim`, s);
+  async function provision(r, staffId) {
     await applyEdit(r.edit);
     const { case: c, room } = r;
-    if (!room) return okReply("\xDCbernommen.");
+    if (!room) return "\xDCbernommen.";
     let channelId = null, created = false;
     try {
       if (room.ownChannels) channelId = room.ownChannelIds.find((x) => !ops.members(x).length) ?? null;
@@ -77532,12 +77543,23 @@ function createVoiceSupport(api2, ops, log = console.error) {
       log(`voice support: channel failed: ${e instanceof Error ? e.message : e}`);
     }
     const moved = channelId ? await ops.move(c.guildId, c.userId, channelId).catch(() => false) : false;
-    if (channelId && ops.voiceChannelOf(c.guildId, s.discordId)) await ops.move(c.guildId, s.discordId, channelId).catch(() => false);
+    if (channelId && staffId && ops.voiceChannelOf(c.guildId, staffId)) await ops.move(c.guildId, staffId, channelId).catch(() => false);
     const threadId = room.notes && r.edit ? await ops.thread(r.edit.channelId, r.edit.messageId, `Notizen #${c.number}`).catch(() => null) : null;
-    const done = await api2.service("POST", `/bot/voice-support/cases/${id}/channel`, { channelId, created, threadId });
+    const done = await api2.service("POST", `/bot/voice-support/cases/${c.id}/channel`, { channelId, created, threadId });
     await applyEdit(done.edit);
-    if (!channelId) return note(room.ownChannels ? "\u26A0\uFE0F \xDCbernommen \u2013 aber gerade ist keiner der eigenen Support-Kan\xE4le frei. Sprich die Person im Warteraum an." : "\u26A0\uFE0F \xDCbernommen \u2013 der Sprachkanal konnte nicht angelegt werden (fehlt dem Bot \u201EKan\xE4le verwalten\u201C?).");
-    return okReply(`\xDCbernommen: <#${channelId}>${moved ? "" : " \u2013 die Person ist nicht mehr im Sprachkanal und wurde nicht verschoben."}`);
+    if (!channelId) throw new Error(room.ownChannels ? "\u26A0\uFE0F \xDCbernommen \u2013 aber gerade ist keiner der eigenen Support-Kan\xE4le frei. Sprich die Person im Warteraum an." : "\u26A0\uFE0F \xDCbernommen \u2013 der Sprachkanal konnte nicht angelegt werden (fehlt dem Bot \u201EKan\xE4le verwalten\u201C?).");
+    return `\xDCbernommen: <#${channelId}>${moved ? "" : " \u2013 die Person ist nicht mehr im Sprachkanal und wurde nicht verschoben."}`;
+  }
+  async function claim(id, s) {
+    const r = await api2.service("POST", `/bot/voice-support/cases/${id}/claim`, s);
+    return provision(r, s.discordId).then((t) => okReply(t), (e) => note(e.message));
+  }
+  async function applyEffects(p) {
+    if (p.provision) await provision(p.provision, p.staffDiscordId ?? null).catch((e) => log(`voice support: ${e.message}`));
+    if (p.edit) await applyEdit(p.edit);
+    if (p.dm) await safe("DM", ops.dm(p.dm.userId, p.dm.message));
+    if (p.threadPost) await safe("thread log", ops.threadPost(p.threadPost.threadId, p.threadPost.text));
+    if (p.deleteChannelId) await safe("delete channel", ops.deleteChannel(p.deleteChannelId));
   }
   async function interact(c) {
     const [action, id = "", extra] = c.args;
@@ -77585,7 +77607,7 @@ function createVoiceSupport(api2, ops, log = console.error) {
       return fail2(e);
     }
   }
-  return { onVoiceState, interact, clear: () => rooms.clear() };
+  return { onVoiceState, interact, applyEffects, clear: () => rooms.clear() };
 }
 var VOICE_INTERACTION = {
   prefix: "vs",
@@ -82712,7 +82734,7 @@ var schema = external_exports.object({
   BOT_API_TOKEN: external_exports.string().min(32, "BOT_API_TOKEN must be at least 32 characters (same value as in the API)"),
   OUTBOX_POLL_SECONDS: external_exports.coerce.number().int().min(2).max(60).default(5),
   /** Wie oft Teamliste und Gefahrenstatus-Panel mit dem System abgeglichen werden (bearbeitet wird nur bei Änderungen). */
-  LIVE_REFRESH_SECONDS: external_exports.coerce.number().int().min(15).max(3600).default(60)
+  LIVE_REFRESH_SECONDS: external_exports.coerce.number().int().min(5).max(3600).default(5)
 });
 var guildIds = (cfg2) => [...new Set((cfg2.DISCORD_GUILD_ID ?? "").split(/[\s,;]+/).filter(Boolean))];
 function parseDotEnv(text) {
@@ -82829,7 +82851,7 @@ async function pollOnce(api2, send, log = console.log, dm, grantRole, syncRoles,
       }
       continue;
     }
-    if (item.type === "application.ticket" || item.type === "embed.post") {
+    if (item.type === "application.ticket" || item.type === "embed.post" || item.type === "message.decided" || item.type === "voice.effects") {
       try {
         if (!onTask || !await onTask(item.type, item.payload)) throw new Error("tasks not supported");
         await api2.service("POST", `/bot/outbox/${item.id}/ack`, { ok: true });
@@ -82929,7 +82951,9 @@ async function pollOnce(api2, send, log = console.log, dm, grantRole, syncRoles,
       const thread = item.payload.thread === true && /\.submitted$/.test(item.type) ? `Bewerbung ${String(item.payload.number ?? "")}`.slice(0, 100) : void 0;
       const authorUserId = item.type === "leave.requested" && typeof item.payload.discordId === "string" && /^\d{15,25}$/.test(item.payload.discordId) ? item.payload.discordId : void 0;
       const replaceKey = item.type === "danger.changed" ? "danger" : void 0;
-      const opts = pingRoleIds.length || avatarUserId || thread || authorUserId || replaceKey ? { ...pingRoleIds.length ? { pingRoleIds } : {}, ...avatarUserId ? { avatarUserId } : {}, ...thread ? { thread } : {}, ...authorUserId ? { authorUserId } : {}, ...replaceKey ? { replaceKey } : {} } : void 0;
+      const trackKind = { "leave.requested": "l", "application.submitted": "a", "qualification.submitted": "q" }[item.type];
+      const trackKey = trackKind && typeof item.payload.id === "string" && /^[0-9a-f-]{36}$/.test(item.payload.id) ? `msg-${trackKind}-${item.payload.id}` : void 0;
+      const opts = pingRoleIds.length || avatarUserId || thread || authorUserId || replaceKey || trackKey ? { ...pingRoleIds.length ? { pingRoleIds } : {}, ...avatarUserId ? { avatarUserId } : {}, ...thread ? { thread } : {}, ...authorUserId ? { authorUserId } : {}, ...replaceKey ? { replaceKey } : {}, ...trackKey ? { trackKey } : {} } : void 0;
       const results = await Promise.allSettled(channelIds.map((id) => opts ? send(id, embeds, buttons, opts) : send(id, embeds, buttons)));
       const failed = results.flatMap((r, i) => r.status === "rejected" ? [`${channelIds[i]}: ${r.reason instanceof Error ? r.reason.message : r.reason}`] : []);
       failed.forEach((f2) => log(`outbox ${item.id}: send failed for channel ${f2}`));
@@ -83339,7 +83363,7 @@ function joinedAtOf2(m) {
 async function markDecided(message, d) {
   const embeds = message.embeds.map((e, i, all) => {
     const b = import_discord4.EmbedBuilder.from(e).setColor(d.color);
-    if (i === all.length - 1) b.addFields({ name: "Entscheidung", value: d.text.slice(0, 1024) });
+    if (i === all.length - 1) b.setFields([...(e.fields ?? []).filter((f2) => f2.name !== "Entscheidung"), { name: "Entscheidung", value: d.text.slice(0, 1024) }]);
     return b;
   });
   const rows = [];
@@ -83529,6 +83553,11 @@ function wireReady(client0) {
           if (old && old !== msg.id) await ch.messages.delete(old).catch(() => void 0);
           await api.service("PUT", `/bot/state/${key}`, { value: msg.id }).catch((e) => console.error("could not remember message:", e instanceof Error ? e.message : e));
         }
+        if (opts?.trackKey) {
+          const key = opts.trackKey;
+          const prev = await api.service("GET", `/bot/state/${key}`).then((r) => Array.isArray(r.value) ? r.value : [], () => []);
+          await api.service("PUT", `/bot/state/${key}`, { value: [...prev, { channelId, messageId: msg.id }].slice(-10) }).catch((e) => console.error("could not remember message:", e instanceof Error ? e.message : e));
+        }
         if (opts?.thread) await msg.startThread({ name: opts.thread, autoArchiveDuration: 10080 }).catch((e) => console.error("could not create staff thread:", e instanceof Error ? e.message : e));
       },
       cfg.OUTBOX_POLL_SECONDS,
@@ -83543,6 +83572,22 @@ function wireReady(client0) {
         await live.refresh(kind2, { channelId, force: true });
       },
       async (type, p) => {
+        if (type === "voice.effects") {
+          await voiceSupport.applyEffects(p);
+          return true;
+        }
+        if (type === "message.decided") {
+          const key = String(p.key ?? "");
+          if (!/^msg-[laq]-[0-9a-f-]{36}$/.test(key)) throw new Error("invalid key");
+          const spots = await api.service("GET", `/bot/state/${key}`).then((r) => Array.isArray(r.value) ? r.value : []);
+          for (const spot of spots) {
+            const ch = spot.channelId ? await client.channels.fetch(spot.channelId).catch(() => null) : null;
+            if (!ch?.isTextBased() || !("messages" in ch) || !spot.messageId) continue;
+            const msg = await ch.messages.fetch(spot.messageId).catch(() => null);
+            if (msg) await markDecided(msg, { text: String(p.text ?? "Entschieden"), color: typeof p.color === "number" ? p.color : 6583435 });
+          }
+          return true;
+        }
         if (type === "embed.post") {
           const channelId = typeof p.channelId === "string" ? p.channelId : "";
           const ch = await client.channels.fetch(channelId);

@@ -52,7 +52,7 @@ export function voiceReport(guilds: Guild[], since: Map<string, number>): VoiceR
 }
 
 /**
- * Meldet dem Dashboard Teammitglieder (mindestens alle 60 Sekunden und bei Änderungen) und Voice-Channels (bei jeder Änderung).
+ * Meldet dem Dashboard Teammitglieder (alle 5 Sekunden und bei Änderungen) und Voice-Channels (bei jeder Änderung).
  * `members`/`presences`: ob die privilegierten Intents „Server Members“ und „Presence“ verfügbar sind.
  */
 export function startPresenceReporter(client: () => Client, api: Api, opts: { members: boolean; presences: boolean }, log: (m: string) => void = console.log) {
@@ -73,7 +73,7 @@ export function startPresenceReporter(client: () => Client, api: Api, opts: { me
   const pushVoice = async () => { await api.service('PUT', '/bot/voice', { channels: voiceReport(guilds(), since) }); };
 
   let mt: NodeJS.Timeout | undefined, vt: NodeJS.Timeout | undefined;
-  const membersSoon = () => { clearTimeout(mt); mt = setTimeout(() => void pushMembers().catch(fail('members')), 5_000); mt.unref?.(); };
+  const membersSoon = () => { clearTimeout(mt); mt = setTimeout(() => void pushMembers().catch(fail('members')), 1_500); mt.unref?.(); };
   const voiceSoon = () => { clearTimeout(vt); vt = setTimeout(() => void pushVoice().catch(fail('voice')), 1_500); vt.unref?.(); };
 
   const c = client();
@@ -93,9 +93,9 @@ export function startPresenceReporter(client: () => Client, api: Api, opts: { me
     for (const g of guilds()) await g.members.fetch().catch((e) => log(`could not load members of ${g.name}: ${e instanceof Error ? e.message : e}`));
   };
   void loadMembers().then(() => Promise.all([pushMembers().catch(fail('members')), pushVoice().catch(fail('voice'))]));
-  // verbindlich: spätestens alle 60 Sekunden ein frischer Stand
-  setInterval(() => void pushMembers().catch(fail('members')), 60_000).unref();
-  setInterval(() => void pushVoice().catch(fail('voice')), 60_000).unref();
+  // verbindlich: alle 5 Sekunden ein frischer Stand (Dashboard aktualisiert sich im selben Takt)
+  setInterval(() => void pushMembers().catch(fail('members')), 5_000).unref();
+  setInterval(() => void pushVoice().catch(fail('voice')), 5_000).unref();
   c.on('guildCreate', (g) => { if (opts.members) void g.members.fetch().catch(() => undefined).then(membersSoon); });
 
   return { sync: () => Promise.all([pushMembers(), pushVoice()]).then(() => undefined) };

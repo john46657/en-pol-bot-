@@ -10,6 +10,7 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.QualificationsService = void 0;
+const guild_context_1 = require("../common/guild-context");
 const common_1 = require("@nestjs/common");
 const prisma_service_1 = require("../prisma/prisma.service");
 const audit_service_1 = require("../audit/audit.service");
@@ -41,7 +42,7 @@ let QualificationsService = class QualificationsService {
         this.roblox = roblox;
     }
     /** Einstellungen eines Servers (`@<guildId>`) – ohne eigene gilt die gemeinsame Grundeinstellung. */
-    keyOf(base, guildId) { return guildId ? `${base}@${guildId}` : base; }
+    keyOf(base, guildId) { const g = (0, guild_context_1.settingsGuild)(guildId); return g ? `${base}@${g}` : base; } // Gruppe mit geteilten Einstellungen → Haupt-Server
     async read(base, guildId) {
         if (guildId) {
             const own = await this.prisma.systemSetting.findUnique({ where: { key: this.keyOf(base, guildId) } });
@@ -177,6 +178,8 @@ let QualificationsService = class QualificationsService {
                     await this.audit.record(decision_1.LEFT_ACTOR, { action: 'qualifications.application.withdraw', module: 'qualifications', entityType: 'QualificationApplication', entityId: a.id, before: { status: 'OPEN' }, after: { status: 'WITHDRAWN' }, reason: decision_1.LEFT_REASON }, tx);
                 return r.count;
             });
+            if (claimed)
+                await this.discord.markDecided('qualification', a.id, decision_1.LEFT_ACTOR, 'WITHDRAWN', decision_1.LEFT_REASON);
             withdrawn += claimed;
         }
         return { denied, withdrawn };
@@ -225,6 +228,7 @@ let QualificationsService = class QualificationsService {
             discordId: a.discordId, status, number: a.number, unitName: a.unitName, roleIds: roles.add, removeRoleIds: roles.remove, reason: reason || null,
             message: (0, decision_1.decisionMessage)(settings, status === 'ACCEPTED', { applicationName: a.unitName, number: a.number, decider, applicantId: a.discordId, reason }),
         }, { always: true });
+        await this.discord.markDecided('qualification', id, actor, status, reason || null);
         return { id, number: a.number, unitName: a.unitName, status, addedToSek, decidedByName: by?.displayName ?? null, reason: reason || null };
     }
 };

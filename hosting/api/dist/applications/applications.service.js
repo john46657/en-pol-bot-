@@ -10,6 +10,7 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.ApplicationsService = exports.DEFAULT_FORM = void 0;
+const guild_context_1 = require("../common/guild-context");
 const teamchance_service_1 = require("../teamchance/teamchance.service");
 const notify_service_1 = require("../notifications/notify.service");
 const common_1 = require("@nestjs/common");
@@ -53,7 +54,8 @@ let ApplicationsService = class ApplicationsService {
     }
     /** Formular eines Servers (`application.form@<guildId>`), sonst das gemeinsame. */
     async form(guildId) {
-        const own = guildId ? await this.prisma.systemSetting.findUnique({ where: { key: `application.form@${guildId}` } }) : null;
+        const g = (0, guild_context_1.settingsGuild)(guildId);
+        const own = g ? await this.prisma.systemSetting.findUnique({ where: { key: `application.form@${g}` } }) : null;
         const s = own ?? await this.prisma.systemSetting.findUnique({ where: { key: 'application.form' } });
         return s?.value ?? exports.DEFAULT_FORM;
     }
@@ -115,7 +117,8 @@ let ApplicationsService = class ApplicationsService {
     }
     /** Einstellungen der Polizei-Bewerbung (Qualifications/Applications → Setup). */
     async police(guildId) {
-        const own = guildId ? await this.prisma.systemSetting.findUnique({ where: { key: `qualifications.config@${guildId}` } }) : null;
+        const g = (0, guild_context_1.settingsGuild)(guildId);
+        const own = g ? await this.prisma.systemSetting.findUnique({ where: { key: `qualifications.config@${g}` } }) : null;
         const v = (own ?? await this.prisma.systemSetting.findUnique({ where: { key: 'qualifications.config' } }))?.value;
         const p = qualifications_config_1.policeSchema.safeParse(v?.police ?? {});
         return p.success ? p.data : qualifications_config_1.policeSchema.parse({});
@@ -180,6 +183,7 @@ let ApplicationsService = class ApplicationsService {
         await this.decided(actor, after, to, reason || null);
         const by = actor.userId ? await this.prisma.user.findUnique({ where: { id: actor.userId }, select: { displayName: true } }) : null;
         await this.archive(after, to, reason || null, by?.displayName ?? null);
+        await this.discord.markDecided('application', id, actor, to, reason || null);
         return { id, number: after.number, status: to, decidedByName: by?.displayName ?? null, reason: reason || null };
     }
     /** „Action On User Leave“ der Polizei-Bewerbung: offene Bewerbungen einer Person, die den Discord-Server verlassen hat. */
@@ -227,6 +231,9 @@ let ApplicationsService = class ApplicationsService {
                 const by = actor.userId ? await this.prisma.user.findUnique({ where: { id: actor.userId }, select: { displayName: true } }) : null;
                 await this.archive(after, to, null, by?.displayName ?? null); // der interne Grund aus dem Web bleibt intern
             }
+            // Discord-Nachricht anpassen (der interne Grund aus dem Web bleibt intern)
+            if (to === 'ACCEPTED' || to === 'REJECTED' || to === 'WITHDRAWN')
+                await this.discord.markDecided('application', id, actor, to, to === 'WITHDRAWN' ? reason ?? null : null);
             return after;
         });
     }

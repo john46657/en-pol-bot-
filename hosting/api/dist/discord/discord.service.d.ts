@@ -93,6 +93,11 @@ export declare class DiscordService {
         always?: boolean;
     }): Promise<void>;
     /**
+     * Antrags-/Bewerbungsnachricht in Discord nach der Entscheidung anpassen (egal ob im Dashboard oder in Discord entschieden):
+     * Farbe, Feld „Entscheidung“, Annehmen/Ablehnen-Buttons weg. Der Bot hat sich beim Posten gemerkt, wo sie steht (`msg-<art>-<id>`).
+     */
+    markDecided(kind: 'leave' | 'application' | 'qualification', id: string, actor: Actor, outcome: 'ACCEPTED' | 'REJECTED' | 'WITHDRAWN', reason?: string | null): Promise<void>;
+    /**
      * „Ticket mit Bewerber öffnen“ aus dem Dashboard: der Bot legt (wie beim Discord-Button) einen privaten Kanal mit Person, Team-Rolle und dir an.
      * Server: der der Bewerbung, sonst der eingestellte Haupt-Server.
      */

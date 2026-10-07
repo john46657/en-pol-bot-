@@ -9,7 +9,7 @@ import { dutyRoleChanges, pollOnce } from '../src/outbox';
 import type { Platform } from '../src/platform';
 import { robloxLookup } from '../src/roblox';
 import { parseGermanDate } from '../src/commands/sek';
-import { applicationEmbeds, outboxButtons, renderOutbox, renderOutboxEmbeds } from '../src/format';
+import { academyCourseEmbed, applicationEmbeds, outboxButtons, renderOutbox, renderOutboxEmbeds } from '../src/format';
 import { APPLICATION_MS, handleDirectMessage, openApplicantTicket, panelEmbed, resetSessions } from '../src/commands/qualifications';
 
 const ME = '123456789012345678', OTHER = '223456789012345678', GUILD = '323456789012345678', CHANNEL = '423456789012345678';
@@ -648,5 +648,33 @@ describe('embed builder jobs', () => {
     expect(await pollOnce(api, async () => undefined, () => undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, async (type, p) => { seen.push(`${type} ${String(p.channelId)}`); return true; })).toBe(1);
     expect(seen).toEqual(['embed.post 460000000000000001']);
     expect(acks).toEqual([{ ok: true }]);
+  });
+});
+
+describe('decision from the dashboard updates the Discord message', () => {
+  it('message.decided goes to the task runner; requests and applications remember where they were posted', async () => {
+    const LEAVE = '11111111-2222-3333-4444-555555555555';
+    const items = [
+      { id: 'o1', type: 'leave.requested', channelKey: 'duty', payload: { id: LEAVE, number: 'LOA-1', name: 'John', discordId: '223456789012345678', startsAt: new Date().toISOString(), endsAt: new Date(Date.now() + 86_400_000).toISOString(), reason: 'test', channelId: '460000000000000001' } },
+      { id: 'o2', type: 'message.decided', channelKey: 'applications', payload: { key: `msg-l-${LEAVE}`, text: '✅ Angenommen', color: 0x22c55e } },
+    ];
+    const api: Api = {
+      async asUser() { throw new Error('unused'); },
+      async service(_m, path) { if (path === '/bot/config') return {} as never; if (path.startsWith('/bot/outbox?')) return items as never; return {} as never; },
+    };
+    const sent: (string | undefined)[] = [], tasks: string[] = [];
+    await pollOnce(api, async (_ch, _e, _b, opts) => { sent.push(opts?.trackKey); }, () => undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, async (type, p) => { tasks.push(`${type} ${String(p.key)}`); return true; });
+    expect(sent).toEqual([`msg-l-${LEAVE}`]);
+    expect(tasks).toEqual([`message.decided msg-l-${LEAVE}`]);
+  });
+});
+
+describe('academy course announcement', () => {
+  it('shows date, place, pass score and instructor; link to the dashboard', () => {
+    const e = academyCourseEmbed({ title: 'Verkehrskontrolle', description: 'Grundkurs', passScore: 80, when: '2026-10-08T18:00:00.000Z', location: 'Wache', instructorName: 'John' });
+    expect(e.title).toBe('🎓 Akademie: Verkehrskontrolle');
+    expect(e.fields?.map((f) => f.name)).toEqual(['🕒 Termin', '📍 Ort', '🎯 Bestehensgrenze', '👮 Ausbilder']);
+    expect(e.fields?.[0]?.value).toContain(`<t:${Date.parse('2026-10-08T18:00:00.000Z') / 1000}:F>`);
+    expect(outboxButtons('academy.course', { dashboardUrl: 'https://x.de/academy' })?.[0]?.url).toBe('https://x.de/academy');
   });
 });

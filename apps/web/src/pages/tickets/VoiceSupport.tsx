@@ -7,9 +7,10 @@ import { useAuth } from '../../lib/auth';
 import { errText } from '../../lib/tickets';
 import { GuildTag, useGuilds, useServer } from '../../lib/guilds';
 import { useAutosaveDraft } from '../../lib/autosave';
+import { useRealtime } from '../../lib/realtime';
 import { ChannelPicker, ChannelsPicker, RolePicker } from '../../components/DiscordPickers';
 import { Toggle } from '../../components/ApplicationSettings';
-import { Badge, Button, Card, ConfirmDialog, EmptyState, ErrorState, fmt, Input, PageHeader, Select, SkeletonRows, Tabs } from '../../components/ui';
+import { Badge, Button, Card, ConfirmDialog, EmptyState, ErrorState, Field, fmt, Input, Modal, PageHeader, Select, SkeletonRows, Tabs, Textarea } from '../../components/ui';
 
 interface VoiceCase { id: string; number: string; roomName: string; guildId: string; userId: string; userName: string; status: keyof typeof VOICE_CASE_STATUS; claimedByName: string | null; closedByName: string | null; closeReason: string | null; messages: number; rating: number | null; createdAt: string; claimedAt: string | null; closedAt: string | null }
 const TONE = { WAITING: 'warning', CLAIMED: 'success', DECLINED: 'danger', ABANDONED: 'neutral', CLOSED: 'neutral' } as const;
@@ -116,6 +117,39 @@ function RoomEditor({ room, onChange, onBack, onDelete, onPrimary, canManage }: 
   );
 }
 
+const D_GREEN = 'bg-[#248046] text-white hover:bg-[#1a6334]', D_RED = 'bg-[#da373c] text-white hover:bg-[#a12828]', D_GREY = 'bg-[#4e5058] text-white hover:bg-[#6d6f78]';
+/** Wie die Buttons unter der Discord-Meldung: Übernehmen / Ablehnen / Nachricht (übernommen: Nachricht / Schließen). Discord-Teil macht der Bot. */
+function CaseActions({ c, onDone }: { c: VoiceCase; onDone: () => void }) {
+  const [ask, setAsk] = useState<'decline' | 'message' | null>(null);
+  const [text, setText] = useState('');
+  const [err, setErr] = useState<string>();
+  const act = useMutation({
+    mutationFn: (body: object) => api(`/voice-support/cases/${c.id}/action`, { method: 'POST', body }),
+    onSuccess: () => { setAsk(null); setErr(undefined); onDone(); }, onError: (e) => setErr(errText(e)),
+  });
+  if (c.status !== 'WAITING' && c.status !== 'CLAIMED') return null;
+  return (
+    <div className="mt-1 grid gap-1">
+      <div className="flex flex-wrap gap-2">
+        {c.status === 'WAITING' && <Button size="sm" variant="plain" className={D_GREEN} disabled={act.isPending} onClick={() => act.mutate({ action: 'claim' })}>✅ Übernehmen</Button>}
+        {c.status === 'WAITING' && <Button size="sm" variant="plain" className={D_RED} disabled={act.isPending} onClick={() => { setText(''); setAsk('decline'); }}>❌ Ablehnen</Button>}
+        <Button size="sm" variant="plain" className={D_GREY} disabled={act.isPending} onClick={() => { setText(''); setAsk('message'); }}>💬 Nachricht</Button>
+        {c.status === 'CLAIMED' && <Button size="sm" variant="plain" className={D_RED} disabled={act.isPending} onClick={() => act.mutate({ action: 'close' })}>🔒 Schließen</Button>}
+      </div>
+      {err && <p role="alert" className="text-xs text-danger">{err}</p>}
+      <Modal open={!!ask} title={ask === 'decline' ? 'Support-Fall ablehnen' : `Nachricht an ${c.userName}`} onClose={() => setAsk(null)}>
+        <div className="grid gap-3">
+          <Field label={ask === 'decline' ? 'Grund (optional, geht per DM an die Person)' : 'Nachricht (per DM)'}>{(id) => <Textarea id={id} rows={4} maxLength={ask === 'decline' ? 500 : 2000} value={text} onChange={(e) => setText(e.target.value)} />}</Field>
+          <div className="flex justify-end gap-2">
+            <Button variant="secondary" onClick={() => setAsk(null)}>Abbrechen</Button>
+            <Button variant={ask === 'decline' ? 'danger' : 'primary'} disabled={act.isPending || (ask === 'message' && !text.trim())} onClick={() => act.mutate(ask === 'decline' ? { action: 'decline', ...(text.trim() ? { reason: text.trim() } : {}) } : { action: 'message', text: text.trim() })}>{ask === 'decline' ? 'Ablehnen' : 'Senden'}</Button>
+          </div>
+        </div>
+      </Modal>
+    </div>
+  );
+}
+
 const missing = (r: VoiceSupportRoom) => [!/^\d{15,25}$/.test(r.guildId) && 'Server', !r.name.trim() && 'Name', !r.waitingChannelId && 'Warteraum', !r.notifyChannelId && 'Benachrichtigungs-Kanal', !r.teamRoleId && 'Team Rolle', r.ownChannels && !r.ownChannelIds.length && 'eigene Kanäle'].filter(Boolean) as string[];
 
 /** Support → Sprach-Support: Räume einrichten und Fälle ansehen. */
@@ -132,7 +166,8 @@ export function VoiceSupport({ embedded = false }: { embedded?: boolean } = {}) 
   const [open, setOpen] = useState<string>();
   const [del, setDel] = useState<string>();
   const [status, setStatus] = useState('OPEN');
-  const cases = useQuery({ queryKey: ['voice-cases', server, status], queryFn: () => api<VoiceCase[]>('/voice-support/cases', { query: { status } }), enabled: tab === 'Fälle', refetchInterval: 15_000 });
+  const cases = useQuery({ queryKey: ['voice-cases', server, status], queryFn: () => api<VoiceCase[]>('/voice-support/cases', { query: { status } }), enabled: tab === 'Fälle', refetchInterval: 5_000 });
+  useRealtime('tickets', ['voice.case'], [['voice-cases']]); // neue/geänderte Fälle sofort, ohne neu zu laden
   useEffect(() => { if (q.data) setRooms(q.data); }, [q.data]);
   const valid = (rs: VoiceSupportRoom[]) => rs.every((r) => !missing(r).length);
   const save = useMutation({ mutationFn: (rs: VoiceSupportRoom[]) => api<VoiceSupportRoom[]>('/voice-support/rooms', { method: 'PUT', body: rs }), onSuccess: (r) => qc.setQueryData(key, r) });
@@ -177,6 +212,7 @@ export function VoiceSupport({ embedded = false }: { embedded?: boolean } = {}) 
                 <li key={c.id} className="grid gap-1 rounded-lg border border-line p-3 text-sm">
                   <p className="flex flex-wrap items-center gap-2"><code>#{c.number}</code> · {c.roomName} <Badge tone={TONE[c.status]}>{VOICE_CASE_STATUS[c.status]}</Badge><GuildTag id={c.guildId} />{c.rating && <span title="Bewertung">{'⭐'.repeat(c.rating)}</span>}</p>
                   <p className="text-muted">👤 {c.userName} · erstellt {fmt(c.createdAt)}{c.claimedByName && ` · übernommen von ${c.claimedByName}`}{c.closedAt && ` · ${c.status === 'DECLINED' ? 'abgelehnt' : 'beendet'} ${fmt(c.closedAt)}${c.closedByName ? ` von ${c.closedByName}` : ''}`}{c.closeReason && ` (${c.closeReason})`}{c.messages ? ` · ${c.messages} Nachricht(en)` : ''}</p>
+                  {can('ticket.claim') && <CaseActions c={c} onDone={() => void qc.invalidateQueries({ queryKey: ['voice-cases'] })} />}
                 </li>
               ))}</ul>
             )}

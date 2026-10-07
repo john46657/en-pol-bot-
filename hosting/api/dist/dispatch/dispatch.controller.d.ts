@@ -125,6 +125,7 @@ export declare class IncidentsController {
             version: number;
             guildId: string | null;
             type: string | null;
+            serverId: string | null;
             description: string | null;
             priority: string;
             status: string;
@@ -132,7 +133,6 @@ export declare class IncidentsController {
             mapX: number | null;
             mapZ: number | null;
             source: string;
-            serverId: string | null;
             location: string | null;
             dispatcherId: string | null;
             supervisorId: string | null;
@@ -161,9 +161,9 @@ export declare class IncidentsController {
                     icon: string | null;
                     status: string;
                     callsign: string;
+                    notes: string | null;
                     mapX: number | null;
                     mapZ: number | null;
-                    notes: string | null;
                     discordRoleId: string | null;
                     erlcTeam: string | null;
                     operational: boolean;
@@ -183,6 +183,7 @@ export declare class IncidentsController {
             version: number;
             guildId: string | null;
             type: string | null;
+            serverId: string | null;
             description: string | null;
             priority: string;
             status: string;
@@ -190,7 +191,6 @@ export declare class IncidentsController {
             mapX: number | null;
             mapZ: number | null;
             source: string;
-            serverId: string | null;
             location: string | null;
             dispatcherId: string | null;
             supervisorId: string | null;
@@ -228,6 +228,7 @@ export declare class IncidentsController {
         version: number;
         guildId: string | null;
         type: string | null;
+        serverId: string | null;
         description: string | null;
         priority: string;
         status: string;
@@ -235,7 +236,6 @@ export declare class IncidentsController {
         mapX: number | null;
         mapZ: number | null;
         source: string;
-        serverId: string | null;
         location: string | null;
         dispatcherId: string | null;
         supervisorId: string | null;
@@ -254,6 +254,7 @@ export declare class IncidentsController {
         version: number;
         guildId: string | null;
         type: string | null;
+        serverId: string | null;
         description: string | null;
         priority: string;
         status: string;
@@ -261,7 +262,6 @@ export declare class IncidentsController {
         mapX: number | null;
         mapZ: number | null;
         source: string;
-        serverId: string | null;
         location: string | null;
         dispatcherId: string | null;
         supervisorId: string | null;
@@ -293,9 +293,9 @@ export declare class DispatchController {
         icon: string | null;
         status: string;
         callsign: string;
+        notes: string | null;
         mapX: number | null;
         mapZ: number | null;
-        notes: string | null;
         discordRoleId: string | null;
         erlcTeam: string | null;
         operational: boolean;
@@ -312,9 +312,9 @@ export declare class DispatchController {
         icon: string | null;
         status: string;
         callsign: string;
+        notes: string | null;
         mapX: number | null;
         mapZ: number | null;
-        notes: string | null;
         discordRoleId: string | null;
         erlcTeam: string | null;
         operational: boolean;
@@ -333,9 +333,9 @@ export declare class DispatchController {
         icon: string | null;
         status: string;
         callsign: string;
+        notes: string | null;
         mapX: number | null;
         mapZ: number | null;
-        notes: string | null;
         discordRoleId: string | null;
         erlcTeam: string | null;
         operational: boolean;
@@ -359,9 +359,9 @@ export declare class DispatchController {
         icon: string | null;
         status: string;
         callsign: string;
+        notes: string | null;
         mapX: number | null;
         mapZ: number | null;
-        notes: string | null;
         discordRoleId: string | null;
         erlcTeam: string | null;
         operational: boolean;
@@ -384,6 +384,7 @@ export declare class DispatchController {
         version: number;
         guildId: string | null;
         type: string | null;
+        serverId: string | null;
         description: string | null;
         priority: string;
         status: string;
@@ -391,7 +392,6 @@ export declare class DispatchController {
         mapX: number | null;
         mapZ: number | null;
         source: string;
-        serverId: string | null;
         location: string | null;
         dispatcherId: string | null;
         supervisorId: string | null;
@@ -410,6 +410,7 @@ export declare class DispatchController {
         version: number;
         guildId: string | null;
         type: string | null;
+        serverId: string | null;
         description: string | null;
         priority: string;
         status: string;
@@ -417,7 +418,6 @@ export declare class DispatchController {
         mapX: number | null;
         mapZ: number | null;
         source: string;
-        serverId: string | null;
         location: string | null;
         dispatcherId: string | null;
         supervisorId: string | null;
@@ -436,6 +436,7 @@ export declare class DispatchController {
         version: number;
         guildId: string | null;
         type: string | null;
+        serverId: string | null;
         description: string | null;
         priority: string;
         status: string;
@@ -443,7 +444,6 @@ export declare class DispatchController {
         mapX: number | null;
         mapZ: number | null;
         source: string;
-        serverId: string | null;
         location: string | null;
         dispatcherId: string | null;
         supervisorId: string | null;

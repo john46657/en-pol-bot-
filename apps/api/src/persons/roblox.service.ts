@@ -1,3 +1,4 @@
+import { recordWhere } from '../common/guild-context';
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 
@@ -45,7 +46,7 @@ export class RobloxService {
     }
     if (!profile) return null;
     const person = await this.prisma.person.findFirst({
-      where: { OR: [{ robloxUserId: profile.id }, { robloxUsername: { equals: profile.name, mode: 'insensitive' } }] },
+      where: { ...recordWhere(), OR: [{ robloxUserId: profile.id }, { robloxUsername: { equals: profile.name, mode: 'insensitive' } }] },
       orderBy: { robloxUserId: { sort: 'asc', nulls: 'last' } }, select: { id: true, robloxUsername: true },
     });
     return { ...profile, person };

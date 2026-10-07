@@ -30,6 +30,7 @@ let SekController = class SekController {
     /** Eigener Stand: Mitglied? (für Web und Bot) */
     me(a) { return this.s.me(a.userId); }
     members() { return this.s.members(); }
+    candidates() { return this.s.candidates(); }
     add(a, b) { return this.s.addMember(a, b); }
     remove(a, b) { return this.s.removeMember(a, b); }
     reports(q) { return this.s.reports(q.limit); }
@@ -51,6 +52,13 @@ __decorate([
     __metadata("design:paramtypes", []),
     __metadata("design:returntype", void 0)
 ], SekController.prototype, "members", null);
+__decorate([
+    (0, common_1.Get)('candidates'),
+    (0, decorators_1.RequirePermission)('sek.manage'),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", []),
+    __metadata("design:returntype", void 0)
+], SekController.prototype, "candidates", null);
 __decorate([
     (0, common_1.Post)('members'),
     (0, common_1.HttpCode)(200),

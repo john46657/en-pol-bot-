@@ -34,7 +34,9 @@ exports.SETTING_SCHEMAS = {
     'retention.readNotificationDays': zod_1.z.number().int().min(7).max(3650),
     'dashboard.defaultLayout': zod_1.z.array(zod_1.z.object({ widget: zod_1.z.string().max(40), visible: zod_1.z.boolean(), order: zod_1.z.number().int() })).max(50),
     'studio.customFields': custom_fields_1.customFieldsConfig,
-    'theme.accent': zod_1.z.enum(studio_service_1.ACCENTS),
+    'theme.accent': zod_1.z.union([zod_1.z.enum(studio_service_1.ACCENTS), zod_1.z.string().regex(/^#[0-9a-fA-F]{6}$/, 'Farbe als #rrggbb')]),
+    /** Eigene Akzentfarben (Studio → Design → „Eigene Farbe hinzufügen“). */
+    'theme.customAccents': zod_1.z.array(zod_1.z.object({ name: zod_1.z.string().trim().min(1).max(30), hex: zod_1.z.string().regex(/^#[0-9a-fA-F]{6}$/, 'Farbe als #rrggbb') })).max(24),
     'discord.channels': zod_1.z.object({ guildId: idList(), dispatch: idList(), wanted: idList(), announcements: idList(), applications: idList(), danger: idList(), sek: idList(), qualifications: idList(), duty: idList(), teamlist: singleId(), tickets: singleId(), staffRole: singleId(), radioRole: singleId(), sekRole: singleId(), dutyRole: idList(), breakRole: idList(), trainingRole: idList(), adminDutyRole: idList() }),
     'team.rankOrder': zod_1.z.array(zod_1.z.string().trim().min(1).max(64)).max(50),
     /** Teams und Büros (Dienstgrade: `team.rankOrder`) – Auswahl in Personalakten und Filter der Teamliste. */
@@ -60,8 +62,11 @@ let AdminService = class AdminService {
         return { settings: Object.fromEntries(rows.map((r) => [r.key, r.value])), allowedKeys: Object.keys(exports.SETTING_SCHEMAS), serverScoped: guild_context_1.SERVER_SCOPED_SETTINGS };
     }
     /** `key@<guildId>`: Server-eigener Wert (nur für Einstellungen, die je Server getrennt sein dürfen). */
-    async setSetting(actor, key, value) {
-        const [base, guild] = key.split('@');
+    async setSetting(actor, rawKey, value) {
+        const [base, rawGuild] = rawKey.split('@');
+        // Gruppe mit geteilten Einstellungen (Server-Verbund): gespeichert wird beim Haupt-Server der Gruppe
+        const guild = rawGuild !== undefined && /^\d{15,25}$/.test(rawGuild) ? (0, guild_context_1.settingsGuild)(rawGuild) ?? rawGuild : rawGuild;
+        const key = guild !== undefined ? `${base}@${guild}` : base;
         if (guild !== undefined && (!/^\d{15,25}$/.test(guild) || !guild_context_1.SERVER_SCOPED_SETTINGS.includes(base)))
             throw new errors_1.AppError('VALIDATION_FAILED', `Die Einstellung „${base}“ kann nicht je Server gesetzt werden.`);
         const schema = exports.SETTING_SCHEMAS[base];

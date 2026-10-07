@@ -17,8 +17,8 @@ export function CadDashboard() {
   const nav = useNavigate();
   const { cad, set } = useCadPrefs();
   const [editing, setEditing] = useState(false);
-  const q = useQuery({ queryKey: ['cad-overview'], queryFn: () => api<CadOverview>('/cad/overview'), refetchInterval: 30_000 });
-  const map = useQuery({ queryKey: ['cad-map'], queryFn: () => api<CadMapData>('/cad/map'), refetchInterval: 15_000 });
+  const q = useQuery({ queryKey: ['cad-overview'], queryFn: () => api<CadOverview>('/cad/overview'), refetchInterval: 5_000 });
+  const map = useQuery({ queryKey: ['cad-map'], queryFn: () => api<CadMapData>('/cad/map'), refetchInterval: 5_000 });
   if (q.isLoading) return <SkeletonRows />;
   if (q.error || !q.data) return <ErrorState error={q.error} onRetry={() => void q.refetch()} />;
   const d = q.data, cfg = d.config;

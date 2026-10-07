@@ -18,7 +18,7 @@ Nur wer die **Team-Rolle** des Raums hat (oder Server-Admin ist), kann Fälle ü
 ## Raum-Einstellungen
 Name, aktiv, Warteraum, Benachrichtigungs-Kanal, Team-Rolle (Pflicht) · Support-Kanal-Prefix · Support-Notizen · eigene Kanäle verwenden (Liste von Sprachkanälen) · **Zeiten** (Tage + von/bis, deutsche Zeit; „bis“ vor „von“ = über Mitternacht; ohne Zeiten immer geöffnet – außerhalb bekommt die Person die Zeiten per DM, das Team wird nicht gepingt) · Bewertungen · **Wartemusik** (Einstellung und „Primär setzen“ schon vorhanden, die Wiedergabe kommt in einem späteren Update).
 
-Im Tab **Fälle** stehen alle Fälle mit Status, Bearbeiter, Nachrichten und Bewertung.
+Im Tab **Fälle** stehen alle Fälle mit Status, Bearbeiter, Nachrichten und Bewertung – **live** (neue und geänderte Fälle erscheinen sofort, ohne die Seite neu zu laden). Mit dem Recht `ticket.claim` gibt es dort dieselben Buttons wie in Discord: **Übernehmen**, **Ablehnen** (optionaler Grund), **Nachricht** und nach der Übernahme **Schließen**. Den Discord-Teil (Kanal anlegen, verschieben, DM, Meldung anpassen) erledigt der Bot gleich danach; bist du mit Discord verknüpft und in einem Sprachkanal, wirst du mitverschoben.
 
 ## Bot-Rechte
 „Kanäle verwalten“, „Mitglieder verschieben“, „Öffentliche Threads erstellen“ (für Notizen) und Zugriff auf Warteraum und Benachrichtigungs-Kanal. Keine privilegierten Intents nötig.

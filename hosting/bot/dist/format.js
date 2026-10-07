@@ -9,6 +9,7 @@ exports.humanDuration = humanDuration;
 exports.leaveDecisionText = leaveDecisionText;
 exports.leaveDirectEmbed = leaveDirectEmbed;
 exports.renderOutboxEmbeds = renderOutboxEmbeds;
+exports.academyCourseEmbed = academyCourseEmbed;
 exports.outboxButtons = outboxButtons;
 exports.qualificationDecisionText = qualificationDecisionText;
 exports.applicationDecisionText = applicationDecisionText;
@@ -241,8 +242,21 @@ function renderOutboxEmbeds(type, p) {
         last.fields = [{ name: 'Entscheidung', value: (0, exports.clip)(`${accepted ? '✅ Angenommen' : '❌ Abgelehnt'}${p.decidedByName ? ` von ${(0, exports.plain)(p.decidedByName)}` : ''}${p.reason ? `\n**Grund:** ${(0, exports.plain)(p.reason)}` : ''}`, 1024) }];
         return embeds;
     }
+    if (type === 'academy.course')
+        return [academyCourseEmbed(p)];
     const e = renderOutbox(type, p);
     return e ? [e] : null;
+}
+/** Ankündigung eines Akademie-Kurses (Rollen-Ping kommt über `pingRoleIds`). */
+function academyCourseEmbed(p) {
+    const when = typeof p.when === 'string' && !Number.isNaN(Date.parse(p.when)) ? Math.floor(Date.parse(p.when) / 1000) : null;
+    const fields = [
+        ...(when ? [{ name: '🕒 Termin', value: `<t:${when}:F> (<t:${when}:R>)`, inline: true }] : []),
+        ...(p.location ? [{ name: '📍 Ort', value: (0, exports.clip)((0, exports.plain)(p.location), 1024), inline: true }] : []),
+        { name: '🎯 Bestehensgrenze', value: `${Number(p.passScore) || 0} Punkte`, inline: true },
+        ...(p.instructorName ? [{ name: '👮 Ausbilder', value: (0, exports.clip)((0, exports.plain)(p.instructorName), 1024), inline: true }] : []),
+    ];
+    return { title: (0, exports.clip)(`🎓 Akademie: ${String(p.title ?? 'Kurs')}`, 256), color: exports.COLORS.info, ...(p.description ? { description: (0, exports.clip)(String(p.description), 4000) } : {}), fields, footer: 'Akademie · EN Polizei' };
 }
 /** Buttons unter Channel-Benachrichtigungen: Annehmen/Ablehnen (auch mit Grund), Verlauf, Ticket, Dashboard. */
 function outboxButtons(type, p) {
@@ -251,6 +265,8 @@ function outboxButtons(type, p) {
             { id: `leave:decide:${p.id}:APPROVED`, label: 'Annehmen', style: 'success', emoji: '✔️' }, { id: `leave:reason:${p.id}:DENIED`, label: 'Ablehnen', style: 'danger', emoji: '✖️' },
             ...(typeof p.dashboardUrl === 'string' && /^https?:\/\//.test(p.dashboardUrl) ? [{ id: 'link', label: 'Im Dashboard ansehen', style: 'secondary', url: p.dashboardUrl }] : []),
         ];
+    if (type === 'academy.course' && typeof p.dashboardUrl === 'string' && /^https?:\/\//.test(p.dashboardUrl))
+        return [{ id: 'link', label: 'Im Dashboard ansehen', style: 'secondary', url: p.dashboardUrl }];
     // Fahndung / Einsatz: Link ins Dashboard
     if (/^wanted\./.test(type) && typeof p.dashboardUrl === 'string' && /^https?:\/\//.test(p.dashboardUrl))
         return [{ id: 'link', label: 'Im Dashboard ansehen', style: 'secondary', url: p.dashboardUrl }];

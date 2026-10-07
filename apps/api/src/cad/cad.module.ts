@@ -5,12 +5,13 @@ import { CadService } from './cad.service';
 import { CadConfigService } from './cad-config.service';
 import { CadNotifyService } from './cad-notify.service';
 import { ErlcService } from './erlc.service';
+import { ErlcSyncService } from './erlc-sync.service';
 
 /** CAD-Leitstelle + ER:LC-Integration. Der ER:LC-Abruf läuft ausschließlich hier im Backend. */
 @Module({
   imports: [MediaModule],
   controllers: [CadController, ErlcController],
-  providers: [CadService, CadConfigService, CadNotifyService, ErlcService],
+  providers: [CadService, CadConfigService, CadNotifyService, ErlcService, ErlcSyncService],
   exports: [CadService, CadConfigService, ErlcService],
 })
 export class CadModule implements OnApplicationBootstrap, OnModuleDestroy {

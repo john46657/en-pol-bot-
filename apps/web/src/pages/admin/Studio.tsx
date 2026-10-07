@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, type ReactNode } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useAutosaveDraft } from '../../lib/autosave';
 import { api, ApiError } from '../../lib/api';
@@ -9,7 +9,7 @@ import { WorkflowEditor } from '../../components/WorkflowEditor';
 
 type CF = StudioConfig['customFields'];
 const TYPES: CustomFieldDef['type'][] = ['text', 'number', 'select', 'date'];
-const ACCENT_LABELS: Record<string, string> = { blue: 'Blau', green: 'Grün', amber: 'Bernstein', red: 'Rot', cyan: 'Cyan', violet: 'Violett' };
+const ACCENT_LABELS: Record<string, string> = { blue: 'Blau', green: 'Grün', amber: 'Bernstein', red: 'Rot', cyan: 'Cyan', violet: 'Violett', orange: 'Orange', pink: 'Pink', indigo: 'Indigo', teal: 'Petrol', lime: 'Limette', sky: 'Himmelblau', rose: 'Rosé', emerald: 'Smaragd', gold: 'Gold', slate: 'Schiefer' };
 const TYPE_LABELS: Record<CustomFieldDef['type'], string> = { text: 'Text', number: 'Zahl', select: 'Auswahl', date: 'Datum' };
 
 /** Studio: Custom Fields (Personen/Fahrzeuge), Theme-Akzent und Workflows (Automationen). Bewerbungsfragen: Applications → Setup. */
@@ -73,17 +73,51 @@ function CustomFields({ manage, onSave, busy }: { manage: boolean; onSave: (v: C
 
 function Theme({ manage, onSave }: { manage: boolean; onSave: (v: string) => void }) {
   const studio = useStudio();
+  const qc = useQueryClient();
   const current = studio.data?.theme.accent ?? 'blue';
+  const custom = studio.data?.theme.customAccents ?? [];
+  const [name, setName] = useState('');
+  const [hex, setHex] = useState('#ff6b00');
+  const [err, setErr] = useState<string>();
+  const saveCustom = useMutation({
+    mutationFn: (list: { name: string; hex: string }[]) => api('/admin/settings/theme.customAccents', { method: 'PUT', body: { value: list } }),
+    onSuccess: () => { setErr(undefined); void qc.invalidateQueries({ queryKey: ['studio-config'] }); }, onError: (e) => setErr(e instanceof ApiError ? e.message : 'Fehlgeschlagen'),
+  });
+  const chip = (key: string, label: string, color: string, extra?: ReactNode) => (
+    <span key={key} className={`flex items-center rounded border ${current.toLowerCase() === key.toLowerCase() ? 'border-fg' : 'border-line'}`}>
+      <button role="radio" aria-checked={current.toLowerCase() === key.toLowerCase()} disabled={!manage} onClick={() => onSave(key)} className="flex items-center gap-2 px-3 py-1.5 text-sm">
+        <span aria-hidden className="size-3 rounded-full" style={{ background: color }} />{label}
+      </button>
+      {extra}
+    </span>
+  );
+  const add = () => {
+    const n = name.trim() || hex.toUpperCase();
+    if (custom.some((c) => c.hex.toLowerCase() === hex.toLowerCase())) { setErr('Diese Farbe gibt es schon.'); return; }
+    saveCustom.mutate([...custom, { name: n.slice(0, 30), hex }]);
+    setName('');
+  };
   return (
     <Card title="Akzentfarbe">
+      <p className="mb-2 text-xs font-semibold uppercase text-muted">Vorgaben</p>
       <div className="flex flex-wrap gap-2" role="radiogroup" aria-label="Akzentfarbe">
-        {Object.entries(ACCENTS).map(([name, hex]) => (
-          <button key={name} role="radio" aria-checked={current === name} disabled={!manage} onClick={() => onSave(name)} className={`flex items-center gap-2 rounded border px-3 py-1.5 text-sm ${current === name ? 'border-fg' : 'border-line'}`}>
-            <span aria-hidden className="size-3 rounded-full" style={{ background: hex }} />{ACCENT_LABELS[name] ?? name}
-          </button>
-        ))}
+        {Object.entries(ACCENTS).map(([key, color]) => chip(key, ACCENT_LABELS[key] ?? key, color))}
       </div>
-      <p className="mt-3 text-xs text-muted">Die Oberfläche ist immer dunkel; nur die Akzentfarbe ist einstellbar.</p>
+      <p className="mb-2 mt-4 text-xs font-semibold uppercase text-muted">Eigene Farben</p>
+      <div className="flex flex-wrap gap-2" role="radiogroup" aria-label="Eigene Akzentfarben">
+        {!custom.length && <span className="text-sm text-muted">Noch keine eigenen Farben.</span>}
+        {custom.map((c) => chip(c.hex, c.name, c.hex, manage && <button type="button" aria-label={`${c.name} entfernen`} className="px-2 text-muted hover:text-danger" onClick={() => saveCustom.mutate(custom.filter((x) => x.hex !== c.hex))}>×</button>))}
+      </div>
+      {manage && (
+        <div className="mt-3 flex flex-wrap items-center gap-2">
+          <input type="color" aria-label="Neue Farbe" value={hex} onChange={(e) => setHex(e.target.value)} className="h-9 w-12 rounded border border-line bg-transparent" />
+          <Input aria-label="Name der Farbe" className="w-48" maxLength={30} placeholder="Name, z. B. Polizei-Blau" value={name} onChange={(e) => setName(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); add(); } }} />
+          <Button size="sm" variant="secondary" disabled={saveCustom.isPending || custom.length >= 24} onClick={add}>+ Eigene Farbe hinzufügen</Button>
+          <Button size="sm" disabled={saveCustom.isPending} onClick={() => { add(); onSave(hex); }}>Hinzufügen & verwenden</Button>
+        </div>
+      )}
+      {err && <p role="alert" className="mt-2 text-sm text-danger">{err}</p>}
+      <p className="mt-3 text-xs text-muted">Gilt für alle Benutzer dieses Servers (eigene Farbe in „Persönlich“ hat Vorrang). Auf hellen Farben wird die Schrift automatisch dunkel.</p>
     </Card>
   );
 }

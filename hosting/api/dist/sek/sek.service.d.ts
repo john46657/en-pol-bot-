@@ -24,6 +24,15 @@ export declare class SekService {
         rank: string | null;
         userId: string;
     }[]>;
+    /** Wer hinzugefügt werden kann: alle aktiven Benutzer, die noch nicht im SEK sind (mit Dienstnummer/Dienstgrad, falls vorhanden). */
+    candidates(): Promise<{
+        userId: string;
+        name: string;
+        username: string;
+        callsign: string | null;
+        rank: string | null;
+        discordLinked: boolean;
+    }[]>;
     addMember(actor: Actor, t: SekTarget): Promise<{
         userId: string;
         displayName: string;

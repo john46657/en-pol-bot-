@@ -228,8 +228,21 @@ export function renderOutboxEmbeds(type: string, p: Record<string, unknown>): Em
     last.fields = [{ name: 'Entscheidung', value: clip(`${accepted ? '✅ Angenommen' : '❌ Abgelehnt'}${p.decidedByName ? ` von ${plain(p.decidedByName)}` : ''}${p.reason ? `\n**Grund:** ${plain(p.reason)}` : ''}`, 1024) }];
     return embeds;
   }
+  if (type === 'academy.course') return [academyCourseEmbed(p)];
   const e = renderOutbox(type, p);
   return e ? [e] : null;
+}
+
+/** Ankündigung eines Akademie-Kurses (Rollen-Ping kommt über `pingRoleIds`). */
+export function academyCourseEmbed(p: Record<string, unknown>): EmbedData {
+  const when = typeof p.when === 'string' && !Number.isNaN(Date.parse(p.when)) ? Math.floor(Date.parse(p.when) / 1000) : null;
+  const fields = [
+    ...(when ? [{ name: '🕒 Termin', value: `<t:${when}:F> (<t:${when}:R>)`, inline: true }] : []),
+    ...(p.location ? [{ name: '📍 Ort', value: clip(plain(p.location), 1024), inline: true }] : []),
+    { name: '🎯 Bestehensgrenze', value: `${Number(p.passScore) || 0} Punkte`, inline: true },
+    ...(p.instructorName ? [{ name: '👮 Ausbilder', value: clip(plain(p.instructorName), 1024), inline: true }] : []),
+  ];
+  return { title: clip(`🎓 Akademie: ${String(p.title ?? 'Kurs')}`, 256), color: COLORS.info, ...(p.description ? { description: clip(String(p.description), 4000) } : {}), fields, footer: 'Akademie · EN Polizei' };
 }
 
 /** Buttons unter Channel-Benachrichtigungen: Annehmen/Ablehnen (auch mit Grund), Verlauf, Ticket, Dashboard. */
@@ -238,6 +251,7 @@ export function outboxButtons(type: string, p: Record<string, unknown>): ButtonS
     { id: `leave:decide:${p.id}:APPROVED`, label: 'Annehmen', style: 'success', emoji: '✔️' }, { id: `leave:reason:${p.id}:DENIED`, label: 'Ablehnen', style: 'danger', emoji: '✖️' },
     ...(typeof p.dashboardUrl === 'string' && /^https?:\/\//.test(p.dashboardUrl) ? [{ id: 'link', label: 'Im Dashboard ansehen', style: 'secondary' as const, url: p.dashboardUrl }] : []),
   ];
+  if (type === 'academy.course' && typeof p.dashboardUrl === 'string' && /^https?:\/\//.test(p.dashboardUrl)) return [{ id: 'link', label: 'Im Dashboard ansehen', style: 'secondary', url: p.dashboardUrl }];
   // Fahndung / Einsatz: Link ins Dashboard
   if (/^wanted\./.test(type) && typeof p.dashboardUrl === 'string' && /^https?:\/\//.test(p.dashboardUrl)) return [{ id: 'link', label: 'Im Dashboard ansehen', style: 'secondary', url: p.dashboardUrl }];
   const kind = type === 'qualification.submitted' ? 'q' : type === 'application.submitted' ? 'p' : null;

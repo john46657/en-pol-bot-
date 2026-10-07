@@ -109,3 +109,15 @@ describe('voice support in the bot', () => {
     expect(done).toEqual([`edit ${NOTIFY} M1`, 'delete V1', `dm ${USER}`]);
   });
 });
+
+describe('actions from the dashboard (outbox voice.effects)', () => {
+  it('claim from the dashboard provisions the channel; decline/message/close effects are executed', async () => {
+    const { vs, done, calls } = setup({ 'POST /bot/voice-support/cases/': { edit } });
+    await vs.applyEffects({ provision: { case: { id: CASE, number: 'S-ABC', userId: USER, userName: 'john', guildId: G }, room: { ...room, notes: false }, edit }, staffDiscordId: null });
+    expect(done).toEqual([`edit ${NOTIFY} M1`, `create 🎧 john near ${WAIT} team ${TEAM}`, `move ${USER} V1`, `edit ${NOTIFY} M1`]);
+    expect(calls).toContain(`POST /bot/voice-support/cases/${CASE}/channel {"channelId":"V1","created":true,"threadId":null}`);
+    done.length = 0;
+    await vs.applyEffects({ edit, dm: { userId: USER, message: { embeds: [] } }, threadPost: { threadId: 'T1', text: 'hi' }, deleteChannelId: 'V1' });
+    expect(done).toEqual([`edit ${NOTIFY} M1`, `dm ${USER}`, 'log T1 hi', 'delete V1']);
+  });
+});

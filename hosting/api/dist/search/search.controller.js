@@ -48,9 +48,9 @@ let SearchController = class SearchController {
         const take = 8;
         const jobs = [];
         if (allowed('persons.view'))
-            jobs.push(this.prisma.person.findMany({ where: { status: 'ACTIVE', OR: [{ robloxUsername: ci(term) }, { robloxUserId: term }, { aliases: { has: term } }] }, take }).then((r) => r.map((x) => ({ type: 'person', id: x.id, label: x.robloxUsername, sub: x.robloxUserId ?? undefined }))));
+            jobs.push(this.prisma.person.findMany({ where: { ...(0, guild_context_1.recordWhere)(), status: 'ACTIVE', OR: [{ robloxUsername: ci(term) }, { robloxUserId: term }, { aliases: { has: term } }] }, take }).then((r) => r.map((x) => ({ type: 'person', id: x.id, label: x.robloxUsername, sub: x.robloxUserId ?? undefined }))));
         if (allowed('vehicles.view'))
-            jobs.push(this.prisma.vehicle.findMany({ where: { plate: { contains: upper.replace(/\s+/g, '') } }, take }).then((r) => r.map((x) => ({ type: 'vehicle', id: x.id, label: x.plate, sub: x.model ?? undefined }))));
+            jobs.push(this.prisma.vehicle.findMany({ where: { ...(0, guild_context_1.recordWhere)(), plate: { contains: upper.replace(/\s+/g, '') } }, take }).then((r) => r.map((x) => ({ type: 'vehicle', id: x.id, label: x.plate, sub: x.model ?? undefined }))));
         if (allowed('incidents.view'))
             jobs.push(this.prisma.incident.findMany({ where: { OR: [{ number: { contains: upper } }, { title: ci(term) }] }, take }).then((r) => r.map((x) => ({ type: 'incident', id: x.id, label: x.number, sub: x.title }))));
         if (allowed('reports.view')) {

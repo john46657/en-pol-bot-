@@ -43,12 +43,12 @@ export declare class TicketsService {
                 robloxUsername: string;
                 updatedAt: Date;
                 version: number;
+                serverId: string | null;
                 createdById: string | null;
                 status: string;
                 custom: import("@prisma/client/runtime/library").JsonValue | null;
-                serverId: string | null;
-                notes: string | null;
                 aliases: string[];
+                notes: string | null;
             };
             legalCode: {
                 id: string;

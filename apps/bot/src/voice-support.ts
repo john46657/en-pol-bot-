@@ -75,24 +75,36 @@ export function createVoiceSupport(api: Api, ops: VoiceOps, log: (m: string) => 
     }
   }
 
-  /** Übernehmen: Kanal bereitstellen (eigener freier Kanal oder neu), Person + Bearbeiter verschieben, Notizen-Thread. */
-  async function claim(id: string, s: Staff): Promise<Reply> {
-    const r = await api.service<Claim>('POST', `/bot/voice-support/cases/${id}/claim`, s);
+  /** Nach dem Übernehmen: Kanal bereitstellen (eigener freier Kanal oder neu), Person + Bearbeiter verschieben, Notizen-Thread. */
+  async function provision(r: Claim, staffId: string | null): Promise<string> {
     await applyEdit(r.edit);
     const { case: c, room } = r;
-    if (!room) return okReply('Übernommen.');
+    if (!room) return 'Übernommen.';
     let channelId: string | null = null, created = false;
     try {
       if (room.ownChannels) channelId = room.ownChannelIds.find((x) => !ops.members(x).length) ?? null;
       else { channelId = await ops.createVoice({ guildId: c.guildId, name: clip(`${room.channelPrefix}${c.userName}`, 100), nearChannelId: room.waitingChannelId, userId: c.userId, teamRoleId: room.teamRoleId }); created = true; }
     } catch (e) { log(`voice support: channel failed: ${e instanceof Error ? e.message : e}`); }
     const moved = channelId ? await ops.move(c.guildId, c.userId, channelId).catch(() => false) : false;
-    if (channelId && ops.voiceChannelOf(c.guildId, s.discordId)) await ops.move(c.guildId, s.discordId, channelId).catch(() => false);
+    if (channelId && staffId && ops.voiceChannelOf(c.guildId, staffId)) await ops.move(c.guildId, staffId, channelId).catch(() => false);
     const threadId = room.notes && r.edit ? await ops.thread(r.edit.channelId, r.edit.messageId, `Notizen #${c.number}`).catch(() => null) : null;
-    const done = await api.service<{ edit: Edit }>('POST', `/bot/voice-support/cases/${id}/channel`, { channelId, created, threadId });
+    const done = await api.service<{ edit: Edit }>('POST', `/bot/voice-support/cases/${c.id}/channel`, { channelId, created, threadId });
     await applyEdit(done.edit);
-    if (!channelId) return note(room.ownChannels ? '⚠️ Übernommen – aber gerade ist keiner der eigenen Support-Kanäle frei. Sprich die Person im Warteraum an.' : '⚠️ Übernommen – der Sprachkanal konnte nicht angelegt werden (fehlt dem Bot „Kanäle verwalten“?).');
-    return okReply(`Übernommen: <#${channelId}>${moved ? '' : ' – die Person ist nicht mehr im Sprachkanal und wurde nicht verschoben.'}`);
+    if (!channelId) throw new Error(room.ownChannels ? '⚠️ Übernommen – aber gerade ist keiner der eigenen Support-Kanäle frei. Sprich die Person im Warteraum an.' : '⚠️ Übernommen – der Sprachkanal konnte nicht angelegt werden (fehlt dem Bot „Kanäle verwalten“?).');
+    return `Übernommen: <#${channelId}>${moved ? '' : ' – die Person ist nicht mehr im Sprachkanal und wurde nicht verschoben.'}`;
+  }
+  async function claim(id: string, s: Staff): Promise<Reply> {
+    const r = await api.service<Claim>('POST', `/bot/voice-support/cases/${id}/claim`, s);
+    return provision(r, s.discordId).then((t) => okReply(t), (e: Error) => note(e.message));
+  }
+
+  /** Aufträge aus dem Dashboard (Outbox `voice.effects`): Übernehmen bereitstellen, Meldung ändern, DM, Notiz, Kanal löschen. */
+  async function applyEffects(p: { provision?: Claim; staffDiscordId?: string | null; edit?: Edit; dm?: { userId: string; message: MessageSpec }; threadPost?: { threadId: string; text: string }; deleteChannelId?: string | null }) {
+    if (p.provision) await provision(p.provision, p.staffDiscordId ?? null).catch((e: Error) => log(`voice support: ${e.message}`));
+    if (p.edit) await applyEdit(p.edit);
+    if (p.dm) await safe('DM', ops.dm(p.dm.userId, p.dm.message));
+    if (p.threadPost) await safe('thread log', ops.threadPost(p.threadPost.threadId, p.threadPost.text));
+    if (p.deleteChannelId) await safe('delete channel', ops.deleteChannel(p.deleteChannelId));
   }
 
   async function interact(c: Ctx & { args: string[]; fields?: Record<string, string> }): Promise<Reply> {
@@ -136,7 +148,7 @@ export function createVoiceSupport(api: Api, ops: VoiceOps, log: (m: string) => 
     } catch (e) { return fail(e); }
   }
 
-  return { onVoiceState, interact, clear: () => rooms.clear() };
+  return { onVoiceState, interact, applyEffects, clear: () => rooms.clear() };
 }
 export type VoiceSupportRuntime = ReturnType<typeof createVoiceSupport>;
 

@@ -6,7 +6,8 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
     return c > 3 && r && Object.defineProperty(target, key, r), r;
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.scopedKey = exports.SERVER_SCOPED_SETTINGS = exports.GuildContextMiddleware = exports.runInGuild = exports.currentGuild = void 0;
+exports.recordWhere = exports.recordSpace = exports.settingsGuild = exports.scopedKey = exports.SERVER_SCOPED_SETTINGS = exports.GuildContextMiddleware = exports.runInGuild = exports.currentGuild = void 0;
+exports.setServerLinkResolvers = setServerLinkResolvers;
 const node_async_hooks_1 = require("node:async_hooks");
 const common_1 = require("@nestjs/common");
 /**
@@ -31,7 +32,23 @@ exports.GuildContextMiddleware = GuildContextMiddleware = __decorate([
     (0, common_1.Injectable)()
 ], GuildContextMiddleware);
 /** Zentrale Einstellungen, die je Server überschrieben werden können (`<key>@<guildId>`, sonst gilt der gemeinsame Wert). */
-exports.SERVER_SCOPED_SETTINGS = ['team.structure', 'team.rankOrder', 'dashboard.defaultLayout', 'theme.accent', 'org.name', 'teamchance'];
-const scopedKey = (key, guildId) => (guildId && exports.SERVER_SCOPED_SETTINGS.includes(key) ? `${key}@${guildId}` : key);
+exports.SERVER_SCOPED_SETTINGS = ['team.structure', 'team.rankOrder', 'dashboard.defaultLayout', 'theme.accent', 'theme.customAccents', 'org.name', 'teamchance'];
+const scopedKey = (key, guildId) => { const g = (0, exports.settingsGuild)(guildId); return g && exports.SERVER_SCOPED_SETTINGS.includes(key) ? `${key}@${g}` : key; };
 exports.scopedKey = scopedKey;
+// ---- Server-Verbund (Administration → Server-Verbund; gesetzt vom ServerLinksService) ----
+let settingsOf = (g) => g;
+let spaceOf = () => null;
+function setServerLinkResolvers(settings, space) { settingsOf = settings; spaceOf = space; }
+/** Server, dessen Einstellungen gelten: in einer Gruppe mit „Einstellungen teilen“ der Haupt-Server der Gruppe, sonst der Server selbst. */
+const settingsGuild = (guildId) => (guildId ? settingsOf(guildId) : null);
+exports.settingsGuild = settingsGuild;
+/**
+ * Akten-Bereich (Personen/Fahrzeuge, Spalte `serverId`): `null` = gemeinsamer Bestand (Standard), sonst eigener Bereich
+ * des Servers bzw. der Gruppe. `undefined` = kein Server gewählt („Alle Server“) → kein Filter.
+ */
+const recordSpace = (guildId = (0, exports.currentGuild)()) => (guildId ? spaceOf(guildId) : undefined);
+exports.recordSpace = recordSpace;
+/** Prisma-Filter für Akten des gewählten Servers (ohne Server: alle). */
+const recordWhere = (guildId = (0, exports.currentGuild)()) => { const s = (0, exports.recordSpace)(guildId); return s === undefined ? {} : { serverId: s }; };
+exports.recordWhere = recordWhere;
 //# sourceMappingURL=guild-context.js.map

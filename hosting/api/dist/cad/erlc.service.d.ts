@@ -1,3 +1,4 @@
+import { ErlcSyncService } from './erlc-sync.service';
 import { type ErlcServer } from '@prisma/client';
 import { z } from 'zod';
 import { type ErlcStatus } from '@enrp/shared';
@@ -32,7 +33,7 @@ export declare const erlcServerInput: z.ZodObject<{
     name: string;
     active: boolean;
     pollSeconds: number;
-    features: ("vehicles" | "players" | "staff" | "queue" | "emergencyCalls" | "modCalls" | "joinLogs" | "killLogs" | "commandLogs" | "commands" | "webhook")[];
+    features: ("vehicles" | "commands" | "players" | "staff" | "queue" | "emergencyCalls" | "modCalls" | "joinLogs" | "killLogs" | "commandLogs" | "webhook")[];
     webhookEnabled: boolean;
     settings?: {
         criticalCommands?: string[] | undefined;
@@ -56,7 +57,7 @@ export declare const erlcServerInput: z.ZodObject<{
     serverRef?: string | null | undefined;
     logoUrl?: string | null | undefined;
     pollSeconds?: number | undefined;
-    features?: ("vehicles" | "players" | "staff" | "queue" | "emergencyCalls" | "modCalls" | "joinLogs" | "killLogs" | "commandLogs" | "commands" | "webhook")[] | undefined;
+    features?: ("vehicles" | "commands" | "players" | "staff" | "queue" | "emergencyCalls" | "modCalls" | "joinLogs" | "killLogs" | "commandLogs" | "webhook")[] | undefined;
     webhookEnabled?: boolean | undefined;
 }>;
 export type ErlcServerInput = z.infer<typeof erlcServerInput>;
@@ -163,12 +164,13 @@ export declare class ErlcService {
     private readonly perms;
     private readonly realtime;
     private readonly notify;
+    private readonly records;
     private readonly log;
     readonly client: ErlcClient;
     private readonly rt;
     private webhookKey;
     private readonly seen;
-    constructor(prisma: PrismaService, audit: AuditService, perms: PermissionService, realtime: RealtimeService, notify: CadNotifyService);
+    constructor(prisma: PrismaService, audit: AuditService, perms: PermissionService, realtime: RealtimeService, notify: CadNotifyService, records: ErlcSyncService);
     /** Nur für Tests: andere Gegenstelle/Signaturschlüssel. */
     useClient(c: ErlcClient): void;
     useWebhookKey(spkiBase64: string): void;
@@ -407,9 +409,9 @@ export declare class ErlcService {
         result: string | null;
         userId: string | null;
         discordId: string | null;
+        serverId: string;
         command: string;
         ok: boolean;
-        serverId: string;
         critical: boolean;
     }[]>;
     verifySignature(raw: Buffer, timestamp: string | undefined, sigHex: string | undefined): boolean;

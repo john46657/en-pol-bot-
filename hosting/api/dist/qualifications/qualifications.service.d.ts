@@ -372,7 +372,7 @@ export declare class QualificationsService {
         id: string;
         number: string;
         unitName: string;
-        status: "REJECTED" | "ACCEPTED";
+        status: "ACCEPTED" | "REJECTED";
         addedToSek: boolean;
         decidedByName: string | null;
         reason: string | null;

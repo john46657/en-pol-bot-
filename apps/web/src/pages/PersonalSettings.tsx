@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react';
 import { RotateCcw } from 'lucide-react';
 import { useAuth } from '../lib/auth';
-import { DEFAULT_PREFS, GRADIENTS, usePrefs, type Preferences } from '../lib/prefs';
+import { backgroundIsLight, DEFAULT_PREFS, GRADIENTS, usePrefs, type Preferences } from '../lib/prefs';
 import { NAV, tr, visible } from '../nav';
 import { QUICK_ACTIONS } from './Dashboard';
 import { Button, Card, Input, PageHeader, Select } from '../components/ui';
@@ -32,19 +32,20 @@ export function PersonalSettings() {
   const { prefs: p, update } = usePrefs();
   const set = <K extends keyof Preferences>(k: K) => (v: Preferences[K]) => update({ [k]: v } as Partial<Preferences>);
   const navItems = NAV.filter((n) => visible(n, can));
+  const bgLight = backgroundIsLight(p.background);
   return (
     <>
       <PageHeader title="Persönliche Einstellungen" subtitle="Nur für dich – andere Benutzer sehen davon nichts. Alles wird automatisch gespeichert und auf allen Geräten geladen."
         actions={<Button variant="ghost" onClick={() => update({ ...DEFAULT_PREFS, favorites: p.favorites, quickActions: p.quickActions, notifications: p.notifications })}><RotateCcw size={14} />Design zurücksetzen</Button>} />
       <div className="grid gap-4 xl:grid-cols-2">
         <Card title="🎨 Design">
-          <Row label="Modus"><Seg label="Modus" value={p.theme} onChange={set('theme')} options={[['dark', '🌙 Dunkel'], ['light', '☀️ Hell'], ['system', '🖥️ System']]} /></Row>
+          <Row label="Modus" hint={bgLight !== null ? `Folgt gerade dem ${bgLight ? 'hellen' : 'dunklen'} Hintergrund` : undefined}><Seg label="Modus" value={p.theme} onChange={set('theme')} options={[['dark', '🌙 Dunkel'], ['light', '☀️ Hell'], ['system', '🖥️ System']]} /></Row>
           <Row label="Akzentfarbe" hint="Leer = Farbe des Servers">
             {ACCENT_PRESETS.map((c) => <button key={c} type="button" aria-label={`Akzentfarbe ${c}`} aria-pressed={p.accent?.toLowerCase() === c.toLowerCase()} onClick={() => update({ accent: c })} className={`h-7 w-7 rounded-full border-2 ${p.accent?.toLowerCase() === c.toLowerCase() ? 'border-fg' : 'border-transparent'}`} style={{ background: c }} />)}
             <input type="color" aria-label="Eigene Akzentfarbe" value={p.accent ?? '#3b82f6'} onChange={(e) => update({ accent: e.target.value })} className="h-8 w-10 rounded border border-line bg-bg" />
             {p.accent && <Button size="sm" variant="ghost" onClick={() => update({ accent: undefined })}>Server-Farbe</Button>}
           </Row>
-          <Row label="Hintergrund">
+          <Row label="Hintergrund" hint="Farbe/Verlauf bestimmt hell oder dunkel – damit die Schrift lesbar bleibt">
             <Select aria-label="Hintergrund-Art" className="w-auto" value={p.background.type} onChange={(e) => update({ background: { type: e.target.value as Preferences['background']['type'], value: e.target.value === 'gradient' ? 'nacht' : e.target.value === 'color' ? '#0b0e14' : '' } })}>
               <option value="none">Standard</option><option value="color">Farbe</option><option value="gradient">Verlauf</option><option value="image">Bild (https-Link)</option>
             </Select>

@@ -45,7 +45,7 @@ async function pollOnce(api, send, log = console.log, dm, grantRole, syncRoles, 
             }
             continue;
         }
-        if (item.type === 'application.ticket' || item.type === 'embed.post') {
+        if (item.type === 'application.ticket' || item.type === 'embed.post' || item.type === 'message.decided' || item.type === 'voice.effects') {
             try {
                 if (!onTask || !(await onTask(item.type, item.payload)))
                     throw new Error('tasks not supported');
@@ -172,7 +172,10 @@ async function pollOnce(api, send, log = console.log, dm, grantRole, syncRoles, 
             const authorUserId = item.type === 'leave.requested' && typeof item.payload.discordId === 'string' && /^\d{15,25}$/.test(item.payload.discordId) ? item.payload.discordId : undefined;
             // Gefahrenstatus: vorherige Meldung im Kanal löschen, damit nur der aktuelle Status dort steht
             const replaceKey = item.type === 'danger.changed' ? 'danger' : undefined;
-            const opts = pingRoleIds.length || avatarUserId || thread || authorUserId || replaceKey ? { ...(pingRoleIds.length ? { pingRoleIds } : {}), ...(avatarUserId ? { avatarUserId } : {}), ...(thread ? { thread } : {}), ...(authorUserId ? { authorUserId } : {}), ...(replaceKey ? { replaceKey } : {}) } : undefined;
+            // Anträge/Bewerbungen mit Entscheidungs-Buttons: Ort merken, damit eine Entscheidung im Dashboard die Nachricht anpassen kann
+            const trackKind = { 'leave.requested': 'l', 'application.submitted': 'a', 'qualification.submitted': 'q' }[item.type];
+            const trackKey = trackKind && typeof item.payload.id === 'string' && /^[0-9a-f-]{36}$/.test(item.payload.id) ? `msg-${trackKind}-${item.payload.id}` : undefined;
+            const opts = pingRoleIds.length || avatarUserId || thread || authorUserId || replaceKey || trackKey ? { ...(pingRoleIds.length ? { pingRoleIds } : {}), ...(avatarUserId ? { avatarUserId } : {}), ...(thread ? { thread } : {}), ...(authorUserId ? { authorUserId } : {}), ...(replaceKey ? { replaceKey } : {}), ...(trackKey ? { trackKey } : {}) } : undefined;
             const results = await Promise.allSettled(channelIds.map((id) => (opts ? send(id, embeds, buttons, opts) : send(id, embeds, buttons))));
             const failed = results.flatMap((r, i) => (r.status === 'rejected' ? [`${channelIds[i]}: ${r.reason instanceof Error ? r.reason.message : r.reason}`] : []));
             failed.forEach((f) => log(`outbox ${item.id}: send failed for channel ${f}`));

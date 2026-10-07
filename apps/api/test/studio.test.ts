@@ -11,7 +11,7 @@ beforeAll(async () => {
   await makeUser(prisma, 'st_off', ['Police Member']);
 });
 afterAll(async () => {
-  await prisma.systemSetting.deleteMany({ where: { key: { in: ['studio.customFields', 'theme.accent'] } } }); // geteilte Test-DB
+  await prisma.systemSetting.deleteMany({ where: { key: { in: ['studio.customFields', 'theme.accent', 'theme.customAccents'] } } }); // geteilte Test-DB
   await app.close();
 });
 
@@ -44,6 +44,13 @@ describe('Studio configuration', () => {
     expect((await adm.put('/api/v1/admin/settings/studio.customFields').send({ value: { persons: [{ key: 'Bad Key', label: 'X', type: 'text' }], vehicles: [] } })).status).toBe(400);
     expect((await adm.put('/api/v1/admin/settings/theme.accent').send({ value: 'hotpink' })).status).toBe(400);
     expect((await adm.put('/api/v1/admin/settings/studio.customFields').send({ value: defs })).status).toBe(200);
+    // mehr Vorgaben und eigene Farben (#rrggbb), eigene Farbliste mit Namen
+    expect((await adm.put('/api/v1/admin/settings/theme.accent').send({ value: 'pink' })).status).toBe(200);
+    expect((await adm.put('/api/v1/admin/settings/theme.accent').send({ value: '#12ab9F' })).status).toBe(200);
+    expect((await adm.put('/api/v1/admin/settings/theme.accent').send({ value: '#12ab9' })).status).toBe(400);
+    expect((await adm.put('/api/v1/admin/settings/theme.customAccents').send({ value: [{ name: 'Polizei-Blau', hex: '#0b3d91' }] })).status).toBe(200);
+    expect((await adm.put('/api/v1/admin/settings/theme.customAccents').send({ value: [{ name: 'X', hex: 'blau' }] })).status).toBe(400);
+    expect((await off.put('/api/v1/admin/settings/theme.customAccents').send({ value: [] })).status).toBe(403);
     expect((await adm.put('/api/v1/admin/settings/theme.accent').send({ value: 'green' })).status).toBe(200);
     expect(await prisma.auditLog.count({ where: { action: 'studio.config.changed' } })).toBeGreaterThanOrEqual(2);
   });
@@ -51,6 +58,7 @@ describe('Studio configuration', () => {
     const off = (await login(app, 'st_off')).agent;
     const c = (await off.get('/api/v1/studio/config')).body;
     expect(c.theme.accent).toBe('green');
+    expect(c.theme.customAccents).toEqual([{ name: 'Polizei-Blau', hex: '#0b3d91' }]);
     expect(c.customFields.persons).toHaveLength(3);
     expect((await (await import('supertest')).default(app.getHttpServer()).get('/api/v1/studio/config')).status).toBe(401);
   });

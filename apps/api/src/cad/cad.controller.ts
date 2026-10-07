@@ -14,6 +14,7 @@ import { MediaService } from '../media/media.service';
 import { CadService, type CadActor } from './cad.service';
 import { CadConfigService, cadConfigSchema } from './cad-config.service';
 import { ErlcService, erlcServerInput } from './erlc.service';
+import { ErlcSyncService } from './erlc-sync.service';
 
 const MAP_MAX_BYTES = 40 * 1024 * 1024;
 const sf = z.string().regex(/^\d{15,25}$/);
@@ -178,7 +179,10 @@ const commandBody = z.object({ command: z.string().trim().min(2).max(500), confi
 @ApiTags('erlc')
 @Controller('erlc')
 export class ErlcController {
-  constructor(private readonly s: ErlcService, private readonly perms: PermissionService) {}
+  constructor(private readonly s: ErlcService, private readonly perms: PermissionService, private readonly records: ErlcSyncService) {}
+  /** Personen-/Fahrzeugseite: wer bzw. was gerade im Spiel ist (aus der ER:LC-API), mit Link zur Akte. */
+  @Get('live/persons') @RequirePermission('persons.view') livePersons() { return this.records.live('persons', currentGuild()); }
+  @Get('live/vehicles') @RequirePermission('vehicles.view') liveVehicles() { return this.records.live('vehicles', currentGuild()); }
   @Get('servers') @RequirePermission('cad.view_erlc')
   async list(@CurrentActor() a: Actor) { return this.s.list(await this.perms.has(a.userId!, 'cad.manage_erlc')); }
   @Post('servers') @RequirePermission('cad.manage_erlc')

@@ -27,6 +27,7 @@ const media_service_1 = require("../media/media.service");
 const cad_service_1 = require("./cad.service");
 const cad_config_service_1 = require("./cad-config.service");
 const erlc_service_1 = require("./erlc.service");
+const erlc_sync_service_1 = require("./erlc-sync.service");
 const MAP_MAX_BYTES = 40 * 1024 * 1024;
 const sf = zod_1.z.string().regex(/^\d{15,25}$/);
 const isBot = (r) => typeof r.headers.authorization === 'string' && r.headers.authorization.startsWith('Bot ');
@@ -513,10 +514,15 @@ const commandBody = zod_1.z.object({ command: zod_1.z.string().trim().min(2).max
 let ErlcController = class ErlcController {
     s;
     perms;
-    constructor(s, perms) {
+    records;
+    constructor(s, perms, records) {
         this.s = s;
         this.perms = perms;
+        this.records = records;
     }
+    /** Personen-/Fahrzeugseite: wer bzw. was gerade im Spiel ist (aus der ER:LC-API), mit Link zur Akte. */
+    livePersons() { return this.records.live('persons', (0, guild_context_1.currentGuild)()); }
+    liveVehicles() { return this.records.live('vehicles', (0, guild_context_1.currentGuild)()); }
     async list(a) { return this.s.list(await this.perms.has(a.userId, 'cad.manage_erlc')); }
     create(a, b) { return this.s.create(a, b); }
     update(a, id, b) { return this.s.update(a, id, b); }
@@ -532,6 +538,20 @@ let ErlcController = class ErlcController {
     }
 };
 exports.ErlcController = ErlcController;
+__decorate([
+    (0, common_1.Get)('live/persons'),
+    (0, decorators_1.RequirePermission)('persons.view'),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", []),
+    __metadata("design:returntype", void 0)
+], ErlcController.prototype, "livePersons", null);
+__decorate([
+    (0, common_1.Get)('live/vehicles'),
+    (0, decorators_1.RequirePermission)('vehicles.view'),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", []),
+    __metadata("design:returntype", void 0)
+], ErlcController.prototype, "liveVehicles", null);
 __decorate([
     (0, common_1.Get)('servers'),
     (0, decorators_1.RequirePermission)('cad.view_erlc'),
@@ -632,6 +652,6 @@ __decorate([
 exports.ErlcController = ErlcController = __decorate([
     (0, swagger_1.ApiTags)('erlc'),
     (0, common_1.Controller)('erlc'),
-    __metadata("design:paramtypes", [erlc_service_1.ErlcService, permission_service_1.PermissionService])
+    __metadata("design:paramtypes", [erlc_service_1.ErlcService, permission_service_1.PermissionService, erlc_sync_service_1.ErlcSyncService])
 ], ErlcController);
 //# sourceMappingURL=cad.controller.js.map

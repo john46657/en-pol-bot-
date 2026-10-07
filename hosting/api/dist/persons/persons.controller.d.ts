@@ -13,14 +13,14 @@ declare const create: z.ZodObject<{
     robloxUsername: string;
     robloxUserId?: string | null | undefined;
     custom?: Record<string, unknown> | undefined;
-    notes?: string | undefined;
     aliases?: string[] | undefined;
+    notes?: string | undefined;
 }, {
     robloxUsername: string;
     robloxUserId?: string | null | undefined;
     custom?: Record<string, unknown> | undefined;
-    notes?: string | undefined;
     aliases?: string[] | undefined;
+    notes?: string | undefined;
 }>;
 declare const update: z.ZodObject<{
     version: z.ZodNumber;
@@ -32,14 +32,14 @@ declare const update: z.ZodObject<{
     version: number;
     robloxUsername?: string | undefined;
     custom?: Record<string, unknown> | undefined;
-    notes?: string | null | undefined;
     aliases?: string[] | undefined;
+    notes?: string | null | undefined;
 }, {
     version: number;
     robloxUsername?: string | undefined;
     custom?: Record<string, unknown> | undefined;
-    notes?: string | null | undefined;
     aliases?: string[] | undefined;
+    notes?: string | null | undefined;
 }>;
 declare const merge: z.ZodObject<{
     targetId: z.ZodString;
@@ -80,12 +80,12 @@ export declare class PersonsController {
             robloxUsername: string;
             updatedAt: Date;
             version: number;
+            serverId: string | null;
             createdById: string | null;
             status: string;
             custom: import("@prisma/client/runtime/library").JsonValue | null;
-            serverId: string | null;
-            notes: string | null;
             aliases: string[];
+            notes: string | null;
         }[];
         total: number;
         page: number;
@@ -103,13 +103,13 @@ export declare class PersonsController {
                 updatedAt: Date;
                 version: number;
                 color: string | null;
+                serverId: string | null;
                 status: string;
                 custom: import("@prisma/client/runtime/library").JsonValue | null;
-                serverId: string | null;
                 notes: string | null;
-                ownerId: string | null;
                 plate: string;
                 model: string | null;
+                ownerId: string | null;
                 erlcReference: string | null;
             }[];
         } & {
@@ -119,12 +119,12 @@ export declare class PersonsController {
             robloxUsername: string;
             updatedAt: Date;
             version: number;
+            serverId: string | null;
             createdById: string | null;
             status: string;
             custom: import("@prisma/client/runtime/library").JsonValue | null;
-            serverId: string | null;
-            notes: string | null;
             aliases: string[];
+            notes: string | null;
         };
         tickets: {
             number: string;
@@ -170,12 +170,12 @@ export declare class PersonsController {
             robloxUsername: string;
             updatedAt: Date;
             version: number;
+            serverId: string | null;
             createdById: string | null;
             status: string;
             custom: import("@prisma/client/runtime/library").JsonValue | null;
-            serverId: string | null;
-            notes: string | null;
             aliases: string[];
+            notes: string | null;
         };
         possibleDuplicates: {
             id: string;
@@ -191,12 +191,12 @@ export declare class PersonsController {
         robloxUsername: string;
         updatedAt: Date;
         version: number;
+        serverId: string | null;
         createdById: string | null;
         status: string;
         custom: import("@prisma/client/runtime/library").JsonValue | null;
-        serverId: string | null;
-        notes: string | null;
         aliases: string[];
+        notes: string | null;
     }>;
     archive(a: Actor, id: string, b: z.infer<typeof archive>): Promise<{
         id: string;
@@ -205,12 +205,12 @@ export declare class PersonsController {
         robloxUsername: string;
         updatedAt: Date;
         version: number;
+        serverId: string | null;
         createdById: string | null;
         status: string;
         custom: import("@prisma/client/runtime/library").JsonValue | null;
-        serverId: string | null;
-        notes: string | null;
         aliases: string[];
+        notes: string | null;
     }>;
     merge(a: Actor, id: string, b: z.infer<typeof merge>): Promise<{
         id: string;
@@ -219,12 +219,12 @@ export declare class PersonsController {
         robloxUsername: string;
         updatedAt: Date;
         version: number;
+        serverId: string | null;
         createdById: string | null;
         status: string;
         custom: import("@prisma/client/runtime/library").JsonValue | null;
-        serverId: string | null;
-        notes: string | null;
         aliases: string[];
+        notes: string | null;
     }>;
 }
 export {};

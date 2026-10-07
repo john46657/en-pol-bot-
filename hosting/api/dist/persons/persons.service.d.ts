@@ -22,12 +22,12 @@ export declare class PersonsService {
             robloxUsername: string;
             updatedAt: Date;
             version: number;
+            serverId: string | null;
             createdById: string | null;
             status: string;
             custom: Prisma.JsonValue | null;
-            serverId: string | null;
-            notes: string | null;
             aliases: string[];
+            notes: string | null;
         }[];
         total: number;
         page: number;
@@ -40,13 +40,13 @@ export declare class PersonsService {
             updatedAt: Date;
             version: number;
             color: string | null;
+            serverId: string | null;
             status: string;
             custom: Prisma.JsonValue | null;
-            serverId: string | null;
             notes: string | null;
-            ownerId: string | null;
             plate: string;
             model: string | null;
+            ownerId: string | null;
             erlcReference: string | null;
         }[];
     } & {
@@ -56,12 +56,12 @@ export declare class PersonsService {
         robloxUsername: string;
         updatedAt: Date;
         version: number;
+        serverId: string | null;
         createdById: string | null;
         status: string;
         custom: Prisma.JsonValue | null;
-        serverId: string | null;
-        notes: string | null;
         aliases: string[];
+        notes: string | null;
     }>;
     overview(id: string): Promise<{
         person: {
@@ -71,13 +71,13 @@ export declare class PersonsService {
                 updatedAt: Date;
                 version: number;
                 color: string | null;
+                serverId: string | null;
                 status: string;
                 custom: Prisma.JsonValue | null;
-                serverId: string | null;
                 notes: string | null;
-                ownerId: string | null;
                 plate: string;
                 model: string | null;
+                ownerId: string | null;
                 erlcReference: string | null;
             }[];
         } & {
@@ -87,12 +87,12 @@ export declare class PersonsService {
             robloxUsername: string;
             updatedAt: Date;
             version: number;
+            serverId: string | null;
             createdById: string | null;
             status: string;
             custom: Prisma.JsonValue | null;
-            serverId: string | null;
-            notes: string | null;
             aliases: string[];
+            notes: string | null;
         };
         tickets: {
             number: string;
@@ -151,12 +151,12 @@ export declare class PersonsService {
             robloxUsername: string;
             updatedAt: Date;
             version: number;
+            serverId: string | null;
             createdById: string | null;
             status: string;
             custom: Prisma.JsonValue | null;
-            serverId: string | null;
-            notes: string | null;
             aliases: string[];
+            notes: string | null;
         };
         possibleDuplicates: {
             id: string;
@@ -177,12 +177,12 @@ export declare class PersonsService {
         robloxUsername: string;
         updatedAt: Date;
         version: number;
+        serverId: string | null;
         createdById: string | null;
         status: string;
         custom: Prisma.JsonValue | null;
-        serverId: string | null;
-        notes: string | null;
         aliases: string[];
+        notes: string | null;
     }>;
     archive(actor: Actor, id: string, reason: string): Promise<{
         id: string;
@@ -191,12 +191,12 @@ export declare class PersonsService {
         robloxUsername: string;
         updatedAt: Date;
         version: number;
+        serverId: string | null;
         createdById: string | null;
         status: string;
         custom: Prisma.JsonValue | null;
-        serverId: string | null;
-        notes: string | null;
         aliases: string[];
+        notes: string | null;
     }>;
     /** Merge nur auf ausdrückliche Bestätigung (nie automatisch). Quelle wird archiviert, nichts wird gelöscht. */
     merge(actor: Actor, sourceId: string, targetId: string, reason: string): Promise<{
@@ -206,11 +206,11 @@ export declare class PersonsService {
         robloxUsername: string;
         updatedAt: Date;
         version: number;
+        serverId: string | null;
         createdById: string | null;
         status: string;
         custom: Prisma.JsonValue | null;
-        serverId: string | null;
-        notes: string | null;
         aliases: string[];
+        notes: string | null;
     }>;
 }

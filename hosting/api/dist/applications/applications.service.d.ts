@@ -102,7 +102,7 @@ export declare class ApplicationsService {
     discordDecide(actor: Actor, id: string, to: 'ACCEPTED' | 'REJECTED', reason?: string): Promise<{
         id: string;
         number: string;
-        status: "REJECTED" | "ACCEPTED";
+        status: "ACCEPTED" | "REJECTED";
         decidedByName: string | null;
         reason: string | null;
     }>;

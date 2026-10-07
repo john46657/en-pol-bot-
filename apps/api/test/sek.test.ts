@@ -26,6 +26,11 @@ describe('SEK module', () => {
     const list = (await lead.get('/api/v1/sek/members')).body as { userId: string }[];
     expect(list.filter((m) => [uid('s_op'), uid('s_cop'), uid('s_lead')].includes(m.userId)).map((m) => m.userId)).toEqual([uid('s_op')]);
     expect(await prisma.auditLog.count({ where: { action: 'sek.member.add', entityId: uid('s_op') } })).toBe(1);
+    // Auswahl „Beamten hinzufügen“: alle aktiven Benutzer ohne Personalakte/Dienststatus, ohne die schon im SEK
+    expect((await cop.get('/api/v1/sek/candidates')).status).toBe(403);
+    const cands = ((await lead.get('/api/v1/sek/candidates')).body as { userId: string; name: string; discordLinked: boolean }[]).map((c) => c.userId);
+    expect(cands).toEqual(expect.arrayContaining([uid('s_cop'), uid('s_cop2'), uid('s_lead')]));
+    expect(cands).not.toContain(uid('s_op'));
   });
 
   it('mission reports: only SEK members (with sek.report) can file; queued for the SEK channel', async () => {

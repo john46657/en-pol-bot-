@@ -17,7 +17,7 @@ export function Communication() {
   const [body, setBody] = useState('');
   const [search, setSearch] = useState('');
   const q = useDebounced(search);
-  const msgs = useQuery({ queryKey: ['messages', ch, q], queryFn: () => api<Msg[]>(`/communication/channels/${ch}/messages`, { query: { q: q || undefined } }), refetchInterval: 10_000, retry: false });
+  const msgs = useQuery({ queryKey: ['messages', ch, q], queryFn: () => api<Msg[]>(`/communication/channels/${ch}/messages`, { query: { q: q || undefined } }), refetchInterval: 5_000, retry: false });
   const inv = () => qc.invalidateQueries({ queryKey: ['messages'] });
   const send = useMutation({ mutationFn: () => api(`/communication/channels/${ch}/messages`, { body: { body } }), onSuccess: () => { setBody(''); void inv(); } });
   const act = useMutation({ mutationFn: (v: { id: string; a: 'pin' | 'delete' }) => api(`/communication/messages/${v.id}/${v.a}`, { method: 'POST' }), onSuccess: inv });

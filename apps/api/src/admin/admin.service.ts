@@ -7,7 +7,7 @@ import { AppError } from '../common/errors';
 import { customFieldsConfig } from '../studio/custom-fields';
 import { ACCENTS } from '../studio/studio.service';
 import { formSchema } from '../qualifications/qualifications.config';
-import { SERVER_SCOPED_SETTINGS } from '../common/guild-context';
+import { SERVER_SCOPED_SETTINGS, settingsGuild } from '../common/guild-context';
 
 /** Eine oder mehrere Discord-IDs, mit Komma getrennt (z. B. Channels auf mehreren Servern). */
 const singleId = () => z.string().regex(/^\d{15,25}$/).optional();
@@ -23,7 +23,9 @@ export const SETTING_SCHEMAS = {
   'retention.readNotificationDays': z.number().int().min(7).max(3650),
   'dashboard.defaultLayout': z.array(z.object({ widget: z.string().max(40), visible: z.boolean(), order: z.number().int() })).max(50),
   'studio.customFields': customFieldsConfig,
-  'theme.accent': z.enum(ACCENTS),
+  'theme.accent': z.union([z.enum(ACCENTS), z.string().regex(/^#[0-9a-fA-F]{6}$/, 'Farbe als #rrggbb')]),
+  /** Eigene Akzentfarben (Studio → Design → „Eigene Farbe hinzufügen“). */
+  'theme.customAccents': z.array(z.object({ name: z.string().trim().min(1).max(30), hex: z.string().regex(/^#[0-9a-fA-F]{6}$/, 'Farbe als #rrggbb') })).max(24),
   'discord.channels': z.object({ guildId: idList(), dispatch: idList(), wanted: idList(), announcements: idList(), applications: idList(), danger: idList(), sek: idList(), qualifications: idList(), duty: idList(), teamlist: singleId(), tickets: singleId(), staffRole: singleId(), radioRole: singleId(), sekRole: singleId(), dutyRole: idList(), breakRole: idList(), trainingRole: idList(), adminDutyRole: idList() }),
   'team.rankOrder': z.array(z.string().trim().min(1).max(64)).max(50),
   /** Teams und Büros (Dienstgrade: `team.rankOrder`) – Auswahl in Personalakten und Filter der Teamliste. */
@@ -49,8 +51,11 @@ export class AdminService {
   }
 
   /** `key@<guildId>`: Server-eigener Wert (nur für Einstellungen, die je Server getrennt sein dürfen). */
-  async setSetting(actor: Actor, key: string, value: unknown) {
-    const [base, guild] = key.split('@') as [string, string | undefined];
+  async setSetting(actor: Actor, rawKey: string, value: unknown) {
+    const [base, rawGuild] = rawKey.split('@') as [string, string | undefined];
+    // Gruppe mit geteilten Einstellungen (Server-Verbund): gespeichert wird beim Haupt-Server der Gruppe
+    const guild = rawGuild !== undefined && /^\d{15,25}$/.test(rawGuild) ? settingsGuild(rawGuild) ?? rawGuild : rawGuild;
+    const key = guild !== undefined ? `${base}@${guild}` : base;
     if (guild !== undefined && (!/^\d{15,25}$/.test(guild) || !(SERVER_SCOPED_SETTINGS as readonly string[]).includes(base))) throw new AppError('VALIDATION_FAILED', `Die Einstellung „${base}“ kann nicht je Server gesetzt werden.`);
     const schema = SETTING_SCHEMAS[base as SettingKey];
     if (!schema) throw new AppError('VALIDATION_FAILED', `Unbekannte Einstellung „${key}“.`);

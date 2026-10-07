@@ -1,12 +1,46 @@
+import { Prisma } from '@prisma/client';
+import { z } from 'zod';
 import { PrismaService } from '../prisma/prisma.service';
 import { AuditService, Actor } from '../audit/audit.service';
 import { TimelineService } from '../timeline/timeline.service';
+import { DiscordService } from '../discord/discord.service';
+/** Standard für Ankündigungen in Discord (Kanal + Rollen, die gepingt werden). */
+export declare const academyConfigSchema: z.ZodObject<{
+    channelId: z.ZodDefault<z.ZodNullable<z.ZodString>>;
+    pingRoleIds: z.ZodDefault<z.ZodArray<z.ZodString, "many">>;
+}, "strip", z.ZodTypeAny, {
+    channelId: string | null;
+    pingRoleIds: string[];
+}, {
+    channelId?: string | null | undefined;
+    pingRoleIds?: string[] | undefined;
+}>;
+export type AcademyConfig = z.infer<typeof academyConfigSchema>;
+/** Ankündigung eines Kurses: Kanal/Rollen (sonst der Standard), optional Termin und Ort. */
+export declare const announceSchema: z.ZodObject<{
+    channelId: z.ZodOptional<z.ZodNullable<z.ZodString>>;
+    pingRoleIds: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
+    when: z.ZodOptional<z.ZodDate>;
+    location: z.ZodOptional<z.ZodString>;
+}, "strip", z.ZodTypeAny, {
+    channelId?: string | null | undefined;
+    pingRoleIds?: string[] | undefined;
+    location?: string | undefined;
+    when?: Date | undefined;
+}, {
+    channelId?: string | null | undefined;
+    pingRoleIds?: string[] | undefined;
+    location?: string | undefined;
+    when?: Date | undefined;
+}>;
+export type Announce = z.infer<typeof announceSchema>;
 export declare class AcademyService {
     private readonly prisma;
     private readonly audit;
     private readonly timeline;
-    constructor(prisma: PrismaService, audit: AuditService, timeline: TimelineService);
-    courses(): import("@prisma/client").Prisma.PrismaPromise<({
+    private readonly discord;
+    constructor(prisma: PrismaService, audit: AuditService, timeline: TimelineService, discord: DiscordService);
+    courses(): Prisma.PrismaPromise<({
         _count: {
             enrollments: number;
         };
@@ -17,17 +51,31 @@ export declare class AcademyService {
         passScore: number;
         instructorId: string | null;
     })[]>;
+    config(): Promise<AcademyConfig>;
+    saveConfig(actor: Actor, c: AcademyConfig): Promise<{
+        channelId: string | null;
+        pingRoleIds: string[];
+    }>;
     createCourse(actor: Actor, d: {
         title: string;
         description?: string;
         passScore?: number;
         instructorId?: string;
-    }): Promise<{
+    }, announce?: Announce): Promise<{
+        announced: {
+            channelId: string | null;
+            pingRoleIds: string[];
+        } | null;
         id: string;
         description: string | null;
         title: string;
         passScore: number;
         instructorId: string | null;
+    }>;
+    /** Kurs in Discord ankündigen (mit Rollen-Ping). Kanal/Rollen aus der Anfrage, sonst der gespeicherte Standard, sonst der Ankündigungs-Kanal. */
+    announce(actor: Actor, id: string, a: Announce): Promise<{
+        channelId: string | null;
+        pingRoleIds: string[];
     }>;
     enroll(actor: Actor, courseId: string, personnelId: string): Promise<{
         id: string;
