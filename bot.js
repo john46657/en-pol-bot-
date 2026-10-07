@@ -75982,7 +75982,9 @@ function guildInfo(g) {
   return {
     id: g.id,
     name: g.name.slice(0, 100),
-    icon: g.iconURL({ size: 64 }) ?? null,
+    icon: g.iconURL({ size: 256 }) ?? null,
+    banner: g.bannerURL({ size: 1024 }) ?? g.splashURL({ size: 1024 }) ?? null,
+    memberCount: g.memberCount,
     channels: [...g.channels.cache.values()].filter((c) => !c.isThread()).slice(0, 500).map((c) => ({ id: c.id, name: c.name.slice(0, 100), type: kind(c.type), parentId: "parentId" in c ? c.parentId ?? null : null, position: "rawPosition" in c ? c.rawPosition : 0 })),
     // @everyone und Rollen von Bots/Integrationen sind keine sinnvolle Auswahl
     roles: [...g.roles.cache.values()].filter((r) => r.id !== g.id && !r.managed).slice(0, 250).map((r) => ({ id: r.id, name: r.name.slice(0, 100), color: r.color, position: r.position }))

@@ -12,7 +12,7 @@ export const CHANNEL_KEYS = ['dispatch', 'wanted', 'announcements', 'application
 export type ChannelKey = (typeof CHANNEL_KEYS)[number];
 /** Channel-/Rollen-IDs aus den Einstellungen. Die Benachrichtigungs-Channels dürfen Komma-Listen sein (mehrere Channels/Server). */
 export interface DiscordGuildInfo {
-  id: string; name: string; icon: string | null;
+  id: string; name: string; icon: string | null; banner?: string | null; memberCount?: number;
   channels: { id: string; name: string; type: 'text' | 'category' | 'voice' | 'other'; parentId: string | null; position: number }[];
   roles: { id: string; name: string; color: number; position: number }[];
 }

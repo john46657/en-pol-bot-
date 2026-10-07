@@ -8,6 +8,8 @@ export interface DiscordGuildInfo {
     id: string;
     name: string;
     icon: string | null;
+    banner?: string | null;
+    memberCount?: number;
     channels: {
         id: string;
         name: string;

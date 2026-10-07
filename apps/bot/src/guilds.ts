@@ -4,6 +4,8 @@ import type { Api } from './api';
 /** Server mit Channels und Rollen, wie das Dashboard sie für Namen und Auswahllisten braucht. */
 export interface GuildInfo {
   id: string; name: string; icon: string | null;
+  /** Banner (bzw. Einladungs-Hintergrund) und Mitgliederzahl – für die Server-Auswahl im Dashboard. */
+  banner?: string | null; memberCount?: number;
   channels: { id: string; name: string; type: 'text' | 'category' | 'voice' | 'other'; parentId: string | null; position: number }[];
   roles: { id: string; name: string; color: number; position: number }[];
 }
@@ -13,7 +15,8 @@ const kind = (t: ChannelType): GuildInfo['channels'][number]['type'] =>
 
 export function guildInfo(g: Guild): GuildInfo {
   return {
-    id: g.id, name: g.name.slice(0, 100), icon: g.iconURL({ size: 64 }) ?? null,
+    id: g.id, name: g.name.slice(0, 100), icon: g.iconURL({ size: 256 }) ?? null,
+    banner: g.bannerURL({ size: 1024 }) ?? g.splashURL({ size: 1024 }) ?? null, memberCount: g.memberCount,
     channels: [...g.channels.cache.values()].filter((c) => !c.isThread()).slice(0, 500)
       .map((c) => ({ id: c.id, name: c.name.slice(0, 100), type: kind(c.type), parentId: 'parentId' in c ? c.parentId ?? null : null, position: 'rawPosition' in c ? (c.rawPosition as number) : 0 })),
     // @everyone und Rollen von Bots/Integrationen sind keine sinnvolle Auswahl

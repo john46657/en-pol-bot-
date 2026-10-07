@@ -6,7 +6,7 @@ import { getServer, setServer, subscribeServer } from './server';
 
 /** Discord-Server des Bots mit Channels und Rollen (meldet der Bot automatisch). */
 export interface GuildInfo {
-  id: string; name: string; icon: string | null;
+  id: string; name: string; icon: string | null; banner?: string | null; memberCount?: number;
   channels: { id: string; name: string; type: 'text' | 'category' | 'voice' | 'other'; parentId: string | null; position: number }[];
   roles: { id: string; name: string; color: number; position: number }[];
 }

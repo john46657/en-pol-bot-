@@ -5,6 +5,8 @@ import { TwoFactorService } from './two-factor.service';
 import { DiscordOAuthService } from './discord-oauth.service';
 import type { AppRequest, AuthUser } from '../common/request-context';
 import type { Actor } from '../audit/audit.service';
+import { DiscordService } from '../discord/discord.service';
+import { PermissionService } from '../authz/permission.service';
 declare const loginSchema: z.ZodObject<{
     username: z.ZodString;
     password: z.ZodString;
@@ -36,8 +38,10 @@ export declare class AuthController {
     private readonly auth;
     private readonly discord;
     private readonly twoFactor;
+    private readonly guilds;
+    private readonly perms;
     private readonly env;
-    constructor(auth: AuthService, discord: DiscordOAuthService, twoFactor: TwoFactorService);
+    constructor(auth: AuthService, discord: DiscordOAuthService, twoFactor: TwoFactorService, guilds: DiscordService, perms: PermissionService);
     private secure;
     /** Welche Anmeldewege es gibt (Login-Seite). */
     /** Einladungs-Link für den Bot (Einstellungen → „Bot zu einem Server hinzufügen“). */
@@ -105,6 +109,17 @@ export declare class AuthController {
         recoveryCodes: string[];
     }>;
     logout(user: AuthUser, actor: Actor, res: Response): Promise<void>;
+    /** Server-Auswahl: alle Server des Bots, auf denen man das Dashboard öffnen darf (+ ob „Alle Server“ erlaubt ist). */
+    servers(user: AuthUser): Promise<{
+        allServers: boolean;
+        servers: {
+            id: string;
+            name: string;
+            icon: string | null;
+            banner: string | null;
+            memberCount: number | null;
+        }[];
+    }>;
     me(user: AuthUser): Promise<{
         id: string;
         username: string;

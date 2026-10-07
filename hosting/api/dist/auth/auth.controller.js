@@ -26,6 +26,9 @@ const decorators_1 = require("../authz/decorators");
 const guards_1 = require("../authz/guards");
 const zod_pipe_1 = require("../common/zod.pipe");
 const env_1 = require("../config/env");
+const discord_service_1 = require("../discord/discord.service");
+const permission_service_1 = require("../authz/permission.service");
+const guild_context_1 = require("../common/guild-context");
 const OAUTH_COOKIE = 'enrp_oauth';
 const loginSchema = zod_1.z.object({ username: zod_1.z.string().min(1).max(64), password: zod_1.z.string().min(1).max(256) });
 const login2faSchema = zod_1.z.object({ ticket: zod_1.z.string().min(1).max(512), code: zod_1.z.string().trim().min(6).max(32) });
@@ -34,11 +37,15 @@ let AuthController = class AuthController {
     auth;
     discord;
     twoFactor;
+    guilds;
+    perms;
     env = (0, env_1.loadEnv)();
-    constructor(auth, discord, twoFactor) {
+    constructor(auth, discord, twoFactor, guilds, perms) {
         this.auth = auth;
         this.discord = discord;
         this.twoFactor = twoFactor;
+        this.guilds = guilds;
+        this.perms = perms;
     }
     secure() { return this.env.COOKIE_SECURE ? this.env.COOKIE_SECURE === 'true' : this.env.NODE_ENV === 'production'; }
     /** Welche Anmeldewege es gibt (Login-Seite). */
@@ -126,6 +133,15 @@ let AuthController = class AuthController {
     async logout(user, actor, res) {
         await this.auth.logout(actor, user.sessionId);
         res.clearCookie(guards_1.SESSION_COOKIE, { path: '/' });
+    }
+    /** Server-Auswahl: alle Server des Bots, auf denen man das Dashboard öffnen darf (+ ob „Alle Server“ erlaubt ist). */
+    async servers(user) {
+        const all = await this.guilds.guilds();
+        const allowed = await Promise.all(all.map((g) => (0, guild_context_1.runInGuild)(g.id, () => this.perms.has(user.id, 'dashboard.view'))));
+        return {
+            allServers: await (0, guild_context_1.runInGuild)(null, () => this.perms.has(user.id, 'dashboard.view')),
+            servers: all.filter((_, i) => allowed[i]).map((g) => ({ id: g.id, name: g.name, icon: g.icon, banner: g.banner ?? null, memberCount: g.memberCount ?? null })),
+        };
     }
     me(user) {
         return this.auth.profile(user.id);
@@ -269,6 +285,13 @@ __decorate([
     __metadata("design:returntype", Promise)
 ], AuthController.prototype, "logout", null);
 __decorate([
+    (0, common_1.Get)('servers'),
+    __param(0, (0, decorators_1.CurrentUser)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object]),
+    __metadata("design:returntype", Promise)
+], AuthController.prototype, "servers", null);
+__decorate([
     (0, common_1.Get)('me'),
     __param(0, (0, decorators_1.CurrentUser)()),
     __metadata("design:type", Function),
@@ -278,6 +301,6 @@ __decorate([
 exports.AuthController = AuthController = __decorate([
     (0, swagger_1.ApiTags)('auth'),
     (0, common_1.Controller)('auth'),
-    __metadata("design:paramtypes", [auth_service_1.AuthService, discord_oauth_service_1.DiscordOAuthService, two_factor_service_1.TwoFactorService])
+    __metadata("design:paramtypes", [auth_service_1.AuthService, discord_oauth_service_1.DiscordOAuthService, two_factor_service_1.TwoFactorService, discord_service_1.DiscordService, permission_service_1.PermissionService])
 ], AuthController);
 //# sourceMappingURL=auth.controller.js.map

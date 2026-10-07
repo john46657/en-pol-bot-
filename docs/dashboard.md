@@ -16,6 +16,7 @@
 
 ## Server laufen getrennt
 - Die Server-Auswahl oben links gilt für alles: Das Dashboard schickt den Server bei jeder Anfrage mit (`X-Guild-Id`), der Bot bei jeder Interaktion.
+- **Server-Übersicht** (`/servers`): Wer auf mehreren Servern Zugriff hat, sieht nach dem Login zuerst eine Übersicht mit großen Karten (Server-Icon, Banner unscharf im Hintergrund, Name, Mitgliederzahl) und wählt dort den Server. Gezeigt werden nur Server, auf denen man das Dashboard öffnen darf; „Alle Server“ nur mit serverübergreifender Rolle. Pro Browser-Sitzung wird einmal gefragt; später erreichbar über das Server-Menü oben links → „Alle Server als Übersicht“. Banner und Mitgliederzahl meldet der Bot (Server-Banner, sonst Einladungs-Hintergrund) – dafür muss der neue Bot-Stand laufen.
 - Rollen können einem Server gehören (beim Anlegen im Server-Kontext automatisch): Sie gelten **nur dort**. Unter „Alle Server“ zählen nur serverübergreifende Rollen. Wer nur auf einem Server Rollen hat, landet automatisch in diesem Server.
 - Teamliste, Voice-Widget, Team-Aktivität, Support-Tickets und Bewerbungen zeigen nur den gewählten Server.
 - Einstellungen je Server: Teams, Büros, Dienstgrade, Organisationsname, Akzentfarbe (`<key>@<serverId>`; ohne eigenen Wert gilt der gemeinsame).

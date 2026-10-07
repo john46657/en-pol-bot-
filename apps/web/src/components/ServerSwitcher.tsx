@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
-import { Check, ChevronDown, Globe, Shield } from 'lucide-react';
+import { Check, ChevronDown, Globe, LayoutGrid, Shield } from 'lucide-react';
+import { useNavigate } from 'react-router';
 import { useGuilds, useServer } from '../lib/guilds';
 
 const Icon = ({ icon, name }: { icon: string | null; name: string }) => (icon
@@ -11,6 +12,7 @@ export function ServerSwitcher({ orgName, onPicked }: { orgName: string; onPicke
   const guilds = useGuilds();
   const [server, setServer] = useServer();
   const [open, setOpen] = useState(false);
+  const nav = useNavigate();
   const ref = useRef<HTMLDivElement>(null);
   useEffect(() => {
     if (!open) return;
@@ -42,6 +44,11 @@ export function ServerSwitcher({ orgName, onPicked }: { orgName: string; onPicke
               </button>
             </li>
           ))}
+          <li role="none" className="mt-1 border-t border-line pt-1">
+            <button type="button" onClick={() => { setOpen(false); onPicked?.(); nav('/servers'); }} className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-sm font-normal text-primary hover:bg-panel-2">
+              <span className="grid h-6 w-6 place-items-center"><LayoutGrid size={16} aria-hidden /></span>Alle Server als Übersicht
+            </button>
+          </li>
         </ul>
       )}
     </div>

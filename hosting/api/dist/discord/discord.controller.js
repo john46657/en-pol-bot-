@@ -28,6 +28,7 @@ const zod_pipe_1 = require("../common/zod.pipe");
 const sf = zod_1.z.string().regex(/^\d{15,25}$/);
 const guildsBody = zod_1.z.object({ guilds: zod_1.z.array(zod_1.z.object({
         id: sf, name: zod_1.z.string().max(100), icon: zod_1.z.string().url().max(300).nullable(),
+        banner: zod_1.z.string().url().max(300).nullable().optional(), memberCount: zod_1.z.number().int().min(0).optional(),
         channels: zod_1.z.array(zod_1.z.object({ id: sf, name: zod_1.z.string().max(100), type: zod_1.z.enum(['text', 'category', 'voice', 'other']), parentId: sf.nullable(), position: zod_1.z.number().int() })).max(500),
         roles: zod_1.z.array(zod_1.z.object({ id: sf, name: zod_1.z.string().max(100), color: zod_1.z.number().int().min(0), position: zod_1.z.number().int() })).max(250),
     })).max(50) });

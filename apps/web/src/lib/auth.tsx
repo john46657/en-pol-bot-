@@ -3,7 +3,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { api, ApiError, setUnauthenticatedHandler } from './api';
 import { initAutosave, resetAutosave } from './autosave';
 import { useRealtimeEvent } from './realtime';
-import { getServer, setServer, subscribeServer } from './server';
+import { getServer, resetServerChosen, setServer, subscribeServer } from './server';
 
 export interface Profile { id: string; username: string; displayName: string; robloxUserId: string | null; robloxUsername: string | null; roles: string[]; permissions: string[]; lastLogin: string | null; twoFactor?: boolean; guildId?: string | null; servers?: string[] }
 interface AuthCtx { user: Profile | null; loading: boolean; can: (p: string) => boolean; login: (u: string, p: string) => Promise<LoginResult>; loginCode: (ticket: string, code: string) => Promise<void>; logout: () => Promise<void> }
@@ -47,7 +47,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return {};
   }, [signedIn]);
   const loginCode = useCallback(async (ticket: string, code: string) => { signedIn(await api<Profile>('/auth/login/2fa', { body: { ticket, code } })); }, [signedIn]);
-  const logout = useCallback(async () => { await api('/auth/logout', { method: 'POST' }).catch(() => undefined); resetAutosave(); qc.removeQueries({ predicate: (q) => q.queryKey[0] !== 'me' }); qc.setQueryData(['me'], null); }, [qc]);
+  const logout = useCallback(async () => { await api('/auth/logout', { method: 'POST' }).catch(() => undefined); resetAutosave(); resetServerChosen(); qc.removeQueries({ predicate: (q) => q.queryKey[0] !== 'me' }); qc.setQueryData(['me'], null); }, [qc]);
   const value = useMemo<AuthCtx>(() => {
     const set = new Set(user?.permissions ?? []);
     return { user, loading: q.isLoading, can: (p) => set.has(p), login, loginCode, logout };

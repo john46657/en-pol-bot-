@@ -14,6 +14,9 @@ import { zodBody } from '../common/zod.pipe';
 import type { AppRequest, AuthUser } from '../common/request-context';
 import type { Actor } from '../audit/audit.service';
 import { loadEnv } from '../config/env';
+import { DiscordService } from '../discord/discord.service';
+import { PermissionService } from '../authz/permission.service';
+import { runInGuild } from '../common/guild-context';
 
 const OAUTH_COOKIE = 'enrp_oauth';
 const loginSchema = z.object({ username: z.string().min(1).max(64), password: z.string().min(1).max(256) });
@@ -24,7 +27,7 @@ const codeSchema = z.object({ code: z.string().trim().min(6).max(32) });
 @Controller('auth')
 export class AuthController {
   private readonly env = loadEnv();
-  constructor(private readonly auth: AuthService, private readonly discord: DiscordOAuthService, private readonly twoFactor: TwoFactorService) {}
+  constructor(private readonly auth: AuthService, private readonly discord: DiscordOAuthService, private readonly twoFactor: TwoFactorService, private readonly guilds: DiscordService, private readonly perms: PermissionService) {}
 
   private secure() { return this.env.COOKIE_SECURE ? this.env.COOKIE_SECURE === 'true' : this.env.NODE_ENV === 'production'; }
 
@@ -134,6 +137,17 @@ export class AuthController {
   async logout(@CurrentUser() user: AuthUser, @CurrentActor() actor: Actor, @Res({ passthrough: true }) res: Response) {
     await this.auth.logout(actor, user.sessionId);
     res.clearCookie(SESSION_COOKIE, { path: '/' });
+  }
+
+  /** Server-Auswahl: alle Server des Bots, auf denen man das Dashboard öffnen darf (+ ob „Alle Server“ erlaubt ist). */
+  @Get('servers')
+  async servers(@CurrentUser() user: AuthUser) {
+    const all = await this.guilds.guilds();
+    const allowed = await Promise.all(all.map((g) => runInGuild(g.id, () => this.perms.has(user.id, 'dashboard.view'))));
+    return {
+      allServers: await runInGuild(null, () => this.perms.has(user.id, 'dashboard.view')),
+      servers: all.filter((_, i) => allowed[i]).map((g) => ({ id: g.id, name: g.name, icon: g.icon, banner: g.banner ?? null, memberCount: g.memberCount ?? null })),
+    };
   }
 
   @Get('me')

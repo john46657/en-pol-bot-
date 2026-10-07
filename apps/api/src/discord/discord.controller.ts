@@ -15,6 +15,7 @@ import { zodBody } from '../common/zod.pipe';
 const sf = z.string().regex(/^\d{15,25}$/);
 const guildsBody = z.object({ guilds: z.array(z.object({
   id: sf, name: z.string().max(100), icon: z.string().url().max(300).nullable(),
+  banner: z.string().url().max(300).nullable().optional(), memberCount: z.number().int().min(0).optional(),
   channels: z.array(z.object({ id: sf, name: z.string().max(100), type: z.enum(['text', 'category', 'voice', 'other']), parentId: sf.nullable(), position: z.number().int() })).max(500),
   roles: z.array(z.object({ id: sf, name: z.string().max(100), color: z.number().int().min(0), position: z.number().int() })).max(250),
 })).max(50) });

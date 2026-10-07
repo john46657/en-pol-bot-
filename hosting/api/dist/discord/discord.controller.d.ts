@@ -11,6 +11,8 @@ declare const guildsBody: z.ZodObject<{
         id: z.ZodString;
         name: z.ZodString;
         icon: z.ZodNullable<z.ZodString>;
+        banner: z.ZodOptional<z.ZodNullable<z.ZodString>>;
+        memberCount: z.ZodOptional<z.ZodNumber>;
         channels: z.ZodArray<z.ZodObject<{
             id: z.ZodString;
             name: z.ZodString;
@@ -63,6 +65,8 @@ declare const guildsBody: z.ZodObject<{
             position: number;
             parentId: string | null;
         }[];
+        banner?: string | null | undefined;
+        memberCount?: number | undefined;
     }, {
         id: string;
         name: string;
@@ -80,6 +84,8 @@ declare const guildsBody: z.ZodObject<{
             position: number;
             parentId: string | null;
         }[];
+        banner?: string | null | undefined;
+        memberCount?: number | undefined;
     }>, "many">;
 }, "strip", z.ZodTypeAny, {
     guilds: {
@@ -99,6 +105,8 @@ declare const guildsBody: z.ZodObject<{
             position: number;
             parentId: string | null;
         }[];
+        banner?: string | null | undefined;
+        memberCount?: number | undefined;
     }[];
 }, {
     guilds: {
@@ -118,6 +126,8 @@ declare const guildsBody: z.ZodObject<{
             position: number;
             parentId: string | null;
         }[];
+        banner?: string | null | undefined;
+        memberCount?: number | undefined;
     }[];
 }>;
 declare const redeem: z.ZodObject<{

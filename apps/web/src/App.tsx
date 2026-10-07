@@ -8,6 +8,7 @@ import { RecordPage } from './components/RecordPage';
 import { Login } from './pages/Login';
 import { Apply } from './pages/Apply';
 import { Dashboard } from './pages/Dashboard';
+import { ServerSelect, StartRedirect } from './pages/ServerSelect';
 import { Mdt } from './pages/Mdt';
 import { Dispatch } from './pages/Dispatch';
 import { Team } from './pages/Team';
@@ -69,8 +70,9 @@ export function App() {
       <Routes>
         <Route path="/login" element={<Login />} />
         <Route path="/apply" element={<Apply />} />
+        <Route path="/servers" element={<Guard><ServerSelect /></Guard>} />
         <Route element={<Guard><AppShell /></Guard>}>
-          <Route index element={<Navigate to="/dashboard" replace />} />
+          <Route index element={<StartRedirect />} />
           <Route path="mdt" element={<Guard perm="dashboard.view"><Mdt /></Guard>} />
           <Route path="dashboard" element={<Guard perm="dashboard.view"><Dashboard /></Guard>} />
           <Route path="team" element={<Guard perm="team.view" area="dashboard.team.view"><Team /></Guard>} />

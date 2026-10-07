@@ -10,3 +10,9 @@ export function setServer(id: string) {
   listeners.forEach((l) => l());
 }
 export function subscribeServer(l: () => void) { listeners.add(l); return () => { listeners.delete(l); }; }
+
+/** Ob in dieser Browser-Sitzung schon ein Server gewählt wurde (sonst zeigt `/` zuerst die Server-Auswahl). */
+const CHOSEN = 'enrp.server.chosen';
+export const serverChosen = () => { try { return sessionStorage.getItem(CHOSEN) === '1'; } catch { return true; } };
+export const markServerChosen = () => { try { sessionStorage.setItem(CHOSEN, '1'); } catch { /* privater Modus */ } };
+export const resetServerChosen = () => { try { sessionStorage.removeItem(CHOSEN); } catch { /* privater Modus */ } };
