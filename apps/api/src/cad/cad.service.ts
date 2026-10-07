@@ -154,10 +154,23 @@ export class CadService {
         throw e;
       }
     }
+    await this.zoneActions(actor, inc);
     this.changed('incident', inc.id);
     this.rt.publish('incidents', 'incident.created', { id: inc.id, number: inc.number });
     await this.notify.emit('incident.created', this.incidentPayload(cfg, inc), inc.guildId);
     return inc;
+  }
+
+  /** Zonen mit automatischer Aktion: Einsatz liegt in der Zone → Hinweis in der Chronik („warn“) bzw. zusätzlich Leitstellenmeldung („notify“). */
+  private async zoneActions(actor: CadActor, inc: { id: string; number: string; title: string; mapX: number | null; mapZ: number | null; guildId: string | null }) {
+    if (inc.mapX === null || inc.mapZ === null) return;
+    const zones = await this.prisma.cadMapObject.findMany({ where: { kind: 'ZONE', autoAction: { not: null } } });
+    for (const z of zones) {
+      const pts = (z.points ?? []) as [number, number][];
+      if (pts.length < 3 || !inside(inc.mapX, inc.mapZ, pts)) continue;
+      await this.log(this.prisma, inc.id, 'NOTE', `⚠️ Einsatzort liegt in Zone „${z.name}“${z.description ? ` – ${z.description}` : ''}`, actor);
+      if (z.autoAction === 'notify') await this.notify.emit('announcement', { text: `Einsatz ${inc.number} (${inc.title}) liegt in der Zone „${z.name}“.`, from: 'CAD' }, inc.guildId);
+    }
   }
 
   async updateIncident(actor: CadActor, id: string, d: Partial<IncidentInput>) {
@@ -593,4 +606,14 @@ export class CadService {
       stale: servers.some((s) => s.status !== 'CONNECTED'),
     };
   }
+}
+
+/** Punkt-in-Polygon (Strahlverfahren). */
+function inside(x: number, z: number, pts: [number, number][]) {
+  let hit = false;
+  for (let i = 0, j = pts.length - 1; i < pts.length; j = i++) {
+    const [xi, zi] = pts[i]!, [xj, zj] = pts[j]!;
+    if ((zi > z) !== (zj > z) && x < ((xj - xi) * (z - zi)) / (zj - zi) + xi) hit = !hit;
+  }
+  return hit;
 }

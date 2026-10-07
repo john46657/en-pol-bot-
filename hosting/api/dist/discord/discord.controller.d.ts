@@ -432,7 +432,26 @@ export declare class BotController {
     members(b: z.infer<typeof membersBody>): void;
     /** Voice-Channels mit Personen (getrennt von der Teamliste). */
     voice(b: z.infer<typeof voiceBody>): void;
-    dangerState(): Promise<import("../danger/danger.service").DangerState>;
+    dangerState(): Promise<{
+        level: string;
+        def: import("@enrp/shared").DangerLevelDef;
+        levels: {
+            key: string;
+            name: string;
+            title: string;
+            emoji: string;
+            color: string;
+            buttonStyle: "danger" | "success" | "primary" | "secondary";
+        }[];
+        panel: {
+            title: string;
+            text: string;
+            buttonEmoji: string;
+        };
+        reason: string | null;
+        setByName: string | null;
+        at: string | null;
+    }>;
     getState(key: string): Promise<{
         value: unknown;
     }>;

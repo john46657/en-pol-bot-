@@ -8,6 +8,7 @@ const features_1 = require("./features");
 const sek_1 = require("./sek");
 const qualifications_1 = require("./qualifications");
 const leave_1 = require("./leave");
+const cad_1 = require("./cad");
 const features_2 = require("./features");
 const tickets_1 = require("./tickets");
 const format_1 = require("../format");
@@ -115,7 +116,7 @@ exports.COMMANDS = [
             return { ephemeral: true, embeds: [{ title: 'EN Polizei — Befehle', color: format_1.COLORS.info, fields: [
                             { name: 'Konto', value: '`/verknuepfen` `/entverknuepfen` `/profil` `/benachrichtigungen`' },
                             { name: 'Abfragen', value: '`/person` `/kennzeichen` `/fahndungen` `/einsaetze` `/einsatzinfo` `/einheiten` `/team`' },
-                            { name: 'Dienst & Leitstelle', value: '`/dienst` `/dienststunden` `/abmeldung` `/einheitstatus` `/einsatz` `/einsatzstatus` `/einsatzzuweisen` `/funk` `/funkcode`' },
+                            { name: 'Dienst & Leitstelle', value: '`/dienst` `/dienststunden` `/abmeldung` `/leave manage` `/einheitstatus` `/einsatz` `/einsatzstatus` `/einsatzzuweisen` `/funk` `/funkcode` `/cad`' },
                             { name: 'Erfassen', value: '`/ticket` `/bericht` `/beschwerde` `/ermittlung` `/fahndung` `/beweis`' },
                             { name: 'Leitung & Team', value: '`/gefahrenstatus` `/funkfreigabe` `/teamliste` `/dienstpanel` `/bewerbungspanel` `/qualipanel` `/teamchance` `/roblox`' },
                             { name: 'SEK', value: '`/sek` `/sek-bericht`' },
@@ -570,6 +571,7 @@ exports.COMMANDS = [
     ...sek_1.SEK_COMMANDS,
     ...qualifications_1.QUALI_COMMANDS,
     ...leave_1.LEAVE_COMMANDS,
+    ...cad_1.CAD_COMMANDS,
     tickets_1.TICKET_COMMAND,
 ];
 const byName = (n) => exports.COMMANDS.find((c) => c.name === n);

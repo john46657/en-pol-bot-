@@ -85,6 +85,50 @@ export declare const preferencesSchema: z.ZodObject<{
             office?: string | undefined;
         } | undefined;
     }>>;
+    /** Persönliche CAD-Ansicht (nur für diesen Benutzer). */
+    cad: z.ZodOptional<z.ZodObject<{
+        widgets: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
+        hiddenLayers: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
+        zoom: z.ZodOptional<z.ZodNumber>;
+        center: z.ZodOptional<z.ZodObject<{
+            x: z.ZodNumber;
+            y: z.ZodNumber;
+        }, "strip", z.ZodTypeAny, {
+            x: number;
+            y: number;
+        }, {
+            x: number;
+            y: number;
+        }>>;
+        compact: z.ZodOptional<z.ZodBoolean>;
+        sidebar: z.ZodOptional<z.ZodBoolean>;
+        favoriteIncidents: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
+        erlcServerId: z.ZodOptional<z.ZodString>;
+    }, "strip", z.ZodTypeAny, {
+        compact?: boolean | undefined;
+        widgets?: string[] | undefined;
+        hiddenLayers?: string[] | undefined;
+        zoom?: number | undefined;
+        center?: {
+            x: number;
+            y: number;
+        } | undefined;
+        sidebar?: boolean | undefined;
+        favoriteIncidents?: string[] | undefined;
+        erlcServerId?: string | undefined;
+    }, {
+        compact?: boolean | undefined;
+        widgets?: string[] | undefined;
+        hiddenLayers?: string[] | undefined;
+        zoom?: number | undefined;
+        center?: {
+            x: number;
+            y: number;
+        } | undefined;
+        sidebar?: boolean | undefined;
+        favoriteIncidents?: string[] | undefined;
+        erlcServerId?: string | undefined;
+    }>>;
     voice: z.ZodOptional<z.ZodObject<{
         channelIds: z.ZodArray<z.ZodString, "many">;
         categoryIds: z.ZodArray<z.ZodString, "many">;
@@ -111,6 +155,19 @@ export declare const preferencesSchema: z.ZodObject<{
         showDuration?: boolean | undefined;
     }>>;
 }, "strip", z.ZodTypeAny, {
+    cad?: {
+        compact?: boolean | undefined;
+        widgets?: string[] | undefined;
+        hiddenLayers?: string[] | undefined;
+        zoom?: number | undefined;
+        center?: {
+            x: number;
+            y: number;
+        } | undefined;
+        sidebar?: boolean | undefined;
+        favoriteIncidents?: string[] | undefined;
+        erlcServerId?: string | undefined;
+    } | undefined;
     voice?: {
         sort: "name" | "members" | "position";
         compact: boolean;
@@ -156,6 +213,19 @@ export declare const preferencesSchema: z.ZodObject<{
         } | undefined;
     } | undefined;
 }, {
+    cad?: {
+        compact?: boolean | undefined;
+        widgets?: string[] | undefined;
+        hiddenLayers?: string[] | undefined;
+        zoom?: number | undefined;
+        center?: {
+            x: number;
+            y: number;
+        } | undefined;
+        sidebar?: boolean | undefined;
+        favoriteIncidents?: string[] | undefined;
+        erlcServerId?: string | undefined;
+    } | undefined;
     voice?: {
         sort: "name" | "members" | "position";
         compact: boolean;

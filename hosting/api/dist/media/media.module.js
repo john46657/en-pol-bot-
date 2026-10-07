@@ -14,6 +14,6 @@ let MediaModule = class MediaModule {
 };
 exports.MediaModule = MediaModule;
 exports.MediaModule = MediaModule = __decorate([
-    (0, common_1.Module)({ controllers: [media_controller_1.MediaController], providers: [media_service_1.MediaService] })
+    (0, common_1.Module)({ controllers: [media_controller_1.MediaController], providers: [media_service_1.MediaService], exports: [media_service_1.MediaService] })
 ], MediaModule);
 //# sourceMappingURL=media.module.js.map

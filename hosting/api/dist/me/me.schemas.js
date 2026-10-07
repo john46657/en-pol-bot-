@@ -34,6 +34,17 @@ exports.preferencesSchema = zod_1.z.object({
         search: zod_1.z.string().max(80).optional(),
         filters: zod_1.z.object({ team: zod_1.z.string().max(64).optional(), rank: zod_1.z.string().max(64).optional(), office: zod_1.z.string().max(64).optional(), status: zod_1.z.string().max(20).optional() }).optional(),
     }).optional(),
+    /** Persönliche CAD-Ansicht (nur für diesen Benutzer). */
+    cad: zod_1.z.object({
+        widgets: zod_1.z.array(zod_1.z.string().max(32)).max(20).optional(),
+        hiddenLayers: zod_1.z.array(zod_1.z.string().max(32)).max(40).optional(),
+        zoom: zod_1.z.number().min(0.02).max(8).optional(),
+        center: zod_1.z.object({ x: zod_1.z.number().finite(), y: zod_1.z.number().finite() }).optional(),
+        compact: zod_1.z.boolean().optional(),
+        sidebar: zod_1.z.boolean().optional(),
+        favoriteIncidents: zod_1.z.array(zod_1.z.string().uuid()).max(50).optional(),
+        erlcServerId: zod_1.z.string().uuid().optional(),
+    }).optional(),
     voice: zod_1.z.object({
         channelIds: zod_1.z.array(zod_1.z.string().regex(/^\d{15,25}$/)).max(100),
         categoryIds: zod_1.z.array(zod_1.z.string().regex(/^\d{15,25}$/)).max(50),

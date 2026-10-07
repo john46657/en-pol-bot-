@@ -115,9 +115,9 @@ export declare class ApplicationsService {
             decidedById: string | null;
             decisionReason: string | null;
             source: string;
+            discordName: string | null;
             answers: import("@prisma/client/runtime/library").JsonValue;
             grantRoleIds: string[];
-            discordName: string | null;
             durationSec: number | null;
             joinedAt: Date | null;
         }[];
@@ -139,9 +139,9 @@ export declare class ApplicationsService {
         decidedById: string | null;
         decisionReason: string | null;
         source: string;
+        discordName: string | null;
         answers: import("@prisma/client/runtime/library").JsonValue;
         grantRoleIds: string[];
-        discordName: string | null;
         durationSec: number | null;
         joinedAt: Date | null;
     }>;
@@ -159,9 +159,9 @@ export declare class ApplicationsService {
         decidedById: string | null;
         decisionReason: string | null;
         source: string;
+        discordName: string | null;
         answers: import("@prisma/client/runtime/library").JsonValue;
         grantRoleIds: string[];
-        discordName: string | null;
         durationSec: number | null;
         joinedAt: Date | null;
     }>;

@@ -40,6 +40,8 @@ const toEmbed = (e) => {
         b.setFooter({ text: e.footer });
     if (e.thumbnail && /^https:\/\//.test(e.thumbnail))
         b.setThumbnail(e.thumbnail);
+    if (e.author?.name)
+        b.setAuthor({ name: e.author.name.slice(0, 256), ...(e.author.iconUrl && /^https:\/\//.test(e.author.iconUrl) ? { iconURL: e.author.iconUrl } : {}) });
     return b;
 };
 const STYLE = { primary: discord_js_1.ButtonStyle.Primary, secondary: discord_js_1.ButtonStyle.Secondary, success: discord_js_1.ButtonStyle.Success, danger: discord_js_1.ButtonStyle.Danger };
@@ -137,9 +139,8 @@ const platform = {
     },
 };
 const live = (0, live_1.createLive)(api, platform);
-function toBuilder(def) {
-    const b = new discord_js_1.SlashCommandBuilder().setName(def.name).setDescription(def.description);
-    for (const o of def.options ?? []) {
+function addOptions(b, options = []) {
+    for (const o of options) {
         const common = (x) => { x.setName(o.name); x.setDescription(o.description); x.setRequired(!!o.required); };
         if (o.type === 'string')
             b.addStringOption((x) => { common(x); if (o.maxLength)
@@ -158,6 +159,14 @@ function toBuilder(def) {
                 x.setMinValue(o.min); if (o.max !== undefined)
                 x.setMaxValue(o.max); return x; });
     }
+}
+function toBuilder(def) {
+    const b = new discord_js_1.SlashCommandBuilder().setName(def.name).setDescription(def.description);
+    if (def.subcommands?.length)
+        for (const sc of def.subcommands)
+            b.addSubcommand((x) => { x.setName(sc.name).setDescription(sc.description); addOptions(x, sc.options); return x; });
+    else
+        addOptions(b, def.options);
     return b.toJSON();
 }
 /** Server-Beitritt des Mitglieds (voller GuildMember oder rohe API-Daten). */
@@ -178,7 +187,7 @@ async function markDecided(message, d) {
     for (const row of message.components) {
         if (!('components' in row))
             continue;
-        const kept = row.components.filter((c) => c.type === discord_js_1.ComponentType.Button && !/^quali:(decide|reason):/.test(c.customId ?? ''));
+        const kept = row.components.filter((c) => c.type === discord_js_1.ComponentType.Button && !/^(quali|leave):(decide|reason):/.test(c.customId ?? ''));
         if (kept.length)
             rows.push(new discord_js_1.ActionRowBuilder().addComponents(kept.map((c) => discord_js_1.ButtonBuilder.from(c))));
     }
@@ -188,7 +197,7 @@ async function markDecided(message, d) {
 function baseCtx(i) {
     const perms = i.memberPermissions;
     return {
-        discordId: i.user.id, api, platform, userName: i.user.username, memberJoinedAt: joinedAtOf(i.member),
+        discordId: i.user.id, api, platform, userName: i.user.username, userAvatar: i.user.displayAvatarURL({ size: 64 }), memberJoinedAt: joinedAtOf(i.member),
         guildId: i.guildId ?? undefined, channelId: i.channelId ?? undefined,
         isGuildAdmin: !!perms && (perms.has(discord_js_1.PermissionFlagsBits.ManageGuild) || perms.has(discord_js_1.PermissionFlagsBits.Administrator)),
         config: () => api.service('GET', '/bot/config'),
@@ -221,7 +230,10 @@ async function handleCommand(i) {
     if (!def)
         return;
     const opts = {};
-    for (const o of def.options ?? []) {
+    const sub = def.subcommands?.length ? i.options.getSubcommand(false) ?? undefined : undefined;
+    if (sub)
+        opts._sub = sub;
+    for (const o of (sub ? def.subcommands?.find((x) => x.name === sub)?.options : def.options) ?? []) {
         const v = i.options.get(o.name)?.value;
         opts[o.name] = typeof v === 'string' || typeof v === 'number' || typeof v === 'boolean' ? v : undefined;
     }
@@ -266,7 +278,7 @@ async function handleComponent(i) {
 function wire(c) {
     c.on('interactionCreate', (i) => {
         // Server der Interaktion → API prüft Rechte für genau diesen Server (Server laufen getrennt)
-        const task = api_1.guildScope.run(i.guildId ?? null, () => (i.isChatInputCommand() ? handleCommand(i) : i.isButton() || i.isModalSubmit() || i.isAnySelectMenu() ? handleComponent(i) : undefined));
+        const task = api_1.guildScope.run(i.guildId ?? null, () => api_1.rolesScope.run(rolesOf(i.member), () => i.isChatInputCommand() ? handleCommand(i) : i.isButton() || i.isModalSubmit() || i.isAnySelectMenu() ? handleComponent(i) : undefined));
         void task?.catch((e) => console.error('interaction failed:', e instanceof Error ? e.message : e));
     });
     // Direktnachrichten: Antworten auf Bewerbungsfragen (Bewerbung bei EN Polizei und Qualifikationen)
@@ -364,14 +376,20 @@ function wireReady(client0) {
                 throw new Error(`channel ${channelId} is not a text channel the bot can post in`);
             // Profilbild des Bewerbers rechts (wie bei Appy)
             const avatar = opts?.avatarUserId ? await client.users.fetch(opts.avatarUserId).then((u) => u.displayAvatarURL({ size: 256 }), () => undefined) : undefined;
-            const list = avatar && embeds[0] ? [{ ...embeds[0], thumbnail: avatar }, ...embeds.slice(1)] : embeds;
+            let list = avatar && embeds[0] ? [{ ...embeds[0], thumbnail: avatar }, ...embeds.slice(1)] : embeds;
+            // Kopfzeile „@Benutzer“ mit Profilbild (Abmeldeantrag wie bei Trident)
+            if (opts?.authorUserId && list[0]) {
+                const u = await client.users.fetch(opts.authorUserId).catch(() => null);
+                if (u)
+                    list = [{ ...list[0], author: { name: `@${u.username}`, iconUrl: u.displayAvatarURL({ size: 64 }) } }, ...list.slice(1)];
+            }
             // Nur die ausdrücklich eingestellten Rollen pingen – niemals @everyone/@here
             const roles = opts?.pingRoleIds ?? [];
             const msg = await ch.send({ ...(roles.length ? { content: roles.map((r) => `<@&${r}>`).join(' ') } : {}), embeds: list.map(toEmbed), components: toRows(buttons), allowedMentions: { parse: [], roles } });
             // Staff-Thread zur Bewerbung (braucht im Channel das Recht „Öffentliche Threads erstellen“)
             if (opts?.thread)
                 await msg.startThread({ name: opts.thread, autoArchiveDuration: 10080 }).catch((e) => console.error('could not create staff thread:', e instanceof Error ? e.message : e));
-        }, cfg.OUTBOX_POLL_SECONDS, console.log, (userId, text) => platform.sendDirectMessage(userId, text), grantRoleEverywhere, syncRolesEverywhere, () => void live.refresh('teamlist').catch(() => undefined), (effects) => tickets.apply(effects).then(() => undefined, (e) => console.error('ticket effects failed:', e instanceof Error ? e.message : e)), () => void presence.sync().catch((e) => console.error('team/voice sync failed:', e instanceof Error ? e.message : e)));
+        }, cfg.OUTBOX_POLL_SECONDS, console.log, (userId, msg) => (typeof msg === 'string' ? platform.sendDirectMessage(userId, msg) : platform.sendDm(userId, { embed: msg }).then(() => undefined)), grantRoleEverywhere, syncRolesEverywhere, () => void live.refresh('teamlist').catch(() => undefined), (effects) => tickets.apply(effects).then(() => undefined, (e) => console.error('ticket effects failed:', e instanceof Error ? e.message : e)), () => void presence.sync().catch((e) => console.error('team/voice sync failed:', e instanceof Error ? e.message : e)));
         live.start(cfg.LIVE_REFRESH_SECONDS);
         void tickets.refresh();
         (0, guilds_1.startGuildDirectory)(() => client, api);

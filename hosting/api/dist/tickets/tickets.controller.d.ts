@@ -90,8 +90,8 @@ export declare class TicketsController {
                 status: string;
                 custom: import("@prisma/client/runtime/library").JsonValue | null;
                 serverId: string | null;
-                aliases: string[];
                 notes: string | null;
+                aliases: string[];
             };
             legalCode: {
                 id: string;

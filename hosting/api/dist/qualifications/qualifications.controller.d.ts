@@ -9,11 +9,11 @@ declare const list: z.ZodObject<{
 }, "strip", z.ZodTypeAny, {
     unit?: string | undefined;
     guildId?: string | undefined;
-    status?: "REJECTED" | "OPEN" | "ACCEPTED" | undefined;
+    status?: "OPEN" | "REJECTED" | "ACCEPTED" | undefined;
 }, {
     unit?: string | undefined;
     guildId?: string | undefined;
-    status?: "REJECTED" | "OPEN" | "ACCEPTED" | undefined;
+    status?: "OPEN" | "REJECTED" | "ACCEPTED" | undefined;
 }>;
 declare const decision: z.ZodObject<{
     status: z.ZodEnum<["ACCEPTED", "REJECTED"]>;
@@ -52,22 +52,22 @@ declare const submit: z.ZodObject<{
 }, "strip", z.ZodTypeAny, {
     unit: string;
     discordId: string;
+    discordName: string;
     answers: {
         answer: string | string[] | null;
         question: string;
     }[];
-    discordName: string;
     guildId?: string | undefined;
     durationSec?: number | undefined;
     joinedAt?: Date | undefined;
 }, {
     unit: string;
     discordId: string;
+    discordName: string;
     answers: {
         answer: string | string[] | null;
         question: string;
     }[];
-    discordName: string;
     guildId?: string | undefined;
     durationSec?: number | undefined;
     joinedAt?: Date | undefined;
@@ -368,12 +368,12 @@ export declare class QualificationsController {
         decidedById: string | null;
         decidedAt: Date | null;
         decisionReason: string | null;
+        unitName: string;
+        discordName: string;
         answers: import("@prisma/client/runtime/library").JsonValue;
         grantRoleIds: string[];
-        discordName: string;
         durationSec: number | null;
         joinedAt: Date | null;
-        unitName: string;
     }[]>;
     history(q: z.infer<typeof historyQ>): import("@prisma/client").Prisma.PrismaPromise<{
         number: string;
@@ -395,12 +395,12 @@ export declare class QualificationsController {
         decidedById: string | null;
         decidedAt: Date | null;
         decisionReason: string | null;
+        unitName: string;
+        discordName: string;
         answers: import("@prisma/client/runtime/library").JsonValue;
         grantRoleIds: string[];
-        discordName: string;
         durationSec: number | null;
         joinedAt: Date | null;
-        unitName: string;
     }>;
     /** Auch vom Bot (Button im Team-Channel) mit den Rechten des klickenden Benutzers. */
     decide(a: Actor, id: string, b: z.infer<typeof decision>): Promise<{

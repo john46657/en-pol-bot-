@@ -240,9 +240,9 @@ function __param(paramIndex, decorator) {
   };
 }
 function __esDecorate(ctor, descriptorIn, decorators, contextIn, initializers, extraInitializers) {
-  function accept(f) {
-    if (f !== void 0 && typeof f !== "function") throw new TypeError("Function expected");
-    return f;
+  function accept(f2) {
+    if (f2 !== void 0 && typeof f2 !== "function") throw new TypeError("Function expected");
+    return f2;
   }
   var kind2 = contextIn.kind, key = kind2 === "getter" ? "get" : kind2 === "setter" ? "set" : "value";
   var target = !descriptorIn && ctor ? contextIn["static"] ? ctor : ctor.prototype : null;
@@ -252,9 +252,9 @@ function __esDecorate(ctor, descriptorIn, decorators, contextIn, initializers, e
     var context = {};
     for (var p in contextIn) context[p] = p === "access" ? {} : contextIn[p];
     for (var p in contextIn.access) context.access[p] = contextIn.access[p];
-    context.addInitializer = function(f) {
+    context.addInitializer = function(f2) {
       if (done) throw new TypeError("Cannot add initializers after decoration has completed");
-      extraInitializers.push(accept(f || null));
+      extraInitializers.push(accept(f2 || null));
     };
     var result = (0, decorators[i])(kind2 === "accessor" ? { get: descriptor.get, set: descriptor.set } : descriptor[key], context);
     if (kind2 === "accessor") {
@@ -281,9 +281,9 @@ function __runInitializers(thisArg, initializers, value) {
 function __propKey(x) {
   return typeof x === "symbol" ? x : "".concat(x);
 }
-function __setFunctionName(f, name, prefix) {
+function __setFunctionName(f2, name, prefix) {
   if (typeof name === "symbol") name = name.description ? "[".concat(name.description, "]") : "";
-  return Object.defineProperty(f, "name", { configurable: true, value: prefix ? "".concat(prefix, " ", name) : name });
+  return Object.defineProperty(f2, "name", { configurable: true, value: prefix ? "".concat(prefix, " ", name) : name });
 }
 function __metadata(metadataKey, metadataValue) {
   if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(metadataKey, metadataValue);
@@ -319,7 +319,7 @@ function __generator(thisArg, body) {
   var _ = { label: 0, sent: function() {
     if (t[0] & 1) throw t[1];
     return t[1];
-  }, trys: [], ops: [] }, f, y, t, g = Object.create((typeof Iterator === "function" ? Iterator : Object).prototype);
+  }, trys: [], ops: [] }, f2, y, t, g = Object.create((typeof Iterator === "function" ? Iterator : Object).prototype);
   return g.next = verb(0), g["throw"] = verb(1), g["return"] = verb(2), typeof Symbol === "function" && (g[Symbol.iterator] = function() {
     return this;
   }), g;
@@ -329,9 +329,9 @@ function __generator(thisArg, body) {
     };
   }
   function step(op) {
-    if (f) throw new TypeError("Generator is already executing.");
+    if (f2) throw new TypeError("Generator is already executing.");
     while (g && (g = 0, op[0] && (_ = 0)), _) try {
-      if (f = 1, y && (t = op[0] & 2 ? y["return"] : op[0] ? y["throw"] || ((t = y["return"]) && t.call(y), 0) : y.next) && !(t = t.call(y, op[1])).done) return t;
+      if (f2 = 1, y && (t = op[0] & 2 ? y["return"] : op[0] ? y["throw"] || ((t = y["return"]) && t.call(y), 0) : y.next) && !(t = t.call(y, op[1])).done) return t;
       if (y = 0, t) op = [op[0] & 2, t.value];
       switch (op[0]) {
         case 0:
@@ -378,7 +378,7 @@ function __generator(thisArg, body) {
       op = [6, e];
       y = 0;
     } finally {
-      f = t = 0;
+      f2 = t = 0;
     }
     if (op[0] & 5) throw op[1];
     return { value: op[0] ? op[1] : void 0, done: true };
@@ -445,19 +445,19 @@ function __asyncGenerator(thisArg, _arguments, generator) {
   return i = Object.create((typeof AsyncIterator === "function" ? AsyncIterator : Object).prototype), verb("next"), verb("throw"), verb("return", awaitReturn), i[Symbol.asyncIterator] = function() {
     return this;
   }, i;
-  function awaitReturn(f) {
+  function awaitReturn(f2) {
     return function(v) {
-      return Promise.resolve(v).then(f, reject);
+      return Promise.resolve(v).then(f2, reject);
     };
   }
-  function verb(n, f) {
+  function verb(n, f2) {
     if (g[n]) {
       i[n] = function(v) {
         return new Promise(function(a, b) {
           q2.push([n, v, a, b]) > 1 || resume(n, v);
         });
       };
-      if (f) i[n] = f(i[n]);
+      if (f2) i[n] = f2(i[n]);
     }
   }
   function resume(n, v) {
@@ -476,8 +476,8 @@ function __asyncGenerator(thisArg, _arguments, generator) {
   function reject(value) {
     resume("throw", value);
   }
-  function settle(f, v) {
-    if (f(v), q2.shift(), q2.length) resume(q2[0][0], q2[0][1]);
+  function settle(f2, v) {
+    if (f2(v), q2.shift(), q2.length) resume(q2[0][0], q2[0][1]);
   }
 }
 function __asyncDelegator(o) {
@@ -487,10 +487,10 @@ function __asyncDelegator(o) {
   }), verb("return"), i[Symbol.iterator] = function() {
     return this;
   }, i;
-  function verb(n, f) {
+  function verb(n, f2) {
     i[n] = o[n] ? function(v) {
-      return (p = !p) ? { value: __await(o[n](v)), done: false } : f ? f(v) : v;
-    } : f;
+      return (p = !p) ? { value: __await(o[n](v)), done: false } : f2 ? f2(v) : v;
+    } : f2;
   }
 }
 function __asyncValues(o) {
@@ -532,16 +532,16 @@ function __importStar(mod) {
 function __importDefault(mod) {
   return mod && mod.__esModule ? mod : { default: mod };
 }
-function __classPrivateFieldGet(receiver, state, kind2, f) {
-  if (kind2 === "a" && !f) throw new TypeError("Private accessor was defined without a getter");
-  if (typeof state === "function" ? receiver !== state || !f : !state.has(receiver)) throw new TypeError("Cannot read private member from an object whose class did not declare it");
-  return kind2 === "m" ? f : kind2 === "a" ? f.call(receiver) : f ? f.value : state.get(receiver);
+function __classPrivateFieldGet(receiver, state, kind2, f2) {
+  if (kind2 === "a" && !f2) throw new TypeError("Private accessor was defined without a getter");
+  if (typeof state === "function" ? receiver !== state || !f2 : !state.has(receiver)) throw new TypeError("Cannot read private member from an object whose class did not declare it");
+  return kind2 === "m" ? f2 : kind2 === "a" ? f2.call(receiver) : f2 ? f2.value : state.get(receiver);
 }
-function __classPrivateFieldSet(receiver, state, value, kind2, f) {
+function __classPrivateFieldSet(receiver, state, value, kind2, f2) {
   if (kind2 === "m") throw new TypeError("Private method is not writable");
-  if (kind2 === "a" && !f) throw new TypeError("Private accessor was defined without a setter");
-  if (typeof state === "function" ? receiver !== state || !f : !state.has(receiver)) throw new TypeError("Cannot write private member to an object whose class did not declare it");
-  return kind2 === "a" ? f.call(receiver, value) : f ? f.value = value : state.set(receiver, value), value;
+  if (kind2 === "a" && !f2) throw new TypeError("Private accessor was defined without a setter");
+  if (typeof state === "function" ? receiver !== state || !f2 : !state.has(receiver)) throw new TypeError("Cannot write private member to an object whose class did not declare it");
+  return kind2 === "a" ? f2.call(receiver, value) : f2 ? f2.value = value : state.set(receiver, value), value;
 }
 function __classPrivateFieldIn(state, receiver) {
   if (receiver === null || typeof receiver !== "object" && typeof receiver !== "function") throw new TypeError("Cannot use 'in' operator on non-object");
@@ -24254,9 +24254,9 @@ var require_dist3 = __commonJS({
               })(e3)) in t3 ? Object.defineProperty(t3, e3, { value: r2, enumerable: true, configurable: true, writable: true }) : t3[e3] = r2, t3;
             }
             __name(u, "u");
-            var l, f, s, y = r(425), p = y.AggregateError, g = y.AggregateErrorPrototype, v = y.Array, h = y.ArrayBuffer, d = y.ArrayBufferPrototype, b = y.ArrayIsArray, m = y.ArrayPrototype, S = y.ArrayPrototypeFilter, P = y.ArrayPrototypeForEach, x = y.ArrayPrototypeIncludes, w = y.ArrayPrototypeIndexOf, A = y.ArrayPrototypeJoin, O = y.ArrayPrototypeMap, _ = y.ArrayPrototypePop, j = y.ArrayPrototypePush, E = y.ArrayPrototypePushApply, k = y.ArrayPrototypeSlice, I = y.ArrayPrototypeSort, R = y.ArrayPrototypeSplice, L = y.ArrayPrototypeUnshift, T = y.BigIntPrototypeValueOf, B = y.Boolean, z = y.BooleanPrototype, M = y.BooleanPrototypeValueOf, C = y.DataView, D = y.DataViewPrototype, N = y.Date, F = y.DatePrototype, W = y.DatePrototypeGetTime, H = y.DatePrototypeToISOString, U = y.DatePrototypeToString, G = y.Error, V = y.ErrorPrototype, Z = y.ErrorPrototypeToString, $ = y.Function, Y = y.FunctionPrototype, q2 = y.FunctionPrototypeBind, J = y.FunctionPrototypeCall, K = y.FunctionPrototypeSymbolHasInstance, Q = y.FunctionPrototypeToString, X = y.JSONStringify, tt = y.Map, et = y.MapPrototype, rt = y.MapPrototypeEntries, nt = y.MapPrototypeGetSize, ot = y.MathFloor, at = y.MathMax, it = y.MathMin, ct = y.MathRound, ut = y.MathSqrt, lt = y.MathTrunc, ft = y.Number, st = y.NumberIsFinite, yt = y.NumberIsNaN, pt = y.NumberParseFloat, gt = y.NumberParseInt, vt = y.NumberPrototype, ht = y.NumberPrototypeToString, dt = y.NumberPrototypeValueOf, bt = y.Object, mt = y.ObjectAssign, St = y.ObjectDefineProperty, Pt = y.ObjectGetOwnPropertyDescriptor, xt = y.ObjectGetOwnPropertyNames, wt = y.ObjectGetOwnPropertySymbols, At = y.ObjectGetPrototypeOf, Ot = y.ObjectIs, _t = y.ObjectKeys, jt = y.ObjectPrototype, Et = y.ObjectPrototypeHasOwnProperty, kt = y.ObjectPrototypePropertyIsEnumerable, It = y.ObjectSeal, Rt = y.ObjectSetPrototypeOf, Lt = y.Promise, Tt = y.PromisePrototype, Bt = y.RangeError, zt = y.RangeErrorPrototype, Mt = y.ReflectApply, Ct = y.ReflectOwnKeys, Dt = y.RegExp, Nt = y.RegExpPrototype, Ft = y.RegExpPrototypeExec, Wt = y.RegExpPrototypeSymbolReplace, Ht = y.RegExpPrototypeSymbolSplit, Ut = y.RegExpPrototypeToString, Gt = y.SafeMap, Vt = y.SafeSet, Zt = y.SafeStringIterator, $t = y.Set, Yt = y.SetPrototype, qt = y.SetPrototypeGetSize, Jt = y.SetPrototypeValues, Kt = y.String, Qt = y.StringPrototype, Xt = y.StringPrototypeCharCodeAt, te = y.StringPrototypeCodePointAt, ee = y.StringPrototypeEndsWith, re = y.StringPrototypeIncludes, ne = y.StringPrototypeIndexOf, oe = y.StringPrototypeLastIndexOf, ae = y.StringPrototypeNormalize, ie = y.StringPrototypePadEnd, ce = y.StringPrototypePadStart, ue = y.StringPrototypeRepeat, le = y.StringPrototypeReplace, fe = y.StringPrototypeReplaceAll, se = y.StringPrototypeSlice, ye = y.StringPrototypeSplit, pe = y.StringPrototypeStartsWith, ge = y.StringPrototypeToLowerCase, ve = y.StringPrototypeTrim, he = y.StringPrototypeValueOf, de = y.SymbolIterator, be = y.SymbolPrototypeToString, me = y.SymbolPrototypeValueOf, Se = y.SymbolToPrimitive, Pe = y.SymbolToStringTag, xe = y.TypeError, we = y.TypeErrorPrototype, Ae = y.TypedArray, Oe = y.TypedArrayPrototype, _e = y.TypedArrayPrototypeGetLength, je = y.TypedArrayPrototypeGetSymbolToStringTag, Ee = y.Uint8Array, ke = y.WeakMap, Ie = y.WeakMapPrototype, Re = y.WeakSet, Le = y.WeakSetPrototype, Te = y.globalThis, Be = y.internalBinding, ze = y.uncurryThis, Me = r(153), Ce = Me.constants, De = Ce.ALL_PROPERTIES, Ne = Ce.ONLY_ENUMERABLE, Fe = Ce.kPending, We = Ce.kRejected, He = Me.getOwnNonIndexProperties, Ue = Me.getPromiseDetails, Ge = Me.getProxyDetails, Ve = Me.previewEntries, Ze = Me.getConstructorName, $e = Me.getExternalValue, Ye = Me.Proxy, qe = r(923), Je = qe.customInspectSymbol, Ke = qe.isError, Qe = qe.join, Xe = qe.removeColors, tr = r(924).isStackOverflowError, er = r(617), rr = er.isAsyncFunction, nr = er.isGeneratorFunction, or = er.isAnyArrayBuffer, ar = er.isArrayBuffer, ir = er.isArgumentsObject, cr = er.isBoxedPrimitive, ur = er.isDataView, lr = er.isExternal, fr = er.isMap, sr = er.isMapIterator, yr = er.isModuleNamespaceObject, pr = er.isNativeError, gr = er.isPromise, vr = er.isSet, hr = er.isSetIterator, dr = er.isWeakMap, br = er.isWeakSet, mr = er.isRegExp, Sr = er.isDate, Pr = er.isTypedArray, xr = er.isStringObject, wr = er.isNumberObject, Ar = er.isBooleanObject, Or = er.isBigIntObject, _r = r(229), jr = r(705).BuiltinModule, Er = r(116), kr = Er.validateObject, Ir = Er.validateString, Rr = Er.kValidateObjectAllowArray;
+            var l, f2, s, y = r(425), p = y.AggregateError, g = y.AggregateErrorPrototype, v = y.Array, h = y.ArrayBuffer, d = y.ArrayBufferPrototype, b = y.ArrayIsArray, m = y.ArrayPrototype, S = y.ArrayPrototypeFilter, P = y.ArrayPrototypeForEach, x = y.ArrayPrototypeIncludes, w = y.ArrayPrototypeIndexOf, A = y.ArrayPrototypeJoin, O = y.ArrayPrototypeMap, _ = y.ArrayPrototypePop, j = y.ArrayPrototypePush, E = y.ArrayPrototypePushApply, k = y.ArrayPrototypeSlice, I = y.ArrayPrototypeSort, R = y.ArrayPrototypeSplice, L = y.ArrayPrototypeUnshift, T = y.BigIntPrototypeValueOf, B = y.Boolean, z = y.BooleanPrototype, M = y.BooleanPrototypeValueOf, C = y.DataView, D = y.DataViewPrototype, N = y.Date, F = y.DatePrototype, W = y.DatePrototypeGetTime, H = y.DatePrototypeToISOString, U = y.DatePrototypeToString, G = y.Error, V = y.ErrorPrototype, Z = y.ErrorPrototypeToString, $ = y.Function, Y = y.FunctionPrototype, q2 = y.FunctionPrototypeBind, J = y.FunctionPrototypeCall, K = y.FunctionPrototypeSymbolHasInstance, Q = y.FunctionPrototypeToString, X = y.JSONStringify, tt = y.Map, et = y.MapPrototype, rt = y.MapPrototypeEntries, nt = y.MapPrototypeGetSize, ot = y.MathFloor, at = y.MathMax, it = y.MathMin, ct = y.MathRound, ut = y.MathSqrt, lt = y.MathTrunc, ft = y.Number, st = y.NumberIsFinite, yt = y.NumberIsNaN, pt = y.NumberParseFloat, gt = y.NumberParseInt, vt = y.NumberPrototype, ht = y.NumberPrototypeToString, dt = y.NumberPrototypeValueOf, bt = y.Object, mt = y.ObjectAssign, St = y.ObjectDefineProperty, Pt = y.ObjectGetOwnPropertyDescriptor, xt = y.ObjectGetOwnPropertyNames, wt = y.ObjectGetOwnPropertySymbols, At = y.ObjectGetPrototypeOf, Ot = y.ObjectIs, _t = y.ObjectKeys, jt = y.ObjectPrototype, Et = y.ObjectPrototypeHasOwnProperty, kt = y.ObjectPrototypePropertyIsEnumerable, It = y.ObjectSeal, Rt = y.ObjectSetPrototypeOf, Lt = y.Promise, Tt = y.PromisePrototype, Bt = y.RangeError, zt = y.RangeErrorPrototype, Mt = y.ReflectApply, Ct = y.ReflectOwnKeys, Dt = y.RegExp, Nt = y.RegExpPrototype, Ft = y.RegExpPrototypeExec, Wt = y.RegExpPrototypeSymbolReplace, Ht = y.RegExpPrototypeSymbolSplit, Ut = y.RegExpPrototypeToString, Gt = y.SafeMap, Vt = y.SafeSet, Zt = y.SafeStringIterator, $t = y.Set, Yt = y.SetPrototype, qt = y.SetPrototypeGetSize, Jt = y.SetPrototypeValues, Kt = y.String, Qt = y.StringPrototype, Xt = y.StringPrototypeCharCodeAt, te = y.StringPrototypeCodePointAt, ee = y.StringPrototypeEndsWith, re = y.StringPrototypeIncludes, ne = y.StringPrototypeIndexOf, oe = y.StringPrototypeLastIndexOf, ae = y.StringPrototypeNormalize, ie = y.StringPrototypePadEnd, ce = y.StringPrototypePadStart, ue = y.StringPrototypeRepeat, le = y.StringPrototypeReplace, fe = y.StringPrototypeReplaceAll, se = y.StringPrototypeSlice, ye = y.StringPrototypeSplit, pe = y.StringPrototypeStartsWith, ge = y.StringPrototypeToLowerCase, ve = y.StringPrototypeTrim, he = y.StringPrototypeValueOf, de = y.SymbolIterator, be = y.SymbolPrototypeToString, me = y.SymbolPrototypeValueOf, Se = y.SymbolToPrimitive, Pe = y.SymbolToStringTag, xe = y.TypeError, we = y.TypeErrorPrototype, Ae = y.TypedArray, Oe = y.TypedArrayPrototype, _e = y.TypedArrayPrototypeGetLength, je = y.TypedArrayPrototypeGetSymbolToStringTag, Ee = y.Uint8Array, ke = y.WeakMap, Ie = y.WeakMapPrototype, Re = y.WeakSet, Le = y.WeakSetPrototype, Te = y.globalThis, Be = y.internalBinding, ze = y.uncurryThis, Me = r(153), Ce = Me.constants, De = Ce.ALL_PROPERTIES, Ne = Ce.ONLY_ENUMERABLE, Fe = Ce.kPending, We = Ce.kRejected, He = Me.getOwnNonIndexProperties, Ue = Me.getPromiseDetails, Ge = Me.getProxyDetails, Ve = Me.previewEntries, Ze = Me.getConstructorName, $e = Me.getExternalValue, Ye = Me.Proxy, qe = r(923), Je = qe.customInspectSymbol, Ke = qe.isError, Qe = qe.join, Xe = qe.removeColors, tr = r(924).isStackOverflowError, er = r(617), rr = er.isAsyncFunction, nr = er.isGeneratorFunction, or = er.isAnyArrayBuffer, ar = er.isArrayBuffer, ir = er.isArgumentsObject, cr = er.isBoxedPrimitive, ur = er.isDataView, lr = er.isExternal, fr = er.isMap, sr = er.isMapIterator, yr = er.isModuleNamespaceObject, pr = er.isNativeError, gr = er.isPromise, vr = er.isSet, hr = er.isSetIterator, dr = er.isWeakMap, br = er.isWeakSet, mr = er.isRegExp, Sr = er.isDate, Pr = er.isTypedArray, xr = er.isStringObject, wr = er.isNumberObject, Ar = er.isBooleanObject, Or = er.isBigIntObject, _r = r(229), jr = r(705).BuiltinModule, Er = r(116), kr = Er.validateObject, Ir = Er.validateString, Rr = Er.kValidateObjectAllowArray;
             function Lr(t3) {
-              return (f = f || r(802)).pathToFileURL(t3).href;
+              return (f2 = f2 || r(802)).pathToFileURL(t3).href;
             }
             __name(Lr, "Lr");
             var Tr, Br, zr, Mr, Cr, Dr = new Vt(S(xt(Te), function(t3) {
@@ -24369,8 +24369,8 @@ var require_dist3 = __commonJS({
                   var u2 = i2.name, l2 = i2.constructor;
                   if (K(l2, a2)) return void 0 !== n2 && o2 !== t3 && fn(e3, a2, o2 || a2, r2, n2), u2;
                 }
-                var f2 = Pt(t3, "constructor");
-                if (void 0 !== f2 && "function" == typeof f2.value && "" !== f2.value.name && cn(a2, f2.value)) return void 0 === n2 || o2 === t3 && Dr.has(f2.value.name) || fn(e3, a2, o2 || a2, r2, n2), Kt(f2.value.name);
+                var f22 = Pt(t3, "constructor");
+                if (void 0 !== f22 && "function" == typeof f22.value && "" !== f22.value.name && cn(a2, f22.value)) return void 0 === n2 || o2 === t3 && Dr.has(f22.value.name) || fn(e3, a2, o2 || a2, r2, n2), Kt(f22.value.name);
                 t3 = At(t3), void 0 === o2 && (o2 = t3);
               }
               if (null === o2) return null;
@@ -24391,10 +24391,10 @@ var require_dist3 = __commonJS({
                 0 === u2 ? c2 = new Vt() : P(i2, function(t4) {
                   return c2.add(t4);
                 }), i2 = Ct(r2), j(t3.seen, e3);
-                var f2, s2 = o(i2);
+                var f22, s2 = o(i2);
                 try {
-                  for (s2.s(); !(f2 = s2.n()).done; ) {
-                    var y2 = f2.value;
+                  for (s2.s(); !(f22 = s2.n()).done; ) {
+                    var y2 = f22.value;
                     if (!("constructor" === y2 || Et(e3, y2) || 0 !== u2 && c2.has(y2))) {
                       var p2 = Pt(r2, y2);
                       if ("function" != typeof p2.value) {
@@ -24572,7 +24572,7 @@ var require_dist3 = __commonJS({
                       var l4 = ne(c3, "\n    at", u4);
                       if (-1 === l4) c3 = "[".concat(c3, "]");
                       else {
-                        var f2 = se(c3, 0, l4), s2 = (function(t6, e6, r3) {
+                        var f22 = se(c3, 0, l4), s2 = (function(t6, e6, r3) {
                           var n4, o2 = ye(r3, "\n");
                           try {
                             n4 = e6.cause;
@@ -24603,13 +24603,13 @@ var require_dist3 = __commonJS({
                           try {
                             for (v4.s(); !(p4 = v4.n()).done; ) {
                               var h4 = p4.value, d4 = Ft(Vr, h4);
-                              if (null !== d4 && jr.exists(d4[1])) f2 += "\n".concat(n3.stylize(h4, "undefined"));
+                              if (null !== d4 && jr.exists(d4[1])) f22 += "\n".concat(n3.stylize(h4, "undefined"));
                               else {
-                                if (f2 += "\n", h4 = bn(n3, h4), void 0 !== g4) {
+                                if (f22 += "\n", h4 = bn(n3, h4), void 0 !== g4) {
                                   var m4 = mn(n3, h4, g4);
                                   m4 === h4 && (m4 = mn(n3, h4, y2 = y2 || Lr(g4))), h4 = m4;
                                 }
-                                f2 += h4;
+                                f22 += h4;
                               }
                             }
                           } catch (t6) {
@@ -24617,8 +24617,8 @@ var require_dist3 = __commonJS({
                           } finally {
                             v4.f();
                           }
-                        } else f2 += "\n".concat(A(s2, "\n"));
-                        c3 = f2;
+                        } else f22 += "\n".concat(A(s2, "\n"));
+                        c3 = f22;
                       }
                       if (0 !== n3.indentationLvl) {
                         var S3 = ue(" ", n3.indentationLvl);
@@ -24644,7 +24644,7 @@ var require_dist3 = __commonJS({
                       return i4 !== n3 && (c3 += null === n3 ? " (null prototype)" : " (".concat(n3, ")")), c3 += ": ".concat(An(on, a4(t5), e5), "]"), "" !== o2 && o2 !== n3 && (c3 += " [".concat(o2, "]")), 0 !== r2.length || e5.stylize === on ? c3 : e5.stylize(c3, ge(i4));
                     })(e4, t4, i3, u3, l3), 0 === i3.length && void 0 === c2) return v3;
                   } else if (!(function(t5) {
-                    return f = f || r(802), "string" == typeof t5.href && t5 instanceof f.URL;
+                    return f2 = f2 || r(802), "string" == typeof t5.href && t5 instanceof f2.URL;
                   })(e4) || n2 > t4.depth && null !== t4.depth) {
                     if (0 === i3.length && void 0 === c2) {
                       if (lr(e4)) {
@@ -24655,7 +24655,7 @@ var require_dist3 = __commonJS({
                     }
                     p3[0] = "".concat(pn(e4, u3, l3), "{");
                   } else if (i3 = (function(t5) {
-                    return s = s || wt(new f.URL("http://user:pass@localhost:8080/?foo=bar#baz")), t5.filter(function(t6) {
+                    return s = s || wt(new f2.URL("http://user:pass@localhost:8080/?foo=bar#baz")), t5.filter(function(t6) {
                       return -1 === s[t6];
                     });
                   })(i3), v3 = e4.href, 0 === i3.length && void 0 === c2) return v3;
@@ -24734,8 +24734,8 @@ var require_dist3 = __commonJS({
                   r2 += se(e3, n2, u2);
                   var l2 = ne(e3, i2, u2);
                   "@" === e3[u2] && (l2 = ne(e3, i2, l2 + 1));
-                  var f2 = se(e3, u2, l2);
-                  r2 += t3.stylize(f2, "module"), n2 = l2, o2 = l2;
+                  var f22 = se(e3, u2, l2);
+                  r2 += t3.stylize(f22, "module"), n2 = l2, o2 = l2;
                 }
               }
               return 0 !== n2 && (e3 = r2 + se(e3, n2)), e3;
@@ -24808,7 +24808,7 @@ var require_dist3 = __commonJS({
                 if (l2 > Math.pow(2, 32) - 2) break;
                 if ("".concat(c2) !== u2) {
                   if (null === Ft(Gr, u2)) break;
-                  var f2 = l2 - c2, s2 = f2 > 1 ? "s" : "", y2 = "<".concat(f2, " empty item").concat(s2, ">");
+                  var f22 = l2 - c2, s2 = f22 > 1 ? "s" : "", y2 = "<".concat(f22, " empty item").concat(s2, ">");
                   if (j(o2, t3.stylize(y2, "undefined")), c2 = l2, o2.length === n2) break;
                 }
                 j(o2, Nn(t3, e3, r2, u2, 1)), c2++;
@@ -24847,8 +24847,8 @@ var require_dist3 = __commonJS({
               for (var a2 = it(at(0, r2.maxArrayLength), e3), i2 = t3.length - a2, c2 = new v(a2), u2 = t3.length > 0 && "number" == typeof t3[0] ? xn : wn, l2 = 0; l2 < a2; ++l2) c2[l2] = u2(r2.stylize, t3[l2], r2.numericSeparator);
               if (i2 > 0 && (c2[a2] = Pn(i2)), r2.showHidden) {
                 r2.indentationLvl += 2;
-                for (var f2 = 0, s2 = ["BYTES_PER_ELEMENT", "length", "byteLength", "byteOffset", "buffer"]; f2 < s2.length; f2++) {
-                  var y2 = s2[f2], p2 = gn(r2, t3[y2], o2, true);
+                for (var f22 = 0, s2 = ["BYTES_PER_ELEMENT", "length", "byteLength", "byteOffset", "buffer"]; f22 < s2.length; f22++) {
+                  var y2 = s2[f22], p2 = gn(r2, t3[y2], o2, true);
                   j(c2, "[".concat(y2, "]: ").concat(p2));
                 }
                 r2.indentationLvl -= 2;
@@ -24859,12 +24859,12 @@ var require_dist3 = __commonJS({
             function In(t3, e3, r2, n2) {
               var a2 = t3.size, i2 = it(at(0, e3.maxArrayLength), a2), c2 = a2 - i2, u2 = [];
               e3.indentationLvl += 2;
-              var l2, f2 = 0, s2 = o(t3);
+              var l2, f22 = 0, s2 = o(t3);
               try {
                 for (s2.s(); !(l2 = s2.n()).done; ) {
                   var y2 = l2.value;
-                  if (f2 >= i2) break;
-                  j(u2, gn(e3, y2, n2)), f2++;
+                  if (f22 >= i2) break;
+                  j(u2, gn(e3, y2, n2)), f22++;
                 }
               } catch (t4) {
                 s2.e(t4);
@@ -24877,12 +24877,12 @@ var require_dist3 = __commonJS({
             function Rn(t3, e3, r2, n2) {
               var a2 = t3.size, i2 = it(at(0, e3.maxArrayLength), a2), c2 = a2 - i2, u2 = [];
               e3.indentationLvl += 2;
-              var l2, f2 = 0, s2 = o(t3);
+              var l2, f22 = 0, s2 = o(t3);
               try {
                 for (s2.s(); !(l2 = s2.n()).done; ) {
                   var y2 = l2.value, p2 = y2[0], g2 = y2[1];
-                  if (f2 >= i2) break;
-                  j(u2, "".concat(gn(e3, p2, n2), " => ").concat(gn(e3, g2, n2))), f2++;
+                  if (f22 >= i2) break;
+                  j(u2, "".concat(gn(e3, p2, n2), " => ").concat(gn(e3, g2, n2))), f22++;
                 }
               } catch (t4) {
                 s2.e(t4);
@@ -24905,8 +24905,8 @@ var require_dist3 = __commonJS({
               var o2 = at(t3.maxArrayLength, 0), a2 = r2.length / 2, i2 = a2 - o2, c2 = it(o2, a2), u2 = new v(c2), l2 = 0;
               if (t3.indentationLvl += 2, 0 === n2) {
                 for (; l2 < c2; l2++) {
-                  var f2 = 2 * l2;
-                  u2[l2] = "".concat(gn(t3, r2[f2], e3), " => ").concat(gn(t3, r2[f2 + 1], e3));
+                  var f22 = 2 * l2;
+                  u2[l2] = "".concat(gn(t3, r2[f22], e3), " => ").concat(gn(t3, r2[f22 + 1], e3));
                 }
                 t3.sorted || I(u2);
               } else for (; l2 < c2; l2++) {
@@ -24945,10 +24945,10 @@ var require_dist3 = __commonJS({
             }
             __name(Dn, "Dn");
             function Nn(t3, e3, r2, o2, a2, i2) {
-              var c2, u2, l2 = arguments.length > 6 && void 0 !== arguments[6] ? arguments[6] : e3, f2 = " ";
+              var c2, u2, l2 = arguments.length > 6 && void 0 !== arguments[6] ? arguments[6] : e3, f22 = " ";
               if (void 0 !== (i2 = i2 || Pt(e3, o2) || { value: e3[o2], enumerable: true }).value) {
                 var s2 = true !== t3.compact || 0 !== a2 ? 2 : 3;
-                t3.indentationLvl += s2, u2 = gn(t3, i2.value, r2), 3 === s2 && t3.breakLength < Hr(u2, t3.colors) && (f2 = "\n".concat(ue(" ", t3.indentationLvl))), t3.indentationLvl -= s2;
+                t3.indentationLvl += s2, u2 = gn(t3, i2.value, r2), 3 === s2 && t3.breakLength < Hr(u2, t3.colors) && (f22 = "\n".concat(ue(" ", t3.indentationLvl))), t3.indentationLvl -= s2;
               } else if (void 0 !== i2.get) {
                 var y2 = void 0 !== i2.set ? "Getter/Setter" : "Getter", p2 = t3.stylize, g2 = "special";
                 if (t3.getters && (true === t3.getters || "get" === t3.getters && void 0 === i2.set || "set" === t3.getters && void 0 !== i2.set)) try {
@@ -24971,7 +24971,7 @@ var require_dist3 = __commonJS({
                 var b2 = Wt(Br, be(o2), en);
                 c2 = t3.stylize(b2, "symbol");
               } else c2 = null !== Ft(Ur, o2) ? "__proto__" === o2 ? "['__proto__']" : t3.stylize(o2, "name") : t3.stylize(rn(o2), "string");
-              return false === i2.enumerable && (c2 = "[".concat(c2, "]")), "".concat(c2, ":").concat(f2).concat(u2);
+              return false === i2.enumerable && (c2 = "[".concat(c2, "]")), "".concat(c2, ":").concat(f22).concat(u2);
             }
             __name(Nn, "Nn");
             function Fn(t3, e3, r2, n2) {
@@ -25030,8 +25030,8 @@ var require_dist3 = __commonJS({
                 return "".concat(r2 ? "".concat(r2, " ") : "").concat(n2[0]).concat(l2, "  ") + "".concat(Qe(e3, ",".concat(l2, "  "))).concat(l2).concat(n2[1]);
               }
               if (Fn(t3, e3, 0, r2)) return "".concat(n2[0]).concat(r2 ? " ".concat(r2) : "", " ").concat(Qe(e3, ", "), " ") + n2[1];
-              var f2 = ue(" ", t3.indentationLvl), s2 = "" === r2 && 1 === n2[0].length ? " " : "".concat(r2 ? " ".concat(r2) : "", "\n").concat(f2, "  ");
-              return "".concat(n2[0]).concat(s2).concat(Qe(e3, ",\n".concat(f2, "  ")), " ").concat(n2[1]);
+              var f22 = ue(" ", t3.indentationLvl), s2 = "" === r2 && 1 === n2[0].length ? " " : "".concat(r2 ? " ".concat(r2) : "", "\n").concat(f22, "  ");
+              return "".concat(n2[0]).concat(s2).concat(Qe(e3, ",\n".concat(f22, "  ")), " ").concat(n2[1]);
             }
             __name(Wn, "Wn");
             function Hn(t3) {
@@ -25094,8 +25094,8 @@ var require_dist3 = __commonJS({
               var r2 = e3[0], o2 = 0, a2 = "", i2 = "";
               if ("string" == typeof r2) {
                 if (1 === e3.length) return r2;
-                for (var u2, l2 = 0, f2 = 0; f2 < r2.length - 1; f2++) if (37 === Xt(r2, f2)) {
-                  var s2 = Xt(r2, ++f2);
+                for (var u2, l2 = 0, f22 = 0; f22 < r2.length - 1; f22++) if (37 === Xt(r2, f22)) {
+                  var s2 = Xt(r2, ++f22);
                   if (o2 + 1 !== e3.length) {
                     switch (s2) {
                       case 115:
@@ -25127,13 +25127,13 @@ var require_dist3 = __commonJS({
                         o2 += 1, u2 = "";
                         break;
                       case 37:
-                        a2 += se(r2, l2, f2), l2 = f2 + 1;
+                        a2 += se(r2, l2, f22), l2 = f22 + 1;
                         continue;
                       default:
                         continue;
                     }
-                    l2 !== f2 - 1 && (a2 += se(r2, l2, f2 - 1)), a2 += u2, l2 = f2 + 1;
-                  } else 37 === s2 && (a2 += se(r2, l2, f2), l2 = f2 + 1);
+                    l2 !== f22 - 1 && (a2 += se(r2, l2, f22 - 1)), a2 += u2, l2 = f22 + 1;
+                  } else 37 === s2 && (a2 += se(r2, l2, f22), l2 = f22 + 1);
                 }
                 0 !== l2 && (o2++, i2 = " ", l2 < r2.length && (a2 += se(r2, l2)));
               }
@@ -25300,14 +25300,14 @@ var require_dist3 = __commonJS({
               return n2;
             }
             __name(c, "c");
-            var u = r(425), l = u.BigInt, f = u.Error, s = u.NumberParseInt, y = u.ObjectEntries, p = u.ObjectGetOwnPropertyDescriptor, g = u.ObjectGetOwnPropertyDescriptors, v = u.ObjectGetOwnPropertySymbols, h = u.ObjectPrototypeToString, d = u.Symbol, b = r(569), m = d("kPending"), S = d("kRejected");
+            var u = r(425), l = u.BigInt, f2 = u.Error, s = u.NumberParseInt, y = u.ObjectEntries, p = u.ObjectGetOwnPropertyDescriptor, g = u.ObjectGetOwnPropertyDescriptors, v = u.ObjectGetOwnPropertySymbols, h = u.ObjectPrototypeToString, d = u.Symbol, b = r(569), m = d("kPending"), S = d("kRejected");
             t2.exports = { constants: { kPending: m, kRejected: S, ALL_PROPERTIES: 0, ONLY_ENUMERABLE: 2 }, getOwnNonIndexProperties: /* @__PURE__ */ __name(function(t3) {
               var e3, r2 = arguments.length > 1 && void 0 !== arguments[1] ? arguments[1] : 2, n2 = g(t3), i2 = [], c2 = a(y(n2));
               try {
                 for (c2.s(); !(e3 = c2.n()).done; ) {
-                  var u2 = o(e3.value, 2), l2 = u2[0], f2 = u2[1];
+                  var u2 = o(e3.value, 2), l2 = u2[0], f22 = u2[1];
                   if (!/^(0|[1-9][0-9]*)$/.test(l2) || s(l2, 10) >= Math.pow(2, 32) - 1) {
-                    if (2 === r2 && !f2.enumerable) continue;
+                    if (2 === r2 && !f22.enumerable) continue;
                     i2.push(l2);
                   }
                 }
@@ -25334,7 +25334,7 @@ var require_dist3 = __commonJS({
               return [[], false];
             }, "previewEntries"), getConstructorName: /* @__PURE__ */ __name(function(t3) {
               var e3;
-              if (!t3 || "object" !== n(t3)) throw new f("Invalid object");
+              if (!t3 || "object" !== n(t3)) throw new f2("Invalid object");
               if (null !== (e3 = t3.constructor) && void 0 !== e3 && e3.name) return t3.constructor.name;
               var r2 = h(t3).match(/^\[object ([^\]]+)\]/);
               return r2 ? r2[1] : "Object";
@@ -25355,13 +25355,13 @@ var require_dist3 = __commonJS({
               throw new (o())(t3);
             }, t2.exports = a;
           }, 370: (t2, e2, r) => {
-            var n = r(425), o = n.StringPrototypeCharCodeAt, a = n.StringPrototypeLastIndexOf, i = n.StringPrototypeSlice, c = r(22), u = c.CHAR_DOT, l = c.CHAR_FORWARD_SLASH, f = r(116).validateString;
+            var n = r(425), o = n.StringPrototypeCharCodeAt, a = n.StringPrototypeLastIndexOf, i = n.StringPrototypeSlice, c = r(22), u = c.CHAR_DOT, l = c.CHAR_FORWARD_SLASH, f2 = r(116).validateString;
             function s(t3) {
               return t3 === l;
             }
             __name(s, "s");
             function y(t3, e3, r2, n2) {
-              for (var c2 = "", f2 = 0, s2 = -1, y2 = 0, p = 0, g = 0; g <= t3.length; ++g) {
+              for (var c2 = "", f22 = 0, s2 = -1, y2 = 0, p = 0, g = 0; g <= t3.length; ++g) {
                 if (g < t3.length) p = o(t3, g);
                 else {
                   if (n2(p)) break;
@@ -25370,19 +25370,19 @@ var require_dist3 = __commonJS({
                 if (n2(p)) {
                   if (s2 === g - 1 || 1 === y2) ;
                   else if (2 === y2) {
-                    if (c2.length < 2 || 2 !== f2 || o(c2, c2.length - 1) !== u || o(c2, c2.length - 2) !== u) {
+                    if (c2.length < 2 || 2 !== f22 || o(c2, c2.length - 1) !== u || o(c2, c2.length - 2) !== u) {
                       if (c2.length > 2) {
                         var v = a(c2, r2);
-                        -1 === v ? (c2 = "", f2 = 0) : f2 = (c2 = i(c2, 0, v)).length - 1 - a(c2, r2), s2 = g, y2 = 0;
+                        -1 === v ? (c2 = "", f22 = 0) : f22 = (c2 = i(c2, 0, v)).length - 1 - a(c2, r2), s2 = g, y2 = 0;
                         continue;
                       }
                       if (0 !== c2.length) {
-                        c2 = "", f2 = 0, s2 = g, y2 = 0;
+                        c2 = "", f22 = 0, s2 = g, y2 = 0;
                         continue;
                       }
                     }
-                    e3 && (c2 += c2.length > 0 ? "".concat(r2, "..") : "..", f2 = 2);
-                  } else c2.length > 0 ? c2 += "".concat(r2).concat(i(t3, s2 + 1, g)) : c2 = i(t3, s2 + 1, g), f2 = g - s2 - 1;
+                    e3 && (c2 += c2.length > 0 ? "".concat(r2, "..") : "..", f22 = 2);
+                  } else c2.length > 0 ? c2 += "".concat(r2).concat(i(t3, s2 + 1, g)) : c2 = i(t3, s2 + 1, g), f22 = g - s2 - 1;
                   s2 = g, y2 = 0;
                 } else p === u && -1 !== y2 ? ++y2 : y2 = -1;
               }
@@ -25393,7 +25393,7 @@ var require_dist3 = __commonJS({
               if ((0 === arguments.length || 1 === arguments.length && ("" === (arguments.length <= 0 ? void 0 : arguments[0]) || "." === (arguments.length <= 0 ? void 0 : arguments[0]))) && o("/", 0) === l) return "/";
               for (var t3 = "", e3 = false, r2 = arguments.length - 1; r2 >= 0 && !e3; r2--) {
                 var n2 = r2 < 0 || arguments.length <= r2 ? void 0 : arguments[r2];
-                f(n2, "paths[".concat(r2, "]")), 0 !== n2.length && (t3 = "".concat(n2, "/").concat(t3), e3 = o(n2, 0) === l);
+                f2(n2, "paths[".concat(r2, "]")), 0 !== n2.length && (t3 = "".concat(n2, "/").concat(t3), e3 = o(n2, 0) === l);
               }
               return e3 || (t3 = "".concat("/", "/").concat(t3), e3 = o("/", 0) === l), t3 = y(t3, !e3, "/", s), e3 ? "/".concat(t3) : t3.length > 0 ? t3 : ".";
             }, "resolve") };
@@ -25443,9 +25443,9 @@ var require_dist3 = __commonJS({
               function l2() {
               }
               __name(l2, "l");
-              function f2() {
+              function f22() {
               }
-              __name(f2, "f");
+              __name(f22, "f");
               function s2() {
               }
               __name(s2, "s");
@@ -25457,7 +25457,7 @@ var require_dist3 = __commonJS({
                 return Object.setPrototypeOf ? Object.setPrototypeOf(t4, s2) : (t4.__proto__ = s2, r(t4, i2, "GeneratorFunction")), t4.prototype = Object.create(p2), t4;
               }
               __name(g2, "g");
-              return f2.prototype = s2, r(p2, "constructor", s2), r(s2, "constructor", f2), f2.displayName = "GeneratorFunction", r(s2, i2, "GeneratorFunction"), r(p2), r(p2, i2, "Generator"), r(p2, a2, function() {
+              return f22.prototype = s2, r(p2, "constructor", s2), r(s2, "constructor", f22), f22.displayName = "GeneratorFunction", r(s2, i2, "GeneratorFunction"), r(p2), r(p2, i2, "Generator"), r(p2, a2, function() {
                 return this;
               }), r(p2, "toString", function() {
                 return "[object Generator]";
@@ -25534,10 +25534,10 @@ var require_dist3 = __commonJS({
               }
             }
             __name(l, "l");
-            function f(t3, e3, r2) {
+            function f2(t3, e3, r2) {
               return e3 && l(t3.prototype, e3), r2 && l(t3, r2), Object.defineProperty(t3, "prototype", { writable: false }), t3;
             }
-            __name(f, "f");
+            __name(f2, "f");
             function s(t3, e3) {
               var r2 = Object.keys(t3);
               if (Object.getOwnPropertySymbols) {
@@ -25782,7 +25782,7 @@ var require_dist3 = __commonJS({
             }), P.IteratorPrototype = Reflect.getPrototypeOf(P.ArrayIteratorPrototype);
             var M = P.ArrayPrototypeForEach, C = P.FinalizationRegistry, D = P.FunctionPrototypeCall, N = P.Map, F = P.ObjectFreeze, W = P.ObjectSetPrototypeOf, H = P.RegExp, U = P.Set, G = P.SymbolIterator, V = P.WeakMap, Z = P.WeakRef, $ = P.WeakSet, Y = /* @__PURE__ */ __name(function(t3, e3) {
               var r2 = (function() {
-                return f(/* @__PURE__ */ __name(function e4(r3) {
+                return f2(/* @__PURE__ */ __name(function e4(r3) {
                   u(this, e4), this._iterator = t3(r3);
                 }, "e"), [{ key: "next", value: /* @__PURE__ */ __name(function() {
                   return e3(this._iterator);
@@ -25822,37 +25822,37 @@ var require_dist3 = __commonJS({
                 return u(this, e3), n(this, e3, [t4]);
               }
               __name(e3, "e");
-              return i(e3, t3), f(e3);
+              return i(e3, t3), f2(e3);
             })(N)), P.SafeWeakMap = J(V, (function(t3) {
               function e3(t4) {
                 return u(this, e3), n(this, e3, [t4]);
               }
               __name(e3, "e");
-              return i(e3, t3), f(e3);
+              return i(e3, t3), f2(e3);
             })(V)), P.SafeSet = J(U, (function(t3) {
               function e3(t4) {
                 return u(this, e3), n(this, e3, [t4]);
               }
               __name(e3, "e");
-              return i(e3, t3), f(e3);
+              return i(e3, t3), f2(e3);
             })(U)), P.SafeWeakSet = J($, (function(t3) {
               function e3(t4) {
                 return u(this, e3), n(this, e3, [t4]);
               }
               __name(e3, "e");
-              return i(e3, t3), f(e3);
+              return i(e3, t3), f2(e3);
             })($)), P.SafeFinalizationRegistry = J(C, (function(t3) {
               function e3(t4) {
                 return u(this, e3), n(this, e3, [t4]);
               }
               __name(e3, "e");
-              return i(e3, t3), f(e3);
+              return i(e3, t3), f2(e3);
             })(C)), P.SafeWeakRef = J(Z, (function(t3) {
               function e3(t4) {
                 return u(this, e3), n(this, e3, [t4]);
               }
               __name(e3, "e");
-              return i(e3, t3), f(e3);
+              return i(e3, t3), f2(e3);
             })(Z)), P.AsyncIteratorPrototype = P.ReflectGetPrototypeOf(b(e2().m(/* @__PURE__ */ __name(function t3() {
               return e2().w(function(t4) {
                 for (; ; ) if (0 === t4.n) return t4.a(2);
@@ -25893,7 +25893,7 @@ var require_dist3 = __commonJS({
               return "symbol" == n(e3) ? e3 : e3 + "";
             }
             __name(a, "a");
-            var i = r(425), c = i.Proxy, u = i.ProxyRevocable, l = new (0, i.SafeWeakMap)(), f = (function() {
+            var i = r(425), c = i.Proxy, u = i.ProxyRevocable, l = new (0, i.SafeWeakMap)(), f2 = (function() {
               return t3 = /* @__PURE__ */ __name(function t4(e4, r2) {
                 !(function(t5, e5) {
                   if (!(t5 instanceof e5)) throw new TypeError("Cannot call a class as a function");
@@ -25913,7 +25913,7 @@ var require_dist3 = __commonJS({
               }, "value") }], null, e3 && o(t3, e3), Object.defineProperty(t3, "prototype", { writable: false }), t3;
               var t3, e3;
             })();
-            t2.exports = { getProxyDetails: f.getProxyDetails.bind(f), Proxy: f };
+            t2.exports = { getProxyDetails: f2.getProxyDetails.bind(f2), Proxy: f2 };
           }, 617: (t2, e2, r) => {
             function n(t3) {
               return n = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function(t4) {
@@ -25923,7 +25923,7 @@ var require_dist3 = __commonJS({
               }, n(t3);
             }
             __name(n, "n");
-            var o = r(425), a = o.ArrayIsArray, i = o.BigInt, c = o.Boolean, u = o.DatePrototype, l = o.Error, f = o.FunctionPrototype, s = o.MapPrototypeHas, y = o.Number, p = o.ObjectDefineProperty, g = o.ObjectGetOwnPropertyDescriptor, v = o.ObjectGetPrototypeOf, h = o.ObjectIsFrozen, d = o.ObjectPrototype, b = o.SetPrototypeHas, m = o.String, S = o.Symbol, P = o.SymbolToStringTag, x = o.globalThis, w = r(153).getConstructorName;
+            var o = r(425), a = o.ArrayIsArray, i = o.BigInt, c = o.Boolean, u = o.DatePrototype, l = o.Error, f2 = o.FunctionPrototype, s = o.MapPrototypeHas, y = o.Number, p = o.ObjectDefineProperty, g = o.ObjectGetOwnPropertyDescriptor, v = o.ObjectGetPrototypeOf, h = o.ObjectIsFrozen, d = o.ObjectPrototype, b = o.SetPrototypeHas, m = o.String, S = o.Symbol, P = o.SymbolToStringTag, x = o.globalThis, w = r(153).getConstructorName;
             function A(t3) {
               for (var e3 = arguments.length, r2 = new Array(e3 > 1 ? e3 - 1 : 0), o2 = 1; o2 < e3; o2++) r2[o2 - 1] = arguments[o2];
               for (var a2 = 0, i2 = r2; a2 < i2.length; a2++) {
@@ -25955,9 +25955,9 @@ var require_dist3 = __commonJS({
             }, "get"), configurable: true }), __magic__.globalThis = __magic__, delete d.__magic__);
             var _ = O(m), j = O(y), E = O(c), k = O(i), I = O(S);
             t2.exports = { isAsyncFunction: /* @__PURE__ */ __name(function(t3) {
-              return "function" == typeof t3 && f.toString.call(t3).startsWith("async");
+              return "function" == typeof t3 && f2.toString.call(t3).startsWith("async");
             }, "isAsyncFunction"), isGeneratorFunction: /* @__PURE__ */ __name(function(t3) {
-              return "function" == typeof t3 && f.toString.call(t3).match(/^(async\s+)?function *\*/);
+              return "function" == typeof t3 && f2.toString.call(t3).match(/^(async\s+)?function *\*/);
             }, "isGeneratorFunction"), isAnyArrayBuffer: /* @__PURE__ */ __name(function(t3) {
               return A(t3, "ArrayBuffer", "SharedArrayBuffer");
             }, "isAnyArrayBuffer"), isArrayBuffer: /* @__PURE__ */ __name(function(t3) {
@@ -26021,11 +26021,11 @@ var require_dist3 = __commonJS({
               return t3.startsWith("internal/") || -1 !== e2.indexOf(t3);
             }, "exists") };
           }, 802: (t2, e2, r) => {
-            var n = r(425), o = n.StringPrototypeCharCodeAt, a = n.StringPrototypeIncludes, i = n.StringPrototypeReplace, c = r(24), u = r(22).CHAR_FORWARD_SLASH, l = r(370), f = /%/g, s = /\\/g, y = /\n/g, p = /\r/g, g = /\t/g;
+            var n = r(425), o = n.StringPrototypeCharCodeAt, a = n.StringPrototypeIncludes, i = n.StringPrototypeReplace, c = r(24), u = r(22).CHAR_FORWARD_SLASH, l = r(370), f2 = /%/g, s = /\\/g, y = /\n/g, p = /\r/g, g = /\t/g;
             t2.exports = { pathToFileURL: /* @__PURE__ */ __name(function(t3) {
               var e3 = new c("file://"), r2 = l.resolve(t3);
               return o(t3, t3.length - 1) === u && r2[r2.length - 1] !== l.sep && (r2 += "/"), e3.pathname = (function(t4) {
-                return a(t4, "%") && (t4 = i(t4, f, "%25")), a(t4, "\\") && (t4 = i(t4, s, "%5C")), a(t4, "\n") && (t4 = i(t4, y, "%0A")), a(t4, "\r") && (t4 = i(t4, p, "%0D")), a(t4, "	") && (t4 = i(t4, g, "%09")), t4;
+                return a(t4, "%") && (t4 = i(t4, f2, "%25")), a(t4, "\\") && (t4 = i(t4, s, "%5C")), a(t4, "\n") && (t4 = i(t4, y, "%0A")), a(t4, "\r") && (t4 = i(t4, p, "%0D")), a(t4, "	") && (t4 = i(t4, g, "%09")), t4;
               })(r2), e3;
             }, "pathToFileURL"), URL: c };
           }, 883: (t2, e2, r) => {
@@ -26138,7 +26138,7 @@ var require_dist3 = __commonJS({
               }, l(t3, e3);
             }
             __name(l, "l");
-            var f, s, y = r(425), p = y.ArrayIsArray, g = y.ArrayPrototypeIncludes, v = y.ArrayPrototypeIndexOf, h = y.ArrayPrototypeJoin, d = y.ArrayPrototypePush, b = y.ArrayPrototypeSlice, m = y.ArrayPrototypeSplice, S = y.Error, P = y.ErrorCaptureStackTrace, x = y.JSONStringify, w = y.ObjectDefineProperty, A = y.ReflectApply, O = y.RegExpPrototypeExec, _ = y.SafeMap, j = y.SafeWeakMap, E = y.String, k = y.StringPrototypeEndsWith, I = y.StringPrototypeIncludes, R = y.StringPrototypeIndexOf, L = y.StringPrototypeSlice, T = y.StringPrototypeToLowerCase, B = y.Symbol, z = y.TypeError, M = B("kIsNodeError"), C = new _(), D = {}, N = /^[A-Z][a-zA-Z0-9]*$/, F = ["string", "function", "number", "object", "Function", "Object", "boolean", "bigint", "symbol"], W = new j(), H = r(229), U = null;
+            var f2, s, y = r(425), p = y.ArrayIsArray, g = y.ArrayPrototypeIncludes, v = y.ArrayPrototypeIndexOf, h = y.ArrayPrototypeJoin, d = y.ArrayPrototypePush, b = y.ArrayPrototypeSlice, m = y.ArrayPrototypeSplice, S = y.Error, P = y.ErrorCaptureStackTrace, x = y.JSONStringify, w = y.ObjectDefineProperty, A = y.ReflectApply, O = y.RegExpPrototypeExec, _ = y.SafeMap, j = y.SafeWeakMap, E = y.String, k = y.StringPrototypeEndsWith, I = y.StringPrototypeIncludes, R = y.StringPrototypeIndexOf, L = y.StringPrototypeSlice, T = y.StringPrototypeToLowerCase, B = y.Symbol, z = y.TypeError, M = B("kIsNodeError"), C = new _(), D = {}, N = /^[A-Z][a-zA-Z0-9]*$/, F = ["string", "function", "number", "object", "Function", "Object", "boolean", "bigint", "symbol"], W = new j(), H = r(229), U = null;
             function G(t3, e3) {
               var r2 = (function(t4) {
                 function r3() {
@@ -26162,10 +26162,10 @@ var require_dist3 = __commonJS({
                 return (function(t5, e4) {
                   if ("function" != typeof e4 && null !== e4) throw new TypeError("Super expression must either be null or a function");
                   t5.prototype = Object.create(e4 && e4.prototype, { constructor: { value: t5, writable: true, configurable: true } }), Object.defineProperty(t5, "prototype", { writable: false }), e4 && l(t5, e4);
-                })(r3, t4), n2 = r3, (f2 = [{ key: "toString", value: /* @__PURE__ */ __name(function() {
+                })(r3, t4), n2 = r3, (f22 = [{ key: "toString", value: /* @__PURE__ */ __name(function() {
                   return "".concat(this.name, " [").concat(e3, "]: ").concat(this.message);
-                }, "value") }]) && a(n2.prototype, f2), s2 && a(n2, s2), Object.defineProperty(n2, "prototype", { writable: false }), n2;
-                var n2, f2, s2;
+                }, "value") }]) && a(n2.prototype, f22), s2 && a(n2, s2), Object.defineProperty(n2, "prototype", { writable: false }), n2;
+                var n2, f22, s2;
               })(t3);
               return r2;
             }
@@ -26237,9 +26237,9 @@ var require_dist3 = __commonJS({
                 }, "e");
                 e3();
               } catch (t4) {
-                s = t4.message, f = t4.name;
+                s = t4.message, f2 = t4.name;
               }
-              return t3 && t3.name === f && t3.message === s;
+              return t3 && t3.name === f2 && t3.message === s;
             }, "isStackOverflowError"), kEnhanceStackBeforeInspector: $, kIsNodeError: M, overrideStackTrace: W }, V("ERR_INTERNAL_ASSERTION", function(t3) {
               var e3 = "This is caused by either a bug in Node.js or incorrect usage of Node.js internals.\nPlease open an issue with this stack trace at https://github.com/nodejs/node/issues\n";
               return void 0 === t3 ? e3 : "".concat(t3, "\n").concat(e3);
@@ -26252,7 +26252,7 @@ var require_dist3 = __commonJS({
                 o2 += '"'.concat(t3, '" ').concat(a2, " ");
               }
               o2 += "must be ";
-              var i2, c2 = [], u2 = [], l2 = [], f2 = (function(t4, e4) {
+              var i2, c2 = [], u2 = [], l2 = [], f22 = (function(t4, e4) {
                 var r3 = "undefined" != typeof Symbol && t4[Symbol.iterator] || t4["@@iterator"];
                 if (!r3) {
                   if (Array.isArray(t4) || (r3 = (function(t5, e5) {
@@ -26290,14 +26290,14 @@ var require_dist3 = __commonJS({
                 }, "f") };
               })(e3);
               try {
-                for (f2.s(); !(i2 = f2.n()).done; ) {
+                for (f22.s(); !(i2 = f22.n()).done; ) {
                   var s2 = i2.value;
                   H("string" == typeof s2, "All expected entries have to be of type string"), g(F, s2) ? d(c2, T(s2)) : null !== O(N, s2) ? d(u2, s2) : (H("object" !== s2, 'The value "object" should be written as "Object"'), d(l2, s2));
                 }
               } catch (t4) {
-                f2.e(t4);
+                f22.e(t4);
               } finally {
-                f2.f();
+                f22.f();
               }
               if (u2.length > 0) {
                 var y2 = v(c2, "object");
@@ -26930,10 +26930,10 @@ var require_toHex = __commonJS({
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     exports2.fromHex = exports2.toHex = void 0;
-    var hex = (num) => new Number(num).toString(16).toLowerCase();
-    var toHex = (num) => `0x${hex(num).length === 1 ? "0" + hex(num) : hex(num)}`;
+    var hex2 = (num) => new Number(num).toString(16).toLowerCase();
+    var toHex = (num) => `0x${hex2(num).length === 1 ? "0" + hex2(num) : hex2(num)}`;
     exports2.toHex = toHex;
-    var fromHex = (hex2) => new Number(hex2);
+    var fromHex = (hex3) => new Number(hex3);
     exports2.fromHex = fromHex;
   }
 });
@@ -38338,12 +38338,12 @@ var require_ClientApplication = __commonJS({
         }
         if ("integration_types_config" in data) {
           this.integrationTypesConfig = Object.fromEntries(
-            Object.entries(data.integration_types_config).map(([key, config]) => {
+            Object.entries(data.integration_types_config).map(([key, config2]) => {
               let oauth2InstallParams = null;
-              if (config.oauth2_install_params) {
+              if (config2.oauth2_install_params) {
                 oauth2InstallParams = {
-                  scopes: config.oauth2_install_params.scopes,
-                  permissions: new PermissionsBitField2(config.oauth2_install_params.permissions).freeze()
+                  scopes: config2.oauth2_install_params.scopes,
+                  permissions: new PermissionsBitField2(config2.oauth2_install_params.permissions).freeze()
                 };
               }
               const context = {
@@ -39730,22 +39730,22 @@ var require_cjs3 = __commonJS({
     })();
     var l;
     var s = [];
-    var f = false;
+    var f2 = false;
     var a = -1;
     function h() {
-      f && l && (f = false, l.length ? s = l.concat(s) : a = -1, s.length && d());
+      f2 && l && (f2 = false, l.length ? s = l.concat(s) : a = -1, s.length && d());
     }
     __name(h, "h");
     function d() {
-      if (!f) {
+      if (!f2) {
         var e3 = c(h);
-        f = true;
+        f2 = true;
         for (var t3 = s.length; t3; ) {
           for (l = s, s = []; ++a < t3; )
             l && l[a].run();
           a = -1, t3 = s.length;
         }
-        l = null, f = false, (function(e4) {
+        l = null, f2 = false, (function(e4) {
           if (n === clearTimeout)
             return clearTimeout(e4);
           if ((n === u || !n) && clearTimeout)
@@ -39775,7 +39775,7 @@ var require_cjs3 = __commonJS({
       if (arguments.length > 1)
         for (var n3 = 1; n3 < arguments.length; n3++)
           t3[n3 - 1] = arguments[n3];
-      s.push(new m(e3, t3)), 1 !== s.length || f || c(d);
+      s.push(new m(e3, t3)), 1 !== s.length || f2 || c(d);
     }, m.prototype.run = function() {
       (this || r).fun.apply(null, (this || r).array);
     }, o.title = "browser", o.browser = true, o.env = {}, o.argv = [], o.version = "", o.versions = {}, o.on = p, o.addListener = p, o.once = p, o.off = p, o.removeListener = p, o.removeAllListeners = p, o.emit = p, o.prependListener = p, o.prependOnceListener = p, o.listeners = function(e3) {
@@ -39856,7 +39856,7 @@ var require_cjs3 = __commonJS({
     }, "i$1");
     var o$2 = {};
     var u$1 = i$1;
-    var f2 = l2;
+    var f22 = l2;
     var a2 = i2;
     function c$1(e3) {
       return e3.call.bind(e3);
@@ -39999,7 +39999,7 @@ var require_cjs3 = __commonJS({
       return p2 && O(e3, v);
     }
     __name(L, "L");
-    o$2.isArgumentsObject = f2, o$2.isGeneratorFunction = a2, o$2.isPromise = function(e3) {
+    o$2.isArgumentsObject = f22, o$2.isGeneratorFunction = a2, o$2.isPromise = function(e3) {
       return "undefined" != typeof Promise && e3 instanceof Promise || null !== e3 && "object" == typeof e3 && "function" == typeof e3.then && "function" == typeof e3.catch;
     }, o$2.isArrayBufferView = function(e3) {
       return d2 && ArrayBuffer.isView ? ArrayBuffer.isView(e3) : S(e3) || R(e3);
@@ -75775,7 +75775,7 @@ function embedOf(e) {
   if (https(e.image)) b.setImage(e.image);
   if (e.author) b.setAuthor({ name: e.author.slice(0, 256), ...https(e.authorIcon) ? { iconURL: e.authorIcon } : {} });
   if (e.footer) b.setFooter({ text: e.footer.slice(0, 2048), ...https(e.footerIcon) ? { iconURL: e.footerIcon } : {} });
-  if (e.fields?.length) b.addFields(e.fields.slice(0, 25).map((f) => ({ name: f.name.slice(0, 256) || "\u200B", value: f.value.slice(0, 1024) || "\u200B", inline: f.inline ?? false })));
+  if (e.fields?.length) b.addFields(e.fields.slice(0, 25).map((f2) => ({ name: f2.name.slice(0, 256) || "\u200B", value: f2.value.slice(0, 1024) || "\u200B", inline: f2.inline ?? false })));
   if (e.timestamp) b.setTimestamp(new Date(e.timestamp));
   if (!e.title && !e.description && !e.fields?.length) b.setDescription("\u200B");
   return b;
@@ -76118,6 +76118,7 @@ function startPresenceReporter(client2, api2, opts, log = console.log) {
 // apps/bot/src/api.ts
 var import_node_async_hooks = require("node:async_hooks");
 var guildScope = new import_node_async_hooks.AsyncLocalStorage();
+var rolesScope = new import_node_async_hooks.AsyncLocalStorage();
 var BotApiError = class extends Error {
   constructor(status, code, message, requestId, reason) {
     super(message);
@@ -76147,7 +76148,7 @@ var HttpApi = class {
       const res = await this.doFetch(`${this.baseUrl}/api/v1${path2}`, {
         method,
         signal: ctl.signal,
-        headers: { authorization: `Bot ${this.token}`, ...discordId ? { "x-discord-user": discordId } : {}, ...discordId && guildScope.getStore() ? { "x-guild-id": guildScope.getStore() } : {}, ...body ? { "content-type": "application/json" } : {} },
+        headers: { authorization: `Bot ${this.token}`, ...discordId ? { "x-discord-user": discordId } : {}, ...discordId && guildScope.getStore() ? { "x-guild-id": guildScope.getStore() } : {}, ...discordId && rolesScope.getStore()?.length ? { "x-discord-roles": rolesScope.getStore().slice(0, 100).join(",") } : {}, ...body ? { "content-type": "application/json" } : {} },
         body: body ? JSON.stringify(body) : void 0
       });
       const text = await res.text();
@@ -76248,8 +76249,14 @@ ${clip(plain(p.description), 2e3)}` : ""}`,
     case "announcement":
       return { title: "\u{1F4E2} Ank\xFCndigung", description: clip(plain(p.body), 4e3), color: COLORS.warning, footer: `von ${clip(p.author, 100)}` };
     case "danger.changed": {
-      const d = DANGER[String(p.level)] ?? DANGER.GREEN;
-      return { title: `${d.emoji} Gefahrenstatus: ${d.label}`, description: p.reason ? clip(plain(p.reason), 1e3) : void 0, color: d.color, fields: [{ name: "Vorher", value: DANGER[String(p.previous)]?.label ?? "\u2014", inline: true }, { name: "Gesetzt von", value: clip(plain(p.setBy ?? "System"), 200), inline: true }] };
+      return {
+        title: clip(`${String(p.name ?? p.level)}${p.title ? `: ${String(p.title)}` : ""}`, 256),
+        color: hexColor(p.color, COLORS.warning),
+        description: clip(`${String(p.text ?? "")}${p.reason ? `
+
+**Hinweis:** ${plain(p.reason)}` : ""}`, 4e3) || void 0,
+        footer: clip(`${p.previous ? `Vorher: ${String(p.previous)} \xB7 ` : ""}Gesetzt von ${String(p.setBy ?? "System")}`, 200)
+      };
     }
     case "duty.changed": {
       const st = String(p.status), prev = String(p.previous ?? "OFF_DUTY");
@@ -76263,19 +76270,18 @@ ${clip(plain(p.description), 2e3)}` : ""}`,
     }
     case "leave.requested":
       return {
-        title: clip(`\u{1F4C5} Abmeldung ${String(p.number)} \u2013 ${plain(p.name)}`, 256),
+        title: "Abmeldeantrag",
         color: COLORS.warning,
-        description: clip(`${p.discordId ? `<@${String(p.discordId)}> ` : ""}m\xF6chte sich abmelden.
-
-**Grund:** ${plain(p.reason)}`, 4e3),
-        fields: [{ name: "Von", value: berlinDate(p.startsAt), inline: true }, { name: "Bis", value: berlinDate(p.endsAt), inline: true }, { name: "Dauer", value: leaveDays(p), inline: true }]
+        description: clip(`${p.discordId ? `<@${String(p.discordId)}>` : plain(p.name)} m\xF6chte sich abmelden.`, 4e3),
+        fields: [{ name: "Grund", value: clip(plain(p.reason), 1024) }, { name: "Dauer", value: leaveSpan(p) }, { name: "Zeitraum", value: `<t:${unixOf(p.startsAt)}:f> \u2013 <t:${unixOf(p.endsAt)}:f>` }],
+        footer: `ID: ${String(p.number)}`
       };
     case "leave.log": {
       const ev = LEAVE_EVENTS[String(p.event)] ?? { text: String(p.event), color: COLORS.neutral };
       return {
         title: clip(`${ev.text}: ${plain(p.name)} (${String(p.number)})`, 256),
         color: ev.color,
-        description: clip([p.discordId ? `<@${String(p.discordId)}>` : null, `**Zeitraum:** ${berlinDate(p.startsAt)} \u2013 ${berlinDate(p.endsAt)} (${leaveDays(p)})`, `**Grund:** ${plain(p.reason)}`, p.decidedByName ? `**Entschieden von:** ${plain(p.decidedByName)}` : null, p.decisionReason ? `**Begr\xFCndung:** ${plain(p.decisionReason)}` : null].filter(Boolean).join("\n"), 4e3)
+        description: clip([p.discordId ? `<@${String(p.discordId)}>` : null, `**Zeitraum:** ${berlinDate(p.startsAt)} \u2013 ${berlinDate(p.endsAt)} (${leaveSpan(p)})`, `**Grund:** ${plain(p.reason)}`, p.decidedByName ? `**Entschieden von:** ${plain(p.decidedByName)}` : null, p.decisionReason ? `**Begr\xFCndung:** ${plain(p.decisionReason)}` : null].filter(Boolean).join("\n"), 4e3)
       };
     }
     case "sek.report":
@@ -76349,10 +76355,6 @@ var berlinDate = (v) => {
   const d = new Date(String(v));
   return Number.isNaN(d.getTime()) ? "\u2014" : d.toLocaleString("de-DE", { timeZone: "Europe/Berlin", day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" });
 };
-var leaveDays = (p) => {
-  const d = Math.max(1, Math.round((new Date(String(p.endsAt)).getTime() - new Date(String(p.startsAt)).getTime()) / 864e5));
-  return `${d} ${d === 1 ? "Tag" : "Tage"}`;
-};
 var LEAVE_EVENTS = {
   approved: { text: "\u2705 Abmeldung angenommen", color: COLORS.success },
   denied: { text: "\u274C Abmeldung abgelehnt", color: COLORS.danger },
@@ -76361,13 +76363,53 @@ var LEAVE_EVENTS = {
   ended_early: { text: "\u21A9\uFE0F Abmeldung vorzeitig beendet", color: COLORS.neutral },
   cancelled: { text: "\u21A9\uFE0F Abmeldung zur\xFCckgezogen", color: COLORS.neutral }
 };
-function leaveDecisionText(p) {
-  const when = `${berlinDate(p.startsAt)} \u2013 ${berlinDate(p.endsAt)}`;
-  return p.status === "APPROVED" ? `\u2705 Deine Abmeldung **${String(p.number)}** (${when}) wurde **angenommen**.${p.decisionReason ? `
-
-**Hinweis:** ${clip(plain(p.decisionReason), 1e3)}` : ""}` : `\u274C Deine Abmeldung **${String(p.number)}** (${when}) wurde **abgelehnt**.${p.decisionReason ? `
-
-**Grund:** ${clip(plain(p.decisionReason), 1e3)}` : ""}`;
+var unixOf = (v) => Math.floor(new Date(String(v)).getTime() / 1e3);
+function humanDuration(ms) {
+  const H = 36e5, D = 24 * H, W = 7 * D;
+  const n = (v, one, many) => `${v} ${v === 1 ? one : many}`;
+  const parts = [];
+  let rest = Math.max(H, Math.round(ms / H) * H);
+  if (rest >= W && rest % D === 0) {
+    parts.push(n(Math.floor(rest / W), "Woche", "Wochen"));
+    rest %= W;
+  }
+  if (rest >= D) {
+    parts.push(n(Math.floor(rest / D), "Tag", "Tage"));
+    rest %= D;
+  }
+  if (rest >= H) parts.push(n(Math.round(rest / H), "Stunde", "Stunden"));
+  return parts.join(", ");
+}
+var leaveSpan = (p) => humanDuration(new Date(String(p.endsAt)).getTime() - new Date(String(p.startsAt)).getTime());
+var guildAuthor = (p) => p.guildName ? { name: clip(String(p.guildName), 200), ...typeof p.guildIcon === "string" && /^https:\/\//.test(p.guildIcon) ? { iconUrl: p.guildIcon } : {} } : void 0;
+function leaveDirectEmbed(type, p) {
+  const author = guildAuthor(p);
+  const server = plain(p.guildName ?? "dem Server");
+  const end = unixOf(p.endsAt);
+  const base = { ...author ? { author } : {}, footer: `ID: ${String(p.number)}` };
+  if (type === "leave.pending") return {
+    ...base,
+    title: "Abmeldung ausstehend",
+    color: COLORS.warning,
+    description: `Deine Abmeldung wurde der Leitung zur Freigabe vorgelegt.
+Wenn sie angenommen wird, endet sie ungef\xE4hr <t:${end}:F> (<t:${end}:R>).
+Um deine Abmeldung zu verwalten, nutze \`/leave manage\` auf **${server}**.`
+  };
+  if (p.status === "APPROVED") return {
+    ...base,
+    title: "Abmeldung angenommen",
+    color: COLORS.success,
+    description: `Deine Abmeldung endet ungef\xE4hr <t:${end}:F> (<t:${end}:R>).
+Um deine Abmeldung zu verwalten, nutze \`/leave manage\` auf **${server}**.`,
+    ...p.decisionReason ? { fields: [{ name: "Hinweis", value: clip(plain(p.decisionReason), 1024) }] } : {}
+  };
+  return {
+    ...base,
+    title: "Abmeldung abgelehnt",
+    color: COLORS.danger,
+    description: `Falls du denkst, dass das ein Fehler war, wende dich an die Leitung von **${server}**.`,
+    ...p.decisionReason ? { fields: [{ name: "Grund", value: clip(plain(p.decisionReason), 1024) }] } : {}
+  };
 }
 function renderOutboxEmbeds(type, p) {
   if (type === "qualification.submitted") return applicationEmbeds(p, "q");
@@ -76385,9 +76427,8 @@ function renderOutboxEmbeds(type, p) {
 }
 function outboxButtons(type, p) {
   if (type === "leave.requested" && typeof p.id === "string") return [
-    { id: `leave:decide:${p.id}:APPROVED`, label: "Annehmen", style: "success" },
-    { id: `leave:decide:${p.id}:DENIED`, label: "Ablehnen", style: "danger" },
-    { id: `leave:reason:${p.id}:DENIED`, label: "Ablehnen mit Grund", style: "danger" },
+    { id: `leave:decide:${p.id}:APPROVED`, label: "Annehmen", style: "success", emoji: "\u2714\uFE0F" },
+    { id: `leave:reason:${p.id}:DENIED`, label: "Ablehnen", style: "danger", emoji: "\u2716\uFE0F" },
     ...typeof p.dashboardUrl === "string" && /^https?:\/\//.test(p.dashboardUrl) ? [{ id: "link", label: "Im Dashboard ansehen", style: "secondary", url: p.dashboardUrl }] : []
   ];
   if (/^wanted\./.test(type) && typeof p.dashboardUrl === "string" && /^https?:\/\//.test(p.dashboardUrl)) return [{ id: "link", label: "Im Dashboard ansehen", style: "secondary", url: p.dashboardUrl }];
@@ -76414,26 +76455,25 @@ function applicationDecisionText(p) {
   if (typeof p.message === "string" && p.message.trim()) return clip(p.message, 2e3);
   return p.status === "ACCEPTED" ? `\u{1F389} Deine Bewerbung **${p.number}** bei EN Polizei wurde **angenommen**! Ein Teammitglied meldet sich bei dir f\xFCr die n\xE4chsten Schritte.${reasonText(p)}` : `Deine Bewerbung **${p.number}** bei EN Polizei wurde diesmal leider **nicht angenommen**. Du kannst dich gerne sp\xE4ter erneut bewerben.${reasonText(p)}`;
 }
-var DANGER = {
-  GREEN: { label: "Gr\xFCn \u2013 Normaler Dienst", emoji: "\u{1F7E2}", color: 3066993 },
-  YELLOW: { label: "Gelb \u2013 Erh\xF6hte Vorsicht", emoji: "\u{1F7E1}", color: 15844367 },
-  RED: { label: "Rot \u2013 Akute Gefahrenlage", emoji: "\u{1F534}", color: 15158332 }
-};
+var hexColor = (v, fallback) => typeof v === "string" && /^#[0-9a-f]{6}$/i.test(v) ? parseInt(v.slice(1), 16) : fallback;
 function dangerEmbed(s) {
-  const d = DANGER[s.level] ?? DANGER.GREEN;
+  const d = s.def;
+  const current = d ? `**Aktuell:** ${d.emoji} ${plain(d.name)}${d.title ? ` \u2013 ${plain(d.title)}` : ""}${s.reason ? `
+${clip(plain(s.reason), 300)}` : ""}` : "";
+  const when = s.at ? `
+<t:${Math.floor(new Date(s.at).getTime() / 1e3)}:f>` : "";
   return {
-    title: `${d.emoji} Aktueller Gefahrenstatus: ${d.label}`,
-    color: d.color,
-    description: s.reason ? clip(plain(s.reason), 1e3) : void 0,
-    fields: [...s.setByName ? [{ name: "Gesetzt von", value: clip(plain(s.setByName), 200), inline: true }] : [], ...s.at ? [{ name: "Seit", value: `<t:${Math.floor(new Date(s.at).getTime() / 1e3)}:R>`, inline: true }] : []],
-    footer: "Buttons: Status \xE4ndern (nur mit Berechtigung)"
+    title: clip(s.panel?.title ?? "Gefahrenstatus", 256),
+    color: hexColor(d?.color, COLORS.danger),
+    description: clip(`${s.panel?.text ?? ""}${current ? `
+
+${current}` : ""}${when}`, 4e3),
+    ...s.setByName ? { footer: `Gesetzt von ${clip(s.setByName, 100)}` } : {}
   };
 }
-var DANGER_BUTTONS = [
-  { id: "danger:set:GREEN", label: "Gr\xFCn", emoji: "\u{1F7E2}", style: "success" },
-  { id: "danger:set:YELLOW", label: "Gelb", emoji: "\u{1F7E1}", style: "primary" },
-  { id: "danger:set:RED", label: "Rot", emoji: "\u{1F534}", style: "danger" }
-];
+function dangerButtons(s) {
+  return (s.levels ?? []).slice(0, 10).map((l) => ({ id: `danger:set:${l.key}`, label: clip(l.name, 80), emoji: s.panel?.buttonEmoji || l.emoji || void 0, style: l.buttonStyle ?? "danger" }));
+}
 var DUTY_EMOJI = { ON_DUTY: "\u{1F7E2}", BREAK: "\u{1F7E1}", TRAINING: "\u{1F535}", ADMINISTRATIVE: "\u{1F535}", OFF_DUTY: "\u26AA" };
 var DUTY_DE = {
   ON_DUTY: { label: "im Dienst", emoji: "\u{1F7E2}", color: 2278750 },
@@ -76473,7 +76513,7 @@ function mapError(e) {
   if (e.status === 0) return errorReply("Das System ist gerade nicht erreichbar. Bitte sp\xE4ter erneut versuchen.");
   if (e.status === 401 && e.reason === "NOT_LINKED") return errorReply("Dein Discord-Konto ist nicht verkn\xFCpft. Erzeuge im Web (Men\xFC \u2192 \u201EDiscord verkn\xFCpfen\u201C) einen Code und nutze `/verknuepfen`.");
   if (e.status === 401) return errorReply(`Authentifizierung fehlgeschlagen.${rid}`);
-  if (e.status === 403) return errorReply("Dazu hast du keine Berechtigung.");
+  if (e.status === 403) return errorReply(/[äöüß]|Server|Einheit|Leitstelle/.test(e.message) && !/^You do not have permission|^This route/.test(e.message) ? `Dazu hast du keine Berechtigung: ${e.message}` : "Dazu hast du keine Berechtigung.");
   if (e.status === 404) return errorReply("Nicht gefunden.");
   if (e.status === 429) return errorReply("Zu viele Anfragen \u2013 bitte kurz warten.");
   if (e.status === 400 || e.status === 409) return errorReply(`${e.message}${rid}`);
@@ -76555,8 +76595,8 @@ var SEK_COMMANDS = [
 var SEK_INTERACTION = {
   prefix: "sek",
   async run(c) {
-    const f = c.fields ?? {};
-    const v = (k) => (f[k] ?? "").trim();
+    const f2 = c.fields ?? {};
+    const v = (k) => (f2[k] ?? "").trim();
     try {
       if (c.args[0] === "report") {
         const when = parseGermanDate(v("datum"));
@@ -76576,9 +76616,11 @@ var SEK_INTERACTION = {
 // packages/shared/dist/index.mjs
 var PERMISSION_CATALOG = {
   /** `dashboard.<bereich>.view`: Sichtbarkeit ganzer Bereiche im Menü und auf der Startseite (zusätzlich zur Modul-Permission). */
-  dashboard: ["view", "customize", "tickets.view", "applications.view", "team.view", "offices.view", "voice.view", "radio.view", "teamchance.view", "logs.view", "settings.view"],
+  dashboard: ["view", "customize", "tickets.view", "applications.view", "team.view", "offices.view", "voice.view", "radio.view", "teamchance.view", "logs.view", "settings.view", "cad.view"],
   team: ["view", "manage"],
   dispatch: ["view", "create", "edit", "assign", "close", "manage"],
+  /** CAD-Leitstelle + ER:LC-Integration (deny-by-default; kritische ER:LC-Befehle brauchen ein eigenes Recht). */
+  cad: ["view", "create_incident", "edit_incident", "close_incident", "assign_unit", "manage_units", "view_persons", "view_vehicles", "manage_map", "view_erlc", "manage_erlc", "erlc_command", "erlc_command_critical", "manage_cross_server", "view_logs", "manage_settings", "radio"],
   incidents: ["view", "create", "edit", "close", "delete"],
   persons: ["view", "create", "edit", "archive", "merge"],
   vehicles: ["view", "create", "edit", "archive"],
@@ -76635,34 +76677,34 @@ var TICKET_ACTIONS = {
 };
 var TICKET_ACTION_KEYS = Object.keys(TICKET_ACTIONS);
 var MAX_FORM_OPTIONS = 25;
-function normalizeField(f) {
-  const type = f.type ?? "TEXT";
+function normalizeField(f2) {
+  const type = f2.type ?? "TEXT";
   return {
-    key: f.key,
-    label: f.label,
-    required: f.required,
+    key: f2.key,
+    label: f2.label,
+    required: f2.required,
     type,
-    minLength: type === "TEXT" ? Math.max(0, f.minLength ?? 0) : 0,
-    maxLength: f.maxLength,
-    options: type === "TEXT" ? [] : (f.options ?? []).slice(0, MAX_FORM_OPTIONS),
-    multiple: type !== "TEXT" && !!f.multiple
+    minLength: type === "TEXT" ? Math.max(0, f2.minLength ?? 0) : 0,
+    maxLength: f2.maxLength,
+    options: type === "TEXT" ? [] : (f2.options ?? []).slice(0, MAX_FORM_OPTIONS),
+    multiple: type !== "TEXT" && !!f2.multiple
   };
 }
 function checkAnswer(field2, value) {
-  const f = normalizeField(field2);
-  if (f.type === "TEXT") {
+  const f2 = normalizeField(field2);
+  if (f2.type === "TEXT") {
     const v = (Array.isArray(value) ? value.join("\n") : value ?? "").trim();
-    if (!v) return f.required ? { ok: false, error: `\u201E${f.label}\u201C ist eine Pflichtfrage.` } : { ok: true, text: "", roleIds: [] };
-    if (v.length < f.minLength) return { ok: false, error: `Die Antwort auf \u201E${f.label}\u201C ist zu kurz (mindestens ${f.minLength} Zeichen).` };
-    if (v.length > f.maxLength) return { ok: false, error: `Die Antwort auf \u201E${f.label}\u201C ist zu lang (h\xF6chstens ${f.maxLength} Zeichen).` };
+    if (!v) return f2.required ? { ok: false, error: `\u201E${f2.label}\u201C ist eine Pflichtfrage.` } : { ok: true, text: "", roleIds: [] };
+    if (v.length < f2.minLength) return { ok: false, error: `Die Antwort auf \u201E${f2.label}\u201C ist zu kurz (mindestens ${f2.minLength} Zeichen).` };
+    if (v.length > f2.maxLength) return { ok: false, error: `Die Antwort auf \u201E${f2.label}\u201C ist zu lang (h\xF6chstens ${f2.maxLength} Zeichen).` };
     return { ok: true, text: v, roleIds: [] };
   }
   const picked = [...new Set((Array.isArray(value) ? value : value ? [value] : []).map((x) => x.trim()).filter(Boolean))];
-  if (!picked.length) return f.required ? { ok: false, error: `Bitte bei \u201E${f.label}\u201C etwas ausw\xE4hlen.` } : { ok: true, text: "", roleIds: [] };
-  if (!f.multiple && picked.length > 1) return { ok: false, error: `Bei \u201E${f.label}\u201C ist nur eine Auswahl erlaubt.` };
-  const opts = picked.map((p) => f.options.find((o) => o.label === p));
-  if (opts.some((o) => !o)) return { ok: false, error: `Ung\xFCltige Auswahl bei \u201E${f.label}\u201C.` };
-  return { ok: true, text: picked.join(", "), roleIds: f.type === "ROLE" ? opts.map((o) => o.roleId).filter((r) => !!r && /^\d{15,25}$/.test(r)) : [] };
+  if (!picked.length) return f2.required ? { ok: false, error: `Bitte bei \u201E${f2.label}\u201C etwas ausw\xE4hlen.` } : { ok: true, text: "", roleIds: [] };
+  if (!f2.multiple && picked.length > 1) return { ok: false, error: `Bei \u201E${f2.label}\u201C ist nur eine Auswahl erlaubt.` };
+  const opts = picked.map((p) => f2.options.find((o) => o.label === p));
+  if (opts.some((o) => !o)) return { ok: false, error: `Ung\xFCltige Auswahl bei \u201E${f2.label}\u201C.` };
+  return { ok: true, text: picked.join(", "), roleIds: f2.type === "ROLE" ? opts.map((o) => o.roleId).filter((r) => !!r && /^\d{15,25}$/.test(r)) : [] };
 }
 var DEFAULT_APPLICATION_MESSAGES = {
   accepted: "\u{1F389} Deine Bewerbung als `{applicationName}` ({number}) wurde von {user} **angenommen**!",
@@ -76681,6 +76723,74 @@ var formatMinutes = (min) => {
   return [d ? `${d} ${d === 1 ? "Tag" : "Tage"}` : "", h ? `${h} ${h === 1 ? "Stunde" : "Stunden"}` : "", m ? `${m} ${m === 1 ? "Minute" : "Minuten"}` : ""].filter(Boolean).join(" ") || "0 Minuten";
 };
 var rolesMatch = (have, ids, mode) => mode === "ALL" ? ids.every((r) => have.includes(r)) : ids.some((r) => have.includes(r));
+var ERLC_MAP_SIZE = 5355;
+var DEFAULT_CAD_CONFIG = {
+  homeGuildId: null,
+  incidentNumberPrefix: "E",
+  incidentTypes: [
+    { key: "ROBBERY", label: "Raub", emoji: "\u{1F4B0}" },
+    { key: "SHOTS", label: "Schussabgabe", emoji: "\u{1F52B}" },
+    { key: "TRAFFIC", label: "Verkehrsunfall", emoji: "\u{1F697}" },
+    { key: "HOSTAGE", label: "Geiselnahme", emoji: "\u{1F9F7}" },
+    { key: "PURSUIT", label: "Verfolgung", emoji: "\u{1F693}" },
+    { key: "OTHER", label: "Sonstiges", emoji: "\u{1F4CB}" }
+  ],
+  priorities: [
+    { key: "HIGH", label: "Hoch", emoji: "\u{1F534}", color: "#ef4444", order: 0 },
+    { key: "MEDIUM", label: "Mittel", emoji: "\u{1F7E0}", color: "#f97316", order: 1 },
+    { key: "LOW", label: "Niedrig", emoji: "\u{1F7E2}", color: "#22c55e", order: 2 }
+  ],
+  incidentStatuses: [
+    { key: "NEW", label: "Neu", emoji: "\u{1F195}", color: "#3b82f6" },
+    { key: "ACKNOWLEDGED", label: "Angenommen", emoji: "\u{1F4E5}", color: "#6366f1" },
+    { key: "EN_ROUTE", label: "Einheiten unterwegs", emoji: "\u{1F693}", color: "#0ea5e9" },
+    { key: "ON_SCENE", label: "Am Einsatzort", emoji: "\u{1F4CD}", color: "#f97316" },
+    { key: "CRITICAL", label: "Kritisch", emoji: "\u{1F6A8}", color: "#ef4444" },
+    { key: "UNDER_CONTROL", label: "Unter Kontrolle", emoji: "\u{1F6E1}\uFE0F", color: "#22c55e" },
+    { key: "CLOSED", label: "Abgeschlossen", emoji: "\u2705", color: "#64748b", closed: true },
+    { key: "CANCELLED", label: "Abgebrochen", emoji: "\u2716\uFE0F", color: "#64748b", closed: true }
+  ],
+  unitStatuses: [
+    { key: "AVAILABLE", label: "Verf\xFCgbar", emoji: "\u{1F7E2}", color: "#22c55e" },
+    { key: "PATROL", label: "Auf Streife", emoji: "\u{1F7E1}", color: "#eab308" },
+    { key: "EN_ROUTE", label: "Unterwegs", emoji: "\u{1F535}", color: "#3b82f6" },
+    { key: "ON_SCENE", label: "Am Einsatzort", emoji: "\u{1F7E0}", color: "#f97316" },
+    { key: "BUSY", label: "Im Einsatz", emoji: "\u{1F534}", color: "#ef4444" },
+    { key: "UNAVAILABLE", label: "Nicht verf\xFCgbar", emoji: "\u26AB", color: "#475569" },
+    { key: "OFF_DUTY", label: "Au\xDFer Dienst", emoji: "\u26AA", color: "#94a3b8" }
+  ],
+  unitTypes: [
+    { key: "SEK", label: "SEK", emoji: "\u{1F693}", color: "#1d4ed8", layer: "sek" },
+    { key: "K9", label: "K9", emoji: "\u{1F415}", color: "#a16207", layer: "k9" },
+    { key: "PATROL", label: "Streife", emoji: "\u{1F694}", color: "#0891b2", layer: "units" }
+  ],
+  layers: [
+    { key: "incidents", label: "Eins\xE4tze", builtin: true, enabledByDefault: true },
+    { key: "calls", label: "ER:LC Notrufe", builtin: true, enabledByDefault: true },
+    { key: "sek", label: "SEK-Einheiten", builtin: true, enabledByDefault: true },
+    { key: "k9", label: "K9-Einheiten", builtin: true, enabledByDefault: true },
+    { key: "units", label: "Weitere Einheiten", builtin: true, enabledByDefault: true },
+    { key: "vehicles", label: "Fahrzeuge", builtin: true, enabledByDefault: false },
+    { key: "staff", label: "Staff", builtin: true, enabledByDefault: false },
+    { key: "players", label: "Alle Spieler", builtin: true, enabledByDefault: false },
+    { key: "pois", label: "Eigene POIs", builtin: true, enabledByDefault: true },
+    { key: "zones", label: "Eigene Zonen", builtin: true, enabledByDefault: true },
+    { key: "restricted", label: "Sperrbereiche", builtin: true, enabledByDefault: true }
+  ],
+  markers: [
+    { key: "incident", label: "Einsatz", emoji: "\u{1F534}", color: "#ef4444" },
+    { key: "call", label: "Emergency Call", emoji: "\u{1F6A8}", color: "#f43f5e" },
+    { key: "unit", label: "Einheit", emoji: "\u{1F694}", color: "#0891b2" },
+    { key: "vehicle", label: "Fahrzeug", emoji: "\u{1F697}", color: "#a855f7" },
+    { key: "staff", label: "Staff", emoji: "\u{1F46E}", color: "#f59e0b" },
+    { key: "player", label: "Spieler", emoji: "\u2022", color: "#94a3b8" },
+    { key: "poi", label: "POI", emoji: "\u{1F4CD}", color: "#10b981" }
+  ],
+  map: { imageUrl: null, width: ERLC_MAP_SIZE, height: ERLC_MAP_SIZE, originX: ERLC_MAP_SIZE / 2, originY: ERLC_MAP_SIZE / 2, scale: 1 },
+  routes: [],
+  memberFields: [],
+  widgets: ["activeIncidents", "availableUnits", "activeCalls", "erlcStatus", "erlcPlayers", "erlcQueue", "staffOnline", "map", "radio"]
+};
 
 // apps/bot/src/commands/qualifications.ts
 var POLICE = "@polizei";
@@ -76704,18 +76814,18 @@ var sweepSessions = (now = Date.now()) => {
 };
 var CANCEL = { id: "quali:cancel", label: "Bewerbung abbrechen", style: "danger" };
 var getConfig = (api2, guildId) => api2.service("GET", `/bot/qualifications${guildId ? `?guildId=${guildId}` : ""}`);
-var field = (f) => {
-  const n = normalizeField(f);
+var field = (f2) => {
+  const n = normalizeField(f2);
   return { ...n, maxLength: Math.min(n.maxLength, 2e3) };
 };
 var asField = (q2, i) => typeof q2 === "string" ? { key: `q${i + 1}`, label: q2, required: true, maxLength: MAX_ANSWER } : q2;
 var questionMessage = (s) => {
   const i = s.answers.length;
   const q2 = s.questions[i];
-  const f = q2.field;
+  const f2 = q2.field;
   const head = `**${i + 1}/${s.questions.length}.** ${plain(q2.text)}`;
-  if (f.type === "TEXT") {
-    const hints = [f.minLength ? `mindestens ${f.minLength} Zeichen` : "", !f.required ? `optional \u2013 schreibe \u201E${SKIP}\u201C, um zu \xFCberspringen` : ""].filter(Boolean).join(" \xB7 ");
+  if (f2.type === "TEXT") {
+    const hints = [f2.minLength ? `mindestens ${f2.minLength} Zeichen` : "", !f2.required ? `optional \u2013 schreibe \u201E${SKIP}\u201C, um zu \xFCberspringen` : ""].filter(Boolean).join(" \xB7 ");
     return { embed: { title: clip(s.unitName, 256), color: COLORS.info, description: clip(`${head}
 
 _Antworte einfach mit einer Nachricht hier im Chat.${hints ? ` (${hints})` : ""}_`, 4e3) }, buttons: [CANCEL] };
@@ -76723,9 +76833,9 @@ _Antworte einfach mit einer Nachricht hier im Chat.${hints ? ` (${hints})` : ""}
   return {
     embed: { title: clip(s.unitName, 256), color: COLORS.info, description: clip(`${head}
 
-_W\xE4hle unten ${f.multiple ? "eine oder mehrere Optionen" : "eine Option"} aus.${f.required ? "" : " Optional."}_`, 4e3) },
-    select: { id: `quali:ans:${i}`, placeholder: f.multiple ? "Optionen w\xE4hlen \u2026" : "Option w\xE4hlen \u2026", min: 1, max: f.multiple ? f.options.length : 1, options: f.options.map((o, j) => ({ label: clip(o.label, 100), value: String(j) })) },
-    buttons: [...f.required ? [] : [{ id: `quali:skip:${i}`, label: "\xDCberspringen", style: "secondary" }], CANCEL]
+_W\xE4hle unten ${f2.multiple ? "eine oder mehrere Optionen" : "eine Option"} aus.${f2.required ? "" : " Optional."}_`, 4e3) },
+    select: { id: `quali:ans:${i}`, placeholder: f2.multiple ? "Optionen w\xE4hlen \u2026" : "Option w\xE4hlen \u2026", min: 1, max: f2.multiple ? f2.options.length : 1, options: f2.options.map((o, j) => ({ label: clip(o.label, 100), value: String(j) })) },
+    buttons: [...f2.required ? [] : [{ id: `quali:skip:${i}`, label: "\xDCberspringen", style: "secondary" }], CANCEL]
   };
 };
 var answerText = (a) => a === null ? "\u2014 (\xFCbersprungen)" : Array.isArray(a) ? a.join(", ") : a;
@@ -76733,10 +76843,10 @@ async function loadFlow(api2, key, guildId) {
   if (!key) return null;
   if (key === POLICE) {
     const [form, cfg2] = await Promise.all([api2.service("GET", `/applications/form${guildId ? `?guildId=${guildId}` : ""}`), getConfig(api2, guildId).catch(() => void 0)]);
-    return { key, name: cfg2?.police?.name ? `Bewerbung \u2013 ${cfg2.police.name}` : POLICE_NAME, appName: cfg2?.police?.name ?? "EN Polizei", enabled: cfg2?.police?.enabled !== false, settings: cfg2?.police?.settings ?? {}, questions: [{ text: "Wie ist dein Roblox-Benutzername?", key: "roblox", field: field({ key: "roblox", label: "Roblox", required: true, maxLength: 20 }) }, ...form.map((f) => ({ text: f.label, key: f.key, field: field(f) }))] };
+    return { key, name: cfg2?.police?.name ? `Bewerbung \u2013 ${cfg2.police.name}` : POLICE_NAME, appName: cfg2?.police?.name ?? "EN Polizei", enabled: cfg2?.police?.enabled !== false, settings: cfg2?.police?.settings ?? {}, questions: [{ text: "Wie ist dein Roblox-Benutzername?", key: "roblox", field: field({ key: "roblox", label: "Roblox", required: true, maxLength: 20 }) }, ...form.map((f2) => ({ text: f2.label, key: f2.key, field: field(f2) }))] };
   }
   const unit = (await getConfig(api2, guildId)).units.find((u) => u.key === key);
-  return unit ? { key: unit.key, name: unit.name, appName: unit.name, enabled: unit.enabled !== false, settings: unit.settings ?? {}, questions: unit.questions.map(asField).map((f) => ({ text: f.label, key: f.key, field: field(f) })) } : null;
+  return unit ? { key: unit.key, name: unit.name, appName: unit.name, enabled: unit.enabled !== false, settings: unit.settings ?? {}, questions: unit.questions.map(asField).map((f2) => ({ text: f2.label, key: f2.key, field: field(f2) })) } : null;
 }
 async function openApplication(api2, key, discordId) {
   return key === POLICE ? api2.service("GET", `/bot/application/open?discordId=${discordId}`) : api2.service("GET", `/bot/qualifications/open?discordId=${discordId}&unit=${encodeURIComponent(key)}`);
@@ -77075,7 +77185,7 @@ var TICKET_INTERACTION = {
   opensModal: (a) => ["ans", "rename", "note", "ratec", "closem"].includes(a[0] ?? "") || a[0] === "close" && a[2] === "m",
   async run(c) {
     const [action, id = "", ...rest] = c.args;
-    const f = c.fields ?? {};
+    const f2 = c.fields ?? {};
     try {
       switch (action) {
         // ---- Ticket öffnen (Panel: Button oder Dropdown) ----
@@ -77105,7 +77215,7 @@ var TICKET_INTERACTION = {
           return { modal: { id: `tk:ansm:${id}:${qid}`, title: "Antwort", fields: [{ id: "value", label: "Deine Antwort", paragraph: kind2 === "l", required: true, maxLength, ...min ? { minLength: Math.min(min, maxLength) } : {} }] } };
         }
         case "ansm":
-          return answer(c, id, rest[0] ?? "", [f.value ?? ""]);
+          return answer(c, id, rest[0] ?? "", [f2.value ?? ""]);
         case "ansv":
           return answer(c, id, rest[0] ?? "", [rest[1] ?? ""]);
         case "anss":
@@ -77128,7 +77238,7 @@ var TICKET_INTERACTION = {
         case "closem":
           return { modal: { id: `tk:closemodal:${id}`, title: "Ticket schlie\xDFen", fields: [{ id: "reason", label: "Warum wird dieses Ticket geschlossen?", paragraph: true, required: true, maxLength: 500 }] } };
         case "closemodal":
-          return close(c, id, (f.reason ?? "").trim() || void 0);
+          return close(c, id, (f2.reason ?? "").trim() || void 0);
         case "closer":
           return close(c, id, c.values?.[0]);
         case "closen":
@@ -77216,11 +77326,11 @@ var TICKET_INTERACTION = {
         case "rename":
           return { modal: { id: `tk:renm:${id}`, title: "Ticket umbenennen", fields: [{ id: "name", label: "Neuer Name (Platzhalter erlaubt)", required: true, maxLength: 90, placeholder: "z. B. support-{username}" }] } };
         case "renm":
-          return run(c, await staff(c, id, { action: "rename", name: f.name ?? "" }));
+          return run(c, await staff(c, id, { action: "rename", name: f2.name ?? "" }));
         case "note":
           return { modal: { id: `tk:notem:${id}`, title: "Interne Notiz", fields: [{ id: "text", label: "Nur f\xFCr berechtigte Mitarbeiter sichtbar", paragraph: true, required: true, maxLength: 4e3 }] } };
         case "notem":
-          return run(c, await staff(c, id, { action: "note", text: f.text ?? "" }));
+          return run(c, await staff(c, id, { action: "note", text: f2.text ?? "" }));
         // ---- Bewertung (per DM an den Ersteller) ----
         case "rate": {
           const r = await c.api.service("POST", `/bot/support-tickets/${id}/rating`, { discordId: c.discordId, stars: Number(rest[0]) });
@@ -77229,7 +77339,7 @@ var TICKET_INTERACTION = {
         case "ratec":
           return { modal: { id: `tk:ratecm:${id}`, title: "Kommentar zur Bewertung", fields: [{ id: "comment", label: "Wie zufrieden warst du mit dem Support?", paragraph: true, required: true, maxLength: 1e3 }] } };
         case "ratecm": {
-          await c.api.service("POST", `/bot/support-tickets/${id}/rating-comment`, { discordId: c.discordId, comment: f.comment ?? "" });
+          await c.api.service("POST", `/bot/support-tickets/${id}/rating-comment`, { discordId: c.discordId, comment: f2.comment ?? "" });
           return okReply("Danke f\xFCr deinen Kommentar!");
         }
         default:
@@ -77307,6 +77417,48 @@ function parseLeaveDate(input, end, now = /* @__PURE__ */ new Date()) {
   return berlinTime(y, m, d, h, min);
 }
 var fmt = (iso) => new Date(iso).toLocaleString("de-DE", { timeZone: "Europe/Berlin", day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" });
+var HOUR = 36e5;
+var UNIT_MS = { m: 6e4, min: 6e4, h: HOUR, std: HOUR, d: 24 * HOUR, t: 24 * HOUR, w: 168 * HOUR };
+function parseDuration(input) {
+  const t = input.trim().toLowerCase().replace(/\s+/g, "");
+  if (!t || !/^(\d+(?:[.,]\d+)?(?:min|std|m|h|d|t|w))+$/.test(t)) return null;
+  let ms = 0;
+  for (const [, n, u] of t.matchAll(/(\d+(?:[.,]\d+)?)(min|std|m|h|d|t|w)/g)) ms += Number(n.replace(",", ".")) * UNIT_MS[u];
+  return ms >= HOUR && Number.isFinite(ms) ? Math.round(ms) : null;
+}
+var ts = (iso, style = "F") => `<t:${Math.floor(new Date(iso).getTime() / 1e3)}:${style}>`;
+async function manageReply(c) {
+  const { items } = await c.api.asUser(c.discordId, "GET", "/leave?mine=true");
+  const now = Date.now();
+  const pending = items.find((r) => r.status === "PENDING");
+  const active = items.find((r) => r.status === "APPROVED" && r.active);
+  const upcoming = items.find((r) => r.status === "APPROVED" && new Date(r.startsAt).getTime() > now);
+  const last = items.find((r) => r.status === "ENDED");
+  const head = c.userName ? { author: { name: `@${c.userName}`, ...c.userAvatar ? { iconUrl: c.userAvatar } : {} } } : {};
+  const embed = (description, color = COLORS.neutral, fields, footer) => ({ ...head, title: "Abmeldungen verwalten", description, color, ...fields ? { fields } : {}, ...footer ? { footer } : {} });
+  const reason = (r) => [{ name: "Grund", value: clip(plain(r.reason), 1024) }];
+  if (active) return {
+    ephemeral: true,
+    embeds: [embed(`Du bist gerade abgemeldet \u2013 bis ungef\xE4hr ${ts(active.endsAt)} (${ts(active.endsAt, "R")}).
+Du kannst die Abmeldung jederzeit vorzeitig beenden.`, COLORS.success, reason(active), `ID: ${active.number}`)],
+    buttons: [{ id: `leave:cancel:${active.id}`, label: "Vorzeitig beenden", style: "danger", emoji: "\u23F9\uFE0F" }]
+  };
+  if (pending) return {
+    ephemeral: true,
+    embeds: [embed(`Deine Abmeldung wartet auf die Freigabe durch die Leitung.
+Wenn sie angenommen wird, endet sie ungef\xE4hr ${ts(pending.endsAt)}.`, COLORS.warning, reason(pending), `ID: ${pending.number}`)],
+    buttons: [{ id: `leave:cancel:${pending.id}`, label: "Antrag zur\xFCckziehen", style: "danger", emoji: "\u21A9\uFE0F" }]
+  };
+  if (upcoming) return {
+    ephemeral: true,
+    embeds: [embed(`Deine Abmeldung beginnt ${ts(upcoming.startsAt)} und endet ${ts(upcoming.endsAt)}.`, COLORS.info, reason(upcoming), `ID: ${upcoming.number}`)],
+    buttons: [{ id: `leave:cancel:${upcoming.id}`, label: "Absagen", style: "danger", emoji: "\u21A9\uFE0F" }]
+  };
+  const start2 = [{ id: "leave:start", label: "Start", style: "primary", emoji: "\u{1F552}" }];
+  if (!items.length) return { ephemeral: true, embeds: [embed("Du warst noch nie abgemeldet.\nUm jetzt eine Abmeldung zu starten, klicke auf `Start`.")], buttons: start2 };
+  return { ephemeral: true, embeds: [embed(`${last ? `Deine letzte Abmeldung endete ${ts(last.endedAt ?? last.endsAt)}.` : "Du hast gerade keine Abmeldung."}
+Um eine neue Abmeldung zu starten, klicke auf \`Start\`.`)], buttons: start2 };
+}
 var LEAVE_COMMANDS = [
   {
     name: "abmeldung",
@@ -77333,6 +77485,18 @@ Die Leitung entscheidet \u2013 du bekommst eine Direktnachricht.`
         return mapError(e);
       }
     }
+  },
+  {
+    name: "leave",
+    description: "Abmeldungen (Leave of Absence)",
+    subcommands: [{ name: "manage", description: "Eigene Abmeldung ansehen, starten oder beenden" }],
+    async run(c) {
+      try {
+        return await manageReply(c);
+      } catch (e) {
+        return mapError(e);
+      }
+    }
   }
 ];
 async function decide2(c, id, status, reason) {
@@ -77350,13 +77514,46 @@ async function decide2(c, id, status, reason) {
 }
 var LEAVE_INTERACTION = {
   prefix: "leave",
-  opensModal: (args) => args[0] === "reason",
+  opensModal: (args) => args[0] === "reason" || args[0] === "start",
   async run(c) {
     const [action, id, st] = c.args;
+    if (action === "start") return { modal: { id: "leave:create", title: "Abmeldung erstellen", fields: [
+      { id: "duration", label: "Dauer", required: true, maxLength: 20, placeholder: "Format: '6h', '4d' oder '2w'" },
+      { id: "reason", label: "Grund", paragraph: true, required: true, minLength: 3, maxLength: 1e3, placeholder: "z. B. Urlaub, Pr\xFCfungsphase" }
+    ] } };
+    if (action === "create") {
+      const ms = parseDuration(c.fields?.duration ?? "");
+      if (!ms) return errorReply("Die Dauer verstehe ich nicht. Beispiele: `6h`, `4d`, `2w` oder `1w 2d` (mindestens 1 Stunde).");
+      const reason = (c.fields?.reason ?? "").trim();
+      if (reason.length < 3) return errorReply("Bitte einen Grund angeben.");
+      const now = Date.now();
+      try {
+        const r = await c.api.asUser(c.discordId, "POST", "/leave", { startsAt: new Date(now).toISOString(), endsAt: new Date(now + ms).toISOString(), reason, ...c.guildId ? { guildId: c.guildId } : {} });
+        return { ephemeral: true, embeds: [{
+          title: `Abmeldung eingereicht \xB7 ${humanDuration(ms)}`,
+          color: COLORS.neutral,
+          footer: `ID: ${r.number}`,
+          description: `Deine Abmeldung wurde der Leitung zur Freigabe vorgelegt.
+Wenn sie angenommen wird, endet sie ungef\xE4hr ${ts(r.endsAt)}.
+Um benachrichtigt zu werden, ob sie angenommen oder abgelehnt wird, lass bitte deine DMs offen.`
+        }] };
+      } catch (e) {
+        return mapError(e);
+      }
+    }
+    if (!id || !/^[0-9a-f-]{36}$/.test(id)) return errorReply("Unbekannte Aktion.");
+    if (action === "cancel") {
+      try {
+        const r = await c.api.asUser(c.discordId, "POST", `/leave/${id}/cancel`);
+        return okReply(r.status === "ENDED" ? `Deine Abmeldung **${r.number}** ist beendet \u2013 willkommen zur\xFCck!` : `Abmeldung **${r.number}** zur\xFCckgezogen.`);
+      } catch (e) {
+        return mapError(e);
+      }
+    }
     const status = st === "APPROVED" || st === "DENIED" ? st : null;
-    if (!id || !/^[0-9a-f-]{36}$/.test(id) || !status) return errorReply("Unbekannte Aktion.");
+    if (!status) return errorReply("Unbekannte Aktion.");
     if (action === "decide") return decide2(c, id, status);
-    if (action === "reason") return { modal: { id: `leave:reasonsubmit:${id}:${status}`, title: status === "APPROVED" ? "Annehmen mit Hinweis" : "Ablehnen mit Grund", fields: [{ id: "reason", label: "Grund (geht per DM an die Person)", paragraph: true, required: true, maxLength: 1e3 }] } };
+    if (action === "reason") return { modal: { id: `leave:reasonsubmit:${id}:${status}`, title: status === "APPROVED" ? "Abmeldung annehmen" : "Abmeldung ablehnen", fields: [{ id: "reason", label: "Grund", paragraph: true, required: true, maxLength: 1e3 }] } };
     if (action === "reasonsubmit") {
       const reason = (c.fields?.reason ?? "").trim();
       return reason ? decide2(c, id, status, reason) : errorReply("Bitte einen Grund angeben.");
@@ -77365,16 +77562,151 @@ var LEAVE_INTERACTION = {
   }
 };
 
+// apps/bot/src/commands/cad.ts
+var lbl = (list, key) => {
+  const o = list.find((x) => x.key === key);
+  return o ? `${o.emoji ? `${o.emoji} ` : ""}${o.label}` : key;
+};
+var norm = (s) => s.trim().toLowerCase().replace(/[\s_-]+/g, "");
+var config = (c) => c.api.asUser(c.discordId, "GET", "/cad/config");
+async function myUnit(c, callsign) {
+  const units = await c.api.asUser(c.discordId, "GET", "/cad/units");
+  if (callsign) return units.find((u) => norm(u.callsign) === norm(callsign)) ?? null;
+  return units.find((u) => u.crew.some((m) => m.discordId === c.discordId)) ?? null;
+}
+var CAD_COMMANDS = [{
+  name: "cad",
+  description: "CAD-Leitstelle: Einheitenstatus, Funkmeldung, aktive Eins\xE4tze",
+  subcommands: [
+    { name: "status", description: "Status deiner Einheit an die Leitstelle melden", options: [
+      { name: "status", description: "z. B. Verf\xFCgbar, Unterwegs, Am Einsatzort", type: "string", required: true, maxLength: 40 },
+      { name: "einheit", description: "Rufname (leer = deine Einheit)", type: "string", maxLength: 16 }
+    ] },
+    { name: "funk", description: "Funkmeldung an die Leitstelle (landet in der Einsatzchronik)", options: [
+      { name: "text", description: "z. B. \u201EAm Einsatzort.\u201C", type: "string", required: true, maxLength: 500 },
+      { name: "einsatz", description: "Einsatznummer (leer = aktueller Einsatz deiner Einheit)", type: "string", maxLength: 32 }
+    ] },
+    { name: "einsaetze", description: "Aktive Eins\xE4tze der Leitstelle" }
+  ],
+  async run(c) {
+    try {
+      const sub = String(c.opts._sub ?? "");
+      if (sub === "status") {
+        const cfg2 = await config(c);
+        const want = String(c.opts.status ?? "");
+        const st = cfg2.unitStatuses.find((s) => norm(s.key) === norm(want) || norm(s.label) === norm(want));
+        if (!st) return errorReply(`Unbekannter Status. M\xF6glich: ${cfg2.unitStatuses.map((s) => `\`${s.label}\``).join(", ")}`);
+        const unit = await myUnit(c, c.opts.einheit ? String(c.opts.einheit) : void 0);
+        if (!unit) return errorReply(c.opts.einheit ? "Diese Einheit gibt es nicht." : "Du bist keiner Einheit zugeordnet. Gib den Rufnamen mit `einheit:` an.");
+        await c.api.asUser(c.discordId, "POST", `/cad/units/${unit.id}/status`, { status: st.key });
+        return okReply(`**${plain(unit.callsign)}** ist jetzt ${lbl(cfg2.unitStatuses, st.key)}.`);
+      }
+      if (sub === "funk") {
+        const r = await c.api.asUser(c.discordId, "POST", "/cad/radio", { text: String(c.opts.text ?? ""), ...c.opts.einsatz ? { incidentNumber: String(c.opts.einsatz) } : {} });
+        return okReply(`\u{1F4FB} ${r.callsign ? `**${plain(r.callsign)}**: ` : ""}\u201E${plain(c.opts.text)}\u201C gesendet${r.incidentNumber ? ` \u2013 Einsatz **${plain(r.incidentNumber)}**` : ""}.`);
+      }
+      if (sub === "einsaetze") {
+        const [cfg2, list] = await Promise.all([config(c), c.api.asUser(c.discordId, "GET", "/cad/incidents?active=true&take=20")]);
+        const lines = list.map((i) => `**${plain(i.number)}** \xB7 ${clip(plain(i.title), 80)} \u2014 ${lbl(cfg2.priorities, i.priority)} / ${lbl(cfg2.incidentStatuses, i.status)}${i.location ? ` \xB7 ${clip(plain(i.location), 60)}` : ""}${i.units.filter((u) => !u.clearedAt).length ? `
+   \u21B3 ${i.units.filter((u) => !u.clearedAt).map((u) => plain(u.unit.callsign)).join(", ")}` : ""}`);
+        return { ephemeral: true, embeds: [{ title: `\u{1F6A8} Aktive Eins\xE4tze (${list.length})`, description: clip(lines.join("\n") || "Keine aktiven Eins\xE4tze.", 4e3), color: COLORS.info }] };
+      }
+      return errorReply("Unbekannter Unterbefehl.");
+    } catch (e) {
+      return mapError(e);
+    }
+  }
+}];
+var CAD_INTERACTION = {
+  prefix: "cad",
+  async run(c) {
+    const [kind2, id, action] = c.args;
+    if (!id || !/^[0-9a-f-]{36}$/.test(id)) return errorReply("Unbekannte Aktion.");
+    try {
+      if (kind2 === "call") {
+        if (action === "claim") {
+          await c.api.asUser(c.discordId, "POST", `/cad/calls/${id}/claim`);
+          return okReply("Notruf \xFCbernommen.");
+        }
+        if (action === "close") {
+          await c.api.asUser(c.discordId, "POST", `/cad/calls/${id}/close`);
+          return okReply("Notruf geschlossen.");
+        }
+        if (action === "incident") {
+          const r = await c.api.asUser(c.discordId, "POST", `/cad/calls/${id}/incident`, {});
+          return okReply(`Einsatz **${plain(r.number)}** aus dem Notruf erstellt.`);
+        }
+        if (action === "units") {
+          const units = (await c.api.asUser(c.discordId, "GET", "/cad/units")).filter((u) => u.operational && !["OFF_DUTY", "UNAVAILABLE"].includes(u.status));
+          if (!units.length) return errorReply("Gerade ist keine Einheit verf\xFCgbar.");
+          return { ephemeral: true, content: "Welche Einheit soll den Notruf \xFCbernehmen?", select: { id: `cad:assign:${id}`, placeholder: "Einheit w\xE4hlen \u2026", options: units.slice(0, 25).map((u) => ({ label: clip(u.callsign, 100), value: u.id, ...u.current ? { description: clip(`im Einsatz ${u.current.number}`, 100) } : u.name ? { description: clip(u.name, 100) } : {} })) } };
+        }
+      }
+      if (kind2 === "assign") {
+        const unitId = c.values?.[0];
+        if (!unitId) return errorReply("Keine Einheit gew\xE4hlt.");
+        await c.api.asUser(c.discordId, "POST", `/cad/calls/${id}/assign`, { unitId });
+        return okReply("Einheit zugewiesen \u2013 der Einsatz steht im CAD.");
+      }
+      return errorReply("Unbekannte Aktion.");
+    } catch (e) {
+      return mapError(e);
+    }
+  }
+};
+var hex = (v) => typeof v === "string" && /^#[0-9a-f]{6}$/i.test(v) ? parseInt(v.slice(1), 16) : void 0;
+var f = (name, value, inline = true) => value === null || value === void 0 || value === "" ? [] : [{ name, value: clip(plain(value), 1024), inline }];
+function renderCadOutbox(type, p) {
+  const head = `${p.number ? `${String(p.number)} \xB7 ` : ""}${clip(plain(p.title ?? ""), 180)}`;
+  const base = [...f("Stichwort", p.keyword), ...f("Einsatzart", p.type), ...f("Priorit\xE4t", p.priority), ...f("Status", p.status), ...f("Ort", p.location)];
+  switch (type) {
+    case "cad.incident.created":
+      return { title: clip(`\u{1F6A8} Neuer Einsatz: ${head}`, 256), color: hex(p.priorityColor) ?? COLORS.danger, description: p.description ? clip(plain(p.description), 1500) : void 0, fields: base };
+    case "cad.incident.status":
+      return { title: clip(`\u{1F504} ${head}`, 256), color: hex(p.priorityColor) ?? COLORS.info, description: `Status: **${plain(p.previous ?? "\u2014")}** \u2192 **${plain(p.status)}**${p.note ? `
+${clip(plain(p.note), 500)}` : ""}`, fields: [...f("Ort", p.location)] };
+    case "cad.incident.assigned":
+      return { title: clip(`\u{1F4FB} ${plain(p.callsign)} \u2192 ${head}`, 256), color: hex(p.priorityColor) ?? COLORS.warning, description: p.unitRoleId ? `<@&${String(p.unitRoleId)}>` : void 0, fields: base };
+    case "cad.incident.closed":
+      return { title: clip(`\u2705 Einsatz abgeschlossen: ${head}`, 256), color: COLORS.success, fields: [...f("Status", p.status), ...f("Ort", p.location)] };
+    case "cad.call.received":
+      return {
+        title: clip(`\u{1F6A8} NOTRUF #${String(p.callNumber ?? "?")}`, 256),
+        color: COLORS.danger,
+        description: p.description ? clip(plain(p.description), 1500) : void 0,
+        fields: [...f("Ort", p.location), ...f("Team", p.team), ...p.startedAt ? [{ name: "Zeit", value: `<t:${Math.floor(Date.parse(String(p.startedAt)) / 1e3)}:t>`, inline: true }] : [], { name: "Status", value: "Offen", inline: true }, ...f("Server", p.server)]
+      };
+    case "cad.announcement":
+      return { title: "\u{1F4E2} Leitstellenmeldung", description: clip(plain(p.text), 4e3), color: COLORS.warning, ...p.from ? { footer: `von ${clip(String(p.from), 100)}` } : {} };
+    case "cad.radio":
+      return { title: clip(`\u{1F4FB} ${plain(p.callsign ?? "Funk")}${p.incidentNumber ? ` \xB7 ${String(p.incidentNumber)}` : ""}`, 256), description: `\u201E${clip(plain(p.text), 1500)}\u201C`, color: COLORS.neutral };
+    default:
+      return null;
+  }
+}
+function cadButtons(type, p) {
+  const link = typeof p.dashboardUrl === "string" && /^https?:\/\//.test(p.dashboardUrl) ? [{ id: "link", label: "Im CAD \xF6ffnen", style: "secondary", url: p.dashboardUrl }] : [];
+  if (type === "cad.call.received" && typeof p.id === "string") return [
+    { id: `cad:call:${p.id}:claim`, label: "\xDCbernehmen", style: "primary", emoji: "\u270B" },
+    { id: `cad:call:${p.id}:incident`, label: "Einsatz erstellen", style: "success", emoji: "\u{1F6A8}" },
+    { id: `cad:call:${p.id}:units`, label: "Einheit zuweisen", style: "secondary", emoji: "\u{1F693}" },
+    { id: `cad:call:${p.id}:close`, label: "Schlie\xDFen", style: "danger", emoji: "\u2716\uFE0F" },
+    ...typeof p.mapUrl === "string" && /^https?:\/\//.test(p.mapUrl) ? [{ id: "map", label: "Auf Karte anzeigen", style: "secondary", url: p.mapUrl }] : []
+  ];
+  if (type.startsWith("cad.incident.")) return link.length ? link : void 0;
+  return void 0;
+}
+
 // apps/bot/src/commands/features.ts
 var str2 = (c, k) => String(c.opts[k] ?? "").trim();
 var choices = (m) => Object.keys(m).map((k) => ({ name: k.replace("_", " "), value: k }));
 var needGuildAdmin = (c) => !c.guildId ? errorReply("Das geht nur auf einem Server, nicht per Direktnachricht.") : !c.isGuildAdmin ? errorReply("Daf\xFCr brauchst du auf diesem Discord-Server das Recht \u201EServer verwalten\u201C.") : null;
-var LEVEL = { gruen: "GREEN", gelb: "YELLOW", rot: "RED" };
+var LEGACY = { gruen: "STATUS_1", "gr\xFCn": "STATUS_1", gelb: "STATUS_2", rot: "STATUS_4" };
 async function setDanger(c, level, reason) {
   try {
     const s = await c.api.asUser(c.discordId, "PUT", "/danger-level", { level, ...reason ? { reason } : {} });
     await c.refreshLive?.("danger").catch(() => void 0);
-    return okReply(`Gefahrenstatus: ${DANGER[s.level]?.emoji ?? ""} **${DANGER[s.level]?.label ?? s.level}**`);
+    return okReply(`Gefahrenstatus: ${s.def?.emoji ?? ""} **${plain(s.def?.name ?? s.level)}**${s.def?.title ? ` \u2013 ${plain(s.def.title)}` : ""}`);
   } catch (e) {
     return mapError(e);
   }
@@ -77394,14 +77726,14 @@ var FEATURE_COMMANDS = [
     description: "Gefahrenstatus anzeigen, setzen oder als Panel posten",
     options: [
       { name: "aktion", description: "Was m\xF6chtest du tun? (Standard: anzeigen)", type: "string", choices: [{ name: "anzeigen", value: "anzeigen" }, { name: "setzen", value: "setzen" }, { name: "panel hier posten", value: "panel" }] },
-      { name: "stufe", description: "Neue Stufe (bei \u201Esetzen\u201C)", type: "string", choices: choices(LEVEL) },
+      { name: "stufe", description: "Neue Stufe (bei \u201Esetzen\u201C), z. B. Status 2", type: "string", maxLength: 40 },
       { name: "grund", description: "Grund (optional, bei \u201Esetzen\u201C)", type: "string", maxLength: 200 }
     ],
     async run(c) {
       const action = str2(c, "aktion") || "anzeigen";
       if (action === "setzen") {
-        const level = LEVEL[str2(c, "stufe")];
-        return level ? setDanger(c, level, str2(c, "grund") || void 0) : errorReply("Bitte eine Stufe w\xE4hlen (gr\xFCn, gelb, rot).");
+        const level = str2(c, "stufe");
+        return level ? setDanger(c, LEGACY[level.toLowerCase()] ?? level, str2(c, "grund") || void 0) : errorReply("Bitte eine Stufe angeben (z. B. \u201EStatus 2\u201C).");
       }
       if (action === "panel") {
         const denied = needGuildAdmin(c);
@@ -77544,11 +77876,12 @@ var INTERACTIONS = [
   QUALI_INTERACTION,
   TICKET_INTERACTION,
   LEAVE_INTERACTION,
+  CAD_INTERACTION,
   {
     prefix: "danger",
     async run(c) {
       const level = c.args[0] === "set" ? c.args[1] : void 0;
-      return level && level in DANGER ? setDanger(c, level) : errorReply("Unbekannte Aktion.");
+      return level ? setDanger(c, level) : errorReply("Unbekannte Aktion.");
     }
   },
   {
@@ -77666,7 +77999,7 @@ Bewerben: \`/bewerbung\``.slice(0, 4e3), color: 2278750, fields: [...s.closesAt 
       return { ephemeral: true, embeds: [{ title: "EN Polizei \u2014 Befehle", color: COLORS.info, fields: [
         { name: "Konto", value: "`/verknuepfen` `/entverknuepfen` `/profil` `/benachrichtigungen`" },
         { name: "Abfragen", value: "`/person` `/kennzeichen` `/fahndungen` `/einsaetze` `/einsatzinfo` `/einheiten` `/team`" },
-        { name: "Dienst & Leitstelle", value: "`/dienst` `/dienststunden` `/abmeldung` `/einheitstatus` `/einsatz` `/einsatzstatus` `/einsatzzuweisen` `/funk` `/funkcode`" },
+        { name: "Dienst & Leitstelle", value: "`/dienst` `/dienststunden` `/abmeldung` `/leave manage` `/einheitstatus` `/einsatz` `/einsatzstatus` `/einsatzzuweisen` `/funk` `/funkcode` `/cad`" },
         { name: "Erfassen", value: "`/ticket` `/bericht` `/beschwerde` `/ermittlung` `/fahndung` `/beweis`" },
         { name: "Leitung & Team", value: "`/gefahrenstatus` `/funkfreigabe` `/teamliste` `/dienstpanel` `/bewerbungspanel` `/qualipanel` `/teamchance` `/roblox`" },
         { name: "SEK", value: "`/sek` `/sek-bericht`" },
@@ -78100,6 +78433,7 @@ Bewerben: \`/bewerbung\``.slice(0, 4e3), color: 2278750, fields: [...s.closesAt 
   ...SEK_COMMANDS,
   ...QUALI_COMMANDS,
   ...LEAVE_COMMANDS,
+  ...CAD_COMMANDS,
   TICKET_COMMAND
 ];
 var byName = (n) => COMMANDS.find((c) => c.name === n);
@@ -82172,9 +82506,9 @@ function parseDotEnv(text) {
 function loadDotEnv(env = process.env) {
   const dirs = [process.cwd(), typeof __dirname === "string" ? __dirname : void 0].filter(Boolean);
   for (const d of dirs) {
-    const f = import_node_path.default.join(d, ".env");
-    if (!(0, import_node_fs.existsSync)(f)) continue;
-    for (const [k, v] of Object.entries(parseDotEnv((0, import_node_fs.readFileSync)(f, "utf8")))) if (env[k] === void 0) env[k] = v;
+    const f2 = import_node_path.default.join(d, ".env");
+    if (!(0, import_node_fs.existsSync)(f2)) continue;
+    for (const [k, v] of Object.entries(parseDotEnv((0, import_node_fs.readFileSync)(f2, "utf8")))) if (env[k] === void 0) env[k] = v;
     return;
   }
 }
@@ -82195,7 +82529,7 @@ function createLive(api2, platform2, log = console.log) {
   async function render(kind2) {
     if (kind2 === "danger") {
       const s = await api2.service("GET", "/bot/danger");
-      return { embed: dangerEmbed(s), buttons: DANGER_BUTTONS };
+      return { embed: dangerEmbed(s), buttons: dangerButtons(s) };
     }
     const t = await api2.service("GET", "/bot/team");
     return { embed: teamlistEmbed(t.members, t.rankOrder), buttons: void 0 };
@@ -82249,7 +82583,12 @@ function dutyRoleChanges(status, cfg2) {
   const all = [...new Set(Object.values(map).flat())];
   return { add: [...new Set(add)], remove: all.filter((r) => !add.includes(r)) };
 }
-var DIRECT = { "application.decided": applicationDecisionText, "qualification.decided": qualificationDecisionText, "leave.decided": leaveDecisionText };
+var DIRECT = {
+  "application.decided": applicationDecisionText,
+  "qualification.decided": qualificationDecisionText,
+  "leave.decided": (p) => leaveDirectEmbed("leave.decided", p),
+  "leave.pending": (p) => leaveDirectEmbed("leave.pending", p)
+};
 async function pollOnce(api2, send, log = console.log, dm, grantRole, syncRoles, onDutyChanged, ticketEffects, onMembersSync) {
   const [channels, items] = await Promise.all([api2.service("GET", "/bot/config"), api2.service("GET", "/bot/outbox?limit=20")]);
   let sent = 0;
@@ -82329,19 +82668,22 @@ async function pollOnce(api2, send, log = console.log, dm, grantRole, syncRoles,
       }
     }
     const own = typeof item.payload.channelId === "string" && /^\d{15,25}$/.test(item.payload.channelId) ? item.payload.channelId : null;
-    const channelIds = own ? [own] : (channels[item.channelKey] ?? "").split(/[\s,;]+/).filter(Boolean);
-    const embeds = renderOutboxEmbeds(item.type, item.payload);
+    const many = Array.isArray(item.payload.channelIds) ? item.payload.channelIds.map(String).filter((c) => /^\d{15,25}$/.test(c)) : null;
+    const channelIds = own ? [own] : many ?? (channels[item.channelKey] ?? "").split(/[\s,;]+/).filter(Boolean);
+    const cad = item.type.startsWith("cad.") ? renderCadOutbox(item.type, item.payload) : null;
+    const embeds = item.type.startsWith("cad.") ? cad ? [cad] : null : renderOutboxEmbeds(item.type, item.payload);
     try {
       if (!channelIds.length) throw new Error(`channel "${item.channelKey}" not configured`);
       if (!embeds) throw new Error(`unknown type "${item.type}"`);
-      const buttons = outboxButtons(item.type, item.payload);
+      const buttons = item.type.startsWith("cad.") ? cadButtons(item.type, item.payload) : outboxButtons(item.type, item.payload);
       const pingRoleIds = Array.isArray(item.payload.pingRoleIds) ? item.payload.pingRoleIds.map(String).filter((r) => /^\d{15,25}$/.test(r)) : [];
       const avatarUserId = /\.(submitted|archived)$/.test(item.type) && /^(qualification|application)\./.test(item.type) && typeof item.payload.discordId === "string" && /^\d{15,25}$/.test(item.payload.discordId) ? item.payload.discordId : void 0;
       const thread = item.payload.thread === true && /\.submitted$/.test(item.type) ? `Bewerbung ${String(item.payload.number ?? "")}`.slice(0, 100) : void 0;
-      const opts = pingRoleIds.length || avatarUserId || thread ? { ...pingRoleIds.length ? { pingRoleIds } : {}, ...avatarUserId ? { avatarUserId } : {}, ...thread ? { thread } : {} } : void 0;
+      const authorUserId = item.type === "leave.requested" && typeof item.payload.discordId === "string" && /^\d{15,25}$/.test(item.payload.discordId) ? item.payload.discordId : void 0;
+      const opts = pingRoleIds.length || avatarUserId || thread || authorUserId ? { ...pingRoleIds.length ? { pingRoleIds } : {}, ...avatarUserId ? { avatarUserId } : {}, ...thread ? { thread } : {}, ...authorUserId ? { authorUserId } : {} } : void 0;
       const results = await Promise.allSettled(channelIds.map((id) => opts ? send(id, embeds, buttons, opts) : send(id, embeds, buttons)));
       const failed = results.flatMap((r, i) => r.status === "rejected" ? [`${channelIds[i]}: ${r.reason instanceof Error ? r.reason.message : r.reason}`] : []);
-      failed.forEach((f) => log(`outbox ${item.id}: send failed for channel ${f}`));
+      failed.forEach((f2) => log(`outbox ${item.id}: send failed for channel ${f2}`));
       if (failed.length === channelIds.length) throw new Error(failed[0]);
       await api2.service("POST", `/bot/outbox/${item.id}/ack`, { ok: true });
       sent++;
@@ -82429,9 +82771,10 @@ var toEmbed = (e) => {
   const b = new import_discord4.EmbedBuilder().setTitle(e.title);
   if (e.description) b.setDescription(e.description);
   if (e.color !== void 0) b.setColor(e.color);
-  if (e.fields?.length) b.addFields(e.fields.map((f) => ({ name: f.name, value: f.value, inline: f.inline ?? false })));
+  if (e.fields?.length) b.addFields(e.fields.map((f2) => ({ name: f2.name, value: f2.value, inline: f2.inline ?? false })));
   if (e.footer) b.setFooter({ text: e.footer });
   if (e.thumbnail && /^https:\/\//.test(e.thumbnail)) b.setThumbnail(e.thumbnail);
+  if (e.author?.name) b.setAuthor({ name: e.author.name.slice(0, 256), ...e.author.iconUrl && /^https:\/\//.test(e.author.iconUrl) ? { iconURL: e.author.iconUrl } : {} });
   return b;
 };
 var STYLE2 = { primary: import_discord4.ButtonStyle.Primary, secondary: import_discord4.ButtonStyle.Secondary, success: import_discord4.ButtonStyle.Success, danger: import_discord4.ButtonStyle.Danger };
@@ -82447,11 +82790,11 @@ var toRows = (buttons = []) => {
   return rows;
 };
 var toComponents = (buttons, select, selects = []) => componentsOf(buttons, [...select ? [select] : [], ...selects]);
-var toModal = (m) => new import_discord4.ModalBuilder().setCustomId(m.id).setTitle(m.title.slice(0, 45)).addComponents(m.fields.map((f) => {
-  const input = new import_discord4.TextInputBuilder().setCustomId(f.id).setLabel(f.label.slice(0, 45)).setStyle(f.paragraph ? import_discord4.TextInputStyle.Paragraph : import_discord4.TextInputStyle.Short).setRequired(!!f.required);
-  if (f.maxLength) input.setMaxLength(f.maxLength);
-  if (f.minLength) input.setMinLength(Math.min(f.minLength, f.maxLength ?? 4e3));
-  if (f.placeholder) input.setPlaceholder(f.placeholder.slice(0, 100));
+var toModal = (m) => new import_discord4.ModalBuilder().setCustomId(m.id).setTitle(m.title.slice(0, 45)).addComponents(m.fields.map((f2) => {
+  const input = new import_discord4.TextInputBuilder().setCustomId(f2.id).setLabel(f2.label.slice(0, 45)).setStyle(f2.paragraph ? import_discord4.TextInputStyle.Paragraph : import_discord4.TextInputStyle.Short).setRequired(!!f2.required);
+  if (f2.maxLength) input.setMaxLength(f2.maxLength);
+  if (f2.minLength) input.setMinLength(Math.min(f2.minLength, f2.maxLength ?? 4e3));
+  if (f2.placeholder) input.setPlaceholder(f2.placeholder.slice(0, 100));
   return new import_discord4.ActionRowBuilder().addComponents(input);
 }));
 var replyPayload = (r) => ({ content: r.content ?? "", embeds: (r.embeds ?? []).map(toEmbed), components: toComponents(r.buttons, r.select, r.selects), allowedMentions: { parse: [] } });
@@ -82516,9 +82859,8 @@ var platform = {
   }
 };
 var live = createLive(api, platform);
-function toBuilder(def) {
-  const b = new import_discord4.SlashCommandBuilder().setName(def.name).setDescription(def.description);
-  for (const o of def.options ?? []) {
+function addOptions(b, options2 = []) {
+  for (const o of options2) {
     const common = (x) => {
       x.setName(o.name);
       x.setDescription(o.description);
@@ -82551,6 +82893,15 @@ function toBuilder(def) {
       return x;
     });
   }
+}
+function toBuilder(def) {
+  const b = new import_discord4.SlashCommandBuilder().setName(def.name).setDescription(def.description);
+  if (def.subcommands?.length) for (const sc of def.subcommands) b.addSubcommand((x) => {
+    x.setName(sc.name).setDescription(sc.description);
+    addOptions(x, sc.options);
+    return x;
+  });
+  else addOptions(b, def.options);
   return b.toJSON();
 }
 function joinedAtOf2(m) {
@@ -82567,7 +82918,7 @@ async function markDecided(message, d) {
   const rows = [];
   for (const row of message.components) {
     if (!("components" in row)) continue;
-    const kept = row.components.filter((c) => c.type === import_discord4.ComponentType.Button && !/^quali:(decide|reason):/.test(c.customId ?? ""));
+    const kept = row.components.filter((c) => c.type === import_discord4.ComponentType.Button && !/^(quali|leave):(decide|reason):/.test(c.customId ?? ""));
     if (kept.length) rows.push(new import_discord4.ActionRowBuilder().addComponents(kept.map((c) => import_discord4.ButtonBuilder.from(c))));
   }
   await message.edit({ embeds, components: rows, allowedMentions: { parse: [] } });
@@ -82579,6 +82930,7 @@ function baseCtx(i) {
     api,
     platform,
     userName: i.user.username,
+    userAvatar: i.user.displayAvatarURL({ size: 64 }),
     memberJoinedAt: joinedAtOf2(i.member),
     guildId: i.guildId ?? void 0,
     channelId: i.channelId ?? void 0,
@@ -82609,7 +82961,9 @@ async function handleCommand(i) {
   const def = byName(i.commandName);
   if (!def) return;
   const opts = {};
-  for (const o of def.options ?? []) {
+  const sub = def.subcommands?.length ? i.options.getSubcommand(false) ?? void 0 : void 0;
+  if (sub) opts._sub = sub;
+  for (const o of (sub ? def.subcommands?.find((x) => x.name === sub)?.options : def.options) ?? []) {
     const v = i.options.get(o.name)?.value;
     opts[o.name] = typeof v === "string" || typeof v === "number" || typeof v === "boolean" ? v : void 0;
   }
@@ -82633,7 +82987,7 @@ async function handleComponent(i) {
     return;
   }
   await i.deferReply({ flags: import_discord4.MessageFlags.Ephemeral });
-  const fields = i.isModalSubmit() ? Object.fromEntries(i.fields.fields.map((f, id) => [id, "value" in f ? String(f.value) : ""])) : void 0;
+  const fields = i.isModalSubmit() ? Object.fromEntries(i.fields.fields.map((f2, id) => [id, "value" in f2 ? String(f2.value) : ""])) : void 0;
   const values = i.isAnySelectMenu() ? i.values : void 0;
   const reply = await safeRun(`interaction ${i.customId}`, () => hit.def.run({ ...baseCtx(i), opts: {}, args: hit.args, fields, values }));
   await i.editReply(replyPayload(reply));
@@ -82643,7 +82997,7 @@ async function handleComponent(i) {
 }
 function wire(c) {
   c.on("interactionCreate", (i) => {
-    const task = guildScope.run(i.guildId ?? null, () => i.isChatInputCommand() ? handleCommand(i) : i.isButton() || i.isModalSubmit() || i.isAnySelectMenu() ? handleComponent(i) : void 0);
+    const task = guildScope.run(i.guildId ?? null, () => rolesScope.run(rolesOf(i.member), () => i.isChatInputCommand() ? handleCommand(i) : i.isButton() || i.isModalSubmit() || i.isAnySelectMenu() ? handleComponent(i) : void 0));
     void task?.catch((e) => console.error("interaction failed:", e instanceof Error ? e.message : e));
   });
   c.on("messageCreate", (m) => {
@@ -82721,14 +83075,18 @@ function wireReady(client0) {
         const ch = await client.channels.fetch(channelId);
         if (!ch?.isSendable()) throw new Error(`channel ${channelId} is not a text channel the bot can post in`);
         const avatar = opts?.avatarUserId ? await client.users.fetch(opts.avatarUserId).then((u) => u.displayAvatarURL({ size: 256 }), () => void 0) : void 0;
-        const list = avatar && embeds[0] ? [{ ...embeds[0], thumbnail: avatar }, ...embeds.slice(1)] : embeds;
+        let list = avatar && embeds[0] ? [{ ...embeds[0], thumbnail: avatar }, ...embeds.slice(1)] : embeds;
+        if (opts?.authorUserId && list[0]) {
+          const u = await client.users.fetch(opts.authorUserId).catch(() => null);
+          if (u) list = [{ ...list[0], author: { name: `@${u.username}`, iconUrl: u.displayAvatarURL({ size: 64 }) } }, ...list.slice(1)];
+        }
         const roles = opts?.pingRoleIds ?? [];
         const msg = await ch.send({ ...roles.length ? { content: roles.map((r) => `<@&${r}>`).join(" ") } : {}, embeds: list.map(toEmbed), components: toRows(buttons), allowedMentions: { parse: [], roles } });
         if (opts?.thread) await msg.startThread({ name: opts.thread, autoArchiveDuration: 10080 }).catch((e) => console.error("could not create staff thread:", e instanceof Error ? e.message : e));
       },
       cfg.OUTBOX_POLL_SECONDS,
       console.log,
-      (userId, text) => platform.sendDirectMessage(userId, text),
+      (userId, msg) => typeof msg === "string" ? platform.sendDirectMessage(userId, msg) : platform.sendDm(userId, { embed: msg }).then(() => void 0),
       grantRoleEverywhere,
       syncRolesEverywhere,
       () => void live.refresh("teamlist").catch(() => void 0),

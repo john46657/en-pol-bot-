@@ -3,6 +3,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.dutyRoleChanges = dutyRoleChanges;
 exports.pollOnce = pollOnce;
 exports.startOutboxLoop = startOutboxLoop;
+const cad_1 = require("./commands/cad");
 const format_1 = require("./format");
 /** Welche Discord-Rolle zu welchem Dienststatus gehört (Einstellungen → Discord). */
 function dutyRoleChanges(status, cfg) {
@@ -14,7 +15,10 @@ function dutyRoleChanges(status, cfg) {
     return { add: [...new Set(add)], remove: all.filter((r) => !add.includes(r)) };
 }
 /** Benachrichtigungen, die per Direktnachricht an eine Person gehen statt in einen Channel. */
-const DIRECT = { 'application.decided': format_1.applicationDecisionText, 'qualification.decided': format_1.qualificationDecisionText, 'leave.decided': format_1.leaveDecisionText };
+const DIRECT = {
+    'application.decided': format_1.applicationDecisionText, 'qualification.decided': format_1.qualificationDecisionText,
+    'leave.decided': (p) => (0, format_1.leaveDirectEmbed)('leave.decided', p), 'leave.pending': (p) => (0, format_1.leaveDirectEmbed)('leave.pending', p),
+};
 /**
  * Holt offene Benachrichtigungen aus der System-API, postet sie und quittiert.
  * Fehlgeschlagene Sendungen werden gemeldet (die API zählt Versuche und gibt nach 5 Fehlversuchen auf).
@@ -118,19 +122,23 @@ async function pollOnce(api, send, log = console.log, dm, grantRole, syncRoles, 
         }
         // eigener Channel im Eintrag (z. B. Bewerbungen einer Einheit) hat Vorrang
         const own = typeof item.payload.channelId === 'string' && /^\d{15,25}$/.test(item.payload.channelId) ? item.payload.channelId : null;
-        const channelIds = own ? [own] : (channels[item.channelKey] ?? '').split(/[\s,;]+/).filter(Boolean);
-        const embeds = (0, format_1.renderOutboxEmbeds)(item.type, item.payload);
+        // CAD: Zielkanäle kommen fertig aus der API (Kanalzuordnungen + Server-Verbindungen)
+        const many = Array.isArray(item.payload.channelIds) ? item.payload.channelIds.map(String).filter((c) => /^\d{15,25}$/.test(c)) : null;
+        const channelIds = own ? [own] : many ?? (channels[item.channelKey] ?? '').split(/[\s,;]+/).filter(Boolean);
+        const cad = item.type.startsWith('cad.') ? (0, cad_1.renderCadOutbox)(item.type, item.payload) : null;
+        const embeds = item.type.startsWith('cad.') ? (cad ? [cad] : null) : (0, format_1.renderOutboxEmbeds)(item.type, item.payload);
         try {
             if (!channelIds.length)
                 throw new Error(`channel "${item.channelKey}" not configured`);
             if (!embeds)
                 throw new Error(`unknown type "${item.type}"`);
-            const buttons = (0, format_1.outboxButtons)(item.type, item.payload);
+            const buttons = item.type.startsWith('cad.') ? (0, cad_1.cadButtons)(item.type, item.payload) : (0, format_1.outboxButtons)(item.type, item.payload);
             const pingRoleIds = Array.isArray(item.payload.pingRoleIds) ? item.payload.pingRoleIds.map(String).filter((r) => /^\d{15,25}$/.test(r)) : [];
             const avatarUserId = /\.(submitted|archived)$/.test(item.type) && /^(qualification|application)\./.test(item.type) && typeof item.payload.discordId === 'string' && /^\d{15,25}$/.test(item.payload.discordId) ? item.payload.discordId : undefined;
             // Staff-Thread je Bewerbung (wie bei Appy)
             const thread = item.payload.thread === true && /\.submitted$/.test(item.type) ? `Bewerbung ${String(item.payload.number ?? '')}`.slice(0, 100) : undefined;
-            const opts = pingRoleIds.length || avatarUserId || thread ? { ...(pingRoleIds.length ? { pingRoleIds } : {}), ...(avatarUserId ? { avatarUserId } : {}), ...(thread ? { thread } : {}) } : undefined;
+            const authorUserId = item.type === 'leave.requested' && typeof item.payload.discordId === 'string' && /^\d{15,25}$/.test(item.payload.discordId) ? item.payload.discordId : undefined;
+            const opts = pingRoleIds.length || avatarUserId || thread || authorUserId ? { ...(pingRoleIds.length ? { pingRoleIds } : {}), ...(avatarUserId ? { avatarUserId } : {}), ...(thread ? { thread } : {}), ...(authorUserId ? { authorUserId } : {}) } : undefined;
             const results = await Promise.allSettled(channelIds.map((id) => (opts ? send(id, embeds, buttons, opts) : send(id, embeds, buttons))));
             const failed = results.flatMap((r, i) => (r.status === 'rejected' ? [`${channelIds[i]}: ${r.reason instanceof Error ? r.reason.message : r.reason}`] : []));
             failed.forEach((f) => log(`outbox ${item.id}: send failed for channel ${f}`));

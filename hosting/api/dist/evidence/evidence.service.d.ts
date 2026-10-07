@@ -17,8 +17,8 @@ export declare class EvidenceService {
             version: number;
             type: string;
             description: string;
-            ownerId: string | null;
             source: string | null;
+            ownerId: string | null;
             caseRef: string | null;
             storageLocation: string | null;
             custodyState: string;
@@ -47,8 +47,8 @@ export declare class EvidenceService {
         version: number;
         type: string;
         description: string;
-        ownerId: string | null;
         source: string | null;
+        ownerId: string | null;
         caseRef: string | null;
         storageLocation: string | null;
         custodyState: string;
@@ -68,8 +68,8 @@ export declare class EvidenceService {
         version: number;
         type: string;
         description: string;
-        ownerId: string | null;
         source: string | null;
+        ownerId: string | null;
         caseRef: string | null;
         storageLocation: string | null;
         custodyState: string;
@@ -88,8 +88,8 @@ export declare class EvidenceService {
         version: number;
         type: string;
         description: string;
-        ownerId: string | null;
         source: string | null;
+        ownerId: string | null;
         caseRef: string | null;
         storageLocation: string | null;
         custodyState: string;

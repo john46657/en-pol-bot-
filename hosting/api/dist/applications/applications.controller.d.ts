@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { ApplicationsService } from './applications.service';
+import { ApplicationsAnalyticsService } from './applications-analytics.service';
 import type { Actor } from '../audit/audit.service';
 declare const submit: z.ZodObject<{
     robloxUsername: z.ZodString;
@@ -36,11 +37,11 @@ declare const listQ: z.ZodObject<{
     page: number;
     pageSize: number;
     guildId?: string | undefined;
-    status?: "SUBMITTED" | "REJECTED" | "SCREENING" | "OPEN" | "INTERVIEW" | "PENDING_DECISION" | "ACCEPTED" | "WITHDRAWN" | undefined;
+    status?: "OPEN" | "SUBMITTED" | "REJECTED" | "SCREENING" | "INTERVIEW" | "PENDING_DECISION" | "ACCEPTED" | "WITHDRAWN" | undefined;
     q?: string | undefined;
 }, {
     guildId?: string | undefined;
-    status?: "SUBMITTED" | "REJECTED" | "SCREENING" | "OPEN" | "INTERVIEW" | "PENDING_DECISION" | "ACCEPTED" | "WITHDRAWN" | undefined;
+    status?: "OPEN" | "SUBMITTED" | "REJECTED" | "SCREENING" | "INTERVIEW" | "PENDING_DECISION" | "ACCEPTED" | "WITHDRAWN" | undefined;
     q?: string | undefined;
     page?: number | undefined;
     pageSize?: number | undefined;
@@ -52,9 +53,26 @@ declare const guildQ: z.ZodObject<{
 }, {
     guildId?: string | undefined;
 }>;
+declare const analyticsQ: z.ZodObject<{
+    type: z.ZodOptional<z.ZodString>;
+    status: z.ZodOptional<z.ZodEnum<["APPROVED", "PENDING", "REJECTED"]>>;
+    reviewer: z.ZodOptional<z.ZodString>;
+    days: z.ZodDefault<z.ZodNumber>;
+}, "strip", z.ZodTypeAny, {
+    days: number;
+    type?: string | undefined;
+    status?: "PENDING" | "APPROVED" | "REJECTED" | undefined;
+    reviewer?: string | undefined;
+}, {
+    type?: string | undefined;
+    status?: "PENDING" | "APPROVED" | "REJECTED" | undefined;
+    days?: number | undefined;
+    reviewer?: string | undefined;
+}>;
 export declare class ApplicationsController {
     private readonly a;
-    constructor(a: ApplicationsService);
+    private readonly stats;
+    constructor(a: ApplicationsService, stats: ApplicationsAnalyticsService);
     /** `?guildId=` – Formular eines Servers (für den Bot); ohne: das gemeinsame (Web-Seite /apply). */
     form(q: z.infer<typeof guildQ>): Promise<import("@enrp/shared").FormField[]>;
     submit(b: z.infer<typeof submit>): Promise<{
@@ -77,15 +95,55 @@ export declare class ApplicationsController {
             decidedById: string | null;
             decisionReason: string | null;
             source: string;
+            discordName: string | null;
             answers: import("@prisma/client/runtime/library").JsonValue;
             grantRoleIds: string[];
-            discordName: string | null;
             durationSec: number | null;
             joinedAt: Date | null;
         }[];
         total: number;
         page: number;
         pageSize: number;
+    }>;
+    /** Statistik (Filter: Name, Status, Prüfer; Zeitraum in Tagen, verglichen mit der Vorperiode). Server getrennt wie die Liste. */
+    analytics(q: z.infer<typeof analyticsQ>): Promise<{
+        days: number;
+        kpis: {
+            key: "total" | "pending" | "approvalRate" | "avgReviewMin" | "completionRate";
+            value: number;
+            change: number;
+        }[];
+        overTime: {
+            date: string;
+            count: number;
+            avg7: number;
+        }[];
+        breakdown: {
+            APPROVED: number;
+            PENDING: number;
+            REJECTED: number;
+        };
+        byType: {
+            type: string;
+            submitted: number;
+            approvalRate: number;
+            avgReviewMin: number;
+        }[];
+        reviewers: {
+            id: string;
+            name: string;
+            reviewed: number;
+            approvalRate: number;
+            avgReviewMin: number;
+        }[];
+        heat: number[][];
+        filters: {
+            types: string[];
+            reviewers: {
+                id: string;
+                name: string;
+            }[];
+        };
     }>;
     history(q: {
         discordId: string;
@@ -110,9 +168,9 @@ export declare class ApplicationsController {
         decidedById: string | null;
         decisionReason: string | null;
         source: string;
+        discordName: string | null;
         answers: import("@prisma/client/runtime/library").JsonValue;
         grantRoleIds: string[];
-        discordName: string | null;
         durationSec: number | null;
         joinedAt: Date | null;
     }>;
@@ -131,9 +189,9 @@ export declare class ApplicationsController {
         decidedById: string | null;
         decisionReason: string | null;
         source: string;
+        discordName: string | null;
         answers: import("@prisma/client/runtime/library").JsonValue;
         grantRoleIds: string[];
-        discordName: string | null;
         durationSec: number | null;
         joinedAt: Date | null;
     }>;
@@ -154,9 +212,9 @@ export declare class ApplicationsController {
         decidedById: string | null;
         decisionReason: string | null;
         source: string;
+        discordName: string | null;
         answers: import("@prisma/client/runtime/library").JsonValue;
         grantRoleIds: string[];
-        discordName: string | null;
         durationSec: number | null;
         joinedAt: Date | null;
     }>;

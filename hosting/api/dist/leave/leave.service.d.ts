@@ -44,6 +44,8 @@ export declare class LeaveService {
     private withDiscord;
     private one;
     private view;
+    /** Server, auf dem beantragt wurde (Kopfzeile der DMs wie bei Trident); sonst der Organisationsname. */
+    private server;
     private payload;
     /** Eintrag im Log-Channel (angenommen, abgelehnt, begonnen, beendet, zurückgezogen). */
     private log;

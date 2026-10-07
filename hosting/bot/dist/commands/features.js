@@ -9,16 +9,18 @@ const sek_1 = require("./sek");
 const qualifications_1 = require("./qualifications");
 const tickets_1 = require("./tickets");
 const leave_1 = require("./leave");
+const cad_1 = require("./cad");
 const str = (c, k) => String(c.opts[k] ?? '').trim();
 const choices = (m) => Object.keys(m).map((k) => ({ name: k.replace('_', ' '), value: k }));
 const needGuildAdmin = (c) => (!c.guildId ? (0, format_1.errorReply)('Das geht nur auf einem Server, nicht per Direktnachricht.') : !c.isGuildAdmin ? (0, format_1.errorReply)('Dafür brauchst du auf diesem Discord-Server das Recht „Server verwalten“.') : null);
 // ---------------- Gefahrenstatus ----------------
-const LEVEL = { gruen: 'GREEN', gelb: 'YELLOW', rot: 'RED' };
+/** Alte Eingaben (grün/gelb/rot) weiter verstehen; sonst entscheidet die API anhand der eingestellten Stufen. */
+const LEGACY = { gruen: 'STATUS_1', 'grün': 'STATUS_1', gelb: 'STATUS_2', rot: 'STATUS_4' };
 async function setDanger(c, level, reason) {
     try {
         const s = await c.api.asUser(c.discordId, 'PUT', '/danger-level', { level, ...(reason ? { reason } : {}) });
         await c.refreshLive?.('danger').catch(() => undefined); // Panel sofort nachziehen (sonst spätestens beim nächsten Abgleich)
-        return (0, format_1.okReply)(`Gefahrenstatus: ${format_1.DANGER[s.level]?.emoji ?? ''} **${format_1.DANGER[s.level]?.label ?? s.level}**`);
+        return (0, format_1.okReply)(`Gefahrenstatus: ${s.def?.emoji ?? ''} **${(0, format_1.plain)(s.def?.name ?? s.level)}**${s.def?.title ? ` – ${(0, format_1.plain)(s.def.title)}` : ''}`);
     }
     catch (e) {
         return (0, errors_1.mapError)(e);
@@ -38,14 +40,14 @@ exports.FEATURE_COMMANDS = [
         name: 'gefahrenstatus', description: 'Gefahrenstatus anzeigen, setzen oder als Panel posten',
         options: [
             { name: 'aktion', description: 'Was möchtest du tun? (Standard: anzeigen)', type: 'string', choices: [{ name: 'anzeigen', value: 'anzeigen' }, { name: 'setzen', value: 'setzen' }, { name: 'panel hier posten', value: 'panel' }] },
-            { name: 'stufe', description: 'Neue Stufe (bei „setzen“)', type: 'string', choices: choices(LEVEL) },
+            { name: 'stufe', description: 'Neue Stufe (bei „setzen“), z. B. Status 2', type: 'string', maxLength: 40 },
             { name: 'grund', description: 'Grund (optional, bei „setzen“)', type: 'string', maxLength: 200 },
         ],
         async run(c) {
             const action = str(c, 'aktion') || 'anzeigen';
             if (action === 'setzen') {
-                const level = LEVEL[str(c, 'stufe')];
-                return level ? setDanger(c, level, str(c, 'grund') || undefined) : (0, format_1.errorReply)('Bitte eine Stufe wählen (grün, gelb, rot).');
+                const level = str(c, 'stufe');
+                return level ? setDanger(c, LEGACY[level.toLowerCase()] ?? level, str(c, 'grund') || undefined) : (0, format_1.errorReply)('Bitte eine Stufe angeben (z. B. „Status 2“).');
             }
             if (action === 'panel') {
                 const denied = needGuildAdmin(c);
@@ -208,11 +210,12 @@ exports.INTERACTIONS = [
     qualifications_1.QUALI_INTERACTION,
     tickets_1.TICKET_INTERACTION,
     leave_1.LEAVE_INTERACTION,
+    cad_1.CAD_INTERACTION,
     {
         prefix: 'danger',
         async run(c) {
             const level = c.args[0] === 'set' ? c.args[1] : undefined;
-            return level && level in format_1.DANGER ? setDanger(c, level) : (0, format_1.errorReply)('Unbekannte Aktion.');
+            return level ? setDanger(c, level) : (0, format_1.errorReply)('Unbekannte Aktion.');
         },
     },
     {

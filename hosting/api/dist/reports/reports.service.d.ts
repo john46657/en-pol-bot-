@@ -38,8 +38,8 @@ export declare class ReportsService {
                 id: string;
                 createdAt: Date;
                 version: number;
-                reportId: string;
                 authorId: string;
+                reportId: string;
                 changeSummary: string;
                 content: Prisma.JsonValue;
                 contentHash: string;

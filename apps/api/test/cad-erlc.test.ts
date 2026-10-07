@@ -242,6 +242,10 @@ describe('CAD', () => {
     expect((await disp.get('/api/v1/cad/map/objects')).body.map((o: { name: string }) => o.name)).toEqual(['Bank']);
     expect((await admin.get('/api/v1/cad/map/objects')).body).toHaveLength(2);
     expect(await prisma.auditLog.count({ where: { action: { startsWith: 'cad.map.' } } })).toBeGreaterThanOrEqual(3);
+    // automatische Aktion einer Zone: Einsatz darin → Hinweis in der Chronik
+    await admin.post('/api/v1/cad/map/objects').send({ kind: 'ZONE', name: 'Hafen', layer: 'restricted', points: [[100, 100], [200, 100], [200, 200], [100, 200]], autoAction: 'warn' });
+    const inc = await disp.post('/api/v1/cad/incidents').send({ title: 'Schmuggel', mapX: 150, mapZ: 150 });
+    expect((await disp.get(`/api/v1/cad/incidents/${inc.body.id}`)).body.log.map((l: { text: string }) => l.text).join(' ')).toContain('Zone „Hafen“');
   });
 
   it('overview and logs', async () => {

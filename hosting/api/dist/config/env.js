@@ -32,6 +32,10 @@ const schema = zod_1.z.object({
     DISCORD_GUILD_ID: zod_1.z.string().optional(),
     /** Discord-IDs (Komma), die beim Discord-Login immer „System Administrator“ sind – damit sich der Besitzer nicht aussperrt. */
     ADMIN_DISCORD_IDS: zod_1.z.string().optional(),
+    /** Schlüssel für die Verschlüsselung der ER:LC-Server-Keys (mind. 32 Zeichen). Leer = abgeleitet aus SESSION_SECRET. */
+    ERLC_SECRET_KEY: zod_1.z.string().min(32).optional(),
+    /** `false` = ER:LC-Server nicht automatisch abrufen (z. B. Testsystem). */
+    ERLC_POLLING: zod_1.z.enum(['true', 'false']).optional(),
 });
 function loadEnv(source = process.env) {
     // Leere Strings (z. B. aus docker-compose `${VAR:-}`) gelten als nicht gesetzt.

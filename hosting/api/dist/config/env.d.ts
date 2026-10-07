@@ -29,6 +29,10 @@ declare const schema: z.ZodObject<{
     DISCORD_GUILD_ID: z.ZodOptional<z.ZodString>;
     /** Discord-IDs (Komma), die beim Discord-Login immer „System Administrator“ sind – damit sich der Besitzer nicht aussperrt. */
     ADMIN_DISCORD_IDS: z.ZodOptional<z.ZodString>;
+    /** Schlüssel für die Verschlüsselung der ER:LC-Server-Keys (mind. 32 Zeichen). Leer = abgeleitet aus SESSION_SECRET. */
+    ERLC_SECRET_KEY: z.ZodOptional<z.ZodString>;
+    /** `false` = ER:LC-Server nicht automatisch abrufen (z. B. Testsystem). */
+    ERLC_POLLING: z.ZodOptional<z.ZodEnum<["true", "false"]>>;
 }, "strip", z.ZodTypeAny, {
     NODE_ENV: "development" | "test" | "production";
     PORT: number;
@@ -49,6 +53,8 @@ declare const schema: z.ZodObject<{
     DISCORD_TOKEN?: string | undefined;
     DISCORD_GUILD_ID?: string | undefined;
     ADMIN_DISCORD_IDS?: string | undefined;
+    ERLC_SECRET_KEY?: string | undefined;
+    ERLC_POLLING?: "true" | "false" | undefined;
 }, {
     DATABASE_URL: string;
     NODE_ENV?: "development" | "test" | "production" | undefined;
@@ -69,6 +75,8 @@ declare const schema: z.ZodObject<{
     DISCORD_TOKEN?: string | undefined;
     DISCORD_GUILD_ID?: string | undefined;
     ADMIN_DISCORD_IDS?: string | undefined;
+    ERLC_SECRET_KEY?: string | undefined;
+    ERLC_POLLING?: "true" | "false" | undefined;
 }>;
 export type Env = z.infer<typeof schema>;
 export declare function loadEnv(source?: NodeJS.ProcessEnv): Env;

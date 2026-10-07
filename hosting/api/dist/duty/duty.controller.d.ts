@@ -42,9 +42,9 @@ export declare class DutyController {
         status: string;
         endedAt: Date | null;
         callsign: string | null;
+        startedAt: Date;
         unitId: string | null;
         shiftType: string | null;
-        startedAt: Date;
     })[]>;
     overview(): Promise<{
         userId: string;
@@ -76,9 +76,9 @@ export declare class DutyController {
         status: string;
         endedAt: Date | null;
         callsign: string | null;
+        startedAt: Date;
         unitId: string | null;
         shiftType: string | null;
-        startedAt: Date;
     } | null, null, import("@prisma/client/runtime/library").DefaultArgs, import("@prisma/client").Prisma.PrismaClientOptions>;
     /** Eigene Dienststunden. */
     myHours(a: Actor, f: z.infer<typeof hoursQuery>): Promise<{
@@ -108,9 +108,9 @@ export declare class DutyController {
         status: string;
         endedAt: Date | null;
         callsign: string | null;
+        startedAt: Date;
         unitId: string | null;
         shiftType: string | null;
-        startedAt: Date;
     } | {
         status: string;
     }>;
@@ -121,9 +121,9 @@ export declare class DutyController {
         status: string;
         endedAt: Date | null;
         callsign: string | null;
+        startedAt: Date;
         unitId: string | null;
         shiftType: string | null;
-        startedAt: Date;
     } | {
         status: string;
     }>;

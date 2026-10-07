@@ -14,8 +14,9 @@ function mapError(e) {
         return (0, format_1.errorReply)('Dein Discord-Konto ist nicht verknüpft. Erzeuge im Web (Menü → „Discord verknüpfen“) einen Code und nutze `/verknuepfen`.');
     if (e.status === 401)
         return (0, format_1.errorReply)(`Authentifizierung fehlgeschlagen.${rid}`);
+    // Fachliche Begründungen (z. B. Server-Verbindung fehlt) mitgeben, die allgemeine englische Meldung nicht
     if (e.status === 403)
-        return (0, format_1.errorReply)('Dazu hast du keine Berechtigung.');
+        return (0, format_1.errorReply)(/[äöüß]|Server|Einheit|Leitstelle/.test(e.message) && !/^You do not have permission|^This route/.test(e.message) ? `Dazu hast du keine Berechtigung: ${e.message}` : 'Dazu hast du keine Berechtigung.');
     if (e.status === 404)
         return (0, format_1.errorReply)('Nicht gefunden.');
     if (e.status === 429)

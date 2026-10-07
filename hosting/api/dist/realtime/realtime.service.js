@@ -14,6 +14,7 @@ exports.ROOM_PERMISSION = {
     incidents: 'incidents.view',
     team: 'team.view',
     wanted: 'wanted.view',
+    cad: 'cad.view',
 };
 let RealtimeService = class RealtimeService {
     server;

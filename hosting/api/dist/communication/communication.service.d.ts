@@ -18,8 +18,8 @@ export declare class CommunicationService {
     list(actor: Actor, channel: Channel, entityId?: string, q?: string): Promise<{
         id: string;
         createdAt: Date;
-        body: string;
         authorId: string;
+        body: string;
         deletedAt: Date | null;
         conversationId: string;
         replyToId: string | null;
@@ -32,8 +32,8 @@ export declare class CommunicationService {
     }): Promise<{
         id: string;
         createdAt: Date;
-        body: string;
         authorId: string;
+        body: string;
         deletedAt: Date | null;
         conversationId: string;
         replyToId: string | null;
@@ -42,8 +42,8 @@ export declare class CommunicationService {
     moderate(actor: Actor, id: string, action: 'pin' | 'unpin' | 'delete'): Promise<{
         id: string;
         createdAt: Date;
-        body: string;
         authorId: string;
+        body: string;
         deletedAt: Date | null;
         conversationId: string;
         replyToId: string | null;

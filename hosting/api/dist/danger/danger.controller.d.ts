@@ -1,20 +1,61 @@
 import { z } from 'zod';
-import { DangerService } from './danger.service';
+import { dangerConfigSchema, DangerService } from './danger.service';
 import type { Actor } from '../audit/audit.service';
 declare const body: z.ZodObject<{
-    level: z.ZodEnum<["GREEN", "YELLOW", "RED"]>;
+    level: z.ZodString;
     reason: z.ZodOptional<z.ZodString>;
 }, "strip", z.ZodTypeAny, {
-    level: "GREEN" | "YELLOW" | "RED";
+    level: string;
     reason?: string | undefined;
 }, {
-    level: "GREEN" | "YELLOW" | "RED";
+    level: string;
     reason?: string | undefined;
 }>;
 export declare class DangerController {
     private readonly d;
     constructor(d: DangerService);
-    get(): Promise<import("./danger.service").DangerState>;
-    set(a: Actor, b: z.infer<typeof body>): Promise<import("./danger.service").DangerState>;
+    get(): Promise<{
+        level: string;
+        def: import("@enrp/shared").DangerLevelDef;
+        levels: {
+            key: string;
+            name: string;
+            title: string;
+            emoji: string;
+            color: string;
+            buttonStyle: "danger" | "success" | "primary" | "secondary";
+        }[];
+        panel: {
+            title: string;
+            text: string;
+            buttonEmoji: string;
+        };
+        reason: string | null;
+        setByName: string | null;
+        at: string | null;
+    }>;
+    set(a: Actor, b: z.infer<typeof body>): Promise<{
+        level: string;
+        def: import("@enrp/shared").DangerLevelDef;
+        levels: {
+            key: string;
+            name: string;
+            title: string;
+            emoji: string;
+            color: string;
+            buttonStyle: "danger" | "success" | "primary" | "secondary";
+        }[];
+        panel: {
+            title: string;
+            text: string;
+            buttonEmoji: string;
+        };
+        reason: string | null;
+        setByName: string | null;
+        at: string | null;
+    }>;
+    /** Stufen, Texte, Farben, Buttons und Pings (Dashboard). */
+    config(): Promise<import("@enrp/shared").DangerConfig>;
+    saveConfig(a: Actor, b: z.infer<typeof dangerConfigSchema>): Promise<import("@enrp/shared").DangerConfig>;
 }
 export {};
