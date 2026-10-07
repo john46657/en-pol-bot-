@@ -20,10 +20,21 @@ export declare class DispatchService {
     } & {
         vehicle: string | null;
         id: string;
+        name: string | null;
         updatedAt: Date;
+        guildId: string | null;
+        type: string | null;
+        color: string | null;
+        icon: string | null;
         status: string;
         callsign: string;
+        mapX: number | null;
+        mapZ: number | null;
         notes: string | null;
+        discordRoleId: string | null;
+        erlcTeam: string | null;
+        operational: boolean;
+        statusRoleIds: string[];
     })[]>;
     createUnit(actor: Actor, d: {
         callsign: string;
@@ -33,18 +44,40 @@ export declare class DispatchService {
     }): Promise<{
         vehicle: string | null;
         id: string;
+        name: string | null;
         updatedAt: Date;
+        guildId: string | null;
+        type: string | null;
+        color: string | null;
+        icon: string | null;
         status: string;
         callsign: string;
+        mapX: number | null;
+        mapZ: number | null;
         notes: string | null;
+        discordRoleId: string | null;
+        erlcTeam: string | null;
+        operational: boolean;
+        statusRoleIds: string[];
     }>;
     setUnitStatus(actor: Actor, id: string, status: UnitStatus): Promise<{
         vehicle: string | null;
         id: string;
+        name: string | null;
         updatedAt: Date;
+        guildId: string | null;
+        type: string | null;
+        color: string | null;
+        icon: string | null;
         status: string;
         callsign: string;
+        mapX: number | null;
+        mapZ: number | null;
         notes: string | null;
+        discordRoleId: string | null;
+        erlcTeam: string | null;
+        operational: boolean;
+        statusRoleIds: string[];
     }>;
     /** Besetzung einer Einheit (Supervisor/Leitstelle). Nur aktive Benutzer; ersetzt die bisherige Besetzung vollständig. */
     setUnitMembers(actor: Actor, id: string, userIds: string[]): Promise<{
@@ -55,10 +88,21 @@ export declare class DispatchService {
     } & {
         vehicle: string | null;
         id: string;
+        name: string | null;
         updatedAt: Date;
+        guildId: string | null;
+        type: string | null;
+        color: string | null;
+        icon: string | null;
         status: string;
         callsign: string;
+        mapX: number | null;
+        mapZ: number | null;
         notes: string | null;
+        discordRoleId: string | null;
+        erlcTeam: string | null;
+        operational: boolean;
+        statusRoleIds: string[];
     }>;
     list(p: PageQuery, status?: string, activeOnly?: boolean): Promise<{
         items: ({
@@ -67,8 +111,8 @@ export declare class DispatchService {
                     callsign: string;
                 };
             } & {
-                unitId: string;
                 incidentId: string;
+                unitId: string;
                 assignedAt: Date;
                 clearedAt: Date | null;
             })[];
@@ -78,16 +122,25 @@ export declare class DispatchService {
             createdAt: Date;
             updatedAt: Date;
             version: number;
+            guildId: string | null;
+            type: string | null;
             description: string | null;
             priority: string;
             status: string;
             title: string;
+            mapX: number | null;
+            mapZ: number | null;
+            source: string;
             serverId: string | null;
             location: string | null;
-            source: string;
             dispatcherId: string | null;
             supervisorId: string | null;
             closedAt: Date | null;
+            keyword: string | null;
+            involved: string | null;
+            requiredUnits: string | null;
+            internalNotes: string | null;
+            restrictRoleIds: string[];
         })[];
         total: number;
         page: number;
@@ -99,14 +152,25 @@ export declare class DispatchService {
                 unit: {
                     vehicle: string | null;
                     id: string;
+                    name: string | null;
                     updatedAt: Date;
+                    guildId: string | null;
+                    type: string | null;
+                    color: string | null;
+                    icon: string | null;
                     status: string;
                     callsign: string;
+                    mapX: number | null;
+                    mapZ: number | null;
                     notes: string | null;
+                    discordRoleId: string | null;
+                    erlcTeam: string | null;
+                    operational: boolean;
+                    statusRoleIds: string[];
                 };
             } & {
-                unitId: string;
                 incidentId: string;
+                unitId: string;
                 assignedAt: Date;
                 clearedAt: Date | null;
             })[];
@@ -116,16 +180,25 @@ export declare class DispatchService {
             createdAt: Date;
             updatedAt: Date;
             version: number;
+            guildId: string | null;
+            type: string | null;
             description: string | null;
             priority: string;
             status: string;
             title: string;
+            mapX: number | null;
+            mapZ: number | null;
+            source: string;
             serverId: string | null;
             location: string | null;
-            source: string;
             dispatcherId: string | null;
             supervisorId: string | null;
             closedAt: Date | null;
+            keyword: string | null;
+            involved: string | null;
+            requiredUnits: string | null;
+            internalNotes: string | null;
+            restrictRoleIds: string[];
         };
         links: {
             role: string;
@@ -159,16 +232,25 @@ export declare class DispatchService {
         createdAt: Date;
         updatedAt: Date;
         version: number;
+        guildId: string | null;
+        type: string | null;
         description: string | null;
         priority: string;
         status: string;
         title: string;
+        mapX: number | null;
+        mapZ: number | null;
+        source: string;
         serverId: string | null;
         location: string | null;
-        source: string;
         dispatcherId: string | null;
         supervisorId: string | null;
         closedAt: Date | null;
+        keyword: string | null;
+        involved: string | null;
+        requiredUnits: string | null;
+        internalNotes: string | null;
+        restrictRoleIds: string[];
     }>;
     attach(tx: Tx, incidentId: string, personIds: string[] | undefined, vehicleIds: string[] | undefined, actor: Actor): Promise<void>;
     attachRecords(actor: Actor, id: string, d: {
@@ -187,16 +269,25 @@ export declare class DispatchService {
         createdAt: Date;
         updatedAt: Date;
         version: number;
+        guildId: string | null;
+        type: string | null;
         description: string | null;
         priority: string;
         status: string;
         title: string;
+        mapX: number | null;
+        mapZ: number | null;
+        source: string;
         serverId: string | null;
         location: string | null;
-        source: string;
         dispatcherId: string | null;
         supervisorId: string | null;
         closedAt: Date | null;
+        keyword: string | null;
+        involved: string | null;
+        requiredUnits: string | null;
+        internalNotes: string | null;
+        restrictRoleIds: string[];
     }>;
     setStatus(actor: Actor, id: string, to: DispatchStatus, note?: string): Promise<{
         number: string;
@@ -204,21 +295,30 @@ export declare class DispatchService {
         createdAt: Date;
         updatedAt: Date;
         version: number;
+        guildId: string | null;
+        type: string | null;
         description: string | null;
         priority: string;
         status: string;
         title: string;
+        mapX: number | null;
+        mapZ: number | null;
+        source: string;
         serverId: string | null;
         location: string | null;
-        source: string;
         dispatcherId: string | null;
         supervisorId: string | null;
         closedAt: Date | null;
+        keyword: string | null;
+        involved: string | null;
+        requiredUnits: string | null;
+        internalNotes: string | null;
+        restrictRoleIds: string[];
     }>;
     assignUnit(actor: Actor, id: string, unitId: string): Promise<{
         units: {
-            unitId: string;
             incidentId: string;
+            unitId: string;
             assignedAt: Date;
             clearedAt: Date | null;
         }[];
@@ -228,15 +328,24 @@ export declare class DispatchService {
         createdAt: Date;
         updatedAt: Date;
         version: number;
+        guildId: string | null;
+        type: string | null;
         description: string | null;
         priority: string;
         status: string;
         title: string;
+        mapX: number | null;
+        mapZ: number | null;
+        source: string;
         serverId: string | null;
         location: string | null;
-        source: string;
         dispatcherId: string | null;
         supervisorId: string | null;
         closedAt: Date | null;
+        keyword: string | null;
+        involved: string | null;
+        requiredUnits: string | null;
+        internalNotes: string | null;
+        restrictRoleIds: string[];
     }>;
 }

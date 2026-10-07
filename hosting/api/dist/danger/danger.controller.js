@@ -19,7 +19,7 @@ const zod_1 = require("zod");
 const danger_service_1 = require("./danger.service");
 const decorators_1 = require("../authz/decorators");
 const zod_pipe_1 = require("../common/zod.pipe");
-const body = zod_1.z.object({ level: zod_1.z.enum(danger_service_1.DANGER_LEVELS), reason: zod_1.z.string().trim().max(200).optional() });
+const body = zod_1.z.object({ level: zod_1.z.string().trim().min(1).max(40), reason: zod_1.z.string().trim().max(200).optional() });
 let DangerController = class DangerController {
     d;
     constructor(d) {
@@ -27,6 +27,9 @@ let DangerController = class DangerController {
     }
     get() { return this.d.get(); }
     set(a, b) { return this.d.set(a, b.level, b.reason); }
+    /** Stufen, Texte, Farben, Buttons und Pings (Dashboard). */
+    config() { return this.d.config(); }
+    saveConfig(a, b) { return this.d.saveConfig(a, b); }
 };
 exports.DangerController = DangerController;
 __decorate([
@@ -45,6 +48,22 @@ __decorate([
     __metadata("design:paramtypes", [Object, void 0]),
     __metadata("design:returntype", void 0)
 ], DangerController.prototype, "set", null);
+__decorate([
+    (0, common_1.Get)('config'),
+    (0, decorators_1.RequirePermission)('dashboard.view'),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", []),
+    __metadata("design:returntype", void 0)
+], DangerController.prototype, "config", null);
+__decorate([
+    (0, common_1.Put)('config'),
+    (0, decorators_1.RequirePermission)('settings.manage'),
+    __param(0, (0, decorators_1.CurrentActor)()),
+    __param(1, (0, common_1.Body)((0, zod_pipe_1.zodBody)(danger_service_1.dangerConfigSchema))),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, void 0]),
+    __metadata("design:returntype", void 0)
+], DangerController.prototype, "saveConfig", null);
 exports.DangerController = DangerController = __decorate([
     (0, swagger_1.ApiTags)('danger'),
     (0, common_1.Controller)('danger-level'),

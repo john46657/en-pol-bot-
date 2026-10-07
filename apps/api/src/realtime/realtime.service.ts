@@ -7,6 +7,7 @@ export const ROOM_PERMISSION: Record<string, string> = {
   incidents: 'incidents.view',
   team: 'team.view',
   wanted: 'wanted.view',
+  cad: 'cad.view',
 };
 
 @Injectable()

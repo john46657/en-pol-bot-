@@ -268,14 +268,29 @@ model Ticket {
 }
 
 model Unit {
-  id        String         @id @default(uuid()) @db.Uuid
-  callsign  String         @unique
-  status    String         @default("OFF_DUTY")
-  vehicle   String?
-  notes     String?
-  members   UnitMember[]
-  incidents IncidentUnit[]
-  updatedAt DateTime       @updatedAt
+  id            String         @id @default(uuid()) @db.Uuid
+  callsign      String         @unique
+  status        String         @default("OFF_DUTY")
+  vehicle       String?
+  notes         String?
+  /// CAD: Anzeigename, Einheitentyp (Schlüssel aus der CAD-Konfiguration, z. B. SEK/K9), Darstellung, Zuordnung
+  name          String?
+  type          String?
+  color         String?
+  icon          String?
+  discordRoleId String?
+  /// Discord-Server, zu dem die Einheit gehört (z. B. SEK/K9-Server)
+  guildId       String?
+  erlcTeam      String?
+  operational   Boolean        @default(true)
+  /// Manuell gesetzte Kartenposition (ER:LC-Koordinaten), falls kein verknüpfter Spieler im Spiel ist
+  mapX          Float?
+  mapZ          Float?
+  /// Discord-Rollen, die den Status dieser Einheit melden dürfen (zusätzlich zu Leitstelle, Besatzung und discordRoleId)
+  statusRoleIds String[]       @default([])
+  members       UnitMember[]
+  incidents     IncidentUnit[]
+  updatedAt     DateTime       @updatedAt
 }
 
 model UnitMember {
@@ -287,22 +302,35 @@ model UnitMember {
 }
 
 model Incident {
-  id           String         @id @default(uuid()) @db.Uuid
-  serverId     String?        @db.Uuid
-  number       String         @unique
-  title        String
-  description  String?
-  priority     String         @default("MEDIUM")
-  location     String?
-  source       String         @default("MANUAL") // MANUAL
-  status       String         @default("NEW")
-  dispatcherId String?        @db.Uuid
-  supervisorId String?        @db.Uuid
-  createdAt    DateTime       @default(now())
-  updatedAt    DateTime       @updatedAt
-  closedAt     DateTime?
-  version      Int            @default(1)
-  units        IncidentUnit[]
+  id              String           @id @default(uuid()) @db.Uuid
+  serverId        String?          @db.Uuid
+  number          String           @unique
+  title           String
+  description     String?
+  priority        String           @default("MEDIUM")
+  location        String?
+  source          String           @default("MANUAL") // MANUAL
+  status          String           @default("NEW")
+  dispatcherId    String?          @db.Uuid
+  supervisorId    String?          @db.Uuid
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+  closedAt        DateTime?
+  version         Int              @default(1)
+  units           IncidentUnit[]
+  /// CAD-Felder: Einsatzart, Stichwort, Kartenposition (ER:LC-Koordinaten), Beteiligte, benötigte Einheiten, interne Notizen
+  type            String?
+  keyword         String?
+  mapX            Float?
+  mapZ            Float?
+  involved        String?
+  requiredUnits   String?
+  internalNotes   String?
+  /// Discord-Server, auf dem der Einsatz geführt wird (Leitstelle)
+  guildId         String?
+  /// Vertraulich: nur diese Dashboard-Rollen (und CAD-Verwaltung/Disponent) sehen den Einsatz; leer = alle mit cad.view
+  restrictRoleIds String[]         @default([])
+  log             CadIncidentLog[]
 
   @@index([status, priority])
 }
@@ -508,6 +536,8 @@ model Application {
   robloxUsername String
   robloxUserId   String?
   decidedById    String?   @db.Uuid
+  /// Zeitpunkt der Annahme/Ablehnung (für die Statistik)
+  decidedAt      DateTime?
   discordId      String? // Bewerber-Discord-ID (bei Bewerbung über den Bot) – für die Entscheidungs-DM
   discordName    String?
   source         String    @default("WEB") // WEB | DISCORD
@@ -1032,4 +1062,182 @@ model RadioCode {
 
   @@unique([guildId, code])
   @@index([guildId, position])
+}
+
+// ───────────── ER:LC-Integration & CAD ─────────────
+
+/// Verbundener ER:LC-Privatserver. Der Server-Key liegt nur verschlüsselt hier (AES-256-GCM) und verlässt das Backend nie.
+model ErlcServer {
+  id             String              @id @default(uuid()) @db.Uuid
+  name           String
+  /// Optionale eigene Kennung (z. B. Join-Key) zur Anzeige
+  serverRef      String?
+  description    String?
+  logoUrl        String?
+  /// zugehöriger Discord-Server
+  guildId        String?
+  active         Boolean             @default(true)
+  keyCipher      String
+  pollSeconds    Int                 @default(15)
+  /// Erlaubte Funktionen: players, staff, queue, vehicles, emergencyCalls, modCalls, joinLogs, killLogs, commandLogs, commands, webhook
+  features       String[]            @default([])
+  webhookEnabled Boolean             @default(false)
+  /// Geheimer Teil der Webhook-Adresse (bindet signierte PRC-Zustellungen an genau diesen Server)
+  webhookToken   String              @default(dbgenerated("md5(random()::text || clock_timestamp()::text)"))
+  /// API-Einstellungen (z. B. kritische/gesperrte Befehle, Timeout)
+  settings       Json?
+  status         String              @default("UNKNOWN") // CONNECTED | LIMITED | OFFLINE | ERROR | UNKNOWN | DISABLED
+  lastSyncAt     DateTime?
+  lastError      String?
+  lastErrorAt    DateTime?
+  latencyMs      Int?
+  rateLimit      Json?
+  /// Letzter erfolgreicher Datenstand (ohne Zugangsdaten) – bleibt bei API-Ausfall sichtbar
+  snapshot       Json?
+  createdAt      DateTime            @default(now())
+  updatedAt      DateTime            @updatedAt
+  calls          ErlcEmergencyCall[]
+  commands       ErlcCommandLog[]
+}
+
+/// Notruf aus ER:LC (API oder Webhook). Verknüpfung mit einem CAD-Einsatz über incidentId.
+model ErlcEmergencyCall {
+  id                 String     @id @default(uuid()) @db.Uuid
+  serverId           String     @db.Uuid
+  callNumber         Int
+  team               String?
+  callerRobloxId     String?
+  callerName         String?
+  description        String?
+  positionDescriptor String?
+  mapX               Float?
+  mapZ               Float?
+  startedAt          DateTime
+  status             String     @default("OPEN") // OPEN | CLAIMED | CLOSED
+  claimedById        String?    @db.Uuid
+  incidentId         String?    @db.Uuid
+  source             String     @default("API") // API | WEBHOOK
+  createdAt          DateTime   @default(now())
+  updatedAt          DateTime   @updatedAt
+  server             ErlcServer @relation(fields: [serverId], references: [id], onDelete: Cascade)
+
+  @@unique([serverId, callNumber, startedAt])
+  @@index([status, startedAt])
+}
+
+/// Protokoll des Command Centers (jeder ausgeführte ER:LC-Befehl).
+model ErlcCommandLog {
+  id        String     @id @default(uuid()) @db.Uuid
+  serverId  String     @db.Uuid
+  userId    String?    @db.Uuid
+  discordId String?
+  command   String
+  critical  Boolean    @default(false)
+  ok        Boolean
+  result    String?
+  error     String?
+  createdAt DateTime   @default(now())
+  server    ErlcServer @relation(fields: [serverId], references: [id], onDelete: Cascade)
+
+  @@index([serverId, createdAt])
+}
+
+/// Eigene Kartenobjekte: POI (Punkt) oder Zone (Polygon). Koordinaten in ER:LC-Spielkoordinaten (unabhängig vom Kartenbild).
+model CadMapObject {
+  id           String   @id @default(uuid()) @db.Uuid
+  kind         String // POI | ZONE
+  name         String
+  description  String?
+  category     String?
+  /// Layer-Schlüssel (z. B. pois, zones, restricted oder eigener Layer)
+  layer        String
+  icon         String?
+  color        String?
+  x            Float?
+  z            Float?
+  points       Json?
+  /// sichtbar für alle (leer) oder nur für diese Discord-Rollen
+  roleIds      String[] @default([])
+  incidentType String?
+  autoAction   String?
+  createdById  String?  @db.Uuid
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@index([layer])
+}
+
+/// Chronik eines Einsatzes: Funkmeldungen, Statuswechsel, Zuweisungen, Notizen, Notruf-Verknüpfungen.
+model CadIncidentLog {
+  id         String   @id @default(uuid()) @db.Uuid
+  incidentId String   @db.Uuid
+  kind       String // RADIO | STATUS | ASSIGN | NOTE | CALL | CREATED
+  text       String
+  unitId     String?  @db.Uuid
+  authorId   String?  @db.Uuid
+  guildId    String?
+  createdAt  DateTime @default(now())
+  incident   Incident @relation(fields: [incidentId], references: [id], onDelete: Cascade)
+
+  @@index([incidentId, createdAt])
+}
+
+/// Funkmeldung (Funk-Integration). Mit incidentId landet sie zusätzlich in der Einsatzchronik.
+model CadRadioMessage {
+  id         String   @id @default(uuid()) @db.Uuid
+  callsign   String?
+  unitId     String?  @db.Uuid
+  incidentId String?  @db.Uuid
+  text       String
+  authorId   String?  @db.Uuid
+  discordId  String?
+  guildId    String?
+  createdAt  DateTime @default(now())
+
+  @@index([createdAt])
+}
+
+/// Zuordnung Discord ↔ Roblox ↔ ER:LC ↔ Team ↔ Einheit, plus Funk-Benutzerdaten (Zello, Funkrufname, Abteilung, Rang).
+model CadMember {
+  id          String   @id @default(uuid()) @db.Uuid
+  userId      String?  @unique @db.Uuid
+  discordId   String?  @unique
+  discordName String?
+  robloxName  String?
+  robloxId    String?
+  erlcName    String?
+  team        String?
+  unitId      String?  @db.Uuid
+  zelloName   String?
+  callsign    String?
+  department  String?
+  rank        String?
+  /// zusätzliche, im Dashboard konfigurierte Felder
+  extra       Json?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([erlcName])
+}
+
+/// Verbindung zwischen zwei Discord-Servern (z. B. Leitstelle ↔ SEK/K9): welche Daten/Aktionen erlaubt sind.
+model CadServerLink {
+  id            String   @id @default(uuid()) @db.Uuid
+  name          String
+  sourceGuildId String
+  targetGuildId String
+  active        Boolean  @default(true)
+  /// Datenarten, die die Quelle an das Ziel senden darf (incidents, incident_status, unit_requests, calls, announcements)
+  sendTypes     String[] @default([])
+  /// Aktionen, die das Ziel zurück an die Quelle ausführen darf (status_report, radio, view_incidents)
+  allowActions  String[] @default([])
+  /// Rollen auf dem Ziel-Server, die diese Aktionen ausführen dürfen (leer = alle mit passendem cad-Recht)
+  roleIds       String[] @default([])
+  /// Zielkanäle je Datenart: { "incidents": ["<channelId>"], ... }
+  channels      Json?
+  notify        Boolean  @default(true)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@unique([sourceGuildId, targetGuildId])
 }

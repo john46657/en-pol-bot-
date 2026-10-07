@@ -1,10 +1,12 @@
 import type { Api } from './api';
 import type { TicketEffect } from '@enrp/shared';
-import { applicationDecisionText, leaveDecisionText, outboxButtons, qualificationDecisionText, renderOutboxEmbeds, type ButtonSpec, type EmbedData } from './format';
+import { cadButtons, renderCadOutbox } from './commands/cad';
+import { applicationDecisionText, leaveDirectEmbed, outboxButtons, qualificationDecisionText, renderOutboxEmbeds, type ButtonSpec, type EmbedData } from './format';
 
 interface OutboxItem { id: string; type: string; channelKey: string; payload: Record<string, unknown> }
 /** `opts`: Rollen, die erwähnt werden (z. B. neue Bewerbung → @Staffelkommandant), und Discord-Benutzer für das Profilbild rechts. */
-export type Sender = (channelId: string, embeds: EmbedData[], buttons?: ButtonSpec[], opts?: { pingRoleIds?: string[]; avatarUserId?: string; thread?: string }) => Promise<void>;
+/** `authorUserId`: Kopfzeile „@Benutzer“ mit Profilbild (z. B. Abmeldeantrag, wie bei Trident). */
+export type Sender = (channelId: string, embeds: EmbedData[], buttons?: ButtonSpec[], opts?: { pingRoleIds?: string[]; avatarUserId?: string; thread?: string; authorUserId?: string }) => Promise<void>;
 /** Discord-Rollen eines Mitglieds anpassen (alle Server, auf denen es die Rollen gibt). */
 export type RoleSync = (userId: string, add: string[], remove: string[]) => Promise<void>;
 /** Welche Discord-Rolle zu welchem Dienststatus gehört (Einstellungen → Discord). */
@@ -18,9 +20,13 @@ export function dutyRoleChanges(status: string, cfg: Record<string, string | und
 }
 /** Vergibt eine Discord-Rolle auf allen Servern, auf denen es sie gibt (z. B. nach angenommener Bewerbung). */
 export type RoleGranter = (userId: string, roleId: string) => Promise<void>;
-export type DirectSender = (userId: string, text: string) => Promise<void>;
+/** Direktnachricht: Text oder ein Embed. */
+export type DirectSender = (userId: string, msg: string | EmbedData) => Promise<void>;
 /** Benachrichtigungen, die per Direktnachricht an eine Person gehen statt in einen Channel. */
-const DIRECT: Record<string, (p: Record<string, unknown>) => string> = { 'application.decided': applicationDecisionText, 'qualification.decided': qualificationDecisionText, 'leave.decided': leaveDecisionText };
+const DIRECT: Record<string, (p: Record<string, unknown>) => string | EmbedData> = {
+  'application.decided': applicationDecisionText, 'qualification.decided': qualificationDecisionText,
+  'leave.decided': (p) => leaveDirectEmbed('leave.decided', p), 'leave.pending': (p) => leaveDirectEmbed('leave.pending', p),
+};
 
 /**
  * Holt offene Benachrichtigungen aus der System-API, postet sie und quittiert.
@@ -108,17 +114,21 @@ export async function pollOnce(api: Api, send: Sender, log: (m: string) => void 
     }
     // eigener Channel im Eintrag (z. B. Bewerbungen einer Einheit) hat Vorrang
     const own = typeof item.payload.channelId === 'string' && /^\d{15,25}$/.test(item.payload.channelId) ? item.payload.channelId : null;
-    const channelIds = own ? [own] : (channels[item.channelKey] ?? '').split(/[\s,;]+/).filter(Boolean);
-    const embeds = renderOutboxEmbeds(item.type, item.payload);
+    // CAD: Zielkanäle kommen fertig aus der API (Kanalzuordnungen + Server-Verbindungen)
+    const many = Array.isArray(item.payload.channelIds) ? item.payload.channelIds.map(String).filter((c) => /^\d{15,25}$/.test(c)) : null;
+    const channelIds = own ? [own] : many ?? (channels[item.channelKey] ?? '').split(/[\s,;]+/).filter(Boolean);
+    const cad = item.type.startsWith('cad.') ? renderCadOutbox(item.type, item.payload) : null;
+    const embeds = item.type.startsWith('cad.') ? (cad ? [cad] : null) : renderOutboxEmbeds(item.type, item.payload);
     try {
       if (!channelIds.length) throw new Error(`channel "${item.channelKey}" not configured`);
       if (!embeds) throw new Error(`unknown type "${item.type}"`);
-      const buttons = outboxButtons(item.type, item.payload);
+      const buttons = item.type.startsWith('cad.') ? cadButtons(item.type, item.payload) : outboxButtons(item.type, item.payload);
       const pingRoleIds = Array.isArray(item.payload.pingRoleIds) ? item.payload.pingRoleIds.map(String).filter((r) => /^\d{15,25}$/.test(r)) : [];
       const avatarUserId = /\.(submitted|archived)$/.test(item.type) && /^(qualification|application)\./.test(item.type) && typeof item.payload.discordId === 'string' && /^\d{15,25}$/.test(item.payload.discordId) ? item.payload.discordId : undefined;
       // Staff-Thread je Bewerbung (wie bei Appy)
       const thread = item.payload.thread === true && /\.submitted$/.test(item.type) ? `Bewerbung ${String(item.payload.number ?? '')}`.slice(0, 100) : undefined;
-      const opts = pingRoleIds.length || avatarUserId || thread ? { ...(pingRoleIds.length ? { pingRoleIds } : {}), ...(avatarUserId ? { avatarUserId } : {}), ...(thread ? { thread } : {}) } : undefined;
+      const authorUserId = item.type === 'leave.requested' && typeof item.payload.discordId === 'string' && /^\d{15,25}$/.test(item.payload.discordId) ? item.payload.discordId : undefined;
+      const opts = pingRoleIds.length || avatarUserId || thread || authorUserId ? { ...(pingRoleIds.length ? { pingRoleIds } : {}), ...(avatarUserId ? { avatarUserId } : {}), ...(thread ? { thread } : {}), ...(authorUserId ? { authorUserId } : {}) } : undefined;
       const results = await Promise.allSettled(channelIds.map((id) => (opts ? send(id, embeds, buttons, opts) : send(id, embeds, buttons))));
       const failed = results.flatMap((r, i) => (r.status === 'rejected' ? [`${channelIds[i]}: ${r.reason instanceof Error ? r.reason.message : r.reason}`] : []));
       failed.forEach((f) => log(`outbox ${item.id}: send failed for channel ${f}`));

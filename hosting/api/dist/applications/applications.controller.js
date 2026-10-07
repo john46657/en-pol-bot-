@@ -20,6 +20,7 @@ const throttler_1 = require("@nestjs/throttler");
 const zod_1 = require("zod");
 const shared_1 = require("@enrp/shared");
 const applications_service_1 = require("./applications.service");
+const applications_analytics_service_1 = require("./applications-analytics.service");
 const decorators_1 = require("../authz/decorators");
 const zod_pipe_1 = require("../common/zod.pipe");
 const pagination_1 = require("../common/pagination");
@@ -28,15 +29,20 @@ const move = zod_1.z.object({ status: zod_1.z.enum(shared_1.APPLICATION_STATUSES
 /** `OPEN` = alle noch nicht entschiedenen (eingereicht, Prüfung, Gespräch, Entscheidung offen). */
 const listQ = pagination_1.pageQuery.extend({ status: zod_1.z.union([zod_1.z.enum(shared_1.APPLICATION_STATUSES), zod_1.z.literal('OPEN')]).optional(), guildId: zod_1.z.string().regex(/^\d{15,25}$/).optional() });
 const guildQ = zod_1.z.object({ guildId: zod_1.z.string().regex(/^\d{15,25}$/).optional() });
+const analyticsQ = zod_1.z.object({ type: zod_1.z.string().max(80).optional(), status: zod_1.z.enum(['APPROVED', 'PENDING', 'REJECTED']).optional(), reviewer: zod_1.z.string().uuid().optional(), days: zod_1.z.coerce.number().int().min(7).max(365).default(30) });
 let ApplicationsController = class ApplicationsController {
     a;
-    constructor(a) {
+    stats;
+    constructor(a, stats) {
         this.a = a;
+        this.stats = stats;
     }
     /** `?guildId=` – Formular eines Servers (für den Bot); ohne: das gemeinsame (Web-Seite /apply). */
     form(q) { return this.a.form(q.guildId); }
     submit(b) { return this.a.submit(b); }
     list(q) { return this.a.list(q, q.status, q.guildId ?? (0, guild_context_1.currentGuild)() ?? undefined); } // Server getrennt: gewählter Server
+    /** Statistik (Filter: Name, Status, Prüfer; Zeitraum in Tagen, verglichen mit der Vorperiode). Server getrennt wie die Liste. */
+    analytics(q) { return this.stats.overview({ ...q, guildId: (0, guild_context_1.currentGuild)() }); }
     history(q) { return this.a.history(q.discordId); }
     get(id) { return this.a.get(id); }
     /** Prüfschritte benötigen applications.review; Entscheidungen applications.decide. */
@@ -77,6 +83,14 @@ __decorate([
     __metadata("design:paramtypes", [void 0]),
     __metadata("design:returntype", void 0)
 ], ApplicationsController.prototype, "list", null);
+__decorate([
+    (0, common_1.Get)('analytics'),
+    (0, decorators_1.RequirePermission)('applications.view'),
+    __param(0, (0, common_1.Query)((0, zod_pipe_1.zodBody)(analyticsQ))),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [void 0]),
+    __metadata("design:returntype", void 0)
+], ApplicationsController.prototype, "analytics", null);
 __decorate([
     (0, common_1.Get)('history'),
     (0, decorators_1.RequirePermission)('applications.view'),
@@ -127,6 +141,6 @@ __decorate([
 exports.ApplicationsController = ApplicationsController = __decorate([
     (0, swagger_1.ApiTags)('applications'),
     (0, common_1.Controller)('applications'),
-    __metadata("design:paramtypes", [applications_service_1.ApplicationsService])
+    __metadata("design:paramtypes", [applications_service_1.ApplicationsService, applications_analytics_service_1.ApplicationsAnalyticsService])
 ], ApplicationsController);
 //# sourceMappingURL=applications.controller.js.map

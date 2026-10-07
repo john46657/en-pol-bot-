@@ -85,6 +85,52 @@ declare const prefsBody: z.ZodObject<{
                 office?: string | undefined;
             } | undefined;
         }>>;
+        cad: z.ZodOptional<z.ZodObject<{
+            widgets: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
+            hiddenLayers: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
+            zoom: z.ZodOptional<z.ZodNumber>;
+            center: z.ZodOptional<z.ZodObject<{
+                x: z.ZodNumber;
+                y: z.ZodNumber;
+            }, "strip", z.ZodTypeAny, {
+                x: number;
+                y: number;
+            }, {
+                x: number;
+                y: number;
+            }>>;
+            compact: z.ZodOptional<z.ZodBoolean>;
+            sidebar: z.ZodOptional<z.ZodBoolean>;
+            favoriteIncidents: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
+            erlcServerId: z.ZodOptional<z.ZodString>;
+            sound: z.ZodOptional<z.ZodBoolean>;
+        }, "strip", z.ZodTypeAny, {
+            compact?: boolean | undefined;
+            widgets?: string[] | undefined;
+            hiddenLayers?: string[] | undefined;
+            zoom?: number | undefined;
+            center?: {
+                x: number;
+                y: number;
+            } | undefined;
+            sidebar?: boolean | undefined;
+            favoriteIncidents?: string[] | undefined;
+            erlcServerId?: string | undefined;
+            sound?: boolean | undefined;
+        }, {
+            compact?: boolean | undefined;
+            widgets?: string[] | undefined;
+            hiddenLayers?: string[] | undefined;
+            zoom?: number | undefined;
+            center?: {
+                x: number;
+                y: number;
+            } | undefined;
+            sidebar?: boolean | undefined;
+            favoriteIncidents?: string[] | undefined;
+            erlcServerId?: string | undefined;
+            sound?: boolean | undefined;
+        }>>;
         voice: z.ZodOptional<z.ZodObject<{
             channelIds: z.ZodArray<z.ZodString, "many">;
             categoryIds: z.ZodArray<z.ZodString, "many">;
@@ -111,6 +157,20 @@ declare const prefsBody: z.ZodObject<{
             showDuration?: boolean | undefined;
         }>>;
     }, "strip", z.ZodTypeAny, {
+        cad?: {
+            compact?: boolean | undefined;
+            widgets?: string[] | undefined;
+            hiddenLayers?: string[] | undefined;
+            zoom?: number | undefined;
+            center?: {
+                x: number;
+                y: number;
+            } | undefined;
+            sidebar?: boolean | undefined;
+            favoriteIncidents?: string[] | undefined;
+            erlcServerId?: string | undefined;
+            sound?: boolean | undefined;
+        } | undefined;
         voice?: {
             sort: "name" | "members" | "position";
             compact: boolean;
@@ -156,6 +216,20 @@ declare const prefsBody: z.ZodObject<{
             } | undefined;
         } | undefined;
     }, {
+        cad?: {
+            compact?: boolean | undefined;
+            widgets?: string[] | undefined;
+            hiddenLayers?: string[] | undefined;
+            zoom?: number | undefined;
+            center?: {
+                x: number;
+                y: number;
+            } | undefined;
+            sidebar?: boolean | undefined;
+            favoriteIncidents?: string[] | undefined;
+            erlcServerId?: string | undefined;
+            sound?: boolean | undefined;
+        } | undefined;
         voice?: {
             sort: "name" | "members" | "position";
             compact: boolean;
@@ -203,6 +277,20 @@ declare const prefsBody: z.ZodObject<{
     }>;
 }, "strip", z.ZodTypeAny, {
     preferences: {
+        cad?: {
+            compact?: boolean | undefined;
+            widgets?: string[] | undefined;
+            hiddenLayers?: string[] | undefined;
+            zoom?: number | undefined;
+            center?: {
+                x: number;
+                y: number;
+            } | undefined;
+            sidebar?: boolean | undefined;
+            favoriteIncidents?: string[] | undefined;
+            erlcServerId?: string | undefined;
+            sound?: boolean | undefined;
+        } | undefined;
         voice?: {
             sort: "name" | "members" | "position";
             compact: boolean;
@@ -250,6 +338,20 @@ declare const prefsBody: z.ZodObject<{
     };
 }, {
     preferences: {
+        cad?: {
+            compact?: boolean | undefined;
+            widgets?: string[] | undefined;
+            hiddenLayers?: string[] | undefined;
+            zoom?: number | undefined;
+            center?: {
+                x: number;
+                y: number;
+            } | undefined;
+            sidebar?: boolean | undefined;
+            favoriteIncidents?: string[] | undefined;
+            erlcServerId?: string | undefined;
+            sound?: boolean | undefined;
+        } | undefined;
         voice?: {
             sort: "name" | "members" | "position";
             compact: boolean;
@@ -453,6 +555,20 @@ export declare class MeController {
     }>;
     setPreferences(a: Actor, b: z.infer<typeof prefsBody>): Promise<{
         preferences: {
+            cad?: {
+                compact?: boolean | undefined;
+                widgets?: string[] | undefined;
+                hiddenLayers?: string[] | undefined;
+                zoom?: number | undefined;
+                center?: {
+                    x: number;
+                    y: number;
+                } | undefined;
+                sidebar?: boolean | undefined;
+                favoriteIncidents?: string[] | undefined;
+                erlcServerId?: string | undefined;
+                sound?: boolean | undefined;
+            } | undefined;
             voice?: {
                 sort: "name" | "members" | "position";
                 compact: boolean;

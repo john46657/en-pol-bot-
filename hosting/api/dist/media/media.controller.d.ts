@@ -26,9 +26,9 @@ export declare class MediaController {
         id: string;
         createdAt: Date;
         size: number;
-        hash: string;
         originalName: string;
         mime: string;
+        hash: string;
     }[]>;
     download(a: Actor, id: string, res: Response): Promise<void>;
 }

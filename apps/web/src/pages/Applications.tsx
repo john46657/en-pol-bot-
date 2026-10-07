@@ -44,7 +44,7 @@ export function Applications() {
 
   return (
     <>
-      <PageHeader title="Applications" subtitle="Applications to EN Polizei from Discord (/bewerbung, /bewerbungspanel) and the web page /apply. Setup: panel texts and questions." />
+      <PageHeader title="Applications" subtitle="Applications to EN Polizei from Discord (/bewerbung, /bewerbungspanel) and the web page /apply. Setup: panel texts and questions." actions={<Link to="/applications/analytics"><Button variant="secondary">📊 Statistik</Button></Link>} />
       {err && <p role="alert" className="mb-3 text-sm text-danger">{err}</p>}
       <Tabs tabs={tabs} active={tab} onChange={setTab} />
       <div className="mt-4">

@@ -1,16 +1,19 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.DUTY_DE = exports.DANGER_BUTTONS = exports.DANGER = exports.fmtDuration = exports.incidentLine = exports.vehicleEmbed = exports.okReply = exports.errorReply = exports.plain = exports.label = exports.clip = exports.COLORS = void 0;
+exports.DUTY_DE = exports.fmtDuration = exports.incidentLine = exports.vehicleEmbed = exports.okReply = exports.errorReply = exports.plain = exports.label = exports.clip = exports.COLORS = void 0;
 exports.personEmbed = personEmbed;
 exports.listEmbed = listEmbed;
 exports.renderOutbox = renderOutbox;
 exports.applicationEmbeds = applicationEmbeds;
+exports.humanDuration = humanDuration;
 exports.leaveDecisionText = leaveDecisionText;
+exports.leaveDirectEmbed = leaveDirectEmbed;
 exports.renderOutboxEmbeds = renderOutboxEmbeds;
 exports.outboxButtons = outboxButtons;
 exports.qualificationDecisionText = qualificationDecisionText;
 exports.applicationDecisionText = applicationDecisionText;
 exports.dangerEmbed = dangerEmbed;
+exports.dangerButtons = dangerButtons;
 exports.teamlistEmbed = teamlistEmbed;
 exports.COLORS = { info: 0x3b82f6, success: 0x22c55e, warning: 0xf59e0b, danger: 0xef4444, neutral: 0x64748b };
 const PRIORITY_COLOR = { LOW: exports.COLORS.neutral, MEDIUM: exports.COLORS.info, HIGH: exports.COLORS.warning, URGENT: exports.COLORS.danger, CRITICAL: exports.COLORS.danger };
@@ -78,8 +81,10 @@ function renderOutbox(type, p) {
         case 'announcement':
             return { title: '📢 Ankündigung', description: (0, exports.clip)((0, exports.plain)(p.body), 4000), color: exports.COLORS.warning, footer: `von ${(0, exports.clip)(p.author, 100)}` };
         case 'danger.changed': {
-            const d = exports.DANGER[String(p.level)] ?? exports.DANGER.GREEN;
-            return { title: `${d.emoji} Gefahrenstatus: ${d.label}`, description: p.reason ? (0, exports.clip)((0, exports.plain)(p.reason), 1000) : undefined, color: d.color, fields: [{ name: 'Vorher', value: (exports.DANGER[String(p.previous)]?.label) ?? '—', inline: true }, { name: 'Gesetzt von', value: (0, exports.clip)((0, exports.plain)(p.setBy ?? 'System'), 200), inline: true }] };
+            // wie im alten Bot: „Status 1: Geringe Kriminalität.“ + Text der Stufe (Ping der eingestellten Rolle macht die Outbox)
+            return { title: (0, exports.clip)(`${String(p.name ?? p.level)}${p.title ? `: ${String(p.title)}` : ''}`, 256), color: hexColor(p.color, exports.COLORS.warning),
+                description: (0, exports.clip)(`${String(p.text ?? '')}${p.reason ? `\n\n**Hinweis:** ${(0, exports.plain)(p.reason)}` : ''}`, 4000) || undefined,
+                footer: (0, exports.clip)(`${p.previous ? `Vorher: ${String(p.previous)} · ` : ''}Gesetzt von ${String(p.setBy ?? 'System')}`, 200) };
         }
         case 'duty.changed': {
             const st = String(p.status), prev = String(p.previous ?? 'OFF_DUTY');
@@ -89,13 +94,15 @@ function renderOutbox(type, p) {
                 description: (0, exports.clip)([p.discordId ? `<@${String(p.discordId)}>` : null, p.shiftType ? `Schicht: **${(0, exports.plain)(p.shiftType)}**` : null, `Vorher: ${exports.DUTY_DE[prev]?.label ?? (0, exports.label)(prev)}${mins}`, p.setBy ? `Gesetzt von: ${(0, exports.plain)(p.setBy)}` : null].filter(Boolean).join('\n'), 1000) };
         }
         case 'leave.requested':
-            return { title: (0, exports.clip)(`📅 Abmeldung ${String(p.number)} – ${(0, exports.plain)(p.name)}`, 256), color: exports.COLORS.warning,
-                description: (0, exports.clip)(`${p.discordId ? `<@${String(p.discordId)}> ` : ''}möchte sich abmelden.\n\n**Grund:** ${(0, exports.plain)(p.reason)}`, 4000),
-                fields: [{ name: 'Von', value: berlinDate(p.startsAt), inline: true }, { name: 'Bis', value: berlinDate(p.endsAt), inline: true }, { name: 'Dauer', value: leaveDays(p), inline: true }] };
+            // wie Trident: oben @Benutzer mit Profilbild (setzt der Bot), Grund + Dauer, unten die ID
+            return { title: 'Abmeldeantrag', color: exports.COLORS.warning,
+                description: (0, exports.clip)(`${p.discordId ? `<@${String(p.discordId)}>` : (0, exports.plain)(p.name)} möchte sich abmelden.`, 4000),
+                fields: [{ name: 'Grund', value: (0, exports.clip)((0, exports.plain)(p.reason), 1024) }, { name: 'Dauer', value: leaveSpan(p) }, { name: 'Zeitraum', value: `<t:${unixOf(p.startsAt)}:f> – <t:${unixOf(p.endsAt)}:f>` }],
+                footer: `ID: ${String(p.number)}` };
         case 'leave.log': {
             const ev = LEAVE_EVENTS[String(p.event)] ?? { text: String(p.event), color: exports.COLORS.neutral };
             return { title: (0, exports.clip)(`${ev.text}: ${(0, exports.plain)(p.name)} (${String(p.number)})`, 256), color: ev.color,
-                description: (0, exports.clip)([p.discordId ? `<@${String(p.discordId)}>` : null, `**Zeitraum:** ${berlinDate(p.startsAt)} – ${berlinDate(p.endsAt)} (${leaveDays(p)})`, `**Grund:** ${(0, exports.plain)(p.reason)}`, p.decidedByName ? `**Entschieden von:** ${(0, exports.plain)(p.decidedByName)}` : null, p.decisionReason ? `**Begründung:** ${(0, exports.plain)(p.decisionReason)}` : null].filter(Boolean).join('\n'), 4000) };
+                description: (0, exports.clip)([p.discordId ? `<@${String(p.discordId)}>` : null, `**Zeitraum:** ${berlinDate(p.startsAt)} – ${berlinDate(p.endsAt)} (${leaveSpan(p)})`, `**Grund:** ${(0, exports.plain)(p.reason)}`, p.decidedByName ? `**Entschieden von:** ${(0, exports.plain)(p.decidedByName)}` : null, p.decisionReason ? `**Begründung:** ${(0, exports.plain)(p.decisionReason)}` : null].filter(Boolean).join('\n'), 4000) };
         }
         case 'sek.report':
             return { title: `🎯 SEK-Einsatzbericht ${p.number}`, color: exports.COLORS.neutral, description: (0, exports.clip)((0, exports.plain)(p.description), 3500), fields: [
@@ -165,18 +172,56 @@ function applicationEmbeds(p, kind) {
 }
 /** Alle Embeds einer Channel-Benachrichtigung (Bewerbungen ggf. mehrere). */
 const berlinDate = (v) => { const d = new Date(String(v)); return Number.isNaN(d.getTime()) ? '—' : d.toLocaleString('de-DE', { timeZone: 'Europe/Berlin', day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }); };
-const leaveDays = (p) => { const d = Math.max(1, Math.round((new Date(String(p.endsAt)).getTime() - new Date(String(p.startsAt)).getTime()) / 86_400_000)); return `${d} ${d === 1 ? 'Tag' : 'Tage'}`; };
 const LEAVE_EVENTS = {
     approved: { text: '✅ Abmeldung angenommen', color: exports.COLORS.success }, denied: { text: '❌ Abmeldung abgelehnt', color: exports.COLORS.danger },
     started: { text: '🏝️ Abmeldung beginnt', color: exports.COLORS.info }, ended: { text: '👋 Abmeldung beendet', color: exports.COLORS.neutral },
     ended_early: { text: '↩️ Abmeldung vorzeitig beendet', color: exports.COLORS.neutral }, cancelled: { text: '↩️ Abmeldung zurückgezogen', color: exports.COLORS.neutral },
 };
-/** Direktnachricht nach der Entscheidung über eine Abmeldung. */
+const unixOf = (v) => Math.floor(new Date(String(v)).getTime() / 1000);
+/** Dauer menschenlesbar: „6 Stunden“, „1 Tag“, „2 Wochen“, „1 Woche, 2 Tage“. */
+function humanDuration(ms) {
+    const H = 3_600_000, D = 24 * H, W = 7 * D;
+    const n = (v, one, many) => `${v} ${v === 1 ? one : many}`;
+    const parts = [];
+    let rest = Math.max(H, Math.round(ms / H) * H);
+    if (rest >= W && rest % D === 0) {
+        parts.push(n(Math.floor(rest / W), 'Woche', 'Wochen'));
+        rest %= W;
+    }
+    if (rest >= D) {
+        parts.push(n(Math.floor(rest / D), 'Tag', 'Tage'));
+        rest %= D;
+    }
+    if (rest >= H)
+        parts.push(n(Math.round(rest / H), 'Stunde', 'Stunden'));
+    return parts.join(', ');
+}
+const leaveSpan = (p) => humanDuration(new Date(String(p.endsAt)).getTime() - new Date(String(p.startsAt)).getTime());
+/** Kopfzeile der DMs: Server, auf dem die Abmeldung beantragt wurde (Name + Icon). */
+const guildAuthor = (p) => (p.guildName ? { name: (0, exports.clip)(String(p.guildName), 200), ...(typeof p.guildIcon === 'string' && /^https:\/\//.test(p.guildIcon) ? { iconUrl: p.guildIcon } : {}) } : undefined);
+/** Direktnachricht nach der Entscheidung über eine Abmeldung (Textfassung, z. B. für Logs/Tests). */
 function leaveDecisionText(p) {
     const when = `${berlinDate(p.startsAt)} – ${berlinDate(p.endsAt)}`;
     return p.status === 'APPROVED'
         ? `✅ Deine Abmeldung **${String(p.number)}** (${when}) wurde **angenommen**.${p.decisionReason ? `\n\n**Hinweis:** ${(0, exports.clip)((0, exports.plain)(p.decisionReason), 1000)}` : ''}`
         : `❌ Deine Abmeldung **${String(p.number)}** (${when}) wurde **abgelehnt**.${p.decisionReason ? `\n\n**Grund:** ${(0, exports.clip)((0, exports.plain)(p.decisionReason), 1000)}` : ''}`;
+}
+/** DMs zu Abmeldungen als Embed (wie Trident): ausstehend (gelb), angenommen (grün), abgelehnt (rot). */
+function leaveDirectEmbed(type, p) {
+    const author = guildAuthor(p);
+    const server = (0, exports.plain)(p.guildName ?? 'dem Server');
+    const end = unixOf(p.endsAt);
+    const base = { ...(author ? { author } : {}), footer: `ID: ${String(p.number)}` };
+    if (type === 'leave.pending')
+        return { ...base, title: 'Abmeldung ausstehend', color: exports.COLORS.warning,
+            description: `Deine Abmeldung wurde der Leitung zur Freigabe vorgelegt.\nWenn sie angenommen wird, endet sie ungefähr <t:${end}:F> (<t:${end}:R>).\nUm deine Abmeldung zu verwalten, nutze \`/leave manage\` auf **${server}**.` };
+    if (p.status === 'APPROVED')
+        return { ...base, title: 'Abmeldung angenommen', color: exports.COLORS.success,
+            description: `Deine Abmeldung endet ungefähr <t:${end}:F> (<t:${end}:R>).\nUm deine Abmeldung zu verwalten, nutze \`/leave manage\` auf **${server}**.`,
+            ...(p.decisionReason ? { fields: [{ name: 'Hinweis', value: (0, exports.clip)((0, exports.plain)(p.decisionReason), 1024) }] } : {}) };
+    return { ...base, title: 'Abmeldung abgelehnt', color: exports.COLORS.danger,
+        description: `Falls du denkst, dass das ein Fehler war, wende dich an die Leitung von **${server}**.`,
+        ...(p.decisionReason ? { fields: [{ name: 'Grund', value: (0, exports.clip)((0, exports.plain)(p.decisionReason), 1024) }] } : {}) };
 }
 function renderOutboxEmbeds(type, p) {
     if (type === 'qualification.submitted')
@@ -198,8 +243,7 @@ function renderOutboxEmbeds(type, p) {
 function outboxButtons(type, p) {
     if (type === 'leave.requested' && typeof p.id === 'string')
         return [
-            { id: `leave:decide:${p.id}:APPROVED`, label: 'Annehmen', style: 'success' }, { id: `leave:decide:${p.id}:DENIED`, label: 'Ablehnen', style: 'danger' },
-            { id: `leave:reason:${p.id}:DENIED`, label: 'Ablehnen mit Grund', style: 'danger' },
+            { id: `leave:decide:${p.id}:APPROVED`, label: 'Annehmen', style: 'success', emoji: '✔️' }, { id: `leave:reason:${p.id}:DENIED`, label: 'Ablehnen', style: 'danger', emoji: '✖️' },
             ...(typeof p.dashboardUrl === 'string' && /^https?:\/\//.test(p.dashboardUrl) ? [{ id: 'link', label: 'Im Dashboard ansehen', style: 'secondary', url: p.dashboardUrl }] : []),
         ];
     // Fahndung / Einsatz: Link ins Dashboard
@@ -235,21 +279,18 @@ function applicationDecisionText(p) {
         ? `🎉 Deine Bewerbung **${p.number}** bei EN Polizei wurde **angenommen**! Ein Teammitglied meldet sich bei dir für die nächsten Schritte.${reasonText(p)}`
         : `Deine Bewerbung **${p.number}** bei EN Polizei wurde diesmal leider **nicht angenommen**. Du kannst dich gerne später erneut bewerben.${reasonText(p)}`;
 }
-// ---- Gefahrenstatus ----
-exports.DANGER = {
-    GREEN: { label: 'Grün – Normaler Dienst', emoji: '🟢', color: 0x2ecc71 },
-    YELLOW: { label: 'Gelb – Erhöhte Vorsicht', emoji: '🟡', color: 0xf1c40f },
-    RED: { label: 'Rot – Akute Gefahrenlage', emoji: '🔴', color: 0xe74c3c },
-};
+const hexColor = (v, fallback) => (typeof v === 'string' && /^#[0-9a-f]{6}$/i.test(v) ? parseInt(v.slice(1), 16) : fallback);
+/** Panel wie im alten Bot: Titel, Erklärung, darunter der aktuelle Stand mit Zeitpunkt. */
 function dangerEmbed(s) {
-    const d = exports.DANGER[s.level] ?? exports.DANGER.GREEN;
-    return { title: `${d.emoji} Aktueller Gefahrenstatus: ${d.label}`, color: d.color, description: s.reason ? (0, exports.clip)((0, exports.plain)(s.reason), 1000) : undefined,
-        fields: [...(s.setByName ? [{ name: 'Gesetzt von', value: (0, exports.clip)((0, exports.plain)(s.setByName), 200), inline: true }] : []), ...(s.at ? [{ name: 'Seit', value: `<t:${Math.floor(new Date(s.at).getTime() / 1000)}:R>`, inline: true }] : [])],
-        footer: 'Buttons: Status ändern (nur mit Berechtigung)' };
+    const d = s.def;
+    const current = d ? `**Aktuell:** ${d.emoji} ${(0, exports.plain)(d.name)}${d.title ? ` – ${(0, exports.plain)(d.title)}` : ''}${s.reason ? `\n${(0, exports.clip)((0, exports.plain)(s.reason), 300)}` : ''}` : '';
+    const when = s.at ? `\n<t:${Math.floor(new Date(s.at).getTime() / 1000)}:f>` : '';
+    return { title: (0, exports.clip)(s.panel?.title ?? 'Gefahrenstatus', 256), color: hexColor(d?.color, exports.COLORS.danger), description: (0, exports.clip)(`${s.panel?.text ?? ''}${current ? `\n\n${current}` : ''}${when}`, 4000),
+        ...(s.setByName ? { footer: `Gesetzt von ${(0, exports.clip)(s.setByName, 100)}` } : {}) };
 }
-exports.DANGER_BUTTONS = [
-    { id: 'danger:set:GREEN', label: 'Grün', emoji: '🟢', style: 'success' }, { id: 'danger:set:YELLOW', label: 'Gelb', emoji: '🟡', style: 'primary' }, { id: 'danger:set:RED', label: 'Rot', emoji: '🔴', style: 'danger' },
-];
+function dangerButtons(s) {
+    return (s.levels ?? []).slice(0, 10).map((l) => ({ id: `danger:set:${l.key}`, label: (0, exports.clip)(l.name, 80), emoji: s.panel?.buttonEmoji || l.emoji || undefined, style: l.buttonStyle ?? 'danger' }));
+}
 const DUTY_EMOJI = { ON_DUTY: '🟢', BREAK: '🟡', TRAINING: '🔵', ADMINISTRATIVE: '🔵', OFF_DUTY: '⚪' };
 /** Dienststatus auf Deutsch (Meldungen im Dienst-Channel, Dienst-Panel). */
 exports.DUTY_DE = {

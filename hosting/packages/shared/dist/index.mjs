@@ -1,9 +1,11 @@
 // src/permissions.ts
 var PERMISSION_CATALOG = {
   /** `dashboard.<bereich>.view`: Sichtbarkeit ganzer Bereiche im Menü und auf der Startseite (zusätzlich zur Modul-Permission). */
-  dashboard: ["view", "customize", "tickets.view", "applications.view", "team.view", "offices.view", "voice.view", "radio.view", "teamchance.view", "logs.view", "settings.view"],
+  dashboard: ["view", "customize", "tickets.view", "applications.view", "team.view", "offices.view", "voice.view", "radio.view", "teamchance.view", "logs.view", "settings.view", "cad.view"],
   team: ["view", "manage"],
   dispatch: ["view", "create", "edit", "assign", "close", "manage"],
+  /** CAD-Leitstelle + ER:LC-Integration (deny-by-default; kritische ER:LC-Befehle brauchen ein eigenes Recht). */
+  cad: ["view", "create_incident", "edit_incident", "close_incident", "assign_unit", "manage_units", "view_persons", "view_vehicles", "manage_map", "view_erlc", "manage_erlc", "erlc_command", "erlc_command_critical", "manage_cross_server", "view_logs", "manage_settings", "radio"],
   incidents: ["view", "create", "edit", "close", "delete"],
   persons: ["view", "create", "edit", "archive", "merge"],
   vehicles: ["view", "create", "edit", "archive"],
@@ -65,7 +67,8 @@ var AREA_PERMISSIONS = {
   "dashboard.radio.view": ["radio.view"],
   "dashboard.teamchance.view": ["teamchance.view"],
   "dashboard.logs.view": ["audit.view"],
-  "dashboard.settings.view": ["settings.view", "roles.view", "users.view", "studio.view"]
+  "dashboard.settings.view": ["settings.view", "roles.view", "users.view", "studio.view"],
+  "dashboard.cad.view": ["cad.view"]
 };
 function areaGrantsFor(grants) {
   return Object.entries(AREA_PERMISSIONS).filter(([, bases]) => bases.some((b) => grants.some((g) => grantMatches(g, b)))).map(([area]) => area);
@@ -287,27 +290,239 @@ var formatMinutes = (min) => {
   return [d ? `${d} ${d === 1 ? "Tag" : "Tage"}` : "", h ? `${h} ${h === 1 ? "Stunde" : "Stunden"}` : "", m ? `${m} ${m === 1 ? "Minute" : "Minuten"}` : ""].filter(Boolean).join(" ") || "0 Minuten";
 };
 var rolesMatch = (have, ids, mode) => mode === "ALL" ? ids.every((r) => have.includes(r)) : ids.some((r) => have.includes(r));
+
+// src/cad.ts
+var CAD_EVENTS = ["incident.created", "incident.status", "incident.assigned", "incident.closed", "call.received", "announcement", "radio"];
+var CAD_EVENT_LABELS = {
+  "incident.created": "Neuer Einsatz",
+  "incident.status": "Einsatzstatus ge\xE4ndert",
+  "incident.assigned": "Einheit zugewiesen",
+  "incident.closed": "Einsatz abgeschlossen",
+  "call.received": "Notruf eingegangen",
+  announcement: "Wichtige Leitstellenmeldung",
+  radio: "Funkmeldung"
+};
+var CAD_LINK_SEND_TYPES = ["incidents", "incident_status", "unit_requests", "calls", "announcements", "radio"];
+var CAD_LINK_ACTIONS = ["status_report", "radio", "view_incidents", "dispatch"];
+var CAD_LINK_LABELS = {
+  incidents: "Eins\xE4tze senden",
+  incident_status: "Einsatzstatus senden",
+  unit_requests: "Einheiten anfordern",
+  calls: "Notrufe senden",
+  announcements: "Leitstellenmeldungen senden",
+  radio: "Funkmeldungen senden",
+  status_report: "Status zur\xFCckmelden",
+  view_incidents: "Einsatzstatus sehen",
+  dispatch: "Notrufe/Eins\xE4tze bearbeiten (\xDCbernehmen, Einsatz erstellen, Einheit zuweisen)"
+};
+var CAD_EVENT_SEND_TYPE = {
+  "incident.created": "incidents",
+  "incident.status": "incident_status",
+  "incident.assigned": "unit_requests",
+  "incident.closed": "incident_status",
+  "call.received": "calls",
+  announcement: "announcements",
+  radio: "radio"
+};
+var CAD_WIDGETS = ["activeIncidents", "availableUnits", "erlcPlayers", "erlcQueue", "activeCalls", "staffOnline", "erlcStatus", "map", "units", "radio", "persons", "vehicles"];
+var CAD_WIDGET_LABELS = {
+  activeIncidents: "Aktive Eins\xE4tze",
+  availableUnits: "Verf\xFCgbare Einheiten",
+  erlcPlayers: "ER:LC Spieler",
+  erlcQueue: "Queue",
+  activeCalls: "Aktive Notrufe",
+  staffOnline: "Staff online",
+  erlcStatus: "ER:LC Status",
+  map: "Einsatzkarte",
+  units: "Einheiten",
+  radio: "Letzte Funkmeldungen",
+  persons: "Personen",
+  vehicles: "Fahrzeuge"
+};
+var ERLC_MAP_SIZE = 5355;
+var DEFAULT_CAD_CONFIG = {
+  homeGuildId: null,
+  incidentNumberPrefix: "E",
+  incidentTypes: [
+    { key: "ROBBERY", label: "Raub", emoji: "\u{1F4B0}" },
+    { key: "SHOTS", label: "Schussabgabe", emoji: "\u{1F52B}" },
+    { key: "TRAFFIC", label: "Verkehrsunfall", emoji: "\u{1F697}" },
+    { key: "HOSTAGE", label: "Geiselnahme", emoji: "\u{1F9F7}" },
+    { key: "PURSUIT", label: "Verfolgung", emoji: "\u{1F693}" },
+    { key: "OTHER", label: "Sonstiges", emoji: "\u{1F4CB}" }
+  ],
+  priorities: [
+    { key: "HIGH", label: "Hoch", emoji: "\u{1F534}", color: "#ef4444", order: 0 },
+    { key: "MEDIUM", label: "Mittel", emoji: "\u{1F7E0}", color: "#f97316", order: 1 },
+    { key: "LOW", label: "Niedrig", emoji: "\u{1F7E2}", color: "#22c55e", order: 2 }
+  ],
+  incidentStatuses: [
+    { key: "NEW", label: "Neu", emoji: "\u{1F195}", color: "#3b82f6" },
+    { key: "ACKNOWLEDGED", label: "Angenommen", emoji: "\u{1F4E5}", color: "#6366f1" },
+    { key: "EN_ROUTE", label: "Einheiten unterwegs", emoji: "\u{1F693}", color: "#0ea5e9" },
+    { key: "ON_SCENE", label: "Am Einsatzort", emoji: "\u{1F4CD}", color: "#f97316" },
+    { key: "CRITICAL", label: "Kritisch", emoji: "\u{1F6A8}", color: "#ef4444" },
+    { key: "UNDER_CONTROL", label: "Unter Kontrolle", emoji: "\u{1F6E1}\uFE0F", color: "#22c55e" },
+    { key: "CLOSED", label: "Abgeschlossen", emoji: "\u2705", color: "#64748b", closed: true },
+    { key: "CANCELLED", label: "Abgebrochen", emoji: "\u2716\uFE0F", color: "#64748b", closed: true }
+  ],
+  unitStatuses: [
+    { key: "AVAILABLE", label: "Verf\xFCgbar", emoji: "\u{1F7E2}", color: "#22c55e" },
+    { key: "PATROL", label: "Auf Streife", emoji: "\u{1F7E1}", color: "#eab308" },
+    { key: "EN_ROUTE", label: "Unterwegs", emoji: "\u{1F535}", color: "#3b82f6" },
+    { key: "ON_SCENE", label: "Am Einsatzort", emoji: "\u{1F7E0}", color: "#f97316" },
+    { key: "BUSY", label: "Im Einsatz", emoji: "\u{1F534}", color: "#ef4444" },
+    { key: "UNAVAILABLE", label: "Nicht verf\xFCgbar", emoji: "\u26AB", color: "#475569" },
+    { key: "OFF_DUTY", label: "Au\xDFer Dienst", emoji: "\u26AA", color: "#94a3b8" }
+  ],
+  unitTypes: [
+    { key: "SEK", label: "SEK", emoji: "\u{1F693}", color: "#1d4ed8", layer: "sek" },
+    { key: "K9", label: "K9", emoji: "\u{1F415}", color: "#a16207", layer: "k9" },
+    { key: "PATROL", label: "Streife", emoji: "\u{1F694}", color: "#0891b2", layer: "units" }
+  ],
+  layers: [
+    { key: "incidents", label: "Eins\xE4tze", builtin: true, enabledByDefault: true },
+    { key: "calls", label: "ER:LC Notrufe", builtin: true, enabledByDefault: true },
+    { key: "sek", label: "SEK-Einheiten", builtin: true, enabledByDefault: true },
+    { key: "k9", label: "K9-Einheiten", builtin: true, enabledByDefault: true },
+    { key: "units", label: "Weitere Einheiten", builtin: true, enabledByDefault: true },
+    { key: "vehicles", label: "Fahrzeuge", builtin: true, enabledByDefault: false },
+    { key: "staff", label: "Staff", builtin: true, enabledByDefault: false },
+    { key: "players", label: "Alle Spieler", builtin: true, enabledByDefault: false },
+    { key: "pois", label: "Eigene POIs", builtin: true, enabledByDefault: true },
+    { key: "zones", label: "Eigene Zonen", builtin: true, enabledByDefault: true },
+    { key: "restricted", label: "Sperrbereiche", builtin: true, enabledByDefault: true }
+  ],
+  markers: [
+    { key: "incident", label: "Einsatz", emoji: "\u{1F534}", color: "#ef4444" },
+    { key: "call", label: "Emergency Call", emoji: "\u{1F6A8}", color: "#f43f5e" },
+    { key: "unit", label: "Einheit", emoji: "\u{1F694}", color: "#0891b2" },
+    { key: "vehicle", label: "Fahrzeug", emoji: "\u{1F697}", color: "#a855f7" },
+    { key: "staff", label: "Staff", emoji: "\u{1F46E}", color: "#f59e0b" },
+    { key: "player", label: "Spieler", emoji: "\u2022", color: "#94a3b8" },
+    { key: "poi", label: "POI", emoji: "\u{1F4CD}", color: "#10b981" }
+  ],
+  map: { imageUrl: null, width: ERLC_MAP_SIZE, height: ERLC_MAP_SIZE, originX: ERLC_MAP_SIZE / 2, originY: ERLC_MAP_SIZE / 2, scale: 1 },
+  routes: [],
+  memberFields: [],
+  widgets: ["activeIncidents", "availableUnits", "activeCalls", "erlcStatus", "erlcPlayers", "erlcQueue", "staffOnline", "map", "radio"]
+};
+var gameToPixel = (m, x, z) => ({ px: m.originX + x * m.scale, py: m.originY + z * m.scale });
+var pixelToGame = (m, px, py) => ({ x: (px - m.originX) / m.scale, z: (py - m.originY) / m.scale });
+var ERLC_FEATURES = ["players", "staff", "queue", "vehicles", "emergencyCalls", "modCalls", "joinLogs", "killLogs", "commandLogs", "commands", "webhook"];
+var ERLC_FEATURE_LABELS = {
+  players: "Spieler (inkl. Positionen)",
+  staff: "Staff",
+  queue: "Queue",
+  vehicles: "Fahrzeuge",
+  emergencyCalls: "Emergency Calls",
+  modCalls: "Mod Calls",
+  joinLogs: "Join Logs",
+  killLogs: "Kill Logs",
+  commandLogs: "Command Logs",
+  commands: "Command Center (Befehle ausf\xFChren)",
+  webhook: "Event-Webhook"
+};
+var ERLC_POLL_OPTIONS = [5, 10, 15, 30, 60];
+var ERLC_STATUSES = ["CONNECTED", "LIMITED", "OFFLINE", "ERROR", "UNKNOWN", "DISABLED"];
+var ERLC_STATUS_LABEL = { CONNECTED: "\u{1F7E2} Verbunden", LIMITED: "\u{1F7E1} Eingeschr\xE4nkt", OFFLINE: "\u{1F534} Offline", ERROR: "\u26A0\uFE0F Fehler", UNKNOWN: "\u26AA Noch nicht gepr\xFCft", DISABLED: "\u23F8\uFE0F Deaktiviert" };
+var ERLC_DEFAULT_CRITICAL = [":ban", ":unban", ":kick", ":pban", ":tban", ":shutdown", ":kill", ":mod", ":unmod", ":admin", ":unadmin", ":prty", ":weather", ":time"];
+var ERLC_DEFAULT_BLOCKED = [":shutdown"];
+function parsePlayer(v) {
+  const s = String(v ?? "");
+  const i = s.lastIndexOf(":");
+  return i > 0 && /^\d+$/.test(s.slice(i + 1)) ? { name: s.slice(0, i), id: s.slice(i + 1) } : { name: s, id: null };
+}
+
+// src/danger.ts
+var DEFAULT_DANGER_CONFIG = {
+  panelTitle: "Gefahrenstatus",
+  panelText: "\u2022 Dr\xFCcke den entsprechenden Button, um Einheiten zu informieren, wie hoch aktuell die Kriminalit\xE4t in der Stadt ist!\n\n\u2022 Desto fr\xFCher mitgeteilt wird, desto besser k\xF6nnen sich alle Einheiten vorbereiten und schnell ausr\xFCcken!",
+  buttonEmoji: "\u2757",
+  pingRoleIds: [],
+  levels: [
+    {
+      key: "STATUS_1",
+      name: "Status 1",
+      title: "Geringe Kriminalit\xE4t.",
+      emoji: "\u{1F7E2}",
+      color: "#2ecc71",
+      buttonStyle: "danger",
+      text: "## Die Stadt ist heute besonders ruhig. \u{1F343}\n\u2022 Bis auf kleinere Verst\xF6\xDFe wie im Stra\xDFenverkehr oder Ruhest\xF6rung gibt es nicht wirklich viel f\xFCr unsere Einsatzkr\xE4fte zu tun. \u{1F69A}\u{1F697}\u{1F693}\n\n\u2022 \u{1F5C3}\uFE0F Vielleicht ist es mal ein Tag, sich mehr um B\xFCroarbeit zu k\xFCmmern und unser Pr\xE4sidium auf den neuesten Stand zu bringen.\n\n\u2022 Entspannt euch, seid aber immer bereit! \u2757"
+    },
+    {
+      key: "STATUS_2",
+      name: "Status 2",
+      title: "Mittlere Kriminalit\xE4t.",
+      emoji: "\u{1F7E1}",
+      color: "#f1c40f",
+      buttonStyle: "danger",
+      text: "## In der Stadt ist einiges los. \u{1F6A8}\n\u2022 Es kommt vermehrt zu Eins\xE4tzen \u2013 Diebst\xE4hle, Verfolgungen und Streitigkeiten nehmen zu.\n\n\u2022 Bleibt aufmerksam und haltet Funkkontakt mit der Leitstelle."
+    },
+    {
+      key: "STATUS_3",
+      name: "Status 3",
+      title: "Hohe Kriminalit\xE4t.",
+      emoji: "\u{1F7E0}",
+      color: "#e67e22",
+      buttonStyle: "danger",
+      text: "## Die Lage ist angespannt! \u26A0\uFE0F\n\u2022 Schwere Straftaten und bewaffnete T\xE4ter sind unterwegs.\n\n\u2022 Nur mit Partner und Schutzausr\xFCstung ausr\xFCcken, Verst\xE4rkung fr\xFChzeitig anfordern."
+    },
+    {
+      key: "STATUS_4",
+      name: "Status 4",
+      title: "Extreme Kriminalit\xE4t.",
+      emoji: "\u{1F534}",
+      color: "#e74c3c",
+      buttonStyle: "danger",
+      text: "## Ausnahmezustand! \u{1F694}\u{1F694}\u{1F694}\n\u2022 Akute Gefahrenlage in der Stadt \u2013 alle verf\xFCgbaren Einheiten werden ben\xF6tigt.\n\n\u2022 Eigensicherung geht vor! Anweisungen der Leitstelle sofort befolgen."
+    }
+  ]
+};
+var LEGACY_DANGER = { GREEN: "STATUS_1", YELLOW: "STATUS_2", RED: "STATUS_4" };
+function dangerLevelOf(cfg, key) {
+  return cfg.levels.find((l) => l.key === key) ?? cfg.levels.find((l) => l.key === LEGACY_DANGER[key ?? ""]) ?? cfg.levels[0];
+}
 export {
   ALL_PERMISSIONS,
   APPLICATION_STATUSES,
   APPLICATION_TRANSITIONS,
   APPLICATION_VARIABLES,
   AREA_PERMISSIONS,
+  CAD_EVENTS,
+  CAD_EVENT_LABELS,
+  CAD_EVENT_SEND_TYPE,
+  CAD_LINK_ACTIONS,
+  CAD_LINK_LABELS,
+  CAD_LINK_SEND_TYPES,
+  CAD_WIDGETS,
+  CAD_WIDGET_LABELS,
   CLAIM_MODES,
   CLOSE_REASON_MODES,
   CLOSE_REASON_SOURCES,
   COMPLAINT_STATUSES,
   COMPLAINT_TRANSITIONS,
   DEFAULT_APPLICATION_MESSAGES,
+  DEFAULT_CAD_CONFIG,
+  DEFAULT_DANGER_CONFIG,
   DISPATCH_STATUSES,
   DISPATCH_TRANSITIONS,
   DUTY_STATUSES,
+  ERLC_DEFAULT_BLOCKED,
+  ERLC_DEFAULT_CRITICAL,
+  ERLC_FEATURES,
+  ERLC_FEATURE_LABELS,
+  ERLC_MAP_SIZE,
+  ERLC_POLL_OPTIONS,
+  ERLC_STATUSES,
+  ERLC_STATUS_LABEL,
   EVIDENCE_CUSTODY_STATES,
   EVIDENCE_TRANSITIONS,
   FORM_QUESTION_TYPES,
   INVESTIGATION_STATUSES,
   INVESTIGATION_TRANSITIONS,
   InvalidTransitionError,
+  LEGACY_DANGER,
   MAX_FORM_OPTIONS,
   MAX_FORM_QUESTIONS,
   PERMISSION_CATALOG,
@@ -332,14 +547,18 @@ export {
   canDelegate,
   canTransition,
   checkAnswer,
+  dangerLevelOf,
   defaultTicketButtons,
   effectivePermissions,
   formatMinutes,
   freeFieldKey,
+  gameToPixel,
   grantMatches,
   isPermissionKey,
   isValidRobloxUserId,
   normalizeField,
+  parsePlayer,
+  pixelToGame,
   renderApplicationText,
   renderTicketText,
   resolvePermission,

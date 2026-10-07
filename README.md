@@ -9,7 +9,7 @@
 Police CAD / MDT / Dispatch for Emergency Response: Liberty County (Roblox). Police and dispatch only.
 Stack: NestJS 11 · Prisma 6 · PostgreSQL · React 19 · Vite · Tailwind 4 · TanStack Query · Socket.IO.
 
-> **Not included (removed on purpose, for now):** the ER:LC API connector/webhooks and Galaxy AI. The Discord bot *is* included. The code is archived in `../enrp-nexus-removed-erlc-galaxy.tar.gz`; see [docs/extending.md](docs/extending.md#re-adding-integrations). Docs: [docs/](docs).
+> **ER:LC-Integration + CAD-Leitstelle** (Server-Key verschlüsselt im Backend, Live-Daten, Notrufe, Karte, Command Center, Cross-Server Leitstelle ↔ SEK/K9): [docs/cad.md](docs/cad.md). Galaxy AI is not included. Docs: [docs/](docs).
 
 ## Quick start (test everything with one command)
 ```bash
@@ -44,4 +44,6 @@ pnpm e2e         # Playwright (uses installed Google Chrome)
 | Support ticket system for Discord, fully configured in the dashboard (panel builder with preview, categories, questions, buttons, roles, statuses, priorities, close reasons, transcripts, ratings, statistics, auto-close/-delete, internal notes, `ticket.*` permissions): [docs/support-tickets.md](docs/support-tickets.md) | done; **not tested against real Discord** |
 | Studio: custom fields (persons/vehicles), accent theme, application form ([docs/studio.md](docs/studio.md)) | done |
 | Dashboard: Discord-Rollen laufend geprüft, Rollen-Hierarchie/-Editor/Matrix, Bereichsrechte, Server getrennt, persönliches Design + Widgets + Layouts, Teamliste (≥ 60 s) und Voice-Widget getrennt, automatisches Speichern: [docs/dashboard.md](docs/dashboard.md) | done; **Teamliste/Voice nicht gegen echtes Discord getestet** |
-| Studio workflows, configurable priorities, virtualized tables, record locking, 2FA | **not implemented** |
+| CAD-Leitstelle + ER:LC (`/cad`): Einsätze, Einheiten, Notrufe → Einsatz, Funk-Chronik, interaktive Karte mit Layern/POIs/Zonen, ER:LC Live, Command Center, Teamübersicht, Cross-Server, konfigurierbare Prioritäten/Status/Kanäle, `cad.*`-Rechte: [docs/cad.md](docs/cad.md) | done; **nicht gegen echten ER:LC-Server/Discord getestet** |
+| Abmeldungen wie Trident (`/leave manage`, Dauer 6h/4d/2w, Annehmen/Ablehnen mit Grund, DMs) · Gefahrenstatus Status 1–4 (Texte/Farben/Ping einstellbar) · Bewerbungs-Statistik | done |
+| Studio workflows, virtualized tables, record locking, 2FA | **not implemented** |

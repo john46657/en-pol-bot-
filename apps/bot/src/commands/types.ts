@@ -18,6 +18,8 @@ export interface Ctx {
   config?: () => Promise<DiscordConfig>;
   /** Anzeigename des Aufrufers in Discord (z. B. für Ticket-Channel-Namen). */
   userName?: string;
+  /** Profilbild des Aufrufers (Kopfzeile wie bei Trident). */
+  userAvatar?: string;
   /** Selbst aktualisierende Nachrichten sofort neu zeichnen; mit `channelId` dorthin (um)ziehen. */
   refreshLive?: (kind: LiveKind, o?: { channelId?: string; force?: boolean }) => Promise<{ channelId: string; messageId?: string } | null>;
   /** Discord-Rollen des Aufrufers auf diesem Server (Ticket-Voraussetzungen). */
@@ -34,8 +36,10 @@ export interface Ctx {
   robloxLookup?: (username: string) => Promise<{ id: number; name: string; displayName: string } | null>;
 }
 export interface OptionDef { name: string; description: string; type: 'string' | 'integer' | 'number' | 'boolean' | 'user'; required?: boolean; choices?: { name: string; value: string }[]; maxLength?: number; min?: number; max?: number }
+/** Unterbefehl (`/leave manage`): Name landet in `opts._sub`, seine Optionen wie gewohnt in `opts`. */
+export interface SubcommandDef { name: string; description: string; options?: OptionDef[] }
 export interface CommandDef {
-  name: string; description: string; options?: OptionDef[];
+  name: string; description: string; options?: OptionDef[]; subcommands?: SubcommandDef[];
   /** true: Der Befehl öffnet ein Formular (Modal) – darf vorher NICHT mit deferReply beantwortet werden. */
   opensModal?: boolean;
   run(ctx: Ctx): Promise<Reply>;

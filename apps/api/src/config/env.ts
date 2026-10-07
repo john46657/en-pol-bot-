@@ -30,6 +30,10 @@ const schema = z.object({
   DISCORD_GUILD_ID: z.string().optional(),
   /** Discord-IDs (Komma), die beim Discord-Login immer „System Administrator“ sind – damit sich der Besitzer nicht aussperrt. */
   ADMIN_DISCORD_IDS: z.string().optional(),
+  /** Schlüssel für die Verschlüsselung der ER:LC-Server-Keys (mind. 32 Zeichen). Leer = abgeleitet aus SESSION_SECRET. */
+  ERLC_SECRET_KEY: z.string().min(32).optional(),
+  /** `false` = ER:LC-Server nicht automatisch abrufen (z. B. Testsystem). */
+  ERLC_POLLING: z.enum(['true', 'false']).optional(),
 });
 
 export type Env = z.infer<typeof schema>;

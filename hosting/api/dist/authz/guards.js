@@ -47,6 +47,8 @@ const BOT_USER_ROUTES = [
     ['POST', new RegExp(`^/applications/${UUID}/discord-decision$`)], ['GET', new RegExp(`^/applications/${UUID}$`)], ['GET', /^\/applications\/history$/],
     ['POST', /^\/communication\/channels\/(TEAM|DISPATCH)\/messages$/],
     ['GET', /^\/leave$/], ['POST', /^\/leave$/], ['POST', new RegExp(`^/leave/${UUID}/(decision|cancel)$`)],
+    ['GET', /^\/cad\/(units|incidents|calls|config)$/], ['POST', /^\/cad\/radio$/], ['POST', new RegExp(`^/cad/units/${UUID}/status$`)],
+    ['POST', new RegExp(`^/cad/calls/${UUID}/(claim|close|incident|assign)$`)], ['POST', new RegExp(`^/cad/incidents/${UUID}/(status|units)$`)],
     ['POST', /^\/support-tickets$/], ['POST', new RegExp(`^/support-tickets/${UUID}/actions$`)], ['GET', new RegExp(`^/support-tickets/${UUID}/options$`)],
 ];
 let AuthGuard = class AuthGuard {

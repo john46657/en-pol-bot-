@@ -316,12 +316,12 @@ export declare class QualificationsService {
         decidedById: string | null;
         decidedAt: Date | null;
         decisionReason: string | null;
+        unitName: string;
+        discordName: string;
         answers: Prisma.JsonValue;
         grantRoleIds: string[];
-        discordName: string;
         durationSec: number | null;
         joinedAt: Date | null;
-        unitName: string;
     }[]>;
     get(id: string): Promise<{
         number: string;
@@ -335,12 +335,12 @@ export declare class QualificationsService {
         decidedById: string | null;
         decidedAt: Date | null;
         decisionReason: string | null;
+        unitName: string;
+        discordName: string;
         answers: Prisma.JsonValue;
         grantRoleIds: string[];
-        discordName: string;
         durationSec: number | null;
         joinedAt: Date | null;
-        unitName: string;
     }>;
     /** Bisherige Qualifikations-Bewerbungen einer Discord-ID (Button „Verlauf“). */
     history(discordId: string): Prisma.PrismaPromise<{

@@ -20,19 +20,19 @@ const SIGNATURES: Record<string, (b: Buffer) => boolean> = {
 };
 const EXT: Record<string, string> = { 'image/png': 'png', 'image/jpeg': 'jpg', 'image/gif': 'gif', 'image/webp': 'webp', 'application/pdf': 'pdf', 'text/plain': 'txt' };
 /** Welche Permission zum Anhängen/Ansehen an einem Entitätstyp nötig ist. */
-const WRITE: Record<string, string> = { Evidence: 'evidence.create', Report: 'reports.create', Complaint: 'complaints.create', Incident: 'incidents.edit', Person: 'persons.edit', Investigation: 'investigations.edit', Vehicle: 'vehicles.edit' };
-const READ: Record<string, string> = { Evidence: 'evidence.view', Report: 'reports.view', Complaint: 'complaints.view', Incident: 'incidents.view', Person: 'persons.view', Investigation: 'investigations.view', Vehicle: 'vehicles.view' };
+const WRITE: Record<string, string> = { CadMap: 'cad.manage_map', Evidence: 'evidence.create', Report: 'reports.create', Complaint: 'complaints.create', Incident: 'incidents.edit', Person: 'persons.edit', Investigation: 'investigations.edit', Vehicle: 'vehicles.edit' };
+const READ: Record<string, string> = { CadMap: 'cad.view', Evidence: 'evidence.view', Report: 'reports.view', Complaint: 'complaints.view', Incident: 'incidents.view', Person: 'persons.view', Investigation: 'investigations.view', Vehicle: 'vehicles.view' };
 
 @Injectable()
 export class MediaService {
   private readonly dir = path.resolve(loadEnv().STORAGE_DIR);
   constructor(private readonly prisma: PrismaService, private readonly audit: AuditService, private readonly perms: PermissionService) {}
 
-  async upload(actor: Actor, file: { originalname: string; mimetype: string; buffer: Buffer; size: number }, link: { linkedType: string; linkedId: string }) {
+  async upload(actor: Actor, file: { originalname: string; mimetype: string; buffer: Buffer; size: number }, link: { linkedType: string; linkedId: string }, maxBytes = MAX_BYTES) {
     const need = WRITE[link.linkedType];
     if (!need) throw new AppError('VALIDATION_FAILED', 'Unsupported linkedType.');
     await this.perms.assert(actor.userId!, need);
-    if (file.size > MAX_BYTES || file.buffer.length > MAX_BYTES) throw new AppError('VALIDATION_FAILED', 'File too large (max 10 MB).');
+    if (file.size > maxBytes || file.buffer.length > maxBytes) throw new AppError('VALIDATION_FAILED', `File too large (max ${Math.round(maxBytes / 1048576)} MB).`);
     const check = SIGNATURES[file.mimetype];
     if (!check || !check(file.buffer)) throw new AppError('VALIDATION_FAILED', 'File type not allowed or content does not match its type.');
     const hash = createHash('sha256').update(file.buffer).digest('hex');

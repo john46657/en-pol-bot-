@@ -16,7 +16,7 @@ export declare class MediaService {
     }, link: {
         linkedType: string;
         linkedId: string;
-    }): Promise<{
+    }, maxBytes?: number): Promise<{
         id: string;
         originalName: string;
         mime: string;
@@ -28,10 +28,10 @@ export declare class MediaService {
             id: string;
             createdAt: Date;
             size: number;
-            hash: string;
-            storageKey: string;
             originalName: string;
             mime: string;
+            hash: string;
+            storageKey: string;
             uploaderId: string;
             linkedType: string | null;
             linkedId: string | null;
@@ -42,8 +42,8 @@ export declare class MediaService {
         id: string;
         createdAt: Date;
         size: number;
-        hash: string;
         originalName: string;
         mime: string;
+        hash: string;
     }[]>;
 }

@@ -2,9 +2,9 @@ import { describe, expect, it } from 'vitest';
 import { BotApiError, type Api } from '../src/api';
 import { byName } from '../src/commands';
 import { interactionFor } from '../src/commands/features';
-import { parseLeaveDate } from '../src/commands/leave';
+import { parseDuration, parseLeaveDate } from '../src/commands/leave';
 import type { Ctx } from '../src/commands/types';
-import { leaveDecisionText, outboxButtons, renderOutboxEmbeds, type Reply } from '../src/format';
+import { humanDuration, leaveDecisionText, leaveDirectEmbed, outboxButtons, renderOutboxEmbeds, type Reply } from '../src/format';
 import { pollOnce } from '../src/outbox';
 
 const ME = '123456789012345678', GUILD = '323456789012345678';
@@ -70,9 +70,13 @@ describe('/abmeldung and the approval buttons', () => {
   it('messages for the channels and the DM', () => {
     const p = { id: 'abc', number: 'LOA-1', name: 'Max', discordId: ME, startsAt: '2026-12-23T23:00:00Z', endsAt: '2026-12-31T22:59:00Z', reason: 'Urlaub', dashboardUrl: 'https://x/leave?id=abc' };
     const req = renderOutboxEmbeds('leave.requested', p)![0]!;
-    expect(req.title).toContain('LOA-1');
-    expect(req.fields?.map((f) => f.value)).toEqual(['24.12.2026, 00:00', '31.12.2026, 23:59', '8 Tage']);
-    expect(outboxButtons('leave.requested', p)?.map((b) => b.id)).toEqual(['leave:decide:abc:APPROVED', 'leave:decide:abc:DENIED', 'leave:reason:abc:DENIED', 'link']);
+    expect(req.footer).toBe('ID: LOA-1');
+    expect(req.fields?.slice(0, 2).map((f) => f.value)).toEqual(['Urlaub', '1 Woche, 1 Tag']);
+    expect(outboxButtons('leave.requested', p)?.map((b) => b.id)).toEqual(['leave:decide:abc:APPROVED', 'leave:reason:abc:DENIED', 'link']);
+    const pending = leaveDirectEmbed('leave.pending', { ...p, guildName: 'ENRP | Polizei' });
+    expect(pending).toMatchObject({ title: 'Abmeldung ausstehend', author: { name: 'ENRP | Polizei' }, footer: 'ID: LOA-1' });
+    expect(leaveDirectEmbed('leave.decided', { ...p, status: 'DENIED', decisionReason: 'test' }).fields?.[0]).toEqual({ name: 'Grund', value: 'test' });
+    expect(leaveDirectEmbed('leave.decided', { ...p, status: 'APPROVED' }).title).toBe('Abmeldung angenommen');
     expect(renderOutboxEmbeds('leave.log', { ...p, event: 'started' })![0]!.title).toContain('beginnt');
     expect(leaveDecisionText({ ...p, status: 'DENIED', decisionReason: 'Personalmangel' })).toContain('Personalmangel');
   });
@@ -111,5 +115,51 @@ describe('shifts in Discord', () => {
     expect(synced).toEqual([`${ME} +800000000000000001 -800000000000000002`]);
     expect(sent[0]).toContain('900000000000000001');
     expect(sent[0]).toContain('Schicht: **SEK**');
+  });
+});
+
+describe('/leave manage (wie Trident)', () => {
+  it('durations: 6h, 4d, 2w, combined and German; rejects nonsense and < 1 hour', () => {
+    expect(parseDuration('6h')).toBe(6 * 3_600_000);
+    expect(parseDuration('4d')).toBe(4 * 86_400_000);
+    expect(parseDuration('2w')).toBe(14 * 86_400_000);
+    expect(parseDuration('1w 2d')).toBe(9 * 86_400_000);
+    expect(parseDuration('3t')).toBe(3 * 86_400_000);
+    for (const bad of ['', 'bald', '30m', '5', 'h6']) expect(parseDuration(bad)).toBeNull();
+    expect(humanDuration(86_400_000)).toBe('1 Tag');
+    expect(humanDuration(14 * 86_400_000)).toBe('2 Wochen');
+    expect(humanDuration(6 * 3_600_000)).toBe('6 Stunden');
+  });
+  it('no leave yet → Start button; Start opens the form; the form creates the request starting now', async () => {
+    const { api, calls } = fakeApi({ 'GET /leave?mine=true': { items: [] }, 'POST /leave': (b: { endsAt: string }) => ({ number: 'LOA-9', endsAt: b.endsAt }) });
+    const r = await byName('leave')!.run(ctx(api, { userName: 'john', opts: { _sub: 'manage' } }));
+    expect(r.embeds?.[0]).toMatchObject({ title: 'Abmeldungen verwalten', author: { name: '@john' } });
+    expect(r.embeds?.[0]?.description).toContain('noch nie');
+    expect(r.buttons?.map((b) => b.id)).toEqual(['leave:start']);
+    const start = interactionFor('leave:start')!;
+    expect(start.def.opensModal?.(start.args)).toBe(true);
+    const modal = (await start.def.run({ ...ctx(api), args: start.args })).modal!;
+    expect(modal.id).toBe('leave:create');
+    expect(modal.fields.map((f) => f.id)).toEqual(['duration', 'reason']);
+    const create = interactionFor('leave:create')!;
+    expect(text(await create.def.run({ ...ctx(api), args: create.args, fields: { duration: 'morgen', reason: 'test' } }))).toContain('Dauer');
+    const before = Date.now();
+    const done = await create.def.run({ ...ctx(api), args: create.args, fields: { duration: '1d', reason: 'test' } });
+    expect(text(done)).toContain('Freigabe');
+    const body = calls.find((c) => c.method === 'POST')!.body as { startsAt: string; endsAt: string; guildId: string };
+    expect(Date.parse(body.endsAt) - Date.parse(body.startsAt)).toBe(86_400_000);
+    expect(Date.parse(body.startsAt)).toBeGreaterThanOrEqual(before - 1000);
+    expect(body.guildId).toBe(GUILD);
+  });
+  it('pending / active leave → withdraw / end early', async () => {
+    const id = '11111111-2222-3333-4444-555555555555';
+    const row = { id, number: 'LOA-2', reason: 'Urlaub', startsAt: '2026-01-01T00:00:00Z', endsAt: '2099-01-01T00:00:00Z', endedAt: null, decisionReason: null };
+    const pend = fakeApi({ 'GET /leave?mine=true': { items: [{ ...row, status: 'PENDING', active: false }] } });
+    expect((await byName('leave')!.run(ctx(pend.api, { opts: { _sub: 'manage' } }))).buttons?.[0]?.id).toBe(`leave:cancel:${id}`);
+    const act = fakeApi({ 'GET /leave?mine=true': { items: [{ ...row, status: 'APPROVED', active: true }] }, [`POST /leave/${id}/cancel`]: { number: 'LOA-2', status: 'ENDED' } });
+    const r = await byName('leave')!.run(ctx(act.api, { opts: { _sub: 'manage' } }));
+    expect(r.buttons?.[0]?.label).toBe('Vorzeitig beenden');
+    const cancel = interactionFor(`leave:cancel:${id}`)!;
+    expect(text(await cancel.def.run({ ...ctx(act.api), args: cancel.args }))).toContain('beendet');
   });
 });

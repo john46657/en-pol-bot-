@@ -31,8 +31,8 @@ export declare class CommunicationController {
     list(a: Actor, ch: z.infer<typeof channel>, q: z.infer<typeof listQ>): Promise<{
         id: string;
         createdAt: Date;
-        body: string;
         authorId: string;
+        body: string;
         deletedAt: Date | null;
         conversationId: string;
         replyToId: string | null;
@@ -41,8 +41,8 @@ export declare class CommunicationController {
     post(a: Actor, ch: z.infer<typeof channel>, b: z.infer<typeof post>): Promise<{
         id: string;
         createdAt: Date;
-        body: string;
         authorId: string;
+        body: string;
         deletedAt: Date | null;
         conversationId: string;
         replyToId: string | null;
@@ -51,8 +51,8 @@ export declare class CommunicationController {
     pin(a: Actor, id: string): Promise<{
         id: string;
         createdAt: Date;
-        body: string;
         authorId: string;
+        body: string;
         deletedAt: Date | null;
         conversationId: string;
         replyToId: string | null;
@@ -61,8 +61,8 @@ export declare class CommunicationController {
     del(a: Actor, id: string): Promise<{
         id: string;
         createdAt: Date;
-        body: string;
         authorId: string;
+        body: string;
         deletedAt: Date | null;
         conversationId: string;
         replyToId: string | null;

@@ -31,11 +31,11 @@ declare const note: z.ZodObject<{
     findings: z.ZodOptional<z.ZodString>;
     internalNotes: z.ZodOptional<z.ZodString>;
 }, "strip", z.ZodTypeAny, {
-    findings?: string | undefined;
     internalNotes?: string | undefined;
+    findings?: string | undefined;
 }, {
-    findings?: string | undefined;
     internalNotes?: string | undefined;
+    findings?: string | undefined;
 }>;
 declare const resolve: z.ZodObject<{
     resolution: z.ZodString;
@@ -77,13 +77,13 @@ export declare class ComplaintsController {
             version: number;
             description: string;
             status: string;
+            internalNotes: string | null;
             officerId: string | null;
             complainantId: string | null;
             subjectId: string | null;
             investigatorId: string | null;
             findings: string | null;
             resolution: string | null;
-            internalNotes: string | null;
         } | {
             internalNotes: undefined;
             findings: undefined;
@@ -115,13 +115,13 @@ export declare class ComplaintsController {
             version: number;
             description: string;
             status: string;
+            internalNotes: string | null;
             officerId: string | null;
             complainantId: string | null;
             subjectId: string | null;
             investigatorId: string | null;
             findings: string | null;
             resolution: string | null;
-            internalNotes: string | null;
         } | {
             internalNotes: undefined;
             findings: undefined;

@@ -22,9 +22,9 @@ export declare class DutyService {
         status: string;
         endedAt: Date | null;
         callsign: string | null;
+        startedAt: Date;
         unitId: string | null;
         shiftType: string | null;
-        startedAt: Date;
     } | {
         status: string;
     }>;
@@ -48,9 +48,9 @@ export declare class DutyService {
         status: string;
         endedAt: Date | null;
         callsign: string | null;
+        startedAt: Date;
         unitId: string | null;
         shiftType: string | null;
-        startedAt: Date;
     })[]>;
     mine(userId: string): import("@prisma/client").Prisma.Prisma__DutySessionClient<{
         id: string;
@@ -58,9 +58,9 @@ export declare class DutyService {
         status: string;
         endedAt: Date | null;
         callsign: string | null;
+        startedAt: Date;
         unitId: string | null;
         shiftType: string | null;
-        startedAt: Date;
     } | null, null, import("@prisma/client/runtime/library").DefaultArgs, import("@prisma/client").Prisma.PrismaClientOptions>;
     /**
      * Dienststunden der letzten `days` Tage, pro Benutzer und Status (in Minuten).

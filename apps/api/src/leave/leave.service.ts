@@ -66,6 +66,14 @@ export class LeaveService {
     };
   }
 
+  /** Server, auf dem beantragt wurde (Kopfzeile der DMs wie bei Trident); sonst der Organisationsname. */
+  private async server(guildId: string | null) {
+    const g = guildId ? (await this.discord.guilds()).find((x) => x.id === guildId) : undefined;
+    if (g) return { guildName: g.name, guildIcon: g.icon };
+    const org = (await this.prisma.systemSetting.findUnique({ where: { key: 'org.name' } }))?.value;
+    return { guildName: typeof org === 'string' ? org : 'EN Polizei', guildIcon: null };
+  }
+
   private payload(r: Row, extra: Record<string, unknown> = {}) {
     return {
       id: r.id, number: r.number, name: r.user.displayName, discordId: r.discordId,
@@ -100,6 +108,8 @@ export class LeaveService {
       return row;
     }).then((x) => this.one(x));
     if (cfg.approvalChannelId) await this.discord.enqueue('duty', 'leave.requested', this.payload(r, { channelId: cfg.approvalChannelId }), { always: true });
+    // DM „Abmeldung ausstehend“ an die Person (wie Trident)
+    if (r.discordId) await this.discord.enqueue('duty', 'leave.pending', this.payload(r, await this.server(r.guildId)), { always: true });
     return this.view(r);
   }
 
@@ -137,7 +147,7 @@ export class LeaveService {
     }).then((x) => this.one(x));
     const cfg = await this.config();
     const extra = { status, decisionReason: reason || null, decidedByName: by?.displayName ?? null };
-    if (updated.discordId) await this.discord.enqueue('duty', 'leave.decided', this.payload(updated, extra), { always: true });
+    if (updated.discordId) await this.discord.enqueue('duty', 'leave.decided', this.payload(updated, { ...extra, ...(await this.server(updated.guildId)) }), { always: true });
     await this.log(cfg, updated, status === 'APPROVED' ? 'approved' : 'denied', extra);
     if (status === 'APPROVED') await this.tick();
     return { ...this.view({ ...updated, decidedByName: by?.displayName ?? null }) };

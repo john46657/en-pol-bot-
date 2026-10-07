@@ -13,7 +13,7 @@ function createLive(api, platform, log = console.log) {
     async function render(kind) {
         if (kind === 'danger') {
             const s = await api.service('GET', '/bot/danger');
-            return { embed: (0, format_1.dangerEmbed)(s), buttons: format_1.DANGER_BUTTONS };
+            return { embed: (0, format_1.dangerEmbed)(s), buttons: (0, format_1.dangerButtons)(s) };
         }
         const t = await api.service('GET', '/bot/team');
         return { embed: (0, format_1.teamlistEmbed)(t.members, t.rankOrder), buttons: undefined };

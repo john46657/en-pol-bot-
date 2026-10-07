@@ -94,11 +94,11 @@ export function Modal({ open, title, onClose, children, wide }: { open: boolean;
   );
 }
 
-export function ConfirmDialog({ open, title, message, confirmLabel = 'Confirm', danger, onConfirm, onClose, busy }: { open: boolean; title: string; message: ReactNode; confirmLabel?: string; danger?: boolean; busy?: boolean; onConfirm: () => void; onClose: () => void }) {
+export function ConfirmDialog({ open, title, message, confirmLabel = 'Confirm', cancelLabel = 'Cancel', danger, onConfirm, onClose, busy }: { open: boolean; title: string; message: ReactNode; confirmLabel?: string; cancelLabel?: string; danger?: boolean; busy?: boolean; onConfirm: () => void; onClose: () => void }) {
   return (
     <Modal open={open} title={title} onClose={onClose}>
       <p className="mb-4 text-sm text-muted">{message}</p>
-      <div className="flex justify-end gap-2"><Button variant="secondary" onClick={onClose}>Cancel</Button><Button variant={danger ? 'danger' : 'primary'} disabled={busy} onClick={onConfirm}>{confirmLabel}</Button></div>
+      <div className="flex justify-end gap-2"><Button variant="secondary" onClick={onClose}>{cancelLabel}</Button><Button variant={danger ? 'danger' : 'primary'} disabled={busy} onClick={onConfirm}>{confirmLabel}</Button></div>
     </Modal>
   );
 }

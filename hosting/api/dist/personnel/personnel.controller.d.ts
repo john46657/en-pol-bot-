@@ -64,11 +64,11 @@ declare const record: z.ZodObject<{
     summary: z.ZodString;
     details: z.ZodOptional<z.ZodString>;
 }, "strip", z.ZodTypeAny, {
-    type: "AWARD" | "DISCIPLINE" | "NOTE";
+    type: "NOTE" | "AWARD" | "DISCIPLINE";
     summary: string;
     details?: string | undefined;
 }, {
-    type: "AWARD" | "DISCIPLINE" | "NOTE";
+    type: "NOTE" | "AWARD" | "DISCIPLINE";
     summary: string;
     details?: string | undefined;
 }>;

@@ -34,8 +34,8 @@ const SIGNATURES = {
 };
 const EXT = { 'image/png': 'png', 'image/jpeg': 'jpg', 'image/gif': 'gif', 'image/webp': 'webp', 'application/pdf': 'pdf', 'text/plain': 'txt' };
 /** Welche Permission zum Anhängen/Ansehen an einem Entitätstyp nötig ist. */
-const WRITE = { Evidence: 'evidence.create', Report: 'reports.create', Complaint: 'complaints.create', Incident: 'incidents.edit', Person: 'persons.edit', Investigation: 'investigations.edit', Vehicle: 'vehicles.edit' };
-const READ = { Evidence: 'evidence.view', Report: 'reports.view', Complaint: 'complaints.view', Incident: 'incidents.view', Person: 'persons.view', Investigation: 'investigations.view', Vehicle: 'vehicles.view' };
+const WRITE = { CadMap: 'cad.manage_map', Evidence: 'evidence.create', Report: 'reports.create', Complaint: 'complaints.create', Incident: 'incidents.edit', Person: 'persons.edit', Investigation: 'investigations.edit', Vehicle: 'vehicles.edit' };
+const READ = { CadMap: 'cad.view', Evidence: 'evidence.view', Report: 'reports.view', Complaint: 'complaints.view', Incident: 'incidents.view', Person: 'persons.view', Investigation: 'investigations.view', Vehicle: 'vehicles.view' };
 let MediaService = class MediaService {
     prisma;
     audit;
@@ -46,13 +46,13 @@ let MediaService = class MediaService {
         this.audit = audit;
         this.perms = perms;
     }
-    async upload(actor, file, link) {
+    async upload(actor, file, link, maxBytes = exports.MAX_BYTES) {
         const need = WRITE[link.linkedType];
         if (!need)
             throw new errors_1.AppError('VALIDATION_FAILED', 'Unsupported linkedType.');
         await this.perms.assert(actor.userId, need);
-        if (file.size > exports.MAX_BYTES || file.buffer.length > exports.MAX_BYTES)
-            throw new errors_1.AppError('VALIDATION_FAILED', 'File too large (max 10 MB).');
+        if (file.size > maxBytes || file.buffer.length > maxBytes)
+            throw new errors_1.AppError('VALIDATION_FAILED', `File too large (max ${Math.round(maxBytes / 1048576)} MB).`);
         const check = SIGNATURES[file.mimetype];
         if (!check || !check(file.buffer))
             throw new errors_1.AppError('VALIDATION_FAILED', 'File type not allowed or content does not match its type.');

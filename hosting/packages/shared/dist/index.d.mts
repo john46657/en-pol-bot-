@@ -1,9 +1,11 @@
 /** Zentraler Permission-Katalog. Einzige Quelle der Wahrheit für Backend und Frontend. */
 declare const PERMISSION_CATALOG: {
     /** `dashboard.<bereich>.view`: Sichtbarkeit ganzer Bereiche im Menü und auf der Startseite (zusätzlich zur Modul-Permission). */
-    readonly dashboard: readonly ["view", "customize", "tickets.view", "applications.view", "team.view", "offices.view", "voice.view", "radio.view", "teamchance.view", "logs.view", "settings.view"];
+    readonly dashboard: readonly ["view", "customize", "tickets.view", "applications.view", "team.view", "offices.view", "voice.view", "radio.view", "teamchance.view", "logs.view", "settings.view", "cad.view"];
     readonly team: readonly ["view", "manage"];
     readonly dispatch: readonly ["view", "create", "edit", "assign", "close", "manage"];
+    /** CAD-Leitstelle + ER:LC-Integration (deny-by-default; kritische ER:LC-Befehle brauchen ein eigenes Recht). */
+    readonly cad: readonly ["view", "create_incident", "edit_incident", "close_incident", "assign_unit", "manage_units", "view_persons", "view_vehicles", "manage_map", "view_erlc", "manage_erlc", "erlc_command", "erlc_command_critical", "manage_cross_server", "view_logs", "manage_settings", "radio"];
     readonly incidents: readonly ["view", "create", "edit", "close", "delete"];
     readonly persons: readonly ["view", "create", "edit", "archive", "merge"];
     readonly vehicles: readonly ["view", "create", "edit", "archive"];
@@ -523,4 +525,140 @@ declare const formatMinutes: (min: number) => string;
 /** Rollen-Voraussetzung: „alle“ oder „mindestens eine“ der Rollen. */
 declare const rolesMatch: (have: string[], ids: string[], mode: "ALL" | "ANY") => boolean;
 
-export { ALL_PERMISSIONS, APPLICATION_STATUSES, APPLICATION_TRANSITIONS, APPLICATION_VARIABLES, AREA_PERMISSIONS, type AnswerCheck, type ApplicationStatus, type ApplicationVars, type ButtonStyleName, CLAIM_MODES, CLOSE_REASON_MODES, CLOSE_REASON_SOURCES, COMPLAINT_STATUSES, COMPLAINT_TRANSITIONS, type ClaimMode, type CloseReasonMode, type CloseReasonSource, type ComplaintStatus, type ComponentButton, type ComponentSelect, DEFAULT_APPLICATION_MESSAGES, DISPATCH_STATUSES, DISPATCH_TRANSITIONS, DUTY_STATUSES, type DispatchStatus, type DutyStatus, EVIDENCE_CUSTODY_STATES, EVIDENCE_TRANSITIONS, type Effect, type EmbedSpec, type EvidenceCustodyState, FORM_QUESTION_TYPES, type Field, type FormField, type FormOption, type FormQuestionType, INVESTIGATION_STATUSES, INVESTIGATION_TRANSITIONS, InvalidTransitionError, type InvestigationStatus, MAX_FORM_OPTIONS, MAX_FORM_QUESTIONS, type MessageSpec, PERMISSION_CATALOG, PRIORITIES, type PermissionContext, type PermissionGrant, type PermissionKey, type Priority, QUESTION_TYPES, type QuestionType, REPORT_STATUSES, REPORT_TRANSITIONS, REPORT_TYPES, ROBLOX_VERIFICATION_STATUSES, type ReportStatus, type ReportType, type Resolution, type ResolutionSource, type RobloxVerificationStatus, STATUS_KINDS, type StatusKind, TICKET_ACTIONS, TICKET_ACTION_KEYS, TICKET_PLACEHOLDERS, TICKET_STATUSES, TICKET_TRANSITIONS, type TicketAction, type TicketButtonConfig, type TicketEffect, type TicketQuestion, type TicketStatus, type TicketVars, type TransitionMap, UNIT_STATUSES, type UnitStatus, WANTED_STATUSES, WANTED_TRANSITIONS, type WantedStatus, areaGrantsFor, assertTransition, can, canDelegate, canTransition, checkAnswer, defaultTicketButtons, effectivePermissions, formatMinutes, freeFieldKey, grantMatches, isPermissionKey, isValidRobloxUserId, normalizeField, renderApplicationText, renderTicketText, resolvePermission, rolesMatch, ticketChannelName, ticketNumber };
+/**
+ * CAD-Leitstelle + ER:LC: Standardwerte der Konfiguration. Alles hier ist nur der Startzustand –
+ * Administratoren ändern Prioritäten, Status, Einheitentypen, Layer, Marker, Karte und Discord-Ziele im Dashboard.
+ */
+interface CadOption {
+    key: string;
+    label: string;
+    emoji?: string;
+    color?: string;
+    order?: number;
+}
+interface CadStatusOption extends CadOption {
+    closed?: boolean;
+}
+interface CadUnitType extends CadOption {
+    layer?: string;
+}
+interface CadLayer {
+    key: string;
+    label: string;
+    builtin?: boolean;
+    enabledByDefault?: boolean;
+}
+interface CadMarkerStyle {
+    key: string;
+    label: string;
+    emoji: string;
+    color: string;
+}
+interface CadMapConfig {
+    /** Kartenbild (hochgeladene ER:LC-Map). Leer = noch keine Karte hinterlegt. */
+    imageUrl?: string | null;
+    width: number;
+    height: number;
+    /** Pixel des Spiel-Ursprungs (0,0) und Pixel pro Spieleinheit – zum Kalibrieren der Marker. */
+    originX: number;
+    originY: number;
+    scale: number;
+}
+interface CadRoute {
+    id: string;
+    guildId: string;
+    event: CadEvent;
+    channelIds: string[];
+    pingRoleIds: string[];
+    enabled: boolean;
+}
+interface CadField {
+    key: string;
+    label: string;
+    type: 'text' | 'number' | 'select';
+    options?: string[];
+}
+interface CadConfig {
+    /** Discord-Server der Leitstelle (Heimat der Einsätze). */
+    homeGuildId?: string | null;
+    incidentNumberPrefix: string;
+    incidentTypes: CadOption[];
+    priorities: CadOption[];
+    incidentStatuses: CadStatusOption[];
+    unitStatuses: CadOption[];
+    unitTypes: CadUnitType[];
+    layers: CadLayer[];
+    markers: CadMarkerStyle[];
+    map: CadMapConfig;
+    routes: CadRoute[];
+    /** Zusätzliche Felder für Funk-/Personenzuordnung (Teamübersicht). */
+    memberFields: CadField[];
+    /** Widgets der Leitstellen-Startseite (Standard für alle; jeder Benutzer kann seine eigene Ansicht anpassen). */
+    widgets: string[];
+}
+declare const CAD_EVENTS: readonly ["incident.created", "incident.status", "incident.assigned", "incident.closed", "call.received", "announcement", "radio"];
+type CadEvent = (typeof CAD_EVENTS)[number];
+declare const CAD_EVENT_LABELS: Record<CadEvent, string>;
+/** Datenarten, die eine Server-Verbindung senden darf, und Aktionen, die der verbundene Server zurück ausführen darf. */
+declare const CAD_LINK_SEND_TYPES: readonly ["incidents", "incident_status", "unit_requests", "calls", "announcements", "radio"];
+declare const CAD_LINK_ACTIONS: readonly ["status_report", "radio", "view_incidents", "dispatch"];
+declare const CAD_LINK_LABELS: Record<string, string>;
+/** Welche Datenart ein CAD-Ereignis bei verbundenen Servern ist. */
+declare const CAD_EVENT_SEND_TYPE: Record<CadEvent, (typeof CAD_LINK_SEND_TYPES)[number]>;
+declare const CAD_WIDGETS: readonly ["activeIncidents", "availableUnits", "erlcPlayers", "erlcQueue", "activeCalls", "staffOnline", "erlcStatus", "map", "units", "radio", "persons", "vehicles"];
+declare const CAD_WIDGET_LABELS: Record<string, string>;
+/** Offizielle ER:LC-Kartenbilder sind 5355 × 5355 px, Spielkoordinate (0,0) liegt in der Mitte. */
+declare const ERLC_MAP_SIZE = 5355;
+declare const DEFAULT_CAD_CONFIG: CadConfig;
+/** Spielkoordinate (ER:LC: X nach rechts, Z nach unten, Ursprung Mitte) → Pixel im Kartenbild. */
+declare const gameToPixel: (m: CadMapConfig, x: number, z: number) => {
+    px: number;
+    py: number;
+};
+declare const pixelToGame: (m: CadMapConfig, px: number, py: number) => {
+    x: number;
+    z: number;
+};
+declare const ERLC_FEATURES: readonly ["players", "staff", "queue", "vehicles", "emergencyCalls", "modCalls", "joinLogs", "killLogs", "commandLogs", "commands", "webhook"];
+type ErlcFeature = (typeof ERLC_FEATURES)[number];
+declare const ERLC_FEATURE_LABELS: Record<ErlcFeature, string>;
+/** Update-Intervalle, die zu den API-Limits passen (ein Abruf liefert alle Daten auf einmal). */
+declare const ERLC_POLL_OPTIONS: readonly [5, 10, 15, 30, 60];
+declare const ERLC_STATUSES: readonly ["CONNECTED", "LIMITED", "OFFLINE", "ERROR", "UNKNOWN", "DISABLED"];
+type ErlcStatus = (typeof ERLC_STATUSES)[number];
+declare const ERLC_STATUS_LABEL: Record<ErlcStatus, string>;
+/** Standard: Befehle, die nur mit `cad.erlc_command_critical` + Bestätigung laufen, und Befehle, die nie über das Dashboard laufen. */
+declare const ERLC_DEFAULT_CRITICAL: string[];
+declare const ERLC_DEFAULT_BLOCKED: string[];
+/** „Name:123“ (ER:LC-Spielerangabe) → { name, id }. */
+declare function parsePlayer(v: unknown): {
+    name: string;
+    id: string | null;
+};
+
+/**
+ * Gefahrenstatus (Kriminalitätslage) – Stufen, Texte, Farben, Buttons und Pings sind im Dashboard einstellbar.
+ * Standard wie im alten Bot: „Status 1“ bis „Status 4“.
+ */
+interface DangerLevelDef {
+    key: string;
+    name: string;
+    title: string;
+    text: string;
+    emoji: string;
+    color: string;
+    buttonStyle: 'primary' | 'secondary' | 'success' | 'danger';
+}
+interface DangerConfig {
+    panelTitle: string;
+    panelText: string;
+    buttonEmoji: string;
+    levels: DangerLevelDef[];
+    pingRoleIds: string[];
+}
+declare const DEFAULT_DANGER_CONFIG: DangerConfig;
+/** Alte Stufen (Grün/Gelb/Rot) → Standard-Stufen, falls die Konfiguration sie nicht mehr kennt. */
+declare const LEGACY_DANGER: Record<string, string>;
+declare function dangerLevelOf(cfg: DangerConfig, key: string | null | undefined): DangerLevelDef;
+
+export { ALL_PERMISSIONS, APPLICATION_STATUSES, APPLICATION_TRANSITIONS, APPLICATION_VARIABLES, AREA_PERMISSIONS, type AnswerCheck, type ApplicationStatus, type ApplicationVars, type ButtonStyleName, CAD_EVENTS, CAD_EVENT_LABELS, CAD_EVENT_SEND_TYPE, CAD_LINK_ACTIONS, CAD_LINK_LABELS, CAD_LINK_SEND_TYPES, CAD_WIDGETS, CAD_WIDGET_LABELS, CLAIM_MODES, CLOSE_REASON_MODES, CLOSE_REASON_SOURCES, COMPLAINT_STATUSES, COMPLAINT_TRANSITIONS, type CadConfig, type CadEvent, type CadField, type CadLayer, type CadMapConfig, type CadMarkerStyle, type CadOption, type CadRoute, type CadStatusOption, type CadUnitType, type ClaimMode, type CloseReasonMode, type CloseReasonSource, type ComplaintStatus, type ComponentButton, type ComponentSelect, DEFAULT_APPLICATION_MESSAGES, DEFAULT_CAD_CONFIG, DEFAULT_DANGER_CONFIG, DISPATCH_STATUSES, DISPATCH_TRANSITIONS, DUTY_STATUSES, type DangerConfig, type DangerLevelDef, type DispatchStatus, type DutyStatus, ERLC_DEFAULT_BLOCKED, ERLC_DEFAULT_CRITICAL, ERLC_FEATURES, ERLC_FEATURE_LABELS, ERLC_MAP_SIZE, ERLC_POLL_OPTIONS, ERLC_STATUSES, ERLC_STATUS_LABEL, EVIDENCE_CUSTODY_STATES, EVIDENCE_TRANSITIONS, type Effect, type EmbedSpec, type ErlcFeature, type ErlcStatus, type EvidenceCustodyState, FORM_QUESTION_TYPES, type Field, type FormField, type FormOption, type FormQuestionType, INVESTIGATION_STATUSES, INVESTIGATION_TRANSITIONS, InvalidTransitionError, type InvestigationStatus, LEGACY_DANGER, MAX_FORM_OPTIONS, MAX_FORM_QUESTIONS, type MessageSpec, PERMISSION_CATALOG, PRIORITIES, type PermissionContext, type PermissionGrant, type PermissionKey, type Priority, QUESTION_TYPES, type QuestionType, REPORT_STATUSES, REPORT_TRANSITIONS, REPORT_TYPES, ROBLOX_VERIFICATION_STATUSES, type ReportStatus, type ReportType, type Resolution, type ResolutionSource, type RobloxVerificationStatus, STATUS_KINDS, type StatusKind, TICKET_ACTIONS, TICKET_ACTION_KEYS, TICKET_PLACEHOLDERS, TICKET_STATUSES, TICKET_TRANSITIONS, type TicketAction, type TicketButtonConfig, type TicketEffect, type TicketQuestion, type TicketStatus, type TicketVars, type TransitionMap, UNIT_STATUSES, type UnitStatus, WANTED_STATUSES, WANTED_TRANSITIONS, type WantedStatus, areaGrantsFor, assertTransition, can, canDelegate, canTransition, checkAnswer, dangerLevelOf, defaultTicketButtons, effectivePermissions, formatMinutes, freeFieldKey, gameToPixel, grantMatches, isPermissionKey, isValidRobloxUserId, normalizeField, parsePlayer, pixelToGame, renderApplicationText, renderTicketText, resolvePermission, rolesMatch, ticketChannelName, ticketNumber };

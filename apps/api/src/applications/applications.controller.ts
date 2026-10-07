@@ -5,6 +5,7 @@ import { Throttle } from '@nestjs/throttler';
 import { z } from 'zod';
 import { APPLICATION_STATUSES } from '@enrp/shared';
 import { ApplicationsService } from './applications.service';
+import { ApplicationsAnalyticsService } from './applications-analytics.service';
 import { CurrentActor, Public, RequirePermission } from '../authz/decorators';
 import type { Actor } from '../audit/audit.service';
 import { zodBody } from '../common/zod.pipe';
@@ -16,10 +17,12 @@ const move = z.object({ status: z.enum(APPLICATION_STATUSES).refine((s) => s !==
 const listQ = pageQuery.extend({ status: z.union([z.enum(APPLICATION_STATUSES), z.literal('OPEN')]).optional(), guildId: z.string().regex(/^\d{15,25}$/).optional() });
 const guildQ = z.object({ guildId: z.string().regex(/^\d{15,25}$/).optional() });
 
+const analyticsQ = z.object({ type: z.string().max(80).optional(), status: z.enum(['APPROVED', 'PENDING', 'REJECTED']).optional(), reviewer: z.string().uuid().optional(), days: z.coerce.number().int().min(7).max(365).default(30) });
+
 @ApiTags('applications')
 @Controller('applications')
 export class ApplicationsController {
-  constructor(private readonly a: ApplicationsService) {}
+  constructor(private readonly a: ApplicationsService, private readonly stats: ApplicationsAnalyticsService) {}
   /** `?guildId=` – Formular eines Servers (für den Bot); ohne: das gemeinsame (Web-Seite /apply). */
   @Public() @Get('form')
   form(@Query(zodBody(guildQ)) q: z.infer<typeof guildQ>) { return this.a.form(q.guildId); }
@@ -27,6 +30,9 @@ export class ApplicationsController {
   submit(@Body(zodBody(submit)) b: z.infer<typeof submit>) { return this.a.submit(b); }
   @Get() @RequirePermission('applications.view')
   list(@Query(zodBody(listQ)) q: z.infer<typeof listQ>) { return this.a.list(q, q.status, q.guildId ?? currentGuild() ?? undefined); } // Server getrennt: gewählter Server
+  /** Statistik (Filter: Name, Status, Prüfer; Zeitraum in Tagen, verglichen mit der Vorperiode). Server getrennt wie die Liste. */
+  @Get('analytics') @RequirePermission('applications.view')
+  analytics(@Query(zodBody(analyticsQ)) q: z.infer<typeof analyticsQ>) { return this.stats.overview({ ...q, guildId: currentGuild() }); }
   @Get('history') @RequirePermission('applications.view')
   history(@Query(zodBody(z.object({ discordId: z.string().regex(/^\d{15,25}$/) }))) q: { discordId: string }) { return this.a.history(q.discordId); }
   @Get(':id') @RequirePermission('applications.view')

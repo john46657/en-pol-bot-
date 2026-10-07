@@ -87,8 +87,8 @@ export declare class ReportsController {
                 id: string;
                 createdAt: Date;
                 version: number;
-                reportId: string;
                 authorId: string;
+                reportId: string;
                 changeSummary: string;
                 content: import("@prisma/client/runtime/library").JsonValue;
                 contentHash: string;

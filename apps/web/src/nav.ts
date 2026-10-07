@@ -1,4 +1,4 @@
-import { Building2, Megaphone, RadioTower, Contact, Palette, CalendarOff, Clock, LifeBuoy, Monitor, BarChart3, BookOpen, Briefcase, Award, Car, ClipboardList, Crosshair, FileText, Fingerprint, Flag, Gavel, LayoutDashboard, MessageSquare, Radio, Scale, Search, Settings, Shield, Siren, Ticket, UserCheck, Users, Wrench, type LucideIcon } from 'lucide-react';
+import { MapPinned, Building2, Megaphone, RadioTower, Contact, Palette, CalendarOff, Clock, LifeBuoy, Monitor, BarChart3, BookOpen, Briefcase, Award, Car, ClipboardList, Crosshair, FileText, Fingerprint, Flag, Gavel, LayoutDashboard, MessageSquare, Radio, Scale, Search, Settings, Shield, Siren, Ticket, UserCheck, Users, Wrench, type LucideIcon } from 'lucide-react';
 
 /** `area`: Bereichs-Sichtbarkeit (dashboard.<bereich>.view) – ohne sie erscheint der Menüpunkt nicht, auch mit Modul-Recht. */
 export interface NavItem { path: string; label: string; icon: LucideIcon; perm?: string; area?: string; group: 'Operations' | 'Records' | 'Organisation' | 'Administration' }
@@ -6,6 +6,7 @@ export interface NavItem { path: string; label: string; icon: LucideIcon; perm?:
 export const NAV: NavItem[] = [
   { path: '/mdt', label: 'MDT', icon: Monitor, perm: 'dashboard.view', group: 'Operations' },
   { path: '/dashboard', label: 'Dashboard', icon: LayoutDashboard, perm: 'dashboard.view', group: 'Operations' },
+  { path: '/cad', label: 'CAD', icon: MapPinned, perm: 'cad.view', area: 'dashboard.cad.view', group: 'Operations' },
   { path: '/dispatch', label: 'Dispatch', icon: Radio, perm: 'dispatch.view', group: 'Operations' },
   { path: '/incidents', label: 'Incidents', icon: Siren, perm: 'incidents.view', group: 'Operations' },
   { path: '/team', label: 'Team', icon: Users, perm: 'team.view', area: 'dashboard.team.view', group: 'Operations' },
@@ -46,7 +47,7 @@ export const GROUPS = ['Operations', 'Records', 'Organisation', 'Administration'
 
 /** Deutsche Menünamen (Sprache unter Persönlich; Standard Deutsch). */
 const DE: Record<string, string> = {
-  Dispatch: 'Leitstelle', Incidents: 'Einsätze', 'Team list': 'Teamliste', Offices: 'Büros', 'Radio codes': 'Funk-Codes', Communication: 'Kommunikation',
+  CAD: 'CAD-Leitstelle', Dispatch: 'Leitstelle (klassisch)', Incidents: 'Einsätze', 'Team list': 'Teamliste', Offices: 'Büros', 'Radio codes': 'Funk-Codes', Communication: 'Kommunikation',
   'Support Tickets': 'Support-Tickets', Persons: 'Personen', Vehicles: 'Fahrzeuge', Reports: 'Berichte', Tickets: 'Strafzettel', Complaints: 'Beschwerden',
   Investigations: 'Ermittlungen', Wanted: 'Fahndungen', Evidence: 'Beweismittel', Personnel: 'Personal', Applications: 'Bewerbungen', Qualifications: 'Qualifikationen',
   'Team chance': 'Team-Chance', Leave: 'Abmeldungen', Analytics: 'Statistiken', Users: 'Benutzer', 'Roles & Permissions': 'Rollen & Rechte', Audit: 'Audit-Logs',

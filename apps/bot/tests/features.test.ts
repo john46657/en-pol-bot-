@@ -3,7 +3,7 @@ import { BotApiError, type Api } from '../src/api';
 import { byName } from '../src/commands';
 import { interactionFor } from '../src/commands/features';
 import type { Ctx } from '../src/commands/types';
-import { COLORS, teamlistEmbed, type Reply } from '../src/format';
+import { COLORS, dangerButtons, dangerEmbed, teamlistEmbed, type Reply } from '../src/format';
 import { createLive } from '../src/live';
 import { dutyRoleChanges, pollOnce } from '../src/outbox';
 import type { Platform } from '../src/platform';
@@ -45,22 +45,29 @@ function fakePlatform() {
 const ctx = (api: Api, extra: Partial<Ctx> = {}): Ctx => ({ discordId: ME, opts: {}, api, guildId: GUILD, channelId: CHANNEL, isGuildAdmin: false, ...extra });
 const text = (r: Reply) => `${r.content ?? ''} ${r.embeds?.map((e) => `${e.title} ${e.description ?? ''} ${e.fields?.map((f) => `${f.name} ${f.value}`).join(' ') ?? ''}`).join(' ') ?? ''}`;
 
+const LV = (key: string, name: string, title: string) => ({ key, name, title, emoji: '🟢', color: '#2ecc71', buttonStyle: 'danger' as const });
+const STATE = (key: string, extra: Record<string, unknown> = {}) => {
+  const levels = [LV('STATUS_1', 'Status 1', 'Geringe Kriminalität.'), LV('STATUS_2', 'Status 2', 'Mittlere Kriminalität.'), LV('STATUS_4', 'Status 4', 'Extreme Kriminalität.')];
+  return { level: key, def: levels.find((l) => l.key === key) ?? levels[0], levels, panel: { title: 'Gefahrenstatus', text: '• Drücke den Button', buttonEmoji: '❗' }, ...extra };
+};
 describe('/gefahrenstatus', () => {
   it('shows and sets the level with the user\'s rights and redraws the panel', async () => {
-    const { api, calls } = fakeApi({ 'GET /danger-level': { level: 'YELLOW', reason: 'Bankraub', setByName: 'Chief' }, 'PUT /danger-level': (b: { level: string }) => ({ level: b.level }) });
-    expect(text(await byName('gefahrenstatus')!.run(ctx(api)))).toContain('Gelb');
+    const { api, calls } = fakeApi({ 'GET /danger-level': STATE('STATUS_2', { reason: 'Bankraub', setByName: 'Chief' }), 'PUT /danger-level': (b: { level: string }) => STATE(b.level) });
+    expect(text(await byName('gefahrenstatus')!.run(ctx(api)))).toContain('Status 2');
     const refreshLive = vi.fn(async () => null);
     const r = await byName('gefahrenstatus')!.run(ctx(api, { opts: { aktion: 'setzen', stufe: 'rot', grund: 'Schüsse' }, refreshLive }));
-    expect(text(r)).toContain('Rot');
-    expect(calls.at(-1)).toMatchObject({ kind: 'user', method: 'PUT', body: { level: 'RED', reason: 'Schüsse' } });
+    expect(text(r)).toContain('Status 4');
+    expect(calls.at(-1)).toMatchObject({ kind: 'user', method: 'PUT', body: { level: 'STATUS_4', reason: 'Schüsse' } });
+    await byName('gefahrenstatus')!.run(ctx(api, { opts: { aktion: 'setzen', stufe: 'Status 2' }, refreshLive }));
+    expect(calls.at(-1)).toMatchObject({ body: { level: 'Status 2' } });
     expect(refreshLive).toHaveBeenCalledWith('danger');
   });
-  it('buttons set the level; unknown levels are rejected; posting the panel needs Discord server rights', async () => {
-    const { api, calls } = fakeApi({ 'PUT /danger-level': (b: { level: string }) => ({ level: b.level }), 'GET /danger-level': { level: 'GREEN' } });
-    const hit = interactionFor('danger:set:GREEN')!;
-    expect(text(await hit.def.run({ ...ctx(api), args: hit.args }))).toContain('Grün');
+  it('buttons set the level; unknown levels are rejected by the API; posting the panel needs Discord server rights', async () => {
+    const { api, calls } = fakeApi({ 'PUT /danger-level': (b: { level: string }) => { if (b.level === 'PURPLE') throw new BotApiError(400, 'VALIDATION_FAILED', 'Unbekannte Stufe.'); return STATE(b.level); }, 'GET /danger-level': STATE('STATUS_1') });
+    const hit = interactionFor('danger:set:STATUS_1')!;
+    expect(text(await hit.def.run({ ...ctx(api), args: hit.args }))).toContain('Status 1');
     expect(text(await hit.def.run({ ...ctx(api), args: ['set', 'PURPLE'] }))).toContain('Unbekannte');
-    expect(calls).toHaveLength(1);
+    expect(calls).toHaveLength(2);
     const refreshLive = vi.fn(async () => ({ channelId: CHANNEL, messageId: 'M' }));
     expect(text(await byName('gefahrenstatus')!.run(ctx(api, { opts: { aktion: 'panel' }, refreshLive })))).toContain('Server verwalten');
     expect(refreshLive).not.toHaveBeenCalled();
@@ -69,7 +76,16 @@ describe('/gefahrenstatus', () => {
   });
   it('maps an unlinked button user to the linking hint', async () => {
     const { api } = fakeApi({ 'PUT /danger-level': new BotApiError(401, 'UNAUTHENTICATED', 'x', undefined, 'NOT_LINKED') });
-    expect(text(await interactionFor('danger:set:RED')!.def.run({ ...ctx(api), args: ['set', 'RED'] }))).toContain('/verknuepfen');
+    expect(text(await interactionFor('danger:set:STATUS_4')!.def.run({ ...ctx(api), args: ['set', 'STATUS_4'] }))).toContain('/verknuepfen');
+  });
+  it('panel and change message look like the old bot (Status 1–4, text of the level)', () => {
+    const s = STATE('STATUS_1', { at: '2026-04-18T14:15:00Z' });
+    expect(dangerButtons(s).map((b) => `${b.emoji} ${b.label}`)).toEqual(['❗ Status 1', '❗ Status 2', '❗ Status 4']);
+    expect(dangerEmbed(s)).toMatchObject({ title: 'Gefahrenstatus' });
+    expect(dangerEmbed(s).description).toContain('<t:1776521700:f>');
+    const msg = renderOutbox('danger.changed', { level: 'STATUS_1', name: 'Status 1', title: 'Geringe Kriminalität.', text: '## Die Stadt ist heute besonders ruhig.', color: '#2ecc71', setBy: 'Chief' })!;
+    expect(msg).toMatchObject({ title: 'Status 1: Geringe Kriminalität.', color: 0x2ecc71 });
+    expect(msg.description).toContain('besonders ruhig');
   });
 });
 
@@ -145,12 +161,12 @@ describe('application ticket channels', () => {
 
 describe('live messages', () => {
   it('posts once, stores where, then only edits when the content changed', async () => {
-    let level = 'GREEN';
+    let level = 'STATUS_1';
     const state: Record<string, unknown> = {};
     const api: Api = {
       async asUser() { throw new Error('unused'); },
       async service(method, path, body) {
-        if (path === '/bot/danger') return { level } as never;
+        if (path === '/bot/danger') return STATE(level) as never;
         if (path.startsWith('/bot/state/')) { const k = path.slice(11); if (method === 'PUT') { state[k] = (body as { value: unknown }).value; return undefined as never; } return { value: state[k] ?? null } as never; }
         throw new Error(path);
       },
@@ -162,7 +178,7 @@ describe('live messages', () => {
     expect(state['danger-panel']).toEqual({ channelId: 'C', messageId: 'M-new' });
     await live.refresh('danger');
     expect(log).toEqual(['post C new']); // unverändert → nichts bearbeitet
-    level = 'RED';
+    level = 'STATUS_4';
     await live.refresh('danger');
     expect(log).toEqual(['post C new', 'post C M-new']);
   });
@@ -198,7 +214,7 @@ describe('application decision DM', () => {
       },
     };
     const dms: string[] = [];
-    const n = await pollOnce(api, async () => { throw new Error('no channel sends expected'); }, () => undefined, async (u, t) => { if (t.includes('APP-8')) throw new Error('Cannot send messages to this user'); dms.push(`${u} ${t}`); });
+    const n = await pollOnce(api, async () => { throw new Error('no channel sends expected'); }, () => undefined, async (u, t) => { if (String(t).includes('APP-8')) throw new Error('Cannot send messages to this user'); dms.push(`${u} ${t}`); });
     expect(n).toBe(1);
     expect(dms[0]).toContain('angenommen');
     expect(acks).toEqual([true, false]);
@@ -413,7 +429,7 @@ describe('Qualifikationen (Panel → Fragen per DM)', () => {
       { id: 'a', type: 'application.decided', channelKey: 'applications', payload: { discordId: OTHER, status: 'REJECTED', number: 'APP-1', message: 'Leider nein, {user} sagt nein.', roleIds: ['700000000000000001'], removeRoleIds: ['700000000000000002'] } },
       { id: 'b', type: 'member.roles', channelKey: 'applications', payload: { discordId: OTHER, add: ['700000000000000003'], remove: ['700000000000000004'] } },
     ]);
-    await pollOnce(b.api, async () => undefined, () => undefined, async (_u, t) => { dms.push(t); }, async (_u, r) => { granted.push(r); }, async (_u, add, remove) => { synced.push(`+${add.join(',')} -${remove.join(',')}`); });
+    await pollOnce(b.api, async () => undefined, () => undefined, async (_u, t) => { dms.push(String(t)); }, async (_u, r) => { granted.push(r); }, async (_u, add, remove) => { synced.push(`+${add.join(',')} -${remove.join(',')}`); });
     expect(dms).toEqual(['Leider nein, {user} sagt nein.']);
     expect(granted).toEqual(['700000000000000001']); // Ablehnungs-Rolle wird auch bei Ablehnung vergeben
     expect(synced).toEqual(['+ -700000000000000002', '+700000000000000003 -700000000000000004']);

@@ -23,9 +23,9 @@ export declare class TicketConfigService {
             description: string;
             color: number;
             position: number;
+            emoji: string | null;
             cooldownMinutes: number;
             questions: Prisma.JsonValue;
-            emoji: string | null;
             buttonStyle: string;
             discordCategoryId: string | null;
             channelNameFormat: string;
@@ -86,9 +86,9 @@ export declare class TicketConfigService {
             title: string;
             categoryIds: string[];
             position: number;
+            emoji: string | null;
             imageUrl: string | null;
             placeholder: string;
-            emoji: string | null;
             style: string;
             thumbnailUrl: string | null;
             bannerUrl: string | null;
@@ -106,9 +106,9 @@ export declare class TicketConfigService {
             name: string;
             color: number;
             position: number;
+            emoji: string;
             kind: string;
             isDefault: boolean;
-            emoji: string;
             isClaimed: boolean;
             isEscalation: boolean;
             isClose: boolean;
@@ -118,8 +118,8 @@ export declare class TicketConfigService {
             name: string;
             color: number;
             position: number;
-            isDefault: boolean;
             emoji: string;
+            isDefault: boolean;
             allowedRoleNames: string[];
             notifyRoleIds: string[];
         }[];
@@ -140,7 +140,7 @@ export declare class TicketConfigService {
             transcriptRetentionDays: number;
             ratingChannelId: string | null;
             ratingPublicChannelId: string | null;
-            ratingPublicFields: ("category" | "creator" | "staff" | "duration" | "comment")[];
+            ratingPublicFields: ("category" | "staff" | "creator" | "duration" | "comment")[];
         };
     }>;
     categoryOut<T extends {
@@ -155,9 +155,9 @@ export declare class TicketConfigService {
         name: string;
         color: number;
         position: number;
+        emoji: string;
         kind: string;
         isDefault: boolean;
-        emoji: string;
         isClaimed: boolean;
         isEscalation: boolean;
         isClose: boolean;
@@ -167,8 +167,8 @@ export declare class TicketConfigService {
         name: string;
         color: number;
         position: number;
-        isDefault: boolean;
         emoji: string;
+        isDefault: boolean;
         allowedRoleNames: string[];
         notifyRoleIds: string[];
     }[]>;
@@ -188,9 +188,9 @@ export declare class TicketConfigService {
         description: string;
         color: number;
         position: number;
+        emoji: string | null;
         cooldownMinutes: number;
         questions: Prisma.JsonValue;
-        emoji: string | null;
         buttonStyle: string;
         discordCategoryId: string | null;
         channelNameFormat: string;
@@ -249,9 +249,9 @@ export declare class TicketConfigService {
         description: string;
         color: number;
         position: number;
+        emoji: string | null;
         cooldownMinutes: number;
         questions: Prisma.JsonValue;
-        emoji: string | null;
         buttonStyle: string;
         discordCategoryId: string | null;
         channelNameFormat: string;
@@ -310,9 +310,9 @@ export declare class TicketConfigService {
         description: string;
         color: number;
         position: number;
+        emoji: string | null;
         cooldownMinutes: number;
         questions: Prisma.JsonValue;
-        emoji: string | null;
         buttonStyle: string;
         discordCategoryId: string | null;
         channelNameFormat: string;
@@ -374,9 +374,9 @@ export declare class TicketConfigService {
         title: string;
         categoryIds: string[];
         position: number;
+        emoji: string | null;
         imageUrl: string | null;
         placeholder: string;
-        emoji: string | null;
         style: string;
         thumbnailUrl: string | null;
         bannerUrl: string | null;
@@ -401,9 +401,9 @@ export declare class TicketConfigService {
         title: string;
         categoryIds: string[];
         position: number;
+        emoji: string | null;
         imageUrl: string | null;
         placeholder: string;
-        emoji: string | null;
         style: string;
         thumbnailUrl: string | null;
         bannerUrl: string | null;
@@ -422,9 +422,9 @@ export declare class TicketConfigService {
         name: string;
         color: number;
         position: number;
+        emoji: string;
         kind: string;
         isDefault: boolean;
-        emoji: string;
         isClaimed: boolean;
         isEscalation: boolean;
         isClose: boolean;
@@ -435,8 +435,8 @@ export declare class TicketConfigService {
         name: string;
         color: number;
         position: number;
-        isDefault: boolean;
         emoji: string;
+        isDefault: boolean;
         allowedRoleNames: string[];
         notifyRoleIds: string[];
     }>;
@@ -459,7 +459,7 @@ export declare class TicketConfigService {
         transcriptRetentionDays: number;
         ratingChannelId: string | null;
         ratingPublicChannelId: string | null;
-        ratingPublicFields: ("category" | "creator" | "staff" | "duration" | "comment")[];
+        ratingPublicFields: ("category" | "staff" | "creator" | "duration" | "comment")[];
     }>;
     private checkRefs;
 }

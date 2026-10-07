@@ -75,8 +75,8 @@ export declare class VehiclesController {
                 status: string;
                 custom: import("@prisma/client/runtime/library").JsonValue | null;
                 serverId: string | null;
-                aliases: string[];
                 notes: string | null;
+                aliases: string[];
             } | null;
         } & {
             id: string;
