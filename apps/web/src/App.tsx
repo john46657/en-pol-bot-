@@ -16,7 +16,6 @@ const Analytics = lazy(() => import('./pages/Analytics').then((m) => ({ default:
 const ApplicationAnalytics = lazy(() => import('./pages/ApplicationAnalytics').then((m) => ({ default: m.ApplicationAnalytics })));
 const Applications = lazy(() => import('./pages/Applications').then((m) => ({ default: m.Applications })));
 const Qualifications = lazy(() => import('./pages/Qualifications').then((m) => ({ default: m.Qualifications })));
-const Sek = lazy(() => import('./pages/Sek').then((m) => ({ default: m.Sek })));
 const SupportTickets = lazy(() => import('./pages/tickets/SupportTickets').then((m) => ({ default: m.SupportTickets })));
 const TicketDetail = lazy(() => import('./pages/tickets/TicketDetail').then((m) => ({ default: m.TicketDetail })));
 const Academy = lazy(() => import('./pages/Academy').then((m) => ({ default: m.Academy })));
@@ -124,7 +123,6 @@ export function App() {
           <Route path="applications/analytics" element={<Guard perm="applications.view" area="dashboard.applications.view"><ApplicationAnalytics /></Guard>} />
           <Route path="applications/:id" element={rec('applications', 'applications.view')} />
           <Route path="qualifications" element={<Guard perm="qualifications.view" area="dashboard.applications.view"><Qualifications /></Guard>} />
-          <Route path="sek" element={<Guard perm="team.view"><Sek /></Guard>} />
           <Route path="academy" element={<Guard perm="academy.view"><Academy /></Guard>} />
           <Route path="communication" element={<Guard perm="communication.view"><Communication /></Guard>} />
           <Route path="analytics" element={<Guard perm="analytics.view"><Analytics /></Guard>} />

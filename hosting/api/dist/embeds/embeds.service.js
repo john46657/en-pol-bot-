@@ -33,7 +33,7 @@ exports.embedSchema = zod_1.z.object({
     author: zod_1.z.string().max(256).default(''),
     thumbnail: https, image: https,
     footer: zod_1.z.string().max(2048).default(''),
-    timestamp: zod_1.z.boolean().default(false),
+    timestamp: zod_1.z.boolean().default(true),
     fields: zod_1.z.array(zod_1.z.object({ name: zod_1.z.string().trim().min(1, 'Jeder Abschnitt braucht eine Überschrift.').max(256), value: zod_1.z.string().trim().min(1, 'Jeder Abschnitt braucht Text.').max(1024), inline: zod_1.z.boolean().default(false) })).max(25).default([]),
     /** Wo der Bot die Nachricht zuletzt gepostet hat (zum Aktualisieren). */
     posted: zod_1.z.object({ channelId: sf, messageId: sf, at: zod_1.z.string() }).nullable().default(null),

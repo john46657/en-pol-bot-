@@ -1,4 +1,4 @@
-import { BadgeCheck, Link2, PanelTop, DoorOpen, MapPinned, Building2, Megaphone, RadioTower, Contact, Palette, CalendarOff, Clock, LifeBuoy, Monitor, BarChart3, BookOpen, Briefcase, Award, Car, ClipboardList, Crosshair, FileText, Fingerprint, Flag, Gavel, LayoutDashboard, MessageSquare, Radio, Scale, Search, Settings, Shield, Siren, Ticket, UserCheck, Users, Wrench, type LucideIcon } from 'lucide-react';
+import { BadgeCheck, Link2, PanelTop, DoorOpen, MapPinned, Building2, Megaphone, RadioTower, Contact, Palette, CalendarOff, Clock, LifeBuoy, Monitor, BarChart3, BookOpen, Briefcase, Award, Car, ClipboardList, FileText, Fingerprint, Flag, Gavel, LayoutDashboard, MessageSquare, Radio, Scale, Search, Settings, Shield, Siren, Ticket, UserCheck, Users, Wrench, type LucideIcon } from 'lucide-react';
 
 /** `area`: Bereichs-Sichtbarkeit (dashboard.<bereich>.view) – ohne sie erscheint der Menüpunkt nicht, auch mit Modul-Recht. */
 export interface NavItem { path: string; label: string; icon: LucideIcon; perm?: string; area?: string; group: 'Operations' | 'Records' | 'Organisation' | 'Administration' }
@@ -28,7 +28,6 @@ export const NAV: NavItem[] = [
   { path: '/qualifications', label: 'Qualifikationen', icon: Award, perm: 'qualifications.view', area: 'dashboard.applications.view', group: 'Organisation' },
   { path: '/teamchance', label: 'Team-Chance', icon: Megaphone, perm: 'teamchance.view', area: 'dashboard.teamchance.view', group: 'Organisation' },
   { path: '/leave', label: 'Abmeldungen', icon: CalendarOff, perm: 'leave.request', group: 'Organisation' },
-  { path: '/sek', label: 'SEK', icon: Crosshair, perm: 'team.view', area: 'dashboard.team.view', group: 'Organisation' },
   { path: '/academy', label: 'Akademie', icon: BookOpen, perm: 'academy.view', group: 'Organisation' },
   { path: '/analytics', label: 'Statistiken', icon: BarChart3, perm: 'analytics.view', group: 'Organisation' },
   { path: '/admin/users', label: 'Benutzer', icon: Users, perm: 'users.view', area: 'dashboard.settings.view', group: 'Administration' },

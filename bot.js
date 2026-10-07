@@ -2410,11 +2410,11 @@ var require_request = __commonJS({
           } else if (typeof val[i] === "object") {
             throw new InvalidArgumentError(`invalid ${key} header`);
           } else {
-            const str4 = `${val[i]}`;
-            if (!isValidHeaderValue(str4)) {
+            const str3 = `${val[i]}`;
+            if (!isValidHeaderValue(str3)) {
               throw new InvalidArgumentError(`invalid ${key} header`);
             }
-            arr.push(str4);
+            arr.push(str3);
           }
         }
         val = arr;
@@ -3979,25 +3979,25 @@ var require_data_url = __commonJS({
     function isHTTPWhiteSpace(char) {
       return char === 13 || char === 10 || char === 9 || char === 32;
     }
-    function removeHTTPWhitespace(str4, leading = true, trailing = true) {
-      return removeChars(str4, leading, trailing, isHTTPWhiteSpace);
+    function removeHTTPWhitespace(str3, leading = true, trailing = true) {
+      return removeChars(str3, leading, trailing, isHTTPWhiteSpace);
     }
     function isASCIIWhitespace(char) {
       return char === 13 || char === 10 || char === 9 || char === 12 || char === 32;
     }
-    function removeASCIIWhitespace(str4, leading = true, trailing = true) {
-      return removeChars(str4, leading, trailing, isASCIIWhitespace);
+    function removeASCIIWhitespace(str3, leading = true, trailing = true) {
+      return removeChars(str3, leading, trailing, isASCIIWhitespace);
     }
-    function removeChars(str4, leading, trailing, predicate) {
+    function removeChars(str3, leading, trailing, predicate) {
       let lead = 0;
-      let trail = str4.length - 1;
+      let trail = str3.length - 1;
       if (leading) {
-        while (lead < str4.length && predicate(str4.charCodeAt(lead))) lead++;
+        while (lead < str3.length && predicate(str3.charCodeAt(lead))) lead++;
       }
       if (trailing) {
-        while (trail > 0 && predicate(str4.charCodeAt(trail))) trail--;
+        while (trail > 0 && predicate(str3.charCodeAt(trail))) trail--;
       }
-      return lead === 0 && trail === str4.length - 1 ? str4 : str4.slice(lead, trail + 1);
+      return lead === 0 && trail === str3.length - 1 ? str3 : str3.slice(lead, trail + 1);
     }
     function isomorphicDecode(input) {
       const length = input.length;
@@ -5916,7 +5916,7 @@ var require_body = __commonJS({
         const boundary = `----formdata-undici-0${`${random(1e11)}`.padStart(11, "0")}`;
         const prefix = `--${boundary}\r
 Content-Disposition: form-data`;
-        const escape2 = (str4) => str4.replace(/\n/g, "%0A").replace(/\r/g, "%0D").replace(/"/g, "%22");
+        const escape2 = (str3) => str3.replace(/\n/g, "%0A").replace(/\r/g, "%0D").replace(/"/g, "%22");
         const normalizeLinefeeds = (value) => value.replace(/\r?\n|\r/g, "\r\n");
         const blobParts = [];
         const rn = new Uint8Array([13, 10]);
@@ -16900,9 +16900,9 @@ var require_cookies = __commonJS({
       webidl.argumentLengthCheck(arguments, 2, "setCookie");
       webidl.brandCheck(headers, Headers, { strict: false });
       cookie = webidl.converters.Cookie(cookie);
-      const str4 = stringify(cookie);
-      if (str4) {
-        headers.append("Set-Cookie", str4);
+      const str3 = stringify(cookie);
+      if (str3) {
+        headers.append("Set-Cookie", str3);
       }
     }
     webidl.converters.DeleteCookieAttributes = webidl.dictionaryConverter([
@@ -33564,8 +33564,8 @@ var require_Util = __commonJS({
       const res = parse(path2);
       return ext && res.ext.startsWith(ext) ? res.name : res.base.split("?")[0];
     }
-    function cleanContent(str4, channel) {
-      return str4.replaceAll(
+    function cleanContent(str3, channel) {
+      return str3.replaceAll(
         /* eslint-disable max-len */
         /<(?:(?<type>@[!&]?|#)|(?:\/(?<commandName>[-_\p{L}\p{N}\p{sc=Deva}\p{sc=Thai} ]+):)|(?:a?:(?<emojiName>[\w]+):))(?<id>\d{17,19})>/gu,
         (match, type, commandName, emojiName, id) => {
@@ -75766,7 +75766,7 @@ var STYLE = { primary: import_discord.ButtonStyle.Primary, secondary: import_dis
 var VIEW = [import_discord.PermissionFlagsBits.ViewChannel, import_discord.PermissionFlagsBits.ReadMessageHistory];
 var TALK = [import_discord.PermissionFlagsBits.SendMessages, import_discord.PermissionFlagsBits.AttachFiles, import_discord.PermissionFlagsBits.EmbedLinks];
 var https = (u) => u && /^https:\/\//.test(u) ? u : void 0;
-function embedOf(e) {
+function embedOf(e, stamp = true) {
   const b = new import_discord.EmbedBuilder();
   if (e.title) b.setTitle(e.title.slice(0, 256));
   if (e.description) b.setDescription(e.description.slice(0, 4096));
@@ -75777,6 +75777,7 @@ function embedOf(e) {
   if (e.footer) b.setFooter({ text: e.footer.slice(0, 2048), ...https(e.footerIcon) ? { iconURL: e.footerIcon } : {} });
   if (e.fields?.length) b.addFields(e.fields.slice(0, 25).map((f2) => ({ name: f2.name.slice(0, 256) || "\u200B", value: f2.value.slice(0, 1024) || "\u200B", inline: f2.inline ?? false })));
   if (e.timestamp) b.setTimestamp(new Date(e.timestamp));
+  else if (stamp) b.setTimestamp(/* @__PURE__ */ new Date());
   if (!e.title && !e.description && !e.fields?.length) b.setDescription("\u200B");
   return b;
 }
@@ -75807,10 +75808,10 @@ function componentsOf(buttons = [], selects = []) {
   }
   return rows;
 }
-function payloadOf(m) {
+function payloadOf(m, stamp = true) {
   return {
     ...m.content ? { content: m.content.slice(0, 2e3) } : {},
-    embeds: (m.embeds ?? []).slice(0, 10).map(embedOf),
+    embeds: (m.embeds ?? []).slice(0, 10).map((e) => embedOf(e, stamp)),
     components: componentsOf(m.buttons, m.select ? [m.select] : []),
     // Nur ausdrücklich gewünschte Erwähnungen pingen – niemals @everyone/@here
     allowedMentions: { parse: [], users: m.mentionUsers ?? [], roles: m.mentionRoles ?? [] }
@@ -76521,6 +76522,18 @@ function teamlistEmbed(members, rankOrder) {
   const onDuty = members.filter((m) => m.dutyStatus === "ON_DUTY").length;
   return { title: "\u{1F4CB} Teamliste \u2013 EN Polizei", color: COLORS.neutral, fields: fields.slice(0, 25), description: members.length ? void 0 : "Noch keine Personalakten angelegt.", footer: `${members.length} Mitglieder \xB7 ${onDuty} im Dienst \xB7 wird automatisch aktualisiert` };
 }
+function dutyReminderDm(p) {
+  const idle = Number(p.idleMinutes ?? 0), auto = Number(p.autoOffMinutes ?? 0);
+  if (p.kind === "ended") return { embed: { title: "\u26AA Schicht automatisch beendet", color: COLORS.neutral, description: `Du warst seit **${idle} Minuten** nicht aktiv und hast auf die Erinnerung nicht reagiert \u2013 deshalb bist du jetzt **au\xDFer Dienst**.${p.shiftMinutes ? `
+Deine Schicht lief ${Number(p.shiftMinutes)} Minuten.` : ""}
+
+Neu starten: Dienst-Panel, \`/dienst an\` oder im Dashboard.` } };
+  return {
+    embed: { title: "\u23F0 Bist du noch im Dienst?", color: COLORS.warning, description: `Du bist **im Dienst**, hast aber seit **${idle} Minuten** nichts gemacht (Dashboard/MDT, Discord).${auto ? `
+Ohne Reaktion endet deine Schicht in **${auto} Minuten** automatisch.` : ""}` },
+    buttons: [{ id: "duty:still", label: "Bin noch im Dienst", style: "success", emoji: "\u2705" }, { id: "duty:OFF_DUTY", label: "Au\xDFer Dienst", style: "danger", emoji: "\u26AA" }]
+  };
+}
 
 // apps/bot/src/commands/errors.ts
 function mapError(e) {
@@ -76535,99 +76548,6 @@ function mapError(e) {
   if (e.status === 400 || e.status === 409) return errorReply(`${e.message}${rid}`);
   return errorReply(`Serverfehler.${rid}`);
 }
-
-// apps/bot/src/commands/sek.ts
-var str = (c, k) => String(c.opts[k] ?? "").trim();
-var ACTION = { liste: "list", berichte: "reports", mein_status: "me", hinzufuegen: "add", entfernen: "remove" };
-var day = (iso) => new Date(String(iso)).toLocaleDateString("de-DE");
-function parseGermanDate(s, now = /* @__PURE__ */ new Date()) {
-  if (!s.trim() || /^heute$/i.test(s.trim())) return now;
-  const m = s.trim().match(/^(\d{1,2})\.(\d{1,2})\.(\d{2}|\d{4})(?:[ ,]+(\d{1,2}):(\d{2}))?$/);
-  if (!m) return null;
-  const year = m[3].length === 2 ? 2e3 + Number(m[3]) : Number(m[3]);
-  const d = new Date(year, Number(m[2]) - 1, Number(m[1]), Number(m[4] ?? 12), Number(m[5] ?? 0));
-  if (d.getMonth() !== Number(m[2]) - 1 || d.getDate() !== Number(m[1])) return null;
-  return d.getTime() > now.getTime() + 864e5 ? null : d;
-}
-async function setSekRole(c, target, on) {
-  const cfg2 = await c.config?.().catch(() => void 0);
-  if (!cfg2?.sekRole || !c.guildId || !c.platform) return "";
-  try {
-    await c.platform.setRole(c.guildId, target, cfg2.sekRole, on);
-    return ` Rolle <@&${cfg2.sekRole}> ${on ? "vergeben" : "entzogen"}.`;
-  } catch {
-    return " \u26A0\uFE0F Die Discord-Rolle konnte nicht ge\xE4ndert werden (Bot-Rolle muss \xFCber der SEK-Rolle stehen und \u201ERollen verwalten\u201C haben).";
-  }
-}
-var SEK_COMMANDS = [
-  {
-    name: "sek",
-    description: "SEK: Mitgliederliste, Einsatzberichte, dein Status, Mitglieder verwalten",
-    options: [
-      { name: "aktion", description: "Was m\xF6chtest du tun? (Standard: liste)", type: "string", choices: Object.keys(ACTION).map((k) => ({ name: k.replace("_", " "), value: k })) },
-      { name: "mitglied", description: "Discord-Mitglied (bei hinzuf\xFCgen/entfernen)", type: "user" }
-    ],
-    async run(c) {
-      const action = ACTION[str(c, "aktion") || "liste"];
-      if (!action) return errorReply("Unbekannte Aktion.");
-      try {
-        if (action === "list") {
-          const rows = await c.api.asUser(c.discordId, "GET", "/sek/members");
-          return { ephemeral: true, embeds: [{ ...listEmbed(`\u{1F3AF} SEK \u2013 Mitglieder (${rows.length})`, rows.map((r2) => `\u2022 ${r2.callsign ? `**${plain(r2.callsign)}** ` : ""}${plain(r2.displayName)}${r2.rank ? ` \xB7 ${plain(r2.rank)}` : ""}`), "Aktuell keine Mitglieder."), color: COLORS.neutral }] };
-        }
-        if (action === "reports") {
-          const rows = await c.api.asUser(c.discordId, "GET", "/sek/reports?limit=10");
-          return { ephemeral: true, embeds: [{ ...listEmbed("\u{1F3AF} SEK \u2013 letzte Einsatzberichte", rows.map((r2) => `\u2022 **${r2.number}** \xB7 ${day(r2.occurredAt)} \xB7 ${plain(r2.missionType)} \u2014 ${plain(r2.authorCallsign ?? r2.authorName)}`), "Noch keine Einsatzberichte."), color: COLORS.neutral }] };
-        }
-        if (action === "me") {
-          const r2 = await c.api.asUser(c.discordId, "GET", "/sek/me");
-          return okReply(r2.member ? "Du bist **Mitglied im SEK**. Einsatzbericht: `/sek-bericht`" : "Du bist nicht im SEK. Bewerben kannst du dich \xFCber das **Qualifikations-Panel** auf dem Server.");
-        }
-        const target = str(c, "mitglied");
-        if (!/^\d{15,25}$/.test(target)) return errorReply("Bitte ein Mitglied angeben.");
-        const r = await c.api.asUser(c.discordId, "POST", action === "add" ? "/sek/members" : "/sek/members/remove", { discordId: target });
-        const note2 = await setSekRole(c, target, action === "add");
-        return okReply(`**${plain(r.displayName)}** ${action === "add" ? "ist jetzt Mitglied im SEK" : "wurde aus dem SEK entfernt"}.${note2}`);
-      } catch (e) {
-        if (e instanceof BotApiError && e.status === 404) return errorReply("Dieses Discord-Konto ist mit keinem aktiven Benutzer verkn\xFCpft (oder ist kein SEK-Mitglied).");
-        if (e instanceof BotApiError && e.status === 409) return errorReply("Diese Person ist bereits Mitglied im SEK.");
-        return mapError(e);
-      }
-    }
-  },
-  {
-    name: "sek-bericht",
-    description: "Erstellt einen SEK-Einsatzbericht (nur SEK-Mitglieder)",
-    opensModal: true,
-    async run() {
-      return { modal: { id: "sek:report", title: "SEK-Einsatzbericht", fields: [
-        { id: "datum", label: "Datum (leer = heute)", required: false, maxLength: 20, placeholder: "z. B. 05.10.2026 21:30" },
-        { id: "einsatzart", label: "Art des Einsatzes", required: true, maxLength: 100, placeholder: "z. B. Geiselnahme, Zugriff" },
-        { id: "beschreibung", label: "Beschreibung", paragraph: true, required: true, maxLength: 4e3 }
-      ] } };
-    }
-  }
-];
-var SEK_INTERACTION = {
-  prefix: "sek",
-  async run(c) {
-    const f2 = c.fields ?? {};
-    const v = (k) => (f2[k] ?? "").trim();
-    try {
-      if (c.args[0] === "report") {
-        const when = parseGermanDate(v("datum"));
-        if (!when) return errorReply("Ung\xFCltiges Datum. Bitte so angeben: 05.10.2026 oder 05.10.2026 21:30 (oder leer lassen).");
-        if (v("beschreibung").length < 5) return errorReply("Bitte eine Beschreibung angeben.");
-        const r = await c.api.asUser(c.discordId, "POST", "/sek/reports", { occurredAt: when.toISOString(), missionType: v("einsatzart"), description: v("beschreibung") });
-        return okReply(`SEK-Einsatzbericht **${r.number}** gespeichert.`);
-      }
-      return errorReply("Unbekannte Aktion.");
-    } catch (e) {
-      if (e instanceof BotApiError && e.status === 403 && c.args[0] === "report") return errorReply("Einsatzberichte k\xF6nnen nur SEK-Mitglieder schreiben.");
-      return mapError(e);
-    }
-  }
-};
 
 // packages/shared/dist/index.mjs
 var PERMISSION_CATALOG = {
@@ -76814,7 +76734,7 @@ var DEFAULT_CAD_CONFIG = {
   map: { imageUrl: null, width: ERLC_MAP_SIZE, height: ERLC_MAP_SIZE, originX: ERLC_MAP_SIZE / 2, originY: ERLC_MAP_SIZE / 2, scale: 1 },
   routes: [],
   memberFields: [],
-  widgets: ["activeIncidents", "availableUnits", "activeCalls", "erlcStatus", "erlcPlayers", "erlcQueue", "staffOnline", "map", "radio"]
+  widgets: ["activeIncidents", "availableUnits", "activeCalls", "dutyActivity", "erlcStatus", "erlcPlayers", "erlcQueue", "staffOnline", "map", "radio"]
 };
 function accountAge(created, now = Date.now()) {
   const t = created ? new Date(created).getTime() : NaN;
@@ -78049,7 +77969,7 @@ var VERIFY_COMMANDS = [
 ];
 
 // apps/bot/src/commands/features.ts
-var str2 = (c, k) => String(c.opts[k] ?? "").trim();
+var str = (c, k) => String(c.opts[k] ?? "").trim();
 var choices = (m) => Object.keys(m).map((k) => ({ name: k.replace("_", " "), value: k }));
 var needGuildAdmin = (c) => !c.guildId ? errorReply("Das geht nur auf einem Server, nicht per Direktnachricht.") : !c.isGuildAdmin ? errorReply("Daf\xFCr brauchst du auf diesem Discord-Server das Recht \u201EServer verwalten\u201C.") : null;
 var LEGACY = { gruen: "STATUS_1", "gr\xFCn": "STATUS_1", gelb: "STATUS_2", rot: "STATUS_4" };
@@ -78079,10 +77999,10 @@ var FEATURE_COMMANDS = [
       { name: "grund", description: "Grund (optional, bei \u201Esetzen\u201C)", type: "string", maxLength: 200 }
     ],
     async run(c) {
-      const action = str2(c, "aktion") || "anzeigen";
+      const action = str(c, "aktion") || "anzeigen";
       if (action === "setzen") {
-        const level = str2(c, "stufe");
-        return level ? setDanger(c, LEGACY[level.toLowerCase()] ?? level, str2(c, "grund") || void 0) : errorReply("Bitte eine Stufe angeben (z. B. \u201EStatus 2\u201C).");
+        const level = str(c, "stufe");
+        return level ? setDanger(c, LEGACY[level.toLowerCase()] ?? level, str(c, "grund") || void 0) : errorReply("Bitte eine Stufe angeben (z. B. \u201EStatus 2\u201C).");
       }
       if (action === "panel") {
         const denied = needGuildAdmin(c);
@@ -78128,14 +78048,14 @@ var FEATURE_COMMANDS = [
       { name: "mitglied", description: "Discord-Mitglied (nicht bei \u201Eliste\u201C)", type: "user" }
     ],
     async run(c) {
-      const action = RADIO[str2(c, "aktion")];
+      const action = RADIO[str(c, "aktion")];
       if (!action) return errorReply("Unbekannte Aktion.");
       try {
         if (action === "list") {
           const rows = await c.api.asUser(c.discordId, "GET", "/radio-whitelist");
           return { ephemeral: true, embeds: [listEmbed(`\u{1F4FB} Funk-Freigabe (${rows.length})`, rows.map((r2) => `\u2022 ${r2.callsign ? `**${plain(r2.callsign)}** ` : ""}${plain(r2.displayName)}`), "Noch niemand freigegeben.")] };
         }
-        const target = str2(c, "mitglied");
+        const target = str(c, "mitglied");
         if (!/^\d{15,25}$/.test(target)) return errorReply("Bitte ein Mitglied angeben.");
         if (action === "check") {
           const r2 = await c.api.asUser(c.discordId, "GET", `/radio-whitelist/check?discordId=${target}`);
@@ -78181,8 +78101,8 @@ var FEATURE_COMMANDS = [
     options: [{ name: "name", description: "Roblox-Benutzername", type: "string", required: true, maxLength: 20 }],
     async run(c) {
       if (!c.robloxLookup) return errorReply("Roblox-Suche ist nicht verf\xFCgbar.");
-      const u = await c.robloxLookup(str2(c, "name"));
-      if (!u) return errorReply(`Kein Roblox-Benutzer \u201E${plain(str2(c, "name"))}\u201C gefunden (oder Roblox ist gerade nicht erreichbar).`);
+      const u = await c.robloxLookup(str(c, "name"));
+      if (!u) return errorReply(`Kein Roblox-Benutzer \u201E${plain(str(c, "name"))}\u201C gefunden (oder Roblox ist gerade nicht erreichbar).`);
       return { ephemeral: true, embeds: [{ title: clip(`\u{1F3AE} ${plain(u.name)}`, 256), color: COLORS.info, fields: [
         { name: "Roblox-ID", value: String(u.id), inline: true },
         { name: "Anzeigename", value: clip(plain(u.displayName), 1024), inline: true },
@@ -78204,6 +78124,14 @@ var INTERACTIONS = [
   {
     prefix: "duty",
     async run(c) {
+      if (c.args[0] === "still") {
+        try {
+          const r = await c.api.asUser(c.discordId, "POST", "/team/me/active");
+          return r.onDuty ? okReply("Danke! Deine Schicht l\xE4uft weiter.") : okReply("Du bist gerade nicht im Dienst.");
+        } catch (e) {
+          return mapError(e);
+        }
+      }
       const shiftType = c.args[0] === "type" ? c.values?.[0] : void 0;
       const status = c.args[0] === "type" ? "ON_DUTY" : c.args[0] ?? "";
       if (!DUTY_DE[status]) return errorReply("Unbekannter Status.");
@@ -78221,7 +78149,6 @@ var INTERACTIONS = [
       }
     }
   },
-  SEK_INTERACTION,
   QUALI_INTERACTION,
   TICKET_INTERACTION,
   VOICE_INTERACTION,
@@ -78257,7 +78184,7 @@ var interactionFor = (customId) => {
 // apps/bot/src/commands/index.ts
 var hm = (min) => `${Math.floor(min / 60)} h ${String(Math.round(min % 60)).padStart(2, "0")} min`;
 var q = (s) => encodeURIComponent(s.trim());
-var str3 = (c, k) => String(c.opts[k] ?? "").trim();
+var str2 = (c, k) => String(c.opts[k] ?? "").trim();
 async function resolvePerson(c, term, opts = {}) {
   const page = await c.api.asUser(c.discordId, "GET", `/persons?q=${q(term)}&pageSize=10`);
   const exact = page.items.filter((p) => String(p.robloxUsername).toLowerCase() === term.toLowerCase() || p.robloxUserId === term);
@@ -78298,7 +78225,7 @@ var COMMANDS = [
     options: [{ name: "suche", description: "Code oder Bedeutung (leer = alle)", type: "string", maxLength: 64 }],
     async run(c) {
       try {
-        const term = str3(c, "suche");
+        const term = str2(c, "suche");
         const rows = await c.api.asUser(c.discordId, "GET", `/radio-codes${term ? `?q=${q(term)}` : ""}`);
         if (!rows.length) return errorReply(term ? `Kein Funk-Code zu \u201E${plain(term)}\u201C gefunden.` : "Es sind noch keine Funk-Codes hinterlegt.");
         const exact = term ? rows.find((r) => r.code.toLowerCase() === term.toLowerCase()) : void 0;
@@ -78338,7 +78265,6 @@ Bewerben: \`/bewerbung\``.slice(0, 4e3), color: 2278750, fields: [...s.closesAt 
         { name: "Dienst & Leitstelle", value: "`/dienst` `/dienststunden` `/abmeldung` `/leave manage` `/einheitstatus` `/einsatz` `/einsatzstatus` `/einsatzzuweisen` `/funk` `/funkcode` `/cad`" },
         { name: "Erfassen", value: "`/ticket` `/bericht` `/beschwerde` `/ermittlung` `/fahndung` `/beweis`" },
         { name: "Leitung & Team", value: "`/gefahrenstatus` `/funkfreigabe` `/teamliste` `/dienstpanel` `/bewerbungspanel` `/qualipanel` `/teamchance` `/roblox`" },
-        { name: "SEK", value: "`/sek` `/sek-bericht`" },
         { name: "Support-Tickets", value: "`/support` \xF6ffnet ein Ticket (Team: `/support mitglied:@\u2026` f\xFCr jemand anderen). Ticket-Panels, Kategorien, Fragen und Buttons werden im Dashboard eingerichtet und von dort in Discord gesendet." },
         { name: "F\xFCr alle", value: "`/bewerbung` (auch ohne Verkn\xFCpfung; Fragen per Direktnachricht) \xB7 SEK/Flugstaffel/Ausbilder \xFCber das Qualifikations-Panel" },
         { name: "Hinweis", value: "Alle Befehle laufen mit **deinen** Rechten im System. Antworten sind nur f\xFCr dich sichtbar." }
@@ -78351,12 +78277,12 @@ Bewerben: \`/bewerbung\``.slice(0, 4e3), color: 2278750, fields: [...s.closesAt 
     options: [{ name: "suche", description: "Name oder Roblox-ID", type: "string", required: true, maxLength: 64 }],
     async run(c) {
       try {
-        const page = await c.api.asUser(c.discordId, "GET", `/persons?q=${q(str3(c, "suche"))}&pageSize=5`);
+        const page = await c.api.asUser(c.discordId, "GET", `/persons?q=${q(str2(c, "suche"))}&pageSize=5`);
         if (!page.items.length) return errorReply("Keine Person gefunden.");
-        if (page.items.length > 1 && !page.items.some((p) => String(p.robloxUsername).toLowerCase() === str3(c, "suche").toLowerCase())) {
+        if (page.items.length > 1 && !page.items.some((p) => String(p.robloxUsername).toLowerCase() === str2(c, "suche").toLowerCase())) {
           return { ephemeral: true, embeds: [listEmbed(`\u{1F465} ${page.total} Treffer`, page.items.map((p) => `\u2022 **${plain(p.robloxUsername)}** (${p.robloxUserId ?? "ohne ID"})`), "")] };
         }
-        const hit = page.items.find((p) => String(p.robloxUsername).toLowerCase() === str3(c, "suche").toLowerCase()) ?? page.items[0];
+        const hit = page.items.find((p) => String(p.robloxUsername).toLowerCase() === str2(c, "suche").toLowerCase()) ?? page.items[0];
         const ov = await c.api.asUser(c.discordId, "GET", `/persons/${hit.id}`);
         const wanted = ov.links.some((l) => l.entityType === "Wanted");
         return { ephemeral: true, embeds: [personEmbed(ov.person, { tickets: ov.tickets.length, wanted })] };
@@ -78371,7 +78297,7 @@ Bewerben: \`/bewerbung\``.slice(0, 4e3), color: 2278750, fields: [...s.closesAt 
     options: [{ name: "kennzeichen", description: "z. B. LC 1001", type: "string", required: true, maxLength: 16 }],
     async run(c) {
       try {
-        const page = await c.api.asUser(c.discordId, "GET", `/vehicles?q=${q(str3(c, "kennzeichen"))}&pageSize=5`);
+        const page = await c.api.asUser(c.discordId, "GET", `/vehicles?q=${q(str2(c, "kennzeichen"))}&pageSize=5`);
         return page.items.length ? { ephemeral: true, embeds: page.items.map(vehicleEmbed) } : errorReply("Kein Fahrzeug gefunden.");
       } catch (e) {
         return mapError(e);
@@ -78395,7 +78321,7 @@ Bewerben: \`/bewerbung\``.slice(0, 4e3), color: 2278750, fields: [...s.closesAt 
     description: "Setzt deinen Dienststatus",
     options: [{ name: "status", description: "Neuer Status", type: "string", required: true, choices: choices2(DUTY) }],
     async run(c) {
-      const status = DUTY[str3(c, "status")];
+      const status = DUTY[str2(c, "status")];
       if (!status) return errorReply("Unbekannter Status.");
       if (status === "ON_DUTY") {
         const pick2 = await shiftPicker(c);
@@ -78455,11 +78381,11 @@ Bewerben: \`/bewerbung\``.slice(0, 4e3), color: 2278750, fields: [...s.closesAt 
       { name: "status", description: "Neuer Status", type: "string", required: true, choices: choices2(UNIT) }
     ],
     async run(c) {
-      const status = UNIT[str3(c, "status")];
+      const status = UNIT[str2(c, "status")];
       if (!status) return errorReply("Unbekannter Status.");
       try {
         const units = await c.api.asUser(c.discordId, "GET", "/dispatch/units");
-        const unit = units.find((u) => String(u.callsign).toLowerCase() === str3(c, "rufzeichen").toLowerCase());
+        const unit = units.find((u) => String(u.callsign).toLowerCase() === str2(c, "rufzeichen").toLowerCase());
         if (!unit) return errorReply("Einheit nicht gefunden.");
         await c.api.asUser(c.discordId, "PUT", `/dispatch/units/${unit.id}/status`, { status });
         return okReply(`**${plain(unit.callsign)}** \u2192 ${label(status)}`);
@@ -78489,11 +78415,11 @@ Bewerben: \`/bewerbung\``.slice(0, 4e3), color: 2278750, fields: [...s.closesAt 
       { name: "ort", description: "Einsatzort", type: "string", maxLength: 200 }
     ],
     async run(c) {
-      const title = str3(c, "titel");
+      const title = str2(c, "titel");
       if (title.length < 3) return errorReply("Der Titel ist zu kurz (mindestens 3 Zeichen).");
       try {
-        const prio = PRIO[str3(c, "prioritaet")] ?? "MEDIUM";
-        const inc = await c.api.asUser(c.discordId, "POST", "/incidents", { title, priority: prio, location: str3(c, "ort") || void 0 });
+        const prio = PRIO[str2(c, "prioritaet")] ?? "MEDIUM";
+        const inc = await c.api.asUser(c.discordId, "POST", "/incidents", { title, priority: prio, location: str2(c, "ort") || void 0 });
         return okReply(`Einsatz **${inc.number}** angelegt (${label(prio)}).`);
       } catch (e) {
         return mapError(e);
@@ -78509,10 +78435,10 @@ Bewerben: \`/bewerbung\``.slice(0, 4e3), color: 2278750, fields: [...s.closesAt 
       { name: "betrag", description: "Betrag", type: "number", min: 0, max: 1e6 }
     ],
     async run(c) {
-      const reason = str3(c, "grund");
+      const reason = str2(c, "grund");
       if (reason.length < 3) return errorReply("Der Grund ist zu kurz (mindestens 3 Zeichen).");
       try {
-        const { person, reply, created } = await resolvePerson(c, str3(c, "person"), { create: true });
+        const { person, reply, created } = await resolvePerson(c, str2(c, "person"), { create: true });
         if (!person) return reply;
         const amount = typeof c.opts.betrag === "number" ? c.opts.betrag : void 0;
         const t = await c.api.asUser(c.discordId, "POST", "/tickets", { personId: person.id, reason, ...amount !== void 0 ? { amount } : {} });
@@ -78571,7 +78497,7 @@ Bewerben: \`/bewerbung\``.slice(0, 4e3), color: 2278750, fields: [...s.closesAt 
     options: [{ name: "nummer", description: "Einsatznummer, z. B. I-2026-ABC123", type: "string", required: true, maxLength: 32 }],
     async run(c) {
       try {
-        const { incident, reply } = await resolveIncident(c, str3(c, "nummer"));
+        const { incident, reply } = await resolveIncident(c, str2(c, "nummer"));
         if (!incident) return reply;
         const d = await c.api.asUser(c.discordId, "GET", `/incidents/${incident.id}`);
         const i = d.incident;
@@ -78596,10 +78522,10 @@ Bewerben: \`/bewerbung\``.slice(0, 4e3), color: 2278750, fields: [...s.closesAt 
       { name: "status", description: "Neuer Status", type: "string", required: true, choices: choices2(INC_STATUS) }
     ],
     async run(c) {
-      const status = INC_STATUS[str3(c, "status")];
+      const status = INC_STATUS[str2(c, "status")];
       if (!status) return errorReply("Unbekannter Status.");
       try {
-        const { incident, reply } = await resolveIncident(c, str3(c, "nummer"));
+        const { incident, reply } = await resolveIncident(c, str2(c, "nummer"));
         if (!incident) return reply;
         if (status === "CLOSED") await c.api.asUser(c.discordId, "POST", `/dispatch/incidents/${incident.id}/close`);
         else await c.api.asUser(c.discordId, "PUT", `/dispatch/incidents/${incident.id}/status`, { status });
@@ -78618,10 +78544,10 @@ Bewerben: \`/bewerbung\``.slice(0, 4e3), color: 2278750, fields: [...s.closesAt 
     ],
     async run(c) {
       try {
-        const { incident, reply } = await resolveIncident(c, str3(c, "nummer"));
+        const { incident, reply } = await resolveIncident(c, str2(c, "nummer"));
         if (!incident) return reply;
         const units = await c.api.asUser(c.discordId, "GET", "/dispatch/units");
-        const unit = units.find((u) => String(u.callsign).toLowerCase() === str3(c, "rufzeichen").toLowerCase());
+        const unit = units.find((u) => String(u.callsign).toLowerCase() === str2(c, "rufzeichen").toLowerCase());
         if (!unit) return errorReply("Einheit nicht gefunden.");
         await c.api.asUser(c.discordId, "POST", `/dispatch/incidents/${incident.id}/assign`, { unitId: unit.id });
         return okReply(`**${plain(unit.callsign)}** wurde **${incident.number}** zugewiesen.`);
@@ -78640,10 +78566,10 @@ Bewerben: \`/bewerbung\``.slice(0, 4e3), color: 2278750, fields: [...s.closesAt 
       { name: "einreichen", description: "Direkt zur Pr\xFCfung einreichen", type: "boolean" }
     ],
     async run(c) {
-      if (str3(c, "titel").length < 3) return errorReply("Der Titel ist zu kurz (mindestens 3 Zeichen).");
+      if (str2(c, "titel").length < 3) return errorReply("Der Titel ist zu kurz (mindestens 3 Zeichen).");
       try {
-        const type = REPORT[str3(c, "typ")] ?? "GENERAL";
-        const r = await c.api.asUser(c.discordId, "POST", "/reports", { type, title: str3(c, "titel"), content: { body: str3(c, "text") } });
+        const type = REPORT[str2(c, "typ")] ?? "GENERAL";
+        const r = await c.api.asUser(c.discordId, "POST", "/reports", { type, title: str2(c, "titel"), content: { body: str2(c, "text") } });
         if (c.opts.einreichen === true) {
           await c.api.asUser(c.discordId, "POST", `/reports/${r.id}/submit`);
           return okReply(`Bericht **${r.number}** angelegt und **eingereicht**.`);
@@ -78663,16 +78589,16 @@ Bewerben: \`/bewerbung\``.slice(0, 4e3), color: 2278750, fields: [...s.closesAt 
       { name: "person", description: "Betroffene Person (Roblox-Name oder -ID)", type: "string", maxLength: 64 }
     ],
     async run(c) {
-      if (str3(c, "kategorie").length < 2) return errorReply("Die Kategorie ist zu kurz.");
-      if (str3(c, "beschreibung").length < 10) return errorReply("Die Beschreibung ist zu kurz (mindestens 10 Zeichen).");
+      if (str2(c, "kategorie").length < 2) return errorReply("Die Kategorie ist zu kurz.");
+      if (str2(c, "beschreibung").length < 10) return errorReply("Die Beschreibung ist zu kurz (mindestens 10 Zeichen).");
       try {
         let subjectId;
-        if (str3(c, "person")) {
-          const r = await resolvePerson(c, str3(c, "person"));
+        if (str2(c, "person")) {
+          const r = await resolvePerson(c, str2(c, "person"));
           if (!r.person) return r.reply;
           subjectId = r.person.id;
         }
-        const res = await c.api.asUser(c.discordId, "POST", "/complaints", { category: str3(c, "kategorie"), description: str3(c, "beschreibung"), ...subjectId ? { subjectId } : {} });
+        const res = await c.api.asUser(c.discordId, "POST", "/complaints", { category: str2(c, "kategorie"), description: str2(c, "beschreibung"), ...subjectId ? { subjectId } : {} });
         return okReply(`Beschwerde **${res.number}** erfasst.`);
       } catch (e) {
         return mapError(e);
@@ -78687,9 +78613,9 @@ Bewerben: \`/bewerbung\``.slice(0, 4e3), color: 2278750, fields: [...s.closesAt 
       { name: "beschreibung", description: "Beschreibung", type: "string", maxLength: 4e3 }
     ],
     async run(c) {
-      if (str3(c, "titel").length < 3) return errorReply("Der Titel ist zu kurz (mindestens 3 Zeichen).");
+      if (str2(c, "titel").length < 3) return errorReply("Der Titel ist zu kurz (mindestens 3 Zeichen).");
       try {
-        const r = await c.api.asUser(c.discordId, "POST", "/investigations", { title: str3(c, "titel"), ...str3(c, "beschreibung") ? { description: str3(c, "beschreibung") } : {} });
+        const r = await c.api.asUser(c.discordId, "POST", "/investigations", { title: str2(c, "titel"), ...str2(c, "beschreibung") ? { description: str2(c, "beschreibung") } : {} });
         return okReply(`Fall **${r.caseNumber}** er\xF6ffnet.`);
       } catch (e) {
         return mapError(e);
@@ -78705,12 +78631,12 @@ Bewerben: \`/bewerbung\``.slice(0, 4e3), color: 2278750, fields: [...s.closesAt 
       { name: "prioritaet", description: "Priorit\xE4t (Standard: mittel)", type: "string", choices: choices2(PRIO) }
     ],
     async run(c) {
-      if (str3(c, "grund").length < 3) return errorReply("Der Grund ist zu kurz (mindestens 3 Zeichen).");
+      if (str2(c, "grund").length < 3) return errorReply("Der Grund ist zu kurz (mindestens 3 Zeichen).");
       try {
-        const { person, reply } = await resolvePerson(c, str3(c, "person"));
+        const { person, reply } = await resolvePerson(c, str2(c, "person"));
         if (!person) return reply;
-        const priority = PRIO[str3(c, "prioritaet")] ?? "MEDIUM";
-        await c.api.asUser(c.discordId, "POST", "/wanted", { personId: person.id, reason: str3(c, "grund"), priority });
+        const priority = PRIO[str2(c, "prioritaet")] ?? "MEDIUM";
+        await c.api.asUser(c.discordId, "POST", "/wanted", { personId: person.id, reason: str2(c, "grund"), priority });
         return okReply(`**${plain(person.robloxUsername)}** ist zur Fahndung ausgeschrieben (${label(priority)}).`);
       } catch (e) {
         return mapError(e);
@@ -78726,9 +78652,9 @@ Bewerben: \`/bewerbung\``.slice(0, 4e3), color: 2278750, fields: [...s.closesAt 
       { name: "fall", description: "Fallnummer, z. B. CASE-2026-ABC123", type: "string", maxLength: 40 }
     ],
     async run(c) {
-      if (str3(c, "typ").length < 2 || str3(c, "beschreibung").length < 3) return errorReply("Typ oder Beschreibung sind zu kurz.");
+      if (str2(c, "typ").length < 2 || str2(c, "beschreibung").length < 3) return errorReply("Typ oder Beschreibung sind zu kurz.");
       try {
-        const e = await c.api.asUser(c.discordId, "POST", "/evidence", { type: str3(c, "typ"), description: str3(c, "beschreibung"), ...str3(c, "fall") ? { caseRef: str3(c, "fall").toUpperCase() } : {} });
+        const e = await c.api.asUser(c.discordId, "POST", "/evidence", { type: str2(c, "typ"), description: str2(c, "beschreibung"), ...str2(c, "fall") ? { caseRef: str2(c, "fall").toUpperCase() } : {} });
         return okReply(`Beweis **${e.number}** erfasst.`);
       } catch (err) {
         return mapError(err);
@@ -78743,10 +78669,10 @@ Bewerben: \`/bewerbung\``.slice(0, 4e3), color: 2278750, fields: [...s.closesAt 
       { name: "text", description: "Nachricht", type: "string", required: true, maxLength: 1500 }
     ],
     async run(c) {
-      const ch = CHANNEL[str3(c, "kanal")];
+      const ch = CHANNEL[str2(c, "kanal")];
       if (!ch) return errorReply("Unbekannter Kanal.");
       try {
-        await c.api.asUser(c.discordId, "POST", `/communication/channels/${ch}/messages`, { body: str3(c, "text") });
+        await c.api.asUser(c.discordId, "POST", `/communication/channels/${ch}/messages`, { body: str2(c, "text") });
         return okReply(`Nachricht an **${ch}** gesendet.`);
       } catch (e) {
         return mapError(e);
@@ -78766,7 +78692,6 @@ Bewerben: \`/bewerbung\``.slice(0, 4e3), color: 2278750, fields: [...s.closesAt 
     }
   },
   ...FEATURE_COMMANDS,
-  ...SEK_COMMANDS,
   ...QUALI_COMMANDS,
   ...LEAVE_COMMANDS,
   ...CAD_COMMANDS,
@@ -82946,7 +82871,7 @@ async function pollOnce(api2, send, log = console.log, dm, grantRole, syncRoles,
       }
       continue;
     }
-    if (item.type === "application.ticket" || item.type === "embed.post" || item.type === "message.decided" || item.type === "voice.effects" || item.type.startsWith("verify.")) {
+    if (item.type === "application.ticket" || item.type === "embed.post" || item.type === "message.decided" || item.type === "voice.effects" || item.type.startsWith("verify.") || item.type === "duty.reminder") {
       try {
         if (!onTask || !await onTask(item.type, item.payload)) throw new Error("tasks not supported");
         await api2.service("POST", `/bot/outbox/${item.id}/ack`, { ok: true });
@@ -83285,6 +83210,7 @@ var toEmbed = (e) => {
   if (e.thumbnail && /^https:\/\//.test(e.thumbnail)) b.setThumbnail(e.thumbnail);
   if (e.image && /^(https|attachment):\/\//.test(e.image)) b.setImage(e.image);
   if (e.author?.name) b.setAuthor({ name: e.author.name.slice(0, 256), ...e.author.iconUrl && /^https:\/\//.test(e.author.iconUrl) ? { iconURL: e.author.iconUrl } : {} });
+  b.setTimestamp(/* @__PURE__ */ new Date());
   return b;
 };
 var STYLE2 = { primary: import_discord4.ButtonStyle.Primary, secondary: import_discord4.ButtonStyle.Secondary, success: import_discord4.ButtonStyle.Success, danger: import_discord4.ButtonStyle.Danger };
@@ -83778,6 +83704,12 @@ function wireReady(client0) {
           await platform.postOrEdit({ channelId: String(p.channelId ?? ""), embed: { title: "Roblox-Verifizierung", description: String(p.text ?? "").slice(0, 4e3), color: typeof p.color === "number" ? p.color : 3900150 } });
           return true;
         }
+        if (type === "duty.reminder") {
+          const userId = String(p.discordId ?? "");
+          if (!/^\d{15,25}$/.test(userId)) throw new Error("no Discord user id");
+          await platform.sendDm(userId, dutyReminderDm(p));
+          return true;
+        }
         if (type === "verify.member") {
           await verify.refreshEverywhere(String(p.discordId ?? ""));
           return true;
@@ -83798,18 +83730,18 @@ function wireReady(client0) {
           const channelId = typeof p.channelId === "string" ? p.channelId : "";
           const ch = await client.channels.fetch(channelId);
           if (!ch?.isSendable() || !("messages" in ch)) throw new Error(`channel ${channelId} is not a text channel the bot can post in`);
-          const payload = payloadOf(p.message);
+          const payload = payloadOf(p.message, false);
           const old = typeof p.messageId === "string" ? await ch.messages.fetch(p.messageId).catch(() => null) : null;
           const msg = old ? await old.edit({ ...payload, content: payload.content ?? "" }) : await ch.send(payload);
           await api.service("POST", `/bot/embeds/${String(p.embedId)}/posted`, { channelId, messageId: msg.id });
           return true;
         }
         if (type !== "application.ticket") return false;
-        const str4 = (k) => typeof p[k] === "string" ? p[k] : void 0;
-        const [guildId, discordId] = [str4("guildId"), str4("discordId")];
+        const str3 = (k) => typeof p[k] === "string" ? p[k] : void 0;
+        const [guildId, discordId] = [str3("guildId"), str3("discordId")];
         if (!guildId || !discordId) throw new Error("guild or user missing");
         const cfg2 = await api.service("GET", "/bot/config").catch(() => void 0);
-        await openApplicantTicket(platform, cfg2, { guildId, discordId, userName: str4("userName") ?? discordId, number: str4("number") ?? "", unitName: str4("unitName"), requesterId: str4("requesterId") });
+        await openApplicantTicket(platform, cfg2, { guildId, discordId, userName: str3("userName") ?? discordId, number: str3("number") ?? "", unitName: str3("unitName"), requesterId: str3("requesterId") });
         return true;
       }
     );

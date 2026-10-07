@@ -23,8 +23,6 @@ Der Bot (`apps/bot`, TypeScript, discord.js 14) ist ein **schlanker Client der S
 | `/abmeldung von bis grund` | Abmeldung (Urlaub, Abwesenheit) beantragen, z. B. `von: 24.12.` `bis: 02.01.2027` (auch `heute`, `morgen 18:00`); die Leitung entscheidet per Button | `leave.request` |
 | `/dienststunden [tage] [alle]` | eigene Dienststunden der letzten 7 (1–90) Tage nach Status; mit `alle` die Stunden aller Beamten | `team.view` · `alle`: `team.manage` |
 | `/dienstpanel` | postet das Dienst-Panel: Buttons **Im Dienst / Pause / Außer Dienst** (setzt den Status als verknüpfter Benutzer) | Discord „Server verwalten“; Klick: `team.view` |
-| `/sek [aktion] [mitglied]` | SEK: Mitgliederliste, letzte Einsatzberichte, eigener Status; Mitglieder hinzufügen/entfernen (+ optionale SEK-Rolle) | `sek.view` · Status: `team.view` · verwalten: `sek.manage` |
-| `/sek-bericht` | SEK-Einsatzbericht per Formular (Datum, Einsatzart, Beschreibung) | `sek.report` + SEK-Mitglied |
 | `/qualipanel` | postet das Qualifikations-Panel (SEK, Flugstaffel, Ausbilder …): Auswahl → Fragen einzeln per DM → Bewerbung mit Annehmen/Ablehnen-Buttons im Team-Channel ([qualifications.md](qualifications.md)) | Discord „Server verwalten“; entscheiden: `qualifications.decide` |
 | `/dienst status` | eigener Dienststatus: an, pause, aus | `team.view` |
 | `/einheitstatus rufzeichen status` | Einheitenstatus ändern | `dispatch.edit` |

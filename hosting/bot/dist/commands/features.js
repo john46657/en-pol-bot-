@@ -5,7 +5,6 @@ exports.shiftPicker = shiftPicker;
 const api_1 = require("../api");
 const format_1 = require("../format");
 const errors_1 = require("./errors");
-const sek_1 = require("./sek");
 const qualifications_1 = require("./qualifications");
 const tickets_1 = require("./tickets");
 const voice_support_1 = require("../voice-support");
@@ -185,6 +184,16 @@ exports.INTERACTIONS = [
     {
         prefix: 'duty',
         async run(c) {
+            // Erinnerung bei Inaktivität: „Bin noch im Dienst“
+            if (c.args[0] === 'still') {
+                try {
+                    const r = await c.api.asUser(c.discordId, 'POST', '/team/me/active');
+                    return r.onDuty ? (0, format_1.okReply)('Danke! Deine Schicht läuft weiter.') : (0, format_1.okReply)('Du bist gerade nicht im Dienst.');
+                }
+                catch (e) {
+                    return (0, errors_1.mapError)(e);
+                }
+            }
             // Auswahl der Schicht-Art (Auswahlmenü nach „Im Dienst“)
             const shiftType = c.args[0] === 'type' ? c.values?.[0] : undefined;
             const status = c.args[0] === 'type' ? 'ON_DUTY' : c.args[0] ?? '';
@@ -207,7 +216,6 @@ exports.INTERACTIONS = [
             }
         },
     },
-    sek_1.SEK_INTERACTION,
     qualifications_1.QUALI_INTERACTION,
     tickets_1.TICKET_INTERACTION,
     voice_support_1.VOICE_INTERACTION,

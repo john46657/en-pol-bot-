@@ -9,7 +9,8 @@ const STYLE = { primary: discord_js_1.ButtonStyle.Primary, secondary: discord_js
 const VIEW = [discord_js_1.PermissionFlagsBits.ViewChannel, discord_js_1.PermissionFlagsBits.ReadMessageHistory];
 const TALK = [discord_js_1.PermissionFlagsBits.SendMessages, discord_js_1.PermissionFlagsBits.AttachFiles, discord_js_1.PermissionFlagsBits.EmbedLinks];
 const https = (u) => (u && /^https:\/\//.test(u) ? u : undefined);
-function embedOf(e) {
+/** `stamp`: ohne eigenen Zeitstempel Datum/Uhrzeit des Sendens unten anzeigen (nicht beim Embed-Baukasten – dort entscheidet der Schalter). */
+function embedOf(e, stamp = true) {
     const b = new discord_js_1.EmbedBuilder();
     if (e.title)
         b.setTitle(e.title.slice(0, 256));
@@ -29,6 +30,8 @@ function embedOf(e) {
         b.addFields(e.fields.slice(0, 25).map((f) => ({ name: f.name.slice(0, 256) || '​', value: f.value.slice(0, 1024) || '​', inline: f.inline ?? false })));
     if (e.timestamp)
         b.setTimestamp(new Date(e.timestamp));
+    else if (stamp)
+        b.setTimestamp(new Date());
     if (!e.title && !e.description && !e.fields?.length)
         b.setDescription('​');
     return b;
@@ -65,10 +68,10 @@ function componentsOf(buttons = [], selects = []) {
     }
     return rows;
 }
-function payloadOf(m) {
+function payloadOf(m, stamp = true) {
     return {
         ...(m.content ? { content: m.content.slice(0, 2000) } : {}),
-        embeds: (m.embeds ?? []).slice(0, 10).map(embedOf),
+        embeds: (m.embeds ?? []).slice(0, 10).map((e) => embedOf(e, stamp)),
         components: componentsOf(m.buttons, m.select ? [m.select] : []),
         // Nur ausdrücklich gewünschte Erwähnungen pingen – niemals @everyone/@here
         allowedMentions: { parse: [], users: m.mentionUsers ?? [], roles: m.mentionRoles ?? [] },

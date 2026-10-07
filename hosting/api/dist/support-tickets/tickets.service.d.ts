@@ -554,6 +554,7 @@ export declare class SupportTicketsService {
         guildId: string;
         channelId: string | null;
         closedAt: Date | null;
+        lastActivityAt: Date;
         answers: Prisma.JsonValue;
         categoryId: string;
         deletedAt: Date | null;
@@ -571,7 +572,6 @@ export declare class SupportTicketsService {
         closedById: string | null;
         closedByName: string | null;
         firstResponseAt: Date | null;
-        lastActivityAt: Date;
         warnedAt: Date | null;
         staffAlertedAt: Date | null;
         closeRequestedAt: Date | null;

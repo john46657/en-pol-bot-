@@ -5,7 +5,6 @@ const api_1 = require("../api");
 const errors_1 = require("./errors");
 Object.defineProperty(exports, "mapError", { enumerable: true, get: function () { return errors_1.mapError; } });
 const features_1 = require("./features");
-const sek_1 = require("./sek");
 const qualifications_1 = require("./qualifications");
 const leave_1 = require("./leave");
 const cad_1 = require("./cad");
@@ -103,7 +102,6 @@ exports.COMMANDS = [
                             { name: 'Dienst & Leitstelle', value: '`/dienst` `/dienststunden` `/abmeldung` `/leave manage` `/einheitstatus` `/einsatz` `/einsatzstatus` `/einsatzzuweisen` `/funk` `/funkcode` `/cad`' },
                             { name: 'Erfassen', value: '`/ticket` `/bericht` `/beschwerde` `/ermittlung` `/fahndung` `/beweis`' },
                             { name: 'Leitung & Team', value: '`/gefahrenstatus` `/funkfreigabe` `/teamliste` `/dienstpanel` `/bewerbungspanel` `/qualipanel` `/teamchance` `/roblox`' },
-                            { name: 'SEK', value: '`/sek` `/sek-bericht`' },
                             { name: 'Support-Tickets', value: '`/support` öffnet ein Ticket (Team: `/support mitglied:@…` für jemand anderen). Ticket-Panels, Kategorien, Fragen und Buttons werden im Dashboard eingerichtet und von dort in Discord gesendet.' },
                             { name: 'Für alle', value: '`/bewerbung` (auch ohne Verknüpfung; Fragen per Direktnachricht) · SEK/Flugstaffel/Ausbilder über das Qualifikations-Panel' },
                             { name: 'Hinweis', value: 'Alle Befehle laufen mit **deinen** Rechten im System. Antworten sind nur für dich sichtbar.' }
@@ -552,7 +550,6 @@ exports.COMMANDS = [
         },
     },
     ...features_1.FEATURE_COMMANDS,
-    ...sek_1.SEK_COMMANDS,
     ...qualifications_1.QUALI_COMMANDS,
     ...leave_1.LEAVE_COMMANDS,
     ...cad_1.CAD_COMMANDS,

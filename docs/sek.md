@@ -1,5 +1,7 @@
 # SEK (Spezialeinsatzkommando)
 
+> **Entfernt:** Die SEK-Seite im Dashboard und die Discord-Befehle `/sek` und `/sek-bericht` gibt es nicht mehr. Bereits gespeicherte SEK-Daten bleiben in der Datenbank; SEK-Bewerbungen laufen weiter über das Qualifikations-Panel.
+
 Eigenes Modul für die Spezialeinheit (früher im alten Bot: `gsg9.py`). Web: **Organisation → SEK** (`/sek`), Discord: `/sek`, `/sek-bericht`. Bewerbungen fürs SEK laufen über das Qualifikations-Panel ([qualifications.md](qualifications.md)).
 
 | Bereich | Wer | Was |

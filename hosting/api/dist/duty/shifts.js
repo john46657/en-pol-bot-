@@ -12,7 +12,7 @@ var __param = (this && this.__param) || function (paramIndex, decorator) {
     return function (target, key) { decorator(target, key, paramIndex); }
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.BotShiftsController = exports.ShiftsController = exports.ShiftsService = exports.shiftsConfigSchema = exports.shiftTypeSchema = void 0;
+exports.BotShiftsController = exports.ShiftsController = exports.ShiftsService = exports.shiftsConfigSchema = exports.reminderSchema = exports.shiftTypeSchema = void 0;
 const common_1 = require("@nestjs/common");
 const swagger_1 = require("@nestjs/swagger");
 const zod_1 = require("zod");
@@ -33,7 +33,15 @@ exports.shiftTypeSchema = zod_1.z.object({
     onBreakRoleIds: roles,
     logChannelId: sf.nullish(),
 });
-exports.shiftsConfigSchema = zod_1.z.object({ enabled: zod_1.z.boolean().default(false), types: zod_1.z.array(exports.shiftTypeSchema).max(25).default([]) })
+/** Erinnerung, wenn jemand „Im Dienst“ ist, aber länger nichts gemacht hat (Dashboard/MDT, Discord). */
+exports.reminderSchema = zod_1.z.object({
+    enabled: zod_1.z.boolean().default(false),
+    /** Minuten ohne Aktivität bis zur Erinnerung */
+    afterMinutes: zod_1.z.number().int().min(5).max(600).default(30),
+    /** Minuten nach der Erinnerung ohne Reaktion → automatisch außer Dienst (0 = nie) */
+    autoOffMinutes: zod_1.z.number().int().min(0).max(600).default(0),
+}).default({});
+exports.shiftsConfigSchema = zod_1.z.object({ enabled: zod_1.z.boolean().default(false), types: zod_1.z.array(exports.shiftTypeSchema).max(25).default([]), reminder: exports.reminderSchema })
     .superRefine((c, ctx) => {
     if (new Set(c.types.map((t) => t.id)).size !== c.types.length)
         ctx.addIssue({ code: 'custom', path: ['types'], message: 'Die IDs der Schichtarten müssen eindeutig sein.' });
@@ -52,7 +60,7 @@ let ShiftsService = class ShiftsService {
     async config() {
         const v = (await this.prisma.systemSetting.findUnique({ where: { key: KEY } }))?.value;
         const r = exports.shiftsConfigSchema.safeParse(v ?? {});
-        return r.success ? r.data : { enabled: false, types: [] };
+        return r.success ? r.data : exports.shiftsConfigSchema.parse({});
     }
     async save(actor, input) {
         // ohne ausdrückliche Vorgabe wird die erste Art zur Standard-Schicht

@@ -37,6 +37,8 @@ let DutyController = class DutyController {
     hours(f) { return this.d.hours(f.days); }
     /** Schicht-Logs: wer wann welche Schicht gestartet/beendet hat (Schichtleitung). */
     shiftLog(f) { return this.d.shiftLog(f); }
+    /** „Bin noch im Dienst“ (Erinnerung) bzw. echte Aktivität im Dashboard/MDT. */
+    active(a) { return this.d.active(a.userId); }
     set(a, b) { return this.d.setStatus(a, b.status, b); }
     /** Muss NACH `me/status` stehen, sonst würde `:userId` den Pfad `me` verschlucken. */
     setFor(a, userId, b) { return this.d.setStatus(a, b.status, b, userId); }
@@ -89,6 +91,15 @@ __decorate([
     __metadata("design:paramtypes", [void 0]),
     __metadata("design:returntype", void 0)
 ], DutyController.prototype, "shiftLog", null);
+__decorate([
+    (0, common_1.Post)('me/active'),
+    (0, common_1.HttpCode)(200),
+    (0, decorators_1.RequirePermission)('team.view'),
+    __param(0, (0, decorators_1.CurrentActor)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object]),
+    __metadata("design:returntype", void 0)
+], DutyController.prototype, "active", null);
 __decorate([
     (0, common_1.Put)('me/status'),
     (0, decorators_1.RequirePermission)('team.view'),

@@ -15,6 +15,7 @@ const roblox_1 = require("./roblox");
 const welcome_1 = require("./welcome");
 const voice_support_1 = require("./voice-support");
 const verify_1 = require("./verify");
+const format_1 = require("./format");
 const shared_1 = require("@enrp/shared");
 (0, config_1.loadDotEnv)();
 const cfg = (0, config_1.loadConfig)();
@@ -48,6 +49,7 @@ const toEmbed = (e) => {
         b.setImage(e.image);
     if (e.author?.name)
         b.setAuthor({ name: e.author.name.slice(0, 256), ...(e.author.iconUrl && /^https:\/\//.test(e.author.iconUrl) ? { iconURL: e.author.iconUrl } : {}) });
+    b.setTimestamp(new Date()); // Datum/Uhrzeit unten in jeder Bot-Nachricht (Discord zeigt sie in der Zeitzone des Lesers)
     return b;
 };
 const STYLE = { primary: discord_js_1.ButtonStyle.Primary, secondary: discord_js_1.ButtonStyle.Secondary, success: discord_js_1.ButtonStyle.Success, danger: discord_js_1.ButtonStyle.Danger };
@@ -583,6 +585,14 @@ function wireReady(client0) {
                 await platform.postOrEdit({ channelId: String(p.channelId ?? ''), embed: { title: 'Roblox-Verifizierung', description: String(p.text ?? '').slice(0, 4000), color: typeof p.color === 'number' ? p.color : 0x3b82f6 } });
                 return true;
             }
+            if (type === 'duty.reminder') {
+                // Inaktivitäts-Erinnerung (nur „Im Dienst“) bzw. Hinweis, dass die Schicht automatisch beendet wurde
+                const userId = String(p.discordId ?? '');
+                if (!/^\d{15,25}$/.test(userId))
+                    throw new Error('no Discord user id');
+                await platform.sendDm(userId, (0, format_1.dutyReminderDm)(p));
+                return true;
+            }
             if (type === 'verify.member') {
                 await verify.refreshEverywhere(String(p.discordId ?? ''));
                 return true;
@@ -609,7 +619,7 @@ function wireReady(client0) {
                 const ch = await client.channels.fetch(channelId);
                 if (!ch?.isSendable() || !('messages' in ch))
                     throw new Error(`channel ${channelId} is not a text channel the bot can post in`);
-                const payload = (0, discord_tickets_1.payloadOf)(p.message);
+                const payload = (0, discord_tickets_1.payloadOf)(p.message, false);
                 const old = typeof p.messageId === 'string' ? await ch.messages.fetch(p.messageId).catch(() => null) : null;
                 const msg = old ? await old.edit({ ...payload, content: payload.content ?? '' }) : await ch.send(payload);
                 await api.service('POST', `/bot/embeds/${String(p.embedId)}/posted`, { channelId, messageId: msg.id });

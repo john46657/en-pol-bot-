@@ -2,7 +2,6 @@ import { BotApiError } from '../api';
 import { clip, COLORS, DUTY_DE, dangerEmbed, errorReply, listEmbed, okReply, plain, type ButtonSpec, type DangerState, type EmbedData, type Reply, type Row } from '../format';
 import type { CommandDef, Ctx, InteractionDef } from './types';
 import { mapError } from './errors';
-import { SEK_INTERACTION } from './sek';
 import { QUALI_INTERACTION } from './qualifications';
 import { TICKET_INTERACTION } from './tickets';
 import { VOICE_INTERACTION } from '../voice-support';
@@ -173,7 +172,6 @@ export const INTERACTIONS: InteractionDef[] = [
       }
     },
   },
-  SEK_INTERACTION,
   QUALI_INTERACTION,
   TICKET_INTERACTION,
   VOICE_INTERACTION,

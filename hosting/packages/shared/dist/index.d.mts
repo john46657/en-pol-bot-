@@ -610,7 +610,7 @@ declare const CAD_LINK_ACTIONS: readonly ["status_report", "radio", "view_incide
 declare const CAD_LINK_LABELS: Record<string, string>;
 /** Welche Datenart ein CAD-Ereignis bei verbundenen Servern ist. */
 declare const CAD_EVENT_SEND_TYPE: Record<CadEvent, (typeof CAD_LINK_SEND_TYPES)[number]>;
-declare const CAD_WIDGETS: readonly ["activeIncidents", "availableUnits", "erlcPlayers", "erlcQueue", "activeCalls", "staffOnline", "erlcStatus", "map", "units", "radio", "persons", "vehicles"];
+declare const CAD_WIDGETS: readonly ["activeIncidents", "availableUnits", "erlcPlayers", "erlcQueue", "activeCalls", "staffOnline", "erlcStatus", "map", "units", "radio", "persons", "vehicles", "dutyActivity"];
 declare const CAD_WIDGET_LABELS: Record<string, string>;
 /** Offizielle ER:LC-Kartenbilder sind 5355 × 5355 px, Spielkoordinate (0,0) liegt in der Mitte. */
 declare const ERLC_MAP_SIZE = 5355;

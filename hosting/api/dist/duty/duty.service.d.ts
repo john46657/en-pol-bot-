@@ -25,6 +25,8 @@ export declare class DutyService {
         startedAt: Date;
         unitId: string | null;
         shiftType: string | null;
+        lastActivityAt: Date | null;
+        remindedAt: Date | null;
     } | {
         status: string;
     }>;
@@ -33,6 +35,22 @@ export declare class DutyService {
      * Wird nur eingereiht, wenn ein Dienst-Channel oder eine Dienst-Rolle eingestellt ist. Fehler stören den Statuswechsel nie.
      */
     private notifyDiscord;
+    private touched;
+    /** Aktivität merken (höchstens einmal pro Minute in die Datenbank). Nur laufende Schichten „Im Dienst“. */
+    touch(userId: string, force?: boolean): Promise<void>;
+    /** „Bin noch im Dienst“ / Herzschlag aus dem Dashboard. */
+    active(userId: string): Promise<{
+        onDuty: boolean;
+        status: string;
+    }>;
+    /**
+     * Jede Minute: Wer „Im Dienst“ ist und seit `afterMinutes` nichts gemacht hat, bekommt eine Erinnerung (Discord-DM mit Buttons + Glocke im Dashboard).
+     * Mit `autoOffMinutes` endet die Schicht automatisch, wenn danach weiter nichts passiert. Pause/Training/Verwaltung sind ausgenommen.
+     */
+    remindTick(now?: Date): Promise<{
+        reminded: number;
+        ended: number;
+    }>;
     team(): import("@prisma/client").Prisma.PrismaPromise<({
         user: {
             personnel: {
@@ -51,6 +69,8 @@ export declare class DutyService {
         startedAt: Date;
         unitId: string | null;
         shiftType: string | null;
+        lastActivityAt: Date | null;
+        remindedAt: Date | null;
     })[]>;
     mine(userId: string): import("@prisma/client").Prisma.Prisma__DutySessionClient<{
         id: string;
@@ -61,6 +81,8 @@ export declare class DutyService {
         startedAt: Date;
         unitId: string | null;
         shiftType: string | null;
+        lastActivityAt: Date | null;
+        remindedAt: Date | null;
     } | null, null, import("@prisma/client/runtime/library").DefaultArgs, import("@prisma/client").Prisma.PrismaClientOptions>;
     /**
      * Dienststunden der letzten `days` Tage, pro Benutzer und Status (in Minuten).
@@ -116,6 +138,8 @@ export declare class DutyService {
         team: string | null;
         dutyStatus: string;
         onDutySince: Date | null;
+        lastActivityAt: Date | null;
+        reminded: boolean;
         shiftType: string | null;
         lastStatusChange: Date | null;
         unit: {

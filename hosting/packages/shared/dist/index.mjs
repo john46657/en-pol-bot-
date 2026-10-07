@@ -333,7 +333,7 @@ var CAD_EVENT_SEND_TYPE = {
   announcement: "announcements",
   radio: "radio"
 };
-var CAD_WIDGETS = ["activeIncidents", "availableUnits", "erlcPlayers", "erlcQueue", "activeCalls", "staffOnline", "erlcStatus", "map", "units", "radio", "persons", "vehicles"];
+var CAD_WIDGETS = ["activeIncidents", "availableUnits", "erlcPlayers", "erlcQueue", "activeCalls", "staffOnline", "erlcStatus", "map", "units", "radio", "persons", "vehicles", "dutyActivity"];
 var CAD_WIDGET_LABELS = {
   activeIncidents: "Aktive Eins\xE4tze",
   availableUnits: "Verf\xFCgbare Einheiten",
@@ -346,7 +346,8 @@ var CAD_WIDGET_LABELS = {
   units: "Einheiten",
   radio: "Letzte Funkmeldungen",
   persons: "Personen",
-  vehicles: "Fahrzeuge"
+  vehicles: "Fahrzeuge",
+  dutyActivity: "Aktivit\xE4t im Dienst"
 };
 var ERLC_MAP_SIZE = 5355;
 var DEFAULT_CAD_CONFIG = {
@@ -414,7 +415,7 @@ var DEFAULT_CAD_CONFIG = {
   map: { imageUrl: null, width: ERLC_MAP_SIZE, height: ERLC_MAP_SIZE, originX: ERLC_MAP_SIZE / 2, originY: ERLC_MAP_SIZE / 2, scale: 1 },
   routes: [],
   memberFields: [],
-  widgets: ["activeIncidents", "availableUnits", "activeCalls", "erlcStatus", "erlcPlayers", "erlcQueue", "staffOnline", "map", "radio"]
+  widgets: ["activeIncidents", "availableUnits", "activeCalls", "dutyActivity", "erlcStatus", "erlcPlayers", "erlcQueue", "staffOnline", "map", "radio"]
 };
 var gameToPixel = (m, x, z) => ({ px: m.originX + x * m.scale, py: m.originY + z * m.scale });
 var pixelToGame = (m, px, py) => ({ x: (px - m.originX) / m.scale, z: (py - m.originY) / m.scale });

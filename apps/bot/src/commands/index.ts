@@ -1,7 +1,6 @@
 import { BotApiError } from '../api';
 import { mapError } from './errors';
 import { FEATURE_COMMANDS } from './features';
-import { SEK_COMMANDS } from './sek';
 import { QUALI_COMMANDS } from './qualifications';
 import { LEAVE_COMMANDS } from './leave';
 import { CAD_COMMANDS } from './cad';
@@ -100,7 +99,6 @@ export const COMMANDS: CommandDef[] = [
         { name: 'Dienst & Leitstelle', value: '`/dienst` `/dienststunden` `/abmeldung` `/leave manage` `/einheitstatus` `/einsatz` `/einsatzstatus` `/einsatzzuweisen` `/funk` `/funkcode` `/cad`' },
         { name: 'Erfassen', value: '`/ticket` `/bericht` `/beschwerde` `/ermittlung` `/fahndung` `/beweis`' },
         { name: 'Leitung & Team', value: '`/gefahrenstatus` `/funkfreigabe` `/teamliste` `/dienstpanel` `/bewerbungspanel` `/qualipanel` `/teamchance` `/roblox`' },
-        { name: 'SEK', value: '`/sek` `/sek-bericht`' },
         { name: 'Support-Tickets', value: '`/support` öffnet ein Ticket (Team: `/support mitglied:@…` für jemand anderen). Ticket-Panels, Kategorien, Fragen und Buttons werden im Dashboard eingerichtet und von dort in Discord gesendet.' },
         { name: 'Für alle', value: '`/bewerbung` (auch ohne Verknüpfung; Fragen per Direktnachricht) · SEK/Flugstaffel/Ausbilder über das Qualifikations-Panel' },
         { name: 'Hinweis', value: 'Alle Befehle laufen mit **deinen** Rechten im System. Antworten sind nur für dich sichtbar.' }] }] };
@@ -442,7 +440,6 @@ export const COMMANDS: CommandDef[] = [
     },
   },
   ...FEATURE_COMMANDS,
-  ...SEK_COMMANDS,
   ...QUALI_COMMANDS,
   ...LEAVE_COMMANDS,
   ...CAD_COMMANDS,

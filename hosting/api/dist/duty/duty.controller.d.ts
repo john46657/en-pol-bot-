@@ -58,6 +58,8 @@ export declare class DutyController {
         startedAt: Date;
         unitId: string | null;
         shiftType: string | null;
+        lastActivityAt: Date | null;
+        remindedAt: Date | null;
     })[]>;
     overview(): Promise<{
         userId: string;
@@ -68,6 +70,8 @@ export declare class DutyController {
         team: string | null;
         dutyStatus: string;
         onDutySince: Date | null;
+        lastActivityAt: Date | null;
+        reminded: boolean;
         shiftType: string | null;
         lastStatusChange: Date | null;
         unit: {
@@ -92,6 +96,8 @@ export declare class DutyController {
         startedAt: Date;
         unitId: string | null;
         shiftType: string | null;
+        lastActivityAt: Date | null;
+        remindedAt: Date | null;
     } | null, null, import("@prisma/client/runtime/library").DefaultArgs, import("@prisma/client").Prisma.PrismaClientOptions>;
     /** Eigene Dienststunden. */
     myHours(a: Actor, f: z.infer<typeof hoursQuery>): Promise<{
@@ -138,6 +144,11 @@ export declare class DutyController {
             endedBy: string | null;
         }[];
     }>;
+    /** „Bin noch im Dienst“ (Erinnerung) bzw. echte Aktivität im Dashboard/MDT. */
+    active(a: Actor): Promise<{
+        onDuty: boolean;
+        status: string;
+    }>;
     set(a: Actor, b: z.infer<typeof body>): Promise<{
         id: string;
         userId: string;
@@ -147,6 +158,8 @@ export declare class DutyController {
         startedAt: Date;
         unitId: string | null;
         shiftType: string | null;
+        lastActivityAt: Date | null;
+        remindedAt: Date | null;
     } | {
         status: string;
     }>;
@@ -160,6 +173,8 @@ export declare class DutyController {
         startedAt: Date;
         unitId: string | null;
         shiftType: string | null;
+        lastActivityAt: Date | null;
+        remindedAt: Date | null;
     } | {
         status: string;
     }>;
