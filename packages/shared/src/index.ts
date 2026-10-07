@@ -7,3 +7,4 @@ export * from './cad';
 export * from './danger';
 export * from './workflows';
 export * from './labels';
+export * from './welcome';

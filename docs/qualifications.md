@@ -20,7 +20,7 @@ Regeln: eine offene Bewerbung pro Person und Einheit; eine laufende Bewerbung im
 - *Qualifikationen*: Titel und Einleitung des Panels; je Einheit Name, Beschreibung, Discord-Rollen-ID (bei Annahme), eigener Bewerbungs-Channel, **Ping-Rollen** (z. B. @Staffelkommandant) und die Fragen. Startwerte: Flugstaffel, SEK, Ausbilder mit je 6 Fragen.
 
 **Seiten im Dashboard:** *Organisation → Applications* (Polizei-Bewerbung) und *Organisation → Qualifications* (SEK, Flugstaffel, Ausbilder …) sind gleich aufgebaut:
-- Tab **Applications**: Bewerbungen als Karten mit allen Antworten und den Buttons **Accept**, **Reject**, **Accept with reason** und **Reject with reason**. Der Grund geht per DM an die Person.
+- Tab **Applications**: Bewerbungen als Karten mit allen Antworten und denselben Buttons wie in Discord: **Annehmen**, **Ablehnen**, **Annehmen mit Grund**, **Ablehnen mit Grund** (der Grund geht per DM an die Person), **Verlauf** (frühere Bewerbungen der Person), **🎫 Ticket mit Bewerber öffnen** (der Bot legt den privaten Kanal mit Person, Team-Rolle und dir an – du nur, wenn dein Konto mit Discord verknüpft ist) und bei der Polizei-Bewerbung **Details & Prüfschritte**. Filter *Zurückgezogen* zeigt zurückgezogene Bewerbungen.
 - Tab **Setup**: alle Einstellungen.
 
 **Einstellungen je Bewerbung (wie bei Appy)** – Channels und Rollen wählst du aus Listen mit Namen. Die Listen meldet der Bot automatisch für jeden Server, auf dem er ist.
@@ -45,7 +45,7 @@ Regeln: eine offene Bewerbung pro Person und Einheit; eine laufende Bewerbung im
   - **Staff Threads**: ein Thread je Bewerbung. Der Bot braucht dafür das Recht „Öffentliche Threads erstellen“.
   - **Application cooldown**: Wartezeit bis zur nächsten Bewerbung.
   - **Time Limit**: Zeit zum Ausfüllen, 5 Minuten bis 7 Tage, Standard 3 Stunden.
-- Noch nicht eingebaut: „Action On User Leave“. Dafür bräuchte der Bot den privilegierten *Server Members Intent*.
+  - **Aktion beim Verlassen**: Was mit einer offenen Bewerbung passiert, wenn die Person den Discord-Server verlässt – *nichts*, *ablehnen* (mit Grund „Hat den Discord-Server verlassen.“, Entscheidungs-DM wie sonst) oder *zurückziehen* (Status „Zurückgezogen“, keine DM). Braucht den privilegierten *Server Members Intent*.
 
 **Fragen-Editor (wie bei Appy)** – bis zu 50 Fragen je Bewerbung, jede als Karte:
 - **Typ**: *Text* (Antwort per Nachricht), *Multiple choice* (Auswahlmenü in der DM, eine oder mehrere Optionen) oder *Role select* (wie Auswahl, jede Option mit einer Discord-Rolle – die gewählten Rollen bekommt die Person **bei Annahme** zusätzlich). Oder *Roblox User*: Die Person gibt ihren Roblox-Benutzernamen an – im Web mit Suche und Profilbild zum Auswählen, in Discord prüft der Bot den Namen sofort, zeigt das gefundene Konto mit Profilbild und lässt es per Button bestätigen („Ja, das bin ich“ / „Anderer Name“); bei unbekanntem Namen fragt er erneut. Der Server prüft beim Einreichen noch einmal bei Roblox und speichert `Name (ID …)`. Bei der Polizei-Bewerbung ersetzt eine solche Frage die eingebaute erste Frage nach dem Roblox-Namen (und setzt Roblox-Name + ID der Bewerbung). Ist Roblox gerade nicht erreichbar, wird der Name ungeprüft übernommen.

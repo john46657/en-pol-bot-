@@ -3,6 +3,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.QUALI_INTERACTION = exports.QUALI_COMMANDS = exports.sweepSessions = exports.resetSessions = exports.MAX_ANSWER = exports.APPLICATION_MS = exports.POLICE = void 0;
 exports.panelEmbed = panelEmbed;
 exports.handleDirectMessage = handleDirectMessage;
+exports.openApplicantTicket = openApplicantTicket;
 const shared_1 = require("@enrp/shared");
 const api_1 = require("../api");
 const format_1 = require("../format");
@@ -349,15 +350,12 @@ exports.QUALI_INTERACTION = {
                 const cfg = await c.config?.().catch(() => undefined);
                 let t;
                 try {
-                    t = await c.platform.createTicketChannel({ guildId: c.guildId, userId: a.discordId, userName: a.discordName ?? a.robloxUsername ?? a.discordId, categoryId: cfg?.tickets, staffRoleId: cfg?.staffRole, extraUserIds: [c.discordId] });
+                    t = await openApplicantTicket(c.platform, cfg, { guildId: c.guildId, discordId: a.discordId, userName: a.discordName ?? a.robloxUsername ?? a.discordId, number: a.number, unitName: a.unitName, requesterId: c.discordId });
                 }
                 catch {
                     return (0, format_1.errorReply)('Ticket konnte nicht angelegt werden (fehlen dem Bot die Rechte „Kanäle verwalten“, oder ist die Person nicht mehr auf dem Server?).');
                 }
-                if (t.existing)
-                    return (0, format_1.okReply)(`Mit dieser Person gibt es schon ein offenes Ticket: <#${t.channelId}>`);
-                await c.platform.postPanel({ channelId: t.channelId, embed: { title: `🎫 Ticket zur Bewerbung ${a.number}`, color: format_1.COLORS.info, description: `<@${a.discordId}>, das Team hat eine Rückfrage zu deiner Bewerbung **${a.number}**${a.unitName ? ` (${(0, format_1.plain)(a.unitName)})` : ''}. Bitte antworte hier.` }, buttons: [{ id: 'support:close', label: 'Ticket schließen', emoji: '🔒', style: 'danger' }] }).catch(() => undefined);
-                return (0, format_1.okReply)(`Ticket geöffnet: <#${t.channelId}>`);
+                return (0, format_1.okReply)(t.existing ? `Mit dieser Person gibt es schon ein offenes Ticket: <#${t.channelId}>` : `Ticket geöffnet: <#${t.channelId}>`);
             }
             if (action === 'rb') {
                 const s = sessions.get(c.discordId);
@@ -456,4 +454,12 @@ exports.QUALI_INTERACTION = {
         }
     },
 };
+/** Privater Kanal mit Bewerber, Team-Rolle und dem anfragenden Teammitglied (Discord-Button und Dashboard). */
+async function openApplicantTicket(platform, cfg, a) {
+    const t = await platform.createTicketChannel({ guildId: a.guildId, userId: a.discordId, userName: a.userName, categoryId: cfg?.tickets, staffRoleId: cfg?.staffRole, extraUserIds: a.requesterId ? [a.requesterId] : [] });
+    if (!t.existing) {
+        await platform.postPanel({ channelId: t.channelId, embed: { title: `🎫 Ticket zur Bewerbung ${a.number}`, color: format_1.COLORS.info, description: `<@${a.discordId}>, das Team hat eine Rückfrage zu deiner Bewerbung **${a.number}**${a.unitName ? ` (${(0, format_1.plain)(a.unitName)})` : ''}. Bitte antworte hier.` }, buttons: [{ id: 'support:close', label: 'Ticket schließen', emoji: '🔒', style: 'danger' }] }).catch(() => undefined);
+    }
+    return t;
+}
 //# sourceMappingURL=qualifications.js.map

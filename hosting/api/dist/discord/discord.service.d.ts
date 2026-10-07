@@ -92,6 +92,22 @@ export declare class DiscordService {
     enqueue(channelKey: ChannelKey, type: string, payload: Record<string, unknown>, opts?: {
         always?: boolean;
     }): Promise<void>;
+    /**
+     * „Ticket mit Bewerber öffnen“ aus dem Dashboard: der Bot legt (wie beim Discord-Button) einen privaten Kanal mit Person, Team-Rolle und dir an.
+     * Server: der der Bewerbung, sonst der eingestellte Haupt-Server.
+     */
+    applicantTicket(actor: Actor, a: {
+        id: string;
+        number: string;
+        discordId: string | null;
+        discordName: string | null;
+        guildId: string | null;
+        unitName?: string | null;
+        robloxUsername?: string | null;
+    }, entityType: string): Promise<{
+        queued: boolean;
+        linked: boolean;
+    }>;
     /** Server des Bots mit Channels und Rollen (meldet der Bot regelmäßig) – für Namen und Auswahllisten im Dashboard. */
     guilds(): Promise<DiscordGuildInfo[]>;
     saveGuilds(guilds: DiscordGuildInfo[]): Promise<void>;

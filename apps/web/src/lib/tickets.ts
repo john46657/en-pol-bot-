@@ -29,6 +29,7 @@ export interface TicketSettingsCfg {
   logChannelId: string | null; transcriptChannelId: string | null; closedTitle: string; closedMessage: string; closedColor: number;
   reopenedMessage: string; ratingMessage: string; ratingThanks: string; transcriptRetentionDays: number;
   ratingChannelId: string | null; ratingPublicChannelId: string | null; ratingPublicFields: RatingField[];
+  memberLeaveAction: 'NONE' | 'CLOSE'; memberLeaveReason: string;
 }
 export const RATING_FIELDS = { creator: 'Ersteller', category: 'Kategorie', staff: 'Bearbeiter', duration: 'Bearbeitungszeit', comment: 'Kommentar' } as const;
 export type RatingField = keyof typeof RATING_FIELDS;

@@ -7,7 +7,7 @@ import { errText } from '../lib/tickets';
 import { useAuth } from '../lib/auth';
 import type { FormField } from '@enrp/shared';
 import { FormQuestionsEditor } from '../components/FormQuestionsEditor';
-import { DecisionButtons } from '../components/DecisionButtons';
+import { ApplicationActions } from '../components/DecisionButtons';
 import { ApplicationSettingsEditor, defaultAppSettings, withDefaults, type AppCommon } from '../components/ApplicationSettings';
 import { GuildTag, useServer } from '../lib/guilds';
 import { ServerScope } from './Applications';
@@ -90,19 +90,20 @@ export function Qualifications() {
                 {(config.data?.units ?? []).map((u) => <option key={u.key} value={u.key}>{u.name}</option>)}
               </Select></div>
               <div className="w-40"><Select aria-label="Status" value={status} onChange={(e) => setStatus(e.target.value)}>
-                <option value="OPEN">Offen</option><option value="ACCEPTED">Angenommen</option><option value="REJECTED">Abgelehnt</option><option value="">Alle</option>
+                <option value="OPEN">Offen</option><option value="ACCEPTED">Angenommen</option><option value="REJECTED">Abgelehnt</option><option value="WITHDRAWN">Zurückgezogen</option><option value="">Alle</option>
               </Select></div>
             </div>
             {apps.isLoading ? <SkeletonRows /> : apps.error ? <ErrorState error={apps.error} onRetry={() => void apps.refetch()} /> : !shown?.length ? <EmptyState text="Keine Bewerbungen." hint="Bewerbungen kommen über das Discord-Panel (/qualipanel)." /> : (
               <div className="grid gap-3">{shown.map((a) => (
-                <Card key={a.id} title={<span className="flex flex-wrap items-center gap-2">{a.unitName} · {a.number} <StatusBadge status={a.status} /><GuildTag id={a.guildId} /></span>}
-                  actions={a.status === 'OPEN' && decideAllowed && <DecisionButtons busy={decide.isPending} onDecide={(st, reason) => decide.mutate({ id: a.id, status: st, reason })} />}>
+                <Card key={a.id} title={<span className="flex flex-wrap items-center gap-2">{a.unitName} · {a.number} <StatusBadge status={a.status} /><GuildTag id={a.guildId} /></span>}>
                   <p className="mb-2 text-sm">Discord: <strong>{a.discordName}</strong> <span className="text-xs text-muted">({a.discordId})</span>{a.linkedName ? <> · Benutzer <strong>{a.linkedName}</strong></> : <span className="text-muted"> · nicht mit einem Benutzer verknüpft</span>}</p>
                   <ol className="grid gap-2 text-sm">{a.answers.map((x, i) => (
                     <li key={i}><p className="text-xs text-muted">{i + 1}. {x.question}</p><p className="whitespace-pre-wrap">{x.answer}</p></li>
                   ))}</ol>
                   {a.decisionReason && <p className="mt-2 text-sm"><span className="text-xs text-muted">Begründung an Bewerber:</span> {a.decisionReason}</p>}
                   <p className="mt-2 text-xs text-muted">Eingereicht {fmt(a.createdAt)}{a.durationSec !== null && ` · ausgefüllt in ${Math.floor(a.durationSec / 60)} min ${a.durationSec % 60} s`}{a.decidedAt && ` · entschieden ${fmt(a.decidedAt)} von ${a.decidedByName}`}</p>
+                  <ApplicationActions open={a.status === 'OPEN'} canDecide={decideAllowed} busy={decide.isPending} onDecide={(st, reason) => decide.mutate({ id: a.id, status: st, reason })}
+                    discordId={a.discordId} name={a.discordName} ticketPath={`/qualifications/applications/${a.id}/ticket`} />
                 </Card>
               ))}</div>
             )}

@@ -15,6 +15,6 @@ let QualificationsModule = class QualificationsModule {
 };
 exports.QualificationsModule = QualificationsModule;
 exports.QualificationsModule = QualificationsModule = __decorate([
-    (0, common_1.Module)({ imports: [persons_module_1.PersonsModule], controllers: [qualifications_controller_1.QualificationsController, qualifications_controller_1.BotQualificationsController], providers: [qualifications_service_1.QualificationsService] })
+    (0, common_1.Module)({ imports: [persons_module_1.PersonsModule], controllers: [qualifications_controller_1.QualificationsController, qualifications_controller_1.BotQualificationsController], providers: [qualifications_service_1.QualificationsService], exports: [qualifications_service_1.QualificationsService] })
 ], QualificationsModule);
 //# sourceMappingURL=qualifications.module.js.map

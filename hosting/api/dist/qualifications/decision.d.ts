@@ -1,4 +1,8 @@
+import type { Actor } from '../audit/audit.service';
 import type { AppSettings } from './qualifications.config';
+/** Automatische Entscheidung, wenn jemand den Discord-Server verlässt (kein Benutzer). */
+export declare const LEFT_ACTOR: Actor;
+export declare const LEFT_REASON = "Hat den Discord-Server verlassen.";
 /** Rollen bei der Entscheidung: angenommen → Annahme-Rollen (+ Rolle der Einheit, Rollen-Auswahl), abgelehnt → Ablehnungs-Rollen; „ausstehend“-Rollen fallen weg. */
 export declare function decisionRoles(s: AppSettings, accepted: boolean, extra?: (string | null | undefined)[]): {
     add: string[];

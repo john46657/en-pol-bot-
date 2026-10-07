@@ -11,7 +11,7 @@ import { nextStatus } from '../common/transition';
 import { PageQuery, pageResult, skipTake } from '../common/pagination';
 import { webUrl } from '../common/web-url';
 import { policeSchema } from '../qualifications/qualifications.config';
-import { cooldownLeft, decisionMessage, decisionRoles, submitRoles } from '../qualifications/decision';
+import { cooldownLeft, decisionMessage, decisionRoles, LEFT_ACTOR, LEFT_REASON, submitRoles } from '../qualifications/decision';
 import { RobloxService } from '../persons/roblox.service';
 import { formatMinutes } from '@enrp/shared';
 
@@ -128,6 +128,10 @@ export class ApplicationsService {
     return { open: !!a, number: a?.number ?? null };
   }
 
+  async openTicket(actor: Actor, id: string) {
+    return this.discord.applicantTicket(actor, { ...(await this.get(id)), unitName: 'EN Polizei' }, 'Application');
+  }
+
   /** Bisherige Bewerbungen einer Discord-ID (Button „Verlauf“). */
   history(discordId: string) {
     return this.prisma.application.findMany({ where: { discordId }, orderBy: { createdAt: 'desc' }, take: 20, select: { id: true, number: true, status: true, createdAt: true, decisionReason: true } });
@@ -151,6 +155,18 @@ export class ApplicationsService {
     const by = actor.userId ? await this.prisma.user.findUnique({ where: { id: actor.userId }, select: { displayName: true } }) : null;
     await this.archive(after, to, reason || null, by?.displayName ?? null);
     return { id, number: after.number, status: to, decidedByName: by?.displayName ?? null, reason: reason || null };
+  }
+
+  /** „Action On User Leave“ der Polizei-Bewerbung: offene Bewerbungen einer Person, die den Discord-Server verlassen hat. */
+  async memberLeft(guildId: string, discordId: string) {
+    const open = await this.prisma.application.findMany({ where: { discordId, status: { in: OPEN_STATUSES }, OR: [{ guildId }, { guildId: null }] }, select: { id: true, guildId: true } });
+    let denied = 0, withdrawn = 0;
+    for (const a of open) {
+      const action = (await this.police(a.guildId)).settings.onLeave;
+      if (action === 'DENY') await this.discordDecide(LEFT_ACTOR, a.id, 'REJECTED', LEFT_REASON).then(() => denied++, () => undefined);
+      else if (action === 'WITHDRAW') await this.transition(LEFT_ACTOR, a.id, 'WITHDRAWN', LEFT_REASON).then(() => withdrawn++, () => undefined);
+    }
+    return { denied, withdrawn };
   }
 
   async list(p: PageQuery, status?: string, guildId?: string) {

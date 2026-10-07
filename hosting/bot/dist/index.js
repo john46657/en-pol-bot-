@@ -12,13 +12,14 @@ const config_1 = require("./config");
 const live_1 = require("./live");
 const outbox_1 = require("./outbox");
 const roblox_1 = require("./roblox");
+const welcome_1 = require("./welcome");
 (0, config_1.loadDotEnv)();
 const cfg = (0, config_1.loadConfig)();
 const api = new api_1.HttpApi(cfg.API_URL, cfg.BOT_API_TOKEN);
 const makeClient = (i) => new discord_js_1.Client({
     intents: [discord_js_1.GatewayIntentBits.Guilds, discord_js_1.GatewayIntentBits.DirectMessages, discord_js_1.GatewayIntentBits.GuildMessages, discord_js_1.GatewayIntentBits.GuildVoiceStates,
         ...(i.content ? [discord_js_1.GatewayIntentBits.MessageContent] : []), ...(i.members ? [discord_js_1.GatewayIntentBits.GuildMembers] : []), ...(i.presences ? [discord_js_1.GatewayIntentBits.GuildPresences] : [])],
-    partials: [discord_js_1.Partials.Channel],
+    partials: [discord_js_1.Partials.Channel, discord_js_1.Partials.GuildMember], // GuildMember: Austritt auch von Mitgliedern, die nicht im Cache sind
 });
 /** Reihenfolge der Versuche, falls privilegierte Intents im Developer Portal aus sind. */
 const INTENT_STEPS = [
@@ -144,6 +145,28 @@ const platform = {
     },
 };
 const live = (0, live_1.createLive)(api, platform);
+/** Willkommen & Abschied, Aktion beim Verlassen (braucht den „Server Members“-Intent). */
+const welcome = (0, welcome_1.createWelcome)(api, {
+    async post(channelId, m) {
+        const ch = await client.channels.fetch(channelId);
+        if (!ch?.isSendable())
+            throw new Error(`channel ${channelId} is not a text channel the bot can post in`);
+        await ch.send({ ...(m.content ? { content: m.content } : {}), embeds: [toEmbed(m.embed)], allowedMentions: { parse: [], users: m.mentionUserIds ?? [] } });
+    },
+    async dm(userId, text) { await platform.sendDirectMessage(userId, text); },
+    async addRoles(guildId, userId, roleIds) {
+        const guild = await client.guilds.fetch(guildId);
+        const ids = roleIds.filter((r) => guild.roles.cache.has(r));
+        if (ids.length)
+            await (await guild.members.fetch(userId)).roles.add(ids, 'EN Polizei: Willkommen');
+    },
+});
+/** Mitglied (auch teilweise geladen) → Daten für Platzhalter. */
+function memberEvent(m) {
+    if (!m.user)
+        return null;
+    return { id: m.id, guildId: m.guild.id, bot: m.user.bot, username: m.user.username, displayName: m.displayName ?? m.user.username, server: m.guild.name, memberCount: m.guild.memberCount, createdAt: m.user.createdAt, avatar: m.user.displayAvatarURL({ size: 256 }) };
+}
 function addOptions(b, options = []) {
     for (const o of options) {
         const common = (x) => { x.setName(o.name); x.setDescription(o.description); x.setRequired(!!o.required); };
@@ -286,6 +309,10 @@ function wire(c) {
         const task = api_1.guildScope.run(i.guildId ?? null, () => api_1.rolesScope.run(rolesOf(i.member), () => i.isChatInputCommand() ? handleCommand(i) : i.isButton() || i.isModalSubmit() || i.isAnySelectMenu() ? handleComponent(i) : undefined));
         void task?.catch((e) => console.error('interaction failed:', e instanceof Error ? e.message : e));
     });
+    c.on('guildMemberAdd', (m) => { const e = memberEvent(m); if (e)
+        void welcome.joined(e).catch((x) => console.error('member join failed:', x instanceof Error ? x.message : x)); });
+    c.on('guildMemberRemove', (m) => { const e = memberEvent(m); if (e)
+        void welcome.left(e).catch((x) => console.error('member leave failed:', x instanceof Error ? x.message : x)); });
     // Direktnachrichten: Antworten auf Bewerbungsfragen (Bewerbung bei EN Polizei und Qualifikationen)
     c.on('messageCreate', (m) => {
         if (m.inGuild()) {
@@ -402,7 +429,17 @@ function wireReady(client0) {
             }
             if (opts?.thread)
                 await msg.startThread({ name: opts.thread, autoArchiveDuration: 10080 }).catch((e) => console.error('could not create staff thread:', e instanceof Error ? e.message : e));
-        }, cfg.OUTBOX_POLL_SECONDS, console.log, (userId, msg) => (typeof msg === 'string' ? platform.sendDirectMessage(userId, msg) : platform.sendDm(userId, { embed: msg }).then(() => undefined)), grantRoleEverywhere, syncRolesEverywhere, () => void live.refresh('teamlist').catch(() => undefined), (effects) => tickets.apply(effects).then(() => undefined, (e) => console.error('ticket effects failed:', e instanceof Error ? e.message : e)), () => void presence.sync().catch((e) => console.error('team/voice sync failed:', e instanceof Error ? e.message : e)), async (kind, channelId) => { await live.refresh(kind, { channelId, force: true }); });
+        }, cfg.OUTBOX_POLL_SECONDS, console.log, (userId, msg) => (typeof msg === 'string' ? platform.sendDirectMessage(userId, msg) : platform.sendDm(userId, { embed: msg }).then(() => undefined)), grantRoleEverywhere, syncRolesEverywhere, () => void live.refresh('teamlist').catch(() => undefined), (effects) => tickets.apply(effects).then(() => undefined, (e) => console.error('ticket effects failed:', e instanceof Error ? e.message : e)), () => void presence.sync().catch((e) => console.error('team/voice sync failed:', e instanceof Error ? e.message : e)), async (kind, channelId) => { await live.refresh(kind, { channelId, force: true }); }, async (type, p) => {
+            if (type !== 'application.ticket')
+                return false;
+            const str = (k) => (typeof p[k] === 'string' ? p[k] : undefined);
+            const [guildId, discordId] = [str('guildId'), str('discordId')];
+            if (!guildId || !discordId)
+                throw new Error('guild or user missing');
+            const cfg = await api.service('GET', '/bot/config').catch(() => undefined);
+            await (0, qualifications_1.openApplicantTicket)(platform, cfg, { guildId, discordId, userName: str('userName') ?? discordId, number: str('number') ?? '', unitName: str('unitName'), requesterId: str('requesterId') });
+            return true;
+        });
         live.start(cfg.LIVE_REFRESH_SECONDS);
         void tickets.refresh();
         (0, guilds_1.startGuildDirectory)(() => client, api);
@@ -431,7 +468,7 @@ async function start() {
                 throw e;
         }
     }
-    const off = [!intents.content && '"Message Content" (ticket transcripts without texts)', !intents.members && '"Server Members" (dashboard team list only shows cached members)', !intents.presences && '"Presence" (no online status in the team list)'].filter(Boolean);
+    const off = [!intents.content && '"Message Content" (ticket transcripts without texts)', !intents.members && '"Server Members" (dashboard team list only shows cached members; no welcome/goodbye messages, auto roles or actions when someone leaves)', !intents.presences && '"Presence" (no online status in the team list)'].filter(Boolean);
     if (off.length)
         console.warn(`Discord: privileged intents not enabled in the Developer Portal (Bot → Privileged Gateway Intents): ${off.join(', ')}.`);
 }

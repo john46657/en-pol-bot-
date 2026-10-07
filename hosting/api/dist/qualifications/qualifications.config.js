@@ -47,6 +47,8 @@ exports.appSettingsSchema = zod_1.z.object({
     staffThreads: zod_1.z.boolean().default(false),
     cooldownMinutes: zod_1.z.number().int().min(0).max(60 * 24 * 365).default(0),
     timeLimitMinutes: zod_1.z.number().int().min(5).max(60 * 24 * 7).default(180),
+    /** Wie bei Appy „Action On User Leave“: offene Bewerbung, wenn die Person den Discord-Server verlässt (braucht den Server Members Intent). */
+    onLeave: zod_1.z.enum(['NONE', 'DENY', 'WITHDRAW']).default('NONE'),
 }).default({});
 const requirements = { enabled: zod_1.z.boolean().default(true), acceptedChannelId: channelOpt, deniedChannelId: channelOpt, settings: exports.appSettingsSchema };
 /** Eine Einheit/Qualifikation, für die man sich über das Discord-Panel bewerben kann. */

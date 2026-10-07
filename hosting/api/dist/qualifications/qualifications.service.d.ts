@@ -59,6 +59,7 @@ export declare class QualificationsService {
                 staffThreads: boolean;
                 cooldownMinutes: number;
                 timeLimitMinutes: number;
+                onLeave: "DENY" | "NONE" | "WITHDRAW";
             };
             key: string;
             description: string;
@@ -100,6 +101,7 @@ export declare class QualificationsService {
                 staffThreads: boolean;
                 cooldownMinutes: number;
                 timeLimitMinutes: number;
+                onLeave: "DENY" | "NONE" | "WITHDRAW";
             };
             description: string;
             enabled: boolean;
@@ -145,6 +147,7 @@ export declare class QualificationsService {
                 staffThreads: boolean;
                 cooldownMinutes: number;
                 timeLimitMinutes: number;
+                onLeave: "DENY" | "NONE" | "WITHDRAW";
             };
             key: string;
             description: string;
@@ -186,6 +189,7 @@ export declare class QualificationsService {
                 staffThreads: boolean;
                 cooldownMinutes: number;
                 timeLimitMinutes: number;
+                onLeave: "DENY" | "NONE" | "WITHDRAW";
             };
             description: string;
             enabled: boolean;
@@ -230,6 +234,7 @@ export declare class QualificationsService {
                 staffThreads: boolean;
                 cooldownMinutes: number;
                 timeLimitMinutes: number;
+                onLeave: "DENY" | "NONE" | "WITHDRAW";
             };
             key: string;
             description: string;
@@ -271,6 +276,7 @@ export declare class QualificationsService {
                 staffThreads: boolean;
                 cooldownMinutes: number;
                 timeLimitMinutes: number;
+                onLeave: "DENY" | "NONE" | "WITHDRAW";
             };
             description: string;
             enabled: boolean;
@@ -314,11 +320,11 @@ export declare class QualificationsService {
         userId: string | null;
         discordId: string;
         guildId: string | null;
+        unitName: string;
         status: string;
         decidedById: string | null;
         decidedAt: Date | null;
         decisionReason: string | null;
-        unitName: string;
         discordName: string;
         answers: Prisma.JsonValue;
         grantRoleIds: string[];
@@ -333,26 +339,35 @@ export declare class QualificationsService {
         userId: string | null;
         discordId: string;
         guildId: string | null;
+        unitName: string;
         status: string;
         decidedById: string | null;
         decidedAt: Date | null;
         decisionReason: string | null;
-        unitName: string;
         discordName: string;
         answers: Prisma.JsonValue;
         grantRoleIds: string[];
         durationSec: number | null;
         joinedAt: Date | null;
     }>;
+    openTicket(actor: Actor, id: string): Promise<{
+        queued: boolean;
+        linked: boolean;
+    }>;
     /** Bisherige Qualifikations-Bewerbungen einer Discord-ID (Button „Verlauf“). */
     history(discordId: string): Prisma.PrismaPromise<{
         number: string;
         id: string;
         createdAt: Date;
+        unitName: string;
         status: string;
         decisionReason: string | null;
-        unitName: string;
     }[]>;
+    /** „Action On User Leave“: offene Bewerbungen einer Person, die den Discord-Server verlassen hat (Einstellung je Einheit). */
+    memberLeft(guildId: string, discordId: string): Promise<{
+        denied: number;
+        withdrawn: number;
+    }>;
     decide(actor: Actor, id: string, status: 'ACCEPTED' | 'REJECTED', reason?: string): Promise<{
         id: string;
         number: string;

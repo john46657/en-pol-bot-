@@ -94,6 +94,22 @@ export class DiscordService {
     } catch { /* Benachrichtigung ist best effort */ }
   }
 
+  /**
+   * „Ticket mit Bewerber öffnen“ aus dem Dashboard: der Bot legt (wie beim Discord-Button) einen privaten Kanal mit Person, Team-Rolle und dir an.
+   * Server: der der Bewerbung, sonst der eingestellte Haupt-Server.
+   */
+  async applicantTicket(actor: Actor, a: { id: string; number: string; discordId: string | null; discordName: string | null; guildId: string | null; unitName?: string | null; robloxUsername?: string | null }, entityType: string) {
+    if (!a.discordId) throw new AppError('VALIDATION_FAILED', 'Diese Bewerbung kam nicht über Discord – es gibt keinen Discord-Benutzer für ein Ticket.');
+    const guildId = a.guildId ?? (await this.channels()).guildId ?? (await this.guilds())[0]?.id;
+    if (!guildId) throw new AppError('VALIDATION_FAILED', 'Kein Discord-Server bekannt – ist der Bot online?');
+    const link = actor.userId ? await this.prisma.discordLink.findUnique({ where: { userId: actor.userId } }) : null;
+    await this.prisma.$transaction(async (tx) => {
+      await tx.discordOutbox.create({ data: { type: 'application.ticket', channelKey: 'applications', payload: { guildId, discordId: a.discordId, userName: a.discordName ?? a.robloxUsername ?? a.discordId, number: a.number, unitName: a.unitName ?? null, requesterId: link?.discordId ?? null } } });
+      await this.audit.record(actor, { action: 'application.ticket', module: 'applications', entityType, entityId: a.id, after: { guildId } }, tx);
+    });
+    return { queued: true, linked: !!link };
+  }
+
   // ---- Bot-Zustand (z. B. IDs der selbst aktualisierenden Nachrichten) ----
   /** Server des Bots mit Channels und Rollen (meldet der Bot regelmäßig) – für Namen und Auswahllisten im Dashboard. */
   async guilds(): Promise<DiscordGuildInfo[]> {

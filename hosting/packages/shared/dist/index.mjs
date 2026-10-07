@@ -641,6 +641,51 @@ var STATUS_LABEL = {
 };
 var statusLabel = (status) => STATUS_LABEL[status] ?? status.replace(/_/g, " ");
 var PRIORITY_LABEL = { LOW: "Niedrig", MEDIUM: "Mittel", HIGH: "Hoch", URGENT: "Dringend", CRITICAL: "Kritisch" };
+
+// src/welcome.ts
+var DEFAULT_WELCOME_CONFIG = {
+  welcome: {
+    enabled: false,
+    channelId: null,
+    title: "\u{1F44B} Willkommen auf {server}!",
+    color: "#3b82f6",
+    showAvatar: true,
+    pingUser: true,
+    message: "Hey {user}, sch\xF6n, dass du da bist! Du bist Mitglied **#{memberCount}**.\n\nLies dir bitte die Regeln durch. Bewerben kannst du dich jederzeit \xFCber das Bewerbungs-Panel."
+  },
+  dm: { enabled: false, message: "Willkommen auf **{server}**, {username}! Bei Fragen \xF6ffne einfach ein Support-Ticket." },
+  autoRoleIds: [],
+  goodbye: { enabled: false, channelId: null, title: "Auf Wiedersehen", color: "#64748b", showAvatar: true, pingUser: false, message: "**{username}** hat den Server verlassen. Wir sind jetzt {memberCount} Mitglieder." }
+};
+var WELCOME_VARIABLES = {
+  "{user}": "Erw\xE4hnung des Mitglieds (@Name)",
+  "{username}": "Benutzername",
+  "{displayName}": "Anzeigename auf dem Server",
+  "{server}": "Name des Servers",
+  "{memberCount}": "Anzahl Mitglieder (nach Beitritt/Austritt)",
+  "{accountAge}": "Alter des Discord-Kontos (z. B. \u201E3 Tage\u201C)"
+};
+function accountAge(created, now = Date.now()) {
+  const t = created ? new Date(created).getTime() : NaN;
+  if (!Number.isFinite(t)) return "\u2014";
+  const days = Math.max(0, Math.floor((now - t) / 864e5));
+  if (days === 0) return "heute erstellt";
+  if (days < 60) return `${days} ${days === 1 ? "Tag" : "Tage"}`;
+  if (days < 730) return `${Math.floor(days / 30)} Monate`;
+  return `${Math.floor(days / 365)} Jahre`;
+}
+function renderWelcomeText(text, m, now = Date.now()) {
+  const vars = {
+    "{user}": `<@${m.id}>`,
+    "{username}": m.username,
+    "{displayName}": m.displayName,
+    "{server}": m.server,
+    "{memberCount}": String(m.memberCount),
+    "{accountAge}": accountAge(m.createdAt, now)
+  };
+  return text.replace(/\{[a-zA-Z]+\}/g, (k) => vars[k] ?? k);
+}
+var hexColor = (c, fallback = 3900150) => /^#[0-9a-fA-F]{6}$/.test(c) ? parseInt(c.slice(1), 16) : fallback;
 export {
   ALL_PERMISSIONS,
   APPLICATION_STATUSES,
@@ -663,6 +708,7 @@ export {
   DEFAULT_APPLICATION_MESSAGES,
   DEFAULT_CAD_CONFIG,
   DEFAULT_DANGER_CONFIG,
+  DEFAULT_WELCOME_CONFIG,
   DISPATCH_STATUSES,
   DISPATCH_TRANSITIONS,
   DUTY_STATUSES,
@@ -702,10 +748,12 @@ export {
   UNIT_STATUSES,
   WANTED_STATUSES,
   WANTED_TRANSITIONS,
+  WELCOME_VARIABLES,
   WORKFLOW_ACTION_LABELS,
   WORKFLOW_OPS,
   WORKFLOW_OP_LABELS,
   WORKFLOW_TRIGGERS,
+  accountAge,
   areaGrantsFor,
   assertTransition,
   can,
@@ -721,6 +769,7 @@ export {
   freeFieldKey,
   gameToPixel,
   grantMatches,
+  hexColor,
   isInputQuestion,
   isPermissionKey,
   isValidRobloxUserId,
@@ -730,6 +779,7 @@ export {
   renderApplicationText,
   renderTemplate,
   renderTicketText,
+  renderWelcomeText,
   resolvePermission,
   rolesMatch,
   statusLabel,

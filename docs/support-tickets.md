@@ -127,7 +127,7 @@ Pro Kategorie lässt sich mit *Dashboard access: system roles* festlegen, welche
 - **Bild im Eröffnungs-Embed** (Kategorie → Ticket message → Image).
 - **Fragen**: Beschreibung sowie Mindest-/Höchstzahl an Zeichen (wird im Discord-Formular und im System geprüft).
 - **Bewertungen**: Team-Channel (alle Angaben) und öffentlicher Channel (nur die gewählten Werte: Ersteller, Kategorie, Bearbeiter, Bearbeitungszeit, Kommentar) unter *General → Ratings*.
-- **Aktion beim Verlassen des Servers**: noch nicht – braucht den *Server Members Intent* (kommt mit den Willkommensnachrichten).
+- **Aktion beim Verlassen des Servers** (*Allgemein → Wenn der Ersteller den Server verlässt*): offene Tickets des Erstellers auf diesem Server automatisch schließen, mit einstellbarem Grund (wie beim Schließen von Hand: CLOSED-Anzeige, Transcript, Log). Braucht den *Server Members Intent*.
 
 ## Platzhalter
 

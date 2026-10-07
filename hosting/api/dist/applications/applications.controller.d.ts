@@ -246,5 +246,10 @@ export declare class ApplicationsController {
         decidedByName: string | null;
         reason: string | null;
     }>;
+    /** „Ticket mit Bewerber öffnen“ (wie der Discord-Button). */
+    ticket(a: Actor, id: string): Promise<{
+        queued: boolean;
+        linked: boolean;
+    }>;
 }
 export {};

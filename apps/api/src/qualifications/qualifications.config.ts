@@ -43,6 +43,8 @@ export const appSettingsSchema = z.object({
   staffThreads: z.boolean().default(false),
   cooldownMinutes: z.number().int().min(0).max(60 * 24 * 365).default(0),
   timeLimitMinutes: z.number().int().min(5).max(60 * 24 * 7).default(180),
+  /** Wie bei Appy „Action On User Leave“: offene Bewerbung, wenn die Person den Discord-Server verlässt (braucht den Server Members Intent). */
+  onLeave: z.enum(['NONE', 'DENY', 'WITHDRAW']).default('NONE'),
 }).default({});
 export type AppSettings = z.infer<typeof appSettingsSchema>;
 const requirements = { enabled: z.boolean().default(true), acceptedChannelId: channelOpt, deniedChannelId: channelOpt, settings: appSettingsSchema };

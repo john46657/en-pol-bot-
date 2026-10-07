@@ -76804,6 +76804,27 @@ var DEFAULT_CAD_CONFIG = {
   memberFields: [],
   widgets: ["activeIncidents", "availableUnits", "activeCalls", "erlcStatus", "erlcPlayers", "erlcQueue", "staffOnline", "map", "radio"]
 };
+function accountAge(created, now = Date.now()) {
+  const t = created ? new Date(created).getTime() : NaN;
+  if (!Number.isFinite(t)) return "\u2014";
+  const days = Math.max(0, Math.floor((now - t) / 864e5));
+  if (days === 0) return "heute erstellt";
+  if (days < 60) return `${days} ${days === 1 ? "Tag" : "Tage"}`;
+  if (days < 730) return `${Math.floor(days / 30)} Monate`;
+  return `${Math.floor(days / 365)} Jahre`;
+}
+function renderWelcomeText(text, m, now = Date.now()) {
+  const vars = {
+    "{user}": `<@${m.id}>`,
+    "{username}": m.username,
+    "{displayName}": m.displayName,
+    "{server}": m.server,
+    "{memberCount}": String(m.memberCount),
+    "{accountAge}": accountAge(m.createdAt, now)
+  };
+  return text.replace(/\{[a-zA-Z]+\}/g, (k) => vars[k] ?? k);
+}
+var hexColor2 = (c, fallback = 3900150) => /^#[0-9a-fA-F]{6}$/.test(c) ? parseInt(c.slice(1), 16) : fallback;
 
 // apps/bot/src/commands/qualifications.ts
 var POLICE = "@polizei";
@@ -77115,13 +77136,11 @@ ${lines.join("\n") || "Keine Bewerbungen."}`, 4e3) }] };
         const cfg2 = await c.config?.().catch(() => void 0);
         let t;
         try {
-          t = await c.platform.createTicketChannel({ guildId: c.guildId, userId: a.discordId, userName: a.discordName ?? a.robloxUsername ?? a.discordId, categoryId: cfg2?.tickets, staffRoleId: cfg2?.staffRole, extraUserIds: [c.discordId] });
+          t = await openApplicantTicket(c.platform, cfg2, { guildId: c.guildId, discordId: a.discordId, userName: a.discordName ?? a.robloxUsername ?? a.discordId, number: a.number, unitName: a.unitName, requesterId: c.discordId });
         } catch {
           return errorReply("Ticket konnte nicht angelegt werden (fehlen dem Bot die Rechte \u201EKan\xE4le verwalten\u201C, oder ist die Person nicht mehr auf dem Server?).");
         }
-        if (t.existing) return okReply(`Mit dieser Person gibt es schon ein offenes Ticket: <#${t.channelId}>`);
-        await c.platform.postPanel({ channelId: t.channelId, embed: { title: `\u{1F3AB} Ticket zur Bewerbung ${a.number}`, color: COLORS.info, description: `<@${a.discordId}>, das Team hat eine R\xFCckfrage zu deiner Bewerbung **${a.number}**${a.unitName ? ` (${plain(a.unitName)})` : ""}. Bitte antworte hier.` }, buttons: [{ id: "support:close", label: "Ticket schlie\xDFen", emoji: "\u{1F512}", style: "danger" }] }).catch(() => void 0);
-        return okReply(`Ticket ge\xF6ffnet: <#${t.channelId}>`);
+        return okReply(t.existing ? `Mit dieser Person gibt es schon ein offenes Ticket: <#${t.channelId}>` : `Ticket ge\xF6ffnet: <#${t.channelId}>`);
       }
       if (action === "rb") {
         const s2 = sessions.get(c.discordId);
@@ -77206,6 +77225,13 @@ Schreib deinen Roblox-Benutzernamen bitte noch einmal (genau wie in Roblox).`, 4
     }
   }
 };
+async function openApplicantTicket(platform2, cfg2, a) {
+  const t = await platform2.createTicketChannel({ guildId: a.guildId, userId: a.discordId, userName: a.userName, categoryId: cfg2?.tickets, staffRoleId: cfg2?.staffRole, extraUserIds: a.requesterId ? [a.requesterId] : [] });
+  if (!t.existing) {
+    await platform2.postPanel({ channelId: t.channelId, embed: { title: `\u{1F3AB} Ticket zur Bewerbung ${a.number}`, color: COLORS.info, description: `<@${a.discordId}>, das Team hat eine R\xFCckfrage zu deiner Bewerbung **${a.number}**${a.unitName ? ` (${plain(a.unitName)})` : ""}. Bitte antworte hier.` }, buttons: [{ id: "support:close", label: "Ticket schlie\xDFen", emoji: "\u{1F512}", style: "danger" }] }).catch(() => void 0);
+  }
+  return t;
+}
 
 // apps/bot/src/commands/tickets.ts
 var UUID = /^[0-9a-f-]{36}$/;
@@ -82662,7 +82688,7 @@ var DIRECT = {
   "leave.decided": (p) => leaveDirectEmbed("leave.decided", p),
   "leave.pending": (p) => leaveDirectEmbed("leave.pending", p)
 };
-async function pollOnce(api2, send, log = console.log, dm, grantRole, syncRoles, onDutyChanged, ticketEffects, onMembersSync, onPanel) {
+async function pollOnce(api2, send, log = console.log, dm, grantRole, syncRoles, onDutyChanged, ticketEffects, onMembersSync, onPanel, onTask) {
   const [channels, items] = await Promise.all([api2.service("GET", "/bot/config"), api2.service("GET", "/bot/outbox?limit=20")]);
   let sent = 0;
   for (const item of items) {
@@ -82677,6 +82703,18 @@ async function pollOnce(api2, send, log = console.log, dm, grantRole, syncRoles,
       } catch (e) {
         const msg = e instanceof Error ? e.message : "panel failed";
         log(`outbox ${item.id} (danger.panel) failed: ${msg}`);
+        await api2.service("POST", `/bot/outbox/${item.id}/ack`, { ok: false, error: msg }).catch(() => void 0);
+      }
+      continue;
+    }
+    if (item.type === "application.ticket") {
+      try {
+        if (!onTask || !await onTask(item.type, item.payload)) throw new Error("tasks not supported");
+        await api2.service("POST", `/bot/outbox/${item.id}/ack`, { ok: true });
+        sent++;
+      } catch (e) {
+        const msg = e instanceof Error ? e.message : "task failed";
+        log(`outbox ${item.id} (${item.type}) failed: ${msg}`);
         await api2.service("POST", `/bot/outbox/${item.id}/ack`, { ok: false, error: msg }).catch(() => void 0);
       }
       continue;
@@ -82784,14 +82822,14 @@ async function pollOnce(api2, send, log = console.log, dm, grantRole, syncRoles,
   }
   return sent;
 }
-function startOutboxLoop(api2, send, seconds, log = console.log, dm, grantRole, syncRoles, onDutyChanged, ticketEffects, onMembersSync, onPanel) {
+function startOutboxLoop(api2, send, seconds, log = console.log, dm, grantRole, syncRoles, onDutyChanged, ticketEffects, onMembersSync, onPanel, onTask) {
   let running = false;
   let lastError;
   const tick = async () => {
     if (running) return;
     running = true;
     try {
-      await pollOnce(api2, send, log, dm, grantRole, syncRoles, onDutyChanged, ticketEffects, onMembersSync, onPanel);
+      await pollOnce(api2, send, log, dm, grantRole, syncRoles, onDutyChanged, ticketEffects, onMembersSync, onPanel, onTask);
       if (lastError) {
         log("outbox: connection to the API restored");
         lastError = void 0;
@@ -82855,6 +82893,56 @@ async function robloxCheck(username, doFetch = fetch) {
   }
 }
 
+// apps/bot/src/welcome.ts
+var CACHE_MS = 3e4;
+function welcomeEmbed(def, m, now = Date.now()) {
+  const title = renderWelcomeText(def.title, m, now).slice(0, 256);
+  const description = renderWelcomeText(def.message, m, now).slice(0, 4e3);
+  return { title: title || "\u200B", ...description ? { description } : {}, color: hexColor2(def.color), ...def.showAvatar && m.avatar ? { thumbnail: m.avatar } : {} };
+}
+function createWelcome(api2, actions, log = console.error) {
+  const cache = /* @__PURE__ */ new Map();
+  const config2 = async (guildId) => {
+    const hit = cache.get(guildId);
+    if (hit && Date.now() - hit.at < CACHE_MS) return hit.cfg;
+    const cfg2 = await api2.service("GET", `/bot/welcome?guildId=${guildId}`);
+    cache.set(guildId, { at: Date.now(), cfg: cfg2 });
+    return cfg2;
+  };
+  const step = (label2, p) => p.catch((e) => log(`${label2} failed: ${e instanceof Error ? e.message : e}`));
+  const say = (def, m) => def.enabled && def.channelId ? actions.post(def.channelId, { ...def.pingUser ? { content: `<@${m.id}>`, mentionUserIds: [m.id] } : {}, embed: welcomeEmbed(def, m) }) : Promise.resolve();
+  return {
+    async joined(m) {
+      if (m.bot) return;
+      const cfg2 = await config2(m.guildId).catch((e) => {
+        log(`welcome config not loaded: ${e instanceof Error ? e.message : e}`);
+        return null;
+      });
+      if (!cfg2) return;
+      await Promise.all([
+        step("welcome message", say(cfg2.welcome, m)),
+        cfg2.dm.enabled && cfg2.dm.message.trim() ? step("welcome DM", actions.dm(m.id, renderWelcomeText(cfg2.dm.message, m).slice(0, 2e3))) : void 0,
+        cfg2.autoRoleIds.length ? step("auto roles", actions.addRoles(m.guildId, m.id, cfg2.autoRoleIds)) : void 0
+      ]);
+    },
+    async left(m) {
+      if (m.bot) return;
+      const cfg2 = await config2(m.guildId).catch((e) => {
+        log(`welcome config not loaded: ${e instanceof Error ? e.message : e}`);
+        return null;
+      });
+      await Promise.all([
+        cfg2 ? step("goodbye message", say(cfg2.goodbye, m)) : void 0,
+        step("member-left actions", api2.service("POST", "/bot/member-left", { guildId: m.guildId, discordId: m.id }))
+      ]);
+    },
+    /** Nach dem Speichern im Dashboard nicht 30 s warten müssen (Tests). */
+    clear() {
+      cache.clear();
+    }
+  };
+}
+
 // apps/bot/src/index.ts
 loadDotEnv();
 var cfg = loadConfig();
@@ -82869,7 +82957,8 @@ var makeClient = (i) => new import_discord4.Client({
     ...i.members ? [import_discord4.GatewayIntentBits.GuildMembers] : [],
     ...i.presences ? [import_discord4.GatewayIntentBits.GuildPresences] : []
   ],
-  partials: [import_discord4.Partials.Channel]
+  partials: [import_discord4.Partials.Channel, import_discord4.Partials.GuildMember]
+  // GuildMember: Austritt auch von Mitgliedern, die nicht im Cache sind
 });
 var INTENT_STEPS = [
   { content: true, members: true, presences: true },
@@ -82977,6 +83066,25 @@ var platform = {
   }
 };
 var live = createLive(api, platform);
+var welcome = createWelcome(api, {
+  async post(channelId, m) {
+    const ch = await client.channels.fetch(channelId);
+    if (!ch?.isSendable()) throw new Error(`channel ${channelId} is not a text channel the bot can post in`);
+    await ch.send({ ...m.content ? { content: m.content } : {}, embeds: [toEmbed(m.embed)], allowedMentions: { parse: [], users: m.mentionUserIds ?? [] } });
+  },
+  async dm(userId, text) {
+    await platform.sendDirectMessage(userId, text);
+  },
+  async addRoles(guildId, userId, roleIds) {
+    const guild = await client.guilds.fetch(guildId);
+    const ids = roleIds.filter((r) => guild.roles.cache.has(r));
+    if (ids.length) await (await guild.members.fetch(userId)).roles.add(ids, "EN Polizei: Willkommen");
+  }
+});
+function memberEvent(m) {
+  if (!m.user) return null;
+  return { id: m.id, guildId: m.guild.id, bot: m.user.bot, username: m.user.username, displayName: m.displayName ?? m.user.username, server: m.guild.name, memberCount: m.guild.memberCount, createdAt: m.user.createdAt, avatar: m.user.displayAvatarURL({ size: 256 }) };
+}
 function addOptions(b, options2 = []) {
   for (const o of options2) {
     const common = (x) => {
@@ -83118,6 +83226,14 @@ function wire(c) {
     const task = guildScope.run(i.guildId ?? null, () => rolesScope.run(rolesOf(i.member), () => i.isChatInputCommand() ? handleCommand(i) : i.isButton() || i.isModalSubmit() || i.isAnySelectMenu() ? handleComponent(i) : void 0));
     void task?.catch((e) => console.error("interaction failed:", e instanceof Error ? e.message : e));
   });
+  c.on("guildMemberAdd", (m) => {
+    const e = memberEvent(m);
+    if (e) void welcome.joined(e).catch((x) => console.error("member join failed:", x instanceof Error ? x.message : x));
+  });
+  c.on("guildMemberRemove", (m) => {
+    const e = memberEvent(m);
+    if (e) void welcome.left(e).catch((x) => console.error("member leave failed:", x instanceof Error ? x.message : x));
+  });
   c.on("messageCreate", (m) => {
     if (m.inGuild()) {
       void tickets.onMessage(m);
@@ -83218,6 +83334,15 @@ function wireReady(client0) {
       () => void presence.sync().catch((e) => console.error("team/voice sync failed:", e instanceof Error ? e.message : e)),
       async (kind2, channelId) => {
         await live.refresh(kind2, { channelId, force: true });
+      },
+      async (type, p) => {
+        if (type !== "application.ticket") return false;
+        const str4 = (k) => typeof p[k] === "string" ? p[k] : void 0;
+        const [guildId, discordId] = [str4("guildId"), str4("discordId")];
+        if (!guildId || !discordId) throw new Error("guild or user missing");
+        const cfg2 = await api.service("GET", "/bot/config").catch(() => void 0);
+        await openApplicantTicket(platform, cfg2, { guildId, discordId, userName: str4("userName") ?? discordId, number: str4("number") ?? "", unitName: str4("unitName"), requesterId: str4("requesterId") });
+        return true;
       }
     );
     live.start(cfg.LIVE_REFRESH_SECONDS);
@@ -83246,7 +83371,7 @@ async function start() {
       if (!/disallowed intents/i.test(e instanceof Error ? e.message : String(e)) || n === INTENT_STEPS.length - 1) throw e;
     }
   }
-  const off = [!intents.content && '"Message Content" (ticket transcripts without texts)', !intents.members && '"Server Members" (dashboard team list only shows cached members)', !intents.presences && '"Presence" (no online status in the team list)'].filter(Boolean);
+  const off = [!intents.content && '"Message Content" (ticket transcripts without texts)', !intents.members && '"Server Members" (dashboard team list only shows cached members; no welcome/goodbye messages, auto roles or actions when someone leaves)', !intents.presences && '"Presence" (no online status in the team list)'].filter(Boolean);
   if (off.length) console.warn(`Discord: privileged intents not enabled in the Developer Portal (Bot \u2192 Privileged Gateway Intents): ${off.join(", ")}.`);
 }
 void start().catch((e) => {

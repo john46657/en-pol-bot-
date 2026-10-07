@@ -9,7 +9,7 @@ import { startPresenceReporter } from './presence';
 import { guildScope, HttpApi, rolesScope } from './api';
 import { byName, COMMANDS, mapError } from './commands';
 import { interactionFor } from './commands/features';
-import { handleDirectMessage, sweepSessions } from './commands/qualifications';
+import { handleDirectMessage, openApplicantTicket, sweepSessions } from './commands/qualifications';
 import type { CommandDef, Ctx } from './commands/types';
 import { guildIds, loadConfig, loadDotEnv } from './config';
 import type { ButtonSpec, EmbedData, ModalSpec, Reply, SelectSpec } from './format';
@@ -17,6 +17,7 @@ import { createLive } from './live';
 import { startOutboxLoop } from './outbox';
 import type { DiscordConfig, Platform } from './platform';
 import { robloxCheck, robloxLookup } from './roblox';
+import { createWelcome, type MemberEvent } from './welcome';
 
 loadDotEnv();
 const cfg = loadConfig();
@@ -24,14 +25,14 @@ const api = new HttpApi(cfg.API_URL, cfg.BOT_API_TOKEN);
 /**
  * Guilds: Slash-Commands, Buttons, Channels, Rollen. DirectMessages: Antworten auf Bewerbungsfragen per DM.
  * GuildMessages + MessageContent: Verlauf/Transcript der Support-Tickets. GuildVoiceStates: Voice-Widget im Dashboard.
- * Privilegiert (Developer Portal → Bot → Privileged Gateway Intents): „Message Content“, „Server Members“ (Teamliste),
+ * Privilegiert (Developer Portal → Bot → Privileged Gateway Intents): „Message Content“, „Server Members“ (Teamliste, Willkommen/Abschied, Aktion beim Verlassen),
  * „Presence“ (Online-Status in der Teamliste). Fehlen sie dort, startet der Bot schrittweise ohne sie.
  */
 interface Intents { content: boolean; members: boolean; presences: boolean }
 const makeClient = (i: Intents) => new Client({
   intents: [GatewayIntentBits.Guilds, GatewayIntentBits.DirectMessages, GatewayIntentBits.GuildMessages, GatewayIntentBits.GuildVoiceStates,
     ...(i.content ? [GatewayIntentBits.MessageContent] : []), ...(i.members ? [GatewayIntentBits.GuildMembers] : []), ...(i.presences ? [GatewayIntentBits.GuildPresences] : [])],
-  partials: [Partials.Channel],
+  partials: [Partials.Channel, Partials.GuildMember], // GuildMember: Austritt auch von Mitgliedern, die nicht im Cache sind
 });
 /** Reihenfolge der Versuche, falls privilegierte Intents im Developer Portal aus sind. */
 const INTENT_STEPS: Intents[] = [
@@ -139,6 +140,25 @@ const platform: Platform = {
   },
 };
 const live = createLive(api, platform);
+/** Willkommen & Abschied, Aktion beim Verlassen (braucht den „Server Members“-Intent). */
+const welcome = createWelcome(api, {
+  async post(channelId, m) {
+    const ch = await client.channels.fetch(channelId);
+    if (!ch?.isSendable()) throw new Error(`channel ${channelId} is not a text channel the bot can post in`);
+    await ch.send({ ...(m.content ? { content: m.content } : {}), embeds: [toEmbed(m.embed)], allowedMentions: { parse: [], users: m.mentionUserIds ?? [] } });
+  },
+  async dm(userId, text) { await platform.sendDirectMessage(userId, text); },
+  async addRoles(guildId, userId, roleIds) {
+    const guild = await client.guilds.fetch(guildId);
+    const ids = roleIds.filter((r) => guild.roles.cache.has(r));
+    if (ids.length) await (await guild.members.fetch(userId)).roles.add(ids, 'EN Polizei: Willkommen');
+  },
+});
+/** Mitglied (auch teilweise geladen) → Daten für Platzhalter. */
+function memberEvent(m: { id: string; user: { username: string; bot: boolean; createdAt: Date; displayAvatarURL(o: { size: number }): string } | null; displayName?: string | null; guild: { id: string; name: string; memberCount: number } }): MemberEvent | null {
+  if (!m.user) return null;
+  return { id: m.id, guildId: m.guild.id, bot: m.user.bot, username: m.user.username, displayName: m.displayName ?? m.user.username, server: m.guild.name, memberCount: m.guild.memberCount, createdAt: m.user.createdAt, avatar: m.user.displayAvatarURL({ size: 256 }) };
+}
 
 type OptionHost = Pick<SlashCommandBuilder, 'addStringOption' | 'addIntegerOption' | 'addBooleanOption' | 'addUserOption' | 'addNumberOption'>;
 function addOptions(b: OptionHost, options: CommandDef['options'] = []) {
@@ -259,6 +279,9 @@ function wire(c: Client) {
     void task?.catch((e) => console.error('interaction failed:', e instanceof Error ? e.message : e));
   });
 
+  c.on('guildMemberAdd', (m) => { const e = memberEvent(m); if (e) void welcome.joined(e).catch((x) => console.error('member join failed:', x instanceof Error ? x.message : x)); });
+  c.on('guildMemberRemove', (m) => { const e = memberEvent(m); if (e) void welcome.left(e).catch((x) => console.error('member leave failed:', x instanceof Error ? x.message : x)); });
+
   // Direktnachrichten: Antworten auf Bewerbungsfragen (Bewerbung bei EN Polizei und Qualifikationen)
   c.on('messageCreate', (m: Message) => {
     if (m.inGuild()) { void tickets.onMessage(m); return; } // Verlauf der Support-Tickets
@@ -354,7 +377,16 @@ function wireReady(client0: Client) {
   }, cfg.OUTBOX_POLL_SECONDS, console.log, (userId, msg) => (typeof msg === 'string' ? platform.sendDirectMessage(userId, msg) : platform.sendDm(userId, { embed: msg }).then(() => undefined)), grantRoleEverywhere, syncRolesEverywhere, () => void live.refresh('teamlist').catch(() => undefined),
     (effects) => tickets.apply(effects).then(() => undefined, (e) => console.error('ticket effects failed:', e instanceof Error ? e.message : e)),
     () => void presence.sync().catch((e) => console.error('team/voice sync failed:', e instanceof Error ? e.message : e)),
-    async (kind, channelId) => { await live.refresh(kind, { channelId, force: true }); });
+    async (kind, channelId) => { await live.refresh(kind, { channelId, force: true }); },
+    async (type, p) => {
+      if (type !== 'application.ticket') return false;
+      const str = (k: string) => (typeof p[k] === 'string' ? (p[k] as string) : undefined);
+      const [guildId, discordId] = [str('guildId'), str('discordId')];
+      if (!guildId || !discordId) throw new Error('guild or user missing');
+      const cfg = await api.service<DiscordConfig>('GET', '/bot/config').catch(() => undefined);
+      await openApplicantTicket(platform, cfg, { guildId, discordId, userName: str('userName') ?? discordId, number: str('number') ?? '', unitName: str('unitName'), requesterId: str('requesterId') });
+      return true;
+    });
   live.start(cfg.LIVE_REFRESH_SECONDS);
   void tickets.refresh();
   startGuildDirectory(() => client, api);
@@ -374,7 +406,7 @@ async function start() {
       if (!/disallowed intents/i.test(e instanceof Error ? e.message : String(e)) || n === INTENT_STEPS.length - 1) throw e;
     }
   }
-  const off = [!intents.content && '"Message Content" (ticket transcripts without texts)', !intents.members && '"Server Members" (dashboard team list only shows cached members)', !intents.presences && '"Presence" (no online status in the team list)'].filter(Boolean);
+  const off = [!intents.content && '"Message Content" (ticket transcripts without texts)', !intents.members && '"Server Members" (dashboard team list only shows cached members; no welcome/goodbye messages, auto roles or actions when someone leaves)', !intents.presences && '"Presence" (no online status in the team list)'].filter(Boolean);
   if (off.length) console.warn(`Discord: privileged intents not enabled in the Developer Portal (Bot → Privileged Gateway Intents): ${off.join(', ')}.`);
 }
 void start().catch((e) => { console.error('Discord login failed:', e instanceof Error ? e.message : e); process.exit(1); });

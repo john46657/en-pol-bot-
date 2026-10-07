@@ -58,4 +58,7 @@ export class ApplicationsController {
   discordDecide(@CurrentActor() a: Actor, @Param('id', ParseUUIDPipe) id: string, @Body(zodBody(z.object({ status: z.enum(['ACCEPTED', 'REJECTED']), reason: z.string().trim().max(1000).optional() }))) b: { status: 'ACCEPTED' | 'REJECTED'; reason?: string }) {
     return this.a.discordDecide(a, id, b.status, b.reason);
   }
+  /** „Ticket mit Bewerber öffnen“ (wie der Discord-Button). */
+  @Post(':id/ticket') @HttpCode(202) @RequirePermission('applications.view')
+  ticket(@CurrentActor() a: Actor, @Param('id', ParseUUIDPipe) id: string) { return this.a.openTicket(a, id); }
 }

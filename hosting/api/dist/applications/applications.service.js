@@ -153,6 +153,9 @@ let ApplicationsService = class ApplicationsService {
         const a = await this.prisma.application.findFirst({ where: { discordId, status: { in: OPEN_STATUSES } }, select: { number: true } });
         return { open: !!a, number: a?.number ?? null };
     }
+    async openTicket(actor, id) {
+        return this.discord.applicantTicket(actor, { ...(await this.get(id)), unitName: 'EN Polizei' }, 'Application');
+    }
     /** Bisherige Bewerbungen einer Discord-ID (Button „Verlauf“). */
     history(discordId) {
         return this.prisma.application.findMany({ where: { discordId }, orderBy: { createdAt: 'desc' }, take: 20, select: { id: true, number: true, status: true, createdAt: true, decisionReason: true } });
@@ -178,6 +181,19 @@ let ApplicationsService = class ApplicationsService {
         const by = actor.userId ? await this.prisma.user.findUnique({ where: { id: actor.userId }, select: { displayName: true } }) : null;
         await this.archive(after, to, reason || null, by?.displayName ?? null);
         return { id, number: after.number, status: to, decidedByName: by?.displayName ?? null, reason: reason || null };
+    }
+    /** „Action On User Leave“ der Polizei-Bewerbung: offene Bewerbungen einer Person, die den Discord-Server verlassen hat. */
+    async memberLeft(guildId, discordId) {
+        const open = await this.prisma.application.findMany({ where: { discordId, status: { in: OPEN_STATUSES }, OR: [{ guildId }, { guildId: null }] }, select: { id: true, guildId: true } });
+        let denied = 0, withdrawn = 0;
+        for (const a of open) {
+            const action = (await this.police(a.guildId)).settings.onLeave;
+            if (action === 'DENY')
+                await this.discordDecide(decision_1.LEFT_ACTOR, a.id, 'REJECTED', decision_1.LEFT_REASON).then(() => denied++, () => undefined);
+            else if (action === 'WITHDRAW')
+                await this.transition(decision_1.LEFT_ACTOR, a.id, 'WITHDRAWN', decision_1.LEFT_REASON).then(() => withdrawn++, () => undefined);
+        }
+        return { denied, withdrawn };
     }
     async list(p, status, guildId) {
         const where = { ...(guildId ? { guildId } : {}), ...(status === 'OPEN' ? { status: { in: OPEN_STATUSES } } : status ? { status } : {}), ...(p.q ? { OR: [{ number: { contains: p.q.toUpperCase() } }, { robloxUsername: { contains: p.q, mode: 'insensitive' } }] } : {}) };

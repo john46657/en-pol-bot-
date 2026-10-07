@@ -1,10 +1,13 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.submitRoles = void 0;
+exports.submitRoles = exports.LEFT_REASON = exports.LEFT_ACTOR = void 0;
 exports.decisionRoles = decisionRoles;
 exports.decisionMessage = decisionMessage;
 exports.cooldownLeft = cooldownLeft;
 const shared_1 = require("@enrp/shared");
+/** Automatische Entscheidung, wenn jemand den Discord-Server verlässt (kein Benutzer). */
+exports.LEFT_ACTOR = { userId: null };
+exports.LEFT_REASON = 'Hat den Discord-Server verlassen.';
 const uniq = (xs) => [...new Set(xs.filter((x) => !!x && /^\d{15,25}$/.test(x)))];
 /** Rollen bei der Entscheidung: angenommen → Annahme-Rollen (+ Rolle der Einheit, Rollen-Auswahl), abgelehnt → Ablehnungs-Rollen; „ausstehend“-Rollen fallen weg. */
 function decisionRoles(s, accepted, extra = []) {

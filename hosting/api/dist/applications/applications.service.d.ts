@@ -64,6 +64,7 @@ export declare class ApplicationsService {
             staffThreads: boolean;
             cooldownMinutes: number;
             timeLimitMinutes: number;
+            onLeave: "DENY" | "NONE" | "WITHDRAW";
         };
         description: string;
         enabled: boolean;
@@ -81,6 +82,10 @@ export declare class ApplicationsService {
     openForDiscord(discordId: string): Promise<{
         open: boolean;
         number: string | null;
+    }>;
+    openTicket(actor: Actor, id: string): Promise<{
+        queued: boolean;
+        linked: boolean;
     }>;
     /** Bisherige Bewerbungen einer Discord-ID (Button „Verlauf“). */
     history(discordId: string): import("@prisma/client").Prisma.PrismaPromise<{
@@ -100,6 +105,11 @@ export declare class ApplicationsService {
         status: "REJECTED" | "ACCEPTED";
         decidedByName: string | null;
         reason: string | null;
+    }>;
+    /** „Action On User Leave“ der Polizei-Bewerbung: offene Bewerbungen einer Person, die den Discord-Server verlassen hat. */
+    memberLeft(guildId: string, discordId: string): Promise<{
+        denied: number;
+        withdrawn: number;
     }>;
     list(p: PageQuery, status?: string, guildId?: string): Promise<{
         items: {

@@ -152,9 +152,34 @@ let QualificationsService = class QualificationsService {
             throw new errors_1.AppError('NOT_FOUND', 'Bewerbung nicht gefunden.');
         return a;
     }
+    async openTicket(actor, id) {
+        return this.discord.applicantTicket(actor, await this.get(id), 'QualificationApplication');
+    }
     /** Bisherige Qualifikations-Bewerbungen einer Discord-ID (Button „Verlauf“). */
     history(discordId) {
         return this.prisma.qualificationApplication.findMany({ where: { discordId }, orderBy: { createdAt: 'desc' }, take: 20, select: { id: true, number: true, unitName: true, status: true, createdAt: true, decisionReason: true } });
+    }
+    /** „Action On User Leave“: offene Bewerbungen einer Person, die den Discord-Server verlassen hat (Einstellung je Einheit). */
+    async memberLeft(guildId, discordId) {
+        const open = await this.prisma.qualificationApplication.findMany({ where: { discordId, status: 'OPEN', OR: [{ guildId }, { guildId: null }] } });
+        let denied = 0, withdrawn = 0;
+        for (const a of open) {
+            const action = (await this.config(a.guildId)).units.find((u) => u.key === a.unit)?.settings.onLeave ?? 'NONE';
+            if (action === 'DENY') {
+                await this.decide(decision_1.LEFT_ACTOR, a.id, 'REJECTED', decision_1.LEFT_REASON).then(() => denied++, () => undefined);
+                continue;
+            }
+            if (action !== 'WITHDRAW')
+                continue;
+            const claimed = await this.prisma.$transaction(async (tx) => {
+                const r = await tx.qualificationApplication.updateMany({ where: { id: a.id, status: 'OPEN' }, data: { status: 'WITHDRAWN', decidedAt: new Date(), decisionReason: decision_1.LEFT_REASON } });
+                if (r.count)
+                    await this.audit.record(decision_1.LEFT_ACTOR, { action: 'qualifications.application.withdraw', module: 'qualifications', entityType: 'QualificationApplication', entityId: a.id, before: { status: 'OPEN' }, after: { status: 'WITHDRAWN' }, reason: decision_1.LEFT_REASON }, tx);
+                return r.count;
+            });
+            withdrawn += claimed;
+        }
+        return { denied, withdrawn };
     }
     async decide(actor, id, status, reason) {
         const a = await this.prisma.qualificationApplication.findUnique({ where: { id } });

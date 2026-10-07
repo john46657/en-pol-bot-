@@ -139,6 +139,16 @@ Jeder Statuswechsel – egal ob im **Dashboard**, per **`/dienst`**, per **Diens
 
 Ist weder Channel noch Rolle eingestellt, wird nichts eingereiht. Fällt der Bot kurz aus, werden die Änderungen nachgeholt.
 
+## Willkommen & Abschied
+*Administration → Willkommen & Abschied* (je Server – oben links wählen; „Alle Server“ = gemeinsame Grundeinstellung):
+- **Willkommensnachricht** in einem Kanal (Titel, Text, Farbe, Profilbild, Erwähnung des neuen Mitglieds) mit Vorschau.
+- **Willkommens-DM** und **automatische Rollen** für neue Mitglieder (keine Bots; die Bot-Rolle muss über diesen Rollen stehen).
+- **Abschiedsnachricht**, wenn jemand den Server verlässt.
+- Platzhalter: `{user}`, `{username}`, `{displayName}`, `{server}`, `{memberCount}`, `{accountAge}`.
+- Beim Verlassen außerdem: offene Bewerbungen nach *Aktion beim Verlassen* ([qualifications.md](qualifications.md)) und offene Support-Tickets nach *Tickets → Allgemein* ([support-tickets.md](support-tickets.md)).
+
+Braucht im Developer Portal den privilegierten **Server Members Intent** (Bot → Privileged Gateway Intents). Ohne ihn startet der Bot trotzdem, nur Beitritte/Austritte kommen nicht an.
+
 ## Abmeldungen (Leave of Absences)
 *Administration → Leave of Absences*: Modul einschalten, **Leave Approval Channel** (Anträge mit Buttons *Annehmen* / *Ablehnen* / *Ablehnen mit Grund*), **Leave Logs Channel** (angenommen, abgelehnt, beginnt, beendet …), **On Leave Role** und die längste erlaubte Dauer.
 - Beantragen: `/abmeldung` in Discord oder *Organisation → Leave* im Dashboard (Recht `leave.request`, haben alle *Police Member*).
