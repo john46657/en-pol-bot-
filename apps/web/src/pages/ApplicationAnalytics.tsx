@@ -30,14 +30,14 @@ const KPI_META: Record<Kpi['key'], { label: string; icon: typeof ClipboardList; 
 };
 
 /** Bewerbungs-Statistik (Polizei + Qualifikationen) – Filter oben, Kennzahlen mit Vergleich zur Vorperiode. */
-export function ApplicationAnalytics() {
+export function ApplicationAnalytics({ embedded = false }: { embedded?: boolean } = {}) {
   const [server] = useServer();
   const [f, setF] = useState<{ type?: string; status?: string; reviewer?: string; days: number }>({ days: 30 });
   const q = useQuery({ queryKey: ['application-analytics', f, server], queryFn: () => api<Stats>('/applications/analytics', { query: { ...f } }) });
   const d = q.data;
   return (
     <>
-      <PageHeader title="Bewerbungs-Statistik" subtitle="Polizei-Bewerbungen und Qualifikationen (SEK, Flugstaffel …)" actions={<Link to="/applications"><Button variant="secondary">← Bewerbungen</Button></Link>} />
+      {!embedded && <PageHeader title="Bewerbungs-Statistik" subtitle="Polizei-Bewerbungen und Qualifikationen (SEK, Flugstaffel …)" actions={<Link to="/applications"><Button variant="secondary">← Bewerbungen</Button></Link>} />}
       <Card className="mb-3">
         <div className="flex flex-wrap items-end gap-3">
           <label className="grid gap-1 text-xs text-muted">Bewerbung<Select aria-label="Bewerbung" value={f.type ?? ''} onChange={(e) => setF({ ...f, type: e.target.value || undefined })}><option value="">Alle Arten</option>{d?.filters.types.map((t) => <option key={t}>{t}</option>)}</Select></label>

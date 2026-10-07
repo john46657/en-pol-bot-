@@ -14,7 +14,6 @@ import { Dispatch } from './pages/Dispatch';
 import { Team } from './pages/Team';
 const Communication = lazy(() => import('./pages/Communication').then((m) => ({ default: m.Communication })));
 const Analytics = lazy(() => import('./pages/Analytics').then((m) => ({ default: m.Analytics })));
-const ApplicationAnalytics = lazy(() => import('./pages/ApplicationAnalytics').then((m) => ({ default: m.ApplicationAnalytics })));
 const Applications = lazy(() => import('./pages/Applications').then((m) => ({ default: m.Applications })));
 const Qualifications = lazy(() => import('./pages/Qualifications').then((m) => ({ default: m.Qualifications })));
 const SupportTickets = lazy(() => import('./pages/tickets/SupportTickets').then((m) => ({ default: m.SupportTickets })));
@@ -52,6 +51,12 @@ const CadSettings = lazy(() => import('./pages/cad/CadAdmin').then((m) => ({ def
 const CadTeam = lazy(() => import('./pages/cad/CadAdmin').then((m) => ({ default: m.CadTeam })));
 const CadCrossServer = lazy(() => import('./pages/cad/CadAdmin').then((m) => ({ default: m.CadCrossServer })));
 const CadLogs = lazy(() => import('./pages/cad/CadAdmin').then((m) => ({ default: m.CadLogs })));
+
+/** Statistik: allgemeine Statistik ODER Bewerbungs-Statistik genügt. */
+function AnalyticsGate() {
+  const { can } = useAuth();
+  return can('analytics.view') || (can('applications.view') && can('dashboard.applications.view')) ? <Analytics /> : <Forbidden />;
+}
 
 /** UI-seitige Routenprüfung (Komfort). Das Backend erzwingt dieselben Rechte unabhängig davon. */
 function Guard({ perm, area, children }: { perm?: string; area?: string; children: ReactNode }) {
@@ -117,17 +122,16 @@ export function App() {
           <Route path="investigations/:id" element={rec('investigations', 'investigations.view')} />
           <Route path="wanted" element={list(R.wanted as never, 'wanted.view')} />
           <Route path="wanted/:id" element={rec('wanted', 'wanted.view')} />
-          <Route path="evidence" element={list(R.evidence as never, 'evidence.view')} />
-          <Route path="evidence/:id" element={rec('evidence', 'evidence.view')} />
+          <Route path="evidence/*" element={<Navigate to="/dashboard" replace />} />
           <Route path="personnel" element={list(R.personnel as never, 'personnel.view')} />
           <Route path="personnel/:id" element={rec('personnel', 'personnel.view')} />
           <Route path="applications" element={<Guard perm="applications.view" area="dashboard.applications.view"><Applications /></Guard>} />
-          <Route path="applications/analytics" element={<Guard perm="applications.view" area="dashboard.applications.view"><ApplicationAnalytics /></Guard>} />
+          <Route path="applications/analytics" element={<Navigate to="/analytics?tab=bewerbungen" replace />} />
           <Route path="applications/:id" element={rec('applications', 'applications.view')} />
           <Route path="qualifications" element={<Guard perm="qualifications.view" area="dashboard.applications.view"><Qualifications /></Guard>} />
           <Route path="academy" element={<Guard perm="academy.view"><Academy /></Guard>} />
           <Route path="communication" element={<Guard perm="communication.view"><Communication /></Guard>} />
-          <Route path="analytics" element={<Guard perm="analytics.view"><Analytics /></Guard>} />
+          <Route path="analytics" element={<Guard><AnalyticsGate /></Guard>} />
           <Route path="admin/users" element={<Guard perm="users.view" area="dashboard.settings.view"><Users /></Guard>} />
           <Route path="admin/roles" element={<Guard perm="roles.view" area="dashboard.settings.view"><Roles /></Guard>} />
           <Route path="admin/overrides" element={<Navigate to="/admin/users" replace />} />
