@@ -82549,6 +82549,7 @@ function createLive(api2, platform2, log = console.log) {
     if (sameSpot && !o.force && lastContent[kind2] === content) return stored;
     const messageId = await platform2.postOrEdit({ channelId, messageId: sameSpot ? stored.messageId : void 0, embed, buttons });
     lastContent[kind2] = content;
+    if (!sameSpot && stored?.messageId && o.force && platform2.deleteMessage) await platform2.deleteMessage(stored.channelId, stored.messageId).catch(() => void 0);
     const placement = { channelId, messageId };
     if (!sameSpot || stored?.messageId !== messageId) await api2.service("PUT", `/bot/state/${STATE_KEY[kind2]}`, { value: placement });
     return placement;
@@ -82593,10 +82594,25 @@ var DIRECT = {
   "leave.decided": (p) => leaveDirectEmbed("leave.decided", p),
   "leave.pending": (p) => leaveDirectEmbed("leave.pending", p)
 };
-async function pollOnce(api2, send, log = console.log, dm, grantRole, syncRoles, onDutyChanged, ticketEffects, onMembersSync) {
+async function pollOnce(api2, send, log = console.log, dm, grantRole, syncRoles, onDutyChanged, ticketEffects, onMembersSync, onPanel) {
   const [channels, items] = await Promise.all([api2.service("GET", "/bot/config"), api2.service("GET", "/bot/outbox?limit=20")]);
   let sent = 0;
   for (const item of items) {
+    if (item.type === "danger.panel") {
+      try {
+        const channelId = String(item.payload.channelId ?? "");
+        if (!/^\d{15,25}$/.test(channelId)) throw new Error("no channel id");
+        if (!onPanel) throw new Error("panels not supported");
+        await onPanel("danger", channelId);
+        await api2.service("POST", `/bot/outbox/${item.id}/ack`, { ok: true });
+        sent++;
+      } catch (e) {
+        const msg = e instanceof Error ? e.message : "panel failed";
+        log(`outbox ${item.id} (danger.panel) failed: ${msg}`);
+        await api2.service("POST", `/bot/outbox/${item.id}/ack`, { ok: false, error: msg }).catch(() => void 0);
+      }
+      continue;
+    }
     const direct = DIRECT[item.type];
     if (direct) {
       try {
@@ -82700,14 +82716,14 @@ async function pollOnce(api2, send, log = console.log, dm, grantRole, syncRoles,
   }
   return sent;
 }
-function startOutboxLoop(api2, send, seconds, log = console.log, dm, grantRole, syncRoles, onDutyChanged, ticketEffects, onMembersSync) {
+function startOutboxLoop(api2, send, seconds, log = console.log, dm, grantRole, syncRoles, onDutyChanged, ticketEffects, onMembersSync, onPanel) {
   let running = false;
   let lastError;
   const tick = async () => {
     if (running) return;
     running = true;
     try {
-      await pollOnce(api2, send, log, dm, grantRole, syncRoles, onDutyChanged, ticketEffects, onMembersSync);
+      await pollOnce(api2, send, log, dm, grantRole, syncRoles, onDutyChanged, ticketEffects, onMembersSync, onPanel);
       if (lastError) {
         log("outbox: connection to the API restored");
         lastError = void 0;
@@ -82856,6 +82872,10 @@ var platform = {
       }
     }
     return (await ch.send(payload)).id;
+  },
+  async deleteMessage(channelId, messageId) {
+    const ch = await client.channels.fetch(channelId);
+    if (ch?.isSendable() && "messages" in ch) await ch.messages.delete(messageId);
   },
   async postPanel({ channelId, embed, buttons, select }) {
     const ch = await client.channels.fetch(channelId);
@@ -83102,7 +83122,10 @@ function wireReady(client0) {
       syncRolesEverywhere,
       () => void live.refresh("teamlist").catch(() => void 0),
       (effects) => tickets.apply(effects).then(() => void 0, (e) => console.error("ticket effects failed:", e instanceof Error ? e.message : e)),
-      () => void presence.sync().catch((e) => console.error("team/voice sync failed:", e instanceof Error ? e.message : e))
+      () => void presence.sync().catch((e) => console.error("team/voice sync failed:", e instanceof Error ? e.message : e)),
+      async (kind2, channelId) => {
+        await live.refresh(kind2, { channelId, force: true });
+      }
     );
     live.start(cfg.LIVE_REFRESH_SECONDS);
     void tickets.refresh();

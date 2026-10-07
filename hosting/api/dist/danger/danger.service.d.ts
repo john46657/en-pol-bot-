@@ -136,4 +136,13 @@ export declare class DangerService {
         setByName: string | null;
         at: string | null;
     }>;
+    /** Wo das Button-Panel gerade steht (merkt sich der Bot). */
+    panel(): Promise<{
+        channelId: string | null;
+        posted: boolean;
+    }>;
+    /** Panel vom Dashboard aus in einen Kanal schicken (der Bot postet es und löscht ein älteres Panel). */
+    sendPanel(actor: Actor, channelId: string): Promise<{
+        queued: boolean;
+    }>;
 }

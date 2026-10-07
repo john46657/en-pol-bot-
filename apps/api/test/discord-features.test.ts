@@ -65,6 +65,18 @@ describe('danger level (Gefahrenstatus)', () => {
     const out = await prisma.discordOutbox.findFirst({ where: { type: 'danger.changed' }, orderBy: { createdAt: 'desc' } });
     expect(out!.payload).toMatchObject({ name: 'Alarm', title: 'Großlage', text: 'Alle Einheiten!', pingRoleIds: ['500000000000000077'] });
   });
+
+  it('the button panel can be sent to any channel from the dashboard (settings.manage)', async () => {
+    const off = (await login(app, 'f_off')).agent;
+    expect((await off.post('/api/v1/danger-level/panel').send({ channelId: '600000000000000001' })).status).toBe(403);
+    const adm = (await login(app, 'f_admin')).agent;
+    expect((await adm.post('/api/v1/danger-level/panel').send({ channelId: 'abc' })).status).toBe(400);
+    expect((await adm.post('/api/v1/danger-level/panel').send({ channelId: '600000000000000001' })).status).toBe(202);
+    expect((await prisma.discordOutbox.findFirst({ where: { type: 'danger.panel' } }))!.payload).toEqual({ channelId: '600000000000000001' });
+    expect(await prisma.auditLog.count({ where: { action: 'danger.panel' } })).toBe(1);
+    await http().put('/api/v1/bot/state/danger-panel').set(bot()).send({ value: { channelId: '600000000000000001', messageId: '700000000000000001' } });
+    expect((await adm.get('/api/v1/danger-level/panel')).body).toEqual({ channelId: '600000000000000001', posted: true });
+  });
 });
 
 describe('radio whitelist (Funk-Freigabe)', () => {

@@ -123,6 +123,15 @@ describe('shifts in Discord', () => {
     expect(await pollOnce(api, async (_ch, _e, _b, o) => { opts.push(o); }, () => undefined)).toBe(1);
     expect(opts[0]).toMatchObject({ replaceKey: 'danger' });
   });
+  it('outbox: the dashboard sends the danger panel to a channel', async () => {
+    const placed: string[] = [];
+    const item = { id: 'p1', type: 'danger.panel', channelKey: 'danger', payload: { channelId: '900000000000000003' } };
+    const { api, calls } = fakeApi({ 'GET /bot/config': {}, 'GET /bot/outbox?limit=20': [item], 'POST /bot/outbox/p1/ack': {} });
+    const n = await pollOnce(api, async () => undefined, () => undefined, undefined, undefined, undefined, undefined, undefined, undefined, async (kind, ch) => { placed.push(`${kind} ${ch}`); });
+    expect(n).toBe(1);
+    expect(placed).toEqual(['danger 900000000000000003']);
+    expect(calls.at(-1)).toMatchObject({ path: '/bot/outbox/p1/ack', body: { ok: true } });
+  });
 });
 
 describe('/leave manage (wie Trident)', () => {

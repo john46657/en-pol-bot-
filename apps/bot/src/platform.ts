@@ -11,6 +11,8 @@ export interface Platform {
   sendDm(userId: string, m: { embed: EmbedData; buttons?: ButtonSpec[]; select?: SelectSpec }): Promise<{ channelId: string; messageId: string }>;
   /** Sendet oder bearbeitet eine Nachricht; liefert deren ID (bei fehlender/gelöschter Alt-Nachricht wird neu gesendet). */
   postOrEdit(a: { channelId: string; messageId?: string; embed: EmbedData; buttons?: ButtonSpec[] }): Promise<string>;
+  /** Nachricht löschen (z. B. altes Panel nach dem Umzug in einen anderen Kanal). */
+  deleteMessage?(channelId: string, messageId: string): Promise<void>;
   /** Postet ein Panel (Embed + Buttons und/oder Auswahlmenü) in einen Channel. */
   postPanel(a: { channelId: string; embed: EmbedData; buttons?: ButtonSpec[]; select?: SelectSpec }): Promise<void>;
 }

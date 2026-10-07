@@ -38,6 +38,8 @@ export function createLive(api: Api, platform: Platform, log: (m: string) => voi
     if (sameSpot && !o.force && lastContent[kind] === content) return stored;
     const messageId = await platform.postOrEdit({ channelId, messageId: sameSpot ? stored.messageId : undefined, embed, buttons });
     lastContent[kind] = content;
+    // Neu platziert (anderer Kanal) → altes Panel entfernen, damit nur eins existiert
+    if (!sameSpot && stored?.messageId && o.force && platform.deleteMessage) await platform.deleteMessage(stored.channelId, stored.messageId).catch(() => undefined);
     const placement = { channelId, messageId };
     if (!sameSpot || stored?.messageId !== messageId) await api.service('PUT', `/bot/state/${STATE_KEY[kind]}`, { value: placement });
     return placement;

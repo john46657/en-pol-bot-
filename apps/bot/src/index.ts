@@ -128,6 +128,10 @@ const platform: Platform = {
     }
     return (await ch.send(payload)).id;
   },
+  async deleteMessage(channelId, messageId) {
+    const ch = await client.channels.fetch(channelId);
+    if (ch?.isSendable() && 'messages' in ch) await ch.messages.delete(messageId);
+  },
   async postPanel({ channelId, embed, buttons, select }) {
     const ch = await client.channels.fetch(channelId);
     if (!ch?.isSendable()) throw new Error(`channel ${channelId} is not a text channel the bot can post in`);
@@ -349,7 +353,8 @@ function wireReady(client0: Client) {
     if (opts?.thread) await msg.startThread({ name: opts.thread, autoArchiveDuration: 10080 }).catch((e) => console.error('could not create staff thread:', e instanceof Error ? e.message : e));
   }, cfg.OUTBOX_POLL_SECONDS, console.log, (userId, msg) => (typeof msg === 'string' ? platform.sendDirectMessage(userId, msg) : platform.sendDm(userId, { embed: msg }).then(() => undefined)), grantRoleEverywhere, syncRolesEverywhere, () => void live.refresh('teamlist').catch(() => undefined),
     (effects) => tickets.apply(effects).then(() => undefined, (e) => console.error('ticket effects failed:', e instanceof Error ? e.message : e)),
-    () => void presence.sync().catch((e) => console.error('team/voice sync failed:', e instanceof Error ? e.message : e)));
+    () => void presence.sync().catch((e) => console.error('team/voice sync failed:', e instanceof Error ? e.message : e)),
+    async (kind, channelId) => { await live.refresh(kind, { channelId, force: true }); });
   live.start(cfg.LIVE_REFRESH_SECONDS);
   void tickets.refresh();
   startGuildDirectory(() => client, api);

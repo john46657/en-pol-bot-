@@ -7,6 +7,7 @@ import { api, ApiError } from '../../lib/api';
 import { useAuth } from '../../lib/auth';
 import { useAutosaveDraft } from '../../lib/autosave';
 import { useGuilds } from '../../lib/guilds';
+import { ChannelPicker } from '../../components/DiscordPickers';
 import { ago, ERLC_STATUS_TONE, optLabel, useCadConfig, type CadUnitRow, type ErlcServerView } from '../../lib/cad';
 import { Badge, Button, Card, ConfirmDialog, EmptyState, ErrorState, Field, Input, Modal, PageHeader, Select, SkeletonRows, Tabs, Textarea } from '../../components/ui';
 
@@ -390,6 +391,32 @@ export function CadLogs() {
 }
 
 // ───────── Gefahrenstatus (Stufen, Texte, Buttons, Ping) ─────────
+/** Button-Panel vom Dashboard aus in einen beliebigen Kanal senden (ein älteres Panel löscht der Bot). */
+function DangerPanelSender() {
+  const qc = useQueryClient();
+  const guilds = useGuilds();
+  const cur = useQuery({ queryKey: ['danger-panel'], queryFn: () => api<{ channelId: string | null; posted: boolean }>('/danger-level/panel') });
+  const [channelId, setChannelId] = useState<string | null>(null);
+  const [msg, setMsg] = useState<string>();
+  const send = useMutation({
+    mutationFn: (target: string) => api('/danger-level/panel', { body: { channelId: target } }),
+    onSuccess: () => { setMsg('✅ Gesendet – der Bot postet das Panel in wenigen Sekunden.'); setTimeout(() => void qc.invalidateQueries({ queryKey: ['danger-panel'] }), 8000); },
+    onError: (e) => setMsg(e instanceof ApiError ? e.message : 'Fehler'),
+  });
+  const chName = (id: string | null) => { for (const g of guilds.data ?? []) { const c = g.channels.find((x) => x.id === id); if (c) return `#${c.name} (${g.name})`; } return id ?? '—'; };
+  return (
+    <Card title="📌 Panel in Discord senden" className="lg:col-span-2">
+      <p className="mb-2 text-xs text-muted">Das Panel zeigt den aktuellen Status mit einem Button je Stufe und aktualisiert sich selbst. Es gibt immer nur ein Panel: Wird es in einen anderen Kanal geschickt, löscht der Bot das alte.</p>
+      <p className="mb-2 text-sm">Aktuell: {cur.data?.channelId ? <b>{chName(cur.data.channelId)}</b> : <span className="text-muted">noch kein Panel gepostet</span>}</p>
+      <div className="flex flex-wrap items-end gap-2">
+        <div className="min-w-64 flex-1"><Field label="Kanal">{() => <ChannelPicker ariaLabel="Kanal für das Panel" value={channelId ?? cur.data?.channelId} onChange={(id) => { setChannelId(id); setMsg(undefined); }} />}</Field></div>
+        <Button disabled={!(channelId ?? cur.data?.channelId) || send.isPending} onClick={() => { const t = channelId ?? cur.data?.channelId; if (t) send.mutate(t); }}>Panel senden</Button>
+      </div>
+      {msg && <p role="status" className="mt-2 text-sm">{msg}</p>}
+    </Card>
+  );
+}
+
 function DangerSettings() {
   const q = useQuery({ queryKey: ['danger-config'], queryFn: () => api<DangerConfig>('/danger-level/config') });
   const [d, setD] = useState<DangerConfig | null>(null);
@@ -401,7 +428,8 @@ function DangerSettings() {
   const move = (i: number, dir: number) => { const n = [...d.levels]; const [x] = n.splice(i, 1); n.splice(i + dir, 0, x!); setD({ ...d, levels: n }); };
   return (
     <div className="grid gap-3 lg:grid-cols-2">
-      <Card title="Panel in Discord (/gefahrenstatus aktion:panel)">
+      <DangerPanelSender />
+      <Card title="Panel-Inhalt">
         <div className="grid gap-2">
           <Field label="Titel">{(id) => <Input id={id} maxLength={200} value={d.panelTitle} onChange={(e) => setD({ ...d, panelTitle: e.target.value })} />}</Field>
           <Field label="Text (Markdown)">{(id) => <Textarea id={id} rows={5} maxLength={3000} value={d.panelText} onChange={(e) => setD({ ...d, panelText: e.target.value })} />}</Field>
