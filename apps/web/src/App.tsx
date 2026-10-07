@@ -7,6 +7,7 @@ import { ResourcePage } from './components/ResourcePage';
 import { RecordPage } from './components/RecordPage';
 import { Login } from './pages/Login';
 import { Apply } from './pages/Apply';
+import { Privacy, Terms } from './pages/Legal';
 import { Dashboard } from './pages/Dashboard';
 import { Mdt } from './pages/Mdt';
 import { Dispatch } from './pages/Dispatch';
@@ -72,6 +73,8 @@ export function App() {
       <Routes>
         <Route path="/login" element={<Login />} />
         <Route path="/apply" element={<Apply />} />
+        <Route path="/datenschutz" element={<Privacy />} />
+        <Route path="/nutzungsbedingungen" element={<Terms />} />
         <Route element={<Guard><AppShell /></Guard>}>
           <Route index element={<Navigate to="/dashboard" replace />} />
           <Route path="mdt" element={<Guard perm="dashboard.view"><Mdt /></Guard>} />
