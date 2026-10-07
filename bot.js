@@ -75940,7 +75940,7 @@ function createTicketRuntime(client2, api2, log = console.log) {
         log(`ticket effect ${e.type} failed: ${msg}`);
         if (e.type === "create") {
           await api2.service("POST", `/bot/support-tickets/${e.ticketId}/abort`, { reason: msg.slice(0, 300) }).catch(() => void 0);
-          throw new Error("Der Ticket-Channel konnte nicht erstellt werden (fehlen dem Bot die Rechte \u201EKan\xE4le verwalten\u201C / \u201ERollen verwalten\u201C?).");
+          throw new Error("Der Ticket-Kanal konnte nicht erstellt werden (fehlen dem Bot die Rechte \u201EKan\xE4le verwalten\u201C / \u201ERollen verwalten\u201C?).");
         }
       }
     }
@@ -76965,7 +76965,7 @@ var QUALI_COMMANDS = [
   },
   {
     name: "bewerbungspanel",
-    description: "Postet das Bewerbungs-Panel (\u201EJetzt bewerben\u201C) in diesen Channel",
+    description: "Postet das Bewerbungs-Panel (\u201EJetzt bewerben\u201C) in diesen Kanal",
     async run(c) {
       if (!c.guildId) return errorReply("Das geht nur auf einem Server, nicht per Direktnachricht.");
       if (!c.isGuildAdmin) return errorReply("Daf\xFCr brauchst du auf diesem Discord-Server das Recht \u201EServer verwalten\u201C.");
@@ -76975,14 +76975,14 @@ var QUALI_COMMANDS = [
         const embed = police ? { title: clip(police.title, 256), color: COLORS.info, description: clip(police.description, 4e3) } : POLICE_PANEL;
         await c.platform.postPanel({ channelId: c.channelId, embed, buttons: [{ id: `quali:pick:${POLICE}`, label: "Jetzt bewerben", emoji: "\u{1F4CB}", style: "primary" }] });
       } catch {
-        return errorReply("Panel konnte nicht gepostet werden (fehlen dem Bot Rechte in diesem Channel?).");
+        return errorReply("Panel konnte nicht gepostet werden (fehlen dem Bot Rechte in diesem Kanal?).");
       }
-      return okReply("Bewerbungs-Panel gepostet. Neue Bewerbungen erscheinen im System unter *Applications* (und im Applications-Channel, falls eingestellt).");
+      return okReply("Bewerbungs-Panel gepostet. Neue Bewerbungen erscheinen im System unter *Applications* (und im Bewerbungs-Kanal, falls eingestellt).");
     }
   },
   {
     name: "qualipanel",
-    description: "Postet das Qualifikations-Panel (SEK, Flugstaffel, Ausbilder \u2026) in diesen Channel",
+    description: "Postet das Qualifikations-Panel (SEK, Flugstaffel, Ausbilder \u2026) in diesen Kanal",
     async run(c) {
       if (!c.guildId) return errorReply("Das geht nur auf einem Server, nicht per Direktnachricht.");
       if (!c.isGuildAdmin) return errorReply("Daf\xFCr brauchst du auf diesem Discord-Server das Recht \u201EServer verwalten\u201C.");
@@ -76994,7 +76994,7 @@ var QUALI_COMMANDS = [
         return okReply(`Qualifikations-Panel gepostet.${ch?.qualifications ? "" : " Tipp: In den Einstellungen einen **Qualifications channel** hinterlegen \u2013 dort landen die Bewerbungen mit Annehmen/Ablehnen-Buttons."}`);
       } catch (e) {
         if (e instanceof BotApiError) return mapError(e);
-        return errorReply("Panel konnte nicht gepostet werden (fehlen dem Bot Rechte in diesem Channel?).");
+        return errorReply("Panel konnte nicht gepostet werden (fehlen dem Bot Rechte in diesem Kanal?).");
       }
     }
   }
@@ -77371,7 +77371,7 @@ var TICKET_INTERACTION = {
           return { ...okReply(r.message ?? "Erledigt."), update: { embeds: [{ title: rest[0] === "yes" ? "\u2705 Schlie\xDFen best\xE4tigt" : "\u2716\uFE0F Ticket bleibt offen", color: rest[0] === "yes" ? COLORS.success : COLORS.neutral }] } };
         }
         case "delete":
-          return { ephemeral: true, embeds: [{ title: "\u{1F5D1}\uFE0F Ticket l\xF6schen?", description: "Der Channel wird gel\xF6scht (ein Transcript wird vorher gesichert, falls eingestellt).", color: COLORS.danger }], buttons: [{ id: `tk:delyes:${id}`, label: "Endg\xFCltig l\xF6schen", style: "danger" }] };
+          return { ephemeral: true, embeds: [{ title: "\u{1F5D1}\uFE0F Ticket l\xF6schen?", description: "Der Kanal wird gel\xF6scht (ein Transcript wird vorher gesichert, falls eingestellt).", color: COLORS.danger }], buttons: [{ id: `tk:delyes:${id}`, label: "Endg\xFCltig l\xF6schen", style: "danger" }] };
         case "delyes":
           return run(c, await staff(c, id, { action: "delete" }));
         // ---- Benutzer/Rollen ----
@@ -78006,7 +78006,7 @@ var FEATURE_COMMANDS = [
         await c.api.asUser(c.discordId, "GET", "/team/overview");
         const cfg2 = await c.config?.();
         const p = await c.refreshLive("teamlist", { channelId: cfg2?.teamlist ? void 0 : c.channelId, force: true });
-        return p ? okReply(`Teamliste steht in <#${p.channelId}> und aktualisiert sich automatisch.`) : errorReply("Kein Channel f\xFCr die Teamliste gefunden.");
+        return p ? okReply(`Teamliste steht in <#${p.channelId}> und aktualisiert sich automatisch.`) : errorReply("Kein Kanal f\xFCr die Teamliste gefunden.");
       } catch (e) {
         return mapError(e);
       }
@@ -78053,7 +78053,7 @@ var FEATURE_COMMANDS = [
   },
   {
     name: "dienstpanel",
-    description: "Postet das Dienst-Panel (Im Dienst / Pause / Au\xDFer Dienst per Button) in diesen Channel",
+    description: "Postet das Dienst-Panel (Im Dienst / Pause / Au\xDFer Dienst per Button) in diesen Kanal",
     async run(c) {
       const denied = needGuildAdmin(c);
       if (denied) return denied;
@@ -78061,10 +78061,10 @@ var FEATURE_COMMANDS = [
       try {
         await c.platform.postPanel({ channelId: c.channelId, embed: DUTY_PANEL, buttons: DUTY_BUTTONS });
       } catch {
-        return errorReply("Panel konnte nicht gepostet werden (fehlen dem Bot Rechte in diesem Channel?).");
+        return errorReply("Panel konnte nicht gepostet werden (fehlen dem Bot Rechte in diesem Kanal?).");
       }
       const cfg2 = await c.config?.().catch(() => void 0);
-      return okReply(`Dienst-Panel gepostet.${cfg2?.dutyRole || cfg2?.duty ? "" : " Tipp: In den Einstellungen einen **Dienst-Channel** (Meldungen) und eine **Dienst-Rolle** hinterlegen."}`);
+      return okReply(`Dienst-Panel gepostet.${cfg2?.dutyRole || cfg2?.duty ? "" : " Tipp: In den Einstellungen einen **Dienst-Kanal** (Meldungen) und eine **Dienst-Rolle** hinterlegen."}`);
     }
   },
   {

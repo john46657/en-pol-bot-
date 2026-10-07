@@ -85,7 +85,7 @@ exports.FEATURE_COMMANDS = [
                 await c.api.asUser(c.discordId, 'GET', '/team/overview'); // Leserecht im System prüfen
                 const cfg = await c.config?.();
                 const p = await c.refreshLive('teamlist', { channelId: cfg?.teamlist ? undefined : c.channelId, force: true });
-                return p ? (0, format_1.okReply)(`Teamliste steht in <#${p.channelId}> und aktualisiert sich automatisch.`) : (0, format_1.errorReply)('Kein Channel für die Teamliste gefunden.');
+                return p ? (0, format_1.okReply)(`Teamliste steht in <#${p.channelId}> und aktualisiert sich automatisch.`) : (0, format_1.errorReply)('Kein Kanal für die Teamliste gefunden.');
             }
             catch (e) {
                 return (0, errors_1.mapError)(e);
@@ -137,7 +137,7 @@ exports.FEATURE_COMMANDS = [
         },
     },
     {
-        name: 'dienstpanel', description: 'Postet das Dienst-Panel (Im Dienst / Pause / Außer Dienst per Button) in diesen Channel',
+        name: 'dienstpanel', description: 'Postet das Dienst-Panel (Im Dienst / Pause / Außer Dienst per Button) in diesen Kanal',
         async run(c) {
             const denied = needGuildAdmin(c);
             if (denied)
@@ -148,10 +148,10 @@ exports.FEATURE_COMMANDS = [
                 await c.platform.postPanel({ channelId: c.channelId, embed: DUTY_PANEL, buttons: DUTY_BUTTONS });
             }
             catch {
-                return (0, format_1.errorReply)('Panel konnte nicht gepostet werden (fehlen dem Bot Rechte in diesem Channel?).');
+                return (0, format_1.errorReply)('Panel konnte nicht gepostet werden (fehlen dem Bot Rechte in diesem Kanal?).');
             }
             const cfg = await c.config?.().catch(() => undefined);
-            return (0, format_1.okReply)(`Dienst-Panel gepostet.${cfg?.dutyRole || cfg?.duty ? '' : ' Tipp: In den Einstellungen einen **Dienst-Channel** (Meldungen) und eine **Dienst-Rolle** hinterlegen.'}`);
+            return (0, format_1.okReply)(`Dienst-Panel gepostet.${cfg?.dutyRole || cfg?.duty ? '' : ' Tipp: In den Einstellungen einen **Dienst-Kanal** (Meldungen) und eine **Dienst-Rolle** hinterlegen.'}`);
         },
     },
     {

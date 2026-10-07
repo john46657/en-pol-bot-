@@ -170,7 +170,7 @@ export function createTicketRuntime(client: () => Client, api: Api, log: (m: str
         log(`ticket effect ${e.type} failed: ${msg}`);
         if (e.type === 'create') {
           await api.service('POST', `/bot/support-tickets/${e.ticketId}/abort`, { reason: msg.slice(0, 300) }).catch(() => undefined);
-          throw new Error('Der Ticket-Channel konnte nicht erstellt werden (fehlen dem Bot die Rechte „Kanäle verwalten“ / „Rollen verwalten“?).');
+          throw new Error('Der Ticket-Kanal konnte nicht erstellt werden (fehlen dem Bot die Rechte „Kanäle verwalten“ / „Rollen verwalten“?).');
         }
       }
     }

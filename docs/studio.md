@@ -5,7 +5,8 @@ Requires `studio.view` / `studio.manage` (or `settings.manage`). All values are 
 | Key | What it does |
 |---|---|
 | `studio.customFields` | Custom fields for **persons** and **vehicles**: `key`, `label`, `type` (text, number, select, date), `required`, `options`. Keys are unique per entity. |
-| `theme.accent` | Accent colour from a fixed palette (blue, green, amber, red, cyan, violet). The UI is always dark. |
+| `theme.accent` | Akzentfarbe: eine der 16 Vorgaben (blue, green, amber, red, cyan, violet, orange, pink, indigo, teal, lime, sky, rose, emerald, gold, slate) oder eine eigene Farbe `#rrggbb`. Hell/Dunkel wählt jeder unter *Persönlich*. |
+| `theme.customAccents` | Eigene Akzentfarben mit Namen (Studio → Design → „Eigene Farbe hinzufügen“), bis 24. |
 | `application.form` | Public application form fields (`/apply`). |
 | `dashboard.defaultLayout` | Default widget layout (users may override; reset returns to default). |
 

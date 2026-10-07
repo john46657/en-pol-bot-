@@ -123,7 +123,7 @@ export const WIDGETS: WidgetDef[] = [
   { id: 'ticket-activity', title: '🎫 Ticket-Aktivität', perms: ['ticket.view', 'dashboard.tickets.view'], to: '/support-tickets', render: () => <Tickets query={{ kind: 'all' }} /> },
   { id: 'applications', title: '📝 Bewerbungen', perms: ['applications.view', 'dashboard.applications.view'], to: '/applications', render: () => <Applications /> },
   { id: 'teamlist', title: '👥 Teamliste', perms: ['team.view', 'dashboard.team.view'], to: '/teamlist', render: () => <TeamRoster compact limit={8} /> },
-  { id: 'voice', title: '🎙️ Aktive Voice-Channels', perms: ['team.view', 'dashboard.voice.view'], render: () => <VoiceWidget /> },
+  { id: 'voice', title: '🎙️ Aktive Sprachkanäle', perms: ['team.view', 'dashboard.voice.view'], render: () => <VoiceWidget /> },
   { id: 'activity', title: '📋 Team-Aktivitäten', perms: ['team.view', 'dashboard.team.view'], render: () => <Activity /> },
   { id: 'offices', title: '🏢 Büros', perms: ['team.view', 'dashboard.offices.view'], to: '/teamlist', render: () => <Grouped by="office" /> },
   { id: 'ranks', title: '🎖️ Dienstgrade', perms: ['team.view', 'dashboard.team.view'], to: '/teamlist', render: () => <Grouped by="rank" /> },

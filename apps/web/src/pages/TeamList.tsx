@@ -14,7 +14,7 @@ export function TeamList() {
       <PageHeader title="👥 Teamliste" subtitle="Aus Discord-Teamrollen und Personalakten – aktualisiert sich alle 5 Sekunden." />
       <div className={`grid gap-4 ${voice ? 'xl:grid-cols-[1fr_340px]' : ''}`}>
         <Card><TeamRoster key={params.get('m') ?? ''} initialOpen={params.get('m') ?? undefined} /></Card>
-        {voice && <Card title="🎙️ Aktive Voice-Channels"><VoiceWidget /></Card>}
+        {voice && <Card title="🎙️ Aktive Sprachkanäle"><VoiceWidget /></Card>}
       </div>
     </>
   );

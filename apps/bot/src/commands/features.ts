@@ -71,7 +71,7 @@ export const FEATURE_COMMANDS: CommandDef[] = [
         await c.api.asUser(c.discordId, 'GET', '/team/overview'); // Leserecht im System prüfen
         const cfg = await c.config?.();
         const p = await c.refreshLive('teamlist', { channelId: cfg?.teamlist ? undefined : c.channelId, force: true });
-        return p ? okReply(`Teamliste steht in <#${p.channelId}> und aktualisiert sich automatisch.`) : errorReply('Kein Channel für die Teamliste gefunden.');
+        return p ? okReply(`Teamliste steht in <#${p.channelId}> und aktualisiert sich automatisch.`) : errorReply('Kein Kanal für die Teamliste gefunden.');
       } catch (e) { return mapError(e); }
     },
   },
@@ -111,14 +111,14 @@ export const FEATURE_COMMANDS: CommandDef[] = [
     },
   },
   {
-    name: 'dienstpanel', description: 'Postet das Dienst-Panel (Im Dienst / Pause / Außer Dienst per Button) in diesen Channel',
+    name: 'dienstpanel', description: 'Postet das Dienst-Panel (Im Dienst / Pause / Außer Dienst per Button) in diesen Kanal',
     async run(c) {
       const denied = needGuildAdmin(c); if (denied) return denied;
       if (!c.channelId || !c.platform) return errorReply('Panel kann hier nicht gepostet werden.');
       try { await c.platform.postPanel({ channelId: c.channelId, embed: DUTY_PANEL, buttons: DUTY_BUTTONS }); }
-      catch { return errorReply('Panel konnte nicht gepostet werden (fehlen dem Bot Rechte in diesem Channel?).'); }
+      catch { return errorReply('Panel konnte nicht gepostet werden (fehlen dem Bot Rechte in diesem Kanal?).'); }
       const cfg = await c.config?.().catch(() => undefined);
-      return okReply(`Dienst-Panel gepostet.${cfg?.dutyRole || cfg?.duty ? '' : ' Tipp: In den Einstellungen einen **Dienst-Channel** (Meldungen) und eine **Dienst-Rolle** hinterlegen.'}`);
+      return okReply(`Dienst-Panel gepostet.${cfg?.dutyRole || cfg?.duty ? '' : ' Tipp: In den Einstellungen einen **Dienst-Kanal** (Meldungen) und eine **Dienst-Rolle** hinterlegen.'}`);
     },
   },
   {

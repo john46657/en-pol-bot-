@@ -149,7 +149,7 @@ exports.QUALI_COMMANDS = [
         } },
     },
     {
-        name: 'bewerbungspanel', description: 'Postet das Bewerbungs-Panel („Jetzt bewerben“) in diesen Channel',
+        name: 'bewerbungspanel', description: 'Postet das Bewerbungs-Panel („Jetzt bewerben“) in diesen Kanal',
         async run(c) {
             if (!c.guildId)
                 return (0, format_1.errorReply)('Das geht nur auf einem Server, nicht per Direktnachricht.');
@@ -163,13 +163,13 @@ exports.QUALI_COMMANDS = [
                 await c.platform.postPanel({ channelId: c.channelId, embed, buttons: [{ id: `quali:pick:${exports.POLICE}`, label: 'Jetzt bewerben', emoji: '📋', style: 'primary' }] });
             }
             catch {
-                return (0, format_1.errorReply)('Panel konnte nicht gepostet werden (fehlen dem Bot Rechte in diesem Channel?).');
+                return (0, format_1.errorReply)('Panel konnte nicht gepostet werden (fehlen dem Bot Rechte in diesem Kanal?).');
             }
-            return (0, format_1.okReply)('Bewerbungs-Panel gepostet. Neue Bewerbungen erscheinen im System unter *Applications* (und im Applications-Channel, falls eingestellt).');
+            return (0, format_1.okReply)('Bewerbungs-Panel gepostet. Neue Bewerbungen erscheinen im System unter *Applications* (und im Bewerbungs-Kanal, falls eingestellt).');
         },
     },
     {
-        name: 'qualipanel', description: 'Postet das Qualifikations-Panel (SEK, Flugstaffel, Ausbilder …) in diesen Channel',
+        name: 'qualipanel', description: 'Postet das Qualifikations-Panel (SEK, Flugstaffel, Ausbilder …) in diesen Kanal',
         async run(c) {
             if (!c.guildId)
                 return (0, format_1.errorReply)('Das geht nur auf einem Server, nicht per Direktnachricht.');
@@ -186,7 +186,7 @@ exports.QUALI_COMMANDS = [
             catch (e) {
                 if (e instanceof api_1.BotApiError)
                     return (0, errors_1.mapError)(e);
-                return (0, format_1.errorReply)('Panel konnte nicht gepostet werden (fehlen dem Bot Rechte in diesem Channel?).');
+                return (0, format_1.errorReply)('Panel konnte nicht gepostet werden (fehlen dem Bot Rechte in diesem Kanal?).');
             }
         },
     },

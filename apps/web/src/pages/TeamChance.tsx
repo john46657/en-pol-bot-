@@ -66,7 +66,7 @@ function TeamChanceEditor({ s: initial, server }: { s: Status; server: string })
           <div className="grid gap-3">
             <label className="flex items-center gap-3 rounded-md border border-line p-3">
               <input type="checkbox" className="h-5 w-5" disabled={!manage} checked={d.open} onChange={(e) => set({ open: e.target.checked })} />
-              <span><span className="block font-semibold">{d.open ? '📣 Team-Chance ist geöffnet' : '🔒 Team-Chance ist geschlossen'}</span><span className="text-xs text-muted">Beim Öffnen und Schließen wird im Ankündigungs-Channel gepostet; beim Öffnen werden alle mit Zugriff auf die Team-Chance benachrichtigt.</span></span>
+              <span><span className="block font-semibold">{d.open ? '📣 Team-Chance ist geöffnet' : '🔒 Team-Chance ist geschlossen'}</span><span className="text-xs text-muted">Beim Öffnen und Schließen wird im Ankündigungs-Kanal gepostet; beim Öffnen werden alle mit Zugriff auf die Team-Chance benachrichtigt.</span></span>
             </label>
             <Field label="Titel">{(id) => <Input id={id} disabled={!manage} value={d.title} maxLength={100} onChange={(e) => set({ title: e.target.value })} />}</Field>
             <Field label="Beschreibung (Discord-Markdown möglich)">{(id) => <Textarea id={id} disabled={!manage} rows={4} value={d.description} maxLength={2000} onChange={(e) => set({ description: e.target.value })} />}</Field>

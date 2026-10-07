@@ -292,7 +292,7 @@ let SupportTicketsService = class SupportTicketsService {
     async abort(id, reason) {
         const t = await this.prisma.supportTicket.findUnique({ where: { id } });
         if (t && !t.channelId)
-            await this.prisma.supportTicket.update({ where: { id }, data: { deletedAt: new Date(), closedAt: new Date(), closeReason: `Channel konnte nicht erstellt werden: ${reason}`.slice(0, 300) } });
+            await this.prisma.supportTicket.update({ where: { id }, data: { deletedAt: new Date(), closedAt: new Date(), closeReason: `Kanal konnte nicht erstellt werden: ${reason}`.slice(0, 300) } });
         return { ok: true };
     }
     // ================= Fragen =================
