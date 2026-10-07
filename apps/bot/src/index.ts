@@ -4,7 +4,8 @@ import {
   type AnySelectMenuInteraction, type ButtonComponent, type ButtonInteraction, type ChatInputCommandInteraction, type Interaction, type Message, type ModalSubmitInteraction,
 } from 'discord.js';
 import { componentsOf, createTicketRuntime, payloadOf } from './discord-tickets';
-import { postOrUpdate } from './messages';
+import { deleteMessage, postAsUser, postOrUpdate } from './messages';
+import { createStaffLists } from './staff-lists';
 import type { MessageSpec } from '@enrp/shared';
 import { startGuildDirectory } from './guilds';
 import { startPresenceReporter } from './presence';
@@ -148,6 +149,7 @@ const platform: Platform = {
   },
 };
 const live = createLive(api, platform);
+const staffLists = createStaffLists(() => client, api);
 /** Willkommen & Abschied, Aktion beim Verlassen (braucht den „Server Members“-Intent). */
 const welcome = createWelcome(api, {
   async post(channelId, m) {
@@ -318,7 +320,24 @@ function baseCtx(i: ChatInputCommandInteraction | ButtonInteraction | ModalSubmi
     userNameOf: (id) => client.users.fetch(id).then((u) => u.username, () => null),
     voiceSupport,
     verifyApply: (guildId, userId, a) => applyVerify(guildId, userId, a),
+    userDisplayName: displayNameOf(i.member) ?? i.user.globalName ?? i.user.username,
+    discord: {
+      post: (channelId, message, asUser) => (asUser ? postAsUser(client, api, channelId, message, asUser) : postOrUpdate(client, api, { channelId, message, forceNew: true })),
+      deleteMessage: (channelId, messageId) => deleteMessage(client, channelId, messageId),
+      addRoles: async (guildId, userId, roleIds) => {
+        const g = client.guilds.cache.get(guildId);
+        const m = await g?.members.fetch(userId).catch(() => null);
+        const add = roleIds.filter((r) => g?.roles.cache.has(r) && !m?.roles.cache.has(r));
+        if (m && add.length) await m.roles.add(add, 'EN Polizei: Formular-Panel');
+      },
+    },
   };
+}
+
+/** Anzeigename des Mitglieds auf dem Server (voller GuildMember oder rohe API-Daten). */
+function displayNameOf(m: unknown): string | undefined {
+  const x = m as { displayName?: string; nick?: string | null } | null;
+  return x?.displayName ?? x?.nick ?? undefined;
 }
 
 /** Rollen-IDs des Mitglieds (voller GuildMember oder rohe API-Daten). */
@@ -393,7 +412,9 @@ function wire(c: Client) {
     if (!e) return;
     void welcome.joined(e).catch((x) => console.error('member join failed:', x instanceof Error ? x.message : x));
   });
-  c.on('guildMemberRemove', (m) => { const e = memberEvent(m); if (e) void welcome.left(e).catch((x) => console.error('member leave failed:', x instanceof Error ? x.message : x)); });
+  c.on('guildMemberRemove', (m) => { staffLists.changed(); const e = memberEvent(m); if (e) void welcome.left(e).catch((x) => console.error('member leave failed:', x instanceof Error ? x.message : x)); });
+  // Staff-Listen: Rollen oder Name geändert → neu zeichnen (gesammelt)
+  c.on('guildMemberUpdate', (o, n) => { if (o.roles.cache.size !== n.roles.cache.size || o.displayName !== n.displayName || ![...o.roles.cache.keys()].every((r) => n.roles.cache.has(r))) staffLists.changed(); });
 
   // Direktnachrichten: Antworten auf Bewerbungsfragen (Bewerbung bei EN Polizei und Qualifikationen)
   c.on('messageCreate', (m: Message) => {
@@ -539,6 +560,8 @@ function wireReady(client0: Client) {
         await api.service('POST', `/bot/embeds/${String(p.embedId)}/posted`, r);
         return true;
       }
+      if (type === 'bot.stafflist') { await staffLists.refresh({ id: String(p.id ?? ''), force: true, forceNew: p.forceNew === true }); return true; }
+      if (type === 'bot.delete') { await deleteMessage(client, String(p.channelId ?? ''), String(p.messageId ?? '')); return true; }
       if (type === 'message.post') {
         // Allgemein (Funk-Codes, Staff-Liste, Panels, Berichte …): gemerkte Nachricht bearbeiten oder neu senden
         const stateKey = typeof p.stateKey === 'string' && /^[a-z0-9:_-]{1,64}$/.test(p.stateKey) ? p.stateKey : undefined;
@@ -554,6 +577,7 @@ function wireReady(client0: Client) {
       return true;
     });
   live.start(cfg.LIVE_REFRESH_SECONDS);
+  staffLists.start(300);
   void tickets.refresh();
   startGuildDirectory(() => client, api);
   setInterval(() => void tickets.refresh(), 120_000).unref();

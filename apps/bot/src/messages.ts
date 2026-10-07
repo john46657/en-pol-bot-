@@ -59,3 +59,31 @@ export async function postOrUpdate(client: Client, api: Api, o: { channelId: str
   if (o.stateKey) await api.service('PUT', `/bot/state/${o.stateKey}`, { value: { channelId: o.channelId, messageId: msg.id } }).catch(() => undefined);
   return { channelId: o.channelId, messageId: msg.id };
 }
+
+/** Als Person posten (Name + Profilbild über einen Webhook des Bots im Kanal). Ohne Webhook-Recht: normal als Bot. */
+export async function postAsUser(client: Client, api: Api, channelId: string, m: MessageSpec, as: { username: string; avatarURL?: string }) {
+  const ch = await client.channels.fetch(channelId);
+  if (!ch?.isSendable() || !('messages' in ch)) throw new Error(`channel ${channelId} is not a text channel the bot can post in`);
+  const { message, files } = await resolveAssets(api, m);
+  const payload = { ...payloadOf(message, false), ...(files.length ? { files } : {}) };
+  let msg: Message | null = null;
+  if ('fetchWebhooks' in ch && 'createWebhook' in ch) {
+    try {
+      const hooks = await ch.fetchWebhooks();
+      const hook = hooks.find((h) => h.owner?.id === client.user?.id && h.name === 'EN Polizei Panels') ?? await ch.createWebhook({ name: 'EN Polizei Panels' });
+      // Webhooks ohne App dürfen keine Buttons senden
+      msg = await hook.send({ ...payload, components: [], username: as.username.slice(0, 80), ...(as.avatarURL ? { avatarURL: as.avatarURL } : {}) }) as Message;
+    } catch { msg = null; } // keine Rechte „Webhooks verwalten“ → als Bot
+  }
+  if (!msg) msg = await ch.send(payload);
+  // Webhook-Nachrichten: Reaktionen über den Kanal setzen
+  const real = await ch.messages.fetch(msg.id).catch(() => msg);
+  await react(real!, message.reactions);
+  return { channelId, messageId: msg.id };
+}
+
+export async function deleteMessage(client: Client, channelId: string, messageId: string) {
+  const ch = await client.channels.fetch(channelId).catch(() => null);
+  if (!ch?.isTextBased() || !('messages' in ch)) return;
+  await ch.messages.delete(messageId).catch(() => undefined);
+}

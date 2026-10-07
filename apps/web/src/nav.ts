@@ -1,4 +1,4 @@
-import { Link2, PanelTop, DoorOpen, MapPinned, Building2, Megaphone, RadioTower, Contact, Palette, CalendarOff, Clock, LifeBuoy, Monitor, BarChart3, BookOpen, Award, Car, ClipboardList, FileText, Fingerprint, Flag, Gavel, LayoutDashboard, MessageSquare, Radio, Scale, Search, Settings, Shield, Siren, Ticket, UserCheck, Users, Wrench, type LucideIcon } from 'lucide-react';
+import { FormInput, ListOrdered, Link2, PanelTop, DoorOpen, MapPinned, Building2, Megaphone, RadioTower, Contact, Palette, CalendarOff, Clock, LifeBuoy, Monitor, BarChart3, BookOpen, Award, Car, ClipboardList, FileText, Fingerprint, Flag, Gavel, LayoutDashboard, MessageSquare, Radio, Scale, Search, Settings, Shield, Siren, Ticket, UserCheck, Users, Wrench, type LucideIcon } from 'lucide-react';
 
 /** `area`: Bereichs-Sichtbarkeit (dashboard.<bereich>.view) – ohne sie erscheint der Menüpunkt nicht, auch mit Modul-Recht. */
 export interface NavItem { path: string; label: string; icon: LucideIcon; perm?: string; area?: string; group: 'Operations' | 'Records' | 'Organisation' | 'Administration' }
@@ -11,6 +11,7 @@ export const NAV: NavItem[] = [
   { path: '/incidents', label: 'Einsätze', icon: Siren, perm: 'incidents.view', group: 'Operations' },
   { path: '/team', label: 'Team', icon: Users, perm: 'team.view', area: 'dashboard.team.view', group: 'Operations' },
   { path: '/teamlist', label: 'Teamliste', icon: Contact, perm: 'team.view', area: 'dashboard.team.view', group: 'Operations' },
+  { path: '/staff-lists', label: 'Staff-Liste (Discord)', icon: ListOrdered, perm: 'team.view', area: 'dashboard.team.view', group: 'Operations' },
   { path: '/offices', label: 'Büros', icon: Building2, perm: 'team.view', area: 'dashboard.offices.view', group: 'Operations' },
   { path: '/radio-codes', label: 'Funk-Codes', icon: RadioTower, perm: 'radio.view', area: 'dashboard.radio.view', group: 'Operations' },
   { path: '/communication', label: 'Kommunikation', icon: MessageSquare, perm: 'communication.view', group: 'Operations' },
@@ -37,6 +38,7 @@ export const NAV: NavItem[] = [
   { path: '/admin/shifts', label: 'Schichten', icon: Clock, perm: 'settings.view', area: 'dashboard.settings.view', group: 'Administration' },
   { path: '/admin/servers', label: 'Server-Verbund', icon: Link2, perm: 'settings.view', area: 'dashboard.settings.view', group: 'Administration' },
   { path: '/admin/embeds', label: 'Embeds', icon: PanelTop, perm: 'settings.view', area: 'dashboard.settings.view', group: 'Administration' },
+  { path: '/admin/form-panels', label: 'Formular-Panels', icon: FormInput, perm: 'settings.view', area: 'dashboard.settings.view', group: 'Administration' },
   { path: '/admin/welcome', label: 'Willkommen & Abschied', icon: DoorOpen, perm: 'settings.view', area: 'dashboard.settings.view', group: 'Administration' },
   { path: '/admin/leave', label: 'Abmeldungen (Einrichtung)', icon: CalendarOff, perm: 'settings.view', area: 'dashboard.settings.view', group: 'Administration' },
   { path: '/admin/studio', label: 'Studio', icon: Wrench, perm: 'studio.view', area: 'dashboard.settings.view', group: 'Administration' },

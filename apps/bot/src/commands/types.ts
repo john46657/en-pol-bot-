@@ -37,6 +37,14 @@ export interface Ctx {
   robloxLookup?: (username: string) => Promise<{ id: number; name: string; displayName: string } | null>;
   /** Roblox-Verifizierung: Rollen/Nickname eines Mitglieds auf einem Server setzen; liefert Hinweise, was nicht ging. */
   verifyApply?: (guildId: string, userId: string, a: { add: string[]; remove: string[]; nickname: string | null }) => Promise<string[]>;
+  /** Anzeigename auf dem Server (Nickname), falls bekannt. */
+  userDisplayName?: string;
+  /** Nachrichten posten/löschen und Rollen geben (Formular-Panels, Berichte). */
+  discord?: {
+    post(channelId: string, message: import('@enrp/shared').MessageSpec, asUser?: { username: string; avatarURL?: string }): Promise<{ channelId: string; messageId: string }>;
+    deleteMessage(channelId: string, messageId: string): Promise<void>;
+    addRoles(guildId: string, userId: string, roleIds: string[]): Promise<void>;
+  };
   /** Sprach-Support (Buttons „Übernehmen“, „Ablehnen“, „Nachricht“ …). */
   voiceSupport?: VoiceSupportRuntime;
 }

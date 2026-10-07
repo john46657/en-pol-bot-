@@ -1369,3 +1369,22 @@ model RobloxOAuthState {
 
   @@index([discordId])
 }
+
+// ───────────── Formular-Panels (Button → Formular → Nachricht) ─────────────
+
+/// Eine Einsendung über ein Formular-Panel (z. B. Zello-/Roblox-Daten); `messageId`: wo der Bot das Ergebnis gepostet hat.
+model PanelSubmission {
+  id         String   @id @default(uuid()) @db.Uuid
+  panelId    String   @db.Uuid
+  guildId    String?
+  discordId  String
+  userName   String
+  values     Json
+  channelId  String?
+  messageId  String?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([panelId, discordId])
+  @@index([panelId, createdAt])
+}
