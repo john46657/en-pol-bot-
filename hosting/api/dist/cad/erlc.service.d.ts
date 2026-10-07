@@ -167,13 +167,14 @@ export declare class ErlcService {
     readonly client: ErlcClient;
     private readonly rt;
     private webhookKey;
+    private readonly seen;
     constructor(prisma: PrismaService, audit: AuditService, perms: PermissionService, realtime: RealtimeService, notify: CadNotifyService);
     /** Nur für Tests: andere Gegenstelle/Signaturschlüssel. */
     useClient(c: ErlcClient): void;
     useWebhookKey(spkiBase64: string): void;
     private runtime;
     /** Geheimnisfreie Darstellung – der Key wird nie ausgeliefert, nur maskiert. */
-    view(s: ErlcServer): {
+    view(s: ErlcServer, withSecrets?: boolean): {
         id: string;
         name: string;
         serverRef: string | null;
@@ -200,12 +201,12 @@ export declare class ErlcService {
         };
         hasKey: boolean;
         keyMasked: string;
-        webhookPath: string;
+        webhookPath: string | null;
         paused: boolean;
         createdAt: Date;
         updatedAt: Date;
     };
-    list(): Promise<{
+    list(withSecrets?: boolean): Promise<{
         id: string;
         name: string;
         serverRef: string | null;
@@ -232,7 +233,7 @@ export declare class ErlcService {
         };
         hasKey: boolean;
         keyMasked: string;
-        webhookPath: string;
+        webhookPath: string | null;
         paused: boolean;
         createdAt: Date;
         updatedAt: Date;
@@ -265,7 +266,7 @@ export declare class ErlcService {
         };
         hasKey: boolean;
         keyMasked: string;
-        webhookPath: string;
+        webhookPath: string | null;
         paused: boolean;
         createdAt: Date;
         updatedAt: Date;
@@ -297,7 +298,7 @@ export declare class ErlcService {
         };
         hasKey: boolean;
         keyMasked: string;
-        webhookPath: string;
+        webhookPath: string | null;
         paused: boolean;
         createdAt: Date;
         updatedAt: Date;
@@ -332,7 +333,7 @@ export declare class ErlcService {
             };
             hasKey: boolean;
             keyMasked: string;
-            webhookPath: string;
+            webhookPath: string | null;
             paused: boolean;
             createdAt: Date;
             updatedAt: Date;
@@ -382,7 +383,7 @@ export declare class ErlcService {
             };
             hasKey: boolean;
             keyMasked: string;
-            webhookPath: string;
+            webhookPath: string | null;
             paused: boolean;
             createdAt: Date;
             updatedAt: Date;
@@ -413,15 +414,23 @@ export declare class ErlcService {
     }[]>;
     verifySignature(raw: Buffer, timestamp: string | undefined, sigHex: string | undefined): boolean;
     /** Webhook-Ereignis: Notrufe sofort ins CAD, sonst als Ereignis vermerken; danach zeitnah normal abrufen. */
-    webhook(id: string, raw: Buffer | undefined, timestamp?: string, signature?: string): Promise<{
+    webhook(id: string, token: string, raw: Buffer | undefined, timestamp?: string, signature?: string): Promise<{
+        ok: boolean;
+        duplicate: boolean;
+        ignored?: undefined;
+        calls?: undefined;
+        events?: undefined;
+    } | {
         ok: boolean;
         ignored: boolean;
+        duplicate?: undefined;
         calls?: undefined;
         events?: undefined;
     } | {
         ok: boolean;
         calls: number;
         events: number;
+        duplicate?: undefined;
         ignored?: undefined;
     }>;
 }

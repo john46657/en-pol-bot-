@@ -42,7 +42,8 @@ export class ErlcClient {
     const cmdWait = bucket === 'command' ? Math.max(0, x.lastCommandAt + COMMAND_SPACING_MS - now) : 0;
     return Math.max(x.blockedUntil - now, bucketWait, cmdWait, 0);
   }
-  forget(id: string) { this.servers.delete(id); }
+  /** Neuer Key: Bucket-Stände vergessen, eine laufende Sperre (429/Retry-After) aber behalten. */
+  forget(id: string) { const x = this.servers.get(id); if (x) x.buckets.clear(); }
 
   fetchServer(id: string, key: string, include: string[]) {
     const qs = include.length ? `?${include.map((k) => `${k}=true`).join('&')}` : '';
@@ -92,7 +93,8 @@ export class ErlcClient {
 
   private readRate(x: PerServer, res: Response, fallback: string) {
     const h = (n: string) => res.headers.get(n);
-    const bucket = h('x-ratelimit-bucket') ?? fallback;
+    // Befehle und Abrufe getrennt führen – die Bucket-Namen der API werden dem jeweiligen Aufruf zugeordnet
+    const bucket = fallback;
     const num = (v: string | null) => (v !== null && v !== '' && Number.isFinite(Number(v)) ? Number(v) : null);
     const reset = num(h('x-ratelimit-reset'));
     if (h('x-ratelimit-limit') === null && h('x-ratelimit-remaining') === null) return;

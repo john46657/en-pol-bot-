@@ -41,6 +41,7 @@ export declare class ErlcClient {
     };
     /** Gesperrt bis (ms) – solange keine Anfragen senden. */
     blockedFor(id: string, bucket?: string): number;
+    /** Neuer Key: Bucket-Stände vergessen, eine laufende Sperre (429/Retry-After) aber behalten. */
     forget(id: string): void;
     fetchServer(id: string, key: string, include: string[]): Promise<ErlcResult<Record<string, unknown>>>;
     runCommand(id: string, key: string, command: string): Promise<ErlcResult<{

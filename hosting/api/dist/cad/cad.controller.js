@@ -94,24 +94,25 @@ let CadController = class CadController {
     overview(a) { return this.s.overview(a); }
     map(a) { return this.s.mapData(a); }
     // Einsätze
-    incidents(q) { return this.s.listIncidents({ active: q.active === 'true', q: q.q, take: q.take }); }
-    incident(id) { return this.s.getIncident(id); }
+    async incidents(a, q) { await this.s.assertCrossServer(a, 'view_incidents', a.roles); return this.s.listIncidents({ active: q.active === 'true', q: q.q, take: q.take }); }
+    async incident(a, id) { await this.s.assertCrossServer(a, 'view_incidents', a.roles); return this.s.getIncident(id); }
     createIncident(a, b) { return this.s.createIncident(a, b); }
     updateIncident(a, id, b) { return this.s.updateIncident(a, id, b); }
-    status(a, id, b) { return this.s.setStatus(a, id, b.status, b.note); }
+    async status(a, id, b) { await this.s.assertCrossServer(a, 'dispatch', a.roles); return this.s.setStatus(a, id, b.status, b.note); }
     note(a, id, b) { return this.s.addNote(a, id, b.text); }
-    assign(a, id, b) { return this.s.assignUnit(a, id, b.unitId); }
+    async assign(a, id, b) { await this.s.assertCrossServer(a, 'dispatch', a.roles); return this.s.assignUnit(a, id, b.unitId); }
     clear(a, id, unitId) { return this.s.clearUnit(a, id, unitId); }
     // Einheiten
-    units() { return this.s.listUnits(); }
+    async units(a) { await this.s.assertCrossServer(a, 'view_incidents', a.roles); return this.s.listUnits(); }
     createUnit(a, b) { return this.s.createUnit(a, b); }
     updateUnit(a, id, b) { return this.s.updateUnit(a, id, b); }
     deleteUnit(a, id) { return this.s.deleteUnit(a, id); }
     /** Leitstelle oder die Besatzung selbst (auch vom verbundenen SEK/K9-Server, falls freigegeben). */
     unitStatus(a, id, b) { return this.s.setUnitStatus(a, id, b.status, a.roles); }
     // Notrufe
-    calls(q) { return this.s.listCalls({ status: q.status ?? 'ALL' }); }
+    async calls(a, q) { await this.s.assertCrossServer(a, 'view_incidents', a.roles); return this.s.listCalls({ status: q.status ?? 'ALL' }); }
     async callAction(a, id, action, body) {
+        await this.s.assertCrossServer(a, 'dispatch', a.roles);
         const need = (p) => this.perms.assert(a.userId, p);
         if (action === 'claim' || action === 'close' || action === 'reopen') {
             await need('cad.edit_incident');
@@ -204,18 +205,20 @@ __decorate([
 __decorate([
     (0, common_1.Get)('incidents'),
     (0, decorators_1.RequirePermission)('cad.view'),
-    __param(0, (0, common_1.Query)((0, zod_pipe_1.zodBody)(listQ))),
+    __param(0, Cad()),
+    __param(1, (0, common_1.Query)((0, zod_pipe_1.zodBody)(listQ))),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [void 0]),
-    __metadata("design:returntype", void 0)
+    __metadata("design:paramtypes", [Object, void 0]),
+    __metadata("design:returntype", Promise)
 ], CadController.prototype, "incidents", null);
 __decorate([
     (0, common_1.Get)('incidents/:id'),
     (0, decorators_1.RequirePermission)('cad.view'),
-    __param(0, (0, common_1.Param)('id', common_1.ParseUUIDPipe)),
+    __param(0, Cad()),
+    __param(1, (0, common_1.Param)('id', common_1.ParseUUIDPipe)),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String]),
-    __metadata("design:returntype", void 0)
+    __metadata("design:paramtypes", [Object, String]),
+    __metadata("design:returntype", Promise)
 ], CadController.prototype, "incident", null);
 __decorate([
     (0, common_1.Post)('incidents'),
@@ -245,7 +248,7 @@ __decorate([
     __param(2, (0, common_1.Body)((0, zod_pipe_1.zodBody)(statusBody))),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [Object, String, void 0]),
-    __metadata("design:returntype", void 0)
+    __metadata("design:returntype", Promise)
 ], CadController.prototype, "status", null);
 __decorate([
     (0, common_1.Post)('incidents/:id/notes'),
@@ -267,7 +270,7 @@ __decorate([
     __param(2, (0, common_1.Body)((0, zod_pipe_1.zodBody)(zod_1.z.object({ unitId: zod_1.z.string().uuid() })))),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [Object, String, Object]),
-    __metadata("design:returntype", void 0)
+    __metadata("design:returntype", Promise)
 ], CadController.prototype, "assign", null);
 __decorate([
     (0, common_1.Delete)('incidents/:id/units/:unitId'),
@@ -283,9 +286,10 @@ __decorate([
 __decorate([
     (0, common_1.Get)('units'),
     (0, decorators_1.RequirePermission)('cad.view'),
+    __param(0, Cad()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", []),
-    __metadata("design:returntype", void 0)
+    __metadata("design:paramtypes", [Object]),
+    __metadata("design:returntype", Promise)
 ], CadController.prototype, "units", null);
 __decorate([
     (0, common_1.Post)('units'),
@@ -330,10 +334,11 @@ __decorate([
 __decorate([
     (0, common_1.Get)('calls'),
     (0, decorators_1.RequirePermission)('cad.view'),
-    __param(0, (0, common_1.Query)((0, zod_pipe_1.zodBody)(zod_1.z.object({ status: zod_1.z.enum(['OPEN', 'CLAIMED', 'CLOSED', 'ALL']).optional() })))),
+    __param(0, Cad()),
+    __param(1, (0, common_1.Query)((0, zod_pipe_1.zodBody)(zod_1.z.object({ status: zod_1.z.enum(['OPEN', 'CLAIMED', 'CLOSED', 'ALL']).optional() })))),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Object]),
-    __metadata("design:returntype", void 0)
+    __metadata("design:paramtypes", [Object, Object]),
+    __metadata("design:returntype", Promise)
 ], CadController.prototype, "calls", null);
 __decorate([
     (0, common_1.Post)('calls/:id/:action'),
@@ -497,10 +502,12 @@ exports.CadController = CadController = __decorate([
 const commandBody = zod_1.z.object({ command: zod_1.z.string().trim().min(2).max(500), confirm: zod_1.z.boolean().optional() });
 let ErlcController = class ErlcController {
     s;
-    constructor(s) {
+    perms;
+    constructor(s, perms) {
         this.s = s;
+        this.perms = perms;
     }
-    list() { return this.s.list(); }
+    async list(a) { return this.s.list(await this.perms.has(a.userId, 'cad.manage_erlc')); }
     create(a, b) { return this.s.create(a, b); }
     update(a, id, b) { return this.s.update(a, id, b); }
     remove(a, id) { return this.s.remove(a, id); }
@@ -510,17 +517,18 @@ let ErlcController = class ErlcController {
     command(a, id, b) { return this.s.runCommand(a, id, b.command, !!b.confirm); }
     commands(id) { return this.s.commandLog(id); }
     /** Event-Webhook von ER:LC (öffentlich, aber nur mit gültiger Ed25519-Signatur von PRC). */
-    webhook(id, req, ts, sig) {
-        return this.s.webhook(id, req.rawBody, ts, sig);
+    webhook(id, token, req, ts, sig) {
+        return this.s.webhook(id, token, req.rawBody, ts, sig);
     }
 };
 exports.ErlcController = ErlcController;
 __decorate([
     (0, common_1.Get)('servers'),
     (0, decorators_1.RequirePermission)('cad.view_erlc'),
+    __param(0, (0, decorators_1.CurrentActor)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", []),
-    __metadata("design:returntype", void 0)
+    __metadata("design:paramtypes", [Object]),
+    __metadata("design:returntype", Promise)
 ], ErlcController.prototype, "list", null);
 __decorate([
     (0, common_1.Post)('servers'),
@@ -599,20 +607,21 @@ __decorate([
     __metadata("design:returntype", void 0)
 ], ErlcController.prototype, "commands", null);
 __decorate([
-    (0, common_1.Post)('webhook/:id'),
+    (0, common_1.Post)('webhook/:id/:token'),
     (0, decorators_1.Public)(),
     (0, common_1.HttpCode)(200),
     __param(0, (0, common_1.Param)('id', common_1.ParseUUIDPipe)),
-    __param(1, (0, common_1.Req)()),
-    __param(2, (0, common_1.Headers)('x-signature-timestamp')),
-    __param(3, (0, common_1.Headers)('x-signature-ed25519')),
+    __param(1, (0, common_1.Param)('token')),
+    __param(2, (0, common_1.Req)()),
+    __param(3, (0, common_1.Headers)('x-signature-timestamp')),
+    __param(4, (0, common_1.Headers)('x-signature-ed25519')),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String, Object, String, String]),
+    __metadata("design:paramtypes", [String, String, Object, String, String]),
     __metadata("design:returntype", void 0)
 ], ErlcController.prototype, "webhook", null);
 exports.ErlcController = ErlcController = __decorate([
     (0, swagger_1.ApiTags)('erlc'),
     (0, common_1.Controller)('erlc'),
-    __metadata("design:paramtypes", [erlc_service_1.ErlcService])
+    __metadata("design:paramtypes", [erlc_service_1.ErlcService, permission_service_1.PermissionService])
 ], ErlcController);
 //# sourceMappingURL=cad.controller.js.map

@@ -99,8 +99,10 @@ export declare class CadService {
     /**
      * Server-übergreifende Aktionen: Vom Heimat-Server (Leitstelle) aus immer erlaubt; von einem anderen Discord-Server
      * nur, wenn eine aktive Server-Verbindung diese Aktion freigibt (und ggf. die Rolle passt).
+     * Geprüft wird nur, was aus Discord kommt (Bot mit Discord-ID): im Dashboard ist der gewählte Server nur ein Filter.
+     * Ohne eingestellten Heimat-Server ist nur ein Ein-Server-Betrieb (keine Server-Verbindungen) offen.
      */
-    assertCrossServer(actor: CadActor, action: 'status_report' | 'radio' | 'view_incidents', memberRoleIds?: string[]): Promise<void>;
+    assertCrossServer(actor: CadActor, action: 'status_report' | 'radio' | 'view_incidents' | 'dispatch', memberRoleIds?: string[]): Promise<void>;
     /** Fortlaufende Einsatznummer, z. B. E-2026-00421 (Präfix in den CAD-Einstellungen). */
     private nextNumber;
     private log;
@@ -279,6 +281,8 @@ export declare class CadService {
         requiredUnits: string | null;
         internalNotes: string | null;
     }>;
+    /** Abschließen und Wiederöffnen eines abgeschlossenen Einsatzes brauchen cad.close_incident. */
+    private assertStatusAllowed;
     setStatus(actor: CadActor, id: string, status: string, note?: string): Promise<{
         number: string;
         id: string;

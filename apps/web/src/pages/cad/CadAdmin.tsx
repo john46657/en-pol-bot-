@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { ArrowDown, ArrowUp, Trash2 } from 'lucide-react';
-import { type DangerConfig, CAD_EVENT_LABELS, CAD_EVENTS, CAD_LINK_ACTIONS, CAD_LINK_LABELS, CAD_LINK_SEND_TYPES, ERLC_FEATURE_LABELS, ERLC_FEATURES, ERLC_POLL_OPTIONS, ERLC_MAP_SIZE, type CadConfig, type CadRoute } from '@enrp/shared';
+import { type DangerConfig, CAD_WIDGET_LABELS, CAD_WIDGETS, CAD_EVENT_LABELS, CAD_EVENTS, CAD_LINK_ACTIONS, CAD_LINK_LABELS, CAD_LINK_SEND_TYPES, ERLC_FEATURE_LABELS, ERLC_FEATURES, ERLC_POLL_OPTIONS, ERLC_MAP_SIZE, type CadConfig, type CadRoute } from '@enrp/shared';
 import { api, ApiError } from '../../lib/api';
 import { useAuth } from '../../lib/auth';
 import { useAutosaveDraft } from '../../lib/autosave';
@@ -90,6 +90,9 @@ export function CadSettings() {
           <div className="grid max-w-xl gap-3">
             <Field label="Discord-Server der Leitstelle (Heimat der Einsätze)" hint="Von anderen Servern (z. B. SEK/K9) geht nur, was eine Server-Verbindung freigibt.">{() => <GuildSelect label="Leitstelle" value={draft.homeGuildId} onChange={(v) => upd({ homeGuildId: v })} />}</Field>
             <Field label="Präfix der Einsatznummer" hint={`Beispiel: ${draft.incidentNumberPrefix}-${new Date().getFullYear()}-00421`}>{(id) => <Input id={id} maxLength={6} value={draft.incidentNumberPrefix} onChange={(e) => upd({ incidentNumberPrefix: e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '') })} />}</Field>
+            <fieldset><legend className="mb-1 text-xs font-medium text-muted">Standard-Widgets der Leitstellen-Startseite (jeder kann seine eigene Ansicht davon abweichend anpassen)</legend>
+              <div className="grid gap-1 sm:grid-cols-2">{CAD_WIDGETS.map((w) => <label key={w} className="flex items-center gap-2 text-sm"><input type="checkbox" checked={draft.widgets.includes(w)} onChange={(e) => upd({ widgets: e.target.checked ? [...draft.widgets, w] : draft.widgets.filter((x) => x !== w) })} />{CAD_WIDGET_LABELS[w]}</label>)}</div>
+            </fieldset>
           </div>
         </Card>}
         {tab === 'Einsätze' && <Card>
@@ -205,7 +208,7 @@ function ErlcIntegration() {
               <dt className="text-muted">Letzter Fehler</dt><dd className={s.lastError ? 'text-danger' : ''}>{s.lastError ? `${s.lastError} (${ago(s.lastErrorAt)})` : '—'}</dd>
               <dt className="text-muted">Intervall</dt><dd>{s.pollSeconds} s{s.paused ? ' · pausiert (Key prüfen)' : ''}</dd>
               <dt className="text-muted">Funktionen</dt><dd className="text-xs">{s.features.map((f) => ERLC_FEATURE_LABELS[f as keyof typeof ERLC_FEATURE_LABELS] ?? f).join(', ') || '—'}</dd>
-              {s.webhookEnabled && <><dt className="text-muted">Webhook-URL</dt><dd className="break-all font-mono text-xs">{location.origin}{s.webhookPath}</dd></>}
+              {s.webhookEnabled && s.webhookPath && <><dt className="text-muted">Webhook-URL</dt><dd className="break-all font-mono text-xs">{location.origin}{s.webhookPath}</dd></>}
             </dl>
             <div className="mt-3 flex flex-wrap gap-1">
               <Button size="sm" variant="secondary" disabled={test.isPending} onClick={() => test.mutate({ id: s.id, action: 'test' })}>Verbindung testen</Button>

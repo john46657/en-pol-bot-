@@ -9,7 +9,7 @@ import { Button, Field, Input, Modal, Select, Textarea } from '../../components/
 
 /** Ein Marker auf der Karte: Spielkoordinate, Layer, Darstellung und Inhalt des Info-Fensters. */
 interface Marker { id: string; layer: string; x: number; z: number; emoji: string; color: string; label: string; title: string; body: ReactNode; actions?: ReactNode; pulse?: boolean }
-type Mode = { kind: 'view' } | { kind: 'poi' } | { kind: 'zone'; points: [number, number][] } | { kind: 'pick'; onPick: (x: number, z: number) => void; hint: string };
+type Mode = { kind: 'view' } | { kind: 'poi' } | { kind: 'zone'; points: [number, number][] } | { kind: 'pick'; onPick: (x: number, z: number) => void; hint: string; tag?: string };
 
 const MIN_ZOOM = 0.03, MAX_ZOOM = 6;
 
@@ -17,12 +17,17 @@ const MIN_ZOOM = 0.03, MAX_ZOOM = 6;
  * Interaktive CAD-Karte: Kartenbild aus den Einstellungen (hochgeladene ER:LC-Map), darüber Layer mit Markern,
  * POIs und Zonen. Zoom mit Mausrad/Buttons, Verschieben per Ziehen (auch Touch). Positionen in Spielkoordinaten.
  */
-export function MapView({ cfg, data, height = '70vh', focus, onCreateIncidentAt, actionsFor, compact }: {
+export function MapView({ cfg, data, height = '70vh', focus, onCreateIncidentAt, actionsFor, compact, placeUnit }: {
   cfg: CadConfig; data: CadMapData | undefined; height?: string; focus?: { x: number; z: number; id?: string } | null;
   onCreateIncidentAt?: (x: number, z: number) => void; actionsFor?: (m: { kind: string; id: string }) => ReactNode; compact?: boolean;
+  /** Einheit ohne Position direkt platzieren (Einheiten → „Auf Karte platzieren“). */
+  placeUnit?: { id: string; callsign: string; done: () => void } | null;
 }) {
   const { can } = useAuth();
+  const qcMap = useQueryClient();
   const { cad, set } = useCadPrefs();
+  /** Manuelle Position einer Einheit (gilt, solange kein zugeordneter Spieler in ER:LC ist). */
+  const setUnitPos = async (id: string, x: number, z: number) => { await api(`/cad/units/${id}`, { method: 'PATCH', body: { mapX: x, mapZ: z } }); void qcMap.invalidateQueries({ queryKey: ['cad-map'] }); void qcMap.invalidateQueries({ queryKey: ['cad-units'] }); };
   const box = useRef<HTMLDivElement>(null);
   const m = cfg.map;
   const [view, setView] = useState<{ s: number; tx: number; ty: number } | null>(null);
@@ -51,6 +56,10 @@ export function MapView({ cfg, data, height = '70vh', focus, onCreateIncidentAt,
     setView({ s, tx: el.clientWidth / 2 - px * s, ty: el.clientHeight / 2 - py * s });
     if (focus.id) setSelected(focus.id);
   }, [focus?.x, focus?.z, focus?.id]);
+
+  useEffect(() => {
+    if (placeUnit) setMode({ kind: 'pick', hint: `Position für ${placeUnit.callsign} anklicken.`, onPick: (x, z) => void setUnitPos(placeUnit.id, x, z).then(placeUnit.done) });
+  }, [placeUnit?.id]);
 
   // Persönlichen Ausschnitt merken (gesammelt gespeichert)
   const saveTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
@@ -123,7 +132,7 @@ export function MapView({ cfg, data, height = '70vh', focus, onCreateIncidentAt,
       const t = is(u);
       out.push({ id: `unit:${u.id}`, layer: t?.layer ?? 'units', x: u.position!.x, z: u.position!.z, emoji: u.icon ?? t?.emoji ?? style('unit').emoji, color: u.color ?? t?.color ?? style('unit').color, label: u.callsign, title: u.callsign,
         body: <dl className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-0.5 text-xs"><dt className="text-muted">Status</dt><dd>{optLabel(cfg.unitStatuses, u.status)}</dd><dt className="text-muted">Team</dt><dd>{t?.label ?? u.type ?? '—'}</dd><dt className="text-muted">Discord</dt><dd>{u.crew.map((c) => c.discordName).filter(Boolean).join(', ') || u.memberNames.join(', ') || '—'}</dd><dt className="text-muted">ER:LC</dt><dd>{u.crew.map((c) => c.erlcName).filter(Boolean).join(', ') || '—'}</dd><dt className="text-muted">Aktueller Einsatz</dt><dd>{u.current ? `${u.current.number}` : 'Keiner'}</dd><dt className="text-muted">Position</dt><dd>{u.position!.source === 'erlc' ? `live${u.position!.street ? ` · ${u.position!.street}` : ''}` : 'manuell'}</dd></dl>,
-        actions: actionsFor?.({ kind: 'unit', id: u.id }) });
+        actions: <>{actionsFor?.({ kind: 'unit', id: u.id })}{can('cad.manage_units') && <Button size="sm" variant="secondary" onClick={() => setMode({ kind: 'pick', hint: `Neue Position für ${u.callsign} anklicken.`, onPick: (x, z) => void setUnitPos(u.id, x, z) })}>📍 Position setzen</Button>}</> });
     }
     const unitNames = new Set(data.units.flatMap((u) => u.crew.map((c) => c.erlcName?.toLowerCase())).filter(Boolean));
     for (const p of data.players) {
@@ -191,7 +200,7 @@ export function MapView({ cfg, data, height = '70vh', focus, onCreateIncidentAt,
       )}
       {!compact && (
         <div data-ui className="absolute left-2 top-2 flex flex-wrap gap-1">
-          {onCreateIncidentAt && can('cad.create_incident') && <Button size="sm" variant={mode.kind === 'pick' ? 'primary' : 'secondary'} onClick={() => setMode(mode.kind === 'pick' ? { kind: 'view' } : { kind: 'pick', hint: 'Klicke auf die Karte, um dort einen Einsatz anzulegen.', onPick: onCreateIncidentAt })}>🔴 Einsatz hier</Button>}
+          {onCreateIncidentAt && can('cad.create_incident') && <Button size="sm" variant={mode.kind === 'pick' && mode.tag === 'incident' ? 'primary' : 'secondary'} onClick={() => setMode(mode.kind === 'pick' && mode.tag === 'incident' ? { kind: 'view' } : { kind: 'pick', tag: 'incident', hint: 'Klicke auf die Karte, um dort einen Einsatz anzulegen.', onPick: onCreateIncidentAt })}>🔴 Einsatz hier</Button>}
           {can('cad.manage_map') && <>
             <Button size="sm" variant={mode.kind === 'poi' ? 'primary' : 'secondary'} onClick={() => setMode(mode.kind === 'poi' ? { kind: 'view' } : { kind: 'poi' })}><Pencil size={12} /> POI setzen</Button>
             <Button size="sm" variant={mode.kind === 'zone' ? 'primary' : 'secondary'} onClick={() => setMode(mode.kind === 'zone' ? { kind: 'view' } : { kind: 'zone', points: [] })}>⬠ Zone zeichnen</Button>

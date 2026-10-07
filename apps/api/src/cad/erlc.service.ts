@@ -1,5 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { createPublicKey, verify as edVerify, type KeyObject } from 'node:crypto';
+import { createPublicKey, timingSafeEqual, verify as edVerify, type KeyObject } from 'node:crypto';
 import { Prisma, type ErlcServer } from '@prisma/client';
 import { z } from 'zod';
 import { ERLC_DEFAULT_BLOCKED, ERLC_DEFAULT_CRITICAL, ERLC_FEATURES, ERLC_POLL_OPTIONS, ERLC_STATUS_LABEL, parsePlayer, type ErlcFeature, type ErlcStatus } from '@enrp/shared';
@@ -113,6 +113,7 @@ export class ErlcService {
   readonly client: ErlcClient;
   private readonly rt = new Map<string, Runtime>();
   private webhookKey: KeyObject;
+  private readonly seen = new Map<string, number>();
 
   constructor(private readonly prisma: PrismaService, private readonly audit: AuditService, private readonly perms: PermissionService, private readonly realtime: RealtimeService, private readonly notify: CadNotifyService) {
     this.client = new ErlcClient();
@@ -129,19 +130,19 @@ export class ErlcService {
   }
 
   /** Geheimnisfreie Darstellung – der Key wird nie ausgeliefert, nur maskiert. */
-  view(s: ErlcServer) {
+  view(s: ErlcServer, withSecrets = false) {
     const settings = settingsSchema.parse(s.settings ?? {});
     return {
       id: s.id, name: s.name, serverRef: s.serverRef, description: s.description, logoUrl: s.logoUrl, guildId: s.guildId, active: s.active,
       pollSeconds: s.pollSeconds, features: s.features, webhookEnabled: s.webhookEnabled, settings,
       status: s.active ? s.status : 'DISABLED', statusLabel: ERLC_STATUS_LABEL[(s.active ? s.status : 'DISABLED') as ErlcStatus] ?? s.status,
       lastSyncAt: s.lastSyncAt, lastError: s.lastError, lastErrorAt: s.lastErrorAt, latencyMs: s.latencyMs,
-      rateLimit: this.client.rate(s.id), hasKey: true, keyMasked: MASK, webhookPath: `/api/v1/erlc/webhook/${s.id}`,
+      rateLimit: this.client.rate(s.id), hasKey: true, keyMasked: MASK, webhookPath: withSecrets ? `/api/v1/erlc/webhook/${s.id}/${s.webhookToken}` : null,
       paused: this.rt.get(s.id)?.paused ?? false, createdAt: s.createdAt, updatedAt: s.updatedAt,
     };
   }
 
-  async list() { return (await this.prisma.erlcServer.findMany({ orderBy: { name: 'asc' } })).map((s) => this.view(s)); }
+  async list(withSecrets = false) { return (await this.prisma.erlcServer.findMany({ orderBy: { name: 'asc' } })).map((s) => this.view(s, withSecrets)); }
   private async load(id: string) {
     const s = await this.prisma.erlcServer.findUnique({ where: { id } });
     if (!s) throw new AppError('NOT_FOUND', 'ER:LC-Server nicht gefunden.');
@@ -156,7 +157,7 @@ export class ErlcService {
       return row;
     });
     this.runtime(s.id).nextDue = 0;
-    return this.view(s);
+    return this.view(s, true);
   }
 
   async update(actor: Actor, id: string, d: Partial<ErlcServerInput>) {
@@ -178,7 +179,7 @@ export class ErlcService {
     const r = this.runtime(id);
     if (d.key || d.active) { r.paused = false; r.failures = 0; r.nextDue = 0; }
     if (d.key) this.client.forget(id);
-    return this.view(s);
+    return this.view(s, true);
   }
 
   async remove(actor: Actor, id: string) {
@@ -197,7 +198,7 @@ export class ErlcService {
     r.paused = false; r.failures = 0;
     const res = await this.poll(id, true);
     await this.audit.record(actor, { action: `erlc.server.${action}`, module: 'erlc', entityType: 'ErlcServer', entityId: id, after: { ok: res.ok, status: res.status } });
-    return { ...res, server: this.view(await this.load(id)) };
+    return { ...res, server: this.view(await this.load(id), true) };
   }
 
   /** Planer (jede Sekunde aus dem Modul): fällige Server abrufen. Kein Server blockiert die anderen. */
@@ -256,7 +257,8 @@ export class ErlcService {
     for (const c of calls) {
       if (!c.callNumber || !c.startedAt) continue;
       const startedAt = new Date(c.startedAt * 1000);
-      const exists = await this.prisma.erlcEmergencyCall.findUnique({ where: { serverId_callNumber_startedAt: { serverId: s.id, callNumber: c.callNumber, startedAt } } });
+      // gleiche Notrufnummer kurz zuvor/danach (Webhook ohne exakte Startzeit, danach der normale Abruf) = derselbe Notruf
+      const exists = await this.prisma.erlcEmergencyCall.findFirst({ where: { serverId: s.id, callNumber: c.callNumber, startedAt: { gte: new Date(startedAt.getTime() - 30 * 60_000), lte: new Date(startedAt.getTime() + 30 * 60_000) } } });
       if (exists) continue;
       try {
         const row = await this.prisma.erlcEmergencyCall.create({ data: { serverId: s.id, callNumber: c.callNumber, team: c.team, callerRobloxId: c.caller, description: c.description, positionDescriptor: c.positionDescriptor, mapX: c.x, mapZ: c.z, startedAt, source } });
@@ -322,11 +324,18 @@ export class ErlcService {
   }
 
   /** Webhook-Ereignis: Notrufe sofort ins CAD, sonst als Ereignis vermerken; danach zeitnah normal abrufen. */
-  async webhook(id: string, raw: Buffer | undefined, timestamp?: string, signature?: string) {
+  async webhook(id: string, token: string, raw: Buffer | undefined, timestamp?: string, signature?: string) {
     if (!raw || !this.verifySignature(raw, timestamp, signature)) throw new AppError('UNAUTHENTICATED', 'Ungültige Signatur.');
     const s = await this.prisma.erlcServer.findUnique({ where: { id } });
+    // PRC signiert für alle Server mit demselben Schlüssel – der geheime Teil der Adresse bindet die Zustellung an unseren Server
+    const a = Buffer.from(token), b = Buffer.from(s?.webhookToken ?? '');
+    if (!s || a.length !== b.length || !timingSafeEqual(a, b)) throw new AppError('NOT_FOUND', 'Unbekannter Server.');
+    // dieselbe signierte Zustellung nicht zweimal verarbeiten (Wiederholung innerhalb des Zeitfensters)
+    const now = Date.now();
+    for (const [k, t] of this.seen) if (t < now) this.seen.delete(k);
+    if (this.seen.has(signature!)) return { ok: true, duplicate: true };
+    this.seen.set(signature!, now + 10 * 60_000);
     // Validierungsanfrage von PRC beim Speichern der URL beantworten, auch wenn der Webhook (noch) nicht aktiv ist
-    if (!s) throw new AppError('NOT_FOUND', 'Unbekannter Server.');
     let body: unknown; try { body = JSON.parse(raw.toString('utf8')); } catch { body = null; }
     if (!s.active || !s.webhookEnabled) return { ok: true, ignored: true };
     const events = Array.isArray(body) ? body : [body];

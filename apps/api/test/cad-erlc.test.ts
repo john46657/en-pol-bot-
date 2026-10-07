@@ -100,7 +100,7 @@ describe('ER:LC integration', () => {
 
   it('rate limits: 429 → LIMITED and nothing is sent until Retry-After passed; bad key → ERROR and paused', async () => {
     const admin = (await login(app, 'cad_admin')).agent;
-    replies = [json(429, { code: 4001, message: 'You are being rate limited', retry_after: 30 }, { 'retry-after': '30' })];
+    replies = [json(429, { code: 4001, message: 'You are being rate limited', retry_after: 1 }, { 'retry-after': '1' })];
     const r = await admin.post(`/api/v1/erlc/servers/${id}/test`);
     expect(r.body).toMatchObject({ ok: false, status: 'LIMITED' });
     const before = calls.length;
@@ -108,7 +108,8 @@ describe('ER:LC integration', () => {
     expect(again.body.status).toBe('LIMITED');
     expect(calls.length).toBe(before); // zurückgehalten, nicht gesendet
     expect((await admin.get(`/api/v1/erlc/servers/${id}/live`)).body.snapshot.server.currentPlayers).toBe(3); // letzter Stand bleibt sichtbar
-    // neuer Key setzt Sperren zurück; ungültiger Key → Fehler + Pause
+    // Sperre läuft ab (Retry-After), ein neuer Key hebt sie nicht vorzeitig auf; ungültiger Key → Fehler + Pause
+    await new Promise((r) => setTimeout(r, 1100));
     await admin.patch(`/api/v1/erlc/servers/${id}`).send({ key: `${SECRET_KEY}-neu` });
     replies = [json(403, { code: 2002, message: 'Invalid server key' })];
     const bad = await admin.post(`/api/v1/erlc/servers/${id}/test`);
@@ -146,12 +147,18 @@ describe('ER:LC integration', () => {
     const body = JSON.stringify({ Team: 'Police', Caller: 1, Players: [], Position: [10, 20], StartedAt: Math.floor(Date.now() / 1000), CallNumber: 1183, Description: 'Raub', PositionDescriptor: 'Bank' });
     const ts = String(Math.floor(Date.now() / 1000));
     const sig = sign(null, Buffer.concat([Buffer.from(ts), Buffer.from(body)]), privateKey).toString('hex');
-    const post = (s: string, b = body) => http().post(`/api/v1/erlc/webhook/${id}`).set({ 'content-type': 'application/json', 'X-Signature-Timestamp': ts, 'X-Signature-Ed25519': s }).send(b);
+    const token = (await prisma.erlcServer.findUniqueOrThrow({ where: { id } })).webhookToken;
+    expect((await admin.get('/api/v1/erlc/servers')).body[0].webhookPath).toBe(`/api/v1/erlc/webhook/${id}/${token}`);
+    const post = (s: string, b = body, t = token) => http().post(`/api/v1/erlc/webhook/${id}/${t}`).set({ 'content-type': 'application/json', 'X-Signature-Timestamp': ts, 'X-Signature-Ed25519': s }).send(b);
     expect((await post('ab'.repeat(64))).status).toBe(401);
     expect((await post(sig, body.replace('Raub', 'Mord'))).status).toBe(401); // Inhalt verändert
+    expect((await post(sig, body, 'falsch')).status).toBe(404); // signiert, aber nicht an unseren Server
     const ok = await post(sig);
     expect(ok.status).toBe(200);
     expect(ok.body.calls).toBe(1);
+    expect((await post(sig)).body.duplicate).toBe(true); // dieselbe Zustellung nochmal → ignoriert
+    // ohne cad.manage_erlc kein Webhook-Pfad
+    expect((await (await login(app, 'cad_disp')).agent.get('/api/v1/erlc/servers')).body[0].webhookPath).toBeNull();
     expect(await prisma.erlcEmergencyCall.findFirst({ where: { callNumber: 1183 } })).toMatchObject({ source: 'WEBHOOK', description: 'Raub' });
   });
 });
@@ -203,6 +210,14 @@ describe('CAD', () => {
     expect(r.body).toMatchObject({ title: 'Schussgeräusche', location: 'Park Street', mapX: -654.6, source: 'ERLC_CALL' });
     expect(await prisma.erlcEmergencyCall.findUnique({ where: { id: call.id } })).toMatchObject({ incidentId: r.body.id, status: 'CLAIMED' });
     expect((await disp.post(`/api/v1/cad/calls/${call.id}/incident`).send({})).status).toBe(409);
+    // gleichzeitige Klicks: nur ein Einsatz wird verknüpft
+    const c2 = await prisma.erlcEmergencyCall.findFirstOrThrow({ where: { callNumber: 1183 } });
+    const both = await Promise.all([disp.post(`/api/v1/cad/calls/${c2.id}/incident`).send({}), disp.post(`/api/v1/cad/calls/${c2.id}/incident`).send({})]);
+    expect(both.map((r) => r.status).sort()).toEqual([200, 409]);
+    // Wiederöffnen eines abgeschlossenen Einsatzes braucht cad.close_incident (Leitstelle hat es)
+    const inc2 = both.find((r) => r.status === 200)!.body.id;
+    expect((await disp.post(`/api/v1/cad/incidents/${inc2}/status`).send({ status: 'CLOSED' })).status).toBe(200);
+    expect(await prisma.erlcEmergencyCall.findUnique({ where: { id: c2.id } })).toMatchObject({ status: 'CLOSED' });
   });
 
   it('cross-server: SEK server can report status / radio only through an allowed server link', async () => {
@@ -220,6 +235,17 @@ describe('CAD', () => {
     expect(radio.body).toMatchObject({ callsign: 'SEK-01', incidentId });
     const detail = (await admin.get(`/api/v1/cad/incidents/${incidentId}`)).body;
     expect(detail.log.at(-1)).toMatchObject({ kind: 'RADIO', text: 'SEK-01: „Am Einsatzort.“' });
+    // Fremde Einheit/Rufname vortäuschen geht nicht; in fremde Einsätze funken auch nicht
+    const other = await admin.post('/api/v1/cad/incidents').send({ title: 'Fremder Einsatz' });
+    expect((await http().post('/api/v1/cad/radio').set(bot(SEK_D, SEK_GUILD)).send({ text: 'x', incidentId: other.body.id })).status).toBe(403);
+    const fake = await http().post('/api/v1/cad/radio').set(bot(SEK_D, SEK_GUILD)).send({ text: 'y', callsign: 'LEITSTELLE' });
+    expect(fake.body.callsign).toBe('SEK-01');
+    // Einsätze sehen / Notrufe bearbeiten vom SEK-Server nur mit freigegebener Aktion
+    expect((await http().get('/api/v1/cad/incidents').set(bot(SEK_D, SEK_GUILD))).status).toBe(403);
+    const call = await prisma.erlcEmergencyCall.findFirstOrThrow({ where: { callNumber: 1183 } });
+    expect((await http().post(`/api/v1/cad/calls/${call.id}/claim`).set(bot(SEK_D, SEK_GUILD))).status).toBe(403);
+    await admin.patch(`/api/v1/cad/links/${link.body.id}`).send({ allowActions: ['status_report', 'radio', 'view_incidents'] });
+    expect((await http().get('/api/v1/cad/incidents').set(bot(SEK_D, SEK_GUILD))).status).toBe(200);
     // neue Einsätze gehen zusätzlich an den Kanal des verbundenen Servers
     await admin.post('/api/v1/cad/incidents').send({ title: 'Geiselnahme' });
     const out = await prisma.discordOutbox.findFirst({ where: { type: 'cad.incident.created' }, orderBy: { createdAt: 'desc' } });

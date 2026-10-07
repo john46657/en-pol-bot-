@@ -1076,6 +1076,8 @@ model ErlcServer {
   /// Erlaubte Funktionen: players, staff, queue, vehicles, emergencyCalls, modCalls, joinLogs, killLogs, commandLogs, commands, webhook
   features       String[]            @default([])
   webhookEnabled Boolean             @default(false)
+  /// Geheimer Teil der Webhook-Adresse (bindet signierte PRC-Zustellungen an genau diesen Server)
+  webhookToken   String              @default(dbgenerated("md5(random()::text || clock_timestamp()::text)"))
   /// API-Einstellungen (z. B. kritische/gesperrte Befehle, Timeout)
   settings       Json?
   status         String              @default("UNKNOWN") // CONNECTED | LIMITED | OFFLINE | ERROR | UNKNOWN | DISABLED

@@ -75,6 +75,7 @@ let DangerService = class DangerService {
         if (!def)
             throw new errors_1.AppError('VALIDATION_FAILED', `Unbekannte Stufe. Möglich: ${cfg.levels.map((l) => l.name).join(', ')}`);
         const before = await this.get();
+        const storedKey = (await this.state()).level;
         const user = actor.userId ? await this.prisma.user.findUnique({ where: { id: actor.userId }, select: { displayName: true } }) : null;
         const state = { level: def.key, reason: reason?.trim() || null, setByName: user?.displayName ?? null, at: new Date().toISOString() };
         await this.prisma.$transaction(async (tx) => {
@@ -82,7 +83,7 @@ let DangerService = class DangerService {
             await this.audit.record(actor, { action: 'danger.set', module: 'dispatch', entityType: 'DangerLevel', entityId: KEY, before: { level: before.level }, after: state, reason }, tx);
         });
         this.rt.publish('dispatch', 'danger.changed', { level: def.key });
-        if (before.level !== def.key || !before.at) {
+        if (storedKey !== def.key || !before.at) {
             await this.discord.enqueue('danger', 'danger.changed', {
                 level: def.key, name: def.name, title: def.title, text: def.text, emoji: def.emoji, color: def.color,
                 previous: before.at ? before.def.name : null, reason: state.reason, setBy: state.setByName, pingRoleIds: cfg.pingRoleIds,

@@ -55,11 +55,17 @@ export class CadService {
   /**
    * Server-übergreifende Aktionen: Vom Heimat-Server (Leitstelle) aus immer erlaubt; von einem anderen Discord-Server
    * nur, wenn eine aktive Server-Verbindung diese Aktion freigibt (und ggf. die Rolle passt).
+   * Geprüft wird nur, was aus Discord kommt (Bot mit Discord-ID): im Dashboard ist der gewählte Server nur ein Filter.
+   * Ohne eingestellten Heimat-Server ist nur ein Ein-Server-Betrieb (keine Server-Verbindungen) offen.
    */
-  async assertCrossServer(actor: CadActor, action: 'status_report' | 'radio' | 'view_incidents', memberRoleIds: string[] = []) {
-    const g = actor.guildId ?? null;
+  async assertCrossServer(actor: CadActor, action: 'status_report' | 'radio' | 'view_incidents' | 'dispatch', memberRoleIds: string[] = []) {
+    const g = actor.discordId ? actor.guildId ?? null : null;
     const home = (await this.cfg.get()).homeGuildId ?? null;
-    if (!g || !home || g === home) return;
+    if (!g || g === home) return;
+    if (!home) {
+      if (!(await this.prisma.cadServerLink.count())) return;
+      throw new AppError('PERMISSION_DENIED', 'Der Discord-Server der Leitstelle ist noch nicht eingestellt (CAD → Einstellungen → Allgemein).');
+    }
     const link = await this.prisma.cadServerLink.findFirst({ where: { active: true, sourceGuildId: home, targetGuildId: g, allowActions: { has: action } } });
     if (!link) throw new AppError('PERMISSION_DENIED', 'Dieser Discord-Server ist für diese Aktion nicht mit der Leitstelle verbunden.');
     if (link.roleIds.length && !memberRoleIds.some((r) => link.roleIds.includes(r))) throw new AppError('PERMISSION_DENIED', 'Dir fehlt die freigegebene Rolle für diese Server-Verbindung.');
@@ -139,8 +145,9 @@ export class CadService {
           if (opts.callId) {
             const call = await tx.erlcEmergencyCall.findUnique({ where: { id: opts.callId } });
             if (!call) throw new AppError('NOT_FOUND', 'Notruf nicht gefunden.');
-            if (call.incidentId) throw new AppError('CONFLICT', 'Aus diesem Notruf wurde schon ein Einsatz erstellt.', { incidentId: call.incidentId });
-            await tx.erlcEmergencyCall.update({ where: { id: call.id }, data: { incidentId: row.id, status: 'CLAIMED', claimedById: call.claimedById ?? actor.userId } });
+            // nur verknüpfen, wenn noch kein Einsatz dran hängt (gleichzeitige Klicks in Discord und Dashboard)
+            const linked = await tx.erlcEmergencyCall.updateMany({ where: { id: call.id, incidentId: null }, data: { incidentId: row.id, status: 'CLAIMED', claimedById: call.claimedById ?? actor.userId } });
+            if (!linked.count) throw new AppError('CONFLICT', 'Aus diesem Notruf wurde schon ein Einsatz erstellt.', { incidentId: call.incidentId });
             await this.log(tx, row.id, 'CALL', `Verknüpft mit ER:LC-Notruf #${call.callNumber}${call.description ? `: ${call.description}` : ''}`, actor);
           }
           await this.timeline.add(tx, { entityType: 'Incident', entityId: row.id, action: 'incident.created', summary: `Einsatz ${row.number} im CAD angelegt`, actorId: actor.userId });
@@ -178,6 +185,7 @@ export class CadService {
     const before = await this.prisma.incident.findUnique({ where: { id } });
     if (!before) throw new AppError('NOT_FOUND', 'Einsatz nicht gefunden.');
     const { status, ...rest } = d;
+    if (status && status !== before.status) await this.assertStatusAllowed(actor, cfg, before.status, status);
     const after = await this.prisma.$transaction(async (tx) => {
       const row = await tx.incident.update({ where: { id }, data: { ...rest, version: { increment: 1 } } });
       const fields = Object.keys(rest);
@@ -191,13 +199,19 @@ export class CadService {
     return after;
   }
 
+  /** Abschließen und Wiederöffnen eines abgeschlossenen Einsatzes brauchen cad.close_incident. */
+  private async assertStatusAllowed(actor: CadActor, cfg: CadConfig, from: string, to: string) {
+    const closed = (k: string) => !!cfg.incidentStatuses.find((s) => s.key === k)?.closed;
+    if ((closed(to) || closed(from)) && !(await this.perms.has(actor.userId!, 'cad.close_incident'))) throw new AppError('PERMISSION_DENIED', 'Zum Abschließen oder Wiederöffnen eines Einsatzes fehlt dir das Recht (cad.close_incident).');
+  }
+
   async setStatus(actor: CadActor, id: string, status: string, note?: string) {
     const cfg = await this.validateIncident({ status });
     const st = cfg.incidentStatuses.find((s) => s.key === status)!;
     const inc = await this.prisma.incident.findUnique({ where: { id } });
     if (!inc) throw new AppError('NOT_FOUND', 'Einsatz nicht gefunden.');
     if (inc.status === status) return inc;
-    if (st.closed && !(await this.perms.has(actor.userId!, 'cad.close_incident'))) throw new AppError('PERMISSION_DENIED', 'Zum Abschließen eines Einsatzes fehlt dir das Recht (cad.close_incident).');
+    await this.assertStatusAllowed(actor, cfg, inc.status, status);
     const after = await this.prisma.$transaction(async (tx) => {
       const row = await tx.incident.update({ where: { id }, data: { status, closedAt: st.closed ? new Date() : null, version: { increment: 1 } } });
       if (st.closed) {
@@ -339,7 +353,8 @@ export class CadService {
     const u = await this.prisma.unit.findUnique({ where: { id }, include: { members: true, incidents: { where: { clearedAt: null } } } });
     if (!u) throw new AppError('NOT_FOUND', 'Einheit nicht gefunden.');
     const dispatcher = await this.perms.has(actor.userId!, 'cad.assign_unit');
-    if (!dispatcher) {
+    if (dispatcher) await this.assertCrossServer(actor, 'dispatch', memberRoleIds);
+    else {
       const crew = u.members.some((m) => m.userId === actor.userId) || !!(await this.prisma.cadMember.findFirst({ where: { unitId: id, OR: [{ userId: actor.userId }, ...(actor.discordId ? [{ discordId: actor.discordId }] : [])] } }));
       if (!crew) throw new AppError('PERMISSION_DENIED', 'Nur die Leitstelle oder die Besatzung darf den Status dieser Einheit ändern.');
       await this.assertCrossServer(actor, 'status_report', memberRoleIds);
@@ -410,16 +425,21 @@ export class CadService {
   /** Funkmeldung (Dashboard oder Discord). Mit Einsatz → zusätzlich in der Einsatzchronik. */
   async sendRadio(actor: CadActor, d: { text: string; unitId?: string | null; incidentId?: string | null; incidentNumber?: string | null; callsign?: string | null }, memberRoleIds: string[] = []) {
     await this.assertCrossServer(actor, 'radio', memberRoleIds);
+    // Leitstelle darf für jede Einheit/jeden Einsatz funken; alle anderen nur als eigene Einheit in deren Einsätze
+    const dispatcher = await this.perms.has(actor.userId!, 'cad.assign_unit');
     const member = await this.prisma.cadMember.findFirst({ where: { OR: [{ userId: actor.userId }, ...(actor.discordId ? [{ discordId: actor.discordId }] : [])] } });
-    const unit = d.unitId ? await this.prisma.unit.findUnique({ where: { id: d.unitId } }) : member?.unitId ? await this.prisma.unit.findUnique({ where: { id: member.unitId } }) : null;
+    const unitId = dispatcher ? d.unitId ?? member?.unitId : member?.unitId;
+    const unit = unitId ? await this.prisma.unit.findUnique({ where: { id: unitId } }) : null;
     let incidentId = d.incidentId ?? null;
+    if (incidentId && !(await this.prisma.incident.findUnique({ where: { id: incidentId }, select: { id: true } }))) throw new AppError('NOT_FOUND', 'Einsatz nicht gefunden.');
     if (!incidentId && d.incidentNumber) {
       const i = await this.prisma.incident.findFirst({ where: { number: { equals: d.incidentNumber.trim(), mode: 'insensitive' } }, select: { id: true } });
       if (!i) throw new AppError('NOT_FOUND', `Einsatz „${d.incidentNumber}“ nicht gefunden.`);
       incidentId = i.id;
     }
+    if (incidentId && !dispatcher && !(unit && (await this.prisma.incidentUnit.findFirst({ where: { incidentId, unitId: unit.id, clearedAt: null } })))) throw new AppError('PERMISSION_DENIED', 'Funkmeldungen in einen Einsatz nur, wenn deine Einheit ihm zugewiesen ist.');
     if (!incidentId && unit) incidentId = (await this.prisma.incidentUnit.findFirst({ where: { unitId: unit.id, clearedAt: null }, orderBy: { assignedAt: 'desc' } }))?.incidentId ?? null;
-    const callsign = d.callsign ?? unit?.callsign ?? member?.callsign ?? null;
+    const callsign = (dispatcher ? d.callsign : null) ?? unit?.callsign ?? member?.callsign ?? null;
     const msg = await this.prisma.$transaction(async (tx) => {
       const row = await tx.cadRadioMessage.create({ data: { text: d.text, callsign, unitId: unit?.id ?? null, incidentId, authorId: actor.userId, discordId: actor.discordId ?? null, guildId: actor.guildId ?? null } });
       if (incidentId) await this.log(tx, incidentId, 'RADIO', `${callsign ?? 'Funk'}: „${d.text}“`, actor, unit?.id);

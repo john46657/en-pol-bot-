@@ -409,7 +409,7 @@ var CAD_EVENT_LABELS = {
   radio: "Funkmeldung"
 };
 var CAD_LINK_SEND_TYPES = ["incidents", "incident_status", "unit_requests", "calls", "announcements", "radio"];
-var CAD_LINK_ACTIONS = ["status_report", "radio", "view_incidents"];
+var CAD_LINK_ACTIONS = ["status_report", "radio", "view_incidents", "dispatch"];
 var CAD_LINK_LABELS = {
   incidents: "Eins\xE4tze senden",
   incident_status: "Einsatzstatus senden",
@@ -418,7 +418,8 @@ var CAD_LINK_LABELS = {
   announcements: "Leitstellenmeldungen senden",
   radio: "Funkmeldungen senden",
   status_report: "Status zur\xFCckmelden",
-  view_incidents: "Einsatzstatus sehen"
+  view_incidents: "Einsatzstatus sehen",
+  dispatch: "Notrufe/Eins\xE4tze bearbeiten (\xDCbernehmen, Einsatz erstellen, Einheit zuweisen)"
 };
 var CAD_EVENT_SEND_TYPE = {
   "incident.created": "incidents",

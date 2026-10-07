@@ -43,6 +43,7 @@ export const preferencesSchema = z.object({
     sidebar: z.boolean().optional(),
     favoriteIncidents: z.array(z.string().uuid()).max(50).optional(),
     erlcServerId: z.string().uuid().optional(),
+    sound: z.boolean().optional(),
   }).optional(),
   voice: z.object({
     channelIds: z.array(z.string().regex(/^\d{15,25}$/)).max(100),

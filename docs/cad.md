@@ -25,7 +25,7 @@ Dashboard (Browser) ──► API/Backend ──► ER:LC Private Server API (ap
 
 ### Event-Webhook
 
-ER:LC sendet Notrufe (und `;`-Befehle) per Webhook. URL im Dashboard (Server bearbeiten → „Event-Webhook nutzen“), z. B. `https://deine-domain/api/v1/erlc/webhook/<id>`; in den ER:LC-Servereinstellungen unter **Event Webhook** eintragen. Jede Zustellung wird mit dem öffentlichen Ed25519-Schlüssel von PRC geprüft (Zeitstempel + Rohdaten, max. 5 Minuten alt). Notrufe landen sofort im CAD; der normale Abruf läuft weiter.
+ER:LC sendet Notrufe (und `;`-Befehle) per Webhook. URL im Dashboard (Server bearbeiten → „Event-Webhook nutzen“), z. B. `https://deine-domain/api/v1/erlc/webhook/<id>/<geheimer-teil>` (nur für `cad.manage_erlc` sichtbar – PRC signiert für alle Server mit demselben Schlüssel, der geheime Teil bindet die Zustellung an euren Server; doppelte Zustellungen werden ignoriert); in den ER:LC-Servereinstellungen unter **Event Webhook** eintragen. Jede Zustellung wird mit dem öffentlichen Ed25519-Schlüssel von PRC geprüft (Zeitstempel + Rohdaten, max. 5 Minuten alt). Notrufe landen sofort im CAD; der normale Abruf läuft weiter.
 
 ### Command Center
 
@@ -49,8 +49,10 @@ ER:LC → Command Center (Recht `cad.erlc_command`). Kritische Befehle (Liste je
 ## Discord-Kanäle und Cross-Server
 
 - **Einstellungen → Discord-Kanäle**: je Server und Ereignis (neuer Einsatz, Status, Zuweisung, abgeschlossen, Notruf, Leitstellenmeldung, Funk) Kanäle und Rollen-Pings. Nichts ist fest eingebaut.
-- **Cross-Server**: Verbindung Quelle (Leitstelle) → Ziel (SEK + K9). Je Verbindung: welche Datenarten die Leitstelle schickt (mit eigenen Zielkanälen) und welche Aktionen der Ziel-Server zurück darf (Status melden, Funk, Einsatzstatus sehen), optional nur mit bestimmten Rollen. Ohne Verbindung bleiben die Server vollständig getrennt; Aktionen vom fremden Server werden abgelehnt.
-- Heimat-Server der Leitstelle: Einstellungen → Allgemein.
+- **Cross-Server**: Verbindung Quelle (Leitstelle) → Ziel (SEK + K9). Je Verbindung: welche Datenarten die Leitstelle schickt (mit eigenen Zielkanälen) und welche Aktionen der Ziel-Server zurück darf (Status melden, Funk, Einsatzstatus sehen, Notrufe/Einsätze bearbeiten), optional nur mit bestimmten Rollen. Ohne Verbindung bleiben die Server vollständig getrennt; Aktionen vom fremden Server werden abgelehnt.
+- Heimat-Server der Leitstelle: Einstellungen → Allgemein. Solange er fehlt und Server-Verbindungen existieren, werden Aktionen aus Discord abgelehnt.
+- Funk aus Discord: wer keine Leitstellen-Rechte hat, funkt immer als eigene Einheit und nur in Einsätze, denen sie zugewiesen ist.
+- Neue Notrufe: im CAD erscheint ein Hinweis mit Ton (abschaltbar über 🔔).
 
 ## Rechte (deny-by-default)
 

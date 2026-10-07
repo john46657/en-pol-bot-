@@ -44,10 +44,10 @@ export const CAD_EVENT_LABELS: Record<CadEvent, string> = {
 
 /** Datenarten, die eine Server-Verbindung senden darf, und Aktionen, die der verbundene Server zurück ausführen darf. */
 export const CAD_LINK_SEND_TYPES = ['incidents', 'incident_status', 'unit_requests', 'calls', 'announcements', 'radio'] as const;
-export const CAD_LINK_ACTIONS = ['status_report', 'radio', 'view_incidents'] as const;
+export const CAD_LINK_ACTIONS = ['status_report', 'radio', 'view_incidents', 'dispatch'] as const;
 export const CAD_LINK_LABELS: Record<string, string> = {
   incidents: 'Einsätze senden', incident_status: 'Einsatzstatus senden', unit_requests: 'Einheiten anfordern', calls: 'Notrufe senden', announcements: 'Leitstellenmeldungen senden', radio: 'Funkmeldungen senden',
-  status_report: 'Status zurückmelden', view_incidents: 'Einsatzstatus sehen',
+  status_report: 'Status zurückmelden', view_incidents: 'Einsatzstatus sehen', dispatch: 'Notrufe/Einsätze bearbeiten (Übernehmen, Einsatz erstellen, Einheit zuweisen)',
 };
 /** Welche Datenart ein CAD-Ereignis bei verbundenen Servern ist. */
 export const CAD_EVENT_SEND_TYPE: Record<CadEvent, (typeof CAD_LINK_SEND_TYPES)[number]> = {

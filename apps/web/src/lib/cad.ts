@@ -32,7 +32,7 @@ export interface ErlcPlayer { name: string; id: string | null; team: string | nu
 export interface ErlcServerView {
   id: string; name: string; serverRef: string | null; description: string | null; logoUrl: string | null; guildId: string | null; active: boolean; pollSeconds: number; features: string[]; webhookEnabled: boolean;
   settings: { criticalCommands: string[]; blockedCommands: string[] }; status: string; statusLabel: string; lastSyncAt: string | null; lastError: string | null; lastErrorAt: string | null; latencyMs: number | null;
-  rateLimit: { blockedUntil: number | null; buckets: { bucket: string; limit: number | null; remaining: number | null; resetAt: number | null }[] }; hasKey: boolean; keyMasked: string; webhookPath: string; paused: boolean;
+  rateLimit: { blockedUntil: number | null; buckets: { bucket: string; limit: number | null; remaining: number | null; resetAt: number | null }[] }; hasKey: boolean; keyMasked: string; webhookPath: string | null; paused: boolean;
 }
 export interface ErlcSnapshot {
   fetchedAt: string; server: { name: string; currentPlayers: number; maxPlayers: number; joinKey: string | null; accVerifiedReq: string | null; teamBalance: boolean | null };

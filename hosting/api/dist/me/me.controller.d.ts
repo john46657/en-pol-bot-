@@ -103,6 +103,7 @@ declare const prefsBody: z.ZodObject<{
             sidebar: z.ZodOptional<z.ZodBoolean>;
             favoriteIncidents: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
             erlcServerId: z.ZodOptional<z.ZodString>;
+            sound: z.ZodOptional<z.ZodBoolean>;
         }, "strip", z.ZodTypeAny, {
             compact?: boolean | undefined;
             widgets?: string[] | undefined;
@@ -115,6 +116,7 @@ declare const prefsBody: z.ZodObject<{
             sidebar?: boolean | undefined;
             favoriteIncidents?: string[] | undefined;
             erlcServerId?: string | undefined;
+            sound?: boolean | undefined;
         }, {
             compact?: boolean | undefined;
             widgets?: string[] | undefined;
@@ -127,6 +129,7 @@ declare const prefsBody: z.ZodObject<{
             sidebar?: boolean | undefined;
             favoriteIncidents?: string[] | undefined;
             erlcServerId?: string | undefined;
+            sound?: boolean | undefined;
         }>>;
         voice: z.ZodOptional<z.ZodObject<{
             channelIds: z.ZodArray<z.ZodString, "many">;
@@ -166,6 +169,7 @@ declare const prefsBody: z.ZodObject<{
             sidebar?: boolean | undefined;
             favoriteIncidents?: string[] | undefined;
             erlcServerId?: string | undefined;
+            sound?: boolean | undefined;
         } | undefined;
         voice?: {
             sort: "name" | "members" | "position";
@@ -224,6 +228,7 @@ declare const prefsBody: z.ZodObject<{
             sidebar?: boolean | undefined;
             favoriteIncidents?: string[] | undefined;
             erlcServerId?: string | undefined;
+            sound?: boolean | undefined;
         } | undefined;
         voice?: {
             sort: "name" | "members" | "position";
@@ -284,6 +289,7 @@ declare const prefsBody: z.ZodObject<{
             sidebar?: boolean | undefined;
             favoriteIncidents?: string[] | undefined;
             erlcServerId?: string | undefined;
+            sound?: boolean | undefined;
         } | undefined;
         voice?: {
             sort: "name" | "members" | "position";
@@ -344,6 +350,7 @@ declare const prefsBody: z.ZodObject<{
             sidebar?: boolean | undefined;
             favoriteIncidents?: string[] | undefined;
             erlcServerId?: string | undefined;
+            sound?: boolean | undefined;
         } | undefined;
         voice?: {
             sort: "name" | "members" | "position";
@@ -560,6 +567,7 @@ export declare class MeController {
                 sidebar?: boolean | undefined;
                 favoriteIncidents?: string[] | undefined;
                 erlcServerId?: string | undefined;
+                sound?: boolean | undefined;
             } | undefined;
             voice?: {
                 sort: "name" | "members" | "position";

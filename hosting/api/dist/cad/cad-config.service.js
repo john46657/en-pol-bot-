@@ -58,7 +58,9 @@ let CadConfigService = class CadConfigService {
     }
     /** Teil-Update (Autosave schickt einzelne Bereiche). */
     async save(actor, patch) {
-        const before = await this.get();
+        // Basis ist der gespeicherte Stand (nicht die Standardwerte), damit eine ungültige Altkonfiguration nicht still überschrieben wird
+        const stored = (await this.prisma.systemSetting.findUnique({ where: { key: KEY } }))?.value;
+        const before = { ...shared_1.DEFAULT_CAD_CONFIG, ...(stored ?? {}), map: { ...shared_1.DEFAULT_CAD_CONFIG.map, ...(stored?.map ?? {}) } };
         const r = exports.cadConfigSchema.safeParse({ ...before, ...patch, ...(patch.map ? { map: { ...before.map, ...patch.map } } : {}) });
         if (!r.success)
             throw new errors_1.AppError('VALIDATION_FAILED', r.error.issues.map((i) => `${i.path.join('.')}: ${i.message}`).join('; '));

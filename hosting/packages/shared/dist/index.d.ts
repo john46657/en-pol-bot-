@@ -601,7 +601,7 @@ type CadEvent = (typeof CAD_EVENTS)[number];
 declare const CAD_EVENT_LABELS: Record<CadEvent, string>;
 /** Datenarten, die eine Server-Verbindung senden darf, und Aktionen, die der verbundene Server zurück ausführen darf. */
 declare const CAD_LINK_SEND_TYPES: readonly ["incidents", "incident_status", "unit_requests", "calls", "announcements", "radio"];
-declare const CAD_LINK_ACTIONS: readonly ["status_report", "radio", "view_incidents"];
+declare const CAD_LINK_ACTIONS: readonly ["status_report", "radio", "view_incidents", "dispatch"];
 declare const CAD_LINK_LABELS: Record<string, string>;
 /** Welche Datenart ein CAD-Ereignis bei verbundenen Servern ist. */
 declare const CAD_EVENT_SEND_TYPE: Record<CadEvent, (typeof CAD_LINK_SEND_TYPES)[number]>;

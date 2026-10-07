@@ -45,7 +45,8 @@ export function CadMapPage() {
   const [draft, setDraft] = useState<{ init: IncidentDraft; callId?: string } | null>(null);
   const map = useQuery({ queryKey: ['cad-map'], queryFn: () => api<CadMapData>('/cad/map'), refetchInterval: 10_000 });
   const units = useQuery({ queryKey: ['cad-units'], queryFn: () => api<CadUnitRow[]>('/cad/units') });
-  const callId = sp.get('call'), incId = sp.get('incident');
+  const callId = sp.get('call'), incId = sp.get('incident'), placeId = sp.get('placeUnit');
+  const place = placeId ? units.data?.find((u) => u.id === placeId) : undefined;
   const call = callId ? map.data?.calls.find((c) => c.id === callId) : undefined;
   const inc = incId ? map.data?.incidents.find((i) => i.id === incId) : undefined;
   const focus = call ? { x: call.mapX!, z: call.mapZ!, id: `call:${call.id}` } : inc ? { x: inc.mapX!, z: inc.mapZ!, id: `incident:${inc.id}` } : null;
@@ -59,7 +60,7 @@ export function CadMapPage() {
     <>
       <PageHeader title="Einsatzkarte" subtitle="Mausrad/Buttons zum Zoomen, Ziehen zum Verschieben · Layer rechts oben" />
       {map.error && <ErrorState error={map.error} />}
-      <MapView cfg={cfg} data={map.data} height="calc(100dvh - 13rem)" focus={focus} actionsFor={actionsFor} onCreateIncidentAt={(x, z) => setDraft({ init: { mapX: x, mapZ: z } })} />
+      <MapView cfg={cfg} data={map.data} height="calc(100dvh - 13rem)" focus={focus} placeUnit={place ? { id: place.id, callsign: place.callsign, done: () => nav('/cad/map', { replace: true }) } : null} actionsFor={actionsFor} onCreateIncidentAt={(x, z) => setDraft({ init: { mapX: x, mapZ: z } })} />
       {draft && <IncidentForm cfg={cfg} initial={draft.init} callId={draft.callId} onClose={() => setDraft(null)} onSaved={(i) => nav(`/cad/incidents?id=${i.id}`)} />}
     </>
   );
@@ -135,7 +136,7 @@ export function CadUnits() {
                   {u.current && <Link className="text-xs hover:underline" to={`/cad/incidents?id=${u.current.id}`}>Einsatz {u.current.number}</Link>}
                 </div>
                 <p className="mt-1 text-xs text-muted">Besatzung: {u.crew.length ? u.crew.map((c) => `${c.callsign ?? c.discordName ?? c.erlcName}${c.inGame ? ' 🟢' : ''}`).join(', ') : u.memberNames.join(', ') || '—'}</p>
-                <p className="text-xs text-muted">Position: {u.position ? `${u.position.source === 'erlc' ? 'live aus ER:LC' : 'manuell'}${u.position.street ? ` · ${u.position.street}` : ''}` : 'unbekannt'}</p>
+                <p className="text-xs text-muted">Position: {u.position ? `${u.position.source === 'erlc' ? 'live aus ER:LC' : 'manuell'}${u.position.street ? ` · ${u.position.street}` : ''}` : 'unbekannt'}{can('cad.manage_units') && u.position?.source !== 'erlc' && <Link className="ml-2 text-primary hover:underline" to={`/cad/map?placeUnit=${u.id}`}>📍 auf Karte platzieren</Link>}</p>
               </div>))}</div>
           </section>
         );
@@ -173,6 +174,7 @@ export function CadRadio() {
   const [msg, setMsg] = useState<string>();
   const q = useQuery({ queryKey: ['cad-radio'], queryFn: () => api<CadRadioRow[]>('/cad/radio', { query: { take: 100 } }), refetchInterval: 15_000 });
   const inc = useQuery({ queryKey: ['cad-incidents', 'active', ''], queryFn: () => api<CadIncidentRow[]>('/cad/incidents', { query: { active: 'true' } }) });
+  const codes = useQuery({ queryKey: ['radio-codes-cad'], queryFn: () => api<{ id: string; code: string; meaning: string; category: string | null }[]>('/radio-codes'), enabled: can('radio.view'), staleTime: 300_000 });
   const send = useMutation({ mutationFn: () => api('/cad/radio', { body: { text, ...(incidentId ? { incidentId } : {}) } }), onSuccess: () => { setText(''); invalidateAll(qc); }, onError: (e) => setMsg(errText(e)) });
   const ann = useMutation({ mutationFn: () => api<{ channels: number }>('/cad/announcements', { body: { text: announce } }), onSuccess: (r) => { setAnnounce(''); setMsg(`Leitstellenmeldung an ${r.channels} Kanal/Kanäle gesendet.`); }, onError: (e) => setMsg(errText(e)) });
   return (
@@ -186,6 +188,7 @@ export function CadRadio() {
             <Select aria-label="Einsatz" className="w-auto" value={incidentId} onChange={(e) => setIncidentId(e.target.value)}><option value="">Einsatz meiner Einheit / keiner</option>{(inc.data ?? []).map((i) => <option key={i.id} value={i.id}>{i.number} · {i.title}</option>)}</Select>
             <Button type="submit" disabled={!text.trim() || send.isPending}>Senden</Button>
           </form>}
+          {can('cad.radio') && !!codes.data?.length && <div className="mb-3 flex flex-wrap gap-1" aria-label="Funk-Codes">{codes.data.slice(0, 40).map((c) => <button key={c.id} type="button" title={c.meaning} className="rounded border border-line px-1.5 py-0.5 text-xs hover:bg-panel-2" onClick={() => setText((t) => `${t ? `${t} ` : ''}${c.code} (${c.meaning})`.slice(0, 500))}>{c.code}</button>)}</div>}
           {q.isLoading ? <SkeletonRows /> : !q.data?.length ? <EmptyState text="Noch keine Funkmeldungen." /> : (
             <ul className="divide-y divide-line text-sm">{q.data.map((r) => <li key={r.id} className="py-1.5"><b>{r.callsign ?? r.authorName ?? 'Funk'}:</b> „{r.text}“<span className="block text-xs text-muted">{new Date(r.createdAt).toLocaleString('de-DE')}{r.incidentNumber ? ` · ${r.incidentNumber}` : ''}{r.authorName && r.callsign ? ` · ${r.authorName}` : ''}{r.guildId ? ' · Discord' : ''}</span></li>)}</ul>
           )}

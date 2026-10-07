@@ -86,25 +86,25 @@ export class CadController {
 
   // Einsätze
   @Get('incidents') @RequirePermission('cad.view')
-  incidents(@Query(zodBody(listQ)) q: z.infer<typeof listQ>) { return this.s.listIncidents({ active: q.active === 'true', q: q.q, take: q.take }); }
+  async incidents(@Cad() a: CadActor & { roles: string[] }, @Query(zodBody(listQ)) q: z.infer<typeof listQ>) { await this.s.assertCrossServer(a, 'view_incidents', a.roles); return this.s.listIncidents({ active: q.active === 'true', q: q.q, take: q.take }); }
   @Get('incidents/:id') @RequirePermission('cad.view')
-  incident(@Param('id', ParseUUIDPipe) id: string) { return this.s.getIncident(id); }
+  async incident(@Cad() a: CadActor & { roles: string[] }, @Param('id', ParseUUIDPipe) id: string) { await this.s.assertCrossServer(a, 'view_incidents', a.roles); return this.s.getIncident(id); }
   @Post('incidents') @RequirePermission('cad.create_incident')
   createIncident(@Cad() a: CadActor, @Body(zodBody(incidentBody)) b: z.infer<typeof incidentBody>) { return this.s.createIncident(a, b); }
   @Patch('incidents/:id') @RequirePermission('cad.edit_incident')
   updateIncident(@Cad() a: CadActor, @Param('id', ParseUUIDPipe) id: string, @Body(zodBody(incidentBody.partial())) b: Partial<z.infer<typeof incidentBody>>) { return this.s.updateIncident(a, id, b); }
   @Post('incidents/:id/status') @HttpCode(200) @RequirePermission('cad.edit_incident')
-  status(@Cad() a: CadActor, @Param('id', ParseUUIDPipe) id: string, @Body(zodBody(statusBody)) b: z.infer<typeof statusBody>) { return this.s.setStatus(a, id, b.status, b.note); }
+  async status(@Cad() a: CadActor & { roles: string[] }, @Param('id', ParseUUIDPipe) id: string, @Body(zodBody(statusBody)) b: z.infer<typeof statusBody>) { await this.s.assertCrossServer(a, 'dispatch', a.roles); return this.s.setStatus(a, id, b.status, b.note); }
   @Post('incidents/:id/notes') @HttpCode(204) @RequirePermission('cad.edit_incident')
   note(@Cad() a: CadActor, @Param('id', ParseUUIDPipe) id: string, @Body(zodBody(z.object({ text: z.string().trim().min(1).max(2000) }))) b: { text: string }) { return this.s.addNote(a, id, b.text); }
   @Post('incidents/:id/units') @HttpCode(200) @RequirePermission('cad.assign_unit')
-  assign(@Cad() a: CadActor, @Param('id', ParseUUIDPipe) id: string, @Body(zodBody(z.object({ unitId: z.string().uuid() }))) b: { unitId: string }) { return this.s.assignUnit(a, id, b.unitId); }
+  async assign(@Cad() a: CadActor & { roles: string[] }, @Param('id', ParseUUIDPipe) id: string, @Body(zodBody(z.object({ unitId: z.string().uuid() }))) b: { unitId: string }) { await this.s.assertCrossServer(a, 'dispatch', a.roles); return this.s.assignUnit(a, id, b.unitId); }
   @Delete('incidents/:id/units/:unitId') @HttpCode(204) @RequirePermission('cad.assign_unit')
   clear(@Cad() a: CadActor, @Param('id', ParseUUIDPipe) id: string, @Param('unitId', ParseUUIDPipe) unitId: string) { return this.s.clearUnit(a, id, unitId); }
 
   // Einheiten
   @Get('units') @RequirePermission('cad.view')
-  units() { return this.s.listUnits(); }
+  async units(@Cad() a: CadActor & { roles: string[] }) { await this.s.assertCrossServer(a, 'view_incidents', a.roles); return this.s.listUnits(); }
   @Post('units') @RequirePermission('cad.manage_units')
   createUnit(@Cad() a: CadActor, @Body(zodBody(unitBody)) b: z.infer<typeof unitBody>) { return this.s.createUnit(a, b); }
   @Patch('units/:id') @RequirePermission('cad.manage_units')
@@ -117,9 +117,10 @@ export class CadController {
 
   // Notrufe
   @Get('calls') @RequirePermission('cad.view')
-  calls(@Query(zodBody(z.object({ status: z.enum(['OPEN', 'CLAIMED', 'CLOSED', 'ALL']).optional() }))) q: { status?: string }) { return this.s.listCalls({ status: q.status ?? 'ALL' }); }
+  async calls(@Cad() a: CadActor & { roles: string[] }, @Query(zodBody(z.object({ status: z.enum(['OPEN', 'CLAIMED', 'CLOSED', 'ALL']).optional() }))) q: { status?: string }) { await this.s.assertCrossServer(a, 'view_incidents', a.roles); return this.s.listCalls({ status: q.status ?? 'ALL' }); }
   @Post('calls/:id/:action') @HttpCode(200) @RequirePermission('cad.view')
-  async callAction(@Cad() a: CadActor, @Param('id', ParseUUIDPipe) id: string, @Param('action') action: string, @Body() body: unknown) {
+  async callAction(@Cad() a: CadActor & { roles: string[] }, @Param('id', ParseUUIDPipe) id: string, @Param('action') action: string, @Body() body: unknown) {
+    await this.s.assertCrossServer(a, 'dispatch', a.roles);
     const need = (p: string) => this.perms.assert(a.userId!, p);
     if (action === 'claim' || action === 'close' || action === 'reopen') { await need('cad.edit_incident'); return this.s.callAction(a, id, action); }
     if (action === 'incident') { await need('cad.create_incident'); return this.s.incidentFromCall(a, id, zodBody(incidentBody.partial()).transform(body ?? {})); }
@@ -174,9 +175,9 @@ const commandBody = z.object({ command: z.string().trim().min(2).max(500), confi
 @ApiTags('erlc')
 @Controller('erlc')
 export class ErlcController {
-  constructor(private readonly s: ErlcService) {}
+  constructor(private readonly s: ErlcService, private readonly perms: PermissionService) {}
   @Get('servers') @RequirePermission('cad.view_erlc')
-  list() { return this.s.list(); }
+  async list(@CurrentActor() a: Actor) { return this.s.list(await this.perms.has(a.userId!, 'cad.manage_erlc')); }
   @Post('servers') @RequirePermission('cad.manage_erlc')
   create(@CurrentActor() a: Actor, @Body(zodBody(erlcServerInput)) b: z.infer<typeof erlcServerInput>) { return this.s.create(a, b); }
   @Patch('servers/:id') @RequirePermission('cad.manage_erlc')
@@ -195,8 +196,8 @@ export class ErlcController {
   commands(@Param('id', ParseUUIDPipe) id: string) { return this.s.commandLog(id); }
 
   /** Event-Webhook von ER:LC (öffentlich, aber nur mit gültiger Ed25519-Signatur von PRC). */
-  @Post('webhook/:id') @Public() @HttpCode(200)
-  webhook(@Param('id', ParseUUIDPipe) id: string, @Req() req: AppRequest & { rawBody?: Buffer }, @Headers('x-signature-timestamp') ts?: string, @Headers('x-signature-ed25519') sig?: string) {
-    return this.s.webhook(id, req.rawBody, ts, sig);
+  @Post('webhook/:id/:token') @Public() @HttpCode(200)
+  webhook(@Param('id', ParseUUIDPipe) id: string, @Param('token') token: string, @Req() req: AppRequest & { rawBody?: Buffer }, @Headers('x-signature-timestamp') ts?: string, @Headers('x-signature-ed25519') sig?: string) {
+    return this.s.webhook(id, token, req.rawBody, ts, sig);
   }
 }

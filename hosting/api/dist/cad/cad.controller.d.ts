@@ -187,7 +187,7 @@ declare const linkBody: z.ZodObject<{
     targetGuildId: z.ZodString;
     active: z.ZodOptional<z.ZodBoolean>;
     sendTypes: z.ZodOptional<z.ZodArray<z.ZodEnum<["incidents", "incident_status", "unit_requests", "calls", "announcements", "radio"]>, "many">>;
-    allowActions: z.ZodOptional<z.ZodArray<z.ZodEnum<["status_report", "radio", "view_incidents"]>, "many">>;
+    allowActions: z.ZodOptional<z.ZodArray<z.ZodEnum<["status_report", "radio", "view_incidents", "dispatch"]>, "many">>;
     roleIds: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
     channels: z.ZodOptional<z.ZodRecord<z.ZodEnum<["incidents", "incident_status", "unit_requests", "calls", "announcements", "radio"]>, z.ZodArray<z.ZodString, "many">>>;
     notify: z.ZodOptional<z.ZodBoolean>;
@@ -198,7 +198,7 @@ declare const linkBody: z.ZodObject<{
     active?: boolean | undefined;
     roleIds?: string[] | undefined;
     sendTypes?: ("announcements" | "incidents" | "radio" | "incident_status" | "unit_requests" | "calls")[] | undefined;
-    allowActions?: ("radio" | "status_report" | "view_incidents")[] | undefined;
+    allowActions?: ("dispatch" | "radio" | "status_report" | "view_incidents")[] | undefined;
     channels?: Partial<Record<"announcements" | "incidents" | "radio" | "incident_status" | "unit_requests" | "calls", string[]>> | undefined;
     notify?: boolean | undefined;
 }, {
@@ -208,7 +208,7 @@ declare const linkBody: z.ZodObject<{
     active?: boolean | undefined;
     roleIds?: string[] | undefined;
     sendTypes?: ("announcements" | "incidents" | "radio" | "incident_status" | "unit_requests" | "calls")[] | undefined;
-    allowActions?: ("radio" | "status_report" | "view_incidents")[] | undefined;
+    allowActions?: ("dispatch" | "radio" | "status_report" | "view_incidents")[] | undefined;
     channels?: Partial<Record<"announcements" | "incidents" | "radio" | "incident_status" | "unit_requests" | "calls", string[]>> | undefined;
     notify?: boolean | undefined;
 }>;
@@ -610,7 +610,9 @@ export declare class CadController {
         }[];
         stale: boolean;
     }>;
-    incidents(q: z.infer<typeof listQ>): Promise<{
+    incidents(a: CadActor & {
+        roles: string[];
+    }, q: z.infer<typeof listQ>): Promise<{
         calls: {
             id: string;
             callNumber: number;
@@ -654,7 +656,9 @@ export declare class CadController {
         requiredUnits: string | null;
         internalNotes: string | null;
     }[]>;
-    incident(id: string): Promise<{
+    incident(a: CadActor & {
+        roles: string[];
+    }, id: string): Promise<{
         calls: {
             id: string;
             createdAt: Date;
@@ -775,7 +779,9 @@ export declare class CadController {
         requiredUnits: string | null;
         internalNotes: string | null;
     }>;
-    status(a: CadActor, id: string, b: z.infer<typeof statusBody>): Promise<{
+    status(a: CadActor & {
+        roles: string[];
+    }, id: string, b: z.infer<typeof statusBody>): Promise<{
         number: string;
         id: string;
         createdAt: Date;
@@ -803,13 +809,17 @@ export declare class CadController {
     note(a: CadActor, id: string, b: {
         text: string;
     }): Promise<void>;
-    assign(a: CadActor, id: string, b: {
+    assign(a: CadActor & {
+        roles: string[];
+    }, id: string, b: {
         unitId: string;
     }): Promise<{
         ok: boolean;
     }>;
     clear(a: CadActor, id: string, unitId: string): Promise<void>;
-    units(): Promise<{
+    units(a: CadActor & {
+        roles: string[];
+    }): Promise<{
         crew: {
             id: string;
             discordName: string | null;
@@ -934,7 +944,9 @@ export declare class CadController {
         erlcTeam: string | null;
         operational: boolean;
     }>;
-    calls(q: {
+    calls(a: CadActor & {
+        roles: string[];
+    }, q: {
         status?: string;
     }): Promise<{
         incident: {
@@ -964,7 +976,9 @@ export declare class CadController {
         source: string;
         serverId: string;
     }[]>;
-    callAction(a: CadActor, id: string, action: string, body: unknown): Promise<{
+    callAction(a: CadActor & {
+        roles: string[];
+    }, id: string, action: string, body: unknown): Promise<{
         id: string;
         createdAt: Date;
         updatedAt: Date;
@@ -1224,8 +1238,9 @@ declare const commandBody: z.ZodObject<{
 }>;
 export declare class ErlcController {
     private readonly s;
-    constructor(s: ErlcService);
-    list(): Promise<{
+    private readonly perms;
+    constructor(s: ErlcService, perms: PermissionService);
+    list(a: Actor): Promise<{
         id: string;
         name: string;
         serverRef: string | null;
@@ -1252,7 +1267,7 @@ export declare class ErlcController {
         };
         hasKey: boolean;
         keyMasked: string;
-        webhookPath: string;
+        webhookPath: string | null;
         paused: boolean;
         createdAt: Date;
         updatedAt: Date;
@@ -1284,7 +1299,7 @@ export declare class ErlcController {
         };
         hasKey: boolean;
         keyMasked: string;
-        webhookPath: string;
+        webhookPath: string | null;
         paused: boolean;
         createdAt: Date;
         updatedAt: Date;
@@ -1316,7 +1331,7 @@ export declare class ErlcController {
         };
         hasKey: boolean;
         keyMasked: string;
-        webhookPath: string;
+        webhookPath: string | null;
         paused: boolean;
         createdAt: Date;
         updatedAt: Date;
@@ -1350,7 +1365,7 @@ export declare class ErlcController {
             };
             hasKey: boolean;
             keyMasked: string;
-            webhookPath: string;
+            webhookPath: string | null;
             paused: boolean;
             createdAt: Date;
             updatedAt: Date;
@@ -1388,7 +1403,7 @@ export declare class ErlcController {
             };
             hasKey: boolean;
             keyMasked: string;
-            webhookPath: string;
+            webhookPath: string | null;
             paused: boolean;
             createdAt: Date;
             updatedAt: Date;
@@ -1426,7 +1441,7 @@ export declare class ErlcController {
             };
             hasKey: boolean;
             keyMasked: string;
-            webhookPath: string;
+            webhookPath: string | null;
             paused: boolean;
             createdAt: Date;
             updatedAt: Date;
@@ -1454,17 +1469,25 @@ export declare class ErlcController {
         critical: boolean;
     }[]>;
     /** Event-Webhook von ER:LC (öffentlich, aber nur mit gültiger Ed25519-Signatur von PRC). */
-    webhook(id: string, req: AppRequest & {
+    webhook(id: string, token: string, req: AppRequest & {
         rawBody?: Buffer;
     }, ts?: string, sig?: string): Promise<{
         ok: boolean;
+        duplicate: boolean;
+        ignored?: undefined;
+        calls?: undefined;
+        events?: undefined;
+    } | {
+        ok: boolean;
         ignored: boolean;
+        duplicate?: undefined;
         calls?: undefined;
         events?: undefined;
     } | {
         ok: boolean;
         calls: number;
         events: number;
+        duplicate?: undefined;
         ignored?: undefined;
     }>;
 }
