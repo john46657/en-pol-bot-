@@ -138,7 +138,9 @@ async function pollOnce(api, send, log = console.log, dm, grantRole, syncRoles, 
             // Staff-Thread je Bewerbung (wie bei Appy)
             const thread = item.payload.thread === true && /\.submitted$/.test(item.type) ? `Bewerbung ${String(item.payload.number ?? '')}`.slice(0, 100) : undefined;
             const authorUserId = item.type === 'leave.requested' && typeof item.payload.discordId === 'string' && /^\d{15,25}$/.test(item.payload.discordId) ? item.payload.discordId : undefined;
-            const opts = pingRoleIds.length || avatarUserId || thread || authorUserId ? { ...(pingRoleIds.length ? { pingRoleIds } : {}), ...(avatarUserId ? { avatarUserId } : {}), ...(thread ? { thread } : {}), ...(authorUserId ? { authorUserId } : {}) } : undefined;
+            // Gefahrenstatus: vorherige Meldung im Kanal löschen, damit nur der aktuelle Status dort steht
+            const replaceKey = item.type === 'danger.changed' ? 'danger' : undefined;
+            const opts = pingRoleIds.length || avatarUserId || thread || authorUserId || replaceKey ? { ...(pingRoleIds.length ? { pingRoleIds } : {}), ...(avatarUserId ? { avatarUserId } : {}), ...(thread ? { thread } : {}), ...(authorUserId ? { authorUserId } : {}), ...(replaceKey ? { replaceKey } : {}) } : undefined;
             const results = await Promise.allSettled(channelIds.map((id) => (opts ? send(id, embeds, buttons, opts) : send(id, embeds, buttons))));
             const failed = results.flatMap((r, i) => (r.status === 'rejected' ? [`${channelIds[i]}: ${r.reason instanceof Error ? r.reason.message : r.reason}`] : []));
             failed.forEach((f) => log(`outbox ${item.id}: send failed for channel ${f}`));

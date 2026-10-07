@@ -339,6 +339,13 @@ function wireReady(client0: Client) {
     const roles = opts?.pingRoleIds ?? [];
     const msg = await ch.send({ ...(roles.length ? { content: roles.map((r) => `<@&${r}>`).join(' ') } : {}), embeds: list.map(toEmbed), components: toRows(buttons), allowedMentions: { parse: [], roles } });
     // Staff-Thread zur Bewerbung (braucht im Channel das Recht „Öffentliche Threads erstellen“)
+    // Ersetzende Meldung (Gefahrenstatus): alte Nachricht in diesem Kanal löschen, neue merken (überlebt Neustarts)
+    if (opts?.replaceKey) {
+      const key = `last-${opts.replaceKey}-${channelId}`;
+      const old = await api.service<{ value: string | null }>('GET', `/bot/state/${key}`).then((r) => r.value, () => null);
+      if (old && old !== msg.id) await ch.messages.delete(old).catch(() => undefined); // schon gelöscht / keine Rechte → egal
+      await api.service('PUT', `/bot/state/${key}`, { value: msg.id }).catch((e) => console.error('could not remember message:', e instanceof Error ? e.message : e));
+    }
     if (opts?.thread) await msg.startThread({ name: opts.thread, autoArchiveDuration: 10080 }).catch((e) => console.error('could not create staff thread:', e instanceof Error ? e.message : e));
   }, cfg.OUTBOX_POLL_SECONDS, console.log, (userId, msg) => (typeof msg === 'string' ? platform.sendDirectMessage(userId, msg) : platform.sendDm(userId, { embed: msg }).then(() => undefined)), grantRoleEverywhere, syncRolesEverywhere, () => void live.refresh('teamlist').catch(() => undefined),
     (effects) => tickets.apply(effects).then(() => undefined, (e) => console.error('ticket effects failed:', e instanceof Error ? e.message : e)),
