@@ -9,3 +9,4 @@ export * from './workflows';
 export * from './labels';
 export * from './welcome';
 export * from './voice-support';
+export * from './verification';

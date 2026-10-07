@@ -6,11 +6,12 @@ import { api, ApiError } from '../lib/api';
 import { useAuth } from '../lib/auth';
 import { useRealtime } from '../lib/realtime';
 import type { ShiftsConfig } from './admin/Shifts';
+import { idleText, idleTone, useMinutesSince } from '../components/DutyActivity';
 import { Button, Card, EmptyState, ErrorState, fmt, PageHeader, PriorityBadge, Select, SkeletonRows, StatusBadge, statusLabel } from '../components/ui';
 
 interface Member {
   userId: string; personnelId: string; name: string; rank: string | null; callsign: string | null; team: string | null;
-  dutyStatus: string; onDutySince: string | null; lastStatusChange: string | null; shiftType?: string | null;
+  dutyStatus: string; onDutySince: string | null; lastStatusChange: string | null; shiftType?: string | null; lastActivityAt?: string | null; reminded?: boolean;
   unit: { id: string; callsign: string; status: string } | null;
   currentIncident: { id: string; number: string; title: string; status: string; priority: string } | null;
 }
@@ -35,6 +36,8 @@ export function Team() {
   // Schicht-Arten (Admin → Shifts): bei mehreren wird beim Dienstbeginn gewählt
   const shifts = useQuery({ queryKey: ['shifts-config'], queryFn: () => api<ShiftsConfig>('/shifts/config') });
   const types = shifts.data?.enabled ? shifts.data.types : [];
+  const since = useMinutesSince();
+  const idleLimit = shifts.data?.reminder?.enabled ? shifts.data.reminder.afterMinutes : 30;
   const [shiftType, setShiftType] = useState('');
   const setMine = useMutation({ mutationFn: (status: string) => api('/team/me/status', { method: 'PUT', body: { status, ...(status === 'ON_DUTY' && shiftType ? { shiftType } : {}) } }), onSuccess: refresh, onError });
   const setOther = useMutation({ mutationFn: (v: { userId: string; status: string }) => api(`/team/${v.userId}/status`, { method: 'PUT', body: { status: v.status } }), onSuccess: refresh, onError });
@@ -83,7 +86,7 @@ export function Team() {
         {overview.isLoading ? <SkeletonRows /> : overview.error ? <ErrorState error={overview.error} onRetry={() => void overview.refetch()} /> : !shown.length ? <EmptyState text="Keine passenden Beamten." hint="Leg unter Personal Personalakten an, damit hier Beamte erscheinen." /> : (
           <div className="table-scroll">
             <table className="w-full text-left text-sm">
-              <thead className="border-b border-line text-xs uppercase text-muted"><tr><th className="p-2">Beamter</th><th>Rang</th><th>Rufname</th><th>Einheit</th><th>Dienststatus</th><th>Aktueller Einsatz</th><th>Letzte Änderung</th>{(manage || assign) && <th>Aktionen</th>}</tr></thead>
+              <thead className="border-b border-line text-xs uppercase text-muted"><tr><th className="p-2">Beamter</th><th>Rang</th><th>Rufname</th><th>Einheit</th><th>Dienststatus</th><th title="Letzte Aktivität im Dashboard/MDT oder per Discord (nur im Dienst)">Inaktiv</th><th>Aktueller Einsatz</th><th>Letzte Änderung</th>{(manage || assign) && <th>Aktionen</th>}</tr></thead>
               <tbody>
                 {shown.map((m) => (
                   <tr key={m.userId} className="border-b border-line/60 last:border-0">
@@ -91,6 +94,7 @@ export function Team() {
                     <td>{m.rank ?? '—'}</td><td>{m.callsign ?? '—'}</td>
                     <td>{m.unit ? <span className="flex items-center gap-1">{m.unit.callsign}<StatusBadge status={m.unit.status} /></span> : '—'}</td>
                     <td><StatusBadge status={m.dutyStatus} />{m.shiftType && m.dutyStatus !== 'OFF_DUTY' && <span className="ml-1 text-xs text-muted">{m.shiftType}</span>}</td>
+                    <td className="whitespace-nowrap text-xs">{m.dutyStatus === 'ON_DUTY' ? <span className={idleTone(since(m.lastActivityAt ?? m.onDutySince), idleLimit, m.reminded)}>{m.reminded ? '⏰ ' : ''}{idleText(since(m.lastActivityAt ?? m.onDutySince))}</span> : <span className="text-muted">—</span>}</td>
                     <td>{m.currentIncident ? <Link className="flex items-center gap-1 hover:underline" to={`/incidents/${m.currentIncident.id}`}>{m.currentIncident.number}<PriorityBadge priority={m.currentIncident.priority} /></Link> : '—'}</td>
                     <td className="text-xs text-muted">{fmt(m.lastStatusChange)}</td>
                     {(manage || assign) && (

@@ -90,6 +90,40 @@ let RobloxService = RobloxService_1 = class RobloxService {
         const p = await this.lookup(input);
         return p ? { id: p.id, name: p.name, displayName: p.displayName, avatarUrl: p.avatarUrl } : null;
     }
+    /** Aktuelle Profilbeschreibung („Über mich“) – ohne Zwischenspeicher (Verifizierung). null = nicht erreichbar. */
+    async description(id) {
+        if (!ID.test(id))
+            return null;
+        try {
+            const u = await this.get(`https://users.roblox.com/v1/users/${id}`);
+            return u ? u.description ?? '' : null;
+        }
+        catch {
+            return null;
+        }
+    }
+    /** Gruppen-Ränge eines Kontos (Gruppen-ID → Rang 0–255) für Rollen-Bindungen; 1 Minute zwischengespeichert. */
+    ranks = new Map();
+    async groupRanks(id) {
+        if (!ID.test(id) || process.env.ROBLOX_LOOKUP === 'off')
+            return {};
+        const hit = this.ranks.get(id);
+        if (hit && Date.now() - hit.at < 60_000)
+            return hit.value;
+        try {
+            const r = await this.get(`https://groups.roblox.com/v2/users/${id}/groups/roles`);
+            if (!r)
+                return hit?.value ?? {};
+            const value = Object.fromEntries((r.data ?? []).filter((x) => x.group?.id && typeof x.role?.rank === 'number').map((x) => [String(x.group.id), x.role.rank]));
+            if (this.ranks.size > 500)
+                this.ranks.clear();
+            this.ranks.set(id, { at: Date.now(), value });
+            return value;
+        }
+        catch {
+            return hit?.value ?? {};
+        }
+    }
     async fetchProfile(p) {
         try {
             let id = p.id;

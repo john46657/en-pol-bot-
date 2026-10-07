@@ -30,7 +30,7 @@ describe('Shifts module', () => {
   it('only settings.manage configures shift types; names unique; first type becomes default', async () => {
     const admin = (await login(app, 'sl_admin')).agent;
     const off = (await login(app, 'sl_off')).agent;
-    expect((await off.get('/api/v1/shifts/config')).body).toEqual({ enabled: false, types: [] });
+    expect((await off.get('/api/v1/shifts/config')).body).toMatchObject({ enabled: false, types: [] });
     const cfg = { enabled: true, types: [
       { id: 'im-dienst', name: 'Im Dienst', onShiftRoleIds: [R.shift], onBreakRoleIds: [R.brk], logChannelId: CH.log },
       { id: 'sek', name: 'SEK Einsatz', onShiftRoleIds: [R.shift2], onBreakRoleIds: [R.brk] },

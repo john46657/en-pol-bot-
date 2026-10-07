@@ -5,12 +5,12 @@ const api_1 = require("../api");
 const errors_1 = require("./errors");
 Object.defineProperty(exports, "mapError", { enumerable: true, get: function () { return errors_1.mapError; } });
 const features_1 = require("./features");
-const sek_1 = require("./sek");
 const qualifications_1 = require("./qualifications");
 const leave_1 = require("./leave");
 const cad_1 = require("./cad");
 const features_2 = require("./features");
 const tickets_1 = require("./tickets");
+const verify_1 = require("./verify");
 const format_1 = require("../format");
 /** Minuten → „3 h 05 min“. */
 const hm = (min) => `${Math.floor(min / 60)} h ${String(Math.round(min % 60)).padStart(2, '0')} min`;
@@ -43,7 +43,7 @@ async function resolvePerson(c, term, opts = {}) {
     const names = (exact.length ? exact : page.items).slice(0, 8).map((p) => `${(0, format_1.plain)(p.robloxUsername)} (${p.robloxUserId ?? 'ohne ID'})`).join(', ');
     return { reply: (0, format_1.errorReply)(`Nicht eindeutig. Treffer: ${names}. Bitte exakten Namen oder die Roblox-ID angeben.`) };
 }
-const DUTY = { an: 'ON_DUTY', pause: 'BREAK', training: 'TRAINING', verwaltung: 'ADMINISTRATIVE', aus: 'OFF_DUTY' };
+const DUTY = { an: 'ON_DUTY', pause: 'BREAK', aus: 'OFF_DUTY' };
 const UNIT = { verfuegbar: 'AVAILABLE', beschaeftigt: 'BUSY', unterwegs: 'EN_ROUTE', vor_ort: 'ON_SCENE', nicht_verfuegbar: 'UNAVAILABLE', ausser_dienst: 'OFF_DUTY' };
 const PRIO = { niedrig: 'LOW', mittel: 'MEDIUM', hoch: 'HIGH', dringend: 'URGENT', kritisch: 'CRITICAL' };
 const choices = (m) => Object.keys(m).map((k) => ({ name: k.replace('_', ' '), value: k }));
@@ -97,12 +97,11 @@ exports.COMMANDS = [
         name: 'hilfe', description: 'Zeigt alle Befehle',
         async run() {
             return { ephemeral: true, embeds: [{ title: 'EN Polizei — Befehle', color: format_1.COLORS.info, fields: [
-                            { name: 'Konto', value: '`/entverknuepfen` `/profil` `/benachrichtigungen`' },
+                            { name: 'Konto', value: '`/entverknuepfen` `/profil` `/benachrichtigungen` `/verifizieren` `/aktualisieren` `/whois`' },
                             { name: 'Abfragen', value: '`/person` `/kennzeichen` `/fahndungen` `/einsaetze` `/einsatzinfo` `/einheiten` `/team`' },
                             { name: 'Dienst & Leitstelle', value: '`/dienst` `/dienststunden` `/abmeldung` `/leave manage` `/einheitstatus` `/einsatz` `/einsatzstatus` `/einsatzzuweisen` `/funk` `/funkcode` `/cad`' },
                             { name: 'Erfassen', value: '`/ticket` `/bericht` `/beschwerde` `/ermittlung` `/fahndung` `/beweis`' },
                             { name: 'Leitung & Team', value: '`/gefahrenstatus` `/funkfreigabe` `/teamliste` `/dienstpanel` `/bewerbungspanel` `/qualipanel` `/teamchance` `/roblox`' },
-                            { name: 'SEK', value: '`/sek` `/sek-bericht`' },
                             { name: 'Support-Tickets', value: '`/support` öffnet ein Ticket (Team: `/support mitglied:@…` für jemand anderen). Ticket-Panels, Kategorien, Fragen und Buttons werden im Dashboard eingerichtet und von dort in Discord gesendet.' },
                             { name: 'Für alle', value: '`/bewerbung` (auch ohne Verknüpfung; Fragen per Direktnachricht) · SEK/Flugstaffel/Ausbilder über das Qualifikations-Panel' },
                             { name: 'Hinweis', value: 'Alle Befehle laufen mit **deinen** Rechten im System. Antworten sind nur für dich sichtbar.' }
@@ -551,11 +550,11 @@ exports.COMMANDS = [
         },
     },
     ...features_1.FEATURE_COMMANDS,
-    ...sek_1.SEK_COMMANDS,
     ...qualifications_1.QUALI_COMMANDS,
     ...leave_1.LEAVE_COMMANDS,
     ...cad_1.CAD_COMMANDS,
     tickets_1.TICKET_COMMAND,
+    ...verify_1.VERIFY_COMMANDS,
 ];
 const byName = (n) => exports.COMMANDS.find((c) => c.name === n);
 exports.byName = byName;

@@ -16,7 +16,6 @@ const Analytics = lazy(() => import('./pages/Analytics').then((m) => ({ default:
 const ApplicationAnalytics = lazy(() => import('./pages/ApplicationAnalytics').then((m) => ({ default: m.ApplicationAnalytics })));
 const Applications = lazy(() => import('./pages/Applications').then((m) => ({ default: m.Applications })));
 const Qualifications = lazy(() => import('./pages/Qualifications').then((m) => ({ default: m.Qualifications })));
-const Sek = lazy(() => import('./pages/Sek').then((m) => ({ default: m.Sek })));
 const SupportTickets = lazy(() => import('./pages/tickets/SupportTickets').then((m) => ({ default: m.SupportTickets })));
 const TicketDetail = lazy(() => import('./pages/tickets/TicketDetail').then((m) => ({ default: m.TicketDetail })));
 const Academy = lazy(() => import('./pages/Academy').then((m) => ({ default: m.Academy })));
@@ -30,6 +29,7 @@ const LegalCodes = lazy(() => import('./pages/admin/LegalCodes').then((m) => ({ 
 const Shifts = lazy(() => import('./pages/admin/Shifts').then((m) => ({ default: m.Shifts })));
 const ServerLinks = lazy(() => import('./pages/admin/ServerLinks').then((m) => ({ default: m.ServerLinks })));
 const Embeds = lazy(() => import('./pages/admin/Embeds').then((m) => ({ default: m.Embeds })));
+const Verification = lazy(() => import('./pages/admin/Verification').then((m) => ({ default: m.Verification })));
 const WelcomeSettings = lazy(() => import('./pages/admin/WelcomeSettings').then((m) => ({ default: m.WelcomeSettings })));
 const LeaveSettings = lazy(() => import('./pages/admin/LeaveSettings').then((m) => ({ default: m.LeaveSettings })));
 const Leave = lazy(() => import('./pages/Leave').then((m) => ({ default: m.Leave })));
@@ -123,7 +123,6 @@ export function App() {
           <Route path="applications/analytics" element={<Guard perm="applications.view" area="dashboard.applications.view"><ApplicationAnalytics /></Guard>} />
           <Route path="applications/:id" element={rec('applications', 'applications.view')} />
           <Route path="qualifications" element={<Guard perm="qualifications.view" area="dashboard.applications.view"><Qualifications /></Guard>} />
-          <Route path="sek" element={<Guard perm="team.view"><Sek /></Guard>} />
           <Route path="academy" element={<Guard perm="academy.view"><Academy /></Guard>} />
           <Route path="communication" element={<Guard perm="communication.view"><Communication /></Guard>} />
           <Route path="analytics" element={<Guard perm="analytics.view"><Analytics /></Guard>} />
@@ -135,6 +134,7 @@ export function App() {
           <Route path="admin/shifts" element={<Guard perm="settings.view"><Shifts /></Guard>} />
           <Route path="admin/servers" element={<Guard perm="settings.view"><ServerLinks /></Guard>} />
           <Route path="admin/embeds" element={<Guard perm="settings.view"><Embeds /></Guard>} />
+          <Route path="admin/verification" element={<Guard perm="settings.view"><Verification /></Guard>} />
           <Route path="admin/welcome" element={<Guard perm="settings.view"><WelcomeSettings /></Guard>} />
           <Route path="admin/leave" element={<Guard perm="settings.view"><LeaveSettings /></Guard>} />
           <Route path="leave" element={<Guard perm="leave.request"><Leave /></Guard>} />

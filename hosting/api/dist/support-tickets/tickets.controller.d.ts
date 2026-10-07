@@ -1033,6 +1033,7 @@ export declare class SupportTicketsController {
         guildId: string;
         channelId: string | null;
         closedAt: Date | null;
+        lastActivityAt: Date;
         answers: import("@prisma/client/runtime/library").JsonValue;
         categoryId: string;
         deletedAt: Date | null;
@@ -1050,7 +1051,6 @@ export declare class SupportTicketsController {
         closedById: string | null;
         closedByName: string | null;
         firstResponseAt: Date | null;
-        lastActivityAt: Date;
         warnedAt: Date | null;
         staffAlertedAt: Date | null;
         closeRequestedAt: Date | null;

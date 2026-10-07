@@ -507,6 +507,10 @@ model DutySession {
   shiftType String?
   startedAt DateTime  @default(now())
   endedAt   DateTime?
+  /// Letzte echte Aktivität (Dashboard/MDT, Discord-Befehle) – für die Inaktivitäts-Erinnerung
+  lastActivityAt DateTime?
+  /// Wann zuletzt an die laufende Schicht erinnert wurde
+  remindedAt DateTime?
   user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId, endedAt])
@@ -1327,4 +1331,29 @@ model VoiceSupportCase {
   @@index([guildId, status])
   @@index([userId, status])
   @@index([channelId])
+}
+
+/// Roblox-Verifizierung (wie RoVer): Discord-Konto ↔ Roblox-Konto, gilt auf allen Servern.
+model RobloxLink {
+  discordId   String   @id
+  discordName String?
+  robloxId    String
+  robloxName  String
+  displayName String
+  verifiedAt  DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([robloxId])
+  @@index([robloxName])
+}
+
+/// Laufende Verifizierung: Code, der ins Roblox-Profil („Über mich“) muss.
+model RobloxVerifyCode {
+  discordId   String   @id
+  robloxId    String
+  robloxName  String
+  displayName String
+  code        String
+  expiresAt   DateTime
+  createdAt   DateTime @default(now())
 }

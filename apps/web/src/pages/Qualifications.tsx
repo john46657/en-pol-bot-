@@ -121,7 +121,7 @@ export function Qualifications() {
             {units.map((u, i) => (
               <Card key={i} title={u.name || 'Neue Einheit'} actions={<Button size="sm" variant="ghost" disabled={units.length <= 1} onClick={() => setUnits(units.filter((_, j) => j !== i))}>Einheit entfernen</Button>}>
                 <div className="mb-4 grid gap-3 md:grid-cols-2">
-                  <Field label="Schlüssel (intern, a-z 0-9 - _)" hint={u.key === 'sek' ? 'Angenommene SEK-Bewerber kommen auch in die SEK-Liste.' : undefined}>{(id) => <Input id={id} value={u.key} disabled={!u.isNew} maxLength={24} onChange={(e) => patch(i, { key: e.target.value.toLowerCase() })} />}</Field>
+                  <Field label="Schlüssel (intern, a-z 0-9 - _)">{(id) => <Input id={id} value={u.key} disabled={!u.isNew} maxLength={24} onChange={(e) => patch(i, { key: e.target.value.toLowerCase() })} />}</Field>
                   <Field label="Beschreibung (im Panel angezeigt)">{(id) => <Textarea id={id} rows={2} maxLength={600} value={u.description} onChange={(e) => patch(i, { description: e.target.value })} />}</Field>
                 </div>
                 <ApplicationSettingsEditor value={u} onChange={(p) => patch(i, p)} name={u.name} onName={(v) => patch(i, { name: v })}

@@ -30,7 +30,7 @@ export class DutyService {
       let created = null;
       if (status !== 'OFF_DUTY') {
         const pers = await tx.personnel.findUnique({ where: { userId } });
-        created = await tx.dutySession.create({ data: { userId, status, startedAt: at, unitId: d.unitId, shiftType: type?.id ?? null, callsign: (d.callsign ?? pers?.callsign ?? undefined)?.toUpperCase() } });
+        created = await tx.dutySession.create({ data: { userId, status, startedAt: at, lastActivityAt: at, unitId: d.unitId, shiftType: type?.id ?? null, callsign: (d.callsign ?? pers?.callsign ?? undefined)?.toUpperCase() } });
       }
       await this.audit.record(actor, { action: targetUserId && targetUserId !== actor.userId ? 'duty.status.set_by_supervisor' : 'duty.status', module: 'team', entityType: 'User', entityId: userId, before: { status: open?.status ?? 'OFF_DUTY' }, after: { status } }, tx);
       return created ?? { status: 'OFF_DUTY' };
@@ -65,6 +65,57 @@ export class DutyService {
         ...(shift ? { shiftType: shift.name, roles: { add: shift.add, remove: shift.remove }, ...(shift.channelId ? { channelId: shift.channelId } : {}) } : {}),
       }, { always: roles || !!shift?.channelId });
     } catch { /* best effort */ }
+  }
+
+  private touched = new Map<string, number>();
+  /** Aktivität merken (höchstens einmal pro Minute in die Datenbank). Nur laufende Schichten „Im Dienst“. */
+  async touch(userId: string, force = false) {
+    const now = Date.now();
+    if (!force && now - (this.touched.get(userId) ?? 0) < 60_000) return;
+    this.touched.set(userId, now);
+    if (this.touched.size > 5000) this.touched.clear();
+    await this.prisma.dutySession.updateMany({ where: { userId, endedAt: null, status: 'ON_DUTY' }, data: { lastActivityAt: new Date(now) } }).catch(() => undefined);
+  }
+
+  /** „Bin noch im Dienst“ / Herzschlag aus dem Dashboard. */
+  async active(userId: string) {
+    await this.touch(userId, true);
+    const open = await this.prisma.dutySession.findFirst({ where: { userId, endedAt: null } });
+    return { onDuty: open?.status === 'ON_DUTY', status: open?.status ?? 'OFF_DUTY' };
+  }
+
+  /**
+   * Jede Minute: Wer „Im Dienst“ ist und seit `afterMinutes` nichts gemacht hat, bekommt eine Erinnerung (Discord-DM mit Buttons + Glocke im Dashboard).
+   * Mit `autoOffMinutes` endet die Schicht automatisch, wenn danach weiter nichts passiert. Pause/Training/Verwaltung sind ausgenommen.
+   */
+  async remindTick(now = new Date()) {
+    const { reminder: r } = await this.shifts.config();
+    const out = { reminded: 0, ended: 0 };
+    if (!r.enabled) return out;
+    const sessions = await this.prisma.dutySession.findMany({ where: { endedAt: null, status: 'ON_DUTY' } });
+    for (const s of sessions) {
+      const last = Math.max(s.startedAt.getTime(), s.lastActivityAt?.getTime() ?? 0);
+      const link = await this.prisma.discordLink.findUnique({ where: { userId: s.userId } });
+      if (s.remindedAt && s.remindedAt.getTime() >= last) {
+        // schon erinnert, seitdem nichts passiert
+        if (r.autoOffMinutes > 0 && now.getTime() - s.remindedAt.getTime() >= r.autoOffMinutes * 60_000) {
+          await this.setStatus({ userId: null }, 'OFF_DUTY', {}, s.userId).catch(() => undefined);
+          const minutes = Math.round((now.getTime() - s.startedAt.getTime()) / 60_000);
+          await this.prisma.notification.create({ data: { userId: s.userId, type: 'DUTY_REMINDER', title: 'Deine Schicht wurde automatisch beendet', body: `Keine Aktivität seit ${Math.round((now.getTime() - last) / 60_000)} Minuten.` } });
+          if (link) await this.discord.enqueue('duty', 'duty.reminder', { kind: 'ended', discordId: link.discordId, idleMinutes: Math.round((now.getTime() - last) / 60_000), shiftMinutes: minutes }, { always: true });
+          out.ended++;
+        }
+        continue;
+      }
+      if (now.getTime() - last < r.afterMinutes * 60_000) continue;
+      await this.prisma.dutySession.update({ where: { id: s.id }, data: { remindedAt: now } });
+      const idle = Math.round((now.getTime() - last) / 60_000);
+      await this.prisma.notification.create({ data: { userId: s.userId, type: 'DUTY_REMINDER', title: 'Bist du noch im Dienst?', body: `Seit ${idle} Minuten keine Aktivität.${r.autoOffMinutes ? ` Ohne Reaktion endet deine Schicht in ${r.autoOffMinutes} Minuten automatisch.` : ''}` } });
+      if (link) await this.discord.enqueue('duty', 'duty.reminder', { kind: 'reminder', discordId: link.discordId, idleMinutes: idle, autoOffMinutes: r.autoOffMinutes }, { always: true });
+      this.rt.publish('team', 'duty.reminder', { userId: s.userId });
+      out.reminded++;
+    }
+    return out;
   }
 
   team() {
@@ -179,6 +230,9 @@ export class DutyService {
       return {
         userId: p.userId, personnelId: p.id, name: p.user.displayName, rank: p.rank, callsign: p.callsign, team: p.team,
         dutyStatus: session?.status ?? 'OFF_DUTY', onDutySince: session?.startedAt ?? null,
+        // Leitstelle: seit wann nichts mehr gemacht (Dashboard/MDT, Discord); `reminded` = Erinnerung ist raus, noch keine Reaktion
+        lastActivityAt: session ? new Date(Math.max(session.startedAt.getTime(), session.lastActivityAt?.getTime() ?? 0)) : null,
+        reminded: !!session?.remindedAt && session.remindedAt.getTime() >= Math.max(session.startedAt.getTime(), session.lastActivityAt?.getTime() ?? 0),
         shiftType: cfg.enabled ? cfg.types.find((t) => t.id === session?.shiftType)?.name ?? null : null,
         lastStatusChange: session?.startedAt ?? ended.get(p.userId) ?? null,
         unit: unit ? { id: unit.id, callsign: unit.callsign, status: unit.status } : null,

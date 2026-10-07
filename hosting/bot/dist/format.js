@@ -16,6 +16,7 @@ exports.applicationDecisionText = applicationDecisionText;
 exports.dangerEmbed = dangerEmbed;
 exports.dangerButtons = dangerButtons;
 exports.teamlistEmbed = teamlistEmbed;
+exports.dutyReminderDm = dutyReminderDm;
 exports.COLORS = { info: 0x3b82f6, success: 0x22c55e, warning: 0xf59e0b, danger: 0xef4444, neutral: 0x64748b };
 const PRIORITY_COLOR = { LOW: exports.COLORS.neutral, MEDIUM: exports.COLORS.info, HIGH: exports.COLORS.warning, URGENT: exports.COLORS.danger, CRITICAL: exports.COLORS.danger };
 /** Discord-Limits: Titel 256, Beschreibung 4096, Feldwert 1024. */
@@ -343,5 +344,15 @@ function teamlistEmbed(members, rankOrder) {
     }
     const onDuty = members.filter((m) => m.dutyStatus === 'ON_DUTY').length;
     return { title: '📋 Teamliste – EN Polizei', color: exports.COLORS.neutral, fields: fields.slice(0, 25), description: members.length ? undefined : 'Noch keine Personalakten angelegt.', footer: `${members.length} Mitglieder · ${onDuty} im Dienst · wird automatisch aktualisiert` };
+}
+/** DM: „Bist du noch im Dienst?“ mit Buttons – oder Hinweis, dass die Schicht automatisch beendet wurde. */
+function dutyReminderDm(p) {
+    const idle = Number(p.idleMinutes ?? 0), auto = Number(p.autoOffMinutes ?? 0);
+    if (p.kind === 'ended')
+        return { embed: { title: '⚪ Schicht automatisch beendet', color: exports.COLORS.neutral, description: `Du warst seit **${idle} Minuten** nicht aktiv und hast auf die Erinnerung nicht reagiert – deshalb bist du jetzt **außer Dienst**.${p.shiftMinutes ? `\nDeine Schicht lief ${Number(p.shiftMinutes)} Minuten.` : ''}\n\nNeu starten: Dienst-Panel, \`/dienst an\` oder im Dashboard.` } };
+    return {
+        embed: { title: '⏰ Bist du noch im Dienst?', color: exports.COLORS.warning, description: `Du bist **im Dienst**, hast aber seit **${idle} Minuten** nichts gemacht (Dashboard/MDT, Discord).${auto ? `\nOhne Reaktion endet deine Schicht in **${auto} Minuten** automatisch.` : ''}` },
+        buttons: [{ id: 'duty:still', label: 'Bin noch im Dienst', style: 'success', emoji: '✅' }, { id: 'duty:OFF_DUTY', label: 'Außer Dienst', style: 'danger', emoji: '⚪' }],
+    };
 }
 //# sourceMappingURL=format.js.map

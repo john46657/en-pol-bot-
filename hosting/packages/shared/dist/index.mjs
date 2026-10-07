@@ -333,7 +333,7 @@ var CAD_EVENT_SEND_TYPE = {
   announcement: "announcements",
   radio: "radio"
 };
-var CAD_WIDGETS = ["activeIncidents", "availableUnits", "erlcPlayers", "erlcQueue", "activeCalls", "staffOnline", "erlcStatus", "map", "units", "radio", "persons", "vehicles"];
+var CAD_WIDGETS = ["activeIncidents", "availableUnits", "erlcPlayers", "erlcQueue", "activeCalls", "staffOnline", "erlcStatus", "map", "units", "radio", "persons", "vehicles", "dutyActivity"];
 var CAD_WIDGET_LABELS = {
   activeIncidents: "Aktive Eins\xE4tze",
   availableUnits: "Verf\xFCgbare Einheiten",
@@ -346,7 +346,8 @@ var CAD_WIDGET_LABELS = {
   units: "Einheiten",
   radio: "Letzte Funkmeldungen",
   persons: "Personen",
-  vehicles: "Fahrzeuge"
+  vehicles: "Fahrzeuge",
+  dutyActivity: "Aktivit\xE4t im Dienst"
 };
 var ERLC_MAP_SIZE = 5355;
 var DEFAULT_CAD_CONFIG = {
@@ -414,7 +415,7 @@ var DEFAULT_CAD_CONFIG = {
   map: { imageUrl: null, width: ERLC_MAP_SIZE, height: ERLC_MAP_SIZE, originX: ERLC_MAP_SIZE / 2, originY: ERLC_MAP_SIZE / 2, scale: 1 },
   routes: [],
   memberFields: [],
-  widgets: ["activeIncidents", "availableUnits", "activeCalls", "erlcStatus", "erlcPlayers", "erlcQueue", "staffOnline", "map", "radio"]
+  widgets: ["activeIncidents", "availableUnits", "activeCalls", "dutyActivity", "erlcStatus", "erlcPlayers", "erlcQueue", "staffOnline", "map", "radio"]
 };
 var gameToPixel = (m, x, z) => ({ px: m.originX + x * m.scale, py: m.originY + z * m.scale });
 var pixelToGame = (m, px, py) => ({ x: (px - m.originX) / m.scale, z: (py - m.originY) / m.scale });
@@ -728,6 +729,43 @@ function isSupportOpen(times, d = /* @__PURE__ */ new Date(), timeZone = "Europe
     return t.days.includes(day) && minute >= from || t.days.includes((day + 6) % 7) && minute < to;
   });
 }
+
+// src/verification.ts
+var DEFAULT_VERIFY_CONFIG = {
+  enabled: false,
+  verifiedRoleIds: [],
+  unverifiedRoleIds: [],
+  nickname: "{roblox-name}",
+  autoOnJoin: true,
+  logChannelId: null,
+  panel: { channelId: null, title: "\u2705 Roblox-Verifizierung", message: "Verkn\xFCpfe dein Roblox-Konto mit Discord, um Zugriff auf den Server zu bekommen.\n\nKlick auf **Verifizieren**, gib deinen Roblox-Namen ein und folge den Schritten.", color: "#22c55e", buttonLabel: "Verifizieren" },
+  binds: []
+};
+var VERIFY_NICK_VARS = {
+  "{roblox-name}": "Roblox-Benutzername",
+  "{display-name}": "Roblox-Anzeigename",
+  "{discord-name}": "Discord-Name",
+  "{roblox-id}": "Roblox-ID"
+};
+function renderVerifyNickname(tpl, v) {
+  if (!tpl.trim()) return null;
+  const vars = { "{roblox-name}": v.robloxName, "{display-name}": v.displayName, "{discord-name}": v.discordName, "{roblox-id}": v.robloxId };
+  const out = tpl.replace(/\{[a-z-]+\}/g, (k) => vars[k] ?? k).trim().slice(0, 32);
+  return out || null;
+}
+function matchingBinds(binds, ranks) {
+  return binds.filter((b) => {
+    const r = ranks[b.groupId];
+    return r !== void 0 && r >= b.minRank && r <= b.maxRank;
+  });
+}
+function verifyActions(cfg, link) {
+  const bindRoles = [...new Set(cfg.binds.flatMap((b) => b.roleIds))];
+  if (!link) return { add: [...new Set(cfg.unverifiedRoleIds)], remove: [.../* @__PURE__ */ new Set([...cfg.verifiedRoleIds, ...bindRoles])].filter((r) => !cfg.unverifiedRoleIds.includes(r)), nickname: null };
+  const add = [.../* @__PURE__ */ new Set([...cfg.verifiedRoleIds, ...matchingBinds(cfg.binds, link.ranks).flatMap((b) => b.roleIds)])];
+  const remove = [.../* @__PURE__ */ new Set([...cfg.unverifiedRoleIds, ...bindRoles])].filter((r) => !add.includes(r));
+  return { add, remove, nickname: renderVerifyNickname(cfg.nickname, link) };
+}
 export {
   ALL_PERMISSIONS,
   APPLICATION_STATUSES,
@@ -750,6 +788,7 @@ export {
   DEFAULT_APPLICATION_MESSAGES,
   DEFAULT_CAD_CONFIG,
   DEFAULT_DANGER_CONFIG,
+  DEFAULT_VERIFY_CONFIG,
   DEFAULT_WELCOME_CONFIG,
   DISPATCH_STATUSES,
   DISPATCH_TRANSITIONS,
@@ -789,6 +828,7 @@ export {
   TICKET_STATUSES,
   TICKET_TRANSITIONS,
   UNIT_STATUSES,
+  VERIFY_NICK_VARS,
   VOICE_CASE_STATUS,
   WANTED_STATUSES,
   WANTED_TRANSITIONS,
@@ -820,6 +860,7 @@ export {
   isSupportOpen,
   isValidRobloxUserId,
   localTime,
+  matchingBinds,
   newVoiceRoom,
   normalizeField,
   parsePlayer,
@@ -827,11 +868,13 @@ export {
   renderApplicationText,
   renderTemplate,
   renderTicketText,
+  renderVerifyNickname,
   renderWelcomeText,
   resolvePermission,
   rolesMatch,
   statusLabel,
   ticketChannelName,
   ticketNumber,
-  triggerMatches
+  triggerMatches,
+  verifyActions
 };

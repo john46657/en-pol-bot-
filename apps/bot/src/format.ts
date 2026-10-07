@@ -327,3 +327,13 @@ export function teamlistEmbed(members: TeamMember[], rankOrder: string[]): Embed
   const onDuty = members.filter((m) => m.dutyStatus === 'ON_DUTY').length;
   return { title: '📋 Teamliste – EN Polizei', color: COLORS.neutral, fields: fields.slice(0, 25), description: members.length ? undefined : 'Noch keine Personalakten angelegt.', footer: `${members.length} Mitglieder · ${onDuty} im Dienst · wird automatisch aktualisiert` };
 }
+
+/** DM: „Bist du noch im Dienst?“ mit Buttons – oder Hinweis, dass die Schicht automatisch beendet wurde. */
+export function dutyReminderDm(p: Record<string, unknown>): { embed: EmbedData; buttons?: ButtonSpec[] } {
+  const idle = Number(p.idleMinutes ?? 0), auto = Number(p.autoOffMinutes ?? 0);
+  if (p.kind === 'ended') return { embed: { title: '⚪ Schicht automatisch beendet', color: COLORS.neutral, description: `Du warst seit **${idle} Minuten** nicht aktiv und hast auf die Erinnerung nicht reagiert – deshalb bist du jetzt **außer Dienst**.${p.shiftMinutes ? `\nDeine Schicht lief ${Number(p.shiftMinutes)} Minuten.` : ''}\n\nNeu starten: Dienst-Panel, \`/dienst an\` oder im Dashboard.` } };
+  return {
+    embed: { title: '⏰ Bist du noch im Dienst?', color: COLORS.warning, description: `Du bist **im Dienst**, hast aber seit **${idle} Minuten** nichts gemacht (Dashboard/MDT, Discord).${auto ? `\nOhne Reaktion endet deine Schicht in **${auto} Minuten** automatisch.` : ''}` },
+    buttons: [{ id: 'duty:still', label: 'Bin noch im Dienst', style: 'success', emoji: '✅' }, { id: 'duty:OFF_DUTY', label: 'Außer Dienst', style: 'danger', emoji: '⚪' }],
+  };
+}

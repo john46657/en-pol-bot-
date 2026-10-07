@@ -21,7 +21,15 @@ export const shiftTypeSchema = z.object({
   onBreakRoleIds: roles,
   logChannelId: sf.nullish(),
 });
-export const shiftsConfigSchema = z.object({ enabled: z.boolean().default(false), types: z.array(shiftTypeSchema).max(25).default([]) })
+/** Erinnerung, wenn jemand „Im Dienst“ ist, aber länger nichts gemacht hat (Dashboard/MDT, Discord). */
+export const reminderSchema = z.object({
+  enabled: z.boolean().default(false),
+  /** Minuten ohne Aktivität bis zur Erinnerung */
+  afterMinutes: z.number().int().min(5).max(600).default(30),
+  /** Minuten nach der Erinnerung ohne Reaktion → automatisch außer Dienst (0 = nie) */
+  autoOffMinutes: z.number().int().min(0).max(600).default(0),
+}).default({});
+export const shiftsConfigSchema = z.object({ enabled: z.boolean().default(false), types: z.array(shiftTypeSchema).max(25).default([]), reminder: reminderSchema })
   .superRefine((c, ctx) => {
     if (new Set(c.types.map((t) => t.id)).size !== c.types.length) ctx.addIssue({ code: 'custom', path: ['types'], message: 'Die IDs der Schichtarten müssen eindeutig sein.' });
     if (new Set(c.types.map((t) => t.name.toLowerCase())).size !== c.types.length) ctx.addIssue({ code: 'custom', path: ['types'], message: 'Die Namen der Schichtarten müssen eindeutig sein.' });
@@ -37,7 +45,7 @@ export class ShiftsService {
   async config(): Promise<ShiftsConfig> {
     const v = (await this.prisma.systemSetting.findUnique({ where: { key: KEY } }))?.value;
     const r = shiftsConfigSchema.safeParse(v ?? {});
-    return r.success ? r.data : { enabled: false, types: [] };
+    return r.success ? r.data : shiftsConfigSchema.parse({});
   }
 
   async save(actor: Actor, input: ShiftsConfig) {

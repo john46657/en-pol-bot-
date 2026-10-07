@@ -7,6 +7,7 @@ import { useMediaQuery } from '../lib/media';
 import { accentHex, useStudio } from '../lib/studio';
 import { useApplyPrefs, usePrefs } from '../lib/prefs';
 import { flush } from '../lib/autosave';
+import { useActivityHeartbeat } from '../lib/activity';
 import { GROUPS, NAV, tr, visible, type NavItem } from '../nav';
 import { DiscordLink } from './DiscordLink';
 import { GlobalSearch } from './GlobalSearch';
@@ -26,6 +27,7 @@ export function AppShell() {
   useEffect(() => { document.title = orgName; }, [orgName]);
   // Seitenwechsel: offene Änderungen sofort senden (sie liegen ohnehin schon lokal vor)
   useEffect(() => { void flush(); }, [loc.pathname]);
+  useActivityHeartbeat(!!user && can('team.view'));
   const items = NAV.filter((n) => visible(n, can));
   const L = (t: string) => tr(t, prefs.language);
   const favs = prefs.favorites.map((p) => items.find((i) => i.path === p)).filter((i): i is NavItem => !!i);

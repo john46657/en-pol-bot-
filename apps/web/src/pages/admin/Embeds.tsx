@@ -17,7 +17,7 @@ interface EmbedDoc {
   id: string; name: string; guildId: string | null; channelId: string | null; content: string; title: string; url: string; description: string; color: string;
   author: string; thumbnail: string; image: string; footer: string; timestamp: boolean; fields: Field[]; posted: { channelId: string; messageId: string; at: string } | null;
 }
-const blank = (guildId: string | null): EmbedDoc => ({ id: crypto.randomUUID(), name: 'Neues Embed', guildId, channelId: null, content: '', title: 'Rang Ordnung und Aufgaben', url: '', description: '', color: '#8b5cf6', author: '', thumbnail: '', image: '', footer: '', timestamp: false, fields: [{ name: '👑 | Kommandant:', value: 'Trägt die Gesamtverantwortung …', inline: false }], posted: null });
+const blank = (guildId: string | null): EmbedDoc => ({ id: crypto.randomUUID(), name: 'Neues Embed', guildId, channelId: null, content: '', title: 'Rang Ordnung und Aufgaben', url: '', description: '', color: '#8b5cf6', author: '', thumbnail: '', image: '', footer: '', timestamp: true, fields: [{ name: '👑 | Kommandant:', value: 'Trägt die Gesamtverantwortung …', inline: false }], posted: null });
 const https = (u: string) => !u || /^https:\/\/\S+$/.test(u);
 const total = (e: EmbedDoc) => e.title.length + e.description.length + e.author.length + e.footer.length + e.fields.reduce((n, f) => n + f.name.length + f.value.length, 0);
 const problems = (e: EmbedDoc) => [

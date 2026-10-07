@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, ParseUUIDPipe, Put, Query } from '@nestjs/common';
+import { Body, Controller, Get, HttpCode, Param, ParseUUIDPipe, Post, Put, Query } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { z } from 'zod';
 import { DUTY_STATUSES } from '@enrp/shared';
@@ -30,6 +30,9 @@ export class DutyController {
   /** Schicht-Logs: wer wann welche Schicht gestartet/beendet hat (Schichtleitung). */
   @Get('shifts') @RequirePermission('team.manage')
   shiftLog(@Query(zodBody(logQuery)) f: z.infer<typeof logQuery>) { return this.d.shiftLog(f); }
+  /** „Bin noch im Dienst“ (Erinnerung) bzw. echte Aktivität im Dashboard/MDT. */
+  @Post('me/active') @HttpCode(200) @RequirePermission('team.view')
+  active(@CurrentActor() a: Actor) { return this.d.active(a.userId!); }
   @Put('me/status') @RequirePermission('team.view')
   set(@CurrentActor() a: Actor, @Body(zodBody(body)) b: z.infer<typeof body>) { return this.d.setStatus(a, b.status, b); }
 

@@ -10,7 +10,8 @@ const VIEW = [PermissionFlagsBits.ViewChannel, PermissionFlagsBits.ReadMessageHi
 const TALK = [PermissionFlagsBits.SendMessages, PermissionFlagsBits.AttachFiles, PermissionFlagsBits.EmbedLinks];
 const https = (u?: string | null) => (u && /^https:\/\//.test(u) ? u : undefined);
 
-export function embedOf(e: EmbedSpec) {
+/** `stamp`: ohne eigenen Zeitstempel Datum/Uhrzeit des Sendens unten anzeigen (nicht beim Embed-Baukasten – dort entscheidet der Schalter). */
+export function embedOf(e: EmbedSpec, stamp = true) {
   const b = new EmbedBuilder();
   if (e.title) b.setTitle(e.title.slice(0, 256));
   if (e.description) b.setDescription(e.description.slice(0, 4096));
@@ -21,6 +22,7 @@ export function embedOf(e: EmbedSpec) {
   if (e.footer) b.setFooter({ text: e.footer.slice(0, 2048), ...(https(e.footerIcon) ? { iconURL: e.footerIcon } : {}) });
   if (e.fields?.length) b.addFields(e.fields.slice(0, 25).map((f) => ({ name: f.name.slice(0, 256) || '​', value: f.value.slice(0, 1024) || '​', inline: f.inline ?? false })));
   if (e.timestamp) b.setTimestamp(new Date(e.timestamp));
+  else if (stamp) b.setTimestamp(new Date());
   if (!e.title && !e.description && !e.fields?.length) b.setDescription('​');
   return b;
 }
@@ -54,10 +56,10 @@ export function componentsOf(buttons: ComponentButton[] = [], selects: Component
   return rows;
 }
 
-export function payloadOf(m: MessageSpec) {
+export function payloadOf(m: MessageSpec, stamp = true) {
   return {
     ...(m.content ? { content: m.content.slice(0, 2000) } : {}),
-    embeds: (m.embeds ?? []).slice(0, 10).map(embedOf),
+    embeds: (m.embeds ?? []).slice(0, 10).map((e) => embedOf(e, stamp)),
     components: componentsOf(m.buttons, m.select ? [m.select] : []),
     // Nur ausdrücklich gewünschte Erwähnungen pingen – niemals @everyone/@here
     allowedMentions: { parse: [] as never[], users: m.mentionUsers ?? [], roles: m.mentionRoles ?? [] },

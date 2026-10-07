@@ -31,7 +31,7 @@ pnpm e2e         # Playwright (uses installed Google Chrome)
 | RBAC (central resolver, user DENY/ALLOW overrides, groups, wildcards), Roblox ID (manual) | done |
 | Persons (+merge), Vehicles, Tickets, Legal codes | done |
 | Dispatch/Incidents/Units, Reports (versioned), Complaints, Investigations, Wanted, Evidence (custody) | done |
-| Personnel, Duty, Applications, SEK special unit ([docs/sek.md](docs/sek.md)), Qualifications ([docs/qualifications.md](docs/qualifications.md)), Academy, Communication, Notifications, Search, Analytics | done (see docs for limits) |
+| Personnel, Duty, Applications, Qualifications ([docs/qualifications.md](docs/qualifications.md)), Academy, Communication, Notifications, Search, Analytics | done (see docs for limits) |
 | Audit (append-only, DB trigger) + Timeline, Exports (CSV/JSON/PDF), Media upload, Settings, Retention | done |
 | WebSockets (authorized rooms) | done |
 | React UI: shell, search, notifications, dashboard (customizable), dispatch board, all record lists/details, admin | done |

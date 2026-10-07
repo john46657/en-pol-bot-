@@ -1,12 +1,12 @@
 import { BotApiError } from '../api';
 import { mapError } from './errors';
 import { FEATURE_COMMANDS } from './features';
-import { SEK_COMMANDS } from './sek';
 import { QUALI_COMMANDS } from './qualifications';
 import { LEAVE_COMMANDS } from './leave';
 import { CAD_COMMANDS } from './cad';
 import { shiftPicker } from './features';
 import { TICKET_COMMAND } from './tickets';
+import { VERIFY_COMMANDS } from './verify';
 import { clip, COLORS, EmbedData, errorReply, incidentLine, label, listEmbed, okReply, personEmbed, plain, Reply, Row, vehicleEmbed } from '../format';
 import type { CommandDef, Ctx } from './types';
 
@@ -43,7 +43,7 @@ async function resolvePerson(c: Ctx, term: string, opts: { create?: boolean } = 
   return { reply: errorReply(`Nicht eindeutig. Treffer: ${names}. Bitte exakten Namen oder die Roblox-ID angeben.`) };
 }
 
-const DUTY = { an: 'ON_DUTY', pause: 'BREAK', training: 'TRAINING', verwaltung: 'ADMINISTRATIVE', aus: 'OFF_DUTY' } as const;
+const DUTY = { an: 'ON_DUTY', pause: 'BREAK', aus: 'OFF_DUTY' } as const;
 const UNIT = { verfuegbar: 'AVAILABLE', beschaeftigt: 'BUSY', unterwegs: 'EN_ROUTE', vor_ort: 'ON_SCENE', nicht_verfuegbar: 'UNAVAILABLE', ausser_dienst: 'OFF_DUTY' } as const;
 const PRIO = { niedrig: 'LOW', mittel: 'MEDIUM', hoch: 'HIGH', dringend: 'URGENT', kritisch: 'CRITICAL' } as const;
 const choices = (m: Record<string, string>) => Object.keys(m).map((k) => ({ name: k.replace('_', ' '), value: k }));
@@ -94,12 +94,11 @@ export const COMMANDS: CommandDef[] = [
     name: 'hilfe', description: 'Zeigt alle Befehle',
     async run() {
       return { ephemeral: true, embeds: [{ title: 'EN Polizei — Befehle', color: COLORS.info, fields: [
-        { name: 'Konto', value: '`/entverknuepfen` `/profil` `/benachrichtigungen`' },
+        { name: 'Konto', value: '`/entverknuepfen` `/profil` `/benachrichtigungen` `/verifizieren` `/aktualisieren` `/whois`' },
         { name: 'Abfragen', value: '`/person` `/kennzeichen` `/fahndungen` `/einsaetze` `/einsatzinfo` `/einheiten` `/team`' },
         { name: 'Dienst & Leitstelle', value: '`/dienst` `/dienststunden` `/abmeldung` `/leave manage` `/einheitstatus` `/einsatz` `/einsatzstatus` `/einsatzzuweisen` `/funk` `/funkcode` `/cad`' },
         { name: 'Erfassen', value: '`/ticket` `/bericht` `/beschwerde` `/ermittlung` `/fahndung` `/beweis`' },
         { name: 'Leitung & Team', value: '`/gefahrenstatus` `/funkfreigabe` `/teamliste` `/dienstpanel` `/bewerbungspanel` `/qualipanel` `/teamchance` `/roblox`' },
-        { name: 'SEK', value: '`/sek` `/sek-bericht`' },
         { name: 'Support-Tickets', value: '`/support` öffnet ein Ticket (Team: `/support mitglied:@…` für jemand anderen). Ticket-Panels, Kategorien, Fragen und Buttons werden im Dashboard eingerichtet und von dort in Discord gesendet.' },
         { name: 'Für alle', value: '`/bewerbung` (auch ohne Verknüpfung; Fragen per Direktnachricht) · SEK/Flugstaffel/Ausbilder über das Qualifikations-Panel' },
         { name: 'Hinweis', value: 'Alle Befehle laufen mit **deinen** Rechten im System. Antworten sind nur für dich sichtbar.' }] }] };
@@ -441,11 +440,11 @@ export const COMMANDS: CommandDef[] = [
     },
   },
   ...FEATURE_COMMANDS,
-  ...SEK_COMMANDS,
   ...QUALI_COMMANDS,
   ...LEAVE_COMMANDS,
   ...CAD_COMMANDS,
   TICKET_COMMAND,
+  ...VERIFY_COMMANDS,
 ];
 
 export { mapError };

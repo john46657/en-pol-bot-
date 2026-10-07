@@ -2,12 +2,12 @@ import { BotApiError } from '../api';
 import { clip, COLORS, DUTY_DE, dangerEmbed, errorReply, listEmbed, okReply, plain, type ButtonSpec, type DangerState, type EmbedData, type Reply, type Row } from '../format';
 import type { CommandDef, Ctx, InteractionDef } from './types';
 import { mapError } from './errors';
-import { SEK_INTERACTION } from './sek';
 import { QUALI_INTERACTION } from './qualifications';
 import { TICKET_INTERACTION } from './tickets';
 import { VOICE_INTERACTION } from '../voice-support';
 import { LEAVE_INTERACTION } from './leave';
 import { CAD_INTERACTION } from './cad';
+import { VERIFY_INTERACTION } from './verify';
 
 const str = (c: Ctx, k: string) => String(c.opts[k] ?? '').trim();
 const choices = (m: Record<string, string>) => Object.keys(m).map((k) => ({ name: k.replace('_', ' '), value: k }));
@@ -29,7 +29,6 @@ async function setDanger(c: Ctx, level: string, reason?: string): Promise<Reply>
 const DUTY_PANEL: EmbedData = { title: '🚓 Dienststatus', color: COLORS.info, description: 'Melde dich hier mit einem Klick **in den Dienst**, in die **Pause** oder **außer Dienst**.\nDein Status erscheint sofort im Dashboard, in der Teamliste und – falls eingestellt – als Discord-Rolle.\n\n*Dein Discord-Konto muss im Dashboard verknüpft sein.*' };
 const DUTY_BUTTONS: ButtonSpec[] = [
   { id: 'duty:ON_DUTY', label: 'Im Dienst', emoji: '🟢', style: 'success' }, { id: 'duty:BREAK', label: 'Pause', emoji: '🟡', style: 'secondary' },
-  { id: 'duty:TRAINING', label: 'Training', emoji: '🔵', style: 'secondary' }, { id: 'duty:ADMINISTRATIVE', label: 'Verwaltung', emoji: '🗂️', style: 'secondary' },
   { id: 'duty:OFF_DUTY', label: 'Außer Dienst', emoji: '⚪', style: 'danger' },
 ];
 
@@ -151,6 +150,13 @@ export const INTERACTIONS: InteractionDef[] = [
   {
     prefix: 'duty',
     async run(c) {
+      // Erinnerung bei Inaktivität: „Bin noch im Dienst“
+      if (c.args[0] === 'still') {
+        try {
+          const r = await c.api.asUser<{ onDuty: boolean }>(c.discordId, 'POST', '/team/me/active');
+          return r.onDuty ? okReply('Danke! Deine Schicht läuft weiter.') : okReply('Du bist gerade nicht im Dienst.');
+        } catch (e) { return mapError(e); }
+      }
       // Auswahl der Schicht-Art (Auswahlmenü nach „Im Dienst“)
       const shiftType = c.args[0] === 'type' ? c.values?.[0] : undefined;
       const status = c.args[0] === 'type' ? 'ON_DUTY' : c.args[0] ?? '';
@@ -166,12 +172,12 @@ export const INTERACTIONS: InteractionDef[] = [
       }
     },
   },
-  SEK_INTERACTION,
   QUALI_INTERACTION,
   TICKET_INTERACTION,
   VOICE_INTERACTION,
   LEAVE_INTERACTION,
   CAD_INTERACTION,
+  VERIFY_INTERACTION,
   {
     prefix: 'danger',
     async run(c) {

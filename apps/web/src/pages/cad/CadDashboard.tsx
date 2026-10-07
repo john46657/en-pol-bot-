@@ -8,6 +8,7 @@ import { useAuth } from '../../lib/auth';
 import { ago, ERLC_STATUS_TONE, optLabel, useCadPrefs, type CadMapData, type CadOverview } from '../../lib/cad';
 import { Badge, Button, Card, EmptyState, ErrorState, Modal, PageHeader, SkeletonRows } from '../../components/ui';
 import { MapView } from './MapView';
+import { DutyActivity } from '../../components/DutyActivity';
 
 const STATUS_DE: Record<string, string> = { CONNECTED: '🟢 Verbunden', LIMITED: '🟡 Eingeschränkt', OFFLINE: '🔴 Offline', ERROR: '⚠️ Fehler', UNKNOWN: '⚪ Unbekannt', DISABLED: '⏸️ Deaktiviert' };
 
@@ -22,7 +23,8 @@ export function CadDashboard() {
   if (q.isLoading) return <SkeletonRows />;
   if (q.error || !q.data) return <ErrorState error={q.error} onRetry={() => void q.refetch()} />;
   const d = q.data, cfg = d.config;
-  const widgets = (cad.widgets ?? cfg.widgets).filter((w) => (CAD_WIDGETS as readonly string[]).includes(w));
+  // „Aktivität im Dienst“ ist neu: ohne eigene Ansicht auch bei älteren Leitstellen-Einstellungen anzeigen
+  const widgets = (cad.widgets ?? (cfg.widgets.includes('dutyActivity') ? cfg.widgets : [...cfg.widgets.slice(0, 3), 'dutyActivity', ...cfg.widgets.slice(3)])).filter((w) => (CAD_WIDGETS as readonly string[]).includes(w) && (w !== 'dutyActivity' || can('team.view')));
   const sum = (k: 'players' | 'queue' | 'staffOnline') => d.erlc.reduce((n, s) => n + (s[k] ?? 0), 0);
   const available = d.units.filter((u) => u.status === cfg.unitStatuses[0]?.key && u.operational);
   const wide = new Set(['map', 'activeIncidents', 'units']);
@@ -42,6 +44,7 @@ export function CadDashboard() {
     units: () => d.units.length ? <ul className="grid gap-1 text-sm sm:grid-cols-2">{d.units.map((u) => <li key={u.id} className="flex items-center justify-between gap-2 rounded border border-line px-2 py-1"><span className="font-medium">{u.icon ?? cfg.unitTypes.find((t) => t.key === u.type)?.emoji ?? '🚔'} {u.callsign}</span><span className="text-xs">{optLabel(cfg.unitStatuses, u.status)}{u.current ? ` · ${u.current.number}` : ''}</span></li>)}</ul> : <EmptyState text="Keine Einheiten angelegt." />,
     radio: () => d.radio.length ? <ul className="space-y-1 text-sm">{d.radio.slice(0, 8).map((r) => <li key={r.id}><b>{r.callsign ?? r.authorName ?? 'Funk'}:</b> „{r.text}“<span className="block text-xs text-muted">{ago(r.createdAt)}{r.incidentNumber ? ` · ${r.incidentNumber}` : ''}</span></li>)}</ul> : <EmptyState text="Noch keine Funkmeldungen." />,
     persons: () => stat('Personen in den Akten', d.counts.persons ?? '—', d.counts.persons !== null ? '/persons' : undefined),
+    dutyActivity: () => <DutyActivity />,
     vehicles: () => stat('Fahrzeuge in den Akten', d.counts.vehicles ?? '—', d.counts.vehicles !== null ? '/vehicles' : undefined),
   };
   const move = (i: number, dir: -1 | 1) => { const next = [...widgets]; const [x] = next.splice(i, 1); next.splice(i + dir, 0, x!); set({ widgets: next }); };

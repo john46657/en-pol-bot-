@@ -10,6 +10,9 @@ Der Bot (`apps/bot`, TypeScript, discord.js 14) ist ein **schlanker Client der S
 | `/entverknuepfen` | Verknüpfung lösen | – |
 | `/profil` | eigenes Konto, Rollen, Anzahl Berechtigungen | – |
 | `/hilfe` | Befehlsübersicht | – |
+| `/verifizieren` | Roblox-Konto mit Discord verknüpfen (wie RoVer): Name eingeben → Wörter in „Über mich“ → prüfen | – (Verifizierung muss auf dem Server an sein) |
+| `/aktualisieren [mitglied]` | Rollen und Nickname aus der Roblox-Verifizierung neu setzen | – · anderes Mitglied: Discord „Server verwalten“ |
+| `/whois mitglied` | verifiziertes Roblox-Konto eines Mitglieds | – |
 | `/person suche` | Person nach Roblox-Name/-ID | `persons.view` |
 | `/kennzeichen kennzeichen` | Fahrzeug nach Kennzeichen | `vehicles.view` |
 | `/fahndungen` | aktive Fahndungen | `wanted.view` |
@@ -19,11 +22,9 @@ Der Bot (`apps/bot`, TypeScript, discord.js 14) ist ein **schlanker Client der S
 | `/team` | wer ist im Dienst (Einheit, Einsatz) | `team.view` |
 | `/abmeldung von bis grund` | Abmeldung (Urlaub, Abwesenheit) beantragen, z. B. `von: 24.12.` `bis: 02.01.2027` (auch `heute`, `morgen 18:00`); die Leitung entscheidet per Button | `leave.request` |
 | `/dienststunden [tage] [alle]` | eigene Dienststunden der letzten 7 (1–90) Tage nach Status; mit `alle` die Stunden aller Beamten | `team.view` · `alle`: `team.manage` |
-| `/dienstpanel` | postet das Dienst-Panel: Buttons **Im Dienst / Pause / Training / Verwaltung / Außer Dienst** (setzt den Status als verknüpfter Benutzer) | Discord „Server verwalten“; Klick: `team.view` |
-| `/sek [aktion] [mitglied]` | SEK: Mitgliederliste, letzte Einsatzberichte, eigener Status; Mitglieder hinzufügen/entfernen (+ optionale SEK-Rolle) | `sek.view` · Status: `team.view` · verwalten: `sek.manage` |
-| `/sek-bericht` | SEK-Einsatzbericht per Formular (Datum, Einsatzart, Beschreibung) | `sek.report` + SEK-Mitglied |
+| `/dienstpanel` | postet das Dienst-Panel: Buttons **Im Dienst / Pause / Außer Dienst** (setzt den Status als verknüpfter Benutzer) | Discord „Server verwalten“; Klick: `team.view` |
 | `/qualipanel` | postet das Qualifikations-Panel (SEK, Flugstaffel, Ausbilder …): Auswahl → Fragen einzeln per DM → Bewerbung mit Annehmen/Ablehnen-Buttons im Team-Channel ([qualifications.md](qualifications.md)) | Discord „Server verwalten“; entscheiden: `qualifications.decide` |
-| `/dienst status` | eigener Dienststatus: an, pause, training, verwaltung, aus | `team.view` |
+| `/dienst status` | eigener Dienststatus: an, pause, aus | `team.view` |
 | `/einheitstatus rufzeichen status` | Einheitenstatus ändern | `dispatch.edit` |
 | `/einsatz titel [prioritaet] [ort]` | Einsatz anlegen | `incidents.create` |
 | `/einsatzstatus nummer status` | Status: bestaetigt, unterwegs, vor_ort, in_bearbeitung, abschluss, abgebrochen, geschlossen | `dispatch.edit` (`geschlossen`: `dispatch.close`) |
@@ -152,6 +153,16 @@ Ist weder Channel noch Rolle eingestellt, wird nichts eingereiht. Fällt der Bot
 - Beim Verlassen außerdem: offene Bewerbungen nach *Aktion beim Verlassen* ([qualifications.md](qualifications.md)) und offene Support-Tickets nach *Tickets → Allgemein* ([support-tickets.md](support-tickets.md)).
 
 Braucht im Developer Portal den privilegierten **Server Members Intent** (Bot → Privileged Gateway Intents). Ohne ihn startet der Bot trotzdem, nur Beitritte/Austritte kommen nicht an.
+
+## Roblox-Verifizierung (wie RoVer)
+*Administration → Roblox-Verifizierung*, je Server oder gemeinsam:
+- **Ablauf:** Panel-Button **Verifizieren** oder `/verifizieren` → Roblox-Namen eingeben → der Bot zeigt fünf Wörter → in Roblox unter **„Über mich“** einfügen und speichern → **Fertig – prüfen**. Der Code gilt 15 Minuten. Eine Verifizierung gilt auf allen Servern.
+- **Rollen:** *Verifiziert-Rollen* bekommt jeder Verifizierte; *Nicht-verifiziert-Rollen* bekommt, wer es noch nicht ist, und sie fallen danach weg. **Gruppen-Rollen**: Rang in einer Roblox-Gruppe (von–bis, 1–255) → Discord-Rollen.
+- **Nickname:** Vorlage mit `{roblox-name}`, `{display-name}`, `{discord-name}`, `{roblox-id}` (höchstens 32 Zeichen; leer = nicht ändern).
+- **Beim Beitritt** (Schalter): Verifizierte bekommen sofort Rollen und Nickname, alle anderen die Nicht-verifiziert-Rollen (braucht den „Server Members“-Intent).
+- **Dashboard:** Liste aller Verifizierten mit Suche, Rollen neu setzen und Verifizierung entfernen; optional Log-Kanal.
+- Ist das Discord-Konto mit einem Dashboard-Benutzer verknüpft, bekommt dieser das bestätigte Roblox-Konto (falls dort noch keins steht), ebenso die CAD-Zuordnung.
+- Voraussetzungen in Discord: Bot-Rolle **über** den vergebenen Rollen, Rechte „Rollen verwalten“ und „Spitznamen verwalten“. Den Server-Besitzer kann Discord nicht umbenennen.
 
 ## Abmeldungen (Leave of Absences)
 *Administration → Leave of Absences*: Modul einschalten, **Leave Approval Channel** (Anträge mit Buttons *Annehmen* / *Ablehnen* / *Ablehnen mit Grund*), **Leave Logs Channel** (angenommen, abgelehnt, beginnt, beendet …), **On Leave Role** und die längste erlaubte Dauer.

@@ -35,6 +35,8 @@ export interface Ctx {
   userNameOf?: (userId: string) => Promise<string | null>;
   /** Roblox-Namenssuche (öffentliche Roblox-API; in Tests ersetzbar). */
   robloxLookup?: (username: string) => Promise<{ id: number; name: string; displayName: string } | null>;
+  /** Roblox-Verifizierung: Rollen/Nickname eines Mitglieds auf einem Server setzen; liefert Hinweise, was nicht ging. */
+  verifyApply?: (guildId: string, userId: string, a: { add: string[]; remove: string[]; nickname: string | null }) => Promise<string[]>;
   /** Sprach-Support (Buttons „Übernehmen“, „Ablehnen“, „Nachricht“ …). */
   voiceSupport?: VoiceSupportRuntime;
 }
