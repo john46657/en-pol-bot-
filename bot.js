@@ -82684,7 +82684,8 @@ async function pollOnce(api2, send, log = console.log, dm, grantRole, syncRoles,
       const avatarUserId = /\.(submitted|archived)$/.test(item.type) && /^(qualification|application)\./.test(item.type) && typeof item.payload.discordId === "string" && /^\d{15,25}$/.test(item.payload.discordId) ? item.payload.discordId : void 0;
       const thread = item.payload.thread === true && /\.submitted$/.test(item.type) ? `Bewerbung ${String(item.payload.number ?? "")}`.slice(0, 100) : void 0;
       const authorUserId = item.type === "leave.requested" && typeof item.payload.discordId === "string" && /^\d{15,25}$/.test(item.payload.discordId) ? item.payload.discordId : void 0;
-      const opts = pingRoleIds.length || avatarUserId || thread || authorUserId ? { ...pingRoleIds.length ? { pingRoleIds } : {}, ...avatarUserId ? { avatarUserId } : {}, ...thread ? { thread } : {}, ...authorUserId ? { authorUserId } : {} } : void 0;
+      const replaceKey = item.type === "danger.changed" ? "danger" : void 0;
+      const opts = pingRoleIds.length || avatarUserId || thread || authorUserId || replaceKey ? { ...pingRoleIds.length ? { pingRoleIds } : {}, ...avatarUserId ? { avatarUserId } : {}, ...thread ? { thread } : {}, ...authorUserId ? { authorUserId } : {}, ...replaceKey ? { replaceKey } : {} } : void 0;
       const results = await Promise.allSettled(channelIds.map((id) => opts ? send(id, embeds, buttons, opts) : send(id, embeds, buttons)));
       const failed = results.flatMap((r, i) => r.status === "rejected" ? [`${channelIds[i]}: ${r.reason instanceof Error ? r.reason.message : r.reason}`] : []);
       failed.forEach((f2) => log(`outbox ${item.id}: send failed for channel ${f2}`));
@@ -83086,6 +83087,12 @@ function wireReady(client0) {
         }
         const roles = opts?.pingRoleIds ?? [];
         const msg = await ch.send({ ...roles.length ? { content: roles.map((r) => `<@&${r}>`).join(" ") } : {}, embeds: list.map(toEmbed), components: toRows(buttons), allowedMentions: { parse: [], roles } });
+        if (opts?.replaceKey) {
+          const key = `last-${opts.replaceKey}-${channelId}`;
+          const old = await api.service("GET", `/bot/state/${key}`).then((r) => r.value, () => null);
+          if (old && old !== msg.id) await ch.messages.delete(old).catch(() => void 0);
+          await api.service("PUT", `/bot/state/${key}`, { value: msg.id }).catch((e) => console.error("could not remember message:", e instanceof Error ? e.message : e));
+        }
         if (opts?.thread) await msg.startThread({ name: opts.thread, autoArchiveDuration: 10080 }).catch((e) => console.error("could not create staff thread:", e instanceof Error ? e.message : e));
       },
       cfg.OUTBOX_POLL_SECONDS,

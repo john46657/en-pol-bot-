@@ -116,6 +116,13 @@ describe('shifts in Discord', () => {
     expect(sent[0]).toContain('900000000000000001');
     expect(sent[0]).toContain('Schicht: **SEK**');
   });
+  it('outbox: a new danger status replaces the previous message in the channel', async () => {
+    const opts: unknown[] = [];
+    const item = { id: 'd1', type: 'danger.changed', channelKey: 'danger', payload: { level: 'STATUS_2', name: 'Status 2', title: 'Mittlere Kriminalität.', text: 'x', color: '#f1c40f', previous: 'Status 4' } };
+    const { api } = fakeApi({ 'GET /bot/config': { danger: '900000000000000002' }, 'GET /bot/outbox?limit=20': [item], 'POST /bot/outbox/d1/ack': {} });
+    expect(await pollOnce(api, async (_ch, _e, _b, o) => { opts.push(o); }, () => undefined)).toBe(1);
+    expect(opts[0]).toMatchObject({ replaceKey: 'danger' });
+  });
 });
 
 describe('/leave manage (wie Trident)', () => {

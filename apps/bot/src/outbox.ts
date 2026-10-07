@@ -6,7 +6,7 @@ import { applicationDecisionText, leaveDirectEmbed, outboxButtons, qualification
 interface OutboxItem { id: string; type: string; channelKey: string; payload: Record<string, unknown> }
 /** `opts`: Rollen, die erwähnt werden (z. B. neue Bewerbung → @Staffelkommandant), und Discord-Benutzer für das Profilbild rechts. */
 /** `authorUserId`: Kopfzeile „@Benutzer“ mit Profilbild (z. B. Abmeldeantrag, wie bei Trident). */
-export type Sender = (channelId: string, embeds: EmbedData[], buttons?: ButtonSpec[], opts?: { pingRoleIds?: string[]; avatarUserId?: string; thread?: string; authorUserId?: string }) => Promise<void>;
+export type Sender = (channelId: string, embeds: EmbedData[], buttons?: ButtonSpec[], opts?: { pingRoleIds?: string[]; avatarUserId?: string; thread?: string; authorUserId?: string; replaceKey?: string }) => Promise<void>;
 /** Discord-Rollen eines Mitglieds anpassen (alle Server, auf denen es die Rollen gibt). */
 export type RoleSync = (userId: string, add: string[], remove: string[]) => Promise<void>;
 /** Welche Discord-Rolle zu welchem Dienststatus gehört (Einstellungen → Discord). */
@@ -128,7 +128,9 @@ export async function pollOnce(api: Api, send: Sender, log: (m: string) => void 
       // Staff-Thread je Bewerbung (wie bei Appy)
       const thread = item.payload.thread === true && /\.submitted$/.test(item.type) ? `Bewerbung ${String(item.payload.number ?? '')}`.slice(0, 100) : undefined;
       const authorUserId = item.type === 'leave.requested' && typeof item.payload.discordId === 'string' && /^\d{15,25}$/.test(item.payload.discordId) ? item.payload.discordId : undefined;
-      const opts = pingRoleIds.length || avatarUserId || thread || authorUserId ? { ...(pingRoleIds.length ? { pingRoleIds } : {}), ...(avatarUserId ? { avatarUserId } : {}), ...(thread ? { thread } : {}), ...(authorUserId ? { authorUserId } : {}) } : undefined;
+      // Gefahrenstatus: vorherige Meldung im Kanal löschen, damit nur der aktuelle Status dort steht
+      const replaceKey = item.type === 'danger.changed' ? 'danger' : undefined;
+      const opts = pingRoleIds.length || avatarUserId || thread || authorUserId || replaceKey ? { ...(pingRoleIds.length ? { pingRoleIds } : {}), ...(avatarUserId ? { avatarUserId } : {}), ...(thread ? { thread } : {}), ...(authorUserId ? { authorUserId } : {}), ...(replaceKey ? { replaceKey } : {}) } : undefined;
       const results = await Promise.allSettled(channelIds.map((id) => (opts ? send(id, embeds, buttons, opts) : send(id, embeds, buttons))));
       const failed = results.flatMap((r, i) => (r.status === 'rejected' ? [`${channelIds[i]}: ${r.reason instanceof Error ? r.reason.message : r.reason}`] : []));
       failed.forEach((f) => log(`outbox ${item.id}: send failed for channel ${f}`));
