@@ -16,6 +16,7 @@ const createUser = z.object({
 });
 const roblox = z.object({ robloxUserId: z.string().nullable(), robloxUsername: z.string().trim().max(64).optional() });
 const active = z.object({ active: z.boolean(), reason: z.string().max(500).optional() });
+const reason = z.object({ reason: z.string().max(500).optional() });
 const roles = z.object({ roleIds: z.array(z.string().uuid()) });
 const override = z.object({ permission: z.string(), effect: z.enum(['ALLOW', 'DENY']), reason: z.string().max(500).optional() });
 
@@ -38,6 +39,9 @@ export class UsersController {
 
   @Put(':id/active') @RequirePermission('users.manage')
   setActive(@CurrentActor() a: Actor, @Param('id', ParseUUIDPipe) id: string, @Body(zodBody(active)) b: z.infer<typeof active>) { return this.users.setActive(a, id, b.active, b.reason); }
+
+  @Post(':id/2fa/reset') @HttpCode(200) @RequirePermission('users.manage')
+  resetTwoFactor(@CurrentActor() a: Actor, @Param('id', ParseUUIDPipe) id: string, @Body(zodBody(reason)) b: z.infer<typeof reason>) { return this.users.resetTwoFactor(a, id, b.reason); }
 
   @Put(':id/roles') @RequirePermission('roles.manage')
   setRoles(@CurrentActor() a: Actor, @Param('id', ParseUUIDPipe) id: string, @Body(zodBody(roles)) b: z.infer<typeof roles>) { return this.users.setRoles(a, id, b.roleIds); }

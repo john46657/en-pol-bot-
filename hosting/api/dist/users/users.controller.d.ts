@@ -41,6 +41,13 @@ declare const active: z.ZodObject<{
     active: boolean;
     reason?: string | undefined;
 }>;
+declare const reason: z.ZodObject<{
+    reason: z.ZodOptional<z.ZodString>;
+}, "strip", z.ZodTypeAny, {
+    reason?: string | undefined;
+}, {
+    reason?: string | undefined;
+}>;
 declare const roles: z.ZodObject<{
     roleIds: z.ZodArray<z.ZodString, "many">;
 }, "strip", z.ZodTypeAny, {
@@ -77,6 +84,7 @@ export declare class UsersController {
             robloxVerifiedAt: Date | null;
             active: boolean;
             lastLogin: Date | null;
+            totpEnabledAt: Date | null;
             updatedAt: Date;
             roles: {
                 role: {
@@ -106,6 +114,7 @@ export declare class UsersController {
         robloxVerifiedAt: Date | null;
         active: boolean;
         lastLogin: Date | null;
+        totpEnabledAt: Date | null;
         updatedAt: Date;
         roles: {
             role: {
@@ -131,6 +140,7 @@ export declare class UsersController {
         robloxVerifiedAt: Date | null;
         active: boolean;
         lastLogin: Date | null;
+        totpEnabledAt: Date | null;
         updatedAt: Date;
         roles: {
             role: {
@@ -156,6 +166,7 @@ export declare class UsersController {
         robloxVerifiedAt: Date | null;
         active: boolean;
         lastLogin: Date | null;
+        totpEnabledAt: Date | null;
         updatedAt: Date;
         roles: {
             role: {
@@ -181,6 +192,33 @@ export declare class UsersController {
         robloxVerifiedAt: Date | null;
         active: boolean;
         lastLogin: Date | null;
+        totpEnabledAt: Date | null;
+        updatedAt: Date;
+        roles: {
+            role: {
+                id: string;
+                name: string;
+            };
+        }[];
+        overrides: {
+            reason: string | null;
+            permissionKey: string;
+            effect: string;
+        }[];
+    }>;
+    resetTwoFactor(a: Actor, id: string, b: z.infer<typeof reason>): Promise<{
+        id: string;
+        createdAt: Date;
+        username: string;
+        email: string | null;
+        robloxUserId: string | null;
+        displayName: string;
+        robloxUsername: string | null;
+        robloxStatus: string;
+        robloxVerifiedAt: Date | null;
+        active: boolean;
+        lastLogin: Date | null;
+        totpEnabledAt: Date | null;
         updatedAt: Date;
         roles: {
             role: {
@@ -206,6 +244,7 @@ export declare class UsersController {
         robloxVerifiedAt: Date | null;
         active: boolean;
         lastLogin: Date | null;
+        totpEnabledAt: Date | null;
         updatedAt: Date;
         roles: {
             role: {

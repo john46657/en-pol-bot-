@@ -7,7 +7,7 @@ import { Badge, Button, Card, ConfirmDialog, Field, fmt, Input, Modal, Select, S
 import { DataTable, useDebounced } from '../../components/DataTable';
 import { FormModal } from '../../components/FormModal';
 
-interface U { id: string; username: string; displayName: string; active: boolean; lastLogin: string | null; robloxUserId: string | null; robloxUsername: string | null; robloxStatus: string; roles: { role: { id: string; name: string } }[]; overrides: { permissionKey: string; effect: string; reason: string | null }[] }
+interface U { id: string; username: string; displayName: string; active: boolean; lastLogin: string | null; totpEnabledAt?: string | null; robloxUserId: string | null; robloxUsername: string | null; robloxStatus: string; roles: { role: { id: string; name: string } }[]; overrides: { permissionKey: string; effect: string; reason: string | null }[] }
 interface Role { id: string; name: string }
 
 export function Users() {
@@ -26,7 +26,7 @@ export function Users() {
       <div className="mb-4 flex items-center justify-between"><h1 className="text-xl font-semibold">Users</h1>{manage && <Button onClick={() => setCreating(true)}>New user</Button>}</div>
       <DataTable<U> rows={list.data?.items} total={list.data?.total ?? 0} page={page} pageSize={25} onPage={setPage} loading={list.isLoading} error={list.error} onRetry={() => void list.refetch()} search={search} onSearch={(s) => { setSearch(s); setPage(1); }}
         onRowClick={setSel} empty={{ text: 'No users found.' }}
-        columns={[{ key: 'username', label: 'Username' }, { key: 'displayName', label: 'Name' }, { key: 'roles', label: 'Roles', render: (u) => u.roles.map((r) => r.role.name).join(', ') || '—' }, { key: 'roblox', label: 'Roblox', render: (u) => u.robloxUserId ? <span>{u.robloxUserId} <Badge>{u.robloxStatus}</Badge></span> : '—' }, { key: 'active', label: 'Status', render: (u) => <StatusBadge status={u.active ? 'ACTIVE' : 'OFF_DUTY'} /> }, { key: 'lastLogin', label: 'Last login', render: (u) => fmt(u.lastLogin) }]} />
+        columns={[{ key: 'username', label: 'Username' }, { key: 'displayName', label: 'Name' }, { key: 'roles', label: 'Roles', render: (u) => u.roles.map((r) => r.role.name).join(', ') || '—' }, { key: 'roblox', label: 'Roblox', render: (u) => u.robloxUserId ? <span>{u.robloxUserId} <Badge>{u.robloxStatus}</Badge></span> : '—' }, { key: 'active', label: 'Status', render: (u) => <StatusBadge status={u.active ? 'ACTIVE' : 'OFF_DUTY'} /> }, { key: '2fa', label: '2FA', render: (u) => u.totpEnabledAt ? <Badge tone="success">🔐 On</Badge> : '—' }, { key: 'lastLogin', label: 'Last login', render: (u) => fmt(u.lastLogin) }]} />
       <FormModal open={creating} onClose={() => setCreating(false)} title="New user" endpoint="/users" invalidate={[['users']]}
         fields={[{ name: 'username', label: 'Username', required: true, min: 3, max: 32 }, { name: 'displayName', label: 'Display name', required: true }, { name: 'password', label: 'Initial password', type: 'password', required: true, min: 12, hint: 'At least 12 characters.' }, { name: 'email', label: 'E-mail (optional)' }]} />
       {sel && <UserDrawer user={sel} roles={roles.data ?? []} manage={manage} canRoles={can('roles.manage')} isSelf={sel.id === me?.id} onClose={() => { setSel(undefined); void qc.invalidateQueries({ queryKey: ['users'] }); }} />}
@@ -40,6 +40,7 @@ function UserDrawer({ user, roles, manage, canRoles, isSelf, onClose }: { user: 
   const [rid, setRid] = useState(''); const [rname, setRname] = useState('');
   const [perm, setPerm] = useState<string>(ALL_PERMISSIONS[0]!); const [effect, setEffect] = useState('DENY'); const [why, setWhy] = useState('');
   const [confirmDisable, setConfirmDisable] = useState(false);
+  const [confirmReset2fa, setConfirmReset2fa] = useState(false);
   const refresh = async () => setU(await api<U>(`/users/${u.id}`));
   const run = async (fn: () => Promise<unknown>) => { try { setErr(undefined); await fn(); await refresh(); } catch (e) { setErr(e instanceof ApiError ? `${e.message}${e.requestId ? ` (Request ID ${e.requestId})` : ''}` : 'Failed'); } };
   const setRoles = useMutation({ mutationFn: (ids: string[]) => api(`/users/${u.id}/roles`, { method: 'PUT', body: { roleIds: ids } }) });
@@ -60,8 +61,13 @@ function UserDrawer({ user, roles, manage, canRoles, isSelf, onClose }: { user: 
           {u.overrides.length === 0 ? <p className="text-sm text-muted">No overrides.</p> : <ul className="mb-3 space-y-1">{u.overrides.map((o) => <li key={o.permissionKey} className="flex items-center justify-between text-sm"><span><Badge tone={o.effect === 'DENY' ? 'danger' : 'success'}>{o.effect}</Badge> <code>{o.permissionKey}</code> {o.reason && <span className="text-xs text-muted">— {o.reason}</span>}</span>{canRoles && <Button size="sm" variant="ghost" onClick={() => void run(() => api(`/users/${u.id}/overrides/${o.permissionKey}`, { method: 'DELETE' }))}>Remove</Button>}</li>)}</ul>}
           {canRoles && <div className="grid items-end gap-2 sm:grid-cols-[1fr_auto_1fr_auto]"><Field label="Permission">{(id) => <Select id={id} value={perm} onChange={(e) => setPerm(e.target.value)}>{ALL_PERMISSIONS.map((p) => <option key={p}>{p}</option>)}</Select>}</Field><Field label="Effect">{(id) => <Select id={id} value={effect} onChange={(e) => setEffect(e.target.value)}><option>ALLOW</option><option>DENY</option></Select>}</Field><Field label="Reason">{(id) => <Input id={id} value={why} onChange={(e) => setWhy(e.target.value)} />}</Field><Button onClick={() => void run(() => api(`/users/${u.id}/overrides`, { method: 'PUT', body: { permission: perm, effect, reason: why || undefined } }))}>Set override</Button></div>}
         </Card>
+        <Card title="Two-factor sign-in">
+          <p className="text-sm">{u.totpEnabledAt ? <>🔐 Active since {fmt(u.totpEnabledAt)}</> : 'Not enabled (the user can turn it on in their personal settings).'}</p>
+          {manage && !isSelf && u.totpEnabledAt && <div className="mt-2"><Button variant="secondary" onClick={() => setConfirmReset2fa(true)}>Reset two-factor</Button></div>}
+        </Card>
         {manage && !isSelf && <div className="flex justify-end">{u.active ? <Button variant="danger" onClick={() => setConfirmDisable(true)}>Disable account</Button> : <Button onClick={() => void run(() => api(`/users/${u.id}/active`, { method: 'PUT', body: { active: true } }))}>Enable account</Button>}</div>}
       </div>
+      <ConfirmDialog open={confirmReset2fa} danger title="Reset two-factor" message="Use this only if the user lost their phone and recovery codes. Two-factor is turned off, the user is signed out everywhere and can sign in with just the password until they set it up again. This is audited." confirmLabel="Reset" onClose={() => setConfirmReset2fa(false)} onConfirm={() => { setConfirmReset2fa(false); void run(() => api(`/users/${u.id}/2fa/reset`, { body: {} })); }} />
       <ConfirmDialog open={confirmDisable} danger title="Disable account" message="The user is signed out immediately and cannot log in until re-enabled. This is audited." confirmLabel="Disable" onClose={() => setConfirmDisable(false)} onConfirm={() => { setConfirmDisable(false); void run(() => api(`/users/${u.id}/active`, { method: 'PUT', body: { active: false } })); }} />
     </Modal>
   );

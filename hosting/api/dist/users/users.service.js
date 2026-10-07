@@ -16,6 +16,7 @@ const prisma_service_1 = require("../prisma/prisma.service");
 const audit_service_1 = require("../audit/audit.service");
 const password_1 = require("../auth/password");
 const auth_service_1 = require("../auth/auth.service");
+const two_factor_service_1 = require("../auth/two-factor.service");
 const permission_service_1 = require("../authz/permission.service");
 const errors_1 = require("../common/errors");
 const realtime_service_1 = require("../realtime/realtime.service");
@@ -23,7 +24,7 @@ const guild_context_1 = require("../common/guild-context");
 const pagination_1 = require("../common/pagination");
 const publicSelect = {
     id: true, username: true, displayName: true, email: true, robloxUserId: true, robloxUsername: true, robloxStatus: true,
-    robloxVerifiedAt: true, active: true, lastLogin: true, createdAt: true, updatedAt: true,
+    robloxVerifiedAt: true, active: true, lastLogin: true, totpEnabledAt: true, createdAt: true, updatedAt: true,
     roles: { select: { role: { select: { id: true, name: true } } } },
     overrides: { select: { permissionKey: true, effect: true, reason: true } },
 };
@@ -116,6 +117,22 @@ let UsersService = class UsersService {
         });
         if (!active)
             await this.auth.revokeAllSessions(id);
+        return u;
+    }
+    /** Zwei-Faktor zurücksetzen (Handy verloren, keine Wiederherstellungscodes). Beendet alle Sessions des Benutzers. */
+    async resetTwoFactor(actor, id, reason) {
+        if (id === actor.userId)
+            throw new errors_1.AppError('CONFLICT', 'Use your own settings to turn off two-factor authentication.');
+        const before = await this.get(id);
+        await this.perms.assertOutranksUser(actor.userId, id);
+        if (!before.totpEnabledAt)
+            throw new errors_1.AppError('CONFLICT', 'Two-factor authentication is not enabled for this user.');
+        const u = await this.prisma.$transaction(async (tx) => {
+            const r = await tx.user.update({ where: { id }, data: two_factor_service_1.TwoFactorService.cleared, select: publicSelect });
+            await this.audit.record(actor, { action: 'user.2fa.reset', module: 'users', entityType: 'User', entityId: id, reason }, tx);
+            return r;
+        });
+        await this.auth.revokeAllSessions(id);
         return u;
     }
     async setRoles(actor, id, roleIds) {

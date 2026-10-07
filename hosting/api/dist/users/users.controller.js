@@ -29,6 +29,7 @@ const createUser = zod_1.z.object({
 });
 const roblox = zod_1.z.object({ robloxUserId: zod_1.z.string().nullable(), robloxUsername: zod_1.z.string().trim().max(64).optional() });
 const active = zod_1.z.object({ active: zod_1.z.boolean(), reason: zod_1.z.string().max(500).optional() });
+const reason = zod_1.z.object({ reason: zod_1.z.string().max(500).optional() });
 const roles = zod_1.z.object({ roleIds: zod_1.z.array(zod_1.z.string().uuid()) });
 const override = zod_1.z.object({ permission: zod_1.z.string(), effect: zod_1.z.enum(['ALLOW', 'DENY']), reason: zod_1.z.string().max(500).optional() });
 let UsersController = class UsersController {
@@ -41,6 +42,7 @@ let UsersController = class UsersController {
     create(a, b) { return this.users.create(a, b); }
     setRoblox(a, id, b) { return this.users.setRoblox(a, id, b); }
     setActive(a, id, b) { return this.users.setActive(a, id, b.active, b.reason); }
+    resetTwoFactor(a, id, b) { return this.users.resetTwoFactor(a, id, b.reason); }
     setRoles(a, id, b) { return this.users.setRoles(a, id, b.roleIds); }
     setOverride(a, id, b) { return this.users.setOverride(a, id, b); }
     removeOverride(a, id, p) { return this.users.removeOverride(a, id, p); }
@@ -91,6 +93,17 @@ __decorate([
     __metadata("design:paramtypes", [Object, String, void 0]),
     __metadata("design:returntype", void 0)
 ], UsersController.prototype, "setActive", null);
+__decorate([
+    (0, common_1.Post)(':id/2fa/reset'),
+    (0, common_1.HttpCode)(200),
+    (0, decorators_1.RequirePermission)('users.manage'),
+    __param(0, (0, decorators_1.CurrentActor)()),
+    __param(1, (0, common_1.Param)('id', common_1.ParseUUIDPipe)),
+    __param(2, (0, common_1.Body)((0, zod_pipe_1.zodBody)(reason))),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, String, void 0]),
+    __metadata("design:returntype", void 0)
+], UsersController.prototype, "resetTwoFactor", null);
 __decorate([
     (0, common_1.Put)(':id/roles'),
     (0, decorators_1.RequirePermission)('roles.manage'),

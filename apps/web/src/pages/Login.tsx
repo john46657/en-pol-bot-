@@ -26,22 +26,49 @@ function DiscordIcon() {
 }
 
 export function Login() {
-  const { user, login } = useAuth();
+  const { user, login, loginCode } = useAuth();
   const loc = useLocation();
   const providers = useQuery({ queryKey: ['auth-providers'], queryFn: () => api<{ discord: boolean; password?: boolean }>('/auth/providers'), retry: false });
   const passwordForm = !providers.data || providers.data.password !== false; // nur Discord, sobald eingerichtet
   const discordError = new URLSearchParams(loc.search).get('discord');
   const [err, setErr] = useState<string>();
   const [busy, setBusy] = useState(false);
+  const [ticket, setTicket] = useState<string>();
+  const [recovery, setRecovery] = useState(false);
   if (user) return <Navigate to={(loc.state as { from?: string } | null)?.from ?? '/'} replace />;
   const submit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const f = new FormData(e.currentTarget);
     setBusy(true); setErr(undefined);
-    try { await login(String(f.get('username')), String(f.get('password'))); }
+    try { const r = await login(String(f.get('username')), String(f.get('password'))); if (r.ticket) setTicket(r.ticket); }
     catch (x) { setErr(x instanceof ApiError && x.status === 429 ? 'Too many attempts. Please wait a minute.' : 'Invalid username or password.'); }
     finally { setBusy(false); }
   };
+  const submitCode = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    const f = new FormData(e.currentTarget);
+    setBusy(true); setErr(undefined);
+    try { await loginCode(ticket!, String(f.get('code'))); }
+    catch (x) {
+      if (x instanceof ApiError && x.status === 401 && /expired/i.test(x.message)) { setTicket(undefined); setErr('Die Anmeldung ist abgelaufen. Bitte Passwort erneut eingeben.'); }
+      else setErr(x instanceof ApiError && x.status === 429 ? 'Zu viele Versuche – bitte eine Minute warten.' : 'Der Code stimmt nicht.');
+    }
+    finally { setBusy(false); }
+  };
+  if (ticket) return (
+    <div className="grid min-h-full place-items-center p-4">
+      <form onSubmit={submitCode} className="w-full max-w-sm space-y-4 rounded-lg border border-line bg-panel p-6" aria-label="Zwei-Faktor-Code">
+        <div className="flex items-center gap-2 text-lg font-semibold"><Shield className="text-primary" aria-hidden />Zwei-Faktor-Anmeldung</div>
+        <p className="text-sm text-muted">{recovery ? 'Gib einen deiner Wiederherstellungscodes ein. Jeder Code funktioniert nur einmal.' : 'Öffne deine Authenticator-App und gib den 6-stelligen Code ein.'}</p>
+        <Field label={recovery ? 'Wiederherstellungscode' : 'Code'} error={err}>{(id) => <Input key={String(recovery)} id={id} name="code" autoComplete="one-time-code" inputMode={recovery ? 'text' : 'numeric'} placeholder={recovery ? 'xxxxx-xxxxx' : '123456'} maxLength={recovery ? 32 : 7} className="font-mono" required autoFocus />}</Field>
+        <Button type="submit" disabled={busy} className="w-full">{busy ? 'Prüfe…' : 'Anmelden'}</Button>
+        <div className="flex justify-between text-xs">
+          <button type="button" className="text-primary hover:underline" onClick={() => { setRecovery(!recovery); setErr(undefined); }}>{recovery ? 'Code aus der App verwenden' : 'Handy nicht zur Hand? Wiederherstellungscode'}</button>
+          <button type="button" className="text-muted hover:underline" onClick={() => { setTicket(undefined); setRecovery(false); setErr(undefined); }}>Zurück</button>
+        </div>
+      </form>
+    </div>
+  );
   return (
     <div className="grid min-h-full place-items-center p-4">
       <form onSubmit={submit} className="w-full max-w-sm space-y-4 rounded-lg border border-line bg-panel p-6" aria-label="Sign in">

@@ -4,6 +4,7 @@ import { Throttle } from '@nestjs/throttler';
 import type { Response } from 'express';
 import { z } from 'zod';
 import { AuthService } from './auth.service';
+import { TwoFactorService } from './two-factor.service';
 import { DiscordLoginFailure, DiscordOAuthService } from './discord-oauth.service';
 import { webUrl } from '../common/web-url';
 import { AppError } from '../common/errors';
@@ -16,12 +17,14 @@ import { loadEnv } from '../config/env';
 
 const OAUTH_COOKIE = 'enrp_oauth';
 const loginSchema = z.object({ username: z.string().min(1).max(64), password: z.string().min(1).max(256) });
+const login2faSchema = z.object({ ticket: z.string().min(1).max(512), code: z.string().trim().min(6).max(32) });
+const codeSchema = z.object({ code: z.string().trim().min(6).max(32) });
 
 @ApiTags('auth')
 @Controller('auth')
 export class AuthController {
   private readonly env = loadEnv();
-  constructor(private readonly auth: AuthService, private readonly discord: DiscordOAuthService) {}
+  constructor(private readonly auth: AuthService, private readonly discord: DiscordOAuthService, private readonly twoFactor: TwoFactorService) {}
 
   private secure() { return this.env.COOKIE_SECURE ? this.env.COOKIE_SECURE === 'true' : this.env.NODE_ENV === 'production'; }
 
@@ -89,9 +92,42 @@ export class AuthController {
     // Ist „Mit Discord anmelden“ eingerichtet, gibt es nur noch Discord (Notfall: PASSWORD_LOGIN=true)
     if (!this.discord.passwordLoginAllowed()) throw new AppError('PERMISSION_DENIED', 'Password login is disabled – sign in with Discord.');
     const r = await this.auth.login(body.username, body.password, { ip: req.ip, userAgent: req.headers['user-agent'], requestId: req.requestId });
-    res.cookie(SESSION_COOKIE, r.token, { httpOnly: true, sameSite: 'strict', secure: this.env.COOKIE_SECURE ? this.env.COOKIE_SECURE === 'true' : this.env.NODE_ENV === 'production', expires: r.expiresAt, path: '/' });
+    if ('twoFactorRequired' in r) return r; // Code-Schritt folgt, noch kein Cookie
+    res.cookie(SESSION_COOKIE, r.token, { httpOnly: true, sameSite: 'strict', secure: this.secure(), expires: r.expiresAt, path: '/' });
     return r.user;
   }
+
+  /** Zweiter Schritt: Code aus der Authenticator-App (oder Wiederherstellungscode) zum Ticket aus `login`. */
+  @Public()
+  @Throttle({ default: { limit: process.env.NODE_ENV === 'test' ? 10_000 : loadEnv().LOGIN_RATE_LIMIT, ttl: 60_000 } })
+  @Post('login/2fa')
+  @HttpCode(200)
+  async login2fa(@Body(zodBody(login2faSchema)) body: z.infer<typeof login2faSchema>, @Req() req: AppRequest, @Res({ passthrough: true }) res: Response) {
+    if (!this.discord.passwordLoginAllowed()) throw new AppError('PERMISSION_DENIED', 'Password login is disabled – sign in with Discord.');
+    const r = await this.auth.loginTwoFactor(body.ticket, body.code, { ip: req.ip, userAgent: req.headers['user-agent'], requestId: req.requestId });
+    res.cookie(SESSION_COOKIE, r.token, { httpOnly: true, sameSite: 'strict', secure: this.secure(), expires: r.expiresAt, path: '/' });
+    return r.user;
+  }
+
+  // ───────────── Zwei-Faktor einrichten (eigenes Konto) ─────────────
+
+  @Get('2fa')
+  twoFactorStatus(@CurrentUser() user: AuthUser) { return this.twoFactor.status(user.id); }
+
+  @Post('2fa/setup') @HttpCode(200)
+  twoFactorSetup(@CurrentActor() a: Actor, @CurrentUser() user: AuthUser) { return this.twoFactor.setup({ ...a, userId: user.id }); }
+
+  @Throttle({ default: { limit: process.env.NODE_ENV === 'test' ? 10_000 : 10, ttl: 60_000 } })
+  @Post('2fa/enable') @HttpCode(200)
+  twoFactorEnable(@CurrentActor() a: Actor, @CurrentUser() user: AuthUser, @Body(zodBody(codeSchema)) b: z.infer<typeof codeSchema>) { return this.twoFactor.enable({ ...a, userId: user.id }, b.code); }
+
+  @Throttle({ default: { limit: process.env.NODE_ENV === 'test' ? 10_000 : 10, ttl: 60_000 } })
+  @Post('2fa/disable') @HttpCode(204)
+  twoFactorDisable(@CurrentActor() a: Actor, @CurrentUser() user: AuthUser, @Body(zodBody(codeSchema)) b: z.infer<typeof codeSchema>) { return this.twoFactor.disable({ ...a, userId: user.id }, b.code); }
+
+  @Throttle({ default: { limit: process.env.NODE_ENV === 'test' ? 10_000 : 10, ttl: 60_000 } })
+  @Post('2fa/recovery-codes') @HttpCode(200)
+  twoFactorRecovery(@CurrentActor() a: Actor, @CurrentUser() user: AuthUser, @Body(zodBody(codeSchema)) b: z.infer<typeof codeSchema>) { return this.twoFactor.regenerateRecovery({ ...a, userId: user.id }, b.code); }
 
   @Post('logout')
   @HttpCode(204)

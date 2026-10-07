@@ -27,7 +27,7 @@ pnpm e2e         # Playwright (uses installed Google Chrome)
 ## Status
 | Area | State |
 |---|---|
-| Auth, sessions, lockout, login history, security events | done |
+| Auth, sessions, lockout, login history, security events, Zwei-Faktor (Authenticator-App, Wiederherstellungscodes, Admin-Reset) | done |
 | RBAC (central resolver, user DENY/ALLOW overrides, groups, wildcards), Roblox ID (manual) | done |
 | Persons (+merge), Vehicles, Tickets, Legal codes | done |
 | Dispatch/Incidents/Units, Reports (versioned), Complaints, Investigations, Wanted, Evidence (custody) | done |
@@ -46,4 +46,4 @@ pnpm e2e         # Playwright (uses installed Google Chrome)
 | Dashboard: Discord-Rollen laufend geprüft, Rollen-Hierarchie/-Editor/Matrix, Bereichsrechte, Server getrennt, persönliches Design + Widgets + Layouts, Teamliste (≥ 60 s) und Voice-Widget getrennt, automatisches Speichern: [docs/dashboard.md](docs/dashboard.md) | done; **Teamliste/Voice nicht gegen echtes Discord getestet** |
 | CAD-Leitstelle + ER:LC (`/cad`): Einsätze, Einheiten, Notrufe → Einsatz, Funk-Chronik, interaktive Karte mit Layern/POIs/Zonen, ER:LC Live, Command Center, Teamübersicht, Cross-Server, konfigurierbare Prioritäten/Status/Kanäle, `cad.*`-Rechte: [docs/cad.md](docs/cad.md) | done; **nicht gegen echten ER:LC-Server/Discord getestet** |
 | Abmeldungen wie Trident (`/leave manage`, Dauer 6h/4d/2w, Annehmen/Ablehnen mit Grund, DMs) · Gefahrenstatus Status 1–4 (Texte/Farben/Ping einstellbar) · Bewerbungs-Statistik | done |
-| Studio workflows, virtualized tables, record locking, 2FA | **not implemented** |
+| Studio workflows, virtualized tables, record locking | **not implemented** |

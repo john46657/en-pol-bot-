@@ -79,6 +79,11 @@ export declare class DiscordService {
         failedLogins: number;
         lockedUntil: Date | null;
         lastLogin: Date | null;
+        totpSecret: string | null;
+        totpPending: string | null;
+        totpEnabledAt: Date | null;
+        totpLastStep: number | null;
+        totpRecovery: string[];
         updatedAt: Date;
         version: number;
     } | null>;

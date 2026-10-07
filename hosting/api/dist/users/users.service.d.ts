@@ -28,6 +28,7 @@ export declare class UsersService {
             robloxVerifiedAt: Date | null;
             active: boolean;
             lastLogin: Date | null;
+            totpEnabledAt: Date | null;
             updatedAt: Date;
             roles: {
                 role: {
@@ -57,6 +58,7 @@ export declare class UsersService {
         robloxVerifiedAt: Date | null;
         active: boolean;
         lastLogin: Date | null;
+        totpEnabledAt: Date | null;
         updatedAt: Date;
         roles: {
             role: {
@@ -88,6 +90,7 @@ export declare class UsersService {
         robloxVerifiedAt: Date | null;
         active: boolean;
         lastLogin: Date | null;
+        totpEnabledAt: Date | null;
         updatedAt: Date;
         roles: {
             role: {
@@ -117,6 +120,7 @@ export declare class UsersService {
         robloxVerifiedAt: Date | null;
         active: boolean;
         lastLogin: Date | null;
+        totpEnabledAt: Date | null;
         updatedAt: Date;
         roles: {
             role: {
@@ -142,6 +146,34 @@ export declare class UsersService {
         robloxVerifiedAt: Date | null;
         active: boolean;
         lastLogin: Date | null;
+        totpEnabledAt: Date | null;
+        updatedAt: Date;
+        roles: {
+            role: {
+                id: string;
+                name: string;
+            };
+        }[];
+        overrides: {
+            reason: string | null;
+            permissionKey: string;
+            effect: string;
+        }[];
+    }>;
+    /** Zwei-Faktor zurücksetzen (Handy verloren, keine Wiederherstellungscodes). Beendet alle Sessions des Benutzers. */
+    resetTwoFactor(actor: Actor, id: string, reason?: string): Promise<{
+        id: string;
+        createdAt: Date;
+        username: string;
+        email: string | null;
+        robloxUserId: string | null;
+        displayName: string;
+        robloxUsername: string | null;
+        robloxStatus: string;
+        robloxVerifiedAt: Date | null;
+        active: boolean;
+        lastLogin: Date | null;
+        totpEnabledAt: Date | null;
         updatedAt: Date;
         roles: {
             role: {
@@ -167,6 +199,7 @@ export declare class UsersService {
         robloxVerifiedAt: Date | null;
         active: boolean;
         lastLogin: Date | null;
+        totpEnabledAt: Date | null;
         updatedAt: Date;
         roles: {
             role: {

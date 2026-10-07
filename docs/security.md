@@ -9,7 +9,8 @@
 - Exports (CSV/JSON/PDF): permission-checked, audited, CSV formula injection neutralized.
 - WebSockets: handshake authenticated by session cookie; every `subscribe` is authorized server-side and re-checks the session; unknown and forbidden rooms answer identically.
 - Security events (`/admin/security-events`): login failures, permission denials, invalid tokens. Secrets are never logged or audited (keys matching password/secret/token/hash are redacted).
-- Not implemented: rate-limit security events, 2FA, record locking, antivirus scanning.
+- Zwei-Faktor-Anmeldung (TOTP, RFC 6238) für den Passwort-Login: jeder richtet sie selbst unter *Persönliche Einstellungen* ein (QR-Code für Google/Microsoft Authenticator, Authy, 1Password …). Das Geheimnis liegt AES-256-GCM-verschlüsselt in der Datenbank (Schlüssel `ERLC_SECRET_KEY`, sonst aus `SESSION_SECRET` abgeleitet – wird er geändert, muss ein Admin die 2FA der Benutzer zurücksetzen). Nach dem Passwort gibt es nur ein 5-Minuten-Ticket (HMAC-signiert), erst der Code erzeugt die Session. Jeder Code gilt nur einmal (auch bei gleichzeitigen Anmeldungen), falsche Codes zählen zur Konto-Sperre (5 Fehlversuche → 15 min). 10 Wiederherstellungscodes, nur als SHA-256 gespeichert, je einmal gültig. Ausschalten/Codes erneuern nur mit gültigem Code. Admins mit `users.manage` können die 2FA eines rangniedrigeren Benutzers zurücksetzen (beendet alle Sessions, auditiert). Die Anmeldung mit Discord ist nicht betroffen – dort gilt Discords eigene 2FA.
+- Not implemented: rate-limit security events, record locking, antivirus scanning.
 
 ## Review findings (Oct 2026) and status
 | Finding | Status |
@@ -23,7 +24,7 @@ Known residual risks (accepted / not yet addressed):
 - Account lockout (5 failures/15 min) can be abused to lock a known username; per-IP rate limiting limits but does not remove this.
 - `POST /applications` answers 409 for an open application of the same Roblox ID (minor existence leak).
 - `trust proxy` is fixed to 1 hop; deploy behind the provided Caddy (or adjust) so `X-Forwarded-For` cannot be spoofed by clients.
-- Uploaded files are not virus-scanned. No 2FA. Session tokens are not bound to IP/device.
+- Uploaded files are not virus-scanned. 2FA is optional per user (not enforceable per role). Session tokens are not bound to IP/device.
 - Roles with `roles.manage` can grant themselves nothing directly (self-changes blocked) but can still grant other accounts anything; treat that permission as admin-equivalent.
 
 ## Production defaults

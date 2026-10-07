@@ -4,6 +4,7 @@ import { PrismaService, Tx } from '../prisma/prisma.service';
 import { AuditService, Actor } from '../audit/audit.service';
 import { hashPassword } from '../auth/password';
 import { AuthService } from '../auth/auth.service';
+import { TwoFactorService } from '../auth/two-factor.service';
 import { PermissionService } from '../authz/permission.service';
 import { AppError } from '../common/errors';
 import { RealtimeService } from '../realtime/realtime.service';
@@ -12,7 +13,7 @@ import { PageQuery, pageResult, skipTake } from '../common/pagination';
 
 const publicSelect = {
   id: true, username: true, displayName: true, email: true, robloxUserId: true, robloxUsername: true, robloxStatus: true,
-  robloxVerifiedAt: true, active: true, lastLogin: true, createdAt: true, updatedAt: true,
+  robloxVerifiedAt: true, active: true, lastLogin: true, totpEnabledAt: true, createdAt: true, updatedAt: true,
   roles: { select: { role: { select: { id: true, name: true } } } },
   overrides: { select: { permissionKey: true, effect: true, reason: true } },
 } as const;
@@ -94,6 +95,21 @@ export class UsersService {
       return r;
     });
     if (!active) await this.auth.revokeAllSessions(id);
+    return u;
+  }
+
+  /** Zwei-Faktor zurücksetzen (Handy verloren, keine Wiederherstellungscodes). Beendet alle Sessions des Benutzers. */
+  async resetTwoFactor(actor: Actor, id: string, reason?: string) {
+    if (id === actor.userId) throw new AppError('CONFLICT', 'Use your own settings to turn off two-factor authentication.');
+    const before = await this.get(id);
+    await this.perms.assertOutranksUser(actor.userId!, id);
+    if (!before.totpEnabledAt) throw new AppError('CONFLICT', 'Two-factor authentication is not enabled for this user.');
+    const u = await this.prisma.$transaction(async (tx) => {
+      const r = await tx.user.update({ where: { id }, data: TwoFactorService.cleared, select: publicSelect });
+      await this.audit.record(actor, { action: 'user.2fa.reset', module: 'users', entityType: 'User', entityId: id, reason }, tx);
+      return r;
+    });
+    await this.auth.revokeAllSessions(id);
     return u;
   }
 

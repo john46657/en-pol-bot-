@@ -2,13 +2,15 @@ import { PrismaService } from '../prisma/prisma.service';
 import { AuditService, Actor } from '../audit/audit.service';
 import { PermissionService } from '../authz/permission.service';
 import { DiscordAccessService } from '../authz/discord-access.service';
+import { TwoFactorService } from './two-factor.service';
 export declare class AuthService {
     private readonly prisma;
     private readonly audit;
     private readonly perms;
     private readonly access;
+    private readonly twoFactor;
     private readonly env;
-    constructor(prisma: PrismaService, audit: AuditService, perms: PermissionService, access: DiscordAccessService);
+    constructor(prisma: PrismaService, audit: AuditService, perms: PermissionService, access: DiscordAccessService, twoFactor: TwoFactorService);
     login(username: string, password: string, meta: {
         ip?: string;
         userAgent?: string;
@@ -25,6 +27,32 @@ export declare class AuthService {
             roles: string[];
             permissions: import("@enrp/shared").PermissionKey[];
             lastLogin: Date | null;
+            twoFactor: boolean;
+            guildId: string | null;
+            servers: string[];
+        };
+    } | {
+        twoFactorRequired: true;
+        ticket: string;
+    }>;
+    /** Zweiter Schritt des Passwort-Logins: Code aus der Authenticator-App oder Wiederherstellungscode. */
+    loginTwoFactor(ticket: string, code: string, meta: {
+        ip?: string;
+        userAgent?: string;
+        requestId?: string;
+    }): Promise<{
+        token: string;
+        expiresAt: Date;
+        user: {
+            id: string;
+            username: string;
+            displayName: string;
+            robloxUserId: string | null;
+            robloxUsername: string | null;
+            roles: string[];
+            permissions: import("@enrp/shared").PermissionKey[];
+            lastLogin: Date | null;
+            twoFactor: boolean;
             guildId: string | null;
             servers: string[];
         };
@@ -49,6 +77,7 @@ export declare class AuthService {
             roles: string[];
             permissions: import("@enrp/shared").PermissionKey[];
             lastLogin: Date | null;
+            twoFactor: boolean;
             guildId: string | null;
             servers: string[];
         };
@@ -65,6 +94,7 @@ export declare class AuthService {
         roles: string[];
         permissions: import("@enrp/shared").PermissionKey[];
         lastLogin: Date | null;
+        twoFactor: boolean;
         guildId: string | null;
         servers: string[];
     }>;
