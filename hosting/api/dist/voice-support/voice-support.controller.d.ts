@@ -35,6 +35,37 @@ declare const voice: z.ZodObject<{
     channelId: string;
     userName?: string | undefined;
 }>;
+declare const webAction: z.ZodDiscriminatedUnion<"action", [z.ZodObject<{
+    action: z.ZodLiteral<"claim">;
+}, "strip", z.ZodTypeAny, {
+    action: "claim";
+}, {
+    action: "claim";
+}>, z.ZodObject<{
+    action: z.ZodLiteral<"close">;
+}, "strip", z.ZodTypeAny, {
+    action: "close";
+}, {
+    action: "close";
+}>, z.ZodObject<{
+    action: z.ZodLiteral<"decline">;
+    reason: z.ZodOptional<z.ZodString>;
+}, "strip", z.ZodTypeAny, {
+    action: "decline";
+    reason?: string | undefined;
+}, {
+    action: "decline";
+    reason?: string | undefined;
+}>, z.ZodObject<{
+    action: z.ZodLiteral<"message">;
+    text: z.ZodString;
+}, "strip", z.ZodTypeAny, {
+    action: "message";
+    text: string;
+}, {
+    action: "message";
+    text: string;
+}>]>;
 declare const staff: z.ZodObject<{
     discordId: z.ZodString;
     name: z.ZodString;
@@ -82,6 +113,32 @@ export declare class VoiceSupportController {
         notifyMessageId: string | null;
         threadId: string | null;
     }[]>;
+    /** Übernehmen / Ablehnen / Nachricht / Schließen aus dem Dashboard (Recht ticket.claim). */
+    action(a: Actor, id: string, b: z.infer<typeof webAction>): Promise<{
+        number: string;
+        id: string;
+        createdAt: Date;
+        userId: string;
+        guildId: string;
+        userName: string;
+        status: string;
+        channelId: string | null;
+        claimedById: string | null;
+        closedAt: Date | null;
+        messages: number;
+        rating: number | null;
+        closeReason: string | null;
+        closedById: string | null;
+        closedByName: string | null;
+        notifyChannelId: string | null;
+        roomId: string;
+        roomName: string;
+        claimedByName: string | null;
+        claimedAt: Date | null;
+        createdChannel: boolean;
+        notifyMessageId: string | null;
+        threadId: string | null;
+    }>;
 }
 /** Dienstweg des Bots. Team-Aktionen tragen Discord-ID, Name und Rollen der klickenden Person (Team-Rolle des Raums). */
 export declare class BotVoiceSupportController {

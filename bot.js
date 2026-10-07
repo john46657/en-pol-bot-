@@ -77528,11 +77528,10 @@ function createVoiceSupport(api2, ops, log = console.error) {
       }
     }
   }
-  async function claim(id, s) {
-    const r = await api2.service("POST", `/bot/voice-support/cases/${id}/claim`, s);
+  async function provision(r, staffId) {
     await applyEdit(r.edit);
     const { case: c, room } = r;
-    if (!room) return okReply("\xDCbernommen.");
+    if (!room) return "\xDCbernommen.";
     let channelId = null, created = false;
     try {
       if (room.ownChannels) channelId = room.ownChannelIds.find((x) => !ops.members(x).length) ?? null;
@@ -77544,12 +77543,23 @@ function createVoiceSupport(api2, ops, log = console.error) {
       log(`voice support: channel failed: ${e instanceof Error ? e.message : e}`);
     }
     const moved = channelId ? await ops.move(c.guildId, c.userId, channelId).catch(() => false) : false;
-    if (channelId && ops.voiceChannelOf(c.guildId, s.discordId)) await ops.move(c.guildId, s.discordId, channelId).catch(() => false);
+    if (channelId && staffId && ops.voiceChannelOf(c.guildId, staffId)) await ops.move(c.guildId, staffId, channelId).catch(() => false);
     const threadId = room.notes && r.edit ? await ops.thread(r.edit.channelId, r.edit.messageId, `Notizen #${c.number}`).catch(() => null) : null;
-    const done = await api2.service("POST", `/bot/voice-support/cases/${id}/channel`, { channelId, created, threadId });
+    const done = await api2.service("POST", `/bot/voice-support/cases/${c.id}/channel`, { channelId, created, threadId });
     await applyEdit(done.edit);
-    if (!channelId) return note(room.ownChannels ? "\u26A0\uFE0F \xDCbernommen \u2013 aber gerade ist keiner der eigenen Support-Kan\xE4le frei. Sprich die Person im Warteraum an." : "\u26A0\uFE0F \xDCbernommen \u2013 der Sprachkanal konnte nicht angelegt werden (fehlt dem Bot \u201EKan\xE4le verwalten\u201C?).");
-    return okReply(`\xDCbernommen: <#${channelId}>${moved ? "" : " \u2013 die Person ist nicht mehr im Sprachkanal und wurde nicht verschoben."}`);
+    if (!channelId) throw new Error(room.ownChannels ? "\u26A0\uFE0F \xDCbernommen \u2013 aber gerade ist keiner der eigenen Support-Kan\xE4le frei. Sprich die Person im Warteraum an." : "\u26A0\uFE0F \xDCbernommen \u2013 der Sprachkanal konnte nicht angelegt werden (fehlt dem Bot \u201EKan\xE4le verwalten\u201C?).");
+    return `\xDCbernommen: <#${channelId}>${moved ? "" : " \u2013 die Person ist nicht mehr im Sprachkanal und wurde nicht verschoben."}`;
+  }
+  async function claim(id, s) {
+    const r = await api2.service("POST", `/bot/voice-support/cases/${id}/claim`, s);
+    return provision(r, s.discordId).then((t) => okReply(t), (e) => note(e.message));
+  }
+  async function applyEffects(p) {
+    if (p.provision) await provision(p.provision, p.staffDiscordId ?? null).catch((e) => log(`voice support: ${e.message}`));
+    if (p.edit) await applyEdit(p.edit);
+    if (p.dm) await safe("DM", ops.dm(p.dm.userId, p.dm.message));
+    if (p.threadPost) await safe("thread log", ops.threadPost(p.threadPost.threadId, p.threadPost.text));
+    if (p.deleteChannelId) await safe("delete channel", ops.deleteChannel(p.deleteChannelId));
   }
   async function interact(c) {
     const [action, id = "", extra] = c.args;
@@ -77597,7 +77607,7 @@ function createVoiceSupport(api2, ops, log = console.error) {
       return fail2(e);
     }
   }
-  return { onVoiceState, interact, clear: () => rooms.clear() };
+  return { onVoiceState, interact, applyEffects, clear: () => rooms.clear() };
 }
 var VOICE_INTERACTION = {
   prefix: "vs",
@@ -82841,7 +82851,7 @@ async function pollOnce(api2, send, log = console.log, dm, grantRole, syncRoles,
       }
       continue;
     }
-    if (item.type === "application.ticket" || item.type === "embed.post" || item.type === "message.decided") {
+    if (item.type === "application.ticket" || item.type === "embed.post" || item.type === "message.decided" || item.type === "voice.effects") {
       try {
         if (!onTask || !await onTask(item.type, item.payload)) throw new Error("tasks not supported");
         await api2.service("POST", `/bot/outbox/${item.id}/ack`, { ok: true });
@@ -83562,6 +83572,10 @@ function wireReady(client0) {
         await live.refresh(kind2, { channelId, force: true });
       },
       async (type, p) => {
+        if (type === "voice.effects") {
+          await voiceSupport.applyEffects(p);
+          return true;
+        }
         if (type === "message.decided") {
           const key = String(p.key ?? "");
           if (!/^msg-[laq]-[0-9a-f-]{36}$/.test(key)) throw new Error("invalid key");

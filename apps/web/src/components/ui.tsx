@@ -7,8 +7,9 @@ import { formatDate } from '../lib/prefs';
 
 const cx = (...c: (string | false | undefined)[]) => c.filter(Boolean).join(' ');
 
-export function Button({ variant = 'primary', size = 'md', className, ...p }: ButtonHTMLAttributes<HTMLButtonElement> & { variant?: 'primary' | 'secondary' | 'danger' | 'ghost'; size?: 'sm' | 'md' }) {
-  const v = { primary: 'bg-primary text-primary-fg hover:brightness-110', secondary: 'bg-panel-2 text-fg border border-line hover:bg-line/50', danger: 'bg-danger text-white hover:brightness-110', ghost: 'text-muted hover:text-fg hover:bg-panel-2' }[variant];
+export function Button({ variant = 'primary', size = 'md', className, ...p }: ButtonHTMLAttributes<HTMLButtonElement> & { variant?: 'primary' | 'secondary' | 'danger' | 'ghost' | 'plain'; size?: 'sm' | 'md' }) {
+  // plain: Farben kommen komplett aus className (z. B. Discord-Grün/-Rot)
+  const v = { plain: '', primary: 'bg-primary text-primary-fg hover:brightness-110', secondary: 'bg-panel-2 text-fg border border-line hover:bg-line/50', danger: 'bg-danger text-white hover:brightness-110', ghost: 'text-muted hover:text-fg hover:bg-panel-2' }[variant];
   return <button type="button" {...p} className={cx('inline-flex items-center justify-center gap-1.5 rounded-md font-medium transition disabled:opacity-50 disabled:cursor-not-allowed', size === 'sm' ? 'px-2.5 py-1 text-xs' : 'px-3.5 py-2 text-sm', v, className)} />;
 }
 

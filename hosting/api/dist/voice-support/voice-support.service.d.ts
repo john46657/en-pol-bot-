@@ -3,6 +3,8 @@ import { z } from 'zod';
 import { type MessageSpec, type VoiceSupportRoom } from '@enrp/shared';
 import { PrismaService } from '../prisma/prisma.service';
 import { AuditService, type Actor } from '../audit/audit.service';
+import { RealtimeService } from '../realtime/realtime.service';
+import { DiscordService } from '../discord/discord.service';
 export declare const roomSchema: z.ZodEffects<z.ZodObject<{
     id: z.ZodString;
     guildId: z.ZodString;
@@ -327,7 +329,7 @@ export declare const roomsSchema: z.ZodEffects<z.ZodArray<z.ZodEffects<z.ZodObje
 }[]>;
 /** Wer im Discord handelt (Team): Discord-ID, Name, Rollen auf dem Server, Server-Admin? */
 export interface Staff {
-    discordId: string;
+    discordId: string | null;
     name: string;
     roleIds: string[];
     admin?: boolean;
@@ -340,7 +342,11 @@ type Case = VoiceSupportCase;
 export declare class VoiceSupportService {
     private readonly prisma;
     private readonly audit;
-    constructor(prisma: PrismaService, audit: AuditService);
+    private readonly rt;
+    private readonly discord;
+    constructor(prisma: PrismaService, audit: AuditService, rt: RealtimeService, discord: DiscordService);
+    /** Dashboard sofort aktualisieren (Liste der Fälle). */
+    private changed;
     rooms(guildId?: string | null): Promise<VoiceSupportRoom[]>;
     /** `guildId`: nur die Räume dieses Servers ersetzen (Server-Ansicht), sonst alle. */
     saveRooms(actor: Actor, input: VoiceSupportRoom[], guildId?: string | null): Promise<VoiceSupportRoom[]>;
@@ -544,6 +550,43 @@ export declare class VoiceSupportService {
             messageId: string;
             message: MessageSpec;
         } | null;
+    }>;
+    private webStaff;
+    private effects;
+    webAction(actor: Actor, id: string, a: {
+        action: 'claim';
+    } | {
+        action: 'decline';
+        reason?: string;
+    } | {
+        action: 'message';
+        text: string;
+    } | {
+        action: 'close';
+    }): Promise<{
+        number: string;
+        id: string;
+        createdAt: Date;
+        userId: string;
+        guildId: string;
+        userName: string;
+        status: string;
+        channelId: string | null;
+        claimedById: string | null;
+        closedAt: Date | null;
+        messages: number;
+        rating: number | null;
+        closeReason: string | null;
+        closedById: string | null;
+        closedByName: string | null;
+        notifyChannelId: string | null;
+        roomId: string;
+        roomName: string;
+        claimedByName: string | null;
+        claimedAt: Date | null;
+        createdChannel: boolean;
+        notifyMessageId: string | null;
+        threadId: string | null;
     }>;
 }
 export {};

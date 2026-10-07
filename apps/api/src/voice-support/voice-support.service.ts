@@ -6,6 +6,8 @@ import { isSupportOpen, MUSIC_TRACKS, WEEKDAYS, type MessageSpec, type VoiceSupp
 import { PrismaService } from '../prisma/prisma.service';
 import { AuditService, type Actor } from '../audit/audit.service';
 import { AppError } from '../common/errors';
+import { RealtimeService } from '../realtime/realtime.service';
+import { DiscordService } from '../discord/discord.service';
 
 const KEY = 'voice-support.rooms';
 const sf = z.string().regex(/^\d{15,25}$/, 'Discord-ID (15–25 Ziffern)');
@@ -32,7 +34,7 @@ export const roomsSchema = z.array(roomSchema).max(30).superRefine((rs, ctx) => 
 });
 
 /** Wer im Discord handelt (Team): Discord-ID, Name, Rollen auf dem Server, Server-Admin? */
-export interface Staff { discordId: string; name: string; roleIds: string[]; admin?: boolean }
+export interface Staff { discordId: string | null; name: string; roleIds: string[]; admin?: boolean }
 type Case = VoiceSupportCase;
 const COLOR = { WAITING: 0x5865f2, CLAIMED: 0x22c55e, DECLINED: 0xef4444, ABANDONED: 0x64748b, CLOSED: 0x64748b } as Record<string, number>;
 const OPEN = ['WAITING', 'CLAIMED'];
@@ -45,7 +47,10 @@ const ts = (d: Date) => `<t:${Math.floor(d.getTime() / 1000)}:f>`;
  */
 @Injectable()
 export class VoiceSupportService {
-  constructor(private readonly prisma: PrismaService, private readonly audit: AuditService) {}
+  constructor(private readonly prisma: PrismaService, private readonly audit: AuditService, private readonly rt: RealtimeService, private readonly discord: DiscordService) {}
+
+  /** Dashboard sofort aktualisieren (Liste der Fälle). */
+  private changed(id: string) { this.rt.publish('tickets', 'voice.case', { id }); }
 
   // ---------------- Einrichtung ----------------
   async rooms(guildId?: string | null): Promise<VoiceSupportRoom[]> {
@@ -74,16 +79,17 @@ export class VoiceSupportService {
 
   // ---------------- Meldung „Ein neuer Support-Fall“ ----------------
   message(c: Case, room?: VoiceSupportRoom): MessageSpec {
+    const who = (id: string | null, name: string | null) => (id ? `<@${id}>` : name ?? 'dem Team');
     const head = {
       WAITING: `### ➕ Ein neuer Support-Fall\n<@${c.userId}> braucht Hilfe!`,
-      CLAIMED: `### ✅ Support-Fall übernommen\n<@${c.claimedById}> kümmert sich um <@${c.userId}>.`,
-      DECLINED: `### ❌ Support-Fall abgelehnt\nAbgelehnt von <@${c.closedById}>${c.closeReason ? ` – ${c.closeReason}` : ''}.`,
+      CLAIMED: `### ✅ Support-Fall übernommen\n${who(c.claimedById, c.claimedByName)} kümmert sich um <@${c.userId}>.`,
+      DECLINED: `### ❌ Support-Fall abgelehnt\nAbgelehnt von ${who(c.closedById, c.closedByName)}${c.closeReason ? ` – ${c.closeReason}` : ''}.`,
       ABANDONED: `### 🚪 Warteraum verlassen\n<@${c.userId}> hat den Warteraum vor der Übernahme verlassen.`,
       CLOSED: `### 🔒 Support-Fall geschlossen\n${c.closedByName ? `Geschlossen von ${c.closedById ? `<@${c.closedById}>` : c.closedByName}` : 'Geschlossen'}${c.closeReason ? ` – ${c.closeReason}` : ''}.`,
     }[c.status] ?? '';
     const lines = [
       `• 🧾 **Case-ID:** \`#${c.number}\``, `• 🕒 **Erstellt am:** ${ts(c.createdAt)}`, `• 👤 **Nutzer:** <@${c.userId}>`,
-      ...(c.claimedById ? [`• 🎧 **Bearbeiter:** <@${c.claimedById}>${c.channelId && c.status === 'CLAIMED' ? ` · <#${c.channelId}>` : ''}`] : []),
+      ...(c.claimedById || c.claimedByName ? [`• 🎧 **Bearbeiter:** ${who(c.claimedById, c.claimedByName)}${c.channelId && c.status === 'CLAIMED' ? ` · <#${c.channelId}>` : ''}`] : []),
       ...(c.messages ? [`• 💬 **Nachrichten an Nutzer:** ${c.messages}`] : []),
       ...(c.rating ? [`• ⭐ **Bewertung:** ${'⭐'.repeat(c.rating)}`] : []),
     ];
@@ -115,6 +121,7 @@ export class VoiceSupportService {
     let number = 'S-';
     for (let i = 0; i < 10; i++) number += LETTERS[randomInt(LETTERS.length)];
     const c = await this.prisma.voiceSupportCase.create({ data: { number, roomId: room.id, roomName: room.name, guildId: d.guildId, userId: d.discordId, userName: d.userName.slice(0, 100), notifyChannelId: room.notifyChannelId } });
+    this.changed(c.id);
     return { action: 'notify' as const, caseId: c.id, channelId: room.notifyChannelId, message: this.message(c, room) };
   }
   async posted(id: string, messageId: string) {
@@ -128,6 +135,7 @@ export class VoiceSupportService {
     const edits = [];
     for (const c of open) {
       const u = await this.prisma.voiceSupportCase.update({ where: { id: c.id }, data: { status: 'ABANDONED', closedAt: new Date() } });
+      this.changed(c.id);
       const e = this.edit(u);
       if (e) edits.push(e);
     }
@@ -157,6 +165,7 @@ export class VoiceSupportService {
     const r = await this.prisma.voiceSupportCase.updateMany({ where: { id, status: 'WAITING' }, data: { status: 'CLAIMED', claimedById: s.discordId, claimedByName: s.name, claimedAt: new Date() } });
     if (!r.count) throw new AppError('CONFLICT', c.status === 'CLAIMED' ? `Schon übernommen von ${c.claimedByName ?? 'jemand anderem'}.` : 'Dieser Support-Fall ist nicht mehr offen.');
     const u = await this.prisma.voiceSupportCase.findUniqueOrThrow({ where: { id } });
+    this.changed(id);
     return {
       case: { id, number: u.number, userId: u.userId, userName: u.userName, guildId: u.guildId },
       room: room ? { name: room.name, waitingChannelId: room.waitingChannelId, teamRoleId: room.teamRoleId, channelPrefix: room.channelPrefix, notes: room.notes, ownChannels: room.ownChannels, ownChannelIds: room.ownChannelIds } : null,
@@ -166,6 +175,7 @@ export class VoiceSupportService {
   /** Bot meldet den bereitgestellten Sprachkanal (und Notizen-Thread). */
   async channel(id: string, d: { channelId: string | null; created: boolean; threadId: string | null }) {
     const u = await this.prisma.voiceSupportCase.update({ where: { id }, data: { channelId: d.channelId, createdChannel: d.created, threadId: d.threadId } }).catch(() => { throw new AppError('NOT_FOUND', 'Support-Fall nicht gefunden.'); });
+    this.changed(id);
     return { edit: this.edit(u, await this.room(u.roomId)) };
   }
   async decline(id: string, s: Staff, reason?: string) {
@@ -174,6 +184,7 @@ export class VoiceSupportService {
     const r = await this.prisma.voiceSupportCase.updateMany({ where: { id, status: 'WAITING' }, data: { status: 'DECLINED', closedById: s.discordId, closedByName: s.name, closedAt: new Date(), closeReason: reason || null } });
     if (!r.count) throw new AppError('CONFLICT', 'Dieser Support-Fall ist nicht mehr offen.');
     const u = await this.prisma.voiceSupportCase.findUniqueOrThrow({ where: { id } });
+    this.changed(id);
     return {
       edit: this.edit(u, room), userId: c.userId,
       dm: { embeds: [{ title: `❌ ${c.roomName}: Support-Fall abgelehnt`, description: `Dein Support-Fall \`#${c.number}\` wurde abgelehnt.${reason ? `\n\n**Grund:** ${reason}` : ''}`, color: 0xef4444 }] } satisfies MessageSpec,
@@ -185,6 +196,7 @@ export class VoiceSupportService {
     this.assertTeam(room, s);
     if (!OPEN.includes(c.status)) throw new AppError('CONFLICT', 'Dieser Support-Fall ist nicht mehr offen.');
     const u = await this.prisma.voiceSupportCase.update({ where: { id }, data: { messages: { increment: 1 } } });
+    this.changed(id);
     return {
       edit: this.edit(u, room), userId: c.userId, threadId: c.threadId,
       dm: { embeds: [{ title: `💬 Nachricht vom Support-Team (${c.roomName})`, description: text, color: 0x5865f2, footer: `Support-Fall #${c.number} · ${s.name}` }] } satisfies MessageSpec,
@@ -197,10 +209,11 @@ export class VoiceSupportService {
     if (c.status !== 'CLAIMED') throw new AppError('CONFLICT', 'Nur übernommene Support-Fälle können geschlossen werden.');
     return this.finish(c, { discordId: s.discordId, name: s.name }, null);
   }
-  private async finish(c: Case, by: { discordId?: string; name: string }, reason: string | null) {
+  private async finish(c: Case, by: { discordId?: string | null; name: string }, reason: string | null) {
     const r = await this.prisma.voiceSupportCase.updateMany({ where: { id: c.id, status: 'CLAIMED' }, data: { status: 'CLOSED', closedById: by.discordId ?? null, closedByName: by.name, closedAt: new Date(), closeReason: reason } });
     if (!r.count) throw new AppError('CONFLICT', 'Dieser Support-Fall ist nicht mehr offen.');
     const u = await this.prisma.voiceSupportCase.findUniqueOrThrow({ where: { id: c.id } });
+    this.changed(c.id);
     const room = await this.room(c.roomId);
     return {
       edit: this.edit(u, room), deleteChannelId: u.createdChannel ? u.channelId : null, userId: u.userId,
@@ -215,6 +228,23 @@ export class VoiceSupportService {
     if (c.userId !== discordId) throw new AppError('PERMISSION_DENIED', 'Nur die Person des Support-Falls kann bewerten.');
     const r = await this.prisma.voiceSupportCase.updateMany({ where: { id, status: 'CLOSED', rating: null }, data: { rating: stars } });
     if (!r.count) throw new AppError('CONFLICT', 'Du hast diesen Support-Fall schon bewertet.');
+    this.changed(id);
     return { edit: this.edit(await this.prisma.voiceSupportCase.findUniqueOrThrow({ where: { id } }), room) };
+  }
+
+  // ---------------- Dashboard: Team-Aktionen (der Bot führt den Discord-Teil per Outbox aus) ----------------
+  private async webStaff(actor: Actor): Promise<Staff> {
+    const [user, link] = await Promise.all([this.prisma.user.findUnique({ where: { id: actor.userId! }, select: { displayName: true } }), this.prisma.discordLink.findUnique({ where: { userId: actor.userId! } })]);
+    return { discordId: link?.discordId ?? null, name: user?.displayName ?? 'Team', roleIds: [], admin: true }; // Recht ticket.claim prüft der Controller
+  }
+  private effects(payload: Record<string, unknown>) { return this.discord.enqueue('tickets', 'voice.effects', payload, { always: true }); }
+  async webAction(actor: Actor, id: string, a: { action: 'claim' } | { action: 'decline'; reason?: string } | { action: 'message'; text: string } | { action: 'close' }) {
+    const s = await this.webStaff(actor);
+    if (a.action === 'claim') { const r = await this.claim(id, s); await this.effects({ provision: r, staffDiscordId: s.discordId }); }
+    else if (a.action === 'decline') { const r = await this.decline(id, s, a.reason); await this.effects({ edit: r.edit, dm: { userId: r.userId, message: r.dm } }); }
+    else if (a.action === 'message') { const r = await this.sendMessage(id, s, a.text); await this.effects({ edit: r.edit, dm: { userId: r.userId, message: r.dm }, ...(r.threadId ? { threadPost: { threadId: r.threadId, text: r.log } } : {}) }); }
+    else { const r = await this.close(id, s); await this.effects({ edit: r.edit, deleteChannelId: r.deleteChannelId, ...(r.ratingDm ? { dm: { userId: r.userId, message: r.ratingDm } } : {}) }); }
+    await this.audit.record(actor, { action: `voice_support.${a.action}`, module: 'tickets', entityType: 'VoiceSupportCase', entityId: id });
+    return this.prisma.voiceSupportCase.findUniqueOrThrow({ where: { id } });
   }
 }

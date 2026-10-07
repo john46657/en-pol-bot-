@@ -9,7 +9,7 @@ import { dutyRoleChanges, pollOnce } from '../src/outbox';
 import type { Platform } from '../src/platform';
 import { robloxLookup } from '../src/roblox';
 import { parseGermanDate } from '../src/commands/sek';
-import { applicationEmbeds, outboxButtons, renderOutbox, renderOutboxEmbeds } from '../src/format';
+import { academyCourseEmbed, applicationEmbeds, outboxButtons, renderOutbox, renderOutboxEmbeds } from '../src/format';
 import { APPLICATION_MS, handleDirectMessage, openApplicantTicket, panelEmbed, resetSessions } from '../src/commands/qualifications';
 
 const ME = '123456789012345678', OTHER = '223456789012345678', GUILD = '323456789012345678', CHANNEL = '423456789012345678';
@@ -670,8 +670,7 @@ describe('decision from the dashboard updates the Discord message', () => {
 });
 
 describe('academy course announcement', () => {
-  it('shows date, place, pass score and instructor; link to the dashboard', async () => {
-    const { academyCourseEmbed, outboxButtons } = await import('../src/format');
+  it('shows date, place, pass score and instructor; link to the dashboard', () => {
     const e = academyCourseEmbed({ title: 'Verkehrskontrolle', description: 'Grundkurs', passScore: 80, when: '2026-10-08T18:00:00.000Z', location: 'Wache', instructorName: 'John' });
     expect(e.title).toBe('🎓 Akademie: Verkehrskontrolle');
     expect(e.fields?.map((f) => f.name)).toEqual(['🕒 Termin', '📍 Ort', '🎯 Bestehensgrenze', '👮 Ausbilder']);

@@ -509,6 +509,10 @@ function wireReady(client0) {
             if (opts?.thread)
                 await msg.startThread({ name: opts.thread, autoArchiveDuration: 10080 }).catch((e) => console.error('could not create staff thread:', e instanceof Error ? e.message : e));
         }, cfg.OUTBOX_POLL_SECONDS, console.log, (userId, msg) => (typeof msg === 'string' ? platform.sendDirectMessage(userId, msg) : platform.sendDm(userId, { embed: msg }).then(() => undefined)), grantRoleEverywhere, syncRolesEverywhere, () => void live.refresh('teamlist').catch(() => undefined), (effects) => tickets.apply(effects).then(() => undefined, (e) => console.error('ticket effects failed:', e instanceof Error ? e.message : e)), () => void presence.sync().catch((e) => console.error('team/voice sync failed:', e instanceof Error ? e.message : e)), async (kind, channelId) => { await live.refresh(kind, { channelId, force: true }); }, async (type, p) => {
+            if (type === 'voice.effects') {
+                await voiceSupport.applyEffects(p);
+                return true;
+            }
             if (type === 'message.decided') {
                 // Entscheidung (auch aus dem Dashboard): gemerkte Antrags-/Bewerbungsnachricht einfärben, Buttons entfernen
                 const key = String(p.key ?? '');

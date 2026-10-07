@@ -45,7 +45,7 @@ async function pollOnce(api, send, log = console.log, dm, grantRole, syncRoles, 
             }
             continue;
         }
-        if (item.type === 'application.ticket' || item.type === 'embed.post' || item.type === 'message.decided') {
+        if (item.type === 'application.ticket' || item.type === 'embed.post' || item.type === 'message.decided' || item.type === 'voice.effects') {
             try {
                 if (!onTask || !(await onTask(item.type, item.payload)))
                     throw new Error('tasks not supported');

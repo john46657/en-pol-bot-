@@ -60,13 +60,12 @@ function createVoiceSupport(api, ops, log = console.error) {
             }
         }
     }
-    /** Übernehmen: Kanal bereitstellen (eigener freier Kanal oder neu), Person + Bearbeiter verschieben, Notizen-Thread. */
-    async function claim(id, s) {
-        const r = await api.service('POST', `/bot/voice-support/cases/${id}/claim`, s);
+    /** Nach dem Übernehmen: Kanal bereitstellen (eigener freier Kanal oder neu), Person + Bearbeiter verschieben, Notizen-Thread. */
+    async function provision(r, staffId) {
         await applyEdit(r.edit);
         const { case: c, room } = r;
         if (!room)
-            return (0, format_1.okReply)('Übernommen.');
+            return 'Übernommen.';
         let channelId = null, created = false;
         try {
             if (room.ownChannels)
@@ -80,14 +79,31 @@ function createVoiceSupport(api, ops, log = console.error) {
             log(`voice support: channel failed: ${e instanceof Error ? e.message : e}`);
         }
         const moved = channelId ? await ops.move(c.guildId, c.userId, channelId).catch(() => false) : false;
-        if (channelId && ops.voiceChannelOf(c.guildId, s.discordId))
-            await ops.move(c.guildId, s.discordId, channelId).catch(() => false);
+        if (channelId && staffId && ops.voiceChannelOf(c.guildId, staffId))
+            await ops.move(c.guildId, staffId, channelId).catch(() => false);
         const threadId = room.notes && r.edit ? await ops.thread(r.edit.channelId, r.edit.messageId, `Notizen #${c.number}`).catch(() => null) : null;
-        const done = await api.service('POST', `/bot/voice-support/cases/${id}/channel`, { channelId, created, threadId });
+        const done = await api.service('POST', `/bot/voice-support/cases/${c.id}/channel`, { channelId, created, threadId });
         await applyEdit(done.edit);
         if (!channelId)
-            return note(room.ownChannels ? '⚠️ Übernommen – aber gerade ist keiner der eigenen Support-Kanäle frei. Sprich die Person im Warteraum an.' : '⚠️ Übernommen – der Sprachkanal konnte nicht angelegt werden (fehlt dem Bot „Kanäle verwalten“?).');
-        return (0, format_1.okReply)(`Übernommen: <#${channelId}>${moved ? '' : ' – die Person ist nicht mehr im Sprachkanal und wurde nicht verschoben.'}`);
+            throw new Error(room.ownChannels ? '⚠️ Übernommen – aber gerade ist keiner der eigenen Support-Kanäle frei. Sprich die Person im Warteraum an.' : '⚠️ Übernommen – der Sprachkanal konnte nicht angelegt werden (fehlt dem Bot „Kanäle verwalten“?).');
+        return `Übernommen: <#${channelId}>${moved ? '' : ' – die Person ist nicht mehr im Sprachkanal und wurde nicht verschoben.'}`;
+    }
+    async function claim(id, s) {
+        const r = await api.service('POST', `/bot/voice-support/cases/${id}/claim`, s);
+        return provision(r, s.discordId).then((t) => (0, format_1.okReply)(t), (e) => note(e.message));
+    }
+    /** Aufträge aus dem Dashboard (Outbox `voice.effects`): Übernehmen bereitstellen, Meldung ändern, DM, Notiz, Kanal löschen. */
+    async function applyEffects(p) {
+        if (p.provision)
+            await provision(p.provision, p.staffDiscordId ?? null).catch((e) => log(`voice support: ${e.message}`));
+        if (p.edit)
+            await applyEdit(p.edit);
+        if (p.dm)
+            await safe('DM', ops.dm(p.dm.userId, p.dm.message));
+        if (p.threadPost)
+            await safe('thread log', ops.threadPost(p.threadPost.threadId, p.threadPost.text));
+        if (p.deleteChannelId)
+            await safe('delete channel', ops.deleteChannel(p.deleteChannelId));
     }
     async function interact(c) {
         const [action, id = '', extra] = c.args;
@@ -137,7 +153,7 @@ function createVoiceSupport(api, ops, log = console.error) {
             return fail(e);
         }
     }
-    return { onVoiceState, interact, clear: () => rooms.clear() };
+    return { onVoiceState, interact, applyEffects, clear: () => rooms.clear() };
 }
 /** Buttons/Formulare `vs:<aktion>:<fallId>` → Laufzeit aus dem Kontext. */
 exports.VOICE_INTERACTION = {

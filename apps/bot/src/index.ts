@@ -451,6 +451,7 @@ function wireReady(client0: Client) {
     () => void presence.sync().catch((e) => console.error('team/voice sync failed:', e instanceof Error ? e.message : e)),
     async (kind, channelId) => { await live.refresh(kind, { channelId, force: true }); },
     async (type, p) => {
+      if (type === 'voice.effects') { await voiceSupport.applyEffects(p as never); return true; }
       if (type === 'message.decided') {
         // Entscheidung (auch aus dem Dashboard): gemerkte Antrags-/Bewerbungsnachricht einfärben, Buttons entfernen
         const key = String(p.key ?? '');

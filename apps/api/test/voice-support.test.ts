@@ -112,4 +112,29 @@ describe('voice support cases', () => {
     expect(r.body.dm.embeds[0].description).toContain('Supportzeiten');
     expect((await http().post('/api/v1/bot/voice-support/join').send({ guildId: GUILD, channelId: WAIT, discordId: RANDOM })).status).toBe(401);
   });
+
+  it('the team acts from the dashboard (ticket.claim); the bot gets the Discord part via the outbox', async () => {
+    const admin = (await login(app, 'vs_admin')).agent;
+    const off = (await login(app, 'vs_off')).agent;
+    await admin.put(`/api/v1/voice-support/rooms?guildId=${GUILD}`).send([room]); // wieder immer geöffnet
+    const j = await http().post('/api/v1/bot/voice-support/join').set(bot()).send({ guildId: GUILD, channelId: WAIT, discordId: '340000000000000077', userName: 'web' });
+    const id = j.body.caseId as string;
+    await http().post(`/api/v1/bot/voice-support/cases/${id}/posted`).set(bot()).send({ messageId: '440000000000000077' });
+    const act = (agent: typeof admin, body: object) => agent.post(`/api/v1/voice-support/cases/${id}/action`).send(body);
+    expect((await act(off, { action: 'claim' })).status).toBe(403);
+    expect((await act(admin, { action: 'message', text: '' })).status).toBe(400);
+    expect((await act(admin, { action: 'message', text: 'Gleich da' })).body).toMatchObject({ status: 'WAITING', messages: 1 });
+    const last = async () => (await prisma.discordOutbox.findFirstOrThrow({ where: { type: 'voice.effects' }, orderBy: { createdAt: 'desc' } })).payload as Record<string, unknown>;
+    expect(await last()).toMatchObject({ dm: { userId: '340000000000000077' }, edit: { messageId: '440000000000000077' } });
+    const c = await act(admin, { action: 'claim' });
+    expect(c.body).toMatchObject({ status: 'CLAIMED', claimedByName: 'vs_admin', claimedById: null });
+    const p = await last();
+    expect(p).toMatchObject({ provision: { case: { id, userId: '340000000000000077' }, room: { waitingChannelId: WAIT } }, staffDiscordId: null });
+    // ohne Discord-Verknüpfung steht der Name in der Meldung
+    expect(JSON.stringify(p)).toContain('vs_admin kümmert sich um');
+    expect((await act(admin, { action: 'claim' })).status).toBe(409);
+    await http().post(`/api/v1/bot/voice-support/cases/${id}/channel`).set(bot()).send({ channelId: '450000000000000077', created: true, threadId: null });
+    expect((await act(admin, { action: 'close' })).body.status).toBe('CLOSED');
+    expect(await last()).toMatchObject({ deleteChannelId: '450000000000000077', dm: { userId: '340000000000000077' } }); // Bewertung per DM
+  });
 });

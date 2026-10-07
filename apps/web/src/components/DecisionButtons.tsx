@@ -16,10 +16,10 @@ export function DecisionButtons({ busy, onDecide }: { busy: boolean; onDecide: (
   const [reason, setReason] = useState('');
   return (
     <>
-      <Button size="sm" className={GREEN} disabled={busy} onClick={() => onDecide('ACCEPTED')}>Annehmen</Button>
-      <Button size="sm" className={RED} disabled={busy} onClick={() => onDecide('REJECTED')}>Ablehnen</Button>
-      <Button size="sm" className={GREEN} disabled={busy} onClick={() => { setReason(''); setAsk('ACCEPTED'); }}>Annehmen mit Grund</Button>
-      <Button size="sm" className={RED} disabled={busy} onClick={() => { setReason(''); setAsk('REJECTED'); }}>Ablehnen mit Grund</Button>
+      <Button size="sm" variant="plain" className={GREEN} disabled={busy} onClick={() => onDecide('ACCEPTED')}>Annehmen</Button>
+      <Button size="sm" variant="plain" className={RED} disabled={busy} onClick={() => onDecide('REJECTED')}>Ablehnen</Button>
+      <Button size="sm" variant="plain" className={GREEN} disabled={busy} onClick={() => { setReason(''); setAsk('ACCEPTED'); }}>Annehmen mit Grund</Button>
+      <Button size="sm" variant="plain" className={RED} disabled={busy} onClick={() => { setReason(''); setAsk('REJECTED'); }}>Ablehnen mit Grund</Button>
       <Modal open={!!ask} title={ask === 'ACCEPTED' ? 'Annehmen mit Grund' : 'Ablehnen mit Grund'} onClose={() => setAsk(null)}>
         <div className="grid gap-3">
           <Field label="Grund (geht per Discord-DM an die Person)">{(id) => <Textarea id={id} rows={4} maxLength={1000} value={reason} onChange={(e) => setReason(e.target.value)} />}</Field>
@@ -81,7 +81,7 @@ export function ApplicationActions({ open, canDecide, busy, onDecide, discordId,
     <div className="mt-3 grid gap-2 border-t border-line pt-3">
       <div className="flex flex-wrap gap-2">
         {open && canDecide && <DecisionButtons busy={busy} onDecide={onDecide} />}
-        {discordId && <Button size="sm" className={BLURPLE} onClick={() => setHistory(true)}>Verlauf</Button>}
+        {discordId && <Button size="sm" variant="plain" className={BLURPLE} onClick={() => setHistory(true)}>Verlauf</Button>}
       </div>
       <div className="flex flex-wrap gap-2">
         {discordId && <Button size="sm" variant="secondary" disabled={ticket.isPending} onClick={() => { setMsg(undefined); ticket.mutate(); }}>🎫 Ticket mit Bewerber öffnen</Button>}
