@@ -5,6 +5,7 @@ import { generateKeyPairSync, sign } from 'node:crypto';
 import { createTestApp, login, makeUser } from './helpers';
 import type { PrismaService } from '../src/prisma/prisma.service';
 import { ErlcService } from '../src/cad/erlc.service';
+import { CadService } from '../src/cad/cad.service';
 import { ErlcClient } from '../src/cad/erlc-client';
 
 const TOKEN = 'test-bot-token-cad-erlc-0123456789abcdefgh';
@@ -240,6 +241,18 @@ describe('CAD', () => {
     expect((await http().post('/api/v1/cad/radio').set(bot(SEK_D, SEK_GUILD)).send({ text: 'x', incidentId: other.body.id })).status).toBe(403);
     const fake = await http().post('/api/v1/cad/radio').set(bot(SEK_D, SEK_GUILD)).send({ text: 'y', callsign: 'LEITSTELLE' });
     expect(fake.body.callsign).toBe('SEK-01');
+    // Einheit wählen: nur die eigene (Leitstelle: alle)
+    const k9 = (await admin.post('/api/v1/cad/units').send({ callsign: 'K9-77', type: 'K9' })).body;
+    expect((await http().post('/api/v1/cad/radio').set(bot(SEK_D, SEK_GUILD)).send({ text: 'z', unitId: k9.id })).status).toBe(403);
+    expect((await http().post('/api/v1/cad/radio').set(bot(SEK_D, SEK_GUILD)).send({ text: 'z', unitId })).body.callsign).toBe('SEK-01');
+    expect((await http().get('/api/v1/cad/radio/units').set(bot(SEK_D, SEK_GUILD))).status).toBe(403); // nur fürs Dashboard
+    const mine = await app.get(CadService).radioUnits({ userId: sekUser.userId, discordId: SEK_D });
+    expect(mine).toMatchObject({ mine: unitId, dispatcher: false });
+    expect(mine.units.map((u) => u.callsign)).toEqual(['SEK-01']);
+    const all = (await admin.get('/api/v1/cad/radio/units')).body;
+    expect(all.dispatcher).toBe(true);
+    expect(all.units.map((u: { callsign: string }) => u.callsign)).toContain('K9-77');
+    expect((await admin.post('/api/v1/cad/radio').send({ text: 'Leitstelle an K9', unitId: k9.id })).body.callsign).toBe('K9-77');
     // Einsätze sehen / Notrufe bearbeiten vom SEK-Server nur mit freigegebener Aktion
     expect((await http().get('/api/v1/cad/incidents').set(bot(SEK_D, SEK_GUILD))).status).toBe(403);
     const call = await prisma.erlcEmergencyCall.findFirstOrThrow({ where: { callNumber: 1183 } });

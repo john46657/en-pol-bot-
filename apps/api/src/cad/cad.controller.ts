@@ -131,6 +131,9 @@ export class CadController {
   // Funk
   @Get('radio') @RequirePermission('cad.view')
   radio(@Query(zodBody(z.object({ incidentId: z.string().uuid().optional(), take: z.coerce.number().int().min(1).max(200).optional() }))) q: { incidentId?: string; take?: number }) { return this.s.listRadio(q); }
+  /** Einheiten, als die man funken darf (Leitstelle: alle; sonst nur die eigene). */
+  @Get('radio/units') @RequirePermission('cad.radio')
+  radioUnits(@Cad() a: CadActor) { return this.s.radioUnits(a); }
   @Post('radio') @RequirePermission('cad.radio')
   sendRadio(@Cad() a: CadActor & { roles: string[] }, @Body(zodBody(radioBody)) b: z.infer<typeof radioBody>) { return this.s.sendRadio(a, b, a.roles); }
   @Post('announcements') @RequirePermission('cad.create_incident')

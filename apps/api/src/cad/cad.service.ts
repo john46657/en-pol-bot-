@@ -445,11 +445,19 @@ export class CadService {
   }
 
   /** Funkmeldung (Dashboard oder Discord). Mit Einsatz → zusätzlich in der Einsatzchronik. */
+  async radioUnits(actor: CadActor) {
+    const dispatcher = await this.perms.has(actor.userId!, 'cad.assign_unit');
+    const member = await this.prisma.cadMember.findFirst({ where: { OR: [{ userId: actor.userId }, ...(actor.discordId ? [{ discordId: actor.discordId }] : [])] }, select: { unitId: true } });
+    const units = await this.prisma.unit.findMany({ where: dispatcher ? {} : { id: member?.unitId ?? '00000000-0000-0000-0000-000000000000' }, select: { id: true, callsign: true, name: true }, orderBy: { callsign: 'asc' } });
+    return { units, mine: member?.unitId ?? null, dispatcher };
+  }
+
   async sendRadio(actor: CadActor, d: { text: string; unitId?: string | null; incidentId?: string | null; incidentNumber?: string | null; callsign?: string | null }, memberRoleIds: string[] = []) {
     await this.assertCrossServer(actor, 'radio', memberRoleIds);
     // Leitstelle darf für jede Einheit/jeden Einsatz funken; alle anderen nur als eigene Einheit in deren Einsätze
     const dispatcher = await this.perms.has(actor.userId!, 'cad.assign_unit');
     const member = await this.prisma.cadMember.findFirst({ where: { OR: [{ userId: actor.userId }, ...(actor.discordId ? [{ discordId: actor.discordId }] : [])] } });
+    if (!dispatcher && d.unitId && d.unitId !== member?.unitId) throw new AppError('PERMISSION_DENIED', 'Du kannst nur als deine eigene Einheit funken.');
     const unitId = dispatcher ? d.unitId ?? member?.unitId : member?.unitId;
     const unit = unitId ? await this.prisma.unit.findUnique({ where: { id: unitId } }) : null;
     let incidentId = d.incidentId ?? null;
