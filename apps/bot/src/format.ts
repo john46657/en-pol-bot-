@@ -1,5 +1,6 @@
 /** Discord-unabhängige Nachrichtenmodelle + Formatierung (einfach testbar). */
-export interface EmbedData { title: string; description?: string; color?: number; fields?: { name: string; value: string; inline?: boolean }[]; footer?: string; thumbnail?: string }
+/** `author`: kleine Zeile über dem Titel (z. B. Server-Name mit Icon oder @Benutzer mit Profilbild, wie bei Trident). */
+export interface EmbedData { title: string; description?: string; color?: number; fields?: { name: string; value: string; inline?: boolean }[]; footer?: string; thumbnail?: string; author?: { name: string; iconUrl?: string } }
 /** `url`: Link-Button (öffnet die Adresse, löst keine Interaktion aus). */
 export interface ButtonSpec { id: string; label: string; style: 'primary' | 'secondary' | 'success' | 'danger'; emoji?: string; url?: string }
 /** Auswahlmenü; `id` wie bei Buttons `prefix:arg`. `kind`: Text-Optionen (Standard), Discord-Benutzer oder -Rollen. */
@@ -92,13 +93,15 @@ export function renderOutbox(type: string, p: Record<string, unknown>): EmbedDat
         description: clip([p.discordId ? `<@${String(p.discordId)}>` : null, p.shiftType ? `Schicht: **${plain(p.shiftType)}**` : null, `Vorher: ${DUTY_DE[prev]?.label ?? label(prev)}${mins}`, p.setBy ? `Gesetzt von: ${plain(p.setBy)}` : null].filter(Boolean).join('\n'), 1000) };
     }
     case 'leave.requested':
-      return { title: clip(`📅 Abmeldung ${String(p.number)} – ${plain(p.name)}`, 256), color: COLORS.warning,
-        description: clip(`${p.discordId ? `<@${String(p.discordId)}> ` : ''}möchte sich abmelden.\n\n**Grund:** ${plain(p.reason)}`, 4000),
-        fields: [{ name: 'Von', value: berlinDate(p.startsAt), inline: true }, { name: 'Bis', value: berlinDate(p.endsAt), inline: true }, { name: 'Dauer', value: leaveDays(p), inline: true }] };
+      // wie Trident: oben @Benutzer mit Profilbild (setzt der Bot), Grund + Dauer, unten die ID
+      return { title: 'Abmeldeantrag', color: COLORS.warning,
+        description: clip(`${p.discordId ? `<@${String(p.discordId)}>` : plain(p.name)} möchte sich abmelden.`, 4000),
+        fields: [{ name: 'Grund', value: clip(plain(p.reason), 1024) }, { name: 'Dauer', value: leaveSpan(p) }, { name: 'Zeitraum', value: `<t:${unixOf(p.startsAt)}:f> – <t:${unixOf(p.endsAt)}:f>` }],
+        footer: `ID: ${String(p.number)}` };
     case 'leave.log': {
       const ev = LEAVE_EVENTS[String(p.event)] ?? { text: String(p.event), color: COLORS.neutral };
       return { title: clip(`${ev.text}: ${plain(p.name)} (${String(p.number)})`, 256), color: ev.color,
-        description: clip([p.discordId ? `<@${String(p.discordId)}>` : null, `**Zeitraum:** ${berlinDate(p.startsAt)} – ${berlinDate(p.endsAt)} (${leaveDays(p)})`, `**Grund:** ${plain(p.reason)}`, p.decidedByName ? `**Entschieden von:** ${plain(p.decidedByName)}` : null, p.decisionReason ? `**Begründung:** ${plain(p.decisionReason)}` : null].filter(Boolean).join('\n'), 4000) };
+        description: clip([p.discordId ? `<@${String(p.discordId)}>` : null, `**Zeitraum:** ${berlinDate(p.startsAt)} – ${berlinDate(p.endsAt)} (${leaveSpan(p)})`, `**Grund:** ${plain(p.reason)}`, p.decidedByName ? `**Entschieden von:** ${plain(p.decidedByName)}` : null, p.decisionReason ? `**Begründung:** ${plain(p.decisionReason)}` : null].filter(Boolean).join('\n'), 4000) };
     }
     case 'sek.report':
       return { title: `🎯 SEK-Einsatzbericht ${p.number}`, color: COLORS.neutral, description: clip(plain(p.description), 3500), fields: [
@@ -162,18 +165,49 @@ export function applicationEmbeds(p: Record<string, unknown>, kind: 'q' | 'p'): 
 
 /** Alle Embeds einer Channel-Benachrichtigung (Bewerbungen ggf. mehrere). */
 const berlinDate = (v: unknown) => { const d = new Date(String(v)); return Number.isNaN(d.getTime()) ? '—' : d.toLocaleString('de-DE', { timeZone: 'Europe/Berlin', day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }); };
-const leaveDays = (p: Record<string, unknown>) => { const d = Math.max(1, Math.round((new Date(String(p.endsAt)).getTime() - new Date(String(p.startsAt)).getTime()) / 86_400_000)); return `${d} ${d === 1 ? 'Tag' : 'Tage'}`; };
 const LEAVE_EVENTS: Record<string, { text: string; color: number }> = {
   approved: { text: '✅ Abmeldung angenommen', color: COLORS.success }, denied: { text: '❌ Abmeldung abgelehnt', color: COLORS.danger },
   started: { text: '🏝️ Abmeldung beginnt', color: COLORS.info }, ended: { text: '👋 Abmeldung beendet', color: COLORS.neutral },
   ended_early: { text: '↩️ Abmeldung vorzeitig beendet', color: COLORS.neutral }, cancelled: { text: '↩️ Abmeldung zurückgezogen', color: COLORS.neutral },
 };
-/** Direktnachricht nach der Entscheidung über eine Abmeldung. */
+const unixOf = (v: unknown) => Math.floor(new Date(String(v)).getTime() / 1000);
+/** Dauer menschenlesbar: „6 Stunden“, „1 Tag“, „2 Wochen“, „1 Woche, 2 Tage“. */
+export function humanDuration(ms: number): string {
+  const H = 3_600_000, D = 24 * H, W = 7 * D;
+  const n = (v: number, one: string, many: string) => `${v} ${v === 1 ? one : many}`;
+  const parts: string[] = [];
+  let rest = Math.max(H, Math.round(ms / H) * H);
+  if (rest >= W && rest % D === 0) { parts.push(n(Math.floor(rest / W), 'Woche', 'Wochen')); rest %= W; }
+  if (rest >= D) { parts.push(n(Math.floor(rest / D), 'Tag', 'Tage')); rest %= D; }
+  if (rest >= H) parts.push(n(Math.round(rest / H), 'Stunde', 'Stunden'));
+  return parts.join(', ');
+}
+const leaveSpan = (p: Record<string, unknown>) => humanDuration(new Date(String(p.endsAt)).getTime() - new Date(String(p.startsAt)).getTime());
+/** Kopfzeile der DMs: Server, auf dem die Abmeldung beantragt wurde (Name + Icon). */
+const guildAuthor = (p: Record<string, unknown>) => (p.guildName ? { name: clip(String(p.guildName), 200), ...(typeof p.guildIcon === 'string' && /^https:\/\//.test(p.guildIcon) ? { iconUrl: p.guildIcon } : {}) } : undefined);
+
+/** Direktnachricht nach der Entscheidung über eine Abmeldung (Textfassung, z. B. für Logs/Tests). */
 export function leaveDecisionText(p: Record<string, unknown>): string {
   const when = `${berlinDate(p.startsAt)} – ${berlinDate(p.endsAt)}`;
   return p.status === 'APPROVED'
     ? `✅ Deine Abmeldung **${String(p.number)}** (${when}) wurde **angenommen**.${p.decisionReason ? `\n\n**Hinweis:** ${clip(plain(p.decisionReason), 1000)}` : ''}`
     : `❌ Deine Abmeldung **${String(p.number)}** (${when}) wurde **abgelehnt**.${p.decisionReason ? `\n\n**Grund:** ${clip(plain(p.decisionReason), 1000)}` : ''}`;
+}
+
+/** DMs zu Abmeldungen als Embed (wie Trident): ausstehend (gelb), angenommen (grün), abgelehnt (rot). */
+export function leaveDirectEmbed(type: string, p: Record<string, unknown>): EmbedData {
+  const author = guildAuthor(p);
+  const server = plain(p.guildName ?? 'dem Server');
+  const end = unixOf(p.endsAt);
+  const base = { ...(author ? { author } : {}), footer: `ID: ${String(p.number)}` };
+  if (type === 'leave.pending') return { ...base, title: 'Abmeldung ausstehend', color: COLORS.warning,
+    description: `Deine Abmeldung wurde der Leitung zur Freigabe vorgelegt.\nWenn sie angenommen wird, endet sie ungefähr <t:${end}:F> (<t:${end}:R>).\nUm deine Abmeldung zu verwalten, nutze \`/leave manage\` auf **${server}**.` };
+  if (p.status === 'APPROVED') return { ...base, title: 'Abmeldung angenommen', color: COLORS.success,
+    description: `Deine Abmeldung endet ungefähr <t:${end}:F> (<t:${end}:R>).\nUm deine Abmeldung zu verwalten, nutze \`/leave manage\` auf **${server}**.`,
+    ...(p.decisionReason ? { fields: [{ name: 'Hinweis', value: clip(plain(p.decisionReason), 1024) }] } : {}) };
+  return { ...base, title: 'Abmeldung abgelehnt', color: COLORS.danger,
+    description: `Falls du denkst, dass das ein Fehler war, wende dich an die Leitung von **${server}**.`,
+    ...(p.decisionReason ? { fields: [{ name: 'Grund', value: clip(plain(p.decisionReason), 1024) }] } : {}) };
 }
 
 export function renderOutboxEmbeds(type: string, p: Record<string, unknown>): EmbedData[] | null {
@@ -194,8 +228,7 @@ export function renderOutboxEmbeds(type: string, p: Record<string, unknown>): Em
 /** Buttons unter Channel-Benachrichtigungen: Annehmen/Ablehnen (auch mit Grund), Verlauf, Ticket, Dashboard. */
 export function outboxButtons(type: string, p: Record<string, unknown>): ButtonSpec[] | undefined {
   if (type === 'leave.requested' && typeof p.id === 'string') return [
-    { id: `leave:decide:${p.id}:APPROVED`, label: 'Annehmen', style: 'success' }, { id: `leave:decide:${p.id}:DENIED`, label: 'Ablehnen', style: 'danger' },
-    { id: `leave:reason:${p.id}:DENIED`, label: 'Ablehnen mit Grund', style: 'danger' },
+    { id: `leave:decide:${p.id}:APPROVED`, label: 'Annehmen', style: 'success', emoji: '✔️' }, { id: `leave:reason:${p.id}:DENIED`, label: 'Ablehnen', style: 'danger', emoji: '✖️' },
     ...(typeof p.dashboardUrl === 'string' && /^https?:\/\//.test(p.dashboardUrl) ? [{ id: 'link', label: 'Im Dashboard ansehen', style: 'secondary' as const, url: p.dashboardUrl }] : []),
   ];
   // Fahndung / Einsatz: Link ins Dashboard

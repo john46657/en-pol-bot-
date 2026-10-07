@@ -198,7 +198,7 @@ describe('application decision DM', () => {
       },
     };
     const dms: string[] = [];
-    const n = await pollOnce(api, async () => { throw new Error('no channel sends expected'); }, () => undefined, async (u, t) => { if (t.includes('APP-8')) throw new Error('Cannot send messages to this user'); dms.push(`${u} ${t}`); });
+    const n = await pollOnce(api, async () => { throw new Error('no channel sends expected'); }, () => undefined, async (u, t) => { if (String(t).includes('APP-8')) throw new Error('Cannot send messages to this user'); dms.push(`${u} ${t}`); });
     expect(n).toBe(1);
     expect(dms[0]).toContain('angenommen');
     expect(acks).toEqual([true, false]);
@@ -413,7 +413,7 @@ describe('Qualifikationen (Panel → Fragen per DM)', () => {
       { id: 'a', type: 'application.decided', channelKey: 'applications', payload: { discordId: OTHER, status: 'REJECTED', number: 'APP-1', message: 'Leider nein, {user} sagt nein.', roleIds: ['700000000000000001'], removeRoleIds: ['700000000000000002'] } },
       { id: 'b', type: 'member.roles', channelKey: 'applications', payload: { discordId: OTHER, add: ['700000000000000003'], remove: ['700000000000000004'] } },
     ]);
-    await pollOnce(b.api, async () => undefined, () => undefined, async (_u, t) => { dms.push(t); }, async (_u, r) => { granted.push(r); }, async (_u, add, remove) => { synced.push(`+${add.join(',')} -${remove.join(',')}`); });
+    await pollOnce(b.api, async () => undefined, () => undefined, async (_u, t) => { dms.push(String(t)); }, async (_u, r) => { granted.push(r); }, async (_u, add, remove) => { synced.push(`+${add.join(',')} -${remove.join(',')}`); });
     expect(dms).toEqual(['Leider nein, {user} sagt nein.']);
     expect(granted).toEqual(['700000000000000001']); // Ablehnungs-Rolle wird auch bei Ablehnung vergeben
     expect(synced).toEqual(['+ -700000000000000002', '+700000000000000003 -700000000000000004']);

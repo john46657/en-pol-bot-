@@ -84,6 +84,7 @@ describe('Leave of Absences', () => {
     expect(r.body).toMatchObject({ status: 'PENDING', name: 'sl_off', discordId: OFF_D, days: 4 });
     expect((await off.post('/api/v1/leave').send({ ...body, startsAt: new Date(Date.now() + 2 * day).toISOString() })).status).toBe(409);
     expect(await lastOutbox('leave.requested')).toMatchObject({ id: r.body.id, channelId: CH.approve, discordId: OFF_D, reason: 'Urlaub' });
+    expect(await lastOutbox('leave.pending')).toMatchObject({ id: r.body.id, discordId: OFF_D, guildName: expect.any(String) });
     // per Discord (Bot im Namen des Mitglieds)
     const viaBot = await http().post('/api/v1/leave').set(bot(LEAD_D)).send({ ...body, reason: 'Prüfungen' });
     expect(viaBot.status).toBe(201);
@@ -104,7 +105,7 @@ describe('Leave of Absences', () => {
     const ok = await http().post(`/api/v1/leave/${mine.id}/decision`).set(bot(LEAD_D)).send({ status: 'APPROVED' });
     expect(ok.body).toMatchObject({ status: 'APPROVED', decidedByName: 'sl_lead', active: false });
     expect((await lead.post(`/api/v1/leave/${mine.id}/decision`).send({ status: 'DENIED' })).status).toBe(409);
-    expect(await lastOutbox('leave.decided')).toMatchObject({ discordId: OFF_D, status: 'APPROVED', reason: 'Urlaub' });
+    expect(await lastOutbox('leave.decided')).toMatchObject({ discordId: OFF_D, status: 'APPROVED', reason: 'Urlaub', guildName: expect.any(String) });
     expect(await lastOutbox('leave.log')).toMatchObject({ event: 'approved', channelId: CH.loaLog });
     const deny = await lead.post(`/api/v1/leave/${other.id}/decision`).send({ status: 'DENIED', reason: 'Zu kurzfristig' });
     expect(deny.body).toMatchObject({ status: 'DENIED', decisionReason: 'Zu kurzfristig' });

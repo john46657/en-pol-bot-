@@ -49,6 +49,7 @@ const toEmbed = (e: EmbedData) => {
   if (e.fields?.length) b.addFields(e.fields.map((f) => ({ name: f.name, value: f.value, inline: f.inline ?? false })));
   if (e.footer) b.setFooter({ text: e.footer });
   if (e.thumbnail && /^https:\/\//.test(e.thumbnail)) b.setThumbnail(e.thumbnail);
+  if (e.author?.name) b.setAuthor({ name: e.author.name.slice(0, 256), ...(e.author.iconUrl && /^https:\/\//.test(e.author.iconUrl) ? { iconURL: e.author.iconUrl } : {}) });
   return b;
 };
 const STYLE = { primary: ButtonStyle.Primary, secondary: ButtonStyle.Secondary, success: ButtonStyle.Success, danger: ButtonStyle.Danger } as const;
@@ -135,9 +136,9 @@ const platform: Platform = {
 };
 const live = createLive(api, platform);
 
-function toBuilder(def: CommandDef) {
-  const b = new SlashCommandBuilder().setName(def.name).setDescription(def.description);
-  for (const o of def.options ?? []) {
+type OptionHost = Pick<SlashCommandBuilder, 'addStringOption' | 'addIntegerOption' | 'addBooleanOption' | 'addUserOption' | 'addNumberOption'>;
+function addOptions(b: OptionHost, options: CommandDef['options'] = []) {
+  for (const o of options) {
     const common = (x: { setName(n: string): unknown; setDescription(d: string): unknown; setRequired(r: boolean): unknown }) => { x.setName(o.name); x.setDescription(o.description); x.setRequired(!!o.required); };
     if (o.type === 'string') b.addStringOption((x) => { common(x); if (o.maxLength) x.setMaxLength(o.maxLength); if (o.choices) x.addChoices(...o.choices); return x; });
     else if (o.type === 'integer') b.addIntegerOption((x) => { common(x); if (o.min !== undefined) x.setMinValue(o.min); if (o.max !== undefined) x.setMaxValue(o.max); return x; });
@@ -145,6 +146,11 @@ function toBuilder(def: CommandDef) {
     else if (o.type === 'user') b.addUserOption((x) => { common(x); return x; });
     else b.addNumberOption((x) => { common(x); if (o.min !== undefined) x.setMinValue(o.min); if (o.max !== undefined) x.setMaxValue(o.max); return x; });
   }
+}
+function toBuilder(def: CommandDef) {
+  const b = new SlashCommandBuilder().setName(def.name).setDescription(def.description);
+  if (def.subcommands?.length) for (const sc of def.subcommands) b.addSubcommand((x) => { x.setName(sc.name).setDescription(sc.description); addOptions(x as unknown as OptionHost, sc.options); return x; });
+  else addOptions(b, def.options);
   return b.toJSON();
 }
 
@@ -165,7 +171,7 @@ async function markDecided(message: Message, d: { text: string; color: number })
   const rows: ActionRowBuilder<ButtonBuilder>[] = [];
   for (const row of message.components) {
     if (!('components' in row)) continue;
-    const kept = row.components.filter((c): c is ButtonComponent => c.type === ComponentType.Button && !/^quali:(decide|reason):/.test(c.customId ?? ''));
+    const kept = row.components.filter((c): c is ButtonComponent => c.type === ComponentType.Button && !/^(quali|leave):(decide|reason):/.test(c.customId ?? ''));
     if (kept.length) rows.push(new ActionRowBuilder<ButtonBuilder>().addComponents(kept.map((c) => ButtonBuilder.from(c))));
   }
   await message.edit({ embeds, components: rows, allowedMentions: { parse: [] } });
@@ -175,7 +181,7 @@ async function markDecided(message: Message, d: { text: string; color: number })
 function baseCtx(i: ChatInputCommandInteraction | ButtonInteraction | ModalSubmitInteraction | AnySelectMenuInteraction): Omit<Ctx, 'opts'> {
   const perms = i.memberPermissions;
   return {
-    discordId: i.user.id, api, platform, userName: i.user.username, memberJoinedAt: joinedAtOf(i.member),
+    discordId: i.user.id, api, platform, userName: i.user.username, userAvatar: i.user.displayAvatarURL({ size: 64 }), memberJoinedAt: joinedAtOf(i.member),
     guildId: i.guildId ?? undefined, channelId: i.channelId ?? undefined,
     isGuildAdmin: !!perms && (perms.has(PermissionFlagsBits.ManageGuild) || perms.has(PermissionFlagsBits.Administrator)),
     config: () => api.service<DiscordConfig>('GET', '/bot/config'),
@@ -206,7 +212,9 @@ async function handleCommand(i: ChatInputCommandInteraction) {
   const def = byName(i.commandName);
   if (!def) return;
   const opts: Record<string, string | number | boolean | undefined> = {};
-  for (const o of def.options ?? []) { const v = i.options.get(o.name)?.value; opts[o.name] = typeof v === 'string' || typeof v === 'number' || typeof v === 'boolean' ? v : undefined; }
+  const sub = def.subcommands?.length ? i.options.getSubcommand(false) ?? undefined : undefined;
+  if (sub) opts._sub = sub;
+  for (const o of (sub ? def.subcommands?.find((x) => x.name === sub)?.options : def.options) ?? []) { const v = i.options.get(o.name)?.value; opts[o.name] = typeof v === 'string' || typeof v === 'number' || typeof v === 'boolean' ? v : undefined; }
   if (def.opensModal) {
     // Formulare müssen die erste Antwort sein – kein deferReply vorher.
     const reply = await safeRun(`command ${def.name}`, () => def.run({ ...baseCtx(i), opts }));
@@ -321,13 +329,18 @@ function wireReady(client0: Client) {
     if (!ch?.isSendable()) throw new Error(`channel ${channelId} is not a text channel the bot can post in`);
     // Profilbild des Bewerbers rechts (wie bei Appy)
     const avatar = opts?.avatarUserId ? await client.users.fetch(opts.avatarUserId).then((u) => u.displayAvatarURL({ size: 256 }), () => undefined) : undefined;
-    const list = avatar && embeds[0] ? [{ ...embeds[0], thumbnail: avatar }, ...embeds.slice(1)] : embeds;
+    let list = avatar && embeds[0] ? [{ ...embeds[0], thumbnail: avatar }, ...embeds.slice(1)] : embeds;
+    // Kopfzeile „@Benutzer“ mit Profilbild (Abmeldeantrag wie bei Trident)
+    if (opts?.authorUserId && list[0]) {
+      const u = await client.users.fetch(opts.authorUserId).catch(() => null);
+      if (u) list = [{ ...list[0], author: { name: `@${u.username}`, iconUrl: u.displayAvatarURL({ size: 64 }) } }, ...list.slice(1)];
+    }
     // Nur die ausdrücklich eingestellten Rollen pingen – niemals @everyone/@here
     const roles = opts?.pingRoleIds ?? [];
     const msg = await ch.send({ ...(roles.length ? { content: roles.map((r) => `<@&${r}>`).join(' ') } : {}), embeds: list.map(toEmbed), components: toRows(buttons), allowedMentions: { parse: [], roles } });
     // Staff-Thread zur Bewerbung (braucht im Channel das Recht „Öffentliche Threads erstellen“)
     if (opts?.thread) await msg.startThread({ name: opts.thread, autoArchiveDuration: 10080 }).catch((e) => console.error('could not create staff thread:', e instanceof Error ? e.message : e));
-  }, cfg.OUTBOX_POLL_SECONDS, console.log, (userId, text) => platform.sendDirectMessage(userId, text), grantRoleEverywhere, syncRolesEverywhere, () => void live.refresh('teamlist').catch(() => undefined),
+  }, cfg.OUTBOX_POLL_SECONDS, console.log, (userId, msg) => (typeof msg === 'string' ? platform.sendDirectMessage(userId, msg) : platform.sendDm(userId, { embed: msg }).then(() => undefined)), grantRoleEverywhere, syncRolesEverywhere, () => void live.refresh('teamlist').catch(() => undefined),
     (effects) => tickets.apply(effects).then(() => undefined, (e) => console.error('ticket effects failed:', e instanceof Error ? e.message : e)),
     () => void presence.sync().catch((e) => console.error('team/voice sync failed:', e instanceof Error ? e.message : e)));
   live.start(cfg.LIVE_REFRESH_SECONDS);
