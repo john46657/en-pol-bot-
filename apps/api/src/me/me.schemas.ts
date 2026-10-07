@@ -44,6 +44,7 @@ export const preferencesSchema = z.object({
     favoriteIncidents: z.array(z.string().uuid()).max(50).optional(),
     erlcServerId: z.string().uuid().optional(),
     sound: z.boolean().optional(),
+    setupHidden: z.boolean().optional(),
   }).optional(),
   voice: z.object({
     channelIds: z.array(z.string().regex(/^\d{15,25}$/)).max(100),

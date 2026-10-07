@@ -48,6 +48,7 @@ export function CadDashboard() {
   return (
     <>
       <PageHeader title="Leitstelle" subtitle="CAD-Übersicht – aktualisiert sich live" actions={<Button variant="secondary" size="sm" onClick={() => setEditing(true)}><Settings2 size={14} /> Ansicht anpassen</Button>} />
+      <SetupChecklist d={d} />
       <div className={`grid gap-3 ${cad.compact ? 'md:grid-cols-3 xl:grid-cols-4' : 'md:grid-cols-2 xl:grid-cols-3'}`}>
         {widgets.map((w) => <Card key={w} title={CAD_WIDGET_LABELS[w]} className={wide.has(w) ? 'md:col-span-2 xl:col-span-2' : undefined}>{W[w]?.()}</Card>)}
       </div>
@@ -61,5 +62,44 @@ export function CadDashboard() {
         <div className="mt-3 flex justify-between"><Button variant="ghost" size="sm" onClick={() => set({ widgets: undefined, compact: false })}>Standard wiederherstellen</Button><Button onClick={() => setEditing(false)}>Fertig</Button></div>
       </Modal>
     </>
+  );
+}
+
+/**
+ * Einrichtungs-Assistent für Administratoren: prüft die Schritte nach dem Update (Leitstellen-Server, Karte, ER:LC,
+ * Einheiten, Zuordnungen, Discord-Kanäle, Server-Verbindung) und führt direkt zur passenden Einstellung.
+ * Verschwindet, sobald alles erledigt ist (oder wenn man ihn ausblendet).
+ */
+function SetupChecklist({ d }: { d: CadOverview }) {
+  const { can } = useAuth();
+  const { cad, set } = useCadPrefs();
+  const admin = can('cad.manage_settings') || can('cad.manage_erlc') || can('cad.manage_map');
+  const links = useQuery({ queryKey: ['cad-links'], queryFn: () => api<{ id: string; active: boolean }[]>('/cad/links'), enabled: admin });
+  const members = useQuery({ queryKey: ['cad-members'], queryFn: () => api<{ id: string; erlcName: string | null }[]>('/cad/members'), enabled: admin });
+  if (!admin || cad.setupHidden) return null;
+  const cfg = d.config;
+  const steps = [
+    { done: !!cfg.homeGuildId, text: 'Discord-Server der Leitstelle auswählen', to: '/cad/settings?tab=Allgemein', hint: 'Einstellungen → Allgemein', perm: 'cad.manage_settings' },
+    { done: !!cfg.map.imageUrl, text: 'ER:LC-Karte hochladen', to: '/cad/settings?tab=Karte+%26+Layer', hint: 'Einstellungen → Karte & Layer', perm: 'cad.manage_map' },
+    { done: d.erlc.length > 0, text: 'ER:LC-Server mit Server-Key verbinden', to: '/cad/settings?tab=ER%3ALC+Integration', hint: 'Einstellungen → ER:LC Integration', perm: 'cad.manage_erlc' },
+    { done: d.erlc.some((s) => s.status === 'CONNECTED'), text: 'ER:LC-Verbindung erfolgreich getestet', to: '/cad/settings?tab=ER%3ALC+Integration', hint: '„Verbindung testen“ – Status 🟢 Verbunden', perm: 'cad.manage_erlc' },
+    { done: d.units.length > 0, text: 'Einheiten anlegen (z. B. SEK-01, K9-01)', to: '/cad/units', hint: 'Einheiten → Neue Einheit', perm: 'cad.manage_units' },
+    { done: (members.data ?? []).some((m) => m.erlcName), text: 'Mitglieder zuordnen (Discord ↔ ER:LC ↔ Einheit)', to: '/cad/team', hint: 'Teamübersicht – dann erscheinen Einheiten live auf der Karte', perm: 'cad.manage_units' },
+    { done: cfg.routes.some((r) => r.enabled && r.channelIds.length), text: 'Discord-Kanäle für Meldungen festlegen', to: '/cad/settings?tab=Discord-Kan%C3%A4le', hint: 'Einstellungen → Discord-Kanäle', perm: 'cad.manage_settings' },
+    { done: (links.data ?? []).some((l) => l.active), text: 'Server-Verbindung Leitstelle ↔ SEK/K9 anlegen', to: '/cad/cross-server', hint: 'Nur nötig, wenn SEK/K9 auf einem eigenen Discord-Server sind', perm: 'cad.manage_cross_server', optional: true },
+  ];
+  const open = steps.filter((s) => !s.done);
+  if (!open.length) return null;
+  return (
+    <Card className="mb-3" title={`🧭 Einrichtung – ${steps.length - open.length} von ${steps.length} erledigt`} actions={<Button size="sm" variant="ghost" onClick={() => set({ setupHidden: true })}>Ausblenden</Button>}>
+      <ul className="grid gap-1.5 sm:grid-cols-2">{steps.map((s) => (
+        <li key={s.text} className="flex items-start gap-2 text-sm">
+          <span aria-hidden>{s.done ? '✅' : s.optional ? '⚪' : '⬜'}</span>
+          <span className="min-w-0">
+            {s.done || !can(s.perm) ? <span className={s.done ? 'text-muted line-through' : ''}>{s.text}</span> : <Link className="font-medium text-primary hover:underline" to={s.to}>{s.text}</Link>}
+            {!s.done && <span className="block text-xs text-muted">{s.hint}{s.optional ? ' (optional)' : ''}{!can(s.perm) ? ' – dafür fehlt dir das Recht' : ''}</span>}
+          </span>
+        </li>))}</ul>
+    </Card>
   );
 }

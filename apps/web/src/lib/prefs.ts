@@ -27,7 +27,7 @@ export interface Preferences {
   quickActions: string[];
   teamList: { view: 'cards' | 'table'; search?: string; filters?: { team?: string; rank?: string; office?: string; status?: string } };
   /** Persönliche CAD-Ansicht (nur für diesen Benutzer). */
-  cad?: { widgets?: string[]; hiddenLayers?: string[]; zoom?: number; center?: { x: number; y: number }; compact?: boolean; sidebar?: boolean; favoriteIncidents?: string[]; erlcServerId?: string; sound?: boolean };
+  cad?: { widgets?: string[]; hiddenLayers?: string[]; zoom?: number; center?: { x: number; y: number }; compact?: boolean; sidebar?: boolean; favoriteIncidents?: string[]; erlcServerId?: string; sound?: boolean; setupHidden?: boolean };
   voice: { channelIds: string[]; categoryIds: string[]; sort: 'members' | 'name' | 'position'; compact: boolean; maxChannels: number; showEmpty?: boolean; showDuration?: boolean };
 }
 
