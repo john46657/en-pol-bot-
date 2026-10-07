@@ -155,6 +155,7 @@ export class QualificationsService {
         if (r.count) await this.audit.record(LEFT_ACTOR, { action: 'qualifications.application.withdraw', module: 'qualifications', entityType: 'QualificationApplication', entityId: a.id, before: { status: 'OPEN' }, after: { status: 'WITHDRAWN' }, reason: LEFT_REASON }, tx);
         return r.count;
       });
+      if (claimed) await this.discord.markDecided('qualification', a.id, LEFT_ACTOR, 'WITHDRAWN', LEFT_REASON);
       withdrawn += claimed;
     }
     return { denied, withdrawn };
@@ -198,6 +199,7 @@ export class QualificationsService {
       discordId: a.discordId, status, number: a.number, unitName: a.unitName, roleIds: roles.add, removeRoleIds: roles.remove, reason: reason || null,
       message: decisionMessage(settings, status === 'ACCEPTED', { applicationName: a.unitName, number: a.number, decider, applicantId: a.discordId, reason }),
     }, { always: true });
+    await this.discord.markDecided('qualification', id, actor, status, reason || null);
     return { id, number: a.number, unitName: a.unitName, status, addedToSek, decidedByName: by?.displayName ?? null, reason: reason || null };
   }
 }

@@ -14,8 +14,8 @@ export function NotificationCenter() {
   const [open, setOpen] = useState(false);
   const [tab, setTab] = useState<Filter>('unread');
   const qc = useQueryClient();
-  const q = useQuery({ queryKey: ['notifications', tab], queryFn: () => api<Page<Notification> & { unread: number }>('/notifications', { query: { filter: tab, pageSize: 50 } }), refetchInterval: 60_000 });
-  const badge = useQuery({ queryKey: ['notifications', 'unread'], queryFn: () => api<Page<Notification> & { unread: number }>('/notifications', { query: { filter: 'unread', pageSize: 1 } }), refetchInterval: 60_000 });
+  const q = useQuery({ queryKey: ['notifications', tab], queryFn: () => api<Page<Notification> & { unread: number }>('/notifications', { query: { filter: tab, pageSize: 50 } }), refetchInterval: 5_000 });
+  const badge = useQuery({ queryKey: ['notifications', 'unread'], queryFn: () => api<Page<Notification> & { unread: number }>('/notifications', { query: { filter: 'unread', pageSize: 1 } }), refetchInterval: 5_000 });
   const inv = () => qc.invalidateQueries({ queryKey: ['notifications'] });
   const readAll = useMutation({ mutationFn: () => api('/notifications/read-all', { method: 'POST' }), onSuccess: inv });
   const act = useMutation({ mutationFn: (v: { id: string; a: 'read' | 'archive' }) => api(`/notifications/${v.id}/${v.a}`, { method: 'POST' }), onSuccess: inv });

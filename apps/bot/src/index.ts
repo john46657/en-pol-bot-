@@ -249,7 +249,7 @@ function joinedAtOf(m: unknown): string | undefined {
 async function markDecided(message: Message, d: { text: string; color: number }) {
   const embeds = message.embeds.map((e, i, all) => {
     const b = EmbedBuilder.from(e).setColor(d.color);
-    if (i === all.length - 1) b.addFields({ name: 'Entscheidung', value: d.text.slice(0, 1024) });
+    if (i === all.length - 1) b.setFields([...(e.fields ?? []).filter((f) => f.name !== 'Entscheidung'), { name: 'Entscheidung', value: d.text.slice(0, 1024) }]); // nur einmal, auch wenn Button und Dashboard beide melden
     return b;
   });
   const rows: ActionRowBuilder<ButtonBuilder>[] = [];
@@ -416,7 +416,7 @@ function wireReady(client0: Client) {
   for (const g of guildIds(cfg)) if (!all.has(g)) all.set(g, g);
   for (const [id, name] of all) await register(id, name);
   c.on('guildCreate', (g) => { console.log(`added to server ${g.name}`); void register(g.id, g.name); });
-  // Teamliste (≥ alle 60 s) und Voice-Widget im Dashboard
+  // Teamliste und Voice-Widget im Dashboard (alle 5 s und bei Änderungen)
   const presence = startPresenceReporter(() => client, api, { members: intents.members, presences: intents.presences });
   startOutboxLoop(api, async (channelId, embeds, buttons, opts) => {
     const ch = await client.channels.fetch(channelId);
@@ -440,12 +440,30 @@ function wireReady(client0: Client) {
       if (old && old !== msg.id) await ch.messages.delete(old).catch(() => undefined); // schon gelöscht / keine Rechte → egal
       await api.service('PUT', `/bot/state/${key}`, { value: msg.id }).catch((e) => console.error('could not remember message:', e instanceof Error ? e.message : e));
     }
+    if (opts?.trackKey) {
+      const key = opts.trackKey;
+      const prev = await api.service<{ value: unknown }>('GET', `/bot/state/${key}`).then((r) => (Array.isArray(r.value) ? r.value : []), () => []);
+      await api.service('PUT', `/bot/state/${key}`, { value: [...prev, { channelId, messageId: msg.id }].slice(-10) }).catch((e) => console.error('could not remember message:', e instanceof Error ? e.message : e));
+    }
     if (opts?.thread) await msg.startThread({ name: opts.thread, autoArchiveDuration: 10080 }).catch((e) => console.error('could not create staff thread:', e instanceof Error ? e.message : e));
   }, cfg.OUTBOX_POLL_SECONDS, console.log, (userId, msg) => (typeof msg === 'string' ? platform.sendDirectMessage(userId, msg) : platform.sendDm(userId, { embed: msg }).then(() => undefined)), grantRoleEverywhere, syncRolesEverywhere, () => void live.refresh('teamlist').catch(() => undefined),
     (effects) => tickets.apply(effects).then(() => undefined, (e) => console.error('ticket effects failed:', e instanceof Error ? e.message : e)),
     () => void presence.sync().catch((e) => console.error('team/voice sync failed:', e instanceof Error ? e.message : e)),
     async (kind, channelId) => { await live.refresh(kind, { channelId, force: true }); },
     async (type, p) => {
+      if (type === 'message.decided') {
+        // Entscheidung (auch aus dem Dashboard): gemerkte Antrags-/Bewerbungsnachricht einfärben, Buttons entfernen
+        const key = String(p.key ?? '');
+        if (!/^msg-[laq]-[0-9a-f-]{36}$/.test(key)) throw new Error('invalid key');
+        const spots = await api.service<{ value: unknown }>('GET', `/bot/state/${key}`).then((r) => (Array.isArray(r.value) ? r.value as { channelId?: string; messageId?: string }[] : []));
+        for (const spot of spots) {
+          const ch = spot.channelId ? await client.channels.fetch(spot.channelId).catch(() => null) : null;
+          if (!ch?.isTextBased() || !('messages' in ch) || !spot.messageId) continue;
+          const msg = await ch.messages.fetch(spot.messageId).catch(() => null); // gelöscht → nichts zu tun
+          if (msg) await markDecided(msg, { text: String(p.text ?? 'Entschieden'), color: typeof p.color === 'number' ? p.color : 0x64748b });
+        }
+        return true;
+      }
       if (type === 'embed.post') {
         // Embed-Baukasten: vorhandene Nachricht bearbeiten (falls noch da), sonst neu posten; Ort ans System melden
         const channelId = typeof p.channelId === 'string' ? p.channelId : '';

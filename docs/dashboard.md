@@ -28,7 +28,7 @@ Nur für einen selbst, je Benutzer (Discord-Konto) in der Datenbank – auf PC u
 
 ## Teamliste (Menü → Teamliste, Widget „👥 Teamliste“)
 - Aus den Discord-Teamrollen (Zugangsrollen + mit Dashboard-Rollen verknüpfte Rollen) und den Personalakten: Avatar, Name, Team, Dienstgrad, Online-Status, Büro, Dienstnummer, Beitritt. **Keine Voice-Daten.**
-- Aktualisiert sich **verbindlich mindestens alle 60 Sekunden** (auch im Hintergrund-Tab), zusätzlich sofort bei Änderungen (Echtzeit) und per „🔄 Jetzt aktualisieren“ (der Bot meldet dann sofort neu). Erkannt werden neue/entfernte Mitglieder, Rollen-, Namens-, Avatar- und Statuswechsel (Team-Aktivität); Team, Dienstgrad, Büro und Dienstnummer kommen aus der Personalakte.
+- Aktualisiert sich **verbindlich alle 5 Sekunden** (auch im Hintergrund-Tab), zusätzlich sofort bei Änderungen (Echtzeit) und per „🔄 Jetzt aktualisieren“ (der Bot meldet dann sofort neu). Erkannt werden neue/entfernte Mitglieder, Rollen-, Namens-, Avatar- und Statuswechsel (Team-Aktivität); Team, Dienstgrad, Büro und Dienstnummer kommen aus der Personalakte.
 - Suche (Name, Benutzername, Dienstnummer, Team, Dienstgrad, Büro), Filter (Team, Dienstgrad, Büro, Status – Werte aus Einstellungen → Teamstruktur), Karten- oder Tabellenansicht, Profil per Klick (Discord-ID, Rollen, Beitritt nur mit `personnel.view`/`users.view`).
 - Team/Büro/Dienstnummer pflegen: Personalakte (wird automatisch gespeichert).
 

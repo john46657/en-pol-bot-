@@ -109,6 +109,9 @@ describe('Leave of Absences', () => {
     expect(await lastOutbox('leave.log')).toMatchObject({ event: 'approved', channelId: CH.loaLog });
     const deny = await lead.post(`/api/v1/leave/${other.id}/decision`).send({ status: 'DENIED', reason: 'Zu kurzfristig' });
     expect(deny.body).toMatchObject({ status: 'DENIED', decisionReason: 'Zu kurzfristig' });
+    // Entscheidung im Dashboard → der Bot passt die Antragsnachricht in Discord an (Farbe, Entscheidung, Buttons weg)
+    expect(await lastOutbox('message.decided')).toMatchObject({ key: `msg-l-${other.id}`, text: expect.stringContaining('❌ Abgelehnt von'), color: 0xef4444 });
+    expect(String((await lastOutbox('message.decided') as { text: string }).text)).toContain('Zu kurzfristig');
     // Beginn erreicht → Rolle; noch einmal prüfen vergibt sie nicht doppelt
     await prisma.leaveRequest.update({ where: { id: mine.id }, data: { startsAt: new Date(Date.now() - 1000) } });
     const svc = app.get(LeaveService);

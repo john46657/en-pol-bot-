@@ -43,7 +43,7 @@ export function CadMapPage() {
   const [sp] = useSearchParams();
   const nav = useNavigate();
   const [draft, setDraft] = useState<{ init: IncidentDraft; callId?: string } | null>(null);
-  const map = useQuery({ queryKey: ['cad-map'], queryFn: () => api<CadMapData>('/cad/map'), refetchInterval: 10_000 });
+  const map = useQuery({ queryKey: ['cad-map'], queryFn: () => api<CadMapData>('/cad/map'), refetchInterval: 5_000 });
   const units = useQuery({ queryKey: ['cad-units'], queryFn: () => api<CadUnitRow[]>('/cad/units') });
   const callId = sp.get('call'), incId = sp.get('incident'), placeId = sp.get('placeUnit');
   const place = placeId ? units.data?.find((u) => u.id === placeId) : undefined;
@@ -71,7 +71,7 @@ export function CadCalls() {
   const { cfg } = useCadConfig();
   const [status, setStatus] = useState('OPEN');
   const [draft, setDraft] = useState<CadCallRow | null>(null);
-  const q = useQuery({ queryKey: ['cad-calls', status], queryFn: () => api<CadCallRow[]>('/cad/calls', { query: { status } }), refetchInterval: 15_000 });
+  const q = useQuery({ queryKey: ['cad-calls', status], queryFn: () => api<CadCallRow[]>('/cad/calls', { query: { status } }), refetchInterval: 5_000 });
   const units = useQuery({ queryKey: ['cad-units'], queryFn: () => api<CadUnitRow[]>('/cad/units') });
   const [sp] = useSearchParams();
   const hl = sp.get('id');
@@ -105,7 +105,7 @@ export function CadUnits() {
   const [sp] = useSearchParams();
   const [edit, setEdit] = useState<UnitDraft | null>(null);
   const [err, setErr] = useState<string>();
-  const q = useQuery({ queryKey: ['cad-units'], queryFn: () => api<CadUnitRow[]>('/cad/units'), refetchInterval: 20_000 });
+  const q = useQuery({ queryKey: ['cad-units'], queryFn: () => api<CadUnitRow[]>('/cad/units'), refetchInterval: 5_000 });
   const status = useMutation({ mutationFn: (v: { id: string; status: string }) => api(`/cad/units/${v.id}/status`, { body: { status: v.status } }), onSuccess: () => invalidateAll(qc), onError: (e) => setErr(errText(e)) });
   const save = useMutation({
     mutationFn: (u: UnitDraft) => { const { id, ...body } = u; const clean = Object.fromEntries(Object.entries(body).map(([k, v]) => [k, v === '' ? null : v])); return id ? api(`/cad/units/${id}`, { method: 'PATCH', body: clean }) : api('/cad/units', { body: Object.fromEntries(Object.entries(clean).filter(([, v]) => v !== null && v !== undefined)) }); },
@@ -175,7 +175,7 @@ export function CadRadio() {
   const [code, setCode] = useState<string>();
   const [announce, setAnnounce] = useState('');
   const [msg, setMsg] = useState<string>();
-  const q = useQuery({ queryKey: ['cad-radio'], queryFn: () => api<CadRadioRow[]>('/cad/radio', { query: { take: 100 } }), refetchInterval: 15_000 });
+  const q = useQuery({ queryKey: ['cad-radio'], queryFn: () => api<CadRadioRow[]>('/cad/radio', { query: { take: 100 } }), refetchInterval: 5_000 });
   const inc = useQuery({ queryKey: ['cad-incidents', 'active', ''], queryFn: () => api<CadIncidentRow[]>('/cad/incidents', { query: { active: 'true' } }) });
   const codes = useQuery({ queryKey: ['radio-codes-cad'], queryFn: () => api<{ id: string; code: string; meaning: string; category: string | null }[]>('/radio-codes'), enabled: can('radio.view'), staleTime: 300_000 });
   const myUnits = useQuery({ queryKey: ['cad-radio-units'], queryFn: () => api<{ units: { id: string; callsign: string; name: string | null }[]; mine: string | null; dispatcher: boolean }>('/cad/radio/units'), enabled: can('cad.radio') });

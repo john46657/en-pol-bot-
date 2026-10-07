@@ -19,7 +19,7 @@ const since = (iso: string | null) => {
 /** 🎙️ Aktive Voice-Channels – vollständig getrennt von der Teamliste; Darstellung persönlich einstellbar. */
 export function VoiceWidget() {
   useRealtime('team', ['team.voice'], [['team-voice']]);
-  const q = useQuery({ queryKey: ['team-voice'], queryFn: () => api<{ channels: VoiceChannel[]; updatedAt: string | null }>('/team/voice'), refetchInterval: 20_000 });
+  const q = useQuery({ queryKey: ['team-voice'], queryFn: () => api<{ channels: VoiceChannel[]; updatedAt: string | null }>('/team/voice'), refetchInterval: 5_000 });
   const { prefs, update } = usePrefs();
   const v = prefs.voice;
   const [setup, setSetup] = useState(false);

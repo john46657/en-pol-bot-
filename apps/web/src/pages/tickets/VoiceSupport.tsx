@@ -132,7 +132,7 @@ export function VoiceSupport({ embedded = false }: { embedded?: boolean } = {}) 
   const [open, setOpen] = useState<string>();
   const [del, setDel] = useState<string>();
   const [status, setStatus] = useState('OPEN');
-  const cases = useQuery({ queryKey: ['voice-cases', server, status], queryFn: () => api<VoiceCase[]>('/voice-support/cases', { query: { status } }), enabled: tab === 'Fälle', refetchInterval: 15_000 });
+  const cases = useQuery({ queryKey: ['voice-cases', server, status], queryFn: () => api<VoiceCase[]>('/voice-support/cases', { query: { status } }), enabled: tab === 'Fälle', refetchInterval: 5_000 });
   useEffect(() => { if (q.data) setRooms(q.data); }, [q.data]);
   const valid = (rs: VoiceSupportRoom[]) => rs.every((r) => !missing(r).length);
   const save = useMutation({ mutationFn: (rs: VoiceSupportRoom[]) => api<VoiceSupportRoom[]>('/voice-support/rooms', { method: 'PUT', body: rs }), onSuccess: (r) => qc.setQueryData(key, r) });

@@ -185,7 +185,7 @@ interface ErlcForm { id?: string; name: string; serverRef?: string | null; descr
 
 function ErlcIntegration() {
   const qc = useQueryClient();
-  const q = useQuery({ queryKey: ['erlc-servers'], queryFn: () => api<ErlcServerView[]>('/erlc/servers'), refetchInterval: 15_000 });
+  const q = useQuery({ queryKey: ['erlc-servers'], queryFn: () => api<ErlcServerView[]>('/erlc/servers'), refetchInterval: 5_000 });
   const [edit, setEdit] = useState<ErlcForm | null>(null);
   const [del, setDel] = useState<ErlcServerView | null>(null);
   const [msg, setMsg] = useState<{ ok: boolean; text: string }>();

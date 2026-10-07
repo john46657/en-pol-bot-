@@ -12,12 +12,12 @@ const Ctx = createContext<AuthCtx | null>(null);
 /**
  * Frontend-Checks dienen nur der UI. Die verbindliche Prüfung erfolgt immer im Backend.
  * Rechte gelten je Discord-Server: beim Serverwechsel wird alles neu geladen. Geänderte Rechte (Rollen-Editor,
- * Discord-Rollenabgleich) kommen per Echtzeit-Ereignis und spätestens nach 60 Sekunden an.
+ * Discord-Rollenabgleich) kommen per Echtzeit-Ereignis und spätestens nach 5 Sekunden an.
  */
 export function AuthProvider({ children }: { children: ReactNode }) {
   const qc = useQueryClient();
   const server = useSyncExternalStore(subscribeServer, getServer, getServer);
-  const q = useQuery({ queryKey: ['me'], queryFn: () => api<Profile>('/auth/me'), retry: false, staleTime: 30_000, refetchInterval: 60_000 });
+  const q = useQuery({ queryKey: ['me'], queryFn: () => api<Profile>('/auth/me'), retry: false, staleTime: 30_000, refetchInterval: 5_000 });
   const user = q.data ?? null;
   useEffect(() => {
     setUnauthenticatedHandler((reason) => {

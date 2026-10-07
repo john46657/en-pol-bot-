@@ -16,8 +16,8 @@ export interface RosterMember {
 }
 interface Roster { members: RosterMember[]; structure: { teams: string[]; ranks: string[]; offices: string[] }; discordUpdatedAt: string | null; generatedAt: string }
 
-/** Verbindlich: spätestens alle 60 Sekunden neu laden (auch im Hintergrund-Tab). */
-export const ROSTER_REFRESH_MS = 60_000;
+/** Verbindlich: alle 5 Sekunden neu laden (auch im Hintergrund-Tab). */
+export const ROSTER_REFRESH_MS = 5_000;
 export const STATUS: Record<RosterMember['status'], { dot: string; label: string }> = {
   online: { dot: '🟢', label: 'Online' }, idle: { dot: '🟡', label: 'Abwesend' }, dnd: { dot: '🔴', label: 'Nicht stören' }, offline: { dot: '⚫', label: 'Offline' }, unknown: { dot: '⚪', label: 'Unbekannt' },
 };
@@ -68,7 +68,7 @@ export function TeamRoster({ compact = false, limit, initialOpen }: { compact?: 
         </div>
         <Button size="sm" variant="secondary" onClick={() => refresh.mutate()} disabled={refresh.isPending}><RefreshCw size={14} className={refresh.isPending || q.isFetching ? 'animate-spin' : undefined} />Jetzt aktualisieren</Button>
       </div>
-      <p className="mb-2 text-xs text-muted">{q.data ? `${q.data.members.length} Mitglieder · ${online} online · Stand ${fmt(q.data.generatedAt)}${q.data.discordUpdatedAt ? '' : ' · Discord-Daten noch nicht gemeldet (Bot)'}` : ' '} · aktualisiert sich automatisch alle 60 s</p>
+      <p className="mb-2 text-xs text-muted">{q.data ? `${q.data.members.length} Mitglieder · ${online} online · Stand ${fmt(q.data.generatedAt)}${q.data.discordUpdatedAt ? '' : ' · Discord-Daten noch nicht gemeldet (Bot)'}` : ' '} · aktualisiert sich automatisch alle 5 s</p>
       {q.isLoading ? <SkeletonRows /> : q.error ? <ErrorState error={q.error} onRetry={() => void q.refetch()} /> : !list.length ? <EmptyState text="Keine Teammitglieder gefunden." hint="Teammitglieder kommen aus den Personalakten und den Discord-Teamrollen." /> : tl.view === 'table' ? (
         <div className="table-scroll"><table className="w-full text-left text-sm">
           <thead className="border-b border-line text-xs uppercase text-muted"><tr><th className="p-2">Mitglied</th><th>Team</th><th>Dienstgrad</th><th>Büro</th><th>Status</th><th>Dienstnummer</th></tr></thead>

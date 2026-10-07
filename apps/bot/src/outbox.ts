@@ -10,7 +10,7 @@ interface OutboxItem { id: string; type: string; channelKey: string; payload: Re
 export type PanelPoster = (kind: 'danger', channelId: string) => Promise<void>;
 /** Aufträge aus dem Dashboard, die der Bot direkt in Discord ausführt (z. B. „Ticket mit Bewerber öffnen“). */
 export type TaskRunner = (type: string, payload: Record<string, unknown>) => Promise<boolean>;
-export type Sender = (channelId: string, embeds: EmbedData[], buttons?: ButtonSpec[], opts?: { pingRoleIds?: string[]; avatarUserId?: string; thread?: string; authorUserId?: string; replaceKey?: string }) => Promise<void>;
+export type Sender = (channelId: string, embeds: EmbedData[], buttons?: ButtonSpec[], opts?: { pingRoleIds?: string[]; avatarUserId?: string; thread?: string; authorUserId?: string; replaceKey?: string; trackKey?: string }) => Promise<void>;
 /** Discord-Rollen eines Mitglieds anpassen (alle Server, auf denen es die Rollen gibt). */
 export type RoleSync = (userId: string, add: string[], remove: string[]) => Promise<void>;
 /** Welche Discord-Rolle zu welchem Dienststatus gehört (Einstellungen → Discord). */
@@ -55,7 +55,7 @@ export async function pollOnce(api: Api, send: Sender, log: (m: string) => void 
       }
       continue;
     }
-    if (item.type === 'application.ticket' || item.type === 'embed.post') {
+    if (item.type === 'application.ticket' || item.type === 'embed.post' || item.type === 'message.decided') {
       try {
         if (!onTask || !(await onTask(item.type, item.payload))) throw new Error('tasks not supported');
         await api.service('POST', `/bot/outbox/${item.id}/ack`, { ok: true });
@@ -161,7 +161,10 @@ export async function pollOnce(api: Api, send: Sender, log: (m: string) => void 
       const authorUserId = item.type === 'leave.requested' && typeof item.payload.discordId === 'string' && /^\d{15,25}$/.test(item.payload.discordId) ? item.payload.discordId : undefined;
       // Gefahrenstatus: vorherige Meldung im Kanal löschen, damit nur der aktuelle Status dort steht
       const replaceKey = item.type === 'danger.changed' ? 'danger' : undefined;
-      const opts = pingRoleIds.length || avatarUserId || thread || authorUserId || replaceKey ? { ...(pingRoleIds.length ? { pingRoleIds } : {}), ...(avatarUserId ? { avatarUserId } : {}), ...(thread ? { thread } : {}), ...(authorUserId ? { authorUserId } : {}), ...(replaceKey ? { replaceKey } : {}) } : undefined;
+      // Anträge/Bewerbungen mit Entscheidungs-Buttons: Ort merken, damit eine Entscheidung im Dashboard die Nachricht anpassen kann
+      const trackKind = { 'leave.requested': 'l', 'application.submitted': 'a', 'qualification.submitted': 'q' }[item.type];
+      const trackKey = trackKind && typeof item.payload.id === 'string' && /^[0-9a-f-]{36}$/.test(item.payload.id) ? `msg-${trackKind}-${item.payload.id}` : undefined;
+      const opts = pingRoleIds.length || avatarUserId || thread || authorUserId || replaceKey || trackKey ? { ...(pingRoleIds.length ? { pingRoleIds } : {}), ...(avatarUserId ? { avatarUserId } : {}), ...(thread ? { thread } : {}), ...(authorUserId ? { authorUserId } : {}), ...(replaceKey ? { replaceKey } : {}), ...(trackKey ? { trackKey } : {}) } : undefined;
       const results = await Promise.allSettled(channelIds.map((id) => (opts ? send(id, embeds, buttons, opts) : send(id, embeds, buttons))));
       const failed = results.flatMap((r, i) => (r.status === 'rejected' ? [`${channelIds[i]}: ${r.reason instanceof Error ? r.reason.message : r.reason}`] : []));
       failed.forEach((f) => log(`outbox ${item.id}: send failed for channel ${f}`));

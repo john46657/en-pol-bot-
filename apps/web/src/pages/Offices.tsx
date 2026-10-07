@@ -14,7 +14,7 @@ interface VoiceChannel { id: string; name: string; members: { id: string }[] }
 function useTalks() {
   const allowed = useAuth().can('dashboard.voice.view');
   useRealtime('team', ['team.voice'], [['team-voice']]);
-  const q = useQuery({ queryKey: ['team-voice'], queryFn: () => api<{ channels: VoiceChannel[] }>('/team/voice'), refetchInterval: 20_000, enabled: allowed });
+  const q = useQuery({ queryKey: ['team-voice'], queryFn: () => api<{ channels: VoiceChannel[] }>('/team/voice'), refetchInterval: 5_000, enabled: allowed });
   const map = new Map<string, string>();
   for (const c of q.data?.channels ?? []) for (const m of c.members) map.set(m.id, c.name);
   return map;
