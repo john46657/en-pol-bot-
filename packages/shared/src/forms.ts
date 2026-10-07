@@ -83,7 +83,7 @@ export type ApplicationVars = Partial<Record<keyof typeof APPLICATION_VARIABLES,
 export const DEFAULT_APPLICATION_MESSAGES = {
   accepted: '🎉 Deine Bewerbung als `{applicationName}` ({number}) wurde von {user} **angenommen**!',
   denied: 'Deine Bewerbung als `{applicationName}` ({number}) wurde von {user} leider **abgelehnt**. Du kannst dich später gerne erneut bewerben.',
-  confirmation: 'Bist du sicher, dass du dich bewerben möchtest?\n\nSobald du startest, schicke ich dir nacheinander **{questionCount} Fragen**. Du hast **{timeLimit}** Zeit, die Bewerbung abzuschließen – sonst musst du neu starten. Abbrechen kannst du jederzeit über den Button.',
+  confirmation: 'Bist du sicher, dass du dich bewerben möchtest?\n\nSobald du startest, schicke ich dir nacheinander **{questionCount} Fragen**. Du hast **{timeLimit}** Zeit, die Bewerbung abzuschließen – sonst musst du neu starten. Abbrechen kannst du jederzeit, indem du **abbrechen** schreibst.',
   completion: '✅ Deine Bewerbung **{number}** ist eingegangen! Das Team prüft sie – die Entscheidung bekommst du hier per Direktnachricht.',
 } as const;
 /** Ersetzt bekannte Variablen; ein Grund wird angehängt, wenn der Text `{reason}` nicht selbst enthält. */

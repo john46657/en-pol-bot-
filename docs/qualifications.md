@@ -4,7 +4,7 @@ Ablauf wie bei Appy – aber im eigenen Bot und mit Daten im System. Die normale
 
 1. Ein Admin postet mit **`/qualipanel`** (Discord-Recht „Server verwalten“) das Panel in einen Channel: Titel, Einleitung, je Einheit Name + Beschreibung und ein Auswahlmenü **„Triff eine Auswahl“**.
 2. Wer eine Einheit auswählt, bekommt eine **Direktnachricht**: „Bist du sicher …?“ mit **Bewerbung starten** / **Abbrechen**; im Channel erscheint (nur für die Person) „Bewerbung gestartet“ mit dem Button **Zur Bewerbung**.
-3. Nach dem Start stellt der Bot die Fragen **einzeln per DM** („1/6. …“); man antwortet einfach mit einer Nachricht (max. 1000 Zeichen). **3 Stunden** Zeit, Abbrechen jederzeit.
+3. Nach dem Start stellt der Bot die Fragen **einzeln per DM** („1/6. …“); man antwortet einfach mit einer Nachricht (max. 1000 Zeichen). **3 Stunden** Zeit. Abbrechen: einfach „abbrechen“ schreiben (unter den Fragen gibt es keinen Abbrechen-Button).
 4. Nach der letzten Antwort wird die Bewerbung gespeichert (Nummer `Q-…`) und **wie bei Appy** gepostet – in den Channel der Einheit (z. B. `#flugstaffel-bewerbungen`, einstellbar je Einheit) oder sonst in den **Qualifications channel**:
    - jede Frage **fett und nummeriert**, darunter die Antwort (sehr lange Bewerbungen werden gekürzt – vollständig im Dashboard),
    - **Bewerber-Infos**: Discord-ID, Benutzername, Erwähnung, Dauer, Server beigetreten, eingereicht,

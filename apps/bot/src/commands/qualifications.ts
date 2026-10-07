@@ -50,28 +50,29 @@ const guildOf = new Map<string, string>();
 export const resetSessions = () => { sessions.clear(); joinedAtOf.clear(); guildOf.clear(); };
 export const sweepSessions = (now = Date.now()) => { for (const [k, s] of sessions) if (s.expiresAt <= now) sessions.delete(k); };
 
-const CANCEL: ButtonSpec = { id: 'quali:cancel', label: 'Bewerbung abbrechen', style: 'danger' };
+/** Abbrechen während der Fragen: einfach „abbrechen“ schreiben (kein Button unter den Fragen). */
+const CANCEL_WORD = 'abbrechen';
 /** Einstellungen des Servers (ohne eigene: die gemeinsamen). */
 const getConfig = (api: Api, guildId?: string) => api.service<QualiConfig>('GET', `/bot/qualifications${guildId ? `?guildId=${guildId}` : ''}`);
 const field = (f: FormField): Field => { const n = normalizeField(f); return { ...n, maxLength: Math.min(n.maxLength, 2000) }; };
 const asField = (q: string | FormField, i: number): FormField => (typeof q === 'string' ? { key: `q${i + 1}`, label: q, required: true, maxLength: MAX_ANSWER } : q);
 /** Aktuelle Frage: Text → Antwort per Nachricht; Auswahl/Rollen → Menü (+ „Überspringen“, falls optional). */
-const questionMessage = (s: Session): { embed: EmbedData; buttons: ButtonSpec[]; select?: SelectSpec } => {
+const questionMessage = (s: Session): { embed: EmbedData; buttons?: ButtonSpec[]; select?: SelectSpec } => {
   const i = s.answers.length;
   const q = s.questions[i]!;
   const f = q.field;
   const head = `**${i + 1}/${s.questions.length}.** ${plain(q.text)}`;
   if (f.type === 'ROBLOX') {
-    return { embed: { title: clip(s.unitName, 256), color: COLORS.info, description: clip(`${head}\n\n_Schreibe deinen **Roblox-Benutzernamen** (genau wie in Roblox, nicht den Anzeigenamen) hier in den Chat – ich prüfe, ob es das Konto gibt.${f.required ? '' : ` Optional – „${SKIP}“ zum Überspringen.`}_`, 4000) }, buttons: [CANCEL] };
+    return { embed: { title: clip(s.unitName, 256), color: COLORS.info, description: clip(`${head}\n\n_Schreibe deinen **Roblox-Benutzernamen** (genau wie in Roblox, nicht den Anzeigenamen) hier in den Chat – ich prüfe, ob es das Konto gibt.${f.required ? '' : ` Optional – „${SKIP}“ zum Überspringen.`}_`, 4000) } };
   }
   if (f.type === 'TEXT') {
     const hints = [f.minLength ? `mindestens ${f.minLength} Zeichen` : '', !f.required ? `optional – schreibe „${SKIP}“, um zu überspringen` : ''].filter(Boolean).join(' · ');
-    return { embed: { title: clip(s.unitName, 256), color: COLORS.info, description: clip(`${head}\n\n_Antworte einfach mit einer Nachricht hier im Chat.${hints ? ` (${hints})` : ''}_`, 4000) }, buttons: [CANCEL] };
+    return { embed: { title: clip(s.unitName, 256), color: COLORS.info, description: clip(`${head}\n\n_Antworte einfach mit einer Nachricht hier im Chat.${hints ? ` (${hints})` : ''}_`, 4000) } };
   }
   return {
     embed: { title: clip(s.unitName, 256), color: COLORS.info, description: clip(`${head}\n\n_Wähle unten ${f.multiple ? 'eine oder mehrere Optionen' : 'eine Option'} aus.${f.required ? '' : ' Optional.'}_`, 4000) },
     select: { id: `quali:ans:${i}`, placeholder: f.multiple ? 'Optionen wählen …' : 'Option wählen …', min: 1, max: f.multiple ? f.options.length : 1, options: f.options.map((o, j) => ({ label: clip(o.label, 100), value: String(j) })) },
-    buttons: [...(f.required ? [] : [{ id: `quali:skip:${i}`, label: 'Überspringen', style: 'secondary' as const }]), CANCEL],
+    buttons: f.required ? [] : [{ id: `quali:skip:${i}`, label: 'Überspringen', style: 'secondary' as const }],
   };
 };
 const answerText = (a: Answer) => (a === null ? '— (übersprungen)' : Array.isArray(a) ? a.join(', ') : a);
@@ -191,17 +192,22 @@ export async function handleDirectMessage(a: { userId: string; userName: string;
     await say(`⏰ Die Zeit für deine Bewerbung ist abgelaufen (${formatMinutes(Math.round(limitMs(s.settings) / 60_000))}). Bitte starte sie über das Panel neu.`, COLORS.warning);
     return;
   }
+  if (a.content.trim().toLowerCase() === CANCEL_WORD) {
+    sessions.delete(a.userId);
+    await say('Bewerbung abgebrochen. Du kannst jederzeit über das Panel neu starten.', COLORS.neutral);
+    return;
+  }
   const q = s.questions[s.answers.length]!;
   if (q.field.type !== 'TEXT' && q.field.type !== 'ROBLOX') { await say('Bitte wähle die Antwort im **Menü** der letzten Frage aus.', COLORS.warning); await a.sendDm(a.userId, questionMessage(s)); return; }
   const text = a.content.trim();
-  if (!text) { await say('Bitte antworte mit Text.', COLORS.warning, [CANCEL]); return; }
+  if (!text) { await say('Bitte antworte mit Text.', COLORS.warning); return; }
   if (!q.field.required && text === SKIP) s.answers.push(null);
   else {
     const r = checkAnswer(q.field, text);
-    if (!r.ok) { await say(r.error, COLORS.warning, [CANCEL]); return; }
+    if (!r.ok) { await say(r.error, COLORS.warning); return; }
     if (q.field.type === 'ROBLOX' && a.robloxCheck) {
       const rb = await a.robloxCheck(r.text).catch(() => undefined);
-      if (rb === null) { await say(`❌ Den Roblox-Benutzer **${plain(r.text)}** gibt es nicht. Bitte prüfe die Schreibweise und schicke ihn noch einmal.`, COLORS.warning, [CANCEL]); return; }
+      if (rb === null) { await say(`❌ Den Roblox-Benutzer **${plain(r.text)}** gibt es nicht. Bitte prüfe die Schreibweise und schicke ihn noch einmal.`, COLORS.warning); return; }
       if (rb) {
         await a.sendDm(a.userId, { embed: { title: clip(s.unitName, 256), color: COLORS.success, description: `✅ Roblox-Konto gefunden: **${plain(rb.name)}**${rb.displayName && rb.displayName !== rb.name ? ` (${plain(rb.displayName)})` : ''}`, ...(rb.avatarUrl ? { thumbnail: rb.avatarUrl } : {}) } });
         s.answers.push(rb.name);
@@ -227,7 +233,7 @@ async function proceed(o: { api: Api; userId: string; userName: string; sendDm: 
     }
     const last = s.questions[s.answers.length - 1]!;
     s.answers.pop(); // letzte Antwort erneut = erneuter Versuch
-    if (last.field.type === 'TEXT') await say('⚠️ Deine Bewerbung konnte gerade nicht gespeichert werden (System nicht erreichbar). Schicke deine **letzte Antwort** gleich noch einmal, um es erneut zu versuchen.', COLORS.warning, [CANCEL]);
+    if (last.field.type === 'TEXT') await say('⚠️ Deine Bewerbung konnte gerade nicht gespeichert werden (System nicht erreichbar). Schicke deine **letzte Antwort** gleich noch einmal, um es erneut zu versuchen.', COLORS.warning);
     else { await say('⚠️ Deine Bewerbung konnte gerade nicht gespeichert werden (System nicht erreichbar). Wähle deine letzte Antwort gleich noch einmal aus.', COLORS.warning); await o.sendDm(o.userId, questionMessage(s)); }
   }
 }
