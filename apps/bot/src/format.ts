@@ -59,6 +59,11 @@ export function listEmbed(title: string, lines: string[], empty: string): EmbedD
 // ---- Outbox-Benachrichtigungen ----
 export function renderOutbox(type: string, p: Record<string, unknown>): EmbedData | null {
   switch (type) {
+    case 'workflow.message': {
+      // Studio-Workflow: Titel/Text kommen aus der Vorlage im Dashboard (Werte schon eingesetzt)
+      const color = typeof p.color === 'string' && /^#[0-9a-f]{6}$/i.test(p.color) ? parseInt(p.color.slice(1), 16) : COLORS.info;
+      return { title: clip(plain(p.title), 256), ...(p.text ? { description: clip(plain(p.text), 4000) } : {}), color, footer: clip(`Workflow: ${String(p.workflow ?? '')}`, 200) };
+    }
     case 'incident.created':
       return { title: `🚨 Neuer Einsatz: ${clip(plain(p.title), 200)}`, color: PRIORITY_COLOR[String(p.priority)] ?? COLORS.info, fields: [{ name: 'Nummer', value: String(p.number), inline: true }, { name: 'Priorität', value: label(p.priority), inline: true }, { name: 'Ort', value: clip(plain(p.location ?? 'unbekannt'), 1024), inline: true }] };
     case 'incident.assigned':

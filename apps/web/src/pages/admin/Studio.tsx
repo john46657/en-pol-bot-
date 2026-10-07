@@ -5,11 +5,12 @@ import { api, ApiError } from '../../lib/api';
 import { useAuth } from '../../lib/auth';
 import { ACCENTS, useStudio, type CustomFieldDef, type StudioConfig } from '../../lib/studio';
 import { Button, Card, Input, PageHeader, Select, SkeletonRows, Tabs } from '../../components/ui';
+import { WorkflowEditor } from '../../components/WorkflowEditor';
 
 type CF = StudioConfig['customFields'];
 const TYPES: CustomFieldDef['type'][] = ['text', 'number', 'select', 'date'];
 
-/** Studio: Custom Fields (Personen/Fahrzeuge) und Theme-Akzent (Bewerbungsfragen: Applications → Setup). Workflows (konfigurierbare Status) gibt es bewusst nicht. */
+/** Studio: Custom Fields (Personen/Fahrzeuge), Theme-Akzent und Workflows (Automationen). Bewerbungsfragen: Applications → Setup. */
 export function Studio() {
   const { can } = useAuth();
   const manage = can('studio.manage') || can('settings.manage');
@@ -23,11 +24,12 @@ export function Studio() {
   });
   return (
     <>
-      <PageHeader title="Studio" subtitle="Configure custom fields and the theme. Every change is validated and audited. Application questions: Applications → Setup." />
+      <PageHeader title="Studio" subtitle="Configure custom fields, the theme and workflows (automations). Every change is validated and audited. Application questions: Applications → Setup." />
       {msg && <p role="status" className="mb-3 rounded border border-line bg-panel p-2 text-sm">{msg}</p>}
-      <Tabs tabs={['Custom fields', 'Theme']} active={tab} onChange={(t) => { setTab(t); setMsg(undefined); }} />
+      <Tabs tabs={['Custom fields', 'Theme', 'Workflows']} active={tab} onChange={(t) => { setTab(t); setMsg(undefined); }} />
       <div className="mt-4">
         {tab === 'Custom fields' && <CustomFields manage={manage} onSave={(v) => save.mutate({ key: 'studio.customFields', value: v })} busy={save.isPending} />}
+        {tab === 'Workflows' && <WorkflowEditor manage={can('studio.manage')} />}
         {tab === 'Theme' && <Theme manage={manage} onSave={(v) => save.mutate({ key: 'theme.accent', value: v })} />}
       </div>
     </>

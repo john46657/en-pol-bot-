@@ -23,7 +23,7 @@ const guild_context_1 = require("../common/guild-context");
 const pagination_1 = require("../common/pagination");
 const publicSelect = {
     id: true, username: true, displayName: true, email: true, robloxUserId: true, robloxUsername: true, robloxStatus: true,
-    robloxVerifiedAt: true, active: true, lastLogin: true, createdAt: true, updatedAt: true,
+    robloxVerifiedAt: true, active: true, lastLogin: true, totpEnabledAt: true, createdAt: true, updatedAt: true,
     roles: { select: { role: { select: { id: true, name: true } } } },
     overrides: { select: { permissionKey: true, effect: true, reason: true } },
 };

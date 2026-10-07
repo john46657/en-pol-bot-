@@ -29,6 +29,8 @@ exports.preferencesSchema = zod_1.z.object({
     notifications: zod_1.z.object({ muted: zod_1.z.array(zod_1.z.string().max(40)).max(50), toasts: zod_1.z.boolean().optional() }).optional(),
     favorites: zod_1.z.array(path).max(30).optional(),
     quickActions: zod_1.z.array(zod_1.z.string().max(40)).max(20).optional(),
+    /** Zeilen pro Tabellenseite (große Seiten werden virtualisiert dargestellt). */
+    tablePageSize: zod_1.z.union([zod_1.z.literal(25), zod_1.z.literal(50), zod_1.z.literal(100), zod_1.z.literal(250), zod_1.z.literal(500)]).optional(),
     teamList: zod_1.z.object({
         view: zod_1.z.enum(['cards', 'table']),
         search: zod_1.z.string().max(80).optional(),

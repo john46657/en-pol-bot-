@@ -47,6 +47,8 @@ export declare const preferencesSchema: z.ZodObject<{
     }>>;
     favorites: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
     quickActions: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
+    /** Zeilen pro Tabellenseite (große Seiten werden virtualisiert dargestellt). */
+    tablePageSize: z.ZodOptional<z.ZodUnion<[z.ZodLiteral<25>, z.ZodLiteral<50>, z.ZodLiteral<100>, z.ZodLiteral<250>, z.ZodLiteral<500>]>>;
     teamList: z.ZodOptional<z.ZodObject<{
         view: z.ZodEnum<["cards", "table"]>;
         search: z.ZodOptional<z.ZodString>;
@@ -210,6 +212,7 @@ export declare const preferencesSchema: z.ZodObject<{
     dateFormat?: "DD.MM.YYYY" | "YYYY-MM-DD" | "MM/DD/YYYY" | undefined;
     favorites?: string[] | undefined;
     quickActions?: string[] | undefined;
+    tablePageSize?: 500 | 25 | 100 | 50 | 250 | undefined;
     teamList?: {
         view: "cards" | "table";
         search?: string | undefined;
@@ -270,6 +273,7 @@ export declare const preferencesSchema: z.ZodObject<{
     dateFormat?: "DD.MM.YYYY" | "YYYY-MM-DD" | "MM/DD/YYYY" | undefined;
     favorites?: string[] | undefined;
     quickActions?: string[] | undefined;
+    tablePageSize?: 500 | 25 | 100 | 50 | 250 | undefined;
     teamList?: {
         view: "cards" | "table";
         search?: string | undefined;

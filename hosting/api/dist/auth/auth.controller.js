@@ -18,6 +18,7 @@ const swagger_1 = require("@nestjs/swagger");
 const throttler_1 = require("@nestjs/throttler");
 const zod_1 = require("zod");
 const auth_service_1 = require("./auth.service");
+const two_factor_service_1 = require("./two-factor.service");
 const discord_oauth_service_1 = require("./discord-oauth.service");
 const web_url_1 = require("../common/web-url");
 const errors_1 = require("../common/errors");
@@ -26,14 +27,18 @@ const guards_1 = require("../authz/guards");
 const zod_pipe_1 = require("../common/zod.pipe");
 const env_1 = require("../config/env");
 const OAUTH_COOKIE = 'enrp_oauth';
+const codeSchema = zod_1.z.object({ code: zod_1.z.string().trim().min(6).max(20) });
+const login2faSchema = zod_1.z.object({ ticket: zod_1.z.string().min(10).max(300), code: zod_1.z.string().trim().min(6).max(20) });
 const loginSchema = zod_1.z.object({ username: zod_1.z.string().min(1).max(64), password: zod_1.z.string().min(1).max(256) });
 let AuthController = class AuthController {
     auth;
     discord;
+    twoFactor;
     env = (0, env_1.loadEnv)();
-    constructor(auth, discord) {
+    constructor(auth, discord, twoFactor) {
         this.auth = auth;
         this.discord = discord;
+        this.twoFactor = twoFactor;
     }
     secure() { return this.env.COOKIE_SECURE ? this.env.COOKIE_SECURE === 'true' : this.env.NODE_ENV === 'production'; }
     /** Welche Anmeldewege es gibt (Login-Seite). */
@@ -99,9 +104,25 @@ let AuthController = class AuthController {
         if (!this.discord.passwordLoginAllowed())
             throw new errors_1.AppError('PERMISSION_DENIED', 'Password login is disabled – sign in with Discord.');
         const r = await this.auth.login(body.username, body.password, { ip: req.ip, userAgent: req.headers['user-agent'], requestId: req.requestId });
-        res.cookie(guards_1.SESSION_COOKIE, r.token, { httpOnly: true, sameSite: 'strict', secure: this.env.COOKIE_SECURE ? this.env.COOKIE_SECURE === 'true' : this.env.NODE_ENV === 'production', expires: r.expiresAt, path: '/' });
+        if ('twoFactorRequired' in r)
+            return r;
+        res.cookie(guards_1.SESSION_COOKIE, r.token, { httpOnly: true, sameSite: 'strict', secure: this.secure(), expires: r.expiresAt, path: '/' });
         return r.user;
     }
+    /** Zweiter Anmeldeschritt (Code aus der Authenticator-App oder Wiederherstellungscode). */
+    async login2fa(body, req, res) {
+        if (!this.discord.passwordLoginAllowed())
+            throw new errors_1.AppError('PERMISSION_DENIED', 'Password login is disabled – sign in with Discord.');
+        const r = await this.auth.loginTwoFactor(body.ticket, body.code, { ip: req.ip, userAgent: req.headers['user-agent'], requestId: req.requestId });
+        res.cookie(guards_1.SESSION_COOKIE, r.token, { httpOnly: true, sameSite: 'strict', secure: this.secure(), expires: r.expiresAt, path: '/' });
+        return r.user;
+    }
+    // ---- eigene Zwei-Faktor-Sicherung (jeder angemeldete Benutzer) ----
+    twoFactorStatus(user) { return this.twoFactor.status(user.id); }
+    twoFactorSetup(actor) { return this.twoFactor.setup(actor); }
+    twoFactorEnable(actor, body) { return this.twoFactor.enable(actor, body.code); }
+    async twoFactorDisable(actor, body) { await this.twoFactor.disable(actor, body.code); }
+    twoFactorRecovery(actor, body) { return this.twoFactor.regenerate(actor, body.code); }
     async logout(user, actor, res) {
         await this.auth.logout(actor, user.sessionId);
         res.clearCookie(guards_1.SESSION_COOKIE, { path: '/' });
@@ -177,6 +198,63 @@ __decorate([
     __metadata("design:returntype", Promise)
 ], AuthController.prototype, "login", null);
 __decorate([
+    (0, decorators_1.Public)(),
+    (0, throttler_1.Throttle)({ default: { limit: process.env.NODE_ENV === 'test' ? 10_000 : (0, env_1.loadEnv)().LOGIN_RATE_LIMIT, ttl: 60_000 } }),
+    (0, common_1.Post)('login/2fa'),
+    (0, common_1.HttpCode)(200),
+    __param(0, (0, common_1.Body)((0, zod_pipe_1.zodBody)(login2faSchema))),
+    __param(1, (0, common_1.Req)()),
+    __param(2, (0, common_1.Res)({ passthrough: true })),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [void 0, Object, Object]),
+    __metadata("design:returntype", Promise)
+], AuthController.prototype, "login2fa", null);
+__decorate([
+    (0, common_1.Get)('2fa'),
+    __param(0, (0, decorators_1.CurrentUser)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object]),
+    __metadata("design:returntype", void 0)
+], AuthController.prototype, "twoFactorStatus", null);
+__decorate([
+    (0, common_1.Post)('2fa/setup'),
+    (0, common_1.HttpCode)(200),
+    __param(0, (0, decorators_1.CurrentActor)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object]),
+    __metadata("design:returntype", void 0)
+], AuthController.prototype, "twoFactorSetup", null);
+__decorate([
+    (0, throttler_1.Throttle)({ default: { limit: process.env.NODE_ENV === 'test' ? 10_000 : 10, ttl: 60_000 } }),
+    (0, common_1.Post)('2fa/enable'),
+    (0, common_1.HttpCode)(200),
+    __param(0, (0, decorators_1.CurrentActor)()),
+    __param(1, (0, common_1.Body)((0, zod_pipe_1.zodBody)(codeSchema))),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, void 0]),
+    __metadata("design:returntype", void 0)
+], AuthController.prototype, "twoFactorEnable", null);
+__decorate([
+    (0, throttler_1.Throttle)({ default: { limit: process.env.NODE_ENV === 'test' ? 10_000 : 10, ttl: 60_000 } }),
+    (0, common_1.Post)('2fa/disable'),
+    (0, common_1.HttpCode)(204),
+    __param(0, (0, decorators_1.CurrentActor)()),
+    __param(1, (0, common_1.Body)((0, zod_pipe_1.zodBody)(codeSchema))),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, void 0]),
+    __metadata("design:returntype", Promise)
+], AuthController.prototype, "twoFactorDisable", null);
+__decorate([
+    (0, throttler_1.Throttle)({ default: { limit: process.env.NODE_ENV === 'test' ? 10_000 : 10, ttl: 60_000 } }),
+    (0, common_1.Post)('2fa/recovery'),
+    (0, common_1.HttpCode)(200),
+    __param(0, (0, decorators_1.CurrentActor)()),
+    __param(1, (0, common_1.Body)((0, zod_pipe_1.zodBody)(codeSchema))),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, void 0]),
+    __metadata("design:returntype", void 0)
+], AuthController.prototype, "twoFactorRecovery", null);
+__decorate([
     (0, common_1.Post)('logout'),
     (0, common_1.HttpCode)(204),
     __param(0, (0, decorators_1.CurrentUser)()),
@@ -196,6 +274,6 @@ __decorate([
 exports.AuthController = AuthController = __decorate([
     (0, swagger_1.ApiTags)('auth'),
     (0, common_1.Controller)('auth'),
-    __metadata("design:paramtypes", [auth_service_1.AuthService, discord_oauth_service_1.DiscordOAuthService])
+    __metadata("design:paramtypes", [auth_service_1.AuthService, discord_oauth_service_1.DiscordOAuthService, two_factor_service_1.TwoFactorService])
 ], AuthController);
 //# sourceMappingURL=auth.controller.js.map

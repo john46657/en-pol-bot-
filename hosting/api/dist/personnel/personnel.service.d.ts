@@ -2,11 +2,13 @@ import { PrismaService } from '../prisma/prisma.service';
 import { AuditService, Actor } from '../audit/audit.service';
 import { TimelineService } from '../timeline/timeline.service';
 import { PageQuery } from '../common/pagination';
+import { LocksService } from '../locks/locks.service';
 export declare class PersonnelService {
     private readonly prisma;
     private readonly audit;
     private readonly timeline;
-    constructor(prisma: PrismaService, audit: AuditService, timeline: TimelineService);
+    private readonly locks;
+    constructor(prisma: PrismaService, audit: AuditService, timeline: TimelineService, locks: LocksService);
     list(p: PageQuery): Promise<{
         items: ({
             user: {

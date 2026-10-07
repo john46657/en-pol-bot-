@@ -16,14 +16,17 @@ const audit_service_1 = require("../audit/audit.service");
 const timeline_service_1 = require("../timeline/timeline.service");
 const errors_1 = require("../common/errors");
 const pagination_1 = require("../common/pagination");
+const locks_service_1 = require("../locks/locks.service");
 let PersonnelService = class PersonnelService {
     prisma;
     audit;
     timeline;
-    constructor(prisma, audit, timeline) {
+    locks;
+    constructor(prisma, audit, timeline, locks) {
         this.prisma = prisma;
         this.audit = audit;
         this.timeline = timeline;
+        this.locks = locks;
     }
     async list(p) {
         const where = p.q ? { OR: [{ callsign: { contains: p.q, mode: 'insensitive' } }, { rank: { contains: p.q, mode: 'insensitive' } }, { user: { displayName: { contains: p.q, mode: 'insensitive' } } }] } : {};
@@ -57,6 +60,7 @@ let PersonnelService = class PersonnelService {
         });
     }
     async update(actor, id, d) {
+        await this.locks.assertFree('personnel', id, actor.userId);
         return this.prisma.$transaction(async (tx) => {
             const before = await tx.personnel.findUnique({ where: { id } });
             if (!before)
@@ -97,6 +101,6 @@ let PersonnelService = class PersonnelService {
 exports.PersonnelService = PersonnelService;
 exports.PersonnelService = PersonnelService = __decorate([
     (0, common_1.Injectable)(),
-    __metadata("design:paramtypes", [prisma_service_1.PrismaService, audit_service_1.AuditService, timeline_service_1.TimelineService])
+    __metadata("design:paramtypes", [prisma_service_1.PrismaService, audit_service_1.AuditService, timeline_service_1.TimelineService, locks_service_1.LocksService])
 ], PersonnelService);
 //# sourceMappingURL=personnel.service.js.map

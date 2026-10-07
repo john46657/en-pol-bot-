@@ -171,6 +171,10 @@ describe('formatting', () => {
     expect(e.description).not.toMatch(/@everyone/);
   });
   it('renders all outbox types and ignores unknown ones', () => {
+    const wf = renderOutbox('workflow.message', { title: 'Hoher Einsatz @everyone', text: 'Bank **raub**', color: '#ff0000', workflow: 'Alarm' })!;
+    expect(wf.title).not.toMatch(/@everyone/);
+    expect(wf.color).toBe(0xff0000);
+    expect(wf.footer).toBe('Workflow: Alarm');
     expect(renderOutbox('incident.created', { number: 'I-1', title: 'Bank', priority: 'CRITICAL', location: 'Main' })!.title).toContain('Neuer Einsatz');
     expect(renderOutbox('incident.assigned', { number: 'I-1', title: 'Bank', priority: 'HIGH', callsign: 'ADAM-1' })!.title).toContain('ADAM-1');
     expect(renderOutbox('wanted.created', { subject: 'Cody', reason: 'Robbery', priority: 'URGENT', kind: 'person' })!.description).toContain('Cody');

@@ -1,9 +1,27 @@
 import type { Response } from 'express';
 import { z } from 'zod';
 import { AuthService } from './auth.service';
+import { TwoFactorService } from './two-factor.service';
 import { DiscordOAuthService } from './discord-oauth.service';
 import type { AppRequest, AuthUser } from '../common/request-context';
 import type { Actor } from '../audit/audit.service';
+declare const codeSchema: z.ZodObject<{
+    code: z.ZodString;
+}, "strip", z.ZodTypeAny, {
+    code: string;
+}, {
+    code: string;
+}>;
+declare const login2faSchema: z.ZodObject<{
+    ticket: z.ZodString;
+    code: z.ZodString;
+}, "strip", z.ZodTypeAny, {
+    ticket: string;
+    code: string;
+}, {
+    ticket: string;
+    code: string;
+}>;
 declare const loginSchema: z.ZodObject<{
     username: z.ZodString;
     password: z.ZodString;
@@ -17,8 +35,9 @@ declare const loginSchema: z.ZodObject<{
 export declare class AuthController {
     private readonly auth;
     private readonly discord;
+    private readonly twoFactor;
     private readonly env;
-    constructor(auth: AuthService, discord: DiscordOAuthService);
+    constructor(auth: AuthService, discord: DiscordOAuthService, twoFactor: TwoFactorService);
     private secure;
     /** Welche Anmeldewege es gibt (Login-Seite). */
     /** Einladungs-Link für den Bot (Einstellungen → „Bot zu einem Server hinzufügen“). */
@@ -48,8 +67,42 @@ export declare class AuthController {
         roles: string[];
         permissions: import("@enrp/shared").PermissionKey[];
         lastLogin: Date | null;
+        twoFactor: boolean;
         guildId: string | null;
         servers: string[];
+    } | {
+        twoFactorRequired: true;
+        ticket: string;
+    }>;
+    /** Zweiter Anmeldeschritt (Code aus der Authenticator-App oder Wiederherstellungscode). */
+    login2fa(body: z.infer<typeof login2faSchema>, req: AppRequest, res: Response): Promise<{
+        id: string;
+        username: string;
+        displayName: string;
+        robloxUserId: string | null;
+        robloxUsername: string | null;
+        roles: string[];
+        permissions: import("@enrp/shared").PermissionKey[];
+        lastLogin: Date | null;
+        twoFactor: boolean;
+        guildId: string | null;
+        servers: string[];
+    }>;
+    twoFactorStatus(user: AuthUser): Promise<{
+        enabled: boolean;
+        enabledAt: Date | null;
+        recoveryLeft: number;
+    }>;
+    twoFactorSetup(actor: Actor): Promise<{
+        secret: string;
+        otpauthUrl: string;
+    }>;
+    twoFactorEnable(actor: Actor, body: z.infer<typeof codeSchema>): Promise<{
+        recoveryCodes: string[];
+    }>;
+    twoFactorDisable(actor: Actor, body: z.infer<typeof codeSchema>): Promise<void>;
+    twoFactorRecovery(actor: Actor, body: z.infer<typeof codeSchema>): Promise<{
+        recoveryCodes: string[];
     }>;
     logout(user: AuthUser, actor: Actor, res: Response): Promise<void>;
     me(user: AuthUser): Promise<{
@@ -61,6 +114,7 @@ export declare class AuthController {
         roles: string[];
         permissions: import("@enrp/shared").PermissionKey[];
         lastLogin: Date | null;
+        twoFactor: boolean;
         guildId: string | null;
         servers: string[];
     }>;

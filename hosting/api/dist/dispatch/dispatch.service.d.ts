@@ -5,13 +5,15 @@ import { PrismaService, Tx } from '../prisma/prisma.service';
 import { AuditService, Actor } from '../audit/audit.service';
 import { TimelineService } from '../timeline/timeline.service';
 import { PageQuery } from '../common/pagination';
+import { LocksService } from '../locks/locks.service';
 export declare class DispatchService {
     private readonly prisma;
     private readonly audit;
     private readonly timeline;
     private readonly rt;
     private readonly discord;
-    constructor(prisma: PrismaService, audit: AuditService, timeline: TimelineService, rt: RealtimeService, discord: DiscordService);
+    private readonly locks;
+    constructor(prisma: PrismaService, audit: AuditService, timeline: TimelineService, rt: RealtimeService, discord: DiscordService, locks: LocksService);
     listUnits(): import("@prisma/client").Prisma.PrismaPromise<({
         members: {
             userId: string;

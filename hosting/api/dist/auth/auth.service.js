@@ -21,6 +21,7 @@ const guards_1 = require("../authz/guards");
 const password_1 = require("./password");
 const errors_1 = require("../common/errors");
 const env_1 = require("../config/env");
+const two_factor_service_1 = require("./two-factor.service");
 const MAX_FAILS = 5;
 const LOCK_MS = 15 * 60 * 1000;
 let AuthService = class AuthService {
@@ -28,12 +29,14 @@ let AuthService = class AuthService {
     audit;
     perms;
     access;
+    twoFactor;
     env = (0, env_1.loadEnv)();
-    constructor(prisma, audit, perms, access) {
+    constructor(prisma, audit, perms, access, twoFactor) {
         this.prisma = prisma;
         this.audit = audit;
         this.perms = perms;
         this.access = access;
+        this.twoFactor = twoFactor;
     }
     async login(username, password, meta) {
         const user = await this.prisma.user.findUnique({ where: { username: username.toLowerCase() } });
@@ -51,7 +54,27 @@ let AuthService = class AuthService {
             await this.prisma.securityEvent.create({ data: { type: 'LOGIN_FAILURE', userId: user?.id, ip: meta.ip, detail: `username=${username.slice(0, 64)}`, requestId: meta.requestId } });
             throw new errors_1.AppError('UNAUTHENTICATED', 'Invalid credentials.');
         }
+        // Zwei-Faktor aktiv → erst nach dem Code eine Sitzung
+        if (user.totpEnabledAt)
+            return { twoFactorRequired: true, ticket: this.twoFactor.ticket(user.id) };
         return this.startSession(user, meta, 'auth.login');
+    }
+    /** Zweiter Schritt: Code aus der Authenticator-App oder Wiederherstellungscode. Fehlversuche zählen zur Kontosperre. */
+    async loginTwoFactor(ticket, code, meta) {
+        const userId = this.twoFactor.readTicket(ticket);
+        const user = await this.prisma.user.findUnique({ where: { id: userId } });
+        const locked = !!user?.lockedUntil && user.lockedUntil > new Date();
+        if (!user || !user.active || locked)
+            throw new errors_1.AppError('UNAUTHENTICATED', 'Anmeldung abgelaufen – bitte erneut anmelden.');
+        const used = await this.twoFactor.consume(user.id, code);
+        if (!used) {
+            const fails = user.failedLogins + 1;
+            await this.prisma.user.update({ where: { id: user.id }, data: { failedLogins: fails, lockedUntil: fails >= MAX_FAILS ? new Date(Date.now() + LOCK_MS) : null } });
+            await this.prisma.loginHistory.create({ data: { userId: user.id, username: user.username, success: false, ip: meta.ip, reason: 'BAD_2FA' } });
+            await this.prisma.securityEvent.create({ data: { type: 'LOGIN_FAILURE', userId: user.id, ip: meta.ip, detail: '2fa', requestId: meta.requestId } });
+            throw new errors_1.AppError('UNAUTHENTICATED', 'Der Code stimmt nicht.');
+        }
+        return this.startSession(user, meta, used === 'recovery' ? 'auth.login.recovery_code' : 'auth.login');
     }
     /** Neue Session nach erfolgreicher Anmeldung (Passwort oder Discord). */
     async startSession(user, meta, action = 'auth.login') {
@@ -68,6 +91,8 @@ let AuthService = class AuthService {
     async logout(actor, sessionId) {
         await this.prisma.$transaction(async (tx) => {
             await tx.session.update({ where: { id: sessionId }, data: { revokedAt: new Date() } });
+            if (actor.userId)
+                await tx.editLock.deleteMany({ where: { userId: actor.userId } }); // eigene Bearbeitungs-Sperren freigeben
             await this.audit.record(actor, { action: 'auth.logout', module: 'auth', entityType: 'User', entityId: actor.userId ?? undefined }, tx);
         });
     }
@@ -82,13 +107,13 @@ let AuthService = class AuthService {
             id: u.id, username: u.username, displayName: u.displayName, robloxUserId: u.robloxUserId, robloxUsername: u.robloxUsername,
             // Rollen, die im gewählten Server gelten; `servers` = Server, auf denen man eigene Server-Rollen hat
             roles: u.roles.filter((r) => active.has(r.roleId)).map((r) => r.role.name), permissions: await this.perms.effective(userId), lastLogin: u.lastLogin,
-            guildId: (0, guild_context_1.currentGuild)(), servers: [...new Set(u.roles.map((r) => r.role.guildId).filter((g) => !!g))],
+            twoFactor: !!u.totpEnabledAt, guildId: (0, guild_context_1.currentGuild)(), servers: [...new Set(u.roles.map((r) => r.role.guildId).filter((g) => !!g))],
         };
     }
 };
 exports.AuthService = AuthService;
 exports.AuthService = AuthService = __decorate([
     (0, common_1.Injectable)(),
-    __metadata("design:paramtypes", [prisma_service_1.PrismaService, audit_service_1.AuditService, permission_service_1.PermissionService, discord_access_service_1.DiscordAccessService])
+    __metadata("design:paramtypes", [prisma_service_1.PrismaService, audit_service_1.AuditService, permission_service_1.PermissionService, discord_access_service_1.DiscordAccessService, two_factor_service_1.TwoFactorService])
 ], AuthService);
 //# sourceMappingURL=auth.service.js.map

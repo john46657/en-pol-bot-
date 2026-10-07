@@ -19,18 +19,21 @@ const studio_service_1 = require("../studio/studio.service");
 const errors_1 = require("../common/errors");
 const pagination_1 = require("../common/pagination");
 const roblox_service_1 = require("./roblox.service");
+const locks_service_1 = require("../locks/locks.service");
 let PersonsService = class PersonsService {
     prisma;
     audit;
     timeline;
     studio;
     roblox;
-    constructor(prisma, audit, timeline, studio, roblox) {
+    locks;
+    constructor(prisma, audit, timeline, studio, roblox, locks) {
         this.prisma = prisma;
         this.audit = audit;
         this.timeline = timeline;
         this.studio = studio;
         this.roblox = roblox;
+        this.locks = locks;
     }
     async list(p, includeArchived = false) {
         const where = {
@@ -88,6 +91,7 @@ let PersonsService = class PersonsService {
         return { person, possibleDuplicates: dups };
     }
     async update(actor, id, version, d) {
+        await this.locks.assertFree('person', id, actor.userId);
         const before = await this.get(id);
         const { custom: rawCustom, ...rest } = d;
         const custom = rawCustom ? await this.studio.check('persons', rawCustom, before.custom) : undefined;
@@ -147,6 +151,6 @@ let PersonsService = class PersonsService {
 exports.PersonsService = PersonsService;
 exports.PersonsService = PersonsService = __decorate([
     (0, common_1.Injectable)(),
-    __metadata("design:paramtypes", [prisma_service_1.PrismaService, audit_service_1.AuditService, timeline_service_1.TimelineService, studio_service_1.StudioService, roblox_service_1.RobloxService])
+    __metadata("design:paramtypes", [prisma_service_1.PrismaService, audit_service_1.AuditService, timeline_service_1.TimelineService, studio_service_1.StudioService, roblox_service_1.RobloxService, locks_service_1.LocksService])
 ], PersonsService);
 //# sourceMappingURL=persons.service.js.map

@@ -14,7 +14,7 @@ const NOTIFICATION_TYPES: [string, string][] = [
   ['SYSTEM', '⚠️ Systemhinweis'], ['TEAMCHANCE', '📣 Team-Chance geöffnet'],
   ['QUALIFICATION', '🏅 Qualifikationen'], ['TICKET_ISSUED', '🧾 Strafzettel'], ['PERSONNEL', '🪪 Dienstgrad / Personal'],
   ['INCIDENT_ASSIGNMENT', '🚨 Einsatz zugewiesen'], ['REPORT_REVIEW', '📄 Bericht zur Prüfung'], ['COMPLAINT_ASSIGNMENT', '⚖️ Beschwerde zugewiesen'],
-  ['ACADEMY_ASSIGNMENT', '🎓 Academy'], ['SEK', '🎯 SEK'], ['RADIO', '📡 Funk'],
+  ['ACADEMY_ASSIGNMENT', '🎓 Academy'], ['SEK', '🎯 SEK'], ['RADIO', '📡 Funk'], ['WORKFLOW', '⚙️ Workflows'],
 ];
 const TIMEZONES = ['Europe/Berlin', 'Europe/Vienna', 'Europe/Zurich', 'Europe/London', 'UTC', 'America/New_York', 'America/Chicago', 'America/Los_Angeles'];
 

@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { UsersService } from './users.service';
+import { TwoFactorService } from '../auth/two-factor.service';
 import type { Actor } from '../audit/audit.service';
 import { pageQuery } from '../common/pagination';
 declare const createUser: z.ZodObject<{
@@ -63,7 +64,8 @@ declare const override: z.ZodObject<{
 }>;
 export declare class UsersController {
     private readonly users;
-    constructor(users: UsersService);
+    private readonly twoFactor;
+    constructor(users: UsersService, twoFactor: TwoFactorService);
     list(q: z.infer<typeof pageQuery>): Promise<{
         items: {
             id: string;
@@ -77,6 +79,7 @@ export declare class UsersController {
             robloxVerifiedAt: Date | null;
             active: boolean;
             lastLogin: Date | null;
+            totpEnabledAt: Date | null;
             updatedAt: Date;
             roles: {
                 role: {
@@ -106,6 +109,7 @@ export declare class UsersController {
         robloxVerifiedAt: Date | null;
         active: boolean;
         lastLogin: Date | null;
+        totpEnabledAt: Date | null;
         updatedAt: Date;
         roles: {
             role: {
@@ -131,6 +135,7 @@ export declare class UsersController {
         robloxVerifiedAt: Date | null;
         active: boolean;
         lastLogin: Date | null;
+        totpEnabledAt: Date | null;
         updatedAt: Date;
         roles: {
             role: {
@@ -156,6 +161,7 @@ export declare class UsersController {
         robloxVerifiedAt: Date | null;
         active: boolean;
         lastLogin: Date | null;
+        totpEnabledAt: Date | null;
         updatedAt: Date;
         roles: {
             role: {
@@ -181,6 +187,7 @@ export declare class UsersController {
         robloxVerifiedAt: Date | null;
         active: boolean;
         lastLogin: Date | null;
+        totpEnabledAt: Date | null;
         updatedAt: Date;
         roles: {
             role: {
@@ -194,6 +201,8 @@ export declare class UsersController {
             effect: string;
         }[];
     }>;
+    /** Zwei-Faktor eines Kontos zurücksetzen (Handy verloren, keine Wiederherstellungscodes). */
+    resetTwoFactor(a: Actor, id: string): Promise<void>;
     setRoles(a: Actor, id: string, b: z.infer<typeof roles>): Promise<{
         id: string;
         createdAt: Date;
@@ -206,6 +215,7 @@ export declare class UsersController {
         robloxVerifiedAt: Date | null;
         active: boolean;
         lastLogin: Date | null;
+        totpEnabledAt: Date | null;
         updatedAt: Date;
         roles: {
             role: {

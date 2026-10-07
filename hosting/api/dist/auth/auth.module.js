@@ -11,10 +11,11 @@ const common_1 = require("@nestjs/common");
 const auth_controller_1 = require("./auth.controller");
 const auth_service_1 = require("./auth.service");
 const discord_oauth_service_1 = require("./discord-oauth.service");
+const two_factor_service_1 = require("./two-factor.service");
 let AuthModule = class AuthModule {
 };
 exports.AuthModule = AuthModule;
 exports.AuthModule = AuthModule = __decorate([
-    (0, common_1.Module)({ controllers: [auth_controller_1.AuthController], providers: [auth_service_1.AuthService, discord_oauth_service_1.DiscordOAuthService], exports: [auth_service_1.AuthService] })
+    (0, common_1.Module)({ controllers: [auth_controller_1.AuthController], providers: [auth_service_1.AuthService, discord_oauth_service_1.DiscordOAuthService, two_factor_service_1.TwoFactorService], exports: [auth_service_1.AuthService, two_factor_service_1.TwoFactorService] })
 ], AuthModule);
 //# sourceMappingURL=auth.module.js.map

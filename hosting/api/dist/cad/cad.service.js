@@ -21,6 +21,7 @@ const errors_1 = require("../common/errors");
 const web_url_1 = require("../common/web-url");
 const cad_config_service_1 = require("./cad-config.service");
 const cad_notify_service_1 = require("./cad-notify.service");
+const locks_service_1 = require("../locks/locks.service");
 const unitInclude = { members: true, incidents: { where: { clearedAt: null }, include: { incident: { select: { id: true, number: true, title: true, status: true } } } } };
 const incidentInclude = { units: { include: { unit: { select: { id: true, callsign: true, name: true, type: true, status: true } } } } };
 let CadService = class CadService {
@@ -31,7 +32,8 @@ let CadService = class CadService {
     timeline;
     cfg;
     notify;
-    constructor(prisma, audit, perms, rt, timeline, cfg, notify) {
+    locks;
+    constructor(prisma, audit, perms, rt, timeline, cfg, notify, locks) {
         this.prisma = prisma;
         this.audit = audit;
         this.perms = perms;
@@ -39,6 +41,7 @@ let CadService = class CadService {
         this.timeline = timeline;
         this.cfg = cfg;
         this.notify = notify;
+        this.locks = locks;
     }
     // ───────── Hilfen ─────────
     label(list, key) {
@@ -199,6 +202,7 @@ let CadService = class CadService {
     }
     async updateIncident(actor, id, d) {
         await this.assertVisible(actor, id);
+        await this.locks.assertFree('incident', id, actor.userId);
         const cfg = await this.validateIncident(d);
         const before = await this.prisma.incident.findUnique({ where: { id } });
         if (!before)
@@ -690,7 +694,7 @@ exports.CadService = CadService;
 exports.CadService = CadService = __decorate([
     (0, common_1.Injectable)(),
     __metadata("design:paramtypes", [prisma_service_1.PrismaService, audit_service_1.AuditService, permission_service_1.PermissionService, realtime_service_1.RealtimeService,
-        timeline_service_1.TimelineService, cad_config_service_1.CadConfigService, cad_notify_service_1.CadNotifyService])
+        timeline_service_1.TimelineService, cad_config_service_1.CadConfigService, cad_notify_service_1.CadNotifyService, locks_service_1.LocksService])
 ], CadService);
 /** Punkt-in-Polygon (Strahlverfahren). */
 function inside(x, z, pts) {
