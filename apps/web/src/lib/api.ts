@@ -25,7 +25,7 @@ export async function api<T = unknown>(path: string, init: { method?: string; bo
   const data = text ? safeJson(text) : undefined;
   if (!res.ok) {
     const e = (data ?? {}) as { code?: string; message?: string; requestId?: string; details?: { reason?: string } };
-    if (res.status === 401 && path !== '/auth/login' && (path !== '/auth/me' || e.details?.reason === 'NO_ACCESS')) onUnauthenticated?.(e.details?.reason);
+    if (res.status === 401 && !path.startsWith('/auth/login') && (path !== '/auth/me' || e.details?.reason === 'NO_ACCESS')) onUnauthenticated?.(e.details?.reason);
     throw new ApiError(res.status, e.code ?? 'ERROR', e.message ?? res.statusText, e.requestId, e.details);
   }
   return data as T;

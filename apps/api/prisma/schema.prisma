@@ -24,6 +24,12 @@ model User {
   failedLogins       Int       @default(0)
   lockedUntil        DateTime?
   lastLogin          DateTime?
+  /// Zwei-Faktor (TOTP): Geheimnis verschlüsselt; aktiv ab totpEnabledAt. Wiederherstellungscodes nur als SHA-256.
+  totpSecret         String?
+  totpPending        String?
+  totpEnabledAt      DateTime?
+  totpLastStep       Int?
+  totpRecovery       String[]  @default([])
   createdAt          DateTime  @default(now())
   updatedAt          DateTime  @updatedAt
   version            Int       @default(1)

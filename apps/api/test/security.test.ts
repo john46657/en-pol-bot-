@@ -18,7 +18,8 @@ afterAll(async () => { await app.close(); });
 
 /** Jede HTTP-Route muss entweder öffentlich sein, eine Permission verlangen oder explizit als „nur authentifiziert, Prüfung im Service“ gelistet sein. */
 const AUTH_ONLY_ALLOWLIST = new Set([
-  'AuthController.logout', 'AuthController.me', 'AuthController.discordLink', // discordLink: verknüpft nur das eigene Konto
+  'AuthController.logout', 'AuthController.me', 'AuthController.twoFactorStatus', 'AuthController.twoFactorSetup', 'AuthController.twoFactorEnable', 'AuthController.twoFactorDisable', 'AuthController.twoFactorRecovery', // nur das eigene Konto
+  'AuthController.discordLink', // discordLink: verknüpft nur das eigene Konto
   'NotificationsController.list', 'NotificationsController.readAll', 'NotificationsController.read', 'NotificationsController.archive', // immer per userId gefiltert
   'SearchController.search', 'StudioController.config', 'DiscordController.link', 'DiscordController.linkCode', 'DiscordController.unlinkSelf', 'AnalyticsController.overview', // pro Entität/Kennzahl geprüft
   'ExportController.export', 'MediaController.upload', 'MediaController.list', 'MediaController.download', // Service-Ebene

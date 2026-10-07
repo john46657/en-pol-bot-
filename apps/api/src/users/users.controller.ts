@@ -2,6 +2,7 @@ import { Body, Controller, Delete, Get, HttpCode, Param, ParseUUIDPipe, Post, Pu
 import { ApiTags } from '@nestjs/swagger';
 import { z } from 'zod';
 import { UsersService } from './users.service';
+import { TwoFactorService } from '../auth/two-factor.service';
 import { CurrentActor, RequirePermission } from '../authz/decorators';
 import type { Actor } from '../audit/audit.service';
 import { zodBody } from '../common/zod.pipe';
@@ -22,7 +23,7 @@ const override = z.object({ permission: z.string(), effect: z.enum(['ALLOW', 'DE
 @ApiTags('users')
 @Controller('users')
 export class UsersController {
-  constructor(private readonly users: UsersService) {}
+  constructor(private readonly users: UsersService, private readonly twoFactor: TwoFactorService) {}
 
   @Get() @RequirePermission('users.view')
   list(@Query(zodBody(pageQuery)) q: z.infer<typeof pageQuery>) { return this.users.list(q); }
@@ -38,6 +39,10 @@ export class UsersController {
 
   @Put(':id/active') @RequirePermission('users.manage')
   setActive(@CurrentActor() a: Actor, @Param('id', ParseUUIDPipe) id: string, @Body(zodBody(active)) b: z.infer<typeof active>) { return this.users.setActive(a, id, b.active, b.reason); }
+
+  /** Zwei-Faktor eines Kontos zurücksetzen (Handy verloren, keine Wiederherstellungscodes). */
+  @Post(':id/2fa/reset') @HttpCode(204) @RequirePermission('users.manage')
+  async resetTwoFactor(@CurrentActor() a: Actor, @Param('id', ParseUUIDPipe) id: string) { await this.twoFactor.adminReset(a, id); }
 
   @Put(':id/roles') @RequirePermission('roles.manage')
   setRoles(@CurrentActor() a: Actor, @Param('id', ParseUUIDPipe) id: string, @Body(zodBody(roles)) b: z.infer<typeof roles>) { return this.users.setRoles(a, id, b.roleIds); }
