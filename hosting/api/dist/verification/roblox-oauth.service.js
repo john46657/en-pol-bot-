@@ -25,6 +25,8 @@ exports.oauthSettingsSchema = zod_1.z.object({
     clientId: zod_1.z.string().trim().regex(/^\d{5,25}$/, 'Client-ID: nur Ziffern (aus create.roblox.com → OAuth 2.0 Apps)').or(zod_1.z.literal('')),
     /** Leer lassen = bisheriges Secret behalten. */
     clientSecret: zod_1.z.string().trim().max(200).optional(),
+    /** Zusätzlich „Mit Code verifizieren“ anbieten (z. B. solange Roblox die App noch nicht freigegeben hat). */
+    allowCode: zod_1.z.boolean().default(true),
 });
 class RobloxOAuthFailure extends Error {
 }
@@ -52,15 +54,16 @@ let RobloxOAuthService = class RobloxOAuthService {
         return v?.clientId && v.clientSecret ? { clientId: v.clientId, clientSecret: v.clientSecret } : null;
     }
     async enabled() { return !!(await this.creds()); }
+    async allowCode() { return (await this.prisma.systemSetting.findUnique({ where: { key: KEY } }))?.value?.allowCode !== false; }
     /** Für das Dashboard – das Secret verlässt den Server nie. */
     async settings() {
         const v = (await this.prisma.systemSetting.findUnique({ where: { key: KEY } }))?.value;
         const fromEnv = !!(this.env.ROBLOX_CLIENT_ID && this.env.ROBLOX_CLIENT_SECRET);
-        return { enabled: await this.enabled(), fromEnv, clientId: fromEnv ? this.env.ROBLOX_CLIENT_ID : v?.clientId ?? '', hasSecret: fromEnv || !!v?.clientSecret, redirectUri: this.redirectUri() };
+        return { enabled: await this.enabled(), fromEnv, clientId: fromEnv ? this.env.ROBLOX_CLIENT_ID : v?.clientId ?? '', hasSecret: fromEnv || !!v?.clientSecret, allowCode: v?.allowCode !== false, redirectUri: this.redirectUri() };
     }
     async save(actor, input) {
         const cur = (await this.prisma.systemSetting.findUnique({ where: { key: KEY } }))?.value;
-        const value = { clientId: input.clientId, clientSecret: input.clientId ? (input.clientSecret || cur?.clientSecret || '') : '' };
+        const value = { clientId: input.clientId, clientSecret: input.clientId ? (input.clientSecret || cur?.clientSecret || '') : '', allowCode: input.allowCode };
         await this.prisma.systemSetting.upsert({ where: { key: KEY }, create: { key: KEY, value }, update: { value } });
         await this.audit.record(actor, { action: 'verification.oauth', module: 'settings', entityType: 'SystemSetting', entityId: KEY, after: { clientId: value.clientId, secretChanged: !!input.clientSecret } });
         return this.settings();
