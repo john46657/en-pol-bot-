@@ -44,7 +44,7 @@ async function resolvePerson(c, term, opts = {}) {
     const names = (exact.length ? exact : page.items).slice(0, 8).map((p) => `${(0, format_1.plain)(p.robloxUsername)} (${p.robloxUserId ?? 'ohne ID'})`).join(', ');
     return { reply: (0, format_1.errorReply)(`Nicht eindeutig. Treffer: ${names}. Bitte exakten Namen oder die Roblox-ID angeben.`) };
 }
-const DUTY = { an: 'ON_DUTY', pause: 'BREAK', training: 'TRAINING', verwaltung: 'ADMINISTRATIVE', aus: 'OFF_DUTY' };
+const DUTY = { an: 'ON_DUTY', pause: 'BREAK', aus: 'OFF_DUTY' };
 const UNIT = { verfuegbar: 'AVAILABLE', beschaeftigt: 'BUSY', unterwegs: 'EN_ROUTE', vor_ort: 'ON_SCENE', nicht_verfuegbar: 'UNAVAILABLE', ausser_dienst: 'OFF_DUTY' };
 const PRIO = { niedrig: 'LOW', mittel: 'MEDIUM', hoch: 'HIGH', dringend: 'URGENT', kritisch: 'CRITICAL' };
 const choices = (m) => Object.keys(m).map((k) => ({ name: k.replace('_', ' '), value: k }));

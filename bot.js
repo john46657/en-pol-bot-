@@ -78066,8 +78066,6 @@ var DUTY_PANEL = { title: "\u{1F693} Dienststatus", color: COLORS.info, descript
 var DUTY_BUTTONS = [
   { id: "duty:ON_DUTY", label: "Im Dienst", emoji: "\u{1F7E2}", style: "success" },
   { id: "duty:BREAK", label: "Pause", emoji: "\u{1F7E1}", style: "secondary" },
-  { id: "duty:TRAINING", label: "Training", emoji: "\u{1F535}", style: "secondary" },
-  { id: "duty:ADMINISTRATIVE", label: "Verwaltung", emoji: "\u{1F5C2}\uFE0F", style: "secondary" },
   { id: "duty:OFF_DUTY", label: "Au\xDFer Dienst", emoji: "\u26AA", style: "danger" }
 ];
 var RADIO = { hinzufuegen: "add", entfernen: "remove", pruefen: "check", liste: "list" };
@@ -78281,7 +78279,7 @@ async function resolvePerson(c, term, opts = {}) {
   const names = (exact.length ? exact : page.items).slice(0, 8).map((p) => `${plain(p.robloxUsername)} (${p.robloxUserId ?? "ohne ID"})`).join(", ");
   return { reply: errorReply(`Nicht eindeutig. Treffer: ${names}. Bitte exakten Namen oder die Roblox-ID angeben.`) };
 }
-var DUTY = { an: "ON_DUTY", pause: "BREAK", training: "TRAINING", verwaltung: "ADMINISTRATIVE", aus: "OFF_DUTY" };
+var DUTY = { an: "ON_DUTY", pause: "BREAK", aus: "OFF_DUTY" };
 var UNIT = { verfuegbar: "AVAILABLE", beschaeftigt: "BUSY", unterwegs: "EN_ROUTE", vor_ort: "ON_SCENE", nicht_verfuegbar: "UNAVAILABLE", ausser_dienst: "OFF_DUTY" };
 var PRIO = { niedrig: "LOW", mittel: "MEDIUM", hoch: "HIGH", dringend: "URGENT", kritisch: "CRITICAL" };
 var choices2 = (m) => Object.keys(m).map((k) => ({ name: k.replace("_", " "), value: k }));

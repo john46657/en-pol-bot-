@@ -32,7 +32,6 @@ async function setDanger(c, level, reason) {
 const DUTY_PANEL = { title: '🚓 Dienststatus', color: format_1.COLORS.info, description: 'Melde dich hier mit einem Klick **in den Dienst**, in die **Pause** oder **außer Dienst**.\nDein Status erscheint sofort im Dashboard, in der Teamliste und – falls eingestellt – als Discord-Rolle.\n\n*Dein Discord-Konto muss im Dashboard verknüpft sein.*' };
 const DUTY_BUTTONS = [
     { id: 'duty:ON_DUTY', label: 'Im Dienst', emoji: '🟢', style: 'success' }, { id: 'duty:BREAK', label: 'Pause', emoji: '🟡', style: 'secondary' },
-    { id: 'duty:TRAINING', label: 'Training', emoji: '🔵', style: 'secondary' }, { id: 'duty:ADMINISTRATIVE', label: 'Verwaltung', emoji: '🗂️', style: 'secondary' },
     { id: 'duty:OFF_DUTY', label: 'Außer Dienst', emoji: '⚪', style: 'danger' },
 ];
 // ---------------- Funk-Freigabe ----------------

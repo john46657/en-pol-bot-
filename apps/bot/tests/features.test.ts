@@ -559,7 +559,7 @@ describe('Dienststatus ↔ Discord', () => {
     const { p, log } = fakePlatform();
     expect(text(await byName('dienstpanel')!.run(ctx(fakeApi({}).api, { platform: p })))).toContain('Server verwalten');
     await byName('dienstpanel')!.run(ctx(fakeApi({}).api, { platform: p, isGuildAdmin: true, config: async () => ({}) }));
-    expect(log).toEqual([`panel ${CHANNEL} duty:ON_DUTY,duty:BREAK,duty:TRAINING,duty:ADMINISTRATIVE,duty:OFF_DUTY`]);
+    expect(log).toEqual([`panel ${CHANNEL} duty:ON_DUTY,duty:BREAK,duty:OFF_DUTY`]);
     const { api, calls } = fakeApi({ 'PUT /team/me/status': {} });
     const hit = interactionFor('duty:ON_DUTY')!;
     expect(text(await hit.def.run({ ...ctx(api), args: hit.args }))).toContain('im Dienst');
