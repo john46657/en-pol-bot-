@@ -62,6 +62,7 @@ export declare class DiscordOAuthService {
             roles: string[];
             permissions: import("@enrp/shared").PermissionKey[];
             lastLogin: Date | null;
+            twoFactor: boolean;
             guildId: string | null;
             servers: string[];
         };

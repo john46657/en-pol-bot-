@@ -24,6 +24,12 @@ model User {
   failedLogins       Int       @default(0)
   lockedUntil        DateTime?
   lastLogin          DateTime?
+  /// Zwei-Faktor (TOTP): Geheimnis verschlüsselt; aktiv ab totpEnabledAt. Wiederherstellungscodes nur als SHA-256.
+  totpSecret         String?
+  totpPending        String?
+  totpEnabledAt      DateTime?
+  totpLastStep       Int?
+  totpRecovery       String[]  @default([])
   createdAt          DateTime  @default(now())
   updatedAt          DateTime  @updatedAt
   version            Int       @default(1)
@@ -38,6 +44,7 @@ model User {
   dutySessions  DutySession[]
   leaveRequests LeaveRequest[]
   settings      UserSettings?
+  editLocks     EditLock[]
 
   @@index([robloxUsername])
 }
@@ -1240,4 +1247,52 @@ model CadServerLink {
   updatedAt     DateTime @updatedAt
 
   @@unique([sourceGuildId, targetGuildId])
+}
+
+// ───────────── Datensatz-Sperre beim Bearbeiten ─────────────
+
+/// Wer gerade einen Datensatz bearbeitet. Läuft ohne Lebenszeichen nach kurzer Zeit ab.
+model EditLock {
+  entityType String
+  entityId   String   @db.Uuid
+  userId     String   @db.Uuid
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt  DateTime @default(now())
+  expiresAt  DateTime
+
+  @@id([entityType, entityId])
+  @@index([userId])
+}
+
+// ───────────── Studio-Workflows ─────────────
+
+/// „Wenn <Audit-Ereignis> (und Bedingungen) → Aktionen“. Wirkt nur auf Ereignisse ab `activeSince`.
+model Workflow {
+  id          String        @id @default(uuid()) @db.Uuid
+  name        String
+  enabled     Boolean       @default(true)
+  trigger     String
+  conditions  Json          @default("[]")
+  actions     Json          @default("[]")
+  activeSince DateTime      @default(now())
+  createdById String?       @db.Uuid
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  runs        WorkflowRun[]
+}
+
+/// Jede Ausführung (einmal je Workflow und Audit-Eintrag).
+model WorkflowRun {
+  id         String   @id @default(uuid()) @db.Uuid
+  workflowId String   @db.Uuid
+  workflow   Workflow @relation(fields: [workflowId], references: [id], onDelete: Cascade)
+  auditId    String   @db.Uuid
+  action     String
+  entityId   String?
+  ok         Boolean  @default(true)
+  error      String?
+  createdAt  DateTime @default(now())
+
+  @@unique([workflowId, auditId])
+  @@index([workflowId, createdAt])
 }

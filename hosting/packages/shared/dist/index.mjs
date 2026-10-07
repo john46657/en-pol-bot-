@@ -483,6 +483,74 @@ var LEGACY_DANGER = { GREEN: "STATUS_1", YELLOW: "STATUS_2", RED: "STATUS_4" };
 function dangerLevelOf(cfg, key) {
   return cfg.levels.find((l) => l.key === key) ?? cfg.levels.find((l) => l.key === LEGACY_DANGER[key ?? ""]) ?? cfg.levels[0];
 }
+
+// src/workflows.ts
+var WORKFLOW_TRIGGERS = [
+  { key: "incident.create", label: "Einsatz angelegt (MDT)", fields: ["number", "title", "priority", "location", "status"] },
+  { key: "cad.incident.create", label: "CAD-Einsatz angelegt", fields: ["number", "title", "priority", "type", "location", "keyword"] },
+  { key: "incident.status", label: "Einsatzstatus ge\xE4ndert", fields: ["number", "status", "priority"] },
+  { key: "report.create", label: "Bericht angelegt", fields: ["title", "type", "status"] },
+  { key: "report.submitted", label: "Bericht eingereicht", fields: ["title", "type", "status"] },
+  { key: "report.approved", label: "Bericht genehmigt", fields: ["title", "type"] },
+  { key: "report.rejected", label: "Bericht abgelehnt", fields: ["title", "type"] },
+  { key: "complaint.create", label: "Beschwerde eingegangen", fields: ["title", "status"] },
+  { key: "wanted.create", label: "Fahndung angelegt", fields: ["subject", "priority", "kind", "status"] },
+  { key: "investigation.create", label: "Ermittlung er\xF6ffnet", fields: ["title", "status"] },
+  { key: "evidence.create", label: "Beweismittel erfasst", fields: ["description", "status"] },
+  { key: "person.create", label: "Personenakte angelegt", fields: ["robloxUsername", "status"] },
+  { key: "ticket.create", label: "Strafzettel ausgestellt", fields: ["number", "status"] },
+  { key: "application.submit", label: "Bewerbung eingegangen", fields: ["status"] },
+  { key: "leave.request", label: "Abmeldung beantragt", fields: ["reason", "status"] },
+  { key: "leave.approve", label: "Abmeldung angenommen", fields: ["reason"] },
+  { key: "leave.deny", label: "Abmeldung abgelehnt", fields: ["reason"] },
+  { key: "personnel.promote", label: "Bef\xF6rderung", fields: ["rank", "callsign"] },
+  { key: "danger.set", label: "Gefahrenstatus ge\xE4ndert", fields: ["level"] },
+  { key: "lock.takeover", label: "Bearbeitung \xFCbernommen", fields: [] },
+  { key: "auth.2fa.reset", label: "Zwei-Faktor zur\xFCckgesetzt", fields: [] }
+];
+var WORKFLOW_OPS = ["eq", "neq", "contains", "in", "exists", "not_exists"];
+var WORKFLOW_OP_LABELS = { eq: "ist", neq: "ist nicht", contains: "enth\xE4lt", in: "ist eins von (Komma)", exists: "ist gesetzt", not_exists: "ist leer" };
+var WORKFLOW_ACTION_LABELS = {
+  notify_permission: "\u{1F514} Benachrichtigung an alle mit Recht \u2026",
+  notify_role: "\u{1F514} Benachrichtigung an Rolle \u2026",
+  discord: "\u{1F4AC} Discord-Meldung in Kanal \u2026"
+};
+var triggerMatches = (pattern, action) => pattern.endsWith("*") ? action.startsWith(pattern.slice(0, -1)) : pattern === action;
+function fieldValue(obj, path) {
+  let cur = obj;
+  for (const k of path.split(".")) {
+    if (cur === null || typeof cur !== "object") return void 0;
+    cur = cur[k];
+  }
+  return cur;
+}
+function conditionMatches(after, c) {
+  const v = fieldValue(after, c.field);
+  const s = v === void 0 || v === null ? "" : typeof v === "object" ? JSON.stringify(v) : String(v);
+  const want = (c.value ?? "").trim();
+  switch (c.op) {
+    case "eq":
+      return s.toLowerCase() === want.toLowerCase();
+    case "neq":
+      return s.toLowerCase() !== want.toLowerCase();
+    case "contains":
+      return s.toLowerCase().includes(want.toLowerCase());
+    case "in":
+      return want.split(",").map((x) => x.trim().toLowerCase()).filter(Boolean).includes(s.toLowerCase());
+    case "exists":
+      return s !== "";
+    case "not_exists":
+      return s === "";
+  }
+}
+function renderTemplate(tpl, ctx) {
+  return tpl.replace(/\{\{\s*([a-zA-Z0-9_.]+)\s*\}\}/g, (_, key) => {
+    const base = { action: ctx.action, entityType: ctx.entityType ?? "", entityId: ctx.entityId ?? "", actor: ctx.actor ?? "System" };
+    const v = key in base ? base[key] : fieldValue(ctx.after, key.startsWith("after.") ? key.slice(6) : key);
+    const s = v === void 0 || v === null ? "\u2014" : typeof v === "object" ? JSON.stringify(v) : String(v);
+    return s.slice(0, 300);
+  });
+}
 export {
   ALL_PERMISSIONS,
   APPLICATION_STATUSES,
@@ -541,15 +609,21 @@ export {
   UNIT_STATUSES,
   WANTED_STATUSES,
   WANTED_TRANSITIONS,
+  WORKFLOW_ACTION_LABELS,
+  WORKFLOW_OPS,
+  WORKFLOW_OP_LABELS,
+  WORKFLOW_TRIGGERS,
   areaGrantsFor,
   assertTransition,
   can,
   canDelegate,
   canTransition,
   checkAnswer,
+  conditionMatches,
   dangerLevelOf,
   defaultTicketButtons,
   effectivePermissions,
+  fieldValue,
   formatMinutes,
   freeFieldKey,
   gameToPixel,
@@ -560,9 +634,11 @@ export {
   parsePlayer,
   pixelToGame,
   renderApplicationText,
+  renderTemplate,
   renderTicketText,
   resolvePermission,
   rolesMatch,
   ticketChannelName,
-  ticketNumber
+  ticketNumber,
+  triggerMatches
 };

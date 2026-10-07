@@ -26,7 +26,8 @@ function DiscordIcon() {
 }
 
 export function Login() {
-  const { user, login } = useAuth();
+  const { user, login, loginTwoFactor } = useAuth();
+  const [ticket, setTicket] = useState<string>();
   const loc = useLocation();
   const providers = useQuery({ queryKey: ['auth-providers'], queryFn: () => api<{ discord: boolean; password?: boolean }>('/auth/providers'), retry: false });
   const passwordForm = !providers.data || providers.data.password !== false; // nur Discord, sobald eingerichtet
@@ -38,9 +39,14 @@ export function Login() {
     e.preventDefault();
     const f = new FormData(e.currentTarget);
     setBusy(true); setErr(undefined);
-    try { await login(String(f.get('username')), String(f.get('password'))); }
-    catch (x) { setErr(x instanceof ApiError && x.status === 429 ? 'Too many attempts. Please wait a minute.' : 'Invalid username or password.'); }
-    finally { setBusy(false); }
+    try {
+      if (ticket) await loginTwoFactor(ticket, String(f.get('code')));
+      else { const r = await login(String(f.get('username')), String(f.get('password'))); if (r) setTicket(r.ticket); }
+    } catch (x) {
+      if (x instanceof ApiError && x.status === 429) setErr('Too many attempts. Please wait a minute.');
+      else if (ticket) { setErr(x instanceof ApiError && /abgelaufen/.test(x.message) ? x.message : 'Der Code stimmt nicht.'); if (x instanceof ApiError && /abgelaufen/.test(x.message)) setTicket(undefined); }
+      else setErr('Invalid username or password.');
+    } finally { setBusy(false); }
   };
   return (
     <div className="grid min-h-full place-items-center p-4">
@@ -56,7 +62,15 @@ export function Login() {
             {passwordForm && <div className="flex items-center gap-2 text-xs text-muted"><span className="h-px flex-1 bg-line" />oder mit Benutzername (Notfall-Zugang)<span className="h-px flex-1 bg-line" /></div>}
           </>
         )}
-        {passwordForm && (
+        {passwordForm && ticket && (
+          <>
+            <p className="text-sm">Zwei-Faktor-Anmeldung: Code aus der Authenticator-App eingeben – oder einen Wiederherstellungscode.</p>
+            <Field label="Code" error={err}>{(id) => <Input id={id} name="code" autoComplete="one-time-code" inputMode="text" maxLength={20} required autoFocus />}</Field>
+            <Button type="submit" disabled={busy} className="w-full">{busy ? 'Prüfe…' : 'Bestätigen'}</Button>
+            <button type="button" className="w-full text-xs text-muted underline" onClick={() => { setTicket(undefined); setErr(undefined); }}>Zurück</button>
+          </>
+        )}
+        {passwordForm && !ticket && (
           <>
             <Field label="Username">{(id) => <Input id={id} name="username" autoComplete="username" required autoFocus={!providers.data?.discord} />}</Field>
             <Field label="Password" error={err}>{(id) => <Input id={id} name="password" type="password" autoComplete="current-password" required />}</Field>

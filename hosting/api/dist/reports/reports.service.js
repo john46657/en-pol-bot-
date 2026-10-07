@@ -22,6 +22,7 @@ const links_1 = require("../common/links");
 const numbering_1 = require("../common/numbering");
 const transition_1 = require("../common/transition");
 const pagination_1 = require("../common/pagination");
+const locks_service_1 = require("../locks/locks.service");
 const stable = (v) => JSON.stringify(v, (_k, x) => (x && typeof x === 'object' && !Array.isArray(x) ? Object.fromEntries(Object.entries(x).sort(([a], [b]) => a.localeCompare(b))) : x));
 const hashContent = (c) => (0, node_crypto_1.createHash)('sha256').update(stable(c)).digest('hex');
 exports.hashContent = hashContent;
@@ -30,11 +31,13 @@ let ReportsService = class ReportsService {
     audit;
     timeline;
     perms;
-    constructor(prisma, audit, timeline, perms) {
+    locks;
+    constructor(prisma, audit, timeline, perms, locks) {
         this.prisma = prisma;
         this.audit = audit;
         this.timeline = timeline;
         this.perms = perms;
+        this.locks = locks;
     }
     /** Autoren sehen eigene Berichte; reports.review/approve-Inhaber sehen alle. Verhindert, dass fremde Entwürfe auftauchen. */
     async canSeeAll(userId) { return (await this.perms.has(userId, 'reports.review')) || (await this.perms.has(userId, 'reports.approve')); }
@@ -77,6 +80,7 @@ let ReportsService = class ReportsService {
     /** Jede Änderung erzeugt eine neue unveränderliche Version; ältere werden nie überschrieben. */
     async edit(actor, id, d) {
         const userId = actor.userId;
+        await this.locks.assertFree('report', id, userId);
         return this.prisma.$transaction(async (tx) => {
             const r = await tx.report.findUnique({ where: { id } });
             if (!r || !(await this.visible(userId, r)))
@@ -119,6 +123,6 @@ let ReportsService = class ReportsService {
 exports.ReportsService = ReportsService;
 exports.ReportsService = ReportsService = __decorate([
     (0, common_1.Injectable)(),
-    __metadata("design:paramtypes", [prisma_service_1.PrismaService, audit_service_1.AuditService, timeline_service_1.TimelineService, permission_service_1.PermissionService])
+    __metadata("design:paramtypes", [prisma_service_1.PrismaService, audit_service_1.AuditService, timeline_service_1.TimelineService, permission_service_1.PermissionService, locks_service_1.LocksService])
 ], ReportsService);
 //# sourceMappingURL=reports.service.js.map

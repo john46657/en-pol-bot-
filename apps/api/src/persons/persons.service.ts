@@ -8,10 +8,11 @@ import { Prisma } from '@prisma/client';
 import { AppError } from '../common/errors';
 import { PageQuery, pageResult, skipTake } from '../common/pagination';
 import { RobloxService } from './roblox.service';
+import { LocksService } from '../locks/locks.service';
 
 @Injectable()
 export class PersonsService {
-  constructor(private readonly prisma: PrismaService, private readonly audit: AuditService, private readonly timeline: TimelineService, private readonly studio: StudioService, private readonly roblox: RobloxService) {}
+  constructor(private readonly prisma: PrismaService, private readonly audit: AuditService, private readonly timeline: TimelineService, private readonly studio: StudioService, private readonly roblox: RobloxService, private readonly locks: LocksService) {}
 
   async list(p: PageQuery, includeArchived = false) {
     const where = {
@@ -70,6 +71,7 @@ export class PersonsService {
   }
 
   async update(actor: Actor, id: string, version: number, d: { robloxUsername?: string; aliases?: string[]; notes?: string | null; custom?: Record<string, unknown> }) {
+    await this.locks.assertFree('person', id, actor.userId);
     const before = await this.get(id);
     const { custom: rawCustom, ...rest } = d;
     const custom = rawCustom ? await this.studio.check('persons', rawCustom, before.custom as Record<string, unknown> | null) : undefined;

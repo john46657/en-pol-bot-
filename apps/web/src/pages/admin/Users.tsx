@@ -4,10 +4,10 @@ import { ALL_PERMISSIONS } from '@enrp/shared';
 import { api, ApiError, type Page } from '../../lib/api';
 import { useAuth } from '../../lib/auth';
 import { Badge, Button, Card, ConfirmDialog, Field, fmt, Input, Modal, Select, StatusBadge } from '../../components/ui';
-import { DataTable, useDebounced } from '../../components/DataTable';
+import { DataTable, useDebounced, useTablePageSize } from '../../components/DataTable';
 import { FormModal } from '../../components/FormModal';
 
-interface U { id: string; username: string; displayName: string; active: boolean; lastLogin: string | null; robloxUserId: string | null; robloxUsername: string | null; robloxStatus: string; roles: { role: { id: string; name: string } }[]; overrides: { permissionKey: string; effect: string; reason: string | null }[] }
+interface U { id: string; username: string; displayName: string; active: boolean; lastLogin: string | null; totpEnabledAt?: string | null; robloxUserId: string | null; robloxUsername: string | null; robloxStatus: string; roles: { role: { id: string; name: string } }[]; overrides: { permissionKey: string; effect: string; reason: string | null }[] }
 interface Role { id: string; name: string }
 
 export function Users() {
@@ -18,13 +18,14 @@ export function Users() {
   const [creating, setCreating] = useState(false);
   const [sel, setSel] = useState<U>();
   const q = useDebounced(search);
-  const list = useQuery({ queryKey: ['users', page, q], queryFn: () => api<Page<U>>('/users', { query: { page, q: q || undefined } }), placeholderData: (p) => p });
+  const [pageSize, setPageSize] = useTablePageSize();
+  const list = useQuery({ queryKey: ['users', page, pageSize, q], queryFn: () => api<Page<U>>('/users', { query: { page, pageSize, q: q || undefined } }), placeholderData: (p) => p });
   const roles = useQuery({ queryKey: ['roles'], queryFn: () => api<Role[]>('/roles'), enabled: can('roles.view') });
   const manage = can('users.manage');
   return (
     <>
       <div className="mb-4 flex items-center justify-between"><h1 className="text-xl font-semibold">Users</h1>{manage && <Button onClick={() => setCreating(true)}>New user</Button>}</div>
-      <DataTable<U> rows={list.data?.items} total={list.data?.total ?? 0} page={page} pageSize={25} onPage={setPage} loading={list.isLoading} error={list.error} onRetry={() => void list.refetch()} search={search} onSearch={(s) => { setSearch(s); setPage(1); }}
+      <DataTable<U> rows={list.data?.items} total={list.data?.total ?? 0} page={page} pageSize={pageSize} onPage={setPage} onPageSize={(n) => { setPageSize(n); setPage(1); }} loading={list.isLoading} error={list.error} onRetry={() => void list.refetch()} search={search} onSearch={(s) => { setSearch(s); setPage(1); }}
         onRowClick={setSel} empty={{ text: 'No users found.' }}
         columns={[{ key: 'username', label: 'Username' }, { key: 'displayName', label: 'Name' }, { key: 'roles', label: 'Roles', render: (u) => u.roles.map((r) => r.role.name).join(', ') || '—' }, { key: 'roblox', label: 'Roblox', render: (u) => u.robloxUserId ? <span>{u.robloxUserId} <Badge>{u.robloxStatus}</Badge></span> : '—' }, { key: 'active', label: 'Status', render: (u) => <StatusBadge status={u.active ? 'ACTIVE' : 'OFF_DUTY'} /> }, { key: 'lastLogin', label: 'Last login', render: (u) => fmt(u.lastLogin) }]} />
       <FormModal open={creating} onClose={() => setCreating(false)} title="New user" endpoint="/users" invalidate={[['users']]}
@@ -40,6 +41,7 @@ function UserDrawer({ user, roles, manage, canRoles, isSelf, onClose }: { user: 
   const [rid, setRid] = useState(''); const [rname, setRname] = useState('');
   const [perm, setPerm] = useState<string>(ALL_PERMISSIONS[0]!); const [effect, setEffect] = useState('DENY'); const [why, setWhy] = useState('');
   const [confirmDisable, setConfirmDisable] = useState(false);
+  const [confirm2fa, setConfirm2fa] = useState(false);
   const refresh = async () => setU(await api<U>(`/users/${u.id}`));
   const run = async (fn: () => Promise<unknown>) => { try { setErr(undefined); await fn(); await refresh(); } catch (e) { setErr(e instanceof ApiError ? `${e.message}${e.requestId ? ` (Request ID ${e.requestId})` : ''}` : 'Failed'); } };
   const setRoles = useMutation({ mutationFn: (ids: string[]) => api(`/users/${u.id}/roles`, { method: 'PUT', body: { roleIds: ids } }) });
@@ -60,9 +62,13 @@ function UserDrawer({ user, roles, manage, canRoles, isSelf, onClose }: { user: 
           {u.overrides.length === 0 ? <p className="text-sm text-muted">No overrides.</p> : <ul className="mb-3 space-y-1">{u.overrides.map((o) => <li key={o.permissionKey} className="flex items-center justify-between text-sm"><span><Badge tone={o.effect === 'DENY' ? 'danger' : 'success'}>{o.effect}</Badge> <code>{o.permissionKey}</code> {o.reason && <span className="text-xs text-muted">— {o.reason}</span>}</span>{canRoles && <Button size="sm" variant="ghost" onClick={() => void run(() => api(`/users/${u.id}/overrides/${o.permissionKey}`, { method: 'DELETE' }))}>Remove</Button>}</li>)}</ul>}
           {canRoles && <div className="grid items-end gap-2 sm:grid-cols-[1fr_auto_1fr_auto]"><Field label="Permission">{(id) => <Select id={id} value={perm} onChange={(e) => setPerm(e.target.value)}>{ALL_PERMISSIONS.map((p) => <option key={p}>{p}</option>)}</Select>}</Field><Field label="Effect">{(id) => <Select id={id} value={effect} onChange={(e) => setEffect(e.target.value)}><option>ALLOW</option><option>DENY</option></Select>}</Field><Field label="Reason">{(id) => <Input id={id} value={why} onChange={(e) => setWhy(e.target.value)} />}</Field><Button onClick={() => void run(() => api(`/users/${u.id}/overrides`, { method: 'PUT', body: { permission: perm, effect, reason: why || undefined } }))}>Set override</Button></div>}
         </Card>
+        <Card title="Zwei-Faktor-Anmeldung">
+          <div className="flex flex-wrap items-center justify-between gap-2 text-sm"><span>{u.totpEnabledAt ? <>Aktiv seit {fmt(u.totpEnabledAt)}</> : 'Nicht eingerichtet'}</span>{manage && !isSelf && u.totpEnabledAt && <Button variant="secondary" onClick={() => setConfirm2fa(true)}>Zurücksetzen</Button>}</div>
+        </Card>
         {manage && !isSelf && <div className="flex justify-end">{u.active ? <Button variant="danger" onClick={() => setConfirmDisable(true)}>Disable account</Button> : <Button onClick={() => void run(() => api(`/users/${u.id}/active`, { method: 'PUT', body: { active: true } }))}>Enable account</Button>}</div>}
       </div>
       <ConfirmDialog open={confirmDisable} danger title="Disable account" message="The user is signed out immediately and cannot log in until re-enabled. This is audited." confirmLabel="Disable" onClose={() => setConfirmDisable(false)} onConfirm={() => { setConfirmDisable(false); void run(() => api(`/users/${u.id}/active`, { method: 'PUT', body: { active: false } })); }} />
+      <ConfirmDialog open={confirm2fa} danger title="Zwei-Faktor zurücksetzen" message="Nur wenn die Person ihr Handy und ihre Wiederherstellungscodes verloren hat – Identität vorher prüfen. Danach reicht das Passwort, bis sie 2FA neu einrichtet. Wird protokolliert." confirmLabel="Zurücksetzen" onClose={() => setConfirm2fa(false)} onConfirm={() => { setConfirm2fa(false); void run(() => api(`/users/${u.id}/2fa/reset`, { method: 'POST' })); }} />
     </Modal>
   );
 }

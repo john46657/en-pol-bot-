@@ -28,6 +28,7 @@ export declare class UsersService {
             robloxVerifiedAt: Date | null;
             active: boolean;
             lastLogin: Date | null;
+            totpEnabledAt: Date | null;
             updatedAt: Date;
             roles: {
                 role: {
@@ -57,6 +58,7 @@ export declare class UsersService {
         robloxVerifiedAt: Date | null;
         active: boolean;
         lastLogin: Date | null;
+        totpEnabledAt: Date | null;
         updatedAt: Date;
         roles: {
             role: {
@@ -88,6 +90,7 @@ export declare class UsersService {
         robloxVerifiedAt: Date | null;
         active: boolean;
         lastLogin: Date | null;
+        totpEnabledAt: Date | null;
         updatedAt: Date;
         roles: {
             role: {
@@ -117,6 +120,7 @@ export declare class UsersService {
         robloxVerifiedAt: Date | null;
         active: boolean;
         lastLogin: Date | null;
+        totpEnabledAt: Date | null;
         updatedAt: Date;
         roles: {
             role: {
@@ -142,6 +146,7 @@ export declare class UsersService {
         robloxVerifiedAt: Date | null;
         active: boolean;
         lastLogin: Date | null;
+        totpEnabledAt: Date | null;
         updatedAt: Date;
         roles: {
             role: {
@@ -167,6 +172,7 @@ export declare class UsersService {
         robloxVerifiedAt: Date | null;
         active: boolean;
         lastLogin: Date | null;
+        totpEnabledAt: Date | null;
         updatedAt: Date;
         roles: {
             role: {

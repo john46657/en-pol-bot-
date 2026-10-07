@@ -661,4 +661,56 @@ declare const DEFAULT_DANGER_CONFIG: DangerConfig;
 declare const LEGACY_DANGER: Record<string, string>;
 declare function dangerLevelOf(cfg: DangerConfig, key: string | null | undefined): DangerLevelDef;
 
-export { ALL_PERMISSIONS, APPLICATION_STATUSES, APPLICATION_TRANSITIONS, APPLICATION_VARIABLES, AREA_PERMISSIONS, type AnswerCheck, type ApplicationStatus, type ApplicationVars, type ButtonStyleName, CAD_EVENTS, CAD_EVENT_LABELS, CAD_EVENT_SEND_TYPE, CAD_LINK_ACTIONS, CAD_LINK_LABELS, CAD_LINK_SEND_TYPES, CAD_WIDGETS, CAD_WIDGET_LABELS, CLAIM_MODES, CLOSE_REASON_MODES, CLOSE_REASON_SOURCES, COMPLAINT_STATUSES, COMPLAINT_TRANSITIONS, type CadConfig, type CadEvent, type CadField, type CadLayer, type CadMapConfig, type CadMarkerStyle, type CadOption, type CadRoute, type CadStatusOption, type CadUnitType, type ClaimMode, type CloseReasonMode, type CloseReasonSource, type ComplaintStatus, type ComponentButton, type ComponentSelect, DEFAULT_APPLICATION_MESSAGES, DEFAULT_CAD_CONFIG, DEFAULT_DANGER_CONFIG, DISPATCH_STATUSES, DISPATCH_TRANSITIONS, DUTY_STATUSES, type DangerConfig, type DangerLevelDef, type DispatchStatus, type DutyStatus, ERLC_DEFAULT_BLOCKED, ERLC_DEFAULT_CRITICAL, ERLC_FEATURES, ERLC_FEATURE_LABELS, ERLC_MAP_SIZE, ERLC_POLL_OPTIONS, ERLC_STATUSES, ERLC_STATUS_LABEL, EVIDENCE_CUSTODY_STATES, EVIDENCE_TRANSITIONS, type Effect, type EmbedSpec, type ErlcFeature, type ErlcStatus, type EvidenceCustodyState, FORM_QUESTION_TYPES, type Field, type FormField, type FormOption, type FormQuestionType, INVESTIGATION_STATUSES, INVESTIGATION_TRANSITIONS, InvalidTransitionError, type InvestigationStatus, LEGACY_DANGER, MAX_FORM_OPTIONS, MAX_FORM_QUESTIONS, type MessageSpec, PERMISSION_CATALOG, PRIORITIES, type PermissionContext, type PermissionGrant, type PermissionKey, type Priority, QUESTION_TYPES, type QuestionType, REPORT_STATUSES, REPORT_TRANSITIONS, REPORT_TYPES, ROBLOX_VERIFICATION_STATUSES, type ReportStatus, type ReportType, type Resolution, type ResolutionSource, type RobloxVerificationStatus, STATUS_KINDS, type StatusKind, TICKET_ACTIONS, TICKET_ACTION_KEYS, TICKET_PLACEHOLDERS, TICKET_STATUSES, TICKET_TRANSITIONS, type TicketAction, type TicketButtonConfig, type TicketEffect, type TicketQuestion, type TicketStatus, type TicketVars, type TransitionMap, UNIT_STATUSES, type UnitStatus, WANTED_STATUSES, WANTED_TRANSITIONS, type WantedStatus, areaGrantsFor, assertTransition, can, canDelegate, canTransition, checkAnswer, dangerLevelOf, defaultTicketButtons, effectivePermissions, formatMinutes, freeFieldKey, gameToPixel, grantMatches, isPermissionKey, isValidRobloxUserId, normalizeField, parsePlayer, pixelToGame, renderApplicationText, renderTicketText, resolvePermission, rolesMatch, ticketChannelName, ticketNumber };
+/**
+ * Studio-Workflows: „Wenn <Ereignis> (und Bedingungen) → Aktionen“.
+ * Ereignisse sind Einträge im Audit-Protokoll (`action`), Bedingungen prüfen Felder des neuen Stands (`after`).
+ */
+interface WorkflowTrigger {
+    key: string;
+    label: string;
+    fields: string[];
+}
+/** Vorschläge im Editor. Eigene Ereignisse (jede Audit-Aktion, auch mit `*` am Ende) sind erlaubt. */
+declare const WORKFLOW_TRIGGERS: WorkflowTrigger[];
+declare const WORKFLOW_OPS: readonly ["eq", "neq", "contains", "in", "exists", "not_exists"];
+type WorkflowOp = (typeof WORKFLOW_OPS)[number];
+declare const WORKFLOW_OP_LABELS: Record<WorkflowOp, string>;
+interface WorkflowCondition {
+    field: string;
+    op: WorkflowOp;
+    value?: string;
+}
+type WorkflowAction = {
+    type: 'notify_permission';
+    permission: string;
+    title: string;
+    body?: string;
+} | {
+    type: 'notify_role';
+    roleId: string;
+    title: string;
+    body?: string;
+} | {
+    type: 'discord';
+    channelIds: string[];
+    pingRoleIds?: string[];
+    title: string;
+    text?: string;
+    color?: string;
+};
+declare const WORKFLOW_ACTION_LABELS: Record<WorkflowAction['type'], string>;
+/** Ereignis-Muster: genau oder mit `*` am Ende (z. B. `report.*`). */
+declare const triggerMatches: (pattern: string, action: string) => boolean;
+/** Feld lesen, auch verschachtelt (`unit.callsign`). */
+declare function fieldValue(obj: unknown, path: string): unknown;
+declare function conditionMatches(after: unknown, c: WorkflowCondition): boolean;
+/** `{{feld}}` / `{{after.feld}}` / `{{action}}` / `{{actor}}` / `{{entityId}}` ersetzen. Werte werden gekürzt; Discord-Erwähnungen entschärft der Bot. */
+declare function renderTemplate(tpl: string, ctx: {
+    action: string;
+    entityType?: string | null;
+    entityId?: string | null;
+    actor?: string | null;
+    after?: unknown;
+}): string;
+
+export { ALL_PERMISSIONS, APPLICATION_STATUSES, APPLICATION_TRANSITIONS, APPLICATION_VARIABLES, AREA_PERMISSIONS, type AnswerCheck, type ApplicationStatus, type ApplicationVars, type ButtonStyleName, CAD_EVENTS, CAD_EVENT_LABELS, CAD_EVENT_SEND_TYPE, CAD_LINK_ACTIONS, CAD_LINK_LABELS, CAD_LINK_SEND_TYPES, CAD_WIDGETS, CAD_WIDGET_LABELS, CLAIM_MODES, CLOSE_REASON_MODES, CLOSE_REASON_SOURCES, COMPLAINT_STATUSES, COMPLAINT_TRANSITIONS, type CadConfig, type CadEvent, type CadField, type CadLayer, type CadMapConfig, type CadMarkerStyle, type CadOption, type CadRoute, type CadStatusOption, type CadUnitType, type ClaimMode, type CloseReasonMode, type CloseReasonSource, type ComplaintStatus, type ComponentButton, type ComponentSelect, DEFAULT_APPLICATION_MESSAGES, DEFAULT_CAD_CONFIG, DEFAULT_DANGER_CONFIG, DISPATCH_STATUSES, DISPATCH_TRANSITIONS, DUTY_STATUSES, type DangerConfig, type DangerLevelDef, type DispatchStatus, type DutyStatus, ERLC_DEFAULT_BLOCKED, ERLC_DEFAULT_CRITICAL, ERLC_FEATURES, ERLC_FEATURE_LABELS, ERLC_MAP_SIZE, ERLC_POLL_OPTIONS, ERLC_STATUSES, ERLC_STATUS_LABEL, EVIDENCE_CUSTODY_STATES, EVIDENCE_TRANSITIONS, type Effect, type EmbedSpec, type ErlcFeature, type ErlcStatus, type EvidenceCustodyState, FORM_QUESTION_TYPES, type Field, type FormField, type FormOption, type FormQuestionType, INVESTIGATION_STATUSES, INVESTIGATION_TRANSITIONS, InvalidTransitionError, type InvestigationStatus, LEGACY_DANGER, MAX_FORM_OPTIONS, MAX_FORM_QUESTIONS, type MessageSpec, PERMISSION_CATALOG, PRIORITIES, type PermissionContext, type PermissionGrant, type PermissionKey, type Priority, QUESTION_TYPES, type QuestionType, REPORT_STATUSES, REPORT_TRANSITIONS, REPORT_TYPES, ROBLOX_VERIFICATION_STATUSES, type ReportStatus, type ReportType, type Resolution, type ResolutionSource, type RobloxVerificationStatus, STATUS_KINDS, type StatusKind, TICKET_ACTIONS, TICKET_ACTION_KEYS, TICKET_PLACEHOLDERS, TICKET_STATUSES, TICKET_TRANSITIONS, type TicketAction, type TicketButtonConfig, type TicketEffect, type TicketQuestion, type TicketStatus, type TicketVars, type TransitionMap, UNIT_STATUSES, type UnitStatus, WANTED_STATUSES, WANTED_TRANSITIONS, WORKFLOW_ACTION_LABELS, WORKFLOW_OPS, WORKFLOW_OP_LABELS, WORKFLOW_TRIGGERS, type WantedStatus, type WorkflowAction, type WorkflowCondition, type WorkflowOp, type WorkflowTrigger, areaGrantsFor, assertTransition, can, canDelegate, canTransition, checkAnswer, conditionMatches, dangerLevelOf, defaultTicketButtons, effectivePermissions, fieldValue, formatMinutes, freeFieldKey, gameToPixel, grantMatches, isPermissionKey, isValidRobloxUserId, normalizeField, parsePlayer, pixelToGame, renderApplicationText, renderTemplate, renderTicketText, resolvePermission, rolesMatch, ticketChannelName, ticketNumber, triggerMatches };

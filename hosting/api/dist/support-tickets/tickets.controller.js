@@ -37,14 +37,14 @@ const actionSchema = zod_1.z.discriminatedUnion('action', [
 const listQ = zod_1.z.object({
     kind: zod_1.z.enum(['open', 'closed', 'archived', 'escalated', 'deleted', 'all']).optional(), statusId: zod_1.z.string().uuid().optional(), priorityId: zod_1.z.string().uuid().optional(), categoryId: zod_1.z.string().uuid().optional(),
     claimer: zod_1.z.union([snowflake, zod_1.z.literal('me')]).optional(), creator: zod_1.z.string().trim().max(100).optional(), from: zod_1.z.coerce.date().optional(), to: zod_1.z.coerce.date().optional(),
-    q: zod_1.z.string().trim().max(100).optional(), guildId: snowflake.optional(), page: zod_1.z.coerce.number().int().min(1).default(1), pageSize: zod_1.z.coerce.number().int().min(1).max(100).default(25),
+    q: zod_1.z.string().trim().max(100).optional(), guildId: snowflake.optional(), page: zod_1.z.coerce.number().int().min(1).default(1), pageSize: zod_1.z.coerce.number().int().min(1).max(500).default(25),
 });
 const transcriptQ = zod_1.z.object({
     q: zod_1.z.string().trim().max(100).optional(), categoryName: zod_1.z.string().max(80).optional(), creator: zod_1.z.string().max(100).optional(), staff: snowflake.optional(), status: zod_1.z.string().max(60).optional(),
     number: zod_1.z.coerce.number().int().positive().optional(), from: zod_1.z.coerce.date().optional(), to: zod_1.z.coerce.date().optional(),
-    page: zod_1.z.coerce.number().int().min(1).default(1), pageSize: zod_1.z.coerce.number().int().min(1).max(100).default(25),
+    page: zod_1.z.coerce.number().int().min(1).default(1), pageSize: zod_1.z.coerce.number().int().min(1).max(500).default(25),
 });
-const ratingQ = zod_1.z.object({ stars: zod_1.z.coerce.number().int().min(1).max(5).optional(), categoryId: zod_1.z.string().uuid().optional(), page: zod_1.z.coerce.number().int().min(1).default(1), pageSize: zod_1.z.coerce.number().int().min(1).max(100).default(25) });
+const ratingQ = zod_1.z.object({ stars: zod_1.z.coerce.number().int().min(1).max(5).optional(), categoryId: zod_1.z.string().uuid().optional(), page: zod_1.z.coerce.number().int().min(1).default(1), pageSize: zod_1.z.coerce.number().int().min(1).max(500).default(25) });
 const openQ = zod_1.z.object({ categoryId: zod_1.z.string().uuid(), discordId: snowflake, discordName: zod_1.z.string().trim().max(100).optional(), guildId: snowflake.optional() });
 const actor = (u) => ({ userId: u.id, robloxUserId: u.robloxUserId });
 /** Support-Tickets im Dashboard (Pfad `support-tickets`, weil `tickets` die Strafzettel sind). */

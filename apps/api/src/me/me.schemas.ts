@@ -28,6 +28,8 @@ export const preferencesSchema = z.object({
   notifications: z.object({ muted: z.array(z.string().max(40)).max(50), toasts: z.boolean().optional() }).optional(),
   favorites: z.array(path).max(30).optional(),
   quickActions: z.array(z.string().max(40)).max(20).optional(),
+  /** Zeilen pro Tabellenseite (große Seiten werden virtualisiert dargestellt). */
+  tablePageSize: z.union([z.literal(25), z.literal(50), z.literal(100), z.literal(250), z.literal(500)]).optional(),
   teamList: z.object({
     view: z.enum(['cards', 'table']),
     search: z.string().max(80).optional(),

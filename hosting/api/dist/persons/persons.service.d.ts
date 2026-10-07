@@ -5,13 +5,15 @@ import { StudioService } from '../studio/studio.service';
 import { Prisma } from '@prisma/client';
 import { PageQuery } from '../common/pagination';
 import { RobloxService } from './roblox.service';
+import { LocksService } from '../locks/locks.service';
 export declare class PersonsService {
     private readonly prisma;
     private readonly audit;
     private readonly timeline;
     private readonly studio;
     private readonly roblox;
-    constructor(prisma: PrismaService, audit: AuditService, timeline: TimelineService, studio: StudioService, roblox: RobloxService);
+    private readonly locks;
+    constructor(prisma: PrismaService, audit: AuditService, timeline: TimelineService, studio: StudioService, roblox: RobloxService, locks: LocksService);
     list(p: PageQuery, includeArchived?: boolean): Promise<{
         items: {
             id: string;

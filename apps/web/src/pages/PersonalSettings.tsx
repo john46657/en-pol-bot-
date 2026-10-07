@@ -5,6 +5,7 @@ import { DEFAULT_PREFS, GRADIENTS, usePrefs, type Preferences } from '../lib/pre
 import { NAV, tr, visible } from '../nav';
 import { QUICK_ACTIONS } from './Dashboard';
 import { Button, Card, Input, PageHeader, Select } from '../components/ui';
+import { TwoFactorCard } from '../components/TwoFactorCard';
 
 const ACCENT_PRESETS = ['#5865F2', '#7289DA', '#3b82f6', '#22c55e', '#f59e0b', '#ef4444', '#06b6d4', '#8b5cf6', '#ec4899'];
 /** Benachrichtigungsarten, die man für sich ausblenden kann. */
@@ -13,7 +14,7 @@ const NOTIFICATION_TYPES: [string, string][] = [
   ['SYSTEM', '⚠️ Systemhinweis'], ['TEAMCHANCE', '📣 Team-Chance geöffnet'],
   ['QUALIFICATION', '🏅 Qualifikationen'], ['TICKET_ISSUED', '🧾 Strafzettel'], ['PERSONNEL', '🪪 Dienstgrad / Personal'],
   ['INCIDENT_ASSIGNMENT', '🚨 Einsatz zugewiesen'], ['REPORT_REVIEW', '📄 Bericht zur Prüfung'], ['COMPLAINT_ASSIGNMENT', '⚖️ Beschwerde zugewiesen'],
-  ['ACADEMY_ASSIGNMENT', '🎓 Academy'], ['SEK', '🎯 SEK'], ['RADIO', '📡 Funk'],
+  ['ACADEMY_ASSIGNMENT', '🎓 Academy'], ['SEK', '🎯 SEK'], ['RADIO', '📡 Funk'], ['WORKFLOW', '⚙️ Workflows'],
 ];
 const TIMEZONES = ['Europe/Berlin', 'Europe/Vienna', 'Europe/Zurich', 'Europe/London', 'UTC', 'America/New_York', 'America/Chicago', 'America/Los_Angeles'];
 
@@ -78,6 +79,7 @@ export function PersonalSettings() {
           <h3 className="mb-1 mt-4 text-sm font-semibold">Schnellaktionen</h3>
           <div className="grid gap-1.5 sm:grid-cols-2">{QUICK_ACTIONS.filter((a) => a.perms.every(can)).map((a) => <Toggle key={a.id} label={a.label} checked={p.quickActions.includes(a.id)} onChange={(on) => update({ quickActions: on ? [...p.quickActions, a.id] : p.quickActions.filter((x) => x !== a.id) })} />)}</div>
         </Card>
+        <TwoFactorCard />
       </div>
     </>
   );

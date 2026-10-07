@@ -26,14 +26,14 @@ const actionSchema = z.discriminatedUnion('action', [
 const listQ = z.object({
   kind: z.enum(['open', 'closed', 'archived', 'escalated', 'deleted', 'all']).optional(), statusId: z.string().uuid().optional(), priorityId: z.string().uuid().optional(), categoryId: z.string().uuid().optional(),
   claimer: z.union([snowflake, z.literal('me')]).optional(), creator: z.string().trim().max(100).optional(), from: z.coerce.date().optional(), to: z.coerce.date().optional(),
-  q: z.string().trim().max(100).optional(), guildId: snowflake.optional(), page: z.coerce.number().int().min(1).default(1), pageSize: z.coerce.number().int().min(1).max(100).default(25),
+  q: z.string().trim().max(100).optional(), guildId: snowflake.optional(), page: z.coerce.number().int().min(1).default(1), pageSize: z.coerce.number().int().min(1).max(500).default(25),
 });
 const transcriptQ = z.object({
   q: z.string().trim().max(100).optional(), categoryName: z.string().max(80).optional(), creator: z.string().max(100).optional(), staff: snowflake.optional(), status: z.string().max(60).optional(),
   number: z.coerce.number().int().positive().optional(), from: z.coerce.date().optional(), to: z.coerce.date().optional(),
-  page: z.coerce.number().int().min(1).default(1), pageSize: z.coerce.number().int().min(1).max(100).default(25),
+  page: z.coerce.number().int().min(1).default(1), pageSize: z.coerce.number().int().min(1).max(500).default(25),
 });
-const ratingQ = z.object({ stars: z.coerce.number().int().min(1).max(5).optional(), categoryId: z.string().uuid().optional(), page: z.coerce.number().int().min(1).default(1), pageSize: z.coerce.number().int().min(1).max(100).default(25) });
+const ratingQ = z.object({ stars: z.coerce.number().int().min(1).max(5).optional(), categoryId: z.string().uuid().optional(), page: z.coerce.number().int().min(1).default(1), pageSize: z.coerce.number().int().min(1).max(500).default(25) });
 const openQ = z.object({ categoryId: z.string().uuid(), discordId: snowflake, discordName: z.string().trim().max(100).optional(), guildId: snowflake.optional() });
 const actor = (u: AuthUser): Actor => ({ userId: u.id, robloxUserId: u.robloxUserId });
 

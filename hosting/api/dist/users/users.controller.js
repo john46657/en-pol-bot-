@@ -17,6 +17,7 @@ const common_1 = require("@nestjs/common");
 const swagger_1 = require("@nestjs/swagger");
 const zod_1 = require("zod");
 const users_service_1 = require("./users.service");
+const two_factor_service_1 = require("../auth/two-factor.service");
 const decorators_1 = require("../authz/decorators");
 const zod_pipe_1 = require("../common/zod.pipe");
 const pagination_1 = require("../common/pagination");
@@ -33,14 +34,18 @@ const roles = zod_1.z.object({ roleIds: zod_1.z.array(zod_1.z.string().uuid()) }
 const override = zod_1.z.object({ permission: zod_1.z.string(), effect: zod_1.z.enum(['ALLOW', 'DENY']), reason: zod_1.z.string().max(500).optional() });
 let UsersController = class UsersController {
     users;
-    constructor(users) {
+    twoFactor;
+    constructor(users, twoFactor) {
         this.users = users;
+        this.twoFactor = twoFactor;
     }
     list(q) { return this.users.list(q); }
     get(id) { return this.users.get(id); }
     create(a, b) { return this.users.create(a, b); }
     setRoblox(a, id, b) { return this.users.setRoblox(a, id, b); }
     setActive(a, id, b) { return this.users.setActive(a, id, b.active, b.reason); }
+    /** Zwei-Faktor eines Kontos zurücksetzen (Handy verloren, keine Wiederherstellungscodes). */
+    async resetTwoFactor(a, id) { await this.twoFactor.adminReset(a, id); }
     setRoles(a, id, b) { return this.users.setRoles(a, id, b.roleIds); }
     setOverride(a, id, b) { return this.users.setOverride(a, id, b); }
     removeOverride(a, id, p) { return this.users.removeOverride(a, id, p); }
@@ -92,6 +97,16 @@ __decorate([
     __metadata("design:returntype", void 0)
 ], UsersController.prototype, "setActive", null);
 __decorate([
+    (0, common_1.Post)(':id/2fa/reset'),
+    (0, common_1.HttpCode)(204),
+    (0, decorators_1.RequirePermission)('users.manage'),
+    __param(0, (0, decorators_1.CurrentActor)()),
+    __param(1, (0, common_1.Param)('id', common_1.ParseUUIDPipe)),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, String]),
+    __metadata("design:returntype", Promise)
+], UsersController.prototype, "resetTwoFactor", null);
+__decorate([
     (0, common_1.Put)(':id/roles'),
     (0, decorators_1.RequirePermission)('roles.manage'),
     __param(0, (0, decorators_1.CurrentActor)()),
@@ -125,6 +140,6 @@ __decorate([
 exports.UsersController = UsersController = __decorate([
     (0, swagger_1.ApiTags)('users'),
     (0, common_1.Controller)('users'),
-    __metadata("design:paramtypes", [users_service_1.UsersService])
+    __metadata("design:paramtypes", [users_service_1.UsersService, two_factor_service_1.TwoFactorService])
 ], UsersController);
 //# sourceMappingURL=users.controller.js.map

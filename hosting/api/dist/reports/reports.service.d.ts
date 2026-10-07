@@ -5,13 +5,15 @@ import { AuditService, Actor } from '../audit/audit.service';
 import { TimelineService } from '../timeline/timeline.service';
 import { PermissionService } from '../authz/permission.service';
 import { PageQuery } from '../common/pagination';
+import { LocksService } from '../locks/locks.service';
 export declare const hashContent: (c: unknown) => string;
 export declare class ReportsService {
     private readonly prisma;
     private readonly audit;
     private readonly timeline;
     private readonly perms;
-    constructor(prisma: PrismaService, audit: AuditService, timeline: TimelineService, perms: PermissionService);
+    private readonly locks;
+    constructor(prisma: PrismaService, audit: AuditService, timeline: TimelineService, perms: PermissionService, locks: LocksService);
     /** Autoren sehen eigene Berichte; reports.review/approve-Inhaber sehen alle. Verhindert, dass fremde Entwürfe auftauchen. */
     private canSeeAll;
     list(actor: Actor, p: PageQuery, status?: string): Promise<{

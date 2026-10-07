@@ -8,6 +8,7 @@ import { TimelineService } from '../timeline/timeline.service';
 import { CadConfigService } from './cad-config.service';
 import { CadNotifyService } from './cad-notify.service';
 import type { ErlcPlayer } from './erlc.service';
+import { LocksService } from '../locks/locks.service';
 /** Wer handelt und von welchem Discord-Server (Bot) bzw. mit welchem gewählten Server (Dashboard). */
 export type CadActor = Actor & {
     guildId?: string | null;
@@ -95,7 +96,8 @@ export declare class CadService {
     private readonly timeline;
     private readonly cfg;
     private readonly notify;
-    constructor(prisma: PrismaService, audit: AuditService, perms: PermissionService, rt: RealtimeService, timeline: TimelineService, cfg: CadConfigService, notify: CadNotifyService);
+    private readonly locks;
+    constructor(prisma: PrismaService, audit: AuditService, perms: PermissionService, rt: RealtimeService, timeline: TimelineService, cfg: CadConfigService, notify: CadNotifyService, locks: LocksService);
     private label;
     private changed;
     /**

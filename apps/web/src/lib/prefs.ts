@@ -25,6 +25,8 @@ export interface Preferences {
   notifications: { muted: string[]; toasts?: boolean };
   favorites: string[];
   quickActions: string[];
+  /** Zeilen pro Tabellenseite (große Seiten werden virtualisiert). */
+  tablePageSize?: 25 | 50 | 100 | 250 | 500;
   teamList: { view: 'cards' | 'table'; search?: string; filters?: { team?: string; rank?: string; office?: string; status?: string } };
   /** Persönliche CAD-Ansicht (nur für diesen Benutzer). */
   cad?: { widgets?: string[]; hiddenLayers?: string[]; zoom?: number; center?: { x: number; y: number }; compact?: boolean; sidebar?: boolean; favoriteIncidents?: string[]; erlcServerId?: string; sound?: boolean; setupHidden?: boolean };

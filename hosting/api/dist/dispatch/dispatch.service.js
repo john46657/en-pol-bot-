@@ -22,6 +22,7 @@ const links_1 = require("../common/links");
 const numbering_1 = require("../common/numbering");
 const transition_1 = require("../common/transition");
 const pagination_1 = require("../common/pagination");
+const locks_service_1 = require("../locks/locks.service");
 const OPEN = ['CLOSED', 'CANCELLED'];
 let DispatchService = class DispatchService {
     prisma;
@@ -29,12 +30,14 @@ let DispatchService = class DispatchService {
     timeline;
     rt;
     discord;
-    constructor(prisma, audit, timeline, rt, discord) {
+    locks;
+    constructor(prisma, audit, timeline, rt, discord, locks) {
         this.prisma = prisma;
         this.audit = audit;
         this.timeline = timeline;
         this.rt = rt;
         this.discord = discord;
+        this.locks = locks;
     }
     // ---- Units ----
     listUnits() { return this.prisma.unit.findMany({ include: { members: true }, orderBy: { callsign: 'asc' } }); }
@@ -120,6 +123,7 @@ let DispatchService = class DispatchService {
         });
     }
     async update(actor, id, version, d) {
+        await this.locks.assertFree('incident', id, actor.userId);
         return this.prisma.$transaction(async (tx) => {
             const before = await tx.incident.findUnique({ where: { id } });
             if (!before)
@@ -183,6 +187,6 @@ let DispatchService = class DispatchService {
 exports.DispatchService = DispatchService;
 exports.DispatchService = DispatchService = __decorate([
     (0, common_1.Injectable)(),
-    __metadata("design:paramtypes", [prisma_service_1.PrismaService, audit_service_1.AuditService, timeline_service_1.TimelineService, realtime_service_1.RealtimeService, discord_service_1.DiscordService])
+    __metadata("design:paramtypes", [prisma_service_1.PrismaService, audit_service_1.AuditService, timeline_service_1.TimelineService, realtime_service_1.RealtimeService, discord_service_1.DiscordService, locks_service_1.LocksService])
 ], DispatchService);
 //# sourceMappingURL=dispatch.service.js.map

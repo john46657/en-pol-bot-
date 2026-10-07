@@ -5,6 +5,7 @@ import { api, ApiError } from '../lib/api';
 import { useAuth } from '../lib/auth';
 import { Button, Card, ErrorState, fmt, Field, PageHeader, SkeletonRows, StatusBadge, Tabs, Textarea, Input, Modal } from '../components/ui';
 import { Timeline, type TimelineItem } from '../components/Timeline';
+import { LockBanner, useEditLock } from '../lib/locks';
 
 interface Version { id: string; version: number; changeSummary: string; content: { body?: string }; contentHash: string; createdAt: string; authorId: string }
 interface ReportData { report: { id: string; number: string; type: string; title: string; status: string; authorId: string; version: number; versions: Version[] }; timeline: TimelineItem[] }
@@ -15,6 +16,7 @@ export function ReportDetail() {
   const qc = useQueryClient();
   const [tab, setTab] = useState('Content');
   const [editing, setEditing] = useState(false);
+  const editLock = useEditLock('report', id, editing);
   const [reject, setReject] = useState(false);
   const [text, setText] = useState('');
   const [summary, setSummary] = useState('');
@@ -50,10 +52,11 @@ export function ReportDetail() {
       </div>
       <Modal open={editing} title="Edit report" onClose={() => setEditing(false)} wide>
         <div className="space-y-3">
+          <LockBanner lock={editLock} />
           <Field label="Report text">{(fid) => <Textarea id={fid} rows={10} value={text} onChange={(e) => setText(e.target.value)} />}</Field>
           <Field label="Change summary *" hint="Every save creates a new immutable version.">{(fid) => <Input id={fid} value={summary} onChange={(e) => setSummary(e.target.value)} />}</Field>
           {err && <p role="alert" className="text-sm text-danger">{err.message}</p>}
-          <div className="flex justify-end gap-2"><Button variant="secondary" onClick={() => setEditing(false)}>Cancel</Button><Button disabled={summary.trim().length < 3 || act.isPending} onClick={() => act.mutate({ path: '', method: 'PATCH', body: { version: r.version, content: { body: text }, changeSummary: summary } })}>Save new version</Button></div>
+          <div className="flex justify-end gap-2"><Button variant="secondary" onClick={() => setEditing(false)}>Cancel</Button><Button disabled={summary.trim().length < 3 || act.isPending || editLock.blocked} onClick={() => act.mutate({ path: '', method: 'PATCH', body: { version: r.version, content: { body: text }, changeSummary: summary } })}>Save new version</Button></div>
         </div>
       </Modal>
       <Modal open={reject} title="Reject report" onClose={() => setReject(false)}>

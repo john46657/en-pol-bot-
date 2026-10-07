@@ -11,13 +11,14 @@ import { linkPerson } from '../common/links';
 import { makeNumber } from '../common/numbering';
 import { nextStatus } from '../common/transition';
 import { PageQuery, pageResult, skipTake } from '../common/pagination';
+import { LocksService } from '../locks/locks.service';
 
 const stable = (v: unknown): string => JSON.stringify(v, (_k, x) => (x && typeof x === 'object' && !Array.isArray(x) ? Object.fromEntries(Object.entries(x).sort(([a], [b]) => a.localeCompare(b))) : x));
 export const hashContent = (c: unknown) => createHash('sha256').update(stable(c)).digest('hex');
 
 @Injectable()
 export class ReportsService {
-  constructor(private readonly prisma: PrismaService, private readonly audit: AuditService, private readonly timeline: TimelineService, private readonly perms: PermissionService) {}
+  constructor(private readonly prisma: PrismaService, private readonly audit: AuditService, private readonly timeline: TimelineService, private readonly perms: PermissionService, private readonly locks: LocksService) {}
 
   /** Autoren sehen eigene Berichte; reports.review/approve-Inhaber sehen alle. Verhindert, dass fremde Entwürfe auftauchen. */
   private async canSeeAll(userId: string) { return (await this.perms.has(userId, 'reports.review')) || (await this.perms.has(userId, 'reports.approve')); }
@@ -63,6 +64,7 @@ export class ReportsService {
   /** Jede Änderung erzeugt eine neue unveränderliche Version; ältere werden nie überschrieben. */
   async edit(actor: Actor, id: string, d: { version: number; title?: string; content: Prisma.InputJsonValue; changeSummary: string }) {
     const userId = actor.userId!;
+    await this.locks.assertFree('report', id, userId);
     return this.prisma.$transaction(async (tx) => {
       const r = await tx.report.findUnique({ where: { id } });
       if (!r || !(await this.visible(userId, r))) throw new AppError('NOT_FOUND', 'Report not found.');
