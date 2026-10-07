@@ -1,3 +1,4 @@
+import { hireEvents } from '../common/hire-events';
 import { settingsGuild } from '../common/guild-context';
 import { Injectable } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
@@ -201,6 +202,8 @@ export class QualificationsService {
       message: decisionMessage(settings, status === 'ACCEPTED', { applicationName: a.unitName, number: a.number, decider, applicantId: a.discordId, reason }),
     }, { always: true });
     await this.discord.markDecided('qualification', id, actor, status, reason || null);
+    // Personal/Dienstnummer-Automatik (falls für diese Einheit eingerichtet)
+    if (status === 'ACCEPTED') await hireEvents.accepted(actor, { applicationId: a.id, number: a.number, kind: a.unitName, discordId: a.discordId, name: a.discordName });
     return { id, number: a.number, unitName: a.unitName, status, addedToSek, decidedByName: by?.displayName ?? null, reason: reason || null };
   }
 }

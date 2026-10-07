@@ -12,3 +12,4 @@ export * from './voice-support';
 export * from './verification';
 export * from './panels';
 export * from './duty-reports';
+export * from './hr';

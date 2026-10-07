@@ -15,9 +15,26 @@ export const PERMISSION_CATALOG = {
   investigations: ['view', 'create', 'edit', 'close'],
   wanted: ['view', 'create', 'edit', 'activate', 'clear'],
   evidence: ['view', 'create', 'transfer', 'release'],
-  personnel: ['view', 'create', 'edit', 'promote', 'discipline'],
+  /** view_sensitive: geschützte Daten (Verwarnungen, interne Notizen, Abwesenheitsgründe, Historie) */
+  personnel: ['view', 'view_sensitive', 'create', 'edit', 'delete', 'promote', 'discipline'],
+  /** Beförderungssystem */
+  promotion: ['view', 'create', 'edit', 'review', 'approve', 'reject', 'execute', 'manage_ranks', 'manage_requirements', 'view_history', 'manage_settings', 'manage'],
+  /** Versetzungen zwischen Abteilungen */
+  transfer: ['view', 'create', 'approve', 'reject'],
+  /** Ausbildungen und Zertifikate */
+  training: ['view', 'create', 'manage'],
+  /** Prüfungen */
+  exam: ['view', 'create', 'manage', 'grade'],
+  warning: ['view', 'create', 'manage'],
+  awards: ['view', 'create', 'manage'],
+  /** Interne Meldungen mit Lesebestätigung */
+  announcements: ['view', 'create', 'manage'],
+  /** Interne Abstimmungen */
+  polls: ['view', 'create', 'manage'],
+  /** Dienstnummern-System */
+  dienstnummer: ['view', 'create', 'assign', 'edit', 'release', 'block', 'history', 'manage_ranges', 'manage_settings'],
   leave: ['view', 'request', 'manage'],
-  applications: ['view', 'review', 'decide'],
+  applications: ['view', 'review', 'decide', 'auto_assign_dienstnummer'],
   academy: ['view', 'manage'],
   sek: ['view', 'report', 'manage'],
   qualifications: ['view', 'decide', 'manage'],

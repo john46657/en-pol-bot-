@@ -467,19 +467,27 @@ model EvidenceTransfer {
 // ───────────── Personnel / Dienst ─────────────
 
 model Personnel {
-  id                 String              @id @default(uuid()) @db.Uuid
-  userId             String              @unique @db.Uuid
+  id                 String               @id @default(uuid()) @db.Uuid
+  userId             String               @unique @db.Uuid
   rank               String?
   team               String?
-  callsign           String?             @unique
+  callsign           String?              @unique
   /// Büro (Liste unter Einstellungen → Teamstruktur)
   office             String?
   /// Dienstnummer
-  serviceNumber      String?             @unique
-  employmentStatus   String              @default("ACTIVE")
-  joinDate           DateTime            @default(now())
-  qualifications     String[]            @default([])
-  user               User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  serviceNumber      String?              @unique
+  employmentStatus   String               @default("ACTIVE")
+  joinDate           DateTime             @default(now())
+  qualifications     String[]             @default([])
+  /// seit wann im aktuellen Rang (Beförderungsvoraussetzung „Mindestzeit im Rang“)
+  rankSince          DateTime             @default(now())
+  /// abgehakte frei definierte Voraussetzungen { <Voraussetzungs-ID>: true }
+  customChecks       Json                 @default("{}")
+  updatedAt          DateTime             @default(now()) @updatedAt
+  hrRequests         HrRequest[]
+  trainingProgress   HrTrainingProgress[]
+  examAttempts       HrExamAttempt[]
+  user               User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
   academyEnrollments AcademyEnrollment[]
   records            PersonnelRecord[]
 }
@@ -488,14 +496,24 @@ model Personnel {
 model PersonnelRecord {
   id          String    @id @default(uuid()) @db.Uuid
   personnelId String    @db.Uuid
-  type        String // PROMOTION | AWARD | DISCIPLINE | NOTE
+  type        String // PROMOTION | TRANSFER | AWARD | WARNING | DISCIPLINE | NOTE | RECOMMENDATION | SERVICE_NUMBER | STATUS | TRAINING | EXAM
   summary     String
   details     String?
+  /// strukturierte Angaben je Art (z. B. Beförderung: from/to/Antragsteller/Genehmiger; Verwarnung: Kategorie/Schweregrad)
+  data        Json?
+  /// z. B. Verwarnung ACTIVE | EXPIRED | REVOKED
+  status      String?
+  expiresAt   DateTime?
+  attachments String[]  @default([])
   createdById String    @db.Uuid
   createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @default(now()) @updatedAt
+  /// weich gelöscht (nur mit Recht; bleibt im Audit nachvollziehbar)
+  deletedAt   DateTime?
   personnel   Personnel @relation(fields: [personnelId], references: [id], onDelete: Cascade)
 
   @@index([personnelId, createdAt])
+  @@index([type, createdAt])
 }
 
 model DutySession {
@@ -530,6 +548,9 @@ model LeaveRequest {
   decidedById    String?   @db.Uuid
   decidedAt      DateTime?
   decisionReason String?
+  /// Abwesenheitsart (Einstellungen → Personal), z. B. Urlaub, Krank
+  type           String?
+  comment        String?
   roleApplied    Boolean   @default(false)
   endedAt        DateTime?
   createdAt      DateTime  @default(now())
@@ -1415,4 +1436,277 @@ model DutyReport {
 
   @@index([templateId, periodStart])
   @@index([authorId, createdAt])
+}
+
+// ───────────── Personal: Ränge, Anträge, Ausbildung, Prüfungen, Meldungen, Abstimmungen ─────────────
+
+/// Rang (frei anlegbar, Reihenfolge = position; kleiner = höher). Personalakten speichern den Rangnamen.
+model HrRank {
+  id               String   @id @default(uuid()) @db.Uuid
+  name             String   @unique
+  position         Int      @default(0)
+  description      String?
+  icon             String?
+  color            String   @default("#64748b")
+  /// Discord-Rollen dieses Rangs (auf allen Servern)
+  discordRoleIds   String[] @default([])
+  /// Dashboard-Rollen, die mit dem Rang vergeben werden (optional)
+  dashboardRoleIds String[] @default([])
+  /// erlaubte Beförderung nach (Rang-IDs; leer = nächsthöherer)
+  nextRankIds      String[] @default([])
+  /// Beförderung IN diesen Rang dürfen nur Personen mit einem dieser Ränge genehmigen (leer = jeder mit promotion.approve)
+  approverRankIds  String[] @default([])
+  /// Voraussetzungen [{ id, type, label, value, ref }]
+  requirements     Json     @default("[]")
+  active           Boolean  @default(true)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+}
+
+/// Antrag: Beförderung oder Versetzung, mit konfigurierbaren Genehmigungsstufen.
+model HrRequest {
+  id           String    @id @default(uuid()) @db.Uuid
+  number       String    @unique
+  kind         String // PROMOTION | TRANSFER
+  personnelId  String    @db.Uuid
+  status       String    @default("OPEN") // OPEN | IN_REVIEW | APPROVED | REJECTED | DEFERRED | EXECUTED | CANCELLED
+  fromValue    String?
+  toValue      String
+  reason       String
+  achievements String?
+  internalNote String?
+  attachments  String[]  @default([])
+  requesterId  String    @db.Uuid
+  /// [{ userId, name, stage, decision: APPROVE|REJECT|REVIEW|DEFER, comment, at }]
+  approvals    Json      @default("[]")
+  decidedAt    DateTime?
+  executedById String?   @db.Uuid
+  executedAt   DateTime?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  version      Int       @default(1)
+  personnel    Personnel @relation(fields: [personnelId], references: [id], onDelete: Cascade)
+
+  @@index([kind, status])
+  @@index([personnelId])
+}
+
+model HrTraining {
+  id             String               @id @default(uuid()) @db.Uuid
+  name           String
+  description    String?
+  requirements   String?
+  instructorIds  String[]             @default([])
+  duration       String?
+  active         Boolean              @default(true)
+  examRequired   Boolean              @default(false)
+  examId         String?              @db.Uuid
+  certificate    Boolean              @default(true)
+  audience       String?
+  requiredRoleId String?
+  /// Gültigkeit in Tagen (leer = unbegrenzt)
+  validDays      Int?
+  position       Int                  @default(0)
+  createdAt      DateTime             @default(now())
+  updatedAt      DateTime             @updatedAt
+  progress       HrTrainingProgress[]
+}
+
+model HrTrainingProgress {
+  id            String     @id @default(uuid()) @db.Uuid
+  trainingId    String     @db.Uuid
+  personnelId   String     @db.Uuid
+  status        String     @default("NOT_STARTED") // NOT_STARTED | IN_PROGRESS | PASSED | FAILED | ABORTED | EXPIRED
+  progress      Int        @default(0)
+  examinerId    String?    @db.Uuid
+  note          String?
+  startedAt     DateTime?
+  completedAt   DateTime?
+  expiresAt     DateTime?
+  certificateNo String?    @unique
+  updatedAt     DateTime   @updatedAt
+  training      HrTraining @relation(fields: [trainingId], references: [id], onDelete: Cascade)
+  personnel     Personnel  @relation(fields: [personnelId], references: [id], onDelete: Cascade)
+
+  @@unique([trainingId, personnelId])
+}
+
+model HrExam {
+  id            String          @id @default(uuid()) @db.Uuid
+  title         String
+  description   String?
+  /// [{ id, type: SINGLE|MULTI|YESNO|TEXT|NUMBER, text, options[], correct[], points }]
+  questions     Json            @default("[]")
+  /// zufällig gezogene Fragen je Versuch (0 = alle)
+  questionCount Int             @default(0)
+  passPercent   Int             @default(70)
+  timeLimitMin  Int?
+  maxAttempts   Int             @default(3)
+  retryHours    Int             @default(24)
+  autoGrade     Boolean         @default(true)
+  showResult    Boolean         @default(true)
+  examinerIds   String[]        @default([])
+  trainingId    String?         @db.Uuid
+  active        Boolean         @default(true)
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+  attempts      HrExamAttempt[]
+}
+
+model HrExamAttempt {
+  id          String    @id @default(uuid()) @db.Uuid
+  examId      String    @db.Uuid
+  personnelId String    @db.Uuid
+  /// Fragen-IDs dieses Versuchs (bei Zufallsauswahl)
+  questionIds String[]  @default([])
+  answers     Json      @default("{}")
+  status      String    @default("IN_PROGRESS") // IN_PROGRESS | SUBMITTED | GRADED
+  score       Float?
+  maxScore    Float?
+  passed      Boolean?
+  gradedById  String?   @db.Uuid
+  gradedAt    DateTime?
+  feedback    String?
+  startedAt   DateTime  @default(now())
+  submittedAt DateTime?
+  exam        HrExam    @relation(fields: [examId], references: [id], onDelete: Cascade)
+  personnel   Personnel @relation(fields: [personnelId], references: [id], onDelete: Cascade)
+
+  @@index([examId, personnelId])
+}
+
+/// Interne Meldung (z. B. neue Dienstanweisung) mit optionaler Lesebestätigung.
+model HrAnnouncement {
+  id               String               @id @default(uuid()) @db.Uuid
+  title            String
+  body             String
+  priority         String               @default("NORMAL") // LOW | NORMAL | HIGH | CRITICAL
+  /// Dashboard-Rollen (leer = alle mit announcements.view)
+  audienceRoleIds  String[]             @default([])
+  publishAt        DateTime             @default(now())
+  expiresAt        DateTime?
+  requireAck       Boolean              @default(false)
+  discordChannelId String?
+  attachments      String[]             @default([])
+  createdById      String               @db.Uuid
+  createdAt        DateTime             @default(now())
+  updatedAt        DateTime             @updatedAt
+  reads            HrAnnouncementRead[]
+
+  @@index([publishAt])
+}
+
+model HrAnnouncementRead {
+  announcementId String         @db.Uuid
+  userId         String         @db.Uuid
+  readAt         DateTime       @default(now())
+  announcement   HrAnnouncement @relation(fields: [announcementId], references: [id], onDelete: Cascade)
+
+  @@id([announcementId, userId])
+}
+
+model HrPoll {
+  id              String       @id @default(uuid()) @db.Uuid
+  title           String
+  description     String?
+  /// [{ id, label }]
+  options         Json
+  audienceRoleIds String[]     @default([])
+  startsAt        DateTime     @default(now())
+  endsAt          DateTime?
+  anonymous       Boolean      @default(false)
+  multiple        Boolean      @default(false)
+  /// ALWAYS | AFTER_VOTE | AFTER_END | NEVER (Verwalter sehen immer alles)
+  showResults     String       @default("AFTER_VOTE")
+  createdById     String       @db.Uuid
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+  votes           HrPollVote[]
+}
+
+model HrPollVote {
+  pollId    String   @db.Uuid
+  userId    String   @db.Uuid
+  optionIds String[]
+  votedAt   DateTime @default(now())
+  poll      HrPoll   @relation(fields: [pollId], references: [id], onDelete: Cascade)
+
+  @@id([pollId, userId])
+}
+
+// ───────────── Dienstnummern ─────────────
+
+/// Nummernkreis, z. B. 1000–1999 oder LS-001–LS-999.
+model ServiceNumberRange {
+  id         String          @id @default(uuid()) @db.Uuid
+  name       String
+  prefix     String          @default("")
+  suffix     String          @default("")
+  start      Int
+  end        Int
+  /// Mindestlänge der Zahl (mit führenden Nullen), 0 = ohne
+  padLength  Int             @default(0)
+  /// LOWEST_FREE (kleinste freie) | SEQUENTIAL (immer weiter hochzählen)
+  order      String          @default("LOWEST_FREE")
+  autoAssign Boolean         @default(true)
+  manual     Boolean         @default(true)
+  /// frei gewordene Nummern wieder vergeben
+  reuse      Boolean         @default(true)
+  /// was mit der alten Nummer bei Änderung/Austritt passiert: FREE | FORMER | BLOCKED
+  releaseAs  String          @default("FORMER")
+  department String?
+  active     Boolean         @default(true)
+  position   Int             @default(0)
+  createdAt  DateTime        @default(now())
+  updatedAt  DateTime        @updatedAt
+  numbers    ServiceNumber[]
+}
+
+model ServiceNumber {
+  id          String             @id @default(uuid()) @db.Uuid
+  rangeId     String             @db.Uuid
+  value       Int
+  display     String             @unique
+  status      String             @default("FREE") // ACTIVE | RESERVED | FREE | BLOCKED | FORMER
+  userId      String?            @db.Uuid
+  personnelId String?            @db.Uuid
+  reservedAt  DateTime?
+  assignedAt  DateTime?
+  note        String?
+  updatedAt   DateTime           @updatedAt
+  range       ServiceNumberRange @relation(fields: [rangeId], references: [id], onDelete: Restrict)
+
+  @@unique([rangeId, value])
+  @@index([status])
+  @@index([userId])
+}
+
+/// Historie je Dienstnummer und Person (Vergabe, Änderung, Freigabe, Sperre …).
+model ServiceNumberEvent {
+  id          String   @id @default(uuid()) @db.Uuid
+  display     String
+  oldDisplay  String?
+  userId      String?  @db.Uuid
+  personnelId String?  @db.Uuid
+  action      String // ASSIGNED_AUTO | ASSIGNED_MANUAL | CHANGED | RELEASED | BLOCKED | UNBLOCKED | RESERVED | FORMER | PENDING
+  reason      String?
+  actorId     String?  @db.Uuid
+  approverId  String?  @db.Uuid
+  createdAt   DateTime @default(now())
+
+  @@index([display, createdAt])
+  @@index([personnelId, createdAt])
+}
+
+/// Einstellung nach angenommener Bewerbung, die noch auf eine Dienstnummer wartet („⚠️ Dienstnummer ausstehend“).
+model HireQueue {
+  id            String   @id @default(uuid()) @db.Uuid
+  applicationId String   @unique
+  kind          String
+  userId        String   @db.Uuid
+  discordId     String?
+  reason        String
+  status        String   @default("PENDING") // PENDING | DONE
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
 }

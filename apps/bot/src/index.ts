@@ -4,7 +4,7 @@ import {
   type AnySelectMenuInteraction, type ButtonComponent, type ButtonInteraction, type ChatInputCommandInteraction, type Interaction, type Message, type ModalSubmitInteraction,
 } from 'discord.js';
 import { componentsOf, createTicketRuntime, payloadOf } from './discord-tickets';
-import { deleteMessage, postAsUser, postOrUpdate } from './messages';
+import { deleteMessage, postAsUser, postOrUpdate, resolveAssets } from './messages';
 import { createStaffLists } from './staff-lists';
 import type { MessageSpec } from '@enrp/shared';
 import { startGuildDirectory } from './guilds';
@@ -562,6 +562,25 @@ function wireReady(client0: Client) {
         return true;
       }
       if (type === 'bot.stafflist') { await staffLists.refresh({ id: String(p.id ?? ''), force: true, forceNew: p.forceNew === true }); return true; }
+      if (type === 'bot.dm') {
+        const userId = String(p.discordId ?? '');
+        if (!/^\d{15,25}$/.test(userId)) throw new Error('no Discord user id');
+        const { message, files } = await resolveAssets(api, p.message as MessageSpec);
+        await (await client.users.fetch(userId)).send({ ...payloadOf(message, false), ...(files.length ? { files } : {}) });
+        return true;
+      }
+      if (type === 'bot.nickname') {
+        // Dienstnummer im Nickname – auf allen Servern, auf denen die Person ist (Bot braucht „Nicknames verwalten“; Server-Inhaber geht nicht)
+        const userId = String(p.discordId ?? ''), nick = String(p.nickname ?? '').slice(0, 32);
+        if (!/^\d{15,25}$/.test(userId) || !nick) throw new Error('invalid nickname task');
+        let done = 0;
+        for (const g of client.guilds.cache.values()) {
+          const m = await g.members.fetch(userId).catch(() => null);
+          if (m && m.id !== g.ownerId && (await m.setNickname(nick, 'EN Polizei: Dienstnummer').then(() => true, () => false))) done++;
+        }
+        if (!done) console.warn(`nickname for ${userId} could not be set (missing permission, owner or not on a server)`);
+        return true;
+      }
       if (type === 'bot.delete') { await deleteMessage(client, String(p.channelId ?? ''), String(p.messageId ?? '')); return true; }
       if (type === 'message.post') {
         // Allgemein (Funk-Codes, Staff-Liste, Panels, Berichte …): gemerkte Nachricht bearbeiten oder neu senden

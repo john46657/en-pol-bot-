@@ -2,13 +2,15 @@
 export const MODULE_LABELS: Record<string, string> = {
   dashboard: '🏠 Dashboard & Bereiche', team: '👥 Team', dispatch: '📡 Leitstelle', incidents: '🚨 Einsätze', persons: '🧑 Personen', vehicles: '🚗 Fahrzeuge',
   reports: '📄 Berichte', dutyreports: '🗓️ Tages-/Wochenberichte', tickets: '🧾 Strafzettel', complaints: '⚖️ Beschwerden', investigations: '🔍 Ermittlungen', wanted: '🚩 Fahndungen', evidence: '💼 Beweismittel',
-  personnel: '🪪 Personal', leave: '🏖️ Abmeldungen', applications: '📝 Bewerbungen', academy: '🎓 Akademie', sek: '🎯 SEK', qualifications: '🏅 Qualifikationen',
+  personnel: '🪪 Personal', promotion: '🎖️ Beförderungen', transfer: '🔀 Versetzungen', training: '🎓 Ausbildungen', exam: '📝 Prüfungen', warning: '⚠️ Verwarnungen', awards: '🏅 Auszeichnungen', announcements: '📢 Interne Meldungen', polls: '🗳️ Abstimmungen', dienstnummer: '🪪 Dienstnummern', leave: '🏖️ Abmeldungen', applications: '📝 Bewerbungen', academy: '🎓 Akademie', sek: '🎯 SEK', qualifications: '🏅 Qualifikationen',
   ticket: '🎫 Support-Tickets', communication: '💬 Kommunikation', analytics: '📊 Statistiken', audit: '📋 Audit-Logs', studio: '🛠️ Studio',
   settings: '⚙️ Bot-Einstellungen', users: '👤 Benutzer', roles: '🛡️ Rollen & Rechte',
 };
 
 export const ACTION_LABELS: Record<string, string> = {
-  view_all: 'alle ansehen', edit_all: 'alle bearbeiten',
+  view_all: 'alle ansehen', edit_all: 'alle bearbeiten', view_sensitive: 'geschützte Daten sehen', execute: 'durchführen', manage_ranks: 'Ränge verwalten',
+  manage_requirements: 'Voraussetzungen verwalten', view_history: 'Historie sehen', manage_settings: 'Einstellungen verwalten', grade: 'bewerten', block: 'sperren',
+  history: 'Historie', manage_ranges: 'Nummernkreise verwalten', auto_assign_dienstnummer: 'Dienstnummer automatisch vergeben',
   view: 'ansehen', create: 'erstellen', edit: 'bearbeiten', delete: 'löschen', manage: 'verwalten', customize: 'anpassen', close: 'schließen', reopen: 'wieder öffnen',
   claim: 'übernehmen', add_user: 'Benutzer hinzufügen', remove_user: 'Benutzer entfernen', change_status: 'Status ändern', change_priority: 'Priorität ändern',
   change_category: 'Kategorie ändern', rename: 'umbenennen', move: 'verschieben', lock: 'sperren', escalate: 'eskalieren', transcript: 'Transkript ansehen',

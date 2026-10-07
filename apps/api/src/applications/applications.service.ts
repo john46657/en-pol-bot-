@@ -1,3 +1,4 @@
+import { hireEvents } from '../common/hire-events';
 import { settingsGuild } from '../common/guild-context';
 import { TeamChanceService } from '../teamchance/teamchance.service';
 import { NotifyService } from '../notifications/notify.service';
@@ -158,7 +159,13 @@ export class ApplicationsService {
     const by = actor.userId ? await this.prisma.user.findUnique({ where: { id: actor.userId }, select: { displayName: true } }) : null;
     await this.archive(after, to, reason || null, by?.displayName ?? null);
     await this.discord.markDecided('application', id, actor, to, reason || null);
+    if (to === 'ACCEPTED') await this.hire(actor, after);
     return { id, number: after.number, status: to, decidedByName: by?.displayName ?? null, reason: reason || null };
+  }
+
+  /** Angenommen → Personal-/Dienstnummern-Automatik (Einstellungen → Dienstnummern). */
+  private hire(actor: Actor, a: { id: string; number: string; discordId: string | null; discordName: string | null; robloxUsername: string; robloxUserId: string | null }) {
+    return hireEvents.accepted(actor, { applicationId: a.id, number: a.number, kind: 'police', discordId: a.discordId, name: a.discordName || a.robloxUsername, robloxUsername: a.robloxUsername, robloxUserId: a.robloxUserId });
   }
 
   /** „Action On User Leave“ der Polizei-Bewerbung: offene Bewerbungen einer Person, die den Discord-Server verlassen hat. */
@@ -206,6 +213,7 @@ export class ApplicationsService {
       }
       // Discord-Nachricht anpassen (der interne Grund aus dem Web bleibt intern)
       if (to === 'ACCEPTED' || to === 'REJECTED' || to === 'WITHDRAWN') await this.discord.markDecided('application', id, actor, to, to === 'WITHDRAWN' ? reason ?? null : null);
+      if (to === 'ACCEPTED') await this.hire(actor, after);
       return after;
     });
   }
