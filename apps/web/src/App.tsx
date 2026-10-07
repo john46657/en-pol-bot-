@@ -36,6 +36,18 @@ const Offices = lazy(() => import('./pages/Offices').then((m) => ({ default: m.O
 const PersonalSettings = lazy(() => import('./pages/PersonalSettings').then((m) => ({ default: m.PersonalSettings })));
 const Studio = lazy(() => import('./pages/admin/Studio').then((m) => ({ default: m.Studio })));
 import * as R from './pages/resources';
+import { CadLayout } from './pages/cad/CadLayout';
+const CadDashboard = lazy(() => import('./pages/cad/CadDashboard').then((m) => ({ default: m.CadDashboard })));
+const CadIncidents = lazy(() => import('./pages/cad/CadIncidents').then((m) => ({ default: m.CadIncidents })));
+const CadMapPage = lazy(() => import('./pages/cad/CadOps').then((m) => ({ default: m.CadMapPage })));
+const CadCalls = lazy(() => import('./pages/cad/CadOps').then((m) => ({ default: m.CadCalls })));
+const CadUnits = lazy(() => import('./pages/cad/CadOps').then((m) => ({ default: m.CadUnits })));
+const CadRadio = lazy(() => import('./pages/cad/CadOps').then((m) => ({ default: m.CadRadio })));
+const ErlcLive = lazy(() => import('./pages/cad/ErlcLive').then((m) => ({ default: m.ErlcLive })));
+const CadSettings = lazy(() => import('./pages/cad/CadAdmin').then((m) => ({ default: m.CadSettings })));
+const CadTeam = lazy(() => import('./pages/cad/CadAdmin').then((m) => ({ default: m.CadTeam })));
+const CadCrossServer = lazy(() => import('./pages/cad/CadAdmin').then((m) => ({ default: m.CadCrossServer })));
+const CadLogs = lazy(() => import('./pages/cad/CadAdmin').then((m) => ({ default: m.CadLogs })));
 
 /** UI-seitige Routenprüfung (Komfort). Das Backend erzwingt dieselben Rechte unabhängig davon. */
 function Guard({ perm, area, children }: { perm?: string; area?: string; children: ReactNode }) {
@@ -66,6 +78,19 @@ export function App() {
           <Route path="radio-codes" element={<Guard perm="radio.view" area="dashboard.radio.view"><RadioCodes /></Guard>} />
           <Route path="teamchance" element={<Guard perm="teamchance.view" area="dashboard.teamchance.view"><TeamChance /></Guard>} />
           <Route path="me/settings" element={<Guard perm="dashboard.view"><PersonalSettings /></Guard>} />
+          <Route path="cad" element={<Guard perm="cad.view" area="dashboard.cad.view"><CadLayout /></Guard>}>
+            <Route index element={<Guard perm="cad.view"><CadDashboard /></Guard>} />
+            <Route path="incidents" element={<Guard perm="cad.view"><CadIncidents /></Guard>} />
+            <Route path="map" element={<Guard perm="cad.view"><CadMapPage /></Guard>} />
+            <Route path="units" element={<Guard perm="cad.view"><CadUnits /></Guard>} />
+            <Route path="radio" element={<Guard perm="cad.view"><CadRadio /></Guard>} />
+            <Route path="calls" element={<Guard perm="cad.view"><CadCalls /></Guard>} />
+            <Route path="erlc" element={<Guard perm="cad.view_erlc"><ErlcLive /></Guard>} />
+            <Route path="team" element={<Guard perm="cad.view"><CadTeam /></Guard>} />
+            <Route path="cross-server" element={<Guard perm="cad.view"><CadCrossServer /></Guard>} />
+            <Route path="logs" element={<Guard perm="cad.view_logs"><CadLogs /></Guard>} />
+            <Route path="settings" element={<Guard perm="cad.view"><CadSettings /></Guard>} />
+          </Route>
           <Route path="dispatch" element={<Guard perm="dispatch.view"><Dispatch /></Guard>} />
           <Route path="support-tickets" element={<Guard perm="ticket.view" area="dashboard.tickets.view"><SupportTickets /></Guard>} />
           <Route path="support-tickets/:id" element={<Guard perm="ticket.view" area="dashboard.tickets.view"><TicketDetail /></Guard>} />
