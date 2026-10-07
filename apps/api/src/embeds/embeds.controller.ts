@@ -7,6 +7,7 @@ import type { Actor } from '../audit/audit.service';
 import { zodBody } from '../common/zod.pipe';
 import { currentGuild } from '../common/guild-context';
 import { AppError } from '../common/errors';
+import { MediaService } from '../media/media.service';
 
 const sf = z.string().regex(/^\d{15,25}$/);
 
@@ -30,7 +31,10 @@ export class EmbedsController {
 @ApiTags('bot')
 @Controller('bot/embeds')
 export class BotEmbedsController {
-  constructor(private readonly s: EmbedsService) {}
+  constructor(private readonly s: EmbedsService, private readonly media: MediaService) {}
+  /** Hochgeladenes Bild (`media:<id>`) für Nachrichten des Bots – nur Embed-Bilder und Banner. */
+  @BotService() @Get('asset/:id')
+  async asset(@Param('id', ParseUUIDPipe) id: string) { const f = await this.media.embedAsset(id); return { mime: f.mime, name: f.name, data: f.data.toString('base64') }; }
   @BotService() @Post(':id/posted') @HttpCode(204)
   async posted(@Param('id', ParseUUIDPipe) id: string, @Body(zodBody(z.object({ channelId: sf, messageId: sf }))) b: { channelId: string; messageId: string }) { await this.s.posted(id, b.channelId, b.messageId); }
 }

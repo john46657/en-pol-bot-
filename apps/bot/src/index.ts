@@ -4,6 +4,7 @@ import {
   type AnySelectMenuInteraction, type ButtonComponent, type ButtonInteraction, type ChatInputCommandInteraction, type Interaction, type Message, type ModalSubmitInteraction,
 } from 'discord.js';
 import { componentsOf, createTicketRuntime, payloadOf } from './discord-tickets';
+import { postOrUpdate } from './messages';
 import type { MessageSpec } from '@enrp/shared';
 import { startGuildDirectory } from './guilds';
 import { startPresenceReporter } from './presence';
@@ -534,12 +535,14 @@ function wireReady(client0: Client) {
       if (type === 'embed.post') {
         // Embed-Baukasten: vorhandene Nachricht bearbeiten (falls noch da), sonst neu posten; Ort ans System melden
         const channelId = typeof p.channelId === 'string' ? p.channelId : '';
-        const ch = await client.channels.fetch(channelId);
-        if (!ch?.isSendable() || !('messages' in ch)) throw new Error(`channel ${channelId} is not a text channel the bot can post in`);
-        const payload = payloadOf(p.message as MessageSpec, false);
-        const old = typeof p.messageId === 'string' ? await ch.messages.fetch(p.messageId).catch(() => null) : null;
-        const msg = old ? await old.edit({ ...payload, content: payload.content ?? '' }) : await ch.send(payload);
-        await api.service('POST', `/bot/embeds/${String(p.embedId)}/posted`, { channelId, messageId: msg.id });
+        const r = await postOrUpdate(client, api, { channelId, message: p.message as MessageSpec, messageId: typeof p.messageId === 'string' ? p.messageId : null, forceNew: typeof p.messageId !== 'string' });
+        await api.service('POST', `/bot/embeds/${String(p.embedId)}/posted`, r);
+        return true;
+      }
+      if (type === 'message.post') {
+        // Allgemein (Funk-Codes, Staff-Liste, Panels, Berichte …): gemerkte Nachricht bearbeiten oder neu senden
+        const stateKey = typeof p.stateKey === 'string' && /^[a-z0-9:_-]{1,64}$/.test(p.stateKey) ? p.stateKey : undefined;
+        await postOrUpdate(client, api, { channelId: String(p.channelId ?? ''), message: p.message as MessageSpec, ...(stateKey ? { stateKey } : {}), forceNew: p.forceNew === true });
         return true;
       }
       if (type !== 'application.ticket') return false;

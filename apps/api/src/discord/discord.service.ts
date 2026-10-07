@@ -1,3 +1,4 @@
+import type { MessageSpec } from '@enrp/shared';
 import { Injectable } from '@nestjs/common';
 import { createHash, randomInt } from 'node:crypto';
 import { Prisma } from '@prisma/client';
@@ -135,6 +136,18 @@ export class DiscordService {
   async saveGuilds(guilds: DiscordGuildInfo[]) {
     const value = guilds as unknown as Prisma.InputJsonValue;
     await this.prisma.systemSetting.upsert({ where: { key: GUILDS_KEY }, create: { key: GUILDS_KEY, value }, update: { value } });
+  }
+
+  /**
+   * Nachricht in einen Kanal setzen oder die dort zuletzt unter `stateKey` gepostete bearbeiten (Funk-Codes, Staff-Liste, Panels …).
+   * Der Bot merkt sich den Ort unter `bot.state.<stateKey>`; `posted()` liest ihn wieder.
+   */
+  async postMessage(stateKey: string, channelId: string, message: MessageSpec, opts: { forceNew?: boolean; tx?: Prisma.TransactionClient } = {}) {
+    await (opts.tx ?? this.prisma).discordOutbox.create({ data: { type: 'message.post', channelKey: 'announcements', payload: { stateKey, channelId, message, forceNew: !!opts.forceNew } as unknown as Prisma.InputJsonValue } });
+  }
+  async posted(stateKey: string): Promise<{ channelId: string; messageId: string } | null> {
+    const v = (await this.getState(stateKey)) as { channelId?: unknown; messageId?: unknown } | null;
+    return v && typeof v.channelId === 'string' && typeof v.messageId === 'string' ? { channelId: v.channelId, messageId: v.messageId } : null;
   }
 
   async getState(key: string): Promise<unknown> {
