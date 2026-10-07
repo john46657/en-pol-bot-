@@ -9,6 +9,7 @@ import { ApplicationsAnalyticsService } from './applications-analytics.service';
 import { CurrentActor, Public, RequirePermission } from '../authz/decorators';
 import type { Actor } from '../audit/audit.service';
 import { zodBody } from '../common/zod.pipe';
+import { RobloxService } from '../persons/roblox.service';
 import { pageQuery } from '../common/pagination';
 
 const submit = z.object({ robloxUsername: z.string().trim().min(1).max(64), robloxUserId: z.string().max(20).optional(), answers: z.record(z.string(), z.union([z.string().max(5000), z.array(z.string().max(100)).max(25)])) });
@@ -22,8 +23,14 @@ const analyticsQ = z.object({ type: z.string().max(80).optional(), status: z.enu
 @ApiTags('applications')
 @Controller('applications')
 export class ApplicationsController {
-  constructor(private readonly a: ApplicationsService, private readonly stats: ApplicationsAnalyticsService) {}
+  constructor(private readonly a: ApplicationsService, private readonly stats: ApplicationsAnalyticsService, private readonly roblox: RobloxService) {}
   /** `?guildId=` – Formular eines Servers (für den Bot); ohne: das gemeinsame (Web-Seite /apply). */
+  /** Frage „Roblox User“: Konto suchen (Name, Anzeigename, Bild – keine internen Daten). Öffentlich, begrenzt. */
+  @Public() @Throttle({ default: { limit: process.env.NODE_ENV === 'test' ? 10_000 : 30, ttl: 60_000 } }) @Get('roblox')
+  async robloxLookup(@Query(zodBody(z.object({ q: z.string().trim().min(3).max(20).regex(/^@?[A-Za-z0-9_]+$/) }))) q: { q: string }) {
+    return { profile: await this.roblox.publicLookup(q.q.replace(/^@/, '')) };
+  }
+
   @Public() @Get('form')
   form(@Query(zodBody(guildQ)) q: z.infer<typeof guildQ>) { return this.a.form(q.guildId); }
   @Public() @Throttle({ default: { limit: process.env.NODE_ENV === 'test' ? 10_000 : 5, ttl: 3_600_000 } }) @Post()

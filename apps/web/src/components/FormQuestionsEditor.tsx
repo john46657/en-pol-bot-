@@ -1,7 +1,7 @@
 import { RolePicker } from './DiscordPickers';
 import { useState } from 'react';
 import { ChevronDown, Copy, GripVertical, Plus, Trash2 } from 'lucide-react';
-import { FORM_QUESTION_TYPES, MAX_FORM_OPTIONS, MAX_FORM_QUESTIONS, freeFieldKey, type FormField, type FormQuestionType } from '@enrp/shared';
+import { FORM_QUESTION_TYPES, isInputQuestion, MAX_FORM_OPTIONS, MAX_FORM_QUESTIONS, freeFieldKey, type FormField, type FormQuestionType } from '@enrp/shared';
 import { Button, Input, Select, Textarea } from './ui';
 
 const move = <T,>(a: T[], from: number, to: number) => { const b = [...a]; const [x] = b.splice(from, 1); b.splice(to, 0, x!); return b; };
@@ -35,8 +35,8 @@ export function FormQuestionsEditor({ value, onChange, disabled }: { value: Form
                 <Button size="sm" variant="ghost" aria-label={`Move question ${i + 1} down`} disabled={disabled || i === value.length - 1} onClick={() => onChange(move(value, i, i + 1))}>↓</Button>
                 <div className="w-40"><Select aria-label={`Type of question ${i + 1}`} value={type} disabled={disabled} onChange={(e) => {
                   const t = e.target.value as FormQuestionType;
-                  patch(i, { type: t, options: t === 'TEXT' ? [] : (q.options?.length ? q.options : [{ label: '' }, { label: '' }]), multiple: t === 'TEXT' ? false : q.multiple });
-                  setOpen({ ...open, [q.key]: t !== 'TEXT' || show });
+                  patch(i, { type: t, options: isInputQuestion(t) ? [] : (q.options?.length ? q.options : [{ label: '' }, { label: '' }]), multiple: isInputQuestion(t) ? false : q.multiple, ...(t === 'ROBLOX' ? { maxLength: 20, minLength: 0 } : {}) });
+                  setOpen({ ...open, [q.key]: !isInputQuestion(t) || show });
                 }}>{(Object.keys(FORM_QUESTION_TYPES) as FormQuestionType[]).map((t) => <option key={t} value={t}>{FORM_QUESTION_TYPES[t]}</option>)}</Select></div>
                 <Button size="sm" variant="ghost" aria-label={`Duplicate question ${i + 1}`} disabled={disabled || value.length >= MAX_FORM_QUESTIONS} onClick={() => onChange([...value.slice(0, i + 1), { ...q, key: freeFieldKey(keys), options: q.options?.map((o) => ({ ...o })) }, ...value.slice(i + 1)])}><Copy size={16} /></Button>
                 <Button size="sm" variant="ghost" aria-label={`Delete question ${i + 1}`} disabled={disabled || value.length <= 1} onClick={() => onChange(value.filter((_, j) => j !== i))} className="text-danger"><Trash2 size={16} /></Button>
@@ -46,7 +46,7 @@ export function FormQuestionsEditor({ value, onChange, disabled }: { value: Form
               <Textarea aria-label={`Text of question ${i + 1}`} rows={2} maxLength={300} value={q.label} disabled={disabled} placeholder="Your question …" onChange={(e) => patch(i, { label: e.target.value })} />
               <button type="button" aria-expanded={show} onClick={() => setOpen({ ...open, [q.key]: !show })} className="flex flex-wrap items-center gap-x-2 self-start text-left text-sm font-semibold">
                 <span className="flex items-center gap-1 whitespace-nowrap">Validation settings <ChevronDown size={16} className={show ? 'rotate-180 transition' : 'transition'} aria-hidden /></span>
-                {!show && <span className="text-xs font-normal text-muted">{q.required ? 'required' : 'optional'}{type === 'TEXT' ? ` · ${q.minLength ? `${q.minLength}–` : 'max. '}${q.maxLength} chars` : ` · ${q.options?.length ?? 0} options${q.multiple ? ' · multiple' : ''}`}</span>}
+                {!show && <span className="text-xs font-normal text-muted">{q.required ? 'required' : 'optional'}{type === 'ROBLOX' ? ' · checked on Roblox' : type === 'TEXT' ? ` · ${q.minLength ? `${q.minLength}–` : 'max. '}${q.maxLength} chars` : ` · ${q.options?.length ?? 0} options${q.multiple ? ' · multiple' : ''}`}</span>}
               </button>
               {show && (
                 <div className="grid gap-3 rounded-md border border-line p-3">
@@ -57,7 +57,8 @@ export function FormQuestionsEditor({ value, onChange, disabled }: { value: Form
                       <label className="grid gap-1 text-xs text-muted">Max. length (characters)<Input type="number" min={1} max={5000} value={q.maxLength} disabled={disabled} onChange={(e) => patch(i, { maxLength: Math.max(1, Number(e.target.value) || 1) })} /></label>
                     </div>
                   )}
-                  {type !== 'TEXT' && (
+                  {type === 'ROBLOX' && <p className="text-xs text-muted">Applicants search their Roblox account (with profile picture) and pick it. The server checks that the account exists and saves name + Roblox ID.</p>}
+                  {!isInputQuestion(type) && (
                     <>
                       <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={!!q.multiple} disabled={disabled} onChange={(e) => patch(i, { multiple: e.target.checked })} />Allow multiple selections</label>
                       <div className="grid gap-2">

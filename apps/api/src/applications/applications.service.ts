@@ -12,6 +12,7 @@ import { PageQuery, pageResult, skipTake } from '../common/pagination';
 import { webUrl } from '../common/web-url';
 import { policeSchema } from '../qualifications/qualifications.config';
 import { cooldownLeft, decisionMessage, decisionRoles, submitRoles } from '../qualifications/decision';
+import { RobloxService } from '../persons/roblox.service';
 import { formatMinutes } from '@enrp/shared';
 
 export type { FormField };
@@ -28,7 +29,7 @@ const OPEN_STATUSES = ['SUBMITTED', 'SCREENING', 'INTERVIEW', 'PENDING_DECISION'
 
 @Injectable()
 export class ApplicationsService {
-  constructor(private readonly prisma: PrismaService, private readonly audit: AuditService, private readonly discord: DiscordService, private readonly notify: NotifyService, private readonly teamchance: TeamChanceService) {}
+  constructor(private readonly prisma: PrismaService, private readonly audit: AuditService, private readonly discord: DiscordService, private readonly notify: NotifyService, private readonly teamchance: TeamChanceService, private readonly roblox: RobloxService) {}
 
   /** Formular eines Servers (`application.form@<guildId>`), sonst das gemeinsame. */
   async form(guildId?: string | null): Promise<FormField[]> {
@@ -48,7 +49,17 @@ export class ApplicationsService {
     for (const f of form) {
       const r = checkAnswer(f, d.answers[f.key]);
       if (!r.ok) throw new AppError('VALIDATION_FAILED', r.error);
-      if (r.text) answers[f.key] = r.text;
+      let text = r.text;
+      // Frage „Roblox User“: Konto muss es bei Roblox geben; gespeichert mit richtiger Schreibweise + ID
+      if (f.type === 'ROBLOX' && text) {
+        const rb = await this.roblox.verifyName(text);
+        if (rb === null) throw new AppError('VALIDATION_FAILED', `Den Roblox-Benutzer „${text}“ gibt es nicht.`);
+        if (rb) {
+          text = `${rb.name} (ID ${rb.id})`;
+          if (!d.robloxUserId) d = { ...d, robloxUsername: rb.name, robloxUserId: rb.id };
+        }
+      }
+      if (text) answers[f.key] = text;
       r.roleIds.forEach((x) => grantRoleIds.add(x));
     }
     if (d.robloxUserId && (await this.prisma.application.count({ where: { robloxUserId: d.robloxUserId, status: { in: OPEN_STATUSES } } }))) {

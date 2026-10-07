@@ -19,3 +19,15 @@ describe('workflow rules', () => {
     expect(renderTemplate('{{x}}', { action: 'a', after: { x: 'y'.repeat(1000) } })).toHaveLength(300);
   });
 });
+
+import { checkAnswer, normalizeField } from '../src/forms';
+describe('Roblox User question', () => {
+  const f = { key: 'rb', label: 'Roblox', required: true, type: 'ROBLOX' as const, maxLength: 1000, options: [{ label: 'x' }] };
+  it('has no options and validates the name', () => {
+    expect(normalizeField(f)).toMatchObject({ options: [], maxLength: 20, multiple: false });
+    expect(checkAnswer(f, '@Builderman')).toEqual({ ok: true, text: 'Builderman', roleIds: [] });
+    expect(checkAnswer(f, 'two words').ok).toBe(false);
+    expect(checkAnswer(f, '').ok).toBe(false);
+    expect(checkAnswer({ ...f, required: false }, '')).toEqual({ ok: true, text: '', roleIds: [] });
+  });
+});

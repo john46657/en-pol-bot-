@@ -28,6 +28,21 @@ export declare class RobloxService {
         name?: string;
     } | null;
     lookup(input: string): Promise<RobloxProfile | null>;
+    /**
+     * Roblox-Benutzername prüfen (Bewerbungsfrage „Roblox User“): gefunden → richtige Schreibweise + ID,
+     * gibt es nicht → null, Roblox nicht erreichbar (oder Abfrage abgeschaltet) → undefined.
+     */
+    verifyName(name: string): Promise<{
+        id: string;
+        name: string;
+    } | null | undefined>;
+    /** Für die öffentliche Bewerbung: nur Name, Anzeigename und Bild (keine internen Daten wie Akten). */
+    publicLookup(input: string): Promise<{
+        id: string;
+        name: string;
+        displayName: string;
+        avatarUrl: string | null;
+    } | null>;
     private fetchProfile;
     private get;
 }

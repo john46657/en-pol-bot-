@@ -60,6 +60,35 @@ let RobloxService = RobloxService_1 = class RobloxService {
         });
         return { ...profile, person };
     }
+    /**
+     * Roblox-Benutzername prüfen (Bewerbungsfrage „Roblox User“): gefunden → richtige Schreibweise + ID,
+     * gibt es nicht → null, Roblox nicht erreichbar (oder Abfrage abgeschaltet) → undefined.
+     */
+    async verifyName(name) {
+        if (process.env.ROBLOX_LOOKUP === 'off' || !NAME.test(name))
+            return undefined;
+        const key = `verify:${name.toLowerCase()}`;
+        const hit = this.cache.get(key);
+        if (hit && Date.now() - hit.at < TTL)
+            return hit.value ? { id: hit.value.id, name: hit.value.name } : null;
+        try {
+            const r = await this.get('https://users.roblox.com/v1/usernames/users', { usernames: [name], excludeBannedUsers: false });
+            if (!r)
+                return undefined; // Fehlerantwort → nicht entscheidbar
+            const u = r.data?.[0];
+            const value = u ? { id: String(u.id), name: u.name } : null;
+            this.cache.set(key, { at: Date.now(), value: value ? { ...value, displayName: value.name, description: '', created: null, isBanned: false, avatarUrl: null, profileUrl: '' } : null });
+            return value;
+        }
+        catch {
+            return undefined;
+        }
+    }
+    /** Für die öffentliche Bewerbung: nur Name, Anzeigename und Bild (keine internen Daten wie Akten). */
+    async publicLookup(input) {
+        const p = await this.lookup(input);
+        return p ? { id: p.id, name: p.name, displayName: p.displayName, avatarUrl: p.avatarUrl } : null;
+    }
     async fetchProfile(p) {
         try {
             let id = p.id;

@@ -148,6 +148,24 @@ describe('/bewerbung (Polizei-Bewerbung per Direktnachricht)', () => {
     expect(out[3]!.embed.description).toContain('APP-1');
     expect(calls.at(-1)).toMatchObject({ kind: 'service', path: '/bot/application', body: { robloxUsername: 'Builderman', robloxUserId: '156', discordId: ME, answers: { age: '18' } } });
   });
+  it('a „Roblox User“ question replaces the built-in one and checks the account on Roblox', async () => {
+    const rbForm = [{ key: 'rb', label: 'Dein Roblox User', required: true, type: 'ROBLOX', maxLength: 20 }, { key: 'why', label: 'Warum?', required: true, maxLength: 100 }];
+    const { api, calls } = fakeApi({ 'GET /applications/form': rbForm, 'GET /bot/application/open': { open: false }, 'POST /bot/application': { number: 'APP-2' } });
+    const { p } = fakePlatform();
+    const start = interactionFor('quali:start:@polizei')!;
+    await start.def.run({ ...ctx(api, { platform: p }), args: start.args });
+    const out: { embed: { description?: string; thumbnail?: string } }[] = [];
+    const check = async (n: string) => (n.toLowerCase() === 'john150210' ? { id: 42, name: 'john150210', displayName: 'John', avatarUrl: 'https://tr.rbxcdn.com/x.png' } : null);
+    const say = { api, sendDm: async (_u: string, m: { embed: { description?: string; thumbnail?: string } }) => { out.push(m); }, robloxLookup: async () => ({ id: 42, name: 'john150210' }), robloxCheck: check };
+    await handleDirectMessage({ userId: ME, userName: 'john', content: 'gibtsnicht99', ...say });
+    expect(out.at(-1)!.embed.description).toContain('gibt es nicht');
+    await handleDirectMessage({ userId: ME, userName: 'john', content: 'John150210', ...say });
+    expect(out.at(-2)!.embed).toMatchObject({ thumbnail: 'https://tr.rbxcdn.com/x.png' });
+    expect(out.at(-2)!.embed.description).toContain('Roblox-Konto gefunden');
+    expect(out.at(-1)!.embed.description).toContain('**2/2.** Warum?');
+    await handleDirectMessage({ userId: ME, userName: 'john', content: 'Weil ich helfen will', ...say });
+    expect(calls.at(-1)).toMatchObject({ path: '/bot/application', body: { robloxUsername: 'john150210', robloxUserId: '42', answers: { rb: 'john150210', why: 'Weil ich helfen will' } } });
+  });
 });
 
 describe('application ticket channels', () => {

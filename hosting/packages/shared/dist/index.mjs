@@ -228,20 +228,23 @@ function ticketChannelName(format, vars) {
 var ticketNumber = (n) => String(n).padStart(4, "0");
 
 // src/forms.ts
-var FORM_QUESTION_TYPES = { TEXT: "Text", CHOICE: "Multiple choice", ROLE: "Role select" };
+var FORM_QUESTION_TYPES = { TEXT: "Text", CHOICE: "Multiple choice", ROLE: "Role select", ROBLOX: "Roblox User" };
+var ROBLOX_NAME = /^[A-Za-z0-9_]{3,20}$/;
+var isInputQuestion = (t) => !t || t === "TEXT" || t === "ROBLOX";
 var MAX_FORM_QUESTIONS = 50;
 var MAX_FORM_OPTIONS = 25;
 function normalizeField(f) {
   const type = f.type ?? "TEXT";
+  const input = isInputQuestion(type);
   return {
     key: f.key,
     label: f.label,
     required: f.required,
     type,
     minLength: type === "TEXT" ? Math.max(0, f.minLength ?? 0) : 0,
-    maxLength: f.maxLength,
-    options: type === "TEXT" ? [] : (f.options ?? []).slice(0, MAX_FORM_OPTIONS),
-    multiple: type !== "TEXT" && !!f.multiple
+    maxLength: type === "ROBLOX" ? 20 : f.maxLength,
+    options: input ? [] : (f.options ?? []).slice(0, MAX_FORM_OPTIONS),
+    multiple: !input && !!f.multiple
   };
 }
 function freeFieldKey(used) {
@@ -250,6 +253,12 @@ function freeFieldKey(used) {
 }
 function checkAnswer(field, value) {
   const f = normalizeField(field);
+  if (f.type === "ROBLOX") {
+    const v = (Array.isArray(value) ? value[0] ?? "" : value ?? "").trim().replace(/^@/, "");
+    if (!v) return f.required ? { ok: false, error: `\u201E${f.label}\u201C ist eine Pflichtfrage.` } : { ok: true, text: "", roleIds: [] };
+    if (!ROBLOX_NAME.test(v)) return { ok: false, error: `Bei \u201E${f.label}\u201C bitte einen g\xFCltigen Roblox-Benutzernamen angeben (3\u201320 Zeichen, Buchstaben, Ziffern, _).` };
+    return { ok: true, text: v, roleIds: [] };
+  }
   if (f.type === "TEXT") {
     const v = (Array.isArray(value) ? value.join("\n") : value ?? "").trim();
     if (!v) return f.required ? { ok: false, error: `\u201E${f.label}\u201C ist eine Pflichtfrage.` } : { ok: true, text: "", roleIds: [] };
@@ -599,6 +608,7 @@ export {
   REPORT_STATUSES,
   REPORT_TRANSITIONS,
   REPORT_TYPES,
+  ROBLOX_NAME,
   ROBLOX_VERIFICATION_STATUSES,
   STATUS_KINDS,
   TICKET_ACTIONS,
@@ -628,6 +638,7 @@ export {
   freeFieldKey,
   gameToPixel,
   grantMatches,
+  isInputQuestion,
   isPermissionKey,
   isValidRobloxUserId,
   normalizeField,

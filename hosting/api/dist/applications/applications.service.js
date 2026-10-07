@@ -24,6 +24,7 @@ const pagination_1 = require("../common/pagination");
 const web_url_1 = require("../common/web-url");
 const qualifications_config_1 = require("../qualifications/qualifications.config");
 const decision_1 = require("../qualifications/decision");
+const roblox_service_1 = require("../persons/roblox.service");
 const shared_2 = require("@enrp/shared");
 /** Die Beschriftungen sind zugleich die Fragen, die der Discord-Bot per Direktnachricht stellt. */
 exports.DEFAULT_FORM = [
@@ -41,12 +42,14 @@ let ApplicationsService = class ApplicationsService {
     discord;
     notify;
     teamchance;
-    constructor(prisma, audit, discord, notify, teamchance) {
+    roblox;
+    constructor(prisma, audit, discord, notify, teamchance, roblox) {
         this.prisma = prisma;
         this.audit = audit;
         this.discord = discord;
         this.notify = notify;
         this.teamchance = teamchance;
+        this.roblox = roblox;
     }
     /** Formular eines Servers (`application.form@<guildId>`), sonst das gemeinsame. */
     async form(guildId) {
@@ -68,8 +71,20 @@ let ApplicationsService = class ApplicationsService {
             const r = (0, shared_1.checkAnswer)(f, d.answers[f.key]);
             if (!r.ok)
                 throw new errors_1.AppError('VALIDATION_FAILED', r.error);
-            if (r.text)
-                answers[f.key] = r.text;
+            let text = r.text;
+            // Frage „Roblox User“: Konto muss es bei Roblox geben; gespeichert mit richtiger Schreibweise + ID
+            if (f.type === 'ROBLOX' && text) {
+                const rb = await this.roblox.verifyName(text);
+                if (rb === null)
+                    throw new errors_1.AppError('VALIDATION_FAILED', `Den Roblox-Benutzer „${text}“ gibt es nicht.`);
+                if (rb) {
+                    text = `${rb.name} (ID ${rb.id})`;
+                    if (!d.robloxUserId)
+                        d = { ...d, robloxUsername: rb.name, robloxUserId: rb.id };
+                }
+            }
+            if (text)
+                answers[f.key] = text;
             r.roleIds.forEach((x) => grantRoleIds.add(x));
         }
         if (d.robloxUserId && (await this.prisma.application.count({ where: { robloxUserId: d.robloxUserId, status: { in: OPEN_STATUSES } } }))) {
@@ -203,6 +218,6 @@ let ApplicationsService = class ApplicationsService {
 exports.ApplicationsService = ApplicationsService;
 exports.ApplicationsService = ApplicationsService = __decorate([
     (0, common_1.Injectable)(),
-    __metadata("design:paramtypes", [prisma_service_1.PrismaService, audit_service_1.AuditService, discord_service_1.DiscordService, notify_service_1.NotifyService, teamchance_service_1.TeamChanceService])
+    __metadata("design:paramtypes", [prisma_service_1.PrismaService, audit_service_1.AuditService, discord_service_1.DiscordService, notify_service_1.NotifyService, teamchance_service_1.TeamChanceService, roblox_service_1.RobloxService])
 ], ApplicationsService);
 //# sourceMappingURL=applications.service.js.map
