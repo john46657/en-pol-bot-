@@ -138,7 +138,7 @@ export function Verification() {
   );
 }
 
-interface OAuth { enabled: boolean; fromEnv: boolean; clientId: string; hasSecret: boolean; redirectUri: string }
+interface OAuth { enabled: boolean; fromEnv: boolean; clientId: string; hasSecret: boolean; allowCode: boolean; redirectUri: string }
 /** „Mit Roblox anmelden“ einrichten: OAuth-App bei Roblox, Client-ID + Secret hier (das Secret wird nie wieder angezeigt). */
 function OAuthCard({ manage }: { manage: boolean }) {
   const qc = useQueryClient();
@@ -146,7 +146,7 @@ function OAuthCard({ manage }: { manage: boolean }) {
   const [id, setId] = useState<string>();
   const [secret, setSecret] = useState('');
   const [copied, setCopied] = useState(false);
-  const save = useMutation({ mutationFn: () => api<OAuth>('/verification/oauth', { method: 'PUT', body: { clientId: (id ?? q.data?.clientId ?? '').trim(), ...(secret.trim() ? { clientSecret: secret.trim() } : {}) } }), onSuccess: (r) => { qc.setQueryData(['verify-oauth'], r); setSecret(''); setId(undefined); } });
+  const save = useMutation({ mutationFn: (allowCode?: boolean) => api<OAuth>('/verification/oauth', { method: 'PUT', body: { clientId: (id ?? q.data?.clientId ?? '').trim(), allowCode: allowCode ?? q.data?.allowCode ?? true, ...(secret.trim() ? { clientSecret: secret.trim() } : {}) } }), onSuccess: (r) => { qc.setQueryData(['verify-oauth'], r); setSecret(''); setId(undefined); } });
   if (!q.data) return q.error ? <ErrorState error={q.error} onRetry={() => void q.refetch()} /> : <SkeletonRows rows={2} />;
   const o = q.data, clientId = id ?? o.clientId;
   return (
@@ -165,8 +165,14 @@ function OAuthCard({ manage }: { manage: boolean }) {
         <div className="grid gap-3 md:grid-cols-[1fr_1fr_auto] md:items-end">
           <label className="grid gap-1 text-xs text-muted">Client-ID<Input aria-label="Roblox Client-ID" disabled={!manage} inputMode="numeric" placeholder="z. B. 1234567890123456789" value={clientId} onChange={(e) => setId(e.target.value.replace(/\D/g, ''))} /></label>
           <label className="grid gap-1 text-xs text-muted">Client-Secret<Input aria-label="Roblox Client-Secret" type="password" autoComplete="off" disabled={!manage} placeholder={o.hasSecret ? '•••••• (gespeichert – leer lassen zum Behalten)' : 'Secret einfügen'} value={secret} onChange={(e) => setSecret(e.target.value)} /></label>
-          {manage && <Button disabled={save.isPending || (clientId === o.clientId && !secret.trim()) || (!!clientId && !o.hasSecret && !secret.trim())} onClick={() => save.mutate()}>Speichern</Button>}
+          {manage && <Button disabled={save.isPending || (clientId === o.clientId && !secret.trim()) || (!!clientId && !o.hasSecret && !secret.trim())} onClick={() => save.mutate(undefined)}>Speichern</Button>}
         </div>
+      )}
+      {o.enabled && (
+        <label className="mt-3 flex items-center gap-2 text-sm">
+          <Toggle label="Mit Code verifizieren zusätzlich anbieten" checked={o.allowCode} onChange={(v) => manage && save.mutate(v)} />
+          <span>Zusätzlich <b>Mit Code verifizieren</b> anbieten <span className="text-xs text-muted">– solange Roblox eure App noch nicht freigegeben hat (vorher geht die Roblox-Anmeldung nur für wenige Konten). Nach der Freigabe abschalten.</span></span>
+        </label>
       )}
       {save.error && <p role="alert" className="mt-2 text-sm text-danger">{errText(save.error)}</p>}
     </Card>

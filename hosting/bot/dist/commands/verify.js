@@ -15,8 +15,8 @@ async function startVerify(c) {
             return { ephemeral: true, content: 'Bestätige dein Roblox-Konto mit einem Code in deinem Profil:', buttons: [{ id: 'verify:code', label: 'Roblox-Namen eingeben', style: 'success', emoji: '✅' }] };
         return {
             ephemeral: true,
-            embeds: [{ title: '✅ Mit Roblox verifizieren', color: format_1.COLORS.success, description: `Klick auf **Mit Roblox anmelden**, melde dich bei Roblox an und bestätige den Zugriff.\nDanach bekommst du hier automatisch deine Rollen und deinen Nickname.\n\nDer Link gilt nur für dich und läuft ${ts(r.expiresAt)} ab.` }],
-            buttons: [{ id: 'link', label: 'Mit Roblox anmelden', style: 'secondary', url: r.url }],
+            embeds: [{ title: '✅ Mit Roblox verifizieren', color: format_1.COLORS.success, description: `Klick auf **Mit Roblox anmelden**, melde dich bei Roblox an und bestätige den Zugriff.\nDanach bekommst du hier automatisch deine Rollen und deinen Nickname.${r.allowCode !== false ? '\nKlappt das nicht, nimm **Mit Code verifizieren**.' : ''}\n\nDer Link gilt nur für dich und läuft ${ts(r.expiresAt)} ab.` }],
+            buttons: [{ id: 'link', label: 'Mit Roblox anmelden', style: 'secondary', url: r.url }, ...(r.allowCode !== false ? [{ id: 'verify:code', label: 'Mit Code verifizieren', style: 'secondary' }] : [])],
         };
     }
     catch (e) {

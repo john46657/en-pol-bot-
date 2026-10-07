@@ -29,11 +29,14 @@ describe('Roblox verification in Discord', () => {
   it('panel button / command: direct Roblox login link; only without OAuth the code form', async () => {
     const start = interactionFor('verify:start')!;
     expect(start.def.opensModal?.(start.args)).toBe(false);
-    const oauth = fakeApi({ 'POST /bot/verify/oauth': { enabled: true, url: 'https://apis.roblox.com/oauth/v1/authorize?state=x', expiresAt: new Date(Date.now() + 600_000).toISOString() } });
+    const oauth = fakeApi({ 'POST /bot/verify/oauth': { enabled: true, allowCode: false, url: 'https://apis.roblox.com/oauth/v1/authorize?state=x', expiresAt: new Date(Date.now() + 600_000).toISOString() } });
     const r1 = await start.def.run({ discordId: ME, opts: {}, api: oauth.api, guildId: GUILD, userName: 'me', args: start.args });
     expect(oauth.calls[0]!.body).toEqual({ guildId: GUILD, discordId: ME, discordName: 'me' });
     expect(r1.buttons).toEqual([{ id: 'link', label: 'Mit Roblox anmelden', style: 'secondary', url: 'https://apis.roblox.com/oauth/v1/authorize?state=x' }]);
     expect((await byName('verifizieren')!.run({ discordId: ME, opts: {}, api: oauth.api })).buttons?.[0]?.url).toContain('apis.roblox.com');
+    // bis zur Freigabe durch Roblox: beides anbieten
+    const both = fakeApi({ 'POST /bot/verify/oauth': { enabled: true, allowCode: true, url: 'https://apis.roblox.com/oauth/v1/authorize?state=y', expiresAt: new Date(Date.now() + 600_000).toISOString() } });
+    expect((await start.def.run({ discordId: ME, opts: {}, api: both.api, args: start.args })).buttons?.map((b) => b.id)).toEqual(['link', 'verify:code']);
     const off = fakeApi({ 'POST /bot/verify/oauth': { enabled: false } });
     expect((await start.def.run({ discordId: ME, opts: {}, api: off.api, args: start.args })).buttons?.[0]?.id).toBe('verify:code');
     const code = interactionFor('verify:code')!;

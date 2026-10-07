@@ -11,12 +11,12 @@ const ts = (iso: string) => `<t:${Math.floor(Date.parse(iso) / 1000)}:R>`;
 /** „Verifizieren“: direkt mit Roblox anmelden (OAuth). Nur wenn das noch nicht eingerichtet ist, geht es über den Code im Profil. */
 async function startVerify(c: Ctx): Promise<Reply> {
   try {
-    const r = await c.api.service<{ enabled: boolean; url?: string; expiresAt?: string }>('POST', '/bot/verify/oauth', { ...(c.guildId ? { guildId: c.guildId } : {}), discordId: c.discordId, ...(c.userName ? { discordName: c.userName } : {}) });
+    const r = await c.api.service<{ enabled: boolean; allowCode?: boolean; url?: string; expiresAt?: string }>('POST', '/bot/verify/oauth', { ...(c.guildId ? { guildId: c.guildId } : {}), discordId: c.discordId, ...(c.userName ? { discordName: c.userName } : {}) });
     if (!r.enabled || !r.url) return { ephemeral: true, content: 'Bestätige dein Roblox-Konto mit einem Code in deinem Profil:', buttons: [{ id: 'verify:code', label: 'Roblox-Namen eingeben', style: 'success', emoji: '✅' }] };
     return {
       ephemeral: true,
-      embeds: [{ title: '✅ Mit Roblox verifizieren', color: COLORS.success, description: `Klick auf **Mit Roblox anmelden**, melde dich bei Roblox an und bestätige den Zugriff.\nDanach bekommst du hier automatisch deine Rollen und deinen Nickname.\n\nDer Link gilt nur für dich und läuft ${ts(r.expiresAt!)} ab.` }],
-      buttons: [{ id: 'link', label: 'Mit Roblox anmelden', style: 'secondary', url: r.url }],
+      embeds: [{ title: '✅ Mit Roblox verifizieren', color: COLORS.success, description: `Klick auf **Mit Roblox anmelden**, melde dich bei Roblox an und bestätige den Zugriff.\nDanach bekommst du hier automatisch deine Rollen und deinen Nickname.${r.allowCode !== false ? '\nKlappt das nicht, nimm **Mit Code verifizieren**.' : ''}\n\nDer Link gilt nur für dich und läuft ${ts(r.expiresAt!)} ab.` }],
+      buttons: [{ id: 'link', label: 'Mit Roblox anmelden', style: 'secondary', url: r.url }, ...(r.allowCode !== false ? [{ id: 'verify:code', label: 'Mit Code verifizieren', style: 'secondary' as const }] : [])],
     };
   } catch (e) { return fail(e); }
 }

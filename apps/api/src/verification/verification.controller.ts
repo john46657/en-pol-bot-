@@ -48,7 +48,7 @@ export class BotVerificationController {
   constructor(private readonly s: VerificationService, private readonly oauth: RobloxOAuthService) {}
   /** „Mit Roblox anmelden“: eingerichtet? Dann Anmelde-Link für dieses Mitglied. */
   @BotService() @Throttle(fast) @Post('oauth') @HttpCode(200)
-  async oauthLink(@Body(zodBody(member)) b: z.infer<typeof member>) { return (await this.oauth.enabled()) ? { enabled: true, ...(await this.oauth.link(b.guildId, b.discordId, b.discordName)) } : { enabled: false }; }
+  async oauthLink(@Body(zodBody(member)) b: z.infer<typeof member>) { return (await this.oauth.enabled()) ? { enabled: true, allowCode: await this.oauth.allowCode(), ...(await this.oauth.link(b.guildId, b.discordId, b.discordName)) } : { enabled: false, allowCode: true }; }
   @BotService() @Get('config') config(@Query(zodBody(z.object({ guildId: sf }))) q: { guildId: string }) { return this.s.config(q.guildId); }
   @BotService() @Throttle(fast) @Post('start') @HttpCode(200)
   start(@Body(zodBody(member.extend({ roblox: z.string().trim().min(1).max(100) }))) b: z.infer<typeof member> & { roblox: string }) { return this.s.start(b.guildId, b.discordId, b.roblox); }

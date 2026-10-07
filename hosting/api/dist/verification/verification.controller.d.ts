@@ -47,6 +47,7 @@ export declare class VerificationController {
         fromEnv: boolean;
         clientId: string;
         hasSecret: boolean;
+        allowCode: boolean;
         redirectUri: string;
     }>;
     saveOauth(a: Actor, b: OAuthSettings): Promise<{
@@ -54,6 +55,7 @@ export declare class VerificationController {
         fromEnv: boolean;
         clientId: string;
         hasSecret: boolean;
+        allowCode: boolean;
         redirectUri: string;
     }>;
     config(q: z.infer<typeof guildQ>): Promise<VerifyConfig & {
@@ -98,8 +100,10 @@ export declare class BotVerificationController {
         url: string;
         expiresAt: Date;
         enabled: boolean;
+        allowCode: boolean;
     } | {
         enabled: boolean;
+        allowCode: boolean;
     }>;
     config(q: {
         guildId: string;

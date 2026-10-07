@@ -132,7 +132,7 @@ let BotVerificationController = class BotVerificationController {
         this.oauth = oauth;
     }
     /** „Mit Roblox anmelden“: eingerichtet? Dann Anmelde-Link für dieses Mitglied. */
-    async oauthLink(b) { return (await this.oauth.enabled()) ? { enabled: true, ...(await this.oauth.link(b.guildId, b.discordId, b.discordName)) } : { enabled: false }; }
+    async oauthLink(b) { return (await this.oauth.enabled()) ? { enabled: true, allowCode: await this.oauth.allowCode(), ...(await this.oauth.link(b.guildId, b.discordId, b.discordName)) } : { enabled: false, allowCode: true }; }
     config(q) { return this.s.config(q.guildId); }
     start(b) { return this.s.start(b.guildId, b.discordId, b.roblox); }
     check(b) { return this.s.check(b.guildId, b.discordId, b.discordName); }

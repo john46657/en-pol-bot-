@@ -6,12 +6,16 @@ export declare const oauthSettingsSchema: z.ZodObject<{
     clientId: z.ZodUnion<[z.ZodString, z.ZodLiteral<"">]>;
     /** Leer lassen = bisheriges Secret behalten. */
     clientSecret: z.ZodOptional<z.ZodString>;
+    /** Zusätzlich „Mit Code verifizieren“ anbieten (z. B. solange Roblox die App noch nicht freigegeben hat). */
+    allowCode: z.ZodDefault<z.ZodBoolean>;
 }, "strip", z.ZodTypeAny, {
     clientId: string;
+    allowCode: boolean;
     clientSecret?: string | undefined;
 }, {
     clientId: string;
     clientSecret?: string | undefined;
+    allowCode?: boolean | undefined;
 }>;
 export type OAuthSettings = z.infer<typeof oauthSettingsSchema>;
 export declare class RobloxOAuthFailure extends Error {
@@ -30,12 +34,14 @@ export declare class RobloxOAuthService {
     redirectUri(): string;
     private creds;
     enabled(): Promise<boolean>;
+    allowCode(): Promise<boolean>;
     /** Für das Dashboard – das Secret verlässt den Server nie. */
     settings(): Promise<{
         enabled: boolean;
         fromEnv: boolean;
         clientId: string;
         hasSecret: boolean;
+        allowCode: boolean;
         redirectUri: string;
     }>;
     save(actor: Actor, input: OAuthSettings): Promise<{
@@ -43,6 +49,7 @@ export declare class RobloxOAuthService {
         fromEnv: boolean;
         clientId: string;
         hasSecret: boolean;
+        allowCode: boolean;
         redirectUri: string;
     }>;
     /** Bot: Anmelde-Link für ein Mitglied (10 Minuten, einmal verwendbar). */

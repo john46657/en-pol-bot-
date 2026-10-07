@@ -77868,10 +77868,10 @@ async function startVerify(c) {
     return {
       ephemeral: true,
       embeds: [{ title: "\u2705 Mit Roblox verifizieren", color: COLORS.success, description: `Klick auf **Mit Roblox anmelden**, melde dich bei Roblox an und best\xE4tige den Zugriff.
-Danach bekommst du hier automatisch deine Rollen und deinen Nickname.
+Danach bekommst du hier automatisch deine Rollen und deinen Nickname.${r.allowCode !== false ? "\nKlappt das nicht, nimm **Mit Code verifizieren**." : ""}
 
 Der Link gilt nur f\xFCr dich und l\xE4uft ${ts2(r.expiresAt)} ab.` }],
-      buttons: [{ id: "link", label: "Mit Roblox anmelden", style: "secondary", url: r.url }]
+      buttons: [{ id: "link", label: "Mit Roblox anmelden", style: "secondary", url: r.url }, ...r.allowCode !== false ? [{ id: "verify:code", label: "Mit Code verifizieren", style: "secondary" }] : []]
     };
   } catch (e) {
     return fail3(e);
