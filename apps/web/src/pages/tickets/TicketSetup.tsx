@@ -532,6 +532,13 @@ function General({ c }: { c: TicketConfig }) {
               {(Object.keys(RATING_FIELDS) as RatingField[]).map((k) => <Check key={k} label={RATING_FIELDS[k]} checked={s.ratingPublicFields.includes(k)} onChange={(v) => set({ ratingPublicFields: v ? [...s.ratingPublicFields, k] : s.ratingPublicFields.filter((x) => x !== k) })} />)}
             </div>
           </Section>
+          <Section title="Wenn der Ersteller den Server verlässt">
+            <div className="grid gap-3 md:grid-cols-2">
+              <Field label="Aktion">{(id) => <Select id={id} value={s.memberLeaveAction} onChange={(e) => set({ memberLeaveAction: e.target.value as TicketSettingsCfg['memberLeaveAction'] })}><option value="NONE">Nichts tun</option><option value="CLOSE">Offene Tickets schließen</option></Select>}</Field>
+              <Field label="Grund beim Schließen">{(id) => <Input id={id} value={s.memberLeaveReason} maxLength={300} disabled={s.memberLeaveAction === 'NONE'} onChange={(e) => set({ memberLeaveReason: e.target.value })} />}</Field>
+            </div>
+            <p className="text-xs text-muted">Braucht den privilegierten <b>Server Members</b>-Intent (Developer Portal → Bot).</p>
+          </Section>
           <Section title="Anzeige bei geschlossenem Ticket">
             <Field label="Titel">{(id) => <Input id={id} value={s.closedTitle} maxLength={256} onChange={(e) => set({ closedTitle: e.target.value })} />}</Field>
             <Field label="Nachricht">{(id) => <Textarea id={id} rows={5} value={s.closedMessage} maxLength={4000} onChange={(e) => set({ closedMessage: e.target.value })} />}</Field>

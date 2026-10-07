@@ -86,6 +86,9 @@ exports.settingsSchema = zod_1.z.object({
     ratingChannelId: optId,
     ratingPublicChannelId: optId,
     ratingPublicFields: zod_1.z.array(zod_1.z.enum(['creator', 'category', 'staff', 'duration', 'comment'])).max(5).default(['creator', 'category', 'duration']),
+    /** Ersteller verlässt den Discord-Server: offene Tickets schließen (braucht den Server Members Intent). */
+    memberLeaveAction: zod_1.z.enum(['NONE', 'CLOSE']).default('NONE'),
+    memberLeaveReason: zod_1.z.string().trim().min(1).max(300).default('Ersteller hat den Server verlassen'),
 });
 exports.DEFAULT_SETTINGS = exports.settingsSchema.parse({});
 //# sourceMappingURL=config.schemas.js.map

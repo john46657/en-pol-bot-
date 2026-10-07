@@ -952,6 +952,20 @@ export class SupportTicketsService {
   }
 
   // ================= Automatik (läuft jede Minute) =================
+  /** Ersteller hat den Discord-Server verlassen: offene Tickets dort schließen (Einstellung unter Tickets → General). */
+  async memberLeft(guildId: string, discordId: string) {
+    const settings = await this.config.settings();
+    if (settings.memberLeaveAction !== 'CLOSE') return { closed: 0 };
+    const sys: TicketActor = { userId: null, discordId: null, name: 'Automatik', viaBot: false, system: true };
+    const effects: TicketEffect[] = [];
+    let closed = 0;
+    for (const t of await this.prisma.supportTicket.findMany({ where: { guildId, creatorId: discordId, closedAt: null, deletedAt: null }, select: { id: true } })) {
+      await this.close(await this.load(t.id), sys, settings.memberLeaveReason, effects).then(() => closed++, (e: Error) => this.log.warn(`member-left close ${t.id}: ${e.message}`));
+    }
+    await this.dispatch(effects, false);
+    return { closed };
+  }
+
   async runAutomation(now = new Date()) {
     const sys: TicketActor = { userId: null, discordId: null, name: 'Automatik', viaBot: false, system: true };
     const effects: TicketEffect[] = [];

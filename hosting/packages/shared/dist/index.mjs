@@ -641,6 +641,93 @@ var STATUS_LABEL = {
 };
 var statusLabel = (status) => STATUS_LABEL[status] ?? status.replace(/_/g, " ");
 var PRIORITY_LABEL = { LOW: "Niedrig", MEDIUM: "Mittel", HIGH: "Hoch", URGENT: "Dringend", CRITICAL: "Kritisch" };
+
+// src/welcome.ts
+var DEFAULT_WELCOME_CONFIG = {
+  welcome: {
+    enabled: false,
+    channelId: null,
+    title: "\u{1F44B} Willkommen auf {server}!",
+    color: "#3b82f6",
+    showAvatar: true,
+    pingUser: true,
+    image: "",
+    imageMediaId: "",
+    message: "Hey {user}, sch\xF6n, dass du da bist! Du bist Mitglied **#{memberCount}**.\n\nLies dir bitte die Regeln durch. Bewerben kannst du dich jederzeit \xFCber das Bewerbungs-Panel."
+  },
+  dm: { enabled: false, message: "Willkommen auf **{server}**, {username}! Bei Fragen \xF6ffne einfach ein Support-Ticket." },
+  autoRoleIds: [],
+  goodbye: { enabled: false, channelId: null, title: "Auf Wiedersehen", color: "#64748b", showAvatar: true, pingUser: false, image: "", imageMediaId: "", message: "**{username}** hat den Server verlassen. Wir sind jetzt {memberCount} Mitglieder." }
+};
+var WELCOME_VARIABLES = {
+  "{user}": "Erw\xE4hnung des Mitglieds (@Name)",
+  "{username}": "Benutzername",
+  "{displayName}": "Anzeigename auf dem Server",
+  "{server}": "Name des Servers",
+  "{memberCount}": "Anzahl Mitglieder (nach Beitritt/Austritt)",
+  "{accountAge}": "Alter des Discord-Kontos (z. B. \u201E3 Tage\u201C)"
+};
+function accountAge(created, now = Date.now()) {
+  const t = created ? new Date(created).getTime() : NaN;
+  if (!Number.isFinite(t)) return "\u2014";
+  const days = Math.max(0, Math.floor((now - t) / 864e5));
+  if (days === 0) return "heute erstellt";
+  if (days < 60) return `${days} ${days === 1 ? "Tag" : "Tage"}`;
+  if (days < 730) return `${Math.floor(days / 30)} Monate`;
+  return `${Math.floor(days / 365)} Jahre`;
+}
+function renderWelcomeText(text, m, now = Date.now()) {
+  const vars = {
+    "{user}": `<@${m.id}>`,
+    "{username}": m.username,
+    "{displayName}": m.displayName,
+    "{server}": m.server,
+    "{memberCount}": String(m.memberCount),
+    "{accountAge}": accountAge(m.createdAt, now)
+  };
+  return text.replace(/\{[a-zA-Z]+\}/g, (k) => vars[k] ?? k);
+}
+var hexColor = (c, fallback = 3900150) => /^#[0-9a-fA-F]{6}$/.test(c) ? parseInt(c.slice(1), 16) : fallback;
+
+// src/voice-support.ts
+var WEEKDAYS = ["So", "Mo", "Di", "Mi", "Do", "Fr", "Sa"];
+var MUSIC_TRACKS = { "": "Track w\xE4hlen", lofi: "Lo-Fi", piano: "Klavier", elevator: "Fahrstuhlmusik", custom: "Eigenes Audio" };
+var VOICE_CASE_STATUS = { WAITING: "Wartet", CLAIMED: "\xDCbernommen", DECLINED: "Abgelehnt", ABANDONED: "Warteraum verlassen", CLOSED: "Geschlossen" };
+var newVoiceRoom = (id, guildId = "") => ({
+  id,
+  guildId,
+  name: "Support",
+  enabled: true,
+  waitingChannelId: "",
+  notifyChannelId: "",
+  teamRoleId: "",
+  channelPrefix: "\u{1F3A7} ",
+  notes: true,
+  ownChannels: false,
+  ownChannelIds: [],
+  times: [],
+  rating: false,
+  music: { enabled: false, openTrack: "", closedTrack: "" },
+  primary: false
+});
+var minutes = (hhmm) => {
+  const [h, m] = hhmm.split(":").map(Number);
+  return (h ?? 0) * 60 + (m ?? 0);
+};
+function localTime(d, timeZone = "Europe/Berlin") {
+  const parts = new Intl.DateTimeFormat("en-US", { timeZone, weekday: "short", hour: "2-digit", minute: "2-digit", hourCycle: "h23" }).formatToParts(d);
+  const get = (t) => parts.find((p) => p.type === t)?.value ?? "";
+  return { day: ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].indexOf(get("weekday")), minute: Number(get("hour")) * 60 + Number(get("minute")) };
+}
+function isSupportOpen(times, d = /* @__PURE__ */ new Date(), timeZone = "Europe/Berlin") {
+  if (!times.length) return true;
+  const { day, minute } = localTime(d, timeZone);
+  return times.some((t) => {
+    const from = minutes(t.from), to = minutes(t.to);
+    if (from <= to) return t.days.includes(day) && minute >= from && minute < to;
+    return t.days.includes(day) && minute >= from || t.days.includes((day + 6) % 7) && minute < to;
+  });
+}
 export {
   ALL_PERMISSIONS,
   APPLICATION_STATUSES,
@@ -663,6 +750,7 @@ export {
   DEFAULT_APPLICATION_MESSAGES,
   DEFAULT_CAD_CONFIG,
   DEFAULT_DANGER_CONFIG,
+  DEFAULT_WELCOME_CONFIG,
   DISPATCH_STATUSES,
   DISPATCH_TRANSITIONS,
   DUTY_STATUSES,
@@ -683,6 +771,7 @@ export {
   LEGACY_DANGER,
   MAX_FORM_OPTIONS,
   MAX_FORM_QUESTIONS,
+  MUSIC_TRACKS,
   PERMISSION_CATALOG,
   PRIORITIES,
   PRIORITY_LABEL,
@@ -700,12 +789,16 @@ export {
   TICKET_STATUSES,
   TICKET_TRANSITIONS,
   UNIT_STATUSES,
+  VOICE_CASE_STATUS,
   WANTED_STATUSES,
   WANTED_TRANSITIONS,
+  WEEKDAYS,
+  WELCOME_VARIABLES,
   WORKFLOW_ACTION_LABELS,
   WORKFLOW_OPS,
   WORKFLOW_OP_LABELS,
   WORKFLOW_TRIGGERS,
+  accountAge,
   areaGrantsFor,
   assertTransition,
   can,
@@ -721,15 +814,20 @@ export {
   freeFieldKey,
   gameToPixel,
   grantMatches,
+  hexColor,
   isInputQuestion,
   isPermissionKey,
+  isSupportOpen,
   isValidRobloxUserId,
+  localTime,
+  newVoiceRoom,
   normalizeField,
   parsePlayer,
   pixelToGame,
   renderApplicationText,
   renderTemplate,
   renderTicketText,
+  renderWelcomeText,
   resolvePermission,
   rolesMatch,
   statusLabel,

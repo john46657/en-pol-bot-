@@ -1,5 +1,10 @@
 import { renderApplicationText } from '@enrp/shared';
+import type { Actor } from '../audit/audit.service';
 import type { AppSettings } from './qualifications.config';
+
+/** Automatische Entscheidung, wenn jemand den Discord-Server verlässt (kein Benutzer). */
+export const LEFT_ACTOR: Actor = { userId: null };
+export const LEFT_REASON = 'Hat den Discord-Server verlassen.';
 
 const uniq = (xs: (string | null | undefined)[]) => [...new Set(xs.filter((x): x is string => !!x && /^\d{15,25}$/.test(x)))];
 

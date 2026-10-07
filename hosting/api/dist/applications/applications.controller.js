@@ -63,6 +63,8 @@ let ApplicationsController = class ApplicationsController {
     discordDecide(a, id, b) {
         return this.a.discordDecide(a, id, b.status, b.reason);
     }
+    /** „Ticket mit Bewerber öffnen“ (wie der Discord-Button). */
+    ticket(a, id) { return this.a.openTicket(a, id); }
 };
 exports.ApplicationsController = ApplicationsController;
 __decorate([
@@ -154,6 +156,16 @@ __decorate([
     __metadata("design:paramtypes", [Object, String, Object]),
     __metadata("design:returntype", void 0)
 ], ApplicationsController.prototype, "discordDecide", null);
+__decorate([
+    (0, common_1.Post)(':id/ticket'),
+    (0, common_1.HttpCode)(202),
+    (0, decorators_1.RequirePermission)('applications.view'),
+    __param(0, (0, decorators_1.CurrentActor)()),
+    __param(1, (0, common_1.Param)('id', common_1.ParseUUIDPipe)),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, String]),
+    __metadata("design:returntype", void 0)
+], ApplicationsController.prototype, "ticket", null);
 exports.ApplicationsController = ApplicationsController = __decorate([
     (0, swagger_1.ApiTags)('applications'),
     (0, common_1.Controller)('applications'),

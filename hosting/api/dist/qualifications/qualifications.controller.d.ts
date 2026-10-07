@@ -4,16 +4,16 @@ import { saveSchema } from './qualifications.config';
 import type { Actor } from '../audit/audit.service';
 declare const list: z.ZodObject<{
     unit: z.ZodOptional<z.ZodString>;
-    status: z.ZodOptional<z.ZodEnum<["OPEN", "ACCEPTED", "REJECTED"]>>;
+    status: z.ZodOptional<z.ZodEnum<["OPEN", "ACCEPTED", "REJECTED", "WITHDRAWN"]>>;
     guildId: z.ZodOptional<z.ZodString>;
 }, "strip", z.ZodTypeAny, {
     unit?: string | undefined;
     guildId?: string | undefined;
-    status?: "OPEN" | "REJECTED" | "ACCEPTED" | undefined;
+    status?: "OPEN" | "REJECTED" | "ACCEPTED" | "WITHDRAWN" | undefined;
 }, {
     unit?: string | undefined;
     guildId?: string | undefined;
-    status?: "OPEN" | "REJECTED" | "ACCEPTED" | undefined;
+    status?: "OPEN" | "REJECTED" | "ACCEPTED" | "WITHDRAWN" | undefined;
 }>;
 declare const decision: z.ZodObject<{
     status: z.ZodEnum<["ACCEPTED", "REJECTED"]>;
@@ -134,6 +134,7 @@ export declare class QualificationsController {
                 staffThreads: boolean;
                 cooldownMinutes: number;
                 timeLimitMinutes: number;
+                onLeave: "DENY" | "NONE" | "WITHDRAW";
             };
             key: string;
             description: string;
@@ -175,6 +176,7 @@ export declare class QualificationsController {
                 staffThreads: boolean;
                 cooldownMinutes: number;
                 timeLimitMinutes: number;
+                onLeave: "DENY" | "NONE" | "WITHDRAW";
             };
             description: string;
             enabled: boolean;
@@ -218,6 +220,7 @@ export declare class QualificationsController {
                 staffThreads: boolean;
                 cooldownMinutes: number;
                 timeLimitMinutes: number;
+                onLeave: "DENY" | "NONE" | "WITHDRAW";
             };
             key: string;
             description: string;
@@ -259,6 +262,7 @@ export declare class QualificationsController {
                 staffThreads: boolean;
                 cooldownMinutes: number;
                 timeLimitMinutes: number;
+                onLeave: "DENY" | "NONE" | "WITHDRAW";
             };
             description: string;
             enabled: boolean;
@@ -303,6 +307,7 @@ export declare class QualificationsController {
                 staffThreads: boolean;
                 cooldownMinutes: number;
                 timeLimitMinutes: number;
+                onLeave: "DENY" | "NONE" | "WITHDRAW";
             };
             key: string;
             description: string;
@@ -344,6 +349,7 @@ export declare class QualificationsController {
                 staffThreads: boolean;
                 cooldownMinutes: number;
                 timeLimitMinutes: number;
+                onLeave: "DENY" | "NONE" | "WITHDRAW";
             };
             description: string;
             enabled: boolean;
@@ -364,11 +370,11 @@ export declare class QualificationsController {
         userId: string | null;
         discordId: string;
         guildId: string | null;
+        unitName: string;
         status: string;
         decidedById: string | null;
         decidedAt: Date | null;
         decisionReason: string | null;
-        unitName: string;
         discordName: string;
         answers: import("@prisma/client/runtime/library").JsonValue;
         grantRoleIds: string[];
@@ -379,9 +385,9 @@ export declare class QualificationsController {
         number: string;
         id: string;
         createdAt: Date;
+        unitName: string;
         status: string;
         decisionReason: string | null;
-        unitName: string;
     }[]>;
     get(id: string): Promise<{
         number: string;
@@ -391,11 +397,11 @@ export declare class QualificationsController {
         userId: string | null;
         discordId: string;
         guildId: string | null;
+        unitName: string;
         status: string;
         decidedById: string | null;
         decidedAt: Date | null;
         decisionReason: string | null;
-        unitName: string;
         discordName: string;
         answers: import("@prisma/client/runtime/library").JsonValue;
         grantRoleIds: string[];
@@ -411,6 +417,11 @@ export declare class QualificationsController {
         addedToSek: boolean;
         decidedByName: string | null;
         reason: string | null;
+    }>;
+    /** „Ticket mit Bewerber öffnen“ (wie der Discord-Button). */
+    ticket(a: Actor, id: string): Promise<{
+        queued: boolean;
+        linked: boolean;
     }>;
 }
 /** Dienst-Endpunkte für das Discord-Panel – Bewerben geht auch ohne verknüpftes Konto. */
@@ -448,6 +459,7 @@ export declare class BotQualificationsController {
                 staffThreads: boolean;
                 cooldownMinutes: number;
                 timeLimitMinutes: number;
+                onLeave: "DENY" | "NONE" | "WITHDRAW";
             };
             key: string;
             description: string;
@@ -489,6 +501,7 @@ export declare class BotQualificationsController {
                 staffThreads: boolean;
                 cooldownMinutes: number;
                 timeLimitMinutes: number;
+                onLeave: "DENY" | "NONE" | "WITHDRAW";
             };
             description: string;
             enabled: boolean;

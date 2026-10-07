@@ -1296,3 +1296,34 @@ model WorkflowRun {
   @@unique([workflowId, auditId])
   @@index([workflowId, createdAt])
 }
+
+/// Sprach-Support: ein Fall entsteht, wenn jemand einen Warteraum betritt (Räume: SystemSetting `voice-support.rooms`).
+model VoiceSupportCase {
+  id              String    @id @default(uuid()) @db.Uuid
+  number          String    @unique
+  roomId          String
+  roomName        String
+  guildId         String
+  userId          String // Discord-ID der hilfesuchenden Person
+  userName        String
+  status          String    @default("WAITING") // WAITING | CLAIMED | DECLINED | ABANDONED | CLOSED
+  claimedById     String?
+  claimedByName   String?
+  claimedAt       DateTime?
+  closedById      String?
+  closedByName    String?
+  closedAt        DateTime?
+  closeReason     String?
+  channelId       String? // Sprachkanal des Falls
+  createdChannel  Boolean   @default(false) // vom Bot angelegt → wird beim Schließen gelöscht
+  notifyChannelId String?
+  notifyMessageId String?
+  threadId        String?
+  messages        Int       @default(0)
+  rating          Int?
+  createdAt       DateTime  @default(now())
+
+  @@index([guildId, status])
+  @@index([userId, status])
+  @@index([channelId])
+}

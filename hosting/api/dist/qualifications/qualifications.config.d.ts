@@ -242,6 +242,8 @@ export declare const appSettingsSchema: z.ZodDefault<z.ZodObject<{
     staffThreads: z.ZodDefault<z.ZodBoolean>;
     cooldownMinutes: z.ZodDefault<z.ZodNumber>;
     timeLimitMinutes: z.ZodDefault<z.ZodNumber>;
+    /** Wie bei Appy „Action On User Leave“: offene Bewerbung, wenn die Person den Discord-Server verlässt (braucht den Server Members Intent). */
+    onLeave: z.ZodDefault<z.ZodEnum<["NONE", "DENY", "WITHDRAW"]>>;
 }, "strip", z.ZodTypeAny, {
     roles: {
         denied: string[];
@@ -269,6 +271,7 @@ export declare const appSettingsSchema: z.ZodDefault<z.ZodObject<{
     staffThreads: boolean;
     cooldownMinutes: number;
     timeLimitMinutes: number;
+    onLeave: "DENY" | "NONE" | "WITHDRAW";
 }, {
     roles?: {
         denied?: string[] | undefined;
@@ -296,6 +299,7 @@ export declare const appSettingsSchema: z.ZodDefault<z.ZodObject<{
     staffThreads?: boolean | undefined;
     cooldownMinutes?: number | undefined;
     timeLimitMinutes?: number | undefined;
+    onLeave?: "DENY" | "NONE" | "WITHDRAW" | undefined;
 }>>;
 export type AppSettings = z.infer<typeof appSettingsSchema>;
 /** Eine Einheit/Qualifikation, für die man sich über das Discord-Panel bewerben kann. */
@@ -478,6 +482,8 @@ export declare const unitSchema: z.ZodObject<{
         staffThreads: z.ZodDefault<z.ZodBoolean>;
         cooldownMinutes: z.ZodDefault<z.ZodNumber>;
         timeLimitMinutes: z.ZodDefault<z.ZodNumber>;
+        /** Wie bei Appy „Action On User Leave“: offene Bewerbung, wenn die Person den Discord-Server verlässt (braucht den Server Members Intent). */
+        onLeave: z.ZodDefault<z.ZodEnum<["NONE", "DENY", "WITHDRAW"]>>;
     }, "strip", z.ZodTypeAny, {
         roles: {
             denied: string[];
@@ -505,6 +511,7 @@ export declare const unitSchema: z.ZodObject<{
         staffThreads: boolean;
         cooldownMinutes: number;
         timeLimitMinutes: number;
+        onLeave: "DENY" | "NONE" | "WITHDRAW";
     }, {
         roles?: {
             denied?: string[] | undefined;
@@ -532,6 +539,7 @@ export declare const unitSchema: z.ZodObject<{
         staffThreads?: boolean | undefined;
         cooldownMinutes?: number | undefined;
         timeLimitMinutes?: number | undefined;
+        onLeave?: "DENY" | "NONE" | "WITHDRAW" | undefined;
     }>>;
     key: z.ZodString;
     name: z.ZodString;
@@ -569,6 +577,7 @@ export declare const unitSchema: z.ZodObject<{
         staffThreads: boolean;
         cooldownMinutes: number;
         timeLimitMinutes: number;
+        onLeave: "DENY" | "NONE" | "WITHDRAW";
     };
     key: string;
     description: string;
@@ -622,6 +631,7 @@ export declare const unitSchema: z.ZodObject<{
         staffThreads?: boolean | undefined;
         cooldownMinutes?: number | undefined;
         timeLimitMinutes?: number | undefined;
+        onLeave?: "DENY" | "NONE" | "WITHDRAW" | undefined;
     } | undefined;
     roleId?: string | undefined;
     description?: string | undefined;
@@ -724,6 +734,8 @@ export declare const policeSchema: z.ZodObject<{
         staffThreads: z.ZodDefault<z.ZodBoolean>;
         cooldownMinutes: z.ZodDefault<z.ZodNumber>;
         timeLimitMinutes: z.ZodDefault<z.ZodNumber>;
+        /** Wie bei Appy „Action On User Leave“: offene Bewerbung, wenn die Person den Discord-Server verlässt (braucht den Server Members Intent). */
+        onLeave: z.ZodDefault<z.ZodEnum<["NONE", "DENY", "WITHDRAW"]>>;
     }, "strip", z.ZodTypeAny, {
         roles: {
             denied: string[];
@@ -751,6 +763,7 @@ export declare const policeSchema: z.ZodObject<{
         staffThreads: boolean;
         cooldownMinutes: number;
         timeLimitMinutes: number;
+        onLeave: "DENY" | "NONE" | "WITHDRAW";
     }, {
         roles?: {
             denied?: string[] | undefined;
@@ -778,6 +791,7 @@ export declare const policeSchema: z.ZodObject<{
         staffThreads?: boolean | undefined;
         cooldownMinutes?: number | undefined;
         timeLimitMinutes?: number | undefined;
+        onLeave?: "DENY" | "NONE" | "WITHDRAW" | undefined;
     }>>;
 }, "strip", z.ZodTypeAny, {
     name: string;
@@ -808,6 +822,7 @@ export declare const policeSchema: z.ZodObject<{
         staffThreads: boolean;
         cooldownMinutes: number;
         timeLimitMinutes: number;
+        onLeave: "DENY" | "NONE" | "WITHDRAW";
     };
     description: string;
     enabled: boolean;
@@ -845,6 +860,7 @@ export declare const policeSchema: z.ZodObject<{
         staffThreads?: boolean | undefined;
         cooldownMinutes?: number | undefined;
         timeLimitMinutes?: number | undefined;
+        onLeave?: "DENY" | "NONE" | "WITHDRAW" | undefined;
     } | undefined;
     description?: string | undefined;
     enabled?: boolean | undefined;
@@ -1036,6 +1052,8 @@ export declare const configSchema: z.ZodObject<{
             staffThreads: z.ZodDefault<z.ZodBoolean>;
             cooldownMinutes: z.ZodDefault<z.ZodNumber>;
             timeLimitMinutes: z.ZodDefault<z.ZodNumber>;
+            /** Wie bei Appy „Action On User Leave“: offene Bewerbung, wenn die Person den Discord-Server verlässt (braucht den Server Members Intent). */
+            onLeave: z.ZodDefault<z.ZodEnum<["NONE", "DENY", "WITHDRAW"]>>;
         }, "strip", z.ZodTypeAny, {
             roles: {
                 denied: string[];
@@ -1063,6 +1081,7 @@ export declare const configSchema: z.ZodObject<{
             staffThreads: boolean;
             cooldownMinutes: number;
             timeLimitMinutes: number;
+            onLeave: "DENY" | "NONE" | "WITHDRAW";
         }, {
             roles?: {
                 denied?: string[] | undefined;
@@ -1090,6 +1109,7 @@ export declare const configSchema: z.ZodObject<{
             staffThreads?: boolean | undefined;
             cooldownMinutes?: number | undefined;
             timeLimitMinutes?: number | undefined;
+            onLeave?: "DENY" | "NONE" | "WITHDRAW" | undefined;
         }>>;
         key: z.ZodString;
         name: z.ZodString;
@@ -1127,6 +1147,7 @@ export declare const configSchema: z.ZodObject<{
             staffThreads: boolean;
             cooldownMinutes: number;
             timeLimitMinutes: number;
+            onLeave: "DENY" | "NONE" | "WITHDRAW";
         };
         key: string;
         description: string;
@@ -1180,6 +1201,7 @@ export declare const configSchema: z.ZodObject<{
             staffThreads?: boolean | undefined;
             cooldownMinutes?: number | undefined;
             timeLimitMinutes?: number | undefined;
+            onLeave?: "DENY" | "NONE" | "WITHDRAW" | undefined;
         } | undefined;
         roleId?: string | undefined;
         description?: string | undefined;
@@ -1217,6 +1239,7 @@ export declare const configSchema: z.ZodObject<{
             staffThreads: boolean;
             cooldownMinutes: number;
             timeLimitMinutes: number;
+            onLeave: "DENY" | "NONE" | "WITHDRAW";
         };
         key: string;
         description: string;
@@ -1270,6 +1293,7 @@ export declare const configSchema: z.ZodObject<{
             staffThreads?: boolean | undefined;
             cooldownMinutes?: number | undefined;
             timeLimitMinutes?: number | undefined;
+            onLeave?: "DENY" | "NONE" | "WITHDRAW" | undefined;
         } | undefined;
         roleId?: string | undefined;
         description?: string | undefined;
@@ -1371,6 +1395,8 @@ export declare const configSchema: z.ZodObject<{
             staffThreads: z.ZodDefault<z.ZodBoolean>;
             cooldownMinutes: z.ZodDefault<z.ZodNumber>;
             timeLimitMinutes: z.ZodDefault<z.ZodNumber>;
+            /** Wie bei Appy „Action On User Leave“: offene Bewerbung, wenn die Person den Discord-Server verlässt (braucht den Server Members Intent). */
+            onLeave: z.ZodDefault<z.ZodEnum<["NONE", "DENY", "WITHDRAW"]>>;
         }, "strip", z.ZodTypeAny, {
             roles: {
                 denied: string[];
@@ -1398,6 +1424,7 @@ export declare const configSchema: z.ZodObject<{
             staffThreads: boolean;
             cooldownMinutes: number;
             timeLimitMinutes: number;
+            onLeave: "DENY" | "NONE" | "WITHDRAW";
         }, {
             roles?: {
                 denied?: string[] | undefined;
@@ -1425,6 +1452,7 @@ export declare const configSchema: z.ZodObject<{
             staffThreads?: boolean | undefined;
             cooldownMinutes?: number | undefined;
             timeLimitMinutes?: number | undefined;
+            onLeave?: "DENY" | "NONE" | "WITHDRAW" | undefined;
         }>>;
     }, "strip", z.ZodTypeAny, {
         name: string;
@@ -1455,6 +1483,7 @@ export declare const configSchema: z.ZodObject<{
             staffThreads: boolean;
             cooldownMinutes: number;
             timeLimitMinutes: number;
+            onLeave: "DENY" | "NONE" | "WITHDRAW";
         };
         description: string;
         enabled: boolean;
@@ -1492,6 +1521,7 @@ export declare const configSchema: z.ZodObject<{
             staffThreads?: boolean | undefined;
             cooldownMinutes?: number | undefined;
             timeLimitMinutes?: number | undefined;
+            onLeave?: "DENY" | "NONE" | "WITHDRAW" | undefined;
         } | undefined;
         description?: string | undefined;
         enabled?: boolean | undefined;
@@ -1532,6 +1562,7 @@ export declare const configSchema: z.ZodObject<{
             staffThreads: boolean;
             cooldownMinutes: number;
             timeLimitMinutes: number;
+            onLeave: "DENY" | "NONE" | "WITHDRAW";
         };
         key: string;
         description: string;
@@ -1573,6 +1604,7 @@ export declare const configSchema: z.ZodObject<{
             staffThreads: boolean;
             cooldownMinutes: number;
             timeLimitMinutes: number;
+            onLeave: "DENY" | "NONE" | "WITHDRAW";
         };
         description: string;
         enabled: boolean;
@@ -1626,6 +1658,7 @@ export declare const configSchema: z.ZodObject<{
             staffThreads?: boolean | undefined;
             cooldownMinutes?: number | undefined;
             timeLimitMinutes?: number | undefined;
+            onLeave?: "DENY" | "NONE" | "WITHDRAW" | undefined;
         } | undefined;
         roleId?: string | undefined;
         description?: string | undefined;
@@ -1666,6 +1699,7 @@ export declare const configSchema: z.ZodObject<{
             staffThreads?: boolean | undefined;
             cooldownMinutes?: number | undefined;
             timeLimitMinutes?: number | undefined;
+            onLeave?: "DENY" | "NONE" | "WITHDRAW" | undefined;
         } | undefined;
         description?: string | undefined;
         enabled?: boolean | undefined;
@@ -1859,6 +1893,8 @@ export declare const saveSchema: z.ZodObject<{
             staffThreads: z.ZodDefault<z.ZodBoolean>;
             cooldownMinutes: z.ZodDefault<z.ZodNumber>;
             timeLimitMinutes: z.ZodDefault<z.ZodNumber>;
+            /** Wie bei Appy „Action On User Leave“: offene Bewerbung, wenn die Person den Discord-Server verlässt (braucht den Server Members Intent). */
+            onLeave: z.ZodDefault<z.ZodEnum<["NONE", "DENY", "WITHDRAW"]>>;
         }, "strip", z.ZodTypeAny, {
             roles: {
                 denied: string[];
@@ -1886,6 +1922,7 @@ export declare const saveSchema: z.ZodObject<{
             staffThreads: boolean;
             cooldownMinutes: number;
             timeLimitMinutes: number;
+            onLeave: "DENY" | "NONE" | "WITHDRAW";
         }, {
             roles?: {
                 denied?: string[] | undefined;
@@ -1913,6 +1950,7 @@ export declare const saveSchema: z.ZodObject<{
             staffThreads?: boolean | undefined;
             cooldownMinutes?: number | undefined;
             timeLimitMinutes?: number | undefined;
+            onLeave?: "DENY" | "NONE" | "WITHDRAW" | undefined;
         }>>;
         key: z.ZodString;
         name: z.ZodString;
@@ -1950,6 +1988,7 @@ export declare const saveSchema: z.ZodObject<{
             staffThreads: boolean;
             cooldownMinutes: number;
             timeLimitMinutes: number;
+            onLeave: "DENY" | "NONE" | "WITHDRAW";
         };
         key: string;
         description: string;
@@ -2003,6 +2042,7 @@ export declare const saveSchema: z.ZodObject<{
             staffThreads?: boolean | undefined;
             cooldownMinutes?: number | undefined;
             timeLimitMinutes?: number | undefined;
+            onLeave?: "DENY" | "NONE" | "WITHDRAW" | undefined;
         } | undefined;
         roleId?: string | undefined;
         description?: string | undefined;
@@ -2040,6 +2080,7 @@ export declare const saveSchema: z.ZodObject<{
             staffThreads: boolean;
             cooldownMinutes: number;
             timeLimitMinutes: number;
+            onLeave: "DENY" | "NONE" | "WITHDRAW";
         };
         key: string;
         description: string;
@@ -2093,6 +2134,7 @@ export declare const saveSchema: z.ZodObject<{
             staffThreads?: boolean | undefined;
             cooldownMinutes?: number | undefined;
             timeLimitMinutes?: number | undefined;
+            onLeave?: "DENY" | "NONE" | "WITHDRAW" | undefined;
         } | undefined;
         roleId?: string | undefined;
         description?: string | undefined;
@@ -2194,6 +2236,8 @@ export declare const saveSchema: z.ZodObject<{
             staffThreads: z.ZodDefault<z.ZodBoolean>;
             cooldownMinutes: z.ZodDefault<z.ZodNumber>;
             timeLimitMinutes: z.ZodDefault<z.ZodNumber>;
+            /** Wie bei Appy „Action On User Leave“: offene Bewerbung, wenn die Person den Discord-Server verlässt (braucht den Server Members Intent). */
+            onLeave: z.ZodDefault<z.ZodEnum<["NONE", "DENY", "WITHDRAW"]>>;
         }, "strip", z.ZodTypeAny, {
             roles: {
                 denied: string[];
@@ -2221,6 +2265,7 @@ export declare const saveSchema: z.ZodObject<{
             staffThreads: boolean;
             cooldownMinutes: number;
             timeLimitMinutes: number;
+            onLeave: "DENY" | "NONE" | "WITHDRAW";
         }, {
             roles?: {
                 denied?: string[] | undefined;
@@ -2248,6 +2293,7 @@ export declare const saveSchema: z.ZodObject<{
             staffThreads?: boolean | undefined;
             cooldownMinutes?: number | undefined;
             timeLimitMinutes?: number | undefined;
+            onLeave?: "DENY" | "NONE" | "WITHDRAW" | undefined;
         }>>;
     }, "strip", z.ZodTypeAny, {
         name: string;
@@ -2278,6 +2324,7 @@ export declare const saveSchema: z.ZodObject<{
             staffThreads: boolean;
             cooldownMinutes: number;
             timeLimitMinutes: number;
+            onLeave: "DENY" | "NONE" | "WITHDRAW";
         };
         description: string;
         enabled: boolean;
@@ -2315,6 +2362,7 @@ export declare const saveSchema: z.ZodObject<{
             staffThreads?: boolean | undefined;
             cooldownMinutes?: number | undefined;
             timeLimitMinutes?: number | undefined;
+            onLeave?: "DENY" | "NONE" | "WITHDRAW" | undefined;
         } | undefined;
         description?: string | undefined;
         enabled?: boolean | undefined;
@@ -2447,6 +2495,7 @@ export declare const saveSchema: z.ZodObject<{
             staffThreads: boolean;
             cooldownMinutes: number;
             timeLimitMinutes: number;
+            onLeave: "DENY" | "NONE" | "WITHDRAW";
         };
         key: string;
         description: string;
@@ -2488,6 +2537,7 @@ export declare const saveSchema: z.ZodObject<{
             staffThreads: boolean;
             cooldownMinutes: number;
             timeLimitMinutes: number;
+            onLeave: "DENY" | "NONE" | "WITHDRAW";
         };
         description: string;
         enabled: boolean;
@@ -2554,6 +2604,7 @@ export declare const saveSchema: z.ZodObject<{
             staffThreads?: boolean | undefined;
             cooldownMinutes?: number | undefined;
             timeLimitMinutes?: number | undefined;
+            onLeave?: "DENY" | "NONE" | "WITHDRAW" | undefined;
         } | undefined;
         roleId?: string | undefined;
         description?: string | undefined;
@@ -2594,6 +2645,7 @@ export declare const saveSchema: z.ZodObject<{
             staffThreads?: boolean | undefined;
             cooldownMinutes?: number | undefined;
             timeLimitMinutes?: number | undefined;
+            onLeave?: "DENY" | "NONE" | "WITHDRAW" | undefined;
         } | undefined;
         description?: string | undefined;
         enabled?: boolean | undefined;

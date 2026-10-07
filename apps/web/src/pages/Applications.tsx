@@ -7,7 +7,7 @@ import { api, type Page } from '../lib/api';
 import { useAuth } from '../lib/auth';
 import { GuildTag, useGuilds, useServer } from '../lib/guilds';
 import { errText } from '../lib/tickets';
-import { DecisionButtons } from '../components/DecisionButtons';
+import { ApplicationActions } from '../components/DecisionButtons';
 import { FormQuestionsEditor } from '../components/FormQuestionsEditor';
 import { ApplicationSettingsEditor, withDefaults, type AppCommon } from '../components/ApplicationSettings';
 import { Button, Card, EmptyState, ErrorState, Field, fmt, Input, PageHeader, Select, SkeletonRows, StatusBadge, Tabs, Textarea } from '../components/ui';
@@ -56,8 +56,7 @@ export function Applications() {
             </div>
             {list.isLoading ? <SkeletonRows /> : list.error ? <ErrorState error={list.error} onRetry={() => void list.refetch()} /> : !list.data?.items.length ? <EmptyState text="Keine Bewerbungen." hint="Bewerbungen kommen über Discord (/bewerbungspanel) oder die Webseite /apply." /> : (
               <div className="grid gap-3">{list.data.items.map((a) => (
-                <Card key={a.id} title={<span className="flex flex-wrap items-center gap-2">EN Polizei · {a.number} <StatusBadge status={a.status} /><GuildTag id={a.guildId} /></span>}
-                  actions={OPEN.includes(a.status) && decideAllowed && <DecisionButtons busy={decide.isPending} onDecide={(s, reason) => decide.mutate({ id: a.id, status: s, reason })} />}>
+                <Card key={a.id} title={<span className="flex flex-wrap items-center gap-2">EN Polizei · {a.number} <StatusBadge status={a.status} /><GuildTag id={a.guildId} /></span>}>
                   <p className="mb-2 text-sm">
                     Roblox: <strong>{a.robloxUsername}</strong>{a.robloxUserId && <span className="text-xs text-muted"> ({a.robloxUserId})</span>}
                     {a.discordId ? <> · Discord: <strong>{a.discordName ?? a.discordId}</strong> <span className="text-xs text-muted">({a.discordId})</span></> : <span className="text-muted"> · über Webformular</span>}
@@ -66,10 +65,9 @@ export function Applications() {
                     <li key={k}><p className="text-xs text-muted">{i + 1}. {labelOf(k)}</p><p className="whitespace-pre-wrap">{v}</p></li>
                   ))}</ol>
                   {a.decisionReason && <p className="mt-2 text-sm"><span className="text-xs text-muted">Begründung:</span> {a.decisionReason}</p>}
-                  <p className="mt-2 flex flex-wrap items-center gap-x-2 text-xs text-muted">
-                    <span>Eingereicht {fmt(a.createdAt)}{a.durationSec !== null && ` · ausgefüllt in ${Math.floor(a.durationSec / 60)} min ${a.durationSec % 60} s`}{a.decidedByName && ` · entschieden von ${a.decidedByName}`}</span>
-                    <Link className="text-primary underline" to={`/applications/${a.id}`}>Details & Prüfschritte</Link>
-                  </p>
+                  <p className="mt-2 text-xs text-muted">Eingereicht {fmt(a.createdAt)}{a.durationSec !== null && ` · ausgefüllt in ${Math.floor(a.durationSec / 60)} min ${a.durationSec % 60} s`}{a.decidedByName && ` · entschieden von ${a.decidedByName}`}</p>
+                  <ApplicationActions open={OPEN.includes(a.status)} canDecide={decideAllowed} busy={decide.isPending} onDecide={(s, reason) => decide.mutate({ id: a.id, status: s, reason })}
+                    discordId={a.discordId} name={a.discordName ?? a.robloxUsername} ticketPath={`/applications/${a.id}/ticket`} detailsTo={`/applications/${a.id}`} />
                 </Card>
               ))}</div>
             )}

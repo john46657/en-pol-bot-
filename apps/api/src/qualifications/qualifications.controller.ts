@@ -8,7 +8,7 @@ import type { Actor } from '../audit/audit.service';
 import { zodBody } from '../common/zod.pipe';
 
 const discordId = z.string().regex(/^\d{15,25}$/);
-const list = z.object({ unit: z.string().max(24).optional(), status: z.enum(['OPEN', 'ACCEPTED', 'REJECTED']).optional(), guildId: z.string().regex(/^\d{15,25}$/).optional() });
+const list = z.object({ unit: z.string().max(24).optional(), status: z.enum(['OPEN', 'ACCEPTED', 'REJECTED', 'WITHDRAWN']).optional(), guildId: z.string().regex(/^\d{15,25}$/).optional() });
 const decision = z.object({ status: z.enum(['ACCEPTED', 'REJECTED']), reason: z.string().trim().max(1000).optional() });
 const historyQ = z.object({ discordId });
 const submit = z.object({ guildId: z.string().regex(/^\d{15,25}$/).optional(), unit: z.string().max(24), discordId, discordName: z.string().trim().min(1).max(100), durationSec: z.number().int().min(0).max(86_400).optional(), joinedAt: z.coerce.date().optional(), answers: z.array(z.object({ question: z.string().max(300), answer: z.union([z.string().max(5000), z.array(z.string().max(100)).max(25)]).nullable() })).min(1).max(50) });
@@ -38,6 +38,9 @@ export class QualificationsController {
   /** Auch vom Bot (Button im Team-Channel) mit den Rechten des klickenden Benutzers. */
   @Post('applications/:id/decision') @HttpCode(200) @RequirePermission('qualifications.decide')
   decide(@CurrentActor() a: Actor, @Param('id', ParseUUIDPipe) id: string, @Body(zodBody(decision)) b: z.infer<typeof decision>) { return this.q.decide(a, id, b.status, b.reason); }
+  /** „Ticket mit Bewerber öffnen“ (wie der Discord-Button). */
+  @Post('applications/:id/ticket') @HttpCode(202) @RequirePermission('qualifications.view')
+  ticket(@CurrentActor() a: Actor, @Param('id', ParseUUIDPipe) id: string) { return this.q.openTicket(a, id); }
 }
 
 /** Dienst-Endpunkte für das Discord-Panel – Bewerben geht auch ohne verknüpftes Konto. */

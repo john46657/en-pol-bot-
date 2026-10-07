@@ -775,6 +775,10 @@ export declare class SupportTicketsService {
     panelPosted(id: string, channelId: string, messageId: string): Promise<{
         ok: boolean;
     }>;
+    /** Ersteller hat den Discord-Server verlassen: offene Tickets dort schließen (Einstellung unter Tickets → General). */
+    memberLeft(guildId: string, discordId: string): Promise<{
+        closed: number;
+    }>;
     runAutomation(now?: Date): Promise<{
         closed: number;
         warned: number;

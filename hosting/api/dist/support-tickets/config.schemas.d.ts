@@ -540,6 +540,9 @@ export declare const settingsSchema: z.ZodObject<{
     ratingChannelId: z.ZodEffects<z.ZodOptional<z.ZodUnion<[z.ZodString, z.ZodLiteral<"">, z.ZodNull]>>, string | null, string | null | undefined>;
     ratingPublicChannelId: z.ZodEffects<z.ZodOptional<z.ZodUnion<[z.ZodString, z.ZodLiteral<"">, z.ZodNull]>>, string | null, string | null | undefined>;
     ratingPublicFields: z.ZodDefault<z.ZodArray<z.ZodEnum<["creator", "category", "staff", "duration", "comment"]>, "many">>;
+    /** Ersteller verlässt den Discord-Server: offene Tickets schließen (braucht den Server Members Intent). */
+    memberLeaveAction: z.ZodDefault<z.ZodEnum<["NONE", "CLOSE"]>>;
+    memberLeaveReason: z.ZodDefault<z.ZodString>;
 }, "strip", z.ZodTypeAny, {
     logChannelId: string | null;
     transcriptChannelId: string | null;
@@ -553,6 +556,8 @@ export declare const settingsSchema: z.ZodObject<{
     ratingChannelId: string | null;
     ratingPublicChannelId: string | null;
     ratingPublicFields: ("category" | "duration" | "staff" | "creator" | "comment")[];
+    memberLeaveAction: "NONE" | "CLOSE";
+    memberLeaveReason: string;
 }, {
     logChannelId?: string | null | undefined;
     transcriptChannelId?: string | null | undefined;
@@ -566,6 +571,8 @@ export declare const settingsSchema: z.ZodObject<{
     ratingChannelId?: string | null | undefined;
     ratingPublicChannelId?: string | null | undefined;
     ratingPublicFields?: ("category" | "duration" | "staff" | "creator" | "comment")[] | undefined;
+    memberLeaveAction?: "NONE" | "CLOSE" | undefined;
+    memberLeaveReason?: string | undefined;
 }>;
 export type TicketSettings = z.infer<typeof settingsSchema>;
 export declare const DEFAULT_SETTINGS: TicketSettings;

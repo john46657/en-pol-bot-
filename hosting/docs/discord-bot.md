@@ -139,6 +139,21 @@ Jeder Statuswechsel – egal ob im **Dashboard**, per **`/dienst`**, per **Diens
 
 Ist weder Channel noch Rolle eingestellt, wird nichts eingereiht. Fällt der Bot kurz aus, werden die Änderungen nachgeholt.
 
+## Embeds (Baukasten wie bei Sapphire)
+*Administration → Embeds* (ansehen `settings.view`, bearbeiten/senden `settings.manage`): Nachricht mit Embed bauen – Text über dem Embed, Titel, Beschreibung, Farbe, **Abschnitte** (Überschrift mit Emoji + Text, z. B. „👑 | Kommandant:“, bis 25; „Aus Dienstgraden“ legt je Dienstgrad der Teamstruktur einen Abschnitt an), Autor, Bilder, Link, Fußzeile, Zeitstempel – mit Live-Vorschau.
+- **Senden** in den gewählten Kanal (z. B. `#karriereweg`). Danach **Nachricht aktualisieren**: der Bot bearbeitet dieselbe Nachricht (kein neuer Post); **Neu senden** postet eine weitere. Wurde die Nachricht in Discord gelöscht, postet der Bot sie neu.
+- Discord-Grenzen werden geprüft (6000 Zeichen je Embed, 1024 je Abschnitt).
+
+## Willkommen & Abschied
+*Administration → Willkommen & Abschied* (je Server – oben links wählen; „Alle Server“ = gemeinsame Grundeinstellung):
+- **Willkommensnachricht** in einem Kanal (Titel, Text, Farbe, Profilbild, Erwähnung des neuen Mitglieds, **Banner**) mit Vorschau. Banner: Bild hochladen (PNG/JPG/GIF/WebP bis 8 MB – der Bot hängt es an die Nachricht an) oder eine Bild-URL (https://). Die Abschiedsnachricht kann ebenfalls einen Banner haben.
+- **Willkommens-DM** und **automatische Rollen** für neue Mitglieder (keine Bots; die Bot-Rolle muss über diesen Rollen stehen).
+- **Abschiedsnachricht**, wenn jemand den Server verlässt.
+- Platzhalter: `{user}`, `{username}`, `{displayName}`, `{server}`, `{memberCount}`, `{accountAge}`.
+- Beim Verlassen außerdem: offene Bewerbungen nach *Aktion beim Verlassen* ([qualifications.md](qualifications.md)) und offene Support-Tickets nach *Tickets → Allgemein* ([support-tickets.md](support-tickets.md)).
+
+Braucht im Developer Portal den privilegierten **Server Members Intent** (Bot → Privileged Gateway Intents). Ohne ihn startet der Bot trotzdem, nur Beitritte/Austritte kommen nicht an.
+
 ## Abmeldungen (Leave of Absences)
 *Administration → Leave of Absences*: Modul einschalten, **Leave Approval Channel** (Anträge mit Buttons *Annehmen* / *Ablehnen* / *Ablehnen mit Grund*), **Leave Logs Channel** (angenommen, abgelehnt, beginnt, beendet …), **On Leave Role** und die längste erlaubte Dauer.
 - Beantragen: `/abmeldung` in Discord oder *Organisation → Leave* im Dashboard (Recht `leave.request`, haben alle *Police Member*).

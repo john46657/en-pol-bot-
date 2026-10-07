@@ -724,4 +724,112 @@ declare const statusLabel: (status: string) => string;
 /** Deutsche Anzeigenamen für Prioritäten. */
 declare const PRIORITY_LABEL: Record<string, string>;
 
-export { ALL_PERMISSIONS, APPLICATION_STATUSES, APPLICATION_TRANSITIONS, APPLICATION_VARIABLES, AREA_PERMISSIONS, type AnswerCheck, type ApplicationStatus, type ApplicationVars, type ButtonStyleName, CAD_EVENTS, CAD_EVENT_LABELS, CAD_EVENT_SEND_TYPE, CAD_LINK_ACTIONS, CAD_LINK_LABELS, CAD_LINK_SEND_TYPES, CAD_WIDGETS, CAD_WIDGET_LABELS, CLAIM_MODES, CLOSE_REASON_MODES, CLOSE_REASON_SOURCES, COMPLAINT_STATUSES, COMPLAINT_TRANSITIONS, type CadConfig, type CadEvent, type CadField, type CadLayer, type CadMapConfig, type CadMarkerStyle, type CadOption, type CadRoute, type CadStatusOption, type CadUnitType, type ClaimMode, type CloseReasonMode, type CloseReasonSource, type ComplaintStatus, type ComponentButton, type ComponentSelect, DEFAULT_APPLICATION_MESSAGES, DEFAULT_CAD_CONFIG, DEFAULT_DANGER_CONFIG, DISPATCH_STATUSES, DISPATCH_TRANSITIONS, DUTY_STATUSES, type DangerConfig, type DangerLevelDef, type DispatchStatus, type DutyStatus, ERLC_DEFAULT_BLOCKED, ERLC_DEFAULT_CRITICAL, ERLC_FEATURES, ERLC_FEATURE_LABELS, ERLC_MAP_SIZE, ERLC_POLL_OPTIONS, ERLC_STATUSES, ERLC_STATUS_LABEL, EVIDENCE_CUSTODY_STATES, EVIDENCE_TRANSITIONS, type Effect, type EmbedSpec, type ErlcFeature, type ErlcStatus, type EvidenceCustodyState, FORM_QUESTION_TYPES, type Field, type FormField, type FormOption, type FormQuestionType, INVESTIGATION_STATUSES, INVESTIGATION_TRANSITIONS, InvalidTransitionError, type InvestigationStatus, LEGACY_DANGER, MAX_FORM_OPTIONS, MAX_FORM_QUESTIONS, type MessageSpec, PERMISSION_CATALOG, PRIORITIES, PRIORITY_LABEL, type PermissionContext, type PermissionGrant, type PermissionKey, type Priority, QUESTION_TYPES, type QuestionType, REPORT_STATUSES, REPORT_TRANSITIONS, REPORT_TYPES, ROBLOX_NAME, ROBLOX_VERIFICATION_STATUSES, type ReportStatus, type ReportType, type Resolution, type ResolutionSource, type RobloxVerificationStatus, STATUS_KINDS, STATUS_LABEL, type StatusKind, TICKET_ACTIONS, TICKET_ACTION_KEYS, TICKET_PLACEHOLDERS, TICKET_STATUSES, TICKET_TRANSITIONS, type TicketAction, type TicketButtonConfig, type TicketEffect, type TicketQuestion, type TicketStatus, type TicketVars, type TransitionMap, UNIT_STATUSES, type UnitStatus, WANTED_STATUSES, WANTED_TRANSITIONS, WORKFLOW_ACTION_LABELS, WORKFLOW_OPS, WORKFLOW_OP_LABELS, WORKFLOW_TRIGGERS, type WantedStatus, type WorkflowAction, type WorkflowCondition, type WorkflowOp, type WorkflowTrigger, areaGrantsFor, assertTransition, can, canDelegate, canTransition, checkAnswer, conditionMatches, dangerLevelOf, defaultTicketButtons, effectivePermissions, fieldValue, formatMinutes, freeFieldKey, gameToPixel, grantMatches, isInputQuestion, isPermissionKey, isValidRobloxUserId, normalizeField, parsePlayer, pixelToGame, renderApplicationText, renderTemplate, renderTicketText, resolvePermission, rolesMatch, statusLabel, ticketChannelName, ticketNumber, triggerMatches };
+/** Willkommens- und Abschiedsnachrichten (je Discord-Server einstellbar, Admin → Welcome & Goodbye). */
+/** Banner: hochgeladenes Bild (`imageMediaId`, der Bot hängt es an) oder Bild-URL (`image`, https). */
+interface WelcomeMessageDef {
+    enabled: boolean;
+    channelId: string | null;
+    title: string;
+    message: string;
+    color: string;
+    showAvatar: boolean;
+    pingUser: boolean;
+    image: string;
+    imageMediaId: string;
+}
+interface WelcomeConfig {
+    welcome: WelcomeMessageDef;
+    /** Direktnachricht an neue Mitglieder. */
+    dm: {
+        enabled: boolean;
+        message: string;
+    };
+    /** Rollen, die neue Mitglieder automatisch bekommen (Bots ausgenommen). */
+    autoRoleIds: string[];
+    goodbye: WelcomeMessageDef;
+}
+declare const DEFAULT_WELCOME_CONFIG: WelcomeConfig;
+/** Platzhalter für Titel und Texte (Anzeige im Dashboard). */
+declare const WELCOME_VARIABLES: {
+    readonly '{user}': "Erwähnung des Mitglieds (@Name)";
+    readonly '{username}': "Benutzername";
+    readonly '{displayName}': "Anzeigename auf dem Server";
+    readonly '{server}': "Name des Servers";
+    readonly '{memberCount}': "Anzahl Mitglieder (nach Beitritt/Austritt)";
+    readonly '{accountAge}': "Alter des Discord-Kontos (z. B. „3 Tage“)";
+};
+interface WelcomeMember {
+    id: string;
+    username: string;
+    displayName: string;
+    server: string;
+    memberCount: number;
+    createdAt?: Date | string | null;
+}
+/** Alter des Discord-Kontos lesbar („heute“, „5 Tage“, „2 Jahre“). */
+declare function accountAge(created: Date | string | null | undefined, now?: number): string;
+/** Platzhalter ersetzen; unbekannte bleiben stehen. */
+declare function renderWelcomeText(text: string, m: WelcomeMember, now?: number): string;
+/** Farbe „#rrggbb“ → Zahl für Discord-Embeds. */
+declare const hexColor: (c: string, fallback?: number) => number;
+
+/** Sprach-Support wie bei GalaxyBot: Warteraum (Sprachkanal) → Support-Fall → Team übernimmt in einem eigenen Sprachkanal. */
+interface SupportTime {
+    days: number[];
+    from: string;
+    to: string;
+}
+interface VoiceSupportRoom {
+    id: string;
+    guildId: string;
+    name: string;
+    enabled: boolean;
+    /** Sprachkanal, den man betritt, um einen Fall zu eröffnen. */
+    waitingChannelId: string;
+    /** Textkanal für „Ein neuer Support-Fall“. */
+    notifyChannelId: string;
+    /** Wird erwähnt und darf Fälle übernehmen. */
+    teamRoleId: string;
+    /** Zeichen vor dem Namen neuer Support-Kanäle (z. B. „🎧 “). */
+    channelPrefix: string;
+    /** Thread am Fall für Team-Notizen. */
+    notes: boolean;
+    /** Vorhandene Sprachkanäle nutzen statt neue anzulegen. */
+    ownChannels: boolean;
+    ownChannelIds: string[];
+    /** Supportzeiten (Europe/Berlin); leer = immer geöffnet. */
+    times: SupportTime[];
+    rating: boolean;
+    /** Wartemusik – Einstellung vorbereitet, spielt noch nicht. */
+    music: {
+        enabled: boolean;
+        openTrack: string;
+        closedTrack: string;
+    };
+    primary: boolean;
+}
+declare const WEEKDAYS: readonly ["So", "Mo", "Di", "Mi", "Do", "Fr", "Sa"];
+declare const MUSIC_TRACKS: {
+    readonly '': "Track wählen";
+    readonly lofi: "Lo-Fi";
+    readonly piano: "Klavier";
+    readonly elevator: "Fahrstuhlmusik";
+    readonly custom: "Eigenes Audio";
+};
+declare const VOICE_CASE_STATUS: {
+    readonly WAITING: "Wartet";
+    readonly CLAIMED: "Übernommen";
+    readonly DECLINED: "Abgelehnt";
+    readonly ABANDONED: "Warteraum verlassen";
+    readonly CLOSED: "Geschlossen";
+};
+declare const newVoiceRoom: (id: string, guildId?: string) => VoiceSupportRoom;
+/** Wochentag (0 = Sonntag) und Minute des Tages in einer Zeitzone. */
+declare function localTime(d: Date, timeZone?: string): {
+    day: number;
+    minute: number;
+};
+/** Ist der Support gerade geöffnet? Ohne Zeiten immer; „bis“ vor „von“ = über Mitternacht. */
+declare function isSupportOpen(times: SupportTime[], d?: Date, timeZone?: string): boolean;
+
+export { ALL_PERMISSIONS, APPLICATION_STATUSES, APPLICATION_TRANSITIONS, APPLICATION_VARIABLES, AREA_PERMISSIONS, type AnswerCheck, type ApplicationStatus, type ApplicationVars, type ButtonStyleName, CAD_EVENTS, CAD_EVENT_LABELS, CAD_EVENT_SEND_TYPE, CAD_LINK_ACTIONS, CAD_LINK_LABELS, CAD_LINK_SEND_TYPES, CAD_WIDGETS, CAD_WIDGET_LABELS, CLAIM_MODES, CLOSE_REASON_MODES, CLOSE_REASON_SOURCES, COMPLAINT_STATUSES, COMPLAINT_TRANSITIONS, type CadConfig, type CadEvent, type CadField, type CadLayer, type CadMapConfig, type CadMarkerStyle, type CadOption, type CadRoute, type CadStatusOption, type CadUnitType, type ClaimMode, type CloseReasonMode, type CloseReasonSource, type ComplaintStatus, type ComponentButton, type ComponentSelect, DEFAULT_APPLICATION_MESSAGES, DEFAULT_CAD_CONFIG, DEFAULT_DANGER_CONFIG, DEFAULT_WELCOME_CONFIG, DISPATCH_STATUSES, DISPATCH_TRANSITIONS, DUTY_STATUSES, type DangerConfig, type DangerLevelDef, type DispatchStatus, type DutyStatus, ERLC_DEFAULT_BLOCKED, ERLC_DEFAULT_CRITICAL, ERLC_FEATURES, ERLC_FEATURE_LABELS, ERLC_MAP_SIZE, ERLC_POLL_OPTIONS, ERLC_STATUSES, ERLC_STATUS_LABEL, EVIDENCE_CUSTODY_STATES, EVIDENCE_TRANSITIONS, type Effect, type EmbedSpec, type ErlcFeature, type ErlcStatus, type EvidenceCustodyState, FORM_QUESTION_TYPES, type Field, type FormField, type FormOption, type FormQuestionType, INVESTIGATION_STATUSES, INVESTIGATION_TRANSITIONS, InvalidTransitionError, type InvestigationStatus, LEGACY_DANGER, MAX_FORM_OPTIONS, MAX_FORM_QUESTIONS, MUSIC_TRACKS, type MessageSpec, PERMISSION_CATALOG, PRIORITIES, PRIORITY_LABEL, type PermissionContext, type PermissionGrant, type PermissionKey, type Priority, QUESTION_TYPES, type QuestionType, REPORT_STATUSES, REPORT_TRANSITIONS, REPORT_TYPES, ROBLOX_NAME, ROBLOX_VERIFICATION_STATUSES, type ReportStatus, type ReportType, type Resolution, type ResolutionSource, type RobloxVerificationStatus, STATUS_KINDS, STATUS_LABEL, type StatusKind, type SupportTime, TICKET_ACTIONS, TICKET_ACTION_KEYS, TICKET_PLACEHOLDERS, TICKET_STATUSES, TICKET_TRANSITIONS, type TicketAction, type TicketButtonConfig, type TicketEffect, type TicketQuestion, type TicketStatus, type TicketVars, type TransitionMap, UNIT_STATUSES, type UnitStatus, VOICE_CASE_STATUS, type VoiceSupportRoom, WANTED_STATUSES, WANTED_TRANSITIONS, WEEKDAYS, WELCOME_VARIABLES, WORKFLOW_ACTION_LABELS, WORKFLOW_OPS, WORKFLOW_OP_LABELS, WORKFLOW_TRIGGERS, type WantedStatus, type WelcomeConfig, type WelcomeMember, type WelcomeMessageDef, type WorkflowAction, type WorkflowCondition, type WorkflowOp, type WorkflowTrigger, accountAge, areaGrantsFor, assertTransition, can, canDelegate, canTransition, checkAnswer, conditionMatches, dangerLevelOf, defaultTicketButtons, effectivePermissions, fieldValue, formatMinutes, freeFieldKey, gameToPixel, grantMatches, hexColor, isInputQuestion, isPermissionKey, isSupportOpen, isValidRobloxUserId, localTime, newVoiceRoom, normalizeField, parsePlayer, pixelToGame, renderApplicationText, renderTemplate, renderTicketText, renderWelcomeText, resolvePermission, rolesMatch, statusLabel, ticketChannelName, ticketNumber, triggerMatches };

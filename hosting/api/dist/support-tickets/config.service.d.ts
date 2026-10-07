@@ -141,6 +141,8 @@ export declare class TicketConfigService {
             ratingChannelId: string | null;
             ratingPublicChannelId: string | null;
             ratingPublicFields: ("category" | "duration" | "staff" | "creator" | "comment")[];
+            memberLeaveAction: "NONE" | "CLOSE";
+            memberLeaveReason: string;
         };
     }>;
     categoryOut<T extends {
@@ -460,6 +462,8 @@ export declare class TicketConfigService {
         ratingChannelId: string | null;
         ratingPublicChannelId: string | null;
         ratingPublicFields: ("category" | "duration" | "staff" | "creator" | "comment")[];
+        memberLeaveAction: "NONE" | "CLOSE";
+        memberLeaveReason: string;
     }>;
     private checkRefs;
 }

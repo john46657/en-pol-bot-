@@ -8,7 +8,7 @@ type Mode = 'ALL' | 'ANY';
 export interface AppSettingsCfg {
   messages: { accepted: string; denied: string; confirmation: string; completion: string };
   roles: { restricted: { ids: string[]; mode: Mode }; required: { ids: string[]; mode: Mode }; accepted: string[]; denied: string[]; acceptedRemove: string[]; deniedRemove: string[]; pending: string[]; removeOnSubmit: string[]; managers: string[] };
-  staffThreads: boolean; cooldownMinutes: number; timeLimitMinutes: number;
+  staffThreads: boolean; cooldownMinutes: number; timeLimitMinutes: number; onLeave: 'NONE' | 'DENY' | 'WITHDRAW';
 }
 /** Was jede Bewerbung (Polizei und jede Einheit) gemeinsam hat. */
 export interface AppCommon { enabled: boolean; channelId?: string; acceptedChannelId?: string; deniedChannelId?: string; pingRoleIds: string[]; settings: AppSettingsCfg }
@@ -16,7 +16,7 @@ export interface AppCommon { enabled: boolean; channelId?: string; acceptedChann
 export const defaultAppSettings = (): AppSettingsCfg => ({
   messages: { ...DEFAULT_APPLICATION_MESSAGES },
   roles: { restricted: { ids: [], mode: 'ANY' }, required: { ids: [], mode: 'ANY' }, accepted: [], denied: [], acceptedRemove: [], deniedRemove: [], pending: [], removeOnSubmit: [], managers: [] },
-  staffThreads: false, cooldownMinutes: 0, timeLimitMinutes: 180,
+  staffThreads: false, cooldownMinutes: 0, timeLimitMinutes: 180, onLeave: 'NONE',
 });
 /** Ältere Einträge ohne Einstellungen mit Standardwerten auffüllen. */
 export const withDefaults = (s: Partial<AppSettingsCfg> | undefined): AppSettingsCfg => {
@@ -127,6 +127,11 @@ export function ApplicationSettingsEditor({ value, onChange, name, onName, quest
         <Box title="Team-Threads" desc="Erstellt zu jeder Einsendung einen Thread, damit das Team darüber sprechen kann."><Toggle label="Team-Threads" checked={s.staffThreads} onChange={(v) => set({ staffThreads: v })} /></Box>
         <Box title="Wartezeit" desc="Wie lange jemand warten muss, bevor eine neue Bewerbung möglich ist."><Duration label="Wartezeit" minutes={s.cooldownMinutes} onChange={(m) => set({ cooldownMinutes: m })} /></Box>
         <Box title="Zeitlimit" desc="Wie lange man Zeit hat, die Bewerbung auszufüllen (min. 5 Minuten, max. 7 Tage)."><Duration label="Zeitlimit" minutes={s.timeLimitMinutes} onChange={(m) => set({ timeLimitMinutes: m })} /></Box>
+        <Box title="Aktion beim Verlassen" desc="Was mit einer offenen Einsendung passiert, wenn die Person den Discord-Server verlässt (braucht den Server-Members-Intent).">
+          <Select aria-label="Aktion beim Verlassen" value={s.onLeave} onChange={(e) => set({ onLeave: e.target.value as AppSettingsCfg['onLeave'] })}>
+            <option value="NONE">Nichts tun</option><option value="DENY">Einsendung ablehnen</option><option value="WITHDRAW">Einsendung zurückziehen</option>
+          </Select>
+        </Box>
       </Section>
     </div>
   );

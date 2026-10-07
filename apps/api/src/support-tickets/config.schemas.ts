@@ -92,6 +92,9 @@ export const settingsSchema = z.object({
   ratingChannelId: optId,
   ratingPublicChannelId: optId,
   ratingPublicFields: z.array(z.enum(['creator', 'category', 'staff', 'duration', 'comment'])).max(5).default(['creator', 'category', 'duration']),
+  /** Ersteller verlässt den Discord-Server: offene Tickets schließen (braucht den Server Members Intent). */
+  memberLeaveAction: z.enum(['NONE', 'CLOSE']).default('NONE'),
+  memberLeaveReason: z.string().trim().min(1).max(300).default('Ersteller hat den Server verlassen'),
 });
 export type TicketSettings = z.infer<typeof settingsSchema>;
 export const DEFAULT_SETTINGS: TicketSettings = settingsSchema.parse({});

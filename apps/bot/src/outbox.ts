@@ -8,6 +8,8 @@ interface OutboxItem { id: string; type: string; channelKey: string; payload: Re
 /** `authorUserId`: Kopfzeile „@Benutzer“ mit Profilbild (z. B. Abmeldeantrag, wie bei Trident). */
 /** Selbst aktualisierendes Panel in einen Kanal setzen (Gefahrenstatus-Panel aus dem Dashboard). */
 export type PanelPoster = (kind: 'danger', channelId: string) => Promise<void>;
+/** Aufträge aus dem Dashboard, die der Bot direkt in Discord ausführt (z. B. „Ticket mit Bewerber öffnen“). */
+export type TaskRunner = (type: string, payload: Record<string, unknown>) => Promise<boolean>;
 export type Sender = (channelId: string, embeds: EmbedData[], buttons?: ButtonSpec[], opts?: { pingRoleIds?: string[]; avatarUserId?: string; thread?: string; authorUserId?: string; replaceKey?: string }) => Promise<void>;
 /** Discord-Rollen eines Mitglieds anpassen (alle Server, auf denen es die Rollen gibt). */
 export type RoleSync = (userId: string, add: string[], remove: string[]) => Promise<void>;
@@ -34,7 +36,7 @@ const DIRECT: Record<string, (p: Record<string, unknown>) => string | EmbedData>
  * Holt offene Benachrichtigungen aus der System-API, postet sie und quittiert.
  * Fehlgeschlagene Sendungen werden gemeldet (die API zählt Versuche und gibt nach 5 Fehlversuchen auf).
  */
-export async function pollOnce(api: Api, send: Sender, log: (m: string) => void = console.log, dm?: DirectSender, grantRole?: RoleGranter, syncRoles?: RoleSync, onDutyChanged?: () => void, ticketEffects?: (effects: TicketEffect[]) => Promise<void>, onMembersSync?: () => void, onPanel?: PanelPoster): Promise<number> {
+export async function pollOnce(api: Api, send: Sender, log: (m: string) => void = console.log, dm?: DirectSender, grantRole?: RoleGranter, syncRoles?: RoleSync, onDutyChanged?: () => void, ticketEffects?: (effects: TicketEffect[]) => Promise<void>, onMembersSync?: () => void, onPanel?: PanelPoster, onTask?: TaskRunner): Promise<number> {
   const [channels, items] = await Promise.all([api.service<Record<string, string | undefined>>('GET', '/bot/config'), api.service<OutboxItem[]>('GET', '/bot/outbox?limit=20')]);
   let sent = 0;
   for (const item of items) {
@@ -49,6 +51,18 @@ export async function pollOnce(api: Api, send: Sender, log: (m: string) => void 
       } catch (e) {
         const msg = e instanceof Error ? e.message : 'panel failed';
         log(`outbox ${item.id} (danger.panel) failed: ${msg}`);
+        await api.service('POST', `/bot/outbox/${item.id}/ack`, { ok: false, error: msg }).catch(() => undefined);
+      }
+      continue;
+    }
+    if (item.type === 'application.ticket' || item.type === 'embed.post') {
+      try {
+        if (!onTask || !(await onTask(item.type, item.payload))) throw new Error('tasks not supported');
+        await api.service('POST', `/bot/outbox/${item.id}/ack`, { ok: true });
+        sent++;
+      } catch (e) {
+        const msg = e instanceof Error ? e.message : 'task failed';
+        log(`outbox ${item.id} (${item.type}) failed: ${msg}`);
         await api.service('POST', `/bot/outbox/${item.id}/ack`, { ok: false, error: msg }).catch(() => undefined);
       }
       continue;
@@ -165,14 +179,14 @@ export async function pollOnce(api: Api, send: Sender, log: (m: string) => void 
 }
 
 /** Läuft dauerhaft; überlappende Durchläufe werden vermieden, Fehler (z. B. API kurz down) beenden die Schleife nicht. */
-export function startOutboxLoop(api: Api, send: Sender, seconds: number, log: (m: string) => void = console.log, dm?: DirectSender, grantRole?: RoleGranter, syncRoles?: RoleSync, onDutyChanged?: () => void, ticketEffects?: (effects: TicketEffect[]) => Promise<void>, onMembersSync?: () => void, onPanel?: PanelPoster) {
+export function startOutboxLoop(api: Api, send: Sender, seconds: number, log: (m: string) => void = console.log, dm?: DirectSender, grantRole?: RoleGranter, syncRoles?: RoleSync, onDutyChanged?: () => void, ticketEffects?: (effects: TicketEffect[]) => Promise<void>, onMembersSync?: () => void, onPanel?: PanelPoster, onTask?: TaskRunner) {
   let running = false;
   let lastError: string | undefined;
   const tick = async () => {
     if (running) return;
     running = true;
     try {
-      await pollOnce(api, send, log, dm, grantRole, syncRoles, onDutyChanged, ticketEffects, onMembersSync, onPanel);
+      await pollOnce(api, send, log, dm, grantRole, syncRoles, onDutyChanged, ticketEffects, onMembersSync, onPanel, onTask);
       if (lastError) { log('outbox: connection to the API restored'); lastError = undefined; }
     } catch (e) {
       // Nur bei neuer/anderer Störung loggen – nicht alle 5 Sekunden dieselbe Zeile

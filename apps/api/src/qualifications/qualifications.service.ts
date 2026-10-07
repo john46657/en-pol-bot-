@@ -9,7 +9,7 @@ import { webUrl } from '../common/web-url';
 import { appSettingsSchema, configSchema, DEFAULT_CONFIG, type QualificationConfig } from './qualifications.config';
 import { checkAnswer, type FormField } from '@enrp/shared';
 import { DEFAULT_FORM } from '../applications/applications.service';
-import { cooldownLeft, decisionMessage, decisionRoles, submitRoles } from './decision';
+import { cooldownLeft, decisionMessage, decisionRoles, LEFT_ACTOR, LEFT_REASON, submitRoles } from './decision';
 import { RobloxService } from '../persons/roblox.service';
 import { formatMinutes } from '@enrp/shared';
 
@@ -133,9 +133,31 @@ export class QualificationsService {
     return a;
   }
 
+  async openTicket(actor: Actor, id: string) {
+    return this.discord.applicantTicket(actor, await this.get(id), 'QualificationApplication');
+  }
+
   /** Bisherige Qualifikations-Bewerbungen einer Discord-ID (Button „Verlauf“). */
   history(discordId: string) {
     return this.prisma.qualificationApplication.findMany({ where: { discordId }, orderBy: { createdAt: 'desc' }, take: 20, select: { id: true, number: true, unitName: true, status: true, createdAt: true, decisionReason: true } });
+  }
+
+  /** „Action On User Leave“: offene Bewerbungen einer Person, die den Discord-Server verlassen hat (Einstellung je Einheit). */
+  async memberLeft(guildId: string, discordId: string) {
+    const open = await this.prisma.qualificationApplication.findMany({ where: { discordId, status: 'OPEN', OR: [{ guildId }, { guildId: null }] } });
+    let denied = 0, withdrawn = 0;
+    for (const a of open) {
+      const action = (await this.config(a.guildId)).units.find((u) => u.key === a.unit)?.settings.onLeave ?? 'NONE';
+      if (action === 'DENY') { await this.decide(LEFT_ACTOR, a.id, 'REJECTED', LEFT_REASON).then(() => denied++, () => undefined); continue; }
+      if (action !== 'WITHDRAW') continue;
+      const claimed = await this.prisma.$transaction(async (tx) => {
+        const r = await tx.qualificationApplication.updateMany({ where: { id: a.id, status: 'OPEN' }, data: { status: 'WITHDRAWN', decidedAt: new Date(), decisionReason: LEFT_REASON } });
+        if (r.count) await this.audit.record(LEFT_ACTOR, { action: 'qualifications.application.withdraw', module: 'qualifications', entityType: 'QualificationApplication', entityId: a.id, before: { status: 'OPEN' }, after: { status: 'WITHDRAWN' }, reason: LEFT_REASON }, tx);
+        return r.count;
+      });
+      withdrawn += claimed;
+    }
+    return { denied, withdrawn };
   }
 
   async decide(actor: Actor, id: string, status: 'ACCEPTED' | 'REJECTED', reason?: string) {

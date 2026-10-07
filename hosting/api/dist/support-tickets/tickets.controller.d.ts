@@ -397,6 +397,8 @@ export declare class SupportTicketsController {
             ratingChannelId: string | null;
             ratingPublicChannelId: string | null;
             ratingPublicFields: ("category" | "duration" | "staff" | "creator" | "comment")[];
+            memberLeaveAction: "NONE" | "CLOSE";
+            memberLeaveReason: string;
         };
     }>;
     settings(u: AuthUser, b: z.infer<typeof settingsSchema>): Promise<{
@@ -412,6 +414,8 @@ export declare class SupportTicketsController {
         ratingChannelId: string | null;
         ratingPublicChannelId: string | null;
         ratingPublicFields: ("category" | "duration" | "staff" | "creator" | "comment")[];
+        memberLeaveAction: "NONE" | "CLOSE";
+        memberLeaveReason: string;
     }>;
     createCategory(u: AuthUser, b: z.infer<typeof categorySchema>): Promise<{
         id: string;

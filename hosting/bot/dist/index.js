@@ -12,13 +12,15 @@ const config_1 = require("./config");
 const live_1 = require("./live");
 const outbox_1 = require("./outbox");
 const roblox_1 = require("./roblox");
+const welcome_1 = require("./welcome");
+const voice_support_1 = require("./voice-support");
 (0, config_1.loadDotEnv)();
 const cfg = (0, config_1.loadConfig)();
 const api = new api_1.HttpApi(cfg.API_URL, cfg.BOT_API_TOKEN);
 const makeClient = (i) => new discord_js_1.Client({
     intents: [discord_js_1.GatewayIntentBits.Guilds, discord_js_1.GatewayIntentBits.DirectMessages, discord_js_1.GatewayIntentBits.GuildMessages, discord_js_1.GatewayIntentBits.GuildVoiceStates,
         ...(i.content ? [discord_js_1.GatewayIntentBits.MessageContent] : []), ...(i.members ? [discord_js_1.GatewayIntentBits.GuildMembers] : []), ...(i.presences ? [discord_js_1.GatewayIntentBits.GuildPresences] : [])],
-    partials: [discord_js_1.Partials.Channel],
+    partials: [discord_js_1.Partials.Channel, discord_js_1.Partials.GuildMember], // GuildMember: Austritt auch von Mitgliedern, die nicht im Cache sind
 });
 /** Reihenfolge der Versuche, falls privilegierte Intents im Developer Portal aus sind. */
 const INTENT_STEPS = [
@@ -40,6 +42,8 @@ const toEmbed = (e) => {
         b.setFooter({ text: e.footer });
     if (e.thumbnail && /^https:\/\//.test(e.thumbnail))
         b.setThumbnail(e.thumbnail);
+    if (e.image && /^(https|attachment):\/\//.test(e.image))
+        b.setImage(e.image);
     if (e.author?.name)
         b.setAuthor({ name: e.author.name.slice(0, 256), ...(e.author.iconUrl && /^https:\/\//.test(e.author.iconUrl) ? { iconURL: e.author.iconUrl } : {}) });
     return b;
@@ -144,6 +148,91 @@ const platform = {
     },
 };
 const live = (0, live_1.createLive)(api, platform);
+/** Willkommen & Abschied, Aktion beim Verlassen (braucht den „Server Members“-Intent). */
+const welcome = (0, welcome_1.createWelcome)(api, {
+    async post(channelId, m) {
+        const ch = await client.channels.fetch(channelId);
+        if (!ch?.isSendable())
+            throw new Error(`channel ${channelId} is not a text channel the bot can post in`);
+        await ch.send({ ...(m.content ? { content: m.content } : {}), embeds: [toEmbed(m.embed)], ...(m.file ? { files: [{ attachment: m.file.data, name: m.file.name }] } : {}), allowedMentions: { parse: [], users: m.mentionUserIds ?? [] } });
+    },
+    async dm(userId, text) { await platform.sendDirectMessage(userId, text); },
+    async addRoles(guildId, userId, roleIds) {
+        const guild = await client.guilds.fetch(guildId);
+        const ids = roleIds.filter((r) => guild.roles.cache.has(r));
+        if (ids.length)
+            await (await guild.members.fetch(userId)).roles.add(ids, 'EN Polizei: Willkommen');
+    },
+});
+/** Sprach-Support: Warteraum → Support-Fall → eigener Sprachkanal (braucht GuildVoiceStates, „Kanäle verwalten“, „Mitglieder verschieben“). */
+const VOICE_TALK = [discord_js_1.PermissionFlagsBits.ViewChannel, discord_js_1.PermissionFlagsBits.Connect, discord_js_1.PermissionFlagsBits.Speak, discord_js_1.PermissionFlagsBits.Stream, discord_js_1.PermissionFlagsBits.UseVAD];
+const voiceSupport = (0, voice_support_1.createVoiceSupport)(api, {
+    async post(channelId, m) {
+        const ch = await client.channels.fetch(channelId);
+        if (!ch?.isSendable())
+            throw new Error(`channel ${channelId} is not a text channel the bot can post in`);
+        return (await ch.send((0, discord_tickets_1.payloadOf)(m))).id;
+    },
+    async edit(channelId, messageId, m) {
+        const ch = await client.channels.fetch(channelId);
+        if (!ch?.isTextBased() || !('messages' in ch))
+            return;
+        const msg = await ch.messages.fetch(messageId).catch(() => null);
+        if (msg)
+            await msg.edit({ ...(0, discord_tickets_1.payloadOf)(m), content: m.content ?? '' });
+    },
+    async dm(userId, m) { await (await client.users.fetch(userId)).send((0, discord_tickets_1.payloadOf)(m)); },
+    members(channelId) {
+        const ch = client.channels.cache.get(channelId);
+        return ch?.isVoiceBased() ? [...ch.members.keys()] : [];
+    },
+    voiceChannelOf(guildId, userId) { return client.guilds.cache.get(guildId)?.voiceStates.cache.get(userId)?.channelId ?? null; },
+    async createVoice({ guildId, name, nearChannelId, userId, teamRoleId }) {
+        const guild = await client.guilds.fetch(guildId);
+        const near = await guild.channels.fetch(nearChannelId).catch(() => null);
+        const ch = await guild.channels.create({
+            name, type: discord_js_1.ChannelType.GuildVoice, ...(near?.parentId ? { parent: near.parentId } : {}), reason: 'EN Polizei: Sprach-Support',
+            permissionOverwrites: [
+                { id: guild.roles.everyone.id, type: discord_js_1.OverwriteType.Role, deny: [discord_js_1.PermissionFlagsBits.ViewChannel, discord_js_1.PermissionFlagsBits.Connect] },
+                { id: userId, type: discord_js_1.OverwriteType.Member, allow: VOICE_TALK },
+                ...(guild.roles.cache.has(teamRoleId) ? [{ id: teamRoleId, type: discord_js_1.OverwriteType.Role, allow: [...VOICE_TALK, discord_js_1.PermissionFlagsBits.MoveMembers] }] : []),
+                { id: client.user.id, type: discord_js_1.OverwriteType.Member, allow: [discord_js_1.PermissionFlagsBits.ViewChannel, discord_js_1.PermissionFlagsBits.Connect, discord_js_1.PermissionFlagsBits.MoveMembers, discord_js_1.PermissionFlagsBits.ManageChannels] },
+            ],
+        });
+        return ch.id;
+    },
+    async move(guildId, userId, channelId) {
+        const member = await (await client.guilds.fetch(guildId)).members.fetch(userId).catch(() => null);
+        if (!member?.voice.channelId)
+            return false;
+        await member.voice.setChannel(channelId, 'EN Polizei: Sprach-Support');
+        return true;
+    },
+    async deleteChannel(channelId) {
+        const ch = await client.channels.fetch(channelId).catch(() => null);
+        // Sicherheitsnetz: nur Sprachkanäle (die das System als selbst angelegt meldet)
+        if (ch?.type === discord_js_1.ChannelType.GuildVoice)
+            await ch.delete('EN Polizei: Support-Fall geschlossen');
+    },
+    async thread(channelId, messageId, name) {
+        const ch = await client.channels.fetch(channelId);
+        if (!ch?.isTextBased() || !('messages' in ch))
+            return null;
+        const msg = await ch.messages.fetch(messageId);
+        return (await msg.startThread({ name: name.slice(0, 100), autoArchiveDuration: 1440 })).id;
+    },
+    async threadPost(threadId, text) {
+        const ch = await client.channels.fetch(threadId);
+        if (ch?.isSendable())
+            await ch.send({ content: text.slice(0, 2000), allowedMentions: { parse: [] } });
+    },
+});
+/** Mitglied (auch teilweise geladen) → Daten für Platzhalter. */
+function memberEvent(m) {
+    if (!m.user)
+        return null;
+    return { id: m.id, guildId: m.guild.id, bot: m.user.bot, username: m.user.username, displayName: m.displayName ?? m.user.username, server: m.guild.name, memberCount: m.guild.memberCount, createdAt: m.user.createdAt, avatar: m.user.displayAvatarURL({ size: 256 }) };
+}
 function addOptions(b, options = []) {
     for (const o of options) {
         const common = (x) => { x.setName(o.name); x.setDescription(o.description); x.setRequired(!!o.required); };
@@ -212,6 +301,7 @@ function baseCtx(i) {
         applyEffects: (effects) => tickets.apply(effects),
         listCategories: (guildId) => tickets.listCategories(guildId),
         userNameOf: (id) => client.users.fetch(id).then((u) => u.username, () => null),
+        voiceSupport,
     };
 }
 /** Rollen-IDs des Mitglieds (voller GuildMember oder rohe API-Daten). */
@@ -286,6 +376,17 @@ function wire(c) {
         const task = api_1.guildScope.run(i.guildId ?? null, () => api_1.rolesScope.run(rolesOf(i.member), () => i.isChatInputCommand() ? handleCommand(i) : i.isButton() || i.isModalSubmit() || i.isAnySelectMenu() ? handleComponent(i) : undefined));
         void task?.catch((e) => console.error('interaction failed:', e instanceof Error ? e.message : e));
     });
+    c.on('voiceStateUpdate', (o, n) => {
+        const user = n.member?.user ?? o.member?.user;
+        if (!user)
+            return;
+        void voiceSupport.onVoiceState({ guildId: n.guild.id, userId: n.id, userName: n.member?.displayName ?? user.username, bot: user.bot, from: o.channelId, to: n.channelId })
+            .catch((x) => console.error('voice support failed:', x instanceof Error ? x.message : x));
+    });
+    c.on('guildMemberAdd', (m) => { const e = memberEvent(m); if (e)
+        void welcome.joined(e).catch((x) => console.error('member join failed:', x instanceof Error ? x.message : x)); });
+    c.on('guildMemberRemove', (m) => { const e = memberEvent(m); if (e)
+        void welcome.left(e).catch((x) => console.error('member leave failed:', x instanceof Error ? x.message : x)); });
     // Direktnachrichten: Antworten auf Bewerbungsfragen (Bewerbung bei EN Polizei und Qualifikationen)
     c.on('messageCreate', (m) => {
         if (m.inGuild()) {
@@ -402,7 +503,29 @@ function wireReady(client0) {
             }
             if (opts?.thread)
                 await msg.startThread({ name: opts.thread, autoArchiveDuration: 10080 }).catch((e) => console.error('could not create staff thread:', e instanceof Error ? e.message : e));
-        }, cfg.OUTBOX_POLL_SECONDS, console.log, (userId, msg) => (typeof msg === 'string' ? platform.sendDirectMessage(userId, msg) : platform.sendDm(userId, { embed: msg }).then(() => undefined)), grantRoleEverywhere, syncRolesEverywhere, () => void live.refresh('teamlist').catch(() => undefined), (effects) => tickets.apply(effects).then(() => undefined, (e) => console.error('ticket effects failed:', e instanceof Error ? e.message : e)), () => void presence.sync().catch((e) => console.error('team/voice sync failed:', e instanceof Error ? e.message : e)), async (kind, channelId) => { await live.refresh(kind, { channelId, force: true }); });
+        }, cfg.OUTBOX_POLL_SECONDS, console.log, (userId, msg) => (typeof msg === 'string' ? platform.sendDirectMessage(userId, msg) : platform.sendDm(userId, { embed: msg }).then(() => undefined)), grantRoleEverywhere, syncRolesEverywhere, () => void live.refresh('teamlist').catch(() => undefined), (effects) => tickets.apply(effects).then(() => undefined, (e) => console.error('ticket effects failed:', e instanceof Error ? e.message : e)), () => void presence.sync().catch((e) => console.error('team/voice sync failed:', e instanceof Error ? e.message : e)), async (kind, channelId) => { await live.refresh(kind, { channelId, force: true }); }, async (type, p) => {
+            if (type === 'embed.post') {
+                // Embed-Baukasten: vorhandene Nachricht bearbeiten (falls noch da), sonst neu posten; Ort ans System melden
+                const channelId = typeof p.channelId === 'string' ? p.channelId : '';
+                const ch = await client.channels.fetch(channelId);
+                if (!ch?.isSendable() || !('messages' in ch))
+                    throw new Error(`channel ${channelId} is not a text channel the bot can post in`);
+                const payload = (0, discord_tickets_1.payloadOf)(p.message);
+                const old = typeof p.messageId === 'string' ? await ch.messages.fetch(p.messageId).catch(() => null) : null;
+                const msg = old ? await old.edit({ ...payload, content: payload.content ?? '' }) : await ch.send(payload);
+                await api.service('POST', `/bot/embeds/${String(p.embedId)}/posted`, { channelId, messageId: msg.id });
+                return true;
+            }
+            if (type !== 'application.ticket')
+                return false;
+            const str = (k) => (typeof p[k] === 'string' ? p[k] : undefined);
+            const [guildId, discordId] = [str('guildId'), str('discordId')];
+            if (!guildId || !discordId)
+                throw new Error('guild or user missing');
+            const cfg = await api.service('GET', '/bot/config').catch(() => undefined);
+            await (0, qualifications_1.openApplicantTicket)(platform, cfg, { guildId, discordId, userName: str('userName') ?? discordId, number: str('number') ?? '', unitName: str('unitName'), requesterId: str('requesterId') });
+            return true;
+        });
         live.start(cfg.LIVE_REFRESH_SECONDS);
         void tickets.refresh();
         (0, guilds_1.startGuildDirectory)(() => client, api);
@@ -431,7 +554,7 @@ async function start() {
                 throw e;
         }
     }
-    const off = [!intents.content && '"Message Content" (ticket transcripts without texts)', !intents.members && '"Server Members" (dashboard team list only shows cached members)', !intents.presences && '"Presence" (no online status in the team list)'].filter(Boolean);
+    const off = [!intents.content && '"Message Content" (ticket transcripts without texts)', !intents.members && '"Server Members" (dashboard team list only shows cached members; no welcome/goodbye messages, auto roles or actions when someone leaves)', !intents.presences && '"Presence" (no online status in the team list)'].filter(Boolean);
     if (off.length)
         console.warn(`Discord: privileged intents not enabled in the Developer Portal (Bot → Privileged Gateway Intents): ${off.join(', ')}.`);
 }

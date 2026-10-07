@@ -10,7 +10,7 @@ import type { Platform } from '../src/platform';
 import { robloxLookup } from '../src/roblox';
 import { parseGermanDate } from '../src/commands/sek';
 import { applicationEmbeds, outboxButtons, renderOutbox, renderOutboxEmbeds } from '../src/format';
-import { APPLICATION_MS, handleDirectMessage, panelEmbed, resetSessions } from '../src/commands/qualifications';
+import { APPLICATION_MS, handleDirectMessage, openApplicantTicket, panelEmbed, resetSessions } from '../src/commands/qualifications';
 
 const ME = '123456789012345678', OTHER = '223456789012345678', GUILD = '323456789012345678', CHANNEL = '423456789012345678';
 type Call = { kind: 'user' | 'service'; method: string; path: string; body?: unknown };
@@ -610,5 +610,43 @@ describe('applications with many questions', () => {
     const normal = applicationEmbeds({ number: 'Q-2', unitName: 'SEK', discordId: ME, answers: Array.from({ length: 20 }, (_, i) => ({ question: `Frage ${i + 1}?`, answer: `Antwort ${i + 1} mit etwas Text.` })) }, 'q').map((e) => e.description).join('\n');
     expect(normal).toContain('**20. Frage 20?**\nAntwort 20 mit etwas Text.');
     expect(normal).not.toContain('gekürzt');
+  });
+});
+
+describe('"Ticket mit Bewerber öffnen" from the dashboard', () => {
+  it('opens the private channel with category and team role and greets the applicant', async () => {
+    const { p, log } = fakePlatform();
+    const t = await openApplicantTicket(p, { tickets: 'CAT', staffRole: 'STAFF' }, { guildId: GUILD, discordId: '223456789012345678', userName: 'max', number: 'Q-1', unitName: 'SEK', requesterId: ME });
+    expect(t).toEqual({ channelId: 'T1', existing: false });
+    expect(log).toEqual(['ticket 223456789012345678 CAT STAFF', 'panel T1 support:close']);
+  });
+  it('the outbox runs the job and acknowledges it; without a runner it fails and is retried', async () => {
+    const acks: unknown[] = [];
+    const item = { id: 'j1', type: 'application.ticket', channelKey: 'applications', payload: { guildId: GUILD, discordId: '223456789012345678' } };
+    const api: Api = {
+      async asUser() { throw new Error('unused'); },
+      async service(method, path, body) { if (path === '/bot/config') return {} as never; if (path.startsWith('/bot/outbox?')) return [item] as never; acks.push(body); return {} as never; },
+    };
+    const jobs: string[] = [];
+    expect(await pollOnce(api, async () => undefined, () => undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, async (type, pl) => { jobs.push(`${type} ${String(pl.discordId)}`); return true; })).toBe(1);
+    expect(jobs).toEqual(['application.ticket 223456789012345678']);
+    expect(acks).toEqual([{ ok: true }]);
+    expect(await pollOnce(api, async () => undefined, () => undefined)).toBe(0);
+    expect(acks[1]).toMatchObject({ ok: false });
+  });
+});
+
+describe('embed builder jobs', () => {
+  it('embed.post goes to the task runner and is acknowledged', async () => {
+    const acks: unknown[] = [];
+    const item = { id: 'e1', type: 'embed.post', channelKey: 'announcements', payload: { embedId: 'x', channelId: '460000000000000001', messageId: null, message: { embeds: [{ title: 'Rang Ordnung' }] } } };
+    const api: Api = {
+      async asUser() { throw new Error('unused'); },
+      async service(_m, path, body) { if (path === '/bot/config') return {} as never; if (path.startsWith('/bot/outbox?')) return [item] as never; acks.push(body); return {} as never; },
+    };
+    const seen: string[] = [];
+    expect(await pollOnce(api, async () => undefined, () => undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, async (type, p) => { seen.push(`${type} ${String(p.channelId)}`); return true; })).toBe(1);
+    expect(seen).toEqual(['embed.post 460000000000000001']);
+    expect(acks).toEqual([{ ok: true }]);
   });
 });

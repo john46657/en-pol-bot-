@@ -46,4 +46,10 @@ export declare class MediaService {
         mime: string;
         hash: string;
     }[]>;
+    /** Für den Bot (ohne Benutzer): nur als Willkommens-Banner hochgeladene Bilder. */
+    welcomeBanner(id: string): Promise<{
+        mime: string;
+        name: string;
+        data: NonSharedBuffer;
+    }>;
 }

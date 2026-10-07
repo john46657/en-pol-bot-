@@ -21,7 +21,7 @@ const qualifications_config_1 = require("./qualifications.config");
 const decorators_1 = require("../authz/decorators");
 const zod_pipe_1 = require("../common/zod.pipe");
 const discordId = zod_1.z.string().regex(/^\d{15,25}$/);
-const list = zod_1.z.object({ unit: zod_1.z.string().max(24).optional(), status: zod_1.z.enum(['OPEN', 'ACCEPTED', 'REJECTED']).optional(), guildId: zod_1.z.string().regex(/^\d{15,25}$/).optional() });
+const list = zod_1.z.object({ unit: zod_1.z.string().max(24).optional(), status: zod_1.z.enum(['OPEN', 'ACCEPTED', 'REJECTED', 'WITHDRAWN']).optional(), guildId: zod_1.z.string().regex(/^\d{15,25}$/).optional() });
 const decision = zod_1.z.object({ status: zod_1.z.enum(['ACCEPTED', 'REJECTED']), reason: zod_1.z.string().trim().max(1000).optional() });
 const historyQ = zod_1.z.object({ discordId });
 const submit = zod_1.z.object({ guildId: zod_1.z.string().regex(/^\d{15,25}$/).optional(), unit: zod_1.z.string().max(24), discordId, discordName: zod_1.z.string().trim().min(1).max(100), durationSec: zod_1.z.number().int().min(0).max(86_400).optional(), joinedAt: zod_1.z.coerce.date().optional(), answers: zod_1.z.array(zod_1.z.object({ question: zod_1.z.string().max(300), answer: zod_1.z.union([zod_1.z.string().max(5000), zod_1.z.array(zod_1.z.string().max(100)).max(25)]).nullable() })).min(1).max(50) });
@@ -44,6 +44,8 @@ let QualificationsController = class QualificationsController {
     get(id) { return this.q.get(id); }
     /** Auch vom Bot (Button im Team-Channel) mit den Rechten des klickenden Benutzers. */
     decide(a, id, b) { return this.q.decide(a, id, b.status, b.reason); }
+    /** „Ticket mit Bewerber öffnen“ (wie der Discord-Button). */
+    ticket(a, id) { return this.q.openTicket(a, id); }
 };
 exports.QualificationsController = QualificationsController;
 __decorate([
@@ -108,6 +110,16 @@ __decorate([
     __metadata("design:paramtypes", [Object, String, void 0]),
     __metadata("design:returntype", void 0)
 ], QualificationsController.prototype, "decide", null);
+__decorate([
+    (0, common_1.Post)('applications/:id/ticket'),
+    (0, common_1.HttpCode)(202),
+    (0, decorators_1.RequirePermission)('qualifications.view'),
+    __param(0, (0, decorators_1.CurrentActor)()),
+    __param(1, (0, common_1.Param)('id', common_1.ParseUUIDPipe)),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, String]),
+    __metadata("design:returntype", void 0)
+], QualificationsController.prototype, "ticket", null);
 exports.QualificationsController = QualificationsController = __decorate([
     (0, swagger_1.ApiTags)('qualifications'),
     (0, common_1.Controller)('qualifications'),
