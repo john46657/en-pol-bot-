@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useSearchParams } from 'react-router';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { ArrowDown, ArrowUp, Trash2 } from 'lucide-react';
 import { type DangerConfig, CAD_WIDGET_LABELS, CAD_WIDGETS, CAD_EVENT_LABELS, CAD_EVENTS, CAD_LINK_ACTIONS, CAD_LINK_LABELS, CAD_LINK_SEND_TYPES, ERLC_FEATURE_LABELS, ERLC_FEATURES, ERLC_POLL_OPTIONS, ERLC_MAP_SIZE, type CadConfig, type CadRoute } from '@enrp/shared';
@@ -72,7 +73,8 @@ export function CadSettings() {
     ...(can('cad.manage_erlc') ? ['ER:LC Integration'] : []),
     ...(can('settings.manage') ? ['Gefahrenstatus'] : []),
   ];
-  const [tab, setTab] = useState(tabs[0] ?? '');
+  const [sp] = useSearchParams();
+  const [tab, setTab] = useState(tabs.includes(sp.get('tab') ?? '') ? sp.get('tab')! : tabs[0] ?? '');
   const [draft, setDraft] = useState<CadConfig | null>(null);
   useEffect(() => { if (q.data && !draft) setDraft(q.data); }, [q.data, draft]);
   const { map: mapDraft, ...rest } = draft ?? ({} as CadConfig);

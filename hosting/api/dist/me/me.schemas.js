@@ -45,6 +45,7 @@ exports.preferencesSchema = zod_1.z.object({
         favoriteIncidents: zod_1.z.array(zod_1.z.string().uuid()).max(50).optional(),
         erlcServerId: zod_1.z.string().uuid().optional(),
         sound: zod_1.z.boolean().optional(),
+        setupHidden: zod_1.z.boolean().optional(),
     }).optional(),
     voice: zod_1.z.object({
         channelIds: zod_1.z.array(zod_1.z.string().regex(/^\d{15,25}$/)).max(100),
