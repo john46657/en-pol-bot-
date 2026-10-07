@@ -33,6 +33,17 @@ export const preferencesSchema = z.object({
     search: z.string().max(80).optional(),
     filters: z.object({ team: z.string().max(64).optional(), rank: z.string().max(64).optional(), office: z.string().max(64).optional(), status: z.string().max(20).optional() }).optional(),
   }).optional(),
+  /** Persönliche CAD-Ansicht (nur für diesen Benutzer). */
+  cad: z.object({
+    widgets: z.array(z.string().max(32)).max(20).optional(),
+    hiddenLayers: z.array(z.string().max(32)).max(40).optional(),
+    zoom: z.number().min(0.02).max(8).optional(),
+    center: z.object({ x: z.number().finite(), y: z.number().finite() }).optional(),
+    compact: z.boolean().optional(),
+    sidebar: z.boolean().optional(),
+    favoriteIncidents: z.array(z.string().uuid()).max(50).optional(),
+    erlcServerId: z.string().uuid().optional(),
+  }).optional(),
   voice: z.object({
     channelIds: z.array(z.string().regex(/^\d{15,25}$/)).max(100),
     categoryIds: z.array(z.string().regex(/^\d{15,25}$/)).max(50),

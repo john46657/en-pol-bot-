@@ -1,9 +1,11 @@
 /** Zentraler Permission-Katalog. Einzige Quelle der Wahrheit für Backend und Frontend. */
 export const PERMISSION_CATALOG = {
   /** `dashboard.<bereich>.view`: Sichtbarkeit ganzer Bereiche im Menü und auf der Startseite (zusätzlich zur Modul-Permission). */
-  dashboard: ['view', 'customize', 'tickets.view', 'applications.view', 'team.view', 'offices.view', 'voice.view', 'radio.view', 'teamchance.view', 'logs.view', 'settings.view'],
+  dashboard: ['view', 'customize', 'tickets.view', 'applications.view', 'team.view', 'offices.view', 'voice.view', 'radio.view', 'teamchance.view', 'logs.view', 'settings.view', 'cad.view'],
   team: ['view', 'manage'],
   dispatch: ['view', 'create', 'edit', 'assign', 'close', 'manage'],
+  /** CAD-Leitstelle + ER:LC-Integration (deny-by-default; kritische ER:LC-Befehle brauchen ein eigenes Recht). */
+  cad: ['view', 'create_incident', 'edit_incident', 'close_incident', 'assign_unit', 'manage_units', 'view_persons', 'view_vehicles', 'manage_map', 'view_erlc', 'manage_erlc', 'erlc_command', 'erlc_command_critical', 'manage_cross_server', 'view_logs', 'manage_settings', 'radio'],
   incidents: ['view', 'create', 'edit', 'close', 'delete'],
   persons: ['view', 'create', 'edit', 'archive', 'merge'],
   vehicles: ['view', 'create', 'edit', 'archive'],
@@ -113,6 +115,7 @@ export const AREA_PERMISSIONS: Record<string, readonly string[]> = {
   'dashboard.teamchance.view': ['teamchance.view'],
   'dashboard.logs.view': ['audit.view'],
   'dashboard.settings.view': ['settings.view', 'roles.view', 'users.view', 'studio.view'],
+  'dashboard.cad.view': ['cad.view'],
 };
 
 /** Bereichs-Rechte, die zu einer Grant-Liste passen (wer `ticket.view` hat, sieht auch den Ticket-Bereich). */
