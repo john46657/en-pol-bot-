@@ -279,3 +279,29 @@ describe('qualification applications', () => {
     expect((await admin.delete('/api/v1/qualifications/config')).status).toBe(400);
   });
 });
+
+describe('application analytics', () => {
+  it('KPIs, status breakdown, by name, reviewers and heatmap over police + qualification applications', async () => {
+    const adminUser = await prisma.user.findFirstOrThrow({ where: { roles: { some: { role: { name: 'System Administrator' } } } } });
+    const now = Date.now();
+    await prisma.qualificationApplication.createMany({ data: [
+      { number: 'QA-STAT-1', unit: 'sek', unitName: 'SEK-Bewerbung', discordId: '880000000000000001', discordName: 'a', answers: [], status: 'ACCEPTED', decidedById: adminUser.id, createdAt: new Date(now - 3_600_000), decidedAt: new Date(now - 1_800_000) },
+      { number: 'QA-STAT-2', unit: 'sek', unitName: 'SEK-Bewerbung', discordId: '880000000000000002', discordName: 'b', answers: [], status: 'OPEN', createdAt: new Date(now - 7_200_000) },
+      { number: 'QA-STAT-3', unit: 'sek', unitName: 'SEK-Bewerbung', discordId: '880000000000000003', discordName: 'c', answers: [], status: 'REJECTED', decidedById: adminUser.id, createdAt: new Date(now - 40 * 86_400_000), decidedAt: new Date(now - 40 * 86_400_000 + 60_000) },
+    ] });
+    const admin = (await login(app, adminUser.username)).agent;
+    const r = await admin.get('/api/v1/applications/analytics').query({ type: 'SEK-Bewerbung', days: 30 });
+    expect(r.status).toBe(200);
+    const k = Object.fromEntries(r.body.kpis.map((x: { key: string; value: number; change: number }) => [x.key, x]));
+    expect(k.total).toMatchObject({ value: 2, change: 100 });
+    expect(k.approvalRate.value).toBe(100);
+    expect(k.pending.value).toBe(1);
+    expect(Math.round(k.avgReviewMin.value)).toBe(30);
+    expect(r.body.breakdown).toEqual({ APPROVED: 1, PENDING: 1, REJECTED: 0 });
+    expect(r.body.byType[0]).toMatchObject({ type: 'SEK-Bewerbung', submitted: 2 });
+    expect(r.body.reviewers[0]).toMatchObject({ reviewed: 1, approvalRate: 100 });
+    expect(r.body.overTime).toHaveLength(30);
+    expect(r.body.heat.flat().reduce((a: number, b: number) => a + b, 0)).toBe(2);
+    expect((await admin.get('/api/v1/applications/analytics').query({ status: 'REJECTED', type: 'SEK-Bewerbung' })).body.kpis[0].value).toBe(0);
+  });
+});
