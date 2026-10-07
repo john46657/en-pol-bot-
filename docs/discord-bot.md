@@ -7,7 +7,6 @@ Der Bot (`apps/bot`, TypeScript, discord.js 14) ist ein **schlanker Client der S
 ## Befehle
 | Befehl | Zweck | Benötigtes Recht (im System) |
 |---|---|---|
-| `/verknuepfen code` | Discord-Konto mit Benutzer verknüpfen | – |
 | `/entverknuepfen` | Verknüpfung lösen | – |
 | `/profil` | eigenes Konto, Rollen, Anzahl Berechtigungen | – |
 | `/hilfe` | Befehlsübersicht | – |
@@ -91,7 +90,7 @@ DISCORD_GUILD_ID=<Server-ID>        # optional – Commands kommen automatisch a
 - **Channels** im Web: *Admin → Settings → Discord bot channels* (Channel-IDs eintragen, speichern). Leer = diese Benachrichtigung aus.
 
 ### 3. Konten verknüpfen
-Jede Person: Web → Chat-Symbol oben rechts („Discord verknüpfen“) → *Code erzeugen* → in Discord `/verknuepfen code:ABCD-EFGH` (10 Minuten gültig, einmal verwendbar). Lösen: im selben Dialog, oder ein Admin über `DELETE /api/v1/discord/links/:userId` (Benutzerverwaltung). Deaktivierte Benutzer verlieren sofort den Bot-Zugriff.
+Jede Person: Web → Chat-Symbol oben rechts („Discord verknüpfen“) → *Mit Discord verknüpfen* (Discord-Anmeldung; braucht `DISCORD_CLIENT_ID`/`DISCORD_CLIENT_SECRET`). Wer sich mit Discord anmeldet, ist automatisch verknüpft. Lösen: im selben Dialog, oder ein Admin über `DELETE /api/v1/discord/links/:userId` (Benutzerverwaltung). Deaktivierte Benutzer verlieren sofort den Bot-Zugriff.
 
 ## Mehrere Discord-Server
 - **Befehle:** Der Bot registriert die Slash-Commands **automatisch auf jedem Server, auf dem er ist** – beim Start und sofort, wenn er auf einen neuen Server eingeladen wird. `DISCORD_GUILD_ID` ist dafür nicht mehr nötig (optional zusätzlich). Schlägt ein Server fehl, steht das im Log, die anderen laufen weiter.
@@ -124,14 +123,14 @@ Jede Person: Web → Chat-Symbol oben rechts („Discord verknüpfen“) → *Co
 | Problem | Lösung |
 |---|---|
 | Bot online, aber keine `/`-Befehle | `applications.commands`-Scope fehlte beim Einladen, oder der Bot hat nach dem Einladen noch nicht neu gestartet (die Befehle kommen sonst sofort beim Beitritt). |
-| „Dein Discord-Konto ist nicht verknüpft“ | `/verknuepfen` mit frischem Code ausführen. |
+| „Dein Discord-Konto ist nicht verknüpft“ | Im Dashboard „Mit Discord verknüpfen“ wählen (Chat-Symbol oben rechts). |
 | Bot meldet „nicht erreichbar“ | `API_URL` stimmt nicht (im Compose-Netz: `http://api:3000`) oder API ist down. |
 | Benachrichtigungen kommen nicht | Channel-ID in *Settings* gesetzt? Bot hat im Channel Schreibrechte? `docker compose logs bot` zeigt `outbox … failed: Missing Access`. |
 | Bot startet nicht: `Invalid bot configuration` | `DISCORD_TOKEN` / `BOT_API_TOKEN` (mind. 32 Zeichen, identisch zur API) fehlen. |
 
 ## Dienststatus ↔ Discord (Synchronisierung)
 Jeder Statuswechsel – egal ob im **Dashboard**, per **`/dienst`**, per **Dienst-Panel** oder durch die **Schichtleitung** – wird an Discord weitergegeben:
-- **Dienst-Rollen** (*Settings → Discord*: *On-duty role ID*, optional *Break / Training / Administrative role ID*): Im Dienst → Rolle vergeben, sonst entfernt; immer nur die Rolle des aktuellen Status. Gilt auf allen Servern, auf denen es die Rolle gibt. Voraussetzung: verknüpftes Konto (`/verknuepfen`), Bot-Rolle steht über den Dienst-Rollen und hat „Rollen verwalten“.
+- **Dienst-Rollen** (*Settings → Discord*: *On-duty role ID*, optional *Break / Training / Administrative role ID*): Im Dienst → Rolle vergeben, sonst entfernt; immer nur die Rolle des aktuellen Status. Gilt auf allen Servern, auf denen es die Rolle gibt. Voraussetzung: verknüpftes Konto (Dashboard → „Mit Discord verknüpfen“), Bot-Rolle steht über den Dienst-Rollen und hat „Rollen verwalten“.
 - **Dienst-Channel** (*Duty channel ID*): Meldung wie „🟢 A-11 · Oscar ist jetzt im Dienst“ bzw. „⚪ … außer Dienst – Vorher: im Dienst – 2 h 15 min“ (bei Schichtleitung: „Gesetzt von …“).
 - **Teamliste** (`/teamliste`) wird sofort neu gezeichnet.
 
@@ -163,7 +162,7 @@ Braucht im Developer Portal den privilegierten **Server Members Intent** (Bot �
 ## Mit Discord anmelden (wie bei Dyno)
 Auf der Login-Seite erscheint **„Mit Discord anmelden“**, sobald `DISCORD_CLIENT_SECRET` gesetzt ist (Developer Portal → OAuth2 → Client Secret; die Client-ID wird aus `DISCORD_TOKEN` gelesen). Im Developer Portal unter **OAuth2 → Redirects** muss `https://<deine-domain>/api/v1/auth/discord/callback` stehen (`WEB_ORIGIN` muss genau diese Domain sein).
 - Discord fragt nur nach dem Benutzernamen (Scope `identify`) – kein Passwort, keine E-Mail.
-- **Bestehende Konten**: wer schon verknüpft ist (`/verknuepfen` oder im Web „Mit Discord verknüpfen“), landet direkt im eigenen Konto.
+- **Bestehende Konten**: wer schon verknüpft ist (im Web „Mit Discord verknüpfen“), landet direkt im eigenen Konto.
 - **Neue Personen** bekommen beim ersten Login automatisch ein Konto – nur wenn sie auf eurem Discord-Server sind (abschaltbar) und zunächst **ohne Rechte**.
 - **Rollen wie bei Dyno** (*Settings → Sign in with Discord*): Discord-Rolle → Systemrolle, z. B. „Polizei“ → *Police Member*. Wird bei jeder Discord-Anmeldung abgeglichen (dazu/weg); andere Rollen bleiben unberührt.
 - **Nur Discord:** Sobald `DISCORD_CLIENT_SECRET` gesetzt ist, zeigt die Login-Seite nur noch „Mit Discord anmelden“ und die API lehnt Passwort-Anmeldungen ab. Vorher (Einrichtung) gilt der Passwort-Login.

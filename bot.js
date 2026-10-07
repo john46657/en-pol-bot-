@@ -76527,7 +76527,7 @@ function mapError(e) {
   if (!(e instanceof BotApiError)) return errorReply("Unerwarteter Fehler im Bot.");
   const rid = e.requestId ? ` (Request-ID \`${e.requestId}\`)` : "";
   if (e.status === 0) return errorReply("Das System ist gerade nicht erreichbar. Bitte sp\xE4ter erneut versuchen.");
-  if (e.status === 401 && e.reason === "NOT_LINKED") return errorReply("Dein Discord-Konto ist nicht verkn\xFCpft. Erzeuge im Web (Men\xFC \u2192 \u201EDiscord verkn\xFCpfen\u201C) einen Code und nutze `/verknuepfen`.");
+  if (e.status === 401 && e.reason === "NOT_LINKED") return errorReply("Dein Discord-Konto ist nicht verkn\xFCpft. Verkn\xFCpfe es im Dashboard (Chat-Symbol oben rechts \u2192 \u201EMit Discord verkn\xFCpfen\u201C).");
   if (e.status === 401) return errorReply(`Authentifizierung fehlgeschlagen.${rid}`);
   if (e.status === 403) return errorReply(/[äöüß]|Server|Einheit|Leitstelle/.test(e.message) && !/^You do not have permission|^This route|^Dafür fehlt dir die Berechtigung|steht dem Bot nicht zur Verfügung/.test(e.message) ? `Dazu hast du keine Berechtigung: ${e.message}` : "Dazu hast du keine Berechtigung.");
   if (e.status === 404) return errorReply("Nicht gefunden.");
@@ -77952,7 +77952,7 @@ async function setDanger(c, level, reason) {
     return mapError(e);
   }
 }
-var DUTY_PANEL = { title: "\u{1F693} Dienststatus", color: COLORS.info, description: "Melde dich hier mit einem Klick **in den Dienst**, in die **Pause** oder **au\xDFer Dienst**.\nDein Status erscheint sofort im Dashboard, in der Teamliste und \u2013 falls eingestellt \u2013 als Discord-Rolle.\n\n*Dein Discord-Konto muss verkn\xFCpft sein (`/verknuepfen`).*" };
+var DUTY_PANEL = { title: "\u{1F693} Dienststatus", color: COLORS.info, description: "Melde dich hier mit einem Klick **in den Dienst**, in die **Pause** oder **au\xDFer Dienst**.\nDein Status erscheint sofort im Dashboard, in der Teamliste und \u2013 falls eingestellt \u2013 als Discord-Rolle.\n\n*Dein Discord-Konto muss im Dashboard verkn\xFCpft sein.*" };
 var DUTY_BUTTONS = [
   { id: "duty:ON_DUTY", label: "Im Dienst", emoji: "\u{1F7E2}", style: "success" },
   { id: "duty:BREAK", label: "Pause", emoji: "\u{1F7E1}", style: "secondary" },
@@ -78220,26 +78220,11 @@ Bewerben: \`/bewerbung\``.slice(0, 4e3), color: 2278750, fields: [...s.closesAt 
     }
   },
   {
-    name: "verknuepfen",
-    description: "Verkn\xFCpft dein Discord-Konto mit deinem EN-Polizei-Benutzer",
-    options: [{ name: "code", description: "Code aus dem Web (\u201EDiscord verkn\xFCpfen\u201C)", type: "string", required: true, maxLength: 12 }],
-    async run(c) {
-      try {
-        const r = await c.api.service("POST", "/bot/link", { code: str3(c, "code"), discordId: c.discordId });
-        return okReply(`Verkn\xFCpft mit **${plain(r.displayName)}** (@${plain(r.username)}). Alle Befehle laufen ab jetzt mit deinen Rechten.`);
-      } catch (e) {
-        if (e instanceof BotApiError && e.status === 400) return errorReply("Ung\xFCltiger oder abgelaufener Code. Erzeuge im Web einen neuen.");
-        if (e instanceof BotApiError && e.status === 409) return errorReply("Dieses Discord-Konto oder dieser Benutzer ist bereits verkn\xFCpft.");
-        return mapError(e);
-      }
-    }
-  },
-  {
     name: "hilfe",
     description: "Zeigt alle Befehle",
     async run() {
       return { ephemeral: true, embeds: [{ title: "EN Polizei \u2014 Befehle", color: COLORS.info, fields: [
-        { name: "Konto", value: "`/verknuepfen` `/entverknuepfen` `/profil` `/benachrichtigungen`" },
+        { name: "Konto", value: "`/entverknuepfen` `/profil` `/benachrichtigungen`" },
         { name: "Abfragen", value: "`/person` `/kennzeichen` `/fahndungen` `/einsaetze` `/einsatzinfo` `/einheiten` `/team`" },
         { name: "Dienst & Leitstelle", value: "`/dienst` `/dienststunden` `/abmeldung` `/leave manage` `/einheitstatus` `/einsatz` `/einsatzstatus` `/einsatzzuweisen` `/funk` `/funkcode` `/cad`" },
         { name: "Erfassen", value: "`/ticket` `/bericht` `/beschwerde` `/ermittlung` `/fahndung` `/beweis`" },
@@ -78451,7 +78436,7 @@ Bewerben: \`/bewerbung\``.slice(0, 4e3), color: 2278750, fields: [...s.closesAt 
     async run(c) {
       try {
         await c.api.asUser(c.discordId, "DELETE", "/discord/link");
-        return okReply("Verkn\xFCpfung gel\xF6st. Mit `/verknuepfen` kannst du sie jederzeit neu herstellen.");
+        return okReply("Verkn\xFCpfung gel\xF6st. Im Dashboard (Chat-Symbol oben rechts) kannst du sie jederzeit neu herstellen.");
       } catch (e) {
         return mapError(e);
       }

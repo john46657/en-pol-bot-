@@ -26,7 +26,7 @@ async function setDanger(c: Ctx, level: string, reason?: string): Promise<Reply>
 }
 
 // ---------------- Dienst-Panel ----------------
-const DUTY_PANEL: EmbedData = { title: '🚓 Dienststatus', color: COLORS.info, description: 'Melde dich hier mit einem Klick **in den Dienst**, in die **Pause** oder **außer Dienst**.\nDein Status erscheint sofort im Dashboard, in der Teamliste und – falls eingestellt – als Discord-Rolle.\n\n*Dein Discord-Konto muss verknüpft sein (`/verknuepfen`).*' };
+const DUTY_PANEL: EmbedData = { title: '🚓 Dienststatus', color: COLORS.info, description: 'Melde dich hier mit einem Klick **in den Dienst**, in die **Pause** oder **außer Dienst**.\nDein Status erscheint sofort im Dashboard, in der Teamliste und – falls eingestellt – als Discord-Rolle.\n\n*Dein Discord-Konto muss im Dashboard verknüpft sein.*' };
 const DUTY_BUTTONS: ButtonSpec[] = [
   { id: 'duty:ON_DUTY', label: 'Im Dienst', emoji: '🟢', style: 'success' }, { id: 'duty:BREAK', label: 'Pause', emoji: '🟡', style: 'secondary' },
   { id: 'duty:TRAINING', label: 'Training', emoji: '🔵', style: 'secondary' }, { id: 'duty:ADMINISTRATIVE', label: 'Verwaltung', emoji: '🗂️', style: 'secondary' },

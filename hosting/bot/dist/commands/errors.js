@@ -11,7 +11,7 @@ function mapError(e) {
     if (e.status === 0)
         return (0, format_1.errorReply)('Das System ist gerade nicht erreichbar. Bitte später erneut versuchen.');
     if (e.status === 401 && e.reason === 'NOT_LINKED')
-        return (0, format_1.errorReply)('Dein Discord-Konto ist nicht verknüpft. Erzeuge im Web (Menü → „Discord verknüpfen“) einen Code und nutze `/verknuepfen`.');
+        return (0, format_1.errorReply)('Dein Discord-Konto ist nicht verknüpft. Verknüpfe es im Dashboard (Chat-Symbol oben rechts → „Mit Discord verknüpfen“).');
     if (e.status === 401)
         return (0, format_1.errorReply)(`Authentifizierung fehlgeschlagen.${rid}`);
     // Fachliche Begründungen (z. B. Server-Verbindung fehlt) mitgeben, die allgemeine Rechte-Meldung nicht (sonst doppelt)

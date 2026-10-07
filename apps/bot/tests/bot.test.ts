@@ -40,7 +40,7 @@ describe('command definitions', () => {
 
 describe('error mapping', () => {
   it('explains unlinked accounts, permission problems and hides internals', () => {
-    expect(text(mapError(new BotApiError(401, 'UNAUTHENTICATED', 'x', 'r1', 'NOT_LINKED')))).toContain('/verknuepfen');
+    expect(text(mapError(new BotApiError(401, 'UNAUTHENTICATED', 'x', 'r1', 'NOT_LINKED')))).toContain('Mit Discord verknüpfen');
     expect(text(mapError(new BotApiError(403, 'PERMISSION_DENIED', 'secret internal detail')))).toContain('keine Berechtigung');
     // allgemeine (deutsche) Rechte-Meldung der API nicht doppelt anhängen
     expect(text(mapError(new BotApiError(403, 'PERMISSION_DENIED', 'Dafür fehlt dir die Berechtigung.')))).not.toContain(':');
@@ -54,15 +54,8 @@ describe('error mapping', () => {
 });
 
 describe('commands run as the linked user and reply ephemerally', () => {
-  it('/verknuepfen uses the service route with the Discord id', async () => {
-    const { api, calls } = fakeApi({ 'POST /bot/link': { displayName: 'Oscar', username: 'officer1' } });
-    const r = await run('verknuepfen', { code: 'ABCD-EFGH' }, api);
-    expect(calls[0]).toMatchObject({ kind: 'service', body: { code: 'ABCD-EFGH', discordId: '123456789012345678' } });
-    expect(text(r)).toContain('Oscar');
-  });
-  it('/verknuepfen reports bad codes without leaking details', async () => {
-    const { api } = fakeApi({ 'POST /bot/link': new BotApiError(400, 'VALIDATION_FAILED', 'Invalid or expired code.') });
-    expect(text(await run('verknuepfen', { code: 'X' }, api))).toContain('Ungültiger oder abgelaufener Code');
+  it('/verknuepfen is gone – linking happens in the dashboard', () => {
+    expect(COMMANDS.some((c) => c.name === 'verknuepfen')).toBe(false);
   });
   it('/person finds a person, shows tickets and flags wanted links', async () => {
     const { api, calls } = fakeApi({
