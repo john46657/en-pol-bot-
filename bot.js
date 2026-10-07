@@ -82829,7 +82829,7 @@ async function pollOnce(api2, send, log = console.log, dm, grantRole, syncRoles,
       }
       continue;
     }
-    if (item.type === "application.ticket") {
+    if (item.type === "application.ticket" || item.type === "embed.post") {
       try {
         if (!onTask || !await onTask(item.type, item.payload)) throw new Error("tasks not supported");
         await api2.service("POST", `/bot/outbox/${item.id}/ack`, { ok: true });
@@ -83543,6 +83543,16 @@ function wireReady(client0) {
         await live.refresh(kind2, { channelId, force: true });
       },
       async (type, p) => {
+        if (type === "embed.post") {
+          const channelId = typeof p.channelId === "string" ? p.channelId : "";
+          const ch = await client.channels.fetch(channelId);
+          if (!ch?.isSendable() || !("messages" in ch)) throw new Error(`channel ${channelId} is not a text channel the bot can post in`);
+          const payload = payloadOf(p.message);
+          const old = typeof p.messageId === "string" ? await ch.messages.fetch(p.messageId).catch(() => null) : null;
+          const msg = old ? await old.edit({ ...payload, content: payload.content ?? "" }) : await ch.send(payload);
+          await api.service("POST", `/bot/embeds/${String(p.embedId)}/posted`, { channelId, messageId: msg.id });
+          return true;
+        }
         if (type !== "application.ticket") return false;
         const str4 = (k) => typeof p[k] === "string" ? p[k] : void 0;
         const [guildId, discordId] = [str4("guildId"), str4("discordId")];

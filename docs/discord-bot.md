@@ -139,6 +139,11 @@ Jeder Statuswechsel – egal ob im **Dashboard**, per **`/dienst`**, per **Diens
 
 Ist weder Channel noch Rolle eingestellt, wird nichts eingereiht. Fällt der Bot kurz aus, werden die Änderungen nachgeholt.
 
+## Embeds (Baukasten wie bei Sapphire)
+*Administration → Embeds* (ansehen `settings.view`, bearbeiten/senden `settings.manage`): Nachricht mit Embed bauen – Text über dem Embed, Titel, Beschreibung, Farbe, **Abschnitte** (Überschrift mit Emoji + Text, z. B. „👑 | Kommandant:“, bis 25; „Aus Dienstgraden“ legt je Dienstgrad der Teamstruktur einen Abschnitt an), Autor, Bilder, Link, Fußzeile, Zeitstempel – mit Live-Vorschau.
+- **Senden** in den gewählten Kanal (z. B. `#karriereweg`). Danach **Nachricht aktualisieren**: der Bot bearbeitet dieselbe Nachricht (kein neuer Post); **Neu senden** postet eine weitere. Wurde die Nachricht in Discord gelöscht, postet der Bot sie neu.
+- Discord-Grenzen werden geprüft (6000 Zeichen je Embed, 1024 je Abschnitt).
+
 ## Willkommen & Abschied
 *Administration → Willkommen & Abschied* (je Server – oben links wählen; „Alle Server“ = gemeinsame Grundeinstellung):
 - **Willkommensnachricht** in einem Kanal (Titel, Text, Farbe, Profilbild, Erwähnung des neuen Mitglieds, **Banner**) mit Vorschau. Banner: Bild hochladen (PNG/JPG/GIF/WebP bis 8 MB – der Bot hängt es an die Nachricht an) oder eine Bild-URL (https://). Die Abschiedsnachricht kann ebenfalls einen Banner haben.

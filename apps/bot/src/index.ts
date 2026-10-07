@@ -4,6 +4,7 @@ import {
   type AnySelectMenuInteraction, type ButtonComponent, type ButtonInteraction, type ChatInputCommandInteraction, type Interaction, type Message, type ModalSubmitInteraction,
 } from 'discord.js';
 import { componentsOf, createTicketRuntime, payloadOf } from './discord-tickets';
+import type { MessageSpec } from '@enrp/shared';
 import { startGuildDirectory } from './guilds';
 import { startPresenceReporter } from './presence';
 import { guildScope, HttpApi, rolesScope } from './api';
@@ -445,6 +446,17 @@ function wireReady(client0: Client) {
     () => void presence.sync().catch((e) => console.error('team/voice sync failed:', e instanceof Error ? e.message : e)),
     async (kind, channelId) => { await live.refresh(kind, { channelId, force: true }); },
     async (type, p) => {
+      if (type === 'embed.post') {
+        // Embed-Baukasten: vorhandene Nachricht bearbeiten (falls noch da), sonst neu posten; Ort ans System melden
+        const channelId = typeof p.channelId === 'string' ? p.channelId : '';
+        const ch = await client.channels.fetch(channelId);
+        if (!ch?.isSendable() || !('messages' in ch)) throw new Error(`channel ${channelId} is not a text channel the bot can post in`);
+        const payload = payloadOf(p.message as MessageSpec);
+        const old = typeof p.messageId === 'string' ? await ch.messages.fetch(p.messageId).catch(() => null) : null;
+        const msg = old ? await old.edit({ ...payload, content: payload.content ?? '' }) : await ch.send(payload);
+        await api.service('POST', `/bot/embeds/${String(p.embedId)}/posted`, { channelId, messageId: msg.id });
+        return true;
+      }
       if (type !== 'application.ticket') return false;
       const str = (k: string) => (typeof p[k] === 'string' ? (p[k] as string) : undefined);
       const [guildId, discordId] = [str('guildId'), str('discordId')];

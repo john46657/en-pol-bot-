@@ -635,3 +635,18 @@ describe('"Ticket mit Bewerber öffnen" from the dashboard', () => {
     expect(acks[1]).toMatchObject({ ok: false });
   });
 });
+
+describe('embed builder jobs', () => {
+  it('embed.post goes to the task runner and is acknowledged', async () => {
+    const acks: unknown[] = [];
+    const item = { id: 'e1', type: 'embed.post', channelKey: 'announcements', payload: { embedId: 'x', channelId: '460000000000000001', messageId: null, message: { embeds: [{ title: 'Rang Ordnung' }] } } };
+    const api: Api = {
+      async asUser() { throw new Error('unused'); },
+      async service(_m, path, body) { if (path === '/bot/config') return {} as never; if (path.startsWith('/bot/outbox?')) return [item] as never; acks.push(body); return {} as never; },
+    };
+    const seen: string[] = [];
+    expect(await pollOnce(api, async () => undefined, () => undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, async (type, p) => { seen.push(`${type} ${String(p.channelId)}`); return true; })).toBe(1);
+    expect(seen).toEqual(['embed.post 460000000000000001']);
+    expect(acks).toEqual([{ ok: true }]);
+  });
+});

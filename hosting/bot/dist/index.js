@@ -504,6 +504,18 @@ function wireReady(client0) {
             if (opts?.thread)
                 await msg.startThread({ name: opts.thread, autoArchiveDuration: 10080 }).catch((e) => console.error('could not create staff thread:', e instanceof Error ? e.message : e));
         }, cfg.OUTBOX_POLL_SECONDS, console.log, (userId, msg) => (typeof msg === 'string' ? platform.sendDirectMessage(userId, msg) : platform.sendDm(userId, { embed: msg }).then(() => undefined)), grantRoleEverywhere, syncRolesEverywhere, () => void live.refresh('teamlist').catch(() => undefined), (effects) => tickets.apply(effects).then(() => undefined, (e) => console.error('ticket effects failed:', e instanceof Error ? e.message : e)), () => void presence.sync().catch((e) => console.error('team/voice sync failed:', e instanceof Error ? e.message : e)), async (kind, channelId) => { await live.refresh(kind, { channelId, force: true }); }, async (type, p) => {
+            if (type === 'embed.post') {
+                // Embed-Baukasten: vorhandene Nachricht bearbeiten (falls noch da), sonst neu posten; Ort ans System melden
+                const channelId = typeof p.channelId === 'string' ? p.channelId : '';
+                const ch = await client.channels.fetch(channelId);
+                if (!ch?.isSendable() || !('messages' in ch))
+                    throw new Error(`channel ${channelId} is not a text channel the bot can post in`);
+                const payload = (0, discord_tickets_1.payloadOf)(p.message);
+                const old = typeof p.messageId === 'string' ? await ch.messages.fetch(p.messageId).catch(() => null) : null;
+                const msg = old ? await old.edit({ ...payload, content: payload.content ?? '' }) : await ch.send(payload);
+                await api.service('POST', `/bot/embeds/${String(p.embedId)}/posted`, { channelId, messageId: msg.id });
+                return true;
+            }
             if (type !== 'application.ticket')
                 return false;
             const str = (k) => (typeof p[k] === 'string' ? p[k] : undefined);
