@@ -179,3 +179,12 @@ Auf der Login-Seite erscheint **„Mit Discord anmelden“**, sobald `DISCORD_CL
 - **Nur Discord:** Sobald `DISCORD_CLIENT_SECRET` gesetzt ist, zeigt die Login-Seite nur noch „Mit Discord anmelden“ und die API lehnt Passwort-Anmeldungen ab. Vorher (Einrichtung) gilt der Passwort-Login.
 - **Team-Rolle fürs MDT:** Unter *Settings → Sign in with Discord → Team role* eine oder mehrere Discord-Rollen-IDs eintragen. Dann kommt nur ins MDT/Dashboard, wer eine davon auf dem Server hat (geprüft bei jeder Anmeldung; Login-Seite: „Dir fehlt die Team-Rolle“). Leer = jedes Server-Mitglied. Welche Rechte jemand bekommt, steuert weiterhin *Discord role → system role*.
 - **Nicht aussperren:** Deine Discord-ID gehört in `ADMIN_DISCORD_IDS` – diese Konten sind beim Discord-Login immer *System Administrator* (auch ohne Server-Mitgliedschaft). **Notfall-Zugang:** `PASSWORD_LOGIN=true` setzen und neu starten, dann ist der Passwort-Login (z. B. `admin`) wieder da. Passwort vergessen: zusätzlich `ADMIN_PASSWORD=<neu>` + `ADMIN_PASSWORD_RESET=true` (siehe [hosting-bot-hosting.md](hosting-bot-hosting.md)).
+
+## Neu: Discord-Nachrichten aus dem Dashboard
+
+- **Funk-Codes** (`/radio-codes` → „In Discord senden“): Liste je Kategorie als Embed; bei Änderungen automatisch aktualisiert (abschaltbar).
+- **Staff-Liste** (`/staff-lists`): Abschnitte je Discord-Rolle (Reihenfolge, Überschrift, Trennlinie, „/“ wenn leer, nur höchste Rolle). Der Bot rechnet die Mitglieder selbst und bearbeitet die Nachricht, sobald sich Rollen ändern (Intent „Server Members“ nötig).
+- **Formular-Panels** (`/admin/form-panels`): Panel mit Button → Formular (bis 5 Felder) → Nachricht im Zielkanal, optional mit Name/Profilbild der Person (Bot braucht „Webhooks verwalten“), Reaktionen, Rollen-Ping, Rollen vergeben, „einmal je Person“.
+- **Tages-/Wochenberichte** (`/duty-reports`, `/dienstbericht ausfuellen|meine|anzeigen`): Vorlagen mit eigenen Feldern; mehr als 5 Felder → mehrseitiges Formular mit „Weiter“. Gepostete Berichte haben „✏️ Bearbeiten“; Änderungen im Dashboard aktualisieren die Nachricht.
+- **Embed-Baukasten**: Bilder per „Datei hinzufügen“/„Datei einfügen“ (Zwischenablage) – der Bot hängt sie an; bis zu 4 Bilder, Autor-/Fußzeilen-Icon, eigenes Datum/Zeit, Reaktionen.
+- **Personal**: Beförderungen tauschen Rang-Rollen, Dienstnummern setzen den Nickname (Bot braucht „Nicknames verwalten“) und schicken eine DM.

@@ -28,6 +28,8 @@ const editRecord = z.object({ summary: z.string().trim().min(2).max(300).optiona
 export class HrController {
   constructor(private readonly core: HrCoreService, private readonly people: HrPeopleService) {}
   @Get('config') @RequirePermission('personnel.view') config() { return this.core.config(); }
+  /** Abwesenheitsarten für den Abmeldeantrag (alle im Dashboard). */
+  @Get('absence-types') @RequirePermission('dashboard.view') async absenceTypes() { return (await this.core.config()).absenceTypes; }
   @Put('config') @RequirePermission('promotion.manage_settings') saveConfig(@CurrentActor() a: Actor, @Body(zodBody(hrConfigSchema)) b: HrConfig) { return this.core.saveConfig(a, b); }
 
   @Get('people') @RequirePermission('personnel.view') overview(@CurrentActor() a: Actor, @Query(zodBody(overviewQ)) q: z.infer<typeof overviewQ>) { return this.people.overview(a, q); }

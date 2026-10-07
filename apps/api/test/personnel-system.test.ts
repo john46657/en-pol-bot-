@@ -7,7 +7,8 @@ import type { PrismaService } from '../src/prisma/prisma.service';
 let app: INestApplication; let prisma: PrismaService;
 type Agent = Awaited<ReturnType<typeof login>>['agent'];
 let admin: Agent, member: Agent, sup: Agent;
-const ids: Record<string, string> = {};
+const ids: Record<string, string> = {} as Record<string, string>;
+const id = (k: string) => ids[k]!;
 const started = new Date();
 
 beforeAll(async () => {
@@ -74,7 +75,7 @@ describe('Rangsystem & Beförderung', () => {
     const ok = await admin.post(`/api/v1/hr/requests/${r.body.id}/decide`).send({ decision: 'APPROVE', comment: 'passt' });
     expect(ok.status).toBe(200);
     expect(ok.body.status).toBe('APPROVED');
-    await prisma.discordLink.create({ data: { userId: ids.target, discordId: '480000000000000001' } });
+    await prisma.discordLink.create({ data: { userId: id('target'), discordId: '480000000000000001' } });
     const ex = await admin.post(`/api/v1/hr/requests/${r.body.id}/execute`);
     expect(ex.status).toBe(200);
     expect(ex.body.status).toBe('EXECUTED');
