@@ -308,7 +308,7 @@ export declare const cadConfigSchema: z.ZodObject<{
         label: string;
         options?: string[] | undefined;
     }[]>;
-    widgets: z.ZodArray<z.ZodEnum<["activeIncidents", "availableUnits", "erlcPlayers", "erlcQueue", "activeCalls", "staffOnline", "erlcStatus", "map", "units", "radio", "persons", "vehicles", "dutyActivity"]>, "many">;
+    widgets: z.ZodPipeline<z.ZodEffects<z.ZodArray<z.ZodString, "many">, ("map" | "persons" | "vehicles" | "radio" | "activeIncidents" | "availableUnits" | "activeCalls" | "erlcStatus" | "units" | "dutyActivity")[], string[]>, z.ZodArray<z.ZodEnum<["activeIncidents", "availableUnits", "activeCalls", "erlcStatus", "map", "units", "radio", "persons", "vehicles", "dutyActivity"]>, "many">>;
 }, "strip", z.ZodTypeAny, {
     map: {
         width: number;
@@ -318,7 +318,7 @@ export declare const cadConfigSchema: z.ZodObject<{
         scale: number;
         imageUrl?: string | null | undefined;
     };
-    widgets: ("map" | "persons" | "vehicles" | "radio" | "activeIncidents" | "availableUnits" | "erlcPlayers" | "erlcQueue" | "activeCalls" | "staffOnline" | "erlcStatus" | "units" | "dutyActivity")[];
+    widgets: ("map" | "persons" | "vehicles" | "radio" | "activeIncidents" | "availableUnits" | "activeCalls" | "erlcStatus" | "units" | "dutyActivity")[];
     incidentNumberPrefix: string;
     incidentTypes: {
         key: string;
@@ -393,7 +393,7 @@ export declare const cadConfigSchema: z.ZodObject<{
         scale: number;
         imageUrl?: string | null | undefined;
     };
-    widgets: ("map" | "persons" | "vehicles" | "radio" | "activeIncidents" | "availableUnits" | "erlcPlayers" | "erlcQueue" | "activeCalls" | "staffOnline" | "erlcStatus" | "units" | "dutyActivity")[];
+    widgets: string[];
     incidentTypes: {
         key: string;
         label: string;

@@ -80296,7 +80296,7 @@ var DEFAULT_CAD_CONFIG = {
   map: { imageUrl: null, width: ERLC_MAP_SIZE, height: ERLC_MAP_SIZE, originX: ERLC_MAP_SIZE / 2, originY: ERLC_MAP_SIZE / 2, scale: 1 },
   routes: [],
   memberFields: [],
-  widgets: ["activeIncidents", "availableUnits", "activeCalls", "dutyActivity", "erlcStatus", "erlcPlayers", "erlcQueue", "staffOnline", "map", "radio"]
+  widgets: ["activeIncidents", "availableUnits", "activeCalls", "dutyActivity", "erlcStatus", "map", "radio"]
 };
 function accountAge(created, now = Date.now()) {
   const t = created ? new Date(created).getTime() : NaN;

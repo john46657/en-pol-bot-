@@ -55,10 +55,10 @@ export const CAD_EVENT_SEND_TYPE: Record<CadEvent, (typeof CAD_LINK_SEND_TYPES)[
   'call.received': 'calls', announcement: 'announcements', radio: 'radio',
 };
 
-export const CAD_WIDGETS = ['activeIncidents', 'availableUnits', 'erlcPlayers', 'erlcQueue', 'activeCalls', 'staffOnline', 'erlcStatus', 'map', 'units', 'radio', 'persons', 'vehicles', 'dutyActivity'] as const;
+export const CAD_WIDGETS = ['activeIncidents', 'availableUnits', 'activeCalls', 'erlcStatus', 'map', 'units', 'radio', 'persons', 'vehicles', 'dutyActivity'] as const;
 export const CAD_WIDGET_LABELS: Record<string, string> = {
-  activeIncidents: 'Aktive Einsätze', availableUnits: 'Verfügbare Einheiten', erlcPlayers: 'ER:LC-Spieler', erlcQueue: 'Warteschlange', activeCalls: 'Aktive Notrufe',
-  staffOnline: 'Server-Team online', erlcStatus: 'ER:LC-Status', map: 'Einsatzkarte', units: 'Einheiten', radio: 'Letzte Funkmeldungen', persons: 'Personen', vehicles: 'Fahrzeuge', dutyActivity: 'Aktivität im Dienst',
+  activeIncidents: 'Aktive Einsätze', availableUnits: 'Verfügbare Einheiten', activeCalls: 'Aktive Notrufe',
+  erlcStatus: 'ER:LC-Status', map: 'Einsatzkarte', units: 'Einheiten', radio: 'Letzte Funkmeldungen', persons: 'Personen', vehicles: 'Fahrzeuge', dutyActivity: 'Aktivität im Dienst',
 };
 
 /** Offizielle ER:LC-Kartenbilder sind 5355 × 5355 px, Spielkoordinate (0,0) liegt in der Mitte. */
@@ -125,7 +125,7 @@ export const DEFAULT_CAD_CONFIG: CadConfig = {
   map: { imageUrl: null, width: ERLC_MAP_SIZE, height: ERLC_MAP_SIZE, originX: ERLC_MAP_SIZE / 2, originY: ERLC_MAP_SIZE / 2, scale: 1 },
   routes: [],
   memberFields: [],
-  widgets: ['activeIncidents', 'availableUnits', 'activeCalls', 'dutyActivity', 'erlcStatus', 'erlcPlayers', 'erlcQueue', 'staffOnline', 'map', 'radio'],
+  widgets: ['activeIncidents', 'availableUnits', 'activeCalls', 'dutyActivity', 'erlcStatus', 'map', 'radio'],
 };
 
 /** Spielkoordinate (ER:LC: X nach rechts, Z nach unten, Ursprung Mitte) → Pixel im Kartenbild. */

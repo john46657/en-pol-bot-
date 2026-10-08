@@ -130,8 +130,8 @@ export const WIDGETS: WidgetDef[] = [
   { id: 'radio', title: '📡 Funk-Codes', perms: ['radio.view', 'dashboard.radio.view'], to: '/radio-codes', render: () => <RadioCodeList /> },
   { id: 'teamchance', title: '📣 Team-Chance', perms: ['teamchance.view', 'dashboard.teamchance.view'], to: '/teamchance', render: () => <TeamChanceSummary /> },
   { id: 'incidents', title: '🚨 Aktive Einsätze', perms: ['incidents.view'], to: '/incidents', render: () => <Incidents /> },
-  { id: 'queue', title: '📡 Leitstellen-Warteschlange', perms: ['dispatch.view'], to: '/dispatch', render: () => <Queue /> },
-  { id: 'units', title: '🚓 Einheiten', perms: ['dispatch.view'], to: '/dispatch', render: () => <Units /> },
+  { id: 'queue', title: '📡 Leitstellen-Warteschlange', perms: ['dispatch.view'], to: '/cad', render: () => <Queue /> },
+  { id: 'units', title: '🚓 Einheiten', perms: ['dispatch.view'], to: '/cad/units', render: () => <Units /> },
   { id: 'wanted', title: '🚩 Fahndungen', perms: ['wanted.view'], to: '/wanted', render: () => <Wanted /> },
   { id: 'reports', title: '📄 Offene Berichte', perms: ['reports.review'], to: '/reports', render: () => <Reports /> },
 ];

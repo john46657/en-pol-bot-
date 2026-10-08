@@ -16,7 +16,6 @@ export const NAV: NavItem[] = [
   { path: '/dashboard', label: 'Dashboard', icon: LayoutDashboard, perm: 'dashboard.view', group: 'Operations' },
   grp('Leitstelle', MapPinned, 'Operations', [
     { path: '/cad', label: 'CAD-Leitstelle', perm: 'cad.view', area: 'dashboard.cad.view' },
-    { path: '/dispatch', label: 'Leitstelle (klassisch)', perm: 'dispatch.view' },
     { path: '/incidents', label: 'Einsätze', perm: 'incidents.view' },
   ]),
   grp('Team', Users, 'Operations', [
