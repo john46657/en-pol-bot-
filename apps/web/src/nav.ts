@@ -1,7 +1,8 @@
-import { TriangleAlert, HardDriveDownload, ScrollText, BellRing, GraduationCap, IdCard, Medal, SlidersHorizontal, CalendarCheck, FormInput, ListOrdered, Link2, PanelTop, DoorOpen, MapPinned, Building2, Megaphone, RadioTower, Contact, Palette, CalendarOff, Clock, LifeBuoy, Monitor, BarChart3, BookOpen, Award, Car, ClipboardList, FileText, Fingerprint, Flag, Gavel, LayoutDashboard, MessageSquare, Radio, Scale, Search, Settings, Shield, Siren, Ticket, UserCheck, Users, Wrench, type LucideIcon } from 'lucide-react';
+import { TriangleAlert, HardDriveDownload, ScrollText, BellRing, GraduationCap, IdCard, Medal, SlidersHorizontal, FormInput, ListOrdered, Link2, PanelTop, DoorOpen, MapPinned, Building2, Megaphone, RadioTower, Contact, Palette, CalendarOff, Clock, LifeBuoy, Monitor, BarChart3, BookOpen, Award, Car, ClipboardList, FileText, Fingerprint, Flag, Gavel, LayoutDashboard, MessageSquare, Radio, Scale, Search, Settings, Shield, Siren, Ticket, UserCheck, Users, Wrench, type LucideIcon } from 'lucide-react';
 
 /** `area`: Bereichs-Sichtbarkeit (dashboard.<bereich>.view) – ohne sie erscheint der Menüpunkt nicht, auch mit Modul-Recht. */
-export interface NavItem { path: string; label: string; icon: LucideIcon; perm?: string; area?: string; group: 'Operations' | 'Records' | 'Organisation' | 'Administration' }
+/** `anyPerm`: sichtbar mit einem dieser Rechte (statt `perm`). `also`: weitere Pfade, unter denen der Menüpunkt aktiv ist. */
+export interface NavItem { path: string; label: string; icon: LucideIcon; perm?: string; anyPerm?: string[]; also?: string[]; area?: string; group: 'Operations' | 'Records' | 'Organisation' | 'Administration' }
 
 export const NAV: NavItem[] = [
   { path: '/mdt', label: 'MDT', icon: Monitor, perm: 'dashboard.view', group: 'Operations' },
@@ -18,8 +19,8 @@ export const NAV: NavItem[] = [
   { path: '/support-tickets', label: 'Support-Tickets', icon: LifeBuoy, perm: 'ticket.view', area: 'dashboard.tickets.view', group: 'Operations' },
   { path: '/persons', label: 'Personen', icon: Fingerprint, perm: 'persons.view', group: 'Records' },
   { path: '/vehicles', label: 'Fahrzeuge', icon: Car, perm: 'vehicles.view', group: 'Records' },
-  { path: '/reports', label: 'Berichte', icon: FileText, perm: 'reports.view', group: 'Records' },
-  { path: '/duty-reports', label: 'Tages-/Wochenberichte', icon: CalendarCheck, perm: 'dutyreports.view', group: 'Records' },
+  // Einsatzberichte und Tages-/Wochenberichte: ein Menüpunkt, Reiter auf der Seite
+  { path: '/reports', label: 'Berichte', icon: FileText, anyPerm: ['reports.view', 'dutyreports.view'], also: ['/duty-reports'], group: 'Records' },
   { path: '/tickets', label: 'Strafzettel', icon: Ticket, perm: 'tickets.view', group: 'Records' },
   { path: '/investigations', label: 'Ermittlungen', icon: Search, perm: 'investigations.view', group: 'Records' },
   { path: '/wanted', label: 'Fahndungen', icon: Flag, perm: 'wanted.view', group: 'Records' },
@@ -54,7 +55,9 @@ export const NAV: NavItem[] = [
   { path: '/me/settings', label: 'Persönlich', icon: Palette, perm: 'dashboard.view', group: 'Administration' },
 ];
 /** Sichtbar = Modul-Recht und (falls gesetzt) Bereichs-Recht. Nur Komfort – die API prüft selbst. */
-export const visible = (n: NavItem, can: (p: string) => boolean) => (!n.perm || can(n.perm)) && (!n.area || can(n.area));
+export const visible = (n: NavItem, can: (p: string) => boolean) => (n.anyPerm ? n.anyPerm.some(can) : !n.perm || can(n.perm)) && (!n.area || can(n.area));
+/** Menüpunkt zu einem (auch alten) Pfad, z. B. für gespeicherte Favoriten. */
+export const navFor = (items: NavItem[], path: string) => items.find((n) => n.path === path || n.also?.includes(path));
 export const GROUPS = ['Operations', 'Records', 'Organisation', 'Administration'] as const;
 
 /** Deutsche Gruppennamen. Menünamen sind direkt deutsch; das Dashboard ist vollständig deutsch. */

@@ -4,6 +4,7 @@ import { useAuth } from './lib/auth';
 import { AppShell } from './components/AppShell';
 import { Forbidden, SkeletonRows } from './components/ui';
 import { ResourcePage } from './components/ResourcePage';
+import { ReportTabs } from './components/ReportTabs';
 import { RecordPage } from './components/RecordPage';
 import { Login } from './pages/Login';
 import { Apply } from './pages/Apply';
@@ -84,6 +85,12 @@ function Guard({ perm, area, children }: { perm?: string; area?: string; childre
 }
 
 const list = (cfg: Parameters<typeof ResourcePage>[0]['cfg'], perm: string) => <Guard perm={perm}><ResourcePage cfg={cfg} /></Guard>;
+/** „Berichte“: Einsatzberichte mit Reitern; wer nur Tages-/Wochenberichte sehen darf, landet direkt dort. */
+function ReportsRoute() {
+  const { can, loading } = useAuth();
+  if (!loading && !can('reports.view') && can('dutyreports.view')) return <Navigate to="/duty-reports" replace />;
+  return <Guard perm="reports.view"><ReportTabs /><ResourcePage cfg={R.reports as never} /></Guard>;
+}
 const rec = (key: keyof typeof R.records, perm: string) => <Guard perm={perm}><RecordPage cfg={R.records[key]!} /></Guard>;
 
 export function App() {
@@ -131,7 +138,7 @@ export function App() {
           <Route path="persons/:id" element={<Guard perm="persons.view"><PersonDetail /></Guard>} />
           <Route path="vehicles" element={list(R.vehicles as never, 'vehicles.view')} />
           <Route path="vehicles/:id" element={rec('vehicles', 'vehicles.view')} />
-          <Route path="reports" element={list(R.reports as never, 'reports.view')} />
+          <Route path="reports" element={<ReportsRoute />} />
           <Route path="reports/:id" element={<Guard perm="reports.view"><ReportDetail /></Guard>} />
           <Route path="tickets" element={list(R.tickets as never, 'tickets.view')} />
           <Route path="tickets/:id" element={rec('tickets', 'tickets.view')} />
