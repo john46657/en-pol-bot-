@@ -11,7 +11,7 @@ import { Badge, Button, Card, EmptyState, ErrorState, Input, PageHeader, Select,
 
 interface Group { id?: string; name: string; guildIds: string[]; shareRecords: boolean; shareSettings: boolean }
 interface Counts { persons: number; vehicles: number }
-interface Links { groups: Group[]; ownRecords: string[]; counts?: { shared?: Counts; groups: Record<string, Counts | undefined>; own: Record<string, Counts | undefined> } }
+interface Links { groups: Group[]; sharedRecords: string[]; counts?: { shared?: Counts; groups: Record<string, Counts | undefined>; own: Record<string, Counts | undefined> } }
 
 const problems = (l: Links) => [
   ...l.groups.filter((g) => !g.name.trim()).map(() => 'Jede Gruppe braucht einen Namen'),
@@ -19,7 +19,7 @@ const problems = (l: Links) => [
 ];
 const countText = (c?: Counts) => (c ? `${c.persons} Personen · ${c.vehicles} Fahrzeuge` : '—');
 
-/** Administration → Server-Verbund: Discord-Server können zusammen sein (Gruppe), müssen aber nicht (eigene oder gemeinsame Akten). */
+/** Administration → Server-Verbund: Discord-Server sind standardmäßig getrennt; zusammen gehören sie nur per Gruppe oder gemeinsamem Bestand. */
 export function ServerLinks() {
   const { can } = useAuth();
   const manage = can('settings.manage');
@@ -30,7 +30,7 @@ export function ServerLinks() {
   const [msg, setMsg] = useState<{ ok: boolean; text: string }>();
   // Eingaben behalten, Zahlen (Akten je Bereich) und neue IDs vom Server übernehmen
   useEffect(() => { if (q.data) setL((cur) => (cur ? { ...cur, counts: q.data.counts, groups: cur.groups.map((g, i) => ({ ...g, id: g.id ?? q.data.groups[i]?.id })) } : q.data)); }, [q.data]);
-  const body = (x: Links) => ({ groups: x.groups.map(({ id, name, guildIds, shareRecords, shareSettings }) => ({ ...(id ? { id } : {}), name, guildIds, shareRecords, shareSettings })), ownRecords: x.ownRecords });
+  const body = (x: Links) => ({ groups: x.groups.map(({ id, name, guildIds, shareRecords, shareSettings }) => ({ ...(id ? { id } : {}), name, guildIds, shareRecords, shareSettings })), sharedRecords: x.sharedRecords });
   const save = useMutation({ mutationFn: (x: Links) => api<Links>('/server-links', { method: 'PUT', body: body(x) }), onSuccess: (r) => { qc.setQueryData(['server-links'], r); setL(r); void qc.invalidateQueries(); } });
   useAutosaveDraft(manage ? 'server-links' : null, l ? body(l) : undefined, (x) => (l && !problems(l).length ? { method: 'PUT', path: '/server-links', body: x, label: 'Server-Verbund' } : null));
   const move = useMutation({
@@ -43,16 +43,16 @@ export function ServerLinks() {
   const nameOf = (id: string) => all.find((g) => g.id === id)?.name ?? id;
   const grouped = new Set(l.groups.flatMap((g) => g.guildIds));
   const setGroup = (i: number, p: Partial<Group>) => setL({ ...l, groups: l.groups.map((g, j) => (j === i ? { ...g, ...p } : g)) });
-  /** Server in die Gruppe aufnehmen/entfernen; aufgenommene Server verlieren „eigene Akten“ (die Gruppe entscheidet). */
+  /** Server in die Gruppe aufnehmen/entfernen; aufgenommene Server verlassen den gemeinsamen Bestand (die Gruppe entscheidet). */
   const toggleGuild = (i: number, id: string, on: boolean) => setL({
-    ...l, ownRecords: on ? l.ownRecords.filter((x) => x !== id) : l.ownRecords,
+    ...l, sharedRecords: on ? l.sharedRecords.filter((x) => x !== id) : l.sharedRecords,
     groups: l.groups.map((g, j) => (j === i ? { ...g, guildIds: on ? [...new Set([...g.guildIds, id])] : g.guildIds.filter((x) => x !== id) } : g)),
   });
   const free = all.filter((g) => !grouped.has(g.id));
   const issues = problems(l);
   return (
     <>
-      <PageHeader title="Server-Verbund" subtitle="Discord-Server können zusammen sein, müssen aber nicht. Verbundene Server teilen Akten und/oder Einstellungen; alle anderen arbeiten mit eigenen oder den gemeinsamen Akten." />
+      <PageHeader title="Server-Verbund" subtitle="Jeder Discord-Server ist standardmäßig getrennt. Hier stellst du ein, welche Server zusammengehören: verbundene Server (Gruppe) teilen Akten und/oder Einstellungen." />
       {msg && <p role={msg.ok ? 'status' : 'alert'} className={`mb-3 text-sm ${msg.ok ? 'text-success' : 'text-danger'}`}>{msg.text}</p>}
       {!all.length && <p className="mb-4 rounded-lg border border-warning/40 bg-warning/10 p-3 text-sm text-warning">Der Bot hat noch keine Server gemeldet – erst wenn er online ist, erscheinen sie hier.</p>}
       <div className="grid gap-4">
@@ -93,19 +93,20 @@ export function ServerLinks() {
         <Card title="Server ohne Gruppe">
           {!free.length ? <p className="text-sm text-muted">Alle Server sind in einer Gruppe.</p> : (
             <ul className="grid gap-2">{free.map((g) => {
-              const own = l.ownRecords.includes(g.id);
+              const own = !l.sharedRecords.includes(g.id);
               return (
                 <li key={g.id} className="flex flex-wrap items-center gap-2 rounded-lg border border-line p-2 text-sm">
                   <span className="font-medium">{g.name}</span>
-                  <Select aria-label={`Akten ${g.name}`} disabled={!manage} className="w-auto" value={own ? 'own' : 'shared'} onChange={(e) => setL({ ...l, ownRecords: e.target.value === 'own' ? [...l.ownRecords, g.id] : l.ownRecords.filter((x) => x !== g.id) })}>
-                    <option value="shared">Gemeinsame Akten (mit allen Servern ohne eigene)</option><option value="own">Eigene Akten (getrennt)</option>
+                  <Select aria-label={`Akten ${g.name}`} disabled={!manage} className="w-auto" value={own ? 'own' : 'shared'} onChange={(e) => setL({ ...l, sharedRecords: e.target.value === 'own' ? l.sharedRecords.filter((x) => x !== g.id) : [...l.sharedRecords, g.id] })}>
+                    <option value="own">Getrennt – eigene Akten (Standard)</option><option value="shared">Gemeinsamer Bestand (mit allen Servern, die ihn nutzen)</option>
                   </Select>
                   <Badge tone="neutral">{own ? countText(l.counts?.own[g.id]) : countText(l.counts?.shared)}</Badge>
-                  {own && manage && q.data?.ownRecords.includes(g.id) && <Button size="sm" variant="ghost" disabled={move.isPending} title="Alle Akten aus dem gemeinsamen Bestand in die eigenen Akten dieses Servers verschieben" onClick={() => move.mutate(g.id)}>Gemeinsame Akten hierher verschieben</Button>}
+                  {own && manage && !q.data?.sharedRecords.includes(g.id) && !!(l.counts?.shared?.persons || l.counts?.shared?.vehicles) && <Button size="sm" variant="ghost" disabled={move.isPending} title="Alle Akten aus dem gemeinsamen Bestand in die eigenen Akten dieses Servers verschieben" onClick={() => move.mutate(g.id)}>Gemeinsame Akten hierher verschieben</Button>}
                 </li>
               );
             })}</ul>
           )}
+          {!!(l.counts?.shared?.persons || l.counts?.shared?.vehicles) && <p className="mt-2 rounded border border-warning/40 bg-warning/10 p-2 text-xs text-warning">Im gemeinsamen Bestand liegen noch {countText(l.counts?.shared)} (z. B. von früher, als Server noch zusammen waren). Getrennte Server sehen sie nicht – mit „Gemeinsame Akten hierher verschieben“ ordnest du sie einem Server zu.</p>}
           <p className="mt-2 text-xs text-muted">Neue Akten (von Hand oder automatisch aus ER:LC) landen im Bereich des Servers, auf dem sie entstehen. Bei „Alle Server“ oben links siehst du alle Akten.</p>
         </Card>
       </div>
