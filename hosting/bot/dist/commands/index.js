@@ -11,6 +11,8 @@ const cad_1 = require("./cad");
 const features_2 = require("./features");
 const tickets_1 = require("./tickets");
 const duty_reports_1 = require("./duty-reports");
+const warnings_1 = require("./warnings");
+const trainings_1 = require("./trainings");
 const format_1 = require("../format");
 /** Minuten → „3 h 05 min“. */
 const hm = (min) => `${Math.floor(min / 60)} h ${String(Math.round(min % 60)).padStart(2, '0')} min`;
@@ -101,7 +103,7 @@ exports.COMMANDS = [
                             { name: 'Abfragen', value: '`/person` `/kennzeichen` `/fahndungen` `/einsaetze` `/einsatzinfo` `/einheiten` `/team`' },
                             { name: 'Dienst & Leitstelle', value: '`/dienst` `/dienststunden` `/abmeldung` `/leave manage` `/einheitstatus` `/einsatz` `/einsatzstatus` `/einsatzzuweisen` `/funk` `/funkcode` `/cad`' },
                             { name: 'Erfassen', value: '`/ticket` `/bericht` `/dienstbericht` `/beschwerde` `/ermittlung` `/fahndung` `/beweis`' },
-                            { name: 'Leitung & Team', value: '`/gefahrenstatus` `/funkfreigabe` `/teamliste` `/dienstpanel` `/bewerbungspanel` `/qualipanel` `/teamchance` `/roblox`' },
+                            { name: 'Leitung & Team', value: '`/ausbildung` `/verwarnen` `/gefahrenstatus` `/funkfreigabe` `/teamliste` `/dienstpanel` `/bewerbungspanel` `/qualipanel` `/teamchance` `/roblox`' },
                             { name: 'Support-Tickets', value: '`/support` öffnet ein Ticket (Team: `/support mitglied:@…` für jemand anderen). Ticket-Panels, Kategorien, Fragen und Buttons werden im Dashboard eingerichtet und von dort in Discord gesendet.' },
                             { name: 'Für alle', value: '`/bewerbung` (auch ohne Verknüpfung; Fragen per Direktnachricht) · SEK/Flugstaffel/Ausbilder über das Qualifikations-Panel' },
                             { name: 'Hinweis', value: 'Alle Befehle laufen mit **deinen** Rechten im System. Antworten sind nur für dich sichtbar.' }
@@ -554,6 +556,8 @@ exports.COMMANDS = [
     ...leave_1.LEAVE_COMMANDS,
     ...cad_1.CAD_COMMANDS,
     ...duty_reports_1.DUTY_REPORT_COMMANDS,
+    ...warnings_1.WARNING_COMMANDS,
+    ...trainings_1.TRAINING_COMMANDS,
     tickets_1.TICKET_COMMAND,
 ];
 const byName = (n) => exports.COMMANDS.find((c) => c.name === n);

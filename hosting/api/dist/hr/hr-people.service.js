@@ -249,10 +249,77 @@ let HrPeopleService = class HrPeopleService {
             const a = cfg.awards.find((x) => x.id === d.awardId);
             await this.core.notify('award.granted', { memberUserId: p.userId, title: `${a.icon} Auszeichnung: ${a.name}`, body: d.summary, entityType: 'Personnel', entityId: id, publicText: a.public ? `**${name}** hat die Auszeichnung **${a.icon} ${a.name}** erhalten.\n${d.summary}` : undefined, dmText: `Du hast die Auszeichnung **${a.icon} ${a.name}** erhalten.\n\n${d.summary}`, color: parseInt(a.color.slice(1), 16) });
         }
-        // Verwarnungen: keine Inhalte nach Discord (Datenschutz) – nur Dashboard
-        if (d.type === 'WARNING')
+        if (d.type === 'WARNING') {
             await this.core.notify('warning.created', { memberUserId: null, title: `Verwarnung für ${name}`, body: summary, entityType: 'Personnel', entityId: id });
+            await this.warningFollowUp(actor, p, r, name, cfg).catch((e) => console.error(`warning follow-up failed: ${e instanceof Error ? e.message : e}`));
+        }
         return r;
+    }
+    /** Aktive Verwarnungen einer Person (nicht zurückgenommen, nicht abgelaufen). */
+    async activeWarnings(personnelId, now = new Date()) {
+        return this.prisma.personnelRecord.count({ where: { personnelId, type: { in: ['WARNING', 'DISCIPLINE'] }, deletedAt: null, status: { not: 'REVOKED' }, OR: [{ expiresAt: null }, { expiresAt: { gt: now } }] } });
+    }
+    /**
+     * Nach einer neuen Verwarnung: Meldung im Verwarnungs-Kanal („Wer / Grund / 1/3“), DM an die Person und – bei Erreichen
+     * der Grenze – Leitung benachrichtigen, Discord-Rollen entziehen und/oder Status setzen (Einstellungen → Personal → Verwarnungen).
+     */
+    async warningFollowUp(actor, p, row, name, cfg) {
+        const w = cfg.warnings;
+        const count = await this.activeWarnings(p.id);
+        const reached = count >= w.limit;
+        const [link, by] = await Promise.all([this.prisma.discordLink.findUnique({ where: { userId: p.userId } }), actor.userId ? this.prisma.user.findUnique({ where: { id: actor.userId }, select: { displayName: true } }) : null]);
+        const data = (row.data ?? {});
+        const vars = { mitglied: link ? `<@${link.discordId}>` : name, name, grund: row.details ? `${row.summary} – ${row.details}` : row.summary, schweregrad: `${data.emoji ?? ''} ${data.severityLabel ?? ''}`.trim(), kategorie: data.category ?? '—', anzahl: String(count), grenze: String(w.limit), durch: by?.displayName ?? 'System', datum: new Date().toLocaleDateString('de-DE'), ablauf: row.expiresAt ? row.expiresAt.toLocaleDateString('de-DE') : 'kein Ablauf' };
+        const color = reached ? 0xef4444 : data.color ? parseInt(data.color.slice(1), 16) : 0xeab308;
+        const limitText = reached ? `\n\n⚠️ **Grenze erreicht (${count}/${w.limit}).**` : '';
+        if (w.channelId) {
+            const ping = reached && w.atLimit.pingDiscordRoleIds.length ? { content: w.atLimit.pingDiscordRoleIds.map((r) => `<@&${r}>`).join(' '), mentionRoles: w.atLimit.pingDiscordRoleIds } : {};
+            await this.core.discord.postMessage(`hr-warning-${row.id.slice(0, 8)}`, w.channelId, { ...ping, embeds: [{ title: `${reached ? '⛔' : '⚠️'} Verwarnung`, description: ((0, shared_1.fillTemplate)(w.template, vars) + limitText).slice(0, 4000), color, footer: `Verwarnt von ${vars.durch}`, timestamp: new Date().toISOString() }] }, { forceNew: true });
+        }
+        if (w.dm)
+            await this.core.dm(p.userId, { embeds: [{ title: '⚠️ Du wurdest verwarnt', description: `**Grund:** ${vars.grund}\n**Verwarnungen:** ${count}/${w.limit}\n**Gültig bis:** ${vars.ablauf}${limitText}`.slice(0, 4000), color }] });
+        if (!reached)
+            return;
+        const a = w.atLimit;
+        if (a.notifyRoleIds.length) {
+            const users = (await this.prisma.userRole.findMany({ where: { roleId: { in: a.notifyRoleIds } }, select: { userId: true } })).map((u) => u.userId);
+            if (users.length)
+                await this.prisma.notification.createMany({ data: [...new Set(users)].map((userId) => ({ userId, type: 'PERSONNEL', title: `⛔ ${name}: Verwarnungs-Grenze erreicht (${count}/${w.limit})`, body: row.summary.slice(0, 500), entityType: 'Personnel', entityId: p.id })) });
+        }
+        if (a.removeDiscordRoleIds.length)
+            await this.core.syncDiscordRoles(p.userId, [], a.removeDiscordRoleIds, `Verwarnungs-Grenze erreicht (${count}/${w.limit})`);
+        if (a.status && cfg.statuses.some((x) => x.key === a.status)) {
+            await this.prisma.personnel.update({ where: { id: p.id }, data: { employmentStatus: a.status } });
+            await this.core.audit.record(actor, { action: 'warning.limit', module: 'personnel', entityType: 'Personnel', entityId: p.id, after: { count, limit: w.limit, status: a.status } });
+        }
+    }
+    /** Alle Verwarnungen (Übersicht im Dashboard), mit aktuellem Zähler je Person. */
+    async warnings(actor, f) {
+        await this.perms.assert(actor.userId, 'warning.view');
+        const now = new Date();
+        const state = f.state ?? 'ACTIVE';
+        const rows = await this.prisma.personnelRecord.findMany({
+            where: { type: { in: ['WARNING', 'DISCIPLINE'] }, deletedAt: null,
+                ...(state === 'REVOKED' ? { status: 'REVOKED' } : state === 'EXPIRED' ? { status: { not: 'REVOKED' }, expiresAt: { lte: now } } : state === 'ACTIVE' ? { status: { not: 'REVOKED' }, OR: [{ expiresAt: null }, { expiresAt: { gt: now } }] } : {}),
+                ...(f.q ? { OR: [{ summary: { contains: f.q, mode: 'insensitive' } }, { personnel: { user: { displayName: { contains: f.q, mode: 'insensitive' } } } }] } : {}) },
+            include: { personnel: { select: { id: true, rank: true, user: { select: { id: true, displayName: true } } } } }, orderBy: { createdAt: 'desc' }, take: 500,
+        });
+        const ids = [...new Set(rows.map((r) => r.personnelId))];
+        const active = await this.prisma.personnelRecord.groupBy({ by: ['personnelId'], where: { personnelId: { in: ids }, type: { in: ['WARNING', 'DISCIPLINE'] }, deletedAt: null, status: { not: 'REVOKED' }, OR: [{ expiresAt: null }, { expiresAt: { gt: now } }] }, _count: { _all: true } });
+        const authors = new Map((await this.prisma.user.findMany({ where: { id: { in: [...new Set(rows.map((r) => r.createdById))] } }, select: { id: true, displayName: true } })).map((u) => [u.id, u.displayName]));
+        const limit = (await this.core.config()).warnings.limit;
+        return { limit, items: rows.map((r) => ({ id: r.id, personnelId: r.personnelId, name: r.personnel.user.displayName, rank: r.personnel.rank, summary: r.summary, details: r.details, data: r.data, createdAt: r.createdAt, expiresAt: r.expiresAt, by: authors.get(r.createdById) ?? '—',
+                state: r.status === 'REVOKED' ? 'REVOKED' : r.expiresAt && r.expiresAt <= now ? 'EXPIRED' : 'ACTIVE', active: active.find((x) => x.personnelId === r.personnelId)?._count._all ?? 0 })) };
+    }
+    /** Verwarnung über Discord (/verwarnen): Person per Discord-ID, Grund, optional Schweregrad. */
+    async warnByDiscord(actor, d) {
+        const link = await this.prisma.discordLink.findUnique({ where: { discordId: d.discordId } });
+        const p = link ? await this.prisma.personnel.findUnique({ where: { userId: link.userId } }) : null;
+        if (!p)
+            throw new errors_1.AppError('NOT_FOUND', 'Für diese Person gibt es keine Personalakte.');
+        const r = await this.addRecord(actor, p.id, { type: 'WARNING', summary: d.reason, severity: d.severity });
+        const cfg = await this.core.config();
+        return { id: r.id, count: await this.activeWarnings(p.id), limit: cfg.warnings.limit };
     }
     async editRecord(actor, recordId, d) {
         const r = await this.prisma.personnelRecord.findUnique({ where: { id: recordId } });

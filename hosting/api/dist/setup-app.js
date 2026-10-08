@@ -16,6 +16,8 @@ function configureApp(app) {
     (0, zod_de_1.installGermanZodErrors)(); // deutsche Zod-Meldungen in Validierungsfehlern
     const env = (0, env_1.loadEnv)();
     app.setGlobalPrefix('api/v1', { exclude: ['health', 'readiness'] });
+    // Discord-Server-Backups vom Bot können größer als die Standard-100-KB sein
+    app.useBodyParser('json', { limit: '5mb' });
     const httpsOnly = env.COOKIE_SECURE ? env.COOKIE_SECURE === 'true' : env.NODE_ENV === 'production';
     // Ohne HTTPS dürfen CSP/HSTS die Seite nicht auf https „hochziehen“ (sonst laden Assets nicht).
     app.use((0, helmet_1.default)({ contentSecurityPolicy: { useDefaults: true, directives: { 'img-src': ["'self'", 'data:', 'blob:', 'https://cdn.discordapp.com', 'https://*.rbxcdn.com', 'https://api.erlc.gg'], ...(httpsOnly ? {} : { 'upgrade-insecure-requests': null }) } }, hsts: httpsOnly }));

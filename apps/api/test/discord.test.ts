@@ -156,6 +156,11 @@ describe('outbox', () => {
     expect(JSON.stringify(list)).not.toMatch(/robloxUserId|passwordHash|notes/);
 
     expect((await http().get('/api/v1/bot/config').set(bot())).body).toMatchObject({ dispatch: '200000000000000001, 200000000000000009' });
+    // Ghost-Ping-Meldung: Standard an, im Dashboard abschaltbar
+    expect((await http().get('/api/v1/bot/ghost-ping').set(bot())).body).toEqual({ enabled: true });
+    expect((await disp.put('/api/v1/admin/settings/discord.ghostPing').send({ value: { enabled: false } })).status).toBe(200);
+    expect((await http().get('/api/v1/bot/ghost-ping').set(bot())).body).toEqual({ enabled: false });
+    expect((await http().get('/api/v1/bot/ghost-ping')).status).toBe(401);
     expect((await http().post(`/api/v1/bot/outbox/${list[0]!.id}/ack`).set(bot()).send({ ok: true })).status).toBe(204);
     expect((await http().post(`/api/v1/bot/outbox/${list[0]!.id}/ack`).set(bot()).send({ ok: true })).status).toBe(404); // schon quittiert
     for (let i = 0; i < 5; i++) expect((await http().post(`/api/v1/bot/outbox/${list[1]!.id}/ack`).set(bot()).send({ ok: false, error: 'Missing Access' })).status).toBe(204);

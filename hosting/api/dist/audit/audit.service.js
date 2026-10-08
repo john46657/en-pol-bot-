@@ -9,7 +9,7 @@ var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.AuditService = void 0;
+exports.AuditService = exports.setAuditSink = void 0;
 exports.redact = redact;
 const common_1 = require("@nestjs/common");
 const prisma_service_1 = require("../prisma/prisma.service");
@@ -20,6 +20,9 @@ function redact(value) {
         return undefined;
     return JSON.parse(JSON.stringify(value, (k, v) => (k && SENSITIVE.test(k) ? '[REDACTED]' : v)));
 }
+let sink = null;
+const setAuditSink = (s) => { sink = s; };
+exports.setAuditSink = setAuditSink;
 let AuditService = class AuditService {
     prisma;
     constructor(prisma) {
@@ -42,6 +45,8 @@ let AuditService = class AuditService {
                 reason: entry.reason,
             },
         });
+        if (sink)
+            await sink(db, actor, { ...entry, before: redact(entry.before), after: redact(entry.after) }).catch((e) => console.error(`logging failed for ${entry.action}: ${e instanceof Error ? e.message : e}`));
     }
 };
 exports.AuditService = AuditService;

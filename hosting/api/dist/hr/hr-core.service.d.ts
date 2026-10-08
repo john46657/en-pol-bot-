@@ -67,6 +67,18 @@ export declare class HrCoreService {
             visible: boolean;
             sensitive: boolean;
         }>>;
+        warnings: {
+            dm: boolean;
+            channelId: string | null;
+            template: string;
+            limit: number;
+            atLimit: {
+                status: string | null;
+                notifyRoleIds: string[];
+                pingDiscordRoleIds: string[];
+                removeDiscordRoleIds: string[];
+            };
+        };
         statuses: {
             key: string;
             label: string;

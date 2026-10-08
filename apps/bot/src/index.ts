@@ -21,6 +21,8 @@ import { startOutboxLoop } from './outbox';
 import type { DiscordConfig, Platform } from './platform';
 import { robloxCheck, robloxLookup } from './roblox';
 import { createWelcome, type MemberEvent } from './welcome';
+import { createGhostPing } from './ghost-ping';
+import { captureGuild, restoreGuild } from './backup';
 import { createVoiceSupport } from './voice-support';
 import { createVerify, type VerifyActions } from './verify';
 import { dutyReminderDm } from './format';
@@ -163,6 +165,14 @@ const welcome = createWelcome(api, {
     const guild = await client.guilds.fetch(guildId);
     const ids = roleIds.filter((r) => guild.roles.cache.has(r));
     if (ids.length) await (await guild.members.fetch(userId)).roles.add(ids, 'EN Polizei: Willkommen');
+  },
+});
+/** Ghost-Ping: gelöschte Nachricht mit @Erwähnung → Hinweis im selben Kanal (nur die Erwähnten werden benachrichtigt). */
+const ghostPing = createGhostPing(api, {
+  async post(channelId, m) {
+    const ch = await client.channels.fetch(channelId);
+    if (!ch?.isSendable()) throw new Error(`channel ${channelId} is not a text channel the bot can post in`);
+    await ch.send({ content: m.content, allowedMentions: { parse: [], users: m.mentionUserIds } });
   },
 });
 /** Roblox-Verifizierung: Rollen und Nickname setzen (nur was nötig ist); liefert verständliche Hinweise, was nicht ging. */
@@ -417,6 +427,12 @@ function wire(c: Client) {
   // Staff-Listen: Rollen oder Name geändert → neu zeichnen (gesammelt)
   c.on('guildMemberUpdate', (o, n) => { if (o.roles.cache.size !== n.roles.cache.size || o.displayName !== n.displayName || ![...o.roles.cache.keys()].every((r) => n.roles.cache.has(r))) staffLists.changed(); });
 
+  // Ghost-Ping: nur Nachrichten aus dem Cache (Erwähnungen bekannt); Teil-Nachrichten ohne Daten werden übergangen
+  c.on('messageDelete', (m) => {
+    if (m.partial || !m.inGuild() || !m.author) return;
+    void ghostPing.deleted({ guildId: m.guildId, channelId: m.channelId, authorId: m.author.id, authorBot: m.author.bot, content: m.content ?? '', createdAt: m.createdAt, mentions: [...m.mentions.users.values()].map((u) => ({ id: u.id, bot: u.bot })) });
+  });
+
   // Direktnachrichten: Antworten auf Bewerbungsfragen (Bewerbung bei EN Polizei und Qualifikationen)
   c.on('messageCreate', (m: Message) => {
     if (m.inGuild()) { void tickets.onMessage(m); return; } // Verlauf der Support-Tickets
@@ -579,6 +595,31 @@ function wireReady(client0: Client) {
           if (m && m.id !== g.ownerId && (await m.setNickname(nick, 'EN Polizei: Dienstnummer').then(() => true, () => false))) done++;
         }
         if (!done) console.warn(`nickname for ${userId} could not be set (missing permission, owner or not on a server)`);
+        return true;
+      }
+      if (type === 'bot.backup.create') {
+        // Discord-Server-Backup: Server auslesen und ans System schicken (Fehler landen am Backup, nicht in der Warteschlange)
+        const id = String(p.backupId ?? '');
+        try { await api.service('POST', `/bot/discord-backups/${id}/data`, { data: await captureGuild(await client.guilds.fetch(String(p.guildId ?? ''))) }); }
+        catch (e) { await api.service('POST', `/bot/discord-backups/${id}/data`, { error: e instanceof Error ? e.message : String(e) }); }
+        return true;
+      }
+      if (type === 'bot.backup.restore') {
+        const id = String(p.backupId ?? '');
+        const b = await api.service<{ data: Parameters<typeof restoreGuild>[1] | null }>('GET', `/bot/discord-backups/${id}`);
+        if (!b.data) throw new Error('backup has no data');
+        const parts = (Array.isArray(p.parts) ? p.parts : []).filter((x): x is 'roles' | 'channels' | 'settings' => x === 'roles' || x === 'channels' || x === 'settings');
+        const result = await restoreGuild(await client.guilds.fetch(String(p.guildId ?? '')), b.data, parts);
+        await api.service('POST', `/bot/discord-backups/${id}/result`, result);
+        return true;
+      }
+      if (type === 'bot.welcome-test') {
+        // Test aus dem Dashboard (Willkommen & Abschied): mit dem Profil der Person, die getestet hat
+        const kind = p.kind === 'goodbye' || p.kind === 'dm' ? p.kind : 'welcome';
+        const guild = await client.guilds.fetch(String(p.guildId ?? ''));
+        const e = memberEvent(await guild.members.fetch(String(p.discordId ?? '')));
+        if (!e) throw new Error('member not found');
+        await welcome.test(kind, e);
         return true;
       }
       if (type === 'bot.delete') { await deleteMessage(client, String(p.channelId ?? ''), String(p.messageId ?? '')); return true; }

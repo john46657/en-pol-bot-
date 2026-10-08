@@ -86,7 +86,8 @@ let DutyReportsService = class DutyReportsService {
         if (!r || (r.authorId !== actor.userId && !(await this.seeAll(actor.userId))))
             throw new errors_1.AppError('NOT_FOUND', 'Bericht nicht gefunden.');
         const [t, posted] = await Promise.all([this.templates.get(r.templateId), this.discord.posted(`drep-${r.id}`)]);
-        return { ...r, template: t ?? null, posted, canEdit: await this.canEdit(actor.userId, r, t) };
+        const reviewerName = r.reviewedById ? (await this.prisma.user.findUnique({ where: { id: r.reviewedById }, select: { displayName: true } }))?.displayName ?? null : null;
+        return { ...r, template: t ?? null, posted, reviewerName, canEdit: await this.canEdit(actor.userId, r, t) };
     }
     async canEdit(userId, r, t) {
         if (await this.perms.has(userId, 'dutyreports.edit_all'))
@@ -94,10 +95,40 @@ let DutyReportsService = class DutyReportsService {
         return r.authorId === userId && (t?.authorCanEdit ?? true);
     }
     /** Neuer Bericht – bei „ein Bericht je Zeitraum“ wird der vorhandene des Zeitraums bearbeitet. */
+    /** Dienstzeit des Zeitraums aus den Dienst-Sitzungen (Pausen abgezogen) – für Felder wie „Dienstzeit“. */
+    async dutyTime(userId, t, date) {
+        if (t.period === 'FREE')
+            return null;
+        const from = (0, shared_1.periodStart)(t.period, date ? new Date(date) : new Date()), to = (0, shared_1.periodEnd)(t.period, from);
+        const [sessions, tz] = await Promise.all([
+            this.prisma.dutySession.findMany({ where: { userId, startedAt: { lt: to }, OR: [{ endedAt: null }, { endedAt: { gt: from } }] }, select: { status: true, startedAt: true, endedAt: true } }),
+            this.prisma.systemSetting.findUnique({ where: { key: 'org.timezone' } }).then((r) => (typeof r?.value === 'string' && r.value ? r.value : 'Europe/Berlin')),
+        ]);
+        try {
+            return (0, shared_1.dutyTimeText)(t.period, sessions, from, to, tz);
+        }
+        catch {
+            return (0, shared_1.dutyTimeText)(t.period, sessions, from, to, 'Europe/Berlin');
+        }
+    }
+    /** Vorbelegung fürs Formular (Dashboard und Discord): Dienstzeit-Felder automatisch. */
+    async prefill(actor, templateId, date) {
+        const t = await this.template(templateId);
+        const fields = t.fields.filter(shared_1.isDutyTimeField);
+        const text = fields.length ? await this.dutyTime(actor.userId, t, date) : null;
+        return { values: text ? Object.fromEntries(fields.map((f) => [f.id, text.slice(0, f.maxLength)])) : {} };
+    }
     async create(actor, d) {
         const t = await this.template(d.templateId);
         if (!t.active)
             throw new errors_1.AppError('CONFLICT', 'Diese Vorlage ist deaktiviert.');
+        // leere Dienstzeit-Felder automatisch aus den Dienst-Sitzungen füllen
+        const empty = t.fields.filter((f) => (0, shared_1.isDutyTimeField)(f) && !String(d.values[f.id] ?? '').trim());
+        if (empty.length) {
+            const text = await this.dutyTime(actor.userId, t, d.periodStart);
+            if (text)
+                d = { ...d, values: { ...d.values, ...Object.fromEntries(empty.map((f) => [f.id, text])) } };
+        }
         const clean = (0, shared_1.cleanReportValues)(t, d.values);
         if ('error' in clean)
             throw new errors_1.AppError('VALIDATION_FAILED', clean.error);
@@ -125,7 +156,9 @@ let DutyReportsService = class DutyReportsService {
         if ('error' in clean)
             throw new errors_1.AppError('VALIDATION_FAILED', clean.error);
         const after = await this.prisma.$transaction(async (tx) => {
-            const upd = await tx.dutyReport.updateMany({ where: { id, ...(d.version ? { version: d.version } : {}) }, data: { values: clean.values, version: { increment: 1 }, editedById: actor.userId } });
+            // nachgebessert vom Verfasser → wieder „eingereicht“, damit die Leitung erneut prüft
+            const back = r.status === 'RETURNED' && r.authorId === actor.userId;
+            const upd = await tx.dutyReport.updateMany({ where: { id, ...(d.version ? { version: d.version } : {}) }, data: { values: clean.values, version: { increment: 1 }, editedById: actor.userId, ...(back ? { status: 'SUBMITTED' } : {}) } });
             if (!upd.count)
                 throw new errors_1.AppError('CONFLICT', 'Der Bericht wurde inzwischen geändert. Bitte neu laden.');
             await this.audit.record(actor, { action: 'dutyreport.edit', module: 'dutyreports', entityType: 'DutyReport', entityId: id, before: { values: r.values }, after: { values: clean.values } }, tx);
@@ -134,16 +167,29 @@ let DutyReportsService = class DutyReportsService {
         await this.publish(id, false);
         return after;
     }
-    async review(actor, id) {
+    /**
+     * Leitung bearbeitet den Bericht: „Geprüft“ (Anmerkung optional), „Zur Nachbesserung“ (Anmerkung Pflicht) oder zurück auf „eingereicht“.
+     * Ohne `decision`: zwischen geprüft und eingereicht umschalten. Der Verfasser bekommt eine Benachrichtigung (und bei Nachbesserung eine DM).
+     */
+    async review(actor, id, d = {}) {
         const r = await this.prisma.dutyReport.findUnique({ where: { id } });
         if (!r)
             throw new errors_1.AppError('NOT_FOUND', 'Bericht nicht gefunden.');
         if (r.authorId === actor.userId)
             throw new errors_1.AppError('CONFLICT', 'Eigene Berichte kannst du nicht prüfen.');
-        const after = await this.prisma.dutyReport.update({ where: { id }, data: { status: r.status === 'REVIEWED' ? 'SUBMITTED' : 'REVIEWED', reviewedById: actor.userId, reviewedAt: new Date() } });
-        await this.audit.record(actor, { action: after.status === 'REVIEWED' ? 'dutyreport.review' : 'dutyreport.unreview', module: 'dutyreports', entityType: 'DutyReport', entityId: id });
-        if (after.status === 'REVIEWED')
-            await this.prisma.notification.create({ data: { userId: r.authorId, type: 'REPORT_REVIEW', title: `${r.templateName} ${r.number} wurde geprüft`, entityType: 'DutyReport', entityId: id } });
+        const status = d.decision ?? (r.status === 'REVIEWED' ? 'SUBMITTED' : 'REVIEWED');
+        const note = d.note?.trim() || null;
+        if (status === 'RETURNED' && !note)
+            throw new errors_1.AppError('VALIDATION_FAILED', 'Bitte schreib dazu, was nachgebessert werden soll.');
+        const after = await this.prisma.dutyReport.update({ where: { id }, data: { status, reviewedById: status === 'SUBMITTED' ? null : actor.userId, reviewedAt: status === 'SUBMITTED' ? null : new Date(), reviewNote: status === 'SUBMITTED' ? null : note } });
+        await this.audit.record(actor, { action: status === 'REVIEWED' ? 'dutyreport.review' : status === 'RETURNED' ? 'dutyreport.return' : 'dutyreport.unreview', module: 'dutyreports', entityType: 'DutyReport', entityId: id, ...(note ? { reason: note } : {}) });
+        if (status !== 'SUBMITTED') {
+            const title = status === 'REVIEWED' ? `${r.templateName} ${r.number} wurde geprüft ✅` : `${r.templateName} ${r.number}: bitte nachbessern ↩️`;
+            await this.prisma.notification.create({ data: { userId: r.authorId, type: 'REPORT_REVIEW', title, ...(note ? { body: note.slice(0, 500) } : {}), entityType: 'DutyReport', entityId: id } });
+            const link = status === 'RETURNED' ? await this.prisma.discordLink.findUnique({ where: { userId: r.authorId } }) : null;
+            if (link)
+                await this.prisma.discordOutbox.create({ data: { type: 'bot.dm', channelKey: 'duty', payload: { discordId: link.discordId, message: { embeds: [{ title: `↩️ ${r.templateName} ${r.number} – bitte nachbessern`, description: `${note}\n\nÜber „Bearbeiten“ am Bericht (Discord oder Dashboard) kannst du ihn anpassen.`.slice(0, 4000), color: 0xf59e0b }] } } } });
+        }
         await this.publish(id, false);
         return after;
     }
@@ -167,7 +213,8 @@ let DutyReportsService = class DutyReportsService {
         if (!isNew && !posted)
             return; // nie gepostet → bei Änderungen nicht nachträglich posten
         const link = await this.prisma.discordLink.findUnique({ where: { userId: r.authorId } });
-        const msg = (0, shared_1.reportMessage)(t, { number: r.number, period: t.period, periodStart: r.periodStart, values: r.values, authorName: r.author.displayName, authorDiscordId: link?.discordId, status: r.status, updatedAt: r.updatedAt, edited: r.version > 1 }, r.id);
+        const reviewer = r.reviewedById ? await this.prisma.discordLink.findUnique({ where: { userId: r.reviewedById } }).then(async (l) => (l ? `<@${l.discordId}>` : (await this.prisma.user.findUnique({ where: { id: r.reviewedById }, select: { displayName: true } }))?.displayName ?? null)) : null;
+        const msg = (0, shared_1.reportMessage)(t, { number: r.number, period: t.period, periodStart: r.periodStart, values: r.values, authorName: r.author.displayName, authorDiscordId: link?.discordId, status: r.status, updatedAt: r.updatedAt, edited: r.version > 1, reviewerName: reviewer, reviewNote: r.reviewNote }, r.id);
         const ping = isNew && t.pingRoleIds.length ? { content: t.pingRoleIds.map((x) => `<@&${x}>`).join(' '), mentionRoles: t.pingRoleIds } : {};
         await this.discord.postMessage(`drep-${id}`, posted?.channelId ?? t.channelId, { ...msg, ...ping });
     }

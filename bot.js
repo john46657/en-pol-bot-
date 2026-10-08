@@ -3159,12 +3159,12 @@ var require_constants2 = __commonJS({
       ERROR2[ERROR2["PAUSED_H2_UPGRADE"] = 23] = "PAUSED_H2_UPGRADE";
       ERROR2[ERROR2["USER"] = 24] = "USER";
     })(ERROR = exports2.ERROR || (exports2.ERROR = {}));
-    var TYPE;
-    (function(TYPE2) {
-      TYPE2[TYPE2["BOTH"] = 0] = "BOTH";
-      TYPE2[TYPE2["REQUEST"] = 1] = "REQUEST";
-      TYPE2[TYPE2["RESPONSE"] = 2] = "RESPONSE";
-    })(TYPE = exports2.TYPE || (exports2.TYPE = {}));
+    var TYPE2;
+    (function(TYPE3) {
+      TYPE3[TYPE3["BOTH"] = 0] = "BOTH";
+      TYPE3[TYPE3["REQUEST"] = 1] = "REQUEST";
+      TYPE3[TYPE3["RESPONSE"] = 2] = "RESPONSE";
+    })(TYPE2 = exports2.TYPE || (exports2.TYPE = {}));
     var FLAGS;
     (function(FLAGS2) {
       FLAGS2[FLAGS2["CONNECTION_KEEP_ALIVE"] = 1] = "CONNECTION_KEEP_ALIVE";
@@ -20273,36 +20273,36 @@ var require_channel = __commonJS({
       ForumLayoutType2[ForumLayoutType2["ListView"] = 1] = "ListView";
       ForumLayoutType2[ForumLayoutType2["GalleryView"] = 2] = "GalleryView";
     })(ForumLayoutType || (exports2.ForumLayoutType = ForumLayoutType = {}));
-    var ChannelType5;
-    (function(ChannelType6) {
-      ChannelType6[ChannelType6["GuildText"] = 0] = "GuildText";
-      ChannelType6[ChannelType6["DM"] = 1] = "DM";
-      ChannelType6[ChannelType6["GuildVoice"] = 2] = "GuildVoice";
-      ChannelType6[ChannelType6["GroupDM"] = 3] = "GroupDM";
-      ChannelType6[ChannelType6["GuildCategory"] = 4] = "GuildCategory";
-      ChannelType6[ChannelType6["GuildAnnouncement"] = 5] = "GuildAnnouncement";
-      ChannelType6[ChannelType6["AnnouncementThread"] = 10] = "AnnouncementThread";
-      ChannelType6[ChannelType6["PublicThread"] = 11] = "PublicThread";
-      ChannelType6[ChannelType6["PrivateThread"] = 12] = "PrivateThread";
-      ChannelType6[ChannelType6["GuildStageVoice"] = 13] = "GuildStageVoice";
-      ChannelType6[ChannelType6["GuildDirectory"] = 14] = "GuildDirectory";
-      ChannelType6[ChannelType6["GuildForum"] = 15] = "GuildForum";
-      ChannelType6[ChannelType6["GuildMedia"] = 16] = "GuildMedia";
-      ChannelType6[ChannelType6["GuildNews"] = 5] = "GuildNews";
-      ChannelType6[ChannelType6["GuildNewsThread"] = 10] = "GuildNewsThread";
-      ChannelType6[ChannelType6["GuildPublicThread"] = 11] = "GuildPublicThread";
-      ChannelType6[ChannelType6["GuildPrivateThread"] = 12] = "GuildPrivateThread";
-    })(ChannelType5 || (exports2.ChannelType = ChannelType5 = {}));
+    var ChannelType6;
+    (function(ChannelType7) {
+      ChannelType7[ChannelType7["GuildText"] = 0] = "GuildText";
+      ChannelType7[ChannelType7["DM"] = 1] = "DM";
+      ChannelType7[ChannelType7["GuildVoice"] = 2] = "GuildVoice";
+      ChannelType7[ChannelType7["GroupDM"] = 3] = "GroupDM";
+      ChannelType7[ChannelType7["GuildCategory"] = 4] = "GuildCategory";
+      ChannelType7[ChannelType7["GuildAnnouncement"] = 5] = "GuildAnnouncement";
+      ChannelType7[ChannelType7["AnnouncementThread"] = 10] = "AnnouncementThread";
+      ChannelType7[ChannelType7["PublicThread"] = 11] = "PublicThread";
+      ChannelType7[ChannelType7["PrivateThread"] = 12] = "PrivateThread";
+      ChannelType7[ChannelType7["GuildStageVoice"] = 13] = "GuildStageVoice";
+      ChannelType7[ChannelType7["GuildDirectory"] = 14] = "GuildDirectory";
+      ChannelType7[ChannelType7["GuildForum"] = 15] = "GuildForum";
+      ChannelType7[ChannelType7["GuildMedia"] = 16] = "GuildMedia";
+      ChannelType7[ChannelType7["GuildNews"] = 5] = "GuildNews";
+      ChannelType7[ChannelType7["GuildNewsThread"] = 10] = "GuildNewsThread";
+      ChannelType7[ChannelType7["GuildPublicThread"] = 11] = "GuildPublicThread";
+      ChannelType7[ChannelType7["GuildPrivateThread"] = 12] = "GuildPrivateThread";
+    })(ChannelType6 || (exports2.ChannelType = ChannelType6 = {}));
     var VideoQualityMode;
     (function(VideoQualityMode2) {
       VideoQualityMode2[VideoQualityMode2["Auto"] = 1] = "Auto";
       VideoQualityMode2[VideoQualityMode2["Full"] = 2] = "Full";
     })(VideoQualityMode || (exports2.VideoQualityMode = VideoQualityMode = {}));
-    var OverwriteType3;
-    (function(OverwriteType4) {
-      OverwriteType4[OverwriteType4["Role"] = 0] = "Role";
-      OverwriteType4[OverwriteType4["Member"] = 1] = "Member";
-    })(OverwriteType3 || (exports2.OverwriteType = OverwriteType3 = {}));
+    var OverwriteType4;
+    (function(OverwriteType5) {
+      OverwriteType5[OverwriteType5["Role"] = 0] = "Role";
+      OverwriteType5[OverwriteType5["Member"] = 1] = "Member";
+    })(OverwriteType4 || (exports2.OverwriteType = OverwriteType4 = {}));
     var ThreadAutoArchiveDuration;
     (function(ThreadAutoArchiveDuration2) {
       ThreadAutoArchiveDuration2[ThreadAutoArchiveDuration2["OneHour"] = 60] = "OneHour";
@@ -31880,7 +31880,7 @@ var require_ChannelFlagsBitField = __commonJS({
 var require_Constants = __commonJS({
   "node_modules/.pnpm/discord.js@14.27.0/node_modules/discord.js/src/util/Constants.js"(exports2) {
     "use strict";
-    var { ChannelType: ChannelType5, MessageType, ComponentType: ComponentType2, ImageFormat, StickerFormatType } = require_v106();
+    var { ChannelType: ChannelType6, MessageType, ComponentType: ComponentType2, ImageFormat, StickerFormatType } = require_v106();
     exports2.MaxBulkDeletableMessageAge = 12096e5;
     exports2.SweeperKeys = [
       "autoModerationRules",
@@ -31907,18 +31907,18 @@ var require_Constants = __commonJS({
       MessageType.ContextMenuCommand
     ];
     exports2.GuildTextBasedChannelTypes = [
-      ChannelType5.GuildText,
-      ChannelType5.GuildAnnouncement,
-      ChannelType5.AnnouncementThread,
-      ChannelType5.PublicThread,
-      ChannelType5.PrivateThread,
-      ChannelType5.GuildVoice,
-      ChannelType5.GuildStageVoice
+      ChannelType6.GuildText,
+      ChannelType6.GuildAnnouncement,
+      ChannelType6.AnnouncementThread,
+      ChannelType6.PublicThread,
+      ChannelType6.PrivateThread,
+      ChannelType6.GuildVoice,
+      ChannelType6.GuildStageVoice
     ];
-    exports2.TextBasedChannelTypes = [...exports2.GuildTextBasedChannelTypes, ChannelType5.DM, ChannelType5.GroupDM];
-    exports2.SendableChannels = [...exports2.GuildTextBasedChannelTypes, ChannelType5.DM];
-    exports2.ThreadChannelTypes = [ChannelType5.AnnouncementThread, ChannelType5.PublicThread, ChannelType5.PrivateThread];
-    exports2.VoiceBasedChannelTypes = [ChannelType5.GuildVoice, ChannelType5.GuildStageVoice];
+    exports2.TextBasedChannelTypes = [...exports2.GuildTextBasedChannelTypes, ChannelType6.DM, ChannelType6.GroupDM];
+    exports2.SendableChannels = [...exports2.GuildTextBasedChannelTypes, ChannelType6.DM];
+    exports2.ThreadChannelTypes = [ChannelType6.AnnouncementThread, ChannelType6.PublicThread, ChannelType6.PrivateThread];
+    exports2.VoiceBasedChannelTypes = [ChannelType6.GuildVoice, ChannelType6.GuildStageVoice];
     exports2.SelectMenuTypes = [
       ComponentType2.StringSelect,
       ComponentType2.UserSelect,
@@ -31977,7 +31977,7 @@ var require_BaseChannel = __commonJS({
     "use strict";
     var { channelLink, channelMention } = require_dist7();
     var { DiscordSnowflake } = require_cjs();
-    var { ChannelType: ChannelType5, Routes: Routes2 } = require_v106();
+    var { ChannelType: ChannelType6, Routes: Routes2 } = require_v106();
     var Base = require_Base();
     var ChannelFlagsBitField = require_ChannelFlagsBitField();
     var { ThreadChannelTypes } = require_Constants();
@@ -32078,7 +32078,7 @@ var require_BaseChannel = __commonJS({
        * @returns {boolean}
        */
       isDMBased() {
-        return [ChannelType5.DM, ChannelType5.GroupDM].includes(this.type);
+        return [ChannelType6.DM, ChannelType6.GroupDM].includes(this.type);
       }
       /**
        * Indicates whether this channel is {@link BaseGuildVoiceChannel voice-based}.
@@ -32233,7 +32233,7 @@ var require_PermissionsBitField = __commonJS({
     "use strict";
     var { PermissionFlagsBits: PermissionFlagsBits3 } = require_v106();
     var BitField = require_BitField();
-    var PermissionsBitField2 = class extends BitField {
+    var PermissionsBitField3 = class extends BitField {
       /**
        * Numeric permission flags.
        * @type {PermissionFlagsBits}
@@ -32313,7 +32313,7 @@ var require_PermissionsBitField = __commonJS({
         return super.toArray(false);
       }
     };
-    module2.exports = PermissionsBitField2;
+    module2.exports = PermissionsBitField3;
   }
 });
 
@@ -32344,7 +32344,7 @@ var require_Role = __commonJS({
     var { PermissionFlagsBits: PermissionFlagsBits3 } = require_v106();
     var Base = require_Base();
     var { DiscordjsError: DiscordjsError2, ErrorCodes: ErrorCodes2 } = require_errors2();
-    var PermissionsBitField2 = require_PermissionsBitField();
+    var PermissionsBitField3 = require_PermissionsBitField();
     var RoleFlagsBitField = require_RoleFlagsBitField();
     var Role = class extends Base {
       constructor(client2, data, guild) {
@@ -32376,7 +32376,7 @@ var require_Role = __commonJS({
           this.rawPosition = data.position;
         }
         if ("permissions" in data) {
-          this.permissions = new PermissionsBitField2(BigInt(data.permissions)).freeze();
+          this.permissions = new PermissionsBitField3(BigInt(data.permissions)).freeze();
         }
         if ("managed" in data) {
           this.managed = data.managed;
@@ -32720,11 +32720,11 @@ var require_Role = __commonJS({
 var require_PermissionOverwrites = __commonJS({
   "node_modules/.pnpm/discord.js@14.27.0/node_modules/discord.js/src/structures/PermissionOverwrites.js"(exports2, module2) {
     "use strict";
-    var { OverwriteType: OverwriteType3 } = require_v106();
+    var { OverwriteType: OverwriteType4 } = require_v106();
     var Base = require_Base();
     var { Role } = require_Role();
     var { DiscordjsTypeError: DiscordjsTypeError2, ErrorCodes: ErrorCodes2 } = require_errors2();
-    var PermissionsBitField2 = require_PermissionsBitField();
+    var PermissionsBitField3 = require_PermissionsBitField();
     var PermissionOverwrites = class extends Base {
       constructor(client2, data, channel) {
         super(client2);
@@ -32737,10 +32737,10 @@ var require_PermissionOverwrites = __commonJS({
           this.type = data.type;
         }
         if ("deny" in data) {
-          this.deny = new PermissionsBitField2(BigInt(data.deny)).freeze();
+          this.deny = new PermissionsBitField3(BigInt(data.deny)).freeze();
         }
         if ("allow" in data) {
-          this.allow = new PermissionsBitField2(BigInt(data.allow)).freeze();
+          this.allow = new PermissionsBitField3(BigInt(data.allow)).freeze();
         }
       }
       /**
@@ -32800,8 +32800,8 @@ var require_PermissionOverwrites = __commonJS({
        * @returns {ResolvedOverwriteOptions}
        */
       static resolveOverwriteOptions(options2, { allow, deny } = {}) {
-        allow = new PermissionsBitField2(allow);
-        deny = new PermissionsBitField2(deny);
+        allow = new PermissionsBitField3(allow);
+        deny = new PermissionsBitField3(deny);
         for (const [perm, value] of Object.entries(options2)) {
           if (value === true) {
             allow.add(perm);
@@ -32846,24 +32846,24 @@ var require_PermissionOverwrites = __commonJS({
        */
       static resolve(overwrite, guild) {
         if (overwrite instanceof this) return overwrite.toJSON();
-        if (typeof overwrite.id === "string" && overwrite.type in OverwriteType3) {
+        if (typeof overwrite.id === "string" && overwrite.type in OverwriteType4) {
           return {
             id: overwrite.id,
             type: overwrite.type,
-            allow: PermissionsBitField2.resolve(overwrite.allow ?? PermissionsBitField2.DefaultBit).toString(),
-            deny: PermissionsBitField2.resolve(overwrite.deny ?? PermissionsBitField2.DefaultBit).toString()
+            allow: PermissionsBitField3.resolve(overwrite.allow ?? PermissionsBitField3.DefaultBit).toString(),
+            deny: PermissionsBitField3.resolve(overwrite.deny ?? PermissionsBitField3.DefaultBit).toString()
           };
         }
         const userOrRole = guild.roles.resolve(overwrite.id) ?? guild.client.users.resolve(overwrite.id);
         if (!userOrRole) {
           throw new DiscordjsTypeError2(ErrorCodes2.InvalidType, "parameter", "cached User or Role");
         }
-        const type = userOrRole instanceof Role ? OverwriteType3.Role : OverwriteType3.Member;
+        const type = userOrRole instanceof Role ? OverwriteType4.Role : OverwriteType4.Member;
         return {
           id: userOrRole.id,
           type,
-          allow: PermissionsBitField2.resolve(overwrite.allow ?? PermissionsBitField2.DefaultBit).toString(),
-          deny: PermissionsBitField2.resolve(overwrite.deny ?? PermissionsBitField2.DefaultBit).toString()
+          allow: PermissionsBitField3.resolve(overwrite.allow ?? PermissionsBitField3.DefaultBit).toString(),
+          deny: PermissionsBitField3.resolve(overwrite.deny ?? PermissionsBitField3.DefaultBit).toString()
         };
       }
     };
@@ -32877,7 +32877,7 @@ var require_PermissionOverwriteManager = __commonJS({
     "use strict";
     var process2 = require("node:process");
     var { Collection: Collection2 } = require_dist6();
-    var { OverwriteType: OverwriteType3, Routes: Routes2 } = require_v106();
+    var { OverwriteType: OverwriteType4, Routes: Routes2 } = require_v106();
     var CachedManager = require_CachedManager();
     var { DiscordjsTypeError: DiscordjsTypeError2, ErrorCodes: ErrorCodes2 } = require_errors2();
     var PermissionOverwrites = require_PermissionOverwrites();
@@ -32955,7 +32955,7 @@ var require_PermissionOverwriteManager = __commonJS({
         if (typeof type !== "number") {
           userOrRole = this.channel.guild.roles.resolve(userOrRole) ?? this.client.users.resolve(userOrRole);
           if (!userOrRole) throw new DiscordjsTypeError2(ErrorCodes2.InvalidType, "parameter", "User nor a Role");
-          type = userOrRole instanceof Role ? OverwriteType3.Role : OverwriteType3.Member;
+          type = userOrRole instanceof Role ? OverwriteType4.Role : OverwriteType4.Member;
         }
         const { allow, deny } = PermissionOverwrites.resolveOverwriteOptions(options2, existing);
         await this.client.rest.put(Routes2.channelPermission(this.channel.id, userOrRoleId), {
@@ -33023,12 +33023,12 @@ var require_GuildChannel = __commonJS({
   "node_modules/.pnpm/discord.js@14.27.0/node_modules/discord.js/src/structures/GuildChannel.js"(exports2, module2) {
     "use strict";
     var { Snowflake } = require_cjs();
-    var { PermissionFlagsBits: PermissionFlagsBits3, ChannelType: ChannelType5 } = require_v106();
+    var { PermissionFlagsBits: PermissionFlagsBits3, ChannelType: ChannelType6 } = require_v106();
     var { BaseChannel } = require_BaseChannel();
     var { DiscordjsError: DiscordjsError2, ErrorCodes: ErrorCodes2 } = require_errors2();
     var PermissionOverwriteManager = require_PermissionOverwriteManager();
     var { VoiceBasedChannelTypes } = require_Constants();
-    var PermissionsBitField2 = require_PermissionsBitField();
+    var PermissionsBitField3 = require_PermissionsBitField();
     var { getSortableGroupTypes } = require_Util();
     var GuildChannel = class extends BaseChannel {
       constructor(guild, data, client2, immediatePatch = true) {
@@ -33089,7 +33089,7 @@ var require_GuildChannel = __commonJS({
         return [...overwriteIds].every((key3) => {
           const channelVal = this.permissionOverwrites.cache.get(key3);
           const parentVal = parent.permissionOverwrites.cache.get(key3);
-          if (key3 === this.guildId && (!channelVal && parentVal.deny.bitfield === PermissionsBitField2.DefaultBit && parentVal.allow.bitfield === PermissionsBitField2.DefaultBit || !parentVal && channelVal.deny.bitfield === PermissionsBitField2.DefaultBit && channelVal.allow.bitfield === PermissionsBitField2.DefaultBit)) {
+          if (key3 === this.guildId && (!channelVal && parentVal.deny.bitfield === PermissionsBitField3.DefaultBit && parentVal.allow.bitfield === PermissionsBitField3.DefaultBit || !parentVal && channelVal.deny.bitfield === PermissionsBitField3.DefaultBit && channelVal.allow.bitfield === PermissionsBitField3.DefaultBit)) {
             return true;
           }
           return channelVal !== void 0 && parentVal !== void 0 && channelVal.deny.bitfield === parentVal.deny.bitfield && channelVal.allow.bitfield === parentVal.allow.bitfield;
@@ -33101,7 +33101,7 @@ var require_GuildChannel = __commonJS({
        * @readonly
        */
       get position() {
-        const selfIsCategory = this.type === ChannelType5.GuildCategory;
+        const selfIsCategory = this.type === ChannelType6.GuildCategory;
         const types = getSortableGroupTypes(this.type);
         let count = 0;
         for (const channel of this.guild.channels.cache.values()) {
@@ -33160,15 +33160,15 @@ var require_GuildChannel = __commonJS({
        */
       memberPermissions(member, checkAdmin) {
         if (checkAdmin && member.id === this.guild.ownerId) {
-          return new PermissionsBitField2(PermissionsBitField2.All).freeze();
+          return new PermissionsBitField3(PermissionsBitField3.All).freeze();
         }
         const roles = member.roles.cache;
-        const permissions = new PermissionsBitField2(roles.map((role) => role.permissions));
+        const permissions = new PermissionsBitField3(roles.map((role) => role.permissions));
         if (checkAdmin && permissions.has(PermissionFlagsBits3.Administrator)) {
-          return new PermissionsBitField2(PermissionsBitField2.All).freeze();
+          return new PermissionsBitField3(PermissionsBitField3.All).freeze();
         }
         const overwrites = this.overwritesFor(member, true, roles);
-        return permissions.remove(overwrites.everyone?.deny ?? PermissionsBitField2.DefaultBit).add(overwrites.everyone?.allow ?? PermissionsBitField2.DefaultBit).remove(overwrites.roles.length > 0 ? overwrites.roles.map((role) => role.deny) : PermissionsBitField2.DefaultBit).add(overwrites.roles.length > 0 ? overwrites.roles.map((role) => role.allow) : PermissionsBitField2.DefaultBit).remove(overwrites.member?.deny ?? PermissionsBitField2.DefaultBit).add(overwrites.member?.allow ?? PermissionsBitField2.DefaultBit).freeze();
+        return permissions.remove(overwrites.everyone?.deny ?? PermissionsBitField3.DefaultBit).add(overwrites.everyone?.allow ?? PermissionsBitField3.DefaultBit).remove(overwrites.roles.length > 0 ? overwrites.roles.map((role) => role.deny) : PermissionsBitField3.DefaultBit).add(overwrites.roles.length > 0 ? overwrites.roles.map((role) => role.allow) : PermissionsBitField3.DefaultBit).remove(overwrites.member?.deny ?? PermissionsBitField3.DefaultBit).add(overwrites.member?.allow ?? PermissionsBitField3.DefaultBit).freeze();
       }
       /**
        * Gets the overall set of permissions for a role in this channel, taking into account channel overwrites.
@@ -33180,12 +33180,12 @@ var require_GuildChannel = __commonJS({
        */
       rolePermissions(role, checkAdmin) {
         if (checkAdmin && role.permissions.has(PermissionFlagsBits3.Administrator)) {
-          return new PermissionsBitField2(PermissionsBitField2.All).freeze();
+          return new PermissionsBitField3(PermissionsBitField3.All).freeze();
         }
-        const basePermissions = new PermissionsBitField2([role.permissions, role.guild.roles.everyone.permissions]);
+        const basePermissions = new PermissionsBitField3([role.permissions, role.guild.roles.everyone.permissions]);
         const everyoneOverwrites = this.permissionOverwrites.cache.get(this.guild.id);
         const roleOverwrites = this.permissionOverwrites.cache.get(role.id);
-        return basePermissions.remove(everyoneOverwrites?.deny ?? PermissionsBitField2.DefaultBit).add(everyoneOverwrites?.allow ?? PermissionsBitField2.DefaultBit).remove(roleOverwrites?.deny ?? PermissionsBitField2.DefaultBit).add(roleOverwrites?.allow ?? PermissionsBitField2.DefaultBit).freeze();
+        return basePermissions.remove(everyoneOverwrites?.deny ?? PermissionsBitField3.DefaultBit).add(everyoneOverwrites?.allow ?? PermissionsBitField3.DefaultBit).remove(roleOverwrites?.deny ?? PermissionsBitField3.DefaultBit).add(roleOverwrites?.allow ?? PermissionsBitField3.DefaultBit).freeze();
       }
       /**
        * Locks in the permission overwrites from the parent channel.
@@ -33421,7 +33421,7 @@ var require_Util = __commonJS({
     var { parse } = require("node:path");
     var process2 = require("node:process");
     var { Collection: Collection2 } = require_dist6();
-    var { ChannelType: ChannelType5, RouteBases, Routes: Routes2 } = require_v106();
+    var { ChannelType: ChannelType6, RouteBases, Routes: Routes2 } = require_v106();
     var { fetch: fetch2 } = require_undici();
     var Colors = require_Colors();
     var { DiscordjsError: DiscordjsError2, DiscordjsRangeError: DiscordjsRangeError2, DiscordjsTypeError: DiscordjsTypeError2, ErrorCodes: ErrorCodes2 } = require_errors2();
@@ -33490,24 +33490,24 @@ var require_Util = __commonJS({
       };
     }
     var TextSortableGroupTypes = [
-      ChannelType5.GuildText,
-      ChannelType5.GuildAnnouncement,
-      ChannelType5.GuildForum,
-      ChannelType5.GuildMedia
+      ChannelType6.GuildText,
+      ChannelType6.GuildAnnouncement,
+      ChannelType6.GuildForum,
+      ChannelType6.GuildMedia
     ];
-    var VoiceSortableGroupTypes = [ChannelType5.GuildVoice, ChannelType5.GuildStageVoice];
-    var CategorySortableGroupTypes = [ChannelType5.GuildCategory];
+    var VoiceSortableGroupTypes = [ChannelType6.GuildVoice, ChannelType6.GuildStageVoice];
+    var CategorySortableGroupTypes = [ChannelType6.GuildCategory];
     function getSortableGroupTypes(type) {
       switch (type) {
-        case ChannelType5.GuildText:
-        case ChannelType5.GuildAnnouncement:
-        case ChannelType5.GuildForum:
-        case ChannelType5.GuildMedia:
+        case ChannelType6.GuildText:
+        case ChannelType6.GuildAnnouncement:
+        case ChannelType6.GuildForum:
+        case ChannelType6.GuildMedia:
           return TextSortableGroupTypes;
-        case ChannelType5.GuildVoice:
-        case ChannelType5.GuildStageVoice:
+        case ChannelType6.GuildVoice:
+        case ChannelType6.GuildStageVoice:
           return VoiceSortableGroupTypes;
-        case ChannelType5.GuildCategory:
+        case ChannelType6.GuildCategory:
           return CategorySortableGroupTypes;
         default:
           return [type];
@@ -33582,7 +33582,7 @@ var require_Util = __commonJS({
               return user ? `@${user.displayName}` : match;
             }
             case "@&": {
-              if (channel.type === ChannelType5.DM) return match;
+              if (channel.type === ChannelType6.DM) return match;
               const role = channel.guild.roles.cache.get(id2);
               return role ? `@${role.name}` : match;
             }
@@ -36169,7 +36169,7 @@ var require_BaseInteraction = __commonJS({
     var AuthorizingIntegrationOwners = require_AuthorizingIntegrationOwners();
     var Base = require_Base();
     var { SelectMenuTypes } = require_Constants();
-    var PermissionsBitField2 = require_PermissionsBitField();
+    var PermissionsBitField3 = require_PermissionsBitField();
     var BaseInteraction = class extends Base {
       constructor(client2, data) {
         super(client2);
@@ -36182,8 +36182,8 @@ var require_BaseInteraction = __commonJS({
         this.user = this.client.users._add(data.user ?? data.member.user);
         this.member = data.member ? this.guild?.members._add(data.member) ?? data.member : null;
         this.version = data.version;
-        this.appPermissions = new PermissionsBitField2(data.app_permissions).freeze();
-        this.memberPermissions = data.member?.permissions ? new PermissionsBitField2(data.member.permissions).freeze() : null;
+        this.appPermissions = new PermissionsBitField3(data.app_permissions).freeze();
+        this.memberPermissions = data.member?.permissions ? new PermissionsBitField3(data.member.permissions).freeze() : null;
         this.locale = data.locale;
         this.guildLocale = data.guild_locale ?? null;
         this.entitlements = data.entitlements.reduce(
@@ -37009,7 +37009,7 @@ var require_ApplicationCommand = __commonJS({
     var isEqual = require_fast_deep_equal();
     var Base = require_Base();
     var ApplicationCommandPermissionsManager = require_ApplicationCommandPermissionsManager();
-    var PermissionsBitField2 = require_PermissionsBitField();
+    var PermissionsBitField3 = require_PermissionsBitField();
     var ApplicationCommand = class extends Base {
       constructor(client2, data, guild, guildId) {
         super(client2);
@@ -37055,7 +37055,7 @@ var require_ApplicationCommand = __commonJS({
           this.options ??= [];
         }
         if ("default_member_permissions" in data) {
-          this.defaultMemberPermissions = data.default_member_permissions ? new PermissionsBitField2(BigInt(data.default_member_permissions)).freeze() : null;
+          this.defaultMemberPermissions = data.default_member_permissions ? new PermissionsBitField3(BigInt(data.default_member_permissions)).freeze() : null;
         } else {
           this.defaultMemberPermissions ??= null;
         }
@@ -37276,10 +37276,10 @@ var require_ApplicationCommand = __commonJS({
         let defaultMemberPermissions = null;
         let dmPermission = command.dmPermission ?? command.dm_permission;
         if ("default_member_permissions" in command) {
-          defaultMemberPermissions = command.default_member_permissions ? new PermissionsBitField2(BigInt(command.default_member_permissions)).bitfield : null;
+          defaultMemberPermissions = command.default_member_permissions ? new PermissionsBitField3(BigInt(command.default_member_permissions)).bitfield : null;
         }
         if ("defaultMemberPermissions" in command) {
-          defaultMemberPermissions = command.defaultMemberPermissions !== null ? new PermissionsBitField2(command.defaultMemberPermissions).bitfield : null;
+          defaultMemberPermissions = command.defaultMemberPermissions !== null ? new PermissionsBitField3(command.defaultMemberPermissions).bitfield : null;
         }
         if (command.name !== this.name || "description" in command && command.description !== this.description || "version" in command && command.version !== this.version || command.type && command.type !== this.type || "nsfw" in command && command.nsfw !== this.nsfw || // Future proof for options being nullable
         // TODO: remove ?? 0 on each when nullable
@@ -37455,7 +37455,7 @@ var require_ApplicationCommandManager = __commonJS({
     var CachedManager = require_CachedManager();
     var { DiscordjsTypeError: DiscordjsTypeError2, ErrorCodes: ErrorCodes2 } = require_errors2();
     var ApplicationCommand = require_ApplicationCommand();
-    var PermissionsBitField2 = require_PermissionsBitField();
+    var PermissionsBitField3 = require_PermissionsBitField();
     var ApplicationCommandManager = class extends CachedManager {
       constructor(client2, iterable) {
         super(client2, ApplicationCommand, iterable);
@@ -37652,10 +37652,10 @@ var require_ApplicationCommandManager = __commonJS({
         if (isJSONEncodable(command)) return command.toJSON();
         let default_member_permissions;
         if ("default_member_permissions" in command) {
-          default_member_permissions = command.default_member_permissions ? new PermissionsBitField2(BigInt(command.default_member_permissions)).bitfield.toString() : command.default_member_permissions;
+          default_member_permissions = command.default_member_permissions ? new PermissionsBitField3(BigInt(command.default_member_permissions)).bitfield.toString() : command.default_member_permissions;
         }
         if ("defaultMemberPermissions" in command) {
-          default_member_permissions = command.defaultMemberPermissions !== null ? new PermissionsBitField2(command.defaultMemberPermissions).bitfield.toString() : command.defaultMemberPermissions;
+          default_member_permissions = command.defaultMemberPermissions !== null ? new PermissionsBitField3(command.defaultMemberPermissions).bitfield.toString() : command.defaultMemberPermissions;
         }
         return {
           name: command.name,
@@ -38316,7 +38316,7 @@ var require_ClientApplication = __commonJS({
     var { SubscriptionManager } = require_SubscriptionManager();
     var ApplicationFlagsBitField = require_ApplicationFlagsBitField();
     var { resolveImage } = require_DataResolver();
-    var PermissionsBitField2 = require_PermissionsBitField();
+    var PermissionsBitField3 = require_PermissionsBitField();
     var ClientApplication = class extends Application {
       constructor(client2, data) {
         super(client2, data);
@@ -38331,7 +38331,7 @@ var require_ClientApplication = __commonJS({
         if ("install_params" in data) {
           this.installParams = {
             scopes: data.install_params.scopes,
-            permissions: new PermissionsBitField2(data.install_params.permissions).freeze()
+            permissions: new PermissionsBitField3(data.install_params.permissions).freeze()
           };
         } else {
           this.installParams ??= null;
@@ -38343,7 +38343,7 @@ var require_ClientApplication = __commonJS({
               if (config2.oauth2_install_params) {
                 oauth2InstallParams = {
                   scopes: config2.oauth2_install_params.scopes,
-                  permissions: new PermissionsBitField2(config2.oauth2_install_params.permissions).freeze()
+                  permissions: new PermissionsBitField3(config2.oauth2_install_params.permissions).freeze()
                 };
               }
               const context = {
@@ -49978,7 +49978,7 @@ var require_Message = __commonJS({
     var { DiscordSnowflake } = require_cjs();
     var {
       InteractionType,
-      ChannelType: ChannelType5,
+      ChannelType: ChannelType6,
       MessageType,
       MessageFlags: MessageFlags2,
       PermissionFlagsBits: PermissionFlagsBits3,
@@ -49999,7 +49999,7 @@ var require_Message = __commonJS({
     var { createComponent, findComponentByCustomId } = require_Components();
     var { NonSystemMessageTypes, MaxBulkDeletableMessageAge, UndeletableMessageTypes } = require_Constants();
     var MessageFlagsBitField = require_MessageFlagsBitField();
-    var PermissionsBitField2 = require_PermissionsBitField();
+    var PermissionsBitField3 = require_PermissionsBitField();
     var { _transformAPIMessageInteractionMetadata } = require_Transformers();
     var { cleanContent, resolvePartialEmoji, transformResolved } = require_Util();
     var Message = class extends Base {
@@ -50504,10 +50504,10 @@ var require_Message = __commonJS({
        * @readonly
        */
       get crosspostable() {
-        const bitfield = PermissionFlagsBits3.SendMessages | (this.author.id === this.client.user.id ? PermissionsBitField2.DefaultBit : PermissionFlagsBits3.ManageMessages);
+        const bitfield = PermissionFlagsBits3.SendMessages | (this.author.id === this.client.user.id ? PermissionsBitField3.DefaultBit : PermissionFlagsBits3.ManageMessages);
         const { channel } = this;
         return Boolean(
-          channel?.type === ChannelType5.GuildAnnouncement && !this.flags.has(MessageFlags2.Crossposted) && this.reference?.type !== MessageReferenceType.Forward && this.type === MessageType.Default && !this.poll && channel.viewable && channel.permissionsFor(this.client.user)?.has(bitfield, false)
+          channel?.type === ChannelType6.GuildAnnouncement && !this.flags.has(MessageFlags2.Crossposted) && this.reference?.type !== MessageReferenceType.Forward && this.type === MessageType.Default && !this.poll && channel.viewable && channel.permissionsFor(this.client.user)?.has(bitfield, false)
         );
       }
       /**
@@ -50676,7 +50676,7 @@ var require_Message = __commonJS({
        */
       async startThread(options2 = {}) {
         if (!this.channel) throw new DiscordjsError2(ErrorCodes2.ChannelNotCached);
-        if (![ChannelType5.GuildText, ChannelType5.GuildAnnouncement].includes(this.channel.type)) {
+        if (![ChannelType6.GuildText, ChannelType6.GuildAnnouncement].includes(this.channel.type)) {
           throw new DiscordjsError2(ErrorCodes2.MessageThreadParent);
         }
         if (this.hasThread) throw new DiscordjsError2(ErrorCodes2.MessageExistingThread);
@@ -51264,7 +51264,7 @@ var require_WebhookClient = __commonJS({
 var require_VoiceState = __commonJS({
   "node_modules/.pnpm/discord.js@14.27.0/node_modules/discord.js/src/structures/VoiceState.js"(exports2, module2) {
     "use strict";
-    var { ChannelType: ChannelType5, Routes: Routes2 } = require_v106();
+    var { ChannelType: ChannelType6, Routes: Routes2 } = require_v106();
     var Base = require_Base();
     var { DiscordjsError: DiscordjsError2, DiscordjsTypeError: DiscordjsTypeError2, ErrorCodes: ErrorCodes2 } = require_errors2();
     var VoiceState = class extends Base {
@@ -51408,7 +51408,7 @@ var require_VoiceState = __commonJS({
        * @returns {Promise<VoiceState>}
        */
       async edit(options2) {
-        if (this.channel?.type !== ChannelType5.GuildStageVoice) throw new DiscordjsError2(ErrorCodes2.VoiceNotStageChannel);
+        if (this.channel?.type !== ChannelType6.GuildStageVoice) throw new DiscordjsError2(ErrorCodes2.VoiceNotStageChannel);
         const target = this.client.user.id === this.id ? "@me" : this.id;
         if (target !== "@me" && options2.requestToSpeak !== void 0) {
           throw new DiscordjsError2(ErrorCodes2.VoiceStateNotOwn);
@@ -51704,7 +51704,7 @@ var require_GuildMember = __commonJS({
     var { DiscordjsError: DiscordjsError2, ErrorCodes: ErrorCodes2 } = require_errors2();
     var GuildMemberRoleManager = require_GuildMemberRoleManager();
     var { GuildMemberFlagsBitField } = require_GuildMemberFlagsBitField();
-    var PermissionsBitField2 = require_PermissionsBitField();
+    var PermissionsBitField3 = require_PermissionsBitField();
     var { _transformCollectibles } = require_Transformers();
     var GuildMember = class extends Base {
       constructor(client2, data, guild) {
@@ -51926,8 +51926,8 @@ var require_GuildMember = __commonJS({
        * @readonly
        */
       get permissions() {
-        if (this.user.id === this.guild.ownerId) return new PermissionsBitField2(PermissionsBitField2.All).freeze();
-        return new PermissionsBitField2(this.roles.cache.map((role) => role.permissions)).freeze();
+        if (this.user.id === this.guild.ownerId) return new PermissionsBitField3(PermissionsBitField3.All).freeze();
+        return new PermissionsBitField3(this.roles.cache.map((role) => role.permissions)).freeze();
       }
       /**
        * Whether the client user is above this user in the hierarchy, according to role position and guild ownership.
@@ -53765,7 +53765,7 @@ var require_Partials = __commonJS({
 var require_Action = __commonJS({
   "node_modules/.pnpm/discord.js@14.27.0/node_modules/discord.js/src/client/actions/Action.js"(exports2, module2) {
     "use strict";
-    var { ChannelType: ChannelType5 } = require_v106();
+    var { ChannelType: ChannelType6 } = require_v106();
     var { Poll } = require_Poll();
     var { PollAnswer } = require_PollAnswer();
     var Partials2 = require_Partials();
@@ -53787,7 +53787,7 @@ var require_Action = __commonJS({
           if (!data.recipients.some((existingRecipient) => recipient.id === existingRecipient.id)) {
             payloadData.recipients = [...data.recipients, recipient];
           }
-        } else if (data.type === ChannelType5.DM || data.type === ChannelType5.GroupDM) {
+        } else if (data.type === ChannelType6.DM || data.type === ChannelType6.GroupDM) {
           const recipient = data.author ?? data.user ?? { id: data.user_id };
           payloadData.recipients = [recipient];
         }
@@ -54213,7 +54213,7 @@ var require_DMChannel = __commonJS({
   "node_modules/.pnpm/discord.js@14.27.0/node_modules/discord.js/src/structures/DMChannel.js"(exports2, module2) {
     "use strict";
     var { userMention } = require_dist7();
-    var { ChannelType: ChannelType5 } = require_v106();
+    var { ChannelType: ChannelType6 } = require_v106();
     var { BaseChannel } = require_BaseChannel();
     var TextBasedChannel = require_TextBasedChannel();
     var DMMessageManager = require_DMMessageManager();
@@ -54221,7 +54221,7 @@ var require_DMChannel = __commonJS({
     var DMChannel = class extends BaseChannel {
       constructor(client2, data) {
         super(client2, data);
-        this.type = ChannelType5.DM;
+        this.type = ChannelType6.DM;
         this.messages = new DMMessageManager(this);
       }
       _patch(data) {
@@ -54843,7 +54843,7 @@ var require_ThreadChannel = __commonJS({
     "use strict";
     var { DiscordAPIError } = require_dist5();
     var { lazy } = require_dist();
-    var { RESTJSONErrorCodes, ChannelFlags, ChannelType: ChannelType5, PermissionFlagsBits: PermissionFlagsBits3, Routes: Routes2 } = require_v106();
+    var { RESTJSONErrorCodes, ChannelFlags, ChannelType: ChannelType6, PermissionFlagsBits: PermissionFlagsBits3, Routes: Routes2 } = require_v106();
     var { BaseChannel } = require_BaseChannel();
     var getThreadOnlyChannel = lazy(() => require_ThreadOnlyChannel());
     var TextBasedChannel = require_TextBasedChannel();
@@ -54877,7 +54877,7 @@ var require_ThreadChannel = __commonJS({
         }
         if ("thread_metadata" in data) {
           this.locked = data.thread_metadata.locked ?? false;
-          this.invitable = this.type === ChannelType5.PrivateThread ? data.thread_metadata.invitable ?? false : null;
+          this.invitable = this.type === ChannelType6.PrivateThread ? data.thread_metadata.invitable ?? false : null;
           this.archived = data.thread_metadata.archived;
           this.autoArchiveDuration = data.thread_metadata.auto_archive_duration;
           this.archiveTimestamp = Date.parse(data.thread_metadata.archive_timestamp);
@@ -54891,7 +54891,7 @@ var require_ThreadChannel = __commonJS({
           this.archiveTimestamp ??= null;
           this.invitable ??= null;
         }
-        this._createdTimestamp ??= this.type === ChannelType5.PrivateThread ? super.createdTimestamp : null;
+        this._createdTimestamp ??= this.type === ChannelType6.PrivateThread ? super.createdTimestamp : null;
         if ("last_message_id" in data) {
           this.lastMessageId = data.last_message_id;
         } else {
@@ -55064,7 +55064,7 @@ var require_ThreadChannel = __commonJS({
             auto_archive_duration: options2.autoArchiveDuration,
             rate_limit_per_user: options2.rateLimitPerUser,
             locked: options2.locked,
-            invitable: this.type === ChannelType5.PrivateThread ? options2.invitable : void 0,
+            invitable: this.type === ChannelType6.PrivateThread ? options2.invitable : void 0,
             applied_tags: options2.appliedTags,
             flags: "flags" in options2 ? ChannelFlagsBitField.resolve(options2.flags) : void 0
           },
@@ -55111,7 +55111,7 @@ var require_ThreadChannel = __commonJS({
        * @returns {Promise<ThreadChannel>}
        */
       async setInvitable(invitable = true, reason) {
-        if (this.type !== ChannelType5.PrivateThread) {
+        if (this.type !== ChannelType6.PrivateThread) {
           throw new DiscordjsRangeError2(ErrorCodes2.ThreadInvitableType, this.type);
         }
         return this.edit({ invitable, reason });
@@ -55194,7 +55194,7 @@ var require_ThreadChannel = __commonJS({
        * @readonly
        */
       get editable() {
-        return this.ownerId === this.client.user.id && (this.type !== ChannelType5.PrivateThread || this.joined) || this.manageable;
+        return this.ownerId === this.client.user.id && (this.type !== ChannelType6.PrivateThread || this.joined) || this.manageable;
       }
       /**
        * Whether the thread is joinable by the client user
@@ -55203,7 +55203,7 @@ var require_ThreadChannel = __commonJS({
        */
       get joinable() {
         return !this.archived && !this.joined && this.permissionsFor(this.client.user)?.has(
-          this.type === ChannelType5.PrivateThread ? PermissionFlagsBits3.ManageThreads : PermissionFlagsBits3.ViewChannel,
+          this.type === ChannelType6.PrivateThread ? PermissionFlagsBits3.ManageThreads : PermissionFlagsBits3.ViewChannel,
           false
         );
       }
@@ -55238,7 +55238,7 @@ var require_ThreadChannel = __commonJS({
         const permissions = this.permissionsFor(this.client.user);
         if (!permissions) return false;
         if (permissions.has(PermissionFlagsBits3.Administrator, false)) return true;
-        return !(this.archived && this.locked && !this.manageable) && (this.type !== ChannelType5.PrivateThread || this.joined || this.manageable) && permissions.has(PermissionFlagsBits3.SendMessagesInThreads, false) && this.guild.members.me.communicationDisabledUntilTimestamp < Date.now();
+        return !(this.archived && this.locked && !this.manageable) && (this.type !== ChannelType6.PrivateThread || this.joined || this.manageable) && permissions.has(PermissionFlagsBits3.SendMessagesInThreads, false) && this.guild.members.me.communicationDisabledUntilTimestamp < Date.now();
       }
       /**
        * Whether the thread is unarchivable by the client user
@@ -55461,7 +55461,7 @@ var require_ThreadManager = __commonJS({
 var require_GuildTextThreadManager = __commonJS({
   "node_modules/.pnpm/discord.js@14.27.0/node_modules/discord.js/src/managers/GuildTextThreadManager.js"(exports2, module2) {
     "use strict";
-    var { ChannelType: ChannelType5, Routes: Routes2 } = require_v106();
+    var { ChannelType: ChannelType6, Routes: Routes2 } = require_v106();
     var ThreadManager = require_ThreadManager();
     var { DiscordjsTypeError: DiscordjsTypeError2, ErrorCodes: ErrorCodes2 } = require_errors2();
     var GuildTextThreadManager = class extends ThreadManager {
@@ -55517,12 +55517,12 @@ var require_GuildTextThreadManager = __commonJS({
         reason,
         rateLimitPerUser
       } = {}) {
-        let resolvedType = this.channel.type === ChannelType5.GuildAnnouncement ? ChannelType5.AnnouncementThread : ChannelType5.PublicThread;
+        let resolvedType = this.channel.type === ChannelType6.GuildAnnouncement ? ChannelType6.AnnouncementThread : ChannelType6.PublicThread;
         let startMessageId;
         if (startMessage) {
           startMessageId = this.channel.messages.resolveId(startMessage);
           if (!startMessageId) throw new DiscordjsTypeError2(ErrorCodes2.InvalidType, "startMessage", "MessageResolvable");
-        } else if (this.channel.type !== ChannelType5.GuildAnnouncement) {
+        } else if (this.channel.type !== ChannelType6.GuildAnnouncement) {
           resolvedType = type ?? resolvedType;
         }
         const data = await this.client.rest.post(Routes2.threads(this.channel.id, startMessageId), {
@@ -55530,7 +55530,7 @@ var require_GuildTextThreadManager = __commonJS({
             name,
             auto_archive_duration: autoArchiveDuration,
             type: resolvedType,
-            invitable: resolvedType === ChannelType5.PrivateThread ? invitable : void 0,
+            invitable: resolvedType === ChannelType6.PrivateThread ? invitable : void 0,
             rate_limit_per_user: rateLimitPerUser
           },
           reason
@@ -56194,7 +56194,7 @@ var require_Channels = __commonJS({
   "node_modules/.pnpm/discord.js@14.27.0/node_modules/discord.js/src/util/Channels.js"(exports2, module2) {
     "use strict";
     var { lazy } = require_dist();
-    var { ChannelType: ChannelType5 } = require_v106();
+    var { ChannelType: ChannelType6 } = require_v106();
     var getCategoryChannel = lazy(() => require_CategoryChannel());
     var getDMChannel = lazy(() => require_DMChannel());
     var getNewsChannel = lazy(() => require_NewsChannel());
@@ -56209,49 +56209,49 @@ var require_Channels = __commonJS({
     function createChannel(client2, data, guild, { allowUnknownGuild } = {}) {
       let channel;
       if (!data.guild_id && !guild) {
-        if (data.recipients && data.type !== ChannelType5.GroupDM || data.type === ChannelType5.DM) {
+        if (data.recipients && data.type !== ChannelType6.GroupDM || data.type === ChannelType6.DM) {
           channel = new (getDMChannel())(client2, data);
-        } else if (data.type === ChannelType5.GroupDM) {
+        } else if (data.type === ChannelType6.GroupDM) {
           channel = new (getPartialGroupDMChannel())(client2, data);
         }
       } else {
         guild ??= client2.guilds.cache.get(data.guild_id);
         if (guild || allowUnknownGuild) {
           switch (data.type) {
-            case ChannelType5.GuildText: {
+            case ChannelType6.GuildText: {
               channel = new (getTextChannel())(guild, data, client2);
               break;
             }
-            case ChannelType5.GuildVoice: {
+            case ChannelType6.GuildVoice: {
               channel = new (getVoiceChannel())(guild, data, client2);
               break;
             }
-            case ChannelType5.GuildCategory: {
+            case ChannelType6.GuildCategory: {
               channel = new (getCategoryChannel())(guild, data, client2);
               break;
             }
-            case ChannelType5.GuildAnnouncement: {
+            case ChannelType6.GuildAnnouncement: {
               channel = new (getNewsChannel())(guild, data, client2);
               break;
             }
-            case ChannelType5.GuildStageVoice: {
+            case ChannelType6.GuildStageVoice: {
               channel = new (getStageChannel())(guild, data, client2);
               break;
             }
-            case ChannelType5.AnnouncementThread:
-            case ChannelType5.PublicThread:
-            case ChannelType5.PrivateThread: {
+            case ChannelType6.AnnouncementThread:
+            case ChannelType6.PublicThread:
+            case ChannelType6.PrivateThread: {
               channel = new (getThreadChannel())(guild, data, client2);
               if (!allowUnknownGuild) channel.parent?.threads.cache.set(channel.id, channel);
               break;
             }
-            case ChannelType5.GuildDirectory:
+            case ChannelType6.GuildDirectory:
               channel = new (getDirectoryChannel())(guild, data, client2);
               break;
-            case ChannelType5.GuildForum:
+            case ChannelType6.GuildForum:
               channel = new (getForumChannel())(guild, data, client2);
               break;
-            case ChannelType5.GuildMedia:
+            case ChannelType6.GuildMedia:
               channel = new (getMediaChannel())(guild, data, client2);
               break;
           }
@@ -68618,7 +68618,7 @@ var require_GuildChannelManager = __commonJS({
     "use strict";
     var process2 = require("node:process");
     var { Collection: Collection2 } = require_dist6();
-    var { ChannelType: ChannelType5, Routes: Routes2 } = require_v106();
+    var { ChannelType: ChannelType6, Routes: Routes2 } = require_v106();
     var CachedManager = require_CachedManager();
     var GuildTextThreadManager = require_GuildTextThreadManager();
     var { DiscordjsError: DiscordjsError2, DiscordjsTypeError: DiscordjsTypeError2, ErrorCodes: ErrorCodes2 } = require_errors2();
@@ -68881,7 +68881,7 @@ var require_GuildChannelManager = __commonJS({
         if (options2.lockPermissions) {
           if (parentId) {
             const newParent = this.cache.get(parentId);
-            if (newParent?.type === ChannelType5.GuildCategory) {
+            if (newParent?.type === ChannelType6.GuildCategory) {
               permission_overwrites = newParent.permissionOverwrites.cache.map(
                 (overwrite) => PermissionOverwrites.resolve(overwrite, this.guild)
               );
@@ -70971,7 +70971,7 @@ var require_RoleManager = __commonJS({
     var { DiscordjsTypeError: DiscordjsTypeError2, ErrorCodes: ErrorCodes2 } = require_errors2();
     var { Role } = require_Role();
     var { resolveImage } = require_DataResolver();
-    var PermissionsBitField2 = require_PermissionsBitField();
+    var PermissionsBitField3 = require_PermissionsBitField();
     var { setPosition, resolveColor } = require_Util();
     var cacheWarningEmitted = false;
     var deprecationEmittedForCreate = false;
@@ -71140,7 +71140,7 @@ var require_RoleManager = __commonJS({
       async create(options2 = {}) {
         let { permissions, icon } = options2;
         const { name, color: color3, hoist, position, mentionable, reason, unicodeEmoji } = options2;
-        if (permissions !== void 0) permissions = new PermissionsBitField2(permissions);
+        if (permissions !== void 0) permissions = new PermissionsBitField3(permissions);
         if (icon) {
           const guildEmojiURL = this.guild.emojis.resolve(icon)?.imageURL();
           icon = guildEmojiURL ? await resolveImage(guildEmojiURL) : await resolveImage(icon);
@@ -71230,7 +71230,7 @@ var require_RoleManager = __commonJS({
           name: options2.name,
           colors,
           hoist: options2.hoist,
-          permissions: options2.permissions === void 0 ? void 0 : new PermissionsBitField2(options2.permissions),
+          permissions: options2.permissions === void 0 ? void 0 : new PermissionsBitField3(options2.permissions),
           mentionable: options2.mentionable,
           icon,
           unicode_emoji: options2.unicodeEmoji
@@ -71581,7 +71581,7 @@ var require_Guild = __commonJS({
     var { Collection: Collection2 } = require_dist6();
     var { makeURLSearchParams: makeURLSearchParams2 } = require_dist5();
     var { DiscordSnowflake } = require_cjs();
-    var { ChannelType: ChannelType5, GuildPremiumTier, Routes: Routes2, GuildFeature } = require_v106();
+    var { ChannelType: ChannelType6, GuildPremiumTier, Routes: Routes2, GuildFeature } = require_v106();
     var AnonymousGuild = require_AnonymousGuild();
     var GuildAuditLogs = require_GuildAuditLogs();
     var { GuildOnboarding } = require_GuildOnboarding();
@@ -72717,7 +72717,7 @@ var require_Guild = __commonJS({
        * @private
        */
       _sortedChannels(channel) {
-        const channelIsCategory = channel.type === ChannelType5.GuildCategory;
+        const channelIsCategory = channel.type === ChannelType6.GuildCategory;
         const types = getSortableGroupTypes(channel.type);
         return discordSort(
           this.channels.cache.filter(
@@ -72735,12 +72735,12 @@ var require_OAuth2Guild = __commonJS({
   "node_modules/.pnpm/discord.js@14.27.0/node_modules/discord.js/src/structures/OAuth2Guild.js"(exports2, module2) {
     "use strict";
     var BaseGuild = require_BaseGuild();
-    var PermissionsBitField2 = require_PermissionsBitField();
+    var PermissionsBitField3 = require_PermissionsBitField();
     var OAuth2Guild = class extends BaseGuild {
       constructor(client2, data) {
         super(client2, data);
         this.owner = data.owner;
-        this.permissions = new PermissionsBitField2(BigInt(data.permissions)).freeze();
+        this.permissions = new PermissionsBitField3(BigInt(data.permissions)).freeze();
       }
     };
     module2.exports = OAuth2Guild;
@@ -72768,7 +72768,7 @@ var require_GuildManager = __commonJS({
     var { Role } = require_Role();
     var { resolveImage } = require_DataResolver();
     var Events2 = require_Events();
-    var PermissionsBitField2 = require_PermissionsBitField();
+    var PermissionsBitField3 = require_PermissionsBitField();
     var SystemChannelFlagsBitField = require_SystemChannelFlagsBitField();
     var { _transformAPIIncidentsData } = require_Transformers();
     var { resolveColor } = require_Util();
@@ -72913,7 +72913,7 @@ var require_GuildManager = __commonJS({
             roles: roles.map(({ color: color3, permissions, ...options2 }) => ({
               ...options2,
               color: color3 && resolveColor(color3),
-              permissions: permissions === void 0 ? void 0 : PermissionsBitField2.resolve(permissions).toString()
+              permissions: permissions === void 0 ? void 0 : PermissionsBitField3.resolve(permissions).toString()
             })),
             channels: channels.map(
               ({
@@ -72932,8 +72932,8 @@ var require_GuildManager = __commonJS({
                 video_quality_mode: videoQualityMode,
                 permission_overwrites: permissionOverwrites?.map(({ allow, deny, ...permissionOverwriteOptions }) => ({
                   ...permissionOverwriteOptions,
-                  allow: allow === void 0 ? void 0 : PermissionsBitField2.resolve(allow).toString(),
-                  deny: deny === void 0 ? void 0 : PermissionsBitField2.resolve(deny).toString()
+                  allow: allow === void 0 ? void 0 : PermissionsBitField3.resolve(allow).toString(),
+                  deny: deny === void 0 ? void 0 : PermissionsBitField3.resolve(deny).toString()
                 })),
                 rate_limit_per_user: rateLimitPerUser
               })
@@ -73099,7 +73099,7 @@ var require_GuildManager = __commonJS({
 var require_UserManager = __commonJS({
   "node_modules/.pnpm/discord.js@14.27.0/node_modules/discord.js/src/managers/UserManager.js"(exports2, module2) {
     "use strict";
-    var { ChannelType: ChannelType5, Routes: Routes2 } = require_v106();
+    var { ChannelType: ChannelType6, Routes: Routes2 } = require_v106();
     var CachedManager = require_CachedManager();
     var { DiscordjsError: DiscordjsError2, ErrorCodes: ErrorCodes2 } = require_errors2();
     var { GuildMember } = require_GuildMember();
@@ -73134,7 +73134,7 @@ var require_UserManager = __commonJS({
       dmChannel(userId) {
         const expectedRecipientIds = [userId, this.client.user.id];
         return this.client.channels.cache.find(
-          (channel) => channel.type === ChannelType5.DM && channel.recipientId === userId && channel.recipientIds.every((id2) => expectedRecipientIds.includes(id2))
+          (channel) => channel.type === ChannelType6.DM && channel.recipientId === userId && channel.recipientIds.every((id2) => expectedRecipientIds.includes(id2))
         ) ?? null;
       }
       /**
@@ -75758,7 +75758,7 @@ var require_src = __commonJS({
 });
 
 // apps/bot/src/index.ts
-var import_discord5 = __toESM(require_src());
+var import_discord6 = __toESM(require_src());
 
 // apps/bot/src/discord-tickets.ts
 var import_discord = __toESM(require_src());
@@ -76021,6 +76021,7 @@ async function postOrUpdate(client2, api2, o) {
   const old = messageId && !o.forceNew ? await ch.messages.fetch(messageId).catch(() => null) : null;
   const msg = old ? await old.edit({ ...payload, content: payload.content ?? "", attachments: [] }) : await ch.send(payload);
   await react(msg, message.reactions);
+  if (!old && message.thread && "startThread" in msg) await msg.startThread({ name: message.thread.slice(0, 100), autoArchiveDuration: 10080 }).catch((e) => console.error("could not start thread:", e instanceof Error ? e.message : e));
   if (o.stateKey) await api2.service("PUT", `/bot/state/${o.stateKey}`, { value: { channelId: o.channelId, messageId: msg.id } }).catch(() => void 0);
   return { channelId: o.channelId, messageId: msg.id };
 }
@@ -80436,6 +80437,38 @@ var formPanelSchema = external_exports.object({
   /** Rollen, die man nach dem Absenden bekommt */
   grantRoleIds: external_exports.array(sf).max(10).default([])
 });
+var httpsImage = external_exports.union([external_exports.string().trim().max(500).regex(/^https:\/\/\S+$/, "Bild: https://-Link"), external_exports.literal("")]).default("");
+var infoOptionSchema = external_exports.object({
+  id: external_exports.string().regex(/^[a-z0-9_-]{1,40}$/, "K\xFCrzel: a\u2013z, 0\u20139, _ und -"),
+  /** im Auswahlmenü */
+  label: external_exports.string().trim().min(1).max(100),
+  description: external_exports.string().max(100).default(""),
+  emoji: emoji.default(""),
+  /** Antwort (nur für die Person sichtbar) */
+  title: external_exports.string().max(256).default(""),
+  text: external_exports.string().max(4e3).default(""),
+  image: httpsImage,
+  color: color.default("#3b82f6")
+});
+var infoPanelSchema = external_exports.object({
+  id: external_exports.string().uuid(),
+  name: external_exports.string().trim().min(1).max(80),
+  guildId: sf.nullable().default(null),
+  channelId: sf.nullable().default(null),
+  title: external_exports.string().max(256).default("Aufgaben als Ausbilder"),
+  text: external_exports.string().max(4e3).default("Hier findest du alles Wichtige. W\xE4hle unten einen Punkt aus."),
+  color: color.default("#1f2937"),
+  image: imageRef,
+  footer: external_exports.string().max(200).default("Klicke auf \u201ETriff eine Auswahl\u201C, um mehr zu erfahren."),
+  placeholder: external_exports.string().trim().min(1).max(150).default("Triff eine Auswahl"),
+  options: external_exports.array(infoOptionSchema).min(1).max(25).default([
+    { id: "aufgaben", label: "Aufgaben", description: "Siehe, welche Aufgaben du hast.", emoji: "\u{1F4C2}", title: "Aufgaben", text: "Beschreibe hier die Aufgaben." },
+    { id: "doku", label: "Dokumentation", description: "Siehe, wie du dokumentieren musst.", emoji: "\u{1F4E8}", title: "Dokumentation", text: "Beschreibe hier, wie dokumentiert wird." }
+  ])
+});
+function infoOptionEmbed(o) {
+  return { title: (o.title || o.label).slice(0, 256), ...o.text ? { description: o.text } : {}, color: toInt(o.color), ...o.image ? { image: o.image } : {} };
+}
 var sf2 = external_exports.string().regex(/^\d{15,25}$/, "Discord-ID (15\u201325 Ziffern)");
 var REPORT_FIELD_TYPES = ["short", "long", "number", "select"];
 var reportFieldSchema = external_exports.object({
@@ -80548,6 +80581,26 @@ var hrConfigSchema = external_exports.object({
     announceChannelId: sf3.nullable().default(null)
   }).default({}),
   notifications: external_exports.record(external_exports.enum(HR_EVENTS), notifyRuleSchema).default({}),
+  /** Verwarnungen: Meldung in Discord mit Zähler und Folgen beim Erreichen der Grenze */
+  warnings: external_exports.object({
+    /** Grenze aktiver Verwarnungen (z. B. 3 → „1/3“) */
+    limit: external_exports.number().int().min(1).max(20).default(3),
+    /** Kanal für jede neue Verwarnung (leer = nur Dashboard) */
+    channelId: sf3.nullable().default(null),
+    template: external_exports.string().max(1500).default("**Wer:** {mitglied}\n**Grund:** {grund}\n**Verwarnungen:** {anzahl}/{grenze}"),
+    /** Person per DM informieren */
+    dm: external_exports.boolean().default(true),
+    atLimit: external_exports.object({
+      /** Dashboard-Rollen, die benachrichtigt werden (z. B. Leitung) */
+      notifyRoleIds: external_exports.array(uuid).max(20).default([]),
+      /** Discord-Rollen, die in der Meldung erwähnt werden */
+      pingDiscordRoleIds: external_exports.array(sf3).max(10).default([]),
+      /** Discord-Rollen, die entzogen werden */
+      removeDiscordRoleIds: external_exports.array(sf3).max(25).default([]),
+      /** Status der Personalakte setzen (z. B. SUSPENDED) – leer = nicht ändern */
+      status: external_exports.string().max(32).nullable().default(null)
+    }).default({})
+  }).default({}),
   /** Zertifikate */
   certificate: external_exports.object({ organisation: external_exports.string().max(100).default("EN Polizei"), logo: external_exports.string().max(500).default(""), signature: external_exports.string().max(100).default("") }).default({})
 });
@@ -80646,6 +80699,22 @@ var dnSettingsSchema = external_exports.object({
   departmentRoles: external_exports.boolean().default(true),
   /** Wechsel der Nummer braucht eine zweite Person (Genehmiger) */
   changeNeedsApprover: external_exports.boolean().default(false)
+});
+var sf4 = external_exports.string().regex(/^\d{15,25}$/, "Discord-Kanal-ID");
+var loggingConfigSchema = external_exports.object({
+  enabled: external_exports.boolean().default(true),
+  /** Kanal je Kategorie */
+  categories: external_exports.record(external_exports.string().max(32), sf4).default({}),
+  /** Abweichung je Typ: eigener Kanal oder 'off' (aus); fehlt = Kanal der Kategorie */
+  types: external_exports.record(external_exports.string().max(80), external_exports.union([sf4, external_exports.literal("off"), external_exports.literal("on")])).default({})
+});
+var backupConfigSchema = external_exports.object({
+  /** Dashboard-Daten täglich automatisch sichern */
+  dataAuto: external_exports.boolean().default(true),
+  /** Discord-Server täglich automatisch sichern */
+  discordAuto: external_exports.boolean().default(false),
+  /** so viele automatische Backups behalten (je Art bzw. Server) */
+  keep: external_exports.number().int().min(1).max(60).default(14)
 });
 
 // apps/bot/src/staff-lists.ts
@@ -82400,6 +82469,22 @@ var FORM_PANEL_INTERACTION = {
     }
   }
 };
+var INFO_PANEL_INTERACTION = {
+  prefix: "ipnl",
+  async run(c) {
+    const [id2] = c.args;
+    if (!/^[0-9a-f-]{36}$/.test(id2 ?? "")) return errorReply("Ung\xFCltige Anfrage.");
+    try {
+      const p = await c.api.service("GET", `/bot/panels/info/${id2}`);
+      const o = p.options.find((x) => x.id === c.values?.[0]);
+      if (!o) return errorReply("Diesen Punkt gibt es nicht mehr.");
+      const e = infoOptionEmbed(o);
+      return { ephemeral: true, embeds: [{ title: e.title ?? o.label, ...e.description ? { description: e.description } : {}, ...e.color !== void 0 ? { color: e.color } : {}, ...e.image ? { image: e.image } : {} }] };
+    } catch (e) {
+      return mapError(e);
+    }
+  }
+};
 
 // apps/bot/src/commands/duty-reports.ts
 var drafts = /* @__PURE__ */ new Map();
@@ -82437,6 +82522,9 @@ function openModal(c, t, mode, id2, page, base) {
   if (page === 0) drafts.set(k, { values: { ...base }, at: Date.now() });
   return { modal: modal(t, mode, id2, page, drafts.get(k)?.values ?? base) };
 }
+async function prefill(c, t) {
+  return c.api.asUser(c.discordId, "GET", `/duty-reports/templates/${t.id}/prefill`).then((r) => r.values ?? {}, () => ({}));
+}
 var DUTY_REPORT_COMMANDS = [{
   name: "dienstbericht",
   description: "Tages-/Wochenbericht ausf\xFCllen, ansehen oder bearbeiten",
@@ -82465,7 +82553,7 @@ var DUTY_REPORT_COMMANDS = [{
       }
       const list = await templates(c);
       if (!list.length) return errorReply("Es gibt noch keine aktive Berichtsvorlage. Vorlagen legt man im Dashboard unter \u201ETages-/Wochenberichte\u201C an.");
-      if (list.length === 1) return openModal(c, list[0], "n", list[0].id, 0, {});
+      if (list.length === 1) return openModal(c, list[0], "n", list[0].id, 0, await prefill(c, list[0]));
       return { ephemeral: true, content: "Welchen Bericht m\xF6chtest du ausf\xFCllen?", select: { id: "drep:pick", placeholder: "Vorlage w\xE4hlen \u2026", options: list.slice(0, 25).map((t) => ({ label: t.name.slice(0, 100), value: t.id, ...t.emoji ? { emoji: t.emoji } : {}, ...t.description ? { description: t.description.slice(0, 100) } : {} })) } };
     } catch (e) {
       return mapError(e);
@@ -82474,14 +82562,24 @@ var DUTY_REPORT_COMMANDS = [{
 }];
 var DUTY_REPORT_INTERACTION = {
   prefix: "drep",
-  opensModal: (args) => ["pick", "edit", "next"].includes(args[0] ?? ""),
+  opensModal: (args) => ["pick", "edit", "next", "ret"].includes(args[0] ?? ""),
   async run(c) {
     const [action, a1, a2, a3] = c.args;
     try {
       if (action === "pick") {
         const id3 = c.values?.[0] ?? "";
         const { t: t2 } = await load(c, "n", id3);
-        return openModal(c, t2, "n", id3, 0, {});
+        return openModal(c, t2, "n", id3, 0, await prefill(c, t2));
+      }
+      if (action === "rev" || action === "retsub") {
+        if (!/^[0-9a-f-]{36}$/.test(a1 ?? "")) return errorReply("Ung\xFCltige Anfrage.");
+        const note2 = String(c.fields?.note ?? "").trim();
+        const r2 = await c.api.asUser(c.discordId, "POST", `/duty-reports/${a1}/review`, action === "rev" ? { decision: "REVIEWED" } : { decision: "RETURNED", note: note2 });
+        return okReply(action === "rev" ? `Bericht **${r2.number}** als gepr\xFCft markiert.` : `Bericht **${r2.number}** zur Nachbesserung zur\xFCckgegeben \u2013 der Verfasser wurde benachrichtigt.`);
+      }
+      if (action === "ret") {
+        if (!/^[0-9a-f-]{36}$/.test(a1 ?? "")) return errorReply("Ung\xFCltige Anfrage.");
+        return { modal: { id: `drep:retsub:${a1}`, title: "Zur Nachbesserung", fields: [{ id: "note", label: "Was soll nachgebessert werden?", paragraph: true, required: true, maxLength: 1e3 }] } };
       }
       if (action === "edit") {
         const { t: t2, values } = await load(c, "e", a1 ?? "");
@@ -82512,6 +82610,66 @@ var DUTY_REPORT_INTERACTION = {
       return okReply(r.merged ? `F\xFCr diesen Zeitraum gab es schon deinen Bericht **${r.number}** \u2013 er wurde aktualisiert.` : `Bericht **${r.number}** eingereicht. Du findest ihn auch im Dashboard; mit \u201EBearbeiten\u201C kannst du ihn \xE4ndern.`);
     } catch (e) {
       return e instanceof Error && !("status" in e) ? errorReply(e.message) : mapError(e);
+    }
+  }
+};
+
+// apps/bot/src/commands/trainings.ts
+function parseGermanDate(text, now = /* @__PURE__ */ new Date()) {
+  const m = /^\s*(\d{1,2})\.(\d{1,2})\.(\d{2,4})?\s*(?:,?\s*(?:um\s*)?(\d{1,2})[:.](\d{2}))?\s*(?:uhr)?\s*$/i.exec(text);
+  if (!m) return null;
+  const year = m[3] ? m[3].length === 2 ? 2e3 + Number(m[3]) : Number(m[3]) : now.getFullYear();
+  const [d, mo, h, mi] = [Number(m[1]), Number(m[2]), Number(m[4] ?? 18), Number(m[5] ?? 0)];
+  const guess = Date.UTC(year, mo - 1, d, h, mi);
+  if (new Date(guess).getUTCDate() !== d || h > 23 || mi > 59) return null;
+  const parts = Object.fromEntries(new Intl.DateTimeFormat("en-US", { timeZone: "Europe/Berlin", hourCycle: "h23", year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit" }).formatToParts(new Date(guess)).map((p) => [p.type, p.value]));
+  const asBerlin = Date.UTC(Number(parts.year), Number(parts.month) - 1, Number(parts.day), Number(parts.hour), Number(parts.minute));
+  return new Date(guess - (asBerlin - guess)).toISOString();
+}
+var TRAINING_COMMANDS = [{
+  name: "ausbildung",
+  description: "Ausbildungstermin ansetzen oder anstehende Termine ansehen",
+  subcommands: [{ name: "ansetzen", description: "Neuen Termin ank\xFCndigen (in diesem Kanal, mit Anmeldung)" }, { name: "termine", description: "Anstehende Ausbildungstermine" }],
+  opensModal: true,
+  async run(c) {
+    try {
+      if (c.opts._sub === "termine") {
+        const list = await c.api.asUser(c.discordId, "GET", "/hr/training-sessions?scope=upcoming");
+        if (!list.length) return okReply("Gerade sind keine Ausbildungstermine angesetzt.");
+        return { ephemeral: true, embeds: [{ title: "\u{1F4DA} Anstehende Ausbildungen", color: COLORS.info, description: list.slice(0, 15).map((s) => `**${s.title}** \u2013 <t:${Math.floor(new Date(s.startsAt).getTime() / 1e3)}:F>${s.forRank ? ` \xB7 ${s.forRank}` : ""} \xB7 ${s.signups.length}${s.maxSignups ? `/${s.maxSignups}` : ""} angemeldet`).join("\n") }] };
+      }
+      return { modal: { id: "trn:new", title: "Ausbildung ansetzen", fields: [
+        { id: "title", label: "Titel", required: true, maxLength: 120, value: "Grundausbildung" },
+        { id: "when", label: "Wann? (TT.MM.JJJJ HH:MM)", required: true, maxLength: 20, placeholder: "08.10.2026 18:30" },
+        { id: "rank", label: "F\xFCr den Rang", required: false, maxLength: 60, placeholder: "z. B. Polizeianw\xE4rter" },
+        { id: "duration", label: "Ungef\xE4hre Dauer", required: false, maxLength: 60, placeholder: "z. B. 60\u2013120 Minuten" },
+        { id: "notes", label: "Hinweise", paragraph: true, required: false, maxLength: 1500 }
+      ] } };
+    } catch (e) {
+      return mapError(e);
+    }
+  }
+}];
+var TRAINING_INTERACTION = {
+  prefix: "trn",
+  async run(c) {
+    const [action, id2] = c.args;
+    try {
+      if (action === "join" || action === "leave") {
+        if (!/^[0-9a-f-]{36}$/.test(id2 ?? "")) return errorReply("Ung\xFCltige Anfrage.");
+        const r = await c.api.service("POST", `/bot/training-sessions/${id2}/signup`, { discordId: c.discordId, name: (c.userDisplayName ?? c.userName ?? c.discordId).slice(0, 64), join: action === "join" });
+        return okReply(r.message);
+      }
+      if (action === "new") {
+        const f2 = c.fields ?? {};
+        const startsAt = parseGermanDate(f2.when ?? "");
+        if (!startsAt) return errorReply("Zeitpunkt bitte so angeben: 08.10.2026 18:30");
+        const s = await c.api.asUser(c.discordId, "POST", "/hr/training-sessions", { title: (f2.title ?? "").trim(), startsAt, forRank: f2.rank || null, duration: f2.duration || null, notes: f2.notes || null, channelId: c.channelId ?? null, guildId: c.guildId ?? null });
+        return okReply(`Ausbildung angesetzt (**${s.number}**) \u2013 die Ank\xFCndigung mit Anmeldung erscheint gleich in diesem Kanal. Auswerten im Dashboard unter \u201EAusbildungen & Pr\xFCfungen\u201C.`);
+      }
+      return errorReply("Unbekannte Aktion.");
+    } catch (e) {
+      return mapError(e);
     }
   }
 };
@@ -82726,13 +82884,34 @@ var INTERACTIONS = [
     }
   },
   FORM_PANEL_INTERACTION,
-  DUTY_REPORT_INTERACTION
+  INFO_PANEL_INTERACTION,
+  DUTY_REPORT_INTERACTION,
+  TRAINING_INTERACTION
 ];
 var interactionFor = (customId) => {
   const [prefix, ...args] = customId.split(":");
   const def = INTERACTIONS.find((d) => d.prefix === prefix);
   return def ? { def, args } : void 0;
 };
+
+// apps/bot/src/commands/warnings.ts
+var WARNING_COMMANDS = [{
+  name: "verwarnen",
+  description: "Teammitglied verwarnen (landet in der Personalakte)",
+  options: [
+    { name: "mitglied", description: "Wer wird verwarnt?", type: "user", required: true },
+    { name: "grund", description: "Grund, z. B. \u201EShift Abuse\u201C", type: "string", required: true, maxLength: 300 },
+    { name: "schweregrad", description: "Standard: Verwarnung", type: "string", choices: [{ name: "Verwarnung", value: "WARNING" }, { name: "Abmahnung", value: "REPRIMAND" }, { name: "Schwerwiegender Versto\xDF", value: "SEVERE" }] }
+  ],
+  async run(c) {
+    try {
+      const r = await c.api.asUser(c.discordId, "POST", "/hr/warnings/discord", { discordId: String(c.opts.mitglied ?? ""), reason: String(c.opts.grund ?? "").trim(), ...c.opts.schweregrad ? { severity: String(c.opts.schweregrad) } : {} });
+      return okReply(`<@${c.opts.mitglied}> wurde verwarnt \u2013 **${r.count}/${r.limit}**${r.count >= r.limit ? " \u26D4 Grenze erreicht." : "."}`);
+    } catch (e) {
+      return mapError(e);
+    }
+  }
+}];
 
 // apps/bot/src/commands/index.ts
 var hm = (min) => `${Math.floor(min / 60)} h ${String(Math.round(min % 60)).padStart(2, "0")} min`;
@@ -82817,7 +82996,7 @@ Bewerben: \`/bewerbung\``.slice(0, 4e3), color: 2278750, fields: [...s.closesAt 
         { name: "Abfragen", value: "`/person` `/kennzeichen` `/fahndungen` `/einsaetze` `/einsatzinfo` `/einheiten` `/team`" },
         { name: "Dienst & Leitstelle", value: "`/dienst` `/dienststunden` `/abmeldung` `/leave manage` `/einheitstatus` `/einsatz` `/einsatzstatus` `/einsatzzuweisen` `/funk` `/funkcode` `/cad`" },
         { name: "Erfassen", value: "`/ticket` `/bericht` `/dienstbericht` `/beschwerde` `/ermittlung` `/fahndung` `/beweis`" },
-        { name: "Leitung & Team", value: "`/gefahrenstatus` `/funkfreigabe` `/teamliste` `/dienstpanel` `/bewerbungspanel` `/qualipanel` `/teamchance` `/roblox`" },
+        { name: "Leitung & Team", value: "`/ausbildung` `/verwarnen` `/gefahrenstatus` `/funkfreigabe` `/teamliste` `/dienstpanel` `/bewerbungspanel` `/qualipanel` `/teamchance` `/roblox`" },
         { name: "Support-Tickets", value: "`/support` \xF6ffnet ein Ticket (Team: `/support mitglied:@\u2026` f\xFCr jemand anderen). Ticket-Panels, Kategorien, Fragen und Buttons werden im Dashboard eingerichtet und von dort in Discord gesendet." },
         { name: "F\xFCr alle", value: "`/bewerbung` (auch ohne Verkn\xFCpfung; Fragen per Direktnachricht) \xB7 SEK/Flugstaffel/Ausbilder \xFCber das Qualifikations-Panel" },
         { name: "Hinweis", value: "Alle Befehle laufen mit **deinen** Rechten im System. Antworten sind nur f\xFCr dich sichtbar." }
@@ -83249,6 +83428,8 @@ Bewerben: \`/bewerbung\``.slice(0, 4e3), color: 2278750, fields: [...s.closesAt 
   ...LEAVE_COMMANDS,
   ...CAD_COMMANDS,
   ...DUTY_REPORT_COMMANDS,
+  ...WARNING_COMMANDS,
+  ...TRAINING_COMMANDS,
   TICKET_COMMAND
 ];
 var byName = (n) => COMMANDS.find((c) => c.name === n);
@@ -83629,6 +83810,17 @@ function createWelcome(api2, actions, log = console.error) {
         step("member-left actions", api2.service("POST", "/bot/member-left", { guildId: m.guildId, discordId: m.id }))
       ]);
     },
+    /** Test aus dem Dashboard: Nachricht bzw. DM wie beim echten Beitritt/Austritt – auch wenn sie ausgeschaltet ist, ohne Rollen/Aktionen. */
+    async test(kind2, m) {
+      cache.delete(m.guildId);
+      const cfg2 = await config2(m.guildId);
+      if (kind2 === "dm") {
+        await actions.dm(m.id, renderWelcomeText(cfg2.dm.message, m).slice(0, 2e3));
+        return;
+      }
+      if (!cfg2[kind2].channelId) throw new Error("no channel configured");
+      await say({ ...cfg2[kind2], enabled: true }, m);
+    },
     /** Nach dem Speichern im Dashboard nicht 30 s warten müssen (Tests). */
     clear() {
       cache.clear();
@@ -83636,13 +83828,179 @@ function createWelcome(api2, actions, log = console.error) {
   };
 }
 
+// apps/bot/src/ghost-ping.ts
+var GHOST_PING_WINDOW_MS = 15 * 6e4;
+var CACHE_MS2 = 6e4;
+function ghostPingTargets(m, now = Date.now()) {
+  if (m.authorBot || now - m.createdAt.getTime() > GHOST_PING_WINDOW_MS) return [];
+  return [...new Set(m.mentions.filter((u) => !u.bot && u.id !== m.authorId).map((u) => u.id))];
+}
+function ghostPingText(m, targets) {
+  const raw = m.content.trim() || targets.map((t) => `<@${t}>`).join(" ");
+  const quoted = raw.replace(/@(everyone|here)/g, "@\u200B$1").slice(0, 1500);
+  return `${targets.map((t) => `<@${t}>`).join(", ")},
+Da war jemand sehr b\xF6se ! <@${m.authorId}> hat ${targets.length > 1 ? "euch" : "dich"} geghost-pinged mit dieser Nachricht !: "${quoted}"`;
+}
+function createGhostPing(api2, actions, log = console.error) {
+  let cached;
+  const enabled = async () => {
+    if (cached && Date.now() - cached.at < CACHE_MS2) return cached.enabled;
+    const r = await api2.service("GET", "/bot/ghost-ping").catch(() => ({ enabled: cached?.enabled ?? true }));
+    cached = { at: Date.now(), enabled: r.enabled !== false };
+    return cached.enabled;
+  };
+  return {
+    async deleted(m) {
+      const targets = ghostPingTargets(m);
+      if (!targets.length || !await enabled()) return;
+      await actions.post(m.channelId, { content: ghostPingText(m, targets), mentionUserIds: targets }).catch((e) => log(`ghost ping message failed: ${e instanceof Error ? e.message : e}`));
+    }
+  };
+}
+
+// apps/bot/src/backup.ts
+var import_discord5 = __toESM(require_src());
+var TYPE = {
+  [import_discord5.ChannelType.GuildText]: "text",
+  [import_discord5.ChannelType.GuildVoice]: "voice",
+  [import_discord5.ChannelType.GuildCategory]: "category",
+  [import_discord5.ChannelType.GuildAnnouncement]: "announcement",
+  [import_discord5.ChannelType.GuildStageVoice]: "stage",
+  [import_discord5.ChannelType.GuildForum]: "forum"
+};
+var BACK = { text: import_discord5.ChannelType.GuildText, voice: import_discord5.ChannelType.GuildVoice, category: import_discord5.ChannelType.GuildCategory, announcement: import_discord5.ChannelType.GuildAnnouncement, stage: import_discord5.ChannelType.GuildStageVoice, forum: import_discord5.ChannelType.GuildForum };
+async function captureGuild(guild) {
+  await guild.roles.fetch();
+  await guild.channels.fetch();
+  const roles = [...guild.roles.cache.values()].filter((r) => r.id !== guild.id && !r.managed).map((r) => ({ id: r.id, name: r.name, color: r.color, hoist: r.hoist, mentionable: r.mentionable, permissions: r.permissions.bitfield.toString(), position: r.position })).sort((a, b) => a.position - b.position);
+  const channels = [];
+  for (const c of guild.channels.cache.values()) {
+    const type = TYPE[c.type];
+    if (!type || c.isThread()) continue;
+    const g = c;
+    channels.push({
+      id: g.id,
+      name: g.name,
+      type,
+      parentId: g.parentId ?? null,
+      position: g.rawPosition,
+      ...g.topic !== void 0 ? { topic: g.topic } : {},
+      ...g.nsfw !== void 0 ? { nsfw: g.nsfw } : {},
+      ...g.rateLimitPerUser !== void 0 ? { rateLimitPerUser: g.rateLimitPerUser } : {},
+      ...g.bitrate !== void 0 ? { bitrate: g.bitrate } : {},
+      ...g.userLimit !== void 0 ? { userLimit: g.userLimit } : {},
+      overwrites: [...g.permissionOverwrites.cache.values()].map((o) => ({ id: o.id, type: o.type === import_discord5.OverwriteType.Role ? "role" : "member", allow: o.allow.bitfield.toString(), deny: o.deny.bitfield.toString() }))
+    });
+  }
+  channels.sort((a, b) => Number(b.type === "category") - Number(a.type === "category") || a.position - b.position);
+  return {
+    version: 1,
+    guildId: guild.id,
+    everyonePermissions: guild.roles.everyone.permissions.bitfield.toString(),
+    roles,
+    channels,
+    settings: { name: guild.name, verificationLevel: guild.verificationLevel, defaultMessageNotifications: guild.defaultMessageNotifications, explicitContentFilter: guild.explicitContentFilter, afkChannelId: guild.afkChannelId, afkTimeout: guild.afkTimeout, systemChannelId: guild.systemChannelId }
+  };
+}
+async function restoreGuild(guild, data, parts) {
+  const r = { created: 0, updated: 0, failed: 0, errors: [], parts, at: (/* @__PURE__ */ new Date()).toISOString() };
+  const fail3 = (what, e) => {
+    r.failed++;
+    if (r.errors.length < 30) r.errors.push(`${what}: ${e instanceof Error ? e.message : String(e)}`);
+  };
+  await guild.roles.fetch();
+  await guild.channels.fetch();
+  const me = guild.members.me ?? await guild.members.fetchMe();
+  const roleMap = /* @__PURE__ */ new Map([[data.guildId, guild.id]]);
+  for (const role of data.roles) {
+    const hit = guild.roles.cache.find((x) => x.name === role.name && !x.managed);
+    if (hit) roleMap.set(role.id, hit.id);
+  }
+  if (parts.includes("roles")) {
+    try {
+      await guild.roles.everyone.setPermissions(BigInt(data.everyonePermissions), "Backup wiederhergestellt");
+      r.updated++;
+    } catch (e) {
+      fail3("@everyone", e);
+    }
+    for (const role of data.roles) {
+      const existing = roleMap.get(role.id) ? guild.roles.cache.get(roleMap.get(role.id)) : void 0;
+      const opts = { name: role.name, color: role.color, hoist: role.hoist, mentionable: role.mentionable, permissions: BigInt(role.permissions) & me.permissions.bitfield, reason: "Backup wiederhergestellt" };
+      try {
+        if (existing) {
+          if (existing.position >= me.roles.highest.position) {
+            fail3(`Rolle ${role.name}`, "steht \xFCber der Bot-Rolle");
+            continue;
+          }
+          await existing.edit(opts);
+          r.updated++;
+        } else {
+          const created = await guild.roles.create(opts);
+          roleMap.set(role.id, created.id);
+          r.created++;
+        }
+      } catch (e) {
+        fail3(`Rolle ${role.name}`, e);
+      }
+    }
+    const positions = data.roles.map((x) => ({ role: roleMap.get(x.id), position: x.position })).filter((x) => !!x.role && (guild.roles.cache.get(x.role)?.position ?? 1e9) < me.roles.highest.position);
+    await guild.roles.setPositions(positions.map((x) => ({ role: x.role, position: Math.min(x.position, me.roles.highest.position - 1) }))).catch((e) => fail3("Rollen-Reihenfolge", e));
+  }
+  const chanMap = /* @__PURE__ */ new Map();
+  if (parts.includes("channels")) {
+    const overwrites = (c) => c.overwrites.map((o) => ({ id: o.type === "role" ? roleMap.get(o.id) ?? null : o.id, type: o.type === "role" ? import_discord5.OverwriteType.Role : import_discord5.OverwriteType.Member, allow: new import_discord5.PermissionsBitField(BigInt(o.allow)), deny: new import_discord5.PermissionsBitField(BigInt(o.deny)) })).filter((o) => !!o.id && (o.type === import_discord5.OverwriteType.Role ? guild.roles.cache.has(o.id) : true));
+    for (const c of data.channels) {
+      const parent = c.parentId ? chanMap.get(c.parentId) ?? null : null;
+      const existing = guild.channels.cache.find((x) => !x.isThread() && x.name === c.name && x.type === BACK[c.type] && ("parentId" in x ? (x.parentId ?? null) === parent : true));
+      const opts = {
+        name: c.name,
+        type: BACK[c.type],
+        parent,
+        permissionOverwrites: overwrites(c),
+        reason: "Backup wiederhergestellt",
+        ...c.topic != null && c.type !== "voice" && c.type !== "category" ? { topic: c.topic } : {},
+        ...c.nsfw !== void 0 && c.type !== "category" ? { nsfw: c.nsfw } : {},
+        ...c.rateLimitPerUser ? { rateLimitPerUser: c.rateLimitPerUser } : {},
+        ...c.bitrate && (c.type === "voice" || c.type === "stage") ? { bitrate: Math.min(c.bitrate, guild.maximumBitrate) } : {},
+        ...c.userLimit !== void 0 && c.type === "voice" ? { userLimit: c.userLimit } : {}
+      };
+      try {
+        if (existing) {
+          const edit = { ...opts };
+          delete edit.type;
+          await existing.edit(edit);
+          chanMap.set(c.id, existing.id);
+          r.updated++;
+        } else {
+          const created = await guild.channels.create(opts);
+          chanMap.set(c.id, created.id);
+          r.created++;
+        }
+      } catch (e) {
+        fail3(`Kanal #${c.name}`, e);
+      }
+    }
+  }
+  if (parts.includes("settings")) {
+    const s = data.settings;
+    const map = (id2) => id2 ? chanMap.get(id2) ?? (guild.channels.cache.has(id2) ? id2 : null) : null;
+    try {
+      await guild.edit({ name: s.name, verificationLevel: s.verificationLevel, defaultMessageNotifications: s.defaultMessageNotifications, explicitContentFilter: s.explicitContentFilter, afkTimeout: s.afkTimeout, afkChannel: map(s.afkChannelId), systemChannel: map(s.systemChannelId), reason: "Backup wiederhergestellt" });
+      r.updated++;
+    } catch (e) {
+      fail3("Servereinstellungen", e);
+    }
+  }
+  return r;
+}
+
 // apps/bot/src/verify.ts
-var CACHE_MS2 = 3e4;
+var CACHE_MS3 = 3e4;
 function createVerify(api2, ops, log = console.error) {
   const cache = /* @__PURE__ */ new Map();
   const config2 = async (guildId) => {
     const hit = cache.get(guildId);
-    if (hit && Date.now() - hit.at < CACHE_MS2) return hit.cfg;
+    if (hit && Date.now() - hit.at < CACHE_MS3) return hit.cfg;
     const cfg2 = await api2.service("GET", `/bot/verify/config?guildId=${guildId}`);
     cache.set(guildId, { at: Date.now(), cfg: cfg2 });
     return cfg2;
@@ -83688,17 +84046,17 @@ function createVerify(api2, ops, log = console.error) {
 loadDotEnv();
 var cfg = loadConfig();
 var api = new HttpApi(cfg.API_URL, cfg.BOT_API_TOKEN);
-var makeClient = (i) => new import_discord5.Client({
+var makeClient = (i) => new import_discord6.Client({
   intents: [
-    import_discord5.GatewayIntentBits.Guilds,
-    import_discord5.GatewayIntentBits.DirectMessages,
-    import_discord5.GatewayIntentBits.GuildMessages,
-    import_discord5.GatewayIntentBits.GuildVoiceStates,
-    ...i.content ? [import_discord5.GatewayIntentBits.MessageContent] : [],
-    ...i.members ? [import_discord5.GatewayIntentBits.GuildMembers] : [],
-    ...i.presences ? [import_discord5.GatewayIntentBits.GuildPresences] : []
+    import_discord6.GatewayIntentBits.Guilds,
+    import_discord6.GatewayIntentBits.DirectMessages,
+    import_discord6.GatewayIntentBits.GuildMessages,
+    import_discord6.GatewayIntentBits.GuildVoiceStates,
+    ...i.content ? [import_discord6.GatewayIntentBits.MessageContent] : [],
+    ...i.members ? [import_discord6.GatewayIntentBits.GuildMembers] : [],
+    ...i.presences ? [import_discord6.GatewayIntentBits.GuildPresences] : []
   ],
-  partials: [import_discord5.Partials.Channel, import_discord5.Partials.GuildMember]
+  partials: [import_discord6.Partials.Channel, import_discord6.Partials.GuildMember]
   // GuildMember: Austritt auch von Mitgliedern, die nicht im Cache sind
 });
 var INTENT_STEPS = [
@@ -83712,7 +84070,7 @@ var intents = INTENT_STEPS[0];
 var client = makeClient(intents);
 var tickets = createTicketRuntime(() => client, api);
 var toEmbed = (e) => {
-  const b = new import_discord5.EmbedBuilder().setTitle(e.title);
+  const b = new import_discord6.EmbedBuilder().setTitle(e.title);
   if (e.description) b.setDescription(e.description);
   if (e.color !== void 0) b.setColor(e.color);
   if (e.fields?.length) b.addFields(e.fields.map((f2) => ({ name: f2.name, value: f2.value, inline: f2.inline ?? false })));
@@ -83723,12 +84081,12 @@ var toEmbed = (e) => {
   b.setTimestamp(/* @__PURE__ */ new Date());
   return b;
 };
-var STYLE2 = { primary: import_discord5.ButtonStyle.Primary, secondary: import_discord5.ButtonStyle.Secondary, success: import_discord5.ButtonStyle.Success, danger: import_discord5.ButtonStyle.Danger };
+var STYLE2 = { primary: import_discord6.ButtonStyle.Primary, secondary: import_discord6.ButtonStyle.Secondary, success: import_discord6.ButtonStyle.Success, danger: import_discord6.ButtonStyle.Danger };
 var toRows = (buttons = []) => {
   const rows = [];
   for (let i = 0; i < buttons.length && rows.length < 5; i += 5) {
-    rows.push(new import_discord5.ActionRowBuilder().addComponents(buttons.slice(i, i + 5).map((b) => {
-      const x = b.url ? new import_discord5.ButtonBuilder().setURL(b.url).setLabel(b.label).setStyle(import_discord5.ButtonStyle.Link) : new import_discord5.ButtonBuilder().setCustomId(b.id).setLabel(b.label).setStyle(STYLE2[b.style]);
+    rows.push(new import_discord6.ActionRowBuilder().addComponents(buttons.slice(i, i + 5).map((b) => {
+      const x = b.url ? new import_discord6.ButtonBuilder().setURL(b.url).setLabel(b.label).setStyle(import_discord6.ButtonStyle.Link) : new import_discord6.ButtonBuilder().setCustomId(b.id).setLabel(b.label).setStyle(STYLE2[b.style]);
       if (b.emoji) x.setEmoji(b.emoji);
       return x;
     })));
@@ -83736,13 +84094,13 @@ var toRows = (buttons = []) => {
   return rows;
 };
 var toComponents = (buttons, select, selects = []) => componentsOf(buttons, [...select ? [select] : [], ...selects]);
-var toModal = (m) => new import_discord5.ModalBuilder().setCustomId(m.id).setTitle(m.title.slice(0, 45)).addComponents(m.fields.map((f2) => {
-  const input = new import_discord5.TextInputBuilder().setCustomId(f2.id).setLabel(f2.label.slice(0, 45)).setStyle(f2.paragraph ? import_discord5.TextInputStyle.Paragraph : import_discord5.TextInputStyle.Short).setRequired(!!f2.required);
+var toModal = (m) => new import_discord6.ModalBuilder().setCustomId(m.id).setTitle(m.title.slice(0, 45)).addComponents(m.fields.map((f2) => {
+  const input = new import_discord6.TextInputBuilder().setCustomId(f2.id).setLabel(f2.label.slice(0, 45)).setStyle(f2.paragraph ? import_discord6.TextInputStyle.Paragraph : import_discord6.TextInputStyle.Short).setRequired(!!f2.required);
   if (f2.maxLength) input.setMaxLength(f2.maxLength);
   if (f2.minLength) input.setMinLength(Math.min(f2.minLength, f2.maxLength ?? 4e3));
   if (f2.placeholder) input.setPlaceholder(f2.placeholder.slice(0, 100));
   if (f2.value) input.setValue(f2.value.slice(0, f2.maxLength ?? 4e3));
-  return new import_discord5.ActionRowBuilder().addComponents(input);
+  return new import_discord6.ActionRowBuilder().addComponents(input);
 }));
 var replyPayload = (r) => ({ content: r.content ?? "", embeds: (r.embeds ?? []).map(toEmbed), components: toComponents(r.buttons, r.select, r.selects), allowedMentions: { parse: [] } });
 var TICKET_PREFIX = "ticket-";
@@ -83756,27 +84114,27 @@ var platform = {
   async createTicketChannel({ guildId, userId, userName, categoryId, staffRoleId, extraUserIds = [] }) {
     const guild = await client.guilds.fetch(guildId);
     const channels = await guild.channels.fetch();
-    const existing = channels.find((c) => c?.type === import_discord5.ChannelType.GuildText && c.name.startsWith(TICKET_PREFIX) && c.topic?.includes(`(${userId})`));
+    const existing = channels.find((c) => c?.type === import_discord6.ChannelType.GuildText && c.name.startsWith(TICKET_PREFIX) && c.topic?.includes(`(${userId})`));
     if (existing) return { channelId: existing.id, existing: true };
-    const view = [import_discord5.PermissionFlagsBits.ViewChannel, import_discord5.PermissionFlagsBits.SendMessages, import_discord5.PermissionFlagsBits.ReadMessageHistory, import_discord5.PermissionFlagsBits.AttachFiles];
+    const view = [import_discord6.PermissionFlagsBits.ViewChannel, import_discord6.PermissionFlagsBits.SendMessages, import_discord6.PermissionFlagsBits.ReadMessageHistory, import_discord6.PermissionFlagsBits.AttachFiles];
     const ch = await guild.channels.create({
       name: ticketName(userName, userId),
-      type: import_discord5.ChannelType.GuildText,
+      type: import_discord6.ChannelType.GuildText,
       topic: `Support-Ticket von ${userName} (${userId})`,
-      ...categoryId && channels.get(categoryId)?.type === import_discord5.ChannelType.GuildCategory ? { parent: categoryId } : {},
+      ...categoryId && channels.get(categoryId)?.type === import_discord6.ChannelType.GuildCategory ? { parent: categoryId } : {},
       permissionOverwrites: [
-        { id: guild.roles.everyone.id, type: import_discord5.OverwriteType.Role, deny: [import_discord5.PermissionFlagsBits.ViewChannel] },
-        { id: userId, type: import_discord5.OverwriteType.Member, allow: view },
-        { id: client.user.id, type: import_discord5.OverwriteType.Member, allow: [...view, import_discord5.PermissionFlagsBits.ManageChannels] },
-        ...staffRoleId ? [{ id: staffRoleId, type: import_discord5.OverwriteType.Role, allow: view }] : [],
-        ...extraUserIds.filter((id2) => id2 !== userId).map((id2) => ({ id: id2, type: import_discord5.OverwriteType.Member, allow: view }))
+        { id: guild.roles.everyone.id, type: import_discord6.OverwriteType.Role, deny: [import_discord6.PermissionFlagsBits.ViewChannel] },
+        { id: userId, type: import_discord6.OverwriteType.Member, allow: view },
+        { id: client.user.id, type: import_discord6.OverwriteType.Member, allow: [...view, import_discord6.PermissionFlagsBits.ManageChannels] },
+        ...staffRoleId ? [{ id: staffRoleId, type: import_discord6.OverwriteType.Role, allow: view }] : [],
+        ...extraUserIds.filter((id2) => id2 !== userId).map((id2) => ({ id: id2, type: import_discord6.OverwriteType.Member, allow: view }))
       ]
     });
     return { channelId: ch.id, existing: false };
   },
   async deleteChannel(channelId, delayMs = 0) {
     const ch = await client.channels.fetch(channelId);
-    if (!ch || ch.type !== import_discord5.ChannelType.GuildText || !ch.name.startsWith(TICKET_PREFIX)) throw new Error("not a ticket channel");
+    if (!ch || ch.type !== import_discord6.ChannelType.GuildText || !ch.name.startsWith(TICKET_PREFIX)) throw new Error("not a ticket channel");
     setTimeout(() => void ch.delete("Support-Ticket geschlossen").catch((e) => console.error("ticket delete failed:", e instanceof Error ? e.message : e)), delayMs);
   },
   async sendDirectMessage(userId, text) {
@@ -83826,6 +84184,13 @@ var welcome = createWelcome(api, {
     if (ids.length) await (await guild.members.fetch(userId)).roles.add(ids, "EN Polizei: Willkommen");
   }
 });
+var ghostPing = createGhostPing(api, {
+  async post(channelId, m) {
+    const ch = await client.channels.fetch(channelId);
+    if (!ch?.isSendable()) throw new Error(`channel ${channelId} is not a text channel the bot can post in`);
+    await ch.send({ content: m.content, allowedMentions: { parse: [], users: m.mentionUserIds } });
+  }
+});
 async function applyVerify(guildId, userId, a) {
   const guild = await client.guilds.fetch(guildId);
   const member = await guild.members.fetch(userId);
@@ -83866,7 +84231,7 @@ var verify = createVerify(api, {
     return out;
   }
 });
-var VOICE_TALK = [import_discord5.PermissionFlagsBits.ViewChannel, import_discord5.PermissionFlagsBits.Connect, import_discord5.PermissionFlagsBits.Speak, import_discord5.PermissionFlagsBits.Stream, import_discord5.PermissionFlagsBits.UseVAD];
+var VOICE_TALK = [import_discord6.PermissionFlagsBits.ViewChannel, import_discord6.PermissionFlagsBits.Connect, import_discord6.PermissionFlagsBits.Speak, import_discord6.PermissionFlagsBits.Stream, import_discord6.PermissionFlagsBits.UseVAD];
 var voiceSupport = createVoiceSupport(api, {
   async post(channelId, m) {
     const ch = await client.channels.fetch(channelId);
@@ -83894,14 +84259,14 @@ var voiceSupport = createVoiceSupport(api, {
     const near = await guild.channels.fetch(nearChannelId).catch(() => null);
     const ch = await guild.channels.create({
       name,
-      type: import_discord5.ChannelType.GuildVoice,
+      type: import_discord6.ChannelType.GuildVoice,
       ...near?.parentId ? { parent: near.parentId } : {},
       reason: "EN Polizei: Sprach-Support",
       permissionOverwrites: [
-        { id: guild.roles.everyone.id, type: import_discord5.OverwriteType.Role, deny: [import_discord5.PermissionFlagsBits.ViewChannel, import_discord5.PermissionFlagsBits.Connect] },
-        { id: userId, type: import_discord5.OverwriteType.Member, allow: VOICE_TALK },
-        ...guild.roles.cache.has(teamRoleId) ? [{ id: teamRoleId, type: import_discord5.OverwriteType.Role, allow: [...VOICE_TALK, import_discord5.PermissionFlagsBits.MoveMembers] }] : [],
-        { id: client.user.id, type: import_discord5.OverwriteType.Member, allow: [import_discord5.PermissionFlagsBits.ViewChannel, import_discord5.PermissionFlagsBits.Connect, import_discord5.PermissionFlagsBits.MoveMembers, import_discord5.PermissionFlagsBits.ManageChannels] }
+        { id: guild.roles.everyone.id, type: import_discord6.OverwriteType.Role, deny: [import_discord6.PermissionFlagsBits.ViewChannel, import_discord6.PermissionFlagsBits.Connect] },
+        { id: userId, type: import_discord6.OverwriteType.Member, allow: VOICE_TALK },
+        ...guild.roles.cache.has(teamRoleId) ? [{ id: teamRoleId, type: import_discord6.OverwriteType.Role, allow: [...VOICE_TALK, import_discord6.PermissionFlagsBits.MoveMembers] }] : [],
+        { id: client.user.id, type: import_discord6.OverwriteType.Member, allow: [import_discord6.PermissionFlagsBits.ViewChannel, import_discord6.PermissionFlagsBits.Connect, import_discord6.PermissionFlagsBits.MoveMembers, import_discord6.PermissionFlagsBits.ManageChannels] }
       ]
     });
     return ch.id;
@@ -83914,7 +84279,7 @@ var voiceSupport = createVoiceSupport(api, {
   },
   async deleteChannel(channelId) {
     const ch = await client.channels.fetch(channelId).catch(() => null);
-    if (ch?.type === import_discord5.ChannelType.GuildVoice) await ch.delete("EN Polizei: Support-Fall geschlossen");
+    if (ch?.type === import_discord6.ChannelType.GuildVoice) await ch.delete("EN Polizei: Support-Fall geschlossen");
   },
   async thread(channelId, messageId, name) {
     const ch = await client.channels.fetch(channelId);
@@ -83967,7 +84332,7 @@ function addOptions(b, options2 = []) {
   }
 }
 function toBuilder(def) {
-  const b = new import_discord5.SlashCommandBuilder().setName(def.name).setDescription(def.description);
+  const b = new import_discord6.SlashCommandBuilder().setName(def.name).setDescription(def.description);
   if (def.subcommands?.length) for (const sc of def.subcommands) b.addSubcommand((x) => {
     x.setName(sc.name).setDescription(sc.description);
     addOptions(x, sc.options);
@@ -83983,15 +84348,15 @@ function joinedAtOf2(m) {
 }
 async function markDecided(message, d) {
   const embeds = message.embeds.map((e, i, all) => {
-    const b = import_discord5.EmbedBuilder.from(e).setColor(d.color);
+    const b = import_discord6.EmbedBuilder.from(e).setColor(d.color);
     if (i === all.length - 1) b.setFields([...(e.fields ?? []).filter((f2) => f2.name !== "Entscheidung"), { name: "Entscheidung", value: d.text.slice(0, 1024) }]);
     return b;
   });
   const rows = [];
   for (const row of message.components) {
     if (!("components" in row)) continue;
-    const kept = row.components.filter((c) => c.type === import_discord5.ComponentType.Button && !/^(quali|leave):(decide|reason):/.test(c.customId ?? ""));
-    if (kept.length) rows.push(new import_discord5.ActionRowBuilder().addComponents(kept.map((c) => import_discord5.ButtonBuilder.from(c))));
+    const kept = row.components.filter((c) => c.type === import_discord6.ComponentType.Button && !/^(quali|leave):(decide|reason):/.test(c.customId ?? ""));
+    if (kept.length) rows.push(new import_discord6.ActionRowBuilder().addComponents(kept.map((c) => import_discord6.ButtonBuilder.from(c))));
   }
   await message.edit({ embeds, components: rows, allowedMentions: { parse: [] } });
 }
@@ -84006,7 +84371,7 @@ function baseCtx(i) {
     memberJoinedAt: joinedAtOf2(i.member),
     guildId: i.guildId ?? void 0,
     channelId: i.channelId ?? void 0,
-    isGuildAdmin: !!perms && (perms.has(import_discord5.PermissionFlagsBits.ManageGuild) || perms.has(import_discord5.PermissionFlagsBits.Administrator)),
+    isGuildAdmin: !!perms && (perms.has(import_discord6.PermissionFlagsBits.ManageGuild) || perms.has(import_discord6.PermissionFlagsBits.Administrator)),
     config: () => api.service("GET", "/bot/config"),
     refreshLive: (kind2, o) => live.refresh(kind2, o),
     robloxLookup: (name) => robloxLookup(name),
@@ -84059,10 +84424,10 @@ async function handleCommand(i) {
   if (def.opensModal) {
     const reply2 = await safeRun(`command ${def.name}`, () => def.run({ ...baseCtx(i), opts }));
     if (reply2.modal) await i.showModal(toModal(reply2.modal));
-    else await i.reply({ ...replyPayload(reply2), flags: import_discord5.MessageFlags.Ephemeral });
+    else await i.reply({ ...replyPayload(reply2), flags: import_discord6.MessageFlags.Ephemeral });
     return;
   }
-  await i.deferReply({ flags: import_discord5.MessageFlags.Ephemeral });
+  await i.deferReply({ flags: import_discord6.MessageFlags.Ephemeral });
   const reply = await safeRun(`command ${def.name}`, () => def.run({ ...baseCtx(i), opts }));
   await i.editReply(replyPayload(reply));
 }
@@ -84072,10 +84437,10 @@ async function handleComponent(i) {
   if ((i.isButton() || i.isAnySelectMenu()) && hit.def.opensModal?.(hit.args)) {
     const reply2 = await safeRun(`interaction ${i.customId}`, () => hit.def.run({ ...baseCtx(i), opts: {}, args: hit.args, ...i.isAnySelectMenu() ? { values: i.values } : {} }));
     if (reply2.modal) await i.showModal(toModal(reply2.modal));
-    else await i.reply({ ...replyPayload(reply2), flags: import_discord5.MessageFlags.Ephemeral });
+    else await i.reply({ ...replyPayload(reply2), flags: import_discord6.MessageFlags.Ephemeral });
     return;
   }
-  await i.deferReply({ flags: import_discord5.MessageFlags.Ephemeral });
+  await i.deferReply({ flags: import_discord6.MessageFlags.Ephemeral });
   const fields = i.isModalSubmit() ? Object.fromEntries(i.fields.fields.map((f2, id2) => [id2, "value" in f2 ? String(f2.value) : ""])) : void 0;
   const values = i.isAnySelectMenu() ? i.values : void 0;
   const reply = await safeRun(`interaction ${i.customId}`, () => hit.def.run({ ...baseCtx(i), opts: {}, args: hit.args, fields, values }));
@@ -84106,6 +84471,10 @@ function wire(c) {
   });
   c.on("guildMemberUpdate", (o, n) => {
     if (o.roles.cache.size !== n.roles.cache.size || o.displayName !== n.displayName || ![...o.roles.cache.keys()].every((r) => n.roles.cache.has(r))) staffLists.changed();
+  });
+  c.on("messageDelete", (m) => {
+    if (m.partial || !m.inGuild() || !m.author) return;
+    void ghostPing.deleted({ guildId: m.guildId, channelId: m.channelId, authorId: m.author.id, authorBot: m.author.bot, content: m.content ?? "", createdAt: m.createdAt, mentions: [...m.mentions.users.values()].map((u) => ({ id: u.id, bot: u.bot })) });
   });
   c.on("messageCreate", (m) => {
     if (m.inGuild()) {
@@ -84282,6 +84651,32 @@ function wireReady(client0) {
             if (m && m.id !== g.ownerId && await m.setNickname(nick, "EN Polizei: Dienstnummer").then(() => true, () => false)) done++;
           }
           if (!done) console.warn(`nickname for ${userId} could not be set (missing permission, owner or not on a server)`);
+          return true;
+        }
+        if (type === "bot.backup.create") {
+          const id2 = String(p.backupId ?? "");
+          try {
+            await api.service("POST", `/bot/discord-backups/${id2}/data`, { data: await captureGuild(await client.guilds.fetch(String(p.guildId ?? ""))) });
+          } catch (e) {
+            await api.service("POST", `/bot/discord-backups/${id2}/data`, { error: e instanceof Error ? e.message : String(e) });
+          }
+          return true;
+        }
+        if (type === "bot.backup.restore") {
+          const id2 = String(p.backupId ?? "");
+          const b = await api.service("GET", `/bot/discord-backups/${id2}`);
+          if (!b.data) throw new Error("backup has no data");
+          const parts = (Array.isArray(p.parts) ? p.parts : []).filter((x) => x === "roles" || x === "channels" || x === "settings");
+          const result = await restoreGuild(await client.guilds.fetch(String(p.guildId ?? "")), b.data, parts);
+          await api.service("POST", `/bot/discord-backups/${id2}/result`, result);
+          return true;
+        }
+        if (type === "bot.welcome-test") {
+          const kind2 = p.kind === "goodbye" || p.kind === "dm" ? p.kind : "welcome";
+          const guild = await client.guilds.fetch(String(p.guildId ?? ""));
+          const e = memberEvent(await guild.members.fetch(String(p.discordId ?? "")));
+          if (!e) throw new Error("member not found");
+          await welcome.test(kind2, e);
           return true;
         }
         if (type === "bot.delete") {

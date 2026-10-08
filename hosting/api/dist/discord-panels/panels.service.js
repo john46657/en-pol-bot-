@@ -27,6 +27,7 @@ let PanelsService = class PanelsService {
     live;
     staff;
     forms;
+    infos;
     constructor(prisma, audit, discord, live) {
         this.prisma = prisma;
         this.audit = audit;
@@ -34,6 +35,7 @@ let PanelsService = class PanelsService {
         this.live = live;
         this.staff = new json_store_1.JsonListStore(prisma, 'discord.staffLists', shared_1.staffListSchema, 50);
         this.forms = new json_store_1.JsonListStore(prisma, 'discord.formPanels', shared_1.formPanelSchema, 50);
+        this.infos = new json_store_1.JsonListStore(prisma, 'discord.infoPanels', shared_1.infoPanelSchema, 50);
     }
     visible(list, g) { return g ? list.filter((x) => !x.guildId || x.guildId === g) : list; }
     // ---------------- Staff-Listen ----------------
@@ -111,6 +113,44 @@ let PanelsService = class PanelsService {
         await this.discord.postMessage(`fpanel-${p.id}`, p.channelId, (0, shared_1.formPanelMessage)(p), { forceNew: mode === 'new' });
         await this.audit.record(actor, { action: 'formpanel.send', module: 'settings', entityType: 'FormPanel', entityId: id, after: { channelId: p.channelId, mode } });
         return { queued: true };
+    }
+    // ---------------- Info-Panels (Bild, Text, Auswahlmenü) ----------------
+    async infoPanels(g) {
+        const list = this.visible(await this.infos.all(), g);
+        return Promise.all(list.map(async (p) => ({ ...p, posted: await this.discord.posted(`ipanel-${p.id}`) })));
+    }
+    async saveInfo(actor, doc) {
+        const p = shared_1.infoPanelSchema.parse(doc);
+        if (new Set(p.options.map((o) => o.id)).size !== p.options.length)
+            throw new errors_1.AppError('VALIDATION_FAILED', 'Jeder Auswahlpunkt braucht ein eigenes Kürzel.');
+        const [d, old] = await this.infos.upsert(p);
+        await this.audit.record(actor, { action: old ? 'infopanel.update' : 'infopanel.create', module: 'settings', entityType: 'InfoPanel', entityId: d.id, after: { name: d.name } });
+        // steht schon in Discord → Text/Auswahl gleich mitziehen
+        const posted = await this.discord.posted(`ipanel-${d.id}`);
+        if (posted && d.channelId === posted.channelId && old && JSON.stringify((0, shared_1.infoPanelMessage)(old)) !== JSON.stringify((0, shared_1.infoPanelMessage)(d)))
+            await this.discord.postMessage(`ipanel-${d.id}`, d.channelId, (0, shared_1.infoPanelMessage)(d));
+        return d;
+    }
+    async removeInfo(actor, id) {
+        if (!(await this.infos.remove(id)))
+            throw new errors_1.AppError('NOT_FOUND', 'Panel nicht gefunden.');
+        await this.audit.record(actor, { action: 'infopanel.delete', module: 'settings', entityType: 'InfoPanel', entityId: id });
+    }
+    async sendInfo(actor, id, mode) {
+        const p = await this.infos.get(id);
+        if (!p)
+            throw new errors_1.AppError('NOT_FOUND', 'Panel nicht gefunden.');
+        if (!p.channelId)
+            throw new errors_1.AppError('VALIDATION_FAILED', 'Wähle zuerst einen Kanal für das Panel.');
+        await this.discord.postMessage(`ipanel-${p.id}`, p.channelId, (0, shared_1.infoPanelMessage)(p), { forceNew: mode === 'new' });
+        await this.audit.record(actor, { action: 'infopanel.send', module: 'settings', entityType: 'InfoPanel', entityId: id, after: { channelId: p.channelId, mode } });
+        return { queued: true };
+    }
+    async botInfo(id) {
+        const p = await this.infos.get(id);
+        if (!p)
+            throw new errors_1.AppError('NOT_FOUND', 'Panel nicht gefunden.');
+        return p;
     }
     submissions(panelId) {
         return this.prisma.panelSubmission.findMany({ where: { panelId }, orderBy: { createdAt: 'desc' }, take: 200 });

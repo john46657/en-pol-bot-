@@ -27,6 +27,9 @@ const Audit = lazy(() => import('./pages/admin/Audit').then((m) => ({ default: m
 const Settings = lazy(() => import('./pages/admin/Settings').then((m) => ({ default: m.Settings })));
 const LegalCodes = lazy(() => import('./pages/admin/LegalCodes').then((m) => ({ default: m.LegalCodes })));
 const Shifts = lazy(() => import('./pages/admin/Shifts').then((m) => ({ default: m.Shifts })));
+const Warnings = lazy(() => import('./pages/hr/Warnings').then((m) => ({ default: m.Warnings })));
+const Backups = lazy(() => import('./pages/admin/Backups').then((m) => ({ default: m.Backups })));
+const Logging = lazy(() => import('./pages/admin/Logging').then((m) => ({ default: m.Logging })));
 const ServerLinks = lazy(() => import('./pages/admin/ServerLinks').then((m) => ({ default: m.ServerLinks })));
 const Embeds = lazy(() => import('./pages/admin/Embeds').then((m) => ({ default: m.Embeds })));
 const WelcomeSettings = lazy(() => import('./pages/admin/WelcomeSettings').then((m) => ({ default: m.WelcomeSettings })));
@@ -37,6 +40,7 @@ const RadioCodes = lazy(() => import('./pages/RadioCodes').then((m) => ({ defaul
 const TeamChance = lazy(() => import('./pages/TeamChance').then((m) => ({ default: m.TeamChance })));
 const StaffLists = lazy(() => import('./pages/DiscordPanels').then((m) => ({ default: m.StaffLists })));
 const FormPanels = lazy(() => import('./pages/DiscordPanels').then((m) => ({ default: m.FormPanels })));
+const InfoPanels = lazy(() => import('./pages/DiscordPanels').then((m) => ({ default: m.InfoPanels })));
 const PersonnelOverview = lazy(() => import('./pages/hr/PersonnelOverview').then((m) => ({ default: m.PersonnelOverview })));
 const PersonnelFile = lazy(() => import('./pages/hr/PersonnelFile').then((m) => ({ default: m.PersonnelFile })));
 const Promotions = lazy(() => import('./pages/hr/Promotions').then((m) => ({ default: m.Promotions })));
@@ -98,6 +102,7 @@ export function App() {
           <Route path="teamlist" element={<Guard perm="team.view" area="dashboard.team.view"><TeamList /></Guard>} />
           <Route path="staff-lists" element={<Guard perm="team.view" area="dashboard.team.view"><StaffLists /></Guard>} />
           <Route path="admin/form-panels" element={<Guard perm="settings.view" area="dashboard.settings.view"><FormPanels /></Guard>} />
+          <Route path="admin/info-panels" element={<Guard perm="settings.view" area="dashboard.settings.view"><InfoPanels /></Guard>} />
           <Route path="duty-reports" element={<Guard perm="dutyreports.view"><DutyReports /></Guard>} />
           <Route path="offices" element={<Guard perm="team.view" area="dashboard.offices.view"><Offices /></Guard>} />
           <Route path="radio-codes" element={<Guard perm="radio.view" area="dashboard.radio.view"><RadioCodes /></Guard>} />
@@ -140,6 +145,7 @@ export function App() {
           <Route path="evidence/*" element={<Navigate to="/dashboard" replace />} />
           <Route path="personnel" element={<Guard perm="personnel.view"><PersonnelOverview /></Guard>} />
           <Route path="personnel/:id" element={<Guard perm="personnel.view"><PersonnelFile /></Guard>} />
+          <Route path="warnings" element={<Guard perm="warning.view"><Warnings /></Guard>} />
           <Route path="promotions" element={<Guard perm="promotion.view"><Promotions /></Guard>} />
           <Route path="trainings" element={<Guard perm="training.view"><Trainings /></Guard>} />
           <Route path="certificates/:no" element={<Guard perm="dashboard.view"><Certificate /></Guard>} />
@@ -160,6 +166,8 @@ export function App() {
           <Route path="admin/audit" element={<Guard perm="audit.view" area="dashboard.logs.view"><Audit /></Guard>} />
           <Route path="admin/shifts" element={<Guard perm="settings.view"><Shifts /></Guard>} />
           <Route path="admin/servers" element={<Guard perm="settings.view"><ServerLinks /></Guard>} />
+          <Route path="admin/backups" element={<Guard perm="settings.manage" area="dashboard.settings.view"><Backups /></Guard>} />
+          <Route path="admin/logging" element={<Guard perm="settings.view" area="dashboard.settings.view"><Logging /></Guard>} />
           <Route path="admin/embeds" element={<Guard perm="settings.view"><Embeds /></Guard>} />
           <Route path="admin/welcome" element={<Guard perm="settings.view"><WelcomeSettings /></Guard>} />
           <Route path="admin/leave" element={<Guard perm="settings.view"><LeaveSettings /></Guard>} />

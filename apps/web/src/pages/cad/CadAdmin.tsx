@@ -9,7 +9,7 @@ import { useAutosaveDraft } from '../../lib/autosave';
 import { useGuilds } from '../../lib/guilds';
 import { ChannelPicker } from '../../components/DiscordPickers';
 import { ago, ERLC_STATUS_TONE, optLabel, useCadConfig, type CadUnitRow, type ErlcServerView } from '../../lib/cad';
-import { Badge, Button, Card, ConfirmDialog, EmptyState, ErrorState, Field, Input, Modal, PageHeader, Select, SkeletonRows, Tabs, Textarea } from '../../components/ui';
+import { Badge, Button, Card, ConfirmDialog, EmptyState, ErrorState, Field, Input, Modal, PageHeader, Select, SkeletonRows, Textarea } from '../../components/ui';
 
 const errText = (e: unknown) => (e instanceof ApiError ? `${e.message}${Array.isArray(e.details) ? `: ${(e.details as { path: string; message: string }[]).map((d) => `${d.path} ${d.message}`).join(', ')}` : ''}` : 'Fehlgeschlagen');
 const GuildSelect = ({ value, onChange, label, allowEmpty = true }: { value: string | null | undefined; onChange: (v: string | null) => void; label: string; allowEmpty?: boolean }) => {
@@ -84,20 +84,42 @@ export function CadSettings() {
   if (!tabs.length) return <EmptyState text="Keine Einstellungen für dich." />;
   if (q.isLoading || !draft) return <SkeletonRows />;
   const upd = (p: Partial<CadConfig>) => setDraft({ ...draft, ...p });
+  // Was steckt in welchem Bereich – und ist er schon eingerichtet? (Klick öffnet den Bereich)
+  const AREAS: Record<string, { desc: string; ok?: boolean }> = {
+    Allgemein: { desc: 'Heimat-Server, Einsatznummern, Startseite', ok: !!draft.homeGuildId },
+    'Einsätze': { desc: 'Prioritäten, Status, Einsatzarten', ok: draft.priorities.length > 0 && draft.incidentStatuses.length > 0 },
+    Einheiten: { desc: 'Einheitenstatus und -typen', ok: draft.unitStatuses.length > 0 && draft.unitTypes.length > 0 },
+    'Discord-Kanäle': { desc: 'Welche Meldung in welchen Kanal', ok: draft.routes.some((r) => r.enabled && r.channelIds.length) },
+    Zusatzfelder: { desc: 'Eigene Felder in der Teamübersicht' },
+    'Karte & Ebenen': { desc: 'ER:LC-Karte, Ebenen, Marker', ok: !!draft.map.imageUrl },
+    'ER:LC Integration': { desc: 'Server-Key, Abgleich, Notrufe' },
+    Gefahrenstatus: { desc: 'Stufen, Texte, Discord-Panel' },
+  };
   return (
     <>
       <PageHeader title="CAD-Einstellungen" subtitle="Änderungen werden automatisch gespeichert" />
-      <Tabs tabs={tabs} active={tab} onChange={setTab} />
+      <div className="mb-3 grid grid-cols-2 gap-2 md:grid-cols-4">{tabs.map((t) => {
+        const a = AREAS[t];
+        return (
+          <button key={t} type="button" onClick={() => setTab(t)} aria-pressed={tab === t} className={`card border px-3 py-2 text-left transition ${tab === t ? 'border-primary bg-primary/10' : 'border-line hover:bg-panel-2/60'}`}>
+            <span className="flex items-center justify-between gap-2 text-sm font-medium">{t}{a?.ok === true ? <span className="text-xs text-success">✓ eingerichtet</span> : a?.ok === false ? <span className="text-xs text-warning">offen</span> : null}</span>
+            {a && <span className="block truncate text-[11px] text-muted">{a.desc}</span>}
+          </button>
+        );
+      })}</div>
       <div className="mt-3">
-        {tab === 'Allgemein' && <Card>
-          <div className="grid max-w-xl gap-3">
-            <Field label="Discord-Server der Leitstelle (Heimat der Einsätze)" hint="Von anderen Servern (z. B. SEK/K9) geht nur, was eine Server-Verbindung freigibt.">{() => <GuildSelect label="Leitstelle" value={draft.homeGuildId} onChange={(v) => upd({ homeGuildId: v })} />}</Field>
-            <Field label="Präfix der Einsatznummer" hint={`Beispiel: ${draft.incidentNumberPrefix}-${new Date().getFullYear()}-00421`}>{(id) => <Input id={id} maxLength={6} value={draft.incidentNumberPrefix} onChange={(e) => upd({ incidentNumberPrefix: e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '') })} />}</Field>
-            <fieldset><legend className="mb-1 text-xs font-medium text-muted">Standard-Kacheln der Leitstellen-Startseite (jeder kann seine eigene Ansicht davon abweichend anpassen)</legend>
-              <div className="grid gap-1 sm:grid-cols-2">{CAD_WIDGETS.map((w) => <label key={w} className="flex items-center gap-2 text-sm"><input type="checkbox" checked={draft.widgets.includes(w)} onChange={(e) => upd({ widgets: e.target.checked ? [...draft.widgets, w] : draft.widgets.filter((x) => x !== w) })} />{CAD_WIDGET_LABELS[w]}</label>)}</div>
-            </fieldset>
-          </div>
-        </Card>}
+        {tab === 'Allgemein' && <div className="grid gap-3 lg:grid-cols-2">
+          <Card title="🏢 Leitstelle">
+            <div className="grid gap-3">
+              <Field label="Discord-Server der Leitstelle (Heimat der Einsätze)" hint="Von anderen Servern (z. B. SEK/K9) geht nur, was eine Server-Verbindung freigibt.">{() => <GuildSelect label="Leitstelle" value={draft.homeGuildId} onChange={(v) => upd({ homeGuildId: v })} />}</Field>
+              <Field label="Präfix der Einsatznummer" hint={`Beispiel: ${draft.incidentNumberPrefix || 'E'}-${new Date().getFullYear()}-00421`}>{(id) => <Input id={id} maxLength={6} value={draft.incidentNumberPrefix} onChange={(e) => upd({ incidentNumberPrefix: e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '') })} />}</Field>
+            </div>
+          </Card>
+          <Card title="🧩 Startseite der Leitstelle" actions={<Button size="sm" variant="ghost" onClick={() => upd({ widgets: [...CAD_WIDGETS] })}>Alle an</Button>}>
+            <p className="mb-2 text-xs text-muted">Standard-Kacheln für alle. Jeder kann seine eigene Ansicht über „Ansicht anpassen“ ändern.</p>
+            <div className="grid gap-1 sm:grid-cols-2">{CAD_WIDGETS.map((w) => <label key={w} className="flex items-center gap-2 text-sm"><input type="checkbox" checked={draft.widgets.includes(w)} onChange={(e) => upd({ widgets: e.target.checked ? [...draft.widgets, w] : draft.widgets.filter((x) => x !== w) })} />{CAD_WIDGET_LABELS[w]}</label>)}</div>
+          </Card>
+        </div>}
         {tab === 'Einsätze' && <Card>
           <OptionListEditor title="Prioritäten (Reihenfolge = Wichtigkeit)" value={draft.priorities} onChange={(v) => upd({ priorities: v })} />
           <OptionListEditor title="Einsatzstatus" value={draft.incidentStatuses} onChange={(v) => upd({ incidentStatuses: v })} extra={(o, set) => <label className="flex items-center gap-1 text-xs"><input type="checkbox" checked={!!o.closed} onChange={(e) => set({ closed: e.target.checked })} />schließt ab</label>} />

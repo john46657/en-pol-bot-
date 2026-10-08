@@ -54,6 +54,8 @@ import { WelcomeModule } from './welcome/welcome.module';
 import { VoiceSupportModule } from './voice-support/voice-support.module';
 import { EmbedsModule } from './embeds/embeds.module';
 import { ServerLinksModule } from './server-links/server-links.module';
+import { LoggingModule } from './logging/logging.module';
+import { BackupModule } from './backup/backup.module';
 import { VerificationModule } from './verification/verification.module';
 import { PanelsModule } from './discord-panels/panels.module';
 import { DutyReportsModule } from './duty-reports/duty-reports.module';
@@ -64,7 +66,7 @@ import { HrModule } from './hr/hr.module';
     ThrottlerModule.forRoot({ throttlers: [{ ttl: 60_000, limit: process.env.NODE_ENV === 'test' ? 10_000 : 300 }], errorMessage: 'Zu viele Anfragen – bitte kurz warten.' }),
     DiscoveryModule, PrismaModule, AuthzModule, AuditModule, AuthModule, UsersModule, PersonsModule, VehiclesModule, TicketsModule,
     DispatchModule, ReportsModule, ComplaintsModule, InvestigationsModule, WantedModule, EvidenceModule,
-    PersonnelModule, DutyModule, ApplicationsModule, AcademyModule, NotificationsModule, SearchModule, CommunicationModule, AnalyticsModule, RealtimeModule, AdminModule, ExportModule, MediaModule, StudioModule, DiscordModule, DangerModule, RadioModule, SekModule, QualificationsModule, SupportTicketsModule, LeaveModule, RosterModule, MeModule, RadioCodesModule, TeamChanceModule, CadModule, LocksModule, WorkflowsModule, WelcomeModule, VoiceSupportModule, EmbedsModule, ServerLinksModule, VerificationModule, PanelsModule, DutyReportsModule, HrModule,
+    PersonnelModule, DutyModule, ApplicationsModule, AcademyModule, NotificationsModule, SearchModule, CommunicationModule, AnalyticsModule, RealtimeModule, AdminModule, ExportModule, MediaModule, StudioModule, DiscordModule, DangerModule, RadioModule, SekModule, QualificationsModule, SupportTicketsModule, LeaveModule, RosterModule, MeModule, RadioCodesModule, TeamChanceModule, CadModule, LocksModule, WorkflowsModule, WelcomeModule, VoiceSupportModule, EmbedsModule, ServerLinksModule, LoggingModule, BackupModule, VerificationModule, PanelsModule, DutyReportsModule, HrModule,
   ],
   controllers: [HealthController, AuditController],
   providers: [

@@ -1,13 +1,13 @@
 import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { ArrowDown, ArrowUp, Plus, Trash2, X } from 'lucide-react';
-import { PROFILE_FIELDS, PROFILE_FIELD_LABEL, PROFILE_SECTIONS, PROFILE_SECTION_LABEL, hrConfigSchema, type HrConfig } from '@enrp/shared';
+import { PROFILE_FIELDS, PROFILE_FIELD_LABEL, PROFILE_SECTIONS, PROFILE_SECTION_LABEL, WARNING_VARIABLES, hrConfigSchema, type HrConfig } from '@enrp/shared';
 import { api } from '../../lib/api';
 import { useAuth } from '../../lib/auth';
 import { onSaved, pendingBody, useAutosaveDraft } from '../../lib/autosave';
 import { useHrConfig } from '../../lib/hr';
 import { Toggle } from '../../components/ApplicationSettings';
-import { RolePicker } from '../../components/DiscordPickers';
+import { ChannelPicker, RolePicker } from '../../components/DiscordPickers';
 import { SaveStatus } from '../../components/SaveStatus';
 import { Button, Card, ErrorState, Input, PageHeader, Select, SkeletonRows, Textarea } from '../../components/ui';
 
@@ -208,6 +208,25 @@ export function HrSettings() {
                   <Button variant="secondary" onClick={addCat} disabled={!newCat.trim()}>Hinzufügen</Button>
                 </div>
               )}
+            </section>
+            <section className="grid gap-3 border-t border-line pt-3">
+              <h3 className="text-sm font-semibold">Meldung in Discord & Grenze</h3>
+              <div className="grid gap-3 md:grid-cols-3">
+                <Lbl label="Grenze (aktive Verwarnungen)"><Input type="number" min={1} max={20} aria-label="Grenze der Verwarnungen" disabled={ro} value={d.warnings.limit} onChange={(e) => upd('warnings', { ...d.warnings, limit: Math.min(20, Math.max(1, Math.round(Number(e.target.value) || 1))) })} /></Lbl>
+                <Lbl label="Verwarnungs-Kanal (leer = nur Dashboard)"><ChannelPicker ariaLabel="Verwarnungs-Kanal" disabled={ro} value={d.warnings.channelId} onChange={(v) => upd('warnings', { ...d.warnings, channelId: v })} /></Lbl>
+                <label className="flex items-center gap-2 self-end text-sm"><Toggle label="Person per DM informieren" checked={d.warnings.dm} onChange={(v) => !ro && upd('warnings', { ...d.warnings, dm: v })} />Person per DM informieren</label>
+              </div>
+              <Lbl label="Text der Meldung"><Textarea aria-label="Text der Verwarnungs-Meldung" rows={3} disabled={ro} maxLength={1500} value={d.warnings.template} onChange={(e) => upd('warnings', { ...d.warnings, template: e.target.value })} /></Lbl>
+              <p className="text-xs text-muted">Platzhalter: {WARNING_VARIABLES.join(' ')}</p>
+              <h4 className="text-xs font-semibold uppercase text-muted">Bei Erreichen der Grenze ({d.warnings.limit}/{d.warnings.limit})</h4>
+              <div className="grid gap-3 md:grid-cols-2">
+                <Lbl label="Dashboard-Rollen benachrichtigen (z. B. Leitung)">
+                  <div className="flex flex-wrap gap-1">{(roles.data ?? []).map((r) => { const on = d.warnings.atLimit.notifyRoleIds.includes(r.id); return <button key={r.id} type="button" disabled={ro} aria-pressed={on} onClick={() => upd('warnings', { ...d.warnings, atLimit: { ...d.warnings.atLimit, notifyRoleIds: on ? d.warnings.atLimit.notifyRoleIds.filter((x) => x !== r.id) : [...d.warnings.atLimit.notifyRoleIds, r.id] } })} className={`rounded border px-2 py-0.5 text-xs ${on ? 'border-primary bg-primary/15' : 'border-line hover:bg-panel-2'}`}>{r.name}</button>; })}</div>
+                </Lbl>
+                <Lbl label="Discord-Rollen in der Meldung erwähnen"><RolePicker ariaLabel="Discord-Rollen erwähnen bei Grenze" disabled={ro} max={10} value={d.warnings.atLimit.pingDiscordRoleIds} onChange={(v) => upd('warnings', { ...d.warnings, atLimit: { ...d.warnings.atLimit, pingDiscordRoleIds: v } })} /></Lbl>
+                <Lbl label="Discord-Rollen entziehen"><RolePicker ariaLabel="Discord-Rollen entziehen bei Grenze" disabled={ro} max={25} value={d.warnings.atLimit.removeDiscordRoleIds} onChange={(v) => upd('warnings', { ...d.warnings, atLimit: { ...d.warnings.atLimit, removeDiscordRoleIds: v } })} /></Lbl>
+                <Lbl label="Status der Personalakte setzen"><Select aria-label="Status bei Grenze" disabled={ro} value={d.warnings.atLimit.status ?? ''} onChange={(e) => upd('warnings', { ...d.warnings, atLimit: { ...d.warnings.atLimit, status: e.target.value || null } })}><option value="">– nicht ändern –</option>{d.statuses.map((x) => <option key={x.key} value={x.key}>{x.emoji} {x.label}</option>)}</Select></Lbl>
+              </div>
             </section>
           </div>
         </Card>

@@ -73,6 +73,13 @@ export function Settings() {
           </div>
         ))}</div>
       </Card>
+      <Card title="👻 Ghost-Ping" className="mt-4">
+        <label className="flex items-center gap-2 text-sm">
+          <input type="checkbox" disabled={!manage} checked={get<{ enabled: boolean }>('discord.ghostPing')?.enabled !== false} onChange={(e) => put('discord.ghostPing', { enabled: e.target.checked }, 'Ghost-Ping')} />
+          Ghost-Pings melden
+        </label>
+        <p className="mt-1 text-xs text-muted">Löscht jemand innerhalb von 15 Minuten eine Nachricht, in der er jemanden erwähnt hat, schreibt der Bot in denselben Kanal: wer gepingt hat und mit welcher Nachricht. Benachrichtigt werden nur die Erwähnten.</p>
+      </Card>
       {manage && <SystemNoticeCard />}
       <BotInviteCard />
       <DiscordLoginCard manage={manage} value={get<DiscordLogin>('auth.discord')} onSave={(v) => put('auth.discord', v, 'Discord-Anmeldung')} />

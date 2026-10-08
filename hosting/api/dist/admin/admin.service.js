@@ -38,6 +38,8 @@ exports.SETTING_SCHEMAS = {
     /** Eigene Akzentfarben (Studio → Design → „Eigene Farbe hinzufügen“). */
     'theme.customAccents': zod_1.z.array(zod_1.z.object({ name: zod_1.z.string().trim().min(1).max(30), hex: zod_1.z.string().regex(/^#[0-9a-fA-F]{6}$/, 'Farbe als #rrggbb') })).max(24),
     'discord.channels': zod_1.z.object({ guildId: idList(), dispatch: idList(), wanted: idList(), announcements: idList(), applications: idList(), danger: idList(), sek: idList(), qualifications: idList(), duty: idList(), teamlist: singleId(), tickets: singleId(), staffRole: singleId(), radioRole: singleId(), sekRole: singleId(), dutyRole: idList(), breakRole: idList(), trainingRole: idList(), adminDutyRole: idList() }),
+    /** Ghost-Ping-Meldung des Bots (gelöschte Nachricht mit @Erwähnung); Standard an. */
+    'discord.ghostPing': zod_1.z.object({ enabled: zod_1.z.boolean() }),
     'team.rankOrder': zod_1.z.array(zod_1.z.string().trim().min(1).max(64)).max(50),
     /** Teams und Büros (Dienstgrade: `team.rankOrder`) – Auswahl in Personalakten und Filter der Teamliste. */
     'team.structure': zod_1.z.object({ teams: zod_1.z.array(zod_1.z.string().trim().min(1).max(64)).max(50), offices: zod_1.z.array(zod_1.z.string().trim().min(1).max(64)).max(50) }),

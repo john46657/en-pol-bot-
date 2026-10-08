@@ -11,6 +11,7 @@ import { fmtDate, type Overview } from '../../lib/hr';
 import { Toggle } from '../../components/ApplicationSettings';
 import { RolePicker } from '../../components/DiscordPickers';
 import { SaveStatus } from '../../components/SaveStatus';
+import { TrainingSessionsTab } from './TrainingSessions';
 import { Badge, Button, Card, ConfirmDialog, EmptyState, ErrorState, fmt, Input, Modal, PageHeader, Select, SkeletonRows, Tabs, Textarea, type Tone } from '../../components/ui';
 
 // ───────────── Typen ─────────────
@@ -115,13 +116,14 @@ const useExams = (enabled = true) => useQuery({ queryKey: ['hr-exams'], queryFn:
 export function Trainings() {
   const { can } = useAuth();
   const canGrade = can('exam.grade') || can('exam.manage');
-  const tabs = [...(can('training.view') ? ['Ausbildungen'] : []), ...(can('exam.view') ? ['Prüfungen'] : []), ...(canGrade ? ['Bewertung'] : [])];
-  const [tab, setTab] = useState(tabs[0] ?? 'Ausbildungen');
+  const tabs = [...(can('training.view') ? ['Termine', 'Ausbildungen'] : []), ...(can('exam.view') ? ['Prüfungen'] : []), ...(canGrade ? ['Bewertung'] : [])];
+  const [tab, setTab] = useState(tabs[0] ?? 'Termine');
   return (
     <div>
-      <PageHeader title="🎓 Ausbildungen & Prüfungen" subtitle="Ausbildungen, Fortschritt, Zertifikate und Online-Prüfungen" />
+      <PageHeader title="🎓 Ausbildungen & Prüfungen" subtitle="Termine mit Anmeldung und Auswertung, Ausbildungen, Fortschritt, Zertifikate und Online-Prüfungen" />
       {tabs.length > 1 && <div className="mb-4"><Tabs tabs={tabs} active={tab} onChange={setTab} /></div>}
       {!tabs.length && <EmptyState text="Keine Berechtigung" hint="Du hast keinen Zugriff auf Ausbildungen oder Prüfungen." />}
+      {tab === 'Termine' && can('training.view') && <TrainingSessionsTab />}
       {tab === 'Ausbildungen' && can('training.view') && <TrainingsTab />}
       {tab === 'Prüfungen' && can('exam.view') && <ExamsTab />}
       {tab === 'Bewertung' && canGrade && <GradingTab />}

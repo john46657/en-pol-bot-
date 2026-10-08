@@ -1,4 +1,4 @@
-import { BellRing, GraduationCap, IdCard, Medal, SlidersHorizontal, CalendarCheck, FormInput, ListOrdered, Link2, PanelTop, DoorOpen, MapPinned, Building2, Megaphone, RadioTower, Contact, Palette, CalendarOff, Clock, LifeBuoy, Monitor, BarChart3, BookOpen, Award, Car, ClipboardList, FileText, Fingerprint, Flag, Gavel, LayoutDashboard, MessageSquare, Radio, Scale, Search, Settings, Shield, Siren, Ticket, UserCheck, Users, Wrench, type LucideIcon } from 'lucide-react';
+import { TriangleAlert, HardDriveDownload, ScrollText, BellRing, GraduationCap, IdCard, Medal, SlidersHorizontal, CalendarCheck, FormInput, ListOrdered, Link2, PanelTop, DoorOpen, MapPinned, Building2, Megaphone, RadioTower, Contact, Palette, CalendarOff, Clock, LifeBuoy, Monitor, BarChart3, BookOpen, Award, Car, ClipboardList, FileText, Fingerprint, Flag, Gavel, LayoutDashboard, MessageSquare, Radio, Scale, Search, Settings, Shield, Siren, Ticket, UserCheck, Users, Wrench, type LucideIcon } from 'lucide-react';
 
 /** `area`: Bereichs-Sichtbarkeit (dashboard.<bereich>.view) – ohne sie erscheint der Menüpunkt nicht, auch mit Modul-Recht. */
 export interface NavItem { path: string; label: string; icon: LucideIcon; perm?: string; area?: string; group: 'Operations' | 'Records' | 'Organisation' | 'Administration' }
@@ -24,6 +24,7 @@ export const NAV: NavItem[] = [
   { path: '/investigations', label: 'Ermittlungen', icon: Search, perm: 'investigations.view', group: 'Records' },
   { path: '/wanted', label: 'Fahndungen', icon: Flag, perm: 'wanted.view', group: 'Records' },
   { path: '/personnel', label: 'Personal', icon: UserCheck, perm: 'personnel.view', group: 'Organisation' },
+  { path: '/warnings', label: 'Verwarnungen', icon: TriangleAlert, perm: 'warning.view', group: 'Organisation' },
   { path: '/promotions', label: 'Beförderungen', icon: Medal, perm: 'promotion.view', group: 'Organisation' },
   { path: '/trainings', label: 'Ausbildungen & Prüfungen', icon: GraduationCap, perm: 'training.view', group: 'Organisation' },
   { path: '/service-numbers', label: 'Dienstnummern', icon: IdCard, perm: 'dienstnummer.view', group: 'Organisation' },
@@ -36,6 +37,8 @@ export const NAV: NavItem[] = [
   { path: '/analytics', label: 'Statistiken', icon: BarChart3, perm: 'analytics.view', group: 'Organisation' },
   { path: '/admin/users', label: 'Benutzer', icon: Users, perm: 'users.view', area: 'dashboard.settings.view', group: 'Administration' },
   { path: '/admin/roles', label: 'Rollen & Rechte', icon: Shield, perm: 'roles.view', area: 'dashboard.settings.view', group: 'Administration' },
+  { path: '/admin/backups', label: 'Backups', icon: HardDriveDownload, perm: 'settings.manage', area: 'dashboard.settings.view', group: 'Administration' },
+  { path: '/admin/logging', label: 'Logging (Discord)', icon: ScrollText, perm: 'settings.view', area: 'dashboard.settings.view', group: 'Administration' },
   { path: '/admin/audit', label: 'Audit-Logs', icon: Gavel, perm: 'audit.view', area: 'dashboard.logs.view', group: 'Administration' },
   { path: '/admin/legal-codes', label: 'Tatbestände', icon: Scale, perm: 'settings.view', area: 'dashboard.settings.view', group: 'Administration' },
   { path: '/admin/settings', label: 'Einstellungen', icon: Settings, perm: 'settings.view', area: 'dashboard.settings.view', group: 'Administration' },
@@ -44,6 +47,7 @@ export const NAV: NavItem[] = [
   { path: '/admin/embeds', label: 'Embeds', icon: PanelTop, perm: 'settings.view', area: 'dashboard.settings.view', group: 'Administration' },
   { path: '/admin/personnel', label: 'Personal-Einstellungen', icon: SlidersHorizontal, perm: 'promotion.manage_settings', area: 'dashboard.settings.view', group: 'Administration' },
   { path: '/admin/form-panels', label: 'Formular-Panels', icon: FormInput, perm: 'settings.view', area: 'dashboard.settings.view', group: 'Administration' },
+  { path: '/admin/info-panels', label: 'Info-Panels', icon: PanelTop, perm: 'settings.view', area: 'dashboard.settings.view', group: 'Administration' },
   { path: '/admin/welcome', label: 'Willkommen & Abschied', icon: DoorOpen, perm: 'settings.view', area: 'dashboard.settings.view', group: 'Administration' },
   { path: '/admin/leave', label: 'Abmeldungen (Einrichtung)', icon: CalendarOff, perm: 'settings.view', area: 'dashboard.settings.view', group: 'Administration' },
   { path: '/admin/studio', label: 'Studio', icon: Wrench, perm: 'studio.view', area: 'dashboard.settings.view', group: 'Administration' },

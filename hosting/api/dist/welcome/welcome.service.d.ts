@@ -216,6 +216,13 @@ export declare class WelcomeService {
         own: boolean;
     }>;
     /** Hochgeladener Banner für den Bot (nur Bilder, die als Willkommens-Banner hochgeladen wurden). */
+    /**
+     * Test-Nachricht: der Bot schickt die gespeicherte Willkommens-/Abschiedsnachricht bzw. DM so, als wärst du gerade
+     * beigetreten/gegangen (mit deinem Discord-Profil) – ohne Rollen oder Aktionen beim Verlassen.
+     */
+    test(actor: Actor, guildId: string | null, kind: 'welcome' | 'goodbye' | 'dm'): Promise<{
+        queued: boolean;
+    }>;
     banner(id: string): Promise<{
         mime: string;
         name: string;

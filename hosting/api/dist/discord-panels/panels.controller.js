@@ -42,6 +42,10 @@ let PanelsController = class PanelsController {
     saveForm(a, id, b) { same(id, b.id); return this.s.saveForm(a, b); }
     removeForm(a, id) { return this.s.removeForm(a, id); }
     sendForm(a, id, b) { return this.s.sendForm(a, id, b.mode); }
+    infos() { return this.s.infoPanels((0, guild_context_1.currentGuild)()); }
+    saveInfo(a, id, b) { same(id, b.id); return this.s.saveInfo(a, b); }
+    removeInfo(a, id) { return this.s.removeInfo(a, id); }
+    sendInfo(a, id, b) { return this.s.sendInfo(a, id, b.mode); }
     subs(id) { return this.s.submissions(id); }
     removeSub(a, id) { return this.s.removeSubmission(a, id); }
 };
@@ -139,6 +143,44 @@ __decorate([
     __metadata("design:returntype", void 0)
 ], PanelsController.prototype, "sendForm", null);
 __decorate([
+    (0, common_1.Get)('info'),
+    (0, decorators_1.RequirePermission)('settings.view'),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", []),
+    __metadata("design:returntype", void 0)
+], PanelsController.prototype, "infos", null);
+__decorate([
+    (0, common_1.Put)('info/:id'),
+    (0, decorators_1.RequirePermission)('settings.manage'),
+    __param(0, (0, decorators_1.CurrentActor)()),
+    __param(1, (0, common_1.Param)('id', common_1.ParseUUIDPipe)),
+    __param(2, (0, common_1.Body)((0, zod_pipe_1.zodBody)(shared_1.infoPanelSchema))),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, String, Object]),
+    __metadata("design:returntype", void 0)
+], PanelsController.prototype, "saveInfo", null);
+__decorate([
+    (0, common_1.Delete)('info/:id'),
+    (0, common_1.HttpCode)(204),
+    (0, decorators_1.RequirePermission)('settings.manage'),
+    __param(0, (0, decorators_1.CurrentActor)()),
+    __param(1, (0, common_1.Param)('id', common_1.ParseUUIDPipe)),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, String]),
+    __metadata("design:returntype", void 0)
+], PanelsController.prototype, "removeInfo", null);
+__decorate([
+    (0, common_1.Post)('info/:id/send'),
+    (0, common_1.HttpCode)(202),
+    (0, decorators_1.RequirePermission)('settings.manage'),
+    __param(0, (0, decorators_1.CurrentActor)()),
+    __param(1, (0, common_1.Param)('id', common_1.ParseUUIDPipe)),
+    __param(2, (0, common_1.Body)((0, zod_pipe_1.zodBody)(mode))),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, String, void 0]),
+    __metadata("design:returntype", void 0)
+], PanelsController.prototype, "sendInfo", null);
+__decorate([
     (0, common_1.Get)('forms/:id/submissions'),
     (0, decorators_1.RequirePermission)('settings.view'),
     __param(0, (0, common_1.Param)('id', common_1.ParseUUIDPipe)),
@@ -168,6 +210,7 @@ let BotPanelsController = class BotPanelsController {
         this.s = s;
     }
     staff() { return this.s.botStaffLists(); }
+    info(id) { return this.s.botInfo(id); }
     form(id) { return this.s.botForm(id); }
     submit(id, b) { return this.s.botSubmit(id, b); }
     async posted(id, b) { await this.s.botSubmissionPosted(id, b.channelId, b.messageId); }
@@ -180,6 +223,14 @@ __decorate([
     __metadata("design:paramtypes", []),
     __metadata("design:returntype", void 0)
 ], BotPanelsController.prototype, "staff", null);
+__decorate([
+    (0, decorators_1.BotService)(),
+    (0, common_1.Get)('info/:id'),
+    __param(0, (0, common_1.Param)('id', common_1.ParseUUIDPipe)),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String]),
+    __metadata("design:returntype", void 0)
+], BotPanelsController.prototype, "info", null);
 __decorate([
     (0, decorators_1.BotService)(),
     (0, common_1.Get)('forms/:id'),

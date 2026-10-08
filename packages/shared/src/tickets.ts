@@ -95,7 +95,7 @@ export interface EmbedSpec {
 export interface ComponentButton { id: string; label: string; emoji?: string; style: ButtonStyleName; url?: string; disabled?: boolean }
 export interface ComponentSelect { id: string; placeholder: string; kind?: 'string' | 'user' | 'role'; min?: number; max?: number; options?: { label: string; value: string; description?: string; emoji?: string }[] }
 /** Bilder in Embeds dürfen `media:<id>` sein (hochgeladene Datei – der Bot lädt sie und hängt sie an). `reactions`: Emojis, die der Bot nach dem Senden setzt. */
-export interface MessageSpec { content?: string; embeds?: EmbedSpec[]; buttons?: ComponentButton[]; select?: ComponentSelect; mentionUsers?: string[]; mentionRoles?: string[]; reactions?: string[] }
+export interface MessageSpec { content?: string; embeds?: EmbedSpec[]; buttons?: ComponentButton[]; select?: ComponentSelect; mentionUsers?: string[]; mentionRoles?: string[]; reactions?: string[]; /** beim ersten Senden einen Thread mit diesem Namen starten */ thread?: string }
 
 export type TicketEffect =
   | { type: 'create'; ticketId: string; guildId: string; name: string; parentId?: string | null; viewers: { id: string; kind: 'user' | 'role'; send: boolean }[]; topic: string; messages: MessageSpec[]; control: MessageSpec }

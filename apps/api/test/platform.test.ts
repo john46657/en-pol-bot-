@@ -105,6 +105,7 @@ describe('media', () => {
     const adm = (await login(app, 'p_admin')).agent;
     const off = (await login(app, 'p_off')).agent;
     const hr = (await login(app, 'p_hr')).agent; // no complaints.view
+    const uploadsBefore = await prisma.auditLog.count({ where: { action: 'media.upload' } }); // andere Testdateien laden auch hoch
     const person = (await adm.post('/api/v1/persons').send({ robloxUsername: 'MediaPerson' })).body.person;
 
     const ok = await off.post('/api/v1/media').field('linkedType', 'Person').field('linkedId', person.id).attach('file', PNG, { filename: '../../evil name.png', contentType: 'image/png' });
@@ -138,6 +139,6 @@ describe('media', () => {
     const cm = await adm.post('/api/v1/media').field('linkedType', 'Complaint').field('linkedId', c.id).attach('file', PNG, { filename: 'c.png', contentType: 'image/png' });
     expect(cm.status).toBe(201);
     expect((await hr.get(`/api/v1/media/${cm.body.id}`)).status).toBe(404);
-    expect(await prisma.auditLog.count({ where: { action: 'media.upload' } })).toBe(2);
+    expect(await prisma.auditLog.count({ where: { action: 'media.upload' } })).toBe(uploadsBefore + 2);
   });
 });

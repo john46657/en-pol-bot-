@@ -60,6 +60,8 @@ async function postOrUpdate(client, api, o) {
     const old = messageId && !o.forceNew ? await ch.messages.fetch(messageId).catch(() => null) : null;
     const msg = old ? await old.edit({ ...payload, content: payload.content ?? '', attachments: [] }) : await ch.send(payload);
     await react(msg, message.reactions);
+    if (!old && message.thread && 'startThread' in msg)
+        await msg.startThread({ name: message.thread.slice(0, 100), autoArchiveDuration: 10080 }).catch((e) => console.error('could not start thread:', e instanceof Error ? e.message : e));
     if (o.stateKey)
         await api.service('PUT', `/bot/state/${o.stateKey}`, { value: { channelId: o.channelId, messageId: msg.id } }).catch(() => undefined);
     return { channelId: o.channelId, messageId: msg.id };

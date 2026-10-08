@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
+import { Link } from 'react-router';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Layers, Locate, Minus, Pencil, Plus, X } from 'lucide-react';
 import { gameToPixel, pixelToGame, type CadConfig } from '@enrp/shared';
@@ -182,7 +183,16 @@ export function MapView({ cfg, data, height = '70vh', focus, onCreateIncidentAt,
           })}
         </div>
       )}
-      {!m.imageUrl && <div data-ui className="pointer-events-none absolute inset-x-0 top-12 mx-auto w-fit rounded bg-black/70 px-3 py-1.5 text-xs text-white">Noch keine Karte hinterlegt – unter CAD → Einstellungen → Karte die ER:LC-Map hochladen.</div>}
+      {!m.imageUrl && (
+        <div className="pointer-events-none absolute inset-0 grid place-items-center p-4" style={{ backgroundImage: 'linear-gradient(rgba(148,163,184,.08) 1px, transparent 1px), linear-gradient(90deg, rgba(148,163,184,.08) 1px, transparent 1px)', backgroundSize: '48px 48px' }}>
+          <div data-ui className="pointer-events-auto max-w-sm rounded-lg border border-line bg-panel/95 p-4 text-center text-sm shadow-lg">
+            <p className="text-2xl" aria-hidden>🗺️</p>
+            <p className="mt-1 font-semibold">Noch keine Karte hinterlegt</p>
+            <p className="mt-1 text-xs text-muted">Lade die ER:LC-Karte als Bild hoch – danach erscheinen Einsätze, Notrufe und Einheiten hier.{!compact ? ' Marker werden trotzdem schon angezeigt, sobald Positionen bekannt sind.' : ''}</p>
+            {can('cad.manage_map') && <Link to="/cad/settings?tab=Karte+%26+Ebenen" className="mt-3 inline-block rounded-md bg-primary px-3 py-1.5 text-xs font-medium text-white hover:opacity-90">Karte hochladen</Link>}
+          </div>
+        </div>
+      )}
       {data?.stale && <div data-ui className="absolute left-2 bottom-2 rounded bg-warning/90 px-2 py-1 text-xs text-black">ER:LC-API momentan nicht erreichbar – letzter bekannter Stand</div>}
 
       {/* Steuerung */}

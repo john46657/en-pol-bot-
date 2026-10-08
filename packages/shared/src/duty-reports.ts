@@ -59,6 +59,39 @@ export function periodLabel(period: ReportTemplate['period'], start: Date | stri
   return dd(s);
 }
 
+// ---------------- Dienstzeit automatisch ----------------
+/** Felder, die automatisch mit der Dienstzeit gefüllt werden (Kürzel oder Beschriftung). */
+export const isDutyTimeField = (f: Pick<ReportField, 'id' | 'label' | 'type'>) => f.type !== 'select' && /dienst ?zeit|dienststunden|arbeitszeit|dienstzeit/i.test(`${f.id} ${f.label}`);
+/** Ende des Zeitraums (exklusiv). */
+export function periodEnd(period: ReportTemplate['period'], start: Date): Date {
+  const e = new Date(start);
+  e.setUTCDate(e.getUTCDate() + (period === 'WEEKLY' ? 7 : 1));
+  return e;
+}
+export interface DutySpan { status: string; startedAt: Date | string; endedAt: Date | string | null }
+const fmtDur = (ms: number) => { const m = Math.round(ms / 60_000); return m < 60 ? `${m} min` : `${Math.floor(m / 60)} h${m % 60 ? ` ${m % 60} min` : ''}`; };
+/**
+ * Dienstzeit im Zeitraum aus den Dienst-Sitzungen: zusammenhängende Sitzungen bilden eine Schicht, Pausen zählen nicht mit.
+ * Tag: „18:02–21:15 (3 h 13 min)“, mehrere Schichten mit Komma. Woche: „12 h 30 min in 4 Schichten“. Ohne Dienst: null.
+ */
+export function dutyTimeText(period: ReportTemplate['period'], sessions: DutySpan[], from: Date, to: Date, timeZone = 'Europe/Berlin', now = new Date()): string | null {
+  const spans = sessions.map((x) => ({ status: x.status, s: Math.max(new Date(x.startedAt).getTime(), from.getTime()), e: Math.min(x.endedAt ? new Date(x.endedAt).getTime() : now.getTime(), to.getTime()) }))
+    .filter((x) => x.e > x.s && x.status !== 'OFF_DUTY').sort((a, b) => a.s - b.s);
+  const shifts: { s: number; e: number; work: number }[] = [];
+  for (const x of spans) {
+    const last = shifts[shifts.length - 1];
+    const work = x.status === 'BREAK' ? 0 : x.e - x.s;
+    if (last && x.s - last.e <= 60_000) { last.e = Math.max(last.e, x.e); last.work += work; } else shifts.push({ s: x.s, e: x.e, work });
+  }
+  const real = shifts.filter((x) => x.work >= 60_000);
+  if (!real.length) return null;
+  const total = real.reduce((n, x) => n + x.work, 0);
+  if (period === 'WEEKLY') return `${fmtDur(total)} in ${real.length} ${real.length === 1 ? 'Schicht' : 'Schichten'}`;
+  const t = (ms: number) => new Date(ms).toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit', timeZone });
+  const open = sessions.some((x) => !x.endedAt);
+  return `${real.map((x, i) => `${t(x.s)}–${open && i === real.length - 1 && x.e >= Math.min(now.getTime(), to.getTime()) - 60_000 ? 'jetzt' : t(x.e)}`).join(', ')} (${fmtDur(total)})`;
+}
+
 /** Werte prüfen/zuschneiden; liefert Fehlertext oder die bereinigten Werte. */
 export function cleanReportValues(t: ReportTemplate, input: Record<string, unknown>): { values: Record<string, string> } | { error: string } {
   const values: Record<string, string> = {};
@@ -72,16 +105,23 @@ export function cleanReportValues(t: ReportTemplate, input: Record<string, unkno
   return { values };
 }
 
-export interface ReportView { number: string; period: ReportTemplate['period']; periodStart: string | Date; values: Record<string, string>; authorName: string; authorDiscordId?: string | null; status: string; updatedAt: string | Date; edited: boolean }
+export interface ReportView { number: string; period: ReportTemplate['period']; periodStart: string | Date; values: Record<string, string>; authorName: string; authorDiscordId?: string | null; status: string; updatedAt: string | Date; edited: boolean; reviewerName?: string | null; reviewNote?: string | null }
+export const REPORT_STATUS_LABEL: Record<string, string> = { SUBMITTED: '📨 Eingereicht', REVIEWED: '✅ Geprüft', RETURNED: '↩️ Zur Nachbesserung' };
 
 /** Bericht als Discord-Nachricht (mit „Bearbeiten“-Button). */
 export function reportMessage(t: ReportTemplate, r: ReportView, id: string): MessageSpec {
   const fields = t.fields.filter((f) => r.values[f.id]).map((f) => ({ name: f.label, value: r.values[f.id]!.slice(0, 1024), inline: f.inline }));
   const embed: EmbedSpec = {
     title: `${t.emoji ? `${t.emoji} ` : ''}${t.name} – ${periodLabel(t.period, r.periodStart)}`.slice(0, 256),
-    description: `**Verfasser:** ${r.authorDiscordId ? `<@${r.authorDiscordId}>` : r.authorName}${r.status === 'REVIEWED' ? '\n✅ **Geprüft**' : ''}`,
+    description: `**Verfasser:** ${r.authorDiscordId ? `<@${r.authorDiscordId}>` : r.authorName}${r.status !== 'SUBMITTED' ? `\n**${REPORT_STATUS_LABEL[r.status] ?? r.status}**${r.reviewerName ? ` von ${r.reviewerName}` : ''}${r.reviewNote ? `\n> ${r.reviewNote.replace(/\n/g, '\n> ').slice(0, 900)}` : ''}` : ''}`,
     color: parseInt(t.color.slice(1), 16), fields: fields.slice(0, 25),
     footer: `${r.number}${r.edited ? ' · bearbeitet' : ''}`, timestamp: new Date(r.updatedAt).toISOString(),
   };
-  return { embeds: [embed], buttons: [{ id: `drep:edit:${id}`, label: 'Bearbeiten', emoji: '✏️', style: 'secondary' }] };
+  embed.color = r.status === 'REVIEWED' ? 0x22c55e : r.status === 'RETURNED' ? 0xf59e0b : embed.color;
+  // Leitung prüft direkt in Discord (Rechte prüft das System beim Klick)
+  return { embeds: [embed], buttons: [
+    { id: `drep:edit:${id}`, label: 'Bearbeiten', emoji: '✏️', style: 'secondary' },
+    ...(r.status !== 'REVIEWED' ? [{ id: `drep:rev:${id}`, label: 'Geprüft', emoji: '✅', style: 'success' as const }] : []),
+    ...(r.status !== 'RETURNED' ? [{ id: `drep:ret:${id}`, label: 'Zur Nachbesserung', emoji: '↩️', style: 'secondary' as const }] : []),
+  ] };
 }

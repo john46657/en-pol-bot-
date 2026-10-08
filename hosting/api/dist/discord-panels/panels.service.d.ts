@@ -1,4 +1,4 @@
-import { type FormPanel, type StaffList } from '@enrp/shared';
+import { type FormPanel, type InfoPanel, type StaffList } from '@enrp/shared';
 import { PrismaService } from '../prisma/prisma.service';
 import { AuditService, type Actor } from '../audit/audit.service';
 import { DiscordService } from '../discord/discord.service';
@@ -12,6 +12,7 @@ export declare class PanelsService {
     private readonly live;
     readonly staff: JsonListStore<StaffList>;
     readonly forms: JsonListStore<FormPanel>;
+    readonly infos: JsonListStore<InfoPanel>;
     constructor(prisma: PrismaService, audit: AuditService, discord: DiscordService, live: DiscordLiveService);
     private visible;
     staffLists(g: string | null): Promise<{
@@ -176,6 +177,80 @@ export declare class PanelsService {
     removeForm(actor: Actor, id: string): Promise<void>;
     sendForm(actor: Actor, id: string, mode: 'update' | 'new'): Promise<{
         queued: boolean;
+    }>;
+    infoPanels(g: string | null): Promise<{
+        posted: {
+            channelId: string;
+            messageId: string;
+        } | null;
+        options: {
+            label: string;
+            text: string;
+            title: string;
+            description: string;
+            id: string;
+            color: string;
+            image: string;
+            emoji: string;
+        }[];
+        text: string;
+        title: string;
+        id: string;
+        name: string;
+        guildId: string | null;
+        channelId: string | null;
+        color: string;
+        footer: string;
+        image: string;
+        placeholder: string;
+    }[]>;
+    saveInfo(actor: Actor, doc: InfoPanel): Promise<{
+        options: {
+            label: string;
+            text: string;
+            title: string;
+            description: string;
+            id: string;
+            color: string;
+            image: string;
+            emoji: string;
+        }[];
+        text: string;
+        title: string;
+        id: string;
+        name: string;
+        guildId: string | null;
+        channelId: string | null;
+        color: string;
+        footer: string;
+        image: string;
+        placeholder: string;
+    }>;
+    removeInfo(actor: Actor, id: string): Promise<void>;
+    sendInfo(actor: Actor, id: string, mode: 'update' | 'new'): Promise<{
+        queued: boolean;
+    }>;
+    botInfo(id: string): Promise<{
+        options: {
+            label: string;
+            text: string;
+            title: string;
+            description: string;
+            id: string;
+            color: string;
+            image: string;
+            emoji: string;
+        }[];
+        text: string;
+        title: string;
+        id: string;
+        name: string;
+        guildId: string | null;
+        channelId: string | null;
+        color: string;
+        footer: string;
+        image: string;
+        placeholder: string;
     }>;
     submissions(panelId: string): import("@prisma/client").Prisma.PrismaPromise<{
         id: string;

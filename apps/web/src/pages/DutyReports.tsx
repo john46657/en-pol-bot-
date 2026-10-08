@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { ArrowDown, ArrowUp, CheckCircle2, Copy, Inbox, Pencil, Plus, Search, Trash2 } from 'lucide-react';
 import { PERIOD_LABEL, periodLabel, reportMessage, type ReportField, type ReportTemplate } from '@enrp/shared';
@@ -13,10 +13,10 @@ import { Toggle } from '../components/ApplicationSettings';
 import { Badge, Button, Card, ConfirmDialog, EmptyState, ErrorState, fmt, Input, Modal, PageHeader, Select, SkeletonRows, Tabs, Textarea } from '../components/ui';
 
 interface Report {
-  id: string; number: string; templateId: string; templateName: string; period: ReportTemplate['period']; periodStart: string; values: Record<string, string>; status: 'SUBMITTED' | 'REVIEWED';
+  id: string; number: string; templateId: string; templateName: string; period: ReportTemplate['period']; periodStart: string; values: Record<string, string>; status: 'SUBMITTED' | 'REVIEWED' | 'RETURNED'; reviewNote?: string | null; reviewedAt?: string | null;
   source: string; version: number; createdAt: string; updatedAt: string; author: { id: string; displayName: string };
 }
-interface Detail extends Report { template: ReportTemplate | null; canEdit: boolean; posted: { channelId: string; messageId: string } | null }
+interface Detail extends Report { template: ReportTemplate | null; canEdit: boolean; reviewerName?: string | null; posted: { channelId: string; messageId: string } | null }
 const today = () => new Date().toISOString().slice(0, 10);
 
 /** Ein Feld im Formular (Dashboard). */
@@ -34,6 +34,15 @@ function ReportForm({ template, initial, onDone, reportId, version }: { template
   const [values, setValues] = useState<Record<string, string>>(initial ?? {});
   const [date, setDate] = useState(today());
   const [err, setErr] = useState<string>();
+  // Neuer Bericht: Dienstzeit automatisch aus den Dienst-Sitzungen (bleibt änderbar; Tag/Woche wechseln → neu berechnet)
+  const auto = useQuery({ queryKey: ['duty-report-prefill', template.id, date], queryFn: () => api<{ values: Record<string, string> }>(`/duty-reports/templates/${template.id}/prefill`, { query: { date } }), enabled: !reportId && template.period !== 'FREE' });
+  const [autoSet, setAutoSet] = useState<Record<string, string>>({});
+  useEffect(() => {
+    const v = auto.data?.values;
+    if (!v) return;
+    setValues((cur) => { const next = { ...cur }; for (const [k, x] of Object.entries(v)) if (!cur[k]?.trim() || cur[k] === autoSet[k]) next[k] = x; return next; });
+    setAutoSet(v);
+  }, [auto.data]);
   const save = useMutation({
     mutationFn: () => (reportId ? api<Report>(`/duty-reports/${reportId}`, { method: 'PATCH', body: { values, version } }) : api<Report & { merged: boolean }>('/duty-reports', { method: 'POST', body: { templateId: template.id, values, ...(template.period !== 'FREE' ? { periodStart: date } : {}) } })),
     onSuccess: (r) => { void qc.invalidateQueries({ queryKey: ['duty-reports'] }); onDone(reportId ? `${r.number} gespeichert.` : 'merged' in r && r.merged ? `Für diesen Zeitraum gab es schon ${r.number} – aktualisiert.` : `${r.number} eingereicht.`); },
@@ -43,7 +52,7 @@ function ReportForm({ template, initial, onDone, reportId, version }: { template
   return (
     <form className="grid gap-3" onSubmit={(e) => { e.preventDefault(); if (!miss.length) save.mutate(); }}>
       {!reportId && template.period !== 'FREE' && <label className="grid gap-1 text-sm">{template.period === 'WEEKLY' ? 'Woche (ein Tag daraus)' : 'Tag'}<Input type="date" aria-label="Zeitraum" value={date} max={today()} onChange={(e) => setDate(e.target.value)} /><span className="text-xs text-muted">{periodLabel(template.period, date)}</span></label>}
-      {template.fields.map((f) => <FieldInput key={f.id} f={f} value={values[f.id] ?? ''} onChange={(v) => setValues({ ...values, [f.id]: v })} />)}
+      {template.fields.map((f) => <div key={f.id}><FieldInput f={f} value={values[f.id] ?? ''} onChange={(v) => setValues({ ...values, [f.id]: v })} />{autoSet[f.id] && values[f.id] === autoSet[f.id] && <p className="mt-0.5 text-[11px] text-success">⏱️ automatisch aus deinen Dienstzeiten – du kannst es ändern.</p>}</div>)}
       {err && <p role="alert" className="text-sm text-danger">{err}</p>}
       <div className="flex items-center gap-2">
         <Button type="submit" disabled={save.isPending || !!miss.length}>{reportId ? 'Speichern' : 'Einreichen'}</Button>
@@ -53,6 +62,8 @@ function ReportForm({ template, initial, onDone, reportId, version }: { template
   );
 }
 
+const StatusBadge = ({ status }: { status: string }) => (status === 'REVIEWED' ? <Badge tone="success">geprüft</Badge> : status === 'RETURNED' ? <Badge tone="warning">nachbessern</Badge> : <Badge tone="info">eingereicht</Badge>);
+
 function ReportDetail({ id, onClose }: { id: string; onClose: () => void }) {
   const { can, user } = useAuth();
   const qc = useQueryClient();
@@ -60,7 +71,12 @@ function ReportDetail({ id, onClose }: { id: string; onClose: () => void }) {
   const [edit, setEdit] = useState(false);
   const [del, setDel] = useState(false);
   const [msg, setMsg] = useState<string>();
-  const review = useMutation({ mutationFn: () => api(`/duty-reports/${id}/review`, { method: 'POST' }), onSuccess: () => void qc.invalidateQueries({ queryKey: ['duty-reports'] }) });
+  const [note, setNote] = useState('');
+  const review = useMutation({
+    mutationFn: (decision: 'REVIEWED' | 'RETURNED' | 'SUBMITTED') => api(`/duty-reports/${id}/review`, { method: 'POST', body: { decision, ...(note.trim() ? { note: note.trim() } : {}) } }),
+    onSuccess: (_r, d) => { setNote(''); setMsg(d === 'REVIEWED' ? 'Als geprüft markiert.' : d === 'RETURNED' ? 'Zur Nachbesserung zurückgegeben – der Verfasser wurde benachrichtigt.' : 'Prüfung zurückgenommen.'); void qc.invalidateQueries({ queryKey: ['duty-reports'] }); void q.refetch(); },
+    onError: (e) => setMsg(errText(e)),
+  });
   const remove = useMutation({ mutationFn: () => api(`/duty-reports/${id}`, { method: 'DELETE' }), onSuccess: () => { void qc.invalidateQueries({ queryKey: ['duty-reports'] }); onClose(); } });
   const r = q.data;
   const fields = r ? (r.template?.fields ?? Object.keys(r.values).map((k) => ({ id: k, label: k }) as ReportField)) : [];
@@ -72,15 +88,32 @@ function ReportDetail({ id, onClose }: { id: string; onClose: () => void }) {
         <div className="grid gap-3">
           <div className="flex flex-wrap items-center gap-2 text-sm">
             <Badge tone="neutral">{r.number}</Badge>
-            {r.status === 'REVIEWED' ? <Badge tone="success">geprüft</Badge> : <Badge tone="info">eingereicht</Badge>}
+            <StatusBadge status={r.status} />
             <span className="text-muted">von <b>{r.author.displayName}</b> · {r.source === 'DISCORD' ? 'über Discord' : 'im Dashboard'} · zuletzt {fmt(r.updatedAt)}{r.version > 1 ? ` · ${r.version - 1}× bearbeitet` : ''}</span>
           </div>
           <dl className="grid gap-3 md:grid-cols-2">{fields.filter((f) => r.values[f.id]).map((f) => <div key={f.id} className={f.type === 'long' ? 'md:col-span-2' : ''}><dt className="text-xs text-muted">{f.label}</dt><dd className="whitespace-pre-wrap">{r.values[f.id]}</dd></div>)}</dl>
+          {r.status !== 'SUBMITTED' && (
+            <div className={`rounded-md border p-2 text-sm ${r.status === 'RETURNED' ? 'border-warning/40 bg-warning/10' : 'border-success/40 bg-success/10'}`}>
+              <p className="font-medium">{r.status === 'RETURNED' ? '↩️ Zur Nachbesserung' : '✅ Geprüft'}{r.reviewerName ? ` von ${r.reviewerName}` : ''}{r.reviewedAt ? <span className="font-normal text-muted"> · {fmt(r.reviewedAt)}</span> : null}</p>
+              {r.reviewNote && <p className="mt-1 whitespace-pre-wrap">{r.reviewNote}</p>}
+              {r.status === 'RETURNED' && r.author.id === user?.id && <p className="mt-1 text-xs text-muted">Bearbeite den Bericht – danach ist er wieder eingereicht und die Leitung prüft erneut.</p>}
+            </div>
+          )}
+          {can('dutyreports.review') && r.author.id !== user?.id && (
+            <div className="grid gap-2 rounded-md border border-line p-2">
+              <p className="text-xs font-medium text-muted">Leitung: Bericht bearbeiten</p>
+              <Textarea aria-label="Anmerkung der Leitung" rows={2} maxLength={1000} placeholder="Anmerkung an den Verfasser (bei „Zur Nachbesserung“ Pflicht)…" value={note} onChange={(e) => setNote(e.target.value)} />
+              <div className="flex flex-wrap gap-2">
+                {r.status !== 'REVIEWED' && <Button size="sm" disabled={review.isPending} onClick={() => review.mutate('REVIEWED')}><CheckCircle2 size={14} className="mr-1" />Geprüft</Button>}
+                {r.status !== 'RETURNED' && <Button size="sm" variant="secondary" disabled={review.isPending || !note.trim()} title={!note.trim() ? 'Erst eine Anmerkung schreiben' : undefined} onClick={() => review.mutate('RETURNED')}>↩️ Zur Nachbesserung</Button>}
+                {r.status !== 'SUBMITTED' && <Button size="sm" variant="ghost" disabled={review.isPending} onClick={() => review.mutate('SUBMITTED')}>Prüfung zurücknehmen</Button>}
+              </div>
+            </div>
+          )}
           {r.posted && <p className="text-xs text-muted">Steht auch in Discord – Änderungen werden dort automatisch übernommen.</p>}
           {msg && <p role="status" className="text-sm text-success">{msg}</p>}
           <div className="flex flex-wrap gap-2">
             {r.canEdit && r.template && <Button onClick={() => setEdit(true)}><Pencil size={14} className="mr-1" />Bearbeiten</Button>}
-            {can('dutyreports.review') && r.author.id !== user?.id && <Button variant="secondary" disabled={review.isPending} onClick={() => review.mutate(undefined, { onSuccess: () => void q.refetch() })}><CheckCircle2 size={14} className="mr-1" />{r.status === 'REVIEWED' ? 'Prüfung zurücknehmen' : 'Als geprüft markieren'}</Button>}
             {can('dutyreports.edit_all') && <Button variant="danger" onClick={() => setDel(true)}><Trash2 size={14} className="mr-1" />Löschen</Button>}
           </div>
         </div>
@@ -105,7 +138,7 @@ function ReportList({ templates }: { templates: ReportTemplate[] }) {
         <div className="mb-3 flex flex-wrap items-end gap-2">
           <label className="relative min-w-[200px] flex-1"><Search size={14} className="absolute left-3 top-3 text-muted" aria-hidden /><Input aria-label="Suchen" className="pl-8" placeholder="Suchen …" value={f.q ?? ''} onChange={(e) => setF({ ...f, q: e.target.value || undefined })} /></label>
           <Select aria-label="Vorlage" className="w-auto" value={f.templateId ?? ''} onChange={(e) => setF({ ...f, templateId: e.target.value || undefined })}><option value="">Alle Vorlagen</option>{templates.map((t) => <option key={t.id} value={t.id}>{t.emoji} {t.name}</option>)}</Select>
-          <Select aria-label="Status" className="w-auto" value={f.status ?? ''} onChange={(e) => setF({ ...f, status: e.target.value || undefined })}><option value="">Alle Status</option><option value="SUBMITTED">Eingereicht</option><option value="REVIEWED">Geprüft</option></Select>
+          <Select aria-label="Status" className="w-auto" value={f.status ?? ''} onChange={(e) => setF({ ...f, status: e.target.value || undefined })}><option value="">Alle Status</option><option value="SUBMITTED">Eingereicht</option><option value="REVIEWED">Geprüft</option><option value="RETURNED">Zur Nachbesserung</option></Select>
           <Input type="date" aria-label="Von" className="w-auto" value={f.from ?? ''} onChange={(e) => setF({ ...f, from: e.target.value || undefined })} />
           <Input type="date" aria-label="Bis" className="w-auto" value={f.to ?? ''} onChange={(e) => setF({ ...f, to: e.target.value || undefined })} />
           {q.data?.seeAll && <label className="flex items-center gap-2 text-sm"><Toggle label="Nur meine" checked={!!f.mine} onChange={(v) => setF({ ...f, mine: v })} />Nur meine</label>}
@@ -124,7 +157,7 @@ function ReportList({ templates }: { templates: ReportTemplate[] }) {
             <tbody>{q.data.items.map((r) => (
               <tr key={r.id} className="cursor-pointer border-b border-line/60 hover:bg-panel-2" onClick={() => setOpen(r.id)}>
                 <td className="p-2 font-mono text-xs">{r.number}</td><td>{r.templateName}</td><td>{periodLabel(r.period, r.periodStart)}</td><td>{r.author.displayName}</td>
-                <td>{r.status === 'REVIEWED' ? <Badge tone="success">geprüft</Badge> : <Badge tone="info">eingereicht</Badge>}{r.source === 'DISCORD' && <span className="ml-1 text-xs text-muted">Discord</span>}</td><td className="text-muted">{fmt(r.updatedAt)}</td>
+                <td><StatusBadge status={r.status} />{r.source === 'DISCORD' && <span className="ml-1 text-xs text-muted">Discord</span>}</td><td className="text-muted">{fmt(r.updatedAt)}</td>
               </tr>
             ))}</tbody>
           </table></div>

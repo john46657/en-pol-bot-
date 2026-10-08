@@ -29,6 +29,12 @@ export declare class WelcomeController {
     save(a: Actor, q: z.infer<typeof guildQ>, b: WelcomeConfig): Promise<WelcomeConfig & {
         own: boolean;
     }>;
+    /** Test-Nachricht in Discord (gespeicherte Einstellungen, dein Profil als Beispiel-Mitglied). */
+    test(a: Actor, q: z.infer<typeof guildQ>, b: {
+        kind: 'welcome' | 'goodbye' | 'dm';
+    }): Promise<{
+        queued: boolean;
+    }>;
     reset(a: Actor, q: z.infer<typeof guildQ>): Promise<WelcomeConfig & {
         own: boolean;
     }>;

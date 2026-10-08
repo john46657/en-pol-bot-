@@ -436,7 +436,7 @@ var DEFAULT_CAD_CONFIG = {
   memberFields: [],
   widgets: ["activeIncidents", "availableUnits", "activeCalls", "dutyActivity", "erlcStatus", "erlcPlayers", "erlcQueue", "staffOnline", "map", "radio"]
 };
-var gameToPixel = (m, x, z4) => ({ px: m.originX + x * m.scale, py: m.originY + z4 * m.scale });
+var gameToPixel = (m, x, z6) => ({ px: m.originX + x * m.scale, py: m.originY + z6 * m.scale });
 var pixelToGame = (m, px, py) => ({ x: (px - m.originX) / m.scale, z: (py - m.originY) / m.scale });
 var ERLC_FEATURES = ["players", "staff", "queue", "vehicles", "emergencyCalls", "modCalls", "joinLogs", "killLogs", "commandLogs", "commands", "webhook"];
 var ERLC_FEATURE_LABELS = {
@@ -933,6 +933,44 @@ function formPanelResult(p, values, user, now = /* @__PURE__ */ new Date()) {
     reactions: p.reactions
   };
 }
+var httpsImage = z.union([z.string().trim().max(500).regex(/^https:\/\/\S+$/, "Bild: https://-Link"), z.literal("")]).default("");
+var infoOptionSchema = z.object({
+  id: z.string().regex(/^[a-z0-9_-]{1,40}$/, "K\xFCrzel: a\u2013z, 0\u20139, _ und -"),
+  /** im Auswahlmenü */
+  label: z.string().trim().min(1).max(100),
+  description: z.string().max(100).default(""),
+  emoji: emoji.default(""),
+  /** Antwort (nur für die Person sichtbar) */
+  title: z.string().max(256).default(""),
+  text: z.string().max(4e3).default(""),
+  image: httpsImage,
+  color: color.default("#3b82f6")
+});
+var infoPanelSchema = z.object({
+  id: z.string().uuid(),
+  name: z.string().trim().min(1).max(80),
+  guildId: sf.nullable().default(null),
+  channelId: sf.nullable().default(null),
+  title: z.string().max(256).default("Aufgaben als Ausbilder"),
+  text: z.string().max(4e3).default("Hier findest du alles Wichtige. W\xE4hle unten einen Punkt aus."),
+  color: color.default("#1f2937"),
+  image: imageRef,
+  footer: z.string().max(200).default("Klicke auf \u201ETriff eine Auswahl\u201C, um mehr zu erfahren."),
+  placeholder: z.string().trim().min(1).max(150).default("Triff eine Auswahl"),
+  options: z.array(infoOptionSchema).min(1).max(25).default([
+    { id: "aufgaben", label: "Aufgaben", description: "Siehe, welche Aufgaben du hast.", emoji: "\u{1F4C2}", title: "Aufgaben", text: "Beschreibe hier die Aufgaben." },
+    { id: "doku", label: "Dokumentation", description: "Siehe, wie du dokumentieren musst.", emoji: "\u{1F4E8}", title: "Dokumentation", text: "Beschreibe hier, wie dokumentiert wird." }
+  ])
+});
+function infoPanelMessage(p) {
+  return {
+    embeds: [{ title: p.title || void 0, description: p.text || void 0, color: toInt(p.color), ...p.image ? { image: p.image } : {}, ...p.footer ? { footer: p.footer } : {} }],
+    select: { id: `ipnl:${p.id}`, placeholder: p.placeholder, options: p.options.map((o) => ({ label: o.label, value: o.id, ...o.description ? { description: o.description } : {}, ...o.emoji ? { emoji: o.emoji } : {} })) }
+  };
+}
+function infoOptionEmbed(o) {
+  return { title: (o.title || o.label).slice(0, 256), ...o.text ? { description: o.text } : {}, color: toInt(o.color), ...o.image ? { image: o.image } : {} };
+}
 
 // src/duty-reports.ts
 import { z as z2 } from "zod";
@@ -990,6 +1028,35 @@ function periodLabel(period, start) {
   }
   return dd(s);
 }
+var isDutyTimeField = (f) => f.type !== "select" && /dienst ?zeit|dienststunden|arbeitszeit|dienstzeit/i.test(`${f.id} ${f.label}`);
+function periodEnd(period, start) {
+  const e = new Date(start);
+  e.setUTCDate(e.getUTCDate() + (period === "WEEKLY" ? 7 : 1));
+  return e;
+}
+var fmtDur = (ms) => {
+  const m = Math.round(ms / 6e4);
+  return m < 60 ? `${m} min` : `${Math.floor(m / 60)} h${m % 60 ? ` ${m % 60} min` : ""}`;
+};
+function dutyTimeText(period, sessions, from, to, timeZone = "Europe/Berlin", now = /* @__PURE__ */ new Date()) {
+  const spans = sessions.map((x) => ({ status: x.status, s: Math.max(new Date(x.startedAt).getTime(), from.getTime()), e: Math.min(x.endedAt ? new Date(x.endedAt).getTime() : now.getTime(), to.getTime()) })).filter((x) => x.e > x.s && x.status !== "OFF_DUTY").sort((a, b) => a.s - b.s);
+  const shifts = [];
+  for (const x of spans) {
+    const last = shifts[shifts.length - 1];
+    const work = x.status === "BREAK" ? 0 : x.e - x.s;
+    if (last && x.s - last.e <= 6e4) {
+      last.e = Math.max(last.e, x.e);
+      last.work += work;
+    } else shifts.push({ s: x.s, e: x.e, work });
+  }
+  const real = shifts.filter((x) => x.work >= 6e4);
+  if (!real.length) return null;
+  const total = real.reduce((n, x) => n + x.work, 0);
+  if (period === "WEEKLY") return `${fmtDur(total)} in ${real.length} ${real.length === 1 ? "Schicht" : "Schichten"}`;
+  const t = (ms) => new Date(ms).toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit", timeZone });
+  const open = sessions.some((x) => !x.endedAt);
+  return `${real.map((x, i) => `${t(x.s)}\u2013${open && i === real.length - 1 && x.e >= Math.min(now.getTime(), to.getTime()) - 6e4 ? "jetzt" : t(x.e)}`).join(", ")} (${fmtDur(total)})`;
+}
 function cleanReportValues(t, input) {
   const values = {};
   for (const f of t.fields) {
@@ -1001,17 +1068,25 @@ function cleanReportValues(t, input) {
   }
   return { values };
 }
+var REPORT_STATUS_LABEL = { SUBMITTED: "\u{1F4E8} Eingereicht", REVIEWED: "\u2705 Gepr\xFCft", RETURNED: "\u21A9\uFE0F Zur Nachbesserung" };
 function reportMessage(t, r, id2) {
   const fields = t.fields.filter((f) => r.values[f.id]).map((f) => ({ name: f.label, value: r.values[f.id].slice(0, 1024), inline: f.inline }));
   const embed = {
     title: `${t.emoji ? `${t.emoji} ` : ""}${t.name} \u2013 ${periodLabel(t.period, r.periodStart)}`.slice(0, 256),
-    description: `**Verfasser:** ${r.authorDiscordId ? `<@${r.authorDiscordId}>` : r.authorName}${r.status === "REVIEWED" ? "\n\u2705 **Gepr\xFCft**" : ""}`,
+    description: `**Verfasser:** ${r.authorDiscordId ? `<@${r.authorDiscordId}>` : r.authorName}${r.status !== "SUBMITTED" ? `
+**${REPORT_STATUS_LABEL[r.status] ?? r.status}**${r.reviewerName ? ` von ${r.reviewerName}` : ""}${r.reviewNote ? `
+> ${r.reviewNote.replace(/\n/g, "\n> ").slice(0, 900)}` : ""}` : ""}`,
     color: parseInt(t.color.slice(1), 16),
     fields: fields.slice(0, 25),
     footer: `${r.number}${r.edited ? " \xB7 bearbeitet" : ""}`,
     timestamp: new Date(r.updatedAt).toISOString()
   };
-  return { embeds: [embed], buttons: [{ id: `drep:edit:${id2}`, label: "Bearbeiten", emoji: "\u270F\uFE0F", style: "secondary" }] };
+  embed.color = r.status === "REVIEWED" ? 2278750 : r.status === "RETURNED" ? 16096779 : embed.color;
+  return { embeds: [embed], buttons: [
+    { id: `drep:edit:${id2}`, label: "Bearbeiten", emoji: "\u270F\uFE0F", style: "secondary" },
+    ...r.status !== "REVIEWED" ? [{ id: `drep:rev:${id2}`, label: "Gepr\xFCft", emoji: "\u2705", style: "success" }] : [],
+    ...r.status !== "RETURNED" ? [{ id: `drep:ret:${id2}`, label: "Zur Nachbesserung", emoji: "\u21A9\uFE0F", style: "secondary" }] : []
+  ] };
 }
 
 // src/hr.ts
@@ -1120,6 +1195,26 @@ var hrConfigSchema = z3.object({
     announceChannelId: sf3.nullable().default(null)
   }).default({}),
   notifications: z3.record(z3.enum(HR_EVENTS), notifyRuleSchema).default({}),
+  /** Verwarnungen: Meldung in Discord mit Zähler und Folgen beim Erreichen der Grenze */
+  warnings: z3.object({
+    /** Grenze aktiver Verwarnungen (z. B. 3 → „1/3“) */
+    limit: z3.number().int().min(1).max(20).default(3),
+    /** Kanal für jede neue Verwarnung (leer = nur Dashboard) */
+    channelId: sf3.nullable().default(null),
+    template: z3.string().max(1500).default("**Wer:** {mitglied}\n**Grund:** {grund}\n**Verwarnungen:** {anzahl}/{grenze}"),
+    /** Person per DM informieren */
+    dm: z3.boolean().default(true),
+    atLimit: z3.object({
+      /** Dashboard-Rollen, die benachrichtigt werden (z. B. Leitung) */
+      notifyRoleIds: z3.array(uuid).max(20).default([]),
+      /** Discord-Rollen, die in der Meldung erwähnt werden */
+      pingDiscordRoleIds: z3.array(sf3).max(10).default([]),
+      /** Discord-Rollen, die entzogen werden */
+      removeDiscordRoleIds: z3.array(sf3).max(25).default([]),
+      /** Status der Personalakte setzen (z. B. SUSPENDED) – leer = nicht ändern */
+      status: z3.string().max(32).nullable().default(null)
+    }).default({})
+  }).default({}),
   /** Zertifikate */
   certificate: z3.object({ organisation: z3.string().max(100).default("EN Polizei"), logo: z3.string().max(500).default(""), signature: z3.string().max(100).default("") }).default({})
 });
@@ -1280,16 +1375,348 @@ var dnSettingsSchema = z3.object({
   /** Wechsel der Nummer braucht eine zweite Person (Genehmiger) */
   changeNeedsApprover: z3.boolean().default(false)
 });
+var WARNING_VARIABLES = ["{mitglied}", "{name}", "{grund}", "{schweregrad}", "{kategorie}", "{anzahl}", "{grenze}", "{durch}", "{datum}", "{ablauf}"];
 var DN_VARIABLES = ["{user}", "{name}", "{dienstnummer}", "{rang}", "{abteilung}", "{bewerbung}", "{datum}"];
 function fillTemplate(tpl, vars) {
   return tpl.replace(/\{([\w.]{1,40})\}/g, (m, k) => vars[k] !== void 0 && vars[k] !== null ? String(vars[k]) : m).replace(/@(everyone|here)/g, "@\u200B$1");
 }
+
+// src/logging.ts
+import { z as z4 } from "zod";
+var LOG_CATEGORIES = [
+  { key: "einsaetze", label: "Eins\xE4tze & Leitstelle", emoji: "\u{1F6A8}", modules: ["cad", "dispatch", "incidents", "erlc", "radio"] },
+  { key: "akten", label: "Akten & Ermittlungen", emoji: "\u{1F5C2}\uFE0F", modules: ["persons", "vehicles", "wanted", "investigations", "evidence", "reports", "tickets", "complaints"] },
+  { key: "bewerbungen", label: "Bewerbungen & Qualifikationen", emoji: "\u{1F4CB}", modules: ["applications", "qualifications"] },
+  { key: "personal", label: "Personal & Ausbildung", emoji: "\u{1F46E}", modules: ["personnel", "promotion", "dienstnummer", "training", "exam", "academy", "sek"] },
+  { key: "dienst", label: "Dienst, Abmeldungen & Berichte", emoji: "\u{1F552}", modules: ["team", "dutyreports", "leave"] },
+  { key: "kommunikation", label: "Kommunikation & Discord", emoji: "\u{1F4AC}", modules: ["announcements", "polls", "communication", "discord"] },
+  { key: "rechte", label: "Rechte, Konten & Anmeldung", emoji: "\u{1F510}", modules: ["permissions", "users", "auth"] },
+  { key: "einstellungen", label: "Einstellungen & System", emoji: "\u2699\uFE0F", modules: ["settings", "studio", "teamchance", "media", "locks", "export"] }
+];
+var logCategoryOf = (module) => LOG_CATEGORIES.find((c) => c.modules.includes(module))?.key ?? "sonstiges";
+var LOG_TYPES = {
+  "academy.config": "academy",
+  "academy.course.announce": "academy",
+  "academy.course.create": "academy",
+  "academy.enroll": "academy",
+  "academy.grade": "academy",
+  "announcement.delete": "announcements",
+  "application.accepted": "applications",
+  "application.rejected": "applications",
+  "application.submit": "applications",
+  "application.ticket": "applications",
+  "application.withdrawn": "applications",
+  "auth.discord.admin_granted": "auth",
+  "auth.logout": "auth",
+  "user.created.discord": "auth",
+  "cad.announcement": "cad",
+  "cad.incident.create": "cad",
+  "cad.incident.note": "cad",
+  "cad.incident.update": "cad",
+  "cad.link.delete": "cad",
+  "cad.member.delete": "cad",
+  "cad.radio": "cad",
+  "cad.unit.assign": "cad",
+  "cad.unit.clear": "cad",
+  "cad.unit.create": "cad",
+  "cad.unit.delete": "cad",
+  "cad.unit.status": "cad",
+  "cad.unit.update": "cad",
+  "complaint.create": "complaints",
+  "complaint.status": "complaints",
+  "dienstnummer.dm": "dienstnummer",
+  "dienstnummer.nickname": "dienstnummer",
+  "dienstnummer.pending": "dienstnummer",
+  "dienstnummer.range.delete": "dienstnummer",
+  "dienstnummer.settings": "dienstnummer",
+  "personnel.discord_roles": "dienstnummer",
+  "discord.bot_installed": "discord",
+  "discord.link": "discord",
+  "discord.link.code_created": "discord",
+  "discord.unlink": "discord",
+  "danger.config": "dispatch",
+  "danger.panel": "dispatch",
+  "danger.set": "dispatch",
+  "incident.assign": "dispatch",
+  "incident.status": "dispatch",
+  "unit.create": "dispatch",
+  "unit.members": "dispatch",
+  "unit.status": "dispatch",
+  "dutyreport.create": "dutyreports",
+  "dutyreport.delete": "dutyreports",
+  "dutyreport.edit": "dutyreports",
+  "dutyreport.return": "dutyreports",
+  "dutyreport.review": "dutyreports",
+  "dutyreport.template.delete": "dutyreports",
+  "dutyreport.unreview": "dutyreports",
+  "erlc.command": "erlc",
+  "erlc.server.create": "erlc",
+  "erlc.server.delete": "erlc",
+  "evidence.confirm": "evidence",
+  "evidence.create": "evidence",
+  "exam.delete": "exam",
+  "exam.grade": "exam",
+  "exam.start": "exam",
+  "export": "export",
+  "incident.attach": "incidents",
+  "incident.create": "incidents",
+  "incident.update": "incidents",
+  "investigation.create": "investigations",
+  "investigation.person.add": "investigations",
+  "investigation.status": "investigations",
+  "leave.config": "leave",
+  "leave.request": "leave",
+  "lock.takeover": "locks",
+  "media.upload": "media",
+  "auth.discord.access_revoked": "permissions",
+  "auth.discord.roles_synced": "permissions",
+  "role.create": "permissions",
+  "role.delete": "permissions",
+  "role.duplicate": "permissions",
+  "role.reorder": "permissions",
+  "user.override.add": "permissions",
+  "user.override.remove": "permissions",
+  "user.roles.set": "permissions",
+  "hr.config.update": "personnel",
+  "personnel.create": "personnel",
+  "personnel.create.application": "personnel",
+  "personnel.delete": "personnel",
+  "personnel.promote": "personnel",
+  "personnel.read": "personnel",
+  "personnel.update": "personnel",
+  "person.archive": "persons",
+  "person.create": "persons",
+  "person.merge": "persons",
+  "person.update": "persons",
+  "poll.delete": "polls",
+  "promotion.rank.create": "promotion",
+  "promotion.rank.delete": "promotion",
+  "promotion.rank.discord_roles": "promotion",
+  "promotion.rank.reorder": "promotion",
+  "promotion.requirement.check": "promotion",
+  "qualifications.application.accept": "qualifications",
+  "qualifications.application.reject": "qualifications",
+  "qualifications.application.submit": "qualifications",
+  "qualifications.application.withdraw": "qualifications",
+  "qualifications.config": "qualifications",
+  "qualifications.config.reset": "qualifications",
+  "radiocode.create": "radio",
+  "radiocode.defaults": "radio",
+  "radiocode.delete": "radio",
+  "radiocode.discord.config": "radio",
+  "radiocode.discord.send": "radio",
+  "radiocode.reorder": "radio",
+  "radiocode.update": "radio",
+  "report.create": "reports",
+  "report.edit": "reports",
+  "sek.member.add": "sek",
+  "sek.member.remove": "sek",
+  "sek.report.create": "sek",
+  "embed.delete": "settings",
+  "embed.send": "settings",
+  "formpanel.delete": "settings",
+  "formpanel.send": "settings",
+  "formpanel.submission.delete": "settings",
+  "legalcode.create": "settings",
+  "notification.system": "settings",
+  "retention.run": "settings",
+  "servers.links": "settings",
+  "servers.links.move": "settings",
+  "studio.config.changed": "settings",
+  "verification.config": "settings",
+  "verification.oauth": "settings",
+  "verification.panel": "settings",
+  "verification.removed": "settings",
+  "verification.verified": "settings",
+  "welcome.config": "settings",
+  "welcome.config.reset": "settings",
+  "studio.workflow.create": "studio",
+  "studio.workflow.delete": "studio",
+  "studio.workflow.update": "studio",
+  "duty.status": "team",
+  "duty.status.set_by_supervisor": "team",
+  "radio.add": "team",
+  "radio.remove": "team",
+  "shifts.config": "team",
+  "stafflist.delete": "team",
+  "stafflist.send": "team",
+  "ticket.create": "tickets",
+  "ticket.void": "tickets",
+  "voice_support.rooms": "tickets",
+  "training.delete": "training",
+  "training.progress": "training",
+  "user.create": "users",
+  "user.roblox.set": "users",
+  "vehicle.archive": "vehicles",
+  "vehicle.create": "vehicles",
+  "wanted.create": "wanted"
+};
+var LOG_DEFAULT_OFF = /* @__PURE__ */ new Set(["personnel.read", "export", "lock.takeover", "promotion.requirement.check", "auth.discord.roles_synced"]);
+var WORDS = {
+  incident: "Einsatz",
+  unit: "Einheit",
+  radio: "Funk",
+  call: "Notruf",
+  member: "Mitglied",
+  link: "Verbindung",
+  map: "Karte",
+  zone: "Zone",
+  poi: "POI",
+  announcement: "Ank\xFCndigung",
+  application: "Bewerbung",
+  applications: "Bewerbung",
+  qualifications: "Qualifikation",
+  course: "Kurs",
+  person: "Person",
+  vehicle: "Fahrzeug",
+  wanted: "Fahndung",
+  investigation: "Ermittlung",
+  evidence: "Beweismittel",
+  report: "Bericht",
+  dutyreport: "Tages-/Wochenbericht",
+  ticket: "Strafzettel",
+  complaint: "Beschwerde",
+  personnel: "Personalakte",
+  promotion: "Bef\xF6rderung",
+  rank: "Rang",
+  dienstnummer: "Dienstnummer",
+  range: "Nummernkreis",
+  training: "Ausbildung",
+  exam: "Pr\xFCfung",
+  academy: "Akademie",
+  sek: "SEK",
+  role: "Rolle",
+  user: "Benutzer",
+  roles: "Rollen",
+  override: "Einzelrecht",
+  auth: "Anmeldung",
+  discord: "Discord",
+  radiocode: "Funk-Code",
+  embed: "Embed",
+  formpanel: "Formular-Panel",
+  stafflist: "Staff-Liste",
+  welcome: "Willkommen",
+  verification: "Verifizierung",
+  studio: "Studio",
+  workflow: "Workflow",
+  settings: "Einstellungen",
+  servers: "Server-Verbund",
+  danger: "Gefahrenstatus",
+  erlc: "ER:LC",
+  server: "Server",
+  leave: "Abmeldung",
+  duty: "Dienst",
+  poll: "Abstimmung",
+  shifts: "Schichten",
+  template: "Vorlage",
+  config: "Einstellungen",
+  panel: "Panel",
+  legalcode: "Tatbestand",
+  media: "Datei",
+  notification: "Systemhinweis",
+  voice_support: "Sprach-Support",
+  hr: "Personal",
+  submission: "Einsendung",
+  requirement: "Voraussetzung",
+  note: "Notiz",
+  grade: "Bewertung",
+  enroll: "Einschreibung",
+  lock: "Sperre",
+  retention: "Bereinigung"
+};
+var VERBS = {
+  create: "angelegt",
+  created: "angelegt",
+  update: "ge\xE4ndert",
+  updated: "ge\xE4ndert",
+  edit: "bearbeitet",
+  delete: "gel\xF6scht",
+  remove: "entfernt",
+  removed: "entfernt",
+  add: "hinzugef\xFCgt",
+  status: "Status ge\xE4ndert",
+  assign: "zugewiesen",
+  clear: "gel\xF6st",
+  submit: "eingereicht",
+  accepted: "angenommen",
+  accept: "angenommen",
+  rejected: "abgelehnt",
+  reject: "abgelehnt",
+  withdrawn: "zur\xFCckgezogen",
+  withdraw: "zur\xFCckgezogen",
+  send: "gesendet",
+  announce: "angek\xFCndigt",
+  reorder: "Reihenfolge ge\xE4ndert",
+  duplicate: "dupliziert",
+  archive: "archiviert",
+  merge: "zusammengef\xFChrt",
+  promote: "bef\xF6rdert",
+  read: "angesehen",
+  start: "gestartet",
+  review: "gepr\xFCft",
+  return: "zur Nachbesserung",
+  unreview: "Pr\xFCfung zur\xFCckgenommen",
+  set: "gesetzt",
+  changed: "ge\xE4ndert",
+  reset: "zur\xFCckgesetzt",
+  confirm: "best\xE4tigt",
+  void: "storniert",
+  upload: "hochgeladen",
+  request: "beantragt",
+  approve: "genehmigt",
+  deny: "abgelehnt",
+  logout: "abgemeldet",
+  verified: "verifiziert",
+  run: "ausgef\xFChrt",
+  move: "verschoben",
+  command: "Befehl ausgef\xFChrt",
+  grade: "bewertet"
+};
+function logTypeLabel(action) {
+  const parts = action.split(".");
+  const last = parts[parts.length - 1];
+  const verb = VERBS[last];
+  const nouns = (verb ? parts.slice(0, -1) : parts).filter((p) => p !== "cad" || parts.length === 1);
+  const noun = [...new Set(nouns.map((p) => WORDS[p] ?? p))].slice(-2).join(" ");
+  return verb ? `${noun} ${verb}` : noun || action;
+}
+var sf4 = z4.string().regex(/^\d{15,25}$/, "Discord-Kanal-ID");
+var loggingConfigSchema = z4.object({
+  enabled: z4.boolean().default(true),
+  /** Kanal je Kategorie */
+  categories: z4.record(z4.string().max(32), sf4).default({}),
+  /** Abweichung je Typ: eigener Kanal oder 'off' (aus); fehlt = Kanal der Kategorie */
+  types: z4.record(z4.string().max(80), z4.union([sf4, z4.literal("off"), z4.literal("on")])).default({})
+});
+function logChannelFor(cfg, module, action) {
+  if (!cfg.enabled) return null;
+  const t = cfg.types[action];
+  if (t === "off") return null;
+  if (t && t !== "on") return t;
+  if (!t && LOG_DEFAULT_OFF.has(action)) return null;
+  return cfg.categories[logCategoryOf(module)] ?? null;
+}
+
+// src/backup.ts
+import { z as z5 } from "zod";
+var BACKUP_PARTS = ["roles", "channels", "settings"];
+var BACKUP_PART_LABEL = { roles: "Rollen", channels: "Kategorien & Kan\xE4le (mit Rechten)", settings: "Servereinstellungen (Name, Verifizierung, AFK \u2026)" };
+var backupConfigSchema = z5.object({
+  /** Dashboard-Daten täglich automatisch sichern */
+  dataAuto: z5.boolean().default(true),
+  /** Discord-Server täglich automatisch sichern */
+  discordAuto: z5.boolean().default(false),
+  /** so viele automatische Backups behalten (je Art bzw. Server) */
+  keep: z5.number().int().min(1).max(60).default(14)
+});
 export {
   ALL_PERMISSIONS,
   APPLICATION_STATUSES,
   APPLICATION_TRANSITIONS,
   APPLICATION_VARIABLES,
   AREA_PERMISSIONS,
+  BACKUP_PARTS,
+  BACKUP_PART_LABEL,
   CAD_EVENTS,
   CAD_EVENT_LABELS,
   CAD_EVENT_SEND_TYPE,
@@ -1335,6 +1762,9 @@ export {
   INVESTIGATION_TRANSITIONS,
   InvalidTransitionError,
   LEGACY_DANGER,
+  LOG_CATEGORIES,
+  LOG_DEFAULT_OFF,
+  LOG_TYPES,
   MAX_FORM_OPTIONS,
   MAX_FORM_QUESTIONS,
   MUSIC_TRACKS,
@@ -1349,6 +1779,7 @@ export {
   QUESTION_TYPES,
   REPORT_FIELD_TYPES,
   REPORT_STATUSES,
+  REPORT_STATUS_LABEL,
   REPORT_TRANSITIONS,
   REPORT_TYPES,
   REQUEST_STATUSES,
@@ -1369,6 +1800,7 @@ export {
   VOICE_CASE_STATUS,
   WANTED_STATUSES,
   WANTED_TRANSITIONS,
+  WARNING_VARIABLES,
   WEEKDAYS,
   WELCOME_VARIABLES,
   WORKFLOW_ACTION_LABELS,
@@ -1380,6 +1812,7 @@ export {
   areaGrantsFor,
   assertTransition,
   awardDefSchema,
+  backupConfigSchema,
   can,
   canDelegate,
   canTransition,
@@ -1390,6 +1823,7 @@ export {
   defaultTicketButtons,
   departmentSchema,
   dnSettingsSchema,
+  dutyTimeText,
   effectivePermissions,
   fieldValue,
   fillTemplate,
@@ -1406,18 +1840,28 @@ export {
   hireMappingSchema,
   hrConfigSchema,
   hrStatusSchema,
+  infoOptionEmbed,
+  infoOptionSchema,
+  infoPanelMessage,
+  infoPanelSchema,
+  isDutyTimeField,
   isInputQuestion,
   isPermissionKey,
   isSupportOpen,
   isValidRobloxUserId,
   isoWeek,
   localTime,
+  logCategoryOf,
+  logChannelFor,
+  logTypeLabel,
+  loggingConfigSchema,
   matchingBinds,
   newVoiceRoom,
   normalizeField,
   notifyRuleSchema,
   panelFieldSchema,
   parsePlayer,
+  periodEnd,
   periodLabel,
   periodStart,
   pixelToGame,

@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { type FormPanel, type StaffList } from '@enrp/shared';
+import { type FormPanel, type StaffList, type InfoPanel } from '@enrp/shared';
 import { PanelsService } from './panels.service';
 import type { Actor } from '../audit/audit.service';
 declare const mode: z.ZodObject<{
@@ -174,6 +174,58 @@ export declare class PanelsController {
     sendForm(a: Actor, id: string, b: z.infer<typeof mode>): Promise<{
         queued: boolean;
     }>;
+    infos(): Promise<{
+        posted: {
+            channelId: string;
+            messageId: string;
+        } | null;
+        options: {
+            label: string;
+            text: string;
+            title: string;
+            description: string;
+            id: string;
+            color: string;
+            image: string;
+            emoji: string;
+        }[];
+        text: string;
+        title: string;
+        id: string;
+        name: string;
+        guildId: string | null;
+        channelId: string | null;
+        color: string;
+        footer: string;
+        image: string;
+        placeholder: string;
+    }[]>;
+    saveInfo(a: Actor, id: string, b: InfoPanel): Promise<{
+        options: {
+            label: string;
+            text: string;
+            title: string;
+            description: string;
+            id: string;
+            color: string;
+            image: string;
+            emoji: string;
+        }[];
+        text: string;
+        title: string;
+        id: string;
+        name: string;
+        guildId: string | null;
+        channelId: string | null;
+        color: string;
+        footer: string;
+        image: string;
+        placeholder: string;
+    }>;
+    removeInfo(a: Actor, id: string): Promise<void>;
+    sendInfo(a: Actor, id: string, b: z.infer<typeof mode>): Promise<{
+        queued: boolean;
+    }>;
     subs(id: string): import("@prisma/client").Prisma.PrismaPromise<{
         id: string;
         createdAt: Date;
@@ -233,6 +285,28 @@ export declare class BotPanelsController {
         autoUpdate: boolean;
         image: string;
     }[]>;
+    info(id: string): Promise<{
+        options: {
+            label: string;
+            text: string;
+            title: string;
+            description: string;
+            id: string;
+            color: string;
+            image: string;
+            emoji: string;
+        }[];
+        text: string;
+        title: string;
+        id: string;
+        name: string;
+        guildId: string | null;
+        channelId: string | null;
+        color: string;
+        footer: string;
+        image: string;
+        placeholder: string;
+    }>;
     form(id: string): Promise<{
         id: string;
         name: string;

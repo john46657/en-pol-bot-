@@ -1,6 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.FORM_PANEL_INTERACTION = void 0;
+exports.INFO_PANEL_INTERACTION = exports.FORM_PANEL_INTERACTION = void 0;
+const shared_1 = require("@enrp/shared");
 const format_1 = require("../format");
 const errors_1 = require("./errors");
 /** Formular-Panels: Button → Formular (Felder aus dem Dashboard) → Nachricht im Zielkanal (optional als die Person, mit Reaktionen). */
@@ -27,6 +28,26 @@ exports.FORM_PANEL_INTERACTION = {
             if (r.grantRoleIds.length && c.guildId)
                 await c.discord.addRoles(c.guildId, c.discordId, r.grantRoleIds).catch(() => undefined);
             return { ephemeral: true, content: r.confirmText || '✅ Gepostet.' };
+        }
+        catch (e) {
+            return (0, errors_1.mapError)(e);
+        }
+    },
+};
+/** Info-Panel: Auswahlmenü `ipnl:<panelId>` → der gewählte Punkt erscheint nur für die Person (Texte im Dashboard). */
+exports.INFO_PANEL_INTERACTION = {
+    prefix: 'ipnl',
+    async run(c) {
+        const [id] = c.args;
+        if (!/^[0-9a-f-]{36}$/.test(id ?? ''))
+            return (0, format_1.errorReply)('Ungültige Anfrage.');
+        try {
+            const p = await c.api.service('GET', `/bot/panels/info/${id}`);
+            const o = p.options.find((x) => x.id === c.values?.[0]);
+            if (!o)
+                return (0, format_1.errorReply)('Diesen Punkt gibt es nicht mehr.');
+            const e = (0, shared_1.infoOptionEmbed)(o);
+            return { ephemeral: true, embeds: [{ title: e.title ?? o.label, ...(e.description ? { description: e.description } : {}), ...(e.color !== undefined ? { color: e.color } : {}), ...(e.image ? { image: e.image } : {}) }] };
         }
         catch (e) {
             return (0, errors_1.mapError)(e);

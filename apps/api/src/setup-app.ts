@@ -1,3 +1,4 @@
+import type { NestExpressApplication } from '@nestjs/platform-express';
 import { INestApplication } from '@nestjs/common';
 import cookieParser from 'cookie-parser';
 import helmet from 'helmet';
@@ -12,6 +13,8 @@ export function configureApp(app: INestApplication) {
   installGermanZodErrors(); // deutsche Zod-Meldungen in Validierungsfehlern
   const env = loadEnv();
   app.setGlobalPrefix('api/v1', { exclude: ['health', 'readiness'] });
+  // Discord-Server-Backups vom Bot können größer als die Standard-100-KB sein
+  (app as NestExpressApplication).useBodyParser('json', { limit: '5mb' });
   const httpsOnly = env.COOKIE_SECURE ? env.COOKIE_SECURE === 'true' : env.NODE_ENV === 'production';
   // Ohne HTTPS dürfen CSP/HSTS die Seite nicht auf https „hochziehen“ (sonst laden Assets nicht).
   app.use(helmet({ contentSecurityPolicy: { useDefaults: true, directives: { 'img-src': ["'self'", 'data:', 'blob:', 'https://cdn.discordapp.com', 'https://*.rbxcdn.com', 'https://api.erlc.gg'], ...(httpsOnly ? {} : { 'upgrade-insecure-requests': null }) } }, hsts: httpsOnly }));

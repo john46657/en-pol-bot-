@@ -12,7 +12,7 @@ var __param = (this && this.__param) || function (paramIndex, decorator) {
     return function (target, key) { decorator(target, key, paramIndex); }
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.ServiceNumbersController = exports.HrCommsController = exports.HrTrainingController = exports.HrRequestsController = exports.HrController = void 0;
+exports.BotTrainingSessionsController = exports.HrTrainingSessionsController = exports.ServiceNumbersController = exports.HrCommsController = exports.HrTrainingController = exports.HrRequestsController = exports.HrController = void 0;
 const common_1 = require("@nestjs/common");
 const swagger_1 = require("@nestjs/swagger");
 const zod_1 = require("zod");
@@ -25,6 +25,7 @@ const hr_requests_service_1 = require("./hr-requests.service");
 const hr_training_service_1 = require("./hr-training.service");
 const hr_comms_service_1 = require("./hr-comms.service");
 const service_numbers_service_1 = require("./service-numbers.service");
+const hr_training_sessions_service_1 = require("./hr-training-sessions.service");
 const uuid = zod_1.z.string().uuid();
 const date = zod_1.z.string().date();
 const reason = zod_1.z.object({ reason: zod_1.z.string().trim().max(1000).optional() });
@@ -50,6 +51,9 @@ let HrController = class HrController {
     profile(a, id) { return this.people.profile(a, id); }
     update(a, id, b) { return this.people.update(a, id, b); }
     remove(a, id) { return this.people.remove(a, id); }
+    /** Verwarnungen (Übersicht) und Verwarnen über Discord (/verwarnen). */
+    warnings(a, q) { return this.people.warnings(a, q); }
+    warnDiscord(a, b) { return this.people.warnByDiscord(a, b); }
     addRecord(a, id, b) { return this.people.addRecord(a, id, b); }
     editRecord(a, id, b) { return this.people.editRecord(a, id, b); }
     deleteRecord(a, id, b) { return this.people.deleteRecord(a, id, b.reason); }
@@ -132,6 +136,24 @@ __decorate([
     __metadata("design:paramtypes", [Object, String]),
     __metadata("design:returntype", void 0)
 ], HrController.prototype, "remove", null);
+__decorate([
+    (0, common_1.Get)('warnings'),
+    (0, decorators_1.RequirePermission)('warning.view'),
+    __param(0, (0, decorators_1.CurrentActor)()),
+    __param(1, (0, common_1.Query)((0, zod_pipe_1.zodBody)(zod_1.z.object({ state: zod_1.z.enum(['ACTIVE', 'EXPIRED', 'REVOKED', 'ALL']).optional(), q: zod_1.z.string().trim().max(80).optional() })))),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, Object]),
+    __metadata("design:returntype", void 0)
+], HrController.prototype, "warnings", null);
+__decorate([
+    (0, common_1.Post)('warnings/discord'),
+    (0, decorators_1.RequirePermission)('warning.create'),
+    __param(0, (0, decorators_1.CurrentActor)()),
+    __param(1, (0, common_1.Body)((0, zod_pipe_1.zodBody)(zod_1.z.object({ discordId: zod_1.z.string().regex(/^\d{15,25}$/), reason: zod_1.z.string().trim().min(2).max(300), severity: zod_1.z.string().max(32).optional() })))),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, Object]),
+    __metadata("design:returntype", void 0)
+], HrController.prototype, "warnDiscord", null);
 __decorate([
     (0, common_1.Post)('people/:id/records'),
     (0, decorators_1.RequirePermission)('personnel.view'),
@@ -824,4 +846,123 @@ exports.ServiceNumbersController = ServiceNumbersController = __decorate([
     (0, common_1.Controller)('dienstnummern'),
     __metadata("design:paramtypes", [service_numbers_service_1.ServiceNumbersService])
 ], ServiceNumbersController);
+const sfId = zod_1.z.string().regex(/^\d{15,25}$/);
+const sessionBody = zod_1.z.object({
+    trainingId: uuid.nullable().optional(), title: zod_1.z.string().trim().min(2).max(120), startsAt: zod_1.z.string().datetime({ offset: true }),
+    forRank: zod_1.z.string().trim().max(60).nullable().optional(), duration: zod_1.z.string().trim().max(60).nullable().optional(), location: zod_1.z.string().trim().max(120).nullable().optional(), notes: zod_1.z.string().trim().max(1500).nullable().optional(),
+    channelId: sfId.nullable().optional(), guildId: sfId.nullable().optional(), promoteRankId: uuid.nullable().optional(), maxSignups: zod_1.z.number().int().min(1).max(200).nullable().optional(),
+});
+const evalBody = zod_1.z.object({ attended: zod_1.z.array(sfId).max(200), passed: zod_1.z.array(sfId).max(200), actualDuration: zod_1.z.string().trim().max(60).nullable().optional(), note: zod_1.z.string().trim().max(1500).nullable().optional() });
+/** Ausbildungstermine: ankündigen (Discord mit Anmeldung + Thread), anmelden, auswerten (mit Beförderung). */
+let HrTrainingSessionsController = class HrTrainingSessionsController {
+    s;
+    constructor(s) {
+        this.s = s;
+    }
+    list(q) { return this.s.list(q); }
+    get(id) { return this.s.get(id); }
+    create(a, b) { return this.s.create(a, b); }
+    update(a, id, b) { return this.s.update(a, id, b); }
+    cancel(a, id, b) { return this.s.cancel(a, id, b.reason); }
+    evaluate(a, id, b) { return this.s.evaluate(a, id, b); }
+    signup(a, id, b) { return this.s.signupSelf(a, id, b.join); }
+};
+exports.HrTrainingSessionsController = HrTrainingSessionsController;
+__decorate([
+    (0, common_1.Get)(),
+    (0, decorators_1.RequirePermission)('training.view'),
+    __param(0, (0, common_1.Query)((0, zod_pipe_1.zodBody)(zod_1.z.object({ scope: zod_1.z.enum(['upcoming', 'past', 'all']).optional() })))),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object]),
+    __metadata("design:returntype", void 0)
+], HrTrainingSessionsController.prototype, "list", null);
+__decorate([
+    (0, common_1.Get)(':id'),
+    (0, decorators_1.RequirePermission)('training.view'),
+    __param(0, (0, common_1.Param)('id', common_1.ParseUUIDPipe)),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String]),
+    __metadata("design:returntype", void 0)
+], HrTrainingSessionsController.prototype, "get", null);
+__decorate([
+    (0, common_1.Post)(),
+    (0, decorators_1.RequirePermission)('training.create'),
+    __param(0, (0, decorators_1.CurrentActor)()),
+    __param(1, (0, common_1.Body)((0, zod_pipe_1.zodBody)(sessionBody))),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, void 0]),
+    __metadata("design:returntype", void 0)
+], HrTrainingSessionsController.prototype, "create", null);
+__decorate([
+    (0, common_1.Put)(':id'),
+    (0, decorators_1.RequirePermission)('training.create'),
+    __param(0, (0, decorators_1.CurrentActor)()),
+    __param(1, (0, common_1.Param)('id', common_1.ParseUUIDPipe)),
+    __param(2, (0, common_1.Body)((0, zod_pipe_1.zodBody)(sessionBody))),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, String, void 0]),
+    __metadata("design:returntype", void 0)
+], HrTrainingSessionsController.prototype, "update", null);
+__decorate([
+    (0, common_1.Post)(':id/cancel'),
+    (0, common_1.HttpCode)(200),
+    (0, decorators_1.RequirePermission)('training.create'),
+    __param(0, (0, decorators_1.CurrentActor)()),
+    __param(1, (0, common_1.Param)('id', common_1.ParseUUIDPipe)),
+    __param(2, (0, common_1.Body)((0, zod_pipe_1.zodBody)(zod_1.z.object({ reason: zod_1.z.string().trim().max(300).optional() })))),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, String, Object]),
+    __metadata("design:returntype", void 0)
+], HrTrainingSessionsController.prototype, "cancel", null);
+__decorate([
+    (0, common_1.Post)(':id/evaluate'),
+    (0, common_1.HttpCode)(200),
+    (0, decorators_1.RequirePermission)('training.create'),
+    __param(0, (0, decorators_1.CurrentActor)()),
+    __param(1, (0, common_1.Param)('id', common_1.ParseUUIDPipe)),
+    __param(2, (0, common_1.Body)((0, zod_pipe_1.zodBody)(evalBody))),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, String, void 0]),
+    __metadata("design:returntype", void 0)
+], HrTrainingSessionsController.prototype, "evaluate", null);
+__decorate([
+    (0, common_1.Post)(':id/signup'),
+    (0, common_1.HttpCode)(200),
+    (0, decorators_1.RequirePermission)('training.view'),
+    __param(0, (0, decorators_1.CurrentActor)()),
+    __param(1, (0, common_1.Param)('id', common_1.ParseUUIDPipe)),
+    __param(2, (0, common_1.Body)((0, zod_pipe_1.zodBody)(zod_1.z.object({ join: zod_1.z.boolean() })))),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, String, Object]),
+    __metadata("design:returntype", void 0)
+], HrTrainingSessionsController.prototype, "signup", null);
+exports.HrTrainingSessionsController = HrTrainingSessionsController = __decorate([
+    (0, swagger_1.ApiTags)('hr'),
+    (0, common_1.Controller)('hr/training-sessions'),
+    __metadata("design:paramtypes", [hr_training_sessions_service_1.HrTrainingSessionsService])
+], HrTrainingSessionsController);
+/** Anmelde-Button in Discord – auch für Mitglieder ohne Dashboard-Konto (z. B. Anwärter). */
+let BotTrainingSessionsController = class BotTrainingSessionsController {
+    s;
+    constructor(s) {
+        this.s = s;
+    }
+    signup(id, b) { return this.s.signupById(id, b); }
+};
+exports.BotTrainingSessionsController = BotTrainingSessionsController;
+__decorate([
+    (0, decorators_1.BotService)(),
+    (0, common_1.Post)(':id/signup'),
+    (0, common_1.HttpCode)(200),
+    __param(0, (0, common_1.Param)('id', common_1.ParseUUIDPipe)),
+    __param(1, (0, common_1.Body)((0, zod_pipe_1.zodBody)(zod_1.z.object({ discordId: sfId, name: zod_1.z.string().trim().min(1).max(64), join: zod_1.z.boolean() })))),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, Object]),
+    __metadata("design:returntype", void 0)
+], BotTrainingSessionsController.prototype, "signup", null);
+exports.BotTrainingSessionsController = BotTrainingSessionsController = __decorate([
+    (0, swagger_1.ApiTags)('bot'),
+    (0, common_1.Controller)('bot/training-sessions'),
+    __metadata("design:paramtypes", [hr_training_sessions_service_1.HrTrainingSessionsService])
+], BotTrainingSessionsController);
 //# sourceMappingURL=hr.controller.js.map
