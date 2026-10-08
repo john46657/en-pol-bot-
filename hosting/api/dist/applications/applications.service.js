@@ -138,11 +138,14 @@ let ApplicationsService = class ApplicationsService {
             message: (0, decision_1.decisionMessage)(police.settings, to === 'ACCEPTED', { applicationName: police.name, number: a.number, decider, applicantId: a.discordId, reason }),
         }, { always: true });
     }
-    /** Wie bei Appy: entschiedene Bewerbung in den Channel für angenommene/abgelehnte Bewerbungen posten. */
+    /** Wie bei Appy: entschiedene Bewerbung in den Channel für angenommene/abgelehnte Bewerbungen posten (nur ohne Original-Nachricht in Discord). */
     async archive(a, to, reason, decidedByName) {
         const police = await this.police(a.guildId);
         const channelId = to === 'ACCEPTED' ? police.acceptedChannelId : police.deniedChannelId;
         if (!channelId)
+            return;
+        // Gibt es die Bewerbungs-Nachricht in Discord, wird nur sie aktualisiert (markDecided) – keine zweite Nachricht
+        if (await this.discord.posted(`msg-a-${a.id}`))
             return;
         const form = await this.form(a.guildId);
         const answers = (a.answers ?? {});

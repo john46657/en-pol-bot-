@@ -154,6 +154,15 @@ declare const actionSchema: z.ZodDiscriminatedUnion<"action", [z.ZodObject<{
     action: "delete";
 }, {
     action: "delete";
+}>, z.ZodObject<{
+    action: z.ZodLiteral<"reply">;
+    text: z.ZodString;
+}, "strip", z.ZodTypeAny, {
+    action: "reply";
+    text: string;
+}, {
+    action: "reply";
+    text: string;
 }>]>;
 declare const listQ: z.ZodObject<{
     kind: z.ZodOptional<z.ZodEnum<["open", "closed", "archived", "escalated", "deleted", "all"]>>;

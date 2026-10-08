@@ -653,6 +653,8 @@ let ServiceNumbersController = class ServiceNumbersController {
     saveSettings(a, b) { return this.s.saveSettings(a, b); }
     history(q) { return this.s.history(q); }
     pending() { return this.s.pending(); }
+    /** Angenommene Bewerbungen ohne Personalakte nachträglich übernehmen. */
+    fromApplications(a) { return this.s.profilesFromApplications(a); }
     confirm(a, id, b) { return this.s.confirmPending(a, id, b.display || undefined); }
     assign(a, b) { return this.s.assignManual(a, b); }
     change(a, b) { return this.s.change(a, b); }
@@ -737,6 +739,15 @@ __decorate([
     __metadata("design:paramtypes", []),
     __metadata("design:returntype", void 0)
 ], ServiceNumbersController.prototype, "pending", null);
+__decorate([
+    (0, common_1.Post)('from-applications'),
+    (0, common_1.HttpCode)(200),
+    (0, decorators_1.RequirePermission)('personnel.create'),
+    __param(0, (0, decorators_1.CurrentActor)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object]),
+    __metadata("design:returntype", void 0)
+], ServiceNumbersController.prototype, "fromApplications", null);
 __decorate([
     (0, common_1.Post)('pending/:id/confirm'),
     (0, common_1.HttpCode)(200),
