@@ -6,6 +6,7 @@ import { PermissionService } from '../authz/permission.service';
 import { MediaService } from '../media/media.service';
 import { CadService, type CadActor } from './cad.service';
 import { CadAirService } from './cad-air.service';
+import { CadTabletService } from './cad-tablet.service';
 import { CadConfigService } from './cad-config.service';
 import { ErlcService, erlcServerInput } from './erlc.service';
 import { ErlcSyncService } from './erlc-sync.service';
@@ -285,10 +286,11 @@ declare const radioBody: z.ZodObject<{
 export declare class CadController {
     private readonly s;
     private readonly air;
+    private readonly tablet;
     private readonly cfg;
     private readonly perms;
     private readonly media;
-    constructor(s: CadService, air: CadAirService, cfg: CadConfigService, perms: PermissionService, media: MediaService);
+    constructor(s: CadService, air: CadAirService, tablet: CadTabletService, cfg: CadConfigService, perms: PermissionService, media: MediaService);
     config(): Promise<import("@enrp/shared").CadConfig>;
     saveConfig(a: Actor, b: Record<string, unknown>): Promise<import("@enrp/shared").CadConfig>;
     saveMap(a: Actor, b: Record<string, unknown>): Promise<import("@enrp/shared").CadConfig>;
@@ -1069,6 +1071,63 @@ export declare class CadController {
         restrictRoleIds: string[];
     } | {
         incidentId: string;
+    }>;
+    /** Tablet der Leitstelle: Meldungen, Aktivitätsbrett, Gesucht, Auto-BOLOs. */
+    tabletView(a: CadActor): Promise<{
+        calls: {
+            id: string;
+            callNumber: number;
+            description: string | null;
+            location: string | null;
+            status: string;
+            startedAt: string;
+        }[];
+        board: {
+            key: string;
+            name: string;
+            callsign: string | null;
+            rank: string | null;
+            since: string | null;
+            unitId: string | null;
+            status: string | null;
+            statusLabel: string | null;
+            statusColor: string | null;
+            availability: "available" | "busy" | "unavailable";
+            inGame: boolean;
+        }[];
+        available: number;
+        me: {
+            unitId: string;
+            callsign: string;
+            status: string;
+            availability: "available" | "busy" | "unavailable";
+        } | null;
+        statuses: {
+            available: string | null;
+            unavailable: string | null;
+        };
+        wanted: {
+            id: string;
+            name: string;
+            reason: string;
+            priority: string;
+            since: string;
+        }[];
+        bolos: {
+            id: string;
+            plate: string;
+            model: string | null;
+            color: string | null;
+            reason: string;
+            priority: string;
+            since: string;
+        }[];
+        inGameWanted: {
+            name: string;
+            stars: number;
+            location: string | null;
+        }[];
+        wantedAllowed: boolean;
     }>;
     airList(): Promise<{
         incident: {

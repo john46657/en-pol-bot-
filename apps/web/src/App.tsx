@@ -60,6 +60,7 @@ const CadMapPage = lazy(() => import('./pages/cad/CadOps').then((m) => ({ defaul
 const CadCalls = lazy(() => import('./pages/cad/CadOps').then((m) => ({ default: m.CadCalls })));
 const CadUnits = lazy(() => import('./pages/cad/CadOps').then((m) => ({ default: m.CadUnits })));
 const CadRadio = lazy(() => import('./pages/cad/CadOps').then((m) => ({ default: m.CadRadio })));
+const CadTablet = lazy(() => import('./pages/cad/CadTablet').then((m) => ({ default: m.CadTablet })));
 const CadAir = lazy(() => import('./pages/cad/CadAir').then((m) => ({ default: m.CadAir })));
 const CadCameras = lazy(() => import('./pages/cad/CadAir').then((m) => ({ default: m.CadCameras })));
 const ErlcLive = lazy(() => import('./pages/cad/ErlcLive').then((m) => ({ default: m.ErlcLive })));
@@ -111,6 +112,7 @@ export function App() {
           <Route path="me/settings" element={<Guard perm="dashboard.view"><PersonalSettings /></Guard>} />
           <Route path="cad" element={<Guard perm="cad.view" area="dashboard.cad.view"><CadLayout /></Guard>}>
             <Route index element={<Guard perm="cad.view"><CadDashboard /></Guard>} />
+            <Route path="tablet" element={<Guard perm="cad.view"><CadTablet /></Guard>} />
             <Route path="incidents" element={<Guard perm="cad.view"><CadIncidents /></Guard>} />
             <Route path="map" element={<Guard perm="cad.view"><CadMapPage /></Guard>} />
             <Route path="units" element={<Guard perm="cad.view"><CadUnits /></Guard>} />

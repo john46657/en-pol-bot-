@@ -26,6 +26,7 @@ const permission_service_1 = require("../authz/permission.service");
 const media_service_1 = require("../media/media.service");
 const cad_service_1 = require("./cad.service");
 const cad_air_service_1 = require("./cad-air.service");
+const cad_tablet_service_1 = require("./cad-tablet.service");
 const cad_config_service_1 = require("./cad-config.service");
 const erlc_service_1 = require("./erlc.service");
 const erlc_sync_service_1 = require("./erlc-sync.service");
@@ -76,12 +77,14 @@ const radioBody = zod_1.z.object({ text: zod_1.z.string().trim().min(1).max(500)
 let CadController = class CadController {
     s;
     air;
+    tablet;
     cfg;
     perms;
     media;
-    constructor(s, air, cfg, perms, media) {
+    constructor(s, air, tablet, cfg, perms, media) {
         this.s = s;
         this.air = air;
+        this.tablet = tablet;
         this.cfg = cfg;
         this.perms = perms;
         this.media = media;
@@ -142,6 +145,8 @@ let CadController = class CadController {
         throw new errors_1.AppError('NOT_FOUND', 'Unbekannte Aktion.');
     }
     // Funk
+    /** Tablet der Leitstelle: Meldungen, Aktivitätsbrett, Gesucht, Auto-BOLOs. */
+    tabletView(a) { return this.tablet.get(a); }
     // Luftunterstützung (Hubschrauber) – Koordination; gerufen wird im Spiel
     airList() { return this.air.list(); }
     airRequest(a, b) { return this.air.request(a, b); }
@@ -383,6 +388,14 @@ __decorate([
     __metadata("design:returntype", Promise)
 ], CadController.prototype, "callAction", null);
 __decorate([
+    (0, common_1.Get)('tablet'),
+    (0, decorators_1.RequirePermission)('cad.view'),
+    __param(0, Cad()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object]),
+    __metadata("design:returntype", void 0)
+], CadController.prototype, "tabletView", null);
+__decorate([
     (0, common_1.Get)('air'),
     (0, decorators_1.RequirePermission)('cad.view'),
     __metadata("design:type", Function),
@@ -569,7 +582,7 @@ __decorate([
 exports.CadController = CadController = __decorate([
     (0, swagger_1.ApiTags)('cad'),
     (0, common_1.Controller)('cad'),
-    __metadata("design:paramtypes", [cad_service_1.CadService, cad_air_service_1.CadAirService, cad_config_service_1.CadConfigService, permission_service_1.PermissionService, media_service_1.MediaService])
+    __metadata("design:paramtypes", [cad_service_1.CadService, cad_air_service_1.CadAirService, cad_tablet_service_1.CadTabletService, cad_config_service_1.CadConfigService, permission_service_1.PermissionService, media_service_1.MediaService])
 ], CadController);
 const commandBody = zod_1.z.object({ command: zod_1.z.string().trim().min(2).max(500), confirm: zod_1.z.boolean().optional() });
 let ErlcController = class ErlcController {

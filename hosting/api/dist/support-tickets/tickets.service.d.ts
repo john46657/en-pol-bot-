@@ -557,8 +557,8 @@ export declare class SupportTicketsService {
         guildId: string;
         channelId: string | null;
         closedAt: Date | null;
-        deletedAt: Date | null;
         lastActivityAt: Date;
+        deletedAt: Date | null;
         answers: Prisma.JsonValue;
         categoryId: string;
         statusId: string;

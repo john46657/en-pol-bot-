@@ -1042,8 +1042,8 @@ export declare class SupportTicketsController {
         guildId: string;
         channelId: string | null;
         closedAt: Date | null;
-        deletedAt: Date | null;
         lastActivityAt: Date;
+        deletedAt: Date | null;
         answers: import("@prisma/client/runtime/library").JsonValue;
         categoryId: string;
         statusId: string;
