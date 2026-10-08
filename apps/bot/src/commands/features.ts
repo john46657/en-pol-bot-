@@ -9,6 +9,7 @@ import { LEAVE_INTERACTION } from './leave';
 import { CAD_INTERACTION } from './cad';
 import { FORM_PANEL_INTERACTION } from './panels';
 import { DUTY_REPORT_INTERACTION } from './duty-reports';
+import { TRAINING_INTERACTION } from './trainings';
 
 const str = (c: Ctx, k: string) => String(c.opts[k] ?? '').trim();
 const choices = (m: Record<string, string>) => Object.keys(m).map((k) => ({ name: k.replace('_', ' '), value: k }));
@@ -201,6 +202,7 @@ export const INTERACTIONS: InteractionDef[] = [
   },
   FORM_PANEL_INTERACTION,
   DUTY_REPORT_INTERACTION,
+  TRAINING_INTERACTION,
 ];
 
 export const interactionFor = (customId: string) => {

@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
-import { HrCommsController, HrController, HrRequestsController, HrTrainingController, ServiceNumbersController } from './hr.controller';
+import { BotTrainingSessionsController, HrCommsController, HrController, HrRequestsController, HrTrainingController, HrTrainingSessionsController, ServiceNumbersController } from './hr.controller';
+import { HrTrainingSessionsService } from './hr-training-sessions.service';
 import { HrCoreService } from './hr-core.service';
 import { HrPeopleService } from './hr-people.service';
 import { HrRequestsService } from './hr-requests.service';
@@ -9,8 +10,8 @@ import { ServiceNumbersService } from './service-numbers.service';
 
 /** Personal- & Verwaltungssystem: Personalakte, Ränge/Beförderungen, Versetzungen, Ausbildungen/Prüfungen, Meldungen/Abstimmungen, Dienstnummern. */
 @Module({
-  controllers: [HrController, HrRequestsController, HrTrainingController, HrCommsController, ServiceNumbersController],
-  providers: [HrCoreService, HrPeopleService, HrRequestsService, HrTrainingService, HrCommsService, ServiceNumbersService],
+  controllers: [HrController, HrRequestsController, HrTrainingController, HrTrainingSessionsController, BotTrainingSessionsController, HrCommsController, ServiceNumbersController],
+  providers: [HrCoreService, HrPeopleService, HrRequestsService, HrTrainingService, HrTrainingSessionsService, HrCommsService, ServiceNumbersService],
   exports: [HrCoreService, ServiceNumbersService],
 })
 export class HrModule {}

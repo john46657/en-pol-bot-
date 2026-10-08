@@ -2,7 +2,7 @@ import { Body, Controller, Delete, Get, HttpCode, Param, ParseUUIDPipe, Patch, P
 import { ApiTags } from '@nestjs/swagger';
 import { z } from 'zod';
 import { dnSettingsSchema, DN_STATUSES, hrConfigSchema, rangeSchema, rankSchema, type DnSettings, type HrConfig, type RangeInput, type RankInput } from '@enrp/shared';
-import { CurrentActor, RequirePermission } from '../authz/decorators';
+import { BotService, CurrentActor, RequirePermission } from '../authz/decorators';
 import type { Actor } from '../audit/audit.service';
 import { zodBody } from '../common/zod.pipe';
 import { HrCoreService } from './hr-core.service';
@@ -11,6 +11,7 @@ import { HrRequestsService } from './hr-requests.service';
 import { examSchema, HrTrainingService, trainingSchema, TRAINING_STATUSES } from './hr-training.service';
 import { announcementSchema, HrCommsService, pollSchema } from './hr-comms.service';
 import { ServiceNumbersService } from './service-numbers.service';
+import { HrTrainingSessionsService } from './hr-training-sessions.service';
 
 const uuid = z.string().uuid();
 const date = z.string().date();
@@ -149,4 +150,34 @@ export class ServiceNumbersController {
   @Post('block') @HttpCode(200) @RequirePermission('dienstnummer.block') block(@CurrentActor() a: Actor, @Body(zodBody(status)) b: z.infer<typeof status>) { return this.s.setStatus(a, b.display, 'BLOCKED', b.reason); }
   @Post('unblock') @HttpCode(200) @RequirePermission('dienstnummer.block') unblock(@CurrentActor() a: Actor, @Body(zodBody(status)) b: z.infer<typeof status>) { return this.s.setStatus(a, b.display, 'UNBLOCK', b.reason); }
   @Post('reserve') @HttpCode(200) @RequirePermission('dienstnummer.create') reserve(@CurrentActor() a: Actor, @Body(zodBody(status)) b: z.infer<typeof status>) { return this.s.setStatus(a, b.display, 'RESERVED', b.reason, b.userId); }
+}
+
+const sfId = z.string().regex(/^\d{15,25}$/);
+const sessionBody = z.object({
+  trainingId: uuid.nullable().optional(), title: z.string().trim().min(2).max(120), startsAt: z.string().datetime({ offset: true }),
+  forRank: z.string().trim().max(60).nullable().optional(), duration: z.string().trim().max(60).nullable().optional(), location: z.string().trim().max(120).nullable().optional(), notes: z.string().trim().max(1500).nullable().optional(),
+  channelId: sfId.nullable().optional(), guildId: sfId.nullable().optional(), promoteRankId: uuid.nullable().optional(), maxSignups: z.number().int().min(1).max(200).nullable().optional(),
+});
+const evalBody = z.object({ attended: z.array(sfId).max(200), passed: z.array(sfId).max(200), actualDuration: z.string().trim().max(60).nullable().optional(), note: z.string().trim().max(1500).nullable().optional() });
+
+/** Ausbildungstermine: ankündigen (Discord mit Anmeldung + Thread), anmelden, auswerten (mit Beförderung). */
+@ApiTags('hr')
+@Controller('hr/training-sessions')
+export class HrTrainingSessionsController {
+  constructor(private readonly s: HrTrainingSessionsService) {}
+  @Get() @RequirePermission('training.view') list(@Query(zodBody(z.object({ scope: z.enum(['upcoming', 'past', 'all']).optional() }))) q: { scope?: 'upcoming' | 'past' | 'all' }) { return this.s.list(q); }
+  @Get(':id') @RequirePermission('training.view') get(@Param('id', ParseUUIDPipe) id: string) { return this.s.get(id); }
+  @Post() @RequirePermission('training.create') create(@CurrentActor() a: Actor, @Body(zodBody(sessionBody)) b: z.infer<typeof sessionBody>) { return this.s.create(a, b); }
+  @Put(':id') @RequirePermission('training.create') update(@CurrentActor() a: Actor, @Param('id', ParseUUIDPipe) id: string, @Body(zodBody(sessionBody)) b: z.infer<typeof sessionBody>) { return this.s.update(a, id, b); }
+  @Post(':id/cancel') @HttpCode(200) @RequirePermission('training.create') cancel(@CurrentActor() a: Actor, @Param('id', ParseUUIDPipe) id: string, @Body(zodBody(z.object({ reason: z.string().trim().max(300).optional() }))) b: { reason?: string }) { return this.s.cancel(a, id, b.reason); }
+  @Post(':id/evaluate') @HttpCode(200) @RequirePermission('training.create') evaluate(@CurrentActor() a: Actor, @Param('id', ParseUUIDPipe) id: string, @Body(zodBody(evalBody)) b: z.infer<typeof evalBody>) { return this.s.evaluate(a, id, b); }
+  @Post(':id/signup') @HttpCode(200) @RequirePermission('training.view') signup(@CurrentActor() a: Actor, @Param('id', ParseUUIDPipe) id: string, @Body(zodBody(z.object({ join: z.boolean() }))) b: { join: boolean }) { return this.s.signupSelf(a, id, b.join); }
+}
+
+/** Anmelde-Button in Discord – auch für Mitglieder ohne Dashboard-Konto (z. B. Anwärter). */
+@ApiTags('bot')
+@Controller('bot/training-sessions')
+export class BotTrainingSessionsController {
+  constructor(private readonly s: HrTrainingSessionsService) {}
+  @BotService() @Post(':id/signup') @HttpCode(200) signup(@Param('id', ParseUUIDPipe) id: string, @Body(zodBody(z.object({ discordId: sfId, name: z.string().trim().min(1).max(64), join: z.boolean() }))) b: { discordId: string; name: string; join: boolean }) { return this.s.signupById(id, b); }
 }
