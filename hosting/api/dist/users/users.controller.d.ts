@@ -70,17 +70,17 @@ export declare class UsersController {
         items: {
             id: string;
             createdAt: Date;
+            updatedAt: Date;
             username: string;
+            displayName: string;
             email: string | null;
             robloxUserId: string | null;
-            displayName: string;
             robloxUsername: string | null;
             robloxStatus: string;
             robloxVerifiedAt: Date | null;
             active: boolean;
             lastLogin: Date | null;
             totpEnabledAt: Date | null;
-            updatedAt: Date;
             roles: {
                 role: {
                     id: string;
@@ -100,17 +100,17 @@ export declare class UsersController {
     get(id: string): Promise<{
         id: string;
         createdAt: Date;
+        updatedAt: Date;
         username: string;
+        displayName: string;
         email: string | null;
         robloxUserId: string | null;
-        displayName: string;
         robloxUsername: string | null;
         robloxStatus: string;
         robloxVerifiedAt: Date | null;
         active: boolean;
         lastLogin: Date | null;
         totpEnabledAt: Date | null;
-        updatedAt: Date;
         roles: {
             role: {
                 id: string;
@@ -126,17 +126,17 @@ export declare class UsersController {
     create(a: Actor, b: z.infer<typeof createUser>): Promise<{
         id: string;
         createdAt: Date;
+        updatedAt: Date;
         username: string;
+        displayName: string;
         email: string | null;
         robloxUserId: string | null;
-        displayName: string;
         robloxUsername: string | null;
         robloxStatus: string;
         robloxVerifiedAt: Date | null;
         active: boolean;
         lastLogin: Date | null;
         totpEnabledAt: Date | null;
-        updatedAt: Date;
         roles: {
             role: {
                 id: string;
@@ -152,17 +152,17 @@ export declare class UsersController {
     setRoblox(a: Actor, id: string, b: z.infer<typeof roblox>): Promise<{
         id: string;
         createdAt: Date;
+        updatedAt: Date;
         username: string;
+        displayName: string;
         email: string | null;
         robloxUserId: string | null;
-        displayName: string;
         robloxUsername: string | null;
         robloxStatus: string;
         robloxVerifiedAt: Date | null;
         active: boolean;
         lastLogin: Date | null;
         totpEnabledAt: Date | null;
-        updatedAt: Date;
         roles: {
             role: {
                 id: string;
@@ -178,17 +178,17 @@ export declare class UsersController {
     setActive(a: Actor, id: string, b: z.infer<typeof active>): Promise<{
         id: string;
         createdAt: Date;
+        updatedAt: Date;
         username: string;
+        displayName: string;
         email: string | null;
         robloxUserId: string | null;
-        displayName: string;
         robloxUsername: string | null;
         robloxStatus: string;
         robloxVerifiedAt: Date | null;
         active: boolean;
         lastLogin: Date | null;
         totpEnabledAt: Date | null;
-        updatedAt: Date;
         roles: {
             role: {
                 id: string;
@@ -206,17 +206,17 @@ export declare class UsersController {
     setRoles(a: Actor, id: string, b: z.infer<typeof roles>): Promise<{
         id: string;
         createdAt: Date;
+        updatedAt: Date;
         username: string;
+        displayName: string;
         email: string | null;
         robloxUserId: string | null;
-        displayName: string;
         robloxUsername: string | null;
         robloxStatus: string;
         robloxVerifiedAt: Date | null;
         active: boolean;
         lastLogin: Date | null;
         totpEnabledAt: Date | null;
-        updatedAt: Date;
         roles: {
             role: {
                 id: string;
@@ -231,12 +231,12 @@ export declare class UsersController {
     }>;
     setOverride(a: Actor, id: string, b: z.infer<typeof override>): Promise<{
         id: string;
-        reason: string | null;
         createdAt: Date;
+        reason: string | null;
+        createdById: string | null;
         userId: string;
         permissionKey: string;
         effect: string;
-        createdById: string | null;
     }>;
     removeOverride(a: Actor, id: string, p: string): Promise<void>;
 }

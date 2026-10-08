@@ -7,22 +7,22 @@ export declare class EmbedsController {
     constructor(s: EmbedsService);
     list(): Promise<{
         id: string;
-        name: string;
-        guildId: string | null;
-        color: string;
-        channelId: string | null;
-        description: string;
-        url: string;
         title: string;
+        description: string;
+        name: string;
+        color: string;
+        guildId: string | null;
+        content: string;
+        footer: string;
+        channelId: string | null;
+        author: string;
+        url: string;
         image: string;
         posted: {
             at: string;
             channelId: string;
             messageId: string;
         } | null;
-        content: string;
-        footer: string;
-        author: string;
         reactions: string[];
         authorIcon: string;
         thumbnail: string;
@@ -39,22 +39,22 @@ export declare class EmbedsController {
     }[]>;
     save(a: Actor, id: string, b: EmbedDoc): Promise<{
         id: string;
-        name: string;
-        guildId: string | null;
-        color: string;
-        channelId: string | null;
-        description: string;
-        url: string;
         title: string;
+        description: string;
+        name: string;
+        color: string;
+        guildId: string | null;
+        content: string;
+        footer: string;
+        channelId: string | null;
+        author: string;
+        url: string;
         image: string;
         posted: {
             at: string;
             channelId: string;
             messageId: string;
         } | null;
-        content: string;
-        footer: string;
-        author: string;
         reactions: string[];
         authorIcon: string;
         thumbnail: string;
@@ -71,22 +71,22 @@ export declare class EmbedsController {
     }>;
     duplicate(a: Actor, id: string): Promise<{
         id: string;
-        name: string;
-        guildId: string | null;
-        color: string;
-        channelId: string | null;
-        description: string;
-        url: string;
         title: string;
+        description: string;
+        name: string;
+        color: string;
+        guildId: string | null;
+        content: string;
+        footer: string;
+        channelId: string | null;
+        author: string;
+        url: string;
         image: string;
         posted: {
             at: string;
             channelId: string;
             messageId: string;
         } | null;
-        content: string;
-        footer: string;
-        author: string;
         reactions: string[];
         authorIcon: string;
         thumbnail: string;

@@ -12,16 +12,16 @@ declare const q: z.ZodObject<{
 }, "strip", z.ZodTypeAny, {
     page: number;
     pageSize: number;
-    action?: string | undefined;
     module?: string | undefined;
     entityType?: string | undefined;
     entityId?: string | undefined;
+    action?: string | undefined;
     q?: string | undefined;
 }, {
-    action?: string | undefined;
     module?: string | undefined;
     entityType?: string | undefined;
     entityId?: string | undefined;
+    action?: string | undefined;
     q?: string | undefined;
     page?: number | undefined;
     pageSize?: number | undefined;
@@ -50,17 +50,17 @@ export declare class AuditController {
             } | null;
             summary: string | null;
             id: string;
-            actorUserId: string | null;
-            actorRobloxUserId: string | null;
-            action: string;
+            createdAt: Date;
+            reason: string | null;
             module: string;
             entityType: string | null;
             entityId: string | null;
+            action: string;
+            actorUserId: string | null;
+            actorRobloxUserId: string | null;
             before: import("@prisma/client/runtime/library").JsonValue | null;
             after: import("@prisma/client/runtime/library").JsonValue | null;
-            reason: string | null;
             requestId: string | null;
-            createdAt: Date;
         }[];
         total: number;
         page: number;

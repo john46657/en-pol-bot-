@@ -17,14 +17,15 @@ export declare class DutyService {
         callsign?: string;
         shiftType?: string;
     }, targetUserId?: string): Promise<{
+        serverId: string | null;
         id: string;
-        userId: string;
         status: string;
-        endedAt: Date | null;
-        callsign: string | null;
-        startedAt: Date;
+        userId: string;
         unitId: string | null;
+        callsign: string | null;
         shiftType: string | null;
+        startedAt: Date;
+        endedAt: Date | null;
         lastActivityAt: Date | null;
         remindedAt: Date | null;
     } | {
@@ -54,33 +55,35 @@ export declare class DutyService {
     team(): import("@prisma/client").Prisma.PrismaPromise<({
         user: {
             personnel: {
-                rank: string | null;
                 callsign: string | null;
+                rank: string | null;
             } | null;
             id: string;
             displayName: string;
         };
     } & {
+        serverId: string | null;
         id: string;
-        userId: string;
         status: string;
-        endedAt: Date | null;
-        callsign: string | null;
-        startedAt: Date;
+        userId: string;
         unitId: string | null;
+        callsign: string | null;
         shiftType: string | null;
+        startedAt: Date;
+        endedAt: Date | null;
         lastActivityAt: Date | null;
         remindedAt: Date | null;
     })[]>;
     mine(userId: string): import("@prisma/client").Prisma.Prisma__DutySessionClient<{
+        serverId: string | null;
         id: string;
-        userId: string;
         status: string;
-        endedAt: Date | null;
-        callsign: string | null;
-        startedAt: Date;
+        userId: string;
         unitId: string | null;
+        callsign: string | null;
         shiftType: string | null;
+        startedAt: Date;
+        endedAt: Date | null;
         lastActivityAt: Date | null;
         remindedAt: Date | null;
     } | null, null, import("@prisma/client/runtime/library").DefaultArgs, import("@prisma/client").Prisma.PrismaClientOptions>;
@@ -150,9 +153,9 @@ export declare class DutyService {
         currentIncident: {
             number: string;
             id: string;
-            priority: string;
-            status: string;
             title: string;
+            status: string;
+            priority: string;
         } | null;
     }[]>;
 }

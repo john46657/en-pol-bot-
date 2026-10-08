@@ -30,41 +30,41 @@ export declare class CommunicationController {
     constructor(c: CommunicationService);
     list(a: Actor, ch: z.infer<typeof channel>, q: z.infer<typeof listQ>): Promise<{
         id: string;
-        createdAt: Date;
         authorId: string;
-        body: string;
+        createdAt: Date;
         deletedAt: Date | null;
         conversationId: string;
+        body: string;
         replyToId: string | null;
         pinned: boolean;
     }[]>;
     post(a: Actor, ch: z.infer<typeof channel>, b: z.infer<typeof post>): Promise<{
         id: string;
-        createdAt: Date;
         authorId: string;
-        body: string;
+        createdAt: Date;
         deletedAt: Date | null;
         conversationId: string;
+        body: string;
         replyToId: string | null;
         pinned: boolean;
     }>;
     pin(a: Actor, id: string): Promise<{
         id: string;
-        createdAt: Date;
         authorId: string;
-        body: string;
+        createdAt: Date;
         deletedAt: Date | null;
         conversationId: string;
+        body: string;
         replyToId: string | null;
         pinned: boolean;
     }>;
     del(a: Actor, id: string): Promise<{
         id: string;
-        createdAt: Date;
         authorId: string;
-        body: string;
+        createdAt: Date;
         deletedAt: Date | null;
         conversationId: string;
+        body: string;
         replyToId: string | null;
         pinned: boolean;
     }>;

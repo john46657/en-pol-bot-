@@ -78,11 +78,11 @@ export declare class RadioCodesService {
     list(q?: string, guildId?: string | null): Promise<{
         id: string;
         createdAt: Date;
-        code: string;
-        category: string | null;
         updatedAt: Date;
-        guildId: string | null;
+        category: string | null;
         description: string | null;
+        guildId: string | null;
+        code: string;
         position: number;
         meaning: string;
     }[]>;
@@ -93,22 +93,22 @@ export declare class RadioCodesService {
     create(actor: Actor, d: Required<Pick<RadioCodeInput, 'code' | 'meaning'>> & RadioCodeInput): Promise<{
         id: string;
         createdAt: Date;
-        code: string;
-        category: string | null;
         updatedAt: Date;
-        guildId: string | null;
+        category: string | null;
         description: string | null;
+        guildId: string | null;
+        code: string;
         position: number;
         meaning: string;
     }>;
     update(actor: Actor, id: string, d: RadioCodeInput): Promise<{
         id: string;
         createdAt: Date;
-        code: string;
-        category: string | null;
         updatedAt: Date;
-        guildId: string | null;
+        category: string | null;
         description: string | null;
+        guildId: string | null;
+        code: string;
         position: number;
         meaning: string;
     }>;
@@ -116,11 +116,11 @@ export declare class RadioCodesService {
     reorder(actor: Actor, ids: string[]): Promise<{
         id: string;
         createdAt: Date;
-        code: string;
-        category: string | null;
         updatedAt: Date;
-        guildId: string | null;
+        category: string | null;
         description: string | null;
+        guildId: string | null;
+        code: string;
         position: number;
         meaning: string;
     }[]>;

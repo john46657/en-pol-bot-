@@ -29,14 +29,14 @@ export declare class ApplicationBansService {
         robloxUserId?: string | null;
     }, scope: string, guildId: string | null): Promise<{
         id: string;
-        reason: string;
         createdAt: Date;
-        name: string;
-        discordId: string | null;
+        reason: string;
+        createdById: string | null;
         expiresAt: Date | null;
         robloxUserId: string | null;
+        name: string;
         guildId: string | null;
-        createdById: string | null;
+        discordId: string | null;
         scopes: string[];
         createdByName: string | null;
         liftedAt: Date | null;
@@ -62,14 +62,14 @@ export declare class ApplicationBansService {
     /** Sperrliste des gewählten Servers (ohne Server: die übergreifenden). */
     list(includeInactive: boolean): Promise<{
         id: string;
-        reason: string;
         createdAt: Date;
-        name: string;
-        discordId: string | null;
+        reason: string;
+        createdById: string | null;
         expiresAt: Date | null;
         robloxUserId: string | null;
+        name: string;
         guildId: string | null;
-        createdById: string | null;
+        discordId: string | null;
         scopes: string[];
         createdByName: string | null;
         liftedAt: Date | null;
@@ -77,14 +77,14 @@ export declare class ApplicationBansService {
     }[]>;
     create(actor: Actor, d: BanInput): Promise<{
         id: string;
-        reason: string;
         createdAt: Date;
-        name: string;
-        discordId: string | null;
+        reason: string;
+        createdById: string | null;
         expiresAt: Date | null;
         robloxUserId: string | null;
+        name: string;
         guildId: string | null;
-        createdById: string | null;
+        discordId: string | null;
         scopes: string[];
         createdByName: string | null;
         liftedAt: Date | null;
@@ -92,14 +92,14 @@ export declare class ApplicationBansService {
     }>;
     lift(actor: Actor, id: string): Promise<{
         id: string;
-        reason: string;
         createdAt: Date;
-        name: string;
-        discordId: string | null;
+        reason: string;
+        createdById: string | null;
         expiresAt: Date | null;
         robloxUserId: string | null;
+        name: string;
         guildId: string | null;
-        createdById: string | null;
+        discordId: string | null;
         scopes: string[];
         createdByName: string | null;
         liftedAt: Date | null;

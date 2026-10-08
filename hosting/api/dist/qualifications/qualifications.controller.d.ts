@@ -8,12 +8,12 @@ declare const list: z.ZodObject<{
     guildId: z.ZodOptional<z.ZodString>;
 }, "strip", z.ZodTypeAny, {
     unit?: string | undefined;
-    guildId?: string | undefined;
     status?: "ACCEPTED" | "REJECTED" | "WITHDRAWN" | "OPEN" | undefined;
+    guildId?: string | undefined;
 }, {
     unit?: string | undefined;
-    guildId?: string | undefined;
     status?: "ACCEPTED" | "REJECTED" | "WITHDRAWN" | "OPEN" | undefined;
+    guildId?: string | undefined;
 }>;
 declare const decision: z.ZodObject<{
     status: z.ZodEnum<["ACCEPTED", "REJECTED"]>;
@@ -51,23 +51,23 @@ declare const submit: z.ZodObject<{
     }>, "many">;
 }, "strip", z.ZodTypeAny, {
     unit: string;
-    discordId: string;
-    discordName: string;
     answers: {
         answer: string | string[] | null;
         question: string;
     }[];
+    discordId: string;
+    discordName: string;
     guildId?: string | undefined;
     durationSec?: number | undefined;
     joinedAt?: Date | undefined;
 }, {
     unit: string;
-    discordId: string;
-    discordName: string;
     answers: {
         answer: string | string[] | null;
         question: string;
     }[];
+    discordId: string;
+    discordName: string;
     guildId?: string | undefined;
     durationSec?: number | undefined;
     joinedAt?: Date | undefined;
@@ -106,8 +106,18 @@ export declare class QualificationsController {
         own: boolean;
         title: string;
         units: {
+            description: string;
             name: string;
+            key: string;
+            questions: import("@enrp/shared").FormField[];
             settings: {
+                cooldownMinutes: number;
+                messages: {
+                    denied: string;
+                    accepted: string;
+                    confirmation: string;
+                    completion: string;
+                };
                 roles: {
                     denied: string[];
                     required: {
@@ -125,30 +135,29 @@ export declare class QualificationsController {
                     removeOnSubmit: string[];
                     managers: string[];
                 };
-                messages: {
-                    denied: string;
-                    accepted: string;
-                    confirmation: string;
-                    completion: string;
-                };
                 staffThreads: boolean;
-                cooldownMinutes: number;
                 timeLimitMinutes: number;
                 onLeave: "DENY" | "NONE" | "WITHDRAW";
             };
-            key: string;
-            description: string;
             enabled: boolean;
             pingRoleIds: string[];
-            questions: import("@enrp/shared").FormField[];
-            channelId?: string | undefined;
             roleId?: string | undefined;
+            channelId?: string | undefined;
             acceptedChannelId?: string | undefined;
             deniedChannelId?: string | undefined;
         }[];
         police: {
+            title: string;
+            description: string;
             name: string;
             settings: {
+                cooldownMinutes: number;
+                messages: {
+                    denied: string;
+                    accepted: string;
+                    confirmation: string;
+                    completion: string;
+                };
                 roles: {
                     denied: string[];
                     required: {
@@ -166,20 +175,11 @@ export declare class QualificationsController {
                     removeOnSubmit: string[];
                     managers: string[];
                 };
-                messages: {
-                    denied: string;
-                    accepted: string;
-                    confirmation: string;
-                    completion: string;
-                };
                 staffThreads: boolean;
-                cooldownMinutes: number;
                 timeLimitMinutes: number;
                 onLeave: "DENY" | "NONE" | "WITHDRAW";
             };
-            description: string;
             enabled: boolean;
-            title: string;
             pingRoleIds: string[];
             channelId?: string | undefined;
             acceptedChannelId?: string | undefined;
@@ -192,8 +192,18 @@ export declare class QualificationsController {
         own: boolean;
         title: string;
         units: {
+            description: string;
             name: string;
+            key: string;
+            questions: import("@enrp/shared").FormField[];
             settings: {
+                cooldownMinutes: number;
+                messages: {
+                    denied: string;
+                    accepted: string;
+                    confirmation: string;
+                    completion: string;
+                };
                 roles: {
                     denied: string[];
                     required: {
@@ -211,30 +221,29 @@ export declare class QualificationsController {
                     removeOnSubmit: string[];
                     managers: string[];
                 };
-                messages: {
-                    denied: string;
-                    accepted: string;
-                    confirmation: string;
-                    completion: string;
-                };
                 staffThreads: boolean;
-                cooldownMinutes: number;
                 timeLimitMinutes: number;
                 onLeave: "DENY" | "NONE" | "WITHDRAW";
             };
-            key: string;
-            description: string;
             enabled: boolean;
             pingRoleIds: string[];
-            questions: import("@enrp/shared").FormField[];
-            channelId?: string | undefined;
             roleId?: string | undefined;
+            channelId?: string | undefined;
             acceptedChannelId?: string | undefined;
             deniedChannelId?: string | undefined;
         }[];
         police: {
+            title: string;
+            description: string;
             name: string;
             settings: {
+                cooldownMinutes: number;
+                messages: {
+                    denied: string;
+                    accepted: string;
+                    confirmation: string;
+                    completion: string;
+                };
                 roles: {
                     denied: string[];
                     required: {
@@ -252,20 +261,11 @@ export declare class QualificationsController {
                     removeOnSubmit: string[];
                     managers: string[];
                 };
-                messages: {
-                    denied: string;
-                    accepted: string;
-                    confirmation: string;
-                    completion: string;
-                };
                 staffThreads: boolean;
-                cooldownMinutes: number;
                 timeLimitMinutes: number;
                 onLeave: "DENY" | "NONE" | "WITHDRAW";
             };
-            description: string;
             enabled: boolean;
-            title: string;
             pingRoleIds: string[];
             channelId?: string | undefined;
             acceptedChannelId?: string | undefined;
@@ -279,8 +279,18 @@ export declare class QualificationsController {
         own: boolean;
         title: string;
         units: {
+            description: string;
             name: string;
+            key: string;
+            questions: import("@enrp/shared").FormField[];
             settings: {
+                cooldownMinutes: number;
+                messages: {
+                    denied: string;
+                    accepted: string;
+                    confirmation: string;
+                    completion: string;
+                };
                 roles: {
                     denied: string[];
                     required: {
@@ -298,30 +308,29 @@ export declare class QualificationsController {
                     removeOnSubmit: string[];
                     managers: string[];
                 };
-                messages: {
-                    denied: string;
-                    accepted: string;
-                    confirmation: string;
-                    completion: string;
-                };
                 staffThreads: boolean;
-                cooldownMinutes: number;
                 timeLimitMinutes: number;
                 onLeave: "DENY" | "NONE" | "WITHDRAW";
             };
-            key: string;
-            description: string;
             enabled: boolean;
             pingRoleIds: string[];
-            questions: import("@enrp/shared").FormField[];
-            channelId?: string | undefined;
             roleId?: string | undefined;
+            channelId?: string | undefined;
             acceptedChannelId?: string | undefined;
             deniedChannelId?: string | undefined;
         }[];
         police: {
+            title: string;
+            description: string;
             name: string;
             settings: {
+                cooldownMinutes: number;
+                messages: {
+                    denied: string;
+                    accepted: string;
+                    confirmation: string;
+                    completion: string;
+                };
                 roles: {
                     denied: string[];
                     required: {
@@ -339,20 +348,11 @@ export declare class QualificationsController {
                     removeOnSubmit: string[];
                     managers: string[];
                 };
-                messages: {
-                    denied: string;
-                    accepted: string;
-                    confirmation: string;
-                    completion: string;
-                };
                 staffThreads: boolean;
-                cooldownMinutes: number;
                 timeLimitMinutes: number;
                 onLeave: "DENY" | "NONE" | "WITHDRAW";
             };
-            description: string;
             enabled: boolean;
-            title: string;
             pingRoleIds: string[];
             channelId?: string | undefined;
             acceptedChannelId?: string | undefined;
@@ -366,47 +366,47 @@ export declare class QualificationsController {
         number: string;
         unit: string;
         id: string;
+        status: string;
         createdAt: Date;
         userId: string | null;
-        discordId: string;
         guildId: string | null;
-        unitName: string;
-        status: string;
         decidedById: string | null;
         decidedAt: Date | null;
         decisionReason: string | null;
-        discordName: string;
         answers: import("@prisma/client/runtime/library").JsonValue;
         grantRoleIds: string[];
+        discordId: string;
+        discordName: string;
         durationSec: number | null;
         joinedAt: Date | null;
+        unitName: string;
     }[]>;
     history(q: z.infer<typeof historyQ>): import("@prisma/client").Prisma.PrismaPromise<{
         number: string;
         id: string;
-        createdAt: Date;
-        unitName: string;
         status: string;
+        createdAt: Date;
         decisionReason: string | null;
+        unitName: string;
     }[]>;
     get(id: string): Promise<{
         number: string;
         unit: string;
         id: string;
+        status: string;
         createdAt: Date;
         userId: string | null;
-        discordId: string;
         guildId: string | null;
-        unitName: string;
-        status: string;
         decidedById: string | null;
         decidedAt: Date | null;
         decisionReason: string | null;
-        discordName: string;
         answers: import("@prisma/client/runtime/library").JsonValue;
         grantRoleIds: string[];
+        discordId: string;
+        discordName: string;
         durationSec: number | null;
         joinedAt: Date | null;
+        unitName: string;
     }>;
     /** Auch vom Bot (Button im Team-Channel) mit den Rechten des klickenden Benutzers. */
     decide(a: Actor, id: string, b: z.infer<typeof decision>): Promise<{
@@ -431,8 +431,18 @@ export declare class BotQualificationsController {
     config(q: z.infer<typeof guildQ>): Promise<{
         title: string;
         units: {
+            description: string;
             name: string;
+            key: string;
+            questions: import("@enrp/shared").FormField[];
             settings: {
+                cooldownMinutes: number;
+                messages: {
+                    denied: string;
+                    accepted: string;
+                    confirmation: string;
+                    completion: string;
+                };
                 roles: {
                     denied: string[];
                     required: {
@@ -450,30 +460,29 @@ export declare class BotQualificationsController {
                     removeOnSubmit: string[];
                     managers: string[];
                 };
-                messages: {
-                    denied: string;
-                    accepted: string;
-                    confirmation: string;
-                    completion: string;
-                };
                 staffThreads: boolean;
-                cooldownMinutes: number;
                 timeLimitMinutes: number;
                 onLeave: "DENY" | "NONE" | "WITHDRAW";
             };
-            key: string;
-            description: string;
             enabled: boolean;
             pingRoleIds: string[];
-            questions: import("@enrp/shared").FormField[];
-            channelId?: string | undefined;
             roleId?: string | undefined;
+            channelId?: string | undefined;
             acceptedChannelId?: string | undefined;
             deniedChannelId?: string | undefined;
         }[];
         police: {
+            title: string;
+            description: string;
             name: string;
             settings: {
+                cooldownMinutes: number;
+                messages: {
+                    denied: string;
+                    accepted: string;
+                    confirmation: string;
+                    completion: string;
+                };
                 roles: {
                     denied: string[];
                     required: {
@@ -491,20 +500,11 @@ export declare class BotQualificationsController {
                     removeOnSubmit: string[];
                     managers: string[];
                 };
-                messages: {
-                    denied: string;
-                    accepted: string;
-                    confirmation: string;
-                    completion: string;
-                };
                 staffThreads: boolean;
-                cooldownMinutes: number;
                 timeLimitMinutes: number;
                 onLeave: "DENY" | "NONE" | "WITHDRAW";
             };
-            description: string;
             enabled: boolean;
-            title: string;
             pingRoleIds: string[];
             channelId?: string | undefined;
             acceptedChannelId?: string | undefined;

@@ -162,29 +162,29 @@ export declare const cadConfigSchema: z.ZodObject<{
         label: string;
         color?: string | undefined;
         emoji?: string | undefined;
-        order?: number | undefined;
         layer?: string | undefined;
+        order?: number | undefined;
     }, {
         key: string;
         label: string;
         color?: string | undefined;
         emoji?: string | undefined;
-        order?: number | undefined;
         layer?: string | undefined;
+        order?: number | undefined;
     }>, "many">, {
         key: string;
         label: string;
         color?: string | undefined;
         emoji?: string | undefined;
-        order?: number | undefined;
         layer?: string | undefined;
+        order?: number | undefined;
     }[], {
         key: string;
         label: string;
         color?: string | undefined;
         emoji?: string | undefined;
-        order?: number | undefined;
         layer?: string | undefined;
+        order?: number | undefined;
     }[]>;
     layers: z.ZodEffects<z.ZodArray<z.ZodObject<{
         key: z.ZodString;
@@ -218,23 +218,23 @@ export declare const cadConfigSchema: z.ZodObject<{
         emoji: z.ZodString;
         color: z.ZodString;
     }, "strip", z.ZodTypeAny, {
-        key: string;
         color: string;
+        key: string;
         emoji: string;
         label: string;
     }, {
-        key: string;
         color: string;
+        key: string;
         emoji: string;
         label: string;
     }>, "many">, {
-        key: string;
         color: string;
+        key: string;
         emoji: string;
         label: string;
     }[], {
-        key: string;
         color: string;
+        key: string;
         emoji: string;
         label: string;
     }[]>;
@@ -281,13 +281,13 @@ export declare const cadConfigSchema: z.ZodObject<{
         id: string;
         guildId: string;
         enabled: boolean;
-        event: "radio" | "incident.created" | "incident.status" | "incident.assigned" | "incident.closed" | "call.received" | "announcement";
+        event: "announcement" | "radio" | "incident.created" | "incident.status" | "incident.assigned" | "incident.closed" | "call.received";
         channelIds: string[];
         pingRoleIds: string[];
     }, {
         id: string;
         guildId: string;
-        event: "radio" | "incident.created" | "incident.status" | "incident.assigned" | "incident.closed" | "call.received" | "announcement";
+        event: "announcement" | "radio" | "incident.created" | "incident.status" | "incident.assigned" | "incident.closed" | "call.received";
         channelIds: string[];
         enabled?: boolean | undefined;
         pingRoleIds?: string[] | undefined;
@@ -298,27 +298,27 @@ export declare const cadConfigSchema: z.ZodObject<{
         type: z.ZodEnum<["text", "number", "select"]>;
         options: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
     }, "strip", z.ZodTypeAny, {
-        key: string;
         type: "number" | "select" | "text";
+        key: string;
         label: string;
         options?: string[] | undefined;
     }, {
-        key: string;
         type: "number" | "select" | "text";
+        key: string;
         label: string;
         options?: string[] | undefined;
     }>, "many">, {
-        key: string;
         type: "number" | "select" | "text";
+        key: string;
         label: string;
         options?: string[] | undefined;
     }[], {
-        key: string;
         type: "number" | "select" | "text";
+        key: string;
         label: string;
         options?: string[] | undefined;
     }[]>;
-    widgets: z.ZodPipeline<z.ZodEffects<z.ZodArray<z.ZodString, "many">, ("map" | "persons" | "vehicles" | "radio" | "activeIncidents" | "availableUnits" | "activeCalls" | "erlcStatus" | "units" | "dutyActivity")[], string[]>, z.ZodArray<z.ZodEnum<["activeIncidents", "availableUnits", "activeCalls", "erlcStatus", "map", "units", "radio", "persons", "vehicles", "dutyActivity"]>, "many">>;
+    widgets: z.ZodPipeline<z.ZodEffects<z.ZodArray<z.ZodString, "many">, ("vehicles" | "units" | "map" | "persons" | "radio" | "activeIncidents" | "availableUnits" | "activeCalls" | "erlcStatus" | "dutyActivity")[], string[]>, z.ZodArray<z.ZodEnum<["activeIncidents", "availableUnits", "activeCalls", "erlcStatus", "map", "units", "radio", "persons", "vehicles", "dutyActivity"]>, "many">>;
 }, "strip", z.ZodTypeAny, {
     map: {
         width: number;
@@ -328,7 +328,7 @@ export declare const cadConfigSchema: z.ZodObject<{
         scale: number;
         imageUrl?: string | null | undefined;
     };
-    widgets: ("map" | "persons" | "vehicles" | "radio" | "activeIncidents" | "availableUnits" | "activeCalls" | "erlcStatus" | "units" | "dutyActivity")[];
+    widgets: ("vehicles" | "units" | "map" | "persons" | "radio" | "activeIncidents" | "availableUnits" | "activeCalls" | "erlcStatus" | "dutyActivity")[];
     incidentNumberPrefix: string;
     incidentTypes: {
         key: string;
@@ -364,8 +364,8 @@ export declare const cadConfigSchema: z.ZodObject<{
         label: string;
         color?: string | undefined;
         emoji?: string | undefined;
-        order?: number | undefined;
         layer?: string | undefined;
+        order?: number | undefined;
     }[];
     layers: {
         key: string;
@@ -374,8 +374,8 @@ export declare const cadConfigSchema: z.ZodObject<{
         enabledByDefault?: boolean | undefined;
     }[];
     markers: {
-        key: string;
         color: string;
+        key: string;
         emoji: string;
         label: string;
     }[];
@@ -383,13 +383,13 @@ export declare const cadConfigSchema: z.ZodObject<{
         id: string;
         guildId: string;
         enabled: boolean;
-        event: "radio" | "incident.created" | "incident.status" | "incident.assigned" | "incident.closed" | "call.received" | "announcement";
+        event: "announcement" | "radio" | "incident.created" | "incident.status" | "incident.assigned" | "incident.closed" | "call.received";
         channelIds: string[];
         pingRoleIds: string[];
     }[];
     memberFields: {
-        key: string;
         type: "number" | "select" | "text";
+        key: string;
         label: string;
         options?: string[] | undefined;
     }[];
@@ -438,8 +438,8 @@ export declare const cadConfigSchema: z.ZodObject<{
         label: string;
         color?: string | undefined;
         emoji?: string | undefined;
-        order?: number | undefined;
         layer?: string | undefined;
+        order?: number | undefined;
     }[];
     layers: {
         key: string;
@@ -448,8 +448,8 @@ export declare const cadConfigSchema: z.ZodObject<{
         enabledByDefault?: boolean | undefined;
     }[];
     markers: {
-        key: string;
         color: string;
+        key: string;
         emoji: string;
         label: string;
     }[];
@@ -457,8 +457,8 @@ export declare const cadConfigSchema: z.ZodObject<{
         event: z.ZodString;
     }, z.ZodTypeAny, "passthrough">[];
     memberFields: {
-        key: string;
         type: "number" | "select" | "text";
+        key: string;
         label: string;
         options?: string[] | undefined;
     }[];

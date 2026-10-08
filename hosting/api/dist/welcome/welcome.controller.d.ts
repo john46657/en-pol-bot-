@@ -13,11 +13,11 @@ declare const memberBody: z.ZodObject<{
     guildId: z.ZodString;
     discordId: z.ZodString;
 }, "strip", z.ZodTypeAny, {
-    discordId: string;
     guildId: string;
+    discordId: string;
 }, {
-    discordId: string;
     guildId: string;
+    discordId: string;
 }>;
 /** Admin → Welcome & Goodbye. Server = `guildId` oder der oben gewählte Server; ohne Server die gemeinsame Grundeinstellung. */
 export declare class WelcomeController {

@@ -18,15 +18,15 @@ export declare const verifyConfigSchema: z.ZodEffects<z.ZodObject<{
         buttonLabel: z.ZodDefault<z.ZodString>;
     }, "strip", z.ZodTypeAny, {
         message: string;
+        title: string;
         color: string;
         channelId: string | null;
-        title: string;
         buttonLabel: string;
     }, {
         message?: string | undefined;
+        title?: string | undefined;
         color?: string | undefined;
         channelId?: string | null | undefined;
-        title?: string | undefined;
         buttonLabel?: string | undefined;
     }>>;
     binds: z.ZodDefault<z.ZodArray<z.ZodObject<{
@@ -53,9 +53,9 @@ export declare const verifyConfigSchema: z.ZodEffects<z.ZodObject<{
     logChannelId: string | null;
     panel: {
         message: string;
+        title: string;
         color: string;
         channelId: string | null;
-        title: string;
         buttonLabel: string;
     };
     verifiedRoleIds: string[];
@@ -74,9 +74,9 @@ export declare const verifyConfigSchema: z.ZodEffects<z.ZodObject<{
     logChannelId?: string | null | undefined;
     panel?: {
         message?: string | undefined;
+        title?: string | undefined;
         color?: string | undefined;
         channelId?: string | null | undefined;
-        title?: string | undefined;
         buttonLabel?: string | undefined;
     } | undefined;
     verifiedRoleIds?: string[] | undefined;
@@ -95,9 +95,9 @@ export declare const verifyConfigSchema: z.ZodEffects<z.ZodObject<{
     logChannelId: string | null;
     panel: {
         message: string;
+        title: string;
         color: string;
         channelId: string | null;
-        title: string;
         buttonLabel: string;
     };
     verifiedRoleIds: string[];
@@ -116,9 +116,9 @@ export declare const verifyConfigSchema: z.ZodEffects<z.ZodObject<{
     logChannelId?: string | null | undefined;
     panel?: {
         message?: string | undefined;
+        title?: string | undefined;
         color?: string | undefined;
         channelId?: string | null | undefined;
-        title?: string | undefined;
         buttonLabel?: string | undefined;
     } | undefined;
     verifiedRoleIds?: string[] | undefined;
@@ -194,9 +194,9 @@ export declare class VerificationService {
         name: string;
         displayName: string;
     }, method: string): Promise<{
-        discordId: string;
-        displayName: string;
         updatedAt: Date;
+        displayName: string;
+        discordId: string;
         discordName: string | null;
         robloxName: string;
         robloxId: string;

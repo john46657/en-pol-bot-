@@ -48,13 +48,13 @@ export declare class TicketsService {
         } | null;
         number: string;
         id: string;
-        reason: string;
+        status: string;
         updatedAt: Date;
         version: number;
-        status: string;
-        notes: string | null;
-        personId: string;
         officerId: string;
+        personId: string;
+        reason: string;
+        notes: string | null;
         legalCodeId: string | null;
         amount: import("@prisma/client/runtime/library").Decimal;
         reportId: string | null;
@@ -71,13 +71,13 @@ export declare class TicketsService {
         } & {
             number: string;
             id: string;
-            reason: string;
+            status: string;
             updatedAt: Date;
             version: number;
-            status: string;
-            notes: string | null;
-            personId: string;
             officerId: string;
+            personId: string;
+            reason: string;
+            notes: string | null;
             legalCodeId: string | null;
             amount: import("@prisma/client/runtime/library").Decimal;
             reportId: string | null;
@@ -92,40 +92,40 @@ export declare class TicketsService {
     get(id: string): Promise<{
         ticket: {
             person: {
+                serverId: string | null;
                 id: string;
+                status: string;
                 createdAt: Date;
-                robloxUserId: string | null;
-                robloxUsername: string;
                 updatedAt: Date;
                 version: number;
-                serverId: string | null;
                 createdById: string | null;
-                status: string;
-                custom: import("@prisma/client/runtime/library").JsonValue | null;
+                robloxUserId: string | null;
+                robloxUsername: string;
                 aliases: string[];
                 notes: string | null;
+                custom: import("@prisma/client/runtime/library").JsonValue | null;
             };
             legalCode: {
                 id: string;
-                code: string;
+                title: string;
                 category: string;
+                description: string | null;
                 expiresAt: Date | null;
                 active: boolean;
-                description: string | null;
-                title: string;
+                code: string;
                 penalty: import("@prisma/client/runtime/library").JsonValue;
                 effectiveDate: Date;
             } | null;
         } & {
             number: string;
             id: string;
-            reason: string;
+            status: string;
             updatedAt: Date;
             version: number;
-            status: string;
-            notes: string | null;
-            personId: string;
             officerId: string;
+            personId: string;
+            reason: string;
+            notes: string | null;
             legalCodeId: string | null;
             amount: import("@prisma/client/runtime/library").Decimal;
             reportId: string | null;
@@ -135,11 +135,11 @@ export declare class TicketsService {
         };
         timeline: {
             id: string;
-            action: string;
+            createdAt: Date;
             entityType: string;
             entityId: string;
-            createdAt: Date;
             summary: string;
+            action: string;
             actorId: string | null;
         }[];
     }>;
@@ -154,13 +154,13 @@ export declare class TicketsService {
     }): Promise<{
         number: string;
         id: string;
-        reason: string;
+        status: string;
         updatedAt: Date;
         version: number;
-        status: string;
-        notes: string | null;
-        personId: string;
         officerId: string;
+        personId: string;
+        reason: string;
+        notes: string | null;
         legalCodeId: string | null;
         amount: import("@prisma/client/runtime/library").Decimal;
         reportId: string | null;
@@ -171,13 +171,13 @@ export declare class TicketsService {
     void(actor: Actor, id: string, reason: string): Promise<{
         number: string;
         id: string;
-        reason: string;
+        status: string;
         updatedAt: Date;
         version: number;
-        status: string;
-        notes: string | null;
-        personId: string;
         officerId: string;
+        personId: string;
+        reason: string;
+        notes: string | null;
         legalCodeId: string | null;
         amount: import("@prisma/client/runtime/library").Decimal;
         reportId: string | null;
