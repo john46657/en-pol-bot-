@@ -185,6 +185,13 @@ describe('qualification applications', () => {
     const row = await prisma.application.findFirstOrThrow({ where: { number: pol.body.number } });
     expect((await admin.post(`/api/v1/applications/${row.id}/discord-decision`).send({ status: 'ACCEPTED' })).status).toBe(200);
     expect((await prisma.discordOutbox.findFirstOrThrow({ where: { type: 'application.archived', payload: { path: ['id'], equals: row.id } } })).payload).toMatchObject({ channelId: '610000000000000011', status: 'ACCEPTED' });
+    // Steht die Bewerbung schon als Nachricht in Discord, wird nur diese aktualisiert – keine zweite Nachricht
+    const pol2 = await http().post('/api/v1/bot/application').set(bot()).send({ robloxUsername: 'Arch_Test2', discordId: '300000000000000087', answers });
+    const row2 = await prisma.application.findFirstOrThrow({ where: { number: pol2.body.number } });
+    await prisma.systemSetting.create({ data: { key: `bot.state.msg-a-${row2.id}`, value: { channelId: '610000000000000010', messageId: '610000000000000099' } } });
+    expect((await admin.post(`/api/v1/applications/${row2.id}/discord-decision`).send({ status: 'ACCEPTED' })).status).toBe(200);
+    expect(await prisma.discordOutbox.findFirst({ where: { type: 'application.archived', payload: { path: ['id'], equals: row2.id } } })).toBeNull();
+    expect(await prisma.discordOutbox.findFirst({ where: { type: 'message.decided', payload: { path: ['key'], equals: `msg-a-${row2.id}` } } })).not.toBeNull();
     expect((await admin.put('/api/v1/qualifications/config').send(cur)).status).toBe(200);
   });
 
