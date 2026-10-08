@@ -105,16 +105,23 @@ export function cleanReportValues(t: ReportTemplate, input: Record<string, unkno
   return { values };
 }
 
-export interface ReportView { number: string; period: ReportTemplate['period']; periodStart: string | Date; values: Record<string, string>; authorName: string; authorDiscordId?: string | null; status: string; updatedAt: string | Date; edited: boolean }
+export interface ReportView { number: string; period: ReportTemplate['period']; periodStart: string | Date; values: Record<string, string>; authorName: string; authorDiscordId?: string | null; status: string; updatedAt: string | Date; edited: boolean; reviewerName?: string | null; reviewNote?: string | null }
+export const REPORT_STATUS_LABEL: Record<string, string> = { SUBMITTED: '📨 Eingereicht', REVIEWED: '✅ Geprüft', RETURNED: '↩️ Zur Nachbesserung' };
 
 /** Bericht als Discord-Nachricht (mit „Bearbeiten“-Button). */
 export function reportMessage(t: ReportTemplate, r: ReportView, id: string): MessageSpec {
   const fields = t.fields.filter((f) => r.values[f.id]).map((f) => ({ name: f.label, value: r.values[f.id]!.slice(0, 1024), inline: f.inline }));
   const embed: EmbedSpec = {
     title: `${t.emoji ? `${t.emoji} ` : ''}${t.name} – ${periodLabel(t.period, r.periodStart)}`.slice(0, 256),
-    description: `**Verfasser:** ${r.authorDiscordId ? `<@${r.authorDiscordId}>` : r.authorName}${r.status === 'REVIEWED' ? '\n✅ **Geprüft**' : ''}`,
+    description: `**Verfasser:** ${r.authorDiscordId ? `<@${r.authorDiscordId}>` : r.authorName}${r.status !== 'SUBMITTED' ? `\n**${REPORT_STATUS_LABEL[r.status] ?? r.status}**${r.reviewerName ? ` von ${r.reviewerName}` : ''}${r.reviewNote ? `\n> ${r.reviewNote.replace(/\n/g, '\n> ').slice(0, 900)}` : ''}` : ''}`,
     color: parseInt(t.color.slice(1), 16), fields: fields.slice(0, 25),
     footer: `${r.number}${r.edited ? ' · bearbeitet' : ''}`, timestamp: new Date(r.updatedAt).toISOString(),
   };
-  return { embeds: [embed], buttons: [{ id: `drep:edit:${id}`, label: 'Bearbeiten', emoji: '✏️', style: 'secondary' }] };
+  embed.color = r.status === 'REVIEWED' ? 0x22c55e : r.status === 'RETURNED' ? 0xf59e0b : embed.color;
+  // Leitung prüft direkt in Discord (Rechte prüft das System beim Klick)
+  return { embeds: [embed], buttons: [
+    { id: `drep:edit:${id}`, label: 'Bearbeiten', emoji: '✏️', style: 'secondary' },
+    ...(r.status !== 'REVIEWED' ? [{ id: `drep:rev:${id}`, label: 'Geprüft', emoji: '✅', style: 'success' as const }] : []),
+    ...(r.status !== 'RETURNED' ? [{ id: `drep:ret:${id}`, label: 'Zur Nachbesserung', emoji: '↩️', style: 'secondary' as const }] : []),
+  ] };
 }

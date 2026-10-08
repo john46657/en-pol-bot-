@@ -71,7 +71,8 @@ export class DutyReportsService {
     const r = await this.prisma.dutyReport.findFirst({ where: /^[0-9a-f-]{36}$/.test(idOrNumber) ? { id: idOrNumber } : { number: idOrNumber.toUpperCase() }, include: { author: { select: { id: true, displayName: true } } } });
     if (!r || (r.authorId !== actor.userId && !(await this.seeAll(actor.userId!)))) throw new AppError('NOT_FOUND', 'Bericht nicht gefunden.');
     const [t, posted] = await Promise.all([this.templates.get(r.templateId), this.discord.posted(`drep-${r.id}`)]);
-    return { ...r, template: t ?? null, posted, canEdit: await this.canEdit(actor.userId!, r, t) };
+    const reviewerName = r.reviewedById ? (await this.prisma.user.findUnique({ where: { id: r.reviewedById }, select: { displayName: true } }))?.displayName ?? null : null;
+    return { ...r, template: t ?? null, posted, reviewerName, canEdit: await this.canEdit(actor.userId!, r, t) };
   }
 
   private async canEdit(userId: string, r: { authorId: string }, t?: ReportTemplate | null) {
@@ -127,7 +128,9 @@ export class DutyReportsService {
     const clean = t ? cleanReportValues(t, d.values) : { values: Object.fromEntries(Object.entries(d.values).map(([k, v]) => [k, String(v ?? '').slice(0, 4000)])) };
     if ('error' in clean) throw new AppError('VALIDATION_FAILED', clean.error);
     const after = await this.prisma.$transaction(async (tx) => {
-      const upd = await tx.dutyReport.updateMany({ where: { id, ...(d.version ? { version: d.version } : {}) }, data: { values: clean.values, version: { increment: 1 }, editedById: actor.userId } });
+      // nachgebessert vom Verfasser → wieder „eingereicht“, damit die Leitung erneut prüft
+      const back = r.status === 'RETURNED' && r.authorId === actor.userId;
+      const upd = await tx.dutyReport.updateMany({ where: { id, ...(d.version ? { version: d.version } : {}) }, data: { values: clean.values, version: { increment: 1 }, editedById: actor.userId, ...(back ? { status: 'SUBMITTED' } : {}) } });
       if (!upd.count) throw new AppError('CONFLICT', 'Der Bericht wurde inzwischen geändert. Bitte neu laden.');
       await this.audit.record(actor, { action: 'dutyreport.edit', module: 'dutyreports', entityType: 'DutyReport', entityId: id, before: { values: r.values }, after: { values: clean.values } }, tx);
       return tx.dutyReport.findUniqueOrThrow({ where: { id } });
@@ -136,13 +139,25 @@ export class DutyReportsService {
     return after;
   }
 
-  async review(actor: Actor, id: string) {
+  /**
+   * Leitung bearbeitet den Bericht: „Geprüft“ (Anmerkung optional), „Zur Nachbesserung“ (Anmerkung Pflicht) oder zurück auf „eingereicht“.
+   * Ohne `decision`: zwischen geprüft und eingereicht umschalten. Der Verfasser bekommt eine Benachrichtigung (und bei Nachbesserung eine DM).
+   */
+  async review(actor: Actor, id: string, d: { decision?: 'REVIEWED' | 'RETURNED' | 'SUBMITTED'; note?: string } = {}) {
     const r = await this.prisma.dutyReport.findUnique({ where: { id } });
     if (!r) throw new AppError('NOT_FOUND', 'Bericht nicht gefunden.');
     if (r.authorId === actor.userId) throw new AppError('CONFLICT', 'Eigene Berichte kannst du nicht prüfen.');
-    const after = await this.prisma.dutyReport.update({ where: { id }, data: { status: r.status === 'REVIEWED' ? 'SUBMITTED' : 'REVIEWED', reviewedById: actor.userId, reviewedAt: new Date() } });
-    await this.audit.record(actor, { action: after.status === 'REVIEWED' ? 'dutyreport.review' : 'dutyreport.unreview', module: 'dutyreports', entityType: 'DutyReport', entityId: id });
-    if (after.status === 'REVIEWED') await this.prisma.notification.create({ data: { userId: r.authorId, type: 'REPORT_REVIEW', title: `${r.templateName} ${r.number} wurde geprüft`, entityType: 'DutyReport', entityId: id } });
+    const status = d.decision ?? (r.status === 'REVIEWED' ? 'SUBMITTED' : 'REVIEWED');
+    const note = d.note?.trim() || null;
+    if (status === 'RETURNED' && !note) throw new AppError('VALIDATION_FAILED', 'Bitte schreib dazu, was nachgebessert werden soll.');
+    const after = await this.prisma.dutyReport.update({ where: { id }, data: { status, reviewedById: status === 'SUBMITTED' ? null : actor.userId, reviewedAt: status === 'SUBMITTED' ? null : new Date(), reviewNote: status === 'SUBMITTED' ? null : note } });
+    await this.audit.record(actor, { action: status === 'REVIEWED' ? 'dutyreport.review' : status === 'RETURNED' ? 'dutyreport.return' : 'dutyreport.unreview', module: 'dutyreports', entityType: 'DutyReport', entityId: id, ...(note ? { reason: note } : {}) });
+    if (status !== 'SUBMITTED') {
+      const title = status === 'REVIEWED' ? `${r.templateName} ${r.number} wurde geprüft ✅` : `${r.templateName} ${r.number}: bitte nachbessern ↩️`;
+      await this.prisma.notification.create({ data: { userId: r.authorId, type: 'REPORT_REVIEW', title, ...(note ? { body: note.slice(0, 500) } : {}), entityType: 'DutyReport', entityId: id } });
+      const link = status === 'RETURNED' ? await this.prisma.discordLink.findUnique({ where: { userId: r.authorId } }) : null;
+      if (link) await this.prisma.discordOutbox.create({ data: { type: 'bot.dm', channelKey: 'duty', payload: { discordId: link.discordId, message: { embeds: [{ title: `↩️ ${r.templateName} ${r.number} – bitte nachbessern`, description: `${note}\n\nÜber „Bearbeiten“ am Bericht (Discord oder Dashboard) kannst du ihn anpassen.`.slice(0, 4000), color: 0xf59e0b }] } } as Prisma.InputJsonValue } });
+    }
     await this.publish(id, false);
     return after;
   }
@@ -164,7 +179,8 @@ export class DutyReportsService {
     const posted = await this.discord.posted(`drep-${id}`);
     if (!isNew && !posted) return; // nie gepostet → bei Änderungen nicht nachträglich posten
     const link = await this.prisma.discordLink.findUnique({ where: { userId: r.authorId } });
-    const msg = reportMessage(t, { number: r.number, period: t.period, periodStart: r.periodStart, values: r.values as Record<string, string>, authorName: r.author.displayName, authorDiscordId: link?.discordId, status: r.status, updatedAt: r.updatedAt, edited: r.version > 1 }, r.id);
+    const reviewer = r.reviewedById ? await this.prisma.discordLink.findUnique({ where: { userId: r.reviewedById } }).then(async (l) => (l ? `<@${l.discordId}>` : (await this.prisma.user.findUnique({ where: { id: r.reviewedById! }, select: { displayName: true } }))?.displayName ?? null)) : null;
+    const msg = reportMessage(t, { number: r.number, period: t.period, periodStart: r.periodStart, values: r.values as Record<string, string>, authorName: r.author.displayName, authorDiscordId: link?.discordId, status: r.status, updatedAt: r.updatedAt, edited: r.version > 1, reviewerName: reviewer, reviewNote: r.reviewNote }, r.id);
     const ping = isNew && t.pingRoleIds.length ? { content: t.pingRoleIds.map((x) => `<@&${x}>`).join(' '), mentionRoles: t.pingRoleIds } : {};
     await this.discord.postMessage(`drep-${id}`, posted?.channelId ?? t.channelId, { ...msg, ...ping });
   }

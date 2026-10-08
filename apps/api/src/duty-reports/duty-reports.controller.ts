@@ -12,7 +12,8 @@ import { AppError } from '../common/errors';
 const values = z.record(z.string().max(40), z.union([z.string().max(4000), z.number()]));
 const create = z.object({ templateId: z.string().uuid(), periodStart: z.string().date().optional(), values, guildId: z.string().regex(/^\d{15,25}$/).nullable().optional(), source: z.enum(['WEB', 'DISCORD']).optional() });
 const edit = z.object({ values, version: z.number().int().optional() });
-const listQ = z.object({ templateId: z.string().uuid().optional(), authorId: z.string().uuid().optional(), from: z.string().date().optional(), to: z.string().date().optional(), q: z.string().max(80).optional(), status: z.enum(['SUBMITTED', 'REVIEWED']).optional(), mine: z.coerce.boolean().optional(), page: z.coerce.number().int().min(1).default(1), pageSize: z.coerce.number().int().min(1).max(200).default(50) });
+const reviewBody = z.object({ decision: z.enum(['REVIEWED', 'RETURNED', 'SUBMITTED']).optional(), note: z.string().trim().max(1000).optional() }).default({});
+const listQ = z.object({ templateId: z.string().uuid().optional(), authorId: z.string().uuid().optional(), from: z.string().date().optional(), to: z.string().date().optional(), q: z.string().max(80).optional(), status: z.enum(['SUBMITTED', 'REVIEWED', 'RETURNED']).optional(), mine: z.coerce.boolean().optional(), page: z.coerce.number().int().min(1).default(1), pageSize: z.coerce.number().int().min(1).max(200).default(50) });
 
 /** 🗓️ Tages-/Wochenberichte (auch vom Discord-Bot im Namen des verknüpften Benutzers benutzt). */
 @ApiTags('duty-reports')
@@ -31,6 +32,7 @@ export class DutyReportsController {
   @Get(':id') @RequirePermission('dutyreports.view') get(@CurrentActor() a: Actor, @Param('id') id: string) { return this.s.get(a, id.slice(0, 40)); }
   @Post() @RequirePermission('dutyreports.create') create(@CurrentActor() a: Actor, @Body(zodBody(create)) b: z.infer<typeof create>) { return this.s.create(a, b); }
   @Patch(':id') @RequirePermission('dutyreports.view') edit(@CurrentActor() a: Actor, @Param('id', ParseUUIDPipe) id: string, @Body(zodBody(edit)) b: z.infer<typeof edit>) { return this.s.update(a, id, b); }
-  @Post(':id/review') @HttpCode(200) @RequirePermission('dutyreports.review') review(@CurrentActor() a: Actor, @Param('id', ParseUUIDPipe) id: string) { return this.s.review(a, id); }
+  @Post(':id/review') @HttpCode(200) @RequirePermission('dutyreports.review')
+  review(@CurrentActor() a: Actor, @Param('id', ParseUUIDPipe) id: string, @Body(zodBody(reviewBody)) b: z.infer<typeof reviewBody>) { return this.s.review(a, id, b); }
   @Delete(':id') @HttpCode(204) @RequirePermission('dutyreports.edit_all') remove(@CurrentActor() a: Actor, @Param('id', ParseUUIDPipe) id: string) { return this.s.remove(a, id); }
 }

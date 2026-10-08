@@ -41,4 +41,24 @@ describe('Tages-/Wochenberichte: Dienstzeit automatisch', () => {
     expect((await off.post('/api/v1/duty-reports').send({ templateId: TPL, values: { dienstzeit: '18–20 Uhr', taetigkeiten: 'x' } })).body.values.dienstzeit).toBe('18–20 Uhr');
     await prisma.dutySession.deleteMany({ where: { userId } });
   });
+
+  it('leadership reviews: returned with a note (author notified, DM), author improves → submitted again, then reviewed', async () => {
+    const admin = (await login(app, 'drep_admin')).agent;
+    const off = (await login(app, 'drep_off')).agent;
+    await prisma.discordLink.create({ data: { userId, discordId: '660000000000000001' } });
+    const r = (await off.post('/api/v1/duty-reports').send({ templateId: TPL, values: { dienstzeit: '1 h', taetigkeiten: 'kurz' } })).body;
+    expect((await admin.post(`/api/v1/duty-reports/${r.id}/review`).send({ decision: 'RETURNED' })).status).toBe(400); // Anmerkung fehlt
+    const ret = await admin.post(`/api/v1/duty-reports/${r.id}/review`).send({ decision: 'RETURNED', note: 'Bitte Tätigkeiten genauer.' });
+    expect(ret.body).toMatchObject({ status: 'RETURNED', reviewNote: 'Bitte Tätigkeiten genauer.' });
+    expect(await prisma.notification.findFirst({ where: { userId, type: 'REPORT_REVIEW', entityId: r.id } })).toMatchObject({ body: 'Bitte Tätigkeiten genauer.' });
+    const dm = await prisma.discordOutbox.findFirst({ where: { type: 'bot.dm' }, orderBy: { createdAt: 'desc' } });
+    expect(dm?.payload).toMatchObject({ discordId: '660000000000000001' });
+    expect((await off.get(`/api/v1/duty-reports/${r.id}`)).body).toMatchObject({ status: 'RETURNED', reviewerName: 'drep_admin' });
+    expect((await off.post(`/api/v1/duty-reports/${r.id}/review`).send({ decision: 'REVIEWED' })).status).toBe(403); // kein Recht
+    // Verfasser bessert nach → wieder eingereicht
+    expect((await off.patch(`/api/v1/duty-reports/${r.id}`).send({ values: { dienstzeit: '1 h', taetigkeiten: 'Streife, Verkehrskontrolle' } })).body.status).toBe('SUBMITTED');
+    expect((await admin.post(`/api/v1/duty-reports/${r.id}/review`).send({ decision: 'REVIEWED', note: 'Passt.' })).body).toMatchObject({ status: 'REVIEWED', reviewNote: 'Passt.' });
+    expect((await admin.post(`/api/v1/duty-reports/${r.id}/review`).send({ decision: 'SUBMITTED' })).body).toMatchObject({ status: 'SUBMITTED', reviewNote: null, reviewedById: null });
+    await prisma.discordLink.deleteMany({ where: { userId } });
+  });
 });

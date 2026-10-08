@@ -79,10 +79,10 @@ export const DUTY_REPORT_COMMANDS: CommandDef[] = [{
   },
 }];
 
-/** Buttons/Menüs/Formulare: drep:pick · drep:edit:<id> · drep:next:<n|e>:<id>:<seite> · drep:sub:<n|e>:<id>:<seite> */
+/** Buttons/Menüs/Formulare: drep:pick · drep:edit:<id> · drep:next:<n|e>:<id>:<seite> · drep:sub:<n|e>:<id>:<seite> · drep:rev:<id> · drep:ret:<id> → drep:retsub:<id> */
 export const DUTY_REPORT_INTERACTION: InteractionDef = {
   prefix: 'drep',
-  opensModal: (args) => ['pick', 'edit', 'next'].includes(args[0] ?? ''),
+  opensModal: (args) => ['pick', 'edit', 'next', 'ret'].includes(args[0] ?? ''),
   async run(c): Promise<Reply> {
     const [action, a1, a2, a3] = c.args;
     try {
@@ -90,6 +90,17 @@ export const DUTY_REPORT_INTERACTION: InteractionDef = {
         const id = c.values?.[0] ?? '';
         const { t } = await load(c, 'n', id);
         return openModal(c, t, 'n', id, 0, await prefill(c, t));
+      }
+      // Leitung: prüfen bzw. zur Nachbesserung zurückgeben (Recht dutyreports.review prüft das System)
+      if (action === 'rev' || action === 'retsub') {
+        if (!/^[0-9a-f-]{36}$/.test(a1 ?? '')) return errorReply('Ungültige Anfrage.');
+        const note = String(c.fields?.note ?? '').trim();
+        const r = await c.api.asUser<{ number: string }>(c.discordId, 'POST', `/duty-reports/${a1}/review`, action === 'rev' ? { decision: 'REVIEWED' } : { decision: 'RETURNED', note });
+        return okReply(action === 'rev' ? `Bericht **${r.number}** als geprüft markiert.` : `Bericht **${r.number}** zur Nachbesserung zurückgegeben – der Verfasser wurde benachrichtigt.`);
+      }
+      if (action === 'ret') {
+        if (!/^[0-9a-f-]{36}$/.test(a1 ?? '')) return errorReply('Ungültige Anfrage.');
+        return { modal: { id: `drep:retsub:${a1}`, title: 'Zur Nachbesserung', fields: [{ id: 'note', label: 'Was soll nachgebessert werden?', paragraph: true, required: true, maxLength: 1000 }] } };
       }
       if (action === 'edit') {
         const { t, values } = await load(c, 'e', a1 ?? '');
