@@ -1,3 +1,4 @@
+import { ApplicationBansService, BAN_POLICE } from '../application-bans/application-bans.service';
 import { hireEvents } from '../common/hire-events';
 import { settingsGuild } from '../common/guild-context';
 import { TeamChanceService } from '../teamchance/teamchance.service';
@@ -31,7 +32,7 @@ const OPEN_STATUSES = ['SUBMITTED', 'SCREENING', 'INTERVIEW', 'PENDING_DECISION'
 
 @Injectable()
 export class ApplicationsService {
-  constructor(private readonly prisma: PrismaService, private readonly audit: AuditService, private readonly discord: DiscordService, private readonly notify: NotifyService, private readonly teamchance: TeamChanceService, private readonly roblox: RobloxService) {}
+  constructor(private readonly prisma: PrismaService, private readonly audit: AuditService, private readonly discord: DiscordService, private readonly notify: NotifyService, private readonly teamchance: TeamChanceService, private readonly roblox: RobloxService, private readonly bans: ApplicationBansService) {}
 
   /** Formular eines Servers (`application.form@<guildId>`), sonst das gemeinsame. */
   async form(guildId?: string | null): Promise<FormField[]> {
@@ -65,6 +66,8 @@ export class ApplicationsService {
       if (text) answers[f.key] = text;
       r.roleIds.forEach((x) => grantRoleIds.add(x));
     }
+    // Bewerbungssperre (Discord-ID oder Roblox-ID)
+    await this.bans.assertAllowed({ discordId: meta.discordId, robloxUserId: d.robloxUserId }, BAN_POLICE, 'die Polizei-Bewerbung', meta.guildId ?? null);
     if (d.robloxUserId && (await this.prisma.application.count({ where: { robloxUserId: d.robloxUserId, status: { in: OPEN_STATUSES } } }))) {
       throw new AppError('CONFLICT', 'Für diesen Roblox-Benutzer gibt es schon eine offene Bewerbung.');
     }

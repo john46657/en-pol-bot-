@@ -10,6 +10,7 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.QualificationsService = void 0;
+const application_bans_service_1 = require("../application-bans/application-bans.service");
 const hire_events_1 = require("../common/hire-events");
 const guild_context_1 = require("../common/guild-context");
 const common_1 = require("@nestjs/common");
@@ -36,11 +37,13 @@ let QualificationsService = class QualificationsService {
     audit;
     discord;
     roblox;
-    constructor(prisma, audit, discord, roblox) {
+    bans;
+    constructor(prisma, audit, discord, roblox, bans) {
         this.prisma = prisma;
         this.audit = audit;
         this.discord = discord;
         this.roblox = roblox;
+        this.bans = bans;
     }
     /** Einstellungen eines Servers (`@<guildId>`) – ohne eigene gilt die gemeinsame Grundeinstellung. */
     keyOf(base, guildId) { const g = (0, guild_context_1.settingsGuild)(guildId); return g ? `${base}@${g}` : base; } // Gruppe mit geteilten Einstellungen → Haupt-Server
@@ -119,6 +122,7 @@ let QualificationsService = class QualificationsService {
             answers.push({ question: q.label, answer: text || '—' });
             r.roleIds.forEach((x) => grantRoleIds.add(x));
         }
+        await this.bans.assertAllowed({ discordId: d.discordId }, unit.key, unit.name, d.guildId ?? null);
         if ((await this.openFor(d.discordId, unit.key)).open)
             throw new errors_1.AppError('CONFLICT', `Für ${unit.name} gibt es schon eine offene Bewerbung.`);
         const last = await this.prisma.qualificationApplication.findFirst({ where: { discordId: d.discordId, unit: unit.key }, orderBy: { createdAt: 'desc' }, select: { createdAt: true } });
@@ -240,6 +244,6 @@ let QualificationsService = class QualificationsService {
 exports.QualificationsService = QualificationsService;
 exports.QualificationsService = QualificationsService = __decorate([
     (0, common_1.Injectable)(),
-    __metadata("design:paramtypes", [prisma_service_1.PrismaService, audit_service_1.AuditService, discord_service_1.DiscordService, roblox_service_1.RobloxService])
+    __metadata("design:paramtypes", [prisma_service_1.PrismaService, audit_service_1.AuditService, discord_service_1.DiscordService, roblox_service_1.RobloxService, application_bans_service_1.ApplicationBansService])
 ], QualificationsService);
 //# sourceMappingURL=qualifications.service.js.map

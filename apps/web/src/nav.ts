@@ -47,6 +47,7 @@ export const NAV: NavItem[] = [
   ]),
   grp('Bewerbungen', ClipboardList, 'Organisation', [
     { path: '/applications', label: 'Bewerbungen', perm: 'applications.view', area: 'dashboard.applications.view' },
+    { path: '/application-bans', label: '⛔ Sperren', perm: 'applications.view', area: 'dashboard.applications.view' },
     { path: '/qualifications', label: 'Qualifikationen', perm: 'qualifications.view', area: 'dashboard.applications.view' },
     { path: '/teamchance', label: 'Team-Chance', perm: 'teamchance.view', area: 'dashboard.teamchance.view' },
   ]),
