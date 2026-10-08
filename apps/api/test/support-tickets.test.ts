@@ -107,6 +107,11 @@ describe('opening a ticket from Discord', () => {
     const add = await act(id, STAFF, { action: 'add_access', targetId: OTHER, kind: 'USER', minutes: 60 });
     expect(find(add.body.effects, 'access')[0]).toMatchObject({ targetId: OTHER, view: true });
     expect((await act(id, STAFF, { action: 'note', text: 'Bereits verwarnt.' })).status).toBe(200);
+    // Antworten aus dem Dashboard: der Bot schreibt in den Ticket-Kanal
+    const reply = await act(id, STAFF, { action: 'reply', text: 'Wir kümmern uns darum.' });
+    expect(reply.status).toBe(200);
+    expect(find(reply.body.effects, 'post')[0]?.message.embeds?.[0]).toMatchObject({ description: 'Wir kümmern uns darum.', footer: 'Antwort über das Dashboard' });
+    expect((await act(id, STAFF, { action: 'reply', text: '   ' })).status).toBe(400);
     expect((await act(id, STAFF, { action: 'delete' })).status).toBe(403); // Ticket Support darf nicht löschen
     expect((await act(id, STAFF, { action: 'lock' })).body.ticket.locked).toBe(true);
     expect((await act(id, STAFF, { action: 'escalate' })).body.ticket.status.name).toBe('Eskaliert');
