@@ -1027,13 +1027,13 @@ declare const progress: z.ZodObject<{
     progress: z.ZodOptional<z.ZodNumber>;
     note: z.ZodOptional<z.ZodNullable<z.ZodString>>;
 }, "strip", z.ZodTypeAny, {
-    status: "EXPIRED" | "PASSED" | "NOT_STARTED" | "IN_PROGRESS" | "FAILED" | "ABORTED";
+    status: "EXPIRED" | "FAILED" | "PASSED" | "NOT_STARTED" | "IN_PROGRESS" | "ABORTED";
     personnelId: string;
     trainingId: string;
     note?: string | null | undefined;
     progress?: number | undefined;
 }, {
-    status: "EXPIRED" | "PASSED" | "NOT_STARTED" | "IN_PROGRESS" | "FAILED" | "ABORTED";
+    status: "EXPIRED" | "FAILED" | "PASSED" | "NOT_STARTED" | "IN_PROGRESS" | "ABORTED";
     personnelId: string;
     trainingId: string;
     note?: string | null | undefined;

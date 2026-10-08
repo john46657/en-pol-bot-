@@ -16,6 +16,7 @@ const outbox_1 = require("./outbox");
 const roblox_1 = require("./roblox");
 const welcome_1 = require("./welcome");
 const ghost_ping_1 = require("./ghost-ping");
+const backup_1 = require("./backup");
 const voice_support_1 = require("./voice-support");
 const verify_1 = require("./verify");
 const format_1 = require("./format");
@@ -685,6 +686,27 @@ function wireReady(client0) {
                 }
                 if (!done)
                     console.warn(`nickname for ${userId} could not be set (missing permission, owner or not on a server)`);
+                return true;
+            }
+            if (type === 'bot.backup.create') {
+                // Discord-Server-Backup: Server auslesen und ans System schicken (Fehler landen am Backup, nicht in der Warteschlange)
+                const id = String(p.backupId ?? '');
+                try {
+                    await api.service('POST', `/bot/discord-backups/${id}/data`, { data: await (0, backup_1.captureGuild)(await client.guilds.fetch(String(p.guildId ?? ''))) });
+                }
+                catch (e) {
+                    await api.service('POST', `/bot/discord-backups/${id}/data`, { error: e instanceof Error ? e.message : String(e) });
+                }
+                return true;
+            }
+            if (type === 'bot.backup.restore') {
+                const id = String(p.backupId ?? '');
+                const b = await api.service('GET', `/bot/discord-backups/${id}`);
+                if (!b.data)
+                    throw new Error('backup has no data');
+                const parts = (Array.isArray(p.parts) ? p.parts : []).filter((x) => x === 'roles' || x === 'channels' || x === 'settings');
+                const result = await (0, backup_1.restoreGuild)(await client.guilds.fetch(String(p.guildId ?? '')), b.data, parts);
+                await api.service('POST', `/bot/discord-backups/${id}/result`, result);
                 return true;
             }
             if (type === 'bot.welcome-test') {
