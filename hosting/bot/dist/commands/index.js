@@ -290,6 +290,7 @@ exports.COMMANDS = [
             { name: 'person', description: 'Roblox-Name oder -ID', type: 'string', required: true, maxLength: 64 },
             { name: 'grund', description: 'Grund', type: 'string', required: true, maxLength: 500 },
             { name: 'betrag', description: 'Betrag', type: 'number', min: 0, max: 1_000_000 },
+            { name: 'im_spiel', description: 'Spieler im Spiel per Nachricht (ER:LC) Bescheid geben', type: 'boolean' },
         ],
         async run(c) {
             const reason = str(c, 'grund');
@@ -300,8 +301,8 @@ exports.COMMANDS = [
                 if (!person)
                     return reply;
                 const amount = typeof c.opts.betrag === 'number' ? c.opts.betrag : undefined;
-                const t = await c.api.asUser(c.discordId, 'POST', '/tickets', { personId: person.id, reason, ...(amount !== undefined ? { amount } : {}) });
-                return (0, format_1.okReply)(`Ticket **${t.number}** für **${(0, format_1.plain)(person.robloxUsername)}** ausgestellt.${created ? ' Die Person war noch nicht im System und wurde nach Roblox-Prüfung neu angelegt.' : ''}`);
+                const t = await c.api.asUser(c.discordId, 'POST', '/tickets', { personId: person.id, reason, ...(amount !== undefined ? { amount } : {}), ...(c.opts.im_spiel === true ? { notifyInGame: true } : {}) });
+                return (0, format_1.okReply)(`Strafzettel **${t.number}** für **${(0, format_1.plain)(person.robloxUsername)}** ausgestellt.${created ? ' Die Person war noch nicht im System und wurde nach Roblox-Prüfung neu angelegt.' : ''}${t.inGame ? `\n${t.inGame.ok ? '🎮' : '⚠️'} ${(0, format_1.plain)(t.inGame.message)}` : ''}`);
             }
             catch (e) {
                 return (0, errors_1.mapError)(e);
