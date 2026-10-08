@@ -41,6 +41,11 @@ function openModal(c: Ctx, t: ReportTemplate, mode: Mode, id: string, page: numb
   return { modal: modal(t, mode, id, page, drafts.get(k)?.values ?? base) };
 }
 
+/** Neuer Bericht: Dienstzeit usw. vorbelegen (aus den Dienst-Sitzungen); ohne API einfach leer. */
+async function prefill(c: Ctx, t: ReportTemplate): Promise<Record<string, string>> {
+  return c.api.asUser<{ values: Record<string, string> }>(c.discordId, 'GET', `/duty-reports/templates/${t.id}/prefill`).then((r) => r.values ?? {}, () => ({}));
+}
+
 export const DUTY_REPORT_COMMANDS: CommandDef[] = [{
   name: 'dienstbericht', description: 'Tages-/Wochenbericht ausfüllen, ansehen oder bearbeiten',
   subcommands: [
@@ -68,7 +73,7 @@ export const DUTY_REPORT_COMMANDS: CommandDef[] = [{
       }
       const list = await templates(c);
       if (!list.length) return errorReply('Es gibt noch keine aktive Berichtsvorlage. Vorlagen legt man im Dashboard unter „Tages-/Wochenberichte“ an.');
-      if (list.length === 1) return openModal(c, list[0]!, 'n', list[0]!.id, 0, {});
+      if (list.length === 1) return openModal(c, list[0]!, 'n', list[0]!.id, 0, await prefill(c, list[0]!));
       return { ephemeral: true, content: 'Welchen Bericht möchtest du ausfüllen?', select: { id: 'drep:pick', placeholder: 'Vorlage wählen …', options: list.slice(0, 25).map((t) => ({ label: t.name.slice(0, 100), value: t.id, ...(t.emoji ? { emoji: t.emoji } : {}), ...(t.description ? { description: t.description.slice(0, 100) } : {}) })) } };
     } catch (e) { return mapError(e); }
   },
@@ -84,7 +89,7 @@ export const DUTY_REPORT_INTERACTION: InteractionDef = {
       if (action === 'pick') {
         const id = c.values?.[0] ?? '';
         const { t } = await load(c, 'n', id);
-        return openModal(c, t, 'n', id, 0, {});
+        return openModal(c, t, 'n', id, 0, await prefill(c, t));
       }
       if (action === 'edit') {
         const { t, values } = await load(c, 'e', a1 ?? '');

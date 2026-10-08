@@ -22,6 +22,8 @@ export class DutyReportsController {
   @Get('templates') @RequirePermission('dutyreports.view') templates(@Query('active') active?: string) { return this.s.listTemplates(currentGuild(), active === '1'); }
   @Put('templates/:id') @RequirePermission('dutyreports.manage')
   saveTemplate(@CurrentActor() a: Actor, @Param('id', ParseUUIDPipe) id: string, @Body(zodBody(reportTemplateSchema)) b: ReportTemplate) { if (b.id !== id) throw new AppError('VALIDATION_FAILED', 'ID passt nicht.'); return this.s.saveTemplate(a, b); }
+  /** Vorbelegung (z. B. Dienstzeit aus den Dienst-Sitzungen) für ein neues Formular. */
+  @Get('templates/:id/prefill') @RequirePermission('dutyreports.create') prefill(@CurrentActor() a: Actor, @Param('id', ParseUUIDPipe) id: string, @Query('date') date?: string) { return this.s.prefill(a, id, date && /^\d{4}-\d{2}-\d{2}$/.test(date) ? date : undefined); }
   @Post('templates/:id/duplicate') @RequirePermission('dutyreports.manage') dup(@CurrentActor() a: Actor, @Param('id', ParseUUIDPipe) id: string) { return this.s.duplicateTemplate(a, id); }
   @Delete('templates/:id') @HttpCode(204) @RequirePermission('dutyreports.manage') removeTemplate(@CurrentActor() a: Actor, @Param('id', ParseUUIDPipe) id: string) { return this.s.removeTemplate(a, id); }
 

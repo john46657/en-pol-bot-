@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import { randomUUID } from 'node:crypto';
-import { cleanReportValues, periodStart, reportMessage, reportTemplateSchema, type ReportTemplate } from '@enrp/shared';
+import { cleanReportValues, dutyTimeText, isDutyTimeField, periodEnd, periodStart, reportMessage, reportTemplateSchema, type ReportTemplate } from '@enrp/shared';
 import { PrismaService } from '../prisma/prisma.service';
 import { AuditService, type Actor } from '../audit/audit.service';
 import { PermissionService } from '../authz/permission.service';
@@ -80,9 +80,30 @@ export class DutyReportsService {
   }
 
   /** Neuer Bericht – bei „ein Bericht je Zeitraum“ wird der vorhandene des Zeitraums bearbeitet. */
+  /** Dienstzeit des Zeitraums aus den Dienst-Sitzungen (Pausen abgezogen) – für Felder wie „Dienstzeit“. */
+  async dutyTime(userId: string, t: ReportTemplate, date?: string) {
+    if (t.period === 'FREE') return null;
+    const from = periodStart(t.period, date ? new Date(date) : new Date()), to = periodEnd(t.period, from);
+    const [sessions, tz] = await Promise.all([
+      this.prisma.dutySession.findMany({ where: { userId, startedAt: { lt: to }, OR: [{ endedAt: null }, { endedAt: { gt: from } }] }, select: { status: true, startedAt: true, endedAt: true } }),
+      this.prisma.systemSetting.findUnique({ where: { key: 'org.timezone' } }).then((r) => (typeof r?.value === 'string' && r.value ? r.value : 'Europe/Berlin')),
+    ]);
+    try { return dutyTimeText(t.period, sessions, from, to, tz); } catch { return dutyTimeText(t.period, sessions, from, to, 'Europe/Berlin'); }
+  }
+  /** Vorbelegung fürs Formular (Dashboard und Discord): Dienstzeit-Felder automatisch. */
+  async prefill(actor: Actor, templateId: string, date?: string) {
+    const t = await this.template(templateId);
+    const fields = t.fields.filter(isDutyTimeField);
+    const text = fields.length ? await this.dutyTime(actor.userId!, t, date) : null;
+    return { values: text ? Object.fromEntries(fields.map((f) => [f.id, text.slice(0, f.maxLength)])) : {} };
+  }
+
   async create(actor: Actor, d: { templateId: string; periodStart?: string; values: Record<string, unknown>; source?: 'WEB' | 'DISCORD'; guildId?: string | null }) {
     const t = await this.template(d.templateId);
     if (!t.active) throw new AppError('CONFLICT', 'Diese Vorlage ist deaktiviert.');
+    // leere Dienstzeit-Felder automatisch aus den Dienst-Sitzungen füllen
+    const empty = t.fields.filter((f) => isDutyTimeField(f) && !String(d.values[f.id] ?? '').trim());
+    if (empty.length) { const text = await this.dutyTime(actor.userId!, t, d.periodStart); if (text) d = { ...d, values: { ...d.values, ...Object.fromEntries(empty.map((f) => [f.id, text])) } }; }
     const clean = cleanReportValues(t, d.values);
     if ('error' in clean) throw new AppError('VALIDATION_FAILED', clean.error);
     const start = periodStart(t.period, d.periodStart ? new Date(d.periodStart) : new Date());

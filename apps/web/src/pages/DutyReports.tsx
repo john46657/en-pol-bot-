@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { ArrowDown, ArrowUp, CheckCircle2, Copy, Inbox, Pencil, Plus, Search, Trash2 } from 'lucide-react';
 import { PERIOD_LABEL, periodLabel, reportMessage, type ReportField, type ReportTemplate } from '@enrp/shared';
@@ -34,6 +34,15 @@ function ReportForm({ template, initial, onDone, reportId, version }: { template
   const [values, setValues] = useState<Record<string, string>>(initial ?? {});
   const [date, setDate] = useState(today());
   const [err, setErr] = useState<string>();
+  // Neuer Bericht: Dienstzeit automatisch aus den Dienst-Sitzungen (bleibt änderbar; Tag/Woche wechseln → neu berechnet)
+  const auto = useQuery({ queryKey: ['duty-report-prefill', template.id, date], queryFn: () => api<{ values: Record<string, string> }>(`/duty-reports/templates/${template.id}/prefill`, { query: { date } }), enabled: !reportId && template.period !== 'FREE' });
+  const [autoSet, setAutoSet] = useState<Record<string, string>>({});
+  useEffect(() => {
+    const v = auto.data?.values;
+    if (!v) return;
+    setValues((cur) => { const next = { ...cur }; for (const [k, x] of Object.entries(v)) if (!cur[k]?.trim() || cur[k] === autoSet[k]) next[k] = x; return next; });
+    setAutoSet(v);
+  }, [auto.data]);
   const save = useMutation({
     mutationFn: () => (reportId ? api<Report>(`/duty-reports/${reportId}`, { method: 'PATCH', body: { values, version } }) : api<Report & { merged: boolean }>('/duty-reports', { method: 'POST', body: { templateId: template.id, values, ...(template.period !== 'FREE' ? { periodStart: date } : {}) } })),
     onSuccess: (r) => { void qc.invalidateQueries({ queryKey: ['duty-reports'] }); onDone(reportId ? `${r.number} gespeichert.` : 'merged' in r && r.merged ? `Für diesen Zeitraum gab es schon ${r.number} – aktualisiert.` : `${r.number} eingereicht.`); },
@@ -43,7 +52,7 @@ function ReportForm({ template, initial, onDone, reportId, version }: { template
   return (
     <form className="grid gap-3" onSubmit={(e) => { e.preventDefault(); if (!miss.length) save.mutate(); }}>
       {!reportId && template.period !== 'FREE' && <label className="grid gap-1 text-sm">{template.period === 'WEEKLY' ? 'Woche (ein Tag daraus)' : 'Tag'}<Input type="date" aria-label="Zeitraum" value={date} max={today()} onChange={(e) => setDate(e.target.value)} /><span className="text-xs text-muted">{periodLabel(template.period, date)}</span></label>}
-      {template.fields.map((f) => <FieldInput key={f.id} f={f} value={values[f.id] ?? ''} onChange={(v) => setValues({ ...values, [f.id]: v })} />)}
+      {template.fields.map((f) => <div key={f.id}><FieldInput f={f} value={values[f.id] ?? ''} onChange={(v) => setValues({ ...values, [f.id]: v })} />{autoSet[f.id] && values[f.id] === autoSet[f.id] && <p className="mt-0.5 text-[11px] text-success">⏱️ automatisch aus deinen Dienstzeiten – du kannst es ändern.</p>}</div>)}
       {err && <p role="alert" className="text-sm text-danger">{err}</p>}
       <div className="flex items-center gap-2">
         <Button type="submit" disabled={save.isPending || !!miss.length}>{reportId ? 'Speichern' : 'Einreichen'}</Button>
