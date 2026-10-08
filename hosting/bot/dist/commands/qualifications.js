@@ -113,6 +113,10 @@ async function offer(c, key) {
     const blocked = roleBlock(flow.settings, c.guildId ? c.memberRoleIds ?? [] : undefined);
     if (blocked)
         return (0, format_1.errorReply)(blocked);
+    // Bewerbungssperre: gar nicht erst starten
+    const ban = await c.api.service('GET', `/bot/application-bans/check?discordId=${c.discordId}&scope=${encodeURIComponent(flow.key === exports.POLICE ? 'police' : flow.key)}&name=${encodeURIComponent(flow.key === exports.POLICE ? 'die Polizei-Bewerbung' : flow.appName)}${c.guildId ? `&guildId=${c.guildId}` : ''}`).catch(() => null);
+    if (ban?.banned)
+        return (0, format_1.errorReply)(`⛔ ${ban.message ?? 'Du bist für diese Bewerbung gesperrt.'}`);
     const open = await openApplication(c.api, flow.key, c.discordId);
     if (open.open)
         return (0, format_1.errorReply)(`Du hast für **${(0, format_1.plain)(flow.name)}** bereits eine offene Bewerbung (${open.number}). Bitte warte auf die Entscheidung.`);

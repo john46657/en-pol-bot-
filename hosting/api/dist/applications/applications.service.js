@@ -10,6 +10,7 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.ApplicationsService = exports.DEFAULT_FORM = void 0;
+const application_bans_service_1 = require("../application-bans/application-bans.service");
 const hire_events_1 = require("../common/hire-events");
 const guild_context_1 = require("../common/guild-context");
 const teamchance_service_1 = require("../teamchance/teamchance.service");
@@ -45,13 +46,15 @@ let ApplicationsService = class ApplicationsService {
     notify;
     teamchance;
     roblox;
-    constructor(prisma, audit, discord, notify, teamchance, roblox) {
+    bans;
+    constructor(prisma, audit, discord, notify, teamchance, roblox, bans) {
         this.prisma = prisma;
         this.audit = audit;
         this.discord = discord;
         this.notify = notify;
         this.teamchance = teamchance;
         this.roblox = roblox;
+        this.bans = bans;
     }
     /** Formular eines Servers (`application.form@<guildId>`), sonst das gemeinsame. */
     async form(guildId) {
@@ -90,6 +93,8 @@ let ApplicationsService = class ApplicationsService {
                 answers[f.key] = text;
             r.roleIds.forEach((x) => grantRoleIds.add(x));
         }
+        // Bewerbungssperre (Discord-ID oder Roblox-ID)
+        await this.bans.assertAllowed({ discordId: meta.discordId, robloxUserId: d.robloxUserId }, application_bans_service_1.BAN_POLICE, 'die Polizei-Bewerbung', meta.guildId ?? null);
         if (d.robloxUserId && (await this.prisma.application.count({ where: { robloxUserId: d.robloxUserId, status: { in: OPEN_STATUSES } } }))) {
             throw new errors_1.AppError('CONFLICT', 'Für diesen Roblox-Benutzer gibt es schon eine offene Bewerbung.');
         }
@@ -253,6 +258,6 @@ let ApplicationsService = class ApplicationsService {
 exports.ApplicationsService = ApplicationsService;
 exports.ApplicationsService = ApplicationsService = __decorate([
     (0, common_1.Injectable)(),
-    __metadata("design:paramtypes", [prisma_service_1.PrismaService, audit_service_1.AuditService, discord_service_1.DiscordService, notify_service_1.NotifyService, teamchance_service_1.TeamChanceService, roblox_service_1.RobloxService])
+    __metadata("design:paramtypes", [prisma_service_1.PrismaService, audit_service_1.AuditService, discord_service_1.DiscordService, notify_service_1.NotifyService, teamchance_service_1.TeamChanceService, roblox_service_1.RobloxService, application_bans_service_1.ApplicationBansService])
 ], ApplicationsService);
 //# sourceMappingURL=applications.service.js.map

@@ -1,3 +1,4 @@
+import { ApplicationBansService } from '../application-bans/application-bans.service';
 import { hireEvents } from '../common/hire-events';
 import { settingsGuild } from '../common/guild-context';
 import { Injectable } from '@nestjs/common';
@@ -25,7 +26,7 @@ export interface Answer { question: string; answer: string | string[] | null }
  */
 @Injectable()
 export class QualificationsService {
-  constructor(private readonly prisma: PrismaService, private readonly audit: AuditService, private readonly discord: DiscordService, private readonly roblox: RobloxService) {}
+  constructor(private readonly prisma: PrismaService, private readonly audit: AuditService, private readonly discord: DiscordService, private readonly roblox: RobloxService, private readonly bans: ApplicationBansService) {}
 
   /** Einstellungen eines Servers (`@<guildId>`) – ohne eigene gilt die gemeinsame Grundeinstellung. */
   private keyOf(base: string, guildId?: string | null) { const g = settingsGuild(guildId); return g ? `${base}@${g}` : base; } // Gruppe mit geteilten Einstellungen → Haupt-Server
@@ -101,6 +102,7 @@ export class QualificationsService {
       answers.push({ question: q.label, answer: text || '—' });
       r.roleIds.forEach((x) => grantRoleIds.add(x));
     }
+    await this.bans.assertAllowed({ discordId: d.discordId }, unit.key, unit.name, d.guildId ?? null);
     if ((await this.openFor(d.discordId, unit.key)).open) throw new AppError('CONFLICT', `Für ${unit.name} gibt es schon eine offene Bewerbung.`);
     const last = await this.prisma.qualificationApplication.findFirst({ where: { discordId: d.discordId, unit: unit.key }, orderBy: { createdAt: 'desc' }, select: { createdAt: true } });
     const wait = cooldownLeft(unit.settings, last?.createdAt);

@@ -1,3 +1,4 @@
+import { ApplicationBansService } from '../application-bans/application-bans.service';
 import { Prisma } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { AuditService, Actor } from '../audit/audit.service';
@@ -18,7 +19,8 @@ export declare class QualificationsService {
     private readonly audit;
     private readonly discord;
     private readonly roblox;
-    constructor(prisma: PrismaService, audit: AuditService, discord: DiscordService, roblox: RobloxService);
+    private readonly bans;
+    constructor(prisma: PrismaService, audit: AuditService, discord: DiscordService, roblox: RobloxService, bans: ApplicationBansService);
     /** Einstellungen eines Servers (`@<guildId>`) – ohne eigene gilt die gemeinsame Grundeinstellung. */
     private keyOf;
     private read;

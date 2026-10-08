@@ -12,6 +12,7 @@ import { Dashboard } from './pages/Dashboard';
 import { Mdt } from './pages/Mdt';
 import { Team } from './pages/Team';
 const Analytics = lazy(() => import('./pages/Analytics').then((m) => ({ default: m.Analytics })));
+const ApplicationBans = lazy(() => import('./pages/ApplicationBans').then((m) => ({ default: m.ApplicationBans })));
 const Applications = lazy(() => import('./pages/Applications').then((m) => ({ default: m.Applications })));
 const Qualifications = lazy(() => import('./pages/Qualifications').then((m) => ({ default: m.Qualifications })));
 const SupportTickets = lazy(() => import('./pages/tickets/SupportTickets').then((m) => ({ default: m.SupportTickets })));
@@ -154,6 +155,7 @@ export function App() {
           <Route path="service-numbers" element={<Guard perm="dienstnummer.view"><ServiceNumbers /></Guard>} />
           <Route path="admin/personnel" element={<Guard perm="personnel.view" area="dashboard.settings.view"><HrSettings /></Guard>} />
           <Route path="applications" element={<Guard perm="applications.view" area="dashboard.applications.view"><Applications /></Guard>} />
+          <Route path="application-bans" element={<Guard perm="applications.view" area="dashboard.applications.view"><ApplicationBans /></Guard>} />
           <Route path="applications/analytics" element={<Navigate to="/analytics?tab=bewerbungen" replace />} />
           <Route path="applications/:id" element={rec('applications', 'applications.view')} />
           <Route path="qualifications" element={<Guard perm="qualifications.view" area="dashboard.applications.view"><Qualifications /></Guard>} />
