@@ -28,6 +28,7 @@ const cad_service_1 = require("./cad.service");
 const cad_config_service_1 = require("./cad-config.service");
 const erlc_service_1 = require("./erlc.service");
 const erlc_sync_service_1 = require("./erlc-sync.service");
+const map_image_1 = require("./map-image");
 const MAP_MAX_BYTES = 40 * 1024 * 1024;
 const sf = zod_1.z.string().regex(/^\d{15,25}$/);
 const isBot = (r) => typeof r.headers.authorization === 'string' && r.headers.authorization.startsWith('Bot ');
@@ -91,6 +92,13 @@ let CadController = class CadController {
             throw new errors_1.AppError('VALIDATION_FAILED', 'Bitte ein Bild (PNG, JPG oder WebP) hochladen.');
         const m = await this.media.upload(a, file, { linkedType: 'CadMap', linkedId: 'map' }, MAP_MAX_BYTES);
         return this.cfg.save(a, { map: { imageUrl: `/api/v1/media/${m.id}`, ...(b.width ? { width: b.width, originX: b.width / 2 } : {}), ...(b.height ? { height: b.height, originY: b.height / 2 } : {}) } });
+    }
+    /** Kartenbild von einer https-Adresse übernehmen: der Server lädt es herunter und speichert es wie einen Upload (fremde Bild-Server blockiert die Sicherheitsrichtlinie). */
+    async mapImageUrl(a, b) {
+        const file = await (0, map_image_1.fetchMapImage)(b.url, MAP_MAX_BYTES);
+        const dims = (0, map_image_1.imageSize)(file.buffer);
+        const m = await this.media.upload(a, file, { linkedType: 'CadMap', linkedId: 'map' }, MAP_MAX_BYTES);
+        return this.cfg.save(a, { map: { imageUrl: `/api/v1/media/${m.id}`, ...(dims ? { width: dims.width, height: dims.height, originX: dims.width / 2, originY: dims.height / 2 } : {}) } });
     }
     overview(a) { return this.s.overview(a); }
     map(a) { return this.s.mapData(a); }
@@ -189,6 +197,15 @@ __decorate([
     __metadata("design:paramtypes", [Object, Object, Object]),
     __metadata("design:returntype", Promise)
 ], CadController.prototype, "mapImage", null);
+__decorate([
+    (0, common_1.Post)('map/image-url'),
+    (0, decorators_1.RequirePermission)('cad.manage_map'),
+    __param(0, (0, decorators_1.CurrentActor)()),
+    __param(1, (0, common_1.Body)((0, zod_pipe_1.zodBody)(zod_1.z.object({ url: zod_1.z.string().trim().url().max(500) })))),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, Object]),
+    __metadata("design:returntype", Promise)
+], CadController.prototype, "mapImageUrl", null);
 __decorate([
     (0, common_1.Get)('overview'),
     (0, decorators_1.RequirePermission)('cad.view'),

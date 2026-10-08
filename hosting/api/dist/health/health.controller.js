@@ -14,12 +14,15 @@ const common_1 = require("@nestjs/common");
 const throttler_1 = require("@nestjs/throttler");
 const prisma_service_1 = require("../prisma/prisma.service");
 const decorators_1 = require("../authz/decorators");
+const web_url_1 = require("../common/web-url");
 let HealthController = class HealthController {
     prisma;
     constructor(prisma) {
         this.prisma = prisma;
     }
     health() { return { status: 'ok' }; }
+    /** Adresse des Web-Dashboards für den Discord-Befehl /dashboard. */
+    dashboardUrl() { return { url: (0, web_url_1.webUrl)('/') }; }
     async readiness() {
         try {
             await this.prisma.$queryRaw `SELECT 1`;
@@ -38,6 +41,13 @@ __decorate([
     __metadata("design:paramtypes", []),
     __metadata("design:returntype", void 0)
 ], HealthController.prototype, "health", null);
+__decorate([
+    (0, decorators_1.BotService)(),
+    (0, common_1.Get)('bot/dashboard-url'),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", []),
+    __metadata("design:returntype", void 0)
+], HealthController.prototype, "dashboardUrl", null);
 __decorate([
     (0, decorators_1.Public)(),
     (0, common_1.Get)('readiness'),

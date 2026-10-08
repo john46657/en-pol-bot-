@@ -273,7 +273,8 @@ test('dashboard: edit mode adds the voice widget separately from the team list; 
 
 test('Funk-Codes: standard codes, edit with autosave, find via global search', async ({ page }) => {
   await uiLogin(page, 'admin', ADMIN_PASSWORD);
-  await page.getByRole('link', { name: 'Funk-Codes' }).click();
+  await page.getByRole('link', { name: 'Funk & Kommunikation' }).click();
+  await page.getByRole('navigation', { name: 'Funk & Kommunikation' }).getByRole('link', { name: 'Funk-Codes' }).click();
   await page.getByRole('button', { name: 'Standard-Codes einfügen' }).click();
   await expect(page.getByLabel('Bedeutung 10-4')).toHaveValue('Verstanden');
   await page.getByLabel('Bedeutung 10-4').fill('Verstanden, Ende');
@@ -288,7 +289,8 @@ test('Funk-Codes: standard codes, edit with autosave, find via global search', a
 
 test('Team-Chance: open it (autosave) – the public application page shows it', async ({ page, browser }) => {
   await uiLogin(page, 'admin', ADMIN_PASSWORD);
-  await page.getByRole('link', { name: 'Team-Chance' }).click();
+  await page.getByRole('link', { name: 'Bewerbungen', exact: true }).first().click();
+  await page.getByRole('navigation', { name: 'Bewerbungen' }).getByRole('link', { name: 'Team-Chance' }).click();
   await page.getByLabel('Titel').fill('E2E Team-Chance');
   await page.getByRole('checkbox', { name: /Team-Chance ist geschlossen/ }).check();
   await expect(page.getByRole('status').filter({ hasText: 'Alle Änderungen gespeichert' })).toBeVisible({ timeout: 10_000 });

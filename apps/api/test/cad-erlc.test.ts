@@ -326,3 +326,20 @@ describe('CAD – Rechte pro Einsatz und pro Einheit', () => {
     expect((await http().post(`/api/v1/cad/units/${u.body.id}/status`).set(roles(ROLE)).send({ status: 'ON_SCENE' })).status).toBe(200);
   });
 });
+
+describe('CAD – beendete Einsätze aufräumen', () => {
+  it('löscht abgeschlossene/abgebrochene Einsätze nach einem Tag, aktive und frische bleiben', async () => {
+    const old = new Date(Date.now() - 25 * 3_600_000), fresh = new Date(Date.now() - 2 * 3_600_000);
+    const mk = (number: string, status: string, closedAt: Date | null) => prisma.incident.create({ data: { number, title: 'Aufräumtest', status, closedAt } });
+    const gone1 = await mk('I-PURGE-1', 'CANCELLED', old);
+    const gone2 = await mk('I-PURGE-2', 'CLOSED', old);
+    const keepFresh = await mk('I-PURGE-3', 'CANCELLED', fresh);
+    const keepActive = await mk('I-PURGE-4', 'NEW', null);
+    await prisma.cadIncidentLog.create({ data: { incidentId: gone1.id, kind: 'NOTE', text: 'x' } });
+    expect(await app.get(CadService).purgeClosedIncidents()).toBeGreaterThanOrEqual(2);
+    const left = (await prisma.incident.findMany({ where: { number: { startsWith: 'I-PURGE-' } } })).map((i) => i.id);
+    expect(left).not.toContain(gone1.id);
+    expect(left).not.toContain(gone2.id);
+    expect(left).toEqual(expect.arrayContaining([keepFresh.id, keepActive.id]));
+  });
+});

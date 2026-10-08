@@ -99,6 +99,11 @@ export declare class CadService {
     private readonly locks;
     constructor(prisma: PrismaService, audit: AuditService, perms: PermissionService, rt: RealtimeService, timeline: TimelineService, cfg: CadConfigService, notify: CadNotifyService, locks: LocksService);
     private label;
+    /**
+     * Beendete Einsätze (Status mit „closed“, z. B. Abgeschlossen/Abgebrochen) werden einen Tag nach Abschluss gelöscht.
+     * Chronik und Einheiten-Zuordnungen fallen per Cascade mit weg; Verweise aus Berichten, Notrufen und Funk werden gelöst.
+     */
+    purgeClosedIncidents(maxAgeMs?: number): Promise<number>;
     private changed;
     /**
      * Server-übergreifende Aktionen: Vom Heimat-Server (Leitstelle) aus immer erlaubt; von einem anderen Discord-Server
@@ -192,9 +197,9 @@ export declare class CadService {
             text: string;
             guildId: string | null;
             incidentId: string;
-            kind: string;
-            unitId: string | null;
             authorId: string | null;
+            unitId: string | null;
+            kind: string;
         }[];
         units: ({
             unit: {
@@ -545,8 +550,8 @@ export declare class CadService {
         guildId: string | null;
         callsign: string | null;
         incidentId: string | null;
-        unitId: string | null;
         authorId: string | null;
+        unitId: string | null;
     }[]>;
     /** Funkmeldung (Dashboard oder Discord). Mit Einsatz → zusätzlich in der Einsatzchronik. */
     radioUnits(actor: CadActor): Promise<{
@@ -573,8 +578,8 @@ export declare class CadService {
         guildId: string | null;
         callsign: string | null;
         incidentId: string | null;
-        unitId: string | null;
         authorId: string | null;
+        unitId: string | null;
     }>;
     /** Wichtige Leitstellenmeldung an alle konfigurierten Kanäle (inkl. verbundener Server). */
     announce(actor: CadActor, text: string): Promise<{
@@ -849,8 +854,8 @@ export declare class CadService {
             guildId: string | null;
             callsign: string | null;
             incidentId: string | null;
-            unitId: string | null;
             authorId: string | null;
+            unitId: string | null;
         }[];
         erlc: {
             id: string;

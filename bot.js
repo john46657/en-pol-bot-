@@ -82987,12 +82987,25 @@ Bewerben: \`/bewerbung\``.slice(0, 4e3), color: 2278750, fields: [...s.closesAt 
       }
     }
   },
+  ...["dashboard", "panel"].map((name) => ({
+    name,
+    description: "Link zum Web-Dashboard",
+    async run(c) {
+      try {
+        const { url } = await c.api.service("GET", "/bot/dashboard-url");
+        return { ephemeral: true, embeds: [{ title: "\u{1F5A5}\uFE0F EN Polizei \u2013 Dashboard", description: `Hier geht's zum Web-Dashboard:
+${url}`, color: COLORS.info }], buttons: [{ id: "link", label: "Dashboard \xF6ffnen", style: "secondary", url }] };
+      } catch (e) {
+        return mapError(e);
+      }
+    }
+  })),
   {
     name: "hilfe",
     description: "Zeigt alle Befehle",
     async run() {
       return { ephemeral: true, embeds: [{ title: "EN Polizei \u2014 Befehle", color: COLORS.info, fields: [
-        { name: "Konto", value: "`/entverknuepfen` `/profil` `/benachrichtigungen`" },
+        { name: "Konto", value: "`/dashboard` `/panel` `/entverknuepfen` `/profil` `/benachrichtigungen`" },
         { name: "Abfragen", value: "`/person` `/kennzeichen` `/fahndungen` `/einsaetze` `/einsatzinfo` `/einheiten` `/team`" },
         { name: "Dienst & Leitstelle", value: "`/dienst` `/dienststunden` `/abmeldung` `/leave manage` `/einheitstatus` `/einsatz` `/einsatzstatus` `/einsatzzuweisen` `/funk` `/funkcode` `/cad`" },
         { name: "Erfassen", value: "`/ticket` `/bericht` `/dienstbericht` `/beschwerde` `/ermittlung` `/fahndung` `/beweis`" },

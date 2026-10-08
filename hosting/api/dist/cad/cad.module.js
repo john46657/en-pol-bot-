@@ -21,14 +21,26 @@ const erlc_sync_service_1 = require("./erlc-sync.service");
 /** CAD-Leitstelle + ER:LC-Integration. Der ER:LC-Abruf läuft ausschließlich hier im Backend. */
 let CadModule = class CadModule {
     erlc;
+    cad;
     timer;
+    purgeTimer;
     running = false;
-    constructor(erlc) {
+    constructor(erlc, cad) {
         this.erlc = erlc;
+        this.cad = cad;
     }
     /** Planer: jede Sekunde prüfen, welche Server fällig sind (Intervall je Server, Backoff bei Fehlern). Nicht in Tests. */
     onApplicationBootstrap() {
-        if (process.env.NODE_ENV === 'test' || process.env.ERLC_POLLING === 'false')
+        if (process.env.NODE_ENV === 'test')
+            return;
+        // Beendete Einsätze nach einem Tag löschen (stündlich prüfen)
+        const purgeLog = new common_1.Logger('CAD');
+        const purge = () => void this.cad.purgeClosedIncidents().then((n) => { if (n)
+            purgeLog.log(`${n} beendete Einsätze gelöscht`); }).catch((e) => purgeLog.error(e.message));
+        purge();
+        this.purgeTimer = setInterval(purge, 60 * 60_000);
+        this.purgeTimer.unref();
+        if (process.env.ERLC_POLLING === 'false')
             return;
         const log = new common_1.Logger('ERLC');
         this.timer = setInterval(() => {
@@ -40,7 +52,8 @@ let CadModule = class CadModule {
         this.timer.unref();
     }
     onModuleDestroy() { if (this.timer)
-        clearInterval(this.timer); }
+        clearInterval(this.timer); if (this.purgeTimer)
+        clearInterval(this.purgeTimer); }
 };
 exports.CadModule = CadModule;
 exports.CadModule = CadModule = __decorate([
@@ -50,6 +63,6 @@ exports.CadModule = CadModule = __decorate([
         providers: [cad_service_1.CadService, cad_config_service_1.CadConfigService, cad_notify_service_1.CadNotifyService, erlc_service_1.ErlcService, erlc_sync_service_1.ErlcSyncService],
         exports: [cad_service_1.CadService, cad_config_service_1.CadConfigService, erlc_service_1.ErlcService],
     }),
-    __metadata("design:paramtypes", [erlc_service_1.ErlcService])
+    __metadata("design:paramtypes", [erlc_service_1.ErlcService, cad_service_1.CadService])
 ], CadModule);
 //# sourceMappingURL=cad.module.js.map

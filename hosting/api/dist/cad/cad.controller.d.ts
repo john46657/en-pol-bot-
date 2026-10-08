@@ -275,6 +275,10 @@ export declare class CadController {
         width?: number;
         height?: number;
     }): Promise<import("@enrp/shared").CadConfig>;
+    /** Kartenbild von einer https-Adresse übernehmen: der Server lädt es herunter und speichert es wie einen Upload (fremde Bild-Server blockiert die Sicherheitsrichtlinie). */
+    mapImageUrl(a: Actor, b: {
+        url: string;
+    }): Promise<import("@enrp/shared").CadConfig>;
     overview(a: CadActor): Promise<{
         config: import("@enrp/shared").CadConfig;
         incidents: {
@@ -426,8 +430,8 @@ export declare class CadController {
             guildId: string | null;
             callsign: string | null;
             incidentId: string | null;
-            unitId: string | null;
             authorId: string | null;
+            unitId: string | null;
         }[];
         erlc: {
             id: string;
@@ -699,9 +703,9 @@ export declare class CadController {
             text: string;
             guildId: string | null;
             incidentId: string;
-            kind: string;
-            unitId: string | null;
             authorId: string | null;
+            unitId: string | null;
+            kind: string;
         }[];
         units: ({
             unit: {
@@ -1057,8 +1061,8 @@ export declare class CadController {
         guildId: string | null;
         callsign: string | null;
         incidentId: string | null;
-        unitId: string | null;
         authorId: string | null;
+        unitId: string | null;
     }[]>;
     /** Einheiten, als die man funken darf (Leitstelle: alle; sonst nur die eigene). */
     radioUnits(a: CadActor): Promise<{
@@ -1081,8 +1085,8 @@ export declare class CadController {
         guildId: string | null;
         callsign: string | null;
         incidentId: string | null;
-        unitId: string | null;
         authorId: string | null;
+        unitId: string | null;
     }>;
     announce(a: CadActor, b: {
         text: string;

@@ -48,6 +48,30 @@ let CadService = class CadService {
         const o = list.find((x) => x.key === key);
         return o ? `${o.emoji ? `${o.emoji} ` : ''}${o.label}` : (key ?? '—');
     }
+    /**
+     * Beendete Einsätze (Status mit „closed“, z. B. Abgeschlossen/Abgebrochen) werden einen Tag nach Abschluss gelöscht.
+     * Chronik und Einheiten-Zuordnungen fallen per Cascade mit weg; Verweise aus Berichten, Notrufen und Funk werden gelöst.
+     */
+    async purgeClosedIncidents(maxAgeMs = 24 * 3_600_000) {
+        const cfg = await this.cfg.get();
+        const closed = cfg.incidentStatuses.filter((s) => s.closed).map((s) => s.key);
+        if (!closed.length)
+            return 0;
+        const before = new Date(Date.now() - maxAgeMs);
+        // ohne Abschlusszeit (ältere Daten) zählt die letzte Änderung
+        const rows = await this.prisma.incident.findMany({ where: { status: { in: closed }, OR: [{ closedAt: { lt: before } }, { closedAt: null, updatedAt: { lt: before } }] }, select: { id: true } });
+        if (!rows.length)
+            return 0;
+        const ids = rows.map((r) => r.id);
+        await this.prisma.$transaction([
+            this.prisma.report.updateMany({ where: { incidentId: { in: ids } }, data: { incidentId: null } }),
+            this.prisma.erlcEmergencyCall.updateMany({ where: { incidentId: { in: ids } }, data: { incidentId: null } }),
+            this.prisma.cadRadioMessage.updateMany({ where: { incidentId: { in: ids } }, data: { incidentId: null } }),
+            this.prisma.incident.deleteMany({ where: { id: { in: ids } } }),
+        ]);
+        this.changed('incident');
+        return ids.length;
+    }
     changed(kind, id) { this.rt.publish('cad', 'cad.changed', { kind, id: id ?? null }); this.rt.publish('dispatch', 'queue.changed', { id: id ?? null }); }
     /**
      * Server-übergreifende Aktionen: Vom Heimat-Server (Leitstelle) aus immer erlaubt; von einem anderen Discord-Server
