@@ -25,6 +25,11 @@ export function redact(value: unknown): Prisma.InputJsonValue | undefined {
   return JSON.parse(JSON.stringify(value, (k, v) => (k && SENSITIVE.test(k) ? '[REDACTED]' : v))) as Prisma.InputJsonValue;
 }
 
+/** Weitere Verarbeitung je Audit-Eintrag (Logging → Discord), gesetzt vom LoggingService. Fehler stören nie den Fachprozess. */
+type AuditSink = (db: Tx | PrismaService, actor: Actor, entry: AuditEntry) => Promise<void>;
+let sink: AuditSink | null = null;
+export const setAuditSink = (s: AuditSink | null) => { sink = s; };
+
 @Injectable()
 export class AuditService {
   constructor(private readonly prisma: PrismaService) {}
@@ -46,5 +51,6 @@ export class AuditService {
         reason: entry.reason,
       },
     });
+    if (sink) await sink(db, actor, { ...entry, before: redact(entry.before), after: redact(entry.after) }).catch((e) => console.error(`logging failed for ${entry.action}: ${e instanceof Error ? e.message : e}`));
   }
 }
