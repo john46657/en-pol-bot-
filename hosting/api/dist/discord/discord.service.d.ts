@@ -69,6 +69,7 @@ export declare class DiscordService {
         createdAt: Date;
         updatedAt: Date;
         version: number;
+        active: boolean;
         username: string;
         displayName: string;
         email: string | null;
@@ -78,7 +79,6 @@ export declare class DiscordService {
         robloxStatus: string;
         robloxVerifiedAt: Date | null;
         robloxVerifiedById: string | null;
-        active: boolean;
         failedLogins: number;
         lockedUntil: Date | null;
         lastLogin: Date | null;

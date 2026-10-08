@@ -40,7 +40,8 @@ model User {
   sessions      Session[]
   loginHistory  LoginHistory[]
   notifications Notification[]
-  personnel     Personnel?
+  /// eine Personalakte je Akten-Bereich (Discord-Server)
+  personnel     Personnel[]
   dutySessions  DutySession[]
   leaveRequests LeaveRequest[]
   settings      UserSettings?
@@ -480,14 +481,16 @@ model EvidenceTransfer {
 
 model Personnel {
   id                 String               @id @default(uuid()) @db.Uuid
-  userId             String               @unique @db.Uuid
+  /// Akten-Bereich des Discord-Servers (wie bei Personen); je Bereich eine Akte pro Benutzer
+  serverId           String?              @db.Uuid
+  userId             String               @db.Uuid
   rank               String?
   team               String?
-  callsign           String?              @unique
+  callsign           String?
   /// Büro (Liste unter Einstellungen → Teamstruktur)
   office             String?
   /// Dienstnummer
-  serviceNumber      String?              @unique
+  serviceNumber      String?
   employmentStatus   String               @default("ACTIVE")
   joinDate           DateTime             @default(now())
   qualifications     String[]             @default([])
@@ -502,6 +505,11 @@ model Personnel {
   user               User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
   academyEnrollments AcademyEnrollment[]
   records            PersonnelRecord[]
+
+  @@unique([serverId, userId])
+  @@unique([serverId, callsign])
+  @@unique([serverId, serviceNumber])
+  @@index([userId])
 }
 
 /// Beförderungen, Auszeichnungen, Disziplinarmaßnahmen (nur mit personnel.* sichtbar).
@@ -1482,7 +1490,8 @@ model DutyReport {
 /// Rang (frei anlegbar, Reihenfolge = position; kleiner = höher). Personalakten speichern den Rangnamen.
 model HrRank {
   id               String   @id @default(uuid()) @db.Uuid
-  name             String   @unique
+  serverId         String?  @db.Uuid
+  name             String
   position         Int      @default(0)
   description      String?
   icon             String?
@@ -1500,6 +1509,8 @@ model HrRank {
   active           Boolean  @default(true)
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
+
+  @@unique([serverId, name])
 }
 
 /// Antrag: Beförderung oder Versetzung, mit konfigurierbaren Genehmigungsstufen.
@@ -1532,6 +1543,7 @@ model HrRequest {
 
 model HrTraining {
   id             String               @id @default(uuid()) @db.Uuid
+  serverId       String?              @db.Uuid
   name           String
   description    String?
   requirements   String?
@@ -1549,6 +1561,8 @@ model HrTraining {
   createdAt      DateTime             @default(now())
   updatedAt      DateTime             @updatedAt
   progress       HrTrainingProgress[]
+
+  @@index([serverId])
 }
 
 model HrTrainingProgress {
@@ -1572,6 +1586,7 @@ model HrTrainingProgress {
 
 model HrExam {
   id            String          @id @default(uuid()) @db.Uuid
+  serverId      String?         @db.Uuid
   title         String
   description   String?
   /// [{ id, type: SINGLE|MULTI|YESNO|TEXT|NUMBER, text, options[], correct[], points }]
@@ -1590,6 +1605,8 @@ model HrExam {
   createdAt     DateTime        @default(now())
   updatedAt     DateTime        @updatedAt
   attempts      HrExamAttempt[]
+
+  @@index([serverId])
 }
 
 model HrExamAttempt {
@@ -1617,6 +1634,7 @@ model HrExamAttempt {
 /// Interne Meldung (z. B. neue Dienstanweisung) mit optionaler Lesebestätigung.
 model HrAnnouncement {
   id               String               @id @default(uuid()) @db.Uuid
+  serverId         String?              @db.Uuid
   title            String
   body             String
   priority         String               @default("NORMAL") // LOW | NORMAL | HIGH | CRITICAL
@@ -1633,6 +1651,7 @@ model HrAnnouncement {
   reads            HrAnnouncementRead[]
 
   @@index([publishAt])
+  @@index([serverId])
 }
 
 model HrAnnouncementRead {
@@ -1646,6 +1665,7 @@ model HrAnnouncementRead {
 
 model HrPoll {
   id              String       @id @default(uuid()) @db.Uuid
+  serverId        String?      @db.Uuid
   title           String
   description     String?
   /// [{ id, label }]
@@ -1661,6 +1681,8 @@ model HrPoll {
   createdAt       DateTime     @default(now())
   updatedAt       DateTime     @updatedAt
   votes           HrPollVote[]
+
+  @@index([serverId])
 }
 
 model HrPollVote {
@@ -1678,6 +1700,7 @@ model HrPollVote {
 /// Nummernkreis, z. B. 1000–1999 oder LS-001–LS-999.
 model ServiceNumberRange {
   id         String          @id @default(uuid()) @db.Uuid
+  serverId   String?         @db.Uuid
   name       String
   prefix     String          @default("")
   suffix     String          @default("")
@@ -1699,13 +1722,17 @@ model ServiceNumberRange {
   createdAt  DateTime        @default(now())
   updatedAt  DateTime        @updatedAt
   numbers    ServiceNumber[]
+
+  @@index([serverId])
 }
 
 model ServiceNumber {
   id          String             @id @default(uuid()) @db.Uuid
+  serverId    String?            @db.Uuid
   rangeId     String             @db.Uuid
   value       Int
-  display     String             @unique
+  /// Schreibweise, eindeutig je Akten-Bereich
+  display     String
   status      String             @default("FREE") // ACTIVE | RESERVED | FREE | BLOCKED | FORMER
   userId      String?            @db.Uuid
   personnelId String?            @db.Uuid
@@ -1716,6 +1743,7 @@ model ServiceNumber {
   range       ServiceNumberRange @relation(fields: [rangeId], references: [id], onDelete: Restrict)
 
   @@unique([rangeId, value])
+  @@unique([serverId, display])
   @@index([status])
   @@index([userId])
 }
@@ -1723,6 +1751,7 @@ model ServiceNumber {
 /// Historie je Dienstnummer und Person (Vergabe, Änderung, Freigabe, Sperre …).
 model ServiceNumberEvent {
   id          String   @id @default(uuid()) @db.Uuid
+  serverId    String?  @db.Uuid
   display     String
   oldDisplay  String?
   userId      String?  @db.Uuid
@@ -1735,11 +1764,13 @@ model ServiceNumberEvent {
 
   @@index([display, createdAt])
   @@index([personnelId, createdAt])
+  @@index([serverId])
 }
 
 /// Einstellung nach angenommener Bewerbung, die noch auf eine Dienstnummer wartet („⚠️ Dienstnummer ausstehend“).
 model HireQueue {
   id            String   @id @default(uuid()) @db.Uuid
+  serverId      String?  @db.Uuid
   applicationId String   @unique
   kind          String
   userId        String   @db.Uuid
@@ -1748,6 +1779,8 @@ model HireQueue {
   status        String   @default("PENDING") // PENDING | DONE
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
+
+  @@index([serverId])
 }
 
 /// Discord-Server-Backup (wie Xenon): Rollen, Kanäle, Rechte, Servereinstellungen. Der Bot liest bzw. stellt wieder her.
@@ -1774,6 +1807,7 @@ model DiscordBackup {
 /// Ausbildungstermin: Ankündigung mit Anmeldung (Discord-Button + Dashboard), Auswertung (erschienen/bestanden/Dauer), Beförderung bei Bestehen.
 model HrTrainingSession {
   id             String    @id @default(uuid()) @db.Uuid
+  serverId       String?   @db.Uuid
   number         String    @unique
   trainingId     String?   @db.Uuid
   title          String
@@ -1806,4 +1840,5 @@ model HrTrainingSession {
   updatedAt      DateTime  @default(now()) @updatedAt
 
   @@index([startsAt])
+  @@index([serverId])
 }

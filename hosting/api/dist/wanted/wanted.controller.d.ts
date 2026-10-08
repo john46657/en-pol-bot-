@@ -89,11 +89,11 @@ export declare class WantedController {
         timeline: {
             id: string;
             createdAt: Date;
-            entityType: string;
-            entityId: string;
-            summary: string;
             action: string;
             actorId: string | null;
+            summary: string;
+            entityType: string;
+            entityId: string;
         }[];
     }>;
     create(a: Actor, b: z.infer<typeof create>): Promise<{

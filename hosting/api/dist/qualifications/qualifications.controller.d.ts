@@ -51,22 +51,22 @@ declare const submit: z.ZodObject<{
     }>, "many">;
 }, "strip", z.ZodTypeAny, {
     unit: string;
+    discordId: string;
     answers: {
         answer: string | string[] | null;
         question: string;
     }[];
-    discordId: string;
     discordName: string;
     guildId?: string | undefined;
     durationSec?: number | undefined;
     joinedAt?: Date | undefined;
 }, {
     unit: string;
+    discordId: string;
     answers: {
         answer: string | string[] | null;
         question: string;
     }[];
-    discordId: string;
     discordName: string;
     guildId?: string | undefined;
     durationSec?: number | undefined;
@@ -108,8 +108,8 @@ export declare class QualificationsController {
         units: {
             description: string;
             name: string;
-            key: string;
             questions: import("@enrp/shared").FormField[];
+            key: string;
             settings: {
                 cooldownMinutes: number;
                 messages: {
@@ -141,8 +141,8 @@ export declare class QualificationsController {
             };
             enabled: boolean;
             pingRoleIds: string[];
-            roleId?: string | undefined;
             channelId?: string | undefined;
+            roleId?: string | undefined;
             acceptedChannelId?: string | undefined;
             deniedChannelId?: string | undefined;
         }[];
@@ -194,8 +194,8 @@ export declare class QualificationsController {
         units: {
             description: string;
             name: string;
-            key: string;
             questions: import("@enrp/shared").FormField[];
+            key: string;
             settings: {
                 cooldownMinutes: number;
                 messages: {
@@ -227,8 +227,8 @@ export declare class QualificationsController {
             };
             enabled: boolean;
             pingRoleIds: string[];
-            roleId?: string | undefined;
             channelId?: string | undefined;
+            roleId?: string | undefined;
             acceptedChannelId?: string | undefined;
             deniedChannelId?: string | undefined;
         }[];
@@ -281,8 +281,8 @@ export declare class QualificationsController {
         units: {
             description: string;
             name: string;
-            key: string;
             questions: import("@enrp/shared").FormField[];
+            key: string;
             settings: {
                 cooldownMinutes: number;
                 messages: {
@@ -314,8 +314,8 @@ export declare class QualificationsController {
             };
             enabled: boolean;
             pingRoleIds: string[];
-            roleId?: string | undefined;
             channelId?: string | undefined;
+            roleId?: string | undefined;
             acceptedChannelId?: string | undefined;
             deniedChannelId?: string | undefined;
         }[];
@@ -370,12 +370,12 @@ export declare class QualificationsController {
         createdAt: Date;
         userId: string | null;
         guildId: string | null;
-        decidedById: string | null;
-        decidedAt: Date | null;
-        decisionReason: string | null;
-        answers: import("@prisma/client/runtime/library").JsonValue;
-        grantRoleIds: string[];
         discordId: string;
+        decidedAt: Date | null;
+        answers: import("@prisma/client/runtime/library").JsonValue;
+        decidedById: string | null;
+        decisionReason: string | null;
+        grantRoleIds: string[];
         discordName: string;
         durationSec: number | null;
         joinedAt: Date | null;
@@ -397,12 +397,12 @@ export declare class QualificationsController {
         createdAt: Date;
         userId: string | null;
         guildId: string | null;
-        decidedById: string | null;
-        decidedAt: Date | null;
-        decisionReason: string | null;
-        answers: import("@prisma/client/runtime/library").JsonValue;
-        grantRoleIds: string[];
         discordId: string;
+        decidedAt: Date | null;
+        answers: import("@prisma/client/runtime/library").JsonValue;
+        decidedById: string | null;
+        decisionReason: string | null;
+        grantRoleIds: string[];
         discordName: string;
         durationSec: number | null;
         joinedAt: Date | null;
@@ -433,8 +433,8 @@ export declare class BotQualificationsController {
         units: {
             description: string;
             name: string;
-            key: string;
             questions: import("@enrp/shared").FormField[];
+            key: string;
             settings: {
                 cooldownMinutes: number;
                 messages: {
@@ -466,8 +466,8 @@ export declare class BotQualificationsController {
             };
             enabled: boolean;
             pingRoleIds: string[];
-            roleId?: string | undefined;
             channelId?: string | undefined;
+            roleId?: string | undefined;
             acceptedChannelId?: string | undefined;
             deniedChannelId?: string | undefined;
         }[];

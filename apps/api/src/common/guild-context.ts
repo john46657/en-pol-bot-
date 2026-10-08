@@ -21,7 +21,7 @@ export class GuildContextMiddleware implements NestMiddleware {
 }
 
 /** Zentrale Einstellungen, die je Server überschrieben werden können (`<key>@<guildId>`, sonst gilt der gemeinsame Wert). */
-export const SERVER_SCOPED_SETTINGS = ['team.structure', 'team.rankOrder', 'dashboard.defaultLayout', 'theme.accent', 'theme.customAccents', 'org.name', 'teamchance'] as const;
+export const SERVER_SCOPED_SETTINGS = ['team.structure', 'team.rankOrder', 'dashboard.defaultLayout', 'theme.accent', 'theme.customAccents', 'org.name', 'teamchance', 'hr.config', 'dienstnummer.settings'] as const;
 export const scopedKey = (key: string, guildId: string | null) => { const g = settingsGuild(guildId); return g && (SERVER_SCOPED_SETTINGS as readonly string[]).includes(key) ? `${key}@${g}` : key; };
 
 // ---- Server-Verbund (Administration → Server-Verbund; gesetzt vom ServerLinksService) ----
@@ -37,3 +37,8 @@ export const settingsGuild = (guildId: string | null | undefined): string | null
 export const recordSpace = (guildId: string | null | undefined = currentGuild()): string | null | undefined => (guildId ? spaceOf(guildId) : undefined);
 /** Prisma-Filter für Akten des gewählten Servers (ohne Server: alle). */
 export const recordWhere = (guildId: string | null | undefined = currentGuild()) => { const s = recordSpace(guildId); return s === undefined ? {} : { serverId: s }; };
+/**
+ * Personalakte des gewählten Servers in verschachtelten Abfragen (dort greift die Server-Trennung nicht):
+ * `user: { select: { personnel: personnelOfServer({ rank: true }) } }` → `user.personnel[0]`.
+ */
+export const personnelOfServer = <S extends object>(select: S) => ({ where: recordWhere(), take: 1, select });

@@ -32,9 +32,9 @@ export declare class CommunicationController {
         id: string;
         authorId: string;
         createdAt: Date;
+        body: string;
         deletedAt: Date | null;
         conversationId: string;
-        body: string;
         replyToId: string | null;
         pinned: boolean;
     }[]>;
@@ -42,9 +42,9 @@ export declare class CommunicationController {
         id: string;
         authorId: string;
         createdAt: Date;
+        body: string;
         deletedAt: Date | null;
         conversationId: string;
-        body: string;
         replyToId: string | null;
         pinned: boolean;
     }>;
@@ -52,9 +52,9 @@ export declare class CommunicationController {
         id: string;
         authorId: string;
         createdAt: Date;
+        body: string;
         deletedAt: Date | null;
         conversationId: string;
-        body: string;
         replyToId: string | null;
         pinned: boolean;
     }>;
@@ -62,9 +62,9 @@ export declare class CommunicationController {
         id: string;
         authorId: string;
         createdAt: Date;
+        body: string;
         deletedAt: Date | null;
         conversationId: string;
-        body: string;
         replyToId: string | null;
         pinned: boolean;
     }>;

@@ -45,10 +45,10 @@ export declare class VehiclesService {
                 updatedAt: Date;
                 version: number;
                 createdById: string | null;
+                notes: string | null;
                 robloxUserId: string | null;
                 robloxUsername: string;
                 aliases: string[];
-                notes: string | null;
                 custom: Prisma.JsonValue | null;
             } | null;
         } & {
@@ -69,11 +69,11 @@ export declare class VehiclesService {
         timeline: {
             id: string;
             createdAt: Date;
-            entityType: string;
-            entityId: string;
-            summary: string;
             action: string;
             actorId: string | null;
+            summary: string;
+            entityType: string;
+            entityId: string;
         }[];
     }>;
     create(actor: Actor, d: {

@@ -120,10 +120,10 @@ export declare class TicketsController {
                 updatedAt: Date;
                 version: number;
                 createdById: string | null;
+                notes: string | null;
                 robloxUserId: string | null;
                 robloxUsername: string;
                 aliases: string[];
-                notes: string | null;
                 custom: import("@prisma/client/runtime/library").JsonValue | null;
             };
             legalCode: {
@@ -157,11 +157,11 @@ export declare class TicketsController {
         timeline: {
             id: string;
             createdAt: Date;
-            entityType: string;
-            entityId: string;
-            summary: string;
             action: string;
             actorId: string | null;
+            summary: string;
+            entityType: string;
+            entityId: string;
         }[];
     }>;
     create(a: Actor, b: z.infer<typeof create>): Promise<{

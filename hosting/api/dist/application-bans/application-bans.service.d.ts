@@ -33,10 +33,10 @@ export declare class ApplicationBansService {
         reason: string;
         createdById: string | null;
         expiresAt: Date | null;
-        robloxUserId: string | null;
         name: string;
         guildId: string | null;
         discordId: string | null;
+        robloxUserId: string | null;
         scopes: string[];
         createdByName: string | null;
         liftedAt: Date | null;
@@ -66,10 +66,10 @@ export declare class ApplicationBansService {
         reason: string;
         createdById: string | null;
         expiresAt: Date | null;
-        robloxUserId: string | null;
         name: string;
         guildId: string | null;
         discordId: string | null;
+        robloxUserId: string | null;
         scopes: string[];
         createdByName: string | null;
         liftedAt: Date | null;
@@ -81,10 +81,10 @@ export declare class ApplicationBansService {
         reason: string;
         createdById: string | null;
         expiresAt: Date | null;
-        robloxUserId: string | null;
         name: string;
         guildId: string | null;
         discordId: string | null;
+        robloxUserId: string | null;
         scopes: string[];
         createdByName: string | null;
         liftedAt: Date | null;
@@ -96,10 +96,10 @@ export declare class ApplicationBansService {
         reason: string;
         createdById: string | null;
         expiresAt: Date | null;
-        robloxUserId: string | null;
         name: string;
         guildId: string | null;
         discordId: string | null;
+        robloxUserId: string | null;
         scopes: string[];
         createdByName: string | null;
         liftedAt: Date | null;

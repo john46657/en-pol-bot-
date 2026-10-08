@@ -76,10 +76,12 @@ export declare class ServerLinksService implements OnModuleInit {
     private links;
     constructor(prisma: PrismaService, audit: AuditService);
     onModuleInit(): Promise<void>;
+    /** Heimat-Server der Leitstelle, sonst der einzige bekannte Discord-Server (für Aufgaben ohne eigenen Server, z. B. Teamliste). */
+    homeGuild(): Promise<string | null>;
     /**
-     * Einmalig nach der Trennung je Server: Berichte, Fahndungen, Ermittlungen, Beschwerden, Beweismittel und Dienstzeiten
-     * ohne Server gehören dem Heimat-Server der Leitstelle (bzw. dem einzigen bekannten Discord-Server). Läuft bei jedem
-     * Start, bis es einen solchen Server gibt; danach nichts mehr zu tun.
+     * Einmalig nach der Trennung je Server: Einträge ohne Server (Berichte, Fahndungen, …, Personal) gehören dem Heimat-Server
+     * der Leitstelle (bzw. dem einzigen bekannten Discord-Server). Jeder Schritt läuft nur einmal (`servers.legacyAssigned`) –
+     * später ohne Server angelegte Einträge (gemeinsamer Bestand) bleiben, wo sie sind. Gibt es noch keinen solchen Server, wird es beim nächsten Start erneut versucht.
      */
     assignLegacyRecords(): Promise<number | null>;
     reload(): Promise<void>;

@@ -25,8 +25,8 @@ declare const course: z.ZodObject<{
 }, "strip", z.ZodTypeAny, {
     title: string;
     description?: string | undefined;
-    passScore?: number | undefined;
     instructorId?: string | undefined;
+    passScore?: number | undefined;
     announce?: {
         location?: string | undefined;
         channelId?: string | null | undefined;
@@ -36,8 +36,8 @@ declare const course: z.ZodObject<{
 }, {
     title: string;
     description?: string | undefined;
-    passScore?: number | undefined;
     instructorId?: string | undefined;
+    passScore?: number | undefined;
     announce?: {
         location?: string | undefined;
         channelId?: string | null | undefined;
@@ -56,8 +56,8 @@ export declare class AcademyController {
         id: string;
         title: string;
         description: string | null;
-        passScore: number;
         instructorId: string | null;
+        passScore: number;
     })[]>;
     create(ac: Actor, b: z.infer<typeof course>): Promise<{
         announced: {
@@ -67,8 +67,8 @@ export declare class AcademyController {
         id: string;
         title: string;
         description: string | null;
-        passScore: number;
         instructorId: string | null;
+        passScore: number;
     }>;
     /** Standard-Kanal und Ping-Rollen für Ankündigungen. */
     config(): Promise<{
@@ -96,10 +96,10 @@ export declare class AcademyController {
     }): Promise<{
         id: string;
         createdAt: Date;
-        enrollmentId: string;
-        score: number;
         passed: boolean;
+        score: number;
         gradedById: string | null;
+        enrollmentId: string;
     }>;
 }
 export {};

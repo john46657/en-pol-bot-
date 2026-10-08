@@ -16,6 +16,7 @@ const prisma_service_1 = require("../prisma/prisma.service");
 const audit_service_1 = require("../audit/audit.service");
 const errors_1 = require("../common/errors");
 const discord_service_1 = require("../discord/discord.service");
+const guild_context_1 = require("../common/guild-context");
 const shifts_1 = require("./shifts");
 /** Dienststatus wird ausschließlich explizit gesetzt – Online-Status ist niemals Dienststatus. */
 let DutyService = class DutyService {
@@ -52,7 +53,7 @@ let DutyService = class DutyService {
                 throw new errors_1.AppError('NOT_FOUND', 'Einheit nicht gefunden.');
             let created = null;
             if (status !== 'OFF_DUTY') {
-                const pers = await tx.personnel.findUnique({ where: { userId } });
+                const pers = await tx.personnel.findFirst({ where: { userId } });
                 created = await tx.dutySession.create({ data: { userId, status, startedAt: at, lastActivityAt: at, unitId: d.unitId, shiftType: type?.id ?? null, callsign: (d.callsign ?? pers?.callsign ?? undefined)?.toUpperCase() } });
             }
             await this.audit.record(actor, { action: targetUserId && targetUserId !== actor.userId ? 'duty.status.set_by_supervisor' : 'duty.status', module: 'team', entityType: 'User', entityId: userId, before: { status: open?.status ?? 'OFF_DUTY' }, after: { status } }, tx);
@@ -79,12 +80,12 @@ let DutyService = class DutyService {
             if (!ch.duty && !roles && !shift?.channelId)
                 return;
             const [user, link] = await Promise.all([
-                this.prisma.user.findUnique({ where: { id: userId }, select: { displayName: true, personnel: { select: { callsign: true, rank: true } } } }),
+                this.prisma.user.findUnique({ where: { id: userId }, select: { displayName: true, personnel: (0, guild_context_1.personnelOfServer)({ callsign: true, rank: true }) } }),
                 this.prisma.discordLink.findUnique({ where: { userId } }),
             ]);
             const by = actor.userId && actor.userId !== userId ? await this.prisma.user.findUnique({ where: { id: actor.userId }, select: { displayName: true } }) : null;
             await this.discord.enqueue('duty', 'duty.changed', {
-                discordId: link?.discordId ?? null, name: user?.displayName ?? '—', callsign: user?.personnel?.callsign ?? null, rank: user?.personnel?.rank ?? null,
+                discordId: link?.discordId ?? null, name: user?.displayName ?? '—', callsign: user?.personnel[0]?.callsign ?? null, rank: user?.personnel[0]?.rank ?? null,
                 status, previous: before?.status ?? 'OFF_DUTY', previousMinutes: before ? Math.round((Date.now() - before.startedAt.getTime()) / 60_000) : null, setBy: by?.displayName ?? null,
                 ...(shift ? { shiftType: shift.name, roles: { add: shift.add, remove: shift.remove }, ...(shift.channelId ? { channelId: shift.channelId } : {}) } : {}),
             }, { always: roles || !!shift?.channelId });
@@ -148,7 +149,7 @@ let DutyService = class DutyService {
     team() {
         return this.prisma.dutySession.findMany({
             where: { endedAt: null },
-            include: { user: { select: { id: true, displayName: true, personnel: { select: { rank: true, callsign: true } } } } },
+            include: { user: { select: { id: true, displayName: true, personnel: (0, guild_context_1.personnelOfServer)({ rank: true, callsign: true }) } } },
             orderBy: { startedAt: 'asc' },
         });
     }
@@ -162,7 +163,7 @@ let DutyService = class DutyService {
         const since = new Date(now.getTime() - days * 86_400_000);
         const sessions = await this.prisma.dutySession.findMany({
             where: { ...(userId ? { userId } : {}), OR: [{ endedAt: null }, { endedAt: { gt: since } }] },
-            include: { user: { select: { displayName: true, personnel: { select: { rank: true, callsign: true } } } } },
+            include: { user: { select: { displayName: true, personnel: (0, guild_context_1.personnelOfServer)({ rank: true, callsign: true }) } } },
         });
         const rows = new Map();
         for (const s of sessions) {
@@ -170,7 +171,7 @@ let DutyService = class DutyService {
             const to = (s.endedAt ?? now).getTime();
             if (to <= from)
                 continue;
-            const r = rows.get(s.userId) ?? { userId: s.userId, name: s.user.displayName, rank: s.user.personnel?.rank ?? null, callsign: s.user.personnel?.callsign ?? null, minutes: 0, byStatus: {}, sessions: 0 };
+            const r = rows.get(s.userId) ?? { userId: s.userId, name: s.user.displayName, rank: s.user.personnel[0]?.rank ?? null, callsign: s.user.personnel[0]?.callsign ?? null, minutes: 0, byStatus: {}, sessions: 0 };
             const min = (to - from) / 60_000;
             r.minutes += min;
             r.byStatus[s.status] = (r.byStatus[s.status] ?? 0) + min;
@@ -191,7 +192,7 @@ let DutyService = class DutyService {
         // Sitzungen etwas vor dem Zeitraum mitnehmen, damit Schichten über die Grenze vollständig sind
         const sessions = await this.prisma.dutySession.findMany({
             where: { ...(f.userId ? { userId: f.userId } : {}), OR: [{ endedAt: null }, { endedAt: { gt: new Date(since.getTime() - 86_400_000) } }] },
-            include: { user: { select: { displayName: true, personnel: { select: { rank: true, callsign: true } } } } },
+            include: { user: { select: { displayName: true, personnel: (0, guild_context_1.personnelOfServer)({ rank: true, callsign: true }) } } },
             orderBy: [{ userId: 'asc' }, { startedAt: 'asc' }],
         });
         const groups = [];
@@ -212,7 +213,7 @@ let DutyService = class DutyService {
             const ms = (s) => (s.endedAt ?? now).getTime() - s.startedAt.getTime();
             const types = [...new Set(g.map((s) => s.shiftType).filter((x) => !!x))];
             return {
-                id: first.id, userId: first.userId, name: first.user.displayName, rank: first.user.personnel?.rank ?? null, callsign: last.callsign ?? first.user.personnel?.callsign ?? null,
+                id: first.id, userId: first.userId, name: first.user.displayName, rank: first.user.personnel[0]?.rank ?? null, callsign: last.callsign ?? first.user.personnel[0]?.callsign ?? null,
                 shiftTypes: types, shiftType: typeName(types[0] ?? null), shiftTypeNames: types.map((t) => typeName(t)),
                 startedAt: first.startedAt, endedAt: end, active: !end, status: end ? 'OFF_DUTY' : last.status,
                 minutes: Math.round(g.reduce((n, s) => n + ms(s), 0) / 60_000),

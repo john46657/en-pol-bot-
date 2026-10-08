@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { AuditService, Actor } from '../audit/audit.service';
 import { DiscordService } from '../discord/discord.service';
+import { personnelOfServer } from '../common/guild-context';
 import { AppError } from '../common/errors';
 
 /** Funk-Freigabe: nur freigegebene Mitglieder gelten als funkberechtigt. Identifikation per Benutzer-ID oder verknüpfter Discord-ID. */
@@ -17,8 +18,8 @@ export class RadioService {
 
   async list() {
     const rows = await this.prisma.radioWhitelist.findMany({ orderBy: { createdAt: 'asc' } });
-    const users = await this.prisma.user.findMany({ where: { id: { in: rows.map((r) => r.userId) } }, select: { id: true, displayName: true, personnel: { select: { callsign: true, rank: true } } } });
-    return rows.map((r) => { const u = users.find((x) => x.id === r.userId); return { userId: r.userId, displayName: u?.displayName ?? '—', callsign: u?.personnel?.callsign ?? null, rank: u?.personnel?.rank ?? null, since: r.createdAt }; });
+    const users = await this.prisma.user.findMany({ where: { id: { in: rows.map((r) => r.userId) } }, select: { id: true, displayName: true, personnel: personnelOfServer({ callsign: true, rank: true }) } });
+    return rows.map((r) => { const u = users.find((x) => x.id === r.userId); return { userId: r.userId, displayName: u?.displayName ?? '—', callsign: u?.personnel[0]?.callsign ?? null, rank: u?.personnel[0]?.rank ?? null, since: r.createdAt }; });
   }
 
   async check(t: { userId?: string; discordId?: string }) {

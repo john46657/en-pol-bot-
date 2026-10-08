@@ -7,12 +7,14 @@ export interface AcceptedApplication {
     discordId: string | null;
     name: string;
     robloxUsername?: string | null;
-    robloxUserId?: string | null;
+    robloxUserId?: string | null; /** Discord-Server, auf dem die Bewerbung gestartet wurde */
+    guildId?: string | null;
 }
 type Handler = (actor: Actor, a: AcceptedApplication) => Promise<void>;
 /**
  * Entkoppelt Bewerbungen vom Personal-/Dienstnummern-System (keine Modul-Abhängigkeit im Kreis):
  * das Personalmodul meldet sich beim Start an, Bewerbungen melden Annahmen. Fehler stoppen die Entscheidung nie.
+ * Personalakte und Dienstnummer entstehen auf dem Server der Bewerbung (sonst auf dem gewählten Server).
  */
 export declare const hireEvents: {
     handler: Handler | null;

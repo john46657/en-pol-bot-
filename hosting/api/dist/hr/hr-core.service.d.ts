@@ -14,6 +14,15 @@ export declare class HrCoreService {
     readonly discord: DiscordService;
     private readonly live;
     constructor(prisma: PrismaService, audit: AuditService, discord: DiscordService, live: DiscordLiveService);
+    /** Einstellung des gewählten Discord-Servers, sonst die gemeinsame (Personal ist je Server getrennt). */
+    setting(key: string, tx?: Tx | PrismaService): Promise<{
+        updatedAt: Date;
+        value: Prisma.JsonValue;
+        key: string;
+    } | null>;
+    /** Schlüssel, unter dem der gewählte Server speichert (ohne Server: der gemeinsame). */
+    settingKey(key: string): string;
+    saveSetting(tx: Tx, key: string, value: Prisma.InputJsonValue): Promise<void>;
     config(): Promise<HrConfig>;
     saveConfig(actor: Actor, input: HrConfig): Promise<{
         transfer: {
@@ -121,88 +130,93 @@ export declare class HrCoreService {
         };
     }>;
     ranks(includeInactive?: boolean): Prisma.PrismaPromise<{
+        serverId: string | null;
         id: string;
         createdAt: Date;
         updatedAt: Date;
         description: string | null;
-        active: boolean;
         name: string;
-        color: string;
-        icon: string | null;
-        discordRoleIds: string[];
         position: number;
+        icon: string | null;
+        color: string;
+        discordRoleIds: string[];
         dashboardRoleIds: string[];
         nextRankIds: string[];
         approverRankIds: string[];
         requirements: Prisma.JsonValue;
+        active: boolean;
     }[]>;
     rankByName(name: string | null | undefined, tx?: Tx | PrismaService): Promise<{
+        serverId: string | null;
         id: string;
         createdAt: Date;
         updatedAt: Date;
         description: string | null;
-        active: boolean;
         name: string;
-        color: string;
-        icon: string | null;
-        discordRoleIds: string[];
         position: number;
+        icon: string | null;
+        color: string;
+        discordRoleIds: string[];
         dashboardRoleIds: string[];
         nextRankIds: string[];
         approverRankIds: string[];
         requirements: Prisma.JsonValue;
+        active: boolean;
     } | null>;
     /** Rangreihenfolge auch für Teamliste/Embeds (team.rankOrder). */
     private syncRankOrder;
     saveRank(actor: Actor, d: RankInput, id?: string): Promise<{
+        serverId: string | null;
         id: string;
         createdAt: Date;
         updatedAt: Date;
         description: string | null;
-        active: boolean;
         name: string;
-        color: string;
-        icon: string | null;
-        discordRoleIds: string[];
         position: number;
+        icon: string | null;
+        color: string;
+        discordRoleIds: string[];
         dashboardRoleIds: string[];
         nextRankIds: string[];
         approverRankIds: string[];
         requirements: Prisma.JsonValue;
+        active: boolean;
     }>;
     reorderRanks(actor: Actor, ids: string[]): Promise<{
+        serverId: string | null;
         id: string;
         createdAt: Date;
         updatedAt: Date;
         description: string | null;
-        active: boolean;
         name: string;
-        color: string;
-        icon: string | null;
-        discordRoleIds: string[];
         position: number;
+        icon: string | null;
+        color: string;
+        discordRoleIds: string[];
         dashboardRoleIds: string[];
         nextRankIds: string[];
         approverRankIds: string[];
         requirements: Prisma.JsonValue;
+        active: boolean;
     }[]>;
     deleteRank(actor: Actor, id: string): Promise<void>;
     /** Mögliche nächste Ränge: eingestellte Ziele, sonst der nächsthöhere aktive Rang. */
     nextRanks(current: HrRank | null): Promise<{
+        serverId: string | null;
         id: string;
         createdAt: Date;
         updatedAt: Date;
         description: string | null;
-        active: boolean;
         name: string;
-        color: string;
-        icon: string | null;
-        discordRoleIds: string[];
         position: number;
+        icon: string | null;
+        color: string;
+        discordRoleIds: string[];
         dashboardRoleIds: string[];
         nextRankIds: string[];
         approverRankIds: string[];
         requirements: Prisma.JsonValue;
+        active: boolean;
     }[]>;
     evaluate(personnelId: string, rank: HrRank): Promise<PromotionCheck>;
     discordIdOf(userId: string): Promise<string | null>;
@@ -231,6 +245,7 @@ export declare class HrCoreService {
         team?: string | null;
     }, tx: Tx): Promise<{
         personnel: {
+            serverId: string | null;
             serviceNumber: string | null;
             id: string;
             updatedAt: Date;

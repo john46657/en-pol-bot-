@@ -17,6 +17,7 @@ const permission_service_1 = require("../authz/permission.service");
 const errors_1 = require("../common/errors");
 const hire_events_1 = require("../common/hire-events");
 const hr_core_service_1 = require("./hr-core.service");
+const guild_context_1 = require("../common/guild-context");
 const hr_people_service_1 = require("./hr-people.service");
 const SETTINGS_KEY = 'dienstnummer.settings';
 const isUnique = (e) => e instanceof client_1.Prisma.PrismaClientKnownRequestError && e.code === 'P2002';
@@ -37,14 +38,14 @@ let ServiceNumbersService = class ServiceNumbersService {
     onModuleInit() { hire_events_1.hireEvents.handler = (actor, a) => this.onApplicationAccepted(actor, a); }
     // ---------------- Einstellungen & Nummernkreise ----------------
     async settings() {
-        const p = shared_1.dnSettingsSchema.safeParse((await this.prisma.systemSetting.findUnique({ where: { key: SETTINGS_KEY } }))?.value ?? {});
+        const p = shared_1.dnSettingsSchema.safeParse((await this.core.setting(SETTINGS_KEY))?.value ?? {});
         return p.success ? p.data : shared_1.dnSettingsSchema.parse({});
     }
     async saveSettings(actor, s) {
         const before = await this.settings();
         const v = shared_1.dnSettingsSchema.parse(s);
-        await this.prisma.systemSetting.upsert({ where: { key: SETTINGS_KEY }, create: { key: SETTINGS_KEY, value: v }, update: { value: v } });
-        await this.core.audit.record(actor, { action: 'dienstnummer.settings', module: 'dienstnummer', entityType: 'SystemSetting', entityId: SETTINGS_KEY, before, after: v });
+        await this.prisma.$transaction((tx) => this.core.saveSetting(tx, SETTINGS_KEY, v));
+        await this.core.audit.record(actor, { action: 'dienstnummer.settings', module: 'dienstnummer', entityType: 'SystemSetting', entityId: this.core.settingKey(SETTINGS_KEY), before, after: v });
         const autoBefore = before.mappings.some((m) => m.rangeId), autoAfter = v.mappings.some((m) => m.rangeId);
         if (autoBefore !== autoAfter)
             await this.core.audit.record(actor, { action: autoAfter ? 'dienstnummer.auto.enabled' : 'dienstnummer.auto.disabled', module: 'dienstnummer' });
@@ -227,7 +228,7 @@ let ServiceNumbersService = class ServiceNumbersService {
                         old = active.display;
                     }
                     // 3) zuweisen + Personalakte
-                    const row = await tx.serviceNumber.update({ where: { display }, data: { status: 'ACTIVE', personnelId: o.personnelId, assignedAt: now } });
+                    const row = await tx.serviceNumber.update({ where: { rangeId_value: { rangeId: range.id, value } }, data: { status: 'ACTIVE', personnelId: o.personnelId, assignedAt: now } });
                     if (o.personnelId) {
                         await tx.personnel.updateMany({ where: { serviceNumber: display, id: { not: o.personnelId } }, data: { serviceNumber: null } });
                         await tx.personnel.update({ where: { id: o.personnelId }, data: { serviceNumber: display } });
@@ -303,7 +304,7 @@ let ServiceNumbersService = class ServiceNumbersService {
     /** Discord nach Vergabe: Nickname, DM (je nach Einstellung). */
     async afterAssign(actor, userId, display, o) {
         const s = await this.settings();
-        const p = await this.prisma.personnel.findUnique({ where: { userId }, include: { user: { select: { displayName: true } } } });
+        const p = await this.prisma.personnel.findFirst({ where: { userId }, include: { user: { select: { displayName: true } } } });
         const discordId = await this.core.discordIdOf(userId);
         const vars = { user: discordId ? `<@${discordId}>` : p?.user.displayName ?? '', name: p?.user.displayName ?? '', dienstnummer: display, rang: p?.rank ?? '—', abteilung: p?.team ?? '—', bewerbung: o.applicationName ?? '—', datum: new Date().toLocaleDateString('de-DE', { timeZone: 'Europe/Berlin' }) };
         if (s.nickname.enabled && discordId) {
@@ -372,7 +373,7 @@ let ServiceNumbersService = class ServiceNumbersService {
             if (a.robloxUsername && !u.robloxUsername)
                 await tx.user.update({ where: { id: u.id }, data: { robloxUsername: a.robloxUsername, ...(a.robloxUserId && !(await tx.user.findUnique({ where: { robloxUserId: a.robloxUserId } })) ? { robloxUserId: a.robloxUserId } : {}) } });
             if (!m.createProfile)
-                return { user: u, personnel: await tx.personnel.findUnique({ where: { userId: u.id } }) };
+                return { user: u, personnel: await tx.personnel.findFirst({ where: { userId: u.id } }) };
             const r = await this.core.ensurePersonnel(u.id, { rank: rank?.name ?? null, team: dept?.name ?? m.department ?? null }, tx);
             if (r.created)
                 await this.core.audit.record(actor, { action: 'personnel.create.application', module: 'personnel', entityType: 'Personnel', entityId: r.personnel.id, after: { application: a.number, rank: rank?.name, department: dept?.name } }, tx);
@@ -406,8 +407,8 @@ let ServiceNumbersService = class ServiceNumbersService {
     /** Ausstehende Einstellungen (ohne Nummer). */
     async pending() {
         const q = await this.prisma.hireQueue.findMany({ where: { status: 'PENDING' }, orderBy: { createdAt: 'asc' } });
-        const users = new Map((await this.prisma.user.findMany({ where: { id: { in: q.map((x) => x.userId) } }, select: { id: true, displayName: true, personnel: { select: { id: true } } } })).map((u) => [u.id, u]));
-        return q.map((x) => ({ ...x, name: users.get(x.userId)?.displayName ?? '—', personnelId: users.get(x.userId)?.personnel?.id ?? null }));
+        const users = new Map((await this.prisma.user.findMany({ where: { id: { in: q.map((x) => x.userId) } }, select: { id: true, displayName: true, personnel: (0, guild_context_1.personnelOfServer)({ id: true }) } })).map((u) => [u.id, u]));
+        return q.map((x) => ({ ...x, name: users.get(x.userId)?.displayName ?? '—', personnelId: users.get(x.userId)?.personnel[0]?.id ?? null }));
     }
     /** Ausstehende Einstellung bestätigen/abschließen: Nummer aus dem Kreis der Zuordnung vergeben. */
     async confirmPending(actor, id, display) {
@@ -416,7 +417,7 @@ let ServiceNumbersService = class ServiceNumbersService {
             throw new errors_1.AppError('NOT_FOUND', 'Eintrag nicht gefunden.');
         const s = await this.settings();
         const m = s.mappings.find((x) => x.kind.toLowerCase() === h.kind.toLowerCase());
-        const p = (await this.prisma.personnel.findUnique({ where: { userId: h.userId } })) ?? (await this.prisma.$transaction(async (tx) => (await this.core.ensurePersonnel(h.userId, { team: m?.department ?? null }, tx)).personnel));
+        const p = (await this.prisma.personnel.findFirst({ where: { userId: h.userId } })) ?? (await this.prisma.$transaction(async (tx) => (await this.core.ensurePersonnel(h.userId, { team: m?.department ?? null }, tx)).personnel));
         const r = await this.allocate(actor, { userId: h.userId, personnelId: p.id, display, rangeId: display ? undefined : m?.rangeId ?? undefined, reason: 'Einstellung bestätigt', manual: true });
         await this.prisma.hireQueue.update({ where: { id }, data: { status: 'DONE' } });
         await this.afterAssign(actor, h.userId, r.display, { applicationName: h.kind === 'police' ? 'Polizei' : h.kind });

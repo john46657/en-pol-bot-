@@ -30,8 +30,8 @@ export declare const erlcServerInput: z.ZodObject<{
         blockedCommands?: string[] | undefined;
     }>>;
 }, "strip", z.ZodTypeAny, {
-    active: boolean;
     name: string;
+    active: boolean;
     pollSeconds: number;
     features: ("vehicles" | "commands" | "players" | "staff" | "queue" | "emergencyCalls" | "modCalls" | "joinLogs" | "killLogs" | "commandLogs" | "webhook")[];
     webhookEnabled: boolean;

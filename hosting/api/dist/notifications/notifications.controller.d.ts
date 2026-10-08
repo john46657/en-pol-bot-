@@ -52,9 +52,9 @@ export declare class NotificationsController {
             title: string;
             createdAt: Date;
             userId: string;
+            body: string | null;
             entityType: string | null;
             entityId: string | null;
-            body: string | null;
             readAt: Date | null;
             archivedAt: Date | null;
         }[];

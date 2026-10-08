@@ -81,9 +81,9 @@ export declare class RadioCodesService {
         updatedAt: Date;
         category: string | null;
         description: string | null;
+        position: number;
         guildId: string | null;
         code: string;
-        position: number;
         meaning: string;
     }[]>;
     private load;
@@ -96,9 +96,9 @@ export declare class RadioCodesService {
         updatedAt: Date;
         category: string | null;
         description: string | null;
+        position: number;
         guildId: string | null;
         code: string;
-        position: number;
         meaning: string;
     }>;
     update(actor: Actor, id: string, d: RadioCodeInput): Promise<{
@@ -107,9 +107,9 @@ export declare class RadioCodesService {
         updatedAt: Date;
         category: string | null;
         description: string | null;
+        position: number;
         guildId: string | null;
         code: string;
-        position: number;
         meaning: string;
     }>;
     remove(actor: Actor, id: string): Promise<void>;
@@ -119,9 +119,9 @@ export declare class RadioCodesService {
         updatedAt: Date;
         category: string | null;
         description: string | null;
+        position: number;
         guildId: string | null;
         code: string;
-        position: number;
         meaning: string;
     }[]>;
     /** Standard-Codes für den gewählten Server (bzw. alle Server) einfügen – vorhandene Codes bleiben unverändert. */

@@ -21,12 +21,12 @@ export declare const formFieldSchema: z.ZodEffects<z.ZodObject<{
     multiple: z.ZodDefault<z.ZodBoolean>;
 }, "strip", z.ZodTypeAny, {
     type: "TEXT" | "CHOICE" | "ROLE" | "ROBLOX";
-    key: string;
     options: {
         label: string;
         roleId?: string | undefined;
     }[];
     multiple: boolean;
+    key: string;
     label: string;
     required: boolean;
     minLength: number;
@@ -45,12 +45,12 @@ export declare const formFieldSchema: z.ZodEffects<z.ZodObject<{
     maxLength?: number | undefined;
 }>, {
     type: "TEXT" | "CHOICE" | "ROLE" | "ROBLOX";
-    key: string;
     options: {
         label: string;
         roleId?: string | undefined;
     }[];
     multiple: boolean;
+    key: string;
     label: string;
     required: boolean;
     minLength: number;
@@ -88,12 +88,12 @@ export declare const formSchema: z.ZodEffects<z.ZodArray<z.ZodEffects<z.ZodObjec
     multiple: z.ZodDefault<z.ZodBoolean>;
 }, "strip", z.ZodTypeAny, {
     type: "TEXT" | "CHOICE" | "ROLE" | "ROBLOX";
-    key: string;
     options: {
         label: string;
         roleId?: string | undefined;
     }[];
     multiple: boolean;
+    key: string;
     label: string;
     required: boolean;
     minLength: number;
@@ -112,12 +112,12 @@ export declare const formSchema: z.ZodEffects<z.ZodArray<z.ZodEffects<z.ZodObjec
     maxLength?: number | undefined;
 }>, {
     type: "TEXT" | "CHOICE" | "ROLE" | "ROBLOX";
-    key: string;
     options: {
         label: string;
         roleId?: string | undefined;
     }[];
     multiple: boolean;
+    key: string;
     label: string;
     required: boolean;
     minLength: number;
@@ -136,12 +136,12 @@ export declare const formSchema: z.ZodEffects<z.ZodArray<z.ZodEffects<z.ZodObjec
     maxLength?: number | undefined;
 }>, "many">, {
     type: "TEXT" | "CHOICE" | "ROLE" | "ROBLOX";
-    key: string;
     options: {
         label: string;
         roleId?: string | undefined;
     }[];
     multiple: boolean;
+    key: string;
     label: string;
     required: boolean;
     minLength: number;
@@ -324,12 +324,12 @@ export declare const unitSchema: z.ZodObject<{
         multiple: z.ZodDefault<z.ZodBoolean>;
     }, "strip", z.ZodTypeAny, {
         type: "TEXT" | "CHOICE" | "ROLE" | "ROBLOX";
-        key: string;
         options: {
             label: string;
             roleId?: string | undefined;
         }[];
         multiple: boolean;
+        key: string;
         label: string;
         required: boolean;
         minLength: number;
@@ -348,12 +348,12 @@ export declare const unitSchema: z.ZodObject<{
         maxLength?: number | undefined;
     }>, {
         type: "TEXT" | "CHOICE" | "ROLE" | "ROBLOX";
-        key: string;
         options: {
             label: string;
             roleId?: string | undefined;
         }[];
         multiple: boolean;
+        key: string;
         label: string;
         required: boolean;
         minLength: number;
@@ -551,8 +551,8 @@ export declare const unitSchema: z.ZodObject<{
 }, "strip", z.ZodTypeAny, {
     description: string;
     name: string;
-    key: string;
     questions: FormField[];
+    key: string;
     settings: {
         cooldownMinutes: number;
         messages: {
@@ -584,13 +584,12 @@ export declare const unitSchema: z.ZodObject<{
     };
     enabled: boolean;
     pingRoleIds: string[];
-    roleId?: string | undefined;
     channelId?: string | undefined;
+    roleId?: string | undefined;
     acceptedChannelId?: string | undefined;
     deniedChannelId?: string | undefined;
 }, {
     name: string;
-    key: string;
     questions: (string | {
         key: string;
         label: string;
@@ -604,9 +603,10 @@ export declare const unitSchema: z.ZodObject<{
         minLength?: number | undefined;
         maxLength?: number | undefined;
     })[];
+    key: string;
     description?: string | undefined;
-    roleId?: string | undefined;
     channelId?: string | undefined;
+    roleId?: string | undefined;
     settings?: {
         cooldownMinutes?: number | undefined;
         messages?: {
@@ -894,12 +894,12 @@ export declare const configSchema: z.ZodObject<{
             multiple: z.ZodDefault<z.ZodBoolean>;
         }, "strip", z.ZodTypeAny, {
             type: "TEXT" | "CHOICE" | "ROLE" | "ROBLOX";
-            key: string;
             options: {
                 label: string;
                 roleId?: string | undefined;
             }[];
             multiple: boolean;
+            key: string;
             label: string;
             required: boolean;
             minLength: number;
@@ -918,12 +918,12 @@ export declare const configSchema: z.ZodObject<{
             maxLength?: number | undefined;
         }>, {
             type: "TEXT" | "CHOICE" | "ROLE" | "ROBLOX";
-            key: string;
             options: {
                 label: string;
                 roleId?: string | undefined;
             }[];
             multiple: boolean;
+            key: string;
             label: string;
             required: boolean;
             minLength: number;
@@ -1121,8 +1121,8 @@ export declare const configSchema: z.ZodObject<{
     }, "strip", z.ZodTypeAny, {
         description: string;
         name: string;
-        key: string;
         questions: FormField[];
+        key: string;
         settings: {
             cooldownMinutes: number;
             messages: {
@@ -1154,13 +1154,12 @@ export declare const configSchema: z.ZodObject<{
         };
         enabled: boolean;
         pingRoleIds: string[];
-        roleId?: string | undefined;
         channelId?: string | undefined;
+        roleId?: string | undefined;
         acceptedChannelId?: string | undefined;
         deniedChannelId?: string | undefined;
     }, {
         name: string;
-        key: string;
         questions: (string | {
             key: string;
             label: string;
@@ -1174,9 +1173,10 @@ export declare const configSchema: z.ZodObject<{
             minLength?: number | undefined;
             maxLength?: number | undefined;
         })[];
+        key: string;
         description?: string | undefined;
-        roleId?: string | undefined;
         channelId?: string | undefined;
+        roleId?: string | undefined;
         settings?: {
             cooldownMinutes?: number | undefined;
             messages?: {
@@ -1213,8 +1213,8 @@ export declare const configSchema: z.ZodObject<{
     }>, "many">, {
         description: string;
         name: string;
-        key: string;
         questions: FormField[];
+        key: string;
         settings: {
             cooldownMinutes: number;
             messages: {
@@ -1246,13 +1246,12 @@ export declare const configSchema: z.ZodObject<{
         };
         enabled: boolean;
         pingRoleIds: string[];
-        roleId?: string | undefined;
         channelId?: string | undefined;
+        roleId?: string | undefined;
         acceptedChannelId?: string | undefined;
         deniedChannelId?: string | undefined;
     }[], {
         name: string;
-        key: string;
         questions: (string | {
             key: string;
             label: string;
@@ -1266,9 +1265,10 @@ export declare const configSchema: z.ZodObject<{
             minLength?: number | undefined;
             maxLength?: number | undefined;
         })[];
+        key: string;
         description?: string | undefined;
-        roleId?: string | undefined;
         channelId?: string | undefined;
+        roleId?: string | undefined;
         settings?: {
             cooldownMinutes?: number | undefined;
             messages?: {
@@ -1536,8 +1536,8 @@ export declare const configSchema: z.ZodObject<{
     units: {
         description: string;
         name: string;
-        key: string;
         questions: FormField[];
+        key: string;
         settings: {
             cooldownMinutes: number;
             messages: {
@@ -1569,8 +1569,8 @@ export declare const configSchema: z.ZodObject<{
         };
         enabled: boolean;
         pingRoleIds: string[];
-        roleId?: string | undefined;
         channelId?: string | undefined;
+        roleId?: string | undefined;
         acceptedChannelId?: string | undefined;
         deniedChannelId?: string | undefined;
     }[];
@@ -1617,7 +1617,6 @@ export declare const configSchema: z.ZodObject<{
 }, {
     units: {
         name: string;
-        key: string;
         questions: (string | {
             key: string;
             label: string;
@@ -1631,9 +1630,10 @@ export declare const configSchema: z.ZodObject<{
             minLength?: number | undefined;
             maxLength?: number | undefined;
         })[];
+        key: string;
         description?: string | undefined;
-        roleId?: string | undefined;
         channelId?: string | undefined;
+        roleId?: string | undefined;
         settings?: {
             cooldownMinutes?: number | undefined;
             messages?: {
@@ -1735,12 +1735,12 @@ export declare const saveSchema: z.ZodObject<{
             multiple: z.ZodDefault<z.ZodBoolean>;
         }, "strip", z.ZodTypeAny, {
             type: "TEXT" | "CHOICE" | "ROLE" | "ROBLOX";
-            key: string;
             options: {
                 label: string;
                 roleId?: string | undefined;
             }[];
             multiple: boolean;
+            key: string;
             label: string;
             required: boolean;
             minLength: number;
@@ -1759,12 +1759,12 @@ export declare const saveSchema: z.ZodObject<{
             maxLength?: number | undefined;
         }>, {
             type: "TEXT" | "CHOICE" | "ROLE" | "ROBLOX";
-            key: string;
             options: {
                 label: string;
                 roleId?: string | undefined;
             }[];
             multiple: boolean;
+            key: string;
             label: string;
             required: boolean;
             minLength: number;
@@ -1962,8 +1962,8 @@ export declare const saveSchema: z.ZodObject<{
     }, "strip", z.ZodTypeAny, {
         description: string;
         name: string;
-        key: string;
         questions: FormField[];
+        key: string;
         settings: {
             cooldownMinutes: number;
             messages: {
@@ -1995,13 +1995,12 @@ export declare const saveSchema: z.ZodObject<{
         };
         enabled: boolean;
         pingRoleIds: string[];
-        roleId?: string | undefined;
         channelId?: string | undefined;
+        roleId?: string | undefined;
         acceptedChannelId?: string | undefined;
         deniedChannelId?: string | undefined;
     }, {
         name: string;
-        key: string;
         questions: (string | {
             key: string;
             label: string;
@@ -2015,9 +2014,10 @@ export declare const saveSchema: z.ZodObject<{
             minLength?: number | undefined;
             maxLength?: number | undefined;
         })[];
+        key: string;
         description?: string | undefined;
-        roleId?: string | undefined;
         channelId?: string | undefined;
+        roleId?: string | undefined;
         settings?: {
             cooldownMinutes?: number | undefined;
             messages?: {
@@ -2054,8 +2054,8 @@ export declare const saveSchema: z.ZodObject<{
     }>, "many">, {
         description: string;
         name: string;
-        key: string;
         questions: FormField[];
+        key: string;
         settings: {
             cooldownMinutes: number;
             messages: {
@@ -2087,13 +2087,12 @@ export declare const saveSchema: z.ZodObject<{
         };
         enabled: boolean;
         pingRoleIds: string[];
-        roleId?: string | undefined;
         channelId?: string | undefined;
+        roleId?: string | undefined;
         acceptedChannelId?: string | undefined;
         deniedChannelId?: string | undefined;
     }[], {
         name: string;
-        key: string;
         questions: (string | {
             key: string;
             label: string;
@@ -2107,9 +2106,10 @@ export declare const saveSchema: z.ZodObject<{
             minLength?: number | undefined;
             maxLength?: number | undefined;
         })[];
+        key: string;
         description?: string | undefined;
-        roleId?: string | undefined;
         channelId?: string | undefined;
+        roleId?: string | undefined;
         settings?: {
             cooldownMinutes?: number | undefined;
             messages?: {
@@ -2393,12 +2393,12 @@ export declare const saveSchema: z.ZodObject<{
         multiple: z.ZodDefault<z.ZodBoolean>;
     }, "strip", z.ZodTypeAny, {
         type: "TEXT" | "CHOICE" | "ROLE" | "ROBLOX";
-        key: string;
         options: {
             label: string;
             roleId?: string | undefined;
         }[];
         multiple: boolean;
+        key: string;
         label: string;
         required: boolean;
         minLength: number;
@@ -2417,12 +2417,12 @@ export declare const saveSchema: z.ZodObject<{
         maxLength?: number | undefined;
     }>, {
         type: "TEXT" | "CHOICE" | "ROLE" | "ROBLOX";
-        key: string;
         options: {
             label: string;
             roleId?: string | undefined;
         }[];
         multiple: boolean;
+        key: string;
         label: string;
         required: boolean;
         minLength: number;
@@ -2441,12 +2441,12 @@ export declare const saveSchema: z.ZodObject<{
         maxLength?: number | undefined;
     }>, "many">, {
         type: "TEXT" | "CHOICE" | "ROLE" | "ROBLOX";
-        key: string;
         options: {
             label: string;
             roleId?: string | undefined;
         }[];
         multiple: boolean;
+        key: string;
         label: string;
         required: boolean;
         minLength: number;
@@ -2469,8 +2469,8 @@ export declare const saveSchema: z.ZodObject<{
     units: {
         description: string;
         name: string;
-        key: string;
         questions: FormField[];
+        key: string;
         settings: {
             cooldownMinutes: number;
             messages: {
@@ -2502,8 +2502,8 @@ export declare const saveSchema: z.ZodObject<{
         };
         enabled: boolean;
         pingRoleIds: string[];
-        roleId?: string | undefined;
         channelId?: string | undefined;
+        roleId?: string | undefined;
         acceptedChannelId?: string | undefined;
         deniedChannelId?: string | undefined;
     }[];
@@ -2549,12 +2549,12 @@ export declare const saveSchema: z.ZodObject<{
     intro: string;
     policeForm?: {
         type: "TEXT" | "CHOICE" | "ROLE" | "ROBLOX";
-        key: string;
         options: {
             label: string;
             roleId?: string | undefined;
         }[];
         multiple: boolean;
+        key: string;
         label: string;
         required: boolean;
         minLength: number;
@@ -2563,7 +2563,6 @@ export declare const saveSchema: z.ZodObject<{
 }, {
     units: {
         name: string;
-        key: string;
         questions: (string | {
             key: string;
             label: string;
@@ -2577,9 +2576,10 @@ export declare const saveSchema: z.ZodObject<{
             minLength?: number | undefined;
             maxLength?: number | undefined;
         })[];
+        key: string;
         description?: string | undefined;
-        roleId?: string | undefined;
         channelId?: string | undefined;
+        roleId?: string | undefined;
         settings?: {
             cooldownMinutes?: number | undefined;
             messages?: {

@@ -102,7 +102,10 @@ describe('bot service data', () => {
     const adm = (await login(app, 'f_admin')).agent;
     expect((await adm.put('/api/v1/admin/settings/team.rankOrder').send({ value: ['Chief', 'Officer'] })).status).toBe(200);
     const off = await prisma.user.findUniqueOrThrow({ where: { username: 'f_off' } });
-    await adm.post('/api/v1/personnel').send({ userId: off.id, rank: 'Officer', callsign: 'f-1', team: 'Patrol' });
+    // Personal ist je Discord-Server getrennt; die Teamliste zeigt das Personal des Heimat-Servers der Leitstelle
+    const HOME = '740000000000000001';
+    expect((await adm.put('/api/v1/cad/config').send({ homeGuildId: HOME })).status).toBe(200);
+    expect((await adm.post('/api/v1/personnel').set('x-guild-id', HOME).send({ userId: off.id, rank: 'Officer', callsign: 'f-1', team: 'Patrol' })).status).toBe(201);
     const t = (await http().get('/api/v1/bot/team').set(bot())).body;
     expect(t.rankOrder).toEqual(['Chief', 'Officer']);
     const m = t.members.find((x: { callsign: string }) => x.callsign === 'F-1');

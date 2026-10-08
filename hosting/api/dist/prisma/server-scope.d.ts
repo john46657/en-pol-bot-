@@ -4,6 +4,8 @@ import { Prisma, type PrismaClient } from '@prisma/client';
  * Die Leitstelle (CAD) bleibt bewusst gemeinsam und steht deshalb nicht hier.
  */
 export declare const SERVER_SCOPED_MODELS: Set<string>;
+/** Einträge ohne eigene Spalte, die zum Bereich ihrer Personalakte gehören (Modell → Relation zur Akte). */
+export declare const SERVER_SCOPED_CHILDREN: Record<string, string>;
 /**
  * Prisma-Erweiterung: Für die Modelle oben sieht und ändert jede Anfrage nur Daten des gewählten Discord-Servers
  * (Header `x-guild-id` bzw. Discord-Server der Bot-Interaktion). Ohne Server (Hintergrund-Aufgaben, „Alle Server“) gibt es keinen Filter.

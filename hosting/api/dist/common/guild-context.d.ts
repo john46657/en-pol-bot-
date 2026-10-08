@@ -6,7 +6,7 @@ export declare class GuildContextMiddleware implements NestMiddleware {
     use(req: Request, _res: Response, next: NextFunction): void;
 }
 /** Zentrale Einstellungen, die je Server überschrieben werden können (`<key>@<guildId>`, sonst gilt der gemeinsame Wert). */
-export declare const SERVER_SCOPED_SETTINGS: readonly ["team.structure", "team.rankOrder", "dashboard.defaultLayout", "theme.accent", "theme.customAccents", "org.name", "teamchance"];
+export declare const SERVER_SCOPED_SETTINGS: readonly ["team.structure", "team.rankOrder", "dashboard.defaultLayout", "theme.accent", "theme.customAccents", "org.name", "teamchance", "hr.config", "dienstnummer.settings"];
 export declare const scopedKey: (key: string, guildId: string | null) => string;
 export declare function setServerLinkResolvers(settings: (guildId: string) => string, space: (guildId: string) => string | null): void;
 /** Server, dessen Einstellungen gelten: in einer Gruppe mit „Einstellungen teilen“ der Haupt-Server der Gruppe, sonst der Server selbst. */
@@ -21,4 +21,17 @@ export declare const recordWhere: (guildId?: string | null | undefined) => {
     serverId?: undefined;
 } | {
     serverId: string | null;
+};
+/**
+ * Personalakte des gewählten Servers in verschachtelten Abfragen (dort greift die Server-Trennung nicht):
+ * `user: { select: { personnel: personnelOfServer({ rank: true }) } }` → `user.personnel[0]`.
+ */
+export declare const personnelOfServer: <S extends object>(select: S) => {
+    where: {
+        serverId?: undefined;
+    } | {
+        serverId: string | null;
+    };
+    take: number;
+    select: S;
 };

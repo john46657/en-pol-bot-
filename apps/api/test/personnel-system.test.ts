@@ -124,7 +124,7 @@ describe('Dienstnummern', () => {
     const ch = await admin.post('/api/v1/dienstnummern/change').send({ personnelId: p.id, display: '1007', reason: 'Wunschnummer' });
     expect(ch.status).toBe(200);
     expect(ch.body).toMatchObject({ display: '1007', old: '1000' });
-    expect((await prisma.serviceNumber.findUniqueOrThrow({ where: { display: '1000' } })).status).toBe('FORMER');
+    expect((await prisma.serviceNumber.findFirstOrThrow({ where: { display: '1000' } })).status).toBe('FORMER');
     // vergebene Nummer kann nicht manuell an jemand anderen gehen
     const other = await prisma.personnel.findFirstOrThrow({ where: { serviceNumber: '1001' } });
     expect((await admin.post('/api/v1/dienstnummern/change').send({ personnelId: other.id, display: '1007', reason: 'test' })).status).toBe(409);
@@ -142,7 +142,7 @@ describe('Dienstnummern', () => {
     const r = await admin.post(`/api/v1/applications/${a.id}/discord-decision`).send({ status: 'ACCEPTED' });
     expect(r.status).toBe(200);
     const link = await prisma.discordLink.findUniqueOrThrow({ where: { discordId: '490000000000000001' } });
-    const p = await prisma.personnel.findUniqueOrThrow({ where: { userId: link.userId } });
+    const p = await prisma.personnel.findFirstOrThrow({ where: { userId: link.userId } });
     expect(p.rank).toBe('T-Meister');
     expect(p.serviceNumber).toMatch(/^10\d\d$/);
     const tasks = (await prisma.discordOutbox.findMany({ where: { type: { in: ['bot.dm', 'bot.nickname'] }, createdAt: { gte: started } } })).filter((t) => (t.payload as { discordId?: string }).discordId === '490000000000000001');
@@ -156,7 +156,7 @@ describe('Dienstnummern', () => {
     const a = await prisma.application.create({ data: { number: `A-T2-${Date.now()}`, answers: {}, robloxUsername: 'Zweit', discordId: '490000000000000002', discordName: 'hr_zweit', source: 'DISCORD' } });
     expect((await admin.post(`/api/v1/applications/${a.id}/discord-decision`).send({ status: 'ACCEPTED' })).status).toBe(200);
     const link = await prisma.discordLink.findUniqueOrThrow({ where: { discordId: '490000000000000002' } });
-    expect(await prisma.personnel.findUnique({ where: { userId: link.userId } })).not.toBeNull();
+    expect(await prisma.personnel.findFirst({ where: { userId: link.userId } })).not.toBeNull();
     // ältere Annahme ohne Akte (vor der Automatik) → nachträglich übernehmen
     await prisma.application.create({ data: { number: `A-T3-${Date.now()}`, answers: {}, robloxUsername: 'Alt', discordId: '490000000000000003', discordName: 'hr_alt', source: 'DISCORD', status: 'ACCEPTED' } });
     expect((await member.post('/api/v1/dienstnummern/from-applications')).status).toBe(403);
@@ -164,7 +164,7 @@ describe('Dienstnummern', () => {
     expect(r.status).toBe(200);
     expect(r.body.created).toBeGreaterThanOrEqual(1);
     const old = await prisma.discordLink.findUniqueOrThrow({ where: { discordId: '490000000000000003' } });
-    expect(await prisma.personnel.findUnique({ where: { userId: old.userId } })).not.toBeNull();
+    expect(await prisma.personnel.findFirst({ where: { userId: old.userId } })).not.toBeNull();
     expect((await admin.post('/api/v1/dienstnummern/from-applications')).body.created).toBe(0);
   });
 });

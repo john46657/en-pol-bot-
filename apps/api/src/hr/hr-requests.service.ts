@@ -73,7 +73,7 @@ export class HrRequestsService {
   private async mayApprove(userId: string, r: HrRequest, cfg: HrConfig) {
     const kind = r.kind as Kind;
     if (!(await this.perms.has(userId, `${P(kind)}.approve`))) return { ok: false, why: 'Recht fehlt' };
-    const me = await this.prisma.personnel.findUnique({ where: { userId } });
+    const me = await this.prisma.personnel.findFirst({ where: { userId } });
     if (me?.id === r.personnelId) return { ok: false, why: 'Eigener Antrag' };
     const approvals = r.approvals as unknown as Approval[];
     if (approvals.some((a) => a.userId === userId && a.decision === 'APPROVE')) return { ok: false, why: 'Schon genehmigt' };

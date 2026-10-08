@@ -23,6 +23,8 @@ const applications_service_1 = require("../applications/applications.service");
 const danger_service_1 = require("../danger/danger.service");
 const duty_service_1 = require("../duty/duty.service");
 const prisma_service_1 = require("../prisma/prisma.service");
+const server_links_service_1 = require("../server-links/server-links.service");
+const guild_context_1 = require("../common/guild-context");
 const decorators_1 = require("../authz/decorators");
 const zod_pipe_1 = require("../common/zod.pipe");
 const sf = zod_1.z.string().regex(/^\d{15,25}$/);
@@ -124,13 +126,15 @@ let BotController = class BotController {
     danger;
     applications;
     prisma;
-    constructor(d, live, duty, danger, applications, prisma) {
+    links;
+    constructor(d, live, duty, danger, applications, prisma, links) {
         this.d = d;
         this.live = live;
         this.duty = duty;
         this.danger = danger;
         this.applications = applications;
         this.prisma = prisma;
+        this.links = links;
     }
     redeem(b) { return this.d.redeem(b.code, b.discordId); }
     config() { return this.d.channels(); }
@@ -141,8 +145,10 @@ let BotController = class BotController {
     ack(id, b) { return this.d.ack(id, b.ok, b.error); }
     /** Teamübersicht für die selbst aktualisierende Teamliste in Discord (nur Anzeigefelder). */
     async team() {
-        const rows = await this.duty.overview();
-        const order = ((await this.prisma.systemSetting.findUnique({ where: { key: 'team.rankOrder' } }))?.value ?? []);
+        // Eine Teamliste für alle: Personal des Heimat-Servers (Personal ist je Discord-Server getrennt)
+        const home = await this.links.homeGuild();
+        const rows = await (0, guild_context_1.runInGuild)(home, () => this.duty.overview());
+        const order = ((home ? await this.prisma.systemSetting.findUnique({ where: { key: (0, guild_context_1.scopedKey)('team.rankOrder', home) } }) : null) ?? (await this.prisma.systemSetting.findUnique({ where: { key: 'team.rankOrder' } })))?.value ?? [];
         return { rankOrder: order, members: rows.map((r) => ({ name: r.name, rank: r.rank, callsign: r.callsign, team: r.team, dutyStatus: r.dutyStatus, unit: r.unit?.callsign ?? null })) };
     }
     /** Teammitglieder (Avatar, Name, Online-Status, Rollen) – der Bot meldet mindestens alle 60 Sekunden. */
@@ -287,6 +293,6 @@ __decorate([
 exports.BotController = BotController = __decorate([
     (0, swagger_1.ApiTags)('bot'),
     (0, common_1.Controller)('bot'),
-    __metadata("design:paramtypes", [discord_service_1.DiscordService, discord_live_service_1.DiscordLiveService, duty_service_1.DutyService, danger_service_1.DangerService, applications_service_1.ApplicationsService, prisma_service_1.PrismaService])
+    __metadata("design:paramtypes", [discord_service_1.DiscordService, discord_live_service_1.DiscordLiveService, duty_service_1.DutyService, danger_service_1.DangerService, applications_service_1.ApplicationsService, prisma_service_1.PrismaService, server_links_service_1.ServerLinksService])
 ], BotController);
 //# sourceMappingURL=discord.controller.js.map

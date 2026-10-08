@@ -144,7 +144,7 @@ let HrTrainingSessionsService = class HrTrainingSessionsService {
         const ranks = rank ? await this.prisma.hrRank.findMany() : [];
         for (const discordId of passed) {
             const link = await this.prisma.discordLink.findUnique({ where: { discordId } });
-            const p = link ? await this.prisma.personnel.findUnique({ where: { userId: link.userId } }) : null;
+            const p = link ? await this.prisma.personnel.findFirst({ where: { userId: link.userId } }) : null;
             if (!p) {
                 results.push({ discordId, promoted: false, problem: 'keine Personalakte' });
                 continue;

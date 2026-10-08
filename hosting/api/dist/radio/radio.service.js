@@ -14,6 +14,7 @@ const common_1 = require("@nestjs/common");
 const prisma_service_1 = require("../prisma/prisma.service");
 const audit_service_1 = require("../audit/audit.service");
 const discord_service_1 = require("../discord/discord.service");
+const guild_context_1 = require("../common/guild-context");
 const errors_1 = require("../common/errors");
 /** Funk-Freigabe: nur freigegebene Mitglieder gelten als funkberechtigt. Identifikation per Benutzer-ID oder verknüpfter Discord-ID. */
 let RadioService = class RadioService {
@@ -33,8 +34,8 @@ let RadioService = class RadioService {
     }
     async list() {
         const rows = await this.prisma.radioWhitelist.findMany({ orderBy: { createdAt: 'asc' } });
-        const users = await this.prisma.user.findMany({ where: { id: { in: rows.map((r) => r.userId) } }, select: { id: true, displayName: true, personnel: { select: { callsign: true, rank: true } } } });
-        return rows.map((r) => { const u = users.find((x) => x.id === r.userId); return { userId: r.userId, displayName: u?.displayName ?? '—', callsign: u?.personnel?.callsign ?? null, rank: u?.personnel?.rank ?? null, since: r.createdAt }; });
+        const users = await this.prisma.user.findMany({ where: { id: { in: rows.map((r) => r.userId) } }, select: { id: true, displayName: true, personnel: (0, guild_context_1.personnelOfServer)({ callsign: true, rank: true }) } });
+        return rows.map((r) => { const u = users.find((x) => x.id === r.userId); return { userId: r.userId, displayName: u?.displayName ?? '—', callsign: u?.personnel[0]?.callsign ?? null, rank: u?.personnel[0]?.rank ?? null, since: r.createdAt }; });
     }
     async check(t) {
         const user = await this.resolve(t);

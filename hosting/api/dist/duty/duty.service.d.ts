@@ -57,7 +57,7 @@ export declare class DutyService {
             personnel: {
                 callsign: string | null;
                 rank: string | null;
-            } | null;
+            }[];
             id: string;
             displayName: string;
         };

@@ -6,6 +6,7 @@ import { AuditService, type Actor } from '../audit/audit.service';
 import { DiscordService } from '../discord/discord.service';
 import { DiscordLiveService } from '../discord/discord-live.service';
 import { AppError } from '../common/errors';
+import { currentGuild, scopedKey } from '../common/guild-context';
 
 const CONFIG_KEY = 'hr.config';
 const norm = (s: string | null | undefined) => (s ?? '').trim().toLowerCase();
@@ -19,8 +20,20 @@ export class HrCoreService {
   constructor(readonly prisma: PrismaService, readonly audit: AuditService, readonly discord: DiscordService, private readonly live: DiscordLiveService) {}
 
   // ---------------- Einstellungen ----------------
+  /** Einstellung des gewählten Discord-Servers, sonst die gemeinsame (Personal ist je Server getrennt). */
+  async setting(key: string, tx: Tx | PrismaService = this.prisma) {
+    const g = currentGuild();
+    return (g ? await tx.systemSetting.findUnique({ where: { key: scopedKey(key, g) } }) : null) ?? tx.systemSetting.findUnique({ where: { key } });
+  }
+  /** Schlüssel, unter dem der gewählte Server speichert (ohne Server: der gemeinsame). */
+  settingKey(key: string) { return scopedKey(key, currentGuild()); }
+  async saveSetting(tx: Tx, key: string, value: Prisma.InputJsonValue) {
+    const k = this.settingKey(key);
+    await tx.systemSetting.upsert({ where: { key: k }, create: { key: k, value }, update: { value } });
+  }
+
   async config(): Promise<HrConfig> {
-    return withHrDefaults((await this.prisma.systemSetting.findUnique({ where: { key: CONFIG_KEY } }))?.value);
+    return withHrDefaults((await this.setting(CONFIG_KEY))?.value);
   }
   async saveConfig(actor: Actor, input: HrConfig) {
     const before = await this.config();
@@ -30,19 +43,19 @@ export class HrCoreService {
     const names = c.departments.map((d) => norm(d.name));
     if (new Set(names).size !== names.length) throw new AppError('VALIDATION_FAILED', 'Abteilungsnamen müssen eindeutig sein.');
     await this.prisma.$transaction(async (tx) => {
-      await tx.systemSetting.upsert({ where: { key: CONFIG_KEY }, create: { key: CONFIG_KEY, value: c as unknown as Prisma.InputJsonValue }, update: { value: c as unknown as Prisma.InputJsonValue } });
+      await this.saveSetting(tx, CONFIG_KEY, c as unknown as Prisma.InputJsonValue);
       // umbenannte Abteilungen in den Personalakten nachziehen (gleiche ID, anderer Name)
       for (const d of c.departments) {
         const old = before.departments.find((x) => x.id === d.id);
         if (old && old.name !== d.name) await tx.personnel.updateMany({ where: { team: old.name }, data: { team: d.name } });
       }
       // Teamliste/Teamstruktur kennt dieselben Abteilungen
-      const st = await tx.systemSetting.findUnique({ where: { key: 'team.structure' } });
+      const st = await this.setting('team.structure', tx);
       const s = (st?.value ?? {}) as { teams?: string[]; offices?: string[] };
       const teams = [...new Set([...c.departments.map((d) => d.name), ...(s.teams ?? []).filter((t) => !before.departments.some((d) => d.name === t) || c.departments.some((d) => d.name === t))])];
       const value = { ...s, teams } as Prisma.InputJsonValue;
-      await tx.systemSetting.upsert({ where: { key: 'team.structure' }, create: { key: 'team.structure', value }, update: { value } });
-      await this.audit.record(actor, { action: 'hr.config.update', module: 'personnel', entityType: 'SystemSetting', entityId: CONFIG_KEY, before, after: c }, tx);
+      await this.saveSetting(tx, 'team.structure', value);
+      await this.audit.record(actor, { action: 'hr.config.update', module: 'personnel', entityType: 'SystemSetting', entityId: this.settingKey(CONFIG_KEY), before, after: c }, tx);
     });
     return this.config();
   }
@@ -56,8 +69,7 @@ export class HrCoreService {
   /** Rangreihenfolge auch für Teamliste/Embeds (team.rankOrder). */
   private async syncRankOrder(tx: Tx) {
     const names = (await tx.hrRank.findMany({ where: { active: true }, orderBy: { position: 'asc' }, select: { name: true } })).map((r) => r.name);
-    const value = names as unknown as Prisma.InputJsonValue;
-    await tx.systemSetting.upsert({ where: { key: 'team.rankOrder' }, create: { key: 'team.rankOrder', value }, update: { value } });
+    await this.saveSetting(tx, 'team.rankOrder', names as unknown as Prisma.InputJsonValue);
   }
   async saveRank(actor: Actor, d: RankInput, id?: string) {
     return this.prisma.$transaction(async (tx) => {
@@ -202,7 +214,7 @@ export class HrCoreService {
 
   /** Personalakte zu einem Benutzer (anlegen, falls gewünscht). */
   async ensurePersonnel(userId: string, d: { rank?: string | null; team?: string | null }, tx: Tx) {
-    const p = await tx.personnel.findUnique({ where: { userId } });
+    const p = await tx.personnel.findFirst({ where: { userId } });
     if (p) return { personnel: p, created: false };
     return { personnel: await tx.personnel.create({ data: { userId, rank: d.rank ?? null, team: d.team ?? null } }), created: true };
   }

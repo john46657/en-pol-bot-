@@ -17,6 +17,7 @@ export declare class PersonnelService {
                 robloxUserId: string | null;
             };
         } & {
+            serverId: string | null;
             serviceNumber: string | null;
             id: string;
             updatedAt: Date;
@@ -49,16 +50,16 @@ export declare class PersonnelService {
                 id: string;
                 title: string;
                 description: string | null;
-                passScore: number;
                 instructorId: string | null;
+                passScore: number;
             };
             results: {
                 id: string;
                 createdAt: Date;
-                enrollmentId: string;
-                score: number;
                 passed: boolean;
+                score: number;
                 gradedById: string | null;
+                enrollmentId: string;
             }[];
         } & {
             id: string;
@@ -74,14 +75,15 @@ export declare class PersonnelService {
             updatedAt: Date;
             createdById: string;
             expiresAt: Date | null;
+            attachments: string[];
             personnelId: string;
             summary: string;
             details: string | null;
             data: import("@prisma/client/runtime/library").JsonValue | null;
-            attachments: string[];
             deletedAt: Date | null;
         }[];
     } & {
+        serverId: string | null;
         serviceNumber: string | null;
         id: string;
         updatedAt: Date;
@@ -105,6 +107,7 @@ export declare class PersonnelService {
         callsign?: string;
         qualifications?: string[];
     }): Promise<{
+        serverId: string | null;
         serviceNumber: string | null;
         id: string;
         updatedAt: Date;
@@ -127,6 +130,7 @@ export declare class PersonnelService {
         employmentStatus?: string;
         qualifications?: string[];
     }): Promise<{
+        serverId: string | null;
         serviceNumber: string | null;
         id: string;
         updatedAt: Date;
@@ -142,6 +146,7 @@ export declare class PersonnelService {
         customChecks: import("@prisma/client/runtime/library").JsonValue;
     }>;
     promote(actor: Actor, id: string, rank: string, reason: string): Promise<{
+        serverId: string | null;
         serviceNumber: string | null;
         id: string;
         updatedAt: Date;
@@ -168,11 +173,11 @@ export declare class PersonnelService {
         updatedAt: Date;
         createdById: string;
         expiresAt: Date | null;
+        attachments: string[];
         personnelId: string;
         summary: string;
         details: string | null;
         data: import("@prisma/client/runtime/library").JsonValue | null;
-        attachments: string[];
         deletedAt: Date | null;
     }>;
 }

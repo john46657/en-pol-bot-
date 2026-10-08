@@ -47,20 +47,20 @@ declare const createP: z.ZodObject<{
     status?: string | undefined;
     userId?: string | undefined;
     callsign?: string | null | undefined;
-    name?: string | undefined;
     rank?: string | null | undefined;
     joinDate?: string | undefined;
-    discordId?: string | undefined;
+    name?: string | undefined;
     department?: string | null | undefined;
+    discordId?: string | undefined;
 }, {
     status?: string | undefined;
     userId?: string | undefined;
     callsign?: string | null | undefined;
-    name?: string | undefined;
     rank?: string | null | undefined;
     joinDate?: string | undefined;
-    discordId?: string | undefined;
+    name?: string | undefined;
     department?: string | null | undefined;
+    discordId?: string | undefined;
 }>;
 declare const updateP: z.ZodObject<{
     department: z.ZodOptional<z.ZodNullable<z.ZodString>>;
@@ -101,8 +101,8 @@ declare const record: z.ZodObject<{
     summary: string;
     category?: string | undefined;
     expiresAt?: string | null | undefined;
-    details?: string | undefined;
     attachments?: string[] | undefined;
+    details?: string | undefined;
     severity?: string | undefined;
     awardId?: string | undefined;
 }, {
@@ -110,8 +110,8 @@ declare const record: z.ZodObject<{
     summary: string;
     category?: string | undefined;
     expiresAt?: string | null | undefined;
-    details?: string | undefined;
     attachments?: string[] | undefined;
+    details?: string | undefined;
     severity?: string | undefined;
     awardId?: string | undefined;
 }>;
@@ -401,6 +401,7 @@ export declare class HrController {
         }[];
     }>;
     create(a: Actor, b: z.infer<typeof createP>): Promise<{
+        serverId: string | null;
         serviceNumber: string | null;
         id: string;
         updatedAt: Date;
@@ -454,11 +455,11 @@ export declare class HrController {
             updatedAt: Date;
             createdById: string;
             expiresAt: Date | null;
+            attachments: string[];
             personnelId: string;
             summary: string;
             details: string | null;
             data: import("@prisma/client/runtime/library").JsonValue | null;
-            attachments: string[];
             deletedAt: Date | null;
         }[] | null;
         transfers: {
@@ -470,11 +471,11 @@ export declare class HrController {
             updatedAt: Date;
             createdById: string;
             expiresAt: Date | null;
+            attachments: string[];
             personnelId: string;
             summary: string;
             details: string | null;
             data: import("@prisma/client/runtime/library").JsonValue | null;
-            attachments: string[];
             deletedAt: Date | null;
         }[] | null;
         requests: {
@@ -487,15 +488,15 @@ export declare class HrController {
             updatedAt: Date;
             version: number;
             reason: string;
-            personnelId: string;
             attachments: string[];
-            decidedAt: Date | null;
+            personnelId: string;
             kind: string;
             fromValue: string | null;
             toValue: string;
             achievements: string | null;
             requesterId: string;
             approvals: import("@prisma/client/runtime/library").JsonValue;
+            decidedAt: Date | null;
             executedById: string | null;
             executedAt: Date | null;
         }[];
@@ -508,11 +509,11 @@ export declare class HrController {
             updatedAt: Date;
             createdById: string;
             expiresAt: Date | null;
+            attachments: string[];
             personnelId: string;
             summary: string;
             details: string | null;
             data: import("@prisma/client/runtime/library").JsonValue | null;
-            attachments: string[];
             deletedAt: Date | null;
         }[] | null;
         warnings: {
@@ -525,11 +526,11 @@ export declare class HrController {
             updatedAt: Date;
             createdById: string;
             expiresAt: Date | null;
+            attachments: string[];
             personnelId: string;
             summary: string;
             details: string | null;
             data: import("@prisma/client/runtime/library").JsonValue | null;
-            attachments: string[];
             deletedAt: Date | null;
         }[] | null;
         notes: {
@@ -541,11 +542,11 @@ export declare class HrController {
             updatedAt: Date;
             createdById: string;
             expiresAt: Date | null;
+            attachments: string[];
             personnelId: string;
             summary: string;
             details: string | null;
             data: import("@prisma/client/runtime/library").JsonValue | null;
-            attachments: string[];
             deletedAt: Date | null;
         }[] | null;
         recommendations: {
@@ -557,11 +558,11 @@ export declare class HrController {
             updatedAt: Date;
             createdById: string;
             expiresAt: Date | null;
+            attachments: string[];
             personnelId: string;
             summary: string;
             details: string | null;
             data: import("@prisma/client/runtime/library").JsonValue | null;
-            attachments: string[];
             deletedAt: Date | null;
         }[];
         trainings: ({
@@ -577,11 +578,11 @@ export declare class HrController {
             updatedAt: Date;
             expiresAt: Date | null;
             startedAt: Date | null;
-            personnelId: string;
             trainingId: string;
+            personnelId: string;
+            note: string | null;
             progress: number;
             examinerId: string | null;
-            note: string | null;
             completedAt: Date | null;
             certificateNo: string | null;
         })[] | null;
@@ -596,13 +597,13 @@ export declare class HrController {
             id: string;
             status: string;
             startedAt: Date;
-            personnelId: string;
-            score: number | null;
-            passed: boolean | null;
-            gradedById: string | null;
             examId: string;
+            passed: boolean | null;
+            personnelId: string;
             questionIds: string[];
+            score: number | null;
             maxScore: number | null;
+            gradedById: string | null;
             gradedAt: Date | null;
             feedback: string | null;
             submittedAt: Date | null;
@@ -620,15 +621,16 @@ export declare class HrController {
             createdAt: Date;
         }[] | null;
         serviceNumbers: {
+            serverId: string | null;
             id: string;
             createdAt: Date;
             reason: string | null;
             userId: string | null;
+            display: string;
             personnelId: string | null;
+            oldDisplay: string | null;
             action: string;
             actorId: string | null;
-            display: string;
-            oldDisplay: string | null;
             approverId: string | null;
         }[] | null;
         history: {
@@ -648,6 +650,7 @@ export declare class HrController {
         };
     }>;
     update(a: Actor, id: string, b: z.infer<typeof updateP>): Promise<{
+        serverId: string | null;
         serviceNumber: string | null;
         id: string;
         updatedAt: Date;
@@ -701,11 +704,11 @@ export declare class HrController {
         updatedAt: Date;
         createdById: string;
         expiresAt: Date | null;
+        attachments: string[];
         personnelId: string;
         summary: string;
         details: string | null;
         data: import("@prisma/client/runtime/library").JsonValue | null;
-        attachments: string[];
         deletedAt: Date | null;
     }>;
     editRecord(a: Actor, id: string, b: z.infer<typeof editRecord>): Promise<{
@@ -716,11 +719,11 @@ export declare class HrController {
         updatedAt: Date;
         createdById: string;
         expiresAt: Date | null;
+        attachments: string[];
         personnelId: string;
         summary: string;
         details: string | null;
         data: import("@prisma/client/runtime/library").JsonValue | null;
-        attachments: string[];
         deletedAt: Date | null;
     }>;
     deleteRecord(a: Actor, id: string, b: z.infer<typeof reason>): Promise<void>;
@@ -730,70 +733,74 @@ export declare class HrController {
         [x: string]: boolean;
     }>;
     ranks(): import("@prisma/client").Prisma.PrismaPromise<{
+        serverId: string | null;
         id: string;
         createdAt: Date;
         updatedAt: Date;
         description: string | null;
-        active: boolean;
         name: string;
-        color: string;
-        icon: string | null;
-        discordRoleIds: string[];
         position: number;
+        icon: string | null;
+        color: string;
+        discordRoleIds: string[];
         dashboardRoleIds: string[];
         nextRankIds: string[];
         approverRankIds: string[];
         requirements: import("@prisma/client/runtime/library").JsonValue;
+        active: boolean;
     }[]>;
     createRank(a: Actor, b: RankInput): Promise<{
+        serverId: string | null;
         id: string;
         createdAt: Date;
         updatedAt: Date;
         description: string | null;
-        active: boolean;
         name: string;
-        color: string;
-        icon: string | null;
-        discordRoleIds: string[];
         position: number;
+        icon: string | null;
+        color: string;
+        discordRoleIds: string[];
         dashboardRoleIds: string[];
         nextRankIds: string[];
         approverRankIds: string[];
         requirements: import("@prisma/client/runtime/library").JsonValue;
+        active: boolean;
     }>;
     order(a: Actor, b: {
         ids: string[];
     }): Promise<{
+        serverId: string | null;
         id: string;
         createdAt: Date;
         updatedAt: Date;
         description: string | null;
-        active: boolean;
         name: string;
-        color: string;
-        icon: string | null;
-        discordRoleIds: string[];
         position: number;
+        icon: string | null;
+        color: string;
+        discordRoleIds: string[];
         dashboardRoleIds: string[];
         nextRankIds: string[];
         approverRankIds: string[];
         requirements: import("@prisma/client/runtime/library").JsonValue;
+        active: boolean;
     }[]>;
     saveRank(a: Actor, id: string, b: RankInput): Promise<{
+        serverId: string | null;
         id: string;
         createdAt: Date;
         updatedAt: Date;
         description: string | null;
-        active: boolean;
         name: string;
-        color: string;
-        icon: string | null;
-        discordRoleIds: string[];
         position: number;
+        icon: string | null;
+        color: string;
+        discordRoleIds: string[];
         dashboardRoleIds: string[];
         nextRankIds: string[];
         approverRankIds: string[];
         requirements: import("@prisma/client/runtime/library").JsonValue;
+        active: boolean;
     }>;
     deleteRank(a: Actor, id: string): Promise<void>;
 }
@@ -811,22 +818,22 @@ declare const reqQ: z.ZodObject<{
 }, "strip", z.ZodTypeAny, {
     status?: string | undefined;
     rank?: string | undefined;
-    personnelId?: string | undefined;
-    kind?: "PROMOTION" | "TRANSFER" | undefined;
     department?: string | undefined;
-    requesterId?: string | undefined;
+    personnelId?: string | undefined;
     approverId?: string | undefined;
+    kind?: "PROMOTION" | "TRANSFER" | undefined;
+    requesterId?: string | undefined;
     q?: string | undefined;
     from?: string | undefined;
     to?: string | undefined;
 }, {
     status?: string | undefined;
     rank?: string | undefined;
-    personnelId?: string | undefined;
-    kind?: "PROMOTION" | "TRANSFER" | undefined;
     department?: string | undefined;
-    requesterId?: string | undefined;
+    personnelId?: string | undefined;
     approverId?: string | undefined;
+    kind?: "PROMOTION" | "TRANSFER" | undefined;
+    requesterId?: string | undefined;
     q?: string | undefined;
     from?: string | undefined;
     to?: string | undefined;
@@ -910,15 +917,15 @@ export declare class HrRequestsController {
         updatedAt: Date;
         version: number;
         reason: string;
-        personnelId: string;
         attachments: string[];
-        decidedAt: Date | null;
+        personnelId: string;
         kind: string;
         fromValue: string | null;
         toValue: string;
         achievements: string | null;
         requesterId: string;
         approvals: import("@prisma/client/runtime/library").JsonValue;
+        decidedAt: Date | null;
         executedById: string | null;
         executedAt: Date | null;
     }[]>;
@@ -978,15 +985,15 @@ export declare class HrRequestsController {
         updatedAt: Date;
         version: number;
         reason: string;
-        personnelId: string;
         attachments: string[];
-        decidedAt: Date | null;
+        personnelId: string;
         kind: string;
         fromValue: string | null;
         toValue: string;
         achievements: string | null;
         requesterId: string;
         approvals: import("@prisma/client/runtime/library").JsonValue;
+        decidedAt: Date | null;
         executedById: string | null;
         executedAt: Date | null;
     }>;
@@ -998,9 +1005,8 @@ export declare class HrRequestsController {
         updatedAt: Date;
         version: number;
         reason: string;
-        personnelId: string;
         attachments: string[];
-        decidedAt: Date | null;
+        personnelId: string;
         kind: string;
         fromValue: string | null;
         toValue: string;
@@ -1008,6 +1014,7 @@ export declare class HrRequestsController {
         internalNote: string | null;
         requesterId: string;
         approvals: import("@prisma/client/runtime/library").JsonValue;
+        decidedAt: Date | null;
         executedById: string | null;
         executedAt: Date | null;
     }>;
@@ -1019,9 +1026,8 @@ export declare class HrRequestsController {
         updatedAt: Date;
         version: number;
         reason: string;
-        personnelId: string;
         attachments: string[];
-        decidedAt: Date | null;
+        personnelId: string;
         kind: string;
         fromValue: string | null;
         toValue: string;
@@ -1029,6 +1035,7 @@ export declare class HrRequestsController {
         internalNote: string | null;
         requesterId: string;
         approvals: import("@prisma/client/runtime/library").JsonValue;
+        decidedAt: Date | null;
         executedById: string | null;
         executedAt: Date | null;
     }>;
@@ -1040,9 +1047,8 @@ export declare class HrRequestsController {
         updatedAt: Date;
         version: number;
         reason: string;
-        personnelId: string;
         attachments: string[];
-        decidedAt: Date | null;
+        personnelId: string;
         kind: string;
         fromValue: string | null;
         toValue: string;
@@ -1050,6 +1056,7 @@ export declare class HrRequestsController {
         internalNote: string | null;
         requesterId: string;
         approvals: import("@prisma/client/runtime/library").JsonValue;
+        decidedAt: Date | null;
         executedById: string | null;
         executedAt: Date | null;
     }>;
@@ -1061,9 +1068,8 @@ export declare class HrRequestsController {
         updatedAt: Date;
         version: number;
         reason: string;
-        personnelId: string;
         attachments: string[];
-        decidedAt: Date | null;
+        personnelId: string;
         kind: string;
         fromValue: string | null;
         toValue: string;
@@ -1071,6 +1077,7 @@ export declare class HrRequestsController {
         internalNote: string | null;
         requesterId: string;
         approvals: import("@prisma/client/runtime/library").JsonValue;
+        decidedAt: Date | null;
         executedById: string | null;
         executedAt: Date | null;
     }>;
@@ -1083,30 +1090,31 @@ declare const progress: z.ZodObject<{
     note: z.ZodOptional<z.ZodNullable<z.ZodString>>;
 }, "strip", z.ZodTypeAny, {
     status: "EXPIRED" | "FAILED" | "PASSED" | "NOT_STARTED" | "IN_PROGRESS" | "ABORTED";
-    personnelId: string;
     trainingId: string;
-    progress?: number | undefined;
+    personnelId: string;
     note?: string | null | undefined;
+    progress?: number | undefined;
 }, {
     status: "EXPIRED" | "FAILED" | "PASSED" | "NOT_STARTED" | "IN_PROGRESS" | "ABORTED";
-    personnelId: string;
     trainingId: string;
-    progress?: number | undefined;
+    personnelId: string;
     note?: string | null | undefined;
+    progress?: number | undefined;
 }>;
 export declare class HrTrainingController {
     private readonly s;
     constructor(s: HrTrainingService);
     trainings(): Promise<{
         passed: number;
+        serverId: string | null;
         id: string;
         createdAt: Date;
         updatedAt: Date;
         description: string | null;
-        active: boolean;
         name: string;
         position: number;
         requirements: string | null;
+        active: boolean;
         instructorIds: string[];
         duration: string | null;
         examRequired: boolean;
@@ -1117,14 +1125,15 @@ export declare class HrTrainingController {
         validDays: number | null;
     }[]>;
     create(a: Actor, b: z.infer<typeof trainingSchema>): Promise<{
+        serverId: string | null;
         id: string;
         createdAt: Date;
         updatedAt: Date;
         description: string | null;
-        active: boolean;
         name: string;
         position: number;
         requirements: string | null;
+        active: boolean;
         instructorIds: string[];
         duration: string | null;
         examRequired: boolean;
@@ -1135,14 +1144,15 @@ export declare class HrTrainingController {
         validDays: number | null;
     }>;
     save(a: Actor, id: string, b: z.infer<typeof trainingSchema>): Promise<{
+        serverId: string | null;
         id: string;
         createdAt: Date;
         updatedAt: Date;
         description: string | null;
-        active: boolean;
         name: string;
         position: number;
         requirements: string | null;
+        active: boolean;
         instructorIds: string[];
         duration: string | null;
         examRequired: boolean;
@@ -1167,11 +1177,11 @@ export declare class HrTrainingController {
         updatedAt: Date;
         expiresAt: Date | null;
         startedAt: Date | null;
-        personnelId: string;
         trainingId: string;
+        personnelId: string;
+        note: string | null;
         progress: number;
         examinerId: string | null;
-        note: string | null;
         completedAt: Date | null;
         certificateNo: string | null;
     })[]>;
@@ -1181,11 +1191,11 @@ export declare class HrTrainingController {
         updatedAt: Date;
         expiresAt: Date | null;
         startedAt: Date | null;
-        personnelId: string;
         trainingId: string;
+        personnelId: string;
+        note: string | null;
         progress: number;
         examinerId: string | null;
-        note: string | null;
         completedAt: Date | null;
         certificateNo: string | null;
     }>;
@@ -1210,19 +1220,19 @@ export declare class HrTrainingController {
         myAttempts: {
             status: string;
             startedAt: Date;
-            score: number | null;
-            passed: boolean | null;
             examId: string;
+            passed: boolean | null;
+            score: number | null;
             maxScore: number | null;
             submittedAt: Date | null;
         }[];
+        serverId: string | null;
         id: string;
         title: string;
         createdAt: Date;
         updatedAt: Date;
         description: string | null;
         active: boolean;
-        trainingId: string | null;
         questionCount: number;
         passPercent: number;
         timeLimitMin: number | null;
@@ -1231,8 +1241,10 @@ export declare class HrTrainingController {
         autoGrade: boolean;
         showResult: boolean;
         examinerIds: string[];
+        trainingId: string | null;
     }[]>;
     createExam(a: Actor, b: z.infer<typeof examSchema>): Promise<{
+        serverId: string | null;
         id: string;
         title: string;
         createdAt: Date;
@@ -1240,7 +1252,6 @@ export declare class HrTrainingController {
         description: string | null;
         active: boolean;
         questions: import("@prisma/client/runtime/library").JsonValue;
-        trainingId: string | null;
         questionCount: number;
         passPercent: number;
         timeLimitMin: number | null;
@@ -1249,8 +1260,10 @@ export declare class HrTrainingController {
         autoGrade: boolean;
         showResult: boolean;
         examinerIds: string[];
+        trainingId: string | null;
     }>;
     saveExam(a: Actor, id: string, b: z.infer<typeof examSchema>): Promise<{
+        serverId: string | null;
         id: string;
         title: string;
         createdAt: Date;
@@ -1258,7 +1271,6 @@ export declare class HrTrainingController {
         description: string | null;
         active: boolean;
         questions: import("@prisma/client/runtime/library").JsonValue;
-        trainingId: string | null;
         questionCount: number;
         passPercent: number;
         timeLimitMin: number | null;
@@ -1267,6 +1279,7 @@ export declare class HrTrainingController {
         autoGrade: boolean;
         showResult: boolean;
         examinerIds: string[];
+        trainingId: string | null;
     }>;
     deleteExam(a: Actor, id: string): Promise<void>;
     start(a: Actor, id: string): Promise<{
@@ -1315,13 +1328,13 @@ export declare class HrTrainingController {
         id: string;
         status: string;
         startedAt: Date;
-        personnelId: string;
-        score: number | null;
-        passed: boolean | null;
-        gradedById: string | null;
         examId: string;
+        passed: boolean | null;
+        personnelId: string;
         questionIds: string[];
+        score: number | null;
         maxScore: number | null;
+        gradedById: string | null;
         gradedAt: Date | null;
         feedback: string | null;
         submittedAt: Date | null;
@@ -1476,6 +1489,7 @@ export declare class HrCommsController {
         readAt: Date | null;
         readCount: number;
         audienceCount: number | null;
+        serverId: string | null;
         id: string;
         title: string;
         createdAt: Date;
@@ -1483,14 +1497,15 @@ export declare class HrCommsController {
         priority: string;
         createdById: string;
         expiresAt: Date | null;
-        attachments: string[];
         body: string;
         audienceRoleIds: string[];
         publishAt: Date;
         requireAck: boolean;
         discordChannelId: string | null;
+        attachments: string[];
     }[]>;
     create(a: Actor, b: z.infer<typeof announcementSchema>): Promise<{
+        serverId: string | null;
         id: string;
         title: string;
         createdAt: Date;
@@ -1498,14 +1513,15 @@ export declare class HrCommsController {
         priority: string;
         createdById: string;
         expiresAt: Date | null;
-        attachments: string[];
         body: string;
         audienceRoleIds: string[];
         publishAt: Date;
         requireAck: boolean;
         discordChannelId: string | null;
+        attachments: string[];
     }>;
     save(a: Actor, id: string, b: z.infer<typeof announcementSchema>): Promise<{
+        serverId: string | null;
         id: string;
         title: string;
         createdAt: Date;
@@ -1513,12 +1529,12 @@ export declare class HrCommsController {
         priority: string;
         createdById: string;
         expiresAt: Date | null;
-        attachments: string[];
         body: string;
         audienceRoleIds: string[];
         publishAt: Date;
         requireAck: boolean;
         discordChannelId: string | null;
+        attachments: string[];
     }>;
     remove(a: Actor, id: string): Promise<void>;
     ack(a: Actor, id: string): Promise<{
@@ -1545,6 +1561,7 @@ export declare class HrCommsController {
             count: number;
             voters: string[] | null;
         }[] | null;
+        serverId: string | null;
         id: string;
         title: string;
         createdAt: Date;
@@ -1552,14 +1569,15 @@ export declare class HrCommsController {
         description: string | null;
         createdById: string;
         startsAt: Date;
-        endsAt: Date | null;
         audienceRoleIds: string[];
         options: import("@prisma/client/runtime/library").JsonValue;
+        endsAt: Date | null;
         anonymous: boolean;
         multiple: boolean;
         showResults: string;
     }[]>;
     createPoll(a: Actor, b: z.infer<typeof pollSchema>): Promise<{
+        serverId: string | null;
         id: string;
         title: string;
         createdAt: Date;
@@ -1567,14 +1585,15 @@ export declare class HrCommsController {
         description: string | null;
         createdById: string;
         startsAt: Date;
-        endsAt: Date | null;
         audienceRoleIds: string[];
         options: import("@prisma/client/runtime/library").JsonValue;
+        endsAt: Date | null;
         anonymous: boolean;
         multiple: boolean;
         showResults: string;
     }>;
     savePoll(a: Actor, id: string, b: z.infer<typeof pollSchema>): Promise<{
+        serverId: string | null;
         id: string;
         title: string;
         createdAt: Date;
@@ -1582,9 +1601,9 @@ export declare class HrCommsController {
         description: string | null;
         createdById: string;
         startsAt: Date;
-        endsAt: Date | null;
         audienceRoleIds: string[];
         options: import("@prisma/client/runtime/library").JsonValue;
+        endsAt: Date | null;
         anonymous: boolean;
         multiple: boolean;
         showResults: string;
@@ -1698,12 +1717,12 @@ export declare class ServiceNumbersController {
         first: string;
         last: string;
         isActive: boolean;
+        serverId: string | null;
         id: string;
         createdAt: Date;
         updatedAt: Date;
         name: string;
         position: number;
-        department: string | null;
         prefix: string;
         suffix: string;
         start: number;
@@ -1714,15 +1733,16 @@ export declare class ServiceNumbersController {
         manual: boolean;
         reuse: boolean;
         releaseAs: string;
+        department: string | null;
     }[]>;
     createRange(a: Actor, b: RangeInput): Promise<{
+        serverId: string | null;
         id: string;
         createdAt: Date;
         updatedAt: Date;
-        active: boolean;
         name: string;
         position: number;
-        department: string | null;
+        active: boolean;
         prefix: string;
         suffix: string;
         start: number;
@@ -1733,15 +1753,16 @@ export declare class ServiceNumbersController {
         manual: boolean;
         reuse: boolean;
         releaseAs: string;
+        department: string | null;
     }>;
     saveRange(a: Actor, id: string, b: RangeInput): Promise<{
+        serverId: string | null;
         id: string;
         createdAt: Date;
         updatedAt: Date;
-        active: boolean;
         name: string;
         position: number;
-        department: string | null;
+        active: boolean;
         prefix: string;
         suffix: string;
         start: number;
@@ -1752,6 +1773,7 @@ export declare class ServiceNumbersController {
         manual: boolean;
         reuse: boolean;
         releaseAs: string;
+        department: string | null;
     }>;
     deleteRange(a: Actor, id: string): Promise<void>;
     settings(): Promise<{
@@ -1810,29 +1832,31 @@ export declare class ServiceNumbersController {
         name: string | null;
         actor: string;
         approver: string | null;
+        serverId: string | null;
         id: string;
         createdAt: Date;
         reason: string | null;
         userId: string | null;
+        display: string;
         personnelId: string | null;
+        oldDisplay: string | null;
         action: string;
         actorId: string | null;
-        display: string;
-        oldDisplay: string | null;
         approverId: string | null;
     }[]>;
     pending(): Promise<{
         name: string;
         personnelId: string | null;
+        serverId: string | null;
         id: string;
         status: string;
         createdAt: Date;
         updatedAt: Date;
         reason: string;
         userId: string;
-        discordId: string | null;
-        kind: string;
         applicationId: string;
+        kind: string;
+        discordId: string | null;
     }[]>;
     /** Angenommene Bewerbungen ohne Personalakte nachträglich übernehmen. */
     fromApplications(a: Actor): Promise<{
@@ -1845,13 +1869,13 @@ export declare class ServiceNumbersController {
         display: string;
         old: string | null;
         range: {
+            serverId: string | null;
             id: string;
             createdAt: Date;
             updatedAt: Date;
-            active: boolean;
             name: string;
             position: number;
-            department: string | null;
+            active: boolean;
             prefix: string;
             suffix: string;
             start: number;
@@ -1862,19 +1886,20 @@ export declare class ServiceNumbersController {
             manual: boolean;
             reuse: boolean;
             releaseAs: string;
+            department: string | null;
         };
     }>;
     assign(a: Actor, b: z.infer<typeof assign>): Promise<{
         display: string;
         old: string | null;
         range: {
+            serverId: string | null;
             id: string;
             createdAt: Date;
             updatedAt: Date;
-            active: boolean;
             name: string;
             position: number;
-            department: string | null;
+            active: boolean;
             prefix: string;
             suffix: string;
             start: number;
@@ -1885,19 +1910,20 @@ export declare class ServiceNumbersController {
             manual: boolean;
             reuse: boolean;
             releaseAs: string;
+            department: string | null;
         };
     }>;
     change(a: Actor, b: z.infer<typeof change>): Promise<{
         display: string;
         old: string | null;
         range: {
+            serverId: string | null;
             id: string;
             createdAt: Date;
             updatedAt: Date;
-            active: boolean;
             name: string;
             position: number;
-            department: string | null;
+            active: boolean;
             prefix: string;
             suffix: string;
             start: number;
@@ -1908,6 +1934,7 @@ export declare class ServiceNumbersController {
             manual: boolean;
             reuse: boolean;
             releaseAs: string;
+            department: string | null;
         };
     }>;
     release(a: Actor, b: z.infer<typeof status> & {
@@ -1944,25 +1971,25 @@ declare const sessionBody: z.ZodObject<{
 }, "strip", z.ZodTypeAny, {
     title: string;
     startsAt: string;
-    guildId?: string | null | undefined;
-    notes?: string | null | undefined;
-    location?: string | null | undefined;
-    channelId?: string | null | undefined;
     duration?: string | null | undefined;
     trainingId?: string | null | undefined;
     forRank?: string | null | undefined;
+    location?: string | null | undefined;
+    notes?: string | null | undefined;
+    channelId?: string | null | undefined;
+    guildId?: string | null | undefined;
     promoteRankId?: string | null | undefined;
     maxSignups?: number | null | undefined;
 }, {
     title: string;
     startsAt: string;
-    guildId?: string | null | undefined;
-    notes?: string | null | undefined;
-    location?: string | null | undefined;
-    channelId?: string | null | undefined;
     duration?: string | null | undefined;
     trainingId?: string | null | undefined;
     forRank?: string | null | undefined;
+    location?: string | null | undefined;
+    notes?: string | null | undefined;
+    channelId?: string | null | undefined;
+    guildId?: string | null | undefined;
     promoteRankId?: string | null | undefined;
     maxSignups?: number | null | undefined;
 }>;
@@ -1972,15 +1999,15 @@ declare const evalBody: z.ZodObject<{
     actualDuration: z.ZodOptional<z.ZodNullable<z.ZodString>>;
     note: z.ZodOptional<z.ZodNullable<z.ZodString>>;
 }, "strip", z.ZodTypeAny, {
-    passed: string[];
     attended: string[];
-    note?: string | null | undefined;
+    passed: string[];
     actualDuration?: string | null | undefined;
+    note?: string | null | undefined;
 }, {
-    passed: string[];
     attended: string[];
-    note?: string | null | undefined;
+    passed: string[];
     actualDuration?: string | null | undefined;
+    note?: string | null | undefined;
 }>;
 /** Ausbildungstermine: ankündigen (Discord mit Anmeldung + Thread), anmelden, auswerten (mit Beförderung). */
 export declare class HrTrainingSessionsController {
@@ -2000,25 +2027,26 @@ export declare class HrTrainingSessionsController {
         } | null;
         instructorName: string | null;
         number: string;
+        serverId: string | null;
         id: string;
         title: string;
         status: string;
         createdAt: Date;
         updatedAt: Date;
         createdById: string | null;
-        guildId: string | null;
-        notes: string | null;
-        location: string | null;
-        startsAt: Date;
-        instructorId: string | null;
-        passed: string[];
-        channelId: string | null;
         duration: string | null;
         trainingId: string | null;
+        startsAt: Date;
         forRank: string | null;
+        location: string | null;
+        notes: string | null;
+        instructorId: string | null;
+        channelId: string | null;
+        guildId: string | null;
         promoteRankId: string | null;
         maxSignups: number | null;
         attended: string[];
+        passed: string[];
         actualDuration: string | null;
         evaluationNote: string | null;
         evaluatedAt: Date | null;
@@ -2036,25 +2064,26 @@ export declare class HrTrainingSessionsController {
         } | null;
         instructorName: string | null;
         number: string;
+        serverId: string | null;
         id: string;
         title: string;
         status: string;
         createdAt: Date;
         updatedAt: Date;
         createdById: string | null;
-        guildId: string | null;
-        notes: string | null;
-        location: string | null;
-        startsAt: Date;
-        instructorId: string | null;
-        passed: string[];
-        channelId: string | null;
         duration: string | null;
         trainingId: string | null;
+        startsAt: Date;
         forRank: string | null;
+        location: string | null;
+        notes: string | null;
+        instructorId: string | null;
+        channelId: string | null;
+        guildId: string | null;
         promoteRankId: string | null;
         maxSignups: number | null;
         attended: string[];
+        passed: string[];
         actualDuration: string | null;
         evaluationNote: string | null;
         evaluatedAt: Date | null;
@@ -2072,25 +2101,26 @@ export declare class HrTrainingSessionsController {
         } | null;
         instructorName: string | null;
         number: string;
+        serverId: string | null;
         id: string;
         title: string;
         status: string;
         createdAt: Date;
         updatedAt: Date;
         createdById: string | null;
-        guildId: string | null;
-        notes: string | null;
-        location: string | null;
-        startsAt: Date;
-        instructorId: string | null;
-        passed: string[];
-        channelId: string | null;
         duration: string | null;
         trainingId: string | null;
+        startsAt: Date;
         forRank: string | null;
+        location: string | null;
+        notes: string | null;
+        instructorId: string | null;
+        channelId: string | null;
+        guildId: string | null;
         promoteRankId: string | null;
         maxSignups: number | null;
         attended: string[];
+        passed: string[];
         actualDuration: string | null;
         evaluationNote: string | null;
         evaluatedAt: Date | null;
@@ -2108,25 +2138,26 @@ export declare class HrTrainingSessionsController {
         } | null;
         instructorName: string | null;
         number: string;
+        serverId: string | null;
         id: string;
         title: string;
         status: string;
         createdAt: Date;
         updatedAt: Date;
         createdById: string | null;
-        guildId: string | null;
-        notes: string | null;
-        location: string | null;
-        startsAt: Date;
-        instructorId: string | null;
-        passed: string[];
-        channelId: string | null;
         duration: string | null;
         trainingId: string | null;
+        startsAt: Date;
         forRank: string | null;
+        location: string | null;
+        notes: string | null;
+        instructorId: string | null;
+        channelId: string | null;
+        guildId: string | null;
         promoteRankId: string | null;
         maxSignups: number | null;
         attended: string[];
+        passed: string[];
         actualDuration: string | null;
         evaluationNote: string | null;
         evaluatedAt: Date | null;
@@ -2146,25 +2177,26 @@ export declare class HrTrainingSessionsController {
         } | null;
         instructorName: string | null;
         number: string;
+        serverId: string | null;
         id: string;
         title: string;
         status: string;
         createdAt: Date;
         updatedAt: Date;
         createdById: string | null;
-        guildId: string | null;
-        notes: string | null;
-        location: string | null;
-        startsAt: Date;
-        instructorId: string | null;
-        passed: string[];
-        channelId: string | null;
         duration: string | null;
         trainingId: string | null;
+        startsAt: Date;
         forRank: string | null;
+        location: string | null;
+        notes: string | null;
+        instructorId: string | null;
+        channelId: string | null;
+        guildId: string | null;
         promoteRankId: string | null;
         maxSignups: number | null;
         attended: string[];
+        passed: string[];
         actualDuration: string | null;
         evaluationNote: string | null;
         evaluatedAt: Date | null;
@@ -2183,25 +2215,26 @@ export declare class HrTrainingSessionsController {
             } | null;
             instructorName: string | null;
             number: string;
+            serverId: string | null;
             id: string;
             title: string;
             status: string;
             createdAt: Date;
             updatedAt: Date;
             createdById: string | null;
-            guildId: string | null;
-            notes: string | null;
-            location: string | null;
-            startsAt: Date;
-            instructorId: string | null;
-            passed: string[];
-            channelId: string | null;
             duration: string | null;
             trainingId: string | null;
+            startsAt: Date;
             forRank: string | null;
+            location: string | null;
+            notes: string | null;
+            instructorId: string | null;
+            channelId: string | null;
+            guildId: string | null;
             promoteRankId: string | null;
             maxSignups: number | null;
             attended: string[];
+            passed: string[];
             actualDuration: string | null;
             evaluationNote: string | null;
             evaluatedAt: Date | null;

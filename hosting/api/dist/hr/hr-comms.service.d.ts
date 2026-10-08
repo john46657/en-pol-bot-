@@ -15,11 +15,11 @@ export declare const announcementSchema: z.ZodObject<{
 }, "strip", z.ZodTypeAny, {
     title: string;
     priority: "LOW" | "HIGH" | "CRITICAL" | "NORMAL";
-    attachments: string[];
     body: string;
     audienceRoleIds: string[];
     requireAck: boolean;
     discordChannelId: string | null;
+    attachments: string[];
     expiresAt?: string | null | undefined;
     publishAt?: string | undefined;
 }, {
@@ -27,11 +27,11 @@ export declare const announcementSchema: z.ZodObject<{
     body: string;
     priority?: "LOW" | "HIGH" | "CRITICAL" | "NORMAL" | undefined;
     expiresAt?: string | null | undefined;
-    attachments?: string[] | undefined;
     audienceRoleIds?: string[] | undefined;
     publishAt?: string | undefined;
     requireAck?: boolean | undefined;
     discordChannelId?: string | null | undefined;
+    attachments?: string[] | undefined;
 }>;
 export declare const pollSchema: z.ZodObject<{
     title: z.ZodString;
@@ -58,8 +58,8 @@ export declare const pollSchema: z.ZodObject<{
     options: string[];
     description?: string | null | undefined;
     startsAt?: string | undefined;
-    endsAt?: string | null | undefined;
     audienceRoleIds?: string[] | undefined;
+    endsAt?: string | null | undefined;
     anonymous?: boolean | undefined;
     multiple?: boolean | undefined;
     showResults?: "ALWAYS" | "AFTER_VOTE" | "AFTER_END" | "NEVER" | undefined;
@@ -79,6 +79,7 @@ export declare class HrCommsService {
         readAt: Date | null;
         readCount: number;
         audienceCount: number | null;
+        serverId: string | null;
         id: string;
         title: string;
         createdAt: Date;
@@ -86,14 +87,15 @@ export declare class HrCommsService {
         priority: string;
         createdById: string;
         expiresAt: Date | null;
-        attachments: string[];
         body: string;
         audienceRoleIds: string[];
         publishAt: Date;
         requireAck: boolean;
         discordChannelId: string | null;
+        attachments: string[];
     }[]>;
     saveAnnouncement(actor: Actor, d: z.infer<typeof announcementSchema>, id?: string): Promise<{
+        serverId: string | null;
         id: string;
         title: string;
         createdAt: Date;
@@ -101,12 +103,12 @@ export declare class HrCommsService {
         priority: string;
         createdById: string;
         expiresAt: Date | null;
-        attachments: string[];
         body: string;
         audienceRoleIds: string[];
         publishAt: Date;
         requireAck: boolean;
         discordChannelId: string | null;
+        attachments: string[];
     }>;
     deleteAnnouncement(actor: Actor, id: string): Promise<void>;
     ack(actor: Actor, id: string): Promise<{
@@ -134,6 +136,7 @@ export declare class HrCommsService {
             count: number;
             voters: string[] | null;
         }[] | null;
+        serverId: string | null;
         id: string;
         title: string;
         createdAt: Date;
@@ -141,14 +144,15 @@ export declare class HrCommsService {
         description: string | null;
         createdById: string;
         startsAt: Date;
-        endsAt: Date | null;
         audienceRoleIds: string[];
         options: import("@prisma/client/runtime/library").JsonValue;
+        endsAt: Date | null;
         anonymous: boolean;
         multiple: boolean;
         showResults: string;
     }[]>;
     savePoll(actor: Actor, d: z.infer<typeof pollSchema>, id?: string): Promise<{
+        serverId: string | null;
         id: string;
         title: string;
         createdAt: Date;
@@ -156,9 +160,9 @@ export declare class HrCommsService {
         description: string | null;
         createdById: string;
         startsAt: Date;
-        endsAt: Date | null;
         audienceRoleIds: string[];
         options: import("@prisma/client/runtime/library").JsonValue;
+        endsAt: Date | null;
         anonymous: boolean;
         multiple: boolean;
         showResults: string;

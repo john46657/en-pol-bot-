@@ -108,11 +108,11 @@ export declare class HrPeopleService {
             updatedAt: Date;
             createdById: string;
             expiresAt: Date | null;
+            attachments: string[];
             personnelId: string;
             summary: string;
             details: string | null;
             data: Prisma.JsonValue | null;
-            attachments: string[];
             deletedAt: Date | null;
         }[] | null;
         transfers: {
@@ -124,11 +124,11 @@ export declare class HrPeopleService {
             updatedAt: Date;
             createdById: string;
             expiresAt: Date | null;
+            attachments: string[];
             personnelId: string;
             summary: string;
             details: string | null;
             data: Prisma.JsonValue | null;
-            attachments: string[];
             deletedAt: Date | null;
         }[] | null;
         requests: {
@@ -141,15 +141,15 @@ export declare class HrPeopleService {
             updatedAt: Date;
             version: number;
             reason: string;
-            personnelId: string;
             attachments: string[];
-            decidedAt: Date | null;
+            personnelId: string;
             kind: string;
             fromValue: string | null;
             toValue: string;
             achievements: string | null;
             requesterId: string;
             approvals: Prisma.JsonValue;
+            decidedAt: Date | null;
             executedById: string | null;
             executedAt: Date | null;
         }[];
@@ -162,11 +162,11 @@ export declare class HrPeopleService {
             updatedAt: Date;
             createdById: string;
             expiresAt: Date | null;
+            attachments: string[];
             personnelId: string;
             summary: string;
             details: string | null;
             data: Prisma.JsonValue | null;
-            attachments: string[];
             deletedAt: Date | null;
         }[] | null;
         warnings: {
@@ -179,11 +179,11 @@ export declare class HrPeopleService {
             updatedAt: Date;
             createdById: string;
             expiresAt: Date | null;
+            attachments: string[];
             personnelId: string;
             summary: string;
             details: string | null;
             data: Prisma.JsonValue | null;
-            attachments: string[];
             deletedAt: Date | null;
         }[] | null;
         notes: {
@@ -195,11 +195,11 @@ export declare class HrPeopleService {
             updatedAt: Date;
             createdById: string;
             expiresAt: Date | null;
+            attachments: string[];
             personnelId: string;
             summary: string;
             details: string | null;
             data: Prisma.JsonValue | null;
-            attachments: string[];
             deletedAt: Date | null;
         }[] | null;
         recommendations: {
@@ -211,11 +211,11 @@ export declare class HrPeopleService {
             updatedAt: Date;
             createdById: string;
             expiresAt: Date | null;
+            attachments: string[];
             personnelId: string;
             summary: string;
             details: string | null;
             data: Prisma.JsonValue | null;
-            attachments: string[];
             deletedAt: Date | null;
         }[];
         trainings: ({
@@ -231,11 +231,11 @@ export declare class HrPeopleService {
             updatedAt: Date;
             expiresAt: Date | null;
             startedAt: Date | null;
-            personnelId: string;
             trainingId: string;
+            personnelId: string;
+            note: string | null;
             progress: number;
             examinerId: string | null;
-            note: string | null;
             completedAt: Date | null;
             certificateNo: string | null;
         })[] | null;
@@ -250,13 +250,13 @@ export declare class HrPeopleService {
             id: string;
             status: string;
             startedAt: Date;
-            personnelId: string;
-            score: number | null;
-            passed: boolean | null;
-            gradedById: string | null;
             examId: string;
+            passed: boolean | null;
+            personnelId: string;
             questionIds: string[];
+            score: number | null;
             maxScore: number | null;
+            gradedById: string | null;
             gradedAt: Date | null;
             feedback: string | null;
             submittedAt: Date | null;
@@ -274,15 +274,16 @@ export declare class HrPeopleService {
             createdAt: Date;
         }[] | null;
         serviceNumbers: {
+            serverId: string | null;
             id: string;
             createdAt: Date;
             reason: string | null;
             userId: string | null;
+            display: string;
             personnelId: string | null;
+            oldDisplay: string | null;
             action: string;
             actorId: string | null;
-            display: string;
-            oldDisplay: string | null;
             approverId: string | null;
         }[] | null;
         history: {
@@ -312,6 +313,7 @@ export declare class HrPeopleService {
         joinDate?: string;
         callsign?: string | null;
     }): Promise<{
+        serverId: string | null;
         serviceNumber: string | null;
         id: string;
         updatedAt: Date;
@@ -332,6 +334,7 @@ export declare class HrPeopleService {
         createdAt: Date;
         updatedAt: Date;
         version: number;
+        active: boolean;
         username: string;
         displayName: string;
         email: string | null;
@@ -341,7 +344,6 @@ export declare class HrPeopleService {
         robloxStatus: string;
         robloxVerifiedAt: Date | null;
         robloxVerifiedById: string | null;
-        active: boolean;
         failedLogins: number;
         lockedUntil: Date | null;
         lastLogin: Date | null;
@@ -360,6 +362,7 @@ export declare class HrPeopleService {
         rank?: string | null;
         rankSince?: string;
     }): Promise<{
+        serverId: string | null;
         serviceNumber: string | null;
         id: string;
         updatedAt: Date;
@@ -393,11 +396,11 @@ export declare class HrPeopleService {
         updatedAt: Date;
         createdById: string;
         expiresAt: Date | null;
+        attachments: string[];
         personnelId: string;
         summary: string;
         details: string | null;
         data: Prisma.JsonValue | null;
-        attachments: string[];
         deletedAt: Date | null;
     }>;
     /** Aktive Verwarnungen einer Person (nicht zurückgenommen, nicht abgelaufen). */
@@ -452,11 +455,11 @@ export declare class HrPeopleService {
         updatedAt: Date;
         createdById: string;
         expiresAt: Date | null;
+        attachments: string[];
         personnelId: string;
         summary: string;
         details: string | null;
         data: Prisma.JsonValue | null;
-        attachments: string[];
         deletedAt: Date | null;
     }>;
     deleteRecord(actor: Actor, recordId: string, reason?: string): Promise<void>;

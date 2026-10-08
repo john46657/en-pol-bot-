@@ -23,10 +23,10 @@ export declare class PersonsService {
             updatedAt: Date;
             version: number;
             createdById: string | null;
+            notes: string | null;
             robloxUserId: string | null;
             robloxUsername: string;
             aliases: string[];
-            notes: string | null;
             custom: Prisma.JsonValue | null;
         }[];
         total: number;
@@ -57,10 +57,10 @@ export declare class PersonsService {
         updatedAt: Date;
         version: number;
         createdById: string | null;
+        notes: string | null;
         robloxUserId: string | null;
         robloxUsername: string;
         aliases: string[];
-        notes: string | null;
         custom: Prisma.JsonValue | null;
     }>;
     overview(id: string): Promise<{
@@ -88,10 +88,10 @@ export declare class PersonsService {
             updatedAt: Date;
             version: number;
             createdById: string | null;
+            notes: string | null;
             robloxUserId: string | null;
             robloxUsername: string;
             aliases: string[];
-            notes: string | null;
             custom: Prisma.JsonValue | null;
         };
         tickets: {
@@ -123,11 +123,11 @@ export declare class PersonsService {
         timeline: {
             id: string;
             createdAt: Date;
-            entityType: string;
-            entityId: string;
-            summary: string;
             action: string;
             actorId: string | null;
+            summary: string;
+            entityType: string;
+            entityId: string;
         }[];
     }>;
     /** Mögliche Duplikate: gleiche Roblox-ID (hart, Unique) oder gleicher Username (weich → Hinweis, kein Auto-Merge). */
@@ -152,10 +152,10 @@ export declare class PersonsService {
             updatedAt: Date;
             version: number;
             createdById: string | null;
+            notes: string | null;
             robloxUserId: string | null;
             robloxUsername: string;
             aliases: string[];
-            notes: string | null;
             custom: Prisma.JsonValue | null;
         };
         possibleDuplicates: {
@@ -178,10 +178,10 @@ export declare class PersonsService {
         updatedAt: Date;
         version: number;
         createdById: string | null;
+        notes: string | null;
         robloxUserId: string | null;
         robloxUsername: string;
         aliases: string[];
-        notes: string | null;
         custom: Prisma.JsonValue | null;
     }>;
     archive(actor: Actor, id: string, reason: string): Promise<{
@@ -192,10 +192,10 @@ export declare class PersonsService {
         updatedAt: Date;
         version: number;
         createdById: string | null;
+        notes: string | null;
         robloxUserId: string | null;
         robloxUsername: string;
         aliases: string[];
-        notes: string | null;
         custom: Prisma.JsonValue | null;
     }>;
     /** Merge nur auf ausdrückliche Bestätigung (nie automatisch). Quelle wird archiviert, nichts wird gelöscht. */
@@ -207,10 +207,10 @@ export declare class PersonsService {
         updatedAt: Date;
         version: number;
         createdById: string | null;
+        notes: string | null;
         robloxUserId: string | null;
         robloxUsername: string;
         aliases: string[];
-        notes: string | null;
         custom: Prisma.JsonValue | null;
     }>;
 }

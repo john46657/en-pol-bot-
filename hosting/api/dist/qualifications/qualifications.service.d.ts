@@ -35,8 +35,8 @@ export declare class QualificationsService {
         units: {
             description: string;
             name: string;
-            key: string;
             questions: FormField[];
+            key: string;
             settings: {
                 cooldownMinutes: number;
                 messages: {
@@ -68,8 +68,8 @@ export declare class QualificationsService {
             };
             enabled: boolean;
             pingRoleIds: string[];
-            roleId?: string | undefined;
             channelId?: string | undefined;
+            roleId?: string | undefined;
             acceptedChannelId?: string | undefined;
             deniedChannelId?: string | undefined;
         }[];
@@ -123,8 +123,8 @@ export declare class QualificationsService {
         units: {
             description: string;
             name: string;
-            key: string;
             questions: FormField[];
+            key: string;
             settings: {
                 cooldownMinutes: number;
                 messages: {
@@ -156,8 +156,8 @@ export declare class QualificationsService {
             };
             enabled: boolean;
             pingRoleIds: string[];
-            roleId?: string | undefined;
             channelId?: string | undefined;
+            roleId?: string | undefined;
             acceptedChannelId?: string | undefined;
             deniedChannelId?: string | undefined;
         }[];
@@ -210,8 +210,8 @@ export declare class QualificationsService {
         units: {
             description: string;
             name: string;
-            key: string;
             questions: FormField[];
+            key: string;
             settings: {
                 cooldownMinutes: number;
                 messages: {
@@ -243,8 +243,8 @@ export declare class QualificationsService {
             };
             enabled: boolean;
             pingRoleIds: string[];
-            roleId?: string | undefined;
             channelId?: string | undefined;
+            roleId?: string | undefined;
             acceptedChannelId?: string | undefined;
             deniedChannelId?: string | undefined;
         }[];
@@ -322,12 +322,12 @@ export declare class QualificationsService {
         createdAt: Date;
         userId: string | null;
         guildId: string | null;
-        decidedById: string | null;
-        decidedAt: Date | null;
-        decisionReason: string | null;
-        answers: Prisma.JsonValue;
-        grantRoleIds: string[];
         discordId: string;
+        decidedAt: Date | null;
+        answers: Prisma.JsonValue;
+        decidedById: string | null;
+        decisionReason: string | null;
+        grantRoleIds: string[];
         discordName: string;
         durationSec: number | null;
         joinedAt: Date | null;
@@ -341,12 +341,12 @@ export declare class QualificationsService {
         createdAt: Date;
         userId: string | null;
         guildId: string | null;
-        decidedById: string | null;
-        decidedAt: Date | null;
-        decisionReason: string | null;
-        answers: Prisma.JsonValue;
-        grantRoleIds: string[];
         discordId: string;
+        decidedAt: Date | null;
+        answers: Prisma.JsonValue;
+        decidedById: string | null;
+        decisionReason: string | null;
+        grantRoleIds: string[];
         discordName: string;
         durationSec: number | null;
         joinedAt: Date | null;

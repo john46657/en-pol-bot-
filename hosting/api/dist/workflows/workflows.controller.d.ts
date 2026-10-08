@@ -28,8 +28,8 @@ export declare class WorkflowsController {
         error: string | null;
         id: string;
         createdAt: Date;
-        entityId: string | null;
         action: string;
+        entityId: string | null;
         ok: boolean;
         workflowId: string;
         auditId: string;

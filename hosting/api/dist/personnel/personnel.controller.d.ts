@@ -83,6 +83,7 @@ export declare class PersonnelController {
                 robloxUserId: string | null;
             };
         } & {
+            serverId: string | null;
             serviceNumber: string | null;
             id: string;
             updatedAt: Date;
@@ -114,16 +115,16 @@ export declare class PersonnelController {
                 id: string;
                 title: string;
                 description: string | null;
-                passScore: number;
                 instructorId: string | null;
+                passScore: number;
             };
             results: {
                 id: string;
                 createdAt: Date;
-                enrollmentId: string;
-                score: number;
                 passed: boolean;
+                score: number;
                 gradedById: string | null;
+                enrollmentId: string;
             }[];
         } & {
             id: string;
@@ -139,14 +140,15 @@ export declare class PersonnelController {
             updatedAt: Date;
             createdById: string;
             expiresAt: Date | null;
+            attachments: string[];
             personnelId: string;
             summary: string;
             details: string | null;
             data: import("@prisma/client/runtime/library").JsonValue | null;
-            attachments: string[];
             deletedAt: Date | null;
         }[];
     } & {
+        serverId: string | null;
         serviceNumber: string | null;
         id: string;
         updatedAt: Date;
@@ -162,6 +164,7 @@ export declare class PersonnelController {
         customChecks: import("@prisma/client/runtime/library").JsonValue;
     }>;
     create(a: Actor, b: z.infer<typeof create>): Promise<{
+        serverId: string | null;
         serviceNumber: string | null;
         id: string;
         updatedAt: Date;
@@ -177,6 +180,7 @@ export declare class PersonnelController {
         customChecks: import("@prisma/client/runtime/library").JsonValue;
     }>;
     update(a: Actor, id: string, b: z.infer<typeof update>): Promise<{
+        serverId: string | null;
         serviceNumber: string | null;
         id: string;
         updatedAt: Date;
@@ -192,6 +196,7 @@ export declare class PersonnelController {
         customChecks: import("@prisma/client/runtime/library").JsonValue;
     }>;
     promote(a: Actor, id: string, b: z.infer<typeof promote>): Promise<{
+        serverId: string | null;
         serviceNumber: string | null;
         id: string;
         updatedAt: Date;
@@ -214,11 +219,11 @@ export declare class PersonnelController {
         updatedAt: Date;
         createdById: string;
         expiresAt: Date | null;
+        attachments: string[];
         personnelId: string;
         summary: string;
         details: string | null;
         data: import("@prisma/client/runtime/library").JsonValue | null;
-        attachments: string[];
         deletedAt: Date | null;
     }>;
 }

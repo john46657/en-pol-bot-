@@ -20,6 +20,12 @@ const audit_service_1 = require("../audit/audit.service");
 const guild_context_1 = require("../common/guild-context");
 const errors_1 = require("../common/errors");
 const KEY = 'servers.links';
+const LEGACY_KEY = 'servers.legacyAssigned';
+/** Einmalige Zuordnung bestehender Einträge zum Heimat-Server, je Schritt der Trennung (Prisma-Modelle). */
+const LEGACY_STEPS = [
+    { step: 'records', models: ['report', 'complaint', 'investigation', 'wantedRecord', 'evidence', 'dutySession'] },
+    { step: 'personnel', models: ['personnel', 'hrRank', 'hrTraining', 'hrExam', 'hrTrainingSession', 'hrAnnouncement', 'hrPoll', 'serviceNumberRange', 'serviceNumber', 'serviceNumberEvent', 'hireQueue'] },
+];
 const sf = zod_1.z.string().regex(/^\d{15,25}$/, 'Discord-Server-ID (15–25 Ziffern)');
 exports.linksSchema = zod_1.z.object({
     /** Verbundene Server: teilen Akten und/oder Einstellungen. Der erste Server ist der Haupt-Server (dessen Einstellungen gelten). */
@@ -61,29 +67,39 @@ let ServerLinksService = class ServerLinksService {
         if (process.env.NODE_ENV !== 'test')
             await this.assignLegacyRecords().catch((e) => this.log.warn(`Zuordnung alter Einträge fehlgeschlagen: ${e instanceof Error ? e.message : e}`));
     }
-    /**
-     * Einmalig nach der Trennung je Server: Berichte, Fahndungen, Ermittlungen, Beschwerden, Beweismittel und Dienstzeiten
-     * ohne Server gehören dem Heimat-Server der Leitstelle (bzw. dem einzigen bekannten Discord-Server). Läuft bei jedem
-     * Start, bis es einen solchen Server gibt; danach nichts mehr zu tun.
-     */
-    async assignLegacyRecords() {
+    /** Heimat-Server der Leitstelle, sonst der einzige bekannte Discord-Server (für Aufgaben ohne eigenen Server, z. B. Teamliste). */
+    async homeGuild() {
         const [cad, known] = await Promise.all([
             this.prisma.systemSetting.findUnique({ where: { key: 'cad.config' } }),
             this.prisma.systemSetting.findUnique({ where: { key: 'discord.guilds' } }),
         ]);
         const guilds = (Array.isArray(known?.value) ? known.value : []).map((g) => String(g.id ?? '')).filter((id) => /^\d{15,25}$/.test(id));
-        const home = (cad?.value?.homeGuildId ?? null) || (guilds.length === 1 ? guilds[0] : null);
+        return (cad?.value?.homeGuildId ?? null) || (guilds.length === 1 ? guilds[0] : null);
+    }
+    /**
+     * Einmalig nach der Trennung je Server: Einträge ohne Server (Berichte, Fahndungen, …, Personal) gehören dem Heimat-Server
+     * der Leitstelle (bzw. dem einzigen bekannten Discord-Server). Jeder Schritt läuft nur einmal (`servers.legacyAssigned`) –
+     * später ohne Server angelegte Einträge (gemeinsamer Bestand) bleiben, wo sie sind. Gibt es noch keinen solchen Server, wird es beim nächsten Start erneut versucht.
+     */
+    async assignLegacyRecords() {
+        const doneRow = await this.prisma.systemSetting.findUnique({ where: { key: LEGACY_KEY } });
+        const done = Array.isArray(doneRow?.value) ? doneRow.value : [];
+        const steps = LEGACY_STEPS.filter((x) => !done.includes(x.step));
+        if (!steps.length)
+            return 0;
+        const home = await this.homeGuild();
         if (!home)
             return null;
         const space = this.space(home);
-        if (space === null)
-            return null; // Heimat-Server nutzt den gemeinsamen Bestand – dort sind die Einträge schon
         const where = { serverId: null }, data = { serverId: space };
-        const r = await this.prisma.$transaction([
-            this.prisma.report.updateMany({ where, data }), this.prisma.complaint.updateMany({ where, data }), this.prisma.investigation.updateMany({ where, data }),
-            this.prisma.wantedRecord.updateMany({ where, data }), this.prisma.evidence.updateMany({ where, data }), this.prisma.dutySession.updateMany({ where, data }),
-        ]);
-        const moved = r.reduce((n, x) => n + x.count, 0);
+        let moved = 0;
+        // Heimat-Server im gemeinsamen Bestand: dort sind die Einträge schon – nur als erledigt merken
+        if (space !== null) {
+            const r = await this.prisma.$transaction(steps.flatMap((x) => x.models.map((m) => this.prisma[m].updateMany({ where, data }))));
+            moved = r.reduce((n, x) => n + x.count, 0);
+        }
+        const value = [...done, ...steps.map((x) => x.step)];
+        await this.prisma.systemSetting.upsert({ where: { key: LEGACY_KEY }, create: { key: LEGACY_KEY, value }, update: { value } });
         if (moved)
             this.log.log(`${moved} bestehende Einträge dem Server ${home} zugeordnet`);
         return moved;

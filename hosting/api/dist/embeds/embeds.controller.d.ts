@@ -11,10 +11,10 @@ export declare class EmbedsController {
         description: string;
         name: string;
         color: string;
+        channelId: string | null;
         guildId: string | null;
         content: string;
         footer: string;
-        channelId: string | null;
         author: string;
         url: string;
         image: string;
@@ -43,10 +43,10 @@ export declare class EmbedsController {
         description: string;
         name: string;
         color: string;
+        channelId: string | null;
         guildId: string | null;
         content: string;
         footer: string;
-        channelId: string | null;
         author: string;
         url: string;
         image: string;
@@ -75,10 +75,10 @@ export declare class EmbedsController {
         description: string;
         name: string;
         color: string;
+        channelId: string | null;
         guildId: string | null;
         content: string;
         footer: string;
-        channelId: string | null;
         author: string;
         url: string;
         image: string;

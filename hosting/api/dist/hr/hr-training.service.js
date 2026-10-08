@@ -112,7 +112,7 @@ let HrTrainingService = class HrTrainingService {
     async exams(actor) {
         const manage = await this.perms.has(actor.userId, 'exam.manage') || await this.perms.has(actor.userId, 'exam.grade');
         const list = await this.prisma.hrExam.findMany({ orderBy: { title: 'asc' } });
-        const me = await this.prisma.personnel.findUnique({ where: { userId: actor.userId } });
+        const me = await this.prisma.personnel.findFirst({ where: { userId: actor.userId } });
         const mine = me ? await this.prisma.hrExamAttempt.findMany({ where: { personnelId: me.id }, select: { examId: true, status: true, passed: true, score: true, maxScore: true, submittedAt: true, startedAt: true } }) : [];
         return list.filter((e) => manage || e.active).map((e) => ({ ...e, questions: manage ? e.questions : undefined, questionTotal: e.questions.length, myAttempts: mine.filter((a) => a.examId === e.id) }));
     }
@@ -136,7 +136,7 @@ let HrTrainingService = class HrTrainingService {
         const e = await this.prisma.hrExam.findUnique({ where: { id: examId } });
         if (!e?.active)
             throw new errors_1.AppError('NOT_FOUND', 'Prüfung nicht verfügbar.');
-        const me = await this.prisma.personnel.findUnique({ where: { userId: actor.userId } });
+        const me = await this.prisma.personnel.findFirst({ where: { userId: actor.userId } });
         if (!me)
             throw new errors_1.AppError('CONFLICT', 'Für Prüfungen brauchst du eine Personalakte.');
         const open = await this.prisma.hrExamAttempt.findFirst({ where: { examId, personnelId: me.id, status: 'IN_PROGRESS' } });

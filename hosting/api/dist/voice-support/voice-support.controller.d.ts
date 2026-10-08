@@ -25,14 +25,14 @@ declare const voice: z.ZodObject<{
     discordId: z.ZodString;
     userName: z.ZodDefault<z.ZodString>;
 }, "strip", z.ZodTypeAny, {
+    channelId: string;
     guildId: string;
     discordId: string;
-    channelId: string;
     userName: string;
 }, {
+    channelId: string;
     guildId: string;
     discordId: string;
-    channelId: string;
     userName?: string | undefined;
 }>;
 declare const webAction: z.ZodDiscriminatedUnion<"action", [z.ZodObject<{
@@ -94,9 +94,9 @@ export declare class VoiceSupportController {
         status: string;
         createdAt: Date;
         userId: string;
+        channelId: string | null;
         guildId: string;
         closedAt: Date | null;
-        channelId: string | null;
         closeReason: string | null;
         closedById: string | null;
         closedByName: string | null;
@@ -120,9 +120,9 @@ export declare class VoiceSupportController {
         status: string;
         createdAt: Date;
         userId: string;
+        channelId: string | null;
         guildId: string;
         closedAt: Date | null;
-        channelId: string | null;
         closeReason: string | null;
         closedById: string | null;
         closedByName: string | null;

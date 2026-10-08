@@ -15,6 +15,8 @@ const check = (scope: string, guildId: string) => http().get(`/api/v1/bot/applic
 beforeAll(async () => {
   process.env.BOT_API_TOKEN = TOKEN;
   ({ app, prisma } = await createTestApp());
+  // Grundeinstellung der Qualifikationen (andere Tests speichern eigene Einheiten in dieselbe Datenbank)
+  await prisma.systemSetting.deleteMany({ where: { key: { startsWith: 'qualifications.config' } } });
   await makeUser(prisma, 'ban_admin', ['System Administrator']);
   await makeUser(prisma, 'ban_member', ['Police Member']);
 });

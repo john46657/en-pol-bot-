@@ -237,7 +237,7 @@ let QualificationsService = class QualificationsService {
         await this.discord.markDecided('qualification', id, actor, status, reason || null);
         // Personal/Dienstnummer-Automatik (falls für diese Einheit eingerichtet)
         if (status === 'ACCEPTED')
-            await hire_events_1.hireEvents.accepted(actor, { applicationId: a.id, number: a.number, kind: a.unitName, discordId: a.discordId, name: a.discordName });
+            await hire_events_1.hireEvents.accepted(actor, { applicationId: a.id, number: a.number, kind: a.unitName, discordId: a.discordId, name: a.discordName, guildId: a.guildId });
         return { id, number: a.number, unitName: a.unitName, status, addedToSek, decidedByName: by?.displayName ?? null, reason: reason || null };
     }
 };

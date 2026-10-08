@@ -3,6 +3,7 @@ import { PrismaService } from '../prisma/prisma.service';
 import { AuditService, Actor } from '../audit/audit.service';
 import { DiscordService } from '../discord/discord.service';
 import { AppError } from '../common/errors';
+import { personnelOfServer } from '../common/guild-context';
 import { makeNumber } from '../common/numbering';
 
 export interface SekTarget { userId?: string; discordId?: string }
@@ -19,8 +20,8 @@ export class SekService {
   }
 
   private async people(ids: string[]) {
-    const users = await this.prisma.user.findMany({ where: { id: { in: [...new Set(ids)] } }, select: { id: true, displayName: true, personnel: { select: { callsign: true, rank: true } } } });
-    return new Map(users.map((u) => [u.id, { displayName: u.displayName, callsign: u.personnel?.callsign ?? null, rank: u.personnel?.rank ?? null }]));
+    const users = await this.prisma.user.findMany({ where: { id: { in: [...new Set(ids)] } }, select: { id: true, displayName: true, personnel: personnelOfServer({ callsign: true, rank: true }) } });
+    return new Map(users.map((u) => [u.id, { displayName: u.displayName, callsign: u.personnel[0]?.callsign ?? null, rank: u.personnel[0]?.rank ?? null }]));
   }
 
   async isMember(userId: string) { return !!(await this.prisma.sekMember.findUnique({ where: { userId } })); }
@@ -37,9 +38,9 @@ export class SekService {
   /** Wer hinzugefügt werden kann: alle aktiven Benutzer, die noch nicht im SEK sind (mit Dienstnummer/Dienstgrad, falls vorhanden). */
   async candidates() {
     const members = new Set((await this.prisma.sekMember.findMany({ select: { userId: true } })).map((m) => m.userId));
-    const users = await this.prisma.user.findMany({ where: { active: true }, orderBy: { displayName: 'asc' }, take: 1000, select: { id: true, displayName: true, username: true, personnel: { select: { callsign: true, rank: true } } } });
+    const users = await this.prisma.user.findMany({ where: { active: true }, orderBy: { displayName: 'asc' }, take: 1000, select: { id: true, displayName: true, username: true, personnel: personnelOfServer({ callsign: true, rank: true }) } });
     const linked = new Set((await this.prisma.discordLink.findMany({ select: { userId: true } })).map((l) => l.userId));
-    return users.filter((u) => !members.has(u.id)).map((u) => ({ userId: u.id, name: u.displayName, username: u.username, callsign: u.personnel?.callsign ?? null, rank: u.personnel?.rank ?? null, discordLinked: linked.has(u.id) }));
+    return users.filter((u) => !members.has(u.id)).map((u) => ({ userId: u.id, name: u.displayName, username: u.username, callsign: u.personnel[0]?.callsign ?? null, rank: u.personnel[0]?.rank ?? null, discordLinked: linked.has(u.id) }));
   }
 
   async addMember(actor: Actor, t: SekTarget) {

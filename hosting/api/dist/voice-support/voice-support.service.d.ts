@@ -48,8 +48,8 @@ export declare const roomSchema: z.ZodEffects<z.ZodObject<{
 }, "strip", z.ZodTypeAny, {
     id: string;
     name: string;
-    guildId: string;
     notes: boolean;
+    guildId: string;
     enabled: boolean;
     notifyChannelId: string;
     rating: boolean;
@@ -96,8 +96,8 @@ export declare const roomSchema: z.ZodEffects<z.ZodObject<{
 }>, {
     id: string;
     name: string;
-    guildId: string;
     notes: boolean;
+    guildId: string;
     enabled: boolean;
     notifyChannelId: string;
     rating: boolean;
@@ -185,8 +185,8 @@ export declare const roomsSchema: z.ZodEffects<z.ZodArray<z.ZodEffects<z.ZodObje
 }, "strip", z.ZodTypeAny, {
     id: string;
     name: string;
-    guildId: string;
     notes: boolean;
+    guildId: string;
     enabled: boolean;
     notifyChannelId: string;
     rating: boolean;
@@ -233,8 +233,8 @@ export declare const roomsSchema: z.ZodEffects<z.ZodArray<z.ZodEffects<z.ZodObje
 }>, {
     id: string;
     name: string;
-    guildId: string;
     notes: boolean;
+    guildId: string;
     enabled: boolean;
     notifyChannelId: string;
     rating: boolean;
@@ -281,8 +281,8 @@ export declare const roomsSchema: z.ZodEffects<z.ZodArray<z.ZodEffects<z.ZodObje
 }>, "many">, {
     id: string;
     name: string;
-    guildId: string;
     notes: boolean;
+    guildId: string;
     enabled: boolean;
     notifyChannelId: string;
     rating: boolean;
@@ -360,9 +360,9 @@ export declare class VoiceSupportService {
         status: string;
         createdAt: Date;
         userId: string;
+        channelId: string | null;
         guildId: string;
         closedAt: Date | null;
-        channelId: string | null;
         closeReason: string | null;
         closedById: string | null;
         closedByName: string | null;
@@ -569,9 +569,9 @@ export declare class VoiceSupportService {
         status: string;
         createdAt: Date;
         userId: string;
+        channelId: string | null;
         guildId: string;
         closedAt: Date | null;
-        channelId: string | null;
         closeReason: string | null;
         closedById: string | null;
         closedByName: string | null;

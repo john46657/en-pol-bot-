@@ -20,6 +20,7 @@ export declare class UsersService {
             id: string;
             createdAt: Date;
             updatedAt: Date;
+            active: boolean;
             username: string;
             displayName: string;
             email: string | null;
@@ -27,7 +28,6 @@ export declare class UsersService {
             robloxUsername: string | null;
             robloxStatus: string;
             robloxVerifiedAt: Date | null;
-            active: boolean;
             lastLogin: Date | null;
             totpEnabledAt: Date | null;
             roles: {
@@ -50,6 +50,7 @@ export declare class UsersService {
         id: string;
         createdAt: Date;
         updatedAt: Date;
+        active: boolean;
         username: string;
         displayName: string;
         email: string | null;
@@ -57,7 +58,6 @@ export declare class UsersService {
         robloxUsername: string | null;
         robloxStatus: string;
         robloxVerifiedAt: Date | null;
-        active: boolean;
         lastLogin: Date | null;
         totpEnabledAt: Date | null;
         roles: {
@@ -82,6 +82,7 @@ export declare class UsersService {
         id: string;
         createdAt: Date;
         updatedAt: Date;
+        active: boolean;
         username: string;
         displayName: string;
         email: string | null;
@@ -89,7 +90,6 @@ export declare class UsersService {
         robloxUsername: string | null;
         robloxStatus: string;
         robloxVerifiedAt: Date | null;
-        active: boolean;
         lastLogin: Date | null;
         totpEnabledAt: Date | null;
         roles: {
@@ -112,6 +112,7 @@ export declare class UsersService {
         id: string;
         createdAt: Date;
         updatedAt: Date;
+        active: boolean;
         username: string;
         displayName: string;
         email: string | null;
@@ -119,7 +120,6 @@ export declare class UsersService {
         robloxUsername: string | null;
         robloxStatus: string;
         robloxVerifiedAt: Date | null;
-        active: boolean;
         lastLogin: Date | null;
         totpEnabledAt: Date | null;
         roles: {
@@ -138,6 +138,7 @@ export declare class UsersService {
         id: string;
         createdAt: Date;
         updatedAt: Date;
+        active: boolean;
         username: string;
         displayName: string;
         email: string | null;
@@ -145,7 +146,6 @@ export declare class UsersService {
         robloxUsername: string | null;
         robloxStatus: string;
         robloxVerifiedAt: Date | null;
-        active: boolean;
         lastLogin: Date | null;
         totpEnabledAt: Date | null;
         roles: {
@@ -164,6 +164,7 @@ export declare class UsersService {
         id: string;
         createdAt: Date;
         updatedAt: Date;
+        active: boolean;
         username: string;
         displayName: string;
         email: string | null;
@@ -171,7 +172,6 @@ export declare class UsersService {
         robloxUsername: string | null;
         robloxStatus: string;
         robloxVerifiedAt: Date | null;
-        active: boolean;
         lastLogin: Date | null;
         totpEnabledAt: Date | null;
         roles: {

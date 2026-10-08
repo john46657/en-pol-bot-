@@ -84,9 +84,9 @@ export declare class RadioCodesController {
         updatedAt: Date;
         category: string | null;
         description: string | null;
+        position: number;
         guildId: string | null;
         code: string;
-        position: number;
         meaning: string;
     }[]>;
     discord(): Promise<{
@@ -126,9 +126,9 @@ export declare class RadioCodesController {
         updatedAt: Date;
         category: string | null;
         description: string | null;
+        position: number;
         guildId: string | null;
         code: string;
-        position: number;
         meaning: string;
     }>;
     defaults(a: Actor): Promise<{
@@ -140,9 +140,9 @@ export declare class RadioCodesController {
         updatedAt: Date;
         category: string | null;
         description: string | null;
+        position: number;
         guildId: string | null;
         code: string;
-        position: number;
         meaning: string;
     }[]>;
     update(a: Actor, id: string, b: z.infer<typeof update>): Promise<{
@@ -151,9 +151,9 @@ export declare class RadioCodesController {
         updatedAt: Date;
         category: string | null;
         description: string | null;
+        position: number;
         guildId: string | null;
         code: string;
-        position: number;
         meaning: string;
     }>;
     remove(a: Actor, id: string): Promise<void>;

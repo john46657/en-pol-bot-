@@ -100,7 +100,7 @@ export class RosterService {
     if (!m) throw new AppError('NOT_FOUND', 'Teammitglied nicht gefunden.');
     const ctx = await this.perms.contextFor(viewerId);
     const details = can(ctx, 'personnel.view') || can(ctx, 'users.view');
-    const personnelId = m.userId && can(ctx, 'personnel.view') ? (await this.prisma.personnel.findUnique({ where: { userId: m.userId }, select: { id: true } }))?.id ?? null : null;
+    const personnelId = m.userId && can(ctx, 'personnel.view') ? (await this.prisma.personnel.findFirst({ where: { userId: m.userId }, select: { id: true } }))?.id ?? null : null;
     return { ...m, discordId: details ? m.discordId : null, discordRoles: details ? m.discordRoles : [], joinedAt: details ? m.joinedAt : null, personnelId, detailed: details };
   }
 

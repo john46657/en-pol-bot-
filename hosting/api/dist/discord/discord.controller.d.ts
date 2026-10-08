@@ -5,6 +5,7 @@ import { ApplicationsService } from '../applications/applications.service';
 import { DangerService } from '../danger/danger.service';
 import { DutyService } from '../duty/duty.service';
 import { PrismaService } from '../prisma/prisma.service';
+import { ServerLinksService } from '../server-links/server-links.service';
 import type { Actor } from '../audit/audit.service';
 declare const guildsBody: z.ZodObject<{
     guilds: z.ZodArray<z.ZodObject<{
@@ -38,13 +39,13 @@ declare const guildsBody: z.ZodObject<{
         }, "strip", z.ZodTypeAny, {
             id: string;
             name: string;
-            color: number;
             position: number;
+            color: number;
         }, {
             id: string;
             name: string;
-            color: number;
             position: number;
+            color: number;
         }>, "many">;
     }, "strip", z.ZodTypeAny, {
         id: string;
@@ -60,8 +61,8 @@ declare const guildsBody: z.ZodObject<{
         roles: {
             id: string;
             name: string;
-            color: number;
             position: number;
+            color: number;
         }[];
     }, {
         id: string;
@@ -77,8 +78,8 @@ declare const guildsBody: z.ZodObject<{
         roles: {
             id: string;
             name: string;
-            color: number;
             position: number;
+            color: number;
         }[];
     }>, "many">;
 }, "strip", z.ZodTypeAny, {
@@ -96,8 +97,8 @@ declare const guildsBody: z.ZodObject<{
         roles: {
             id: string;
             name: string;
-            color: number;
             position: number;
+            color: number;
         }[];
     }[];
 }, {
@@ -115,8 +116,8 @@ declare const guildsBody: z.ZodObject<{
         roles: {
             id: string;
             name: string;
-            color: number;
             position: number;
+            color: number;
         }[];
     }[];
 }>;
@@ -124,11 +125,11 @@ declare const redeem: z.ZodObject<{
     code: z.ZodString;
     discordId: z.ZodString;
 }, "strip", z.ZodTypeAny, {
-    code: string;
     discordId: string;
+    code: string;
 }, {
-    code: string;
     discordId: string;
+    code: string;
 }>;
 declare const ack: z.ZodObject<{
     ok: z.ZodBoolean;
@@ -167,18 +168,18 @@ declare const membersBody: z.ZodObject<{
     }, "strip", z.ZodTypeAny, {
         id: string;
         status: "unknown" | "online" | "idle" | "dnd" | "offline";
+        guildId: string;
         username: string;
         displayName: string;
-        guildId: string;
         joinedAt: string | null;
         roleIds: string[];
         avatar: string | null;
     }, {
         id: string;
         status: "unknown" | "online" | "idle" | "dnd" | "offline";
+        guildId: string;
         username: string;
         displayName: string;
-        guildId: string;
         joinedAt: string | null;
         roleIds: string[];
         avatar: string | null;
@@ -187,9 +188,9 @@ declare const membersBody: z.ZodObject<{
     members: {
         id: string;
         status: "unknown" | "online" | "idle" | "dnd" | "offline";
+        guildId: string;
         username: string;
         displayName: string;
-        guildId: string;
         joinedAt: string | null;
         roleIds: string[];
         avatar: string | null;
@@ -198,9 +199,9 @@ declare const membersBody: z.ZodObject<{
     members: {
         id: string;
         status: "unknown" | "online" | "idle" | "dnd" | "offline";
+        guildId: string;
         username: string;
         displayName: string;
-        guildId: string;
         joinedAt: string | null;
         roleIds: string[];
         avatar: string | null;
@@ -251,8 +252,8 @@ declare const voiceBody: z.ZodObject<{
     }, "strip", z.ZodTypeAny, {
         id: string;
         name: string;
-        guildId: string;
         position: number;
+        guildId: string;
         members: {
             id: string;
             displayName: string;
@@ -270,8 +271,8 @@ declare const voiceBody: z.ZodObject<{
     }, {
         id: string;
         name: string;
-        guildId: string;
         position: number;
+        guildId: string;
         members: {
             id: string;
             displayName: string;
@@ -291,8 +292,8 @@ declare const voiceBody: z.ZodObject<{
     channels: {
         id: string;
         name: string;
-        guildId: string;
         position: number;
+        guildId: string;
         members: {
             id: string;
             displayName: string;
@@ -312,8 +313,8 @@ declare const voiceBody: z.ZodObject<{
     channels: {
         id: string;
         name: string;
-        guildId: string;
         position: number;
+        guildId: string;
         members: {
             id: string;
             displayName: string;
@@ -347,20 +348,20 @@ declare const application: z.ZodObject<{
     joinedAt: z.ZodOptional<z.ZodDate>;
     answers: z.ZodRecord<z.ZodString, z.ZodUnion<[z.ZodString, z.ZodArray<z.ZodString, "many">]>>;
 }, "strip", z.ZodTypeAny, {
-    robloxUsername: string;
-    answers: Record<string, string | string[]>;
     discordId: string;
-    robloxUserId?: string | undefined;
+    answers: Record<string, string | string[]>;
+    robloxUsername: string;
     guildId?: string | undefined;
+    robloxUserId?: string | undefined;
     discordName?: string | undefined;
     durationSec?: number | undefined;
     joinedAt?: Date | undefined;
 }, {
-    robloxUsername: string;
-    answers: Record<string, string | string[]>;
     discordId: string;
-    robloxUserId?: string | undefined;
+    answers: Record<string, string | string[]>;
+    robloxUsername: string;
     guildId?: string | undefined;
+    robloxUserId?: string | undefined;
     discordName?: string | undefined;
     durationSec?: number | undefined;
     joinedAt?: Date | undefined;
@@ -395,7 +396,8 @@ export declare class BotController {
     private readonly danger;
     private readonly applications;
     private readonly prisma;
-    constructor(d: DiscordService, live: DiscordLiveService, duty: DutyService, danger: DangerService, applications: ApplicationsService, prisma: PrismaService);
+    private readonly links;
+    constructor(d: DiscordService, live: DiscordLiveService, duty: DutyService, danger: DangerService, applications: ApplicationsService, prisma: PrismaService, links: ServerLinksService);
     redeem(b: z.infer<typeof redeem>): Promise<{
         displayName: string;
         username: string;

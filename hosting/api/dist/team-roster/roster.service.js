@@ -111,7 +111,7 @@ let RosterService = class RosterService {
             throw new errors_1.AppError('NOT_FOUND', 'Teammitglied nicht gefunden.');
         const ctx = await this.perms.contextFor(viewerId);
         const details = (0, shared_1.can)(ctx, 'personnel.view') || (0, shared_1.can)(ctx, 'users.view');
-        const personnelId = m.userId && (0, shared_1.can)(ctx, 'personnel.view') ? (await this.prisma.personnel.findUnique({ where: { userId: m.userId }, select: { id: true } }))?.id ?? null : null;
+        const personnelId = m.userId && (0, shared_1.can)(ctx, 'personnel.view') ? (await this.prisma.personnel.findFirst({ where: { userId: m.userId }, select: { id: true } }))?.id ?? null : null;
         return { ...m, discordId: details ? m.discordId : null, discordRoles: details ? m.discordRoles : [], joinedAt: details ? m.joinedAt : null, personnelId, detailed: details };
     }
     /** Voice-Channels mit Personen (eigenes Widget, getrennt von der Teamliste). */

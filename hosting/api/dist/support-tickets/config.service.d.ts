@@ -18,12 +18,13 @@ export declare class TicketConfigService {
             createdAt: Date;
             updatedAt: Date;
             description: string;
-            active: boolean;
             name: string;
+            position: number;
             color: number;
+            active: boolean;
+            questions: Prisma.JsonValue;
             guildId: string | null;
             emoji: string | null;
-            position: number;
             buttonStyle: string;
             discordCategoryId: string | null;
             channelNameFormat: string;
@@ -35,7 +36,6 @@ export declare class TicketConfigService {
             maxOpen: number;
             cooldownMinutes: number;
             defaultPriorityId: string | null;
-            questions: Prisma.JsonValue;
             welcomeTitle: string;
             welcomeMessage: string;
             mentionStaff: boolean;
@@ -81,7 +81,9 @@ export declare class TicketConfigService {
             updatedAt: Date;
             description: string;
             name: string;
+            position: number;
             color: number;
+            channelId: string | null;
             guildId: string | null;
             emoji: string | null;
             thumbnailUrl: string | null;
@@ -93,21 +95,19 @@ export declare class TicketConfigService {
             authorIconUrl: string | null;
             style: string;
             placeholder: string;
-            channelId: string | null;
             categoryIds: string[];
             allowedRoleIds: string[];
             showLoad: boolean;
-            position: number;
             messageChannelId: string | null;
             messageId: string | null;
         }[];
         statuses: {
             id: string;
             name: string;
-            color: number;
-            emoji: string;
             position: number;
+            color: number;
             kind: string;
+            emoji: string;
             isDefault: boolean;
             isClaimed: boolean;
             isEscalation: boolean;
@@ -116,9 +116,9 @@ export declare class TicketConfigService {
         priorities: {
             id: string;
             name: string;
+            position: number;
             color: number;
             emoji: string;
-            position: number;
             isDefault: boolean;
             allowedRoleNames: string[];
             notifyRoleIds: string[];
@@ -140,7 +140,7 @@ export declare class TicketConfigService {
             transcriptRetentionDays: number;
             ratingChannelId: string | null;
             ratingPublicChannelId: string | null;
-            ratingPublicFields: ("category" | "comment" | "duration" | "staff" | "creator")[];
+            ratingPublicFields: ("category" | "duration" | "comment" | "staff" | "creator")[];
             memberLeaveAction: "NONE" | "CLOSE";
             memberLeaveReason: string;
         };
@@ -155,10 +155,10 @@ export declare class TicketConfigService {
     statuses(): Prisma.PrismaPromise<{
         id: string;
         name: string;
-        color: number;
-        emoji: string;
         position: number;
+        color: number;
         kind: string;
+        emoji: string;
         isDefault: boolean;
         isClaimed: boolean;
         isEscalation: boolean;
@@ -167,9 +167,9 @@ export declare class TicketConfigService {
     priorities(): Prisma.PrismaPromise<{
         id: string;
         name: string;
+        position: number;
         color: number;
         emoji: string;
-        position: number;
         isDefault: boolean;
         allowedRoleNames: string[];
         notifyRoleIds: string[];
@@ -185,12 +185,13 @@ export declare class TicketConfigService {
         createdAt: Date;
         updatedAt: Date;
         description: string;
-        active: boolean;
         name: string;
+        position: number;
         color: number;
+        active: boolean;
+        questions: Prisma.JsonValue;
         guildId: string | null;
         emoji: string | null;
-        position: number;
         buttonStyle: string;
         discordCategoryId: string | null;
         channelNameFormat: string;
@@ -202,7 +203,6 @@ export declare class TicketConfigService {
         maxOpen: number;
         cooldownMinutes: number;
         defaultPriorityId: string | null;
-        questions: Prisma.JsonValue;
         welcomeTitle: string;
         welcomeMessage: string;
         mentionStaff: boolean;
@@ -246,12 +246,13 @@ export declare class TicketConfigService {
         createdAt: Date;
         updatedAt: Date;
         description: string;
-        active: boolean;
         name: string;
+        position: number;
         color: number;
+        active: boolean;
+        questions: Prisma.JsonValue;
         guildId: string | null;
         emoji: string | null;
-        position: number;
         buttonStyle: string;
         discordCategoryId: string | null;
         channelNameFormat: string;
@@ -263,7 +264,6 @@ export declare class TicketConfigService {
         maxOpen: number;
         cooldownMinutes: number;
         defaultPriorityId: string | null;
-        questions: Prisma.JsonValue;
         welcomeTitle: string;
         welcomeMessage: string;
         mentionStaff: boolean;
@@ -307,12 +307,13 @@ export declare class TicketConfigService {
         createdAt: Date;
         updatedAt: Date;
         description: string;
-        active: boolean;
         name: string;
+        position: number;
         color: number;
+        active: boolean;
+        questions: Prisma.JsonValue;
         guildId: string | null;
         emoji: string | null;
-        position: number;
         buttonStyle: string;
         discordCategoryId: string | null;
         channelNameFormat: string;
@@ -324,7 +325,6 @@ export declare class TicketConfigService {
         maxOpen: number;
         cooldownMinutes: number;
         defaultPriorityId: string | null;
-        questions: Prisma.JsonValue;
         welcomeTitle: string;
         welcomeMessage: string;
         mentionStaff: boolean;
@@ -371,7 +371,9 @@ export declare class TicketConfigService {
         updatedAt: Date;
         description: string;
         name: string;
+        position: number;
         color: number;
+        channelId: string | null;
         guildId: string | null;
         emoji: string | null;
         thumbnailUrl: string | null;
@@ -383,11 +385,9 @@ export declare class TicketConfigService {
         authorIconUrl: string | null;
         style: string;
         placeholder: string;
-        channelId: string | null;
         categoryIds: string[];
         allowedRoleIds: string[];
         showLoad: boolean;
-        position: number;
         messageChannelId: string | null;
         messageId: string | null;
     }>;
@@ -398,7 +398,9 @@ export declare class TicketConfigService {
         updatedAt: Date;
         description: string;
         name: string;
+        position: number;
         color: number;
+        channelId: string | null;
         guildId: string | null;
         emoji: string | null;
         thumbnailUrl: string | null;
@@ -410,11 +412,9 @@ export declare class TicketConfigService {
         authorIconUrl: string | null;
         style: string;
         placeholder: string;
-        channelId: string | null;
         categoryIds: string[];
         allowedRoleIds: string[];
         showLoad: boolean;
-        position: number;
         messageChannelId: string | null;
         messageId: string | null;
     }>;
@@ -422,10 +422,10 @@ export declare class TicketConfigService {
     saveStatus(actor: Actor, id: string | null, d: z.infer<typeof statusSchema>): Promise<{
         id: string;
         name: string;
-        color: number;
-        emoji: string;
         position: number;
+        color: number;
         kind: string;
+        emoji: string;
         isDefault: boolean;
         isClaimed: boolean;
         isEscalation: boolean;
@@ -435,9 +435,9 @@ export declare class TicketConfigService {
     savePriority(actor: Actor, id: string | null, d: z.infer<typeof prioritySchema>): Promise<{
         id: string;
         name: string;
+        position: number;
         color: number;
         emoji: string;
-        position: number;
         isDefault: boolean;
         allowedRoleNames: string[];
         notifyRoleIds: string[];
@@ -461,7 +461,7 @@ export declare class TicketConfigService {
         transcriptRetentionDays: number;
         ratingChannelId: string | null;
         ratingPublicChannelId: string | null;
-        ratingPublicFields: ("category" | "comment" | "duration" | "staff" | "creator")[];
+        ratingPublicFields: ("category" | "duration" | "comment" | "staff" | "creator")[];
         memberLeaveAction: "NONE" | "CLOSE";
         memberLeaveReason: string;
     }>;

@@ -169,8 +169,8 @@ export class ApplicationsService {
   }
 
   /** Angenommen → Personal-/Dienstnummern-Automatik (Einstellungen → Dienstnummern). */
-  private hire(actor: Actor, a: { id: string; number: string; discordId: string | null; discordName: string | null; robloxUsername: string; robloxUserId: string | null }) {
-    return hireEvents.accepted(actor, { applicationId: a.id, number: a.number, kind: 'police', discordId: a.discordId, name: a.discordName || a.robloxUsername, robloxUsername: a.robloxUsername, robloxUserId: a.robloxUserId });
+  private hire(actor: Actor, a: { id: string; number: string; discordId: string | null; discordName: string | null; robloxUsername: string; robloxUserId: string | null; guildId: string | null }) {
+    return hireEvents.accepted(actor, { applicationId: a.id, number: a.number, kind: 'police', discordId: a.discordId, name: a.discordName || a.robloxUsername, robloxUsername: a.robloxUsername, robloxUserId: a.robloxUserId, guildId: a.guildId });
   }
 
   /** „Action On User Leave“ der Polizei-Bewerbung: offene Bewerbungen einer Person, die den Discord-Server verlassen hat. */

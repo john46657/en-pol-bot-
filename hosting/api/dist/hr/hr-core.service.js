@@ -17,6 +17,7 @@ const audit_service_1 = require("../audit/audit.service");
 const discord_service_1 = require("../discord/discord.service");
 const discord_live_service_1 = require("../discord/discord-live.service");
 const errors_1 = require("../common/errors");
+const guild_context_1 = require("../common/guild-context");
 const CONFIG_KEY = 'hr.config';
 const norm = (s) => (s ?? '').trim().toLowerCase();
 /**
@@ -35,8 +36,19 @@ let HrCoreService = class HrCoreService {
         this.live = live;
     }
     // ---------------- Einstellungen ----------------
+    /** Einstellung des gewählten Discord-Servers, sonst die gemeinsame (Personal ist je Server getrennt). */
+    async setting(key, tx = this.prisma) {
+        const g = (0, guild_context_1.currentGuild)();
+        return (g ? await tx.systemSetting.findUnique({ where: { key: (0, guild_context_1.scopedKey)(key, g) } }) : null) ?? tx.systemSetting.findUnique({ where: { key } });
+    }
+    /** Schlüssel, unter dem der gewählte Server speichert (ohne Server: der gemeinsame). */
+    settingKey(key) { return (0, guild_context_1.scopedKey)(key, (0, guild_context_1.currentGuild)()); }
+    async saveSetting(tx, key, value) {
+        const k = this.settingKey(key);
+        await tx.systemSetting.upsert({ where: { key: k }, create: { key: k, value }, update: { value } });
+    }
     async config() {
-        return (0, shared_1.withHrDefaults)((await this.prisma.systemSetting.findUnique({ where: { key: CONFIG_KEY } }))?.value);
+        return (0, shared_1.withHrDefaults)((await this.setting(CONFIG_KEY))?.value);
     }
     async saveConfig(actor, input) {
         const before = await this.config();
@@ -48,7 +60,7 @@ let HrCoreService = class HrCoreService {
         if (new Set(names).size !== names.length)
             throw new errors_1.AppError('VALIDATION_FAILED', 'Abteilungsnamen müssen eindeutig sein.');
         await this.prisma.$transaction(async (tx) => {
-            await tx.systemSetting.upsert({ where: { key: CONFIG_KEY }, create: { key: CONFIG_KEY, value: c }, update: { value: c } });
+            await this.saveSetting(tx, CONFIG_KEY, c);
             // umbenannte Abteilungen in den Personalakten nachziehen (gleiche ID, anderer Name)
             for (const d of c.departments) {
                 const old = before.departments.find((x) => x.id === d.id);
@@ -56,12 +68,12 @@ let HrCoreService = class HrCoreService {
                     await tx.personnel.updateMany({ where: { team: old.name }, data: { team: d.name } });
             }
             // Teamliste/Teamstruktur kennt dieselben Abteilungen
-            const st = await tx.systemSetting.findUnique({ where: { key: 'team.structure' } });
+            const st = await this.setting('team.structure', tx);
             const s = (st?.value ?? {});
             const teams = [...new Set([...c.departments.map((d) => d.name), ...(s.teams ?? []).filter((t) => !before.departments.some((d) => d.name === t) || c.departments.some((d) => d.name === t))])];
             const value = { ...s, teams };
-            await tx.systemSetting.upsert({ where: { key: 'team.structure' }, create: { key: 'team.structure', value }, update: { value } });
-            await this.audit.record(actor, { action: 'hr.config.update', module: 'personnel', entityType: 'SystemSetting', entityId: CONFIG_KEY, before, after: c }, tx);
+            await this.saveSetting(tx, 'team.structure', value);
+            await this.audit.record(actor, { action: 'hr.config.update', module: 'personnel', entityType: 'SystemSetting', entityId: this.settingKey(CONFIG_KEY), before, after: c }, tx);
         });
         return this.config();
     }
@@ -75,8 +87,7 @@ let HrCoreService = class HrCoreService {
     /** Rangreihenfolge auch für Teamliste/Embeds (team.rankOrder). */
     async syncRankOrder(tx) {
         const names = (await tx.hrRank.findMany({ where: { active: true }, orderBy: { position: 'asc' }, select: { name: true } })).map((r) => r.name);
-        const value = names;
-        await tx.systemSetting.upsert({ where: { key: 'team.rankOrder' }, create: { key: 'team.rankOrder', value }, update: { value } });
+        await this.saveSetting(tx, 'team.rankOrder', names);
     }
     async saveRank(actor, d, id) {
         return this.prisma.$transaction(async (tx) => {
@@ -243,7 +254,7 @@ let HrCoreService = class HrCoreService {
     }
     /** Personalakte zu einem Benutzer (anlegen, falls gewünscht). */
     async ensurePersonnel(userId, d, tx) {
-        const p = await tx.personnel.findUnique({ where: { userId } });
+        const p = await tx.personnel.findFirst({ where: { userId } });
         if (p)
             return { personnel: p, created: false };
         return { personnel: await tx.personnel.create({ data: { userId, rank: d.rank ?? null, team: d.team ?? null } }), created: true };

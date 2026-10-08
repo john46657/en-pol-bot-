@@ -134,7 +134,7 @@ export class HrPeopleService {
       let userId = d.userId;
       if (!userId && d.discordId) userId = (await this.userForDiscord(tx, d.discordId, d.name ?? d.discordId)).id;
       if (!userId) throw new AppError('VALIDATION_FAILED', 'Benutzer oder Discord-ID angeben.');
-      if (await tx.personnel.findUnique({ where: { userId } })) throw new AppError('CONFLICT', 'Für diese Person gibt es schon eine Personalakte.');
+      if (await tx.personnel.findFirst({ where: { userId } })) throw new AppError('CONFLICT', 'Für diese Person gibt es schon eine Personalakte.');
       if (d.status && !cfg.statuses.some((s) => s.key === d.status)) throw new AppError('VALIDATION_FAILED', 'Unbekannter Status.');
       const p = await tx.personnel.create({ data: { userId, rank: d.rank ?? null, team: d.department ?? null, employmentStatus: d.status ?? 'ACTIVE', joinDate: d.joinDate ? new Date(d.joinDate) : new Date(), callsign: d.callsign?.toUpperCase() || null } });
       await this.core.audit.record(actor, { action: 'personnel.create', module: 'personnel', entityType: 'Personnel', entityId: p.id, after: p }, tx);
@@ -293,7 +293,7 @@ export class HrPeopleService {
   /** Verwarnung über Discord (/verwarnen): Person per Discord-ID, Grund, optional Schweregrad. */
   async warnByDiscord(actor: Actor, d: { discordId: string; reason: string; severity?: string }) {
     const link = await this.prisma.discordLink.findUnique({ where: { discordId: d.discordId } });
-    const p = link ? await this.prisma.personnel.findUnique({ where: { userId: link.userId } }) : null;
+    const p = link ? await this.prisma.personnel.findFirst({ where: { userId: link.userId } }) : null;
     if (!p) throw new AppError('NOT_FOUND', 'Für diese Person gibt es keine Personalakte.');
     const r = await this.addRecord(actor, p.id, { type: 'WARNING', summary: d.reason, severity: d.severity });
     const cfg = await this.core.config();

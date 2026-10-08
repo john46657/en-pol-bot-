@@ -8,6 +8,8 @@ import { ApplicationsService } from '../applications/applications.service';
 import { DangerService } from '../danger/danger.service';
 import { DutyService } from '../duty/duty.service';
 import { PrismaService } from '../prisma/prisma.service';
+import { ServerLinksService } from '../server-links/server-links.service';
+import { runInGuild, scopedKey } from '../common/guild-context';
 import { BotService, CurrentActor, RequirePermission } from '../authz/decorators';
 import type { Actor } from '../audit/audit.service';
 import { zodBody } from '../common/zod.pipe';
@@ -58,7 +60,7 @@ export class DiscordController {
 @ApiTags('bot')
 @Controller('bot')
 export class BotController {
-  constructor(private readonly d: DiscordService, private readonly live: DiscordLiveService, private readonly duty: DutyService, private readonly danger: DangerService, private readonly applications: ApplicationsService, private readonly prisma: PrismaService) {}
+  constructor(private readonly d: DiscordService, private readonly live: DiscordLiveService, private readonly duty: DutyService, private readonly danger: DangerService, private readonly applications: ApplicationsService, private readonly prisma: PrismaService, private readonly links: ServerLinksService) {}
   @BotService() @Throttle({ default: { limit: rate, ttl: 60_000 } }) @Post('link') @HttpCode(200)
   redeem(@Body(zodBody(redeem)) b: z.infer<typeof redeem>) { return this.d.redeem(b.code, b.discordId); }
   @BotService() @Get('config') config() { return this.d.channels(); }
@@ -72,8 +74,10 @@ export class BotController {
   /** Teamübersicht für die selbst aktualisierende Teamliste in Discord (nur Anzeigefelder). */
   @BotService() @Get('team')
   async team() {
-    const rows = await this.duty.overview();
-    const order = (((await this.prisma.systemSetting.findUnique({ where: { key: 'team.rankOrder' } }))?.value as string[] | undefined) ?? []);
+    // Eine Teamliste für alle: Personal des Heimat-Servers (Personal ist je Discord-Server getrennt)
+    const home = await this.links.homeGuild();
+    const rows = await runInGuild(home, () => this.duty.overview());
+    const order = (((home ? await this.prisma.systemSetting.findUnique({ where: { key: scopedKey('team.rankOrder', home) } }) : null) ?? (await this.prisma.systemSetting.findUnique({ where: { key: 'team.rankOrder' } })))?.value as string[] | undefined) ?? [];
     return { rankOrder: order, members: rows.map((r) => ({ name: r.name, rank: r.rank, callsign: r.callsign, team: r.team, dutyStatus: r.dutyStatus, unit: r.unit?.callsign ?? null })) };
   }
 

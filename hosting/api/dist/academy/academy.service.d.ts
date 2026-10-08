@@ -48,8 +48,8 @@ export declare class AcademyService {
         id: string;
         title: string;
         description: string | null;
-        passScore: number;
         instructorId: string | null;
+        passScore: number;
     })[]>;
     config(): Promise<AcademyConfig>;
     saveConfig(actor: Actor, c: AcademyConfig): Promise<{
@@ -69,8 +69,8 @@ export declare class AcademyService {
         id: string;
         title: string;
         description: string | null;
-        passScore: number;
         instructorId: string | null;
+        passScore: number;
     }>;
     /** Kurs in Discord ankündigen (mit Rollen-Ping). Kanal/Rollen aus der Anfrage, sonst der gespeicherte Standard, sonst der Ankündigungs-Kanal. */
     announce(actor: Actor, id: string, a: Announce): Promise<{
@@ -87,9 +87,9 @@ export declare class AcademyService {
     grade(actor: Actor, enrollmentId: string, score: number): Promise<{
         id: string;
         createdAt: Date;
-        enrollmentId: string;
-        score: number;
         passed: boolean;
+        score: number;
         gradedById: string | null;
+        enrollmentId: string;
     }>;
 }

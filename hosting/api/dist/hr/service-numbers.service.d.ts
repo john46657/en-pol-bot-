@@ -51,12 +51,12 @@ export declare class ServiceNumbersService implements OnModuleInit {
         first: string;
         last: string;
         isActive: boolean;
+        serverId: string | null;
         id: string;
         createdAt: Date;
         updatedAt: Date;
         name: string;
         position: number;
-        department: string | null;
         prefix: string;
         suffix: string;
         start: number;
@@ -67,15 +67,16 @@ export declare class ServiceNumbersService implements OnModuleInit {
         manual: boolean;
         reuse: boolean;
         releaseAs: string;
+        department: string | null;
     }[]>;
     saveRange(actor: Actor, d: RangeInput, id?: string): Promise<{
+        serverId: string | null;
         id: string;
         createdAt: Date;
         updatedAt: Date;
-        active: boolean;
         name: string;
         position: number;
-        department: string | null;
+        active: boolean;
         prefix: string;
         suffix: string;
         start: number;
@@ -86,6 +87,7 @@ export declare class ServiceNumbersService implements OnModuleInit {
         manual: boolean;
         reuse: boolean;
         releaseAs: string;
+        department: string | null;
     }>;
     deleteRange(actor: Actor, id: string): Promise<void>;
     /** Nummern mit Status/Person. „Frei“ enthält auch nie benutzte Nummern (bis `limit`). */
@@ -122,15 +124,16 @@ export declare class ServiceNumbersService implements OnModuleInit {
         name: string | null;
         actor: string;
         approver: string | null;
+        serverId: string | null;
         id: string;
         createdAt: Date;
         reason: string | null;
         userId: string | null;
+        display: string;
         personnelId: string | null;
+        oldDisplay: string | null;
         action: string;
         actorId: string | null;
-        display: string;
-        oldDisplay: string | null;
         approverId: string | null;
     }[]>;
     /** Nummer zu einer Schreibweise finden (Kreis + Wert). */
@@ -154,13 +157,13 @@ export declare class ServiceNumbersService implements OnModuleInit {
         display: string;
         old: string | null;
         range: {
+            serverId: string | null;
             id: string;
             createdAt: Date;
             updatedAt: Date;
-            active: boolean;
             name: string;
             position: number;
-            department: string | null;
+            active: boolean;
             prefix: string;
             suffix: string;
             start: number;
@@ -171,6 +174,7 @@ export declare class ServiceNumbersService implements OnModuleInit {
             manual: boolean;
             reuse: boolean;
             releaseAs: string;
+            department: string | null;
         };
     }>;
     /** Manuelle Vergabe (dienstnummer.assign) an eine Personalakte. */
@@ -183,13 +187,13 @@ export declare class ServiceNumbersService implements OnModuleInit {
         display: string;
         old: string | null;
         range: {
+            serverId: string | null;
             id: string;
             createdAt: Date;
             updatedAt: Date;
-            active: boolean;
             name: string;
             position: number;
-            department: string | null;
+            active: boolean;
             prefix: string;
             suffix: string;
             start: number;
@@ -200,6 +204,7 @@ export declare class ServiceNumbersService implements OnModuleInit {
             manual: boolean;
             reuse: boolean;
             releaseAs: string;
+            department: string | null;
         };
     }>;
     /** Nummer ändern (dienstnummer.edit); die alte wird je nach Kreis frei, ehemalig oder gesperrt. */
@@ -213,13 +218,13 @@ export declare class ServiceNumbersService implements OnModuleInit {
         display: string;
         old: string | null;
         range: {
+            serverId: string | null;
             id: string;
             createdAt: Date;
             updatedAt: Date;
-            active: boolean;
             name: string;
             position: number;
-            department: string | null;
+            active: boolean;
             prefix: string;
             suffix: string;
             start: number;
@@ -230,6 +235,7 @@ export declare class ServiceNumbersService implements OnModuleInit {
             manual: boolean;
             reuse: boolean;
             releaseAs: string;
+            department: string | null;
         };
     }>;
     /** Nummer freigeben / als ehemalig markieren / sperren / entsperren / reservieren. */
@@ -258,28 +264,29 @@ export declare class ServiceNumbersService implements OnModuleInit {
     pending(): Promise<{
         name: string;
         personnelId: string | null;
+        serverId: string | null;
         id: string;
         status: string;
         createdAt: Date;
         updatedAt: Date;
         reason: string;
         userId: string;
-        discordId: string | null;
-        kind: string;
         applicationId: string;
+        kind: string;
+        discordId: string | null;
     }[]>;
     /** Ausstehende Einstellung bestätigen/abschließen: Nummer aus dem Kreis der Zuordnung vergeben. */
     confirmPending(actor: Actor, id: string, display?: string): Promise<{
         display: string;
         old: string | null;
         range: {
+            serverId: string | null;
             id: string;
             createdAt: Date;
             updatedAt: Date;
-            active: boolean;
             name: string;
             position: number;
-            department: string | null;
+            active: boolean;
             prefix: string;
             suffix: string;
             start: number;
@@ -290,6 +297,7 @@ export declare class ServiceNumbersService implements OnModuleInit {
             manual: boolean;
             reuse: boolean;
             releaseAs: string;
+            department: string | null;
         };
     }>;
 }

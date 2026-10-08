@@ -256,9 +256,9 @@ export declare class PanelsService {
         id: string;
         createdAt: Date;
         updatedAt: Date;
+        channelId: string | null;
         guildId: string | null;
         discordId: string;
-        channelId: string | null;
         messageId: string | null;
         panelId: string;
         userName: string;

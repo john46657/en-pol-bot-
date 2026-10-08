@@ -195,8 +195,8 @@ export declare class VerificationService {
         displayName: string;
     }, method: string): Promise<{
         updatedAt: Date;
-        displayName: string;
         discordId: string;
+        displayName: string;
         discordName: string | null;
         robloxName: string;
         robloxId: string;
