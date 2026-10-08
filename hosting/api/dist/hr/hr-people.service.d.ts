@@ -400,6 +400,44 @@ export declare class HrPeopleService {
         deletedAt: Date | null;
         personnelId: string;
     }>;
+    /** Aktive Verwarnungen einer Person (nicht zurückgenommen, nicht abgelaufen). */
+    activeWarnings(personnelId: string, now?: Date): Promise<number>;
+    /**
+     * Nach einer neuen Verwarnung: Meldung im Verwarnungs-Kanal („Wer / Grund / 1/3“), DM an die Person und – bei Erreichen
+     * der Grenze – Leitung benachrichtigen, Discord-Rollen entziehen und/oder Status setzen (Einstellungen → Personal → Verwarnungen).
+     */
+    private warningFollowUp;
+    /** Alle Verwarnungen (Übersicht im Dashboard), mit aktuellem Zähler je Person. */
+    warnings(actor: Actor, f: {
+        state?: 'ACTIVE' | 'EXPIRED' | 'REVOKED' | 'ALL';
+        q?: string;
+    }): Promise<{
+        limit: number;
+        items: {
+            id: string;
+            personnelId: string;
+            name: string;
+            rank: string | null;
+            summary: string;
+            details: string | null;
+            data: Prisma.JsonValue;
+            createdAt: Date;
+            expiresAt: Date | null;
+            by: string;
+            state: string;
+            active: number;
+        }[];
+    }>;
+    /** Verwarnung über Discord (/verwarnen): Person per Discord-ID, Grund, optional Schweregrad. */
+    warnByDiscord(actor: Actor, d: {
+        discordId: string;
+        reason: string;
+        severity?: string;
+    }): Promise<{
+        id: string;
+        count: number;
+        limit: number;
+    }>;
     editRecord(actor: Actor, recordId: string, d: {
         summary?: string;
         details?: string | null;

@@ -933,6 +933,44 @@ function formPanelResult(p, values, user, now = /* @__PURE__ */ new Date()) {
     reactions: p.reactions
   };
 }
+var httpsImage = z.union([z.string().trim().max(500).regex(/^https:\/\/\S+$/, "Bild: https://-Link"), z.literal("")]).default("");
+var infoOptionSchema = z.object({
+  id: z.string().regex(/^[a-z0-9_-]{1,40}$/, "K\xFCrzel: a\u2013z, 0\u20139, _ und -"),
+  /** im Auswahlmenü */
+  label: z.string().trim().min(1).max(100),
+  description: z.string().max(100).default(""),
+  emoji: emoji.default(""),
+  /** Antwort (nur für die Person sichtbar) */
+  title: z.string().max(256).default(""),
+  text: z.string().max(4e3).default(""),
+  image: httpsImage,
+  color: color.default("#3b82f6")
+});
+var infoPanelSchema = z.object({
+  id: z.string().uuid(),
+  name: z.string().trim().min(1).max(80),
+  guildId: sf.nullable().default(null),
+  channelId: sf.nullable().default(null),
+  title: z.string().max(256).default("Aufgaben als Ausbilder"),
+  text: z.string().max(4e3).default("Hier findest du alles Wichtige. W\xE4hle unten einen Punkt aus."),
+  color: color.default("#1f2937"),
+  image: imageRef,
+  footer: z.string().max(200).default("Klicke auf \u201ETriff eine Auswahl\u201C, um mehr zu erfahren."),
+  placeholder: z.string().trim().min(1).max(150).default("Triff eine Auswahl"),
+  options: z.array(infoOptionSchema).min(1).max(25).default([
+    { id: "aufgaben", label: "Aufgaben", description: "Siehe, welche Aufgaben du hast.", emoji: "\u{1F4C2}", title: "Aufgaben", text: "Beschreibe hier die Aufgaben." },
+    { id: "doku", label: "Dokumentation", description: "Siehe, wie du dokumentieren musst.", emoji: "\u{1F4E8}", title: "Dokumentation", text: "Beschreibe hier, wie dokumentiert wird." }
+  ])
+});
+function infoPanelMessage(p) {
+  return {
+    embeds: [{ title: p.title || void 0, description: p.text || void 0, color: toInt(p.color), ...p.image ? { image: p.image } : {}, ...p.footer ? { footer: p.footer } : {} }],
+    select: { id: `ipnl:${p.id}`, placeholder: p.placeholder, options: p.options.map((o) => ({ label: o.label, value: o.id, ...o.description ? { description: o.description } : {}, ...o.emoji ? { emoji: o.emoji } : {} })) }
+  };
+}
+function infoOptionEmbed(o) {
+  return { title: (o.title || o.label).slice(0, 256), ...o.text ? { description: o.text } : {}, color: toInt(o.color), ...o.image ? { image: o.image } : {} };
+}
 
 // src/duty-reports.ts
 import { z as z2 } from "zod";
@@ -1157,6 +1195,26 @@ var hrConfigSchema = z3.object({
     announceChannelId: sf3.nullable().default(null)
   }).default({}),
   notifications: z3.record(z3.enum(HR_EVENTS), notifyRuleSchema).default({}),
+  /** Verwarnungen: Meldung in Discord mit Zähler und Folgen beim Erreichen der Grenze */
+  warnings: z3.object({
+    /** Grenze aktiver Verwarnungen (z. B. 3 → „1/3“) */
+    limit: z3.number().int().min(1).max(20).default(3),
+    /** Kanal für jede neue Verwarnung (leer = nur Dashboard) */
+    channelId: sf3.nullable().default(null),
+    template: z3.string().max(1500).default("**Wer:** {mitglied}\n**Grund:** {grund}\n**Verwarnungen:** {anzahl}/{grenze}"),
+    /** Person per DM informieren */
+    dm: z3.boolean().default(true),
+    atLimit: z3.object({
+      /** Dashboard-Rollen, die benachrichtigt werden (z. B. Leitung) */
+      notifyRoleIds: z3.array(uuid).max(20).default([]),
+      /** Discord-Rollen, die in der Meldung erwähnt werden */
+      pingDiscordRoleIds: z3.array(sf3).max(10).default([]),
+      /** Discord-Rollen, die entzogen werden */
+      removeDiscordRoleIds: z3.array(sf3).max(25).default([]),
+      /** Status der Personalakte setzen (z. B. SUSPENDED) – leer = nicht ändern */
+      status: z3.string().max(32).nullable().default(null)
+    }).default({})
+  }).default({}),
   /** Zertifikate */
   certificate: z3.object({ organisation: z3.string().max(100).default("EN Polizei"), logo: z3.string().max(500).default(""), signature: z3.string().max(100).default("") }).default({})
 });
@@ -1317,6 +1375,7 @@ var dnSettingsSchema = z3.object({
   /** Wechsel der Nummer braucht eine zweite Person (Genehmiger) */
   changeNeedsApprover: z3.boolean().default(false)
 });
+var WARNING_VARIABLES = ["{mitglied}", "{name}", "{grund}", "{schweregrad}", "{kategorie}", "{anzahl}", "{grenze}", "{durch}", "{datum}", "{ablauf}"];
 var DN_VARIABLES = ["{user}", "{name}", "{dienstnummer}", "{rang}", "{abteilung}", "{bewerbung}", "{datum}"];
 function fillTemplate(tpl, vars) {
   return tpl.replace(/\{([\w.]{1,40})\}/g, (m, k) => vars[k] !== void 0 && vars[k] !== null ? String(vars[k]) : m).replace(/@(everyone|here)/g, "@\u200B$1");
@@ -1741,6 +1800,7 @@ export {
   VOICE_CASE_STATUS,
   WANTED_STATUSES,
   WANTED_TRANSITIONS,
+  WARNING_VARIABLES,
   WEEKDAYS,
   WELCOME_VARIABLES,
   WORKFLOW_ACTION_LABELS,
@@ -1780,6 +1840,10 @@ export {
   hireMappingSchema,
   hrConfigSchema,
   hrStatusSchema,
+  infoOptionEmbed,
+  infoOptionSchema,
+  infoPanelMessage,
+  infoPanelSchema,
   isDutyTimeField,
   isInputQuestion,
   isPermissionKey,

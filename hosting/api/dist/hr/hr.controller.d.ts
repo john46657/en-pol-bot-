@@ -7,6 +7,7 @@ import { HrRequestsService } from './hr-requests.service';
 import { examSchema, HrTrainingService, trainingSchema } from './hr-training.service';
 import { announcementSchema, HrCommsService, pollSchema } from './hr-comms.service';
 import { ServiceNumbersService } from './service-numbers.service';
+import { HrTrainingSessionsService } from './hr-training-sessions.service';
 declare const reason: z.ZodObject<{
     reason: z.ZodOptional<z.ZodString>;
 }, "strip", z.ZodTypeAny, {
@@ -189,6 +190,18 @@ export declare class HrController {
             visible: boolean;
             sensitive: boolean;
         }>>;
+        warnings: {
+            dm: boolean;
+            channelId: string | null;
+            template: string;
+            limit: number;
+            atLimit: {
+                status: string | null;
+                notifyRoleIds: string[];
+                pingDiscordRoleIds: string[];
+                removeDiscordRoleIds: string[];
+            };
+        };
         statuses: {
             key: string;
             label: string;
@@ -288,6 +301,18 @@ export declare class HrController {
             visible: boolean;
             sensitive: boolean;
         }>>;
+        warnings: {
+            dm: boolean;
+            channelId: string | null;
+            template: string;
+            limit: number;
+            atLimit: {
+                status: string | null;
+                notifyRoleIds: string[];
+                pingDiscordRoleIds: string[];
+                removeDiscordRoleIds: string[];
+            };
+        };
         statuses: {
             key: string;
             label: string;
@@ -638,6 +663,36 @@ export declare class HrController {
         customChecks: import("@prisma/client/runtime/library").JsonValue;
     }>;
     remove(a: Actor, id: string): Promise<void>;
+    /** Verwarnungen (Übersicht) und Verwarnen über Discord (/verwarnen). */
+    warnings(a: Actor, q: {
+        state?: 'ACTIVE' | 'EXPIRED' | 'REVOKED' | 'ALL';
+        q?: string;
+    }): Promise<{
+        limit: number;
+        items: {
+            id: string;
+            personnelId: string;
+            name: string;
+            rank: string | null;
+            summary: string;
+            details: string | null;
+            data: import("@prisma/client/runtime/library").JsonValue;
+            createdAt: Date;
+            expiresAt: Date | null;
+            by: string;
+            state: string;
+            active: number;
+        }[];
+    }>;
+    warnDiscord(a: Actor, b: {
+        discordId: string;
+        reason: string;
+        severity?: string;
+    }): Promise<{
+        id: string;
+        count: number;
+        limit: number;
+    }>;
     addRecord(a: Actor, id: string, b: z.infer<typeof record>): Promise<{
         data: import("@prisma/client/runtime/library").JsonValue | null;
         id: string;
@@ -1872,6 +1927,312 @@ export declare class ServiceNumbersController {
     reserve(a: Actor, b: z.infer<typeof status>): Promise<{
         display: string;
         status: "FREE" | "RESERVED" | "BLOCKED" | "FORMER";
+    }>;
+}
+declare const sessionBody: z.ZodObject<{
+    trainingId: z.ZodOptional<z.ZodNullable<z.ZodString>>;
+    title: z.ZodString;
+    startsAt: z.ZodString;
+    forRank: z.ZodOptional<z.ZodNullable<z.ZodString>>;
+    duration: z.ZodOptional<z.ZodNullable<z.ZodString>>;
+    location: z.ZodOptional<z.ZodNullable<z.ZodString>>;
+    notes: z.ZodOptional<z.ZodNullable<z.ZodString>>;
+    channelId: z.ZodOptional<z.ZodNullable<z.ZodString>>;
+    guildId: z.ZodOptional<z.ZodNullable<z.ZodString>>;
+    promoteRankId: z.ZodOptional<z.ZodNullable<z.ZodString>>;
+    maxSignups: z.ZodOptional<z.ZodNullable<z.ZodNumber>>;
+}, "strip", z.ZodTypeAny, {
+    startsAt: string;
+    title: string;
+    guildId?: string | null | undefined;
+    channelId?: string | null | undefined;
+    duration?: string | null | undefined;
+    notes?: string | null | undefined;
+    location?: string | null | undefined;
+    trainingId?: string | null | undefined;
+    forRank?: string | null | undefined;
+    promoteRankId?: string | null | undefined;
+    maxSignups?: number | null | undefined;
+}, {
+    startsAt: string;
+    title: string;
+    guildId?: string | null | undefined;
+    channelId?: string | null | undefined;
+    duration?: string | null | undefined;
+    notes?: string | null | undefined;
+    location?: string | null | undefined;
+    trainingId?: string | null | undefined;
+    forRank?: string | null | undefined;
+    promoteRankId?: string | null | undefined;
+    maxSignups?: number | null | undefined;
+}>;
+declare const evalBody: z.ZodObject<{
+    attended: z.ZodArray<z.ZodString, "many">;
+    passed: z.ZodArray<z.ZodString, "many">;
+    actualDuration: z.ZodOptional<z.ZodNullable<z.ZodString>>;
+    note: z.ZodOptional<z.ZodNullable<z.ZodString>>;
+}, "strip", z.ZodTypeAny, {
+    passed: string[];
+    attended: string[];
+    note?: string | null | undefined;
+    actualDuration?: string | null | undefined;
+}, {
+    passed: string[];
+    attended: string[];
+    note?: string | null | undefined;
+    actualDuration?: string | null | undefined;
+}>;
+/** Ausbildungstermine: ankündigen (Discord mit Anmeldung + Thread), anmelden, auswerten (mit Beförderung). */
+export declare class HrTrainingSessionsController {
+    private readonly s;
+    constructor(s: HrTrainingSessionsService);
+    list(q: {
+        scope?: 'upcoming' | 'past' | 'all';
+    }): Promise<{
+        signups: import("./hr-training-sessions.service").Signup[];
+        training: {
+            id: string;
+            name: string;
+        } | null;
+        promoteRank: {
+            id: string;
+            name: string;
+        } | null;
+        instructorName: string | null;
+        number: string;
+        id: string;
+        createdAt: Date;
+        updatedAt: Date;
+        guildId: string | null;
+        channelId: string | null;
+        createdById: string | null;
+        status: string;
+        startsAt: Date;
+        duration: string | null;
+        title: string;
+        notes: string | null;
+        location: string | null;
+        instructorId: string | null;
+        passed: string[];
+        trainingId: string | null;
+        forRank: string | null;
+        promoteRankId: string | null;
+        maxSignups: number | null;
+        attended: string[];
+        actualDuration: string | null;
+        evaluationNote: string | null;
+        evaluatedAt: Date | null;
+        evaluatedById: string | null;
+    }[]>;
+    get(id: string): Promise<{
+        signups: import("./hr-training-sessions.service").Signup[];
+        training: {
+            id: string;
+            name: string;
+        } | null;
+        promoteRank: {
+            id: string;
+            name: string;
+        } | null;
+        instructorName: string | null;
+        number: string;
+        id: string;
+        createdAt: Date;
+        updatedAt: Date;
+        guildId: string | null;
+        channelId: string | null;
+        createdById: string | null;
+        status: string;
+        startsAt: Date;
+        duration: string | null;
+        title: string;
+        notes: string | null;
+        location: string | null;
+        instructorId: string | null;
+        passed: string[];
+        trainingId: string | null;
+        forRank: string | null;
+        promoteRankId: string | null;
+        maxSignups: number | null;
+        attended: string[];
+        actualDuration: string | null;
+        evaluationNote: string | null;
+        evaluatedAt: Date | null;
+        evaluatedById: string | null;
+    }>;
+    create(a: Actor, b: z.infer<typeof sessionBody>): Promise<{
+        signups: import("./hr-training-sessions.service").Signup[];
+        training: {
+            id: string;
+            name: string;
+        } | null;
+        promoteRank: {
+            id: string;
+            name: string;
+        } | null;
+        instructorName: string | null;
+        number: string;
+        id: string;
+        createdAt: Date;
+        updatedAt: Date;
+        guildId: string | null;
+        channelId: string | null;
+        createdById: string | null;
+        status: string;
+        startsAt: Date;
+        duration: string | null;
+        title: string;
+        notes: string | null;
+        location: string | null;
+        instructorId: string | null;
+        passed: string[];
+        trainingId: string | null;
+        forRank: string | null;
+        promoteRankId: string | null;
+        maxSignups: number | null;
+        attended: string[];
+        actualDuration: string | null;
+        evaluationNote: string | null;
+        evaluatedAt: Date | null;
+        evaluatedById: string | null;
+    }>;
+    update(a: Actor, id: string, b: z.infer<typeof sessionBody>): Promise<{
+        signups: import("./hr-training-sessions.service").Signup[];
+        training: {
+            id: string;
+            name: string;
+        } | null;
+        promoteRank: {
+            id: string;
+            name: string;
+        } | null;
+        instructorName: string | null;
+        number: string;
+        id: string;
+        createdAt: Date;
+        updatedAt: Date;
+        guildId: string | null;
+        channelId: string | null;
+        createdById: string | null;
+        status: string;
+        startsAt: Date;
+        duration: string | null;
+        title: string;
+        notes: string | null;
+        location: string | null;
+        instructorId: string | null;
+        passed: string[];
+        trainingId: string | null;
+        forRank: string | null;
+        promoteRankId: string | null;
+        maxSignups: number | null;
+        attended: string[];
+        actualDuration: string | null;
+        evaluationNote: string | null;
+        evaluatedAt: Date | null;
+        evaluatedById: string | null;
+    }>;
+    cancel(a: Actor, id: string, b: {
+        reason?: string;
+    }): Promise<{
+        signups: import("./hr-training-sessions.service").Signup[];
+        training: {
+            id: string;
+            name: string;
+        } | null;
+        promoteRank: {
+            id: string;
+            name: string;
+        } | null;
+        instructorName: string | null;
+        number: string;
+        id: string;
+        createdAt: Date;
+        updatedAt: Date;
+        guildId: string | null;
+        channelId: string | null;
+        createdById: string | null;
+        status: string;
+        startsAt: Date;
+        duration: string | null;
+        title: string;
+        notes: string | null;
+        location: string | null;
+        instructorId: string | null;
+        passed: string[];
+        trainingId: string | null;
+        forRank: string | null;
+        promoteRankId: string | null;
+        maxSignups: number | null;
+        attended: string[];
+        actualDuration: string | null;
+        evaluationNote: string | null;
+        evaluatedAt: Date | null;
+        evaluatedById: string | null;
+    }>;
+    evaluate(a: Actor, id: string, b: z.infer<typeof evalBody>): Promise<{
+        session: {
+            signups: import("./hr-training-sessions.service").Signup[];
+            training: {
+                id: string;
+                name: string;
+            } | null;
+            promoteRank: {
+                id: string;
+                name: string;
+            } | null;
+            instructorName: string | null;
+            number: string;
+            id: string;
+            createdAt: Date;
+            updatedAt: Date;
+            guildId: string | null;
+            channelId: string | null;
+            createdById: string | null;
+            status: string;
+            startsAt: Date;
+            duration: string | null;
+            title: string;
+            notes: string | null;
+            location: string | null;
+            instructorId: string | null;
+            passed: string[];
+            trainingId: string | null;
+            forRank: string | null;
+            promoteRankId: string | null;
+            maxSignups: number | null;
+            attended: string[];
+            actualDuration: string | null;
+            evaluationNote: string | null;
+            evaluatedAt: Date | null;
+            evaluatedById: string | null;
+        };
+        results: {
+            discordId: string;
+            promoted: boolean;
+            problem?: string;
+        }[];
+    }>;
+    signup(a: Actor, id: string, b: {
+        join: boolean;
+    }): Promise<{
+        ok: boolean;
+        message: string;
+        count: number;
+    }>;
+}
+/** Anmelde-Button in Discord – auch für Mitglieder ohne Dashboard-Konto (z. B. Anwärter). */
+export declare class BotTrainingSessionsController {
+    private readonly s;
+    constructor(s: HrTrainingSessionsService);
+    signup(id: string, b: {
+        discordId: string;
+        name: string;
+        join: boolean;
+    }): Promise<{
+        ok: boolean;
+        message: string;
+        count: number;
     }>;
 }
 export {};

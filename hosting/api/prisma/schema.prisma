@@ -1733,3 +1733,40 @@ model DiscordBackup {
 
   @@index([guildId, createdAt])
 }
+
+/// Ausbildungstermin: Ankündigung mit Anmeldung (Discord-Button + Dashboard), Auswertung (erschienen/bestanden/Dauer), Beförderung bei Bestehen.
+model HrTrainingSession {
+  id             String    @id @default(uuid()) @db.Uuid
+  number         String    @unique
+  trainingId     String?   @db.Uuid
+  title          String
+  startsAt       DateTime
+  /// „Für den Rang“ (Anzeige)
+  forRank        String?
+  /// „Ungefähre Dauer“, z. B. „60–120 Minuten“
+  duration       String?
+  location       String?
+  notes          String?
+  instructorId   String?   @db.Uuid
+  channelId      String?
+  guildId        String?
+  /// Rang, den Bestandene automatisch bekommen (leer = keine Beförderung)
+  promoteRankId  String?   @db.Uuid
+  maxSignups     Int?
+  /// PLANNED | DONE | CANCELLED
+  status         String    @default("PLANNED")
+  /// [{ discordId, userId?, name, at }]
+  signups        Json      @default("[]")
+  /// Discord-IDs
+  attended       String[]  @default([])
+  passed         String[]  @default([])
+  actualDuration String?
+  evaluationNote String?
+  evaluatedAt    DateTime?
+  evaluatedById  String?   @db.Uuid
+  createdById    String?   @db.Uuid
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @default(now()) @updatedAt
+
+  @@index([startsAt])
+}

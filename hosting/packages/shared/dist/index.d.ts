@@ -414,7 +414,8 @@ interface MessageSpec {
     select?: ComponentSelect;
     mentionUsers?: string[];
     mentionRoles?: string[];
-    reactions?: string[];
+    reactions?: string[]; /** beim ersten Senden einen Thread mit diesem Namen starten */
+    thread?: string;
 }
 type TicketEffect = {
     type: 'create';
@@ -1166,6 +1167,125 @@ declare function formPanelResult(p: FormPanel, values: Record<string, string>, u
     name: string;
     avatar?: string;
 }, now?: Date): MessageSpec;
+declare const infoOptionSchema: z.ZodObject<{
+    id: z.ZodString;
+    /** im Auswahlmenü */
+    label: z.ZodString;
+    description: z.ZodDefault<z.ZodString>;
+    emoji: z.ZodDefault<z.ZodString>;
+    /** Antwort (nur für die Person sichtbar) */
+    title: z.ZodDefault<z.ZodString>;
+    text: z.ZodDefault<z.ZodString>;
+    image: z.ZodDefault<z.ZodUnion<[z.ZodString, z.ZodLiteral<"">]>>;
+    color: z.ZodDefault<z.ZodString>;
+}, "strip", z.ZodTypeAny, {
+    label: string;
+    text: string;
+    title: string;
+    description: string;
+    id: string;
+    color: string;
+    image: string;
+    emoji: string;
+}, {
+    label: string;
+    id: string;
+    text?: string | undefined;
+    title?: string | undefined;
+    description?: string | undefined;
+    color?: string | undefined;
+    image?: string | undefined;
+    emoji?: string | undefined;
+}>;
+declare const infoPanelSchema: z.ZodObject<{
+    id: z.ZodString;
+    name: z.ZodString;
+    guildId: z.ZodDefault<z.ZodNullable<z.ZodString>>;
+    channelId: z.ZodDefault<z.ZodNullable<z.ZodString>>;
+    title: z.ZodDefault<z.ZodString>;
+    text: z.ZodDefault<z.ZodString>;
+    color: z.ZodDefault<z.ZodString>;
+    image: z.ZodDefault<z.ZodUnion<[z.ZodString, z.ZodLiteral<"">]>>;
+    footer: z.ZodDefault<z.ZodString>;
+    placeholder: z.ZodDefault<z.ZodString>;
+    options: z.ZodDefault<z.ZodArray<z.ZodObject<{
+        id: z.ZodString;
+        /** im Auswahlmenü */
+        label: z.ZodString;
+        description: z.ZodDefault<z.ZodString>;
+        emoji: z.ZodDefault<z.ZodString>;
+        /** Antwort (nur für die Person sichtbar) */
+        title: z.ZodDefault<z.ZodString>;
+        text: z.ZodDefault<z.ZodString>;
+        image: z.ZodDefault<z.ZodUnion<[z.ZodString, z.ZodLiteral<"">]>>;
+        color: z.ZodDefault<z.ZodString>;
+    }, "strip", z.ZodTypeAny, {
+        label: string;
+        text: string;
+        title: string;
+        description: string;
+        id: string;
+        color: string;
+        image: string;
+        emoji: string;
+    }, {
+        label: string;
+        id: string;
+        text?: string | undefined;
+        title?: string | undefined;
+        description?: string | undefined;
+        color?: string | undefined;
+        image?: string | undefined;
+        emoji?: string | undefined;
+    }>, "many">>;
+}, "strip", z.ZodTypeAny, {
+    options: {
+        label: string;
+        text: string;
+        title: string;
+        description: string;
+        id: string;
+        color: string;
+        image: string;
+        emoji: string;
+    }[];
+    text: string;
+    title: string;
+    id: string;
+    name: string;
+    guildId: string | null;
+    channelId: string | null;
+    color: string;
+    footer: string;
+    image: string;
+    placeholder: string;
+}, {
+    id: string;
+    name: string;
+    options?: {
+        label: string;
+        id: string;
+        text?: string | undefined;
+        title?: string | undefined;
+        description?: string | undefined;
+        color?: string | undefined;
+        image?: string | undefined;
+        emoji?: string | undefined;
+    }[] | undefined;
+    text?: string | undefined;
+    title?: string | undefined;
+    guildId?: string | null | undefined;
+    channelId?: string | null | undefined;
+    color?: string | undefined;
+    footer?: string | undefined;
+    image?: string | undefined;
+    placeholder?: string | undefined;
+}>;
+type InfoPanel = z.infer<typeof infoPanelSchema>;
+type InfoOption = z.infer<typeof infoOptionSchema>;
+declare function infoPanelMessage(p: InfoPanel): MessageSpec;
+/** Antwort auf eine Auswahl (nur für die Person sichtbar). */
+declare function infoOptionEmbed(o: InfoOption): EmbedSpec;
 
 declare const REPORT_FIELD_TYPES: readonly ["short", "long", "number", "select"];
 declare const reportFieldSchema: z.ZodObject<{
@@ -1755,6 +1875,58 @@ declare const hrConfigSchema: z.ZodObject<{
         roleIds?: string[] | undefined;
         channelId?: string | null | undefined;
     }>>>;
+    /** Verwarnungen: Meldung in Discord mit Zähler und Folgen beim Erreichen der Grenze */
+    warnings: z.ZodDefault<z.ZodObject<{
+        /** Grenze aktiver Verwarnungen (z. B. 3 → „1/3“) */
+        limit: z.ZodDefault<z.ZodNumber>;
+        /** Kanal für jede neue Verwarnung (leer = nur Dashboard) */
+        channelId: z.ZodDefault<z.ZodNullable<z.ZodString>>;
+        template: z.ZodDefault<z.ZodString>;
+        /** Person per DM informieren */
+        dm: z.ZodDefault<z.ZodBoolean>;
+        atLimit: z.ZodDefault<z.ZodObject<{
+            /** Dashboard-Rollen, die benachrichtigt werden (z. B. Leitung) */
+            notifyRoleIds: z.ZodDefault<z.ZodArray<z.ZodString, "many">>;
+            /** Discord-Rollen, die in der Meldung erwähnt werden */
+            pingDiscordRoleIds: z.ZodDefault<z.ZodArray<z.ZodString, "many">>;
+            /** Discord-Rollen, die entzogen werden */
+            removeDiscordRoleIds: z.ZodDefault<z.ZodArray<z.ZodString, "many">>;
+            /** Status der Personalakte setzen (z. B. SUSPENDED) – leer = nicht ändern */
+            status: z.ZodDefault<z.ZodNullable<z.ZodString>>;
+        }, "strip", z.ZodTypeAny, {
+            status: string | null;
+            notifyRoleIds: string[];
+            pingDiscordRoleIds: string[];
+            removeDiscordRoleIds: string[];
+        }, {
+            status?: string | null | undefined;
+            notifyRoleIds?: string[] | undefined;
+            pingDiscordRoleIds?: string[] | undefined;
+            removeDiscordRoleIds?: string[] | undefined;
+        }>>;
+    }, "strip", z.ZodTypeAny, {
+        dm: boolean;
+        channelId: string | null;
+        template: string;
+        limit: number;
+        atLimit: {
+            status: string | null;
+            notifyRoleIds: string[];
+            pingDiscordRoleIds: string[];
+            removeDiscordRoleIds: string[];
+        };
+    }, {
+        dm?: boolean | undefined;
+        channelId?: string | null | undefined;
+        template?: string | undefined;
+        limit?: number | undefined;
+        atLimit?: {
+            status?: string | null | undefined;
+            notifyRoleIds?: string[] | undefined;
+            pingDiscordRoleIds?: string[] | undefined;
+            removeDiscordRoleIds?: string[] | undefined;
+        } | undefined;
+    }>>;
     /** Zertifikate */
     certificate: z.ZodDefault<z.ZodObject<{
         organisation: z.ZodDefault<z.ZodString>;
@@ -1821,6 +1993,18 @@ declare const hrConfigSchema: z.ZodObject<{
         visible: boolean;
         sensitive: boolean;
     }>>;
+    warnings: {
+        dm: boolean;
+        channelId: string | null;
+        template: string;
+        limit: number;
+        atLimit: {
+            status: string | null;
+            notifyRoleIds: string[];
+            pingDiscordRoleIds: string[];
+            removeDiscordRoleIds: string[];
+        };
+    };
     statuses: {
         key: string;
         label: string;
@@ -1913,6 +2097,18 @@ declare const hrConfigSchema: z.ZodObject<{
         visible: boolean;
         sensitive: boolean;
     }>> | undefined;
+    warnings?: {
+        dm?: boolean | undefined;
+        channelId?: string | null | undefined;
+        template?: string | undefined;
+        limit?: number | undefined;
+        atLimit?: {
+            status?: string | null | undefined;
+            notifyRoleIds?: string[] | undefined;
+            pingDiscordRoleIds?: string[] | undefined;
+            removeDiscordRoleIds?: string[] | undefined;
+        } | undefined;
+    } | undefined;
     statuses?: {
         key: string;
         label: string;
@@ -2343,6 +2539,8 @@ declare const dnSettingsSchema: z.ZodObject<{
     changeNeedsApprover?: boolean | undefined;
 }>;
 type DnSettings = z.infer<typeof dnSettingsSchema>;
+/** Platzhalter für die Verwarnungs-Meldung. */
+declare const WARNING_VARIABLES: readonly ["{mitglied}", "{name}", "{grund}", "{schweregrad}", "{kategorie}", "{anzahl}", "{grenze}", "{durch}", "{datum}", "{ablauf}"];
 declare const DN_VARIABLES: readonly ["{user}", "{name}", "{dienstnummer}", "{rang}", "{abteilung}", "{bewerbung}", "{datum}"];
 /** Platzhalter füllen (DM, Nickname, Ankündigungen). Unbekannte Platzhalter bleiben stehen. */
 declare function fillTemplate(tpl: string, vars: Record<string, string | null | undefined>): string;
@@ -2497,4 +2695,4 @@ declare const backupConfigSchema: z.ZodObject<{
 }>;
 type BackupConfig = z.infer<typeof backupConfigSchema>;
 
-export { ALL_PERMISSIONS, APPLICATION_STATUSES, APPLICATION_TRANSITIONS, APPLICATION_VARIABLES, AREA_PERMISSIONS, type AnswerCheck, type ApplicationStatus, type ApplicationVars, BACKUP_PARTS, BACKUP_PART_LABEL, type BackupChannel, type BackupConfig, type BackupOverwrite, type BackupPart, type BackupRestoreResult, type BackupRole, type BackupSettings, type ButtonStyleName, CAD_EVENTS, CAD_EVENT_LABELS, CAD_EVENT_SEND_TYPE, CAD_LINK_ACTIONS, CAD_LINK_LABELS, CAD_LINK_SEND_TYPES, CAD_WIDGETS, CAD_WIDGET_LABELS, CLAIM_MODES, CLOSE_REASON_MODES, CLOSE_REASON_SOURCES, COMPLAINT_STATUSES, COMPLAINT_TRANSITIONS, type CadConfig, type CadEvent, type CadField, type CadLayer, type CadMapConfig, type CadMarkerStyle, type CadOption, type CadRoute, type CadStatusOption, type CadUnitType, type ClaimMode, type CloseReasonMode, type CloseReasonSource, type ComplaintStatus, type ComponentButton, type ComponentSelect, DEFAULT_APPLICATION_MESSAGES, DEFAULT_CAD_CONFIG, DEFAULT_DANGER_CONFIG, DEFAULT_HR_CONFIG, DEFAULT_VERIFY_CONFIG, DEFAULT_WELCOME_CONFIG, DISPATCH_STATUSES, DISPATCH_TRANSITIONS, DN_STATUSES, DN_STATUS_LABEL, DN_VARIABLES, DUTY_STATUSES, type DangerConfig, type DangerLevelDef, type DiscordBackupData, type DispatchStatus, type DnSettings, type DnStatus, type DutySpan, type DutyStatus, ERLC_DEFAULT_BLOCKED, ERLC_DEFAULT_CRITICAL, ERLC_FEATURES, ERLC_FEATURE_LABELS, ERLC_MAP_SIZE, ERLC_POLL_OPTIONS, ERLC_STATUSES, ERLC_STATUS_LABEL, EVIDENCE_CUSTODY_STATES, EVIDENCE_TRANSITIONS, EXAM_QUESTION_TYPES, EXAM_QUESTION_TYPE_LABEL, type Effect, type EmbedSpec, type ErlcFeature, type ErlcStatus, type EvidenceCustodyState, FORM_PANEL_VARIABLES, FORM_QUESTION_TYPES, type Field, type FormField, type FormOption, type FormPanel, type FormQuestionType, HR_EVENTS, HR_EVENT_LABEL, type HrConfig, type HrEvent, INVESTIGATION_STATUSES, INVESTIGATION_TRANSITIONS, InvalidTransitionError, type InvestigationStatus, LEGACY_DANGER, LOG_CATEGORIES, LOG_DEFAULT_OFF, LOG_TYPES, type LogCategoryKey, type LoggingConfig, MAX_FORM_OPTIONS, MAX_FORM_QUESTIONS, MUSIC_TRACKS, type MessageSpec, PERIOD_LABEL, PERMISSION_CATALOG, PRIORITIES, PRIORITY_LABEL, PROFILE_FIELDS, PROFILE_FIELD_LABEL, PROFILE_SECTIONS, PROFILE_SECTION_LABEL, type PermissionContext, type PermissionGrant, type PermissionKey, type Priority, type ProfileSection, type PromotionCheck, QUESTION_TYPES, type Question, type QuestionType, REPORT_FIELD_TYPES, REPORT_STATUSES, REPORT_STATUS_LABEL, REPORT_TRANSITIONS, REPORT_TYPES, REQUEST_STATUSES, REQUEST_STATUS_DEFAULT, REQUIREMENT_LABEL, REQUIREMENT_TYPES, ROBLOX_NAME, ROBLOX_VERIFICATION_STATUSES, type RangeInput, type RankInput, type ReportField, type ReportStatus, type ReportTemplate, type ReportType, type ReportView, type RequestStatus, type Requirement, type RequirementResult, type RequirementType, type Resolution, type ResolutionSource, type RobloxVerificationStatus, STATUS_KINDS, STATUS_LABEL, type StaffList, type StaffMember, type StatusKind, type SupportTime, TICKET_ACTIONS, TICKET_ACTION_KEYS, TICKET_PLACEHOLDERS, TICKET_STATUSES, TICKET_TRANSITIONS, type TicketAction, type TicketButtonConfig, type TicketEffect, type TicketQuestion, type TicketStatus, type TicketVars, type TransitionMap, UNIT_STATUSES, type UnitStatus, VERIFY_NICK_VARS, VOICE_CASE_STATUS, type VerifyBind, type VerifyConfig, type VerifyNickVars, type VerifyPanel, type VoiceSupportRoom, WANTED_STATUSES, WANTED_TRANSITIONS, WEEKDAYS, WELCOME_VARIABLES, WORKFLOW_ACTION_LABELS, WORKFLOW_OPS, WORKFLOW_OP_LABELS, WORKFLOW_TRIGGERS, type WantedStatus, type WelcomeConfig, type WelcomeMember, type WelcomeMessageDef, type WorkflowAction, type WorkflowCondition, type WorkflowOp, type WorkflowTrigger, absenceTypeSchema, accountAge, areaGrantsFor, assertTransition, awardDefSchema, backupConfigSchema, can, canDelegate, canTransition, checkAnswer, cleanReportValues, conditionMatches, dangerLevelOf, defaultTicketButtons, departmentSchema, dnSettingsSchema, dutyTimeText, effectivePermissions, fieldValue, fillTemplate, formPanelMessage, formPanelResult, formPanelSchema, formatMinutes, formatServiceNumber, freeFieldKey, gameToPixel, gradeAnswer, grantMatches, hexColor, hireMappingSchema, hrConfigSchema, hrStatusSchema, isDutyTimeField, isInputQuestion, isPermissionKey, isSupportOpen, isValidRobloxUserId, isoWeek, localTime, logCategoryOf, logChannelFor, logTypeLabel, loggingConfigSchema, matchingBinds, newVoiceRoom, normalizeField, notifyRuleSchema, panelFieldSchema, parsePlayer, periodEnd, periodLabel, periodStart, pixelToGame, questionSchema, rangeSchema, rankSchema, renderApplicationText, renderPanelTemplate, renderStaffList, renderTemplate, renderTicketText, renderVerifyNickname, renderWelcomeText, reportFieldSchema, reportMessage, reportTemplateSchema, requestStatusDefSchema, requirementSchema, resolvePermission, rolesMatch, severitySchema, staffListSchema, staffSectionSchema, stageSchema, statusLabel, ticketChannelName, ticketNumber, triggerMatches, verifyActions, withHrDefaults };
+export { ALL_PERMISSIONS, APPLICATION_STATUSES, APPLICATION_TRANSITIONS, APPLICATION_VARIABLES, AREA_PERMISSIONS, type AnswerCheck, type ApplicationStatus, type ApplicationVars, BACKUP_PARTS, BACKUP_PART_LABEL, type BackupChannel, type BackupConfig, type BackupOverwrite, type BackupPart, type BackupRestoreResult, type BackupRole, type BackupSettings, type ButtonStyleName, CAD_EVENTS, CAD_EVENT_LABELS, CAD_EVENT_SEND_TYPE, CAD_LINK_ACTIONS, CAD_LINK_LABELS, CAD_LINK_SEND_TYPES, CAD_WIDGETS, CAD_WIDGET_LABELS, CLAIM_MODES, CLOSE_REASON_MODES, CLOSE_REASON_SOURCES, COMPLAINT_STATUSES, COMPLAINT_TRANSITIONS, type CadConfig, type CadEvent, type CadField, type CadLayer, type CadMapConfig, type CadMarkerStyle, type CadOption, type CadRoute, type CadStatusOption, type CadUnitType, type ClaimMode, type CloseReasonMode, type CloseReasonSource, type ComplaintStatus, type ComponentButton, type ComponentSelect, DEFAULT_APPLICATION_MESSAGES, DEFAULT_CAD_CONFIG, DEFAULT_DANGER_CONFIG, DEFAULT_HR_CONFIG, DEFAULT_VERIFY_CONFIG, DEFAULT_WELCOME_CONFIG, DISPATCH_STATUSES, DISPATCH_TRANSITIONS, DN_STATUSES, DN_STATUS_LABEL, DN_VARIABLES, DUTY_STATUSES, type DangerConfig, type DangerLevelDef, type DiscordBackupData, type DispatchStatus, type DnSettings, type DnStatus, type DutySpan, type DutyStatus, ERLC_DEFAULT_BLOCKED, ERLC_DEFAULT_CRITICAL, ERLC_FEATURES, ERLC_FEATURE_LABELS, ERLC_MAP_SIZE, ERLC_POLL_OPTIONS, ERLC_STATUSES, ERLC_STATUS_LABEL, EVIDENCE_CUSTODY_STATES, EVIDENCE_TRANSITIONS, EXAM_QUESTION_TYPES, EXAM_QUESTION_TYPE_LABEL, type Effect, type EmbedSpec, type ErlcFeature, type ErlcStatus, type EvidenceCustodyState, FORM_PANEL_VARIABLES, FORM_QUESTION_TYPES, type Field, type FormField, type FormOption, type FormPanel, type FormQuestionType, HR_EVENTS, HR_EVENT_LABEL, type HrConfig, type HrEvent, INVESTIGATION_STATUSES, INVESTIGATION_TRANSITIONS, type InfoOption, type InfoPanel, InvalidTransitionError, type InvestigationStatus, LEGACY_DANGER, LOG_CATEGORIES, LOG_DEFAULT_OFF, LOG_TYPES, type LogCategoryKey, type LoggingConfig, MAX_FORM_OPTIONS, MAX_FORM_QUESTIONS, MUSIC_TRACKS, type MessageSpec, PERIOD_LABEL, PERMISSION_CATALOG, PRIORITIES, PRIORITY_LABEL, PROFILE_FIELDS, PROFILE_FIELD_LABEL, PROFILE_SECTIONS, PROFILE_SECTION_LABEL, type PermissionContext, type PermissionGrant, type PermissionKey, type Priority, type ProfileSection, type PromotionCheck, QUESTION_TYPES, type Question, type QuestionType, REPORT_FIELD_TYPES, REPORT_STATUSES, REPORT_STATUS_LABEL, REPORT_TRANSITIONS, REPORT_TYPES, REQUEST_STATUSES, REQUEST_STATUS_DEFAULT, REQUIREMENT_LABEL, REQUIREMENT_TYPES, ROBLOX_NAME, ROBLOX_VERIFICATION_STATUSES, type RangeInput, type RankInput, type ReportField, type ReportStatus, type ReportTemplate, type ReportType, type ReportView, type RequestStatus, type Requirement, type RequirementResult, type RequirementType, type Resolution, type ResolutionSource, type RobloxVerificationStatus, STATUS_KINDS, STATUS_LABEL, type StaffList, type StaffMember, type StatusKind, type SupportTime, TICKET_ACTIONS, TICKET_ACTION_KEYS, TICKET_PLACEHOLDERS, TICKET_STATUSES, TICKET_TRANSITIONS, type TicketAction, type TicketButtonConfig, type TicketEffect, type TicketQuestion, type TicketStatus, type TicketVars, type TransitionMap, UNIT_STATUSES, type UnitStatus, VERIFY_NICK_VARS, VOICE_CASE_STATUS, type VerifyBind, type VerifyConfig, type VerifyNickVars, type VerifyPanel, type VoiceSupportRoom, WANTED_STATUSES, WANTED_TRANSITIONS, WARNING_VARIABLES, WEEKDAYS, WELCOME_VARIABLES, WORKFLOW_ACTION_LABELS, WORKFLOW_OPS, WORKFLOW_OP_LABELS, WORKFLOW_TRIGGERS, type WantedStatus, type WelcomeConfig, type WelcomeMember, type WelcomeMessageDef, type WorkflowAction, type WorkflowCondition, type WorkflowOp, type WorkflowTrigger, absenceTypeSchema, accountAge, areaGrantsFor, assertTransition, awardDefSchema, backupConfigSchema, can, canDelegate, canTransition, checkAnswer, cleanReportValues, conditionMatches, dangerLevelOf, defaultTicketButtons, departmentSchema, dnSettingsSchema, dutyTimeText, effectivePermissions, fieldValue, fillTemplate, formPanelMessage, formPanelResult, formPanelSchema, formatMinutes, formatServiceNumber, freeFieldKey, gameToPixel, gradeAnswer, grantMatches, hexColor, hireMappingSchema, hrConfigSchema, hrStatusSchema, infoOptionEmbed, infoOptionSchema, infoPanelMessage, infoPanelSchema, isDutyTimeField, isInputQuestion, isPermissionKey, isSupportOpen, isValidRobloxUserId, isoWeek, localTime, logCategoryOf, logChannelFor, logTypeLabel, loggingConfigSchema, matchingBinds, newVoiceRoom, normalizeField, notifyRuleSchema, panelFieldSchema, parsePlayer, periodEnd, periodLabel, periodStart, pixelToGame, questionSchema, rangeSchema, rankSchema, renderApplicationText, renderPanelTemplate, renderStaffList, renderTemplate, renderTicketText, renderVerifyNickname, renderWelcomeText, reportFieldSchema, reportMessage, reportTemplateSchema, requestStatusDefSchema, requirementSchema, resolvePermission, rolesMatch, severitySchema, staffListSchema, staffSectionSchema, stageSchema, statusLabel, ticketChannelName, ticketNumber, triggerMatches, verifyActions, withHrDefaults };

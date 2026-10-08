@@ -76021,6 +76021,7 @@ async function postOrUpdate(client2, api2, o) {
   const old = messageId && !o.forceNew ? await ch.messages.fetch(messageId).catch(() => null) : null;
   const msg = old ? await old.edit({ ...payload, content: payload.content ?? "", attachments: [] }) : await ch.send(payload);
   await react(msg, message.reactions);
+  if (!old && message.thread && "startThread" in msg) await msg.startThread({ name: message.thread.slice(0, 100), autoArchiveDuration: 10080 }).catch((e) => console.error("could not start thread:", e instanceof Error ? e.message : e));
   if (o.stateKey) await api2.service("PUT", `/bot/state/${o.stateKey}`, { value: { channelId: o.channelId, messageId: msg.id } }).catch(() => void 0);
   return { channelId: o.channelId, messageId: msg.id };
 }
@@ -80436,6 +80437,38 @@ var formPanelSchema = external_exports.object({
   /** Rollen, die man nach dem Absenden bekommt */
   grantRoleIds: external_exports.array(sf).max(10).default([])
 });
+var httpsImage = external_exports.union([external_exports.string().trim().max(500).regex(/^https:\/\/\S+$/, "Bild: https://-Link"), external_exports.literal("")]).default("");
+var infoOptionSchema = external_exports.object({
+  id: external_exports.string().regex(/^[a-z0-9_-]{1,40}$/, "K\xFCrzel: a\u2013z, 0\u20139, _ und -"),
+  /** im Auswahlmenü */
+  label: external_exports.string().trim().min(1).max(100),
+  description: external_exports.string().max(100).default(""),
+  emoji: emoji.default(""),
+  /** Antwort (nur für die Person sichtbar) */
+  title: external_exports.string().max(256).default(""),
+  text: external_exports.string().max(4e3).default(""),
+  image: httpsImage,
+  color: color.default("#3b82f6")
+});
+var infoPanelSchema = external_exports.object({
+  id: external_exports.string().uuid(),
+  name: external_exports.string().trim().min(1).max(80),
+  guildId: sf.nullable().default(null),
+  channelId: sf.nullable().default(null),
+  title: external_exports.string().max(256).default("Aufgaben als Ausbilder"),
+  text: external_exports.string().max(4e3).default("Hier findest du alles Wichtige. W\xE4hle unten einen Punkt aus."),
+  color: color.default("#1f2937"),
+  image: imageRef,
+  footer: external_exports.string().max(200).default("Klicke auf \u201ETriff eine Auswahl\u201C, um mehr zu erfahren."),
+  placeholder: external_exports.string().trim().min(1).max(150).default("Triff eine Auswahl"),
+  options: external_exports.array(infoOptionSchema).min(1).max(25).default([
+    { id: "aufgaben", label: "Aufgaben", description: "Siehe, welche Aufgaben du hast.", emoji: "\u{1F4C2}", title: "Aufgaben", text: "Beschreibe hier die Aufgaben." },
+    { id: "doku", label: "Dokumentation", description: "Siehe, wie du dokumentieren musst.", emoji: "\u{1F4E8}", title: "Dokumentation", text: "Beschreibe hier, wie dokumentiert wird." }
+  ])
+});
+function infoOptionEmbed(o) {
+  return { title: (o.title || o.label).slice(0, 256), ...o.text ? { description: o.text } : {}, color: toInt(o.color), ...o.image ? { image: o.image } : {} };
+}
 var sf2 = external_exports.string().regex(/^\d{15,25}$/, "Discord-ID (15\u201325 Ziffern)");
 var REPORT_FIELD_TYPES = ["short", "long", "number", "select"];
 var reportFieldSchema = external_exports.object({
@@ -80548,6 +80581,26 @@ var hrConfigSchema = external_exports.object({
     announceChannelId: sf3.nullable().default(null)
   }).default({}),
   notifications: external_exports.record(external_exports.enum(HR_EVENTS), notifyRuleSchema).default({}),
+  /** Verwarnungen: Meldung in Discord mit Zähler und Folgen beim Erreichen der Grenze */
+  warnings: external_exports.object({
+    /** Grenze aktiver Verwarnungen (z. B. 3 → „1/3“) */
+    limit: external_exports.number().int().min(1).max(20).default(3),
+    /** Kanal für jede neue Verwarnung (leer = nur Dashboard) */
+    channelId: sf3.nullable().default(null),
+    template: external_exports.string().max(1500).default("**Wer:** {mitglied}\n**Grund:** {grund}\n**Verwarnungen:** {anzahl}/{grenze}"),
+    /** Person per DM informieren */
+    dm: external_exports.boolean().default(true),
+    atLimit: external_exports.object({
+      /** Dashboard-Rollen, die benachrichtigt werden (z. B. Leitung) */
+      notifyRoleIds: external_exports.array(uuid).max(20).default([]),
+      /** Discord-Rollen, die in der Meldung erwähnt werden */
+      pingDiscordRoleIds: external_exports.array(sf3).max(10).default([]),
+      /** Discord-Rollen, die entzogen werden */
+      removeDiscordRoleIds: external_exports.array(sf3).max(25).default([]),
+      /** Status der Personalakte setzen (z. B. SUSPENDED) – leer = nicht ändern */
+      status: external_exports.string().max(32).nullable().default(null)
+    }).default({})
+  }).default({}),
   /** Zertifikate */
   certificate: external_exports.object({ organisation: external_exports.string().max(100).default("EN Polizei"), logo: external_exports.string().max(500).default(""), signature: external_exports.string().max(100).default("") }).default({})
 });
@@ -82416,6 +82469,22 @@ var FORM_PANEL_INTERACTION = {
     }
   }
 };
+var INFO_PANEL_INTERACTION = {
+  prefix: "ipnl",
+  async run(c) {
+    const [id2] = c.args;
+    if (!/^[0-9a-f-]{36}$/.test(id2 ?? "")) return errorReply("Ung\xFCltige Anfrage.");
+    try {
+      const p = await c.api.service("GET", `/bot/panels/info/${id2}`);
+      const o = p.options.find((x) => x.id === c.values?.[0]);
+      if (!o) return errorReply("Diesen Punkt gibt es nicht mehr.");
+      const e = infoOptionEmbed(o);
+      return { ephemeral: true, embeds: [{ title: e.title ?? o.label, ...e.description ? { description: e.description } : {}, ...e.color !== void 0 ? { color: e.color } : {}, ...e.image ? { image: e.image } : {} }] };
+    } catch (e) {
+      return mapError(e);
+    }
+  }
+};
 
 // apps/bot/src/commands/duty-reports.ts
 var drafts = /* @__PURE__ */ new Map();
@@ -82541,6 +82610,66 @@ var DUTY_REPORT_INTERACTION = {
       return okReply(r.merged ? `F\xFCr diesen Zeitraum gab es schon deinen Bericht **${r.number}** \u2013 er wurde aktualisiert.` : `Bericht **${r.number}** eingereicht. Du findest ihn auch im Dashboard; mit \u201EBearbeiten\u201C kannst du ihn \xE4ndern.`);
     } catch (e) {
       return e instanceof Error && !("status" in e) ? errorReply(e.message) : mapError(e);
+    }
+  }
+};
+
+// apps/bot/src/commands/trainings.ts
+function parseGermanDate(text, now = /* @__PURE__ */ new Date()) {
+  const m = /^\s*(\d{1,2})\.(\d{1,2})\.(\d{2,4})?\s*(?:,?\s*(?:um\s*)?(\d{1,2})[:.](\d{2}))?\s*(?:uhr)?\s*$/i.exec(text);
+  if (!m) return null;
+  const year = m[3] ? m[3].length === 2 ? 2e3 + Number(m[3]) : Number(m[3]) : now.getFullYear();
+  const [d, mo, h, mi] = [Number(m[1]), Number(m[2]), Number(m[4] ?? 18), Number(m[5] ?? 0)];
+  const guess = Date.UTC(year, mo - 1, d, h, mi);
+  if (new Date(guess).getUTCDate() !== d || h > 23 || mi > 59) return null;
+  const parts = Object.fromEntries(new Intl.DateTimeFormat("en-US", { timeZone: "Europe/Berlin", hourCycle: "h23", year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit" }).formatToParts(new Date(guess)).map((p) => [p.type, p.value]));
+  const asBerlin = Date.UTC(Number(parts.year), Number(parts.month) - 1, Number(parts.day), Number(parts.hour), Number(parts.minute));
+  return new Date(guess - (asBerlin - guess)).toISOString();
+}
+var TRAINING_COMMANDS = [{
+  name: "ausbildung",
+  description: "Ausbildungstermin ansetzen oder anstehende Termine ansehen",
+  subcommands: [{ name: "ansetzen", description: "Neuen Termin ank\xFCndigen (in diesem Kanal, mit Anmeldung)" }, { name: "termine", description: "Anstehende Ausbildungstermine" }],
+  opensModal: true,
+  async run(c) {
+    try {
+      if (c.opts._sub === "termine") {
+        const list = await c.api.asUser(c.discordId, "GET", "/hr/training-sessions?scope=upcoming");
+        if (!list.length) return okReply("Gerade sind keine Ausbildungstermine angesetzt.");
+        return { ephemeral: true, embeds: [{ title: "\u{1F4DA} Anstehende Ausbildungen", color: COLORS.info, description: list.slice(0, 15).map((s) => `**${s.title}** \u2013 <t:${Math.floor(new Date(s.startsAt).getTime() / 1e3)}:F>${s.forRank ? ` \xB7 ${s.forRank}` : ""} \xB7 ${s.signups.length}${s.maxSignups ? `/${s.maxSignups}` : ""} angemeldet`).join("\n") }] };
+      }
+      return { modal: { id: "trn:new", title: "Ausbildung ansetzen", fields: [
+        { id: "title", label: "Titel", required: true, maxLength: 120, value: "Grundausbildung" },
+        { id: "when", label: "Wann? (TT.MM.JJJJ HH:MM)", required: true, maxLength: 20, placeholder: "08.10.2026 18:30" },
+        { id: "rank", label: "F\xFCr den Rang", required: false, maxLength: 60, placeholder: "z. B. Polizeianw\xE4rter" },
+        { id: "duration", label: "Ungef\xE4hre Dauer", required: false, maxLength: 60, placeholder: "z. B. 60\u2013120 Minuten" },
+        { id: "notes", label: "Hinweise", paragraph: true, required: false, maxLength: 1500 }
+      ] } };
+    } catch (e) {
+      return mapError(e);
+    }
+  }
+}];
+var TRAINING_INTERACTION = {
+  prefix: "trn",
+  async run(c) {
+    const [action, id2] = c.args;
+    try {
+      if (action === "join" || action === "leave") {
+        if (!/^[0-9a-f-]{36}$/.test(id2 ?? "")) return errorReply("Ung\xFCltige Anfrage.");
+        const r = await c.api.service("POST", `/bot/training-sessions/${id2}/signup`, { discordId: c.discordId, name: (c.userDisplayName ?? c.userName ?? c.discordId).slice(0, 64), join: action === "join" });
+        return okReply(r.message);
+      }
+      if (action === "new") {
+        const f2 = c.fields ?? {};
+        const startsAt = parseGermanDate(f2.when ?? "");
+        if (!startsAt) return errorReply("Zeitpunkt bitte so angeben: 08.10.2026 18:30");
+        const s = await c.api.asUser(c.discordId, "POST", "/hr/training-sessions", { title: (f2.title ?? "").trim(), startsAt, forRank: f2.rank || null, duration: f2.duration || null, notes: f2.notes || null, channelId: c.channelId ?? null, guildId: c.guildId ?? null });
+        return okReply(`Ausbildung angesetzt (**${s.number}**) \u2013 die Ank\xFCndigung mit Anmeldung erscheint gleich in diesem Kanal. Auswerten im Dashboard unter \u201EAusbildungen & Pr\xFCfungen\u201C.`);
+      }
+      return errorReply("Unbekannte Aktion.");
+    } catch (e) {
+      return mapError(e);
     }
   }
 };
@@ -82755,13 +82884,34 @@ var INTERACTIONS = [
     }
   },
   FORM_PANEL_INTERACTION,
-  DUTY_REPORT_INTERACTION
+  INFO_PANEL_INTERACTION,
+  DUTY_REPORT_INTERACTION,
+  TRAINING_INTERACTION
 ];
 var interactionFor = (customId) => {
   const [prefix, ...args] = customId.split(":");
   const def = INTERACTIONS.find((d) => d.prefix === prefix);
   return def ? { def, args } : void 0;
 };
+
+// apps/bot/src/commands/warnings.ts
+var WARNING_COMMANDS = [{
+  name: "verwarnen",
+  description: "Teammitglied verwarnen (landet in der Personalakte)",
+  options: [
+    { name: "mitglied", description: "Wer wird verwarnt?", type: "user", required: true },
+    { name: "grund", description: "Grund, z. B. \u201EShift Abuse\u201C", type: "string", required: true, maxLength: 300 },
+    { name: "schweregrad", description: "Standard: Verwarnung", type: "string", choices: [{ name: "Verwarnung", value: "WARNING" }, { name: "Abmahnung", value: "REPRIMAND" }, { name: "Schwerwiegender Versto\xDF", value: "SEVERE" }] }
+  ],
+  async run(c) {
+    try {
+      const r = await c.api.asUser(c.discordId, "POST", "/hr/warnings/discord", { discordId: String(c.opts.mitglied ?? ""), reason: String(c.opts.grund ?? "").trim(), ...c.opts.schweregrad ? { severity: String(c.opts.schweregrad) } : {} });
+      return okReply(`<@${c.opts.mitglied}> wurde verwarnt \u2013 **${r.count}/${r.limit}**${r.count >= r.limit ? " \u26D4 Grenze erreicht." : "."}`);
+    } catch (e) {
+      return mapError(e);
+    }
+  }
+}];
 
 // apps/bot/src/commands/index.ts
 var hm = (min) => `${Math.floor(min / 60)} h ${String(Math.round(min % 60)).padStart(2, "0")} min`;
@@ -82846,7 +82996,7 @@ Bewerben: \`/bewerbung\``.slice(0, 4e3), color: 2278750, fields: [...s.closesAt 
         { name: "Abfragen", value: "`/person` `/kennzeichen` `/fahndungen` `/einsaetze` `/einsatzinfo` `/einheiten` `/team`" },
         { name: "Dienst & Leitstelle", value: "`/dienst` `/dienststunden` `/abmeldung` `/leave manage` `/einheitstatus` `/einsatz` `/einsatzstatus` `/einsatzzuweisen` `/funk` `/funkcode` `/cad`" },
         { name: "Erfassen", value: "`/ticket` `/bericht` `/dienstbericht` `/beschwerde` `/ermittlung` `/fahndung` `/beweis`" },
-        { name: "Leitung & Team", value: "`/gefahrenstatus` `/funkfreigabe` `/teamliste` `/dienstpanel` `/bewerbungspanel` `/qualipanel` `/teamchance` `/roblox`" },
+        { name: "Leitung & Team", value: "`/ausbildung` `/verwarnen` `/gefahrenstatus` `/funkfreigabe` `/teamliste` `/dienstpanel` `/bewerbungspanel` `/qualipanel` `/teamchance` `/roblox`" },
         { name: "Support-Tickets", value: "`/support` \xF6ffnet ein Ticket (Team: `/support mitglied:@\u2026` f\xFCr jemand anderen). Ticket-Panels, Kategorien, Fragen und Buttons werden im Dashboard eingerichtet und von dort in Discord gesendet." },
         { name: "F\xFCr alle", value: "`/bewerbung` (auch ohne Verkn\xFCpfung; Fragen per Direktnachricht) \xB7 SEK/Flugstaffel/Ausbilder \xFCber das Qualifikations-Panel" },
         { name: "Hinweis", value: "Alle Befehle laufen mit **deinen** Rechten im System. Antworten sind nur f\xFCr dich sichtbar." }
@@ -83278,6 +83428,8 @@ Bewerben: \`/bewerbung\``.slice(0, 4e3), color: 2278750, fields: [...s.closesAt 
   ...LEAVE_COMMANDS,
   ...CAD_COMMANDS,
   ...DUTY_REPORT_COMMANDS,
+  ...WARNING_COMMANDS,
+  ...TRAINING_COMMANDS,
   TICKET_COMMAND
 ];
 var byName = (n) => COMMANDS.find((c) => c.name === n);

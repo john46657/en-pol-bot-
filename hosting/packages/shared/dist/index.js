@@ -110,6 +110,7 @@ __export(index_exports, {
   VOICE_CASE_STATUS: () => VOICE_CASE_STATUS,
   WANTED_STATUSES: () => WANTED_STATUSES,
   WANTED_TRANSITIONS: () => WANTED_TRANSITIONS,
+  WARNING_VARIABLES: () => WARNING_VARIABLES,
   WEEKDAYS: () => WEEKDAYS,
   WELCOME_VARIABLES: () => WELCOME_VARIABLES,
   WORKFLOW_ACTION_LABELS: () => WORKFLOW_ACTION_LABELS,
@@ -149,6 +150,10 @@ __export(index_exports, {
   hireMappingSchema: () => hireMappingSchema,
   hrConfigSchema: () => hrConfigSchema,
   hrStatusSchema: () => hrStatusSchema,
+  infoOptionEmbed: () => infoOptionEmbed,
+  infoOptionSchema: () => infoOptionSchema,
+  infoPanelMessage: () => infoPanelMessage,
+  infoPanelSchema: () => infoPanelSchema,
   isDutyTimeField: () => isDutyTimeField,
   isInputQuestion: () => isInputQuestion,
   isPermissionKey: () => isPermissionKey,
@@ -1135,6 +1140,44 @@ function formPanelResult(p, values, user, now = /* @__PURE__ */ new Date()) {
     reactions: p.reactions
   };
 }
+var httpsImage = import_zod.z.union([import_zod.z.string().trim().max(500).regex(/^https:\/\/\S+$/, "Bild: https://-Link"), import_zod.z.literal("")]).default("");
+var infoOptionSchema = import_zod.z.object({
+  id: import_zod.z.string().regex(/^[a-z0-9_-]{1,40}$/, "K\xFCrzel: a\u2013z, 0\u20139, _ und -"),
+  /** im Auswahlmenü */
+  label: import_zod.z.string().trim().min(1).max(100),
+  description: import_zod.z.string().max(100).default(""),
+  emoji: emoji.default(""),
+  /** Antwort (nur für die Person sichtbar) */
+  title: import_zod.z.string().max(256).default(""),
+  text: import_zod.z.string().max(4e3).default(""),
+  image: httpsImage,
+  color: color.default("#3b82f6")
+});
+var infoPanelSchema = import_zod.z.object({
+  id: import_zod.z.string().uuid(),
+  name: import_zod.z.string().trim().min(1).max(80),
+  guildId: sf.nullable().default(null),
+  channelId: sf.nullable().default(null),
+  title: import_zod.z.string().max(256).default("Aufgaben als Ausbilder"),
+  text: import_zod.z.string().max(4e3).default("Hier findest du alles Wichtige. W\xE4hle unten einen Punkt aus."),
+  color: color.default("#1f2937"),
+  image: imageRef,
+  footer: import_zod.z.string().max(200).default("Klicke auf \u201ETriff eine Auswahl\u201C, um mehr zu erfahren."),
+  placeholder: import_zod.z.string().trim().min(1).max(150).default("Triff eine Auswahl"),
+  options: import_zod.z.array(infoOptionSchema).min(1).max(25).default([
+    { id: "aufgaben", label: "Aufgaben", description: "Siehe, welche Aufgaben du hast.", emoji: "\u{1F4C2}", title: "Aufgaben", text: "Beschreibe hier die Aufgaben." },
+    { id: "doku", label: "Dokumentation", description: "Siehe, wie du dokumentieren musst.", emoji: "\u{1F4E8}", title: "Dokumentation", text: "Beschreibe hier, wie dokumentiert wird." }
+  ])
+});
+function infoPanelMessage(p) {
+  return {
+    embeds: [{ title: p.title || void 0, description: p.text || void 0, color: toInt(p.color), ...p.image ? { image: p.image } : {}, ...p.footer ? { footer: p.footer } : {} }],
+    select: { id: `ipnl:${p.id}`, placeholder: p.placeholder, options: p.options.map((o) => ({ label: o.label, value: o.id, ...o.description ? { description: o.description } : {}, ...o.emoji ? { emoji: o.emoji } : {} })) }
+  };
+}
+function infoOptionEmbed(o) {
+  return { title: (o.title || o.label).slice(0, 256), ...o.text ? { description: o.text } : {}, color: toInt(o.color), ...o.image ? { image: o.image } : {} };
+}
 
 // src/duty-reports.ts
 var import_zod2 = require("zod");
@@ -1359,6 +1402,26 @@ var hrConfigSchema = import_zod3.z.object({
     announceChannelId: sf3.nullable().default(null)
   }).default({}),
   notifications: import_zod3.z.record(import_zod3.z.enum(HR_EVENTS), notifyRuleSchema).default({}),
+  /** Verwarnungen: Meldung in Discord mit Zähler und Folgen beim Erreichen der Grenze */
+  warnings: import_zod3.z.object({
+    /** Grenze aktiver Verwarnungen (z. B. 3 → „1/3“) */
+    limit: import_zod3.z.number().int().min(1).max(20).default(3),
+    /** Kanal für jede neue Verwarnung (leer = nur Dashboard) */
+    channelId: sf3.nullable().default(null),
+    template: import_zod3.z.string().max(1500).default("**Wer:** {mitglied}\n**Grund:** {grund}\n**Verwarnungen:** {anzahl}/{grenze}"),
+    /** Person per DM informieren */
+    dm: import_zod3.z.boolean().default(true),
+    atLimit: import_zod3.z.object({
+      /** Dashboard-Rollen, die benachrichtigt werden (z. B. Leitung) */
+      notifyRoleIds: import_zod3.z.array(uuid).max(20).default([]),
+      /** Discord-Rollen, die in der Meldung erwähnt werden */
+      pingDiscordRoleIds: import_zod3.z.array(sf3).max(10).default([]),
+      /** Discord-Rollen, die entzogen werden */
+      removeDiscordRoleIds: import_zod3.z.array(sf3).max(25).default([]),
+      /** Status der Personalakte setzen (z. B. SUSPENDED) – leer = nicht ändern */
+      status: import_zod3.z.string().max(32).nullable().default(null)
+    }).default({})
+  }).default({}),
   /** Zertifikate */
   certificate: import_zod3.z.object({ organisation: import_zod3.z.string().max(100).default("EN Polizei"), logo: import_zod3.z.string().max(500).default(""), signature: import_zod3.z.string().max(100).default("") }).default({})
 });
@@ -1519,6 +1582,7 @@ var dnSettingsSchema = import_zod3.z.object({
   /** Wechsel der Nummer braucht eine zweite Person (Genehmiger) */
   changeNeedsApprover: import_zod3.z.boolean().default(false)
 });
+var WARNING_VARIABLES = ["{mitglied}", "{name}", "{grund}", "{schweregrad}", "{kategorie}", "{anzahl}", "{grenze}", "{durch}", "{datum}", "{ablauf}"];
 var DN_VARIABLES = ["{user}", "{name}", "{dienstnummer}", "{rang}", "{abteilung}", "{bewerbung}", "{datum}"];
 function fillTemplate(tpl, vars) {
   return tpl.replace(/\{([\w.]{1,40})\}/g, (m, k) => vars[k] !== void 0 && vars[k] !== null ? String(vars[k]) : m).replace(/@(everyone|here)/g, "@\u200B$1");
@@ -1944,6 +2008,7 @@ var backupConfigSchema = import_zod5.z.object({
   VOICE_CASE_STATUS,
   WANTED_STATUSES,
   WANTED_TRANSITIONS,
+  WARNING_VARIABLES,
   WEEKDAYS,
   WELCOME_VARIABLES,
   WORKFLOW_ACTION_LABELS,
@@ -1983,6 +2048,10 @@ var backupConfigSchema = import_zod5.z.object({
   hireMappingSchema,
   hrConfigSchema,
   hrStatusSchema,
+  infoOptionEmbed,
+  infoOptionSchema,
+  infoPanelMessage,
+  infoPanelSchema,
   isDutyTimeField,
   isInputQuestion,
   isPermissionKey,
