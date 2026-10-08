@@ -10,6 +10,7 @@ import { Input } from '../../components/ui';
 /** CAD-Navigation. Personen/Fahrzeuge/Reports verweisen auf die vorhandenen Akten (gleiche Daten, gleiche Rechte). */
 export const CAD_NAV: { to: string; label: string; perm?: string; area?: string }[] = [
   { to: '/cad', label: 'Übersicht' },
+  { to: '/cad/tablet', label: '📟 Tablet' },
   { to: '/cad/incidents', label: 'Einsätze' },
   { to: '/cad/map', label: 'Einsatzkarte' },
   { to: '/cad/units', label: 'Einheiten' },

@@ -13,6 +13,7 @@ import { PermissionService } from '../authz/permission.service';
 import { MediaService } from '../media/media.service';
 import { CadService, type CadActor } from './cad.service';
 import { CadAirService } from './cad-air.service';
+import { CadTabletService } from './cad-tablet.service';
 import { CadConfigService, cadConfigSchema } from './cad-config.service';
 import { ErlcService, erlcServerInput } from './erlc.service';
 import { ErlcSyncService } from './erlc-sync.service';
@@ -66,7 +67,7 @@ const radioBody = z.object({ text: z.string().trim().min(1).max(500), unitId: op
 @ApiTags('cad')
 @Controller('cad')
 export class CadController {
-  constructor(private readonly s: CadService, private readonly air: CadAirService, private readonly cfg: CadConfigService, private readonly perms: PermissionService, private readonly media: MediaService) {}
+  constructor(private readonly s: CadService, private readonly air: CadAirService, private readonly tablet: CadTabletService, private readonly cfg: CadConfigService, private readonly perms: PermissionService, private readonly media: MediaService) {}
 
   // Konfiguration
   @Get('config') @RequirePermission('cad.view')
@@ -141,6 +142,10 @@ export class CadController {
   }
 
   // Funk
+  /** Tablet der Leitstelle: Meldungen, Aktivitätsbrett, Gesucht, Auto-BOLOs. */
+  @Get('tablet') @RequirePermission('cad.view')
+  tabletView(@Cad() a: CadActor) { return this.tablet.get(a); }
+
   // Luftunterstützung (Hubschrauber) – Koordination; gerufen wird im Spiel
   @Get('air') @RequirePermission('cad.view')
   airList() { return this.air.list(); }

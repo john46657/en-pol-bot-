@@ -380,3 +380,16 @@ describe('CAD – Luftunterstützung und Gebäudekameras', () => {
     expect(map.vehicles.every((v) => v.owner === 'MaxMustermann123')).toBe(true);
   });
 });
+
+describe('CAD – Tablet', () => {
+  it('zeigt offene Meldungen, nur Polizisten im Aktivitätsbrett und Fahndungen nur mit Recht', async () => {
+    const admin = (await login(app, 'cad_admin')).agent;
+    const t = (await admin.get('/api/v1/cad/tablet')).body as { calls: unknown[]; board: { name: string; inGame: boolean }[]; wantedAllowed: boolean; inGameWanted: { name: string; stars: number }[] };
+    expect(Array.isArray(t.calls)).toBe(true);
+    const inGame = t.board.filter((b) => b.inGame).map((b) => b.name);
+    expect(inGame).toContain('MaxMustermann123');
+    expect(inGame).not.toContain('Driver');
+    expect(t.wantedAllowed).toBe(true);
+    expect(t.inGameWanted).toEqual(expect.arrayContaining([expect.objectContaining({ name: 'Driver', stars: 2 })]));
+  });
+});
