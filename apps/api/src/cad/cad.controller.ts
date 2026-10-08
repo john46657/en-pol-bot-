@@ -15,6 +15,7 @@ import { CadService, type CadActor } from './cad.service';
 import { CadConfigService, cadConfigSchema } from './cad-config.service';
 import { ErlcService, erlcServerInput } from './erlc.service';
 import { ErlcSyncService } from './erlc-sync.service';
+import { fetchMapImage, imageSize } from './map-image';
 
 const MAP_MAX_BYTES = 40 * 1024 * 1024;
 const sf = z.string().regex(/^\d{15,25}$/);
@@ -78,6 +79,14 @@ export class CadController {
     if (!file || !/^image\/(png|jpeg|webp)$/.test(file.mimetype)) throw new AppError('VALIDATION_FAILED', 'Bitte ein Bild (PNG, JPG oder WebP) hochladen.');
     const m = await this.media.upload(a, file, { linkedType: 'CadMap', linkedId: 'map' }, MAP_MAX_BYTES);
     return this.cfg.save(a, { map: { imageUrl: `/api/v1/media/${m.id}`, ...(b.width ? { width: b.width, originX: b.width / 2 } : {}), ...(b.height ? { height: b.height, originY: b.height / 2 } : {}) } as never });
+  }
+  /** Kartenbild von einer https-Adresse übernehmen: der Server lädt es herunter und speichert es wie einen Upload (fremde Bild-Server blockiert die Sicherheitsrichtlinie). */
+  @Post('map/image-url') @RequirePermission('cad.manage_map')
+  async mapImageUrl(@CurrentActor() a: Actor, @Body(zodBody(z.object({ url: z.string().trim().url().max(500) }))) b: { url: string }) {
+    const file = await fetchMapImage(b.url, MAP_MAX_BYTES);
+    const dims = imageSize(file.buffer);
+    const m = await this.media.upload(a, file, { linkedType: 'CadMap', linkedId: 'map' }, MAP_MAX_BYTES);
+    return this.cfg.save(a, { map: { imageUrl: `/api/v1/media/${m.id}`, ...(dims ? { width: dims.width, height: dims.height, originX: dims.width / 2, originY: dims.height / 2 } : {}) } as never });
   }
 
   @Get('overview') @RequirePermission('cad.view')

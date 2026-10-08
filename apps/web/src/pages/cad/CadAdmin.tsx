@@ -1,7 +1,7 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useSearchParams } from 'react-router';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { ArrowDown, ArrowUp, Trash2 } from 'lucide-react';
+import { ArrowDown, ArrowUp, Link2, Trash2, Upload } from 'lucide-react';
 import { type DangerConfig, CAD_WIDGET_LABELS, CAD_WIDGETS, CAD_EVENT_LABELS, CAD_EVENTS, CAD_LINK_ACTIONS, CAD_LINK_LABELS, CAD_LINK_SEND_TYPES, ERLC_FEATURE_LABELS, ERLC_FEATURES, ERLC_POLL_OPTIONS, ERLC_MAP_SIZE, type CadConfig, type CadRoute } from '@enrp/shared';
 import { api, ApiError } from '../../lib/api';
 import { useAuth } from '../../lib/auth';
@@ -177,16 +177,32 @@ function MapSettings({ draft, upd }: { draft: CadConfig; upd: (p: Partial<CadCon
     onSuccess: (cfg) => { upd({ map: cfg.map }); void qc.invalidateQueries({ queryKey: ['cad-config'] }); setMsg('Karte hochgeladen.'); },
     onError: (e) => setMsg(errText(e)),
   });
+  const fileRef = useRef<HTMLInputElement>(null);
+  const [url, setUrl] = useState('');
+  // Bild-Adresse: der Server lädt das Bild herunter und speichert es wie einen Upload
+  const fromUrl = useMutation({
+    mutationFn: (u: string) => api<CadConfig>('/cad/map/image-url', { body: { url: u } }),
+    onSuccess: (cfg) => { upd({ map: cfg.map }); void qc.invalidateQueries({ queryKey: ['cad-config'] }); setUrl(''); setMsg('Karte von der Adresse übernommen.'); },
+    onError: (e) => setMsg(errText(e)),
+  });
+  const busy = upload.isPending || fromUrl.isPending;
+  const [broken, setBroken] = useState<string | null>(null);
   const num = (label: string, k: 'width' | 'height' | 'originX' | 'originY' | 'scale', hint?: string) => <Field label={label} hint={hint}>{(id) => <Input id={id} type="number" step="any" value={m[k]} onChange={(e) => e.target.value !== '' && setMap({ [k]: Number(e.target.value) })} />}</Field>;
   return (
     <div className="grid gap-3 lg:grid-cols-2">
       <Card title="Kartenbild">
         <p className="mb-2 text-xs text-muted">Lade hier deine ER:LC-Map hoch (PNG/JPG/WebP, bis 40 MB). Sie ist der Hintergrund der CAD-Karte – Marker, POIs und Zonen liegen als Ebenen darüber.</p>
-        {m.imageUrl && <img src={m.imageUrl} alt="Aktuelle Karte" className="mb-2 max-h-48 rounded border border-line" />}
-        <input type="file" accept="image/png,image/jpeg,image/webp" aria-label="Karte hochladen" onChange={(e) => e.target.files?.[0] && upload.mutate(e.target.files[0])} />
-        {upload.isPending && <p className="text-xs text-muted">Wird hochgeladen …</p>}
+        {m.imageUrl && (broken === m.imageUrl
+          ? <p className="mb-2 rounded border border-danger/50 bg-danger/10 px-2 py-1 text-xs">Das aktuelle Kartenbild lässt sich nicht anzeigen ({m.imageUrl.startsWith('/api/') ? 'Datei fehlt' : 'keine Bilddatei oder fremder Server'}). Bitte eine Datei hochladen oder die Bildadresse unten laden.</p>
+          : <img src={m.imageUrl} alt="Aktuelle Karte" onError={() => setBroken(m.imageUrl ?? null)} className="mb-2 max-h-48 rounded border border-line" />)}
+        <input ref={fileRef} type="file" accept="image/png,image/jpeg,image/webp" className="hidden" aria-label="Karte hochladen" onChange={(e) => { const f = e.target.files?.[0]; if (f) upload.mutate(f); e.target.value = ''; }} />
+        <Button size="sm" variant="secondary" disabled={busy} onClick={() => fileRef.current?.click()}><Upload size={14} /> Datei auswählen</Button>
+        <Field label="oder Bild-Adresse (https, direkt zur Bilddatei)" hint="z. B. https://erlc.one/maps/2026/erlc-map-9-26-26.png – keine Webseite, sondern die Bilddatei selbst">{(id) => (
+          <div className="flex gap-2"><Input id={id} value={url} placeholder="https://…/karte.png" onChange={(e) => setUrl(e.target.value)} />
+            <Button size="sm" variant="secondary" disabled={busy || !/^https:\/\/\S+$/.test(url.trim())} onClick={() => fromUrl.mutate(url.trim())}><Link2 size={14} /> Laden</Button></div>
+        )}</Field>
+        {busy && <p className="text-xs text-muted">{upload.isPending ? 'Wird hochgeladen …' : 'Bild wird geladen – große Karten brauchen einen Moment …'}</p>}
         {msg && <p role="status" className="mt-1 text-xs">{msg}</p>}
-        <Field label="oder Bild-Adresse (https)">{(id) => <Input id={id} value={m.imageUrl ?? ''} placeholder="https://…" onChange={(e) => setMap({ imageUrl: e.target.value || null })} />}</Field>
       </Card>
       <Card title="Kalibrierung">
         <p className="mb-2 text-xs text-muted">ER:LC liefert Positionen relativ zur Kartenmitte (X nach rechts, Z nach unten). Standard für die offiziellen 5355-px-Karten: Ursprung in der Bildmitte, Maßstab 1. Liegen Marker daneben, hier anpassen.</p>
