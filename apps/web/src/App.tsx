@@ -60,6 +60,8 @@ const CadMapPage = lazy(() => import('./pages/cad/CadOps').then((m) => ({ defaul
 const CadCalls = lazy(() => import('./pages/cad/CadOps').then((m) => ({ default: m.CadCalls })));
 const CadUnits = lazy(() => import('./pages/cad/CadOps').then((m) => ({ default: m.CadUnits })));
 const CadRadio = lazy(() => import('./pages/cad/CadOps').then((m) => ({ default: m.CadRadio })));
+const CadAir = lazy(() => import('./pages/cad/CadAir').then((m) => ({ default: m.CadAir })));
+const CadCameras = lazy(() => import('./pages/cad/CadAir').then((m) => ({ default: m.CadCameras })));
 const ErlcLive = lazy(() => import('./pages/cad/ErlcLive').then((m) => ({ default: m.ErlcLive })));
 const CadSettings = lazy(() => import('./pages/cad/CadAdmin').then((m) => ({ default: m.CadSettings })));
 const CadTeam = lazy(() => import('./pages/cad/CadAdmin').then((m) => ({ default: m.CadTeam })));
@@ -114,6 +116,8 @@ export function App() {
             <Route path="units" element={<Guard perm="cad.view"><CadUnits /></Guard>} />
             <Route path="radio" element={<Guard perm="cad.view"><CadRadio /></Guard>} />
             <Route path="calls" element={<Guard perm="cad.view"><CadCalls /></Guard>} />
+            <Route path="air" element={<Guard perm="cad.view"><CadAir /></Guard>} />
+            <Route path="cameras" element={<Guard perm="cad.view"><CadCameras /></Guard>} />
             <Route path="erlc" element={<Guard perm="cad.view_erlc"><ErlcLive /></Guard>} />
             <Route path="team" element={<Guard perm="cad.view"><CadTeam /></Guard>} />
             <Route path="cross-server" element={<Guard perm="cad.view"><CadCrossServer /></Guard>} />

@@ -2,7 +2,7 @@ import { Body, Controller, createParamDecorator, Delete, ExecutionContext, Get, 
 import { FileInterceptor } from '@nestjs/platform-express';
 import { ApiTags } from '@nestjs/swagger';
 import { z } from 'zod';
-import { CAD_LINK_ACTIONS, CAD_LINK_SEND_TYPES } from '@enrp/shared';
+import { AIR_MODES, AIR_STATUS, CAD_LINK_ACTIONS, CAD_LINK_SEND_TYPES, type AirMode, type AirStatus } from '@enrp/shared';
 import { CurrentActor, Public, RequirePermission } from '../authz/decorators';
 import type { Actor } from '../audit/audit.service';
 import { zodBody } from '../common/zod.pipe';
@@ -12,6 +12,7 @@ import type { AppRequest } from '../common/request-context';
 import { PermissionService } from '../authz/permission.service';
 import { MediaService } from '../media/media.service';
 import { CadService, type CadActor } from './cad.service';
+import { CadAirService } from './cad-air.service';
 import { CadConfigService, cadConfigSchema } from './cad-config.service';
 import { ErlcService, erlcServerInput } from './erlc.service';
 import { ErlcSyncService } from './erlc-sync.service';
@@ -59,12 +60,13 @@ const linkBody = z.object({
 });
 const listQ = z.object({ active: z.enum(['true', 'false']).optional(), q: z.string().max(80).optional(), take: z.coerce.number().int().min(1).max(300).optional() });
 const statusBody = z.object({ status: z.string().min(1).max(32), note: z.string().trim().max(500).optional() });
+const airBody = z.object({ mode: z.enum(Object.keys(AIR_MODES) as [AirMode, ...AirMode[]]), target: opt(text(80)), note: opt(text(300)), incidentId: opt(z.string().uuid()), incidentNumber: opt(text(32)) });
 const radioBody = z.object({ text: z.string().trim().min(1).max(500), unitId: opt(z.string().uuid()), incidentId: opt(z.string().uuid()), incidentNumber: opt(text(32)), callsign: opt(text(24)) });
 
 @ApiTags('cad')
 @Controller('cad')
 export class CadController {
-  constructor(private readonly s: CadService, private readonly cfg: CadConfigService, private readonly perms: PermissionService, private readonly media: MediaService) {}
+  constructor(private readonly s: CadService, private readonly air: CadAirService, private readonly cfg: CadConfigService, private readonly perms: PermissionService, private readonly media: MediaService) {}
 
   // Konfiguration
   @Get('config') @RequirePermission('cad.view')
@@ -139,6 +141,17 @@ export class CadController {
   }
 
   // Funk
+  // Luftunterstützung (Hubschrauber) – Koordination; gerufen wird im Spiel
+  @Get('air') @RequirePermission('cad.view')
+  airList() { return this.air.list(); }
+  @Post('air') @RequirePermission('cad.radio')
+  airRequest(@Cad() a: CadActor, @Body(zodBody(airBody)) b: z.infer<typeof airBody>) { return this.air.request(a, b); }
+  @Post('air/:id/status') @RequirePermission('cad.radio')
+  airStatus(@Cad() a: CadActor, @Param('id', ParseUUIDPipe) id: string, @Body(zodBody(z.object({ status: z.enum(Object.keys(AIR_STATUS) as [AirStatus, ...AirStatus[]]) }))) b: { status: AirStatus }) { return this.air.setStatus(a, id, b.status); }
+  /** Gebäudekameras (ER:LC-Liste) als Kartenpunkte anlegen – fehlende, ohne Position. */
+  @Post('cameras/defaults') @RequirePermission('cad.manage_map')
+  cameraDefaults(@Cad() a: CadActor) { return this.air.addDefaultCameras(a); }
+
   @Get('radio') @RequirePermission('cad.view')
   radio(@Query(zodBody(z.object({ incidentId: z.string().uuid().optional(), take: z.coerce.number().int().min(1).max(200).optional() }))) q: { incidentId?: string; take?: number }) { return this.s.listRadio(q); }
   /** Einheiten, als die man funken darf (Leitstelle: alle; sonst nur die eigene). */

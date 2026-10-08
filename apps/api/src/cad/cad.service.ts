@@ -668,9 +668,9 @@ export class CadService {
       if (!snap?.players) continue;
       const staffNames = snap.staff ? new Set([...snap.staff.admins, ...snap.staff.mods, ...snap.staff.helpers].map((x) => x.name.toLowerCase())) : new Set<string>();
       for (const p of snap.players) players.push({ ...p, serverId: s.id, staff: (!!p.permission && p.permission !== 'Normal') || staffNames.has(p.name.toLowerCase()) });
-      // Fahrzeuge haben keine eigene Position – sie stehen dort, wo ihr Besitzer gerade ist
+      // GPS nur für Polizeifahrzeuge: ER:LC liefert keine Fahrzeugposition – sie stehen dort, wo ihr Besitzer (Team Police) gerade ist
       const byName = new Map(snap.players.map((p) => [p.name.toLowerCase(), p]));
-      for (const v of snap.vehicles ?? []) { const o = byName.get(v.owner.toLowerCase()); if (o?.location) vehicles.push({ name: v.name, owner: v.owner, plate: v.plate, colorHex: v.colorHex, x: o.location.x, z: o.location.z, serverId: s.id }); }
+      for (const v of snap.vehicles ?? []) { const o = byName.get(v.owner.toLowerCase()); if (o?.location && o.team?.toLowerCase() === 'police') vehicles.push({ name: v.name, owner: v.owner, plate: v.plate, colorHex: v.colorHex, x: o.location.x, z: o.location.z, serverId: s.id }); }
     }
     return {
       incidents: incidents.filter((i) => i.mapX !== null && i.mapZ !== null),

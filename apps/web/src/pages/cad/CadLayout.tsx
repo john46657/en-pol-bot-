@@ -1,10 +1,11 @@
 import { useEffect, useState } from 'react';
-import { Link, NavLink, Outlet } from 'react-router';
+import { Link, NavLink, Outlet, useNavigate } from 'react-router';
 import { useQuery } from '@tanstack/react-query';
 import { api } from '../../lib/api';
 import { useAuth } from '../../lib/auth';
 import { useCadLive, useCadPrefs, type CadOverview } from '../../lib/cad';
 import { onRealtime } from '../../lib/realtime';
+import { Input } from '../../components/ui';
 
 /** CAD-Navigation. Personen/Fahrzeuge/Reports verweisen auf die vorhandenen Akten (gleiche Daten, gleiche Rechte). */
 export const CAD_NAV: { to: string; label: string; perm?: string; area?: string }[] = [
@@ -14,6 +15,8 @@ export const CAD_NAV: { to: string; label: string; perm?: string; area?: string 
   { to: '/cad/units', label: 'Einheiten' },
   { to: '/cad/radio', label: 'Funk' },
   { to: '/cad/calls', label: 'Notrufe' },
+  { to: '/cad/air', label: '🚁 Luftunterstützung' },
+  { to: '/cad/cameras', label: '📹 Kameras' },
   { to: '/persons', label: 'Personen', perm: 'cad.view_persons' },
   { to: '/vehicles', label: 'Fahrzeuge', perm: 'cad.view_vehicles' },
   { to: '/cad/erlc', label: 'ER:LC Live', perm: 'cad.view_erlc' },
@@ -34,6 +37,7 @@ export function CadLayout() {
   return (
     <div>
       <div className="mb-3">
+        <CadQuickSearch />
         <nav aria-label="CAD" className="-mx-1 flex gap-1 overflow-x-auto pb-1">
           {items.map((n) => (
             <NavLink key={n.to} to={n.to} end={n.to === '/cad'} className={({ isActive }) => `whitespace-nowrap rounded-md px-2.5 py-1.5 text-sm ${isActive ? 'bg-primary text-primary-fg' : 'text-muted hover:bg-panel-2 hover:text-fg'}`}>{n.label}</NavLink>
@@ -47,6 +51,37 @@ export function CadLayout() {
       )}
       <Outlet />
       <CallAlert />
+    </div>
+  );
+}
+
+interface SearchHit { type: string; id: string; label: string; sub?: string }
+/** Schnellabfrage in der Leitstelle: Personen (Roblox-Name/-ID) und Fahrzeuge (Kennzeichen) direkt suchen. */
+function CadQuickSearch() {
+  const { can } = useAuth();
+  const nav = useNavigate();
+  const [term, setTerm] = useState('');
+  const [debounced, setDebounced] = useState('');
+  const [open, setOpen] = useState(false);
+  useEffect(() => { const t = setTimeout(() => setDebounced(term.trim()), 250); return () => clearTimeout(t); }, [term]);
+  const persons = can('persons.view'), vehicles = can('vehicles.view');
+  const q = useQuery({ queryKey: ['cad-quicksearch', debounced], queryFn: () => api<{ results: SearchHit[] }>('/search', { query: { q: debounced } }).then((r) => r.results), enabled: debounced.length >= 2 && (persons || vehicles) });
+  if (!persons && !vehicles) return null;
+  const hits = (q.data ?? []).filter((h) => (h.type === 'person' && persons) || (h.type === 'vehicle' && vehicles));
+  const go = (h: SearchHit) => { setOpen(false); setTerm(''); nav(h.type === 'person' ? `/persons/${h.id}` : `/vehicles/${h.id}`); };
+  return (
+    <div className="relative mb-2 max-w-md">
+      <Input type="search" aria-label="Person oder Fahrzeug suchen" placeholder={`🔎 ${[persons && 'Person (Roblox-Name/-ID)', vehicles && 'Kennzeichen'].filter(Boolean).join(' oder ')} suchen…`} value={term}
+        onChange={(e) => { setTerm(e.target.value); setOpen(true); }} onFocus={() => setOpen(true)} onBlur={() => setTimeout(() => setOpen(false), 150)}
+        onKeyDown={(e) => { if (e.key === 'Enter' && hits[0]) go(hits[0]); if (e.key === 'Escape') setOpen(false); }} />
+      {open && debounced.length >= 2 && (
+        <ul role="listbox" aria-label="Treffer" className="absolute z-30 mt-1 max-h-80 w-full overflow-auto rounded-md border border-line bg-panel p-1 shadow-lg">
+          {q.isLoading ? <li className="px-2 py-1.5 text-xs text-muted">Suche …</li> : !hits.length ? <li className="px-2 py-1.5 text-xs text-muted">Keine Person und kein Fahrzeug gefunden.</li> : hits.map((h) => (
+            <li key={`${h.type}:${h.id}`}><button type="button" role="option" aria-selected={false} onMouseDown={(e) => e.preventDefault()} onClick={() => go(h)} className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-sm hover:bg-panel-2">
+              <span aria-hidden>{h.type === 'person' ? '👤' : '🚗'}</span><span className="min-w-0 flex-1 truncate"><b>{h.label}</b>{h.sub && <span className="ml-1 text-xs text-muted">{h.sub}</span>}</span><span className="text-[11px] text-muted">{h.type === 'person' ? 'Person' : 'Fahrzeug'}</span>
+            </button></li>))}
+        </ul>
+      )}
     </div>
   );
 }
