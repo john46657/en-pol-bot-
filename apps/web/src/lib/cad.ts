@@ -82,6 +82,3 @@ export const ago = (iso: string | null | undefined) => {
   return s < 60 ? `vor ${s} s` : s < 3600 ? `vor ${Math.floor(s / 60)} min` : s < 86400 ? `vor ${Math.floor(s / 3600)} h` : `vor ${Math.floor(s / 86400)} T`;
 };
 export const unixTime = (t: number) => new Date(t * 1000).toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' });
-
-/** Anforderung Luftunterstützung (Hubschrauber). */
-export interface CadAirRow { id: string; number: number; mode: 'SEARCH' | 'PATROL'; target: string | null; note: string | null; status: 'OPEN' | 'ACCEPTED' | 'DONE' | 'CANCELLED'; requestedBy: string | null; handledBy: string | null; authorId: string | null; createdAt: string; updatedAt: string; incident: { id: string; number: string; title: string } | null }

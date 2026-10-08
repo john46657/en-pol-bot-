@@ -1216,26 +1216,6 @@ model CadIncidentLog {
   @@index([incidentId, createdAt])
 }
 
-/// Anforderung Luftunterstützung (Hubschrauber). ER:LC bietet dafür keine API – der Hubschrauber wird im Spiel gerufen, das CAD koordiniert.
-model CadAirRequest {
-  id          String   @id @default(uuid()) @db.Uuid
-  number      Int      @default(autoincrement())
-  mode        String // SEARCH (Spieler suchen) | PATROL (Patrouille)
-  target      String?
-  note        String?
-  status      String   @default("OPEN") // OPEN | ACCEPTED | DONE | CANCELLED
-  incidentId  String?  @db.Uuid
-  requestedBy String?
-  handledBy   String?
-  authorId    String?  @db.Uuid
-  discordId   String?
-  guildId     String?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-
-  @@index([status, createdAt])
-}
-
 /// Funkmeldung (Funk-Integration). Mit incidentId landet sie zusätzlich in der Einsatzchronik.
 model CadRadioMessage {
   id         String   @id @default(uuid()) @db.Uuid

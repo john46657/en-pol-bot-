@@ -80281,7 +80281,6 @@ var DEFAULT_CAD_CONFIG = {
     { key: "staff", label: "Staff", builtin: true, enabledByDefault: false },
     { key: "players", label: "Alle Spieler", builtin: true, enabledByDefault: false },
     { key: "pois", label: "Eigene POIs", builtin: true, enabledByDefault: true },
-    { key: "cameras", label: "Geb\xE4udekameras", builtin: true, enabledByDefault: true },
     { key: "zones", label: "Eigene Zonen", builtin: true, enabledByDefault: true },
     { key: "restricted", label: "Sperrbereiche", builtin: true, enabledByDefault: true }
   ],
@@ -80292,8 +80291,7 @@ var DEFAULT_CAD_CONFIG = {
     { key: "vehicle", label: "Polizeifahrzeug", emoji: "\u{1F693}", color: "#2563eb" },
     { key: "staff", label: "Staff", emoji: "\u{1F46E}", color: "#f59e0b" },
     { key: "player", label: "Spieler", emoji: "\u2022", color: "#94a3b8" },
-    { key: "poi", label: "POI", emoji: "\u{1F4CD}", color: "#10b981" },
-    { key: "camera", label: "Kamera", emoji: "\u{1F4F9}", color: "#64748b" }
+    { key: "poi", label: "POI", emoji: "\u{1F4CD}", color: "#10b981" }
   ],
   map: { imageUrl: null, width: ERLC_MAP_SIZE, height: ERLC_MAP_SIZE, originX: ERLC_MAP_SIZE / 2, originY: ERLC_MAP_SIZE / 2, scale: 1 },
   routes: [],
@@ -82325,7 +82323,7 @@ async function myUnit(c, callsign) {
 }
 var CAD_COMMANDS = [{
   name: "cad",
-  description: "CAD-Leitstelle: Einheitenstatus, Funkmeldung, Eins\xE4tze, Luftunterst\xFCtzung",
+  description: "CAD-Leitstelle: Einheitenstatus, Funkmeldung, aktive Eins\xE4tze",
   subcommands: [
     { name: "status", description: "Status deiner Einheit an die Leitstelle melden", options: [
       { name: "status", description: "z. B. Verf\xFCgbar, Unterwegs, Am Einsatzort", type: "string", required: true, maxLength: 40 },
@@ -82335,13 +82333,7 @@ var CAD_COMMANDS = [{
       { name: "text", description: "z. B. \u201EAm Einsatzort.\u201C", type: "string", required: true, maxLength: 500 },
       { name: "einsatz", description: "Einsatznummer (leer = aktueller Einsatz deiner Einheit)", type: "string", maxLength: 32 }
     ] },
-    { name: "einsaetze", description: "Aktive Eins\xE4tze der Leitstelle" },
-    { name: "heli", description: "Luftunterst\xFCtzung (Hubschrauber) bei der Leitstelle anfordern", options: [
-      { name: "modus", description: "Spieler suchen oder Patrouille", type: "string", required: true, choices: [{ name: "Spieler suchen", value: "SEARCH" }, { name: "Patrouille", value: "PATROL" }] },
-      { name: "ziel", description: "Gesuchter Spieler (bei \u201ESpieler suchen\u201C) oder Gebiet", type: "string", maxLength: 80 },
-      { name: "einsatz", description: "Einsatznummer (optional)", type: "string", maxLength: 32 },
-      { name: "hinweis", description: "Hinweis f\xFCr die Leitstelle", type: "string", maxLength: 300 }
-    ] }
+    { name: "einsaetze", description: "Aktive Eins\xE4tze der Leitstelle" }
   ],
   async run(c) {
     try {
@@ -82359,12 +82351,6 @@ var CAD_COMMANDS = [{
       if (sub === "funk") {
         const r = await c.api.asUser(c.discordId, "POST", "/cad/radio", { text: String(c.opts.text ?? ""), ...c.opts.einsatz ? { incidentNumber: String(c.opts.einsatz) } : {} });
         return okReply(`\u{1F4FB} ${r.callsign ? `**${plain(r.callsign)}**: ` : ""}\u201E${plain(c.opts.text)}\u201C gesendet${r.incidentNumber ? ` \u2013 Einsatz **${plain(r.incidentNumber)}**` : ""}.`);
-      }
-      if (sub === "heli") {
-        const mode = String(c.opts.modus ?? "");
-        if (mode === "SEARCH" && !String(c.opts.ziel ?? "").trim()) return errorReply("Bei \u201ESpieler suchen\u201C bitte mit `ziel:` angeben, wer gesucht wird.");
-        const r = await c.api.asUser(c.discordId, "POST", "/cad/air", { mode, ...c.opts.ziel ? { target: String(c.opts.ziel) } : {}, ...c.opts.einsatz ? { incidentNumber: String(c.opts.einsatz) } : {}, ...c.opts.hinweis ? { note: String(c.opts.hinweis) } : {} });
-        return okReply(`\u{1F681} Luftunterst\xFCtzung **#${r.number}** angefordert (${mode === "SEARCH" ? `Spieler suchen: ${plain(c.opts.ziel)}` : "Patrouille"})${r.incident ? ` \u2013 Einsatz **${plain(r.incident.number)}**` : ""}. Die Leitstelle ist informiert; gerufen wird der Hubschrauber im Spiel.`);
       }
       if (sub === "einsaetze") {
         const [cfg2, list] = await Promise.all([config(c), c.api.asUser(c.discordId, "GET", "/cad/incidents?active=true&take=20")]);
@@ -82439,15 +82425,6 @@ ${clip(plain(p.note), 500)}` : ""}`, fields: [...f("Ort", p.location)] };
       };
     case "cad.announcement":
       return { title: "\u{1F4E2} Leitstellenmeldung", description: clip(plain(p.text), 4e3), color: COLORS.warning, ...p.from ? { footer: `von ${clip(String(p.from), 100)}` } : {} };
-    case "cad.air.requested":
-      return {
-        title: clip(`\u{1F681} Luftunterst\xFCtzung #${String(p.number ?? "?")} angefordert`, 256),
-        color: COLORS.warning,
-        description: `**${plain(p.modeLabel ?? p.mode)}**${p.target ? `: ${clip(plain(p.target), 200)}` : ""}${p.note ? `
-${clip(plain(p.note), 500)}` : ""}
-_Hubschrauber im Spiel \xFCber das Polizei-Tablet rufen._`,
-        fields: [...f("Angefordert von", p.by), ...f("Einsatz", p.incidentNumber)]
-      };
     case "cad.radio":
       return { title: clip(`\u{1F4FB} ${plain(p.callsign ?? "Funk")}${p.incidentNumber ? ` \xB7 ${String(p.incidentNumber)}` : ""}`, 256), description: `\u201E${clip(plain(p.text), 1500)}\u201C`, color: COLORS.neutral };
     default:
@@ -82463,7 +82440,7 @@ function cadButtons(type, p) {
     { id: `cad:call:${p.id}:close`, label: "Schlie\xDFen", style: "danger", emoji: "\u2716\uFE0F" },
     ...typeof p.mapUrl === "string" && /^https?:\/\//.test(p.mapUrl) ? [{ id: "map", label: "Auf Karte anzeigen", style: "secondary", url: p.mapUrl }] : []
   ];
-  if (type.startsWith("cad.incident.") || type === "cad.air.requested") return link.length ? link : void 0;
+  if (type.startsWith("cad.incident.")) return link.length ? link : void 0;
   return void 0;
 }
 

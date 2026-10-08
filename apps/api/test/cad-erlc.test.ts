@@ -344,36 +344,7 @@ describe('CAD – beendete Einsätze aufräumen', () => {
   });
 });
 
-describe('CAD – Luftunterstützung und Gebäudekameras', () => {
-  it('Anforderung: Spieler suchen braucht ein Ziel, Leitstelle übernimmt/erledigt, Anforderer darf nur abbrechen', async () => {
-    const member = (await login(app, 'cad_member')).agent;
-    const disp = (await login(app, 'cad_disp')).agent;
-    expect((await member.post('/api/v1/cad/air').send({ mode: 'SEARCH' })).status).toBe(400);
-    const a = await member.post('/api/v1/cad/air').send({ mode: 'SEARCH', target: 'Driver', note: 'flüchtig Richtung Springfield' });
-    expect(a.status).toBe(201);
-    expect(a.body).toMatchObject({ mode: 'SEARCH', target: 'Driver', status: 'OPEN' });
-    expect((await member.post(`/api/v1/cad/air/${a.body.id}/status`).send({ status: 'ACCEPTED' })).status).toBe(403);
-    expect((await disp.post(`/api/v1/cad/air/${a.body.id}/status`).send({ status: 'ACCEPTED' })).body.status).toBe('ACCEPTED');
-    expect((await disp.post(`/api/v1/cad/air/${a.body.id}/status`).send({ status: 'DONE' })).body.status).toBe('DONE');
-    expect((await disp.post(`/api/v1/cad/air/${a.body.id}/status`).send({ status: 'OPEN' })).status).toBe(409);
-    const b = await member.post('/api/v1/cad/air').send({ mode: 'PATROL' });
-    expect((await member.post(`/api/v1/cad/air/${b.body.id}/status`).send({ status: 'CANCELLED' })).body.status).toBe('CANCELLED');
-    const list = (await disp.get('/api/v1/cad/air')).body as { id: string }[];
-    expect(list.map((r) => r.id)).toEqual(expect.arrayContaining([a.body.id, b.body.id]));
-  });
-
-  it('Kameras aus ER:LC einfügen legt nur fehlende an (Ebene cameras, ohne Position)', async () => {
-    const admin = (await login(app, 'cad_admin')).agent;
-    const member = (await login(app, 'cad_member')).agent;
-    expect((await member.post('/api/v1/cad/cameras/defaults')).status).toBe(403);
-    const first = (await admin.post('/api/v1/cad/cameras/defaults')).body;
-    expect(first.added).toBeGreaterThan(5);
-    expect((await admin.post('/api/v1/cad/cameras/defaults')).body.added).toBe(0);
-    const cams = ((await admin.get('/api/v1/cad/map/objects')).body as { layer: string; x: number | null; name: string }[]).filter((o) => o.layer === 'cameras');
-    expect(cams).toHaveLength(first.added);
-    expect(cams.every((c) => c.x === null)).toBe(true);
-  });
-
+describe('CAD – Karte', () => {
   it('Karte: Fahrzeug-GPS nur für Polizeifahrzeuge', async () => {
     const admin = (await login(app, 'cad_admin')).agent;
     const map = (await admin.get('/api/v1/cad/map')).body as { vehicles: { owner: string }[] };

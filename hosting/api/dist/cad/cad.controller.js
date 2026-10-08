@@ -25,7 +25,6 @@ const guild_context_1 = require("../common/guild-context");
 const permission_service_1 = require("../authz/permission.service");
 const media_service_1 = require("../media/media.service");
 const cad_service_1 = require("./cad.service");
-const cad_air_service_1 = require("./cad-air.service");
 const cad_tablet_service_1 = require("./cad-tablet.service");
 const cad_config_service_1 = require("./cad-config.service");
 const erlc_service_1 = require("./erlc.service");
@@ -72,18 +71,15 @@ const linkBody = zod_1.z.object({
 });
 const listQ = zod_1.z.object({ active: zod_1.z.enum(['true', 'false']).optional(), q: zod_1.z.string().max(80).optional(), take: zod_1.z.coerce.number().int().min(1).max(300).optional() });
 const statusBody = zod_1.z.object({ status: zod_1.z.string().min(1).max(32), note: zod_1.z.string().trim().max(500).optional() });
-const airBody = zod_1.z.object({ mode: zod_1.z.enum(Object.keys(shared_1.AIR_MODES)), target: opt(text(80)), note: opt(text(300)), incidentId: opt(zod_1.z.string().uuid()), incidentNumber: opt(text(32)) });
 const radioBody = zod_1.z.object({ text: zod_1.z.string().trim().min(1).max(500), unitId: opt(zod_1.z.string().uuid()), incidentId: opt(zod_1.z.string().uuid()), incidentNumber: opt(text(32)), callsign: opt(text(24)) });
 let CadController = class CadController {
     s;
-    air;
     tablet;
     cfg;
     perms;
     media;
-    constructor(s, air, tablet, cfg, perms, media) {
+    constructor(s, tablet, cfg, perms, media) {
         this.s = s;
-        this.air = air;
         this.tablet = tablet;
         this.cfg = cfg;
         this.perms = perms;
@@ -147,12 +143,6 @@ let CadController = class CadController {
     // Funk
     /** Tablet der Leitstelle: Meldungen, Aktivitätsbrett, Gesucht, Auto-BOLOs. */
     tabletView(a) { return this.tablet.get(a); }
-    // Luftunterstützung (Hubschrauber) – Koordination; gerufen wird im Spiel
-    airList() { return this.air.list(); }
-    airRequest(a, b) { return this.air.request(a, b); }
-    airStatus(a, id, b) { return this.air.setStatus(a, id, b.status); }
-    /** Gebäudekameras (ER:LC-Liste) als Kartenpunkte anlegen – fehlende, ohne Position. */
-    cameraDefaults(a) { return this.air.addDefaultCameras(a); }
     radio(q) { return this.s.listRadio(q); }
     /** Einheiten, als die man funken darf (Leitstelle: alle; sonst nur die eigene). */
     radioUnits(a) { return this.s.radioUnits(a); }
@@ -396,40 +386,6 @@ __decorate([
     __metadata("design:returntype", void 0)
 ], CadController.prototype, "tabletView", null);
 __decorate([
-    (0, common_1.Get)('air'),
-    (0, decorators_1.RequirePermission)('cad.view'),
-    __metadata("design:type", Function),
-    __metadata("design:paramtypes", []),
-    __metadata("design:returntype", void 0)
-], CadController.prototype, "airList", null);
-__decorate([
-    (0, common_1.Post)('air'),
-    (0, decorators_1.RequirePermission)('cad.radio'),
-    __param(0, Cad()),
-    __param(1, (0, common_1.Body)((0, zod_pipe_1.zodBody)(airBody))),
-    __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Object, void 0]),
-    __metadata("design:returntype", void 0)
-], CadController.prototype, "airRequest", null);
-__decorate([
-    (0, common_1.Post)('air/:id/status'),
-    (0, decorators_1.RequirePermission)('cad.radio'),
-    __param(0, Cad()),
-    __param(1, (0, common_1.Param)('id', common_1.ParseUUIDPipe)),
-    __param(2, (0, common_1.Body)((0, zod_pipe_1.zodBody)(zod_1.z.object({ status: zod_1.z.enum(Object.keys(shared_1.AIR_STATUS)) })))),
-    __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Object, String, Object]),
-    __metadata("design:returntype", void 0)
-], CadController.prototype, "airStatus", null);
-__decorate([
-    (0, common_1.Post)('cameras/defaults'),
-    (0, decorators_1.RequirePermission)('cad.manage_map'),
-    __param(0, Cad()),
-    __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Object]),
-    __metadata("design:returntype", void 0)
-], CadController.prototype, "cameraDefaults", null);
-__decorate([
     (0, common_1.Get)('radio'),
     (0, decorators_1.RequirePermission)('cad.view'),
     __param(0, (0, common_1.Query)((0, zod_pipe_1.zodBody)(zod_1.z.object({ incidentId: zod_1.z.string().uuid().optional(), take: zod_1.z.coerce.number().int().min(1).max(200).optional() })))),
@@ -582,7 +538,7 @@ __decorate([
 exports.CadController = CadController = __decorate([
     (0, swagger_1.ApiTags)('cad'),
     (0, common_1.Controller)('cad'),
-    __metadata("design:paramtypes", [cad_service_1.CadService, cad_air_service_1.CadAirService, cad_tablet_service_1.CadTabletService, cad_config_service_1.CadConfigService, permission_service_1.PermissionService, media_service_1.MediaService])
+    __metadata("design:paramtypes", [cad_service_1.CadService, cad_tablet_service_1.CadTabletService, cad_config_service_1.CadConfigService, permission_service_1.PermissionService, media_service_1.MediaService])
 ], CadController);
 const commandBody = zod_1.z.object({ command: zod_1.z.string().trim().min(2).max(500), confirm: zod_1.z.boolean().optional() });
 let ErlcController = class ErlcController {
