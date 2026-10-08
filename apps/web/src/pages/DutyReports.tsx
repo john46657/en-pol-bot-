@@ -8,7 +8,6 @@ import { errText } from '../lib/tickets';
 import { useServer } from '../lib/guilds';
 import { useDocList } from '../lib/doclist';
 import { ChannelPicker, RolePicker } from '../components/DiscordPickers';
-import { ReportTabs } from '../components/ReportTabs';
 import { DiscordPreview } from '../components/DiscordPreview';
 import { Toggle } from '../components/ApplicationSettings';
 import { Badge, Button, Card, ConfirmDialog, EmptyState, ErrorState, fmt, Input, Modal, PageHeader, Select, SkeletonRows, Tabs, Textarea } from '../components/ui';
@@ -292,7 +291,6 @@ export function DutyReports() {
   const tabs = ['Berichte', ...(can('dutyreports.manage') ? ['Vorlagen'] : [])];
   return (
     <>
-      <ReportTabs />
       <PageHeader title="🗓️ Tages-/Wochenberichte" subtitle="Eigene Vorlagen mit frei wählbaren Feldern. Ausfüllen, ansehen und bearbeiten im Dashboard und in Discord (/dienstbericht) – Änderungen erscheinen überall." />
       {tabs.length > 1 && <div className="mb-3"><Tabs tabs={tabs} active={tab} onChange={setTab} /></div>}
       {tab === 'Vorlagen' ? <Templates /> : t.error ? <ErrorState error={t.error} /> : !t.data ? <SkeletonRows /> : <ReportList templates={t.data} />}

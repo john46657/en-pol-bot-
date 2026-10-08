@@ -7,7 +7,7 @@ import { useAuth } from '../lib/auth';
 import { flush } from '../lib/autosave';
 import { DEFAULT_LAYOUTS, usePrefs, type Layout, type WidgetCfg, type WidgetSize } from '../lib/prefs';
 import { useRealtime } from '../lib/realtime';
-import { NAV, navFor, tr, visible } from '../nav';
+import { href, NAV, navFor, tr, visible } from '../nav';
 import { Button, Card, EmptyState, ErrorState, fmt, Input, PageHeader, PriorityBadge, Select, Skeleton, StatusBadge } from '../components/ui';
 import { TeamRoster, useRoster } from '../components/TeamRoster';
 import { VoiceWidget } from '../components/VoiceWidget';
@@ -76,7 +76,7 @@ function Favorites() {
   const { can } = useAuth();
   const items = [...new Set(prefs.favorites.map((p) => navFor(NAV, p)).filter((n): n is (typeof NAV)[number] => !!n && visible(n, can)))];
   if (!items.length) return <p className="text-sm text-muted">Noch keine Favoriten. Im Menü auf ☆ neben einem Bereich klicken.</p>;
-  return <ul className="grid gap-1 sm:grid-cols-2">{items.map((n) => <li key={n.path}><Link to={n.path} className="flex items-center gap-2 rounded px-2 py-1.5 text-sm hover:bg-panel-2"><n.icon size={14} aria-hidden />⭐ {tr(n.label, prefs.language)}</Link></li>)}</ul>;
+  return <ul className="grid gap-1 sm:grid-cols-2">{items.map((n) => <li key={n.path}><Link to={href(n, can)} className="flex items-center gap-2 rounded px-2 py-1.5 text-sm hover:bg-panel-2"><n.icon size={14} aria-hidden />⭐ {tr(n.label, prefs.language)}</Link></li>)}</ul>;
 }
 
 function Notifications() {

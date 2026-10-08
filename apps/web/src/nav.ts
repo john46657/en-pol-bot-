@@ -1,63 +1,102 @@
-import { TriangleAlert, HardDriveDownload, ScrollText, BellRing, GraduationCap, IdCard, Medal, SlidersHorizontal, FormInput, ListOrdered, Link2, PanelTop, DoorOpen, MapPinned, Building2, Megaphone, RadioTower, Contact, Palette, CalendarOff, Clock, LifeBuoy, Monitor, BarChart3, BookOpen, Award, Car, ClipboardList, FileText, Fingerprint, Flag, Gavel, LayoutDashboard, MessageSquare, Radio, Scale, Search, Settings, Shield, Siren, Ticket, UserCheck, Users, Wrench, type LucideIcon } from 'lucide-react';
+import { ScrollText, BellRing, GraduationCap, PanelTop, MapPinned, RadioTower, Palette, CalendarOff, LifeBuoy, Monitor, BarChart3, Car, ClipboardList, FileText, Fingerprint, Flag, LayoutDashboard, Search, Settings, Ticket, UserCheck, Users, Wrench, type LucideIcon } from 'lucide-react';
 
-/** `area`: Bereichs-Sichtbarkeit (dashboard.<bereich>.view) – ohne sie erscheint der Menüpunkt nicht, auch mit Modul-Recht. */
-/** `anyPerm`: sichtbar mit einem dieser Rechte (statt `perm`). `also`: weitere Pfade, unter denen der Menüpunkt aktiv ist. */
-export interface NavItem { path: string; label: string; icon: LucideIcon; perm?: string; anyPerm?: string[]; also?: string[]; area?: string; group: 'Operations' | 'Records' | 'Organisation' | 'Administration' }
+/** Reiter eines zusammengefassten Menüpunkts: eigene Seite mit eigenem Recht. */
+export interface NavTab { path: string; label: string; perm?: string; area?: string }
+/**
+ * `area`: Bereichs-Sichtbarkeit (dashboard.<bereich>.view) – ohne sie erscheint der Menüpunkt nicht, auch mit Modul-Recht.
+ * `tabs`: mehrere Seiten unter einem Menüpunkt; sichtbar, wenn mindestens ein Reiter erlaubt ist. Der Menüpunkt führt
+ * zum ersten erlaubten Reiter, oben auf der Seite erscheint die Reiterleiste.
+ */
+export interface NavItem { path: string; label: string; icon: LucideIcon; perm?: string; area?: string; tabs?: NavTab[]; group: 'Operations' | 'Records' | 'Organisation' | 'Administration' }
+
+const grp = (label: string, icon: LucideIcon, group: NavItem['group'], tabs: NavTab[]): NavItem => ({ path: tabs[0]!.path, label, icon, group, tabs });
 
 export const NAV: NavItem[] = [
   { path: '/mdt', label: 'MDT', icon: Monitor, perm: 'dashboard.view', group: 'Operations' },
   { path: '/dashboard', label: 'Dashboard', icon: LayoutDashboard, perm: 'dashboard.view', group: 'Operations' },
-  { path: '/cad', label: 'CAD-Leitstelle', icon: MapPinned, perm: 'cad.view', area: 'dashboard.cad.view', group: 'Operations' },
-  { path: '/dispatch', label: 'Leitstelle (klassisch)', icon: Radio, perm: 'dispatch.view', group: 'Operations' },
-  { path: '/incidents', label: 'Einsätze', icon: Siren, perm: 'incidents.view', group: 'Operations' },
-  { path: '/team', label: 'Team', icon: Users, perm: 'team.view', area: 'dashboard.team.view', group: 'Operations' },
-  { path: '/teamlist', label: 'Teamliste', icon: Contact, perm: 'team.view', area: 'dashboard.team.view', group: 'Operations' },
-  { path: '/staff-lists', label: 'Staff-Liste (Discord)', icon: ListOrdered, perm: 'team.view', area: 'dashboard.team.view', group: 'Operations' },
-  { path: '/offices', label: 'Büros', icon: Building2, perm: 'team.view', area: 'dashboard.offices.view', group: 'Operations' },
-  { path: '/radio-codes', label: 'Funk-Codes', icon: RadioTower, perm: 'radio.view', area: 'dashboard.radio.view', group: 'Operations' },
-  { path: '/communication', label: 'Kommunikation', icon: MessageSquare, perm: 'communication.view', group: 'Operations' },
+  grp('Leitstelle', MapPinned, 'Operations', [
+    { path: '/cad', label: 'CAD-Leitstelle', perm: 'cad.view', area: 'dashboard.cad.view' },
+    { path: '/dispatch', label: 'Leitstelle (klassisch)', perm: 'dispatch.view' },
+    { path: '/incidents', label: 'Einsätze', perm: 'incidents.view' },
+  ]),
+  grp('Team', Users, 'Operations', [
+    { path: '/team', label: 'Team', perm: 'team.view', area: 'dashboard.team.view' },
+    { path: '/teamlist', label: 'Teamliste', perm: 'team.view', area: 'dashboard.team.view' },
+    { path: '/staff-lists', label: 'Staff-Liste (Discord)', perm: 'team.view', area: 'dashboard.team.view' },
+    { path: '/offices', label: 'Büros', perm: 'team.view', area: 'dashboard.offices.view' },
+  ]),
+  grp('Funk & Kommunikation', RadioTower, 'Operations', [
+    { path: '/radio-codes', label: 'Funk-Codes', perm: 'radio.view', area: 'dashboard.radio.view' },
+    { path: '/communication', label: 'Kommunikation', perm: 'communication.view' },
+  ]),
   { path: '/support-tickets', label: 'Support-Tickets', icon: LifeBuoy, perm: 'ticket.view', area: 'dashboard.tickets.view', group: 'Operations' },
   { path: '/persons', label: 'Personen', icon: Fingerprint, perm: 'persons.view', group: 'Records' },
   { path: '/vehicles', label: 'Fahrzeuge', icon: Car, perm: 'vehicles.view', group: 'Records' },
-  // Einsatzberichte und Tages-/Wochenberichte: ein Menüpunkt, Reiter auf der Seite
-  { path: '/reports', label: 'Berichte', icon: FileText, anyPerm: ['reports.view', 'dutyreports.view'], also: ['/duty-reports'], group: 'Records' },
+  grp('Berichte', FileText, 'Records', [
+    { path: '/reports', label: '📄 Einsatzberichte', perm: 'reports.view' },
+    { path: '/duty-reports', label: '🗓️ Tages-/Wochenberichte', perm: 'dutyreports.view' },
+  ]),
   { path: '/tickets', label: 'Strafzettel', icon: Ticket, perm: 'tickets.view', group: 'Records' },
   { path: '/investigations', label: 'Ermittlungen', icon: Search, perm: 'investigations.view', group: 'Records' },
   { path: '/wanted', label: 'Fahndungen', icon: Flag, perm: 'wanted.view', group: 'Records' },
-  { path: '/personnel', label: 'Personal', icon: UserCheck, perm: 'personnel.view', group: 'Organisation' },
-  { path: '/warnings', label: 'Verwarnungen', icon: TriangleAlert, perm: 'warning.view', group: 'Organisation' },
-  { path: '/promotions', label: 'Beförderungen', icon: Medal, perm: 'promotion.view', group: 'Organisation' },
-  { path: '/trainings', label: 'Ausbildungen & Prüfungen', icon: GraduationCap, perm: 'training.view', group: 'Organisation' },
-  { path: '/service-numbers', label: 'Dienstnummern', icon: IdCard, perm: 'dienstnummer.view', group: 'Organisation' },
+  grp('Personal', UserCheck, 'Organisation', [
+    { path: '/personnel', label: 'Personal', perm: 'personnel.view' },
+    { path: '/warnings', label: 'Verwarnungen', perm: 'warning.view' },
+    { path: '/promotions', label: 'Beförderungen', perm: 'promotion.view' },
+    { path: '/service-numbers', label: 'Dienstnummern', perm: 'dienstnummer.view' },
+  ]),
+  grp('Ausbildung', GraduationCap, 'Organisation', [
+    { path: '/trainings', label: 'Ausbildungen & Prüfungen', perm: 'training.view' },
+    { path: '/academy', label: 'Akademie', perm: 'academy.view' },
+  ]),
+  grp('Bewerbungen', ClipboardList, 'Organisation', [
+    { path: '/applications', label: 'Bewerbungen', perm: 'applications.view', area: 'dashboard.applications.view' },
+    { path: '/qualifications', label: 'Qualifikationen', perm: 'qualifications.view', area: 'dashboard.applications.view' },
+    { path: '/teamchance', label: 'Team-Chance', perm: 'teamchance.view', area: 'dashboard.teamchance.view' },
+  ]),
   { path: '/announcements', label: 'Meldungen & Abstimmungen', icon: BellRing, perm: 'announcements.view', group: 'Organisation' },
-  { path: '/applications', label: 'Bewerbungen', icon: ClipboardList, perm: 'applications.view', area: 'dashboard.applications.view', group: 'Organisation' },
-  { path: '/qualifications', label: 'Qualifikationen', icon: Award, perm: 'qualifications.view', area: 'dashboard.applications.view', group: 'Organisation' },
-  { path: '/teamchance', label: 'Team-Chance', icon: Megaphone, perm: 'teamchance.view', area: 'dashboard.teamchance.view', group: 'Organisation' },
   { path: '/leave', label: 'Abmeldungen', icon: CalendarOff, perm: 'leave.request', group: 'Organisation' },
-  { path: '/academy', label: 'Akademie', icon: BookOpen, perm: 'academy.view', group: 'Organisation' },
   { path: '/analytics', label: 'Statistiken', icon: BarChart3, perm: 'analytics.view', group: 'Organisation' },
-  { path: '/admin/users', label: 'Benutzer', icon: Users, perm: 'users.view', area: 'dashboard.settings.view', group: 'Administration' },
-  { path: '/admin/roles', label: 'Rollen & Rechte', icon: Shield, perm: 'roles.view', area: 'dashboard.settings.view', group: 'Administration' },
-  { path: '/admin/backups', label: 'Backups', icon: HardDriveDownload, perm: 'settings.manage', area: 'dashboard.settings.view', group: 'Administration' },
-  { path: '/admin/logging', label: 'Logging (Discord)', icon: ScrollText, perm: 'settings.view', area: 'dashboard.settings.view', group: 'Administration' },
-  { path: '/admin/audit', label: 'Audit-Logs', icon: Gavel, perm: 'audit.view', area: 'dashboard.logs.view', group: 'Administration' },
-  { path: '/admin/legal-codes', label: 'Tatbestände', icon: Scale, perm: 'settings.view', area: 'dashboard.settings.view', group: 'Administration' },
-  { path: '/admin/settings', label: 'Einstellungen', icon: Settings, perm: 'settings.view', area: 'dashboard.settings.view', group: 'Administration' },
-  { path: '/admin/shifts', label: 'Schichten', icon: Clock, perm: 'settings.view', area: 'dashboard.settings.view', group: 'Administration' },
-  { path: '/admin/servers', label: 'Server-Verbund', icon: Link2, perm: 'settings.view', area: 'dashboard.settings.view', group: 'Administration' },
-  { path: '/admin/embeds', label: 'Embeds', icon: PanelTop, perm: 'settings.view', area: 'dashboard.settings.view', group: 'Administration' },
-  { path: '/admin/personnel', label: 'Personal-Einstellungen', icon: SlidersHorizontal, perm: 'promotion.manage_settings', area: 'dashboard.settings.view', group: 'Administration' },
-  { path: '/admin/form-panels', label: 'Formular-Panels', icon: FormInput, perm: 'settings.view', area: 'dashboard.settings.view', group: 'Administration' },
-  { path: '/admin/info-panels', label: 'Info-Panels', icon: PanelTop, perm: 'settings.view', area: 'dashboard.settings.view', group: 'Administration' },
-  { path: '/admin/welcome', label: 'Willkommen & Abschied', icon: DoorOpen, perm: 'settings.view', area: 'dashboard.settings.view', group: 'Administration' },
-  { path: '/admin/leave', label: 'Abmeldungen (Einrichtung)', icon: CalendarOff, perm: 'settings.view', area: 'dashboard.settings.view', group: 'Administration' },
+  grp('Benutzer & Rollen', Users, 'Administration', [
+    { path: '/admin/users', label: 'Benutzer', perm: 'users.view', area: 'dashboard.settings.view' },
+    { path: '/admin/roles', label: 'Rollen & Rechte', perm: 'roles.view', area: 'dashboard.settings.view' },
+  ]),
+  grp('Einstellungen', Settings, 'Administration', [
+    { path: '/admin/settings', label: 'Allgemein', perm: 'settings.view', area: 'dashboard.settings.view' },
+    { path: '/admin/legal-codes', label: 'Tatbestände', perm: 'settings.view', area: 'dashboard.settings.view' },
+    { path: '/admin/shifts', label: 'Schichten', perm: 'settings.view', area: 'dashboard.settings.view' },
+    { path: '/admin/servers', label: 'Server-Verbund', perm: 'settings.view', area: 'dashboard.settings.view' },
+    { path: '/admin/personnel', label: 'Personal', perm: 'promotion.manage_settings', area: 'dashboard.settings.view' },
+    { path: '/admin/leave', label: 'Abmeldungen', perm: 'settings.view', area: 'dashboard.settings.view' },
+  ]),
+  grp('Discord-Nachrichten', PanelTop, 'Administration', [
+    { path: '/admin/embeds', label: 'Embeds', perm: 'settings.view', area: 'dashboard.settings.view' },
+    { path: '/admin/form-panels', label: 'Formular-Panels', perm: 'settings.view', area: 'dashboard.settings.view' },
+    { path: '/admin/info-panels', label: 'Info-Panels', perm: 'settings.view', area: 'dashboard.settings.view' },
+    { path: '/admin/welcome', label: 'Willkommen & Abschied', perm: 'settings.view', area: 'dashboard.settings.view' },
+  ]),
+  grp('Protokolle & Backups', ScrollText, 'Administration', [
+    { path: '/admin/audit', label: 'Audit-Logs', perm: 'audit.view', area: 'dashboard.logs.view' },
+    { path: '/admin/logging', label: 'Logging (Discord)', perm: 'settings.view', area: 'dashboard.settings.view' },
+    { path: '/admin/backups', label: 'Backups', perm: 'settings.manage', area: 'dashboard.settings.view' },
+  ]),
   { path: '/admin/studio', label: 'Studio', icon: Wrench, perm: 'studio.view', area: 'dashboard.settings.view', group: 'Administration' },
   { path: '/me/settings', label: 'Persönlich', icon: Palette, perm: 'dashboard.view', group: 'Administration' },
 ];
+type Can = (p: string) => boolean;
 /** Sichtbar = Modul-Recht und (falls gesetzt) Bereichs-Recht. Nur Komfort – die API prüft selbst. */
-export const visible = (n: NavItem, can: (p: string) => boolean) => (n.anyPerm ? n.anyPerm.some(can) : !n.perm || can(n.perm)) && (!n.area || can(n.area));
+const allowed = (n: { perm?: string; area?: string }, can: Can) => (!n.perm || can(n.perm)) && (!n.area || can(n.area));
+export const visibleTabs = (n: NavItem, can: Can) => (n.tabs ?? []).filter((t) => allowed(t, can));
+export const visible = (n: NavItem, can: Can) => (n.tabs ? visibleTabs(n, can).length > 0 : allowed(n, can));
+/** Ziel des Menüpunkts: bei Reitern der erste erlaubte. */
+export const href = (n: NavItem, can: Can) => (n.tabs ? visibleTabs(n, can)[0]?.path ?? n.path : n.path);
+const under = (pathname: string, p: string) => pathname === p || pathname.startsWith(`${p}/`);
+/** Gehört die aktuelle Seite zu diesem Menüpunkt (auch Unterseiten und Reiter)? */
+export const isActive = (n: NavItem, pathname: string) => (n.tabs ? n.tabs.map((t) => t.path) : [n.path]).some((p) => under(pathname, p));
 /** Menüpunkt zu einem (auch alten) Pfad, z. B. für gespeicherte Favoriten. */
-export const navFor = (items: NavItem[], path: string) => items.find((n) => n.path === path || n.also?.includes(path));
+export const navFor = (items: NavItem[], path: string) => items.find((n) => n.path === path || n.tabs?.some((t) => t.path === path));
+/** Zusammengefasster Menüpunkt, zu dem die aktuelle Seite gehört (für die Reiterleiste). */
+export const sectionFor = (pathname: string) => NAV.find((n) => n.tabs && isActive(n, pathname));
 export const GROUPS = ['Operations', 'Records', 'Organisation', 'Administration'] as const;
 
 /** Deutsche Gruppennamen. Menünamen sind direkt deutsch; das Dashboard ist vollständig deutsch. */

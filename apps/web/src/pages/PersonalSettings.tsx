@@ -2,7 +2,7 @@ import type { ReactNode } from 'react';
 import { RotateCcw } from 'lucide-react';
 import { useAuth } from '../lib/auth';
 import { backgroundIsLight, DEFAULT_PREFS, GRADIENTS, usePrefs, type Preferences } from '../lib/prefs';
-import { NAV, tr, visible } from '../nav';
+import { NAV, navFor, tr, visible } from '../nav';
 import { QUICK_ACTIONS } from './Dashboard';
 import { Button, Card, Input, PageHeader, Select } from '../components/ui';
 import { TwoFactorCard } from '../components/TwoFactorCard';
@@ -75,7 +75,7 @@ export function PersonalSettings() {
         </Card>
         <Card title="⭐ Favoriten & Schnellzugriff">
           <p className="mb-2 text-xs text-muted">Favoriten erscheinen oben im Menü und im Favoriten-Widget (auch über ☆ im Menü).</p>
-          <div className="grid gap-1.5 sm:grid-cols-2">{navItems.map((n) => <Toggle key={n.path} label={tr(n.label, p.language)} checked={p.favorites.includes(n.path)} onChange={(on) => update({ favorites: on ? [...p.favorites, n.path] : p.favorites.filter((x) => x !== n.path) })} />)}</div>
+          <div className="grid gap-1.5 sm:grid-cols-2">{navItems.map((n) => <Toggle key={n.path} label={tr(n.label, p.language)} checked={p.favorites.some((x) => navFor([n], x))} onChange={(on) => update({ favorites: on ? [...p.favorites, n.path] : p.favorites.filter((x) => !navFor([n], x)) })} />)}</div>
           <h3 className="mb-1 mt-4 text-sm font-semibold">Schnellaktionen</h3>
           <div className="grid gap-1.5 sm:grid-cols-2">{QUICK_ACTIONS.filter((a) => a.perms.every(can)).map((a) => <Toggle key={a.id} label={a.label} checked={p.quickActions.includes(a.id)} onChange={(on) => update({ quickActions: on ? [...p.quickActions, a.id] : p.quickActions.filter((x) => x !== a.id) })} />)}</div>
         </Card>
