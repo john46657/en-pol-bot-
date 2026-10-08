@@ -243,6 +243,16 @@ export declare class ServiceNumbersService implements OnModuleInit {
      * Bewerbung angenommen → Benutzer/Personalakte anlegen → Rang/Abteilung → (je nach Zeitpunkt) Dienstnummer atomar vergeben
      * → Discord-Rollen, Nickname, DM → Audit. Fehlt eine Nummer, bleibt die Einstellung als „⚠️ Dienstnummer ausstehend“ stehen.
      */
+    /** Zuordnung für eine Bewerbungsart. Polizei-Bewerbungen bekommen immer eine Personalakte, auch ohne eigene Zuordnung. */
+    private mappingFor;
+    /**
+     * Bereits angenommene Polizei-Bewerbungen ohne Personalakte nachträglich übernehmen (z. B. von vor der Automatik).
+     * Legt nur die Akte an (Rang/Abteilung laut Zuordnung) – keine Dienstnummer, Rollen oder DMs.
+     */
+    profilesFromApplications(actor: Actor): Promise<{
+        created: number;
+        skipped: number;
+    }>;
     onApplicationAccepted(actor: Actor, a: AcceptedApplication): Promise<void>;
     /** Ausstehende Einstellungen (ohne Nummer). */
     pending(): Promise<{

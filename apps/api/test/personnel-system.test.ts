@@ -149,4 +149,22 @@ describe('Dienstnummern', () => {
     expect(tasks.map((t) => t.type).sort()).toEqual(['bot.dm', 'bot.nickname']);
     expect((tasks.find((t) => t.type === 'bot.nickname')!.payload as { nickname: string }).nickname).toBe(`[${p.serviceNumber}] neuling`);
   });
+
+  it('police applications always get a profile; older acceptances can be taken over', async () => {
+    // ohne eigene Zuordnung (z. B. gelöscht) legt eine angenommene Polizei-Bewerbung trotzdem die Personalakte an
+    await admin.put('/api/v1/dienstnummern/settings').send({ timing: 'ACCEPT', mappings: [] });
+    const a = await prisma.application.create({ data: { number: `A-T2-${Date.now()}`, answers: {}, robloxUsername: 'Zweit', discordId: '490000000000000002', discordName: 'hr_zweit', source: 'DISCORD' } });
+    expect((await admin.post(`/api/v1/applications/${a.id}/discord-decision`).send({ status: 'ACCEPTED' })).status).toBe(200);
+    const link = await prisma.discordLink.findUniqueOrThrow({ where: { discordId: '490000000000000002' } });
+    expect(await prisma.personnel.findUnique({ where: { userId: link.userId } })).not.toBeNull();
+    // ältere Annahme ohne Akte (vor der Automatik) → nachträglich übernehmen
+    await prisma.application.create({ data: { number: `A-T3-${Date.now()}`, answers: {}, robloxUsername: 'Alt', discordId: '490000000000000003', discordName: 'hr_alt', source: 'DISCORD', status: 'ACCEPTED' } });
+    expect((await member.post('/api/v1/dienstnummern/from-applications')).status).toBe(403);
+    const r = await admin.post('/api/v1/dienstnummern/from-applications');
+    expect(r.status).toBe(200);
+    expect(r.body.created).toBeGreaterThanOrEqual(1);
+    const old = await prisma.discordLink.findUniqueOrThrow({ where: { discordId: '490000000000000003' } });
+    expect(await prisma.personnel.findUnique({ where: { userId: old.userId } })).not.toBeNull();
+    expect((await admin.post('/api/v1/dienstnummern/from-applications')).body.created).toBe(0);
+  });
 });

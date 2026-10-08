@@ -137,6 +137,8 @@ export class ServiceNumbersController {
   @Put('settings') @RequirePermission('dienstnummer.manage_settings') saveSettings(@CurrentActor() a: Actor, @Body(zodBody(dnSettingsSchema)) b: DnSettings) { return this.s.saveSettings(a, b); }
   @Get('history') @RequirePermission('dienstnummer.history') history(@Query(zodBody(z.object({ display: z.string().max(40).optional(), personnelId: uuid.optional(), userId: uuid.optional() }))) q: { display?: string; personnelId?: string; userId?: string }) { return this.s.history(q); }
   @Get('pending') @RequirePermission('dienstnummer.view') pending() { return this.s.pending(); }
+  /** Angenommene Bewerbungen ohne Personalakte nachträglich übernehmen. */
+  @Post('from-applications') @HttpCode(200) @RequirePermission('personnel.create') fromApplications(@CurrentActor() a: Actor) { return this.s.profilesFromApplications(a); }
   @Post('pending/:id/confirm') @HttpCode(200) @RequirePermission('dienstnummer.assign') confirm(@CurrentActor() a: Actor, @Param('id', ParseUUIDPipe) id: string, @Body(zodBody(z.object({ display: z.string().trim().max(40).optional() }))) b: { display?: string }) { return this.s.confirmPending(a, id, b.display || undefined); }
   @Post('assign') @HttpCode(200) @RequirePermission('dienstnummer.assign') assign(@CurrentActor() a: Actor, @Body(zodBody(assign)) b: z.infer<typeof assign>) { return this.s.assignManual(a, b); }
   @Post('change') @HttpCode(200) @RequirePermission('dienstnummer.edit') change(@CurrentActor() a: Actor, @Body(zodBody(change)) b: z.infer<typeof change>) { return this.s.change(a, b); }

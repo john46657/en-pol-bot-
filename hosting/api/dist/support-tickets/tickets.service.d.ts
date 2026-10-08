@@ -73,6 +73,9 @@ export type ActionInput = {
     action: 'rating';
 } | {
     action: 'delete';
+} | {
+    action: 'reply';
+    text: string;
 };
 /**
  * Support-Ticket-System. Das System entscheidet (Rechte, Regeln, Daten, Protokoll), der Bot führt die Discord-Seite aus (Effekte).

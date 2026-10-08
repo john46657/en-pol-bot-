@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
-import { useMutation, useQuery } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router';
-import { ArrowDown, ArrowUp, LayoutGrid, Plus, Search, Table2 } from 'lucide-react';
+import { ArrowDown, ArrowUp, FileInput, LayoutGrid, Plus, Search, Table2 } from 'lucide-react';
 import { api } from '../../lib/api';
 import { useAuth } from '../../lib/auth';
 import { errText } from '../../lib/tickets';
@@ -66,6 +66,14 @@ export function PersonnelOverview() {
     placeholderData: (prev) => prev,
   });
   const data = list.data;
+  const qc = useQueryClient();
+  const [imported, setImported] = useState<string>();
+  // Angenommene Bewerbungen ohne Personalakte übernehmen (neue Annahmen legen die Akte automatisch an)
+  const fromApps = useMutation({
+    mutationFn: () => api<{ created: number; skipped: number }>('/dienstnummern/from-applications', { method: 'POST' }),
+    onSuccess: (r) => { setImported(r.created ? `${r.created} Personalakte${r.created === 1 ? '' : 'n'} aus angenommenen Bewerbungen angelegt.` : 'Alle angenommenen Bewerbungen haben schon eine Personalakte.'); void qc.invalidateQueries({ queryKey: ['hr-people'] }); },
+    onError: (e) => setImported(errText(e)),
+  });
   const showWarn = !!data?.rows.some((r) => r.counts.warnings !== null);
   const cols = COLS.filter((c) => c.key !== 'warnings' || showWarn);
   const rows = useMemo(() => {
@@ -84,7 +92,11 @@ export function PersonnelOverview() {
   return (
     <div>
       <PageHeader title="Personal" subtitle={data ? `${rows.length} Personalakten` : undefined}
-        actions={can('personnel.create') && <Button onClick={() => setCreate(true)}><Plus size={16} aria-hidden />Personalakte anlegen</Button>} />
+        actions={can('personnel.create') && <span className="flex flex-wrap gap-2">
+          <Button variant="secondary" disabled={fromApps.isPending} title="Für angenommene Bewerbungen ohne Personalakte eine anlegen" onClick={() => fromApps.mutate()}><FileInput size={16} aria-hidden />Aus Bewerbungen übernehmen</Button>
+          <Button onClick={() => setCreate(true)}><Plus size={16} aria-hidden />Personalakte anlegen</Button>
+        </span>} />
+      {imported && <p role="status" className="mb-3 text-sm text-muted">{imported}</p>}
       <Card className="mb-4">
         <div className="flex flex-wrap items-end gap-2">
           <label className="relative min-w-[16rem] flex-1">
@@ -117,7 +129,7 @@ export function PersonnelOverview() {
       </Card>
 
       {list.isLoading ? <SkeletonRows rows={8} /> : list.error ? <ErrorState error={list.error} onRetry={() => void list.refetch()} /> : !rows.length ? (
-        <Card><EmptyState text="Keine Personalakten gefunden." hint={term || Object.values(f).some(Boolean) ? 'Suche oder Filter anpassen.' : undefined} /></Card>
+        <Card><EmptyState text="Keine Personalakten gefunden." hint={term || Object.values(f).some(Boolean) ? 'Suche oder Filter anpassen.' : 'Wird eine Bewerbung angenommen, entsteht die Personalakte automatisch. Ältere Annahmen holst du mit „Aus Bewerbungen übernehmen“ nach.'} /></Card>
       ) : v.view === 'table' ? (
         <Card className="overflow-x-auto">
           <table className="w-full text-sm">

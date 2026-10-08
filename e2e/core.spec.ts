@@ -76,19 +76,11 @@ test('permission denial: a police member cannot reach admin pages or see admin n
   expect(res.status()).toBe(403);
 });
 
-test('complaint workflow via UI', async ({ page }) => {
+test('complaints run through support tickets (no own menu)', async ({ page }) => {
   await uiLogin(page, 'admin', ADMIN_PASSWORD);
   await page.goto('/complaints');
-  await page.getByRole('button', { name: 'Neue Beschwerde' }).click();
-  await page.getByLabel('Kategorie *').fill('Conduct');
-  await page.getByLabel('Beschreibung *').fill('Officer was rude during the traffic stop on Main Street.');
-  await page.getByRole('button', { name: 'Speichern' }).click();
-  await expect(page.getByRole('heading', { name: /^Beschwerde C-/ })).toBeVisible();
-  await expect(page.getByText('Eingegangen', { exact: true })).toBeVisible();
-  await page.getByRole('button', { name: 'Vorprüfung starten' }).click();
-  await expect(page.getByText('Vorprüfung', { exact: true })).toBeVisible();
-  await page.getByRole('button', { name: 'Schließen', exact: true }).click();
-  await expect(page.getByText('Geschlossen', { exact: true })).toBeVisible();
+  await expect(page).toHaveURL(/\/support-tickets$/);
+  await expect(page.getByRole('link', { name: 'Beschwerden' })).toHaveCount(0);
 });
 
 test('public application → staff review workflow', async ({ page, browser }) => {

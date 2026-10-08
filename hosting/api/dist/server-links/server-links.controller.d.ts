@@ -30,7 +30,7 @@ export declare class ServerLinksController {
             shareSettings: boolean;
             id?: string | undefined;
         }[];
-        ownRecords: string[];
+        sharedRecords: string[];
     }>;
     save(a: Actor, b: ServerLinks): Promise<{
         counts: {
@@ -58,7 +58,7 @@ export declare class ServerLinksController {
             shareSettings: boolean;
             id?: string | undefined;
         }[];
-        ownRecords: string[];
+        sharedRecords: string[];
     }>;
     move(a: Actor, b: {
         guildId: string;

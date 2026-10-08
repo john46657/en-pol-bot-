@@ -33,6 +33,7 @@ const actionSchema = zod_1.z.discriminatedUnion('action', [
     zod_1.z.object({ action: zod_1.z.literal('move'), parentId: snowflake.nullable() }), zod_1.z.object({ action: zod_1.z.literal('transcript') }),
     zod_1.z.object({ action: zod_1.z.literal('lock') }), zod_1.z.object({ action: zod_1.z.literal('unlock') }), zod_1.z.object({ action: zod_1.z.literal('escalate') }),
     zod_1.z.object({ action: zod_1.z.literal('note'), text: zod_1.z.string().trim().min(1).max(4000) }), zod_1.z.object({ action: zod_1.z.literal('rating') }), zod_1.z.object({ action: zod_1.z.literal('delete') }),
+    zod_1.z.object({ action: zod_1.z.literal('reply'), text: zod_1.z.string().trim().min(1).max(4000) }),
 ]);
 const listQ = zod_1.z.object({
     kind: zod_1.z.enum(['open', 'closed', 'archived', 'escalated', 'deleted', 'all']).optional(), statusId: zod_1.z.string().uuid().optional(), priorityId: zod_1.z.string().uuid().optional(), categoryId: zod_1.z.string().uuid().optional(),

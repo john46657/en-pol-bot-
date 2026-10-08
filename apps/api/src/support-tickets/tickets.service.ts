@@ -33,10 +33,10 @@ export type ActionInput =
   | { action: 'add_access'; targetId: string; kind: 'USER' | 'ROLE'; minutes?: number } | { action: 'remove_access'; targetId: string }
   | { action: 'priority'; priorityId: string } | { action: 'status'; statusId: string } | { action: 'category'; categoryId: string }
   | { action: 'rename'; name: string } | { action: 'move'; parentId: string | null } | { action: 'transcript' }
-  | { action: 'lock' } | { action: 'unlock' } | { action: 'escalate' } | { action: 'note'; text: string } | { action: 'rating' } | { action: 'delete' };
+  | { action: 'lock' } | { action: 'unlock' } | { action: 'escalate' } | { action: 'note'; text: string } | { action: 'rating' } | { action: 'delete' } | { action: 'reply'; text: string };
 
 /** Welches Recht welche API-Aktion braucht (Katalog in @enrp/shared). */
-const PERM: Record<ActionInput['action'], TicketAction> = {
+const PERM: Record<Exclude<ActionInput['action'], 'reply'>, TicketAction> = {
   close: 'close', close_request: 'close_request', reopen: 'reopen', claim: 'claim', unclaim: 'unclaim', add_access: 'add_user', remove_access: 'remove_user', priority: 'priority', status: 'status',
   category: 'category', rename: 'rename', move: 'move', transcript: 'transcript', lock: 'lock', unlock: 'unlock', escalate: 'escalate', note: 'note', rating: 'rating', delete: 'delete',
 };
@@ -297,7 +297,8 @@ export class SupportTicketsService {
   // ================= Aktionen =================
   async action(id: string, actor: TicketActor, input: ActionInput) {
     const l = await this.load(id);
-    const perm = TICKET_ACTIONS[PERM[input.action]].permission;
+    // Antworten aus dem Dashboard: wer Tickets bearbeiten (übernehmen) darf, darf auch antworten
+    const perm = input.action === 'reply' ? 'ticket.claim' : TICKET_ACTIONS[PERM[input.action]].permission;
     await this.assertCan(actor, perm, l.cat);
     const effects: TicketEffect[] = [];
     const message = await this.perform(l, actor, input, effects);
@@ -538,6 +539,15 @@ export class SupportTicketsService {
         await this.prisma.ticketNote.create({ data: { ticketId: t.id, authorId: actor.discordId, authorUserId: actor.userId, authorName: actor.name, text: input.text } });
         await this.logAction(l, 'note_added', actor, {}, effects); // Inhalt bleibt intern (nicht im Log-Channel)
         return 'Interne Notiz gespeichert (nur für berechtigte Mitarbeiter sichtbar).';
+      }
+      case 'reply': {
+        this.requireOpen(l);
+        if (!ch) throw new AppError('CONFLICT', 'Das Ticket hat (noch) keinen Discord-Kanal.');
+        // Der Bot schreibt die Antwort in den Ticket-Kanal; der Mitschnitt übernimmt sie in den Verlauf
+        post({ embeds: [{ author: actor.name.slice(0, 100), description: input.text, color: l.cat.color, footer: 'Antwort über das Dashboard' }] });
+        await this.prisma.supportTicket.update({ where: { id: t.id }, data: { lastActivityAt: new Date(), warnedAt: null, staffAlertedAt: null, firstResponseAt: t.firstResponseAt ?? new Date() } });
+        await this.logAction(l, 'replied', actor, {}, effects);
+        return 'Antwort gesendet – sie erscheint gleich im Discord-Kanal und im Verlauf.';
       }
       case 'rating': {
         effects.push(this.ratingRequest(l));

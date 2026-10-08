@@ -11,7 +11,7 @@ import { GuildTag, useGuilds } from '../../lib/guilds';
 const LOG: Record<string, string> = {
   created: 'Ticket geöffnet', answers: 'Fragen beantwortet', claimed: 'Übernommen', claim_transferred: 'Bearbeiter gewechselt', unclaimed: 'Freigegeben', user_added: 'Benutzer hinzugefügt', user_removed: 'Benutzer entfernt',
   role_added: 'Rolle hinzugefügt', role_removed: 'Rolle entfernt', priority_changed: 'Priorität geändert', status_changed: 'Status geändert', category_changed: 'Kategorie geändert', renamed: 'Umbenannt', moved: 'Verschoben',
-  locked: 'Gesperrt', unlocked: 'Entsperrt', escalated: 'Eskaliert', closed: 'Geschlossen', reopened: 'Wieder geöffnet', transcript_created: 'Transkript erstellt', transcript_deleted: 'Transkript gelöscht', note_added: 'Interne Notiz hinzugefügt',
+  locked: 'Gesperrt', unlocked: 'Entsperrt', escalated: 'Eskaliert', closed: 'Geschlossen', reopened: 'Wieder geöffnet', transcript_created: 'Transkript erstellt', transcript_deleted: 'Transkript gelöscht', note_added: 'Interne Notiz hinzugefügt', replied: 'Über das Dashboard geantwortet',
   rating_requested: 'Bewertung angefragt', rated: 'Bewertet', access_expired: 'Temporärer Zugriff abgelaufen', auto_warning: 'Inaktivitätswarnung', deleted: 'Gelöscht',
 };
 type Dialog = null | 'close' | 'rename' | 'access' | 'move' | 'delete';
@@ -21,15 +21,16 @@ export function TicketDetail() {
   const { id = '' } = useParams();
   const { can } = useAuth();
   const qc = useQueryClient();
-  const t = useQuery({ queryKey: ['support-ticket', id], queryFn: () => api<Detail>(`/support-tickets/${id}`) });
+  const t = useQuery({ queryKey: ['support-ticket', id], queryFn: () => api<Detail>(`/support-tickets/${id}`), refetchInterval: 10_000 }); // neue Nachrichten aus Discord
   const opts = useQuery({ queryKey: ['support-ticket-options', id], queryFn: () => api<TicketOptions>(`/support-tickets/${id}/options`), enabled: !!t.data });
   const [dialog, setDialog] = useState<Dialog>(null);
   const multiServer = (useGuilds().data?.length ?? 0) > 1;
   const [msg, setMsg] = useState<string>();
   const [note, setNote] = useState('');
+  const [reply, setReply] = useState('');
   const act = useMutation({
     mutationFn: (body: Record<string, unknown>) => api<{ message: string }>(`/support-tickets/${id}/actions`, { method: 'POST', body }),
-    onSuccess: (r) => { setMsg(r.message); setDialog(null); setNote(''); void qc.invalidateQueries({ queryKey: ['support-ticket', id] }); void qc.invalidateQueries({ queryKey: ['support-ticket-options', id] }); void qc.invalidateQueries({ queryKey: ['support-tickets'] }); },
+    onSuccess: (r) => { setMsg(r.message); setDialog(null); setNote(''); setReply(''); void qc.invalidateQueries({ queryKey: ['support-ticket', id] }); void qc.invalidateQueries({ queryKey: ['support-ticket-options', id] }); void qc.invalidateQueries({ queryKey: ['support-tickets'] }); },
     onError: () => setMsg(undefined),
   });
   if (t.isLoading) return <SkeletonRows />;
@@ -97,6 +98,13 @@ export function TicketDetail() {
                   </div>
                 </li>
               ))}</ol>
+            )}
+            {!closed && !deleted && can('ticket.claim') && (
+              <div className="mt-3 grid gap-2 border-t border-line pt-3">
+                <Textarea aria-label="Antwort an den Ersteller" rows={3} maxLength={4000} value={reply} onChange={(e) => setReply(e.target.value)} placeholder={d.channelId ? 'Antwort schreiben … (erscheint im Discord-Ticket)' : 'Das Ticket hat noch keinen Discord-Kanal.'} disabled={!d.channelId}
+                  onKeyDown={(e) => { if (e.key === 'Enter' && (e.ctrlKey || e.metaKey) && reply.trim()) run({ action: 'reply', text: reply }); }} />
+                <div className="flex items-center gap-2"><Button size="sm" disabled={!reply.trim() || !d.channelId || act.isPending} onClick={() => run({ action: 'reply', text: reply })}>💬 Antworten</Button><span className="text-xs text-muted">Strg/⌘ + Enter sendet</span></div>
+              </div>
             )}
           </Card>
           {d.notes && (

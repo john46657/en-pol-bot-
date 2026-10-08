@@ -76,7 +76,7 @@ export declare class ApplicationsService {
     }>;
     /** Entscheidungs-DM mit Text und Rollen aus den Einstellungen. */
     private decided;
-    /** Wie bei Appy: entschiedene Bewerbung in den Channel für angenommene/abgelehnte Bewerbungen posten. */
+    /** Wie bei Appy: entschiedene Bewerbung in den Channel für angenommene/abgelehnte Bewerbungen posten (nur ohne Original-Nachricht in Discord). */
     private archive;
     /** Für den Bot: hat dieses Discord-Konto schon eine offene Bewerbung? */
     openForDiscord(discordId: string): Promise<{

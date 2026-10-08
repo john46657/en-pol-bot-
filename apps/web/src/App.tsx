@@ -130,7 +130,8 @@ export function App() {
           <Route path="reports/:id" element={<Guard perm="reports.view"><ReportDetail /></Guard>} />
           <Route path="tickets" element={list(R.tickets as never, 'tickets.view')} />
           <Route path="tickets/:id" element={rec('tickets', 'tickets.view')} />
-          <Route path="complaints" element={list(R.complaints as never, 'complaints.view')} />
+          {/* Beschwerden laufen über Support-Tickets; alte Beschwerden bleiben per Link (Suche, Personenakte) erreichbar */}
+          <Route path="complaints" element={<Navigate to="/support-tickets" replace />} />
           <Route path="complaints/:id" element={rec('complaints', 'complaints.view')} />
           <Route path="investigations" element={list(R.investigations as never, 'investigations.view')} />
           <Route path="investigations/:id" element={rec('investigations', 'investigations.view')} />

@@ -16,12 +16,12 @@ export const linksSchema = z.object({
     guildIds: z.array(sf).min(2, 'Eine Gruppe braucht mindestens zwei Server.').max(20),
     shareRecords: z.boolean().default(true), shareSettings: z.boolean().default(false),
   })).max(20).default([]),
-  /** Server ohne Gruppe mit eigenen Akten (sonst: gemeinsamer Bestand aller Server). */
-  ownRecords: z.array(sf).max(50).default([]),
+  /** Server ohne Gruppe, die den gemeinsamen Bestand nutzen (Opt-in). Alle anderen Server ohne Gruppe sind getrennt (eigene Akten). */
+  sharedRecords: z.array(sf).max(50).default([]),
 }).superRefine((c, ctx) => {
   const seen = new Set<string>();
   c.groups.forEach((g, i) => g.guildIds.forEach((id) => { if (seen.has(id)) ctx.addIssue({ code: 'custom', path: ['groups', i, 'guildIds'], message: 'Ein Server kann nur in einer Gruppe sein.' }); seen.add(id); }));
-  if (c.ownRecords.some((id) => seen.has(id))) ctx.addIssue({ code: 'custom', path: ['ownRecords'], message: 'Server in einer Gruppe richten sich nach der Gruppe.' });
+  if (c.sharedRecords.some((id) => seen.has(id))) ctx.addIssue({ code: 'custom', path: ['sharedRecords'], message: 'Server in einer Gruppe richten sich nach der Gruppe.' });
 });
 export type ServerLinks = z.infer<typeof linksSchema>;
 
@@ -32,12 +32,12 @@ export function ownSpace(guildId: string) {
 }
 
 /**
- * Server-Verbund: Discord-Server können zusammen sein (Gruppe teilt Akten und/oder Einstellungen), müssen aber nicht
- * (eigene Akten bzw. gemeinsamer Bestand). Die Zuordnung liegt im Speicher, damit jede Anfrage sie ohne Datenbank-Zugriff kennt.
+ * Server-Verbund: Discord-Server sind standardmäßig getrennt (eigene Akten). Zusammen gehören sie nur, wenn das eingestellt
+ * ist: als Gruppe (teilt Akten und/oder Einstellungen) oder per Opt-in in den gemeinsamen Bestand. Die Zuordnung liegt im Speicher, damit jede Anfrage sie ohne Datenbank-Zugriff kennt.
  */
 @Injectable()
 export class ServerLinksService implements OnModuleInit {
-  private links: ServerLinks = { groups: [], ownRecords: [] };
+  private links: ServerLinks = { groups: [], sharedRecords: [] };
   constructor(private readonly prisma: PrismaService, private readonly audit: AuditService) {}
 
   async onModuleInit() {
@@ -47,7 +47,7 @@ export class ServerLinksService implements OnModuleInit {
   async reload() {
     const v = (await this.prisma.systemSetting.findUnique({ where: { key: KEY } }))?.value;
     const p = linksSchema.safeParse(v ?? {});
-    this.links = p.success ? p.data : { groups: [], ownRecords: [] };
+    this.links = p.success ? p.data : { groups: [], sharedRecords: [] };
   }
 
   private groupOf(guildId: string) { return this.links.groups.find((x) => x.guildIds.includes(guildId)); }
@@ -55,7 +55,7 @@ export class ServerLinksService implements OnModuleInit {
   space(guildId: string): string | null {
     const g = this.groupOf(guildId);
     if (g) return g.shareRecords ? g.id! : ownSpace(guildId);
-    return this.links.ownRecords.includes(guildId) ? ownSpace(guildId) : null;
+    return this.links.sharedRecords.includes(guildId) ? null : ownSpace(guildId);
   }
 
   get() { return this.links; }
@@ -73,14 +73,18 @@ export class ServerLinksService implements OnModuleInit {
 
   /** Für die Seite: Einstellungen + Zahl der Akten je Bereich (damit man sieht, was wohin gehört). */
   async overview() {
-    const [persons, vehicles] = await Promise.all([
+    const [persons, vehicles, known] = await Promise.all([
       this.prisma.person.groupBy({ by: ['serverId'], _count: { _all: true } }),
       this.prisma.vehicle.groupBy({ by: ['serverId'], _count: { _all: true } }),
+      this.prisma.systemSetting.findUnique({ where: { key: 'discord.guilds' } }),
     ]);
+    // Getrennte Server ohne Gruppe: alle vom Bot gemeldeten, die weder in einer Gruppe noch im gemeinsamen Bestand sind
+    const grouped = new Set([...this.links.groups.flatMap((g) => g.guildIds), ...this.links.sharedRecords]);
+    const own = (Array.isArray(known?.value) ? (known.value as { id?: unknown }[]) : []).map((g) => String(g.id ?? '')).filter((id) => /^\d{15,25}$/.test(id) && !grouped.has(id));
     const count = (rows: { serverId: string | null; _count: { _all: number } }[], s: string | null) => rows.find((r) => r.serverId === s)?._count._all ?? 0;
     const spaces = new Map<string | null, { persons: number; vehicles: number }>();
-    for (const s of [null, ...this.links.groups.map((g) => g.id!), ...this.links.ownRecords.map(ownSpace)]) spaces.set(s, { persons: count(persons, s), vehicles: count(vehicles, s) });
-    return { ...this.links, counts: { shared: spaces.get(null), groups: Object.fromEntries(this.links.groups.map((g) => [g.id!, spaces.get(g.id!)])), own: Object.fromEntries(this.links.ownRecords.map((id) => [id, spaces.get(ownSpace(id))])) } };
+    for (const s of [null, ...this.links.groups.map((g) => g.id!), ...own.map(ownSpace)]) spaces.set(s, { persons: count(persons, s), vehicles: count(vehicles, s) });
+    return { ...this.links, counts: { shared: spaces.get(null), groups: Object.fromEntries(this.links.groups.map((g) => [g.id!, spaces.get(g.id!)])), own: Object.fromEntries(own.map((id) => [id, spaces.get(ownSpace(id))])) } };
   }
 
   /** Bestehende gemeinsame Akten in einen Bereich verschieben (z. B. nach dem Trennen eines Servers). */

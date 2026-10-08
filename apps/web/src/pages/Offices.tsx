@@ -8,15 +8,16 @@ import { VoiceWidget } from '../components/VoiceWidget';
 import { Card, EmptyState, ErrorState, Input, PageHeader, SkeletonRows, Tabs } from '../components/ui';
 
 const VoiceSupport = lazy(() => import('./tickets/VoiceSupport').then((m) => ({ default: m.VoiceSupport })));
-interface VoiceChannel { id: string; name: string; members: { id: string }[] }
+interface VoiceChannel { id: string; guildId: string; name: string; members: { id: string }[] }
+interface Talk { name: string; url: string }
 
-/** Discord-ID → Sprachkanal, in dem die Person gerade ist (Voice-Daten vom Bot, live). */
+/** Discord-ID → Sprachkanal (Name + Discord-Link zum Beitreten), in dem die Person gerade ist (Voice-Daten vom Bot, live). */
 function useTalks() {
   const allowed = useAuth().can('dashboard.voice.view');
   useRealtime('team', ['team.voice'], [['team-voice']]);
   const q = useQuery({ queryKey: ['team-voice'], queryFn: () => api<{ channels: VoiceChannel[] }>('/team/voice'), refetchInterval: 5_000, enabled: allowed });
-  const map = new Map<string, string>();
-  for (const c of q.data?.channels ?? []) for (const m of c.members) map.set(m.id, c.name);
+  const map = new Map<string, Talk>();
+  for (const c of q.data?.channels ?? []) for (const m of c.members) map.set(m.id, { name: c.name, url: `https://discord.com/channels/${c.guildId}/${c.id}` });
   return map;
 }
 
@@ -27,7 +28,7 @@ function OfficeList() {
   const groups = new Map<string, RosterMember[]>();
   for (const o of q.data?.structure.offices ?? []) groups.set(o, []);
   for (const m of q.data?.members ?? []) {
-    const talk = m.discordId ? talks.get(m.discordId) ?? '' : '';
+    const talk = m.discordId ? talks.get(m.discordId)?.name ?? '' : '';
     if (t && !`${m.name} ${m.rank ?? ''} ${m.office ?? ''} ${talk}`.toLowerCase().includes(t.toLowerCase())) continue;
     const k = m.office ?? 'Ohne Büro';
     groups.set(k, [...(groups.get(k) ?? []), m]);
@@ -47,7 +48,8 @@ function OfficeList() {
                     return (
                       <li key={m.key} className="flex items-center gap-2 text-sm">
                         <Avatar src={m.avatar} name={m.name} size={24} />
-                        <span className="min-w-0 flex-1 truncate">{m.name}{talk && <span className="ml-1 rounded bg-success/15 px-1.5 py-0.5 text-xs text-success" title="Gerade in diesem Talk">🔊 {talk}</span>}</span>
+                        <span className="min-w-0 flex-1 truncate">{m.name}{talk && <span className="ml-1 rounded bg-success/15 px-1.5 py-0.5 text-xs text-success" title="Gerade in diesem Talk">🔊 {talk.name}</span>}</span>
+                        {talk && <a href={talk.url} target="_blank" rel="noreferrer" className="shrink-0 rounded bg-primary/15 px-1.5 py-0.5 text-xs text-primary hover:bg-primary/25" title={`In Discord „${talk.name}“ öffnen und beitreten`}>🎧 Beitreten</a>}
                         <span className="text-xs text-muted">{m.rank ?? ''}</span><span title={STATUS[m.status].label}>{STATUS[m.status].dot}</span>
                       </li>
                     );

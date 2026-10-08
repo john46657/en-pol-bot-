@@ -21,7 +21,6 @@ export const NAV: NavItem[] = [
   { path: '/reports', label: 'Berichte', icon: FileText, perm: 'reports.view', group: 'Records' },
   { path: '/duty-reports', label: 'Tages-/Wochenberichte', icon: CalendarCheck, perm: 'dutyreports.view', group: 'Records' },
   { path: '/tickets', label: 'Strafzettel', icon: Ticket, perm: 'tickets.view', group: 'Records' },
-  { path: '/complaints', label: 'Beschwerden', icon: Scale, perm: 'complaints.view', group: 'Records' },
   { path: '/investigations', label: 'Ermittlungen', icon: Search, perm: 'investigations.view', group: 'Records' },
   { path: '/wanted', label: 'Fahndungen', icon: Flag, perm: 'wanted.view', group: 'Records' },
   { path: '/personnel', label: 'Personal', icon: UserCheck, perm: 'personnel.view', group: 'Organisation' },

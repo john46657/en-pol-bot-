@@ -321,9 +321,43 @@ let ServiceNumbersService = class ServiceNumbersService {
      * Bewerbung angenommen → Benutzer/Personalakte anlegen → Rang/Abteilung → (je nach Zeitpunkt) Dienstnummer atomar vergeben
      * → Discord-Rollen, Nickname, DM → Audit. Fehlt eine Nummer, bleibt die Einstellung als „⚠️ Dienstnummer ausstehend“ stehen.
      */
+    /** Zuordnung für eine Bewerbungsart. Polizei-Bewerbungen bekommen immer eine Personalakte, auch ohne eigene Zuordnung. */
+    mappingFor(s, kind) {
+        return s.mappings.find((x) => x.kind.toLowerCase() === kind.toLowerCase())
+            ?? (kind === 'police' ? { kind: 'police', rangeId: null, department: null, rankId: null, createProfile: true, roleIds: [] } : undefined);
+    }
+    /**
+     * Bereits angenommene Polizei-Bewerbungen ohne Personalakte nachträglich übernehmen (z. B. von vor der Automatik).
+     * Legt nur die Akte an (Rang/Abteilung laut Zuordnung) – keine Dienstnummer, Rollen oder DMs.
+     */
+    async profilesFromApplications(actor) {
+        const m = this.mappingFor(await this.settings(), 'police');
+        if (!m?.createProfile)
+            return { created: 0, skipped: 0 };
+        const rank = m.rankId ? await this.prisma.hrRank.findUnique({ where: { id: m.rankId } }) : null;
+        const dept = m.department ? (await this.core.config()).departments.find((d) => d.name === m.department) : null;
+        const apps = await this.prisma.application.findMany({ where: { status: 'ACCEPTED' }, orderBy: { createdAt: 'asc' }, select: { id: true, number: true, discordId: true, discordName: true, robloxUsername: true } });
+        let created = 0, skipped = 0;
+        for (const a of apps) {
+            if (!a.discordId) {
+                skipped++;
+                continue;
+            }
+            const made = await this.prisma.$transaction(async (tx) => {
+                const u = await this.people.userForDiscord(tx, a.discordId, a.discordName || a.robloxUsername);
+                const r = await this.core.ensurePersonnel(u.id, { rank: rank?.name ?? null, team: dept?.name ?? m.department ?? null }, tx);
+                if (r.created)
+                    await this.core.audit.record(actor, { action: 'personnel.create.application', module: 'personnel', entityType: 'Personnel', entityId: r.personnel.id, after: { application: a.number, rank: rank?.name, department: dept?.name, backfill: true } }, tx);
+                return r.created;
+            });
+            if (made)
+                created++;
+        }
+        return { created, skipped };
+    }
     async onApplicationAccepted(actor, a) {
         const s = await this.settings();
-        const m = s.mappings.find((x) => x.kind.toLowerCase() === a.kind.toLowerCase());
+        const m = this.mappingFor(s, a.kind);
         if (!m)
             return;
         if (!a.discordId) {

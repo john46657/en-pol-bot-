@@ -336,7 +336,8 @@ let SupportTicketsService = class SupportTicketsService {
     // ================= Aktionen =================
     async action(id, actor, input) {
         const l = await this.load(id);
-        const perm = shared_1.TICKET_ACTIONS[PERM[input.action]].permission;
+        // Antworten aus dem Dashboard: wer Tickets bearbeiten (übernehmen) darf, darf auch antworten
+        const perm = input.action === 'reply' ? 'ticket.claim' : shared_1.TICKET_ACTIONS[PERM[input.action]].permission;
         await this.assertCan(actor, perm, l.cat);
         const effects = [];
         const message = await this.perform(l, actor, input, effects);
@@ -618,6 +619,16 @@ let SupportTicketsService = class SupportTicketsService {
                 await this.prisma.ticketNote.create({ data: { ticketId: t.id, authorId: actor.discordId, authorUserId: actor.userId, authorName: actor.name, text: input.text } });
                 await this.logAction(l, 'note_added', actor, {}, effects); // Inhalt bleibt intern (nicht im Log-Channel)
                 return 'Interne Notiz gespeichert (nur für berechtigte Mitarbeiter sichtbar).';
+            }
+            case 'reply': {
+                this.requireOpen(l);
+                if (!ch)
+                    throw new errors_1.AppError('CONFLICT', 'Das Ticket hat (noch) keinen Discord-Kanal.');
+                // Der Bot schreibt die Antwort in den Ticket-Kanal; der Mitschnitt übernimmt sie in den Verlauf
+                post({ embeds: [{ author: actor.name.slice(0, 100), description: input.text, color: l.cat.color, footer: 'Antwort über das Dashboard' }] });
+                await this.prisma.supportTicket.update({ where: { id: t.id }, data: { lastActivityAt: new Date(), warnedAt: null, staffAlertedAt: null, firstResponseAt: t.firstResponseAt ?? new Date() } });
+                await this.logAction(l, 'replied', actor, {}, effects);
+                return 'Antwort gesendet – sie erscheint gleich im Discord-Kanal und im Verlauf.';
             }
             case 'rating': {
                 effects.push(this.ratingRequest(l));

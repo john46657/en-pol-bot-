@@ -112,11 +112,13 @@ export class ApplicationsService {
     }, { always: true });
   }
 
-  /** Wie bei Appy: entschiedene Bewerbung in den Channel für angenommene/abgelehnte Bewerbungen posten. */
+  /** Wie bei Appy: entschiedene Bewerbung in den Channel für angenommene/abgelehnte Bewerbungen posten (nur ohne Original-Nachricht in Discord). */
   private async archive(a: { id: string; number: string; robloxUsername: string; robloxUserId: string | null; discordId: string | null; discordName: string | null; guildId: string | null; answers: unknown; durationSec: number | null; joinedAt: Date | null; createdAt: Date; source: string }, to: 'ACCEPTED' | 'REJECTED', reason: string | null, decidedByName: string | null) {
     const police = await this.police(a.guildId);
     const channelId = to === 'ACCEPTED' ? police.acceptedChannelId : police.deniedChannelId;
     if (!channelId) return;
+    // Gibt es die Bewerbungs-Nachricht in Discord, wird nur sie aktualisiert (markDecided) – keine zweite Nachricht
+    if (await this.discord.posted(`msg-a-${a.id}`)) return;
     const form = await this.form(a.guildId);
     const answers = (a.answers ?? {}) as Record<string, string>;
     await this.discord.enqueue('applications', 'application.archived', {

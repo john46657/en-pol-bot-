@@ -22,6 +22,7 @@ const actionSchema = z.discriminatedUnion('action', [
   z.object({ action: z.literal('move'), parentId: snowflake.nullable() }), z.object({ action: z.literal('transcript') }),
   z.object({ action: z.literal('lock') }), z.object({ action: z.literal('unlock') }), z.object({ action: z.literal('escalate') }),
   z.object({ action: z.literal('note'), text: z.string().trim().min(1).max(4000) }), z.object({ action: z.literal('rating') }), z.object({ action: z.literal('delete') }),
+  z.object({ action: z.literal('reply'), text: z.string().trim().min(1).max(4000) }),
 ]);
 const listQ = z.object({
   kind: z.enum(['open', 'closed', 'archived', 'escalated', 'deleted', 'all']).optional(), statusId: z.string().uuid().optional(), priorityId: z.string().uuid().optional(), categoryId: z.string().uuid().optional(),

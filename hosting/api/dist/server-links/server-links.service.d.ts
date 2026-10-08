@@ -23,8 +23,8 @@ export declare const linksSchema: z.ZodEffects<z.ZodObject<{
         shareRecords?: boolean | undefined;
         shareSettings?: boolean | undefined;
     }>, "many">>;
-    /** Server ohne Gruppe mit eigenen Akten (sonst: gemeinsamer Bestand aller Server). */
-    ownRecords: z.ZodDefault<z.ZodArray<z.ZodString, "many">>;
+    /** Server ohne Gruppe, die den gemeinsamen Bestand nutzen (Opt-in). Alle anderen Server ohne Gruppe sind getrennt (eigene Akten). */
+    sharedRecords: z.ZodDefault<z.ZodArray<z.ZodString, "many">>;
 }, "strip", z.ZodTypeAny, {
     groups: {
         name: string;
@@ -33,7 +33,7 @@ export declare const linksSchema: z.ZodEffects<z.ZodObject<{
         shareSettings: boolean;
         id?: string | undefined;
     }[];
-    ownRecords: string[];
+    sharedRecords: string[];
 }, {
     groups?: {
         name: string;
@@ -42,7 +42,7 @@ export declare const linksSchema: z.ZodEffects<z.ZodObject<{
         shareRecords?: boolean | undefined;
         shareSettings?: boolean | undefined;
     }[] | undefined;
-    ownRecords?: string[] | undefined;
+    sharedRecords?: string[] | undefined;
 }>, {
     groups: {
         name: string;
@@ -51,7 +51,7 @@ export declare const linksSchema: z.ZodEffects<z.ZodObject<{
         shareSettings: boolean;
         id?: string | undefined;
     }[];
-    ownRecords: string[];
+    sharedRecords: string[];
 }, {
     groups?: {
         name: string;
@@ -60,14 +60,14 @@ export declare const linksSchema: z.ZodEffects<z.ZodObject<{
         shareRecords?: boolean | undefined;
         shareSettings?: boolean | undefined;
     }[] | undefined;
-    ownRecords?: string[] | undefined;
+    sharedRecords?: string[] | undefined;
 }>;
 export type ServerLinks = z.infer<typeof linksSchema>;
 /** Eigener Akten-Bereich eines einzelnen Servers als feste UUID (aus der Server-ID abgeleitet). */
 export declare function ownSpace(guildId: string): string;
 /**
- * Server-Verbund: Discord-Server können zusammen sein (Gruppe teilt Akten und/oder Einstellungen), müssen aber nicht
- * (eigene Akten bzw. gemeinsamer Bestand). Die Zuordnung liegt im Speicher, damit jede Anfrage sie ohne Datenbank-Zugriff kennt.
+ * Server-Verbund: Discord-Server sind standardmäßig getrennt (eigene Akten). Zusammen gehören sie nur, wenn das eingestellt
+ * ist: als Gruppe (teilt Akten und/oder Einstellungen) oder per Opt-in in den gemeinsamen Bestand. Die Zuordnung liegt im Speicher, damit jede Anfrage sie ohne Datenbank-Zugriff kennt.
  */
 export declare class ServerLinksService implements OnModuleInit {
     private readonly prisma;
@@ -87,7 +87,7 @@ export declare class ServerLinksService implements OnModuleInit {
             shareSettings: boolean;
             id?: string | undefined;
         }[];
-        ownRecords: string[];
+        sharedRecords: string[];
     };
     save(actor: Actor, input: ServerLinks): Promise<{
         counts: {
@@ -115,7 +115,7 @@ export declare class ServerLinksService implements OnModuleInit {
             shareSettings: boolean;
             id?: string | undefined;
         }[];
-        ownRecords: string[];
+        sharedRecords: string[];
     }>;
     /** Für die Seite: Einstellungen + Zahl der Akten je Bereich (damit man sieht, was wohin gehört). */
     overview(): Promise<{
@@ -144,7 +144,7 @@ export declare class ServerLinksService implements OnModuleInit {
             shareSettings: boolean;
             id?: string | undefined;
         }[];
-        ownRecords: string[];
+        sharedRecords: string[];
     }>;
     /** Bestehende gemeinsame Akten in einen Bereich verschieben (z. B. nach dem Trennen eines Servers). */
     moveShared(actor: Actor, guildId: string): Promise<{

@@ -1779,6 +1779,11 @@ export declare class ServiceNumbersController {
         kind: string;
         applicationId: string;
     }[]>;
+    /** Angenommene Bewerbungen ohne Personalakte nachträglich übernehmen. */
+    fromApplications(a: Actor): Promise<{
+        created: number;
+        skipped: number;
+    }>;
     confirm(a: Actor, id: string, b: {
         display?: string;
     }): Promise<{
