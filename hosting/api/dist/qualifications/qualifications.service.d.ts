@@ -71,7 +71,6 @@ export declare class QualificationsService {
             acceptedChannelId?: string | undefined;
             deniedChannelId?: string | undefined;
         }[];
-        intro: string;
         police: {
             name: string;
             settings: {
@@ -111,6 +110,7 @@ export declare class QualificationsService {
             acceptedChannelId?: string | undefined;
             deniedChannelId?: string | undefined;
         };
+        intro: string;
     }>;
     saveConfig(actor: Actor, input: QualificationConfig & {
         policeForm?: FormField[];
@@ -159,7 +159,6 @@ export declare class QualificationsService {
             acceptedChannelId?: string | undefined;
             deniedChannelId?: string | undefined;
         }[];
-        intro: string;
         police: {
             name: string;
             settings: {
@@ -199,6 +198,7 @@ export declare class QualificationsService {
             acceptedChannelId?: string | undefined;
             deniedChannelId?: string | undefined;
         };
+        intro: string;
     }>;
     /** Eigene Einstellungen eines Servers löschen – danach gilt wieder die gemeinsame Grundeinstellung. */
     resetGuild(actor: Actor, guildId: string): Promise<{
@@ -246,7 +246,6 @@ export declare class QualificationsService {
             acceptedChannelId?: string | undefined;
             deniedChannelId?: string | undefined;
         }[];
-        intro: string;
         police: {
             name: string;
             settings: {
@@ -286,6 +285,7 @@ export declare class QualificationsService {
             acceptedChannelId?: string | undefined;
             deniedChannelId?: string | undefined;
         };
+        intro: string;
     }>;
     /** Für den Bot: läuft für diese Discord-ID schon eine offene Bewerbung (je Einheit)? */
     openFor(discordId: string, unit?: string): Promise<{

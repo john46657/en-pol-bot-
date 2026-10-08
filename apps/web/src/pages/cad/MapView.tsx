@@ -11,17 +11,18 @@ import { Button, Field, Input, Modal, Select, Textarea } from '../../components/
 interface Marker { id: string; layer: string; x: number; z: number; emoji: string; color: string; label: string; title: string; body: ReactNode; actions?: ReactNode; pulse?: boolean }
 type Mode = { kind: 'view' } | { kind: 'poi' } | { kind: 'zone'; points: [number, number][] } | { kind: 'pick'; onPick: (x: number, z: number) => void; hint: string; tag?: string };
 
-const MIN_ZOOM = 0.03, MAX_ZOOM = 6;
+const MAX_ZOOM = 6;
+type View = { s: number; tx: number; ty: number };
 
 /**
  * Interaktive CAD-Karte: Kartenbild aus den Einstellungen (hochgeladene ER:LC-Map), darüber Layer mit Markern,
  * POIs und Zonen. Zoom mit Mausrad/Buttons, Verschieben per Ziehen (auch Touch). Positionen in Spielkoordinaten.
  */
-export function MapView({ cfg, data, height = '70vh', focus, onCreateIncidentAt, actionsFor, compact, placeUnit }: {
+export function MapView({ cfg, data, height = '70vh', focus, onCreateIncidentAt, actionsFor, compact, placeUnit, placeObject }: {
   cfg: CadConfig; data: CadMapData | undefined; height?: string; focus?: { x: number; z: number; id?: string } | null;
   onCreateIncidentAt?: (x: number, z: number) => void; actionsFor?: (m: { kind: string; id: string }) => ReactNode; compact?: boolean;
   /** Einheit ohne Position direkt platzieren (Einheiten → „Auf Karte platzieren“). */
-  placeUnit?: { id: string; callsign: string; done: () => void } | null;
+  placeUnit?: { id: string; callsign: string; done: () => void } | null; placeObject?: { id: string; name: string; done: () => void } | null;
 }) {
   const { can } = useAuth();
   const qcMap = useQueryClient();
@@ -41,14 +42,42 @@ export function MapView({ cfg, data, height = '70vh', focus, onCreateIncidentAt,
   const drag = useRef<{ x: number; y: number; tx: number; ty: number; moved: boolean } | null>(null);
   const hidden = useMemo(() => new Set(cad.hiddenLayers ?? cfg.layers.filter((l) => l.enabledByDefault === false).map((l) => l.key)), [cad.hiddenLayers, cfg.layers]);
 
-  // Start: gespeicherte persönliche Ansicht oder ganze Karte einpassen
+  /**
+   * Die Karte füllt das Feld immer ganz aus: kleinster Zoom = Feld vollständig bedeckt, Verschieben nur bis zum Kartenrand.
+   * So bleibt sie gleich groß – nur rein- und wieder rauszoomen bis zu dieser Größe.
+   */
+  const clamp = (v: View): View => {
+    const el = box.current;
+    if (!el) return v;
+    const w = el.clientWidth, h = el.clientHeight;
+    const minS = Math.max(w / m.width, h / m.height);
+    const s = Math.min(Math.max(MAX_ZOOM, minS), Math.max(minS, v.s));
+    const tx = Math.min(0, Math.max(w - m.width * s, v.tx)), ty = Math.min(0, Math.max(h - m.height * s, v.ty));
+    return { s, tx, ty };
+  };
+  /** Ganze Karte: kleinster Zoom, mittig. */
+  const whole = (): View => {
+    const el = box.current!;
+    const s = Math.max(el.clientWidth / m.width, el.clientHeight / m.height);
+    return { s, tx: (el.clientWidth - m.width * s) / 2, ty: (el.clientHeight - m.height * s) / 2 };
+  };
+
+  // Start: gespeicherte persönliche Ansicht oder ganze Karte
   useEffect(() => {
     const el = box.current;
     if (!el || view) return;
-    const fit = Math.min(el.clientWidth / m.width, el.clientHeight / m.height);
-    if (cad.zoom && cad.center && !compact) setView({ s: cad.zoom, tx: el.clientWidth / 2 - cad.center.x * cad.zoom, ty: el.clientHeight / 2 - cad.center.y * cad.zoom });
-    else setView({ s: fit, tx: (el.clientWidth - m.width * fit) / 2, ty: (el.clientHeight - m.height * fit) / 2 });
+    if (cad.zoom && cad.center && !compact) setView(clamp({ s: cad.zoom, tx: el.clientWidth / 2 - cad.center.x * cad.zoom, ty: el.clientHeight / 2 - cad.center.y * cad.zoom }));
+    else setView(whole());
   }, [m.width, m.height, view, cad.zoom, cad.center, compact]);
+
+  // Feldgröße ändert sich (Fenster, Seitenleiste): Ansicht wieder an den Rand anpassen
+  useEffect(() => {
+    const el = box.current;
+    if (!el || typeof ResizeObserver === 'undefined') return;
+    const ro = new ResizeObserver(() => setView((v) => (v ? clamp(v) : v)));
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, [m.width, m.height]);
 
   // Fokus (z. B. „Auf Karte anzeigen“): dorthin springen und Info-Fenster öffnen
   useEffect(() => {
@@ -56,9 +85,14 @@ export function MapView({ cfg, data, height = '70vh', focus, onCreateIncidentAt,
     if (!el || !focus) return;
     const { px, py } = gameToPixel(m, focus.x, focus.z);
     const s = Math.max(view?.s ?? 0.3, 0.6);
-    setView({ s, tx: el.clientWidth / 2 - px * s, ty: el.clientHeight / 2 - py * s });
+    setView(clamp({ s, tx: el.clientWidth / 2 - px * s, ty: el.clientHeight / 2 - py * s }));
     if (focus.id) setSelected(focus.id);
   }, [focus?.x, focus?.z, focus?.id]);
+
+  // Kartenpunkt (z. B. Gebäudekamera) platzieren
+  useEffect(() => {
+    if (placeObject) setMode({ kind: 'pick', hint: `Position für ${placeObject.name} anklicken.`, onPick: (x, z) => void api(`/cad/map/objects/${placeObject.id}`, { method: 'PATCH', body: { x, z } }).then(() => { void qcMap.invalidateQueries({ queryKey: ['cad-map'] }); void qcMap.invalidateQueries({ queryKey: ['cad-map-objects'] }); placeObject.done(); }) });
+  }, [placeObject?.id]);
 
   useEffect(() => {
     if (placeUnit) setMode({ kind: 'pick', hint: `Position für ${placeUnit.callsign} anklicken.`, onPick: (x, z) => void setUnitPos(placeUnit.id, x, z).then(placeUnit.done) });
@@ -66,16 +100,16 @@ export function MapView({ cfg, data, height = '70vh', focus, onCreateIncidentAt,
 
   // Persönlichen Ausschnitt merken (gesammelt gespeichert)
   const saveTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
-  const remember = (v: { s: number; tx: number; ty: number }) => {
+  const remember = (v: View) => {
     if (compact || !box.current) return;
     const el = box.current;
     clearTimeout(saveTimer.current);
     saveTimer.current = setTimeout(() => set({ zoom: Number(v.s.toFixed(4)), center: { x: Math.round((el.clientWidth / 2 - v.tx) / v.s), y: Math.round((el.clientHeight / 2 - v.ty) / v.s) } }), 1500);
   };
-  const apply = (v: { s: number; tx: number; ty: number }) => { setView(v); remember(v); };
+  const apply = (v: View) => { const c = clamp(v); setView(c); remember(c); };
   const zoomAt = (factor: number, cx: number, cy: number) => {
     if (!view) return;
-    const s = Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, view.s * factor));
+    const s = clamp({ ...view, s: view.s * factor }).s;
     apply({ s, tx: cx - ((cx - view.tx) * s) / view.s, ty: cy - ((cy - view.ty) * s) / view.s });
   };
   const center = () => { const el = box.current!; return [el.clientWidth / 2, el.clientHeight / 2] as const; };
@@ -103,7 +137,7 @@ export function MapView({ cfg, data, height = '70vh', focus, onCreateIncidentAt,
     const d = drag.current;
     if (!d || !view) return;
     if (Math.abs(e.clientX - d.x) + Math.abs(e.clientY - d.y) > 4) d.moved = true;
-    if (d.moved) setView({ ...view, tx: d.tx + e.clientX - d.x, ty: d.ty + e.clientY - d.y });
+    if (d.moved) setView(clamp({ ...view, tx: d.tx + e.clientX - d.x, ty: d.ty + e.clientY - d.y }));
   };
   const onPointerUp = (e: React.PointerEvent) => {
     const d = drag.current;
@@ -189,7 +223,7 @@ export function MapView({ cfg, data, height = '70vh', focus, onCreateIncidentAt,
       <div data-ui className="absolute right-2 top-2 flex flex-col gap-1">
         <Button size="sm" variant="secondary" aria-label="Hineinzoomen" onClick={() => zoomAt(1.4, ...center())}><Plus size={14} /></Button>
         <Button size="sm" variant="secondary" aria-label="Herauszoomen" onClick={() => zoomAt(1 / 1.4, ...center())}><Minus size={14} /></Button>
-        <Button size="sm" variant="secondary" aria-label="Ganze Karte" onClick={() => { const el = box.current!; const fit = Math.min(el.clientWidth / m.width, el.clientHeight / m.height); apply({ s: fit, tx: (el.clientWidth - m.width * fit) / 2, ty: (el.clientHeight - m.height * fit) / 2 }); }}><Locate size={14} /></Button>
+        <Button size="sm" variant="secondary" aria-label="Ganze Karte" onClick={() => apply(whole())}><Locate size={14} /></Button>
         <Button size="sm" variant="secondary" aria-label="Ebenen" aria-expanded={showLayers} onClick={() => setShowLayers((v) => !v)}><Layers size={14} /></Button>
       </div>
       {showLayers && (

@@ -146,7 +146,6 @@ export declare class QualificationsController {
             acceptedChannelId?: string | undefined;
             deniedChannelId?: string | undefined;
         }[];
-        intro: string;
         police: {
             name: string;
             settings: {
@@ -186,6 +185,7 @@ export declare class QualificationsController {
             acceptedChannelId?: string | undefined;
             deniedChannelId?: string | undefined;
         };
+        intro: string;
     }>;
     save(a: Actor, q: z.infer<typeof guildQ>, b: z.infer<typeof saveSchema>): Promise<{
         policeForm: import("@enrp/shared").FormField[];
@@ -232,7 +232,6 @@ export declare class QualificationsController {
             acceptedChannelId?: string | undefined;
             deniedChannelId?: string | undefined;
         }[];
-        intro: string;
         police: {
             name: string;
             settings: {
@@ -272,6 +271,7 @@ export declare class QualificationsController {
             acceptedChannelId?: string | undefined;
             deniedChannelId?: string | undefined;
         };
+        intro: string;
     }>;
     /** Eigene Einstellungen eines Servers entfernen (zurück zur gemeinsamen Grundeinstellung). */
     reset(a: Actor, q: z.infer<typeof guildRequired>): Promise<{
@@ -319,7 +319,6 @@ export declare class QualificationsController {
             acceptedChannelId?: string | undefined;
             deniedChannelId?: string | undefined;
         }[];
-        intro: string;
         police: {
             name: string;
             settings: {
@@ -359,6 +358,7 @@ export declare class QualificationsController {
             acceptedChannelId?: string | undefined;
             deniedChannelId?: string | undefined;
         };
+        intro: string;
     }>;
     list(f: z.infer<typeof list>): Promise<{
         linkedName: string | null;
@@ -471,7 +471,6 @@ export declare class BotQualificationsController {
             acceptedChannelId?: string | undefined;
             deniedChannelId?: string | undefined;
         }[];
-        intro: string;
         police: {
             name: string;
             settings: {
@@ -511,6 +510,7 @@ export declare class BotQualificationsController {
             acceptedChannelId?: string | undefined;
             deniedChannelId?: string | undefined;
         };
+        intro: string;
     }>;
     open(f: z.infer<typeof openQ>): Promise<{
         open: boolean;

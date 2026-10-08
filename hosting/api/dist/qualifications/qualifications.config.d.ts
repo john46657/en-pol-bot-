@@ -1574,7 +1574,6 @@ export declare const configSchema: z.ZodObject<{
         acceptedChannelId?: string | undefined;
         deniedChannelId?: string | undefined;
     }[];
-    intro: string;
     police: {
         name: string;
         settings: {
@@ -1614,6 +1613,7 @@ export declare const configSchema: z.ZodObject<{
         acceptedChannelId?: string | undefined;
         deniedChannelId?: string | undefined;
     };
+    intro: string;
 }, {
     units: {
         name: string;
@@ -1669,7 +1669,6 @@ export declare const configSchema: z.ZodObject<{
         deniedChannelId?: string | undefined;
     }[];
     title?: string | undefined;
-    intro?: string | undefined;
     police?: {
         name?: string | undefined;
         settings?: {
@@ -1709,6 +1708,7 @@ export declare const configSchema: z.ZodObject<{
         acceptedChannelId?: string | undefined;
         deniedChannelId?: string | undefined;
     } | undefined;
+    intro?: string | undefined;
 }>;
 /** Speichern aus „Qualifications → Setup“: Panels + Einheiten und optional die Fragen der Polizei-Bewerbung. */
 export declare const saveSchema: z.ZodObject<{
@@ -2507,7 +2507,6 @@ export declare const saveSchema: z.ZodObject<{
         acceptedChannelId?: string | undefined;
         deniedChannelId?: string | undefined;
     }[];
-    intro: string;
     police: {
         name: string;
         settings: {
@@ -2547,6 +2546,7 @@ export declare const saveSchema: z.ZodObject<{
         acceptedChannelId?: string | undefined;
         deniedChannelId?: string | undefined;
     };
+    intro: string;
     policeForm?: {
         key: string;
         type: "TEXT" | "CHOICE" | "ROLE" | "ROBLOX";
@@ -2615,7 +2615,6 @@ export declare const saveSchema: z.ZodObject<{
         deniedChannelId?: string | undefined;
     }[];
     title?: string | undefined;
-    intro?: string | undefined;
     police?: {
         name?: string | undefined;
         settings?: {
@@ -2655,6 +2654,7 @@ export declare const saveSchema: z.ZodObject<{
         acceptedChannelId?: string | undefined;
         deniedChannelId?: string | undefined;
     } | undefined;
+    intro?: string | undefined;
     policeForm?: {
         key: string;
         label: string;

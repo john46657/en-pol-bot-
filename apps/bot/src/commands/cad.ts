@@ -22,7 +22,7 @@ async function myUnit(c: Ctx, callsign?: string): Promise<CadUnit | null> {
 }
 
 export const CAD_COMMANDS: CommandDef[] = [{
-  name: 'cad', description: 'CAD-Leitstelle: Einheitenstatus, Funkmeldung, aktive Einsätze',
+  name: 'cad', description: 'CAD-Leitstelle: Einheitenstatus, Funkmeldung, Einsätze, Luftunterstützung',
   subcommands: [
     { name: 'status', description: 'Status deiner Einheit an die Leitstelle melden', options: [
       { name: 'status', description: 'z. B. Verfügbar, Unterwegs, Am Einsatzort', type: 'string', required: true, maxLength: 40 },
@@ -33,6 +33,12 @@ export const CAD_COMMANDS: CommandDef[] = [{
       { name: 'einsatz', description: 'Einsatznummer (leer = aktueller Einsatz deiner Einheit)', type: 'string', maxLength: 32 },
     ] },
     { name: 'einsaetze', description: 'Aktive Einsätze der Leitstelle' },
+    { name: 'heli', description: 'Luftunterstützung (Hubschrauber) bei der Leitstelle anfordern', options: [
+      { name: 'modus', description: 'Spieler suchen oder Patrouille', type: 'string', required: true, choices: [{ name: 'Spieler suchen', value: 'SEARCH' }, { name: 'Patrouille', value: 'PATROL' }] },
+      { name: 'ziel', description: 'Gesuchter Spieler (bei „Spieler suchen“) oder Gebiet', type: 'string', maxLength: 80 },
+      { name: 'einsatz', description: 'Einsatznummer (optional)', type: 'string', maxLength: 32 },
+      { name: 'hinweis', description: 'Hinweis für die Leitstelle', type: 'string', maxLength: 300 },
+    ] },
   ],
   async run(c): Promise<Reply> {
     try {
@@ -50,6 +56,12 @@ export const CAD_COMMANDS: CommandDef[] = [{
       if (sub === 'funk') {
         const r = await c.api.asUser<{ callsign: string | null; incidentNumber: string | null }>(c.discordId, 'POST', '/cad/radio', { text: String(c.opts.text ?? ''), ...(c.opts.einsatz ? { incidentNumber: String(c.opts.einsatz) } : {}) });
         return okReply(`📻 ${r.callsign ? `**${plain(r.callsign)}**: ` : ''}„${plain(c.opts.text)}“ gesendet${r.incidentNumber ? ` – Einsatz **${plain(r.incidentNumber)}**` : ''}.`);
+      }
+      if (sub === 'heli') {
+        const mode = String(c.opts.modus ?? '');
+        if (mode === 'SEARCH' && !String(c.opts.ziel ?? '').trim()) return errorReply('Bei „Spieler suchen“ bitte mit `ziel:` angeben, wer gesucht wird.');
+        const r = await c.api.asUser<{ number: number; incident: { number: string } | null }>(c.discordId, 'POST', '/cad/air', { mode, ...(c.opts.ziel ? { target: String(c.opts.ziel) } : {}), ...(c.opts.einsatz ? { incidentNumber: String(c.opts.einsatz) } : {}), ...(c.opts.hinweis ? { note: String(c.opts.hinweis) } : {}) });
+        return okReply(`🚁 Luftunterstützung **#${r.number}** angefordert (${mode === 'SEARCH' ? `Spieler suchen: ${plain(c.opts.ziel)}` : 'Patrouille'})${r.incident ? ` – Einsatz **${plain(r.incident.number)}**` : ''}. Die Leitstelle ist informiert; gerufen wird der Hubschrauber im Spiel.`);
       }
       if (sub === 'einsaetze') {
         const [cfg, list] = await Promise.all([config(c), c.api.asUser<CadIncident[]>(c.discordId, 'GET', '/cad/incidents?active=true&take=20')]);
@@ -110,6 +122,10 @@ export function renderCadOutbox(type: string, p: Record<string, unknown>): Embed
         fields: [...f('Ort', p.location), ...f('Team', p.team), ...(p.startedAt ? [{ name: 'Zeit', value: `<t:${Math.floor(Date.parse(String(p.startedAt)) / 1000)}:t>`, inline: true }] : []), { name: 'Status', value: 'Offen', inline: true }, ...f('Server', p.server)] };
     case 'cad.announcement':
       return { title: '📢 Leitstellenmeldung', description: clip(plain(p.text), 4000), color: COLORS.warning, ...(p.from ? { footer: `von ${clip(String(p.from), 100)}` } : {}) };
+    case 'cad.air.requested':
+      return { title: clip(`🚁 Luftunterstützung #${String(p.number ?? '?')} angefordert`, 256), color: COLORS.warning,
+        description: `**${plain(p.modeLabel ?? p.mode)}**${p.target ? `: ${clip(plain(p.target), 200)}` : ''}${p.note ? `\n${clip(plain(p.note), 500)}` : ''}\n_Hubschrauber im Spiel über das Polizei-Tablet rufen._`,
+        fields: [...f('Angefordert von', p.by), ...f('Einsatz', p.incidentNumber)] };
     case 'cad.radio':
       return { title: clip(`📻 ${plain(p.callsign ?? 'Funk')}${p.incidentNumber ? ` · ${String(p.incidentNumber)}` : ''}`, 256), description: `„${clip(plain(p.text), 1500)}“`, color: COLORS.neutral };
     default:
@@ -126,6 +142,6 @@ export function cadButtons(type: string, p: Record<string, unknown>): ButtonSpec
     { id: `cad:call:${p.id}:close`, label: 'Schließen', style: 'danger', emoji: '✖️' },
     ...(typeof p.mapUrl === 'string' && /^https?:\/\//.test(p.mapUrl) ? [{ id: 'map', label: 'Auf Karte anzeigen', style: 'secondary' as const, url: p.mapUrl }] : []),
   ];
-  if (type.startsWith('cad.incident.')) return link.length ? link : undefined;
+  if (type.startsWith('cad.incident.') || type === 'cad.air.requested') return link.length ? link : undefined;
   return undefined;
 }

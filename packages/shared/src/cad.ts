@@ -35,11 +35,12 @@ export interface CadConfig {
   widgets: string[];
 }
 
-export const CAD_EVENTS = ['incident.created', 'incident.status', 'incident.assigned', 'incident.closed', 'call.received', 'announcement', 'radio'] as const;
+export const CAD_EVENTS = ['incident.created', 'incident.status', 'incident.assigned', 'incident.closed', 'call.received', 'announcement', 'radio', 'air.requested'] as const;
 export type CadEvent = (typeof CAD_EVENTS)[number];
 export const CAD_EVENT_LABELS: Record<CadEvent, string> = {
   'incident.created': 'Neuer Einsatz', 'incident.status': 'Einsatzstatus geändert', 'incident.assigned': 'Einheit zugewiesen',
   'incident.closed': 'Einsatz abgeschlossen', 'call.received': 'Notruf eingegangen', announcement: 'Wichtige Leitstellenmeldung', radio: 'Funkmeldung',
+  'air.requested': 'Luftunterstützung angefordert',
 };
 
 /** Datenarten, die eine Server-Verbindung senden darf, und Aktionen, die der verbundene Server zurück ausführen darf. */
@@ -52,7 +53,7 @@ export const CAD_LINK_LABELS: Record<string, string> = {
 /** Welche Datenart ein CAD-Ereignis bei verbundenen Servern ist. */
 export const CAD_EVENT_SEND_TYPE: Record<CadEvent, (typeof CAD_LINK_SEND_TYPES)[number]> = {
   'incident.created': 'incidents', 'incident.status': 'incident_status', 'incident.assigned': 'unit_requests', 'incident.closed': 'incident_status',
-  'call.received': 'calls', announcement: 'announcements', radio: 'radio',
+  'call.received': 'calls', announcement: 'announcements', radio: 'radio', 'air.requested': 'unit_requests',
 };
 
 export const CAD_WIDGETS = ['activeIncidents', 'availableUnits', 'activeCalls', 'erlcStatus', 'map', 'units', 'radio', 'persons', 'vehicles', 'dutyActivity'] as const;
@@ -108,10 +109,11 @@ export const DEFAULT_CAD_CONFIG: CadConfig = {
     { key: 'sek', label: 'SEK-Einheiten', builtin: true, enabledByDefault: true },
     { key: 'k9', label: 'K9-Einheiten', builtin: true, enabledByDefault: true },
     { key: 'units', label: 'Weitere Einheiten', builtin: true, enabledByDefault: true },
-    { key: 'vehicles', label: 'Fahrzeuge', builtin: true, enabledByDefault: false },
+    { key: 'vehicles', label: 'Polizeifahrzeuge (GPS)', builtin: true, enabledByDefault: true },
     { key: 'staff', label: 'Staff', builtin: true, enabledByDefault: false },
     { key: 'players', label: 'Alle Spieler', builtin: true, enabledByDefault: false },
     { key: 'pois', label: 'Eigene POIs', builtin: true, enabledByDefault: true },
+    { key: 'cameras', label: 'Gebäudekameras', builtin: true, enabledByDefault: true },
     { key: 'zones', label: 'Eigene Zonen', builtin: true, enabledByDefault: true },
     { key: 'restricted', label: 'Sperrbereiche', builtin: true, enabledByDefault: true },
   ],
@@ -119,16 +121,41 @@ export const DEFAULT_CAD_CONFIG: CadConfig = {
     { key: 'incident', label: 'Einsatz', emoji: '🔴', color: '#ef4444' },
     { key: 'call', label: 'Emergency Call', emoji: '🚨', color: '#f43f5e' },
     { key: 'unit', label: 'Einheit', emoji: '🚔', color: '#0891b2' },
-    { key: 'vehicle', label: 'Fahrzeug', emoji: '🚗', color: '#a855f7' },
+    { key: 'vehicle', label: 'Polizeifahrzeug', emoji: '🚓', color: '#2563eb' },
     { key: 'staff', label: 'Staff', emoji: '👮', color: '#f59e0b' },
     { key: 'player', label: 'Spieler', emoji: '•', color: '#94a3b8' },
     { key: 'poi', label: 'POI', emoji: '📍', color: '#10b981' },
+    { key: 'camera', label: 'Kamera', emoji: '📹', color: '#64748b' },
   ],
   map: { imageUrl: null, width: ERLC_MAP_SIZE, height: ERLC_MAP_SIZE, originX: ERLC_MAP_SIZE / 2, originY: ERLC_MAP_SIZE / 2, scale: 1 },
   routes: [],
   memberFields: [],
   widgets: ['activeIncidents', 'availableUnits', 'activeCalls', 'dutyActivity', 'erlcStatus', 'map', 'radio'],
 };
+
+/**
+ * Gebäudekameras aus dem Polizei-Tablet in ER:LC (Name · Gebiet). Die ER:LC-API liefert keine Kameras –
+ * die Liste dient der Leitstelle als Übersicht; Positionen setzt man einmal auf der Karte.
+ */
+export const ERLC_BUILDING_CAMERAS: { name: string; area: string }[] = [
+  { name: 'Polizeistation Außenbereich', area: 'Industrial Zone' },
+  { name: 'Maple St & Oak Valley Dr', area: 'Springfield' },
+  { name: 'Springfield Gun Store Exterior', area: 'Springfield' },
+  { name: 'RC Bank Außenbereich', area: 'City Hall' },
+  { name: 'Hauptstraße', area: 'City Hall' },
+  { name: 'Power Plant Exterior', area: 'Industrial Zone' },
+  { name: 'RC Shopping Plaza Exterior', area: 'City Hall' },
+  { name: 'RC Gun Store Exterior', area: 'City Hall' },
+  { name: 'Pancake House Exterior', area: 'Fairview Heights' },
+  { name: 'Airport Exterior', area: 'Liberty County Airfield' },
+];
+/** Luftunterstützung (Hubschrauber): wird im Spiel gerufen, das CAD koordiniert Anforderung und Rückmeldung. */
+export const AIR_MODES = { SEARCH: 'Spieler suchen', PATROL: 'Patrouille' } as const;
+export type AirMode = keyof typeof AIR_MODES;
+export const AIR_STATUS = { OPEN: 'Angefordert', ACCEPTED: 'Hubschrauber unterwegs', DONE: 'Erledigt', CANCELLED: 'Abgebrochen' } as const;
+export type AirStatus = keyof typeof AIR_STATUS;
+/** Server-Abklingzeit nach jedem Hubschrauber-Einsatz in ER:LC (Minuten) – nur als Hinweis. */
+export const AIR_SERVER_COOLDOWN_MIN = 6;
 
 /** Spielkoordinate (ER:LC: X nach rechts, Z nach unten, Ursprung Mitte) → Pixel im Kartenbild. */
 export const gameToPixel = (m: CadMapConfig, x: number, z: number) => ({ px: m.originX + x * m.scale, py: m.originY + z * m.scale });
