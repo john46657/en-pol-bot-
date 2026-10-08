@@ -3,11 +3,11 @@ import { Link, useNavigate, useSearchParams } from 'react-router';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { api, ApiError } from '../../lib/api';
 import { useAuth } from '../../lib/auth';
-import { ago, optLabel, useCadConfig, type CadCallRow, type CadConfig, type CadIncidentRow, type CadMapData, type CadRadioRow, type CadUnitRow } from '../../lib/cad';
+import { ago, optColor, optLabel, useCadConfig, type CadCallRow, type CadConfig, type CadIncidentRow, type CadMapData, type CadRadioRow, type CadUnitRow } from '../../lib/cad';
 import { useGuilds } from '../../lib/guilds';
 import { Badge, Button, Card, EmptyState, ErrorState, Field, Input, Modal, PageHeader, Select, SkeletonRows, Textarea } from '../../components/ui';
 import { MapView } from './MapView';
-import { IncidentForm, type IncidentDraft } from './CadIncidents';
+import { IncidentForm, OptChip, type IncidentDraft } from './CadIncidents';
 
 const errText = (e: unknown) => (e instanceof ApiError ? e.message : 'Fehlgeschlagen');
 const invalidateAll = (qc: ReturnType<typeof useQueryClient>) => { for (const k of ['cad-overview', 'cad-incidents', 'cad-incident', 'cad-units', 'cad-calls', 'cad-map', 'cad-radio', 'cad-members']) void qc.invalidateQueries({ queryKey: [k] }); };
@@ -113,12 +113,27 @@ export function CadUnits() {
   });
   const del = useMutation({ mutationFn: (id: string) => api(`/cad/units/${id}`, { method: 'DELETE' }), onSuccess: () => { setEdit(null); invalidateAll(qc); }, onError: (e) => setErr(errText(e)) });
   const types = [...cfg.unitTypes.map((t) => t.key), null];
+  const [filter, setFilter] = useState<string>('');
+  const [term, setTerm] = useState('');
+  const all = q.data ?? [];
+  const shown = all.filter((u) => (!filter || u.status === filter) && (!term || `${u.callsign} ${u.name ?? ''} ${u.vehicle ?? ''} ${u.crew.map((c) => `${c.callsign ?? ''} ${c.discordName ?? ''} ${c.erlcName ?? ''}`).join(' ')} ${u.memberNames.join(' ')}`.toLowerCase().includes(term.toLowerCase())));
   return (
     <>
       <PageHeader title="Einheiten" subtitle="Status, Besatzung, aktuelle Einsätze und Position" actions={can('cad.manage_units') ? <Button onClick={() => setEdit({ callsign: '', type: cfg.unitTypes[0]?.key ?? null, operational: true })}>Neue Einheit</Button> : undefined} />
       {err && <div role="alert" className="mb-2 rounded border border-danger/40 bg-danger/10 p-2 text-sm text-danger">{err}</div>}
-      {q.isLoading ? <SkeletonRows /> : q.error ? <ErrorState error={q.error} /> : !q.data?.length ? <Card><EmptyState text="Noch keine Einheiten." hint="z. B. SEK-01, K9-01 – Typen, Farben und Symbole unter Einstellungen." /></Card> : types.map((t) => {
-        const list = q.data!.filter((u) => (u.type ?? null) === t || (t === null && u.type && !cfg.unitTypes.some((x) => x.key === u.type)));
+      {!!all.length && (
+        <div className="mb-3 flex flex-wrap items-center gap-2">
+          {/* Lage der Einheiten: Anzahl je Status – Klick filtert */}
+          <button type="button" aria-pressed={!filter} onClick={() => setFilter('')} className={`rounded-full border px-3 py-1 text-xs ${!filter ? 'border-primary bg-primary/15' : 'border-line hover:bg-panel-2'}`}>Alle <b>{all.length}</b></button>
+          {cfg.unitStatuses.map((st) => { const n = all.filter((u) => u.status === st.key).length; return n ? (
+            <button key={st.key} type="button" aria-pressed={filter === st.key} onClick={() => setFilter(filter === st.key ? '' : st.key)} className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs ${filter === st.key ? 'border-primary bg-primary/15' : 'border-line hover:bg-panel-2'}`}>
+              <span aria-hidden className="h-2 w-2 rounded-full" style={{ background: st.color ?? '#64748b' }} />{st.label} <b>{n}</b>
+            </button>) : null; })}
+          <div className="ml-auto w-full sm:w-64"><Input aria-label="Einheiten durchsuchen" className="py-1 text-xs" placeholder="🔍 Rufname, Besatzung, Fahrzeug…" value={term} onChange={(e) => setTerm(e.target.value)} /></div>
+        </div>
+      )}
+      {q.isLoading ? <SkeletonRows /> : q.error ? <ErrorState error={q.error} /> : !q.data?.length ? <Card><EmptyState text="Noch keine Einheiten." hint="z. B. SEK-01, K9-01 – Typen, Farben und Symbole unter Einstellungen." /></Card> : !shown.length ? <Card><EmptyState text="Keine Einheit passt zum Filter." /></Card> : types.map((t) => {
+        const list = shown.filter((u) => (u.type ?? null) === t || (t === null && u.type && !cfg.unitTypes.some((x) => x.key === u.type)));
         if (!list.length) return null;
         const ty = cfg.unitTypes.find((x) => x.key === t);
         return (
@@ -132,9 +147,15 @@ export function CadUnits() {
                   {can('cad.manage_units') && <Button size="sm" variant="ghost" onClick={() => setEdit({ ...u })}>Bearbeiten</Button>}
                 </div>
                 <div className="mt-2 flex flex-wrap items-center gap-2 text-sm">
-                  {can('cad.assign_unit') ? <Select aria-label={`Status ${u.callsign}`} className="w-auto py-1 text-xs" value={u.status} onChange={(e) => status.mutate({ id: u.id, status: e.target.value })}>{cfg.unitStatuses.map((s) => <option key={s.key} value={s.key}>{optLabel(cfg.unitStatuses, s.key)}</option>)}</Select> : <span>{optLabel(cfg.unitStatuses, u.status)}</span>}
-                  {u.current && <Link className="text-xs hover:underline" to={`/cad/incidents?id=${u.current.id}`}>Einsatz {u.current.number}</Link>}
+                  <OptChip list={cfg.unitStatuses} value={u.status} />
+                  {u.current && <Link className="text-xs font-medium text-primary hover:underline" to={`/cad/incidents?id=${u.current.id}`}>🚨 {u.current.number}</Link>}
                 </div>
+                {/* Status mit einem Klick (Symbol = Status, Name beim Drüberfahren) */}
+                {can('cad.assign_unit') && <div className="mt-2 flex flex-wrap gap-1" role="group" aria-label={`Status ${u.callsign}`}>{cfg.unitStatuses.map((st) => {
+                  const cur = st.key === u.status;
+                  return <button key={st.key} type="button" title={st.label} aria-label={`${u.callsign}: ${st.label}`} aria-pressed={cur} disabled={cur || status.isPending} onClick={() => status.mutate({ id: u.id, status: st.key })}
+                    className={`rounded border px-1.5 py-0.5 text-xs ${cur ? 'border-transparent font-semibold' : 'border-line hover:bg-panel-2'}`} style={cur ? { background: `${optColor(cfg.unitStatuses, st.key) ?? '#64748b'}33` } : undefined}>{st.emoji ?? st.label.slice(0, 2)}</button>;
+                })}</div>}
                 <p className="mt-1 text-xs text-muted">Besatzung: {u.crew.length ? u.crew.map((c) => `${c.callsign ?? c.discordName ?? c.erlcName}${c.inGame ? ' 🟢' : ''}`).join(', ') : u.memberNames.join(', ') || '—'}</p>
                 <p className="text-xs text-muted">Position: {u.position ? `${u.position.source === 'erlc' ? 'live aus ER:LC' : 'manuell'}${u.position.street ? ` · ${u.position.street}` : ''}` : 'unbekannt'}{can('cad.manage_units') && u.position?.source !== 'erlc' && <Link className="ml-2 text-primary hover:underline" to={`/cad/map?placeUnit=${u.id}`}>📍 auf Karte platzieren</Link>}</p>
               </div>))}</div>
@@ -175,6 +196,8 @@ export function CadRadio() {
   const [code, setCode] = useState<string>();
   const [announce, setAnnounce] = useState('');
   const [msg, setMsg] = useState<string>();
+  const [feedInc, setFeedInc] = useState('');
+  const [feedTerm, setFeedTerm] = useState('');
   const q = useQuery({ queryKey: ['cad-radio'], queryFn: () => api<CadRadioRow[]>('/cad/radio', { query: { take: 100 } }), refetchInterval: 5_000 });
   const inc = useQuery({ queryKey: ['cad-incidents', 'active', ''], queryFn: () => api<CadIncidentRow[]>('/cad/incidents', { query: { active: 'true' } }) });
   const codes = useQuery({ queryKey: ['radio-codes-cad'], queryFn: () => api<{ id: string; code: string; meaning: string; category: string | null }[]>('/radio-codes'), enabled: can('radio.view'), staleTime: 300_000 });
@@ -189,20 +212,32 @@ export function CadRadio() {
       {msg && <p role="status" className="mb-2 text-sm text-muted">{msg}</p>}
       <div className="grid gap-3 lg:grid-cols-3">
         <Card className="lg:col-span-2" title="Funkverkehr">
-          {can('cad.radio') && <form className="mb-3 flex flex-wrap gap-2" onSubmit={(e) => { e.preventDefault(); if (text.trim() && unitId) send.mutate(); }}>
-            <Select aria-label="Einheit" required className="w-auto" value={unitId} onChange={(e) => setUnitId(e.target.value)}>
-              <option value="">{myUnits.data && !myUnits.data.units.length ? 'Keine Einheit zugeordnet' : 'Einheit wählen…'}</option>
+          {can('cad.radio') && <form className="mb-3 grid gap-2 sm:grid-cols-[10rem_minmax(0,1fr)_12rem_auto]" onSubmit={(e) => { e.preventDefault(); if (text.trim() && unitId) send.mutate(); }}>
+            <Select aria-label="Einheit" required value={unitId} onChange={(e) => setUnitId(e.target.value)}>
+              <option value="">{myUnits.data && !myUnits.data.units.length ? 'Keine Einheit' : 'Als Einheit…'}</option>
               {(myUnits.data?.units ?? []).map((u) => <option key={u.id} value={u.id}>{u.callsign}{u.name ? ` · ${u.name}` : ''}</option>)}
             </Select>
-            <Input aria-label="Funkmeldung" className="min-w-48 flex-1" maxLength={500} placeholder="z. B. „Am Einsatzort.“" value={text} onChange={(e) => { setText(e.target.value); setCode(undefined); }} />
-            <Select aria-label="Einsatz" className="w-auto" value={incidentId} onChange={(e) => setIncidentId(e.target.value)}><option value="">Einsatz meiner Einheit / keiner</option>{(inc.data ?? []).map((i) => <option key={i.id} value={i.id}>{i.number} · {i.title}</option>)}</Select>
+            <Input aria-label="Funkmeldung" maxLength={500} placeholder="📻 Funkmeldung – Enter sendet" value={text} onChange={(e) => { setText(e.target.value); setCode(undefined); }} />
+            <Select aria-label="Einsatz" value={incidentId} onChange={(e) => setIncidentId(e.target.value)}><option value="">Einsatz meiner Einheit</option>{(inc.data ?? []).map((i) => <option key={i.id} value={i.id}>{i.number} · {i.title}</option>)}</Select>
             <Button type="submit" disabled={!text.trim() || !unitId || send.isPending}>Senden</Button>
           </form>}
+          {can('cad.radio') && myUnits.data && !myUnits.data.units.length && <p className="-mt-1 mb-3 text-xs text-muted">Du bist keiner Einheit zugeordnet – Zuordnung unter Teamübersicht.</p>}
           {can('cad.radio') && !!codes.data?.length && <div role="radiogroup" className="mb-3 flex flex-wrap gap-1" aria-label="Funk-Codes">{codes.data.slice(0, 40).map((c) => <button key={c.id} type="button" role="radio" aria-checked={code === c.id} title={c.meaning} className={`rounded border px-1.5 py-0.5 text-xs ${code === c.id ? 'border-primary bg-primary text-primary-fg' : 'border-line hover:bg-panel-2'}`}
                 // immer nur ein Code: Klick ersetzt den Text, erneuter Klick hebt die Auswahl auf
                 onClick={() => { if (code === c.id) { setCode(undefined); setText(''); } else { setCode(c.id); setText(`${c.code} (${c.meaning})`.slice(0, 500)); } }}>{c.code}</button>)}</div>}
+          {!!q.data?.length && (
+            <div className="mb-2 flex flex-wrap items-center gap-2 border-t border-line pt-3">
+              <div className="w-40 shrink-0"><Select aria-label="Funk nach Einsatz filtern" className="py-1 text-xs" value={feedInc} onChange={(e) => setFeedInc(e.target.value)}><option value="">Alle Meldungen</option><option value="-">ohne Einsatz</option>{[...new Set(q.data.map((r) => r.incidentNumber).filter(Boolean))].map((n) => <option key={n} value={n!}>{n}</option>)}</Select></div>
+              <div className="min-w-0 flex-1"><Input aria-label="Funk durchsuchen" className="py-1 text-xs" placeholder="🔍 Rufname oder Text…" value={feedTerm} onChange={(e) => setFeedTerm(e.target.value)} /></div>
+            </div>
+          )}
           {q.isLoading ? <SkeletonRows /> : !q.data?.length ? <EmptyState text="Noch keine Funkmeldungen." /> : (
-            <ul className="divide-y divide-line text-sm">{q.data.map((r) => <li key={r.id} className="py-1.5"><b>{r.callsign ?? r.authorName ?? 'Funk'}:</b> „{r.text}“<span className="block text-xs text-muted">{new Date(r.createdAt).toLocaleString('de-DE')}{r.incidentNumber ? ` · ${r.incidentNumber}` : ''}{r.authorName && r.callsign ? ` · ${r.authorName}` : ''}{r.guildId ? ' · Discord' : ''}</span></li>)}</ul>
+            <ul className="space-y-1 text-sm">{q.data.filter((r) => (!feedInc || (feedInc === '-' ? !r.incidentNumber : r.incidentNumber === feedInc)) && (!feedTerm || `${r.callsign ?? ''} ${r.authorName ?? ''} ${r.text}`.toLowerCase().includes(feedTerm.toLowerCase()))).map((r) => (
+              <li key={r.id} className="flex gap-2 rounded px-1 py-1 hover:bg-panel-2/50">
+                <span className="w-11 shrink-0 pt-0.5 text-xs tabular-nums text-muted" title={new Date(r.createdAt).toLocaleString('de-DE')}>{new Date(r.createdAt).toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' })}</span>
+                <span className="shrink-0 rounded bg-primary/15 px-1.5 py-0.5 text-xs font-semibold text-primary">{r.callsign ?? r.authorName ?? 'Funk'}</span>
+                <span className="min-w-0 flex-1">„{r.text}“<span className="block text-[11px] text-muted">{ago(r.createdAt)}{r.incidentNumber ? <> · <Link className="hover:underline" to={`/cad/incidents?id=${r.incidentId}`}>{r.incidentNumber}</Link></> : ''}{r.authorName && r.callsign ? ` · ${r.authorName}` : ''}{r.guildId ? ' · über Discord' : ''}</span></span>
+              </li>))}</ul>
           )}
         </Card>
         {can('cad.create_incident') && <Card title="Wichtige Leitstellenmeldung">
