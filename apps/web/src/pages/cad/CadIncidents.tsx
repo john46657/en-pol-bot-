@@ -4,7 +4,8 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { MapPin, Star } from 'lucide-react';
 import { api, ApiError } from '../../lib/api';
 import { useAuth } from '../../lib/auth';
-import { ago, optColor, optLabel, useCadConfig, useCadPrefs, type CadConfig, type CadIncidentDetail, type CadIncidentRow, type CadRadioRow, type CadUnitRow } from '../../lib/cad';
+import { ago, optColor, optLabel, useCadConfig, useCadPrefs, type CadConfig, type CadIncidentDetail, type CadIncidentRow, type CadMapData, type CadRadioRow, type CadUnitRow } from '../../lib/cad';
+import { MiniMap } from './MiniMap';
 import { LockBanner, useEditLock } from '../../lib/locks';
 import { Button, Card, EmptyState, ErrorState, Field, Input, Modal, PageHeader, Select, SkeletonRows, Textarea } from '../../components/ui';
 
@@ -25,6 +26,10 @@ export function IncidentForm({ cfg, initial, id, callId, onClose, onSaved }: { c
   const [err, setErr] = useState<string>();
   const editLock = useEditLock('incident', id, !!id);
   const roles = useQuery({ queryKey: ['roles-list'], queryFn: () => api<{ id: string; name: string }[]>('/roles').catch(() => []) });
+  const { can } = useAuth();
+  // Spieler mit Live-Position aus ER:LC – Position per Klick übernehmen (Polizei zuerst)
+  const live = useQuery({ queryKey: ['cad-map'], queryFn: () => api<CadMapData>('/cad/map'), enabled: can('cad.view_erlc'), staleTime: 5_000 });
+  const players = (live.data?.players ?? []).filter((p) => p.location && p.team?.toLowerCase() !== 'sheriff').sort((a, b) => Number(b.team?.toLowerCase() === 'police') - Number(a.team?.toLowerCase() === 'police') || a.name.localeCompare(b.name));
   const m = useMutation({
     mutationFn: () => {
       const body = Object.fromEntries(Object.entries(v).map(([k, x]) => [k, x === '' ? null : x])) as Record<string, unknown>;
@@ -45,9 +50,16 @@ export function IncidentForm({ cfg, initial, id, callId, onClose, onSaved }: { c
         <Field label="Priorität">{(fid) => <Select id={fid} value={v.priority ?? ''} onChange={(e) => upd({ priority: e.target.value })}>{cfg.priorities.map((p) => <option key={p.key} value={p.key}>{optLabel(cfg.priorities, p.key)}</option>)}</Select>}</Field>
         {!id && <Field label="Status">{(fid) => <Select id={fid} value={v.status ?? ''} onChange={(e) => upd({ status: e.target.value || undefined })}><option value="">Standard ({optLabel(cfg.incidentStatuses, cfg.incidentStatuses.find((s) => !s.closed)?.key)})</option>{cfg.incidentStatuses.filter((s) => !s.closed).map((s) => <option key={s.key} value={s.key}>{optLabel(cfg.incidentStatuses, s.key)}</option>)}</Select>}</Field>}
         <Field label="Ort">{(fid) => <Input id={fid} maxLength={200} value={v.location ?? ''} onChange={(e) => upd({ location: e.target.value })} />}</Field>
-        <Field label="Kartenposition (X / Z)" hint="Spielkoordinaten – am einfachsten über „Einsatz hier“ auf der Karte">{(fid) => (
+        {players.length > 0 && <Field label="Position aus ER:LC übernehmen" hint="Live-Standort eines Spielers (z. B. Anrufer oder Einheit vor Ort)">{(fid) => (
+          <Select id={fid} value="" onChange={(e) => { const p = players.find((x) => `${x.serverId}:${x.name}` === e.target.value); if (p?.location) upd({ mapX: Math.round(p.location.x * 10) / 10, mapZ: Math.round(p.location.z * 10) / 10, location: v.location || [p.location.street, p.location.postal && `PLZ ${p.location.postal}`].filter(Boolean).join(' · ') }); }}>
+            <option value="">📍 Spieler wählen…</option>
+            {players.map((p) => <option key={`${p.serverId}:${p.name}`} value={`${p.serverId}:${p.name}`}>{p.team?.toLowerCase() === 'police' ? '🚓' : '👤'} {p.name}{p.callsign ? ` (${p.callsign})` : ''} – {[p.location!.street, p.location!.postal && `PLZ ${p.location!.postal}`].filter(Boolean).join(' · ') || 'ohne Straße'}</option>)}
+          </Select>
+        )}</Field>}
+        <Field label="Kartenposition (X / Z)" hint="Wird bei Notrufen automatisch aus ER:LC übernommen – sonst Spieler oben wählen oder „Einsatz hier“ auf der Karte">{(fid) => (
           <div className="flex gap-1"><Input id={fid} type="number" step="any" placeholder="X" value={v.mapX ?? ''} onChange={(e) => upd({ mapX: e.target.value === '' ? null : Number(e.target.value) })} /><Input aria-label="Z" type="number" step="any" placeholder="Z" value={v.mapZ ?? ''} onChange={(e) => upd({ mapZ: e.target.value === '' ? null : Number(e.target.value) })} /></div>
         )}</Field>
+        {v.mapX !== null && v.mapX !== undefined && v.mapZ !== null && v.mapZ !== undefined && <div className="sm:col-span-2"><MiniMap cfg={cfg} x={v.mapX} z={v.mapZ} height={120} label={v.location || undefined} /></div>}
         <div className="sm:col-span-2"><Field label="Beschreibung">{(fid) => <Textarea id={fid} rows={3} maxLength={5000} value={v.description ?? ''} onChange={(e) => upd({ description: e.target.value })} />}</Field></div>
         <Field label="Beteiligte Personen">{(fid) => <Textarea id={fid} rows={2} maxLength={2000} value={v.involved ?? ''} onChange={(e) => upd({ involved: e.target.value })} />}</Field>
         <Field label="Benötigte Einheiten">{(fid) => <Textarea id={fid} rows={2} maxLength={500} value={v.requiredUnits ?? ''} onChange={(e) => upd({ requiredUnits: e.target.value })} />}</Field>
@@ -144,6 +156,7 @@ export function IncidentDetail({ id, cfg }: { id: string; cfg: CadConfig }) {
       {err && <div role="alert" className="mb-2 rounded border border-danger/40 bg-danger/10 p-2 text-sm text-danger">{err}</div>}
       <div className="grid gap-4 lg:grid-cols-2">
         <dl className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-1 text-sm">
+          {i.mapX !== null && i.mapZ !== null && <div className="col-span-2 mb-1"><MiniMap cfg={cfg} x={i.mapX} z={i.mapZ} to={`/cad/map?incident=${i.id}`} height={150} label={i.location ?? undefined} emoji="📋" /></div>}
           {row('Priorität', optLabel(cfg.priorities, i.priority))}{row('Status', optLabel(cfg.incidentStatuses, i.status))}{row('Einsatzart', i.type ? optLabel(cfg.incidentTypes, i.type) : null)}
           {row('Stichwort', i.keyword)}{row('Ort', i.location)}{row('Beschreibung', i.description)}{row('Beteiligte', i.involved)}{row('Benötigt', i.requiredUnits)}
           {row('Disponent', i.dispatcherId ? i.names[i.dispatcherId] ?? '—' : null)}{row('Erstellt', new Date(i.createdAt).toLocaleString('de-DE'))}{row('Aktualisiert', new Date(i.updatedAt).toLocaleString('de-DE'))}

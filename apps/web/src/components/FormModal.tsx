@@ -11,13 +11,14 @@ import { looksLikeRoblox, type RobloxProfile } from './RobloxCard';
 import { LockBanner, useEditLock, type LockType } from '../lib/locks';
 
 export interface FieldDef {
-  name: string; label: string; type?: 'text' | 'textarea' | 'number' | 'select' | 'person' | 'legalCode' | 'datetime' | 'date' | 'password';
+  name: string; label: string; type?: 'text' | 'textarea' | 'number' | 'select' | 'person' | 'legalCode' | 'datetime' | 'date' | 'password' | 'erlcPlayer' | 'checkbox';
   required?: boolean; options?: readonly string[]; hint?: string; max?: number; min?: number;
 }
 
 function buildSchema(fields: FieldDef[]) {
   const shape: Record<string, ZodTypeAny> = {};
   for (const f of fields) {
+    if (f.type === 'checkbox') { shape[f.name] = z.boolean().optional(); continue; }
     let s: ZodTypeAny = f.type === 'number' ? z.coerce.number().min(f.min ?? 0) : z.string().max(f.max ?? 5000);
     if (f.type === 'select' && f.options?.length) s = z.enum(f.options as [string, ...string[]], { errorMap: () => ({ message: `${f.label} ist erforderlich` }) });
     if (!f.required) s = f.type === 'number' ? z.preprocess((v) => (v === '' || v === undefined ? undefined : v), s.optional()) : z.union([s, z.literal('')]).optional();
@@ -25,6 +26,25 @@ function buildSchema(fields: FieldDef[]) {
     shape[f.name] = s;
   }
   return z.object(shape);
+}
+
+interface ErlcPlayerRow { serverId: string; serverName: string; name: string; team: string | null; location: string | null; plates: string[]; personId: string | null; canMessage: boolean }
+/** Spieler, die gerade im Spiel sind (ER:LC) – Wert „serverId|Name“; die Personenakte wird beim Speichern gefunden oder angelegt. */
+function ErlcPlayerPicker({ id, value, onChange }: { id: string; value: string; onChange: (v: string) => void }) {
+  const q = useQuery({ queryKey: ['tickets-erlc-players'], queryFn: () => api<ErlcPlayerRow[]>('/tickets/erlc-players'), refetchInterval: 15_000, retry: false });
+  const [filter, setFilter] = useState('');
+  const list = (q.data ?? []).filter((p) => !filter || `${p.name} ${p.plates.join(' ')}`.toLowerCase().includes(filter.toLowerCase()));
+  if (q.isError) return <p className="text-xs text-muted">ER:LC nicht erreichbar.</p>;
+  if (q.data && !q.data.length) return <p className="text-xs text-muted">Gerade ist niemand im Spiel (oder ER:LC nicht verbunden).</p>;
+  return (
+    <div className="space-y-1">
+      <Input aria-label="Spieler oder Kennzeichen filtern" placeholder="Name oder Kennzeichen…" value={filter} onChange={(e) => setFilter(e.target.value)} />
+      <Select id={id} value={value} onChange={(e) => onChange(e.target.value)}>
+        <option value="">— keiner (Person oben wählen) —</option>
+        {list.map((p) => <option key={`${p.serverId}|${p.name}`} value={`${p.serverId}|${p.name}`}>🎮 {p.name}{p.plates.length ? ` · 🚗 ${p.plates.join(', ')}` : ''}{p.location ? ` · ${p.location}` : ''}{p.personId ? '' : ' · neue Akte'}</option>)}
+      </Select>
+    </div>
+  );
 }
 
 /** Person suchen (Name oder Roblox-ID). Keine Akte? → Roblox fragen und die Akte mit einem Klick anlegen. */
@@ -115,6 +135,8 @@ export function FormModal({ open, onClose, title, fields, endpoint, method, toBo
             {(id) => f.type === 'textarea' ? <Textarea id={id} {...register(f.name)} />
               : f.type === 'select' ? <Select id={id} {...register(f.name)}><option value="">—</option>{f.options?.map((o) => <option key={o} value={o}>{optionLabel(o)}</option>)}</Select>
               : f.type === 'person' ? <PersonPicker id={id} value={String(watch(f.name) ?? '')} onChange={(v) => setValue(f.name, v, { shouldValidate: true })} />
+              : f.type === 'erlcPlayer' ? <ErlcPlayerPicker id={id} value={String(watch(f.name) ?? '')} onChange={(v) => setValue(f.name, v, { shouldValidate: true })} />
+              : f.type === 'checkbox' ? <label className="flex items-center gap-2 text-sm"><input id={id} type="checkbox" {...register(f.name)} />{f.hint ?? f.label}</label>
               : f.type === 'legalCode' ? <LegalCodePicker id={id} value={String(watch(f.name) ?? '')} onChange={(v) => setValue(f.name, v, { shouldValidate: true })} />
               : <Input id={id} type={f.type === 'number' ? 'number' : f.type === 'password' ? 'password' : f.type === 'datetime' ? 'datetime-local' : f.type === 'date' ? 'date' : 'text'} step={f.type === 'number' ? 'any' : undefined} {...register(f.name)} />}
           </Field>

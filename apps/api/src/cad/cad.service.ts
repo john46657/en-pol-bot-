@@ -107,12 +107,13 @@ export class CadService {
     await tx.cadIncidentLog.create({ data: { incidentId, kind, text: text.slice(0, 2000), unitId: unitId ?? null, authorId: actor.userId, guildId: actor.guildId ?? null } });
   }
 
-  private incidentPayload(cfg: CadConfig, i: { id: string; number: string; title: string; type: string | null; keyword: string | null; priority: string; status: string; location: string | null; description: string | null }, extra: Record<string, unknown> = {}) {
+  private incidentPayload(cfg: CadConfig, i: { id: string; number: string; title: string; type: string | null; keyword: string | null; priority: string; status: string; location: string | null; description: string | null; mapX?: number | null; mapZ?: number | null }, extra: Record<string, unknown> = {}) {
     const prio = cfg.priorities.find((p) => p.key === i.priority);
     return {
       id: i.id, number: i.number, title: i.title, keyword: i.keyword, type: i.type ? this.label(cfg.incidentTypes, i.type) : null,
       priority: this.label(cfg.priorities, i.priority), priorityColor: prio?.color ?? null, status: this.label(cfg.incidentStatuses, i.status),
-      location: i.location, description: i.description?.slice(0, 1000) ?? null, dashboardUrl: webUrl(`/cad/incidents?id=${i.id}`), ...extra,
+      location: i.location, description: i.description?.slice(0, 1000) ?? null, dashboardUrl: webUrl(`/cad/incidents?id=${i.id}`),
+      ...(i.mapX !== null && i.mapX !== undefined && i.mapZ !== null && i.mapZ !== undefined ? { mapUrl: webUrl(`/cad/map?incident=${i.id}`) } : {}), ...extra,
     };
   }
 
@@ -667,7 +668,8 @@ export class CadService {
       const snap = s.snapshot as ErlcSnapshot | null;
       if (!snap?.players) continue;
       const staffNames = snap.staff ? new Set([...snap.staff.admins, ...snap.staff.mods, ...snap.staff.helpers].map((x) => x.name.toLowerCase())) : new Set<string>();
-      for (const p of snap.players) players.push({ ...p, serverId: s.id, staff: (!!p.permission && p.permission !== 'Normal') || staffNames.has(p.name.toLowerCase()) });
+      // Nur Polizei-Leitstelle: Sheriffs erscheinen nicht auf der Karte
+      for (const p of snap.players) if (p.team?.toLowerCase() !== 'sheriff') players.push({ ...p, serverId: s.id, staff: (!!p.permission && p.permission !== 'Normal') || staffNames.has(p.name.toLowerCase()) });
       // GPS nur für Polizeifahrzeuge: ER:LC liefert keine Fahrzeugposition – sie stehen dort, wo ihr Besitzer (Team Police) gerade ist
       const byName = new Map(snap.players.map((p) => [p.name.toLowerCase(), p]));
       for (const v of snap.vehicles ?? []) { const o = byName.get(v.owner.toLowerCase()); if (o?.location && o.team?.toLowerCase() === 'police') vehicles.push({ name: v.name, owner: v.owner, plate: v.plate, colorHex: v.colorHex, x: o.location.x, z: o.location.z, serverId: s.id }); }

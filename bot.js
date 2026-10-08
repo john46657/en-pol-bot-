@@ -82442,7 +82442,10 @@ function cadButtons(type, p) {
     { id: `cad:call:${p.id}:close`, label: "Schlie\xDFen", style: "danger", emoji: "\u2716\uFE0F" },
     ...typeof p.mapUrl === "string" && /^https?:\/\//.test(p.mapUrl) ? [{ id: "map", label: "Auf Karte anzeigen", style: "secondary", url: p.mapUrl }] : []
   ];
-  if (type.startsWith("cad.incident.")) return link.length ? link : void 0;
+  if (type.startsWith("cad.incident.")) {
+    const map = type === "cad.incident.created" && typeof p.mapUrl === "string" && /^https?:\/\//.test(p.mapUrl) ? [{ id: "map", label: "Auf Karte anzeigen", style: "secondary", url: p.mapUrl }] : [];
+    return link.length || map.length ? [...link, ...map] : void 0;
+  }
   return void 0;
 }
 
@@ -83179,7 +83182,8 @@ ${url}`, color: COLORS.info }], buttons: [{ id: "link", label: "Dashboard \xF6ff
     options: [
       { name: "person", description: "Roblox-Name oder -ID", type: "string", required: true, maxLength: 64 },
       { name: "grund", description: "Grund", type: "string", required: true, maxLength: 500 },
-      { name: "betrag", description: "Betrag", type: "number", min: 0, max: 1e6 }
+      { name: "betrag", description: "Betrag", type: "number", min: 0, max: 1e6 },
+      { name: "im_spiel", description: "Spieler im Spiel per Nachricht (ER:LC) Bescheid geben", type: "boolean" }
     ],
     async run(c) {
       const reason = str2(c, "grund");
@@ -83188,8 +83192,9 @@ ${url}`, color: COLORS.info }], buttons: [{ id: "link", label: "Dashboard \xF6ff
         const { person, reply, created } = await resolvePerson(c, str2(c, "person"), { create: true });
         if (!person) return reply;
         const amount = typeof c.opts.betrag === "number" ? c.opts.betrag : void 0;
-        const t = await c.api.asUser(c.discordId, "POST", "/tickets", { personId: person.id, reason, ...amount !== void 0 ? { amount } : {} });
-        return okReply(`Ticket **${t.number}** f\xFCr **${plain(person.robloxUsername)}** ausgestellt.${created ? " Die Person war noch nicht im System und wurde nach Roblox-Pr\xFCfung neu angelegt." : ""}`);
+        const t = await c.api.asUser(c.discordId, "POST", "/tickets", { personId: person.id, reason, ...amount !== void 0 ? { amount } : {}, ...c.opts.im_spiel === true ? { notifyInGame: true } : {} });
+        return okReply(`Strafzettel **${t.number}** f\xFCr **${plain(person.robloxUsername)}** ausgestellt.${created ? " Die Person war noch nicht im System und wurde nach Roblox-Pr\xFCfung neu angelegt." : ""}${t.inGame ? `
+${t.inGame.ok ? "\u{1F3AE}" : "\u26A0\uFE0F"} ${plain(t.inGame.message)}` : ""}`);
       } catch (e) {
         return mapError(e);
       }

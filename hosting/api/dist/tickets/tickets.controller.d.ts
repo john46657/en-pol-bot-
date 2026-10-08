@@ -2,7 +2,18 @@ import { z } from 'zod';
 import { TicketsService } from './tickets.service';
 import type { Actor } from '../audit/audit.service';
 declare const create: z.ZodObject<{
-    personId: z.ZodString;
+    personId: z.ZodOptional<z.ZodString>;
+    erlcPlayer: z.ZodOptional<z.ZodObject<{
+        serverId: z.ZodString;
+        name: z.ZodString;
+    }, "strip", z.ZodTypeAny, {
+        name: string;
+        serverId: string;
+    }, {
+        name: string;
+        serverId: string;
+    }>>;
+    notifyInGame: z.ZodOptional<z.ZodBoolean>;
     legalCodeId: z.ZodOptional<z.ZodString>;
     reason: z.ZodString;
     amount: z.ZodOptional<z.ZodNumber>;
@@ -10,18 +21,28 @@ declare const create: z.ZodObject<{
     reportId: z.ZodOptional<z.ZodString>;
 }, "strip", z.ZodTypeAny, {
     reason: string;
-    personId: string;
     notes?: string | undefined;
+    personId?: string | undefined;
     legalCodeId?: string | undefined;
     amount?: number | undefined;
     reportId?: string | undefined;
+    erlcPlayer?: {
+        name: string;
+        serverId: string;
+    } | undefined;
+    notifyInGame?: boolean | undefined;
 }, {
     reason: string;
-    personId: string;
     notes?: string | undefined;
+    personId?: string | undefined;
     legalCodeId?: string | undefined;
     amount?: number | undefined;
     reportId?: string | undefined;
+    erlcPlayer?: {
+        name: string;
+        serverId: string;
+    } | undefined;
+    notifyInGame?: boolean | undefined;
 }>;
 declare const voidSchema: z.ZodObject<{
     reason: z.ZodString;
@@ -77,6 +98,18 @@ export declare class TicketsController {
         page: number;
         pageSize: number;
     }>;
+    /** Spieler im Spiel (ER:LC) für „Strafzettel an Spieler im Spiel“. */
+    erlcPlayers(): Promise<{
+        serverId: string;
+        serverName: string;
+        name: string;
+        robloxUserId: string | null;
+        team: string | null;
+        location: string | null;
+        plates: string[];
+        personId: string | null;
+        canMessage: boolean;
+    }[]>;
     get(id: string): Promise<{
         ticket: {
             person: {
@@ -132,6 +165,10 @@ export declare class TicketsController {
         }[];
     }>;
     create(a: Actor, b: z.infer<typeof create>): Promise<{
+        inGame: {
+            ok: boolean;
+            message: string;
+        } | null;
         number: string;
         id: string;
         reason: string;

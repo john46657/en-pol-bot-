@@ -11,10 +11,11 @@ const common_1 = require("@nestjs/common");
 const tickets_controller_1 = require("./tickets.controller");
 const tickets_service_1 = require("./tickets.service");
 const legal_codes_controller_1 = require("../legal-codes/legal-codes.controller");
+const cad_module_1 = require("../cad/cad.module");
 let TicketsModule = class TicketsModule {
 };
 exports.TicketsModule = TicketsModule;
 exports.TicketsModule = TicketsModule = __decorate([
-    (0, common_1.Module)({ controllers: [tickets_controller_1.TicketsController, legal_codes_controller_1.LegalCodesController], providers: [tickets_service_1.TicketsService] })
+    (0, common_1.Module)({ imports: [cad_module_1.CadModule], controllers: [tickets_controller_1.TicketsController, legal_codes_controller_1.LegalCodesController], providers: [tickets_service_1.TicketsService] })
 ], TicketsModule);
 //# sourceMappingURL=tickets.module.js.map

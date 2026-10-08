@@ -256,14 +256,25 @@ export class ErlcService {
   /** Notrufe übernehmen (idempotent je Server + Notrufnummer + Startzeit). Neue Notrufe → CAD + Discord. */
   async syncCalls(s: Pick<ErlcServer, 'id' | 'name' | 'guildId'>, calls: NonNullable<ErlcSnapshot['emergencyCalls']>, source: 'API' | 'WEBHOOK') {
     let created = 0;
+    // Ohne Position im Notruf: Standort des Anrufers im Spiel (letzter Abruf) nehmen – einmal je Durchlauf laden
+    let players: ErlcPlayer[] | null = null;
+    const callerPos = async (callerId: string | null) => {
+      if (!callerId) return null;
+      players ??= ((await this.prisma.erlcServer.findUnique({ where: { id: s.id }, select: { snapshot: true } }))?.snapshot as ErlcSnapshot | null)?.players ?? [];
+      return players.find((p) => p.id === callerId)?.location ?? null;
+    };
     for (const c of calls) {
       if (!c.callNumber || !c.startedAt) continue;
+      // Nur Notrufe an die Polizei (Sheriff, Feuerwehr, DOT gehören nicht in diese Leitstelle)
+      if (c.team && c.team.toLowerCase() !== 'police') continue;
       const startedAt = new Date(c.startedAt * 1000);
       // gleiche Notrufnummer kurz zuvor/danach (Webhook ohne exakte Startzeit, danach der normale Abruf) = derselbe Notruf
       const exists = await this.prisma.erlcEmergencyCall.findFirst({ where: { serverId: s.id, callNumber: c.callNumber, startedAt: { gte: new Date(startedAt.getTime() - 30 * 60_000), lte: new Date(startedAt.getTime() + 30 * 60_000) } } });
       if (exists) continue;
       try {
-        const row = await this.prisma.erlcEmergencyCall.create({ data: { serverId: s.id, callNumber: c.callNumber, team: c.team, callerRobloxId: c.caller, description: c.description, positionDescriptor: c.positionDescriptor, mapX: c.x, mapZ: c.z, startedAt, source } });
+        const fb = c.x === null || c.z === null ? await callerPos(c.caller) : null;
+        const where = c.positionDescriptor ?? (fb ? [fb.street, fb.postal && `PLZ ${fb.postal}`].filter(Boolean).join(' · ') || null : null);
+        const row = await this.prisma.erlcEmergencyCall.create({ data: { serverId: s.id, callNumber: c.callNumber, team: c.team, callerRobloxId: c.caller, description: c.description, positionDescriptor: where, mapX: c.x ?? fb?.x ?? null, mapZ: c.z ?? fb?.z ?? null, startedAt, source } });
         created++;
         await this.notify.emit('call.received', { id: row.id, callNumber: row.callNumber, team: row.team, description: row.description, location: row.positionDescriptor, server: s.name, startedAt: row.startedAt.toISOString(), mapUrl: webUrl(`/cad/map?call=${row.id}`), dashboardUrl: webUrl(`/cad/calls?id=${row.id}`) }, s.guildId);
       } catch (e) {

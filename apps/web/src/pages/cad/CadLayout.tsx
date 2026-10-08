@@ -3,7 +3,8 @@ import { Link, NavLink, Outlet, useNavigate } from 'react-router';
 import { useQuery } from '@tanstack/react-query';
 import { api } from '../../lib/api';
 import { useAuth } from '../../lib/auth';
-import { useCadLive, useCadPrefs, type CadOverview } from '../../lib/cad';
+import { useCadConfig, useCadLive, useCadPrefs, type CadMapData, type CadOverview } from '../../lib/cad';
+import { MiniMap } from './MiniMap';
 import { onRealtime } from '../../lib/realtime';
 import { Input } from '../../components/ui';
 
@@ -98,30 +99,52 @@ function beep() {
   } catch { /* kein Audio verfügbar */ }
 }
 
-/** Neuer ER:LC-Notruf → Hinweis (und Ton, abschaltbar) für alle, die gerade im CAD sind. */
+/** Neuer ER:LC-Notruf oder neuer Einsatz → Hinweis mit Kartenausschnitt (und Ton, abschaltbar) für alle, die gerade im CAD sind. */
 function CallAlert() {
   const { cad, set } = useCadPrefs();
-  const [alerts, setAlerts] = useState<{ id: string; at: number }[]>([]);
+  const { cfg } = useCadConfig();
+  const [alerts, setAlerts] = useState<{ kind: 'call' | 'incident'; id: string; at: number }[]>([]);
   const sound = cad.sound !== false;
-  useEffect(() => onRealtime('cad.call.received', (p) => {
-    const id = String((p as { id?: unknown })?.id ?? '');
-    if (!id) return;
-    if (sound) beep();
-    setAlerts((a) => [...a.filter((x) => x.id !== id).slice(-2), { id, at: Date.now() }]);
-    setTimeout(() => setAlerts((a) => a.filter((x) => x.id !== id)), 20_000);
-  }), [sound]);
+  useEffect(() => {
+    const add = (kind: 'call' | 'incident') => (p: unknown) => {
+      const id = String((p as { id?: unknown })?.id ?? '');
+      if (!id) return;
+      if (sound) beep();
+      setAlerts((a) => [...a.filter((x) => x.id !== id).slice(-2), { kind, id, at: Date.now() }]);
+      setTimeout(() => setAlerts((a) => a.filter((x) => x.id !== id)), 30_000);
+    };
+    const offCall = onRealtime('cad.call.received', add('call'));
+    const offInc = onRealtime('cad.incident.created', add('incident'));
+    return () => { offCall(); offInc(); };
+  }, [sound]);
+  // Position und Ort der gemeldeten Notrufe/Einsätze (Kartendaten werden nur geladen, solange ein Hinweis offen ist)
+  const map = useQuery({ queryKey: ['cad-map'], queryFn: () => api<CadMapData>('/cad/map'), enabled: alerts.length > 0, refetchInterval: alerts.length ? 3_000 : false });
   if (!alerts.length) return null;
+  const close = (id: string) => setAlerts((x) => x.filter((y) => y.id !== id));
   return (
     <div className="fixed top-16 left-1/2 z-50 grid w-96 max-w-[calc(100vw-2rem)] -translate-x-1/2 gap-2" role="alert">
-      {alerts.map((a) => (
-        <div key={a.id} className="flex items-center gap-2 rounded-lg border border-danger/50 bg-danger/90 p-3 text-sm text-white shadow-xl">
-          <span className="animate-pulse text-lg" aria-hidden>🚨</span>
-          <span className="flex-1">Neuer ER:LC-Notruf eingegangen</span>
-          <Link className="rounded bg-white/20 px-2 py-0.5 hover:bg-white/30" to={`/cad/calls?id=${a.id}`} onClick={() => setAlerts((x) => x.filter((y) => y.id !== a.id))}>Öffnen</Link>
-          <Link className="rounded bg-white/20 px-2 py-0.5 hover:bg-white/30" to={`/cad/map?call=${a.id}`}>Karte</Link>
-          <button type="button" aria-label={sound ? 'Ton aus' : 'Ton an'} title={sound ? 'Ton aus' : 'Ton an'} onClick={() => set({ sound: !sound })}>{sound ? '🔔' : '🔕'}</button>
-        </div>
-      ))}
+      {alerts.map((a) => {
+        const call = a.kind === 'call' ? map.data?.calls.find((c) => c.id === a.id) : undefined;
+        const inc = a.kind === 'incident' ? map.data?.incidents.find((i) => i.id === a.id) : undefined;
+        const pos = call && call.mapX !== null && call.mapZ !== null ? { x: call.mapX, z: call.mapZ } : inc && inc.mapX !== null && inc.mapZ !== null ? { x: inc.mapX, z: inc.mapZ } : null;
+        const title = a.kind === 'call' ? `🚨 Notruf${call ? ` #${call.callNumber}` : ''}${call?.description ? ` · ${call.description}` : ''}` : `📋 Neuer Einsatz${inc ? ` ${inc.number} · ${inc.title}` : ''}`;
+        const where = call?.positionDescriptor ?? inc?.location ?? null;
+        const mapTo = `/cad/map?${a.kind === 'call' ? 'call' : 'incident'}=${a.id}`;
+        return (
+          <div key={a.id} className={`space-y-2 rounded-lg border p-3 text-sm text-white shadow-xl ${a.kind === 'call' ? 'border-danger/50 bg-danger/90' : 'border-warning/50 bg-[#7c2d12]/95'}`}>
+            <div className="flex items-center gap-2">
+              <span className="min-w-0 flex-1"><b className="block truncate">{title}</b>{where && <span className="block truncate text-xs opacity-90">📍 {where}</span>}</span>
+              <button type="button" aria-label={sound ? 'Ton aus' : 'Ton an'} title={sound ? 'Ton aus' : 'Ton an'} onClick={() => set({ sound: !sound })}>{sound ? '🔔' : '🔕'}</button>
+              <button type="button" aria-label="Hinweis schließen" className="px-1" onClick={() => close(a.id)}>✕</button>
+            </div>
+            {pos ? <MiniMap cfg={cfg} x={pos.x} z={pos.z} to={mapTo} height={120} emoji={a.kind === 'call' ? '🚨' : '📋'} /> : map.isFetched && <p className="text-xs opacity-90">Keine Kartenposition gemeldet.</p>}
+            <div className="flex gap-1">
+              <Link className="rounded bg-white/20 px-2 py-0.5 hover:bg-white/30" to={a.kind === 'call' ? `/cad/calls?id=${a.id}` : `/cad/incidents?id=${a.id}`} onClick={() => close(a.id)}>Öffnen</Link>
+              {pos && <Link className="rounded bg-white/20 px-2 py-0.5 hover:bg-white/30" to={mapTo} onClick={() => close(a.id)}>🗺️ Karte</Link>}
+            </div>
+          </div>
+        );
+      })}
     </div>
   );
 }

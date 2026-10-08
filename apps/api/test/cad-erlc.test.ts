@@ -364,3 +364,20 @@ describe('CAD – Tablet', () => {
     expect(t.inGameWanted).toEqual(expect.arrayContaining([expect.objectContaining({ name: 'Driver', stars: 2 })]));
   });
 });
+
+describe('Strafzettel direkt aus ER:LC', () => {
+  it('listet Spieler im Spiel ohne Polizei und stellt einen Strafzettel per Spieler aus (Akte wird gefunden/angelegt)', async () => {
+    const admin = (await login(app, 'cad_admin')).agent;
+    const list = (await admin.get('/api/v1/tickets/erlc-players')).body as { serverId: string; name: string; personId: string | null }[];
+    const names = list.map((p) => p.name);
+    expect(names).toContain('Driver');
+    expect(names).not.toContain('MaxMustermann123');
+    const driver = list.find((p) => p.name === 'Driver')!;
+    const r = await admin.post('/api/v1/tickets').send({ erlcPlayer: { serverId: driver.serverId, name: 'Driver' }, reason: 'Zu schnell gefahren', amount: 500 });
+    expect(r.status).toBe(201);
+    expect(r.body).toMatchObject({ status: 'ISSUED', inGame: null });
+    const person = await prisma.person.findUnique({ where: { id: r.body.personId } });
+    expect(person?.robloxUserId).toBe('333');
+    expect((await admin.post('/api/v1/tickets').send({ reason: 'ohne Person' })).status).toBe(400);
+  });
+});
