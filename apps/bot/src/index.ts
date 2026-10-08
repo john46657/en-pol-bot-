@@ -22,6 +22,7 @@ import type { DiscordConfig, Platform } from './platform';
 import { robloxCheck, robloxLookup } from './roblox';
 import { createWelcome, type MemberEvent } from './welcome';
 import { createGhostPing } from './ghost-ping';
+import { captureGuild, restoreGuild } from './backup';
 import { createVoiceSupport } from './voice-support';
 import { createVerify, type VerifyActions } from './verify';
 import { dutyReminderDm } from './format';
@@ -594,6 +595,22 @@ function wireReady(client0: Client) {
           if (m && m.id !== g.ownerId && (await m.setNickname(nick, 'EN Polizei: Dienstnummer').then(() => true, () => false))) done++;
         }
         if (!done) console.warn(`nickname for ${userId} could not be set (missing permission, owner or not on a server)`);
+        return true;
+      }
+      if (type === 'bot.backup.create') {
+        // Discord-Server-Backup: Server auslesen und ans System schicken (Fehler landen am Backup, nicht in der Warteschlange)
+        const id = String(p.backupId ?? '');
+        try { await api.service('POST', `/bot/discord-backups/${id}/data`, { data: await captureGuild(await client.guilds.fetch(String(p.guildId ?? ''))) }); }
+        catch (e) { await api.service('POST', `/bot/discord-backups/${id}/data`, { error: e instanceof Error ? e.message : String(e) }); }
+        return true;
+      }
+      if (type === 'bot.backup.restore') {
+        const id = String(p.backupId ?? '');
+        const b = await api.service<{ data: Parameters<typeof restoreGuild>[1] | null }>('GET', `/bot/discord-backups/${id}`);
+        if (!b.data) throw new Error('backup has no data');
+        const parts = (Array.isArray(p.parts) ? p.parts : []).filter((x): x is 'roles' | 'channels' | 'settings' => x === 'roles' || x === 'channels' || x === 'settings');
+        const result = await restoreGuild(await client.guilds.fetch(String(p.guildId ?? '')), b.data, parts);
+        await api.service('POST', `/bot/discord-backups/${id}/result`, result);
         return true;
       }
       if (type === 'bot.welcome-test') {
