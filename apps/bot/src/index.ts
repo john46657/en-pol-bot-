@@ -21,6 +21,7 @@ import { startOutboxLoop } from './outbox';
 import type { DiscordConfig, Platform } from './platform';
 import { robloxCheck, robloxLookup } from './roblox';
 import { createWelcome, type MemberEvent } from './welcome';
+import { createGhostPing } from './ghost-ping';
 import { createVoiceSupport } from './voice-support';
 import { createVerify, type VerifyActions } from './verify';
 import { dutyReminderDm } from './format';
@@ -163,6 +164,14 @@ const welcome = createWelcome(api, {
     const guild = await client.guilds.fetch(guildId);
     const ids = roleIds.filter((r) => guild.roles.cache.has(r));
     if (ids.length) await (await guild.members.fetch(userId)).roles.add(ids, 'EN Polizei: Willkommen');
+  },
+});
+/** Ghost-Ping: gelöschte Nachricht mit @Erwähnung → Hinweis im selben Kanal (nur die Erwähnten werden benachrichtigt). */
+const ghostPing = createGhostPing(api, {
+  async post(channelId, m) {
+    const ch = await client.channels.fetch(channelId);
+    if (!ch?.isSendable()) throw new Error(`channel ${channelId} is not a text channel the bot can post in`);
+    await ch.send({ content: m.content, allowedMentions: { parse: [], users: m.mentionUserIds } });
   },
 });
 /** Roblox-Verifizierung: Rollen und Nickname setzen (nur was nötig ist); liefert verständliche Hinweise, was nicht ging. */
@@ -416,6 +425,12 @@ function wire(c: Client) {
   c.on('guildMemberRemove', (m) => { staffLists.changed(); const e = memberEvent(m); if (e) void welcome.left(e).catch((x) => console.error('member leave failed:', x instanceof Error ? x.message : x)); });
   // Staff-Listen: Rollen oder Name geändert → neu zeichnen (gesammelt)
   c.on('guildMemberUpdate', (o, n) => { if (o.roles.cache.size !== n.roles.cache.size || o.displayName !== n.displayName || ![...o.roles.cache.keys()].every((r) => n.roles.cache.has(r))) staffLists.changed(); });
+
+  // Ghost-Ping: nur Nachrichten aus dem Cache (Erwähnungen bekannt); Teil-Nachrichten ohne Daten werden übergangen
+  c.on('messageDelete', (m) => {
+    if (m.partial || !m.inGuild() || !m.author) return;
+    void ghostPing.deleted({ guildId: m.guildId, channelId: m.channelId, authorId: m.author.id, authorBot: m.author.bot, content: m.content ?? '', createdAt: m.createdAt, mentions: [...m.mentions.users.values()].map((u) => ({ id: u.id, bot: u.bot })) });
+  });
 
   // Direktnachrichten: Antworten auf Bewerbungsfragen (Bewerbung bei EN Polizei und Qualifikationen)
   c.on('messageCreate', (m: Message) => {
