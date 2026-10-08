@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { DEFAULT_WELCOME_CONFIG, hexColor, renderWelcomeText, WELCOME_VARIABLES, type WelcomeConfig, type WelcomeMessageDef } from '@enrp/shared';
 import { useAutosaveDraft } from '../../lib/autosave';
@@ -54,7 +54,7 @@ function BannerPicker({ label, value, onChange, disabled, guildId }: { label: st
 }
 
 /** Eine Nachricht (Willkommen oder Abschied) mit Kanal, Texten, Farbe und Vorschau. */
-function MessageEditor({ label, value, onChange, disabled, server, guildId }: { label: string; value: WelcomeMessageDef; onChange: (v: WelcomeMessageDef) => void; disabled: boolean; server: string; guildId: string }) {
+function MessageEditor({ label, value, onChange, disabled, server, guildId, test }: { label: string; value: WelcomeMessageDef; onChange: (v: WelcomeMessageDef) => void; disabled: boolean; server: string; guildId: string; test?: ReactNode }) {
   const set = (p: Partial<WelcomeMessageDef>) => onChange({ ...value, ...p });
   const preview = useMediaPreview(value.imageMediaId);
   return (
@@ -73,6 +73,7 @@ function MessageEditor({ label, value, onChange, disabled, server, guildId }: { 
           <label className="grid gap-1 text-sm">Nachricht<Textarea aria-label={`${label}: Nachricht`} disabled={disabled} rows={5} maxLength={4000} value={value.message} onChange={(e) => set({ message: e.target.value })} /></label>
           <BannerPicker label={label} value={value} onChange={set} disabled={disabled} guildId={guildId} />
           <label className="flex items-center gap-2 text-sm">Farbe<input type="color" aria-label={`${label}: Farbe`} disabled={disabled} value={value.color} onChange={(e) => set({ color: e.target.value })} className="h-8 w-12 rounded border border-line bg-transparent" /></label>
+          {test}
         </div>
         <DiscordPreview message={{ content: value.pingUser ? '@Max' : undefined, embeds: [{ title: sample(value.title, server), description: sample(value.message, server), color: hexColor(value.color), image: preview ?? (value.image || undefined) }] }} />
       </div>
@@ -96,12 +97,25 @@ export function WelcomeSettings() {
   const valid = (c: Cfg) => (!c.welcome.enabled || !!c.welcome.channelId) && (!c.goodbye.enabled || !!c.goodbye.channelId) && url(c.welcome.image) && url(c.goodbye.image);
   const save = useMutation({ mutationFn: (c: Cfg) => api<Cfg>('/welcome/config', { method: 'PUT', body: body(c) }), onSuccess: (r) => qc.setQueryData(key, r) });
   const reset = useMutation({ mutationFn: () => api<Cfg>('/welcome/config', { method: 'DELETE' }), onSuccess: (r) => { qc.setQueryData(key, r); setCfg(r); } });
+  // Test-Nachricht: erst den aktuellen Stand speichern, dann schickt der Bot die Nachricht mit deinem Profil
+  const [tested, setTested] = useState<{ kind: string; ok: boolean; text: string }>();
+  const test = useMutation({
+    mutationFn: async (kind: 'welcome' | 'goodbye' | 'dm') => { if (cfg && valid(cfg) && JSON.stringify(cfg) !== JSON.stringify(q.data)) await save.mutateAsync(cfg); return api('/welcome/test', { method: 'POST', body: { kind } }); },
+    onSuccess: (_r, kind) => setTested({ kind, ok: true, text: kind === 'dm' ? 'Test-DM ist unterwegs – schau in deine Direktnachrichten.' : 'Test-Nachricht ist unterwegs – schau in den Kanal (dauert ein paar Sekunden).' }),
+    onError: (e, kind) => setTested({ kind, ok: false, text: errText(e) }),
+  });
   useAutosaveDraft(manage ? `welcome:${server || 'all'}` : null, cfg, (c) => (valid(c) ? { method: 'PUT', path: '/welcome/config', body: body(c), label: 'Willkommen & Abschied' } : null));
   if (q.error) return <ErrorState error={q.error} onRetry={() => void q.refetch()} />;
   if (!cfg) return <SkeletonRows />;
   const set = (p: Partial<Cfg>) => setCfg({ ...cfg, ...p });
   const serverName = guildName(guilds.data, server) ?? 'EN Polizei';
   const dirty = JSON.stringify(cfg) !== JSON.stringify(q.data);
+  const testButton = (kind: 'welcome' | 'goodbye' | 'dm', can: boolean) => manage && (
+    <div className="flex flex-wrap items-center gap-2">
+      <Button size="sm" variant="secondary" disabled={!server || !can || test.isPending} title={!server ? 'Oben links einen Server wählen' : undefined} onClick={() => test.mutate(kind)}>🧪 Test senden</Button>
+      {!server ? <span className="text-xs text-muted">Oben links einen Server wählen.</span> : tested?.kind === kind && <span role={tested.ok ? 'status' : 'alert'} className={`text-xs ${tested.ok ? 'text-success' : 'text-danger'}`}>{tested.text}</span>}
+    </div>
+  );
   return (
     <>
       <PageHeader title="Willkommen & Abschied" subtitle="Nachrichten, wenn jemand dem Discord-Server beitritt oder ihn verlässt, eine Willkommens-DM und automatische Rollen." />
@@ -111,17 +125,18 @@ export function WelcomeSettings() {
         {server && cfg.own && manage && <Button size="sm" variant="ghost" className="ml-2" disabled={reset.isPending} onClick={() => reset.mutate()}>Gemeinsame Einstellungen nutzen</Button>}
       </p>
       <div className="grid gap-4">
-        <MessageEditor label="Willkommensnachricht" value={cfg.welcome} onChange={(v) => set({ welcome: v })} disabled={!manage} server={serverName} guildId={server} />
+        <MessageEditor label="Willkommensnachricht" value={cfg.welcome} onChange={(v) => set({ welcome: v })} disabled={!manage} server={serverName} guildId={server} test={testButton('welcome', !!cfg.welcome.channelId)} />
         <Card title="Willkommens-DM & automatische Rollen">
           <div className="grid gap-3 md:grid-cols-2">
             <Box title="Direktnachricht" desc="Geht privat an neue Mitglieder (nur wenn sie DMs erlauben).">
               <div className="flex items-center gap-2"><Toggle label="Willkommens-DM aktiv" checked={cfg.dm.enabled} onChange={(v) => set({ dm: { ...cfg.dm, enabled: v } })} /><span className="text-sm">{cfg.dm.enabled ? 'An' : 'Aus'}</span></div>
               <Textarea aria-label="Willkommens-DM" disabled={!manage} rows={4} maxLength={2000} value={cfg.dm.message} onChange={(e) => set({ dm: { ...cfg.dm, message: e.target.value } })} />
+              {testButton('dm', !!cfg.dm.message.trim())}
             </Box>
             <Box title={`Automatische Rollen: ${cfg.autoRoleIds.length}`} desc="Bekommt jedes neue Mitglied (keine Bots). Die Bot-Rolle muss über diesen Rollen stehen."><RolePicker ariaLabel="Automatische Rollen" disabled={!manage} max={10} value={cfg.autoRoleIds} onChange={(ids) => set({ autoRoleIds: ids })} /></Box>
           </div>
         </Card>
-        <MessageEditor label="Abschiedsnachricht" value={cfg.goodbye} onChange={(v) => set({ goodbye: v })} disabled={!manage} server={serverName} guildId={server} />
+        <MessageEditor label="Abschiedsnachricht" value={cfg.goodbye} onChange={(v) => set({ goodbye: v })} disabled={!manage} server={serverName} guildId={server} test={testButton('goodbye', !!cfg.goodbye.channelId)} />
         <Card title="Platzhalter">
           <ul className="grid gap-1 text-sm md:grid-cols-2">{Object.entries(WELCOME_VARIABLES).map(([k, v]) => <li key={k}><code className="text-primary">{k}</code> <span className="text-muted">{v}</span></li>)}</ul>
           <p className="mt-3 text-xs text-muted">Verlässt jemand den Server, werden offene Bewerbungen nach <b>Aktion beim Verlassen</b> (Qualifikationen → Einrichtung) und offene Support-Tickets nach Tickets → Allgemein behandelt.</p>

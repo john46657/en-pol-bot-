@@ -31,6 +31,25 @@ afterAll(async () => {
 });
 
 describe('welcome & goodbye settings', () => {
+  it('test message: needs a server, a linked Discord account and a channel; queues a bot task', async () => {
+    const admin = (await login(app, 'wel_admin')).agent;
+    expect((await admin.post('/api/v1/welcome/test').send({ kind: 'welcome' })).status).toBe(400); // kein Server
+    expect((await admin.post(`/api/v1/welcome/test?guildId=${GUILD}`).send({ kind: 'welcome' })).body.message).toMatch(/Discord/); // nicht verknüpft
+    const u = await prisma.user.findUniqueOrThrow({ where: { username: 'wel_admin' } });
+    await prisma.discordLink.upsert({ where: { userId: u.id }, create: { userId: u.id, discordId: '330000000000000001' }, update: {} });
+    expect((await admin.post(`/api/v1/welcome/test?guildId=${GUILD}`).send({ kind: 'goodbye' })).body.message).toMatch(/Kanal/);
+    const cur = (await admin.get(`/api/v1/welcome/config?guildId=${GUILD}`)).body;
+    delete cur.own;
+    expect((await admin.put(`/api/v1/welcome/config?guildId=${GUILD}`).send({ ...cur, welcome: { ...cur.welcome, channelId: CH } })).status).toBe(200);
+    expect((await admin.post(`/api/v1/welcome/test?guildId=${GUILD}`).send({ kind: 'welcome' })).status).toBe(200);
+    const task = await prisma.discordOutbox.findFirstOrThrow({ where: { type: 'bot.welcome-test', createdAt: { gte: started } } });
+    expect(task.payload).toEqual({ guildId: GUILD, discordId: '330000000000000001', kind: 'welcome' });
+    const off = (await login(app, 'wel_off')).agent;
+    expect((await off.post(`/api/v1/welcome/test?guildId=${GUILD}`).send({ kind: 'welcome' })).status).toBe(403);
+    await prisma.discordLink.delete({ where: { userId: u.id } });
+    await prisma.systemSetting.deleteMany({ where: { key: `welcome.config@${GUILD}` } });
+  });
+
   it('per server with fallback to the shared settings; validated; only settings.manage saves', async () => {
     const admin = (await login(app, 'wel_admin')).agent;
     const off = (await login(app, 'wel_off')).agent;

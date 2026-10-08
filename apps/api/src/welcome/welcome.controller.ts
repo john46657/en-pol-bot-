@@ -23,6 +23,9 @@ export class WelcomeController {
   config(@Query(zodBody(guildQ)) q: z.infer<typeof guildQ>) { return this.s.config(q.guildId ?? currentGuild()); }
   @Put('config') @RequirePermission('settings.manage')
   save(@CurrentActor() a: Actor, @Query(zodBody(guildQ)) q: z.infer<typeof guildQ>, @Body(zodBody(welcomeConfigSchema)) b: WelcomeConfig) { return this.s.save(a, b, q.guildId ?? currentGuild()); }
+  /** Test-Nachricht in Discord (gespeicherte Einstellungen, dein Profil als Beispiel-Mitglied). */
+  @Post('test') @HttpCode(200) @RequirePermission('settings.manage')
+  test(@CurrentActor() a: Actor, @Query(zodBody(guildQ)) q: z.infer<typeof guildQ>, @Body(zodBody(z.object({ kind: z.enum(['welcome', 'goodbye', 'dm']) }))) b: { kind: 'welcome' | 'goodbye' | 'dm' }) { return this.s.test(a, q.guildId ?? currentGuild(), b.kind); }
   @Delete('config') @RequirePermission('settings.manage')
   reset(@CurrentActor() a: Actor, @Query(zodBody(guildQ)) q: z.infer<typeof guildQ>) {
     const g = q.guildId ?? currentGuild();

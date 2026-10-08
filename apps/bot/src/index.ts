@@ -596,6 +596,15 @@ function wireReady(client0: Client) {
         if (!done) console.warn(`nickname for ${userId} could not be set (missing permission, owner or not on a server)`);
         return true;
       }
+      if (type === 'bot.welcome-test') {
+        // Test aus dem Dashboard (Willkommen & Abschied): mit dem Profil der Person, die getestet hat
+        const kind = p.kind === 'goodbye' || p.kind === 'dm' ? p.kind : 'welcome';
+        const guild = await client.guilds.fetch(String(p.guildId ?? ''));
+        const e = memberEvent(await guild.members.fetch(String(p.discordId ?? '')));
+        if (!e) throw new Error('member not found');
+        await welcome.test(kind, e);
+        return true;
+      }
       if (type === 'bot.delete') { await deleteMessage(client, String(p.channelId ?? ''), String(p.messageId ?? '')); return true; }
       if (type === 'message.post') {
         // Allgemein (Funk-Codes, Staff-Liste, Panels, Berichte …): gemerkte Nachricht bearbeiten oder neu senden

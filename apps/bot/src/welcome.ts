@@ -69,6 +69,14 @@ export function createWelcome(api: Api, actions: WelcomeActions, log: (m: string
         step('member-left actions', api.service('POST', '/bot/member-left', { guildId: m.guildId, discordId: m.id })),
       ]);
     },
+    /** Test aus dem Dashboard: Nachricht bzw. DM wie beim echten Beitritt/Austritt – auch wenn sie ausgeschaltet ist, ohne Rollen/Aktionen. */
+    async test(kind: 'welcome' | 'goodbye' | 'dm', m: MemberEvent) {
+      cache.delete(m.guildId); // gerade gespeicherte Einstellungen verwenden
+      const cfg = await config(m.guildId);
+      if (kind === 'dm') { await actions.dm(m.id, renderWelcomeText(cfg.dm.message, m).slice(0, 2000)); return; }
+      if (!cfg[kind].channelId) throw new Error('no channel configured');
+      await say({ ...cfg[kind], enabled: true }, m);
+    },
     /** Nach dem Speichern im Dashboard nicht 30 s warten müssen (Tests). */
     clear() { cache.clear(); },
   };

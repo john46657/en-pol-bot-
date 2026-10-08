@@ -40,6 +40,13 @@ describe('member join / leave', () => {
     await w.joined(member());
     expect(done).toEqual(expect.arrayContaining([expect.stringMatching(new RegExp(`^post ${CH} <@${USER}> 👋 Willkommen auf EN Polizei!`)), `dm ${USER} Willkommen max`, `roles ${GUILD} ${USER} ${ROLE}`]));
   });
+  it('test from the dashboard: sends the message even when switched off, but no roles', async () => {
+    const { w, done } = setup({ welcome: { ...DEFAULT_WELCOME_CONFIG.welcome, enabled: false, channelId: CH }, dm: { enabled: false, message: 'Hallo {username}' }, autoRoleIds: [ROLE] });
+    await w.test('welcome', member());
+    await w.test('dm', member());
+    expect(done).toEqual([expect.stringMatching(new RegExp(`^post ${CH} <@${USER}> 👋 Willkommen auf EN Polizei!`)), `dm ${USER} Hallo max`]);
+    await expect(w.test('goodbye', member())).rejects.toThrow('no channel');
+  });
   it('does nothing for bots or when everything is off', async () => {
     const a = setup({ autoRoleIds: [ROLE] });
     await a.w.joined(member({ bot: true }));
