@@ -93,7 +93,7 @@ function Tile({ label, value, hint, to, tone = 'success' }: { label: string; val
 }
 
 /**
- * Einrichtungs-Assistent für Administratoren: prüft die Schritte nach dem Update (Leitstellen-Server, Karte, ER:LC,
+ * Einrichtungs-Assistent für Administratoren: prüft die Schritte nach dem Update (Leitstellen-Server, ER:LC,
  * Einheiten, Zuordnungen, Discord-Kanäle, Server-Verbindung) und führt direkt zur passenden Einstellung.
  * Verschwindet, sobald alles erledigt ist (oder wenn man ihn ausblendet).
  */
@@ -107,7 +107,6 @@ function SetupChecklist({ d }: { d: CadOverview }) {
   const cfg = d.config;
   const steps = [
     { done: !!cfg.homeGuildId, text: 'Discord-Server der Leitstelle auswählen', to: '/cad/settings?tab=Allgemein', hint: 'Einstellungen → Allgemein', perm: 'cad.manage_settings' },
-    { done: !!cfg.map.imageUrl, text: 'ER:LC-Karte hochladen', to: '/cad/settings?tab=Karte+%26+Ebenen', hint: 'Einstellungen → Karte & Ebenen', perm: 'cad.manage_map' },
     { done: d.erlc.length > 0, text: 'ER:LC-Server mit Server-Key verbinden', to: '/cad/settings?tab=ER%3ALC+Integration', hint: 'Einstellungen → ER:LC Integration', perm: 'cad.manage_erlc' },
     { done: d.erlc.some((s) => s.status === 'CONNECTED'), text: 'ER:LC-Verbindung erfolgreich getestet', to: '/cad/settings?tab=ER%3ALC+Integration', hint: '„Verbindung testen“ – Status 🟢 Verbunden', perm: 'cad.manage_erlc' },
     { done: d.units.length > 0, text: 'Einheiten anlegen (z. B. SEK-01, K9-01)', to: '/cad/units', hint: 'Einheiten → Neue Einheit', perm: 'cad.manage_units' },

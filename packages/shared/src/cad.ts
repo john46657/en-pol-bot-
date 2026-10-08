@@ -63,6 +63,8 @@ export const CAD_WIDGET_LABELS: Record<string, string> = {
 
 /** Offizielle ER:LC-Kartenbilder sind 5355 × 5355 px, Spielkoordinate (0,0) liegt in der Mitte. */
 export const ERLC_MAP_SIZE = 5355;
+/** Mitgelieferte ER:LC-Karte (Stand 26.09.2026, 4096 px, als 5355 × 5355 dargestellt) – gilt ohne eigenes Kartenbild oder wenn es nicht lädt. */
+export const ERLC_BUILTIN_MAP = '/maps/erlc-map.webp';
 
 export const DEFAULT_CAD_CONFIG: CadConfig = {
   homeGuildId: null,
