@@ -45,14 +45,12 @@ export function CadMapPage() {
   const [draft, setDraft] = useState<{ init: IncidentDraft; callId?: string } | null>(null);
   const map = useQuery({ queryKey: ['cad-map'], queryFn: () => api<CadMapData>('/cad/map'), refetchInterval: 5_000 });
   const units = useQuery({ queryKey: ['cad-units'], queryFn: () => api<CadUnitRow[]>('/cad/units') });
-  const callId = sp.get('call'), incId = sp.get('incident'), placeId = sp.get('placeUnit'), unitFocus = sp.get('unit'), objFocus = sp.get('object'), placeObjId = sp.get('placeObject');
+  const callId = sp.get('call'), incId = sp.get('incident'), placeId = sp.get('placeUnit'), unitFocus = sp.get('unit');
   const place = placeId ? units.data?.find((u) => u.id === placeId) : undefined;
   const call = callId ? map.data?.calls.find((c) => c.id === callId) : undefined;
   const inc = incId ? map.data?.incidents.find((i) => i.id === incId) : undefined;
   const unitPos = unitFocus ? map.data?.units.find((u) => u.id === unitFocus && u.position) : undefined;
-  const obj = objFocus ? map.data?.objects.find((o) => o.id === objFocus && o.x !== null) : undefined;
-  const placeObj = placeObjId ? map.data?.objects.find((o) => o.id === placeObjId) : undefined;
-  const focus = call ? { x: call.mapX!, z: call.mapZ!, id: `call:${call.id}` } : inc ? { x: inc.mapX!, z: inc.mapZ!, id: `incident:${inc.id}` } : unitPos ? { x: unitPos.position!.x, z: unitPos.position!.z, id: `unit:${unitPos.id}` } : obj ? { x: obj.x!, z: obj.z!, id: `poi:${obj.id}` } : null;
+  const focus = call ? { x: call.mapX!, z: call.mapZ!, id: `call:${call.id}` } : inc ? { x: inc.mapX!, z: inc.mapZ!, id: `incident:${inc.id}` } : unitPos ? { x: unitPos.position!.x, z: unitPos.position!.z, id: `unit:${unitPos.id}` } : null;
   const { can } = useAuth();
   const located = new Set((map.data?.units ?? []).map((u) => u.id));
   const Row = ({ active, onClick, children, sub, dot }: { active?: boolean; onClick?: () => void; children: ReactNode; sub?: ReactNode; dot?: string }) => (
@@ -72,7 +70,7 @@ export function CadMapPage() {
       <PageHeader title="Einsatzkarte" subtitle="Mausrad/Schaltflächen zum Zoomen, Ziehen zum Verschieben · Ebenen rechts oben" />
       {map.error && <ErrorState error={map.error} />}
       <div className="grid gap-3 xl:grid-cols-[minmax(0,1fr)_17rem]">
-      <MapView cfg={cfg} data={map.data} height="calc(100dvh - 13rem)" focus={focus} placeUnit={place ? { id: place.id, callsign: place.callsign, done: () => nav('/cad/map', { replace: true }) } : null} placeObject={placeObj ? { id: placeObj.id, name: placeObj.name, done: () => nav(`/cad/map?object=${placeObj.id}`, { replace: true }) } : null} actionsFor={actionsFor} onCreateIncidentAt={(x, z) => setDraft({ init: { mapX: x, mapZ: z } })} />
+      <MapView cfg={cfg} data={map.data} height="calc(100dvh - 13rem)" focus={focus} placeUnit={place ? { id: place.id, callsign: place.callsign, done: () => nav('/cad/map', { replace: true }) } : null} actionsFor={actionsFor} onCreateIncidentAt={(x, z) => setDraft({ init: { mapX: x, mapZ: z } })} />
       {/* Lage neben der Karte: Klick zentriert die Karte auf den Marker */}
       <aside className="card max-h-[calc(100dvh-13rem)] space-y-3 overflow-auto border border-line p-2" aria-label="Lage">
         <section><h3 className="px-2 text-xs font-semibold uppercase text-muted">🚨 Notrufe ({map.data?.calls.length ?? 0})</h3>

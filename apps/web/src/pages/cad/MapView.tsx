@@ -18,11 +18,11 @@ type View = { s: number; tx: number; ty: number };
  * Interaktive CAD-Karte: Kartenbild aus den Einstellungen (hochgeladene ER:LC-Map), darüber Layer mit Markern,
  * POIs und Zonen. Zoom mit Mausrad/Buttons, Verschieben per Ziehen (auch Touch). Positionen in Spielkoordinaten.
  */
-export function MapView({ cfg, data, height = '70vh', focus, onCreateIncidentAt, actionsFor, compact, placeUnit, placeObject }: {
+export function MapView({ cfg, data, height = '70vh', focus, onCreateIncidentAt, actionsFor, compact, placeUnit }: {
   cfg: CadConfig; data: CadMapData | undefined; height?: string; focus?: { x: number; z: number; id?: string } | null;
   onCreateIncidentAt?: (x: number, z: number) => void; actionsFor?: (m: { kind: string; id: string }) => ReactNode; compact?: boolean;
   /** Einheit ohne Position direkt platzieren (Einheiten → „Auf Karte platzieren“). */
-  placeUnit?: { id: string; callsign: string; done: () => void } | null; placeObject?: { id: string; name: string; done: () => void } | null;
+  placeUnit?: { id: string; callsign: string; done: () => void } | null;
 }) {
   const { can } = useAuth();
   const qcMap = useQueryClient();
@@ -88,11 +88,6 @@ export function MapView({ cfg, data, height = '70vh', focus, onCreateIncidentAt,
     setView(clamp({ s, tx: el.clientWidth / 2 - px * s, ty: el.clientHeight / 2 - py * s }));
     if (focus.id) setSelected(focus.id);
   }, [focus?.x, focus?.z, focus?.id]);
-
-  // Kartenpunkt (z. B. Gebäudekamera) platzieren
-  useEffect(() => {
-    if (placeObject) setMode({ kind: 'pick', hint: `Position für ${placeObject.name} anklicken.`, onPick: (x, z) => void api(`/cad/map/objects/${placeObject.id}`, { method: 'PATCH', body: { x, z } }).then(() => { void qcMap.invalidateQueries({ queryKey: ['cad-map'] }); void qcMap.invalidateQueries({ queryKey: ['cad-map-objects'] }); placeObject.done(); }) });
-  }, [placeObject?.id]);
 
   useEffect(() => {
     if (placeUnit) setMode({ kind: 'pick', hint: `Position für ${placeUnit.callsign} anklicken.`, onPick: (x, z) => void setUnitPos(placeUnit.id, x, z).then(placeUnit.done) });

@@ -14,7 +14,6 @@ const common_1 = require("@nestjs/common");
 const media_module_1 = require("../media/media.module");
 const cad_controller_1 = require("./cad.controller");
 const cad_service_1 = require("./cad.service");
-const cad_air_service_1 = require("./cad-air.service");
 const cad_tablet_service_1 = require("./cad-tablet.service");
 const cad_config_service_1 = require("./cad-config.service");
 const cad_notify_service_1 = require("./cad-notify.service");
@@ -62,7 +61,7 @@ exports.CadModule = CadModule = __decorate([
     (0, common_1.Module)({
         imports: [media_module_1.MediaModule],
         controllers: [cad_controller_1.CadController, cad_controller_1.ErlcController],
-        providers: [cad_service_1.CadService, cad_air_service_1.CadAirService, cad_tablet_service_1.CadTabletService, cad_config_service_1.CadConfigService, cad_notify_service_1.CadNotifyService, erlc_service_1.ErlcService, erlc_sync_service_1.ErlcSyncService],
+        providers: [cad_service_1.CadService, cad_tablet_service_1.CadTabletService, cad_config_service_1.CadConfigService, cad_notify_service_1.CadNotifyService, erlc_service_1.ErlcService, erlc_sync_service_1.ErlcSyncService],
         exports: [cad_service_1.CadService, cad_config_service_1.CadConfigService, erlc_service_1.ErlcService],
     }),
     __metadata("design:paramtypes", [erlc_service_1.ErlcService, cad_service_1.CadService])

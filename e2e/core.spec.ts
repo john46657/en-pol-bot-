@@ -249,8 +249,7 @@ test('dashboard: edit mode adds the voice widget separately from the team list; 
 
 test('Funk-Codes: standard codes, edit with autosave, find via global search', async ({ page }) => {
   await uiLogin(page, 'admin', ADMIN_PASSWORD);
-  await page.getByRole('link', { name: 'Funk & Kommunikation' }).click();
-  await page.getByRole('navigation', { name: 'Funk & Kommunikation' }).getByRole('link', { name: 'Funk-Codes' }).click();
+  await page.getByRole('link', { name: 'Funk-Codes' }).click();
   await page.getByRole('button', { name: 'Standard-Codes einfügen' }).click();
   await expect(page.getByLabel('Bedeutung 10-4')).toHaveValue('Verstanden');
   await page.getByLabel('Bedeutung 10-4').fill('Verstanden, Ende');

@@ -24,10 +24,7 @@ export const NAV: NavItem[] = [
     { path: '/staff-lists', label: 'Staff-Liste (Discord)', perm: 'team.view', area: 'dashboard.team.view' },
     { path: '/offices', label: 'Büros', perm: 'team.view', area: 'dashboard.offices.view' },
   ]),
-  grp('Funk & Kommunikation', RadioTower, 'Operations', [
-    { path: '/radio-codes', label: 'Funk-Codes', perm: 'radio.view', area: 'dashboard.radio.view' },
-    { path: '/communication', label: 'Kommunikation', perm: 'communication.view' },
-  ]),
+  { path: '/radio-codes', label: 'Funk-Codes', icon: RadioTower, perm: 'radio.view', area: 'dashboard.radio.view', group: 'Operations' },
   { path: '/support-tickets', label: 'Support-Tickets', icon: LifeBuoy, perm: 'ticket.view', area: 'dashboard.tickets.view', group: 'Operations' },
   { path: '/persons', label: 'Personen', icon: Fingerprint, perm: 'persons.view', group: 'Records' },
   { path: '/vehicles', label: 'Fahrzeuge', icon: Car, perm: 'vehicles.view', group: 'Records' },

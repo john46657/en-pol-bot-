@@ -11,7 +11,6 @@ import { Privacy, Terms } from './pages/Legal';
 import { Dashboard } from './pages/Dashboard';
 import { Mdt } from './pages/Mdt';
 import { Team } from './pages/Team';
-const Communication = lazy(() => import('./pages/Communication').then((m) => ({ default: m.Communication })));
 const Analytics = lazy(() => import('./pages/Analytics').then((m) => ({ default: m.Analytics })));
 const Applications = lazy(() => import('./pages/Applications').then((m) => ({ default: m.Applications })));
 const Qualifications = lazy(() => import('./pages/Qualifications').then((m) => ({ default: m.Qualifications })));
@@ -61,8 +60,6 @@ const CadCalls = lazy(() => import('./pages/cad/CadOps').then((m) => ({ default:
 const CadUnits = lazy(() => import('./pages/cad/CadOps').then((m) => ({ default: m.CadUnits })));
 const CadRadio = lazy(() => import('./pages/cad/CadOps').then((m) => ({ default: m.CadRadio })));
 const CadTablet = lazy(() => import('./pages/cad/CadTablet').then((m) => ({ default: m.CadTablet })));
-const CadAir = lazy(() => import('./pages/cad/CadAir').then((m) => ({ default: m.CadAir })));
-const CadCameras = lazy(() => import('./pages/cad/CadAir').then((m) => ({ default: m.CadCameras })));
 const ErlcLive = lazy(() => import('./pages/cad/ErlcLive').then((m) => ({ default: m.ErlcLive })));
 const CadSettings = lazy(() => import('./pages/cad/CadAdmin').then((m) => ({ default: m.CadSettings })));
 const CadTeam = lazy(() => import('./pages/cad/CadAdmin').then((m) => ({ default: m.CadTeam })));
@@ -118,8 +115,6 @@ export function App() {
             <Route path="units" element={<Guard perm="cad.view"><CadUnits /></Guard>} />
             <Route path="radio" element={<Guard perm="cad.view"><CadRadio /></Guard>} />
             <Route path="calls" element={<Guard perm="cad.view"><CadCalls /></Guard>} />
-            <Route path="air" element={<Guard perm="cad.view"><CadAir /></Guard>} />
-            <Route path="cameras" element={<Guard perm="cad.view"><CadCameras /></Guard>} />
             <Route path="erlc" element={<Guard perm="cad.view_erlc"><ErlcLive /></Guard>} />
             <Route path="team" element={<Guard perm="cad.view"><CadTeam /></Guard>} />
             <Route path="cross-server" element={<Guard perm="cad.view"><CadCrossServer /></Guard>} />
@@ -163,7 +158,8 @@ export function App() {
           <Route path="applications/:id" element={rec('applications', 'applications.view')} />
           <Route path="qualifications" element={<Guard perm="qualifications.view" area="dashboard.applications.view"><Qualifications /></Guard>} />
           <Route path="academy" element={<Guard perm="academy.view"><Academy /></Guard>} />
-          <Route path="communication" element={<Guard perm="communication.view"><Communication /></Guard>} />
+          {/* „Kommunikation“ entfernt – alte Links landen bei den Funk-Codes */}
+          <Route path="communication" element={<Navigate to="/radio-codes" replace />} />
           <Route path="analytics" element={<Guard><AnalyticsGate /></Guard>} />
           <Route path="admin/users" element={<Guard perm="users.view" area="dashboard.settings.view"><Users /></Guard>} />
           <Route path="admin/roles" element={<Guard perm="roles.view" area="dashboard.settings.view"><Roles /></Guard>} />

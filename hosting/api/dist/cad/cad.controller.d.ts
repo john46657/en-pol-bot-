@@ -1,11 +1,9 @@
 import { z } from 'zod';
-import { type AirStatus } from '@enrp/shared';
 import type { Actor } from '../audit/audit.service';
 import type { AppRequest } from '../common/request-context';
 import { PermissionService } from '../authz/permission.service';
 import { MediaService } from '../media/media.service';
 import { CadService, type CadActor } from './cad.service';
-import { CadAirService } from './cad-air.service';
 import { CadTabletService } from './cad-tablet.service';
 import { CadConfigService } from './cad-config.service';
 import { ErlcService, erlcServerInput } from './erlc.service';
@@ -245,25 +243,6 @@ declare const statusBody: z.ZodObject<{
     status: string;
     note?: string | undefined;
 }>;
-declare const airBody: z.ZodObject<{
-    mode: z.ZodEnum<["SEARCH" | "PATROL", ...("SEARCH" | "PATROL")[]]>;
-    target: z.ZodOptional<z.ZodNullable<z.ZodTypeAny>>;
-    note: z.ZodOptional<z.ZodNullable<z.ZodTypeAny>>;
-    incidentId: z.ZodOptional<z.ZodNullable<z.ZodTypeAny>>;
-    incidentNumber: z.ZodOptional<z.ZodNullable<z.ZodTypeAny>>;
-}, "strip", z.ZodTypeAny, {
-    mode: "SEARCH" | "PATROL";
-    incidentId?: any;
-    note?: any;
-    incidentNumber?: any;
-    target?: any;
-}, {
-    mode: "SEARCH" | "PATROL";
-    incidentId?: any;
-    note?: any;
-    incidentNumber?: any;
-    target?: any;
-}>;
 declare const radioBody: z.ZodObject<{
     text: z.ZodString;
     unitId: z.ZodOptional<z.ZodNullable<z.ZodTypeAny>>;
@@ -285,12 +264,11 @@ declare const radioBody: z.ZodObject<{
 }>;
 export declare class CadController {
     private readonly s;
-    private readonly air;
     private readonly tablet;
     private readonly cfg;
     private readonly perms;
     private readonly media;
-    constructor(s: CadService, air: CadAirService, tablet: CadTabletService, cfg: CadConfigService, perms: PermissionService, media: MediaService);
+    constructor(s: CadService, tablet: CadTabletService, cfg: CadConfigService, perms: PermissionService, media: MediaService);
     config(): Promise<import("@enrp/shared").CadConfig>;
     saveConfig(a: Actor, b: Record<string, unknown>): Promise<import("@enrp/shared").CadConfig>;
     saveMap(a: Actor, b: Record<string, unknown>): Promise<import("@enrp/shared").CadConfig>;
@@ -1128,70 +1106,6 @@ export declare class CadController {
             location: string | null;
         }[];
         wantedAllowed: boolean;
-    }>;
-    airList(): Promise<{
-        incident: {
-            number: string;
-            id: string;
-            title: string;
-        } | null;
-        number: number;
-        id: string;
-        createdAt: Date;
-        discordId: string | null;
-        updatedAt: Date;
-        guildId: string | null;
-        status: string;
-        mode: string;
-        incidentId: string | null;
-        authorId: string | null;
-        note: string | null;
-        target: string | null;
-        requestedBy: string | null;
-        handledBy: string | null;
-    }[]>;
-    airRequest(a: CadActor, b: z.infer<typeof airBody>): Promise<{
-        incident: {
-            id: string;
-            number: string;
-            guildId: string | null;
-        } | null;
-        number: number;
-        id: string;
-        createdAt: Date;
-        discordId: string | null;
-        updatedAt: Date;
-        guildId: string | null;
-        status: string;
-        mode: string;
-        incidentId: string | null;
-        authorId: string | null;
-        note: string | null;
-        target: string | null;
-        requestedBy: string | null;
-        handledBy: string | null;
-    }>;
-    airStatus(a: CadActor, id: string, b: {
-        status: AirStatus;
-    }): Promise<{
-        number: number;
-        id: string;
-        createdAt: Date;
-        discordId: string | null;
-        updatedAt: Date;
-        guildId: string | null;
-        status: string;
-        mode: string;
-        incidentId: string | null;
-        authorId: string | null;
-        note: string | null;
-        target: string | null;
-        requestedBy: string | null;
-        handledBy: string | null;
-    }>;
-    /** Gebäudekameras (ER:LC-Liste) als Kartenpunkte anlegen – fehlende, ohne Position. */
-    cameraDefaults(a: CadActor): Promise<{
-        added: number;
     }>;
     radio(q: {
         incidentId?: string;

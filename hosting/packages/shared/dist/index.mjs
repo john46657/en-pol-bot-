@@ -320,7 +320,7 @@ var formatMinutes = (min) => {
 var rolesMatch = (have, ids, mode) => mode === "ALL" ? ids.every((r) => have.includes(r)) : ids.some((r) => have.includes(r));
 
 // src/cad.ts
-var CAD_EVENTS = ["incident.created", "incident.status", "incident.assigned", "incident.closed", "call.received", "announcement", "radio", "air.requested"];
+var CAD_EVENTS = ["incident.created", "incident.status", "incident.assigned", "incident.closed", "call.received", "announcement", "radio"];
 var CAD_EVENT_LABELS = {
   "incident.created": "Neuer Einsatz",
   "incident.status": "Einsatzstatus ge\xE4ndert",
@@ -328,8 +328,7 @@ var CAD_EVENT_LABELS = {
   "incident.closed": "Einsatz abgeschlossen",
   "call.received": "Notruf eingegangen",
   announcement: "Wichtige Leitstellenmeldung",
-  radio: "Funkmeldung",
-  "air.requested": "Luftunterst\xFCtzung angefordert"
+  radio: "Funkmeldung"
 };
 var CAD_LINK_SEND_TYPES = ["incidents", "incident_status", "unit_requests", "calls", "announcements", "radio"];
 var CAD_LINK_ACTIONS = ["status_report", "radio", "view_incidents", "dispatch"];
@@ -351,8 +350,7 @@ var CAD_EVENT_SEND_TYPE = {
   "incident.closed": "incident_status",
   "call.received": "calls",
   announcement: "announcements",
-  radio: "radio",
-  "air.requested": "unit_requests"
+  radio: "radio"
 };
 var CAD_WIDGETS = ["activeIncidents", "availableUnits", "activeCalls", "erlcStatus", "map", "units", "radio", "persons", "vehicles", "dutyActivity"];
 var CAD_WIDGET_LABELS = {
@@ -419,7 +417,6 @@ var DEFAULT_CAD_CONFIG = {
     { key: "staff", label: "Staff", builtin: true, enabledByDefault: false },
     { key: "players", label: "Alle Spieler", builtin: true, enabledByDefault: false },
     { key: "pois", label: "Eigene POIs", builtin: true, enabledByDefault: true },
-    { key: "cameras", label: "Geb\xE4udekameras", builtin: true, enabledByDefault: true },
     { key: "zones", label: "Eigene Zonen", builtin: true, enabledByDefault: true },
     { key: "restricted", label: "Sperrbereiche", builtin: true, enabledByDefault: true }
   ],
@@ -430,29 +427,13 @@ var DEFAULT_CAD_CONFIG = {
     { key: "vehicle", label: "Polizeifahrzeug", emoji: "\u{1F693}", color: "#2563eb" },
     { key: "staff", label: "Staff", emoji: "\u{1F46E}", color: "#f59e0b" },
     { key: "player", label: "Spieler", emoji: "\u2022", color: "#94a3b8" },
-    { key: "poi", label: "POI", emoji: "\u{1F4CD}", color: "#10b981" },
-    { key: "camera", label: "Kamera", emoji: "\u{1F4F9}", color: "#64748b" }
+    { key: "poi", label: "POI", emoji: "\u{1F4CD}", color: "#10b981" }
   ],
   map: { imageUrl: null, width: ERLC_MAP_SIZE, height: ERLC_MAP_SIZE, originX: ERLC_MAP_SIZE / 2, originY: ERLC_MAP_SIZE / 2, scale: 1 },
   routes: [],
   memberFields: [],
   widgets: ["activeIncidents", "availableUnits", "activeCalls", "dutyActivity", "erlcStatus", "map", "radio"]
 };
-var ERLC_BUILDING_CAMERAS = [
-  { name: "Polizeistation Au\xDFenbereich", area: "Industrial Zone" },
-  { name: "Maple St & Oak Valley Dr", area: "Springfield" },
-  { name: "Springfield Gun Store Exterior", area: "Springfield" },
-  { name: "RC Bank Au\xDFenbereich", area: "City Hall" },
-  { name: "Hauptstra\xDFe", area: "City Hall" },
-  { name: "Power Plant Exterior", area: "Industrial Zone" },
-  { name: "RC Shopping Plaza Exterior", area: "City Hall" },
-  { name: "RC Gun Store Exterior", area: "City Hall" },
-  { name: "Pancake House Exterior", area: "Fairview Heights" },
-  { name: "Airport Exterior", area: "Liberty County Airfield" }
-];
-var AIR_MODES = { SEARCH: "Spieler suchen", PATROL: "Patrouille" };
-var AIR_STATUS = { OPEN: "Angefordert", ACCEPTED: "Hubschrauber unterwegs", DONE: "Erledigt", CANCELLED: "Abgebrochen" };
-var AIR_SERVER_COOLDOWN_MIN = 6;
 var gameToPixel = (m, x, z6) => ({ px: m.originX + x * m.scale, py: m.originY + z6 * m.scale });
 var pixelToGame = (m, px, py) => ({ x: (px - m.originX) / m.scale, z: (py - m.originY) / m.scale });
 var ERLC_FEATURES = ["players", "staff", "queue", "vehicles", "emergencyCalls", "modCalls", "joinLogs", "killLogs", "commandLogs", "commands", "webhook"];
@@ -1727,9 +1708,6 @@ var backupConfigSchema = z5.object({
   keep: z5.number().int().min(1).max(60).default(14)
 });
 export {
-  AIR_MODES,
-  AIR_SERVER_COOLDOWN_MIN,
-  AIR_STATUS,
   ALL_PERMISSIONS,
   APPLICATION_STATUSES,
   APPLICATION_TRANSITIONS,
@@ -1762,7 +1740,6 @@ export {
   DN_STATUS_LABEL,
   DN_VARIABLES,
   DUTY_STATUSES,
-  ERLC_BUILDING_CAMERAS,
   ERLC_BUILTIN_MAP,
   ERLC_DEFAULT_BLOCKED,
   ERLC_DEFAULT_CRITICAL,
