@@ -55,6 +55,7 @@ const PersonalSettings = lazy(() => import('./pages/PersonalSettings').then((m) 
 const Studio = lazy(() => import('./pages/admin/Studio').then((m) => ({ default: m.Studio })));
 import * as R from './pages/resources';
 import { CadLayout } from './pages/cad/CadLayout';
+import { TeamLayout } from './pages/TeamLayout';
 const CadDashboard = lazy(() => import('./pages/cad/CadDashboard').then((m) => ({ default: m.CadDashboard })));
 const CadIncidents = lazy(() => import('./pages/cad/CadIncidents').then((m) => ({ default: m.CadIncidents })));
 const CadMapPage = lazy(() => import('./pages/cad/CadOps').then((m) => ({ default: m.CadMapPage })));
@@ -71,6 +72,12 @@ const CadLogs = lazy(() => import('./pages/cad/CadAdmin').then((m) => ({ default
 function AnalyticsGate() {
   const { can } = useAuth();
   return can('analytics.view') || (can('applications.view') && can('dashboard.applications.view')) ? <Analytics /> : <Forbidden />;
+}
+
+/** Leitstelle (klassisch) liegt als Reiter im CAD – wer das CAD sieht, landet dort; sonst eigenständig. */
+function DispatchEntry() {
+  const { can } = useAuth();
+  return can('cad.view') && can('dashboard.cad.view') ? <Navigate to="/cad/dispatch" replace /> : <Dispatch />;
 }
 
 /** UI-seitige Routenprüfung (Komfort). Das Backend erzwingt dieselben Rechte unabhängig davon. */
@@ -98,9 +105,11 @@ export function App() {
           <Route index element={<Navigate to="/dashboard" replace />} />
           <Route path="mdt" element={<Guard perm="dashboard.view"><Mdt /></Guard>} />
           <Route path="dashboard" element={<Guard perm="dashboard.view"><Dashboard /></Guard>} />
-          <Route path="team" element={<Guard perm="team.view" area="dashboard.team.view"><Team /></Guard>} />
-          <Route path="teamlist" element={<Guard perm="team.view" area="dashboard.team.view"><TeamList /></Guard>} />
-          <Route path="staff-lists" element={<Guard perm="team.view" area="dashboard.team.view"><StaffLists /></Guard>} />
+          <Route element={<Guard perm="team.view" area="dashboard.team.view"><TeamLayout /></Guard>}>
+            <Route path="team" element={<Team />} />
+            <Route path="teamlist" element={<Suspense fallback={<SkeletonRows />}><TeamList /></Suspense>} />
+            <Route path="staff-lists" element={<Suspense fallback={<SkeletonRows />}><StaffLists /></Suspense>} />
+          </Route>
           <Route path="admin/form-panels" element={<Guard perm="settings.view" area="dashboard.settings.view"><FormPanels /></Guard>} />
           <Route path="admin/info-panels" element={<Guard perm="settings.view" area="dashboard.settings.view"><InfoPanels /></Guard>} />
           <Route path="duty-reports" element={<Guard perm="dutyreports.view"><DutyReports /></Guard>} />
@@ -115,13 +124,14 @@ export function App() {
             <Route path="units" element={<Guard perm="cad.view"><CadUnits /></Guard>} />
             <Route path="radio" element={<Guard perm="cad.view"><CadRadio /></Guard>} />
             <Route path="calls" element={<Guard perm="cad.view"><CadCalls /></Guard>} />
+            <Route path="dispatch" element={<Guard perm="dispatch.view"><DispatchEntry /></Guard>} />
             <Route path="erlc" element={<Guard perm="cad.view_erlc"><ErlcLive /></Guard>} />
             <Route path="team" element={<Guard perm="cad.view"><CadTeam /></Guard>} />
             <Route path="cross-server" element={<Guard perm="cad.view"><CadCrossServer /></Guard>} />
             <Route path="logs" element={<Guard perm="cad.view_logs"><CadLogs /></Guard>} />
             <Route path="settings" element={<Guard perm="cad.view"><CadSettings /></Guard>} />
           </Route>
-          <Route path="dispatch" element={<Guard perm="dispatch.view"><Dispatch /></Guard>} />
+          <Route path="dispatch" element={<Guard perm="dispatch.view"><DispatchEntry /></Guard>} />
           <Route path="support-tickets" element={<Guard perm="ticket.view" area="dashboard.tickets.view"><SupportTickets /></Guard>} />
           <Route path="voice-support" element={<Navigate to="/offices#support" replace />} />
           <Route path="support-tickets/:id" element={<Guard perm="ticket.view" area="dashboard.tickets.view"><TicketDetail /></Guard>} />

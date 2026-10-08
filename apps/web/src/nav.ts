@@ -1,17 +1,23 @@
-import { TriangleAlert, HardDriveDownload, ScrollText, BellRing, GraduationCap, IdCard, Medal, SlidersHorizontal, CalendarCheck, FormInput, ListOrdered, Link2, PanelTop, DoorOpen, MapPinned, Building2, Megaphone, RadioTower, Contact, Palette, CalendarOff, Clock, LifeBuoy, Monitor, BarChart3, BookOpen, Award, Car, ClipboardList, FileText, Fingerprint, Flag, Gavel, LayoutDashboard, MessageSquare, Radio, Scale, Search, Settings, Shield, Siren, Ticket, UserCheck, Users, Wrench, type LucideIcon } from 'lucide-react';
+import { TriangleAlert, HardDriveDownload, ScrollText, BellRing, GraduationCap, IdCard, Medal, SlidersHorizontal, CalendarCheck, FormInput, Link2, PanelTop, DoorOpen, MapPinned, Building2, Megaphone, RadioTower, Palette, CalendarOff, Clock, LifeBuoy, Monitor, BarChart3, BookOpen, Award, Car, ClipboardList, FileText, Fingerprint, Flag, Gavel, LayoutDashboard, MessageSquare, Radio, Scale, Search, Settings, Shield, Siren, Ticket, UserCheck, Users, Wrench, type LucideIcon } from 'lucide-react';
 
 /** `area`: Bereichs-Sichtbarkeit (dashboard.<bereich>.view) – ohne sie erscheint der Menüpunkt nicht, auch mit Modul-Recht. */
-export interface NavItem { path: string; label: string; icon: LucideIcon; perm?: string; area?: string; group: 'Operations' | 'Records' | 'Organisation' | 'Administration' }
+export interface NavItem {
+  path: string; label: string; icon: LucideIcon; perm?: string; area?: string; group: 'Operations' | 'Records' | 'Organisation' | 'Administration';
+  /** weitere Seiten, die zu diesem Menüpunkt gehören (als Reiter) – markieren den Punkt als aktiv */
+  also?: string[];
+  /** ausblenden, wenn man alle diese Rechte hat (z. B. klassische Leitstelle nur ohne CAD-Zugang) */
+  hideIf?: string[];
+}
 
 export const NAV: NavItem[] = [
   { path: '/mdt', label: 'MDT', icon: Monitor, perm: 'dashboard.view', group: 'Operations' },
   { path: '/dashboard', label: 'Dashboard', icon: LayoutDashboard, perm: 'dashboard.view', group: 'Operations' },
-  { path: '/cad', label: 'CAD-Leitstelle', icon: MapPinned, perm: 'cad.view', area: 'dashboard.cad.view', group: 'Operations' },
-  { path: '/dispatch', label: 'Leitstelle (klassisch)', icon: Radio, perm: 'dispatch.view', group: 'Operations' },
+  // Leitstelle: CAD mit der klassischen Leitstelle als Reiter; ohne CAD-Zugang direkt die klassische
+  { path: '/cad', label: 'Leitstelle', icon: MapPinned, perm: 'cad.view', area: 'dashboard.cad.view', group: 'Operations', also: ['/dispatch'] },
+  { path: '/dispatch', label: 'Leitstelle', icon: Radio, perm: 'dispatch.view', group: 'Operations', hideIf: ['cad.view', 'dashboard.cad.view'] },
   { path: '/incidents', label: 'Einsätze', icon: Siren, perm: 'incidents.view', group: 'Operations' },
-  { path: '/team', label: 'Team', icon: Users, perm: 'team.view', area: 'dashboard.team.view', group: 'Operations' },
-  { path: '/teamlist', label: 'Teamliste', icon: Contact, perm: 'team.view', area: 'dashboard.team.view', group: 'Operations' },
-  { path: '/staff-lists', label: 'Staff-Liste (Discord)', icon: ListOrdered, perm: 'team.view', area: 'dashboard.team.view', group: 'Operations' },
+  // Team, Teamliste und Staff-Liste (Discord) als Reiter einer Seite
+  { path: '/team', label: 'Team', icon: Users, perm: 'team.view', area: 'dashboard.team.view', group: 'Operations', also: ['/teamlist', '/staff-lists'] },
   { path: '/offices', label: 'Büros', icon: Building2, perm: 'team.view', area: 'dashboard.offices.view', group: 'Operations' },
   { path: '/radio-codes', label: 'Funk-Codes', icon: RadioTower, perm: 'radio.view', area: 'dashboard.radio.view', group: 'Operations' },
   { path: '/communication', label: 'Kommunikation', icon: MessageSquare, perm: 'communication.view', group: 'Operations' },
@@ -54,7 +60,7 @@ export const NAV: NavItem[] = [
   { path: '/me/settings', label: 'Persönlich', icon: Palette, perm: 'dashboard.view', group: 'Administration' },
 ];
 /** Sichtbar = Modul-Recht und (falls gesetzt) Bereichs-Recht. Nur Komfort – die API prüft selbst. */
-export const visible = (n: NavItem, can: (p: string) => boolean) => (!n.perm || can(n.perm)) && (!n.area || can(n.area));
+export const visible = (n: NavItem, can: (p: string) => boolean) => (!n.perm || can(n.perm)) && (!n.area || can(n.area)) && !(n.hideIf && n.hideIf.every(can));
 export const GROUPS = ['Operations', 'Records', 'Organisation', 'Administration'] as const;
 
 /** Deutsche Gruppennamen. Menünamen sind direkt deutsch; das Dashboard ist vollständig deutsch. */

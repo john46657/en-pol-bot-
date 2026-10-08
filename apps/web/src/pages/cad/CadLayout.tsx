@@ -14,6 +14,7 @@ export const CAD_NAV: { to: string; label: string; perm?: string; area?: string 
   { to: '/cad/units', label: 'Einheiten' },
   { to: '/cad/radio', label: 'Funk' },
   { to: '/cad/calls', label: 'Notrufe' },
+  { to: '/cad/dispatch', label: 'Leitstelle (klassisch)', perm: 'dispatch.view' },
   { to: '/persons', label: 'Personen', perm: 'cad.view_persons' },
   { to: '/vehicles', label: 'Fahrzeuge', perm: 'cad.view_vehicles' },
   { to: '/cad/erlc', label: 'ER:LC Live', perm: 'cad.view_erlc' },
