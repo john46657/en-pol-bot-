@@ -45,11 +45,20 @@ export function CadMapPage() {
   const [draft, setDraft] = useState<{ init: IncidentDraft; callId?: string } | null>(null);
   const map = useQuery({ queryKey: ['cad-map'], queryFn: () => api<CadMapData>('/cad/map'), refetchInterval: 5_000 });
   const units = useQuery({ queryKey: ['cad-units'], queryFn: () => api<CadUnitRow[]>('/cad/units') });
-  const callId = sp.get('call'), incId = sp.get('incident'), placeId = sp.get('placeUnit');
+  const callId = sp.get('call'), incId = sp.get('incident'), placeId = sp.get('placeUnit'), unitFocus = sp.get('unit');
   const place = placeId ? units.data?.find((u) => u.id === placeId) : undefined;
   const call = callId ? map.data?.calls.find((c) => c.id === callId) : undefined;
   const inc = incId ? map.data?.incidents.find((i) => i.id === incId) : undefined;
-  const focus = call ? { x: call.mapX!, z: call.mapZ!, id: `call:${call.id}` } : inc ? { x: inc.mapX!, z: inc.mapZ!, id: `incident:${inc.id}` } : null;
+  const unitPos = unitFocus ? map.data?.units.find((u) => u.id === unitFocus && u.position) : undefined;
+  const focus = call ? { x: call.mapX!, z: call.mapZ!, id: `call:${call.id}` } : inc ? { x: inc.mapX!, z: inc.mapZ!, id: `incident:${inc.id}` } : unitPos ? { x: unitPos.position!.x, z: unitPos.position!.z, id: `unit:${unitPos.id}` } : null;
+  const { can } = useAuth();
+  const located = new Set((map.data?.units ?? []).map((u) => u.id));
+  const Row = ({ active, onClick, children, sub, dot }: { active?: boolean; onClick?: () => void; children: ReactNode; sub?: ReactNode; dot?: string }) => (
+    <li><button type="button" disabled={!onClick} onClick={onClick} className={`flex w-full items-start gap-2 rounded px-2 py-1 text-left text-sm ${active ? 'bg-primary/15' : onClick ? 'hover:bg-panel-2' : 'opacity-70'}`}>
+      {dot && <span aria-hidden className="mt-1.5 h-2 w-2 shrink-0 rounded-full" style={{ background: dot }} />}
+      <span className="min-w-0 flex-1"><span className="block truncate">{children}</span>{sub && <span className="block truncate text-[11px] text-muted">{sub}</span>}</span>
+    </button></li>
+  );
   const actionsFor = (m: { kind: string; id: string }): ReactNode => {
     if (m.kind === 'call') { const c = map.data?.calls.find((x) => x.id === m.id); return c ? <CallActions call={c} cfg={cfg} units={units.data ?? []} showMap={false} onIncident={(cc) => setDraft({ init: callDraft(cc), callId: cc.id })} /> : null; }
     if (m.kind === 'incident') return <Button size="sm" variant="secondary" onClick={() => nav(`/cad/incidents?id=${m.id}`)}>Details</Button>;
@@ -60,7 +69,21 @@ export function CadMapPage() {
     <>
       <PageHeader title="Einsatzkarte" subtitle="Mausrad/Schaltflächen zum Zoomen, Ziehen zum Verschieben · Ebenen rechts oben" />
       {map.error && <ErrorState error={map.error} />}
+      <div className="grid gap-3 xl:grid-cols-[minmax(0,1fr)_17rem]">
       <MapView cfg={cfg} data={map.data} height="calc(100dvh - 13rem)" focus={focus} placeUnit={place ? { id: place.id, callsign: place.callsign, done: () => nav('/cad/map', { replace: true }) } : null} actionsFor={actionsFor} onCreateIncidentAt={(x, z) => setDraft({ init: { mapX: x, mapZ: z } })} />
+      {/* Lage neben der Karte: Klick zentriert die Karte auf den Marker */}
+      <aside className="card max-h-[calc(100dvh-13rem)] space-y-3 overflow-auto border border-line p-2" aria-label="Lage">
+        <section><h3 className="px-2 text-xs font-semibold uppercase text-muted">🚨 Notrufe ({map.data?.calls.length ?? 0})</h3>
+          <ul>{(map.data?.calls ?? []).map((c) => <Row key={c.id} dot="#ef4444" active={callId === c.id} onClick={() => nav(`/cad/map?call=${c.id}`)} sub={`${c.positionDescriptor ?? '—'} · ${ago(c.startedAt)}`}>#{c.callNumber} · {c.description ?? 'Notruf'}</Row>)}{!map.data?.calls.length && <li className="px-2 text-xs text-muted">keine offenen</li>}</ul></section>
+        <section><h3 className="px-2 text-xs font-semibold uppercase text-muted">📋 Einsätze ({map.data?.incidents.length ?? 0})</h3>
+          <ul>{(map.data?.incidents ?? []).map((i) => <Row key={i.id} dot={optColor(cfg.priorities, i.priority) ?? '#64748b'} active={incId === i.id} onClick={() => nav(`/cad/map?incident=${i.id}`)} sub={`${optLabel(cfg.incidentStatuses, i.status)} · ${i.location ?? 'ohne Ort'}`}>{i.number} · {i.title}</Row>)}{!map.data?.incidents.length && <li className="px-2 text-xs text-muted">keine mit Position</li>}</ul>
+          {can('cad.create_incident') && <p className="px-2 pt-1 text-[11px] text-muted">Neuer Einsatz: „Einsatz hier“ oben links, dann auf die Karte klicken.</p>}</section>
+        <section><h3 className="px-2 text-xs font-semibold uppercase text-muted">🚓 Einheiten ({units.data?.length ?? 0})</h3>
+          <ul>{(units.data ?? []).map((u) => located.has(u.id)
+            ? <Row key={u.id} dot={optColor(cfg.unitStatuses, u.status) ?? '#64748b'} active={unitFocus === u.id} onClick={() => nav(`/cad/map?unit=${u.id}`)} sub={`${optLabel(cfg.unitStatuses, u.status)}${u.current ? ` · ${u.current.number}` : ''}`}>{u.callsign}</Row>
+            : <Row key={u.id} dot={optColor(cfg.unitStatuses, u.status) ?? '#64748b'} onClick={can('cad.manage_units') ? () => nav(`/cad/map?placeUnit=${u.id}`) : undefined} sub={can('cad.manage_units') ? '📍 ohne Position – klicken zum Platzieren' : 'ohne Position'}>{u.callsign}</Row>)}</ul></section>
+      </aside>
+      </div>
       {draft && <IncidentForm cfg={cfg} initial={draft.init} callId={draft.callId} onClose={() => setDraft(null)} onSaved={(i) => nav(`/cad/incidents?id=${i.id}`)} />}
     </>
   );
