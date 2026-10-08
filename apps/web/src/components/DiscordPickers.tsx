@@ -30,11 +30,15 @@ export function ChannelPicker({ value, onChange, kind = 'text', ariaLabel, disab
   if (!list.length) return <Input aria-label={ariaLabel} inputMode="numeric" disabled={disabled} value={value ?? ''} placeholder={kind === 'category' ? 'Discord-Kategorie-ID' : kind === 'voice' ? 'Sprachkanal-ID' : 'Discord-Kanal-ID'} onChange={(e) => onChange(idOf(e.target.value) || null)} />;
   const known = list.some((g) => g.channels.some((c) => c.id === value));
   return (
-    <Select aria-label={ariaLabel} disabled={disabled} value={value ?? ''} onChange={(e) => onChange(e.target.value || null)}>
-      <option value="">— keiner —</option>
-      {value && !known && <option value={value}>Unbekannt ({value})</option>}
-      {list.map((g) => <optgroup key={g.id} label={g.name}>{channelOptions(g, kind).map((c) => <option key={c.id} value={c.id}>{c.label}</option>)}</optgroup>)}
-    </Select>
+    <div className="flex min-w-0 items-center gap-1">
+      <Select aria-label={ariaLabel} disabled={disabled} value={value ?? ''} onChange={(e) => onChange(e.target.value || null)}>
+        <option value="">— keiner —</option>
+        {value && !known && <option value={value}>Unbekannt ({value})</option>}
+        {list.map((g) => <optgroup key={g.id} label={g.name}>{channelOptions(g, kind).map((c) => <option key={c.id} value={c.id}>{c.label}</option>)}</optgroup>)}
+      </Select>
+      {/* Kanal wieder ganz entfernen, ohne „— keiner —“ in der langen Liste suchen zu müssen */}
+      {value && !disabled && <button type="button" aria-label={`${ariaLabel} entfernen`} title="Kanal entfernen" className="shrink-0 rounded p-1.5 text-muted hover:bg-danger/10 hover:text-danger" onClick={() => onChange(null)}><X size={14} /></button>}
+    </div>
   );
 }
 
