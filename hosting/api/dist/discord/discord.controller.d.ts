@@ -401,6 +401,10 @@ export declare class BotController {
         username: string;
     }>;
     config(): Promise<import("./discord.service").DiscordChannels>;
+    /** Ghost-Ping-Meldung an/aus (Einstellungen → Discord-Bot); ohne Eintrag an. */
+    ghostPing(): Promise<{
+        enabled: boolean;
+    }>;
     guilds(b: z.infer<typeof guildsBody>): Promise<void>;
     outbox(q: z.infer<typeof outboxQ>): import("@prisma/client").Prisma.PrismaPromise<{
         id: string;

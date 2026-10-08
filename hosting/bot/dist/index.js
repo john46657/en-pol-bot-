@@ -15,6 +15,7 @@ const live_1 = require("./live");
 const outbox_1 = require("./outbox");
 const roblox_1 = require("./roblox");
 const welcome_1 = require("./welcome");
+const ghost_ping_1 = require("./ghost-ping");
 const voice_support_1 = require("./voice-support");
 const verify_1 = require("./verify");
 const format_1 = require("./format");
@@ -171,6 +172,15 @@ const welcome = (0, welcome_1.createWelcome)(api, {
         const ids = roleIds.filter((r) => guild.roles.cache.has(r));
         if (ids.length)
             await (await guild.members.fetch(userId)).roles.add(ids, 'EN Polizei: Willkommen');
+    },
+});
+/** Ghost-Ping: gelöschte Nachricht mit @Erwähnung → Hinweis im selben Kanal (nur die Erwähnten werden benachrichtigt). */
+const ghostPing = (0, ghost_ping_1.createGhostPing)(api, {
+    async post(channelId, m) {
+        const ch = await client.channels.fetch(channelId);
+        if (!ch?.isSendable())
+            throw new Error(`channel ${channelId} is not a text channel the bot can post in`);
+        await ch.send({ content: m.content, allowedMentions: { parse: [], users: m.mentionUserIds } });
     },
 });
 /** Roblox-Verifizierung: Rollen und Nickname setzen (nur was nötig ist); liefert verständliche Hinweise, was nicht ging. */
@@ -470,6 +480,12 @@ function wire(c) {
     // Staff-Listen: Rollen oder Name geändert → neu zeichnen (gesammelt)
     c.on('guildMemberUpdate', (o, n) => { if (o.roles.cache.size !== n.roles.cache.size || o.displayName !== n.displayName || ![...o.roles.cache.keys()].every((r) => n.roles.cache.has(r)))
         staffLists.changed(); });
+    // Ghost-Ping: nur Nachrichten aus dem Cache (Erwähnungen bekannt); Teil-Nachrichten ohne Daten werden übergangen
+    c.on('messageDelete', (m) => {
+        if (m.partial || !m.inGuild() || !m.author)
+            return;
+        void ghostPing.deleted({ guildId: m.guildId, channelId: m.channelId, authorId: m.author.id, authorBot: m.author.bot, content: m.content ?? '', createdAt: m.createdAt, mentions: [...m.mentions.users.values()].map((u) => ({ id: u.id, bot: u.bot })) });
+    });
     // Direktnachrichten: Antworten auf Bewerbungsfragen (Bewerbung bei EN Polizei und Qualifikationen)
     c.on('messageCreate', (m) => {
         if (m.inGuild()) {
@@ -669,6 +685,16 @@ function wireReady(client0) {
                 }
                 if (!done)
                     console.warn(`nickname for ${userId} could not be set (missing permission, owner or not on a server)`);
+                return true;
+            }
+            if (type === 'bot.welcome-test') {
+                // Test aus dem Dashboard (Willkommen & Abschied): mit dem Profil der Person, die getestet hat
+                const kind = p.kind === 'goodbye' || p.kind === 'dm' ? p.kind : 'welcome';
+                const guild = await client.guilds.fetch(String(p.guildId ?? ''));
+                const e = memberEvent(await guild.members.fetch(String(p.discordId ?? '')));
+                if (!e)
+                    throw new Error('member not found');
+                await welcome.test(kind, e);
                 return true;
             }
             if (type === 'bot.delete') {

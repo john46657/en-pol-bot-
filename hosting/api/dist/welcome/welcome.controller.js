@@ -33,6 +33,8 @@ let WelcomeController = class WelcomeController {
     }
     config(q) { return this.s.config(q.guildId ?? (0, guild_context_1.currentGuild)()); }
     save(a, q, b) { return this.s.save(a, b, q.guildId ?? (0, guild_context_1.currentGuild)()); }
+    /** Test-Nachricht in Discord (gespeicherte Einstellungen, dein Profil als Beispiel-Mitglied). */
+    test(a, q, b) { return this.s.test(a, q.guildId ?? (0, guild_context_1.currentGuild)(), b.kind); }
     reset(a, q) {
         const g = q.guildId ?? (0, guild_context_1.currentGuild)();
         if (!g)
@@ -59,6 +61,17 @@ __decorate([
     __metadata("design:paramtypes", [Object, void 0, Object]),
     __metadata("design:returntype", void 0)
 ], WelcomeController.prototype, "save", null);
+__decorate([
+    (0, common_1.Post)('test'),
+    (0, common_1.HttpCode)(200),
+    (0, decorators_1.RequirePermission)('settings.manage'),
+    __param(0, (0, decorators_1.CurrentActor)()),
+    __param(1, (0, common_1.Query)((0, zod_pipe_1.zodBody)(guildQ))),
+    __param(2, (0, common_1.Body)((0, zod_pipe_1.zodBody)(zod_1.z.object({ kind: zod_1.z.enum(['welcome', 'goodbye', 'dm']) })))),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, void 0, Object]),
+    __metadata("design:returntype", void 0)
+], WelcomeController.prototype, "test", null);
 __decorate([
     (0, common_1.Delete)('config'),
     (0, decorators_1.RequirePermission)('settings.manage'),

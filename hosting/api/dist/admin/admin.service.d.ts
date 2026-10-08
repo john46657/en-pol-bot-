@@ -218,6 +218,14 @@ export declare const SETTING_SCHEMAS: {
         trainingRole?: string | undefined;
         adminDutyRole?: string | undefined;
     }>;
+    /** Ghost-Ping-Meldung des Bots (gelöschte Nachricht mit @Erwähnung); Standard an. */
+    readonly 'discord.ghostPing': z.ZodObject<{
+        enabled: z.ZodBoolean;
+    }, "strip", z.ZodTypeAny, {
+        enabled: boolean;
+    }, {
+        enabled: boolean;
+    }>;
     readonly 'team.rankOrder': z.ZodArray<z.ZodString, "many">;
     /** Teams und Büros (Dienstgrade: `team.rankOrder`) – Auswahl in Personalakten und Filter der Teamliste. */
     readonly 'team.structure': z.ZodObject<{

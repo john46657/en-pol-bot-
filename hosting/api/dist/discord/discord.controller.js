@@ -134,6 +134,8 @@ let BotController = class BotController {
     }
     redeem(b) { return this.d.redeem(b.code, b.discordId); }
     config() { return this.d.channels(); }
+    /** Ghost-Ping-Meldung an/aus (Einstellungen → Discord-Bot); ohne Eintrag an. */
+    async ghostPing() { const v = (await this.prisma.systemSetting.findUnique({ where: { key: 'discord.ghostPing' } }))?.value; return { enabled: v?.enabled !== false }; }
     async guilds(b) { await this.d.saveGuilds(b.guilds); }
     outbox(q) { return this.d.pending(q.limit); }
     ack(id, b) { return this.d.ack(id, b.ok, b.error); }
@@ -173,6 +175,13 @@ __decorate([
     __metadata("design:paramtypes", []),
     __metadata("design:returntype", void 0)
 ], BotController.prototype, "config", null);
+__decorate([
+    (0, decorators_1.BotService)(),
+    (0, common_1.Get)('ghost-ping'),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", []),
+    __metadata("design:returntype", Promise)
+], BotController.prototype, "ghostPing", null);
 __decorate([
     (0, decorators_1.BotService)(),
     (0, common_1.Put)('guilds'),

@@ -20,6 +20,7 @@ const applications_service_1 = require("../applications/applications.service");
 const qualifications_service_1 = require("../qualifications/qualifications.service");
 const tickets_service_1 = require("../support-tickets/tickets.service");
 const media_service_1 = require("../media/media.service");
+const errors_1 = require("../common/errors");
 const KEY = 'welcome.config';
 const sf = zod_1.z.string().regex(/^\d{15,25}$/, 'Discord-ID (15–25 Ziffern)');
 const message = (d) => zod_1.z.object({
@@ -85,6 +86,24 @@ let WelcomeService = class WelcomeService {
         return this.config(guildId);
     }
     /** Hochgeladener Banner für den Bot (nur Bilder, die als Willkommens-Banner hochgeladen wurden). */
+    /**
+     * Test-Nachricht: der Bot schickt die gespeicherte Willkommens-/Abschiedsnachricht bzw. DM so, als wärst du gerade
+     * beigetreten/gegangen (mit deinem Discord-Profil) – ohne Rollen oder Aktionen beim Verlassen.
+     */
+    async test(actor, guildId, kind) {
+        if (!guildId)
+            throw new errors_1.AppError('VALIDATION_FAILED', 'Wähle oben links zuerst einen Server.');
+        const link = actor.userId ? await this.prisma.discordLink.findUnique({ where: { userId: actor.userId } }) : null;
+        if (!link)
+            throw new errors_1.AppError('VALIDATION_FAILED', 'Verknüpfe zuerst dein Konto mit Discord – die Test-Nachricht nutzt dein Profil.');
+        const cfg = await this.config(guildId);
+        if (kind !== 'dm' && !cfg[kind].channelId)
+            throw new errors_1.AppError('VALIDATION_FAILED', 'Wähle zuerst einen Kanal für diese Nachricht.');
+        if (kind === 'dm' && !cfg.dm.message.trim())
+            throw new errors_1.AppError('VALIDATION_FAILED', 'Die Willkommens-DM ist leer.');
+        await this.prisma.discordOutbox.create({ data: { type: 'bot.welcome-test', channelKey: 'announcements', payload: { guildId, discordId: link.discordId, kind } } });
+        return { queued: true };
+    }
     async banner(id) {
         const f = await this.media.welcomeBanner(id);
         return { mime: f.mime, name: f.name, data: f.data.toString('base64') };
