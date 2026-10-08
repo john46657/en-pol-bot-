@@ -110,7 +110,8 @@ let CadService = class CadService {
         return {
             id: i.id, number: i.number, title: i.title, keyword: i.keyword, type: i.type ? this.label(cfg.incidentTypes, i.type) : null,
             priority: this.label(cfg.priorities, i.priority), priorityColor: prio?.color ?? null, status: this.label(cfg.incidentStatuses, i.status),
-            location: i.location, description: i.description?.slice(0, 1000) ?? null, dashboardUrl: (0, web_url_1.webUrl)(`/cad/incidents?id=${i.id}`), ...extra,
+            location: i.location, description: i.description?.slice(0, 1000) ?? null, dashboardUrl: (0, web_url_1.webUrl)(`/cad/incidents?id=${i.id}`),
+            ...(i.mapX !== null && i.mapX !== undefined && i.mapZ !== null && i.mapZ !== undefined ? { mapUrl: (0, web_url_1.webUrl)(`/cad/map?incident=${i.id}`) } : {}), ...extra,
         };
     }
     // ───────── Einsätze ─────────
@@ -704,8 +705,10 @@ let CadService = class CadService {
                 if (!snap?.players)
                     continue;
                 const staffNames = snap.staff ? new Set([...snap.staff.admins, ...snap.staff.mods, ...snap.staff.helpers].map((x) => x.name.toLowerCase())) : new Set();
+                // Nur Polizei-Leitstelle: Sheriffs erscheinen nicht auf der Karte
                 for (const p of snap.players)
-                    players.push({ ...p, serverId: s.id, staff: (!!p.permission && p.permission !== 'Normal') || staffNames.has(p.name.toLowerCase()) });
+                    if (p.team?.toLowerCase() !== 'sheriff')
+                        players.push({ ...p, serverId: s.id, staff: (!!p.permission && p.permission !== 'Normal') || staffNames.has(p.name.toLowerCase()) });
                 // GPS nur für Polizeifahrzeuge: ER:LC liefert keine Fahrzeugposition – sie stehen dort, wo ihr Besitzer (Team Police) gerade ist
                 const byName = new Map(snap.players.map((p) => [p.name.toLowerCase(), p]));
                 for (const v of snap.vehicles ?? []) {

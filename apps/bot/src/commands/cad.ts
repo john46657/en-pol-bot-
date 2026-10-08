@@ -126,6 +126,9 @@ export function cadButtons(type: string, p: Record<string, unknown>): ButtonSpec
     { id: `cad:call:${p.id}:close`, label: 'Schließen', style: 'danger', emoji: '✖️' },
     ...(typeof p.mapUrl === 'string' && /^https?:\/\//.test(p.mapUrl) ? [{ id: 'map', label: 'Auf Karte anzeigen', style: 'secondary' as const, url: p.mapUrl }] : []),
   ];
-  if (type.startsWith('cad.incident.')) return link.length ? link : undefined;
+  if (type.startsWith('cad.incident.')) {
+    const map = type === 'cad.incident.created' && typeof p.mapUrl === 'string' && /^https?:\/\//.test(p.mapUrl) ? [{ id: 'map', label: 'Auf Karte anzeigen', style: 'secondary' as const, url: p.mapUrl }] : [];
+    return link.length || map.length ? [...link, ...map] : undefined;
+  }
   return undefined;
 }

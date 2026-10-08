@@ -87,7 +87,7 @@ let CadTabletService = class CadTabletService {
             bolos = recs.filter((r) => r.vehicleId).map((r) => { const v = vehicles.find((x) => x.id === r.vehicleId); return { id: r.id, plate: v?.plate ?? '—', model: v?.model ?? null, color: v?.color ?? null, reason: r.reason, priority: r.priority, since: r.createdAt.toISOString() }; });
         }
         // Im Spiel gesucht (Fahndungssterne aus ER:LC)
-        const inGameWanted = servers.flatMap((s) => (s.snapshot?.players ?? []).filter((p) => p.wantedStars > 0).map((p) => ({ name: p.name, stars: p.wantedStars, location: p.location ? [p.location.street, p.location.postal && `PLZ ${p.location.postal}`].filter(Boolean).join(' · ') || null : null })));
+        const inGameWanted = servers.flatMap((s) => (s.snapshot?.players ?? []).filter((p) => p.wantedStars > 0 && p.team?.toLowerCase() !== 'sheriff').map((p) => ({ name: p.name, stars: p.wantedStars, location: p.location ? [p.location.street, p.location.postal && `PLZ ${p.location.postal}`].filter(Boolean).join(' · ') || null : null })));
         return {
             calls: calls.map((c) => ({ id: c.id, callNumber: c.callNumber, description: c.description, location: c.positionDescriptor, status: c.status, startedAt: c.startedAt.toISOString() })),
             board, available: board.filter((b) => b.availability === 'available').length,

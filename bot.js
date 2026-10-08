@@ -82440,7 +82440,10 @@ function cadButtons(type, p) {
     { id: `cad:call:${p.id}:close`, label: "Schlie\xDFen", style: "danger", emoji: "\u2716\uFE0F" },
     ...typeof p.mapUrl === "string" && /^https?:\/\//.test(p.mapUrl) ? [{ id: "map", label: "Auf Karte anzeigen", style: "secondary", url: p.mapUrl }] : []
   ];
-  if (type.startsWith("cad.incident.")) return link.length ? link : void 0;
+  if (type.startsWith("cad.incident.")) {
+    const map = type === "cad.incident.created" && typeof p.mapUrl === "string" && /^https?:\/\//.test(p.mapUrl) ? [{ id: "map", label: "Auf Karte anzeigen", style: "secondary", url: p.mapUrl }] : [];
+    return link.length || map.length ? [...link, ...map] : void 0;
+  }
   return void 0;
 }
 

@@ -136,8 +136,10 @@ function cadButtons(type, p) {
             { id: `cad:call:${p.id}:close`, label: 'Schließen', style: 'danger', emoji: '✖️' },
             ...(typeof p.mapUrl === 'string' && /^https?:\/\//.test(p.mapUrl) ? [{ id: 'map', label: 'Auf Karte anzeigen', style: 'secondary', url: p.mapUrl }] : []),
         ];
-    if (type.startsWith('cad.incident.'))
-        return link.length ? link : undefined;
+    if (type.startsWith('cad.incident.')) {
+        const map = type === 'cad.incident.created' && typeof p.mapUrl === 'string' && /^https?:\/\//.test(p.mapUrl) ? [{ id: 'map', label: 'Auf Karte anzeigen', style: 'secondary', url: p.mapUrl }] : [];
+        return link.length || map.length ? [...link, ...map] : undefined;
+    }
     return undefined;
 }
 //# sourceMappingURL=cad.js.map
