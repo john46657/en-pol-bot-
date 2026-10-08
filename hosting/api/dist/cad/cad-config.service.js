@@ -40,7 +40,8 @@ exports.cadConfigSchema = zod_1.z.object({
     }),
     routes: zod_1.z.array(zod_1.z.object({ id: zod_1.z.string().min(1).max(40), guildId: sf, event: zod_1.z.enum(shared_1.CAD_EVENTS), channelIds: zod_1.z.array(sf).max(10), pingRoleIds: zod_1.z.array(sf).max(10).default([]), enabled: zod_1.z.boolean().default(true) })).max(100),
     memberFields: list(zod_1.z.object({ key: keyStr, label: zod_1.z.string().trim().min(1).max(60), type: zod_1.z.enum(['text', 'number', 'select']), options: zod_1.z.array(zod_1.z.string().max(60)).max(30).optional() }), 0, 20),
-    widgets: zod_1.z.array(zod_1.z.enum(shared_1.CAD_WIDGETS)).max(20),
+    // Entfernte Kacheln (z. B. erlcPlayers) aus älteren Einstellungen still verwerfen statt die ganze Konfiguration ungültig zu machen
+    widgets: zod_1.z.array(zod_1.z.string()).transform((ws) => ws.filter((w) => shared_1.CAD_WIDGETS.includes(w))).pipe(zod_1.z.array(zod_1.z.enum(shared_1.CAD_WIDGETS)).max(20)),
 });
 /** Zentrale CAD-Konfiguration (eine Quelle für Backend, Dashboard und Bot). Fehlt etwas, gelten die Standardwerte. */
 let CadConfigService = class CadConfigService {

@@ -31,7 +31,8 @@ export const cadConfigSchema = z.object({
   }),
   routes: z.array(z.object({ id: z.string().min(1).max(40), guildId: sf, event: z.enum(CAD_EVENTS), channelIds: z.array(sf).max(10), pingRoleIds: z.array(sf).max(10).default([]), enabled: z.boolean().default(true) })).max(100),
   memberFields: list(z.object({ key: keyStr, label: z.string().trim().min(1).max(60), type: z.enum(['text', 'number', 'select']), options: z.array(z.string().max(60)).max(30).optional() }), 0, 20),
-  widgets: z.array(z.enum(CAD_WIDGETS)).max(20),
+  // Entfernte Kacheln (z. B. erlcPlayers) aus älteren Einstellungen still verwerfen statt die ganze Konfiguration ungültig zu machen
+  widgets: z.array(z.string()).transform((ws) => ws.filter((w): w is (typeof CAD_WIDGETS)[number] => (CAD_WIDGETS as readonly string[]).includes(w))).pipe(z.array(z.enum(CAD_WIDGETS)).max(20)),
 });
 
 /** Zentrale CAD-Konfiguration (eine Quelle für Backend, Dashboard und Bot). Fehlt etwas, gelten die Standardwerte. */

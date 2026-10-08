@@ -559,14 +559,11 @@ var CAD_EVENT_SEND_TYPE = {
   announcement: "announcements",
   radio: "radio"
 };
-var CAD_WIDGETS = ["activeIncidents", "availableUnits", "erlcPlayers", "erlcQueue", "activeCalls", "staffOnline", "erlcStatus", "map", "units", "radio", "persons", "vehicles", "dutyActivity"];
+var CAD_WIDGETS = ["activeIncidents", "availableUnits", "activeCalls", "erlcStatus", "map", "units", "radio", "persons", "vehicles", "dutyActivity"];
 var CAD_WIDGET_LABELS = {
   activeIncidents: "Aktive Eins\xE4tze",
   availableUnits: "Verf\xFCgbare Einheiten",
-  erlcPlayers: "ER:LC-Spieler",
-  erlcQueue: "Warteschlange",
   activeCalls: "Aktive Notrufe",
-  staffOnline: "Server-Team online",
   erlcStatus: "ER:LC-Status",
   map: "Einsatzkarte",
   units: "Einheiten",
@@ -641,7 +638,7 @@ var DEFAULT_CAD_CONFIG = {
   map: { imageUrl: null, width: ERLC_MAP_SIZE, height: ERLC_MAP_SIZE, originX: ERLC_MAP_SIZE / 2, originY: ERLC_MAP_SIZE / 2, scale: 1 },
   routes: [],
   memberFields: [],
-  widgets: ["activeIncidents", "availableUnits", "activeCalls", "dutyActivity", "erlcStatus", "erlcPlayers", "erlcQueue", "staffOnline", "map", "radio"]
+  widgets: ["activeIncidents", "availableUnits", "activeCalls", "dutyActivity", "erlcStatus", "map", "radio"]
 };
 var gameToPixel = (m, x, z6) => ({ px: m.originX + x * m.scale, py: m.originY + z6 * m.scale });
 var pixelToGame = (m, px, py) => ({ x: (px - m.originX) / m.scale, z: (py - m.originY) / m.scale });

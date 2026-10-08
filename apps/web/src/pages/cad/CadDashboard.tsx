@@ -24,17 +24,12 @@ export function CadDashboard() {
   const d = q.data, cfg = d.config;
   // „Aktivität im Dienst“ ist neu: ohne eigene Ansicht auch bei älteren Leitstellen-Einstellungen anzeigen
   const widgets = (cad.widgets ?? (cfg.widgets.includes('dutyActivity') ? cfg.widgets : [...cfg.widgets.slice(0, 3), 'dutyActivity', ...cfg.widgets.slice(3)])).filter((w) => (CAD_WIDGETS as readonly string[]).includes(w) && (w !== 'dutyActivity' || can('team.view')));
-  const sum = (k: 'players' | 'queue' | 'staffOnline') => d.erlc.reduce((n, s) => n + (s[k] ?? 0), 0);
   const available = d.units.filter((u) => u.status === cfg.unitStatuses[0]?.key && u.operational);
   const erlcLive = d.erlc.some((s) => s.status === 'CONNECTED' || s.status === 'LIMITED');
   const wide = new Set(['map', 'activeIncidents', 'units']);
   /** Kennzahl als kompakte Kachel (oben in einer Reihe statt einer großen Karte je Zahl). */
-  const STATS: Record<string, () => { value: string | number; hint?: string; to?: string; tone?: 'danger' | 'success' | 'muted' } | null> = {
+  const STATS: Record<string, () => { value: string | number; hint?: string; to?: string; tone?: 'danger' | 'success' | 'muted' }> = {
     availableUnits: () => ({ value: available.length, hint: `von ${d.units.length} Einheiten`, to: '/cad/units', tone: !d.units.length ? 'muted' : !available.length ? 'danger' : 'success' }),
-    // ER:LC-Kacheln nur zeigen, solange ER:LC verbunden ist
-    erlcPlayers: () => (erlcLive ? { value: `${sum('players')}${d.erlc.some((s) => s.maxPlayers) ? ` / ${d.erlc.reduce((n, s) => n + (s.maxPlayers ?? 0), 0)}` : ''}`, hint: 'auf dem Server', to: '/cad/erlc' } : null),
-    erlcQueue: () => (erlcLive ? { value: sum('queue'), hint: 'warten auf Beitritt', to: '/cad/erlc' } : null),
-    staffOnline: () => (erlcLive ? { value: sum('staffOnline'), hint: 'im Spiel', to: '/cad/erlc' } : null),
     persons: () => ({ value: d.counts.persons ?? '–', hint: 'in den Akten', to: d.counts.persons !== null ? '/persons' : undefined }),
     vehicles: () => ({ value: d.counts.vehicles ?? '–', hint: 'im Register', to: d.counts.vehicles !== null ? '/vehicles' : undefined }),
   };
@@ -62,7 +57,7 @@ export function CadDashboard() {
       <div className="mb-3 grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-6">
         <Tile label="Aktive Einsätze" value={d.incidents.length} hint={d.incidents.length ? `${d.incidents.filter((i) => i.priority === cfg.priorities[0]?.key).length} mit höchster Priorität` : 'alles ruhig'} to="/cad/incidents" tone={d.incidents.length ? 'warning' : 'success'} />
         <Tile label="Offene Notrufe" value={d.calls.length} hint={d.calls.length ? `ältester ${ago(d.calls[d.calls.length - 1]!.startedAt)}` : 'keine'} to="/cad/calls" tone={d.calls.length ? 'danger' : 'success'} />
-        {stats.map((w) => { const x = STATS[w]!(); return x && <Tile key={w} label={CAD_WIDGET_LABELS[w] ?? w} value={x.value} hint={x.hint} to={x.to} tone={x.tone} />; })}
+        {stats.map((w) => { const x = STATS[w]!(); return <Tile key={w} label={CAD_WIDGET_LABELS[w] ?? w} value={x.value} hint={x.hint} to={x.to} tone={x.tone} />; })}
       </div>
       <div className={`grid gap-3 ${cad.compact ? 'md:grid-cols-3 xl:grid-cols-4' : 'md:grid-cols-2 xl:grid-cols-3'}`}>
         {panels.map((w) => (
