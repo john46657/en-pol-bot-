@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link, useSearchParams } from 'react-router';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { MapPin, Star } from 'lucide-react';
@@ -11,6 +11,12 @@ import { Button, Card, EmptyState, ErrorState, Field, Input, Modal, PageHeader, 
 export interface IncidentDraft { restrictRoleIds?: string[]; title?: string; type?: string; keyword?: string; priority?: string; status?: string; location?: string; description?: string; involved?: string; requiredUnits?: string; internalNotes?: string; mapX?: number | null; mapZ?: number | null }
 
 const errText = (e: unknown) => (e instanceof ApiError ? `${e.message}${Array.isArray(e.details) ? `: ${(e.details as { path: string; message: string }[]).map((d) => `${d.path} ${d.message}`).join(', ')}` : ''}` : 'Fehlgeschlagen');
+
+/** Farbiger Chip für Priorität/Status (Farbe aus den CAD-Einstellungen, Text immer dabei). */
+export function OptChip({ list, value }: { list: CadConfig['priorities']; value: string | null | undefined }) {
+  const c = optColor(list, value) ?? '#64748b';
+  return <span className="inline-flex shrink-0 items-center rounded px-1.5 py-0.5 text-[11px] font-medium" style={{ background: `${c}26`, color: c, border: `1px solid ${c}55` }}>{optLabel(list, value)}</span>;
+}
 
 /** Einsatz anlegen/bearbeiten. `callId`: aus einem ER:LC-Notruf erstellen (Verknüpfung bleibt gespeichert). */
 export function IncidentForm({ cfg, initial, id, callId, onClose, onSaved }: { cfg: CadConfig; initial?: IncidentDraft; id?: string; callId?: string; onClose: () => void; onSaved?: (inc: CadIncidentRow) => void }) {
@@ -69,25 +75,36 @@ export function CadIncidents() {
   const fav = new Set(cad.favoriteIncidents ?? []);
   const toggleFav = (id: string) => set({ favoriteIncidents: fav.has(id) ? [...fav].filter((x) => x !== id) : [...fav, id].slice(-50) });
   const rows = [...(list.data ?? [])].sort((a, b) => Number(fav.has(b.id)) - Number(fav.has(a.id)));
+  // Großer Bildschirm: ersten Einsatz direkt öffnen, statt eine leere Detailansicht zu zeigen
+  useEffect(() => { if (!selected && rows[0] && window.matchMedia('(min-width: 1280px)').matches) setSp({ id: rows[0].id }, { replace: true }); }, [selected, rows[0]?.id]);
   return (
     <>
       <PageHeader title="Einsätze" actions={can('cad.create_incident') ? <Button onClick={() => setCreating(true)}>Neuer Einsatz</Button> : undefined} />
       <div className="grid gap-3 xl:grid-cols-5">
         <Card className="xl:col-span-2">
-          <div className="mb-2 flex w-full items-center gap-2"><Select aria-label="Filter" className="w-auto py-1 text-xs" value={scope} onChange={(e) => setScope(e.target.value as 'active' | 'all')}><option value="active">Aktive</option><option value="all">Alle</option></Select><Input aria-label="Suche" className="min-w-0 flex-1 py-1 text-xs" placeholder="Nummer, Titel, Stichwort, Ort…" value={q} onChange={(e) => setQ(e.target.value)} /></div>
+          <div className="mb-2 flex w-full items-center gap-2">
+            <div className="flex shrink-0 overflow-hidden rounded-md border border-line text-xs" role="group" aria-label="Filter">{(['active', 'all'] as const).map((k) => <button key={k} type="button" aria-pressed={scope === k} onClick={() => setScope(k)} className={`px-2.5 py-1.5 ${scope === k ? 'bg-primary text-white' : 'hover:bg-panel-2'}`}>{k === 'active' ? 'Aktive' : 'Alle'}</button>)}</div>
+            <Input aria-label="Suche" className="min-w-0 flex-1 py-1.5 text-xs" placeholder="🔍 Nummer, Titel, Stichwort, Ort…" value={q} onChange={(e) => setQ(e.target.value)} />
+          </div>
+          {!!rows.length && <p className="mb-1 text-xs text-muted">{rows.length} {rows.length === 1 ? 'Einsatz' : 'Einsätze'}{fav.size ? ' · ⭐ Favoriten oben' : ''}</p>}
 
           {list.isLoading ? <SkeletonRows /> : list.error ? <ErrorState error={list.error} /> : !rows.length ? <EmptyState text="Keine Einsätze." /> : (
             <ul className="divide-y divide-line">{rows.map((i) => (
-              <li key={i.id} className={`flex items-start gap-2 py-2 ${selected === i.id ? 'bg-primary/10' : ''}`}>
-                <button aria-label={fav.has(i.id) ? 'Favorit entfernen' : 'Als Favorit merken'} onClick={() => toggleFav(i.id)} className={fav.has(i.id) ? 'text-warning' : 'text-muted'}><Star size={14} fill={fav.has(i.id) ? 'currentColor' : 'none'} /></button>
+              <li key={i.id} className={`flex items-start gap-2 rounded-md border-l-4 px-2 py-2 ${selected === i.id ? 'bg-primary/10' : 'hover:bg-panel-2/50'}`} style={{ borderLeftColor: optColor(cfg.priorities, i.priority) ?? '#64748b' }}>
+                <button aria-label={fav.has(i.id) ? 'Favorit entfernen' : 'Als Favorit merken'} onClick={() => toggleFav(i.id)} className={`mt-0.5 ${fav.has(i.id) ? 'text-warning' : 'text-muted'}`}><Star size={14} fill={fav.has(i.id) ? 'currentColor' : 'none'} /></button>
                 <button className="min-w-0 flex-1 text-left" onClick={() => setSp({ id: i.id })}>
-                  <p className="truncate text-sm font-medium"><span className="mr-1 inline-block h-2 w-2 rounded-full" style={{ background: optColor(cfg.priorities, i.priority) ?? "#64748b" }} />{i.restrictRoleIds?.length ? "🔒 " : ""}{i.number} · {i.title}</p>
-                  <p className="truncate text-xs text-muted">{optLabel(cfg.incidentStatuses, i.status)} · {i.keyword ?? optLabel(cfg.incidentTypes, i.type)} · {i.location ?? 'ohne Ort'} · {ago(i.createdAt)}</p>
+                  <p className="truncate text-sm font-medium">{i.restrictRoleIds?.length ? '🔒 ' : ''}<span className="text-muted">{i.number}</span> · {i.title}</p>
+                  <p className="mt-0.5 flex flex-wrap items-center gap-1 text-xs text-muted">
+                    <OptChip list={cfg.priorities} value={i.priority} /><OptChip list={cfg.incidentStatuses} value={i.status} />
+                    {(i.keyword || i.type) && <span>{i.keyword ?? optLabel(cfg.incidentTypes, i.type)}</span>}
+                    <span className="truncate">📍 {i.location ?? 'ohne Ort'}</span>
+                  </p>
+                  <p className="mt-0.5 text-[11px] text-muted">{ago(i.createdAt)}{i.units.filter((u) => !u.clearedAt).length ? ` · 🚓 ${i.units.filter((u) => !u.clearedAt).map((u) => u.unit.callsign).join(', ')}` : ' · keine Einheit'}</p>
                 </button>
               </li>))}</ul>
           )}
         </Card>
-        <div className="xl:col-span-3">{selected ? <IncidentDetail id={selected} cfg={cfg} /> : <Card><EmptyState text="Einsatz links auswählen." /></Card>}</div>
+        <div className="xl:col-span-3">{selected ? <IncidentDetail id={selected} cfg={cfg} /> : <Card><EmptyState text={rows.length ? 'Einsatz links auswählen.' : 'Keine Einsätze.'} hint={can('cad.create_incident') ? '„Neuer Einsatz“ oben rechts – oder auf der Einsatzkarte „Einsatz hier“.' : undefined} /></Card>}</div>
       </div>
       {creating && <IncidentForm cfg={cfg} onClose={() => setCreating(false)} onSaved={(inc) => setSp({ id: inc.id })} />}
     </>
@@ -120,7 +137,7 @@ export function IncidentDetail({ id, cfg }: { id: string; cfg: CadConfig }) {
   const free = (units.data ?? []).filter((u) => u.operational && !['OFF_DUTY', 'UNAVAILABLE'].includes(u.status) && !active.some((a) => a.unitId === u.id));
   const row = (label: string, value: React.ReactNode) => value ? <><dt className="text-muted">{label}</dt><dd className="whitespace-pre-wrap">{value}</dd></> : null;
   return (
-    <Card title={<span>{i.number} · {i.title}</span>} actions={<div className="flex flex-wrap gap-1">
+    <Card title={<span className="flex flex-wrap items-center gap-2"><span>{i.number} · {i.title}</span><OptChip list={cfg.priorities} value={i.priority} /><OptChip list={cfg.incidentStatuses} value={i.status} /></span>} actions={<div className="flex flex-wrap gap-1">
       {i.mapX !== null && <Link to={`/cad/map?incident=${i.id}`}><Button size="sm" variant="secondary"><MapPin size={12} /> Karte</Button></Link>}
       {can('cad.edit_incident') && <Button size="sm" variant="secondary" onClick={() => setEdit(true)}>Bearbeiten</Button>}
     </div>}>
@@ -135,11 +152,20 @@ export function IncidentDetail({ id, cfg }: { id: string; cfg: CadConfig }) {
         </dl>
         <div className="space-y-3">
           {can('cad.edit_incident') && !st?.closed && (
-            <div><p className="mb-1 text-xs font-medium text-muted">Status setzen</p><div className="flex flex-wrap gap-1">{cfg.incidentStatuses.filter((s) => s.key !== i.status && (!s.closed || can('cad.close_incident'))).map((s) => <Button key={s.key} size="sm" variant={s.closed ? 'danger' : 'secondary'} disabled={status.isPending} onClick={() => status.mutate(s.key)}>{optLabel(cfg.incidentStatuses, s.key)}</Button>)}</div></div>
+            <div><p className="mb-1 text-xs font-medium text-muted">Status</p><div className="flex flex-wrap gap-1">{cfg.incidentStatuses.filter((s) => !s.closed || can('cad.close_incident')).map((s) => {
+              const cur = s.key === i.status;
+              return <Button key={s.key} size="sm" variant={cur ? 'primary' : s.closed ? 'danger' : 'secondary'} aria-pressed={cur} disabled={status.isPending || cur} onClick={() => status.mutate(s.key)}>{optLabel(cfg.incidentStatuses, s.key)}</Button>;
+            })}</div></div>
           )}
           <div><p className="mb-1 text-xs font-medium text-muted">Einheiten</p>
-            <ul className="space-y-1 text-sm">{active.map((u) => <li key={u.unitId} className="flex items-center justify-between gap-2"><span>{u.unit.callsign} · {optLabel(cfg.unitStatuses, u.unit.status)}</span>{can('cad.assign_unit') && <Button size="sm" variant="ghost" onClick={() => clear.mutate(u.unitId)}>lösen</Button>}</li>)}{!active.length && <li className="text-muted">keine</li>}</ul>
-            {can('cad.assign_unit') && !st?.closed && free.length > 0 && <Select aria-label="Einheit zuweisen" className="mt-1 py-1 text-xs" value="" onChange={(e) => e.target.value && assign.mutate(e.target.value)}><option value="">Einheit zuweisen…</option>{free.map((u) => <option key={u.id} value={u.id}>{u.callsign}{u.current ? ` (in ${u.current.number})` : ''} – {optLabel(cfg.unitStatuses, u.status)}</option>)}</Select>}
+            <ul className="space-y-1 text-sm">{active.map((u) => <li key={u.unitId} className="flex items-center justify-between gap-2 rounded border border-line px-2 py-1"><span className="flex items-center gap-2"><b>{u.unit.callsign}</b><OptChip list={cfg.unitStatuses} value={u.unit.status} /><span className="text-xs text-muted">seit {ago(u.assignedAt).replace('vor ', '')}</span></span>{can('cad.assign_unit') && <Button size="sm" variant="ghost" onClick={() => clear.mutate(u.unitId)}>lösen</Button>}</li>)}{!active.length && <li className="text-muted">keine</li>}</ul>
+            {can('cad.assign_unit') && !st?.closed && free.length > 0 && (
+              <div className="mt-2"><p className="mb-1 text-[11px] text-muted">Zuweisen (ein Klick):</p><div className="flex flex-wrap gap-1">{free.map((u) => (
+                <button key={u.id} type="button" disabled={assign.isPending} onClick={() => assign.mutate(u.id)} title={`${optLabel(cfg.unitStatuses, u.status)}${u.current ? ` – gerade in ${u.current.number}` : ''}`}
+                  className="inline-flex items-center gap-1 rounded border border-line px-2 py-0.5 text-xs hover:border-primary hover:bg-primary/10 disabled:opacity-50">
+                  <span aria-hidden className="h-2 w-2 rounded-full" style={{ background: optColor(cfg.unitStatuses, u.status) ?? '#64748b' }} />+ {u.callsign}{u.current ? <span className="text-muted">({u.current.number})</span> : null}
+                </button>))}</div></div>
+            )}
           </div>
         </div>
       </div>
