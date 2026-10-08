@@ -129,6 +129,8 @@ export declare class DiscordService {
         channelId: string;
         messageId: string;
     } | null>;
+    /** Gibt es die Antrags-/Bewerbungsnachricht (`msg-<art>-<id>`) in Discord? Der Bot merkt sich die Orte als Liste. */
+    hasTrackedMessage(key: string): Promise<boolean>;
     getState(key: string): Promise<unknown>;
     setState(key: string, value: unknown): Promise<void>;
     pending(limit: number): Prisma.PrismaPromise<{

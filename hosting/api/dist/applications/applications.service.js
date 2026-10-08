@@ -145,7 +145,7 @@ let ApplicationsService = class ApplicationsService {
         if (!channelId)
             return;
         // Gibt es die Bewerbungs-Nachricht in Discord, wird nur sie aktualisiert (markDecided) – keine zweite Nachricht
-        if (await this.discord.posted(`msg-a-${a.id}`))
+        if (await this.discord.hasTrackedMessage(`msg-a-${a.id}`))
             return;
         const form = await this.form(a.guildId);
         const answers = (a.answers ?? {});
