@@ -7,7 +7,6 @@ import { useRealtime } from '../lib/realtime';
 import { Button, Card, EmptyState, ErrorState, PageHeader, PriorityBadge, Select, SkeletonRows, StatusBadge, statusLabel } from '../components/ui';
 import { DISPATCH_TRANSITIONS, UNIT_STATUSES } from '@enrp/shared';
 import { FormModal } from '../components/FormModal';
-import { DangerLevel } from '../components/DangerLevel';
 import { DutyActivity } from '../components/DutyActivity';
 import { PRIORITIES } from '@enrp/shared';
 
@@ -35,7 +34,6 @@ export function Dispatch() {
   return (
     <>
       <PageHeader title="Leitstelle" subtitle="Live-Übersicht – aktualisiert sich in Echtzeit" actions={<>{can('incidents.create') && <Button onClick={() => setCreating(true)}>Neuer Einsatz</Button>}{can('dispatch.manage') && <Button variant="secondary" onClick={() => setUnitForm(true)}>Neue Einheit</Button>}</>} />
-      <DangerLevel />
       {err && <div role="alert" className="mb-3 rounded border border-danger/40 bg-danger/10 p-2 text-sm text-danger">{err}</div>}
       <div className="grid gap-4 xl:grid-cols-3">
         <div className="xl:col-span-2">
