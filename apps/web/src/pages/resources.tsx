@@ -39,24 +39,6 @@ export const reports: ResourceConfig<Row> = {
     toBody: (v) => ({ type: v.type, title: v.title, content: { body: v.body }, personIds: v.personId ? [v.personId] : undefined }) },
 };
 
-export const tickets: ResourceConfig<Row> = {
-  title: 'Strafzettel', subtitle: 'Verwarnungen und Bußgelder', endpoint: '/tickets', queryKey: 'tickets', emptyText: 'Keine Strafzettel ausgestellt.', detailPath: (r) => `/tickets/${r.id}`,
-  columns: [{ key: 'number', label: 'Nummer' }, { key: 'person', label: 'Person', render: (r) => s((r.person as Row)?.robloxUsername) }, { key: 'reason', label: 'Grund' }, { key: 'amount', label: 'Betrag', render: (r) => Number(r.amount).toFixed(2) }, { key: 'status', label: 'Status', render: status }, { key: 'issuedAt', label: 'Ausgestellt', render: date('issuedAt') }],
-  create: { perm: 'tickets.create', label: 'Neuer Strafzettel', fields: [
-    { name: 'erlcPlayer', label: 'Spieler im Spiel (ER:LC)', type: 'erlcPlayer', hint: 'Direkt aus ER:LC – die Personenakte wird automatisch gefunden oder angelegt.' },
-    { name: 'personId', label: 'oder Person aus den Akten', type: 'person' },
-    { name: 'legalCodeId', label: 'Tatbestand', type: 'legalCode', hint: 'Optional; lässt du den Betrag leer, wird er aus dem Tatbestand übernommen.' },
-    { name: 'reason', label: 'Grund', required: true, min: 3, max: 1000 }, { name: 'amount', label: 'Betrag', type: 'number' },
-    { name: 'notifyInGame', label: 'Im Spiel Bescheid geben', type: 'checkbox', hint: 'Spieler bekommt im Spiel eine Nachricht (ER:LC :pm) mit Nummer, Grund und Betrag' },
-  ],
-  toBody: (v) => {
-    const { erlcPlayer, personId, notifyInGame, ...rest } = v as Record<string, unknown>;
-    const [serverId, name] = typeof erlcPlayer === 'string' && erlcPlayer.includes('|') ? erlcPlayer.split('|') : [];
-    const body = Object.fromEntries(Object.entries(rest).filter(([, x]) => x !== '' && x !== undefined));
-    return { ...body, ...(serverId && name ? { erlcPlayer: { serverId, name } } : personId ? { personId } : {}), ...(notifyInGame ? { notifyInGame: true } : {}) };
-  } },
-};
-
 export const complaints: ResourceConfig<Row> = {
   title: 'Beschwerden', endpoint: '/complaints', queryKey: 'complaints', emptyText: 'Keine Beschwerden.', statusFilter: COMPLAINT_STATUSES, detailPath: (r) => `/complaints/${r.id}`,
   columns: [{ key: 'number', label: 'Nummer' }, { key: 'category', label: 'Kategorie' }, { key: 'status', label: 'Status', render: status }, { key: 'createdAt', label: 'Eingegangen', render: date('createdAt') }],
@@ -95,12 +77,8 @@ export const applications: ResourceConfig<Row> = {
 // ---------- Detailseiten ----------
 const link = (r: Row, k: string) => (r[k] ? <code className="text-xs">{String(r[k])}</code> : '—');
 const nested = (key: string) => (d: Record<string, unknown>) => ({ record: d[key] as Row, timeline: d.timeline as never });
-const money = (v: unknown) => Number(v).toFixed(2);
 
 export const records: Record<string, RecordConfig> = {
-  tickets: { endpoint: '/tickets', queryKey: 'tickets', back: '/tickets', title: (r) => `Strafzettel ${r.number}`, pick: nested('ticket'),
-    fields: [{ key: 'reason', label: 'Grund' }, { key: 'amount', label: 'Betrag', render: money }, { key: 'issuedAt', label: 'Ausgestellt' }, { key: 'personId', label: 'Person', render: (_v, r) => <Link className="text-primary underline" to={`/persons/${r.personId}`}>{String(r.personId).slice(0, 8)}…</Link> }, { key: 'voidReason', label: 'Stornogrund' }, { key: 'notes', label: 'Notizen' }],
-    actions: [{ label: 'Strafzettel stornieren', perm: 'tickets.void', path: (id) => `/tickets/${id}/void`, danger: true, reason: 'required', show: (r) => r.status === 'ISSUED' }] },
   complaints: { endpoint: '/complaints', queryKey: 'complaints', back: '/complaints', title: (r) => `Beschwerde ${r.number}`, pick: nested('complaint'),
     fields: [{ key: 'category', label: 'Kategorie' }, { key: 'description', label: 'Beschreibung' }, { key: 'findings', label: 'Feststellungen' }, { key: 'resolution', label: 'Ergebnis' }, { key: 'internalNotes', label: 'Interne Notizen' }, { key: 'investigatorId', label: 'Ermittler', render: (_v, r) => link(r, 'investigatorId') }],
     actions: [

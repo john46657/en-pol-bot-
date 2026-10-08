@@ -27,7 +27,6 @@ Der Bot (`apps/bot`, TypeScript, discord.js 14) ist ein **schlanker Client der S
 | `/einsatzstatus nummer status` | Status: bestaetigt, unterwegs, vor_ort, in_bearbeitung, abschluss, abgebrochen, geschlossen | `dispatch.edit` (`geschlossen`: `dispatch.close`) |
 | `/einsatzzuweisen nummer rufzeichen` | Einheit einem Einsatz zuweisen | `dispatch.assign` |
 | `/funk kanal text` | Nachricht in Systemkanal team/dispatch | `communication.send` |
-| `/ticket person grund [betrag]` | Ticket ausstellen (Person muss eindeutig sein) | `tickets.create` |
 | `/bericht titel text [typ] [einreichen]` | Bericht als Entwurf oder direkt einreichen | `reports.create` (+ `reports.submit`) |
 | `/beschwerde kategorie beschreibung [person]` | Beschwerde erfassen | `complaints.create` |
 | `/ermittlung titel [beschreibung]` | Ermittlungsfall eröffnen | `investigations.create` |

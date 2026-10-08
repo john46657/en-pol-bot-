@@ -135,8 +135,9 @@ export function App() {
           <Route path="vehicles/:id" element={rec('vehicles', 'vehicles.view')} />
           <Route path="reports" element={list(R.reports as never, 'reports.view')} />
           <Route path="reports/:id" element={<Guard perm="reports.view"><ReportDetail /></Guard>} />
-          <Route path="tickets" element={list(R.tickets as never, 'tickets.view')} />
-          <Route path="tickets/:id" element={rec('tickets', 'tickets.view')} />
+          {/* Strafzettel entfernt – alte Links landen bei den Personen */}
+          <Route path="tickets" element={<Navigate to="/persons" replace />} />
+          <Route path="tickets/:id" element={<Navigate to="/persons" replace />} />
           {/* Beschwerden laufen über Support-Tickets; alte Beschwerden bleiben per Link (Suche, Personenakte) erreichbar */}
           <Route path="complaints" element={<Navigate to="/support-tickets" replace />} />
           <Route path="complaints/:id" element={rec('complaints', 'complaints.view')} />

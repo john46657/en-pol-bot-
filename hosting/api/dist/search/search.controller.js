@@ -57,8 +57,6 @@ let SearchController = class SearchController {
             const all = allowed('reports.review') || allowed('reports.approve');
             jobs.push(this.prisma.report.findMany({ where: { AND: [{ OR: [{ number: { contains: upper } }, { title: ci(term) }] }, all ? {} : { OR: [{ authorId: u.id }, { status: { in: ['APPROVED', 'ARCHIVED'] } }] }] }, take }).then((r) => r.map((x) => ({ type: 'report', id: x.id, label: x.number, sub: x.title }))));
         }
-        if (allowed('tickets.view'))
-            jobs.push(this.prisma.ticket.findMany({ where: { number: { contains: upper } }, take }).then((r) => r.map((x) => ({ type: 'ticket', id: x.id, label: x.number, sub: x.reason }))));
         if (allowed('complaints.view'))
             jobs.push(this.prisma.complaint.findMany({ where: { number: { contains: upper } }, take }).then((r) => r.map((x) => ({ type: 'complaint', id: x.id, label: x.number, sub: x.category }))));
         if (allowed('investigations.view'))

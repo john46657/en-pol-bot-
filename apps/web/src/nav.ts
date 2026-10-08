@@ -1,4 +1,4 @@
-import { ScrollText, BellRing, GraduationCap, PanelTop, MapPinned, RadioTower, Palette, CalendarOff, LifeBuoy, Monitor, BarChart3, Car, ClipboardList, FileText, Fingerprint, Flag, LayoutDashboard, Search, Settings, Ticket, UserCheck, Users, Wrench, type LucideIcon } from 'lucide-react';
+import { ScrollText, BellRing, GraduationCap, PanelTop, MapPinned, RadioTower, Palette, CalendarOff, LifeBuoy, Monitor, BarChart3, Car, ClipboardList, FileText, Fingerprint, Flag, LayoutDashboard, Search, Settings, UserCheck, Users, Wrench, type LucideIcon } from 'lucide-react';
 
 /** Reiter eines zusammengefassten Menüpunkts: eigene Seite mit eigenem Recht. */
 export interface NavTab { path: string; label: string; perm?: string; area?: string }
@@ -32,7 +32,6 @@ export const NAV: NavItem[] = [
     { path: '/reports', label: '📄 Einsatzberichte', perm: 'reports.view' },
     { path: '/duty-reports', label: '🗓️ Tages-/Wochenberichte', perm: 'dutyreports.view' },
   ]),
-  { path: '/tickets', label: 'Strafzettel', icon: Ticket, perm: 'tickets.view', group: 'Records' },
   { path: '/investigations', label: 'Ermittlungen', icon: Search, perm: 'investigations.view', group: 'Records' },
   { path: '/wanted', label: 'Fahndungen', icon: Flag, perm: 'wanted.view', group: 'Records' },
   grp('Personal', UserCheck, 'Organisation', [

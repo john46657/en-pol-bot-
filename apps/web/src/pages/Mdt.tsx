@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Link, useNavigate } from 'react-router';
-import { Car, FileText, Fingerprint, Flag, Search, Siren, Ticket, type LucideIcon } from 'lucide-react';
+import { Car, FileText, Fingerprint, Flag, Search, Siren, type LucideIcon } from 'lucide-react';
 import { api, type Page } from '../lib/api';
 import { useAuth } from '../lib/auth';
 import { useRealtime } from '../lib/realtime';
@@ -21,7 +21,6 @@ interface Quick { key: string; label: string; icon: LucideIcon; perm: string; cf
 const QUICK: Quick[] = [
   { key: 'incident', label: 'Einsatz anlegen', icon: Siren, perm: 'incidents.create', cfg: R.incidents as never, route: 'incidents' },
   { key: 'report', label: 'Bericht anlegen', icon: FileText, perm: 'reports.create', cfg: R.reports as never, route: 'reports' },
-  { key: 'ticket', label: 'Strafzettel ausstellen', icon: Ticket, perm: 'tickets.create', cfg: R.tickets as never, route: 'tickets' },
   { key: 'investigation', label: 'Ermittlung anlegen', icon: Search, perm: 'investigations.create', cfg: R.investigations as never, route: 'investigations' },
   { key: 'wanted', label: 'Fahndung anlegen', icon: Flag, perm: 'wanted.create', cfg: R.wanted as never, route: 'wanted' },
 ];

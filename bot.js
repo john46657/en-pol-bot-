@@ -82922,22 +82922,11 @@ var WARNING_COMMANDS = [{
 var hm = (min) => `${Math.floor(min / 60)} h ${String(Math.round(min % 60)).padStart(2, "0")} min`;
 var q = (s) => encodeURIComponent(s.trim());
 var str2 = (c, k) => String(c.opts[k] ?? "").trim();
-async function resolvePerson(c, term, opts = {}) {
+async function resolvePerson(c, term) {
   const page = await c.api.asUser(c.discordId, "GET", `/persons?q=${q(term)}&pageSize=10`);
   const exact = page.items.filter((p) => String(p.robloxUsername).toLowerCase() === term.toLowerCase() || p.robloxUserId === term);
   if (exact.length === 1) return { person: exact[0] };
   if (exact.length === 0 && page.items.length === 0) {
-    if (opts.create && c.robloxLookup) {
-      const u = await c.robloxLookup(term);
-      if (!u) return { reply: errorReply(`Keine Person zu \u201E${plain(term)}\u201C gefunden \u2013 und bei Roblox gibt es keinen Benutzer mit diesem Namen (oder Roblox ist gerade nicht erreichbar).`) };
-      try {
-        const created = await c.api.asUser(c.discordId, "POST", "/persons", { robloxUsername: u.name, robloxUserId: String(u.id) });
-        return { person: created, created: true };
-      } catch (e) {
-        if (e instanceof BotApiError && e.status === 403) return { reply: errorReply(`\u201E${plain(u.name)}\u201C ist noch nicht im System, und dir fehlt das Recht, Personen anzulegen. Bitte lass die Person von jemandem mit Berechtigung anlegen.`) };
-        throw e;
-      }
-    }
     return { reply: errorReply(`Keine Person zu \u201E${plain(term)}\u201C gefunden.`) };
   }
   const names = (exact.length ? exact : page.items).slice(0, 8).map((p) => `${plain(p.robloxUsername)} (${p.robloxUserId ?? "ohne ID"})`).join(", ");
@@ -83013,7 +83002,7 @@ ${url}`, color: COLORS.info }], buttons: [{ id: "link", label: "Dashboard \xF6ff
         { name: "Konto", value: "`/dashboard` `/panel` `/entverknuepfen` `/profil` `/benachrichtigungen`" },
         { name: "Abfragen", value: "`/person` `/kennzeichen` `/fahndungen` `/einsaetze` `/einsatzinfo` `/einheiten` `/team`" },
         { name: "Dienst & Leitstelle", value: "`/dienst` `/dienststunden` `/abmeldung` `/leave manage` `/einheitstatus` `/einsatz` `/einsatzstatus` `/einsatzzuweisen` `/funk` `/funkcode` `/cad`" },
-        { name: "Erfassen", value: "`/ticket` `/bericht` `/dienstbericht` `/beschwerde` `/ermittlung` `/fahndung` `/beweis`" },
+        { name: "Erfassen", value: "`/bericht` `/dienstbericht` `/beschwerde` `/ermittlung` `/fahndung` `/beweis`" },
         { name: "Leitung & Team", value: "`/ausbildung` `/verwarnen` `/gefahrenstatus` `/funkfreigabe` `/teamliste` `/dienstpanel` `/bewerbungspanel` `/qualipanel` `/teamchance` `/roblox`" },
         { name: "Support-Tickets", value: "`/support` \xF6ffnet ein Ticket (Team: `/support mitglied:@\u2026` f\xFCr jemand anderen). Ticket-Panels, Kategorien, Fragen und Buttons werden im Dashboard eingerichtet und von dort in Discord gesendet." },
         { name: "F\xFCr alle", value: "`/bewerbung` (auch ohne Verkn\xFCpfung; Fragen per Direktnachricht) \xB7 SEK/Flugstaffel/Ausbilder \xFCber das Qualifikations-Panel" },
@@ -83171,30 +83160,6 @@ ${url}`, color: COLORS.info }], buttons: [{ id: "link", label: "Dashboard \xF6ff
         const prio = PRIO[str2(c, "prioritaet")] ?? "MEDIUM";
         const inc = await c.api.asUser(c.discordId, "POST", "/incidents", { title, priority: prio, location: str2(c, "ort") || void 0 });
         return okReply(`Einsatz **${inc.number}** angelegt (${label(prio)}).`);
-      } catch (e) {
-        return mapError(e);
-      }
-    }
-  },
-  {
-    name: "ticket",
-    description: "Stellt ein Ticket aus",
-    options: [
-      { name: "person", description: "Roblox-Name oder -ID", type: "string", required: true, maxLength: 64 },
-      { name: "grund", description: "Grund", type: "string", required: true, maxLength: 500 },
-      { name: "betrag", description: "Betrag", type: "number", min: 0, max: 1e6 },
-      { name: "im_spiel", description: "Spieler im Spiel per Nachricht (ER:LC) Bescheid geben", type: "boolean" }
-    ],
-    async run(c) {
-      const reason = str2(c, "grund");
-      if (reason.length < 3) return errorReply("Der Grund ist zu kurz (mindestens 3 Zeichen).");
-      try {
-        const { person, reply, created } = await resolvePerson(c, str2(c, "person"), { create: true });
-        if (!person) return reply;
-        const amount = typeof c.opts.betrag === "number" ? c.opts.betrag : void 0;
-        const t = await c.api.asUser(c.discordId, "POST", "/tickets", { personId: person.id, reason, ...amount !== void 0 ? { amount } : {}, ...c.opts.im_spiel === true ? { notifyInGame: true } : {} });
-        return okReply(`Strafzettel **${t.number}** f\xFCr **${plain(person.robloxUsername)}** ausgestellt.${created ? " Die Person war noch nicht im System und wurde nach Roblox-Pr\xFCfung neu angelegt." : ""}${t.inGame ? `
-${t.inGame.ok ? "\u{1F3AE}" : "\u26A0\uFE0F"} ${plain(t.inGame.message)}` : ""}`);
       } catch (e) {
         return mapError(e);
       }
