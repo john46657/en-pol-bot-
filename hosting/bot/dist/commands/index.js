@@ -95,11 +95,23 @@ exports.COMMANDS = [
             }
         },
     },
+    ...['dashboard', 'panel'].map((name) => ({
+        name, description: 'Link zum Web-Dashboard',
+        async run(c) {
+            try {
+                const { url } = await c.api.service('GET', '/bot/dashboard-url');
+                return { ephemeral: true, embeds: [{ title: '🖥️ EN Polizei – Dashboard', description: `Hier geht's zum Web-Dashboard:\n${url}`, color: format_1.COLORS.info }], buttons: [{ id: 'link', label: 'Dashboard öffnen', style: 'secondary', url }] };
+            }
+            catch (e) {
+                return (0, errors_1.mapError)(e);
+            }
+        },
+    })),
     {
         name: 'hilfe', description: 'Zeigt alle Befehle',
         async run() {
             return { ephemeral: true, embeds: [{ title: 'EN Polizei — Befehle', color: format_1.COLORS.info, fields: [
-                            { name: 'Konto', value: '`/entverknuepfen` `/profil` `/benachrichtigungen`' },
+                            { name: 'Konto', value: '`/dashboard` `/panel` `/entverknuepfen` `/profil` `/benachrichtigungen`' },
                             { name: 'Abfragen', value: '`/person` `/kennzeichen` `/fahndungen` `/einsaetze` `/einsatzinfo` `/einheiten` `/team`' },
                             { name: 'Dienst & Leitstelle', value: '`/dienst` `/dienststunden` `/abmeldung` `/leave manage` `/einheitstatus` `/einsatz` `/einsatzstatus` `/einsatzzuweisen` `/funk` `/funkcode` `/cad`' },
                             { name: 'Erfassen', value: '`/ticket` `/bericht` `/dienstbericht` `/beschwerde` `/ermittlung` `/fahndung` `/beweis`' },

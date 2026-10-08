@@ -92,11 +92,20 @@ export const COMMANDS: CommandDef[] = [
       } catch (e) { return mapError(e); }
     },
   },
+  ...['dashboard', 'panel'].map((name): CommandDef => ({
+    name, description: 'Link zum Web-Dashboard',
+    async run(c) {
+      try {
+        const { url } = await c.api.service<{ url: string }>('GET', '/bot/dashboard-url');
+        return { ephemeral: true, embeds: [{ title: '🖥️ EN Polizei – Dashboard', description: `Hier geht's zum Web-Dashboard:\n${url}`, color: COLORS.info }], buttons: [{ id: 'link', label: 'Dashboard öffnen', style: 'secondary', url }] };
+      } catch (e) { return mapError(e); }
+    },
+  })),
   {
     name: 'hilfe', description: 'Zeigt alle Befehle',
     async run() {
       return { ephemeral: true, embeds: [{ title: 'EN Polizei — Befehle', color: COLORS.info, fields: [
-        { name: 'Konto', value: '`/entverknuepfen` `/profil` `/benachrichtigungen`' },
+        { name: 'Konto', value: '`/dashboard` `/panel` `/entverknuepfen` `/profil` `/benachrichtigungen`' },
         { name: 'Abfragen', value: '`/person` `/kennzeichen` `/fahndungen` `/einsaetze` `/einsatzinfo` `/einheiten` `/team`' },
         { name: 'Dienst & Leitstelle', value: '`/dienst` `/dienststunden` `/abmeldung` `/leave manage` `/einheitstatus` `/einsatz` `/einsatzstatus` `/einsatzzuweisen` `/funk` `/funkcode` `/cad`' },
         { name: 'Erfassen', value: '`/ticket` `/bericht` `/dienstbericht` `/beschwerde` `/ermittlung` `/fahndung` `/beweis`' },
