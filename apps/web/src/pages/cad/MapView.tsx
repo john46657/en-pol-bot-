@@ -1,8 +1,7 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
-import { Link } from 'react-router';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Layers, Locate, Minus, Pencil, Plus, X } from 'lucide-react';
-import { gameToPixel, pixelToGame, type CadConfig } from '@enrp/shared';
+import { ERLC_BUILTIN_MAP, gameToPixel, pixelToGame, type CadConfig } from '@enrp/shared';
 import { api, ApiError } from '../../lib/api';
 import { useAuth } from '../../lib/auth';
 import { optLabel, useCadPrefs, type CadMapData, type CadMapObject } from '../../lib/cad';
@@ -31,6 +30,9 @@ export function MapView({ cfg, data, height = '70vh', focus, onCreateIncidentAt,
   const setUnitPos = async (id: string, x: number, z: number) => { await api(`/cad/units/${id}`, { method: 'PATCH', body: { mapX: x, mapZ: z } }); void qcMap.invalidateQueries({ queryKey: ['cad-map'] }); void qcMap.invalidateQueries({ queryKey: ['cad-units'] }); };
   const box = useRef<HTMLDivElement>(null);
   const m = cfg.map;
+  // Eigenes Kartenbild; fehlt es oder lädt es nicht (z. B. Webseiten-Adresse), gilt die mitgelieferte ER:LC-Karte
+  const [mapFailed, setMapFailed] = useState<string | null>(null);
+  const mapSrc = m.imageUrl && mapFailed !== m.imageUrl ? m.imageUrl : ERLC_BUILTIN_MAP;
   const [view, setView] = useState<{ s: number; tx: number; ty: number } | null>(null);
   const [selected, setSelected] = useState<string | null>(focus?.id ?? null);
   const [mode, setMode] = useState<Mode>({ kind: 'view' });
@@ -163,9 +165,7 @@ export function MapView({ cfg, data, height = '70vh', focus, onCreateIncidentAt,
       onPointerDown={onPointerDown} onPointerMove={onPointerMove} onPointerUp={onPointerUp} role="application" aria-label="Einsatzkarte">
       {view && (
         <div className="absolute left-0 top-0 origin-top-left" style={{ width: m.width, height: m.height, transform: `translate(${view.tx}px, ${view.ty}px) scale(${view.s})`, cursor: mode.kind === 'view' ? 'grab' : 'crosshair' }}>
-          {m.imageUrl
-            ? <img src={m.imageUrl} alt="ER:LC-Karte" draggable={false} className="pointer-events-none absolute inset-0 h-full w-full" />
-            : <div className="absolute inset-0 grid place-items-center" style={{ backgroundImage: 'linear-gradient(#1e293b 1px, transparent 1px), linear-gradient(90deg, #1e293b 1px, transparent 1px)', backgroundSize: '200px 200px' }} />}
+          <img src={mapSrc} alt="ER:LC-Karte" draggable={false} onError={() => m.imageUrl && setMapFailed(m.imageUrl)} className="pointer-events-none absolute inset-0 h-full w-full" />
           <svg className="pointer-events-none absolute inset-0" width={m.width} height={m.height}>
             {zones.map((z) => <polygon key={z.id} points={z.points!.map(([x, zz]) => { const p = gameToPixel(m, x, zz); return `${p.px},${p.py}`; }).join(' ')} fill={`${z.color ?? (z.layer === 'restricted' ? '#ef4444' : '#3b82f6')}33`} stroke={z.color ?? (z.layer === 'restricted' ? '#ef4444' : '#3b82f6')} strokeWidth={3 / view.s} />)}
             {mode.kind === 'zone' && mode.points.length > 0 && <polyline points={mode.points.map(([x, zz]) => { const p = gameToPixel(m, x, zz); return `${p.px},${p.py}`; }).join(' ')} fill="none" stroke="#facc15" strokeWidth={3 / view.s} strokeDasharray={`${8 / view.s}`} />}
@@ -181,16 +181,6 @@ export function MapView({ cfg, data, height = '70vh', focus, onCreateIncidentAt,
               </button>
             );
           })}
-        </div>
-      )}
-      {!m.imageUrl && (
-        <div className="pointer-events-none absolute inset-0 grid place-items-center p-4" style={{ backgroundImage: 'linear-gradient(rgba(148,163,184,.08) 1px, transparent 1px), linear-gradient(90deg, rgba(148,163,184,.08) 1px, transparent 1px)', backgroundSize: '48px 48px' }}>
-          <div data-ui className="pointer-events-auto max-w-sm rounded-lg border border-line bg-panel/95 p-4 text-center text-sm shadow-lg">
-            <p className="text-2xl" aria-hidden>🗺️</p>
-            <p className="mt-1 font-semibold">Noch keine Karte hinterlegt</p>
-            <p className="mt-1 text-xs text-muted">Lade die ER:LC-Karte als Bild hoch – danach erscheinen Einsätze, Notrufe und Einheiten hier.{!compact ? ' Marker werden trotzdem schon angezeigt, sobald Positionen bekannt sind.' : ''}</p>
-            {can('cad.manage_map') && <Link to="/cad/settings?tab=Karte+%26+Ebenen" className="mt-3 inline-block rounded-md bg-primary px-3 py-1.5 text-xs font-medium text-white hover:opacity-90">Karte hochladen</Link>}
-          </div>
         </div>
       )}
       {data?.stale && <div data-ui className="absolute left-2 bottom-2 rounded bg-warning/90 px-2 py-1 text-xs text-black">ER:LC-API momentan nicht erreichbar – letzter bekannter Stand</div>}
