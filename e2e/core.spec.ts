@@ -13,31 +13,6 @@ test('login rejects bad credentials, accepts good ones, and logout ends the sess
   await expect(page).toHaveURL(/\/login/); // protected route redirects
 });
 
-test('person → ticket creation is linked and visible on the person record', async ({ page }) => {
-  await uiLogin(page, 'admin', ADMIN_PASSWORD);
-  await page.goto('/persons');
-  await page.getByRole('button', { name: 'Neue Person' }).click();
-  await page.getByLabel('Roblox-Name oder Roblox-ID *').fill('E2E_Speeder');
-  await page.getByLabel('Roblox-Benutzer-ID (optional)').fill('5550001');
-  await page.getByRole('button', { name: 'Speichern' }).click();
-  await expect(page.getByRole('heading', { name: 'E2E_Speeder' })).toBeVisible();
-
-  await page.goto('/tickets');
-  await page.getByRole('button', { name: 'Neuer Strafzettel' }).click();
-  await page.getByLabel('Person *').fill('E2E_Speeder');
-  await page.getByRole('option', { name: /E2E_Speeder/ }).click();
-  await page.getByLabel('Grund *').fill('Speeding 120 in a 60 zone');
-  await page.getByLabel('Betrag').fill('300');
-  await page.getByRole('button', { name: 'Speichern' }).click();
-  await expect(page.getByRole('heading', { name: /^Strafzettel T-/ })).toBeVisible();
-  await expect(page.getByText(/Strafzettel T-.* ausgestellt/).first()).toBeVisible(); // timeline
-
-  await page.goto('/persons');
-  await page.getByText('E2E_Speeder').click();
-  await page.getByRole('tab', { name: 'Strafzettel' }).click();
-  await expect(page.getByText('Speeding 120 in a 60 zone')).toBeVisible();
-});
-
 test('permission denial: a police member cannot reach admin pages or see admin navigation', async ({ page }) => {
   const u = await createUser('e2e_rookie', 'Police Member');
   await uiLogin(page, u.username, u.password);

@@ -32,7 +32,8 @@ function Overview() {
   const [days, setDays] = useState(30);
   const q = useQuery({ queryKey: ['analytics', days], queryFn: () => api<Overview>('/analytics/overview', { query: { days } }) });
   if (q.error) return <ErrorState error={q.error} onRetry={() => void q.refetch()} />;
-  const sections = q.data ? (Object.entries(q.data).filter(([k, v]) => k !== 'days' && typeof v === 'object') as [string, Section][]) : [];
+  // Strafzettel gibt es im Dashboard nicht mehr
+  const sections = q.data ? (Object.entries(q.data).filter(([k, v]) => k !== 'days' && k !== 'tickets' && typeof v === 'object') as [string, Section][]) : [];
   return (
     <>
       <div className="mb-3 flex justify-end"><Select aria-label="Zeitraum" className="w-auto" value={days} onChange={(e) => setDays(Number(e.target.value))}>{[7, 30, 90, 365].map((d) => <option key={d} value={d}>Letzte {d} Tage</option>)}</Select></div>

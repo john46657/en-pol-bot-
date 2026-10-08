@@ -117,48 +117,6 @@ describe('commands run as the linked user and reply ephemerally', () => {
     expect(text(await run('einsatz', { titel: 'Banküberfall', prioritaet: 'kritisch', ort: 'Main St' }, api))).toContain('I-2026-ABC123');
     expect(calls[0]!.body).toMatchObject({ title: 'Banküberfall', priority: 'CRITICAL', location: 'Main St' });
   });
-  it('/ticket legt eine unbekannte Person nach Roblox-Prüfung an – nur mit Recht und nur wenn Roblox sie kennt', async () => {
-    const lookup = async (n: string) => (n === 'john150210' ? { id: 4242, name: 'john150210', displayName: 'John' } : null);
-    const runWith = (opts: Record<string, string | number>, api: Api, withRoblox = true) => byName('ticket')!.run({ discordId: '123456789012345678', opts, api, ...(withRoblox ? { robloxLookup: lookup } : {}) });
-    // 1) unbekannt + bei Roblox vorhanden → angelegt, Ticket ausgestellt
-    const ok = fakeApi({ 'GET /persons': { items: [], total: 0 }, 'POST /persons': { id: 'pNew', robloxUsername: 'john150210', robloxUserId: '4242' }, 'POST /tickets': { number: 'T-1' } });
-    const r = text(await runWith({ person: 'john150210', grund: 'Speeding' }, ok.api));
-    expect(r).toContain('T-1');
-    expect(r).toContain('neu angelegt');
-    expect(ok.calls.find((c) => c.method === 'POST' && c.path === '/persons')!.body).toEqual({ robloxUsername: 'john150210', robloxUserId: '4242' });
-    expect(ok.calls.find((c) => c.path === '/tickets')!.body).toMatchObject({ personId: 'pNew' });
-    // 2) bei Roblox unbekannt (Tippfehler) → nichts angelegt
-    const typo = fakeApi({ 'GET /persons': { items: [], total: 0 } });
-    expect(text(await runWith({ person: 'johnn150210', grund: 'Speeding' }, typo.api))).toContain('bei Roblox gibt es keinen');
-    expect(typo.calls.some((c) => c.method === 'POST')).toBe(false);
-    // 3) ohne Recht zum Anlegen → verständliche Meldung, kein Ticket
-    const denied = fakeApi({ 'GET /persons': { items: [], total: 0 }, 'POST /persons': new BotApiError(403, 'FORBIDDEN', 'no') });
-    const d = text(await runWith({ person: 'john150210', grund: 'Speeding' }, denied.api));
-    expect(d).toContain('Recht');
-    expect(denied.calls.some((c) => c.path === '/tickets')).toBe(false);
-    // 4) ohne Roblox-Suche (z. B. nicht verfügbar) bleibt es bei „nicht gefunden“
-    const none = fakeApi({ 'GET /persons': { items: [], total: 0 } });
-    expect(text(await runWith({ person: 'john150210', grund: 'Speeding' }, none.api, false))).toContain('Keine Person');
-    // 5) vorhandene Person wird nicht doppelt angelegt
-    const have = fakeApi({ 'GET /persons': { items: [{ id: 'p1', robloxUsername: 'john150210', robloxUserId: '4242' }], total: 1 }, 'POST /tickets': { number: 'T-2' } });
-    expect(text(await runWith({ person: 'john150210', grund: 'Speeding' }, have.api))).not.toContain('neu angelegt');
-    expect(have.calls.some((c) => c.method === 'POST' && c.path === '/persons')).toBe(false);
-  });
-
-  it('/ticket needs exactly one matching person (name or Roblox id)', async () => {
-    const one = fakeApi({ 'GET /persons': { items: [{ id: 'p1', robloxUsername: 'Alex_Racer', robloxUserId: '7000001' }], total: 1 }, 'POST /tickets': { number: 'T-2026-XYZ' } });
-    expect(text(await run('ticket', { person: 'alex_racer', grund: 'Speeding', betrag: 300 }, one.api))).toContain('T-2026-XYZ');
-    expect(one.calls.at(-1)!.body).toEqual({ personId: 'p1', reason: 'Speeding', amount: 300 });
-    const none = fakeApi({ 'GET /persons': { items: [], total: 0 } });
-    expect(text(await run('ticket', { person: 'ghost', grund: 'Speeding' }, none.api))).toContain('Keine Person');
-    const many = fakeApi({ 'GET /persons': { items: [{ id: 'a', robloxUsername: 'Alex_1', robloxUserId: '1' }, { id: 'b', robloxUsername: 'Alex_2', robloxUserId: '2' }], total: 2 } });
-    const r = await run('ticket', { person: 'alex', grund: 'Speeding' }, many.api);
-    expect(text(r)).toContain('Nicht eindeutig');
-    expect(many.calls.some((c) => c.method === 'POST')).toBe(false); // nie raten
-  });
-});
-
-describe('formatting', () => {
   it('neutralizes markdown and mass pings, and respects Discord limits', () => {
     expect(plain('@everyone @here **x**')).not.toMatch(/@everyone|@here/);
     expect(clip('a'.repeat(5000), 4096).length).toBe(4096);

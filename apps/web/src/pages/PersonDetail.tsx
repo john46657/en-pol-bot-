@@ -14,7 +14,7 @@ interface Overview {
   links: { id: string; entityType: string; entityId: string; role: string; createdAt: string }[];
   timeline: TimelineItem[];
 }
-const TABS = ['Übersicht', 'Fahrzeuge', 'Strafzettel', 'Verknüpfte Akten', 'Verlauf'];
+const TABS = ['Übersicht', 'Fahrzeuge', 'Verknüpfte Akten', 'Verlauf'];
 const ROUTES: Record<string, string> = { Incident: 'incidents', Report: 'reports', Ticket: 'tickets', Complaint: 'complaints', Investigation: 'investigations', Wanted: 'wanted', Evidence: 'evidence' };
 const ENTITY_LABELS: Record<string, string> = { Incident: 'Einsatz', Report: 'Bericht', Ticket: 'Strafzettel', Complaint: 'Beschwerde', Investigation: 'Ermittlung', Wanted: 'Fahndung', Evidence: 'Beweismittel', Person: 'Person', Vehicle: 'Fahrzeug' };
 
@@ -28,7 +28,7 @@ export function PersonDetail() {
   const q = useQuery({ queryKey: ['persons', id], queryFn: () => api<Overview>(`/persons/${id}`) });
   if (q.isLoading) return <SkeletonRows />;
   if (q.error || !q.data) return <ErrorState error={q.error} onRetry={() => void q.refetch()} />;
-  const { person: p, tickets, links, timeline } = q.data;
+  const { person: p, links, timeline } = q.data;
   return (
     <>
       <PageHeader title={p.robloxUsername} subtitle={`Roblox-ID ${p.robloxUserId ?? 'unbekannt'}`} actions={<><StatusBadge status={p.status} />{can('persons.edit') && <Button variant="secondary" onClick={() => setEditing(true)}>Bearbeiten</Button>}</>} />
@@ -36,7 +36,6 @@ export function PersonDetail() {
       <div className="mt-4">
         {tab === 'Übersicht' && <Card title="Übersicht"><dl className="grid gap-4 sm:grid-cols-2"><div><dt className="text-xs text-muted">Aliasse</dt><dd>{p.aliases.join(', ') || '—'}</dd></div><div><dt className="text-xs text-muted">Notizen</dt><dd className="whitespace-pre-wrap">{p.notes ?? '—'}</dd></div>{defs.map((d) => <div key={d.key}><dt className="text-xs text-muted">{d.label}</dt><dd>{p.custom?.[d.key] ?? '—'}</dd></div>)}</dl></Card>}
         {tab === 'Fahrzeuge' && <Card>{p.vehicles.length ? <ul>{p.vehicles.map((v) => <li key={v.id}>{v.plate} — {v.model ?? '—'}</li>)}</ul> : <EmptyState text="Keine verknüpften Fahrzeuge." />}</Card>}
-        {tab === 'Strafzettel' && <Card>{tickets.length ? <ul className="divide-y divide-line">{tickets.map((t) => <li key={t.id} className="flex justify-between py-2"><span>{t.number} · {t.reason}</span><span className="flex gap-2">{Number(t.amount).toFixed(2)}<StatusBadge status={t.status} /></span></li>)}</ul> : <EmptyState text="Keine Strafzettel." />}</Card>}
         {tab === 'Verknüpfte Akten' && <Card>{links.length ? <ul className="divide-y divide-line">{links.map((l) => <li key={l.id} className="py-2 text-sm">{ENTITY_LABELS[l.entityType] ?? l.entityType} <code className="text-xs">{l.entityId.slice(0, 8)}</code> · {l.role} · {fmt(l.createdAt)}{ROUTES[l.entityType] ? <> · <Link className="text-primary underline" to={`/${ROUTES[l.entityType]}/${l.entityId}`}>öffnen</Link></> : null}</li>)}</ul> : <EmptyState text="Keine verknüpften Akten." />}</Card>}
         {tab === 'Verlauf' && <Card><Timeline items={timeline} /></Card>}
       </div>
