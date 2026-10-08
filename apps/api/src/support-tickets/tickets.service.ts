@@ -690,7 +690,7 @@ export class SupportTicketsService {
       await mkdir(this.dir, { recursive: true });
       await writeFile(path.join(this.dir, key), buf);
       return key;
-    } catch (e) { this.log.warn(`attachment not stored: ${e instanceof Error ? e.message : e}`); return null; }
+    } catch (e) { this.log.warn(`Anhang nicht gespeichert: ${e instanceof Error ? e.message : e}`); return null; }
   }
 
   /** Anhang ausliefern (nur mit Zugriff auf das Ticket). Nur Bilder inline, alles andere als Download. */
@@ -970,7 +970,7 @@ export class SupportTicketsService {
     const effects: TicketEffect[] = [];
     let closed = 0;
     for (const t of await this.prisma.supportTicket.findMany({ where: { guildId, creatorId: discordId, closedAt: null, deletedAt: null }, select: { id: true } })) {
-      await this.close(await this.load(t.id), sys, settings.memberLeaveReason, effects).then(() => closed++, (e: Error) => this.log.warn(`member-left close ${t.id}: ${e.message}`));
+      await this.close(await this.load(t.id), sys, settings.memberLeaveReason, effects).then(() => closed++, (e: Error) => this.log.warn(`Schließen nach Austritt ${t.id}: ${e.message}`));
     }
     await this.dispatch(effects, false);
     return { closed };
@@ -1012,7 +1012,7 @@ export class SupportTicketsService {
         const alertedFor = t.staffAlertedAt ? (now.getTime() - t.staffAlertedAt.getTime()) / 60_000 : 0;
         const unclaim = (c.autoUnclaimMinutes > 0 && idle >= c.autoUnclaimMinutes) || (c.staffAlertMinutes > 0 && !!t.staffAlertedAt && alertedFor >= c.staffAlertMinutes);
         if (unclaim) {
-          for (const target of t.claimers) await this.perform(await this.load(t.id), sys, { action: 'unclaim', targetId: target }, effects).catch((e: Error) => this.log.warn(`auto-unclaim ${t.id}: ${e.message}`));
+          for (const target of t.claimers) await this.perform(await this.load(t.id), sys, { action: 'unclaim', targetId: target }, effects).catch((e: Error) => this.log.warn(`Automatische Freigabe ${t.id}: ${e.message}`));
           await this.prisma.supportTicket.update({ where: { id: t.id }, data: { staffAlertedAt: null } });
           unclaimed++;
         } else if (c.staffAlertMinutes > 0 && !t.staffAlertedAt && idle >= c.staffAlertMinutes) {

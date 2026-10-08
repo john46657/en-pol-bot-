@@ -55,7 +55,7 @@ Regeln: eine offene Bewerbung pro Person und Einheit; eine laufende Bewerbung im
 
 Fragen gelten sofort für neu gestartete Bewerbungen. Geänderte Panel-Texte/Einheiten: Panel mit `/bewerbungspanel` bzw. `/qualipanel` neu posten.
 
-**Discord-Einstellungen (Web → Administration → Settings):** *Qualifications channel ID* = Team-Channel für eingehende Bewerbungen (nur für das Team sichtbar machen – die Antworten stehen im Klartext darin). Die Bot-Rolle muss über den zu vergebenden Rollen stehen und „Rollen verwalten“ haben. Der Bot braucht keine „privileged intents“; Mitglieder müssen DMs von Servermitgliedern erlauben.
+**Discord-Einstellungen (Dashboard → Einstellungen → Allgemein):** *Qualifikations-Kanal* = Team-Channel für eingehende Bewerbungen (nur für das Team sichtbar machen – die Antworten stehen im Klartext darin). Die Bot-Rolle muss über den zu vergebenden Rollen stehen und „Rollen verwalten“ haben. Der Bot braucht keine „privileged intents“; Mitglieder müssen DMs von Servermitgliedern erlauben.
 
 **Rechte:** `qualifications.view` (Bewerbungen ansehen), `qualifications.decide` (entscheiden), `qualifications.manage` (einrichten). Startrollen: *SEK Leitung* und *Training Staff* (view + decide), *Police Administration* (alle; bei neuen Installationen).
 

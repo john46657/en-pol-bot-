@@ -43,26 +43,26 @@ export async function pollOnce(api: Api, send: Sender, log: (m: string) => void 
     if (item.type === 'danger.panel') {
       try {
         const channelId = String(item.payload.channelId ?? '');
-        if (!/^\d{15,25}$/.test(channelId)) throw new Error('no channel id');
-        if (!onPanel) throw new Error('panels not supported');
+        if (!/^\d{15,25}$/.test(channelId)) throw new Error('Keine Kanal-ID');
+        if (!onPanel) throw new Error('Panels werden nicht unterstützt');
         await onPanel('danger', channelId);
         await api.service('POST', `/bot/outbox/${item.id}/ack`, { ok: true });
         sent++;
       } catch (e) {
         const msg = e instanceof Error ? e.message : 'panel failed';
-        log(`outbox ${item.id} (danger.panel) failed: ${msg}`);
+        log(`Warteschlange ${item.id} (danger.panel) fehlgeschlagen: ${msg}`);
         await api.service('POST', `/bot/outbox/${item.id}/ack`, { ok: false, error: msg }).catch(() => undefined);
       }
       continue;
     }
     if (item.type === 'application.ticket' || item.type === 'embed.post' || item.type === 'message.post' || item.type.startsWith('bot.') || item.type === 'message.decided' || item.type === 'voice.effects' || item.type.startsWith('verify.') || item.type === 'duty.reminder') {
       try {
-        if (!onTask || !(await onTask(item.type, item.payload))) throw new Error('tasks not supported');
+        if (!onTask || !(await onTask(item.type, item.payload))) throw new Error('Aufträge werden nicht unterstützt');
         await api.service('POST', `/bot/outbox/${item.id}/ack`, { ok: true });
         sent++;
       } catch (e) {
         const msg = e instanceof Error ? e.message : 'task failed';
-        log(`outbox ${item.id} (${item.type}) failed: ${msg}`);
+        log(`Warteschlange ${item.id} (${item.type}) fehlgeschlagen: ${msg}`);
         await api.service('POST', `/bot/outbox/${item.id}/ack`, { ok: false, error: msg }).catch(() => undefined);
       }
       continue;
@@ -71,22 +71,22 @@ export async function pollOnce(api: Api, send: Sender, log: (m: string) => void 
     if (direct) {
       try {
         const userId = String(item.payload.discordId ?? '');
-        if (!/^\d{15,25}$/.test(userId)) throw new Error('no Discord user id');
+        if (!/^\d{15,25}$/.test(userId)) throw new Error('Keine Discord-Benutzer-ID');
         // Rolle zuerst (wichtiger als die Nachricht; erneutes Vergeben bei Wiederholung schadet nicht)
         // Rollen aus der Entscheidung (Annahme-/Ablehnungs-Rollen, Rolle der Einheit, Rollen-Auswahl); `roleId` = ältere Einträge (nur bei Annahme)
         const ids = (v: unknown) => (Array.isArray(v) ? v : []).map((r) => String(r ?? '')).filter((r) => /^\d{15,25}$/.test(r));
         const roleIds = [...new Set([...(item.payload.status === 'ACCEPTED' ? ids([item.payload.roleId]) : []), ...ids(item.payload.roleIds)])];
-        if (grantRole) for (const roleId of roleIds) await grantRole(userId, roleId).catch((e) => log(`outbox ${item.id}: role ${roleId} could not be given: ${e instanceof Error ? e.message : e}`));
+        if (grantRole) for (const roleId of roleIds) await grantRole(userId, roleId).catch((e) => log(`Warteschlange ${item.id}: Rolle ${roleId} konnte nicht vergeben werden: ${e instanceof Error ? e.message : e}`));
         const remove = ids(item.payload.removeRoleIds);
-        if (remove.length && syncRoles) await syncRoles(userId, [], remove).catch((e) => log(`outbox ${item.id}: roles could not be removed: ${e instanceof Error ? e.message : e}`));
-        if (!dm) throw new Error('direct messages not available');
+        if (remove.length && syncRoles) await syncRoles(userId, [], remove).catch((e) => log(`Warteschlange ${item.id}: Rollen konnten nicht entfernt werden: ${e instanceof Error ? e.message : e}`));
+        if (!dm) throw new Error('Direktnachrichten nicht verfügbar');
         await dm(userId, direct(item.payload));
         await api.service('POST', `/bot/outbox/${item.id}/ack`, { ok: true });
         sent++;
       } catch (e) {
         // z. B. Nutzer hat DMs deaktiviert oder den Server verlassen
         const msg = e instanceof Error ? e.message : 'send failed';
-        log(`outbox ${item.id} (${item.type}) direct message failed: ${msg}`);
+        log(`Warteschlange ${item.id} (${item.type}): Direktnachricht fehlgeschlagen: ${msg}`);
         await api.service('POST', `/bot/outbox/${item.id}/ack`, { ok: false, error: msg }).catch(() => undefined);
       }
       continue;
@@ -101,7 +101,7 @@ export async function pollOnce(api: Api, send: Sender, log: (m: string) => void 
         sent++;
       } catch (e) {
         const msg = e instanceof Error ? e.message : 'ticket effects failed';
-        log(`outbox ${item.id} (${item.type}) failed: ${msg}`);
+        log(`Warteschlange ${item.id} (${item.type}) fehlgeschlagen: ${msg}`);
         await api.service('POST', `/bot/outbox/${item.id}/ack`, { ok: false, error: msg }).catch(() => undefined);
       }
       continue;
@@ -118,13 +118,13 @@ export async function pollOnce(api: Api, send: Sender, log: (m: string) => void 
       const userId = String(item.payload.discordId ?? '');
       const ids = (v: unknown) => (Array.isArray(v) ? v : []).map(String).filter((r) => /^\d{15,25}$/.test(r));
       try {
-        if (!syncRoles || !/^\d{15,25}$/.test(userId)) throw new Error('roles not available');
+        if (!syncRoles || !/^\d{15,25}$/.test(userId)) throw new Error('Rollen nicht verfügbar');
         await syncRoles(userId, ids(item.payload.add), ids(item.payload.remove));
         await api.service('POST', `/bot/outbox/${item.id}/ack`, { ok: true }).catch(() => undefined);
         sent++;
       } catch (e) {
         const msg = e instanceof Error ? e.message : 'roles failed';
-        log(`outbox ${item.id} (member.roles) failed: ${msg}`);
+        log(`Warteschlange ${item.id} (member.roles) fehlgeschlagen: ${msg}`);
         await api.service('POST', `/bot/outbox/${item.id}/ack`, { ok: false, error: msg }).catch(() => undefined);
       }
       continue;
@@ -138,7 +138,7 @@ export async function pollOnce(api: Api, send: Sender, log: (m: string) => void 
         const given = item.payload.roles as { add?: unknown; remove?: unknown } | undefined;
         const ids = (v: unknown) => (Array.isArray(v) ? v : []).map(String).filter((r) => /^\d{15,25}$/.test(r));
         const { add, remove } = given ? { add: ids(given.add), remove: ids(given.remove) } : dutyRoleChanges(String(item.payload.status), channels);
-        if (add.length || remove.length) await syncRoles(userId, add, remove).catch((e) => log(`outbox ${item.id}: duty roles could not be updated: ${e instanceof Error ? e.message : e}`));
+        if (add.length || remove.length) await syncRoles(userId, add, remove).catch((e) => log(`Warteschlange ${item.id}: Dienstrollen konnten nicht aktualisiert werden: ${e instanceof Error ? e.message : e}`));
       }
       const ownLog = typeof item.payload.channelId === 'string' && /^\d{15,25}$/.test(item.payload.channelId);
       if (!channels.duty && !ownLog) { await api.service('POST', `/bot/outbox/${item.id}/ack`, { ok: true }).catch(() => undefined); sent++; continue; }
@@ -151,8 +151,8 @@ export async function pollOnce(api: Api, send: Sender, log: (m: string) => void 
     const cad = item.type.startsWith('cad.') ? renderCadOutbox(item.type, item.payload) : null;
     const embeds = item.type.startsWith('cad.') ? (cad ? [cad] : null) : renderOutboxEmbeds(item.type, item.payload);
     try {
-      if (!channelIds.length) throw new Error(`channel "${item.channelKey}" not configured`);
-      if (!embeds) throw new Error(`unknown type "${item.type}"`);
+      if (!channelIds.length) throw new Error(`Kanal „${item.channelKey}“ ist nicht eingestellt`);
+      if (!embeds) throw new Error(`Unbekannte Art „${item.type}“`);
       const buttons = item.type.startsWith('cad.') ? cadButtons(item.type, item.payload) : outboxButtons(item.type, item.payload);
       const pingRoleIds = Array.isArray(item.payload.pingRoleIds) ? item.payload.pingRoleIds.map(String).filter((r) => /^\d{15,25}$/.test(r)) : [];
       const avatarUserId = /\.(submitted|archived)$/.test(item.type) && /^(qualification|application)\./.test(item.type) && typeof item.payload.discordId === 'string' && /^\d{15,25}$/.test(item.payload.discordId) ? item.payload.discordId : undefined;
@@ -167,14 +167,14 @@ export async function pollOnce(api: Api, send: Sender, log: (m: string) => void 
       const opts = pingRoleIds.length || avatarUserId || thread || authorUserId || replaceKey || trackKey ? { ...(pingRoleIds.length ? { pingRoleIds } : {}), ...(avatarUserId ? { avatarUserId } : {}), ...(thread ? { thread } : {}), ...(authorUserId ? { authorUserId } : {}), ...(replaceKey ? { replaceKey } : {}), ...(trackKey ? { trackKey } : {}) } : undefined;
       const results = await Promise.allSettled(channelIds.map((id) => (opts ? send(id, embeds, buttons, opts) : send(id, embeds, buttons))));
       const failed = results.flatMap((r, i) => (r.status === 'rejected' ? [`${channelIds[i]}: ${r.reason instanceof Error ? r.reason.message : r.reason}`] : []));
-      failed.forEach((f) => log(`outbox ${item.id}: send failed for channel ${f}`));
+      failed.forEach((f) => log(`Warteschlange ${item.id}: Senden in Kanal ${f} fehlgeschlagen`));
       // Erfolg, wenn mindestens ein Channel erreicht wurde (sonst Wiederholung – würde die erfolgreichen doppelt beliefern)
       if (failed.length === channelIds.length) throw new Error(failed[0]);
       await api.service('POST', `/bot/outbox/${item.id}/ack`, { ok: true });
       sent++;
     } catch (e) {
       const msg = e instanceof Error ? e.message : 'send failed';
-      log(`outbox ${item.id} (${item.type}) failed: ${msg}`);
+      log(`Warteschlange ${item.id} (${item.type}) fehlgeschlagen: ${msg}`);
       await api.service('POST', `/bot/outbox/${item.id}/ack`, { ok: false, error: msg }).catch(() => undefined);
     }
   }
@@ -190,11 +190,11 @@ export function startOutboxLoop(api: Api, send: Sender, seconds: number, log: (m
     running = true;
     try {
       await pollOnce(api, send, log, dm, grantRole, syncRoles, onDutyChanged, ticketEffects, onMembersSync, onPanel, onTask);
-      if (lastError) { log('outbox: connection to the API restored'); lastError = undefined; }
+      if (lastError) { log('Warteschlange: Verbindung zur API wiederhergestellt'); lastError = undefined; }
     } catch (e) {
       // Nur bei neuer/anderer Störung loggen – nicht alle 5 Sekunden dieselbe Zeile
       const msg = e instanceof Error ? e.message : String(e);
-      if (msg !== lastError) { log(`outbox poll failed: ${msg} (will keep retrying quietly)`); lastError = msg; }
+      if (msg !== lastError) { log(`Warteschlange: Abruf fehlgeschlagen: ${msg} (wird still weiter versucht)`); lastError = msg; }
     } finally { running = false; }
   };
   const timer = setInterval(() => void tick(), seconds * 1000);

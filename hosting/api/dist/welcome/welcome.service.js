@@ -110,7 +110,7 @@ let WelcomeService = class WelcomeService {
     }
     /** Vom Bot: Mitglied hat den Server verlassen → offene Bewerbungen und Tickets nach Einstellung behandeln. Fehler eines Bereichs stoppen die anderen nicht. */
     async memberLeft(guildId, discordId) {
-        const safe = (label, p, empty) => p.catch((e) => { this.log.warn(`member left (${label}): ${e.message}`); return empty; });
+        const safe = (label, p, empty) => p.catch((e) => { this.log.warn(`Mitglied ausgetreten (${label}): ${e.message}`); return empty; });
         const [applications, qualifications, tickets] = await Promise.all([
             safe('applications', this.applications.memberLeft(guildId, discordId), { denied: 0, withdrawn: 0 }),
             safe('qualifications', this.qualifications.memberLeft(guildId, discordId), { denied: 0, withdrawn: 0 }),

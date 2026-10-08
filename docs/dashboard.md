@@ -5,11 +5,11 @@
 - Die Discord-Rollen werden **laufend** geprüft, nicht nur beim Login: bei Anfragen spätestens alle 2 Minuten je Benutzer, im Hintergrund alle 5 Minuten für alle angemeldeten Discord-Benutzer. Zugangsrolle verloren → alle Sessions sofort beendet (Audit `auth.discord.access_revoked`). Ist Discord kurz nicht erreichbar, bleibt der letzte Stand (kein Aussperren bei Störungen).
 - `ADMIN_DISCORD_IDS` (Serverbesitzer) kommen immer rein und haben die Rolle „System Administrator“.
 
-## Rollen & Rechte (Admin → Roles & Permissions)
+## Rollen & Rechte (Einstellungen → Rollen & Rechte)
 - Rollen haben **Priorität** (Hierarchie, oben = höchster Rang, per Ziehen oder Pfeilen sortierbar), Farbe, Icon, Beschreibung, aktiv/deaktiviert (deaktiviert = verleiht nichts) und **verknüpfte Discord-Rollen**: Wer eine davon hat, bekommt die Dashboard-Rolle automatisch (und verliert sie mit der Discord-Rolle). Mehrere Discord-Rollen je Rolle möglich.
 - Erstellen, bearbeiten, duplizieren, löschen, deaktivieren; Rechte je Rolle oder in der **Berechtigungsmatrix** (Bereiche/Aktionen × Rollen). Jede Änderung wird automatisch gespeichert.
 - **Bereichsrechte** (`dashboard.tickets.view`, `dashboard.applications.view`, `dashboard.team.view`, `dashboard.offices.view`, `dashboard.voice.view`, `dashboard.logs.view`, `dashboard.settings.view`) blenden ganze Bereiche aus dem Menü/der Startseite aus; die API prüft zusätzlich immer die Modul-Rechte (z. B. `ticket.delete`). Bestehende Rollen bekamen die Bereichsrechte passend zu ihren Modul-Rechten (Migration).
-- **Benutzer-Rechte** (Admin → Users): einzelne Rechte zusätzlich erlauben oder ausdrücklich verweigern. Reihenfolge: Benutzer-DENY → Benutzer-ALLOW → Rollen-DENY → Rollen-ALLOW → verweigert.
+- **Benutzer-Rechte** (Einstellungen → Benutzer): einzelne Rechte zusätzlich erlauben oder ausdrücklich verweigern. Reihenfolge: Benutzer-DENY → Benutzer-ALLOW → Rollen-DENY → Rollen-ALLOW → verweigert.
 - **Sicherheit (serverseitig):** niemand ändert eigene Rollen/Rechte; Rollen und Benutzer nur **unterhalb des eigenen Rangs**; erlauben nur, was man selbst hat (Wildcards nur mit allen erfassten Rechten); die Serverbesitzer-Rolle ist im Dashboard nicht änderbar; Sperren/Entsperren nur von oben. Ausblenden im Menü ist nur Komfort.
 - **Audit**: jede Änderung einzeln (Modul `permissions`) mit Benutzer, Discord-ID, Zeit, alter/neuer Wert, Rolle bzw. betroffener Benutzer und lesbarem Satz („Max hat der Rolle „Moderator“ die Berechtigung ticket.delete entzogen“).
 - Geänderte Rechte wirken sofort (jede API-Anfrage rechnet neu); offene Dashboards laden ihr Profil per Echtzeit-Ereignis neu.

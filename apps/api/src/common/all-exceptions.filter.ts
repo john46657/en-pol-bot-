@@ -46,9 +46,9 @@ export class AllExceptionsFilter implements ExceptionFilter {
     } else if (exception instanceof Prisma.PrismaClientKnownRequestError) {
       if (exception.code === 'P2002') { status = 409; code = 'CONFLICT'; message = 'Ein Datensatz mit diesen Werten existiert bereits.'; }
       else if (exception.code === 'P2025') { status = 404; code = 'NOT_FOUND'; message = 'Datensatz nicht gefunden.'; }
-      else this.log.error({ requestId, prisma: exception.code }, 'prisma error');
+      else this.log.error({ requestId, prisma: exception.code }, 'Datenbankfehler');
     } else {
-      this.log.error({ requestId, err: exception instanceof Error ? exception.message : String(exception) }, 'unhandled');
+      this.log.error({ requestId, err: exception instanceof Error ? exception.message : String(exception) }, 'Unbehandelter Fehler');
     }
     if (status === 403 || status === 401) {
       // wird vom SecurityEvent-Interceptor/Guard bereits protokolliert

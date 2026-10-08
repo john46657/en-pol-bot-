@@ -1,46 +1,46 @@
-# Extending EN Polizei
+# EN Polizei erweitern
 
-Three levels, from no-code to code.
+Drei Stufen, von ohne Code bis Code.
 
-## 1. No code (Admin → Studio / Settings)
-- **Custom fields** on persons and vehicles, **accent colour**, **application form**, default **dashboard layout**, organisation name, retention.
-- **Roles, permissions, per-user overrides**: Admin → Roles & Permissions / Users.
-- **Legal codes**: Admin → Legal Codes.
+## 1. Ohne Code (Admin → Studio / Einstellungen)
+- **Eigene Felder** für Personen und Fahrzeuge, **Akzentfarbe**, **Bewerbungsformular**, Standard-**Dashboard-Anordnung**, Organisationsname, Aufbewahrung, **Workflows**.
+- **Rollen, Rechte, Ausnahmen je Benutzer**: Admin → Rollen & Rechte / Benutzer.
+- **Tatbestände**: Admin → Tatbestände.
 
-## 2. Add a permission
-1. Add the action to `PERMISSION_CATALOG` in `packages/shared/src/permissions.ts` (e.g. `evidence: [..., 'destroy']`).
-2. `pnpm db:seed` registers it (idempotent). Grant it to roles in the UI (or add it to `STARTER_ROLES` in `apps/api/src/seed/seed-lib.ts` for new installs).
-3. Protect endpoints with `@RequirePermission('evidence.destroy')`; hide UI with `can('evidence.destroy')`.
+## 2. Ein Recht hinzufügen
+1. Die Aktion in `PERMISSION_CATALOG` in `packages/shared/src/permissions.ts` eintragen (z. B. `evidence: [..., 'destroy']`).
+2. `pnpm db:seed` legt es an (mehrfach ausführbar). In der Oberfläche Rollen zuweisen (oder für neue Installationen in `STARTER_ROLES` in `apps/api/src/seed/seed-lib.ts` eintragen).
+3. Endpunkte mit `@RequirePermission('evidence.destroy')` schützen; in der Oberfläche mit `can('evidence.destroy')` ausblenden.
 
-## 3. Add a new module (example: "Citations of Property" → `seizures`)
-Follow an existing small module as template — **vehicles** (`apps/api/src/vehicles`, `apps/web/src/pages/resources.tsx`).
+## 3. Ein neues Modul anlegen (Beispiel: Sicherstellungen → `seizures`)
+Ein bestehendes kleines Modul als Vorlage nehmen – **Fahrzeuge** (`apps/api/src/vehicles`, `apps/web/src/pages/resources.tsx`).
 
 **Backend**
-1. `apps/api/prisma/schema.prisma`: add the model (UUID id, `version Int @default(1)` for optimistic locking, indexes) → `pnpm db:migrate:dev --name seizures`.
-2. `apps/api/src/seizures/`: `seizures.service.ts`, `seizures.controller.ts`, `seizures.module.ts`. Rules every service follows:
-   - do multi-table writes inside `this.prisma.$transaction(async (tx) => …)`;
-   - call `this.audit.record(actor, {…}, tx)` and `this.timeline.add(tx, {…})`;
-   - link people with `linkPerson(tx, personId, 'Seizure', id)` (dedupe-safe);
-   - generate numbers with `makeNumber('S')`; use `nextStatus(MAP, from, to)` for status changes;
-   - never delete — archive/void/cancel with a reason.
-3. Controller: `@RequirePermission(...)` on **every** route, bodies/queries through `zodBody(schema)`, lists through `pageQuery`.
-4. Register the module in `apps/api/src/app.module.ts`.
-5. If the status flow is new, define it in `packages/shared/src/statuses.ts` (+ test in `packages/shared/tests`).
-6. Add it to global search (`search/search.controller.ts`, only behind the view permission) and exports if wanted.
-7. Tests: copy the pattern in `apps/api/test/ops.test.ts` (403 without permission, happy path, audit + timeline rows, rollback). `test/security.test.ts` automatically fails if a route has no explicit authorization decision.
+1. `apps/api/prisma/schema.prisma`: Modell anlegen (UUID-ID, `version Int @default(1)` für optimistisches Sperren, Indizes) → `pnpm db:migrate:dev --name seizures`. Soll es je Discord-Server getrennt sein: Spalte `serverId String? @db.Uuid` mit Index und das Modell in `SERVER_SCOPED_MODELS` (`apps/api/src/prisma/server-scope.ts`) eintragen.
+2. `apps/api/src/seizures/`: `seizures.service.ts`, `seizures.controller.ts`, `seizures.module.ts`. Regeln für jeden Service:
+   - Schreibzugriffe auf mehrere Tabellen in `this.prisma.$transaction(async (tx) => …)`;
+   - `this.audit.record(actor, {…}, tx)` und `this.timeline.add(tx, {…})` aufrufen;
+   - Personen mit `linkPerson(tx, personId, 'Seizure', id)` verknüpfen (ohne Dubletten);
+   - Nummern mit `makeNumber('S')` erzeugen; Statuswechsel mit `nextStatus(MAP, from, to)`;
+   - nie löschen – mit Begründung archivieren, stornieren oder abbrechen.
+3. Controller: `@RequirePermission(...)` an **jeder** Route, Body/Query über `zodBody(schema)`, Listen über `pageQuery`.
+4. Das Modul in `apps/api/src/app.module.ts` eintragen.
+5. Ist der Statusablauf neu, ihn in `packages/shared/src/statuses.ts` festlegen (+ Test in `packages/shared/tests`).
+6. Bei Bedarf in die globale Suche (`search/search.controller.ts`, nur hinter dem Ansehen-Recht) und in die Exporte aufnehmen.
+7. Tests: Muster aus `apps/api/test/ops.test.ts` übernehmen (403 ohne Recht, Normalfall, Audit- und Zeitleisten-Einträge, Rollback). `test/security.test.ts` schlägt automatisch fehl, wenn eine Route keine ausdrückliche Berechtigungsentscheidung hat.
 
 **Frontend**
-1. `apps/web/src/pages/resources.tsx`: add a `ResourceConfig` (columns, create form fields) and a `RecordConfig` (detail fields + permission-aware actions).
-2. `apps/web/src/nav.ts`: nav entry with `perm`. `apps/web/src/App.tsx`: two routes using `list(...)` / `rec(...)`.
-3. Add it as a MDT quick action in `pages/Mdt.tsx` and/or a dashboard widget in `pages/Dashboard.tsx` if useful.
+1. `apps/web/src/pages/resources.tsx`: eine `ResourceConfig` (Spalten, Felder im Anlegen-Formular) und eine `RecordConfig` (Detailfelder + Aktionen je nach Recht) anlegen.
+2. `apps/web/src/nav.ts`: Menüeintrag mit `perm`. `apps/web/src/App.tsx`: zwei Routen mit `list(...)` / `rec(...)`.
+3. Bei Bedarf als MDT-Schnellaktion in `pages/Mdt.tsx` und/oder als Dashboard-Kachel in `pages/Dashboard.tsx` aufnehmen.
 
-**Realtime** (optional): `this.rt.publish('room', 'event', {id})` after the transaction commits; add the room + required permission to `ROOM_PERMISSION` in `realtime/realtime.service.ts`; subscribe in the page with `useRealtime`.
+**Echtzeit** (optional): `this.rt.publish('room', 'event', {id})` nach dem Abschluss der Transaktion; Raum + nötiges Recht in `ROOM_PERMISSION` in `realtime/realtime.service.ts` eintragen; in der Seite mit `useRealtime` abonnieren.
 
-## Add a Discord bot command
-See the last section of [discord-bot.md](discord-bot.md) (new entry in `COMMANDS`; new API route only via the explicit bot allowlist).
+## Einen Discord-Befehl hinzufügen
+Siehe den letzten Abschnitt in [discord-bot.md](discord-bot.md) (neuer Eintrag in `COMMANDS`; neue API-Route nur über die ausdrückliche Bot-Freigabeliste).
 
-## Conventions worth keeping
-Permissions checked in the backend first; no secrets in code; Zod on all input; German or English UI text is fine but keep one language per screen; keep docs in `docs/` in sync with the code (they describe what exists, including what does not).
+## Konventionen
+Rechte zuerst im Backend prüfen; keine Geheimnisse im Code; Zod für alle Eingaben; Texte in Oberfläche, Bot, Fehlermeldungen und Logs auf Deutsch; die Doku in `docs/` passend zum Code halten (sie beschreibt, was es gibt – und was nicht).
 
-## Re-adding integrations
-ER:LC (API connector + signed webhooks) and Galaxy AI (assistant with human-confirmed proposals) were removed for now. Their code, tests and docs are archived in `enrp-nexus-removed-erlc-galaxy.tar.gz` (next to the repo). To bring them back: restore `apps/api/src/{erlc,galaxy}`, re-add the `ERLC*`/`AIProposal` Prisma models + migration, the `erlc`/`galaxy` permission modules in `packages/shared/src/permissions.ts`, register the modules in `app.module.ts`, and re-add the UI pieces (`pages/admin/Erlc.tsx`, `components/GalaxyPanel.tsx`, nav/route/dashboard widget). Existing databases keep unused `erlc.*`/`galaxy.*` permission rows; they are harmless.
+## Entfernte Integrationen
+Galaxy AI (Assistent mit von Menschen bestätigten Vorschlägen) ist entfernt. Code, Tests und Doku liegen archiviert in `enrp-nexus-removed-erlc-galaxy.tar.gz` (neben dem Repository). Bestehende Datenbanken behalten ungenutzte `galaxy.*`-Rechte; sie sind harmlos. ER:LC ist inzwischen fester Teil der Leitstelle (siehe [cad.md](cad.md)).

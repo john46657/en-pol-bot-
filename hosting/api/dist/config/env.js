@@ -44,7 +44,7 @@ function loadEnv(source = process.env) {
     // Leere Strings (z. B. aus docker-compose `${VAR:-}`) gelten als nicht gesetzt.
     const env = schema.parse(Object.fromEntries(Object.entries(source).filter(([, v]) => v !== '')));
     if (env.NODE_ENV === 'production' && env.SESSION_SECRET === 'dev-only-insecure-session-secret') {
-        throw new Error('SESSION_SECRET must be set in production');
+        throw new Error('SESSION_SECRET muss im Produktivbetrieb gesetzt sein');
     }
     // Der Port des Panels gewinnt; danach gilt überall nur noch `env.PORT`
     return { ...env, PORT: env.SERVER_PORT ?? env.PORT };

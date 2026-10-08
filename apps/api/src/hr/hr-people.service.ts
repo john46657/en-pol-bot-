@@ -230,7 +230,7 @@ export class HrPeopleService {
     }
     if (d.type === 'WARNING') {
       await this.core.notify('warning.created', { memberUserId: null, title: `Verwarnung für ${name}`, body: summary, entityType: 'Personnel', entityId: id });
-      await this.warningFollowUp(actor, p, r, name, cfg).catch((e) => console.error(`warning follow-up failed: ${e instanceof Error ? e.message : e}`));
+      await this.warningFollowUp(actor, p, r, name, cfg).catch((e) => console.error(`Folgeaktionen der Verwarnung fehlgeschlagen: ${e instanceof Error ? e.message : e}`));
     }
     return r;
   }

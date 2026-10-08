@@ -54,7 +54,7 @@ function loadConfig(env = process.env) {
         throw new Error(`Bitte in der .env bzw. im Env-Tab noch ausfüllen: ${todo.join(', ')} (dort steht noch ein Platzhalter "HIER_…").`);
     const r = schema.safeParse(Object.fromEntries(Object.entries(env).filter(([, v]) => v !== '')));
     if (!r.success)
-        throw new Error(`Invalid bot configuration:\n${r.error.issues.map((i) => ` - ${i.path.join('.')}: ${i.message}`).join('\n')}`);
+        throw new Error(`Ungültige Bot-Konfiguration:\n${r.error.issues.map((i) => ` - ${i.path.join('.')}: ${i.message}`).join('\n')}`);
     return r.data;
 }
 //# sourceMappingURL=config.js.map

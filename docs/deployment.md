@@ -41,9 +41,9 @@ Das Skript installiert Docker, öffnet nur die Ports 22/80/443 (ufw), erzeugt `.
 Danach `https://nexus.deine-domain.de` öffnen → als `admin` anmelden.
 
 ## 4. Erste Schritte in der App
-1. *Admin → Users*: eigenen Account anlegen (Rolle System Administrator), mit diesem arbeiten; das Standard-`admin`-Konto danach deaktivieren oder starkes Passwort lassen.
-2. *Admin → Roles & Permissions*: Rollen an deine Fraktionsstruktur anpassen.
-3. *Admin → Legal Codes*: Strafkatalog eintragen. *Admin → Settings*: Organisationsname, Zeitzone. *Studio*: Custom Fields, Akzentfarbe, Bewerbungsformular.
+1. *Einstellungen → Benutzer*: eigenen Account anlegen (Rolle System Administrator), mit diesem arbeiten; das Standard-`admin`-Konto danach deaktivieren oder starkes Passwort lassen.
+2. *Einstellungen → Rollen & Rechte*: Rollen an deine Fraktionsstruktur anpassen.
+3. *Einstellungen → Tatbestände*: Strafkatalog eintragen. *Einstellungen → Allgemein*: Organisationsname, Zeitzone. *Studio*: eigene Felder, Akzentfarbe, Bewerbungsformular.
 4. Benutzer und Personalakten anlegen; Roblox-User-IDs bei Bedarf manuell hinterlegen.
 5. Bewerbungsseite für Interessenten: `https://nexus.deine-domain.de/apply`.
 
@@ -67,7 +67,7 @@ Kostenlos z. B. mit UptimeRobot: HTTP-Monitor auf `https://nexus.deine-domain.de
 - **Wiederherstellen:** `./deploy/restore.sh backups/daily/enrp-DATUM.sql.gz` (fragt vorher nach Bestätigung). Probiere eine Wiederherstellung einmal aus, **bevor** du dich auf die Backups verlässt.
 
 ### Aufbewahrung
-Die API räumt täglich alte Sessions, Login-Historie und gelesene Benachrichtigungen auf (einstellbar unter *Admin → Settings*). **Audit-Logs werden nie gelöscht.**
+Die API räumt täglich alte Sessions, Login-Historie und gelesene Benachrichtigungen auf (einstellbar unter *Einstellungen → Allgemein → Datenaufbewahrung*). **Audit-Logs werden nie gelöscht.**
 
 ## 6. Sicherheits-Checkliste für den Server
 - [ ] SSH nur mit Key (`PasswordAuthentication no` in `/etc/ssh/sshd_config`), kein Root-Login mit Passwort

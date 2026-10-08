@@ -45,7 +45,7 @@ describe('member join / leave', () => {
     await w.test('welcome', member());
     await w.test('dm', member());
     expect(done).toEqual([expect.stringMatching(new RegExp(`^post ${CH} <@${USER}> 👋 Willkommen auf EN Polizei!`)), `dm ${USER} Hallo max`]);
-    await expect(w.test('goodbye', member())).rejects.toThrow('no channel');
+    await expect(w.test('goodbye', member())).rejects.toThrow('Kein Kanal');
   });
   it('does nothing for bots or when everything is off', async () => {
     const a = setup({ autoRoleIds: [ROLE] });

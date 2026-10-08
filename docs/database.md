@@ -1,11 +1,12 @@
-# Database
+# Datenbank
 
-PostgreSQL via Prisma (`apps/api/prisma/schema.prisma`). UUID primary keys, foreign keys, unique constraints and indexes throughout.
+PostgreSQL über Prisma (`apps/api/prisma/schema.prisma`). Durchgehend UUID-Primärschlüssel, Fremdschlüssel, Eindeutigkeits-Regeln und Indizes.
 
-- Migrations: `prisma/migrations/*`. Dev: `pnpm db:migrate:dev`. Production: `prisma migrate deploy` (runs on container start). **Never** use `db push` or `migrate reset` against production.
-- `AuditLog` is append-only: DB triggers reject UPDATE, DELETE and TRUNCATE (see `init` migration).
-- Optimistic locking: `version` columns (Person, Incident, Report, …); stale writes return `409 CONFLICT`.
-- Dedupe: `RecordLink` unique on (person, entityType, entityId, role); 
-- Not implemented in the schema yet: record locking ("currently edited by …").
+- Migrationen: `prisma/migrations/*`. Entwicklung: `pnpm db:migrate:dev`. Produktion: `prisma migrate deploy` (läuft beim Start). **Nie** `db push` oder `migrate reset` gegen die Produktion verwenden.
+- `AuditLog` ist nur anhängbar: DB-Trigger lehnen UPDATE, DELETE und TRUNCATE ab (siehe Migration `init`).
+- Optimistisches Sperren: Spalten `version` (Person, Incident, Report, …); veraltete Schreibzugriffe liefern `409 CONFLICT`.
+- Ohne Dubletten: `RecordLink` ist eindeutig über (Person, entityType, entityId, Rolle).
+- Bearbeitungssperren („wird gerade bearbeitet von …“) liegen in `EditLock` (siehe [security.md](security.md)).
+- Je Discord-Server getrennte Daten tragen die Spalte `serverId` (Akten-Bereich); Eindeutigkeit gilt dort je Bereich, z. B. `Personnel (serverId, userId)`, `HrRank (serverId, name)`. Hinweis: PostgreSQL behandelt `NULL` als verschieden – im gemeinsamen Bestand (`serverId` leer) sichert die API die Eindeutigkeit selbst ab.
 
-Local dev DB: `pnpm --filter @enrp/api dev:db` (embedded PostgreSQL on port 54329).
+Lokale Entwicklungs-DB: `pnpm --filter @enrp/api dev:db` (eingebettetes PostgreSQL auf Port 54329).

@@ -64,8 +64,8 @@ Eigenen Admin-Benutzer anlegen, Rollen/Rechte anpassen, Legal Codes eintragen, B
    DISCORD_TOKEN=<Bot-Token>
    ```
    Das Start-Skript startet den Bot dann automatisch **mit** (er spricht intern mit `127.0.0.1`; das Geheimnis zwischen API und Bot wird automatisch erzeugt und in `data/` gespeichert).
-3. Channel-IDs unter *Admin → Settings → Discord bot channels* eintragen; Konten über das Chat-Symbol oben rechts verknüpfen.
-4. Erwartete Konsolen-Zeilen: `Logged in as …` und `10 slash commands registered …` (Befehlszahl kann abweichen).
+3. Kanal-IDs unter *Einstellungen → Allgemein → Discord-Bot-Kanäle* eintragen; Konten über das Chat-Symbol oben rechts verknüpfen.
+4. Erwartete Konsolen-Zeilen: `Angemeldet als …` und `… Slash-Befehle registriert für …` (Befehlszahl kann abweichen).
 
 ## 5. HTTPS (wichtig für echten Betrieb)
 Mit `COOKIE_SECURE=true` werden Sitzungs-Cookies nur über HTTPS gesendet. Das setzt voraus, dass **vor** dem Server eine HTTPS-Schicht sitzt, z. B.:

@@ -158,7 +158,7 @@ describe('outbox poller', () => {
     expect(sent).toEqual(['C1']);
     expect(acks.map((a) => [a.path, a.body.ok])).toEqual([['/bot/outbox/1/ack', true], ['/bot/outbox/2/ack', false], ['/bot/outbox/3/ack', false]]);
     expect(acks[1]!.body.error).toBe('C2: Missing Access');
-    expect(acks[2]!.body.error).toContain('not configured');
+    expect(acks[2]!.body.error).toContain('nicht eingestellt');
   });
 });
 
@@ -199,10 +199,10 @@ describe('outbox loop log noise', () => {
     const lines: string[] = [];
     const stop = startOutboxLoop(api, async () => undefined, 5, (m) => lines.push(m));
     await vi.advanceTimersByTimeAsync(5000 * 6); // 7 Durchläufe, alle fehlgeschlagen
-    expect(lines.filter((l) => l.includes('failed'))).toHaveLength(1);
+    expect(lines.filter((l) => l.includes('fehlgeschlagen'))).toHaveLength(1);
     up = true;
     await vi.advanceTimersByTimeAsync(5000);
-    expect(lines.filter((l) => l.includes('restored'))).toHaveLength(1);
+    expect(lines.filter((l) => l.includes('wiederhergestellt'))).toHaveLength(1);
     stop();
     vi.useRealTimers();
   });

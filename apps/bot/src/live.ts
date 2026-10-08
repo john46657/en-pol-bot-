@@ -57,7 +57,7 @@ export function createLive(api: Api, platform: Platform, log: (m: string) => voi
         lastError = undefined;
       } catch (e) {
         const msg = e instanceof Error ? e.message : String(e);
-        if (msg !== lastError) { log(`live messages: refresh failed: ${msg} (will keep retrying quietly)`); lastError = msg; }
+        if (msg !== lastError) { log(`Live-Nachrichten: Aktualisierung fehlgeschlagen: ${msg} (wird still weiter versucht)`); lastError = msg; }
       } finally { running = false; }
     };
     const timer = setInterval(() => void tick(), seconds * 1000);

@@ -33,7 +33,7 @@ export function createWelcome(api: Api, actions: WelcomeActions, log: (m: string
     cache.set(guildId, { at: Date.now(), cfg });
     return cfg;
   };
-  const step = (label: string, p: Promise<unknown>) => p.catch((e) => log(`${label} failed: ${e instanceof Error ? e.message : e}`));
+  const step = (label: string, p: Promise<unknown>) => p.catch((e) => log(`${label} fehlgeschlagen: ${e instanceof Error ? e.message : e}`));
   // hochgeladene Banner (Datei bleibt gleich, solange die ID gleich ist)
   const banners = new Map<string, { name: string; data: Buffer }>();
   const banner = async (id: string) => {
@@ -46,27 +46,27 @@ export function createWelcome(api: Api, actions: WelcomeActions, log: (m: string
   };
   const say = async (def: WelcomeMessageDef, m: MemberEvent) => {
     if (!def.enabled || !def.channelId) return;
-    const file = def.imageMediaId ? await banner(def.imageMediaId).catch((e) => { log(`banner not loaded: ${e instanceof Error ? e.message : e}`); return undefined; }) : undefined;
+    const file = def.imageMediaId ? await banner(def.imageMediaId).catch((e) => { log(`Banner nicht geladen: ${e instanceof Error ? e.message : e}`); return undefined; }) : undefined;
     await actions.post(def.channelId, { ...(def.pingUser ? { content: `<@${m.id}>`, mentionUserIds: [m.id] } : {}), embed: welcomeEmbed(def, m, Date.now(), file?.name), ...(file ? { file } : {}) });
   };
 
   return {
     async joined(m: MemberEvent) {
       if (m.bot) return;
-      const cfg = await config(m.guildId).catch((e) => { log(`welcome config not loaded: ${e instanceof Error ? e.message : e}`); return null; });
+      const cfg = await config(m.guildId).catch((e) => { log(`Willkommens-Einstellungen nicht geladen: ${e instanceof Error ? e.message : e}`); return null; });
       if (!cfg) return;
       await Promise.all([
-        step('welcome message', say(cfg.welcome, m)),
-        cfg.dm.enabled && cfg.dm.message.trim() ? step('welcome DM', actions.dm(m.id, renderWelcomeText(cfg.dm.message, m).slice(0, 2000))) : undefined,
-        cfg.autoRoleIds.length ? step('auto roles', actions.addRoles(m.guildId, m.id, cfg.autoRoleIds)) : undefined,
+        step('Willkommensnachricht', say(cfg.welcome, m)),
+        cfg.dm.enabled && cfg.dm.message.trim() ? step('Willkommens-DM', actions.dm(m.id, renderWelcomeText(cfg.dm.message, m).slice(0, 2000))) : undefined,
+        cfg.autoRoleIds.length ? step('Auto-Rollen', actions.addRoles(m.guildId, m.id, cfg.autoRoleIds)) : undefined,
       ]);
     },
     async left(m: MemberEvent) {
       if (m.bot) return;
-      const cfg = await config(m.guildId).catch((e) => { log(`welcome config not loaded: ${e instanceof Error ? e.message : e}`); return null; });
+      const cfg = await config(m.guildId).catch((e) => { log(`Willkommens-Einstellungen nicht geladen: ${e instanceof Error ? e.message : e}`); return null; });
       await Promise.all([
-        cfg ? step('goodbye message', say(cfg.goodbye, m)) : undefined,
-        step('member-left actions', api.service('POST', '/bot/member-left', { guildId: m.guildId, discordId: m.id })),
+        cfg ? step('Abschiedsnachricht', say(cfg.goodbye, m)) : undefined,
+        step('Aktionen beim Verlassen', api.service('POST', '/bot/member-left', { guildId: m.guildId, discordId: m.id })),
       ]);
     },
     /** Test aus dem Dashboard: Nachricht bzw. DM wie beim echten Beitritt/Austritt – auch wenn sie ausgeschaltet ist, ohne Rollen/Aktionen. */
@@ -74,7 +74,7 @@ export function createWelcome(api: Api, actions: WelcomeActions, log: (m: string
       cache.delete(m.guildId); // gerade gespeicherte Einstellungen verwenden
       const cfg = await config(m.guildId);
       if (kind === 'dm') { await actions.dm(m.id, renderWelcomeText(cfg.dm.message, m).slice(0, 2000)); return; }
-      if (!cfg[kind].channelId) throw new Error('no channel configured');
+      if (!cfg[kind].channelId) throw new Error('Kein Kanal eingestellt');
       await say({ ...cfg[kind], enabled: true }, m);
     },
     /** Nach dem Speichern im Dashboard nicht 30 s warten müssen (Tests). */

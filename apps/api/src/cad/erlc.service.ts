@@ -209,7 +209,7 @@ export class ErlcService {
     await Promise.all(servers.map(async ({ id }) => {
       const r = this.runtime(id);
       if (r.inFlight || r.paused || now < r.nextDue) return;
-      await this.poll(id).catch((e: Error) => this.log.warn(`poll ${id} failed: ${e.message}`));
+      await this.poll(id).catch((e: Error) => this.log.warn(`Abruf ${id} fehlgeschlagen: ${e.message}`));
     }));
   }
 

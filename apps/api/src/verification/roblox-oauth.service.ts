@@ -76,7 +76,7 @@ export class RobloxOAuthService {
     if (!s || s.expiresAt < new Date()) throw new RobloxOAuthFailure('Der Link ist abgelaufen oder wurde schon benutzt. Klick in Discord noch einmal auf „Verifizieren“.');
     const c = await this.creds();
     if (!c || !code) throw new RobloxOAuthFailure('Die Anmeldung bei Roblox hat nicht geklappt. Versuch es noch einmal.');
-    const user = await this.fetchUser(c, code).catch((e) => { this.log.warn(`roblox oauth failed: ${e instanceof Error ? e.message : e}`); return null; });
+    const user = await this.fetchUser(c, code).catch((e) => { this.log.warn(`Roblox-Anmeldung fehlgeschlagen: ${e instanceof Error ? e.message : e}`); return null; });
     if (!user) throw new RobloxOAuthFailure('Roblox hat das Konto nicht bestätigt. Versuch es noch einmal.');
     const link = await this.verification.linkAccount(s.guildId, s.discordId, s.discordName, user, 'Roblox-Anmeldung');
     await this.verification.refresh(s.discordId);
@@ -88,11 +88,11 @@ export class RobloxOAuthService {
       method: 'POST', headers: { 'content-type': 'application/x-www-form-urlencoded' }, signal: AbortSignal.timeout(8000),
       body: new URLSearchParams({ grant_type: 'authorization_code', code, client_id: c.clientId, client_secret: c.clientSecret, redirect_uri: this.redirectUri() }),
     });
-    if (!tok.ok) throw new Error(`token HTTP ${tok.status}`);
+    if (!tok.ok) throw new Error(`Token: HTTP ${tok.status}`);
     const { access_token } = (await tok.json()) as { access_token?: string };
-    if (!access_token) throw new Error('no access token');
+    if (!access_token) throw new Error('Kein Zugriffstoken erhalten');
     const info = await fetch('https://apis.roblox.com/oauth/v1/userinfo', { headers: { authorization: `Bearer ${access_token}` }, signal: AbortSignal.timeout(8000) });
-    if (!info.ok) throw new Error(`userinfo HTTP ${info.status}`);
+    if (!info.ok) throw new Error(`Benutzerinfo: HTTP ${info.status}`);
     const u = (await info.json()) as { sub?: string; preferred_username?: string; nickname?: string; name?: string };
     if (!u.sub || !/^\d{1,19}$/.test(u.sub) || !u.preferred_username) return null;
     return { id: u.sub, name: u.preferred_username, displayName: u.nickname || u.name || u.preferred_username };

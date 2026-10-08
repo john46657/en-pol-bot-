@@ -220,8 +220,8 @@ describe('ticket runtime', () => {
       { type: 'delete', channelId: CH, delayMs: 0 },
     ]);
     expect(log).toEqual([`perm ${ME} view=false`, 'perm-del R']);
-    expect(logs.some((l) => l.includes('rename failed'))).toBe(true);
-    expect(logs.some((l) => l.includes('refusing to delete'))).toBe(true);
+    expect(logs.some((l) => l.includes('rename fehlgeschlagen'))).toBe(true);
+    expect(logs.some((l) => l.includes('verweigert'))).toBe(true);
   });
 
   it('records messages only in ticket channels', async () => {

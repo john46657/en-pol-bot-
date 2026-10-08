@@ -128,11 +128,11 @@ export class DiscordOAuthService {
         method: 'POST', headers: { 'content-type': 'application/x-www-form-urlencoded' }, signal: AbortSignal.timeout(10_000),
         body: new URLSearchParams({ client_id: this.clientId()!, client_secret: this.env.DISCORD_CLIENT_SECRET!, grant_type: 'authorization_code', code, redirect_uri: this.redirectUri() }),
       });
-      if (!tok.ok) { this.log.warn(`token exchange failed: HTTP ${tok.status} (Client-Secret und Redirect-URL im Developer Portal prüfen)`); throw new DiscordLoginFailure('failed'); }
+      if (!tok.ok) { this.log.warn(`Token-Austausch fehlgeschlagen: HTTP ${tok.status} (Client-Secret und Redirect-URL im Developer Portal prüfen)`); throw new DiscordLoginFailure('failed'); }
       return (await tok.json()) as { access_token: string; guild?: { id?: string; name?: string } };
     } catch (e) {
       if (e instanceof DiscordLoginFailure) throw e;
-      this.log.warn(`Discord not reachable: ${e instanceof Error ? e.message : e}`);
+      this.log.warn(`Discord nicht erreichbar: ${e instanceof Error ? e.message : e}`);
       throw new DiscordLoginFailure('failed');
     }
   }
@@ -147,7 +147,7 @@ export class DiscordOAuthService {
       return u;
     } catch (e) {
       if (e instanceof DiscordLoginFailure) throw e;
-      this.log.warn(`Discord not reachable: ${e instanceof Error ? e.message : e}`);
+      this.log.warn(`Discord nicht erreichbar: ${e instanceof Error ? e.message : e}`);
       throw new DiscordLoginFailure('failed');
     }
   }

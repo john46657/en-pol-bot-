@@ -51,6 +51,6 @@ export class AuditService {
         reason: entry.reason,
       },
     });
-    if (sink) await sink(db, actor, { ...entry, before: redact(entry.before), after: redact(entry.after) }).catch((e) => console.error(`logging failed for ${entry.action}: ${e instanceof Error ? e.message : e}`));
+    if (sink) await sink(db, actor, { ...entry, before: redact(entry.before), after: redact(entry.after) }).catch((e) => console.error(`Protokollierung für ${entry.action} fehlgeschlagen: ${e instanceof Error ? e.message : e}`));
   }
 }

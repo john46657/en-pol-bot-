@@ -1,7 +1,7 @@
-# Dispatch & incidents
+# Leitstelle & Einsätze
 
-- Incidents `I-YYYY-XXXXXX`; status machine `NEW → ACKNOWLEDGED → ASSIGNED → EN_ROUTE → ON_SCENE → PROCESSING → CLEARING → CLOSED` (+ `CANCELLED`), defined in `packages/shared/src/statuses.ts`.
-- Units (`/dispatch/units`) with statuses AVAILABLE/BUSY/EN_ROUTE/ON_SCENE/UNAVAILABLE/OFF_DUTY. Assigning a unit marks it BUSY; closing/cancelling releases units.
-- Persons/vehicles attach to incidents (deduped links, person timeline entry).
-- Realtime: rooms `dispatch`, `incidents`, `team` (see authorization of subscriptions in `security.md`).
-- Priorities are the fixed enum LOW…CRITICAL (not yet configurable in the UI). Radio/incident chat uses the communication module (`INCIDENT` channel exists in the API).
+- Einsätze `I-JJJJ-XXXXXX`; Statusablauf `NEW → ACKNOWLEDGED → ASSIGNED → EN_ROUTE → ON_SCENE → PROCESSING → CLEARING → CLOSED` (+ `CANCELLED`), festgelegt in `packages/shared/src/statuses.ts`.
+- Einheiten (`/dispatch/units`) mit den Status AVAILABLE/BUSY/EN_ROUTE/ON_SCENE/UNAVAILABLE/OFF_DUTY. Eine zugewiesene Einheit wird BUSY; Schließen/Abbrechen gibt die Einheiten frei.
+- Personen und Fahrzeuge lassen sich an Einsätze hängen (ohne Dubletten, mit Eintrag in der Zeitleiste der Person).
+- Echtzeit: Räume `dispatch`, `incidents`, `team` (Prüfung der Abos siehe `security.md`).
+- Prioritäten sind hier fest LOW…CRITICAL. Die CAD-Leitstelle (`/cad`, [cad.md](cad.md)) hat einstellbare Prioritäten, Status und Kanäle. Funk/Einsatz-Chat läuft über das Kommunikationsmodul (Kanal `INCIDENT` gibt es in der API).

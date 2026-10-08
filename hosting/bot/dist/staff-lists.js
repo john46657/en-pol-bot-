@@ -46,7 +46,7 @@ function createStaffLists(client, api, log = console.log) {
     /** Rollen/Mitglieder geändert → gesammelt nach 10 Sekunden neu zeichnen. */
     function changed() {
         clearTimeout(timer);
-        timer = setTimeout(() => void refresh().catch((e) => log(`staff lists: ${e instanceof Error ? e.message : e}`)), 10_000);
+        timer = setTimeout(() => void refresh().catch((e) => log(`Staff-Listen: ${e instanceof Error ? e.message : e}`)), 10_000);
         timer.unref?.();
     }
     function start(seconds = 300) {
@@ -54,7 +54,7 @@ function createStaffLists(client, api, log = console.log) {
         const tick = () => void refresh().then(() => { lastError = undefined; }, (e) => {
             const msg = e instanceof Error ? e.message : String(e);
             if (msg !== lastError) {
-                log(`staff lists: refresh failed: ${msg}`);
+                log(`Staff-Listen: Aktualisierung fehlgeschlagen: ${msg}`);
                 lastError = msg;
             }
         });

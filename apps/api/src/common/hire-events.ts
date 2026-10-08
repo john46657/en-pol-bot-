@@ -14,6 +14,6 @@ export const hireEvents = {
   handler: null as Handler | null,
   async accepted(actor: Actor, a: AcceptedApplication) {
     if (!this.handler) return;
-    try { const h = this.handler; await runInGuild(a.guildId || currentGuild(), () => h(actor, a)); } catch (e) { console.error(`hire automation failed for ${a.number}: ${e instanceof Error ? e.message : e}`); }
+    try { const h = this.handler; await runInGuild(a.guildId || currentGuild(), () => h(actor, a)); } catch (e) { console.error(`Einstellungs-Automatik für ${a.number} fehlgeschlagen: ${e instanceof Error ? e.message : e}`); }
   },
 };

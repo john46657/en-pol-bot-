@@ -1,40 +1,41 @@
-# Security
+# Sicherheit
 
-- Passwords: scrypt. Sessions: random 256-bit tokens, hashed at rest, httpOnly + SameSite=Strict cookies.
-- CSRF: SameSite=Strict + Origin check on mutating requests. XSS: React escaping, strict CSP at the proxy, uploads served as attachments with `nosniff` and sandbox CSP.
-- Input validation: Zod on every body/query/param. SQL injection: Prisma parameterization.
-- Rate limiting: global 300/min, login 10/min, public applications 5/hour.
-- Headers: helmet; Caddy adds HSTS/CSP/frame-ancestors.
-- Uploads (`/media`): ≤10 MB, MIME allowlist **plus magic-byte check**, SHA-256, random storage key, client file name sanitized, access follows the linked entity's permission.
-- Exports (CSV/JSON/PDF): permission-checked, audited, CSV formula injection neutralized.
-- WebSockets: handshake authenticated by session cookie; every `subscribe` is authorized server-side and re-checks the session; unknown and forbidden rooms answer identically.
-- Security events (`/admin/security-events`): login failures, permission denials, invalid tokens. Secrets are never logged or audited (keys matching password/secret/token/hash are redacted).
-- 2FA (TOTP, RFC 6238) for password login: Persönliche Einstellungen → „Zwei-Faktor-Anmeldung“. Secret AES-256-GCM encrypted (same key as ER:LC keys), each code valid once (last time step stored), 10 one-time recovery codes stored as SHA-256 hashes, wrong codes count towards the account lockout. Password step only returns a signed 5-minute ticket, no session. Admins with `users.manage` can reset another account's 2FA (audited `auth.2fa.reset`). Discord login relies on Discord's own 2FA.
-- Record locking (`/locks/:type/:id`): opening an edit form for a person, incident (MDT + CAD), report or personnel file locks it (90 s, heartbeat every 30 s, released on close/logout). Others see who is editing and saves from anyone else are rejected with 409; a deliberate takeover is audited (`lock.takeover`) and the previous editor is notified. Works on top of the existing version checks (optimistic locking).
-- Not implemented: rate-limit security events, antivirus scanning.
+- Passwörter: scrypt. Sitzungen: zufällige 256-Bit-Tokens, nur als Hash gespeichert, Cookies httpOnly + SameSite=Strict.
+- CSRF: SameSite=Strict + Prüfung der Herkunft bei ändernden Anfragen. XSS: React-Escaping, strenge CSP am Proxy, Uploads werden als Anhang mit `nosniff` und Sandbox-CSP ausgeliefert.
+- Eingaben: Zod für jeden Body, jede Query und jeden Parameter. SQL-Injection: Parameter über Prisma.
+- Begrenzung: global 300/min, Anmeldung 10/min, öffentliche Bewerbungen 5/Stunde.
+- Header: helmet; Caddy ergänzt HSTS/CSP/frame-ancestors.
+- Uploads (`/media`): ≤ 10 MB, erlaubte MIME-Typen **plus Prüfung der Datei-Signatur**, SHA-256, zufälliger Speicherschlüssel, bereinigter Dateiname, Zugriff folgt dem Recht am verknüpften Eintrag.
+- Exporte (CSV/JSON/PDF): mit Rechteprüfung, auditiert, Formel-Injection in CSV entschärft.
+- WebSockets: Verbindungsaufbau über das Sitzungs-Cookie; jedes `subscribe` wird auf dem Server geprüft (auch die Sitzung erneut); unbekannte und verbotene Räume antworten gleich.
+- Sicherheitsereignisse (`/admin/security-events`): fehlgeschlagene Anmeldungen, abgelehnte Zugriffe, ungültige Tokens. Geheimnisse werden nie geloggt oder auditiert (Schlüssel wie password/secret/token/hash werden geschwärzt).
+- Zwei-Faktor-Anmeldung (TOTP, RFC 6238) bei Passwort-Anmeldung: Persönliche Einstellungen → „Zwei-Faktor-Anmeldung“. Das Geheimnis ist mit AES-256-GCM verschlüsselt (derselbe Schlüssel wie bei ER:LC-Keys), jeder Code gilt nur einmal (letzter Zeitschritt wird gespeichert), 10 Einmal-Wiederherstellungscodes als SHA-256-Hash, falsche Codes zählen zur Kontosperre. Der Passwort-Schritt liefert nur ein signiertes 5-Minuten-Ticket, keine Sitzung. Admins mit `users.manage` können die 2FA eines anderen Kontos zurücksetzen (auditiert als `auth.2fa.reset`). Die Discord-Anmeldung verlässt sich auf die 2FA von Discord.
+- Bearbeitungssperren (`/locks/:type/:id`): Wer das Bearbeiten-Formular einer Person, eines Einsatzes (MDT + CAD), eines Berichts oder einer Personalakte öffnet, sperrt den Eintrag (90 s, Lebenszeichen alle 30 s, Freigabe beim Schließen/Abmelden). Andere sehen, wer bearbeitet; Speichern anderer wird mit 409 abgewiesen; eine bewusste Übernahme wird auditiert (`lock.takeover`) und der bisherige Bearbeiter benachrichtigt. Funktioniert zusätzlich zu den Versionsprüfungen (optimistisches Sperren).
+- Nicht umgesetzt: Begrenzung von Sicherheitsereignissen, Virenscan.
 
-## Review findings (Oct 2026) and status
-| Finding | Status |
+## Prüfergebnisse (Okt. 2026) und Stand
+| Befund | Stand |
 |---|---|
-| `users.manage` alone could assign any role (incl. System Administrator) when creating a user | **Fixed** — `roles.manage` required; test in `test/security.test.ts` |
-| Users could change their own roles / permission overrides | **Fixed** — rejected with 409 |
-| The last active System Administrator could be disabled or demoted | **Fixed** — 409 |
-| Every route has an explicit authorization decision | **Enforced** by a test that walks all controllers (new routes without `@RequirePermission`/`@Public`/allowlist entry fail the build) |
+| `users.manage` allein konnte beim Anlegen eines Benutzers jede Rolle vergeben (auch System Administrator) | **Behoben** – `roles.manage` nötig; Test in `test/security.test.ts` |
+| Benutzer konnten eigene Rollen / Rechte-Ausnahmen ändern | **Behoben** – Abweisung mit 409 |
+| Der letzte aktive System Administrator ließ sich deaktivieren oder herabstufen | **Behoben** – 409 |
+| Jede Route hat eine ausdrückliche Berechtigungsentscheidung | **Erzwungen** durch einen Test, der alle Controller durchgeht (neue Routen ohne `@RequirePermission`/`@Public`/Freigabeliste lassen den Build scheitern) |
+| Daten je Discord-Server getrennt | Zentral im Datenbankzugriff (`prisma/server-scope.ts`); Tests in `test/server-scope.test.ts` |
 
-Known residual risks (accepted / not yet addressed):
-- Account lockout (5 failures/15 min) can be abused to lock a known username; per-IP rate limiting limits but does not remove this.
-- `POST /applications` answers 409 for an open application of the same Roblox ID (minor existence leak).
-- `trust proxy` is fixed to 1 hop; deploy behind the provided Caddy (or adjust) so `X-Forwarded-For` cannot be spoofed by clients.
-- Uploaded files are not virus-scanned. 2FA is optional per user (not enforceable per role yet). Session tokens are not bound to IP/device.
-- Roles with `roles.manage` can grant themselves nothing directly (self-changes blocked) but can still grant other accounts anything; treat that permission as admin-equivalent.
+Bekannte Restrisiken (akzeptiert / noch offen):
+- Die Kontosperre (5 Fehlversuche/15 min) lässt sich missbrauchen, um einen bekannten Benutzernamen zu sperren; die Begrenzung je IP schwächt das ab, verhindert es aber nicht.
+- `POST /applications` antwortet bei einer offenen Bewerbung derselben Roblox-ID mit 409 (verrät gering, dass es sie gibt).
+- `trust proxy` ist fest auf 1 Hop; hinter dem mitgelieferten Caddy betreiben (oder anpassen), damit Clients `X-Forwarded-For` nicht fälschen können.
+- Hochgeladene Dateien werden nicht auf Viren geprüft. 2FA ist je Benutzer freiwillig (noch nicht je Rolle erzwingbar). Sitzungstokens sind nicht an IP/Gerät gebunden.
+- Rollen mit `roles.manage` können sich selbst nichts direkt geben (eigene Änderungen gesperrt), anderen Konten aber alles; dieses Recht wie Admin behandeln.
 
-## Production defaults
-- Swagger UI (`/api/docs`) is only served in development (`ENABLE_SWAGGER=true` overrides).
-- Retention runs daily inside the API process in production (first run 1 minute after start); every run is audited as `retention.run` with no user.
+## Standards im Produktivbetrieb
+- Swagger-UI (`/api/docs`) gibt es nur in der Entwicklung (`ENABLE_SWAGGER=true` schaltet sie trotzdem ein).
+- Die Aufbewahrung läuft im Produktivbetrieb täglich im API-Prozess (erster Lauf 1 Minute nach dem Start); jeder Lauf wird als `retention.run` ohne Benutzer auditiert.
 
-## Discord bot
-Token-authenticated service client; acts only as a linked, active user and only on an explicit route allowlist (`BOT_USER_ROUTES`, writes limited to creating records and dispatch control). Details and limits: [discord-bot.md](discord-bot.md). Covered by `test/discord.test.ts` (token checks, unlinked/disabled users, allowlist, attribution in audit, outbox, code single-use/expiry).
+## Discord-Bot
+Dienst-Client mit Token; handelt nur als verknüpfter, aktiver Benutzer und nur auf einer ausdrücklichen Routen-Freigabeliste (`BOT_USER_ROUTES`, Schreiben beschränkt auf das Anlegen von Einträgen und die Leitstellen-Steuerung). Details und Grenzen: [discord-bot.md](discord-bot.md). Abgedeckt durch `test/discord.test.ts` (Token-Prüfung, nicht verknüpfte/deaktivierte Benutzer, Freigabeliste, Zuordnung im Audit, Warteschlange, Codes nur einmal gültig und mit Ablauf).
 
-## Single-process / panel hosting
-- `COOKIE_SECURE` (default: on in production). Without HTTPS the launcher sets it to `false` and prints a loud warning; CSP `upgrade-insecure-requests` and HSTS are then disabled so the site loads over http. Credentials are unencrypted in that mode.
-- The CSRF origin check accepts configured origins **or** the same origin as the requested host (cross-site requests carry a foreign origin and stay blocked; tested).
+## Ein Prozess / Panel-Hosting
+- `COOKIE_SECURE` (Standard: im Produktivbetrieb an). Ohne HTTPS setzt das Startskript es auf `false` und gibt eine deutliche Warnung aus; CSP `upgrade-insecure-requests` und HSTS sind dann aus, damit die Seite über http lädt. Zugangsdaten gehen in diesem Modus unverschlüsselt über die Leitung.
+- Die CSRF-Prüfung der Herkunft akzeptiert eingestellte Herkünfte **oder** dieselbe Herkunft wie der angefragte Host (seitenfremde Anfragen tragen eine fremde Herkunft und bleiben gesperrt; getestet).

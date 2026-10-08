@@ -60,7 +60,7 @@ function createLive(api, platform, log = console.log) {
             catch (e) {
                 const msg = e instanceof Error ? e.message : String(e);
                 if (msg !== lastError) {
-                    log(`live messages: refresh failed: ${msg} (will keep retrying quietly)`);
+                    log(`Live-Nachrichten: Aktualisierung fehlgeschlagen: ${msg} (wird still weiter versucht)`);
                     lastError = msg;
                 }
             }

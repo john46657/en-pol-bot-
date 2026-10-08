@@ -1,13 +1,14 @@
-# Testing
+# Tests
 
 ```bash
-pnpm test        # shared unit tests, bot tests (fake API), API integration tests (own embedded PostgreSQL), web component tests
+pnpm test        # Unit-Tests von shared, Bot-Tests (Fake-API), API-Integrationstests (eigenes eingebettetes PostgreSQL), Komponenten-Tests im Web
 pnpm lint && pnpm typecheck && pnpm build
 ```
-API tests (`apps/api/test`) boot the full Nest app against a throw-away PostgreSQL, apply real migrations, and cover auth, RBAC (incl. user DENY > role ALLOW), Roblox ID, persons/vehicles/tickets (transaction rollback), dispatch/reports/complaints/investigations/wanted/evidence/personnel/applications/academy, search leakage, communication permissions, analytics gating, WebSocket authorization, exports, media validation, audit immutability. Set `TEST_DATABASE_URL` to use an external database.
-## Browser E2E (Playwright)
+Die API-Tests (`apps/api/test`) starten die komplette Nest-App gegen ein Wegwerf-PostgreSQL, wenden die echten Migrationen an und decken ab: Anmeldung, Rechte (inkl. VERBOT am Benutzer > ERLAUBNIS aus der Rolle), Roblox-ID, Personen/Fahrzeuge (Rollback von Transaktionen), Leitstelle/Berichte/Beschwerden/Ermittlungen/Fahndungen/Beweismittel/Personal/Bewerbungen/Akademie, keine Lecks in der Suche, Rechte in der Kommunikation, Sperren bei Auswertungen, WebSocket-Rechte, Exporte, Prüfung von Medien, Unveränderlichkeit des Audits und die Trennung je Discord-Server (`server-scope.test.ts`). Mit `TEST_DATABASE_URL` lässt sich eine eigene Datenbank nutzen (z. B. wenn das eingebettete PostgreSQL als root nicht startet); sie sollte vor jedem Lauf leer sein.
+
+## Browser-E2E (Playwright)
 ```bash
 pnpm e2e
 ```
-Starts a throw-away PostgreSQL (:54340), the API (:3100) and Vite (:5174), seeds an admin, and drives the installed **Google Chrome** (`channel: 'chrome'`, no browser download). Specs (`e2e/core.spec.ts`, 10): login/logout, person→ticket, dispatch workflow, permission denial (UI + API), complaint workflow, public application→review, Studio custom field + theme, MDT search/quick action, Team dashboard, Discord link flow.
-Not covered: load tests, other browsers, mobile viewports.
+Startet ein Wegwerf-PostgreSQL (:54340), die API (:3100) und Vite (:5174), legt einen Admin an und steuert das installierte **Google Chrome** (`channel: 'chrome'`, kein Browser-Download). Szenarien in `e2e/core.spec.ts`: An-/Abmeldung, Leitstellen-Ablauf, abgelehnte Rechte (Oberfläche + API), Beschwerde-Ablauf, öffentliche Bewerbung → Prüfung, Studio-Feld + Design, MDT-Suche/Schnellaktion, Team-Dashboard, Discord-Verknüpfung.
+Nicht abgedeckt: Lasttests, andere Browser, Mobil-Ansichten.

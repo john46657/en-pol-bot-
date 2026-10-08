@@ -91,7 +91,7 @@ let RobloxOAuthService = class RobloxOAuthService {
         const c = await this.creds();
         if (!c || !code)
             throw new RobloxOAuthFailure('Die Anmeldung bei Roblox hat nicht geklappt. Versuch es noch einmal.');
-        const user = await this.fetchUser(c, code).catch((e) => { this.log.warn(`roblox oauth failed: ${e instanceof Error ? e.message : e}`); return null; });
+        const user = await this.fetchUser(c, code).catch((e) => { this.log.warn(`Roblox-Anmeldung fehlgeschlagen: ${e instanceof Error ? e.message : e}`); return null; });
         if (!user)
             throw new RobloxOAuthFailure('Roblox hat das Konto nicht bestätigt. Versuch es noch einmal.');
         const link = await this.verification.linkAccount(s.guildId, s.discordId, s.discordName, user, 'Roblox-Anmeldung');
@@ -104,13 +104,13 @@ let RobloxOAuthService = class RobloxOAuthService {
             body: new URLSearchParams({ grant_type: 'authorization_code', code, client_id: c.clientId, client_secret: c.clientSecret, redirect_uri: this.redirectUri() }),
         });
         if (!tok.ok)
-            throw new Error(`token HTTP ${tok.status}`);
+            throw new Error(`Token: HTTP ${tok.status}`);
         const { access_token } = (await tok.json());
         if (!access_token)
-            throw new Error('no access token');
+            throw new Error('Kein Zugriffstoken erhalten');
         const info = await fetch('https://apis.roblox.com/oauth/v1/userinfo', { headers: { authorization: `Bearer ${access_token}` }, signal: AbortSignal.timeout(8000) });
         if (!info.ok)
-            throw new Error(`userinfo HTTP ${info.status}`);
+            throw new Error(`Benutzerinfo: HTTP ${info.status}`);
         const u = (await info.json());
         if (!u.sub || !/^\d{1,19}$/.test(u.sub) || !u.preferred_username)
             return null;

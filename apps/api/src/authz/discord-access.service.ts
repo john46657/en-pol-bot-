@@ -33,7 +33,7 @@ export class DiscordAccessService implements OnModuleInit, OnModuleDestroy {
 
   onModuleInit() {
     if (this.env.NODE_ENV === 'test' || !this.env.DISCORD_TOKEN) return;
-    this.timer = setInterval(() => void this.sweep().catch((e) => this.log.warn(`sweep failed: ${e instanceof Error ? e.message : e}`)), SWEEP_MS);
+    this.timer = setInterval(() => void this.sweep().catch((e) => this.log.warn(`Rollenprüfung fehlgeschlagen: ${e instanceof Error ? e.message : e}`)), SWEEP_MS);
     this.timer.unref?.();
   }
   onModuleDestroy() { clearInterval(this.timer); }

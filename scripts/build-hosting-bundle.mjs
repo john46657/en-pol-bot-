@@ -10,7 +10,7 @@ import path from 'node:path';
 const root = path.resolve(import.meta.dirname, '..');
 const out = path.join(root, 'dist-hosting');
 const bundle = path.join(out, 'bundle');
-const sh = (cmd, args, cwd = root) => { const r = spawnSync(cmd, args, { cwd, stdio: 'inherit' }); if (r.status !== 0) { console.error(`failed: ${cmd} ${args.join(' ')}`); process.exit(1); } };
+const sh = (cmd, args, cwd = root) => { const r = spawnSync(cmd, args, { cwd, stdio: 'inherit' }); if (r.status !== 0) { console.error(`fehlgeschlagen: ${cmd} ${args.join(' ')}`); process.exit(1); } };
 const json = (p) => JSON.parse(readFileSync(path.join(root, p), 'utf8'));
 
 console.log('==> build');

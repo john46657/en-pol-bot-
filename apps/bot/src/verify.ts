@@ -36,16 +36,16 @@ export function createVerify(api: Api, ops: VerifyMemberOps, log: (m: string) =>
     /** Beitritt: Verifizierte bekommen sofort Rollen + Nickname, alle anderen die „nicht verifiziert“-Rollen. */
     async joined(m: { guildId: string; id: string; bot: boolean; displayName?: string }) {
       if (m.bot) return;
-      const cfg = await config(m.guildId).catch((e) => { log(`verify config not loaded: ${e instanceof Error ? e.message : e}`); return null; });
+      const cfg = await config(m.guildId).catch((e) => { log(`Verifizierungs-Einstellungen nicht geladen: ${e instanceof Error ? e.message : e}`); return null; });
       if (!cfg?.enabled || !cfg.autoOnJoin) return;
-      const r = await sync(m.guildId, m.id, m.displayName).catch((e) => { log(`verify on join failed: ${e instanceof Error ? e.message : e}`); return null; });
-      if (r?.problems.length) log(`verify on join (${m.guildId}): ${r.problems.join('; ')}`);
+      const r = await sync(m.guildId, m.id, m.displayName).catch((e) => { log(`Verifizierung beim Beitritt fehlgeschlagen: ${e instanceof Error ? e.message : e}`); return null; });
+      if (r?.problems.length) log(`Verifizierung beim Beitritt (${m.guildId}): ${r.problems.join('; ')}`);
     },
     /** Nach Entfernen/Ändern im Dashboard: auf allen Servern neu setzen. */
     async refreshEverywhere(userId: string) {
       for (const g of await ops.guildsOf(userId)) {
-        const r = await sync(g.guildId, userId, g.displayName).catch((e) => { log(`verify refresh failed (${g.guildId}): ${e instanceof Error ? e.message : e}`); return null; });
-        if (r?.problems.length) log(`verify refresh (${g.guildId}): ${r.problems.join('; ')}`);
+        const r = await sync(g.guildId, userId, g.displayName).catch((e) => { log(`Verifizierung aktualisieren fehlgeschlagen (${g.guildId}): ${e instanceof Error ? e.message : e}`); return null; });
+        if (r?.problems.length) log(`Verifizierung aktualisieren (${g.guildId}): ${r.problems.join('; ')}`);
       }
     },
     clear() { cache.clear(); },

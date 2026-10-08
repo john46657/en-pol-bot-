@@ -45,7 +45,7 @@ export function createStaffLists(client: () => Client, api: Api, log: (m: string
   /** Rollen/Mitglieder geändert → gesammelt nach 10 Sekunden neu zeichnen. */
   function changed() {
     clearTimeout(timer);
-    timer = setTimeout(() => void refresh().catch((e) => log(`staff lists: ${e instanceof Error ? e.message : e}`)), 10_000);
+    timer = setTimeout(() => void refresh().catch((e) => log(`Staff-Listen: ${e instanceof Error ? e.message : e}`)), 10_000);
     timer.unref?.();
   }
 
@@ -53,7 +53,7 @@ export function createStaffLists(client: () => Client, api: Api, log: (m: string
     let lastError: string | undefined;
     const tick = () => void refresh().then(() => { lastError = undefined; }, (e) => {
       const msg = e instanceof Error ? e.message : String(e);
-      if (msg !== lastError) { log(`staff lists: refresh failed: ${msg}`); lastError = msg; }
+      if (msg !== lastError) { log(`Staff-Listen: Aktualisierung fehlgeschlagen: ${msg}`); lastError = msg; }
     });
     setTimeout(tick, 15_000).unref?.();
     setInterval(tick, seconds * 1000).unref?.();

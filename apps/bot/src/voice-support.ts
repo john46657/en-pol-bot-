@@ -43,12 +43,12 @@ export function createVoiceSupport(api: Api, ops: VoiceOps, log: (m: string) => 
     rooms.set(guildId, { at: Date.now(), list });
     return list;
   };
-  const safe = (label: string, p: Promise<unknown>) => p.catch((e) => log(`voice support: ${label} failed: ${e instanceof Error ? e.message : e}`));
-  const applyEdit = (e: Edit) => (e ? safe('update message', ops.edit(e.channelId, e.messageId, e.message)) : Promise.resolve());
+  const safe = (label: string, p: Promise<unknown>) => p.catch((e) => log(`Sprach-Support: ${label} fehlgeschlagen: ${e instanceof Error ? e.message : e}`));
+  const applyEdit = (e: Edit) => (e ? safe('Nachricht aktualisieren', ops.edit(e.channelId, e.messageId, e.message)) : Promise.resolve());
   async function finished(r: Finish) {
     await applyEdit(r.edit);
-    if (r.deleteChannelId) await safe('delete channel', ops.deleteChannel(r.deleteChannelId));
-    if (r.ratingDm) await safe('rating DM', ops.dm(r.userId, r.ratingDm));
+    if (r.deleteChannelId) await safe('Kanal löschen', ops.deleteChannel(r.deleteChannelId));
+    if (r.ratingDm) await safe('Bewertungs-DM', ops.dm(r.userId, r.ratingDm));
   }
 
   async function onVoiceState(e: VoiceEvent) {
@@ -67,7 +67,7 @@ export function createVoiceSupport(api: Api, ops: VoiceOps, log: (m: string) => 
     }
     if (e.to && list.some((r) => r.enabled && r.waitingChannelId === e.to)) {
       const r = await api.service<{ action: 'none' | 'closed' | 'notify'; caseId?: string; channelId?: string; message?: MessageSpec; dm?: MessageSpec }>('POST', '/bot/voice-support/join', { guildId: e.guildId, channelId: e.to, discordId: e.userId, userName: e.userName });
-      if (r.action === 'closed' && r.dm) await safe('closed DM', ops.dm(e.userId, r.dm));
+      if (r.action === 'closed' && r.dm) await safe('DM beim Schließen', ops.dm(e.userId, r.dm));
       if (r.action === 'notify' && r.caseId && r.channelId && r.message) {
         const messageId = await ops.post(r.channelId, r.message);
         await api.service('POST', `/bot/voice-support/cases/${r.caseId}/posted`, { messageId });
@@ -84,7 +84,7 @@ export function createVoiceSupport(api: Api, ops: VoiceOps, log: (m: string) => 
     try {
       if (room.ownChannels) channelId = room.ownChannelIds.find((x) => !ops.members(x).length) ?? null;
       else { channelId = await ops.createVoice({ guildId: c.guildId, name: clip(`${room.channelPrefix}${c.userName}`, 100), nearChannelId: room.waitingChannelId, userId: c.userId, teamRoleId: room.teamRoleId }); created = true; }
-    } catch (e) { log(`voice support: channel failed: ${e instanceof Error ? e.message : e}`); }
+    } catch (e) { log(`Sprach-Support: Kanal fehlgeschlagen: ${e instanceof Error ? e.message : e}`); }
     const moved = channelId ? await ops.move(c.guildId, c.userId, channelId).catch(() => false) : false;
     if (channelId && staffId && ops.voiceChannelOf(c.guildId, staffId)) await ops.move(c.guildId, staffId, channelId).catch(() => false);
     const threadId = room.notes && r.edit ? await ops.thread(r.edit.channelId, r.edit.messageId, `Notizen #${c.number}`).catch(() => null) : null;
@@ -100,11 +100,11 @@ export function createVoiceSupport(api: Api, ops: VoiceOps, log: (m: string) => 
 
   /** Aufträge aus dem Dashboard (Outbox `voice.effects`): Übernehmen bereitstellen, Meldung ändern, DM, Notiz, Kanal löschen. */
   async function applyEffects(p: { provision?: Claim; staffDiscordId?: string | null; edit?: Edit; dm?: { userId: string; message: MessageSpec }; threadPost?: { threadId: string; text: string }; deleteChannelId?: string | null }) {
-    if (p.provision) await provision(p.provision, p.staffDiscordId ?? null).catch((e: Error) => log(`voice support: ${e.message}`));
+    if (p.provision) await provision(p.provision, p.staffDiscordId ?? null).catch((e: Error) => log(`Sprach-Support: ${e.message}`));
     if (p.edit) await applyEdit(p.edit);
     if (p.dm) await safe('DM', ops.dm(p.dm.userId, p.dm.message));
-    if (p.threadPost) await safe('thread log', ops.threadPost(p.threadPost.threadId, p.threadPost.text));
-    if (p.deleteChannelId) await safe('delete channel', ops.deleteChannel(p.deleteChannelId));
+    if (p.threadPost) await safe('Thread-Protokoll', ops.threadPost(p.threadPost.threadId, p.threadPost.text));
+    if (p.deleteChannelId) await safe('Kanal löschen', ops.deleteChannel(p.deleteChannelId));
   }
 
   async function interact(c: Ctx & { args: string[]; fields?: Record<string, string> }): Promise<Reply> {
@@ -129,7 +129,7 @@ export function createVoiceSupport(api: Api, ops: VoiceOps, log: (m: string) => 
           const sent = await ops.dm(r.userId, r.dm).then(() => true, () => false);
           if (!sent) return errorReply('Die Nachricht kam nicht an – die Person hat Direktnachrichten ausgeschaltet.');
           await applyEdit(r.edit);
-          if (r.threadId) await safe('thread log', ops.threadPost(r.threadId, r.log));
+          if (r.threadId) await safe('Thread-Protokoll', ops.threadPost(r.threadId, r.log));
           return note('💬 Nachricht gesendet.');
         }
         case 'close': {

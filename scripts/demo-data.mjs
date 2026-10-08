@@ -4,7 +4,7 @@
  * Verknüpfungen und Benachrichtigungen genau wie im Betrieb entstehen). Idempotent. Nur lokal!
  */
 const API = process.env.API_URL ?? 'http://localhost:3000';
-if (process.env.NODE_ENV === 'production') { console.error('Refusing to create demo data in production.'); process.exit(1); }
+if (process.env.NODE_ENV === 'production') { console.error('Demodaten werden im Produktivbetrieb nicht angelegt.'); process.exit(1); }
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD ?? 'Admin-Demo-123456';
 const DEMO_PASSWORD = 'Demo-Pass-123456';
 
@@ -32,9 +32,9 @@ const USERS = [
 ];
 
 const admin = new Client();
-try { await admin.login('admin', ADMIN_PASSWORD); } catch { console.log('Demo data skipped: could not log in as admin (custom admin password?). Set ADMIN_PASSWORD.'); process.exit(0); }
+try { await admin.login('admin', ADMIN_PASSWORD); } catch { console.log('Demodaten übersprungen: Anmeldung als admin fehlgeschlagen (eigenes Admin-Passwort?). ADMIN_PASSWORD setzen.'); process.exit(0); }
 const existing = await get(admin, '/users?q=officer1');
-if (existing.items.some((u) => u.username === 'officer1')) { console.log('Demo data already present.'); printAccounts(); process.exit(0); }
+if (existing.items.some((u) => u.username === 'officer1')) { console.log('Demodaten sind schon vorhanden.'); printAccounts(); process.exit(0); }
 
 const roles = Object.fromEntries((await get(admin, '/roles')).map((r) => [r.name, r.id]));
 const uid = {};
@@ -108,11 +108,11 @@ await post(admin, '/communication/channels/ANNOUNCEMENT/messages', { body: 'Welc
 await post(admin, '/communication/channels/TEAM/messages', { body: 'Patrol assignments are posted in Dispatch.' });
 await fetch(`${API}/api/v1/applications`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ robloxUsername: 'Nina_Newbie', robloxUserId: '8000001', answers: { experience: '2 years RP', availability: 'Evenings', motivation: 'I like structured roleplay.', roleplayKnowledge: 'Familiar with FRP/NITRP.', erlcKnowledge: 'Good' } }) });
 void adminId;
-console.log('Demo data created.');
+console.log('Demodaten angelegt.');
 printAccounts();
 
 function printAccounts() {
-  console.log('\n  Account       Password            Roles');
+  console.log('\n  Konto         Passwort            Rollen');
   console.log(`  admin         ${ADMIN_PASSWORD.padEnd(19)} System Administrator`);
   for (const [u, , rs] of USERS) console.log(`  ${u.padEnd(13)} ${DEMO_PASSWORD.padEnd(19)} ${rs.join(', ')}`);
 }

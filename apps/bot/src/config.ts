@@ -45,6 +45,6 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): BotConfig {
   const todo = Object.entries(env).filter(([k, v]) => /^(DISCORD_TOKEN|DISCORD_GUILD_ID|BOT_API_TOKEN|API_URL)$/.test(k) && v && isPlaceholder(v)).map(([k]) => k);
   if (todo.length) throw new Error(`Bitte in der .env bzw. im Env-Tab noch ausfüllen: ${todo.join(', ')} (dort steht noch ein Platzhalter "HIER_…").`);
   const r = schema.safeParse(Object.fromEntries(Object.entries(env).filter(([, v]) => v !== '')));
-  if (!r.success) throw new Error(`Invalid bot configuration:\n${r.error.issues.map((i) => ` - ${i.path.join('.')}: ${i.message}`).join('\n')}`);
+  if (!r.success) throw new Error(`Ungültige Bot-Konfiguration:\n${r.error.issues.map((i) => ` - ${i.path.join('.')}: ${i.message}`).join('\n')}`);
   return r.data;
 }

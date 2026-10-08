@@ -30,7 +30,7 @@ function base32Decode(s) {
     for (const ch of clean) {
         const i = B32.indexOf(ch);
         if (i < 0)
-            throw new Error('invalid base32');
+            throw new Error('Ungültiges Base32');
         value = (value << 5) | i;
         bits += 5;
         if (bits >= 8) {

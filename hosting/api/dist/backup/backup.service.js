@@ -68,7 +68,7 @@ let BackupService = class BackupService {
     onModuleInit() {
         if (process.env.NODE_ENV === 'test')
             return;
-        this.timer = setInterval(() => void this.autoTick().catch((e) => this.log.warn(`auto backup failed: ${e instanceof Error ? e.message : e}`)), 60 * 60_000);
+        this.timer = setInterval(() => void this.autoTick().catch((e) => this.log.warn(`Automatische Sicherung fehlgeschlagen: ${e instanceof Error ? e.message : e}`)), 60 * 60_000);
         setTimeout(() => void this.autoTick().catch(() => undefined), 5 * 60_000).unref();
     }
     onModuleDestroy() { if (this.timer)

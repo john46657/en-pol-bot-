@@ -62,7 +62,7 @@ export function startPresenceReporter(client: () => Client, api: Api, opts: { me
   const guilds = () => [...client().guilds.cache.values()].slice(0, 50);
   const fail = (what: string) => (e: unknown) => {
     const msg = `${what}: ${e instanceof Error ? e.message : e}`;
-    if (msg !== lastError) { log(`team/voice report failed – ${msg} (will keep retrying quietly)`); lastError = msg; }
+    if (msg !== lastError) { log(`Team-/Voice-Meldung fehlgeschlagen – ${msg} (wird still weiter versucht)`); lastError = msg; }
   };
 
   const pushMembers = async () => {
@@ -89,8 +89,8 @@ export function startPresenceReporter(client: () => Client, api: Api, opts: { me
 
   /** Mitgliederliste einmal vollständig laden (danach hält Discord sie über Ereignisse aktuell). */
   const loadMembers = async () => {
-    if (!opts.members) { log('Discord: "Server Members Intent" is off – the dashboard team list only shows members the bot has seen (enable it in the Developer Portal → Bot).'); return; }
-    for (const g of guilds()) await g.members.fetch().catch((e) => log(`could not load members of ${g.name}: ${e instanceof Error ? e.message : e}`));
+    if (!opts.members) { log('Discord: „Server Members Intent“ ist aus – die Teamliste im Dashboard zeigt nur Mitglieder, die der Bot schon gesehen hat (im Developer Portal → Bot aktivieren).'); return; }
+    for (const g of guilds()) await g.members.fetch().catch((e) => log(`Mitglieder von ${g.name} konnten nicht geladen werden: ${e instanceof Error ? e.message : e}`));
   };
   void loadMembers().then(() => Promise.all([pushMembers().catch(fail('members')), pushVoice().catch(fail('voice'))]));
   // verbindlich: alle 5 Sekunden ein frischer Stand (Dashboard aktualisiert sich im selben Takt)

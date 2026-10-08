@@ -39,7 +39,7 @@ let NotifyService = class NotifyService {
                 this.rt.publishToUser(id, 'notification.new', { type: n.type, title: n.title.slice(0, 200) });
         }
         catch (e) {
-            this.log.warn(`notification failed: ${e instanceof Error ? e.message : e}`);
+            this.log.warn(`Benachrichtigung fehlgeschlagen: ${e instanceof Error ? e.message : e}`);
         }
     }
     /** Aktive Benutzer mit einem Recht (im angegebenen Server bzw. serverübergreifend), ohne `exceptUserId`. Gebündelt: 5 Abfragen insgesamt. */
@@ -81,7 +81,7 @@ let NotifyService = class NotifyService {
             await this.notify(await this.usersWith(permission, opts), n);
         }
         catch (e) {
-            this.log.warn(`notification failed: ${e instanceof Error ? e.message : e}`);
+            this.log.warn(`Benachrichtigung fehlgeschlagen: ${e instanceof Error ? e.message : e}`);
         }
     }
 };

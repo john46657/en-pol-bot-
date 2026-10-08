@@ -65,10 +65,10 @@ let AllExceptionsFilter = class AllExceptionsFilter {
                 message = 'Datensatz nicht gefunden.';
             }
             else
-                this.log.error({ requestId, prisma: exception.code }, 'prisma error');
+                this.log.error({ requestId, prisma: exception.code }, 'Datenbankfehler');
         }
         else {
-            this.log.error({ requestId, err: exception instanceof Error ? exception.message : String(exception) }, 'unhandled');
+            this.log.error({ requestId, err: exception instanceof Error ? exception.message : String(exception) }, 'Unbehandelter Fehler');
         }
         if (status === 403 || status === 401) {
             // wird vom SecurityEvent-Interceptor/Guard bereits protokolliert

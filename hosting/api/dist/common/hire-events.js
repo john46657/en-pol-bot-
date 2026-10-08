@@ -17,7 +17,7 @@ exports.hireEvents = {
             await (0, guild_context_1.runInGuild)(a.guildId || (0, guild_context_1.currentGuild)(), () => h(actor, a));
         }
         catch (e) {
-            console.error(`hire automation failed for ${a.number}: ${e instanceof Error ? e.message : e}`);
+            console.error(`Einstellungs-Automatik für ${a.number} fehlgeschlagen: ${e instanceof Error ? e.message : e}`);
         }
     },
 };

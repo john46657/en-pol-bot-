@@ -22,14 +22,14 @@ function createVoiceSupport(api, ops, log = console.error) {
         rooms.set(guildId, { at: Date.now(), list });
         return list;
     };
-    const safe = (label, p) => p.catch((e) => log(`voice support: ${label} failed: ${e instanceof Error ? e.message : e}`));
-    const applyEdit = (e) => (e ? safe('update message', ops.edit(e.channelId, e.messageId, e.message)) : Promise.resolve());
+    const safe = (label, p) => p.catch((e) => log(`Sprach-Support: ${label} fehlgeschlagen: ${e instanceof Error ? e.message : e}`));
+    const applyEdit = (e) => (e ? safe('Nachricht aktualisieren', ops.edit(e.channelId, e.messageId, e.message)) : Promise.resolve());
     async function finished(r) {
         await applyEdit(r.edit);
         if (r.deleteChannelId)
-            await safe('delete channel', ops.deleteChannel(r.deleteChannelId));
+            await safe('Kanal löschen', ops.deleteChannel(r.deleteChannelId));
         if (r.ratingDm)
-            await safe('rating DM', ops.dm(r.userId, r.ratingDm));
+            await safe('Bewertungs-DM', ops.dm(r.userId, r.ratingDm));
     }
     async function onVoiceState(e) {
         if (e.bot || e.from === e.to)
@@ -53,7 +53,7 @@ function createVoiceSupport(api, ops, log = console.error) {
         if (e.to && list.some((r) => r.enabled && r.waitingChannelId === e.to)) {
             const r = await api.service('POST', '/bot/voice-support/join', { guildId: e.guildId, channelId: e.to, discordId: e.userId, userName: e.userName });
             if (r.action === 'closed' && r.dm)
-                await safe('closed DM', ops.dm(e.userId, r.dm));
+                await safe('DM beim Schließen', ops.dm(e.userId, r.dm));
             if (r.action === 'notify' && r.caseId && r.channelId && r.message) {
                 const messageId = await ops.post(r.channelId, r.message);
                 await api.service('POST', `/bot/voice-support/cases/${r.caseId}/posted`, { messageId });
@@ -76,7 +76,7 @@ function createVoiceSupport(api, ops, log = console.error) {
             }
         }
         catch (e) {
-            log(`voice support: channel failed: ${e instanceof Error ? e.message : e}`);
+            log(`Sprach-Support: Kanal fehlgeschlagen: ${e instanceof Error ? e.message : e}`);
         }
         const moved = channelId ? await ops.move(c.guildId, c.userId, channelId).catch(() => false) : false;
         if (channelId && staffId && ops.voiceChannelOf(c.guildId, staffId))
@@ -95,15 +95,15 @@ function createVoiceSupport(api, ops, log = console.error) {
     /** Aufträge aus dem Dashboard (Outbox `voice.effects`): Übernehmen bereitstellen, Meldung ändern, DM, Notiz, Kanal löschen. */
     async function applyEffects(p) {
         if (p.provision)
-            await provision(p.provision, p.staffDiscordId ?? null).catch((e) => log(`voice support: ${e.message}`));
+            await provision(p.provision, p.staffDiscordId ?? null).catch((e) => log(`Sprach-Support: ${e.message}`));
         if (p.edit)
             await applyEdit(p.edit);
         if (p.dm)
             await safe('DM', ops.dm(p.dm.userId, p.dm.message));
         if (p.threadPost)
-            await safe('thread log', ops.threadPost(p.threadPost.threadId, p.threadPost.text));
+            await safe('Thread-Protokoll', ops.threadPost(p.threadPost.threadId, p.threadPost.text));
         if (p.deleteChannelId)
-            await safe('delete channel', ops.deleteChannel(p.deleteChannelId));
+            await safe('Kanal löschen', ops.deleteChannel(p.deleteChannelId));
     }
     async function interact(c) {
         const [action, id = '', extra] = c.args;
@@ -131,7 +131,7 @@ function createVoiceSupport(api, ops, log = console.error) {
                         return (0, format_1.errorReply)('Die Nachricht kam nicht an – die Person hat Direktnachrichten ausgeschaltet.');
                     await applyEdit(r.edit);
                     if (r.threadId)
-                        await safe('thread log', ops.threadPost(r.threadId, r.log));
+                        await safe('Thread-Protokoll', ops.threadPost(r.threadId, r.log));
                     return note('💬 Nachricht gesendet.');
                 }
                 case 'close': {

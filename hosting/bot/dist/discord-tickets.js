@@ -125,10 +125,10 @@ function createTicketRuntime(client, api, log = console.log) {
         for (const id of e.channelIds) {
             const ch = await text(id);
             if (ch)
-                await ch.send({ ...extra, files: [file()] }).catch((err) => log(`transcript to ${id} failed: ${err instanceof Error ? err.message : err}`));
+                await ch.send({ ...extra, files: [file()] }).catch((err) => log(`Transkript an ${id} fehlgeschlagen: ${err instanceof Error ? err.message : err}`));
         }
         if (e.userId)
-            await (await client().users.fetch(e.userId)).send({ ...extra, files: [file()] }).catch(() => log(`transcript DM to ${e.userId} failed (DMs closed?)`));
+            await (await client().users.fetch(e.userId)).send({ ...extra, files: [file()] }).catch(() => log(`Transkript-DM an ${e.userId} fehlgeschlagen (DMs geschlossen?)`));
     }
     async function applyOne(e, result) {
         switch (e.type) {
@@ -180,7 +180,7 @@ function createTicketRuntime(client, api, log = console.log) {
                 return;
             }
             case 'dm':
-                await (await client().users.fetch(e.userId)).send(payloadOf(e.message)).catch(() => log(`ticket DM to ${e.userId} failed (DMs closed?)`));
+                await (await client().users.fetch(e.userId)).send(payloadOf(e.message)).catch(() => log(`Ticket-DM an ${e.userId} fehlgeschlagen (DMs geschlossen?)`));
                 return;
             case 'transcript':
                 await transcript(e);
@@ -190,13 +190,13 @@ function createTicketRuntime(client, api, log = console.log) {
                 if (!channels.has(e.channelId))
                     await refresh();
                 if (!channels.has(e.channelId)) {
-                    log(`refusing to delete ${e.channelId}: not a ticket channel`);
+                    log(`Löschen von ${e.channelId} verweigert: kein Ticket-Kanal`);
                     return;
                 }
                 const ch = await text(e.channelId);
                 if (!ch)
                     return;
-                setTimeout(() => void ch.delete('EN Polizei: Ticket gelöscht').then(() => channels.delete(e.channelId)).catch((err) => log(`ticket delete failed: ${err instanceof Error ? err.message : err}`)), e.delayMs);
+                setTimeout(() => void ch.delete('EN Polizei: Ticket gelöscht').then(() => channels.delete(e.channelId)).catch((err) => log(`Ticket konnte nicht gelöscht werden: ${err instanceof Error ? err.message : err}`)), e.delayMs);
                 return;
             }
             case 'panel': {
@@ -220,7 +220,7 @@ function createTicketRuntime(client, api, log = console.log) {
             }
             catch (err) {
                 const msg = err instanceof Error ? err.message : String(err);
-                log(`ticket effect ${e.type} failed: ${msg}`);
+                log(`Ticket-Aktion ${e.type} fehlgeschlagen: ${msg}`);
                 if (e.type === 'create') {
                     await api.service('POST', `/bot/support-tickets/${e.ticketId}/abort`, { reason: msg.slice(0, 300) }).catch(() => undefined);
                     throw new Error('Der Ticket-Kanal konnte nicht erstellt werden (fehlen dem Bot die Rechte „Kanäle verwalten“ / „Rollen verwalten“?).');
@@ -246,7 +246,7 @@ function createTicketRuntime(client, api, log = console.log) {
             authorAvatar: m.author.displayAvatarURL({ size: 64 }), isBot: m.author.bot, content: m.content.slice(0, 8000),
             attachments: [...m.attachments.values()].slice(0, 10).map((a) => ({ name: a.name.slice(0, 200), url: a.url, size: a.size, contentType: a.contentType ?? null })),
             embeds: m.embeds.slice(0, 10).map((e) => ({ ...(e.title ? { title: e.title.slice(0, 256) } : {}), ...(e.description ? { description: e.description.slice(0, 4096) } : {}) })),
-        }).catch((err) => log(`ticket message not recorded: ${err instanceof Error ? err.message : err}`));
+        }).catch((err) => log(`Ticket-Nachricht nicht gespeichert: ${err instanceof Error ? err.message : err}`));
     }
     async function listCategories(guildId) {
         const guild = await client().guilds.fetch(guildId);

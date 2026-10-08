@@ -39,7 +39,7 @@ const waitPort = (port, ms = 90_000) => new Promise((res, rej) => {
 function shutdown(code = 0) { for (const c of children) c.kill('SIGTERM'); setTimeout(() => process.exit(code), 500); }
 process.on('SIGINT', () => shutdown(0)); process.on('SIGTERM', () => shutdown(0));
 
-console.log('EN Polizei — local dev environment');
+console.log('EN Polizei – lokale Entwicklungsumgebung');
 if (!existsSync(path.join(root, 'node_modules'))) runSync('pnpm', ['install'], 'setup');
 writeFileSync(path.join(root, 'apps/api/.env'), `DATABASE_URL=${env.DATABASE_URL}\n`);
 runSync('pnpm', ['--filter', '@enrp/shared', 'build'], 'build');
@@ -56,5 +56,5 @@ await new Promise((r) => setTimeout(r, 1500));
 
 const demo = spawnSync('node', ['scripts/demo-data.mjs'], { cwd: root, env: { ...env, API_URL: `http://localhost:${API_PORT}` }, encoding: 'utf8' });
 console.log((demo.stdout || '').trim() || (demo.stderr || '').trim());
-console.log(botEnabled ? '  Discord bot: started (DISCORD_TOKEN found)' : '  Discord bot: not started (set DISCORD_TOKEN to enable, see docs/discord-bot.md)');
-console.log(`\n  Web:     http://localhost:${WEB_PORT}\n  API:     http://localhost:${API_PORT}/api/docs\n  Login:   see table above (admin / ${ADMIN_PASSWORD})\n  Stop:    Ctrl+C\n`);
+console.log(botEnabled ? '  Discord-Bot: gestartet (DISCORD_TOKEN gefunden)' : '  Discord-Bot: nicht gestartet (DISCORD_TOKEN setzen, siehe docs/discord-bot.md)');
+console.log(`\n  Web:     http://localhost:${WEB_PORT}\n  API:     http://localhost:${API_PORT}/api/docs\n  Anmelden: siehe Tabelle oben (admin / ${ADMIN_PASSWORD})\n  Beenden: Strg+C\n`);

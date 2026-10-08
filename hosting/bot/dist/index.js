@@ -121,8 +121,8 @@ const platform = {
         const ch = await client.channels.fetch(channelId);
         // Sicherheitsnetz: der Bot löscht ausschließlich eigene Ticket-Channels
         if (!ch || ch.type !== discord_js_1.ChannelType.GuildText || !ch.name.startsWith(TICKET_PREFIX))
-            throw new Error('not a ticket channel');
-        setTimeout(() => void ch.delete('Support-Ticket geschlossen').catch((e) => console.error('ticket delete failed:', e instanceof Error ? e.message : e)), delayMs);
+            throw new Error('Kein Ticket-Kanal');
+        setTimeout(() => void ch.delete('Support-Ticket geschlossen').catch((e) => console.error('Ticket konnte nicht gelöscht werden:', e instanceof Error ? e.message : e)), delayMs);
     },
     async sendDirectMessage(userId, text) {
         await (await client.users.fetch(userId)).send({ content: text, allowedMentions: { parse: [] } });
@@ -134,7 +134,7 @@ const platform = {
     async postOrEdit({ channelId, messageId, embed, buttons }) {
         const ch = await client.channels.fetch(channelId);
         if (!ch?.isSendable() || !('messages' in ch))
-            throw new Error(`channel ${channelId} is not a text channel the bot can post in`);
+            throw new Error(`Kanal ${channelId} ist kein Textkanal, in dem der Bot schreiben darf`);
         const payload = { embeds: [toEmbed(embed)], components: toRows(buttons), allowedMentions: { parse: [] } };
         if (messageId) {
             const old = await ch.messages.fetch(messageId).catch(() => null); // gelöscht → neu senden
@@ -153,7 +153,7 @@ const platform = {
     async postPanel({ channelId, embed, buttons, select }) {
         const ch = await client.channels.fetch(channelId);
         if (!ch?.isSendable())
-            throw new Error(`channel ${channelId} is not a text channel the bot can post in`);
+            throw new Error(`Kanal ${channelId} ist kein Textkanal, in dem der Bot schreiben darf`);
         await ch.send({ embeds: [toEmbed(embed)], components: toComponents(buttons, select), allowedMentions: { parse: [] } });
     },
 };
@@ -164,7 +164,7 @@ const welcome = (0, welcome_1.createWelcome)(api, {
     async post(channelId, m) {
         const ch = await client.channels.fetch(channelId);
         if (!ch?.isSendable())
-            throw new Error(`channel ${channelId} is not a text channel the bot can post in`);
+            throw new Error(`Kanal ${channelId} ist kein Textkanal, in dem der Bot schreiben darf`);
         await ch.send({ ...(m.content ? { content: m.content } : {}), embeds: [toEmbed(m.embed)], ...(m.file ? { files: [{ attachment: m.file.data, name: m.file.name }] } : {}), allowedMentions: { parse: [], users: m.mentionUserIds ?? [] } });
     },
     async dm(userId, text) { await platform.sendDirectMessage(userId, text); },
@@ -180,7 +180,7 @@ const ghostPing = (0, ghost_ping_1.createGhostPing)(api, {
     async post(channelId, m) {
         const ch = await client.channels.fetch(channelId);
         if (!ch?.isSendable())
-            throw new Error(`channel ${channelId} is not a text channel the bot can post in`);
+            throw new Error(`Kanal ${channelId} ist kein Textkanal, in dem der Bot schreiben darf`);
         await ch.send({ content: m.content, allowedMentions: { parse: [], users: m.mentionUserIds } });
     },
 });
@@ -239,7 +239,7 @@ const voiceSupport = (0, voice_support_1.createVoiceSupport)(api, {
     async post(channelId, m) {
         const ch = await client.channels.fetch(channelId);
         if (!ch?.isSendable())
-            throw new Error(`channel ${channelId} is not a text channel the bot can post in`);
+            throw new Error(`Kanal ${channelId} ist kein Textkanal, in dem der Bot schreiben darf`);
         return (await ch.send((0, discord_tickets_1.payloadOf)(m))).id;
     },
     async edit(channelId, messageId, m) {
@@ -403,7 +403,7 @@ async function safeRun(label, fn) {
         return await fn();
     }
     catch (e) {
-        console.error(`${label} failed:`, e instanceof Error ? e.message : e);
+        console.error(`${label} fehlgeschlagen:`, e instanceof Error ? e.message : e);
         return (0, commands_1.mapError)(e);
     }
 }
@@ -453,31 +453,31 @@ async function handleComponent(i) {
     await i.editReply(replyPayload(reply));
     const source = i.isModalSubmit() ? (i.isFromMessage() ? i.message : null) : i.message;
     if (reply.decided && source)
-        await markDecided(source, reply.decided).catch((e) => console.error('could not update the application message:', e instanceof Error ? e.message : e));
+        await markDecided(source, reply.decided).catch((e) => console.error('Bewerbungsnachricht konnte nicht aktualisiert werden:', e instanceof Error ? e.message : e));
     if (reply.update && source)
-        await source.edit({ embeds: (reply.update.embeds ?? []).map(toEmbed), components: toComponents(reply.update.buttons), allowedMentions: { parse: [] } }).catch((e) => console.error('could not update message:', e instanceof Error ? e.message : e));
+        await source.edit({ embeds: (reply.update.embeds ?? []).map(toEmbed), components: toComponents(reply.update.buttons), allowedMentions: { parse: [] } }).catch((e) => console.error('Nachricht konnte nicht aktualisiert werden:', e instanceof Error ? e.message : e));
 }
 function wire(c) {
     c.on('interactionCreate', (i) => {
         // Server der Interaktion → API prüft Rechte für genau diesen Server (Server laufen getrennt)
         const task = api_1.guildScope.run(i.guildId ?? null, () => api_1.rolesScope.run(rolesOf(i.member), () => i.isChatInputCommand() ? handleCommand(i) : i.isButton() || i.isModalSubmit() || i.isAnySelectMenu() ? handleComponent(i) : undefined));
-        void task?.catch((e) => console.error('interaction failed:', e instanceof Error ? e.message : e));
+        void task?.catch((e) => console.error('Interaktion fehlgeschlagen:', e instanceof Error ? e.message : e));
     });
     c.on('voiceStateUpdate', (o, n) => {
         const user = n.member?.user ?? o.member?.user;
         if (!user)
             return;
         void voiceSupport.onVoiceState({ guildId: n.guild.id, userId: n.id, userName: n.member?.displayName ?? user.username, bot: user.bot, from: o.channelId, to: n.channelId })
-            .catch((x) => console.error('voice support failed:', x instanceof Error ? x.message : x));
+            .catch((x) => console.error('Sprach-Support fehlgeschlagen:', x instanceof Error ? x.message : x));
     });
     c.on('guildMemberAdd', (m) => {
         const e = memberEvent(m);
         if (!e)
             return;
-        void welcome.joined(e).catch((x) => console.error('member join failed:', x instanceof Error ? x.message : x));
+        void welcome.joined(e).catch((x) => console.error('Beitritt konnte nicht verarbeitet werden:', x instanceof Error ? x.message : x));
     });
     c.on('guildMemberRemove', (m) => { staffLists.changed(); const e = memberEvent(m); if (e)
-        void welcome.left(e).catch((x) => console.error('member leave failed:', x instanceof Error ? x.message : x)); });
+        void welcome.left(e).catch((x) => console.error('Austritt konnte nicht verarbeitet werden:', x instanceof Error ? x.message : x)); });
     // Staff-Listen: Rollen oder Name geändert → neu zeichnen (gesammelt)
     c.on('guildMemberUpdate', (o, n) => { if (o.roles.cache.size !== n.roles.cache.size || o.displayName !== n.displayName || ![...o.roles.cache.keys()].every((r) => n.roles.cache.has(r)))
         staffLists.changed(); });
@@ -496,7 +496,7 @@ function wire(c) {
         if (m.author.bot)
             return;
         void (0, qualifications_1.handleDirectMessage)({ userId: m.author.id, userName: m.author.username, content: m.content, api, sendDm: (u, msg) => platform.sendDm(u, msg), robloxLookup: (n) => (0, roblox_1.robloxLookup)(n), robloxCheck: (n) => (0, roblox_1.robloxCheck)(n) })
-            .catch((e) => console.error('direct message handling failed:', e instanceof Error ? e.message : e));
+            .catch((e) => console.error('Direktnachricht konnte nicht verarbeitet werden:', e instanceof Error ? e.message : e));
     });
 }
 setInterval(() => (0, qualifications_1.sweepSessions)(), 10 * 60_000).unref();
@@ -530,21 +530,21 @@ async function grantRoleEverywhere(userId, roleId) {
             await member.roles.add(roleId, 'EN Polizei: Bewerbung angenommen');
     }
     if (!found)
-        throw new Error('role not found on any server');
+        throw new Error('Rolle auf keinem Server gefunden');
 }
 /** Beim Start prüfen, ob das System erreichbar ist (nur Hinweis – der Bot läuft auch ohne API weiter). */
 async function checkApi() {
     try {
         const res = await fetch(`${cfg.API_URL}/health`, { signal: AbortSignal.timeout(8000) });
-        console.log(res.ok ? `API reachable at ${cfg.API_URL}` : `API answered HTTP ${res.status} at ${cfg.API_URL}/health — commands will fail until the system is running (502 = app behind the proxy is not running)`);
+        console.log(res.ok ? `API erreichbar unter ${cfg.API_URL}` : `API antwortet mit HTTP ${res.status} unter ${cfg.API_URL}/health – Befehle schlagen fehl, bis das System läuft (502 = die App hinter dem Proxy läuft nicht)`);
     }
     catch {
-        console.log(`API NOT reachable at ${cfg.API_URL} — the bot runs, but commands will say "system not reachable" until the system is up`);
+        console.log(`API NICHT erreichbar unter ${cfg.API_URL} – der Bot läuft, aber Befehle melden „System nicht erreichbar“, bis das System läuft`);
     }
 }
 function wireReady(client0) {
     client0.once('clientReady', async (c) => {
-        console.log(`Logged in as ${c.user.tag}`);
+        console.log(`Angemeldet als ${c.user.tag}`);
         // Einladungs-Link (Administrator-Rechte, wie im Dashboard)
         console.log(`Bot einladen: https://discord.com/oauth2/authorize?client_id=${c.user.id}&scope=bot%20applications.commands&permissions=8`);
         console.log(`Server (${c.guilds.cache.size}): ${[...c.guilds.cache.values()].map((g) => g.name).join(', ') || 'keiner – Bot mit dem Link oben einladen'}`);
@@ -556,15 +556,15 @@ function wireReady(client0) {
             await c.application.commands.set([]);
         }
         catch (e) {
-            console.error(`could not clear global commands: ${e instanceof Error ? e.message : e}`);
+            console.error(`Globale Befehle konnten nicht entfernt werden: ${e instanceof Error ? e.message : e}`);
         } // keine doppelten (global + Server)
         const register = async (g, name) => {
             try {
                 await c.application.commands.set(json, g);
-                console.log(`${json.length} slash commands registered for ${name ?? g}`);
+                console.log(`${json.length} Slash-Befehle registriert für ${name ?? g}`);
             }
             catch (e) {
-                console.error(`could not register commands for ${name ?? g} (invited with the applications.commands scope?): ${e instanceof Error ? e.message : e}`);
+                console.error(`Befehle für ${name ?? g} konnten nicht registriert werden (mit dem Scope applications.commands eingeladen?): ${e instanceof Error ? e.message : e}`);
             }
         };
         const all = new Map([...c.guilds.cache.values()].map((g) => [g.id, g.name]));
@@ -573,13 +573,13 @@ function wireReady(client0) {
                 all.set(g, g);
         for (const [id, name] of all)
             await register(id, name);
-        c.on('guildCreate', (g) => { console.log(`added to server ${g.name}`); void register(g.id, g.name); });
+        c.on('guildCreate', (g) => { console.log(`Zu Server ${g.name} hinzugefügt`); void register(g.id, g.name); });
         // Teamliste und Voice-Widget im Dashboard (alle 5 s und bei Änderungen)
         const presence = (0, presence_1.startPresenceReporter)(() => client, api, { members: intents.members, presences: intents.presences });
         (0, outbox_1.startOutboxLoop)(api, async (channelId, embeds, buttons, opts) => {
             const ch = await client.channels.fetch(channelId);
             if (!ch?.isSendable())
-                throw new Error(`channel ${channelId} is not a text channel the bot can post in`);
+                throw new Error(`Kanal ${channelId} ist kein Textkanal, in dem der Bot schreiben darf`);
             // Profilbild des Bewerbers rechts (wie bei Appy)
             const avatar = opts?.avatarUserId ? await client.users.fetch(opts.avatarUserId).then((u) => u.displayAvatarURL({ size: 256 }), () => undefined) : undefined;
             let list = avatar && embeds[0] ? [{ ...embeds[0], thumbnail: avatar }, ...embeds.slice(1)] : embeds;
@@ -599,16 +599,16 @@ function wireReady(client0) {
                 const old = await api.service('GET', `/bot/state/${key}`).then((r) => r.value, () => null);
                 if (old && old !== msg.id)
                     await ch.messages.delete(old).catch(() => undefined); // schon gelöscht / keine Rechte → egal
-                await api.service('PUT', `/bot/state/${key}`, { value: msg.id }).catch((e) => console.error('could not remember message:', e instanceof Error ? e.message : e));
+                await api.service('PUT', `/bot/state/${key}`, { value: msg.id }).catch((e) => console.error('Nachricht konnte nicht gespeichert werden:', e instanceof Error ? e.message : e));
             }
             if (opts?.trackKey) {
                 const key = opts.trackKey;
                 const prev = await api.service('GET', `/bot/state/${key}`).then((r) => (Array.isArray(r.value) ? r.value : []), () => []);
-                await api.service('PUT', `/bot/state/${key}`, { value: [...prev, { channelId, messageId: msg.id }].slice(-10) }).catch((e) => console.error('could not remember message:', e instanceof Error ? e.message : e));
+                await api.service('PUT', `/bot/state/${key}`, { value: [...prev, { channelId, messageId: msg.id }].slice(-10) }).catch((e) => console.error('Nachricht konnte nicht gespeichert werden:', e instanceof Error ? e.message : e));
             }
             if (opts?.thread)
-                await msg.startThread({ name: opts.thread, autoArchiveDuration: 10080 }).catch((e) => console.error('could not create staff thread:', e instanceof Error ? e.message : e));
-        }, cfg.OUTBOX_POLL_SECONDS, console.log, (userId, msg) => (typeof msg === 'string' ? platform.sendDirectMessage(userId, msg) : platform.sendDm(userId, { embed: msg }).then(() => undefined)), grantRoleEverywhere, syncRolesEverywhere, () => void live.refresh('teamlist').catch(() => undefined), (effects) => tickets.apply(effects).then(() => undefined, (e) => console.error('ticket effects failed:', e instanceof Error ? e.message : e)), () => void presence.sync().catch((e) => console.error('team/voice sync failed:', e instanceof Error ? e.message : e)), async (kind, channelId) => { await live.refresh(kind, { channelId, force: true }); }, async (type, p) => {
+                await msg.startThread({ name: opts.thread, autoArchiveDuration: 10080 }).catch((e) => console.error('Staff-Thread konnte nicht erstellt werden:', e instanceof Error ? e.message : e));
+        }, cfg.OUTBOX_POLL_SECONDS, console.log, (userId, msg) => (typeof msg === 'string' ? platform.sendDirectMessage(userId, msg) : platform.sendDm(userId, { embed: msg }).then(() => undefined)), grantRoleEverywhere, syncRolesEverywhere, () => void live.refresh('teamlist').catch(() => undefined), (effects) => tickets.apply(effects).then(() => undefined, (e) => console.error('Ticket-Aktionen fehlgeschlagen:', e instanceof Error ? e.message : e)), () => void presence.sync().catch((e) => console.error('Team-/Voice-Abgleich fehlgeschlagen:', e instanceof Error ? e.message : e)), async (kind, channelId) => { await live.refresh(kind, { channelId, force: true }); }, async (type, p) => {
             if (type === 'voice.effects') {
                 await voiceSupport.applyEffects(p);
                 return true;
@@ -630,7 +630,7 @@ function wireReady(client0) {
                 // Inaktivitäts-Erinnerung (nur „Im Dienst“) bzw. Hinweis, dass die Schicht automatisch beendet wurde
                 const userId = String(p.discordId ?? '');
                 if (!/^\d{15,25}$/.test(userId))
-                    throw new Error('no Discord user id');
+                    throw new Error('Keine Discord-Benutzer-ID');
                 await platform.sendDm(userId, (0, format_1.dutyReminderDm)(p));
                 return true;
             }
@@ -642,7 +642,7 @@ function wireReady(client0) {
                 // Entscheidung (auch aus dem Dashboard): gemerkte Antrags-/Bewerbungsnachricht einfärben, Buttons entfernen
                 const key = String(p.key ?? '');
                 if (!/^msg-[laq]-[0-9a-f-]{36}$/.test(key))
-                    throw new Error('invalid key');
+                    throw new Error('Ungültiger Schlüssel');
                 const spots = await api.service('GET', `/bot/state/${key}`).then((r) => (Array.isArray(r.value) ? r.value : []));
                 for (const spot of spots) {
                     const ch = spot.channelId ? await client.channels.fetch(spot.channelId).catch(() => null) : null;
@@ -668,7 +668,7 @@ function wireReady(client0) {
             if (type === 'bot.dm') {
                 const userId = String(p.discordId ?? '');
                 if (!/^\d{15,25}$/.test(userId))
-                    throw new Error('no Discord user id');
+                    throw new Error('Keine Discord-Benutzer-ID');
                 const { message, files } = await (0, messages_1.resolveAssets)(api, p.message);
                 await (await client.users.fetch(userId)).send({ ...(0, discord_tickets_1.payloadOf)(message, false), ...(files.length ? { files } : {}) });
                 return true;
@@ -677,7 +677,7 @@ function wireReady(client0) {
                 // Dienstnummer im Nickname – auf allen Servern, auf denen die Person ist (Bot braucht „Nicknames verwalten“; Server-Inhaber geht nicht)
                 const userId = String(p.discordId ?? ''), nick = String(p.nickname ?? '').slice(0, 32);
                 if (!/^\d{15,25}$/.test(userId) || !nick)
-                    throw new Error('invalid nickname task');
+                    throw new Error('Ungültiger Nickname-Auftrag');
                 let done = 0;
                 for (const g of client.guilds.cache.values()) {
                     const m = await g.members.fetch(userId).catch(() => null);
@@ -685,7 +685,7 @@ function wireReady(client0) {
                         done++;
                 }
                 if (!done)
-                    console.warn(`nickname for ${userId} could not be set (missing permission, owner or not on a server)`);
+                    console.warn(`Nickname für ${userId} konnte nicht gesetzt werden (fehlendes Recht, Server-Inhaber oder nicht auf einem Server)`);
                 return true;
             }
             if (type === 'bot.backup.create') {
@@ -703,7 +703,7 @@ function wireReady(client0) {
                 const id = String(p.backupId ?? '');
                 const b = await api.service('GET', `/bot/discord-backups/${id}`);
                 if (!b.data)
-                    throw new Error('backup has no data');
+                    throw new Error('Sicherung enthält keine Daten');
                 const parts = (Array.isArray(p.parts) ? p.parts : []).filter((x) => x === 'roles' || x === 'channels' || x === 'settings');
                 const result = await (0, backup_1.restoreGuild)(await client.guilds.fetch(String(p.guildId ?? '')), b.data, parts);
                 await api.service('POST', `/bot/discord-backups/${id}/result`, result);
@@ -715,7 +715,7 @@ function wireReady(client0) {
                 const guild = await client.guilds.fetch(String(p.guildId ?? ''));
                 const e = memberEvent(await guild.members.fetch(String(p.discordId ?? '')));
                 if (!e)
-                    throw new Error('member not found');
+                    throw new Error('Mitglied nicht gefunden');
                 await welcome.test(kind, e);
                 return true;
             }
@@ -734,7 +734,7 @@ function wireReady(client0) {
             const str = (k) => (typeof p[k] === 'string' ? p[k] : undefined);
             const [guildId, discordId] = [str('guildId'), str('discordId')];
             if (!guildId || !discordId)
-                throw new Error('guild or user missing');
+                throw new Error('Server oder Benutzer fehlt');
             const cfg = await api.service('GET', '/bot/config').catch(() => undefined);
             await (0, qualifications_1.openApplicantTicket)(platform, cfg, { guildId, discordId, userName: str('userName') ?? discordId, number: str('number') ?? '', unitName: str('unitName'), requesterId: str('requesterId') });
             return true;
@@ -748,7 +748,7 @@ function wireReady(client0) {
 }
 for (const sig of ['SIGINT', 'SIGTERM'])
     process.on(sig, () => { void client.destroy().finally(() => process.exit(0)); });
-process.on('unhandledRejection', (e) => console.error('unhandledRejection:', e instanceof Error ? e.message : e));
+process.on('unhandledRejection', (e) => console.error('Unbehandelte Promise-Ablehnung:', e instanceof Error ? e.message : e));
 /** Start; sind privilegierte Intents im Developer Portal aus, schrittweise ohne sie neu verbinden. */
 async function start() {
     for (const [n, step] of INTENT_STEPS.entries()) {
@@ -770,7 +770,7 @@ async function start() {
     }
     const off = [!intents.content && '"Message Content" (ticket transcripts without texts)', !intents.members && '"Server Members" (dashboard team list only shows cached members; no welcome/goodbye messages, auto roles or actions when someone leaves)', !intents.presences && '"Presence" (no online status in the team list)'].filter(Boolean);
     if (off.length)
-        console.warn(`Discord: privileged intents not enabled in the Developer Portal (Bot → Privileged Gateway Intents): ${off.join(', ')}.`);
+        console.warn(`Discord: Privilegierte Intents im Developer Portal nicht aktiviert (Bot → Privileged Gateway Intents): ${off.join(', ')}.`);
 }
-void start().catch((e) => { console.error('Discord login failed:', e instanceof Error ? e.message : e); process.exit(1); });
+void start().catch((e) => { console.error('Discord-Anmeldung fehlgeschlagen:', e instanceof Error ? e.message : e); process.exit(1); });
 //# sourceMappingURL=index.js.map

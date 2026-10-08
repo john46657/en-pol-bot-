@@ -27,7 +27,7 @@ export function startGuildDirectory(client: () => Client, api: Api, log: (m: str
   let timer: NodeJS.Timeout | undefined;
   const push = async () => {
     const guilds = [...client().guilds.cache.values()].slice(0, 50).map(guildInfo);
-    await api.service('PUT', '/bot/guilds', { guilds }).catch((e) => log(`guild directory not sent: ${e instanceof Error ? e.message : e}`));
+    await api.service('PUT', '/bot/guilds', { guilds }).catch((e) => log(`Serverliste nicht gesendet: ${e instanceof Error ? e.message : e}`));
   };
   // mehrere Änderungen kurz hintereinander nur einmal melden
   const soon = () => { clearTimeout(timer); timer = setTimeout(() => void push(), 5_000); timer.unref?.(); };

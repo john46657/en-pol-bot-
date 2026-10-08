@@ -228,7 +228,7 @@ let ErlcService = class ErlcService {
             const r = this.runtime(id);
             if (r.inFlight || r.paused || now < r.nextDue)
                 return;
-            await this.poll(id).catch((e) => this.log.warn(`poll ${id} failed: ${e.message}`));
+            await this.poll(id).catch((e) => this.log.warn(`Abruf ${id} fehlgeschlagen: ${e.message}`));
         }));
     }
     /** Ein Abruf von GET /v2/server mit allen freigegebenen Datenarten. */

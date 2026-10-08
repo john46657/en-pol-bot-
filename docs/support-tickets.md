@@ -9,7 +9,7 @@ Ein komplett im Dashboard konfigurierbares Ticket-System für den Discord-Bot. *
 1. **Discord Developer Portal → Bot:**
    - **Message Content Intent** einschalten, damit der Bot Nachrichten in Ticket-Channels für Dashboard und Transcript mitschneiden kann. Ohne den Intent startet der Bot trotzdem: Tickets funktionieren, aber der Verlauf bleibt leer.
    - Bot-Rechte: *View Channels*, *Send Messages*, *Embed Links*, *Attach Files*, *Read Message History*, **Manage Channels** und **Manage Roles** (Kanalrechte setzen). Die Bot-Rolle muss über den Team-Rollen stehen.
-2. **Web → Administration → Settings → Discord:** die *Guild ID* (Server-ID) eintragen. Sie wird nur fürs Öffnen von Tickets aus dem Dashboard gebraucht.
+2. **Dashboard → Einstellungen → Allgemein → Discord:** den *Server* eintragen. Sie wird nur fürs Öffnen von Tickets aus dem Dashboard gebraucht.
 3. **Support Tickets → Statuses & priorities:** Status, Prioritäten und vorgefertigte Schließgründe anpassen (Startwerte sind angelegt).
 4. **Support Tickets → Categories:** Kategorie(n) anlegen. Die Startkategorie heißt *Support*.
    - Discord-Kategorie und Team-Rollen eintragen (Rechtsklick → *ID kopieren*; dafür in Discord den Entwicklermodus einschalten).

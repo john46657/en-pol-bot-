@@ -103,7 +103,7 @@ let ErlcSyncService = class ErlcSyncService {
                 this.rt.publish('cad', 'erlc.records', { serverId, persons, vehicles: cars });
         }
         catch (e) {
-            this.log.warn(`sync ${serverId} failed: ${e instanceof Error ? e.message : e}`);
+            this.log.warn(`Abgleich ${serverId} fehlgeschlagen: ${e instanceof Error ? e.message : e}`);
         }
         return { persons, vehicles: cars };
     }

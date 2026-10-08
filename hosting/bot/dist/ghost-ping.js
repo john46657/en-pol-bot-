@@ -36,7 +36,7 @@ function createGhostPing(api, actions, log = console.error) {
             if (!targets.length || !(await enabled()))
                 return;
             // nur die Geghost-Pingten werden benachrichtigt, der Absender nur genannt
-            await actions.post(m.channelId, { content: ghostPingText(m, targets), mentionUserIds: targets }).catch((e) => log(`ghost ping message failed: ${e instanceof Error ? e.message : e}`));
+            await actions.post(m.channelId, { content: ghostPingText(m, targets), mentionUserIds: targets }).catch((e) => log(`Ghost-Ping-Nachricht fehlgeschlagen: ${e instanceof Error ? e.message : e}`));
         },
     };
 }

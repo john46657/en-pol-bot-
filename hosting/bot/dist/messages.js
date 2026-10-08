@@ -61,7 +61,7 @@ async function postOrUpdate(client, api, o) {
     const msg = old ? await old.edit({ ...payload, content: payload.content ?? '', attachments: [] }) : await ch.send(payload);
     await react(msg, message.reactions);
     if (!old && message.thread && 'startThread' in msg)
-        await msg.startThread({ name: message.thread.slice(0, 100), autoArchiveDuration: 10080 }).catch((e) => console.error('could not start thread:', e instanceof Error ? e.message : e));
+        await msg.startThread({ name: message.thread.slice(0, 100), autoArchiveDuration: 10080 }).catch((e) => console.error('Thread konnte nicht gestartet werden:', e instanceof Error ? e.message : e));
     if (o.stateKey)
         await api.service('PUT', `/bot/state/${o.stateKey}`, { value: { channelId: o.channelId, messageId: msg.id } }).catch(() => undefined);
     return { channelId: o.channelId, messageId: msg.id };
@@ -70,7 +70,7 @@ async function postOrUpdate(client, api, o) {
 async function postAsUser(client, api, channelId, m, as) {
     const ch = await client.channels.fetch(channelId);
     if (!ch?.isSendable() || !('messages' in ch))
-        throw new Error(`channel ${channelId} is not a text channel the bot can post in`);
+        throw new Error(`Kanal ${channelId} ist kein Textkanal, in dem der Bot schreiben darf`);
     const { message, files } = await resolveAssets(api, m);
     const payload = { ...(0, discord_tickets_1.payloadOf)(message, false), ...(files.length ? { files } : {}) };
     let msg = null;

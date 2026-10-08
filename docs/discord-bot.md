@@ -64,7 +64,7 @@ Neue/zugewiesene Einsätze (Dispatch-Channel), neue Fahndungen (Wanted-Channel),
 3. *OAuth2 → URL Generator*: Scopes `bot` **und** `applications.commands`; Bot-Rechte: *View Channels*, *Send Messages*, *Embed Links* *Attach Files*, *Read Message History* – für Support-Tickets zusätzlich *Manage Channels* und *Manage Roles* (Kanalrechte), für Rollen bei Bewerbungen/Funk *Manage Roles*, für Staff-Threads bei Bewerbungen *Create Public Threads*. Der Bot meldet dem Dashboard automatisch seine Server mit Channels und Rollen (für die Auswahllisten). URL öffnen → Bot auf deinen Server einladen.
 4. Discord → Einstellungen → Erweitert → **Entwicklermodus** an. Rechtsklick auf deinen Server → *Server-ID kopieren*; Rechtsklick auf die Ziel-Channels → *Channel-ID kopieren*. Der Bot braucht in diesen Channels die Rechte *Kanal ansehen*, *Nachrichten senden*, *Links einbetten*.
 
-**Bot einladen (einfachster Weg):** Dashboard → *Administration → Settings* → **Add bot to a server**. Der Button gibt dem Bot Administrator-Rechte und läuft über das Dashboard. Dadurch funktioniert er auch, wenn im Developer Portal **„OAuth2-Code-Erlaubnis benötigt“** an ist; das System löst den Code selbst ein. Danach landest du wieder in den Einstellungen. Er steht auch in der Konsole, sobald der Bot startet („Bot einladen: …“).
+**Bot einladen (einfachster Weg):** Dashboard → *Einstellungen → Allgemein* → Abschnitt „Discord-Bot auf euren Servern“ → **Bot zu einem Server hinzufügen**. Der Button gibt dem Bot Administrator-Rechte und läuft über das Dashboard. Dadurch funktioniert er auch, wenn im Developer Portal **„OAuth2-Code-Erlaubnis benötigt“** an ist; das System löst den Code selbst ein. Danach landest du wieder in den Einstellungen. Er steht auch in der Konsole, sobald der Bot startet („Bot einladen: …“).
 
 Klappt das Einladen nicht, im Developer Portal unter **Bot** prüfen:
 - **Public Bot** an: sonst kann nur das Konto einladen, dem der Bot gehört.
@@ -83,9 +83,9 @@ DISCORD_GUILD_ID=<Server-ID>        # optional – Commands kommen automatisch a
 - **Auf dem VPS:** Werte in `.env` eintragen (`BOT_API_TOKEN` erzeugt `setup-server.sh` schon), dann
   ```bash
   docker compose --profile bot up -d --build
-  docker compose logs -f bot       # sollte „Logged in as …“ und „… slash commands registered“ zeigen
+  docker compose logs -f bot       # sollte „Angemeldet als …“ und „… Slash-Befehle registriert für …“ zeigen
   ```
-- **Channels** im Web: *Admin → Settings → Discord bot channels* (Channel-IDs eintragen, speichern). Leer = diese Benachrichtigung aus.
+- **Channels** im Web: *Einstellungen → Allgemein → Discord-Bot-Kanäle* (Kanal-IDs eintragen, wird automatisch gespeichert). Leer = diese Benachrichtigung aus.
 
 ### 3. Konten verknüpfen
 Jede Person: Web → Chat-Symbol oben rechts („Discord verknüpfen“) → *Mit Discord verknüpfen* (Discord-Anmeldung; braucht `DISCORD_CLIENT_ID`/`DISCORD_CLIENT_SECRET`). Wer sich mit Discord anmeldet, ist automatisch verknüpft. Lösen: im selben Dialog, oder ein Admin über `DELETE /api/v1/discord/links/:userId` (Benutzerverwaltung). Deaktivierte Benutzer verlieren sofort den Bot-Zugriff.
@@ -96,7 +96,7 @@ Jede Person: Web → Chat-Symbol oben rechts („Discord verknüpfen“) → *Mi
   - **Pro Server** (ohne eigene Einstellungen gelten die gemeinsamen): Polizei-Bewerbung und Qualifikationen (Texte, Fragen, Channels, Rollen), Ticket-Panels und Ticket-Arten, die Bewerbungen und Tickets selbst. „Use shared settings again“ entfernt die eigenen Einstellungen eines Servers.
   - **Gemeinsam:** MDT, Personen, Berichte, Team, Benutzer und Rechte, Ticket-Status/Prioritäten/Gründe.
   - Channel- und Rollen-Auswahl zeigen nur den gewählten Server.
-- **Benachrichtigungen:** Unter *Admin → Settings → Discord bot channels* pro Art (Dispatch/Wanted/Announcements) mehrere Channel-IDs mit Komma eintragen, auch auf verschiedenen Servern. Gesendet wird an alle; die Nachricht gilt als zugestellt, sobald mindestens ein Channel erreicht wurde.
+- **Benachrichtigungen:** Unter *Einstellungen → Allgemein → Discord-Bot-Kanäle* pro Art (Dispatch/Wanted/Announcements) mehrere Channel-IDs mit Komma eintragen, auch auf verschiedenen Servern. Gesendet wird an alle; die Nachricht gilt als zugestellt, sobald mindestens ein Channel erreicht wurde.
 - Die Verknüpfung (Discord-Konto ↔ Benutzer) ist serverübergreifend: ein Konto, alle Server.
 
 ## Sicherheitsmodell
@@ -175,9 +175,9 @@ Auf der Login-Seite erscheint **„Mit Discord anmelden“**, sobald `DISCORD_CL
 - Discord fragt nur nach dem Benutzernamen (Scope `identify`) – kein Passwort, keine E-Mail.
 - **Bestehende Konten**: wer schon verknüpft ist (im Web „Mit Discord verknüpfen“), landet direkt im eigenen Konto.
 - **Neue Personen** bekommen beim ersten Login automatisch ein Konto – nur wenn sie auf eurem Discord-Server sind (abschaltbar) und zunächst **ohne Rechte**.
-- **Rollen wie bei Dyno** (*Settings → Sign in with Discord*): Discord-Rolle → Systemrolle, z. B. „Polizei“ → *Police Member*. Wird bei jeder Discord-Anmeldung abgeglichen (dazu/weg); andere Rollen bleiben unberührt.
+- **Rollen wie bei Dyno** (*Einstellungen → Allgemein → „Mit Discord anmelden – Zugang zum Dashboard“*): Discord-Rolle → Systemrolle, z. B. „Polizei“ → *Police Member*. Wird bei jeder Discord-Anmeldung abgeglichen (dazu/weg); andere Rollen bleiben unberührt.
 - **Nur Discord:** Sobald `DISCORD_CLIENT_SECRET` gesetzt ist, zeigt die Login-Seite nur noch „Mit Discord anmelden“ und die API lehnt Passwort-Anmeldungen ab. Vorher (Einrichtung) gilt der Passwort-Login.
-- **Team-Rolle fürs MDT:** Unter *Settings → Sign in with Discord → Team role* eine oder mehrere Discord-Rollen-IDs eintragen. Dann kommt nur ins MDT/Dashboard, wer eine davon auf dem Server hat (geprüft bei jeder Anmeldung; Login-Seite: „Dir fehlt die Team-Rolle“). Leer = jedes Server-Mitglied. Welche Rechte jemand bekommt, steuert weiterhin *Discord role → system role*.
+- **Team-Rolle fürs MDT:** Unter *Einstellungen → Allgemein → „Discord-Rollen mit Dashboard-Zugriff (Teamrollen)“* eine oder mehrere Discord-Rollen-IDs eintragen. Dann kommt nur ins MDT/Dashboard, wer eine davon auf dem Server hat (geprüft bei jeder Anmeldung; Login-Seite: „Dir fehlt die Team-Rolle“). Leer = jedes Server-Mitglied. Welche Rechte jemand bekommt, steuert weiterhin *Discord-Rolle → Systemrolle*.
 - **Nicht aussperren:** Deine Discord-ID gehört in `ADMIN_DISCORD_IDS` – diese Konten sind beim Discord-Login immer *System Administrator* (auch ohne Server-Mitgliedschaft). **Notfall-Zugang:** `PASSWORD_LOGIN=true` setzen und neu starten, dann ist der Passwort-Login (z. B. `admin`) wieder da. Passwort vergessen: zusätzlich `ADMIN_PASSWORD=<neu>` + `ADMIN_PASSWORD_RESET=true` (siehe [hosting-bot-hosting.md](hosting-bot-hosting.md)).
 
 ## Neu: Discord-Nachrichten aus dem Dashboard
