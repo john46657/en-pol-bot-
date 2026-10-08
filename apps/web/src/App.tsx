@@ -10,7 +10,6 @@ import { Apply } from './pages/Apply';
 import { Privacy, Terms } from './pages/Legal';
 import { Dashboard } from './pages/Dashboard';
 import { Mdt } from './pages/Mdt';
-import { Dispatch } from './pages/Dispatch';
 import { Team } from './pages/Team';
 const Communication = lazy(() => import('./pages/Communication').then((m) => ({ default: m.Communication })));
 const Analytics = lazy(() => import('./pages/Analytics').then((m) => ({ default: m.Analytics })));
@@ -121,7 +120,8 @@ export function App() {
             <Route path="logs" element={<Guard perm="cad.view_logs"><CadLogs /></Guard>} />
             <Route path="settings" element={<Guard perm="cad.view"><CadSettings /></Guard>} />
           </Route>
-          <Route path="dispatch" element={<Guard perm="dispatch.view"><Dispatch /></Guard>} />
+          {/* „Leitstelle (klassisch)“ ist im CAD aufgegangen – alte Links landen dort */}
+          <Route path="dispatch" element={<Navigate to="/cad" replace />} />
           <Route path="support-tickets" element={<Guard perm="ticket.view" area="dashboard.tickets.view"><SupportTickets /></Guard>} />
           <Route path="voice-support" element={<Navigate to="/offices#support" replace />} />
           <Route path="support-tickets/:id" element={<Guard perm="ticket.view" area="dashboard.tickets.view"><TicketDetail /></Guard>} />

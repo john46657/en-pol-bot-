@@ -38,30 +38,6 @@ test('person → ticket creation is linked and visible on the person record', as
   await expect(page.getByText('Speeding 120 in a 60 zone')).toBeVisible();
 });
 
-test('dispatch workflow: unit + incident, assign, progress and close', async ({ page }) => {
-  await uiLogin(page, 'admin', ADMIN_PASSWORD);
-  await page.goto('/dispatch');
-  await page.getByRole('button', { name: 'Neue Einheit' }).click();
-  await page.getByLabel('Funkrufname *').fill('E2E-1');
-  await page.getByRole('button', { name: 'Speichern' }).click();
-  await page.getByLabel('Status von E2E-1').selectOption('AVAILABLE');
-
-  await page.getByRole('button', { name: 'Neuer Einsatz' }).click();
-  await page.getByLabel('Titel *').fill('E2E bank robbery');
-  await page.getByLabel('Priorität').selectOption('HIGH');
-  await page.getByRole('button', { name: 'Speichern' }).click();
-  const row = page.getByRole('listitem').filter({ hasText: 'E2E bank robbery' });
-  await expect(row).toBeVisible();
-  await row.getByLabel(/Einheit zu .* zuweisen/).selectOption({ label: 'E2E-1' });
-  await expect(row.getByText('Zugewiesen')).toBeVisible();
-  for (const next of ['Anfahrt', 'Vor Ort', 'Abschluss']) {
-    await row.getByRole('button', { name: new RegExp(`→ ${next}`) }).click();
-    await expect(row.getByText(next, { exact: true }).first()).toBeVisible();
-  }
-  await row.getByRole('button', { name: /→ Geschlossen/ }).click();
-  await expect(page.getByRole('listitem').filter({ hasText: 'E2E bank robbery' })).toHaveCount(0); // leaves the active board
-});
-
 test('permission denial: a police member cannot reach admin pages or see admin navigation', async ({ page }) => {
   const u = await createUser('e2e_rookie', 'Police Member');
   await uiLogin(page, u.username, u.password);
