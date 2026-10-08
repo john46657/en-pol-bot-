@@ -1,7 +1,7 @@
 import { Body, Controller, Delete, Get, HttpCode, Param, ParseUUIDPipe, Post, Put } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { z } from 'zod';
-import { formPanelSchema, staffListSchema, type FormPanel, type StaffList } from '@enrp/shared';
+import { formPanelSchema, staffListSchema, type FormPanel, type StaffList, infoPanelSchema, type InfoPanel } from '@enrp/shared';
 import { PanelsService } from './panels.service';
 import { BotService, CurrentActor, RequirePermission } from '../authz/decorators';
 import type { Actor } from '../audit/audit.service';
@@ -33,6 +33,12 @@ export class PanelsController {
   @Delete('forms/:id') @HttpCode(204) @RequirePermission('settings.manage') removeForm(@CurrentActor() a: Actor, @Param('id', ParseUUIDPipe) id: string) { return this.s.removeForm(a, id); }
   @Post('forms/:id/send') @HttpCode(202) @RequirePermission('settings.manage')
   sendForm(@CurrentActor() a: Actor, @Param('id', ParseUUIDPipe) id: string, @Body(zodBody(mode)) b: z.infer<typeof mode>) { return this.s.sendForm(a, id, b.mode); }
+  @Get('info') @RequirePermission('settings.view') infos() { return this.s.infoPanels(currentGuild()); }
+  @Put('info/:id') @RequirePermission('settings.manage')
+  saveInfo(@CurrentActor() a: Actor, @Param('id', ParseUUIDPipe) id: string, @Body(zodBody(infoPanelSchema)) b: InfoPanel) { same(id, b.id); return this.s.saveInfo(a, b); }
+  @Delete('info/:id') @HttpCode(204) @RequirePermission('settings.manage') removeInfo(@CurrentActor() a: Actor, @Param('id', ParseUUIDPipe) id: string) { return this.s.removeInfo(a, id); }
+  @Post('info/:id/send') @HttpCode(202) @RequirePermission('settings.manage')
+  sendInfo(@CurrentActor() a: Actor, @Param('id', ParseUUIDPipe) id: string, @Body(zodBody(mode)) b: z.infer<typeof mode>) { return this.s.sendInfo(a, id, b.mode); }
   @Get('forms/:id/submissions') @RequirePermission('settings.view') subs(@Param('id', ParseUUIDPipe) id: string) { return this.s.submissions(id); }
   @Delete('submissions/:id') @HttpCode(204) @RequirePermission('settings.manage') removeSub(@CurrentActor() a: Actor, @Param('id', ParseUUIDPipe) id: string) { return this.s.removeSubmission(a, id); }
 }
@@ -44,6 +50,7 @@ const submit = z.object({ guildId: sf.nullable(), discordId: sf, userName: z.str
 export class BotPanelsController {
   constructor(private readonly s: PanelsService) {}
   @BotService() @Get('staff') staff() { return this.s.botStaffLists(); }
+  @BotService() @Get('info/:id') info(@Param('id', ParseUUIDPipe) id: string) { return this.s.botInfo(id); }
   @BotService() @Get('forms/:id') form(@Param('id', ParseUUIDPipe) id: string) { return this.s.botForm(id); }
   @BotService() @Post('forms/:id/submit') @HttpCode(200)
   submit(@Param('id', ParseUUIDPipe) id: string, @Body(zodBody(submit)) b: z.infer<typeof submit>) { return this.s.botSubmit(id, b); }

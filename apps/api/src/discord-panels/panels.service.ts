@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { randomUUID } from 'node:crypto';
-import { formPanelMessage, formPanelResult, formPanelSchema, staffListSchema, type FormPanel, type StaffList } from '@enrp/shared';
+import { formPanelMessage, formPanelResult, formPanelSchema, infoPanelMessage, infoPanelSchema, staffListSchema, type FormPanel, type InfoPanel, type StaffList } from '@enrp/shared';
 import { PrismaService } from '../prisma/prisma.service';
 import { AuditService, type Actor } from '../audit/audit.service';
 import { DiscordService } from '../discord/discord.service';
@@ -13,9 +13,11 @@ import { JsonListStore } from '../common/json-store';
 export class PanelsService {
   readonly staff: JsonListStore<StaffList>;
   readonly forms: JsonListStore<FormPanel>;
+  readonly infos: JsonListStore<InfoPanel>;
   constructor(private readonly prisma: PrismaService, private readonly audit: AuditService, private readonly discord: DiscordService, private readonly live: DiscordLiveService) {
     this.staff = new JsonListStore(prisma, 'discord.staffLists', staffListSchema as never, 50);
     this.forms = new JsonListStore(prisma, 'discord.formPanels', formPanelSchema as never, 50);
+    this.infos = new JsonListStore(prisma, 'discord.infoPanels', infoPanelSchema as never, 50);
   }
 
   private visible<T extends { guildId: string | null }>(list: T[], g: string | null) { return g ? list.filter((x) => !x.guildId || x.guildId === g) : list; }
@@ -87,6 +89,39 @@ export class PanelsService {
     await this.audit.record(actor, { action: 'formpanel.send', module: 'settings', entityType: 'FormPanel', entityId: id, after: { channelId: p.channelId, mode } });
     return { queued: true };
   }
+  // ---------------- Info-Panels (Bild, Text, Auswahlmenü) ----------------
+  async infoPanels(g: string | null) {
+    const list = this.visible(await this.infos.all(), g);
+    return Promise.all(list.map(async (p) => ({ ...p, posted: await this.discord.posted(`ipanel-${p.id}`) })));
+  }
+  async saveInfo(actor: Actor, doc: InfoPanel) {
+    const p = infoPanelSchema.parse(doc);
+    if (new Set(p.options.map((o) => o.id)).size !== p.options.length) throw new AppError('VALIDATION_FAILED', 'Jeder Auswahlpunkt braucht ein eigenes Kürzel.');
+    const [d, old] = await this.infos.upsert(p);
+    await this.audit.record(actor, { action: old ? 'infopanel.update' : 'infopanel.create', module: 'settings', entityType: 'InfoPanel', entityId: d.id, after: { name: d.name } });
+    // steht schon in Discord → Text/Auswahl gleich mitziehen
+    const posted = await this.discord.posted(`ipanel-${d.id}`);
+    if (posted && d.channelId === posted.channelId && old && JSON.stringify(infoPanelMessage(old)) !== JSON.stringify(infoPanelMessage(d))) await this.discord.postMessage(`ipanel-${d.id}`, d.channelId, infoPanelMessage(d));
+    return d;
+  }
+  async removeInfo(actor: Actor, id: string) {
+    if (!(await this.infos.remove(id))) throw new AppError('NOT_FOUND', 'Panel nicht gefunden.');
+    await this.audit.record(actor, { action: 'infopanel.delete', module: 'settings', entityType: 'InfoPanel', entityId: id });
+  }
+  async sendInfo(actor: Actor, id: string, mode: 'update' | 'new') {
+    const p = await this.infos.get(id);
+    if (!p) throw new AppError('NOT_FOUND', 'Panel nicht gefunden.');
+    if (!p.channelId) throw new AppError('VALIDATION_FAILED', 'Wähle zuerst einen Kanal für das Panel.');
+    await this.discord.postMessage(`ipanel-${p.id}`, p.channelId, infoPanelMessage(p), { forceNew: mode === 'new' });
+    await this.audit.record(actor, { action: 'infopanel.send', module: 'settings', entityType: 'InfoPanel', entityId: id, after: { channelId: p.channelId, mode } });
+    return { queued: true };
+  }
+  async botInfo(id: string) {
+    const p = await this.infos.get(id);
+    if (!p) throw new AppError('NOT_FOUND', 'Panel nicht gefunden.');
+    return p;
+  }
+
   submissions(panelId: string) {
     return this.prisma.panelSubmission.findMany({ where: { panelId }, orderBy: { createdAt: 'desc' }, take: 200 });
   }

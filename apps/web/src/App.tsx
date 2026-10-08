@@ -40,6 +40,7 @@ const RadioCodes = lazy(() => import('./pages/RadioCodes').then((m) => ({ defaul
 const TeamChance = lazy(() => import('./pages/TeamChance').then((m) => ({ default: m.TeamChance })));
 const StaffLists = lazy(() => import('./pages/DiscordPanels').then((m) => ({ default: m.StaffLists })));
 const FormPanels = lazy(() => import('./pages/DiscordPanels').then((m) => ({ default: m.FormPanels })));
+const InfoPanels = lazy(() => import('./pages/DiscordPanels').then((m) => ({ default: m.InfoPanels })));
 const PersonnelOverview = lazy(() => import('./pages/hr/PersonnelOverview').then((m) => ({ default: m.PersonnelOverview })));
 const PersonnelFile = lazy(() => import('./pages/hr/PersonnelFile').then((m) => ({ default: m.PersonnelFile })));
 const Promotions = lazy(() => import('./pages/hr/Promotions').then((m) => ({ default: m.Promotions })));
@@ -101,6 +102,7 @@ export function App() {
           <Route path="teamlist" element={<Guard perm="team.view" area="dashboard.team.view"><TeamList /></Guard>} />
           <Route path="staff-lists" element={<Guard perm="team.view" area="dashboard.team.view"><StaffLists /></Guard>} />
           <Route path="admin/form-panels" element={<Guard perm="settings.view" area="dashboard.settings.view"><FormPanels /></Guard>} />
+          <Route path="admin/info-panels" element={<Guard perm="settings.view" area="dashboard.settings.view"><InfoPanels /></Guard>} />
           <Route path="duty-reports" element={<Guard perm="dutyreports.view"><DutyReports /></Guard>} />
           <Route path="offices" element={<Guard perm="team.view" area="dashboard.offices.view"><Offices /></Guard>} />
           <Route path="radio-codes" element={<Guard perm="radio.view" area="dashboard.radio.view"><RadioCodes /></Guard>} />

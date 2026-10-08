@@ -47,6 +47,7 @@ export const NAV: NavItem[] = [
   { path: '/admin/embeds', label: 'Embeds', icon: PanelTop, perm: 'settings.view', area: 'dashboard.settings.view', group: 'Administration' },
   { path: '/admin/personnel', label: 'Personal-Einstellungen', icon: SlidersHorizontal, perm: 'promotion.manage_settings', area: 'dashboard.settings.view', group: 'Administration' },
   { path: '/admin/form-panels', label: 'Formular-Panels', icon: FormInput, perm: 'settings.view', area: 'dashboard.settings.view', group: 'Administration' },
+  { path: '/admin/info-panels', label: 'Info-Panels', icon: PanelTop, perm: 'settings.view', area: 'dashboard.settings.view', group: 'Administration' },
   { path: '/admin/welcome', label: 'Willkommen & Abschied', icon: DoorOpen, perm: 'settings.view', area: 'dashboard.settings.view', group: 'Administration' },
   { path: '/admin/leave', label: 'Abmeldungen (Einrichtung)', icon: CalendarOff, perm: 'settings.view', area: 'dashboard.settings.view', group: 'Administration' },
   { path: '/admin/studio', label: 'Studio', icon: Wrench, perm: 'studio.view', area: 'dashboard.settings.view', group: 'Administration' },

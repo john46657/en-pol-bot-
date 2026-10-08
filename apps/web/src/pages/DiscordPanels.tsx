@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { ArrowDown, ArrowUp, Copy, Plus, Send, Trash2 } from 'lucide-react';
-import { renderPanelTemplate, renderStaffList, formPanelResult, formPanelMessage, type FormPanel, type MessageSpec, type StaffList } from '@enrp/shared';
+import { renderPanelTemplate, renderStaffList, formPanelResult, formPanelMessage, infoOptionEmbed, infoPanelMessage, type FormPanel, type InfoPanel, type MessageSpec, type StaffList } from '@enrp/shared';
 import { api } from '../lib/api';
 import { useAuth } from '../lib/auth';
 import { errText } from '../lib/tickets';
@@ -332,6 +332,125 @@ export function FormPanels() {
         </div>
       )}
       <ConfirmDialog open={!!del} danger title="Panel löschen?" message="Der Button in Discord funktioniert danach nicht mehr. Einsendungen bleiben gespeichert." confirmLabel="Löschen" busy={L.remove.isPending} onConfirm={() => del && L.remove.mutate(del, { onSuccess: () => setDel(undefined) })} onClose={() => setDel(undefined)} />
+    </>
+  );
+}
+
+// ───────────── Info-Panels ─────────────
+type InfoDoc = InfoPanel & Posted;
+const blankInfo = (guildId: string | null): InfoDoc => ({
+  id: crypto.randomUUID(), name: 'Aufgaben als Ausbilder', guildId, channelId: null, title: 'Aufgaben als Ausbilder', color: '#1f2937', image: '', placeholder: 'Triff eine Auswahl',
+  text: 'Als Ausbilder bist du ein wichtiger Teil der Polizei. Bitte sieh dir dieses Panel regelmäßig an, damit du immer auf dem aktuellen Stand bist.',
+  footer: 'Klicke auf „Triff eine Auswahl“, um dir einen Überblick zu deinen Tätigkeiten zu geben',
+  options: [
+    { id: 'aufgaben', label: 'Aufgaben', description: 'Siehe, welche Aufgaben du als Ausbilder hast.', emoji: '📂', title: 'Aufgaben', text: '• Grundausbildungen durchführen\n• Auswertung im Dashboard eintragen', image: '', color: '#3b82f6' },
+    { id: 'doku', label: 'Dokumentation', description: 'Siehe, wie du Abschnitte dokumentieren musst.', emoji: '📨', title: 'Dokumentation', text: 'So dokumentierst du eine Ausbildung …', image: '', color: '#8b5cf6' },
+  ], posted: null,
+});
+const infoProblems = (d: InfoDoc) => [
+  !d.name.trim() && 'Name fehlt', !d.options.length && 'Mindestens ein Auswahlpunkt', d.options.some((o) => !/^[a-z0-9_-]{1,40}$/.test(o.id)) && 'Kürzel: nur a–z, 0–9, _ und -',
+  new Set(d.options.map((o) => o.id)).size !== d.options.length && 'Kürzel doppelt', d.options.some((o) => !o.label.trim()) && 'Auswahlpunkt ohne Namen',
+  d.options.some((o) => o.image && !/^https:\/\//.test(o.image)) && 'Bilder der Auswahlpunkte: nur https://-Links',
+].filter(Boolean) as string[];
+const stripInfo = ({ posted: _p, ...d }: InfoDoc) => d;
+
+function InfoEditor({ doc, set, manage }: { doc: InfoDoc; set: (p: Partial<InfoDoc>) => void; manage: boolean }) {
+  const opt = (i: number, p: Partial<InfoDoc['options'][number]>) => set({ options: doc.options.map((o, j) => (j === i ? { ...o, ...p } : o)) });
+  const move = (i: number, d: -1 | 1) => { const n = [...doc.options]; const [x] = n.splice(i, 1); n.splice(i + d, 0, x!); set({ options: n }); };
+  return (
+    <div className="grid gap-3">
+      <div className="grid gap-3 md:grid-cols-2">
+        <label className="grid gap-1 text-sm">Name (nur im Dashboard)<Input aria-label="Name" disabled={!manage} maxLength={80} value={doc.name} onChange={(e) => set({ name: e.target.value })} /></label>
+        <label className="grid gap-1 text-sm">Kanal<ChannelPicker ariaLabel="Kanal für das Panel" disabled={!manage} value={doc.channelId} onChange={(id) => set({ channelId: id })} /></label>
+      </div>
+      <details open className="rounded-lg border border-line p-2">
+        <summary className="cursor-pointer text-sm font-semibold">1 · Panel</summary>
+        <div className="mt-2 grid gap-3">
+          <div className="grid grid-cols-[1fr_auto] gap-2">
+            <label className="grid gap-1 text-sm">Titel<Input aria-label="Panel-Titel" disabled={!manage} maxLength={256} value={doc.title} onChange={(e) => set({ title: e.target.value })} /></label>
+            <label className="grid gap-1 text-sm">Farbe<input type="color" aria-label="Panel-Farbe" disabled={!manage} value={doc.color} onChange={(e) => set({ color: e.target.value })} className="h-9 w-16 rounded border border-line bg-transparent" /></label>
+          </div>
+          <label className="grid gap-1 text-sm">Text<Textarea aria-label="Panel-Text" disabled={!manage} rows={4} maxLength={4000} value={doc.text} onChange={(e) => set({ text: e.target.value })} /></label>
+          <ImageInput label="Bild (groß, unter dem Text)" value={doc.image} disabled={!manage} onChange={(v) => set({ image: v })} />
+          <div className="grid gap-3 md:grid-cols-2">
+            <label className="grid gap-1 text-sm">Fußzeile<Input aria-label="Fußzeile" disabled={!manage} maxLength={200} value={doc.footer} onChange={(e) => set({ footer: e.target.value })} /></label>
+            <label className="grid gap-1 text-sm">Text im Auswahlmenü<Input aria-label="Platzhalter" disabled={!manage} maxLength={150} value={doc.placeholder} onChange={(e) => set({ placeholder: e.target.value })} /></label>
+          </div>
+        </div>
+      </details>
+      <details open className="rounded-lg border border-line p-2">
+        <summary className="cursor-pointer text-sm font-semibold">2 · Auswahlpunkte ({doc.options.length}/25) – Antwort sieht nur die Person, die auswählt</summary>
+        <div className="mt-2 grid gap-2">{doc.options.map((o, i) => (
+          <div key={i} className="grid gap-2 rounded-md border border-line p-2">
+            <div className="grid gap-2 md:grid-cols-[4rem_minmax(0,1fr)_8rem_auto]">
+              <Input aria-label={`Punkt ${i + 1}: Emoji`} disabled={!manage} maxLength={64} value={o.emoji} onChange={(e) => opt(i, { emoji: e.target.value })} />
+              <Input aria-label={`Punkt ${i + 1}: Name`} disabled={!manage} maxLength={100} value={o.label} onChange={(e) => opt(i, { label: e.target.value })} />
+              <Input aria-label={`Punkt ${i + 1}: Kürzel`} disabled={!manage} maxLength={40} value={o.id} onChange={(e) => opt(i, { id: e.target.value.toLowerCase().replace(/[^a-z0-9_-]/g, '') })} />
+              {manage && <span className="flex gap-1"><Button size="sm" variant="ghost" aria-label="nach oben" disabled={i === 0} onClick={() => move(i, -1)}><ArrowUp size={12} /></Button><Button size="sm" variant="ghost" aria-label="nach unten" disabled={i === doc.options.length - 1} onClick={() => move(i, 1)}><ArrowDown size={12} /></Button><Button size="sm" variant="ghost" aria-label={`Punkt ${o.label} entfernen`} disabled={doc.options.length <= 1} onClick={() => set({ options: doc.options.filter((_, j) => j !== i) })}><Trash2 size={12} /></Button></span>}
+            </div>
+            <Input aria-label={`Punkt ${i + 1}: Beschreibung im Menü`} disabled={!manage} maxLength={100} placeholder="Kurzbeschreibung im Menü" value={o.description} onChange={(e) => opt(i, { description: e.target.value })} />
+            <div className="grid grid-cols-[1fr_auto] gap-2"><Input aria-label={`Punkt ${i + 1}: Überschrift`} disabled={!manage} maxLength={256} placeholder="Überschrift der Antwort" value={o.title} onChange={(e) => opt(i, { title: e.target.value })} /><input type="color" aria-label={`Punkt ${i + 1}: Farbe`} disabled={!manage} value={o.color} onChange={(e) => opt(i, { color: e.target.value })} className="h-9 w-16 rounded border border-line bg-transparent" /></div>
+            <Textarea aria-label={`Punkt ${i + 1}: Text`} disabled={!manage} rows={3} maxLength={4000} placeholder="Text der Antwort" value={o.text} onChange={(e) => opt(i, { text: e.target.value })} />
+            <Input aria-label={`Punkt ${i + 1}: Bild`} disabled={!manage} maxLength={500} placeholder="Bild (optional, https://…)" value={o.image} onChange={(e) => opt(i, { image: e.target.value.trim() })} />
+          </div>
+        ))}
+        {manage && doc.options.length < 25 && <Button size="sm" variant="secondary" onClick={() => set({ options: [...doc.options, { id: `punkt-${doc.options.length + 1}`, label: 'Neuer Punkt', description: '', emoji: '', title: '', text: '', image: '', color: '#3b82f6' }] })}><Plus size={14} className="mr-1" />Auswahlpunkt</Button>}
+        </div>
+      </details>
+    </div>
+  );
+}
+
+/** ℹ️ Info-Panels: Bild + Text + Auswahlmenü (wie „Aufgaben als Ausbilder“) – jeder Punkt zeigt der Person ihren eigenen Text. */
+export function InfoPanels() {
+  const { can } = useAuth();
+  const manage = can('settings.manage');
+  const ch = useChannelName();
+  const L = useDocList<InfoDoc>({ path: '/discord-panels/info', key: 'info-panels', manage, valid: (d) => !infoProblems(d).length, serverKeys: ['posted'], strip: stripInfo, label: 'Info-Panel' });
+  const [del, setDel] = useState<string>();
+  const [msg, setMsg] = useState<{ ok: boolean; text: string }>();
+  const [pick, setPick] = useState(0);
+  const send = useMutation({
+    mutationFn: async (v: { d: InfoDoc; mode: 'update' | 'new' }) => { await L.saveNow(v.d); return api(`/discord-panels/info/${v.d.id}/send`, { method: 'POST', body: { mode: v.mode } }); },
+    onSuccess: () => { setMsg({ ok: true, text: 'Wird gesendet …' }); L.refetchSoon(); },
+    onError: (e) => setMsg({ ok: false, text: errText(e) }),
+  });
+  if (L.q.error) return <ErrorState error={L.q.error} onRetry={() => void L.q.refetch()} />;
+  if (!L.docs) return <SkeletonRows />;
+  const cur = L.current;
+  const chosen = cur?.options[Math.min(pick, (cur?.options.length ?? 1) - 1)];
+  return (
+    <>
+      <PageHeader title="ℹ️ Info-Panels" subtitle="Panel mit Bild, Text und Auswahlmenü in Discord – z. B. „Aufgaben als Ausbilder“. Jeder Auswahlpunkt zeigt der Person einen eigenen Text (nur für sie sichtbar)." />
+      {!cur ? (
+        <Card title="Panels" actions={manage && <Button size="sm" onClick={() => L.add(blankInfo(L.server || null))}><Plus size={16} className="mr-1" />Panel anlegen</Button>}>
+          {!L.docs.length ? <EmptyState text="Noch keine Info-Panels." hint="Beispiel: „Aufgaben als Ausbilder“ mit den Punkten „Aufgaben“ und „Dokumentation“." /> : (
+            <ul className="grid gap-2">{L.docs.map((d) => (
+              <li key={d.id} className="flex flex-wrap items-center gap-2 rounded-lg border border-line p-3">
+                <span aria-hidden className="h-8 w-1.5 rounded" style={{ background: d.color }} />
+                <span className="font-semibold">{d.name}</span>
+                <Badge tone="neutral">{d.options.length} Punkte</Badge>
+                {d.posted ? <Badge tone="success">in {ch(d.posted.channelId)}</Badge> : <Badge tone="neutral">nicht gesendet</Badge>}
+                <Button size="sm" variant="secondary" className="ml-auto" onClick={() => { L.setOpen(d.id); setMsg(undefined); setPick(0); }}>Bearbeiten</Button>
+              </li>
+            ))}</ul>
+          )}
+        </Card>
+      ) : (
+        <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_minmax(0,460px)]">
+          <Card title={cur.name} actions={<span className="flex gap-1">{manage && <Button size="sm" variant="danger" aria-label="Panel löschen" onClick={() => setDel(cur.id)}><Trash2 size={14} /></Button>}<Button size="sm" variant="secondary" onClick={() => L.setOpen(undefined)}>Zurück</Button></span>}>
+            <InfoEditor doc={cur} manage={manage} set={(p) => { L.update({ ...cur, ...p }); setMsg(undefined); }} />
+          </Card>
+          <div className="grid content-start gap-3 xl:sticky xl:top-4">
+            <p className="text-xs font-semibold uppercase text-muted">Panel</p>
+            <Preview message={infoPanelMessage(cur)} />
+            <div className="pl-14"><Select aria-label="Vorschau: Auswahl" value={String(pick)} onChange={(e) => setPick(Number(e.target.value))}>{cur.options.map((o, i) => <option key={i} value={i}>{o.emoji} {o.label}{o.description ? ` – ${o.description}` : ''}</option>)}</Select></div>
+            {chosen && <><p className="text-xs font-semibold uppercase text-muted">Antwort auf „{chosen.label}“ (nur für die Person)</p><Preview message={{ embeds: [infoOptionEmbed(chosen)] }} /></>}
+            <SendBox posted={cur.posted} channelId={cur.channelId} disabled={!manage} busy={send.isPending} onSend={(mode) => send.mutate({ d: cur, mode })} msg={msg} problems={infoProblems(cur)} />
+          </div>
+        </div>
+      )}
+      <ConfirmDialog open={!!del} danger title="Panel löschen?" message="Das Auswahlmenü in Discord funktioniert danach nicht mehr." confirmLabel="Löschen" busy={L.remove.isPending} onConfirm={() => del && L.remove.mutate(del, { onSuccess: () => setDel(undefined) })} onClose={() => setDel(undefined)} />
     </>
   );
 }

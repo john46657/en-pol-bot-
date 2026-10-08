@@ -145,3 +145,48 @@ export function formPanelResult(p: FormPanel, values: Record<string, string>, us
     reactions: p.reactions,
   };
 }
+
+// ───────────── Info-Panel (Bild, Text, Auswahlmenü – jeder Punkt zeigt seinen eigenen Text) ─────────────
+
+const httpsImage = z.union([z.string().trim().max(500).regex(/^https:\/\/\S+$/, 'Bild: https://-Link'), z.literal('')]).default('');
+export const infoOptionSchema = z.object({
+  id: z.string().regex(/^[a-z0-9_-]{1,40}$/, 'Kürzel: a–z, 0–9, _ und -'),
+  /** im Auswahlmenü */
+  label: z.string().trim().min(1).max(100),
+  description: z.string().max(100).default(''),
+  emoji: emoji.default(''),
+  /** Antwort (nur für die Person sichtbar) */
+  title: z.string().max(256).default(''),
+  text: z.string().max(4000).default(''),
+  image: httpsImage,
+  color: color.default('#3b82f6'),
+});
+export const infoPanelSchema = z.object({
+  id: z.string().uuid(),
+  name: z.string().trim().min(1).max(80),
+  guildId: sf.nullable().default(null),
+  channelId: sf.nullable().default(null),
+  title: z.string().max(256).default('Aufgaben als Ausbilder'),
+  text: z.string().max(4000).default('Hier findest du alles Wichtige. Wähle unten einen Punkt aus.'),
+  color: color.default('#1f2937'),
+  image: imageRef,
+  footer: z.string().max(200).default('Klicke auf „Triff eine Auswahl“, um mehr zu erfahren.'),
+  placeholder: z.string().trim().min(1).max(150).default('Triff eine Auswahl'),
+  options: z.array(infoOptionSchema).min(1).max(25).default([
+    { id: 'aufgaben', label: 'Aufgaben', description: 'Siehe, welche Aufgaben du hast.', emoji: '📂', title: 'Aufgaben', text: 'Beschreibe hier die Aufgaben.' },
+    { id: 'doku', label: 'Dokumentation', description: 'Siehe, wie du dokumentieren musst.', emoji: '📨', title: 'Dokumentation', text: 'Beschreibe hier, wie dokumentiert wird.' },
+  ]),
+});
+export type InfoPanel = z.infer<typeof infoPanelSchema>;
+export type InfoOption = z.infer<typeof infoOptionSchema>;
+
+export function infoPanelMessage(p: InfoPanel): MessageSpec {
+  return {
+    embeds: [{ title: p.title || undefined, description: p.text || undefined, color: toInt(p.color), ...(p.image ? { image: p.image } : {}), ...(p.footer ? { footer: p.footer } : {}) }],
+    select: { id: `ipnl:${p.id}`, placeholder: p.placeholder, options: p.options.map((o) => ({ label: o.label, value: o.id, ...(o.description ? { description: o.description } : {}), ...(o.emoji ? { emoji: o.emoji } : {}) })) },
+  };
+}
+/** Antwort auf eine Auswahl (nur für die Person sichtbar). */
+export function infoOptionEmbed(o: InfoOption): EmbedSpec {
+  return { title: (o.title || o.label).slice(0, 256), ...(o.text ? { description: o.text } : {}), color: toInt(o.color), ...(o.image ? { image: o.image } : {}) };
+}
