@@ -156,6 +156,12 @@ let DiscordService = class DiscordService {
         const v = (await this.getState(stateKey));
         return v && typeof v.channelId === 'string' && typeof v.messageId === 'string' ? { channelId: v.channelId, messageId: v.messageId } : null;
     }
+    /** Gibt es die Antrags-/Bewerbungsnachricht (`msg-<art>-<id>`) in Discord? Der Bot merkt sich die Orte als Liste. */
+    async hasTrackedMessage(key) {
+        const v = await this.getState(key);
+        const spots = Array.isArray(v) ? v : v ? [v] : [];
+        return spots.some((x) => !!x && typeof x === 'object' && typeof x.messageId === 'string');
+    }
     async getState(key) {
         return (await this.prisma.systemSetting.findUnique({ where: { key: `bot.state.${key}` } }))?.value ?? null;
     }
