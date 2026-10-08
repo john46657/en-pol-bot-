@@ -348,6 +348,7 @@ export declare class SupportTicketsService {
         id: string;
         createdAt: Date;
         createdById: string | null;
+        createdByName: string | null;
         creatorId: string;
         creatorName: string;
         claimers: string[];
@@ -357,7 +358,6 @@ export declare class SupportTicketsService {
         statusName: string;
         html: string;
         sizeBytes: number;
-        createdByName: string | null;
     }>;
     /** Anzeigenamen zu Discord-IDs (verknüpfte Konten, sonst zuletzt gesehener Name in Tickets). */
     private discordNames;
@@ -536,8 +536,8 @@ export declare class SupportTicketsService {
         transcripts: {
             id: string;
             createdAt: Date;
-            sizeBytes: number;
             createdByName: string | null;
+            sizeBytes: number;
         }[] | null;
         rating: {
             id: string;
@@ -656,6 +656,7 @@ export declare class SupportTicketsService {
             ticketNumber: string;
             id: string;
             createdAt: Date;
+            createdByName: string | null;
             creatorId: string;
             creatorName: string;
             claimers: string[];
@@ -663,13 +664,13 @@ export declare class SupportTicketsService {
             categoryName: string;
             statusName: string;
             sizeBytes: number;
-            createdByName: string | null;
         }[];
     }>;
     transcript(userId: string | null, id: string): Promise<{
         id: string;
         createdAt: Date;
         createdById: string | null;
+        createdByName: string | null;
         creatorId: string;
         creatorName: string;
         claimers: string[];
@@ -679,7 +680,6 @@ export declare class SupportTicketsService {
         statusName: string;
         html: string;
         sizeBytes: number;
-        createdByName: string | null;
     }>;
     deleteTranscript(actor: TicketActor, id: string): Promise<{
         ok: boolean;

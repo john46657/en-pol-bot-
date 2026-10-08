@@ -81436,6 +81436,8 @@ async function offer(c, key3) {
   if (!flow.enabled) return errorReply(`Bewerbungen f\xFCr **${plain(flow.name)}** sind derzeit geschlossen.`);
   const blocked = roleBlock(flow.settings, c.guildId ? c.memberRoleIds ?? [] : void 0);
   if (blocked) return errorReply(blocked);
+  const ban = await c.api.service("GET", `/bot/application-bans/check?discordId=${c.discordId}&scope=${encodeURIComponent(flow.key === POLICE ? "police" : flow.key)}&name=${encodeURIComponent(flow.key === POLICE ? "die Polizei-Bewerbung" : flow.appName)}${c.guildId ? `&guildId=${c.guildId}` : ""}`).catch(() => null);
+  if (ban?.banned) return errorReply(`\u26D4 ${ban.message ?? "Du bist f\xFCr diese Bewerbung gesperrt."}`);
   const open = await openApplication(c.api, flow.key, c.discordId);
   if (open.open) return errorReply(`Du hast f\xFCr **${plain(flow.name)}** bereits eine offene Bewerbung (${open.number}). Bitte warte auf die Entscheidung.`);
   if (!c.platform) return errorReply("Direktnachrichten sind hier nicht verf\xFCgbar.");

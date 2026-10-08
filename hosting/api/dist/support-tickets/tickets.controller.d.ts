@@ -929,6 +929,7 @@ export declare class SupportTicketsController {
             ticketNumber: string;
             id: string;
             createdAt: Date;
+            createdByName: string | null;
             creatorId: string;
             creatorName: string;
             claimers: string[];
@@ -936,7 +937,6 @@ export declare class SupportTicketsController {
             categoryName: string;
             statusName: string;
             sizeBytes: number;
-            createdByName: string | null;
         }[];
     }>;
     transcript(u: AuthUser, id: string, download: string | undefined, res: Response): Promise<void>;
@@ -1021,8 +1021,8 @@ export declare class SupportTicketsController {
         transcripts: {
             id: string;
             createdAt: Date;
-            sizeBytes: number;
             createdByName: string | null;
+            sizeBytes: number;
         }[] | null;
         rating: {
             id: string;

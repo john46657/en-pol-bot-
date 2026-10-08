@@ -794,6 +794,29 @@ model SekReport {
   @@index([createdAt])
 }
 
+/// Bewerbungssperre: Person (Discord-ID und/oder Roblox-ID) darf sich für bestimmte Bewerbungen nicht bewerben.
+/// `scopes`: "*" = alle, "police" = Polizei-Bewerbung, sonst Schlüssel einer Qualifikation (z. B. "sek").
+/// Je Discord-Server eigen (`guildId`); ohne Server = gilt überall.
+model ApplicationBan {
+  id            String    @id @default(uuid()) @db.Uuid
+  guildId       String?
+  discordId     String?
+  robloxUserId  String?
+  name          String
+  scopes        String[]
+  reason        String
+  expiresAt     DateTime?
+  createdById   String?   @db.Uuid
+  createdByName String?
+  createdAt     DateTime  @default(now())
+  liftedAt      DateTime?
+  liftedById    String?   @db.Uuid
+
+  @@index([guildId])
+  @@index([discordId])
+  @@index([robloxUserId])
+}
+
 /**
  * Bewerbungen für Qualifikationen (SEK, Flugstaffel, Ausbilder …) – per Discord-Panel, Fragen einzeln per Direktnachricht.
  */

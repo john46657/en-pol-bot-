@@ -1,3 +1,4 @@
+import { ApplicationBansService } from '../application-bans/application-bans.service';
 import { TeamChanceService } from '../teamchance/teamchance.service';
 import { NotifyService } from '../notifications/notify.service';
 import { ApplicationStatus, type FormField } from '@enrp/shared';
@@ -16,7 +17,8 @@ export declare class ApplicationsService {
     private readonly notify;
     private readonly teamchance;
     private readonly roblox;
-    constructor(prisma: PrismaService, audit: AuditService, discord: DiscordService, notify: NotifyService, teamchance: TeamChanceService, roblox: RobloxService);
+    private readonly bans;
+    constructor(prisma: PrismaService, audit: AuditService, discord: DiscordService, notify: NotifyService, teamchance: TeamChanceService, roblox: RobloxService, bans: ApplicationBansService);
     /** Formular eines Servers (`application.form@<guildId>`), sonst das gemeinsame. */
     form(guildId?: string | null): Promise<FormField[]>;
     /** Öffentliche Bewerbung (kein Account nötig). Antworten werden strikt gegen das konfigurierte Formular validiert. */
