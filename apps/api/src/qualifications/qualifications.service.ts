@@ -187,7 +187,7 @@ export class QualificationsService {
     // wie bei Appy: entschiedene Bewerbung in den Channel für angenommene/abgelehnte Bewerbungen posten –
     // aber nur, wenn es keine Original-Nachricht in Discord gibt (die wird dann nur aktualisiert)
     const archive = status === 'ACCEPTED' ? unit?.acceptedChannelId : unit?.deniedChannelId;
-    if (archive && !(await this.discord.posted(`msg-q-${a.id}`))) {
+    if (archive && !(await this.discord.hasTrackedMessage(`msg-q-${a.id}`))) {
       const by = actor.userId ? await this.prisma.user.findUnique({ where: { id: actor.userId }, select: { displayName: true } }) : null;
       await this.discord.enqueue('qualifications', 'qualification.archived', {
         id: a.id, number: a.number, unitName: a.unitName, discordId: a.discordId, discordName: a.discordName, answers: a.answers, durationSec: a.durationSec, joinedAt: a.joinedAt?.toISOString() ?? null, createdAt: a.createdAt.toISOString(),

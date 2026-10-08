@@ -118,7 +118,7 @@ export class ApplicationsService {
     const channelId = to === 'ACCEPTED' ? police.acceptedChannelId : police.deniedChannelId;
     if (!channelId) return;
     // Gibt es die Bewerbungs-Nachricht in Discord, wird nur sie aktualisiert (markDecided) – keine zweite Nachricht
-    if (await this.discord.posted(`msg-a-${a.id}`)) return;
+    if (await this.discord.hasTrackedMessage(`msg-a-${a.id}`)) return;
     const form = await this.form(a.guildId);
     const answers = (a.answers ?? {}) as Record<string, string>;
     await this.discord.enqueue('applications', 'application.archived', {
