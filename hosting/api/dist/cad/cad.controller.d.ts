@@ -430,8 +430,8 @@ export declare class CadController {
             guildId: string | null;
             callsign: string | null;
             incidentId: string | null;
-            unitId: string | null;
             authorId: string | null;
+            unitId: string | null;
         }[];
         erlc: {
             id: string;
@@ -703,9 +703,9 @@ export declare class CadController {
             text: string;
             guildId: string | null;
             incidentId: string;
-            kind: string;
-            unitId: string | null;
             authorId: string | null;
+            unitId: string | null;
+            kind: string;
         }[];
         units: ({
             unit: {
@@ -1061,8 +1061,8 @@ export declare class CadController {
         guildId: string | null;
         callsign: string | null;
         incidentId: string | null;
-        unitId: string | null;
         authorId: string | null;
+        unitId: string | null;
     }[]>;
     /** Einheiten, als die man funken darf (Leitstelle: alle; sonst nur die eigene). */
     radioUnits(a: CadActor): Promise<{
@@ -1085,8 +1085,8 @@ export declare class CadController {
         guildId: string | null;
         callsign: string | null;
         incidentId: string | null;
-        unitId: string | null;
         authorId: string | null;
+        unitId: string | null;
     }>;
     announce(a: CadActor, b: {
         text: string;

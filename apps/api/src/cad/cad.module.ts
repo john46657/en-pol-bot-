@@ -16,11 +16,19 @@ import { ErlcSyncService } from './erlc-sync.service';
 })
 export class CadModule implements OnApplicationBootstrap, OnModuleDestroy {
   private timer?: NodeJS.Timeout;
+  private purgeTimer?: NodeJS.Timeout;
   private running = false;
-  constructor(private readonly erlc: ErlcService) {}
+  constructor(private readonly erlc: ErlcService, private readonly cad: CadService) {}
   /** Planer: jede Sekunde prüfen, welche Server fällig sind (Intervall je Server, Backoff bei Fehlern). Nicht in Tests. */
   onApplicationBootstrap() {
-    if (process.env.NODE_ENV === 'test' || process.env.ERLC_POLLING === 'false') return;
+    if (process.env.NODE_ENV === 'test') return;
+    // Beendete Einsätze nach einem Tag löschen (stündlich prüfen)
+    const purgeLog = new Logger('CAD');
+    const purge = () => void this.cad.purgeClosedIncidents().then((n) => { if (n) purgeLog.log(`${n} beendete Einsätze gelöscht`); }).catch((e: Error) => purgeLog.error(e.message));
+    purge();
+    this.purgeTimer = setInterval(purge, 60 * 60_000);
+    this.purgeTimer.unref();
+    if (process.env.ERLC_POLLING === 'false') return;
     const log = new Logger('ERLC');
     this.timer = setInterval(() => {
       if (this.running) return;
@@ -29,5 +37,5 @@ export class CadModule implements OnApplicationBootstrap, OnModuleDestroy {
     }, 1000);
     this.timer.unref();
   }
-  onModuleDestroy() { if (this.timer) clearInterval(this.timer); }
+  onModuleDestroy() { if (this.timer) clearInterval(this.timer); if (this.purgeTimer) clearInterval(this.purgeTimer); }
 }
