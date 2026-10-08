@@ -31,20 +31,30 @@ declare const edit: z.ZodObject<{
     values: Record<string, string | number>;
     version?: number | undefined;
 }>;
+declare const reviewBody: z.ZodDefault<z.ZodObject<{
+    decision: z.ZodOptional<z.ZodEnum<["REVIEWED", "RETURNED", "SUBMITTED"]>>;
+    note: z.ZodOptional<z.ZodString>;
+}, "strip", z.ZodTypeAny, {
+    note?: string | undefined;
+    decision?: "SUBMITTED" | "REVIEWED" | "RETURNED" | undefined;
+}, {
+    note?: string | undefined;
+    decision?: "SUBMITTED" | "REVIEWED" | "RETURNED" | undefined;
+}>>;
 declare const listQ: z.ZodObject<{
     templateId: z.ZodOptional<z.ZodString>;
     authorId: z.ZodOptional<z.ZodString>;
     from: z.ZodOptional<z.ZodString>;
     to: z.ZodOptional<z.ZodString>;
     q: z.ZodOptional<z.ZodString>;
-    status: z.ZodOptional<z.ZodEnum<["SUBMITTED", "REVIEWED"]>>;
+    status: z.ZodOptional<z.ZodEnum<["SUBMITTED", "REVIEWED", "RETURNED"]>>;
     mine: z.ZodOptional<z.ZodBoolean>;
     page: z.ZodDefault<z.ZodNumber>;
     pageSize: z.ZodDefault<z.ZodNumber>;
 }, "strip", z.ZodTypeAny, {
     page: number;
     pageSize: number;
-    status?: "SUBMITTED" | "REVIEWED" | undefined;
+    status?: "SUBMITTED" | "REVIEWED" | "RETURNED" | undefined;
     mine?: boolean | undefined;
     q?: string | undefined;
     authorId?: string | undefined;
@@ -52,7 +62,7 @@ declare const listQ: z.ZodObject<{
     to?: string | undefined;
     templateId?: string | undefined;
 }, {
-    status?: "SUBMITTED" | "REVIEWED" | undefined;
+    status?: "SUBMITTED" | "REVIEWED" | "RETURNED" | undefined;
     mine?: boolean | undefined;
     q?: string | undefined;
     authorId?: string | undefined;
@@ -114,6 +124,12 @@ export declare class DutyReportsController {
         onePerPeriod: boolean;
         authorCanEdit: boolean;
     }>;
+    /** Vorbelegung (z. B. Dienstzeit aus den Dienst-Sitzungen) für ein neues Formular. */
+    prefill(a: Actor, id: string, date?: string): Promise<{
+        values: {
+            [k: string]: string;
+        };
+    }>;
     dup(a: Actor, id: string): Promise<{
         description: string;
         id: string;
@@ -162,6 +178,7 @@ export declare class DutyReportsController {
             periodStart: Date;
             reviewedById: string | null;
             reviewedAt: Date | null;
+            reviewNote: string | null;
             editedById: string | null;
         })[];
         total: number;
@@ -198,6 +215,7 @@ export declare class DutyReportsController {
             channelId: string;
             messageId: string;
         } | null;
+        reviewerName: string | null;
         canEdit: boolean;
         author: {
             id: string;
@@ -219,6 +237,7 @@ export declare class DutyReportsController {
         periodStart: Date;
         reviewedById: string | null;
         reviewedAt: Date | null;
+        reviewNote: string | null;
         editedById: string | null;
     }>;
     create(a: Actor, b: z.infer<typeof create>): Promise<{
@@ -239,6 +258,7 @@ export declare class DutyReportsController {
         periodStart: Date;
         reviewedById: string | null;
         reviewedAt: Date | null;
+        reviewNote: string | null;
         editedById: string | null;
     }>;
     edit(a: Actor, id: string, b: z.infer<typeof edit>): Promise<{
@@ -258,9 +278,10 @@ export declare class DutyReportsController {
         periodStart: Date;
         reviewedById: string | null;
         reviewedAt: Date | null;
+        reviewNote: string | null;
         editedById: string | null;
     }>;
-    review(a: Actor, id: string): Promise<{
+    review(a: Actor, id: string, b: z.infer<typeof reviewBody>): Promise<{
         number: string;
         id: string;
         createdAt: Date;
@@ -277,6 +298,7 @@ export declare class DutyReportsController {
         periodStart: Date;
         reviewedById: string | null;
         reviewedAt: Date | null;
+        reviewNote: string | null;
         editedById: string | null;
     }>;
     remove(a: Actor, id: string): Promise<void>;

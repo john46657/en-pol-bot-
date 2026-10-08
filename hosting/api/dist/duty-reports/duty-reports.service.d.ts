@@ -120,6 +120,7 @@ export declare class DutyReportsService {
             periodStart: Date;
             reviewedById: string | null;
             reviewedAt: Date | null;
+            reviewNote: string | null;
             editedById: string | null;
         })[];
         total: number;
@@ -156,6 +157,7 @@ export declare class DutyReportsService {
             channelId: string;
             messageId: string;
         } | null;
+        reviewerName: string | null;
         canEdit: boolean;
         author: {
             id: string;
@@ -177,10 +179,19 @@ export declare class DutyReportsService {
         periodStart: Date;
         reviewedById: string | null;
         reviewedAt: Date | null;
+        reviewNote: string | null;
         editedById: string | null;
     }>;
     private canEdit;
     /** Neuer Bericht – bei „ein Bericht je Zeitraum“ wird der vorhandene des Zeitraums bearbeitet. */
+    /** Dienstzeit des Zeitraums aus den Dienst-Sitzungen (Pausen abgezogen) – für Felder wie „Dienstzeit“. */
+    dutyTime(userId: string, t: ReportTemplate, date?: string): Promise<string | null>;
+    /** Vorbelegung fürs Formular (Dashboard und Discord): Dienstzeit-Felder automatisch. */
+    prefill(actor: Actor, templateId: string, date?: string): Promise<{
+        values: {
+            [k: string]: string;
+        };
+    }>;
     create(actor: Actor, d: {
         templateId: string;
         periodStart?: string;
@@ -205,6 +216,7 @@ export declare class DutyReportsService {
         periodStart: Date;
         reviewedById: string | null;
         reviewedAt: Date | null;
+        reviewNote: string | null;
         editedById: string | null;
     }>;
     update(actor: Actor, id: string, d: {
@@ -227,9 +239,17 @@ export declare class DutyReportsService {
         periodStart: Date;
         reviewedById: string | null;
         reviewedAt: Date | null;
+        reviewNote: string | null;
         editedById: string | null;
     }>;
-    review(actor: Actor, id: string): Promise<{
+    /**
+     * Leitung bearbeitet den Bericht: „Geprüft“ (Anmerkung optional), „Zur Nachbesserung“ (Anmerkung Pflicht) oder zurück auf „eingereicht“.
+     * Ohne `decision`: zwischen geprüft und eingereicht umschalten. Der Verfasser bekommt eine Benachrichtigung (und bei Nachbesserung eine DM).
+     */
+    review(actor: Actor, id: string, d?: {
+        decision?: 'REVIEWED' | 'RETURNED' | 'SUBMITTED';
+        note?: string;
+    }): Promise<{
         number: string;
         id: string;
         createdAt: Date;
@@ -246,6 +266,7 @@ export declare class DutyReportsService {
         periodStart: Date;
         reviewedById: string | null;
         reviewedAt: Date | null;
+        reviewNote: string | null;
         editedById: string | null;
     }>;
     remove(actor: Actor, id: string): Promise<void>;

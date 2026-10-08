@@ -41,6 +41,10 @@ function openModal(c, t, mode, id, page, base) {
         drafts.set(k, { values: { ...base }, at: Date.now() });
     return { modal: modal(t, mode, id, page, drafts.get(k)?.values ?? base) };
 }
+/** Neuer Bericht: Dienstzeit usw. vorbelegen (aus den Dienst-Sitzungen); ohne API einfach leer. */
+async function prefill(c, t) {
+    return c.api.asUser(c.discordId, 'GET', `/duty-reports/templates/${t.id}/prefill`).then((r) => r.values ?? {}, () => ({}));
+}
 exports.DUTY_REPORT_COMMANDS = [{
         name: 'dienstbericht', description: 'Tages-/Wochenbericht ausfüllen, ansehen oder bearbeiten',
         subcommands: [
@@ -70,7 +74,7 @@ exports.DUTY_REPORT_COMMANDS = [{
                 if (!list.length)
                     return (0, format_1.errorReply)('Es gibt noch keine aktive Berichtsvorlage. Vorlagen legt man im Dashboard unter „Tages-/Wochenberichte“ an.');
                 if (list.length === 1)
-                    return openModal(c, list[0], 'n', list[0].id, 0, {});
+                    return openModal(c, list[0], 'n', list[0].id, 0, await prefill(c, list[0]));
                 return { ephemeral: true, content: 'Welchen Bericht möchtest du ausfüllen?', select: { id: 'drep:pick', placeholder: 'Vorlage wählen …', options: list.slice(0, 25).map((t) => ({ label: t.name.slice(0, 100), value: t.id, ...(t.emoji ? { emoji: t.emoji } : {}), ...(t.description ? { description: t.description.slice(0, 100) } : {}) })) } };
             }
             catch (e) {
@@ -78,17 +82,30 @@ exports.DUTY_REPORT_COMMANDS = [{
             }
         },
     }];
-/** Buttons/Menüs/Formulare: drep:pick · drep:edit:<id> · drep:next:<n|e>:<id>:<seite> · drep:sub:<n|e>:<id>:<seite> */
+/** Buttons/Menüs/Formulare: drep:pick · drep:edit:<id> · drep:next:<n|e>:<id>:<seite> · drep:sub:<n|e>:<id>:<seite> · drep:rev:<id> · drep:ret:<id> → drep:retsub:<id> */
 exports.DUTY_REPORT_INTERACTION = {
     prefix: 'drep',
-    opensModal: (args) => ['pick', 'edit', 'next'].includes(args[0] ?? ''),
+    opensModal: (args) => ['pick', 'edit', 'next', 'ret'].includes(args[0] ?? ''),
     async run(c) {
         const [action, a1, a2, a3] = c.args;
         try {
             if (action === 'pick') {
                 const id = c.values?.[0] ?? '';
                 const { t } = await load(c, 'n', id);
-                return openModal(c, t, 'n', id, 0, {});
+                return openModal(c, t, 'n', id, 0, await prefill(c, t));
+            }
+            // Leitung: prüfen bzw. zur Nachbesserung zurückgeben (Recht dutyreports.review prüft das System)
+            if (action === 'rev' || action === 'retsub') {
+                if (!/^[0-9a-f-]{36}$/.test(a1 ?? ''))
+                    return (0, format_1.errorReply)('Ungültige Anfrage.');
+                const note = String(c.fields?.note ?? '').trim();
+                const r = await c.api.asUser(c.discordId, 'POST', `/duty-reports/${a1}/review`, action === 'rev' ? { decision: 'REVIEWED' } : { decision: 'RETURNED', note });
+                return (0, format_1.okReply)(action === 'rev' ? `Bericht **${r.number}** als geprüft markiert.` : `Bericht **${r.number}** zur Nachbesserung zurückgegeben – der Verfasser wurde benachrichtigt.`);
+            }
+            if (action === 'ret') {
+                if (!/^[0-9a-f-]{36}$/.test(a1 ?? ''))
+                    return (0, format_1.errorReply)('Ungültige Anfrage.');
+                return { modal: { id: `drep:retsub:${a1}`, title: 'Zur Nachbesserung', fields: [{ id: 'note', label: 'Was soll nachgebessert werden?', paragraph: true, required: true, maxLength: 1000 }] } };
             }
             if (action === 'edit') {
                 const { t, values } = await load(c, 'e', a1 ?? '');

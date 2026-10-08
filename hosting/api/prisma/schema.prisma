@@ -1423,11 +1423,13 @@ model DutyReport {
   periodStart  DateTime
   authorId     String    @db.Uuid
   values       Json
-  status       String    @default("SUBMITTED") // SUBMITTED | REVIEWED
+  status       String    @default("SUBMITTED") // SUBMITTED | REVIEWED | RETURNED (zur Nachbesserung)
   source       String    @default("WEB") // WEB | DISCORD
   guildId      String?
   reviewedById String?   @db.Uuid
   reviewedAt   DateTime?
+  /// Anmerkung der Leitung (bei „Geprüft“ optional, bei „Zur Nachbesserung“ Pflicht)
+  reviewNote   String?
   editedById   String?   @db.Uuid
   version      Int       @default(1)
   createdAt    DateTime  @default(now())

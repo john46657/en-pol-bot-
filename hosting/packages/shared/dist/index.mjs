@@ -990,6 +990,35 @@ function periodLabel(period, start) {
   }
   return dd(s);
 }
+var isDutyTimeField = (f) => f.type !== "select" && /dienst ?zeit|dienststunden|arbeitszeit|dienstzeit/i.test(`${f.id} ${f.label}`);
+function periodEnd(period, start) {
+  const e = new Date(start);
+  e.setUTCDate(e.getUTCDate() + (period === "WEEKLY" ? 7 : 1));
+  return e;
+}
+var fmtDur = (ms) => {
+  const m = Math.round(ms / 6e4);
+  return m < 60 ? `${m} min` : `${Math.floor(m / 60)} h${m % 60 ? ` ${m % 60} min` : ""}`;
+};
+function dutyTimeText(period, sessions, from, to, timeZone = "Europe/Berlin", now = /* @__PURE__ */ new Date()) {
+  const spans = sessions.map((x) => ({ status: x.status, s: Math.max(new Date(x.startedAt).getTime(), from.getTime()), e: Math.min(x.endedAt ? new Date(x.endedAt).getTime() : now.getTime(), to.getTime()) })).filter((x) => x.e > x.s && x.status !== "OFF_DUTY").sort((a, b) => a.s - b.s);
+  const shifts = [];
+  for (const x of spans) {
+    const last = shifts[shifts.length - 1];
+    const work = x.status === "BREAK" ? 0 : x.e - x.s;
+    if (last && x.s - last.e <= 6e4) {
+      last.e = Math.max(last.e, x.e);
+      last.work += work;
+    } else shifts.push({ s: x.s, e: x.e, work });
+  }
+  const real = shifts.filter((x) => x.work >= 6e4);
+  if (!real.length) return null;
+  const total = real.reduce((n, x) => n + x.work, 0);
+  if (period === "WEEKLY") return `${fmtDur(total)} in ${real.length} ${real.length === 1 ? "Schicht" : "Schichten"}`;
+  const t = (ms) => new Date(ms).toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit", timeZone });
+  const open = sessions.some((x) => !x.endedAt);
+  return `${real.map((x, i) => `${t(x.s)}\u2013${open && i === real.length - 1 && x.e >= Math.min(now.getTime(), to.getTime()) - 6e4 ? "jetzt" : t(x.e)}`).join(", ")} (${fmtDur(total)})`;
+}
 function cleanReportValues(t, input) {
   const values = {};
   for (const f of t.fields) {
@@ -1001,17 +1030,25 @@ function cleanReportValues(t, input) {
   }
   return { values };
 }
+var REPORT_STATUS_LABEL = { SUBMITTED: "\u{1F4E8} Eingereicht", REVIEWED: "\u2705 Gepr\xFCft", RETURNED: "\u21A9\uFE0F Zur Nachbesserung" };
 function reportMessage(t, r, id2) {
   const fields = t.fields.filter((f) => r.values[f.id]).map((f) => ({ name: f.label, value: r.values[f.id].slice(0, 1024), inline: f.inline }));
   const embed = {
     title: `${t.emoji ? `${t.emoji} ` : ""}${t.name} \u2013 ${periodLabel(t.period, r.periodStart)}`.slice(0, 256),
-    description: `**Verfasser:** ${r.authorDiscordId ? `<@${r.authorDiscordId}>` : r.authorName}${r.status === "REVIEWED" ? "\n\u2705 **Gepr\xFCft**" : ""}`,
+    description: `**Verfasser:** ${r.authorDiscordId ? `<@${r.authorDiscordId}>` : r.authorName}${r.status !== "SUBMITTED" ? `
+**${REPORT_STATUS_LABEL[r.status] ?? r.status}**${r.reviewerName ? ` von ${r.reviewerName}` : ""}${r.reviewNote ? `
+> ${r.reviewNote.replace(/\n/g, "\n> ").slice(0, 900)}` : ""}` : ""}`,
     color: parseInt(t.color.slice(1), 16),
     fields: fields.slice(0, 25),
     footer: `${r.number}${r.edited ? " \xB7 bearbeitet" : ""}`,
     timestamp: new Date(r.updatedAt).toISOString()
   };
-  return { embeds: [embed], buttons: [{ id: `drep:edit:${id2}`, label: "Bearbeiten", emoji: "\u270F\uFE0F", style: "secondary" }] };
+  embed.color = r.status === "REVIEWED" ? 2278750 : r.status === "RETURNED" ? 16096779 : embed.color;
+  return { embeds: [embed], buttons: [
+    { id: `drep:edit:${id2}`, label: "Bearbeiten", emoji: "\u270F\uFE0F", style: "secondary" },
+    ...r.status !== "REVIEWED" ? [{ id: `drep:rev:${id2}`, label: "Gepr\xFCft", emoji: "\u2705", style: "success" }] : [],
+    ...r.status !== "RETURNED" ? [{ id: `drep:ret:${id2}`, label: "Zur Nachbesserung", emoji: "\u21A9\uFE0F", style: "secondary" }] : []
+  ] };
 }
 
 // src/hr.ts
@@ -1349,6 +1386,7 @@ export {
   QUESTION_TYPES,
   REPORT_FIELD_TYPES,
   REPORT_STATUSES,
+  REPORT_STATUS_LABEL,
   REPORT_TRANSITIONS,
   REPORT_TYPES,
   REQUEST_STATUSES,
@@ -1390,6 +1428,7 @@ export {
   defaultTicketButtons,
   departmentSchema,
   dnSettingsSchema,
+  dutyTimeText,
   effectivePermissions,
   fieldValue,
   fillTemplate,
@@ -1406,6 +1445,7 @@ export {
   hireMappingSchema,
   hrConfigSchema,
   hrStatusSchema,
+  isDutyTimeField,
   isInputQuestion,
   isPermissionKey,
   isSupportOpen,
@@ -1418,6 +1458,7 @@ export {
   notifyRuleSchema,
   panelFieldSchema,
   parsePlayer,
+  periodEnd,
   periodLabel,
   periodStart,
   pixelToGame,

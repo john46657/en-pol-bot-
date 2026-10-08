@@ -25,7 +25,8 @@ const errors_1 = require("../common/errors");
 const values = zod_1.z.record(zod_1.z.string().max(40), zod_1.z.union([zod_1.z.string().max(4000), zod_1.z.number()]));
 const create = zod_1.z.object({ templateId: zod_1.z.string().uuid(), periodStart: zod_1.z.string().date().optional(), values, guildId: zod_1.z.string().regex(/^\d{15,25}$/).nullable().optional(), source: zod_1.z.enum(['WEB', 'DISCORD']).optional() });
 const edit = zod_1.z.object({ values, version: zod_1.z.number().int().optional() });
-const listQ = zod_1.z.object({ templateId: zod_1.z.string().uuid().optional(), authorId: zod_1.z.string().uuid().optional(), from: zod_1.z.string().date().optional(), to: zod_1.z.string().date().optional(), q: zod_1.z.string().max(80).optional(), status: zod_1.z.enum(['SUBMITTED', 'REVIEWED']).optional(), mine: zod_1.z.coerce.boolean().optional(), page: zod_1.z.coerce.number().int().min(1).default(1), pageSize: zod_1.z.coerce.number().int().min(1).max(200).default(50) });
+const reviewBody = zod_1.z.object({ decision: zod_1.z.enum(['REVIEWED', 'RETURNED', 'SUBMITTED']).optional(), note: zod_1.z.string().trim().max(1000).optional() }).default({});
+const listQ = zod_1.z.object({ templateId: zod_1.z.string().uuid().optional(), authorId: zod_1.z.string().uuid().optional(), from: zod_1.z.string().date().optional(), to: zod_1.z.string().date().optional(), q: zod_1.z.string().max(80).optional(), status: zod_1.z.enum(['SUBMITTED', 'REVIEWED', 'RETURNED']).optional(), mine: zod_1.z.coerce.boolean().optional(), page: zod_1.z.coerce.number().int().min(1).default(1), pageSize: zod_1.z.coerce.number().int().min(1).max(200).default(50) });
 /** 🗓️ Tages-/Wochenberichte (auch vom Discord-Bot im Namen des verknüpften Benutzers benutzt). */
 let DutyReportsController = class DutyReportsController {
     s;
@@ -35,13 +36,15 @@ let DutyReportsController = class DutyReportsController {
     templates(active) { return this.s.listTemplates((0, guild_context_1.currentGuild)(), active === '1'); }
     saveTemplate(a, id, b) { if (b.id !== id)
         throw new errors_1.AppError('VALIDATION_FAILED', 'ID passt nicht.'); return this.s.saveTemplate(a, b); }
+    /** Vorbelegung (z. B. Dienstzeit aus den Dienst-Sitzungen) für ein neues Formular. */
+    prefill(a, id, date) { return this.s.prefill(a, id, date && /^\d{4}-\d{2}-\d{2}$/.test(date) ? date : undefined); }
     dup(a, id) { return this.s.duplicateTemplate(a, id); }
     removeTemplate(a, id) { return this.s.removeTemplate(a, id); }
     list(a, q) { return this.s.list(a, q, q.page, q.pageSize); }
     get(a, id) { return this.s.get(a, id.slice(0, 40)); }
     create(a, b) { return this.s.create(a, b); }
     edit(a, id, b) { return this.s.update(a, id, b); }
-    review(a, id) { return this.s.review(a, id); }
+    review(a, id, b) { return this.s.review(a, id, b); }
     remove(a, id) { return this.s.remove(a, id); }
 };
 exports.DutyReportsController = DutyReportsController;
@@ -63,6 +66,16 @@ __decorate([
     __metadata("design:paramtypes", [Object, String, Object]),
     __metadata("design:returntype", void 0)
 ], DutyReportsController.prototype, "saveTemplate", null);
+__decorate([
+    (0, common_1.Get)('templates/:id/prefill'),
+    (0, decorators_1.RequirePermission)('dutyreports.create'),
+    __param(0, (0, decorators_1.CurrentActor)()),
+    __param(1, (0, common_1.Param)('id', common_1.ParseUUIDPipe)),
+    __param(2, (0, common_1.Query)('date')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, String, String]),
+    __metadata("design:returntype", void 0)
+], DutyReportsController.prototype, "prefill", null);
 __decorate([
     (0, common_1.Post)('templates/:id/duplicate'),
     (0, decorators_1.RequirePermission)('dutyreports.manage'),
@@ -125,8 +138,9 @@ __decorate([
     (0, decorators_1.RequirePermission)('dutyreports.review'),
     __param(0, (0, decorators_1.CurrentActor)()),
     __param(1, (0, common_1.Param)('id', common_1.ParseUUIDPipe)),
+    __param(2, (0, common_1.Body)((0, zod_pipe_1.zodBody)(reviewBody))),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Object, String]),
+    __metadata("design:paramtypes", [Object, String, void 0]),
     __metadata("design:returntype", void 0)
 ], DutyReportsController.prototype, "review", null);
 __decorate([
