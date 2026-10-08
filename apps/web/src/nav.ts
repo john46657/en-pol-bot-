@@ -1,4 +1,4 @@
-import { HardDriveDownload, ScrollText, BellRing, GraduationCap, IdCard, Medal, SlidersHorizontal, CalendarCheck, FormInput, ListOrdered, Link2, PanelTop, DoorOpen, MapPinned, Building2, Megaphone, RadioTower, Contact, Palette, CalendarOff, Clock, LifeBuoy, Monitor, BarChart3, BookOpen, Award, Car, ClipboardList, FileText, Fingerprint, Flag, Gavel, LayoutDashboard, MessageSquare, Radio, Scale, Search, Settings, Shield, Siren, Ticket, UserCheck, Users, Wrench, type LucideIcon } from 'lucide-react';
+import { TriangleAlert, HardDriveDownload, ScrollText, BellRing, GraduationCap, IdCard, Medal, SlidersHorizontal, CalendarCheck, FormInput, ListOrdered, Link2, PanelTop, DoorOpen, MapPinned, Building2, Megaphone, RadioTower, Contact, Palette, CalendarOff, Clock, LifeBuoy, Monitor, BarChart3, BookOpen, Award, Car, ClipboardList, FileText, Fingerprint, Flag, Gavel, LayoutDashboard, MessageSquare, Radio, Scale, Search, Settings, Shield, Siren, Ticket, UserCheck, Users, Wrench, type LucideIcon } from 'lucide-react';
 
 /** `area`: Bereichs-Sichtbarkeit (dashboard.<bereich>.view) – ohne sie erscheint der Menüpunkt nicht, auch mit Modul-Recht. */
 export interface NavItem { path: string; label: string; icon: LucideIcon; perm?: string; area?: string; group: 'Operations' | 'Records' | 'Organisation' | 'Administration' }
@@ -24,6 +24,7 @@ export const NAV: NavItem[] = [
   { path: '/investigations', label: 'Ermittlungen', icon: Search, perm: 'investigations.view', group: 'Records' },
   { path: '/wanted', label: 'Fahndungen', icon: Flag, perm: 'wanted.view', group: 'Records' },
   { path: '/personnel', label: 'Personal', icon: UserCheck, perm: 'personnel.view', group: 'Organisation' },
+  { path: '/warnings', label: 'Verwarnungen', icon: TriangleAlert, perm: 'warning.view', group: 'Organisation' },
   { path: '/promotions', label: 'Beförderungen', icon: Medal, perm: 'promotion.view', group: 'Organisation' },
   { path: '/trainings', label: 'Ausbildungen & Prüfungen', icon: GraduationCap, perm: 'training.view', group: 'Organisation' },
   { path: '/service-numbers', label: 'Dienstnummern', icon: IdCard, perm: 'dienstnummer.view', group: 'Organisation' },

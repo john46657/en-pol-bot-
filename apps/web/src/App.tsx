@@ -27,6 +27,7 @@ const Audit = lazy(() => import('./pages/admin/Audit').then((m) => ({ default: m
 const Settings = lazy(() => import('./pages/admin/Settings').then((m) => ({ default: m.Settings })));
 const LegalCodes = lazy(() => import('./pages/admin/LegalCodes').then((m) => ({ default: m.LegalCodes })));
 const Shifts = lazy(() => import('./pages/admin/Shifts').then((m) => ({ default: m.Shifts })));
+const Warnings = lazy(() => import('./pages/hr/Warnings').then((m) => ({ default: m.Warnings })));
 const Backups = lazy(() => import('./pages/admin/Backups').then((m) => ({ default: m.Backups })));
 const Logging = lazy(() => import('./pages/admin/Logging').then((m) => ({ default: m.Logging })));
 const ServerLinks = lazy(() => import('./pages/admin/ServerLinks').then((m) => ({ default: m.ServerLinks })));
@@ -142,6 +143,7 @@ export function App() {
           <Route path="evidence/*" element={<Navigate to="/dashboard" replace />} />
           <Route path="personnel" element={<Guard perm="personnel.view"><PersonnelOverview /></Guard>} />
           <Route path="personnel/:id" element={<Guard perm="personnel.view"><PersonnelFile /></Guard>} />
+          <Route path="warnings" element={<Guard perm="warning.view"><Warnings /></Guard>} />
           <Route path="promotions" element={<Guard perm="promotion.view"><Promotions /></Guard>} />
           <Route path="trainings" element={<Guard perm="training.view"><Trainings /></Guard>} />
           <Route path="certificates/:no" element={<Guard perm="dashboard.view"><Certificate /></Guard>} />

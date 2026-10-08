@@ -81,6 +81,26 @@ export const hrConfigSchema = z.object({
     announceChannelId: sf.nullable().default(null),
   }).default({}),
   notifications: z.record(z.enum(HR_EVENTS), notifyRuleSchema).default({}),
+  /** Verwarnungen: Meldung in Discord mit Zähler und Folgen beim Erreichen der Grenze */
+  warnings: z.object({
+    /** Grenze aktiver Verwarnungen (z. B. 3 → „1/3“) */
+    limit: z.number().int().min(1).max(20).default(3),
+    /** Kanal für jede neue Verwarnung (leer = nur Dashboard) */
+    channelId: sf.nullable().default(null),
+    template: z.string().max(1500).default('**Wer:** {mitglied}\n**Grund:** {grund}\n**Verwarnungen:** {anzahl}/{grenze}'),
+    /** Person per DM informieren */
+    dm: z.boolean().default(true),
+    atLimit: z.object({
+      /** Dashboard-Rollen, die benachrichtigt werden (z. B. Leitung) */
+      notifyRoleIds: z.array(uuid).max(20).default([]),
+      /** Discord-Rollen, die in der Meldung erwähnt werden */
+      pingDiscordRoleIds: z.array(sf).max(10).default([]),
+      /** Discord-Rollen, die entzogen werden */
+      removeDiscordRoleIds: z.array(sf).max(25).default([]),
+      /** Status der Personalakte setzen (z. B. SUSPENDED) – leer = nicht ändern */
+      status: z.string().max(32).nullable().default(null),
+    }).default({}),
+  }).default({}),
   /** Zertifikate */
   certificate: z.object({ organisation: z.string().max(100).default('EN Polizei'), logo: z.string().max(500).default(''), signature: z.string().max(100).default('') }).default({}),
 });
@@ -219,6 +239,8 @@ export const dnSettingsSchema = z.object({
   changeNeedsApprover: z.boolean().default(false),
 });
 export type DnSettings = z.infer<typeof dnSettingsSchema>;
+/** Platzhalter für die Verwarnungs-Meldung. */
+export const WARNING_VARIABLES = ['{mitglied}', '{name}', '{grund}', '{schweregrad}', '{kategorie}', '{anzahl}', '{grenze}', '{durch}', '{datum}', '{ablauf}'] as const;
 export const DN_VARIABLES = ['{user}', '{name}', '{dienstnummer}', '{rang}', '{abteilung}', '{bewerbung}', '{datum}'] as const;
 /** Platzhalter füllen (DM, Nickname, Ankündigungen). Unbekannte Platzhalter bleiben stehen. */
 export function fillTemplate(tpl: string, vars: Record<string, string | null | undefined>) {
