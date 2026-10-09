@@ -23,6 +23,8 @@ export declare const dangerConfigSchema: z.ZodObject<{
         emoji: z.ZodString;
         color: z.ZodString;
         buttonStyle: z.ZodEnum<["primary", "secondary", "success", "danger"]>;
+        /** zusätzlich nur bei dieser Stufe pingen */
+        pingRoleIds: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
     }, "strip", z.ZodTypeAny, {
         title: string;
         name: string;
@@ -31,6 +33,7 @@ export declare const dangerConfigSchema: z.ZodObject<{
         emoji: string;
         buttonStyle: "success" | "danger" | "primary" | "secondary";
         text: string;
+        pingRoleIds?: string[] | undefined;
     }, {
         title: string;
         name: string;
@@ -39,6 +42,7 @@ export declare const dangerConfigSchema: z.ZodObject<{
         emoji: string;
         buttonStyle: "success" | "danger" | "primary" | "secondary";
         text: string;
+        pingRoleIds?: string[] | undefined;
     }>, "many">, {
         title: string;
         name: string;
@@ -47,6 +51,7 @@ export declare const dangerConfigSchema: z.ZodObject<{
         emoji: string;
         buttonStyle: "success" | "danger" | "primary" | "secondary";
         text: string;
+        pingRoleIds?: string[] | undefined;
     }[], {
         title: string;
         name: string;
@@ -55,6 +60,7 @@ export declare const dangerConfigSchema: z.ZodObject<{
         emoji: string;
         buttonStyle: "success" | "danger" | "primary" | "secondary";
         text: string;
+        pingRoleIds?: string[] | undefined;
     }[]>;
 }, "strip", z.ZodTypeAny, {
     pingRoleIds: string[];
@@ -69,6 +75,7 @@ export declare const dangerConfigSchema: z.ZodObject<{
         emoji: string;
         buttonStyle: "success" | "danger" | "primary" | "secondary";
         text: string;
+        pingRoleIds?: string[] | undefined;
     }[];
 }, {
     pingRoleIds: string[];
@@ -83,6 +90,7 @@ export declare const dangerConfigSchema: z.ZodObject<{
         emoji: string;
         buttonStyle: "success" | "danger" | "primary" | "secondary";
         text: string;
+        pingRoleIds?: string[] | undefined;
     }[];
 }>;
 /** Gefahrenstatus. Stufen/Texte/Farben/Pings kommen aus der Konfiguration (Dashboard); Änderungen sind auditiert und gehen live raus. */
