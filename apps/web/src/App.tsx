@@ -7,6 +7,7 @@ import { ResourcePage } from './components/ResourcePage';
 import { RecordPage } from './components/RecordPage';
 import { Login } from './pages/Login';
 import { Apply } from './pages/Apply';
+import { WebApply } from './pages/WebApply';
 import { Privacy, Terms } from './pages/Legal';
 import { Dashboard } from './pages/Dashboard';
 import { Mdt } from './pages/Mdt';
@@ -103,6 +104,7 @@ export function App() {
       <Routes>
         <Route path="/login" element={<Login />} />
         <Route path="/apply" element={<Apply />} />
+        <Route path="/bewerbung/:token" element={<WebApply />} />
         <Route path="/datenschutz" element={<Privacy />} />
         <Route path="/nutzungsbedingungen" element={<Terms />} />
         {/* Polizei-MDT: eigene Vollbild-Oberfläche, gleiche Anmeldung wie das Dashboard */}

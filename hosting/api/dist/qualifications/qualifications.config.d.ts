@@ -244,6 +244,8 @@ export declare const appSettingsSchema: z.ZodDefault<z.ZodObject<{
     timeLimitMinutes: z.ZodDefault<z.ZodNumber>;
     /** Wie bei Appy „Action On User Leave“: offene Bewerbung, wenn die Person den Discord-Server verlässt (braucht den Server Members Intent). */
     onLeave: z.ZodDefault<z.ZodEnum<["NONE", "DENY", "WITHDRAW"]>>;
+    /** Art der Bewerbung: Fragen per Direktnachricht oder als Formular im Browser (Link vom Bot). */
+    mode: z.ZodDefault<z.ZodEnum<["DM", "WEB"]>>;
 }, "strip", z.ZodTypeAny, {
     cooldownMinutes: number;
     messages: {
@@ -269,6 +271,7 @@ export declare const appSettingsSchema: z.ZodDefault<z.ZodObject<{
         removeOnSubmit: string[];
         managers: string[];
     };
+    mode: "DM" | "WEB";
     staffThreads: boolean;
     timeLimitMinutes: number;
     onLeave: "DENY" | "NONE" | "WITHDRAW";
@@ -297,6 +300,7 @@ export declare const appSettingsSchema: z.ZodDefault<z.ZodObject<{
         removeOnSubmit?: string[] | undefined;
         managers?: string[] | undefined;
     } | undefined;
+    mode?: "DM" | "WEB" | undefined;
     staffThreads?: boolean | undefined;
     timeLimitMinutes?: number | undefined;
     onLeave?: "DENY" | "NONE" | "WITHDRAW" | undefined;
@@ -484,6 +488,8 @@ export declare const unitSchema: z.ZodObject<{
         timeLimitMinutes: z.ZodDefault<z.ZodNumber>;
         /** Wie bei Appy „Action On User Leave“: offene Bewerbung, wenn die Person den Discord-Server verlässt (braucht den Server Members Intent). */
         onLeave: z.ZodDefault<z.ZodEnum<["NONE", "DENY", "WITHDRAW"]>>;
+        /** Art der Bewerbung: Fragen per Direktnachricht oder als Formular im Browser (Link vom Bot). */
+        mode: z.ZodDefault<z.ZodEnum<["DM", "WEB"]>>;
     }, "strip", z.ZodTypeAny, {
         cooldownMinutes: number;
         messages: {
@@ -509,6 +515,7 @@ export declare const unitSchema: z.ZodObject<{
             removeOnSubmit: string[];
             managers: string[];
         };
+        mode: "DM" | "WEB";
         staffThreads: boolean;
         timeLimitMinutes: number;
         onLeave: "DENY" | "NONE" | "WITHDRAW";
@@ -537,6 +544,7 @@ export declare const unitSchema: z.ZodObject<{
             removeOnSubmit?: string[] | undefined;
             managers?: string[] | undefined;
         } | undefined;
+        mode?: "DM" | "WEB" | undefined;
         staffThreads?: boolean | undefined;
         timeLimitMinutes?: number | undefined;
         onLeave?: "DENY" | "NONE" | "WITHDRAW" | undefined;
@@ -578,6 +586,7 @@ export declare const unitSchema: z.ZodObject<{
             removeOnSubmit: string[];
             managers: string[];
         };
+        mode: "DM" | "WEB";
         staffThreads: boolean;
         timeLimitMinutes: number;
         onLeave: "DENY" | "NONE" | "WITHDRAW";
@@ -632,6 +641,7 @@ export declare const unitSchema: z.ZodObject<{
             removeOnSubmit?: string[] | undefined;
             managers?: string[] | undefined;
         } | undefined;
+        mode?: "DM" | "WEB" | undefined;
         staffThreads?: boolean | undefined;
         timeLimitMinutes?: number | undefined;
         onLeave?: "DENY" | "NONE" | "WITHDRAW" | undefined;
@@ -736,6 +746,8 @@ export declare const policeSchema: z.ZodObject<{
         timeLimitMinutes: z.ZodDefault<z.ZodNumber>;
         /** Wie bei Appy „Action On User Leave“: offene Bewerbung, wenn die Person den Discord-Server verlässt (braucht den Server Members Intent). */
         onLeave: z.ZodDefault<z.ZodEnum<["NONE", "DENY", "WITHDRAW"]>>;
+        /** Art der Bewerbung: Fragen per Direktnachricht oder als Formular im Browser (Link vom Bot). */
+        mode: z.ZodDefault<z.ZodEnum<["DM", "WEB"]>>;
     }, "strip", z.ZodTypeAny, {
         cooldownMinutes: number;
         messages: {
@@ -761,6 +773,7 @@ export declare const policeSchema: z.ZodObject<{
             removeOnSubmit: string[];
             managers: string[];
         };
+        mode: "DM" | "WEB";
         staffThreads: boolean;
         timeLimitMinutes: number;
         onLeave: "DENY" | "NONE" | "WITHDRAW";
@@ -789,6 +802,7 @@ export declare const policeSchema: z.ZodObject<{
             removeOnSubmit?: string[] | undefined;
             managers?: string[] | undefined;
         } | undefined;
+        mode?: "DM" | "WEB" | undefined;
         staffThreads?: boolean | undefined;
         timeLimitMinutes?: number | undefined;
         onLeave?: "DENY" | "NONE" | "WITHDRAW" | undefined;
@@ -822,6 +836,7 @@ export declare const policeSchema: z.ZodObject<{
             removeOnSubmit: string[];
             managers: string[];
         };
+        mode: "DM" | "WEB";
         staffThreads: boolean;
         timeLimitMinutes: number;
         onLeave: "DENY" | "NONE" | "WITHDRAW";
@@ -861,6 +876,7 @@ export declare const policeSchema: z.ZodObject<{
             removeOnSubmit?: string[] | undefined;
             managers?: string[] | undefined;
         } | undefined;
+        mode?: "DM" | "WEB" | undefined;
         staffThreads?: boolean | undefined;
         timeLimitMinutes?: number | undefined;
         onLeave?: "DENY" | "NONE" | "WITHDRAW" | undefined;
@@ -1054,6 +1070,8 @@ export declare const configSchema: z.ZodObject<{
             timeLimitMinutes: z.ZodDefault<z.ZodNumber>;
             /** Wie bei Appy „Action On User Leave“: offene Bewerbung, wenn die Person den Discord-Server verlässt (braucht den Server Members Intent). */
             onLeave: z.ZodDefault<z.ZodEnum<["NONE", "DENY", "WITHDRAW"]>>;
+            /** Art der Bewerbung: Fragen per Direktnachricht oder als Formular im Browser (Link vom Bot). */
+            mode: z.ZodDefault<z.ZodEnum<["DM", "WEB"]>>;
         }, "strip", z.ZodTypeAny, {
             cooldownMinutes: number;
             messages: {
@@ -1079,6 +1097,7 @@ export declare const configSchema: z.ZodObject<{
                 removeOnSubmit: string[];
                 managers: string[];
             };
+            mode: "DM" | "WEB";
             staffThreads: boolean;
             timeLimitMinutes: number;
             onLeave: "DENY" | "NONE" | "WITHDRAW";
@@ -1107,6 +1126,7 @@ export declare const configSchema: z.ZodObject<{
                 removeOnSubmit?: string[] | undefined;
                 managers?: string[] | undefined;
             } | undefined;
+            mode?: "DM" | "WEB" | undefined;
             staffThreads?: boolean | undefined;
             timeLimitMinutes?: number | undefined;
             onLeave?: "DENY" | "NONE" | "WITHDRAW" | undefined;
@@ -1148,6 +1168,7 @@ export declare const configSchema: z.ZodObject<{
                 removeOnSubmit: string[];
                 managers: string[];
             };
+            mode: "DM" | "WEB";
             staffThreads: boolean;
             timeLimitMinutes: number;
             onLeave: "DENY" | "NONE" | "WITHDRAW";
@@ -1202,6 +1223,7 @@ export declare const configSchema: z.ZodObject<{
                 removeOnSubmit?: string[] | undefined;
                 managers?: string[] | undefined;
             } | undefined;
+            mode?: "DM" | "WEB" | undefined;
             staffThreads?: boolean | undefined;
             timeLimitMinutes?: number | undefined;
             onLeave?: "DENY" | "NONE" | "WITHDRAW" | undefined;
@@ -1240,6 +1262,7 @@ export declare const configSchema: z.ZodObject<{
                 removeOnSubmit: string[];
                 managers: string[];
             };
+            mode: "DM" | "WEB";
             staffThreads: boolean;
             timeLimitMinutes: number;
             onLeave: "DENY" | "NONE" | "WITHDRAW";
@@ -1294,6 +1317,7 @@ export declare const configSchema: z.ZodObject<{
                 removeOnSubmit?: string[] | undefined;
                 managers?: string[] | undefined;
             } | undefined;
+            mode?: "DM" | "WEB" | undefined;
             staffThreads?: boolean | undefined;
             timeLimitMinutes?: number | undefined;
             onLeave?: "DENY" | "NONE" | "WITHDRAW" | undefined;
@@ -1397,6 +1421,8 @@ export declare const configSchema: z.ZodObject<{
             timeLimitMinutes: z.ZodDefault<z.ZodNumber>;
             /** Wie bei Appy „Action On User Leave“: offene Bewerbung, wenn die Person den Discord-Server verlässt (braucht den Server Members Intent). */
             onLeave: z.ZodDefault<z.ZodEnum<["NONE", "DENY", "WITHDRAW"]>>;
+            /** Art der Bewerbung: Fragen per Direktnachricht oder als Formular im Browser (Link vom Bot). */
+            mode: z.ZodDefault<z.ZodEnum<["DM", "WEB"]>>;
         }, "strip", z.ZodTypeAny, {
             cooldownMinutes: number;
             messages: {
@@ -1422,6 +1448,7 @@ export declare const configSchema: z.ZodObject<{
                 removeOnSubmit: string[];
                 managers: string[];
             };
+            mode: "DM" | "WEB";
             staffThreads: boolean;
             timeLimitMinutes: number;
             onLeave: "DENY" | "NONE" | "WITHDRAW";
@@ -1450,6 +1477,7 @@ export declare const configSchema: z.ZodObject<{
                 removeOnSubmit?: string[] | undefined;
                 managers?: string[] | undefined;
             } | undefined;
+            mode?: "DM" | "WEB" | undefined;
             staffThreads?: boolean | undefined;
             timeLimitMinutes?: number | undefined;
             onLeave?: "DENY" | "NONE" | "WITHDRAW" | undefined;
@@ -1483,6 +1511,7 @@ export declare const configSchema: z.ZodObject<{
                 removeOnSubmit: string[];
                 managers: string[];
             };
+            mode: "DM" | "WEB";
             staffThreads: boolean;
             timeLimitMinutes: number;
             onLeave: "DENY" | "NONE" | "WITHDRAW";
@@ -1522,6 +1551,7 @@ export declare const configSchema: z.ZodObject<{
                 removeOnSubmit?: string[] | undefined;
                 managers?: string[] | undefined;
             } | undefined;
+            mode?: "DM" | "WEB" | undefined;
             staffThreads?: boolean | undefined;
             timeLimitMinutes?: number | undefined;
             onLeave?: "DENY" | "NONE" | "WITHDRAW" | undefined;
@@ -1563,6 +1593,7 @@ export declare const configSchema: z.ZodObject<{
                 removeOnSubmit: string[];
                 managers: string[];
             };
+            mode: "DM" | "WEB";
             staffThreads: boolean;
             timeLimitMinutes: number;
             onLeave: "DENY" | "NONE" | "WITHDRAW";
@@ -1603,6 +1634,7 @@ export declare const configSchema: z.ZodObject<{
                 removeOnSubmit: string[];
                 managers: string[];
             };
+            mode: "DM" | "WEB";
             staffThreads: boolean;
             timeLimitMinutes: number;
             onLeave: "DENY" | "NONE" | "WITHDRAW";
@@ -1659,6 +1691,7 @@ export declare const configSchema: z.ZodObject<{
                 removeOnSubmit?: string[] | undefined;
                 managers?: string[] | undefined;
             } | undefined;
+            mode?: "DM" | "WEB" | undefined;
             staffThreads?: boolean | undefined;
             timeLimitMinutes?: number | undefined;
             onLeave?: "DENY" | "NONE" | "WITHDRAW" | undefined;
@@ -1699,6 +1732,7 @@ export declare const configSchema: z.ZodObject<{
                 removeOnSubmit?: string[] | undefined;
                 managers?: string[] | undefined;
             } | undefined;
+            mode?: "DM" | "WEB" | undefined;
             staffThreads?: boolean | undefined;
             timeLimitMinutes?: number | undefined;
             onLeave?: "DENY" | "NONE" | "WITHDRAW" | undefined;
@@ -1895,6 +1929,8 @@ export declare const saveSchema: z.ZodObject<{
             timeLimitMinutes: z.ZodDefault<z.ZodNumber>;
             /** Wie bei Appy „Action On User Leave“: offene Bewerbung, wenn die Person den Discord-Server verlässt (braucht den Server Members Intent). */
             onLeave: z.ZodDefault<z.ZodEnum<["NONE", "DENY", "WITHDRAW"]>>;
+            /** Art der Bewerbung: Fragen per Direktnachricht oder als Formular im Browser (Link vom Bot). */
+            mode: z.ZodDefault<z.ZodEnum<["DM", "WEB"]>>;
         }, "strip", z.ZodTypeAny, {
             cooldownMinutes: number;
             messages: {
@@ -1920,6 +1956,7 @@ export declare const saveSchema: z.ZodObject<{
                 removeOnSubmit: string[];
                 managers: string[];
             };
+            mode: "DM" | "WEB";
             staffThreads: boolean;
             timeLimitMinutes: number;
             onLeave: "DENY" | "NONE" | "WITHDRAW";
@@ -1948,6 +1985,7 @@ export declare const saveSchema: z.ZodObject<{
                 removeOnSubmit?: string[] | undefined;
                 managers?: string[] | undefined;
             } | undefined;
+            mode?: "DM" | "WEB" | undefined;
             staffThreads?: boolean | undefined;
             timeLimitMinutes?: number | undefined;
             onLeave?: "DENY" | "NONE" | "WITHDRAW" | undefined;
@@ -1989,6 +2027,7 @@ export declare const saveSchema: z.ZodObject<{
                 removeOnSubmit: string[];
                 managers: string[];
             };
+            mode: "DM" | "WEB";
             staffThreads: boolean;
             timeLimitMinutes: number;
             onLeave: "DENY" | "NONE" | "WITHDRAW";
@@ -2043,6 +2082,7 @@ export declare const saveSchema: z.ZodObject<{
                 removeOnSubmit?: string[] | undefined;
                 managers?: string[] | undefined;
             } | undefined;
+            mode?: "DM" | "WEB" | undefined;
             staffThreads?: boolean | undefined;
             timeLimitMinutes?: number | undefined;
             onLeave?: "DENY" | "NONE" | "WITHDRAW" | undefined;
@@ -2081,6 +2121,7 @@ export declare const saveSchema: z.ZodObject<{
                 removeOnSubmit: string[];
                 managers: string[];
             };
+            mode: "DM" | "WEB";
             staffThreads: boolean;
             timeLimitMinutes: number;
             onLeave: "DENY" | "NONE" | "WITHDRAW";
@@ -2135,6 +2176,7 @@ export declare const saveSchema: z.ZodObject<{
                 removeOnSubmit?: string[] | undefined;
                 managers?: string[] | undefined;
             } | undefined;
+            mode?: "DM" | "WEB" | undefined;
             staffThreads?: boolean | undefined;
             timeLimitMinutes?: number | undefined;
             onLeave?: "DENY" | "NONE" | "WITHDRAW" | undefined;
@@ -2238,6 +2280,8 @@ export declare const saveSchema: z.ZodObject<{
             timeLimitMinutes: z.ZodDefault<z.ZodNumber>;
             /** Wie bei Appy „Action On User Leave“: offene Bewerbung, wenn die Person den Discord-Server verlässt (braucht den Server Members Intent). */
             onLeave: z.ZodDefault<z.ZodEnum<["NONE", "DENY", "WITHDRAW"]>>;
+            /** Art der Bewerbung: Fragen per Direktnachricht oder als Formular im Browser (Link vom Bot). */
+            mode: z.ZodDefault<z.ZodEnum<["DM", "WEB"]>>;
         }, "strip", z.ZodTypeAny, {
             cooldownMinutes: number;
             messages: {
@@ -2263,6 +2307,7 @@ export declare const saveSchema: z.ZodObject<{
                 removeOnSubmit: string[];
                 managers: string[];
             };
+            mode: "DM" | "WEB";
             staffThreads: boolean;
             timeLimitMinutes: number;
             onLeave: "DENY" | "NONE" | "WITHDRAW";
@@ -2291,6 +2336,7 @@ export declare const saveSchema: z.ZodObject<{
                 removeOnSubmit?: string[] | undefined;
                 managers?: string[] | undefined;
             } | undefined;
+            mode?: "DM" | "WEB" | undefined;
             staffThreads?: boolean | undefined;
             timeLimitMinutes?: number | undefined;
             onLeave?: "DENY" | "NONE" | "WITHDRAW" | undefined;
@@ -2324,6 +2370,7 @@ export declare const saveSchema: z.ZodObject<{
                 removeOnSubmit: string[];
                 managers: string[];
             };
+            mode: "DM" | "WEB";
             staffThreads: boolean;
             timeLimitMinutes: number;
             onLeave: "DENY" | "NONE" | "WITHDRAW";
@@ -2363,6 +2410,7 @@ export declare const saveSchema: z.ZodObject<{
                 removeOnSubmit?: string[] | undefined;
                 managers?: string[] | undefined;
             } | undefined;
+            mode?: "DM" | "WEB" | undefined;
             staffThreads?: boolean | undefined;
             timeLimitMinutes?: number | undefined;
             onLeave?: "DENY" | "NONE" | "WITHDRAW" | undefined;
@@ -2496,6 +2544,7 @@ export declare const saveSchema: z.ZodObject<{
                 removeOnSubmit: string[];
                 managers: string[];
             };
+            mode: "DM" | "WEB";
             staffThreads: boolean;
             timeLimitMinutes: number;
             onLeave: "DENY" | "NONE" | "WITHDRAW";
@@ -2536,6 +2585,7 @@ export declare const saveSchema: z.ZodObject<{
                 removeOnSubmit: string[];
                 managers: string[];
             };
+            mode: "DM" | "WEB";
             staffThreads: boolean;
             timeLimitMinutes: number;
             onLeave: "DENY" | "NONE" | "WITHDRAW";
@@ -2605,6 +2655,7 @@ export declare const saveSchema: z.ZodObject<{
                 removeOnSubmit?: string[] | undefined;
                 managers?: string[] | undefined;
             } | undefined;
+            mode?: "DM" | "WEB" | undefined;
             staffThreads?: boolean | undefined;
             timeLimitMinutes?: number | undefined;
             onLeave?: "DENY" | "NONE" | "WITHDRAW" | undefined;
@@ -2645,6 +2696,7 @@ export declare const saveSchema: z.ZodObject<{
                 removeOnSubmit?: string[] | undefined;
                 managers?: string[] | undefined;
             } | undefined;
+            mode?: "DM" | "WEB" | undefined;
             staffThreads?: boolean | undefined;
             timeLimitMinutes?: number | undefined;
             onLeave?: "DENY" | "NONE" | "WITHDRAW" | undefined;

@@ -120,6 +120,11 @@ async function offer(c, key) {
     const open = await openApplication(c.api, flow.key, c.discordId);
     if (open.open)
         return (0, format_1.errorReply)(`Du hast für **${(0, format_1.plain)(flow.name)}** bereits eine offene Bewerbung (${open.number}). Bitte warte auf die Entscheidung.`);
+    // Bewerbungsart „Web“: persönlicher Link zum Formular im Browser statt Fragen per DM
+    if (flow.settings.mode === 'WEB') {
+        const link = await c.api.service('POST', '/bot/qualifications/web-link', { unit: flow.key, discordId: c.discordId, discordName: c.userName ?? c.discordId, ...(c.guildId ? { guildId: c.guildId } : {}), ...(c.memberJoinedAt ? { joinedAt: c.memberJoinedAt } : {}) });
+        return { ephemeral: true, embeds: [{ title: (0, format_1.clip)(flow.name, 256), color: format_1.COLORS.info, description: `Deine Bewerbung füllst du im **Browser** aus. Der Link gilt nur für dich und ist **${link.timeLimit}** gültig – teile ihn mit niemandem.` }], buttons: [{ id: 'quali:web', label: 'Bewerbung öffnen', style: 'secondary', url: link.url }] };
+    }
     if (!c.platform)
         return (0, format_1.errorReply)('Direktnachrichten sind hier nicht verfügbar.');
     if (c.memberJoinedAt)

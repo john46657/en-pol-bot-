@@ -81508,6 +81508,10 @@ async function offer(c, key4) {
   if (ban?.banned) return errorReply(`\u26D4 ${ban.message ?? "Du bist f\xFCr diese Bewerbung gesperrt."}`);
   const open = await openApplication(c.api, flow.key, c.discordId);
   if (open.open) return errorReply(`Du hast f\xFCr **${plain(flow.name)}** bereits eine offene Bewerbung (${open.number}). Bitte warte auf die Entscheidung.`);
+  if (flow.settings.mode === "WEB") {
+    const link = await c.api.service("POST", "/bot/qualifications/web-link", { unit: flow.key, discordId: c.discordId, discordName: c.userName ?? c.discordId, ...c.guildId ? { guildId: c.guildId } : {}, ...c.memberJoinedAt ? { joinedAt: c.memberJoinedAt } : {} });
+    return { ephemeral: true, embeds: [{ title: clip(flow.name, 256), color: COLORS.info, description: `Deine Bewerbung f\xFCllst du im **Browser** aus. Der Link gilt nur f\xFCr dich und ist **${link.timeLimit}** g\xFCltig \u2013 teile ihn mit niemandem.` }], buttons: [{ id: "quali:web", label: "Bewerbung \xF6ffnen", style: "secondary", url: link.url }] };
+  }
   if (!c.platform) return errorReply("Direktnachrichten sind hier nicht verf\xFCgbar.");
   if (c.memberJoinedAt) joinedAtOf.set(c.discordId, c.memberJoinedAt);
   if (c.guildId) guildOf.set(c.discordId, c.guildId);

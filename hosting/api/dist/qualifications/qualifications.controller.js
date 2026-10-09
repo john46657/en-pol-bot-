@@ -12,12 +12,14 @@ var __param = (this && this.__param) || function (paramIndex, decorator) {
     return function (target, key) { decorator(target, key, paramIndex); }
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.BotQualificationsController = exports.QualificationsController = void 0;
+exports.WebApplyController = exports.BotQualificationsController = exports.QualificationsController = void 0;
 const common_1 = require("@nestjs/common");
 const swagger_1 = require("@nestjs/swagger");
+const throttler_1 = require("@nestjs/throttler");
 const zod_1 = require("zod");
 const qualifications_service_1 = require("./qualifications.service");
 const qualifications_config_1 = require("./qualifications.config");
+const web_apply_service_1 = require("./web-apply.service");
 const decorators_1 = require("../authz/decorators");
 const zod_pipe_1 = require("../common/zod.pipe");
 const discordId = zod_1.z.string().regex(/^\d{15,25}$/);
@@ -26,6 +28,9 @@ const decision = zod_1.z.object({ status: zod_1.z.enum(['ACCEPTED', 'REJECTED'])
 const historyQ = zod_1.z.object({ discordId });
 const submit = zod_1.z.object({ guildId: zod_1.z.string().regex(/^\d{15,25}$/).optional(), unit: zod_1.z.string().max(24), discordId, discordName: zod_1.z.string().trim().min(1).max(100), durationSec: zod_1.z.number().int().min(0).max(86_400).optional(), joinedAt: zod_1.z.coerce.date().optional(), answers: zod_1.z.array(zod_1.z.object({ question: zod_1.z.string().max(300), answer: zod_1.z.union([zod_1.z.string().max(5000), zod_1.z.array(zod_1.z.string().max(100)).max(25)]).nullable() })).min(1).max(50) });
 const openQ = zod_1.z.object({ discordId, unit: zod_1.z.string().max(24).optional() });
+const webLink = zod_1.z.object({ unit: zod_1.z.string().max(24), discordId, discordName: zod_1.z.string().trim().min(1).max(100), guildId: zod_1.z.string().regex(/^\d{15,25}$/).optional(), joinedAt: zod_1.z.coerce.date().optional() });
+const token = zod_1.z.string().regex(/^[\w-]{10,2000}\.[\w-]{20,100}$/, 'Ungültiger Bewerbungslink.');
+const webSubmit = zod_1.z.object({ robloxUsername: zod_1.z.string().trim().max(64).optional(), answers: zod_1.z.record(zod_1.z.string(), zod_1.z.union([zod_1.z.string().max(5000), zod_1.z.array(zod_1.z.string().max(100)).max(25)])) });
 const guildQ = zod_1.z.object({ guildId: zod_1.z.string().regex(/^\d{15,25}$/).optional() });
 const guildRequired = zod_1.z.object({ guildId: zod_1.z.string().regex(/^\d{15,25}$/) });
 let QualificationsController = class QualificationsController {
@@ -128,12 +133,16 @@ exports.QualificationsController = QualificationsController = __decorate([
 /** Dienst-Endpunkte für das Discord-Panel – Bewerben geht auch ohne verknüpftes Konto. */
 let BotQualificationsController = class BotQualificationsController {
     q;
-    constructor(q) {
+    web;
+    constructor(q, web) {
         this.q = q;
+        this.web = web;
     }
     config(q) { return this.q.config(q.guildId); }
     open(f) { return this.q.openFor(f.discordId, f.unit); }
     submit(b) { return this.q.submit(b); }
+    /** Bewerbungsart „Web“: persönlicher, signierter Link zum Formular im Browser. */
+    webLink(b) { return this.web.link(b); }
 };
 exports.BotQualificationsController = BotQualificationsController;
 __decorate([
@@ -160,9 +169,52 @@ __decorate([
     __metadata("design:paramtypes", [void 0]),
     __metadata("design:returntype", void 0)
 ], BotQualificationsController.prototype, "submit", null);
+__decorate([
+    (0, decorators_1.BotService)(),
+    (0, common_1.Post)('web-link'),
+    (0, common_1.HttpCode)(200),
+    __param(0, (0, common_1.Body)((0, zod_pipe_1.zodBody)(webLink))),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [void 0]),
+    __metadata("design:returntype", void 0)
+], BotQualificationsController.prototype, "webLink", null);
 exports.BotQualificationsController = BotQualificationsController = __decorate([
     (0, swagger_1.ApiTags)('bot'),
     (0, common_1.Controller)('bot/qualifications'),
-    __metadata("design:paramtypes", [qualifications_service_1.QualificationsService])
+    __metadata("design:paramtypes", [qualifications_service_1.QualificationsService, web_apply_service_1.WebApplyService])
 ], BotQualificationsController);
+/** Öffentliches Bewerbungsformular zu einem Link aus dem Bot (Bewerbungsart „Web“) – ohne Konto. */
+let WebApplyController = class WebApplyController {
+    web;
+    constructor(web) {
+        this.web = web;
+    }
+    open(t) { return this.web.open(t); }
+    submit(t, b) { return this.web.submit(t, b); }
+};
+exports.WebApplyController = WebApplyController;
+__decorate([
+    (0, decorators_1.Public)(),
+    (0, common_1.Get)(':token'),
+    __param(0, (0, common_1.Param)('token', (0, zod_pipe_1.zodBody)(token))),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String]),
+    __metadata("design:returntype", void 0)
+], WebApplyController.prototype, "open", null);
+__decorate([
+    (0, decorators_1.Public)(),
+    (0, throttler_1.Throttle)({ default: { limit: process.env.NODE_ENV === 'test' ? 10_000 : 10, ttl: 600_000 } }),
+    (0, common_1.Post)(':token'),
+    (0, common_1.HttpCode)(201),
+    __param(0, (0, common_1.Param)('token', (0, zod_pipe_1.zodBody)(token))),
+    __param(1, (0, common_1.Body)((0, zod_pipe_1.zodBody)(webSubmit))),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, void 0]),
+    __metadata("design:returntype", void 0)
+], WebApplyController.prototype, "submit", null);
+exports.WebApplyController = WebApplyController = __decorate([
+    (0, swagger_1.ApiTags)('qualifications'),
+    (0, common_1.Controller)('web-apply'),
+    __metadata("design:paramtypes", [web_apply_service_1.WebApplyService])
+], WebApplyController);
 //# sourceMappingURL=qualifications.controller.js.map

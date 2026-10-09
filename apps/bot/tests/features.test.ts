@@ -289,6 +289,19 @@ describe('Qualifikationen (Panel → Fragen per DM)', () => {
     expect(text(await hit.def.run({ ...ctx(api, { platform: dmClosed }), args: hit.args, values: ['sek'] }))).toContain('Direktnachrichten');
   });
 
+  it('Bewerbungsart „Web“: no DM, a personal link to the form in the browser instead', async () => {
+    const web = { ...CFG, units: [{ ...CFG.units[0]!, settings: { mode: 'WEB' as const } }] };
+    const { api, calls } = fakeApi({ 'GET /bot/qualifications/open': { open: false, number: null }, 'GET /bot/qualifications': web, 'POST /bot/qualifications/web-link': { url: 'https://dash.example/bewerbung/abc.def', timeLimit: '3 Stunden' } });
+    const { p, log } = fakePlatform();
+    const hit = interactionFor('quali:pick')!;
+    const r = await hit.def.run({ ...ctx(api, { platform: p }), args: hit.args, values: ['flugstaffel'] });
+    expect(log).toEqual([]); // keine Direktnachricht
+    expect(r.ephemeral).toBe(true);
+    expect(r.buttons?.[0]?.url).toBe('https://dash.example/bewerbung/abc.def');
+    expect(text(r)).toContain('3 Stunden');
+    expect(calls.find((c) => c.path === '/bot/qualifications/web-link')!.body).toMatchObject({ unit: 'flugstaffel', discordId: ME, guildId: GUILD });
+  });
+
   it('asks the questions one by one via DM and submits the answers', async () => {
     const { api, calls } = fakeApi({ 'GET /bot/qualifications/open': { open: false }, 'GET /bot/qualifications': CFG, 'POST /bot/qualifications/applications': { number: 'Q-2026-AB' } });
     const { p, log } = fakePlatform();

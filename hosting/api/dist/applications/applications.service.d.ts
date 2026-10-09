@@ -66,6 +66,7 @@ export declare class ApplicationsService {
                 removeOnSubmit: string[];
                 managers: string[];
             };
+            mode: "DM" | "WEB";
             staffThreads: boolean;
             timeLimitMinutes: number;
             onLeave: "DENY" | "NONE" | "WITHDRAW";
