@@ -161,7 +161,9 @@ export class DiscordService {
     return (await this.prisma.systemSetting.findUnique({ where: { key: `bot.state.${key}` } }))?.value ?? null;
   }
   async setState(key: string, value: unknown) {
-    await this.prisma.systemSetting.upsert({ where: { key: `bot.state.${key}` }, create: { key: `bot.state.${key}`, value: value as Prisma.InputJsonValue }, update: { value: value as Prisma.InputJsonValue } });
+    // null als JSON-null speichern (Prisma lehnt ein nacktes null für Json-Felder ab)
+    const v = value === null ? Prisma.JsonNull : value as Prisma.InputJsonValue;
+    await this.prisma.systemSetting.upsert({ where: { key: `bot.state.${key}` }, create: { key: `bot.state.${key}`, value: v }, update: { value: v } });
   }
 
   pending(limit: number) {

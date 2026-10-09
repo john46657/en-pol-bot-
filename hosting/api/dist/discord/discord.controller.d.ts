@@ -148,9 +148,9 @@ declare const outboxQ: z.ZodObject<{
     limit?: number | undefined;
 }>;
 declare const stateBody: z.ZodObject<{
-    value: z.ZodUnknown;
+    value: z.ZodEffects<z.ZodUnknown, {} | null, unknown>;
 }, "strip", z.ZodTypeAny, {
-    value?: unknown;
+    value: {} | null;
 }, {
     value?: unknown;
 }>;
