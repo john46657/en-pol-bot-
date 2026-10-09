@@ -28191,10 +28191,10 @@ var require_dist4 = __commonJS({
       if (tree.noOffset !== null) {
         found.push(...walkTree(0, bytes, tree.noOffset));
       }
-      return unique(found);
+      return unique2(found);
     };
     exports2.filetypeinfo = filetypeinfo;
-    var unique = (found) => {
+    var unique2 = (found) => {
       const seen = /* @__PURE__ */ new Set();
       const result = [];
       for (const guess of found) {
@@ -37050,7 +37050,7 @@ var require_ApplicationCommand = __commonJS({
           this.descriptionLocalized ??= null;
         }
         if ("options" in data) {
-          this.options = data.options.map((option) => this.constructor.transformOption(option, true));
+          this.options = data.options.map((option2) => this.constructor.transformOption(option2, true));
         } else {
           this.options ??= [];
         }
@@ -37307,12 +37307,12 @@ var require_ApplicationCommand = __commonJS({
       static optionsEqual(existing, options2, enforceOptionOrder = false) {
         if (existing.length !== options2.length) return false;
         if (enforceOptionOrder) {
-          return existing.every((option, index) => this._optionEquals(option, options2[index], enforceOptionOrder));
+          return existing.every((option2, index) => this._optionEquals(option2, options2[index], enforceOptionOrder));
         }
-        const newOptions = new Map(options2.map((option) => [option.name, option]));
-        for (const option of existing) {
-          const foundOption = newOptions.get(option.name);
-          if (!foundOption || !this._optionEquals(option, foundOption)) return false;
+        const newOptions = new Map(options2.map((option2) => [option2.name, option2]));
+        for (const option2 of existing) {
+          const foundOption = newOptions.get(option2.name);
+          if (!foundOption || !this._optionEquals(option2, foundOption)) return false;
         }
         return true;
       }
@@ -37327,24 +37327,24 @@ var require_ApplicationCommand = __commonJS({
        * @returns {boolean}
        * @private
        */
-      static _optionEquals(existing, option, enforceOptionOrder = false) {
-        if (option.name !== existing.name || option.type !== existing.type || option.description !== existing.description || option.autocomplete !== existing.autocomplete || (option.required ?? ([ApplicationCommandOptionType.Subcommand, ApplicationCommandOptionType.SubcommandGroup].includes(option.type) ? void 0 : false)) !== existing.required || option.choices?.length !== existing.choices?.length || option.options?.length !== existing.options?.length || (option.channelTypes ?? option.channel_types)?.length !== existing.channelTypes?.length || (option.minValue ?? option.min_value) !== existing.minValue || (option.maxValue ?? option.max_value) !== existing.maxValue || (option.minLength ?? option.min_length) !== existing.minLength || (option.maxLength ?? option.max_length) !== existing.maxLength || !isEqual(option.nameLocalizations ?? option.name_localizations ?? {}, existing.nameLocalizations ?? {}) || !isEqual(
-          option.descriptionLocalizations ?? option.description_localizations ?? {},
+      static _optionEquals(existing, option2, enforceOptionOrder = false) {
+        if (option2.name !== existing.name || option2.type !== existing.type || option2.description !== existing.description || option2.autocomplete !== existing.autocomplete || (option2.required ?? ([ApplicationCommandOptionType.Subcommand, ApplicationCommandOptionType.SubcommandGroup].includes(option2.type) ? void 0 : false)) !== existing.required || option2.choices?.length !== existing.choices?.length || option2.options?.length !== existing.options?.length || (option2.channelTypes ?? option2.channel_types)?.length !== existing.channelTypes?.length || (option2.minValue ?? option2.min_value) !== existing.minValue || (option2.maxValue ?? option2.max_value) !== existing.maxValue || (option2.minLength ?? option2.min_length) !== existing.minLength || (option2.maxLength ?? option2.max_length) !== existing.maxLength || !isEqual(option2.nameLocalizations ?? option2.name_localizations ?? {}, existing.nameLocalizations ?? {}) || !isEqual(
+          option2.descriptionLocalizations ?? option2.description_localizations ?? {},
           existing.descriptionLocalizations ?? {}
         )) {
           return false;
         }
         if (existing.choices) {
           if (enforceOptionOrder && !existing.choices.every(
-            (choice, index) => choice.name === option.choices[index].name && choice.value === option.choices[index].value && isEqual(
+            (choice, index) => choice.name === option2.choices[index].name && choice.value === option2.choices[index].value && isEqual(
               choice.nameLocalizations ?? {},
-              option.choices[index].nameLocalizations ?? option.choices[index].name_localizations ?? {}
+              option2.choices[index].nameLocalizations ?? option2.choices[index].name_localizations ?? {}
             )
           )) {
             return false;
           }
           if (!enforceOptionOrder) {
-            const newChoices = new Map(option.choices.map((choice) => [choice.name, choice]));
+            const newChoices = new Map(option2.choices.map((choice) => [choice.name, choice]));
             for (const choice of existing.choices) {
               const foundChoice = newChoices.get(choice.name);
               if (!foundChoice || foundChoice.value !== choice.value) return false;
@@ -37352,13 +37352,13 @@ var require_ApplicationCommand = __commonJS({
           }
         }
         if (existing.channelTypes) {
-          const newTypes = option.channelTypes ?? option.channel_types;
+          const newTypes = option2.channelTypes ?? option2.channel_types;
           for (const type of existing.channelTypes) {
             if (!newTypes.includes(type)) return false;
           }
         }
         if (existing.options) {
-          return this.optionsEqual(existing.options, option.options, enforceOptionOrder);
+          return this.optionsEqual(existing.options, option2.options, enforceOptionOrder);
         }
         return true;
       }
@@ -37404,7 +37404,7 @@ var require_ApplicationCommand = __commonJS({
        * @returns {APIApplicationCommandOption}
        * @private
        */
-      static transformOption(option, received) {
+      static transformOption(option2, received) {
         const channelTypesKey = received ? "channelTypes" : "channel_types";
         const minValueKey = received ? "minValue" : "min_value";
         const maxValueKey = received ? "maxValue" : "max_value";
@@ -37415,27 +37415,27 @@ var require_ApplicationCommand = __commonJS({
         const descriptionLocalizationsKey = received ? "descriptionLocalizations" : "description_localizations";
         const descriptionLocalizedKey = received ? "descriptionLocalized" : "description_localized";
         return {
-          type: option.type,
-          name: option.name,
-          [nameLocalizationsKey]: option.nameLocalizations ?? option.name_localizations,
-          [nameLocalizedKey]: option.nameLocalized ?? option.name_localized,
-          description: option.description,
-          [descriptionLocalizationsKey]: option.descriptionLocalizations ?? option.description_localizations,
-          [descriptionLocalizedKey]: option.descriptionLocalized ?? option.description_localized,
-          required: option.required ?? (option.type === ApplicationCommandOptionType.Subcommand || option.type === ApplicationCommandOptionType.SubcommandGroup ? void 0 : false),
-          autocomplete: option.autocomplete,
-          choices: option.choices?.map((choice) => ({
+          type: option2.type,
+          name: option2.name,
+          [nameLocalizationsKey]: option2.nameLocalizations ?? option2.name_localizations,
+          [nameLocalizedKey]: option2.nameLocalized ?? option2.name_localized,
+          description: option2.description,
+          [descriptionLocalizationsKey]: option2.descriptionLocalizations ?? option2.description_localizations,
+          [descriptionLocalizedKey]: option2.descriptionLocalized ?? option2.description_localized,
+          required: option2.required ?? (option2.type === ApplicationCommandOptionType.Subcommand || option2.type === ApplicationCommandOptionType.SubcommandGroup ? void 0 : false),
+          autocomplete: option2.autocomplete,
+          choices: option2.choices?.map((choice) => ({
             name: choice.name,
             [nameLocalizedKey]: choice.nameLocalized ?? choice.name_localized,
             [nameLocalizationsKey]: choice.nameLocalizations ?? choice.name_localizations,
             value: choice.value
           })),
-          options: option.options?.map((opt) => this.transformOption(opt, received)),
-          [channelTypesKey]: option.channelTypes ?? option.channel_types,
-          [minValueKey]: option.minValue ?? option.min_value,
-          [maxValueKey]: option.maxValue ?? option.max_value,
-          [minLengthKey]: option.minLength ?? option.min_length,
-          [maxLengthKey]: option.maxLength ?? option.max_length
+          options: option2.options?.map((opt) => this.transformOption(opt, received)),
+          [channelTypesKey]: option2.channelTypes ?? option2.channel_types,
+          [minValueKey]: option2.minValue ?? option2.min_value,
+          [maxValueKey]: option2.maxValue ?? option2.max_value,
+          [minLengthKey]: option2.minLength ?? option2.min_length,
+          [maxLengthKey]: option2.maxLength ?? option2.max_length
         };
       }
     };
@@ -37664,7 +37664,7 @@ var require_ApplicationCommandManager = __commonJS({
           nsfw: command.nsfw,
           description_localizations: command.descriptionLocalizations ?? command.description_localizations,
           type: command.type,
-          options: command.options?.map((option) => ApplicationCommand.transformOption(option)),
+          options: command.options?.map((option2) => ApplicationCommand.transformOption(option2)),
           default_member_permissions,
           dm_permission: command.dmPermission ?? command.dm_permission,
           integration_types: command.integrationTypes ?? command.integration_types,
@@ -42821,8 +42821,8 @@ var require_util9 = __commonJS({
       return mixedProto;
     };
     exports2.hardMixProtos = hardMixProtos;
-    var unique = (arr) => arr.filter((e, i) => arr.indexOf(e) == i);
-    exports2.unique = unique;
+    var unique2 = (arr) => arr.filter((e, i) => arr.indexOf(e) == i);
+    exports2.unique = unique2;
     var flatten = (arr) => arr.length === 0 ? [] : arr.length === 1 ? arr[0] : arr.reduce((a1, a2) => [...a1, ...a2]);
     exports2.flatten = flatten;
   }
@@ -43942,11 +43942,11 @@ var require_dist8 = __commonJS({
       if (data.required === true && data.min_values === 0) {
         return import_shapeshift3.Result.err(new RangeError("If required is true, min_values must be at least 1"));
       }
-      const defaultCount = data.options.filter((option) => option.default === true).length;
+      const defaultCount = data.options.filter((option2) => option2.default === true).length;
       if (data.max_values !== void 0 && defaultCount > data.max_values) {
         return import_shapeshift3.Result.err(new RangeError("The number of default options cannot be greater than max_values"));
       }
-      const values = data.options.map((option) => option.value);
+      const values = data.options.map((option2) => option2.value);
       const uniqueValues = new Set(values);
       if (uniqueValues.size !== values.length) {
         return import_shapeshift3.Result.err(new RangeError("Each option in a checkbox group must have a unique value"));
@@ -43961,11 +43961,11 @@ var require_dist8 = __commonJS({
       options: import_shapeshift3.s.array(radioGroupOptionPredicate).lengthGreaterThanOrEqual(2).lengthLessThanOrEqual(10),
       required: import_shapeshift3.s.boolean().optional()
     }).reshape((data) => {
-      const defaultCount = data.options.filter((option) => option.default === true).length;
+      const defaultCount = data.options.filter((option2) => option2.default === true).length;
       if (defaultCount > 1) {
         return import_shapeshift3.Result.err(new RangeError("There can be at most one default option in a radio group"));
       }
-      const values = data.options.map((option) => option.value);
+      const values = data.options.map((option2) => option2.value);
       const uniqueValues = new Set(values);
       if (uniqueValues.size !== values.length) {
         return import_shapeshift3.Result.err(new RangeError("Each option in a radio group must have a unique value"));
@@ -44140,7 +44140,7 @@ var require_dist8 = __commonJS({
       constructor(data) {
         const { options: options2, ...initData } = data ?? {};
         super({ ...initData, type: import_v105.ComponentType.CheckboxGroup });
-        this.options = options2?.map((option) => new CheckboxGroupOptionBuilder(option)) ?? [];
+        this.options = options2?.map((option2) => new CheckboxGroupOptionBuilder(option2)) ?? [];
       }
       /**
        * Sets the custom id of this checkbox group.
@@ -44161,9 +44161,9 @@ var require_dist8 = __commonJS({
         this.options.push(
           ...normalizedOptions.map((normalizedOption) => {
             const json = "toJSON" in normalizedOption ? normalizedOption.toJSON() : normalizedOption;
-            const option = new CheckboxGroupOptionBuilder(json);
-            checkboxGroupOptionPredicate.parse(option.toJSON());
-            return option;
+            const option2 = new CheckboxGroupOptionBuilder(json);
+            checkboxGroupOptionPredicate.parse(option2.toJSON());
+            return option2;
           })
         );
         return this;
@@ -44195,9 +44195,9 @@ var require_dist8 = __commonJS({
           deleteCount,
           ...normalizedOptions.map((normalizedOption) => {
             const json = "toJSON" in normalizedOption ? normalizedOption.toJSON() : normalizedOption;
-            const option = new CheckboxGroupOptionBuilder(json);
-            checkboxGroupOptionPredicate.parse(option.toJSON());
-            return option;
+            const option2 = new CheckboxGroupOptionBuilder(json);
+            checkboxGroupOptionPredicate.parse(option2.toJSON());
+            return option2;
           })
         );
         this.options.splice(0, this.options.length, ...clone);
@@ -44236,7 +44236,7 @@ var require_dist8 = __commonJS({
       toJSON() {
         const data = {
           ...this.data,
-          options: this.options.map((option) => option.toJSON())
+          options: this.options.map((option2) => option2.toJSON())
         };
         checkboxGroupPredicate.parse(data);
         return data;
@@ -44353,7 +44353,7 @@ var require_dist8 = __commonJS({
       constructor(data) {
         const { options: options2, ...initData } = data ?? {};
         super({ ...initData, type: import_v106.ComponentType.RadioGroup });
-        this.options = options2?.map((option) => new RadioGroupOptionBuilder(option)) ?? [];
+        this.options = options2?.map((option2) => new RadioGroupOptionBuilder(option2)) ?? [];
       }
       /**
        * Sets the custom id of this radio group.
@@ -44374,9 +44374,9 @@ var require_dist8 = __commonJS({
         this.options.push(
           ...normalizedOptions.map((normalizedOption) => {
             const json = "toJSON" in normalizedOption ? normalizedOption.toJSON() : normalizedOption;
-            const option = new RadioGroupOptionBuilder(json);
-            radioGroupOptionPredicate.parse(option.toJSON());
-            return option;
+            const option2 = new RadioGroupOptionBuilder(json);
+            radioGroupOptionPredicate.parse(option2.toJSON());
+            return option2;
           })
         );
         return this;
@@ -44408,9 +44408,9 @@ var require_dist8 = __commonJS({
           deleteCount,
           ...normalizedOptions.map((normalizedOption) => {
             const json = "toJSON" in normalizedOption ? normalizedOption.toJSON() : normalizedOption;
-            const option = new RadioGroupOptionBuilder(json);
-            radioGroupOptionPredicate.parse(option.toJSON());
-            return option;
+            const option2 = new RadioGroupOptionBuilder(json);
+            radioGroupOptionPredicate.parse(option2.toJSON());
+            return option2;
           })
         );
         this.options.splice(0, this.options.length, ...clone);
@@ -44431,7 +44431,7 @@ var require_dist8 = __commonJS({
       toJSON() {
         const data = {
           ...this.data,
-          options: this.options.map((option) => option.toJSON())
+          options: this.options.map((option2) => option2.toJSON())
         };
         radioGroupPredicate.parse(data);
         return data;
@@ -44994,7 +44994,7 @@ var require_dist8 = __commonJS({
       constructor(data) {
         const { options: options2, ...initData } = data ?? {};
         super({ ...initData, type: import_v1014.ComponentType.StringSelect });
-        this.options = options2?.map((option) => new StringSelectMenuOptionBuilder(option)) ?? [];
+        this.options = options2?.map((option2) => new StringSelectMenuOptionBuilder(option2)) ?? [];
       }
       /**
        * Adds options to this select menu.
@@ -45067,7 +45067,7 @@ var require_dist8 = __commonJS({
         validateRequiredSelectMenuParameters(this.options, this.data.custom_id);
         return {
           ...this.data,
-          options: this.options.map((option) => option.toJSON())
+          options: this.options.map((option2) => option2.toJSON())
         };
       }
     };
@@ -46832,7 +46832,7 @@ var require_dist8 = __commonJS({
         return {
           ...this,
           type: import_v1031.ApplicationCommandType.ChatInput,
-          options: this.options.map((option) => option.toJSON())
+          options: this.options.map((option2) => option2.toJSON())
         };
       }
     };
@@ -47390,7 +47390,7 @@ var require_dist8 = __commonJS({
           name_localizations: this.name_localizations,
           description: this.description,
           description_localizations: this.description_localizations,
-          options: this.options.map((option) => option.toJSON())
+          options: this.options.map((option2) => option2.toJSON())
         };
       }
     };
@@ -47426,7 +47426,7 @@ var require_dist8 = __commonJS({
           name_localizations: this.name_localizations,
           description: this.description,
           description_localizations: this.description_localizations,
-          options: this.options.map((option) => option.toJSON())
+          options: this.options.map((option2) => option2.toJSON())
         };
       }
     };
@@ -49667,8 +49667,8 @@ var require_StringSelectMenuBuilder = __commonJS({
         super(
           toSnakeCase({
             ...data,
-            options: options2?.map(({ emoji: emoji2, ...option }) => ({
-              ...option,
+            options: options2?.map(({ emoji: emoji2, ...option2 }) => ({
+              ...option2,
               emoji: emoji2 && typeof emoji2 === "string" ? resolvePartialEmoji(emoji2) : emoji2
             }))
           })
@@ -49684,9 +49684,9 @@ var require_StringSelectMenuBuilder = __commonJS({
         if (isJSONEncodable(selectMenuOption)) {
           return selectMenuOption;
         }
-        const { emoji: emoji2, ...option } = selectMenuOption;
+        const { emoji: emoji2, ...option2 } = selectMenuOption;
         return {
-          ...option,
+          ...option2,
           emoji: typeof emoji2 === "string" ? resolvePartialEmoji(emoji2) : emoji2
         };
       }
@@ -49696,7 +49696,7 @@ var require_StringSelectMenuBuilder = __commonJS({
        * @returns {StringSelectMenuBuilder}
        */
       addOptions(...options2) {
-        return super.addOptions(normalizeArray(options2).map((option) => _StringSelectMenuBuilder.normalizeEmoji(option)));
+        return super.addOptions(normalizeArray(options2).map((option2) => _StringSelectMenuBuilder.normalizeEmoji(option2)));
       }
       /**
        * Sets the options on this select menu
@@ -49704,7 +49704,7 @@ var require_StringSelectMenuBuilder = __commonJS({
        * @returns {StringSelectMenuBuilder}
        */
       setOptions(...options2) {
-        return super.setOptions(normalizeArray(options2).map((option) => _StringSelectMenuBuilder.normalizeEmoji(option)));
+        return super.setOptions(normalizeArray(options2).map((option2) => _StringSelectMenuBuilder.normalizeEmoji(option2)));
       }
       /**
        * Creates a new select menu builder from json data
@@ -56641,7 +56641,7 @@ var require_GuildOnboardingPrompt = __commonJS({
         this.guildId = guildId;
         this.id = data.id;
         this.options = data.options.reduce(
-          (options2, option) => options2.set(option.id, new GuildOnboardingPromptOption(client2, option, guildId)),
+          (options2, option2) => options2.set(option2.id, new GuildOnboardingPromptOption(client2, option2, guildId)),
           new Collection2()
         );
         this.title = data.title;
@@ -57954,14 +57954,14 @@ var require_CommandInteractionOptionResolver = __commonJS({
        * @returns {?CommandInteractionOption} The option, if found.
        */
       get(name, required = false) {
-        const option = this._hoistedOptions.find((opt) => opt.name === name);
-        if (!option) {
+        const option2 = this._hoistedOptions.find((opt) => opt.name === name);
+        if (!option2) {
           if (required) {
             throw new DiscordjsTypeError2(ErrorCodes2.CommandInteractionOptionNotFound, name);
           }
           return null;
         }
-        return option;
+        return option2;
       }
       /**
        * Gets an option by name and property and checks its type.
@@ -57973,15 +57973,15 @@ var require_CommandInteractionOptionResolver = __commonJS({
        * @private
        */
       _getTypedOption(name, allowedTypes, properties, required) {
-        const option = this.get(name, required);
-        if (!option) {
+        const option2 = this.get(name, required);
+        if (!option2) {
           return null;
-        } else if (!allowedTypes.includes(option.type)) {
-          throw new DiscordjsTypeError2(ErrorCodes2.CommandInteractionOptionType, name, option.type, allowedTypes.join(", "));
-        } else if (required && properties.every((prop) => option[prop] === null || option[prop] === void 0)) {
-          throw new DiscordjsTypeError2(ErrorCodes2.CommandInteractionOptionEmpty, name, option.type);
+        } else if (!allowedTypes.includes(option2.type)) {
+          throw new DiscordjsTypeError2(ErrorCodes2.CommandInteractionOptionType, name, option2.type, allowedTypes.join(", "));
+        } else if (required && properties.every((prop) => option2[prop] === null || option2[prop] === void 0)) {
+          throw new DiscordjsTypeError2(ErrorCodes2.CommandInteractionOptionEmpty, name, option2.type);
         }
-        return option;
+        return option2;
       }
       /**
        * Gets the selected subcommand.
@@ -58012,8 +58012,8 @@ var require_CommandInteractionOptionResolver = __commonJS({
        * @returns {?boolean} The value of the option, or null if not set and not required.
        */
       getBoolean(name, required = false) {
-        const option = this._getTypedOption(name, [ApplicationCommandOptionType.Boolean], ["value"], required);
-        return option?.value ?? null;
+        const option2 = this._getTypedOption(name, [ApplicationCommandOptionType.Boolean], ["value"], required);
+        return option2?.value ?? null;
       }
       /**
        * Gets a channel option.
@@ -58024,8 +58024,8 @@ var require_CommandInteractionOptionResolver = __commonJS({
        * The value of the option, or null if not set and not required.
        */
       getChannel(name, required = false, channelTypes = []) {
-        const option = this._getTypedOption(name, [ApplicationCommandOptionType.Channel], ["channel"], required);
-        const channel = option?.channel ?? null;
+        const option2 = this._getTypedOption(name, [ApplicationCommandOptionType.Channel], ["channel"], required);
+        const channel = option2?.channel ?? null;
         if (channel && channelTypes.length > 0 && !channelTypes.includes(channel.type)) {
           throw new DiscordjsTypeError2(
             ErrorCodes2.CommandInteractionOptionInvalidChannelType,
@@ -58043,8 +58043,8 @@ var require_CommandInteractionOptionResolver = __commonJS({
        * @returns {?string} The value of the option, or null if not set and not required.
        */
       getString(name, required = false) {
-        const option = this._getTypedOption(name, [ApplicationCommandOptionType.String], ["value"], required);
-        return option?.value ?? null;
+        const option2 = this._getTypedOption(name, [ApplicationCommandOptionType.String], ["value"], required);
+        return option2?.value ?? null;
       }
       /**
        * Gets an integer option.
@@ -58053,8 +58053,8 @@ var require_CommandInteractionOptionResolver = __commonJS({
        * @returns {?number} The value of the option, or null if not set and not required.
        */
       getInteger(name, required = false) {
-        const option = this._getTypedOption(name, [ApplicationCommandOptionType.Integer], ["value"], required);
-        return option?.value ?? null;
+        const option2 = this._getTypedOption(name, [ApplicationCommandOptionType.Integer], ["value"], required);
+        return option2?.value ?? null;
       }
       /**
        * Gets a number option.
@@ -58063,8 +58063,8 @@ var require_CommandInteractionOptionResolver = __commonJS({
        * @returns {?number} The value of the option, or null if not set and not required.
        */
       getNumber(name, required = false) {
-        const option = this._getTypedOption(name, [ApplicationCommandOptionType.Number], ["value"], required);
-        return option?.value ?? null;
+        const option2 = this._getTypedOption(name, [ApplicationCommandOptionType.Number], ["value"], required);
+        return option2?.value ?? null;
       }
       /**
        * Gets a user option.
@@ -58073,13 +58073,13 @@ var require_CommandInteractionOptionResolver = __commonJS({
        * @returns {?User} The value of the option, or null if not set and not required.
        */
       getUser(name, required = false) {
-        const option = this._getTypedOption(
+        const option2 = this._getTypedOption(
           name,
           [ApplicationCommandOptionType.User, ApplicationCommandOptionType.Mentionable],
           ["user"],
           required
         );
-        return option?.user ?? null;
+        return option2?.user ?? null;
       }
       /**
        * Gets a member option.
@@ -58088,13 +58088,13 @@ var require_CommandInteractionOptionResolver = __commonJS({
        * The value of the option, or null if the user is not present in the guild or the option is not set.
        */
       getMember(name) {
-        const option = this._getTypedOption(
+        const option2 = this._getTypedOption(
           name,
           [ApplicationCommandOptionType.User, ApplicationCommandOptionType.Mentionable],
           ["member"],
           false
         );
-        return option?.member ?? null;
+        return option2?.member ?? null;
       }
       /**
        * Gets a role option.
@@ -58103,13 +58103,13 @@ var require_CommandInteractionOptionResolver = __commonJS({
        * @returns {?(Role|APIRole)} The value of the option, or null if not set and not required.
        */
       getRole(name, required = false) {
-        const option = this._getTypedOption(
+        const option2 = this._getTypedOption(
           name,
           [ApplicationCommandOptionType.Role, ApplicationCommandOptionType.Mentionable],
           ["role"],
           required
         );
-        return option?.role ?? null;
+        return option2?.role ?? null;
       }
       /**
        * Gets an attachment option.
@@ -58118,8 +58118,8 @@ var require_CommandInteractionOptionResolver = __commonJS({
        * @returns {?Attachment} The value of the option, or null if not set and not required.
        */
       getAttachment(name, required = false) {
-        const option = this._getTypedOption(name, [ApplicationCommandOptionType.Attachment], ["attachment"], required);
-        return option?.attachment ?? null;
+        const option2 = this._getTypedOption(name, [ApplicationCommandOptionType.Attachment], ["attachment"], required);
+        return option2?.attachment ?? null;
       }
       /**
        * Gets a mentionable option.
@@ -58129,13 +58129,13 @@ var require_CommandInteractionOptionResolver = __commonJS({
        * The value of the option, or null if not set and not required.
        */
       getMentionable(name, required = false) {
-        const option = this._getTypedOption(
+        const option2 = this._getTypedOption(
           name,
           [ApplicationCommandOptionType.Mentionable],
           ["user", "member", "role"],
           required
         );
-        return option?.member ?? option?.user ?? option?.role ?? null;
+        return option2?.member ?? option2?.user ?? option2?.role ?? null;
       }
       /**
        * Gets a message option.
@@ -58145,8 +58145,8 @@ var require_CommandInteractionOptionResolver = __commonJS({
        * The value of the option, or null if not set and not required.
        */
       getMessage(name, required = false) {
-        const option = this._getTypedOption(name, ["_MESSAGE"], ["message"], required);
-        return option?.message ?? null;
+        const option2 = this._getTypedOption(name, ["_MESSAGE"], ["message"], required);
+        return option2?.message ?? null;
       }
       /**
        * The full autocomplete option object.
@@ -58163,7 +58163,7 @@ var require_CommandInteractionOptionResolver = __commonJS({
        * The value of the option, or the whole option if getFull is true
        */
       getFocused(getFull = false) {
-        const focusedOption = this._hoistedOptions.find((option) => option.focused);
+        const focusedOption = this._hoistedOptions.find((option2) => option2.focused);
         if (!focusedOption) throw new DiscordjsTypeError2(ErrorCodes2.AutocompleteInteractionOptionNoFocusedOption);
         return getFull ? focusedOption : focusedOption.value;
       }
@@ -58219,8 +58219,8 @@ var require_AutocompleteInteraction = __commonJS({
           body: {
             type: InteractionResponseType.ApplicationCommandAutocompleteResult,
             data: {
-              choices: options2.map(({ nameLocalizations, ...option }) => ({
-                ...this.client.options.jsonTransformer(option),
+              choices: options2.map(({ nameLocalizations, ...option2 }) => ({
+                ...this.client.options.jsonTransformer(option2),
                 name_localizations: nameLocalizations
               }))
             }
@@ -58988,23 +58988,23 @@ var require_CommandInteraction = __commonJS({
        * @returns {CommandInteractionOption}
        * @private
        */
-      transformOption(option, resolved) {
+      transformOption(option2, resolved) {
         const result = {
-          name: option.name,
-          type: option.type
+          name: option2.name,
+          type: option2.type
         };
-        if ("value" in option) result.value = option.value;
-        if ("options" in option) result.options = option.options.map((opt) => this.transformOption(opt, resolved));
+        if ("value" in option2) result.value = option2.value;
+        if ("options" in option2) result.options = option2.options.map((opt) => this.transformOption(opt, resolved));
         if (resolved) {
-          const user = resolved.users?.[option.value];
+          const user = resolved.users?.[option2.value];
           if (user) result.user = this.client.users._add(user);
-          const member = resolved.members?.[option.value];
+          const member = resolved.members?.[option2.value];
           if (member) result.member = this.guild?.members._add({ user, ...member }) ?? member;
-          const channel = resolved.channels?.[option.value];
+          const channel = resolved.channels?.[option2.value];
           if (channel) result.channel = this.client.channels._add(channel, this.guild) ?? channel;
-          const role = resolved.roles?.[option.value];
+          const role = resolved.roles?.[option2.value];
           if (role) result.role = this.guild?.roles._add(role) ?? role;
-          const attachment = resolved.attachments?.[option.value];
+          const attachment = resolved.attachments?.[option2.value];
           if (attachment) result.attachment = new Attachment(attachment);
         }
         return result;
@@ -59049,7 +59049,7 @@ var require_ChatInputCommandInteraction = __commonJS({
         super(client2, data);
         this.options = new CommandInteractionOptionResolver(
           this.client,
-          data.data.options?.map((option) => this.transformOption(option, data.data.resolved)) ?? [],
+          data.data.options?.map((option2) => this.transformOption(option2, data.data.resolved)) ?? [],
           transformResolved({ client: this.client, guild: this.guild, channel: this.channel }, data.data.resolved)
         );
       }
@@ -59063,7 +59063,7 @@ var require_ChatInputCommandInteraction = __commonJS({
           this.commandName,
           this.options._group,
           this.options._subcommand,
-          ...this.options._hoistedOptions.map((option) => `${option.name}:${option.value}`)
+          ...this.options._hoistedOptions.map((option2) => `${option2.name}:${option2.value}`)
         ];
         return `/${properties.filter(Boolean).join(" ")}`;
       }
@@ -69394,7 +69394,7 @@ var require_GuildInviteManager = __commonJS({
        *   .then(console.log)
        *   .catch(console.error);
        */
-      async create(channel, { temporary, maxAge, maxUses, unique, targetUser, targetApplication, targetType, reason } = {}) {
+      async create(channel, { temporary, maxAge, maxUses, unique: unique2, targetUser, targetApplication, targetType, reason } = {}) {
         const id2 = this.guild.channels.resolveId(channel);
         if (!id2) throw new DiscordjsError2(ErrorCodes2.GuildChannelResolve);
         const invite = await this.client.rest.post(Routes2.channelInvites(id2), {
@@ -69402,7 +69402,7 @@ var require_GuildInviteManager = __commonJS({
             temporary,
             max_age: maxAge,
             max_uses: maxUses,
-            unique,
+            unique: unique2,
             target_user_id: this.client.users.resolveId(targetUser),
             target_application_id: targetApplication?.id ?? targetApplication?.applicationId ?? targetApplication,
             target_type: targetType
@@ -72263,14 +72263,14 @@ var require_Guild = __commonJS({
               required: prompt.required,
               in_onboarding: prompt.inOnboarding,
               type: prompt.type,
-              options: prompt.options.map((option) => {
-                const emoji2 = resolvePartialEmoji(option.emoji);
+              options: prompt.options.map((option2) => {
+                const emoji2 = resolvePartialEmoji(option2.emoji);
                 return {
-                  id: option.id,
-                  channel_ids: option.channels?.map((channel) => this.channels.resolveId(channel)),
-                  role_ids: option.roles?.map((role) => this.roles.resolveId(role)),
-                  title: option.title,
-                  description: option.description,
+                  id: option2.id,
+                  channel_ids: option2.channels?.map((channel) => this.channels.resolveId(channel)),
+                  role_ids: option2.roles?.map((role) => this.roles.resolveId(role)),
+                  title: option2.title,
+                  description: option2.description,
                   emoji_animated: emoji2?.animated,
                   emoji_id: emoji2?.id,
                   emoji_name: emoji2?.name
@@ -76930,8 +76930,8 @@ var ZodType = class {
   promise() {
     return ZodPromise.create(this, this._def);
   }
-  or(option) {
-    return ZodUnion.create([this, option], this._def);
+  or(option2) {
+    return ZodUnion.create([this, option2], this._def);
   }
   and(incoming) {
     return ZodIntersection.create(this, incoming, this._def);
@@ -78781,7 +78781,7 @@ var ZodUnion = class extends ZodType {
       return INVALID;
     }
     if (ctx.common.async) {
-      return Promise.all(options2.map(async (option) => {
+      return Promise.all(options2.map(async (option2) => {
         const childCtx = {
           ...ctx,
           common: {
@@ -78791,7 +78791,7 @@ var ZodUnion = class extends ZodType {
           parent: null
         };
         return {
-          result: await option._parseAsync({
+          result: await option2._parseAsync({
             data: ctx.data,
             path: ctx.path,
             parent: childCtx
@@ -78802,7 +78802,7 @@ var ZodUnion = class extends ZodType {
     } else {
       let dirty = void 0;
       const issues = [];
-      for (const option of options2) {
+      for (const option2 of options2) {
         const childCtx = {
           ...ctx,
           common: {
@@ -78811,7 +78811,7 @@ var ZodUnion = class extends ZodType {
           },
           parent: null
         };
-        const result = option._parseSync({
+        const result = option2._parseSync({
           data: ctx.data,
           path: ctx.path,
           parent: childCtx
@@ -78892,8 +78892,8 @@ var ZodDiscriminatedUnion = class _ZodDiscriminatedUnion extends ZodType {
     }
     const discriminator = this.discriminator;
     const discriminatorValue = ctx.data[discriminator];
-    const option = this.optionsMap.get(discriminatorValue);
-    if (!option) {
+    const option2 = this.optionsMap.get(discriminatorValue);
+    if (!option2) {
       addIssueToContext(ctx, {
         code: ZodIssueCode.invalid_union_discriminator,
         options: Array.from(this.optionsMap.keys()),
@@ -78902,13 +78902,13 @@ var ZodDiscriminatedUnion = class _ZodDiscriminatedUnion extends ZodType {
       return INVALID;
     }
     if (ctx.common.async) {
-      return option._parseAsync({
+      return option2._parseAsync({
         data: ctx.data,
         path: ctx.path,
         parent: ctx
       });
     } else {
-      return option._parseSync({
+      return option2._parseSync({
         data: ctx.data,
         path: ctx.path,
         parent: ctx
@@ -80103,6 +80103,8 @@ var PERMISSION_CATALOG = {
   incidents: ["view", "create", "edit", "close", "delete"],
   persons: ["view", "create", "edit", "archive", "merge"],
   vehicles: ["view", "create", "edit", "archive"],
+  /** Waffenregister im MDT */
+  weapons: ["view", "create", "edit"],
   reports: ["view", "create", "edit", "submit", "review", "approve", "reject", "archive"],
   tickets: ["view", "create", "edit", "void"],
   complaints: ["view", "create", "assign", "investigate", "resolve", "close"],
@@ -80724,6 +80726,33 @@ var backupConfigSchema = external_exports.object({
   discordAuto: external_exports.boolean().default(false),
   /** so viele automatische Backups behalten (je Art bzw. Server) */
   keep: external_exports.number().int().min(1).max(60).default(14)
+});
+var option = external_exports.object({ key: external_exports.string().trim().min(1).max(32).regex(/^[A-Z0-9_]+$/, "Schl\xFCssel: nur A\u2013Z, 0\u20139 und _"), label: external_exports.string().trim().min(1).max(40) });
+var unique = (xs) => new Set(xs.map((x) => x.key)).size === xs.length;
+var mdtConfigSchema = external_exports.object({
+  licenses: external_exports.array(option).max(30).refine(unique, "Schl\xFCssel doppelt"),
+  flags: external_exports.array(option.extend({ tone: external_exports.enum(["danger", "warning", "info", "neutral"]) })).max(30).refine(unique, "Schl\xFCssel doppelt"),
+  weaponTypes: external_exports.array(option).max(40).refine(unique, "Schl\xFCssel doppelt"),
+  genders: external_exports.array(external_exports.string().trim().min(1).max(30)).max(10)
+});
+var WEAPON_STATUSES = [
+  { key: "REGISTERED", label: "Registriert", tone: "success" },
+  { key: "STOLEN", label: "Gestohlen", tone: "danger" },
+  { key: "SEIZED", label: "Beschlagnahmt", tone: "warning" },
+  { key: "DESTROYED", label: "Vernichtet", tone: "neutral" }
+];
+var WEAPON_STATUS_KEYS = WEAPON_STATUSES.map((s) => s.key);
+var personDetailsSchema = external_exports.object({
+  fullName: external_exports.string().trim().max(80).nullish(),
+  dateOfBirth: external_exports.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Datum als JJJJ-MM-TT").nullish(),
+  gender: external_exports.string().trim().max(30).nullish(),
+  phone: external_exports.string().trim().max(30).nullish(),
+  job: external_exports.string().trim().max(60).nullish(),
+  nationality: external_exports.string().trim().max(60).nullish(),
+  address: external_exports.string().trim().max(200).nullish(),
+  appearance: external_exports.object({ skinTone: external_exports.string().max(40).optional(), hairColor: external_exports.string().max(40).optional(), eyeColor: external_exports.string().max(40).optional(), height: external_exports.string().max(20).optional(), features: external_exports.string().max(300).optional() }).nullish(),
+  licenses: external_exports.array(external_exports.string().max(32)).max(30).optional(),
+  flags: external_exports.array(external_exports.string().max(32)).max(30).optional()
 });
 
 // apps/bot/src/staff-lists.ts

@@ -69,6 +69,12 @@ const CadLogs = lazy(() => import('./pages/cad/CadAdmin').then((m) => ({ default
 const CadMdt = lazy(() => import('./pages/cad/CadShift').then((m) => ({ default: m.CadMdt })));
 const CadHandover = lazy(() => import('./pages/cad/CadShift').then((m) => ({ default: m.CadHandover })));
 const CadStats = lazy(() => import('./pages/cad/CadShift').then((m) => ({ default: m.CadStats })));
+import { MdtShell } from './pages/mdt/MdtShell';
+const MdtCitizens = lazy(() => import('./pages/mdt/Citizens').then((m) => ({ default: m.MdtCitizens })));
+const MdtVehicles = lazy(() => import('./pages/mdt/MdtRecords').then((m) => ({ default: m.MdtVehicles })));
+const MdtWarrants = lazy(() => import('./pages/mdt/MdtRecords').then((m) => ({ default: m.MdtWarrants })));
+const MdtWeapons = lazy(() => import('./pages/mdt/MdtRecords').then((m) => ({ default: m.MdtWeapons })));
+const MdtSettings = lazy(() => import('./pages/mdt/MdtRecords').then((m) => ({ default: m.MdtSettings })));
 
 /** Statistik: allgemeine Statistik ODER Bewerbungs-Statistik genügt. */
 function AnalyticsGate() {
@@ -97,9 +103,26 @@ export function App() {
         <Route path="/apply" element={<Apply />} />
         <Route path="/datenschutz" element={<Privacy />} />
         <Route path="/nutzungsbedingungen" element={<Terms />} />
+        {/* Polizei-MDT: eigene Vollbild-Oberfläche, gleiche Anmeldung wie das Dashboard */}
+        <Route path="mdt" element={<Guard perm="dashboard.view"><MdtShell /></Guard>}>
+          <Route index element={<Mdt />} />
+          <Route path="unit" element={<Guard perm="cad.view"><CadMdt /></Guard>} />
+          <Route path="citizens" element={<Guard perm="persons.view"><MdtCitizens /></Guard>} />
+          <Route path="vehicles" element={<Guard perm="vehicles.view"><MdtVehicles /></Guard>} />
+          <Route path="warrants" element={<Guard perm="wanted.view"><MdtWarrants /></Guard>} />
+          <Route path="weapons" element={<Guard perm="weapons.view"><MdtWeapons /></Guard>} />
+          <Route path="reports" element={list({ ...R.reports, detailPath: (r) => `/mdt/reports/${r.id}` }, 'reports.view')} />
+          <Route path="reports/:id" element={<Guard perm="reports.view"><ReportDetail /></Guard>} />
+          <Route path="incidents" element={list({ ...R.incidents, detailPath: (r) => `/mdt/incidents/${r.id}` }, 'incidents.view')} />
+          <Route path="incidents/:id" element={<Guard perm="incidents.view"><RecordPage cfg={{ ...R.records.incidents!, back: '/mdt/incidents' }} /></Guard>} />
+          <Route path="investigations" element={list({ ...R.investigations, detailPath: (r) => `/mdt/investigations/${r.id}` }, 'investigations.view')} />
+          <Route path="investigations/:id" element={<Guard perm="investigations.view"><RecordPage cfg={{ ...R.records.investigations!, back: '/mdt/investigations' }} /></Guard>} />
+          <Route path="roster" element={<Guard perm="team.view"><TeamList /></Guard>} />
+          <Route path="officers" element={list(R.personnel, 'personnel.view')} />
+          <Route path="settings" element={<Guard perm="settings.manage"><MdtSettings /></Guard>} />
+        </Route>
         <Route element={<Guard><AppShell /></Guard>}>
           <Route index element={<Navigate to="/dashboard" replace />} />
-          <Route path="mdt" element={<Guard perm="dashboard.view"><Mdt /></Guard>} />
           <Route path="dashboard" element={<Guard perm="dashboard.view"><Dashboard /></Guard>} />
           <Route path="team" element={<Guard perm="team.view" area="dashboard.team.view"><Team /></Guard>} />
           <Route path="teamlist" element={<Guard perm="team.view" area="dashboard.team.view"><TeamList /></Guard>} />

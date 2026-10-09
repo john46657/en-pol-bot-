@@ -9,6 +9,8 @@ var PERMISSION_CATALOG = {
   incidents: ["view", "create", "edit", "close", "delete"],
   persons: ["view", "create", "edit", "archive", "merge"],
   vehicles: ["view", "create", "edit", "archive"],
+  /** Waffenregister im MDT */
+  weapons: ["view", "create", "edit"],
   reports: ["view", "create", "edit", "submit", "review", "approve", "reject", "archive"],
   tickets: ["view", "create", "edit", "void"],
   complaints: ["view", "create", "assign", "investigate", "resolve", "close"],
@@ -449,7 +451,7 @@ var DEFAULT_CAD_CONFIG = {
   memberFields: [],
   widgets: ["activeIncidents", "availableUnits", "activeCalls", "dutyActivity", "erlcStatus", "map", "radio"]
 };
-var gameToPixel = (m, x, z6) => ({ px: m.originX + x * m.scale, py: m.originY + z6 * m.scale });
+var gameToPixel = (m, x, z7) => ({ px: m.originX + x * m.scale, py: m.originY + z7 * m.scale });
 var pixelToGame = (m, px, py) => ({ x: (px - m.originX) / m.scale, z: (py - m.originY) / m.scale });
 var ERLC_FEATURES = ["players", "staff", "queue", "vehicles", "emergencyCalls", "modCalls", "joinLogs", "killLogs", "commandLogs", "commands", "webhook"];
 var ERLC_FEATURE_LABELS = {
@@ -1398,7 +1400,7 @@ function fillTemplate(tpl, vars) {
 import { z as z4 } from "zod";
 var LOG_CATEGORIES = [
   { key: "einsaetze", label: "Eins\xE4tze & Leitstelle", emoji: "\u{1F6A8}", modules: ["cad", "dispatch", "incidents", "erlc", "radio"] },
-  { key: "akten", label: "Akten & Ermittlungen", emoji: "\u{1F5C2}\uFE0F", modules: ["persons", "vehicles", "wanted", "investigations", "evidence", "reports", "tickets", "complaints"] },
+  { key: "akten", label: "Akten & Ermittlungen", emoji: "\u{1F5C2}\uFE0F", modules: ["persons", "vehicles", "weapons", "wanted", "investigations", "evidence", "reports", "tickets", "complaints"] },
   { key: "bewerbungen", label: "Bewerbungen & Qualifikationen", emoji: "\u{1F4CB}", modules: ["applications", "qualifications"] },
   { key: "personal", label: "Personal & Ausbildung", emoji: "\u{1F46E}", modules: ["personnel", "promotion", "dienstnummer", "training", "exam", "academy", "sek"] },
   { key: "dienst", label: "Dienst, Abmeldungen & Berichte", emoji: "\u{1F552}", modules: ["team", "dutyreports", "leave"] },
@@ -1408,6 +1410,10 @@ var LOG_CATEGORIES = [
 ];
 var logCategoryOf = (module) => LOG_CATEGORIES.find((c) => c.modules.includes(module))?.key ?? "sonstiges";
 var LOG_TYPES = {
+  "weapon.update": "weapons",
+  "weapon.create": "weapons",
+  "person.photo": "persons",
+  "mdt.config": "settings",
   "academy.config": "academy",
   "academy.course.announce": "academy",
   "academy.course.create": "academy",
@@ -1725,6 +1731,69 @@ var backupConfigSchema = z5.object({
   /** so viele automatische Backups behalten (je Art bzw. Server) */
   keep: z5.number().int().min(1).max(60).default(14)
 });
+
+// src/mdt.ts
+import { z as z6 } from "zod";
+var option = z6.object({ key: z6.string().trim().min(1).max(32).regex(/^[A-Z0-9_]+$/, "Schl\xFCssel: nur A\u2013Z, 0\u20139 und _"), label: z6.string().trim().min(1).max(40) });
+var unique = (xs) => new Set(xs.map((x) => x.key)).size === xs.length;
+var mdtConfigSchema = z6.object({
+  licenses: z6.array(option).max(30).refine(unique, "Schl\xFCssel doppelt"),
+  flags: z6.array(option.extend({ tone: z6.enum(["danger", "warning", "info", "neutral"]) })).max(30).refine(unique, "Schl\xFCssel doppelt"),
+  weaponTypes: z6.array(option).max(40).refine(unique, "Schl\xFCssel doppelt"),
+  genders: z6.array(z6.string().trim().min(1).max(30)).max(10)
+});
+var DEFAULT_MDT_CONFIG = {
+  licenses: [
+    { key: "DRIVER", label: "F\xFChrerschein" },
+    { key: "WEAPON", label: "Waffenschein" },
+    { key: "BUSINESS", label: "Gewerbeschein" },
+    { key: "PILOT", label: "Flugschein" },
+    { key: "BOAT", label: "Bootsf\xFChrerschein" }
+  ],
+  flags: [
+    { key: "DANGEROUS", label: "Gef\xE4hrlich", tone: "danger" },
+    { key: "ARMED", label: "Bewaffnet", tone: "danger" },
+    { key: "FLIGHT_RISK", label: "Fluchtgefahr", tone: "warning" },
+    { key: "VIOLENT", label: "Gewaltbereit", tone: "warning" },
+    { key: "GANG", label: "Bandenzugeh\xF6rigkeit", tone: "warning" }
+  ],
+  weaponTypes: [
+    { key: "PISTOL", label: "Pistole" },
+    { key: "RIFLE", label: "Gewehr" },
+    { key: "SHOTGUN", label: "Schrotflinte" },
+    { key: "SMG", label: "Maschinenpistole" },
+    { key: "TASER", label: "Taser" },
+    { key: "KNIFE", label: "Messer" },
+    { key: "OTHER", label: "Sonstige" }
+  ],
+  genders: ["M\xE4nnlich", "Weiblich", "Divers"]
+};
+var WEAPON_STATUSES = [
+  { key: "REGISTERED", label: "Registriert", tone: "success" },
+  { key: "STOLEN", label: "Gestohlen", tone: "danger" },
+  { key: "SEIZED", label: "Beschlagnahmt", tone: "warning" },
+  { key: "DESTROYED", label: "Vernichtet", tone: "neutral" }
+];
+var WEAPON_STATUS_KEYS = WEAPON_STATUSES.map((s) => s.key);
+var personDetailsSchema = z6.object({
+  fullName: z6.string().trim().max(80).nullish(),
+  dateOfBirth: z6.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Datum als JJJJ-MM-TT").nullish(),
+  gender: z6.string().trim().max(30).nullish(),
+  phone: z6.string().trim().max(30).nullish(),
+  job: z6.string().trim().max(60).nullish(),
+  nationality: z6.string().trim().max(60).nullish(),
+  address: z6.string().trim().max(200).nullish(),
+  appearance: z6.object({ skinTone: z6.string().max(40).optional(), hairColor: z6.string().max(40).optional(), eyeColor: z6.string().max(40).optional(), height: z6.string().max(20).optional(), features: z6.string().max(300).optional() }).nullish(),
+  licenses: z6.array(z6.string().max(32)).max(30).optional(),
+  flags: z6.array(z6.string().max(32)).max(30).optional()
+});
+function ageOf(dob, now = /* @__PURE__ */ new Date()) {
+  if (!dob || !/^\d{4}-\d{2}-\d{2}/.test(dob)) return null;
+  const [y, m, d] = dob.slice(0, 10).split("-").map(Number);
+  let age = now.getUTCFullYear() - y;
+  if (now.getUTCMonth() + 1 < m || now.getUTCMonth() + 1 === m && now.getUTCDate() < d) age--;
+  return age >= 0 && age < 150 ? age : null;
+}
 export {
   ALL_PERMISSIONS,
   APPLICATION_STATUSES,
@@ -1752,6 +1821,7 @@ export {
   DEFAULT_CAD_CONFIG,
   DEFAULT_DANGER_CONFIG,
   DEFAULT_HR_CONFIG,
+  DEFAULT_MDT_CONFIG,
   DEFAULT_VERIFY_CONFIG,
   DEFAULT_WELCOME_CONFIG,
   DISPATCH_STATUSES,
@@ -1820,6 +1890,8 @@ export {
   WANTED_STATUSES,
   WANTED_TRANSITIONS,
   WARNING_VARIABLES,
+  WEAPON_STATUSES,
+  WEAPON_STATUS_KEYS,
   WEEKDAYS,
   WELCOME_VARIABLES,
   WORKFLOW_ACTION_LABELS,
@@ -1828,6 +1900,7 @@ export {
   WORKFLOW_TRIGGERS,
   absenceTypeSchema,
   accountAge,
+  ageOf,
   areaGrantsFor,
   assertTransition,
   awardDefSchema,
@@ -1875,6 +1948,7 @@ export {
   logTypeLabel,
   loggingConfigSchema,
   matchingBinds,
+  mdtConfigSchema,
   newVoiceRoom,
   normalizeField,
   notifyRuleSchema,
@@ -1883,6 +1957,7 @@ export {
   periodEnd,
   periodLabel,
   periodStart,
+  personDetailsSchema,
   pixelToGame,
   questionSchema,
   rangeSchema,

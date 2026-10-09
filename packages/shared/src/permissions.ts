@@ -9,6 +9,8 @@ export const PERMISSION_CATALOG = {
   incidents: ['view', 'create', 'edit', 'close', 'delete'],
   persons: ['view', 'create', 'edit', 'archive', 'merge'],
   vehicles: ['view', 'create', 'edit', 'archive'],
+  /** Waffenregister im MDT */
+  weapons: ['view', 'create', 'edit'],
   reports: ['view', 'create', 'edit', 'submit', 'review', 'approve', 'reject', 'archive'],
   tickets: ['view', 'create', 'edit', 'void'],
   complaints: ['view', 'create', 'assign', 'investigate', 'resolve', 'close'],

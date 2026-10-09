@@ -17,6 +17,10 @@ interface Hit { type: string; id: string; label: string; sub?: string }
 const ROUTE: Record<string, string> = { person: 'persons', vehicle: 'vehicles', incident: 'incidents', report: 'reports', ticket: 'tickets', complaint: 'complaints', investigation: 'investigations', wanted: 'wanted', evidence: 'evidence', personnel: 'personnel' };
 const TYPE_LABELS: Record<string, string> = { person: 'Person', vehicle: 'Fahrzeug', incident: 'Einsatz', report: 'Bericht', ticket: 'Strafzettel', complaint: 'Beschwerde', investigation: 'Ermittlung', wanted: 'Fahndung', evidence: 'Beweismittel', personnel: 'Personal' };
 
+/** Im MDT öffnen Personen und Fahrzeuge die MDT-Akte, Einsätze/Berichte/Ermittlungen die MDT-Ansicht; alles andere das Dashboard. */
+const MDT_PATH: Record<string, string> = { person: '/mdt/citizens?id=', vehicle: '/mdt/vehicles?id=', incident: '/mdt/incidents/', report: '/mdt/reports/', investigation: '/mdt/investigations/' };
+const hitPath = (h: Hit) => (MDT_PATH[h.type] ? `${MDT_PATH[h.type]}${h.id}` : `/${ROUTE[h.type]}/${h.id}`);
+
 interface Quick { key: string; label: string; icon: LucideIcon; perm: string; cfg: ResourceConfig<Row>; route: string }
 const QUICK: Quick[] = [
   { key: 'incident', label: 'Einsatz anlegen', icon: Siren, perm: 'incidents.create', cfg: R.incidents as never, route: 'incidents' },
@@ -57,13 +61,13 @@ export function Mdt() {
           {canVehicle && <Button size="sm" variant={mode === 'vehicle' ? 'primary' : 'secondary'} onClick={() => setMode('vehicle')}><Car size={13} />Fahrzeug suchen</Button>}
         </div>
         <Input ref={input} aria-label="MDT-Suche" placeholder={mode === 'vehicle' ? 'Kennzeichen, z. B. LC 1001' : mode === 'person' ? 'Roblox-Benutzername oder Roblox-ID' : 'Roblox-Name oder -ID, Kennzeichen, I-/R-/T-/C-/CASE-/E-Nummer…'} value={term}
-          onChange={(e) => setTerm(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter' && results[0]) nav(`/${ROUTE[results[0].type]}/${results[0].id}`); }} />
+          onChange={(e) => setTerm(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter' && results[0]) nav(hitPath(results[0])); }} />
         <div className="mt-3" aria-live="polite">
           {q.length >= 2 && mode !== 'vehicle' && <RobloxCard term={q} />}
           {q.length < 2 ? <p className="text-xs text-muted">Mindestens 2 Zeichen eingeben. Es werden nur Datensätze angezeigt, die du sehen darfst.</p>
             : search.isLoading ? <SkeletonRows rows={2} /> : search.error ? <ErrorState error={search.error} onRetry={() => void search.refetch()} />
             : !results.length ? <EmptyState text="Keine passenden Datensätze im System." /> : (
-              <ul className="grid gap-1 md:grid-cols-2">{results.map((h) => <li key={`${h.type}${h.id}`}><Link to={`/${ROUTE[h.type]}/${h.id}`} className="flex items-center gap-2 rounded px-2 py-1.5 hover:bg-panel-2"><Badge>{TYPE_LABELS[h.type] ?? h.type}</Badge><span className="font-medium">{h.label}</span>{h.sub && <span className="min-w-0 truncate text-xs text-muted">{h.sub}</span>}</Link></li>)}</ul>
+              <ul className="grid gap-1 md:grid-cols-2">{results.map((h) => <li key={`${h.type}${h.id}`}><Link to={hitPath(h)} className="flex items-center gap-2 rounded px-2 py-1.5 hover:bg-panel-2"><Badge>{TYPE_LABELS[h.type] ?? h.type}</Badge><span className="font-medium">{h.label}</span>{h.sub && <span className="min-w-0 truncate text-xs text-muted">{h.sub}</span>}</Link></li>)}</ul>
             )}
         </div>
       </Card>
