@@ -70,6 +70,7 @@ export const NAV: NavItem[] = [
     { path: '/admin/form-panels', label: 'Formular-Panels', perm: 'settings.view', area: 'dashboard.settings.view' },
     { path: '/admin/info-panels', label: 'Info-Panels', perm: 'settings.view', area: 'dashboard.settings.view' },
     { path: '/admin/welcome', label: 'Willkommen & Abschied', perm: 'settings.view', area: 'dashboard.settings.view' },
+    { path: '/admin/danger-level', label: 'Gefahrenstatus', perm: 'settings.manage', area: 'dashboard.settings.view' },
   ]),
   grp('Protokolle & Backups', ScrollText, 'Administration', [
     { path: '/admin/audit', label: 'Audit-Logs', perm: 'audit.view', area: 'dashboard.logs.view' },

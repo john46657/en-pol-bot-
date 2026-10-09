@@ -10,7 +10,7 @@ interface DangerState { level: string; reason: string | null; setByName: string 
 
 /**
  * Gefahrenstatus – live; Ändern mit dispatch.manage (optional mit Grund).
- * Stufen und Texte kommen aus den Einstellungen (CAD → Einstellungen), dieselbe Quelle wie das Discord-Panel.
+ * Stufen und Texte kommen aus den Einstellungen (Discord-Nachrichten → Gefahrenstatus), dieselbe Quelle wie das Discord-Panel.
  */
 export function DangerLevel() {
   const { can } = useAuth();
