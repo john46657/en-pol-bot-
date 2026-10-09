@@ -24,6 +24,7 @@ const Users = lazy(() => import('./pages/admin/Users').then((m) => ({ default: m
 const Roles = lazy(() => import('./pages/admin/Roles').then((m) => ({ default: m.Roles })));
 const Audit = lazy(() => import('./pages/admin/Audit').then((m) => ({ default: m.Audit })));
 const Settings = lazy(() => import('./pages/admin/Settings').then((m) => ({ default: m.Settings })));
+const DangerSettingsPage = lazy(() => import('./pages/admin/DangerSettings').then((m) => ({ default: m.DangerSettingsPage })));
 const LegalCodes = lazy(() => import('./pages/admin/LegalCodes').then((m) => ({ default: m.LegalCodes })));
 const Shifts = lazy(() => import('./pages/admin/Shifts').then((m) => ({ default: m.Shifts })));
 const Warnings = lazy(() => import('./pages/hr/Warnings').then((m) => ({ default: m.Warnings })));
@@ -209,6 +210,7 @@ export function App() {
           <Route path="admin/welcome" element={<Guard perm="settings.view"><WelcomeSettings /></Guard>} />
           <Route path="admin/leave" element={<Guard perm="settings.view"><LeaveSettings /></Guard>} />
           <Route path="leave" element={<Guard perm="leave.request"><Leave /></Guard>} />
+          <Route path="admin/danger-level" element={<Guard perm="settings.manage" area="dashboard.settings.view"><DangerSettingsPage /></Guard>} />
           <Route path="admin/legal-codes" element={<Guard perm="settings.view"><LegalCodes /></Guard>} />
           <Route path="admin/settings" element={<Guard perm="settings.view" area="dashboard.settings.view"><Settings /></Guard>} />
           <Route path="admin/studio" element={<Guard perm="studio.view" area="dashboard.settings.view"><Studio /></Guard>} />
