@@ -20,6 +20,8 @@ const env_1 = require("../config/env");
 const qualifications_service_1 = require("./qualifications.service");
 /** Schlüssel der Polizei-Bewerbung (wie im Bot); alles andere ist eine Einheit aus der Qualifikations-Konfiguration. */
 exports.POLICE_KEY = '@polizei';
+/** Länge der Signatur (HMAC-SHA256, base64url). */
+const SIG_LENGTH = 43;
 /**
  * Bewerbungsart „Web“: Der Bot stellt einen signierten, zeitlich begrenzten Link aus, die Person füllt die Fragen
  * im Browser aus. Kein Konto nötig – die Discord-Identität steckt im Link. Geprüft wird beim Absenden genauso wie bei
@@ -35,7 +37,8 @@ let WebApplyService = class WebApplyService {
     }
     sign(body) { return (0, node_crypto_1.createHmac)('sha256', this.secret).update(`webapply:${body}`).digest('base64url'); }
     verify(token) {
-        const [body, sig] = token.split('.');
+        // Link = Inhalt + Signatur (immer 43 Zeichen) ohne Trennzeichen – ein Punkt im Pfad würde als Dateiname gelten
+        const body = token.slice(0, -SIG_LENGTH), sig = token.slice(-SIG_LENGTH);
         const expected = body ? this.sign(body) : '';
         if (!body || !sig || sig.length !== expected.length || !(0, node_crypto_1.timingSafeEqual)(Buffer.from(sig), Buffer.from(expected)))
             throw new errors_1.AppError('NOT_FOUND', 'Dieser Bewerbungslink ist ungültig.');
@@ -64,7 +67,7 @@ let WebApplyService = class WebApplyService {
         const now = Date.now();
         const claims = { k: d.unit, d: d.discordId, n: d.discordName, ...(d.guildId ? { g: d.guildId } : {}), ...(d.joinedAt ? { j: d.joinedAt.toISOString() } : {}), t: now, e: now + f.settings.timeLimitMinutes * 60_000 };
         const body = Buffer.from(JSON.stringify(claims)).toString('base64url');
-        return { url: (0, web_url_1.webUrl)(`/bewerbung/${body}.${this.sign(body)}`), expiresAt: new Date(claims.e).toISOString(), timeLimit: (0, shared_1.formatMinutes)(f.settings.timeLimitMinutes) };
+        return { url: (0, web_url_1.webUrl)(`/bewerbung/${body}${this.sign(body)}`), expiresAt: new Date(claims.e).toISOString(), timeLimit: (0, shared_1.formatMinutes)(f.settings.timeLimitMinutes) };
     }
     /** Öffentlich: Formular zum Link. */
     async open(token) {

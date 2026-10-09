@@ -130,13 +130,15 @@ export function useSaveState() {
 
 /**
  * Formular-Entwurf automatisch speichern: jede Änderung am Entwurf (nicht das erste Laden) wird gesammelt gesendet.
+ * `draft` ist `undefined`, solange (neu) geladen wird – der erste Stand danach gilt als gespeichert.
  * `request(draft)` liefert die Anfrage – oder `null`, solange der Entwurf unvollständig/ungültig ist (dann bleibt er lokal).
  */
 export function useAutosaveDraft<T>(key: string | null, draft: T | undefined, request: (d: T) => SaveRequest | null, delay = 1000) {
   const last = useRef<string | undefined>(undefined);
   const k = useRef(key);
   useEffect(() => {
-    if (!key || draft === undefined) return;
+    // lädt (neu), z. B. nach dem Server-Wechsel: der nächste Stand ist wieder der gespeicherte – nicht als Änderung senden
+    if (!key || draft === undefined) { last.current = undefined; return; }
     const json = JSON.stringify(draft);
     if (k.current !== key || last.current === undefined) { k.current = key; last.current = json; return; } // erster Stand = gespeicherter Stand
     if (json === last.current) return;

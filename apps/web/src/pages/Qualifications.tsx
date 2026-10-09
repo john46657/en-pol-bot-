@@ -53,8 +53,11 @@ export function Qualifications() {
   const [title, setTitle] = useState('');
   const [intro, setIntro] = useState('');
   const [units, setUnits] = useState<DraftUnit[]>([]);
+  // aus welchem geladenen Stand der Entwurf stammt – erst danach automatisch speichern (sonst speichert schon das Öffnen)
+  const [loadedFrom, setLoadedFrom] = useState<Config>();
   useEffect(() => {
     if (!config.data) return;
+    setLoadedFrom(config.data);
     setTitle(config.data.title); setIntro(config.data.intro);
     // die frühere einzelne „Rolle bei Annahme“ wird zu den Accepted Roles
     setUnits(config.data.units.map((u) => {
@@ -72,7 +75,7 @@ export function Qualifications() {
     onSuccess: () => { setErr(undefined); setMsg('Gespeichert. Fragen gelten sofort für neue Bewerbungen; poste das Panel in Discord erneut (/qualipanel), damit geänderte Texte oder Einheiten angezeigt werden.'); void qc.invalidateQueries({ queryKey: ['quali-config'] }); }, onError,
   });
   // automatisch speichern – je Server getrennt; unvollständige Einheiten (ohne Name/Schlüssel/Frage) bleiben lokal
-  const qDraft = useMemo(() => (config.data ? { title, intro, units } : undefined), [title, intro, units, config.data]);
+  const qDraft = useMemo(() => (config.data && loadedFrom === config.data ? { title, intro, units } : undefined), [title, intro, units, config.data, loadedFrom]);
   useAutosaveDraft(config.data && can('qualifications.manage') ? `quali:setup:${server || 'all'}` : null, qDraft, (d) => (d.units.every((u) => u.name.trim() && u.questions.length) ? { method: 'PUT', path: `/qualifications/config${server ? `?guildId=${server}` : ''}`, body: { title: d.title, intro: d.intro, police: config.data!.police, units: d.units.map(({ isNew: _n, ...u }) => u) }, label: 'Qualifikationen' } : null), 1500);
   const patch = (i: number, p: Partial<DraftUnit>) => setUnits(units.map((u, j) => (j === i ? { ...u, ...p } : u)));
 
