@@ -50,6 +50,17 @@ export declare class VehiclesService {
                 custom: Prisma.JsonValue | null;
                 aliases: string[];
                 notes: string | null;
+                fullName: string | null;
+                dateOfBirth: Date | null;
+                gender: string | null;
+                phone: string | null;
+                job: string | null;
+                nationality: string | null;
+                address: string | null;
+                appearance: Prisma.JsonValue | null;
+                licenses: string[];
+                flags: string[];
+                photoId: string | null;
             } | null;
         } & {
             id: string;

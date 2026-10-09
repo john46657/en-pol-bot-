@@ -1,13 +1,50 @@
-# MDT (web UI)
+# MDT (Polizei-Terminal)
 
-Routes: `/dashboard /dispatch /incidents /team /communication /persons /vehicles /reports /tickets /complaints /investigations /wanted /evidence /personnel /applications /academy /analytics /admin/*`. Navigation entries and route guards depend on the user's effective permissions; the API enforces the same rules.
+Das MDT ist eine **eigene Vollbild-Oberfläche** unter `/mdt`, aufgebaut wie ein Streifen-Terminal. Anmeldung und Rechte sind dieselben wie im Dashboard:
+- **Dashboard → MDT:** Button „MDT öffnen“ oben rechts oder Menüpunkt „MDT“.
+- **MDT → Dashboard:** „Zum Dashboard“ oben rechts.
 
-The **MDT page** (`/mdt`) is the central portal: scoped search (everything / person / vehicle), permission-aware quick actions (create incident, report, ticket, complaint, investigation, wanted, evidence), and wanted/incident/report panels. The **Team dashboard** (`/team`) lists officers with rank, callsign, unit, duty status, current incident and last status change; users with `team.manage` can set others' duty status, users with `dispatch.assign` can move officers between units.
+Jeder Menüpunkt erscheint nur mit dem passenden Recht. Die API prüft dieselben Rechte.
 
-Global search: **Ctrl/Cmd+K** (name, Roblox ID, plate, I-/R-/T-/C-/CASE-/E- numbers), permission-aware on the server.
+| Bereich | Route | Recht | Inhalt |
+|---|---|---|---|
+| Übersicht | `/mdt` | `dashboard.view` | Suche (Person, Kennzeichen, Aktenzeichen, Roblox-Name/-ID), Schnellaktionen (Einsatz, Bericht, Ermittlung, Fahndung anlegen), Lagebild |
+| Meine Einheit | `/mdt/unit` | `cad.view` | Einheit, Dienststatus, Einsatzaufträge, Rückmeldungen an die Leitstelle (siehe [cad.md](cad.md)) |
+| Bürger | `/mdt/citizens` | `persons.view` | Bürgersuche als Karten (Name, Roblox-Name/-ID, Telefon; Filter nach Merkmal), Klick öffnet die **Bürgerakte** |
+| Fahrzeuge | `/mdt/vehicles` | `vehicles.view` | Kennzeichen, Modell oder Halter; Akte mit Halter, Fahndungen, Einsätzen |
+| Haftbefehle | `/mdt/warrants` | `wanted.view` | aktive Fahndungen nach Personen und Fahrzeugen |
+| Waffen | `/mdt/weapons` | `weapons.view` | Waffenregister: Seriennummer, Art, Modell, Besitzer, Status (registriert, gestohlen, beschlagnahmt, vernichtet) |
+| Berichte, Einsätze, Ermittlungen | `/mdt/reports` … | wie im Dashboard | dieselben Listen und Akten, im MDT geöffnet |
+| Dienstliste, Beamte | `/mdt/roster`, `/mdt/officers` | `team.view`, `personnel.view` | Teamliste und Personal |
+| MDT-Einstellungen | `/mdt/settings` | `settings.manage` | Lizenzen, Merkmale/Warnhinweise (mit Farbe), Waffenarten, Geschlechter – automatisch gespeichert |
 
-**Roblox lookup** (MDT search and Ctrl/Cmd+K, needs `persons.view`): type a Roblox **username**, a **Roblox ID** or paste a **profile link** – a card shows the Roblox account (avatar, display name, @name, ID, account age, banned on Roblox) with **Open person record** (if one exists, matched by ID or name) or **Create person record** (filled with name + ID, needs `persons.create`) and a link to the Roblox profile. The API (`GET /api/v1/persons/roblox?q=`) asks the public Roblox API (no token needed) and caches answers for 10 minutes; if Roblox is unreachable, the card simply doesn't appear.
+## Bürgerakte
 
-The same works in every **Person** field (e.g. *Create Ticket*): type a Roblox name or ID; if there is no record yet, the Roblox account is offered with **Create person record**. *New person* needs only the Roblox name **or** the ID – the other is looked up on Roblox (exact match only, never guessed). Tickets pick the **legal code** from a list (Admin → Legal Codes) instead of an ID.
-Generic building blocks: `ResourcePage` (server-side pagination, search, status filter, create modal), `RecordPage` (details, timeline, permission-aware actions with required reasons), `DataTable`, `FormModal`, `PersonPicker`, `StatusBadge`/`PriorityBadge` (text, not colour only), loading skeletons, empty and error states (with request ID).
-Studio (custom fields, accent) is documented in `studio.md`. Not implemented: virtualized tables, separate quick-action bar, Studio workflows.
+- **Kopf:** Foto, Name, Roblox-ID, Warnhinweise („Aktiver Haftbefehl“ und die gesetzten Merkmale), Geburtsdatum, Alter, Geschlecht, Telefon, Beruf, Adresse.
+- **Foto:** „Foto ändern“ (Datei) oder „Foto aufnehmen“ (öffnet am Handy die Kamera). PNG, JPG oder WebP bis 8 MB; das Foto ersetzt das vorige.
+- **Zähler:** aktive Haftbefehle, Fahrzeuge, Waffen, Einsätze, Berichte. Ein Klick öffnet den Reiter.
+- **Reiter:** Übersicht (Personalien, äußere Merkmale, Adresse), Lizenzen, Haftbefehle, Fahrzeuge, Waffen (mit „Registrieren“), Einsätze, Berichte, Ermittlungen, Notizen, Merkmale, Verlauf.
+- **Rechte:** Bearbeiten braucht `persons.edit`. Reiter, deren Bereich man nicht sehen darf, fehlen. Zum Beispiel erscheinen ohne `wanted.view` keine Haftbefehle.
+- **Nur gespeicherte Daten:** Was nicht erfasst ist, steht als „Nicht erfasst“ da und wird nie erfunden. Personen aus ER:LC kommen mit Roblox-Name und -ID. Die Personalien (Rollenspiel-Identität) trägt die Polizei ein.
+- **Protokoll und Konflikte:** Jede Änderung steht im Verlauf der Person und im Audit (`person.update`, `person.photo`). Hat jemand anderes die Akte inzwischen geändert, wird das Speichern abgelehnt (Versionsprüfung).
+
+## Waffenregister
+
+- Seriennummern sind je Akten-Bereich eindeutig. Sie werden in Großbuchstaben gespeichert, Leerzeichen fallen weg.
+- Rechte:
+  - `weapons.view`: Register ansehen
+  - `weapons.create`: Waffen registrieren
+  - `weapons.edit`: Status, Besitzer und Notizen ändern
+- Die Migration gibt die Rechte jeder Rolle, die die entsprechenden Fahrzeugrechte hat (`vehicles.view` / `create` / `edit`).
+- Audit-Aktionen: `weapon.create` und `weapon.update`.
+
+## API
+
+`/api/v1/mdt/…`:
+- `config` (GET; PUT nur mit `settings.manage`)
+- `citizens` (Liste), `citizens/:id` (Profil, PATCH Personalien), `citizens/:id/photo` (POST)
+- `vehicles`, `vehicles/:id`
+- `weapons` (GET, POST), `weapons/:id` (PATCH)
+- `warrants`
+
+Bürger, Fahrzeuge und Waffen gelten je gewähltem Discord-Server bzw. Server-Verbund (Akten-Bereich).

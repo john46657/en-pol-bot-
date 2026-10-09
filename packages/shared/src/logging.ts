@@ -6,7 +6,7 @@ import { z } from 'zod';
  */
 export const LOG_CATEGORIES = [
   { key: 'einsaetze', label: 'Einsätze & Leitstelle', emoji: '🚨', modules: ['cad', 'dispatch', 'incidents', 'erlc', 'radio'] },
-  { key: 'akten', label: 'Akten & Ermittlungen', emoji: '🗂️', modules: ['persons', 'vehicles', 'wanted', 'investigations', 'evidence', 'reports', 'tickets', 'complaints'] },
+  { key: 'akten', label: 'Akten & Ermittlungen', emoji: '🗂️', modules: ['persons', 'vehicles', 'weapons', 'wanted', 'investigations', 'evidence', 'reports', 'tickets', 'complaints'] },
   { key: 'bewerbungen', label: 'Bewerbungen & Qualifikationen', emoji: '📋', modules: ['applications', 'qualifications'] },
   { key: 'personal', label: 'Personal & Ausbildung', emoji: '👮', modules: ['personnel', 'promotion', 'dienstnummer', 'training', 'exam', 'academy', 'sek'] },
   { key: 'dienst', label: 'Dienst, Abmeldungen & Berichte', emoji: '🕒', modules: ['team', 'dutyreports', 'leave'] },
@@ -19,6 +19,10 @@ export const logCategoryOf = (module: string): LogCategoryKey => (LOG_CATEGORIES
 
 /** Bekannte Aktionen → Bereich (aus den Audit-Einträgen der API; weitere kommen aus dem Audit-Log dazu). */
 export const LOG_TYPES: Record<string, string> = {
+  'weapon.update': 'weapons',
+  'weapon.create': 'weapons',
+  'person.photo': 'persons',
+  'mdt.config': 'settings',
   'academy.config': 'academy',
   'academy.course.announce': 'academy',
   'academy.course.create': 'academy',

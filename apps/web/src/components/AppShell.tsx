@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
-import { NavLink, Outlet, useLocation } from 'react-router';
-import { ChevronsLeft, ChevronsRight, LogOut, Menu, Shield, Star } from 'lucide-react';
+import { Link, NavLink, Outlet, useLocation } from 'react-router';
+import { ChevronsLeft, ChevronsRight, LogOut, Menu, Monitor, Shield, Star } from 'lucide-react';
 import { ServerSwitcher } from './ServerSwitcher';
 import { useAuth } from '../lib/auth';
 import { useMediaQuery } from '../lib/media';
@@ -81,6 +81,7 @@ export function AppShell() {
           <Button variant="ghost" className="lg:hidden" aria-label="Menü öffnen" onClick={() => setOpen(true)}><Menu size={18} /></Button>
           <GlobalSearch />
           <div className="ml-auto flex shrink-0 items-center gap-1 sm:gap-2">
+            {can('dashboard.view') && <Link to="/mdt" className="flex items-center gap-1.5 rounded-md bg-primary px-2.5 py-1.5 text-xs font-medium text-primary-fg hover:opacity-90" title="Polizei-MDT öffnen"><Monitor size={14} aria-hidden /><span className="hidden sm:inline">MDT öffnen</span></Link>}
             <SaveStatus />
             <DiscordLink />
             <NotificationCenter />

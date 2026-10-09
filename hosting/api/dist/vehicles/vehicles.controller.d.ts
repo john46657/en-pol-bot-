@@ -77,6 +77,17 @@ export declare class VehiclesController {
                 custom: import("@prisma/client/runtime/library").JsonValue | null;
                 aliases: string[];
                 notes: string | null;
+                fullName: string | null;
+                dateOfBirth: Date | null;
+                gender: string | null;
+                phone: string | null;
+                job: string | null;
+                nationality: string | null;
+                address: string | null;
+                appearance: import("@prisma/client/runtime/library").JsonValue | null;
+                licenses: string[];
+                flags: string[];
+                photoId: string | null;
             } | null;
         } & {
             id: string;

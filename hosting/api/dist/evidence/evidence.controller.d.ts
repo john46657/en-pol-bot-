@@ -13,16 +13,16 @@ declare const create: z.ZodObject<{
     type: string;
     description: string;
     source?: string | undefined;
-    personIds?: string[] | undefined;
     caseRef?: string | undefined;
     storageLocation?: string | undefined;
+    personIds?: string[] | undefined;
 }, {
     type: string;
     description: string;
     source?: string | undefined;
-    personIds?: string[] | undefined;
     caseRef?: string | undefined;
     storageLocation?: string | undefined;
+    personIds?: string[] | undefined;
 }>;
 declare const transfer: z.ZodObject<{
     to: z.ZodEffects<z.ZodEnum<["COLLECTED", "STORED", "TRANSFERRED", "REVIEWED", "RELEASED", "ARCHIVED"]>, "ARCHIVED" | "COLLECTED" | "STORED" | "TRANSFERRED" | "REVIEWED", "ARCHIVED" | "COLLECTED" | "STORED" | "TRANSFERRED" | "REVIEWED" | "RELEASED">;

@@ -4,6 +4,7 @@ import { MeModule } from './me/me.module';
 import { RadioCodesModule } from './radio-codes/radio-codes.module';
 import { TeamChanceModule } from './teamchance/teamchance.module';
 import { CadModule } from './cad/cad.module';
+import { MdtModule } from './mdt/mdt.module';
 import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
 import { APP_FILTER, APP_GUARD, DiscoveryModule } from '@nestjs/core';
 import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
@@ -67,7 +68,7 @@ import { HrModule } from './hr/hr.module';
     ThrottlerModule.forRoot({ throttlers: [{ ttl: 60_000, limit: process.env.NODE_ENV === 'test' ? 10_000 : 300 }], errorMessage: 'Zu viele Anfragen – bitte kurz warten.' }),
     DiscoveryModule, PrismaModule, AuthzModule, AuditModule, AuthModule, UsersModule, PersonsModule, VehiclesModule, TicketsModule,
     DispatchModule, ReportsModule, ComplaintsModule, InvestigationsModule, WantedModule, EvidenceModule,
-    PersonnelModule, DutyModule, ApplicationsModule, ApplicationBansModule, AcademyModule, NotificationsModule, SearchModule, CommunicationModule, AnalyticsModule, RealtimeModule, AdminModule, ExportModule, MediaModule, StudioModule, DiscordModule, DangerModule, RadioModule, SekModule, QualificationsModule, SupportTicketsModule, LeaveModule, RosterModule, MeModule, RadioCodesModule, TeamChanceModule, CadModule, LocksModule, WorkflowsModule, WelcomeModule, VoiceSupportModule, EmbedsModule, ServerLinksModule, LoggingModule, BackupModule, VerificationModule, PanelsModule, DutyReportsModule, HrModule,
+    PersonnelModule, DutyModule, ApplicationsModule, ApplicationBansModule, AcademyModule, NotificationsModule, SearchModule, CommunicationModule, AnalyticsModule, RealtimeModule, AdminModule, ExportModule, MediaModule, StudioModule, DiscordModule, DangerModule, RadioModule, SekModule, QualificationsModule, SupportTicketsModule, LeaveModule, RosterModule, MeModule, RadioCodesModule, TeamChanceModule, CadModule, MdtModule, LocksModule, WorkflowsModule, WelcomeModule, VoiceSupportModule, EmbedsModule, ServerLinksModule, LoggingModule, BackupModule, VerificationModule, PanelsModule, DutyReportsModule, HrModule,
   ],
   controllers: [HealthController, AuditController],
   providers: [

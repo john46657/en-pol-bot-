@@ -182,20 +182,34 @@ model UserSettings {
 // ───────────── Records ─────────────
 
 model Person {
-  id             String   @id @default(uuid()) @db.Uuid
-  serverId       String?  @db.Uuid
+  id             String    @id @default(uuid()) @db.Uuid
+  serverId       String?   @db.Uuid
   robloxUserId   String? // eindeutig je Akten-Bereich (serverId), siehe Server-Verbund
   robloxUsername String
-  aliases        String[] @default([])
-  status         String   @default("ACTIVE") // ACTIVE | ARCHIVED
+  aliases        String[]  @default([])
+  status         String    @default("ACTIVE") // ACTIVE | ARCHIVED
   notes          String?
   custom         Json? // Werte der in Studio definierten Custom Fields
-  createdById    String?  @db.Uuid
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
-  version        Int      @default(1)
+  /// Personalien im MDT (Rollenspiel-Identität); Lizenzen/Merkmale sind Schlüssel aus der MDT-Konfiguration
+  fullName       String?
+  dateOfBirth    DateTime? @db.Date
+  gender         String?
+  phone          String?
+  job            String?
+  nationality    String?
+  address        String?
+  appearance     Json?
+  licenses       String[]  @default([])
+  flags          String[]  @default([])
+  /// Foto (Media mit linkedType „Person“)
+  photoId        String?   @db.Uuid
+  createdById    String?   @db.Uuid
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+  version        Int       @default(1)
 
   vehicles Vehicle[]
+  weapons  Weapon[]
   links    RecordLink[]
   tickets  Ticket[]
 
@@ -221,6 +235,26 @@ model Vehicle {
 
   @@unique([serverId, plate])
   @@index([plate])
+}
+
+/// Waffenregister im MDT: Seriennummer je Akten-Bereich eindeutig.
+model Weapon {
+  id        String   @id @default(uuid()) @db.Uuid
+  serverId  String?  @db.Uuid
+  serial    String
+  type      String
+  model     String?
+  ownerId   String?  @db.Uuid
+  status    String   @default("REGISTERED") // REGISTERED | STOLEN | SEIZED | DESTROYED
+  notes     String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  version   Int      @default(1)
+  owner     Person?  @relation(fields: [ownerId], references: [id], onDelete: SetNull)
+
+  @@unique([serverId, serial])
+  @@index([serial])
+  @@index([ownerId])
 }
 
 /**
