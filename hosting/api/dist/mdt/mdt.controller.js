@@ -39,6 +39,7 @@ let MdtController = class MdtController {
     saveConfig(a, b) { return this.s.saveConfig(a, b); }
     citizens(q) { return this.s.citizens(q); }
     citizen(a, id) { return this.s.profile(a, id); }
+    citizenRoblox(a, id) { return this.s.robloxProfile(a, id); }
     updateCitizen(a, id, b) {
         const { version, ...rest } = b;
         return this.s.updateCitizen(a, id, version, rest);
@@ -88,6 +89,15 @@ __decorate([
     __metadata("design:paramtypes", [Object, String]),
     __metadata("design:returntype", void 0)
 ], MdtController.prototype, "citizen", null);
+__decorate([
+    (0, common_1.Get)('citizens/:id/roblox'),
+    (0, decorators_1.RequirePermission)('persons.view'),
+    __param(0, (0, decorators_1.CurrentActor)()),
+    __param(1, (0, common_1.Param)('id', common_1.ParseUUIDPipe)),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, String]),
+    __metadata("design:returntype", void 0)
+], MdtController.prototype, "citizenRoblox", null);
 __decorate([
     (0, common_1.Patch)('citizens/:id'),
     (0, decorators_1.RequirePermission)('persons.edit'),

@@ -19,6 +19,7 @@ const permission_service_1 = require("../authz/permission.service");
 const timeline_service_1 = require("../timeline/timeline.service");
 const media_service_1 = require("../media/media.service");
 const locks_service_1 = require("../locks/locks.service");
+const roblox_service_1 = require("../persons/roblox.service");
 const errors_1 = require("../common/errors");
 const guild_context_1 = require("../common/guild-context");
 const pagination_1 = require("../common/pagination");
@@ -47,13 +48,15 @@ let MdtService = class MdtService {
     timeline;
     media;
     locks;
-    constructor(prisma, audit, perms, timeline, media, locks) {
+    roblox;
+    constructor(prisma, audit, perms, timeline, media, locks, roblox) {
         this.prisma = prisma;
         this.audit = audit;
         this.perms = perms;
         this.timeline = timeline;
         this.media = media;
         this.locks = locks;
+        this.roblox = roblox;
     }
     // ───────── Einstellungen ─────────
     async config() {
@@ -99,8 +102,8 @@ let MdtService = class MdtService {
             this.prisma.person.findMany({ where, orderBy: [{ fullName: { sort: 'asc', nulls: 'last' } }, { robloxUsername: 'asc' }], ...(0, pagination_1.skipTake)(p) }),
             this.prisma.person.count({ where }),
         ]);
-        const counts = await this.warrantCounts(items.map((i) => i.id));
-        return (0, pagination_1.pageResult)(items.map((i) => this.citizen(i, counts.get(i.id) ?? 0)), total, p);
+        const [counts, heads] = await Promise.all([this.warrantCounts(items.map((i) => i.id)), this.roblox.headshots(items.map((i) => i.robloxUserId).filter((x) => !!x))]);
+        return (0, pagination_1.pageResult)(items.map((i) => ({ ...this.citizen(i, counts.get(i.id) ?? 0), robloxHeadshotUrl: i.robloxUserId ? heads.get(i.robloxUserId) ?? null : null })), total, p);
     }
     async profile(actor, id) {
         const p = await this.prisma.person.findFirst({ where: { id, ...(0, guild_context_1.recordWhere)() } });
@@ -176,6 +179,31 @@ let MdtService = class MdtService {
             await this.audit.record(actor, { action: 'person.update', module: 'persons', entityType: 'Person', entityId: id, before: Object.fromEntries(fields.map((k) => [k, before[k]])), after: Object.fromEntries(fields.map((k) => [k, after[k]])) }, tx);
             return this.citizen(after, 0);
         });
+    }
+    /**
+     * Roblox-Profil der Person (Avatar, Anzeigename, Kontoalter, Freunde, Gruppen, frühere Namen) – live von Roblox.
+     * Ohne gespeicherte Roblox-ID wird sie über den Roblox-Namen gesucht (nur exakter Treffer) und in der Akte nachgetragen.
+     */
+    async robloxProfile(actor, id) {
+        const p = await this.prisma.person.findFirst({ where: { id, ...(0, guild_context_1.recordWhere)() }, select: { id: true, robloxUserId: true, robloxUsername: true } });
+        if (!p)
+            throw new errors_1.AppError('NOT_FOUND', 'Person nicht gefunden.');
+        let rid = p.robloxUserId;
+        if (!rid) {
+            const found = await this.roblox.verifyName(p.robloxUsername);
+            if (found === undefined)
+                return { status: 'unreachable', profile: null };
+            if (found === null)
+                return { status: 'not_found', profile: null };
+            rid = found.id;
+            const taken = await this.prisma.person.findFirst({ where: { robloxUserId: rid, serverId: (await this.prisma.person.findUnique({ where: { id }, select: { serverId: true } }))?.serverId ?? null }, select: { id: true } });
+            if (!taken) {
+                await this.prisma.person.update({ where: { id }, data: { robloxUserId: rid } });
+                await this.timeline.add(this.prisma, { entityType: 'Person', entityId: id, action: 'person.updated', summary: `Roblox-ID ${rid} von Roblox übernommen`, actorId: actor.userId });
+            }
+        }
+        const profile = await this.roblox.profileDetails(rid);
+        return profile ? { status: 'ok', profile } : { status: process.env.ROBLOX_LOOKUP === 'off' ? 'disabled' : 'unreachable', profile: null };
     }
     /** Foto hochladen oder mit der Kamera aufnehmen (Bild bis 8 MB); ersetzt das bisherige Foto. */
     async setPhoto(actor, id, file) {
@@ -288,6 +316,7 @@ exports.MdtService = MdtService;
 exports.MdtService = MdtService = __decorate([
     (0, common_1.Injectable)(),
     __metadata("design:paramtypes", [prisma_service_1.PrismaService, audit_service_1.AuditService, permission_service_1.PermissionService,
-        timeline_service_1.TimelineService, media_service_1.MediaService, locks_service_1.LocksService])
+        timeline_service_1.TimelineService, media_service_1.MediaService, locks_service_1.LocksService,
+        roblox_service_1.RobloxService])
 ], MdtService);
 //# sourceMappingURL=mdt.service.js.map

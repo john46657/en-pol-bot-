@@ -9,12 +9,13 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.MdtModule = void 0;
 const common_1 = require("@nestjs/common");
 const media_module_1 = require("../media/media.module");
+const persons_module_1 = require("../persons/persons.module");
 const mdt_controller_1 = require("./mdt.controller");
 const mdt_service_1 = require("./mdt.service");
 let MdtModule = class MdtModule {
 };
 exports.MdtModule = MdtModule;
 exports.MdtModule = MdtModule = __decorate([
-    (0, common_1.Module)({ imports: [media_module_1.MediaModule], controllers: [mdt_controller_1.MdtController], providers: [mdt_service_1.MdtService] })
+    (0, common_1.Module)({ imports: [media_module_1.MediaModule, persons_module_1.PersonsModule], controllers: [mdt_controller_1.MdtController], providers: [mdt_service_1.MdtService] })
 ], MdtModule);
 //# sourceMappingURL=mdt.module.js.map

@@ -6,6 +6,7 @@ import { PermissionService } from '../authz/permission.service';
 import { TimelineService } from '../timeline/timeline.service';
 import { MediaService } from '../media/media.service';
 import { LocksService } from '../locks/locks.service';
+import { RobloxService } from '../persons/roblox.service';
 import { type PageQuery } from '../common/pagination';
 /**
  * Polizei-MDT: Bürger-, Fahrzeug- und Waffenakten in der Ansicht eines Streifen-Terminals.
@@ -19,7 +20,8 @@ export declare class MdtService {
     private readonly timeline;
     private readonly media;
     private readonly locks;
-    constructor(prisma: PrismaService, audit: AuditService, perms: PermissionService, timeline: TimelineService, media: MediaService, locks: LocksService);
+    private readonly roblox;
+    constructor(prisma: PrismaService, audit: AuditService, perms: PermissionService, timeline: TimelineService, media: MediaService, locks: LocksService, roblox: RobloxService);
     config(): Promise<MdtConfig>;
     saveConfig(actor: Actor, patch: Partial<MdtConfig>): Promise<{
         licenses: {
@@ -43,6 +45,7 @@ export declare class MdtService {
         flag?: string;
     }): Promise<{
         items: {
+            robloxHeadshotUrl: string | null;
             id: string;
             robloxUsername: string;
             robloxUserId: string | null;
@@ -121,9 +124,9 @@ export declare class MdtService {
             serverId: string | null;
             status: string;
             custom: Prisma.JsonValue | null;
+            model: string | null;
             notes: string | null;
             plate: string;
-            model: string | null;
             ownerId: string | null;
             erlcReference: string | null;
         }[] | null;
@@ -135,8 +138,8 @@ export declare class MdtService {
             type: string;
             serverId: string | null;
             status: string;
-            notes: string | null;
             model: string | null;
+            notes: string | null;
             ownerId: string | null;
             serial: string;
         }[] | null;
@@ -151,8 +154,8 @@ export declare class MdtService {
             priority: string;
             createdById: string;
             status: string;
-            personId: string | null;
             vehicleId: string | null;
+            personId: string | null;
         }[] | null;
     }>;
     updateCitizen(actor: Actor, id: string, version: number, d: PersonDetails & {
@@ -179,6 +182,20 @@ export declare class MdtService {
         version: number;
         updatedAt: Date;
     }>;
+    /**
+     * Roblox-Profil der Person (Avatar, Anzeigename, Kontoalter, Freunde, Gruppen, frühere Namen) – live von Roblox.
+     * Ohne gespeicherte Roblox-ID wird sie über den Roblox-Namen gesucht (nur exakter Treffer) und in der Akte nachgetragen.
+     */
+    robloxProfile(actor: Actor, id: string): Promise<{
+        status: "not_found";
+        profile: null;
+    } | {
+        status: "ok";
+        profile: import("../persons/roblox.service").RobloxDetails;
+    } | {
+        status: "unreachable" | "disabled";
+        profile: null;
+    }>;
     /** Foto hochladen oder mit der Kamera aufnehmen (Bild bis 8 MB); ersetzt das bisherige Foto. */
     setPhoto(actor: Actor, id: string, file: {
         originalname: string;
@@ -204,9 +221,9 @@ export declare class MdtService {
             serverId: string | null;
             status: string;
             custom: Prisma.JsonValue | null;
+            model: string | null;
             notes: string | null;
             plate: string;
-            model: string | null;
             ownerId: string | null;
             erlcReference: string | null;
         }[];
@@ -232,9 +249,9 @@ export declare class MdtService {
             serverId: string | null;
             status: string;
             custom: Prisma.JsonValue | null;
+            model: string | null;
             notes: string | null;
             plate: string;
-            model: string | null;
             ownerId: string | null;
             erlcReference: string | null;
         };
@@ -249,8 +266,8 @@ export declare class MdtService {
             priority: string;
             createdById: string;
             status: string;
-            personId: string | null;
             vehicleId: string | null;
+            personId: string | null;
         }[] | null;
         incidents: {
             number: string;
@@ -287,8 +304,8 @@ export declare class MdtService {
             type: string;
             serverId: string | null;
             status: string;
-            notes: string | null;
             model: string | null;
+            notes: string | null;
             ownerId: string | null;
             serial: string;
         })[];
@@ -312,8 +329,8 @@ export declare class MdtService {
         type: string;
         serverId: string | null;
         status: string;
-        notes: string | null;
         model: string | null;
+        notes: string | null;
         ownerId: string | null;
         serial: string;
     }>;
@@ -331,8 +348,8 @@ export declare class MdtService {
         type: string;
         serverId: string | null;
         status: string;
-        notes: string | null;
         model: string | null;
+        notes: string | null;
         ownerId: string | null;
         serial: string;
     }>;
@@ -348,8 +365,8 @@ export declare class MdtService {
         vehicle: {
             id: string;
             color: string | null;
-            plate: string;
             model: string | null;
+            plate: string;
         } | null;
         id: string;
         reason: string;
@@ -361,7 +378,7 @@ export declare class MdtService {
         priority: string;
         createdById: string;
         status: string;
-        personId: string | null;
         vehicleId: string | null;
+        personId: string | null;
     }[]>;
 }

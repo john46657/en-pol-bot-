@@ -12,15 +12,15 @@ declare const create: z.ZodObject<{
 }, "strip", z.ZodTypeAny, {
     robloxUsername: string;
     robloxUserId?: string | null | undefined;
-    custom?: Record<string, unknown> | undefined;
     aliases?: string[] | undefined;
     notes?: string | undefined;
+    custom?: Record<string, unknown> | undefined;
 }, {
     robloxUsername: string;
     robloxUserId?: string | null | undefined;
-    custom?: Record<string, unknown> | undefined;
     aliases?: string[] | undefined;
     notes?: string | undefined;
+    custom?: Record<string, unknown> | undefined;
 }>;
 declare const update: z.ZodObject<{
     version: z.ZodNumber;
@@ -31,15 +31,15 @@ declare const update: z.ZodObject<{
 }, "strip", z.ZodTypeAny, {
     version: number;
     robloxUsername?: string | undefined;
-    custom?: Record<string, unknown> | undefined;
     aliases?: string[] | undefined;
     notes?: string | null | undefined;
+    custom?: Record<string, unknown> | undefined;
 }, {
     version: number;
     robloxUsername?: string | undefined;
-    custom?: Record<string, unknown> | undefined;
     aliases?: string[] | undefined;
     notes?: string | null | undefined;
+    custom?: Record<string, unknown> | undefined;
 }>;
 declare const merge: z.ZodObject<{
     targetId: z.ZodString;
@@ -47,12 +47,12 @@ declare const merge: z.ZodObject<{
     reason: z.ZodString;
 }, "strip", z.ZodTypeAny, {
     reason: string;
-    confirm: true;
     targetId: string;
+    confirm: true;
 }, {
     reason: string;
-    confirm: true;
     targetId: string;
+    confirm: true;
 }>;
 declare const robloxQ: z.ZodObject<{
     q: z.ZodString;
@@ -74,29 +74,18 @@ export declare class PersonsController {
     constructor(persons: PersonsService, roblox: RobloxService);
     list(q: z.infer<typeof pageQuery>): Promise<{
         items: {
+            serverId: string | null;
             id: string;
+            status: string;
             createdAt: Date;
-            robloxUserId: string | null;
-            robloxUsername: string;
             updatedAt: Date;
             version: number;
-            serverId: string | null;
             createdById: string | null;
-            status: string;
-            custom: import("@prisma/client/runtime/library").JsonValue | null;
+            robloxUserId: string | null;
+            robloxUsername: string;
             aliases: string[];
             notes: string | null;
-            fullName: string | null;
-            dateOfBirth: Date | null;
-            gender: string | null;
-            phone: string | null;
-            job: string | null;
-            nationality: string | null;
-            address: string | null;
-            appearance: import("@prisma/client/runtime/library").JsonValue | null;
-            licenses: string[];
-            flags: string[];
-            photoId: string | null;
+            custom: import("@prisma/client/runtime/library").JsonValue | null;
         }[];
         total: number;
         page: number;
@@ -109,55 +98,44 @@ export declare class PersonsController {
     get(id: string): Promise<{
         person: {
             vehicles: {
+                serverId: string | null;
+                model: string | null;
                 id: string;
+                status: string;
                 createdAt: Date;
                 updatedAt: Date;
                 version: number;
-                color: string | null;
-                serverId: string | null;
-                status: string;
-                custom: import("@prisma/client/runtime/library").JsonValue | null;
-                notes: string | null;
-                plate: string;
-                model: string | null;
                 ownerId: string | null;
+                color: string | null;
+                notes: string | null;
+                custom: import("@prisma/client/runtime/library").JsonValue | null;
+                plate: string;
                 erlcReference: string | null;
             }[];
         } & {
+            serverId: string | null;
             id: string;
+            status: string;
             createdAt: Date;
-            robloxUserId: string | null;
-            robloxUsername: string;
             updatedAt: Date;
             version: number;
-            serverId: string | null;
             createdById: string | null;
-            status: string;
-            custom: import("@prisma/client/runtime/library").JsonValue | null;
+            robloxUserId: string | null;
+            robloxUsername: string;
             aliases: string[];
             notes: string | null;
-            fullName: string | null;
-            dateOfBirth: Date | null;
-            gender: string | null;
-            phone: string | null;
-            job: string | null;
-            nationality: string | null;
-            address: string | null;
-            appearance: import("@prisma/client/runtime/library").JsonValue | null;
-            licenses: string[];
-            flags: string[];
-            photoId: string | null;
+            custom: import("@prisma/client/runtime/library").JsonValue | null;
         };
         tickets: {
             number: string;
             id: string;
-            reason: string;
+            status: string;
             updatedAt: Date;
             version: number;
-            status: string;
-            notes: string | null;
-            personId: string;
             officerId: string;
+            personId: string;
+            reason: string;
+            notes: string | null;
             legalCodeId: string | null;
             amount: import("@prisma/client/runtime/library").Decimal;
             reportId: string | null;
@@ -168,129 +146,85 @@ export declare class PersonsController {
         links: {
             role: string;
             id: string;
-            entityType: string;
-            entityId: string;
             createdAt: Date;
             personId: string | null;
             vehicleId: string | null;
+            entityType: string;
+            entityId: string;
         }[];
         timeline: {
             id: string;
-            action: string;
+            createdAt: Date;
             entityType: string;
             entityId: string;
-            createdAt: Date;
             summary: string;
+            action: string;
             actorId: string | null;
         }[];
     }>;
     create(a: Actor, b: z.infer<typeof create>): Promise<{
         person: {
+            serverId: string | null;
             id: string;
+            status: string;
             createdAt: Date;
-            robloxUserId: string | null;
-            robloxUsername: string;
             updatedAt: Date;
             version: number;
-            serverId: string | null;
             createdById: string | null;
-            status: string;
-            custom: import("@prisma/client/runtime/library").JsonValue | null;
+            robloxUserId: string | null;
+            robloxUsername: string;
             aliases: string[];
             notes: string | null;
-            fullName: string | null;
-            dateOfBirth: Date | null;
-            gender: string | null;
-            phone: string | null;
-            job: string | null;
-            nationality: string | null;
-            address: string | null;
-            appearance: import("@prisma/client/runtime/library").JsonValue | null;
-            licenses: string[];
-            flags: string[];
-            photoId: string | null;
+            custom: import("@prisma/client/runtime/library").JsonValue | null;
         };
         possibleDuplicates: {
             id: string;
+            status: string;
             robloxUserId: string | null;
             robloxUsername: string;
-            status: string;
         }[];
     }>;
     update(a: Actor, id: string, b: z.infer<typeof update>): Promise<{
+        serverId: string | null;
         id: string;
+        status: string;
         createdAt: Date;
-        robloxUserId: string | null;
-        robloxUsername: string;
         updatedAt: Date;
         version: number;
-        serverId: string | null;
         createdById: string | null;
-        status: string;
-        custom: import("@prisma/client/runtime/library").JsonValue | null;
+        robloxUserId: string | null;
+        robloxUsername: string;
         aliases: string[];
         notes: string | null;
-        fullName: string | null;
-        dateOfBirth: Date | null;
-        gender: string | null;
-        phone: string | null;
-        job: string | null;
-        nationality: string | null;
-        address: string | null;
-        appearance: import("@prisma/client/runtime/library").JsonValue | null;
-        licenses: string[];
-        flags: string[];
-        photoId: string | null;
+        custom: import("@prisma/client/runtime/library").JsonValue | null;
     }>;
     archive(a: Actor, id: string, b: z.infer<typeof archive>): Promise<{
+        serverId: string | null;
         id: string;
+        status: string;
         createdAt: Date;
-        robloxUserId: string | null;
-        robloxUsername: string;
         updatedAt: Date;
         version: number;
-        serverId: string | null;
         createdById: string | null;
-        status: string;
-        custom: import("@prisma/client/runtime/library").JsonValue | null;
+        robloxUserId: string | null;
+        robloxUsername: string;
         aliases: string[];
         notes: string | null;
-        fullName: string | null;
-        dateOfBirth: Date | null;
-        gender: string | null;
-        phone: string | null;
-        job: string | null;
-        nationality: string | null;
-        address: string | null;
-        appearance: import("@prisma/client/runtime/library").JsonValue | null;
-        licenses: string[];
-        flags: string[];
-        photoId: string | null;
+        custom: import("@prisma/client/runtime/library").JsonValue | null;
     }>;
     merge(a: Actor, id: string, b: z.infer<typeof merge>): Promise<{
+        serverId: string | null;
         id: string;
+        status: string;
         createdAt: Date;
-        robloxUserId: string | null;
-        robloxUsername: string;
         updatedAt: Date;
         version: number;
-        serverId: string | null;
         createdById: string | null;
-        status: string;
-        custom: import("@prisma/client/runtime/library").JsonValue | null;
+        robloxUserId: string | null;
+        robloxUsername: string;
         aliases: string[];
         notes: string | null;
-        fullName: string | null;
-        dateOfBirth: Date | null;
-        gender: string | null;
-        phone: string | null;
-        job: string | null;
-        nationality: string | null;
-        address: string | null;
-        appearance: import("@prisma/client/runtime/library").JsonValue | null;
-        licenses: string[];
-        flags: string[];
-        photoId: string | null;
+        custom: import("@prisma/client/runtime/library").JsonValue | null;
     }>;
 }
 export {};

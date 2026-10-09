@@ -12,12 +12,17 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.PrismaService = void 0;
 const common_1 = require("@nestjs/common");
 const client_1 = require("@prisma/client");
+const server_scope_1 = require("./server-scope");
 let PrismaService = class PrismaService extends client_1.PrismaClient {
     /**
      * Längere Zeitlimits für Transaktionen: bei gehosteten Datenbanken (z. B. bot-hosting.net) dauert jede Abfrage spürbar;
      * mit dem Standard (5 s) brachen große Speichervorgänge (z. B. alle Rechte einer Rolle) mit „unexpected error“ ab.
      */
-    constructor() { super({ transactionOptions: { timeout: 30_000, maxWait: 15_000 } }); }
+    constructor() {
+        super({ transactionOptions: { timeout: 30_000, maxWait: 15_000 } });
+        // Je Discord-Server getrennte Daten (Berichte, Fahndungen, …) – siehe server-scope.ts. Nest bekommt den erweiterten Client.
+        return (0, server_scope_1.withServerScope)(this);
+    }
     async onModuleInit() { await this.$connect(); }
     async onModuleDestroy() { await this.$disconnect(); }
 };

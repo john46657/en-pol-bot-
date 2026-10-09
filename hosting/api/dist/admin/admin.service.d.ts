@@ -32,26 +32,26 @@ export declare const SETTING_SCHEMAS: {
             required: z.ZodDefault<z.ZodBoolean>;
             options: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
         }, "strip", z.ZodTypeAny, {
-            key: string;
             type: "number" | "select" | "text" | "date";
+            key: string;
             label: string;
             required: boolean;
             options?: string[] | undefined;
         }, {
-            key: string;
             type: "number" | "select" | "text" | "date";
+            key: string;
             label: string;
             options?: string[] | undefined;
             required?: boolean | undefined;
         }>, {
-            key: string;
             type: "number" | "select" | "text" | "date";
+            key: string;
             label: string;
             required: boolean;
             options?: string[] | undefined;
         }, {
-            key: string;
             type: "number" | "select" | "text" | "date";
+            key: string;
             label: string;
             options?: string[] | undefined;
             required?: boolean | undefined;
@@ -63,86 +63,86 @@ export declare const SETTING_SCHEMAS: {
             required: z.ZodDefault<z.ZodBoolean>;
             options: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
         }, "strip", z.ZodTypeAny, {
-            key: string;
             type: "number" | "select" | "text" | "date";
+            key: string;
             label: string;
             required: boolean;
             options?: string[] | undefined;
         }, {
-            key: string;
             type: "number" | "select" | "text" | "date";
+            key: string;
             label: string;
             options?: string[] | undefined;
             required?: boolean | undefined;
         }>, {
-            key: string;
             type: "number" | "select" | "text" | "date";
+            key: string;
             label: string;
             required: boolean;
             options?: string[] | undefined;
         }, {
-            key: string;
             type: "number" | "select" | "text" | "date";
+            key: string;
             label: string;
             options?: string[] | undefined;
             required?: boolean | undefined;
         }>, "many">>;
     }, "strip", z.ZodTypeAny, {
-        persons: {
-            key: string;
+        vehicles: {
             type: "number" | "select" | "text" | "date";
+            key: string;
             label: string;
             required: boolean;
             options?: string[] | undefined;
         }[];
-        vehicles: {
-            key: string;
+        persons: {
             type: "number" | "select" | "text" | "date";
+            key: string;
             label: string;
             required: boolean;
             options?: string[] | undefined;
         }[];
     }, {
-        persons?: {
-            key: string;
+        vehicles?: {
             type: "number" | "select" | "text" | "date";
+            key: string;
             label: string;
             options?: string[] | undefined;
             required?: boolean | undefined;
         }[] | undefined;
-        vehicles?: {
-            key: string;
+        persons?: {
             type: "number" | "select" | "text" | "date";
+            key: string;
             label: string;
             options?: string[] | undefined;
             required?: boolean | undefined;
         }[] | undefined;
     }>, {
-        persons: {
-            key: string;
+        vehicles: {
             type: "number" | "select" | "text" | "date";
+            key: string;
             label: string;
             required: boolean;
             options?: string[] | undefined;
         }[];
-        vehicles: {
-            key: string;
+        persons: {
             type: "number" | "select" | "text" | "date";
+            key: string;
             label: string;
             required: boolean;
             options?: string[] | undefined;
         }[];
     }, {
-        persons?: {
-            key: string;
+        vehicles?: {
             type: "number" | "select" | "text" | "date";
+            key: string;
             label: string;
             options?: string[] | undefined;
             required?: boolean | undefined;
         }[] | undefined;
-        vehicles?: {
-            key: string;
+        persons?: {
             type: "number" | "select" | "text" | "date";
+            key: string;
             label: string;
             options?: string[] | undefined;
             required?: boolean | undefined;
@@ -180,16 +180,16 @@ export declare const SETTING_SCHEMAS: {
         trainingRole: z.ZodOptional<z.ZodString>;
         adminDutyRole: z.ZodOptional<z.ZodString>;
     }, "strip", z.ZodTypeAny, {
+        guildId?: string | undefined;
+        qualifications?: string | undefined;
+        tickets?: string | undefined;
         dispatch?: string | undefined;
         wanted?: string | undefined;
         announcements?: string | undefined;
         applications?: string | undefined;
         danger?: string | undefined;
         sek?: string | undefined;
-        qualifications?: string | undefined;
         duty?: string | undefined;
-        tickets?: string | undefined;
-        guildId?: string | undefined;
         teamlist?: string | undefined;
         staffRole?: string | undefined;
         radioRole?: string | undefined;
@@ -199,16 +199,16 @@ export declare const SETTING_SCHEMAS: {
         trainingRole?: string | undefined;
         adminDutyRole?: string | undefined;
     }, {
+        guildId?: string | undefined;
+        qualifications?: string | undefined;
+        tickets?: string | undefined;
         dispatch?: string | undefined;
         wanted?: string | undefined;
         announcements?: string | undefined;
         applications?: string | undefined;
         danger?: string | undefined;
         sek?: string | undefined;
-        qualifications?: string | undefined;
         duty?: string | undefined;
-        tickets?: string | undefined;
-        guildId?: string | undefined;
         teamlist?: string | undefined;
         staffRole?: string | undefined;
         radioRole?: string | undefined;
@@ -257,17 +257,17 @@ export declare const SETTING_SCHEMAS: {
         }>, "many">>;
         multiple: z.ZodDefault<z.ZodBoolean>;
     }, "strip", z.ZodTypeAny, {
-        key: string;
         type: "TEXT" | "CHOICE" | "ROLE" | "ROBLOX";
+        key: string;
         options: {
             label: string;
             roleId?: string | undefined;
         }[];
+        multiple: boolean;
         label: string;
         required: boolean;
         minLength: number;
         maxLength: number;
-        multiple: boolean;
     }, {
         key: string;
         label: string;
@@ -277,21 +277,21 @@ export declare const SETTING_SCHEMAS: {
             label: string;
             roleId?: string | undefined;
         }[] | undefined;
+        multiple?: boolean | undefined;
         minLength?: number | undefined;
         maxLength?: number | undefined;
-        multiple?: boolean | undefined;
     }>, {
-        key: string;
         type: "TEXT" | "CHOICE" | "ROLE" | "ROBLOX";
+        key: string;
         options: {
             label: string;
             roleId?: string | undefined;
         }[];
+        multiple: boolean;
         label: string;
         required: boolean;
         minLength: number;
         maxLength: number;
-        multiple: boolean;
     }, {
         key: string;
         label: string;
@@ -301,21 +301,21 @@ export declare const SETTING_SCHEMAS: {
             label: string;
             roleId?: string | undefined;
         }[] | undefined;
+        multiple?: boolean | undefined;
         minLength?: number | undefined;
         maxLength?: number | undefined;
-        multiple?: boolean | undefined;
     }>, "many">, {
-        key: string;
         type: "TEXT" | "CHOICE" | "ROLE" | "ROBLOX";
+        key: string;
         options: {
             label: string;
             roleId?: string | undefined;
         }[];
+        multiple: boolean;
         label: string;
         required: boolean;
         minLength: number;
         maxLength: number;
-        multiple: boolean;
     }[], {
         key: string;
         label: string;
@@ -325,9 +325,9 @@ export declare const SETTING_SCHEMAS: {
             label: string;
             roleId?: string | undefined;
         }[] | undefined;
+        multiple?: boolean | undefined;
         minLength?: number | undefined;
         maxLength?: number | undefined;
-        multiple?: boolean | undefined;
     }[]>;
     /** „Mit Discord anmelden“: neue Konten erlauben, nur Mitglieder des Discord-Servers, Discord-Rolle → Systemrolle. */
     readonly 'auth.discord': z.ZodObject<{
@@ -382,11 +382,11 @@ export declare class AdminService {
     }>;
     securityEvents(take?: number, type?: string): Prisma.PrismaPromise<{
         id: string;
-        requestId: string | null;
+        type: string;
         createdAt: Date;
         userId: string | null;
-        type: string;
         ip: string | null;
+        requestId: string | null;
         detail: string | null;
     }[]>;
     getLayout(userId: string): Promise<{

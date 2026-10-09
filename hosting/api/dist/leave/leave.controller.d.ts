@@ -12,15 +12,15 @@ declare const requestBody: z.ZodObject<{
     reason: string;
     startsAt: Date;
     endsAt: Date;
-    guildId?: string | undefined;
     type?: string | undefined;
+    guildId?: string | undefined;
     comment?: string | undefined;
 }, {
     reason: string;
     startsAt: Date;
     endsAt: Date;
-    guildId?: string | undefined;
     type?: string | undefined;
+    guildId?: string | undefined;
     comment?: string | undefined;
 }>;
 declare const listQ: z.ZodObject<{

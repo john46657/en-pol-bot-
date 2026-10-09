@@ -19,17 +19,17 @@ export declare class UsersService {
         items: {
             id: string;
             createdAt: Date;
+            updatedAt: Date;
             username: string;
+            displayName: string;
             email: string | null;
             robloxUserId: string | null;
-            displayName: string;
             robloxUsername: string | null;
             robloxStatus: string;
             robloxVerifiedAt: Date | null;
             active: boolean;
             lastLogin: Date | null;
             totpEnabledAt: Date | null;
-            updatedAt: Date;
             roles: {
                 role: {
                     id: string;
@@ -49,17 +49,17 @@ export declare class UsersService {
     get(id: string): Promise<{
         id: string;
         createdAt: Date;
+        updatedAt: Date;
         username: string;
+        displayName: string;
         email: string | null;
         robloxUserId: string | null;
-        displayName: string;
         robloxUsername: string | null;
         robloxStatus: string;
         robloxVerifiedAt: Date | null;
         active: boolean;
         lastLogin: Date | null;
         totpEnabledAt: Date | null;
-        updatedAt: Date;
         roles: {
             role: {
                 id: string;
@@ -81,17 +81,17 @@ export declare class UsersService {
     }): Promise<{
         id: string;
         createdAt: Date;
+        updatedAt: Date;
         username: string;
+        displayName: string;
         email: string | null;
         robloxUserId: string | null;
-        displayName: string;
         robloxUsername: string | null;
         robloxStatus: string;
         robloxVerifiedAt: Date | null;
         active: boolean;
         lastLogin: Date | null;
         totpEnabledAt: Date | null;
-        updatedAt: Date;
         roles: {
             role: {
                 id: string;
@@ -111,17 +111,17 @@ export declare class UsersService {
     }): Promise<{
         id: string;
         createdAt: Date;
+        updatedAt: Date;
         username: string;
+        displayName: string;
         email: string | null;
         robloxUserId: string | null;
-        displayName: string;
         robloxUsername: string | null;
         robloxStatus: string;
         robloxVerifiedAt: Date | null;
         active: boolean;
         lastLogin: Date | null;
         totpEnabledAt: Date | null;
-        updatedAt: Date;
         roles: {
             role: {
                 id: string;
@@ -137,17 +137,17 @@ export declare class UsersService {
     setActive(actor: Actor, id: string, active: boolean, reason?: string): Promise<{
         id: string;
         createdAt: Date;
+        updatedAt: Date;
         username: string;
+        displayName: string;
         email: string | null;
         robloxUserId: string | null;
-        displayName: string;
         robloxUsername: string | null;
         robloxStatus: string;
         robloxVerifiedAt: Date | null;
         active: boolean;
         lastLogin: Date | null;
         totpEnabledAt: Date | null;
-        updatedAt: Date;
         roles: {
             role: {
                 id: string;
@@ -163,17 +163,17 @@ export declare class UsersService {
     setRoles(actor: Actor, id: string, roleIds: string[]): Promise<{
         id: string;
         createdAt: Date;
+        updatedAt: Date;
         username: string;
+        displayName: string;
         email: string | null;
         robloxUserId: string | null;
-        displayName: string;
         robloxUsername: string | null;
         robloxStatus: string;
         robloxVerifiedAt: Date | null;
         active: boolean;
         lastLogin: Date | null;
         totpEnabledAt: Date | null;
-        updatedAt: Date;
         roles: {
             role: {
                 id: string;
@@ -192,12 +192,12 @@ export declare class UsersService {
         reason?: string;
     }): Promise<{
         id: string;
-        reason: string | null;
         createdAt: Date;
+        reason: string | null;
+        createdById: string | null;
         userId: string;
         permissionKey: string;
         effect: string;
-        createdById: string | null;
     }>;
     removeOverride(actor: Actor, id: string, permission: string): Promise<void>;
 }

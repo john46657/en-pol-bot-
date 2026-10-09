@@ -67,11 +67,13 @@ export declare class DiscordService {
     resolveUser(discordId: string): Promise<{
         id: string;
         createdAt: Date;
+        updatedAt: Date;
+        version: number;
         username: string;
-        email: string | null;
-        robloxUserId: string | null;
         displayName: string;
+        email: string | null;
         passwordHash: string;
+        robloxUserId: string | null;
         robloxUsername: string | null;
         robloxStatus: string;
         robloxVerifiedAt: Date | null;
@@ -85,8 +87,6 @@ export declare class DiscordService {
         totpEnabledAt: Date | null;
         totpLastStep: number | null;
         totpRecovery: string[];
-        updatedAt: Date;
-        version: number;
     } | null>;
     channels(): Promise<DiscordChannels>;
     /** Nur Einreihen, wenn für den Kanal-Schlüssel ein Channel konfiguriert ist (kein Datenanfall ohne Bot). Fehler dürfen den Fachprozess nie stören. */
@@ -135,8 +135,8 @@ export declare class DiscordService {
     setState(key: string, value: unknown): Promise<void>;
     pending(limit: number): Prisma.PrismaPromise<{
         id: string;
-        createdAt: Date;
         type: string;
+        createdAt: Date;
         channelKey: string;
         payload: Prisma.JsonValue;
         attempts: number;

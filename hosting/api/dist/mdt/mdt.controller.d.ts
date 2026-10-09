@@ -122,15 +122,15 @@ declare const weaponBody: z.ZodObject<{
     type: string;
     serial: string;
     status?: "REGISTERED" | "STOLEN" | "SEIZED" | "DESTROYED" | undefined;
-    notes?: string | null | undefined;
     model?: string | null | undefined;
+    notes?: string | null | undefined;
     ownerId?: string | null | undefined;
 }, {
     type: string;
     serial: string;
     status?: "REGISTERED" | "STOLEN" | "SEIZED" | "DESTROYED" | undefined;
-    notes?: string | null | undefined;
     model?: string | null | undefined;
+    notes?: string | null | undefined;
     ownerId?: string | null | undefined;
 }>;
 /** Polizei-MDT (Streifen-Terminal): Bürger, Fahrzeuge, Waffen, Haftbefehle. Gleiche Akten und Rechte wie im Dashboard. */
@@ -171,6 +171,7 @@ export declare class MdtController {
     }>;
     citizens(q: z.infer<typeof citizenQ>): Promise<{
         items: {
+            robloxHeadshotUrl: string | null;
             id: string;
             robloxUsername: string;
             robloxUserId: string | null;
@@ -249,9 +250,9 @@ export declare class MdtController {
             serverId: string | null;
             status: string;
             custom: import("@prisma/client/runtime/library").JsonValue | null;
+            model: string | null;
             notes: string | null;
             plate: string;
-            model: string | null;
             ownerId: string | null;
             erlcReference: string | null;
         }[] | null;
@@ -263,8 +264,8 @@ export declare class MdtController {
             type: string;
             serverId: string | null;
             status: string;
-            notes: string | null;
             model: string | null;
+            notes: string | null;
             ownerId: string | null;
             serial: string;
         }[] | null;
@@ -279,9 +280,19 @@ export declare class MdtController {
             priority: string;
             createdById: string;
             status: string;
-            personId: string | null;
             vehicleId: string | null;
+            personId: string | null;
         }[] | null;
+    }>;
+    citizenRoblox(a: Actor, id: string): Promise<{
+        status: "not_found";
+        profile: null;
+    } | {
+        status: "ok";
+        profile: import("../persons/roblox.service").RobloxDetails;
+    } | {
+        status: "unreachable" | "disabled";
+        profile: null;
     }>;
     updateCitizen(a: Actor, id: string, b: z.infer<typeof citizenUpdate>): Promise<{
         id: string;
@@ -324,9 +335,9 @@ export declare class MdtController {
             serverId: string | null;
             status: string;
             custom: import("@prisma/client/runtime/library").JsonValue | null;
+            model: string | null;
             notes: string | null;
             plate: string;
-            model: string | null;
             ownerId: string | null;
             erlcReference: string | null;
         }[];
@@ -352,9 +363,9 @@ export declare class MdtController {
             serverId: string | null;
             status: string;
             custom: import("@prisma/client/runtime/library").JsonValue | null;
+            model: string | null;
             notes: string | null;
             plate: string;
-            model: string | null;
             ownerId: string | null;
             erlcReference: string | null;
         };
@@ -369,8 +380,8 @@ export declare class MdtController {
             priority: string;
             createdById: string;
             status: string;
-            personId: string | null;
             vehicleId: string | null;
+            personId: string | null;
         }[] | null;
         incidents: {
             number: string;
@@ -404,8 +415,8 @@ export declare class MdtController {
             type: string;
             serverId: string | null;
             status: string;
-            notes: string | null;
             model: string | null;
+            notes: string | null;
             ownerId: string | null;
             serial: string;
         })[];
@@ -421,8 +432,8 @@ export declare class MdtController {
         type: string;
         serverId: string | null;
         status: string;
-        notes: string | null;
         model: string | null;
+        notes: string | null;
         ownerId: string | null;
         serial: string;
     }>;
@@ -436,8 +447,8 @@ export declare class MdtController {
         type: string;
         serverId: string | null;
         status: string;
-        notes: string | null;
         model: string | null;
+        notes: string | null;
         ownerId: string | null;
         serial: string;
     }>;
@@ -455,8 +466,8 @@ export declare class MdtController {
         vehicle: {
             id: string;
             color: string | null;
-            plate: string;
             model: string | null;
+            plate: string;
         } | null;
         id: string;
         reason: string;
@@ -468,8 +479,8 @@ export declare class MdtController {
         priority: string;
         createdById: string;
         status: string;
-        personId: string | null;
         vehicleId: string | null;
+        personId: string | null;
     }[]>;
 }
 export {};

@@ -17,18 +17,18 @@ declare const create: z.ZodObject<{
         jailMinutes?: number | undefined;
     }>;
 }, "strip", z.ZodTypeAny, {
-    code: string;
-    category: string;
     title: string;
+    category: string;
+    code: string;
     penalty: {
         fine?: number | undefined;
         jailMinutes?: number | undefined;
     };
     description?: string | undefined;
 }, {
-    code: string;
-    category: string;
     title: string;
+    category: string;
+    code: string;
     penalty: {
         fine?: number | undefined;
         jailMinutes?: number | undefined;
@@ -42,23 +42,23 @@ export declare class LegalCodesController {
     constructor(prisma: PrismaService, audit: AuditService);
     list(): import("@prisma/client").Prisma.PrismaPromise<{
         id: string;
-        code: string;
+        title: string;
         category: string;
+        description: string | null;
         expiresAt: Date | null;
         active: boolean;
-        description: string | null;
-        title: string;
+        code: string;
         penalty: import("@prisma/client/runtime/library").JsonValue;
         effectiveDate: Date;
     }[]>;
     create(a: Actor, b: z.infer<typeof create>): Promise<{
         id: string;
-        code: string;
+        title: string;
         category: string;
+        description: string | null;
         expiresAt: Date | null;
         active: boolean;
-        description: string | null;
-        title: string;
+        code: string;
         penalty: import("@prisma/client/runtime/library").JsonValue;
         effectiveDate: Date;
     }>;
