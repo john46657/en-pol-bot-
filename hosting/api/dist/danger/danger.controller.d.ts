@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import { dangerConfigSchema, DangerService } from './danger.service';
 import type { Actor } from '../audit/audit.service';
+import type { AppRequest } from '../common/request-context';
 declare const panelBody: z.ZodObject<{
     channelId: z.ZodString;
 }, "strip", z.ZodTypeAny, {
@@ -41,7 +42,7 @@ export declare class DangerController {
         setByName: string | null;
         at: string | null;
     }>;
-    set(a: Actor, b: z.infer<typeof body>): Promise<{
+    set(a: Actor, b: z.infer<typeof body>, r: AppRequest): Promise<{
         level: string;
         def: import("@enrp/shared").DangerLevelDef;
         levels: {

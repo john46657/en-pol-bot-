@@ -4,7 +4,9 @@
  */
 export interface DangerLevelDef { key: string; name: string; title: string; text: string; emoji: string; color: string; buttonStyle: 'primary' | 'secondary' | 'success' | 'danger';
   /** Discord-Rollen, die nur beim Wechsel auf diese Stufe zusätzlich gepingt werden */
-  pingRoleIds?: string[] }
+  pingRoleIds?: string[];
+  /** Nur diese Discord-Rollen dürfen auf diese Stufe schalten (leer = alle mit dispatch.manage) */
+  allowRoleIds?: string[] }
 export interface DangerConfig { panelTitle: string; panelText: string; buttonEmoji: string; levels: DangerLevelDef[]; pingRoleIds: string[] }
 
 export const DEFAULT_DANGER_CONFIG: DangerConfig = {

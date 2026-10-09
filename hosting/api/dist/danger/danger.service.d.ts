@@ -4,6 +4,7 @@ import { PrismaService } from '../prisma/prisma.service';
 import { AuditService, Actor } from '../audit/audit.service';
 import { RealtimeService } from '../realtime/realtime.service';
 import { DiscordService } from '../discord/discord.service';
+import { PermissionService } from '../authz/permission.service';
 export interface DangerState {
     level: string;
     reason: string | null;
@@ -25,6 +26,8 @@ export declare const dangerConfigSchema: z.ZodObject<{
         buttonStyle: z.ZodEnum<["primary", "secondary", "success", "danger"]>;
         /** zusätzlich nur bei dieser Stufe pingen */
         pingRoleIds: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
+        /** nur diese Discord-Rollen dürfen auf diese Stufe schalten (leer = alle mit dispatch.manage) */
+        allowRoleIds: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
     }, "strip", z.ZodTypeAny, {
         title: string;
         name: string;
@@ -34,6 +37,7 @@ export declare const dangerConfigSchema: z.ZodObject<{
         buttonStyle: "success" | "danger" | "primary" | "secondary";
         text: string;
         pingRoleIds?: string[] | undefined;
+        allowRoleIds?: string[] | undefined;
     }, {
         title: string;
         name: string;
@@ -43,6 +47,7 @@ export declare const dangerConfigSchema: z.ZodObject<{
         buttonStyle: "success" | "danger" | "primary" | "secondary";
         text: string;
         pingRoleIds?: string[] | undefined;
+        allowRoleIds?: string[] | undefined;
     }>, "many">, {
         title: string;
         name: string;
@@ -52,6 +57,7 @@ export declare const dangerConfigSchema: z.ZodObject<{
         buttonStyle: "success" | "danger" | "primary" | "secondary";
         text: string;
         pingRoleIds?: string[] | undefined;
+        allowRoleIds?: string[] | undefined;
     }[], {
         title: string;
         name: string;
@@ -61,6 +67,7 @@ export declare const dangerConfigSchema: z.ZodObject<{
         buttonStyle: "success" | "danger" | "primary" | "secondary";
         text: string;
         pingRoleIds?: string[] | undefined;
+        allowRoleIds?: string[] | undefined;
     }[]>;
 }, "strip", z.ZodTypeAny, {
     pingRoleIds: string[];
@@ -76,6 +83,7 @@ export declare const dangerConfigSchema: z.ZodObject<{
         buttonStyle: "success" | "danger" | "primary" | "secondary";
         text: string;
         pingRoleIds?: string[] | undefined;
+        allowRoleIds?: string[] | undefined;
     }[];
 }, {
     pingRoleIds: string[];
@@ -91,6 +99,7 @@ export declare const dangerConfigSchema: z.ZodObject<{
         buttonStyle: "success" | "danger" | "primary" | "secondary";
         text: string;
         pingRoleIds?: string[] | undefined;
+        allowRoleIds?: string[] | undefined;
     }[];
 }>;
 /** Gefahrenstatus. Stufen/Texte/Farben/Pings kommen aus der Konfiguration (Dashboard); Änderungen sind auditiert und gehen live raus. */
@@ -99,7 +108,8 @@ export declare class DangerService {
     private readonly audit;
     private readonly rt;
     private readonly discord;
-    constructor(prisma: PrismaService, audit: AuditService, rt: RealtimeService, discord: DiscordService);
+    private readonly perms;
+    constructor(prisma: PrismaService, audit: AuditService, rt: RealtimeService, discord: DiscordService, perms: PermissionService);
     config(): Promise<DangerConfig>;
     saveConfig(actor: Actor, input: DangerConfig): Promise<DangerConfig>;
     private state;
@@ -124,7 +134,11 @@ export declare class DangerService {
         setByName: string | null;
         at: string | null;
     }>;
-    set(actor: Actor, level: string, reason?: string): Promise<{
+    /**
+     * Status setzen. Hat die Stufe freigegebene Rollen, gilt zusätzlich: aus Discord nur mit einer dieser Rollen
+     * (`discordRoles` = Rollen des Klickenden), ohne Discord (Dashboard/API) nur mit settings.manage.
+     */
+    set(actor: Actor, level: string, reason?: string, discordRoles?: string[] | null): Promise<{
         level: string;
         def: import("@enrp/shared").DangerLevelDef;
         levels: {

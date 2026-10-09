@@ -17,6 +17,7 @@ const prisma_service_1 = require("../prisma/prisma.service");
 const audit_service_1 = require("../audit/audit.service");
 const realtime_service_1 = require("../realtime/realtime.service");
 const discord_service_1 = require("../discord/discord.service");
+const permission_service_1 = require("../authz/permission.service");
 const errors_1 = require("../common/errors");
 const KEY = 'danger.current';
 const CFG = 'danger.config';
@@ -31,6 +32,8 @@ exports.dangerConfigSchema = zod_1.z.object({
         emoji: zod_1.z.string().max(16), color: zod_1.z.string().regex(/^#[0-9a-fA-F]{6}$/), buttonStyle: zod_1.z.enum(['primary', 'secondary', 'success', 'danger']),
         /** zusätzlich nur bei dieser Stufe pingen */
         pingRoleIds: zod_1.z.array(sf).max(10).optional(),
+        /** nur diese Discord-Rollen dürfen auf diese Stufe schalten (leer = alle mit dispatch.manage) */
+        allowRoleIds: zod_1.z.array(sf).max(10).optional(),
     })).min(2).max(10).refine((xs) => new Set(xs.map((x) => x.key)).size === xs.length, 'Schlüssel müssen eindeutig sein'),
 });
 /** Gefahrenstatus. Stufen/Texte/Farben/Pings kommen aus der Konfiguration (Dashboard); Änderungen sind auditiert und gehen live raus. */
@@ -39,11 +42,13 @@ let DangerService = class DangerService {
     audit;
     rt;
     discord;
-    constructor(prisma, audit, rt, discord) {
+    perms;
+    constructor(prisma, audit, rt, discord, perms) {
         this.prisma = prisma;
         this.audit = audit;
         this.rt = rt;
         this.discord = discord;
+        this.perms = perms;
     }
     async config() {
         const v = (await this.prisma.systemSetting.findUnique({ where: { key: CFG } }))?.value;
@@ -70,12 +75,21 @@ let DangerService = class DangerService {
         const def = (0, shared_1.dangerLevelOf)(cfg, s.level);
         return { ...s, level: def.key, def, levels: cfg.levels.map((l) => ({ key: l.key, name: l.name, title: l.title, emoji: l.emoji, color: l.color, buttonStyle: l.buttonStyle })), panel: { title: cfg.panelTitle, text: cfg.panelText, buttonEmoji: cfg.buttonEmoji } };
     }
-    async set(actor, level, reason) {
+    /**
+     * Status setzen. Hat die Stufe freigegebene Rollen, gilt zusätzlich: aus Discord nur mit einer dieser Rollen
+     * (`discordRoles` = Rollen des Klickenden), ohne Discord (Dashboard/API) nur mit settings.manage.
+     */
+    async set(actor, level, reason, discordRoles = null) {
         const cfg = await this.config();
         const want = level.trim().toUpperCase();
         const def = cfg.levels.find((l) => l.key === want || l.name.toUpperCase() === want);
         if (!def)
             throw new errors_1.AppError('VALIDATION_FAILED', `Unbekannte Stufe. Möglich: ${cfg.levels.map((l) => l.name).join(', ')}`);
+        if (def.allowRoleIds?.length) {
+            const ok = discordRoles ? discordRoles.some((r) => def.allowRoleIds.includes(r)) : await this.perms.has(actor.userId, 'settings.manage');
+            if (!ok)
+                throw new errors_1.AppError('PERMISSION_DENIED', `Auf „${def.name}“ dürfen nur bestimmte Rollen schalten.`);
+        }
         const before = await this.get();
         const storedKey = (await this.state()).level;
         const user = actor.userId ? await this.prisma.user.findUnique({ where: { id: actor.userId }, select: { displayName: true } }) : null;
@@ -110,6 +124,6 @@ let DangerService = class DangerService {
 exports.DangerService = DangerService;
 exports.DangerService = DangerService = __decorate([
     (0, common_1.Injectable)(),
-    __metadata("design:paramtypes", [prisma_service_1.PrismaService, audit_service_1.AuditService, realtime_service_1.RealtimeService, discord_service_1.DiscordService])
+    __metadata("design:paramtypes", [prisma_service_1.PrismaService, audit_service_1.AuditService, realtime_service_1.RealtimeService, discord_service_1.DiscordService, permission_service_1.PermissionService])
 ], DangerService);
 //# sourceMappingURL=danger.service.js.map
