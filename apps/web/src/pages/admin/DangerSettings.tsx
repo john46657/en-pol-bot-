@@ -50,7 +50,6 @@ function DangerSettings() {
   const [d, setD] = useState<DangerConfig | null>(null);
   useEffect(() => { if (q.data && !d) setD(q.data); }, [q.data, d]);
   useAutosaveDraft(d ? 'danger:config' : null, d ?? undefined, (v) => ({ method: 'PUT', path: '/danger-level/config', body: v, guildId: null, label: 'Gefahrenstatus' }));
-  const guilds = useGuilds();
   if (!d) return <SkeletonRows />;
   const setLevel = (i: number, p: Partial<DangerConfig['levels'][number]>) => setD({ ...d, levels: d.levels.map((l, j) => (j === i ? { ...l, ...p } : l)) });
   const move = (i: number, dir: number) => { const n = [...d.levels]; const [x] = n.splice(i, 1); n.splice(i + dir, 0, x!); setD({ ...d, levels: n }); };
@@ -62,12 +61,7 @@ function DangerSettings() {
           <Field label="Titel">{(id) => <Input id={id} maxLength={200} value={d.panelTitle} onChange={(e) => setD({ ...d, panelTitle: e.target.value })} />}</Field>
           <Field label="Text (Markdown)">{(id) => <Textarea id={id} rows={5} maxLength={3000} value={d.panelText} onChange={(e) => setD({ ...d, panelText: e.target.value })} />}</Field>
           <Field label="Emoji auf den Schaltflächen (leer = Emoji der Stufe)">{(id) => <Input id={id} maxLength={4} value={d.buttonEmoji} onChange={(e) => setD({ ...d, buttonEmoji: e.target.value })} />}</Field>
-          <Field label="Bei jeder Änderung pingen (z. B. @Im Dienst)" hint="Kanal: Einstellungen → Discord → Gefahrenstatus-Kanal">{() => (
-            <div className="flex flex-wrap items-center gap-1">
-              {d.pingRoleIds.map((id) => { const r = guilds.data?.flatMap((g) => g.roles).find((x) => x.id === id); return <span key={id} className="inline-flex items-center gap-1 rounded border border-success/40 bg-success/10 px-1.5 py-0.5 text-xs">@{r?.name ?? id}<button type="button" aria-label="entfernen" onClick={() => setD({ ...d, pingRoleIds: d.pingRoleIds.filter((x) => x !== id) })}>×</button></span>; })}
-              <Select aria-label="Rolle hinzufügen" className="w-auto py-1 text-xs" value="" onChange={(e) => e.target.value && setD({ ...d, pingRoleIds: [...new Set([...d.pingRoleIds, e.target.value])] })}><option value="">+ Rolle…</option>{(guilds.data ?? []).map((g) => <optgroup key={g.id} label={g.name}>{g.roles.map((r) => <option key={r.id} value={r.id}>@{r.name}</option>)}</optgroup>)}</Select>
-            </div>
-          )}</Field>
+          <Field label="Bei jeder Änderung pingen (z. B. @Im Dienst)" hint="Kanal: Einstellungen → Discord → Gefahrenstatus-Kanal">{() => <RolePicker value={d.pingRoleIds} onChange={(pingRoleIds) => setD({ ...d, pingRoleIds })} />}</Field>
         </div>
       </Card>
       <Card title="Vorschau">
@@ -89,9 +83,21 @@ function DangerSettings() {
               <Button size="sm" variant="ghost" aria-label="Entfernen" disabled={d.levels.length <= 2} onClick={() => setD({ ...d, levels: d.levels.filter((_, j) => j !== i) })}><Trash2 size={12} /></Button>
             </div>
             <Textarea aria-label="Text der Meldung (Markdown)" className="md:col-span-4" rows={3} maxLength={3500} value={l.text} onChange={(e) => setLevel(i, { text: e.target.value })} />
+            <div className="flex flex-wrap items-center gap-2 md:col-span-4"><span className="text-xs text-muted">Bei dieser Stufe zusätzlich pingen:</span><RolePicker value={l.pingRoleIds ?? []} onChange={(pingRoleIds) => setLevel(i, { pingRoleIds })} /></div>
           </li>))}</ul>
         <Button size="sm" variant="secondary" className="mt-2" disabled={d.levels.length >= 10} onClick={() => setD({ ...d, levels: [...d.levels, { key: `STATUS_${d.levels.length + 1}_${Math.random().toString(36).slice(2, 5).toUpperCase()}`, name: `Status ${d.levels.length + 1}`, title: '', text: '', emoji: '⚪', color: '#64748b', buttonStyle: 'danger' }] })}>+ Stufe</Button>
       </Card>
+    </div>
+  );
+}
+
+/** Discord-Rollen als Chips mit „+ Rolle…“ (aus allen verbundenen Servern), höchstens 10. */
+function RolePicker({ value, onChange }: { value: string[]; onChange: (ids: string[]) => void }) {
+  const guilds = useGuilds();
+  return (
+    <div className="flex flex-wrap items-center gap-1">
+      {value.map((id) => { const r = guilds.data?.flatMap((g) => g.roles).find((x) => x.id === id); return <span key={id} className="inline-flex items-center gap-1 rounded border border-success/40 bg-success/10 px-1.5 py-0.5 text-xs">@{r?.name ?? id}<button type="button" aria-label={`@${r?.name ?? id} entfernen`} onClick={() => onChange(value.filter((x) => x !== id))}>×</button></span>; })}
+      {value.length < 10 && <Select aria-label="Rolle hinzufügen" className="w-auto py-1 text-xs" value="" onChange={(e) => e.target.value && onChange([...new Set([...value, e.target.value])])}><option value="">+ Rolle…</option>{(guilds.data ?? []).map((g) => <optgroup key={g.id} label={g.name}>{g.roles.map((r) => <option key={r.id} value={r.id}>@{r.name}</option>)}</optgroup>)}</Select>}
     </div>
   );
 }

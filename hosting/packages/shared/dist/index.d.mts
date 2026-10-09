@@ -717,6 +717,8 @@ interface DangerLevelDef {
     emoji: string;
     color: string;
     buttonStyle: 'primary' | 'secondary' | 'success' | 'danger';
+    /** Discord-Rollen, die nur beim Wechsel auf diese Stufe zusätzlich gepingt werden */
+    pingRoleIds?: string[];
 }
 interface DangerConfig {
     panelTitle: string;

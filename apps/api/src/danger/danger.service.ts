@@ -20,6 +20,8 @@ export const dangerConfigSchema = z.object({
   levels: z.array(z.object({
     key: z.string().trim().regex(/^[A-Z0-9_]{1,24}$/), name: z.string().trim().min(1).max(40), title: z.string().trim().max(200), text: z.string().max(3500),
     emoji: z.string().max(16), color: z.string().regex(/^#[0-9a-fA-F]{6}$/), buttonStyle: z.enum(['primary', 'secondary', 'success', 'danger']),
+    /** zusätzlich nur bei dieser Stufe pingen */
+    pingRoleIds: z.array(sf).max(10).optional(),
   })).min(2).max(10).refine((xs) => new Set(xs.map((x) => x.key)).size === xs.length, 'Schlüssel müssen eindeutig sein'),
 });
 
@@ -74,7 +76,7 @@ export class DangerService {
     if (storedKey !== def.key || !before.at) {
       await this.discord.enqueue('danger', 'danger.changed', {
         level: def.key, name: def.name, title: def.title, text: def.text, emoji: def.emoji, color: def.color,
-        previous: before.at ? before.def.name : null, reason: state.reason, setBy: state.setByName, pingRoleIds: cfg.pingRoleIds,
+        previous: before.at ? before.def.name : null, reason: state.reason, setBy: state.setByName, pingRoleIds: [...new Set([...cfg.pingRoleIds, ...(def.pingRoleIds ?? [])])],
       });
     }
     return this.get();
