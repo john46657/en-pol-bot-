@@ -17,6 +17,8 @@ const cad_service_1 = require("./cad.service");
 const cad_tablet_service_1 = require("./cad-tablet.service");
 const cad_config_service_1 = require("./cad-config.service");
 const cad_notify_service_1 = require("./cad-notify.service");
+const cad_handover_service_1 = require("./cad-handover.service");
+const cad_stats_service_1 = require("./cad-stats.service");
 const erlc_service_1 = require("./erlc.service");
 const erlc_sync_service_1 = require("./erlc-sync.service");
 /** CAD-Leitstelle + ER:LC-Integration. Der ER:LC-Abruf läuft ausschließlich hier im Backend. */
@@ -61,7 +63,7 @@ exports.CadModule = CadModule = __decorate([
     (0, common_1.Module)({
         imports: [media_module_1.MediaModule],
         controllers: [cad_controller_1.CadController, cad_controller_1.ErlcController],
-        providers: [cad_service_1.CadService, cad_tablet_service_1.CadTabletService, cad_config_service_1.CadConfigService, cad_notify_service_1.CadNotifyService, erlc_service_1.ErlcService, erlc_sync_service_1.ErlcSyncService],
+        providers: [cad_service_1.CadService, cad_tablet_service_1.CadTabletService, cad_config_service_1.CadConfigService, cad_notify_service_1.CadNotifyService, cad_handover_service_1.CadHandoverService, cad_stats_service_1.CadStatsService, erlc_service_1.ErlcService, erlc_sync_service_1.ErlcSyncService],
         exports: [cad_service_1.CadService, cad_config_service_1.CadConfigService, erlc_service_1.ErlcService],
     }),
     __metadata("design:paramtypes", [erlc_service_1.ErlcService, cad_service_1.CadService])

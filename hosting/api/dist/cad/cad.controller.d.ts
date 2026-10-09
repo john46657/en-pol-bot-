@@ -5,6 +5,8 @@ import { PermissionService } from '../authz/permission.service';
 import { MediaService } from '../media/media.service';
 import { CadService, type CadActor } from './cad.service';
 import { CadTabletService } from './cad-tablet.service';
+import { CadHandoverService } from './cad-handover.service';
+import { CadStatsService } from './cad-stats.service';
 import { CadConfigService } from './cad-config.service';
 import { ErlcService, erlcServerInput } from './erlc.service';
 import { ErlcSyncService } from './erlc-sync.service';
@@ -243,6 +245,19 @@ declare const statusBody: z.ZodObject<{
     status: string;
     note?: string | undefined;
 }>;
+declare const feedbackBody: z.ZodObject<{
+    kind: z.ZodEnum<["accepted" | "en_route" | "on_scene" | "support" | "under_control" | "completed", ...("accepted" | "en_route" | "on_scene" | "support" | "under_control" | "completed")[]]>;
+    incidentId: z.ZodOptional<z.ZodNullable<z.ZodTypeAny>>;
+    note: z.ZodOptional<z.ZodNullable<z.ZodTypeAny>>;
+}, "strip", z.ZodTypeAny, {
+    kind: "accepted" | "en_route" | "on_scene" | "support" | "under_control" | "completed";
+    incidentId?: any;
+    note?: any;
+}, {
+    kind: "accepted" | "en_route" | "on_scene" | "support" | "under_control" | "completed";
+    incidentId?: any;
+    note?: any;
+}>;
 declare const radioBody: z.ZodObject<{
     text: z.ZodString;
     unitId: z.ZodOptional<z.ZodNullable<z.ZodTypeAny>>;
@@ -268,7 +283,9 @@ export declare class CadController {
     private readonly cfg;
     private readonly perms;
     private readonly media;
-    constructor(s: CadService, tablet: CadTabletService, cfg: CadConfigService, perms: PermissionService, media: MediaService);
+    private readonly handover;
+    private readonly statsSvc;
+    constructor(s: CadService, tablet: CadTabletService, cfg: CadConfigService, perms: PermissionService, media: MediaService, handover: CadHandoverService, statsSvc: CadStatsService);
     config(): Promise<import("@enrp/shared").CadConfig>;
     saveConfig(a: Actor, b: Record<string, unknown>): Promise<import("@enrp/shared").CadConfig>;
     saveMap(a: Actor, b: Record<string, unknown>): Promise<import("@enrp/shared").CadConfig>;
@@ -969,6 +986,266 @@ export declare class CadController {
         mapX: number | null;
         mapZ: number | null;
         statusRoleIds: string[];
+    }>;
+    /** Rückmeldung zum Einsatz (MDT/Discord): gleiche Berechtigung wie der Einheitenstatus. */
+    feedback(a: CadActor & {
+        roles: string[];
+    }, id: string, b: z.infer<typeof feedbackBody>): Promise<{
+        ok: boolean;
+        incidentId: string;
+        number: string;
+        callsign: string;
+        unitStatus: "EN_ROUTE" | "ON_SCENE" | null;
+    }>;
+    mdt(a: CadActor): Promise<{
+        units: {
+            id: string;
+            callsign: string;
+            name: string | null;
+            type: string | null;
+            status: string;
+            color: string | null;
+            icon: string | null;
+            vehicle: string | null;
+            operational: boolean;
+            incidents: {
+                log: {
+                    id: string;
+                    authorId: string | null;
+                    incidentId: string;
+                    createdAt: Date;
+                    unitId: string | null;
+                    guildId: string | null;
+                    kind: string;
+                    text: string;
+                }[];
+                units: ({
+                    unit: {
+                        id: string;
+                        type: string | null;
+                        status: string;
+                        callsign: string;
+                        name: string | null;
+                    };
+                } & {
+                    incidentId: string;
+                    unitId: string;
+                    assignedAt: Date;
+                    clearedAt: Date | null;
+                })[];
+                number: string;
+                serverId: string | null;
+                id: string;
+                type: string | null;
+                title: string;
+                status: string;
+                createdAt: Date;
+                updatedAt: Date;
+                version: number;
+                description: string | null;
+                internalNotes: string | null;
+                priority: string;
+                source: string;
+                guildId: string | null;
+                mapX: number | null;
+                mapZ: number | null;
+                location: string | null;
+                dispatcherId: string | null;
+                supervisorId: string | null;
+                closedAt: Date | null;
+                keyword: string | null;
+                involved: string | null;
+                requiredUnits: string | null;
+                restrictRoleIds: string[];
+            }[];
+        }[];
+        radio: {
+            id: string;
+            authorId: string | null;
+            incidentId: string | null;
+            createdAt: Date;
+            unitId: string | null;
+            callsign: string | null;
+            guildId: string | null;
+            discordId: string | null;
+            text: string;
+        }[];
+        notifications: {
+            id: string;
+            type: string;
+            title: string;
+            createdAt: Date;
+            userId: string;
+            entityType: string | null;
+            entityId: string | null;
+            body: string | null;
+            readAt: Date | null;
+            archivedAt: Date | null;
+        }[];
+        history: never[] | {
+            number: string;
+            type: string | null;
+            status: string;
+            incidentId: string;
+            createdAt: Date;
+            priority: string;
+            source: string;
+            guildId: string | null;
+            dispatcherId: string | null;
+            closedAt: Date;
+            units: string[];
+            unitTypes: string[];
+        }[];
+        feedback: readonly [{
+            readonly key: "accepted";
+            readonly label: "Auftrag angenommen";
+            readonly emoji: "\u2705";
+            readonly unitStatus: "EN_ROUTE";
+        }, {
+            readonly key: "en_route";
+            readonly label: "Ausger\u00FCckt";
+            readonly emoji: "\uD83D\uDE93";
+            readonly unitStatus: "EN_ROUTE";
+        }, {
+            readonly key: "on_scene";
+            readonly label: "Am Einsatzort";
+            readonly emoji: "\uD83D\uDCCD";
+            readonly unitStatus: "ON_SCENE";
+        }, {
+            readonly key: "support";
+            readonly label: "Unterst\u00FCtzung ben\u00F6tigt";
+            readonly emoji: "\uD83C\uDD98";
+        }, {
+            readonly key: "under_control";
+            readonly label: "Einsatz unter Kontrolle";
+            readonly emoji: "\uD83D\uDEE1\uFE0F";
+        }, {
+            readonly key: "completed";
+            readonly label: "Einsatz abgeschlossen (Meldung)";
+            readonly emoji: "\uD83C\uDFC1";
+        }];
+    }>;
+    handovers(): Promise<{
+        snapshot: import("./cad-handover.service").HandoverSnapshot;
+        createdByName: string | null;
+        acknowledgedByName: string | null;
+        id: string;
+        createdAt: Date;
+        createdById: string | null;
+        guildId: string | null;
+        notes: string;
+        acknowledgedById: string | null;
+        acknowledgedAt: Date | null;
+        ackNote: string | null;
+    }[]>;
+    handoverDraft(): Promise<{
+        snapshot: import("./cad-handover.service").HandoverSnapshot;
+        previous: {
+            snapshot: import("./cad-handover.service").HandoverSnapshot;
+            createdByName: string | null;
+            acknowledgedByName: string | null;
+            id: string;
+            createdAt: Date;
+            createdById: string | null;
+            guildId: string | null;
+            notes: string;
+            acknowledgedById: string | null;
+            acknowledgedAt: Date | null;
+            ackNote: string | null;
+        } | null;
+    }>;
+    createHandover(a: CadActor, b: {
+        notes: string;
+    }): Promise<{
+        id: string;
+        createdAt: Date;
+        createdById: string | null;
+        guildId: string | null;
+        notes: string;
+        snapshot: import("@prisma/client/runtime/library").JsonValue;
+        acknowledgedById: string | null;
+        acknowledgedAt: Date | null;
+        ackNote: string | null;
+    }>;
+    ackHandover(a: CadActor, id: string, b: {
+        note?: string | null;
+    }): Promise<{
+        id: string;
+        createdAt: Date;
+        createdById: string | null;
+        guildId: string | null;
+        notes: string;
+        snapshot: import("@prisma/client/runtime/library").JsonValue;
+        acknowledgedById: string | null;
+        acknowledgedAt: Date | null;
+        ackNote: string | null;
+    }>;
+    stats(q: {
+        days?: number;
+    }): Promise<{
+        days: number;
+        since: string;
+        generatedAt: string;
+        totals: {
+            created: number;
+            closed: number;
+            openNow: number;
+            avgHandlingMin: number | null;
+            medianHandlingMin: number | null;
+        };
+        byDay: {
+            key: string;
+            value: number;
+        }[];
+        byWeek: {
+            key: string;
+            value: number;
+        }[];
+        byMonth: {
+            key: string;
+            value: number;
+        }[];
+        byType: {
+            key: string;
+            label: string;
+            value: number;
+        }[];
+        byPriority: {
+            key: string;
+            label: string;
+            color: string | null;
+            value: number;
+        }[];
+        byClosedStatus: {
+            key: string;
+            label: string;
+            value: number;
+        }[];
+        bySource: {
+            key: string;
+            label: string;
+            value: number;
+        }[];
+        units: {
+            key: string;
+            label: string;
+            value: number;
+        }[];
+        unitTypes: {
+            key: string;
+            label: string;
+            value: number;
+        }[];
+        duty: {
+            totalHours: number;
+            officers: number;
+            sessions: number;
+            top: {
+                userId: string;
+                name: string;
+                hours: number;
+            }[];
+        };
     }>;
     calls(a: CadActor & {
         roles: string[];

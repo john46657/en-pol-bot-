@@ -66,6 +66,9 @@ const CadSettings = lazy(() => import('./pages/cad/CadAdmin').then((m) => ({ def
 const CadTeam = lazy(() => import('./pages/cad/CadAdmin').then((m) => ({ default: m.CadTeam })));
 const CadCrossServer = lazy(() => import('./pages/cad/CadAdmin').then((m) => ({ default: m.CadCrossServer })));
 const CadLogs = lazy(() => import('./pages/cad/CadAdmin').then((m) => ({ default: m.CadLogs })));
+const CadMdt = lazy(() => import('./pages/cad/CadShift').then((m) => ({ default: m.CadMdt })));
+const CadHandover = lazy(() => import('./pages/cad/CadShift').then((m) => ({ default: m.CadHandover })));
+const CadStats = lazy(() => import('./pages/cad/CadShift').then((m) => ({ default: m.CadStats })));
 
 /** Statistik: allgemeine Statistik ODER Bewerbungs-Statistik genügt. */
 function AnalyticsGate() {
@@ -116,6 +119,9 @@ export function App() {
             <Route path="units" element={<Guard perm="cad.view"><CadUnits /></Guard>} />
             <Route path="radio" element={<Guard perm="cad.view"><CadRadio /></Guard>} />
             <Route path="calls" element={<Guard perm="cad.view"><CadCalls /></Guard>} />
+            <Route path="mdt" element={<Guard perm="cad.view"><CadMdt /></Guard>} />
+            <Route path="handover" element={<Guard perm="cad.view"><CadHandover /></Guard>} />
+            <Route path="stats" element={<Guard perm="cad.view_stats"><CadStats /></Guard>} />
             <Route path="erlc" element={<Guard perm="cad.view_erlc"><ErlcLive /></Guard>} />
             <Route path="team" element={<Guard perm="cad.view"><CadTeam /></Guard>} />
             <Route path="cross-server" element={<Guard perm="cad.view"><CadCrossServer /></Guard>} />

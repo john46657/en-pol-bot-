@@ -5,7 +5,7 @@ var PERMISSION_CATALOG = {
   team: ["view", "manage"],
   dispatch: ["view", "create", "edit", "assign", "close", "manage"],
   /** CAD-Leitstelle + ER:LC-Integration (deny-by-default; kritische ER:LC-Befehle brauchen ein eigenes Recht). */
-  cad: ["view", "create_incident", "edit_incident", "close_incident", "assign_unit", "manage_units", "view_persons", "view_vehicles", "manage_map", "view_erlc", "manage_erlc", "erlc_command", "erlc_command_critical", "manage_cross_server", "view_logs", "manage_settings", "radio"],
+  cad: ["view", "create_incident", "edit_incident", "close_incident", "assign_unit", "manage_units", "view_persons", "view_vehicles", "manage_map", "view_erlc", "manage_erlc", "erlc_command", "erlc_command_critical", "manage_cross_server", "view_logs", "manage_settings", "radio", "handover", "view_stats"],
   incidents: ["view", "create", "edit", "close", "delete"],
   persons: ["view", "create", "edit", "archive", "merge"],
   vehicles: ["view", "create", "edit", "archive"],
@@ -320,16 +320,28 @@ var formatMinutes = (min) => {
 var rolesMatch = (have, ids, mode) => mode === "ALL" ? ids.every((r) => have.includes(r)) : ids.some((r) => have.includes(r));
 
 // src/cad.ts
-var CAD_EVENTS = ["incident.created", "incident.status", "incident.assigned", "incident.closed", "call.received", "announcement", "radio"];
+var CAD_EVENTS = ["incident.created", "incident.status", "incident.assigned", "incident.closed", "incident.feedback", "incident.support", "call.received", "announcement", "radio", "handover"];
 var CAD_EVENT_LABELS = {
   "incident.created": "Neuer Einsatz",
   "incident.status": "Einsatzstatus ge\xE4ndert",
   "incident.assigned": "Einheit zugewiesen",
   "incident.closed": "Einsatz abgeschlossen",
+  "incident.feedback": "R\xFCckmeldung einer Einheit (MDT)",
+  "incident.support": "Unterst\xFCtzung ben\xF6tigt",
   "call.received": "Notruf eingegangen",
   announcement: "Wichtige Leitstellenmeldung",
-  radio: "Funkmeldung"
+  radio: "Funkmeldung",
+  handover: "Schicht\xFCbergabe"
 };
+var CAD_FEEDBACK = [
+  { key: "accepted", label: "Auftrag angenommen", emoji: "\u2705", unitStatus: "EN_ROUTE" },
+  { key: "en_route", label: "Ausger\xFCckt", emoji: "\u{1F693}", unitStatus: "EN_ROUTE" },
+  { key: "on_scene", label: "Am Einsatzort", emoji: "\u{1F4CD}", unitStatus: "ON_SCENE" },
+  { key: "support", label: "Unterst\xFCtzung ben\xF6tigt", emoji: "\u{1F198}" },
+  { key: "under_control", label: "Einsatz unter Kontrolle", emoji: "\u{1F6E1}\uFE0F" },
+  { key: "completed", label: "Einsatz abgeschlossen (Meldung)", emoji: "\u{1F3C1}" }
+];
+var CAD_FEEDBACK_KEYS = CAD_FEEDBACK.map((f) => f.key);
 var CAD_LINK_SEND_TYPES = ["incidents", "incident_status", "unit_requests", "calls", "announcements", "radio"];
 var CAD_LINK_ACTIONS = ["status_report", "radio", "view_incidents", "dispatch"];
 var CAD_LINK_LABELS = {
@@ -348,9 +360,12 @@ var CAD_EVENT_SEND_TYPE = {
   "incident.status": "incident_status",
   "incident.assigned": "unit_requests",
   "incident.closed": "incident_status",
+  "incident.feedback": "incident_status",
+  "incident.support": "incident_status",
   "call.received": "calls",
   announcement: "announcements",
-  radio: "radio"
+  radio: "radio",
+  handover: "announcements"
 };
 var CAD_WIDGETS = ["activeIncidents", "availableUnits", "activeCalls", "erlcStatus", "map", "units", "radio", "persons", "vehicles", "dutyActivity"];
 var CAD_WIDGET_LABELS = {
@@ -1408,6 +1423,8 @@ var LOG_TYPES = {
   "auth.logout": "auth",
   "user.created.discord": "auth",
   "cad.announcement": "cad",
+  "cad.handover.acknowledge": "cad",
+  "cad.handover.create": "cad",
   "cad.incident.create": "cad",
   "cad.incident.note": "cad",
   "cad.incident.update": "cad",
@@ -1418,6 +1435,7 @@ var LOG_TYPES = {
   "cad.unit.clear": "cad",
   "cad.unit.create": "cad",
   "cad.unit.delete": "cad",
+  "cad.unit.feedback": "cad",
   "cad.unit.status": "cad",
   "cad.unit.update": "cad",
   "complaint.create": "complaints",
@@ -1718,6 +1736,8 @@ export {
   CAD_EVENTS,
   CAD_EVENT_LABELS,
   CAD_EVENT_SEND_TYPE,
+  CAD_FEEDBACK,
+  CAD_FEEDBACK_KEYS,
   CAD_LINK_ACTIONS,
   CAD_LINK_LABELS,
   CAD_LINK_SEND_TYPES,

@@ -23,12 +23,12 @@ export declare const roomSchema: z.ZodEffects<z.ZodObject<{
         to: z.ZodString;
     }, "strip", z.ZodTypeAny, {
         from: string;
-        to: string;
         days: number[];
+        to: string;
     }, {
         from: string;
-        to: string;
         days: number[];
+        to: string;
     }>, "many">>;
     rating: z.ZodDefault<z.ZodBoolean>;
     music: z.ZodDefault<z.ZodObject<{
@@ -61,8 +61,8 @@ export declare const roomSchema: z.ZodEffects<z.ZodObject<{
     ownChannelIds: string[];
     times: {
         from: string;
-        to: string;
         days: number[];
+        to: string;
     }[];
     music: {
         enabled: boolean;
@@ -85,8 +85,8 @@ export declare const roomSchema: z.ZodEffects<z.ZodObject<{
     ownChannelIds?: string[] | undefined;
     times?: {
         from: string;
-        to: string;
         days: number[];
+        to: string;
     }[] | undefined;
     music?: {
         enabled?: boolean | undefined;
@@ -109,8 +109,8 @@ export declare const roomSchema: z.ZodEffects<z.ZodObject<{
     ownChannelIds: string[];
     times: {
         from: string;
-        to: string;
         days: number[];
+        to: string;
     }[];
     music: {
         enabled: boolean;
@@ -133,8 +133,8 @@ export declare const roomSchema: z.ZodEffects<z.ZodObject<{
     ownChannelIds?: string[] | undefined;
     times?: {
         from: string;
-        to: string;
         days: number[];
+        to: string;
     }[] | undefined;
     music?: {
         enabled?: boolean | undefined;
@@ -160,12 +160,12 @@ export declare const roomsSchema: z.ZodEffects<z.ZodArray<z.ZodEffects<z.ZodObje
         to: z.ZodString;
     }, "strip", z.ZodTypeAny, {
         from: string;
-        to: string;
         days: number[];
+        to: string;
     }, {
         from: string;
-        to: string;
         days: number[];
+        to: string;
     }>, "many">>;
     rating: z.ZodDefault<z.ZodBoolean>;
     music: z.ZodDefault<z.ZodObject<{
@@ -198,8 +198,8 @@ export declare const roomsSchema: z.ZodEffects<z.ZodArray<z.ZodEffects<z.ZodObje
     ownChannelIds: string[];
     times: {
         from: string;
-        to: string;
         days: number[];
+        to: string;
     }[];
     music: {
         enabled: boolean;
@@ -222,8 +222,8 @@ export declare const roomsSchema: z.ZodEffects<z.ZodArray<z.ZodEffects<z.ZodObje
     ownChannelIds?: string[] | undefined;
     times?: {
         from: string;
-        to: string;
         days: number[];
+        to: string;
     }[] | undefined;
     music?: {
         enabled?: boolean | undefined;
@@ -246,8 +246,8 @@ export declare const roomsSchema: z.ZodEffects<z.ZodArray<z.ZodEffects<z.ZodObje
     ownChannelIds: string[];
     times: {
         from: string;
-        to: string;
         days: number[];
+        to: string;
     }[];
     music: {
         enabled: boolean;
@@ -270,8 +270,8 @@ export declare const roomsSchema: z.ZodEffects<z.ZodArray<z.ZodEffects<z.ZodObje
     ownChannelIds?: string[] | undefined;
     times?: {
         from: string;
-        to: string;
         days: number[];
+        to: string;
     }[] | undefined;
     music?: {
         enabled?: boolean | undefined;
@@ -294,8 +294,8 @@ export declare const roomsSchema: z.ZodEffects<z.ZodArray<z.ZodEffects<z.ZodObje
     ownChannelIds: string[];
     times: {
         from: string;
-        to: string;
         days: number[];
+        to: string;
     }[];
     music: {
         enabled: boolean;
@@ -318,8 +318,8 @@ export declare const roomsSchema: z.ZodEffects<z.ZodArray<z.ZodEffects<z.ZodObje
     ownChannelIds?: string[] | undefined;
     times?: {
         from: string;
-        to: string;
         days: number[];
+        to: string;
     }[] | undefined;
     music?: {
         enabled?: boolean | undefined;

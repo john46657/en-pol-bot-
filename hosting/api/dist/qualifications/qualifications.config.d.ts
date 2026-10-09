@@ -208,11 +208,11 @@ export declare const appSettingsSchema: z.ZodDefault<z.ZodObject<{
         managers: z.ZodDefault<z.ZodArray<z.ZodString, "many">>;
     }, "strip", z.ZodTypeAny, {
         denied: string[];
+        accepted: string[];
         required: {
             mode: "ALL" | "ANY";
             ids: string[];
         };
-        accepted: string[];
         restricted: {
             mode: "ALL" | "ANY";
             ids: string[];
@@ -224,11 +224,11 @@ export declare const appSettingsSchema: z.ZodDefault<z.ZodObject<{
         managers: string[];
     }, {
         denied?: string[] | undefined;
+        accepted?: string[] | undefined;
         required?: {
             mode?: "ALL" | "ANY" | undefined;
             ids?: string[] | undefined;
         } | undefined;
-        accepted?: string[] | undefined;
         restricted?: {
             mode?: "ALL" | "ANY" | undefined;
             ids?: string[] | undefined;
@@ -254,11 +254,11 @@ export declare const appSettingsSchema: z.ZodDefault<z.ZodObject<{
     };
     roles: {
         denied: string[];
+        accepted: string[];
         required: {
             mode: "ALL" | "ANY";
             ids: string[];
         };
-        accepted: string[];
         restricted: {
             mode: "ALL" | "ANY";
             ids: string[];
@@ -282,11 +282,11 @@ export declare const appSettingsSchema: z.ZodDefault<z.ZodObject<{
     } | undefined;
     roles?: {
         denied?: string[] | undefined;
+        accepted?: string[] | undefined;
         required?: {
             mode?: "ALL" | "ANY" | undefined;
             ids?: string[] | undefined;
         } | undefined;
-        accepted?: string[] | undefined;
         restricted?: {
             mode?: "ALL" | "ANY" | undefined;
             ids?: string[] | undefined;
@@ -448,11 +448,11 @@ export declare const unitSchema: z.ZodObject<{
             managers: z.ZodDefault<z.ZodArray<z.ZodString, "many">>;
         }, "strip", z.ZodTypeAny, {
             denied: string[];
+            accepted: string[];
             required: {
                 mode: "ALL" | "ANY";
                 ids: string[];
             };
-            accepted: string[];
             restricted: {
                 mode: "ALL" | "ANY";
                 ids: string[];
@@ -464,11 +464,11 @@ export declare const unitSchema: z.ZodObject<{
             managers: string[];
         }, {
             denied?: string[] | undefined;
+            accepted?: string[] | undefined;
             required?: {
                 mode?: "ALL" | "ANY" | undefined;
                 ids?: string[] | undefined;
             } | undefined;
-            accepted?: string[] | undefined;
             restricted?: {
                 mode?: "ALL" | "ANY" | undefined;
                 ids?: string[] | undefined;
@@ -494,11 +494,11 @@ export declare const unitSchema: z.ZodObject<{
         };
         roles: {
             denied: string[];
+            accepted: string[];
             required: {
                 mode: "ALL" | "ANY";
                 ids: string[];
             };
-            accepted: string[];
             restricted: {
                 mode: "ALL" | "ANY";
                 ids: string[];
@@ -522,11 +522,11 @@ export declare const unitSchema: z.ZodObject<{
         } | undefined;
         roles?: {
             denied?: string[] | undefined;
+            accepted?: string[] | undefined;
             required?: {
                 mode?: "ALL" | "ANY" | undefined;
                 ids?: string[] | undefined;
             } | undefined;
-            accepted?: string[] | undefined;
             restricted?: {
                 mode?: "ALL" | "ANY" | undefined;
                 ids?: string[] | undefined;
@@ -563,11 +563,11 @@ export declare const unitSchema: z.ZodObject<{
         };
         roles: {
             denied: string[];
+            accepted: string[];
             required: {
                 mode: "ALL" | "ANY";
                 ids: string[];
             };
-            accepted: string[];
             restricted: {
                 mode: "ALL" | "ANY";
                 ids: string[];
@@ -617,11 +617,11 @@ export declare const unitSchema: z.ZodObject<{
         } | undefined;
         roles?: {
             denied?: string[] | undefined;
+            accepted?: string[] | undefined;
             required?: {
                 mode?: "ALL" | "ANY" | undefined;
                 ids?: string[] | undefined;
             } | undefined;
-            accepted?: string[] | undefined;
             restricted?: {
                 mode?: "ALL" | "ANY" | undefined;
                 ids?: string[] | undefined;
@@ -700,11 +700,11 @@ export declare const policeSchema: z.ZodObject<{
             managers: z.ZodDefault<z.ZodArray<z.ZodString, "many">>;
         }, "strip", z.ZodTypeAny, {
             denied: string[];
+            accepted: string[];
             required: {
                 mode: "ALL" | "ANY";
                 ids: string[];
             };
-            accepted: string[];
             restricted: {
                 mode: "ALL" | "ANY";
                 ids: string[];
@@ -716,11 +716,11 @@ export declare const policeSchema: z.ZodObject<{
             managers: string[];
         }, {
             denied?: string[] | undefined;
+            accepted?: string[] | undefined;
             required?: {
                 mode?: "ALL" | "ANY" | undefined;
                 ids?: string[] | undefined;
             } | undefined;
-            accepted?: string[] | undefined;
             restricted?: {
                 mode?: "ALL" | "ANY" | undefined;
                 ids?: string[] | undefined;
@@ -746,11 +746,11 @@ export declare const policeSchema: z.ZodObject<{
         };
         roles: {
             denied: string[];
+            accepted: string[];
             required: {
                 mode: "ALL" | "ANY";
                 ids: string[];
             };
-            accepted: string[];
             restricted: {
                 mode: "ALL" | "ANY";
                 ids: string[];
@@ -774,11 +774,11 @@ export declare const policeSchema: z.ZodObject<{
         } | undefined;
         roles?: {
             denied?: string[] | undefined;
+            accepted?: string[] | undefined;
             required?: {
                 mode?: "ALL" | "ANY" | undefined;
                 ids?: string[] | undefined;
             } | undefined;
-            accepted?: string[] | undefined;
             restricted?: {
                 mode?: "ALL" | "ANY" | undefined;
                 ids?: string[] | undefined;
@@ -807,11 +807,11 @@ export declare const policeSchema: z.ZodObject<{
         };
         roles: {
             denied: string[];
+            accepted: string[];
             required: {
                 mode: "ALL" | "ANY";
                 ids: string[];
             };
-            accepted: string[];
             restricted: {
                 mode: "ALL" | "ANY";
                 ids: string[];
@@ -846,11 +846,11 @@ export declare const policeSchema: z.ZodObject<{
         } | undefined;
         roles?: {
             denied?: string[] | undefined;
+            accepted?: string[] | undefined;
             required?: {
                 mode?: "ALL" | "ANY" | undefined;
                 ids?: string[] | undefined;
             } | undefined;
-            accepted?: string[] | undefined;
             restricted?: {
                 mode?: "ALL" | "ANY" | undefined;
                 ids?: string[] | undefined;
@@ -1018,11 +1018,11 @@ export declare const configSchema: z.ZodObject<{
                 managers: z.ZodDefault<z.ZodArray<z.ZodString, "many">>;
             }, "strip", z.ZodTypeAny, {
                 denied: string[];
+                accepted: string[];
                 required: {
                     mode: "ALL" | "ANY";
                     ids: string[];
                 };
-                accepted: string[];
                 restricted: {
                     mode: "ALL" | "ANY";
                     ids: string[];
@@ -1034,11 +1034,11 @@ export declare const configSchema: z.ZodObject<{
                 managers: string[];
             }, {
                 denied?: string[] | undefined;
+                accepted?: string[] | undefined;
                 required?: {
                     mode?: "ALL" | "ANY" | undefined;
                     ids?: string[] | undefined;
                 } | undefined;
-                accepted?: string[] | undefined;
                 restricted?: {
                     mode?: "ALL" | "ANY" | undefined;
                     ids?: string[] | undefined;
@@ -1064,11 +1064,11 @@ export declare const configSchema: z.ZodObject<{
             };
             roles: {
                 denied: string[];
+                accepted: string[];
                 required: {
                     mode: "ALL" | "ANY";
                     ids: string[];
                 };
-                accepted: string[];
                 restricted: {
                     mode: "ALL" | "ANY";
                     ids: string[];
@@ -1092,11 +1092,11 @@ export declare const configSchema: z.ZodObject<{
             } | undefined;
             roles?: {
                 denied?: string[] | undefined;
+                accepted?: string[] | undefined;
                 required?: {
                     mode?: "ALL" | "ANY" | undefined;
                     ids?: string[] | undefined;
                 } | undefined;
-                accepted?: string[] | undefined;
                 restricted?: {
                     mode?: "ALL" | "ANY" | undefined;
                     ids?: string[] | undefined;
@@ -1133,11 +1133,11 @@ export declare const configSchema: z.ZodObject<{
             };
             roles: {
                 denied: string[];
+                accepted: string[];
                 required: {
                     mode: "ALL" | "ANY";
                     ids: string[];
                 };
-                accepted: string[];
                 restricted: {
                     mode: "ALL" | "ANY";
                     ids: string[];
@@ -1187,11 +1187,11 @@ export declare const configSchema: z.ZodObject<{
             } | undefined;
             roles?: {
                 denied?: string[] | undefined;
+                accepted?: string[] | undefined;
                 required?: {
                     mode?: "ALL" | "ANY" | undefined;
                     ids?: string[] | undefined;
                 } | undefined;
-                accepted?: string[] | undefined;
                 restricted?: {
                     mode?: "ALL" | "ANY" | undefined;
                     ids?: string[] | undefined;
@@ -1225,11 +1225,11 @@ export declare const configSchema: z.ZodObject<{
             };
             roles: {
                 denied: string[];
+                accepted: string[];
                 required: {
                     mode: "ALL" | "ANY";
                     ids: string[];
                 };
-                accepted: string[];
                 restricted: {
                     mode: "ALL" | "ANY";
                     ids: string[];
@@ -1279,11 +1279,11 @@ export declare const configSchema: z.ZodObject<{
             } | undefined;
             roles?: {
                 denied?: string[] | undefined;
+                accepted?: string[] | undefined;
                 required?: {
                     mode?: "ALL" | "ANY" | undefined;
                     ids?: string[] | undefined;
                 } | undefined;
-                accepted?: string[] | undefined;
                 restricted?: {
                     mode?: "ALL" | "ANY" | undefined;
                     ids?: string[] | undefined;
@@ -1361,11 +1361,11 @@ export declare const configSchema: z.ZodObject<{
                 managers: z.ZodDefault<z.ZodArray<z.ZodString, "many">>;
             }, "strip", z.ZodTypeAny, {
                 denied: string[];
+                accepted: string[];
                 required: {
                     mode: "ALL" | "ANY";
                     ids: string[];
                 };
-                accepted: string[];
                 restricted: {
                     mode: "ALL" | "ANY";
                     ids: string[];
@@ -1377,11 +1377,11 @@ export declare const configSchema: z.ZodObject<{
                 managers: string[];
             }, {
                 denied?: string[] | undefined;
+                accepted?: string[] | undefined;
                 required?: {
                     mode?: "ALL" | "ANY" | undefined;
                     ids?: string[] | undefined;
                 } | undefined;
-                accepted?: string[] | undefined;
                 restricted?: {
                     mode?: "ALL" | "ANY" | undefined;
                     ids?: string[] | undefined;
@@ -1407,11 +1407,11 @@ export declare const configSchema: z.ZodObject<{
             };
             roles: {
                 denied: string[];
+                accepted: string[];
                 required: {
                     mode: "ALL" | "ANY";
                     ids: string[];
                 };
-                accepted: string[];
                 restricted: {
                     mode: "ALL" | "ANY";
                     ids: string[];
@@ -1435,11 +1435,11 @@ export declare const configSchema: z.ZodObject<{
             } | undefined;
             roles?: {
                 denied?: string[] | undefined;
+                accepted?: string[] | undefined;
                 required?: {
                     mode?: "ALL" | "ANY" | undefined;
                     ids?: string[] | undefined;
                 } | undefined;
-                accepted?: string[] | undefined;
                 restricted?: {
                     mode?: "ALL" | "ANY" | undefined;
                     ids?: string[] | undefined;
@@ -1468,11 +1468,11 @@ export declare const configSchema: z.ZodObject<{
             };
             roles: {
                 denied: string[];
+                accepted: string[];
                 required: {
                     mode: "ALL" | "ANY";
                     ids: string[];
                 };
-                accepted: string[];
                 restricted: {
                     mode: "ALL" | "ANY";
                     ids: string[];
@@ -1507,11 +1507,11 @@ export declare const configSchema: z.ZodObject<{
             } | undefined;
             roles?: {
                 denied?: string[] | undefined;
+                accepted?: string[] | undefined;
                 required?: {
                     mode?: "ALL" | "ANY" | undefined;
                     ids?: string[] | undefined;
                 } | undefined;
-                accepted?: string[] | undefined;
                 restricted?: {
                     mode?: "ALL" | "ANY" | undefined;
                     ids?: string[] | undefined;
@@ -1548,11 +1548,11 @@ export declare const configSchema: z.ZodObject<{
             };
             roles: {
                 denied: string[];
+                accepted: string[];
                 required: {
                     mode: "ALL" | "ANY";
                     ids: string[];
                 };
-                accepted: string[];
                 restricted: {
                     mode: "ALL" | "ANY";
                     ids: string[];
@@ -1588,11 +1588,11 @@ export declare const configSchema: z.ZodObject<{
             };
             roles: {
                 denied: string[];
+                accepted: string[];
                 required: {
                     mode: "ALL" | "ANY";
                     ids: string[];
                 };
-                accepted: string[];
                 restricted: {
                     mode: "ALL" | "ANY";
                     ids: string[];
@@ -1644,11 +1644,11 @@ export declare const configSchema: z.ZodObject<{
             } | undefined;
             roles?: {
                 denied?: string[] | undefined;
+                accepted?: string[] | undefined;
                 required?: {
                     mode?: "ALL" | "ANY" | undefined;
                     ids?: string[] | undefined;
                 } | undefined;
-                accepted?: string[] | undefined;
                 restricted?: {
                     mode?: "ALL" | "ANY" | undefined;
                     ids?: string[] | undefined;
@@ -1684,11 +1684,11 @@ export declare const configSchema: z.ZodObject<{
             } | undefined;
             roles?: {
                 denied?: string[] | undefined;
+                accepted?: string[] | undefined;
                 required?: {
                     mode?: "ALL" | "ANY" | undefined;
                     ids?: string[] | undefined;
                 } | undefined;
-                accepted?: string[] | undefined;
                 restricted?: {
                     mode?: "ALL" | "ANY" | undefined;
                     ids?: string[] | undefined;
@@ -1859,11 +1859,11 @@ export declare const saveSchema: z.ZodObject<{
                 managers: z.ZodDefault<z.ZodArray<z.ZodString, "many">>;
             }, "strip", z.ZodTypeAny, {
                 denied: string[];
+                accepted: string[];
                 required: {
                     mode: "ALL" | "ANY";
                     ids: string[];
                 };
-                accepted: string[];
                 restricted: {
                     mode: "ALL" | "ANY";
                     ids: string[];
@@ -1875,11 +1875,11 @@ export declare const saveSchema: z.ZodObject<{
                 managers: string[];
             }, {
                 denied?: string[] | undefined;
+                accepted?: string[] | undefined;
                 required?: {
                     mode?: "ALL" | "ANY" | undefined;
                     ids?: string[] | undefined;
                 } | undefined;
-                accepted?: string[] | undefined;
                 restricted?: {
                     mode?: "ALL" | "ANY" | undefined;
                     ids?: string[] | undefined;
@@ -1905,11 +1905,11 @@ export declare const saveSchema: z.ZodObject<{
             };
             roles: {
                 denied: string[];
+                accepted: string[];
                 required: {
                     mode: "ALL" | "ANY";
                     ids: string[];
                 };
-                accepted: string[];
                 restricted: {
                     mode: "ALL" | "ANY";
                     ids: string[];
@@ -1933,11 +1933,11 @@ export declare const saveSchema: z.ZodObject<{
             } | undefined;
             roles?: {
                 denied?: string[] | undefined;
+                accepted?: string[] | undefined;
                 required?: {
                     mode?: "ALL" | "ANY" | undefined;
                     ids?: string[] | undefined;
                 } | undefined;
-                accepted?: string[] | undefined;
                 restricted?: {
                     mode?: "ALL" | "ANY" | undefined;
                     ids?: string[] | undefined;
@@ -1974,11 +1974,11 @@ export declare const saveSchema: z.ZodObject<{
             };
             roles: {
                 denied: string[];
+                accepted: string[];
                 required: {
                     mode: "ALL" | "ANY";
                     ids: string[];
                 };
-                accepted: string[];
                 restricted: {
                     mode: "ALL" | "ANY";
                     ids: string[];
@@ -2028,11 +2028,11 @@ export declare const saveSchema: z.ZodObject<{
             } | undefined;
             roles?: {
                 denied?: string[] | undefined;
+                accepted?: string[] | undefined;
                 required?: {
                     mode?: "ALL" | "ANY" | undefined;
                     ids?: string[] | undefined;
                 } | undefined;
-                accepted?: string[] | undefined;
                 restricted?: {
                     mode?: "ALL" | "ANY" | undefined;
                     ids?: string[] | undefined;
@@ -2066,11 +2066,11 @@ export declare const saveSchema: z.ZodObject<{
             };
             roles: {
                 denied: string[];
+                accepted: string[];
                 required: {
                     mode: "ALL" | "ANY";
                     ids: string[];
                 };
-                accepted: string[];
                 restricted: {
                     mode: "ALL" | "ANY";
                     ids: string[];
@@ -2120,11 +2120,11 @@ export declare const saveSchema: z.ZodObject<{
             } | undefined;
             roles?: {
                 denied?: string[] | undefined;
+                accepted?: string[] | undefined;
                 required?: {
                     mode?: "ALL" | "ANY" | undefined;
                     ids?: string[] | undefined;
                 } | undefined;
-                accepted?: string[] | undefined;
                 restricted?: {
                     mode?: "ALL" | "ANY" | undefined;
                     ids?: string[] | undefined;
@@ -2202,11 +2202,11 @@ export declare const saveSchema: z.ZodObject<{
                 managers: z.ZodDefault<z.ZodArray<z.ZodString, "many">>;
             }, "strip", z.ZodTypeAny, {
                 denied: string[];
+                accepted: string[];
                 required: {
                     mode: "ALL" | "ANY";
                     ids: string[];
                 };
-                accepted: string[];
                 restricted: {
                     mode: "ALL" | "ANY";
                     ids: string[];
@@ -2218,11 +2218,11 @@ export declare const saveSchema: z.ZodObject<{
                 managers: string[];
             }, {
                 denied?: string[] | undefined;
+                accepted?: string[] | undefined;
                 required?: {
                     mode?: "ALL" | "ANY" | undefined;
                     ids?: string[] | undefined;
                 } | undefined;
-                accepted?: string[] | undefined;
                 restricted?: {
                     mode?: "ALL" | "ANY" | undefined;
                     ids?: string[] | undefined;
@@ -2248,11 +2248,11 @@ export declare const saveSchema: z.ZodObject<{
             };
             roles: {
                 denied: string[];
+                accepted: string[];
                 required: {
                     mode: "ALL" | "ANY";
                     ids: string[];
                 };
-                accepted: string[];
                 restricted: {
                     mode: "ALL" | "ANY";
                     ids: string[];
@@ -2276,11 +2276,11 @@ export declare const saveSchema: z.ZodObject<{
             } | undefined;
             roles?: {
                 denied?: string[] | undefined;
+                accepted?: string[] | undefined;
                 required?: {
                     mode?: "ALL" | "ANY" | undefined;
                     ids?: string[] | undefined;
                 } | undefined;
-                accepted?: string[] | undefined;
                 restricted?: {
                     mode?: "ALL" | "ANY" | undefined;
                     ids?: string[] | undefined;
@@ -2309,11 +2309,11 @@ export declare const saveSchema: z.ZodObject<{
             };
             roles: {
                 denied: string[];
+                accepted: string[];
                 required: {
                     mode: "ALL" | "ANY";
                     ids: string[];
                 };
-                accepted: string[];
                 restricted: {
                     mode: "ALL" | "ANY";
                     ids: string[];
@@ -2348,11 +2348,11 @@ export declare const saveSchema: z.ZodObject<{
             } | undefined;
             roles?: {
                 denied?: string[] | undefined;
+                accepted?: string[] | undefined;
                 required?: {
                     mode?: "ALL" | "ANY" | undefined;
                     ids?: string[] | undefined;
                 } | undefined;
-                accepted?: string[] | undefined;
                 restricted?: {
                     mode?: "ALL" | "ANY" | undefined;
                     ids?: string[] | undefined;
@@ -2481,11 +2481,11 @@ export declare const saveSchema: z.ZodObject<{
             };
             roles: {
                 denied: string[];
+                accepted: string[];
                 required: {
                     mode: "ALL" | "ANY";
                     ids: string[];
                 };
-                accepted: string[];
                 restricted: {
                     mode: "ALL" | "ANY";
                     ids: string[];
@@ -2521,11 +2521,11 @@ export declare const saveSchema: z.ZodObject<{
             };
             roles: {
                 denied: string[];
+                accepted: string[];
                 required: {
                     mode: "ALL" | "ANY";
                     ids: string[];
                 };
-                accepted: string[];
                 restricted: {
                     mode: "ALL" | "ANY";
                     ids: string[];
@@ -2590,11 +2590,11 @@ export declare const saveSchema: z.ZodObject<{
             } | undefined;
             roles?: {
                 denied?: string[] | undefined;
+                accepted?: string[] | undefined;
                 required?: {
                     mode?: "ALL" | "ANY" | undefined;
                     ids?: string[] | undefined;
                 } | undefined;
-                accepted?: string[] | undefined;
                 restricted?: {
                     mode?: "ALL" | "ANY" | undefined;
                     ids?: string[] | undefined;
@@ -2630,11 +2630,11 @@ export declare const saveSchema: z.ZodObject<{
             } | undefined;
             roles?: {
                 denied?: string[] | undefined;
+                accepted?: string[] | undefined;
                 required?: {
                     mode?: "ALL" | "ANY" | undefined;
                     ids?: string[] | undefined;
                 } | undefined;
-                accepted?: string[] | undefined;
                 restricted?: {
                     mode?: "ALL" | "ANY" | undefined;
                     ids?: string[] | undefined;

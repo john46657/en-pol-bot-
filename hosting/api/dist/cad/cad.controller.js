@@ -26,6 +26,8 @@ const permission_service_1 = require("../authz/permission.service");
 const media_service_1 = require("../media/media.service");
 const cad_service_1 = require("./cad.service");
 const cad_tablet_service_1 = require("./cad-tablet.service");
+const cad_handover_service_1 = require("./cad-handover.service");
+const cad_stats_service_1 = require("./cad-stats.service");
 const cad_config_service_1 = require("./cad-config.service");
 const erlc_service_1 = require("./erlc.service");
 const erlc_sync_service_1 = require("./erlc-sync.service");
@@ -71,6 +73,7 @@ const linkBody = zod_1.z.object({
 });
 const listQ = zod_1.z.object({ active: zod_1.z.enum(['true', 'false']).optional(), q: zod_1.z.string().max(80).optional(), take: zod_1.z.coerce.number().int().min(1).max(300).optional() });
 const statusBody = zod_1.z.object({ status: zod_1.z.string().min(1).max(32), note: zod_1.z.string().trim().max(500).optional() });
+const feedbackBody = zod_1.z.object({ kind: zod_1.z.enum(shared_1.CAD_FEEDBACK_KEYS), incidentId: opt(zod_1.z.string().uuid()), note: opt(text(500)) });
 const radioBody = zod_1.z.object({ text: zod_1.z.string().trim().min(1).max(500), unitId: opt(zod_1.z.string().uuid()), incidentId: opt(zod_1.z.string().uuid()), incidentNumber: opt(text(32)), callsign: opt(text(24)) });
 let CadController = class CadController {
     s;
@@ -78,12 +81,16 @@ let CadController = class CadController {
     cfg;
     perms;
     media;
-    constructor(s, tablet, cfg, perms, media) {
+    handover;
+    statsSvc;
+    constructor(s, tablet, cfg, perms, media, handover, statsSvc) {
         this.s = s;
         this.tablet = tablet;
         this.cfg = cfg;
         this.perms = perms;
         this.media = media;
+        this.handover = handover;
+        this.statsSvc = statsSvc;
     }
     // Konfiguration
     config() { return this.cfg.get(); }
@@ -121,6 +128,17 @@ let CadController = class CadController {
     deleteUnit(a, id) { return this.s.deleteUnit(a, id); }
     /** Leitstelle oder die Besatzung selbst (auch vom verbundenen SEK/K9-Server, falls freigegeben). */
     unitStatus(a, id, b) { return this.s.setUnitStatus(a, id, b.status, a.roles); }
+    /** Rückmeldung zum Einsatz (MDT/Discord): gleiche Berechtigung wie der Einheitenstatus. */
+    feedback(a, id, b) { return this.s.feedback(a, id, b, a.roles); }
+    // MDT (eigene Einheit, Einsatzaufträge, Rückmeldungen)
+    mdt(a) { return this.s.mdt(a); }
+    // Schichtübergabe
+    handovers() { return this.handover.list(); }
+    handoverDraft() { return this.handover.draft(); }
+    createHandover(a, b) { return this.handover.create(a, b.notes); }
+    ackHandover(a, id, b) { return this.handover.acknowledge(a, id, b.note); }
+    // Statistik
+    stats(q) { return this.statsSvc.stats(q.days ?? 30); }
     // Notrufe
     async calls(a, q) { await this.s.assertCrossServer(a, 'view_incidents', a.roles); return this.s.listCalls({ status: q.status ?? 'ALL' }); }
     async callAction(a, id, action, body) {
@@ -357,6 +375,67 @@ __decorate([
     __metadata("design:returntype", void 0)
 ], CadController.prototype, "unitStatus", null);
 __decorate([
+    (0, common_1.Post)('units/:id/feedback'),
+    (0, common_1.HttpCode)(200),
+    (0, decorators_1.RequirePermission)('cad.view'),
+    __param(0, Cad()),
+    __param(1, (0, common_1.Param)('id', common_1.ParseUUIDPipe)),
+    __param(2, (0, common_1.Body)((0, zod_pipe_1.zodBody)(feedbackBody))),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, String, void 0]),
+    __metadata("design:returntype", void 0)
+], CadController.prototype, "feedback", null);
+__decorate([
+    (0, common_1.Get)('mdt'),
+    (0, decorators_1.RequirePermission)('cad.view'),
+    __param(0, Cad()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object]),
+    __metadata("design:returntype", void 0)
+], CadController.prototype, "mdt", null);
+__decorate([
+    (0, common_1.Get)('handovers'),
+    (0, decorators_1.RequirePermission)('cad.view'),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", []),
+    __metadata("design:returntype", void 0)
+], CadController.prototype, "handovers", null);
+__decorate([
+    (0, common_1.Get)('handovers/draft'),
+    (0, decorators_1.RequirePermission)('cad.handover'),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", []),
+    __metadata("design:returntype", void 0)
+], CadController.prototype, "handoverDraft", null);
+__decorate([
+    (0, common_1.Post)('handovers'),
+    (0, decorators_1.RequirePermission)('cad.handover'),
+    __param(0, Cad()),
+    __param(1, (0, common_1.Body)((0, zod_pipe_1.zodBody)(zod_1.z.object({ notes: zod_1.z.string().trim().min(1).max(5000) })))),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, Object]),
+    __metadata("design:returntype", void 0)
+], CadController.prototype, "createHandover", null);
+__decorate([
+    (0, common_1.Post)('handovers/:id/acknowledge'),
+    (0, common_1.HttpCode)(200),
+    (0, decorators_1.RequirePermission)('cad.handover'),
+    __param(0, Cad()),
+    __param(1, (0, common_1.Param)('id', common_1.ParseUUIDPipe)),
+    __param(2, (0, common_1.Body)((0, zod_pipe_1.zodBody)(zod_1.z.object({ note: zod_1.z.string().trim().max(1000).nullish() })))),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, String, Object]),
+    __metadata("design:returntype", void 0)
+], CadController.prototype, "ackHandover", null);
+__decorate([
+    (0, common_1.Get)('stats'),
+    (0, decorators_1.RequirePermission)('cad.view_stats'),
+    __param(0, (0, common_1.Query)((0, zod_pipe_1.zodBody)(zod_1.z.object({ days: zod_1.z.coerce.number().int().min(1).max(365).optional() })))),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object]),
+    __metadata("design:returntype", void 0)
+], CadController.prototype, "stats", null);
+__decorate([
     (0, common_1.Get)('calls'),
     (0, decorators_1.RequirePermission)('cad.view'),
     __param(0, Cad()),
@@ -538,7 +617,8 @@ __decorate([
 exports.CadController = CadController = __decorate([
     (0, swagger_1.ApiTags)('cad'),
     (0, common_1.Controller)('cad'),
-    __metadata("design:paramtypes", [cad_service_1.CadService, cad_tablet_service_1.CadTabletService, cad_config_service_1.CadConfigService, permission_service_1.PermissionService, media_service_1.MediaService])
+    __metadata("design:paramtypes", [cad_service_1.CadService, cad_tablet_service_1.CadTabletService, cad_config_service_1.CadConfigService, permission_service_1.PermissionService, media_service_1.MediaService,
+        cad_handover_service_1.CadHandoverService, cad_stats_service_1.CadStatsService])
 ], CadController);
 const commandBody = zod_1.z.object({ command: zod_1.z.string().trim().min(2).max(500), confirm: zod_1.z.boolean().optional() });
 let ErlcController = class ErlcController {

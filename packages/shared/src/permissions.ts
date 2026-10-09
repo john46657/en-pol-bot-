@@ -5,7 +5,7 @@ export const PERMISSION_CATALOG = {
   team: ['view', 'manage'],
   dispatch: ['view', 'create', 'edit', 'assign', 'close', 'manage'],
   /** CAD-Leitstelle + ER:LC-Integration (deny-by-default; kritische ER:LC-Befehle brauchen ein eigenes Recht). */
-  cad: ['view', 'create_incident', 'edit_incident', 'close_incident', 'assign_unit', 'manage_units', 'view_persons', 'view_vehicles', 'manage_map', 'view_erlc', 'manage_erlc', 'erlc_command', 'erlc_command_critical', 'manage_cross_server', 'view_logs', 'manage_settings', 'radio'],
+  cad: ['view', 'create_incident', 'edit_incident', 'close_incident', 'assign_unit', 'manage_units', 'view_persons', 'view_vehicles', 'manage_map', 'view_erlc', 'manage_erlc', 'erlc_command', 'erlc_command_critical', 'manage_cross_server', 'view_logs', 'manage_settings', 'radio', 'handover', 'view_stats'],
   incidents: ['view', 'create', 'edit', 'close', 'delete'],
   persons: ['view', 'create', 'edit', 'archive', 'merge'],
   vehicles: ['view', 'create', 'edit', 'archive'],
