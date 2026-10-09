@@ -13,10 +13,10 @@ export declare const announcementSchema: z.ZodObject<{
     discordChannelId: z.ZodDefault<z.ZodNullable<z.ZodString>>;
     attachments: z.ZodDefault<z.ZodArray<z.ZodString, "many">>;
 }, "strip", z.ZodTypeAny, {
-    priority: "LOW" | "HIGH" | "CRITICAL" | "NORMAL";
     title: string;
-    body: string;
+    priority: "LOW" | "HIGH" | "CRITICAL" | "NORMAL";
     attachments: string[];
+    body: string;
     audienceRoleIds: string[];
     requireAck: boolean;
     discordChannelId: string | null;
@@ -25,8 +25,8 @@ export declare const announcementSchema: z.ZodObject<{
 }, {
     title: string;
     body: string;
-    expiresAt?: string | null | undefined;
     priority?: "LOW" | "HIGH" | "CRITICAL" | "NORMAL" | undefined;
+    expiresAt?: string | null | undefined;
     attachments?: string[] | undefined;
     audienceRoleIds?: string[] | undefined;
     publishAt?: string | undefined;
@@ -44,24 +44,24 @@ export declare const pollSchema: z.ZodObject<{
     multiple: z.ZodDefault<z.ZodBoolean>;
     showResults: z.ZodDefault<z.ZodEnum<["ALWAYS", "AFTER_VOTE", "AFTER_END", "NEVER"]>>;
 }, "strip", z.ZodTypeAny, {
-    description: string | null;
-    options: string[];
     title: string;
-    multiple: boolean;
+    description: string | null;
     audienceRoleIds: string[];
+    options: string[];
     anonymous: boolean;
+    multiple: boolean;
     showResults: "ALWAYS" | "AFTER_VOTE" | "AFTER_END" | "NEVER";
     startsAt?: string | undefined;
     endsAt?: string | null | undefined;
 }, {
-    options: string[];
     title: string;
+    options: string[];
     description?: string | null | undefined;
     startsAt?: string | undefined;
     endsAt?: string | null | undefined;
-    multiple?: boolean | undefined;
     audienceRoleIds?: string[] | undefined;
     anonymous?: boolean | undefined;
+    multiple?: boolean | undefined;
     showResults?: "ALWAYS" | "AFTER_VOTE" | "AFTER_END" | "NEVER" | undefined;
 }>;
 /** Interne Meldungen (Zielgruppe, Priorität, Zeitraum, Lesebestätigung, Discord) und Abstimmungen. */
@@ -80,14 +80,14 @@ export declare class HrCommsService {
         readCount: number;
         audienceCount: number | null;
         id: string;
+        title: string;
         createdAt: Date;
-        expiresAt: Date | null;
         updatedAt: Date;
         priority: string;
         createdById: string;
-        title: string;
-        body: string;
+        expiresAt: Date | null;
         attachments: string[];
+        body: string;
         audienceRoleIds: string[];
         publishAt: Date;
         requireAck: boolean;
@@ -95,14 +95,14 @@ export declare class HrCommsService {
     }[]>;
     saveAnnouncement(actor: Actor, d: z.infer<typeof announcementSchema>, id?: string): Promise<{
         id: string;
+        title: string;
         createdAt: Date;
-        expiresAt: Date | null;
         updatedAt: Date;
         priority: string;
         createdById: string;
-        title: string;
-        body: string;
+        expiresAt: Date | null;
         attachments: string[];
+        body: string;
         audienceRoleIds: string[];
         publishAt: Date;
         requireAck: boolean;
@@ -135,32 +135,32 @@ export declare class HrCommsService {
             voters: string[] | null;
         }[] | null;
         id: string;
+        title: string;
         createdAt: Date;
         updatedAt: Date;
         description: string | null;
         createdById: string;
-        options: import("@prisma/client/runtime/library").JsonValue;
         startsAt: Date;
         endsAt: Date | null;
-        title: string;
-        multiple: boolean;
         audienceRoleIds: string[];
+        options: import("@prisma/client/runtime/library").JsonValue;
         anonymous: boolean;
+        multiple: boolean;
         showResults: string;
     }[]>;
     savePoll(actor: Actor, d: z.infer<typeof pollSchema>, id?: string): Promise<{
         id: string;
+        title: string;
         createdAt: Date;
         updatedAt: Date;
         description: string | null;
         createdById: string;
-        options: import("@prisma/client/runtime/library").JsonValue;
         startsAt: Date;
         endsAt: Date | null;
-        title: string;
-        multiple: boolean;
         audienceRoleIds: string[];
+        options: import("@prisma/client/runtime/library").JsonValue;
         anonymous: boolean;
+        multiple: boolean;
         showResults: string;
     }>;
     deletePoll(actor: Actor, id: string): Promise<void>;

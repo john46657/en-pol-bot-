@@ -59,8 +59,8 @@ export declare class CadHandoverService {
         acknowledgedByName: string | null;
         id: string;
         createdAt: Date;
-        guildId: string | null;
         createdById: string | null;
+        guildId: string | null;
         notes: string;
         acknowledgedById: string | null;
         acknowledgedAt: Date | null;
@@ -75,8 +75,8 @@ export declare class CadHandoverService {
             acknowledgedByName: string | null;
             id: string;
             createdAt: Date;
-            guildId: string | null;
             createdById: string | null;
+            guildId: string | null;
             notes: string;
             acknowledgedById: string | null;
             acknowledgedAt: Date | null;
@@ -86,8 +86,8 @@ export declare class CadHandoverService {
     create(actor: CadActor, notes: string): Promise<{
         id: string;
         createdAt: Date;
-        guildId: string | null;
         createdById: string | null;
+        guildId: string | null;
         notes: string;
         snapshot: Prisma.JsonValue;
         acknowledgedById: string | null;
@@ -98,8 +98,8 @@ export declare class CadHandoverService {
     acknowledge(actor: CadActor, id: string, note?: string | null): Promise<{
         id: string;
         createdAt: Date;
-        guildId: string | null;
         createdById: string | null;
+        guildId: string | null;
         notes: string;
         snapshot: Prisma.JsonValue;
         acknowledgedById: string | null;

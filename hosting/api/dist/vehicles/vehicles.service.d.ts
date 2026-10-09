@@ -17,18 +17,18 @@ export declare class VehiclesService {
                 robloxUsername: string;
             } | null;
         } & {
+            serverId: string | null;
+            model: string | null;
             id: string;
+            status: string;
             createdAt: Date;
             updatedAt: Date;
             version: number;
-            color: string | null;
-            serverId: string | null;
-            status: string;
-            custom: Prisma.JsonValue | null;
-            model: string | null;
-            notes: string | null;
-            plate: string;
             ownerId: string | null;
+            color: string | null;
+            notes: string | null;
+            custom: Prisma.JsonValue | null;
+            plate: string;
             erlcReference: string | null;
         })[];
         total: number;
@@ -38,18 +38,18 @@ export declare class VehiclesService {
     get(id: string): Promise<{
         vehicle: {
             owner: {
+                serverId: string | null;
                 id: string;
+                status: string;
                 createdAt: Date;
-                robloxUserId: string | null;
-                robloxUsername: string;
                 updatedAt: Date;
                 version: number;
-                serverId: string | null;
                 createdById: string | null;
-                status: string;
-                custom: Prisma.JsonValue | null;
+                robloxUserId: string | null;
+                robloxUsername: string;
                 aliases: string[];
                 notes: string | null;
+                custom: Prisma.JsonValue | null;
                 fullName: string | null;
                 dateOfBirth: Date | null;
                 gender: string | null;
@@ -63,27 +63,27 @@ export declare class VehiclesService {
                 photoId: string | null;
             } | null;
         } & {
+            serverId: string | null;
+            model: string | null;
             id: string;
+            status: string;
             createdAt: Date;
             updatedAt: Date;
             version: number;
-            color: string | null;
-            serverId: string | null;
-            status: string;
-            custom: Prisma.JsonValue | null;
-            model: string | null;
-            notes: string | null;
-            plate: string;
             ownerId: string | null;
+            color: string | null;
+            notes: string | null;
+            custom: Prisma.JsonValue | null;
+            plate: string;
             erlcReference: string | null;
         };
         timeline: {
             id: string;
-            action: string;
+            createdAt: Date;
             entityType: string;
             entityId: string;
-            createdAt: Date;
             summary: string;
+            action: string;
             actorId: string | null;
         }[];
     }>;
@@ -96,33 +96,33 @@ export declare class VehiclesService {
         erlcReference?: string;
         custom?: Record<string, unknown>;
     }): Promise<{
+        serverId: string | null;
+        model: string | null;
         id: string;
+        status: string;
         createdAt: Date;
         updatedAt: Date;
         version: number;
-        color: string | null;
-        serverId: string | null;
-        status: string;
-        custom: Prisma.JsonValue | null;
-        model: string | null;
-        notes: string | null;
-        plate: string;
         ownerId: string | null;
+        color: string | null;
+        notes: string | null;
+        custom: Prisma.JsonValue | null;
+        plate: string;
         erlcReference: string | null;
     }>;
     archive(actor: Actor, id: string, reason: string): Promise<{
+        serverId: string | null;
+        model: string | null;
         id: string;
+        status: string;
         createdAt: Date;
         updatedAt: Date;
         version: number;
-        color: string | null;
-        serverId: string | null;
-        status: string;
-        custom: Prisma.JsonValue | null;
-        model: string | null;
-        notes: string | null;
-        plate: string;
         ownerId: string | null;
+        color: string | null;
+        notes: string | null;
+        custom: Prisma.JsonValue | null;
+        plate: string;
         erlcReference: string | null;
     }>;
 }

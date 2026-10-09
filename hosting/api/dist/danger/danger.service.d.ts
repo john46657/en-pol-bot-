@@ -24,37 +24,37 @@ export declare const dangerConfigSchema: z.ZodObject<{
         color: z.ZodString;
         buttonStyle: z.ZodEnum<["primary", "secondary", "success", "danger"]>;
     }, "strip", z.ZodTypeAny, {
-        name: string;
-        text: string;
-        key: string;
-        color: string;
-        emoji: string;
         title: string;
-        buttonStyle: "danger" | "success" | "primary" | "secondary";
+        name: string;
+        color: string;
+        key: string;
+        emoji: string;
+        buttonStyle: "success" | "danger" | "primary" | "secondary";
+        text: string;
     }, {
-        name: string;
-        text: string;
-        key: string;
-        color: string;
-        emoji: string;
         title: string;
-        buttonStyle: "danger" | "success" | "primary" | "secondary";
+        name: string;
+        color: string;
+        key: string;
+        emoji: string;
+        buttonStyle: "success" | "danger" | "primary" | "secondary";
+        text: string;
     }>, "many">, {
-        name: string;
-        text: string;
-        key: string;
-        color: string;
-        emoji: string;
         title: string;
-        buttonStyle: "danger" | "success" | "primary" | "secondary";
+        name: string;
+        color: string;
+        key: string;
+        emoji: string;
+        buttonStyle: "success" | "danger" | "primary" | "secondary";
+        text: string;
     }[], {
-        name: string;
-        text: string;
-        key: string;
-        color: string;
-        emoji: string;
         title: string;
-        buttonStyle: "danger" | "success" | "primary" | "secondary";
+        name: string;
+        color: string;
+        key: string;
+        emoji: string;
+        buttonStyle: "success" | "danger" | "primary" | "secondary";
+        text: string;
     }[]>;
 }, "strip", z.ZodTypeAny, {
     pingRoleIds: string[];
@@ -62,13 +62,13 @@ export declare const dangerConfigSchema: z.ZodObject<{
     panelText: string;
     buttonEmoji: string;
     levels: {
-        name: string;
-        text: string;
-        key: string;
-        color: string;
-        emoji: string;
         title: string;
-        buttonStyle: "danger" | "success" | "primary" | "secondary";
+        name: string;
+        color: string;
+        key: string;
+        emoji: string;
+        buttonStyle: "success" | "danger" | "primary" | "secondary";
+        text: string;
     }[];
 }, {
     pingRoleIds: string[];
@@ -76,13 +76,13 @@ export declare const dangerConfigSchema: z.ZodObject<{
     panelText: string;
     buttonEmoji: string;
     levels: {
-        name: string;
-        text: string;
-        key: string;
-        color: string;
-        emoji: string;
         title: string;
-        buttonStyle: "danger" | "success" | "primary" | "secondary";
+        name: string;
+        color: string;
+        key: string;
+        emoji: string;
+        buttonStyle: "success" | "danger" | "primary" | "secondary";
+        text: string;
     }[];
 }>;
 /** Gefahrenstatus. Stufen/Texte/Farben/Pings kommen aus der Konfiguration (Dashboard); Änderungen sind auditiert und gehen live raus. */
@@ -105,7 +105,7 @@ export declare class DangerService {
             title: string;
             emoji: string;
             color: string;
-            buttonStyle: "danger" | "success" | "primary" | "secondary";
+            buttonStyle: "success" | "danger" | "primary" | "secondary";
         }[];
         panel: {
             title: string;
@@ -125,7 +125,7 @@ export declare class DangerService {
             title: string;
             emoji: string;
             color: string;
-            buttonStyle: "danger" | "success" | "primary" | "secondary";
+            buttonStyle: "success" | "danger" | "primary" | "secondary";
         }[];
         panel: {
             title: string;

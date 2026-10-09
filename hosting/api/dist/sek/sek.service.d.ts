@@ -48,9 +48,9 @@ export declare class SekService {
         authorCallsign: string | null;
         number: string;
         id: string;
+        authorId: string;
         createdAt: Date;
         description: string;
-        authorId: string;
         occurredAt: Date;
         missionType: string;
     }[]>;
@@ -61,9 +61,9 @@ export declare class SekService {
     }): Promise<{
         number: string;
         id: string;
+        authorId: string;
         createdAt: Date;
         description: string;
-        authorId: string;
         occurredAt: Date;
         missionType: string;
     }>;

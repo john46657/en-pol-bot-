@@ -28,13 +28,13 @@ declare const body: z.ZodObject<{
     shiftType: z.ZodOptional<z.ZodString>;
 }, "strip", z.ZodTypeAny, {
     status: "OFF_DUTY" | "BREAK" | "ON_DUTY" | "TRAINING" | "ADMINISTRATIVE";
-    callsign?: string | undefined;
     unitId?: string | undefined;
+    callsign?: string | undefined;
     shiftType?: string | undefined;
 }, {
     status: "OFF_DUTY" | "BREAK" | "ON_DUTY" | "TRAINING" | "ADMINISTRATIVE";
-    callsign?: string | undefined;
     unitId?: string | undefined;
+    callsign?: string | undefined;
     shiftType?: string | undefined;
 }>;
 export declare class DutyController {
@@ -43,21 +43,22 @@ export declare class DutyController {
     team(): import("@prisma/client").Prisma.PrismaPromise<({
         user: {
             personnel: {
-                rank: string | null;
                 callsign: string | null;
+                rank: string | null;
             } | null;
             id: string;
             displayName: string;
         };
     } & {
+        serverId: string | null;
         id: string;
-        userId: string;
         status: string;
-        endedAt: Date | null;
-        callsign: string | null;
-        startedAt: Date;
+        userId: string;
         unitId: string | null;
+        callsign: string | null;
         shiftType: string | null;
+        startedAt: Date;
+        endedAt: Date | null;
         lastActivityAt: Date | null;
         remindedAt: Date | null;
     })[]>;
@@ -82,20 +83,21 @@ export declare class DutyController {
         currentIncident: {
             number: string;
             id: string;
-            priority: string;
-            status: string;
             title: string;
+            status: string;
+            priority: string;
         } | null;
     }[]>;
     mine(a: Actor): import("@prisma/client").Prisma.Prisma__DutySessionClient<{
+        serverId: string | null;
         id: string;
-        userId: string;
         status: string;
-        endedAt: Date | null;
-        callsign: string | null;
-        startedAt: Date;
+        userId: string;
         unitId: string | null;
+        callsign: string | null;
         shiftType: string | null;
+        startedAt: Date;
+        endedAt: Date | null;
         lastActivityAt: Date | null;
         remindedAt: Date | null;
     } | null, null, import("@prisma/client/runtime/library").DefaultArgs, import("@prisma/client").Prisma.PrismaClientOptions>;
@@ -150,14 +152,15 @@ export declare class DutyController {
         status: string;
     }>;
     set(a: Actor, b: z.infer<typeof body>): Promise<{
+        serverId: string | null;
         id: string;
-        userId: string;
         status: string;
-        endedAt: Date | null;
-        callsign: string | null;
-        startedAt: Date;
+        userId: string;
         unitId: string | null;
+        callsign: string | null;
         shiftType: string | null;
+        startedAt: Date;
+        endedAt: Date | null;
         lastActivityAt: Date | null;
         remindedAt: Date | null;
     } | {
@@ -165,14 +168,15 @@ export declare class DutyController {
     }>;
     /** Muss NACH `me/status` stehen, sonst würde `:userId` den Pfad `me` verschlucken. */
     setFor(a: Actor, userId: string, b: z.infer<typeof body>): Promise<{
+        serverId: string | null;
         id: string;
-        userId: string;
         status: string;
-        endedAt: Date | null;
-        callsign: string | null;
-        startedAt: Date;
+        userId: string;
         unitId: string | null;
+        callsign: string | null;
         shiftType: string | null;
+        startedAt: Date;
+        endedAt: Date | null;
         lastActivityAt: Date | null;
         remindedAt: Date | null;
     } | {

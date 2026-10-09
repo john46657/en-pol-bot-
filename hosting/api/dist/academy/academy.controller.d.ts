@@ -12,38 +12,38 @@ declare const course: z.ZodObject<{
         when: z.ZodOptional<z.ZodDate>;
         location: z.ZodOptional<z.ZodString>;
     }, "strip", z.ZodTypeAny, {
+        location?: string | undefined;
         channelId?: string | null | undefined;
         pingRoleIds?: string[] | undefined;
-        location?: string | undefined;
         when?: Date | undefined;
     }, {
+        location?: string | undefined;
         channelId?: string | null | undefined;
         pingRoleIds?: string[] | undefined;
-        location?: string | undefined;
         when?: Date | undefined;
     }>>;
 }, "strip", z.ZodTypeAny, {
     title: string;
     description?: string | undefined;
-    announce?: {
-        channelId?: string | null | undefined;
-        pingRoleIds?: string[] | undefined;
-        location?: string | undefined;
-        when?: Date | undefined;
-    } | undefined;
     passScore?: number | undefined;
     instructorId?: string | undefined;
+    announce?: {
+        location?: string | undefined;
+        channelId?: string | null | undefined;
+        pingRoleIds?: string[] | undefined;
+        when?: Date | undefined;
+    } | undefined;
 }, {
     title: string;
     description?: string | undefined;
-    announce?: {
-        channelId?: string | null | undefined;
-        pingRoleIds?: string[] | undefined;
-        location?: string | undefined;
-        when?: Date | undefined;
-    } | undefined;
     passScore?: number | undefined;
     instructorId?: string | undefined;
+    announce?: {
+        location?: string | undefined;
+        channelId?: string | null | undefined;
+        pingRoleIds?: string[] | undefined;
+        when?: Date | undefined;
+    } | undefined;
 }>;
 export declare class AcademyController {
     private readonly a;
@@ -54,8 +54,8 @@ export declare class AcademyController {
         };
     } & {
         id: string;
-        description: string | null;
         title: string;
+        description: string | null;
         passScore: number;
         instructorId: string | null;
     })[]>;
@@ -65,8 +65,8 @@ export declare class AcademyController {
             pingRoleIds: string[];
         } | null;
         id: string;
-        description: string | null;
         title: string;
+        description: string | null;
         passScore: number;
         instructorId: string | null;
     }>;
@@ -96,10 +96,10 @@ export declare class AcademyController {
     }): Promise<{
         id: string;
         createdAt: Date;
+        enrollmentId: string;
         score: number;
         passed: boolean;
         gradedById: string | null;
-        enrollmentId: string;
     }>;
 }
 export {};

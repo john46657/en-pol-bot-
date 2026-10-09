@@ -55,45 +55,45 @@ export declare class BackupService implements OnModuleInit, OnModuleDestroy {
     listDiscord(guildId?: string): Prisma.PrismaPromise<{
         error: string | null;
         id: string;
+        status: string;
         createdAt: Date;
+        createdById: string | null;
         name: string;
         guildId: string;
-        createdById: string | null;
-        status: string;
         guildName: string;
-        stats: Prisma.JsonValue;
         auto: boolean;
+        stats: Prisma.JsonValue;
         restoredAt: Date | null;
         restoreResult: Prisma.JsonValue;
     }[]>;
     getDiscord(id: string): Promise<{
         error: string | null;
-        data: Prisma.JsonValue | null;
         id: string;
+        status: string;
         createdAt: Date;
+        createdById: string | null;
         name: string;
         guildId: string;
-        createdById: string | null;
-        status: string;
+        data: Prisma.JsonValue | null;
         guildName: string;
-        stats: Prisma.JsonValue | null;
         auto: boolean;
+        stats: Prisma.JsonValue | null;
         restoredAt: Date | null;
         restoreResult: Prisma.JsonValue | null;
     }>;
     /** Backup anlegen – der Bot liest den Server aus und schickt die Daten (Status PENDING → READY). */
     createDiscord(actor: Actor | null, guildId: string, name?: string, auto?: boolean): Promise<{
         error: string | null;
-        data: Prisma.JsonValue | null;
         id: string;
+        status: string;
         createdAt: Date;
+        createdById: string | null;
         name: string;
         guildId: string;
-        createdById: string | null;
-        status: string;
+        data: Prisma.JsonValue | null;
         guildName: string;
-        stats: Prisma.JsonValue | null;
         auto: boolean;
+        stats: Prisma.JsonValue | null;
         restoredAt: Date | null;
         restoreResult: Prisma.JsonValue | null;
     }>;

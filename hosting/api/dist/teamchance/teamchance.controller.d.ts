@@ -16,9 +16,9 @@ export declare class TeamChanceController {
         reason: string | null;
         used: number;
         remaining: number | null;
-        channelId: string | null;
-        description: string;
         title: string;
+        description: string;
+        channelId: string | null;
         open: boolean;
         opensAt: string | null;
         closesAt: string | null;
@@ -32,9 +32,9 @@ export declare class TeamChanceController {
         reason: string | null;
         used: number;
         remaining: number | null;
-        channelId: string | null;
-        description: string;
         title: string;
+        description: string;
+        channelId: string | null;
         open: boolean;
         opensAt: string | null;
         closesAt: string | null;
