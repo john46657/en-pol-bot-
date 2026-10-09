@@ -12,6 +12,7 @@ import { CadConfigService } from './cad-config.service';
 import { CadNotifyService } from './cad-notify.service';
 import type { ErlcPlayer, ErlcSnapshot } from './erlc.service';
 import { LocksService } from '../locks/locks.service';
+import { FleetService } from '../fleet/fleet.service';
 
 /** Wer handelt und von welchem Discord-Server (Bot) bzw. mit welchem gewählten Server (Dashboard). */
 export type CadActor = Actor & { guildId?: string | null; discordId?: string | null };
@@ -44,6 +45,7 @@ export class CadService {
   constructor(
     private readonly prisma: PrismaService, private readonly audit: AuditService, private readonly perms: PermissionService, private readonly rt: RealtimeService,
     private readonly timeline: TimelineService, private readonly cfg: CadConfigService, private readonly notify: CadNotifyService, private readonly locks: LocksService,
+    private readonly fleet: FleetService,
   ) {}
 
   // ───────── Hilfen ─────────
@@ -499,6 +501,8 @@ export class CadService {
         incidents: u.incidents.map((l) => byId.get(l.incidentId)).filter((i): i is NonNullable<typeof i> => !!i).map((i) => ({ ...i, log: [...i.log].reverse() })),
       })),
       radio, notifications, history, feedback: CAD_FEEDBACK,
+      // intern zugewiesene Polizeifahrzeuge (keine bestätigte Live-Nutzung)
+      vehicles: (await this.perms.has(uid, 'fleet.view')) ? await this.fleet.forUnits(unitIds) : [],
     };
   }
 
@@ -748,16 +752,14 @@ export class CadService {
     ]);
     const erlcAllowed = await this.perms.has(actor.userId!, 'cad.view_erlc');
     const players: (ErlcPlayer & { serverId: string; staff: boolean })[] = [];
-    const vehicles: { name: string; owner: string; plate: string | null; colorHex: string | null; x: number; z: number; serverId: string }[] = [];
+    // Polizeifahrzeuge: ER:LC liefert keine Fahrzeugposition – gezeigt wird die Position des Besitzers (als solche gekennzeichnet)
+    const vehicles = erlcAllowed && (await this.perms.has(actor.userId!, 'fleet.view')) ? await this.fleet.forMap() : [];
     if (erlcAllowed) for (const s of servers) {
       const snap = s.snapshot as ErlcSnapshot | null;
       if (!snap?.players) continue;
       const staffNames = snap.staff ? new Set([...snap.staff.admins, ...snap.staff.mods, ...snap.staff.helpers].map((x) => x.name.toLowerCase())) : new Set<string>();
       // Nur Polizei-Leitstelle: Sheriffs erscheinen nicht auf der Karte
       for (const p of snap.players) if (p.team?.toLowerCase() !== 'sheriff') players.push({ ...p, serverId: s.id, staff: (!!p.permission && p.permission !== 'Normal') || staffNames.has(p.name.toLowerCase()) });
-      // GPS nur für Polizeifahrzeuge: ER:LC liefert keine Fahrzeugposition – sie stehen dort, wo ihr Besitzer (Team Police) gerade ist
-      const byName = new Map(snap.players.map((p) => [p.name.toLowerCase(), p]));
-      for (const v of snap.vehicles ?? []) { const o = byName.get(v.owner.toLowerCase()); if (o?.location && o.team?.toLowerCase() === 'police') vehicles.push({ name: v.name, owner: v.owner, plate: v.plate, colorHex: v.colorHex, x: o.location.x, z: o.location.z, serverId: s.id }); }
     }
     return {
       incidents: incidents.filter((i) => i.mapX !== null && i.mapZ !== null),

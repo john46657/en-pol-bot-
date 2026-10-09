@@ -14,16 +14,16 @@ declare const create: z.ZodObject<{
     plate: string;
     color?: string | undefined;
     custom?: Record<string, unknown> | undefined;
-    notes?: string | undefined;
     model?: string | undefined;
+    notes?: string | undefined;
     ownerId?: string | undefined;
     erlcReference?: string | undefined;
 }, {
     plate: string;
     color?: string | undefined;
     custom?: Record<string, unknown> | undefined;
-    notes?: string | undefined;
     model?: string | undefined;
+    notes?: string | undefined;
     ownerId?: string | undefined;
     erlcReference?: string | undefined;
 }>;
@@ -52,9 +52,9 @@ export declare class VehiclesController {
             serverId: string | null;
             status: string;
             custom: import("@prisma/client/runtime/library").JsonValue | null;
+            model: string | null;
             notes: string | null;
             plate: string;
-            model: string | null;
             ownerId: string | null;
             erlcReference: string | null;
         })[];
@@ -98,9 +98,9 @@ export declare class VehiclesController {
             serverId: string | null;
             status: string;
             custom: import("@prisma/client/runtime/library").JsonValue | null;
+            model: string | null;
             notes: string | null;
             plate: string;
-            model: string | null;
             ownerId: string | null;
             erlcReference: string | null;
         };
@@ -123,9 +123,9 @@ export declare class VehiclesController {
         serverId: string | null;
         status: string;
         custom: import("@prisma/client/runtime/library").JsonValue | null;
+        model: string | null;
         notes: string | null;
         plate: string;
-        model: string | null;
         ownerId: string | null;
         erlcReference: string | null;
     }>;
@@ -138,9 +138,9 @@ export declare class VehiclesController {
         serverId: string | null;
         status: string;
         custom: import("@prisma/client/runtime/library").JsonValue | null;
+        model: string | null;
         notes: string | null;
         plate: string;
-        model: string | null;
         ownerId: string | null;
         erlcReference: string | null;
     }>;

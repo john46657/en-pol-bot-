@@ -16,6 +16,7 @@ export const CAD_NAV: { to: string; label: string; perm?: string; area?: string 
   { to: '/cad/incidents', label: 'Einsätze' },
   { to: '/cad/map', label: 'Einsatzkarte' },
   { to: '/cad/units', label: 'Einheiten' },
+  { to: '/cad/fleet', label: '🚓 Polizeifahrzeuge', perm: 'fleet.view' },
   { to: '/cad/radio', label: 'Funk' },
   { to: '/cad/calls', label: 'Notrufe' },
   { to: '/persons', label: 'Personen', perm: 'cad.view_persons' },

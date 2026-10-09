@@ -813,9 +813,9 @@ declare const reqQ: z.ZodObject<{
     status?: string | undefined;
     rank?: string | undefined;
     q?: string | undefined;
+    department?: string | undefined;
     kind?: "PROMOTION" | "TRANSFER" | undefined;
     from?: string | undefined;
-    department?: string | undefined;
     to?: string | undefined;
     personnelId?: string | undefined;
     approverId?: string | undefined;
@@ -824,9 +824,9 @@ declare const reqQ: z.ZodObject<{
     status?: string | undefined;
     rank?: string | undefined;
     q?: string | undefined;
+    department?: string | undefined;
     kind?: "PROMOTION" | "TRANSFER" | undefined;
     from?: string | undefined;
-    department?: string | undefined;
     to?: string | undefined;
     personnelId?: string | undefined;
     approverId?: string | undefined;

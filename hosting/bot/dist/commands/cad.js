@@ -32,6 +32,7 @@ exports.CAD_COMMANDS = [{
                     { name: 'einheit', description: 'Rufname (leer = deine Einheit)', type: 'string', maxLength: 16 },
                 ] },
             { name: 'einsaetze', description: 'Aktive Einsätze der Leitstelle' },
+            { name: 'fahrzeuge', description: 'Gerade in ER:LC gemeldete Polizeifahrzeuge (Besitzer, Einheit)' },
         ],
         async run(c) {
             try {
@@ -64,6 +65,12 @@ exports.CAD_COMMANDS = [{
                     const [cfg, list] = await Promise.all([config(c), c.api.asUser(c.discordId, 'GET', '/cad/incidents?active=true&take=20')]);
                     const lines = list.map((i) => `**${(0, format_1.plain)(i.number)}** · ${(0, format_1.clip)((0, format_1.plain)(i.title), 80)} — ${lbl(cfg.priorities, i.priority)} / ${lbl(cfg.incidentStatuses, i.status)}${i.location ? ` · ${(0, format_1.clip)((0, format_1.plain)(i.location), 60)}` : ''}${i.units.filter((u) => !u.clearedAt).length ? `\n   ↳ ${i.units.filter((u) => !u.clearedAt).map((u) => (0, format_1.plain)(u.unit.callsign)).join(', ')}` : ''}`);
                     return { ephemeral: true, embeds: [{ title: `🚨 Aktive Einsätze (${list.length})`, description: (0, format_1.clip)(lines.join('\n') || 'Keine aktiven Einsätze.', 4000), color: format_1.COLORS.info }] };
+                }
+                if (sub === 'fahrzeuge') {
+                    const r = await c.api.asUser(c.discordId, 'GET', '/fleet/vehicles');
+                    // ER:LC meldet keinen Fahrer und keine Fahrzeugposition – nur, wer das Fahrzeug gespawnt hat
+                    const lines = r.items.slice(0, 30).map((v) => `🚓 **${(0, format_1.clip)((0, format_1.plain)(v.api.name), 60)}**${v.api.plate ? ` · ${(0, format_1.plain)(v.api.plate)}` : ''}${v.internal.internalCode ? ` · ${(0, format_1.plain)(v.internal.internalCode)}` : ''}\n   ↳ Besitzer ${(0, format_1.plain)(v.api.owner)}${v.ownerOnline ? '' : ' (nicht im Spiel)'}${v.internal.unit ? ` · Einheit ${(0, format_1.plain)(v.internal.unit.callsign)}` : ''}${v.stale ? ' · ⚠️ veraltet' : ''}`);
+                    return { ephemeral: true, embeds: [{ title: `🚓 Polizeifahrzeuge (${r.items.length})`, description: (0, format_1.clip)(lines.join('\n') || 'Gerade meldet ER:LC keine Polizeifahrzeuge.', 4000), color: format_1.COLORS.info, footer: 'Fahrer: nicht verfügbar – ER:LC meldet nur den Besitzer.' }] };
                 }
                 return (0, format_1.errorReply)('Unbekannter Unterbefehl.');
             }

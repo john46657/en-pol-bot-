@@ -54,6 +54,13 @@ describe('/cad', () => {
     const none = fakeApi({ 'GET /cad/units': [] });
     expect(text(await byName('cad')!.run(ctx(none.api, { _sub: 'rueckmeldung', art: 'accepted' })))).toContain('keiner Einheit');
   });
+  it('fahrzeuge: listet Polizeifahrzeuge mit Besitzer, nie mit Fahrer', async () => {
+    const { api } = fakeApi({ 'GET /fleet/vehicles': { items: [{ api: { name: 'Falcon Interceptor', owner: 'OfcMiller', plate: 'POL-1' }, ownerOnline: true, stale: false, internal: { internalCode: 'EN 1-21', unit: { callsign: 'SEK-01' } } }] } });
+    const r = await byName('cad')!.run(ctx(api, { _sub: 'fahrzeuge' }));
+    expect(text(r)).toContain('Besitzer OfcMiller');
+    expect(text(r)).toContain('Einheit SEK-01');
+    expect(r.embeds?.[0]?.footer).toContain('Fahrer: nicht verfügbar');
+  });
   it('Meldungen: Rückmeldung, Unterstützung benötigt und Schichtübergabe', () => {
     expect(renderCadOutbox('cad.incident.support', { number: 'E-1', title: 'Raub', callsign: 'SEK-01', note: 'Schüsse' })?.title).toContain('Unterstützung benötigt: SEK-01');
     expect(renderCadOutbox('cad.incident.feedback', { number: 'E-1', title: 'Raub', callsign: 'K9-01', feedback: '📍 Am Einsatzort' })?.title).toContain('K9-01: 📍 Am Einsatzort');

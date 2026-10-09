@@ -12,6 +12,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.CadModule = void 0;
 const common_1 = require("@nestjs/common");
 const media_module_1 = require("../media/media.module");
+const fleet_module_1 = require("../fleet/fleet.module");
 const cad_controller_1 = require("./cad.controller");
 const cad_service_1 = require("./cad.service");
 const cad_tablet_service_1 = require("./cad-tablet.service");
@@ -61,7 +62,7 @@ let CadModule = class CadModule {
 exports.CadModule = CadModule;
 exports.CadModule = CadModule = __decorate([
     (0, common_1.Module)({
-        imports: [media_module_1.MediaModule],
+        imports: [media_module_1.MediaModule, fleet_module_1.FleetModule],
         controllers: [cad_controller_1.CadController, cad_controller_1.ErlcController],
         providers: [cad_service_1.CadService, cad_tablet_service_1.CadTabletService, cad_config_service_1.CadConfigService, cad_notify_service_1.CadNotifyService, cad_handover_service_1.CadHandoverService, cad_stats_service_1.CadStatsService, erlc_service_1.ErlcService, erlc_sync_service_1.ErlcSyncService],
         exports: [cad_service_1.CadService, cad_config_service_1.CadConfigService, erlc_service_1.ErlcService],

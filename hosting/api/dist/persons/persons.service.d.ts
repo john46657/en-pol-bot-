@@ -54,9 +54,9 @@ export declare class PersonsService {
             serverId: string | null;
             status: string;
             custom: Prisma.JsonValue | null;
+            model: string | null;
             notes: string | null;
             plate: string;
-            model: string | null;
             ownerId: string | null;
             erlcReference: string | null;
         }[];
@@ -96,9 +96,9 @@ export declare class PersonsService {
                 serverId: string | null;
                 status: string;
                 custom: Prisma.JsonValue | null;
+                model: string | null;
                 notes: string | null;
                 plate: string;
-                model: string | null;
                 ownerId: string | null;
                 erlcReference: string | null;
             }[];
@@ -150,8 +150,8 @@ export declare class PersonsService {
             entityType: string;
             entityId: string;
             createdAt: Date;
-            personId: string | null;
             vehicleId: string | null;
+            personId: string | null;
         }[];
         timeline: {
             id: string;

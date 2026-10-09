@@ -9,6 +9,8 @@ var PERMISSION_CATALOG = {
   incidents: ["view", "create", "edit", "close", "delete"],
   persons: ["view", "create", "edit", "archive", "merge"],
   vehicles: ["view", "create", "edit", "archive"],
+  /** Polizeifahrzeuge (Live aus ER:LC + Modellkatalog); edit = Status/Notizen/Tags/Kennung, assign = Einheit zuweisen */
+  fleet: ["view", "view_details", "edit", "assign", "manage_catalog", "manage"],
   /** Waffenregister im MDT */
   weapons: ["view", "create", "edit"],
   reports: ["view", "create", "edit", "submit", "review", "approve", "reject", "archive"],
@@ -430,7 +432,7 @@ var DEFAULT_CAD_CONFIG = {
     { key: "sek", label: "SEK-Einheiten", builtin: true, enabledByDefault: true },
     { key: "k9", label: "K9-Einheiten", builtin: true, enabledByDefault: true },
     { key: "units", label: "Weitere Einheiten", builtin: true, enabledByDefault: true },
-    { key: "vehicles", label: "Polizeifahrzeuge (GPS)", builtin: true, enabledByDefault: true },
+    { key: "vehicles", label: "Polizeifahrzeuge (Position des Besitzers)", builtin: true, enabledByDefault: true },
     { key: "staff", label: "Staff", builtin: true, enabledByDefault: false },
     { key: "players", label: "Alle Spieler", builtin: true, enabledByDefault: false },
     { key: "pois", label: "Eigene POIs", builtin: true, enabledByDefault: true },
@@ -451,7 +453,7 @@ var DEFAULT_CAD_CONFIG = {
   memberFields: [],
   widgets: ["activeIncidents", "availableUnits", "activeCalls", "dutyActivity", "erlcStatus", "map", "radio"]
 };
-var gameToPixel = (m, x, z7) => ({ px: m.originX + x * m.scale, py: m.originY + z7 * m.scale });
+var gameToPixel = (m, x, z8) => ({ px: m.originX + x * m.scale, py: m.originY + z8 * m.scale });
 var pixelToGame = (m, px, py) => ({ x: (px - m.originX) / m.scale, z: (py - m.originY) / m.scale });
 var ERLC_FEATURES = ["players", "staff", "queue", "vehicles", "emergencyCalls", "modCalls", "joinLogs", "killLogs", "commandLogs", "commands", "webhook"];
 var ERLC_FEATURE_LABELS = {
@@ -524,8 +526,8 @@ var DEFAULT_DANGER_CONFIG = {
   ]
 };
 var LEGACY_DANGER = { GREEN: "STATUS_1", YELLOW: "STATUS_2", RED: "STATUS_4" };
-function dangerLevelOf(cfg, key2) {
-  return cfg.levels.find((l) => l.key === key2) ?? cfg.levels.find((l) => l.key === LEGACY_DANGER[key2 ?? ""]) ?? cfg.levels[0];
+function dangerLevelOf(cfg, key3) {
+  return cfg.levels.find((l) => l.key === key3) ?? cfg.levels.find((l) => l.key === LEGACY_DANGER[key3 ?? ""]) ?? cfg.levels[0];
 }
 
 // src/workflows.ts
@@ -588,9 +590,9 @@ function conditionMatches(after, c) {
   }
 }
 function renderTemplate(tpl, ctx) {
-  return tpl.replace(/\{\{\s*([a-zA-Z0-9_.]+)\s*\}\}/g, (_, key2) => {
+  return tpl.replace(/\{\{\s*([a-zA-Z0-9_.]+)\s*\}\}/g, (_, key3) => {
     const base = { action: ctx.action, entityType: ctx.entityType ?? "", entityId: ctx.entityId ?? "", actor: ctx.actor ?? "System" };
-    const v = key2 in base ? base[key2] : fieldValue(ctx.after, key2.startsWith("after.") ? key2.slice(6) : key2);
+    const v = key3 in base ? base[key3] : fieldValue(ctx.after, key3.startsWith("after.") ? key3.slice(6) : key3);
     const s = v === void 0 || v === null ? "\u2014" : typeof v === "object" ? JSON.stringify(v) : String(v);
     return s.slice(0, 300);
   });
@@ -1399,7 +1401,7 @@ function fillTemplate(tpl, vars) {
 // src/logging.ts
 import { z as z4 } from "zod";
 var LOG_CATEGORIES = [
-  { key: "einsaetze", label: "Eins\xE4tze & Leitstelle", emoji: "\u{1F6A8}", modules: ["cad", "dispatch", "incidents", "erlc", "radio"] },
+  { key: "einsaetze", label: "Eins\xE4tze & Leitstelle", emoji: "\u{1F6A8}", modules: ["cad", "dispatch", "incidents", "erlc", "radio", "fleet"] },
   { key: "akten", label: "Akten & Ermittlungen", emoji: "\u{1F5C2}\uFE0F", modules: ["persons", "vehicles", "weapons", "wanted", "investigations", "evidence", "reports", "tickets", "complaints"] },
   { key: "bewerbungen", label: "Bewerbungen & Qualifikationen", emoji: "\u{1F4CB}", modules: ["applications", "qualifications"] },
   { key: "personal", label: "Personal & Ausbildung", emoji: "\u{1F46E}", modules: ["personnel", "promotion", "dienstnummer", "training", "exam", "academy", "sek"] },
@@ -1410,6 +1412,12 @@ var LOG_CATEGORIES = [
 ];
 var logCategoryOf = (module) => LOG_CATEGORIES.find((c) => c.modules.includes(module))?.key ?? "sonstiges";
 var LOG_TYPES = {
+  "fleet.vehicle.incident": "fleet",
+  "fleet.vehicle.update": "fleet",
+  "fleet.model.delete": "fleet",
+  "fleet.model.update": "fleet",
+  "fleet.model.create": "fleet",
+  "fleet.config": "fleet",
   "weapon.update": "weapons",
   "weapon.create": "weapons",
   "person.photo": "persons",
@@ -1794,6 +1802,63 @@ function ageOf(dob, now = /* @__PURE__ */ new Date()) {
   if (now.getUTCMonth() + 1 < m || now.getUTCMonth() + 1 === m && now.getUTCDate() < d) age--;
   return age >= 0 && age < 150 ? age : null;
 }
+
+// src/fleet.ts
+import { z as z7 } from "zod";
+var key2 = z7.string().trim().min(1).max(32).regex(/^[A-Z0-9_]+$/, "Schl\xFCssel: nur A\u2013Z, 0\u20139 und _");
+var unique2 = (xs) => new Set(xs.map((x) => x.key)).size === xs.length;
+var fleetConfigSchema = z7.object({
+  categories: z7.array(z7.object({ key: key2, label: z7.string().trim().min(1).max(40), icon: z7.string().trim().min(1).max(8) })).min(1).max(30).refine(unique2, "Schl\xFCssel doppelt"),
+  internalStatuses: z7.array(z7.object({ key: key2, label: z7.string().trim().min(1).max(40), color: z7.string().regex(/^#[0-9a-fA-F]{6}$/) })).min(1).max(20).refine(unique2, "Schl\xFCssel doppelt"),
+  /** Mindestabstand zwischen zwei Abgleichen der Live-Fahrzeuge (Sekunden); der ER:LC-Abruf selbst läuft im eingestellten Server-Intervall. */
+  syncSeconds: z7.number().int().min(5).max(600),
+  /** Nicht mehr gemeldete Fahrzeuge ohne interne Daten nach so vielen Tagen löschen. */
+  keepInactiveDays: z7.number().int().min(1).max(90)
+});
+var DEFAULT_FLEET_CONFIG = {
+  categories: [
+    { key: "PATROL", label: "Streifenwagen", icon: "\u{1F693}" },
+    { key: "SUV", label: "SUV", icon: "\u{1F699}" },
+    { key: "UNMARKED", label: "Zivilfahrzeug", icon: "\u{1F575}\uFE0F" },
+    { key: "MOTORCYCLE", label: "Motorrad", icon: "\u{1F3CD}\uFE0F" },
+    { key: "SPECIAL", label: "Sonderfahrzeug", icon: "\u{1F690}" },
+    { key: "OTHER", label: "Sonstiges", icon: "\u{1F697}" }
+  ],
+  internalStatuses: [
+    { key: "UNASSIGNED", label: "Nicht zugewiesen", color: "#64748b" },
+    { key: "ASSIGNED", label: "Zugewiesen", color: "#3b82f6" },
+    { key: "ON_MISSION", label: "Im Einsatz", color: "#f97316" },
+    { key: "OUT_OF_SERVICE", label: "Au\xDFer Dienst", color: "#475569" }
+  ],
+  syncSeconds: 10,
+  keepInactiveDays: 7
+};
+var DRIVER_STATES = {
+  recognized: "Fahrer erkannt",
+  ambiguous: "Fahrer nicht eindeutig erkennbar",
+  none: "Kein Fahrer erkannt",
+  unavailable: "Fahrerdaten nicht verf\xFCgbar"
+};
+var DRIVER_HINT = "ER:LC meldet nur, wer das Fahrzeug gespawnt hat (Besitzer) \u2013 nicht, wer gerade f\xE4hrt.";
+var POSITION_HINT = "Position des Besitzers laut ER:LC \u2013 keine Fahrzeugposition (die API liefert keine).";
+var fleetModelSchema = z7.object({
+  name: z7.string().trim().min(1).max(80),
+  /** Modellname genau so, wie ER:LC ihn meldet (z. B. „Falcon Interceptor Utility 2019“) – darüber werden Live-Fahrzeuge zugeordnet. */
+  erlcName: z7.string().trim().min(1).max(120),
+  category: key2,
+  description: z7.string().trim().max(1e3).nullish(),
+  internalCode: z7.string().trim().max(40).nullish(),
+  active: z7.boolean().optional(),
+  tags: z7.array(z7.string().trim().min(1).max(30)).max(20).optional(),
+  department: z7.string().trim().max(60).nullish()
+});
+var fleetInternalSchema = z7.object({
+  unitId: z7.string().uuid().nullish(),
+  internalStatus: key2.optional(),
+  internalCode: z7.string().trim().max(40).nullish(),
+  notes: z7.string().trim().max(3e3).nullish(),
+  tags: z7.array(z7.string().trim().min(1).max(30)).max(20).optional()
+});
 export {
   ALL_PERMISSIONS,
   APPLICATION_STATUSES,
@@ -1820,6 +1885,7 @@ export {
   DEFAULT_APPLICATION_MESSAGES,
   DEFAULT_CAD_CONFIG,
   DEFAULT_DANGER_CONFIG,
+  DEFAULT_FLEET_CONFIG,
   DEFAULT_HR_CONFIG,
   DEFAULT_MDT_CONFIG,
   DEFAULT_VERIFY_CONFIG,
@@ -1829,6 +1895,8 @@ export {
   DN_STATUSES,
   DN_STATUS_LABEL,
   DN_VARIABLES,
+  DRIVER_HINT,
+  DRIVER_STATES,
   DUTY_STATUSES,
   ERLC_BUILTIN_MAP,
   ERLC_DEFAULT_BLOCKED,
@@ -1859,6 +1927,7 @@ export {
   MUSIC_TRACKS,
   PERIOD_LABEL,
   PERMISSION_CATALOG,
+  POSITION_HINT,
   PRIORITIES,
   PRIORITY_LABEL,
   PROFILE_FIELDS,
@@ -1919,6 +1988,9 @@ export {
   effectivePermissions,
   fieldValue,
   fillTemplate,
+  fleetConfigSchema,
+  fleetInternalSchema,
+  fleetModelSchema,
   formPanelMessage,
   formPanelResult,
   formPanelSchema,

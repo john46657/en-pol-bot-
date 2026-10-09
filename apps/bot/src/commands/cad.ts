@@ -10,6 +10,7 @@ import { CAD_FEEDBACK } from '@enrp/shared';
 interface CadOption { key: string; label: string; emoji?: string }
 interface CadConfig { unitStatuses: CadOption[]; incidentStatuses: (CadOption & { closed?: boolean })[]; priorities: CadOption[] }
 interface CadUnit { id: string; callsign: string; name: string | null; status: string; operational: boolean; crew: { discordId: string | null }[]; current: { number: string } | null }
+interface FleetRow { api: { name: string; owner: string; plate: string | null }; ownerOnline: boolean; stale: boolean; internal: { internalCode: string | null; unit: { callsign: string } | null } }
 interface CadIncident { id: string; number: string; title: string; priority: string; status: string; location: string | null; units: { clearedAt: string | null; unit: { callsign: string } }[] }
 
 const lbl = (list: CadOption[], key: string) => { const o = list.find((x) => x.key === key); return o ? `${o.emoji ? `${o.emoji} ` : ''}${o.label}` : key; };
@@ -39,6 +40,7 @@ export const CAD_COMMANDS: CommandDef[] = [{
       { name: 'einheit', description: 'Rufname (leer = deine Einheit)', type: 'string', maxLength: 16 },
     ] },
     { name: 'einsaetze', description: 'Aktive Einsätze der Leitstelle' },
+    { name: 'fahrzeuge', description: 'Gerade in ER:LC gemeldete Polizeifahrzeuge (Besitzer, Einheit)' },
   ],
   async run(c): Promise<Reply> {
     try {
@@ -68,6 +70,12 @@ export const CAD_COMMANDS: CommandDef[] = [{
         const [cfg, list] = await Promise.all([config(c), c.api.asUser<CadIncident[]>(c.discordId, 'GET', '/cad/incidents?active=true&take=20')]);
         const lines = list.map((i) => `**${plain(i.number)}** · ${clip(plain(i.title), 80)} — ${lbl(cfg.priorities, i.priority)} / ${lbl(cfg.incidentStatuses, i.status)}${i.location ? ` · ${clip(plain(i.location), 60)}` : ''}${i.units.filter((u) => !u.clearedAt).length ? `\n   ↳ ${i.units.filter((u) => !u.clearedAt).map((u) => plain(u.unit.callsign)).join(', ')}` : ''}`);
         return { ephemeral: true, embeds: [{ title: `🚨 Aktive Einsätze (${list.length})`, description: clip(lines.join('\n') || 'Keine aktiven Einsätze.', 4000), color: COLORS.info }] };
+      }
+      if (sub === 'fahrzeuge') {
+        const r = await c.api.asUser<{ items: FleetRow[] }>(c.discordId, 'GET', '/fleet/vehicles');
+        // ER:LC meldet keinen Fahrer und keine Fahrzeugposition – nur, wer das Fahrzeug gespawnt hat
+        const lines = r.items.slice(0, 30).map((v) => `🚓 **${clip(plain(v.api.name), 60)}**${v.api.plate ? ` · ${plain(v.api.plate)}` : ''}${v.internal.internalCode ? ` · ${plain(v.internal.internalCode)}` : ''}\n   ↳ Besitzer ${plain(v.api.owner)}${v.ownerOnline ? '' : ' (nicht im Spiel)'}${v.internal.unit ? ` · Einheit ${plain(v.internal.unit.callsign)}` : ''}${v.stale ? ' · ⚠️ veraltet' : ''}`);
+        return { ephemeral: true, embeds: [{ title: `🚓 Polizeifahrzeuge (${r.items.length})`, description: clip(lines.join('\n') || 'Gerade meldet ER:LC keine Polizeifahrzeuge.', 4000), color: COLORS.info, footer: 'Fahrer: nicht verfügbar – ER:LC meldet nur den Besitzer.' }] };
       }
       return errorReply('Unbekannter Unterbefehl.');
     } catch (e) { return mapError(e); }

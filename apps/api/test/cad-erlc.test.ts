@@ -188,10 +188,11 @@ describe('CAD', () => {
     expect((await disp.post('/api/v1/cad/units').send({ callsign: 'X-1', type: 'NOPE' })).status).toBe(400);
     const i1 = await disp.post('/api/v1/cad/incidents').send({ title: 'Banküberfall', type: 'ROBBERY', keyword: 'Raub', priority: 'HIGH', location: 'Bank', mapX: 10, mapZ: 20 });
     expect(i1.status).toBe(201);
-    expect(i1.body.number).toBe(`E-${new Date().getUTCFullYear()}-00001`);
+    // fortlaufend (andere Testdateien legen evtl. schon Einsätze an – die Nummer muss nur zum Format passen und weiterzählen)
+    expect(i1.body.number).toMatch(new RegExp(`^E-${new Date().getUTCFullYear()}-\\d{5}$`));
     incidentId = i1.body.id;
     const i2 = await disp.post('/api/v1/cad/incidents').send({ title: 'Zweiter Einsatz' });
-    expect(i2.body.number).toBe(`E-${new Date().getUTCFullYear()}-00002`);
+    expect(i2.body.number).toBe(`E-${new Date().getUTCFullYear()}-${String(Number(i1.body.number.slice(-5)) + 1).padStart(5, '0')}`);
     expect((await disp.post('/api/v1/cad/incidents').send({ title: 'Prio falsch', priority: 'GIBTSNICHT' })).status).toBe(400);
     expect(await prisma.discordOutbox.findFirst({ where: { type: 'cad.incident.created' }, orderBy: { createdAt: 'desc' } })).toMatchObject({ payload: expect.objectContaining({ channelIds: [CH.leit] }) });
     expect((await disp.post(`/api/v1/cad/incidents/${incidentId}/units`).send({ unitId })).status).toBe(200);

@@ -121,9 +121,9 @@ export declare class MdtService {
             serverId: string | null;
             status: string;
             custom: Prisma.JsonValue | null;
+            model: string | null;
             notes: string | null;
             plate: string;
-            model: string | null;
             ownerId: string | null;
             erlcReference: string | null;
         }[] | null;
@@ -135,8 +135,8 @@ export declare class MdtService {
             type: string;
             serverId: string | null;
             status: string;
-            notes: string | null;
             model: string | null;
+            notes: string | null;
             ownerId: string | null;
             serial: string;
         }[] | null;
@@ -151,8 +151,8 @@ export declare class MdtService {
             priority: string;
             createdById: string;
             status: string;
-            personId: string | null;
             vehicleId: string | null;
+            personId: string | null;
         }[] | null;
     }>;
     updateCitizen(actor: Actor, id: string, version: number, d: PersonDetails & {
@@ -204,9 +204,9 @@ export declare class MdtService {
             serverId: string | null;
             status: string;
             custom: Prisma.JsonValue | null;
+            model: string | null;
             notes: string | null;
             plate: string;
-            model: string | null;
             ownerId: string | null;
             erlcReference: string | null;
         }[];
@@ -232,9 +232,9 @@ export declare class MdtService {
             serverId: string | null;
             status: string;
             custom: Prisma.JsonValue | null;
+            model: string | null;
             notes: string | null;
             plate: string;
-            model: string | null;
             ownerId: string | null;
             erlcReference: string | null;
         };
@@ -249,8 +249,8 @@ export declare class MdtService {
             priority: string;
             createdById: string;
             status: string;
-            personId: string | null;
             vehicleId: string | null;
+            personId: string | null;
         }[] | null;
         incidents: {
             number: string;
@@ -287,8 +287,8 @@ export declare class MdtService {
             type: string;
             serverId: string | null;
             status: string;
-            notes: string | null;
             model: string | null;
+            notes: string | null;
             ownerId: string | null;
             serial: string;
         })[];
@@ -312,8 +312,8 @@ export declare class MdtService {
         type: string;
         serverId: string | null;
         status: string;
-        notes: string | null;
         model: string | null;
+        notes: string | null;
         ownerId: string | null;
         serial: string;
     }>;
@@ -331,8 +331,8 @@ export declare class MdtService {
         type: string;
         serverId: string | null;
         status: string;
-        notes: string | null;
         model: string | null;
+        notes: string | null;
         ownerId: string | null;
         serial: string;
     }>;
@@ -348,8 +348,8 @@ export declare class MdtService {
         vehicle: {
             id: string;
             color: string | null;
-            plate: string;
             model: string | null;
+            plate: string;
         } | null;
         id: string;
         reason: string;
@@ -361,7 +361,7 @@ export declare class MdtService {
         priority: string;
         createdById: string;
         status: string;
-        personId: string | null;
         vehicleId: string | null;
+        personId: string | null;
     }[]>;
 }

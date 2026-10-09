@@ -126,12 +126,12 @@ declare const memberBody: z.ZodObject<{
     rank?: any;
     callsign?: any;
     unitId?: any;
+    erlcName?: any;
+    department?: any;
     discordName?: any;
     robloxName?: any;
     robloxId?: any;
-    erlcName?: any;
     zelloName?: any;
-    department?: any;
     extra?: Record<string, string | number> | null | undefined;
 }, {
     userId?: any;
@@ -140,12 +140,12 @@ declare const memberBody: z.ZodObject<{
     rank?: any;
     callsign?: any;
     unitId?: any;
+    erlcName?: any;
+    department?: any;
     discordName?: any;
     robloxName?: any;
     robloxId?: any;
-    erlcName?: any;
     zelloName?: any;
-    department?: any;
     extra?: Record<string, string | number> | null | undefined;
 }>;
 declare const mapObjectBody: z.ZodObject<{
@@ -207,9 +207,9 @@ declare const linkBody: z.ZodObject<{
     targetGuildId: string;
     active?: boolean | undefined;
     roleIds?: string[] | undefined;
-    sendTypes?: ("announcements" | "incidents" | "radio" | "incident_status" | "unit_requests" | "calls")[] | undefined;
+    sendTypes?: ("announcements" | "incidents" | "radio" | "calls" | "incident_status" | "unit_requests")[] | undefined;
     allowActions?: ("dispatch" | "radio" | "status_report" | "view_incidents")[] | undefined;
-    channels?: Partial<Record<"announcements" | "incidents" | "radio" | "incident_status" | "unit_requests" | "calls", string[]>> | undefined;
+    channels?: Partial<Record<"announcements" | "incidents" | "radio" | "calls" | "incident_status" | "unit_requests", string[]>> | undefined;
     notify?: boolean | undefined;
 }, {
     name: string;
@@ -217,9 +217,9 @@ declare const linkBody: z.ZodObject<{
     targetGuildId: string;
     active?: boolean | undefined;
     roleIds?: string[] | undefined;
-    sendTypes?: ("announcements" | "incidents" | "radio" | "incident_status" | "unit_requests" | "calls")[] | undefined;
+    sendTypes?: ("announcements" | "incidents" | "radio" | "calls" | "incident_status" | "unit_requests")[] | undefined;
     allowActions?: ("dispatch" | "radio" | "status_report" | "view_incidents")[] | undefined;
-    channels?: Partial<Record<"announcements" | "incidents" | "radio" | "incident_status" | "unit_requests" | "calls", string[]>> | undefined;
+    channels?: Partial<Record<"announcements" | "incidents" | "radio" | "calls" | "incident_status" | "unit_requests", string[]>> | undefined;
     notify?: boolean | undefined;
 }>;
 declare const listQ: z.ZodObject<{
@@ -449,8 +449,8 @@ export declare class CadController {
             guildId: string | null;
             callsign: string | null;
             incidentId: string | null;
-            authorId: string | null;
             unitId: string | null;
+            authorId: string | null;
         }[];
         erlc: {
             id: string;
@@ -634,13 +634,20 @@ export declare class CadController {
             staff: boolean;
         })[];
         vehicles: {
+            id: string;
+            serverId: string;
             name: string;
             owner: string;
             plate: string | null;
             colorHex: string | null;
+            colorName: string | null;
             x: number;
             z: number;
-            serverId: string;
+            positionHint: string;
+            category: string | null;
+            icon: string | null;
+            unit: string | null;
+            uncertain: boolean;
         }[];
         stale: boolean;
     }>;
@@ -722,9 +729,9 @@ export declare class CadController {
             text: string;
             guildId: string | null;
             incidentId: string;
-            authorId: string | null;
             unitId: string | null;
             kind: string;
+            authorId: string | null;
         }[];
         units: ({
             unit: {
@@ -1015,9 +1022,9 @@ export declare class CadController {
                     text: string;
                     guildId: string | null;
                     incidentId: string;
-                    authorId: string | null;
                     unitId: string | null;
                     kind: string;
+                    authorId: string | null;
                 }[];
                 units: ({
                     unit: {
@@ -1067,8 +1074,8 @@ export declare class CadController {
             guildId: string | null;
             callsign: string | null;
             incidentId: string | null;
-            authorId: string | null;
             unitId: string | null;
+            authorId: string | null;
         }[];
         notifications: {
             id: string;
@@ -1124,6 +1131,68 @@ export declare class CadController {
             readonly label: "Einsatz abgeschlossen (Meldung)";
             readonly emoji: "\uD83C\uDFC1";
         }];
+        vehicles: {
+            id: string;
+            erlcServerId: string;
+            serverName: string;
+            key: string;
+            active: boolean;
+            uncertain: boolean;
+            stale: boolean;
+            api: {
+                name: string;
+                owner: string;
+                ownerRobloxId: string | null;
+                ownerTeam: string | null;
+                plate: string | null;
+                texture: string | null;
+                colorHex: string | null;
+                colorName: string | null;
+                policeReason: string;
+                firstSeenAt: Date;
+                lastSeenAt: Date;
+                apiChangedAt: Date;
+            };
+            driver: {
+                state: "unavailable";
+                label: "Fahrerdaten nicht verfügbar";
+                hint: string;
+            };
+            ownerOnline: boolean;
+            ownerPosition: {
+                x: number;
+                z: number;
+                street: string | null;
+                postal: string | null;
+                hint: string;
+            } | null;
+            discord: {
+                discordId: string | null;
+                name: string | null;
+            } | null;
+            model: {
+                id: string;
+                name: string;
+                category: string;
+                imageUrl: string | null;
+                internalCode: string | null;
+                department: string | null;
+            } | null;
+            internal: {
+                unitId: string | null;
+                unit: {
+                    id: string;
+                    name: string | null;
+                    callsign: string;
+                } | null;
+                status: string;
+                internalCode: string | null;
+                notes: string | null;
+                tags: string[];
+                version: number;
+                updatedAt: Date;
+            };
+        }[];
     }>;
     handovers(): Promise<{
         snapshot: import("./cad-handover.service").HandoverSnapshot;
@@ -1347,7 +1416,7 @@ export declare class CadController {
             status: string | null;
             statusLabel: string | null;
             statusColor: string | null;
-            availability: "available" | "busy" | "unavailable";
+            availability: "unavailable" | "available" | "busy";
             inGame: boolean;
         }[];
         available: number;
@@ -1355,7 +1424,7 @@ export declare class CadController {
             unitId: string;
             callsign: string;
             status: string;
-            availability: "available" | "busy" | "unavailable";
+            availability: "unavailable" | "available" | "busy";
         } | null;
         statuses: {
             available: string | null;
@@ -1397,8 +1466,8 @@ export declare class CadController {
         guildId: string | null;
         callsign: string | null;
         incidentId: string | null;
-        authorId: string | null;
         unitId: string | null;
+        authorId: string | null;
     }[]>;
     /** Einheiten, als die man funken darf (Leitstelle: alle; sonst nur die eigene). */
     radioUnits(a: CadActor): Promise<{
@@ -1421,8 +1490,8 @@ export declare class CadController {
         guildId: string | null;
         callsign: string | null;
         incidentId: string | null;
-        authorId: string | null;
         unitId: string | null;
+        authorId: string | null;
     }>;
     announce(a: CadActor, b: {
         text: string;
@@ -1440,12 +1509,12 @@ export declare class CadController {
         rank: string | null;
         callsign: string | null;
         unitId: string | null;
+        erlcName: string | null;
+        department: string | null;
         discordName: string | null;
         robloxName: string | null;
         robloxId: string | null;
-        erlcName: string | null;
         zelloName: string | null;
-        department: string | null;
         extra: import("@prisma/client/runtime/library").JsonValue | null;
     }[]>;
     createMember(a: CadActor, b: z.infer<typeof memberBody>): Promise<{
@@ -1458,12 +1527,12 @@ export declare class CadController {
         rank: string | null;
         callsign: string | null;
         unitId: string | null;
+        erlcName: string | null;
+        department: string | null;
         discordName: string | null;
         robloxName: string | null;
         robloxId: string | null;
-        erlcName: string | null;
         zelloName: string | null;
-        department: string | null;
         extra: import("@prisma/client/runtime/library").JsonValue | null;
     }>;
     updateMember(a: CadActor, id: string, b: Partial<z.infer<typeof memberBody>>): Promise<{
@@ -1476,12 +1545,12 @@ export declare class CadController {
         rank: string | null;
         callsign: string | null;
         unitId: string | null;
+        erlcName: string | null;
+        department: string | null;
         discordName: string | null;
         robloxName: string | null;
         robloxId: string | null;
-        erlcName: string | null;
         zelloName: string | null;
-        department: string | null;
         extra: import("@prisma/client/runtime/library").JsonValue | null;
     }>;
     deleteMember(a: CadActor, id: string): Promise<void>;

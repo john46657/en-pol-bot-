@@ -45,7 +45,9 @@ export interface ErlcSnapshot {
 export interface CadMapObject { id: string; kind: 'POI' | 'ZONE'; name: string; description: string | null; category: string | null; layer: string; icon: string | null; color: string | null; x: number | null; z: number | null; points: [number, number][] | null; roleIds: string[]; incidentType: string | null; autoAction: string | null }
 export interface CadMapData {
   incidents: CadIncidentRow[]; calls: CadCallRow[]; units: CadUnitRow[]; objects: CadMapObject[];
-  players: (ErlcPlayer & { serverId: string; staff: boolean })[]; vehicles: { name: string; owner: string; plate: string | null; colorHex: string | null; x: number; z: number; serverId: string }[]; stale: boolean;
+  players: (ErlcPlayer & { serverId: string; staff: boolean })[];
+  /** Polizeifahrzeuge an der Position ihres Besitzers (ER:LC liefert keine Fahrzeugposition). */
+  vehicles: { id: string; name: string; owner: string; plate: string | null; colorHex: string | null; colorName: string | null; x: number; z: number; serverId: string; positionHint: string; category: string | null; icon: string | null; unit: string | null; uncertain: boolean }[]; stale: boolean;
 }
 export interface CadOverview {
   config: CadConfig; incidents: CadIncidentRow[]; units: CadUnitRow[]; calls: CadCallRow[]; radio: CadRadioRow[];
@@ -55,8 +57,8 @@ export interface CadOverview {
 
 /** Alle CAD-Ansichten aktualisieren sich live (Server sendet nur „geändert“, Daten kommen über die API). */
 export function useCadLive() {
-  useRealtime('cad', ['cad.changed', 'call.created', 'erlc.snapshot', 'erlc.status', 'cad.incident.created', 'cad.incident.status', 'cad.incident.assigned', 'cad.incident.closed', 'cad.radio'],
-    [['cad-overview'], ['cad-mdt'], ['cad-handovers'], ['cad-incidents'], ['cad-incident'], ['cad-units'], ['cad-calls'], ['cad-radio'], ['cad-map'], ['cad-members'], ['erlc-live'], ['erlc-servers']]);
+  useRealtime('cad', ['cad.changed', 'call.created', 'erlc.snapshot', 'erlc.status', 'cad.incident.created', 'cad.incident.status', 'cad.incident.assigned', 'cad.incident.closed', 'cad.radio', 'fleet.changed'],
+    [['cad-overview'], ['cad-mdt'], ['fleet-vehicles'], ['fleet-vehicle'], ['fleet-catalog'], ['cad-handovers'], ['cad-incidents'], ['cad-incident'], ['cad-units'], ['cad-calls'], ['cad-radio'], ['cad-map'], ['cad-members'], ['erlc-live'], ['erlc-servers']]);
 }
 
 export function useCadConfig() {

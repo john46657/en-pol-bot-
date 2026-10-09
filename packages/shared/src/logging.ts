@@ -5,7 +5,7 @@ import { z } from 'zod';
  * je Kategorie ein Kanal, einzelne Typen mit eigenem Kanal oder ausgeschaltet. Im Dashboard steht alles im Audit-Log.
  */
 export const LOG_CATEGORIES = [
-  { key: 'einsaetze', label: 'Einsätze & Leitstelle', emoji: '🚨', modules: ['cad', 'dispatch', 'incidents', 'erlc', 'radio'] },
+  { key: 'einsaetze', label: 'Einsätze & Leitstelle', emoji: '🚨', modules: ['cad', 'dispatch', 'incidents', 'erlc', 'radio', 'fleet'] },
   { key: 'akten', label: 'Akten & Ermittlungen', emoji: '🗂️', modules: ['persons', 'vehicles', 'weapons', 'wanted', 'investigations', 'evidence', 'reports', 'tickets', 'complaints'] },
   { key: 'bewerbungen', label: 'Bewerbungen & Qualifikationen', emoji: '📋', modules: ['applications', 'qualifications'] },
   { key: 'personal', label: 'Personal & Ausbildung', emoji: '👮', modules: ['personnel', 'promotion', 'dienstnummer', 'training', 'exam', 'academy', 'sek'] },
@@ -19,6 +19,12 @@ export const logCategoryOf = (module: string): LogCategoryKey => (LOG_CATEGORIES
 
 /** Bekannte Aktionen → Bereich (aus den Audit-Einträgen der API; weitere kommen aus dem Audit-Log dazu). */
 export const LOG_TYPES: Record<string, string> = {
+  'fleet.vehicle.incident': 'fleet',
+  'fleet.vehicle.update': 'fleet',
+  'fleet.model.delete': 'fleet',
+  'fleet.model.update': 'fleet',
+  'fleet.model.create': 'fleet',
+  'fleet.config': 'fleet',
   'weapon.update': 'weapons',
   'weapon.create': 'weapons',
   'person.photo': 'persons',

@@ -208,8 +208,8 @@ export declare class DispatchService {
             entityType: string;
             entityId: string;
             createdAt: Date;
-            personId: string | null;
             vehicleId: string | null;
+            personId: string | null;
         }[];
         timeline: {
             id: string;

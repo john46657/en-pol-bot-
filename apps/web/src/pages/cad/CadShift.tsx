@@ -4,6 +4,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { api, ApiError } from '../../lib/api';
 import { useAuth } from '../../lib/auth';
 import { ago, optColor, optLabel, useCadConfig, type CadIncidentRow } from '../../lib/cad';
+import { InternalStatus, useFleetConfig, VehicleDetail, VehicleIcon, type FleetVehicle } from './Fleet';
 import { Badge, Button, Card, EmptyState, ErrorState, Field, Input, PageHeader, Select, SkeletonRows, Textarea, fmt } from '../../components/ui';
 
 const errText = (e: unknown) => (e instanceof ApiError ? e.message : 'Fehlgeschlagen');
@@ -17,6 +18,8 @@ interface Mdt {
   notifications: { id: string; title: string; body: string | null; createdAt: string; readAt: string | null; entityType: string | null; entityId: string | null }[];
   history: { incidentId: string; number: string; type: string | null; status: string; createdAt: string; closedAt: string }[];
   feedback: { key: string; label: string; emoji: string }[];
+  /** intern zugewiesene Polizeifahrzeuge der eigenen Einheiten */
+  vehicles?: FleetVehicle[];
 }
 
 /** MDT für SEK/K9 und andere Einheiten: eigener Status, Einsatzaufträge, Rückmeldungen an die Leitstelle. Gut bedienbar auf dem Handy. */
@@ -26,6 +29,8 @@ export function CadMdt() {
   const q = useQuery({ queryKey: ['cad-mdt'], queryFn: () => api<Mdt>('/cad/mdt'), refetchInterval: 5_000 });
   const [note, setNote] = useState<Record<string, string>>({});
   const [msg, setMsg] = useState<{ ok: boolean; text: string }>();
+  const [vehicle, setVehicle] = useState<string | null>(null);
+  const fleetCfg = useFleetConfig();
   const refresh = () => { for (const k of ['cad-mdt', 'cad-units', 'cad-incident', 'cad-overview']) void qc.invalidateQueries({ queryKey: [k] }); };
   const status = useMutation({
     mutationFn: (v: { unitId: string; status: string }) => api(`/cad/units/${v.unitId}/status`, { body: { status: v.status } }),
@@ -87,11 +92,24 @@ export function CadMdt() {
           ))}
         </div>
         <div className="space-y-3">
+          {d.vehicles && d.vehicles.length > 0 && (
+            <Card title="🚓 Zugewiesene Fahrzeuge (intern)">
+              <ul className="space-y-1.5 text-sm">{d.vehicles.map((v) => (
+                <li key={v.id}><button type="button" className="flex w-full items-center gap-2 text-left hover:underline" onClick={() => setVehicle(v.id)}>
+                  <VehicleIcon v={v} cfg={fleetCfg} size="h-8 w-8" />
+                  <span className="min-w-0 flex-1"><b>{v.api.name}</b>{v.internal.internalCode && <span className="text-muted"> · {v.internal.internalCode}</span>}<span className="block text-xs text-muted">{v.internal.unit?.callsign} · Besitzer {v.api.owner} · {v.active ? 'in ER:LC gemeldet' : 'gerade nicht in ER:LC gemeldet'}</span></span>
+                  <InternalStatus cfg={fleetCfg} status={v.internal.status} />
+                </button></li>
+              ))}</ul>
+              <p className="mt-1 text-[11px] text-muted">Interne Zuweisung – sagt nicht, wer das Fahrzeug gerade fährt.</p>
+            </Card>
+          )}
           <Card title="📻 Funkmeldungen">{d.radio.length ? <ul className="max-h-72 space-y-1 overflow-auto text-sm">{d.radio.map((r) => <li key={r.id}><span className="text-xs text-muted">{ago(r.createdAt)}</span> {r.callsign && <b>{r.callsign}: </b>}{r.text}</li>)}</ul> : <p className="text-sm text-muted">Keine Funkmeldungen.</p>}</Card>
           <Card title="🔔 Letzte Benachrichtigungen">{d.notifications.length ? <ul className="space-y-1 text-sm">{d.notifications.map((n) => <li key={n.id} className={n.readAt ? 'text-muted' : ''}><span className="text-xs text-muted">{ago(n.createdAt)}</span> {n.title}</li>)}</ul> : <p className="text-sm text-muted">Keine Benachrichtigungen.</p>}</Card>
           <Card title="🗂️ Einsatzhistorie">{d.history.length ? <ul className="space-y-1 text-sm">{d.history.map((h) => <li key={h.incidentId}><b>{h.number}</b> · {h.type ? optLabel(cfg.incidentTypes, h.type) : 'Einsatz'} · <span className="text-muted">{optLabel(cfg.incidentStatuses, h.status)} {fmt(h.closedAt)}</span></li>)}</ul> : <p className="text-sm text-muted">Noch keine abgeschlossenen Einsätze.</p>}</Card>
         </div>
       </div>
+      <VehicleDetail id={vehicle} onClose={() => setVehicle(null)} />
     </>
   );
 }

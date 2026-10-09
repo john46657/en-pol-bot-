@@ -137,6 +137,73 @@ export declare const preferencesSchema: z.ZodObject<{
         sound?: boolean | undefined;
         setupHidden?: boolean | undefined;
     }>>;
+    /** Persönliche Filter/Sortierung der Polizeifahrzeuge. */
+    fleet: z.ZodOptional<z.ZodObject<{
+        search: z.ZodOptional<z.ZodString>;
+        filters: z.ZodOptional<z.ZodObject<{
+            model: z.ZodOptional<z.ZodString>;
+            color: z.ZodOptional<z.ZodString>;
+            owner: z.ZodOptional<z.ZodString>;
+            unit: z.ZodOptional<z.ZodString>;
+            active: z.ZodOptional<z.ZodEnum<["active", "inactive", "all"]>>;
+            online: z.ZodOptional<z.ZodEnum<["all", "yes", "no"]>>;
+        }, "strip", z.ZodTypeAny, {
+            unit?: string | undefined;
+            active?: "active" | "inactive" | "all" | undefined;
+            color?: string | undefined;
+            online?: "all" | "yes" | "no" | undefined;
+            model?: string | undefined;
+            owner?: string | undefined;
+        }, {
+            unit?: string | undefined;
+            active?: "active" | "inactive" | "all" | undefined;
+            color?: string | undefined;
+            online?: "all" | "yes" | "no" | undefined;
+            model?: string | undefined;
+            owner?: string | undefined;
+        }>>;
+        sort: z.ZodOptional<z.ZodObject<{
+            key: z.ZodString;
+            dir: z.ZodEnum<["asc", "desc"]>;
+        }, "strip", z.ZodTypeAny, {
+            key: string;
+            dir: "asc" | "desc";
+        }, {
+            key: string;
+            dir: "asc" | "desc";
+        }>>;
+        mapFilter: z.ZodOptional<z.ZodString>;
+    }, "strip", z.ZodTypeAny, {
+        search?: string | undefined;
+        sort?: {
+            key: string;
+            dir: "asc" | "desc";
+        } | undefined;
+        filters?: {
+            unit?: string | undefined;
+            active?: "active" | "inactive" | "all" | undefined;
+            color?: string | undefined;
+            online?: "all" | "yes" | "no" | undefined;
+            model?: string | undefined;
+            owner?: string | undefined;
+        } | undefined;
+        mapFilter?: string | undefined;
+    }, {
+        search?: string | undefined;
+        sort?: {
+            key: string;
+            dir: "asc" | "desc";
+        } | undefined;
+        filters?: {
+            unit?: string | undefined;
+            active?: "active" | "inactive" | "all" | undefined;
+            color?: string | undefined;
+            online?: "all" | "yes" | "no" | undefined;
+            model?: string | undefined;
+            owner?: string | undefined;
+        } | undefined;
+        mapFilter?: string | undefined;
+    }>>;
     voice: z.ZodOptional<z.ZodObject<{
         channelIds: z.ZodArray<z.ZodString, "many">;
         categoryIds: z.ZodArray<z.ZodString, "many">;
@@ -190,6 +257,22 @@ export declare const preferencesSchema: z.ZodObject<{
     notifications?: {
         muted: string[];
         toasts?: boolean | undefined;
+    } | undefined;
+    fleet?: {
+        search?: string | undefined;
+        sort?: {
+            key: string;
+            dir: "asc" | "desc";
+        } | undefined;
+        filters?: {
+            unit?: string | undefined;
+            active?: "active" | "inactive" | "all" | undefined;
+            color?: string | undefined;
+            online?: "all" | "yes" | "no" | undefined;
+            model?: string | undefined;
+            owner?: string | undefined;
+        } | undefined;
+        mapFilter?: string | undefined;
     } | undefined;
     theme?: "system" | "dark" | "light" | undefined;
     accent?: string | undefined;
@@ -251,6 +334,22 @@ export declare const preferencesSchema: z.ZodObject<{
     notifications?: {
         muted: string[];
         toasts?: boolean | undefined;
+    } | undefined;
+    fleet?: {
+        search?: string | undefined;
+        sort?: {
+            key: string;
+            dir: "asc" | "desc";
+        } | undefined;
+        filters?: {
+            unit?: string | undefined;
+            active?: "active" | "inactive" | "all" | undefined;
+            color?: string | undefined;
+            online?: "all" | "yes" | "no" | undefined;
+            model?: string | undefined;
+            owner?: string | undefined;
+        } | undefined;
+        mapFilter?: string | undefined;
     } | undefined;
     theme?: "system" | "dark" | "light" | undefined;
     accent?: string | undefined;

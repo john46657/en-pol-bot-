@@ -66,6 +66,7 @@ const CadSettings = lazy(() => import('./pages/cad/CadAdmin').then((m) => ({ def
 const CadTeam = lazy(() => import('./pages/cad/CadAdmin').then((m) => ({ default: m.CadTeam })));
 const CadCrossServer = lazy(() => import('./pages/cad/CadAdmin').then((m) => ({ default: m.CadCrossServer })));
 const CadLogs = lazy(() => import('./pages/cad/CadAdmin').then((m) => ({ default: m.CadLogs })));
+const FleetPage = lazy(() => import('./pages/cad/Fleet').then((m) => ({ default: m.FleetPage })));
 const CadMdt = lazy(() => import('./pages/cad/CadShift').then((m) => ({ default: m.CadMdt })));
 const CadHandover = lazy(() => import('./pages/cad/CadShift').then((m) => ({ default: m.CadHandover })));
 const CadStats = lazy(() => import('./pages/cad/CadShift').then((m) => ({ default: m.CadStats })));
@@ -111,6 +112,7 @@ export function App() {
           <Route path="vehicles" element={<Guard perm="vehicles.view"><MdtVehicles /></Guard>} />
           <Route path="warrants" element={<Guard perm="wanted.view"><MdtWarrants /></Guard>} />
           <Route path="weapons" element={<Guard perm="weapons.view"><MdtWeapons /></Guard>} />
+          <Route path="fleet" element={<Guard perm="fleet.view"><FleetPage /></Guard>} />
           <Route path="reports" element={list({ ...R.reports, detailPath: (r) => `/mdt/reports/${r.id}` }, 'reports.view')} />
           <Route path="reports/:id" element={<Guard perm="reports.view"><ReportDetail /></Guard>} />
           <Route path="incidents" element={list({ ...R.incidents, detailPath: (r) => `/mdt/incidents/${r.id}` }, 'incidents.view')} />
@@ -143,6 +145,7 @@ export function App() {
             <Route path="radio" element={<Guard perm="cad.view"><CadRadio /></Guard>} />
             <Route path="calls" element={<Guard perm="cad.view"><CadCalls /></Guard>} />
             <Route path="mdt" element={<Guard perm="cad.view"><CadMdt /></Guard>} />
+            <Route path="fleet" element={<Guard perm="fleet.view"><FleetPage /></Guard>} />
             <Route path="handover" element={<Guard perm="cad.view"><CadHandover /></Guard>} />
             <Route path="stats" element={<Guard perm="cad.view_stats"><CadStats /></Guard>} />
             <Route path="erlc" element={<Guard perm="cad.view_erlc"><ErlcLive /></Guard>} />

@@ -25,9 +25,9 @@ export declare class VehiclesService {
             serverId: string | null;
             status: string;
             custom: Prisma.JsonValue | null;
+            model: string | null;
             notes: string | null;
             plate: string;
-            model: string | null;
             ownerId: string | null;
             erlcReference: string | null;
         })[];
@@ -71,9 +71,9 @@ export declare class VehiclesService {
             serverId: string | null;
             status: string;
             custom: Prisma.JsonValue | null;
+            model: string | null;
             notes: string | null;
             plate: string;
-            model: string | null;
             ownerId: string | null;
             erlcReference: string | null;
         };
@@ -104,9 +104,9 @@ export declare class VehiclesService {
         serverId: string | null;
         status: string;
         custom: Prisma.JsonValue | null;
+        model: string | null;
         notes: string | null;
         plate: string;
-        model: string | null;
         ownerId: string | null;
         erlcReference: string | null;
     }>;
@@ -119,9 +119,9 @@ export declare class VehiclesService {
         serverId: string | null;
         status: string;
         custom: Prisma.JsonValue | null;
+        model: string | null;
         notes: string | null;
         plate: string;
-        model: string | null;
         ownerId: string | null;
         erlcReference: string | null;
     }>;

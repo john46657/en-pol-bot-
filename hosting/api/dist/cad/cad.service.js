@@ -23,6 +23,7 @@ const web_url_1 = require("../common/web-url");
 const cad_config_service_1 = require("./cad-config.service");
 const cad_notify_service_1 = require("./cad-notify.service");
 const locks_service_1 = require("../locks/locks.service");
+const fleet_service_1 = require("../fleet/fleet.service");
 const unitInclude = { members: true, incidents: { where: { clearedAt: null }, include: { incident: { select: { id: true, number: true, title: true, status: true } } } } };
 const incidentInclude = { units: { include: { unit: { select: { id: true, callsign: true, name: true, type: true, status: true } } } } };
 let CadService = class CadService {
@@ -34,7 +35,8 @@ let CadService = class CadService {
     cfg;
     notify;
     locks;
-    constructor(prisma, audit, perms, rt, timeline, cfg, notify, locks) {
+    fleet;
+    constructor(prisma, audit, perms, rt, timeline, cfg, notify, locks, fleet) {
         this.prisma = prisma;
         this.audit = audit;
         this.perms = perms;
@@ -43,6 +45,7 @@ let CadService = class CadService {
         this.cfg = cfg;
         this.notify = notify;
         this.locks = locks;
+        this.fleet = fleet;
     }
     // ───────── Hilfen ─────────
     label(list, key) {
@@ -532,6 +535,8 @@ let CadService = class CadService {
                 incidents: u.incidents.map((l) => byId.get(l.incidentId)).filter((i) => !!i).map((i) => ({ ...i, log: [...i.log].reverse() })),
             })),
             radio, notifications, history, feedback: shared_1.CAD_FEEDBACK,
+            // intern zugewiesene Polizeifahrzeuge (keine bestätigte Live-Nutzung)
+            vehicles: (await this.perms.has(uid, 'fleet.view')) ? await this.fleet.forUnits(unitIds) : [],
         };
     }
     // ───────── Notrufe (ER:LC) ─────────
@@ -790,7 +795,8 @@ let CadService = class CadService {
         ]);
         const erlcAllowed = await this.perms.has(actor.userId, 'cad.view_erlc');
         const players = [];
-        const vehicles = [];
+        // Polizeifahrzeuge: ER:LC liefert keine Fahrzeugposition – gezeigt wird die Position des Besitzers (als solche gekennzeichnet)
+        const vehicles = erlcAllowed && (await this.perms.has(actor.userId, 'fleet.view')) ? await this.fleet.forMap() : [];
         if (erlcAllowed)
             for (const s of servers) {
                 const snap = s.snapshot;
@@ -801,13 +807,6 @@ let CadService = class CadService {
                 for (const p of snap.players)
                     if (p.team?.toLowerCase() !== 'sheriff')
                         players.push({ ...p, serverId: s.id, staff: (!!p.permission && p.permission !== 'Normal') || staffNames.has(p.name.toLowerCase()) });
-                // GPS nur für Polizeifahrzeuge: ER:LC liefert keine Fahrzeugposition – sie stehen dort, wo ihr Besitzer (Team Police) gerade ist
-                const byName = new Map(snap.players.map((p) => [p.name.toLowerCase(), p]));
-                for (const v of snap.vehicles ?? []) {
-                    const o = byName.get(v.owner.toLowerCase());
-                    if (o?.location && o.team?.toLowerCase() === 'police')
-                        vehicles.push({ name: v.name, owner: v.owner, plate: v.plate, colorHex: v.colorHex, x: o.location.x, z: o.location.z, serverId: s.id });
-                }
             }
         return {
             incidents: incidents.filter((i) => i.mapX !== null && i.mapZ !== null),
@@ -821,7 +820,8 @@ exports.CadService = CadService;
 exports.CadService = CadService = __decorate([
     (0, common_1.Injectable)(),
     __metadata("design:paramtypes", [prisma_service_1.PrismaService, audit_service_1.AuditService, permission_service_1.PermissionService, realtime_service_1.RealtimeService,
-        timeline_service_1.TimelineService, cad_config_service_1.CadConfigService, cad_notify_service_1.CadNotifyService, locks_service_1.LocksService])
+        timeline_service_1.TimelineService, cad_config_service_1.CadConfigService, cad_notify_service_1.CadNotifyService, locks_service_1.LocksService,
+        fleet_service_1.FleetService])
 ], CadService);
 /** Punkt-in-Polygon (Strahlverfahren). */
 function inside(x, z, pts) {

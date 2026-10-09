@@ -43,8 +43,8 @@ export declare class InvestigationsService {
             entityType: string;
             entityId: string;
             createdAt: Date;
-            personId: string | null;
             vehicleId: string | null;
+            personId: string | null;
         }[];
         evidence: {
             number: string;

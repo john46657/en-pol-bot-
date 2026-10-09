@@ -117,9 +117,9 @@ export declare class PersonsController {
                 serverId: string | null;
                 status: string;
                 custom: import("@prisma/client/runtime/library").JsonValue | null;
+                model: string | null;
                 notes: string | null;
                 plate: string;
-                model: string | null;
                 ownerId: string | null;
                 erlcReference: string | null;
             }[];
@@ -171,8 +171,8 @@ export declare class PersonsController {
             entityType: string;
             entityId: string;
             createdAt: Date;
-            personId: string | null;
             vehicleId: string | null;
+            personId: string | null;
         }[];
         timeline: {
             id: string;

@@ -9,6 +9,8 @@ export const PERMISSION_CATALOG = {
   incidents: ['view', 'create', 'edit', 'close', 'delete'],
   persons: ['view', 'create', 'edit', 'archive', 'merge'],
   vehicles: ['view', 'create', 'edit', 'archive'],
+  /** Polizeifahrzeuge (Live aus ER:LC + Modellkatalog); edit = Status/Notizen/Tags/Kennung, assign = Einheit zuweisen */
+  fleet: ['view', 'view_details', 'edit', 'assign', 'manage_catalog', 'manage'],
   /** Waffenregister im MDT */
   weapons: ['view', 'create', 'edit'],
   reports: ['view', 'create', 'edit', 'submit', 'review', 'approve', 'reject', 'archive'],

@@ -1,7 +1,7 @@
 import { Suspense, useState, type ReactNode } from 'react';
 import { Link, NavLink, Outlet, useLocation } from 'react-router';
 import { useQueryClient } from '@tanstack/react-query';
-import { BookOpen, Car, ClipboardList, Crosshair, FileText, Fingerprint, Flag, LayoutDashboard, Menu, RefreshCw, Search, Settings, Shield, Siren, Smartphone, UserCheck, Users, X, type LucideIcon } from 'lucide-react';
+import { BookOpen, Car, ClipboardList, Crosshair, FileText, Fingerprint, Flag, LayoutDashboard, Menu, RefreshCw, Search, Settings, Shield, Siren, Smartphone, Truck, UserCheck, Users, X, type LucideIcon } from 'lucide-react';
 import { useAuth } from '../../lib/auth';
 import { SkeletonRows } from '../../components/ui';
 import { SaveStatus } from '../../components/SaveStatus';
@@ -20,6 +20,7 @@ export const MDT_NAV: { group: string; items: Item[] }[] = [
     { to: '/mdt/vehicles', label: 'Fahrzeuge', icon: Car, perm: 'vehicles.view' },
     { to: '/mdt/warrants', label: 'Haftbefehle', icon: Flag, perm: 'wanted.view' },
     { to: '/mdt/weapons', label: 'Waffen', icon: Crosshair, perm: 'weapons.view' },
+    { to: '/mdt/fleet', label: 'Polizeifahrzeuge', icon: Truck, perm: 'fleet.view' },
   ] },
   { group: 'Vorgänge', items: [
     { to: '/mdt/reports', label: 'Berichte', icon: FileText, perm: 'reports.view' },

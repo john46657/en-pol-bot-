@@ -30,6 +30,8 @@ export interface Preferences {
   teamList: { view: 'cards' | 'table'; search?: string; filters?: { team?: string; rank?: string; office?: string; status?: string } };
   /** Persönliche CAD-Ansicht (nur für diesen Benutzer). */
   cad?: { widgets?: string[]; hiddenLayers?: string[]; zoom?: number; center?: { x: number; y: number }; compact?: boolean; sidebar?: boolean; favoriteIncidents?: string[]; erlcServerId?: string; sound?: boolean; setupHidden?: boolean };
+  /** Persönliche Filter/Sortierung der Polizeifahrzeuge. */
+  fleet?: { search?: string; filters?: { model?: string; color?: string; owner?: string; unit?: string; active?: 'active' | 'inactive' | 'all'; online?: 'all' | 'yes' | 'no' }; sort?: { key: string; dir: 'asc' | 'desc' }; mapFilter?: string };
   voice: { channelIds: string[]; categoryIds: string[]; sort: 'members' | 'name' | 'position'; compact: boolean; maxChannels: number; showEmpty?: boolean; showDuration?: boolean };
 }
 

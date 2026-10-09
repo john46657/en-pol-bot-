@@ -8,13 +8,13 @@ declare const create: z.ZodObject<{
     incidentId: z.ZodOptional<z.ZodString>;
     personIds: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
 }, "strip", z.ZodTypeAny, {
-    type: "PATROL" | "INCIDENT" | "TRAFFIC" | "ARREST" | "CITATION" | "COLLISION" | "INVESTIGATION" | "GENERAL";
+    type: "INCIDENT" | "PATROL" | "TRAFFIC" | "ARREST" | "CITATION" | "COLLISION" | "INVESTIGATION" | "GENERAL";
     title: string;
     content: Record<string, unknown>;
     incidentId?: string | undefined;
     personIds?: string[] | undefined;
 }, {
-    type: "PATROL" | "INCIDENT" | "TRAFFIC" | "ARREST" | "CITATION" | "COLLISION" | "INVESTIGATION" | "GENERAL";
+    type: "INCIDENT" | "PATROL" | "TRAFFIC" | "ARREST" | "CITATION" | "COLLISION" | "INVESTIGATION" | "GENERAL";
     title: string;
     content: Record<string, unknown>;
     incidentId?: string | undefined;

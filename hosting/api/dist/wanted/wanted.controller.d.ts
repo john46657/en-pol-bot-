@@ -13,15 +13,15 @@ declare const create: z.ZodObject<{
     expiresAt?: Date | undefined;
     description?: string | undefined;
     priority?: "MEDIUM" | "LOW" | "HIGH" | "URGENT" | "CRITICAL" | undefined;
-    personId?: string | undefined;
     vehicleId?: string | undefined;
+    personId?: string | undefined;
 }, {
     reason: string;
     expiresAt?: Date | undefined;
     description?: string | undefined;
     priority?: "MEDIUM" | "LOW" | "HIGH" | "URGENT" | "CRITICAL" | undefined;
-    personId?: string | undefined;
     vehicleId?: string | undefined;
+    personId?: string | undefined;
 }>;
 declare const reason: z.ZodObject<{
     reason: z.ZodString;
@@ -62,8 +62,8 @@ export declare class WantedController {
             priority: string;
             createdById: string;
             status: string;
-            personId: string | null;
             vehicleId: string | null;
+            personId: string | null;
         }[];
         total: number;
         page: number;
@@ -81,8 +81,8 @@ export declare class WantedController {
             priority: string;
             createdById: string;
             status: string;
-            personId: string | null;
             vehicleId: string | null;
+            personId: string | null;
         };
         timeline: {
             id: string;
@@ -105,8 +105,8 @@ export declare class WantedController {
         priority: string;
         createdById: string;
         status: string;
-        personId: string | null;
         vehicleId: string | null;
+        personId: string | null;
     }>;
     activate(a: Actor, id: string, b: z.infer<typeof reason>): Promise<{
         id: string;
@@ -119,8 +119,8 @@ export declare class WantedController {
         priority: string;
         createdById: string;
         status: string;
-        personId: string | null;
         vehicleId: string | null;
+        personId: string | null;
     }>;
     clear(a: Actor, id: string, b: z.infer<typeof reason>): Promise<{
         id: string;
@@ -133,8 +133,8 @@ export declare class WantedController {
         priority: string;
         createdById: string;
         status: string;
-        personId: string | null;
         vehicleId: string | null;
+        personId: string | null;
     }>;
     cancel(a: Actor, id: string, b: z.infer<typeof reason>): Promise<{
         id: string;
@@ -147,8 +147,8 @@ export declare class WantedController {
         priority: string;
         createdById: string;
         status: string;
-        personId: string | null;
         vehicleId: string | null;
+        personId: string | null;
     }>;
     archive(a: Actor, id: string, b: z.infer<typeof reason>): Promise<{
         id: string;
@@ -161,8 +161,8 @@ export declare class WantedController {
         priority: string;
         createdById: string;
         status: string;
-        personId: string | null;
         vehicleId: string | null;
+        personId: string | null;
     }>;
 }
 export {};

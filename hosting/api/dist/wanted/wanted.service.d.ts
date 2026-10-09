@@ -24,8 +24,8 @@ export declare class WantedService {
             priority: string;
             createdById: string;
             status: string;
-            personId: string | null;
             vehicleId: string | null;
+            personId: string | null;
         }[];
         total: number;
         page: number;
@@ -43,8 +43,8 @@ export declare class WantedService {
             priority: string;
             createdById: string;
             status: string;
-            personId: string | null;
             vehicleId: string | null;
+            personId: string | null;
         };
         timeline: {
             id: string;
@@ -74,8 +74,8 @@ export declare class WantedService {
         priority: string;
         createdById: string;
         status: string;
-        personId: string | null;
         vehicleId: string | null;
+        personId: string | null;
     }>;
     setStatus(actor: Actor, id: string, to: WantedStatus, reason: string): Promise<{
         id: string;
@@ -88,7 +88,7 @@ export declare class WantedService {
         priority: string;
         createdById: string;
         status: string;
-        personId: string | null;
         vehicleId: string | null;
+        personId: string | null;
     }>;
 }
