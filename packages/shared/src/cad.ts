@@ -124,7 +124,7 @@ export const DEFAULT_CAD_CONFIG: CadConfig = {
     { key: 'sek', label: 'SEK-Einheiten', builtin: true, enabledByDefault: true },
     { key: 'k9', label: 'K9-Einheiten', builtin: true, enabledByDefault: true },
     { key: 'units', label: 'Weitere Einheiten', builtin: true, enabledByDefault: true },
-    { key: 'vehicles', label: 'Polizeifahrzeuge (GPS)', builtin: true, enabledByDefault: true },
+    { key: 'vehicles', label: 'Polizeifahrzeuge (Position des Besitzers)', builtin: true, enabledByDefault: true },
     { key: 'staff', label: 'Staff', builtin: true, enabledByDefault: false },
     { key: 'players', label: 'Alle Spieler', builtin: true, enabledByDefault: false },
     { key: 'pois', label: 'Eigene POIs', builtin: true, enabledByDefault: true },

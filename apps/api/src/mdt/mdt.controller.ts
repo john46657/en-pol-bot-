@@ -32,6 +32,8 @@ export class MdtController {
   citizens(@Query(zodBody(citizenQ)) q: z.infer<typeof citizenQ>) { return this.s.citizens(q); }
   @Get('citizens/:id') @RequirePermission('persons.view')
   citizen(@CurrentActor() a: Actor, @Param('id', ParseUUIDPipe) id: string) { return this.s.profile(a, id); }
+  @Get('citizens/:id/roblox') @RequirePermission('persons.view')
+  citizenRoblox(@CurrentActor() a: Actor, @Param('id', ParseUUIDPipe) id: string) { return this.s.robloxProfile(a, id); }
   @Patch('citizens/:id') @RequirePermission('persons.edit')
   updateCitizen(@CurrentActor() a: Actor, @Param('id', ParseUUIDPipe) id: string, @Body(zodBody(citizenUpdate)) b: z.infer<typeof citizenUpdate>) {
     const { version, ...rest } = b;

@@ -106,8 +106,8 @@ export declare class FleetService {
                 unitId: string | null;
                 unit: {
                     id: string;
-                    name: string | null;
                     callsign: string;
+                    name: string | null;
                 } | null;
                 status: string;
                 internalCode: string | null;
@@ -120,9 +120,9 @@ export declare class FleetService {
         servers: {
             vehiclesEnabled: boolean;
             id: string;
+            status: string;
             name: string;
             lastError: string | null;
-            status: string;
             features: string[];
             lastSyncAt: Date | null;
         }[];
@@ -139,18 +139,18 @@ export declare class FleetService {
         incidents: never[] | {
             number: string;
             id: string;
-            status: string;
             title: string;
+            status: string;
         }[];
         events: {
             actorName: string | null;
             id: string;
-            createdAt: Date;
-            text: string;
-            actorId: string | null;
             incidentId: string | null;
+            createdAt: Date;
             vehicleId: string;
+            actorId: string | null;
             kind: string;
+            text: string;
         }[];
         id: string;
         erlcServerId: string;
@@ -202,8 +202,8 @@ export declare class FleetService {
             unitId: string | null;
             unit: {
                 id: string;
-                name: string | null;
                 callsign: string;
+                name: string | null;
             } | null;
             status: string;
             internalCode: string | null;
@@ -243,18 +243,18 @@ export declare class FleetService {
         incidents: never[] | {
             number: string;
             id: string;
-            status: string;
             title: string;
+            status: string;
         }[];
         events: {
             actorName: string | null;
             id: string;
-            createdAt: Date;
-            text: string;
-            actorId: string | null;
             incidentId: string | null;
+            createdAt: Date;
             vehicleId: string;
+            actorId: string | null;
             kind: string;
+            text: string;
         }[];
         id: string;
         erlcServerId: string;
@@ -306,8 +306,8 @@ export declare class FleetService {
             unitId: string | null;
             unit: {
                 id: string;
-                name: string | null;
                 callsign: string;
+                name: string | null;
             } | null;
             status: string;
             internalCode: string | null;
@@ -374,8 +374,8 @@ export declare class FleetService {
             unitId: string | null;
             unit: {
                 id: string;
-                name: string | null;
                 callsign: string;
+                name: string | null;
             } | null;
             status: string;
             internalCode: string | null;
@@ -390,16 +390,16 @@ export declare class FleetService {
         liveCount: number;
         id: string;
         createdAt: Date;
-        name: string;
-        category: string;
-        active: boolean;
         updatedAt: Date;
+        category: string;
         description: string | null;
+        active: boolean;
+        name: string;
+        erlcName: string;
+        department: string | null;
         internalCode: string | null;
         tags: string[];
-        erlcName: string;
         imageId: string | null;
-        department: string | null;
     }[]>;
     /** Modellnamen, die ER:LC bisher gemeldet hat und die noch nicht im Katalog stehen (Vorschläge zum Übernehmen). */
     suggestions(): Promise<{
@@ -410,30 +410,30 @@ export declare class FleetService {
     createModel(actor: Actor, d: FleetModelInput): Promise<{
         id: string;
         createdAt: Date;
-        name: string;
-        category: string;
-        active: boolean;
         updatedAt: Date;
+        category: string;
         description: string | null;
+        active: boolean;
+        name: string;
+        erlcName: string;
+        department: string | null;
         internalCode: string | null;
         tags: string[];
-        erlcName: string;
         imageId: string | null;
-        department: string | null;
     }>;
     updateModel(actor: Actor, id: string, d: Partial<FleetModelInput>): Promise<{
         id: string;
         createdAt: Date;
-        name: string;
-        category: string;
-        active: boolean;
         updatedAt: Date;
+        category: string;
         description: string | null;
+        active: boolean;
+        name: string;
+        erlcName: string;
+        department: string | null;
         internalCode: string | null;
         tags: string[];
-        erlcName: string;
         imageId: string | null;
-        department: string | null;
     }>;
     deleteModel(actor: Actor, id: string): Promise<void>;
     setModelImage(actor: Actor, id: string, file: {

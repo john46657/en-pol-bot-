@@ -9,6 +9,7 @@ import { CadConfigService } from './cad-config.service';
 import { CadNotifyService } from './cad-notify.service';
 import type { ErlcPlayer } from './erlc.service';
 import { LocksService } from '../locks/locks.service';
+import { FleetService } from '../fleet/fleet.service';
 /** Wer handelt und von welchem Discord-Server (Bot) bzw. mit welchem gewählten Server (Dashboard). */
 export type CadActor = Actor & {
     guildId?: string | null;
@@ -97,7 +98,8 @@ export declare class CadService {
     private readonly cfg;
     private readonly notify;
     private readonly locks;
-    constructor(prisma: PrismaService, audit: AuditService, perms: PermissionService, rt: RealtimeService, timeline: TimelineService, cfg: CadConfigService, notify: CadNotifyService, locks: LocksService);
+    private readonly fleet;
+    constructor(prisma: PrismaService, audit: AuditService, perms: PermissionService, rt: RealtimeService, timeline: TimelineService, cfg: CadConfigService, notify: CadNotifyService, locks: LocksService, fleet: FleetService);
     private label;
     /**
      * Beendete Einsätze (Status mit „closed“, z. B. Abgeschlossen/Abgebrochen) werden einen Tag nach Abschluss gelöscht.
@@ -606,6 +608,68 @@ export declare class CadService {
             readonly label: "Einsatz abgeschlossen (Meldung)";
             readonly emoji: "\uD83C\uDFC1";
         }];
+        vehicles: {
+            id: string;
+            erlcServerId: string;
+            serverName: string;
+            key: string;
+            active: boolean;
+            uncertain: boolean;
+            stale: boolean;
+            api: {
+                name: string;
+                owner: string;
+                ownerRobloxId: string | null;
+                ownerTeam: string | null;
+                plate: string | null;
+                texture: string | null;
+                colorHex: string | null;
+                colorName: string | null;
+                policeReason: string;
+                firstSeenAt: Date;
+                lastSeenAt: Date;
+                apiChangedAt: Date;
+            };
+            driver: {
+                state: "unavailable";
+                label: "Fahrerdaten nicht verfügbar";
+                hint: string;
+            };
+            ownerOnline: boolean;
+            ownerPosition: {
+                x: number;
+                z: number;
+                street: string | null;
+                postal: string | null;
+                hint: string;
+            } | null;
+            discord: {
+                discordId: string | null;
+                name: string | null;
+            } | null;
+            model: {
+                id: string;
+                name: string;
+                category: string;
+                imageUrl: string | null;
+                internalCode: string | null;
+                department: string | null;
+            } | null;
+            internal: {
+                unitId: string | null;
+                unit: {
+                    id: string;
+                    callsign: string;
+                    name: string | null;
+                } | null;
+                status: string;
+                internalCode: string | null;
+                notes: string | null;
+                tags: string[];
+                version: number;
+                updatedAt: Date;
+            };
+        }[];
     }>;
     listCalls(f: {
         status?: string;
@@ -1191,13 +1255,20 @@ export declare class CadService {
             staff: boolean;
         })[];
         vehicles: {
+            id: string;
+            serverId: string;
             name: string;
             owner: string;
             plate: string | null;
             colorHex: string | null;
+            colorName: string | null;
             x: number;
             z: number;
-            serverId: string;
+            positionHint: string;
+            category: string | null;
+            icon: string | null;
+            unit: string | null;
+            uncertain: boolean;
         }[];
         stale: boolean;
     }>;

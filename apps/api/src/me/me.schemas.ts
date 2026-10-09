@@ -48,6 +48,13 @@ export const preferencesSchema = z.object({
     sound: z.boolean().optional(),
     setupHidden: z.boolean().optional(),
   }).optional(),
+  /** Persönliche Filter/Sortierung der Polizeifahrzeuge. */
+  fleet: z.object({
+    search: z.string().max(80).optional(),
+    filters: z.object({ model: z.string().max(120).optional(), color: z.string().max(60).optional(), owner: z.string().max(60).optional(), unit: z.string().max(40).optional(), active: z.enum(['active', 'inactive', 'all']).optional(), online: z.enum(['all', 'yes', 'no']).optional() }).optional(),
+    sort: z.object({ key: z.string().max(20), dir: z.enum(['asc', 'desc']) }).optional(),
+    mapFilter: z.string().max(80).optional(),
+  }).optional(),
   voice: z.object({
     channelIds: z.array(z.string().regex(/^\d{15,25}$/)).max(100),
     categoryIds: z.array(z.string().regex(/^\d{15,25}$/)).max(50),

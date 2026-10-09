@@ -14,6 +14,31 @@ export interface RobloxProfile {
         robloxUsername: string;
     } | null;
 }
+/** Ausführliches Roblox-Profil (Bürgerakte im MDT). `null` in einem Feld = von Roblox gerade nicht abrufbar. */
+export interface RobloxDetails {
+    id: string;
+    name: string;
+    displayName: string;
+    description: string;
+    created: string | null;
+    isBanned: boolean;
+    verified: boolean;
+    profileUrl: string;
+    avatarUrl: string | null;
+    headshotUrl: string | null;
+    friends: number | null;
+    followers: number | null;
+    following: number | null;
+    groups: {
+        id: string;
+        name: string;
+        role: string | null;
+        rank: number | null;
+        memberCount: number | null;
+    }[] | null;
+    previousNames: string[] | null;
+    fetchedAt: string;
+}
 /**
  * Roblox-Konto nachschlagen – per Benutzername oder Roblox-ID – über die öffentliche Roblox-API (kein Token).
  * Antworten werden 10 Minuten zwischengespeichert; Fehler/Timeouts → null (die normale Suche läuft weiter).
@@ -48,6 +73,15 @@ export declare class RobloxService {
     /** Gruppen-Ränge eines Kontos (Gruppen-ID → Rang 0–255) für Rollen-Bindungen; 1 Minute zwischengespeichert. */
     private ranks;
     groupRanks(id: string): Promise<Record<string, number>>;
+    /**
+     * Ausführliches Roblox-Profil für die Bürgerakte (öffentliche Roblox-APIs, 10 Minuten zwischengespeichert).
+     * Jeder Teil kann einzeln fehlen (Roblox nicht erreichbar) – dann `null`, nie geraten.
+     */
+    private details;
+    profileDetails(id: string): Promise<RobloxDetails | null>;
+    /** Kopfbilder für viele Roblox-IDs mit einer Anfrage (Kartenansicht); 10 Minuten zwischengespeichert, Fehler → keine Bilder. */
+    private heads;
+    headshots(ids: string[]): Promise<Map<string, string>>;
     private fetchProfile;
     private get;
 }

@@ -49,7 +49,7 @@ ER:LC → Command Center (Recht `cad.erlc_command`). Kritische Befehle (Liste je
 - **Position sofort bei neuen Notrufen/Einsätzen:** Die Position kommt direkt aus ER:LC (Notruf-Position; fehlt sie, der Live-Standort des Anrufers). Im CAD erscheint ein Hinweis mit **Kartenausschnitt** und Ort, Klick öffnet die Einsatzkarte; Einsatz-Details zeigen denselben Ausschnitt. Beim Anlegen eines Einsatzes lässt sich die Position per **„Position aus ER:LC übernehmen“** (Live-Standort eines Spielers) setzen. Die Discord-Meldung „Neuer Einsatz“ hat „Auf Karte anzeigen“.
 - **Nur Polizei:** Übernommen werden nur ER:LC-Notrufe an das Team Police (nicht Sheriff/Feuerwehr/DOT); Sheriffs erscheinen weder auf der Karte noch in der Spielerauswahl.
 - **Schnellsuche** oben in der Leitstelle: Personen (Roblox-Name/-ID) und Fahrzeuge (Kennzeichen) direkt suchen und öffnen.
-- **Fahrzeug-GPS:** Die Ebene „Polizeifahrzeuge (GPS)“ zeigt nur Fahrzeuge von Spielern im Team Police. ER:LC liefert keine Fahrzeugposition – das Fahrzeug steht dort, wo sein Besitzer gerade ist.
+- **Polizeifahrzeuge:** Die Ebene „Polizeifahrzeuge (Position des Besitzers)“ zeigt Polizeifahrzeuge an der Position ihres Besitzers. ER:LC liefert keine Fahrzeugposition und keinen Fahrer. Alles dazu steht in [fleet.md](fleet.md).
 - Discord: `/cad status`, `/cad funk`, `/cad einsaetze`; unter Notruf-Meldungen die Buttons Übernehmen / Einsatz erstellen / Einheit zuweisen / Schließen / Auf Karte anzeigen.
 
 ## MDT für SEK, K9 und andere Einheiten

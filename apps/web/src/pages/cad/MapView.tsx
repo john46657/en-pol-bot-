@@ -5,6 +5,7 @@ import { ERLC_BUILTIN_MAP, gameToPixel, pixelToGame, type CadConfig } from '@enr
 import { api, ApiError } from '../../lib/api';
 import { useAuth } from '../../lib/auth';
 import { optLabel, useCadPrefs, type CadMapData, type CadMapObject } from '../../lib/cad';
+import { usePrefs } from '../../lib/prefs';
 import { Button, Field, Input, Modal, Select, Textarea } from '../../components/ui';
 
 /** Ein Marker auf der Karte: Spielkoordinate, Layer, Darstellung und Inhalt des Info-Fensters. */
@@ -27,6 +28,9 @@ export function MapView({ cfg, data, height = '70vh', focus, onCreateIncidentAt,
   const { can } = useAuth();
   const qcMap = useQueryClient();
   const { cad, set } = useCadPrefs();
+  const { prefs, update: updatePrefs } = usePrefs();
+  const vehicleFilter = prefs.fleet?.mapFilter ?? '';
+  const setVehicleFilter = (v: string) => updatePrefs({ fleet: { ...prefs.fleet, mapFilter: v } });
   /** Manuelle Position einer Einheit (gilt, solange kein zugeordneter Spieler in ER:LC ist). */
   const setUnitPos = async (id: string, x: number, z: number) => { await api(`/cad/units/${id}`, { method: 'PATCH', body: { mapX: x, mapZ: z } }); void qcMap.invalidateQueries({ queryKey: ['cad-map'] }); void qcMap.invalidateQueries({ queryKey: ['cad-units'] }); };
   const box = useRef<HTMLDivElement>(null);
@@ -175,13 +179,30 @@ export function MapView({ cfg, data, height = '70vh', focus, onCreateIncidentAt,
       out.push({ id: `player:${p.serverId}:${p.name}`, layer: staff ? 'staff' : 'players', x: p.location.x, z: p.location.z, emoji: st.emoji, color: st.color, label: p.callsign ?? p.name, title: p.name,
         body: <dl className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-0.5 text-xs"><dt className="text-muted">Team</dt><dd>{p.team ?? '—'}</dd>{p.callsign && <><dt className="text-muted">Rufname</dt><dd>{p.callsign}</dd></>}<dt className="text-muted">Ort</dt><dd>{[p.location.street, p.location.postal && `PLZ ${p.location.postal}`].filter(Boolean).join(' · ') || '—'}</dd>{p.wantedStars > 0 && <><dt className="text-muted">Gesucht</dt><dd>{'⭐'.repeat(p.wantedStars)}</dd></>}</dl> });
     }
-    for (const v of data.vehicles) out.push({ id: `vehicle:${v.serverId}:${v.owner}:${v.plate}`, layer: 'vehicles', x: v.x, z: v.z, emoji: style('vehicle').emoji, color: v.colorHex ?? style('vehicle').color, label: v.plate ?? v.name, title: v.name,
-      body: <dl className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-0.5 text-xs"><dt className="text-muted">Kennzeichen</dt><dd>{v.plate ?? '—'}</dd><dt className="text-muted">Fahrer/Besitzer</dt><dd>{v.owner}</dd></dl> });
+    const vf = vehicleFilter.trim().toLowerCase();
+    // Alle Fahrzeuge eines Besitzers stehen an seiner Position (ER:LC liefert keine Fahrzeugposition) → ein Marker je Besitzer
+    const groups = new Map<string, CadMapData['vehicles']>();
+    for (const v of data.vehicles) {
+      if (vf && ![v.name, v.owner, v.plate, v.unit, v.colorName].some((x) => x?.toLowerCase().includes(vf))) continue;
+      const k = `${v.serverId}:${v.owner.toLowerCase()}`;
+      groups.set(k, [...(groups.get(k) ?? []), v]);
+    }
+    for (const [k, vs] of groups) {
+      const v = vs[0]!;
+      out.push({ id: `vehicle:${k}`, layer: 'vehicles', x: v.x, z: v.z, emoji: vs.length > 1 ? '🚓' : v.icon ?? style('vehicle').emoji, color: vs.length > 1 ? style('vehicle').color : v.colorHex ?? style('vehicle').color,
+        label: vs.length > 1 ? `${v.owner} (${vs.length} Fzg.)` : v.unit ?? v.plate ?? v.name, title: vs.length > 1 ? `${vs.length} Fahrzeuge von ${v.owner}` : `${v.name} · Besitzer ${v.owner}`,
+        body: <><ul className="space-y-1.5 text-xs">{vs.map((x) => (
+          <li key={x.id}><b>{x.icon ?? '🚗'} {x.name}</b>{x.plate && <> · {x.plate}</>}{x.colorName && <> · {x.colorName}</>}{x.unit && <> · Einheit {x.unit}</>}{x.uncertain && <span className="text-muted"> · Zuordnung unsicher</span>}
+            {can('fleet.view_details') && <> · <a className="underline" href={`/cad/fleet?id=${x.id}`}>Details</a></>}</li>
+        ))}</ul>
+          <p className="mt-1 text-xs"><span className="text-muted">Besitzer:</span> {v.owner} · <span className="text-muted">Fahrer:</span> Fahrerdaten nicht verfügbar</p>
+          <p className="mt-1 text-[11px] text-warning">📍 {v.positionHint}</p></> });
+    }
     for (const o of data.objects) if (o.kind === 'POI' && o.x !== null && o.z !== null) out.push({ id: `poi:${o.id}`, layer: o.layer, x: o.x, z: o.z, emoji: o.icon ?? style('poi').emoji, color: o.color ?? style('poi').color, label: o.name, title: o.name,
       body: <div className="text-xs">{o.description ?? ''}{o.category && <p className="text-muted">Kategorie: {o.category}</p>}</div>,
       actions: can('cad.manage_map') ? <Button size="sm" variant="secondary" onClick={() => setEditObj(o)}>Bearbeiten</Button> : undefined });
     return out;
-  }, [data, cfg, actionsFor, can]);
+  }, [data, cfg, actionsFor, can, vehicleFilter]);
 
   const visible = markers.filter((mk) => !hidden.has(mk.layer));
   const zones = (data?.objects ?? []).filter((o) => o.kind === 'ZONE' && o.points && !hidden.has(o.layer));
@@ -224,6 +245,7 @@ export function MapView({ cfg, data, height = '70vh', focus, onCreateIncidentAt,
       {showLayers && (
         <div data-ui className="absolute right-12 top-2 max-h-[80%] w-56 overflow-auto rounded-md border border-line bg-panel p-2 text-sm shadow-lg">
           <p className="mb-1 text-xs font-semibold text-muted">Ebenen</p>
+          <input type="search" aria-label="Fahrzeuge filtern" placeholder="🚓 Modell, Besitzer, Einheit…" className="mb-1 w-full rounded border border-line bg-bg px-2 py-1 text-xs" value={vehicleFilter} onChange={(e) => setVehicleFilter(e.target.value)} />
           {cfg.layers.map((l) => <label key={l.key} className="flex items-center justify-between gap-2 py-0.5"><span className="flex items-center gap-2"><input type="checkbox" checked={!hidden.has(l.key)} onChange={() => toggleLayer(l.key)} />{l.label}</span><span className="text-xs text-muted">{counts(l.key)}</span></label>)}
         </div>
       )}

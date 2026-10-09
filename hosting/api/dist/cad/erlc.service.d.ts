@@ -7,6 +7,7 @@ import { AuditService, type Actor } from '../audit/audit.service';
 import { PermissionService } from '../authz/permission.service';
 import { RealtimeService } from '../realtime/realtime.service';
 import { ErlcClient, type ErlcResult } from './erlc-client';
+import { FleetService } from '../fleet/fleet.service';
 import { CadNotifyService } from './cad-notify.service';
 export declare const erlcServerInput: z.ZodObject<{
     name: z.ZodString;
@@ -165,12 +166,13 @@ export declare class ErlcService {
     private readonly realtime;
     private readonly notify;
     private readonly records;
+    private readonly fleet;
     private readonly log;
     readonly client: ErlcClient;
     private readonly rt;
     private webhookKey;
     private readonly seen;
-    constructor(prisma: PrismaService, audit: AuditService, perms: PermissionService, realtime: RealtimeService, notify: CadNotifyService, records: ErlcSyncService);
+    constructor(prisma: PrismaService, audit: AuditService, perms: PermissionService, realtime: RealtimeService, notify: CadNotifyService, records: ErlcSyncService, fleet: FleetService);
     /** Nur für Tests: andere Gegenstelle/Signaturschlüssel. */
     useClient(c: ErlcClient): void;
     useWebhookKey(spkiBase64: string): void;

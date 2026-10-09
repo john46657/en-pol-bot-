@@ -26,9 +26,9 @@ var __export = (target, all) => {
 };
 var __copyProps = (to, from, except, desc) => {
   if (from && typeof from === "object" || typeof from === "function") {
-    for (let key3 of __getOwnPropNames(from))
-      if (!__hasOwnProp.call(to, key3) && key3 !== except)
-        __defProp(to, key3, { get: () => from[key3], enumerable: !(desc = __getOwnPropDesc(from, key3)) || desc.enumerable });
+    for (let key4 of __getOwnPropNames(from))
+      if (!__hasOwnProp.call(to, key4) && key4 !== except)
+        __defProp(to, key4, { get: () => from[key4], enumerable: !(desc = __getOwnPropDesc(from, key4)) || desc.enumerable });
   }
   return to;
 };
@@ -57,9 +57,9 @@ var require_dist = __commonJS({
     };
     var __copyProps2 = (to, from, except, desc) => {
       if (from && typeof from === "object" || typeof from === "function") {
-        for (let key3 of __getOwnPropNames2(from))
-          if (!__hasOwnProp2.call(to, key3) && key3 !== except)
-            __defProp2(to, key3, { get: () => from[key3], enumerable: !(desc = __getOwnPropDesc2(from, key3)) || desc.enumerable });
+        for (let key4 of __getOwnPropNames2(from))
+          if (!__hasOwnProp2.call(to, key4) && key4 !== except)
+            __defProp2(to, key4, { get: () => from[key4], enumerable: !(desc = __getOwnPropDesc2(from, key4)) || desc.enumerable });
       }
       return to;
     };
@@ -228,15 +228,15 @@ function __rest(s, e) {
     }
   return t;
 }
-function __decorate(decorators, target, key3, desc) {
-  var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key3) : desc, d;
-  if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key3, desc);
-  else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key3, r) : d(target, key3)) || r;
-  return c > 3 && r && Object.defineProperty(target, key3, r), r;
+function __decorate(decorators, target, key4, desc) {
+  var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key4) : desc, d;
+  if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key4, desc);
+  else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key4, r) : d(target, key4)) || r;
+  return c > 3 && r && Object.defineProperty(target, key4, r), r;
 }
 function __param(paramIndex, decorator) {
-  return function(target, key3) {
-    decorator(target, key3, paramIndex);
+  return function(target, key4) {
+    decorator(target, key4, paramIndex);
   };
 }
 function __esDecorate(ctor, descriptorIn, decorators, contextIn, initializers, extraInitializers) {
@@ -244,7 +244,7 @@ function __esDecorate(ctor, descriptorIn, decorators, contextIn, initializers, e
     if (f2 !== void 0 && typeof f2 !== "function") throw new TypeError("Function expected");
     return f2;
   }
-  var kind2 = contextIn.kind, key3 = kind2 === "getter" ? "get" : kind2 === "setter" ? "set" : "value";
+  var kind2 = contextIn.kind, key4 = kind2 === "getter" ? "get" : kind2 === "setter" ? "set" : "value";
   var target = !descriptorIn && ctor ? contextIn["static"] ? ctor : ctor.prototype : null;
   var descriptor = descriptorIn || (target ? Object.getOwnPropertyDescriptor(target, contextIn.name) : {});
   var _, done = false;
@@ -256,7 +256,7 @@ function __esDecorate(ctor, descriptorIn, decorators, contextIn, initializers, e
       if (done) throw new TypeError("Cannot add initializers after decoration has completed");
       extraInitializers.push(accept(f2 || null));
     };
-    var result = (0, decorators[i])(kind2 === "accessor" ? { get: descriptor.get, set: descriptor.set } : descriptor[key3], context);
+    var result = (0, decorators[i])(kind2 === "accessor" ? { get: descriptor.get, set: descriptor.set } : descriptor[key4], context);
     if (kind2 === "accessor") {
       if (result === void 0) continue;
       if (result === null || typeof result !== "object") throw new TypeError("Object expected");
@@ -265,7 +265,7 @@ function __esDecorate(ctor, descriptorIn, decorators, contextIn, initializers, e
       if (_ = accept(result.init)) initializers.unshift(_);
     } else if (_ = accept(result)) {
       if (kind2 === "field") initializers.unshift(_);
-      else descriptor[key3] = _;
+      else descriptor[key4] = _;
     }
   }
   if (target) Object.defineProperty(target, contextIn.name, descriptor);
@@ -1230,9 +1230,9 @@ var require_constants = __commonJS({
       "X-XSS-Protection"
     ];
     for (let i = 0; i < wellknownHeaderNames.length; ++i) {
-      const key3 = wellknownHeaderNames[i];
-      const lowerCasedKey = key3.toLowerCase();
-      headerNameLowerCasedRecord[key3] = headerNameLowerCasedRecord[lowerCasedKey] = lowerCasedKey;
+      const key4 = wellknownHeaderNames[i];
+      const lowerCasedKey = key4.toLowerCase();
+      headerNameLowerCasedRecord[key4] = headerNameLowerCasedRecord[lowerCasedKey] = lowerCasedKey;
     }
     Object.setPrototypeOf(headerNameLowerCasedRecord, null);
     module2.exports = {
@@ -1266,16 +1266,16 @@ var require_tree = __commonJS({
        * @param {any} value
        * @param {number} index
        */
-      constructor(key3, value, index) {
-        if (index === void 0 || index >= key3.length) {
+      constructor(key4, value, index) {
+        if (index === void 0 || index >= key4.length) {
           throw new TypeError("Unreachable");
         }
-        const code = this.code = key3.charCodeAt(index);
+        const code = this.code = key4.charCodeAt(index);
         if (code > 127) {
           throw new TypeError("key must be ascii string");
         }
-        if (key3.length !== ++index) {
-          this.middle = new _TstNode(key3, value, index);
+        if (key4.length !== ++index) {
+          this.middle = new _TstNode(key4, value, index);
         } else {
           this.value = value;
         }
@@ -1284,15 +1284,15 @@ var require_tree = __commonJS({
        * @param {string} key
        * @param {any} value
        */
-      add(key3, value) {
-        const length = key3.length;
+      add(key4, value) {
+        const length = key4.length;
         if (length === 0) {
           throw new TypeError("Unreachable");
         }
         let index = 0;
         let node = this;
         while (true) {
-          const code = key3.charCodeAt(index);
+          const code = key4.charCodeAt(index);
           if (code > 127) {
             throw new TypeError("key must be ascii string");
           }
@@ -1303,20 +1303,20 @@ var require_tree = __commonJS({
             } else if (node.middle !== null) {
               node = node.middle;
             } else {
-              node.middle = new _TstNode(key3, value, index);
+              node.middle = new _TstNode(key4, value, index);
               break;
             }
           } else if (node.code < code) {
             if (node.left !== null) {
               node = node.left;
             } else {
-              node.left = new _TstNode(key3, value, index);
+              node.left = new _TstNode(key4, value, index);
               break;
             }
           } else if (node.right !== null) {
             node = node.right;
           } else {
-            node.right = new _TstNode(key3, value, index);
+            node.right = new _TstNode(key4, value, index);
             break;
           }
         }
@@ -1325,12 +1325,12 @@ var require_tree = __commonJS({
        * @param {Uint8Array} key
        * @return {TstNode | null}
        */
-      search(key3) {
-        const keylength = key3.length;
+      search(key4) {
+        const keylength = key4.length;
         let index = 0;
         let node = this;
         while (node !== null && index < keylength) {
-          let code = key3[index];
+          let code = key4[index];
           if (code <= 90 && code >= 65) {
             code |= 32;
           }
@@ -1355,25 +1355,25 @@ var require_tree = __commonJS({
        * @param {string} key
        * @param {any} value
        * */
-      insert(key3, value) {
+      insert(key4, value) {
         if (this.node === null) {
-          this.node = new TstNode(key3, value, 0);
+          this.node = new TstNode(key4, value, 0);
         } else {
-          this.node.add(key3, value);
+          this.node.add(key4, value);
         }
       }
       /**
        * @param {Uint8Array} key
        * @return {any}
        */
-      lookup(key3) {
-        return this.node?.search(key3)?.value ?? null;
+      lookup(key4) {
+        return this.node?.search(key4)?.value ?? null;
       }
     };
     var tree = new TernarySearchTree();
     for (let i = 0; i < wellknownHeaderNames.length; ++i) {
-      const key3 = headerNameLowerCasedRecord[wellknownHeaderNames[i]];
-      tree.insert(key3, key3);
+      const key4 = headerNameLowerCasedRecord[wellknownHeaderNames[i]];
+      tree.insert(key4, key4);
     }
     module2.exports = {
       TernarySearchTree,
@@ -1597,20 +1597,20 @@ var require_util = __commonJS({
     function parseHeaders(headers, obj) {
       if (obj === void 0) obj = {};
       for (let i = 0; i < headers.length; i += 2) {
-        const key3 = headerNameToString(headers[i]);
-        let val = obj[key3];
+        const key4 = headerNameToString(headers[i]);
+        let val = obj[key4];
         if (val) {
           if (typeof val === "string") {
             val = [val];
-            obj[key3] = val;
+            obj[key4] = val;
           }
           val.push(headers[i + 1].toString("utf8"));
         } else {
           const headersValue = headers[i + 1];
           if (typeof headersValue === "string") {
-            obj[key3] = headersValue;
+            obj[key4] = headersValue;
           } else {
-            obj[key3] = Array.isArray(headersValue) ? headersValue.map((x) => x.toString("utf8")) : headersValue.toString("utf8");
+            obj[key4] = Array.isArray(headersValue) ? headersValue.map((x) => x.toString("utf8")) : headersValue.toString("utf8");
           }
         }
       }
@@ -1624,21 +1624,21 @@ var require_util = __commonJS({
       const ret = new Array(len);
       let hasContentLength = false;
       let contentDispositionIdx = -1;
-      let key3;
+      let key4;
       let val;
       let kLen = 0;
       for (let n = 0; n < headers.length; n += 2) {
-        key3 = headers[n];
+        key4 = headers[n];
         val = headers[n + 1];
-        typeof key3 !== "string" && (key3 = key3.toString());
+        typeof key4 !== "string" && (key4 = key4.toString());
         typeof val !== "string" && (val = val.toString("utf8"));
-        kLen = key3.length;
-        if (kLen === 14 && key3[7] === "-" && (key3 === "content-length" || key3.toLowerCase() === "content-length")) {
+        kLen = key4.length;
+        if (kLen === 14 && key4[7] === "-" && (key4 === "content-length" || key4.toLowerCase() === "content-length")) {
           hasContentLength = true;
-        } else if (kLen === 19 && key3[7] === "-" && (key3 === "content-disposition" || key3.toLowerCase() === "content-disposition")) {
+        } else if (kLen === 19 && key4[7] === "-" && (key4 === "content-disposition" || key4.toLowerCase() === "content-disposition")) {
           contentDispositionIdx = n + 1;
         }
-        ret[n] = key3;
+        ret[n] = key4;
         ret[n + 1] = val;
       }
       if (hasContentLength && contentDispositionIdx !== -1) {
@@ -2379,20 +2379,20 @@ var require_request = __commonJS({
           this.endHandler = null;
         }
       }
-      addHeader(key3, value) {
-        processHeader(this, key3, value);
+      addHeader(key4, value) {
+        processHeader(this, key4, value);
         return this;
       }
     };
-    function processHeader(request, key3, val) {
+    function processHeader(request, key4, val) {
       if (val && (typeof val === "object" && !Array.isArray(val))) {
-        throw new InvalidArgumentError(`invalid ${key3} header`);
+        throw new InvalidArgumentError(`invalid ${key4} header`);
       } else if (val === void 0) {
         return;
       }
-      let headerName = headerNameLowerCasedRecord[key3];
+      let headerName = headerNameLowerCasedRecord[key4];
       if (headerName === void 0) {
-        headerName = key3.toLowerCase();
+        headerName = key4.toLowerCase();
         if (headerNameLowerCasedRecord[headerName] === void 0 && !isValidHTTPToken(headerName)) {
           throw new InvalidArgumentError("invalid header key");
         }
@@ -2402,17 +2402,17 @@ var require_request = __commonJS({
         for (let i = 0; i < val.length; i++) {
           if (typeof val[i] === "string") {
             if (!isValidHeaderValue(val[i])) {
-              throw new InvalidArgumentError(`invalid ${key3} header`);
+              throw new InvalidArgumentError(`invalid ${key4} header`);
             }
             arr.push(val[i]);
           } else if (val[i] === null) {
             arr.push("");
           } else if (typeof val[i] === "object") {
-            throw new InvalidArgumentError(`invalid ${key3} header`);
+            throw new InvalidArgumentError(`invalid ${key4} header`);
           } else {
             const str3 = `${val[i]}`;
             if (!isValidHeaderValue(str3)) {
-              throw new InvalidArgumentError(`invalid ${key3} header`);
+              throw new InvalidArgumentError(`invalid ${key4} header`);
             }
             arr.push(str3);
           }
@@ -2420,14 +2420,14 @@ var require_request = __commonJS({
         val = arr;
       } else if (typeof val === "string") {
         if (!isValidHeaderValue(val)) {
-          throw new InvalidArgumentError(`invalid ${key3} header`);
+          throw new InvalidArgumentError(`invalid ${key4} header`);
         }
       } else if (val === null) {
         val = "";
       } else {
         val = `${val}`;
         if (!isValidHeaderValue(val)) {
-          throw new InvalidArgumentError(`invalid ${key3} header`);
+          throw new InvalidArgumentError(`invalid ${key4} header`);
         }
       }
       if (headerName === "host") {
@@ -2448,7 +2448,7 @@ var require_request = __commonJS({
         }
       } else if (request.contentType === null && headerName === "content-type") {
         request.contentType = val;
-        request.headers.push(key3, val);
+        request.headers.push(key4, val);
       } else if (headerName === "transfer-encoding" || headerName === "keep-alive" || headerName === "upgrade") {
         throw new InvalidArgumentError(`invalid ${headerName} header`);
       } else if (headerName === "connection") {
@@ -2462,7 +2462,7 @@ var require_request = __commonJS({
       } else if (headerName === "expect") {
         throw new NotSupportedError("expect header not supported");
       } else {
-        request.headers.push(key3, val);
+        request.headers.push(key4, val);
       }
     }
     module2.exports = Request;
@@ -2942,13 +2942,13 @@ var require_connect = __commonJS({
         constructor(maxCachedSessions) {
           this._maxCachedSessions = maxCachedSessions;
           this._sessionCache = /* @__PURE__ */ new Map();
-          this._sessionRegistry = new global.FinalizationRegistry((key3) => {
+          this._sessionRegistry = new global.FinalizationRegistry((key4) => {
             if (this._sessionCache.size < this._maxCachedSessions) {
               return;
             }
-            const ref = this._sessionCache.get(key3);
+            const ref = this._sessionCache.get(key4);
             if (ref !== void 0 && ref.deref() === void 0) {
-              this._sessionCache.delete(key3);
+              this._sessionCache.delete(key4);
             }
           });
         }
@@ -3112,10 +3112,10 @@ var require_utils = __commonJS({
     exports2.enumToMap = void 0;
     function enumToMap(obj) {
       const res = {};
-      Object.keys(obj).forEach((key3) => {
-        const value = obj[key3];
+      Object.keys(obj).forEach((key4) => {
+        const value = obj[key4];
         if (typeof value === "number") {
-          res[key3] = value;
+          res[key4] = value;
         }
       });
       return res;
@@ -3292,9 +3292,9 @@ var require_constants2 = __commonJS({
     ];
     exports2.METHOD_MAP = utils_1.enumToMap(METHODS);
     exports2.H_METHOD_MAP = {};
-    Object.keys(exports2.METHOD_MAP).forEach((key3) => {
-      if (/^H/.test(key3)) {
-        exports2.H_METHOD_MAP[key3] = exports2.METHOD_MAP[key3];
+    Object.keys(exports2.METHOD_MAP).forEach((key4) => {
+      if (/^H/.test(key4)) {
+        exports2.H_METHOD_MAP[key4] = exports2.METHOD_MAP[key4];
       }
     });
     var FINISH;
@@ -4265,19 +4265,19 @@ var require_webidl = __commonJS({
         const result = {};
         if (!types.isProxy(O)) {
           const keys2 = [...Object.getOwnPropertyNames(O), ...Object.getOwnPropertySymbols(O)];
-          for (const key3 of keys2) {
-            const typedKey = keyConverter(key3, prefix, argument);
-            const typedValue = valueConverter(O[key3], prefix, argument);
+          for (const key4 of keys2) {
+            const typedKey = keyConverter(key4, prefix, argument);
+            const typedValue = valueConverter(O[key4], prefix, argument);
             result[typedKey] = typedValue;
           }
           return result;
         }
         const keys = Reflect.ownKeys(O);
-        for (const key3 of keys) {
-          const desc = Reflect.getOwnPropertyDescriptor(O, key3);
+        for (const key4 of keys) {
+          const desc = Reflect.getOwnPropertyDescriptor(O, key4);
           if (desc?.enumerable) {
-            const typedKey = keyConverter(key3, prefix, argument);
-            const typedValue = valueConverter(O[key3], prefix, argument);
+            const typedKey = keyConverter(key4, prefix, argument);
+            const typedValue = valueConverter(O[key4], prefix, argument);
             result[typedKey] = typedValue;
           }
         }
@@ -4308,29 +4308,29 @@ var require_webidl = __commonJS({
           });
         }
         for (const options2 of converters) {
-          const { key: key3, defaultValue, required, converter } = options2;
+          const { key: key4, defaultValue, required, converter } = options2;
           if (required === true) {
-            if (!Object.hasOwn(dictionary, key3)) {
+            if (!Object.hasOwn(dictionary, key4)) {
               throw webidl.errors.exception({
                 header: prefix,
-                message: `Missing required key "${key3}".`
+                message: `Missing required key "${key4}".`
               });
             }
           }
-          let value = dictionary[key3];
+          let value = dictionary[key4];
           const hasDefault = Object.hasOwn(options2, "defaultValue");
           if (hasDefault && value !== null) {
             value ??= defaultValue();
           }
           if (required || hasDefault || value !== void 0) {
-            value = converter(value, prefix, `${argument}.${key3}`);
+            value = converter(value, prefix, `${argument}.${key4}`);
             if (options2.allowedValues && !options2.allowedValues.includes(value)) {
               throw webidl.errors.exception({
                 header: prefix,
                 message: `${value} is not an accepted type. Expected one of ${options2.allowedValues.join(", ")}.`
               });
             }
-            dict[key3] = value;
+            dict[key4] = value;
           }
         }
         return dict;
@@ -4945,18 +4945,18 @@ var require_util2 = __commonJS({
               done: true
             };
           }
-          const { [keyIndex]: key3, [valueIndex]: value } = values[index];
+          const { [keyIndex]: key4, [valueIndex]: value } = values[index];
           this.#index = index + 1;
           let result;
           switch (this.#kind) {
             case "key":
-              result = key3;
+              result = key4;
               break;
             case "value":
               result = value;
               break;
             case "key+value":
-              result = [key3, value];
+              result = [key4, value];
               break;
           }
           return {
@@ -5022,8 +5022,8 @@ var require_util2 = __commonJS({
                 `Failed to execute 'forEach' on '${name}': parameter 1 is not of type 'Function'.`
               );
             }
-            for (const { 0: key3, 1: value } of makeIterator(this, "key+value")) {
-              callbackfn.call(thisArg, value, key3, this);
+            for (const { 0: key4, 1: value } of makeIterator(this, "key+value")) {
+              callbackfn.call(thisArg, value, key4, this);
             }
           }
         }
@@ -6466,15 +6466,15 @@ var require_client_h1 = __commonJS({
         } else {
           this.headers[len - 1] = Buffer.concat([this.headers[len - 1], buf]);
         }
-        const key3 = this.headers[len - 2];
-        if (key3.length === 10) {
-          const headerName = util2.bufferToLowerCasedHeaderName(key3);
+        const key4 = this.headers[len - 2];
+        if (key4.length === 10) {
+          const headerName = util2.bufferToLowerCasedHeaderName(key4);
           if (headerName === "keep-alive") {
             this.keepAlive += buf.toString();
           } else if (headerName === "connection") {
             this.connection += buf.toString();
           }
-        } else if (key3.length === 14 && util2.bufferToLowerCasedHeaderName(key3) === "content-length") {
+        } else if (key4.length === 14 && util2.bufferToLowerCasedHeaderName(key4) === "content-length") {
           this.contentLength += buf.toString();
         }
         this.trackHeader(buf.length);
@@ -6973,15 +6973,15 @@ upgrade: ${upgrade}\r
       }
       if (Array.isArray(headers)) {
         for (let n = 0; n < headers.length; n += 2) {
-          const key3 = headers[n + 0];
+          const key4 = headers[n + 0];
           const val = headers[n + 1];
           if (Array.isArray(val)) {
             for (let i = 0; i < val.length; i++) {
-              header += `${key3}: ${val[i]}\r
+              header += `${key4}: ${val[i]}\r
 `;
             }
           } else {
-            header += `${key3}: ${val}\r
+            header += `${key4}: ${val}\r
 `;
           }
         }
@@ -7493,18 +7493,18 @@ var require_client_h2 = __commonJS({
       }
       const headers = {};
       for (let n = 0; n < reqHeaders.length; n += 2) {
-        const key3 = reqHeaders[n + 0];
+        const key4 = reqHeaders[n + 0];
         const val = reqHeaders[n + 1];
         if (Array.isArray(val)) {
           for (let i = 0; i < val.length; i++) {
-            if (headers[key3]) {
-              headers[key3] += `,${val[i]}`;
+            if (headers[key4]) {
+              headers[key4] += `,${val[i]}`;
             } else {
-              headers[key3] = val[i];
+              headers[key4] = val[i];
             }
           }
         } else {
-          headers[key3] = val;
+          headers[key4] = val;
         }
       }
       let stream;
@@ -7999,9 +7999,9 @@ var require_redirect_handler = __commonJS({
           }
         }
       } else if (headers && typeof headers === "object") {
-        for (const key3 of Object.keys(headers)) {
-          if (!shouldRemoveHeader(key3, removeContent, unknownOrigin)) {
-            ret.push(key3, headers[key3]);
+        for (const key4 of Object.keys(headers)) {
+          if (!shouldRemoveHeader(key4, removeContent, unknownOrigin)) {
+            ret.push(key4, headers[key4]);
           }
         }
       } else {
@@ -9078,16 +9078,16 @@ var require_agent = __commonJS({
         return ret;
       }
       [kDispatch](opts, handler) {
-        let key3;
+        let key4;
         if (opts.origin && (typeof opts.origin === "string" || opts.origin instanceof URL)) {
-          key3 = String(opts.origin);
+          key4 = String(opts.origin);
         } else {
           throw new InvalidArgumentError("opts.origin must be a non-empty string or URL.");
         }
-        let dispatcher = this[kClients].get(key3);
+        let dispatcher = this[kClients].get(key4);
         if (!dispatcher) {
           dispatcher = this[kFactory](opts.origin, this[kOptions]).on("drain", this[kOnDrain]).on("connect", this[kOnConnect]).on("disconnect", this[kOnDisconnect]).on("connectionError", this[kOnConnectionError]);
-          this[kClients].set(key3, dispatcher);
+          this[kClients].set(key4, dispatcher);
         }
         return dispatcher.dispatch(opts, handler);
       }
@@ -9326,7 +9326,7 @@ var require_proxy_agent = __commonJS({
       return headers;
     }
     function throwIfProxyAuthIsSent(headers) {
-      const existProxyAuth = headers && Object.keys(headers).find((key3) => key3.toLowerCase() === "proxy-authorization");
+      const existProxyAuth = headers && Object.keys(headers).find((key4) => key4.toLowerCase() === "proxy-authorization");
       if (existProxyAuth) {
         throw new InvalidArgumentError("Proxy-Authorization should be sent in ProxyAgent constructor");
       }
@@ -11104,18 +11104,18 @@ var require_mock_utils = __commonJS({
         })
       );
     }
-    function getHeaderByName(headers, key3) {
+    function getHeaderByName(headers, key4) {
       if (Array.isArray(headers)) {
         for (let i = 0; i < headers.length; i += 2) {
-          if (headers[i].toLocaleLowerCase() === key3.toLocaleLowerCase()) {
+          if (headers[i].toLocaleLowerCase() === key4.toLocaleLowerCase()) {
             return headers[i + 1];
           }
         }
         return void 0;
       } else if (typeof headers.get === "function") {
-        return headers.get(key3);
+        return headers.get(key4);
       } else {
-        return lowerCaseEntries(headers)[key3.toLocaleLowerCase()];
+        return lowerCaseEntries(headers)[key4.toLocaleLowerCase()];
       }
     }
     function buildHeadersFromArray(headers) {
@@ -11179,41 +11179,41 @@ var require_mock_utils = __commonJS({
         return data.toString();
       }
     }
-    function getMockDispatch(mockDispatches, key3) {
-      const basePath = key3.query ? buildURL(key3.path, key3.query) : key3.path;
+    function getMockDispatch(mockDispatches, key4) {
+      const basePath = key4.query ? buildURL(key4.path, key4.query) : key4.path;
       const resolvedPath = typeof basePath === "string" ? safeUrl(basePath) : basePath;
       let matchedMockDispatches = mockDispatches.filter(({ consumed }) => !consumed).filter(({ path: path2 }) => matchValue(safeUrl(path2), resolvedPath));
       if (matchedMockDispatches.length === 0) {
         throw new MockNotMatchedError(`Mock dispatch not matched for path '${resolvedPath}'`);
       }
-      matchedMockDispatches = matchedMockDispatches.filter(({ method }) => matchValue(method, key3.method));
+      matchedMockDispatches = matchedMockDispatches.filter(({ method }) => matchValue(method, key4.method));
       if (matchedMockDispatches.length === 0) {
-        throw new MockNotMatchedError(`Mock dispatch not matched for method '${key3.method}' on path '${resolvedPath}'`);
+        throw new MockNotMatchedError(`Mock dispatch not matched for method '${key4.method}' on path '${resolvedPath}'`);
       }
-      matchedMockDispatches = matchedMockDispatches.filter(({ body }) => typeof body !== "undefined" ? matchValue(body, key3.body) : true);
+      matchedMockDispatches = matchedMockDispatches.filter(({ body }) => typeof body !== "undefined" ? matchValue(body, key4.body) : true);
       if (matchedMockDispatches.length === 0) {
-        throw new MockNotMatchedError(`Mock dispatch not matched for body '${key3.body}' on path '${resolvedPath}'`);
+        throw new MockNotMatchedError(`Mock dispatch not matched for body '${key4.body}' on path '${resolvedPath}'`);
       }
-      matchedMockDispatches = matchedMockDispatches.filter((mockDispatch2) => matchHeaders(mockDispatch2, key3.headers));
+      matchedMockDispatches = matchedMockDispatches.filter((mockDispatch2) => matchHeaders(mockDispatch2, key4.headers));
       if (matchedMockDispatches.length === 0) {
-        const headers = typeof key3.headers === "object" ? JSON.stringify(key3.headers) : key3.headers;
+        const headers = typeof key4.headers === "object" ? JSON.stringify(key4.headers) : key4.headers;
         throw new MockNotMatchedError(`Mock dispatch not matched for headers '${headers}' on path '${resolvedPath}'`);
       }
       return matchedMockDispatches[0];
     }
-    function addMockDispatch(mockDispatches, key3, data) {
+    function addMockDispatch(mockDispatches, key4, data) {
       const baseData = { timesInvoked: 0, times: 1, persist: false, consumed: false };
       const replyData = typeof data === "function" ? { callback: data } : { ...data };
-      const newMockDispatch = { ...baseData, ...key3, pending: true, data: { error: null, ...replyData } };
+      const newMockDispatch = { ...baseData, ...key4, pending: true, data: { error: null, ...replyData } };
       mockDispatches.push(newMockDispatch);
       return newMockDispatch;
     }
-    function deleteMockDispatch(mockDispatches, key3) {
+    function deleteMockDispatch(mockDispatches, key4) {
       const index = mockDispatches.findIndex((dispatch) => {
         if (!dispatch.consumed) {
           return false;
         }
-        return matchKey(dispatch, key3);
+        return matchKey(dispatch, key4);
       });
       if (index !== -1) {
         mockDispatches.splice(index, 1);
@@ -11233,9 +11233,9 @@ var require_mock_utils = __commonJS({
       const keys = Object.keys(data);
       const result = [];
       for (let i = 0; i < keys.length; ++i) {
-        const key3 = keys[i];
-        const value = data[key3];
-        const name = Buffer.from(`${key3}`);
+        const key4 = keys[i];
+        const value = data[key4];
+        const name = Buffer.from(`${key4}`);
         if (Array.isArray(value)) {
           for (let j = 0; j < value.length; ++j) {
             result.push(name, Buffer.from(`${value[j]}`));
@@ -11257,8 +11257,8 @@ var require_mock_utils = __commonJS({
       return Buffer.concat(buffers).toString("utf8");
     }
     function mockDispatch(opts, handler) {
-      const key3 = buildKey(opts);
-      const mockDispatch2 = getMockDispatch(this[kDispatches], key3);
+      const key4 = buildKey(opts);
+      const mockDispatch2 = getMockDispatch(this[kDispatches], key4);
       mockDispatch2.timesInvoked++;
       if (mockDispatch2.data.callback) {
         mockDispatch2.data = { ...mockDispatch2.data, ...mockDispatch2.data.callback(opts) };
@@ -11268,7 +11268,7 @@ var require_mock_utils = __commonJS({
       mockDispatch2.consumed = !persist && timesInvoked >= times;
       mockDispatch2.pending = timesInvoked < times;
       if (error !== null) {
-        deleteMockDispatch(this[kDispatches], key3);
+        deleteMockDispatch(this[kDispatches], key4);
         handler.onError(error);
         return true;
       }
@@ -11293,7 +11293,7 @@ var require_mock_utils = __commonJS({
         handler.onHeaders?.(statusCode, responseHeaders, resume, getStatusText(statusCode));
         handler.onData?.(Buffer.from(responseData));
         handler.onComplete?.(responseTrailers);
-        deleteMockDispatch(mockDispatches, key3);
+        deleteMockDispatch(mockDispatches, key4);
       }
       function resume() {
       }
@@ -13200,16 +13200,16 @@ var require_dispatcher_weakref = __commonJS({
       constructor(finalizer) {
         this.finalizer = finalizer;
       }
-      register(dispatcher, key3) {
+      register(dispatcher, key4) {
         if (dispatcher.on) {
           dispatcher.on("disconnect", () => {
             if (dispatcher[kConnected] === 0 && dispatcher[kSize] === 0) {
-              this.finalizer(key3);
+              this.finalizer(key4);
             }
           });
         }
       }
-      unregister(key3) {
+      unregister(key4) {
       }
     };
     module2.exports = function() {
@@ -16696,8 +16696,8 @@ var require_util6 = __commonJS({
         if (!part.includes("=")) {
           throw new Error("Invalid unparsed");
         }
-        const [key3, ...value] = part.split("=");
-        const trimmedKey = key3.trim();
+        const [key4, ...value] = part.split("=");
+        const trimmedKey = key4.trim();
         const joinedValue = value.join("=");
         validateCookieName(trimmedKey);
         validateCookieValue(joinedValue);
@@ -22743,8 +22743,8 @@ var require_v103 = __commonJS({
         return `/users/${userId}/application-identities/${applicationId}/${providerType}/${providerIssuedUserId}/delete`;
       }
     };
-    for (const [key3, fn] of Object.entries(exports2.Routes)) {
-      exports2.Routes[key3] = ((...args) => {
+    for (const [key4, fn] of Object.entries(exports2.Routes)) {
+      exports2.Routes[key4] = ((...args) => {
         const escaped = args.map((arg) => {
           if (arg) {
             if (internals_1.urlSafeCharacters.test(String(arg))) {
@@ -23001,8 +23001,8 @@ var require_v103 = __commonJS({
         return `/guild-tag-badges/${guildId}/${guildTagBadge}.${format}`;
       }
     };
-    for (const [key3, fn] of Object.entries(exports2.CDNRoutes)) {
-      exports2.CDNRoutes[key3] = ((...args) => {
+    for (const [key4, fn] of Object.entries(exports2.CDNRoutes)) {
+      exports2.CDNRoutes[key4] = ((...args) => {
         const escaped = args.map((arg) => {
           if (arg) {
             if (internals_1.urlSafeCharacters.test(String(arg))) {
@@ -23384,9 +23384,9 @@ var require_dist2 = __commonJS({
     };
     var __copyProps2 = (to, from, except, desc) => {
       if (from && typeof from === "object" || typeof from === "function") {
-        for (let key3 of __getOwnPropNames2(from))
-          if (!__hasOwnProp2.call(to, key3) && key3 !== except)
-            __defProp2(to, key3, { get: () => from[key3], enumerable: !(desc = __getOwnPropDesc2(from, key3)) || desc.enumerable });
+        for (let key4 of __getOwnPropNames2(from))
+          if (!__hasOwnProp2.call(to, key4) && key4 !== except)
+            __defProp2(to, key4, { get: () => from[key4], enumerable: !(desc = __getOwnPropDesc2(from, key4)) || desc.enumerable });
       }
       return to;
     };
@@ -23411,11 +23411,11 @@ var require_dist2 = __commonJS({
        * collection.ensure(guildId, () => defaultGuildConfig);
        * ```
        */
-      ensure(key3, defaultValueGenerator) {
-        if (this.has(key3)) return this.get(key3);
+      ensure(key4, defaultValueGenerator) {
+        if (this.has(key4)) return this.get(key4);
         if (typeof defaultValueGenerator !== "function") throw new TypeError(`${defaultValueGenerator} is not a function`);
-        const defaultValue = defaultValueGenerator(key3, this);
-        this.set(key3, defaultValue);
+        const defaultValue = defaultValueGenerator(key4, this);
+        this.set(key4, defaultValue);
         return defaultValue;
       }
       /**
@@ -23425,7 +23425,7 @@ var require_dist2 = __commonJS({
        * @returns `true` if all of the elements exist, `false` if at least one does not exist.
        */
       hasAll(...keys) {
-        return keys.every((key3) => super.has(key3));
+        return keys.every((key4) => super.has(key4));
       }
       /**
        * Checks if any of the elements exist in the collection.
@@ -23434,7 +23434,7 @@ var require_dist2 = __commonJS({
        * @returns `true` if any of the elements exist, `false` if none exist.
        */
       hasAny(...keys) {
-        return keys.some((key3) => super.has(key3));
+        return keys.some((key4) => super.has(key4));
       }
       first(amount) {
         if (amount === void 0) return this.values().next().value;
@@ -23513,22 +23513,22 @@ var require_dist2 = __commonJS({
       reverse() {
         const entries = [...this.entries()].reverse();
         this.clear();
-        for (const [key3, value] of entries) this.set(key3, value);
+        for (const [key4, value] of entries) this.set(key4, value);
         return this;
       }
       find(fn, thisArg) {
         if (typeof fn !== "function") throw new TypeError(`${fn} is not a function`);
         if (thisArg !== void 0) fn = fn.bind(thisArg);
-        for (const [key3, val] of this) {
-          if (fn(val, key3, this)) return val;
+        for (const [key4, val] of this) {
+          if (fn(val, key4, this)) return val;
         }
         return void 0;
       }
       findKey(fn, thisArg) {
         if (typeof fn !== "function") throw new TypeError(`${fn} is not a function`);
         if (thisArg !== void 0) fn = fn.bind(thisArg);
-        for (const [key3, val] of this) {
-          if (fn(val, key3, this)) return key3;
+        for (const [key4, val] of this) {
+          if (fn(val, key4, this)) return key4;
         }
         return void 0;
       }
@@ -23538,8 +23538,8 @@ var require_dist2 = __commonJS({
         const entries = [...this.entries()];
         for (let index = entries.length - 1; index >= 0; index--) {
           const val = entries[index][1];
-          const key3 = entries[index][0];
-          if (fn(val, key3, this)) return val;
+          const key4 = entries[index][0];
+          if (fn(val, key4, this)) return val;
         }
         return void 0;
       }
@@ -23548,9 +23548,9 @@ var require_dist2 = __commonJS({
         if (thisArg !== void 0) fn = fn.bind(thisArg);
         const entries = [...this.entries()];
         for (let index = entries.length - 1; index >= 0; index--) {
-          const key3 = entries[index][0];
+          const key4 = entries[index][0];
           const val = entries[index][1];
-          if (fn(val, key3, this)) return key3;
+          if (fn(val, key4, this)) return key4;
         }
         return void 0;
       }
@@ -23558,8 +23558,8 @@ var require_dist2 = __commonJS({
         if (typeof fn !== "function") throw new TypeError(`${fn} is not a function`);
         if (thisArg !== void 0) fn = fn.bind(thisArg);
         const previousSize = this.size;
-        for (const [key3, val] of this) {
-          if (fn(val, key3, this)) this.delete(key3);
+        for (const [key4, val] of this) {
+          if (fn(val, key4, this)) this.delete(key4);
         }
         return previousSize - this.size;
       }
@@ -23567,8 +23567,8 @@ var require_dist2 = __commonJS({
         if (typeof fn !== "function") throw new TypeError(`${fn} is not a function`);
         if (thisArg !== void 0) fn = fn.bind(thisArg);
         const results = new this.constructor[Symbol.species]();
-        for (const [key3, val] of this) {
-          if (fn(val, key3, this)) results.set(key3, val);
+        for (const [key4, val] of this) {
+          if (fn(val, key4, this)) results.set(key4, val);
         }
         return results;
       }
@@ -23579,11 +23579,11 @@ var require_dist2 = __commonJS({
           new this.constructor[Symbol.species](),
           new this.constructor[Symbol.species]()
         ];
-        for (const [key3, val] of this) {
-          if (fn(val, key3, this)) {
-            results[0].set(key3, val);
+        for (const [key4, val] of this) {
+          if (fn(val, key4, this)) {
+            results[0].set(key4, val);
           } else {
-            results[1].set(key3, val);
+            results[1].set(key4, val);
           }
         }
         return results;
@@ -23597,30 +23597,30 @@ var require_dist2 = __commonJS({
         if (thisArg !== void 0) fn = fn.bind(thisArg);
         const iter = this.entries();
         return Array.from({ length: this.size }, () => {
-          const [key3, value] = iter.next().value;
-          return fn(value, key3, this);
+          const [key4, value] = iter.next().value;
+          return fn(value, key4, this);
         });
       }
       mapValues(fn, thisArg) {
         if (typeof fn !== "function") throw new TypeError(`${fn} is not a function`);
         if (thisArg !== void 0) fn = fn.bind(thisArg);
         const coll = new this.constructor[Symbol.species]();
-        for (const [key3, val] of this) coll.set(key3, fn(val, key3, this));
+        for (const [key4, val] of this) coll.set(key4, fn(val, key4, this));
         return coll;
       }
       some(fn, thisArg) {
         if (typeof fn !== "function") throw new TypeError(`${fn} is not a function`);
         if (thisArg !== void 0) fn = fn.bind(thisArg);
-        for (const [key3, val] of this) {
-          if (fn(val, key3, this)) return true;
+        for (const [key4, val] of this) {
+          if (fn(val, key4, this)) return true;
         }
         return false;
       }
       every(fn, thisArg) {
         if (typeof fn !== "function") throw new TypeError(`${fn} is not a function`);
         if (thisArg !== void 0) fn = fn.bind(thisArg);
-        for (const [key3, val] of this) {
-          if (!fn(val, key3, this)) return false;
+        for (const [key4, val] of this) {
+          if (!fn(val, key4, this)) return false;
         }
         return true;
       }
@@ -23634,8 +23634,8 @@ var require_dist2 = __commonJS({
         } else {
           accumulator = initialValue;
         }
-        for (const [key3, value] of iterator) {
-          accumulator = fn(accumulator, value, key3, this);
+        for (const [key4, value] of iterator) {
+          accumulator = fn(accumulator, value, key4, this);
         }
         return accumulator;
       }
@@ -23653,17 +23653,17 @@ var require_dist2 = __commonJS({
           index = entries.length;
         }
         while (--index >= 0) {
-          const key3 = entries[index][0];
+          const key4 = entries[index][0];
           const val = entries[index][1];
-          accumulator = fn(accumulator, val, key3, this);
+          accumulator = fn(accumulator, val, key4, this);
         }
         return accumulator;
       }
       each(fn, thisArg) {
         if (typeof fn !== "function") throw new TypeError(`${fn} is not a function`);
         if (thisArg !== void 0) fn = fn.bind(thisArg);
-        for (const [key3, value] of this) {
-          fn(value, key3, this);
+        for (const [key4, value] of this) {
+          fn(value, key4, this);
         }
         return this;
       }
@@ -23696,7 +23696,7 @@ var require_dist2 = __commonJS({
       concat(...collections) {
         const newColl = this.clone();
         for (const coll of collections) {
-          for (const [key3, val] of coll) newColl.set(key3, val);
+          for (const [key4, val] of coll) newColl.set(key4, val);
         }
         return newColl;
       }
@@ -23712,8 +23712,8 @@ var require_dist2 = __commonJS({
         if (!collection) return false;
         if (this === collection) return true;
         if (this.size !== collection.size) return false;
-        for (const [key3, value] of this) {
-          if (!collection.has(key3) || value !== collection.get(key3)) {
+        for (const [key4, value] of this) {
+          if (!collection.has(key4) || value !== collection.get(key4)) {
             return false;
           }
         }
@@ -23735,8 +23735,8 @@ var require_dist2 = __commonJS({
         const entries = [...this.entries()];
         entries.sort((a, b) => compareFunction(a[1], b[1], a[0], b[0]));
         super.clear();
-        for (const [key3, value] of entries) {
-          super.set(key3, value);
+        for (const [key4, value] of entries) {
+          super.set(key4, value);
         }
         return this;
       }
@@ -23755,8 +23755,8 @@ var require_dist2 = __commonJS({
        */
       intersection(other) {
         const coll = new this.constructor[Symbol.species]();
-        for (const [key3, value] of this) {
-          if (other.has(key3)) coll.set(key3, value);
+        for (const [key4, value] of this) {
+          if (other.has(key4)) coll.set(key4, value);
         }
         return coll;
       }
@@ -23778,8 +23778,8 @@ var require_dist2 = __commonJS({
        */
       union(other) {
         const coll = new this.constructor[Symbol.species](this);
-        for (const [key3, value] of other) {
-          if (!coll.has(key3)) coll.set(key3, value);
+        for (const [key4, value] of other) {
+          if (!coll.has(key4)) coll.set(key4, value);
         }
         return coll;
       }
@@ -23799,8 +23799,8 @@ var require_dist2 = __commonJS({
        */
       difference(other) {
         const coll = new this.constructor[Symbol.species]();
-        for (const [key3, value] of this) {
-          if (!other.has(key3)) coll.set(key3, value);
+        for (const [key4, value] of this) {
+          if (!other.has(key4)) coll.set(key4, value);
         }
         return coll;
       }
@@ -23819,11 +23819,11 @@ var require_dist2 = __commonJS({
        */
       symmetricDifference(other) {
         const coll = new this.constructor[Symbol.species]();
-        for (const [key3, value] of this) {
-          if (!other.has(key3)) coll.set(key3, value);
+        for (const [key4, value] of this) {
+          if (!other.has(key4)) coll.set(key4, value);
         }
-        for (const [key3, value] of other) {
-          if (!this.has(key3)) coll.set(key3, value);
+        for (const [key4, value] of other) {
+          if (!this.has(key4)) coll.set(key4, value);
         }
         return coll;
       }
@@ -23858,18 +23858,18 @@ var require_dist2 = __commonJS({
       merge(other, whenInSelf, whenInOther, whenInBoth) {
         const coll = new this.constructor[Symbol.species]();
         const keys = /* @__PURE__ */ new Set([...this.keys(), ...other.keys()]);
-        for (const key3 of keys) {
-          const hasInSelf = this.has(key3);
-          const hasInOther = other.has(key3);
+        for (const key4 of keys) {
+          const hasInSelf = this.has(key4);
+          const hasInOther = other.has(key4);
           if (hasInSelf && hasInOther) {
-            const result = whenInBoth(this.get(key3), other.get(key3), key3);
-            if (result.keep) coll.set(key3, result.value);
+            const result = whenInBoth(this.get(key4), other.get(key4), key4);
+            if (result.keep) coll.set(key4, result.value);
           } else if (hasInSelf) {
-            const result = whenInSelf(this.get(key3), key3);
-            if (result.keep) coll.set(key3, result.value);
+            const result = whenInSelf(this.get(key4), key4);
+            if (result.keep) coll.set(key4, result.value);
           } else if (hasInOther) {
-            const result = whenInOther(other.get(key3), key3);
-            if (result.keep) coll.set(key3, result.value);
+            const result = whenInOther(other.get(key4), key4);
+            if (result.keep) coll.set(key4, result.value);
           }
         }
         return coll;
@@ -23916,11 +23916,11 @@ var require_dist2 = __commonJS({
        */
       static combineEntries(entries, combine) {
         const coll = new _Collection();
-        for (const [key3, value] of entries) {
-          if (coll.has(key3)) {
-            coll.set(key3, combine(coll.get(key3), value, key3));
+        for (const [key4, value] of entries) {
+          if (coll.has(key4)) {
+            coll.set(key4, combine(coll.get(key4), value, key4));
           } else {
-            coll.set(key3, value);
+            coll.set(key4, value);
           }
         }
         return coll;
@@ -23935,9 +23935,9 @@ var require_cjs = __commonJS({
   "node_modules/.pnpm/@sapphire+snowflake@3.5.5/node_modules/@sapphire/snowflake/dist/cjs/index.cjs"(exports2) {
     "use strict";
     var __defProp2 = Object.defineProperty;
-    var __defNormalProp = (obj, key3, value) => key3 in obj ? __defProp2(obj, key3, { enumerable: true, configurable: true, writable: true, value }) : obj[key3] = value;
+    var __defNormalProp = (obj, key4, value) => key4 in obj ? __defProp2(obj, key4, { enumerable: true, configurable: true, writable: true, value }) : obj[key4] = value;
     var __name = (target, value) => __defProp2(target, "name", { value, configurable: true });
-    var __publicField = (obj, key3, value) => __defNormalProp(obj, typeof key3 !== "symbol" ? key3 + "" : key3, value);
+    var __publicField = (obj, key4, value) => __defNormalProp(obj, typeof key4 !== "symbol" ? key4 + "" : key4, value);
     var IncrementSymbol = /* @__PURE__ */ Symbol("@sapphire/snowflake.increment");
     var EpochSymbol = /* @__PURE__ */ Symbol("@sapphire/snowflake.epoch");
     var EpochNumberSymbol = /* @__PURE__ */ Symbol("@sapphire/snowflake.epoch.number");
@@ -24132,9 +24132,9 @@ var require_dist3 = __commonJS({
     };
     var __copyProps2 = (to, from, except, desc) => {
       if (from && typeof from === "object" || typeof from === "function") {
-        for (let key3 of __getOwnPropNames2(from))
-          if (!__hasOwnProp2.call(to, key3) && key3 !== except)
-            __defProp2(to, key3, { get: () => from[key3], enumerable: !(desc = __getOwnPropDesc2(from, key3)) || desc.enumerable });
+        for (let key4 of __getOwnPropNames2(from))
+          if (!__hasOwnProp2.call(to, key4) && key4 !== except)
+            __defProp2(to, key4, { get: () => from[key4], enumerable: !(desc = __getOwnPropDesc2(from, key4)) || desc.enumerable });
       }
       return to;
     };
@@ -26507,11 +26507,11 @@ Emitted 'error' event${ctorInfo} at:
           return this;
         }
         if (!event) {
-          for (const key3 of Reflect.ownKeys(events)) {
-            if (key3 === "removeListener") {
+          for (const key4 of Reflect.ownKeys(events)) {
+            if (key4 === "removeListener") {
               continue;
             }
-            this.removeAllListeners(key3);
+            this.removeAllListeners(key4);
           }
           this.removeAllListeners("removeListener");
           this._events = { __proto__: null };
@@ -28191,18 +28191,18 @@ var require_dist4 = __commonJS({
       if (tree.noOffset !== null) {
         found.push(...walkTree(0, bytes, tree.noOffset));
       }
-      return unique2(found);
+      return unique3(found);
     };
     exports2.filetypeinfo = filetypeinfo;
-    var unique2 = (found) => {
+    var unique3 = (found) => {
       const seen = /* @__PURE__ */ new Set();
       const result = [];
       for (const guess of found) {
-        const key3 = JSON.stringify([guess.typename, guess.mime, guess.extension]);
-        if (seen.has(key3)) {
+        const key4 = JSON.stringify([guess.typename, guess.mime, guess.extension]);
+        if (seen.has(key4)) {
           continue;
         }
-        seen.add(key3);
+        seen.add(key4);
         result.push({ ...guess });
       }
       return result;
@@ -28248,9 +28248,9 @@ var require_cjs2 = __commonJS({
   "node_modules/.pnpm/@sapphire+async-queue@1.5.5/node_modules/@sapphire/async-queue/dist/cjs/index.cjs"(exports2) {
     "use strict";
     var __defProp2 = Object.defineProperty;
-    var __defNormalProp = (obj, key3, value) => key3 in obj ? __defProp2(obj, key3, { enumerable: true, configurable: true, writable: true, value }) : obj[key3] = value;
+    var __defNormalProp = (obj, key4, value) => key4 in obj ? __defProp2(obj, key4, { enumerable: true, configurable: true, writable: true, value }) : obj[key4] = value;
     var __name = (target, value) => __defProp2(target, "name", { value, configurable: true });
-    var __publicField = (obj, key3, value) => __defNormalProp(obj, typeof key3 !== "symbol" ? key3 + "" : key3, value);
+    var __publicField = (obj, key4, value) => __defNormalProp(obj, typeof key4 !== "symbol" ? key4 + "" : key4, value);
     var _AsyncQueueEntry = class _AsyncQueueEntry {
       constructor(queue) {
         __publicField(this, "promise");
@@ -28390,9 +28390,9 @@ var require_dist5 = __commonJS({
     };
     var __copyProps2 = (to, from, except, desc) => {
       if (from && typeof from === "object" || typeof from === "function") {
-        for (let key3 of __getOwnPropNames2(from))
-          if (!__hasOwnProp2.call(to, key3) && key3 !== except)
-            __defProp2(to, key3, { get: () => from[key3], enumerable: !(desc = __getOwnPropDesc2(from, key3)) || desc.enumerable });
+        for (let key4 of __getOwnPropNames2(from))
+          if (!__hasOwnProp2.call(to, key4) && key4 !== except)
+            __defProp2(to, key4, { get: () => from[key4], enumerable: !(desc = __getOwnPropDesc2(from, key4)) || desc.enumerable });
       }
       return to;
     };
@@ -28632,7 +28632,7 @@ var require_dist5 = __commonJS({
       const params = new URLSearchParams();
       if (!parameters) return params;
       const { arrayFormat = "repeat" } = options2;
-      for (const [key3, value] of Object.entries(parameters)) {
+      for (const [key4, value] of Object.entries(parameters)) {
         if (Array.isArray(value)) {
           const commaSeparatedElements = arrayFormat === "comma" ? [] : null;
           for (const element of value) {
@@ -28643,16 +28643,16 @@ var require_dist5 = __commonJS({
             if (commaSeparatedElements) {
               commaSeparatedElements.push(serialized2);
             } else {
-              params.append(key3, serialized2);
+              params.append(key4, serialized2);
             }
           }
           if (commaSeparatedElements?.length) {
-            params.append(key3, commaSeparatedElements.join(","));
+            params.append(key4, commaSeparatedElements.join(","));
           }
           continue;
         }
         const serialized = serializeSearchParam(value);
-        if (serialized !== null) params.append(key3, serialized);
+        if (serialized !== null) params.append(key4, serialized);
       }
       return params;
     }
@@ -28669,7 +28669,7 @@ var require_dist5 = __commonJS({
         if (typeof body !== "object" || body === null) return false;
         if (method !== "PATCH") return false;
         const castedBody = body;
-        return ["name", "topic"].some((key3) => Reflect.has(castedBody, key3));
+        return ["name", "topic"].some((key4) => Reflect.has(castedBody, key4));
       }
       return true;
     }
@@ -29030,12 +29030,12 @@ ${flattened}` : error.message || flattened || "Unknown Error";
         }
         return error.error_description ?? "No Description";
       }
-      static *flattenDiscordError(obj, key3 = "") {
+      static *flattenDiscordError(obj, key4 = "") {
         if (isErrorResponse(obj)) {
-          return yield `${key3.length ? `${key3}[${obj.code}]` : `${obj.code}`}: ${obj.message}`.trim();
+          return yield `${key4.length ? `${key4}[${obj.code}]` : `${obj.code}`}: ${obj.message}`.trim();
         }
         for (const [otherKey, val] of Object.entries(obj)) {
-          const nextKey = otherKey.startsWith("_") ? key3 : key3 ? Number.isNaN(Number(otherKey)) ? `${key3}.${otherKey}` : `${key3}[${otherKey}]` : otherKey;
+          const nextKey = otherKey.startsWith("_") ? key4 : key4 ? Number.isNaN(Number(otherKey)) ? `${key4}.${otherKey}` : `${key4}[${otherKey}]` : otherKey;
           if (typeof val === "string") {
             yield val;
           } else if (isErrorGroupWrapper(val)) {
@@ -29609,12 +29609,12 @@ ${flattened}` : error.message || flattened || "Unknown Error";
           this.hashTimer = setInterval(() => {
             const sweptHashes = new import_collection.Collection();
             const currentDate = Date.now();
-            this.hashes.sweep((val, key3) => {
+            this.hashes.sweep((val, key4) => {
               if (val.lastAccess === -1) return false;
               const shouldSweep = Math.floor(currentDate - val.lastAccess) > this.options.hashLifetime;
               if (shouldSweep) {
-                sweptHashes.set(key3, val);
-                this.emit("restDebug", `Hash ${val.value} for ${key3} swept due to lifetime being exceeded`);
+                sweptHashes.set(key4, val);
+                this.emit("restDebug", `Hash ${val.value} for ${key4} swept due to lifetime being exceeded`);
               }
               return shouldSweep;
             });
@@ -29626,11 +29626,11 @@ ${flattened}` : error.message || flattened || "Unknown Error";
           validateMaxInterval(this.options.handlerSweepInterval);
           this.handlerTimer = setInterval(() => {
             const sweptHandlers = new import_collection.Collection();
-            this.handlers.sweep((val, key3) => {
+            this.handlers.sweep((val, key4) => {
               const { inactive } = val;
               if (inactive) {
-                sweptHandlers.set(key3, val);
-                this.emit("restDebug", `Handler ${val.id} for ${key3} swept due to being inactive`);
+                sweptHandlers.set(key4, val);
+                this.emit("restDebug", `Handler ${val.id} for ${key4} swept due to being inactive`);
               }
               return inactive;
             });
@@ -29818,8 +29818,8 @@ ${flattened}` : error.message || flattened || "Unknown Error";
           }
           if (request2.body != null) {
             if (request2.appendToFormData) {
-              for (const [key3, value] of Object.entries(request2.body)) {
-                formData.append(key3, value);
+              for (const [key4, value] of Object.entries(request2.body)) {
+                formData.append(key4, value);
               }
             } else {
               formData.append("payload_json", JSON.stringify(request2.body));
@@ -30021,7 +30021,7 @@ var require_ErrorCodes = __commonJS({
       "BulkBanUsersOptionEmpty",
       "PollAlreadyExpired"
     ];
-    module2.exports = Object.fromEntries(keys.map((key3) => [key3, key3]));
+    module2.exports = Object.fromEntries(keys.map((key4) => [key4, key4]));
   }
 });
 
@@ -30467,8 +30467,8 @@ var require_lodash = __commonJS({
       return string.match(reAsciiWord) || [];
     }
     function basePropertyOf(object) {
-      return function(key3) {
-        return object == null ? void 0 : object[key3];
+      return function(key4) {
+        return object == null ? void 0 : object[key4];
       };
     }
     var deburrLetter = basePropertyOf(deburredLetters);
@@ -30541,9 +30541,9 @@ var require_dist6 = __commonJS({
     };
     var __copyProps2 = (to, from, except, desc) => {
       if (from && typeof from === "object" || typeof from === "function") {
-        for (let key3 of __getOwnPropNames2(from))
-          if (!__hasOwnProp2.call(to, key3) && key3 !== except)
-            __defProp2(to, key3, { get: () => from[key3], enumerable: !(desc = __getOwnPropDesc2(from, key3)) || desc.enumerable });
+        for (let key4 of __getOwnPropNames2(from))
+          if (!__hasOwnProp2.call(to, key4) && key4 !== except)
+            __defProp2(to, key4, { get: () => from[key4], enumerable: !(desc = __getOwnPropDesc2(from, key4)) || desc.enumerable });
       }
       return to;
     };
@@ -30568,13 +30568,13 @@ var require_dist6 = __commonJS({
        * collection.ensure(guildId, () => defaultGuildConfig);
        * ```
        */
-      ensure(key3, defaultValueGenerator) {
-        if (this.has(key3))
-          return this.get(key3);
+      ensure(key4, defaultValueGenerator) {
+        if (this.has(key4))
+          return this.get(key4);
         if (typeof defaultValueGenerator !== "function")
           throw new TypeError(`${defaultValueGenerator} is not a function`);
-        const defaultValue = defaultValueGenerator(key3, this);
-        this.set(key3, defaultValue);
+        const defaultValue = defaultValueGenerator(key4, this);
+        this.set(key4, defaultValue);
         return defaultValue;
       }
       /**
@@ -30584,7 +30584,7 @@ var require_dist6 = __commonJS({
        * @returns `true` if all of the elements exist, `false` if at least one does not exist.
        */
       hasAll(...keys) {
-        return keys.every((key3) => super.has(key3));
+        return keys.every((key4) => super.has(key4));
       }
       /**
        * Checks if any of the elements exist in the collection.
@@ -30593,7 +30593,7 @@ var require_dist6 = __commonJS({
        * @returns `true` if any of the elements exist, `false` if none exist.
        */
       hasAny(...keys) {
-        return keys.some((key3) => super.has(key3));
+        return keys.some((key4) => super.has(key4));
       }
       first(amount) {
         if (amount === void 0)
@@ -30686,8 +30686,8 @@ var require_dist6 = __commonJS({
       reverse() {
         const entries = [...this.entries()].reverse();
         this.clear();
-        for (const [key3, value] of entries)
-          this.set(key3, value);
+        for (const [key4, value] of entries)
+          this.set(key4, value);
         return this;
       }
       find(fn, thisArg) {
@@ -30695,8 +30695,8 @@ var require_dist6 = __commonJS({
           throw new TypeError(`${fn} is not a function`);
         if (thisArg !== void 0)
           fn = fn.bind(thisArg);
-        for (const [key3, val] of this) {
-          if (fn(val, key3, this))
+        for (const [key4, val] of this) {
+          if (fn(val, key4, this))
             return val;
         }
         return void 0;
@@ -30706,9 +30706,9 @@ var require_dist6 = __commonJS({
           throw new TypeError(`${fn} is not a function`);
         if (thisArg !== void 0)
           fn = fn.bind(thisArg);
-        for (const [key3, val] of this) {
-          if (fn(val, key3, this))
-            return key3;
+        for (const [key4, val] of this) {
+          if (fn(val, key4, this))
+            return key4;
         }
         return void 0;
       }
@@ -30718,9 +30718,9 @@ var require_dist6 = __commonJS({
         if (thisArg !== void 0)
           fn = fn.bind(thisArg);
         const previousSize = this.size;
-        for (const [key3, val] of this) {
-          if (fn(val, key3, this))
-            this.delete(key3);
+        for (const [key4, val] of this) {
+          if (fn(val, key4, this))
+            this.delete(key4);
         }
         return previousSize - this.size;
       }
@@ -30730,9 +30730,9 @@ var require_dist6 = __commonJS({
         if (thisArg !== void 0)
           fn = fn.bind(thisArg);
         const results = new this.constructor[Symbol.species]();
-        for (const [key3, val] of this) {
-          if (fn(val, key3, this))
-            results.set(key3, val);
+        for (const [key4, val] of this) {
+          if (fn(val, key4, this))
+            results.set(key4, val);
         }
         return results;
       }
@@ -30745,11 +30745,11 @@ var require_dist6 = __commonJS({
           new this.constructor[Symbol.species](),
           new this.constructor[Symbol.species]()
         ];
-        for (const [key3, val] of this) {
-          if (fn(val, key3, this)) {
-            results[0].set(key3, val);
+        for (const [key4, val] of this) {
+          if (fn(val, key4, this)) {
+            results[0].set(key4, val);
           } else {
-            results[1].set(key3, val);
+            results[1].set(key4, val);
           }
         }
         return results;
@@ -30765,8 +30765,8 @@ var require_dist6 = __commonJS({
           fn = fn.bind(thisArg);
         const iter = this.entries();
         return Array.from({ length: this.size }, () => {
-          const [key3, value] = iter.next().value;
-          return fn(value, key3, this);
+          const [key4, value] = iter.next().value;
+          return fn(value, key4, this);
         });
       }
       mapValues(fn, thisArg) {
@@ -30775,8 +30775,8 @@ var require_dist6 = __commonJS({
         if (thisArg !== void 0)
           fn = fn.bind(thisArg);
         const coll = new this.constructor[Symbol.species]();
-        for (const [key3, val] of this)
-          coll.set(key3, fn(val, key3, this));
+        for (const [key4, val] of this)
+          coll.set(key4, fn(val, key4, this));
         return coll;
       }
       some(fn, thisArg) {
@@ -30784,8 +30784,8 @@ var require_dist6 = __commonJS({
           throw new TypeError(`${fn} is not a function`);
         if (thisArg !== void 0)
           fn = fn.bind(thisArg);
-        for (const [key3, val] of this) {
-          if (fn(val, key3, this))
+        for (const [key4, val] of this) {
+          if (fn(val, key4, this))
             return true;
         }
         return false;
@@ -30795,8 +30795,8 @@ var require_dist6 = __commonJS({
           throw new TypeError(`${fn} is not a function`);
         if (thisArg !== void 0)
           fn = fn.bind(thisArg);
-        for (const [key3, val] of this) {
-          if (!fn(val, key3, this))
+        for (const [key4, val] of this) {
+          if (!fn(val, key4, this))
             return false;
         }
         return true;
@@ -30825,8 +30825,8 @@ var require_dist6 = __commonJS({
         } else {
           accumulator = initialValue;
         }
-        for (const [key3, value] of iterator) {
-          accumulator = fn(accumulator, value, key3, this);
+        for (const [key4, value] of iterator) {
+          accumulator = fn(accumulator, value, key4, this);
         }
         return accumulator;
       }
@@ -30835,8 +30835,8 @@ var require_dist6 = __commonJS({
           throw new TypeError(`${fn} is not a function`);
         if (thisArg !== void 0)
           fn = fn.bind(thisArg);
-        for (const [key3, value] of this) {
-          fn(value, key3, this);
+        for (const [key4, value] of this) {
+          fn(value, key4, this);
         }
         return this;
       }
@@ -30871,8 +30871,8 @@ var require_dist6 = __commonJS({
       concat(...collections) {
         const newColl = this.clone();
         for (const coll of collections) {
-          for (const [key3, val] of coll)
-            newColl.set(key3, val);
+          for (const [key4, val] of coll)
+            newColl.set(key4, val);
         }
         return newColl;
       }
@@ -30891,8 +30891,8 @@ var require_dist6 = __commonJS({
           return true;
         if (this.size !== collection.size)
           return false;
-        for (const [key3, value] of this) {
-          if (!collection.has(key3) || value !== collection.get(key3)) {
+        for (const [key4, value] of this) {
+          if (!collection.has(key4) || value !== collection.get(key4)) {
             return false;
           }
         }
@@ -30914,8 +30914,8 @@ var require_dist6 = __commonJS({
         const entries = [...this.entries()];
         entries.sort((a, b) => compareFunction(a[1], b[1], a[0], b[0]));
         super.clear();
-        for (const [key3, value] of entries) {
-          super.set(key3, value);
+        for (const [key4, value] of entries) {
+          super.set(key4, value);
         }
         return this;
       }
@@ -30926,9 +30926,9 @@ var require_dist6 = __commonJS({
        */
       intersect(other) {
         const coll = new this.constructor[Symbol.species]();
-        for (const [key3, value] of other) {
-          if (this.has(key3) && Object.is(value, this.get(key3))) {
-            coll.set(key3, value);
+        for (const [key4, value] of other) {
+          if (this.has(key4) && Object.is(value, this.get(key4))) {
+            coll.set(key4, value);
           }
         }
         return coll;
@@ -30940,9 +30940,9 @@ var require_dist6 = __commonJS({
        */
       subtract(other) {
         const coll = new this.constructor[Symbol.species]();
-        for (const [key3, value] of this) {
-          if (!other.has(key3) || !Object.is(value, other.get(key3))) {
-            coll.set(key3, value);
+        for (const [key4, value] of this) {
+          if (!other.has(key4) || !Object.is(value, other.get(key4))) {
+            coll.set(key4, value);
           }
         }
         return coll;
@@ -30954,13 +30954,13 @@ var require_dist6 = __commonJS({
        */
       difference(other) {
         const coll = new this.constructor[Symbol.species]();
-        for (const [key3, value] of other) {
-          if (!this.has(key3))
-            coll.set(key3, value);
+        for (const [key4, value] of other) {
+          if (!this.has(key4))
+            coll.set(key4, value);
         }
-        for (const [key3, value] of this) {
-          if (!other.has(key3))
-            coll.set(key3, value);
+        for (const [key4, value] of this) {
+          if (!other.has(key4))
+            coll.set(key4, value);
         }
         return coll;
       }
@@ -30995,21 +30995,21 @@ var require_dist6 = __commonJS({
       merge(other, whenInSelf, whenInOther, whenInBoth) {
         const coll = new this.constructor[Symbol.species]();
         const keys = /* @__PURE__ */ new Set([...this.keys(), ...other.keys()]);
-        for (const key3 of keys) {
-          const hasInSelf = this.has(key3);
-          const hasInOther = other.has(key3);
+        for (const key4 of keys) {
+          const hasInSelf = this.has(key4);
+          const hasInOther = other.has(key4);
           if (hasInSelf && hasInOther) {
-            const result = whenInBoth(this.get(key3), other.get(key3), key3);
+            const result = whenInBoth(this.get(key4), other.get(key4), key4);
             if (result.keep)
-              coll.set(key3, result.value);
+              coll.set(key4, result.value);
           } else if (hasInSelf) {
-            const result = whenInSelf(this.get(key3), key3);
+            const result = whenInSelf(this.get(key4), key4);
             if (result.keep)
-              coll.set(key3, result.value);
+              coll.set(key4, result.value);
           } else if (hasInOther) {
-            const result = whenInOther(other.get(key3), key3);
+            const result = whenInOther(other.get(key4), key4);
             if (result.keep)
-              coll.set(key3, result.value);
+              coll.set(key4, result.value);
           }
         }
         return coll;
@@ -31049,11 +31049,11 @@ var require_dist6 = __commonJS({
        */
       static combineEntries(entries, combine) {
         const coll = new _Collection();
-        for (const [key3, value] of entries) {
-          if (coll.has(key3)) {
-            coll.set(key3, combine(coll.get(key3), value, key3));
+        for (const [key4, value] of entries) {
+          if (coll.has(key4)) {
+            coll.set(key4, combine(coll.get(key4), value, key4));
           } else {
-            coll.set(key3, value);
+            coll.set(key4, value);
           }
         }
         return coll;
@@ -31375,9 +31375,9 @@ var require_dist7 = __commonJS({
     };
     var __copyProps2 = (to, from, except, desc) => {
       if (from && typeof from === "object" || typeof from === "function") {
-        for (let key3 of __getOwnPropNames2(from))
-          if (!__hasOwnProp2.call(to, key3) && key3 !== except)
-            __defProp2(to, key3, { get: () => from[key3], enumerable: !(desc = __getOwnPropDesc2(from, key3)) || desc.enumerable });
+        for (let key4 of __getOwnPropNames2(from))
+          if (!__hasOwnProp2.call(to, key4) && key4 !== except)
+            __defProp2(to, key4, { get: () => from[key4], enumerable: !(desc = __getOwnPropDesc2(from, key4)) || desc.enumerable });
       }
       return to;
     };
@@ -31719,7 +31719,7 @@ ${content}
     function email(email2, headers) {
       if (headers) {
         const searchParams = new URLSearchParams(
-          Object.fromEntries(Object.entries(headers).map(([key3, value]) => [key3.toLowerCase(), value]))
+          Object.fromEntries(Object.entries(headers).map(([key4, value]) => [key4.toLowerCase(), value]))
         );
         return `<${email2}?${searchParams.toString()}>`;
       }
@@ -33086,10 +33086,10 @@ var require_GuildChannel = __commonJS({
           ...this.permissionOverwrites.cache.keys(),
           ...parent.permissionOverwrites.cache.keys()
         ]);
-        return [...overwriteIds].every((key3) => {
-          const channelVal = this.permissionOverwrites.cache.get(key3);
-          const parentVal = parent.permissionOverwrites.cache.get(key3);
-          if (key3 === this.guildId && (!channelVal && parentVal.deny.bitfield === PermissionsBitField3.DefaultBit && parentVal.allow.bitfield === PermissionsBitField3.DefaultBit || !parentVal && channelVal.deny.bitfield === PermissionsBitField3.DefaultBit && channelVal.allow.bitfield === PermissionsBitField3.DefaultBit)) {
+        return [...overwriteIds].every((key4) => {
+          const channelVal = this.permissionOverwrites.cache.get(key4);
+          const parentVal = parent.permissionOverwrites.cache.get(key4);
+          if (key4 === this.guildId && (!channelVal && parentVal.deny.bitfield === PermissionsBitField3.DefaultBit && parentVal.allow.bitfield === PermissionsBitField3.DefaultBit || !parentVal && channelVal.deny.bitfield === PermissionsBitField3.DefaultBit && channelVal.allow.bitfield === PermissionsBitField3.DefaultBit)) {
             return true;
           }
           return channelVal !== void 0 && parentVal !== void 0 && channelVal.deny.bitfield === parentVal.deny.bitfield && channelVal.allow.bitfield === parentVal.allow.bitfield;
@@ -33430,7 +33430,7 @@ var require_Util = __commonJS({
     var deprecationEmittedForRemoveThreadMember = false;
     function flatten(obj, ...props) {
       if (!isObject(obj)) return obj;
-      const objProps = Object.keys(obj).filter((key3) => !key3.startsWith("_")).map((key3) => ({ [key3]: true }));
+      const objProps = Object.keys(obj).filter((key4) => !key4.startsWith("_")).map((key4) => ({ [key4]: true }));
       props = objProps.length ? Object.assign(...objProps, ...props) : Object.assign({}, ...props);
       const out = {};
       for (let [prop, newProp] of Object.entries(props)) {
@@ -33755,11 +33755,11 @@ var require_Transformers = __commonJS({
       if (isJSONEncodable(obj)) return toSnakeCase(obj.toJSON());
       if (Array.isArray(obj)) return obj.map(toSnakeCase);
       return Object.fromEntries(
-        Object.entries(obj).map(([key3, value]) => [
-          snakeCase(key3),
+        Object.entries(obj).map(([key4, value]) => [
+          snakeCase(key4),
           // TODO: The special handling of 'emoji' is just a temporary fix for v14, will be dropped in v15.
           // See https://github.com/discordjs/discord.js/issues/10909
-          key3 === "emoji" && typeof value === "string" ? resolvePartialEmoji(value) : toSnakeCase(value)
+          key4 === "emoji" && typeof value === "string" ? resolvePartialEmoji(value) : toSnakeCase(value)
         ])
       );
     }
@@ -33963,9 +33963,9 @@ var require_LimitedCollection = __commonJS({
         this.maxSize = maxSize;
         this.keepOverLimit = keepOverLimit;
       }
-      set(key3, value) {
-        if (this.maxSize === 0 && !this.keepOverLimit?.(value, key3, this)) return this;
-        if (this.size >= this.maxSize && !this.has(key3)) {
+      set(key4, value) {
+        if (this.maxSize === 0 && !this.keepOverLimit?.(value, key4, this)) return this;
+        if (this.size >= this.maxSize && !this.has(key4)) {
           for (const [k, v] of this.entries()) {
             const keep = this.keepOverLimit?.(v, k, this) ?? false;
             if (!keep) {
@@ -33974,7 +33974,7 @@ var require_LimitedCollection = __commonJS({
             }
           }
         }
-        return super.set(key3, value);
+        return super.set(key4, value);
       }
       static get [Symbol.species]() {
         return Collection2;
@@ -36990,8 +36990,8 @@ var require_fast_deep_equal = __commonJS({
         for (i = length; i-- !== 0; )
           if (!Object.prototype.hasOwnProperty.call(b, keys[i])) return false;
         for (i = length; i-- !== 0; ) {
-          var key3 = keys[i];
-          if (!equal(a[key3], b[key3])) return false;
+          var key4 = keys[i];
+          if (!equal(a[key4], b[key4])) return false;
         }
         return true;
       }
@@ -38338,7 +38338,7 @@ var require_ClientApplication = __commonJS({
         }
         if ("integration_types_config" in data) {
           this.integrationTypesConfig = Object.fromEntries(
-            Object.entries(data.integration_types_config).map(([key3, config2]) => {
+            Object.entries(data.integration_types_config).map(([key4, config2]) => {
               let oauth2InstallParams = null;
               if (config2.oauth2_install_params) {
                 oauth2InstallParams = {
@@ -38349,7 +38349,7 @@ var require_ClientApplication = __commonJS({
               const context = {
                 oauth2InstallParams
               };
-              return [key3, context];
+              return [key4, context];
             })
           );
         } else {
@@ -38811,8 +38811,8 @@ var require_baseIsNative = __commonJS({
 // node_modules/.pnpm/lodash@4.18.1/node_modules/lodash/_getValue.js
 var require_getValue = __commonJS({
   "node_modules/.pnpm/lodash@4.18.1/node_modules/lodash/_getValue.js"(exports2, module2) {
-    function getValue(object, key3) {
-      return object == null ? void 0 : object[key3];
+    function getValue(object, key4) {
+      return object == null ? void 0 : object[key4];
     }
     module2.exports = getValue;
   }
@@ -38823,8 +38823,8 @@ var require_getNative = __commonJS({
   "node_modules/.pnpm/lodash@4.18.1/node_modules/lodash/_getNative.js"(exports2, module2) {
     var baseIsNative = require_baseIsNative();
     var getValue = require_getValue();
-    function getNative(object, key3) {
-      var value = getValue(object, key3);
+    function getNative(object, key4) {
+      var value = getValue(object, key4);
       return baseIsNative(value) ? value : void 0;
     }
     module2.exports = getNative;
@@ -38855,8 +38855,8 @@ var require_hashClear = __commonJS({
 // node_modules/.pnpm/lodash@4.18.1/node_modules/lodash/_hashDelete.js
 var require_hashDelete = __commonJS({
   "node_modules/.pnpm/lodash@4.18.1/node_modules/lodash/_hashDelete.js"(exports2, module2) {
-    function hashDelete(key3) {
-      var result = this.has(key3) && delete this.__data__[key3];
+    function hashDelete(key4) {
+      var result = this.has(key4) && delete this.__data__[key4];
       this.size -= result ? 1 : 0;
       return result;
     }
@@ -38871,13 +38871,13 @@ var require_hashGet = __commonJS({
     var HASH_UNDEFINED = "__lodash_hash_undefined__";
     var objectProto = Object.prototype;
     var hasOwnProperty = objectProto.hasOwnProperty;
-    function hashGet(key3) {
+    function hashGet(key4) {
       var data = this.__data__;
       if (nativeCreate) {
-        var result = data[key3];
+        var result = data[key4];
         return result === HASH_UNDEFINED ? void 0 : result;
       }
-      return hasOwnProperty.call(data, key3) ? data[key3] : void 0;
+      return hasOwnProperty.call(data, key4) ? data[key4] : void 0;
     }
     module2.exports = hashGet;
   }
@@ -38889,9 +38889,9 @@ var require_hashHas = __commonJS({
     var nativeCreate = require_nativeCreate();
     var objectProto = Object.prototype;
     var hasOwnProperty = objectProto.hasOwnProperty;
-    function hashHas(key3) {
+    function hashHas(key4) {
       var data = this.__data__;
-      return nativeCreate ? data[key3] !== void 0 : hasOwnProperty.call(data, key3);
+      return nativeCreate ? data[key4] !== void 0 : hasOwnProperty.call(data, key4);
     }
     module2.exports = hashHas;
   }
@@ -38902,10 +38902,10 @@ var require_hashSet = __commonJS({
   "node_modules/.pnpm/lodash@4.18.1/node_modules/lodash/_hashSet.js"(exports2, module2) {
     var nativeCreate = require_nativeCreate();
     var HASH_UNDEFINED = "__lodash_hash_undefined__";
-    function hashSet(key3, value) {
+    function hashSet(key4, value) {
       var data = this.__data__;
-      this.size += this.has(key3) ? 0 : 1;
-      data[key3] = nativeCreate && value === void 0 ? HASH_UNDEFINED : value;
+      this.size += this.has(key4) ? 0 : 1;
+      data[key4] = nativeCreate && value === void 0 ? HASH_UNDEFINED : value;
       return this;
     }
     module2.exports = hashSet;
@@ -38962,10 +38962,10 @@ var require_eq = __commonJS({
 var require_assocIndexOf = __commonJS({
   "node_modules/.pnpm/lodash@4.18.1/node_modules/lodash/_assocIndexOf.js"(exports2, module2) {
     var eq = require_eq();
-    function assocIndexOf(array, key3) {
+    function assocIndexOf(array, key4) {
       var length = array.length;
       while (length--) {
-        if (eq(array[length][0], key3)) {
+        if (eq(array[length][0], key4)) {
           return length;
         }
       }
@@ -38981,8 +38981,8 @@ var require_listCacheDelete = __commonJS({
     var assocIndexOf = require_assocIndexOf();
     var arrayProto = Array.prototype;
     var splice = arrayProto.splice;
-    function listCacheDelete(key3) {
-      var data = this.__data__, index = assocIndexOf(data, key3);
+    function listCacheDelete(key4) {
+      var data = this.__data__, index = assocIndexOf(data, key4);
       if (index < 0) {
         return false;
       }
@@ -39003,8 +39003,8 @@ var require_listCacheDelete = __commonJS({
 var require_listCacheGet = __commonJS({
   "node_modules/.pnpm/lodash@4.18.1/node_modules/lodash/_listCacheGet.js"(exports2, module2) {
     var assocIndexOf = require_assocIndexOf();
-    function listCacheGet(key3) {
-      var data = this.__data__, index = assocIndexOf(data, key3);
+    function listCacheGet(key4) {
+      var data = this.__data__, index = assocIndexOf(data, key4);
       return index < 0 ? void 0 : data[index][1];
     }
     module2.exports = listCacheGet;
@@ -39015,8 +39015,8 @@ var require_listCacheGet = __commonJS({
 var require_listCacheHas = __commonJS({
   "node_modules/.pnpm/lodash@4.18.1/node_modules/lodash/_listCacheHas.js"(exports2, module2) {
     var assocIndexOf = require_assocIndexOf();
-    function listCacheHas(key3) {
-      return assocIndexOf(this.__data__, key3) > -1;
+    function listCacheHas(key4) {
+      return assocIndexOf(this.__data__, key4) > -1;
     }
     module2.exports = listCacheHas;
   }
@@ -39026,11 +39026,11 @@ var require_listCacheHas = __commonJS({
 var require_listCacheSet = __commonJS({
   "node_modules/.pnpm/lodash@4.18.1/node_modules/lodash/_listCacheSet.js"(exports2, module2) {
     var assocIndexOf = require_assocIndexOf();
-    function listCacheSet(key3, value) {
-      var data = this.__data__, index = assocIndexOf(data, key3);
+    function listCacheSet(key4, value) {
+      var data = this.__data__, index = assocIndexOf(data, key4);
       if (index < 0) {
         ++this.size;
-        data.push([key3, value]);
+        data.push([key4, value]);
       } else {
         data[index][1] = value;
       }
@@ -39108,9 +39108,9 @@ var require_isKeyable = __commonJS({
 var require_getMapData = __commonJS({
   "node_modules/.pnpm/lodash@4.18.1/node_modules/lodash/_getMapData.js"(exports2, module2) {
     var isKeyable = require_isKeyable();
-    function getMapData(map, key3) {
+    function getMapData(map, key4) {
       var data = map.__data__;
-      return isKeyable(key3) ? data[typeof key3 == "string" ? "string" : "hash"] : data.map;
+      return isKeyable(key4) ? data[typeof key4 == "string" ? "string" : "hash"] : data.map;
     }
     module2.exports = getMapData;
   }
@@ -39120,8 +39120,8 @@ var require_getMapData = __commonJS({
 var require_mapCacheDelete = __commonJS({
   "node_modules/.pnpm/lodash@4.18.1/node_modules/lodash/_mapCacheDelete.js"(exports2, module2) {
     var getMapData = require_getMapData();
-    function mapCacheDelete(key3) {
-      var result = getMapData(this, key3)["delete"](key3);
+    function mapCacheDelete(key4) {
+      var result = getMapData(this, key4)["delete"](key4);
       this.size -= result ? 1 : 0;
       return result;
     }
@@ -39133,8 +39133,8 @@ var require_mapCacheDelete = __commonJS({
 var require_mapCacheGet = __commonJS({
   "node_modules/.pnpm/lodash@4.18.1/node_modules/lodash/_mapCacheGet.js"(exports2, module2) {
     var getMapData = require_getMapData();
-    function mapCacheGet(key3) {
-      return getMapData(this, key3).get(key3);
+    function mapCacheGet(key4) {
+      return getMapData(this, key4).get(key4);
     }
     module2.exports = mapCacheGet;
   }
@@ -39144,8 +39144,8 @@ var require_mapCacheGet = __commonJS({
 var require_mapCacheHas = __commonJS({
   "node_modules/.pnpm/lodash@4.18.1/node_modules/lodash/_mapCacheHas.js"(exports2, module2) {
     var getMapData = require_getMapData();
-    function mapCacheHas(key3) {
-      return getMapData(this, key3).has(key3);
+    function mapCacheHas(key4) {
+      return getMapData(this, key4).has(key4);
     }
     module2.exports = mapCacheHas;
   }
@@ -39155,9 +39155,9 @@ var require_mapCacheHas = __commonJS({
 var require_mapCacheSet = __commonJS({
   "node_modules/.pnpm/lodash@4.18.1/node_modules/lodash/_mapCacheSet.js"(exports2, module2) {
     var getMapData = require_getMapData();
-    function mapCacheSet(key3, value) {
-      var data = getMapData(this, key3), size = data.size;
-      data.set(key3, value);
+    function mapCacheSet(key4, value) {
+      var data = getMapData(this, key4), size = data.size;
+      data.set(key4, value);
       this.size += data.size == size ? 0 : 1;
       return this;
     }
@@ -39200,12 +39200,12 @@ var require_memoize = __commonJS({
         throw new TypeError(FUNC_ERROR_TEXT);
       }
       var memoized = function() {
-        var args = arguments, key3 = resolver ? resolver.apply(this, args) : args[0], cache = memoized.cache;
-        if (cache.has(key3)) {
-          return cache.get(key3);
+        var args = arguments, key4 = resolver ? resolver.apply(this, args) : args[0], cache = memoized.cache;
+        if (cache.has(key4)) {
+          return cache.get(key4);
         }
         var result = func.apply(this, args);
-        memoized.cache = cache.set(key3, result) || cache;
+        memoized.cache = cache.set(key4, result) || cache;
         return result;
       };
       memoized.cache = new (memoize.Cache || MapCache)();
@@ -39222,11 +39222,11 @@ var require_memoizeCapped = __commonJS({
     var memoize = require_memoize();
     var MAX_MEMOIZE_SIZE = 500;
     function memoizeCapped(func) {
-      var result = memoize(func, function(key3) {
+      var result = memoize(func, function(key4) {
         if (cache.size === MAX_MEMOIZE_SIZE) {
           cache.clear();
         }
-        return key3;
+        return key4;
       });
       var cache = result.cache;
       return result;
@@ -39415,8 +39415,8 @@ var require_es6 = __commonJS({
         for (i = length; i-- !== 0; )
           if (!Object.prototype.hasOwnProperty.call(b, keys[i])) return false;
         for (i = length; i-- !== 0; ) {
-          var key3 = keys[i];
-          if (!equal(a[key3], b[key3])) return false;
+          var key4 = keys[i];
+          if (!equal(a[key4], b[key4])) return false;
         }
         return true;
       }
@@ -39552,8 +39552,8 @@ var require_arrayIncludesWith = __commonJS({
 // node_modules/.pnpm/lodash@4.18.1/node_modules/lodash/_cacheHas.js
 var require_cacheHas = __commonJS({
   "node_modules/.pnpm/lodash@4.18.1/node_modules/lodash/_cacheHas.js"(exports2, module2) {
-    function cacheHas(cache, key3) {
-      return cache.has(key3);
+    function cacheHas(cache, key4) {
+      return cache.has(key4);
     }
     module2.exports = cacheHas;
   }
@@ -40506,7 +40506,7 @@ ${givenBlock}`;
     };
     __name(_Result, "Result");
     var Result = _Result;
-    function whenConstraint(key3, options2, validator, validatorOptions) {
+    function whenConstraint(key4, options2, validator, validatorOptions) {
       return {
         run(input, parent) {
           if (!parent) {
@@ -40519,8 +40519,8 @@ ${givenBlock}`;
               )
             );
           }
-          const isKeyArray = Array.isArray(key3);
-          const value = isKeyArray ? key3.map((k2) => get__default.default(parent, k2)) : get__default.default(parent, key3);
+          const isKeyArray = Array.isArray(key4);
+          const value = isKeyArray ? key4.map((k2) => get__default.default(parent, k2)) : get__default.default(parent, key4);
           const predicate = resolveBooleanIs(options2, value, isKeyArray) ? options2.then : options2.otherwise;
           if (predicate) {
             return predicate(validator).run(input);
@@ -40601,8 +40601,8 @@ ${givenBlock}`;
       default(value, options2 = this.validatorOptions) {
         return new DefaultValidator(this.clone(), value, options2);
       }
-      when(key3, options2, validatorOptions) {
-        return this.addConstraint(whenConstraint(key3, options2, this, validatorOptions));
+      when(key4, options2, validatorOptions) {
+        return this.addConstraint(whenConstraint(key4, options2, this, validatorOptions));
       }
       describe(description) {
         const clone = this.clone();
@@ -40788,8 +40788,8 @@ ${givenBlock}`;
   ${options2.stylize("|", "undefined")} `;
         const header = `${options2.stylize("CombinedPropertyError", "special")} (${options2.stylize(this.errors.length.toString(), "number")})`;
         const message = options2.stylize(this.message, "regexp");
-        const errors = this.errors.map(([key3, error]) => {
-          const property = _CombinedPropertyError2.formatProperty(key3, options2);
+        const errors = this.errors.map(([key4, error]) => {
+          const property = _CombinedPropertyError2.formatProperty(key4, options2);
           const body = error[customInspectSymbolStackLess](depth - 1, newOptions).replace(/\n/g, padding);
           return `  input${property}${padding}${body}`;
         }).join("\n\n");
@@ -40798,12 +40798,12 @@ ${givenBlock}`;
 
 ${errors}`;
       }
-      static formatProperty(key3, options2) {
-        if (typeof key3 === "string")
-          return options2.stylize(`.${key3}`, "symbol");
-        if (typeof key3 === "number")
-          return `[${options2.stylize(key3.toString(), "number")}]`;
-        return `[${options2.stylize("Symbol", "symbol")}(${key3.description})]`;
+      static formatProperty(key4, options2) {
+        if (typeof key4 === "string")
+          return options2.stylize(`.${key4}`, "symbol");
+        if (typeof key4 === "number")
+          return `[${options2.stylize(key4.toString(), "number")}]`;
+        return `[${options2.stylize("Symbol", "symbol")}(${key4.description})]`;
       }
     };
     __name(_CombinedPropertyError, "CombinedPropertyError");
@@ -41598,35 +41598,35 @@ ${errors}`;
             break;
         }
         const shapeEntries = Object.entries(shape);
-        this.keys = shapeEntries.map(([key3]) => key3);
-        for (const [key3, validator] of shapeEntries) {
+        this.keys = shapeEntries.map(([key4]) => key4);
+        for (const [key4, validator] of shapeEntries) {
           if (validator instanceof UnionValidator) {
             const [possiblyLiteralOrNullishPredicate] = validator["validators"];
             if (possiblyLiteralOrNullishPredicate instanceof NullishValidator) {
-              this.possiblyUndefinedKeys.set(key3, validator);
+              this.possiblyUndefinedKeys.set(key4, validator);
             } else if (possiblyLiteralOrNullishPredicate instanceof LiteralValidator) {
               if (possiblyLiteralOrNullishPredicate.expected === void 0) {
-                this.possiblyUndefinedKeys.set(key3, validator);
+                this.possiblyUndefinedKeys.set(key4, validator);
               } else {
-                this.requiredKeys.set(key3, validator);
+                this.requiredKeys.set(key4, validator);
               }
             } else if (validator instanceof DefaultValidator) {
-              this.possiblyUndefinedKeysWithDefaults.set(key3, validator);
+              this.possiblyUndefinedKeysWithDefaults.set(key4, validator);
             } else {
-              this.requiredKeys.set(key3, validator);
+              this.requiredKeys.set(key4, validator);
             }
           } else if (validator instanceof NullishValidator) {
-            this.possiblyUndefinedKeys.set(key3, validator);
+            this.possiblyUndefinedKeys.set(key4, validator);
           } else if (validator instanceof LiteralValidator) {
             if (validator.expected === void 0) {
-              this.possiblyUndefinedKeys.set(key3, validator);
+              this.possiblyUndefinedKeys.set(key4, validator);
             } else {
-              this.requiredKeys.set(key3, validator);
+              this.requiredKeys.set(key4, validator);
             }
           } else if (validator instanceof DefaultValidator) {
-            this.possiblyUndefinedKeysWithDefaults.set(key3, validator);
+            this.possiblyUndefinedKeysWithDefaults.set(key4, validator);
           } else {
-            this.requiredKeys.set(key3, validator);
+            this.requiredKeys.set(key4, validator);
           }
         }
       }
@@ -41640,16 +41640,16 @@ ${errors}`;
         return Reflect.construct(this.constructor, [this.shape, 2, options2, this.constraints]);
       }
       partial(options2 = this.validatorOptions) {
-        const shape = Object.fromEntries(this.keys.map((key3) => [key3, this.shape[key3].optional(options2)]));
+        const shape = Object.fromEntries(this.keys.map((key4) => [key4, this.shape[key4].optional(options2)]));
         return Reflect.construct(this.constructor, [shape, this.strategy, options2, this.constraints]);
       }
       required(options2 = this.validatorOptions) {
         const shape = Object.fromEntries(
-          this.keys.map((key3) => {
-            let validator = this.shape[key3];
+          this.keys.map((key4) => {
+            let validator = this.shape[key4];
             if (validator instanceof UnionValidator)
               validator = validator.required(options2);
-            return [key3, validator];
+            return [key4, validator];
           })
         );
         return Reflect.construct(this.constructor, [shape, this.strategy, options2, this.constraints]);
@@ -41660,13 +41660,13 @@ ${errors}`;
       }
       pick(keys, options2 = this.validatorOptions) {
         const shape = Object.fromEntries(
-          keys.filter((key3) => this.keys.includes(key3)).map((key3) => [key3, this.shape[key3]])
+          keys.filter((key4) => this.keys.includes(key4)).map((key4) => [key4, this.shape[key4]])
         );
         return Reflect.construct(this.constructor, [shape, this.strategy, options2, this.constraints]);
       }
       omit(keys, options2 = this.validatorOptions) {
         const shape = Object.fromEntries(
-          this.keys.filter((key3) => !keys.includes(key3)).map((key3) => [key3, this.shape[key3]])
+          this.keys.filter((key4) => !keys.includes(key4)).map((key4) => [key4, this.shape[key4]])
         );
         return Reflect.construct(this.constructor, [shape, this.strategy, options2, this.constraints]);
       }
@@ -41702,41 +41702,41 @@ ${errors}`;
         const errors = [];
         const finalObject = {};
         const inputEntries = new Map(Object.entries(value));
-        const runPredicate = /* @__PURE__ */ __name((key3, predicate) => {
-          const result = predicate.run(value[key3]);
+        const runPredicate = /* @__PURE__ */ __name((key4, predicate) => {
+          const result = predicate.run(value[key4]);
           if (result.isOk()) {
-            finalObject[key3] = result.value;
+            finalObject[key4] = result.value;
           } else {
             const error = result.error;
-            errors.push([key3, error]);
+            errors.push([key4, error]);
           }
         }, "runPredicate");
-        for (const [key3, predicate] of this.requiredKeys) {
-          if (inputEntries.delete(key3)) {
-            runPredicate(key3, predicate);
+        for (const [key4, predicate] of this.requiredKeys) {
+          if (inputEntries.delete(key4)) {
+            runPredicate(key4, predicate);
           } else {
-            errors.push([key3, new MissingPropertyError(key3, this.validatorOptions)]);
+            errors.push([key4, new MissingPropertyError(key4, this.validatorOptions)]);
           }
         }
-        for (const [key3, validator] of this.possiblyUndefinedKeysWithDefaults) {
-          inputEntries.delete(key3);
-          runPredicate(key3, validator);
+        for (const [key4, validator] of this.possiblyUndefinedKeysWithDefaults) {
+          inputEntries.delete(key4);
+          runPredicate(key4, validator);
         }
         if (inputEntries.size === 0) {
           return errors.length === 0 ? Result.ok(finalObject) : Result.err(new CombinedPropertyError(errors, this.validatorOptions));
         }
         const checkInputEntriesInsteadOfSchemaKeys = this.possiblyUndefinedKeys.size > inputEntries.size;
         if (checkInputEntriesInsteadOfSchemaKeys) {
-          for (const [key3] of inputEntries) {
-            const predicate = this.possiblyUndefinedKeys.get(key3);
+          for (const [key4] of inputEntries) {
+            const predicate = this.possiblyUndefinedKeys.get(key4);
             if (predicate) {
-              runPredicate(key3, predicate);
+              runPredicate(key4, predicate);
             }
           }
         } else {
-          for (const [key3, predicate] of this.possiblyUndefinedKeys) {
-            if (inputEntries.delete(key3)) {
-              runPredicate(key3, predicate);
+          for (const [key4, predicate] of this.possiblyUndefinedKeys) {
+            if (inputEntries.delete(key4)) {
+              runPredicate(key4, predicate);
             }
           }
         }
@@ -41746,37 +41746,37 @@ ${errors}`;
         const errors = [];
         const finalResult = {};
         const inputEntries = new Map(Object.entries(value));
-        const runPredicate = /* @__PURE__ */ __name((key3, predicate) => {
-          const result = predicate.run(value[key3]);
+        const runPredicate = /* @__PURE__ */ __name((key4, predicate) => {
+          const result = predicate.run(value[key4]);
           if (result.isOk()) {
-            finalResult[key3] = result.value;
+            finalResult[key4] = result.value;
           } else {
             const error = result.error;
-            errors.push([key3, error]);
+            errors.push([key4, error]);
           }
         }, "runPredicate");
-        for (const [key3, predicate] of this.requiredKeys) {
-          if (inputEntries.delete(key3)) {
-            runPredicate(key3, predicate);
+        for (const [key4, predicate] of this.requiredKeys) {
+          if (inputEntries.delete(key4)) {
+            runPredicate(key4, predicate);
           } else {
-            errors.push([key3, new MissingPropertyError(key3, this.validatorOptions)]);
+            errors.push([key4, new MissingPropertyError(key4, this.validatorOptions)]);
           }
         }
-        for (const [key3, validator] of this.possiblyUndefinedKeysWithDefaults) {
-          inputEntries.delete(key3);
-          runPredicate(key3, validator);
+        for (const [key4, validator] of this.possiblyUndefinedKeysWithDefaults) {
+          inputEntries.delete(key4);
+          runPredicate(key4, validator);
         }
-        for (const [key3, predicate] of this.possiblyUndefinedKeys) {
+        for (const [key4, predicate] of this.possiblyUndefinedKeys) {
           if (inputEntries.size === 0) {
             break;
           }
-          if (inputEntries.delete(key3)) {
-            runPredicate(key3, predicate);
+          if (inputEntries.delete(key4)) {
+            runPredicate(key4, predicate);
           }
         }
         if (inputEntries.size !== 0) {
-          for (const [key3, value2] of inputEntries.entries()) {
-            errors.push([key3, new UnknownPropertyError(key3, value2, this.validatorOptions)]);
+          for (const [key4, value2] of inputEntries.entries()) {
+            errors.push([key4, new UnknownPropertyError(key4, value2, this.validatorOptions)]);
           }
         }
         return errors.length === 0 ? Result.ok(finalResult) : Result.err(new CombinedPropertyError(errors, this.validatorOptions));
@@ -41818,12 +41818,12 @@ ${errors}`;
         }
         const errors = [];
         const transformed = {};
-        for (const [key3, val] of Object.entries(value)) {
+        for (const [key4, val] of Object.entries(value)) {
           const result = this.validator.run(val);
           if (result.isOk())
-            transformed[key3] = result.value;
+            transformed[key4] = result.value;
           else
-            errors.push([key3, result.error]);
+            errors.push([key4, result.error]);
         }
         return errors.length === 0 ? Result.ok(transformed) : Result.err(new CombinedPropertyError(errors, this.validatorOptions));
       }
@@ -42261,14 +42261,14 @@ ${givenBlock}`;
         }
         const errors = [];
         const transformed = /* @__PURE__ */ new Map();
-        for (const [key3, val] of value.entries()) {
-          const keyResult = this.keyValidator.run(key3);
+        for (const [key4, val] of value.entries()) {
+          const keyResult = this.keyValidator.run(key4);
           const valueResult = this.valueValidator.run(val);
           const { length } = errors;
           if (keyResult.isErr())
-            errors.push([key3, keyResult.error]);
+            errors.push([key4, keyResult.error]);
           if (valueResult.isErr())
-            errors.push([key3, valueResult.error]);
+            errors.push([key4, valueResult.error]);
           if (errors.length === length)
             transformed.set(keyResult.value, valueResult.value);
         }
@@ -42314,9 +42314,9 @@ ${givenBlock}`;
         }
         const padding = `
   ${options2.stylize("|", "undefined")} `;
-        const pairs = this.enumKeys.map((key3) => {
-          const enumValue = this.enumMappings.get(key3);
-          return `${options2.stylize(key3, "string")} or ${options2.stylize(
+        const pairs = this.enumKeys.map((key4) => {
+          const enumValue = this.enumMappings.get(key4);
+          return `${options2.stylize(key4, "string")} or ${options2.stylize(
             enumValue.toString(),
             typeof enumValue === "number" ? "number" : "string"
           )}`;
@@ -42337,12 +42337,12 @@ ${pairsBlock}`;
         this.hasNumericElements = false;
         this.enumMapping = /* @__PURE__ */ new Map();
         this.enumShape = enumShape;
-        this.enumKeys = Object.keys(enumShape).filter((key3) => {
-          return typeof enumShape[enumShape[key3]] !== "number";
+        this.enumKeys = Object.keys(enumShape).filter((key4) => {
+          return typeof enumShape[enumShape[key4]] !== "number";
         });
-        for (const key3 of this.enumKeys) {
-          const enumValue = enumShape[key3];
-          this.enumMapping.set(key3, enumValue);
+        for (const key4 of this.enumKeys) {
+          const enumValue = enumShape[key4];
+          this.enumMapping.set(key4, enumValue);
           this.enumMapping.set(enumValue, enumValue);
           if (typeof enumValue === "number") {
             this.hasNumericElements = true;
@@ -42821,8 +42821,8 @@ var require_util9 = __commonJS({
       return mixedProto;
     };
     exports2.hardMixProtos = hardMixProtos;
-    var unique2 = (arr) => arr.filter((e, i) => arr.indexOf(e) == i);
-    exports2.unique = unique2;
+    var unique3 = (arr) => arr.filter((e, i) => arr.indexOf(e) == i);
+    exports2.unique = unique3;
     var flatten = (arr) => arr.length === 0 ? [] : arr.length === 1 ? arr[0] : arr.reduce((a1, a2) => [...a1, ...a2]);
     exports2.flatten = flatten;
   }
@@ -42885,7 +42885,7 @@ var require_proxy = __commonJS({
         throw new Error("Cannot delete properties on Proxies created by ts-mixer");
       },
       ownKeys() {
-        return ingredients.map(Object.getOwnPropertyNames).reduce((prev, curr) => curr.concat(prev.filter((key3) => curr.indexOf(key3) < 0)));
+        return ingredients.map(Object.getOwnPropertyNames).reduce((prev, curr) => curr.concat(prev.filter((key4) => curr.indexOf(key4) < 0)));
       }
     });
     exports2.proxyMix = proxyMix;
@@ -42962,8 +42962,8 @@ var require_decorator = __commonJS({
       var _a, _b;
       const allKeys = (0, util_1.unique)([...Object.getOwnPropertyNames(o1), ...Object.getOwnPropertyNames(o2)]);
       const mergedObject = {};
-      for (let key3 of allKeys)
-        mergedObject[key3] = (0, util_1.unique)([...(_a = o1 === null || o1 === void 0 ? void 0 : o1[key3]) !== null && _a !== void 0 ? _a : [], ...(_b = o2 === null || o2 === void 0 ? void 0 : o2[key3]) !== null && _b !== void 0 ? _b : []]);
+      for (let key4 of allKeys)
+        mergedObject[key4] = (0, util_1.unique)([...(_a = o1 === null || o1 === void 0 ? void 0 : o1[key4]) !== null && _a !== void 0 ? _a : [], ...(_b = o2 === null || o2 === void 0 ? void 0 : o2[key4]) !== null && _b !== void 0 ? _b : []]);
       return mergedObject;
     };
     var mergePropertyAndMethodDecorators = (d1, d2) => {
@@ -43037,20 +43037,20 @@ var require_decorator = __commonJS({
       classDecorators.push(decorator);
       return decorator(clazz);
     });
-    var decorateMember = (decorator) => ((object, key3, ...otherArgs) => {
+    var decorateMember = (decorator) => ((object, key4, ...otherArgs) => {
       var _a, _b, _c;
       const decoratorTargetType = typeof object === "function" ? "static" : "instance";
-      const decoratorType = typeof object[key3] === "function" ? "method" : "property";
+      const decoratorType = typeof object[key4] === "function" ? "method" : "property";
       const clazz = decoratorTargetType === "static" ? object : object.constructor;
       const decoratorsForClass = (0, exports2.getDecoratorsForClass)(clazz);
       const decoratorsForTargetType = (_a = decoratorsForClass === null || decoratorsForClass === void 0 ? void 0 : decoratorsForClass[decoratorTargetType]) !== null && _a !== void 0 ? _a : {};
       decoratorsForClass[decoratorTargetType] = decoratorsForTargetType;
       let decoratorsForType = (_b = decoratorsForTargetType === null || decoratorsForTargetType === void 0 ? void 0 : decoratorsForTargetType[decoratorType]) !== null && _b !== void 0 ? _b : {};
       decoratorsForTargetType[decoratorType] = decoratorsForType;
-      let decoratorsForKey = (_c = decoratorsForType === null || decoratorsForType === void 0 ? void 0 : decoratorsForType[key3]) !== null && _c !== void 0 ? _c : [];
-      decoratorsForType[key3] = decoratorsForKey;
+      let decoratorsForKey = (_c = decoratorsForType === null || decoratorsForType === void 0 ? void 0 : decoratorsForType[key4]) !== null && _c !== void 0 ? _c : [];
+      decoratorsForType[key4] = decoratorsForKey;
       decoratorsForKey.push(decorator);
-      return decorator(object, key3, ...otherArgs);
+      return decorator(object, key4, ...otherArgs);
     });
     var decorate = (decorator) => ((...args) => {
       if (args.length === 1)
@@ -43113,13 +43113,13 @@ var require_mixins = __commonJS({
       const propDecorators = propAndMethodDecorators.property;
       const methodDecorators = propAndMethodDecorators.method;
       if (propDecorators)
-        for (let key3 in propDecorators)
-          for (let decorator of propDecorators[key3])
-            decorator(target, key3);
+        for (let key4 in propDecorators)
+          for (let decorator of propDecorators[key4])
+            decorator(target, key4);
       if (methodDecorators)
-        for (let key3 in methodDecorators)
-          for (let decorator of methodDecorators[key3])
-            decorator(target, key3, Object.getOwnPropertyDescriptor(target, key3));
+        for (let key4 in methodDecorators)
+          for (let decorator of methodDecorators[key4])
+            decorator(target, key4, Object.getOwnPropertyDescriptor(target, key4));
     };
     var mix = (...ingredients) => (decoratedClass) => {
       const mixedClass = Mixin(...ingredients.concat([decoratedClass]));
@@ -43178,9 +43178,9 @@ var require_dist8 = __commonJS({
     };
     var __copyProps2 = (to, from, except, desc) => {
       if (from && typeof from === "object" || typeof from === "function") {
-        for (let key3 of __getOwnPropNames2(from))
-          if (!__hasOwnProp2.call(to, key3) && key3 !== except)
-            __defProp2(to, key3, { get: () => from[key3], enumerable: !(desc = __getOwnPropDesc2(from, key3)) || desc.enumerable });
+        for (let key4 of __getOwnPropNames2(from))
+          if (!__hasOwnProp2.call(to, key4) && key4 !== except)
+            __defProp2(to, key4, { get: () => from[key4], enumerable: !(desc = __getOwnPropDesc2(from, key4)) || desc.enumerable });
       }
       return to;
     };
@@ -43194,12 +43194,12 @@ var require_dist8 = __commonJS({
       mod
     ));
     var __toCommonJS2 = (mod) => __copyProps2(__defProp2({}, "__esModule", { value: true }), mod);
-    var __decorateClass = (decorators, target, key3, kind2) => {
-      var result = kind2 > 1 ? void 0 : kind2 ? __getOwnPropDesc2(target, key3) : target;
+    var __decorateClass = (decorators, target, key4, kind2) => {
+      var result = kind2 > 1 ? void 0 : kind2 ? __getOwnPropDesc2(target, key4) : target;
       for (var i = decorators.length - 1, decorator; i >= 0; i--)
         if (decorator = decorators[i])
-          result = (kind2 ? decorator(target, key3, result) : decorator(result)) || result;
-      if (kind2 && result) __defProp2(target, key3, result);
+          result = (kind2 ? decorator(target, key4, result) : decorator(result)) || result;
+      if (kind2 && result) __defProp2(target, key4, result);
       return result;
     };
     var index_exports = {};
@@ -53730,10 +53730,10 @@ var require_Enums = __commonJS({
     "use strict";
     function createEnum(keys) {
       const obj = {};
-      for (const [index, key3] of keys.entries()) {
-        if (key3 === null) continue;
-        obj[key3] = index;
-        obj[index] = key3;
+      for (const [index, key4] of keys.entries()) {
+        if (key4 === null) continue;
+        obj[key4] = index;
+        obj[index] = key4;
       }
       return obj;
     }
@@ -57062,7 +57062,7 @@ var require_GuildAuditLogsEntry = __commonJS({
             })
           );
         } else if (targetType === Targets.Invite) {
-          const inviteChange = this.changes.find(({ key: key3 }) => key3 === "code");
+          const inviteChange = this.changes.find(({ key: key4 }) => key4 === "code");
           this.target = guild.invites.cache.get(inviteChange.new ?? inviteChange.old) ?? new Invite2(guild.client, changesReduce(this.changes, { guild }));
         } else if (targetType === Targets.Message) {
           this.target = data.action_type === AuditLogEvent.MessageBulkDelete ? guild.channels.cache.get(data.target_id) ?? { id: data.target_id } : guild.client.users.cache.get(data.target_id) ?? null;
@@ -60972,44 +60972,44 @@ var require_permessage_deflate2 = __commonJS({
        */
       normalizeParams(configurations) {
         configurations.forEach((params) => {
-          Object.keys(params).forEach((key3) => {
-            let value = params[key3];
+          Object.keys(params).forEach((key4) => {
+            let value = params[key4];
             if (value.length > 1) {
-              throw new Error(`Parameter "${key3}" must have only a single value`);
+              throw new Error(`Parameter "${key4}" must have only a single value`);
             }
             value = value[0];
-            if (key3 === "client_max_window_bits") {
+            if (key4 === "client_max_window_bits") {
               if (value !== true) {
                 const num = +value;
                 if (!Number.isInteger(num) || num < 8 || num > 15) {
                   throw new TypeError(
-                    `Invalid value for parameter "${key3}": ${value}`
+                    `Invalid value for parameter "${key4}": ${value}`
                   );
                 }
                 value = num;
               } else if (!this._isServer) {
                 throw new TypeError(
-                  `Invalid value for parameter "${key3}": ${value}`
+                  `Invalid value for parameter "${key4}": ${value}`
                 );
               }
-            } else if (key3 === "server_max_window_bits") {
+            } else if (key4 === "server_max_window_bits") {
               const num = +value;
               if (!Number.isInteger(num) || num < 8 || num > 15) {
                 throw new TypeError(
-                  `Invalid value for parameter "${key3}": ${value}`
+                  `Invalid value for parameter "${key4}": ${value}`
                 );
               }
               value = num;
-            } else if (key3 === "client_no_context_takeover" || key3 === "server_no_context_takeover") {
+            } else if (key4 === "client_no_context_takeover" || key4 === "server_no_context_takeover") {
               if (value !== true) {
                 throw new TypeError(
-                  `Invalid value for parameter "${key3}": ${value}`
+                  `Invalid value for parameter "${key4}": ${value}`
                 );
               }
             } else {
-              throw new Error(`Unknown parameter "${key3}"`);
+              throw new Error(`Unknown parameter "${key4}"`);
             }
-            params[key3] = value;
+            params[key4] = value;
           });
         });
         return configurations;
@@ -61057,8 +61057,8 @@ var require_permessage_deflate2 = __commonJS({
       _decompress(data, fin, callback) {
         const endpoint = this._isServer ? "client" : "server";
         if (!this._inflate) {
-          const key3 = `${endpoint}_max_window_bits`;
-          const windowBits = typeof this.params[key3] !== "number" ? zlib.Z_DEFAULT_WINDOWBITS : this.params[key3];
+          const key4 = `${endpoint}_max_window_bits`;
+          const windowBits = typeof this.params[key4] !== "number" ? zlib.Z_DEFAULT_WINDOWBITS : this.params[key4];
           this._inflate = zlib.createInflateRaw({
             ...this._options.zlibInflateOptions,
             windowBits
@@ -61108,8 +61108,8 @@ var require_permessage_deflate2 = __commonJS({
       _compress(data, fin, callback) {
         const endpoint = this._isServer ? "server" : "client";
         if (!this._deflate) {
-          const key3 = `${endpoint}_max_window_bits`;
-          const windowBits = typeof this.params[key3] !== "number" ? zlib.Z_DEFAULT_WINDOWBITS : this.params[key3];
+          const key4 = `${endpoint}_max_window_bits`;
+          const windowBits = typeof this.params[key4] !== "number" ? zlib.Z_DEFAULT_WINDOWBITS : this.params[key4];
           this._deflate = zlib.createDeflateRaw({
             ...this._options.zlibDeflateOptions,
             windowBits
@@ -63416,7 +63416,7 @@ var require_websocket2 = __commonJS({
         }
       }
       const defaultPort = isSecure ? 443 : 80;
-      const key3 = randomBytes(16).toString("base64");
+      const key4 = randomBytes(16).toString("base64");
       const request = isSecure ? https2.request : http.request;
       const protocolSet = /* @__PURE__ */ new Set();
       let perMessageDeflate;
@@ -63427,7 +63427,7 @@ var require_websocket2 = __commonJS({
       opts.headers = {
         ...opts.headers,
         "Sec-WebSocket-Version": opts.protocolVersion,
-        "Sec-WebSocket-Key": key3,
+        "Sec-WebSocket-Key": key4,
         Connection: "Upgrade",
         Upgrade: "websocket"
       };
@@ -63478,8 +63478,8 @@ var require_websocket2 = __commonJS({
           const headers = options2 && options2.headers;
           options2 = { ...options2, headers: {} };
           if (headers) {
-            for (const [key4, value] of Object.entries(headers)) {
-              options2.headers[key4.toLowerCase()] = value;
+            for (const [key5, value] of Object.entries(headers)) {
+              options2.headers[key5.toLowerCase()] = value;
             }
           }
         } else if (websocket.listenerCount("redirect") === 0) {
@@ -63546,7 +63546,7 @@ var require_websocket2 = __commonJS({
           abortHandshake(websocket, socket, "Invalid Upgrade header");
           return;
         }
-        const digest = createHash("sha1").update(key3 + GUID).digest("base64");
+        const digest = createHash("sha1").update(key4 + GUID).digest("base64");
         if (res.headers["sec-websocket-accept"] !== digest) {
           abortHandshake(websocket, socket, "Invalid Sec-WebSocket-Accept header");
           return;
@@ -64114,7 +64114,7 @@ var require_websocket_server = __commonJS({
        */
       handleUpgrade(req, socket, head, cb) {
         socket.on("error", socketOnError);
-        const key3 = req.headers["sec-websocket-key"];
+        const key4 = req.headers["sec-websocket-key"];
         const upgrade = req.headers.upgrade;
         const version = +req.headers["sec-websocket-version"];
         if (req.method !== "GET") {
@@ -64127,7 +64127,7 @@ var require_websocket_server = __commonJS({
           abortHandshakeOrEmitwsClientError(this, req, socket, 400, message);
           return;
         }
-        if (key3 === void 0 || !keyRegex.test(key3)) {
+        if (key4 === void 0 || !keyRegex.test(key4)) {
           const message = "Missing or invalid Sec-WebSocket-Key header";
           abortHandshakeOrEmitwsClientError(this, req, socket, 400, message);
           return;
@@ -64187,7 +64187,7 @@ var require_websocket_server = __commonJS({
               }
               this.completeUpgrade(
                 extensions,
-                key3,
+                key4,
                 protocols,
                 req,
                 socket,
@@ -64199,7 +64199,7 @@ var require_websocket_server = __commonJS({
           }
           if (!this.options.verifyClient(info)) return abortHandshake(socket, 401);
         }
-        this.completeUpgrade(extensions, key3, protocols, req, socket, head, cb);
+        this.completeUpgrade(extensions, key4, protocols, req, socket, head, cb);
       }
       /**
        * Upgrade the connection to WebSocket.
@@ -64214,7 +64214,7 @@ var require_websocket_server = __commonJS({
        * @throws {Error} If called more than once with the same socket
        * @private
        */
-      completeUpgrade(extensions, key3, protocols, req, socket, head, cb) {
+      completeUpgrade(extensions, key4, protocols, req, socket, head, cb) {
         if (!socket.readable || !socket.writable) return socket.destroy();
         if (socket[kWebSocket]) {
           throw new Error(
@@ -64222,7 +64222,7 @@ var require_websocket_server = __commonJS({
           );
         }
         if (this._state > RUNNING) return abortHandshake(socket, 503);
-        const digest = createHash("sha1").update(key3 + GUID).digest("base64");
+        const digest = createHash("sha1").update(key4 + GUID).digest("base64");
         const headers = [
           "HTTP/1.1 101 Switching Protocols",
           "Upgrade: websocket",
@@ -64351,9 +64351,9 @@ var require_dist9 = __commonJS({
     };
     var __copyProps2 = (to, from, except, desc) => {
       if (from && typeof from === "object" || typeof from === "function") {
-        for (let key3 of __getOwnPropNames2(from))
-          if (!__hasOwnProp2.call(to, key3) && key3 !== except)
-            __defProp2(to, key3, { get: () => from[key3], enumerable: !(desc = __getOwnPropDesc2(from, key3)) || desc.enumerable });
+        for (let key4 of __getOwnPropNames2(from))
+          if (!__hasOwnProp2.call(to, key4) && key4 !== except)
+            __defProp2(to, key4, { get: () => from[key4], enumerable: !(desc = __getOwnPropDesc2(from, key4)) || desc.enumerable });
       }
       return to;
     };
@@ -64808,8 +64808,8 @@ var require_dist9 = __commonJS({
        * {@inheritDoc IIdentifyThrottler.waitForIdentify}
        */
       async waitForIdentify(shardId, signal) {
-        const key3 = shardId % this.maxConcurrency;
-        const state = this.states.ensure(key3, () => {
+        const key4 = shardId % this.maxConcurrency;
+        const state = this.states.ensure(key4, () => {
           return {
             queue: new import_async_queue.AsyncQueue(),
             resetsAt: Number.POSITIVE_INFINITY
@@ -69394,7 +69394,7 @@ var require_GuildInviteManager = __commonJS({
        *   .then(console.log)
        *   .catch(console.error);
        */
-      async create(channel, { temporary, maxAge, maxUses, unique: unique2, targetUser, targetApplication, targetType, reason } = {}) {
+      async create(channel, { temporary, maxAge, maxUses, unique: unique3, targetUser, targetApplication, targetType, reason } = {}) {
         const id2 = this.guild.channels.resolveId(channel);
         if (!id2) throw new DiscordjsError2(ErrorCodes2.GuildChannelResolve);
         const invite = await this.client.rest.post(Routes2.channelInvites(id2), {
@@ -69402,7 +69402,7 @@ var require_GuildInviteManager = __commonJS({
             temporary,
             max_age: maxAge,
             max_uses: maxUses,
-            unique: unique2,
+            unique: unique3,
             target_user_id: this.client.users.resolveId(targetUser),
             target_application_id: targetApplication?.id ?? targetApplication?.applicationId ?? targetApplication,
             target_type: targetType
@@ -73505,13 +73505,13 @@ var require_Sweepers = __commonJS({
       constructor(client2, options2) {
         Object.defineProperty(this, "client", { value: client2 });
         this.options = options2;
-        this.intervals = Object.fromEntries(SweeperKeys.map((key3) => [key3, null]));
-        for (const key3 of SweeperKeys) {
-          if (!(key3 in options2)) continue;
-          this._validateProperties(key3);
-          const clonedOptions = { ...this.options[key3] };
+        this.intervals = Object.fromEntries(SweeperKeys.map((key4) => [key4, null]));
+        for (const key4 of SweeperKeys) {
+          if (!(key4 in options2)) continue;
+          this._validateProperties(key4);
+          const clonedOptions = { ...this.options[key4] };
           if (!("filter" in clonedOptions)) {
-            switch (key3) {
+            switch (key4) {
               case "invites":
                 clonedOptions.filter = this.constructor.expiredInviteSweepFilter(clonedOptions.lifetime);
                 break;
@@ -73522,7 +73522,7 @@ var require_Sweepers = __commonJS({
                 clonedOptions.filter = this.constructor.archivedThreadSweepFilter(clonedOptions.lifetime);
             }
           }
-          this._initInterval(key3, `sweep${key3[0].toUpperCase()}${key3.slice(1)}`, clonedOptions);
+          this._initInterval(key4, `sweep${key4[0].toUpperCase()}${key4.slice(1)}`, clonedOptions);
         }
       }
       /**
@@ -73711,11 +73711,11 @@ var require_Sweepers = __commonJS({
           throw new DiscordjsTypeError2(ErrorCodes2.InvalidType, "filter", "function");
         }
         let threads = 0;
-        for (const [key3, val] of this.client.channels.cache.entries()) {
+        for (const [key4, val] of this.client.channels.cache.entries()) {
           if (!ThreadChannelTypes.includes(val.type)) continue;
-          if (filter(val, key3, this.client.channels.cache)) {
+          if (filter(val, key4, this.client.channels.cache)) {
             threads++;
-            this.client.channels._remove(key3);
+            this.client.channels._remove(key4);
           }
         }
         this.client.emit(Events2.CacheSweep, `Swept ${threads} threads.`);
@@ -73747,8 +73747,8 @@ var require_Sweepers = __commonJS({
        * @returns {void}
        */
       destroy() {
-        for (const key3 of SweeperKeys) {
-          if (this.intervals[key3]) clearInterval2(this.intervals[key3]);
+        for (const key4 of SweeperKeys) {
+          if (this.intervals[key4]) clearInterval2(this.intervals[key4]);
         }
       }
       /**
@@ -73784,11 +73784,11 @@ var require_Sweepers = __commonJS({
           if (lifetime <= 0) return null;
           const lifetimeMs = lifetime * 1e3;
           const now = Date.now();
-          return (entry, key3, coll) => {
-            if (excludeFromSweep(entry, key3, coll)) {
+          return (entry, key4, coll) => {
+            if (excludeFromSweep(entry, key4, coll)) {
               return false;
             }
-            const comparisonTimestamp = getComparisonTimestamp(entry, key3, coll);
+            const comparisonTimestamp = getComparisonTimestamp(entry, key4, coll);
             if (!comparisonTimestamp || typeof comparisonTimestamp !== "number") return false;
             return now - comparisonTimestamp > lifetimeMs;
           };
@@ -73843,7 +73843,7 @@ var require_Sweepers = __commonJS({
        * @returns {Object} Object containing the number of guilds swept and the number of items swept
        * @private
        */
-      _sweepGuildDirectProp(key3, filter, { emit = true, outputName } = {}) {
+      _sweepGuildDirectProp(key4, filter, { emit = true, outputName } = {}) {
         if (typeof filter !== "function") {
           throw new DiscordjsTypeError2(ErrorCodes2.InvalidType, "filter", "function");
         }
@@ -73851,12 +73851,12 @@ var require_Sweepers = __commonJS({
         let items = 0;
         for (const guild of this.client.guilds.cache.values()) {
           if (!guild.available) continue;
-          const { cache } = guild[key3];
+          const { cache } = guild[key4];
           guilds++;
           items += cache.sweep(filter);
         }
         if (emit) {
-          this.client.emit(Events2.CacheSweep, `Swept ${items} ${outputName ?? key3} in ${guilds} guilds.`);
+          this.client.emit(Events2.CacheSweep, `Swept ${items} ${outputName ?? key4} in ${guilds} guilds.`);
         }
         return { guilds, items };
       }
@@ -73865,22 +73865,22 @@ var require_Sweepers = __commonJS({
        * @param {string} key Key of the options object to check
        * @private
        */
-      _validateProperties(key3) {
-        const props = this.options[key3];
+      _validateProperties(key4) {
+        const props = this.options[key4];
         if (typeof props !== "object") {
-          throw new DiscordjsTypeError2(ErrorCodes2.InvalidType, `sweepers.${key3}`, "object", true);
+          throw new DiscordjsTypeError2(ErrorCodes2.InvalidType, `sweepers.${key4}`, "object", true);
         }
         if (typeof props.interval !== "number") {
-          throw new DiscordjsTypeError2(ErrorCodes2.InvalidType, `sweepers.${key3}.interval`, "number");
+          throw new DiscordjsTypeError2(ErrorCodes2.InvalidType, `sweepers.${key4}.interval`, "number");
         }
-        if (["invites", "messages", "threads"].includes(key3) && !("filter" in props)) {
+        if (["invites", "messages", "threads"].includes(key4) && !("filter" in props)) {
           if (typeof props.lifetime !== "number") {
-            throw new DiscordjsTypeError2(ErrorCodes2.InvalidType, `sweepers.${key3}.lifetime`, "number");
+            throw new DiscordjsTypeError2(ErrorCodes2.InvalidType, `sweepers.${key4}.lifetime`, "number");
           }
           return;
         }
         if (typeof props.filter !== "function") {
-          throw new DiscordjsTypeError2(ErrorCodes2.InvalidType, `sweepers.${key3}.filter`, "function");
+          throw new DiscordjsTypeError2(ErrorCodes2.InvalidType, `sweepers.${key4}.filter`, "function");
         }
       }
       /**
@@ -76197,9 +76197,9 @@ var util;
   };
   util2.objectKeys = typeof Object.keys === "function" ? (obj) => Object.keys(obj) : (object) => {
     const keys = [];
-    for (const key3 in object) {
-      if (Object.prototype.hasOwnProperty.call(object, key3)) {
-        keys.push(key3);
+    for (const key4 in object) {
+      if (Object.prototype.hasOwnProperty.call(object, key4)) {
+        keys.push(key4);
       }
     }
     return keys;
@@ -76599,10 +76599,10 @@ var ParseStatus = class _ParseStatus {
   static async mergeObjectAsync(status, pairs) {
     const syncPairs = [];
     for (const pair of pairs) {
-      const key3 = await pair.key;
+      const key4 = await pair.key;
       const value = await pair.value;
       syncPairs.push({
-        key: key3,
+        key: key4,
         value
       });
     }
@@ -76611,17 +76611,17 @@ var ParseStatus = class _ParseStatus {
   static mergeObjectSync(status, pairs) {
     const finalObject = {};
     for (const pair of pairs) {
-      const { key: key3, value } = pair;
-      if (key3.status === "aborted")
+      const { key: key4, value } = pair;
+      if (key4.status === "aborted")
         return INVALID;
       if (value.status === "aborted")
         return INVALID;
-      if (key3.status === "dirty")
+      if (key4.status === "dirty")
         status.dirty();
       if (value.status === "dirty")
         status.dirty();
-      if (key3.value !== "__proto__" && (typeof value.value !== "undefined" || pair.alwaysSet)) {
-        finalObject[key3.value] = value.value;
+      if (key4.value !== "__proto__" && (typeof value.value !== "undefined" || pair.alwaysSet)) {
+        finalObject[key4.value] = value.value;
       }
     }
     return { status: status.value, value: finalObject };
@@ -76646,12 +76646,12 @@ var errorUtil;
 
 // node_modules/.pnpm/zod@3.25.76/node_modules/zod/v3/types.js
 var ParseInputLazyPath = class {
-  constructor(parent, value, path2, key3) {
+  constructor(parent, value, path2, key4) {
     this._cachedPath = [];
     this.parent = parent;
     this.data = value;
     this._path = path2;
-    this._key = key3;
+    this._key = key4;
   }
   get path() {
     if (!this._cachedPath.length) {
@@ -78396,9 +78396,9 @@ ZodArray.create = (schema2, params) => {
 function deepPartialify(schema2) {
   if (schema2 instanceof ZodObject) {
     const newShape = {};
-    for (const key3 in schema2.shape) {
-      const fieldSchema = schema2.shape[key3];
-      newShape[key3] = ZodOptional.create(deepPartialify(fieldSchema));
+    for (const key4 in schema2.shape) {
+      const fieldSchema = schema2.shape[key4];
+      newShape[key4] = ZodOptional.create(deepPartialify(fieldSchema));
     }
     return new ZodObject({
       ...schema2._def,
@@ -78449,29 +78449,29 @@ var ZodObject = class _ZodObject extends ZodType {
     const { shape, keys: shapeKeys } = this._getCached();
     const extraKeys = [];
     if (!(this._def.catchall instanceof ZodNever && this._def.unknownKeys === "strip")) {
-      for (const key3 in ctx.data) {
-        if (!shapeKeys.includes(key3)) {
-          extraKeys.push(key3);
+      for (const key4 in ctx.data) {
+        if (!shapeKeys.includes(key4)) {
+          extraKeys.push(key4);
         }
       }
     }
     const pairs = [];
-    for (const key3 of shapeKeys) {
-      const keyValidator = shape[key3];
-      const value = ctx.data[key3];
+    for (const key4 of shapeKeys) {
+      const keyValidator = shape[key4];
+      const value = ctx.data[key4];
       pairs.push({
-        key: { status: "valid", value: key3 },
-        value: keyValidator._parse(new ParseInputLazyPath(ctx, value, ctx.path, key3)),
-        alwaysSet: key3 in ctx.data
+        key: { status: "valid", value: key4 },
+        value: keyValidator._parse(new ParseInputLazyPath(ctx, value, ctx.path, key4)),
+        alwaysSet: key4 in ctx.data
       });
     }
     if (this._def.catchall instanceof ZodNever) {
       const unknownKeys = this._def.unknownKeys;
       if (unknownKeys === "passthrough") {
-        for (const key3 of extraKeys) {
+        for (const key4 of extraKeys) {
           pairs.push({
-            key: { status: "valid", value: key3 },
-            value: { status: "valid", value: ctx.data[key3] }
+            key: { status: "valid", value: key4 },
+            value: { status: "valid", value: ctx.data[key4] }
           });
         }
       } else if (unknownKeys === "strict") {
@@ -78488,15 +78488,15 @@ var ZodObject = class _ZodObject extends ZodType {
       }
     } else {
       const catchall = this._def.catchall;
-      for (const key3 of extraKeys) {
-        const value = ctx.data[key3];
+      for (const key4 of extraKeys) {
+        const value = ctx.data[key4];
         pairs.push({
-          key: { status: "valid", value: key3 },
+          key: { status: "valid", value: key4 },
           value: catchall._parse(
-            new ParseInputLazyPath(ctx, value, ctx.path, key3)
+            new ParseInputLazyPath(ctx, value, ctx.path, key4)
             //, ctx.child(key), value, getParsedType(value)
           ),
-          alwaysSet: key3 in ctx.data
+          alwaysSet: key4 in ctx.data
         });
       }
     }
@@ -78504,10 +78504,10 @@ var ZodObject = class _ZodObject extends ZodType {
       return Promise.resolve().then(async () => {
         const syncPairs = [];
         for (const pair of pairs) {
-          const key3 = await pair.key;
+          const key4 = await pair.key;
           const value = await pair.value;
           syncPairs.push({
-            key: key3,
+            key: key4,
             value,
             alwaysSet: pair.alwaysSet
           });
@@ -78632,8 +78632,8 @@ var ZodObject = class _ZodObject extends ZodType {
   //   }) as any;
   //   return merged;
   // }
-  setKey(key3, schema2) {
-    return this.augment({ [key3]: schema2 });
+  setKey(key4, schema2) {
+    return this.augment({ [key4]: schema2 });
   }
   // merge<Incoming extends AnyZodObject>(
   //   merging: Incoming
@@ -78664,9 +78664,9 @@ var ZodObject = class _ZodObject extends ZodType {
   }
   pick(mask) {
     const shape = {};
-    for (const key3 of util.objectKeys(mask)) {
-      if (mask[key3] && this.shape[key3]) {
-        shape[key3] = this.shape[key3];
+    for (const key4 of util.objectKeys(mask)) {
+      if (mask[key4] && this.shape[key4]) {
+        shape[key4] = this.shape[key4];
       }
     }
     return new _ZodObject({
@@ -78676,9 +78676,9 @@ var ZodObject = class _ZodObject extends ZodType {
   }
   omit(mask) {
     const shape = {};
-    for (const key3 of util.objectKeys(this.shape)) {
-      if (!mask[key3]) {
-        shape[key3] = this.shape[key3];
+    for (const key4 of util.objectKeys(this.shape)) {
+      if (!mask[key4]) {
+        shape[key4] = this.shape[key4];
       }
     }
     return new _ZodObject({
@@ -78694,12 +78694,12 @@ var ZodObject = class _ZodObject extends ZodType {
   }
   partial(mask) {
     const newShape = {};
-    for (const key3 of util.objectKeys(this.shape)) {
-      const fieldSchema = this.shape[key3];
-      if (mask && !mask[key3]) {
-        newShape[key3] = fieldSchema;
+    for (const key4 of util.objectKeys(this.shape)) {
+      const fieldSchema = this.shape[key4];
+      if (mask && !mask[key4]) {
+        newShape[key4] = fieldSchema;
       } else {
-        newShape[key3] = fieldSchema.optional();
+        newShape[key4] = fieldSchema.optional();
       }
     }
     return new _ZodObject({
@@ -78709,16 +78709,16 @@ var ZodObject = class _ZodObject extends ZodType {
   }
   required(mask) {
     const newShape = {};
-    for (const key3 of util.objectKeys(this.shape)) {
-      if (mask && !mask[key3]) {
-        newShape[key3] = this.shape[key3];
+    for (const key4 of util.objectKeys(this.shape)) {
+      if (mask && !mask[key4]) {
+        newShape[key4] = this.shape[key4];
       } else {
-        const fieldSchema = this.shape[key3];
+        const fieldSchema = this.shape[key4];
         let newField = fieldSchema;
         while (newField instanceof ZodOptional) {
           newField = newField._def.innerType;
         }
-        newShape[key3] = newField;
+        newShape[key4] = newField;
       }
     }
     return new _ZodObject({
@@ -78962,14 +78962,14 @@ function mergeValues(a, b) {
     return { valid: true, data: a };
   } else if (aType === ZodParsedType.object && bType === ZodParsedType.object) {
     const bKeys = util.objectKeys(b);
-    const sharedKeys = util.objectKeys(a).filter((key3) => bKeys.indexOf(key3) !== -1);
+    const sharedKeys = util.objectKeys(a).filter((key4) => bKeys.indexOf(key4) !== -1);
     const newObj = { ...a, ...b };
-    for (const key3 of sharedKeys) {
-      const sharedValue = mergeValues(a[key3], b[key3]);
+    for (const key4 of sharedKeys) {
+      const sharedValue = mergeValues(a[key4], b[key4]);
       if (!sharedValue.valid) {
         return { valid: false };
       }
-      newObj[key3] = sharedValue.data;
+      newObj[key4] = sharedValue.data;
     }
     return { valid: true, data: newObj };
   } else if (aType === ZodParsedType.array && bType === ZodParsedType.array) {
@@ -79133,11 +79133,11 @@ var ZodRecord = class _ZodRecord extends ZodType {
     const pairs = [];
     const keyType = this._def.keyType;
     const valueType = this._def.valueType;
-    for (const key3 in ctx.data) {
+    for (const key4 in ctx.data) {
       pairs.push({
-        key: keyType._parse(new ParseInputLazyPath(ctx, key3, ctx.path, key3)),
-        value: valueType._parse(new ParseInputLazyPath(ctx, ctx.data[key3], ctx.path, key3)),
-        alwaysSet: key3 in ctx.data
+        key: keyType._parse(new ParseInputLazyPath(ctx, key4, ctx.path, key4)),
+        value: valueType._parse(new ParseInputLazyPath(ctx, ctx.data[key4], ctx.path, key4)),
+        alwaysSet: key4 in ctx.data
       });
     }
     if (ctx.common.async) {
@@ -79185,9 +79185,9 @@ var ZodMap = class extends ZodType {
     }
     const keyType = this._def.keyType;
     const valueType = this._def.valueType;
-    const pairs = [...ctx.data.entries()].map(([key3, value], index) => {
+    const pairs = [...ctx.data.entries()].map(([key4, value], index) => {
       return {
-        key: keyType._parse(new ParseInputLazyPath(ctx, key3, ctx.path, [index, "key"])),
+        key: keyType._parse(new ParseInputLazyPath(ctx, key4, ctx.path, [index, "key"])),
         value: valueType._parse(new ParseInputLazyPath(ctx, value, ctx.path, [index, "value"]))
       };
     });
@@ -79195,30 +79195,30 @@ var ZodMap = class extends ZodType {
       const finalMap = /* @__PURE__ */ new Map();
       return Promise.resolve().then(async () => {
         for (const pair of pairs) {
-          const key3 = await pair.key;
+          const key4 = await pair.key;
           const value = await pair.value;
-          if (key3.status === "aborted" || value.status === "aborted") {
+          if (key4.status === "aborted" || value.status === "aborted") {
             return INVALID;
           }
-          if (key3.status === "dirty" || value.status === "dirty") {
+          if (key4.status === "dirty" || value.status === "dirty") {
             status.dirty();
           }
-          finalMap.set(key3.value, value.value);
+          finalMap.set(key4.value, value.value);
         }
         return { status: status.value, value: finalMap };
       });
     } else {
       const finalMap = /* @__PURE__ */ new Map();
       for (const pair of pairs) {
-        const key3 = pair.key;
+        const key4 = pair.key;
         const value = pair.value;
-        if (key3.status === "aborted" || value.status === "aborted") {
+        if (key4.status === "aborted" || value.status === "aborted") {
           return INVALID;
         }
-        if (key3.status === "dirty" || value.status === "dirty") {
+        if (key4.status === "dirty" || value.status === "dirty") {
           status.dirty();
         }
-        finalMap.set(key3.value, value.value);
+        finalMap.set(key4.value, value.value);
       }
       return { status: status.value, value: finalMap };
     }
@@ -80103,6 +80103,8 @@ var PERMISSION_CATALOG = {
   incidents: ["view", "create", "edit", "close", "delete"],
   persons: ["view", "create", "edit", "archive", "merge"],
   vehicles: ["view", "create", "edit", "archive"],
+  /** Polizeifahrzeuge (Live aus ER:LC + Modellkatalog); edit = Status/Notizen/Tags/Kennung, assign = Einheit zuweisen */
+  fleet: ["view", "view_details", "edit", "assign", "manage_catalog", "manage"],
   /** Waffenregister im MDT */
   weapons: ["view", "create", "edit"],
   reports: ["view", "create", "edit", "submit", "review", "approve", "reject", "archive"],
@@ -80288,7 +80290,7 @@ var DEFAULT_CAD_CONFIG = {
     { key: "sek", label: "SEK-Einheiten", builtin: true, enabledByDefault: true },
     { key: "k9", label: "K9-Einheiten", builtin: true, enabledByDefault: true },
     { key: "units", label: "Weitere Einheiten", builtin: true, enabledByDefault: true },
-    { key: "vehicles", label: "Polizeifahrzeuge (GPS)", builtin: true, enabledByDefault: true },
+    { key: "vehicles", label: "Polizeifahrzeuge (Position des Besitzers)", builtin: true, enabledByDefault: true },
     { key: "staff", label: "Staff", builtin: true, enabledByDefault: false },
     { key: "players", label: "Alle Spieler", builtin: true, enabledByDefault: false },
     { key: "pois", label: "Eigene POIs", builtin: true, enabledByDefault: true },
@@ -80754,6 +80756,34 @@ var personDetailsSchema = external_exports.object({
   licenses: external_exports.array(external_exports.string().max(32)).max(30).optional(),
   flags: external_exports.array(external_exports.string().max(32)).max(30).optional()
 });
+var key2 = external_exports.string().trim().min(1).max(32).regex(/^[A-Z0-9_]+$/, "Schl\xFCssel: nur A\u2013Z, 0\u20139 und _");
+var unique2 = (xs) => new Set(xs.map((x) => x.key)).size === xs.length;
+var fleetConfigSchema = external_exports.object({
+  categories: external_exports.array(external_exports.object({ key: key2, label: external_exports.string().trim().min(1).max(40), icon: external_exports.string().trim().min(1).max(8) })).min(1).max(30).refine(unique2, "Schl\xFCssel doppelt"),
+  internalStatuses: external_exports.array(external_exports.object({ key: key2, label: external_exports.string().trim().min(1).max(40), color: external_exports.string().regex(/^#[0-9a-fA-F]{6}$/) })).min(1).max(20).refine(unique2, "Schl\xFCssel doppelt"),
+  /** Mindestabstand zwischen zwei Abgleichen der Live-Fahrzeuge (Sekunden); der ER:LC-Abruf selbst läuft im eingestellten Server-Intervall. */
+  syncSeconds: external_exports.number().int().min(5).max(600),
+  /** Nicht mehr gemeldete Fahrzeuge ohne interne Daten nach so vielen Tagen löschen. */
+  keepInactiveDays: external_exports.number().int().min(1).max(90)
+});
+var fleetModelSchema = external_exports.object({
+  name: external_exports.string().trim().min(1).max(80),
+  /** Modellname genau so, wie ER:LC ihn meldet (z. B. „Falcon Interceptor Utility 2019“) – darüber werden Live-Fahrzeuge zugeordnet. */
+  erlcName: external_exports.string().trim().min(1).max(120),
+  category: key2,
+  description: external_exports.string().trim().max(1e3).nullish(),
+  internalCode: external_exports.string().trim().max(40).nullish(),
+  active: external_exports.boolean().optional(),
+  tags: external_exports.array(external_exports.string().trim().min(1).max(30)).max(20).optional(),
+  department: external_exports.string().trim().max(60).nullish()
+});
+var fleetInternalSchema = external_exports.object({
+  unitId: external_exports.string().uuid().nullish(),
+  internalStatus: key2.optional(),
+  internalCode: external_exports.string().trim().max(40).nullish(),
+  notes: external_exports.string().trim().max(3e3).nullish(),
+  tags: external_exports.array(external_exports.string().trim().min(1).max(30)).max(20).optional()
+});
 
 // apps/bot/src/staff-lists.ts
 function createStaffLists(client2, api2, log = console.log) {
@@ -80924,9 +80954,9 @@ function startPresenceReporter(client2, api2, opts, log = console.log) {
   const c = client2();
   for (const g of guilds()) for (const s of g.voiceStates.cache.values()) if (s.channelId) since.set(`${g.id}:${s.id}`, Date.now());
   c.on("voiceStateUpdate", (before, after) => {
-    const key3 = `${after.guild.id}:${after.id}`;
-    if (!after.channelId) since.delete(key3);
-    else if (before.channelId !== after.channelId) since.set(key3, Date.now());
+    const key4 = `${after.guild.id}:${after.id}`;
+    if (!after.channelId) since.delete(key4);
+    else if (before.channelId !== after.channelId) since.set(key4, Date.now());
     voiceSoon();
   });
   for (const ev of ["guildMemberAdd", "guildMemberRemove", "guildMemberUpdate", "userUpdate", ...opts.presences ? ["presenceUpdate"] : []]) c.on(ev, membersSoon);
@@ -81435,21 +81465,21 @@ _W\xE4hle unten ${f2.multiple ? "eine oder mehrere Optionen" : "eine Option"} au
   };
 };
 var answerText = (a) => a === null ? "\u2014 (\xFCbersprungen)" : Array.isArray(a) ? a.join(", ") : a;
-async function loadFlow(api2, key3, guildId) {
-  if (!key3) return null;
-  if (key3 === POLICE) {
+async function loadFlow(api2, key4, guildId) {
+  if (!key4) return null;
+  if (key4 === POLICE) {
     const [form, cfg2] = await Promise.all([api2.service("GET", `/applications/form${guildId ? `?guildId=${guildId}` : ""}`), getConfig(api2, guildId).catch(() => void 0)]);
-    return { key: key3, name: cfg2?.police?.name ? `Bewerbung \u2013 ${cfg2.police.name}` : POLICE_NAME, appName: cfg2?.police?.name ?? "EN Polizei", enabled: cfg2?.police?.enabled !== false, settings: cfg2?.police?.settings ?? {}, questions: [
+    return { key: key4, name: cfg2?.police?.name ? `Bewerbung \u2013 ${cfg2.police.name}` : POLICE_NAME, appName: cfg2?.police?.name ?? "EN Polizei", enabled: cfg2?.police?.enabled !== false, settings: cfg2?.police?.settings ?? {}, questions: [
       // Roblox-Name: eigene Frage „Roblox User“ im Formular ersetzt die eingebaute erste Frage
       ...form.some((f2) => f2.type === "ROBLOX") ? [] : [{ text: "Wie ist dein Roblox-Benutzername?", key: ROBLOX_KEY, field: field({ key: ROBLOX_KEY, label: "Roblox", required: true, maxLength: 20, type: "ROBLOX" }) }],
       ...form.map((f2) => ({ text: f2.label, key: f2.key, field: field(f2) }))
     ] };
   }
-  const unit = (await getConfig(api2, guildId)).units.find((u) => u.key === key3);
+  const unit = (await getConfig(api2, guildId)).units.find((u) => u.key === key4);
   return unit ? { key: unit.key, name: unit.name, appName: unit.name, enabled: unit.enabled !== false, settings: unit.settings ?? {}, questions: unit.questions.map(asField).map((f2) => ({ text: f2.label, key: f2.key, field: field(f2) })) } : null;
 }
-async function openApplication(api2, key3, discordId) {
-  return key3 === POLICE ? api2.service("GET", `/bot/application/open?discordId=${discordId}`) : api2.service("GET", `/bot/qualifications/open?discordId=${discordId}&unit=${encodeURIComponent(key3)}`);
+async function openApplication(api2, key4, discordId) {
+  return key4 === POLICE ? api2.service("GET", `/bot/application/open?discordId=${discordId}`) : api2.service("GET", `/bot/qualifications/open?discordId=${discordId}&unit=${encodeURIComponent(key4)}`);
 }
 async function submitSession(api2, s, userId, userName, robloxLookup2, now = Date.now()) {
   const meta = { durationSec: Math.max(0, Math.round((now - s.startedAt) / 1e3)), ...s.joinedAt ? { joinedAt: s.joinedAt } : {}, ...s.guildId ? { guildId: s.guildId } : {} };
@@ -81466,10 +81496,10 @@ async function submitSession(api2, s, userId, userName, robloxLookup2, now = Dat
   return (await api2.service("POST", "/bot/qualifications/applications", { unit: s.unit, discordId: userId, discordName: userName, answers: s.questions.map((q2, i) => ({ question: q2.text, answer: s.answers[i] ?? null })), ...meta })).number;
 }
 var POLICE_PANEL = { title: "\u{1F4CB} Bewerbung bei EN Polizei", color: COLORS.info, description: "Du m\xF6chtest Teil der **EN Polizei** werden? Klicke auf **Jetzt bewerben** \u2013 der Bot stellt dir die Fragen nacheinander per **Direktnachricht**.\n\nDu brauchst deinen **Roblox-Namen** und etwa 10 Minuten Zeit. Die Entscheidung bekommst du ebenfalls per Direktnachricht." };
-async function offer(c, key3) {
+async function offer(c, key4) {
   const running = sessions.get(c.discordId);
   if (running && running.expiresAt > Date.now()) return errorReply(`Du hast bereits eine laufende Bewerbung (**${plain(running.unitName)}**) in deinen Direktnachrichten. Beende oder brich sie dort zuerst ab.`);
-  const flow = await loadFlow(c.api, key3, c.guildId);
+  const flow = await loadFlow(c.api, key4, c.guildId);
   if (!flow) return errorReply("Diese Auswahl gibt es nicht mehr. Bitte das Panel neu laden.");
   if (!flow.enabled) return errorReply(`Bewerbungen f\xFCr **${plain(flow.name)}** sind derzeit geschlossen.`);
   const blocked = roleBlock(flow.settings, c.guildId ? c.memberRoleIds ?? [] : void 0);
@@ -82350,9 +82380,9 @@ Um benachrichtigt zu werden, ob sie angenommen oder abgelehnt wird, lass bitte d
 };
 
 // apps/bot/src/commands/cad.ts
-var lbl = (list, key3) => {
-  const o = list.find((x) => x.key === key3);
-  return o ? `${o.emoji ? `${o.emoji} ` : ""}${o.label}` : key3;
+var lbl = (list, key4) => {
+  const o = list.find((x) => x.key === key4);
+  return o ? `${o.emoji ? `${o.emoji} ` : ""}${o.label}` : key4;
 };
 var norm = (s) => s.trim().toLowerCase().replace(/[\s_-]+/g, "");
 var config = (c) => c.api.asUser(c.discordId, "GET", "/cad/config");
@@ -82378,7 +82408,8 @@ var CAD_COMMANDS = [{
       { name: "notiz", description: "Zusatz, z. B. \u201E2 Verd\xE4chtige fl\xFCchtig Richtung Norden\u201C", type: "string", maxLength: 500 },
       { name: "einheit", description: "Rufname (leer = deine Einheit)", type: "string", maxLength: 16 }
     ] },
-    { name: "einsaetze", description: "Aktive Eins\xE4tze der Leitstelle" }
+    { name: "einsaetze", description: "Aktive Eins\xE4tze der Leitstelle" },
+    { name: "fahrzeuge", description: "Gerade in ER:LC gemeldete Polizeifahrzeuge (Besitzer, Einheit)" }
   ],
   async run(c) {
     try {
@@ -82409,6 +82440,12 @@ var CAD_COMMANDS = [{
         const lines = list.map((i) => `**${plain(i.number)}** \xB7 ${clip(plain(i.title), 80)} \u2014 ${lbl(cfg2.priorities, i.priority)} / ${lbl(cfg2.incidentStatuses, i.status)}${i.location ? ` \xB7 ${clip(plain(i.location), 60)}` : ""}${i.units.filter((u) => !u.clearedAt).length ? `
    \u21B3 ${i.units.filter((u) => !u.clearedAt).map((u) => plain(u.unit.callsign)).join(", ")}` : ""}`);
         return { ephemeral: true, embeds: [{ title: `\u{1F6A8} Aktive Eins\xE4tze (${list.length})`, description: clip(lines.join("\n") || "Keine aktiven Eins\xE4tze.", 4e3), color: COLORS.info }] };
+      }
+      if (sub === "fahrzeuge") {
+        const r = await c.api.asUser(c.discordId, "GET", "/fleet/vehicles");
+        const lines = r.items.slice(0, 30).map((v) => `\u{1F693} **${clip(plain(v.api.name), 60)}**${v.api.plate ? ` \xB7 ${plain(v.api.plate)}` : ""}${v.internal.internalCode ? ` \xB7 ${plain(v.internal.internalCode)}` : ""}
+   \u21B3 Besitzer ${plain(v.api.owner)}${v.ownerOnline ? "" : " (nicht im Spiel)"}${v.internal.unit ? ` \xB7 Einheit ${plain(v.internal.unit.callsign)}` : ""}${v.stale ? " \xB7 \u26A0\uFE0F veraltet" : ""}`);
+        return { ephemeral: true, embeds: [{ title: `\u{1F693} Polizeifahrzeuge (${r.items.length})`, description: clip(lines.join("\n") || "Gerade meldet ER:LC keine Polizeifahrzeuge.", 4e3), color: COLORS.info, footer: "Fahrer: nicht verf\xFCgbar \u2013 ER:LC meldet nur den Besitzer." }] };
       }
       return errorReply("Unbekannter Unterbefehl.");
     } catch (e) {
@@ -82563,7 +82600,7 @@ var INFO_PANEL_INTERACTION = {
 
 // apps/bot/src/commands/duty-reports.ts
 var drafts = /* @__PURE__ */ new Map();
-var key2 = (c, mode, id2) => `${c.discordId}:${mode}:${id2}`;
+var key3 = (c, mode, id2) => `${c.discordId}:${mode}:${id2}`;
 var sweep = () => {
   for (const [k, v] of drafts) if (Date.now() - v.at > 30 * 6e4) drafts.delete(k);
 };
@@ -82593,7 +82630,7 @@ async function load(c, mode, id2) {
   return { t: r.template, values: r.values, report: r };
 }
 function openModal(c, t, mode, id2, page, base) {
-  const k = key2(c, mode, id2);
+  const k = key3(c, mode, id2);
   if (page === 0) drafts.set(k, { values: { ...base }, at: Date.now() });
   return { modal: modal(t, mode, id2, page, drafts.get(k)?.values ?? base) };
 }
@@ -82662,7 +82699,7 @@ var DUTY_REPORT_INTERACTION = {
       }
       const mode = a1 === "e" ? "e" : "n", id2 = a2 ?? "", page = Number(a3 ?? 0);
       if (!/^[0-9a-f-]{36}$/.test(id2) || !Number.isInteger(page) || page < 0) return errorReply("Ung\xFCltige Anfrage.");
-      const k = key2(c, mode, id2);
+      const k = key3(c, mode, id2);
       if (action === "next") {
         const d2 = drafts.get(k);
         if (!d2) return errorReply("Die Eingabe ist abgelaufen \u2013 bitte neu beginnen.");
@@ -84614,15 +84651,15 @@ function wireReady(client0) {
         const roles = opts?.pingRoleIds ?? [];
         const msg = await ch.send({ ...roles.length ? { content: roles.map((r) => `<@&${r}>`).join(" ") } : {}, embeds: list.map(toEmbed), components: toRows(buttons), allowedMentions: { parse: [], roles } });
         if (opts?.replaceKey) {
-          const key3 = `last-${opts.replaceKey}-${channelId}`;
-          const old = await api.service("GET", `/bot/state/${key3}`).then((r) => r.value, () => null);
+          const key4 = `last-${opts.replaceKey}-${channelId}`;
+          const old = await api.service("GET", `/bot/state/${key4}`).then((r) => r.value, () => null);
           if (old && old !== msg.id) await ch.messages.delete(old).catch(() => void 0);
-          await api.service("PUT", `/bot/state/${key3}`, { value: msg.id }).catch((e) => console.error("could not remember message:", e instanceof Error ? e.message : e));
+          await api.service("PUT", `/bot/state/${key4}`, { value: msg.id }).catch((e) => console.error("could not remember message:", e instanceof Error ? e.message : e));
         }
         if (opts?.trackKey) {
-          const key3 = opts.trackKey;
-          const prev = await api.service("GET", `/bot/state/${key3}`).then((r) => Array.isArray(r.value) ? r.value : [], () => []);
-          await api.service("PUT", `/bot/state/${key3}`, { value: [...prev, { channelId, messageId: msg.id }].slice(-10) }).catch((e) => console.error("could not remember message:", e instanceof Error ? e.message : e));
+          const key4 = opts.trackKey;
+          const prev = await api.service("GET", `/bot/state/${key4}`).then((r) => Array.isArray(r.value) ? r.value : [], () => []);
+          await api.service("PUT", `/bot/state/${key4}`, { value: [...prev, { channelId, messageId: msg.id }].slice(-10) }).catch((e) => console.error("could not remember message:", e instanceof Error ? e.message : e));
         }
         if (opts?.thread) await msg.startThread({ name: opts.thread, autoArchiveDuration: 10080 }).catch((e) => console.error("could not create staff thread:", e instanceof Error ? e.message : e));
       },
@@ -84669,9 +84706,9 @@ function wireReady(client0) {
           return true;
         }
         if (type === "message.decided") {
-          const key3 = String(p.key ?? "");
-          if (!/^msg-[laq]-[0-9a-f-]{36}$/.test(key3)) throw new Error("invalid key");
-          const spots = await api.service("GET", `/bot/state/${key3}`).then((r) => Array.isArray(r.value) ? r.value : []);
+          const key4 = String(p.key ?? "");
+          if (!/^msg-[laq]-[0-9a-f-]{36}$/.test(key4)) throw new Error("invalid key");
+          const spots = await api.service("GET", `/bot/state/${key4}`).then((r) => Array.isArray(r.value) ? r.value : []);
           for (const spot of spots) {
             const ch = spot.channelId ? await client.channels.fetch(spot.channelId).catch(() => null) : null;
             if (!ch?.isTextBased() || !("messages" in ch) || !spot.messageId) continue;

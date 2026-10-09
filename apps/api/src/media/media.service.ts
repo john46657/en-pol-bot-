@@ -22,8 +22,8 @@ const SIGNATURES: Record<string, (b: Buffer) => boolean> = {
 };
 const EXT: Record<string, string> = { 'image/png': 'png', 'image/jpeg': 'jpg', 'image/gif': 'gif', 'image/webp': 'webp', 'application/pdf': 'pdf', 'text/plain': 'txt' };
 /** Welche Permission zum Anhängen/Ansehen an einem Entitätstyp nötig ist. */
-const WRITE: Record<string, string> = { WelcomeBanner: 'settings.manage', EmbedAsset: 'settings.manage', HrAttachment: 'personnel.view', CadMap: 'cad.manage_map', Evidence: 'evidence.create', Report: 'reports.create', Complaint: 'complaints.create', Incident: 'incidents.edit', Person: 'persons.edit', Investigation: 'investigations.edit', Vehicle: 'vehicles.edit' };
-const READ: Record<string, string> = { WelcomeBanner: 'settings.view', EmbedAsset: 'settings.view', HrAttachment: 'personnel.view', CadMap: 'cad.view', Evidence: 'evidence.view', Report: 'reports.view', Complaint: 'complaints.view', Incident: 'incidents.view', Person: 'persons.view', Investigation: 'investigations.view', Vehicle: 'vehicles.view' };
+const WRITE: Record<string, string> = { FleetModel: 'fleet.manage_catalog', WelcomeBanner: 'settings.manage', EmbedAsset: 'settings.manage', HrAttachment: 'personnel.view', CadMap: 'cad.manage_map', Evidence: 'evidence.create', Report: 'reports.create', Complaint: 'complaints.create', Incident: 'incidents.edit', Person: 'persons.edit', Investigation: 'investigations.edit', Vehicle: 'vehicles.edit' };
+const READ: Record<string, string> = { FleetModel: 'fleet.view', WelcomeBanner: 'settings.view', EmbedAsset: 'settings.view', HrAttachment: 'personnel.view', CadMap: 'cad.view', Evidence: 'evidence.view', Report: 'reports.view', Complaint: 'complaints.view', Incident: 'incidents.view', Person: 'persons.view', Investigation: 'investigations.view', Vehicle: 'vehicles.view' };
 
 @Injectable()
 export class MediaService {

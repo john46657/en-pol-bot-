@@ -12,6 +12,7 @@ import { AppError } from '../common/errors';
 import { webUrl } from '../common/web-url';
 import { ErlcClient, type ErlcResult } from './erlc-client';
 import { decryptSecret, encryptSecret } from './erlc-crypto';
+import { FleetService } from '../fleet/fleet.service';
 import { CadNotifyService } from './cad-notify.service';
 
 /** Öffentlicher Ed25519-Schlüssel von PRC für Event-Webhooks (https://apidocs.erlc.gg/event-webhooks). */
@@ -116,7 +117,7 @@ export class ErlcService {
   private webhookKey: KeyObject;
   private readonly seen = new Map<string, number>();
 
-  constructor(private readonly prisma: PrismaService, private readonly audit: AuditService, private readonly perms: PermissionService, private readonly realtime: RealtimeService, private readonly notify: CadNotifyService, private readonly records: ErlcSyncService) {
+  constructor(private readonly prisma: PrismaService, private readonly audit: AuditService, private readonly perms: PermissionService, private readonly realtime: RealtimeService, private readonly notify: CadNotifyService, private readonly records: ErlcSyncService, private readonly fleet: FleetService) {
     this.client = new ErlcClient();
     this.webhookKey = createPublicKey({ key: Buffer.from(process.env.ERLC_WEBHOOK_PUBLIC_KEY || PRC_WEBHOOK_KEY, 'base64'), format: 'der', type: 'spki' });
   }
@@ -248,6 +249,7 @@ export class ErlcService {
       await this.prisma.erlcServer.update({ where: { id }, data: { status: 'CONNECTED', lastSyncAt: new Date(), latencyMs: res.latencyMs, snapshot: snap as unknown as Prisma.InputJsonValue, rateLimit: this.client.rate(id) as unknown as Prisma.InputJsonValue } });
       if (snap.emergencyCalls) await this.syncCalls(s, snap.emergencyCalls, 'API');
       await this.records.sync(id, snap, s.guildId); // Personen + Fahrzeuge ins System übernehmen (Akten-Bereich des Discord-Servers)
+      await this.fleet.sync(id, snap, manual).catch((e: Error) => this.log.error(`Polizeifahrzeuge: ${e.message}`)); // Live-Polizeifahrzeuge abgleichen
       this.realtime.publish('cad', 'erlc.snapshot', { serverId: id });
       return { ok: true, status: 'CONNECTED', latencyMs: res.latencyMs };
     } finally { r.inFlight = false; }

@@ -26,6 +26,7 @@ const errors_1 = require("../common/errors");
 const web_url_1 = require("../common/web-url");
 const erlc_client_1 = require("./erlc-client");
 const erlc_crypto_1 = require("./erlc-crypto");
+const fleet_service_1 = require("../fleet/fleet.service");
 const cad_notify_service_1 = require("./cad-notify.service");
 /** Öffentlicher Ed25519-Schlüssel von PRC für Event-Webhooks (https://apidocs.erlc.gg/event-webhooks). */
 const PRC_WEBHOOK_KEY = 'MCowBQYDK2VwAyEAjSICb9pp0kHizGQtdG8ySWsDChfGqi+gyFCttigBNOA=';
@@ -119,18 +120,20 @@ let ErlcService = class ErlcService {
     realtime;
     notify;
     records;
+    fleet;
     log = new common_1.Logger('ERLC');
     client;
     rt = new Map();
     webhookKey;
     seen = new Map();
-    constructor(prisma, audit, perms, realtime, notify, records) {
+    constructor(prisma, audit, perms, realtime, notify, records, fleet) {
         this.prisma = prisma;
         this.audit = audit;
         this.perms = perms;
         this.realtime = realtime;
         this.notify = notify;
         this.records = records;
+        this.fleet = fleet;
         this.client = new erlc_client_1.ErlcClient();
         this.webhookKey = (0, node_crypto_1.createPublicKey)({ key: Buffer.from(process.env.ERLC_WEBHOOK_PUBLIC_KEY || PRC_WEBHOOK_KEY, 'base64'), format: 'der', type: 'spki' });
     }
@@ -271,6 +274,7 @@ let ErlcService = class ErlcService {
             if (snap.emergencyCalls)
                 await this.syncCalls(s, snap.emergencyCalls, 'API');
             await this.records.sync(id, snap, s.guildId); // Personen + Fahrzeuge ins System übernehmen (Akten-Bereich des Discord-Servers)
+            await this.fleet.sync(id, snap, manual).catch((e) => this.log.error(`Polizeifahrzeuge: ${e.message}`)); // Live-Polizeifahrzeuge abgleichen
             this.realtime.publish('cad', 'erlc.snapshot', { serverId: id });
             return { ok: true, status: 'CONNECTED', latencyMs: res.latencyMs };
         }
@@ -434,6 +438,6 @@ let ErlcService = class ErlcService {
 exports.ErlcService = ErlcService;
 exports.ErlcService = ErlcService = __decorate([
     (0, common_1.Injectable)(),
-    __metadata("design:paramtypes", [prisma_service_1.PrismaService, audit_service_1.AuditService, permission_service_1.PermissionService, realtime_service_1.RealtimeService, cad_notify_service_1.CadNotifyService, erlc_sync_service_1.ErlcSyncService])
+    __metadata("design:paramtypes", [prisma_service_1.PrismaService, audit_service_1.AuditService, permission_service_1.PermissionService, realtime_service_1.RealtimeService, cad_notify_service_1.CadNotifyService, erlc_sync_service_1.ErlcSyncService, fleet_service_1.FleetService])
 ], ErlcService);
 //# sourceMappingURL=erlc.service.js.map

@@ -1,5 +1,6 @@
 import { Logger, Module, type OnApplicationBootstrap, type OnModuleDestroy } from '@nestjs/common';
 import { MediaModule } from '../media/media.module';
+import { FleetModule } from '../fleet/fleet.module';
 import { CadController, ErlcController } from './cad.controller';
 import { CadService } from './cad.service';
 import { CadTabletService } from './cad-tablet.service';
@@ -12,7 +13,7 @@ import { ErlcSyncService } from './erlc-sync.service';
 
 /** CAD-Leitstelle + ER:LC-Integration. Der ER:LC-Abruf läuft ausschließlich hier im Backend. */
 @Module({
-  imports: [MediaModule],
+  imports: [MediaModule, FleetModule],
   controllers: [CadController, ErlcController],
   providers: [CadService, CadTabletService, CadConfigService, CadNotifyService, CadHandoverService, CadStatsService, ErlcService, ErlcSyncService],
   exports: [CadService, CadConfigService, ErlcService],

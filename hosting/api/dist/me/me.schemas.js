@@ -49,6 +49,13 @@ exports.preferencesSchema = zod_1.z.object({
         sound: zod_1.z.boolean().optional(),
         setupHidden: zod_1.z.boolean().optional(),
     }).optional(),
+    /** Persönliche Filter/Sortierung der Polizeifahrzeuge. */
+    fleet: zod_1.z.object({
+        search: zod_1.z.string().max(80).optional(),
+        filters: zod_1.z.object({ model: zod_1.z.string().max(120).optional(), color: zod_1.z.string().max(60).optional(), owner: zod_1.z.string().max(60).optional(), unit: zod_1.z.string().max(40).optional(), active: zod_1.z.enum(['active', 'inactive', 'all']).optional(), online: zod_1.z.enum(['all', 'yes', 'no']).optional() }).optional(),
+        sort: zod_1.z.object({ key: zod_1.z.string().max(20), dir: zod_1.z.enum(['asc', 'desc']) }).optional(),
+        mapFilter: zod_1.z.string().max(80).optional(),
+    }).optional(),
     voice: zod_1.z.object({
         channelIds: zod_1.z.array(zod_1.z.string().regex(/^\d{15,25}$/)).max(100),
         categoryIds: zod_1.z.array(zod_1.z.string().regex(/^\d{15,25}$/)).max(50),

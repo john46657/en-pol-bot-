@@ -16,3 +16,4 @@ export * from './hr';
 export * from './logging';
 export * from './backup';
 export * from './mdt';
+export * from './fleet';

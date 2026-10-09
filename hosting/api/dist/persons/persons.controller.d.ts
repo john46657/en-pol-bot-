@@ -86,6 +86,17 @@ export declare class PersonsController {
             aliases: string[];
             notes: string | null;
             custom: import("@prisma/client/runtime/library").JsonValue | null;
+            fullName: string | null;
+            dateOfBirth: Date | null;
+            gender: string | null;
+            phone: string | null;
+            job: string | null;
+            nationality: string | null;
+            address: string | null;
+            appearance: import("@prisma/client/runtime/library").JsonValue | null;
+            licenses: string[];
+            flags: string[];
+            photoId: string | null;
         }[];
         total: number;
         page: number;
@@ -125,6 +136,17 @@ export declare class PersonsController {
             aliases: string[];
             notes: string | null;
             custom: import("@prisma/client/runtime/library").JsonValue | null;
+            fullName: string | null;
+            dateOfBirth: Date | null;
+            gender: string | null;
+            phone: string | null;
+            job: string | null;
+            nationality: string | null;
+            address: string | null;
+            appearance: import("@prisma/client/runtime/library").JsonValue | null;
+            licenses: string[];
+            flags: string[];
+            photoId: string | null;
         };
         tickets: {
             number: string;
@@ -176,6 +198,17 @@ export declare class PersonsController {
             aliases: string[];
             notes: string | null;
             custom: import("@prisma/client/runtime/library").JsonValue | null;
+            fullName: string | null;
+            dateOfBirth: Date | null;
+            gender: string | null;
+            phone: string | null;
+            job: string | null;
+            nationality: string | null;
+            address: string | null;
+            appearance: import("@prisma/client/runtime/library").JsonValue | null;
+            licenses: string[];
+            flags: string[];
+            photoId: string | null;
         };
         possibleDuplicates: {
             id: string;
@@ -197,6 +230,17 @@ export declare class PersonsController {
         aliases: string[];
         notes: string | null;
         custom: import("@prisma/client/runtime/library").JsonValue | null;
+        fullName: string | null;
+        dateOfBirth: Date | null;
+        gender: string | null;
+        phone: string | null;
+        job: string | null;
+        nationality: string | null;
+        address: string | null;
+        appearance: import("@prisma/client/runtime/library").JsonValue | null;
+        licenses: string[];
+        flags: string[];
+        photoId: string | null;
     }>;
     archive(a: Actor, id: string, b: z.infer<typeof archive>): Promise<{
         serverId: string | null;
@@ -211,6 +255,17 @@ export declare class PersonsController {
         aliases: string[];
         notes: string | null;
         custom: import("@prisma/client/runtime/library").JsonValue | null;
+        fullName: string | null;
+        dateOfBirth: Date | null;
+        gender: string | null;
+        phone: string | null;
+        job: string | null;
+        nationality: string | null;
+        address: string | null;
+        appearance: import("@prisma/client/runtime/library").JsonValue | null;
+        licenses: string[];
+        flags: string[];
+        photoId: string | null;
     }>;
     merge(a: Actor, id: string, b: z.infer<typeof merge>): Promise<{
         serverId: string | null;
@@ -225,6 +280,17 @@ export declare class PersonsController {
         aliases: string[];
         notes: string | null;
         custom: import("@prisma/client/runtime/library").JsonValue | null;
+        fullName: string | null;
+        dateOfBirth: Date | null;
+        gender: string | null;
+        phone: string | null;
+        job: string | null;
+        nationality: string | null;
+        address: string | null;
+        appearance: import("@prisma/client/runtime/library").JsonValue | null;
+        licenses: string[];
+        flags: string[];
+        photoId: string | null;
     }>;
 }
 export {};

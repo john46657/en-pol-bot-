@@ -107,6 +107,7 @@ declare const prefsBody: z.ZodObject<{
             sound: z.ZodOptional<z.ZodBoolean>;
             setupHidden: z.ZodOptional<z.ZodBoolean>;
         }, "strip", z.ZodTypeAny, {
+            erlcServerId?: string | undefined;
             compact?: boolean | undefined;
             widgets?: string[] | undefined;
             hiddenLayers?: string[] | undefined;
@@ -117,10 +118,10 @@ declare const prefsBody: z.ZodObject<{
             } | undefined;
             sidebar?: boolean | undefined;
             favoriteIncidents?: string[] | undefined;
-            erlcServerId?: string | undefined;
             sound?: boolean | undefined;
             setupHidden?: boolean | undefined;
         }, {
+            erlcServerId?: string | undefined;
             compact?: boolean | undefined;
             widgets?: string[] | undefined;
             hiddenLayers?: string[] | undefined;
@@ -131,9 +132,74 @@ declare const prefsBody: z.ZodObject<{
             } | undefined;
             sidebar?: boolean | undefined;
             favoriteIncidents?: string[] | undefined;
-            erlcServerId?: string | undefined;
             sound?: boolean | undefined;
             setupHidden?: boolean | undefined;
+        }>>;
+        fleet: z.ZodOptional<z.ZodObject<{
+            search: z.ZodOptional<z.ZodString>;
+            filters: z.ZodOptional<z.ZodObject<{
+                model: z.ZodOptional<z.ZodString>;
+                color: z.ZodOptional<z.ZodString>;
+                owner: z.ZodOptional<z.ZodString>;
+                unit: z.ZodOptional<z.ZodString>;
+                active: z.ZodOptional<z.ZodEnum<["active", "inactive", "all"]>>;
+                online: z.ZodOptional<z.ZodEnum<["all", "yes", "no"]>>;
+            }, "strip", z.ZodTypeAny, {
+                model?: string | undefined;
+                unit?: string | undefined;
+                active?: "active" | "inactive" | "all" | undefined;
+                color?: string | undefined;
+                owner?: string | undefined;
+                online?: "all" | "yes" | "no" | undefined;
+            }, {
+                model?: string | undefined;
+                unit?: string | undefined;
+                active?: "active" | "inactive" | "all" | undefined;
+                color?: string | undefined;
+                owner?: string | undefined;
+                online?: "all" | "yes" | "no" | undefined;
+            }>>;
+            sort: z.ZodOptional<z.ZodObject<{
+                key: z.ZodString;
+                dir: z.ZodEnum<["asc", "desc"]>;
+            }, "strip", z.ZodTypeAny, {
+                key: string;
+                dir: "asc" | "desc";
+            }, {
+                key: string;
+                dir: "asc" | "desc";
+            }>>;
+            mapFilter: z.ZodOptional<z.ZodString>;
+        }, "strip", z.ZodTypeAny, {
+            search?: string | undefined;
+            sort?: {
+                key: string;
+                dir: "asc" | "desc";
+            } | undefined;
+            filters?: {
+                model?: string | undefined;
+                unit?: string | undefined;
+                active?: "active" | "inactive" | "all" | undefined;
+                color?: string | undefined;
+                owner?: string | undefined;
+                online?: "all" | "yes" | "no" | undefined;
+            } | undefined;
+            mapFilter?: string | undefined;
+        }, {
+            search?: string | undefined;
+            sort?: {
+                key: string;
+                dir: "asc" | "desc";
+            } | undefined;
+            filters?: {
+                model?: string | undefined;
+                unit?: string | undefined;
+                active?: "active" | "inactive" | "all" | undefined;
+                color?: string | undefined;
+                owner?: string | undefined;
+                online?: "all" | "yes" | "no" | undefined;
+            } | undefined;
+            mapFilter?: string | undefined;
         }>>;
         voice: z.ZodOptional<z.ZodObject<{
             channelIds: z.ZodArray<z.ZodString, "many">;
@@ -168,6 +234,7 @@ declare const prefsBody: z.ZodObject<{
             toasts?: boolean | undefined;
         } | undefined;
         cad?: {
+            erlcServerId?: string | undefined;
             compact?: boolean | undefined;
             widgets?: string[] | undefined;
             hiddenLayers?: string[] | undefined;
@@ -178,7 +245,6 @@ declare const prefsBody: z.ZodObject<{
             } | undefined;
             sidebar?: boolean | undefined;
             favoriteIncidents?: string[] | undefined;
-            erlcServerId?: string | undefined;
             sound?: boolean | undefined;
             setupHidden?: boolean | undefined;
         } | undefined;
@@ -190,6 +256,22 @@ declare const prefsBody: z.ZodObject<{
             maxChannels: number;
             showEmpty?: boolean | undefined;
             showDuration?: boolean | undefined;
+        } | undefined;
+        fleet?: {
+            search?: string | undefined;
+            sort?: {
+                key: string;
+                dir: "asc" | "desc";
+            } | undefined;
+            filters?: {
+                model?: string | undefined;
+                unit?: string | undefined;
+                active?: "active" | "inactive" | "all" | undefined;
+                color?: string | undefined;
+                owner?: string | undefined;
+                online?: "all" | "yes" | "no" | undefined;
+            } | undefined;
+            mapFilter?: string | undefined;
         } | undefined;
         accent?: string | undefined;
         background?: {
@@ -229,6 +311,7 @@ declare const prefsBody: z.ZodObject<{
             toasts?: boolean | undefined;
         } | undefined;
         cad?: {
+            erlcServerId?: string | undefined;
             compact?: boolean | undefined;
             widgets?: string[] | undefined;
             hiddenLayers?: string[] | undefined;
@@ -239,7 +322,6 @@ declare const prefsBody: z.ZodObject<{
             } | undefined;
             sidebar?: boolean | undefined;
             favoriteIncidents?: string[] | undefined;
-            erlcServerId?: string | undefined;
             sound?: boolean | undefined;
             setupHidden?: boolean | undefined;
         } | undefined;
@@ -251,6 +333,22 @@ declare const prefsBody: z.ZodObject<{
             maxChannels: number;
             showEmpty?: boolean | undefined;
             showDuration?: boolean | undefined;
+        } | undefined;
+        fleet?: {
+            search?: string | undefined;
+            sort?: {
+                key: string;
+                dir: "asc" | "desc";
+            } | undefined;
+            filters?: {
+                model?: string | undefined;
+                unit?: string | undefined;
+                active?: "active" | "inactive" | "all" | undefined;
+                color?: string | undefined;
+                owner?: string | undefined;
+                online?: "all" | "yes" | "no" | undefined;
+            } | undefined;
+            mapFilter?: string | undefined;
         } | undefined;
         accent?: string | undefined;
         background?: {
@@ -292,6 +390,7 @@ declare const prefsBody: z.ZodObject<{
             toasts?: boolean | undefined;
         } | undefined;
         cad?: {
+            erlcServerId?: string | undefined;
             compact?: boolean | undefined;
             widgets?: string[] | undefined;
             hiddenLayers?: string[] | undefined;
@@ -302,7 +401,6 @@ declare const prefsBody: z.ZodObject<{
             } | undefined;
             sidebar?: boolean | undefined;
             favoriteIncidents?: string[] | undefined;
-            erlcServerId?: string | undefined;
             sound?: boolean | undefined;
             setupHidden?: boolean | undefined;
         } | undefined;
@@ -314,6 +412,22 @@ declare const prefsBody: z.ZodObject<{
             maxChannels: number;
             showEmpty?: boolean | undefined;
             showDuration?: boolean | undefined;
+        } | undefined;
+        fleet?: {
+            search?: string | undefined;
+            sort?: {
+                key: string;
+                dir: "asc" | "desc";
+            } | undefined;
+            filters?: {
+                model?: string | undefined;
+                unit?: string | undefined;
+                active?: "active" | "inactive" | "all" | undefined;
+                color?: string | undefined;
+                owner?: string | undefined;
+                online?: "all" | "yes" | "no" | undefined;
+            } | undefined;
+            mapFilter?: string | undefined;
         } | undefined;
         accent?: string | undefined;
         background?: {
@@ -355,6 +469,7 @@ declare const prefsBody: z.ZodObject<{
             toasts?: boolean | undefined;
         } | undefined;
         cad?: {
+            erlcServerId?: string | undefined;
             compact?: boolean | undefined;
             widgets?: string[] | undefined;
             hiddenLayers?: string[] | undefined;
@@ -365,7 +480,6 @@ declare const prefsBody: z.ZodObject<{
             } | undefined;
             sidebar?: boolean | undefined;
             favoriteIncidents?: string[] | undefined;
-            erlcServerId?: string | undefined;
             sound?: boolean | undefined;
             setupHidden?: boolean | undefined;
         } | undefined;
@@ -377,6 +491,22 @@ declare const prefsBody: z.ZodObject<{
             maxChannels: number;
             showEmpty?: boolean | undefined;
             showDuration?: boolean | undefined;
+        } | undefined;
+        fleet?: {
+            search?: string | undefined;
+            sort?: {
+                key: string;
+                dir: "asc" | "desc";
+            } | undefined;
+            filters?: {
+                model?: string | undefined;
+                unit?: string | undefined;
+                active?: "active" | "inactive" | "all" | undefined;
+                color?: string | undefined;
+                owner?: string | undefined;
+                online?: "all" | "yes" | "no" | undefined;
+            } | undefined;
+            mapFilter?: string | undefined;
         } | undefined;
         accent?: string | undefined;
         background?: {
@@ -574,6 +704,7 @@ export declare class MeController {
                 toasts?: boolean | undefined;
             } | undefined;
             cad?: {
+                erlcServerId?: string | undefined;
                 compact?: boolean | undefined;
                 widgets?: string[] | undefined;
                 hiddenLayers?: string[] | undefined;
@@ -584,7 +715,6 @@ export declare class MeController {
                 } | undefined;
                 sidebar?: boolean | undefined;
                 favoriteIncidents?: string[] | undefined;
-                erlcServerId?: string | undefined;
                 sound?: boolean | undefined;
                 setupHidden?: boolean | undefined;
             } | undefined;
@@ -596,6 +726,22 @@ export declare class MeController {
                 maxChannels: number;
                 showEmpty?: boolean | undefined;
                 showDuration?: boolean | undefined;
+            } | undefined;
+            fleet?: {
+                search?: string | undefined;
+                sort?: {
+                    key: string;
+                    dir: "asc" | "desc";
+                } | undefined;
+                filters?: {
+                    model?: string | undefined;
+                    unit?: string | undefined;
+                    active?: "active" | "inactive" | "all" | undefined;
+                    color?: string | undefined;
+                    owner?: string | undefined;
+                    online?: "all" | "yes" | "no" | undefined;
+                } | undefined;
+                mapFilter?: string | undefined;
             } | undefined;
             accent?: string | undefined;
             background?: {

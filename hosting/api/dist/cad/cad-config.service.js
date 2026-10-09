@@ -56,8 +56,9 @@ let CadConfigService = class CadConfigService {
         const v = (await this.prisma.systemSetting.findUnique({ where: { key: KEY } }))?.value;
         const merged = { ...shared_1.DEFAULT_CAD_CONFIG, ...(v ?? {}), map: { ...shared_1.DEFAULT_CAD_CONFIG.map, ...(v?.map ?? {}) } };
         // Neu hinzugekommene eingebaute Ebenen/Marker auch bei älteren Einstellungen anbieten
+        // eingebaute Layer behalten ihre Standard-Bezeichnung (z. B. nach einer Umbenennung im Code)
         if (v?.layers)
-            merged.layers = [...v.layers, ...shared_1.DEFAULT_CAD_CONFIG.layers.filter((l) => !v.layers.some((x) => x.key === l.key))].slice(0, 40);
+            merged.layers = [...v.layers.map((l) => { const d = shared_1.DEFAULT_CAD_CONFIG.layers.find((x) => x.key === l.key && x.builtin); return d ? { ...l, label: d.label } : l; }), ...shared_1.DEFAULT_CAD_CONFIG.layers.filter((l) => !v.layers.some((x) => x.key === l.key))].slice(0, 40);
         // Fahrzeug-Ebene zeigt nur noch Polizeifahrzeuge (GPS): alte Standardbezeichnung/-sichtbarkeit nachziehen
         merged.layers = merged.layers.map((l) => (l.key === 'vehicles' && l.label === 'Fahrzeuge' ? { ...l, label: 'Polizeifahrzeuge (GPS)', enabledByDefault: true } : l));
         if (v?.markers)

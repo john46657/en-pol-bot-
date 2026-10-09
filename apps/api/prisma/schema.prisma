@@ -1203,6 +1203,7 @@ model ErlcServer {
   updatedAt      DateTime            @updatedAt
   calls          ErlcEmergencyCall[]
   commands       ErlcCommandLog[]
+  liveVehicles   ErlcLiveVehicle[]
 }
 
 /// Notruf aus ER:LC (API oder Webhook). Verknüpfung mit einem CAD-Einsatz über incidentId.
@@ -1876,4 +1877,72 @@ model CadIncidentStat {
 
   @@index([closedAt])
   @@index([createdAt])
+}
+
+/// Polizeifahrzeug aus der ER:LC-API (nur gespawnte Fahrzeuge). API-Felder schreibt nur der Abgleich, interne Felder nur das Dashboard.
+/// ER:LC liefert keine Fahrzeug-ID: `key` = Besitzer + Modell + Kennzeichen (+ #n bei mehreren gleichen → `uncertain`).
+model ErlcLiveVehicle {
+  id             String             @id @default(uuid()) @db.Uuid
+  erlcServerId   String             @db.Uuid
+  key            String
+  // ---- aus der ER:LC-API ----
+  name           String
+  owner          String
+  ownerRobloxId  String?
+  ownerTeam      String?
+  plate          String?
+  texture        String?
+  colorHex       String?
+  colorName      String?
+  /// „team“ = Besitzer im Team Police, „catalog“ = Modell steht im Polizei-Katalog (Besitzer gerade nicht im Spiel)
+  policeReason   String
+  uncertain      Boolean            @default(false)
+  active         Boolean            @default(true)
+  firstSeenAt    DateTime           @default(now())
+  lastSeenAt     DateTime           @default(now())
+  apiChangedAt   DateTime           @default(now())
+  // ---- intern (CAD) ----
+  unitId         String?            @db.Uuid
+  internalStatus String             @default("UNASSIGNED")
+  internalCode   String?
+  notes          String?
+  tags           String[]           @default([])
+  version        Int                @default(1)
+  updatedAt      DateTime           @updatedAt
+  server         ErlcServer         @relation(fields: [erlcServerId], references: [id], onDelete: Cascade)
+  events         ErlcVehicleEvent[]
+
+  @@unique([erlcServerId, key])
+  @@index([active])
+  @@index([unitId])
+}
+
+/// Verlauf eines Live-Fahrzeugs: gespawnt, nicht mehr gemeldet, API-Daten geändert, interne Änderung, Einsatz dokumentiert.
+model ErlcVehicleEvent {
+  id         String          @id @default(uuid()) @db.Uuid
+  vehicleId  String          @db.Uuid
+  kind       String // SPAWNED | DESPAWNED | CHANGED | INTERNAL | INCIDENT
+  text       String
+  incidentId String?         @db.Uuid
+  actorId    String?         @db.Uuid
+  createdAt  DateTime        @default(now())
+  vehicle    ErlcLiveVehicle @relation(fields: [vehicleId], references: [id], onDelete: Cascade)
+
+  @@index([vehicleId, createdAt])
+}
+
+/// Gepflegter Katalog der Polizeifahrzeug-Modelle (getrennt von den gerade gespawnten Fahrzeugen).
+model PoliceVehicleModel {
+  id           String   @id @default(uuid()) @db.Uuid
+  name         String
+  erlcName     String   @unique
+  category     String
+  description  String?
+  internalCode String?
+  imageId      String?  @db.Uuid
+  active       Boolean  @default(true)
+  tags         String[] @default([])
+  department   String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 }
