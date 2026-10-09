@@ -74,18 +74,18 @@ export declare class SekController {
         authorCallsign: string | null;
         number: string;
         id: string;
+        authorId: string;
         createdAt: Date;
         description: string;
-        authorId: string;
         occurredAt: Date;
         missionType: string;
     }[]>;
     createReport(a: Actor, b: z.infer<typeof report>): Promise<{
         number: string;
         id: string;
+        authorId: string;
         createdAt: Date;
         description: string;
-        authorId: string;
         occurredAt: Date;
         missionType: string;
     }>;

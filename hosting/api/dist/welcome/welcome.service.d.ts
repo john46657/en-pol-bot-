@@ -19,20 +19,20 @@ export declare const welcomeConfigSchema: z.ZodEffects<z.ZodObject<{
         imageMediaId: z.ZodDefault<z.ZodUnion<[z.ZodString, z.ZodLiteral<"">]>>;
     }, "strip", z.ZodTypeAny, {
         message: string;
+        title: string;
         color: string;
         channelId: string | null;
         enabled: boolean;
-        title: string;
         image: string;
         showAvatar: boolean;
         pingUser: boolean;
         imageMediaId: string;
     }, {
         message?: string | undefined;
+        title?: string | undefined;
         color?: string | undefined;
         channelId?: string | null | undefined;
         enabled?: boolean | undefined;
-        title?: string | undefined;
         image?: string | undefined;
         showAvatar?: boolean | undefined;
         pingUser?: boolean | undefined;
@@ -61,20 +61,20 @@ export declare const welcomeConfigSchema: z.ZodEffects<z.ZodObject<{
         imageMediaId: z.ZodDefault<z.ZodUnion<[z.ZodString, z.ZodLiteral<"">]>>;
     }, "strip", z.ZodTypeAny, {
         message: string;
+        title: string;
         color: string;
         channelId: string | null;
         enabled: boolean;
-        title: string;
         image: string;
         showAvatar: boolean;
         pingUser: boolean;
         imageMediaId: string;
     }, {
         message?: string | undefined;
+        title?: string | undefined;
         color?: string | undefined;
         channelId?: string | null | undefined;
         enabled?: boolean | undefined;
-        title?: string | undefined;
         image?: string | undefined;
         showAvatar?: boolean | undefined;
         pingUser?: boolean | undefined;
@@ -87,10 +87,10 @@ export declare const welcomeConfigSchema: z.ZodEffects<z.ZodObject<{
     };
     welcome: {
         message: string;
+        title: string;
         color: string;
         channelId: string | null;
         enabled: boolean;
-        title: string;
         image: string;
         showAvatar: boolean;
         pingUser: boolean;
@@ -99,10 +99,10 @@ export declare const welcomeConfigSchema: z.ZodEffects<z.ZodObject<{
     autoRoleIds: string[];
     goodbye: {
         message: string;
+        title: string;
         color: string;
         channelId: string | null;
         enabled: boolean;
-        title: string;
         image: string;
         showAvatar: boolean;
         pingUser: boolean;
@@ -115,10 +115,10 @@ export declare const welcomeConfigSchema: z.ZodEffects<z.ZodObject<{
     } | undefined;
     welcome?: {
         message?: string | undefined;
+        title?: string | undefined;
         color?: string | undefined;
         channelId?: string | null | undefined;
         enabled?: boolean | undefined;
-        title?: string | undefined;
         image?: string | undefined;
         showAvatar?: boolean | undefined;
         pingUser?: boolean | undefined;
@@ -127,10 +127,10 @@ export declare const welcomeConfigSchema: z.ZodEffects<z.ZodObject<{
     autoRoleIds?: string[] | undefined;
     goodbye?: {
         message?: string | undefined;
+        title?: string | undefined;
         color?: string | undefined;
         channelId?: string | null | undefined;
         enabled?: boolean | undefined;
-        title?: string | undefined;
         image?: string | undefined;
         showAvatar?: boolean | undefined;
         pingUser?: boolean | undefined;
@@ -143,10 +143,10 @@ export declare const welcomeConfigSchema: z.ZodEffects<z.ZodObject<{
     };
     welcome: {
         message: string;
+        title: string;
         color: string;
         channelId: string | null;
         enabled: boolean;
-        title: string;
         image: string;
         showAvatar: boolean;
         pingUser: boolean;
@@ -155,10 +155,10 @@ export declare const welcomeConfigSchema: z.ZodEffects<z.ZodObject<{
     autoRoleIds: string[];
     goodbye: {
         message: string;
+        title: string;
         color: string;
         channelId: string | null;
         enabled: boolean;
-        title: string;
         image: string;
         showAvatar: boolean;
         pingUser: boolean;
@@ -171,10 +171,10 @@ export declare const welcomeConfigSchema: z.ZodEffects<z.ZodObject<{
     } | undefined;
     welcome?: {
         message?: string | undefined;
+        title?: string | undefined;
         color?: string | undefined;
         channelId?: string | null | undefined;
         enabled?: boolean | undefined;
-        title?: string | undefined;
         image?: string | undefined;
         showAvatar?: boolean | undefined;
         pingUser?: boolean | undefined;
@@ -183,10 +183,10 @@ export declare const welcomeConfigSchema: z.ZodEffects<z.ZodObject<{
     autoRoleIds?: string[] | undefined;
     goodbye?: {
         message?: string | undefined;
+        title?: string | undefined;
         color?: string | undefined;
         channelId?: string | null | undefined;
         enabled?: boolean | undefined;
-        title?: string | undefined;
         image?: string | undefined;
         showAvatar?: boolean | undefined;
         pingUser?: boolean | undefined;

@@ -42,29 +42,29 @@ export declare class BackupController {
     }): import("@prisma/client").Prisma.PrismaPromise<{
         error: string | null;
         id: string;
+        status: string;
         createdAt: Date;
+        createdById: string | null;
         name: string;
         guildId: string;
-        createdById: string | null;
-        status: string;
         guildName: string;
-        stats: import("@prisma/client/runtime/library").JsonValue;
         auto: boolean;
+        stats: import("@prisma/client/runtime/library").JsonValue;
         restoredAt: Date | null;
         restoreResult: import("@prisma/client/runtime/library").JsonValue;
     }[]>;
     getDiscord(id: string): Promise<{
         error: string | null;
-        data: import("@prisma/client/runtime/library").JsonValue | null;
         id: string;
+        status: string;
         createdAt: Date;
+        createdById: string | null;
         name: string;
         guildId: string;
-        createdById: string | null;
-        status: string;
+        data: import("@prisma/client/runtime/library").JsonValue | null;
         guildName: string;
-        stats: import("@prisma/client/runtime/library").JsonValue | null;
         auto: boolean;
+        stats: import("@prisma/client/runtime/library").JsonValue | null;
         restoredAt: Date | null;
         restoreResult: import("@prisma/client/runtime/library").JsonValue | null;
     }>;
@@ -73,16 +73,16 @@ export declare class BackupController {
         name?: string;
     }): Promise<{
         error: string | null;
-        data: import("@prisma/client/runtime/library").JsonValue | null;
         id: string;
+        status: string;
         createdAt: Date;
+        createdById: string | null;
         name: string;
         guildId: string;
-        createdById: string | null;
-        status: string;
+        data: import("@prisma/client/runtime/library").JsonValue | null;
         guildName: string;
-        stats: import("@prisma/client/runtime/library").JsonValue | null;
         auto: boolean;
+        stats: import("@prisma/client/runtime/library").JsonValue | null;
         restoredAt: Date | null;
         restoreResult: import("@prisma/client/runtime/library").JsonValue | null;
     }>;

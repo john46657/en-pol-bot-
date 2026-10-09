@@ -496,18 +496,18 @@ export declare class SupportTicketsService {
             id: string;
             createdAt: Date;
             expiresAt: Date | null;
-            kind: string;
-            targetId: string;
-            ticketId: string;
             addedById: string | null;
+            kind: string;
+            ticketId: string;
+            targetId: string;
         }[];
         messages: {
             id: string;
-            createdAt: Date;
-            discordId: string | null;
             authorId: string;
+            createdAt: Date;
             content: string;
             attachments: Prisma.JsonValue;
+            discordId: string | null;
             authorName: string;
             ticketId: string;
             authorAvatar: string | null;
@@ -517,17 +517,17 @@ export declare class SupportTicketsService {
         }[];
         notes: {
             id: string;
-            createdAt: Date;
-            text: string;
             authorId: string | null;
+            createdAt: Date;
             authorName: string;
+            text: string;
             ticketId: string;
             authorUserId: string | null;
         }[] | null;
         logs: {
             id: string;
-            action: string;
             createdAt: Date;
+            action: string;
             actorId: string | null;
             detail: Prisma.JsonValue;
             ticketId: string;
@@ -552,22 +552,22 @@ export declare class SupportTicketsService {
         names: Record<string, string>;
         id: string;
         createdAt: Date;
-        name: string;
         updatedAt: Date;
-        guildId: string;
-        channelId: string | null;
-        closedAt: Date | null;
         lastActivityAt: Date;
+        name: string;
+        guildId: string;
+        closedAt: Date | null;
         deletedAt: Date | null;
         answers: Prisma.JsonValue;
+        channelId: string | null;
         categoryId: string;
-        statusId: string;
-        priorityId: string | null;
         panelId: string | null;
         controlMessageId: string | null;
         creatorId: string;
         creatorName: string;
         creatorUserId: string | null;
+        statusId: string;
+        priorityId: string | null;
         claimers: string[];
         questionIndex: number;
         locked: boolean;
@@ -613,17 +613,17 @@ export declare class SupportTicketsService {
         }[];
         reasons: {
             id: string;
-            text: string;
             position: number;
+            text: string;
         }[];
         access: {
             id: string;
             createdAt: Date;
             expiresAt: Date | null;
-            kind: string;
-            targetId: string;
-            ticketId: string;
             addedById: string | null;
+            kind: string;
+            ticketId: string;
+            targetId: string;
         }[];
         close: {
             mode: string;

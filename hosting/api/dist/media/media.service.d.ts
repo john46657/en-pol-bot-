@@ -27,9 +27,9 @@ export declare class MediaService {
         media: {
             id: string;
             createdAt: Date;
-            size: number;
             originalName: string;
             mime: string;
+            size: number;
             hash: string;
             storageKey: string;
             uploaderId: string;
@@ -41,9 +41,9 @@ export declare class MediaService {
     list(actor: Actor, linkedType: string, linkedId: string): Promise<{
         id: string;
         createdAt: Date;
-        size: number;
         originalName: string;
         mime: string;
+        size: number;
         hash: string;
     }[]>;
     /** Für den Bot (ohne Benutzer): nur als Willkommens-Banner hochgeladene Bilder. */

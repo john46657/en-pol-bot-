@@ -123,11 +123,11 @@ export declare class HrCoreService {
     ranks(includeInactive?: boolean): Prisma.PrismaPromise<{
         id: string;
         createdAt: Date;
-        name: string;
-        active: boolean;
         updatedAt: Date;
-        color: string;
         description: string | null;
+        active: boolean;
+        name: string;
+        color: string;
         icon: string | null;
         discordRoleIds: string[];
         position: number;
@@ -139,11 +139,11 @@ export declare class HrCoreService {
     rankByName(name: string | null | undefined, tx?: Tx | PrismaService): Promise<{
         id: string;
         createdAt: Date;
-        name: string;
-        active: boolean;
         updatedAt: Date;
-        color: string;
         description: string | null;
+        active: boolean;
+        name: string;
+        color: string;
         icon: string | null;
         discordRoleIds: string[];
         position: number;
@@ -157,11 +157,11 @@ export declare class HrCoreService {
     saveRank(actor: Actor, d: RankInput, id?: string): Promise<{
         id: string;
         createdAt: Date;
-        name: string;
-        active: boolean;
         updatedAt: Date;
-        color: string;
         description: string | null;
+        active: boolean;
+        name: string;
+        color: string;
         icon: string | null;
         discordRoleIds: string[];
         position: number;
@@ -173,11 +173,11 @@ export declare class HrCoreService {
     reorderRanks(actor: Actor, ids: string[]): Promise<{
         id: string;
         createdAt: Date;
-        name: string;
-        active: boolean;
         updatedAt: Date;
-        color: string;
         description: string | null;
+        active: boolean;
+        name: string;
+        color: string;
         icon: string | null;
         discordRoleIds: string[];
         position: number;
@@ -191,11 +191,11 @@ export declare class HrCoreService {
     nextRanks(current: HrRank | null): Promise<{
         id: string;
         createdAt: Date;
-        name: string;
-        active: boolean;
         updatedAt: Date;
-        color: string;
         description: string | null;
+        active: boolean;
+        name: string;
+        color: string;
         icon: string | null;
         discordRoleIds: string[];
         position: number;
@@ -233,15 +233,15 @@ export declare class HrCoreService {
         personnel: {
             serviceNumber: string | null;
             id: string;
-            qualifications: string[];
-            userId: string;
             updatedAt: Date;
-            team: string | null;
-            rank: string | null;
+            userId: string;
             callsign: string | null;
+            rank: string | null;
+            team: string | null;
             office: string | null;
             employmentStatus: string;
             joinDate: Date;
+            qualifications: string[];
             rankSince: Date;
             customChecks: Prisma.JsonValue;
         };

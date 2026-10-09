@@ -17,11 +17,11 @@ export declare class CommunicationService {
     private conversation;
     list(actor: Actor, channel: Channel, entityId?: string, q?: string): Promise<{
         id: string;
-        createdAt: Date;
         authorId: string;
-        body: string;
+        createdAt: Date;
         deletedAt: Date | null;
         conversationId: string;
+        body: string;
         replyToId: string | null;
         pinned: boolean;
     }[]>;
@@ -31,21 +31,21 @@ export declare class CommunicationService {
         replyToId?: string;
     }): Promise<{
         id: string;
-        createdAt: Date;
         authorId: string;
-        body: string;
+        createdAt: Date;
         deletedAt: Date | null;
         conversationId: string;
+        body: string;
         replyToId: string | null;
         pinned: boolean;
     }>;
     moderate(actor: Actor, id: string, action: 'pin' | 'unpin' | 'delete'): Promise<{
         id: string;
-        createdAt: Date;
         authorId: string;
-        body: string;
+        createdAt: Date;
         deletedAt: Date | null;
         conversationId: string;
+        body: string;
         replyToId: string | null;
         pinned: boolean;
     }>;
