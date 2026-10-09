@@ -326,6 +326,28 @@ export declare class HrPeopleService {
         rankSince: Date;
         customChecks: Prisma.JsonValue;
     }>;
+    /** Discord-Mitglieder (vom Bot gemeldet) ohne Personalakte – Auswahl z. B. bei der Dienstnummer-Vergabe. */
+    discordWithoutFile(): Promise<{
+        discordId: string;
+        name: string;
+        username: string;
+    }[]>;
+    /** Personalakte zu einer Discord-ID – vorhandene oder neu angelegt (Name aus Discord). */
+    fileForDiscord(actor: Actor, discordId: string): Promise<{
+        serviceNumber: string | null;
+        id: string;
+        updatedAt: Date;
+        userId: string;
+        callsign: string | null;
+        rank: string | null;
+        team: string | null;
+        office: string | null;
+        employmentStatus: string;
+        joinDate: Date;
+        qualifications: string[];
+        rankSince: Date;
+        customChecks: Prisma.JsonValue;
+    }>;
     /** Benutzer zu einer Discord-ID (vorhandene Verknüpfung oder neu, Anmeldung später über Discord). */
     userForDiscord(tx: Prisma.TransactionClient, discordId: string, name: string): Promise<{
         id: string;

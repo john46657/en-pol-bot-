@@ -174,8 +174,18 @@ export declare class ServiceNumbersService implements OnModuleInit {
         };
     }>;
     /** Manuelle Vergabe (dienstnummer.assign) an eine Personalakte. */
+    /** Discord-Mitglieder ohne Personalakte (Auswahl im Vergabe-Dialog). */
+    discordCandidates(): Promise<{
+        discordId: string;
+        name: string;
+        username: string;
+    }[]>;
+    /** Vorabprüfung einer bestimmten Nummer (die eigentliche, atomare Prüfung macht `allocate`). */
+    private checkFree;
+    /** Vergabe an eine Personalakte oder direkt an ein Discord-Mitglied (Personalakte wird dann bei Bedarf angelegt). */
     assignManual(actor: Actor, d: {
-        personnelId: string;
+        personnelId?: string;
+        discordId?: string;
         display?: string;
         rangeId?: string;
         reason?: string;

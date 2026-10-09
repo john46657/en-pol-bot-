@@ -197,10 +197,25 @@ export class ServiceNumbersService implements OnModuleInit {
   }
 
   /** Manuelle Vergabe (dienstnummer.assign) an eine Personalakte. */
-  async assignManual(actor: Actor, d: { personnelId: string; display?: string; rangeId?: string; reason?: string }) {
-    const p = await this.prisma.personnel.findUnique({ where: { id: d.personnelId } });
-    if (!p) throw new AppError('NOT_FOUND', 'Personalakte nicht gefunden.');
+  /** Discord-Mitglieder ohne Personalakte (Auswahl im Vergabe-Dialog). */
+  discordCandidates() { return this.people.discordWithoutFile(); }
+
+  /** Vorabprüfung einer bestimmten Nummer (die eigentliche, atomare Prüfung macht `allocate`). */
+  private async checkFree(display: string) {
+    const p = await this.parse(display.trim());
+    if (!p) throw new AppError('VALIDATION_FAILED', `„${display}“ gehört zu keinem Nummernkreis.`);
+    const row = await this.prisma.serviceNumber.findUnique({ where: { rangeId_value: { rangeId: p.range.id, value: p.value } } });
+    if (!p.range.active || !p.range.manual || (row && row.status !== 'FREE')) throw new AppError('CONFLICT', `Die Nummer ${row?.display ?? display} ist nicht frei vergebbar.`);
+  }
+
+  /** Vergabe an eine Personalakte oder direkt an ein Discord-Mitglied (Personalakte wird dann bei Bedarf angelegt). */
+  async assignManual(actor: Actor, d: { personnelId?: string; discordId?: string; display?: string; rangeId?: string; reason?: string }) {
     if (!d.display && !d.rangeId) throw new AppError('VALIDATION_FAILED', 'Nummer oder Nummernkreis angeben.');
+    if (!d.personnelId && !d.discordId) throw new AppError('VALIDATION_FAILED', 'Person oder Discord-Mitglied angeben.');
+    // Nummer zuerst prüfen, damit bei belegter Nummer keine leere Personalakte entsteht
+    if (d.display && !d.personnelId) await this.checkFree(d.display);
+    const p = d.personnelId ? await this.prisma.personnel.findUnique({ where: { id: d.personnelId } }) : await this.people.fileForDiscord(actor, d.discordId!);
+    if (!p) throw new AppError('NOT_FOUND', 'Personalakte nicht gefunden.');
     const r = await this.allocate(actor, { userId: p.userId, personnelId: p.id, display: d.display, rangeId: d.rangeId, reason: d.reason, manual: true });
     await this.prisma.hireQueue.updateMany({ where: { userId: p.userId, status: 'PENDING' }, data: { status: 'DONE' } });
     await this.afterAssign(actor, p.userId, r.display, { applicationName: null });

@@ -155,6 +155,25 @@ let HrPeopleService = class HrPeopleService {
             return p;
         });
     }
+    /** Discord-Mitglieder (vom Bot gemeldet) ohne Personalakte – Auswahl z. B. bei der Dienstnummer-Vergabe. */
+    async discordWithoutFile() {
+        const withFile = new Set((await this.prisma.personnel.findMany({ select: { userId: true } })).map((p) => p.userId));
+        const linked = new Set((await this.prisma.discordLink.findMany({ select: { userId: true, discordId: true } })).filter((l) => withFile.has(l.userId)).map((l) => l.discordId));
+        const seen = new Map();
+        for (const m of this.live.getMembers().members)
+            if (!linked.has(m.id) && !seen.has(m.id))
+                seen.set(m.id, { discordId: m.id, name: m.displayName, username: m.username });
+        return [...seen.values()].sort((a, b) => a.name.localeCompare(b.name, 'de'));
+    }
+    /** Personalakte zu einer Discord-ID – vorhandene oder neu angelegt (Name aus Discord). */
+    async fileForDiscord(actor, discordId) {
+        const link = await this.prisma.discordLink.findUnique({ where: { discordId } });
+        const existing = link ? await this.prisma.personnel.findUnique({ where: { userId: link.userId } }) : null;
+        if (existing)
+            return existing;
+        const m = this.live.getMembers().members.find((x) => x.id === discordId);
+        return this.create(actor, { discordId, name: m?.displayName ?? m?.username ?? discordId });
+    }
     /** Benutzer zu einer Discord-ID (vorhandene Verknüpfung oder neu, Anmeldung später über Discord). */
     async userForDiscord(tx, discordId, name) {
         const link = await tx.discordLink.findUnique({ where: { discordId } });
