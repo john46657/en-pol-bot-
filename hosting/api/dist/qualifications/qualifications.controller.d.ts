@@ -399,6 +399,7 @@ export declare class QualificationsController {
     list(f: z.infer<typeof list>): Promise<{
         linkedName: string | null;
         decidedByName: string | null;
+        avatar: string | null;
         number: string;
         unit: string;
         id: string;

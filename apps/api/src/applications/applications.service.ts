@@ -9,6 +9,7 @@ import { PrismaService } from '../prisma/prisma.service';
 import { AuditService, Actor } from '../audit/audit.service';
 import { AppError } from '../common/errors';
 import { DiscordService } from '../discord/discord.service';
+import { DiscordLiveService } from '../discord/discord-live.service';
 import { makeNumber } from '../common/numbering';
 import { nextStatus } from '../common/transition';
 import { PageQuery, pageResult, skipTake } from '../common/pagination';
@@ -32,7 +33,7 @@ const OPEN_STATUSES = ['SUBMITTED', 'SCREENING', 'INTERVIEW', 'PENDING_DECISION'
 
 @Injectable()
 export class ApplicationsService {
-  constructor(private readonly prisma: PrismaService, private readonly audit: AuditService, private readonly discord: DiscordService, private readonly notify: NotifyService, private readonly teamchance: TeamChanceService, private readonly roblox: RobloxService, private readonly bans: ApplicationBansService) {}
+  constructor(private readonly prisma: PrismaService, private readonly audit: AuditService, private readonly discord: DiscordService, private readonly notify: NotifyService, private readonly teamchance: TeamChanceService, private readonly roblox: RobloxService, private readonly bans: ApplicationBansService, private readonly live: DiscordLiveService) {}
 
   /** Formular eines Servers (`application.form@<guildId>`), sonst das gemeinsame. */
   async form(guildId?: string | null): Promise<FormField[]> {
@@ -191,7 +192,9 @@ export class ApplicationsService {
     // wer entschieden hat (Name) – für die Karten-Ansicht
     const ids = [...new Set(items.map((a) => a.decidedById).filter((x): x is string => !!x))];
     const users = new Map((await this.prisma.user.findMany({ where: { id: { in: ids } }, select: { id: true, displayName: true } })).map((u) => [u.id, u.displayName]));
-    return pageResult(items.map((a) => ({ ...a, decidedByName: a.decidedById ? users.get(a.decidedById) ?? '—' : null })), total, p);
+    // Discord-Profilbild (vom Bot gemeldet) für die Listen-Ansicht
+    const avatars = new Map(this.live.getMembers().members.map((m) => [m.id, m.avatar]));
+    return pageResult(items.map((a) => ({ ...a, decidedByName: a.decidedById ? users.get(a.decidedById) ?? '—' : null, avatar: a.discordId ? avatars.get(a.discordId) ?? null : null })), total, p);
   }
 
   async get(id: string) {

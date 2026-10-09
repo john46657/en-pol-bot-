@@ -17,6 +17,7 @@ const common_1 = require("@nestjs/common");
 const prisma_service_1 = require("../prisma/prisma.service");
 const audit_service_1 = require("../audit/audit.service");
 const discord_service_1 = require("../discord/discord.service");
+const discord_live_service_1 = require("../discord/discord-live.service");
 const errors_1 = require("../common/errors");
 const numbering_1 = require("../common/numbering");
 const web_url_1 = require("../common/web-url");
@@ -38,12 +39,14 @@ let QualificationsService = class QualificationsService {
     discord;
     roblox;
     bans;
-    constructor(prisma, audit, discord, roblox, bans) {
+    live;
+    constructor(prisma, audit, discord, roblox, bans, live) {
         this.prisma = prisma;
         this.audit = audit;
         this.discord = discord;
         this.roblox = roblox;
         this.bans = bans;
+        this.live = live;
     }
     /** Einstellungen eines Servers (`@<guildId>`) – ohne eigene gilt die gemeinsame Grundeinstellung. */
     keyOf(base, guildId) { const g = (0, guild_context_1.settingsGuild)(guildId); return g ? `${base}@${g}` : base; } // Gruppe mit geteilten Einstellungen → Haupt-Server
@@ -150,7 +153,8 @@ let QualificationsService = class QualificationsService {
         const rows = await this.prisma.qualificationApplication.findMany({ where: { ...(f.unit ? { unit: f.unit } : {}), ...(f.status ? { status: f.status } : {}), ...(f.guildId ? { guildId: f.guildId } : {}) }, orderBy: { createdAt: 'desc' }, take: 200 });
         const ids = [...new Set(rows.flatMap((r) => [r.userId, r.decidedById]).filter((x) => !!x))];
         const users = new Map((await this.prisma.user.findMany({ where: { id: { in: ids } }, select: { id: true, displayName: true } })).map((u) => [u.id, u.displayName]));
-        return rows.map((r) => ({ ...r, linkedName: r.userId ? users.get(r.userId) ?? null : null, decidedByName: r.decidedById ? users.get(r.decidedById) ?? '—' : null }));
+        const avatars = new Map(this.live.getMembers().members.map((m) => [m.id, m.avatar]));
+        return rows.map((r) => ({ ...r, linkedName: r.userId ? users.get(r.userId) ?? null : null, decidedByName: r.decidedById ? users.get(r.decidedById) ?? '—' : null, avatar: avatars.get(r.discordId) ?? null }));
     }
     async get(id) {
         const a = await this.prisma.qualificationApplication.findUnique({ where: { id } });
@@ -244,6 +248,6 @@ let QualificationsService = class QualificationsService {
 exports.QualificationsService = QualificationsService;
 exports.QualificationsService = QualificationsService = __decorate([
     (0, common_1.Injectable)(),
-    __metadata("design:paramtypes", [prisma_service_1.PrismaService, audit_service_1.AuditService, discord_service_1.DiscordService, roblox_service_1.RobloxService, application_bans_service_1.ApplicationBansService])
+    __metadata("design:paramtypes", [prisma_service_1.PrismaService, audit_service_1.AuditService, discord_service_1.DiscordService, roblox_service_1.RobloxService, application_bans_service_1.ApplicationBansService, discord_live_service_1.DiscordLiveService])
 ], QualificationsService);
 //# sourceMappingURL=qualifications.service.js.map

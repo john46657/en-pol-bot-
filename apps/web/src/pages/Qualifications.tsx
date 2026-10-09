@@ -9,16 +9,17 @@ import type { FormField } from '@enrp/shared';
 import { FormQuestionsEditor } from '../components/FormQuestionsEditor';
 import { ApplicationActions } from '../components/DecisionButtons';
 import { ApplicationSettingsEditor, defaultAppSettings, withDefaults, type AppCommon } from '../components/ApplicationSettings';
-import { GuildTag, useServer } from '../lib/guilds';
+import { useServer } from '../lib/guilds';
 import { ServerScope } from './Applications';
-import { Button, Card, EmptyState, ErrorState, Field, fmt, Input, PageHeader, Select, SkeletonRows, StatusBadge, Tabs, Textarea } from '../components/ui';
+import { SubmissionCard } from '../components/Submission';
+import { Button, Card, EmptyState, ErrorState, Field, fmt, Input, PageHeader, Select, SkeletonRows, Tabs, Textarea } from '../components/ui';
 
 interface Unit extends Partial<AppCommon> { key: string; name: string; description: string; roleId?: string; questions: FormField[] }
 interface Config { own?: boolean; title: string; intro: string; units: Unit[]; police: { title: string; description: string; pingRoleIds?: string[] }; policeForm: FormField[] }
 interface Application {
   id: string; number: string; unit: string; unitName: string; discordId: string; discordName: string; linkedName: string | null;
   answers: { question: string; answer: string }[]; status: string; createdAt: string; decidedAt: string | null; decidedByName: string | null;
-  decisionReason: string | null; durationSec: number | null; guildId?: string | null;
+  decisionReason: string | null; durationSec: number | null; guildId?: string | null; avatar?: string | null;
 }
 type DraftUnit = Unit & AppCommon & { isNew?: boolean };
 const newQuestion = (): FormField => ({ key: 'frage1', label: '', type: 'TEXT', required: true, minLength: 0, maxLength: 1000, options: [], multiple: false });
@@ -95,16 +96,14 @@ export function Qualifications() {
             </div>
             {apps.isLoading ? <SkeletonRows /> : apps.error ? <ErrorState error={apps.error} onRetry={() => void apps.refetch()} /> : !shown?.length ? <EmptyState text="Keine Bewerbungen." hint="Bewerbungen kommen über das Discord-Panel (/qualipanel)." /> : (
               <div className="grid gap-3">{shown.map((a) => (
-                <Card key={a.id} title={<span className="flex flex-wrap items-center gap-2">{a.unitName} · {a.number} <StatusBadge status={a.status} /><GuildTag id={a.guildId} /></span>}>
-                  <p className="mb-2 text-sm">Discord: <strong>{a.discordName}</strong> <span className="text-xs text-muted">({a.discordId})</span>{a.linkedName ? <> · Benutzer <strong>{a.linkedName}</strong></> : <span className="text-muted"> · nicht mit einem Benutzer verknüpft</span>}</p>
-                  <ol className="grid gap-2 text-sm">{a.answers.map((x, i) => (
-                    <li key={i}><p className="text-xs text-muted">{i + 1}. {x.question}</p><p className="whitespace-pre-wrap">{x.answer}</p></li>
-                  ))}</ol>
-                  {a.decisionReason && <p className="mt-2 text-sm"><span className="text-xs text-muted">Begründung an Bewerber:</span> {a.decisionReason}</p>}
-                  <p className="mt-2 text-xs text-muted">Eingereicht {fmt(a.createdAt)}{a.durationSec !== null && ` · ausgefüllt in ${Math.floor(a.durationSec / 60)} min ${a.durationSec % 60} s`}{a.decidedAt && ` · entschieden ${fmt(a.decidedAt)} von ${a.decidedByName}`}</p>
-                  <ApplicationActions open={a.status === 'OPEN'} canDecide={decideAllowed} busy={decide.isPending} onDecide={(st, reason) => decide.mutate({ id: a.id, status: st, reason })}
-                    discordId={a.discordId} name={a.discordName} ticketPath={`/qualifications/applications/${a.id}/ticket`} />
-                </Card>
+                <SubmissionCard key={a.id} id={a.id} defaultOpen={!!only} name={a.discordName} appName={a.unitName} status={a.status} discordId={a.discordId} avatar={a.avatar} guildId={a.guildId} createdAt={a.createdAt} answers={a.answers}
+                  details={<>
+                    <p className="text-sm">{a.number}{a.linkedName ? <> · Benutzer <strong>{a.linkedName}</strong></> : <span className="text-muted"> · nicht mit einem Benutzer verknüpft</span>}</p>
+                    {a.decisionReason && <p className="text-sm"><span className="text-xs text-muted">Begründung an Bewerber:</span> {a.decisionReason}</p>}
+                    <p className="text-xs text-muted">{a.durationSec !== null && `Ausgefüllt in ${Math.floor(a.durationSec / 60)} min ${a.durationSec % 60} s`}{a.decidedAt && ` · entschieden ${fmt(a.decidedAt)} von ${a.decidedByName}`}</p>
+                  </>}
+                  actions={<ApplicationActions open={a.status === 'OPEN'} canDecide={decideAllowed} busy={decide.isPending} onDecide={(st, reason) => decide.mutate({ id: a.id, status: st, reason })}
+                    discordId={a.discordId} name={a.discordName} ticketPath={`/qualifications/applications/${a.id}/ticket`} />} />
               ))}</div>
             )}
           </>
