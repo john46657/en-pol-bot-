@@ -11,6 +11,7 @@ import { href, NAV, navFor, tr, visible } from '../nav';
 import { Button, Card, EmptyState, ErrorState, fmt, Input, PageHeader, PriorityBadge, Select, Skeleton, StatusBadge } from '../components/ui';
 import { TeamRoster, useRoster } from '../components/TeamRoster';
 import { VoiceWidget } from '../components/VoiceWidget';
+import { DangerLevel } from '../components/DangerLevel';
 import { RadioCodeList } from './RadioCodes';
 import { TeamChanceSummary } from './TeamChance';
 
@@ -170,6 +171,7 @@ export function Dashboard() {
             <Button onClick={() => { void flush(); setEdit(false); }}>Fertig</Button>
           </> : <Button variant="secondary" onClick={() => setEdit(true)}>Dashboard bearbeiten</Button>)}
         </div>} />
+      <DangerLevel />
       {edit && (
         <div className="mb-4 flex flex-wrap items-end gap-2 rounded-lg border border-dashed border-primary/50 p-3">
           <label className="text-xs text-muted">Layout-Name<Input className="mt-1 w-48 py-1 text-sm" value={active.name} maxLength={40} onChange={(e) => e.target.value.trim() && saveLayout({ ...active, name: e.target.value })} /></label>
