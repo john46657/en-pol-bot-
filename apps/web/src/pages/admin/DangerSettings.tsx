@@ -84,6 +84,7 @@ function DangerSettings() {
             </div>
             <Textarea aria-label="Text der Meldung (Markdown)" className="md:col-span-4" rows={3} maxLength={3500} value={l.text} onChange={(e) => setLevel(i, { text: e.target.value })} />
             <div className="flex flex-wrap items-center gap-2 md:col-span-4"><span className="text-xs text-muted">Bei dieser Stufe zusätzlich pingen:</span><RolePicker value={l.pingRoleIds ?? []} onChange={(pingRoleIds) => setLevel(i, { pingRoleIds })} /></div>
+            <div className="flex flex-wrap items-center gap-2 md:col-span-4"><span className="text-xs text-muted">Nur diese Rollen dürfen auf diese Stufe schalten (leer = alle mit Leitstellen-Recht):</span><RolePicker value={l.allowRoleIds ?? []} onChange={(allowRoleIds) => setLevel(i, { allowRoleIds })} /></div>
           </li>))}</ul>
         <Button size="sm" variant="secondary" className="mt-2" disabled={d.levels.length >= 10} onClick={() => setD({ ...d, levels: [...d.levels, { key: `STATUS_${d.levels.length + 1}_${Math.random().toString(36).slice(2, 5).toUpperCase()}`, name: `Status ${d.levels.length + 1}`, title: '', text: '', emoji: '⚪', color: '#64748b', buttonStyle: 'danger' }] })}>+ Stufe</Button>
       </Card>

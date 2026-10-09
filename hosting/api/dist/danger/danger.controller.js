@@ -27,7 +27,12 @@ let DangerController = class DangerController {
         this.d = d;
     }
     get() { return this.d.get(); }
-    set(a, b) { return this.d.set(a, b.level, b.reason); }
+    set(a, b, r) {
+        // aus Discord (Bot im Namen eines Benutzers): Rollen des Klickenden für stufenbezogene Freigaben
+        const fromDiscord = typeof r.headers.authorization === 'string' && r.headers.authorization.startsWith('Bot ') && typeof r.headers['x-discord-user'] === 'string';
+        const roles = fromDiscord ? (typeof r.headers['x-discord-roles'] === 'string' ? r.headers['x-discord-roles'].split(',').filter((x) => /^\d{15,25}$/.test(x)).slice(0, 100) : []) : null;
+        return this.d.set(a, b.level, b.reason, roles);
+    }
     /** Stufen, Texte, Farben, Buttons und Pings (Dashboard). */
     config() { return this.d.config(); }
     /** Button-Panel (Status per Klick) in einen Discord-Kanal senden. */
@@ -48,8 +53,9 @@ __decorate([
     (0, decorators_1.RequirePermission)('dispatch.manage'),
     __param(0, (0, decorators_1.CurrentActor)()),
     __param(1, (0, common_1.Body)((0, zod_pipe_1.zodBody)(body))),
+    __param(2, (0, common_1.Req)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Object, void 0]),
+    __metadata("design:paramtypes", [Object, void 0, Object]),
     __metadata("design:returntype", void 0)
 ], DangerController.prototype, "set", null);
 __decorate([

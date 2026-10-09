@@ -719,6 +719,8 @@ interface DangerLevelDef {
     buttonStyle: 'primary' | 'secondary' | 'success' | 'danger';
     /** Discord-Rollen, die nur beim Wechsel auf diese Stufe zusätzlich gepingt werden */
     pingRoleIds?: string[];
+    /** Nur diese Discord-Rollen dürfen auf diese Stufe schalten (leer = alle mit dispatch.manage) */
+    allowRoleIds?: string[];
 }
 interface DangerConfig {
     panelTitle: string;
