@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { Link } from 'react-router';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Camera, ImageUp } from 'lucide-react';
+import { Camera, ExternalLink, ImageUp } from 'lucide-react';
 import { DEFAULT_MDT_CONFIG, WEAPON_STATUSES, type MdtConfig } from '@enrp/shared';
 import { api, ApiError, type Page } from '../../lib/api';
 import { useAuth } from '../../lib/auth';
@@ -13,7 +13,16 @@ export interface Citizen {
   dateOfBirth: string | null; age: number | null; gender: string | null; phone: string | null; job: string | null; nationality: string | null; address: string | null;
   appearance: { skinTone?: string; hairColor?: string; eyeColor?: string; height?: string; features?: string } | null;
   licenses: string[]; flags: string[]; photoUrl: string | null; activeWarrants: number; version: number;
+  /** nur in der Bürgersuche: Roblox-Kopfbild (live von Roblox) */
+  robloxHeadshotUrl?: string | null;
 }
+/** Roblox-Profil der Person, live von Roblox (null-Felder = gerade nicht abrufbar). */
+export interface RobloxDetails {
+  id: string; name: string; displayName: string; description: string; created: string | null; isBanned: boolean; verified: boolean; profileUrl: string;
+  avatarUrl: string | null; headshotUrl: string | null; friends: number | null; followers: number | null; following: number | null;
+  groups: { id: string; name: string; role: string | null; rank: number | null; memberCount: number | null }[] | null; previousNames: string[] | null; fetchedAt: string;
+}
+type RobloxResult = { status: 'ok' | 'not_found' | 'unreachable' | 'disabled'; profile: RobloxDetails | null };
 interface Linked { id: string; ref: string; title: string; status: string; role: string; createdAt: string }
 interface Profile {
   person: Citizen & { notes: string | null; createdAt: string };
@@ -79,7 +88,7 @@ export function MdtCitizens() {
               <MdtCard key={c.id} label={`Akte ${nameOf(c)} öffnen`} onClick={() => setOpen(c.id)}>
                 <div className="mb-2 flex min-h-5 flex-wrap gap-1"><CitizenBadges c={c} cfg={cfg} /></div>
                 <div className="mb-2 flex items-center gap-2">
-                  <Avatar url={c.photoUrl} name={nameOf(c)} />
+                  <Avatar url={c.robloxHeadshotUrl ?? c.photoUrl} name={nameOf(c)} />
                   <div className="min-w-0"><p className="truncate font-semibold">{nameOf(c)}</p><p className="truncate text-xs text-muted">#{c.robloxUserId ?? c.robloxUsername}{c.fullName ? ` · ${c.robloxUsername}` : ''}</p></div>
                 </div>
                 <div className="grid grid-cols-2 gap-1">
@@ -102,7 +111,7 @@ export function MdtCitizens() {
 }
 
 const TABS = [
-  ['overview', 'Übersicht'], ['licenses', 'Lizenzen'], ['warrants', 'Haftbefehle'], ['vehicles', 'Fahrzeuge'], ['weapons', 'Waffen'], ['incidents', 'Einsätze'],
+  ['overview', 'Übersicht'], ['roblox', 'Roblox'], ['licenses', 'Lizenzen'], ['warrants', 'Haftbefehle'], ['vehicles', 'Fahrzeuge'], ['weapons', 'Waffen'], ['incidents', 'Einsätze'],
   ['reports', 'Berichte'], ['investigations', 'Ermittlungen'], ['notes', 'Notizen'], ['flags', 'Merkmale'], ['history', 'Verlauf'],
 ] as const;
 type TabKey = (typeof TABS)[number][0];
@@ -117,7 +126,10 @@ export function CitizenProfile({ id, onClose }: { id: string | null; onClose: ()
   const [editing, setEditing] = useState(false);
   const [msg, setMsg] = useState<{ ok: boolean; text: string }>();
   const q = useQuery({ queryKey: ['mdt-citizen', id], queryFn: () => api<Profile>(`/mdt/citizens/${id}`), enabled: !!id });
-  useEffect(() => { setTab('overview'); setEditing(false); setMsg(undefined); }, [id]);
+  const rb = useQuery({ queryKey: ['mdt-citizen-roblox', id], queryFn: () => api<RobloxResult>(`/mdt/citizens/${id}/roblox`), enabled: !!id, staleTime: 5 * 60_000, retry: false });
+  const [view, setView] = useState<'roblox' | 'photo'>('roblox');
+  const rp = rb.data?.profile ?? null;
+  useEffect(() => { setTab('overview'); setEditing(false); setMsg(undefined); setView('roblox'); }, [id]);
   const refresh = () => { void qc.invalidateQueries({ queryKey: ['mdt-citizen', id] }); void qc.invalidateQueries({ queryKey: ['mdt-citizens'] }); };
   const save = useMutation({
     mutationFn: (body: Record<string, unknown>) => api<Citizen>(`/mdt/citizens/${id}`, { method: 'PATCH', body: { ...body, version: q.data!.person.version } }),
@@ -138,7 +150,17 @@ export function CitizenProfile({ id, onClose }: { id: string | null; onClose: ()
           {msg && <p role={msg.ok ? 'status' : 'alert'} className={`text-sm ${msg.ok ? 'text-success' : 'text-danger'}`}>{msg.text}</p>}
           <section className="grid gap-3 rounded-lg border border-line bg-panel-2/40 p-3 sm:grid-cols-[9rem_minmax(0,1fr)]">
             <div className="mx-auto w-36 space-y-1.5 sm:w-full">
-              {p.photoUrl ? <img src={p.photoUrl} alt={`Foto von ${nameOf(p)}`} className="aspect-[3/4] w-full rounded-md border border-line object-cover" /> : <div className="grid aspect-[3/4] w-full place-items-center rounded-md border border-dashed border-line text-4xl font-semibold text-muted" aria-label="Kein Foto">{nameOf(p).slice(0, 1)}</div>}
+              {/* Standard: Roblox-Avatar (live); ein hochgeladenes Foto lässt sich daneben umschalten */}
+              {rp?.avatarUrl && (view === 'roblox' || !p.photoUrl)
+                ? <a href={rp.profileUrl} target="_blank" rel="noreferrer" title="Roblox-Profil öffnen" className="block"><img src={rp.avatarUrl} alt={`Roblox-Avatar von ${rp.name}`} className="aspect-[3/4] w-full rounded-md border border-line bg-gradient-to-b from-panel-2 to-bg object-contain" /></a>
+                : p.photoUrl ? <img src={p.photoUrl} alt={`Foto von ${nameOf(p)}`} className="aspect-[3/4] w-full rounded-md border border-line object-cover" />
+                : <div className="grid aspect-[3/4] w-full place-items-center rounded-md border border-dashed border-line text-center text-muted" aria-label="Kein Bild">{rb.isLoading ? <span className="text-xs">Roblox wird geladen…</span> : <span className="text-4xl font-semibold">{nameOf(p).slice(0, 1)}</span>}</div>}
+              {rp?.avatarUrl && p.photoUrl && (
+                <div className="grid grid-cols-2 gap-1" role="group" aria-label="Bild">
+                  <Button size="sm" variant={view === 'roblox' ? 'primary' : 'secondary'} aria-pressed={view === 'roblox'} onClick={() => setView('roblox')}>Roblox</Button>
+                  <Button size="sm" variant={view === 'photo' ? 'primary' : 'secondary'} aria-pressed={view === 'photo'} onClick={() => setView('photo')}>Foto</Button>
+                </div>
+              )}
               {edit && <>
                 <input ref={fileRef} type="file" accept="image/png,image/jpeg,image/webp" hidden onChange={(e) => { const f = e.target.files?.[0]; if (f) photo.mutate(f); e.target.value = ''; }} />
                 <input ref={camRef} type="file" accept="image/*" capture="user" hidden onChange={(e) => { const f = e.target.files?.[0]; if (f) photo.mutate(f); e.target.value = ''; }} />
@@ -151,6 +173,15 @@ export function CitizenProfile({ id, onClose }: { id: string | null; onClose: ()
                 <h3 className="text-xl font-bold">{nameOf(p)}</h3>
                 <span className="rounded border border-line px-1.5 py-0.5 font-mono text-[11px] text-muted">{p.robloxUserId ? `ID ${p.robloxUserId}` : p.robloxUsername}</span>
               </div>
+              {rp ? (
+                <a href={rp.profileUrl} target="_blank" rel="noreferrer" className="mb-2 flex w-fit items-center gap-2 rounded-md border border-line bg-panel px-2 py-1 text-sm hover:bg-panel-2" title="Roblox-Profil öffnen">
+                  {rp.headshotUrl && <img src={rp.headshotUrl} alt="" className="h-7 w-7 rounded-full bg-bg" />}
+                  <span><b>{rp.displayName}</b> <span className="text-muted">@{rp.name}</span></span>
+                  {rp.verified && <span title="Von Roblox verifiziert" className="text-info">✔</span>}
+                  {rp.isBanned && <Badge tone="danger">Auf Roblox gesperrt</Badge>}
+                  <ExternalLink size={12} className="text-muted" aria-hidden />
+                </a>
+              ) : rb.data && <p className="mb-2 text-xs text-muted">{rb.data.status === 'not_found' ? `Kein Roblox-Konto „${p.robloxUsername}“ gefunden.` : 'Roblox gerade nicht erreichbar.'}</p>}
               <div className="mb-2 flex flex-wrap gap-1">{p.activeWarrants > 0 && <Badge tone="danger">Aktiver Haftbefehl</Badge>}{p.flags.map((f) => <Badge key={f} tone={toneOf(cfg, f)}>{labelOf(cfg.flags, f)}</Badge>)}</div>
               <div className="grid grid-cols-2 gap-1.5 md:grid-cols-3">
                 {([['Geburtsdatum', fmtDate(p.dateOfBirth)], ['Alter', p.age ?? '—'], ['Geschlecht', p.gender], ['Telefon', p.phone], ['Beruf', p.job], ['Adresse', p.address ?? 'Keine Adresse erfasst']] as [string, ReactNode][]).map(([k, v]) => (
@@ -171,6 +202,7 @@ export function CitizenProfile({ id, onClose }: { id: string | null; onClose: ()
           </div>
           <div role="tabpanel">
             {tab === 'overview' && (editing ? <DetailsForm p={p} cfg={cfg} busy={save.isPending} onCancel={() => setEditing(false)} onSave={(b) => save.mutate(b)} /> : <Overview p={p} onEdit={edit ? () => setEditing(true) : undefined} />)}
+            {tab === 'roblox' && <RobloxTab r={rb.data} loading={rb.isLoading} onRetry={() => void rb.refetch()} />}
             {tab === 'licenses' && <Toggles title="Lizenzen" options={cfg.licenses} value={p.licenses} canEdit={edit} busy={save.isPending} onSave={(v) => save.mutate({ licenses: v })} empty="Keine Lizenzen." />}
             {tab === 'flags' && <Toggles title="Merkmale / Warnhinweise" options={cfg.flags} value={p.flags} canEdit={edit} busy={save.isPending} onSave={(v) => save.mutate({ flags: v })} empty="Keine Merkmale." />}
             {tab === 'notes' && <Notes value={p.notes} canEdit={edit} busy={save.isPending} onSave={(notes) => save.mutate({ notes })} />}
@@ -294,4 +326,47 @@ function PersonWeapons({ ownerId, weapons, onChanged }: { ownerId: string; weapo
 export function WeaponStatusBadge({ status }: { status: string }) {
   const s = WEAPON_STATUSES.find((x) => x.key === status);
   return <Badge tone={(s?.tone ?? 'neutral') as Tone}>{s?.label ?? status}</Badge>;
+}
+
+const years = (iso: string) => { const d = new Date(iso); const y = (Date.now() - d.getTime()) / (365.25 * 86_400_000); return y >= 1 ? `${Math.floor(y)} Jahr${Math.floor(y) === 1 ? '' : 'e'}` : `${Math.max(1, Math.floor(y * 12))} Monat(e)`; };
+const n = (v: number | null) => (v === null ? 'nicht abrufbar' : v.toLocaleString('de-DE'));
+
+/** Reiter „Roblox“: alles, was Roblox öffentlich über das Konto zeigt – live abgefragt, nichts geraten. */
+function RobloxTab({ r, loading, onRetry }: { r: RobloxResult | undefined; loading: boolean; onRetry: () => void }) {
+  if (loading) return <SkeletonRows rows={4} />;
+  if (!r?.profile) return (
+    <div className="space-y-2 text-sm text-muted">
+      <p>{r?.status === 'not_found' ? 'Zu diesem Roblox-Namen gibt es kein Konto.' : r?.status === 'disabled' ? 'Die Roblox-Abfrage ist auf diesem System abgeschaltet.' : 'Roblox ist gerade nicht erreichbar.'}</p>
+      {r?.status !== 'not_found' && <Button size="sm" variant="secondary" onClick={onRetry}>Erneut versuchen</Button>}
+    </div>
+  );
+  const p = r.profile;
+  const Stat = ({ k, v }: { k: string; v: string }) => <div className="rounded-md border border-line px-2 py-1.5 text-center"><p className="text-lg font-semibold tabular-nums text-primary">{v}</p><p className="text-[10px] uppercase tracking-wide text-muted">{k}</p></div>;
+  return (
+    <div className="space-y-3">
+      <div className="flex flex-wrap items-center gap-3">
+        {p.headshotUrl && <img src={p.headshotUrl} alt="" className="h-16 w-16 rounded-full border border-line bg-bg" />}
+        <div className="min-w-0 flex-1">
+          <p className="text-lg font-semibold">{p.displayName} {p.verified && <span title="Von Roblox verifiziert" className="text-info">✔</span>}</p>
+          <p className="text-sm text-muted">@{p.name} · ID <span className="font-mono">{p.id}</span></p>
+          <div className="mt-1 flex flex-wrap gap-1">{p.isBanned ? <Badge tone="danger">Auf Roblox gesperrt</Badge> : <Badge tone="success">Konto aktiv</Badge>}{p.verified && <Badge tone="info">Verifiziert</Badge>}</div>
+        </div>
+        <a href={p.profileUrl} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 rounded-md border border-line px-2.5 py-1.5 text-xs hover:bg-panel-2">Roblox-Profil öffnen<ExternalLink size={12} aria-hidden /></a>
+      </div>
+      <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+        <Stat k="Konto erstellt" v={p.created ? new Date(p.created).toLocaleDateString('de-DE') : 'unbekannt'} />
+        <Stat k="Kontoalter" v={p.created ? years(p.created) : 'unbekannt'} />
+        <Stat k="Freunde" v={n(p.friends)} />
+        <Stat k="Follower / folgt" v={p.followers === null && p.following === null ? 'nicht abrufbar' : `${n(p.followers)} / ${n(p.following)}`} />
+      </div>
+      {p.description && <section><h4 className="mb-1 text-sm font-semibold">Über mich</h4><p className="whitespace-pre-wrap rounded border border-line bg-panel-2/40 p-2 text-sm">{p.description}</p></section>}
+      <section><h4 className="mb-1 text-sm font-semibold">Gruppen{p.groups ? ` (${p.groups.length})` : ''}</h4>
+        {p.groups === null ? <p className="text-sm text-muted">Gruppen gerade nicht abrufbar.</p> : !p.groups.length ? <p className="text-sm text-muted">In keiner Gruppe.</p> : (
+          <ul className="divide-y divide-line text-sm">{p.groups.map((g) => <li key={g.id} className="flex flex-wrap items-center justify-between gap-2 py-1"><a className="hover:underline" href={`https://www.roblox.com/communities/${g.id}`} target="_blank" rel="noreferrer">{g.name}</a><span className="text-xs text-muted">{g.role ?? '—'}{g.rank !== null ? ` · Rang ${g.rank}` : ''}</span></li>)}</ul>
+        )}
+      </section>
+      <section><h4 className="mb-1 text-sm font-semibold">Frühere Namen</h4>{p.previousNames === null ? <p className="text-sm text-muted">Gerade nicht abrufbar.</p> : p.previousNames.length ? <p className="text-sm">{p.previousNames.join(', ')}</p> : <p className="text-sm text-muted">Keine.</p>}</section>
+      <p className="text-[11px] text-muted">Live von Roblox abgefragt (öffentliche Daten), Stand {fmt(p.fetchedAt)}.</p>
+    </div>
+  );
 }

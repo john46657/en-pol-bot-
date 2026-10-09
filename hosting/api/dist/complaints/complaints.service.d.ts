@@ -23,9 +23,9 @@ export declare class ComplaintsService {
             description: string;
             status: string;
             internalNotes: string | null;
+            officerId: string | null;
             complainantId: string | null;
             subjectId: string | null;
-            officerId: string | null;
             investigatorId: string | null;
             findings: string | null;
             resolution: string | null;
@@ -40,9 +40,9 @@ export declare class ComplaintsService {
             version: number;
             description: string;
             status: string;
+            officerId: string | null;
             complainantId: string | null;
             subjectId: string | null;
-            officerId: string | null;
             investigatorId: string | null;
             resolution: string | null;
         })[];
@@ -61,9 +61,9 @@ export declare class ComplaintsService {
             description: string;
             status: string;
             internalNotes: string | null;
+            officerId: string | null;
             complainantId: string | null;
             subjectId: string | null;
-            officerId: string | null;
             investigatorId: string | null;
             findings: string | null;
             resolution: string | null;
@@ -78,9 +78,9 @@ export declare class ComplaintsService {
             version: number;
             description: string;
             status: string;
+            officerId: string | null;
             complainantId: string | null;
             subjectId: string | null;
-            officerId: string | null;
             investigatorId: string | null;
             resolution: string | null;
         };

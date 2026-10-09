@@ -7,6 +7,7 @@ import { PermissionService } from '../authz/permission.service';
 import { TimelineService } from '../timeline/timeline.service';
 import { MediaService } from '../media/media.service';
 import { LocksService } from '../locks/locks.service';
+import { RobloxService } from '../persons/roblox.service';
 import { AppError } from '../common/errors';
 import { recordSpace, recordWhere } from '../common/guild-context';
 import { pageResult, skipTake, type PageQuery } from '../common/pagination';
@@ -38,6 +39,7 @@ export class MdtService {
   constructor(
     private readonly prisma: PrismaService, private readonly audit: AuditService, private readonly perms: PermissionService,
     private readonly timeline: TimelineService, private readonly media: MediaService, private readonly locks: LocksService,
+    private readonly roblox: RobloxService,
   ) {}
 
   // ───────── Einstellungen ─────────
@@ -86,8 +88,8 @@ export class MdtService {
       this.prisma.person.findMany({ where, orderBy: [{ fullName: { sort: 'asc', nulls: 'last' } }, { robloxUsername: 'asc' }], ...skipTake(p) }),
       this.prisma.person.count({ where }),
     ]);
-    const counts = await this.warrantCounts(items.map((i) => i.id));
-    return pageResult(items.map((i) => this.citizen(i, counts.get(i.id) ?? 0)), total, p);
+    const [counts, heads] = await Promise.all([this.warrantCounts(items.map((i) => i.id)), this.roblox.headshots(items.map((i) => i.robloxUserId).filter((x): x is string => !!x))]);
+    return pageResult(items.map((i) => ({ ...this.citizen(i, counts.get(i.id) ?? 0), robloxHeadshotUrl: i.robloxUserId ? heads.get(i.robloxUserId) ?? null : null })), total, p);
   }
 
   async profile(actor: Actor, id: string) {
@@ -156,6 +158,29 @@ export class MdtService {
       await this.audit.record(actor, { action: 'person.update', module: 'persons', entityType: 'Person', entityId: id, before: Object.fromEntries(fields.map((k) => [k, (before as Record<string, unknown>)[k]])), after: Object.fromEntries(fields.map((k) => [k, (after as Record<string, unknown>)[k]])) }, tx);
       return this.citizen(after, 0);
     });
+  }
+
+  /**
+   * Roblox-Profil der Person (Avatar, Anzeigename, Kontoalter, Freunde, Gruppen, frühere Namen) – live von Roblox.
+   * Ohne gespeicherte Roblox-ID wird sie über den Roblox-Namen gesucht (nur exakter Treffer) und in der Akte nachgetragen.
+   */
+  async robloxProfile(actor: Actor, id: string) {
+    const p = await this.prisma.person.findFirst({ where: { id, ...recordWhere() }, select: { id: true, robloxUserId: true, robloxUsername: true } });
+    if (!p) throw new AppError('NOT_FOUND', 'Person nicht gefunden.');
+    let rid = p.robloxUserId;
+    if (!rid) {
+      const found = await this.roblox.verifyName(p.robloxUsername);
+      if (found === undefined) return { status: 'unreachable' as const, profile: null };
+      if (found === null) return { status: 'not_found' as const, profile: null };
+      rid = found.id;
+      const taken = await this.prisma.person.findFirst({ where: { robloxUserId: rid, serverId: (await this.prisma.person.findUnique({ where: { id }, select: { serverId: true } }))?.serverId ?? null }, select: { id: true } });
+      if (!taken) {
+        await this.prisma.person.update({ where: { id }, data: { robloxUserId: rid } });
+        await this.timeline.add(this.prisma, { entityType: 'Person', entityId: id, action: 'person.updated', summary: `Roblox-ID ${rid} von Roblox übernommen`, actorId: actor.userId });
+      }
+    }
+    const profile = await this.roblox.profileDetails(rid);
+    return profile ? { status: 'ok' as const, profile } : { status: process.env.ROBLOX_LOOKUP === 'off' ? 'disabled' as const : 'unreachable' as const, profile: null };
   }
 
   /** Foto hochladen oder mit der Kamera aufnehmen (Bild bis 8 MB); ersetzt das bisherige Foto. */

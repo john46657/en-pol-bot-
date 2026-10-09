@@ -124,6 +124,76 @@ let RobloxService = RobloxService_1 = class RobloxService {
             return hit?.value ?? {};
         }
     }
+    /**
+     * Ausführliches Roblox-Profil für die Bürgerakte (öffentliche Roblox-APIs, 10 Minuten zwischengespeichert).
+     * Jeder Teil kann einzeln fehlen (Roblox nicht erreichbar) – dann `null`, nie geraten.
+     */
+    details = new Map();
+    async profileDetails(id) {
+        if (!ID.test(id) || process.env.ROBLOX_LOOKUP === 'off')
+            return null;
+        const hit = this.details.get(id);
+        if (hit && Date.now() - hit.at < TTL)
+            return hit.value;
+        const safe = (p) => p.catch(() => null);
+        const thumb = (r) => { const t = r?.data?.[0]; return t?.state === 'Completed' && t.imageUrl?.startsWith('https://') ? t.imageUrl : null; };
+        const count = (r) => (typeof r?.count === 'number' ? r.count : null);
+        const [u, body, head, friends, followers, following, groups, history] = await Promise.all([
+            safe(this.get(`https://users.roblox.com/v1/users/${id}`)),
+            safe(this.get(`https://thumbnails.roblox.com/v1/users/avatar?userIds=${id}&size=420x420&format=Png&isCircular=false`)),
+            safe(this.get(`https://thumbnails.roblox.com/v1/users/avatar-headshot?userIds=${id}&size=150x150&format=Png&isCircular=false`)),
+            safe(this.get(`https://friends.roblox.com/v1/users/${id}/friends/count`)),
+            safe(this.get(`https://friends.roblox.com/v1/users/${id}/followers/count`)),
+            safe(this.get(`https://friends.roblox.com/v1/users/${id}/followings/count`)),
+            safe(this.get(`https://groups.roblox.com/v2/users/${id}/groups/roles`)),
+            safe(this.get(`https://users.roblox.com/v1/users/${id}/username-history?limit=10&sortOrder=Desc`)),
+        ]);
+        if (!u?.id) {
+            this.details.set(id, { at: Date.now(), value: null });
+            return null;
+        }
+        const value = {
+            id: String(u.id), name: u.name, displayName: u.displayName, description: (u.description ?? '').slice(0, 1000), created: u.created ?? null,
+            isBanned: !!u.isBanned, verified: !!u.hasVerifiedBadge, profileUrl: `https://www.roblox.com/users/${u.id}/profile`,
+            avatarUrl: thumb(body), headshotUrl: thumb(head),
+            friends: count(friends), followers: count(followers), following: count(following),
+            groups: groups?.data ? groups.data.filter((g) => g.group?.id && g.group.name).slice(0, 25).map((g) => ({ id: String(g.group.id), name: g.group.name, role: g.role?.name ?? null, rank: g.role?.rank ?? null, memberCount: g.group.memberCount ?? null })) : null,
+            previousNames: history?.data ? history.data.map((h) => h.name).filter((x) => !!x && x !== u.name) : null,
+            fetchedAt: new Date().toISOString(),
+        };
+        if (this.details.size > 500)
+            this.details.clear();
+        this.details.set(id, { at: Date.now(), value });
+        return value;
+    }
+    /** Kopfbilder für viele Roblox-IDs mit einer Anfrage (Kartenansicht); 10 Minuten zwischengespeichert, Fehler → keine Bilder. */
+    heads = new Map();
+    async headshots(ids) {
+        const out = new Map();
+        if (process.env.ROBLOX_LOOKUP === 'off')
+            return out;
+        const want = [...new Set(ids.filter((i) => ID.test(i)))];
+        const missing = want.filter((i) => { const h = this.heads.get(i); return !h || Date.now() - h.at >= TTL; });
+        if (missing.length) {
+            try {
+                const r = await this.get(`https://thumbnails.roblox.com/v1/users/avatar-headshot?userIds=${missing.slice(0, 100).join(',')}&size=150x150&format=Png&isCircular=false`);
+                if (this.heads.size > 2000)
+                    this.heads.clear();
+                for (const i of missing)
+                    this.heads.set(i, { at: Date.now(), url: null });
+                for (const t of r?.data ?? [])
+                    if (t.targetId && t.state === 'Completed' && t.imageUrl?.startsWith('https://'))
+                        this.heads.set(String(t.targetId), { at: Date.now(), url: t.imageUrl });
+            }
+            catch { /* Roblox nicht erreichbar – Karten zeigen dann Initialen */ }
+        }
+        for (const i of want) {
+            const u = this.heads.get(i)?.url;
+            if (u)
+                out.set(i, u);
+        }
+        return out;
+    }
     async fetchProfile(p) {
         try {
             let id = p.id;

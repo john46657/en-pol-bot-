@@ -171,6 +171,7 @@ export declare class MdtController {
     }>;
     citizens(q: z.infer<typeof citizenQ>): Promise<{
         items: {
+            robloxHeadshotUrl: string | null;
             id: string;
             robloxUsername: string;
             robloxUserId: string | null;
@@ -282,6 +283,16 @@ export declare class MdtController {
             vehicleId: string | null;
             personId: string | null;
         }[] | null;
+    }>;
+    citizenRoblox(a: Actor, id: string): Promise<{
+        status: "not_found";
+        profile: null;
+    } | {
+        status: "ok";
+        profile: import("../persons/roblox.service").RobloxDetails;
+    } | {
+        status: "unreachable" | "disabled";
+        profile: null;
     }>;
     updateCitizen(a: Actor, id: string, b: z.infer<typeof citizenUpdate>): Promise<{
         id: string;

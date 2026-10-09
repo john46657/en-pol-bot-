@@ -21,7 +21,13 @@ Jeder Menüpunkt erscheint nur mit dem passenden Recht. Die API prüft dieselben
 ## Bürgerakte
 
 - **Kopf:** Foto, Name, Roblox-ID, Warnhinweise („Aktiver Haftbefehl“ und die gesetzten Merkmale), Geburtsdatum, Alter, Geschlecht, Telefon, Beruf, Adresse.
-- **Foto:** „Foto ändern“ (Datei) oder „Foto aufnehmen“ (öffnet am Handy die Kamera). PNG, JPG oder WebP bis 8 MB; das Foto ersetzt das vorige.
+- **Roblox-Profil (live):**
+  - Statt eines Platzhalters zeigt die Akte den **Roblox-Avatar** (Ganzkörper), dazu Kopfbild, Anzeigename, @Name, Verifiziert-Haken und „Auf Roblox gesperrt“, mit Link zum Profil.
+  - Der Reiter **„Roblox“** zeigt Erstelldatum, Kontoalter, Freunde, Follower/folgt, „Über mich“, Gruppen mit Rolle und Rang sowie frühere Namen.
+  - Alles kommt von den öffentlichen Roblox-APIs und wird 10 Minuten zwischengespeichert. Ist ein Teil nicht abrufbar, steht „nicht abrufbar“ da, nichts wird geraten.
+  - Fehlt in der Akte die Roblox-ID, wird sie über den exakten Roblox-Namen nachgetragen.
+  - Die Karten der Bürgersuche zeigen das Roblox-Kopfbild (eine gebündelte Abfrage je Seite).
+- **Foto:** „Foto ändern“ (Datei) oder „Foto aufnehmen“ (öffnet am Handy die Kamera). PNG, JPG oder WebP bis 8 MB; das Foto ersetzt das vorige. Gibt es Foto und Roblox-Avatar, schaltet man unter dem Bild zwischen „Roblox“ und „Foto“ um.
 - **Zähler:** aktive Haftbefehle, Fahrzeuge, Waffen, Einsätze, Berichte. Ein Klick öffnet den Reiter.
 - **Reiter:** Übersicht (Personalien, äußere Merkmale, Adresse), Lizenzen, Haftbefehle, Fahrzeuge, Waffen (mit „Registrieren“), Einsätze, Berichte, Ermittlungen, Notizen, Merkmale, Verlauf.
 - **Rechte:** Bearbeiten braucht `persons.edit`. Reiter, deren Bereich man nicht sehen darf, fehlen. Zum Beispiel erscheinen ohne `wanted.view` keine Haftbefehle.
@@ -42,7 +48,7 @@ Jeder Menüpunkt erscheint nur mit dem passenden Recht. Die API prüft dieselben
 
 `/api/v1/mdt/…`:
 - `config` (GET; PUT nur mit `settings.manage`)
-- `citizens` (Liste), `citizens/:id` (Profil, PATCH Personalien), `citizens/:id/photo` (POST)
+- `citizens` (Liste), `citizens/:id` (Profil, PATCH Personalien), `citizens/:id/photo` (POST), `citizens/:id/roblox` (Roblox-Profil live)
 - `vehicles`, `vehicles/:id`
 - `weapons` (GET, POST), `weapons/:id` (PATCH)
 - `warrants`
