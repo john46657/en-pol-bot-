@@ -13,11 +13,11 @@ declare const casesQ: z.ZodObject<{
     guildId: z.ZodOptional<z.ZodString>;
     status: z.ZodOptional<z.ZodEnum<["OPEN", "WAITING", "CLAIMED", "DECLINED", "ABANDONED", "CLOSED"]>>;
 }, "strip", z.ZodTypeAny, {
-    guildId?: string | undefined;
     status?: "CLAIMED" | "CLOSED" | "OPEN" | "WAITING" | "DECLINED" | "ABANDONED" | undefined;
+    guildId?: string | undefined;
 }, {
-    guildId?: string | undefined;
     status?: "CLAIMED" | "CLOSED" | "OPEN" | "WAITING" | "DECLINED" | "ABANDONED" | undefined;
+    guildId?: string | undefined;
 }>;
 declare const voice: z.ZodObject<{
     guildId: z.ZodString;
@@ -25,13 +25,13 @@ declare const voice: z.ZodObject<{
     discordId: z.ZodString;
     userName: z.ZodDefault<z.ZodString>;
 }, "strip", z.ZodTypeAny, {
-    discordId: string;
     guildId: string;
+    discordId: string;
     channelId: string;
     userName: string;
 }, {
-    discordId: string;
     guildId: string;
+    discordId: string;
     channelId: string;
     userName?: string | undefined;
 }>;
@@ -91,53 +91,53 @@ export declare class VoiceSupportController {
     cases(q: z.infer<typeof casesQ>): Promise<{
         number: string;
         id: string;
+        status: string;
         createdAt: Date;
         userId: string;
         guildId: string;
-        channelId: string | null;
-        userName: string;
-        status: string;
-        claimedById: string | null;
         closedAt: Date | null;
-        messages: number;
-        rating: number | null;
+        channelId: string | null;
         closeReason: string | null;
         closedById: string | null;
         closedByName: string | null;
-        notifyChannelId: string | null;
+        claimedById: string | null;
         roomId: string;
         roomName: string;
+        userName: string;
         claimedByName: string | null;
         claimedAt: Date | null;
         createdChannel: boolean;
+        notifyChannelId: string | null;
         notifyMessageId: string | null;
         threadId: string | null;
+        messages: number;
+        rating: number | null;
     }[]>;
     /** Übernehmen / Ablehnen / Nachricht / Schließen aus dem Dashboard (Recht ticket.claim). */
     action(a: Actor, id: string, b: z.infer<typeof webAction>): Promise<{
         number: string;
         id: string;
+        status: string;
         createdAt: Date;
         userId: string;
         guildId: string;
-        channelId: string | null;
-        userName: string;
-        status: string;
-        claimedById: string | null;
         closedAt: Date | null;
-        messages: number;
-        rating: number | null;
+        channelId: string | null;
         closeReason: string | null;
         closedById: string | null;
         closedByName: string | null;
-        notifyChannelId: string | null;
+        claimedById: string | null;
         roomId: string;
         roomName: string;
+        userName: string;
         claimedByName: string | null;
         claimedAt: Date | null;
         createdChannel: boolean;
+        notifyChannelId: string | null;
         notifyMessageId: string | null;
         threadId: string | null;
+        messages: number;
+        rating: number | null;
     }>;
 }
 /** Dienstweg des Bots. Team-Aktionen tragen Discord-ID, Name und Rollen der klickenden Person (Team-Rolle des Raums). */
@@ -198,7 +198,7 @@ export declare class BotVoiceSupportController {
             buttons: {
                 id: string;
                 label: string;
-                style: "danger" | "success" | "secondary";
+                style: "success" | "danger" | "secondary";
             }[];
         } | null;
         closed: boolean;
@@ -294,7 +294,7 @@ export declare class BotVoiceSupportController {
             buttons: {
                 id: string;
                 label: string;
-                style: "danger" | "success" | "secondary";
+                style: "success" | "danger" | "secondary";
             }[];
         } | null;
     }>;

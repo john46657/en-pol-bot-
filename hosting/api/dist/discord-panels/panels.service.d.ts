@@ -255,14 +255,14 @@ export declare class PanelsService {
     submissions(panelId: string): import("@prisma/client").Prisma.PrismaPromise<{
         id: string;
         createdAt: Date;
-        discordId: string;
         updatedAt: Date;
         guildId: string | null;
-        values: import("@prisma/client/runtime/library").JsonValue;
+        discordId: string;
         channelId: string | null;
         messageId: string | null;
-        userName: string;
         panelId: string;
+        userName: string;
+        values: import("@prisma/client/runtime/library").JsonValue;
     }[]>;
     removeSubmission(actor: Actor, id: string): Promise<void>;
     botStaffLists(): Promise<{

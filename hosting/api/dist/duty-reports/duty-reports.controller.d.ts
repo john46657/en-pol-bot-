@@ -11,14 +11,14 @@ declare const create: z.ZodObject<{
 }, "strip", z.ZodTypeAny, {
     values: Record<string, string | number>;
     templateId: string;
-    guildId?: string | null | undefined;
     source?: "DISCORD" | "WEB" | undefined;
+    guildId?: string | null | undefined;
     periodStart?: string | undefined;
 }, {
     values: Record<string, string | number>;
     templateId: string;
-    guildId?: string | null | undefined;
     source?: "DISCORD" | "WEB" | undefined;
+    guildId?: string | null | undefined;
     periodStart?: string | undefined;
 }>;
 declare const edit: z.ZodObject<{
@@ -55,22 +55,22 @@ declare const listQ: z.ZodObject<{
     page: number;
     pageSize: number;
     status?: "SUBMITTED" | "REVIEWED" | "RETURNED" | undefined;
+    authorId?: string | undefined;
+    templateId?: string | undefined;
     mine?: boolean | undefined;
     q?: string | undefined;
-    authorId?: string | undefined;
     from?: string | undefined;
     to?: string | undefined;
-    templateId?: string | undefined;
 }, {
     status?: "SUBMITTED" | "REVIEWED" | "RETURNED" | undefined;
+    authorId?: string | undefined;
+    templateId?: string | undefined;
     mine?: boolean | undefined;
     q?: string | undefined;
-    authorId?: string | undefined;
     from?: string | undefined;
     page?: number | undefined;
     pageSize?: number | undefined;
     to?: string | undefined;
-    templateId?: string | undefined;
 }>;
 /** 🗓️ Tages-/Wochenberichte (auch vom Discord-Bot im Namen des verknüpften Benutzers benutzt). */
 export declare class DutyReportsController {
@@ -164,14 +164,14 @@ export declare class DutyReportsController {
         } & {
             number: string;
             id: string;
+            status: string;
+            authorId: string;
             createdAt: Date;
             updatedAt: Date;
             version: number;
+            source: string;
             guildId: string | null;
             values: import("@prisma/client/runtime/library").JsonValue;
-            status: string;
-            source: string;
-            authorId: string;
             templateId: string;
             templateName: string;
             period: string;
@@ -223,14 +223,14 @@ export declare class DutyReportsController {
         };
         number: string;
         id: string;
+        status: string;
+        authorId: string;
         createdAt: Date;
         updatedAt: Date;
         version: number;
+        source: string;
         guildId: string | null;
         values: import("@prisma/client/runtime/library").JsonValue;
-        status: string;
-        source: string;
-        authorId: string;
         templateId: string;
         templateName: string;
         period: string;
@@ -244,14 +244,14 @@ export declare class DutyReportsController {
         merged: boolean;
         number: string;
         id: string;
+        status: string;
+        authorId: string;
         createdAt: Date;
         updatedAt: Date;
         version: number;
+        source: string;
         guildId: string | null;
         values: import("@prisma/client/runtime/library").JsonValue;
-        status: string;
-        source: string;
-        authorId: string;
         templateId: string;
         templateName: string;
         period: string;
@@ -264,14 +264,14 @@ export declare class DutyReportsController {
     edit(a: Actor, id: string, b: z.infer<typeof edit>): Promise<{
         number: string;
         id: string;
+        status: string;
+        authorId: string;
         createdAt: Date;
         updatedAt: Date;
         version: number;
+        source: string;
         guildId: string | null;
         values: import("@prisma/client/runtime/library").JsonValue;
-        status: string;
-        source: string;
-        authorId: string;
         templateId: string;
         templateName: string;
         period: string;
@@ -284,14 +284,14 @@ export declare class DutyReportsController {
     review(a: Actor, id: string, b: z.infer<typeof reviewBody>): Promise<{
         number: string;
         id: string;
+        status: string;
+        authorId: string;
         createdAt: Date;
         updatedAt: Date;
         version: number;
+        source: string;
         guildId: string | null;
         values: import("@prisma/client/runtime/library").JsonValue;
-        status: string;
-        source: string;
-        authorId: string;
         templateId: string;
         templateName: string;
         period: string;

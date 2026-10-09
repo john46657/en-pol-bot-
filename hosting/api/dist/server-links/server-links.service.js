@@ -49,6 +49,7 @@ function ownSpace(guildId) {
 let ServerLinksService = class ServerLinksService {
     prisma;
     audit;
+    log = new common_1.Logger('ServerLinks');
     links = { groups: [], sharedRecords: [] };
     constructor(prisma, audit) {
         this.prisma = prisma;
@@ -57,6 +58,35 @@ let ServerLinksService = class ServerLinksService {
     async onModuleInit() {
         (0, guild_context_1.setServerLinkResolvers)((g) => this.settingsGuild(g), (g) => this.space(g));
         await this.reload();
+        if (process.env.NODE_ENV !== 'test')
+            await this.assignLegacyRecords().catch((e) => this.log.warn(`Zuordnung alter Einträge fehlgeschlagen: ${e instanceof Error ? e.message : e}`));
+    }
+    /**
+     * Einmalig nach der Trennung je Server: Berichte, Fahndungen, Ermittlungen, Beschwerden, Beweismittel und Dienstzeiten
+     * ohne Server gehören dem Heimat-Server der Leitstelle (bzw. dem einzigen bekannten Discord-Server). Läuft bei jedem
+     * Start, bis es einen solchen Server gibt; danach nichts mehr zu tun.
+     */
+    async assignLegacyRecords() {
+        const [cad, known] = await Promise.all([
+            this.prisma.systemSetting.findUnique({ where: { key: 'cad.config' } }),
+            this.prisma.systemSetting.findUnique({ where: { key: 'discord.guilds' } }),
+        ]);
+        const guilds = (Array.isArray(known?.value) ? known.value : []).map((g) => String(g.id ?? '')).filter((id) => /^\d{15,25}$/.test(id));
+        const home = (cad?.value?.homeGuildId ?? null) || (guilds.length === 1 ? guilds[0] : null);
+        if (!home)
+            return null;
+        const space = this.space(home);
+        if (space === null)
+            return null; // Heimat-Server nutzt den gemeinsamen Bestand – dort sind die Einträge schon
+        const where = { serverId: null }, data = { serverId: space };
+        const r = await this.prisma.$transaction([
+            this.prisma.report.updateMany({ where, data }), this.prisma.complaint.updateMany({ where, data }), this.prisma.investigation.updateMany({ where, data }),
+            this.prisma.wantedRecord.updateMany({ where, data }), this.prisma.evidence.updateMany({ where, data }), this.prisma.dutySession.updateMany({ where, data }),
+        ]);
+        const moved = r.reduce((n, x) => n + x.count, 0);
+        if (moved)
+            this.log.log(`${moved} bestehende Einträge dem Server ${home} zugeordnet`);
+        return moved;
     }
     async reload() {
         const v = (await this.prisma.systemSetting.findUnique({ where: { key: KEY } }))?.value;

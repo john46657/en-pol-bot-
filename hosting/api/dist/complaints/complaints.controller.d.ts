@@ -10,15 +10,15 @@ declare const create: z.ZodObject<{
 }, "strip", z.ZodTypeAny, {
     category: string;
     description: string;
-    officerId?: string | undefined;
     complainantId?: string | undefined;
     subjectId?: string | undefined;
+    officerId?: string | undefined;
 }, {
     category: string;
     description: string;
-    officerId?: string | undefined;
     complainantId?: string | undefined;
     subjectId?: string | undefined;
+    officerId?: string | undefined;
 }>;
 declare const assign: z.ZodObject<{
     investigatorId: z.ZodString;
@@ -31,11 +31,11 @@ declare const note: z.ZodObject<{
     findings: z.ZodOptional<z.ZodString>;
     internalNotes: z.ZodOptional<z.ZodString>;
 }, "strip", z.ZodTypeAny, {
-    internalNotes?: string | undefined;
     findings?: string | undefined;
+    internalNotes?: string | undefined;
 }, {
-    internalNotes?: string | undefined;
     findings?: string | undefined;
+    internalNotes?: string | undefined;
 }>;
 declare const resolve: z.ZodObject<{
     resolution: z.ZodString;
@@ -70,34 +70,36 @@ export declare class ComplaintsController {
     list(a: Actor, q: z.infer<typeof listQ>): Promise<{
         items: ({
             number: string;
+            serverId: string | null;
             id: string;
+            status: string;
             createdAt: Date;
-            category: string;
             updatedAt: Date;
             version: number;
-            description: string;
-            status: string;
-            internalNotes: string | null;
-            officerId: string | null;
             complainantId: string | null;
             subjectId: string | null;
+            officerId: string | null;
+            category: string;
+            description: string;
             investigatorId: string | null;
             findings: string | null;
             resolution: string | null;
+            internalNotes: string | null;
         } | {
             internalNotes: undefined;
             findings: undefined;
             number: string;
+            serverId: string | null;
             id: string;
+            status: string;
             createdAt: Date;
-            category: string;
             updatedAt: Date;
             version: number;
-            description: string;
-            status: string;
-            officerId: string | null;
             complainantId: string | null;
             subjectId: string | null;
+            officerId: string | null;
+            category: string;
+            description: string;
             investigatorId: string | null;
             resolution: string | null;
         })[];
@@ -108,44 +110,46 @@ export declare class ComplaintsController {
     get(a: Actor, id: string): Promise<{
         complaint: {
             number: string;
+            serverId: string | null;
             id: string;
+            status: string;
             createdAt: Date;
-            category: string;
             updatedAt: Date;
             version: number;
-            description: string;
-            status: string;
-            internalNotes: string | null;
-            officerId: string | null;
             complainantId: string | null;
             subjectId: string | null;
+            officerId: string | null;
+            category: string;
+            description: string;
             investigatorId: string | null;
             findings: string | null;
             resolution: string | null;
+            internalNotes: string | null;
         } | {
             internalNotes: undefined;
             findings: undefined;
             number: string;
+            serverId: string | null;
             id: string;
+            status: string;
             createdAt: Date;
-            category: string;
             updatedAt: Date;
             version: number;
-            description: string;
-            status: string;
-            officerId: string | null;
             complainantId: string | null;
             subjectId: string | null;
+            officerId: string | null;
+            category: string;
+            description: string;
             investigatorId: string | null;
             resolution: string | null;
         };
         timeline: {
             id: string;
-            action: string;
+            createdAt: Date;
             entityType: string;
             entityId: string;
-            createdAt: Date;
             summary: string;
+            action: string;
             actorId: string | null;
         }[];
     }>;

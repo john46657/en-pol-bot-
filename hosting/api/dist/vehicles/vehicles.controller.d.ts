@@ -12,19 +12,19 @@ declare const create: z.ZodObject<{
     custom: z.ZodOptional<z.ZodRecord<z.ZodString, z.ZodUnknown>>;
 }, "strip", z.ZodTypeAny, {
     plate: string;
-    color?: string | undefined;
-    custom?: Record<string, unknown> | undefined;
-    notes?: string | undefined;
     model?: string | undefined;
     ownerId?: string | undefined;
+    color?: string | undefined;
+    notes?: string | undefined;
+    custom?: Record<string, unknown> | undefined;
     erlcReference?: string | undefined;
 }, {
     plate: string;
-    color?: string | undefined;
-    custom?: Record<string, unknown> | undefined;
-    notes?: string | undefined;
     model?: string | undefined;
     ownerId?: string | undefined;
+    color?: string | undefined;
+    notes?: string | undefined;
+    custom?: Record<string, unknown> | undefined;
     erlcReference?: string | undefined;
 }>;
 declare const archive: z.ZodObject<{
@@ -44,18 +44,18 @@ export declare class VehiclesController {
                 robloxUsername: string;
             } | null;
         } & {
+            serverId: string | null;
+            model: string | null;
             id: string;
+            status: string;
             createdAt: Date;
             updatedAt: Date;
             version: number;
-            color: string | null;
-            serverId: string | null;
-            status: string;
-            custom: import("@prisma/client/runtime/library").JsonValue | null;
-            notes: string | null;
-            plate: string;
-            model: string | null;
             ownerId: string | null;
+            color: string | null;
+            notes: string | null;
+            custom: import("@prisma/client/runtime/library").JsonValue | null;
+            plate: string;
             erlcReference: string | null;
         })[];
         total: number;
@@ -65,72 +65,72 @@ export declare class VehiclesController {
     get(id: string): Promise<{
         vehicle: {
             owner: {
+                serverId: string | null;
                 id: string;
+                status: string;
                 createdAt: Date;
-                robloxUserId: string | null;
-                robloxUsername: string;
                 updatedAt: Date;
                 version: number;
-                serverId: string | null;
                 createdById: string | null;
-                status: string;
-                custom: import("@prisma/client/runtime/library").JsonValue | null;
+                robloxUserId: string | null;
+                robloxUsername: string;
                 aliases: string[];
                 notes: string | null;
+                custom: import("@prisma/client/runtime/library").JsonValue | null;
             } | null;
         } & {
+            serverId: string | null;
+            model: string | null;
             id: string;
+            status: string;
             createdAt: Date;
             updatedAt: Date;
             version: number;
-            color: string | null;
-            serverId: string | null;
-            status: string;
-            custom: import("@prisma/client/runtime/library").JsonValue | null;
-            notes: string | null;
-            plate: string;
-            model: string | null;
             ownerId: string | null;
+            color: string | null;
+            notes: string | null;
+            custom: import("@prisma/client/runtime/library").JsonValue | null;
+            plate: string;
             erlcReference: string | null;
         };
         timeline: {
             id: string;
-            action: string;
+            createdAt: Date;
             entityType: string;
             entityId: string;
-            createdAt: Date;
             summary: string;
+            action: string;
             actorId: string | null;
         }[];
     }>;
     create(a: Actor, b: z.infer<typeof create>): Promise<{
+        serverId: string | null;
+        model: string | null;
         id: string;
+        status: string;
         createdAt: Date;
         updatedAt: Date;
         version: number;
-        color: string | null;
-        serverId: string | null;
-        status: string;
-        custom: import("@prisma/client/runtime/library").JsonValue | null;
-        notes: string | null;
-        plate: string;
-        model: string | null;
         ownerId: string | null;
+        color: string | null;
+        notes: string | null;
+        custom: import("@prisma/client/runtime/library").JsonValue | null;
+        plate: string;
         erlcReference: string | null;
     }>;
     archive(a: Actor, id: string, b: z.infer<typeof archive>): Promise<{
+        serverId: string | null;
+        model: string | null;
         id: string;
+        status: string;
         createdAt: Date;
         updatedAt: Date;
         version: number;
-        color: string | null;
-        serverId: string | null;
-        status: string;
-        custom: import("@prisma/client/runtime/library").JsonValue | null;
-        notes: string | null;
-        plate: string;
-        model: string | null;
         ownerId: string | null;
+        color: string | null;
+        notes: string | null;
+        custom: import("@prisma/client/runtime/library").JsonValue | null;
+        plate: string;
         erlcReference: string | null;
     }>;
 }

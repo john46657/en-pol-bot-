@@ -11,16 +11,16 @@ declare const createBody: z.ZodObject<{
 }, "strip", z.ZodTypeAny, {
     reason: string;
     scopes: string[];
+    expiresAt?: string | null | undefined;
     name?: string | null | undefined;
     discordId?: string | null | undefined;
-    expiresAt?: string | null | undefined;
     roblox?: string | null | undefined;
 }, {
     reason: string;
     scopes: string[];
+    expiresAt?: string | null | undefined;
     name?: string | null | undefined;
     discordId?: string | null | undefined;
-    expiresAt?: string | null | undefined;
     roblox?: string | null | undefined;
 }>;
 export declare class ApplicationBansController {
@@ -30,14 +30,14 @@ export declare class ApplicationBansController {
         all?: string;
     }): Promise<{
         id: string;
-        reason: string;
         createdAt: Date;
-        name: string;
-        discordId: string | null;
+        reason: string;
+        createdById: string | null;
         expiresAt: Date | null;
         robloxUserId: string | null;
+        name: string;
         guildId: string | null;
-        createdById: string | null;
+        discordId: string | null;
         scopes: string[];
         createdByName: string | null;
         liftedAt: Date | null;
@@ -45,14 +45,14 @@ export declare class ApplicationBansController {
     }[]>;
     create(a: Actor, b: z.infer<typeof createBody>): Promise<{
         id: string;
-        reason: string;
         createdAt: Date;
-        name: string;
-        discordId: string | null;
+        reason: string;
+        createdById: string | null;
         expiresAt: Date | null;
         robloxUserId: string | null;
+        name: string;
         guildId: string | null;
-        createdById: string | null;
+        discordId: string | null;
         scopes: string[];
         createdByName: string | null;
         liftedAt: Date | null;
@@ -60,14 +60,14 @@ export declare class ApplicationBansController {
     }>;
     lift(a: Actor, id: string): Promise<{
         id: string;
-        reason: string;
         createdAt: Date;
-        name: string;
-        discordId: string | null;
+        reason: string;
+        createdById: string | null;
         expiresAt: Date | null;
         robloxUserId: string | null;
+        name: string;
         guildId: string | null;
-        createdById: string | null;
+        discordId: string | null;
         scopes: string[];
         createdByName: string | null;
         liftedAt: Date | null;

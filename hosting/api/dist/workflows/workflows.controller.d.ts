@@ -15,9 +15,9 @@ export declare class WorkflowsController {
     } & {
         id: string;
         createdAt: Date;
-        name: string;
         updatedAt: Date;
         createdById: string | null;
+        name: string;
         enabled: boolean;
         trigger: string;
         conditions: import("@prisma/client/runtime/library").JsonValue;
@@ -27,9 +27,9 @@ export declare class WorkflowsController {
     runs(id: string): import("@prisma/client").Prisma.PrismaPromise<{
         error: string | null;
         id: string;
-        action: string;
-        entityId: string | null;
         createdAt: Date;
+        entityId: string | null;
+        action: string;
         ok: boolean;
         workflowId: string;
         auditId: string;
@@ -37,9 +37,9 @@ export declare class WorkflowsController {
     create(a: Actor, b: WorkflowInput): Promise<{
         id: string;
         createdAt: Date;
-        name: string;
         updatedAt: Date;
         createdById: string | null;
+        name: string;
         enabled: boolean;
         trigger: string;
         conditions: import("@prisma/client/runtime/library").JsonValue;
@@ -49,9 +49,9 @@ export declare class WorkflowsController {
     update(a: Actor, id: string, b: WorkflowInput): Promise<{
         id: string;
         createdAt: Date;
-        name: string;
         updatedAt: Date;
         createdById: string | null;
+        name: string;
         enabled: boolean;
         trigger: string;
         conditions: import("@prisma/client/runtime/library").JsonValue;

@@ -14,18 +14,19 @@ export declare class WantedService {
     expireDue(): Promise<import("@prisma/client").Prisma.BatchPayload>;
     list(p: PageQuery, status?: string): Promise<{
         items: {
+            serverId: string | null;
             id: string;
-            reason: string;
+            status: string;
             createdAt: Date;
-            expiresAt: Date | null;
             updatedAt: Date;
             version: number;
             description: string | null;
-            priority: string;
-            createdById: string;
-            status: string;
             personId: string | null;
             vehicleId: string | null;
+            reason: string;
+            priority: string;
+            createdById: string;
+            expiresAt: Date | null;
         }[];
         total: number;
         page: number;
@@ -33,26 +34,27 @@ export declare class WantedService {
     }>;
     get(id: string): Promise<{
         wanted: {
+            serverId: string | null;
             id: string;
-            reason: string;
+            status: string;
             createdAt: Date;
-            expiresAt: Date | null;
             updatedAt: Date;
             version: number;
             description: string | null;
-            priority: string;
-            createdById: string;
-            status: string;
             personId: string | null;
             vehicleId: string | null;
+            reason: string;
+            priority: string;
+            createdById: string;
+            expiresAt: Date | null;
         };
         timeline: {
             id: string;
-            action: string;
+            createdAt: Date;
             entityType: string;
             entityId: string;
-            createdAt: Date;
             summary: string;
+            action: string;
             actorId: string | null;
         }[];
     }>;
@@ -64,31 +66,33 @@ export declare class WantedService {
         priority?: string;
         expiresAt?: Date;
     }): Promise<{
+        serverId: string | null;
         id: string;
-        reason: string;
+        status: string;
         createdAt: Date;
-        expiresAt: Date | null;
         updatedAt: Date;
         version: number;
         description: string | null;
-        priority: string;
-        createdById: string;
-        status: string;
         personId: string | null;
         vehicleId: string | null;
+        reason: string;
+        priority: string;
+        createdById: string;
+        expiresAt: Date | null;
     }>;
     setStatus(actor: Actor, id: string, to: WantedStatus, reason: string): Promise<{
+        serverId: string | null;
         id: string;
-        reason: string;
+        status: string;
         createdAt: Date;
-        expiresAt: Date | null;
         updatedAt: Date;
         version: number;
         description: string | null;
-        priority: string;
-        createdById: string;
-        status: string;
         personId: string | null;
         vehicleId: string | null;
+        reason: string;
+        priority: string;
+        createdById: string;
+        expiresAt: Date | null;
     }>;
 }

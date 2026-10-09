@@ -72,9 +72,16 @@ export declare function ownSpace(guildId: string): string;
 export declare class ServerLinksService implements OnModuleInit {
     private readonly prisma;
     private readonly audit;
+    private readonly log;
     private links;
     constructor(prisma: PrismaService, audit: AuditService);
     onModuleInit(): Promise<void>;
+    /**
+     * Einmalig nach der Trennung je Server: Berichte, Fahndungen, Ermittlungen, Beschwerden, Beweismittel und Dienstzeiten
+     * ohne Server gehören dem Heimat-Server der Leitstelle (bzw. dem einzigen bekannten Discord-Server). Läuft bei jedem
+     * Start, bis es einen solchen Server gibt; danach nichts mehr zu tun.
+     */
+    assignLegacyRecords(): Promise<number | null>;
     reload(): Promise<void>;
     private groupOf;
     settingsGuild(guildId: string): string;

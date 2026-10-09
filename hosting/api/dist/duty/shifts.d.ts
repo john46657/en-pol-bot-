@@ -19,8 +19,8 @@ export declare const shiftTypeSchema: z.ZodObject<{
 }, {
     id: string;
     name: string;
-    logChannelId?: string | null | undefined;
     isDefault?: boolean | undefined;
+    logChannelId?: string | null | undefined;
     onShiftRoleIds?: string[] | undefined;
     onBreakRoleIds?: string[] | undefined;
 }>;
@@ -59,8 +59,8 @@ export declare const shiftsConfigSchema: z.ZodEffects<z.ZodObject<{
     }, {
         id: string;
         name: string;
-        logChannelId?: string | null | undefined;
         isDefault?: boolean | undefined;
+        logChannelId?: string | null | undefined;
         onShiftRoleIds?: string[] | undefined;
         onBreakRoleIds?: string[] | undefined;
     }>, "many">>;
@@ -99,8 +99,8 @@ export declare const shiftsConfigSchema: z.ZodEffects<z.ZodObject<{
     types?: {
         id: string;
         name: string;
-        logChannelId?: string | null | undefined;
         isDefault?: boolean | undefined;
+        logChannelId?: string | null | undefined;
         onShiftRoleIds?: string[] | undefined;
         onBreakRoleIds?: string[] | undefined;
     }[] | undefined;
@@ -129,8 +129,8 @@ export declare const shiftsConfigSchema: z.ZodEffects<z.ZodObject<{
     types?: {
         id: string;
         name: string;
-        logChannelId?: string | null | undefined;
         isDefault?: boolean | undefined;
+        logChannelId?: string | null | undefined;
         onShiftRoleIds?: string[] | undefined;
         onBreakRoleIds?: string[] | undefined;
     }[] | undefined;

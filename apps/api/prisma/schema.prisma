@@ -357,6 +357,7 @@ model IncidentUnit {
 
 model Report {
   id             String          @id @default(uuid()) @db.Uuid
+  serverId       String?         @db.Uuid
   number         String          @unique
   type           String
   title          String
@@ -370,6 +371,7 @@ model Report {
   versions       ReportVersion[]
 
   @@index([status])
+  @@index([serverId])
 }
 
 model ReportVersion {
@@ -388,6 +390,7 @@ model ReportVersion {
 
 model Complaint {
   id             String   @id @default(uuid()) @db.Uuid
+  serverId       String?  @db.Uuid
   number         String   @unique
   complainantId  String?  @db.Uuid
   subjectId      String?  @db.Uuid
@@ -404,10 +407,12 @@ model Complaint {
   version        Int      @default(1)
 
   @@index([status])
+  @@index([serverId])
 }
 
 model Investigation {
   id          String   @id @default(uuid()) @db.Uuid
+  serverId    String?  @db.Uuid
   caseNumber  String   @unique
   title       String
   description String?
@@ -416,10 +421,13 @@ model Investigation {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
   version     Int      @default(1)
+
+  @@index([serverId])
 }
 
 model WantedRecord {
   id          String    @id @default(uuid()) @db.Uuid
+  serverId    String?   @db.Uuid
   personId    String?   @db.Uuid
   vehicleId   String?   @db.Uuid
   reason      String
@@ -433,10 +441,12 @@ model WantedRecord {
   version     Int       @default(1)
 
   @@index([status])
+  @@index([serverId])
 }
 
 model Evidence {
   id              String             @id @default(uuid()) @db.Uuid
+  serverId        String?            @db.Uuid
   number          String             @unique
   caseRef         String?
   type            String
@@ -449,6 +459,8 @@ model Evidence {
   updatedAt       DateTime           @updatedAt
   version         Int                @default(1)
   transfers       EvidenceTransfer[]
+
+  @@index([serverId])
 }
 
 model EvidenceTransfer {
@@ -518,6 +530,7 @@ model PersonnelRecord {
 
 model DutySession {
   id             String    @id @default(uuid()) @db.Uuid
+  serverId       String?   @db.Uuid
   userId         String    @db.Uuid
   status         String
   unitId         String?   @db.Uuid
@@ -533,6 +546,7 @@ model DutySession {
   user           User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId, endedAt])
+  @@index([serverId])
 }
 
 /// Abmeldung (Leave of Absence): Antrag → Freigabe → Rolle „abgemeldet“ von Beginn bis Ende.

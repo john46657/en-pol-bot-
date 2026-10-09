@@ -95,11 +95,11 @@ declare const actionSchema: z.ZodDiscriminatedUnion<"action", [z.ZodObject<{
     action: z.ZodLiteral<"rename">;
     name: z.ZodString;
 }, "strip", z.ZodTypeAny, {
-    action: "rename";
     name: string;
+    action: "rename";
 }, {
-    action: "rename";
     name: string;
+    action: "rename";
 }>, z.ZodObject<{
     action: z.ZodLiteral<"move">;
     parentId: z.ZodNullable<z.ZodString>;
@@ -181,27 +181,27 @@ declare const listQ: z.ZodObject<{
     page: number;
     pageSize: number;
     guildId?: string | undefined;
-    q?: string | undefined;
     kind?: "all" | "open" | "closed" | "archived" | "escalated" | "deleted" | undefined;
-    from?: Date | undefined;
-    to?: Date | undefined;
-    creator?: string | undefined;
     categoryId?: string | undefined;
     statusId?: string | undefined;
     priorityId?: string | undefined;
+    q?: string | undefined;
+    from?: Date | undefined;
+    to?: Date | undefined;
+    creator?: string | undefined;
     claimer?: string | undefined;
 }, {
     guildId?: string | undefined;
-    q?: string | undefined;
     kind?: "all" | "open" | "closed" | "archived" | "escalated" | "deleted" | undefined;
+    categoryId?: string | undefined;
+    statusId?: string | undefined;
+    priorityId?: string | undefined;
+    q?: string | undefined;
     from?: Date | undefined;
     page?: number | undefined;
     pageSize?: number | undefined;
     to?: Date | undefined;
     creator?: string | undefined;
-    categoryId?: string | undefined;
-    statusId?: string | undefined;
-    priorityId?: string | undefined;
     claimer?: string | undefined;
 }>;
 declare const transcriptQ: z.ZodObject<{
@@ -220,15 +220,16 @@ declare const transcriptQ: z.ZodObject<{
     pageSize: number;
     number?: number | undefined;
     status?: string | undefined;
+    categoryName?: string | undefined;
     q?: string | undefined;
     staff?: string | undefined;
     from?: Date | undefined;
     to?: Date | undefined;
     creator?: string | undefined;
-    categoryName?: string | undefined;
 }, {
     number?: number | undefined;
     status?: string | undefined;
+    categoryName?: string | undefined;
     q?: string | undefined;
     staff?: string | undefined;
     from?: Date | undefined;
@@ -236,7 +237,6 @@ declare const transcriptQ: z.ZodObject<{
     pageSize?: number | undefined;
     to?: Date | undefined;
     creator?: string | undefined;
-    categoryName?: string | undefined;
 }>;
 declare const ratingQ: z.ZodObject<{
     stars: z.ZodOptional<z.ZodNumber>;
@@ -249,10 +249,10 @@ declare const ratingQ: z.ZodObject<{
     categoryId?: string | undefined;
     stars?: number | undefined;
 }, {
-    page?: number | undefined;
-    pageSize?: number | undefined;
     categoryId?: string | undefined;
     stars?: number | undefined;
+    page?: number | undefined;
+    pageSize?: number | undefined;
 }>;
 declare const openQ: z.ZodObject<{
     categoryId: z.ZodString;
@@ -281,26 +281,26 @@ export declare class SupportTicketsController {
         categories: ({
             id: string;
             createdAt: Date;
-            name: string;
-            active: boolean;
             updatedAt: Date;
-            guildId: string | null;
-            color: number;
             description: string;
+            active: boolean;
+            name: string;
+            color: number;
+            guildId: string | null;
             emoji: string | null;
             position: number;
-            cooldownMinutes: number;
-            questions: import("@prisma/client/runtime/library").JsonValue;
             buttonStyle: string;
             discordCategoryId: string | null;
             channelNameFormat: string;
             staffRoleIds: string[];
             extraRoleIds: string[];
+            accessRoleNames: string[];
             requiredRoleIds: string[];
             allowedUserIds: string[];
-            accessRoleNames: string[];
             maxOpen: number;
+            cooldownMinutes: number;
             defaultPriorityId: string | null;
+            questions: import("@prisma/client/runtime/library").JsonValue;
             welcomeTitle: string;
             welcomeMessage: string;
             mentionStaff: boolean;
@@ -341,30 +341,30 @@ export declare class SupportTicketsController {
         })[];
         panels: {
             id: string;
-            createdAt: Date;
-            name: string;
-            updatedAt: Date;
-            guildId: string | null;
-            color: number;
-            channelId: string | null;
-            messageId: string | null;
-            description: string;
-            emoji: string | null;
             title: string;
-            categoryIds: string[];
-            position: number;
-            imageUrl: string | null;
-            placeholder: string;
-            style: string;
+            createdAt: Date;
+            updatedAt: Date;
+            description: string;
+            name: string;
+            color: number;
+            guildId: string | null;
+            emoji: string | null;
             thumbnailUrl: string | null;
+            imageUrl: string | null;
             bannerUrl: string | null;
             footer: string | null;
             footerIconUrl: string | null;
             authorName: string | null;
             authorIconUrl: string | null;
+            style: string;
+            placeholder: string;
+            channelId: string | null;
+            categoryIds: string[];
             allowedRoleIds: string[];
             showLoad: boolean;
+            position: number;
             messageChannelId: string | null;
+            messageId: string | null;
         }[];
         statuses: {
             id: string;
@@ -390,12 +390,12 @@ export declare class SupportTicketsController {
         }[];
         reasons: {
             id: string;
-            text: string;
             position: number;
+            text: string;
         }[];
         settings: {
-            logChannelId: string | null;
             transcriptChannelId: string | null;
+            logChannelId: string | null;
             closedTitle: string;
             closedMessage: string;
             closedColor: number;
@@ -411,8 +411,8 @@ export declare class SupportTicketsController {
         };
     }>;
     settings(u: AuthUser, b: z.infer<typeof settingsSchema>): Promise<{
-        logChannelId: string | null;
         transcriptChannelId: string | null;
+        logChannelId: string | null;
         closedTitle: string;
         closedMessage: string;
         closedColor: number;
@@ -429,26 +429,26 @@ export declare class SupportTicketsController {
     createCategory(u: AuthUser, b: z.infer<typeof categorySchema>): Promise<{
         id: string;
         createdAt: Date;
-        name: string;
-        active: boolean;
         updatedAt: Date;
-        guildId: string | null;
-        color: number;
         description: string;
+        active: boolean;
+        name: string;
+        color: number;
+        guildId: string | null;
         emoji: string | null;
         position: number;
-        cooldownMinutes: number;
-        questions: import("@prisma/client/runtime/library").JsonValue;
         buttonStyle: string;
         discordCategoryId: string | null;
         channelNameFormat: string;
         staffRoleIds: string[];
         extraRoleIds: string[];
+        accessRoleNames: string[];
         requiredRoleIds: string[];
         allowedUserIds: string[];
-        accessRoleNames: string[];
         maxOpen: number;
+        cooldownMinutes: number;
         defaultPriorityId: string | null;
+        questions: import("@prisma/client/runtime/library").JsonValue;
         welcomeTitle: string;
         welcomeMessage: string;
         mentionStaff: boolean;
@@ -490,26 +490,26 @@ export declare class SupportTicketsController {
     updateCategory(u: AuthUser, id: string, b: z.infer<typeof categorySchema>): Promise<{
         id: string;
         createdAt: Date;
-        name: string;
-        active: boolean;
         updatedAt: Date;
-        guildId: string | null;
-        color: number;
         description: string;
+        active: boolean;
+        name: string;
+        color: number;
+        guildId: string | null;
         emoji: string | null;
         position: number;
-        cooldownMinutes: number;
-        questions: import("@prisma/client/runtime/library").JsonValue;
         buttonStyle: string;
         discordCategoryId: string | null;
         channelNameFormat: string;
         staffRoleIds: string[];
         extraRoleIds: string[];
+        accessRoleNames: string[];
         requiredRoleIds: string[];
         allowedUserIds: string[];
-        accessRoleNames: string[];
         maxOpen: number;
+        cooldownMinutes: number;
         defaultPriorityId: string | null;
+        questions: import("@prisma/client/runtime/library").JsonValue;
         welcomeTitle: string;
         welcomeMessage: string;
         mentionStaff: boolean;
@@ -551,26 +551,26 @@ export declare class SupportTicketsController {
     dupCategory(u: AuthUser, id: string): Promise<{
         id: string;
         createdAt: Date;
-        name: string;
-        active: boolean;
         updatedAt: Date;
-        guildId: string | null;
-        color: number;
         description: string;
+        active: boolean;
+        name: string;
+        color: number;
+        guildId: string | null;
         emoji: string | null;
         position: number;
-        cooldownMinutes: number;
-        questions: import("@prisma/client/runtime/library").JsonValue;
         buttonStyle: string;
         discordCategoryId: string | null;
         channelNameFormat: string;
         staffRoleIds: string[];
         extraRoleIds: string[];
+        accessRoleNames: string[];
         requiredRoleIds: string[];
         allowedUserIds: string[];
-        accessRoleNames: string[];
         maxOpen: number;
+        cooldownMinutes: number;
         defaultPriorityId: string | null;
+        questions: import("@prisma/client/runtime/library").JsonValue;
         welcomeTitle: string;
         welcomeMessage: string;
         mentionStaff: boolean;
@@ -612,84 +612,84 @@ export declare class SupportTicketsController {
     delCategory(u: AuthUser, id: string): Promise<void>;
     createPanel(u: AuthUser, b: z.infer<typeof panelSchema>): Promise<{
         id: string;
-        createdAt: Date;
-        name: string;
-        updatedAt: Date;
-        guildId: string | null;
-        color: number;
-        channelId: string | null;
-        messageId: string | null;
-        description: string;
-        emoji: string | null;
         title: string;
-        categoryIds: string[];
-        position: number;
-        imageUrl: string | null;
-        placeholder: string;
-        style: string;
+        createdAt: Date;
+        updatedAt: Date;
+        description: string;
+        name: string;
+        color: number;
+        guildId: string | null;
+        emoji: string | null;
         thumbnailUrl: string | null;
+        imageUrl: string | null;
         bannerUrl: string | null;
         footer: string | null;
         footerIconUrl: string | null;
         authorName: string | null;
         authorIconUrl: string | null;
+        style: string;
+        placeholder: string;
+        channelId: string | null;
+        categoryIds: string[];
         allowedRoleIds: string[];
         showLoad: boolean;
+        position: number;
         messageChannelId: string | null;
+        messageId: string | null;
     }>;
     updatePanel(u: AuthUser, id: string, b: z.infer<typeof panelSchema>): Promise<{
         id: string;
-        createdAt: Date;
-        name: string;
-        updatedAt: Date;
-        guildId: string | null;
-        color: number;
-        channelId: string | null;
-        messageId: string | null;
-        description: string;
-        emoji: string | null;
         title: string;
-        categoryIds: string[];
-        position: number;
-        imageUrl: string | null;
-        placeholder: string;
-        style: string;
+        createdAt: Date;
+        updatedAt: Date;
+        description: string;
+        name: string;
+        color: number;
+        guildId: string | null;
+        emoji: string | null;
         thumbnailUrl: string | null;
+        imageUrl: string | null;
         bannerUrl: string | null;
         footer: string | null;
         footerIconUrl: string | null;
         authorName: string | null;
         authorIconUrl: string | null;
+        style: string;
+        placeholder: string;
+        channelId: string | null;
+        categoryIds: string[];
         allowedRoleIds: string[];
         showLoad: boolean;
+        position: number;
         messageChannelId: string | null;
+        messageId: string | null;
     }>;
     dupPanel(u: AuthUser, id: string): Promise<{
         id: string;
-        createdAt: Date;
-        name: string;
-        updatedAt: Date;
-        guildId: string | null;
-        color: number;
-        channelId: string | null;
-        messageId: string | null;
-        description: string;
-        emoji: string | null;
         title: string;
-        categoryIds: string[];
-        position: number;
-        imageUrl: string | null;
-        placeholder: string;
-        style: string;
+        createdAt: Date;
+        updatedAt: Date;
+        description: string;
+        name: string;
+        color: number;
+        guildId: string | null;
+        emoji: string | null;
         thumbnailUrl: string | null;
+        imageUrl: string | null;
         bannerUrl: string | null;
         footer: string | null;
         footerIconUrl: string | null;
         authorName: string | null;
         authorIconUrl: string | null;
+        style: string;
+        placeholder: string;
+        channelId: string | null;
+        categoryIds: string[];
         allowedRoleIds: string[];
         showLoad: boolean;
+        position: number;
         messageChannelId: string | null;
+        messageId: string | null;
     }>;
     delPanel(u: AuthUser, id: string): Promise<void>;
     preview(id: string): Promise<import("@enrp/shared").MessageSpec>;
@@ -747,13 +747,13 @@ export declare class SupportTicketsController {
     delPriority(u: AuthUser, id: string): Promise<void>;
     createReason(u: AuthUser, b: z.infer<typeof reasonSchema>): Promise<{
         id: string;
-        text: string;
         position: number;
+        text: string;
     }>;
     updateReason(u: AuthUser, id: string, b: z.infer<typeof reasonSchema>): Promise<{
         id: string;
-        text: string;
         position: number;
+        text: string;
     }>;
     delReason(u: AuthUser, id: string): Promise<void>;
     list(u: AuthUser, q: z.infer<typeof listQ>): Promise<{
@@ -981,18 +981,18 @@ export declare class SupportTicketsController {
             id: string;
             createdAt: Date;
             expiresAt: Date | null;
-            kind: string;
-            targetId: string;
-            ticketId: string;
             addedById: string | null;
+            kind: string;
+            ticketId: string;
+            targetId: string;
         }[];
         messages: {
             id: string;
-            createdAt: Date;
-            discordId: string | null;
             authorId: string;
+            createdAt: Date;
             content: string;
             attachments: import("@prisma/client/runtime/library").JsonValue;
+            discordId: string | null;
             authorName: string;
             ticketId: string;
             authorAvatar: string | null;
@@ -1002,17 +1002,17 @@ export declare class SupportTicketsController {
         }[];
         notes: {
             id: string;
-            createdAt: Date;
-            text: string;
             authorId: string | null;
+            createdAt: Date;
             authorName: string;
+            text: string;
             ticketId: string;
             authorUserId: string | null;
         }[] | null;
         logs: {
             id: string;
-            action: string;
             createdAt: Date;
+            action: string;
             actorId: string | null;
             detail: import("@prisma/client/runtime/library").JsonValue;
             ticketId: string;
@@ -1037,22 +1037,22 @@ export declare class SupportTicketsController {
         names: Record<string, string>;
         id: string;
         createdAt: Date;
-        name: string;
         updatedAt: Date;
-        guildId: string;
-        channelId: string | null;
-        closedAt: Date | null;
         lastActivityAt: Date;
+        name: string;
+        guildId: string;
+        closedAt: Date | null;
         deletedAt: Date | null;
         answers: import("@prisma/client/runtime/library").JsonValue;
+        channelId: string | null;
         categoryId: string;
-        statusId: string;
-        priorityId: string | null;
         panelId: string | null;
         controlMessageId: string | null;
         creatorId: string;
         creatorName: string;
         creatorUserId: string | null;
+        statusId: string;
+        priorityId: string | null;
         claimers: string[];
         questionIndex: number;
         locked: boolean;
@@ -1097,17 +1097,17 @@ export declare class SupportTicketsController {
         }[];
         reasons: {
             id: string;
-            text: string;
             position: number;
+            text: string;
         }[];
         access: {
             id: string;
             createdAt: Date;
             expiresAt: Date | null;
-            kind: string;
-            targetId: string;
-            ticketId: string;
             addedById: string | null;
+            kind: string;
+            ticketId: string;
+            targetId: string;
         }[];
         close: {
             mode: string;
@@ -1168,15 +1168,15 @@ declare const botOpen: z.ZodObject<{
     discordName: z.ZodString;
     memberRoleIds: z.ZodDefault<z.ZodArray<z.ZodString, "many">>;
 }, "strip", z.ZodTypeAny, {
-    discordId: string;
     guildId: string;
+    discordId: string;
     discordName: string;
     categoryId: string;
     memberRoleIds: string[];
     panelId?: string | undefined;
 }, {
-    discordId: string;
     guildId: string;
+    discordId: string;
     discordName: string;
     categoryId: string;
     panelId?: string | undefined;
@@ -1197,60 +1197,60 @@ declare const botMessage: z.ZodObject<{
         contentType: z.ZodOptional<z.ZodNullable<z.ZodString>>;
     }, "strip", z.ZodTypeAny, {
         name: string;
-        url: string;
         size: number;
+        url: string;
         contentType?: string | null | undefined;
     }, {
         name: string;
-        url: string;
         size: number;
+        url: string;
         contentType?: string | null | undefined;
     }>, "many">>;
     embeds: z.ZodDefault<z.ZodArray<z.ZodObject<{
         title: z.ZodOptional<z.ZodString>;
         description: z.ZodOptional<z.ZodString>;
     }, "strip", z.ZodTypeAny, {
-        description?: string | undefined;
         title?: string | undefined;
+        description?: string | undefined;
     }, {
-        description?: string | undefined;
         title?: string | undefined;
+        description?: string | undefined;
     }>, "many">>;
 }, "strip", z.ZodTypeAny, {
-    channelId: string;
     authorId: string;
     content: string;
     attachments: {
         name: string;
-        url: string;
         size: number;
+        url: string;
         contentType?: string | null | undefined;
     }[];
     authorName: string;
+    channelId: string;
     isBot: boolean;
     embeds: {
-        description?: string | undefined;
         title?: string | undefined;
+        description?: string | undefined;
     }[];
     discordMessageId: string;
     authorAvatar?: string | null | undefined;
 }, {
-    channelId: string;
     authorId: string;
     content: string;
     authorName: string;
+    channelId: string;
     isBot: boolean;
     discordMessageId: string;
     attachments?: {
         name: string;
-        url: string;
         size: number;
+        url: string;
         contentType?: string | null | undefined;
     }[] | undefined;
     authorAvatar?: string | null | undefined;
     embeds?: {
-        description?: string | undefined;
         title?: string | undefined;
+        description?: string | undefined;
     }[] | undefined;
 }>;
 /** Dienst-Endpunkte für den Bot (Ersteller ohne Konto, Channel-Meldungen, Panels, Transcripts). */

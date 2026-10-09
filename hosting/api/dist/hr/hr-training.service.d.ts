@@ -17,12 +17,12 @@ export declare const trainingSchema: z.ZodObject<{
     requiredRoleId: z.ZodDefault<z.ZodNullable<z.ZodString>>;
     validDays: z.ZodDefault<z.ZodNullable<z.ZodNumber>>;
 }, "strip", z.ZodTypeAny, {
-    name: string;
-    active: boolean;
     description: string | null;
-    duration: string | null;
+    active: boolean;
+    name: string;
     requirements: string | null;
     instructorIds: string[];
+    duration: string | null;
     examRequired: boolean;
     examId: string | null;
     certificate: boolean;
@@ -31,11 +31,11 @@ export declare const trainingSchema: z.ZodObject<{
     validDays: number | null;
 }, {
     name: string;
-    active?: boolean | undefined;
     description?: string | null | undefined;
-    duration?: string | null | undefined;
+    active?: boolean | undefined;
     requirements?: string | null | undefined;
     instructorIds?: string[] | undefined;
+    duration?: string | null | undefined;
     examRequired?: boolean | undefined;
     examId?: string | null | undefined;
     certificate?: boolean | undefined;
@@ -79,9 +79,9 @@ export declare const examSchema: z.ZodObject<{
     trainingId: z.ZodDefault<z.ZodNullable<z.ZodString>>;
     active: z.ZodDefault<z.ZodBoolean>;
 }, "strip", z.ZodTypeAny, {
-    active: boolean;
-    description: string | null;
     title: string;
+    description: string | null;
+    active: boolean;
     questions: {
         options: string[];
         type: "YESNO" | "MULTI" | "TEXT" | "SINGLE" | "NUMBER";
@@ -101,8 +101,8 @@ export declare const examSchema: z.ZodObject<{
     examinerIds: string[];
 }, {
     title: string;
-    active?: boolean | undefined;
     description?: string | null | undefined;
+    active?: boolean | undefined;
     questions?: {
         type: "YESNO" | "MULTI" | "TEXT" | "SINGLE" | "NUMBER";
         text: string;
@@ -132,14 +132,14 @@ export declare class HrTrainingService {
         passed: number;
         id: string;
         createdAt: Date;
-        name: string;
-        active: boolean;
         updatedAt: Date;
         description: string | null;
-        duration: string | null;
+        active: boolean;
+        name: string;
         position: number;
         requirements: string | null;
         instructorIds: string[];
+        duration: string | null;
         examRequired: boolean;
         examId: string | null;
         certificate: boolean;
@@ -150,14 +150,14 @@ export declare class HrTrainingService {
     saveTraining(actor: Actor, d: z.infer<typeof trainingSchema>, id?: string): Promise<{
         id: string;
         createdAt: Date;
-        name: string;
-        active: boolean;
         updatedAt: Date;
         description: string | null;
-        duration: string | null;
+        active: boolean;
+        name: string;
         position: number;
         requirements: string | null;
         instructorIds: string[];
+        duration: string | null;
         examRequired: boolean;
         examId: string | null;
         certificate: boolean;
@@ -177,15 +177,15 @@ export declare class HrTrainingService {
         };
     } & {
         id: string;
-        expiresAt: Date | null;
-        updatedAt: Date;
         status: string;
+        updatedAt: Date;
+        expiresAt: Date | null;
         startedAt: Date | null;
-        note: string | null;
         personnelId: string;
         trainingId: string;
         progress: number;
         examinerId: string | null;
+        note: string | null;
         completedAt: Date | null;
         certificateNo: string | null;
     })[]>;
@@ -198,15 +198,15 @@ export declare class HrTrainingService {
         note?: string | null;
     }): Promise<{
         id: string;
-        expiresAt: Date | null;
-        updatedAt: Date;
         status: string;
+        updatedAt: Date;
+        expiresAt: Date | null;
         startedAt: Date | null;
-        note: string | null;
         personnelId: string;
         trainingId: string;
         progress: number;
         examinerId: string | null;
+        note: string | null;
         completedAt: Date | null;
         certificateNo: string | null;
     }>;
@@ -241,11 +241,11 @@ export declare class HrTrainingService {
             submittedAt: Date | null;
         }[];
         id: string;
+        title: string;
         createdAt: Date;
-        active: boolean;
         updatedAt: Date;
         description: string | null;
-        title: string;
+        active: boolean;
         trainingId: string | null;
         questionCount: number;
         passPercent: number;
@@ -258,11 +258,11 @@ export declare class HrTrainingService {
     }[]>;
     saveExam(actor: Actor, d: z.infer<typeof examSchema>, id?: string): Promise<{
         id: string;
+        title: string;
         createdAt: Date;
-        active: boolean;
         updatedAt: Date;
         description: string | null;
-        title: string;
+        active: boolean;
         questions: Prisma.JsonValue;
         trainingId: string | null;
         questionCount: number;
