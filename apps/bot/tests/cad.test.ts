@@ -45,6 +45,23 @@ describe('/cad', () => {
     const denied = fakeApi({ 'POST /cad/radio': new BotApiError(403, 'PERMISSION_DENIED', 'Dieser Discord-Server ist für diese Aktion nicht mit der Leitstelle verbunden.') });
     expect(text(await byName('cad')!.run(ctx(denied.api, { _sub: 'funk', text: 'x' })))).toMatch(/nicht|Recht/);
   });
+  it('rueckmeldung: meldet für die eigene Einheit; ohne Einheit ein Hinweis', async () => {
+    const { api, calls } = fakeApi({ 'GET /cad/units': UNITS, [`POST /cad/units/${UNIT}/feedback`]: { number: 'E-2026-00007', callsign: 'SEK-01' } });
+    const r = await byName('cad')!.run(ctx(api, { _sub: 'rueckmeldung', art: 'support', notiz: 'Schüsse' }));
+    expect(text(r)).toContain('Unterstützung benötigt');
+    expect(text(r)).toContain('E-2026-00007');
+    expect(calls.at(-1)).toMatchObject({ path: `/cad/units/${UNIT}/feedback`, body: { kind: 'support', note: 'Schüsse' } });
+    const none = fakeApi({ 'GET /cad/units': [] });
+    expect(text(await byName('cad')!.run(ctx(none.api, { _sub: 'rueckmeldung', art: 'accepted' })))).toContain('keiner Einheit');
+  });
+  it('Meldungen: Rückmeldung, Unterstützung benötigt und Schichtübergabe', () => {
+    expect(renderCadOutbox('cad.incident.support', { number: 'E-1', title: 'Raub', callsign: 'SEK-01', note: 'Schüsse' })?.title).toContain('Unterstützung benötigt: SEK-01');
+    expect(renderCadOutbox('cad.incident.feedback', { number: 'E-1', title: 'Raub', callsign: 'K9-01', feedback: '📍 Am Einsatzort' })?.title).toContain('K9-01: 📍 Am Einsatzort');
+    const h = renderCadOutbox('cad.handover', { by: 'Dana', notes: 'B210 gesperrt', incidents: ['E-1 · Raub (Neu)'], openIncidents: 1, activeUnits: 2, openCalls: 0, dashboardUrl: 'https://x.test/cad/handover' });
+    expect(h?.description).toContain('B210 gesperrt');
+    expect(h?.description).toContain('E-1 · Raub');
+    expect(cadButtons('cad.handover', { dashboardUrl: 'https://x.test/cad/handover' })).toHaveLength(1);
+  });
 });
 
 describe('Notruf-Buttons', () => {

@@ -12,6 +12,7 @@ import { Input } from '../../components/ui';
 export const CAD_NAV: { to: string; label: string; perm?: string; area?: string }[] = [
   { to: '/cad', label: 'Übersicht' },
   { to: '/cad/tablet', label: '📟 Tablet' },
+  { to: '/cad/mdt', label: '📱 MDT' },
   { to: '/cad/incidents', label: 'Einsätze' },
   { to: '/cad/map', label: 'Einsatzkarte' },
   { to: '/cad/units', label: 'Einheiten' },
@@ -23,6 +24,8 @@ export const CAD_NAV: { to: string; label: string; perm?: string; area?: string 
   { to: '/cad/team', label: 'Teamübersicht' },
   { to: '/cad/cross-server', label: 'Cross-Server' },
   { to: '/reports', label: 'Berichte', perm: 'reports.view' },
+  { to: '/cad/handover', label: 'Schichtübergabe' },
+  { to: '/cad/stats', label: 'Statistik', perm: 'cad.view_stats' },
   { to: '/cad/logs', label: 'Protokolle', perm: 'cad.view_logs' },
   { to: '/cad/settings', label: 'Einstellungen', perm: 'cad.manage_settings' },
 ];

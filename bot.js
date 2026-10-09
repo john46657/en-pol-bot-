@@ -80099,7 +80099,7 @@ var PERMISSION_CATALOG = {
   team: ["view", "manage"],
   dispatch: ["view", "create", "edit", "assign", "close", "manage"],
   /** CAD-Leitstelle + ER:LC-Integration (deny-by-default; kritische ER:LC-Befehle brauchen ein eigenes Recht). */
-  cad: ["view", "create_incident", "edit_incident", "close_incident", "assign_unit", "manage_units", "view_persons", "view_vehicles", "manage_map", "view_erlc", "manage_erlc", "erlc_command", "erlc_command_critical", "manage_cross_server", "view_logs", "manage_settings", "radio"],
+  cad: ["view", "create_incident", "edit_incident", "close_incident", "assign_unit", "manage_units", "view_persons", "view_vehicles", "manage_map", "view_erlc", "manage_erlc", "erlc_command", "erlc_command_critical", "manage_cross_server", "view_logs", "manage_settings", "radio", "handover", "view_stats"],
   incidents: ["view", "create", "edit", "close", "delete"],
   persons: ["view", "create", "edit", "archive", "merge"],
   vehicles: ["view", "create", "edit", "archive"],
@@ -80230,6 +80230,15 @@ var formatMinutes = (min) => {
   return [d ? `${d} ${d === 1 ? "Tag" : "Tage"}` : "", h ? `${h} ${h === 1 ? "Stunde" : "Stunden"}` : "", m ? `${m} ${m === 1 ? "Minute" : "Minuten"}` : ""].filter(Boolean).join(" ") || "0 Minuten";
 };
 var rolesMatch = (have, ids, mode) => mode === "ALL" ? ids.every((r) => have.includes(r)) : ids.some((r) => have.includes(r));
+var CAD_FEEDBACK = [
+  { key: "accepted", label: "Auftrag angenommen", emoji: "\u2705", unitStatus: "EN_ROUTE" },
+  { key: "en_route", label: "Ausger\xFCckt", emoji: "\u{1F693}", unitStatus: "EN_ROUTE" },
+  { key: "on_scene", label: "Am Einsatzort", emoji: "\u{1F4CD}", unitStatus: "ON_SCENE" },
+  { key: "support", label: "Unterst\xFCtzung ben\xF6tigt", emoji: "\u{1F198}" },
+  { key: "under_control", label: "Einsatz unter Kontrolle", emoji: "\u{1F6E1}\uFE0F" },
+  { key: "completed", label: "Einsatz abgeschlossen (Meldung)", emoji: "\u{1F3C1}" }
+];
+var CAD_FEEDBACK_KEYS = CAD_FEEDBACK.map((f2) => f2.key);
 var ERLC_MAP_SIZE = 5355;
 var DEFAULT_CAD_CONFIG = {
   homeGuildId: null,
@@ -82335,6 +82344,11 @@ var CAD_COMMANDS = [{
       { name: "text", description: "z. B. \u201EAm Einsatzort.\u201C", type: "string", required: true, maxLength: 500 },
       { name: "einsatz", description: "Einsatznummer (leer = aktueller Einsatz deiner Einheit)", type: "string", maxLength: 32 }
     ] },
+    { name: "rueckmeldung", description: "R\xFCckmeldung deiner Einheit zum Einsatz an die Leitstelle (Chronik)", options: [
+      { name: "art", description: "Was meldest du?", type: "string", required: true, choices: CAD_FEEDBACK.map((x) => ({ name: x.label, value: x.key })) },
+      { name: "notiz", description: "Zusatz, z. B. \u201E2 Verd\xE4chtige fl\xFCchtig Richtung Norden\u201C", type: "string", maxLength: 500 },
+      { name: "einheit", description: "Rufname (leer = deine Einheit)", type: "string", maxLength: 16 }
+    ] },
     { name: "einsaetze", description: "Aktive Eins\xE4tze der Leitstelle" }
   ],
   async run(c) {
@@ -82349,6 +82363,13 @@ var CAD_COMMANDS = [{
         if (!unit) return errorReply(c.opts.einheit ? "Diese Einheit gibt es nicht." : "Du bist keiner Einheit zugeordnet. Gib den Rufnamen mit `einheit:` an.");
         await c.api.asUser(c.discordId, "POST", `/cad/units/${unit.id}/status`, { status: st.key });
         return okReply(`**${plain(unit.callsign)}** ist jetzt ${lbl(cfg2.unitStatuses, st.key)}.`);
+      }
+      if (sub === "rueckmeldung") {
+        const unit = await myUnit(c, c.opts.einheit ? String(c.opts.einheit) : void 0);
+        if (!unit) return errorReply(c.opts.einheit ? "Diese Einheit gibt es nicht." : "Du bist keiner Einheit zugeordnet. Gib den Rufnamen mit `einheit:` an.");
+        const r = await c.api.asUser(c.discordId, "POST", `/cad/units/${unit.id}/feedback`, { kind: String(c.opts.art ?? ""), ...c.opts.notiz ? { note: String(c.opts.notiz) } : {} });
+        const fb = CAD_FEEDBACK.find((x) => x.key === c.opts.art);
+        return okReply(`${fb ? `${fb.emoji} ${fb.label}` : "R\xFCckmeldung"} \u2013 **${plain(r.callsign)}** \xB7 Einsatz **${plain(r.number)}** an die Leitstelle gemeldet.`);
       }
       if (sub === "funk") {
         const r = await c.api.asUser(c.discordId, "POST", "/cad/radio", { text: String(c.opts.text ?? ""), ...c.opts.einsatz ? { incidentNumber: String(c.opts.einsatz) } : {} });
@@ -82418,6 +82439,25 @@ ${clip(plain(p.note), 500)}` : ""}`, fields: [...f("Ort", p.location)] };
       return { title: clip(`\u{1F4FB} ${plain(p.callsign)} \u2192 ${head}`, 256), color: hex(p.priorityColor) ?? COLORS.warning, description: p.unitRoleId ? `<@&${String(p.unitRoleId)}>` : void 0, fields: base };
     case "cad.incident.closed":
       return { title: clip(`\u2705 Einsatz abgeschlossen: ${head}`, 256), color: COLORS.success, fields: [...f("Status", p.status), ...f("Ort", p.location)] };
+    case "cad.incident.feedback":
+      return { title: clip(`\u{1F4DF} ${plain(p.callsign)}: ${plain(p.feedback)}`, 256), color: COLORS.info, description: clip(`**${head}**${p.note ? `
+${clip(plain(p.note), 500)}` : ""}`, 1500), fields: [...f("Ort", p.location)] };
+    case "cad.incident.support":
+      return { title: clip(`\u{1F198} Unterst\xFCtzung ben\xF6tigt: ${plain(p.callsign)}`, 256), color: COLORS.danger, description: clip(`**${head}**${p.note ? `
+${clip(plain(p.note), 500)}` : ""}`, 1500), fields: [...f("Priorit\xE4t", p.priority), ...f("Ort", p.location)] };
+    case "cad.handover": {
+      const list = Array.isArray(p.incidents) ? p.incidents.map((x) => `\u2022 ${plain(x)}`).join("\n") : "";
+      return {
+        title: "\u{1F501} Schicht\xFCbergabe der Leitstelle",
+        color: COLORS.info,
+        description: clip(`${p.notes ? `${plain(p.notes)}
+
+` : ""}${list ? `**Offene Eins\xE4tze**
+${list}` : "Keine offenen Eins\xE4tze."}`, 4e3),
+        fields: [...f("Offene Eins\xE4tze", p.openIncidents), ...f("Einheiten im Einsatz", p.activeUnits), ...f("Offene Notrufe", p.openCalls)],
+        ...p.by ? { footer: `von ${clip(String(p.by), 100)}` } : {}
+      };
+    }
     case "cad.call.received":
       return {
         title: clip(`\u{1F6A8} NOTRUF #${String(p.callNumber ?? "?")}`, 256),
@@ -82442,6 +82482,7 @@ function cadButtons(type, p) {
     { id: `cad:call:${p.id}:close`, label: "Schlie\xDFen", style: "danger", emoji: "\u2716\uFE0F" },
     ...typeof p.mapUrl === "string" && /^https?:\/\//.test(p.mapUrl) ? [{ id: "map", label: "Auf Karte anzeigen", style: "secondary", url: p.mapUrl }] : []
   ];
+  if (type === "cad.handover") return link.length ? link : void 0;
   if (type.startsWith("cad.incident.")) {
     const map = type === "cad.incident.created" && typeof p.mapUrl === "string" && /^https?:\/\//.test(p.mapUrl) ? [{ id: "map", label: "Auf Karte anzeigen", style: "secondary", url: p.mapUrl }] : [];
     return link.length || map.length ? [...link, ...map] : void 0;

@@ -56,7 +56,7 @@ export interface CadOverview {
 /** Alle CAD-Ansichten aktualisieren sich live (Server sendet nur „geändert“, Daten kommen über die API). */
 export function useCadLive() {
   useRealtime('cad', ['cad.changed', 'call.created', 'erlc.snapshot', 'erlc.status', 'cad.incident.created', 'cad.incident.status', 'cad.incident.assigned', 'cad.incident.closed', 'cad.radio'],
-    [['cad-overview'], ['cad-incidents'], ['cad-incident'], ['cad-units'], ['cad-calls'], ['cad-radio'], ['cad-map'], ['cad-members'], ['erlc-live'], ['erlc-servers']]);
+    [['cad-overview'], ['cad-mdt'], ['cad-handovers'], ['cad-incidents'], ['cad-incident'], ['cad-units'], ['cad-calls'], ['cad-radio'], ['cad-map'], ['cad-members'], ['erlc-live'], ['erlc-servers']]);
 }
 
 export function useCadConfig() {

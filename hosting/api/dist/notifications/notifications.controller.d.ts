@@ -22,14 +22,14 @@ declare const q: z.ZodObject<{
     filter: z.ZodDefault<z.ZodEnum<["unread", "read", "archived", "all"]>>;
     type: z.ZodOptional<z.ZodString>;
 }, "strip", z.ZodTypeAny, {
-    filter: "all" | "unread" | "read" | "archived";
+    filter: "all" | "archived" | "unread" | "read";
     page: number;
     pageSize: number;
     type?: string | undefined;
     q?: string | undefined;
 }, {
     type?: string | undefined;
-    filter?: "all" | "unread" | "read" | "archived" | undefined;
+    filter?: "all" | "archived" | "unread" | "read" | undefined;
     q?: string | undefined;
     page?: number | undefined;
     pageSize?: number | undefined;

@@ -42,11 +42,11 @@ export declare class ApplicationsService {
         settings: {
             roles: {
                 denied: string[];
+                accepted: string[];
                 required: {
                     mode: "ALL" | "ANY";
                     ids: string[];
                 };
-                accepted: string[];
                 restricted: {
                     mode: "ALL" | "ANY";
                     ids: string[];

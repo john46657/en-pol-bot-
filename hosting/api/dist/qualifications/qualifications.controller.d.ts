@@ -110,11 +110,11 @@ export declare class QualificationsController {
             settings: {
                 roles: {
                     denied: string[];
+                    accepted: string[];
                     required: {
                         mode: "ALL" | "ANY";
                         ids: string[];
                     };
-                    accepted: string[];
                     restricted: {
                         mode: "ALL" | "ANY";
                         ids: string[];
@@ -151,11 +151,11 @@ export declare class QualificationsController {
             settings: {
                 roles: {
                     denied: string[];
+                    accepted: string[];
                     required: {
                         mode: "ALL" | "ANY";
                         ids: string[];
                     };
-                    accepted: string[];
                     restricted: {
                         mode: "ALL" | "ANY";
                         ids: string[];
@@ -196,11 +196,11 @@ export declare class QualificationsController {
             settings: {
                 roles: {
                     denied: string[];
+                    accepted: string[];
                     required: {
                         mode: "ALL" | "ANY";
                         ids: string[];
                     };
-                    accepted: string[];
                     restricted: {
                         mode: "ALL" | "ANY";
                         ids: string[];
@@ -237,11 +237,11 @@ export declare class QualificationsController {
             settings: {
                 roles: {
                     denied: string[];
+                    accepted: string[];
                     required: {
                         mode: "ALL" | "ANY";
                         ids: string[];
                     };
-                    accepted: string[];
                     restricted: {
                         mode: "ALL" | "ANY";
                         ids: string[];
@@ -283,11 +283,11 @@ export declare class QualificationsController {
             settings: {
                 roles: {
                     denied: string[];
+                    accepted: string[];
                     required: {
                         mode: "ALL" | "ANY";
                         ids: string[];
                     };
-                    accepted: string[];
                     restricted: {
                         mode: "ALL" | "ANY";
                         ids: string[];
@@ -324,11 +324,11 @@ export declare class QualificationsController {
             settings: {
                 roles: {
                     denied: string[];
+                    accepted: string[];
                     required: {
                         mode: "ALL" | "ANY";
                         ids: string[];
                     };
-                    accepted: string[];
                     restricted: {
                         mode: "ALL" | "ANY";
                         ids: string[];
@@ -435,11 +435,11 @@ export declare class BotQualificationsController {
             settings: {
                 roles: {
                     denied: string[];
+                    accepted: string[];
                     required: {
                         mode: "ALL" | "ANY";
                         ids: string[];
                     };
-                    accepted: string[];
                     restricted: {
                         mode: "ALL" | "ANY";
                         ids: string[];
@@ -476,11 +476,11 @@ export declare class BotQualificationsController {
             settings: {
                 roles: {
                     denied: string[];
+                    accepted: string[];
                     required: {
                         mode: "ALL" | "ANY";
                         ids: string[];
                     };
-                    accepted: string[];
                     restricted: {
                         mode: "ALL" | "ANY";
                         ids: string[];

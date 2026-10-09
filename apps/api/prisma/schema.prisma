@@ -1793,3 +1793,39 @@ model HrTrainingSession {
 
   @@index([startsAt])
 }
+
+/// Schichtübergabe der Leitstelle: Stand bei Übergabe (offene Einsätze, eingesetzte Einheiten, offene Notrufe, letzte Statusänderungen) + Notizen; die nächste Schicht bestätigt.
+model CadHandover {
+  id               String    @id @default(uuid()) @db.Uuid
+  guildId          String?
+  createdById      String?   @db.Uuid
+  notes            String
+  /// eingefrorener Stand zum Zeitpunkt der Übergabe (vertrauliche Einsätze nur als Anzahl)
+  snapshot         Json
+  acknowledgedById String?   @db.Uuid
+  acknowledgedAt   DateTime?
+  ackNote          String?
+  createdAt        DateTime  @default(now())
+
+  @@index([createdAt])
+}
+
+/// Dauerhafte Kennzahlen abgeschlossener Einsätze – bleiben für die Statistik, wenn der Einsatz selbst nach einem Tag gelöscht wird.
+model CadIncidentStat {
+  incidentId   String   @id @db.Uuid
+  number       String
+  type         String?
+  priority     String
+  status       String
+  source       String
+  guildId      String?
+  dispatcherId String?  @db.Uuid
+  createdAt    DateTime
+  closedAt     DateTime
+  /// beteiligte Einheiten (Rufnamen und Einheitentypen) über die ganze Dauer des Einsatzes
+  units        String[] @default([])
+  unitTypes    String[] @default([])
+
+  @@index([closedAt])
+  @@index([createdAt])
+}

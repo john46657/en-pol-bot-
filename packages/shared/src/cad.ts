@@ -35,12 +35,28 @@ export interface CadConfig {
   widgets: string[];
 }
 
-export const CAD_EVENTS = ['incident.created', 'incident.status', 'incident.assigned', 'incident.closed', 'call.received', 'announcement', 'radio'] as const;
+export const CAD_EVENTS = ['incident.created', 'incident.status', 'incident.assigned', 'incident.closed', 'incident.feedback', 'incident.support', 'call.received', 'announcement', 'radio', 'handover'] as const;
 export type CadEvent = (typeof CAD_EVENTS)[number];
 export const CAD_EVENT_LABELS: Record<CadEvent, string> = {
   'incident.created': 'Neuer Einsatz', 'incident.status': 'Einsatzstatus geändert', 'incident.assigned': 'Einheit zugewiesen',
-  'incident.closed': 'Einsatz abgeschlossen', 'call.received': 'Notruf eingegangen', announcement: 'Wichtige Leitstellenmeldung', radio: 'Funkmeldung',
+  'incident.closed': 'Einsatz abgeschlossen', 'incident.feedback': 'Rückmeldung einer Einheit (MDT)', 'incident.support': 'Unterstützung benötigt',
+  'call.received': 'Notruf eingegangen', announcement: 'Wichtige Leitstellenmeldung', radio: 'Funkmeldung', handover: 'Schichtübergabe',
 };
+
+/**
+ * Rückmeldungen einer Einheit aus dem MDT bzw. Discord (`/cad rueckmeldung`). Sie landen in der Einsatzchronik;
+ * `unitStatus` wird nur gesetzt, wenn es diesen Einheitenstatus in den CAD-Einstellungen gibt. Den Einsatz selbst ändern sie nie.
+ */
+export const CAD_FEEDBACK = [
+  { key: 'accepted', label: 'Auftrag angenommen', emoji: '✅', unitStatus: 'EN_ROUTE' },
+  { key: 'en_route', label: 'Ausgerückt', emoji: '🚓', unitStatus: 'EN_ROUTE' },
+  { key: 'on_scene', label: 'Am Einsatzort', emoji: '📍', unitStatus: 'ON_SCENE' },
+  { key: 'support', label: 'Unterstützung benötigt', emoji: '🆘' },
+  { key: 'under_control', label: 'Einsatz unter Kontrolle', emoji: '🛡️' },
+  { key: 'completed', label: 'Einsatz abgeschlossen (Meldung)', emoji: '🏁' },
+] as const satisfies readonly { key: string; label: string; emoji: string; unitStatus?: string }[];
+export type CadFeedbackKey = (typeof CAD_FEEDBACK)[number]['key'];
+export const CAD_FEEDBACK_KEYS = CAD_FEEDBACK.map((f) => f.key) as [CadFeedbackKey, ...CadFeedbackKey[]];
 
 /** Datenarten, die eine Server-Verbindung senden darf, und Aktionen, die der verbundene Server zurück ausführen darf. */
 export const CAD_LINK_SEND_TYPES = ['incidents', 'incident_status', 'unit_requests', 'calls', 'announcements', 'radio'] as const;
@@ -52,7 +68,7 @@ export const CAD_LINK_LABELS: Record<string, string> = {
 /** Welche Datenart ein CAD-Ereignis bei verbundenen Servern ist. */
 export const CAD_EVENT_SEND_TYPE: Record<CadEvent, (typeof CAD_LINK_SEND_TYPES)[number]> = {
   'incident.created': 'incidents', 'incident.status': 'incident_status', 'incident.assigned': 'unit_requests', 'incident.closed': 'incident_status',
-  'call.received': 'calls', announcement: 'announcements', radio: 'radio',
+  'incident.feedback': 'incident_status', 'incident.support': 'incident_status', 'call.received': 'calls', announcement: 'announcements', radio: 'radio', handover: 'announcements',
 };
 
 export const CAD_WIDGETS = ['activeIncidents', 'availableUnits', 'activeCalls', 'erlcStatus', 'map', 'units', 'radio', 'persons', 'vehicles', 'dutyActivity'] as const;

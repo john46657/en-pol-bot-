@@ -52,6 +52,35 @@ ER:LC → Command Center (Recht `cad.erlc_command`). Kritische Befehle (Liste je
 - **Fahrzeug-GPS:** Die Ebene „Polizeifahrzeuge (GPS)“ zeigt nur Fahrzeuge von Spielern im Team Police. ER:LC liefert keine Fahrzeugposition – das Fahrzeug steht dort, wo sein Besitzer gerade ist.
 - Discord: `/cad status`, `/cad funk`, `/cad einsaetze`; unter Notruf-Meldungen die Buttons Übernehmen / Einsatz erstellen / Einheit zuweisen / Schließen / Auf Karte anzeigen.
 
+## MDT für SEK, K9 und andere Einheiten
+
+**CAD → 📱 MDT** (`/cad/mdt`, Recht `cad.view`, auf dem Handy bedienbar) zeigt jedem Mitglied seine Einheit(en). Zugeordnet wird über die Teamübersicht (Benutzerkonto bzw. Discord-ID → Einheit).
+- Dienststatus der eigenen Einheit mit einem Klick (konfigurierte Einheitenstatus).
+- Aktuelle Einsatzaufträge mit Stichwort, Einsatzart, Ort (Link zur Karte), Beschreibung, beteiligten Einheiten und Einsatzchronik.
+- **Rückmeldungen an die Leitstelle** (optional mit Zusatz): ✅ Auftrag angenommen · 🚓 Ausgerückt · 📍 Am Einsatzort · 🆘 Unterstützung benötigt · 🛡️ Einsatz unter Kontrolle · 🏁 Einsatz abgeschlossen (Meldung). Sie stehen in der Einsatzchronik und gehen nach Discord (Ereignisse „Rückmeldung einer Einheit“ und „Unterstützung benötigt“). „Ausgerückt“/„Angenommen“ setzen die Einheit auf *Unterwegs*, „Am Einsatzort“ auf *Am Einsatzort* – nur, wenn es diese Einheitenstatus gibt. Bei „Unterstützung benötigt“ und „Abschluss gemeldet“ bekommt der Disponent des Einsatzes zusätzlich eine Benachrichtigung.
+- **Den Einsatz selbst ändern Rückmeldungen nie.** Status und Abschluss bleiben bei der Leitstelle (`cad.edit_incident` / `cad.close_incident`).
+- Melden dürfen die Besatzung, die Leitstelle (`cad.assign_unit`) und aus Discord die Rolle der Einheit bzw. die freigegebenen Status-Rollen, vom SEK/K9-Server nur mit der Server-Verbindungs-Aktion „Status zurückmelden“.
+- Discord: `/cad rueckmeldung art:<…> [notiz] [einheit]`.
+- Daneben: Funkmeldungen der eigenen Einsätze, letzte Benachrichtigungen, Einsatzhistorie der eigenen Einheiten.
+
+## Schichtübergabe
+
+**CAD → Schichtübergabe** (`/cad/handover`). Ansehen mit `cad.view`, anlegen und bestätigen mit `cad.handover`.
+- Die Übergabe hält den Stand fest: offene Einsätze, eingesetzte Einheiten, offene Notrufe ohne Einsatz, die letzten Status- und Rückmeldungsänderungen seit der vorigen Übergabe (höchstens 12 Stunden) und die Notizen des abgebenden Disponenten. Vertrauliche Einsätze erscheinen nur als Anzahl.
+- Die nächste Schicht bestätigt die Übernahme, optional mit Notiz. Das geht nur einmal und nicht durch den Ersteller. Der Ersteller wird benachrichtigt.
+- Ersteller, Bestätigender und Zeiten werden gespeichert (Audit `cad.handover.create` / `cad.handover.acknowledge`). Discord-Ereignis: „Schichtübergabe“.
+
+## Leitstellenstatistik
+
+**CAD → Statistik** (`/cad/stats`, Recht `cad.view_stats`), Zeitraum 24 Stunden bis 365 Tage:
+- neue, abgeschlossene und offene Einsätze; Ø- und Median-Bearbeitungszeit (Anlage → Abschluss)
+- Einsätze je Tag, Woche oder Monat, umschaltbar als Tabelle
+- Einsatzarten, Prioritäten, Abschlussart, Herkunft (CAD oder ER:LC-Notruf)
+- Beteiligung der Einheiten und der Einheitentypen
+- Dienstzeiten aus den im System erfassten Dienstsitzungen, nicht aus der ER:LC-Onlinezeit
+
+Abgeschlossene Einsätze werden beim Abschluss als Kennzahlen gesichert (`CadIncidentStat`). So zählen sie weiter, auch wenn der Einsatz einen Tag später gelöscht wird. Wird ein Einsatz wieder geöffnet, verschwindet sein Eintrag wieder. Bereits abgeschlossene Einsätze übernimmt die Migration.
+
 ## Discord-Kanäle und Cross-Server
 
 - **Einstellungen → Discord-Kanäle**: je Server und Ereignis (neuer Einsatz, Status, Zuweisung, abgeschlossen, Notruf, Leitstellenmeldung, Funk) Kanäle und Rollen-Pings. Nichts ist fest eingebaut.
@@ -62,7 +91,7 @@ ER:LC → Command Center (Recht `cad.erlc_command`). Kritische Befehle (Liste je
 
 ## Rechte (deny-by-default)
 
-`cad.view`, `cad.create_incident`, `cad.edit_incident`, `cad.close_incident`, `cad.assign_unit`, `cad.manage_units`, `cad.view_persons`, `cad.view_vehicles`, `cad.manage_map`, `cad.view_erlc`, `cad.manage_erlc`, `cad.erlc_command`, `cad.erlc_command_critical`, `cad.manage_cross_server`, `cad.view_logs`, `cad.manage_settings`, `cad.radio` + Bereich `dashboard.cad.view`. Rechte gelten wie überall je Discord-Server (Rollen-Editor). Die Migration gibt bestehenden Rollen passende Rechte (Leitstelle → Einsatzrechte, Einstellungen → Verwaltung); **kritische ER:LC-Befehle bekommt niemand automatisch**.
+`cad.view`, `cad.create_incident`, `cad.edit_incident`, `cad.close_incident`, `cad.assign_unit`, `cad.manage_units`, `cad.view_persons`, `cad.view_vehicles`, `cad.manage_map`, `cad.view_erlc`, `cad.manage_erlc`, `cad.erlc_command`, `cad.erlc_command_critical`, `cad.manage_cross_server`, `cad.view_logs`, `cad.manage_settings`, `cad.radio`, `cad.handover`, `cad.view_stats` + Bereich `dashboard.cad.view`. Rechte gelten wie überall je Discord-Server (Rollen-Editor). Die Migration gibt bestehenden Rollen passende Rechte (Leitstelle → Einsatzrechte, Einstellungen → Verwaltung); **kritische ER:LC-Befehle bekommt niemand automatisch**. `cad.handover` erhält, wer Einsätze anlegen darf. `cad.view_stats` erhält, wer Einsätze abschließen oder CAD-Protokolle sehen darf.
 
 ## Rechte pro Einsatz und pro Einheit
 

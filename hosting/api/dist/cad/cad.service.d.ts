@@ -1,5 +1,5 @@
 import { Prisma } from '@prisma/client';
-import type { CadConfig } from '@enrp/shared';
+import { type CadConfig, type CadFeedbackKey } from '@enrp/shared';
 import { PrismaService } from '../prisma/prisma.service';
 import { AuditService, type Actor } from '../audit/audit.service';
 import { PermissionService } from '../authz/permission.service';
@@ -104,6 +104,8 @@ export declare class CadService {
      * Chronik und Einheiten-Zuordnungen fallen per Cascade mit weg; Verweise aus Berichten, Notrufen und Funk werden gelöst.
      */
     purgeClosedIncidents(maxAgeMs?: number): Promise<number>;
+    /** Kennzahlen abgeschlossener Einsätze dauerhaft sichern (CadIncidentStat), damit die Statistik das Löschen nach einem Tag überlebt. */
+    private archiveStats;
     private changed;
     /**
      * Server-übergreifende Aktionen: Vom Heimat-Server (Leitstelle) aus immer erlaubt; von einem anderen Discord-Server
@@ -436,6 +438,8 @@ export declare class CadService {
         statusRoleIds: string[];
     }>;
     deleteUnit(actor: CadActor, id: string): Promise<void>;
+    /** Für eine Einheit melden darf: die Leitstelle (cad.assign_unit), die Besatzung oder – aus Discord – die Rolle der Einheit bzw. freigegebene Status-Rollen. */
+    private assertUnitReporter;
     /** Status einer Einheit: Leitstelle (cad.assign_unit) oder ein Besatzungsmitglied selbst (auch vom verbundenen SEK/K9-Server). */
     setUnitStatus(actor: CadActor, id: string, status: string, memberRoleIds?: string[]): Promise<{
         vehicle: string | null;
@@ -455,6 +459,153 @@ export declare class CadService {
         erlcTeam: string | null;
         operational: boolean;
         statusRoleIds: string[];
+    }>;
+    /**
+     * Rückmeldung einer Einheit zu ihrem Einsatz (MDT / Discord): steht in der Einsatzchronik, setzt ggf. den Einheitenstatus
+     * und geht an die Leitstelle. Der Einsatz selbst (Status, Abschluss) bleibt der Leitstelle vorbehalten.
+     */
+    feedback(actor: CadActor, unitId: string, d: {
+        kind: CadFeedbackKey;
+        incidentId?: string | null;
+        note?: string | null;
+    }, memberRoleIds?: string[]): Promise<{
+        ok: boolean;
+        incidentId: string;
+        number: string;
+        callsign: string;
+        unitStatus: "EN_ROUTE" | "ON_SCENE" | null;
+    }>;
+    /**
+     * MDT eines Mitglieds: eigene Einheit(en) (Zuordnung über das Benutzerkonto oder die Teamübersicht), deren laufende Einsätze mit Chronik,
+     * Funkmeldungen, letzte Benachrichtigungen und die Einsatzhistorie der eigenen Einheiten.
+     */
+    mdt(actor: CadActor): Promise<{
+        units: {
+            id: string;
+            callsign: string;
+            name: string | null;
+            type: string | null;
+            status: string;
+            color: string | null;
+            icon: string | null;
+            vehicle: string | null;
+            operational: boolean;
+            incidents: {
+                log: {
+                    id: string;
+                    createdAt: Date;
+                    text: string;
+                    guildId: string | null;
+                    incidentId: string;
+                    authorId: string | null;
+                    unitId: string | null;
+                    kind: string;
+                }[];
+                units: ({
+                    unit: {
+                        id: string;
+                        name: string | null;
+                        type: string | null;
+                        status: string;
+                        callsign: string;
+                    };
+                } & {
+                    incidentId: string;
+                    unitId: string;
+                    assignedAt: Date;
+                    clearedAt: Date | null;
+                })[];
+                number: string;
+                id: string;
+                createdAt: Date;
+                updatedAt: Date;
+                version: number;
+                guildId: string | null;
+                type: string | null;
+                serverId: string | null;
+                description: string | null;
+                priority: string;
+                status: string;
+                title: string;
+                mapX: number | null;
+                mapZ: number | null;
+                source: string;
+                location: string | null;
+                dispatcherId: string | null;
+                supervisorId: string | null;
+                closedAt: Date | null;
+                keyword: string | null;
+                involved: string | null;
+                requiredUnits: string | null;
+                internalNotes: string | null;
+                restrictRoleIds: string[];
+            }[];
+        }[];
+        radio: {
+            id: string;
+            createdAt: Date;
+            text: string;
+            discordId: string | null;
+            guildId: string | null;
+            callsign: string | null;
+            incidentId: string | null;
+            authorId: string | null;
+            unitId: string | null;
+        }[];
+        notifications: {
+            id: string;
+            entityType: string | null;
+            entityId: string | null;
+            createdAt: Date;
+            userId: string;
+            type: string;
+            title: string;
+            body: string | null;
+            readAt: Date | null;
+            archivedAt: Date | null;
+        }[];
+        history: never[] | {
+            number: string;
+            createdAt: Date;
+            guildId: string | null;
+            type: string | null;
+            priority: string;
+            status: string;
+            unitTypes: string[];
+            units: string[];
+            incidentId: string;
+            source: string;
+            dispatcherId: string | null;
+            closedAt: Date;
+        }[];
+        feedback: readonly [{
+            readonly key: "accepted";
+            readonly label: "Auftrag angenommen";
+            readonly emoji: "\u2705";
+            readonly unitStatus: "EN_ROUTE";
+        }, {
+            readonly key: "en_route";
+            readonly label: "Ausger\u00FCckt";
+            readonly emoji: "\uD83D\uDE93";
+            readonly unitStatus: "EN_ROUTE";
+        }, {
+            readonly key: "on_scene";
+            readonly label: "Am Einsatzort";
+            readonly emoji: "\uD83D\uDCCD";
+            readonly unitStatus: "ON_SCENE";
+        }, {
+            readonly key: "support";
+            readonly label: "Unterst\u00FCtzung ben\u00F6tigt";
+            readonly emoji: "\uD83C\uDD98";
+        }, {
+            readonly key: "under_control";
+            readonly label: "Einsatz unter Kontrolle";
+            readonly emoji: "\uD83D\uDEE1\uFE0F";
+        }, {
+            readonly key: "completed";
+            readonly label: "Einsatz abgeschlossen (Meldung)";
+            readonly emoji: "\uD83C\uDFC1";
+        }];
     }>;
     listCalls(f: {
         status?: string;

@@ -250,6 +250,7 @@ export declare class HrPeopleService {
             id: string;
             status: string;
             startedAt: Date;
+            feedback: string | null;
             personnelId: string;
             score: number | null;
             passed: boolean | null;
@@ -258,7 +259,6 @@ export declare class HrPeopleService {
             questionIds: string[];
             maxScore: number | null;
             gradedAt: Date | null;
-            feedback: string | null;
             submittedAt: Date | null;
         }[] | null;
         absences: {

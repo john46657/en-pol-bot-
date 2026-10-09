@@ -2,7 +2,7 @@ import { Body, Controller, createParamDecorator, Delete, ExecutionContext, Get, 
 import { FileInterceptor } from '@nestjs/platform-express';
 import { ApiTags } from '@nestjs/swagger';
 import { z } from 'zod';
-import { CAD_LINK_ACTIONS, CAD_LINK_SEND_TYPES } from '@enrp/shared';
+import { CAD_FEEDBACK_KEYS, CAD_LINK_ACTIONS, CAD_LINK_SEND_TYPES } from '@enrp/shared';
 import { CurrentActor, Public, RequirePermission } from '../authz/decorators';
 import type { Actor } from '../audit/audit.service';
 import { zodBody } from '../common/zod.pipe';
@@ -13,6 +13,8 @@ import { PermissionService } from '../authz/permission.service';
 import { MediaService } from '../media/media.service';
 import { CadService, type CadActor } from './cad.service';
 import { CadTabletService } from './cad-tablet.service';
+import { CadHandoverService } from './cad-handover.service';
+import { CadStatsService } from './cad-stats.service';
 import { CadConfigService, cadConfigSchema } from './cad-config.service';
 import { ErlcService, erlcServerInput } from './erlc.service';
 import { ErlcSyncService } from './erlc-sync.service';
@@ -60,12 +62,16 @@ const linkBody = z.object({
 });
 const listQ = z.object({ active: z.enum(['true', 'false']).optional(), q: z.string().max(80).optional(), take: z.coerce.number().int().min(1).max(300).optional() });
 const statusBody = z.object({ status: z.string().min(1).max(32), note: z.string().trim().max(500).optional() });
+const feedbackBody = z.object({ kind: z.enum(CAD_FEEDBACK_KEYS), incidentId: opt(z.string().uuid()), note: opt(text(500)) });
 const radioBody = z.object({ text: z.string().trim().min(1).max(500), unitId: opt(z.string().uuid()), incidentId: opt(z.string().uuid()), incidentNumber: opt(text(32)), callsign: opt(text(24)) });
 
 @ApiTags('cad')
 @Controller('cad')
 export class CadController {
-  constructor(private readonly s: CadService, private readonly tablet: CadTabletService, private readonly cfg: CadConfigService, private readonly perms: PermissionService, private readonly media: MediaService) {}
+  constructor(
+    private readonly s: CadService, private readonly tablet: CadTabletService, private readonly cfg: CadConfigService, private readonly perms: PermissionService, private readonly media: MediaService,
+    private readonly handover: CadHandoverService, private readonly statsSvc: CadStatsService,
+  ) {}
 
   // Konfiguration
   @Get('config') @RequirePermission('cad.view')
@@ -125,6 +131,27 @@ export class CadController {
   /** Leitstelle oder die Besatzung selbst (auch vom verbundenen SEK/K9-Server, falls freigegeben). */
   @Post('units/:id/status') @HttpCode(200) @RequirePermission('cad.view')
   unitStatus(@Cad() a: CadActor & { roles: string[] }, @Param('id', ParseUUIDPipe) id: string, @Body(zodBody(z.object({ status: z.string().min(1).max(32) }))) b: { status: string }) { return this.s.setUnitStatus(a, id, b.status, a.roles); }
+  /** Rückmeldung zum Einsatz (MDT/Discord): gleiche Berechtigung wie der Einheitenstatus. */
+  @Post('units/:id/feedback') @HttpCode(200) @RequirePermission('cad.view')
+  feedback(@Cad() a: CadActor & { roles: string[] }, @Param('id', ParseUUIDPipe) id: string, @Body(zodBody(feedbackBody)) b: z.infer<typeof feedbackBody>) { return this.s.feedback(a, id, b, a.roles); }
+
+  // MDT (eigene Einheit, Einsatzaufträge, Rückmeldungen)
+  @Get('mdt') @RequirePermission('cad.view')
+  mdt(@Cad() a: CadActor) { return this.s.mdt(a); }
+
+  // Schichtübergabe
+  @Get('handovers') @RequirePermission('cad.view')
+  handovers() { return this.handover.list(); }
+  @Get('handovers/draft') @RequirePermission('cad.handover')
+  handoverDraft() { return this.handover.draft(); }
+  @Post('handovers') @RequirePermission('cad.handover')
+  createHandover(@Cad() a: CadActor, @Body(zodBody(z.object({ notes: z.string().trim().min(1).max(5000) }))) b: { notes: string }) { return this.handover.create(a, b.notes); }
+  @Post('handovers/:id/acknowledge') @HttpCode(200) @RequirePermission('cad.handover')
+  ackHandover(@Cad() a: CadActor, @Param('id', ParseUUIDPipe) id: string, @Body(zodBody(z.object({ note: z.string().trim().max(1000).nullish() }))) b: { note?: string | null }) { return this.handover.acknowledge(a, id, b.note); }
+
+  // Statistik
+  @Get('stats') @RequirePermission('cad.view_stats')
+  stats(@Query(zodBody(z.object({ days: z.coerce.number().int().min(1).max(365).optional() }))) q: { days?: number }) { return this.statsSvc.stats(q.days ?? 30); }
 
   // Notrufe
   @Get('calls') @RequirePermission('cad.view')

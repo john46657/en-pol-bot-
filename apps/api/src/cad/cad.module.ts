@@ -5,6 +5,8 @@ import { CadService } from './cad.service';
 import { CadTabletService } from './cad-tablet.service';
 import { CadConfigService } from './cad-config.service';
 import { CadNotifyService } from './cad-notify.service';
+import { CadHandoverService } from './cad-handover.service';
+import { CadStatsService } from './cad-stats.service';
 import { ErlcService } from './erlc.service';
 import { ErlcSyncService } from './erlc-sync.service';
 
@@ -12,7 +14,7 @@ import { ErlcSyncService } from './erlc-sync.service';
 @Module({
   imports: [MediaModule],
   controllers: [CadController, ErlcController],
-  providers: [CadService, CadTabletService, CadConfigService, CadNotifyService, ErlcService, ErlcSyncService],
+  providers: [CadService, CadTabletService, CadConfigService, CadNotifyService, CadHandoverService, CadStatsService, ErlcService, ErlcSyncService],
   exports: [CadService, CadConfigService, ErlcService],
 })
 export class CadModule implements OnApplicationBootstrap, OnModuleDestroy {

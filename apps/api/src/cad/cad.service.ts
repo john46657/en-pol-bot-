@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
-import type { CadConfig, CadEvent } from '@enrp/shared';
+import { CAD_FEEDBACK, type CadConfig, type CadEvent, type CadFeedbackKey } from '@enrp/shared';
 import { PrismaService, type Tx } from '../prisma/prisma.service';
 import { AuditService, type Actor } from '../audit/audit.service';
 import { PermissionService } from '../authz/permission.service';
@@ -64,6 +64,8 @@ export class CadService {
     const rows = await this.prisma.incident.findMany({ where: { status: { in: closed }, OR: [{ closedAt: { lt: before } }, { closedAt: null, updatedAt: { lt: before } }] }, select: { id: true } });
     if (!rows.length) return 0;
     const ids = rows.map((r) => r.id);
+    // Kennzahlen bleiben für die Statistik (ältere Einsätze ohne Eintrag werden hier nachgetragen)
+    await this.prisma.$transaction((tx) => this.archiveStats(tx, ids, true));
     await this.prisma.$transaction([
       this.prisma.report.updateMany({ where: { incidentId: { in: ids } }, data: { incidentId: null } }),
       this.prisma.erlcEmergencyCall.updateMany({ where: { incidentId: { in: ids } }, data: { incidentId: null } }),
@@ -72,6 +74,20 @@ export class CadService {
     ]);
     this.changed('incident');
     return ids.length;
+  }
+
+  /** Kennzahlen abgeschlossener Einsätze dauerhaft sichern (CadIncidentStat), damit die Statistik das Löschen nach einem Tag überlebt. */
+  private async archiveStats(tx: Tx, ids: string[], onlyMissing = false) {
+    if (!ids.length) return;
+    const have = onlyMissing ? new Set((await tx.cadIncidentStat.findMany({ where: { incidentId: { in: ids } }, select: { incidentId: true } })).map((r) => r.incidentId)) : new Set<string>();
+    const rows = await tx.incident.findMany({ where: { id: { in: ids.filter((i) => !have.has(i)) } }, include: { units: { include: { unit: { select: { callsign: true, type: true } } } } } });
+    if (!rows.length) return;
+    await tx.cadIncidentStat.deleteMany({ where: { incidentId: { in: rows.map((r) => r.id) } } });
+    await tx.cadIncidentStat.createMany({ data: rows.map((i) => ({
+      incidentId: i.id, number: i.number, type: i.type, priority: i.priority, status: i.status, source: i.source, guildId: i.guildId, dispatcherId: i.dispatcherId,
+      createdAt: i.createdAt, closedAt: i.closedAt ?? i.updatedAt,
+      units: [...new Set(i.units.map((u) => u.unit.callsign))], unitTypes: [...new Set(i.units.map((u) => u.unit.type).filter((t): t is string => !!t))],
+    })) });
   }
 
   private changed(kind: string, id?: string) { this.rt.publish('cad', 'cad.changed', { kind, id: id ?? null }); this.rt.publish('dispatch', 'queue.changed', { id: id ?? null }); }
@@ -261,7 +277,8 @@ export class CadService {
         await tx.incidentUnit.updateMany({ where: { incidentId: id, clearedAt: null }, data: { clearedAt: new Date() } });
         await tx.unit.updateMany({ where: { id: { in: open.map((u) => u.unitId) }, status: { notIn: ['OFF_DUTY', 'UNAVAILABLE'] } }, data: { status: cfg.unitStatuses[0]!.key } });
         await tx.erlcEmergencyCall.updateMany({ where: { incidentId: id, status: { not: 'CLOSED' } }, data: { status: 'CLOSED' } });
-      }
+        await this.archiveStats(tx, [id]);
+      } else await tx.cadIncidentStat.deleteMany({ where: { incidentId: id } }); // wiedereröffnet → zählt wieder als offen
       await this.log(tx, id, 'STATUS', `Status: ${this.label(cfg.incidentStatuses, inc.status)} → ${this.label(cfg.incidentStatuses, status)}${note ? ` – ${note}` : ''}`, actor);
       await this.audit.record(actor, { action: st.closed ? 'cad.incident.close' : 'cad.incident.status', module: 'cad', entityType: 'Incident', entityId: id, before: { status: inc.status }, after: { status }, reason: note }, tx);
       return row;
@@ -391,20 +408,21 @@ export class CadService {
     this.changed('unit', id);
   }
 
+  /** Für eine Einheit melden darf: die Leitstelle (cad.assign_unit), die Besatzung oder – aus Discord – die Rolle der Einheit bzw. freigegebene Status-Rollen. */
+  private async assertUnitReporter(actor: CadActor, u: { id: string; discordRoleId: string | null; statusRoleIds: string[]; members: { userId: string }[] }, memberRoleIds: string[]) {
+    if (await this.perms.has(actor.userId!, 'cad.assign_unit')) return this.assertCrossServer(actor, 'dispatch', memberRoleIds);
+    const crew = u.members.some((m) => m.userId === actor.userId) || !!(await this.prisma.cadMember.findFirst({ where: { unitId: u.id, OR: [{ userId: actor.userId }, ...(actor.discordId ? [{ discordId: actor.discordId }] : [])] } }));
+    const byRole = memberRoleIds.some((r) => r === u.discordRoleId || u.statusRoleIds.includes(r));
+    if (!crew && !byRole) throw new AppError('PERMISSION_DENIED', 'Nur die Leitstelle, die Besatzung oder freigegebene Rollen dürfen für diese Einheit melden.');
+    await this.assertCrossServer(actor, 'status_report', memberRoleIds);
+  }
+
   /** Status einer Einheit: Leitstelle (cad.assign_unit) oder ein Besatzungsmitglied selbst (auch vom verbundenen SEK/K9-Server). */
   async setUnitStatus(actor: CadActor, id: string, status: string, memberRoleIds: string[] = []) {
     const cfg = await this.validateUnit({ status });
     const u = await this.prisma.unit.findUnique({ where: { id }, include: { members: true, incidents: { where: { clearedAt: null } } } });
     if (!u) throw new AppError('NOT_FOUND', 'Einheit nicht gefunden.');
-    const dispatcher = await this.perms.has(actor.userId!, 'cad.assign_unit');
-    if (dispatcher) await this.assertCrossServer(actor, 'dispatch', memberRoleIds);
-    else {
-      const crew = u.members.some((m) => m.userId === actor.userId) || !!(await this.prisma.cadMember.findFirst({ where: { unitId: id, OR: [{ userId: actor.userId }, ...(actor.discordId ? [{ discordId: actor.discordId }] : [])] } }));
-      // Einheiten-Rechte: Discord-Rolle der Einheit bzw. freigegebene Status-Rollen (aus Discord übermittelt)
-      const byRole = memberRoleIds.some((r) => r === u.discordRoleId || u.statusRoleIds.includes(r));
-      if (!crew && !byRole) throw new AppError('PERMISSION_DENIED', 'Nur die Leitstelle, die Besatzung oder freigegebene Rollen dürfen den Status dieser Einheit ändern.');
-      await this.assertCrossServer(actor, 'status_report', memberRoleIds);
-    }
+    await this.assertUnitReporter(actor, u, memberRoleIds);
     if (u.status === status) return u;
     const after = await this.prisma.$transaction(async (tx) => {
       const row = await tx.unit.update({ where: { id }, data: { status } });
@@ -415,6 +433,73 @@ export class CadService {
     this.changed('unit', id);
     this.rt.publish('dispatch', 'unit.status', { unitId: id, status });
     return after;
+  }
+
+  /**
+   * Rückmeldung einer Einheit zu ihrem Einsatz (MDT / Discord): steht in der Einsatzchronik, setzt ggf. den Einheitenstatus
+   * und geht an die Leitstelle. Der Einsatz selbst (Status, Abschluss) bleibt der Leitstelle vorbehalten.
+   */
+  async feedback(actor: CadActor, unitId: string, d: { kind: CadFeedbackKey; incidentId?: string | null; note?: string | null }, memberRoleIds: string[] = []) {
+    const cfg = await this.cfg.get();
+    const fb = CAD_FEEDBACK.find((f) => f.key === d.kind);
+    if (!fb) throw new AppError('VALIDATION_FAILED', 'Unbekannte Rückmeldung.');
+    const u = await this.prisma.unit.findUnique({ where: { id: unitId }, include: { members: true, incidents: { where: { clearedAt: null }, orderBy: { assignedAt: 'desc' } } } });
+    if (!u) throw new AppError('NOT_FOUND', 'Einheit nicht gefunden.');
+    await this.assertUnitReporter(actor, u, memberRoleIds);
+    const incidentId = d.incidentId ?? u.incidents[0]?.incidentId;
+    if (!incidentId) throw new AppError('CONFLICT', `${u.callsign} ist gerade keinem Einsatz zugewiesen.`);
+    if (!u.incidents.some((l) => l.incidentId === incidentId)) throw new AppError('CONFLICT', `${u.callsign} ist diesem Einsatz nicht (mehr) zugewiesen.`);
+    const inc = await this.prisma.incident.findUnique({ where: { id: incidentId } });
+    if (!inc) throw new AppError('NOT_FOUND', 'Einsatz nicht gefunden.');
+    const unitStatus = 'unitStatus' in fb && cfg.unitStatuses.some((s) => s.key === fb.unitStatus) ? fb.unitStatus : null;
+    const note = d.note?.trim() || null;
+    const text = `${u.callsign}: ${fb.emoji} ${fb.label}${note ? ` – ${note}` : ''}`;
+    await this.prisma.$transaction(async (tx) => {
+      await this.log(tx, incidentId, 'FEEDBACK', text, actor, unitId);
+      if (unitStatus && u.status !== unitStatus) await tx.unit.update({ where: { id: unitId }, data: { status: unitStatus } });
+      await this.audit.record(actor, { action: 'cad.unit.feedback', module: 'cad', entityType: 'Incident', entityId: incidentId, after: { unitId, callsign: u.callsign, kind: fb.key, note, unitStatus } }, tx);
+      // Disponent des Einsatzes direkt benachrichtigen, wenn Hilfe gebraucht oder der Abschluss gemeldet wird
+      if ((fb.key === 'support' || fb.key === 'completed') && inc.dispatcherId && inc.dispatcherId !== actor.userId) {
+        await tx.notification.create({ data: { userId: inc.dispatcherId, type: fb.key === 'support' ? 'INCIDENT_SUPPORT' : 'INCIDENT_COMPLETED', title: `${inc.number}: ${u.callsign} – ${fb.label}`, body: note, entityType: 'Incident', entityId: incidentId } });
+      }
+    });
+    this.changed('incident', incidentId);
+    this.rt.publish('dispatch', 'unit.feedback', { unitId, incidentId, kind: fb.key });
+    if (!inc.restrictRoleIds.length) {
+      await this.notify.emit(fb.key === 'support' ? 'incident.support' : 'incident.feedback', this.incidentPayload(cfg, inc, { callsign: u.callsign, feedback: `${fb.emoji} ${fb.label}`, feedbackKey: fb.key, note }), inc.guildId);
+    }
+    return { ok: true, incidentId, number: inc.number, callsign: u.callsign, unitStatus };
+  }
+
+  /**
+   * MDT eines Mitglieds: eigene Einheit(en) (Zuordnung über das Benutzerkonto oder die Teamübersicht), deren laufende Einsätze mit Chronik,
+   * Funkmeldungen, letzte Benachrichtigungen und die Einsatzhistorie der eigenen Einheiten.
+   */
+  async mdt(actor: CadActor) {
+    const uid = actor.userId!;
+    const [direct, mapped] = await Promise.all([
+      this.prisma.unitMember.findMany({ where: { userId: uid }, select: { unitId: true } }),
+      this.prisma.cadMember.findMany({ where: { OR: [{ userId: uid }, ...(actor.discordId ? [{ discordId: actor.discordId }] : [])], unitId: { not: null } }, select: { unitId: true } }),
+    ]);
+    const unitIds = [...new Set([...direct, ...mapped].map((m) => m.unitId!))];
+    const vis = await this.visibility(actor);
+    const units = await this.prisma.unit.findMany({ where: { id: { in: unitIds } }, orderBy: { callsign: 'asc' }, include: { incidents: { where: { clearedAt: null, incident: vis }, orderBy: { assignedAt: 'desc' }, select: { assignedAt: true, incidentId: true } } } });
+    const incidentIds = [...new Set(units.flatMap((u) => u.incidents.map((l) => l.incidentId)))];
+    const callsigns = units.map((u) => u.callsign);
+    const [incidents, radio, notifications, history] = await Promise.all([
+      this.prisma.incident.findMany({ where: { id: { in: incidentIds } }, include: { ...incidentInclude, log: { orderBy: { createdAt: 'desc' }, take: 30 } } }),
+      this.prisma.cadRadioMessage.findMany({ where: { OR: [{ incidentId: { in: incidentIds } }, { unitId: { in: unitIds } }] }, orderBy: { createdAt: 'desc' }, take: 30 }),
+      this.prisma.notification.findMany({ where: { userId: uid, archivedAt: null }, orderBy: { createdAt: 'desc' }, take: 10 }),
+      callsigns.length ? this.prisma.cadIncidentStat.findMany({ where: { units: { hasSome: callsigns } }, orderBy: { closedAt: 'desc' }, take: 15 }) : Promise.resolve([]),
+    ]);
+    const byId = new Map(incidents.map((i) => [i.id, i]));
+    return {
+      units: units.map((u) => ({
+        id: u.id, callsign: u.callsign, name: u.name, type: u.type, status: u.status, color: u.color, icon: u.icon, vehicle: u.vehicle, operational: u.operational,
+        incidents: u.incidents.map((l) => byId.get(l.incidentId)).filter((i): i is NonNullable<typeof i> => !!i).map((i) => ({ ...i, log: [...i.log].reverse() })),
+      })),
+      radio, notifications, history, feedback: CAD_FEEDBACK,
+    };
   }
 
   // ───────── Notrufe (ER:LC) ─────────

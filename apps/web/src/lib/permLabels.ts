@@ -1,6 +1,6 @@
 /** Lesbare Namen für die Rechte-Matrix (Schlüssel bleiben sichtbar für Profis). */
 export const MODULE_LABELS: Record<string, string> = {
-  dashboard: '🏠 Dashboard & Bereiche', team: '👥 Team', dispatch: '📡 Leitstelle', incidents: '🚨 Einsätze', persons: '🧑 Personen', vehicles: '🚗 Fahrzeuge',
+  dashboard: '🏠 Dashboard & Bereiche', team: '👥 Team', dispatch: '📡 Leitstelle', cad: '🗺️ CAD-Leitstelle', incidents: '🚨 Einsätze', persons: '🧑 Personen', vehicles: '🚗 Fahrzeuge',
   reports: '📄 Berichte', dutyreports: '🗓️ Tages-/Wochenberichte', tickets: '🧾 Strafzettel', complaints: '⚖️ Beschwerden', investigations: '🔍 Ermittlungen', wanted: '🚩 Fahndungen', evidence: '💼 Beweismittel',
   personnel: '🪪 Personal', promotion: '🎖️ Beförderungen', transfer: '🔀 Versetzungen', training: '🎓 Ausbildungen', exam: '📝 Prüfungen', warning: '⚠️ Verwarnungen', awards: '🏅 Auszeichnungen', announcements: '📢 Interne Meldungen', polls: '🗳️ Abstimmungen', dienstnummer: '🪪 Dienstnummern', leave: '🏖️ Abmeldungen', applications: '📝 Bewerbungen', academy: '🎓 Akademie', sek: '🎯 SEK', qualifications: '🏅 Qualifikationen',
   ticket: '🎫 Support-Tickets', communication: '💬 Kommunikation', analytics: '📊 Statistiken', audit: '📋 Audit-Logs', studio: '🛠️ Studio',
@@ -18,6 +18,7 @@ export const ACTION_LABELS: Record<string, string> = {
   assign: 'zuweisen', archive: 'archivieren', merge: 'zusammenführen', submit: 'einreichen', approve: 'genehmigen', reject: 'ablehnen', void: 'stornieren',
   investigate: 'ermitteln', resolve: 'abschließen', activate: 'aktivieren', clear: 'aufheben', transfer: 'übergeben', release: 'freigeben', promote: 'befördern',
   discipline: 'Disziplinarmaßnahmen', request: 'beantragen', report: 'melden', send: 'senden', moderate: 'moderieren', export: 'exportieren',
+  handover: 'Schichtübergabe erstellen/bestätigen', view_stats: 'Statistik ansehen',
   'tickets.view': 'Bereich Tickets', 'applications.view': 'Bereich Bewerbungen', 'team.view': 'Bereich Team', 'offices.view': 'Bereich Büros',
   'voice.view': 'Bereich Sprachkanäle', 'logs.view': 'Bereich Logs', 'settings.view': 'Bereich Einstellungen',
 };
