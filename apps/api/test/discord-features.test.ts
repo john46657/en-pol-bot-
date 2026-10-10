@@ -73,6 +73,11 @@ describe('danger level (Gefahrenstatus)', () => {
     expect((await http().put('/api/v1/danger-level').set({ ...bot(D_DISP), 'X-Discord-Roles': '500000000000000011,500000000000000099' }).send({ level: 'ALARM' })).status).toBe(200);
     expect((await adm.put('/api/v1/danger-level').send({ level: levels[0].key })).status).toBe(200); // ohne Rollen-Freigabe: frei
     expect((await adm.put('/api/v1/danger-level').send({ level: 'ALARM' })).status).toBe(200); // Dashboard: Admin mit settings.manage
+    // eigener Kanal für Statusänderungen (statt Gefahrenstatus-Kanal aus den Einstellungen)
+    expect((await adm.put('/api/v1/danger-level/config').send({ ...cfg, levels: restricted, pingRoleIds: [], channelId: '500000000000000055' })).status).toBe(200);
+    await adm.put('/api/v1/danger-level').send({ level: levels[0].key });
+    const own = await prisma.discordOutbox.findFirst({ where: { type: 'danger.changed' }, orderBy: { createdAt: 'desc' } });
+    expect(own!.payload).toMatchObject({ channelId: '500000000000000055' });
   });
 
   it('the button panel can be sent to any channel from the dashboard (settings.manage)', async () => {

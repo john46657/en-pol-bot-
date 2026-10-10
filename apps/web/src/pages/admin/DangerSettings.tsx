@@ -56,12 +56,16 @@ function DangerSettings() {
   return (
     <div className="grid gap-3 lg:grid-cols-2">
       <DangerPanelSender />
+      <Card title="📣 Kanal für Statusänderungen" className="lg:col-span-2">
+        <p className="mb-2 text-xs text-muted">Hier postet der Bot bei jeder Änderung des Gefahrenstatus eine Meldung (mit Ping). Das kann ein anderer Kanal sein als der des Panels. Die vorherige Meldung ersetzt der Bot dabei.</p>
+        <Field label="Kanal" hint={d.channelId ? undefined : 'Leer = Gefahrenstatus-Kanal aus Einstellungen → Discord.'}>{() => <ChannelPicker ariaLabel="Kanal für Statusänderungen" value={d.channelId ?? null} onChange={(channelId) => setD({ ...d, channelId })} />}</Field>
+      </Card>
       <Card title="Panel-Inhalt">
         <div className="grid gap-2">
           <Field label="Titel">{(id) => <Input id={id} maxLength={200} value={d.panelTitle} onChange={(e) => setD({ ...d, panelTitle: e.target.value })} />}</Field>
           <Field label="Text (Markdown)">{(id) => <Textarea id={id} rows={5} maxLength={3000} value={d.panelText} onChange={(e) => setD({ ...d, panelText: e.target.value })} />}</Field>
           <Field label="Emoji auf den Schaltflächen (leer = Emoji der Stufe)">{(id) => <Input id={id} maxLength={4} value={d.buttonEmoji} onChange={(e) => setD({ ...d, buttonEmoji: e.target.value })} />}</Field>
-          <Field label="Bei jeder Änderung pingen (z. B. @Im Dienst)" hint="Kanal: Einstellungen → Discord → Gefahrenstatus-Kanal">{() => <RolePicker value={d.pingRoleIds} onChange={(pingRoleIds) => setD({ ...d, pingRoleIds })} />}</Field>
+          <Field label="Bei jeder Änderung pingen (z. B. @Im Dienst)" hint="Gepingt wird in der Meldung im Kanal für Statusänderungen (oben).">{() => <RolePicker value={d.pingRoleIds} onChange={(pingRoleIds) => setD({ ...d, pingRoleIds })} />}</Field>
         </div>
       </Card>
       <Card title="Vorschau">

@@ -18,6 +18,8 @@ export const dangerConfigSchema = z.object({
   panelText: z.string().max(3000),
   buttonEmoji: z.string().max(16),
   pingRoleIds: z.array(sf).max(10),
+  /** Kanal für Statusänderungen (leer = Gefahrenstatus-Kanal aus Einstellungen → Discord) */
+  channelId: sf.nullable().optional(),
   levels: z.array(z.object({
     key: z.string().trim().regex(/^[A-Z0-9_]{1,24}$/), name: z.string().trim().min(1).max(40), title: z.string().trim().max(200), text: z.string().max(3500),
     emoji: z.string().max(16), color: z.string().regex(/^#[0-9a-fA-F]{6}$/), buttonStyle: z.enum(['primary', 'secondary', 'success', 'danger']),
@@ -88,7 +90,8 @@ export class DangerService {
       await this.discord.enqueue('danger', 'danger.changed', {
         level: def.key, name: def.name, title: def.title, text: def.text, emoji: def.emoji, color: def.color,
         previous: before.at ? before.def.name : null, reason: state.reason, setBy: state.setByName, pingRoleIds: [...new Set([...cfg.pingRoleIds, ...(def.pingRoleIds ?? [])])],
-      });
+        ...(cfg.channelId ? { channelId: cfg.channelId } : {}),
+      }, { always: !!cfg.channelId });
     }
     return this.get();
   }

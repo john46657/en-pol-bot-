@@ -728,6 +728,8 @@ interface DangerConfig {
     buttonEmoji: string;
     levels: DangerLevelDef[];
     pingRoleIds: string[];
+    /** Kanal für die Meldung bei jeder Statusänderung (leer = Einstellungen → Discord → Gefahrenstatus-Kanal) */
+    channelId?: string | null;
 }
 declare const DEFAULT_DANGER_CONFIG: DangerConfig;
 /** Alte Stufen (Grün/Gelb/Rot) → Standard-Stufen, falls die Konfiguration sie nicht mehr kennt. */
