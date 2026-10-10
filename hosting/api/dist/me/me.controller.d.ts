@@ -2,6 +2,8 @@ import { Prisma } from '@prisma/client';
 import { z } from 'zod';
 import { PrismaService } from '../prisma/prisma.service';
 import type { Actor } from '../audit/audit.service';
+import { UsersService } from '../users/users.service';
+import { nameBody } from '../users/users.controller';
 declare const prefsBody: z.ZodObject<{
     preferences: z.ZodObject<{
         theme: z.ZodOptional<z.ZodEnum<["dark", "light", "system"]>>;
@@ -689,7 +691,8 @@ declare const layoutsBody: z.ZodObject<{
  */
 export declare class MeController {
     private readonly prisma;
-    constructor(prisma: PrismaService);
+    private readonly users;
+    constructor(prisma: PrismaService, users: UsersService);
     get(a: Actor): Promise<{
         preferences: string | number | boolean | Prisma.JsonObject | Prisma.JsonArray;
         layouts: string | number | boolean | Prisma.JsonObject | Prisma.JsonArray | null;
@@ -775,6 +778,33 @@ export declare class MeController {
             } | undefined;
         };
         savedAt: Date;
+    }>;
+    /** Eigenen Anzeigenamen ändern (steht in Teamliste, Dienst-Übersicht, Einsätzen …). */
+    setName(a: Actor, b: z.infer<typeof nameBody>): Promise<{
+        id: string;
+        createdAt: Date;
+        updatedAt: Date;
+        username: string;
+        displayName: string;
+        email: string | null;
+        robloxUserId: string | null;
+        robloxUsername: string | null;
+        robloxStatus: string;
+        robloxVerifiedAt: Date | null;
+        active: boolean;
+        lastLogin: Date | null;
+        totpEnabledAt: Date | null;
+        roles: {
+            role: {
+                id: string;
+                name: string;
+            };
+        }[];
+        overrides: {
+            reason: string | null;
+            permissionKey: string;
+            effect: string;
+        }[];
     }>;
     /** Layouts (Widgets, Reihenfolge, Größe). `null` = auf den Standard zurücksetzen. */
     setLayouts(a: Actor, b: z.infer<typeof layoutsBody>): Promise<{

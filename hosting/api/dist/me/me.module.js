@@ -9,10 +9,11 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.MeModule = void 0;
 const common_1 = require("@nestjs/common");
 const me_controller_1 = require("./me.controller");
+const users_module_1 = require("../users/users.module");
 let MeModule = class MeModule {
 };
 exports.MeModule = MeModule;
 exports.MeModule = MeModule = __decorate([
-    (0, common_1.Module)({ controllers: [me_controller_1.MeController] })
+    (0, common_1.Module)({ imports: [users_module_1.UsersModule], controllers: [me_controller_1.MeController] })
 ], MeModule);
 //# sourceMappingURL=me.module.js.map

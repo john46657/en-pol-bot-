@@ -102,6 +102,17 @@ let UsersService = class UsersService {
             return u;
         });
     }
+    /** Anzeigename ändern – den eigenen immer, fremde nur unterhalb des eigenen Rangs (users.manage). */
+    async setName(actor, id, displayName) {
+        const before = await this.get(id);
+        if (id !== actor.userId)
+            await this.perms.assertOutranksUser(actor.userId, id);
+        return this.prisma.$transaction(async (tx) => {
+            const r = await tx.user.update({ where: { id }, data: { displayName }, select: publicSelect });
+            await this.audit.record(actor, { action: 'user.rename', module: 'users', entityType: 'User', entityId: id, before: { displayName: before.displayName }, after: { displayName } }, tx);
+            return r;
+        });
+    }
     async setActive(actor, id, active, reason) {
         if (!active && id === actor.userId)
             throw new errors_1.AppError('CONFLICT', 'Du kannst dein eigenes Konto nicht deaktivieren.');

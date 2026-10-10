@@ -41,6 +41,7 @@ function UserDrawer({ user, roles, manage, canRoles, isSelf, onClose }: { user: 
   const [rid, setRid] = useState(''); const [rname, setRname] = useState('');
   const [perm, setPerm] = useState<string>(ALL_PERMISSIONS[0]!); const [effect, setEffect] = useState('DENY'); const [why, setWhy] = useState('');
   const [confirmDisable, setConfirmDisable] = useState(false);
+  const [dname, setDname] = useState(u.displayName);
   const [confirm2fa, setConfirm2fa] = useState(false);
   const refresh = async () => setU(await api<U>(`/users/${u.id}`));
   const run = async (fn: () => Promise<unknown>) => { try { setErr(undefined); await fn(); await refresh(); } catch (e) { setErr(e instanceof ApiError ? `${e.message}${e.requestId ? ` (Anfrage-ID ${e.requestId})` : ''}` : 'Fehlgeschlagen'); } };
@@ -50,6 +51,9 @@ function UserDrawer({ user, roles, manage, canRoles, isSelf, onClose }: { user: 
     <Modal open title={`${u.displayName} (@${u.username})`} onClose={onClose} wide>
       <div className="space-y-5">
         {err && <div role="alert" className="rounded border border-danger/40 bg-danger/10 p-2 text-sm text-danger">{err}</div>}
+        {manage && !isSelf && <Card title="Anzeigename">
+          <div className="flex flex-wrap items-end gap-2"><Field label="Name">{(id) => <Input id={id} maxLength={64} value={dname} onChange={(e) => setDname(e.target.value)} />}</Field><Button disabled={!dname.trim() || dname.trim() === u.displayName} onClick={() => void run(() => api(`/users/${u.id}/name`, { method: 'PUT', body: { displayName: dname.trim() } }))}>Speichern</Button></div>
+        </Card>}
         <Card title="Roblox-Identität">
           <p className="mb-2 text-sm">Aktuell: {u.robloxUserId ? <>{u.robloxUsername ?? '—'} · ID {u.robloxUserId} <Badge>{u.robloxStatus}</Badge></> : 'nicht verknüpft'}</p>
           {manage && <div className="flex flex-wrap items-end gap-2"><Field label="Roblox-Benutzer-ID (manuell)">{(id) => <Input id={id} value={rid} onChange={(e) => setRid(e.target.value)} placeholder="123456789" />}</Field><Field label="Roblox-Benutzername">{(id) => <Input id={id} value={rname} onChange={(e) => setRname(e.target.value)} />}</Field><Button disabled={!rid} onClick={() => void run(() => api(`/users/${u.id}/roblox`, { method: 'PUT', body: { robloxUserId: rid, robloxUsername: rname || undefined } }))}>Manuell speichern</Button>{u.robloxUserId && <Button variant="secondary" onClick={() => void run(() => api(`/users/${u.id}/roblox`, { method: 'PUT', body: { robloxUserId: null } }))}>Verknüpfung lösen</Button>}</div>}

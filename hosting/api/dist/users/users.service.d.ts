@@ -134,6 +134,33 @@ export declare class UsersService {
             effect: string;
         }[];
     }>;
+    /** Anzeigename ändern – den eigenen immer, fremde nur unterhalb des eigenen Rangs (users.manage). */
+    setName(actor: Actor, id: string, displayName: string): Promise<{
+        id: string;
+        createdAt: Date;
+        updatedAt: Date;
+        username: string;
+        displayName: string;
+        email: string | null;
+        robloxUserId: string | null;
+        robloxUsername: string | null;
+        robloxStatus: string;
+        robloxVerifiedAt: Date | null;
+        active: boolean;
+        lastLogin: Date | null;
+        totpEnabledAt: Date | null;
+        roles: {
+            role: {
+                id: string;
+                name: string;
+            };
+        }[];
+        overrides: {
+            reason: string | null;
+            permissionKey: string;
+            effect: string;
+        }[];
+    }>;
     setActive(actor: Actor, id: string, active: boolean, reason?: string): Promise<{
         id: string;
         createdAt: Date;

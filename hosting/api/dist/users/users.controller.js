@@ -12,7 +12,7 @@ var __param = (this && this.__param) || function (paramIndex, decorator) {
     return function (target, key) { decorator(target, key, paramIndex); }
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.UsersController = void 0;
+exports.UsersController = exports.nameBody = void 0;
 const common_1 = require("@nestjs/common");
 const swagger_1 = require("@nestjs/swagger");
 const zod_1 = require("zod");
@@ -21,6 +21,7 @@ const two_factor_service_1 = require("../auth/two-factor.service");
 const decorators_1 = require("../authz/decorators");
 const zod_pipe_1 = require("../common/zod.pipe");
 const pagination_1 = require("../common/pagination");
+exports.nameBody = zod_1.z.object({ displayName: zod_1.z.string().trim().min(1).max(64) });
 const createUser = zod_1.z.object({
     username: zod_1.z.string().trim().min(3).max(32).regex(/^[a-zA-Z0-9_.-]+$/),
     displayName: zod_1.z.string().trim().min(1).max(64),
@@ -46,6 +47,7 @@ let UsersController = class UsersController {
     setActive(a, id, b) { return this.users.setActive(a, id, b.active, b.reason); }
     /** Zwei-Faktor eines Kontos zurücksetzen (Handy verloren, keine Wiederherstellungscodes). */
     async resetTwoFactor(a, id) { await this.twoFactor.adminReset(a, id); }
+    setName(a, id, b) { return this.users.setName(a, id, b.displayName); }
     setRoles(a, id, b) { return this.users.setRoles(a, id, b.roleIds); }
     setOverride(a, id, b) { return this.users.setOverride(a, id, b); }
     removeOverride(a, id, p) { return this.users.removeOverride(a, id, p); }
@@ -106,6 +108,16 @@ __decorate([
     __metadata("design:paramtypes", [Object, String]),
     __metadata("design:returntype", Promise)
 ], UsersController.prototype, "resetTwoFactor", null);
+__decorate([
+    (0, common_1.Put)(':id/name'),
+    (0, decorators_1.RequirePermission)('users.manage'),
+    __param(0, (0, decorators_1.CurrentActor)()),
+    __param(1, (0, common_1.Param)('id', common_1.ParseUUIDPipe)),
+    __param(2, (0, common_1.Body)((0, zod_pipe_1.zodBody)(exports.nameBody))),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, String, void 0]),
+    __metadata("design:returntype", void 0)
+], UsersController.prototype, "setName", null);
 __decorate([
     (0, common_1.Put)(':id/roles'),
     (0, decorators_1.RequirePermission)('roles.manage'),

@@ -65,9 +65,9 @@ declare const listQ: z.ZodObject<{
     q?: string | undefined;
 }, {
     status?: "ACTIVE" | "CLOSED" | "OPEN" | "ARCHIVED" | "SUSPENDED" | undefined;
-    q?: string | undefined;
     page?: number | undefined;
     pageSize?: number | undefined;
+    q?: string | undefined;
 }>;
 export declare class InvestigationsController {
     private readonly i;

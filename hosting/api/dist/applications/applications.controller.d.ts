@@ -50,9 +50,9 @@ declare const inboxQ: z.ZodObject<{
     status?: "ACCEPTED" | "REJECTED" | "WITHDRAWN" | "OPEN" | undefined;
     guildId?: string | undefined;
     order?: "newest" | "oldest" | undefined;
-    q?: string | undefined;
     page?: number | undefined;
     pageSize?: number | undefined;
+    q?: string | undefined;
 }>;
 declare const listQ: z.ZodObject<{
     page: z.ZodDefault<z.ZodNumber>;
@@ -73,9 +73,9 @@ declare const listQ: z.ZodObject<{
     status?: "ACCEPTED" | "REJECTED" | "WITHDRAWN" | "OPEN" | "SUBMITTED" | "SCREENING" | "INTERVIEW" | "PENDING_DECISION" | undefined;
     guildId?: string | undefined;
     order?: "newest" | "oldest" | undefined;
-    q?: string | undefined;
     page?: number | undefined;
     pageSize?: number | undefined;
+    q?: string | undefined;
 }>;
 declare const guildQ: z.ZodObject<{
     guildId: z.ZodOptional<z.ZodString>;

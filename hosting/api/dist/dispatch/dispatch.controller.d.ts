@@ -72,9 +72,9 @@ declare const listQ: z.ZodObject<{
 }, {
     status?: "CANCELLED" | "EN_ROUTE" | "ON_SCENE" | "CLOSED" | "NEW" | "ACKNOWLEDGED" | "ASSIGNED" | "PROCESSING" | "CLEARING" | undefined;
     active?: boolean | undefined;
-    q?: string | undefined;
     page?: number | undefined;
     pageSize?: number | undefined;
+    q?: string | undefined;
 }>;
 declare const attach: z.ZodObject<{
     personIds: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;

@@ -17,6 +17,6 @@ let UsersModule = class UsersModule {
 };
 exports.UsersModule = UsersModule;
 exports.UsersModule = UsersModule = __decorate([
-    (0, common_1.Module)({ imports: [auth_module_1.AuthModule], controllers: [users_controller_1.UsersController, roles_controller_1.RolesController], providers: [users_service_1.UsersService, roles_service_1.RolesService] })
+    (0, common_1.Module)({ imports: [auth_module_1.AuthModule], controllers: [users_controller_1.UsersController, roles_controller_1.RolesController], providers: [users_service_1.UsersService, roles_service_1.RolesService], exports: [users_service_1.UsersService] })
 ], UsersModule);
 //# sourceMappingURL=users.module.js.map

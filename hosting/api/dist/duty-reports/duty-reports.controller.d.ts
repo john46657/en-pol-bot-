@@ -66,10 +66,10 @@ declare const listQ: z.ZodObject<{
     authorId?: string | undefined;
     templateId?: string | undefined;
     mine?: boolean | undefined;
-    q?: string | undefined;
-    from?: string | undefined;
     page?: number | undefined;
     pageSize?: number | undefined;
+    q?: string | undefined;
+    from?: string | undefined;
     to?: string | undefined;
 }>;
 /** 🗓️ Tages-/Wochenberichte (auch vom Discord-Bot im Namen des verknüpften Benutzers benutzt). */

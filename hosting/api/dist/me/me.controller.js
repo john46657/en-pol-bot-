@@ -21,6 +21,8 @@ const prisma_service_1 = require("../prisma/prisma.service");
 const decorators_1 = require("../authz/decorators");
 const zod_pipe_1 = require("../common/zod.pipe");
 const me_schemas_1 = require("./me.schemas");
+const users_service_1 = require("../users/users.service");
+const users_controller_1 = require("../users/users.controller");
 const prefsBody = zod_1.z.object({ preferences: me_schemas_1.preferencesSchema });
 const layoutsBody = zod_1.z.object({ layouts: me_schemas_1.layoutsSchema.nullable() });
 /**
@@ -29,8 +31,10 @@ const layoutsBody = zod_1.z.object({ layouts: me_schemas_1.layoutsSchema.nullabl
  */
 let MeController = class MeController {
     prisma;
-    constructor(prisma) {
+    users;
+    constructor(prisma, users) {
         this.prisma = prisma;
+        this.users = users;
     }
     async get(a) {
         const s = await this.prisma.userSettings.findUnique({ where: { userId: a.userId } });
@@ -41,6 +45,8 @@ let MeController = class MeController {
         await this.prisma.userSettings.upsert({ where: { userId: a.userId }, create: { userId: a.userId, preferences: value }, update: { preferences: value } });
         return { preferences: b.preferences, savedAt: new Date() };
     }
+    /** Eigenen Anzeigenamen ändern (steht in Teamliste, Dienst-Übersicht, Einsätzen …). */
+    setName(a, b) { return this.users.setName(a, a.userId, b.displayName); }
     /** Layouts (Widgets, Reihenfolge, Größe). `null` = auf den Standard zurücksetzen. */
     async setLayouts(a, b) {
         const value = b.layouts === null ? client_1.Prisma.DbNull : b.layouts;
@@ -67,6 +73,15 @@ __decorate([
     __metadata("design:returntype", Promise)
 ], MeController.prototype, "setPreferences", null);
 __decorate([
+    (0, common_1.Put)('name'),
+    (0, decorators_1.RequirePermission)('dashboard.view'),
+    __param(0, (0, decorators_1.CurrentActor)()),
+    __param(1, (0, common_1.Body)((0, zod_pipe_1.zodBody)(users_controller_1.nameBody))),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, void 0]),
+    __metadata("design:returntype", void 0)
+], MeController.prototype, "setName", null);
+__decorate([
     (0, common_1.Put)('layouts'),
     (0, decorators_1.RequirePermission)('dashboard.customize'),
     __param(0, (0, decorators_1.CurrentActor)()),
@@ -78,6 +93,6 @@ __decorate([
 exports.MeController = MeController = __decorate([
     (0, swagger_1.ApiTags)('me'),
     (0, common_1.Controller)('me'),
-    __metadata("design:paramtypes", [prisma_service_1.PrismaService])
+    __metadata("design:paramtypes", [prisma_service_1.PrismaService, users_service_1.UsersService])
 ], MeController);
 //# sourceMappingURL=me.controller.js.map
