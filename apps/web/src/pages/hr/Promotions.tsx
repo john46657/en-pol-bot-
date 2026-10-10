@@ -344,11 +344,20 @@ function RanksTab() {
     onError: (e) => { setDel(null); setErr(errText(e)); },
   });
   const list = ranks.data ?? [];
+  // Ränge aus den Dashboard-Rollen übernehmen (unterster Rang zuerst; der Rang vergibt dann die Rolle)
+  const dashRoles = useQuery({ queryKey: ['roles-hierarchy'], queryFn: () => api<{ id: string; name: string; priority: number; color: string | null; icon: string | null; active: boolean }[]>('/roles'), enabled: manage, staleTime: 60_000, retry: false });
+  const fromRoles = (dashRoles.data ?? []).filter((r) => r.active && r.name !== 'System Administrator' && !list.some((x) => x.name.toLowerCase() === r.name.toLowerCase())).sort((a, b) => b.priority - a.priority);
+  const importRoles = useMutation({
+    mutationFn: async () => { for (const r of fromRoles) await api('/hr/ranks', { method: 'POST', body: { name: r.name, color: /^#[0-9a-fA-F]{6}$/.test(r.color ?? '') ? r.color : '#64748b', icon: r.icon || null, dashboardRoleIds: [r.id] } }); },
+    onSuccess: () => { setErr(undefined); void qc.invalidateQueries({ queryKey: ['hr-ranks'] }); },
+    onError: (e) => { setErr(errText(e)); void qc.invalidateQueries({ queryKey: ['hr-ranks'] }); },
+  });
   const move = (i: number, d: -1 | 1) => { const j = i + d; if (j < 0 || j >= list.length) return; const ids = list.map((r) => r.id); [ids[i], ids[j]] = [ids[j]!, ids[i]!]; order.mutate(ids); };
   const editing = edit && edit !== 'new' ? list.find((r) => r.id === edit) : undefined;
 
   return (
-    <Card title="Ränge (von unten nach oben)" actions={manage && <Button size="sm" onClick={() => setEdit('new')}><Plus size={14} /> Rang anlegen</Button>}>
+    <Card title="Ränge (von unten nach oben)" actions={manage && <div className="flex flex-wrap gap-2">{fromRoles.length > 0 && <Button size="sm" variant="secondary" disabled={importRoles.isPending} title={fromRoles.map((r) => r.name).join(', ')} onClick={() => importRoles.mutate()}>Aus Dashboard-Rollen übernehmen ({fromRoles.length})</Button>}<Button size="sm" onClick={() => setEdit('new')}><Plus size={14} /> Rang anlegen</Button></div>}>
+      {manage && fromRoles.length > 0 && !list.length && <p className="mb-3 text-sm text-muted">Tipp: „Aus Dashboard-Rollen übernehmen“ legt für jede Rolle unter „Rollen &amp; Rechte“ (außer System Administrator) einen Rang an – in derselben Reihenfolge. Wer befördert wird, bekommt die Rolle dann automatisch.</p>}
       {err && <p role="alert" className="mb-3 rounded-md border border-danger/40 bg-danger/10 p-2 text-sm text-danger">{err}</p>}
       {ranks.isLoading ? <SkeletonRows /> : ranks.error ? <ErrorState error={ranks.error} onRetry={() => void ranks.refetch()} /> : !list.length ? <EmptyState text="Noch keine Ränge angelegt." /> : (
         <ol className="grid gap-2">{list.map((r, i) => (
@@ -622,7 +631,8 @@ export function Promotions() {
     ...(can('personnel.view') || can('promotion.manage_ranks') ? ['Ränge'] : []),
     ...(can('promotion.manage_settings') ? ['Workflow & Benachrichtigungen'] : []),
   ];
-  const [tab, setTab] = useState(tabs[0] ?? '');
+  const [params] = useSearchParams();
+  const [tab, setTab] = useState(params.get('tab') ?? tabs[0] ?? '');
   const active = tabs.includes(tab) ? tab : tabs[0];
   if (!active) return <Forbidden />;
   return (
