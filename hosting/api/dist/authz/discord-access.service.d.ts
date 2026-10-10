@@ -39,6 +39,16 @@ export declare class DiscordAccessService implements OnModuleInit, OnModuleDestr
     settings(): Promise<DiscordLoginSettings>;
     /** Mitglied auf einem der Server des Bots (bzw. der eingestellten Server)? `null` = nein, `unknown` = nicht prüfbar. */
     membership(discordId: string): Promise<Membership>;
+    private bot;
+    /** Eingestellte Server bzw. alle Server des Bots (max. 20); `null` = Discord nicht erreichbar. */
+    private guildIds;
+    /** Server-Mitglieder per Name suchen (Discord: Benutzer- oder Servername beginnt mit `query`). Ohne Token/Discord: leer. */
+    searchMembers(query: string, limit?: number): Promise<{
+        id: string;
+        username: string;
+        displayName: string;
+        avatar: string | null;
+    }[]>;
     /** Darf diese Mitgliedschaft ins Dashboard? (Besitzer aus ADMIN_DISCORD_IDS prüft der Aufrufer vorab.) */
     verdict(member: {
         roles: string[];

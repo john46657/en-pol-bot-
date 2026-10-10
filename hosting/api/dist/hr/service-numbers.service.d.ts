@@ -1,6 +1,8 @@
 import { OnModuleInit } from '@nestjs/common';
 import { type DnSettings, type DnStatus, type RangeInput } from '@enrp/shared';
 import { PermissionService } from '../authz/permission.service';
+import { DiscordAccessService } from '../authz/discord-access.service';
+import { DiscordLiveService } from '../discord/discord-live.service';
 import type { Actor } from '../audit/audit.service';
 import { type AcceptedApplication } from '../common/hire-events';
 import { HrCoreService } from './hr-core.service';
@@ -13,7 +15,9 @@ export declare class ServiceNumbersService implements OnModuleInit {
     private readonly core;
     private readonly people;
     private readonly perms;
-    constructor(core: HrCoreService, people: HrPeopleService, perms: PermissionService);
+    private readonly discord;
+    private readonly live;
+    constructor(core: HrCoreService, people: HrPeopleService, perms: PermissionService, discord: DiscordAccessService, live: DiscordLiveService);
     private get prisma();
     onModuleInit(): void;
     settings(): Promise<DnSettings>;
@@ -174,8 +178,22 @@ export declare class ServiceNumbersService implements OnModuleInit {
         };
     }>;
     /** Manuelle Vergabe (dienstnummer.assign) an eine Personalakte. */
+    /**
+     * Discord-Mitglieder für die Personenauswahl: Teamliste des Bots (Teilstring) + Discord-Suche über alle Server-Mitglieder
+     * (Name beginnt mit …). `personnelId` gesetzt = es gibt schon eine Personalakte.
+     */
+    discordMembers(q: string): Promise<{
+        personnelId: string | null;
+        serviceNumber: string | null;
+        id: string;
+        username: string;
+        displayName: string;
+        avatar: string | null;
+    }[]>;
     assignManual(actor: Actor, d: {
-        personnelId: string;
+        personnelId?: string;
+        discordId?: string;
+        name?: string;
         display?: string;
         rangeId?: string;
         reason?: string;
@@ -202,6 +220,8 @@ export declare class ServiceNumbersService implements OnModuleInit {
             releaseAs: string;
         };
     }>;
+    /** Personalakte zu einem Discord-Mitglied – vorhandene oder neu angelegt (Benutzer wird bei Bedarf mit angelegt). */
+    private personnelForDiscord;
     /** Nummer ändern (dienstnummer.edit); die alte wird je nach Kreis frei, ehemalig oder gesperrt. */
     change(actor: Actor, d: {
         personnelId: string;
