@@ -3,6 +3,7 @@ import { BrowserRouter, Navigate, Route, Routes, useLocation } from 'react-route
 import { useAuth } from './lib/auth';
 import { AppShell } from './components/AppShell';
 import { Forbidden, SkeletonRows } from './components/ui';
+import { ErrorBoundary } from './components/ErrorBoundary';
 import { ResourcePage } from './components/ResourcePage';
 import { RecordPage } from './components/RecordPage';
 import { Login } from './pages/Login';
@@ -91,7 +92,7 @@ function Guard({ perm, area, children }: { perm?: string; area?: string; childre
   if (loading) return <div className="p-6"><SkeletonRows /></div>;
   if (!user) return <Navigate to="/login" state={{ from: loc.pathname }} replace />;
   if ((perm && !can(perm)) || (area && !can(area))) return <Forbidden />;
-  return <Suspense fallback={<SkeletonRows />}>{children}</Suspense>;
+  return <ErrorBoundary resetKey={loc.pathname}><Suspense fallback={<SkeletonRows />}>{children}</Suspense></ErrorBoundary>;
 }
 
 const list = (cfg: Parameters<typeof ResourcePage>[0]['cfg'], perm: string) => <Guard perm={perm}><ResourcePage cfg={cfg} /></Guard>;
