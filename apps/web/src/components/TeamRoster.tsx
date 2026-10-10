@@ -54,7 +54,7 @@ export function TeamRoster({ compact = false, limit, initialOpen }: { compact?: 
   return (
     <div>
       <div className="mb-3 flex flex-wrap items-center gap-2">
-        <div className="relative min-w-40 flex-1"><Search size={14} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-muted" aria-hidden />
+        <div className="relative min-w-40 flex-1 basis-full sm:basis-auto"><Search size={14} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-muted" aria-hidden />
           <Input aria-label="Teammitglied suchen" placeholder="🔍 Teammitglied suchen" className="py-1.5 pl-8 text-sm" value={search} onChange={(e) => { setSearch(e.target.value); update({ teamList: { ...tl, search: e.target.value } }); }} /></div>
         {!compact && s && <>
           <Select aria-label="Team" className="w-auto py-1.5 text-xs" value={f.team ?? ''} onChange={(e) => setFilter('team', e.target.value)}><option value="">Alle Teams</option>{s.teams.map((x) => <option key={x}>{x}</option>)}</Select>
