@@ -1,11 +1,13 @@
 import { useEffect, useRef, type ButtonHTMLAttributes, type InputHTMLAttributes, type ReactNode, type SelectHTMLAttributes, type TextareaHTMLAttributes, forwardRef, useId } from 'react';
 import { PRIORITY_LABEL, STATUS_LABEL, statusLabel } from '@enrp/shared';
 import { createPortal } from 'react-dom';
+import { twMerge } from 'tailwind-merge';
 import { AlertTriangle, Inbox, X } from 'lucide-react';
 import { ApiError } from '../lib/api';
 import { formatDate } from '../lib/prefs';
 
-const cx = (...c: (string | false | undefined)[]) => c.filter(Boolean).join(' ');
+// twMerge: bei widersprüchlichen Klassen gewinnt die zuletzt angegebene (z. B. className="w-auto py-1 text-xs" schlägt die Standard-Breite/-Größe der Eingabefelder)
+const cx = (...c: (string | false | undefined)[]) => twMerge(c.filter(Boolean).join(' '));
 
 export function Button({ variant = 'primary', size = 'md', className, ...p }: ButtonHTMLAttributes<HTMLButtonElement> & { variant?: 'primary' | 'secondary' | 'danger' | 'ghost' | 'plain'; size?: 'sm' | 'md' }) {
   // plain: Farben kommen komplett aus className (z. B. Discord-Grün/-Rot)

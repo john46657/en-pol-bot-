@@ -98,10 +98,10 @@ export function Team() {
                     <td>{m.currentIncident ? <Link className="flex items-center gap-1 hover:underline" to={`/incidents/${m.currentIncident.id}`}>{m.currentIncident.number}<PriorityBadge priority={m.currentIncident.priority} /></Link> : '—'}</td>
                     <td className="text-xs text-muted">{fmt(m.lastStatusChange)}</td>
                     {(manage || assign) && (
-                      <td className="space-x-1 whitespace-nowrap py-1">
-                        {manage && <Select aria-label={`Dienststatus von ${m.name}`} className="inline-block w-auto min-w-36 py-1 text-xs" value={m.dutyStatus} onChange={(e) => setOther.mutate({ userId: m.userId, status: e.target.value })}>{DUTY_STATUSES.map((s) => <option key={s} value={s}>{statusLabel(s)}</option>)}</Select>}
-                        {assign && <Select aria-label={`Einheit von ${m.name}`} className="inline-block w-auto min-w-36 py-1 text-xs" value={m.unit?.id ?? ''} onChange={(e) => moveToUnit.mutate({ userId: m.userId, unitId: e.target.value })}><option value="">Keine Einheit</option>{units.data?.map((u) => <option key={u.id} value={u.id}>{u.callsign}</option>)}</Select>}
-                      </td>
+                      <td className="py-1"><div className="flex flex-col gap-1 2xl:flex-row">{/* gestapelt, damit die Tabelle auch auf Laptops passt */}
+                        {manage && <Select aria-label={`Dienststatus von ${m.name}`} className="w-36 py-1 text-xs" value={m.dutyStatus} onChange={(e) => setOther.mutate({ userId: m.userId, status: e.target.value })}>{DUTY_STATUSES.map((s) => <option key={s} value={s}>{statusLabel(s)}</option>)}</Select>}
+                        {assign && <Select aria-label={`Einheit von ${m.name}`} className="w-36 py-1 text-xs" value={m.unit?.id ?? ''} onChange={(e) => moveToUnit.mutate({ userId: m.userId, unitId: e.target.value })}><option value="">Keine Einheit</option>{units.data?.map((u) => <option key={u.id} value={u.id}>{u.callsign}</option>)}</Select>}
+                      </div></td>
                     )}
                   </tr>
                 ))}
