@@ -194,7 +194,7 @@ export declare class MdtService {
         status: "ok";
         profile: import("../persons/roblox.service").RobloxDetails;
     } | {
-        status: "unreachable" | "disabled";
+        status: "disabled" | "unreachable";
         profile: null;
     }>;
     /** Foto hochladen oder mit der Kamera aufnehmen (Bild bis 8 MB); ersetzt das bisherige Foto. */

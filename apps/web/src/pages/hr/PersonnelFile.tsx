@@ -105,7 +105,8 @@ export function PersonnelFile() {
   const visible = tabs.filter(([, ok]) => ok).map(([t]) => t);
   const active = visible.includes(tab) ? tab : visible[0] ?? '';
   const st = statusInfo(cfg, p.status);
-  const editCard = can('personnel.edit') && <EditCard key={p.id} p={p} cfg={cfg} />;
+  const rolesCard = can('roles.manage') && can('users.view') && <RolesCard key={`roles-${p.userId}`} userId={p.userId} />;
+  const editCard = (can('personnel.edit') || rolesCard) && <div className="grid gap-4">{can('personnel.edit') && <EditCard key={p.id} p={p} cfg={cfg} />}{rolesCard}</div>;
 
   return (
     <div className="grid gap-4">
@@ -193,6 +194,50 @@ function EditCard({ p, cfg }: { p: Profile; cfg: HrConfig | undefined }) {
         <label className="grid gap-1 text-sm">Rufname<Input aria-label="Rufname" maxLength={16} value={d.callsign} onChange={(e) => setD({ ...d, callsign: e.target.value.toUpperCase() })} /></label>
       </div>
       <p className="mt-2 text-xs text-muted">Änderungen werden automatisch gespeichert. Den Rang ändert man über eine Beförderung.</p>
+    </Card>
+  );
+}
+
+// ───────────── Dashboard-Rollen (wie unter Rollen & Rechte → Hierarchie) ─────────────
+interface DashRole { id: string; name: string; priority: number; color: string | null; icon: string | null; active: boolean }
+function RolesCard({ userId }: { userId: string }) {
+  const { user } = useAuth();
+  const qc = useQueryClient();
+  const roles = useQuery({ queryKey: ['roles'], queryFn: () => api<DashRole[]>('/roles'), staleTime: 60_000 });
+  const account = useQuery({ queryKey: ['user', userId], queryFn: () => api<{ roles: { role: { id: string } }[] }>(`/users/${userId}`) });
+  const rank = useQuery({ queryKey: ['my-rank'], queryFn: () => api<{ rank: number }>('/roles/my-rank') });
+  const [err, setErr] = useState<string>();
+  const save = useMutation({
+    mutationFn: (ids: string[]) => api(`/users/${userId}/roles`, { method: 'PUT', body: { roleIds: ids } }),
+    onSuccess: () => { setErr(undefined); void qc.invalidateQueries({ queryKey: ['user', userId] }); },
+    onError: (e) => setErr(errText(e)),
+  });
+  const self = user?.id === userId;
+  const owner = !!user?.roles.includes('System Administrator');
+  const myRank = rank.data?.rank ?? Number.MAX_SAFE_INTEGER;
+  const has = new Set((account.data?.roles ?? []).map((r) => r.role.id));
+  const list = [...(roles.data ?? [])].sort((a, b) => a.priority - b.priority);
+  return (
+    <Card title="Rollen im Dashboard">
+      {roles.isLoading || account.isLoading ? <SkeletonRows /> : roles.error || account.error ? <ErrorState error={roles.error ?? account.error} /> : (
+        <>
+          <ul className="grid gap-1.5 sm:grid-cols-2 lg:grid-cols-3">{list.map((r) => {
+            const allowed = !self && (owner || r.priority > myRank);
+            return (
+              <li key={r.id}>
+                <label className={`flex items-center gap-2 rounded-md border border-line px-2 py-1.5 text-sm ${allowed ? 'cursor-pointer hover:bg-panel-2' : 'opacity-60'}`}>
+                  <input type="checkbox" disabled={!allowed || save.isPending} checked={has.has(r.id)} onChange={(e) => save.mutate(e.target.checked ? [...has, r.id] : [...has].filter((x) => x !== r.id))} />
+                  <span aria-hidden className="h-2.5 w-2.5 shrink-0 rounded-full" style={{ background: r.color ?? 'var(--color-muted, #888)' }} />
+                  <span className="min-w-0 truncate">{r.icon ? `${r.icon} ` : ''}{r.name}</span>
+                  {!r.active && <Badge>inaktiv</Badge>}
+                </label>
+              </li>
+            );
+          })}</ul>
+          {err && <p role="alert" className="mt-2 text-sm text-danger">{err}</p>}
+          <p className="mt-2 text-xs text-muted">{self ? 'Deine eigenen Rollen kannst du nicht ändern.' : 'Wird sofort gespeichert. Oben = höchster Rang; du kannst nur Rollen unterhalb deines eigenen Rangs vergeben.'}</p>
+        </>
+      )}
     </Card>
   );
 }

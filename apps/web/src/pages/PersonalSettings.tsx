@@ -1,4 +1,7 @@
-import type { ReactNode } from 'react';
+import { useState, type ReactNode } from 'react';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { api } from '../lib/api';
+import { errText } from '../lib/tickets';
 import { RotateCcw } from 'lucide-react';
 import { useAuth } from '../lib/auth';
 import { backgroundIsLight, DEFAULT_PREFS, GRADIENTS, usePrefs, type Preferences } from '../lib/prefs';
@@ -26,6 +29,30 @@ function Seg<T extends string>({ value, options, onChange, label }: { value: T; 
 }
 const Toggle = ({ checked, onChange, label }: { checked: boolean; onChange: (v: boolean) => void; label: string }) => <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={checked} onChange={(e) => onChange(e.target.checked)} />{label}</label>;
 
+/** Eigener Anzeigename (Teamliste, Dienst-Übersicht, Einsätze …). */
+function NameCard() {
+  const { user } = useAuth();
+  const qc = useQueryClient();
+  const [name, setName] = useState<string>();
+  const value = name ?? user?.displayName ?? '';
+  const save = useMutation({
+    mutationFn: () => api('/me/name', { method: 'PUT', body: { displayName: value.trim() } }),
+    onSuccess: () => { setName(undefined); void qc.invalidateQueries({ queryKey: ['me'] }); void qc.invalidateQueries(); },
+  });
+  const changed = !!value.trim() && value.trim() !== user?.displayName;
+  return (
+    <Card title="👤 Name">
+      <form className="flex flex-wrap items-end gap-2" onSubmit={(e) => { e.preventDefault(); if (changed) save.mutate(); }}>
+        <label className="grid min-w-60 flex-1 gap-1 text-sm">Anzeigename<Input aria-label="Anzeigename" maxLength={64} value={value} onChange={(e) => setName(e.target.value)} /></label>
+        <Button type="submit" disabled={!changed || save.isPending}>Speichern</Button>
+      </form>
+      <p className="mt-2 text-xs text-muted">So stehst du in der Teamliste, der Dienst-Übersicht, bei Einsätzen und Berichten. Anmeldename bleibt @{user?.username}.</p>
+      {save.error && <p role="alert" className="mt-1 text-sm text-danger">{errText(save.error)}</p>}
+      {save.isSuccess && <p role="status" className="mt-1 text-sm text-success">Gespeichert.</p>}
+    </Card>
+  );
+}
+
 /** Persönliche Einstellungen – wirken nur für einen selbst und werden automatisch gespeichert (auf jedem Gerät gleich). */
 export function PersonalSettings() {
   const { can } = useAuth();
@@ -38,6 +65,7 @@ export function PersonalSettings() {
       <PageHeader title="Persönliche Einstellungen" subtitle="Nur für dich – andere Benutzer sehen davon nichts. Alles wird automatisch gespeichert und auf allen Geräten geladen."
         actions={<Button variant="ghost" onClick={() => update({ ...DEFAULT_PREFS, favorites: p.favorites, quickActions: p.quickActions, notifications: p.notifications })}><RotateCcw size={14} />Design zurücksetzen</Button>} />
       <div className="grid gap-4 xl:grid-cols-2">
+        <NameCard />
         <Card title="🎨 Design">
           <Row label="Modus" hint={bgLight !== null ? `Folgt gerade dem ${bgLight ? 'hellen' : 'dunklen'} Hintergrund` : undefined}><Seg label="Modus" value={p.theme} onChange={set('theme')} options={[['dark', '🌙 Dunkel'], ['light', '☀️ Hell'], ['system', '🖥️ System']]} /></Row>
           <Row label="Akzentfarbe" hint="Leer = Farbe des Servers">

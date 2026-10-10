@@ -30,9 +30,9 @@ declare const q: z.ZodObject<{
 }, {
     type?: string | undefined;
     filter?: "all" | "archived" | "unread" | "read" | undefined;
-    q?: string | undefined;
     page?: number | undefined;
     pageSize?: number | undefined;
+    q?: string | undefined;
 }>;
 /** Jeder Benutzer sieht ausschließlich eigene Benachrichtigungen (immer per userId gefiltert). */
 export declare class NotificationsController {

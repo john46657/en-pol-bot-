@@ -20,9 +20,9 @@ declare const listQ: z.ZodObject<{
     pageSize: number;
     q?: string | undefined;
 }, {
-    q?: string | undefined;
     page?: number | undefined;
     pageSize?: number | undefined;
+    q?: string | undefined;
 }>;
 declare const member: z.ZodObject<{
     guildId: z.ZodOptional<z.ZodString>;

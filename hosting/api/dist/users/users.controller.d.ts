@@ -3,6 +3,13 @@ import { UsersService } from './users.service';
 import { TwoFactorService } from '../auth/two-factor.service';
 import type { Actor } from '../audit/audit.service';
 import { pageQuery } from '../common/pagination';
+export declare const nameBody: z.ZodObject<{
+    displayName: z.ZodString;
+}, "strip", z.ZodTypeAny, {
+    displayName: string;
+}, {
+    displayName: string;
+}>;
 declare const createUser: z.ZodObject<{
     username: z.ZodString;
     displayName: z.ZodString;
@@ -203,6 +210,33 @@ export declare class UsersController {
     }>;
     /** Zwei-Faktor eines Kontos zurücksetzen (Handy verloren, keine Wiederherstellungscodes). */
     resetTwoFactor(a: Actor, id: string): Promise<void>;
+    remove(a: Actor, id: string): Promise<void>;
+    setName(a: Actor, id: string, b: z.infer<typeof nameBody>): Promise<{
+        id: string;
+        createdAt: Date;
+        updatedAt: Date;
+        username: string;
+        displayName: string;
+        email: string | null;
+        robloxUserId: string | null;
+        robloxUsername: string | null;
+        robloxStatus: string;
+        robloxVerifiedAt: Date | null;
+        active: boolean;
+        lastLogin: Date | null;
+        totpEnabledAt: Date | null;
+        roles: {
+            role: {
+                id: string;
+                name: string;
+            };
+        }[];
+        overrides: {
+            reason: string | null;
+            permissionKey: string;
+            effect: string;
+        }[];
+    }>;
     setRoles(a: Actor, id: string, b: z.infer<typeof roles>): Promise<{
         id: string;
         createdAt: Date;

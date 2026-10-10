@@ -83,6 +83,33 @@ export class UsersService {
     });
   }
 
+  /** Anzeigename ändern – den eigenen immer, fremde nur unterhalb des eigenen Rangs (users.manage). */
+  async setName(actor: Actor, id: string, displayName: string) {
+    const before = await this.get(id);
+    if (id !== actor.userId) await this.perms.assertOutranksUser(actor.userId!, id);
+    return this.prisma.$transaction(async (tx) => {
+      const r = await tx.user.update({ where: { id }, data: { displayName }, select: publicSelect });
+      await this.audit.record(actor, { action: 'user.rename', module: 'users', entityType: 'User', entityId: id, before: { displayName: before.displayName }, after: { displayName } }, tx);
+      return r;
+    });
+  }
+
+  /**
+   * Konto endgültig löschen (users.manage): nicht das eigene, nur unterhalb des eigenen Rangs, der letzte aktive
+   * System Administrator bleibt. Sitzungen, Rollen, Personalakte usw. gehen mit; im Audit-Log bleibt festgehalten, wer gelöscht wurde.
+   */
+  async remove(actor: Actor, id: string) {
+    if (id === actor.userId) throw new AppError('CONFLICT', 'Du kannst dein eigenes Konto nicht löschen.');
+    const before = await this.get(id);
+    await this.perms.assertOutranksUser(actor.userId!, id);
+    await this.auth.revokeAllSessions(id);
+    await this.prisma.$transaction(async (tx) => {
+      await this.assertAdminRemains(tx, id);
+      await tx.user.delete({ where: { id } });
+      await this.audit.record(actor, { action: 'user.delete', module: 'users', entityType: 'User', entityId: id, before: { username: before.username, displayName: before.displayName, roles: before.roles.map((r) => r.role.name) } }, tx);
+    });
+  }
+
   async setActive(actor: Actor, id: string, active: boolean, reason?: string) {
     if (!active && id === actor.userId) throw new AppError('CONFLICT', 'Du kannst dein eigenes Konto nicht deaktivieren.');
     await this.get(id);

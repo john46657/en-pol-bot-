@@ -43,9 +43,9 @@ declare const listQ: z.ZodObject<{
     q?: string | undefined;
 }, {
     status?: "CANCELLED" | "ACTIVE" | "ARCHIVED" | "EXPIRED" | "CLEARED" | undefined;
-    q?: string | undefined;
     page?: number | undefined;
     pageSize?: number | undefined;
+    q?: string | undefined;
 }>;
 export declare class WantedController {
     private readonly w;

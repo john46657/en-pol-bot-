@@ -15,9 +15,9 @@ declare const citizenQ: z.ZodObject<{
     q?: string | undefined;
     flag?: string | undefined;
 }, {
-    q?: string | undefined;
     page?: number | undefined;
     pageSize?: number | undefined;
+    q?: string | undefined;
     flag?: string | undefined;
 }>;
 declare const citizenUpdate: z.ZodObject<{
@@ -107,9 +107,9 @@ declare const weaponQ: z.ZodObject<{
 }, {
     status?: "REGISTERED" | "STOLEN" | "SEIZED" | "DESTROYED" | undefined;
     ownerId?: string | undefined;
-    q?: string | undefined;
     page?: number | undefined;
     pageSize?: number | undefined;
+    q?: string | undefined;
 }>;
 declare const weaponBody: z.ZodObject<{
     serial: z.ZodString;
@@ -292,7 +292,7 @@ export declare class MdtController {
         status: "ok";
         profile: import("../persons/roblox.service").RobloxDetails;
     } | {
-        status: "unreachable" | "disabled";
+        status: "disabled" | "unreachable";
         profile: null;
     }>;
     updateCitizen(a: Actor, id: string, b: z.infer<typeof citizenUpdate>): Promise<{

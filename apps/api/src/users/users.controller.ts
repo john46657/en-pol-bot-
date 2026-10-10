@@ -8,6 +8,7 @@ import type { Actor } from '../audit/audit.service';
 import { zodBody } from '../common/zod.pipe';
 import { pageQuery } from '../common/pagination';
 
+export const nameBody = z.object({ displayName: z.string().trim().min(1).max(64) });
 const createUser = z.object({
   username: z.string().trim().min(3).max(32).regex(/^[a-zA-Z0-9_.-]+$/),
   displayName: z.string().trim().min(1).max(64),
@@ -43,6 +44,12 @@ export class UsersController {
   /** Zwei-Faktor eines Kontos zurücksetzen (Handy verloren, keine Wiederherstellungscodes). */
   @Post(':id/2fa/reset') @HttpCode(204) @RequirePermission('users.manage')
   async resetTwoFactor(@CurrentActor() a: Actor, @Param('id', ParseUUIDPipe) id: string) { await this.twoFactor.adminReset(a, id); }
+
+  @Delete(':id') @HttpCode(204) @RequirePermission('users.manage')
+  remove(@CurrentActor() a: Actor, @Param('id', ParseUUIDPipe) id: string) { return this.users.remove(a, id); }
+
+  @Put(':id/name') @RequirePermission('users.manage')
+  setName(@CurrentActor() a: Actor, @Param('id', ParseUUIDPipe) id: string, @Body(zodBody(nameBody)) b: z.infer<typeof nameBody>) { return this.users.setName(a, id, b.displayName); }
 
   @Put(':id/roles') @RequirePermission('roles.manage')
   setRoles(@CurrentActor() a: Actor, @Param('id', ParseUUIDPipe) id: string, @Body(zodBody(roles)) b: z.infer<typeof roles>) { return this.users.setRoles(a, id, b.roleIds); }

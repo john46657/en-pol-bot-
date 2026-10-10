@@ -196,10 +196,10 @@ declare const listQ: z.ZodObject<{
     categoryId?: string | undefined;
     statusId?: string | undefined;
     priorityId?: string | undefined;
-    q?: string | undefined;
-    from?: Date | undefined;
     page?: number | undefined;
     pageSize?: number | undefined;
+    q?: string | undefined;
+    from?: Date | undefined;
     to?: Date | undefined;
     creator?: string | undefined;
     claimer?: string | undefined;
@@ -230,11 +230,11 @@ declare const transcriptQ: z.ZodObject<{
     number?: number | undefined;
     status?: string | undefined;
     categoryName?: string | undefined;
+    page?: number | undefined;
+    pageSize?: number | undefined;
     q?: string | undefined;
     staff?: string | undefined;
     from?: Date | undefined;
-    page?: number | undefined;
-    pageSize?: number | undefined;
     to?: Date | undefined;
     creator?: string | undefined;
 }>;

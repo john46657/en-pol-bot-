@@ -7,6 +7,8 @@ import { CurrentActor, RequirePermission } from '../authz/decorators';
 import type { Actor } from '../audit/audit.service';
 import { zodBody } from '../common/zod.pipe';
 import { layoutsSchema, preferencesSchema } from './me.schemas';
+import { UsersService } from '../users/users.service';
+import { nameBody } from '../users/users.controller';
 
 const prefsBody = z.object({ preferences: preferencesSchema });
 const layoutsBody = z.object({ layouts: layoutsSchema.nullable() });
@@ -18,7 +20,7 @@ const layoutsBody = z.object({ layouts: layoutsSchema.nullable() });
 @ApiTags('me')
 @Controller('me')
 export class MeController {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(private readonly prisma: PrismaService, private readonly users: UsersService) {}
 
   @Get('preferences') @RequirePermission('dashboard.view')
   async get(@CurrentActor() a: Actor) {
@@ -32,6 +34,10 @@ export class MeController {
     await this.prisma.userSettings.upsert({ where: { userId: a.userId! }, create: { userId: a.userId!, preferences: value }, update: { preferences: value } });
     return { preferences: b.preferences, savedAt: new Date() };
   }
+
+  /** Eigenen Anzeigenamen ändern (steht in Teamliste, Dienst-Übersicht, Einsätzen …). */
+  @Put('name') @RequirePermission('dashboard.view')
+  setName(@CurrentActor() a: Actor, @Body(zodBody(nameBody)) b: z.infer<typeof nameBody>) { return this.users.setName(a, a.userId!, b.displayName); }
 
   /** Layouts (Widgets, Reihenfolge, Größe). `null` = auf den Standard zurücksetzen. */
   @Put('layouts') @RequirePermission('dashboard.customize')
