@@ -218,8 +218,9 @@ function OptionList({ title, items, onChange, withTone }: { title: string; items
   return (
     <Card title={title} actions={<Button size="sm" variant="secondary" onClick={() => onChange([...items, { key: `NEU_${items.length + 1}`, label: 'Neu', ...(withTone ? { tone: 'warning' as Tone } : {}) }])}><Plus size={14} />Hinzufügen</Button>}>
       <ul className="space-y-1.5">{items.map((o, i) => (
-        <li key={i} className={`grid gap-1.5 ${withTone ? 'grid-cols-[minmax(0,1fr)_7rem_6rem_auto]' : 'grid-cols-[minmax(0,1fr)_8rem_auto]'}`}>
-          <Input aria-label="Bezeichnung" maxLength={40} value={o.label} onChange={(e) => set(i, { label: e.target.value, ...(o.key.startsWith('NEU_') || (!saved.has(o.key) && o.key === keyOf(o.label)) ? { key: keyOf(e.target.value) } : {}) })} />
+        <li key={i} className={`grid gap-1.5 ${withTone ? 'grid-cols-[minmax(0,1fr)_6rem_auto] sm:grid-cols-[minmax(0,1fr)_7rem_6rem_auto]' : 'grid-cols-[minmax(0,1fr)_8rem_auto]'}`}>
+          {/* Handy: Bezeichnung in eigener Zeile, sonst wird sie neben Schlüssel und Farbe unlesbar schmal */}
+          <Input aria-label="Bezeichnung" className={withTone ? 'col-span-3 sm:col-span-1' : undefined} maxLength={40} value={o.label} onChange={(e) => set(i, { label: e.target.value, ...(o.key.startsWith('NEU_') || (!saved.has(o.key) && o.key === keyOf(o.label)) ? { key: keyOf(e.target.value) } : {}) })} />
           <Input aria-label="Schlüssel" className="font-mono text-xs" maxLength={32} value={o.key} onChange={(e) => set(i, { key: e.target.value.toUpperCase() })} />
           {withTone && <Select aria-label="Farbe" value={o.tone} onChange={(e) => set(i, { tone: e.target.value as Tone })}><option value="danger">Rot</option><option value="warning">Orange</option><option value="info">Blau</option><option value="neutral">Grau</option></Select>}
           <Button size="sm" variant="ghost" aria-label={`${o.label} entfernen`} onClick={() => onChange(items.filter((_, j) => j !== i))}><Trash2 size={14} /></Button>
