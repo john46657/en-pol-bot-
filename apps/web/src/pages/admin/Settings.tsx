@@ -37,7 +37,10 @@ export function Settings() {
     // nur vollständige IDs speichern (sonst lehnt der Server ab); halbe Eingaben bleiben lokal stehen
     if (manage && Object.values(all).every((x) => /^\d{15,25}(\s*,\s*\d{15,25})*$/.test(String(x)))) put('discord.channels', all, 'Discord-Kanäle');
   };
-  const structure = get<{ teams: string[]; offices: string[] }>('team.structure') ?? { teams: [], offices: [] };
+  // ältere Einträge können eine Liste nicht enthalten (z. B. nur „teams“ aus Personal → Abteilungen)
+  const rawStructure = get<{ teams?: string[]; offices?: string[] }>('team.structure');
+  const structure = { teams: Array.isArray(rawStructure?.teams) ? rawStructure.teams : [], offices: Array.isArray(rawStructure?.offices) ? rawStructure.offices : [] };
+  const rankOrder = get<string[]>('team.rankOrder');
   const serverName = server ? guilds.data?.find((g) => g.id === server)?.name ?? server : null;
   return (
     <>
@@ -57,7 +60,7 @@ export function Settings() {
         <p className="mb-3 text-xs text-muted">{serverName ? `Gilt nur für ${serverName} (Server laufen getrennt). Ohne eigene Werte gilt die gemeinsame Einstellung („Alle Server“).` : 'Gemeinsame Werte für alle Server. Wähle oben links einen Server, um für ihn eigene Werte festzulegen.'} Auswahl in Personalakten und Filter der Teamliste. Werte aus euren Discord-Rollen übernehmen oder selbst eintippen – heißt eine Discord-Rolle wie ein Dienstgrad oder Team, erkennt die Teamliste ihn automatisch.</p>
         <div className="grid gap-4 lg:grid-cols-3">
           <div><p className="mb-1 text-xs font-medium text-muted">Teams</p><TagListEditor ariaLabel="Team hinzufügen" disabled={!manage} value={structure.teams} placeholder="z. B. Polizei + Enter" onChange={(v) => put('team.structure', { ...structure, teams: v }, 'Teams')} /></div>
-          <div><p className="mb-1 text-xs font-medium text-muted">Dienstgrade (höchster zuerst)</p><TagListEditor ariaLabel="Dienstgrad hinzufügen" ordered disabled={!manage} value={get<string[]>('team.rankOrder') ?? []} placeholder="z. B. Polizeipräsident + Enter" onChange={(v) => put('team.rankOrder', v, 'Dienstgrade')} /></div>
+          <div><p className="mb-1 text-xs font-medium text-muted">Dienstgrade (höchster zuerst)</p><TagListEditor ariaLabel="Dienstgrad hinzufügen" ordered disabled={!manage} value={Array.isArray(rankOrder) ? rankOrder : []} placeholder="z. B. Polizeipräsident + Enter" onChange={(v) => put('team.rankOrder', v, 'Dienstgrade')} /></div>
           <div><p className="mb-1 text-xs font-medium text-muted">Büros</p><TagListEditor ariaLabel="Büro hinzufügen" disabled={!manage} value={structure.offices} placeholder="z. B. Verwaltung + Enter" onChange={(v) => put('team.structure', { ...structure, offices: v }, 'Büros')} /></div>
         </div>
       </Card>
