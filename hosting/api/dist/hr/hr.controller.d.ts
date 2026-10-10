@@ -1618,19 +1618,36 @@ declare const listQ: z.ZodObject<{
     limit?: number | undefined;
     q?: string | undefined;
 }>;
-declare const assign: z.ZodObject<{
-    personnelId: z.ZodString;
+/** Vergabe: Personalakte oder Discord-Mitglied (ohne Akte – sie wird dann angelegt). */
+declare const assign: z.ZodEffects<z.ZodObject<{
     display: z.ZodOptional<z.ZodString>;
     rangeId: z.ZodOptional<z.ZodString>;
     reason: z.ZodOptional<z.ZodString>;
+} & {
+    personnelId: z.ZodOptional<z.ZodString>;
+    discordId: z.ZodOptional<z.ZodString>;
 }, "strip", z.ZodTypeAny, {
-    personnelId: string;
     reason?: string | undefined;
+    personnelId?: string | undefined;
+    discordId?: string | undefined;
     rangeId?: string | undefined;
     display?: string | undefined;
 }, {
-    personnelId: string;
     reason?: string | undefined;
+    personnelId?: string | undefined;
+    discordId?: string | undefined;
+    rangeId?: string | undefined;
+    display?: string | undefined;
+}>, {
+    reason?: string | undefined;
+    personnelId?: string | undefined;
+    discordId?: string | undefined;
+    rangeId?: string | undefined;
+    display?: string | undefined;
+}, {
+    reason?: string | undefined;
+    personnelId?: string | undefined;
+    discordId?: string | undefined;
     rangeId?: string | undefined;
     display?: string | undefined;
 }>;
@@ -1833,6 +1850,11 @@ export declare class ServiceNumbersController {
         discordId: string | null;
         kind: string;
         applicationId: string;
+    }[]>;
+    discordMembers(): Promise<{
+        discordId: string;
+        name: string;
+        username: string;
     }[]>;
     /** Angenommene Bewerbungen ohne Personalakte nachträglich übernehmen. */
     fromApplications(a: Actor): Promise<{

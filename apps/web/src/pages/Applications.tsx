@@ -5,16 +5,17 @@ import type { FormField } from '@enrp/shared';
 import { useAutosaveDraft } from '../lib/autosave';
 import { api, type Page } from '../lib/api';
 import { useAuth } from '../lib/auth';
-import { GuildTag, useGuilds, useServer } from '../lib/guilds';
+import { useGuilds, useServer } from '../lib/guilds';
 import { errText } from '../lib/tickets';
 import { ApplicationActions } from '../components/DecisionButtons';
+import { SubmissionCard } from '../components/Submission';
 import { FormQuestionsEditor } from '../components/FormQuestionsEditor';
 import { ApplicationSettingsEditor, withDefaults, type AppCommon } from '../components/ApplicationSettings';
-import { Button, Card, EmptyState, ErrorState, Field, fmt, Input, PageHeader, Select, SkeletonRows, StatusBadge, Tabs, Textarea } from '../components/ui';
+import { Button, Card, EmptyState, ErrorState, Field, Input, PageHeader, Select, SkeletonRows, Tabs, Textarea } from '../components/ui';
 
 interface Application {
   id: string; number: string; status: string; robloxUsername: string; robloxUserId: string | null; discordId: string | null; discordName: string | null; guildId: string | null;
-  source: string; answers: Record<string, string>; createdAt: string; durationSec: number | null; decisionReason: string | null; decidedByName: string | null;
+  source: string; answers: Record<string, string>; createdAt: string; durationSec: number | null; decisionReason: string | null; decidedByName: string | null; avatar?: string | null;
 }
 interface PoliceCfg extends Partial<AppCommon> { title: string; description: string; name?: string }
 interface QualiConfig { title: string; intro: string; units: unknown[]; police: PoliceCfg; policeForm: FormField[]; own?: boolean }
@@ -39,6 +40,9 @@ export function Applications() {
     mutationFn: (v: { id: string; status: 'ACCEPTED' | 'REJECTED'; reason?: string }) => api(`/applications/${v.id}/discord-decision`, { method: 'POST', body: { status: v.status, ...(v.reason ? { reason: v.reason } : {}) } }),
     onSuccess: () => { setErr(undefined); void qc.invalidateQueries({ queryKey: ['applications-cards'] }); }, onError: (e) => setErr(errText(e)),
   });
+  // Name der Polizei-Bewerbung (Einrichtung → „Name der Bewerbung“) für „…s Bewerbung für 'Polizeianwärter'“
+  const quali = useQuery({ queryKey: ['quali-config', server], queryFn: () => api<QualiConfig>('/qualifications/config', { query: { guildId: server } }), enabled: can('qualifications.view') });
+  const policeName = quali.data?.police.name ?? 'Polizeianwärter';
   const labelOf = (key: string) => form.data?.find((f) => f.key === key)?.label ?? key;
   const pages = list.data ? Math.max(1, Math.ceil(list.data.total / list.data.pageSize)) : 1;
 
@@ -56,19 +60,15 @@ export function Applications() {
             </div>
             {list.isLoading ? <SkeletonRows /> : list.error ? <ErrorState error={list.error} onRetry={() => void list.refetch()} /> : !list.data?.items.length ? <EmptyState text="Keine Bewerbungen." hint="Bewerbungen kommen über Discord (/bewerbungspanel) oder die Webseite /apply." /> : (
               <div className="grid gap-3">{list.data.items.map((a) => (
-                <Card key={a.id} title={<span className="flex flex-wrap items-center gap-2">EN Polizei · {a.number} <StatusBadge status={a.status} /><GuildTag id={a.guildId} /></span>}>
-                  <p className="mb-2 text-sm">
-                    Roblox: <strong>{a.robloxUsername}</strong>{a.robloxUserId && <span className="text-xs text-muted"> ({a.robloxUserId})</span>}
-                    {a.discordId ? <> · Discord: <strong>{a.discordName ?? a.discordId}</strong> <span className="text-xs text-muted">({a.discordId})</span></> : <span className="text-muted"> · über Webformular</span>}
-                  </p>
-                  <ol className="grid gap-2 text-sm">{Object.entries(a.answers ?? {}).map(([k, v], i) => (
-                    <li key={k}><p className="text-xs text-muted">{i + 1}. {labelOf(k)}</p><p className="whitespace-pre-wrap">{v}</p></li>
-                  ))}</ol>
-                  {a.decisionReason && <p className="mt-2 text-sm"><span className="text-xs text-muted">Begründung:</span> {a.decisionReason}</p>}
-                  <p className="mt-2 text-xs text-muted">Eingereicht {fmt(a.createdAt)}{a.durationSec !== null && ` · ausgefüllt in ${Math.floor(a.durationSec / 60)} min ${a.durationSec % 60} s`}{a.decidedByName && ` · entschieden von ${a.decidedByName}`}</p>
-                  <ApplicationActions open={OPEN.includes(a.status)} canDecide={decideAllowed} busy={decide.isPending} onDecide={(s, reason) => decide.mutate({ id: a.id, status: s, reason })}
-                    discordId={a.discordId} name={a.discordName ?? a.robloxUsername} ticketPath={`/applications/${a.id}/ticket`} detailsTo={`/applications/${a.id}`} />
-                </Card>
+                <SubmissionCard key={a.id} id={a.id} name={a.discordName ?? a.robloxUsername} appName={policeName} status={a.status} discordId={a.discordId} avatar={a.avatar} guildId={a.guildId} createdAt={a.createdAt}
+                  answers={Object.entries(a.answers ?? {}).map(([k, v]) => ({ question: labelOf(k), answer: v }))}
+                  details={<>
+                    <p className="text-sm">{a.number} · Roblox: <strong>{a.robloxUsername}</strong>{a.robloxUserId && <span className="text-xs text-muted"> ({a.robloxUserId})</span>}{!a.discordId && <span className="text-muted"> · über Webformular</span>}</p>
+                    {a.decisionReason && <p className="text-sm"><span className="text-xs text-muted">Begründung:</span> {a.decisionReason}</p>}
+                    <p className="text-xs text-muted">{a.durationSec !== null && `Ausgefüllt in ${Math.floor(a.durationSec / 60)} min ${a.durationSec % 60} s`}{a.decidedByName && ` · entschieden von ${a.decidedByName}`}</p>
+                  </>}
+                  actions={<ApplicationActions open={OPEN.includes(a.status)} canDecide={decideAllowed} busy={decide.isPending} onDecide={(s, reason) => decide.mutate({ id: a.id, status: s, reason })}
+                    discordId={a.discordId} name={a.discordName ?? a.robloxUsername} ticketPath={`/applications/${a.id}/ticket`} detailsTo={`/applications/${a.id}`} />} />
               ))}</div>
             )}
             {pages > 1 && (

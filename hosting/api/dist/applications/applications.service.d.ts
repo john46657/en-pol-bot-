@@ -5,6 +5,7 @@ import { ApplicationStatus, type FormField } from '@enrp/shared';
 import { PrismaService } from '../prisma/prisma.service';
 import { AuditService, Actor } from '../audit/audit.service';
 import { DiscordService } from '../discord/discord.service';
+import { DiscordLiveService } from '../discord/discord-live.service';
 import { PageQuery } from '../common/pagination';
 import { RobloxService } from '../persons/roblox.service';
 export type { FormField };
@@ -18,7 +19,8 @@ export declare class ApplicationsService {
     private readonly teamchance;
     private readonly roblox;
     private readonly bans;
-    constructor(prisma: PrismaService, audit: AuditService, discord: DiscordService, notify: NotifyService, teamchance: TeamChanceService, roblox: RobloxService, bans: ApplicationBansService);
+    private readonly live;
+    constructor(prisma: PrismaService, audit: AuditService, discord: DiscordService, notify: NotifyService, teamchance: TeamChanceService, roblox: RobloxService, bans: ApplicationBansService, live: DiscordLiveService);
     /** Formular eines Servers (`application.form@<guildId>`), sonst das gemeinsame. */
     form(guildId?: string | null): Promise<FormField[]>;
     /** Öffentliche Bewerbung (kein Account nötig). Antworten werden strikt gegen das konfigurierte Formular validiert. */
@@ -66,6 +68,7 @@ export declare class ApplicationsService {
                 removeOnSubmit: string[];
                 managers: string[];
             };
+            mode: "DM" | "WEB";
             staffThreads: boolean;
             timeLimitMinutes: number;
             onLeave: "DENY" | "NONE" | "WITHDRAW";
@@ -118,6 +121,7 @@ export declare class ApplicationsService {
     list(p: PageQuery, status?: string, guildId?: string): Promise<{
         items: {
             decidedByName: string | null;
+            avatar: string | null;
             number: string;
             id: string;
             status: string;

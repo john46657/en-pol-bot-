@@ -8,7 +8,8 @@ import { MdtModule } from './mdt/mdt.module';
 import { FleetModule } from './fleet/fleet.module';
 import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
 import { APP_FILTER, APP_GUARD, DiscoveryModule } from '@nestjs/core';
-import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
+import { ThrottlerModule } from '@nestjs/throttler';
+import { BotAwareThrottlerGuard } from './common/throttler.guard';
 import { PrismaModule } from './prisma/prisma.module';
 import { AuthzModule } from './authz/authz.module';
 import { AuditModule } from './audit/audit.module';
@@ -74,7 +75,7 @@ import { HrModule } from './hr/hr.module';
   controllers: [HealthController, AuditController],
   providers: [
     { provide: APP_FILTER, useClass: AllExceptionsFilter },
-    { provide: APP_GUARD, useClass: ThrottlerGuard },
+    { provide: APP_GUARD, useClass: BotAwareThrottlerGuard },
     { provide: APP_GUARD, useClass: AuthGuard },
     { provide: APP_GUARD, useClass: PermissionGuard },
   ],

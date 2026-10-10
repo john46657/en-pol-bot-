@@ -6,10 +6,11 @@ import { Prisma } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { AuditService, Actor } from '../audit/audit.service';
 import { DiscordService } from '../discord/discord.service';
+import { DiscordLiveService } from '../discord/discord-live.service';
 import { AppError } from '../common/errors';
 import { makeNumber } from '../common/numbering';
 import { webUrl } from '../common/web-url';
-import { appSettingsSchema, configSchema, DEFAULT_CONFIG, type QualificationConfig } from './qualifications.config';
+import { appSettingsSchema, configSchema, DEFAULT_CONFIG, formSchema, type QualificationConfig } from './qualifications.config';
 import { checkAnswer, type FormField } from '@enrp/shared';
 import { DEFAULT_FORM } from '../applications/applications.service';
 import { cooldownLeft, decisionMessage, decisionRoles, LEFT_ACTOR, LEFT_REASON, submitRoles } from './decision';
@@ -26,7 +27,7 @@ export interface Answer { question: string; answer: string | string[] | null }
  */
 @Injectable()
 export class QualificationsService {
-  constructor(private readonly prisma: PrismaService, private readonly audit: AuditService, private readonly discord: DiscordService, private readonly roblox: RobloxService, private readonly bans: ApplicationBansService) {}
+  constructor(private readonly prisma: PrismaService, private readonly audit: AuditService, private readonly discord: DiscordService, private readonly roblox: RobloxService, private readonly bans: ApplicationBansService, private readonly live: DiscordLiveService) {}
 
   /** Einstellungen eines Servers (`@<guildId>`) – ohne eigene gilt die gemeinsame Grundeinstellung. */
   private keyOf(base: string, guildId?: string | null) { const g = settingsGuild(guildId); return g ? `${base}@${g}` : base; } // Gruppe mit geteilten Einstellungen → Haupt-Server
@@ -43,7 +44,8 @@ export class QualificationsService {
 
   /** Fragen der Polizei-Bewerbung (dasselbe Formular wie /apply und Studio). */
   async policeForm(guildId?: string | null): Promise<FormField[]> {
-    return ((await this.read(FORM_KEY, guildId)).value as unknown as FormField[] | undefined) ?? DEFAULT_FORM;
+    const p = formSchema.safeParse((await this.read(FORM_KEY, guildId)).value);
+    return p.success ? p.data as FormField[] : DEFAULT_FORM; // ungültig gespeichert → Standardformular
   }
 
   /** Alles für „Setup“ an einem Ort; `own` = dieser Server hat eigene Einstellungen. */
@@ -128,7 +130,8 @@ export class QualificationsService {
     const rows = await this.prisma.qualificationApplication.findMany({ where: { ...(f.unit ? { unit: f.unit } : {}), ...(f.status ? { status: f.status } : {}), ...(f.guildId ? { guildId: f.guildId } : {}) }, orderBy: { createdAt: 'desc' }, take: 200 });
     const ids = [...new Set(rows.flatMap((r) => [r.userId, r.decidedById]).filter((x): x is string => !!x))];
     const users = new Map((await this.prisma.user.findMany({ where: { id: { in: ids } }, select: { id: true, displayName: true } })).map((u) => [u.id, u.displayName]));
-    return rows.map((r) => ({ ...r, linkedName: r.userId ? users.get(r.userId) ?? null : null, decidedByName: r.decidedById ? users.get(r.decidedById) ?? '—' : null }));
+    const avatars = new Map(this.live.getMembers().members.map((m) => [m.id, m.avatar]));
+    return rows.map((r) => ({ ...r, linkedName: r.userId ? users.get(r.userId) ?? null : null, decidedByName: r.decidedById ? users.get(r.decidedById) ?? '—' : null, avatar: avatars.get(r.discordId) ?? null }));
   }
 
   async get(id: string) {

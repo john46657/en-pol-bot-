@@ -14,7 +14,9 @@ export class StudioService {
   private async setting<T>(key: string, fallback: T): Promise<T> {
     const g = currentGuild(); // Server-eigener Wert (z. B. Name, Akzentfarbe) vor dem gemeinsamen
     const own = g ? await this.prisma.systemSetting.findUnique({ where: { key: scopedKey(key, g) } }) : null;
-    return ((own ?? (await this.prisma.systemSetting.findUnique({ where: { key } })))?.value as T | undefined) ?? fallback;
+    const v = (own ?? (await this.prisma.systemSetting.findUnique({ where: { key } })))?.value;
+    // gespeicherter Wert mit falschem Typ (altes Format, kaputt) → Standardwert statt Absturz im Dashboard
+    return v !== undefined && v !== null && typeof v === typeof fallback && Array.isArray(v) === Array.isArray(fallback) ? v as T : fallback;
   }
 
   async config() {
@@ -24,11 +26,13 @@ export class StudioService {
       this.setting<string>('org.name', 'EN Polizei'),
       this.setting<{ name: string; hex: string }[]>('theme.customAccents', []),
     ]);
-    return { org: { name }, theme: { accent, customAccents }, customFields };
+    const list = <X,>(x: unknown) => (Array.isArray(x) ? x as X[] : []);
+    return { org: { name }, theme: { accent, customAccents: list<{ name: string; hex: string }>(customAccents).filter((a) => typeof a?.name === 'string' && typeof a?.hex === 'string') }, customFields: { ...customFields, persons: list<CustomFieldDef>(customFields.persons), vehicles: list<CustomFieldDef>(customFields.vehicles) } };
   }
 
   async defs(entity: CustomEntity): Promise<CustomFieldDef[]> {
-    return (await this.setting<CustomFieldsConfig>('studio.customFields', { persons: [], vehicles: [] }))[entity] ?? [];
+    const d = (await this.setting<CustomFieldsConfig>('studio.customFields', { persons: [], vehicles: [] }))[entity];
+    return Array.isArray(d) ? d : [];
   }
 
   /** Liefert bereinigte Custom-Werte oder wirft 400 mit allen Fehlern. */

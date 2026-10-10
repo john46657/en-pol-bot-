@@ -3,6 +3,7 @@ import { Prisma } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { AuditService, Actor } from '../audit/audit.service';
 import { DiscordService } from '../discord/discord.service';
+import { DiscordLiveService } from '../discord/discord-live.service';
 import { type QualificationConfig } from './qualifications.config';
 import { type FormField } from '@enrp/shared';
 import { RobloxService } from '../persons/roblox.service';
@@ -20,7 +21,8 @@ export declare class QualificationsService {
     private readonly discord;
     private readonly roblox;
     private readonly bans;
-    constructor(prisma: PrismaService, audit: AuditService, discord: DiscordService, roblox: RobloxService, bans: ApplicationBansService);
+    private readonly live;
+    constructor(prisma: PrismaService, audit: AuditService, discord: DiscordService, roblox: RobloxService, bans: ApplicationBansService, live: DiscordLiveService);
     /** Einstellungen eines Servers (`@<guildId>`) – ohne eigene gilt die gemeinsame Grundeinstellung. */
     private keyOf;
     private read;
@@ -62,6 +64,7 @@ export declare class QualificationsService {
                     removeOnSubmit: string[];
                     managers: string[];
                 };
+                mode: "DM" | "WEB";
                 staffThreads: boolean;
                 timeLimitMinutes: number;
                 onLeave: "DENY" | "NONE" | "WITHDRAW";
@@ -102,6 +105,7 @@ export declare class QualificationsService {
                     removeOnSubmit: string[];
                     managers: string[];
                 };
+                mode: "DM" | "WEB";
                 staffThreads: boolean;
                 timeLimitMinutes: number;
                 onLeave: "DENY" | "NONE" | "WITHDRAW";
@@ -150,6 +154,7 @@ export declare class QualificationsService {
                     removeOnSubmit: string[];
                     managers: string[];
                 };
+                mode: "DM" | "WEB";
                 staffThreads: boolean;
                 timeLimitMinutes: number;
                 onLeave: "DENY" | "NONE" | "WITHDRAW";
@@ -190,6 +195,7 @@ export declare class QualificationsService {
                     removeOnSubmit: string[];
                     managers: string[];
                 };
+                mode: "DM" | "WEB";
                 staffThreads: boolean;
                 timeLimitMinutes: number;
                 onLeave: "DENY" | "NONE" | "WITHDRAW";
@@ -237,6 +243,7 @@ export declare class QualificationsService {
                     removeOnSubmit: string[];
                     managers: string[];
                 };
+                mode: "DM" | "WEB";
                 staffThreads: boolean;
                 timeLimitMinutes: number;
                 onLeave: "DENY" | "NONE" | "WITHDRAW";
@@ -277,6 +284,7 @@ export declare class QualificationsService {
                     removeOnSubmit: string[];
                     managers: string[];
                 };
+                mode: "DM" | "WEB";
                 staffThreads: boolean;
                 timeLimitMinutes: number;
                 onLeave: "DENY" | "NONE" | "WITHDRAW";
@@ -315,6 +323,7 @@ export declare class QualificationsService {
     }): Promise<{
         linkedName: string | null;
         decidedByName: string | null;
+        avatar: string | null;
         number: string;
         unit: string;
         id: string;

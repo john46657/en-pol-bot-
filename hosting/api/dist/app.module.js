@@ -18,6 +18,7 @@ const fleet_module_1 = require("./fleet/fleet.module");
 const common_1 = require("@nestjs/common");
 const core_1 = require("@nestjs/core");
 const throttler_1 = require("@nestjs/throttler");
+const throttler_guard_1 = require("./common/throttler.guard");
 const prisma_module_1 = require("./prisma/prisma.module");
 const authz_module_1 = require("./authz/authz.module");
 const audit_module_1 = require("./audit/audit.module");
@@ -88,7 +89,7 @@ exports.AppModule = AppModule = __decorate([
         controllers: [health_controller_1.HealthController, audit_controller_1.AuditController],
         providers: [
             { provide: core_1.APP_FILTER, useClass: all_exceptions_filter_1.AllExceptionsFilter },
-            { provide: core_1.APP_GUARD, useClass: throttler_1.ThrottlerGuard },
+            { provide: core_1.APP_GUARD, useClass: throttler_guard_1.BotAwareThrottlerGuard },
             { provide: core_1.APP_GUARD, useClass: guards_1.AuthGuard },
             { provide: core_1.APP_GUARD, useClass: guards_1.PermissionGuard },
         ],

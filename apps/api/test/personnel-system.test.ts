@@ -3,6 +3,7 @@ import type { INestApplication } from '@nestjs/common';
 import { randomUUID } from 'node:crypto';
 import { createTestApp, login, makeUser } from './helpers';
 import type { PrismaService } from '../src/prisma/prisma.service';
+import { DiscordLiveService } from '../src/discord/discord-live.service';
 
 let app: INestApplication; let prisma: PrismaService;
 type Agent = Awaited<ReturnType<typeof login>>['agent'];
@@ -134,6 +135,25 @@ describe('Dienstnummern', () => {
     expect((await admin.post('/api/v1/dienstnummern/block').send({ display: '1009', reason: 'gesperrt' })).status).toBe(200);
     const list = await admin.get('/api/v1/dienstnummern').query({ status: 'BLOCKED' });
     expect(list.body.map((r: { display: string }) => r.display)).toContain('1009');
+  });
+
+  it('assigns directly to a Discord member without a profile (profile is created)', async () => {
+    app.get(DiscordLiveService).setMembers([{ id: '490000000000000009', guildId: '480000000000000001', username: 'hr_dc', displayName: 'hr_dc Neu', avatar: null, status: 'online', roleIds: [], joinedAt: null }]);
+    const list = await admin.get('/api/v1/dienstnummern/discord-members');
+    expect(list.status).toBe(200);
+    expect(list.body).toContainEqual({ discordId: '490000000000000009', name: 'hr_dc Neu', username: 'hr_dc' });
+    expect((await member.get('/api/v1/dienstnummern/discord-members')).status).toBe(403);
+    // gesperrte Nummer: abgelehnt, und es entsteht keine leere Personalakte
+    expect((await admin.post('/api/v1/dienstnummern/assign').send({ discordId: '490000000000000009', display: '1009' })).status).toBe(409);
+    expect(await prisma.discordLink.findUnique({ where: { discordId: '490000000000000009' } })).toBeNull();
+    // weder Akte noch Discord-ID / beides zugleich: ungültig
+    expect((await admin.post('/api/v1/dienstnummern/assign').send({ display: '1008' })).status).toBe(400);
+    const r = await admin.post('/api/v1/dienstnummern/assign').send({ discordId: '490000000000000009', display: '1008' });
+    expect(r.status).toBe(200);
+    const link = await prisma.discordLink.findUniqueOrThrow({ where: { discordId: '490000000000000009' } });
+    expect((await prisma.personnel.findUniqueOrThrow({ where: { userId: link.userId } })).serviceNumber).toBe('1008');
+    expect((await admin.get('/api/v1/dienstnummern/discord-members')).body.map((m: { discordId: string }) => m.discordId)).not.toContain('490000000000000009');
+    app.get(DiscordLiveService).setMembers([]);
   });
 
   it('accepted application → profile, number, DM, nickname', async () => {

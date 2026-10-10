@@ -122,6 +122,10 @@ describe('bot service data', () => {
   it('bot state is a validated key/value store, bot-token only', async () => {
     expect((await http().put('/api/v1/bot/state/teamlist:123').set(bot()).send({ value: { channelId: '1', messageId: '2' } })).status).toBe(204);
     expect((await http().get('/api/v1/bot/state/teamlist:123').set(bot())).body.value).toEqual({ channelId: '1', messageId: '2' });
+    // ohne Wert: saubere Ablehnung statt Serverfehler; null wird gespeichert und als null gelesen
+    expect((await http().put('/api/v1/bot/state/teamlist:123').set(bot()).send({})).status).toBe(400);
+    expect((await http().put('/api/v1/bot/state/teamlist:123').set(bot()).send({ value: null })).status).toBe(204);
+    expect((await http().get('/api/v1/bot/state/teamlist:123').set(bot())).body.value).toBeNull();
     expect((await http().get('/api/v1/bot/state/never-set').set(bot())).body.value).toBeNull();
     expect((await http().put('/api/v1/bot/state/BAD KEY!').set(bot()).send({ value: 1 })).status).toBe(400);
     expect((await http().get('/api/v1/bot/state/teamlist:123')).status).toBe(401);

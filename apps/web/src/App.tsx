@@ -7,6 +7,8 @@ import { ResourcePage } from './components/ResourcePage';
 import { RecordPage } from './components/RecordPage';
 import { Login } from './pages/Login';
 import { Apply } from './pages/Apply';
+import { ErrorBoundary } from './components/ErrorBoundary';
+import { WebApply } from './pages/WebApply';
 import { Privacy, Terms } from './pages/Legal';
 import { Dashboard } from './pages/Dashboard';
 import { Mdt } from './pages/Mdt';
@@ -84,6 +86,12 @@ function AnalyticsGate() {
   return can('analytics.view') || (can('applications.view') && can('dashboard.applications.view')) ? <Analytics /> : <Forbidden />;
 }
 
+/** Äußerster Schutz (auch Anmeldung, öffentliche Bewerbung): Fehler zurücksetzen beim Seitenwechsel. */
+function RootBoundary({ children }: { children: ReactNode }) {
+  const loc = useLocation();
+  return <ErrorBoundary resetKey={loc.pathname}>{children}</ErrorBoundary>;
+}
+
 /** UI-seitige Routenprüfung (Komfort). Das Backend erzwingt dieselben Rechte unabhängig davon. */
 function Guard({ perm, area, children }: { perm?: string; area?: string; children: ReactNode }) {
   const { user, loading, can } = useAuth();
@@ -91,7 +99,7 @@ function Guard({ perm, area, children }: { perm?: string; area?: string; childre
   if (loading) return <div className="p-6"><SkeletonRows /></div>;
   if (!user) return <Navigate to="/login" state={{ from: loc.pathname }} replace />;
   if ((perm && !can(perm)) || (area && !can(area))) return <Forbidden />;
-  return <Suspense fallback={<SkeletonRows />}>{children}</Suspense>;
+  return <ErrorBoundary resetKey={loc.pathname}><Suspense fallback={<SkeletonRows />}>{children}</Suspense></ErrorBoundary>;
 }
 
 const list = (cfg: Parameters<typeof ResourcePage>[0]['cfg'], perm: string) => <Guard perm={perm}><ResourcePage cfg={cfg} /></Guard>;
@@ -100,9 +108,11 @@ const rec = (key: keyof typeof R.records, perm: string) => <Guard perm={perm}><R
 export function App() {
   return (
     <BrowserRouter>
+      <RootBoundary>
       <Routes>
         <Route path="/login" element={<Login />} />
         <Route path="/apply" element={<Apply />} />
+        <Route path="/bewerbung/:token" element={<WebApply />} />
         <Route path="/datenschutz" element={<Privacy />} />
         <Route path="/nutzungsbedingungen" element={<Terms />} />
         {/* Polizei-MDT: eigene Vollbild-Oberfläche, gleiche Anmeldung wie das Dashboard */}
@@ -217,6 +227,7 @@ export function App() {
           <Route path="*" element={<div className="py-16 text-center text-muted">404 – Seite nicht gefunden</div>} />
         </Route>
       </Routes>
+      </RootBoundary>
     </BrowserRouter>
   );
 }

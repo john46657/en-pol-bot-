@@ -458,6 +458,9 @@ async function handleComponent(i) {
         await source.edit({ embeds: (reply.update.embeds ?? []).map(toEmbed), components: toComponents(reply.update.buttons), allowedMentions: { parse: [] } }).catch((e) => console.error('could not update message:', e instanceof Error ? e.message : e));
 }
 function wire(c) {
+    // Verbindungsfehler melden – ein 'error'-Ereignis ohne Listener würde den ganzen Prozess beenden
+    c.on('error', (e) => console.error('discord client error:', e.message));
+    c.on('shardError', (e, id) => console.error(`discord shard ${id} error:`, e.message));
     c.on('interactionCreate', (i) => {
         // Server der Interaktion → API prüft Rechte für genau diesen Server (Server laufen getrennt)
         const task = api_1.guildScope.run(i.guildId ?? null, () => api_1.rolesScope.run(rolesOf(i.member), () => i.isChatInputCommand() ? handleCommand(i) : i.isButton() || i.isModalSubmit() || i.isAnySelectMenu() ? handleComponent(i) : undefined));
@@ -749,6 +752,17 @@ function wireReady(client0) {
 for (const sig of ['SIGINT', 'SIGTERM'])
     process.on(sig, () => { void client.destroy().finally(() => process.exit(0)); });
 process.on('unhandledRejection', (e) => console.error('unhandledRejection:', e instanceof Error ? e.message : e));
+// Fehler in einem Ereignis-Handler beendet nicht den Bot (laufende DM-Bewerbungen blieben sonst auf der Strecke).
+// Häufen sie sich, lieber beenden – das Hosting-Startskript startet den Bot dann sauber neu.
+let crashes = [];
+process.on('uncaughtException', (e) => {
+    console.error('uncaughtException:', e instanceof Error ? e.stack ?? e.message : e);
+    crashes = [...crashes.filter((t) => Date.now() - t < 60_000), Date.now()];
+    if (crashes.length > 20) {
+        console.error('zu viele Fehler in kurzer Zeit – Bot wird neu gestartet');
+        process.exit(1);
+    }
+});
 /** Start; sind privilegierte Intents im Developer Portal aus, schrittweise ohne sie neu verbinden. */
 async function start() {
     for (const [n, step] of INTENT_STEPS.entries()) {

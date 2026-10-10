@@ -95,6 +95,7 @@ export declare class ApplicationsController {
     list(q: z.infer<typeof listQ>): Promise<{
         items: {
             decidedByName: string | null;
+            avatar: string | null;
             number: string;
             id: string;
             status: string;

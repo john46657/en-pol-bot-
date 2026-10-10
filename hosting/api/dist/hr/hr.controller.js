@@ -658,8 +658,10 @@ exports.HrCommsController = HrCommsController = __decorate([
 ], HrCommsController);
 // ───────────── Dienstnummern ─────────────
 const listQ = zod_1.z.object({ status: zod_1.z.enum(shared_1.DN_STATUSES).optional(), rangeId: uuid.optional(), q: zod_1.z.string().max(80).optional(), department: zod_1.z.string().max(64).optional(), rank: zod_1.z.string().max(64).optional(), limit: zod_1.z.coerce.number().int().min(1).max(1000).optional() });
-const assign = zod_1.z.object({ personnelId: uuid, display: zod_1.z.string().trim().min(1).max(40).optional(), rangeId: uuid.optional(), reason: zod_1.z.string().max(500).optional() });
-const change = assign.extend({ reason: zod_1.z.string().trim().min(3).max(500), approverId: uuid.nullable().optional() });
+const assignBase = zod_1.z.object({ personnelId: uuid, display: zod_1.z.string().trim().min(1).max(40).optional(), rangeId: uuid.optional(), reason: zod_1.z.string().max(500).optional() });
+/** Vergabe: Personalakte oder Discord-Mitglied (ohne Akte – sie wird dann angelegt). */
+const assign = assignBase.extend({ personnelId: uuid.optional(), discordId: zod_1.z.string().regex(/^\d{15,25}$/).optional() }).refine((b) => !!b.personnelId !== !!b.discordId, { message: 'Personalakte oder Discord-Mitglied angeben.' });
+const change = assignBase.extend({ reason: zod_1.z.string().trim().min(3).max(500), approverId: uuid.nullable().optional() });
 const status = zod_1.z.object({ display: zod_1.z.string().trim().min(1).max(40), reason: zod_1.z.string().max(500).optional(), userId: uuid.optional() });
 let ServiceNumbersController = class ServiceNumbersController {
     s;
@@ -675,6 +677,7 @@ let ServiceNumbersController = class ServiceNumbersController {
     saveSettings(a, b) { return this.s.saveSettings(a, b); }
     history(q) { return this.s.history(q); }
     pending() { return this.s.pending(); }
+    discordMembers() { return this.s.discordCandidates(); }
     /** Angenommene Bewerbungen ohne Personalakte nachträglich übernehmen. */
     fromApplications(a) { return this.s.profilesFromApplications(a); }
     confirm(a, id, b) { return this.s.confirmPending(a, id, b.display || undefined); }
@@ -761,6 +764,13 @@ __decorate([
     __metadata("design:paramtypes", []),
     __metadata("design:returntype", void 0)
 ], ServiceNumbersController.prototype, "pending", null);
+__decorate([
+    (0, common_1.Get)('discord-members'),
+    (0, decorators_1.RequirePermission)('dienstnummer.assign'),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", []),
+    __metadata("design:returntype", void 0)
+], ServiceNumbersController.prototype, "discordMembers", null);
 __decorate([
     (0, common_1.Post)('from-applications'),
     (0, common_1.HttpCode)(200),

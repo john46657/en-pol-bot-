@@ -124,8 +124,10 @@ export class HrCommsController {
 
 // ───────────── Dienstnummern ─────────────
 const listQ = z.object({ status: z.enum(DN_STATUSES).optional(), rangeId: uuid.optional(), q: z.string().max(80).optional(), department: z.string().max(64).optional(), rank: z.string().max(64).optional(), limit: z.coerce.number().int().min(1).max(1000).optional() });
-const assign = z.object({ personnelId: uuid, display: z.string().trim().min(1).max(40).optional(), rangeId: uuid.optional(), reason: z.string().max(500).optional() });
-const change = assign.extend({ reason: z.string().trim().min(3).max(500), approverId: uuid.nullable().optional() });
+const assignBase = z.object({ personnelId: uuid, display: z.string().trim().min(1).max(40).optional(), rangeId: uuid.optional(), reason: z.string().max(500).optional() });
+/** Vergabe: Personalakte oder Discord-Mitglied (ohne Akte – sie wird dann angelegt). */
+const assign = assignBase.extend({ personnelId: uuid.optional(), discordId: z.string().regex(/^\d{15,25}$/).optional() }).refine((b) => !!b.personnelId !== !!b.discordId, { message: 'Personalakte oder Discord-Mitglied angeben.' });
+const change = assignBase.extend({ reason: z.string().trim().min(3).max(500), approverId: uuid.nullable().optional() });
 const status = z.object({ display: z.string().trim().min(1).max(40), reason: z.string().max(500).optional(), userId: uuid.optional() });
 
 @ApiTags('hr')
@@ -141,6 +143,7 @@ export class ServiceNumbersController {
   @Put('settings') @RequirePermission('dienstnummer.manage_settings') saveSettings(@CurrentActor() a: Actor, @Body(zodBody(dnSettingsSchema)) b: DnSettings) { return this.s.saveSettings(a, b); }
   @Get('history') @RequirePermission('dienstnummer.history') history(@Query(zodBody(z.object({ display: z.string().max(40).optional(), personnelId: uuid.optional(), userId: uuid.optional() }))) q: { display?: string; personnelId?: string; userId?: string }) { return this.s.history(q); }
   @Get('pending') @RequirePermission('dienstnummer.view') pending() { return this.s.pending(); }
+  @Get('discord-members') @RequirePermission('dienstnummer.assign') discordMembers() { return this.s.discordCandidates(); }
   /** Angenommene Bewerbungen ohne Personalakte nachträglich übernehmen. */
   @Post('from-applications') @HttpCode(200) @RequirePermission('personnel.create') fromApplications(@CurrentActor() a: Actor) { return this.s.profilesFromApplications(a); }
   @Post('pending/:id/confirm') @HttpCode(200) @RequirePermission('dienstnummer.assign') confirm(@CurrentActor() a: Actor, @Param('id', ParseUUIDPipe) id: string, @Body(zodBody(z.object({ display: z.string().trim().max(40).optional() }))) b: { display?: string }) { return this.s.confirmPending(a, id, b.display || undefined); }

@@ -23,7 +23,7 @@ const ack = z.object({ ok: z.boolean(), error: z.string().max(300).optional() })
 const outboxQ = z.object({ limit: z.coerce.number().int().min(1).max(50).default(20) });
 const rate = process.env.NODE_ENV === 'test' ? 10_000 : 20;
 const stateKey = z.string().regex(/^[a-z0-9:_-]{1,64}$/);
-const stateBody = z.object({ value: z.unknown() });
+const stateBody = z.object({ value: z.unknown().refine((v) => v !== undefined, 'value fehlt.') });
 const avatar = z.string().url().max(300).nullable();
 const membersBody = z.object({ members: z.array(z.object({
   id: sf, guildId: sf, username: z.string().max(100), displayName: z.string().max(100), avatar, status: z.enum(['online', 'idle', 'dnd', 'offline', 'unknown']),

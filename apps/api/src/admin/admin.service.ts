@@ -49,7 +49,9 @@ export class AdminService {
 
   async getSettings() {
     const rows = await this.prisma.systemSetting.findMany();
-    return { settings: Object.fromEntries(rows.map((r) => [r.key, r.value])), allowedKeys: Object.keys(SETTING_SCHEMAS), serverScoped: SERVER_SCOPED_SETTINGS };
+    // Ungültige gespeicherte Werte (altes Format, unvollständig) weglassen – dann gelten im Dashboard die Standardwerte
+    const valid = rows.filter((r) => { const schema = SETTING_SCHEMAS[r.key.split('@')[0] as SettingKey]; return !schema || schema.safeParse(r.value).success; });
+    return { settings: Object.fromEntries(valid.map((r) => [r.key, r.value])), allowedKeys: Object.keys(SETTING_SCHEMAS), serverScoped: SERVER_SCOPED_SETTINGS };
   }
 
   /** `key@<guildId>`: Server-eigener Wert (nur für Einstellungen, die je Server getrennt sein dürfen). */

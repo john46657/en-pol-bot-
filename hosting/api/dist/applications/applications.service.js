@@ -21,6 +21,7 @@ const prisma_service_1 = require("../prisma/prisma.service");
 const audit_service_1 = require("../audit/audit.service");
 const errors_1 = require("../common/errors");
 const discord_service_1 = require("../discord/discord.service");
+const discord_live_service_1 = require("../discord/discord-live.service");
 const numbering_1 = require("../common/numbering");
 const transition_1 = require("../common/transition");
 const pagination_1 = require("../common/pagination");
@@ -47,7 +48,8 @@ let ApplicationsService = class ApplicationsService {
     teamchance;
     roblox;
     bans;
-    constructor(prisma, audit, discord, notify, teamchance, roblox, bans) {
+    live;
+    constructor(prisma, audit, discord, notify, teamchance, roblox, bans, live) {
         this.prisma = prisma;
         this.audit = audit;
         this.discord = discord;
@@ -55,13 +57,16 @@ let ApplicationsService = class ApplicationsService {
         this.teamchance = teamchance;
         this.roblox = roblox;
         this.bans = bans;
+        this.live = live;
     }
     /** Formular eines Servers (`application.form@<guildId>`), sonst das gemeinsame. */
     async form(guildId) {
         const g = (0, guild_context_1.settingsGuild)(guildId);
         const own = g ? await this.prisma.systemSetting.findUnique({ where: { key: `application.form@${g}` } }) : null;
         const s = own ?? await this.prisma.systemSetting.findUnique({ where: { key: 'application.form' } });
-        return s?.value ?? exports.DEFAULT_FORM;
+        // ungültig gespeichertes Formular (altes Format, kaputt) → Standardformular
+        const p = qualifications_config_1.formSchema.safeParse(s?.value);
+        return p.success ? p.data : exports.DEFAULT_FORM;
     }
     /** Öffentliche Bewerbung (kein Account nötig). Antworten werden strikt gegen das konfigurierte Formular validiert. */
     async submit(d, meta = {}) {
@@ -220,7 +225,9 @@ let ApplicationsService = class ApplicationsService {
         // wer entschieden hat (Name) – für die Karten-Ansicht
         const ids = [...new Set(items.map((a) => a.decidedById).filter((x) => !!x))];
         const users = new Map((await this.prisma.user.findMany({ where: { id: { in: ids } }, select: { id: true, displayName: true } })).map((u) => [u.id, u.displayName]));
-        return (0, pagination_1.pageResult)(items.map((a) => ({ ...a, decidedByName: a.decidedById ? users.get(a.decidedById) ?? '—' : null })), total, p);
+        // Discord-Profilbild (vom Bot gemeldet) für die Listen-Ansicht
+        const avatars = new Map(this.live.getMembers().members.map((m) => [m.id, m.avatar]));
+        return (0, pagination_1.pageResult)(items.map((a) => ({ ...a, decidedByName: a.decidedById ? users.get(a.decidedById) ?? '—' : null, avatar: a.discordId ? avatars.get(a.discordId) ?? null : null })), total, p);
     }
     async get(id) {
         const a = await this.prisma.application.findUnique({ where: { id } });
@@ -258,6 +265,6 @@ let ApplicationsService = class ApplicationsService {
 exports.ApplicationsService = ApplicationsService;
 exports.ApplicationsService = ApplicationsService = __decorate([
     (0, common_1.Injectable)(),
-    __metadata("design:paramtypes", [prisma_service_1.PrismaService, audit_service_1.AuditService, discord_service_1.DiscordService, notify_service_1.NotifyService, teamchance_service_1.TeamChanceService, roblox_service_1.RobloxService, application_bans_service_1.ApplicationBansService])
+    __metadata("design:paramtypes", [prisma_service_1.PrismaService, audit_service_1.AuditService, discord_service_1.DiscordService, notify_service_1.NotifyService, teamchance_service_1.TeamChanceService, roblox_service_1.RobloxService, application_bans_service_1.ApplicationBansService, discord_live_service_1.DiscordLiveService])
 ], ApplicationsService);
 //# sourceMappingURL=applications.service.js.map
