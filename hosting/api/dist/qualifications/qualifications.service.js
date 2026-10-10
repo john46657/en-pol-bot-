@@ -158,6 +158,14 @@ let QualificationsService = class QualificationsService {
             throw new errors_1.AppError('NOT_FOUND', 'Bewerbung nicht gefunden.');
         return a;
     }
+    /** Bewerbung endgültig löschen (qualifications.delete) – im Audit-Log bleibt festgehalten, was gelöscht wurde. */
+    async remove(actor, id) {
+        const a = await this.get(id);
+        await this.prisma.$transaction(async (tx) => {
+            await tx.qualificationApplication.delete({ where: { id } });
+            await this.audit.record(actor, { action: 'qualifications.application.delete', module: 'qualifications', entityType: 'QualificationApplication', entityId: id, before: { number: a.number, unit: a.unitName, status: a.status, discordId: a.discordId, discordName: a.discordName } }, tx);
+        });
+    }
     async openTicket(actor, id) {
         return this.discord.applicantTicket(actor, await this.get(id), 'QualificationApplication');
     }

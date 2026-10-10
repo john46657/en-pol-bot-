@@ -352,6 +352,8 @@ export declare class QualificationsService {
         joinedAt: Date | null;
         unitName: string;
     }>;
+    /** Bewerbung endgültig löschen (qualifications.delete) – im Audit-Log bleibt festgehalten, was gelöscht wurde. */
+    remove(actor: Actor, id: string): Promise<void>;
     openTicket(actor: Actor, id: string): Promise<{
         queued: boolean;
         linked: boolean;

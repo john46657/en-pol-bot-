@@ -49,6 +49,9 @@ export declare class DiscordAccessService implements OnModuleInit, OnModuleDestr
         displayName: string;
         avatar: string | null;
     }[]>;
+    private readonly avatarCache;
+    /** Profilbilder zu Discord-IDs (Discord-API, 6 h zwischengespeichert). Ohne Token/Discord: leer. */
+    avatars(ids: string[]): Promise<Map<string, string | null>>;
     /** Darf diese Mitgliedschaft ins Dashboard? (Besitzer aus ADMIN_DISCORD_IDS prüft der Aufrufer vorab.) */
     verdict(member: {
         roles: string[];

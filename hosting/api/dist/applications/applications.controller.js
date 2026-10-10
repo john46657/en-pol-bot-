@@ -25,9 +25,11 @@ const decorators_1 = require("../authz/decorators");
 const zod_pipe_1 = require("../common/zod.pipe");
 const roblox_service_1 = require("../persons/roblox.service");
 const pagination_1 = require("../common/pagination");
+const permission_service_1 = require("../authz/permission.service");
 const submit = zod_1.z.object({ robloxUsername: zod_1.z.string().trim().min(1).max(64), robloxUserId: zod_1.z.string().max(20).optional(), answers: zod_1.z.record(zod_1.z.string(), zod_1.z.union([zod_1.z.string().max(5000), zod_1.z.array(zod_1.z.string().max(100)).max(25)])) });
 const move = zod_1.z.object({ status: zod_1.z.enum(shared_1.APPLICATION_STATUSES).refine((s) => s !== 'ACCEPTED' && s !== 'REJECTED', 'Annehmen oder Ablehnen bitte über die Entscheidung.'), reason: zod_1.z.string().trim().min(3).max(1000).optional() });
 /** `OPEN` = alle noch nicht entschiedenen (eingereicht, Prüfung, Gespräch, Entscheidung offen). */
+const inboxQ = pagination_1.pageQuery.extend({ pageSize: zod_1.z.coerce.number().int().min(1).max(100).default(20), type: zod_1.z.string().regex(/^(police|q:.{1,24})$/).optional(), status: zod_1.z.enum(['OPEN', 'ACCEPTED', 'REJECTED', 'WITHDRAWN']).optional(), order: zod_1.z.enum(['newest', 'oldest']).optional(), guildId: zod_1.z.string().regex(/^\d{15,25}$/).optional() });
 const listQ = pagination_1.pageQuery.extend({ status: zod_1.z.union([zod_1.z.enum(shared_1.APPLICATION_STATUSES), zod_1.z.literal('OPEN')]).optional(), guildId: zod_1.z.string().regex(/^\d{15,25}$/).optional(), order: zod_1.z.enum(['newest', 'oldest']).optional() });
 const guildQ = zod_1.z.object({ guildId: zod_1.z.string().regex(/^\d{15,25}$/).optional() });
 const analyticsQ = zod_1.z.object({ type: zod_1.z.string().max(80).optional(), status: zod_1.z.enum(['APPROVED', 'PENDING', 'REJECTED']).optional(), reviewer: zod_1.z.string().uuid().optional(), days: zod_1.z.coerce.number().int().min(7).max(365).default(30) });
@@ -35,10 +37,12 @@ let ApplicationsController = class ApplicationsController {
     a;
     stats;
     roblox;
-    constructor(a, stats, roblox) {
+    perms;
+    constructor(a, stats, roblox, perms) {
         this.a = a;
         this.stats = stats;
         this.roblox = roblox;
+        this.perms = perms;
     }
     /** `?guildId=` – Formular eines Servers (für den Bot); ohne: das gemeinsame (Web-Seite /apply). */
     /** Frage „Roblox User“: Konto suchen (Name, Anzeigename, Bild – keine internen Daten). Öffentlich, begrenzt. */
@@ -51,6 +55,12 @@ let ApplicationsController = class ApplicationsController {
     /** Statistik (Filter: Name, Status, Prüfer; Zeitraum in Tagen, verglichen mit der Vorperiode). Server getrennt wie die Liste. */
     analytics(q) { return this.stats.overview({ ...q, guildId: (0, guild_context_1.currentGuild)() }); }
     history(q) { return this.a.history(q.discordId); }
+    /** Alle Bewerbungen (Polizei + Einheiten mit qualifications.view) in einer Liste, mit Profilbildern. */
+    async inbox(a, q) {
+        const quali = !!a.userId && await this.perms.has(a.userId, 'qualifications.view');
+        return this.a.inbox({ ...q, guildId: q.guildId ?? (0, guild_context_1.currentGuild)() ?? undefined }, { police: true, quali });
+    }
+    remove(a, id) { return this.a.remove(a, id); }
     get(id) { return this.a.get(id); }
     /** Prüfschritte benötigen applications.review; Entscheidungen applications.decide. */
     move(a, id, b) {
@@ -118,6 +128,25 @@ __decorate([
     __metadata("design:returntype", void 0)
 ], ApplicationsController.prototype, "history", null);
 __decorate([
+    (0, common_1.Get)('inbox'),
+    (0, decorators_1.RequirePermission)('applications.view'),
+    __param(0, (0, decorators_1.CurrentActor)()),
+    __param(1, (0, common_1.Query)((0, zod_pipe_1.zodBody)(inboxQ))),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, void 0]),
+    __metadata("design:returntype", Promise)
+], ApplicationsController.prototype, "inbox", null);
+__decorate([
+    (0, common_1.Delete)(':id'),
+    (0, common_1.HttpCode)(204),
+    (0, decorators_1.RequirePermission)('applications.delete'),
+    __param(0, (0, decorators_1.CurrentActor)()),
+    __param(1, (0, common_1.Param)('id', common_1.ParseUUIDPipe)),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, String]),
+    __metadata("design:returntype", void 0)
+], ApplicationsController.prototype, "remove", null);
+__decorate([
     (0, common_1.Get)(':id'),
     (0, decorators_1.RequirePermission)('applications.view'),
     __param(0, (0, common_1.Param)('id', common_1.ParseUUIDPipe)),
@@ -169,6 +198,6 @@ __decorate([
 exports.ApplicationsController = ApplicationsController = __decorate([
     (0, swagger_1.ApiTags)('applications'),
     (0, common_1.Controller)('applications'),
-    __metadata("design:paramtypes", [applications_service_1.ApplicationsService, applications_analytics_service_1.ApplicationsAnalyticsService, roblox_service_1.RobloxService])
+    __metadata("design:paramtypes", [applications_service_1.ApplicationsService, applications_analytics_service_1.ApplicationsAnalyticsService, roblox_service_1.RobloxService, permission_service_1.PermissionService])
 ], ApplicationsController);
 //# sourceMappingURL=applications.controller.js.map

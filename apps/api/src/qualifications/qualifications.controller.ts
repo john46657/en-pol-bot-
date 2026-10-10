@@ -38,6 +38,8 @@ export class QualificationsController {
   /** Auch vom Bot (Button im Team-Channel) mit den Rechten des klickenden Benutzers. */
   @Post('applications/:id/decision') @HttpCode(200) @RequirePermission('qualifications.decide')
   decide(@CurrentActor() a: Actor, @Param('id', ParseUUIDPipe) id: string, @Body(zodBody(decision)) b: z.infer<typeof decision>) { return this.q.decide(a, id, b.status, b.reason); }
+  @Delete('applications/:id') @HttpCode(204) @RequirePermission('qualifications.delete')
+  remove(@CurrentActor() a: Actor, @Param('id', ParseUUIDPipe) id: string) { return this.q.remove(a, id); }
   /** „Ticket mit Bewerber öffnen“ (wie der Discord-Button). */
   @Post('applications/:id/ticket') @HttpCode(202) @RequirePermission('qualifications.view')
   ticket(@CurrentActor() a: Actor, @Param('id', ParseUUIDPipe) id: string) { return this.q.openTicket(a, id); }
