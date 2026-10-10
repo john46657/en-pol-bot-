@@ -40,7 +40,7 @@ export class HrCoreService {
       const st = await tx.systemSetting.findUnique({ where: { key: 'team.structure' } });
       const s = (st?.value ?? {}) as { teams?: string[]; offices?: string[] };
       const teams = [...new Set([...c.departments.map((d) => d.name), ...(s.teams ?? []).filter((t) => !before.departments.some((d) => d.name === t) || c.departments.some((d) => d.name === t))])];
-      const value = { ...s, teams } as Prisma.InputJsonValue;
+      const value = { ...s, offices: s.offices ?? [], teams } as Prisma.InputJsonValue; // offices ist Pflicht (sonst stürzt die Einstellungsseite ab)
       await tx.systemSetting.upsert({ where: { key: 'team.structure' }, create: { key: 'team.structure', value }, update: { value } });
       await this.audit.record(actor, { action: 'hr.config.update', module: 'personnel', entityType: 'SystemSetting', entityId: CONFIG_KEY, before, after: c }, tx);
     });
