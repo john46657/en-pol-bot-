@@ -21,5 +21,7 @@ async function bootstrap() {
         setInterval(run, 24 * 3_600_000).unref();
     }
 }
+// Sicherheitsnetz: ein vergessenes .catch() bei einer Hintergrund-Aufgabe darf nicht die ganze API (und das Dashboard) beenden
+process.on('unhandledRejection', (e) => new common_1.Logger('Process').error(`unhandledRejection: ${e instanceof Error ? e.stack ?? e.message : String(e)}`));
 void bootstrap();
 //# sourceMappingURL=main.js.map

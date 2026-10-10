@@ -84546,6 +84546,8 @@ async function handleComponent(i) {
   if (reply.update && source) await source.edit({ embeds: (reply.update.embeds ?? []).map(toEmbed), components: toComponents(reply.update.buttons), allowedMentions: { parse: [] } }).catch((e) => console.error("could not update message:", e instanceof Error ? e.message : e));
 }
 function wire(c) {
+  c.on("error", (e) => console.error("discord client error:", e.message));
+  c.on("shardError", (e, id2) => console.error(`discord shard ${id2} error:`, e.message));
   c.on("interactionCreate", (i) => {
     const task = guildScope.run(i.guildId ?? null, () => rolesScope.run(rolesOf(i.member), () => i.isChatInputCommand() ? handleCommand(i) : i.isButton() || i.isModalSubmit() || i.isAnySelectMenu() ? handleComponent(i) : void 0));
     void task?.catch((e) => console.error("interaction failed:", e instanceof Error ? e.message : e));
@@ -84804,6 +84806,15 @@ for (const sig of ["SIGINT", "SIGTERM"]) process.on(sig, () => {
   void client.destroy().finally(() => process.exit(0));
 });
 process.on("unhandledRejection", (e) => console.error("unhandledRejection:", e instanceof Error ? e.message : e));
+var crashes = [];
+process.on("uncaughtException", (e) => {
+  console.error("uncaughtException:", e instanceof Error ? e.stack ?? e.message : e);
+  crashes = [...crashes.filter((t) => Date.now() - t < 6e4), Date.now()];
+  if (crashes.length > 20) {
+    console.error("zu viele Fehler in kurzer Zeit \u2013 Bot wird neu gestartet");
+    process.exit(1);
+  }
+});
 async function start() {
   for (const [n, step] of INTENT_STEPS.entries()) {
     if (n > 0) {

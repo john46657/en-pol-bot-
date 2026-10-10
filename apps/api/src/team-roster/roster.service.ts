@@ -41,11 +41,13 @@ export class RosterService {
       this.setting('team.rankOrder'),
       this.prisma.personnel.findMany({ where: { employmentStatus: { notIn: ['RESIGNED', 'TERMINATED'] } }, select: { team: true, rank: true, office: true } }),
     ]);
-    const s = (cfg?.value ?? {}) as Partial<TeamStructure>;
+    // gespeicherte Werte können älter/unvollständig sein – nur Text-Listen übernehmen
+    const strings = (v: unknown) => (Array.isArray(v) ? v.filter((x): x is string => typeof x === 'string') : []);
+    const s = (cfg?.value && typeof cfg.value === 'object' ? cfg.value : {}) as Record<string, unknown>;
     return {
-      teams: uniq([...(s.teams ?? []), ...used.map((u) => u.team)]),
-      ranks: uniq([...((order?.value as string[] | undefined) ?? []), ...used.map((u) => u.rank)]),
-      offices: uniq([...(s.offices ?? []), ...used.map((u) => u.office)]),
+      teams: uniq([...strings(s.teams), ...used.map((u) => u.team)]),
+      ranks: uniq([...strings(order?.value), ...used.map((u) => u.rank)]),
+      offices: uniq([...strings(s.offices), ...used.map((u) => u.office)]),
     };
   }
 
