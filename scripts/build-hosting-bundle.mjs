@@ -41,6 +41,8 @@ writeFileSync(path.join(bundle, 'package.json'), JSON.stringify({
   name: 'en-polizei-hosting', version: json('package.json').version, private: true, main: 'start.js', engines: { node: '>=22' },
   scripts: { start: 'node start.js', postinstall: `prisma generate --schema api/prisma/schema.prisma` },
   dependencies: Object.fromEntries(Object.entries(deps).sort(([a], [b]) => a.localeCompare(b))),
+  // Sicherheits-Fixes für transitive Pakete (wie pnpm.overrides im Hauptordner)
+  overrides: { 'deepmerge-ts': '^8.0.2', '@nestjs/swagger': { 'js-yaml': '^5.4.3' } },
 }, null, 2) + '\n');
 void prisma;
 

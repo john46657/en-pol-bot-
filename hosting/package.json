@@ -30,5 +30,11 @@
     "rxjs": "^7.8.2",
     "socket.io": "^4.8.1",
     "zod": "^3.25.0"
+  },
+  "overrides": {
+    "deepmerge-ts": "^8.0.2",
+    "@nestjs/swagger": {
+      "js-yaml": "^5.4.3"
+    }
   }
 }
