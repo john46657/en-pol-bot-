@@ -136,6 +136,18 @@ describe('Dienstnummern', () => {
     expect(list.body.map((r: { display: string }) => r.display)).toContain('1009');
   });
 
+  it('assigns directly to a Discord member – the profile is created on the fly', async () => {
+    expect((await admin.post('/api/v1/dienstnummern/assign').send({ display: '1008' })).status).toBe(400);
+    const r = await admin.post('/api/v1/dienstnummern/assign').send({ discordId: '490000000000000009', name: 'hr_discordneu', display: '1008' });
+    expect(r.status).toBe(200);
+    const link = await prisma.discordLink.findUniqueOrThrow({ where: { discordId: '490000000000000009' } });
+    expect((await prisma.personnel.findUniqueOrThrow({ where: { userId: link.userId } })).serviceNumber).toBe('1008');
+    // zweite Vergabe an dieselbe Person: vorhandene Akte, keine zweite aktive Nummer
+    expect((await admin.post('/api/v1/dienstnummern/assign').send({ discordId: '490000000000000009', display: '1006' })).status).toBe(409);
+    expect((await member.get('/api/v1/dienstnummern/discord-members').query({ q: 'hr' })).status).toBe(403);
+    expect((await admin.get('/api/v1/dienstnummern/discord-members').query({ q: 'x' })).body).toEqual([]);
+  });
+
   it('accepted application → profile, number, DM, nickname', async () => {
     await admin.put('/api/v1/dienstnummern/settings').send({ timing: 'ACCEPT', mappings: [{ kind: 'police', rangeId: ids.range, department: 'Polizei', rankId: ids.low }], nickname: { enabled: true, format: '[{dienstnummer}] {name}' }, dm: { enabled: true } });
     const a = await prisma.application.create({ data: { number: `A-T-${Date.now()}`, answers: {}, robloxUsername: 'NeuRoblox', discordId: '490000000000000001', discordName: 'neuling', source: 'DISCORD' } });

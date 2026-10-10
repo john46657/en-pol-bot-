@@ -14,6 +14,8 @@ const common_1 = require("@nestjs/common");
 const client_1 = require("@prisma/client");
 const shared_1 = require("@enrp/shared");
 const permission_service_1 = require("../authz/permission.service");
+const discord_access_service_1 = require("../authz/discord-access.service");
+const discord_live_service_1 = require("../discord/discord-live.service");
 const errors_1 = require("../common/errors");
 const hire_events_1 = require("../common/hire-events");
 const hr_core_service_1 = require("./hr-core.service");
@@ -28,10 +30,14 @@ let ServiceNumbersService = class ServiceNumbersService {
     core;
     people;
     perms;
-    constructor(core, people, perms) {
+    discord;
+    live;
+    constructor(core, people, perms, discord, live) {
         this.core = core;
         this.people = people;
         this.perms = perms;
+        this.discord = discord;
+        this.live = live;
     }
     get prisma() { return this.core.prisma; }
     onModuleInit() { hire_events_1.hireEvents.handler = (actor, a) => this.onApplicationAccepted(actor, a); }
@@ -247,16 +253,49 @@ let ServiceNumbersService = class ServiceNumbersService {
         throw new errors_1.AppError('CONFLICT', 'Die Dienstnummer konnte gerade nicht vergeben werden (viele gleichzeitige Vergaben). Bitte erneut versuchen.');
     }
     /** Manuelle Vergabe (dienstnummer.assign) an eine Personalakte. */
+    /**
+     * Discord-Mitglieder für die Personenauswahl: Teamliste des Bots (Teilstring) + Discord-Suche über alle Server-Mitglieder
+     * (Name beginnt mit …). `personnelId` gesetzt = es gibt schon eine Personalakte.
+     */
+    async discordMembers(q) {
+        const t = q.trim().toLowerCase();
+        if (t.length < 2)
+            return [];
+        const found = new Map();
+        for (const m of this.live.getMembers().members) {
+            if (!found.has(m.id) && (m.displayName.toLowerCase().includes(t) || m.username.toLowerCase().includes(t) || m.id === t))
+                found.set(m.id, { id: m.id, username: m.username, displayName: m.displayName, avatar: m.avatar });
+        }
+        for (const m of await this.discord.searchMembers(q, 25))
+            if (!found.has(m.id))
+                found.set(m.id, m);
+        const list = [...found.values()].slice(0, 30);
+        const links = await this.prisma.discordLink.findMany({ where: { discordId: { in: list.map((m) => m.id) } }, select: { discordId: true, userId: true } });
+        const files = new Map((await this.prisma.personnel.findMany({ where: { userId: { in: links.map((l) => l.userId) } }, select: { id: true, userId: true, serviceNumber: true } })).map((p) => [p.userId, p]));
+        const byId = new Map(links.map((l) => [l.discordId, files.get(l.userId)]));
+        return list.map((m) => ({ ...m, personnelId: byId.get(m.id)?.id ?? null, serviceNumber: byId.get(m.id)?.serviceNumber ?? null }));
+    }
     async assignManual(actor, d) {
-        const p = await this.prisma.personnel.findUnique({ where: { id: d.personnelId } });
-        if (!p)
-            throw new errors_1.AppError('NOT_FOUND', 'Personalakte nicht gefunden.');
         if (!d.display && !d.rangeId)
             throw new errors_1.AppError('VALIDATION_FAILED', 'Nummer oder Nummernkreis angeben.');
+        const p = d.personnelId ? await this.prisma.personnel.findUnique({ where: { id: d.personnelId } }) : d.discordId ? await this.personnelForDiscord(actor, d.discordId, d.name) : null;
+        if (!p)
+            throw new errors_1.AppError('NOT_FOUND', 'Personalakte nicht gefunden.');
         const r = await this.allocate(actor, { userId: p.userId, personnelId: p.id, display: d.display, rangeId: d.rangeId, reason: d.reason, manual: true });
         await this.prisma.hireQueue.updateMany({ where: { userId: p.userId, status: 'PENDING' }, data: { status: 'DONE' } });
         await this.afterAssign(actor, p.userId, r.display, { applicationName: null });
         return r;
+    }
+    /** Personalakte zu einem Discord-Mitglied – vorhandene oder neu angelegt (Benutzer wird bei Bedarf mit angelegt). */
+    async personnelForDiscord(actor, discordId, name) {
+        const live = this.live.getMembers().members.find((m) => m.id === discordId);
+        return this.prisma.$transaction(async (tx) => {
+            const u = await this.people.userForDiscord(tx, discordId, name?.trim() || live?.displayName || discordId);
+            const r = await this.core.ensurePersonnel(u.id, {}, tx);
+            if (r.created)
+                await this.core.audit.record(actor, { action: 'personnel.create', module: 'personnel', entityType: 'Personnel', entityId: r.personnel.id, after: { discordId, via: 'dienstnummer.assign' } }, tx);
+            return r.personnel;
+        });
     }
     /** Nummer ändern (dienstnummer.edit); die alte wird je nach Kreis frei, ehemalig oder gesperrt. */
     async change(actor, d) {
@@ -426,6 +465,6 @@ let ServiceNumbersService = class ServiceNumbersService {
 exports.ServiceNumbersService = ServiceNumbersService;
 exports.ServiceNumbersService = ServiceNumbersService = __decorate([
     (0, common_1.Injectable)(),
-    __metadata("design:paramtypes", [hr_core_service_1.HrCoreService, hr_people_service_1.HrPeopleService, permission_service_1.PermissionService])
+    __metadata("design:paramtypes", [hr_core_service_1.HrCoreService, hr_people_service_1.HrPeopleService, permission_service_1.PermissionService, discord_access_service_1.DiscordAccessService, discord_live_service_1.DiscordLiveService])
 ], ServiceNumbersService);
 //# sourceMappingURL=service-numbers.service.js.map

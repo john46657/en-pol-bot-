@@ -49,18 +49,13 @@ export class DiscordAccessService implements OnModuleInit, OnModuleDestroy {
   async membership(discordId: string): Promise<Membership> {
     const token = this.env.DISCORD_TOKEN;
     if (!token) return 'unknown';
-    const bot = (path: string) => fetch(`${API}${path}`, { headers: { authorization: `Bot ${token}` }, signal: AbortSignal.timeout(10_000) });
+    const bot = this.bot(token);
     try {
-      const cfg = (await this.prisma.systemSetting.findUnique({ where: { key: 'discord.channels' } }))?.value as { guildId?: string } | undefined;
-      let guilds = [cfg?.guildId, this.env.DISCORD_GUILD_ID].join(',').split(/[\s,;]+/).filter((g) => /^\d{15,25}$/.test(g));
-      if (!guilds.length) {
-        const r = await bot('/users/@me/guilds?limit=200');
-        if (!r.ok) return 'unknown';
-        guilds = ((await r.json()) as { id: string }[]).map((g) => g.id);
-      }
+      const guilds = await this.guildIds(bot);
+      if (!guilds) return 'unknown';
       let isMember = false;
       const roles: string[] = [];
-      for (const g of [...new Set(guilds)].slice(0, 20)) {
+      for (const g of guilds) {
         const r = await bot(`/guilds/${g}/members/${discordId}`);
         if (r.status === 404) continue;
         if (!r.ok) return 'unknown';
@@ -69,6 +64,40 @@ export class DiscordAccessService implements OnModuleInit, OnModuleDestroy {
       }
       return isMember ? { roles } : null;
     } catch { return 'unknown'; }
+  }
+
+  private bot(token: string) { return (path: string) => fetch(`${API}${path}`, { headers: { authorization: `Bot ${token}` }, signal: AbortSignal.timeout(10_000) }); }
+
+  /** Eingestellte Server bzw. alle Server des Bots (max. 20); `null` = Discord nicht erreichbar. */
+  private async guildIds(bot: (path: string) => Promise<Response>): Promise<string[] | null> {
+    const cfg = (await this.prisma.systemSetting.findUnique({ where: { key: 'discord.channels' } }))?.value as { guildId?: string } | undefined;
+    let guilds = [cfg?.guildId, this.env.DISCORD_GUILD_ID].join(',').split(/[\s,;]+/).filter((g) => /^\d{15,25}$/.test(g));
+    if (!guilds.length) {
+      const r = await bot('/users/@me/guilds?limit=200');
+      if (!r.ok) return null;
+      guilds = ((await r.json()) as { id: string }[]).map((g) => g.id);
+    }
+    return [...new Set(guilds)].slice(0, 20);
+  }
+
+  /** Server-Mitglieder per Name suchen (Discord: Benutzer- oder Servername beginnt mit `query`). Ohne Token/Discord: leer. */
+  async searchMembers(query: string, limit = 25): Promise<{ id: string; username: string; displayName: string; avatar: string | null }[]> {
+    const token = this.env.DISCORD_TOKEN;
+    if (!token || !query.trim()) return [];
+    const bot = this.bot(token);
+    try {
+      const guilds = (await this.guildIds(bot)) ?? [];
+      const found = new Map<string, { id: string; username: string; displayName: string; avatar: string | null }>();
+      for (const g of guilds) {
+        const r = await bot(`/guilds/${g}/members/search?query=${encodeURIComponent(query.trim())}&limit=${limit}`);
+        if (!r.ok) continue;
+        for (const m of (await r.json()) as { nick?: string | null; user: { id: string; username: string; global_name?: string | null; avatar?: string | null; bot?: boolean } }[]) {
+          if (m.user.bot || found.has(m.user.id)) continue;
+          found.set(m.user.id, { id: m.user.id, username: m.user.username, displayName: m.nick || m.user.global_name || m.user.username, avatar: m.user.avatar ? `https://cdn.discordapp.com/avatars/${m.user.id}/${m.user.avatar}.png?size=64` : null });
+        }
+      }
+      return [...found.values()].slice(0, limit);
+    } catch { return []; }
   }
 
   /** Darf diese Mitgliedschaft ins Dashboard? (Besitzer aus ADMIN_DISCORD_IDS prüft der Aufrufer vorab.) */

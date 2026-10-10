@@ -124,8 +124,11 @@ export class HrCommsController {
 
 // ───────────── Dienstnummern ─────────────
 const listQ = z.object({ status: z.enum(DN_STATUSES).optional(), rangeId: uuid.optional(), q: z.string().max(80).optional(), department: z.string().max(64).optional(), rank: z.string().max(64).optional(), limit: z.coerce.number().int().min(1).max(1000).optional() });
-const assign = z.object({ personnelId: uuid, display: z.string().trim().min(1).max(40).optional(), rangeId: uuid.optional(), reason: z.string().max(500).optional() });
-const change = assign.extend({ reason: z.string().trim().min(3).max(500), approverId: uuid.nullable().optional() });
+const target = z.object({ display: z.string().trim().min(1).max(40).optional(), rangeId: uuid.optional(), reason: z.string().max(500).optional() });
+/** Person per Personalakte oder direkt als Discord-Mitglied (Personalakte wird dann angelegt). */
+const assign = target.extend({ personnelId: uuid.optional(), discordId: z.string().regex(/^\d{15,25}$/).optional(), name: z.string().trim().max(64).optional() })
+  .refine((b) => !!b.personnelId !== !!b.discordId, { message: 'Personalakte oder Discord-Mitglied angeben.' });
+const change = target.extend({ personnelId: uuid, reason: z.string().trim().min(3).max(500), approverId: uuid.nullable().optional() });
 const status = z.object({ display: z.string().trim().min(1).max(40), reason: z.string().max(500).optional(), userId: uuid.optional() });
 
 @ApiTags('hr')
@@ -144,6 +147,7 @@ export class ServiceNumbersController {
   /** Angenommene Bewerbungen ohne Personalakte nachträglich übernehmen. */
   @Post('from-applications') @HttpCode(200) @RequirePermission('personnel.create') fromApplications(@CurrentActor() a: Actor) { return this.s.profilesFromApplications(a); }
   @Post('pending/:id/confirm') @HttpCode(200) @RequirePermission('dienstnummer.assign') confirm(@CurrentActor() a: Actor, @Param('id', ParseUUIDPipe) id: string, @Body(zodBody(z.object({ display: z.string().trim().max(40).optional() }))) b: { display?: string }) { return this.s.confirmPending(a, id, b.display || undefined); }
+  @Get('discord-members') @RequirePermission('dienstnummer.assign') discordMembers(@Query(zodBody(z.object({ q: z.string().max(80).default('') }))) q: { q: string }) { return this.s.discordMembers(q.q); }
   @Post('assign') @HttpCode(200) @RequirePermission('dienstnummer.assign') assign(@CurrentActor() a: Actor, @Body(zodBody(assign)) b: z.infer<typeof assign>) { return this.s.assignManual(a, b); }
   @Post('change') @HttpCode(200) @RequirePermission('dienstnummer.edit') change(@CurrentActor() a: Actor, @Body(zodBody(change)) b: z.infer<typeof change>) { return this.s.change(a, b); }
   @Post('release') @HttpCode(200) @RequirePermission('dienstnummer.release') release(@CurrentActor() a: Actor, @Body(zodBody(status.extend({ as: z.enum(['FREE', 'FORMER']).default('FREE') }))) b: z.infer<typeof status> & { as: 'FREE' | 'FORMER' }) { return this.s.setStatus(a, b.display, b.as, b.reason); }

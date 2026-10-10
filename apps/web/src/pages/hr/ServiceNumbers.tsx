@@ -14,6 +14,7 @@ import { onSaved, useAutosaveDraft } from '../../lib/autosave';
 import { Toggle } from '../../components/ApplicationSettings';
 import { RolePicker } from '../../components/DiscordPickers';
 import { DiscordPreview } from '../../components/DiscordPreview';
+import { useDebounced } from '../../components/DataTable';
 import { SaveStatus } from '../../components/SaveStatus';
 import { Badge, Button, Card, ConfirmDialog, EmptyState, ErrorState, fmt, Input, Modal, PageHeader, Select, SkeletonRows, Tabs, Textarea, type Tone } from '../../components/ui';
 
@@ -225,21 +226,48 @@ function RowActions({ row, onAction }: { row: DnRow; onAction: (a: Action) => vo
   return <div className="flex flex-wrap gap-1">{items.length ? items : <span className="text-xs text-muted">—</span>}</div>;
 }
 
-/** Person aus den Personalakten wählen (mit Suche). */
-function PersonPicker({ value, onChange, label, people, filter }: { value: string; onChange: (id: string) => void; label: string; people: PersonRow[] | undefined; filter?: (p: PersonRow) => boolean }) {
+interface DiscordHit { id: string; username: string; displayName: string; avatar: string | null; personnelId: string | null; serviceNumber: string | null }
+/** Wert im Personen-Feld für ein Discord-Mitglied ohne Personalakte. */
+const DISCORD = 'discord:';
+
+/**
+ * Person aus den Personalakten wählen (mit Suche). Mit `discord`: ab 2 Zeichen zusätzlich Discord-Mitglieder
+ * des Servers – auch ohne Personalakte (Wert dann `discord:<id>`, die Akte wird beim Speichern angelegt).
+ */
+function PersonPicker({ value, onChange, label, people, filter, discord }: { value: string; onChange: (id: string, hit?: DiscordHit) => void; label: string; people: PersonRow[] | undefined; filter?: (p: PersonRow) => boolean; discord?: boolean }) {
   const [term, setTerm] = useState('');
   const t = term.trim().toLowerCase();
+  const q = useDebounced(term.trim(), 350);
   const rows = (people ?? []).filter((p) => (filter ? filter(p) : true) && (!t || [p.name, p.username, p.discordName, p.discordId, p.robloxName, p.serviceNumber, p.rank].some((v) => v?.toLowerCase().includes(t))));
+  const members = useQuery({ queryKey: ['dn', 'discord-members', q], queryFn: () => api<DiscordHit[]>('/dienstnummern/discord-members', { query: { q } }), enabled: !!discord && q.length >= 2, staleTime: 30_000 });
+  // Discord-Treffer, die schon als Personalakte in der Liste stehen, nicht doppelt zeigen
+  const shown = new Set(rows.map((p) => p.id));
+  const hits = (members.data ?? []).filter((m) => !m.personnelId || !shown.has(m.personnelId));
+  const [picked, setPicked] = useState<DiscordHit>();
+  const pick = (v: string) => {
+    const hit = v.startsWith(DISCORD) ? hits.find((m) => m.id === v.slice(DISCORD.length)) ?? picked : undefined;
+    setPicked(hit);
+    onChange(v, hit);
+  };
   return (
     <div className="grid gap-1">
-      <Input aria-label={`${label} suchen`} placeholder="Suchen (Name, Discord, Roblox, Dienstnummer) …" value={term} onChange={(e) => setTerm(e.target.value)} />
-      <Select aria-label={label} value={value} onChange={(e) => onChange(e.target.value)} disabled={!people}>
-        <option value="">{people ? `– ${label} wählen (${rows.length}) –` : 'Lädt …'}</option>
-        {rows.slice(0, 300).map((p) => <option key={p.id} value={p.id}>{p.name}{p.rank ? ` · ${p.rank}` : ''}{p.serviceNumber ? ` · ${p.serviceNumber}` : ''}</option>)}
+      <Input aria-label={`${label} suchen`} placeholder={discord ? 'Suchen (Name, Discord-Name, Roblox, Dienstnummer) …' : 'Suchen (Name, Discord, Roblox, Dienstnummer) …'} value={term} onChange={(e) => setTerm(e.target.value)} />
+      <Select aria-label={label} value={value} onChange={(e) => pick(e.target.value)} disabled={!people}>
+        <option value="">{people ? `– ${label} wählen (${rows.length + hits.length}) –` : 'Lädt …'}</option>
+        {discord ? <optgroup label="Personalakten">{rows.slice(0, 300).map((p) => <PersonOption key={p.id} p={p} />)}</optgroup> : rows.slice(0, 300).map((p) => <PersonOption key={p.id} p={p} />)}
+        {discord && q.length >= 2 && (
+          <optgroup label={members.isFetching ? 'Discord – sucht …' : `Discord-Mitglieder (${hits.length})`}>
+            {hits.map((m) => <option key={m.id} value={m.personnelId ?? `${DISCORD}${m.id}`}>{m.displayName} (@{m.username}){m.personnelId ? (m.serviceNumber ? ` · ${m.serviceNumber}` : ' · Personalakte') : ' · neue Personalakte'}</option>)}
+          </optgroup>
+        )}
+        {/* gewähltes Discord-Mitglied bleibt sichtbar, auch wenn sich die Suche ändert */}
+        {picked && value === `${DISCORD}${picked.id}` && !hits.some((m) => m.id === picked.id) && <option value={value}>{picked.displayName} (@{picked.username}) · neue Personalakte</option>}
       </Select>
+      {discord && q.length >= 2 && !members.isFetching && members.data && !hits.length && !rows.length && <p className="text-xs text-muted">Niemand gefunden – Discord sucht nach dem Anfang des Benutzer- oder Servernamens.</p>}
     </div>
   );
 }
+const PersonOption = ({ p }: { p: PersonRow }) => <option value={p.id}>{p.name}{p.rank ? ` · ${p.rank}` : ''}{p.serviceNumber ? ` · ${p.serviceNumber}` : ''}</option>;
 
 const CHECKS = ['Nummer existiert in einem Nummernkreis', 'Nummer ist verfügbar (frei)', 'Nummer ist nicht reserviert oder gesperrt', 'Person hat noch keine aktive Dienstnummer'];
 
@@ -249,6 +277,7 @@ function AssignModal({ row, onClose }: { row?: DnRow; onClose: () => void }) {
   const people = usePeople(true);
   const ranges = useRanges();
   const [personnelId, setPersonnelId] = useState('');
+  const [member, setMember] = useState<DiscordHit>();
   const [mode, setMode] = useState<'display' | 'range'>('display');
   const [display, setDisplay] = useState(row?.display ?? '');
   const [rangeId, setRangeId] = useState('');
@@ -256,9 +285,11 @@ function AssignModal({ row, onClose }: { row?: DnRow; onClose: () => void }) {
   const [confirm, setConfirm] = useState(false);
   const [err, setErr] = useState<string>();
   const person = people.data?.rows.find((p) => p.id === personnelId);
+  const discordId = personnelId.startsWith(DISCORD) ? personnelId.slice(DISCORD.length) : null;
+  const who = discordId ? { personnelId: undefined, discordId, name: member?.displayName } : { personnelId };
   const target = row ? row.display : mode === 'display' ? display.trim() : `nächste freie aus „${ranges.data?.find((r) => r.id === rangeId)?.name ?? '?'}“`;
   const save = useMutation({
-    mutationFn: () => api<{ display: string }>('/dienstnummern/assign', { method: 'POST', body: { personnelId, ...(row || mode === 'display' ? { display: row?.display ?? display.trim() } : { rangeId }), reason: reason.trim() || undefined } }),
+    mutationFn: () => api<{ display: string }>('/dienstnummern/assign', { method: 'POST', body: { ...who, ...(row || mode === 'display' ? { display: row?.display ?? display.trim() } : { rangeId }), reason: reason.trim() || undefined } }),
     onSuccess: () => { invalidate(); onClose(); },
     onError: (e) => { setConfirm(false); setErr(errText(e)); },
   });
@@ -267,7 +298,8 @@ function AssignModal({ row, onClose }: { row?: DnRow; onClose: () => void }) {
     <>
       <Modal open={!confirm} title={row ? `Dienstnummer ${row.display} vergeben` : 'Dienstnummer manuell vergeben'} onClose={onClose}>
         <form className="grid gap-3" onSubmit={(e) => { e.preventDefault(); if (ready) { setErr(undefined); setConfirm(true); } }}>
-          <Row label="Person (Personalakte) *"><PersonPicker label="Person" value={personnelId} onChange={setPersonnelId} people={people.data?.rows} /></Row>
+          <Row label="Person (Personalakte oder Discord) *"><PersonPicker discord label="Person" value={personnelId} onChange={(id, hit) => { setPersonnelId(id); setMember(hit); }} people={people.data?.rows} /></Row>
+          {discordId && <p className="rounded-md border border-primary/40 bg-primary/10 p-2 text-sm">ℹ️ <b>{member?.displayName ?? discordId}</b> hat noch keine Personalakte – sie wird beim Vergeben automatisch angelegt.</p>}
           {person?.serviceNumber && <p role="alert" className="rounded-md border border-warning/40 bg-warning/10 p-2 text-sm text-warning">⚠️ {person.name} hat bereits die Dienstnummer <b>{person.serviceNumber}</b>. Nutze stattdessen „Ändern“ – eine zweite aktive Nummer ist nicht erlaubt.</p>}
           {!row && (
             <>
@@ -297,7 +329,7 @@ function AssignModal({ row, onClose }: { row?: DnRow; onClose: () => void }) {
         </form>
       </Modal>
       <ConfirmDialog open={confirm} title="Vergabe bestätigen" busy={save.isPending} confirmLabel="Vergeben" onClose={() => setConfirm(false)} onConfirm={() => save.mutate()}
-        message={<>Dienstnummer <b className="font-mono">{target}</b> an <b>{person?.name ?? '—'}</b> vergeben? Nickname und DM folgen den Einstellungen.</>} />
+        message={<>Dienstnummer <b className="font-mono">{target}</b> an <b>{person?.name ?? member?.displayName ?? '—'}</b> vergeben? Nickname und DM folgen den Einstellungen.</>} />
     </>
   );
 }

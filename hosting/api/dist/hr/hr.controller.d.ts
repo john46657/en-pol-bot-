@@ -1618,27 +1618,49 @@ declare const listQ: z.ZodObject<{
     limit?: number | undefined;
     q?: string | undefined;
 }>;
-declare const assign: z.ZodObject<{
-    personnelId: z.ZodString;
+/** Person per Personalakte oder direkt als Discord-Mitglied (Personalakte wird dann angelegt). */
+declare const assign: z.ZodEffects<z.ZodObject<{
     display: z.ZodOptional<z.ZodString>;
     rangeId: z.ZodOptional<z.ZodString>;
     reason: z.ZodOptional<z.ZodString>;
+} & {
+    personnelId: z.ZodOptional<z.ZodString>;
+    discordId: z.ZodOptional<z.ZodString>;
+    name: z.ZodOptional<z.ZodString>;
 }, "strip", z.ZodTypeAny, {
-    personnelId: string;
     reason?: string | undefined;
+    name?: string | undefined;
+    personnelId?: string | undefined;
+    discordId?: string | undefined;
     rangeId?: string | undefined;
     display?: string | undefined;
 }, {
-    personnelId: string;
     reason?: string | undefined;
+    name?: string | undefined;
+    personnelId?: string | undefined;
+    discordId?: string | undefined;
+    rangeId?: string | undefined;
+    display?: string | undefined;
+}>, {
+    reason?: string | undefined;
+    name?: string | undefined;
+    personnelId?: string | undefined;
+    discordId?: string | undefined;
+    rangeId?: string | undefined;
+    display?: string | undefined;
+}, {
+    reason?: string | undefined;
+    name?: string | undefined;
+    personnelId?: string | undefined;
+    discordId?: string | undefined;
     rangeId?: string | undefined;
     display?: string | undefined;
 }>;
 declare const change: z.ZodObject<{
-    personnelId: z.ZodString;
     display: z.ZodOptional<z.ZodString>;
     rangeId: z.ZodOptional<z.ZodString>;
 } & {
+    personnelId: z.ZodString;
     reason: z.ZodString;
     approverId: z.ZodOptional<z.ZodNullable<z.ZodString>>;
 }, "strip", z.ZodTypeAny, {
@@ -1864,6 +1886,16 @@ export declare class ServiceNumbersController {
             releaseAs: string;
         };
     }>;
+    discordMembers(q: {
+        q: string;
+    }): Promise<{
+        personnelId: string | null;
+        serviceNumber: string | null;
+        id: string;
+        username: string;
+        displayName: string;
+        avatar: string | null;
+    }[]>;
     assign(a: Actor, b: z.infer<typeof assign>): Promise<{
         display: string;
         old: string | null;
