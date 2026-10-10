@@ -59,6 +59,31 @@ export declare class AcademyController {
         passScore: number;
         instructorId: string | null;
     })[]>;
+    course(id: string): Promise<{
+        enrollments: {
+            personnelId: string;
+            userId: string;
+            name: string;
+            callsign: string | null;
+            rank: string | null;
+            result: {
+                id: string;
+                createdAt: Date;
+                enrollmentId: string;
+                score: number;
+                passed: boolean;
+                gradedById: string | null;
+            } | null;
+            id: string;
+            createdAt: Date;
+            courseId: string;
+        }[];
+        id: string;
+        title: string;
+        description: string | null;
+        passScore: number;
+        instructorId: string | null;
+    }>;
     create(ac: Actor, b: z.infer<typeof course>): Promise<{
         announced: {
             channelId: string | null;

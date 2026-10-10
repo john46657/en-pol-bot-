@@ -47,6 +47,10 @@ export declare class UsersService {
         pageSize: number;
     }>;
     get(id: string): Promise<{
+        discord: {
+            discordId: string;
+            linkedAt: Date;
+        } | null;
         id: string;
         createdAt: Date;
         updatedAt: Date;

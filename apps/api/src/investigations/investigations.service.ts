@@ -26,7 +26,7 @@ export class InvestigationsService {
     const inv = await this.prisma.investigation.findUnique({ where: { id } });
     if (!inv) throw new AppError('NOT_FOUND', 'Ermittlung nicht gefunden.');
     const [links, evidence, timeline] = await Promise.all([
-      this.prisma.recordLink.findMany({ where: { entityType: 'Investigation', entityId: id } }),
+      this.prisma.recordLink.findMany({ where: { entityType: 'Investigation', entityId: id }, include: { person: { select: { id: true, robloxUsername: true } } }, orderBy: { createdAt: 'asc' } }),
       this.prisma.evidence.findMany({ where: { caseRef: inv.caseNumber }, select: { id: true, number: true, type: true, custodyState: true } }),
       this.timeline.list('Investigation', id),
     ]);

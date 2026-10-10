@@ -1,5 +1,6 @@
 /** Deutsche Anzeigenamen für Status- und Prioritätswerte (Dashboard, Benachrichtigungen, Verlauf). */
 export const STATUS_LABEL: Record<string, string> = {
+  SUSPECT: 'Verdächtige Person', WITNESS: 'Zeuge', VICTIM: 'Opfer', PERSON_OF_INTEREST: 'Relevante Person',
   NEW: 'Neu', ACKNOWLEDGED: 'Bestätigt', ASSIGNED: 'Zugewiesen', EN_ROUTE: 'Anfahrt', ON_SCENE: 'Vor Ort', PROCESSING: 'In Bearbeitung', CLEARING: 'Abschluss', CLOSED: 'Geschlossen', CANCELLED: 'Abgebrochen',
   DRAFT: 'Entwurf', SUBMITTED: 'Eingereicht', UNDER_REVIEW: 'In Prüfung', APPROVED: 'Genehmigt', REJECTED: 'Abgelehnt', ARCHIVED: 'Archiviert',
   ISSUED: 'Ausgestellt', PAID: 'Bezahlt', VOID: 'Ungültig', ACTIVE: 'Aktiv', CLEARED: 'Erledigt', EXPIRED: 'Abgelaufen', OPEN: 'Offen', SUSPENDED: 'Ausgesetzt',

@@ -14,6 +14,8 @@ export class AcademyController {
   constructor(private readonly a: AcademyService) {}
   @Get('courses') @RequirePermission('academy.view')
   courses() { return this.a.courses(); }
+  @Get('courses/:id') @RequirePermission('academy.view')
+  course(@Param('id', ParseUUIDPipe) id: string) { return this.a.course(id); }
   @Post('courses') @RequirePermission('academy.manage')
   create(@CurrentActor() ac: Actor, @Body(zodBody(course)) b: z.infer<typeof course>) { const { announce, ...d } = b; return this.a.createCourse(ac, d, announce); }
   /** Standard-Kanal und Ping-Rollen für Ankündigungen. */

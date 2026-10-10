@@ -600,6 +600,10 @@ function renderTemplate(tpl, ctx) {
 
 // src/labels.ts
 var STATUS_LABEL = {
+  SUSPECT: "Verd\xE4chtige Person",
+  WITNESS: "Zeuge",
+  VICTIM: "Opfer",
+  PERSON_OF_INTEREST: "Relevante Person",
   NEW: "Neu",
   ACKNOWLEDGED: "Best\xE4tigt",
   ASSIGNED: "Zugewiesen",

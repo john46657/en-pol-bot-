@@ -6,7 +6,8 @@ import { api, ApiError } from '../../lib/api';
 import { useAutosaveDraft } from '../../lib/autosave';
 import { useGuilds } from '../../lib/guilds';
 import { ChannelPicker } from '../../components/DiscordPickers';
-import { Button, Card, Field, Input, PageHeader, Select, SkeletonRows, Textarea } from '../../components/ui';
+import { Button, Card, Field, fmt, Input, PageHeader, Select, SkeletonRows, Textarea } from '../../components/ui';
+import { useAuth } from '../../lib/auth';
 
 /** Discord-Nachrichten → Gefahrenstatus: Stufen, Texte, Schaltflächen, Ping und das Discord-Panel (automatisch gespeichert). */
 export function DangerSettingsPage() {
@@ -15,6 +16,39 @@ export function DangerSettingsPage() {
       <PageHeader title="Gefahrenstatus" subtitle="Stufen, Texte, Schaltflächen und das Panel in Discord – Änderungen werden automatisch gespeichert" />
       <DangerSettings />
     </>
+  );
+}
+
+// ───────── Aktueller Status (direkt im Dashboard schalten, wie per Button im Discord-Panel) ─────────
+interface DangerNow { level: string; reason: string | null; setByName: string | null; at: string | null; levels: { key: string; name: string; title: string; emoji: string; color: string }[] }
+function DangerCurrent() {
+  const { can } = useAuth();
+  const qc = useQueryClient();
+  const cur = useQuery({ queryKey: ['danger-now'], queryFn: () => api<DangerNow>('/danger-level'), refetchInterval: 15_000 });
+  const [reason, setReason] = useState('');
+  const [msg, setMsg] = useState<{ ok: boolean; text: string }>();
+  const set = useMutation({
+    mutationFn: (level: string) => api<DangerNow>('/danger-level', { method: 'PUT', body: { level, ...(reason.trim() ? { reason: reason.trim() } : {}) } }),
+    onSuccess: (r) => { setReason(''); qc.setQueryData(['danger-now'], r); setMsg({ ok: true, text: '✅ Status gesetzt – die Meldung geht gleich in Discord raus.' }); },
+    onError: (e) => setMsg({ ok: false, text: e instanceof ApiError ? e.message : 'Fehler' }),
+  });
+  const now = cur.data?.levels.find((l) => l.key === cur.data?.level);
+  return (
+    <Card title="🚨 Aktueller Status" className="lg:col-span-2">
+      {!cur.data ? <SkeletonRows rows={2} /> : <>
+        <p className="mb-3 text-sm">
+          {now ? <b style={{ color: now.color }}>{now.emoji} {now.name} – {now.title}</b> : <span className="text-muted">noch nicht gesetzt</span>}
+          {cur.data.at && <span className="ml-2 text-xs text-muted">seit {fmt(cur.data.at)}{cur.data.setByName ? ` · von ${cur.data.setByName}` : ''}{cur.data.reason ? ` · „${cur.data.reason}“` : ''}</span>}
+        </p>
+        {can('dispatch.manage') ? <>
+          <Field label="Grund (optional)">{(id) => <Input id={id} maxLength={200} value={reason} onChange={(e) => setReason(e.target.value)} placeholder="z. B. Schießerei Innenstadt" />}</Field>
+          <div className="mt-2 flex flex-wrap gap-2">{cur.data.levels.map((l) => (
+            <Button key={l.key} size="sm" variant={l.key === cur.data?.level ? 'primary' : 'secondary'} disabled={set.isPending} onClick={() => set.mutate(l.key)} style={{ borderColor: l.color }}>{l.emoji} {l.name}</Button>
+          ))}</div>
+        </> : <p className="text-xs text-muted">Zum Umschalten fehlt das Recht „dispatch.manage“.</p>}
+        {msg && <p role={msg.ok ? 'status' : 'alert'} className={`mt-2 text-sm ${msg.ok ? 'text-success' : 'text-danger'}`}>{msg.text}</p>}
+      </>}
+    </Card>
   );
 }
 
@@ -55,6 +89,7 @@ function DangerSettings() {
   const move = (i: number, dir: number) => { const n = [...d.levels]; const [x] = n.splice(i, 1); n.splice(i + dir, 0, x!); setD({ ...d, levels: n }); };
   return (
     <div className="grid gap-3 lg:grid-cols-2">
+      <DangerCurrent />
       <DangerPanelSender />
       <Card title="📣 Kanal für Statusänderungen" className="lg:col-span-2">
         <p className="mb-2 text-xs text-muted">Hier postet der Bot bei jeder Änderung des Gefahrenstatus eine Meldung (mit Ping). Das kann ein anderer Kanal sein als der des Panels. Die vorherige Meldung ersetzt der Bot dabei.</p>

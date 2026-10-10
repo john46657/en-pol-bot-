@@ -6,7 +6,8 @@ import { api, ApiError } from '../lib/api';
 import { useAuth } from '../lib/auth';
 import { hasPending, onSaved, pendingBody, queueSave } from '../lib/autosave';
 import { guildName, useGuilds, useServer } from '../lib/guilds';
-import { Badge, Button, Card, ConfirmDialog, EmptyState, ErrorState, Input, PageHeader, SkeletonRows, Textarea } from '../components/ui';
+import { Badge, Button, Card, ConfirmDialog, EmptyState, ErrorState, fmt, Input, PageHeader, Select, SkeletonRows, Textarea } from '../components/ui';
+import type { Overview } from '../lib/hr';
 import { useAutosaveDraft } from '../lib/autosave';
 import { errText } from '../lib/tickets';
 import { ChannelPicker } from '../components/DiscordPickers';
@@ -152,7 +153,63 @@ export function RadioCodes() {
           </table></div>
         )}
       </Card>
+      {can('team.view') && <RadioWhitelist />}
       <ConfirmDialog open={!!del} danger title="Funk-Code löschen" message={`„${del?.code} – ${del?.meaning}“ löschen?`} confirmLabel="Löschen" busy={remove.isPending} onClose={() => setDel(undefined)} onConfirm={() => del && remove.mutate(del)} />
     </>
+  );
+}
+
+interface WhitelistRow { userId: string; displayName: string; callsign: string | null; rank: string | null; since: string }
+/** Funk-Freigabe: wer im Funk sprechen darf (gleiche Liste wie der Bot-Befehl). Hinzufügen per Personal-Auswahl oder Discord-ID. */
+function RadioWhitelist() {
+  const { can } = useAuth();
+  const manage = can('personnel.edit');
+  const qc = useQueryClient();
+  const q = useQuery({ queryKey: ['radio-whitelist'], queryFn: () => api<WhitelistRow[]>('/radio-whitelist') });
+  const people = useQuery({ queryKey: ['hr-people', 'pick'], queryFn: () => api<Overview>('/hr/people'), enabled: manage && can('personnel.view'), staleTime: 60_000 });
+  const [pick, setPick] = useState('');
+  const [discordId, setDiscordId] = useState('');
+  const [msg, setMsg] = useState<{ ok: boolean; text: string }>();
+  const [del, setDel] = useState<WhitelistRow>();
+  const done = (text: string) => { setMsg({ ok: true, text }); void qc.invalidateQueries({ queryKey: ['radio-whitelist'] }); };
+  const add = useMutation({
+    mutationFn: () => api<{ displayName: string }>('/radio-whitelist', { body: pick ? { userId: pick } : { discordId: discordId.trim() } }),
+    onSuccess: (r) => { setPick(''); setDiscordId(''); done(`✅ ${r.displayName} ist jetzt für den Funk freigegeben.`); },
+    onError: (e) => setMsg({ ok: false, text: errText(e) }),
+  });
+  const remove = useMutation({
+    mutationFn: (userId: string) => api<{ displayName: string }>('/radio-whitelist/remove', { body: { userId } }),
+    onSuccess: (r) => { setDel(undefined); done(`${r.displayName} wurde von der Funk-Whitelist entfernt.`); },
+    onError: (e) => { setDel(undefined); setMsg({ ok: false, text: errText(e) }); },
+  });
+  const listed = new Set(q.data?.map((r) => r.userId));
+  const options = (people.data?.rows ?? []).filter((p) => !listed.has(p.userId)).sort((a, b) => a.name.localeCompare(b.name, 'de'));
+  const validDiscord = /^\d{15,25}$/.test(discordId.trim());
+  return (
+    <Card title={`🎙️ Funk-Whitelist${q.data ? ` (${q.data.length})` : ''}`} className="mt-4">
+      <p className="mb-2 text-xs text-muted">Nur freigegebene Mitglieder gelten als funkberechtigt – dieselbe Liste, die der Bot nutzt.</p>
+      {manage && (
+        <div className="mb-3 flex flex-wrap items-end gap-2">
+          {can('personnel.view') && (
+            <Select aria-label="Person freigeben" className="min-w-0 flex-1" value={pick} onChange={(e) => { setPick(e.target.value); if (e.target.value) setDiscordId(''); }}>
+              <option value="">{options.length ? 'Person aus dem Personal …' : 'Keine weiteren Personen'}</option>
+              {options.map((p) => <option key={p.userId} value={p.userId}>{p.name}{p.callsign ? ` (${p.callsign})` : ''}</option>)}
+            </Select>
+          )}
+          <Input aria-label="oder Discord-ID" className="w-56" placeholder="oder Discord-ID" inputMode="numeric" value={discordId} onChange={(e) => { setDiscordId(e.target.value); if (e.target.value) setPick(''); }} />
+          <Button disabled={add.isPending || (!pick && !validDiscord)} onClick={() => add.mutate()}>Freigeben</Button>
+        </div>
+      )}
+      {msg && <p role={msg.ok ? 'status' : 'alert'} className={`mb-2 text-sm ${msg.ok ? 'text-success' : 'text-danger'}`}>{msg.text}</p>}
+      {q.isLoading ? <SkeletonRows rows={3} /> : q.error ? <ErrorState error={q.error} onRetry={() => void q.refetch()} /> : !q.data?.length ? <EmptyState text="Noch niemand freigegeben." /> : (
+        <ul className="divide-y divide-line">{q.data.map((r) => (
+          <li key={r.userId} className="flex flex-wrap items-center justify-between gap-2 py-1.5 text-sm">
+            <span><b>{r.displayName}</b>{r.callsign ? <span className="ml-1 text-xs text-muted">({r.callsign})</span> : null}{r.rank ? <span className="ml-2 text-xs text-muted">{r.rank}</span> : null}</span>
+            <span className="flex items-center gap-2 text-xs text-muted">seit {fmt(r.since)}{manage && <Button size="sm" variant="ghost" aria-label={`${r.displayName} entfernen`} onClick={() => setDel(r)}><Trash2 size={13} /></Button>}</span>
+          </li>
+        ))}</ul>
+      )}
+      <ConfirmDialog open={!!del} danger title="Funk-Freigabe entziehen" message={`${del?.displayName ?? ''} von der Funk-Whitelist entfernen?`} confirmLabel="Entfernen" busy={remove.isPending} onClose={() => setDel(undefined)} onConfirm={() => del && remove.mutate(del.userId)} />
+    </Card>
   );
 }

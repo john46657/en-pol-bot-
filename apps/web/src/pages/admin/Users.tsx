@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { ALL_PERMISSIONS } from '@enrp/shared';
 import { api, ApiError, type Page } from '../../lib/api';
@@ -7,7 +7,7 @@ import { Badge, Button, Card, ConfirmDialog, Field, fmt, Input, Modal, Select, S
 import { DataTable, useDebounced, useTablePageSize } from '../../components/DataTable';
 import { FormModal } from '../../components/FormModal';
 
-interface U { id: string; username: string; displayName: string; active: boolean; lastLogin: string | null; totpEnabledAt?: string | null; robloxUserId: string | null; robloxUsername: string | null; robloxStatus: string; roles: { role: { id: string; name: string } }[]; overrides: { permissionKey: string; effect: string; reason: string | null }[] }
+interface U { id: string; username: string; displayName: string; active: boolean; discord?: { discordId: string; linkedAt: string } | null; lastLogin: string | null; totpEnabledAt?: string | null; robloxUserId: string | null; robloxUsername: string | null; robloxStatus: string; roles: { role: { id: string; name: string } }[]; overrides: { permissionKey: string; effect: string; reason: string | null }[] }
 interface Role { id: string; name: string }
 
 export function Users() {
@@ -44,7 +44,9 @@ function UserDrawer({ user, roles, manage, canRoles, isSelf, onClose }: { user: 
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [dname, setDname] = useState(u.displayName);
   const [confirm2fa, setConfirm2fa] = useState(false);
+  const [confirmUnlink, setConfirmUnlink] = useState(false);
   const refresh = async () => setU(await api<U>(`/users/${u.id}`));
+  useEffect(() => { void refresh().catch(() => undefined); }, [user.id]); // Liste liefert keine Discord-Verknüpfung
   const run = async (fn: () => Promise<unknown>) => { try { setErr(undefined); await fn(); await refresh(); } catch (e) { setErr(e instanceof ApiError ? `${e.message}${e.requestId ? ` (Anfrage-ID ${e.requestId})` : ''}` : 'Fehlgeschlagen'); } };
   const setRoles = useMutation({ mutationFn: (ids: string[]) => api(`/users/${u.id}/roles`, { method: 'PUT', body: { roleIds: ids } }) });
   const roleIds = u.roles.map((r) => r.role.id);
@@ -67,6 +69,9 @@ function UserDrawer({ user, roles, manage, canRoles, isSelf, onClose }: { user: 
           {u.overrides.length === 0 ? <p className="text-sm text-muted">Keine Ausnahmen.</p> : <ul className="mb-3 space-y-1">{u.overrides.map((o) => <li key={o.permissionKey} className="flex items-center justify-between text-sm"><span><Badge tone={o.effect === 'DENY' ? 'danger' : 'success'}>{o.effect === 'DENY' ? 'Verbieten' : 'Erlauben'}</Badge> <code>{o.permissionKey}</code> {o.reason && <span className="text-xs text-muted">— {o.reason}</span>}</span>{canRoles && <Button size="sm" variant="ghost" onClick={() => void run(() => api(`/users/${u.id}/overrides/${o.permissionKey}`, { method: 'DELETE' }))}>Entfernen</Button>}</li>)}</ul>}
           {canRoles && <div className="grid items-end gap-2 sm:grid-cols-[1fr_auto_1fr_auto]"><Field label="Recht">{(id) => <Select id={id} value={perm} onChange={(e) => setPerm(e.target.value)}>{ALL_PERMISSIONS.map((p) => <option key={p}>{p}</option>)}</Select>}</Field><Field label="Wirkung">{(id) => <Select id={id} value={effect} onChange={(e) => setEffect(e.target.value)}><option value="ALLOW">Erlauben</option><option value="DENY">Verbieten</option></Select>}</Field><Field label="Grund">{(id) => <Input id={id} value={why} onChange={(e) => setWhy(e.target.value)} />}</Field><Button onClick={() => void run(() => api(`/users/${u.id}/overrides`, { method: 'PUT', body: { permission: perm, effect, reason: why || undefined } }))}>Ausnahme setzen</Button></div>}
         </Card>
+        <Card title="Discord-Verknüpfung">
+          <div className="flex flex-wrap items-center justify-between gap-2 text-sm"><span>{u.discord ? <>Discord-ID <code>{u.discord.discordId}</code> · seit {fmt(u.discord.linkedAt)}</> : u.discord === null ? 'Nicht verknüpft' : '…'}</span>{manage && u.discord && <Button variant="secondary" onClick={() => setConfirmUnlink(true)}>Verknüpfung lösen</Button>}</div>
+        </Card>
         <Card title="Zwei-Faktor-Anmeldung">
           <div className="flex flex-wrap items-center justify-between gap-2 text-sm"><span>{u.totpEnabledAt ? <>Aktiv seit {fmt(u.totpEnabledAt)}</> : 'Nicht eingerichtet'}</span>{manage && !isSelf && u.totpEnabledAt && <Button variant="secondary" onClick={() => setConfirm2fa(true)}>Zurücksetzen</Button>}</div>
         </Card>
@@ -76,6 +81,7 @@ function UserDrawer({ user, roles, manage, canRoles, isSelf, onClose }: { user: 
         message={<>Konto <b>@{u.username}</b> ({u.displayName}) endgültig löschen? Rollen, Sitzungen, Personalakte und persönliche Einstellungen gehen mit. Das lässt sich nicht rückgängig machen; im Audit-Log bleibt vermerkt, wer gelöscht wurde. Nur sperren: „Konto deaktivieren“.</>}
         onConfirm={() => { setConfirmDelete(false); void (async () => { try { setErr(undefined); await api(`/users/${u.id}`, { method: 'DELETE' }); onClose(); } catch (e) { setErr(e instanceof ApiError ? e.message : 'Fehlgeschlagen'); } })(); }} />
       <ConfirmDialog open={confirmDisable} danger title="Konto deaktivieren" message="Der Benutzer wird sofort abgemeldet und kann sich erst nach Reaktivierung wieder anmelden. Wird protokolliert." confirmLabel="Deaktivieren" onClose={() => setConfirmDisable(false)} onConfirm={() => { setConfirmDisable(false); void run(() => api(`/users/${u.id}/active`, { method: 'PUT', body: { active: false } })); }} />
+      <ConfirmDialog open={confirmUnlink} danger title="Discord-Verknüpfung lösen" message="Bot-Befehle und Discord-Rollen gelten danach nicht mehr für dieses Konto, bis es neu verknüpft wird. Wird protokolliert." confirmLabel="Lösen" onClose={() => setConfirmUnlink(false)} onConfirm={() => { setConfirmUnlink(false); void run(() => api(`/discord/links/${u.id}`, { method: 'DELETE' })); }} />
       <ConfirmDialog open={confirm2fa} danger title="Zwei-Faktor zurücksetzen" message="Nur wenn die Person ihr Handy und ihre Wiederherstellungscodes verloren hat – Identität vorher prüfen. Danach reicht das Passwort, bis sie 2FA neu einrichtet. Wird protokolliert." confirmLabel="Zurücksetzen" onClose={() => setConfirm2fa(false)} onConfirm={() => { setConfirm2fa(false); void run(() => api(`/users/${u.id}/2fa/reset`, { method: 'POST' })); }} />
     </Modal>
   );
