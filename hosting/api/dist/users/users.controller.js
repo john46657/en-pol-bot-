@@ -47,6 +47,7 @@ let UsersController = class UsersController {
     setActive(a, id, b) { return this.users.setActive(a, id, b.active, b.reason); }
     /** Zwei-Faktor eines Kontos zurücksetzen (Handy verloren, keine Wiederherstellungscodes). */
     async resetTwoFactor(a, id) { await this.twoFactor.adminReset(a, id); }
+    remove(a, id) { return this.users.remove(a, id); }
     setName(a, id, b) { return this.users.setName(a, id, b.displayName); }
     setRoles(a, id, b) { return this.users.setRoles(a, id, b.roleIds); }
     setOverride(a, id, b) { return this.users.setOverride(a, id, b); }
@@ -108,6 +109,16 @@ __decorate([
     __metadata("design:paramtypes", [Object, String]),
     __metadata("design:returntype", Promise)
 ], UsersController.prototype, "resetTwoFactor", null);
+__decorate([
+    (0, common_1.Delete)(':id'),
+    (0, common_1.HttpCode)(204),
+    (0, decorators_1.RequirePermission)('users.manage'),
+    __param(0, (0, decorators_1.CurrentActor)()),
+    __param(1, (0, common_1.Param)('id', common_1.ParseUUIDPipe)),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, String]),
+    __metadata("design:returntype", void 0)
+], UsersController.prototype, "remove", null);
 __decorate([
     (0, common_1.Put)(':id/name'),
     (0, decorators_1.RequirePermission)('users.manage'),

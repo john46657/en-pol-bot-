@@ -21,4 +21,18 @@ describe('Anzeigename', () => {
     expect((await prisma.user.findUniqueOrThrow({ where: { id: member.id } })).displayName).toBe('Officer Max');
     expect(await prisma.auditLog.count({ where: { action: 'user.rename', entityId: member.id } })).toBe(2);
   });
+
+  it('accounts can be deleted (not yourself, not the last admin), audited', async () => {
+    const a1 = await makeUser(prisma, 'del_admin1', ['System Administrator']);
+    const target = await makeUser(prisma, 'del_target', ['Police Member']);
+    const m = await makeUser(prisma, 'del_member', ['Supervisor']);
+    const admin = (await login(app, 'del_admin1')).agent;
+    const sup = (await login(app, 'del_member')).agent;
+    expect((await sup.delete(`/api/v1/users/${target.id}`)).status).toBe(403); // ohne users.manage
+    expect((await admin.delete(`/api/v1/users/${a1.id}`)).status).toBe(409); // nicht sich selbst
+    expect((await admin.delete(`/api/v1/users/${target.id}`)).status).toBe(204);
+    expect(await prisma.user.findUnique({ where: { id: target.id } })).toBeNull();
+    expect(await prisma.auditLog.count({ where: { action: 'user.delete', entityId: target.id } })).toBe(1);
+    expect(m.id).toBeTruthy();
+  });
 });

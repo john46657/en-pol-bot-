@@ -45,6 +45,9 @@ export class UsersController {
   @Post(':id/2fa/reset') @HttpCode(204) @RequirePermission('users.manage')
   async resetTwoFactor(@CurrentActor() a: Actor, @Param('id', ParseUUIDPipe) id: string) { await this.twoFactor.adminReset(a, id); }
 
+  @Delete(':id') @HttpCode(204) @RequirePermission('users.manage')
+  remove(@CurrentActor() a: Actor, @Param('id', ParseUUIDPipe) id: string) { return this.users.remove(a, id); }
+
   @Put(':id/name') @RequirePermission('users.manage')
   setName(@CurrentActor() a: Actor, @Param('id', ParseUUIDPipe) id: string, @Body(zodBody(nameBody)) b: z.infer<typeof nameBody>) { return this.users.setName(a, id, b.displayName); }
 

@@ -161,6 +161,11 @@ export declare class UsersService {
             effect: string;
         }[];
     }>;
+    /**
+     * Konto endgültig löschen (users.manage): nicht das eigene, nur unterhalb des eigenen Rangs, der letzte aktive
+     * System Administrator bleibt. Sitzungen, Rollen, Personalakte usw. gehen mit; im Audit-Log bleibt festgehalten, wer gelöscht wurde.
+     */
+    remove(actor: Actor, id: string): Promise<void>;
     setActive(actor: Actor, id: string, active: boolean, reason?: string): Promise<{
         id: string;
         createdAt: Date;

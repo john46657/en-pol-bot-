@@ -210,6 +210,7 @@ export declare class UsersController {
     }>;
     /** Zwei-Faktor eines Kontos zurücksetzen (Handy verloren, keine Wiederherstellungscodes). */
     resetTwoFactor(a: Actor, id: string): Promise<void>;
+    remove(a: Actor, id: string): Promise<void>;
     setName(a: Actor, id: string, b: z.infer<typeof nameBody>): Promise<{
         id: string;
         createdAt: Date;

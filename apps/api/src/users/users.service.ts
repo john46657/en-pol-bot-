@@ -94,6 +94,22 @@ export class UsersService {
     });
   }
 
+  /**
+   * Konto endgültig löschen (users.manage): nicht das eigene, nur unterhalb des eigenen Rangs, der letzte aktive
+   * System Administrator bleibt. Sitzungen, Rollen, Personalakte usw. gehen mit; im Audit-Log bleibt festgehalten, wer gelöscht wurde.
+   */
+  async remove(actor: Actor, id: string) {
+    if (id === actor.userId) throw new AppError('CONFLICT', 'Du kannst dein eigenes Konto nicht löschen.');
+    const before = await this.get(id);
+    await this.perms.assertOutranksUser(actor.userId!, id);
+    await this.auth.revokeAllSessions(id);
+    await this.prisma.$transaction(async (tx) => {
+      await this.assertAdminRemains(tx, id);
+      await tx.user.delete({ where: { id } });
+      await this.audit.record(actor, { action: 'user.delete', module: 'users', entityType: 'User', entityId: id, before: { username: before.username, displayName: before.displayName, roles: before.roles.map((r) => r.role.name) } }, tx);
+    });
+  }
+
   async setActive(actor: Actor, id: string, active: boolean, reason?: string) {
     if (!active && id === actor.userId) throw new AppError('CONFLICT', 'Du kannst dein eigenes Konto nicht deaktivieren.');
     await this.get(id);

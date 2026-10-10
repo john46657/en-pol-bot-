@@ -41,6 +41,7 @@ function UserDrawer({ user, roles, manage, canRoles, isSelf, onClose }: { user: 
   const [rid, setRid] = useState(''); const [rname, setRname] = useState('');
   const [perm, setPerm] = useState<string>(ALL_PERMISSIONS[0]!); const [effect, setEffect] = useState('DENY'); const [why, setWhy] = useState('');
   const [confirmDisable, setConfirmDisable] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState(false);
   const [dname, setDname] = useState(u.displayName);
   const [confirm2fa, setConfirm2fa] = useState(false);
   const refresh = async () => setU(await api<U>(`/users/${u.id}`));
@@ -69,8 +70,11 @@ function UserDrawer({ user, roles, manage, canRoles, isSelf, onClose }: { user: 
         <Card title="Zwei-Faktor-Anmeldung">
           <div className="flex flex-wrap items-center justify-between gap-2 text-sm"><span>{u.totpEnabledAt ? <>Aktiv seit {fmt(u.totpEnabledAt)}</> : 'Nicht eingerichtet'}</span>{manage && !isSelf && u.totpEnabledAt && <Button variant="secondary" onClick={() => setConfirm2fa(true)}>Zurücksetzen</Button>}</div>
         </Card>
-        {manage && !isSelf && <div className="flex justify-end">{u.active ? <Button variant="danger" onClick={() => setConfirmDisable(true)}>Konto deaktivieren</Button> : <Button onClick={() => void run(() => api(`/users/${u.id}/active`, { method: 'PUT', body: { active: true } }))}>Konto aktivieren</Button>}</div>}
+        {manage && !isSelf && <div className="flex justify-end gap-2"><Button variant="danger" onClick={() => setConfirmDelete(true)}>Benutzer löschen</Button>{u.active ? <Button variant="danger" onClick={() => setConfirmDisable(true)}>Konto deaktivieren</Button> : <Button onClick={() => void run(() => api(`/users/${u.id}/active`, { method: 'PUT', body: { active: true } }))}>Konto aktivieren</Button>}</div>}
       </div>
+      <ConfirmDialog open={confirmDelete} danger title="Benutzer löschen" confirmLabel="Endgültig löschen" onClose={() => setConfirmDelete(false)}
+        message={<>Konto <b>@{u.username}</b> ({u.displayName}) endgültig löschen? Rollen, Sitzungen, Personalakte und persönliche Einstellungen gehen mit. Das lässt sich nicht rückgängig machen; im Audit-Log bleibt vermerkt, wer gelöscht wurde. Nur sperren: „Konto deaktivieren“.</>}
+        onConfirm={() => { setConfirmDelete(false); void (async () => { try { setErr(undefined); await api(`/users/${u.id}`, { method: 'DELETE' }); onClose(); } catch (e) { setErr(e instanceof ApiError ? e.message : 'Fehlgeschlagen'); } })(); }} />
       <ConfirmDialog open={confirmDisable} danger title="Konto deaktivieren" message="Der Benutzer wird sofort abgemeldet und kann sich erst nach Reaktivierung wieder anmelden. Wird protokolliert." confirmLabel="Deaktivieren" onClose={() => setConfirmDisable(false)} onConfirm={() => { setConfirmDisable(false); void run(() => api(`/users/${u.id}/active`, { method: 'PUT', body: { active: false } })); }} />
       <ConfirmDialog open={confirm2fa} danger title="Zwei-Faktor zurücksetzen" message="Nur wenn die Person ihr Handy und ihre Wiederherstellungscodes verloren hat – Identität vorher prüfen. Danach reicht das Passwort, bis sie 2FA neu einrichtet. Wird protokolliert." confirmLabel="Zurücksetzen" onClose={() => setConfirm2fa(false)} onConfirm={() => { setConfirm2fa(false); void run(() => api(`/users/${u.id}/2fa/reset`, { method: 'POST' })); }} />
     </Modal>
