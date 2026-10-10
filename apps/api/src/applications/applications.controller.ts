@@ -15,7 +15,7 @@ import { pageQuery } from '../common/pagination';
 const submit = z.object({ robloxUsername: z.string().trim().min(1).max(64), robloxUserId: z.string().max(20).optional(), answers: z.record(z.string(), z.union([z.string().max(5000), z.array(z.string().max(100)).max(25)])) });
 const move = z.object({ status: z.enum(APPLICATION_STATUSES).refine((s) => s !== 'ACCEPTED' && s !== 'REJECTED', 'Annehmen oder Ablehnen bitte über die Entscheidung.'), reason: z.string().trim().min(3).max(1000).optional() });
 /** `OPEN` = alle noch nicht entschiedenen (eingereicht, Prüfung, Gespräch, Entscheidung offen). */
-const listQ = pageQuery.extend({ status: z.union([z.enum(APPLICATION_STATUSES), z.literal('OPEN')]).optional(), guildId: z.string().regex(/^\d{15,25}$/).optional() });
+const listQ = pageQuery.extend({ status: z.union([z.enum(APPLICATION_STATUSES), z.literal('OPEN')]).optional(), guildId: z.string().regex(/^\d{15,25}$/).optional(), order: z.enum(['newest', 'oldest']).optional() });
 const guildQ = z.object({ guildId: z.string().regex(/^\d{15,25}$/).optional() });
 
 const analyticsQ = z.object({ type: z.string().max(80).optional(), status: z.enum(['APPROVED', 'PENDING', 'REJECTED']).optional(), reviewer: z.string().uuid().optional(), days: z.coerce.number().int().min(7).max(365).default(30) });
@@ -36,7 +36,7 @@ export class ApplicationsController {
   @Public() @Throttle({ default: { limit: process.env.NODE_ENV === 'test' ? 10_000 : 5, ttl: 3_600_000 } }) @Post()
   submit(@Body(zodBody(submit)) b: z.infer<typeof submit>) { return this.a.submit(b); }
   @Get() @RequirePermission('applications.view')
-  list(@Query(zodBody(listQ)) q: z.infer<typeof listQ>) { return this.a.list(q, q.status, q.guildId ?? currentGuild() ?? undefined); } // Server getrennt: gewählter Server
+  list(@Query(zodBody(listQ)) q: z.infer<typeof listQ>) { return this.a.list(q, q.status, q.guildId ?? currentGuild() ?? undefined, q.order); } // Server getrennt: gewählter Server
   /** Statistik (Filter: Name, Status, Prüfer; Zeitraum in Tagen, verglichen mit der Vorperiode). Server getrennt wie die Liste. */
   @Get('analytics') @RequirePermission('applications.view')
   analytics(@Query(zodBody(analyticsQ)) q: z.infer<typeof analyticsQ>) { return this.stats.overview({ ...q, guildId: currentGuild() }); }

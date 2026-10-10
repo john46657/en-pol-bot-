@@ -34,15 +34,18 @@ declare const listQ: z.ZodObject<{
 } & {
     status: z.ZodOptional<z.ZodUnion<[z.ZodEnum<["SUBMITTED", "SCREENING", "INTERVIEW", "PENDING_DECISION", "ACCEPTED", "REJECTED", "WITHDRAWN"]>, z.ZodLiteral<"OPEN">]>>;
     guildId: z.ZodOptional<z.ZodString>;
+    order: z.ZodOptional<z.ZodEnum<["newest", "oldest"]>>;
 }, "strip", z.ZodTypeAny, {
     page: number;
     pageSize: number;
     status?: "ACCEPTED" | "REJECTED" | "WITHDRAWN" | "OPEN" | "SUBMITTED" | "SCREENING" | "INTERVIEW" | "PENDING_DECISION" | undefined;
     guildId?: string | undefined;
+    order?: "newest" | "oldest" | undefined;
     q?: string | undefined;
 }, {
     status?: "ACCEPTED" | "REJECTED" | "WITHDRAWN" | "OPEN" | "SUBMITTED" | "SCREENING" | "INTERVIEW" | "PENDING_DECISION" | undefined;
     guildId?: string | undefined;
+    order?: "newest" | "oldest" | undefined;
     q?: string | undefined;
     page?: number | undefined;
     pageSize?: number | undefined;

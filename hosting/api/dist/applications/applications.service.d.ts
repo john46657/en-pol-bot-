@@ -115,7 +115,7 @@ export declare class ApplicationsService {
         denied: number;
         withdrawn: number;
     }>;
-    list(p: PageQuery, status?: string, guildId?: string): Promise<{
+    list(p: PageQuery, status?: string, guildId?: string, order?: 'newest' | 'oldest'): Promise<{
         items: {
             decidedByName: string | null;
             number: string;

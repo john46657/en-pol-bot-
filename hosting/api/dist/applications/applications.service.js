@@ -214,9 +214,9 @@ let ApplicationsService = class ApplicationsService {
         }
         return { denied, withdrawn };
     }
-    async list(p, status, guildId) {
+    async list(p, status, guildId, order = 'newest') {
         const where = { ...(guildId ? { guildId } : {}), ...(status === 'OPEN' ? { status: { in: OPEN_STATUSES } } : status ? { status } : {}), ...(p.q ? { OR: [{ number: { contains: p.q.toUpperCase() } }, { robloxUsername: { contains: p.q, mode: 'insensitive' } }] } : {}) };
-        const [items, total] = await Promise.all([this.prisma.application.findMany({ where, orderBy: { createdAt: 'desc' }, ...(0, pagination_1.skipTake)(p) }), this.prisma.application.count({ where })]);
+        const [items, total] = await Promise.all([this.prisma.application.findMany({ where, orderBy: { createdAt: order === 'oldest' ? 'asc' : 'desc' }, ...(0, pagination_1.skipTake)(p) }), this.prisma.application.count({ where })]);
         // wer entschieden hat (Name) – für die Karten-Ansicht
         const ids = [...new Set(items.map((a) => a.decidedById).filter((x) => !!x))];
         const users = new Map((await this.prisma.user.findMany({ where: { id: { in: ids } }, select: { id: true, displayName: true } })).map((u) => [u.id, u.displayName]));
