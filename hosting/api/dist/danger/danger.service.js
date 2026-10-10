@@ -27,6 +27,8 @@ exports.dangerConfigSchema = zod_1.z.object({
     panelText: zod_1.z.string().max(3000),
     buttonEmoji: zod_1.z.string().max(16),
     pingRoleIds: zod_1.z.array(sf).max(10),
+    /** Kanal für Statusänderungen (leer = Gefahrenstatus-Kanal aus Einstellungen → Discord) */
+    channelId: sf.nullable().optional(),
     levels: zod_1.z.array(zod_1.z.object({
         key: zod_1.z.string().trim().regex(/^[A-Z0-9_]{1,24}$/), name: zod_1.z.string().trim().min(1).max(40), title: zod_1.z.string().trim().max(200), text: zod_1.z.string().max(3500),
         emoji: zod_1.z.string().max(16), color: zod_1.z.string().regex(/^#[0-9a-fA-F]{6}$/), buttonStyle: zod_1.z.enum(['primary', 'secondary', 'success', 'danger']),
@@ -103,7 +105,8 @@ let DangerService = class DangerService {
             await this.discord.enqueue('danger', 'danger.changed', {
                 level: def.key, name: def.name, title: def.title, text: def.text, emoji: def.emoji, color: def.color,
                 previous: before.at ? before.def.name : null, reason: state.reason, setBy: state.setByName, pingRoleIds: [...new Set([...cfg.pingRoleIds, ...(def.pingRoleIds ?? [])])],
-            });
+                ...(cfg.channelId ? { channelId: cfg.channelId } : {}),
+            }, { always: !!cfg.channelId });
         }
         return this.get();
     }

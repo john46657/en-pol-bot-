@@ -7,7 +7,9 @@ export interface DangerLevelDef { key: string; name: string; title: string; text
   pingRoleIds?: string[];
   /** Nur diese Discord-Rollen dürfen auf diese Stufe schalten (leer = alle mit dispatch.manage) */
   allowRoleIds?: string[] }
-export interface DangerConfig { panelTitle: string; panelText: string; buttonEmoji: string; levels: DangerLevelDef[]; pingRoleIds: string[] }
+export interface DangerConfig { panelTitle: string; panelText: string; buttonEmoji: string; levels: DangerLevelDef[]; pingRoleIds: string[];
+  /** Kanal für die Meldung bei jeder Statusänderung (leer = Einstellungen → Discord → Gefahrenstatus-Kanal) */
+  channelId?: string | null }
 
 export const DEFAULT_DANGER_CONFIG: DangerConfig = {
   panelTitle: 'Gefahrenstatus',

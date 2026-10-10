@@ -43,17 +43,17 @@ declare const submit: z.ZodObject<{
         question: z.ZodString;
         answer: z.ZodNullable<z.ZodUnion<[z.ZodString, z.ZodArray<z.ZodString, "many">]>>;
     }, "strip", z.ZodTypeAny, {
-        answer: string | string[] | null;
         question: string;
+        answer: string | string[] | null;
     }, {
-        answer: string | string[] | null;
         question: string;
+        answer: string | string[] | null;
     }>, "many">;
 }, "strip", z.ZodTypeAny, {
     unit: string;
     answers: {
-        answer: string | string[] | null;
         question: string;
+        answer: string | string[] | null;
     }[];
     discordId: string;
     discordName: string;
@@ -63,8 +63,8 @@ declare const submit: z.ZodObject<{
 }, {
     unit: string;
     answers: {
-        answer: string | string[] | null;
         question: string;
+        answer: string | string[] | null;
     }[];
     discordId: string;
     discordName: string;
@@ -418,6 +418,7 @@ export declare class QualificationsController {
         decidedByName: string | null;
         reason: string | null;
     }>;
+    remove(a: Actor, id: string): Promise<void>;
     /** „Ticket mit Bewerber öffnen“ (wie der Discord-Button). */
     ticket(a: Actor, id: string): Promise<{
         queued: boolean;

@@ -118,6 +118,39 @@ let DiscordAccessService = class DiscordAccessService {
             return [];
         }
     }
+    avatarCache = new Map();
+    /** Profilbilder zu Discord-IDs (Discord-API, 6 h zwischengespeichert). Ohne Token/Discord: leer. */
+    async avatars(ids) {
+        const out = new Map();
+        const token = this.env.DISCORD_TOKEN;
+        const now = Date.now();
+        const missing = [];
+        for (const id of new Set(ids)) {
+            const c = this.avatarCache.get(id);
+            if (c && now - c.at < 6 * 3_600_000)
+                out.set(id, c.url);
+            else
+                missing.push(id);
+        }
+        if (!token || !missing.length)
+            return out;
+        const bot = this.bot(token);
+        await Promise.all(missing.slice(0, 100).map(async (id) => {
+            try {
+                const r = await bot(`/users/${id}`);
+                if (!r.ok)
+                    return;
+                const u = (await r.json());
+                const url = u.avatar ? `https://cdn.discordapp.com/avatars/${id}/${u.avatar}.png?size=64` : null;
+                this.avatarCache.set(id, { url, at: now });
+                out.set(id, url);
+            }
+            catch { /* Profilbild ist nur Deko */ }
+        }));
+        if (this.avatarCache.size > 5000)
+            this.avatarCache.clear();
+        return out;
+    }
     /** Darf diese Mitgliedschaft ins Dashboard? (Besitzer aus ADMIN_DISCORD_IDS prüft der Aufrufer vorab.) */
     verdict(member, s) {
         if ((s.requireGuild || s.teamRoleIds.length) && member === null)

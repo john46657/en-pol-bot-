@@ -16,6 +16,8 @@ export declare const dangerConfigSchema: z.ZodObject<{
     panelText: z.ZodString;
     buttonEmoji: z.ZodString;
     pingRoleIds: z.ZodArray<z.ZodString, "many">;
+    /** Kanal für Statusänderungen (leer = Gefahrenstatus-Kanal aus Einstellungen → Discord) */
+    channelId: z.ZodOptional<z.ZodNullable<z.ZodString>>;
     levels: z.ZodEffects<z.ZodArray<z.ZodObject<{
         key: z.ZodString;
         name: z.ZodString;
@@ -85,6 +87,7 @@ export declare const dangerConfigSchema: z.ZodObject<{
         pingRoleIds?: string[] | undefined;
         allowRoleIds?: string[] | undefined;
     }[];
+    channelId?: string | null | undefined;
 }, {
     pingRoleIds: string[];
     panelTitle: string;
@@ -101,6 +104,7 @@ export declare const dangerConfigSchema: z.ZodObject<{
         pingRoleIds?: string[] | undefined;
         allowRoleIds?: string[] | undefined;
     }[];
+    channelId?: string | null | undefined;
 }>;
 /** Gefahrenstatus. Stufen/Texte/Farben/Pings kommen aus der Konfiguration (Dashboard); Änderungen sind auditiert und gehen live raus. */
 export declare class DangerService {

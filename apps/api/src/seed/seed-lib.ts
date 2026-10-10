@@ -28,12 +28,22 @@ const STARTER_PRIORITY: Record<string, number> = {
   Investigator: 50, Dispatch: 50, 'Senior Officer': 60, 'Ticket Support': 70, SEK: 70, 'Police Member': 90,
 };
 
+/** Merker, welche Startrollen schon einmal angelegt wurden. */
+const SEEDED_KEY = 'roles.starterSeeded';
+
 export async function seedBase(prisma: PrismaClient) {
   for (const key of ALL_PERMISSIONS) {
     await prisma.permission.upsert({ where: { key }, create: { key, module: key.split('.')[0] ?? key }, update: {} });
   }
   await prisma.permission.upsert({ where: { key: '*' }, create: { key: '*', module: '*' }, update: {} });
+  // Startrollen nur EINMAL anlegen: wer eine löscht, bekommt sie beim nächsten Start nicht zurück.
+  // Ohne Merker (Installationen von vor dieser Regel) gelten alle Startrollen als schon angelegt, sobald es Rollen gibt.
+  const mark = await prisma.systemSetting.findUnique({ where: { key: SEEDED_KEY } });
+  const seeded = new Set(Array.isArray(mark?.value) ? (mark.value as string[]) : (await prisma.role.count()) ? Object.keys(STARTER_ROLES) : []);
   for (const [name, def] of Object.entries(STARTER_ROLES)) {
+    // System Administrator bleibt immer da (erster Admin, Notfall-Zugang)
+    if (seeded.has(name) && name !== 'System Administrator') continue;
+    seeded.add(name);
     const role = await prisma.role.upsert({ where: { name }, create: { name, description: def.description, system: true, priority: STARTER_PRIORITY[name] ?? 100 }, update: {} });
     const existing = await prisma.rolePermission.count({ where: { roleId: role.id } });
     if (existing === 0) {
@@ -45,6 +55,8 @@ export async function seedBase(prisma: PrismaClient) {
       await prisma.rolePermission.createMany({ data: grants.map((permissionKey) => ({ roleId: role.id, permissionKey, effect: 'ALLOW' })), skipDuplicates: true });
     }
   }
+  const value = [...seeded];
+  await prisma.systemSetting.upsert({ where: { key: SEEDED_KEY }, create: { key: SEEDED_KEY, value }, update: { value } });
 }
 
 /** Ticket-System: Beispiel-Startwerte (nur wenn noch nichts angelegt ist) – alles im Dashboard änderbar/löschbar. */

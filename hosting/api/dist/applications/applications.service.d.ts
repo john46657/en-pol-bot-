@@ -7,9 +7,20 @@ import { AuditService, Actor } from '../audit/audit.service';
 import { DiscordService } from '../discord/discord.service';
 import { PageQuery } from '../common/pagination';
 import { RobloxService } from '../persons/roblox.service';
+import { DiscordAccessService } from '../authz/discord-access.service';
+import { DiscordLiveService } from '../discord/discord-live.service';
 export type { FormField };
 /** Die Beschriftungen sind zugleich die Fragen, die der Discord-Bot per Direktnachricht stellt. */
 export declare const DEFAULT_FORM: FormField[];
+export interface InboxQuery {
+    page: number;
+    pageSize: number;
+    q?: string;
+    type?: string;
+    status?: string;
+    order?: 'newest' | 'oldest';
+    guildId?: string;
+}
 export declare class ApplicationsService {
     private readonly prisma;
     private readonly audit;
@@ -18,7 +29,9 @@ export declare class ApplicationsService {
     private readonly teamchance;
     private readonly roblox;
     private readonly bans;
-    constructor(prisma: PrismaService, audit: AuditService, discord: DiscordService, notify: NotifyService, teamchance: TeamChanceService, roblox: RobloxService, bans: ApplicationBansService);
+    private readonly access;
+    private readonly live;
+    constructor(prisma: PrismaService, audit: AuditService, discord: DiscordService, notify: NotifyService, teamchance: TeamChanceService, roblox: RobloxService, bans: ApplicationBansService, access: DiscordAccessService, live: DiscordLiveService);
     /** Formular eines Servers (`application.form@<guildId>`), sonst das gemeinsame. */
     form(guildId?: string | null): Promise<FormField[]>;
     /** Öffentliche Bewerbung (kein Account nötig). Antworten werden strikt gegen das konfigurierte Formular validiert. */
@@ -115,7 +128,7 @@ export declare class ApplicationsService {
         denied: number;
         withdrawn: number;
     }>;
-    list(p: PageQuery, status?: string, guildId?: string): Promise<{
+    list(p: PageQuery, status?: string, guildId?: string, order?: 'newest' | 'oldest'): Promise<{
         items: {
             decidedByName: string | null;
             number: string;
@@ -142,6 +155,46 @@ export declare class ApplicationsService {
         page: number;
         pageSize: number;
     }>;
+    /**
+     * Alle Bewerbungen in einer Liste (wie bei Appy): Polizei-Bewerbungen und – mit qualifications.view – Bewerbungen
+     * für Einheiten (Flugstaffel, GSG9 …). Filter: Art (`police` / `q:<einheit>`), Status, Suche, Sortierung; mit Profilbildern.
+     */
+    inbox(f: InboxQuery, allowed: {
+        police: boolean;
+        quali: boolean;
+    }): Promise<{
+        items: {
+            decidedByName: string | null;
+            avatar: string | null;
+            kind: "police" | "qualification";
+            id: string;
+            number: string;
+            typeKey: string;
+            typeName: string;
+            status: string;
+            discordId: string | null;
+            discordName: string | null;
+            robloxUsername: string | null;
+            robloxUserId: string | null;
+            answers: {
+                label: string;
+                value: string;
+            }[];
+            createdAt: Date;
+            durationSec: number | null;
+            decisionReason: string | null;
+            guildId: string | null;
+        }[];
+        total: number;
+        page: number;
+        pageSize: number;
+        types: {
+            key: string;
+            name: string;
+        }[];
+    }>;
+    /** Bewerbung endgültig löschen (applications.delete) – im Audit-Log bleibt festgehalten, was gelöscht wurde. */
+    remove(actor: Actor, id: string): Promise<void>;
     get(id: string): Promise<{
         number: string;
         id: string;

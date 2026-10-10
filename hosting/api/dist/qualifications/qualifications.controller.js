@@ -44,6 +44,7 @@ let QualificationsController = class QualificationsController {
     get(id) { return this.q.get(id); }
     /** Auch vom Bot (Button im Team-Channel) mit den Rechten des klickenden Benutzers. */
     decide(a, id, b) { return this.q.decide(a, id, b.status, b.reason); }
+    remove(a, id) { return this.q.remove(a, id); }
     /** „Ticket mit Bewerber öffnen“ (wie der Discord-Button). */
     ticket(a, id) { return this.q.openTicket(a, id); }
 };
@@ -110,6 +111,16 @@ __decorate([
     __metadata("design:paramtypes", [Object, String, void 0]),
     __metadata("design:returntype", void 0)
 ], QualificationsController.prototype, "decide", null);
+__decorate([
+    (0, common_1.Delete)('applications/:id'),
+    (0, common_1.HttpCode)(204),
+    (0, decorators_1.RequirePermission)('qualifications.delete'),
+    __param(0, (0, decorators_1.CurrentActor)()),
+    __param(1, (0, common_1.Param)('id', common_1.ParseUUIDPipe)),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, String]),
+    __metadata("design:returntype", void 0)
+], QualificationsController.prototype, "remove", null);
 __decorate([
     (0, common_1.Post)('applications/:id/ticket'),
     (0, common_1.HttpCode)(202),

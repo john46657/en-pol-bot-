@@ -29,6 +29,8 @@ const qualifications_config_1 = require("../qualifications/qualifications.config
 const decision_1 = require("../qualifications/decision");
 const roblox_service_1 = require("../persons/roblox.service");
 const shared_2 = require("@enrp/shared");
+const discord_access_service_1 = require("../authz/discord-access.service");
+const discord_live_service_1 = require("../discord/discord-live.service");
 /** Die Beschriftungen sind zugleich die Fragen, die der Discord-Bot per Direktnachricht stellt. */
 exports.DEFAULT_FORM = [
     { key: 'experience', label: 'Welche Erfahrung hast du im Polizei-Roleplay (auch auf anderen Servern)?', required: true, maxLength: 2000 },
@@ -47,7 +49,9 @@ let ApplicationsService = class ApplicationsService {
     teamchance;
     roblox;
     bans;
-    constructor(prisma, audit, discord, notify, teamchance, roblox, bans) {
+    access;
+    live;
+    constructor(prisma, audit, discord, notify, teamchance, roblox, bans, access, live) {
         this.prisma = prisma;
         this.audit = audit;
         this.discord = discord;
@@ -55,6 +59,8 @@ let ApplicationsService = class ApplicationsService {
         this.teamchance = teamchance;
         this.roblox = roblox;
         this.bans = bans;
+        this.access = access;
+        this.live = live;
     }
     /** Formular eines Servers (`application.form@<guildId>`), sonst das gemeinsame. */
     async form(guildId) {
@@ -214,13 +220,75 @@ let ApplicationsService = class ApplicationsService {
         }
         return { denied, withdrawn };
     }
-    async list(p, status, guildId) {
+    async list(p, status, guildId, order = 'newest') {
         const where = { ...(guildId ? { guildId } : {}), ...(status === 'OPEN' ? { status: { in: OPEN_STATUSES } } : status ? { status } : {}), ...(p.q ? { OR: [{ number: { contains: p.q.toUpperCase() } }, { robloxUsername: { contains: p.q, mode: 'insensitive' } }] } : {}) };
-        const [items, total] = await Promise.all([this.prisma.application.findMany({ where, orderBy: { createdAt: 'desc' }, ...(0, pagination_1.skipTake)(p) }), this.prisma.application.count({ where })]);
+        const [items, total] = await Promise.all([this.prisma.application.findMany({ where, orderBy: { createdAt: order === 'oldest' ? 'asc' : 'desc' }, ...(0, pagination_1.skipTake)(p) }), this.prisma.application.count({ where })]);
         // wer entschieden hat (Name) – für die Karten-Ansicht
         const ids = [...new Set(items.map((a) => a.decidedById).filter((x) => !!x))];
         const users = new Map((await this.prisma.user.findMany({ where: { id: { in: ids } }, select: { id: true, displayName: true } })).map((u) => [u.id, u.displayName]));
         return (0, pagination_1.pageResult)(items.map((a) => ({ ...a, decidedByName: a.decidedById ? users.get(a.decidedById) ?? '—' : null })), total, p);
+    }
+    /**
+     * Alle Bewerbungen in einer Liste (wie bei Appy): Polizei-Bewerbungen und – mit qualifications.view – Bewerbungen
+     * für Einheiten (Flugstaffel, GSG9 …). Filter: Art (`police` / `q:<einheit>`), Status, Suche, Sortierung; mit Profilbildern.
+     */
+    async inbox(f, allowed) {
+        const asc = f.order === 'oldest';
+        const take = Math.min(f.page * f.pageSize, 5000);
+        const q = f.q?.trim();
+        const wantPolice = allowed.police && (!f.type || f.type === 'police');
+        const wantQuali = allowed.quali && (!f.type || f.type.startsWith('q:'));
+        const unit = f.type?.startsWith('q:') ? f.type.slice(2) : undefined;
+        const guild = f.guildId ? { guildId: f.guildId } : {};
+        const pWhere = { ...guild, ...(f.status === 'OPEN' ? { status: { in: OPEN_STATUSES } } : f.status ? { status: f.status } : {}),
+            ...(q ? { OR: [{ number: { contains: q.toUpperCase() } }, { robloxUsername: { contains: q, mode: 'insensitive' } }, { discordName: { contains: q, mode: 'insensitive' } }, { discordId: q }] } : {}) };
+        const qWhere = { ...guild, ...(unit ? { unit } : {}), ...(f.status ? { status: f.status } : {}),
+            ...(q ? { OR: [{ number: { contains: q.toUpperCase() } }, { discordName: { contains: q, mode: 'insensitive' } }, { discordId: q }] } : {}) };
+        const order = { createdAt: asc ? 'asc' : 'desc' };
+        const [police, pTotal, quali, qTotal, units, pName] = await Promise.all([
+            wantPolice ? this.prisma.application.findMany({ where: pWhere, orderBy: order, take }) : [],
+            wantPolice ? this.prisma.application.count({ where: pWhere }) : 0,
+            wantQuali ? this.prisma.qualificationApplication.findMany({ where: qWhere, orderBy: order, take }) : [],
+            wantQuali ? this.prisma.qualificationApplication.count({ where: qWhere }) : 0,
+            allowed.quali ? this.prisma.qualificationApplication.groupBy({ by: ['unit', 'unitName'], orderBy: { unitName: 'asc' } }) : [],
+            this.police(f.guildId ?? null).then((p) => p.name),
+        ]);
+        const forms = new Map();
+        const labels = async (g) => {
+            const k = g ?? '';
+            if (!forms.has(k))
+                forms.set(k, new Map((await this.form(g)).map((x) => [x.key, x.label])));
+            return forms.get(k);
+        };
+        const rows = [
+            ...await Promise.all(police.map(async (a) => {
+                const l = await labels(a.guildId);
+                return { kind: 'police', id: a.id, number: a.number, typeKey: 'police', typeName: pName, status: a.status, discordId: a.discordId, discordName: a.discordName, robloxUsername: a.robloxUsername, robloxUserId: a.robloxUserId,
+                    answers: Object.entries((a.answers ?? {})).map(([k, v]) => ({ label: l.get(k) ?? k, value: String(v ?? '') })), createdAt: a.createdAt, durationSec: a.durationSec, decisionReason: a.decisionReason, decidedById: a.decidedById, guildId: a.guildId };
+            })),
+            ...quali.map((a) => ({ kind: 'qualification', id: a.id, number: a.number, typeKey: `q:${a.unit}`, typeName: a.unitName, status: a.status, discordId: a.discordId, discordName: a.discordName, robloxUsername: null, robloxUserId: null,
+                answers: (Array.isArray(a.answers) ? a.answers : []).map((x) => ({ label: String(x.question ?? ''), value: String(x.answer ?? '') })), createdAt: a.createdAt, durationSec: a.durationSec, decisionReason: a.decisionReason, decidedById: a.decidedById, guildId: a.guildId })),
+        ].sort((x, y) => (asc ? 1 : -1) * (x.createdAt.getTime() - y.createdAt.getTime()));
+        const page = rows.slice((f.page - 1) * f.pageSize, f.page * f.pageSize);
+        const ids = [...new Set(page.map((r) => r.decidedById).filter((x) => !!x))];
+        const deciders = new Map((await this.prisma.user.findMany({ where: { id: { in: ids } }, select: { id: true, displayName: true } })).map((u) => [u.id, u.displayName]));
+        const discordIds = page.map((r) => r.discordId).filter((x) => !!x);
+        const known = new Map(this.live.getMembers().members.filter((m) => m.avatar).map((m) => [m.id, m.avatar]));
+        const fetched = await this.access.avatars(discordIds.filter((id) => !known.has(id)));
+        return {
+            items: page.map(({ decidedById, ...r }) => ({ ...r, decidedByName: decidedById ? deciders.get(decidedById) ?? '—' : null, avatar: r.discordId ? known.get(r.discordId) ?? fetched.get(r.discordId) ?? null : null })),
+            total: pTotal + qTotal, page: f.page, pageSize: f.pageSize,
+            types: [...(allowed.police ? [{ key: 'police', name: pName }] : []), ...units.map((u) => ({ key: `q:${u.unit}`, name: u.unitName }))].filter((t, i, all) => all.findIndex((x) => x.key === t.key) === i),
+        };
+    }
+    /** Bewerbung endgültig löschen (applications.delete) – im Audit-Log bleibt festgehalten, was gelöscht wurde. */
+    async remove(actor, id) {
+        const a = await this.get(id);
+        await this.prisma.$transaction(async (tx) => {
+            await tx.hireQueue.deleteMany({ where: { applicationId: id } });
+            await tx.application.delete({ where: { id } });
+            await this.audit.record(actor, { action: 'application.delete', module: 'applications', entityType: 'Application', entityId: id, before: { number: a.number, status: a.status, robloxUsername: a.robloxUsername, discordId: a.discordId, discordName: a.discordName } }, tx);
+        });
     }
     async get(id) {
         const a = await this.prisma.application.findUnique({ where: { id } });
@@ -258,6 +326,6 @@ let ApplicationsService = class ApplicationsService {
 exports.ApplicationsService = ApplicationsService;
 exports.ApplicationsService = ApplicationsService = __decorate([
     (0, common_1.Injectable)(),
-    __metadata("design:paramtypes", [prisma_service_1.PrismaService, audit_service_1.AuditService, discord_service_1.DiscordService, notify_service_1.NotifyService, teamchance_service_1.TeamChanceService, roblox_service_1.RobloxService, application_bans_service_1.ApplicationBansService])
+    __metadata("design:paramtypes", [prisma_service_1.PrismaService, audit_service_1.AuditService, discord_service_1.DiscordService, notify_service_1.NotifyService, teamchance_service_1.TeamChanceService, roblox_service_1.RobloxService, application_bans_service_1.ApplicationBansService, discord_access_service_1.DiscordAccessService, discord_live_service_1.DiscordLiveService])
 ], ApplicationsService);
 //# sourceMappingURL=applications.service.js.map

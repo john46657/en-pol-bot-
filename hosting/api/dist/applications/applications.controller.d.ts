@@ -3,6 +3,7 @@ import { ApplicationsService } from './applications.service';
 import { ApplicationsAnalyticsService } from './applications-analytics.service';
 import type { Actor } from '../audit/audit.service';
 import { RobloxService } from '../persons/roblox.service';
+import { PermissionService } from '../authz/permission.service';
 declare const submit: z.ZodObject<{
     robloxUsername: z.ZodString;
     robloxUserId: z.ZodOptional<z.ZodString>;
@@ -27,6 +28,32 @@ declare const move: z.ZodObject<{
     reason?: string | undefined;
 }>;
 /** `OPEN` = alle noch nicht entschiedenen (eingereicht, Prüfung, Gespräch, Entscheidung offen). */
+declare const inboxQ: z.ZodObject<{
+    page: z.ZodDefault<z.ZodNumber>;
+    q: z.ZodOptional<z.ZodString>;
+} & {
+    pageSize: z.ZodDefault<z.ZodNumber>;
+    type: z.ZodOptional<z.ZodString>;
+    status: z.ZodOptional<z.ZodEnum<["OPEN", "ACCEPTED", "REJECTED", "WITHDRAWN"]>>;
+    order: z.ZodOptional<z.ZodEnum<["newest", "oldest"]>>;
+    guildId: z.ZodOptional<z.ZodString>;
+}, "strip", z.ZodTypeAny, {
+    page: number;
+    pageSize: number;
+    type?: string | undefined;
+    status?: "ACCEPTED" | "REJECTED" | "WITHDRAWN" | "OPEN" | undefined;
+    guildId?: string | undefined;
+    order?: "newest" | "oldest" | undefined;
+    q?: string | undefined;
+}, {
+    type?: string | undefined;
+    status?: "ACCEPTED" | "REJECTED" | "WITHDRAWN" | "OPEN" | undefined;
+    guildId?: string | undefined;
+    order?: "newest" | "oldest" | undefined;
+    q?: string | undefined;
+    page?: number | undefined;
+    pageSize?: number | undefined;
+}>;
 declare const listQ: z.ZodObject<{
     page: z.ZodDefault<z.ZodNumber>;
     pageSize: z.ZodDefault<z.ZodNumber>;
@@ -34,15 +61,18 @@ declare const listQ: z.ZodObject<{
 } & {
     status: z.ZodOptional<z.ZodUnion<[z.ZodEnum<["SUBMITTED", "SCREENING", "INTERVIEW", "PENDING_DECISION", "ACCEPTED", "REJECTED", "WITHDRAWN"]>, z.ZodLiteral<"OPEN">]>>;
     guildId: z.ZodOptional<z.ZodString>;
+    order: z.ZodOptional<z.ZodEnum<["newest", "oldest"]>>;
 }, "strip", z.ZodTypeAny, {
     page: number;
     pageSize: number;
     status?: "ACCEPTED" | "REJECTED" | "WITHDRAWN" | "OPEN" | "SUBMITTED" | "SCREENING" | "INTERVIEW" | "PENDING_DECISION" | undefined;
     guildId?: string | undefined;
+    order?: "newest" | "oldest" | undefined;
     q?: string | undefined;
 }, {
     status?: "ACCEPTED" | "REJECTED" | "WITHDRAWN" | "OPEN" | "SUBMITTED" | "SCREENING" | "INTERVIEW" | "PENDING_DECISION" | undefined;
     guildId?: string | undefined;
+    order?: "newest" | "oldest" | undefined;
     q?: string | undefined;
     page?: number | undefined;
     pageSize?: number | undefined;
@@ -74,7 +104,8 @@ export declare class ApplicationsController {
     private readonly a;
     private readonly stats;
     private readonly roblox;
-    constructor(a: ApplicationsService, stats: ApplicationsAnalyticsService, roblox: RobloxService);
+    private readonly perms;
+    constructor(a: ApplicationsService, stats: ApplicationsAnalyticsService, roblox: RobloxService, perms: PermissionService);
     /** `?guildId=` – Formular eines Servers (für den Bot); ohne: das gemeinsame (Web-Seite /apply). */
     /** Frage „Roblox User“: Konto suchen (Name, Anzeigename, Bild – keine internen Daten). Öffentlich, begrenzt. */
     robloxLookup(q: {
@@ -168,6 +199,39 @@ export declare class ApplicationsController {
         createdAt: Date;
         decisionReason: string | null;
     }[]>;
+    /** Alle Bewerbungen (Polizei + Einheiten mit qualifications.view) in einer Liste, mit Profilbildern. */
+    inbox(a: Actor, q: z.infer<typeof inboxQ>): Promise<{
+        items: {
+            decidedByName: string | null;
+            avatar: string | null;
+            kind: "police" | "qualification";
+            id: string;
+            number: string;
+            typeKey: string;
+            typeName: string;
+            status: string;
+            discordId: string | null;
+            discordName: string | null;
+            robloxUsername: string | null;
+            robloxUserId: string | null;
+            answers: {
+                label: string;
+                value: string;
+            }[];
+            createdAt: Date;
+            durationSec: number | null;
+            decisionReason: string | null;
+            guildId: string | null;
+        }[];
+        total: number;
+        page: number;
+        pageSize: number;
+        types: {
+            key: string;
+            name: string;
+        }[];
+    }>;
+    remove(a: Actor, id: string): Promise<void>;
     get(id: string): Promise<{
         number: string;
         id: string;

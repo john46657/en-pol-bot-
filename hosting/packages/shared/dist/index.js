@@ -261,10 +261,10 @@ var PERMISSION_CATALOG = {
   /** Dienstnummern-System */
   dienstnummer: ["view", "create", "assign", "edit", "release", "block", "history", "manage_ranges", "manage_settings"],
   leave: ["view", "request", "manage"],
-  applications: ["view", "review", "decide", "auto_assign_dienstnummer"],
+  applications: ["view", "review", "decide", "delete", "auto_assign_dienstnummer"],
   academy: ["view", "manage"],
   sek: ["view", "report", "manage"],
-  qualifications: ["view", "decide", "manage"],
+  qualifications: ["view", "decide", "delete", "manage"],
   ticket: ["view", "create", "claim", "close", "reopen", "delete", "add_user", "remove_user", "change_status", "change_priority", "change_category", "rename", "move", "lock", "escalate", "transcript", "transcript_delete", "internal_notes", "rate", "manage", "settings"],
   /** Funk-Codes (Liste der Funkcodes, z. B. 10-4) */
   radio: ["view", "manage"],

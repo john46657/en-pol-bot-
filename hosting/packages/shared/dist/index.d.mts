@@ -40,10 +40,10 @@ declare const PERMISSION_CATALOG: {
     /** Dienstnummern-System */
     readonly dienstnummer: readonly ["view", "create", "assign", "edit", "release", "block", "history", "manage_ranges", "manage_settings"];
     readonly leave: readonly ["view", "request", "manage"];
-    readonly applications: readonly ["view", "review", "decide", "auto_assign_dienstnummer"];
+    readonly applications: readonly ["view", "review", "decide", "delete", "auto_assign_dienstnummer"];
     readonly academy: readonly ["view", "manage"];
     readonly sek: readonly ["view", "report", "manage"];
-    readonly qualifications: readonly ["view", "decide", "manage"];
+    readonly qualifications: readonly ["view", "decide", "delete", "manage"];
     readonly ticket: readonly ["view", "create", "claim", "close", "reopen", "delete", "add_user", "remove_user", "change_status", "change_priority", "change_category", "rename", "move", "lock", "escalate", "transcript", "transcript_delete", "internal_notes", "rate", "manage", "settings"];
     /** Funk-Codes (Liste der Funkcodes, z. B. 10-4) */
     readonly radio: readonly ["view", "manage"];
@@ -728,6 +728,8 @@ interface DangerConfig {
     buttonEmoji: string;
     levels: DangerLevelDef[];
     pingRoleIds: string[];
+    /** Kanal für die Meldung bei jeder Statusänderung (leer = Einstellungen → Discord → Gefahrenstatus-Kanal) */
+    channelId?: string | null;
 }
 declare const DEFAULT_DANGER_CONFIG: DangerConfig;
 /** Alte Stufen (Grün/Gelb/Rot) → Standard-Stufen, falls die Konfiguration sie nicht mehr kennt. */
