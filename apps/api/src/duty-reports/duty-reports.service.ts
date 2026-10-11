@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import { randomUUID } from 'node:crypto';
-import { cleanReportValues, dutyTimeText, isDutyTimeField, periodEnd, periodStart, reportMessage, reportTemplateSchema, type ReportTemplate } from '@enrp/shared';
+import { cleanReportValues, dutyTimeText, isDutyTimeField, isRobloxField, periodEnd, periodStart, reportMessage, reportTemplateSchema, type ReportTemplate } from '@enrp/shared';
 import { PrismaService } from '../prisma/prisma.service';
 import { AuditService, type Actor } from '../audit/audit.service';
 import { PermissionService } from '../authz/permission.service';
@@ -94,17 +94,27 @@ export class DutyReportsService {
   /** Vorbelegung fürs Formular (Dashboard und Discord): Dienstzeit-Felder automatisch. */
   async prefill(actor: Actor, templateId: string, date?: string) {
     const t = await this.template(templateId);
-    const fields = t.fields.filter(isDutyTimeField);
-    const text = fields.length ? await this.dutyTime(actor.userId!, t, date) : null;
-    return { values: text ? Object.fromEntries(fields.map((f) => [f.id, text.slice(0, f.maxLength)])) : {} };
+    return { values: await this.autoValues(actor.userId!, t, t.fields, date) };
+  }
+
+  /** Automatisch füllbare Felder: Dienstzeit aus den Dienst-Sitzungen, Roblox-Name aus dem verknüpften Konto. */
+  private async autoValues(userId: string, t: ReportTemplate, fields: ReportTemplate['fields'], date?: string) {
+    const values: Record<string, string> = {};
+    const duty = fields.filter(isDutyTimeField);
+    const text = duty.length ? await this.dutyTime(userId, t, date) : null;
+    if (text) for (const f of duty) values[f.id] = text.slice(0, f.maxLength);
+    const roblox = fields.filter((f) => isRobloxField(f) && !isDutyTimeField(f));
+    const name = roblox.length ? (await this.prisma.user.findUnique({ where: { id: userId }, select: { robloxUsername: true } }))?.robloxUsername : null;
+    if (name) for (const f of roblox) values[f.id] = name.slice(0, f.maxLength);
+    return values;
   }
 
   async create(actor: Actor, d: { templateId: string; periodStart?: string; values: Record<string, unknown>; source?: 'WEB' | 'DISCORD'; guildId?: string | null }) {
     const t = await this.template(d.templateId);
     if (!t.active) throw new AppError('CONFLICT', 'Diese Vorlage ist deaktiviert.');
-    // leere Dienstzeit-Felder automatisch aus den Dienst-Sitzungen füllen
-    const empty = t.fields.filter((f) => isDutyTimeField(f) && !String(d.values[f.id] ?? '').trim());
-    if (empty.length) { const text = await this.dutyTime(actor.userId!, t, d.periodStart); if (text) d = { ...d, values: { ...d.values, ...Object.fromEntries(empty.map((f) => [f.id, text])) } }; }
+    // leere Dienstzeit-/Roblox-Felder automatisch füllen
+    const empty = t.fields.filter((f) => (isDutyTimeField(f) || isRobloxField(f)) && !String(d.values[f.id] ?? '').trim());
+    if (empty.length) d = { ...d, values: { ...d.values, ...(await this.autoValues(actor.userId!, t, empty, d.periodStart)) } };
     const clean = cleanReportValues(t, d.values);
     if ('error' in clean) throw new AppError('VALIDATION_FAILED', clean.error);
     const start = periodStart(t.period, d.periodStart ? new Date(d.periodStart) : new Date());

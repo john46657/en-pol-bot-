@@ -80132,10 +80132,10 @@ var PERMISSION_CATALOG = {
   /** Dienstnummern-System */
   dienstnummer: ["view", "create", "assign", "edit", "release", "block", "history", "manage_ranges", "manage_settings"],
   leave: ["view", "request", "manage"],
-  applications: ["view", "review", "decide", "auto_assign_dienstnummer"],
+  applications: ["view", "review", "decide", "delete", "auto_assign_dienstnummer"],
   academy: ["view", "manage"],
   sek: ["view", "report", "manage"],
-  qualifications: ["view", "decide", "manage"],
+  qualifications: ["view", "decide", "delete", "manage"],
   ticket: ["view", "create", "claim", "close", "reopen", "delete", "add_user", "remove_user", "change_status", "change_priority", "change_category", "rename", "move", "lock", "escalate", "transcript", "transcript_delete", "internal_notes", "rate", "manage", "settings"],
   /** Funk-Codes (Liste der Funkcodes, z. B. 10-4) */
   radio: ["view", "manage"],
@@ -80494,7 +80494,9 @@ var reportFieldSchema = external_exports.object({
   options: external_exports.array(external_exports.string().trim().min(1).max(100)).max(25).default([]),
   maxLength: external_exports.number().int().min(1).max(4e3).default(1e3),
   /** in Discord nebeneinander anzeigen */
-  inline: external_exports.boolean().default(false)
+  inline: external_exports.boolean().default(false),
+  /** Trennlinie vor diesem Feld (nur Listen-Darstellung) */
+  separator: external_exports.boolean().default(false)
 });
 var reportTemplateSchema = external_exports.object({
   id: external_exports.string().uuid(),
@@ -80513,7 +80515,9 @@ var reportTemplateSchema = external_exports.object({
   /** Verfasser darf nach dem Einreichen noch bearbeiten */
   authorCanEdit: external_exports.boolean().default(true),
   /** Rollen, die beim neuen Bericht erwähnt werden */
-  pingRoleIds: external_exports.array(sf2).max(10).default([])
+  pingRoleIds: external_exports.array(sf2).max(10).default([]),
+  /** Darstellung in Discord: FIELDS = Embed-Felder, LIST = „➣ **Feld:** Wert“-Liste mit Trennlinien */
+  layout: external_exports.enum(["FIELDS", "LIST"]).default("FIELDS")
 });
 var dd = (d) => d.toLocaleDateString("de-DE", { timeZone: "UTC", day: "2-digit", month: "2-digit", year: "numeric" });
 function isoWeek(d) {
@@ -80530,6 +80534,8 @@ function periodLabel(period, start2) {
   }
   return dd(s);
 }
+var LINE_LONG = "\u23AF".repeat(20);
+var LINE_SHORT = "\u23AF".repeat(12);
 var sf3 = external_exports.string().regex(/^\d{15,25}$/, "Discord-ID (15\u201325 Ziffern)");
 var color2 = external_exports.string().regex(/^#[0-9a-fA-F]{6}$/);
 var key = external_exports.string().regex(/^[A-Z0-9_]{1,32}$/, "Schl\xFCssel: A\u2013Z, 0\u20139, _");

@@ -1003,7 +1003,9 @@ var reportFieldSchema = z2.object({
   options: z2.array(z2.string().trim().min(1).max(100)).max(25).default([]),
   maxLength: z2.number().int().min(1).max(4e3).default(1e3),
   /** in Discord nebeneinander anzeigen */
-  inline: z2.boolean().default(false)
+  inline: z2.boolean().default(false),
+  /** Trennlinie vor diesem Feld (nur Listen-Darstellung) */
+  separator: z2.boolean().default(false)
 });
 var reportTemplateSchema = z2.object({
   id: z2.string().uuid(),
@@ -1022,7 +1024,9 @@ var reportTemplateSchema = z2.object({
   /** Verfasser darf nach dem Einreichen noch bearbeiten */
   authorCanEdit: z2.boolean().default(true),
   /** Rollen, die beim neuen Bericht erwähnt werden */
-  pingRoleIds: z2.array(sf2).max(10).default([])
+  pingRoleIds: z2.array(sf2).max(10).default([]),
+  /** Darstellung in Discord: FIELDS = Embed-Felder, LIST = „➣ **Feld:** Wert“-Liste mit Trennlinien */
+  layout: z2.enum(["FIELDS", "LIST"]).default("FIELDS")
 });
 var PERIOD_LABEL = { DAILY: "Tagesbericht", WEEKLY: "Wochenbericht", FREE: "Bericht" };
 function periodStart(period, d = /* @__PURE__ */ new Date()) {
@@ -1046,6 +1050,21 @@ function periodLabel(period, start) {
   return dd(s);
 }
 var isDutyTimeField = (f) => f.type !== "select" && /dienst ?zeit|dienststunden|arbeitszeit|dienstzeit/i.test(`${f.id} ${f.label}`);
+function policeReportFields() {
+  const f = (id2, label, type, o = {}) => ({ id: id2, label, type, placeholder: "", required: false, options: [], maxLength: type === "number" ? 10 : type === "long" ? 1e3 : 100, inline: false, separator: false, ...o });
+  return [
+    f("roblox", "Roblox-Username", "short", { required: true }),
+    f("dienstzeit", "Zeitraum", "short", { placeholder: "wird automatisch aus der Dienstzeit gef\xFCllt" }),
+    f("verfolgungen", "Verfolgungen", "number", { separator: true }),
+    f("dispatch", "Dispatch", "number"),
+    f("geblitzt", "Geblitzt", "number", { separator: true }),
+    f("verkehrskontrollen", "Verkehrskontrollen", "number"),
+    f("festnahmen", "Festnahmen", "number", { separator: true }),
+    f("geiselnahmen", "Geiselnahmen", "number"),
+    f("notiz", "Notiz", "long", { separator: true })
+  ];
+}
+var isRobloxField = (f) => f.type !== "select" && /roblox/i.test(`${f.id} ${f.label}`);
 function periodEnd(period, start) {
   const e = new Date(start);
   e.setUTCDate(e.getUTCDate() + (period === "WEEKLY" ? 7 : 1));
@@ -1086,24 +1105,48 @@ function cleanReportValues(t, input) {
   return { values };
 }
 var REPORT_STATUS_LABEL = { SUBMITTED: "\u{1F4E8} Eingereicht", REVIEWED: "\u2705 Gepr\xFCft", RETURNED: "\u21A9\uFE0F Zur Nachbesserung" };
-function reportMessage(t, r, id2) {
-  const fields = t.fields.filter((f) => r.values[f.id]).map((f) => ({ name: f.label, value: r.values[f.id].slice(0, 1024), inline: f.inline }));
-  const embed = {
-    title: `${t.emoji ? `${t.emoji} ` : ""}${t.name} \u2013 ${periodLabel(t.period, r.periodStart)}`.slice(0, 256),
-    description: `**Verfasser:** ${r.authorDiscordId ? `<@${r.authorDiscordId}>` : r.authorName}${r.status !== "SUBMITTED" ? `
+var LINE_LONG = "\u23AF".repeat(20);
+var LINE_SHORT = "\u23AF".repeat(12);
+var statusLines = (r) => r.status !== "SUBMITTED" ? `
 **${REPORT_STATUS_LABEL[r.status] ?? r.status}**${r.reviewerName ? ` von ${r.reviewerName}` : ""}${r.reviewNote ? `
-> ${r.reviewNote.replace(/\n/g, "\n> ").slice(0, 900)}` : ""}` : ""}`,
+> ${r.reviewNote.replace(/\n/g, "\n> ").slice(0, 900)}` : ""}` : "";
+function listEmbed(t, r) {
+  const parts = [LINE_LONG, ""];
+  t.fields.forEach((f, i) => {
+    if (f.separator && i > 0) parts.push("", LINE_SHORT, "");
+    parts.push(`\u27A3 **${f.label}:** ${(r.values[f.id] ?? "").slice(0, 1e3)}`);
+  });
+  const status = statusLines(r);
+  let description = parts.join("\n");
+  if (description.length + status.length > 4096) description = `${description.slice(0, 4090 - status.length)}\u2026`;
+  return {
+    title: `${t.emoji ? `${t.emoji} ` : ""}${t.name} ${r.authorName}`.slice(0, 256),
+    description: `${description}${status ? `
+${status}` : ""}`,
     color: parseInt(t.color.slice(1), 16),
-    fields: fields.slice(0, 25),
-    footer: `${r.number}${r.edited ? " \xB7 bearbeitet" : ""}`,
+    footer: `${r.number} | ${r.authorName}${r.authorDiscordId ? ` ( ${r.authorDiscordId} )` : ""}${r.edited ? " \xB7 bearbeitet" : ""}`.slice(0, 2048),
     timestamp: new Date(r.updatedAt).toISOString()
   };
+}
+function reportMessage(t, r, id2) {
+  const embed = t.layout === "LIST" ? listEmbed(t, r) : fieldsEmbed(t, r);
   embed.color = r.status === "REVIEWED" ? 2278750 : r.status === "RETURNED" ? 16096779 : embed.color;
   return { embeds: [embed], buttons: [
     { id: `drep:edit:${id2}`, label: "Bearbeiten", emoji: "\u270F\uFE0F", style: "secondary" },
     ...r.status !== "REVIEWED" ? [{ id: `drep:rev:${id2}`, label: "Gepr\xFCft", emoji: "\u2705", style: "success" }] : [],
     ...r.status !== "RETURNED" ? [{ id: `drep:ret:${id2}`, label: "Zur Nachbesserung", emoji: "\u21A9\uFE0F", style: "secondary" }] : []
   ] };
+}
+function fieldsEmbed(t, r) {
+  const fields = t.fields.filter((f) => r.values[f.id]).map((f) => ({ name: f.label, value: r.values[f.id].slice(0, 1024), inline: f.inline }));
+  return {
+    title: `${t.emoji ? `${t.emoji} ` : ""}${t.name} \u2013 ${periodLabel(t.period, r.periodStart)}`.slice(0, 256),
+    description: `**Verfasser:** ${r.authorDiscordId ? `<@${r.authorDiscordId}>` : r.authorName}${statusLines(r)}`,
+    color: parseInt(t.color.slice(1), 16),
+    fields: fields.slice(0, 25),
+    footer: `${r.number}${r.edited ? " \xB7 bearbeitet" : ""}`,
+    timestamp: new Date(r.updatedAt).toISOString()
+  };
 }
 
 // src/hr.ts
@@ -2011,6 +2054,7 @@ export {
   isDutyTimeField,
   isInputQuestion,
   isPermissionKey,
+  isRobloxField,
   isSupportOpen,
   isValidRobloxUserId,
   isoWeek,
@@ -2031,6 +2075,7 @@ export {
   periodStart,
   personDetailsSchema,
   pixelToGame,
+  policeReportFields,
   questionSchema,
   rangeSchema,
   rankSchema,
