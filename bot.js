@@ -20964,11 +20964,11 @@ var require_message = __commonJS({
     (function(UnfurledMediaItemFlags2) {
       UnfurledMediaItemFlags2[UnfurledMediaItemFlags2["IsAnimated"] = 1] = "IsAnimated";
     })(UnfurledMediaItemFlags || (exports2.UnfurledMediaItemFlags = UnfurledMediaItemFlags = {}));
-    var SeparatorSpacingSize;
-    (function(SeparatorSpacingSize2) {
-      SeparatorSpacingSize2[SeparatorSpacingSize2["Small"] = 1] = "Small";
-      SeparatorSpacingSize2[SeparatorSpacingSize2["Large"] = 2] = "Large";
-    })(SeparatorSpacingSize || (exports2.SeparatorSpacingSize = SeparatorSpacingSize = {}));
+    var SeparatorSpacingSize2;
+    (function(SeparatorSpacingSize3) {
+      SeparatorSpacingSize3[SeparatorSpacingSize3["Small"] = 1] = "Small";
+      SeparatorSpacingSize3[SeparatorSpacingSize3["Large"] = 2] = "Large";
+    })(SeparatorSpacingSize2 || (exports2.SeparatorSpacingSize = SeparatorSpacingSize2 = {}));
     var MessageSearchAuthorType;
     (function(MessageSearchAuthorType2) {
       MessageSearchAuthorType2["User"] = "user";
@@ -26400,7 +26400,7 @@ var require_dist3 = __commonJS({
         if (name !== "AsyncEventEmitter") ctorInfo = ` on ${name} instance`;
       } catch {
       }
-      const sep = `
+      const sep2 = `
 Emitted 'error' event${ctorInfo} at:
 `;
       const errStack = err.stack.split("\n").slice(1);
@@ -26409,7 +26409,7 @@ Emitted 'error' event${ctorInfo} at:
       if (len > 0) {
         ownStack.splice(off + 1, len - 2, "    [... lines matching original stack trace ...]");
       }
-      return err.stack + sep + ownStack.join("\n");
+      return err.stack + sep2 + ownStack.join("\n");
     }
     __name(enhanceStackTrace, "enhanceStackTrace");
     var brandSymbol = /* @__PURE__ */ Symbol.for("async-event-emitter.ts-brand");
@@ -43220,7 +43220,7 @@ var require_dist8 = __commonJS({
       ComponentAssertions: () => Assertions_exports2,
       ComponentBuilder: () => ComponentBuilder,
       ComponentsV2Assertions: () => Assertions_exports8,
-      ContainerBuilder: () => ContainerBuilder,
+      ContainerBuilder: () => ContainerBuilder2,
       ContextMenuCommandAssertions: () => Assertions_exports11,
       ContextMenuCommandBuilder: () => ContextMenuCommandBuilder,
       EmbedAssertions: () => Assertions_exports,
@@ -43242,7 +43242,7 @@ var require_dist8 = __commonJS({
       SelectMenuAssertions: () => Assertions_exports6,
       SelectMenuBuilder: () => StringSelectMenuBuilder2,
       SelectMenuOptionBuilder: () => StringSelectMenuOptionBuilder,
-      SeparatorBuilder: () => SeparatorBuilder,
+      SeparatorBuilder: () => SeparatorBuilder2,
       SharedNameAndDescription: () => SharedNameAndDescription,
       SharedSlashCommand: () => SharedSlashCommand,
       SharedSlashCommandOptions: () => SharedSlashCommandOptions,
@@ -43262,7 +43262,7 @@ var require_dist8 = __commonJS({
       SlashCommandUserOption: () => SlashCommandUserOption,
       StringSelectMenuBuilder: () => StringSelectMenuBuilder2,
       StringSelectMenuOptionBuilder: () => StringSelectMenuOptionBuilder,
-      TextDisplayBuilder: () => TextDisplayBuilder,
+      TextDisplayBuilder: () => TextDisplayBuilder2,
       TextInputAssertions: () => Assertions_exports5,
       TextInputBuilder: () => TextInputBuilder2,
       ThumbnailBuilder: () => ThumbnailBuilder,
@@ -45629,7 +45629,7 @@ var require_dist8 = __commonJS({
       }
     };
     var import_v1022 = require_v106();
-    var SeparatorBuilder = class extends ComponentBuilder {
+    var SeparatorBuilder2 = class extends ComponentBuilder {
       static {
         __name(this, "SeparatorBuilder");
       }
@@ -45693,7 +45693,7 @@ var require_dist8 = __commonJS({
       }
     };
     var import_v1023 = require_v106();
-    var TextDisplayBuilder = class extends ComponentBuilder {
+    var TextDisplayBuilder2 = class extends ComponentBuilder {
       static {
         __name(this, "TextDisplayBuilder");
       }
@@ -45740,7 +45740,7 @@ var require_dist8 = __commonJS({
         return { ...this.data };
       }
     };
-    var ContainerBuilder = class extends ComponentBuilder {
+    var ContainerBuilder2 = class extends ComponentBuilder {
       static {
         __name(this, "ContainerBuilder");
       }
@@ -45851,7 +45851,7 @@ var require_dist8 = __commonJS({
        * @param components - The separator components to add
        */
       addSeparatorComponents(...components) {
-        this.components.push(...normalizeArray(components).map((component) => resolveBuilder(component, SeparatorBuilder)));
+        this.components.push(...normalizeArray(components).map((component) => resolveBuilder(component, SeparatorBuilder2)));
         return this;
       }
       /**
@@ -45861,7 +45861,7 @@ var require_dist8 = __commonJS({
        */
       addTextDisplayComponents(...components) {
         this.components.push(
-          ...normalizeArray(components).map((component) => resolveBuilder(component, TextDisplayBuilder))
+          ...normalizeArray(components).map((component) => resolveBuilder(component, TextDisplayBuilder2))
         );
         return this;
       }
@@ -46154,8 +46154,8 @@ var require_dist8 = __commonJS({
       addTextDisplayComponents(...components) {
         this.components.push(
           ...normalizeArray(components).map((input) => {
-            const result = resolveBuilder(input, TextDisplayBuilder);
-            assertReturnOfBuilder(result, TextDisplayBuilder);
+            const result = resolveBuilder(input, TextDisplayBuilder2);
+            assertReturnOfBuilder(result, TextDisplayBuilder2);
             return result;
           })
         );
@@ -46173,8 +46173,8 @@ var require_dist8 = __commonJS({
           index,
           deleteCount,
           ...normalizeArray(components).map((input) => {
-            const result = resolveBuilder(input, TextDisplayBuilder);
-            assertReturnOfBuilder(result, TextDisplayBuilder);
+            const result = resolveBuilder(input, TextDisplayBuilder2);
+            assertReturnOfBuilder(result, TextDisplayBuilder2);
             return result;
           })
         );
@@ -46184,7 +46184,7 @@ var require_dist8 = __commonJS({
        * {@inheritDoc ComponentBuilder.toJSON}
        */
       toJSON() {
-        validateComponentArray(this.components, 1, 3, TextDisplayBuilder);
+        validateComponentArray(this.components, 1, 3, TextDisplayBuilder2);
         return {
           ...this.data,
           components: this.components.map((component) => component.toJSON()),
@@ -46216,13 +46216,13 @@ var require_dist8 = __commonJS({
         case import_v1027.ComponentType.File:
           return new FileBuilder(data);
         case import_v1027.ComponentType.Container:
-          return new ContainerBuilder(data);
+          return new ContainerBuilder2(data);
         case import_v1027.ComponentType.Section:
           return new SectionBuilder(data);
         case import_v1027.ComponentType.Separator:
-          return new SeparatorBuilder(data);
+          return new SeparatorBuilder2(data);
         case import_v1027.ComponentType.TextDisplay:
-          return new TextDisplayBuilder(data);
+          return new TextDisplayBuilder2(data);
         case import_v1027.ComponentType.Thumbnail:
           return new ThumbnailBuilder(data);
         case import_v1027.ComponentType.MediaGallery:
@@ -46339,7 +46339,7 @@ var require_dist8 = __commonJS({
     });
     var import_shapeshift9 = require_cjs3();
     var titleValidator = import_shapeshift9.s.string().lengthGreaterThanOrEqual(1).lengthLessThanOrEqual(45).setValidationEnabled(isValidationEnabled);
-    var componentsValidator = import_shapeshift9.s.union([import_shapeshift9.s.instance(ActionRowBuilder3), import_shapeshift9.s.instance(LabelBuilder), import_shapeshift9.s.instance(TextDisplayBuilder)]).array().lengthGreaterThanOrEqual(1).setValidationEnabled(isValidationEnabled);
+    var componentsValidator = import_shapeshift9.s.union([import_shapeshift9.s.instance(ActionRowBuilder3), import_shapeshift9.s.instance(LabelBuilder), import_shapeshift9.s.instance(TextDisplayBuilder2)]).array().lengthGreaterThanOrEqual(1).setValidationEnabled(isValidationEnabled);
     function validateRequiredParameters2(customId, title, components) {
       customIdValidator.parse(customId);
       titleValidator.parse(title);
@@ -46394,7 +46394,7 @@ var require_dist8 = __commonJS({
       addComponents(...components) {
         this.components.push(
           ...normalizeArray(components).map((component, idx) => {
-            if (component instanceof ActionRowBuilder3 || component instanceof LabelBuilder || component instanceof TextDisplayBuilder) {
+            if (component instanceof ActionRowBuilder3 || component instanceof LabelBuilder || component instanceof TextDisplayBuilder2) {
               return component;
             }
             if (component instanceof TextInputBuilder2) {
@@ -46408,7 +46408,7 @@ var require_dist8 = __commonJS({
                 return new LabelBuilder(component);
               }
               if (component.type === import_v1029.ComponentType.TextDisplay) {
-                return new TextDisplayBuilder(component);
+                return new TextDisplayBuilder2(component);
               }
               if (component.type === import_v1029.ComponentType.TextInput) {
                 return new ActionRowBuilder3().addComponents(
@@ -46439,7 +46439,7 @@ var require_dist8 = __commonJS({
        */
       addTextDisplayComponents(...components) {
         const normalized = normalizeArray(components);
-        const resolved = normalized.map((row) => resolveBuilder(row, TextDisplayBuilder));
+        const resolved = normalized.map((row) => resolveBuilder(row, TextDisplayBuilder2));
         this.components.push(...resolved);
         return this;
       }
@@ -49630,7 +49630,7 @@ var require_SectionComponent = __commonJS({
 var require_SeparatorComponent = __commonJS({
   "node_modules/.pnpm/discord.js@14.27.0/node_modules/discord.js/src/structures/SeparatorComponent.js"(exports2, module2) {
     "use strict";
-    var { SeparatorSpacingSize } = require_v106();
+    var { SeparatorSpacingSize: SeparatorSpacingSize2 } = require_v106();
     var Component = require_Component();
     var SeparatorComponent = class extends Component {
       /**
@@ -49639,7 +49639,7 @@ var require_SeparatorComponent = __commonJS({
        * @readonly
        */
       get spacing() {
-        return this.data.spacing ?? SeparatorSpacingSize.Small;
+        return this.data.spacing ?? SeparatorSpacingSize2.Small;
       }
       /**
        * Whether this separator is a divider
@@ -81118,12 +81118,11 @@ ${clip(plain(p.description), 2e3)}` : ""}`,
       return { title: "\u{1F4E2} Ank\xFCndigung", description: clip(plain(p.body), 4e3), color: COLORS.warning, footer: `von ${clip(p.author, 100)}` };
     case "danger.changed": {
       return {
+        box: true,
         title: clip(`${String(p.name ?? p.level)}${p.title ? `: ${String(p.title)}` : ""}`, 256),
-        color: hexColor2(p.color, COLORS.warning),
         description: clip(`${String(p.text ?? "")}${p.reason ? `
 
-**Hinweis:** ${plain(p.reason)}` : ""}`, 4e3) || void 0,
-        footer: clip(`${p.previous ? `Vorher: ${String(p.previous)} \xB7 ` : ""}Gesetzt von ${String(p.setBy ?? "System")}`, 200)
+**Hinweis:** ${plain(p.reason)}` : ""}`, 4e3) || void 0
       };
     }
     case "duty.changed": {
@@ -81350,6 +81349,9 @@ ${clip(plain(s.reason), 300)}` : ""}` : "";
 ${current}` : ""}${when}`, 4e3),
     ...s.setByName ? { footer: `Gesetzt von ${clip(s.setByName, 100)}` } : {}
   };
+}
+function dangerPanel(s) {
+  return { box: true, heading: true, title: clip(s.panel?.title ?? "Gefahrenstatus", 256), description: clip(s.panel?.text ?? "", 4e3) || void 0, ...s.at ? { stamp: s.at } : {} };
 }
 function dangerButtons(s) {
   return (s.levels ?? []).slice(0, 10).map((l) => ({ id: `danger:set:${l.key}`, label: clip(l.name, 80), emoji: s.panel?.buttonEmoji || l.emoji || void 0, style: l.buttonStyle ?? "danger" }));
@@ -83574,7 +83576,7 @@ function createLive(api2, platform2, log = console.log) {
   async function render(kind2) {
     if (kind2 === "danger") {
       const s = await api2.service("GET", "/bot/danger");
-      return { embed: dangerEmbed(s), buttons: dangerButtons(s) };
+      return { embed: dangerPanel(s), buttons: dangerButtons(s) };
     }
     const t = await api2.service("GET", "/bot/team");
     return { embed: teamlistEmbed(t.members, t.rankOrder), buttons: void 0 };
@@ -84185,6 +84187,21 @@ var toRows = (buttons = []) => {
   }
   return rows;
 };
+var sep = () => new import_discord6.SeparatorBuilder().setDivider(true).setSpacing(import_discord6.SeparatorSpacingSize.Large);
+var toBox = (list, buttons, ping) => [
+  ...ping ? [new import_discord6.TextDisplayBuilder().setContent(ping)] : [],
+  ...list.map((e, i) => {
+    const c = new import_discord6.ContainerBuilder().addTextDisplayComponents(new import_discord6.TextDisplayBuilder().setContent(e.heading ? `# ${e.title}` : `**${e.title}**`));
+    if (e.description) {
+      if (e.heading) c.addSeparatorComponents(sep());
+      c.addTextDisplayComponents(new import_discord6.TextDisplayBuilder().setContent(e.description));
+    }
+    const rows = i === list.length - 1 ? toRows(buttons) : [];
+    if (rows.length) c.addSeparatorComponents(sep()).addActionRowComponents(...rows);
+    if (e.stamp && !Number.isNaN(Date.parse(e.stamp))) c.addSeparatorComponents(sep()).addTextDisplayComponents(new import_discord6.TextDisplayBuilder().setContent(`<t:${Math.floor(Date.parse(e.stamp) / 1e3)}:f>`));
+    return c;
+  })
+];
 var toComponents = (buttons, select, selects = []) => componentsOf(buttons, [...select ? [select] : [], ...selects]);
 var toModal = (m) => new import_discord6.ModalBuilder().setCustomId(m.id).setTitle(m.title.slice(0, 45)).addComponents(m.fields.map((f2) => {
   const input = new import_discord6.TextInputBuilder().setCustomId(f2.id).setLabel(f2.label.slice(0, 45)).setStyle(f2.paragraph ? import_discord6.TextInputStyle.Paragraph : import_discord6.TextInputStyle.Short).setRequired(!!f2.required);
@@ -84239,6 +84256,16 @@ var platform = {
   async postOrEdit({ channelId, messageId, embed, buttons }) {
     const ch = await client.channels.fetch(channelId);
     if (!ch?.isSendable() || !("messages" in ch)) throw new Error(`channel ${channelId} is not a text channel the bot can post in`);
+    if (embed.box) {
+      const box = { components: toBox([embed], buttons), flags: import_discord6.MessageFlags.IsComponentsV2, allowedMentions: { parse: [] } };
+      const old = messageId ? await ch.messages.fetch(messageId).catch(() => null) : null;
+      if (old?.flags.has(import_discord6.MessageFlags.IsComponentsV2)) {
+        await old.edit(box);
+        return old.id;
+      }
+      if (old) await old.delete().catch(() => void 0);
+      return (await ch.send(box)).id;
+    }
     const payload = { embeds: [toEmbed(embed)], components: toRows(buttons), allowedMentions: { parse: [] } };
     if (messageId) {
       const old = await ch.messages.fetch(messageId).catch(() => null);
@@ -84649,7 +84676,8 @@ function wireReady(client0) {
           if (u) list = [{ ...list[0], author: { name: `@${u.username}`, iconUrl: u.displayAvatarURL({ size: 64 }) } }, ...list.slice(1)];
         }
         const roles = opts?.pingRoleIds ?? [];
-        const msg = await ch.send({ ...roles.length ? { content: roles.map((r) => `<@&${r}>`).join(" ") } : {}, embeds: list.map(toEmbed), components: toRows(buttons), allowedMentions: { parse: [], roles } });
+        const ping = roles.length ? roles.map((r) => `<@&${r}>`).join(" ") : void 0;
+        const msg = list[0]?.box ? await ch.send({ components: toBox(list, buttons, ping), flags: import_discord6.MessageFlags.IsComponentsV2, allowedMentions: { parse: [], roles } }) : await ch.send({ ...ping ? { content: ping } : {}, embeds: list.map(toEmbed), components: toRows(buttons), allowedMentions: { parse: [], roles } });
         if (opts?.replaceKey) {
           const key4 = `last-${opts.replaceKey}-${channelId}`;
           const old = await api.service("GET", `/bot/state/${key4}`).then((r) => r.value, () => null);

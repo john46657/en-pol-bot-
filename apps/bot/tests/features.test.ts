@@ -3,7 +3,7 @@ import { BotApiError, type Api } from '../src/api';
 import { byName } from '../src/commands';
 import { interactionFor } from '../src/commands/features';
 import type { Ctx } from '../src/commands/types';
-import { COLORS, dangerButtons, dangerEmbed, teamlistEmbed, type Reply } from '../src/format';
+import { COLORS, dangerButtons, dangerEmbed, dangerPanel, teamlistEmbed, type Reply } from '../src/format';
 import { createLive } from '../src/live';
 import { dutyRoleChanges, pollOnce } from '../src/outbox';
 import type { Platform } from '../src/platform';
@@ -83,8 +83,13 @@ describe('/gefahrenstatus', () => {
     expect(dangerEmbed(s)).toMatchObject({ title: 'Gefahrenstatus' });
     expect(dangerEmbed(s).description).toContain('<t:1776521700:f>');
     const msg = renderOutbox('danger.changed', { level: 'STATUS_1', name: 'Status 1', title: 'Geringe Kriminalität.', text: '## Die Stadt ist heute besonders ruhig.', color: '#2ecc71', setBy: 'Chief' })!;
-    expect(msg).toMatchObject({ title: 'Status 1: Geringe Kriminalität.', color: 0x2ecc71 });
+    // Kasten ohne Farbstreifen und ohne Fußzeile „Vorher … · Gesetzt von …“
+    expect(msg).toMatchObject({ box: true, title: 'Status 1: Geringe Kriminalität.' });
+    expect(msg.color).toBeUndefined();
+    expect(msg.footer).toBeUndefined();
     expect(msg.description).toContain('besonders ruhig');
+    // Panel wie im alten Bot: Kasten mit großem Titel, Text und Datum der letzten Änderung (ohne Farbstreifen)
+    expect(dangerPanel(s)).toEqual({ box: true, heading: true, title: 'Gefahrenstatus', description: expect.any(String), stamp: '2026-04-18T14:15:00Z' });
   });
 });
 
@@ -190,12 +195,12 @@ describe('application ticket channels', () => {
 
 describe('live messages', () => {
   it('posts once, stores where, then only edits when the content changed', async () => {
-    let level = 'STATUS_1';
+    let level = 'STATUS_1', at = '2026-04-18T14:15:00Z';
     const state: Record<string, unknown> = {};
     const api: Api = {
       async asUser() { throw new Error('unused'); },
       async service(method, path, body) {
-        if (path === '/bot/danger') return STATE(level) as never;
+        if (path === '/bot/danger') return STATE(level, { at }) as never;
         if (path.startsWith('/bot/state/')) { const k = path.slice(11); if (method === 'PUT') { state[k] = (body as { value: unknown }).value; return undefined as never; } return { value: state[k] ?? null } as never; }
         throw new Error(path);
       },
@@ -207,7 +212,7 @@ describe('live messages', () => {
     expect(state['danger-panel']).toEqual({ channelId: 'C', messageId: 'M-new' });
     await live.refresh('danger');
     expect(log).toEqual(['post C new']); // unverändert → nichts bearbeitet
-    level = 'STATUS_4';
+    level = 'STATUS_4'; at = '2026-04-18T15:00:00Z'; // neue Stufe → neues Datum im Panel
     await live.refresh('danger');
     expect(log).toEqual(['post C new', 'post C M-new']);
   });
