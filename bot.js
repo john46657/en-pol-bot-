@@ -82278,6 +82278,49 @@ Wenn sie angenommen wird, endet sie ungef\xE4hr ${ts(pending.endsAt)}.`, COLORS.
   return { ephemeral: true, embeds: [embed(`${last ? `Deine letzte Abmeldung endete ${ts(last.endedAt ?? last.endsAt)}.` : "Du hast gerade keine Abmeldung."}
 Um eine neue Abmeldung zu starten, klicke auf \`Start\`.`)], buttons: start2 };
 }
+var DAY_MS = 24 * HOUR;
+var span = (ms) => {
+  const d = Math.round(ms / DAY_MS);
+  if (d >= 1) return `${d} ${d === 1 ? "Tag" : "Tage"}`;
+  const h = Math.max(1, Math.round(ms / HOUR));
+  return `${h} Std.`;
+};
+var STATE_DE = { PENDING: "\u23F3 ausstehend", DENIED: "\u274C abgelehnt", CANCELLED: "\u21A9\uFE0F zur\xFCckgezogen" };
+var leaveState = (r) => r.active ? "\u{1F7E2} l\xE4uft" : r.status === "APPROVED" && new Date(r.startsAt).getTime() > Date.now() ? "\u{1F4C5} geplant" : STATE_DE[r.status] ?? "";
+var memberHead = async (c, discordId) => ({ name: `Abmeldungen: @${await c.userNameOf?.(discordId) ?? discordId}` });
+async function adminReply(c, discordId) {
+  if (!/^\d{15,25}$/.test(discordId)) return errorReply("Bitte ein Mitglied ausw\xE4hlen.");
+  const { items } = await c.api.asUser(c.discordId, "GET", `/leave?discordId=${discordId}&status=ALL`);
+  const current = items.find((r) => r.active) ?? items.find((r) => r.status === "PENDING") ?? items.find((r) => r.status === "APPROVED" && new Date(r.startsAt).getTime() > Date.now());
+  const list = items.slice(0, 10).map((r, i) => {
+    const end = r.endedAt && r.status === "ENDED" ? r.endedAt : r.endsAt;
+    const st = leaveState(r);
+    return `\`${i + 1}.\` ${ts(r.startsAt, "f")} [${span(new Date(end).getTime() - new Date(r.startsAt).getTime())}]${st ? ` ${st}` : ""}`;
+  });
+  const description = `**Verlauf**
+${list.length ? list.join("\n") : "Noch keine Abmeldungen."}${items.length > 10 ? `
+\u2026 und ${items.length - 10} \xE4ltere` : ""}`;
+  const buttons = [
+    current ? { id: `leave:cancel:${current.id}`, label: current.active ? "Beenden" : current.status === "PENDING" ? "Antrag zur\xFCckziehen" : "Absagen", style: "danger", emoji: "\u23F9\uFE0F" } : { id: `leave:astart:${discordId}`, label: "Start", style: "primary", emoji: "\u{1F552}" },
+    ...items.length ? [{ id: `leave:ahist:${discordId}`, label: "Erweiterten Verlauf ansehen", style: "secondary", emoji: "\u{1F4DC}" }] : []
+  ];
+  return { ephemeral: true, embeds: [{ box: true, heading: "small", author: await memberHead(c, discordId), title: "Abmeldungen verwalten", description }], buttons };
+}
+async function adminHistory(c, discordId) {
+  const { items } = await c.api.asUser(c.discordId, "GET", `/leave?discordId=${discordId}&status=ALL`);
+  if (!items.length) return okReply("Noch keine Abmeldungen.");
+  const blocks = items.slice(0, 15).map((r) => {
+    const st = leaveState(r);
+    return clip([
+      `\`${r.number}\`${st ? ` ${st}` : ""}`,
+      `- **Beginn:** ${ts(r.startsAt, "f")}`,
+      `- **Ende:** ${ts(r.status === "ENDED" && r.endedAt ? r.endedAt : r.endsAt, "f")}`,
+      `- **Grund:** ${clip(plain(r.reason), 300)}`,
+      ...r.decisionReason ? [`- **Entscheidung:** ${clip(plain(r.decisionReason), 200)}`] : []
+    ].join("\n"), 900);
+  });
+  return { ephemeral: true, embeds: [{ box: true, heading: "small", author: await memberHead(c, discordId), title: "Verlauf der Abmeldungen", description: clip(blocks.join("\n\n"), 3900) }] };
+}
 var LEAVE_COMMANDS = [
   {
     name: "abmeldung",
@@ -82308,10 +82351,13 @@ Die Leitung entscheidet \u2013 du bekommst eine Direktnachricht.`
   {
     name: "leave",
     description: "Abmeldungen (Leave of Absence)",
-    subcommands: [{ name: "manage", description: "Eigene Abmeldung ansehen, starten oder beenden" }],
+    subcommands: [
+      { name: "manage", description: "Eigene Abmeldung ansehen, starten oder beenden" },
+      { name: "admin", description: "Leitung: Abmeldungen eines Mitglieds ansehen, starten oder beenden", options: [{ name: "mitglied", description: "Discord-Mitglied", type: "user", required: true }] }
+    ],
     async run(c) {
       try {
-        return await manageReply(c);
+        return c.opts._sub === "admin" ? await adminReply(c, String(c.opts.mitglied ?? "")) : await manageReply(c);
       } catch (e) {
         return mapError(e);
       }
@@ -82333,9 +82379,33 @@ async function decide2(c, id2, status, reason) {
 }
 var LEAVE_INTERACTION = {
   prefix: "leave",
-  opensModal: (args) => args[0] === "reason" || args[0] === "start",
+  opensModal: (args) => args[0] === "reason" || args[0] === "start" || args[0] === "astart",
   async run(c) {
     const [action, id2, st] = c.args;
+    if (action === "ahist" && id2) {
+      try {
+        return await adminHistory(c, id2);
+      } catch (e) {
+        return mapError(e);
+      }
+    }
+    if (action === "astart" && id2) return { modal: { id: `leave:acreate:${id2}`, title: "Abmeldung f\xFCr Mitglied starten", fields: [
+      { id: "duration", label: "Dauer", required: true, maxLength: 20, placeholder: "Format: '6h', '4d' oder '2w'" },
+      { id: "reason", label: "Grund", paragraph: true, required: true, minLength: 3, maxLength: 1e3, placeholder: "z. B. Urlaub" }
+    ] } };
+    if (action === "acreate" && id2 && /^\d{15,25}$/.test(id2)) {
+      const ms = parseDuration(c.fields?.duration ?? "");
+      if (!ms) return errorReply("Die Dauer verstehe ich nicht. Beispiele: `6h`, `4d`, `2w` oder `1w 2d` (mindestens 1 Stunde).");
+      const reason = (c.fields?.reason ?? "").trim();
+      if (reason.length < 3) return errorReply("Bitte einen Grund angeben.");
+      const now = Date.now();
+      try {
+        await c.api.asUser(c.discordId, "POST", "/leave", { startsAt: new Date(now).toISOString(), endsAt: new Date(now + ms).toISOString(), reason, forDiscordId: id2, ...c.guildId ? { guildId: c.guildId } : {} });
+        return await adminReply(c, id2);
+      } catch (e) {
+        return mapError(e);
+      }
+    }
     if (action === "start") return { modal: { id: "leave:create", title: "Abmeldung erstellen", fields: [
       { id: "duration", label: "Dauer", required: true, maxLength: 20, placeholder: "Format: '6h', '4d' oder '2w'" },
       { id: "reason", label: "Grund", paragraph: true, required: true, minLength: 3, maxLength: 1e3, placeholder: "z. B. Urlaub, Pr\xFCfungsphase" }
@@ -82364,6 +82434,7 @@ Um benachrichtigt zu werden, ob sie angenommen oder abgelehnt wird, lass bitte d
     if (action === "cancel") {
       try {
         const r = await c.api.asUser(c.discordId, "POST", `/leave/${id2}/cancel`);
+        if (r.discordId && r.discordId !== c.discordId) return okReply(`Abmeldung **${r.number}** von ${plain(r.name)} ${r.status === "ENDED" ? "beendet" : "abgesagt"}.`);
         return okReply(r.status === "ENDED" ? `Deine Abmeldung **${r.number}** ist beendet \u2013 willkommen zur\xFCck!` : `Abmeldung **${r.number}** zur\xFCckgezogen.`);
       } catch (e) {
         return mapError(e);
@@ -84191,11 +84262,15 @@ var sep = () => new import_discord6.SeparatorBuilder().setDivider(true).setSpaci
 var toBox = (list, buttons, ping) => [
   ...ping ? [new import_discord6.TextDisplayBuilder().setContent(ping)] : [],
   ...list.map((e, i) => {
-    const c = new import_discord6.ContainerBuilder().addTextDisplayComponents(new import_discord6.TextDisplayBuilder().setContent(e.heading ? `# ${e.title}` : `**${e.title}**`));
+    const c = new import_discord6.ContainerBuilder();
+    if (e.author?.name) c.addTextDisplayComponents(new import_discord6.TextDisplayBuilder().setContent(`**${e.author.name}**`));
+    c.addTextDisplayComponents(new import_discord6.TextDisplayBuilder().setContent(e.heading === "small" ? `### ${e.title}` : e.heading ? `# ${e.title}` : `**${e.title}**`));
     if (e.description) {
-      if (e.heading) c.addSeparatorComponents(sep());
+      if (e.heading === true) c.addSeparatorComponents(sep());
       c.addTextDisplayComponents(new import_discord6.TextDisplayBuilder().setContent(e.description));
     }
+    for (const f2 of e.fields ?? []) c.addTextDisplayComponents(new import_discord6.TextDisplayBuilder().setContent(`**${f2.name}**
+${f2.value}`));
     const rows = i === list.length - 1 ? toRows(buttons) : [];
     if (rows.length) c.addSeparatorComponents(sep()).addActionRowComponents(...rows);
     if (e.stamp && !Number.isNaN(Date.parse(e.stamp))) c.addSeparatorComponents(sep()).addTextDisplayComponents(new import_discord6.TextDisplayBuilder().setContent(`<t:${Math.floor(Date.parse(e.stamp) / 1e3)}:f>`));
@@ -84211,7 +84286,7 @@ var toModal = (m) => new import_discord6.ModalBuilder().setCustomId(m.id).setTit
   if (f2.value) input.setValue(f2.value.slice(0, f2.maxLength ?? 4e3));
   return new import_discord6.ActionRowBuilder().addComponents(input);
 }));
-var replyPayload = (r) => ({ content: r.content ?? "", embeds: (r.embeds ?? []).map(toEmbed), components: toComponents(r.buttons, r.select, r.selects), allowedMentions: { parse: [] } });
+var replyPayload = (r) => r.embeds?.[0]?.box ? { components: [...toBox(r.embeds), ...toComponents(r.buttons, r.select, r.selects)], flags: import_discord6.MessageFlags.IsComponentsV2, allowedMentions: { parse: [] } } : { content: r.content ?? "", embeds: (r.embeds ?? []).map(toEmbed), components: toComponents(r.buttons, r.select, r.selects), allowedMentions: { parse: [] } };
 var TICKET_PREFIX = "ticket-";
 var ticketName = (userName, userId) => `${TICKET_PREFIX}${userName.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 40) || userId}`;
 var platform = {
@@ -84543,7 +84618,10 @@ async function handleCommand(i) {
   if (def.opensModal) {
     const reply2 = await safeRun(`command ${def.name}`, () => def.run({ ...baseCtx(i), opts }));
     if (reply2.modal) await i.showModal(toModal(reply2.modal));
-    else await i.reply({ ...replyPayload(reply2), flags: import_discord6.MessageFlags.Ephemeral });
+    else {
+      const p = replyPayload(reply2);
+      await i.reply({ ...p, flags: ("flags" in p ? p.flags ?? 0 : 0) | import_discord6.MessageFlags.Ephemeral });
+    }
     return;
   }
   await i.deferReply({ flags: import_discord6.MessageFlags.Ephemeral });
@@ -84556,7 +84634,10 @@ async function handleComponent(i) {
   if ((i.isButton() || i.isAnySelectMenu()) && hit.def.opensModal?.(hit.args)) {
     const reply2 = await safeRun(`interaction ${i.customId}`, () => hit.def.run({ ...baseCtx(i), opts: {}, args: hit.args, ...i.isAnySelectMenu() ? { values: i.values } : {} }));
     if (reply2.modal) await i.showModal(toModal(reply2.modal));
-    else await i.reply({ ...replyPayload(reply2), flags: import_discord6.MessageFlags.Ephemeral });
+    else {
+      const p = replyPayload(reply2);
+      await i.reply({ ...p, flags: ("flags" in p ? p.flags ?? 0 : 0) | import_discord6.MessageFlags.Ephemeral });
+    }
     return;
   }
   await i.deferReply({ flags: import_discord6.MessageFlags.Ephemeral });

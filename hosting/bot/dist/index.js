@@ -78,12 +78,17 @@ const sep = () => new discord_js_1.SeparatorBuilder().setDivider(true).setSpacin
 const toBox = (list, buttons, ping) => [
     ...(ping ? [new discord_js_1.TextDisplayBuilder().setContent(ping)] : []),
     ...list.map((e, i) => {
-        const c = new discord_js_1.ContainerBuilder().addTextDisplayComponents(new discord_js_1.TextDisplayBuilder().setContent(e.heading ? `# ${e.title}` : `**${e.title}**`));
+        const c = new discord_js_1.ContainerBuilder();
+        if (e.author?.name)
+            c.addTextDisplayComponents(new discord_js_1.TextDisplayBuilder().setContent(`**${e.author.name}**`));
+        c.addTextDisplayComponents(new discord_js_1.TextDisplayBuilder().setContent(e.heading === 'small' ? `### ${e.title}` : e.heading ? `# ${e.title}` : `**${e.title}**`));
         if (e.description) {
-            if (e.heading)
+            if (e.heading === true)
                 c.addSeparatorComponents(sep());
             c.addTextDisplayComponents(new discord_js_1.TextDisplayBuilder().setContent(e.description));
         }
+        for (const f of e.fields ?? [])
+            c.addTextDisplayComponents(new discord_js_1.TextDisplayBuilder().setContent(`**${f.name}**\n${f.value}`));
         const rows = i === list.length - 1 ? toRows(buttons) : [];
         if (rows.length)
             c.addSeparatorComponents(sep()).addActionRowComponents(...rows);
@@ -106,7 +111,10 @@ const toModal = (m) => new discord_js_1.ModalBuilder().setCustomId(m.id).setTitl
         input.setValue(f.value.slice(0, f.maxLength ?? 4000));
     return new discord_js_1.ActionRowBuilder().addComponents(input);
 }));
-const replyPayload = (r) => ({ content: r.content ?? '', embeds: (r.embeds ?? []).map(toEmbed), components: toComponents(r.buttons, r.select, r.selects), allowedMentions: { parse: [] } });
+const replyPayload = (r) => (r.embeds?.[0]?.box
+    // Kasten wie bei Trident: Buttons darunter, außerhalb des Kastens
+    ? { components: [...toBox(r.embeds), ...toComponents(r.buttons, r.select, r.selects)], flags: discord_js_1.MessageFlags.IsComponentsV2, allowedMentions: { parse: [] } }
+    : { content: r.content ?? '', embeds: (r.embeds ?? []).map(toEmbed), components: toComponents(r.buttons, r.select, r.selects), allowedMentions: { parse: [] } });
 const TICKET_PREFIX = 'ticket-';
 const ticketName = (userName, userId) => `${TICKET_PREFIX}${userName.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 40) || userId}`;
 /** Echte Discord-Umsetzung der Plattform-Aktionen (in Tests ein Fake). */
@@ -458,8 +466,10 @@ async function handleCommand(i) {
         const reply = await safeRun(`command ${def.name}`, () => def.run({ ...baseCtx(i), opts }));
         if (reply.modal)
             await i.showModal(toModal(reply.modal));
-        else
-            await i.reply({ ...replyPayload(reply), flags: discord_js_1.MessageFlags.Ephemeral });
+        else {
+            const p = replyPayload(reply);
+            await i.reply({ ...p, flags: ('flags' in p ? (p.flags ?? 0) : 0) | discord_js_1.MessageFlags.Ephemeral });
+        }
         return;
     }
     // Antworten sind immer nur für den Aufrufer sichtbar (Daten gehören nicht in öffentliche Channels).
@@ -476,8 +486,10 @@ async function handleComponent(i) {
         const reply = await safeRun(`interaction ${i.customId}`, () => hit.def.run({ ...baseCtx(i), opts: {}, args: hit.args, ...(i.isAnySelectMenu() ? { values: i.values } : {}) }));
         if (reply.modal)
             await i.showModal(toModal(reply.modal));
-        else
-            await i.reply({ ...replyPayload(reply), flags: discord_js_1.MessageFlags.Ephemeral });
+        else {
+            const p = replyPayload(reply);
+            await i.reply({ ...p, flags: ('flags' in p ? (p.flags ?? 0) : 0) | discord_js_1.MessageFlags.Ephemeral });
+        }
         return;
     }
     await i.deferReply({ flags: discord_js_1.MessageFlags.Ephemeral });

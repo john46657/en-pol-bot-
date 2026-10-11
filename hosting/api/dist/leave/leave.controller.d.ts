@@ -8,6 +8,7 @@ declare const requestBody: z.ZodObject<{
     guildId: z.ZodOptional<z.ZodString>;
     type: z.ZodOptional<z.ZodString>;
     comment: z.ZodOptional<z.ZodString>;
+    forDiscordId: z.ZodOptional<z.ZodString>;
 }, "strip", z.ZodTypeAny, {
     reason: string;
     startsAt: Date;
@@ -15,6 +16,7 @@ declare const requestBody: z.ZodObject<{
     type?: string | undefined;
     guildId?: string | undefined;
     comment?: string | undefined;
+    forDiscordId?: string | undefined;
 }, {
     reason: string;
     startsAt: Date;
@@ -22,15 +24,19 @@ declare const requestBody: z.ZodObject<{
     type?: string | undefined;
     guildId?: string | undefined;
     comment?: string | undefined;
+    forDiscordId?: string | undefined;
 }>;
 declare const listQ: z.ZodObject<{
     status: z.ZodOptional<z.ZodEnum<["PENDING", "APPROVED", "DENIED", "CANCELLED", "ENDED", "ACTIVE", "UPCOMING", "ALL"]>>;
     mine: z.ZodOptional<z.ZodEnum<["true", "false"]>>;
+    discordId: z.ZodOptional<z.ZodString>;
 }, "strip", z.ZodTypeAny, {
     status?: "PENDING" | "APPROVED" | "DENIED" | "CANCELLED" | "ENDED" | "ACTIVE" | "UPCOMING" | "ALL" | undefined;
+    discordId?: string | undefined;
     mine?: "true" | "false" | undefined;
 }, {
     status?: "PENDING" | "APPROVED" | "DENIED" | "CANCELLED" | "ENDED" | "ACTIVE" | "UPCOMING" | "ALL" | undefined;
+    discordId?: string | undefined;
     mine?: "true" | "false" | undefined;
 }>;
 declare const decision: z.ZodObject<{
@@ -62,7 +68,6 @@ export declare class LeaveController {
         logChannelId?: string | null | undefined;
     }>;
     list(a: Actor, q: z.infer<typeof listQ>): Promise<{
-        all: boolean;
         items: {
             id: string;
             number: string;
@@ -84,6 +89,11 @@ export declare class LeaveController {
             createdAt: Date;
             days: number;
         }[];
+        member?: {
+            userId: string;
+            name: string;
+        } | undefined;
+        all: boolean;
     }>;
     request(a: Actor, b: z.infer<typeof requestBody>): Promise<{
         id: string;

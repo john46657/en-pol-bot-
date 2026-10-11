@@ -50,6 +50,8 @@ export declare class LeaveService {
     /** Eintrag im Log-Channel (angenommen, abgelehnt, begonnen, beendet, zurückgezogen). */
     private log;
     private roles;
+    /** Mitglied per Discord-ID (Leitung, z. B. `/leave admin`). */
+    private member;
     request(actor: Actor, d: {
         startsAt: Date;
         endsAt: Date;
@@ -57,6 +59,7 @@ export declare class LeaveService {
         guildId?: string;
         type?: string;
         comment?: string;
+        forDiscordId?: string;
     }): Promise<{
         id: string;
         number: string;
@@ -78,11 +81,12 @@ export declare class LeaveService {
         createdAt: Date;
         days: number;
     }>;
+    private create;
     list(actor: Actor, f: {
         status?: string;
         mine?: boolean;
+        discordId?: string;
     }): Promise<{
-        all: boolean;
         items: {
             id: string;
             number: string;
@@ -104,6 +108,11 @@ export declare class LeaveService {
             createdAt: Date;
             days: number;
         }[];
+        member?: {
+            userId: string;
+            name: string;
+        } | undefined;
+        all: boolean;
     }>;
     private load;
     decide(actor: Actor, id: string, status: 'APPROVED' | 'DENIED', reason?: string): Promise<{

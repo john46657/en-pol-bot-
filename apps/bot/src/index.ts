@@ -85,8 +85,11 @@ const sep = () => new SeparatorBuilder().setDivider(true).setSpacing(SeparatorSp
 const toBox = (list: EmbedData[], buttons?: ButtonSpec[], ping?: string) => [
   ...(ping ? [new TextDisplayBuilder().setContent(ping)] : []),
   ...list.map((e, i) => {
-    const c = new ContainerBuilder().addTextDisplayComponents(new TextDisplayBuilder().setContent(e.heading ? `# ${e.title}` : `**${e.title}**`));
-    if (e.description) { if (e.heading) c.addSeparatorComponents(sep()); c.addTextDisplayComponents(new TextDisplayBuilder().setContent(e.description)); }
+    const c = new ContainerBuilder();
+    if (e.author?.name) c.addTextDisplayComponents(new TextDisplayBuilder().setContent(`**${e.author.name}**`));
+    c.addTextDisplayComponents(new TextDisplayBuilder().setContent(e.heading === 'small' ? `### ${e.title}` : e.heading ? `# ${e.title}` : `**${e.title}**`));
+    if (e.description) { if (e.heading === true) c.addSeparatorComponents(sep()); c.addTextDisplayComponents(new TextDisplayBuilder().setContent(e.description)); }
+    for (const f of e.fields ?? []) c.addTextDisplayComponents(new TextDisplayBuilder().setContent(`**${f.name}**\n${f.value}`));
     const rows = i === list.length - 1 ? toRows(buttons) : [];
     if (rows.length) c.addSeparatorComponents(sep()).addActionRowComponents(...rows);
     if (e.stamp && !Number.isNaN(Date.parse(e.stamp))) c.addSeparatorComponents(sep()).addTextDisplayComponents(new TextDisplayBuilder().setContent(`<t:${Math.floor(Date.parse(e.stamp) / 1000)}:f>`));
@@ -103,7 +106,10 @@ const toModal = (m: ModalSpec) => new ModalBuilder().setCustomId(m.id).setTitle(
   if (f.value) input.setValue(f.value.slice(0, f.maxLength ?? 4000));
   return new ActionRowBuilder<TextInputBuilder>().addComponents(input);
 }));
-const replyPayload = (r: Reply) => ({ content: r.content ?? '', embeds: (r.embeds ?? []).map(toEmbed), components: toComponents(r.buttons, r.select, r.selects), allowedMentions: { parse: [] as never[] } });
+const replyPayload = (r: Reply) => (r.embeds?.[0]?.box
+  // Kasten wie bei Trident: Buttons darunter, außerhalb des Kastens
+  ? { components: [...toBox(r.embeds), ...toComponents(r.buttons, r.select, r.selects)], flags: MessageFlags.IsComponentsV2 as const, allowedMentions: { parse: [] as never[] } }
+  : { content: r.content ?? '', embeds: (r.embeds ?? []).map(toEmbed), components: toComponents(r.buttons, r.select, r.selects), allowedMentions: { parse: [] as never[] } });
 
 const TICKET_PREFIX = 'ticket-';
 const ticketName = (userName: string, userId: string) => `${TICKET_PREFIX}${userName.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 40) || userId}`;
@@ -400,7 +406,7 @@ async function handleCommand(i: ChatInputCommandInteraction) {
     // Formulare müssen die erste Antwort sein – kein deferReply vorher.
     const reply = await safeRun(`command ${def.name}`, () => def.run({ ...baseCtx(i), opts }));
     if (reply.modal) await i.showModal(toModal(reply.modal));
-    else await i.reply({ ...replyPayload(reply), flags: MessageFlags.Ephemeral });
+    else { const p = replyPayload(reply); await i.reply({ ...p, flags: ('flags' in p ? (p.flags ?? 0) : 0) | MessageFlags.Ephemeral }); }
     return;
   }
   // Antworten sind immer nur für den Aufrufer sichtbar (Daten gehören nicht in öffentliche Channels).
@@ -416,7 +422,7 @@ async function handleComponent(i: ButtonInteraction | ModalSubmitInteraction | A
     // Formulare müssen die erste Antwort sein – kein deferReply vorher.
     const reply = await safeRun(`interaction ${i.customId}`, () => hit.def.run({ ...baseCtx(i), opts: {}, args: hit.args, ...(i.isAnySelectMenu() ? { values: i.values } : {}) }));
     if (reply.modal) await i.showModal(toModal(reply.modal));
-    else await i.reply({ ...replyPayload(reply), flags: MessageFlags.Ephemeral });
+    else { const p = replyPayload(reply); await i.reply({ ...p, flags: ('flags' in p ? (p.flags ?? 0) : 0) | MessageFlags.Ephemeral }); }
     return;
   }
   await i.deferReply({ flags: MessageFlags.Ephemeral });

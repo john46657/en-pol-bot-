@@ -2,7 +2,7 @@
 /** `author`: kleine Zeile über dem Titel (z. B. Server-Name mit Icon oder @Benutzer mit Profilbild, wie bei Trident). */
 export interface EmbedData { title: string; description?: string; color?: number; fields?: { name: string; value: string; inline?: boolean }[]; footer?: string; thumbnail?: string; author?: { name: string; iconUrl?: string }; /** großes Bild (https:// oder attachment://datei) */ image?: string;
   /** Als Kasten ohne Farbstreifen senden (Discord-Komponenten statt Embed); Titel groß (`heading`) oder fett, `stamp` = Datum/Uhrzeit unten. */
-  box?: boolean; heading?: boolean; stamp?: string }
+  box?: boolean; heading?: boolean | 'small'; stamp?: string }
 /** `url`: Link-Button (öffnet die Adresse, löst keine Interaktion aus). */
 export interface ButtonSpec { id: string; label: string; style: 'primary' | 'secondary' | 'success' | 'danger'; emoji?: string; url?: string }
 /** Auswahlmenü; `id` wie bei Buttons `prefix:arg`. `kind`: Text-Optionen (Standard), Discord-Benutzer oder -Rollen. */

@@ -167,3 +167,24 @@ describe('Leave of Absences', () => {
     expect((await lead.post(`/api/v1/leave/${other.body.id}/cancel`)).body.status).toBe('CANCELLED');
   });
 });
+
+describe('/leave admin (Leitung für ein Mitglied)', () => {
+  it('management sees the member history by Discord id and starts a leave for the member (approved at once)', async () => {
+    const admin = (await login(app, 'sl_admin')).agent;
+    await admin.put('/api/v1/leave/config').send({ enabled: true, maxDays: 30 });
+    await prisma.leaveRequest.deleteMany({ where: { user: { username: 'sl_off' } } });
+    const body = { startsAt: new Date().toISOString(), endsAt: new Date(Date.now() + 2 * 86_400_000).toISOString(), reason: 'Urlaub', forDiscordId: OFF_D };
+    // Mitglieder dürfen keine Abmeldung für andere starten und keine fremden Verläufe sehen
+    expect((await http().post('/api/v1/leave').set(bot(OFF_D)).send({ ...body, forDiscordId: LEAD_D })).status).toBe(403);
+    expect((await http().get(`/api/v1/leave?discordId=${LEAD_D}`).set(bot(OFF_D))).status).toBe(403);
+    const r = await admin.post('/api/v1/leave').send(body);
+    expect(r.status).toBe(201);
+    expect(r.body).toMatchObject({ status: 'APPROVED', active: true, name: 'sl_off', discordId: OFF_D });
+    const list = (await admin.get(`/api/v1/leave?discordId=${OFF_D}&status=ALL`)).body;
+    expect(list.member).toMatchObject({ name: 'sl_off' });
+    expect(list.items.map((x: { number: string }) => x.number)).toEqual([r.body.number]);
+    expect((await admin.get('/api/v1/leave?discordId=599999999999999999')).status).toBe(404);
+    expect((await admin.post(`/api/v1/leave/${r.body.id}/cancel`)).body).toMatchObject({ status: 'ENDED' });
+  });
+});
+
