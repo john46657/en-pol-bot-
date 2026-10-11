@@ -113,8 +113,7 @@ let LeaveService = class LeaveService {
             if (!(await this.perms.has(actor.userId, 'leave.manage')))
                 throw new errors_1.AppError('PERMISSION_DENIED', 'Abmeldungen für andere starten darf nur die Leitung (leave.manage).');
             const target = await this.member(d.forDiscordId);
-            const { forDiscordId: _f, ...rest } = d;
-            const r = await this.create(actor, target.id, rest);
+            const r = await this.create(actor, target.id, { startsAt: d.startsAt, endsAt: d.endsAt, reason: d.reason, guildId: d.guildId, type: d.type, comment: d.comment });
             return this.decide(actor, r.id, 'APPROVED');
         }
         const r = await this.create(actor, actor.userId, d);
