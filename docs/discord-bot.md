@@ -136,6 +136,18 @@ Jeder Statuswechsel – egal ob im **Dashboard**, per **`/dienst`**, per **Diens
 
 Ist weder Channel noch Rolle eingestellt, wird nichts eingereiht. Fällt der Bot kurz aus, werden die Änderungen nachgeholt.
 
+### Automatischer Wochen-Reset (Sonntag → Montag)
+Jeden **Montag 00:00 Uhr Europe/Berlin** (Sommer-/Winterzeit automatisch; eine Woche hat dann 167 bzw. 169 Stunden) schließt das System die Woche **Montag 00:00 bis folgender Montag 00:00** ab – in genau dieser Reihenfolge und in **einer** Datenbank-Transaktion:
+1. **Wochenarchiv** speichern (`DutyWeekArchive`): Rangliste je Beamter (Dienstzeit ohne Pause, Pause, Sitzungen) und alle Dienst-Sitzungen der Woche. Über Mitternacht laufende Schichten zählen anteilig in beide Wochen.
+2. **Rangliste** in Discord veröffentlichen: eingestellter Kanal, sonst der Dienst-Channel (ohne Kanal wird nur archiviert). Plätze (1–25) und @Erwähnungen (ohne Ping) sind einstellbar.
+3. **Wochenzähler** im Dashboard auf die neue Woche setzen.
+
+Gelöscht wird dabei **nichts**: Schichten und Dienstzeiten bleiben in `DutySession`, Wochenarchive sind auf DB-Ebene unveränderlich (Trigger verbietet UPDATE/DELETE/TRUNCATE) und bleiben auch beim Einspielen eines Daten-Backups erhalten.
+
+- **Kein doppelter Reset**: Postgres-Advisory-Lock (mehrere Instanzen), eindeutige Woche im Archiv und fester Discord-Schlüssel `week-rank-<Montag>` (ein erneuter Auftrag bearbeitet nur dieselbe Nachricht).
+- **Nachholen**: Die API prüft beim Start und alle 30 Sekunden. War sie über einen Wochenwechsel aus, wird jeder verpasste Reset genau einmal nachgeholt; ältere verpasste Wochen werden nur archiviert, die zuletzt abgeschlossene Woche wird veröffentlicht (Archiv als „nachgeholt“ markiert).
+- **Dashboard**: *Team* → **Wochenrangliste** (laufende Woche, **nächster Reset-Zeitpunkt**, Auswahl abgeschlossener Wochen); Einstellungen unter *Administration → Schichten* → **Automatischer Wochen-Reset** (`settings.manage`, dauerhaft gespeichert). Vollständige Archive (mit allen Sitzungen): `GET /api/v1/team/week/archives/:id` (`team.manage`).
+
 ## Embeds (Baukasten wie bei Sapphire)
 *Administration → Embeds* (ansehen `settings.view`, bearbeiten/senden `settings.manage`): Nachricht mit Embed bauen – Text über dem Embed, Titel, Beschreibung, Farbe, **Abschnitte** (Überschrift mit Emoji + Text, z. B. „👑 | Kommandant:“, bis 25; „Aus Dienstgraden“ legt je Dienstgrad der Teamstruktur einen Abschnitt an), Autor, Bilder, Link, Fußzeile, Zeitstempel – mit Live-Vorschau.
 - **Senden** in den gewählten Kanal (z. B. `#karriereweg`). Danach **Nachricht aktualisieren**: der Bot bearbeitet dieselbe Nachricht (kein neuer Post); **Neu senden** postet eine weitere. Wurde die Nachricht in Discord gelöscht, postet der Bot sie neu.

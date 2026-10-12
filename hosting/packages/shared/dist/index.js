@@ -122,6 +122,8 @@ __export(index_exports, {
   WEAPON_STATUSES: () => WEAPON_STATUSES,
   WEAPON_STATUS_KEYS: () => WEAPON_STATUS_KEYS,
   WEEKDAYS: () => WEEKDAYS,
+  WEEK_COUNTED_STATUSES: () => WEEK_COUNTED_STATUSES,
+  WEEK_TIMEZONE: () => WEEK_TIMEZONE,
   WELCOME_VARIABLES: () => WELCOME_VARIABLES,
   WORKFLOW_ACTION_LABELS: () => WORKFLOW_ACTION_LABELS,
   WORKFLOW_OPS: () => WORKFLOW_OPS,
@@ -174,6 +176,7 @@ __export(index_exports, {
   isSupportOpen: () => isSupportOpen,
   isValidRobloxUserId: () => isValidRobloxUserId,
   isoWeek: () => isoWeek,
+  localMidnight: () => localMidnight,
   localTime: () => localTime,
   logCategoryOf: () => logCategoryOf,
   logChannelFor: () => logChannelFor,
@@ -182,6 +185,7 @@ __export(index_exports, {
   matchingBinds: () => matchingBinds,
   mdtConfigSchema: () => mdtConfigSchema,
   newVoiceRoom: () => newVoiceRoom,
+  nextWeekStart: () => nextWeekStart,
   normalizeField: () => normalizeField,
   notifyRuleSchema: () => notifyRuleSchema,
   panelFieldSchema: () => panelFieldSchema,
@@ -217,6 +221,11 @@ __export(index_exports, {
   ticketNumber: () => ticketNumber,
   triggerMatches: () => triggerMatches,
   verifyActions: () => verifyActions,
+  weekIso: () => weekIso,
+  weekKey: () => weekKey,
+  weekLabel: () => weekLabel,
+  weekStartOf: () => weekStartOf,
+  weekTotals: () => weekTotals,
   withHrDefaults: () => withHrDefaults
 });
 module.exports = __toCommonJS(index_exports);
@@ -1333,6 +1342,68 @@ function reportMessage(t, r, id2) {
   ] };
 }
 
+// src/duty-week.ts
+var WEEK_TIMEZONE = "Europe/Berlin";
+function localParts(at, timeZone) {
+  const p = Object.fromEntries(new Intl.DateTimeFormat("en-US", { timeZone, year: "numeric", month: "numeric", day: "numeric", hour: "numeric", minute: "numeric", second: "numeric", hourCycle: "h23", weekday: "short" }).formatToParts(at).map((x) => [x.type, x.value]));
+  const wd = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"].indexOf(p.weekday) + 1;
+  return { y: Number(p.year), m: Number(p.month), d: Number(p.day), h: Number(p.hour), min: Number(p.minute), s: Number(p.second), wd };
+}
+function offsetMs(at, timeZone) {
+  const l = localParts(at, timeZone);
+  return Date.UTC(l.y, l.m - 1, l.d, l.h, l.min, l.s) - Math.floor(at.getTime() / 1e3) * 1e3;
+}
+function localMidnight(y, m, d, timeZone = WEEK_TIMEZONE) {
+  const guess = Date.UTC(y, m - 1, d);
+  let t = guess - offsetMs(new Date(guess), timeZone);
+  t = guess - offsetMs(new Date(t), timeZone);
+  return new Date(t);
+}
+function weekStartOf(at, timeZone = WEEK_TIMEZONE) {
+  const l = localParts(at, timeZone);
+  return localMidnight(l.y, l.m, l.d - (l.wd - 1), timeZone);
+}
+function nextWeekStart(weekStart, timeZone = WEEK_TIMEZONE) {
+  const l = localParts(new Date(weekStart.getTime() + 84 * 36e5), timeZone);
+  return localMidnight(l.y, l.m, l.d - (l.wd - 1) + 7, timeZone);
+}
+function weekIso(weekStart, timeZone = WEEK_TIMEZONE) {
+  const l = localParts(new Date(weekStart.getTime() + 84 * 36e5), timeZone);
+  const date = new Date(Date.UTC(l.y, l.m - 1, l.d));
+  date.setUTCDate(date.getUTCDate() + 4 - l.wd);
+  const year = date.getUTCFullYear();
+  return { year, week: Math.ceil(((date.getTime() - Date.UTC(year, 0, 1)) / 864e5 + 1) / 7) };
+}
+function weekKey(weekStart, timeZone = WEEK_TIMEZONE) {
+  const l = localParts(new Date(weekStart.getTime() + 84 * 36e5), timeZone);
+  const mon = new Date(Date.UTC(l.y, l.m - 1, l.d - (l.wd - 1)));
+  return mon.toISOString().slice(0, 10);
+}
+function weekLabel(weekStart, timeZone = WEEK_TIMEZONE) {
+  const { year, week } = weekIso(weekStart, timeZone);
+  const [y, m, d] = weekKey(weekStart, timeZone).split("-").map(Number);
+  const f = (x, withYear = false) => x.toLocaleDateString("de-DE", { timeZone: "UTC", day: "2-digit", month: "2-digit", ...withYear ? { year: "numeric" } : {} });
+  return `KW ${week}/${year} \xB7 ${f(new Date(Date.UTC(y, m - 1, d)))}\u2013${f(new Date(Date.UTC(y, m - 1, d + 6)), true)}`;
+}
+var WEEK_COUNTED_STATUSES = ["ON_DUTY", "TRAINING", "ADMINISTRATIVE"];
+function weekTotals(sessions, from, to, now = /* @__PURE__ */ new Date()) {
+  const rows = /* @__PURE__ */ new Map();
+  const counted = new Set(WEEK_COUNTED_STATUSES);
+  for (const s of sessions) {
+    const a = Math.max(s.startedAt.getTime(), from.getTime());
+    const b = Math.min((s.endedAt ?? now).getTime(), to.getTime());
+    if (b <= a) continue;
+    const r = rows.get(s.userId) ?? { userId: s.userId, minutes: 0, breakMinutes: 0, byStatus: {}, sessions: 0 };
+    const min = (b - a) / 6e4;
+    r.byStatus[s.status] = (r.byStatus[s.status] ?? 0) + min;
+    if (counted.has(s.status)) r.minutes += min;
+    if (s.status === "BREAK") r.breakMinutes += min;
+    r.sessions++;
+    rows.set(s.userId, r);
+  }
+  return [...rows.values()].map((r) => ({ ...r, minutes: Math.round(r.minutes), breakMinutes: Math.round(r.breakMinutes), byStatus: Object.fromEntries(Object.entries(r.byStatus).map(([k, v]) => [k, Math.round(v)])) })).filter((r) => r.minutes > 0 || r.breakMinutes > 0).sort((x, y) => y.minutes - x.minutes || y.sessions - x.sessions);
+}
+
 // src/hr.ts
 var import_zod3 = require("zod");
 var sf3 = import_zod3.z.string().regex(/^\d{15,25}$/, "Discord-ID (15\u201325 Ziffern)");
@@ -2190,6 +2261,8 @@ var fleetInternalSchema = import_zod7.z.object({
   WEAPON_STATUSES,
   WEAPON_STATUS_KEYS,
   WEEKDAYS,
+  WEEK_COUNTED_STATUSES,
+  WEEK_TIMEZONE,
   WELCOME_VARIABLES,
   WORKFLOW_ACTION_LABELS,
   WORKFLOW_OPS,
@@ -2242,6 +2315,7 @@ var fleetInternalSchema = import_zod7.z.object({
   isSupportOpen,
   isValidRobloxUserId,
   isoWeek,
+  localMidnight,
   localTime,
   logCategoryOf,
   logChannelFor,
@@ -2250,6 +2324,7 @@ var fleetInternalSchema = import_zod7.z.object({
   matchingBinds,
   mdtConfigSchema,
   newVoiceRoom,
+  nextWeekStart,
   normalizeField,
   notifyRuleSchema,
   panelFieldSchema,
@@ -2285,5 +2360,10 @@ var fleetInternalSchema = import_zod7.z.object({
   ticketNumber,
   triggerMatches,
   verifyActions,
+  weekIso,
+  weekKey,
+  weekLabel,
+  weekStartOf,
+  weekTotals,
   withHrDefaults
 });

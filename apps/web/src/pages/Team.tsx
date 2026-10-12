@@ -7,6 +7,7 @@ import { useAuth } from '../lib/auth';
 import { useRealtime } from '../lib/realtime';
 import type { ShiftsConfig } from './admin/Shifts';
 import { idleText, idleTone, useMinutesSince } from '../components/DutyActivity';
+import { WeeklyRanking } from '../components/WeeklyRanking';
 import { Button, Card, EmptyState, ErrorState, fmt, PageHeader, PriorityBadge, Select, SkeletonRows, StatusBadge, statusLabel } from '../components/ui';
 
 interface Member {
@@ -110,6 +111,7 @@ export function Team() {
           </div>
         )}
       </Card>
+      <WeeklyRanking />
       <DutyHours all={manage} />
     </>
   );

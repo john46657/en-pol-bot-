@@ -27,8 +27,8 @@ const env_1 = require("../config/env");
 const KEY = 'backup.config';
 /** Flüchtige Daten (Sitzungen, Bot-Warteschlange, Sperren, Einmal-Codes) und die Discord-Backups selbst gehören nicht in ein Daten-Backup. */
 const SKIP = new Set(['Session', 'DiscordOutbox', 'EditLock', 'DiscordLinkCode', 'RobloxVerifyCode', 'RobloxOAuthState', 'DiscordBackup']);
-/** Beim Einspielen unangetastet: das Audit-Log ist unveränderlich (nur anhängen) und bleibt vollständig erhalten. */
-const KEEP_ON_RESTORE = new Set(['AuditLog']);
+/** Beim Einspielen unangetastet: Audit-Log und Wochenarchive sind unveränderlich (nur anhängen) und bleiben vollständig erhalten. */
+const KEEP_ON_RESTORE = new Set(['AuditLog', 'DutyWeekArchive']);
 const FILE = /^(auto|manuell|vor-wiederherstellung)-(\d{8}-\d{6})\.json\.gz$/;
 const delegate = (name) => name.charAt(0).toLowerCase() + name.slice(1);
 /** Tabellen in einer Reihenfolge, in der jede Tabelle nach denen kommt, auf die sie verweist (zum Einspielen). */
@@ -191,6 +191,10 @@ let BackupService = class BackupService {
             const keep = sessions.filter((x) => users.has(x.userId));
             if (keep.length)
                 await tx.session.createMany({ data: keep, skipDuplicates: true });
+            // Wochenarchive aus dem Backup, die hier fehlen, ergänzen – vorhandene werden nie überschrieben
+            const weeks = (body.tables.DutyWeekArchive ?? []);
+            for (let i = 0; i < weeks.length; i += 500)
+                await tx.dutyWeekArchive.createMany({ data: weeks.slice(i, i + 500), skipDuplicates: true });
         }, { timeout: 10 * 60_000, maxWait: 30_000 });
         await this.audit.record(actor, { action: 'backup.data.restore', module: 'settings', entityType: 'Backup', entityId: source.name ?? 'upload', after: { rows, safety: safety.name } });
         return { rows, safety: safety.name };

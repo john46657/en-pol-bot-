@@ -583,6 +583,34 @@ model DutySession {
   @@index([serverId])
 }
 
+/// Wochenarchiv des automatischen Wochen-Resets (Montag 00:00 Europe/Berlin): Rangliste + alle Dienstzeiten der Woche als Momentaufnahme.
+/// Unveränderlich (DB-Trigger verbietet UPDATE/DELETE/TRUNCATE); `weekStart` eindeutig → ein Archiv und eine Discord-Meldung je Woche.
+model DutyWeekArchive {
+  id            String   @id @default(uuid()) @db.Uuid
+  /// Montag 00:00 der archivierten Woche (als UTC-Zeitpunkt)
+  weekStart     DateTime @unique
+  /// folgender Montag 00:00 (exklusiv)
+  weekEnd       DateTime
+  /// lokales Datum des Montags, z. B. 2026-10-05
+  weekKey       String
+  label         String
+  timezone      String
+  totalMinutes  Int
+  activeUsers   Int
+  shiftCount    Int
+  /// Rangliste: [{ place, userId, name, rank, callsign, discordId, minutes, breakMinutes, byStatus, sessions }]
+  ranking       Json
+  /// alle Dienst-Sitzungen der Woche (an den Wochengrenzen abgeschnitten)
+  sessions      Json
+  /// Discord-Kanal der Rangliste; null = nicht veröffentlicht (kein Kanal, aus oder nachgeholte ältere Woche)
+  discordChannelId String?
+  /// nach einem Neustart nachgeholt
+  catchUp       Boolean  @default(false)
+  createdAt     DateTime @default(now())
+
+  @@index([createdAt])
+}
+
 /// Abmeldung (Leave of Absence): Antrag → Freigabe → Rolle „abgemeldet“ von Beginn bis Ende.
 model LeaveRequest {
   id             String    @id @default(uuid()) @db.Uuid
