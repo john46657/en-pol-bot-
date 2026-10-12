@@ -816,9 +816,9 @@ declare const reqQ: z.ZodObject<{
     department?: string | undefined;
     requesterId?: string | undefined;
     approverId?: string | undefined;
-    q?: string | undefined;
     from?: string | undefined;
     to?: string | undefined;
+    q?: string | undefined;
 }, {
     status?: string | undefined;
     rank?: string | undefined;
@@ -827,9 +827,9 @@ declare const reqQ: z.ZodObject<{
     department?: string | undefined;
     requesterId?: string | undefined;
     approverId?: string | undefined;
-    q?: string | undefined;
     from?: string | undefined;
     to?: string | undefined;
+    q?: string | undefined;
 }>;
 declare const createR: z.ZodObject<{
     kind: z.ZodEnum<["PROMOTION", "TRANSFER"]>;
@@ -1082,13 +1082,13 @@ declare const progress: z.ZodObject<{
     progress: z.ZodOptional<z.ZodNumber>;
     note: z.ZodOptional<z.ZodNullable<z.ZodString>>;
 }, "strip", z.ZodTypeAny, {
-    status: "EXPIRED" | "FAILED" | "PASSED" | "NOT_STARTED" | "IN_PROGRESS" | "ABORTED";
+    status: "FAILED" | "EXPIRED" | "PASSED" | "NOT_STARTED" | "IN_PROGRESS" | "ABORTED";
     personnelId: string;
     trainingId: string;
     progress?: number | undefined;
     note?: string | null | undefined;
 }, {
-    status: "EXPIRED" | "FAILED" | "PASSED" | "NOT_STARTED" | "IN_PROGRESS" | "ABORTED";
+    status: "FAILED" | "EXPIRED" | "PASSED" | "NOT_STARTED" | "IN_PROGRESS" | "ABORTED";
     personnelId: string;
     trainingId: string;
     progress?: number | undefined;
@@ -1484,11 +1484,11 @@ export declare class HrCommsController {
         createdById: string;
         expiresAt: Date | null;
         attachments: string[];
+        discordChannelId: string | null;
         body: string;
         audienceRoleIds: string[];
         publishAt: Date;
         requireAck: boolean;
-        discordChannelId: string | null;
     }[]>;
     create(a: Actor, b: z.infer<typeof announcementSchema>): Promise<{
         id: string;
@@ -1499,11 +1499,11 @@ export declare class HrCommsController {
         createdById: string;
         expiresAt: Date | null;
         attachments: string[];
+        discordChannelId: string | null;
         body: string;
         audienceRoleIds: string[];
         publishAt: Date;
         requireAck: boolean;
-        discordChannelId: string | null;
     }>;
     save(a: Actor, id: string, b: z.infer<typeof announcementSchema>): Promise<{
         id: string;
@@ -1514,11 +1514,11 @@ export declare class HrCommsController {
         createdById: string;
         expiresAt: Date | null;
         attachments: string[];
+        discordChannelId: string | null;
         body: string;
         audienceRoleIds: string[];
         publishAt: Date;
         requireAck: boolean;
-        discordChannelId: string | null;
     }>;
     remove(a: Actor, id: string): Promise<void>;
     ack(a: Actor, id: string): Promise<{

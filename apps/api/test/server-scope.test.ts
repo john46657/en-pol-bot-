@@ -1,6 +1,6 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import type { INestApplication } from '@nestjs/common';
-import { createTestApp, login, makeUser } from './helpers';
+import { createTestApp, login, makeUser, registerServer } from './helpers';
 import type { PrismaService } from '../src/prisma/prisma.service';
 
 const A = '730000000000000001', B = '730000000000000002';
@@ -9,6 +9,8 @@ let app: INestApplication; let prisma: PrismaService;
 beforeAll(async () => {
   ({ app, prisma } = await createTestApp());
   await makeUser(prisma, 'scope_admin', ['System Administrator']);
+  // Multi-Server: verwendete Server registrieren, alle Testbenutzer als bestätigte Mitglieder
+  for (const g of [A, B]) await registerServer(prisma, g, (await prisma.user.findMany({ select: { id: true } })).map((u) => u.id));
 });
 afterAll(async () => { await app.close(); });
 

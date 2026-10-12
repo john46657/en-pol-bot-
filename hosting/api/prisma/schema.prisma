@@ -46,29 +46,35 @@ model User {
   settings      UserSettings?
   editLocks     EditLock[]
   dutyReports   DutyReport[]             @relation("DutyReportAuthor")
+  memberships   ServerMembership[]
 
   @@index([robloxUsername])
 }
 
 model Role {
-  id             String           @id @default(uuid()) @db.Uuid
-  name           String           @unique
-  description    String?
-  system         Boolean          @default(false)
+  id              String               @id @default(uuid()) @db.Uuid
+  /// eindeutig je Server (`guildId`); serverübergreifende Rollen (guildId null) zusätzlich per Teil-Index eindeutig
+  name            String
+  description     String?
+  system          Boolean              @default(false)
   /// Rang in der Hierarchie: kleiner = höher (1 = Serverbesitzer). Nur Rollen unterhalb der eigenen dürfen verwaltet werden.
-  priority       Int              @default(100)
-  color          String?
-  icon           String?
+  priority        Int                  @default(100)
+  color           String?
+  icon            String?
   /// Deaktivierte Rollen verleihen keine Rechte (bleiben aber zugewiesen).
-  active         Boolean          @default(true)
+  active          Boolean              @default(true)
   /// Discord-Rollen, die diese Dashboard-Rolle automatisch verleihen (Abgleich bei Login und regelmäßig).
-  discordRoleIds String[]         @default([])
+  discordRoleIds  String[]             @default([])
   /// Discord-Server, auf dem die Rolle gilt (null = alle Server). Server laufen getrennt.
-  guildId        String?
-  createdAt      DateTime         @default(now())
-  updatedAt      DateTime         @updatedAt
-  users          UserRole[]
-  permissions    RolePermission[]
+  guildId         String?
+  createdAt       DateTime             @default(now())
+  updatedAt       DateTime             @updatedAt
+  users           UserRole[]
+  permissions     RolePermission[]
+  discordMappings DiscordRoleMapping[]
+
+  @@unique([guildId, name])
+  @@index([name])
 }
 
 model Permission {
@@ -80,10 +86,12 @@ model Permission {
 }
 
 model UserRole {
-  userId String @db.Uuid
-  roleId String @db.Uuid
-  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
-  role   Role   @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  userId   String   @db.Uuid
+  roleId   String   @db.Uuid
+  /// Leer = manuell vergeben (gilt überall, wo die Rolle gilt). Sonst über Discord-Rollen vergeben und NUR auf diesen Servern gültig.
+  guildIds String[] @default([])
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role     Role     @relation(fields: [roleId], references: [id], onDelete: Cascade)
 
   @@id([userId, roleId])
 }
@@ -586,28 +594,31 @@ model DutySession {
 /// Wochenarchiv des automatischen Wochen-Resets (Montag 00:00 Europe/Berlin): Rangliste + alle Dienstzeiten der Woche als Momentaufnahme.
 /// Unveränderlich (DB-Trigger verbietet UPDATE/DELETE/TRUNCATE); `weekStart` eindeutig → ein Archiv und eine Discord-Meldung je Woche.
 model DutyWeekArchive {
-  id            String   @id @default(uuid()) @db.Uuid
+  id               String   @id @default(uuid()) @db.Uuid
+  /// Bereich: `global` (Gesamtstatistik aller Server) oder `space:<Akten-Bereich>` (Server bzw. gemeinsame Shift-Log-Gruppe)
+  scope            String   @default("global")
   /// Montag 00:00 der archivierten Woche (als UTC-Zeitpunkt)
-  weekStart     DateTime @unique
+  weekStart        DateTime
   /// folgender Montag 00:00 (exklusiv)
-  weekEnd       DateTime
+  weekEnd          DateTime
   /// lokales Datum des Montags, z. B. 2026-10-05
-  weekKey       String
-  label         String
-  timezone      String
-  totalMinutes  Int
-  activeUsers   Int
-  shiftCount    Int
+  weekKey          String
+  label            String
+  timezone         String
+  totalMinutes     Int
+  activeUsers      Int
+  shiftCount       Int
   /// Rangliste: [{ place, userId, name, rank, callsign, discordId, minutes, breakMinutes, byStatus, sessions }]
-  ranking       Json
+  ranking          Json
   /// alle Dienst-Sitzungen der Woche (an den Wochengrenzen abgeschnitten)
-  sessions      Json
+  sessions         Json
   /// Discord-Kanal der Rangliste; null = nicht veröffentlicht (kein Kanal, aus oder nachgeholte ältere Woche)
   discordChannelId String?
   /// nach einem Neustart nachgeholt
-  catchUp       Boolean  @default(false)
-  createdAt     DateTime @default(now())
+  catchUp          Boolean  @default(false)
+  createdAt        DateTime @default(now())
 
+  @@unique([scope, weekStart])
   @@index([createdAt])
 }
 
@@ -770,6 +781,10 @@ model TimelineEvent {
 model AuditLog {
   id                String   @id @default(uuid()) @db.Uuid
   actorUserId       String?  @db.Uuid
+  /// Discord-Server der Aktion (Guild-ID), sofern anwendbar
+  serverId          String?
+  /// SUCCESS | DENIED | FAILED
+  result            String   @default("SUCCESS")
   actorRobloxUserId String?
   action            String
   module            String
@@ -784,6 +799,7 @@ model AuditLog {
   @@index([module, createdAt])
   @@index([entityType, entityId])
   @@index([actorUserId, createdAt])
+  @@index([serverId, createdAt])
 }
 
 model SecurityEvent {
@@ -1973,4 +1989,179 @@ model PoliceVehicleModel {
   department   String?
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
+}
+
+// ───────────── Multi-Server: Server, Mitgliedschaften, Module, Verbindungen, Synchronisierung ─────────────
+
+/// Registrierter Discord-Server (Mandant). Deaktivieren/Archivieren löscht nie Fachdaten.
+model DiscordServer {
+  id           String                   @id @default(uuid()) @db.Uuid
+  guildId      String                   @unique
+  name         String
+  /// ACTIVE | DISABLED | ERROR (Verbindungsfehler)
+  status       String                   @default("ACTIVE")
+  /// archiviert („gelöscht“) – Daten bleiben, Server ist nicht mehr wählbar
+  archivedAt   DateTime?
+  version      Int                      @default(1)
+  createdAt    DateTime                 @default(now())
+  updatedAt    DateTime                 @updatedAt
+  memberships  ServerMembership[]
+  modules      ServerModuleSetting[]
+  roleMappings DiscordRoleMapping[]
+  connections  ServerConnectionMember[]
+}
+
+/// Mitgliedschaft eines Benutzers auf einem Server. Nur MEMBER berechtigt zum Zugriff auf diesen Server.
+model ServerMembership {
+  id             String        @id @default(uuid()) @db.Uuid
+  serverId       String        @db.Uuid
+  userId         String        @db.Uuid
+  /// MEMBER | LEFT | UNKNOWN
+  status         String        @default("UNKNOWN")
+  /// DISCORD (vom Bot/Discord geprüft) | MANUAL (vom Administrator für Konten ohne Discord)
+  source         String        @default("DISCORD")
+  /// Discord-Rollen des Mitglieds auf diesem Server (letzter Abgleich)
+  discordRoleIds String[]      @default([])
+  lastVerifiedAt DateTime?
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+  server         DiscordServer @relation(fields: [serverId], references: [id], onDelete: Cascade)
+  user           User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([serverId, userId])
+  @@index([userId])
+}
+
+/// Modul-Katalog (aus dem Code gepflegt: packages/shared/src/modules.ts)
+model AppModule {
+  key         String                @id
+  name        String
+  description String?
+  isSystem    Boolean               @default(false)
+  dependsOn   String[]              @default([])
+  settings    ServerModuleSetting[]
+}
+
+/// Modul je Server: an/aus + validierte Einstellungen. Ohne Zeile gilt der Standard (an). `version` für optimistisches Sperren.
+model ServerModuleSetting {
+  id          String        @id @default(uuid()) @db.Uuid
+  serverId    String        @db.Uuid
+  moduleKey   String
+  enabled     Boolean       @default(true)
+  settings    Json          @default("{}")
+  version     Int           @default(1)
+  updatedById String?       @db.Uuid
+  updatedAt   DateTime      @updatedAt
+  server      DiscordServer @relation(fields: [serverId], references: [id], onDelete: Cascade)
+  module      AppModule     @relation(fields: [moduleKey], references: [key], onDelete: Cascade)
+
+  @@unique([serverId, moduleKey])
+}
+
+/// Discord-Rolle (eines bestimmten Servers) → interne Rolle. Verleiht die interne Rolle nur auf diesem Server.
+model DiscordRoleMapping {
+  id            String        @id @default(uuid()) @db.Uuid
+  serverId      String        @db.Uuid
+  discordRoleId String
+  roleId        String        @db.Uuid
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+  server        DiscordServer @relation(fields: [serverId], references: [id], onDelete: Cascade)
+  role          Role          @relation(fields: [roleId], references: [id], onDelete: Cascade)
+
+  @@unique([serverId, discordRoleId, roleId])
+  @@index([roleId])
+}
+
+/// Verbindung mehrerer Server. Eine Verbindung allein erlaubt keinen Datenaustausch – dafür braucht es Datenfreigaben.
+model ServerConnection {
+  id          String                   @id @default(uuid()) @db.Uuid
+  name        String
+  /// ACTIVE | DISABLED
+  status      String                   @default("ACTIVE")
+  version     Int                      @default(1)
+  createdById String?                  @db.Uuid
+  createdAt   DateTime                 @default(now())
+  updatedAt   DateTime                 @updatedAt
+  members     ServerConnectionMember[]
+  policies    ConnectionDataPolicy[]
+  events      SyncEvent[]
+}
+
+model ServerConnectionMember {
+  id           String                 @id @default(uuid()) @db.Uuid
+  connectionId String                 @db.Uuid
+  serverId     String                 @db.Uuid
+  createdAt    DateTime               @default(now())
+  connection   ServerConnection       @relation(fields: [connectionId], references: [id], onDelete: Cascade)
+  server       DiscordServer          @relation(fields: [serverId], references: [id], onDelete: Cascade)
+  asSource     ConnectionDataPolicy[] @relation("PolicySource")
+  asTarget     ConnectionDataPolicy[] @relation("PolicyTarget")
+
+  @@unique([connectionId, serverId])
+  @@index([serverId])
+}
+
+/// Datenfreigabe zwischen zwei Mitgliedern einer Verbindung. Richtung: A_TO_B (Quelle→Ziel), B_TO_A, BIDIRECTIONAL, NONE.
+/// Freigaben übertragen nur lesende Kopien – nie Bearbeitungsrechte.
+model ConnectionDataPolicy {
+  id             String                 @id @default(uuid()) @db.Uuid
+  connectionId   String                 @db.Uuid
+  sourceServerId String                 @db.Uuid
+  targetServerId String                 @db.Uuid
+  dataType       String
+  direction      String                 @default("A_TO_B")
+  enabled        Boolean                @default(true)
+  settings       Json                   @default("{}")
+  version        Int                    @default(1)
+  createdAt      DateTime               @default(now())
+  updatedAt      DateTime               @updatedAt
+  connection     ServerConnection       @relation(fields: [connectionId], references: [id], onDelete: Cascade)
+  source         ServerConnectionMember @relation("PolicySource", fields: [connectionId, sourceServerId], references: [connectionId, serverId], onDelete: Cascade, map: "ConnectionDataPolicy_source_member_fkey")
+  target         ServerConnectionMember @relation("PolicyTarget", fields: [connectionId, targetServerId], references: [connectionId, serverId], onDelete: Cascade, map: "ConnectionDataPolicy_target_member_fkey")
+
+  @@unique([connectionId, sourceServerId, targetServerId, dataType])
+}
+
+/// Outbox der serverübergreifenden Synchronisierung. `idempotencyKey` verhindert doppelte Verarbeitung.
+model SyncEvent {
+  id             String           @id @default(uuid()) @db.Uuid
+  connectionId   String           @db.Uuid
+  policyId       String           @db.Uuid
+  sourceServerId String           @db.Uuid
+  targetServerId String           @db.Uuid
+  dataType       String
+  eventType      String
+  sourceRecordId String
+  sourceVersion  Int              @default(1)
+  idempotencyKey String           @unique
+  payload        Json
+  /// PENDING | DONE | SKIPPED (veraltet/Konflikt) | FAILED (endgültig, manuell wiederholbar) | CANCELLED (Verbindung/Freigabe aus)
+  status         String           @default("PENDING")
+  attemptCount   Int              @default(0)
+  nextAttemptAt  DateTime         @default(now())
+  lastError      String?
+  createdAt      DateTime         @default(now())
+  processedAt    DateTime?
+  connection     ServerConnection @relation(fields: [connectionId], references: [id], onDelete: Cascade)
+
+  @@index([status, nextAttemptAt])
+  @@index([connectionId, createdAt])
+}
+
+/// Nur lesend synchronisierte Kopie eines Datensatzes eines anderen Servers (Zielseite).
+model SyncedRecord {
+  id             String   @id @default(uuid()) @db.Uuid
+  targetServerId String   @db.Uuid
+  sourceServerId String   @db.Uuid
+  connectionId   String   @db.Uuid
+  dataType       String
+  sourceRecordId String
+  sourceVersion  Int
+  data           Json
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@unique([targetServerId, dataType, sourceRecordId])
+  @@index([targetServerId, dataType, updatedAt])
 }

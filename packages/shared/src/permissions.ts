@@ -56,6 +56,14 @@ export const PERMISSION_CATALOG = {
   settings: ['view', 'manage'],
   users: ['view', 'manage'],
   roles: ['view', 'manage'],
+  /** Multi-Server: Server-Stammdaten/Mitgliedschaften (Registrierung, Deaktivierung, Archivierung nur globale Systemadministratoren) */
+  servers: ['view', 'manage'],
+  /** Module je Server an/aus und deren Einstellungen */
+  modules: ['view', 'manage'],
+  /** Serververbindungen und Datenfreigaben (wirksam nur mit dem Recht auf JEDEM beteiligten Server) */
+  connections: ['view', 'manage'],
+  /** Synchronisierungsereignisse einsehen bzw. fehlgeschlagene erneut anstoßen */
+  sync: ['view', 'retry'],
 } as const;
 
 type Catalog = typeof PERMISSION_CATALOG;

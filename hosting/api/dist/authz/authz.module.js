@@ -10,11 +10,12 @@ exports.AuthzModule = void 0;
 const common_1 = require("@nestjs/common");
 const permission_service_1 = require("./permission.service");
 const discord_access_service_1 = require("./discord-access.service");
+const authorization_service_1 = require("./authorization.service");
 let AuthzModule = class AuthzModule {
 };
 exports.AuthzModule = AuthzModule;
 exports.AuthzModule = AuthzModule = __decorate([
     (0, common_1.Global)(),
-    (0, common_1.Module)({ providers: [permission_service_1.PermissionService, discord_access_service_1.DiscordAccessService], exports: [permission_service_1.PermissionService, discord_access_service_1.DiscordAccessService] })
+    (0, common_1.Module)({ providers: [permission_service_1.PermissionService, discord_access_service_1.DiscordAccessService, authorization_service_1.AuthorizationService], exports: [permission_service_1.PermissionService, discord_access_service_1.DiscordAccessService, authorization_service_1.AuthorizationService] })
 ], AuthzModule);
 //# sourceMappingURL=authz.module.js.map

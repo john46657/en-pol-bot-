@@ -215,7 +215,7 @@ let QualificationsService = class QualificationsService {
             if (status === 'ACCEPTED' && a.unit === 'sek' && a.userId) {
                 await tx.sekMember.upsert({ where: { userId: a.userId }, create: { userId: a.userId, addedById: actor.userId }, update: {} });
                 // System-Rolle „SEK“ (Einsatzberichte schreiben), falls vorhanden
-                const role = await tx.role.findUnique({ where: { name: 'SEK' } });
+                const role = await tx.role.findFirst({ where: { guildId: null, name: 'SEK' } });
                 if (role)
                     await tx.userRole.upsert({ where: { userId_roleId: { userId: a.userId, roleId: role.id } }, create: { userId: a.userId, roleId: role.id }, update: {} });
                 addedToSek = true;

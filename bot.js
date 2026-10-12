@@ -80149,7 +80149,15 @@ var PERMISSION_CATALOG = {
   studio: ["view", "manage"],
   settings: ["view", "manage"],
   users: ["view", "manage"],
-  roles: ["view", "manage"]
+  roles: ["view", "manage"],
+  /** Multi-Server: Server-Stammdaten/Mitgliedschaften (Registrierung, Deaktivierung, Archivierung nur globale Systemadministratoren) */
+  servers: ["view", "manage"],
+  /** Module je Server an/aus und deren Einstellungen */
+  modules: ["view", "manage"],
+  /** Serververbindungen und Datenfreigaben (wirksam nur mit dem Recht auf JEDEM beteiligten Server) */
+  connections: ["view", "manage"],
+  /** Synchronisierungsereignisse einsehen bzw. fehlgeschlagene erneut anstoßen */
+  sync: ["view", "retry"]
 };
 var ALL_PERMISSIONS = Object.entries(PERMISSION_CATALOG).flatMap(
   ([module2, actions]) => actions.map((a) => `${module2}.${a}`)
@@ -80530,6 +80538,57 @@ function periodLabel(period, start2) {
   }
   return dd(s);
 }
+var MODULES = [
+  { key: "core", name: "Grundsystem", description: "Dashboard, Benutzer, Rollen & Rechte, Einstellungen, Audit, Server, Verbindungen", system: true, permissionPrefixes: ["dashboard", "settings", "users", "roles", "audit", "studio", "analytics", "servers", "modules", "connections", "sync"] },
+  { key: "cad", name: "CAD-Leitstelle", description: "Eins\xE4tze, Einheiten, Notrufe, Karte, Funk, Polizeifahrzeuge", permissionPrefixes: ["cad", "fleet"] },
+  { key: "mdt", name: "MDT", description: "Personen, Fahrzeuge, Waffen, Haftbefehle, Bu\xDFgelder", permissionPrefixes: ["persons", "vehicles", "weapons", "wanted", "tickets"] },
+  { key: "dispatch", name: "Dispatch", description: "Einsatzverwaltung und Einheiten-Board", permissionPrefixes: ["dispatch", "incidents"] },
+  { key: "reports", name: "Berichte", description: "Einsatzberichte, Tages-/Wochenberichte", permissionPrefixes: ["reports", "dutyreports"] },
+  { key: "shift_logs", name: "Shift Logs", description: "Dienststatus, Schichten, Dienstzeiten, Wochenranglisten", permissionPrefixes: ["team"] },
+  { key: "investigations", name: "Ermittlungen", description: "Beschwerden, Ermittlungen, Beweismittel", permissionPrefixes: ["complaints", "investigations", "evidence"] },
+  { key: "personnel", name: "Personal", description: "Personalakte, Bef\xF6rderungen, Ausbildung, Abmeldungen, Dienstnummern", permissionPrefixes: ["personnel", "promotion", "transfer", "training", "exam", "warning", "awards", "dienstnummer", "leave"] },
+  { key: "applications", name: "Bewerbungen", description: "Bewerbungen, Qualifikationen, Academy, Team-Chance", permissionPrefixes: ["applications", "qualifications", "academy", "teamchance"] },
+  { key: "support", name: "Support-Tickets", description: "Ticket-System f\xFCr Discord", permissionPrefixes: ["ticket"] },
+  { key: "sek", name: "SEK", description: "Spezialeinsatzkommando", permissionPrefixes: ["sek"] },
+  { key: "communication", name: "Kommunikation", description: "Nachrichten, Meldungen, Abstimmungen, Funk-Codes", permissionPrefixes: ["communication", "announcements", "polls", "radio"] }
+];
+var MODULE_KEYS = MODULES.map((m) => m.key);
+var BOT_COMMAND_MODULES = {
+  cad: "cad",
+  bericht: "reports",
+  dienstbericht: "reports",
+  person: "mdt",
+  kennzeichen: "mdt",
+  fahndungen: "mdt",
+  fahndung: "mdt",
+  dienst: "shift_logs",
+  dienststunden: "shift_logs",
+  team: "shift_logs",
+  dienstpanel: "shift_logs",
+  teamliste: "shift_logs",
+  einheiten: "dispatch",
+  einheitstatus: "dispatch",
+  einsaetze: "dispatch",
+  einsatz: "dispatch",
+  einsatzinfo: "dispatch",
+  einsatzstatus: "dispatch",
+  einsatzzuweisen: "dispatch",
+  beschwerde: "investigations",
+  ermittlung: "investigations",
+  beweis: "investigations",
+  abmeldung: "personnel",
+  leave: "personnel",
+  ausbildung: "personnel",
+  verwarnen: "personnel",
+  teamchance: "applications",
+  bewerbung: "applications",
+  bewerbungspanel: "applications",
+  qualipanel: "applications",
+  support: "support",
+  funkcode: "communication",
+  funk: "communication"
+};
+var commandsForServer = (all, disabledModules) => all.filter((c) => !disabledModules.includes(BOT_COMMAND_MODULES[c.name] ?? "core"));
 var sf3 = external_exports.string().regex(/^\d{15,25}$/, "Discord-ID (15\u201325 Ziffern)");
 var color2 = external_exports.string().regex(/^#[0-9a-fA-F]{6}$/);
 var key = external_exports.string().regex(/^[A-Z0-9_]{1,32}$/, "Schl\xFCssel: A\u2013Z, 0\u20139, _");
@@ -84729,14 +84788,23 @@ function wireReady(client0) {
     } catch (e) {
       console.error(`could not clear global commands: ${e instanceof Error ? e.message : e}`);
     }
-    const register = async (g, name) => {
+    const registered = /* @__PURE__ */ new Map();
+    const register = async (g, name, quiet = false) => {
+      const mods = await api.service("GET", `/bot/servers/${g}/modules`).catch(() => null);
+      const list = mods ? json.filter((j) => commandsForServer([{ name: j.name }], mods.disabled).length) : json;
+      const sig = list.map((j) => j.name).sort().join(",");
+      if (quiet && registered.get(g) === sig) return;
       try {
-        await c.application.commands.set(json, g);
-        console.log(`${json.length} slash commands registered for ${name ?? g}`);
+        await c.application.commands.set(list, g);
+        registered.set(g, sig);
+        console.log(`${list.length} slash commands registered for ${name ?? g}${mods?.disabled.length ? ` (Module aus: ${mods.disabled.join(", ")})` : ""}`);
       } catch (e) {
         console.error(`could not register commands for ${name ?? g} (invited with the applications.commands scope?): ${e instanceof Error ? e.message : e}`);
       }
     };
+    setInterval(() => {
+      for (const [id2, gname] of c.guilds.cache.map((x) => [x.id, x.name])) void register(id2, gname, true);
+    }, 12e4).unref();
     const all = new Map([...c.guilds.cache.values()].map((g) => [g.id, g.name]));
     for (const g of guildIds(cfg)) if (!all.has(g)) all.set(g, g);
     for (const [id2, name] of all) await register(id2, name);

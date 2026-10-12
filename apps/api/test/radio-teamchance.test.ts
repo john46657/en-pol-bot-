@@ -1,7 +1,7 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import type { INestApplication } from '@nestjs/common';
 import request from 'supertest';
-import { createTestApp, login, makeUser } from './helpers';
+import { createTestApp, login, makeUser, registerServer } from './helpers';
 import type { PrismaService } from '../src/prisma/prisma.service';
 
 const TOKEN = 'c'.repeat(40);
@@ -13,6 +13,8 @@ beforeAll(async () => {
   process.env.BOT_API_TOKEN = TOKEN;
   ({ app, prisma } = await createTestApp());
   for (const [n, roles] of Object.entries({ x_admin: ['System Administrator'], x_off: ['Police Member'], x_sup: ['Police Member', 'Supervisor'] })) id[n] = (await makeUser(prisma, n, roles)).id;
+  // Multi-Server: verwendete Server registrieren, alle Testbenutzer als bestätigte Mitglieder
+  for (const g of [G, '850000000000000001']) await registerServer(prisma, g, (await prisma.user.findMany({ select: { id: true } })).map((u) => u.id));
 });
 afterAll(async () => {
   delete process.env.BOT_API_TOKEN;
@@ -35,7 +37,7 @@ describe('Funk-Codes', () => {
     expect(inA).toEqual([expect.objectContaining({ meaning: 'Alles klar (Server A)', guildId: G })]); // Server-Code überdeckt den gemeinsamen
     expect((await off.post('/api/v1/radio-codes').send({ code: 'X', meaning: 'nein' })).status).toBe(403);
     expect((await adm.patch(`/api/v1/radio-codes/${own.body.id}`).set('X-Guild-Id', G).send({ meaning: 'Verstanden!' })).body.meaning).toBe('Verstanden!');
-    expect((await adm.patch(`/api/v1/radio-codes/${own.body.id}`).set('X-Guild-Id', '810000000000000009').send({ meaning: 'x' })).status).toBe(404);
+    expect((await adm.patch(`/api/v1/radio-codes/${own.body.id}`).set('X-Guild-Id', '810000000000000009').send({ meaning: 'x' })).status).toBe(403); // nicht registrierter Server: kein Zugriff
     // Bot im Namen eines verknüpften Mitglieds
     await prisma.discordLink.create({ data: { userId: id.x_off!, discordId: '820000000000000001' } });
     const viaBot = await request(app.getHttpServer()).get('/api/v1/radio-codes?q=10-99').set({ Authorization: `Bot ${TOKEN}`, 'X-Discord-User': '820000000000000001' });

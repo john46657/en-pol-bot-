@@ -28,7 +28,7 @@ export class UsersService {
 
   /** Mindestens ein aktiver System Administrator muss bestehen bleiben. */
   private async assertAdminRemains(tx: Tx, targetId: string) {
-    const role = await tx.role.findUnique({ where: { name: 'System Administrator' } });
+    const role = await tx.role.findFirst({ where: { guildId: null, name: 'System Administrator' } });
     if (!role) return;
     const others = await tx.userRole.count({ where: { roleId: role.id, userId: { not: targetId }, user: { active: true } } });
     const targetIsAdmin = await tx.userRole.count({ where: { roleId: role.id, userId: targetId } });
@@ -140,7 +140,7 @@ export class UsersService {
       await this.perms.assertOutranksRole(actor.userId!, r.priority, r.name);
     }
     return this.prisma.$transaction(async (tx) => {
-      const adminRole = await tx.role.findUnique({ where: { name: 'System Administrator' } });
+      const adminRole = await tx.role.findFirst({ where: { guildId: null, name: 'System Administrator' } });
       if (adminRole && !roleIds.includes(adminRole.id)) await this.assertAdminRemains(tx, id);
       await tx.userRole.deleteMany({ where: { userId: id } });
       await tx.userRole.createMany({ data: roleIds.map((roleId) => ({ userId: id, roleId })) });

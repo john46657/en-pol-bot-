@@ -12,7 +12,7 @@ async function main() {
     if (!(await prisma.user.findFirst())) {
       const password = process.env.ADMIN_PASSWORD ?? randomBytes(12).toString('base64url');
       const admin = await prisma.user.create({ data: { username: 'admin', displayName: 'System Administrator', passwordHash: await hashPassword(password), settings: { create: {} } } });
-      const role = await prisma.role.findUniqueOrThrow({ where: { name: 'System Administrator' } });
+      const role = await prisma.role.findFirstOrThrow({ where: { guildId: null, name: 'System Administrator' } });
       await prisma.userRole.create({ data: { userId: admin.id, roleId: role.id } });
       console.log(`Initial admin created: username=admin${process.env.ADMIN_PASSWORD ? '' : ` password=${password} (change immediately; shown once)`}`);
     }

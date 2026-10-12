@@ -49,6 +49,8 @@ export declare class AuditController {
                 discordId: string | null;
             } | null;
             summary: string | null;
+            serverId: string | null;
+            result: string;
             id: string;
             createdAt: Date;
             reason: string | null;

@@ -37,3 +37,15 @@ export async function login(app: INestApplication, username: string, password = 
   const res = await agent.post('/api/v1/auth/login').send({ username, password });
   return { agent, res };
 }
+
+/**
+ * Multi-Server: Discord-Server registrieren (aktiv) und Benutzer als bestätigte Mitglieder eintragen.
+ * Ohne Registrierung lehnt die API einen Server im Header ab; ohne Mitgliedschaft gibt es dort keinen Zugriff.
+ */
+export async function registerServer(prisma: PrismaService, guildId: string, memberUserIds: string[] = [], name = `Server ${guildId.slice(-4)}`) {
+  const s = await prisma.discordServer.upsert({ where: { guildId }, create: { guildId, name, status: 'ACTIVE' }, update: {} });
+  for (const userId of memberUserIds) {
+    await prisma.serverMembership.upsert({ where: { serverId_userId: { serverId: s.id, userId } }, create: { serverId: s.id, userId, status: 'MEMBER', source: 'MANUAL' }, update: { status: 'MEMBER' } });
+  }
+  return s;
+}

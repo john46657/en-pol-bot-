@@ -16,6 +16,7 @@ const prisma_service_1 = require("../prisma/prisma.service");
 const audit_service_1 = require("../audit/audit.service");
 const permission_service_1 = require("../authz/permission.service");
 const discord_access_service_1 = require("../authz/discord-access.service");
+const authorization_service_1 = require("../authz/authorization.service");
 const guild_context_1 = require("../common/guild-context");
 const guards_1 = require("../authz/guards");
 const password_1 = require("./password");
@@ -30,13 +31,15 @@ let AuthService = class AuthService {
     perms;
     access;
     twoFactor;
+    authz;
     env = (0, env_1.loadEnv)();
-    constructor(prisma, audit, perms, access, twoFactor) {
+    constructor(prisma, audit, perms, access, twoFactor, authz) {
         this.prisma = prisma;
         this.audit = audit;
         this.perms = perms;
         this.access = access;
         this.twoFactor = twoFactor;
+        this.authz = authz;
     }
     async login(username, password, meta) {
         const user = await this.prisma.user.findUnique({ where: { username: username.toLowerCase() } });
@@ -103,17 +106,20 @@ let AuthService = class AuthService {
     async profile(userId) {
         const u = await this.prisma.user.findUniqueOrThrow({ where: { id: userId }, include: { roles: { include: { role: true } } } });
         const active = new Set(await this.perms.roleIdsFor(userId));
+        // Server, die man wählen darf: registriert, nicht archiviert, bestätigte Mitgliedschaft (globale Systemadministratoren: alle)
+        const owner = await this.perms.isOwner(userId);
+        const servers = await this.prisma.discordServer.findMany({ where: { archivedAt: null, ...(owner ? {} : { memberships: { some: { userId, status: 'MEMBER' } } }) }, select: { guildId: true }, orderBy: { name: 'asc' } });
         return {
             id: u.id, username: u.username, displayName: u.displayName, robloxUserId: u.robloxUserId, robloxUsername: u.robloxUsername,
             // Rollen, die im gewählten Server gelten; `servers` = Server, auf denen man eigene Server-Rollen hat
-            roles: u.roles.filter((r) => active.has(r.roleId)).map((r) => r.role.name), permissions: await this.perms.effective(userId), lastLogin: u.lastLogin,
-            twoFactor: !!u.totpEnabledAt, guildId: (0, guild_context_1.currentGuild)(), servers: [...new Set(u.roles.map((r) => r.role.guildId).filter((g) => !!g))],
+            roles: u.roles.filter((r) => active.has(r.roleId)).map((r) => r.role.name), permissions: await this.authz.effective(userId), lastLogin: u.lastLogin,
+            twoFactor: !!u.totpEnabledAt, guildId: (0, guild_context_1.currentGuild)(), servers: servers.map((s) => s.guildId), globalAdmin: owner,
         };
     }
 };
 exports.AuthService = AuthService;
 exports.AuthService = AuthService = __decorate([
     (0, common_1.Injectable)(),
-    __metadata("design:paramtypes", [prisma_service_1.PrismaService, audit_service_1.AuditService, permission_service_1.PermissionService, discord_access_service_1.DiscordAccessService, two_factor_service_1.TwoFactorService])
+    __metadata("design:paramtypes", [prisma_service_1.PrismaService, audit_service_1.AuditService, permission_service_1.PermissionService, discord_access_service_1.DiscordAccessService, two_factor_service_1.TwoFactorService, authorization_service_1.AuthorizationService])
 ], AuthService);
 //# sourceMappingURL=auth.service.js.map

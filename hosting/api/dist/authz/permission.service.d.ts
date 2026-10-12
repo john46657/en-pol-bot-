@@ -9,16 +9,21 @@ export declare class PermissionService {
     /**
      * IDs aller aktiven Rollen des Benutzers (direkt und über Gruppen), die im Server der Anfrage gelten:
      * serverübergreifende Rollen immer, Server-Rollen nur in ihrem Server. Deaktivierte Rollen verleihen nichts.
+     * Über Discord-Rollen vergebene Zuweisungen (`UserRole.guildIds`) gelten NUR auf den Servern, auf denen die Discord-Rolle
+     * besteht – auch wenn die interne Rolle selbst serverübergreifend ist (keine Rechteübertragung zwischen Servern).
      */
     roleIdsFor(userId: string, guildId?: string | null): Promise<string[]>;
-    contextFor(userId: string): Promise<PermissionContext>;
+    contextFor(userId: string, guildId?: string | null): Promise<PermissionContext>;
     check(userId: string, permission: string): Promise<import("@enrp/shared").Resolution>;
     has(userId: string, permission: string): Promise<boolean>;
     assert(userId: string, permission: string): Promise<void>;
-    effective(userId: string): Promise<import("@enrp/shared").PermissionKey[]>;
+    effective(userId: string, guildId?: string | null): Promise<import("@enrp/shared").PermissionKey[]>;
     /** Höchster Rang des Benutzers = kleinste Priorität seiner aktiven Rollen. */
     rankOf(userId: string): Promise<number>;
-    /** Serverbesitzer = aktive Rolle „System Administrator“ (bei Discord-Login über ADMIN_DISCORD_IDS vergeben). */
+    /**
+     * Globaler Systemadministrator (Serverbesitzer) = serverübergreifende, aktive Rolle „System Administrator“, MANUELL vergeben
+     * (bzw. beim Discord-Login über ADMIN_DISCORD_IDS). Server-Administratoren (Rechte nur auf einem Server) sind das ausdrücklich nicht.
+     */
     isOwner(userId: string): Promise<boolean>;
     /** Nur Rollen strikt unterhalb des eigenen Rangs dürfen verwaltet, vergeben oder entzogen werden (Besitzer: alle). */
     assertOutranksRole(actorId: string, rolePriority: number, roleName?: string): Promise<void>;

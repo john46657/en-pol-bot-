@@ -6,6 +6,7 @@ import { TimelineService } from '../timeline/timeline.service';
 import { PermissionService } from '../authz/permission.service';
 import { PageQuery } from '../common/pagination';
 import { LocksService } from '../locks/locks.service';
+import { SyncService } from '../multi-server/sync.service';
 export declare const hashContent: (c: unknown) => string;
 export declare class ReportsService {
     private readonly prisma;
@@ -13,7 +14,8 @@ export declare class ReportsService {
     private readonly timeline;
     private readonly perms;
     private readonly locks;
-    constructor(prisma: PrismaService, audit: AuditService, timeline: TimelineService, perms: PermissionService, locks: LocksService);
+    private readonly sync;
+    constructor(prisma: PrismaService, audit: AuditService, timeline: TimelineService, perms: PermissionService, locks: LocksService, sync: SyncService);
     /** Autoren sehen eigene Berichte; reports.review/approve-Inhaber sehen alle. Verhindert, dass fremde Entwürfe auftauchen. */
     private canSeeAll;
     list(actor: Actor, p: PageQuery, status?: string): Promise<{

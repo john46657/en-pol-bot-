@@ -44,7 +44,9 @@ export async function seedBase(prisma: PrismaClient) {
     // System Administrator bleibt immer da (erster Admin, Notfall-Zugang)
     if (seeded.has(name) && name !== 'System Administrator') continue;
     seeded.add(name);
-    const role = await prisma.role.upsert({ where: { name }, create: { name, description: def.description, system: true, priority: STARTER_PRIORITY[name] ?? 100 }, update: {} });
+    // serverübergreifende Startrolle (eindeutig per Teil-Index auf name WHERE guildId IS NULL; parallele Starts: zweiter liest nur)
+    const role = (await prisma.role.findFirst({ where: { guildId: null, name } }))
+      ?? (await prisma.role.create({ data: { name, description: def.description, system: true, priority: STARTER_PRIORITY[name] ?? 100 } }).catch(async () => prisma.role.findFirstOrThrow({ where: { guildId: null, name } })));
     const existing = await prisma.rolePermission.count({ where: { roleId: role.id } });
     if (existing === 0) {
       // wie die Migration: Funk-Codes sieht das Team, Team-Chance sieht/verwaltet, wer Bewerbungen sieht/entscheidet

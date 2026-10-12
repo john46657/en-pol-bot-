@@ -1,6 +1,6 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import type { INestApplication } from '@nestjs/common';
-import { createTestApp, login, makeUser } from './helpers';
+import { createTestApp, login, makeUser, registerServer } from './helpers';
 import type { PrismaService } from '../src/prisma/prisma.service';
 import { ServerLinksService } from '../src/server-links/server-links.service';
 
@@ -11,6 +11,8 @@ beforeAll(async () => {
   ({ app, prisma } = await createTestApp());
   await makeUser(prisma, 'link_admin', ['System Administrator']);
   await makeUser(prisma, 'link_off', ['Police Member']);
+  // Multi-Server: verwendete Server registrieren, alle Testbenutzer als bestätigte Mitglieder
+  for (const g of [A, B, C, D]) await registerServer(prisma, g, (await prisma.user.findMany({ select: { id: true } })).map((u) => u.id));
 });
 afterAll(async () => {
   await prisma.systemSetting.deleteMany({ where: { OR: [{ key: 'servers.links' }, { key: { startsWith: 'welcome.config@35' } }] } });
@@ -43,10 +45,10 @@ describe('server links: Discord servers can be together, but do not have to', ()
     expect(await names(A)).toHaveLength(1); // Gruppe A+B
     expect(await names(B)).toHaveLength(1);
     expect(await names(C)).toHaveLength(1); // ohne Gruppe: standardmäßig getrennt
-    expect(await names('350000000000000009')).toHaveLength(0); // jeder andere Server auch
+    expect((await admin.get('/api/v1/persons?q=Link_').set('X-Guild-Id', '350000000000000009')).status).toBe(403); // nicht registrierter Server: kein Zugriff
     expect((await create(D, 'Link_Group', '8800001')).status).toBe(201); // gemeinsamer Bestand (Opt-in)
     expect(await names(D)).toHaveLength(1);
-    expect(await names('350000000000000009')).toHaveLength(0);
+    expect((await admin.get('/api/v1/persons?q=Link_').set('X-Guild-Id', '350000000000000009')).status).toBe(403); // nicht registrierter Server: kein Zugriff
     expect(await names()).toHaveLength(3); // „Alle Server“
   });
 

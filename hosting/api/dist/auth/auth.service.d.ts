@@ -2,6 +2,7 @@ import { PrismaService } from '../prisma/prisma.service';
 import { AuditService, Actor } from '../audit/audit.service';
 import { PermissionService } from '../authz/permission.service';
 import { DiscordAccessService } from '../authz/discord-access.service';
+import { AuthorizationService } from '../authz/authorization.service';
 import { TwoFactorService } from './two-factor.service';
 export declare class AuthService {
     private readonly prisma;
@@ -9,8 +10,9 @@ export declare class AuthService {
     private readonly perms;
     private readonly access;
     private readonly twoFactor;
+    private readonly authz;
     private readonly env;
-    constructor(prisma: PrismaService, audit: AuditService, perms: PermissionService, access: DiscordAccessService, twoFactor: TwoFactorService);
+    constructor(prisma: PrismaService, audit: AuditService, perms: PermissionService, access: DiscordAccessService, twoFactor: TwoFactorService, authz: AuthorizationService);
     login(username: string, password: string, meta: {
         ip?: string;
         userAgent?: string;
@@ -30,6 +32,7 @@ export declare class AuthService {
             twoFactor: boolean;
             guildId: string | null;
             servers: string[];
+            globalAdmin: boolean;
         };
     } | {
         twoFactorRequired: true;
@@ -55,6 +58,7 @@ export declare class AuthService {
             twoFactor: boolean;
             guildId: string | null;
             servers: string[];
+            globalAdmin: boolean;
         };
     }>;
     /** Neue Session nach erfolgreicher Anmeldung (Passwort oder Discord). */
@@ -80,6 +84,7 @@ export declare class AuthService {
             twoFactor: boolean;
             guildId: string | null;
             servers: string[];
+            globalAdmin: boolean;
         };
     }>;
     logout(actor: Actor, sessionId: string): Promise<void>;
@@ -97,5 +102,6 @@ export declare class AuthService {
         twoFactor: boolean;
         guildId: string | null;
         servers: string[];
+        globalAdmin: boolean;
     }>;
 }

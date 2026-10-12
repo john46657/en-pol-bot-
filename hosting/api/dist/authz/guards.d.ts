@@ -1,9 +1,9 @@
 import { CanActivate, ExecutionContext } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { PrismaService } from '../prisma/prisma.service';
-import { PermissionService } from './permission.service';
 import { DiscordService } from '../discord/discord.service';
 import { DiscordAccessService } from './discord-access.service';
+import { AuthorizationService } from './authorization.service';
 export declare const SESSION_COOKIE = "enrp_session";
 export declare const hashToken: (t: string) => string;
 export declare class AuthGuard implements CanActivate {
@@ -11,16 +11,21 @@ export declare class AuthGuard implements CanActivate {
     private readonly prisma;
     private readonly discord;
     private readonly access;
+    private readonly authz;
     private readonly botToken;
-    constructor(reflector: Reflector, prisma: PrismaService, discord: DiscordService, access: DiscordAccessService);
+    constructor(reflector: Reflector, prisma: PrismaService, discord: DiscordService, access: DiscordAccessService, authz: AuthorizationService);
     private validBotToken;
     private botFailure;
     canActivate(ctx: ExecutionContext): Promise<boolean>;
 }
+/**
+ * Jede Route mit `@RequirePermission` läuft über den zentralen AuthorizationService: Server der Anfrage (X-Guild-Id)
+ * registriert und aktiv, bestätigte Mitgliedschaft, Modul an, Berechtigung. Routen unter `/servers/:serverId/…` prüfen
+ * zusätzlich gegen den Pfad-Server (siehe ServersController) – der Header kann den Pfad nie übersteuern.
+ */
 export declare class PermissionGuard implements CanActivate {
     private readonly reflector;
-    private readonly perms;
-    private readonly prisma;
-    constructor(reflector: Reflector, perms: PermissionService, prisma: PrismaService);
+    private readonly authz;
+    constructor(reflector: Reflector, authz: AuthorizationService);
     canActivate(ctx: ExecutionContext): Promise<boolean>;
 }

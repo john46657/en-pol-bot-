@@ -55,7 +55,15 @@ var PERMISSION_CATALOG = {
   studio: ["view", "manage"],
   settings: ["view", "manage"],
   users: ["view", "manage"],
-  roles: ["view", "manage"]
+  roles: ["view", "manage"],
+  /** Multi-Server: Server-Stammdaten/Mitgliedschaften (Registrierung, Deaktivierung, Archivierung nur globale Systemadministratoren) */
+  servers: ["view", "manage"],
+  /** Module je Server an/aus und deren Einstellungen */
+  modules: ["view", "manage"],
+  /** Serververbindungen und Datenfreigaben (wirksam nur mit dem Recht auf JEDEM beteiligten Server) */
+  connections: ["view", "manage"],
+  /** Synchronisierungsereignisse einsehen bzw. fehlgeschlagene erneut anstoßen */
+  sync: ["view", "retry"]
 };
 var ALL_PERMISSIONS = Object.entries(PERMISSION_CATALOG).flatMap(
   ([module, actions]) => actions.map((a) => `${module}.${a}`)
@@ -1172,6 +1180,93 @@ function weekTotals(sessions, from, to, now = /* @__PURE__ */ new Date()) {
   return [...rows.values()].map((r) => ({ ...r, minutes: Math.round(r.minutes), breakMinutes: Math.round(r.breakMinutes), byStatus: Object.fromEntries(Object.entries(r.byStatus).map(([k, v]) => [k, Math.round(v)])) })).filter((r) => r.minutes > 0 || r.breakMinutes > 0).sort((x, y) => y.minutes - x.minutes || y.sessions - x.sessions);
 }
 
+// src/modules.ts
+var MODULES = [
+  { key: "core", name: "Grundsystem", description: "Dashboard, Benutzer, Rollen & Rechte, Einstellungen, Audit, Server, Verbindungen", system: true, permissionPrefixes: ["dashboard", "settings", "users", "roles", "audit", "studio", "analytics", "servers", "modules", "connections", "sync"] },
+  { key: "cad", name: "CAD-Leitstelle", description: "Eins\xE4tze, Einheiten, Notrufe, Karte, Funk, Polizeifahrzeuge", permissionPrefixes: ["cad", "fleet"] },
+  { key: "mdt", name: "MDT", description: "Personen, Fahrzeuge, Waffen, Haftbefehle, Bu\xDFgelder", permissionPrefixes: ["persons", "vehicles", "weapons", "wanted", "tickets"] },
+  { key: "dispatch", name: "Dispatch", description: "Einsatzverwaltung und Einheiten-Board", permissionPrefixes: ["dispatch", "incidents"] },
+  { key: "reports", name: "Berichte", description: "Einsatzberichte, Tages-/Wochenberichte", permissionPrefixes: ["reports", "dutyreports"] },
+  { key: "shift_logs", name: "Shift Logs", description: "Dienststatus, Schichten, Dienstzeiten, Wochenranglisten", permissionPrefixes: ["team"] },
+  { key: "investigations", name: "Ermittlungen", description: "Beschwerden, Ermittlungen, Beweismittel", permissionPrefixes: ["complaints", "investigations", "evidence"] },
+  { key: "personnel", name: "Personal", description: "Personalakte, Bef\xF6rderungen, Ausbildung, Abmeldungen, Dienstnummern", permissionPrefixes: ["personnel", "promotion", "transfer", "training", "exam", "warning", "awards", "dienstnummer", "leave"] },
+  { key: "applications", name: "Bewerbungen", description: "Bewerbungen, Qualifikationen, Academy, Team-Chance", permissionPrefixes: ["applications", "qualifications", "academy", "teamchance"] },
+  { key: "support", name: "Support-Tickets", description: "Ticket-System f\xFCr Discord", permissionPrefixes: ["ticket"] },
+  { key: "sek", name: "SEK", description: "Spezialeinsatzkommando", permissionPrefixes: ["sek"] },
+  { key: "communication", name: "Kommunikation", description: "Nachrichten, Meldungen, Abstimmungen, Funk-Codes", permissionPrefixes: ["communication", "announcements", "polls", "radio"] }
+];
+var MODULE_KEYS = MODULES.map((m) => m.key);
+var moduleDef = (key3) => MODULES.find((m) => m.key === key3);
+function moduleOfPermission(permission) {
+  const prefix = permission.split(".")[0] ?? "";
+  return MODULES.find((m) => m.permissionPrefixes.includes(prefix))?.key ?? "core";
+}
+function moduleDependencyError(key3, enabled, state) {
+  const def = moduleDef(key3);
+  if (!def) return "Unbekanntes Modul.";
+  if (def.system && !enabled) return `\u201E${def.name}\u201C ist ein Systemmodul und kann nicht deaktiviert werden.`;
+  if (enabled) {
+    const missing = (def.dependsOn ?? []).filter((d) => state[d] === false);
+    if (missing.length) return `\u201E${def.name}\u201C braucht: ${missing.map((m) => moduleDef(m)?.name ?? m).join(", ")}.`;
+  } else {
+    const users = MODULES.filter((m) => (m.dependsOn ?? []).includes(key3) && state[m.key] !== false);
+    if (users.length) return `\u201E${def.name}\u201C wird noch gebraucht von: ${users.map((m) => m.name).join(", ")}.`;
+  }
+  return null;
+}
+var SYNC_DATA_TYPES = [
+  { key: "reports", module: "reports", label: "Berichte (eingereicht/freigegeben)", source: "reports" },
+  { key: "unit_status", module: "shift_logs", label: "Dienststatus der Beamten", source: "duty" },
+  { key: "shift_statistics", module: "shift_logs", label: "Wochenstatistik (Shift Logs)", source: "weekly-reset" },
+  { key: "team_overview", module: "shift_logs", label: "Team\xFCbersicht (wer ist im Dienst)", source: "duty" },
+  { key: "incidents", module: "cad", label: "Eins\xE4tze", source: null },
+  { key: "incident_status", module: "cad", label: "Einsatzstatus", source: null },
+  { key: "radio_messages", module: "cad", label: "Funkspr\xFCche", source: null }
+];
+var SYNC_DIRECTIONS = ["A_TO_B", "B_TO_A", "BIDIRECTIONAL", "NONE"];
+function policyAllowsFlow(p, from, to) {
+  if (!p.enabled || p.direction === "NONE") return false;
+  const forward = p.sourceServerId === from && p.targetServerId === to;
+  const backward = p.sourceServerId === to && p.targetServerId === from;
+  return forward && (p.direction === "A_TO_B" || p.direction === "BIDIRECTIONAL") || backward && (p.direction === "B_TO_A" || p.direction === "BIDIRECTIONAL");
+}
+var BOT_COMMAND_MODULES = {
+  cad: "cad",
+  bericht: "reports",
+  dienstbericht: "reports",
+  person: "mdt",
+  kennzeichen: "mdt",
+  fahndungen: "mdt",
+  fahndung: "mdt",
+  dienst: "shift_logs",
+  dienststunden: "shift_logs",
+  team: "shift_logs",
+  dienstpanel: "shift_logs",
+  teamliste: "shift_logs",
+  einheiten: "dispatch",
+  einheitstatus: "dispatch",
+  einsaetze: "dispatch",
+  einsatz: "dispatch",
+  einsatzinfo: "dispatch",
+  einsatzstatus: "dispatch",
+  einsatzzuweisen: "dispatch",
+  beschwerde: "investigations",
+  ermittlung: "investigations",
+  beweis: "investigations",
+  abmeldung: "personnel",
+  leave: "personnel",
+  ausbildung: "personnel",
+  verwarnen: "personnel",
+  teamchance: "applications",
+  bewerbung: "applications",
+  bewerbungspanel: "applications",
+  qualipanel: "applications",
+  support: "support",
+  funkcode: "communication",
+  funk: "communication"
+};
+var commandsForServer = (all, disabledModules) => all.filter((c) => !disabledModules.includes(BOT_COMMAND_MODULES[c.name] ?? "core"));
+
 // src/hr.ts
 import { z as z3 } from "zod";
 var sf3 = z3.string().regex(/^\d{15,25}$/, "Discord-ID (15\u201325 Ziffern)");
@@ -1933,6 +2028,7 @@ export {
   AREA_PERMISSIONS,
   BACKUP_PARTS,
   BACKUP_PART_LABEL,
+  BOT_COMMAND_MODULES,
   CAD_EVENTS,
   CAD_EVENT_LABELS,
   CAD_EVENT_SEND_TYPE,
@@ -1990,6 +2086,8 @@ export {
   LOG_TYPES,
   MAX_FORM_OPTIONS,
   MAX_FORM_QUESTIONS,
+  MODULES,
+  MODULE_KEYS,
   MUSIC_TRACKS,
   PERIOD_LABEL,
   PERMISSION_CATALOG,
@@ -2014,6 +2112,8 @@ export {
   ROBLOX_VERIFICATION_STATUSES,
   STATUS_KINDS,
   STATUS_LABEL,
+  SYNC_DATA_TYPES,
+  SYNC_DIRECTIONS,
   TICKET_ACTIONS,
   TICKET_ACTION_KEYS,
   TICKET_PLACEHOLDERS,
@@ -2047,6 +2147,7 @@ export {
   canTransition,
   checkAnswer,
   cleanReportValues,
+  commandsForServer,
   conditionMatches,
   dangerLevelOf,
   defaultTicketButtons,
@@ -2090,6 +2191,9 @@ export {
   loggingConfigSchema,
   matchingBinds,
   mdtConfigSchema,
+  moduleDef,
+  moduleDependencyError,
+  moduleOfPermission,
   newVoiceRoom,
   nextWeekStart,
   normalizeField,
@@ -2101,6 +2205,7 @@ export {
   periodStart,
   personDetailsSchema,
   pixelToGame,
+  policyAllowsFlow,
   questionSchema,
   rangeSchema,
   rankSchema,

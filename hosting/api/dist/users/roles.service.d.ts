@@ -60,6 +60,7 @@ export declare class RolesService {
     private load;
     private guard;
     private assertPriority;
+    /** Rollennamen sind je Server eindeutig (gleicher Name auf zwei Servern = zwei verschiedene Rollen). */
     private uniqueName;
     create(actor: Actor, d: RoleInput & {
         name: string;
