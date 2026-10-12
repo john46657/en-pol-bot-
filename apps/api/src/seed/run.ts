@@ -27,7 +27,7 @@ async function main() {
         console.log('Admin password reset from ADMIN_PASSWORD (user "admin", unlocked). Remove ADMIN_PASSWORD_RESET now.');
       }
     }
-    await prisma.legalCode.upsert({ where: { code: 'TVO-1' }, create: { code: 'TVO-1', title: 'Geschwindigkeitsüberschreitung', category: 'Verkehr', penalty: { fine: 250 } }, update: {} });
+    if (!(await prisma.legalCode.findFirst({ where: { code: 'TVO-1', serverId: null } }))) await prisma.legalCode.create({ data: { code: 'TVO-1', title: 'Geschwindigkeitsüberschreitung', category: 'Verkehr', penalty: { fine: 250 } } });
   } finally { await prisma.$disconnect(); }
 }
 void main();

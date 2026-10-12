@@ -24,10 +24,11 @@ let PermissionService = class PermissionService {
         this.prisma = prisma;
     }
     /**
-     * IDs aller aktiven Rollen des Benutzers (direkt und über Gruppen), die im Server der Anfrage gelten:
-     * serverübergreifende Rollen immer, Server-Rollen nur in ihrem Server. Deaktivierte Rollen verleihen nichts.
-     * Über Discord-Rollen vergebene Zuweisungen (`UserRole.guildIds`) gelten NUR auf den Servern, auf denen die Discord-Rolle
-     * besteht – auch wenn die interne Rolle selbst serverübergreifend ist (keine Rechteübertragung zwischen Servern).
+     * IDs aller aktiven Rollen des Benutzers (direkt und über Gruppen), die im Server der Anfrage gelten.
+     * Server sind von Grund auf getrennt: auf einem Server zählen NUR die Rollen dieses Servers (`guildId`) – plus der globale
+     * Systemadministrator. Serverübergreifende Rollen (Vorlagen) gelten nur unter „Alle Server“ (ohne Server).
+     * Über Discord vergebene Zuweisungen (`UserRole.guildIds`) gelten nur auf den Servern, auf denen die Discord-Rolle besteht.
+     * Deaktivierte Rollen verleihen nichts.
      */
     async roleIdsFor(userId, guildId = (0, guild_context_1.currentGuild)()) {
         const [direct, groups] = await Promise.all([
@@ -40,10 +41,13 @@ let PermissionService = class PermissionService {
                 ids.add(r.roleId);
         if (!ids.size)
             return [];
-        return (await this.prisma.role.findMany({ where: { id: { in: [...ids] }, active: true, OR: [{ guildId: null }, ...(guildId ? [{ guildId }] : [])] }, select: { id: true } })).map((r) => r.id);
+        const where = guildId
+            ? { OR: [{ guildId }, { guildId: null, name: 'System Administrator', users: { some: { userId, guildIds: { isEmpty: true } } } }] }
+            : { guildId: null };
+        return (await this.prisma.role.findMany({ where: { id: { in: [...ids] }, active: true, ...where }, select: { id: true } })).map((r) => r.id);
     }
     async contextFor(userId, guildId = (0, guild_context_1.currentGuild)()) {
-        const [overrides, roleIds] = await Promise.all([this.prisma.userPermissionOverride.findMany({ where: { userId } }), this.roleIdsFor(userId, guildId)]);
+        const [overrides, roleIds] = await Promise.all([this.prisma.userPermissionOverride.findMany({ where: { userId, guildId } }), this.roleIdsFor(userId, guildId)]);
         const rolePerms = roleIds.length ? await this.prisma.rolePermission.findMany({ where: { roleId: { in: roleIds } } }) : [];
         const toGrant = (p, e) => ({ permission: p, effect: e === 'DENY' ? 'DENY' : 'ALLOW' });
         return {

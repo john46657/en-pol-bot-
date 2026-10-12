@@ -7,10 +7,11 @@ export declare class PermissionService {
     private readonly prisma;
     constructor(prisma: PrismaService);
     /**
-     * IDs aller aktiven Rollen des Benutzers (direkt und über Gruppen), die im Server der Anfrage gelten:
-     * serverübergreifende Rollen immer, Server-Rollen nur in ihrem Server. Deaktivierte Rollen verleihen nichts.
-     * Über Discord-Rollen vergebene Zuweisungen (`UserRole.guildIds`) gelten NUR auf den Servern, auf denen die Discord-Rolle
-     * besteht – auch wenn die interne Rolle selbst serverübergreifend ist (keine Rechteübertragung zwischen Servern).
+     * IDs aller aktiven Rollen des Benutzers (direkt und über Gruppen), die im Server der Anfrage gelten.
+     * Server sind von Grund auf getrennt: auf einem Server zählen NUR die Rollen dieses Servers (`guildId`) – plus der globale
+     * Systemadministrator. Serverübergreifende Rollen (Vorlagen) gelten nur unter „Alle Server“ (ohne Server).
+     * Über Discord vergebene Zuweisungen (`UserRole.guildIds`) gelten nur auf den Servern, auf denen die Discord-Rolle besteht.
+     * Deaktivierte Rollen verleihen nichts.
      */
     roleIdsFor(userId: string, guildId?: string | null): Promise<string[]>;
     contextFor(userId: string, guildId?: string | null): Promise<PermissionContext>;

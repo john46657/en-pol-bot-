@@ -59,9 +59,25 @@ let AdminService = class AdminService {
         this.prisma = prisma;
         this.audit = audit;
     }
+    /**
+     * Mit gewähltem Server: nur die Werte DIESES Servers (Konfiguration je Server) und die globalen Einstellungen – nie Werte
+     * anderer Server. Unter „Alle Server“: alles (Verwaltung der Grundwerte).
+     */
     async getSettings() {
-        const rows = await this.prisma.systemSetting.findMany();
-        return { settings: Object.fromEntries(rows.map((r) => [r.key, r.value])), allowedKeys: Object.keys(exports.SETTING_SCHEMAS), serverScoped: guild_context_1.SERVER_SCOPED_SETTINGS };
+        const g = (0, guild_context_1.settingsGuild)((0, guild_context_1.currentGuild)());
+        if (!g) {
+            const rows = await this.prisma.systemSetting.findMany();
+            return { settings: Object.fromEntries(rows.map((r) => [r.key, r.value])), allowedKeys: Object.keys(exports.SETTING_SCHEMAS), serverScoped: guild_context_1.PER_SERVER_SETTING_KEYS };
+        }
+        const keys = Object.keys(exports.SETTING_SCHEMAS);
+        const rows = await this.prisma.systemSetting.findMany({ where: { key: { in: keys } } }); // je Server umgeleitet (server-scope.ts)
+        const settings = {};
+        for (const r of rows) {
+            settings[r.key] = r.value;
+            if (guild_context_1.PER_SERVER_SETTING_KEYS.includes(r.key))
+                settings[`${r.key}@${g}`] = r.value;
+        }
+        return { settings, allowedKeys: keys, serverScoped: guild_context_1.PER_SERVER_SETTING_KEYS };
     }
     /** `key@<guildId>`: Server-eigener Wert (nur für Einstellungen, die je Server getrennt sein dürfen). */
     async setSetting(actor, rawKey, value) {
@@ -69,8 +85,12 @@ let AdminService = class AdminService {
         // Gruppe mit geteilten Einstellungen (Server-Verbund): gespeichert wird beim Haupt-Server der Gruppe
         const guild = rawGuild !== undefined && /^\d{15,25}$/.test(rawGuild) ? (0, guild_context_1.settingsGuild)(rawGuild) ?? rawGuild : rawGuild;
         const key = guild !== undefined ? `${base}@${guild}` : base;
-        if (guild !== undefined && (!/^\d{15,25}$/.test(guild) || !guild_context_1.SERVER_SCOPED_SETTINGS.includes(base)))
+        if (guild !== undefined && (!/^\d{15,25}$/.test(guild) || !guild_context_1.PER_SERVER_SETTING_KEYS.includes(base)))
             throw new errors_1.AppError('VALIDATION_FAILED', `Die Einstellung „${base}“ kann nicht je Server gesetzt werden.`);
+        // im Kontext eines Servers nie die Einstellungen eines anderen Servers ändern
+        const ctx = (0, guild_context_1.settingsGuild)((0, guild_context_1.currentGuild)());
+        if (ctx && guild !== undefined && guild !== ctx)
+            throw new errors_1.AppError('PERMISSION_DENIED', 'Einstellungen anderer Server kannst du hier nicht ändern.');
         const schema = exports.SETTING_SCHEMAS[base];
         if (!schema)
             throw new errors_1.AppError('VALIDATION_FAILED', `Unbekannte Einstellung „${key}“.`);
@@ -80,7 +100,7 @@ let AdminService = class AdminService {
         return this.prisma.$transaction(async (tx) => {
             const before = await tx.systemSetting.findUnique({ where: { key } });
             const row = await tx.systemSetting.upsert({ where: { key }, create: { key, value: parsed.data }, update: { value: parsed.data } });
-            await this.audit.record(actor, { action: /^(application|dashboard|studio|theme|discord|team)\./.test(key) ? 'studio.config.changed' : 'settings.changed', module: 'settings', entityType: 'SystemSetting', entityId: key, before: before?.value, after: row.value }, tx);
+            await this.audit.record(actor, { action: /^(application|dashboard|studio|theme|discord|team)\./.test(key) ? 'studio.config.changed' : 'settings.changed', module: 'settings', entityType: 'SystemSetting', entityId: ctx && !key.includes('@') && guild_context_1.PER_SERVER_SETTING_KEYS.includes(key) ? `${key}@${ctx}` : key, before: before?.value, after: row.value }, tx);
             return { key, value: row.value };
         });
     }

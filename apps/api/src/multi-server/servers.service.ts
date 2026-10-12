@@ -8,8 +8,9 @@ import { PermissionService } from '../authz/permission.service';
 import { DiscordAccessService } from '../authz/discord-access.service';
 import { RolesService, type RoleInput } from '../users/roles.service';
 import { AppError } from '../common/errors';
-import { runInGuild } from '../common/guild-context';
+import { PER_SERVER_SETTING_KEYS, runInGuild, settingsGuild } from '../common/guild-context';
 import { parseModuleSettings } from './module-settings';
+import { initServerRoles } from './server-roles';
 
 const conflict = () => new AppError('CONFLICT', 'Diese Einstellung wurde inzwischen von jemand anderem geändert. Bitte neu laden – deine Änderung wurde NICHT gespeichert.', { reason: 'VERSION_CONFLICT' });
 
@@ -27,6 +28,35 @@ export class ServersService implements OnModuleInit {
     for (const m of MODULES as readonly ModuleDef[]) {
       await this.prisma.appModule.upsert({ where: { key: m.key }, create: { key: m.key, name: m.name, description: m.description, isSystem: !!m.system, dependsOn: m.dependsOn ?? [] }, update: { name: m.name, description: m.description, isSystem: !!m.system, dependsOn: m.dependsOn ?? [] } }).catch((e) => this.log.warn(`Modul ${m.key}: ${e instanceof Error ? e.message : e}`));
     }
+    if (process.env.NODE_ENV !== 'test') await this.splitSettings().catch((e) => this.log.warn(`Einstellungen je Server: ${e instanceof Error ? e.message : e}`));
+    // Server von vor der Trennung: einmalig bisherige Rollen samt Zuweisungen als eigene Server-Rollen übernehmen
+    for (const s of await this.prisma.discordServer.findMany({ where: { rolesInitializedAt: null }, select: { id: true, name: true } })) {
+      await initServerRoles(this.prisma, s.id, true).then((n) => n && this.log.log(`${n} Rollen für ${s.name} übernommen`), (e) => this.log.warn(`Rollen für ${s.name}: ${e instanceof Error ? e.message : e}`));
+    }
+  }
+
+  /**
+   * Einmalig beim Übergang auf „Server von Grund auf getrennt“: bisher gemeinsame Einstellungen bekommt jeder bestehende
+   * Server als EIGENE Kopie (danach unabhängig). Server, die später dazukommen, starten mit Standardwerten.
+   */
+  async splitSettings() {
+    const FLAG = 'migration.serverSplit';
+    await this.prisma.$transaction(async (tx) => {
+      await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtext(${FLAG}))`;
+      if (await tx.systemSetting.findUnique({ where: { key: FLAG } })) return;
+      const servers = await tx.discordServer.findMany({ where: { archivedAt: null }, select: { guildId: true } });
+      const base = await tx.systemSetting.findMany({ where: { key: { in: [...PER_SERVER_SETTING_KEYS] } } });
+      let copied = 0;
+      for (const sv of servers) {
+        const g = settingsGuild(sv.guildId) ?? sv.guildId;
+        for (const row of base) {
+          const r = await tx.systemSetting.createMany({ data: [{ key: `${row.key}@${g}`, value: row.value as Prisma.InputJsonValue }], skipDuplicates: true });
+          copied += r.count;
+        }
+      }
+      await tx.systemSetting.create({ data: { key: FLAG, value: { at: new Date().toISOString(), servers: servers.length, copied } } });
+      if (copied) this.log.log(`${copied} Einstellungen auf ${servers.length} Server übertragen (je Server eigene Kopie)`);
+    }, { timeout: 60_000 });
   }
 
   // ───────── Zugriff ─────────
@@ -74,6 +104,7 @@ export class ServersService implements OnModuleInit {
     if (await this.prisma.discordServer.findUnique({ where: { guildId: d.guildId } })) throw new AppError('CONFLICT', 'Dieser Discord-Server ist bereits registriert.');
     const s = await this.prisma.$transaction(async (tx) => {
       const s = await tx.discordServer.create({ data: { guildId: d.guildId, name: d.name, status: 'ACTIVE' } });
+      await initServerRoles(tx, s.id, false); // neuer Server: eigene Startrollen, keine übernommenen Zuweisungen
       await this.audit.record(actor, { action: 'server.register', module: 'servers', entityType: 'DiscordServer', entityId: s.id, serverId: s.guildId, after: { guildId: s.guildId, name: s.name } }, tx);
       return s;
     }).catch((e) => { if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === 'P2002') throw new AppError('CONFLICT', 'Dieser Discord-Server ist bereits registriert.'); throw e; });
@@ -119,7 +150,7 @@ export class ServersService implements OnModuleInit {
       const s = await this.prisma.discordServer.findUnique({ where: { guildId: g.id } });
       if (!s) {
         await this.prisma.discordServer.create({ data: { guildId: g.id, name: g.name || g.id, status: 'DISABLED' } }).then(
-          (c) => this.audit.record({ userId: null }, { action: 'server.discovered', module: 'servers', entityType: 'DiscordServer', entityId: c.id, serverId: g.id, after: { name: c.name, status: 'DISABLED' } }),
+          async (c) => (await initServerRoles(this.prisma, c.id, false), this.audit.record({ userId: null }, { action: 'server.discovered', module: 'servers', entityType: 'DiscordServer', entityId: c.id, serverId: g.id, after: { name: c.name, status: 'DISABLED' } })),
           () => undefined,
         );
       } else if (s.name !== g.name || s.status === 'ERROR') {

@@ -235,11 +235,11 @@ let WeeklyResetService = class WeeklyResetService {
     async rank(db, totals) {
         const ids = totals.map((t) => t.userId);
         const [users, links] = await Promise.all([
-            db.user.findMany({ where: { id: { in: ids } }, select: { id: true, displayName: true, personnel: { select: { rank: true, callsign: true } } } }),
+            db.user.findMany({ where: { id: { in: ids } }, select: { id: true, displayName: true, personnel: { ...(0, guild_context_1.onePersonnel)(), select: { rank: true, callsign: true } } } }),
             db.discordLink.findMany({ where: { userId: { in: ids } }, select: { userId: true, discordId: true } }),
         ]);
         const u = new Map(users.map((x) => [x.id, x])), l = new Map(links.map((x) => [x.userId, x.discordId]));
-        return totals.map((t, i) => ({ place: i + 1, ...t, name: u.get(t.userId)?.displayName ?? 'Unbekannt', rank: u.get(t.userId)?.personnel?.rank ?? null, callsign: u.get(t.userId)?.personnel?.callsign ?? null, discordId: l.get(t.userId) ?? null }));
+        return totals.map((t, i) => ({ place: i + 1, ...t, name: u.get(t.userId)?.displayName ?? 'Unbekannt', rank: u.get(t.userId)?.personnel[0]?.rank ?? null, callsign: u.get(t.userId)?.personnel[0]?.callsign ?? null, discordId: l.get(t.userId) ?? null }));
     }
     message(cfg, label, start, end, ranking, total) {
         const f = (d) => d.toLocaleString('de-DE', { timeZone: shared_1.WEEK_TIMEZONE, weekday: 'short', day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });

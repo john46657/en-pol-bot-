@@ -5,6 +5,7 @@ import { DiscordService } from '../discord/discord.service';
 import { AppError } from '../common/errors';
 
 /** Funk-Freigabe: nur freigegebene Mitglieder gelten als funkberechtigt. Identifikation per Benutzer-ID oder verknüpfter Discord-ID. */
+import { onePersonnel } from '../common/guild-context';
 @Injectable()
 export class RadioService {
   constructor(private readonly prisma: PrismaService, private readonly audit: AuditService, private readonly discord: DiscordService) {}
@@ -17,18 +18,18 @@ export class RadioService {
 
   async list() {
     const rows = await this.prisma.radioWhitelist.findMany({ orderBy: { createdAt: 'asc' } });
-    const users = await this.prisma.user.findMany({ where: { id: { in: rows.map((r) => r.userId) } }, select: { id: true, displayName: true, personnel: { select: { callsign: true, rank: true } } } });
-    return rows.map((r) => { const u = users.find((x) => x.id === r.userId); return { userId: r.userId, displayName: u?.displayName ?? '—', callsign: u?.personnel?.callsign ?? null, rank: u?.personnel?.rank ?? null, since: r.createdAt }; });
+    const users = await this.prisma.user.findMany({ where: { id: { in: rows.map((r) => r.userId) } }, select: { id: true, displayName: true, personnel: { ...onePersonnel(), select: { callsign: true, rank: true } } } });
+    return rows.map((r) => { const u = users.find((x) => x.id === r.userId); return { userId: r.userId, displayName: u?.displayName ?? '—', callsign: u?.personnel[0]?.callsign ?? null, rank: u?.personnel[0]?.rank ?? null, since: r.createdAt }; });
   }
 
   async check(t: { userId?: string; discordId?: string }) {
     const user = await this.resolve(t);
-    return { whitelisted: !!(await this.prisma.radioWhitelist.findUnique({ where: { userId: user.id } })), displayName: user.displayName };
+    return { whitelisted: !!(await this.prisma.radioWhitelist.findFirst({ where: { userId: user.id } })), displayName: user.displayName };
   }
 
   async add(actor: Actor, t: { userId?: string; discordId?: string }) {
     const user = await this.resolve(t);
-    if (await this.prisma.radioWhitelist.findUnique({ where: { userId: user.id } })) throw new AppError('CONFLICT', `${user.displayName} steht schon auf der Funk-Whitelist.`);
+    if (await this.prisma.radioWhitelist.findFirst({ where: { userId: user.id } })) throw new AppError('CONFLICT', `${user.displayName} steht schon auf der Funk-Whitelist.`);
     await this.prisma.$transaction(async (tx) => {
       await tx.radioWhitelist.create({ data: { userId: user.id, addedById: actor.userId } });
       await tx.notification.create({ data: { userId: user.id, type: 'RADIO', title: 'Du bist jetzt für den Funk freigegeben' } });

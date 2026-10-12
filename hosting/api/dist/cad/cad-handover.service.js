@@ -11,6 +11,7 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.CadHandoverService = void 0;
 const common_1 = require("@nestjs/common");
+const guild_context_1 = require("../common/guild-context");
 const prisma_service_1 = require("../prisma/prisma.service");
 const audit_service_1 = require("../audit/audit.service");
 const realtime_service_1 = require("../realtime/realtime.service");
@@ -46,7 +47,7 @@ let CadHandoverService = class CadHandoverService {
             this.prisma.incident.findMany({ where: { status: { notIn: closed } }, orderBy: { createdAt: 'asc' }, take: 100, include: { units: { where: { clearedAt: null }, include: { unit: { select: { callsign: true } } } } } }),
             this.prisma.unit.findMany({ where: { operational: true, status: { notIn: ['OFF_DUTY'] } }, orderBy: { callsign: 'asc' }, include: { incidents: { where: { clearedAt: null }, include: { incident: { select: { number: true, restrictRoleIds: true } } } } } }),
             this.prisma.erlcEmergencyCall.findMany({ where: { status: { in: ['OPEN', 'CLAIMED'] }, incidentId: null }, orderBy: { startedAt: 'asc' }, take: 50 }),
-            this.prisma.cadIncidentLog.findMany({ where: { kind: { in: ['STATUS', 'FEEDBACK'] }, createdAt: { gte: since }, incident: { restrictRoleIds: { isEmpty: true } } }, orderBy: { createdAt: 'desc' }, take: 25, include: { incident: { select: { number: true } } } }),
+            this.prisma.cadIncidentLog.findMany({ where: { kind: { in: ['STATUS', 'FEEDBACK'] }, createdAt: { gte: since }, incident: { restrictRoleIds: { isEmpty: true }, ...(0, guild_context_1.recordWhere)() } }, orderBy: { createdAt: 'desc' }, take: 25, include: { incident: { select: { number: true } } } }),
         ]);
         // vertrauliche Einsätze stehen nur als Anzahl in der Übergabe – sie ist für alle mit cad.view sichtbar
         const visible = open.filter((i) => !i.restrictRoleIds.length);

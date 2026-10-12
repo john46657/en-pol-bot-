@@ -28,6 +28,7 @@ const cad_service_1 = require("./cad.service");
 const cad_tablet_service_1 = require("./cad-tablet.service");
 const cad_handover_service_1 = require("./cad-handover.service");
 const cad_stats_service_1 = require("./cad-stats.service");
+const cad_link_interceptor_1 = require("./cad-link.interceptor");
 const cad_config_service_1 = require("./cad-config.service");
 const erlc_service_1 = require("./erlc.service");
 const erlc_sync_service_1 = require("./erlc-sync.service");
@@ -41,7 +42,9 @@ const Cad = (0, common_1.createParamDecorator)((_d, ctx) => {
     const bot = isBot(r);
     const discordId = bot && typeof r.headers['x-discord-user'] === 'string' ? r.headers['x-discord-user'] : null;
     const roles = bot && typeof r.headers['x-discord-roles'] === 'string' ? r.headers['x-discord-roles'].split(',').filter((x) => /^\d{15,25}$/.test(x)).slice(0, 100) : [];
-    return { userId: r.user?.id ?? null, robloxUserId: r.user?.robloxUserId ?? null, requestId: r.requestId, guildId: (0, guild_context_1.currentGuild)(), discordId, roles };
+    // Server, von dem der Befehl kommt – auch wenn er per Querverbindung im Bereich der Leitstelle läuft (CadLinkInterceptor)
+    const origin = r.originGuildId;
+    return { userId: r.user?.id ?? null, robloxUserId: r.user?.robloxUserId ?? null, requestId: r.requestId, guildId: origin !== undefined ? origin : (0, guild_context_1.currentGuild)(), discordId, roles };
 });
 const opt = (s) => s.nullish();
 const text = (max) => zod_1.z.string().trim().max(max);
@@ -616,6 +619,7 @@ __decorate([
 ], CadController.prototype, "logs", null);
 exports.CadController = CadController = __decorate([
     (0, swagger_1.ApiTags)('cad'),
+    (0, common_1.UseInterceptors)(cad_link_interceptor_1.CadLinkInterceptor),
     (0, common_1.Controller)('cad'),
     __metadata("design:paramtypes", [cad_service_1.CadService, cad_tablet_service_1.CadTabletService, cad_config_service_1.CadConfigService, permission_service_1.PermissionService, media_service_1.MediaService,
         cad_handover_service_1.CadHandoverService, cad_stats_service_1.CadStatsService])

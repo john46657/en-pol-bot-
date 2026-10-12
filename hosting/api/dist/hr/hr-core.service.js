@@ -243,7 +243,7 @@ let HrCoreService = class HrCoreService {
     }
     /** Personalakte zu einem Benutzer (anlegen, falls gewünscht). */
     async ensurePersonnel(userId, d, tx) {
-        const p = await tx.personnel.findUnique({ where: { userId } });
+        const p = await tx.personnel.findFirst({ where: { userId } });
         if (p)
             return { personnel: p, created: false };
         return { personnel: await tx.personnel.create({ data: { userId, rank: d.rank ?? null, team: d.team ?? null } }), created: true };

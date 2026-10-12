@@ -180,9 +180,9 @@ export declare const SETTING_SCHEMAS: {
         trainingRole: z.ZodOptional<z.ZodString>;
         adminDutyRole: z.ZodOptional<z.ZodString>;
     }, "strip", z.ZodTypeAny, {
+        tickets?: string | undefined;
         guildId?: string | undefined;
         qualifications?: string | undefined;
-        tickets?: string | undefined;
         dispatch?: string | undefined;
         wanted?: string | undefined;
         announcements?: string | undefined;
@@ -199,9 +199,9 @@ export declare const SETTING_SCHEMAS: {
         trainingRole?: string | undefined;
         adminDutyRole?: string | undefined;
     }, {
+        tickets?: string | undefined;
         guildId?: string | undefined;
         qualifications?: string | undefined;
-        tickets?: string | undefined;
         dispatch?: string | undefined;
         wanted?: string | undefined;
         announcements?: string | undefined;
@@ -258,12 +258,12 @@ export declare const SETTING_SCHEMAS: {
         multiple: z.ZodDefault<z.ZodBoolean>;
     }, "strip", z.ZodTypeAny, {
         type: "TEXT" | "CHOICE" | "ROLE" | "ROBLOX";
-        key: string;
         options: {
             label: string;
             roleId?: string | undefined;
         }[];
         multiple: boolean;
+        key: string;
         label: string;
         required: boolean;
         minLength: number;
@@ -282,12 +282,12 @@ export declare const SETTING_SCHEMAS: {
         maxLength?: number | undefined;
     }>, {
         type: "TEXT" | "CHOICE" | "ROLE" | "ROBLOX";
-        key: string;
         options: {
             label: string;
             roleId?: string | undefined;
         }[];
         multiple: boolean;
+        key: string;
         label: string;
         required: boolean;
         minLength: number;
@@ -306,12 +306,12 @@ export declare const SETTING_SCHEMAS: {
         maxLength?: number | undefined;
     }>, "many">, {
         type: "TEXT" | "CHOICE" | "ROLE" | "ROBLOX";
-        key: string;
         options: {
             label: string;
             roleId?: string | undefined;
         }[];
         multiple: boolean;
+        key: string;
         label: string;
         required: boolean;
         minLength: number;
@@ -368,12 +368,14 @@ export declare class AdminService {
     private readonly prisma;
     private readonly audit;
     constructor(prisma: PrismaService, audit: AuditService);
+    /**
+     * Mit gewähltem Server: nur die Werte DIESES Servers (Konfiguration je Server) und die globalen Einstellungen – nie Werte
+     * anderer Server. Unter „Alle Server“: alles (Verwaltung der Grundwerte).
+     */
     getSettings(): Promise<{
-        settings: {
-            [k: string]: Prisma.JsonValue;
-        };
+        settings: Record<string, unknown>;
         allowedKeys: string[];
-        serverScoped: readonly ["team.structure", "team.rankOrder", "dashboard.defaultLayout", "theme.accent", "theme.customAccents", "org.name", "teamchance"];
+        serverScoped: readonly string[];
     }>;
     /** `key@<guildId>`: Server-eigener Wert (nur für Einstellungen, die je Server getrennt sein dürfen). */
     setSetting(actor: Actor, rawKey: string, value: unknown): Promise<{
@@ -382,8 +384,8 @@ export declare class AdminService {
     }>;
     securityEvents(take?: number, type?: string): Prisma.PrismaPromise<{
         id: string;
-        type: string;
         createdAt: Date;
+        type: string;
         userId: string | null;
         ip: string | null;
         requestId: string | null;

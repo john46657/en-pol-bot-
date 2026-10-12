@@ -18,26 +18,28 @@ export declare class UsersService {
     list(p: PageQuery): Promise<{
         items: {
             id: string;
+            robloxUserId: string | null;
+            robloxUsername: string | null;
             createdAt: Date;
             updatedAt: Date;
+            active: boolean;
             username: string;
             displayName: string;
             email: string | null;
-            robloxUserId: string | null;
-            robloxUsername: string | null;
             robloxStatus: string;
             robloxVerifiedAt: Date | null;
-            active: boolean;
             lastLogin: Date | null;
             totpEnabledAt: Date | null;
             roles: {
                 role: {
                     id: string;
+                    guildId: string | null;
                     name: string;
                 };
             }[];
             overrides: {
                 reason: string | null;
+                guildId: string | null;
                 permissionKey: string;
                 effect: string;
             }[];
@@ -52,26 +54,28 @@ export declare class UsersService {
             linkedAt: Date;
         } | null;
         id: string;
+        robloxUserId: string | null;
+        robloxUsername: string | null;
         createdAt: Date;
         updatedAt: Date;
+        active: boolean;
         username: string;
         displayName: string;
         email: string | null;
-        robloxUserId: string | null;
-        robloxUsername: string | null;
         robloxStatus: string;
         robloxVerifiedAt: Date | null;
-        active: boolean;
         lastLogin: Date | null;
         totpEnabledAt: Date | null;
         roles: {
             role: {
                 id: string;
+                guildId: string | null;
                 name: string;
             };
         }[];
         overrides: {
             reason: string | null;
+            guildId: string | null;
             permissionKey: string;
             effect: string;
         }[];
@@ -84,26 +88,28 @@ export declare class UsersService {
         roleIds?: string[];
     }): Promise<{
         id: string;
+        robloxUserId: string | null;
+        robloxUsername: string | null;
         createdAt: Date;
         updatedAt: Date;
+        active: boolean;
         username: string;
         displayName: string;
         email: string | null;
-        robloxUserId: string | null;
-        robloxUsername: string | null;
         robloxStatus: string;
         robloxVerifiedAt: Date | null;
-        active: boolean;
         lastLogin: Date | null;
         totpEnabledAt: Date | null;
         roles: {
             role: {
                 id: string;
+                guildId: string | null;
                 name: string;
             };
         }[];
         overrides: {
             reason: string | null;
+            guildId: string | null;
             permissionKey: string;
             effect: string;
         }[];
@@ -114,26 +120,28 @@ export declare class UsersService {
         robloxUsername?: string;
     }): Promise<{
         id: string;
+        robloxUserId: string | null;
+        robloxUsername: string | null;
         createdAt: Date;
         updatedAt: Date;
+        active: boolean;
         username: string;
         displayName: string;
         email: string | null;
-        robloxUserId: string | null;
-        robloxUsername: string | null;
         robloxStatus: string;
         robloxVerifiedAt: Date | null;
-        active: boolean;
         lastLogin: Date | null;
         totpEnabledAt: Date | null;
         roles: {
             role: {
                 id: string;
+                guildId: string | null;
                 name: string;
             };
         }[];
         overrides: {
             reason: string | null;
+            guildId: string | null;
             permissionKey: string;
             effect: string;
         }[];
@@ -141,26 +149,28 @@ export declare class UsersService {
     /** Anzeigename ändern – den eigenen immer, fremde nur unterhalb des eigenen Rangs (users.manage). */
     setName(actor: Actor, id: string, displayName: string): Promise<{
         id: string;
+        robloxUserId: string | null;
+        robloxUsername: string | null;
         createdAt: Date;
         updatedAt: Date;
+        active: boolean;
         username: string;
         displayName: string;
         email: string | null;
-        robloxUserId: string | null;
-        robloxUsername: string | null;
         robloxStatus: string;
         robloxVerifiedAt: Date | null;
-        active: boolean;
         lastLogin: Date | null;
         totpEnabledAt: Date | null;
         roles: {
             role: {
                 id: string;
+                guildId: string | null;
                 name: string;
             };
         }[];
         overrides: {
             reason: string | null;
+            guildId: string | null;
             permissionKey: string;
             effect: string;
         }[];
@@ -172,52 +182,60 @@ export declare class UsersService {
     remove(actor: Actor, id: string): Promise<void>;
     setActive(actor: Actor, id: string, active: boolean, reason?: string): Promise<{
         id: string;
+        robloxUserId: string | null;
+        robloxUsername: string | null;
         createdAt: Date;
         updatedAt: Date;
+        active: boolean;
         username: string;
         displayName: string;
         email: string | null;
-        robloxUserId: string | null;
-        robloxUsername: string | null;
         robloxStatus: string;
         robloxVerifiedAt: Date | null;
-        active: boolean;
         lastLogin: Date | null;
         totpEnabledAt: Date | null;
         roles: {
             role: {
                 id: string;
+                guildId: string | null;
                 name: string;
             };
         }[];
         overrides: {
             reason: string | null;
+            guildId: string | null;
             permissionKey: string;
             effect: string;
         }[];
     }>;
+    /**
+     * Rollen eines Benutzers setzen – NUR im Bereich der Anfrage: mit gewähltem Server die Rollen dieses Servers, unter
+     * „Alle Server“ die serverübergreifenden. Rollen anderer Server bleiben unberührt (Server sind getrennt).
+     */
     setRoles(actor: Actor, id: string, roleIds: string[]): Promise<{
         id: string;
+        robloxUserId: string | null;
+        robloxUsername: string | null;
         createdAt: Date;
         updatedAt: Date;
+        active: boolean;
         username: string;
         displayName: string;
         email: string | null;
-        robloxUserId: string | null;
-        robloxUsername: string | null;
         robloxStatus: string;
         robloxVerifiedAt: Date | null;
-        active: boolean;
         lastLogin: Date | null;
         totpEnabledAt: Date | null;
         roles: {
             role: {
                 id: string;
+                guildId: string | null;
                 name: string;
             };
         }[];
         overrides: {
             reason: string | null;
+            guildId: string | null;
             permissionKey: string;
             effect: string;
         }[];
@@ -228,10 +246,11 @@ export declare class UsersService {
         reason?: string;
     }): Promise<{
         id: string;
+        createdById: string | null;
         createdAt: Date;
         reason: string | null;
-        createdById: string | null;
         userId: string;
+        guildId: string | null;
         permissionKey: string;
         effect: string;
     }>;

@@ -25,8 +25,8 @@ export declare const questionSchema: z.ZodEffects<z.ZodEffects<z.ZodObject<{
     label: string;
     required: boolean;
     description?: string | undefined;
-    placeholder?: string | undefined;
     options?: string[] | undefined;
+    placeholder?: string | undefined;
     minLength?: number | undefined;
     maxLength?: number | undefined;
 }>, {
@@ -45,8 +45,8 @@ export declare const questionSchema: z.ZodEffects<z.ZodEffects<z.ZodObject<{
     label: string;
     required: boolean;
     description?: string | undefined;
-    placeholder?: string | undefined;
     options?: string[] | undefined;
+    placeholder?: string | undefined;
     minLength?: number | undefined;
     maxLength?: number | undefined;
 }>, {
@@ -65,8 +65,8 @@ export declare const questionSchema: z.ZodEffects<z.ZodEffects<z.ZodObject<{
     label: string;
     required: boolean;
     description?: string | undefined;
-    placeholder?: string | undefined;
     options?: string[] | undefined;
+    placeholder?: string | undefined;
     minLength?: number | undefined;
     maxLength?: number | undefined;
 }>;
@@ -77,16 +77,16 @@ export declare const buttonSchema: z.ZodObject<{
     style: z.ZodEnum<["primary", "secondary", "success", "danger"]>;
     enabled: z.ZodBoolean;
 }, "strip", z.ZodTypeAny, {
-    action: string;
-    style: "success" | "danger" | "primary" | "secondary";
     enabled: boolean;
     label: string;
+    action: string;
+    style: "success" | "danger" | "primary" | "secondary";
     emoji?: string | undefined;
 }, {
-    action: string;
-    style: "success" | "danger" | "primary" | "secondary";
     enabled: boolean;
     label: string;
+    action: string;
+    style: "success" | "danger" | "primary" | "secondary";
     emoji?: string | undefined;
 }>;
 export declare const categorySchema: z.ZodObject<{
@@ -135,8 +135,8 @@ export declare const categorySchema: z.ZodObject<{
         label: string;
         required: boolean;
         description?: string | undefined;
-        placeholder?: string | undefined;
         options?: string[] | undefined;
+        placeholder?: string | undefined;
         minLength?: number | undefined;
         maxLength?: number | undefined;
     }>, {
@@ -155,8 +155,8 @@ export declare const categorySchema: z.ZodObject<{
         label: string;
         required: boolean;
         description?: string | undefined;
-        placeholder?: string | undefined;
         options?: string[] | undefined;
+        placeholder?: string | undefined;
         minLength?: number | undefined;
         maxLength?: number | undefined;
     }>, {
@@ -175,8 +175,8 @@ export declare const categorySchema: z.ZodObject<{
         label: string;
         required: boolean;
         description?: string | undefined;
-        placeholder?: string | undefined;
         options?: string[] | undefined;
+        placeholder?: string | undefined;
         minLength?: number | undefined;
         maxLength?: number | undefined;
     }>, "many">>, {
@@ -195,8 +195,8 @@ export declare const categorySchema: z.ZodObject<{
         label: string;
         required: boolean;
         description?: string | undefined;
-        placeholder?: string | undefined;
         options?: string[] | undefined;
+        placeholder?: string | undefined;
         minLength?: number | undefined;
         maxLength?: number | undefined;
     }[] | undefined>;
@@ -211,16 +211,16 @@ export declare const categorySchema: z.ZodObject<{
         style: z.ZodEnum<["primary", "secondary", "success", "danger"]>;
         enabled: z.ZodBoolean;
     }, "strip", z.ZodTypeAny, {
-        action: string;
-        style: "success" | "danger" | "primary" | "secondary";
         enabled: boolean;
         label: string;
+        action: string;
+        style: "success" | "danger" | "primary" | "secondary";
         emoji?: string | undefined;
     }, {
-        action: string;
-        style: "success" | "danger" | "primary" | "secondary";
         enabled: boolean;
         label: string;
+        action: string;
+        style: "success" | "danger" | "primary" | "secondary";
         emoji?: string | undefined;
     }>, "many">>;
     claimMode: z.ZodDefault<z.ZodEnum<["MULTI" | "SINGLE" | "PRIMARY", ...("MULTI" | "SINGLE" | "PRIMARY")[]]>>;
@@ -253,23 +253,12 @@ export declare const categorySchema: z.ZodObject<{
     staffAlertMinutes: z.ZodDefault<z.ZodNumber>;
     closeRequestCloses: z.ZodDefault<z.ZodBoolean>;
 }, "strip", z.ZodTypeAny, {
+    color: number;
     description: string;
     active: boolean;
-    name: string;
-    color: number;
     guildId: string | null;
-    emoji: string | null;
+    name: string;
     position: number;
-    buttonStyle: "success" | "danger" | "primary" | "secondary";
-    discordCategoryId: string | null;
-    channelNameFormat: string;
-    staffRoleIds: string[];
-    extraRoleIds: string[];
-    accessRoleNames: string[];
-    requiredRoleIds: string[];
-    allowedUserIds: string[];
-    maxOpen: number;
-    cooldownMinutes: number;
     questions: {
         id: string;
         type: "SHORT" | "LONG" | "YESNO" | "SELECT" | "MULTI";
@@ -281,15 +270,26 @@ export declare const categorySchema: z.ZodObject<{
         minLength?: number | undefined;
         maxLength?: number | undefined;
     }[];
+    emoji: string | null;
+    buttonStyle: "success" | "danger" | "primary" | "secondary";
+    discordCategoryId: string | null;
+    channelNameFormat: string;
+    staffRoleIds: string[];
+    extraRoleIds: string[];
+    accessRoleNames: string[];
+    requiredRoleIds: string[];
+    allowedUserIds: string[];
+    maxOpen: number;
+    cooldownMinutes: number;
     welcomeTitle: string;
     welcomeMessage: string;
     mentionStaff: boolean;
     mentionText: string;
     buttons: {
-        action: string;
-        style: "success" | "danger" | "primary" | "secondary";
         enabled: boolean;
         label: string;
+        action: string;
+        style: "success" | "danger" | "primary" | "secondary";
         emoji?: string | undefined;
     }[];
     claimMode: "MULTI" | "SINGLE" | "PRIMARY";
@@ -324,12 +324,23 @@ export declare const categorySchema: z.ZodObject<{
     escalationPriorityId?: string | null | undefined;
 }, {
     name: string;
+    color?: number | undefined;
     description?: string | undefined;
     active?: boolean | undefined;
-    color?: number | undefined;
     guildId?: string | null | undefined;
-    emoji?: string | null | undefined;
     position?: number | undefined;
+    questions?: {
+        id: string;
+        type: "SHORT" | "LONG" | "YESNO" | "SELECT" | "MULTI";
+        label: string;
+        required: boolean;
+        description?: string | undefined;
+        options?: string[] | undefined;
+        placeholder?: string | undefined;
+        minLength?: number | undefined;
+        maxLength?: number | undefined;
+    }[] | undefined;
+    emoji?: string | null | undefined;
     buttonStyle?: "success" | "danger" | "primary" | "secondary" | undefined;
     discordCategoryId?: string | null | undefined;
     channelNameFormat?: string | undefined;
@@ -341,26 +352,15 @@ export declare const categorySchema: z.ZodObject<{
     maxOpen?: number | undefined;
     cooldownMinutes?: number | undefined;
     defaultPriorityId?: string | null | undefined;
-    questions?: {
-        id: string;
-        type: "SHORT" | "LONG" | "YESNO" | "SELECT" | "MULTI";
-        label: string;
-        required: boolean;
-        description?: string | undefined;
-        placeholder?: string | undefined;
-        options?: string[] | undefined;
-        minLength?: number | undefined;
-        maxLength?: number | undefined;
-    }[] | undefined;
     welcomeTitle?: string | undefined;
     welcomeMessage?: string | undefined;
     mentionStaff?: boolean | undefined;
     mentionText?: string | undefined;
     buttons?: {
-        action: string;
-        style: "success" | "danger" | "primary" | "secondary";
         enabled: boolean;
         label: string;
+        action: string;
+        style: "success" | "danger" | "primary" | "secondary";
         emoji?: string | undefined;
     }[] | undefined;
     claimMode?: "MULTI" | "SINGLE" | "PRIMARY" | undefined;
@@ -416,11 +416,12 @@ export declare const panelSchema: z.ZodObject<{
     showLoad: z.ZodDefault<z.ZodBoolean>;
     position: z.ZodDefault<z.ZodNumber>;
 }, "strip", z.ZodTypeAny, {
+    color: number;
     title: string;
     description: string;
-    name: string;
-    color: number;
     guildId: string | null;
+    name: string;
+    position: number;
     emoji: string | null;
     thumbnailUrl: string | null;
     imageUrl: string | null;
@@ -435,13 +436,13 @@ export declare const panelSchema: z.ZodObject<{
     categoryIds: string[];
     allowedRoleIds: string[];
     showLoad: boolean;
-    position: number;
 }, {
     name: string;
+    color?: number | undefined;
     title?: string | undefined;
     description?: string | undefined;
-    color?: number | undefined;
     guildId?: string | null | undefined;
+    position?: number | undefined;
     emoji?: string | null | undefined;
     thumbnailUrl?: string | null | undefined;
     imageUrl?: string | null | undefined;
@@ -456,7 +457,6 @@ export declare const panelSchema: z.ZodObject<{
     categoryIds?: string[] | undefined;
     allowedRoleIds?: string[] | undefined;
     showLoad?: boolean | undefined;
-    position?: number | undefined;
 }>;
 export type PanelInput = z.infer<typeof panelSchema>;
 export declare const statusSchema: z.ZodObject<{
@@ -470,11 +470,11 @@ export declare const statusSchema: z.ZodObject<{
     isEscalation: z.ZodDefault<z.ZodBoolean>;
     isClose: z.ZodDefault<z.ZodBoolean>;
 }, "strip", z.ZodTypeAny, {
-    name: string;
     color: number;
-    emoji: string;
-    position: number;
+    name: string;
     kind: "CLOSED" | "OPEN" | "ARCHIVED";
+    position: number;
+    emoji: string;
     isDefault: boolean;
     isClaimed: boolean;
     isEscalation: boolean;
@@ -482,9 +482,9 @@ export declare const statusSchema: z.ZodObject<{
 }, {
     name: string;
     color?: number | undefined;
-    emoji?: string | undefined;
-    position?: number | undefined;
     kind?: "CLOSED" | "OPEN" | "ARCHIVED" | undefined;
+    position?: number | undefined;
+    emoji?: string | undefined;
     isDefault?: boolean | undefined;
     isClaimed?: boolean | undefined;
     isEscalation?: boolean | undefined;
@@ -499,18 +499,18 @@ export declare const prioritySchema: z.ZodObject<{
     allowedRoleNames: z.ZodDefault<z.ZodArray<z.ZodString, "many">>;
     notifyRoleIds: z.ZodDefault<z.ZodArray<z.ZodString, "many">>;
 }, "strip", z.ZodTypeAny, {
-    name: string;
     color: number;
-    emoji: string;
+    name: string;
     position: number;
+    emoji: string;
     isDefault: boolean;
     allowedRoleNames: string[];
     notifyRoleIds: string[];
 }, {
     name: string;
     color?: number | undefined;
-    emoji?: string | undefined;
     position?: number | undefined;
+    emoji?: string | undefined;
     isDefault?: boolean | undefined;
     allowedRoleNames?: string[] | undefined;
     notifyRoleIds?: string[] | undefined;
@@ -555,7 +555,7 @@ export declare const settingsSchema: z.ZodObject<{
     transcriptRetentionDays: number;
     ratingChannelId: string | null;
     ratingPublicChannelId: string | null;
-    ratingPublicFields: ("category" | "comment" | "duration" | "staff" | "creator")[];
+    ratingPublicFields: ("category" | "duration" | "comment" | "staff" | "creator")[];
     memberLeaveAction: "NONE" | "CLOSE";
     memberLeaveReason: string;
 }, {
@@ -570,7 +570,7 @@ export declare const settingsSchema: z.ZodObject<{
     transcriptRetentionDays?: number | undefined;
     ratingChannelId?: string | null | undefined;
     ratingPublicChannelId?: string | null | undefined;
-    ratingPublicFields?: ("category" | "comment" | "duration" | "staff" | "creator")[] | undefined;
+    ratingPublicFields?: ("category" | "duration" | "comment" | "staff" | "creator")[] | undefined;
     memberLeaveAction?: "NONE" | "CLOSE" | undefined;
     memberLeaveReason?: string | undefined;
 }>;

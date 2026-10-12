@@ -90,7 +90,6 @@ export declare const examSchema: z.ZodObject<{
         correct: string[];
         points: number;
     }[];
-    trainingId: string | null;
     questionCount: number;
     passPercent: number;
     timeLimitMin: number | null;
@@ -99,6 +98,7 @@ export declare const examSchema: z.ZodObject<{
     autoGrade: boolean;
     showResult: boolean;
     examinerIds: string[];
+    trainingId: string | null;
 }, {
     title: string;
     description?: string | null | undefined;
@@ -111,7 +111,6 @@ export declare const examSchema: z.ZodObject<{
         correct?: string[] | undefined;
         points?: number | undefined;
     }[] | undefined;
-    trainingId?: string | null | undefined;
     questionCount?: number | undefined;
     passPercent?: number | undefined;
     timeLimitMin?: number | null | undefined;
@@ -120,6 +119,7 @@ export declare const examSchema: z.ZodObject<{
     autoGrade?: boolean | undefined;
     showResult?: boolean | undefined;
     examinerIds?: string[] | undefined;
+    trainingId?: string | null | undefined;
 }>;
 export declare const TRAINING_STATUSES: readonly ["NOT_STARTED", "IN_PROGRESS", "PASSED", "FAILED", "ABORTED", "EXPIRED"];
 /** Ausbildungen (mit Fortschritt und Zertifikat) und Prüfungen (Fragen, Versuche, automatische/manuelle Bewertung). */
@@ -130,6 +130,7 @@ export declare class HrTrainingService {
     private get prisma();
     trainings(): Promise<{
         passed: number;
+        serverId: string | null;
         id: string;
         createdAt: Date;
         updatedAt: Date;
@@ -148,6 +149,7 @@ export declare class HrTrainingService {
         validDays: number | null;
     }[]>;
     saveTraining(actor: Actor, d: z.infer<typeof trainingSchema>, id?: string): Promise<{
+        serverId: string | null;
         id: string;
         createdAt: Date;
         updatedAt: Date;
@@ -183,9 +185,9 @@ export declare class HrTrainingService {
         startedAt: Date | null;
         personnelId: string;
         trainingId: string;
+        note: string | null;
         progress: number;
         examinerId: string | null;
-        note: string | null;
         completedAt: Date | null;
         certificateNo: string | null;
     })[]>;
@@ -204,9 +206,9 @@ export declare class HrTrainingService {
         startedAt: Date | null;
         personnelId: string;
         trainingId: string;
+        note: string | null;
         progress: number;
         examinerId: string | null;
-        note: string | null;
         completedAt: Date | null;
         certificateNo: string | null;
     }>;
@@ -234,19 +236,19 @@ export declare class HrTrainingService {
         myAttempts: {
             status: string;
             startedAt: Date;
+            examId: string;
             score: number | null;
             passed: boolean | null;
-            examId: string;
             maxScore: number | null;
             submittedAt: Date | null;
         }[];
+        serverId: string | null;
         id: string;
-        title: string;
         createdAt: Date;
         updatedAt: Date;
+        title: string;
         description: string | null;
         active: boolean;
-        trainingId: string | null;
         questionCount: number;
         passPercent: number;
         timeLimitMin: number | null;
@@ -255,16 +257,17 @@ export declare class HrTrainingService {
         autoGrade: boolean;
         showResult: boolean;
         examinerIds: string[];
+        trainingId: string | null;
     }[]>;
     saveExam(actor: Actor, d: z.infer<typeof examSchema>, id?: string): Promise<{
+        serverId: string | null;
         id: string;
-        title: string;
         createdAt: Date;
         updatedAt: Date;
+        title: string;
         description: string | null;
         active: boolean;
         questions: Prisma.JsonValue;
-        trainingId: string | null;
         questionCount: number;
         passPercent: number;
         timeLimitMin: number | null;
@@ -273,6 +276,7 @@ export declare class HrTrainingService {
         autoGrade: boolean;
         showResult: boolean;
         examinerIds: string[];
+        trainingId: string | null;
     }>;
     deleteExam(actor: Actor, id: string): Promise<void>;
     /** Prüfung starten: prüft Versuche, Wartezeit; zieht ggf. zufällige Fragen. Liefert Fragen OHNE Lösungen. */
@@ -468,10 +472,10 @@ export declare class HrTrainingService {
         status: string;
         startedAt: Date;
         personnelId: string;
+        examId: string;
         score: number | null;
         passed: boolean | null;
         gradedById: string | null;
-        examId: string;
         questionIds: string[];
         maxScore: number | null;
         gradedAt: Date | null;

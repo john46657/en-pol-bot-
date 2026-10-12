@@ -18,6 +18,7 @@ const prisma_service_1 = require("../prisma/prisma.service");
 const audit_service_1 = require("../audit/audit.service");
 const discord_service_1 = require("../discord/discord.service");
 const errors_1 = require("../common/errors");
+const guild_context_2 = require("../common/guild-context");
 const numbering_1 = require("../common/numbering");
 const web_url_1 = require("../common/web-url");
 const qualifications_config_1 = require("./qualifications.config");
@@ -213,9 +214,10 @@ let QualificationsService = class QualificationsService {
             if (claimed.count === 0)
                 throw new errors_1.AppError('CONFLICT', 'Über diese Bewerbung wurde schon entschieden.');
             if (status === 'ACCEPTED' && a.unit === 'sek' && a.userId) {
-                await tx.sekMember.upsert({ where: { userId: a.userId }, create: { userId: a.userId, addedById: actor.userId }, update: {} });
-                // System-Rolle „SEK“ (Einsatzberichte schreiben), falls vorhanden
-                const role = await tx.role.findFirst({ where: { guildId: null, name: 'SEK' } });
+                // SEK-Mitglied und Rolle „SEK“ des Servers der Bewerbung (je Server getrennt)
+                if (!(await tx.sekMember.findFirst({ where: { userId: a.userId } })))
+                    await tx.sekMember.create({ data: { userId: a.userId, addedById: actor.userId } });
+                const role = await tx.role.findFirst({ where: { guildId: a.guildId ?? (0, guild_context_2.currentGuild)(), name: 'SEK' } });
                 if (role)
                     await tx.userRole.upsert({ where: { userId_roleId: { userId: a.userId, roleId: role.id } }, create: { userId: a.userId, roleId: role.id }, update: {} });
                 addedToSek = true;

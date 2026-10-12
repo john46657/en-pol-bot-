@@ -121,32 +121,34 @@ export declare class HrCoreService {
         };
     }>;
     ranks(includeInactive?: boolean): Prisma.PrismaPromise<{
+        serverId: string | null;
         id: string;
         createdAt: Date;
         updatedAt: Date;
+        color: string;
         description: string | null;
         active: boolean;
         name: string;
-        color: string;
         icon: string | null;
-        discordRoleIds: string[];
         position: number;
+        discordRoleIds: string[];
         dashboardRoleIds: string[];
         nextRankIds: string[];
         approverRankIds: string[];
         requirements: Prisma.JsonValue;
     }[]>;
     rankByName(name: string | null | undefined, tx?: Tx | PrismaService): Promise<{
+        serverId: string | null;
         id: string;
         createdAt: Date;
         updatedAt: Date;
+        color: string;
         description: string | null;
         active: boolean;
         name: string;
-        color: string;
         icon: string | null;
-        discordRoleIds: string[];
         position: number;
+        discordRoleIds: string[];
         dashboardRoleIds: string[];
         nextRankIds: string[];
         approverRankIds: string[];
@@ -155,32 +157,34 @@ export declare class HrCoreService {
     /** Rangreihenfolge auch für Teamliste/Embeds (team.rankOrder). */
     private syncRankOrder;
     saveRank(actor: Actor, d: RankInput, id?: string): Promise<{
+        serverId: string | null;
         id: string;
         createdAt: Date;
         updatedAt: Date;
+        color: string;
         description: string | null;
         active: boolean;
         name: string;
-        color: string;
         icon: string | null;
-        discordRoleIds: string[];
         position: number;
+        discordRoleIds: string[];
         dashboardRoleIds: string[];
         nextRankIds: string[];
         approverRankIds: string[];
         requirements: Prisma.JsonValue;
     }>;
     reorderRanks(actor: Actor, ids: string[]): Promise<{
+        serverId: string | null;
         id: string;
         createdAt: Date;
         updatedAt: Date;
+        color: string;
         description: string | null;
         active: boolean;
         name: string;
-        color: string;
         icon: string | null;
-        discordRoleIds: string[];
         position: number;
+        discordRoleIds: string[];
         dashboardRoleIds: string[];
         nextRankIds: string[];
         approverRankIds: string[];
@@ -189,16 +193,17 @@ export declare class HrCoreService {
     deleteRank(actor: Actor, id: string): Promise<void>;
     /** Mögliche nächste Ränge: eingestellte Ziele, sonst der nächsthöhere aktive Rang. */
     nextRanks(current: HrRank | null): Promise<{
+        serverId: string | null;
         id: string;
         createdAt: Date;
         updatedAt: Date;
+        color: string;
         description: string | null;
         active: boolean;
         name: string;
-        color: string;
         icon: string | null;
-        discordRoleIds: string[];
         position: number;
+        discordRoleIds: string[];
         dashboardRoleIds: string[];
         nextRankIds: string[];
         approverRankIds: string[];
@@ -231,13 +236,14 @@ export declare class HrCoreService {
         team?: string | null;
     }, tx: Tx): Promise<{
         personnel: {
+            serverId: string | null;
             serviceNumber: string | null;
             id: string;
             updatedAt: Date;
             userId: string;
             callsign: string | null;
-            rank: string | null;
             team: string | null;
+            rank: string | null;
             office: string | null;
             employmentStatus: string;
             joinDate: Date;

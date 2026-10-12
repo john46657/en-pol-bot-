@@ -15,6 +15,7 @@ const prisma_service_1 = require("../prisma/prisma.service");
 const audit_service_1 = require("../audit/audit.service");
 const realtime_service_1 = require("../realtime/realtime.service");
 const env_1 = require("../config/env");
+const server_roles_1 = require("../multi-server/server-roles");
 const API = 'https://discord.com/api/v10';
 /** Wie lange ein Abgleich gilt, bevor die Discord-Rollen erneut geprüft werden. */
 const CHECK_TTL_MS = 2 * 60_000;
@@ -185,14 +186,15 @@ let DiscordAccessService = class DiscordAccessService {
     async syncRoles(userId, byGuild, s, checked = Object.keys(byGuild)) {
         const settings = s ?? (await this.settings());
         const names = [...new Set(settings.roleMap.map((m) => m.role))];
+        // nur Rollen der geprüften Server – serverübergreifende Vorlagen werden nicht über Discord vergeben
         const roles = await this.prisma.role.findMany({
-            where: { name: { not: 'System Administrator' }, OR: [{ name: { in: names } }, { discordRoleIds: { isEmpty: false } }, { discordMappings: { some: {} } }] },
+            where: { guildId: { in: checked }, name: { not: 'System Administrator' }, OR: [{ name: { in: names } }, { discordRoleIds: { isEmpty: false } }, { discordMappings: { some: {} } }] },
             include: { discordMappings: { include: { server: { select: { guildId: true } } } } },
         });
         if (!roles.length)
             return;
         const wantedGuilds = (r) => checked.filter((g) => {
-            if (r.guildId && r.guildId !== g)
+            if (r.guildId !== g)
                 return false; // Server-Rolle gilt nur auf ihrem Server
             const have = byGuild[g];
             if (!have)
@@ -222,6 +224,8 @@ let DiscordAccessService = class DiscordAccessService {
                     changes.push({ name: r.name, before: [], after: next });
                     continue;
                 }
+                if (!row.guildIds.length)
+                    continue; // manuell vergeben: bleibt
                 if (JSON.stringify(before) !== JSON.stringify(next)) {
                     await tx.userRole.update({ where: { userId_roleId: { userId, roleId: r.id } }, data: { guildIds: next } });
                     changes.push({ name: r.name, before: before, after: next });
@@ -246,7 +250,11 @@ let DiscordAccessService = class DiscordAccessService {
         for (const guildId of ids.filter((g) => !have.has(g))) {
             const known = (await this.prisma.systemSetting.findUnique({ where: { key: 'discord.guilds' } }))?.value;
             const name = (Array.isArray(known) ? known.find((g) => g.id === guildId)?.name : undefined) ?? guildId;
-            await this.prisma.discordServer.create({ data: { guildId, name, status: 'ACTIVE' } }).then((c) => this.audit.record({ userId: null }, { action: 'server.register', module: 'servers', entityType: 'DiscordServer', entityId: c.id, serverId: guildId, after: { guildId, name, via: 'configured' } }), () => undefined);
+            await this.prisma.discordServer.create({ data: { guildId, name, status: 'ACTIVE' } }).then(async (c) => {
+                // eingestellter Haupt-Server: bisherige Rollen samt Zuweisungen als eigene Server-Rollen übernehmen
+                await (0, server_roles_1.initServerRoles)(this.prisma, c.id, true);
+                await this.audit.record({ userId: null }, { action: 'server.register', module: 'servers', entityType: 'DiscordServer', entityId: c.id, serverId: guildId, after: { guildId, name, via: 'configured' } });
+            }, () => undefined);
         }
     }
     /** Abgleich nach dem Login merken (kein zweiter Discord-Aufruf direkt danach). */

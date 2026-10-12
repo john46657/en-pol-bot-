@@ -41,10 +41,10 @@ let RolesService = class RolesService {
     }
     /** Nach jeder Änderung: alle Dashboards laden ihre Rechte neu (die API prüft ohnehin bei jeder Anfrage). */
     changed(v) { this.rt.broadcast('permissions.changed'); return v; }
-    /** Im Server-Kontext: Rollen dieses Servers und serverübergreifende; unter „Alle Server“: alle. */
+    /** Im Server-Kontext nur die Rollen dieses Servers; unter „Alle Server“: alle (serverübergreifende = Vorlagen für neue Server). */
     list() {
         const g = (0, guild_context_1.currentGuild)();
-        return this.prisma.role.findMany({ where: g ? { OR: [{ guildId: null }, { guildId: g }] } : {}, orderBy: [{ priority: 'asc' }, { name: 'asc' }], include });
+        return this.prisma.role.findMany({ where: g ? { guildId: g } : {}, orderBy: [{ priority: 'asc' }, { name: 'asc' }], include });
     }
     catalog() { return shared_1.ALL_PERMISSIONS; }
     /** Eigener Rang (für die Oberfläche: welche Rollen sind bearbeitbar). */
@@ -57,8 +57,8 @@ let RolesService = class RolesService {
     }
     async guard(actor, role) {
         const g = (0, guild_context_1.currentGuild)();
-        if (g && role.guildId && role.guildId !== g)
-            throw new errors_1.AppError('NOT_FOUND', 'Rolle nicht gefunden.'); // Rollen anderer Server sind hier unsichtbar
+        if (g && role.guildId !== g)
+            throw new errors_1.AppError('NOT_FOUND', 'Rolle nicht gefunden.'); // Rollen anderer Server (und Vorlagen) sind hier unsichtbar
         if (role.name === exports.ADMIN_ROLE)
             throw new errors_1.AppError('PERMISSION_DENIED', 'Die Rolle „System Administrator“ kann im Dashboard nicht geändert werden.');
         await this.perms.assertOutranksRole(actor.userId, role.priority, role.name);

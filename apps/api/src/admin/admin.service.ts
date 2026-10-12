@@ -7,7 +7,7 @@ import { AppError } from '../common/errors';
 import { customFieldsConfig } from '../studio/custom-fields';
 import { ACCENTS } from '../studio/studio.service';
 import { formSchema } from '../qualifications/qualifications.config';
-import { SERVER_SCOPED_SETTINGS, settingsGuild } from '../common/guild-context';
+import { currentGuild, PER_SERVER_SETTING_KEYS, settingsGuild } from '../common/guild-context';
 
 /** Eine oder mehrere Discord-IDs, mit Komma getrennt (z. B. Channels auf mehreren Servern). */
 const singleId = () => z.string().regex(/^\d{15,25}$/).optional();
@@ -47,9 +47,21 @@ export type SettingKey = keyof typeof SETTING_SCHEMAS;
 export class AdminService {
   constructor(private readonly prisma: PrismaService, private readonly audit: AuditService) {}
 
+  /**
+   * Mit gewähltem Server: nur die Werte DIESES Servers (Konfiguration je Server) und die globalen Einstellungen – nie Werte
+   * anderer Server. Unter „Alle Server“: alles (Verwaltung der Grundwerte).
+   */
   async getSettings() {
-    const rows = await this.prisma.systemSetting.findMany();
-    return { settings: Object.fromEntries(rows.map((r) => [r.key, r.value])), allowedKeys: Object.keys(SETTING_SCHEMAS), serverScoped: SERVER_SCOPED_SETTINGS };
+    const g = settingsGuild(currentGuild());
+    if (!g) {
+      const rows = await this.prisma.systemSetting.findMany();
+      return { settings: Object.fromEntries(rows.map((r) => [r.key, r.value])), allowedKeys: Object.keys(SETTING_SCHEMAS), serverScoped: PER_SERVER_SETTING_KEYS };
+    }
+    const keys = Object.keys(SETTING_SCHEMAS);
+    const rows = await this.prisma.systemSetting.findMany({ where: { key: { in: keys } } }); // je Server umgeleitet (server-scope.ts)
+    const settings: Record<string, unknown> = {};
+    for (const r of rows) { settings[r.key] = r.value; if (PER_SERVER_SETTING_KEYS.includes(r.key)) settings[`${r.key}@${g}`] = r.value; }
+    return { settings, allowedKeys: keys, serverScoped: PER_SERVER_SETTING_KEYS };
   }
 
   /** `key@<guildId>`: Server-eigener Wert (nur für Einstellungen, die je Server getrennt sein dürfen). */
@@ -58,7 +70,10 @@ export class AdminService {
     // Gruppe mit geteilten Einstellungen (Server-Verbund): gespeichert wird beim Haupt-Server der Gruppe
     const guild = rawGuild !== undefined && /^\d{15,25}$/.test(rawGuild) ? settingsGuild(rawGuild) ?? rawGuild : rawGuild;
     const key = guild !== undefined ? `${base}@${guild}` : base;
-    if (guild !== undefined && (!/^\d{15,25}$/.test(guild) || !(SERVER_SCOPED_SETTINGS as readonly string[]).includes(base))) throw new AppError('VALIDATION_FAILED', `Die Einstellung „${base}“ kann nicht je Server gesetzt werden.`);
+    if (guild !== undefined && (!/^\d{15,25}$/.test(guild) || !PER_SERVER_SETTING_KEYS.includes(base))) throw new AppError('VALIDATION_FAILED', `Die Einstellung „${base}“ kann nicht je Server gesetzt werden.`);
+    // im Kontext eines Servers nie die Einstellungen eines anderen Servers ändern
+    const ctx = settingsGuild(currentGuild());
+    if (ctx && guild !== undefined && guild !== ctx) throw new AppError('PERMISSION_DENIED', 'Einstellungen anderer Server kannst du hier nicht ändern.');
     const schema = SETTING_SCHEMAS[base as SettingKey];
     if (!schema) throw new AppError('VALIDATION_FAILED', `Unbekannte Einstellung „${key}“.`);
     const parsed = schema.safeParse(value);
@@ -66,7 +81,7 @@ export class AdminService {
     return this.prisma.$transaction(async (tx) => {
       const before = await tx.systemSetting.findUnique({ where: { key } });
       const row = await tx.systemSetting.upsert({ where: { key }, create: { key, value: parsed.data as Prisma.InputJsonValue }, update: { value: parsed.data as Prisma.InputJsonValue } });
-      await this.audit.record(actor, { action: /^(application|dashboard|studio|theme|discord|team)\./.test(key) ? 'studio.config.changed' : 'settings.changed', module: 'settings', entityType: 'SystemSetting', entityId: key, before: before?.value, after: row.value }, tx);
+      await this.audit.record(actor, { action: /^(application|dashboard|studio|theme|discord|team)\./.test(key) ? 'studio.config.changed' : 'settings.changed', module: 'settings', entityType: 'SystemSetting', entityId: ctx && !key.includes('@') && PER_SERVER_SETTING_KEYS.includes(key) ? `${key}@${ctx}` : key, before: before?.value, after: row.value }, tx);
       return { key, value: row.value };
     });
   }

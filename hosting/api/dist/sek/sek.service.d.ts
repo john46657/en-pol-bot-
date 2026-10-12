@@ -5,7 +5,6 @@ export interface SekTarget {
     userId?: string;
     discordId?: string;
 }
-/** SEK (Spezialeinsatzkommando): Roster und Einsatzberichte (nur Mitglieder). Bewerbungen laufen über die Qualifikationen. */
 export declare class SekService {
     private readonly prisma;
     private readonly audit;
@@ -47,9 +46,10 @@ export declare class SekService {
         authorName: string;
         authorCallsign: string | null;
         number: string;
+        serverId: string | null;
         id: string;
-        authorId: string;
         createdAt: Date;
+        authorId: string;
         description: string;
         occurredAt: Date;
         missionType: string;
@@ -60,9 +60,10 @@ export declare class SekService {
         description: string;
     }): Promise<{
         number: string;
+        serverId: string | null;
         id: string;
-        authorId: string;
         createdAt: Date;
+        authorId: string;
         description: string;
         occurredAt: Date;
         missionType: string;

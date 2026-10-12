@@ -21,15 +21,21 @@ export declare class ServersService implements OnModuleInit {
     constructor(prisma: PrismaService, audit: AuditService, authz: AuthorizationService, perms: PermissionService, roles: RolesService, access2: DiscordAccessService);
     /** Modul-Katalog aus dem Code in die Datenbank übernehmen (Fremdschlüssel der Server-Einstellungen). */
     onModuleInit(): Promise<void>;
+    /**
+     * Einmalig beim Übergang auf „Server von Grund auf getrennt“: bisher gemeinsame Einstellungen bekommt jeder bestehende
+     * Server als EIGENE Kopie (danach unabhängig). Server, die später dazukommen, starten mit Standardwerten.
+     */
+    splitSettings(): Promise<void>;
     load(serverId: string): Promise<{
         id: string;
         status: string;
         createdAt: Date;
         updatedAt: Date;
         version: number;
-        name: string;
         guildId: string;
+        name: string;
         archivedAt: Date | null;
+        rolesInitializedAt: Date | null;
     }>;
     /** Server laden und Recht auf GENAU diesem Server prüfen (fremde Server: 404 statt Hinweis auf Existenz). */
     access(actor: Actor, serverId: string, permission: string): Promise<{
@@ -38,9 +44,10 @@ export declare class ServersService implements OnModuleInit {
         createdAt: Date;
         updatedAt: Date;
         version: number;
-        name: string;
         guildId: string;
+        name: string;
         archivedAt: Date | null;
+        rolesInitializedAt: Date | null;
     }>;
     /** Nur Mitgliedschaft (bzw. globaler Systemadministrator) – für Auskünfte über sich selbst. */
     accessAsMember(actor: Actor, serverId: string): Promise<{
@@ -49,9 +56,10 @@ export declare class ServersService implements OnModuleInit {
         createdAt: Date;
         updatedAt: Date;
         version: number;
-        name: string;
         guildId: string;
+        name: string;
         archivedAt: Date | null;
+        rolesInitializedAt: Date | null;
     }>;
     requireGlobalAdmin(actor: Actor, what: string): Promise<void>;
     /** Sichtbar: globale Systemadministratoren alle; sonst Server mit bestätigter Mitgliedschaft und `servers.view` dort. */
@@ -61,9 +69,10 @@ export declare class ServersService implements OnModuleInit {
         createdAt: Date;
         updatedAt: Date;
         version: number;
-        name: string;
         guildId: string;
+        name: string;
         archivedAt: Date | null;
+        rolesInitializedAt: Date | null;
     }[]>;
     create(actor: Actor, d: {
         guildId: string;
@@ -74,9 +83,10 @@ export declare class ServersService implements OnModuleInit {
         createdAt: Date;
         updatedAt: Date;
         version: number;
-        name: string;
         guildId: string;
+        name: string;
         archivedAt: Date | null;
+        rolesInitializedAt: Date | null;
     }>;
     /** Name (servers.manage auf dem Server) bzw. Status (nur globale Systemadministratoren). Optimistisches Sperren über `version`. */
     update(actor: Actor, serverId: string, d: {
@@ -89,9 +99,10 @@ export declare class ServersService implements OnModuleInit {
         createdAt: Date;
         updatedAt: Date;
         version: number;
-        name: string;
         guildId: string;
+        name: string;
         archivedAt: Date | null;
+        rolesInitializedAt: Date | null;
     }>;
     /** „Löschen“ = archivieren: nicht mehr wählbar, keine Synchronisierung, aber ALLE Fachdaten und Archive bleiben erhalten. */
     archive(actor: Actor, serverId: string): Promise<{
@@ -100,9 +111,10 @@ export declare class ServersService implements OnModuleInit {
         createdAt: Date;
         updatedAt: Date;
         version: number;
-        name: string;
         guildId: string;
+        name: string;
         archivedAt: Date | null;
+        rolesInitializedAt: Date | null;
     }>;
     /** Vom Bot gemeldete Server: bekannte aktualisieren (Name, Verbindungsfehler aufheben); neue werden DEAKTIVIERT angelegt und müssen freigeschaltet werden. */
     syncFromBot(guilds: {
@@ -201,15 +213,15 @@ export declare class ServersService implements OnModuleInit {
         id: string;
         createdAt: Date;
         updatedAt: Date;
+        color: string | null;
         description: string | null;
         priority: number;
         active: boolean;
+        guildId: string | null;
         name: string;
-        system: boolean;
-        color: string | null;
         icon: string | null;
         discordRoleIds: string[];
-        guildId: string | null;
+        system: boolean;
     })[]>;
     createRole(actor: Actor, serverId: string, d: RoleInput & {
         name: string;
@@ -225,15 +237,15 @@ export declare class ServersService implements OnModuleInit {
         id: string;
         createdAt: Date;
         updatedAt: Date;
+        color: string | null;
         description: string | null;
         priority: number;
         active: boolean;
+        guildId: string | null;
         name: string;
-        system: boolean;
-        color: string | null;
         icon: string | null;
         discordRoleIds: string[];
-        guildId: string | null;
+        system: boolean;
     }>;
     updateRole(actor: Actor, serverId: string, roleId: string, d: RoleInput): Promise<{
         _count: {
@@ -247,15 +259,15 @@ export declare class ServersService implements OnModuleInit {
         id: string;
         createdAt: Date;
         updatedAt: Date;
+        color: string | null;
         description: string | null;
         priority: number;
         active: boolean;
+        guildId: string | null;
         name: string;
-        system: boolean;
-        color: string | null;
         icon: string | null;
         discordRoleIds: string[];
-        guildId: string | null;
+        system: boolean;
     }>;
     deleteRole(actor: Actor, serverId: string, roleId: string): Promise<void>;
     permissionCatalog(actor: Actor, serverId: string): Promise<{
@@ -298,16 +310,16 @@ export declare class ServersService implements OnModuleInit {
     roleMappings(actor: Actor, serverId: string): Promise<({
         role: {
             id: string;
-            name: string;
             guildId: string | null;
+            name: string;
         };
     } & {
         serverId: string;
         id: string;
         createdAt: Date;
         updatedAt: Date;
-        roleId: string;
         discordRoleId: string;
+        roleId: string;
     })[]>;
     /**
      * Zuordnungen dieses Servers ersetzen. Zulässig: Rollen dieses Servers oder serverübergreifende Rollen – die Zuweisung gilt
@@ -319,16 +331,16 @@ export declare class ServersService implements OnModuleInit {
     }[]): Promise<({
         role: {
             id: string;
-            name: string;
             guildId: string | null;
+            name: string;
         };
     } & {
         serverId: string;
         id: string;
         createdAt: Date;
         updatedAt: Date;
-        roleId: string;
         discordRoleId: string;
+        roleId: string;
     })[]>;
     auditLogs(actor: Actor, serverId: string, q: {
         page: number;
@@ -341,9 +353,9 @@ export declare class ServersService implements OnModuleInit {
             id: string;
             createdAt: Date;
             reason: string | null;
+            entityId: string | null;
             module: string;
             entityType: string | null;
-            entityId: string | null;
             action: string;
             actorUserId: string | null;
             actorRobloxUserId: string | null;

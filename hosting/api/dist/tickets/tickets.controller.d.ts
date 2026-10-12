@@ -21,8 +21,8 @@ declare const create: z.ZodObject<{
     reportId: z.ZodOptional<z.ZodString>;
 }, "strip", z.ZodTypeAny, {
     reason: string;
-    personId?: string | undefined;
     notes?: string | undefined;
+    personId?: string | undefined;
     legalCodeId?: string | undefined;
     amount?: number | undefined;
     reportId?: string | undefined;
@@ -33,8 +33,8 @@ declare const create: z.ZodObject<{
     notifyInGame?: boolean | undefined;
 }, {
     reason: string;
-    personId?: string | undefined;
     notes?: string | undefined;
+    personId?: string | undefined;
     legalCodeId?: string | undefined;
     amount?: number | undefined;
     reportId?: string | undefined;
@@ -79,14 +79,15 @@ export declare class TicketsController {
             };
         } & {
             number: string;
+            serverId: string | null;
             id: string;
             status: string;
+            notes: string | null;
             updatedAt: Date;
             version: number;
             officerId: string;
             personId: string;
             reason: string;
-            notes: string | null;
             legalCodeId: string | null;
             amount: import("@prisma/client/runtime/library").Decimal;
             reportId: string | null;
@@ -115,14 +116,10 @@ export declare class TicketsController {
             person: {
                 serverId: string | null;
                 id: string;
-                status: string;
-                createdAt: Date;
-                updatedAt: Date;
-                version: number;
-                createdById: string | null;
                 robloxUserId: string | null;
                 robloxUsername: string;
                 aliases: string[];
+                status: string;
                 notes: string | null;
                 custom: import("@prisma/client/runtime/library").JsonValue | null;
                 fullName: string | null;
@@ -136,28 +133,34 @@ export declare class TicketsController {
                 licenses: string[];
                 flags: string[];
                 photoId: string | null;
+                createdById: string | null;
+                createdAt: Date;
+                updatedAt: Date;
+                version: number;
             };
             legalCode: {
+                serverId: string | null;
                 id: string;
                 title: string;
                 category: string;
                 description: string | null;
                 expiresAt: Date | null;
-                active: boolean;
                 code: string;
                 penalty: import("@prisma/client/runtime/library").JsonValue;
+                active: boolean;
                 effectiveDate: Date;
             } | null;
         } & {
             number: string;
+            serverId: string | null;
             id: string;
             status: string;
+            notes: string | null;
             updatedAt: Date;
             version: number;
             officerId: string;
             personId: string;
             reason: string;
-            notes: string | null;
             legalCodeId: string | null;
             amount: import("@prisma/client/runtime/library").Decimal;
             reportId: string | null;
@@ -168,8 +171,8 @@ export declare class TicketsController {
         timeline: {
             id: string;
             createdAt: Date;
-            entityType: string;
             entityId: string;
+            entityType: string;
             summary: string;
             action: string;
             actorId: string | null;
@@ -181,14 +184,15 @@ export declare class TicketsController {
             message: string;
         } | null;
         number: string;
+        serverId: string | null;
         id: string;
         status: string;
+        notes: string | null;
         updatedAt: Date;
         version: number;
         officerId: string;
         personId: string;
         reason: string;
-        notes: string | null;
         legalCodeId: string | null;
         amount: import("@prisma/client/runtime/library").Decimal;
         reportId: string | null;
@@ -198,14 +202,15 @@ export declare class TicketsController {
     }>;
     void(a: Actor, id: string, b: z.infer<typeof voidSchema>): Promise<{
         number: string;
+        serverId: string | null;
         id: string;
         status: string;
+        notes: string | null;
         updatedAt: Date;
         version: number;
         officerId: string;
         personId: string;
         reason: string;
-        notes: string | null;
         legalCodeId: string | null;
         amount: import("@prisma/client/runtime/library").Decimal;
         reportId: string | null;

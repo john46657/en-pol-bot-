@@ -93,8 +93,8 @@ describe('roles & permissions editor', () => {
 
   it('no self-escalation: only roles below the own rank, only permissions one has, never own roles', async () => {
     const lead = (await login(app, 'r_lead')).agent;
-    const roles = (await lead.get('/api/v1/roles')).body as { id: string; name: string }[];
-    const byName = (n: string) => roles.find((r) => r.name === n)!.id;
+    const roles = (await lead.get('/api/v1/roles')).body as { id: string; name: string; guildId: string | null }[];
+    const byName = (n: string) => roles.find((r) => r.name === n && !r.guildId)!.id; // serverübergreifende Rollen („Alle Server“)
     // eigene Rolle und höhere Rollen: nicht bearbeitbar
     expect((await lead.patch(`/api/v1/roles/${byName('Police Administration')}/permissions`).send({ permission: 'audit.export', effect: 'ALLOW' })).status).toBe(403);
     expect((await lead.patch(`/api/v1/roles/${byName('Police Administration')}`).send({ priority: 1 })).status).toBe(403);
@@ -143,6 +143,9 @@ describe('Discord role sync after login', () => {
     const user = await makeUser(prisma, 'r_discord');
     await prisma.discordLink.create({ data: { userId: user.id, discordId: D.mod } });
     members.set(D.mod, [ACCESS_ROLE, MOD_ROLE]);
+    // Über Discord vergeben werden nur Rollen des jeweiligen Servers: „Moderator“ als Server-Rolle von GUILD
+    const tpl = await prisma.role.findFirstOrThrow({ where: { guildId: null, name: 'Moderator' }, include: { permissions: true } });
+    await prisma.role.create({ data: { guildId: GUILD, name: 'Moderator', priority: tpl.priority, discordRoleIds: [MOD_ROLE], permissions: { create: tpl.permissions.map((p) => ({ permissionKey: p.permissionKey, effect: p.effect })) } } });
     const access = app.get(DiscordAccessService);
     access.forget();
     const agent = (await login(app, 'r_discord')).agent;

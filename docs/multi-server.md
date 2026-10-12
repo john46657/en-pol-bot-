@@ -1,6 +1,6 @@
 # Multi-Server-Architektur
 
-EN | POLIZEI kann mehrere Discord-Server gleichzeitig bedienen. **Jeder Server arbeitet standardmäßig getrennt**: eigene Module, eigene Rollen und Rechte, eigene Daten. Server lassen sich **optional** verbinden. Verbunden werden aber nur die Daten, die ausdrücklich freigegeben sind, und die kommen beim anderen Server nur als **lesende Kopie** an. **Rechte werden nie automatisch auf andere Server übertragen.**
+EN | POLIZEI kann mehrere Discord-Server gleichzeitig bedienen. **Die Server sind von Grund auf getrennt**: eigene Module, eigene Rollen und Rechte, eigene Einstellungen, eigene Personalakten, eine eigene Leitstelle und eigene Daten. Server lassen sich **optional** verbinden. Verbunden werden aber nur die Daten, die ausdrücklich freigegeben sind, und die kommen beim anderen Server nur als **lesende Kopie** an. **Rechte werden nie automatisch auf andere Server übertragen.**
 
 Dieses Dokument beschreibt den Stand des Codes. Was noch fehlt, steht unter [Bekannte Einschränkungen](#bekannte-einschränkungen).
 
@@ -44,6 +44,28 @@ Migration: `apps/api/prisma/migrations/20261105100000_multi_server_foundation`. 
 | *(erweitert)* | `UserRole.guildIds` | Leer = manuell vergeben. Sonst über Discord vergeben und nur auf diesen Servern gültig. |
 | *(erweitert)* | `DutyWeekArchive.scope` | `global` oder `space:<Akten-Bereich>`, eindeutig je (`scope`, `weekStart`). |
 
+### Vollständige Trennung (Standard)
+
+Getrennt wird zentral in der Datenbankschicht (`apps/api/src/prisma/server-scope.ts`). Im Kontext eines Servers sieht und ändert jede Abfrage nur Daten dieses Servers, und neue Einträge bekommen automatisch seinen Bereich. Kein Fachmodul muss daran denken, also kann es auch keines vergessen.
+
+| Bereich | Tabellen / Inhalte |
+|---|---|
+| Akten & MDT | Personen, Fahrzeuge, Waffen, Haftbefehle, Bußgelder, **Tatbestände** |
+| Berichte & Ermittlungen | Berichte, Beschwerden, Ermittlungen, Beweismittel |
+| **Leitstelle (CAD)** | Einsätze, Einheiten (Rufnamen je Server), Karte, CAD-Mitglieder, Funk, Schichtübergaben, Statistik, ER:LC-Server samt Notrufen und Befehlslog |
+| **Personal & HR** | Personalakte (eine **je Server**: eigener Dienstgrad, Rufname, Dienstnummer), Beförderungen/Versetzungen, Ausbildungen, Prüfungen, Meldungen, Abstimmungen, Dienstgrade, Dienstnummern-Kreise, Einstellungs-Warteschlange, Academy |
+| Dienst | Dienstzeiten, Wochenranglisten |
+| Sonstiges | SEK, Funk-Freigaben, Workflows, Kommunikation |
+| **Rollen & Rechte** | Auf einem Server zählen **nur** dessen Rollen (plus globaler Systemadministrator). Persönliche Ausnahmen gelten je Server. |
+| **Einstellungen** | Kanäle, CAD-, MDT-, HR-, Ticket-, Willkommens-, Verifizierungs-, Logging-, Schicht-, Abmeldungs-Konfiguration usw. je Server (`PER_SERVER_SETTING_KEYS`), **ohne** Rückgriff auf Werte anderer Server |
+
+Gemeinsam (global) bleiben nur: Benutzerkonten und Anmeldung, Backups, der Server-Verbund selbst, Serververbindungen, das Audit-Log (mit Server-Spalte) und der Bot-Zustand.
+
+Ausnahmen gibt es **nur ausdrücklich**:
+- **Server-Verbund-Gruppe mit „Akten teilen“**: gemeinsamer Bereich für die Gruppe.
+- **Datenfreigabe** über eine Serververbindung: nur lesende Kopien.
+- **CAD-Querverbindung**: Ein Discord-Befehl von einem verbundenen Server (z. B. SEK/K9) arbeitet nur dann im Bereich der Leitstelle, wenn **beide Seiten** es eingerichtet haben. Der SEK-Server trägt die Leitstelle als Heimat-Server ein (CAD → Einstellungen), die Leitstelle legt die Verbindung an (`CadServerLink`). Welche Aktionen erlaubt sind (Status, Funk, Einsätze sehen, Disponieren), bestimmt weiterhin die Verbindung. Dashboard-Anfragen werden nie umgeleitet (`apps/api/src/cad/cad-link.interceptor.ts`).
+
 ### Datenbereiche
 
 | Art | Umsetzung |
@@ -63,7 +85,7 @@ Ein Datensatz wird **nicht** global sichtbar, nur weil eine Verbindung besteht: 
 2. Der Server ist registriert (`UNKNOWN_SERVER`). Ist er deaktiviert oder archiviert, sind nur Grundsystem-Rechte erlaubt (`SERVER_DISABLED`).
 3. Die Mitgliedschaft ist bestätigt (`NOT_MEMBER`). Ausnahme: globale Systemadministratoren.
 4. Das Modul ist auf dem Server an (`MODULE_DISABLED`). Das gilt auch für globale Administratoren.
-5. Die Berechtigung (`PERMISSION`) ergibt sich aus Rollen **dieses** Servers, serverübergreifenden Rollen und Einzel-Ausnahmen, in der Reihenfolge Benutzer-DENY → Benutzer-ALLOW → Rollen-DENY → Rollen-ALLOW → verweigert.
+5. Die Berechtigung (`PERMISSION`) ergibt sich **nur** aus Rollen dieses Servers (plus globaler Systemadministrator) und den Ausnahmen für diesen Server, in der Reihenfolge Benutzer-DENY → Benutzer-ALLOW → Rollen-DENY → Rollen-ALLOW → verweigert.
 6. Der Datensatz liegt im erlaubten Bereich (`FOREIGN_RECORD`, nach außen als `404`).
 7. Serverübergreifend muss eine Freigabe aktiv sein (`NO_POLICY`), und zwar nur zum Lesen (`READ_ONLY`).
 
@@ -78,7 +100,13 @@ Globaler Systemadministrator ≠ Serveradministrator:
 
 ### Was sich gegenüber vorher ändert
 
-- **Über Discord vergebene Rollen gelten nur noch auf dem Server, auf dem die Discord-Rolle besteht.** Unter „Alle Server“ (ohne gewählten Server) gelten nur manuell vergebene, serverübergreifende Rollen.
+- **Auf einem Server gelten nur die Rollen dieses Servers.** Serverübergreifende Rollen sind nur noch Vorlagen (für neue Server) und wirken nur unter „Alle Server“. Über Discord vergebene Rollen gelten nur auf dem Server, auf dem die Discord-Rolle besteht.
+- **Neue Server** bekommen eigene Startrollen als Kopie der Vorlagen, aber **ohne Zuweisungen**.
+- **Persönliche Rechte-Ausnahmen** gelten nur auf dem Server, auf dem sie gesetzt wurden.
+- **Rollen eines Benutzers setzen** ändert nur die Rollen des gewählten Servers. Rollen anderer Server bleiben unberührt.
+- **Einstellungen** gelten je Server. Die Einstellungsliste zeigt im Server-Kontext nur die Werte dieses Servers, und Einstellungen anderer Server lassen sich von dort nicht ändern.
+- **Personalakte, HR, Leitstelle** und alle weiteren Fachdaten sind je Server getrennt (Tabelle oben).
+- **Benachrichtigungen** an „alle mit Recht X“ gehen nur an bestätigte Mitglieder des Servers mit diesem Recht dort.
 - Ein gewählter Server muss registriert sein, und man muss dort bestätigtes Mitglied sein. Das Dashboard bietet in der Server-Auswahl nur solche Server an.
 - Konten ohne Discord (Passwort-Konten) brauchen auf einem Server eine **manuelle Mitgliedschaft** (`PUT /servers/:id/members`, Recht `servers.manage`). Globale Systemadministratoren brauchen keine.
 
@@ -123,7 +151,7 @@ Angebundene Quellen (Datenarten mit echten Ereignissen):
 | `unit_status`, `team_overview` | Dienststatus-Wechsel auf einem Server |
 | `shift_statistics` | Wochenarchiv eines Servers bzw. einer Shift-Log-Gruppe |
 
-`incidents`, `incident_status` und `radio_messages` lassen sich anlegen, haben aber **noch keine Quelle**. Die CAD-Leitstelle ist bewusst ein gemeinsamer Bereich (siehe [cad.md](cad.md)).
+`incidents`, `incident_status` und `radio_messages` lassen sich anlegen, haben aber **noch keine Quelle**.
 
 ## Module je Server
 
@@ -168,14 +196,22 @@ Katalog: `core` (System, immer an), `cad`, `mdt`, `dispatch`, `reports`, `shift_
   - Bereits vom Bot gemeldete Server (`discord.guilds`) werden als **aktiv** registriert. Ungültige IDs werden übersprungen.
   - Bestehende Archive erhalten den Bereich `global`, bestehende Audit-Einträge das Ergebnis `SUCCESS`.
   - **Nichts** wird automatisch zwischen Servern freigegeben.
-- Bestehende Dienstzeiten ohne Server werden weiterhin wie bisher über `assignLegacyRecords` dem Heimat-Server zugeordnet. Lässt sich ein Datensatz keinem Server eindeutig zuordnen, bleibt er im gemeinsamen Bestand. Er ist dann nur für Server sichtbar, die diesen Bestand ausdrücklich nutzen.
-- Bestehende Discord-Rollen-Zuweisungen gelten bis zum nächsten Discord-Abgleich des Benutzers noch serverübergreifend. Der Abgleich läuft bei der nächsten Anfrage, spätestens nach 5 Minuten.
-- Mit Migrationstest geprüft: Bestandsdatenbank → Migration → Server registriert, Rollen, Audit und Archive unverändert.
+- Zweite Migration `20261106100000_strict_server_separation` (vollständige Trennung, ebenfalls nicht destruktiv):
+  - Neue Spalte `serverId` und Eindeutigkeiten je Server für die bisher gemeinsamen Tabellen.
+  - **Bisherige persönliche Ausnahmen (auch Verbote)** werden auf jeden bestehenden Server kopiert, sodass niemand durch die Trennung Rechte gewinnt.
+- Beim ersten Start nach dem Update (einmalig, mit Sperre gegen mehrere Instanzen):
+  - **Rollen**: Jeder bestehende Server übernimmt die bisherigen Rollen samt Rechten, Discord-Verknüpfung und Zuweisungen als eigene Server-Rollen (`initServerRoles`). Niemand verliert seinen Zugang, und ab dann sind die Rollen je Server unabhängig.
+  - **Einstellungen**: Jeder bestehende Server bekommt die bisherigen Werte als eigene Kopie (`splitSettings`). Später hinzukommende Server starten mit Standardwerten.
+  - **Daten ohne Server** (bisher gemeinsam, z. B. Personalakten, Einsätze, Einheiten, HR, Dienstnummern) gehen an den **Heimat-Server** (`assignLegacyRecords`). Heimat-Server ist die Leitstelle aus der CAD-Einstellung, sonst der eingestellte Haupt-Server, sonst der einzige bekannte Server.
+  - Gibt es in diesem Server schon einen gleichartigen Eintrag (z. B. eine Personalakte desselben Benutzers), bleibt der alte Eintrag ohne Server. Lässt sich kein Heimat-Server bestimmen, bleiben die Daten im gemeinsamen Bestand und sind nur für Server sichtbar, die diesen Bestand ausdrücklich nutzen.
+- Mit Migrationstests geprüft:
+  - Bestandsdatenbank → Migration: Server registriert, Rollen, Audit und Archive unverändert.
+  - Ein bestehendes Verbot wird auf jeden Server kopiert.
 - **Vor dem Update** ein Daten-Backup anlegen (*Administration → Backups* oder `deploy/`-Skripte).
 - **Zurücksetzen**:
   - Altes Release starten und Backup einspielen (`deploy/restore.sh`).
   - Die neuen Tabellen stören ein altes Release nicht.
-  - Ein bloßes Zurückrollen des Codes ohne Backup funktioniert ebenfalls. Über Discord vergebene Rollen gelten dann wieder serverübergreifend.
+  - Ein bloßes Zurückrollen des Codes **ohne** Backup ist nach der vollständigen Trennung nicht empfehlenswert: Das alte Release kennt die Server-Kopien von Rollen und Personalakten nicht. Deshalb immer mit dem Backup zurücksetzen.
 - Beim Einspielen eines Daten-Backups bleiben `AuditLog` und `DutyWeekArchive` unangetastet (beide unveränderlich). Fehlende Archive werden ergänzt.
 
 ## Tests
@@ -190,13 +226,16 @@ Katalog: `core` (System, immer an), `cad`, `mdt`, `dispatch`, `reports`, `shift_
 - Idempotenz, Konflikt, Retry ohne Duplikate, deaktivierte Verbindung
 - Wochen-Reset je Server (eigener Kanal, kein Doppel-Reset, fremde Archive unsichtbar)
 - Audit je Server, unveränderlich
+- vollständige Trennung: Personalakte je Server (gleicher Rufname erlaubt), serverübergreifende Rollen wirken auf keinem Server, neue Server starten mit eigenen Startrollen ohne Zuweisungen, Einstellungen je Server (nicht sichtbar, nicht änderbar von anderen), Einheiten und Tatbestände je Server
+- `server-scope.test.ts`: Leitstelle je Server, Nummern bleiben global eindeutig. `cad-erlc.test.ts`: CAD-Querverbindung nur, wenn beide Seiten sie eingerichtet haben
 
 Dazu kommen `packages/shared/tests/modules.test.ts` und die angepassten bestehenden Tests.
 
 ## Bekannte Einschränkungen
 
-- **Einzel-Ausnahmen für Benutzer** (`UserPermissionOverride`) sind noch nicht je Server, sie gelten serverübergreifend. Sie werden ausdrücklich von Administratoren gesetzt.
-- **„Alle Server“-Ansicht**: Wer eine manuell vergebene, serverübergreifende Rolle hat, sieht dort die Daten aller Server, wie bisher. Serverübergreifende Rollen sind damit ausdrücklich globale Rechte.
+- **„Alle Server“-Ansicht**: Wer eine manuell vergebene, serverübergreifende Rolle hat (in der Praxis Administratoren), sieht dort die Daten aller Server. Das ist ausdrücklich die globale Verwaltungsansicht. Hintergrundaufgaben ohne Server (z. B. ER:LC-Abgleich) arbeiten ebenfalls serverübergreifend.
+- Verschachtelte Abfragen (z. B. „Benutzer mit seiner Personalakte“) filtert die Datenbankschicht nicht automatisch. Die betroffenen Stellen wählen die Akte des aktuellen Servers ausdrücklich (`onePersonnel`).
+- Die CAD-Querverbindung, ER:LC-Server, Funk und Übergaben hängen an der Discord-Server-ID, nicht an der Server-Verbund-Gruppe.
 - Objektbezogene Zusatzprüfungen in einzelnen Diensten (`PermissionService.has`) prüfen nur Rollen. Server, Mitgliedschaft und Modul sind aber für jede Route bereits durch den Guard geprüft.
 - `incidents`, `incident_status` und `radio_messages` haben noch keine Sync-Quelle (siehe oben).
 - Keine manuellen Shift-Log-Korrekturen: Es gibt keine Bearbeitung vergangener Schichten, also auch kein Audit dafür.

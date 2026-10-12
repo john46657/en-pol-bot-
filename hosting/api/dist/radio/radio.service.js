@@ -16,6 +16,7 @@ const audit_service_1 = require("../audit/audit.service");
 const discord_service_1 = require("../discord/discord.service");
 const errors_1 = require("../common/errors");
 /** Funk-Freigabe: nur freigegebene Mitglieder gelten als funkberechtigt. Identifikation per Benutzer-ID oder verknüpfter Discord-ID. */
+const guild_context_1 = require("../common/guild-context");
 let RadioService = class RadioService {
     prisma;
     audit;
@@ -33,16 +34,16 @@ let RadioService = class RadioService {
     }
     async list() {
         const rows = await this.prisma.radioWhitelist.findMany({ orderBy: { createdAt: 'asc' } });
-        const users = await this.prisma.user.findMany({ where: { id: { in: rows.map((r) => r.userId) } }, select: { id: true, displayName: true, personnel: { select: { callsign: true, rank: true } } } });
-        return rows.map((r) => { const u = users.find((x) => x.id === r.userId); return { userId: r.userId, displayName: u?.displayName ?? '—', callsign: u?.personnel?.callsign ?? null, rank: u?.personnel?.rank ?? null, since: r.createdAt }; });
+        const users = await this.prisma.user.findMany({ where: { id: { in: rows.map((r) => r.userId) } }, select: { id: true, displayName: true, personnel: { ...(0, guild_context_1.onePersonnel)(), select: { callsign: true, rank: true } } } });
+        return rows.map((r) => { const u = users.find((x) => x.id === r.userId); return { userId: r.userId, displayName: u?.displayName ?? '—', callsign: u?.personnel[0]?.callsign ?? null, rank: u?.personnel[0]?.rank ?? null, since: r.createdAt }; });
     }
     async check(t) {
         const user = await this.resolve(t);
-        return { whitelisted: !!(await this.prisma.radioWhitelist.findUnique({ where: { userId: user.id } })), displayName: user.displayName };
+        return { whitelisted: !!(await this.prisma.radioWhitelist.findFirst({ where: { userId: user.id } })), displayName: user.displayName };
     }
     async add(actor, t) {
         const user = await this.resolve(t);
-        if (await this.prisma.radioWhitelist.findUnique({ where: { userId: user.id } }))
+        if (await this.prisma.radioWhitelist.findFirst({ where: { userId: user.id } }))
             throw new errors_1.AppError('CONFLICT', `${user.displayName} steht schon auf der Funk-Whitelist.`);
         await this.prisma.$transaction(async (tx) => {
             await tx.radioWhitelist.create({ data: { userId: user.id, addedById: actor.userId } });

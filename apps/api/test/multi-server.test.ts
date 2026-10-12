@@ -312,3 +312,70 @@ describe('Audit-Logs je Server', () => {
     await expect(prisma.auditLog.delete({ where: { id: one.id } })).rejects.toThrow();
   });
 });
+
+describe('Server von Grund auf getrennt', () => {
+  it('Personalakte je Server: gleiche Person, eigener Dienstgrad und Rufname je Server', async () => {
+    const gadmin = await as('ms_gadmin');
+    const target = uid.ms_bot!;
+    const a = await gadmin.post('/api/v1/personnel').set('X-Guild-Id', A).send({ userId: target, rank: 'Kommissar', callsign: 'MS-1' });
+    expect(a.status).toBe(201);
+    const b = await gadmin.post('/api/v1/personnel').set('X-Guild-Id', B).send({ userId: target, rank: 'Anwärter', callsign: 'MS-1' }); // gleicher Rufname auf anderem Server erlaubt
+    expect(b.status).toBe(201);
+    expect(a.body.id).not.toBe(b.body.id);
+    expect((await gadmin.post('/api/v1/personnel').set('X-Guild-Id', A).send({ userId: target, rank: 'Doppelt' })).status).toBe(409); // eine Akte je Server
+    const listA = (await gadmin.get('/api/v1/personnel?pageSize=200').set('X-Guild-Id', A)).body.items as { id: string; rank: string }[];
+    const listB = (await gadmin.get('/api/v1/personnel?pageSize=200').set('X-Guild-Id', B)).body.items as { id: string; rank: string }[];
+    expect(listA.find((p) => p.id === a.body.id)?.rank).toBe('Kommissar');
+    expect(listA.some((p) => p.id === b.body.id)).toBe(false);
+    expect(listB.find((p) => p.id === b.body.id)?.rank).toBe('Anwärter');
+    expect((await gadmin.get(`/api/v1/personnel/${a.body.id}`).set('X-Guild-Id', B)).status).toBe(404);
+  });
+
+  it('Rollen je Server: serverübergreifende Rollen wirken auf keinem Server; neue Server starten mit eigenen Startrollen ohne Zuweisungen', async () => {
+    // globale Rolle (manuell) gibt im Server-Kontext nichts
+    const police = await prisma.role.findFirstOrThrow({ where: { guildId: null, name: 'Police Member' } });
+    await prisma.userRole.create({ data: { userId: uid.ms_offb!, roleId: police.id } });
+    const offB = await as('ms_offb');
+    expect((await offB.get('/api/v1/auth/me').set('X-Guild-Id', A)).body.roles).toEqual([]);
+    expect((await offB.get('/api/v1/auth/me').set('X-Guild-Id', B)).body.roles).toEqual(['Officer']);
+    // neuer Server: Startrollen als eigene Kopien, aber ohne Zuweisungen
+    const gadmin = await as('ms_gadmin');
+    const reg = await gadmin.post('/api/v1/servers').send({ guildId: '910000000000000005', name: 'Neu getrennt' });
+    expect(reg.status).toBe(201);
+    const roles = await prisma.role.findMany({ where: { guildId: '910000000000000005' }, include: { _count: { select: { users: true } } } });
+    expect(roles.map((r) => r.name)).toContain('Police Member');
+    expect(roles.every((r) => r._count.users === 0)).toBe(true);
+    expect(roles.some((r) => r.name === 'System Administrator')).toBe(false);
+  });
+
+  it('Einstellungen je Server: Werte eines Servers sind auf anderen unsichtbar und dort nicht änderbar', async () => {
+    const gadmin = await as('ms_gadmin');
+    expect((await gadmin.put('/api/v1/admin/settings/org.name').set('X-Guild-Id', A).send({ value: 'Polizei Alpha' })).status).toBe(200);
+    expect((await gadmin.put('/api/v1/admin/settings/discord.ghostPing').set('X-Guild-Id', A).send({ value: { enabled: false } })).status).toBe(200);
+    const onB = (await gadmin.get('/api/v1/admin/settings').set('X-Guild-Id', B)).body.settings as Record<string, unknown>;
+    expect(onB['org.name']).toBeUndefined();
+    expect(onB['discord.ghostPing']).toBeUndefined();
+    expect(Object.keys(onB).some((k) => k.includes(A))).toBe(false);
+    const onA = (await gadmin.get('/api/v1/admin/settings').set('X-Guild-Id', A)).body.settings as Record<string, unknown>;
+    expect(onA['org.name']).toBe('Polizei Alpha');
+    expect(onA['discord.ghostPing']).toEqual({ enabled: false });
+    // aus dem Kontext von B den Wert von A schreiben: verboten
+    expect((await gadmin.put(`/api/v1/admin/settings/${encodeURIComponent(`org.name@${A}`)}`).set('X-Guild-Id', B).send({ value: 'gekapert' })).status).toBe(403);
+    expect(await prisma.systemSetting.findUnique({ where: { key: `org.name@${A}` } })).toMatchObject({ value: 'Polizei Alpha' });
+  });
+
+  it('Leitstelle, Tatbestände je Server: gleiche Rufnamen/Codes erlaubt, fremde unsichtbar', async () => {
+    const gadmin = await as('ms_gadmin');
+    const uA = await gadmin.post('/api/v1/cad/units').set('X-Guild-Id', A).send({ callsign: 'ADAM-9' });
+    const uB = await gadmin.post('/api/v1/cad/units').set('X-Guild-Id', B).send({ callsign: 'ADAM-9' });
+    expect([uA.status, uB.status]).toEqual([201, 201]);
+    const unitsB = (await gadmin.get('/api/v1/cad/units').set('X-Guild-Id', B)).body as { id: string }[];
+    expect(unitsB.map((u) => u.id)).toContain(uB.body.id);
+    expect(unitsB.map((u) => u.id)).not.toContain(uA.body.id);
+    const code = { code: 'MS-1', title: 'Test', category: 'Test', penalty: { fine: 10 } };
+    expect((await gadmin.post('/api/v1/legal-codes').set('X-Guild-Id', A).send(code)).status).toBe(201);
+    expect((await gadmin.post('/api/v1/legal-codes').set('X-Guild-Id', B).send(code)).status).toBe(201);
+    const codesB = (await gadmin.get('/api/v1/legal-codes').set('X-Guild-Id', B)).body as { code: string }[] | { items: { code: string }[] };
+    expect((Array.isArray(codesB) ? codesB : codesB.items).filter((c) => c.code === 'MS-1')).toHaveLength(1);
+  });
+});

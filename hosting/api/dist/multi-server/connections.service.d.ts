@@ -36,8 +36,8 @@ export declare class ConnectionsService {
             server: {
                 id: string;
                 status: string;
-                name: string;
                 guildId: string;
+                name: string;
                 archivedAt: Date | null;
             };
         } & {
@@ -49,10 +49,10 @@ export declare class ConnectionsService {
     } & {
         id: string;
         status: string;
+        createdById: string | null;
         createdAt: Date;
         updatedAt: Date;
         version: number;
-        createdById: string | null;
         name: string;
     })[]>;
     get(actor: Actor, id: string): Promise<{
@@ -60,8 +60,8 @@ export declare class ConnectionsService {
             server: {
                 id: string;
                 status: string;
-                name: string;
                 guildId: string;
+                name: string;
                 archivedAt: Date | null;
             };
         } & {
@@ -73,10 +73,10 @@ export declare class ConnectionsService {
     } & {
         id: string;
         status: string;
+        createdById: string | null;
         createdAt: Date;
         updatedAt: Date;
         version: number;
-        createdById: string | null;
         name: string;
     }>;
     create(actor: Actor, d: {
@@ -90,9 +90,10 @@ export declare class ConnectionsService {
                 createdAt: Date;
                 updatedAt: Date;
                 version: number;
-                name: string;
                 guildId: string;
+                name: string;
                 archivedAt: Date | null;
+                rolesInitializedAt: Date | null;
             };
         } & {
             serverId: string;
@@ -103,10 +104,10 @@ export declare class ConnectionsService {
     } & {
         id: string;
         status: string;
+        createdById: string | null;
         createdAt: Date;
         updatedAt: Date;
         version: number;
-        createdById: string | null;
         name: string;
     }>;
     update(actor: Actor, id: string, d: {
@@ -121,9 +122,10 @@ export declare class ConnectionsService {
                 createdAt: Date;
                 updatedAt: Date;
                 version: number;
-                name: string;
                 guildId: string;
+                name: string;
                 archivedAt: Date | null;
+                rolesInitializedAt: Date | null;
             };
         } & {
             serverId: string;
@@ -134,10 +136,10 @@ export declare class ConnectionsService {
     } & {
         id: string;
         status: string;
+        createdById: string | null;
         createdAt: Date;
         updatedAt: Date;
         version: number;
-        createdById: string | null;
         name: string;
     }>;
     /** Nur deaktivierte Verbindungen können entfernt werden. Synchronisierte Kopien bleiben gespeichert, sind aber ohne Freigabe nicht mehr lesbar. */
@@ -147,8 +149,8 @@ export declare class ConnectionsService {
             server: {
                 id: string;
                 status: string;
-                name: string;
                 guildId: string;
+                name: string;
                 archivedAt: Date | null;
             };
         } & {
@@ -160,10 +162,10 @@ export declare class ConnectionsService {
     } & {
         id: string;
         status: string;
+        createdById: string | null;
         createdAt: Date;
         updatedAt: Date;
         version: number;
-        createdById: string | null;
         name: string;
     }>;
     /** Ein Server kann eine Verbindung mit `connections.manage` auf diesem Server verlassen; seine Freigaben enden (offene Ereignisse verworfen). */
@@ -172,8 +174,8 @@ export declare class ConnectionsService {
             server: {
                 id: string;
                 status: string;
-                name: string;
                 guildId: string;
+                name: string;
                 archivedAt: Date | null;
             };
         } & {
@@ -185,10 +187,10 @@ export declare class ConnectionsService {
     } & {
         id: string;
         status: string;
+        createdById: string | null;
         createdAt: Date;
         updatedAt: Date;
         version: number;
-        createdById: string | null;
         name: string;
     }>;
     policies(actor: Actor, id: string): Promise<{
@@ -196,8 +198,8 @@ export declare class ConnectionsService {
         createdAt: Date;
         updatedAt: Date;
         version: number;
-        settings: Prisma.JsonValue;
         enabled: boolean;
+        settings: Prisma.JsonValue;
         connectionId: string;
         sourceServerId: string;
         targetServerId: string;
@@ -216,8 +218,8 @@ export declare class ConnectionsService {
         createdAt: Date;
         updatedAt: Date;
         version: number;
-        settings: Prisma.JsonValue;
         enabled: boolean;
+        settings: Prisma.JsonValue;
         connectionId: string;
         sourceServerId: string;
         targetServerId: string;
@@ -235,8 +237,8 @@ export declare class ConnectionsService {
         createdAt: Date;
         updatedAt: Date;
         version: number;
-        settings: Prisma.JsonValue;
         enabled: boolean;
+        settings: Prisma.JsonValue;
         connectionId: string;
         sourceServerId: string;
         targetServerId: string;
@@ -291,9 +293,9 @@ export declare class ConnectionsService {
             id: string;
             createdAt: Date;
             reason: string | null;
+            entityId: string | null;
             module: string;
             entityType: string | null;
-            entityId: string | null;
             action: string;
             actorUserId: string | null;
             actorRobloxUserId: string | null;
@@ -315,8 +317,8 @@ export declare class ConnectionsService {
         readOnly: boolean;
         source: {
             id: string;
-            name: string;
             guildId: string;
+            name: string;
         } | null;
         sourceRecordId: string;
         sourceVersion: number;

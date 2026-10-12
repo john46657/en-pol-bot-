@@ -40,7 +40,8 @@ model User {
   sessions      Session[]
   loginHistory  LoginHistory[]
   notifications Notification[]
-  personnel     Personnel?
+  /// je Server eine eigene Personalakte
+  personnel     Personnel[]
   dutySessions  DutySession[]
   leaveRequests LeaveRequest[]
   settings      UserSettings?
@@ -134,6 +135,8 @@ model GroupMember {
 model UserPermissionOverride {
   id            String     @id @default(uuid()) @db.Uuid
   userId        String     @db.Uuid
+  /// Server, auf dem die Ausnahme gilt; null = nur unter „Alle Server“
+  guildId       String?
   permissionKey String
   effect        String // ALLOW | DENY
   reason        String?
@@ -142,7 +145,7 @@ model UserPermissionOverride {
   user          User       @relation(fields: [userId], references: [id], onDelete: Cascade)
   permission    Permission @relation(fields: [permissionKey], references: [key], onDelete: Cascade)
 
-  @@unique([userId, permissionKey])
+  @@unique([userId, guildId, permissionKey])
 }
 
 model Session {
@@ -284,7 +287,9 @@ model RecordLink {
 
 model LegalCode {
   id            String    @id @default(uuid()) @db.Uuid
-  code          String    @unique
+  /// Bereich des Discord-Servers (Akten-Bereich, siehe server-scope.ts); null = gemeinsamer Altbestand
+  serverId      String?   @db.Uuid
+  code          String
   title         String
   description   String?
   category      String
@@ -293,10 +298,14 @@ model LegalCode {
   effectiveDate DateTime  @default(now())
   expiresAt     DateTime?
   tickets       Ticket[]
+
+  @@unique([serverId, code])
 }
 
 model Ticket {
   id          String     @id @default(uuid()) @db.Uuid
+  /// Bereich des Discord-Servers (Akten-Bereich, siehe server-scope.ts); null = gemeinsamer Altbestand
+  serverId    String?    @db.Uuid
   number      String     @unique
   personId    String     @db.Uuid
   officerId   String     @db.Uuid
@@ -316,11 +325,14 @@ model Ticket {
 
   @@index([personId])
   @@index([officerId])
+  @@index([serverId])
 }
 
 model Unit {
   id            String         @id @default(uuid()) @db.Uuid
-  callsign      String         @unique
+  /// Bereich des Discord-Servers (Akten-Bereich, siehe server-scope.ts); null = gemeinsamer Altbestand
+  serverId      String?        @db.Uuid
+  callsign      String
   status        String         @default("OFF_DUTY")
   vehicle       String?
   notes         String?
@@ -342,6 +354,8 @@ model Unit {
   members       UnitMember[]
   incidents     IncidentUnit[]
   updatedAt     DateTime       @updatedAt
+
+  @@unique([serverId, callsign])
 }
 
 model UnitMember {
@@ -384,6 +398,7 @@ model Incident {
   log             CadIncidentLog[]
 
   @@index([status, priority])
+  @@index([serverId])
 }
 
 model IncidentUnit {
@@ -522,14 +537,16 @@ model EvidenceTransfer {
 
 model Personnel {
   id                 String               @id @default(uuid()) @db.Uuid
-  userId             String               @unique @db.Uuid
+  /// Bereich des Discord-Servers (Akten-Bereich, siehe server-scope.ts); null = gemeinsamer Altbestand
+  serverId           String?              @db.Uuid
+  userId             String               @db.Uuid
   rank               String?
   team               String?
-  callsign           String?              @unique
+  callsign           String?
   /// Büro (Liste unter Einstellungen → Teamstruktur)
   office             String?
   /// Dienstnummer
-  serviceNumber      String?              @unique
+  serviceNumber      String?
   employmentStatus   String               @default("ACTIVE")
   joinDate           DateTime             @default(now())
   qualifications     String[]             @default([])
@@ -544,6 +561,10 @@ model Personnel {
   user               User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
   academyEnrollments AcademyEnrollment[]
   records            PersonnelRecord[]
+
+  @@unique([serverId, userId])
+  @@unique([serverId, callsign])
+  @@unique([serverId, serviceNumber])
 }
 
 /// Beförderungen, Auszeichnungen, Disziplinarmaßnahmen (nur mit personnel.* sichtbar).
@@ -674,11 +695,15 @@ model Application {
 
 model AcademyCourse {
   id           String              @id @default(uuid()) @db.Uuid
+  /// Bereich des Discord-Servers (Akten-Bereich, siehe server-scope.ts); null = gemeinsamer Altbestand
+  serverId     String?             @db.Uuid
   title        String
   description  String?
   passScore    Int                 @default(70)
   instructorId String?             @db.Uuid
   enrollments  AcademyEnrollment[]
+
+  @@index([serverId])
 }
 
 model AcademyEnrollment {
@@ -707,10 +732,14 @@ model AcademyResult {
 
 model Conversation {
   id       String    @id @default(uuid()) @db.Uuid
+  /// Bereich des Discord-Servers (Akten-Bereich, siehe server-scope.ts); null = gemeinsamer Altbestand
+  serverId String?   @db.Uuid
   channel  String // TEAM | DISPATCH | INCIDENT | SUPERVISOR | ANNOUNCEMENT
   title    String?
   entityId String?
   messages Message[]
+
+  @@index([serverId])
 }
 
 model Message {
@@ -859,9 +888,13 @@ model DiscordOutbox {
 /// Funk-Freigabe (Whitelist): nur freigegebene Mitglieder gelten als funkberechtigt.
 model RadioWhitelist {
   id        String   @id @default(uuid()) @db.Uuid
-  userId    String   @unique @db.Uuid
+  /// Bereich des Discord-Servers (Akten-Bereich, siehe server-scope.ts); null = gemeinsamer Altbestand
+  serverId  String?  @db.Uuid
+  userId    String   @db.Uuid
   addedById String?  @db.Uuid
   createdAt DateTime @default(now())
+
+  @@unique([serverId, userId])
 }
 
 /**
@@ -869,13 +902,19 @@ model RadioWhitelist {
  */
 model SekMember {
   id        String   @id @default(uuid()) @db.Uuid
-  userId    String   @unique @db.Uuid
+  /// Bereich des Discord-Servers (Akten-Bereich, siehe server-scope.ts); null = gemeinsamer Altbestand
+  serverId  String?  @db.Uuid
+  userId    String   @db.Uuid
   addedById String?  @db.Uuid
   createdAt DateTime @default(now())
+
+  @@unique([serverId, userId])
 }
 
 model SekReport {
   id          String   @id @default(uuid()) @db.Uuid
+  /// Bereich des Discord-Servers (Akten-Bereich, siehe server-scope.ts); null = gemeinsamer Altbestand
+  serverId    String?  @db.Uuid
   number      String   @unique
   authorId    String   @db.Uuid
   occurredAt  DateTime
@@ -884,6 +923,7 @@ model SekReport {
   createdAt   DateTime @default(now())
 
   @@index([createdAt])
+  @@index([serverId])
 }
 
 /// Bewerbungssperre: Person (Discord-ID und/oder Roblox-ID) darf sich für bestimmte Bewerbungen nicht bewerben.
@@ -1295,6 +1335,8 @@ model ErlcCommandLog {
 /// Eigene Kartenobjekte: POI (Punkt) oder Zone (Polygon). Koordinaten in ER:LC-Spielkoordinaten (unabhängig vom Kartenbild).
 model CadMapObject {
   id           String   @id @default(uuid()) @db.Uuid
+  /// Bereich des Discord-Servers (Akten-Bereich, siehe server-scope.ts); null = gemeinsamer Altbestand
+  serverId     String?  @db.Uuid
   kind         String // POI | ZONE
   name         String
   description  String?
@@ -1315,6 +1357,7 @@ model CadMapObject {
   updatedAt    DateTime @updatedAt
 
   @@index([layer])
+  @@index([serverId])
 }
 
 /// Chronik eines Einsatzes: Funkmeldungen, Statuswechsel, Zuweisungen, Notizen, Notruf-Verknüpfungen.
@@ -1350,8 +1393,10 @@ model CadRadioMessage {
 /// Zuordnung Discord ↔ Roblox ↔ ER:LC ↔ Team ↔ Einheit, plus Funk-Benutzerdaten (Zello, Funkrufname, Abteilung, Rang).
 model CadMember {
   id          String   @id @default(uuid()) @db.Uuid
-  userId      String?  @unique @db.Uuid
-  discordId   String?  @unique
+  /// Bereich des Discord-Servers (Akten-Bereich, siehe server-scope.ts); null = gemeinsamer Altbestand
+  serverId    String?  @db.Uuid
+  userId      String?  @db.Uuid
+  discordId   String?
   discordName String?
   robloxName  String?
   robloxId    String?
@@ -1367,6 +1412,8 @@ model CadMember {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
+  @@unique([serverId, userId])
+  @@unique([serverId, discordId])
   @@index([erlcName])
 }
 
@@ -1412,6 +1459,8 @@ model EditLock {
 /// „Wenn <Audit-Ereignis> (und Bedingungen) → Aktionen“. Wirkt nur auf Ereignisse ab `activeSince`.
 model Workflow {
   id          String        @id @default(uuid()) @db.Uuid
+  /// Bereich des Discord-Servers (Akten-Bereich, siehe server-scope.ts); null = gemeinsamer Altbestand
+  serverId    String?       @db.Uuid
   name        String
   enabled     Boolean       @default(true)
   trigger     String
@@ -1422,6 +1471,8 @@ model Workflow {
   createdAt   DateTime      @default(now())
   updatedAt   DateTime      @updatedAt
   runs        WorkflowRun[]
+
+  @@index([serverId])
 }
 
 /// Jede Ausführung (einmal je Workflow und Audit-Eintrag).
@@ -1561,7 +1612,9 @@ model DutyReport {
 /// Rang (frei anlegbar, Reihenfolge = position; kleiner = höher). Personalakten speichern den Rangnamen.
 model HrRank {
   id               String   @id @default(uuid()) @db.Uuid
-  name             String   @unique
+  /// Bereich des Discord-Servers (Akten-Bereich, siehe server-scope.ts); null = gemeinsamer Altbestand
+  serverId         String?  @db.Uuid
+  name             String
   position         Int      @default(0)
   description      String?
   icon             String?
@@ -1579,11 +1632,15 @@ model HrRank {
   active           Boolean  @default(true)
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
+
+  @@unique([serverId, name])
 }
 
 /// Antrag: Beförderung oder Versetzung, mit konfigurierbaren Genehmigungsstufen.
 model HrRequest {
   id           String    @id @default(uuid()) @db.Uuid
+  /// Bereich des Discord-Servers (Akten-Bereich, siehe server-scope.ts); null = gemeinsamer Altbestand
+  serverId     String?   @db.Uuid
   number       String    @unique
   kind         String // PROMOTION | TRANSFER
   personnelId  String    @db.Uuid
@@ -1607,10 +1664,13 @@ model HrRequest {
 
   @@index([kind, status])
   @@index([personnelId])
+  @@index([serverId])
 }
 
 model HrTraining {
   id             String               @id @default(uuid()) @db.Uuid
+  /// Bereich des Discord-Servers (Akten-Bereich, siehe server-scope.ts); null = gemeinsamer Altbestand
+  serverId       String?              @db.Uuid
   name           String
   description    String?
   requirements   String?
@@ -1628,6 +1688,8 @@ model HrTraining {
   createdAt      DateTime             @default(now())
   updatedAt      DateTime             @updatedAt
   progress       HrTrainingProgress[]
+
+  @@index([serverId])
 }
 
 model HrTrainingProgress {
@@ -1651,6 +1713,8 @@ model HrTrainingProgress {
 
 model HrExam {
   id            String          @id @default(uuid()) @db.Uuid
+  /// Bereich des Discord-Servers (Akten-Bereich, siehe server-scope.ts); null = gemeinsamer Altbestand
+  serverId      String?         @db.Uuid
   title         String
   description   String?
   /// [{ id, type: SINGLE|MULTI|YESNO|TEXT|NUMBER, text, options[], correct[], points }]
@@ -1669,6 +1733,8 @@ model HrExam {
   createdAt     DateTime        @default(now())
   updatedAt     DateTime        @updatedAt
   attempts      HrExamAttempt[]
+
+  @@index([serverId])
 }
 
 model HrExamAttempt {
@@ -1696,6 +1762,8 @@ model HrExamAttempt {
 /// Interne Meldung (z. B. neue Dienstanweisung) mit optionaler Lesebestätigung.
 model HrAnnouncement {
   id               String               @id @default(uuid()) @db.Uuid
+  /// Bereich des Discord-Servers (Akten-Bereich, siehe server-scope.ts); null = gemeinsamer Altbestand
+  serverId         String?              @db.Uuid
   title            String
   body             String
   priority         String               @default("NORMAL") // LOW | NORMAL | HIGH | CRITICAL
@@ -1712,6 +1780,7 @@ model HrAnnouncement {
   reads            HrAnnouncementRead[]
 
   @@index([publishAt])
+  @@index([serverId])
 }
 
 model HrAnnouncementRead {
@@ -1725,6 +1794,8 @@ model HrAnnouncementRead {
 
 model HrPoll {
   id              String       @id @default(uuid()) @db.Uuid
+  /// Bereich des Discord-Servers (Akten-Bereich, siehe server-scope.ts); null = gemeinsamer Altbestand
+  serverId        String?      @db.Uuid
   title           String
   description     String?
   /// [{ id, label }]
@@ -1740,6 +1811,8 @@ model HrPoll {
   createdAt       DateTime     @default(now())
   updatedAt       DateTime     @updatedAt
   votes           HrPollVote[]
+
+  @@index([serverId])
 }
 
 model HrPollVote {
@@ -1757,6 +1830,8 @@ model HrPollVote {
 /// Nummernkreis, z. B. 1000–1999 oder LS-001–LS-999.
 model ServiceNumberRange {
   id         String          @id @default(uuid()) @db.Uuid
+  /// Bereich des Discord-Servers (Akten-Bereich, siehe server-scope.ts); null = gemeinsamer Altbestand
+  serverId   String?         @db.Uuid
   name       String
   prefix     String          @default("")
   suffix     String          @default("")
@@ -1778,13 +1853,17 @@ model ServiceNumberRange {
   createdAt  DateTime        @default(now())
   updatedAt  DateTime        @updatedAt
   numbers    ServiceNumber[]
+
+  @@index([serverId])
 }
 
 model ServiceNumber {
   id          String             @id @default(uuid()) @db.Uuid
+  /// Bereich des Discord-Servers (Akten-Bereich, siehe server-scope.ts); null = gemeinsamer Altbestand
+  serverId    String?            @db.Uuid
   rangeId     String             @db.Uuid
   value       Int
-  display     String             @unique
+  display     String
   status      String             @default("FREE") // ACTIVE | RESERVED | FREE | BLOCKED | FORMER
   userId      String?            @db.Uuid
   personnelId String?            @db.Uuid
@@ -1795,6 +1874,7 @@ model ServiceNumber {
   range       ServiceNumberRange @relation(fields: [rangeId], references: [id], onDelete: Restrict)
 
   @@unique([rangeId, value])
+  @@unique([serverId, display])
   @@index([status])
   @@index([userId])
 }
@@ -1819,6 +1899,8 @@ model ServiceNumberEvent {
 /// Einstellung nach angenommener Bewerbung, die noch auf eine Dienstnummer wartet („⚠️ Dienstnummer ausstehend“).
 model HireQueue {
   id            String   @id @default(uuid()) @db.Uuid
+  /// Bereich des Discord-Servers (Akten-Bereich, siehe server-scope.ts); null = gemeinsamer Altbestand
+  serverId      String?  @db.Uuid
   applicationId String   @unique
   kind          String
   userId        String   @db.Uuid
@@ -1827,6 +1909,8 @@ model HireQueue {
   status        String   @default("PENDING") // PENDING | DONE
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
+
+  @@index([serverId])
 }
 
 /// Discord-Server-Backup (wie Xenon): Rollen, Kanäle, Rechte, Servereinstellungen. Der Bot liest bzw. stellt wieder her.
@@ -1995,20 +2079,22 @@ model PoliceVehicleModel {
 
 /// Registrierter Discord-Server (Mandant). Deaktivieren/Archivieren löscht nie Fachdaten.
 model DiscordServer {
-  id           String                   @id @default(uuid()) @db.Uuid
-  guildId      String                   @unique
-  name         String
+  id                 String                   @id @default(uuid()) @db.Uuid
+  guildId            String                   @unique
+  name               String
   /// ACTIVE | DISABLED | ERROR (Verbindungsfehler)
-  status       String                   @default("ACTIVE")
+  status             String                   @default("ACTIVE")
   /// archiviert („gelöscht“) – Daten bleiben, Server ist nicht mehr wählbar
-  archivedAt   DateTime?
-  version      Int                      @default(1)
-  createdAt    DateTime                 @default(now())
-  updatedAt    DateTime                 @updatedAt
-  memberships  ServerMembership[]
-  modules      ServerModuleSetting[]
-  roleMappings DiscordRoleMapping[]
-  connections  ServerConnectionMember[]
+  archivedAt         DateTime?
+  /// Rollen dieses Servers angelegt (Startrollen bzw. bei der Migration übernommene bisherige Rollen)
+  rolesInitializedAt DateTime?
+  version            Int                      @default(1)
+  createdAt          DateTime                 @default(now())
+  updatedAt          DateTime                 @updatedAt
+  memberships        ServerMembership[]
+  modules            ServerModuleSetting[]
+  roleMappings       DiscordRoleMapping[]
+  connections        ServerConnectionMember[]
 }
 
 /// Mitgliedschaft eines Benutzers auf einem Server. Nur MEMBER berechtigt zum Zugriff auf diesen Server.

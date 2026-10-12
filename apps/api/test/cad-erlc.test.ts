@@ -228,9 +228,15 @@ describe('CAD', () => {
     const admin = (await login(app, 'cad_admin')).agent;
     const sekUser = await prisma.discordLink.findUniqueOrThrow({ where: { discordId: SEK_D } });
     await admin.post('/api/v1/cad/members').send({ userId: sekUser.userId, discordId: SEK_D, erlcName: 'MaxMustermann123', team: 'SEK', unitId, callsign: 'SEK-01', zelloName: 'max_zello' });
-    // ohne Verbindung: vom SEK-Server verboten
+    // Server sind getrennt: die Leitstelle dieses Tests läuft im gemeinsamen Bestand (HOME nutzt ihn ausdrücklich), SEK hat einen eigenen Bereich
+    expect((await admin.put('/api/v1/server-links').send({ groups: [], sharedRecords: [HOME] })).status).toBe(200);
+    // ohne Querverbindung: der SEK-Server sieht die Einheit der Leitstelle gar nicht
     const denied = await http().post(`/api/v1/cad/units/${unitId}/status`).set(bot(SEK_D, SEK_GUILD)).send({ status: 'ON_SCENE' });
-    expect(denied.status).toBe(403);
+    expect(denied.status).toBe(404);
+    // Querverbindung ausdrücklich auf beiden Seiten: SEK nennt die Leitstelle als Heimat-Server, die Leitstelle legt die Verbindung an
+    expect((await admin.put('/api/v1/cad/config').set('X-Guild-Id', SEK_GUILD).send({ homeGuildId: HOME })).status).toBe(200);
+    expect((await admin.put('/api/v1/cad/config').set('X-Guild-Id', HOME).send({ homeGuildId: HOME })).status).toBe(200);
+    expect((await http().post(`/api/v1/cad/units/${unitId}/status`).set(bot(SEK_D, SEK_GUILD)).send({ status: 'ON_SCENE' })).status).toBe(404); // Heimat-Server allein reicht nicht
     const link = await admin.post('/api/v1/cad/links').send({ name: 'Leitstelle ↔ SEK/K9', sourceGuildId: HOME, targetGuildId: SEK_GUILD, sendTypes: ['incidents', 'unit_requests'], allowActions: ['status_report', 'radio'], channels: { incidents: [CH.sek] } });
     expect(link.status).toBe(201);
     expect((await http().post(`/api/v1/cad/units/${unitId}/status`).set(bot(SEK_D, SEK_GUILD)).send({ status: 'ON_SCENE' })).status).toBe(200);

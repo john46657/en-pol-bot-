@@ -10,7 +10,7 @@ import { RealtimeService } from '../realtime/realtime.service';
 import { CurrentActor, RequirePermission } from '../authz/decorators';
 import { zodBody } from '../common/zod.pipe';
 import { AppError } from '../common/errors';
-import { currentGuild, recordSpace } from '../common/guild-context';
+import { currentGuild, recordSpace, onePersonnel } from '../common/guild-context';
 import { ServersService } from '../multi-server/servers.service';
 import { SyncService } from '../multi-server/sync.service';
 
@@ -214,11 +214,11 @@ export class WeeklyResetService {
   private async rank(db: Prisma.TransactionClient | PrismaService, totals: ReturnType<typeof weekTotals>): Promise<RankingEntry[]> {
     const ids = totals.map((t) => t.userId);
     const [users, links] = await Promise.all([
-      db.user.findMany({ where: { id: { in: ids } }, select: { id: true, displayName: true, personnel: { select: { rank: true, callsign: true } } } }),
+      db.user.findMany({ where: { id: { in: ids } }, select: { id: true, displayName: true, personnel: { ...onePersonnel(), select: { rank: true, callsign: true } } } }),
       db.discordLink.findMany({ where: { userId: { in: ids } }, select: { userId: true, discordId: true } }),
     ]);
     const u = new Map(users.map((x) => [x.id, x])), l = new Map(links.map((x) => [x.userId, x.discordId]));
-    return totals.map((t, i) => ({ place: i + 1, ...t, name: u.get(t.userId)?.displayName ?? 'Unbekannt', rank: u.get(t.userId)?.personnel?.rank ?? null, callsign: u.get(t.userId)?.personnel?.callsign ?? null, discordId: l.get(t.userId) ?? null }));
+    return totals.map((t, i) => ({ place: i + 1, ...t, name: u.get(t.userId)?.displayName ?? 'Unbekannt', rank: u.get(t.userId)?.personnel[0]?.rank ?? null, callsign: u.get(t.userId)?.personnel[0]?.callsign ?? null, discordId: l.get(t.userId) ?? null }));
   }
 
   private message(cfg: WeeklyResetConfig, label: string, start: Date, end: Date, ranking: RankingEntry[], total: number): MessageSpec {

@@ -7,11 +7,11 @@ declare const createServer: z.ZodObject<{
     guildId: z.ZodString;
     name: z.ZodString;
 }, "strict", z.ZodTypeAny, {
-    name: string;
     guildId: string;
+    name: string;
 }, {
-    name: string;
     guildId: string;
+    name: string;
 }>;
 declare const patchServer: z.ZodObject<{
     name: z.ZodOptional<z.ZodString>;
@@ -42,12 +42,12 @@ declare const patchModule: z.ZodObject<{
     version: z.ZodNumber;
 }, "strict", z.ZodTypeAny, {
     version: number;
-    settings?: unknown;
     enabled?: boolean | undefined;
+    settings?: unknown;
 }, {
     version: number;
-    settings?: unknown;
     enabled?: boolean | undefined;
+    settings?: unknown;
 }>;
 declare const createRole: z.ZodObject<{
     description: z.ZodOptional<z.ZodNullable<z.ZodString>>;
@@ -59,18 +59,18 @@ declare const createRole: z.ZodObject<{
     name: z.ZodString;
 }, "strict", z.ZodTypeAny, {
     name: string;
+    color?: string | null | undefined;
     description?: string | null | undefined;
     priority?: number | undefined;
     active?: boolean | undefined;
-    color?: string | null | undefined;
     icon?: string | null | undefined;
     discordRoleIds?: string[] | undefined;
 }, {
     name: string;
+    color?: string | null | undefined;
     description?: string | null | undefined;
     priority?: number | undefined;
     active?: boolean | undefined;
-    color?: string | null | undefined;
     icon?: string | null | undefined;
     discordRoleIds?: string[] | undefined;
 }>;
@@ -83,19 +83,19 @@ declare const updateRole: z.ZodObject<{
     discordRoleIds: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
     name: z.ZodOptional<z.ZodString>;
 }, "strict", z.ZodTypeAny, {
+    color?: string | null | undefined;
     description?: string | null | undefined;
     priority?: number | undefined;
     active?: boolean | undefined;
     name?: string | undefined;
-    color?: string | null | undefined;
     icon?: string | null | undefined;
     discordRoleIds?: string[] | undefined;
 }, {
+    color?: string | null | undefined;
     description?: string | null | undefined;
     priority?: number | undefined;
     active?: boolean | undefined;
     name?: string | undefined;
-    color?: string | null | undefined;
     icon?: string | null | undefined;
     discordRoleIds?: string[] | undefined;
 }>;
@@ -126,21 +126,21 @@ declare const mappings: z.ZodObject<{
         discordRoleId: z.ZodString;
         roleId: z.ZodString;
     }, "strip", z.ZodTypeAny, {
-        roleId: string;
         discordRoleId: string;
+        roleId: string;
     }, {
-        roleId: string;
         discordRoleId: string;
+        roleId: string;
     }>, "many">;
 }, "strict", z.ZodTypeAny, {
     mappings: {
-        roleId: string;
         discordRoleId: string;
+        roleId: string;
     }[];
 }, {
     mappings: {
-        roleId: string;
         discordRoleId: string;
+        roleId: string;
     }[];
 }>;
 declare const auditQuery: z.ZodObject<{
@@ -191,8 +191,8 @@ declare const createPolicy: z.ZodObject<{
     enabled: z.ZodDefault<z.ZodBoolean>;
     settings: z.ZodDefault<z.ZodObject<{}, "strict", z.ZodTypeAny, {}, {}>>;
 }, "strict", z.ZodTypeAny, {
-    settings: {};
     enabled: boolean;
+    settings: {};
     sourceServerId: string;
     targetServerId: string;
     dataType: string;
@@ -201,8 +201,8 @@ declare const createPolicy: z.ZodObject<{
     sourceServerId: string;
     targetServerId: string;
     dataType: string;
-    settings?: {} | undefined;
     enabled?: boolean | undefined;
+    settings?: {} | undefined;
     direction?: "NONE" | "A_TO_B" | "B_TO_A" | "BIDIRECTIONAL" | undefined;
 }>;
 declare const patchPolicy: z.ZodObject<{
@@ -212,13 +212,13 @@ declare const patchPolicy: z.ZodObject<{
     version: z.ZodNumber;
 }, "strict", z.ZodTypeAny, {
     version: number;
-    settings?: {} | undefined;
     enabled?: boolean | undefined;
+    settings?: {} | undefined;
     direction?: "NONE" | "A_TO_B" | "B_TO_A" | "BIDIRECTIONAL" | undefined;
 }, {
     version: number;
-    settings?: {} | undefined;
     enabled?: boolean | undefined;
+    settings?: {} | undefined;
     direction?: "NONE" | "A_TO_B" | "B_TO_A" | "BIDIRECTIONAL" | undefined;
 }>;
 declare const eventsQuery: z.ZodObject<{
@@ -252,9 +252,10 @@ export declare class ServersController {
         createdAt: Date;
         updatedAt: Date;
         version: number;
-        name: string;
         guildId: string;
+        name: string;
         archivedAt: Date | null;
+        rolesInitializedAt: Date | null;
     }[]>;
     create(a: Actor, b: z.infer<typeof createServer>): Promise<{
         id: string;
@@ -262,9 +263,10 @@ export declare class ServersController {
         createdAt: Date;
         updatedAt: Date;
         version: number;
-        name: string;
         guildId: string;
+        name: string;
         archivedAt: Date | null;
+        rolesInitializedAt: Date | null;
     }>;
     get(a: Actor, id: string): Promise<{
         id: string;
@@ -272,9 +274,10 @@ export declare class ServersController {
         createdAt: Date;
         updatedAt: Date;
         version: number;
-        name: string;
         guildId: string;
+        name: string;
         archivedAt: Date | null;
+        rolesInitializedAt: Date | null;
     }>;
     patch(a: Actor, id: string, b: z.infer<typeof patchServer>): Promise<{
         id: string;
@@ -282,9 +285,10 @@ export declare class ServersController {
         createdAt: Date;
         updatedAt: Date;
         version: number;
-        name: string;
         guildId: string;
+        name: string;
         archivedAt: Date | null;
+        rolesInitializedAt: Date | null;
     }>;
     remove(a: Actor, id: string): Promise<{
         id: string;
@@ -292,9 +296,10 @@ export declare class ServersController {
         createdAt: Date;
         updatedAt: Date;
         version: number;
-        name: string;
         guildId: string;
+        name: string;
         archivedAt: Date | null;
+        rolesInitializedAt: Date | null;
     }>;
     members(a: Actor, id: string): Promise<({
         user: {
@@ -367,15 +372,15 @@ export declare class ServersController {
         id: string;
         createdAt: Date;
         updatedAt: Date;
+        color: string | null;
         description: string | null;
         priority: number;
         active: boolean;
+        guildId: string | null;
         name: string;
-        system: boolean;
-        color: string | null;
         icon: string | null;
         discordRoleIds: string[];
-        guildId: string | null;
+        system: boolean;
     })[]>;
     createRole(a: Actor, id: string, b: z.infer<typeof createRole>): Promise<{
         _count: {
@@ -389,15 +394,15 @@ export declare class ServersController {
         id: string;
         createdAt: Date;
         updatedAt: Date;
+        color: string | null;
         description: string | null;
         priority: number;
         active: boolean;
+        guildId: string | null;
         name: string;
-        system: boolean;
-        color: string | null;
         icon: string | null;
         discordRoleIds: string[];
-        guildId: string | null;
+        system: boolean;
     }>;
     updateRole(a: Actor, id: string, roleId: string, b: z.infer<typeof updateRole>): Promise<{
         _count: {
@@ -411,15 +416,15 @@ export declare class ServersController {
         id: string;
         createdAt: Date;
         updatedAt: Date;
+        color: string | null;
         description: string | null;
         priority: number;
         active: boolean;
+        guildId: string | null;
         name: string;
-        system: boolean;
-        color: string | null;
         icon: string | null;
         discordRoleIds: string[];
-        guildId: string | null;
+        system: boolean;
     }>;
     deleteRole(a: Actor, id: string, roleId: string): Promise<void>;
     permissions(a: Actor, id: string): Promise<{
@@ -457,30 +462,30 @@ export declare class ServersController {
     roleMappings(a: Actor, id: string): Promise<({
         role: {
             id: string;
-            name: string;
             guildId: string | null;
+            name: string;
         };
     } & {
         serverId: string;
         id: string;
         createdAt: Date;
         updatedAt: Date;
-        roleId: string;
         discordRoleId: string;
+        roleId: string;
     })[]>;
     setRoleMappings(a: Actor, id: string, b: z.infer<typeof mappings>): Promise<({
         role: {
             id: string;
-            name: string;
             guildId: string | null;
+            name: string;
         };
     } & {
         serverId: string;
         id: string;
         createdAt: Date;
         updatedAt: Date;
-        roleId: string;
         discordRoleId: string;
+        roleId: string;
     })[]>;
     audit(a: Actor, id: string, q: z.infer<typeof auditQuery>): Promise<{
         items: {
@@ -489,9 +494,9 @@ export declare class ServersController {
             id: string;
             createdAt: Date;
             reason: string | null;
+            entityId: string | null;
             module: string;
             entityType: string | null;
-            entityId: string | null;
             action: string;
             actorUserId: string | null;
             actorRobloxUserId: string | null;
@@ -510,8 +515,8 @@ export declare class ServersController {
         readOnly: boolean;
         source: {
             id: string;
-            name: string;
             guildId: string;
+            name: string;
         } | null;
         sourceRecordId: string;
         sourceVersion: number;
@@ -531,8 +536,8 @@ export declare class ConnectionsController {
             server: {
                 id: string;
                 status: string;
-                name: string;
                 guildId: string;
+                name: string;
                 archivedAt: Date | null;
             };
         } & {
@@ -544,10 +549,10 @@ export declare class ConnectionsController {
     } & {
         id: string;
         status: string;
+        createdById: string | null;
         createdAt: Date;
         updatedAt: Date;
         version: number;
-        createdById: string | null;
         name: string;
     })[]>;
     create(a: Actor, b: z.infer<typeof createConnection>): Promise<{
@@ -558,9 +563,10 @@ export declare class ConnectionsController {
                 createdAt: Date;
                 updatedAt: Date;
                 version: number;
-                name: string;
                 guildId: string;
+                name: string;
                 archivedAt: Date | null;
+                rolesInitializedAt: Date | null;
             };
         } & {
             serverId: string;
@@ -571,10 +577,10 @@ export declare class ConnectionsController {
     } & {
         id: string;
         status: string;
+        createdById: string | null;
         createdAt: Date;
         updatedAt: Date;
         version: number;
-        createdById: string | null;
         name: string;
     }>;
     get(a: Actor, id: string): Promise<{
@@ -582,8 +588,8 @@ export declare class ConnectionsController {
             server: {
                 id: string;
                 status: string;
-                name: string;
                 guildId: string;
+                name: string;
                 archivedAt: Date | null;
             };
         } & {
@@ -595,10 +601,10 @@ export declare class ConnectionsController {
     } & {
         id: string;
         status: string;
+        createdById: string | null;
         createdAt: Date;
         updatedAt: Date;
         version: number;
-        createdById: string | null;
         name: string;
     }>;
     patch(a: Actor, id: string, b: z.infer<typeof patchConnection>): Promise<{
@@ -609,9 +615,10 @@ export declare class ConnectionsController {
                 createdAt: Date;
                 updatedAt: Date;
                 version: number;
-                name: string;
                 guildId: string;
+                name: string;
                 archivedAt: Date | null;
+                rolesInitializedAt: Date | null;
             };
         } & {
             serverId: string;
@@ -622,10 +629,10 @@ export declare class ConnectionsController {
     } & {
         id: string;
         status: string;
+        createdById: string | null;
         createdAt: Date;
         updatedAt: Date;
         version: number;
-        createdById: string | null;
         name: string;
     }>;
     remove(a: Actor, id: string): Promise<void>;
@@ -636,8 +643,8 @@ export declare class ConnectionsController {
             server: {
                 id: string;
                 status: string;
-                name: string;
                 guildId: string;
+                name: string;
                 archivedAt: Date | null;
             };
         } & {
@@ -649,10 +656,10 @@ export declare class ConnectionsController {
     } & {
         id: string;
         status: string;
+        createdById: string | null;
         createdAt: Date;
         updatedAt: Date;
         version: number;
-        createdById: string | null;
         name: string;
     }>;
     removeMember(a: Actor, id: string, serverId: string): Promise<{
@@ -660,8 +667,8 @@ export declare class ConnectionsController {
             server: {
                 id: string;
                 status: string;
-                name: string;
                 guildId: string;
+                name: string;
                 archivedAt: Date | null;
             };
         } & {
@@ -673,10 +680,10 @@ export declare class ConnectionsController {
     } & {
         id: string;
         status: string;
+        createdById: string | null;
         createdAt: Date;
         updatedAt: Date;
         version: number;
-        createdById: string | null;
         name: string;
     }>;
     policies(a: Actor, id: string): Promise<{
@@ -684,8 +691,8 @@ export declare class ConnectionsController {
         createdAt: Date;
         updatedAt: Date;
         version: number;
-        settings: import("@prisma/client/runtime/library").JsonValue;
         enabled: boolean;
+        settings: import("@prisma/client/runtime/library").JsonValue;
         connectionId: string;
         sourceServerId: string;
         targetServerId: string;
@@ -697,8 +704,8 @@ export declare class ConnectionsController {
         createdAt: Date;
         updatedAt: Date;
         version: number;
-        settings: import("@prisma/client/runtime/library").JsonValue;
         enabled: boolean;
+        settings: import("@prisma/client/runtime/library").JsonValue;
         connectionId: string;
         sourceServerId: string;
         targetServerId: string;
@@ -710,8 +717,8 @@ export declare class ConnectionsController {
         createdAt: Date;
         updatedAt: Date;
         version: number;
-        settings: import("@prisma/client/runtime/library").JsonValue;
         enabled: boolean;
+        settings: import("@prisma/client/runtime/library").JsonValue;
         connectionId: string;
         sourceServerId: string;
         targetServerId: string;
@@ -758,9 +765,9 @@ export declare class ConnectionsController {
             id: string;
             createdAt: Date;
             reason: string | null;
+            entityId: string | null;
             module: string;
             entityType: string | null;
-            entityId: string | null;
             action: string;
             actorUserId: string | null;
             actorRobloxUserId: string | null;

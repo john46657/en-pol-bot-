@@ -13,10 +13,11 @@ export declare class WorkflowsController {
             ok: boolean;
         }[];
     } & {
+        serverId: string | null;
         id: string;
+        createdById: string | null;
         createdAt: Date;
         updatedAt: Date;
-        createdById: string | null;
         name: string;
         enabled: boolean;
         trigger: string;
@@ -29,16 +30,17 @@ export declare class WorkflowsController {
         id: string;
         createdAt: Date;
         entityId: string | null;
-        action: string;
         ok: boolean;
+        action: string;
         workflowId: string;
         auditId: string;
     }[]>;
     create(a: Actor, b: WorkflowInput): Promise<{
+        serverId: string | null;
         id: string;
+        createdById: string | null;
         createdAt: Date;
         updatedAt: Date;
-        createdById: string | null;
         name: string;
         enabled: boolean;
         trigger: string;
@@ -47,10 +49,11 @@ export declare class WorkflowsController {
         activeSince: Date;
     }>;
     update(a: Actor, id: string, b: WorkflowInput): Promise<{
+        serverId: string | null;
         id: string;
+        createdById: string | null;
         createdAt: Date;
         updatedAt: Date;
-        createdById: string | null;
         name: string;
         enabled: boolean;
         trigger: string;
