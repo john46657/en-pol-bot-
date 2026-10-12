@@ -14,6 +14,7 @@ exports.outboxButtons = outboxButtons;
 exports.qualificationDecisionText = qualificationDecisionText;
 exports.applicationDecisionText = applicationDecisionText;
 exports.dangerEmbed = dangerEmbed;
+exports.dangerPanel = dangerPanel;
 exports.dangerButtons = dangerButtons;
 exports.teamlistEmbed = teamlistEmbed;
 exports.dutyReminderDm = dutyReminderDm;
@@ -89,9 +90,9 @@ function renderOutbox(type, p) {
             return { title: '📢 Ankündigung', description: (0, exports.clip)((0, exports.plain)(p.body), 4000), color: exports.COLORS.warning, footer: `von ${(0, exports.clip)(p.author, 100)}` };
         case 'danger.changed': {
             // wie im alten Bot: „Status 1: Geringe Kriminalität.“ + Text der Stufe (Ping der eingestellten Rolle macht die Outbox)
-            return { title: (0, exports.clip)(`${String(p.name ?? p.level)}${p.title ? `: ${String(p.title)}` : ''}`, 256), color: hexColor(p.color, exports.COLORS.warning),
-                description: (0, exports.clip)(`${String(p.text ?? '')}${p.reason ? `\n\n**Hinweis:** ${(0, exports.plain)(p.reason)}` : ''}`, 4000) || undefined,
-                footer: (0, exports.clip)(`${p.previous ? `Vorher: ${String(p.previous)} · ` : ''}Gesetzt von ${String(p.setBy ?? 'System')}`, 200) };
+            // als Kasten ohne Farbstreifen und ohne Fußzeile („Vorher … · Gesetzt von …“)
+            return { box: true, title: (0, exports.clip)(`${String(p.name ?? p.level)}${p.title ? `: ${String(p.title)}` : ''}`, 256),
+                description: (0, exports.clip)(`${String(p.text ?? '')}${p.reason ? `\n\n**Hinweis:** ${(0, exports.plain)(p.reason)}` : ''}`, 4000) || undefined };
         }
         case 'duty.changed': {
             const st = String(p.status), prev = String(p.previous ?? 'OFF_DUTY');
@@ -309,6 +310,10 @@ function dangerEmbed(s) {
     const when = s.at ? `\n<t:${Math.floor(new Date(s.at).getTime() / 1000)}:f>` : '';
     return { title: (0, exports.clip)(s.panel?.title ?? 'Gefahrenstatus', 256), color: hexColor(d?.color, exports.COLORS.danger), description: (0, exports.clip)(`${s.panel?.text ?? ''}${current ? `\n\n${current}` : ''}${when}`, 4000),
         ...(s.setByName ? { footer: `Gesetzt von ${(0, exports.clip)(s.setByName, 100)}` } : {}) };
+}
+/** Selbst aktualisierendes Panel wie im alten Bot: Kasten mit Titel, Text, einem Button je Stufe und Datum/Uhrzeit der letzten Änderung. */
+function dangerPanel(s) {
+    return { box: true, heading: true, title: (0, exports.clip)(s.panel?.title ?? 'Gefahrenstatus', 256), description: (0, exports.clip)(s.panel?.text ?? '', 4000) || undefined, ...(s.at ? { stamp: s.at } : {}) };
 }
 function dangerButtons(s) {
     return (s.levels ?? []).slice(0, 10).map((l) => ({ id: `danger:set:${l.key}`, label: (0, exports.clip)(l.name, 80), emoji: s.panel?.buttonEmoji || l.emoji || undefined, style: l.buttonStyle ?? 'danger' }));

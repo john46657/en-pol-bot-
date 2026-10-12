@@ -39,7 +39,12 @@ export declare class InvestigationsService {
             caseNumber: string;
             leadId: string | null;
         };
-        links: {
+        links: ({
+            person: {
+                id: string;
+                robloxUsername: string;
+            } | null;
+        } & {
             role: string;
             id: string;
             createdAt: Date;
@@ -47,7 +52,7 @@ export declare class InvestigationsService {
             vehicleId: string | null;
             entityType: string;
             entityId: string;
-        }[];
+        })[];
         evidence: {
             number: string;
             id: string;

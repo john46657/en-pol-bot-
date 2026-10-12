@@ -102,7 +102,12 @@ export declare class InvestigationsController {
             caseNumber: string;
             leadId: string | null;
         };
-        links: {
+        links: ({
+            person: {
+                id: string;
+                robloxUsername: string;
+            } | null;
+        } & {
             role: string;
             id: string;
             createdAt: Date;
@@ -110,7 +115,7 @@ export declare class InvestigationsController {
             vehicleId: string | null;
             entityType: string;
             entityId: string;
-        }[];
+        })[];
         evidence: {
             number: string;
             id: string;

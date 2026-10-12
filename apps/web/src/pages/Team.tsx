@@ -110,6 +110,37 @@ export function Team() {
           </div>
         )}
       </Card>
+      <DutyHours all={manage} />
     </>
+  );
+}
+
+interface HoursRow { userId: string; name: string; rank: string | null; callsign: string | null; minutes: number; byStatus: Record<string, number>; sessions: number }
+const hm = (min: number) => `${Math.floor(min / 60)} h ${String(min % 60).padStart(2, '0')} min`;
+/** Dienststunden im gewählten Zeitraum – Schichtleitung (team.manage) sieht alle, sonst nur die eigenen. */
+function DutyHours({ all }: { all: boolean }) {
+  const [days, setDays] = useState(7);
+  const q = useQuery({ queryKey: ['duty-hours', all, days], queryFn: () => api<{ users: HoursRow[] }>(all ? '/team/hours' : '/team/me/hours', { query: { days } }) });
+  const statuses = useMemo(() => [...new Set((q.data?.users ?? []).flatMap((u) => Object.keys(u.byStatus)))].sort(), [q.data]);
+  const total = (q.data?.users ?? []).reduce((a, u) => a + u.minutes, 0);
+  return (
+    <Card className="mt-4" title={all ? '⏱️ Dienststunden' : '⏱️ Meine Dienststunden'} actions={<Select aria-label="Zeitraum" className="w-auto py-1 text-xs" value={days} onChange={(e) => setDays(Number(e.target.value))}>{[1, 7, 14, 30, 90].map((d) => <option key={d} value={d}>{d === 1 ? 'Letzte 24 h' : `Letzte ${d} Tage`}</option>)}</Select>}>
+      {q.isLoading ? <SkeletonRows rows={3} /> : q.error ? <ErrorState error={q.error} onRetry={() => void q.refetch()} /> : !q.data?.users.length ? <EmptyState text="Keine Dienstzeiten in diesem Zeitraum." /> : (
+        <div className="table-scroll">
+          <table className="w-full text-sm">
+            <thead className="text-left text-xs uppercase text-muted"><tr>{all && <th className="p-2">Beamter</th>}<th className="p-2">Gesamt</th>{statuses.map((st) => <th key={st} className="p-2">{statusLabel(st)}</th>)}<th className="p-2">Sitzungen</th></tr></thead>
+            <tbody>{q.data.users.map((u) => (
+              <tr key={u.userId} className="border-t border-line">
+                {all && <td className="p-2 font-medium">{u.name}{u.callsign ? <span className="ml-1 text-xs text-muted">({u.callsign})</span> : null}</td>}
+                <td className="p-2 font-semibold">{hm(u.minutes)}</td>
+                {statuses.map((st) => <td key={st} className="p-2 text-muted">{u.byStatus[st] ? hm(u.byStatus[st]!) : '—'}</td>)}
+                <td className="p-2 text-muted">{u.sessions}</td>
+              </tr>
+            ))}</tbody>
+            {all && q.data.users.length > 1 && <tfoot><tr className="border-t border-line text-xs text-muted"><td className="p-2">Summe ({q.data.users.length})</td><td className="p-2 font-semibold">{hm(total)}</td><td colSpan={statuses.length + 1} /></tr></tfoot>}
+          </table>
+        </div>
+      )}
+    </Card>
   );
 }

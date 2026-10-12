@@ -1,5 +1,5 @@
 import {
-  ActionRowBuilder, ButtonBuilder, ButtonStyle, ChannelType, Client, ComponentType, EmbedBuilder, GatewayIntentBits, MessageFlags, ModalBuilder, OverwriteType, Partials,
+  ActionRowBuilder, ButtonBuilder, ButtonStyle, ChannelType, Client, ComponentType, ContainerBuilder, EmbedBuilder, SeparatorBuilder, SeparatorSpacingSize, TextDisplayBuilder, GatewayIntentBits, MessageFlags, ModalBuilder, OverwriteType, Partials,
   PermissionFlagsBits, SlashCommandBuilder, TextInputBuilder, TextInputStyle,
   type AnySelectMenuInteraction, type ButtonComponent, type ButtonInteraction, type ChatInputCommandInteraction, type Interaction, type Message, type ModalSubmitInteraction,
 } from 'discord.js';
@@ -77,6 +77,25 @@ const toRows = (buttons: ButtonSpec[] = []) => {
   }
   return rows;
 };
+/**
+ * Kasten ohne Farbstreifen (Discord-Komponenten): Titel, Trennlinie, Text, Buttons, Datum/Uhrzeit – wie das Panel des alten Bots.
+ * Pings stehen als eigene Zeile über dem Kasten. Nachrichten mit Komponenten haben keinen `content` und keine Embeds.
+ */
+const sep = () => new SeparatorBuilder().setDivider(true).setSpacing(SeparatorSpacingSize.Large);
+const toBox = (list: EmbedData[], buttons?: ButtonSpec[], ping?: string) => [
+  ...(ping ? [new TextDisplayBuilder().setContent(ping)] : []),
+  ...list.map((e, i) => {
+    const c = new ContainerBuilder();
+    if (e.author?.name) c.addTextDisplayComponents(new TextDisplayBuilder().setContent(`**${e.author.name}**`));
+    c.addTextDisplayComponents(new TextDisplayBuilder().setContent(e.heading === 'small' ? `### ${e.title}` : e.heading ? `# ${e.title}` : `**${e.title}**`));
+    if (e.description) { if (e.heading === true) c.addSeparatorComponents(sep()); c.addTextDisplayComponents(new TextDisplayBuilder().setContent(e.description)); }
+    for (const f of e.fields ?? []) c.addTextDisplayComponents(new TextDisplayBuilder().setContent(`**${f.name}**\n${f.value}`));
+    const rows = i === list.length - 1 ? toRows(buttons) : [];
+    if (rows.length) c.addSeparatorComponents(sep()).addActionRowComponents(...rows);
+    if (e.stamp && !Number.isNaN(Date.parse(e.stamp))) c.addSeparatorComponents(sep()).addTextDisplayComponents(new TextDisplayBuilder().setContent(`<t:${Math.floor(Date.parse(e.stamp) / 1000)}:f>`));
+    return c;
+  }),
+];
 /** Auswahlmenüs als eigene Reihen über den Buttons. */
 const toComponents = (buttons?: ButtonSpec[], select?: SelectSpec, selects: SelectSpec[] = []) => componentsOf(buttons, [...(select ? [select] : []), ...selects]);
 const toModal = (m: ModalSpec) => new ModalBuilder().setCustomId(m.id).setTitle(m.title.slice(0, 45)).addComponents(m.fields.map((f) => {
@@ -87,7 +106,10 @@ const toModal = (m: ModalSpec) => new ModalBuilder().setCustomId(m.id).setTitle(
   if (f.value) input.setValue(f.value.slice(0, f.maxLength ?? 4000));
   return new ActionRowBuilder<TextInputBuilder>().addComponents(input);
 }));
-const replyPayload = (r: Reply) => ({ content: r.content ?? '', embeds: (r.embeds ?? []).map(toEmbed), components: toComponents(r.buttons, r.select, r.selects), allowedMentions: { parse: [] as never[] } });
+const replyPayload = (r: Reply) => (r.embeds?.[0]?.box
+  // Kasten wie bei Trident: Buttons darunter, außerhalb des Kastens
+  ? { components: [...toBox(r.embeds), ...toComponents(r.buttons, r.select, r.selects)], flags: MessageFlags.IsComponentsV2 as const, allowedMentions: { parse: [] as never[] } }
+  : { content: r.content ?? '', embeds: (r.embeds ?? []).map(toEmbed), components: toComponents(r.buttons, r.select, r.selects), allowedMentions: { parse: [] as never[] } });
 
 const TICKET_PREFIX = 'ticket-';
 const ticketName = (userName: string, userId: string) => `${TICKET_PREFIX}${userName.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 40) || userId}`;
@@ -134,6 +156,14 @@ const platform: Platform = {
   async postOrEdit({ channelId, messageId, embed, buttons }) {
     const ch = await client.channels.fetch(channelId);
     if (!ch?.isSendable() || !('messages' in ch)) throw new Error(`channel ${channelId} is not a text channel the bot can post in`);
+    if (embed.box) {
+      const box = { components: toBox([embed], buttons), flags: MessageFlags.IsComponentsV2 as const, allowedMentions: { parse: [] as never[] } };
+      const old = messageId ? await ch.messages.fetch(messageId).catch(() => null) : null;
+      if (old?.flags.has(MessageFlags.IsComponentsV2)) { await old.edit(box); return old.id; }
+      // ältere Embed-Nachricht lässt sich nicht in einen Kasten umbauen → ersetzen
+      if (old) await old.delete().catch(() => undefined);
+      return (await ch.send(box)).id;
+    }
     const payload = { embeds: [toEmbed(embed)], components: toRows(buttons), allowedMentions: { parse: [] as never[] } };
     if (messageId) {
       const old = await ch.messages.fetch(messageId).catch(() => null); // gelöscht → neu senden
@@ -376,7 +406,7 @@ async function handleCommand(i: ChatInputCommandInteraction) {
     // Formulare müssen die erste Antwort sein – kein deferReply vorher.
     const reply = await safeRun(`command ${def.name}`, () => def.run({ ...baseCtx(i), opts }));
     if (reply.modal) await i.showModal(toModal(reply.modal));
-    else await i.reply({ ...replyPayload(reply), flags: MessageFlags.Ephemeral });
+    else { const p = replyPayload(reply); await i.reply({ ...p, flags: ('flags' in p ? (p.flags ?? 0) : 0) | MessageFlags.Ephemeral }); }
     return;
   }
   // Antworten sind immer nur für den Aufrufer sichtbar (Daten gehören nicht in öffentliche Channels).
@@ -392,7 +422,7 @@ async function handleComponent(i: ButtonInteraction | ModalSubmitInteraction | A
     // Formulare müssen die erste Antwort sein – kein deferReply vorher.
     const reply = await safeRun(`interaction ${i.customId}`, () => hit.def.run({ ...baseCtx(i), opts: {}, args: hit.args, ...(i.isAnySelectMenu() ? { values: i.values } : {}) }));
     if (reply.modal) await i.showModal(toModal(reply.modal));
-    else await i.reply({ ...replyPayload(reply), flags: MessageFlags.Ephemeral });
+    else { const p = replyPayload(reply); await i.reply({ ...p, flags: ('flags' in p ? (p.flags ?? 0) : 0) | MessageFlags.Ephemeral }); }
     return;
   }
   await i.deferReply({ flags: MessageFlags.Ephemeral });
@@ -515,7 +545,10 @@ function wireReady(client0: Client) {
     }
     // Nur die ausdrücklich eingestellten Rollen pingen – niemals @everyone/@here
     const roles = opts?.pingRoleIds ?? [];
-    const msg = await ch.send({ ...(roles.length ? { content: roles.map((r) => `<@&${r}>`).join(' ') } : {}), embeds: list.map(toEmbed), components: toRows(buttons), allowedMentions: { parse: [], roles } });
+    const ping = roles.length ? roles.map((r) => `<@&${r}>`).join(' ') : undefined;
+    const msg = list[0]?.box
+      ? await ch.send({ components: toBox(list, buttons, ping), flags: MessageFlags.IsComponentsV2, allowedMentions: { parse: [], roles } })
+      : await ch.send({ ...(ping ? { content: ping } : {}), embeds: list.map(toEmbed), components: toRows(buttons), allowedMentions: { parse: [], roles } });
     // Staff-Thread zur Bewerbung (braucht im Channel das Recht „Öffentliche Threads erstellen“)
     // Ersetzende Meldung (Gefahrenstatus): alte Nachricht in diesem Kanal löschen, neue merken (überlebt Neustarts)
     if (opts?.replaceKey) {

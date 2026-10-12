@@ -1,6 +1,7 @@
 import { ErlcLiveCard } from '../components/ErlcLiveCard';
 import { DiscordChannelHint } from '../components/DiscordChannelHint';
 import { PersonnelTeamEditor } from '../components/PersonnelTeamEditor';
+import { InvestigationPersons } from '../components/InvestigationPersons';
 import { Link } from 'react-router';
 import { COMPLAINT_STATUSES, DISPATCH_STATUSES, INVESTIGATION_STATUSES, PRIORITIES, REPORT_STATUSES, REPORT_TYPES, WANTED_STATUSES, APPLICATION_STATUSES } from '@enrp/shared';
 import type { ResourceConfig } from '../components/ResourcePage';
@@ -88,14 +89,21 @@ export const records: Record<string, RecordConfig> = {
     ] },
   investigations: { endpoint: '/investigations', queryKey: 'investigations', back: '/investigations', title: (r) => `Fall ${r.caseNumber}`, pick: nested('investigation'),
     fields: [{ key: 'title', label: 'Titel' }, { key: 'description', label: 'Beschreibung' }, { key: 'leadId', label: 'Leitung', render: (_v, r) => link(r, 'leadId') }, { key: 'createdAt', label: 'Eröffnet' }],
-    actions: [{ label: 'Fall schließen', perm: 'investigations.close', path: (id) => `/investigations/${id}/close`, danger: true, reason: 'required', show: (r) => r.status !== 'CLOSED' && r.status !== 'ARCHIVED' }],
-    extra: (_r, d) => ((d.evidence as Row[] | undefined)?.length ? <div className="mt-4"><h3 className="mb-1 text-xs text-muted">Beweismittel</h3><ul className="text-sm">{(d.evidence as Row[]).map((e) => <li key={String(e.id)}><Link className="text-primary underline" to={`/evidence/${e.id}`}>{String(e.number)}</Link> · {String(e.type)} · <Badge>{statusLabel(String(e.custodyState))}</Badge></li>)}</ul></div> : null) },
+    actions: [
+      { label: 'Ermittlung aufnehmen', perm: 'investigations.edit', path: (id) => `/investigations/${id}/status`, method: 'PUT', body: { status: 'ACTIVE' }, reason: 'optional', show: (r) => r.status === 'OPEN' || r.status === 'SUSPENDED' },
+      { label: 'Ruhen lassen', perm: 'investigations.edit', path: (id) => `/investigations/${id}/status`, method: 'PUT', body: { status: 'SUSPENDED' }, reason: 'optional', show: (r) => r.status === 'ACTIVE' },
+      { label: 'Fall wieder öffnen', perm: 'investigations.edit', path: (id) => `/investigations/${id}/status`, method: 'PUT', body: { status: 'ACTIVE' }, reason: 'required', show: (r) => r.status === 'CLOSED' },
+      { label: 'Archivieren', perm: 'investigations.edit', path: (id) => `/investigations/${id}/status`, method: 'PUT', body: { status: 'ARCHIVED' }, reason: 'optional', show: (r) => r.status === 'CLOSED' },
+      { label: 'Fall schließen', perm: 'investigations.close', path: (id) => `/investigations/${id}/close`, danger: true, reason: 'required', show: (r) => r.status !== 'CLOSED' && r.status !== 'ARCHIVED' },
+    ],
+    extra: (r, d) => <><InvestigationPersons id={String(r.id)} status={String(r.status)} links={(d.links as never) ?? []} />{((d.evidence as Row[] | undefined)?.length ? <div className="mt-4"><h3 className="mb-1 text-xs text-muted">Beweismittel</h3><ul className="text-sm">{(d.evidence as Row[]).map((e) => <li key={String(e.id)}><Link className="text-primary underline" to={`/evidence/${e.id}`}>{String(e.number)}</Link> · {String(e.type)} · <Badge>{statusLabel(String(e.custodyState))}</Badge></li>)}</ul></div> : null)}</> },
   wanted: { endpoint: '/wanted', queryKey: 'wanted', back: '/wanted', title: (r) => `Fahndung: ${r.reason}`, pick: nested('wanted'),
     fields: [{ key: 'reason', label: 'Grund' }, { key: 'description', label: 'Beschreibung' }, { key: 'priority', label: 'Priorität', render: (v) => <PriorityBadge priority={String(v)} /> }, { key: 'personId', label: 'Person', render: (_v, r) => r.personId ? <Link className="text-primary underline" to={`/persons/${r.personId}`}>Akte öffnen</Link> : '—' }, { key: 'expiresAt', label: 'Läuft ab' }],
     actions: [
       { label: 'Erledigen', perm: 'wanted.clear', path: (id) => `/wanted/${id}/clear`, reason: 'required', show: (r) => r.status === 'ACTIVE' },
       { label: 'Abbrechen', perm: 'wanted.edit', path: (id) => `/wanted/${id}/cancel`, danger: true, reason: 'required', show: (r) => r.status === 'ACTIVE' },
       { label: 'Reaktivieren', perm: 'wanted.activate', path: (id) => `/wanted/${id}/activate`, reason: 'required', show: (r) => r.status === 'EXPIRED' },
+      { label: 'Archivieren', perm: 'wanted.edit', path: (id) => `/wanted/${id}/archive`, reason: 'required', show: (r) => ['CLEARED', 'CANCELLED', 'EXPIRED'].includes(String(r.status)) },
     ] },
   incidents: { endpoint: '/incidents', queryKey: 'incidents', back: '/incidents', title: (r) => `${r.number} — ${r.title}`, pick: nested('incident'),
     fields: [{ key: 'priority', label: 'Priorität', render: (v) => <PriorityBadge priority={String(v)} /> }, { key: 'location', label: 'Ort' }, { key: 'description', label: 'Beschreibung' }, { key: 'source', label: 'Quelle' }, { key: 'createdAt', label: 'Erstellt' }, { key: 'closedAt', label: 'Geschlossen' }],

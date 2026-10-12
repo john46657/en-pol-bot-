@@ -26,6 +26,7 @@ let AcademyController = class AcademyController {
         this.a = a;
     }
     courses() { return this.a.courses(); }
+    course(id) { return this.a.course(id); }
     create(ac, b) { const { announce, ...d } = b; return this.a.createCourse(ac, d, announce); }
     /** Standard-Kanal und Ping-Rollen für Ankündigungen. */
     config() { return this.a.config(); }
@@ -42,6 +43,14 @@ __decorate([
     __metadata("design:paramtypes", []),
     __metadata("design:returntype", void 0)
 ], AcademyController.prototype, "courses", null);
+__decorate([
+    (0, common_1.Get)('courses/:id'),
+    (0, decorators_1.RequirePermission)('academy.view'),
+    __param(0, (0, common_1.Param)('id', common_1.ParseUUIDPipe)),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String]),
+    __metadata("design:returntype", void 0)
+], AcademyController.prototype, "course", null);
 __decorate([
     (0, common_1.Post)('courses'),
     (0, decorators_1.RequirePermission)('academy.manage'),

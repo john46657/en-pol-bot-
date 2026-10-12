@@ -179,3 +179,33 @@ describe('/leave manage (wie Trident)', () => {
     expect(text(await cancel.def.run({ ...ctx(act.api), args: cancel.args }))).toContain('beendet');
   });
 });
+
+describe('/leave admin (wie Trident)', () => {
+  const MEMBER = '223456789012345678';
+  const row = (n: number, extra: Record<string, unknown>) => ({ id: `11111111-2222-3333-4444-55555555555${n}`, number: `LOA-${n}`, reason: 'test', startsAt: '2026-10-06T21:09:00Z', endsAt: '2026-10-07T16:55:00Z', endedAt: null, decisionReason: null, active: false, ...extra });
+  it('shows the member history as a box; Start opens the form and starts the leave for the member', async () => {
+    const { api, calls } = fakeApi({ [`GET /leave?discordId=${MEMBER}`]: { items: [row(1, { status: 'ENDED', endedAt: '2026-10-07T16:55:00Z' })] }, 'POST /leave': { number: 'LOA-9' } });
+    const r = await byName('leave')!.run(ctx(api, { opts: { _sub: 'admin', mitglied: MEMBER }, userNameOf: async () => 'john45346' }));
+    expect(r.embeds?.[0]).toMatchObject({ box: true, title: 'Abmeldungen verwalten', author: { name: 'Abmeldungen: @john45346' } });
+    expect(r.embeds?.[0]?.description).toMatch(/Verlauf[\s\S]*`1\.` <t:\d+:f> \[1 Tag\]/);
+    expect(r.buttons?.map((b) => b.id)).toEqual([`leave:astart:${MEMBER}`, `leave:ahist:${MEMBER}`]);
+    const hist = interactionFor(`leave:ahist:${MEMBER}`)!;
+    const h = await hist.def.run({ ...ctx(api), args: hist.args });
+    expect(h.embeds?.[0]?.description).toMatch(/`LOA-1`[\s\S]*\*\*Beginn:\*\*[\s\S]*\*\*Ende:\*\*[\s\S]*\*\*Grund:\*\* test/);
+    const start = interactionFor(`leave:astart:${MEMBER}`)!;
+    expect(start.def.opensModal?.(start.args)).toBe(true);
+    expect((await start.def.run({ ...ctx(api), args: start.args })).modal?.id).toBe(`leave:acreate:${MEMBER}`);
+    const create = interactionFor(`leave:acreate:${MEMBER}`)!;
+    await create.def.run({ ...ctx(api), args: create.args, fields: { duration: '2d', reason: 'Urlaub' } });
+    expect(calls.find((c) => c.method === 'POST')?.body).toMatchObject({ forDiscordId: MEMBER, reason: 'Urlaub', guildId: GUILD });
+  });
+  it('a running leave can be ended by the management', async () => {
+    const id = '11111111-2222-3333-4444-555555555552';
+    const { api } = fakeApi({ [`GET /leave?discordId=${MEMBER}`]: { items: [row(2, { status: 'APPROVED', active: true, endsAt: '2099-01-01T00:00:00Z' })] }, [`POST /leave/${id}/cancel`]: { number: 'LOA-2', status: 'ENDED', name: 'John', discordId: MEMBER } });
+    const r = await byName('leave')!.run(ctx(api, { opts: { _sub: 'admin', mitglied: MEMBER } }));
+    expect(r.buttons?.[0]).toMatchObject({ id: `leave:cancel:${id}`, label: 'Beenden' });
+    expect(r.embeds?.[0]?.description).toContain('läuft');
+    const cancel = interactionFor(`leave:cancel:${id}`)!;
+    expect(text(await cancel.def.run({ ...ctx(api), args: cancel.args }))).toContain('von John beendet');
+  });
+});

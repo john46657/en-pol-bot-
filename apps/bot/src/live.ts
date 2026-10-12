@@ -1,5 +1,5 @@
 import type { Api } from './api';
-import { dangerButtons, dangerEmbed, teamlistEmbed, type DangerState, type TeamMember } from './format';
+import { dangerButtons, dangerPanel, teamlistEmbed, type DangerState, type TeamMember } from './format';
 import type { DiscordConfig, Platform } from './platform';
 
 export type LiveKind = 'danger' | 'teamlist';
@@ -17,7 +17,7 @@ export function createLive(api: Api, platform: Platform, log: (m: string) => voi
   async function render(kind: LiveKind) {
     if (kind === 'danger') {
       const s = await api.service<DangerState>('GET', '/bot/danger');
-      return { embed: dangerEmbed(s), buttons: dangerButtons(s) };
+      return { embed: dangerPanel(s), buttons: dangerButtons(s) };
     }
     const t = await api.service<{ rankOrder: string[]; members: TeamMember[] }>('GET', '/bot/team');
     return { embed: teamlistEmbed(t.members, t.rankOrder), buttons: undefined };

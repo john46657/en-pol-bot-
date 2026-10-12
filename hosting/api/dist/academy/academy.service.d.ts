@@ -51,6 +51,32 @@ export declare class AcademyService {
         passScore: number;
         instructorId: string | null;
     })[]>;
+    /** Kurs mit Teilnehmern und letzter Bewertung (Akademie-Seite: einschreiben und benoten). */
+    course(id: string): Promise<{
+        enrollments: {
+            personnelId: string;
+            userId: string;
+            name: string;
+            callsign: string | null;
+            rank: string | null;
+            result: {
+                id: string;
+                createdAt: Date;
+                enrollmentId: string;
+                score: number;
+                passed: boolean;
+                gradedById: string | null;
+            } | null;
+            id: string;
+            createdAt: Date;
+            courseId: string;
+        }[];
+        id: string;
+        title: string;
+        description: string | null;
+        passScore: number;
+        instructorId: string | null;
+    }>;
     config(): Promise<AcademyConfig>;
     saveConfig(actor: Actor, c: AcademyConfig): Promise<{
         channelId: string | null;

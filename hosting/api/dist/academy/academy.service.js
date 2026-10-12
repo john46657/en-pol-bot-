@@ -39,6 +39,19 @@ let AcademyService = class AcademyService {
         this.discord = discord;
     }
     courses() { return this.prisma.academyCourse.findMany({ include: { _count: { select: { enrollments: true } } }, orderBy: { title: 'asc' } }); }
+    /** Kurs mit Teilnehmern und letzter Bewertung (Akademie-Seite: einschreiben und benoten). */
+    async course(id) {
+        const c = await this.prisma.academyCourse.findUnique({
+            where: { id },
+            include: { enrollments: { orderBy: { createdAt: 'asc' }, include: { personnel: { select: { id: true, callsign: true, rank: true, user: { select: { id: true, displayName: true } } } }, results: { orderBy: { createdAt: 'desc' }, take: 1 } } } },
+        });
+        if (!c)
+            throw new errors_1.AppError('NOT_FOUND', 'Kurs nicht gefunden.');
+        return {
+            ...c,
+            enrollments: c.enrollments.map(({ results, personnel, ...e }) => ({ ...e, personnelId: personnel.id, userId: personnel.user.id, name: personnel.user.displayName, callsign: personnel.callsign, rank: personnel.rank, result: results[0] ?? null })),
+        };
+    }
     async config() {
         const v = (await this.prisma.systemSetting.findUnique({ where: { key: KEY } }))?.value;
         const p = exports.academyConfigSchema.safeParse(v ?? {});

@@ -20964,11 +20964,11 @@ var require_message = __commonJS({
     (function(UnfurledMediaItemFlags2) {
       UnfurledMediaItemFlags2[UnfurledMediaItemFlags2["IsAnimated"] = 1] = "IsAnimated";
     })(UnfurledMediaItemFlags || (exports2.UnfurledMediaItemFlags = UnfurledMediaItemFlags = {}));
-    var SeparatorSpacingSize;
-    (function(SeparatorSpacingSize2) {
-      SeparatorSpacingSize2[SeparatorSpacingSize2["Small"] = 1] = "Small";
-      SeparatorSpacingSize2[SeparatorSpacingSize2["Large"] = 2] = "Large";
-    })(SeparatorSpacingSize || (exports2.SeparatorSpacingSize = SeparatorSpacingSize = {}));
+    var SeparatorSpacingSize2;
+    (function(SeparatorSpacingSize3) {
+      SeparatorSpacingSize3[SeparatorSpacingSize3["Small"] = 1] = "Small";
+      SeparatorSpacingSize3[SeparatorSpacingSize3["Large"] = 2] = "Large";
+    })(SeparatorSpacingSize2 || (exports2.SeparatorSpacingSize = SeparatorSpacingSize2 = {}));
     var MessageSearchAuthorType;
     (function(MessageSearchAuthorType2) {
       MessageSearchAuthorType2["User"] = "user";
@@ -26400,7 +26400,7 @@ var require_dist3 = __commonJS({
         if (name !== "AsyncEventEmitter") ctorInfo = ` on ${name} instance`;
       } catch {
       }
-      const sep = `
+      const sep2 = `
 Emitted 'error' event${ctorInfo} at:
 `;
       const errStack = err.stack.split("\n").slice(1);
@@ -26409,7 +26409,7 @@ Emitted 'error' event${ctorInfo} at:
       if (len > 0) {
         ownStack.splice(off + 1, len - 2, "    [... lines matching original stack trace ...]");
       }
-      return err.stack + sep + ownStack.join("\n");
+      return err.stack + sep2 + ownStack.join("\n");
     }
     __name(enhanceStackTrace, "enhanceStackTrace");
     var brandSymbol = /* @__PURE__ */ Symbol.for("async-event-emitter.ts-brand");
@@ -43220,7 +43220,7 @@ var require_dist8 = __commonJS({
       ComponentAssertions: () => Assertions_exports2,
       ComponentBuilder: () => ComponentBuilder,
       ComponentsV2Assertions: () => Assertions_exports8,
-      ContainerBuilder: () => ContainerBuilder,
+      ContainerBuilder: () => ContainerBuilder2,
       ContextMenuCommandAssertions: () => Assertions_exports11,
       ContextMenuCommandBuilder: () => ContextMenuCommandBuilder,
       EmbedAssertions: () => Assertions_exports,
@@ -43242,7 +43242,7 @@ var require_dist8 = __commonJS({
       SelectMenuAssertions: () => Assertions_exports6,
       SelectMenuBuilder: () => StringSelectMenuBuilder2,
       SelectMenuOptionBuilder: () => StringSelectMenuOptionBuilder,
-      SeparatorBuilder: () => SeparatorBuilder,
+      SeparatorBuilder: () => SeparatorBuilder2,
       SharedNameAndDescription: () => SharedNameAndDescription,
       SharedSlashCommand: () => SharedSlashCommand,
       SharedSlashCommandOptions: () => SharedSlashCommandOptions,
@@ -43262,7 +43262,7 @@ var require_dist8 = __commonJS({
       SlashCommandUserOption: () => SlashCommandUserOption,
       StringSelectMenuBuilder: () => StringSelectMenuBuilder2,
       StringSelectMenuOptionBuilder: () => StringSelectMenuOptionBuilder,
-      TextDisplayBuilder: () => TextDisplayBuilder,
+      TextDisplayBuilder: () => TextDisplayBuilder2,
       TextInputAssertions: () => Assertions_exports5,
       TextInputBuilder: () => TextInputBuilder2,
       ThumbnailBuilder: () => ThumbnailBuilder,
@@ -45629,7 +45629,7 @@ var require_dist8 = __commonJS({
       }
     };
     var import_v1022 = require_v106();
-    var SeparatorBuilder = class extends ComponentBuilder {
+    var SeparatorBuilder2 = class extends ComponentBuilder {
       static {
         __name(this, "SeparatorBuilder");
       }
@@ -45693,7 +45693,7 @@ var require_dist8 = __commonJS({
       }
     };
     var import_v1023 = require_v106();
-    var TextDisplayBuilder = class extends ComponentBuilder {
+    var TextDisplayBuilder2 = class extends ComponentBuilder {
       static {
         __name(this, "TextDisplayBuilder");
       }
@@ -45740,7 +45740,7 @@ var require_dist8 = __commonJS({
         return { ...this.data };
       }
     };
-    var ContainerBuilder = class extends ComponentBuilder {
+    var ContainerBuilder2 = class extends ComponentBuilder {
       static {
         __name(this, "ContainerBuilder");
       }
@@ -45851,7 +45851,7 @@ var require_dist8 = __commonJS({
        * @param components - The separator components to add
        */
       addSeparatorComponents(...components) {
-        this.components.push(...normalizeArray(components).map((component) => resolveBuilder(component, SeparatorBuilder)));
+        this.components.push(...normalizeArray(components).map((component) => resolveBuilder(component, SeparatorBuilder2)));
         return this;
       }
       /**
@@ -45861,7 +45861,7 @@ var require_dist8 = __commonJS({
        */
       addTextDisplayComponents(...components) {
         this.components.push(
-          ...normalizeArray(components).map((component) => resolveBuilder(component, TextDisplayBuilder))
+          ...normalizeArray(components).map((component) => resolveBuilder(component, TextDisplayBuilder2))
         );
         return this;
       }
@@ -46154,8 +46154,8 @@ var require_dist8 = __commonJS({
       addTextDisplayComponents(...components) {
         this.components.push(
           ...normalizeArray(components).map((input) => {
-            const result = resolveBuilder(input, TextDisplayBuilder);
-            assertReturnOfBuilder(result, TextDisplayBuilder);
+            const result = resolveBuilder(input, TextDisplayBuilder2);
+            assertReturnOfBuilder(result, TextDisplayBuilder2);
             return result;
           })
         );
@@ -46173,8 +46173,8 @@ var require_dist8 = __commonJS({
           index,
           deleteCount,
           ...normalizeArray(components).map((input) => {
-            const result = resolveBuilder(input, TextDisplayBuilder);
-            assertReturnOfBuilder(result, TextDisplayBuilder);
+            const result = resolveBuilder(input, TextDisplayBuilder2);
+            assertReturnOfBuilder(result, TextDisplayBuilder2);
             return result;
           })
         );
@@ -46184,7 +46184,7 @@ var require_dist8 = __commonJS({
        * {@inheritDoc ComponentBuilder.toJSON}
        */
       toJSON() {
-        validateComponentArray(this.components, 1, 3, TextDisplayBuilder);
+        validateComponentArray(this.components, 1, 3, TextDisplayBuilder2);
         return {
           ...this.data,
           components: this.components.map((component) => component.toJSON()),
@@ -46216,13 +46216,13 @@ var require_dist8 = __commonJS({
         case import_v1027.ComponentType.File:
           return new FileBuilder(data);
         case import_v1027.ComponentType.Container:
-          return new ContainerBuilder(data);
+          return new ContainerBuilder2(data);
         case import_v1027.ComponentType.Section:
           return new SectionBuilder(data);
         case import_v1027.ComponentType.Separator:
-          return new SeparatorBuilder(data);
+          return new SeparatorBuilder2(data);
         case import_v1027.ComponentType.TextDisplay:
-          return new TextDisplayBuilder(data);
+          return new TextDisplayBuilder2(data);
         case import_v1027.ComponentType.Thumbnail:
           return new ThumbnailBuilder(data);
         case import_v1027.ComponentType.MediaGallery:
@@ -46339,7 +46339,7 @@ var require_dist8 = __commonJS({
     });
     var import_shapeshift9 = require_cjs3();
     var titleValidator = import_shapeshift9.s.string().lengthGreaterThanOrEqual(1).lengthLessThanOrEqual(45).setValidationEnabled(isValidationEnabled);
-    var componentsValidator = import_shapeshift9.s.union([import_shapeshift9.s.instance(ActionRowBuilder3), import_shapeshift9.s.instance(LabelBuilder), import_shapeshift9.s.instance(TextDisplayBuilder)]).array().lengthGreaterThanOrEqual(1).setValidationEnabled(isValidationEnabled);
+    var componentsValidator = import_shapeshift9.s.union([import_shapeshift9.s.instance(ActionRowBuilder3), import_shapeshift9.s.instance(LabelBuilder), import_shapeshift9.s.instance(TextDisplayBuilder2)]).array().lengthGreaterThanOrEqual(1).setValidationEnabled(isValidationEnabled);
     function validateRequiredParameters2(customId, title, components) {
       customIdValidator.parse(customId);
       titleValidator.parse(title);
@@ -46394,7 +46394,7 @@ var require_dist8 = __commonJS({
       addComponents(...components) {
         this.components.push(
           ...normalizeArray(components).map((component, idx) => {
-            if (component instanceof ActionRowBuilder3 || component instanceof LabelBuilder || component instanceof TextDisplayBuilder) {
+            if (component instanceof ActionRowBuilder3 || component instanceof LabelBuilder || component instanceof TextDisplayBuilder2) {
               return component;
             }
             if (component instanceof TextInputBuilder2) {
@@ -46408,7 +46408,7 @@ var require_dist8 = __commonJS({
                 return new LabelBuilder(component);
               }
               if (component.type === import_v1029.ComponentType.TextDisplay) {
-                return new TextDisplayBuilder(component);
+                return new TextDisplayBuilder2(component);
               }
               if (component.type === import_v1029.ComponentType.TextInput) {
                 return new ActionRowBuilder3().addComponents(
@@ -46439,7 +46439,7 @@ var require_dist8 = __commonJS({
        */
       addTextDisplayComponents(...components) {
         const normalized = normalizeArray(components);
-        const resolved = normalized.map((row) => resolveBuilder(row, TextDisplayBuilder));
+        const resolved = normalized.map((row) => resolveBuilder(row, TextDisplayBuilder2));
         this.components.push(...resolved);
         return this;
       }
@@ -49630,7 +49630,7 @@ var require_SectionComponent = __commonJS({
 var require_SeparatorComponent = __commonJS({
   "node_modules/.pnpm/discord.js@14.27.0/node_modules/discord.js/src/structures/SeparatorComponent.js"(exports2, module2) {
     "use strict";
-    var { SeparatorSpacingSize } = require_v106();
+    var { SeparatorSpacingSize: SeparatorSpacingSize2 } = require_v106();
     var Component = require_Component();
     var SeparatorComponent = class extends Component {
       /**
@@ -49639,7 +49639,7 @@ var require_SeparatorComponent = __commonJS({
        * @readonly
        */
       get spacing() {
-        return this.data.spacing ?? SeparatorSpacingSize.Small;
+        return this.data.spacing ?? SeparatorSpacingSize2.Small;
       }
       /**
        * Whether this separator is a divider
@@ -80132,10 +80132,10 @@ var PERMISSION_CATALOG = {
   /** Dienstnummern-System */
   dienstnummer: ["view", "create", "assign", "edit", "release", "block", "history", "manage_ranges", "manage_settings"],
   leave: ["view", "request", "manage"],
-  applications: ["view", "review", "decide", "auto_assign_dienstnummer"],
+  applications: ["view", "review", "decide", "delete", "auto_assign_dienstnummer"],
   academy: ["view", "manage"],
   sek: ["view", "report", "manage"],
-  qualifications: ["view", "decide", "manage"],
+  qualifications: ["view", "decide", "delete", "manage"],
   ticket: ["view", "create", "claim", "close", "reopen", "delete", "add_user", "remove_user", "change_status", "change_priority", "change_category", "rename", "move", "lock", "escalate", "transcript", "transcript_delete", "internal_notes", "rate", "manage", "settings"],
   /** Funk-Codes (Liste der Funkcodes, z. B. 10-4) */
   radio: ["view", "manage"],
@@ -81118,12 +81118,11 @@ ${clip(plain(p.description), 2e3)}` : ""}`,
       return { title: "\u{1F4E2} Ank\xFCndigung", description: clip(plain(p.body), 4e3), color: COLORS.warning, footer: `von ${clip(p.author, 100)}` };
     case "danger.changed": {
       return {
+        box: true,
         title: clip(`${String(p.name ?? p.level)}${p.title ? `: ${String(p.title)}` : ""}`, 256),
-        color: hexColor2(p.color, COLORS.warning),
         description: clip(`${String(p.text ?? "")}${p.reason ? `
 
-**Hinweis:** ${plain(p.reason)}` : ""}`, 4e3) || void 0,
-        footer: clip(`${p.previous ? `Vorher: ${String(p.previous)} \xB7 ` : ""}Gesetzt von ${String(p.setBy ?? "System")}`, 200)
+**Hinweis:** ${plain(p.reason)}` : ""}`, 4e3) || void 0
       };
     }
     case "duty.changed": {
@@ -81350,6 +81349,9 @@ ${clip(plain(s.reason), 300)}` : ""}` : "";
 ${current}` : ""}${when}`, 4e3),
     ...s.setByName ? { footer: `Gesetzt von ${clip(s.setByName, 100)}` } : {}
   };
+}
+function dangerPanel(s) {
+  return { box: true, heading: true, title: clip(s.panel?.title ?? "Gefahrenstatus", 256), description: clip(s.panel?.text ?? "", 4e3) || void 0, ...s.at ? { stamp: s.at } : {} };
 }
 function dangerButtons(s) {
   return (s.levels ?? []).slice(0, 10).map((l) => ({ id: `danger:set:${l.key}`, label: clip(l.name, 80), emoji: s.panel?.buttonEmoji || l.emoji || void 0, style: l.buttonStyle ?? "danger" }));
@@ -82276,6 +82278,49 @@ Wenn sie angenommen wird, endet sie ungef\xE4hr ${ts(pending.endsAt)}.`, COLORS.
   return { ephemeral: true, embeds: [embed(`${last ? `Deine letzte Abmeldung endete ${ts(last.endedAt ?? last.endsAt)}.` : "Du hast gerade keine Abmeldung."}
 Um eine neue Abmeldung zu starten, klicke auf \`Start\`.`)], buttons: start2 };
 }
+var DAY_MS = 24 * HOUR;
+var span = (ms) => {
+  const d = Math.round(ms / DAY_MS);
+  if (d >= 1) return `${d} ${d === 1 ? "Tag" : "Tage"}`;
+  const h = Math.max(1, Math.round(ms / HOUR));
+  return `${h} Std.`;
+};
+var STATE_DE = { PENDING: "\u23F3 ausstehend", DENIED: "\u274C abgelehnt", CANCELLED: "\u21A9\uFE0F zur\xFCckgezogen" };
+var leaveState = (r) => r.active ? "\u{1F7E2} l\xE4uft" : r.status === "APPROVED" && new Date(r.startsAt).getTime() > Date.now() ? "\u{1F4C5} geplant" : STATE_DE[r.status] ?? "";
+var memberHead = async (c, discordId) => ({ name: `Abmeldungen: @${await c.userNameOf?.(discordId) ?? discordId}` });
+async function adminReply(c, discordId) {
+  if (!/^\d{15,25}$/.test(discordId)) return errorReply("Bitte ein Mitglied ausw\xE4hlen.");
+  const { items } = await c.api.asUser(c.discordId, "GET", `/leave?discordId=${discordId}&status=ALL`);
+  const current = items.find((r) => r.active) ?? items.find((r) => r.status === "PENDING") ?? items.find((r) => r.status === "APPROVED" && new Date(r.startsAt).getTime() > Date.now());
+  const list = items.slice(0, 10).map((r, i) => {
+    const end = r.endedAt && r.status === "ENDED" ? r.endedAt : r.endsAt;
+    const st = leaveState(r);
+    return `\`${i + 1}.\` ${ts(r.startsAt, "f")} [${span(new Date(end).getTime() - new Date(r.startsAt).getTime())}]${st ? ` ${st}` : ""}`;
+  });
+  const description = `**Verlauf**
+${list.length ? list.join("\n") : "Noch keine Abmeldungen."}${items.length > 10 ? `
+\u2026 und ${items.length - 10} \xE4ltere` : ""}`;
+  const buttons = [
+    current ? { id: `leave:cancel:${current.id}`, label: current.active ? "Beenden" : current.status === "PENDING" ? "Antrag zur\xFCckziehen" : "Absagen", style: "danger", emoji: "\u23F9\uFE0F" } : { id: `leave:astart:${discordId}`, label: "Start", style: "primary", emoji: "\u{1F552}" },
+    ...items.length ? [{ id: `leave:ahist:${discordId}`, label: "Erweiterten Verlauf ansehen", style: "secondary", emoji: "\u{1F4DC}" }] : []
+  ];
+  return { ephemeral: true, embeds: [{ box: true, heading: "small", author: await memberHead(c, discordId), title: "Abmeldungen verwalten", description }], buttons };
+}
+async function adminHistory(c, discordId) {
+  const { items } = await c.api.asUser(c.discordId, "GET", `/leave?discordId=${discordId}&status=ALL`);
+  if (!items.length) return okReply("Noch keine Abmeldungen.");
+  const blocks = items.slice(0, 15).map((r) => {
+    const st = leaveState(r);
+    return clip([
+      `\`${r.number}\`${st ? ` ${st}` : ""}`,
+      `- **Beginn:** ${ts(r.startsAt, "f")}`,
+      `- **Ende:** ${ts(r.status === "ENDED" && r.endedAt ? r.endedAt : r.endsAt, "f")}`,
+      `- **Grund:** ${clip(plain(r.reason), 300)}`,
+      ...r.decisionReason ? [`- **Entscheidung:** ${clip(plain(r.decisionReason), 200)}`] : []
+    ].join("\n"), 900);
+  });
+  return { ephemeral: true, embeds: [{ box: true, heading: "small", author: await memberHead(c, discordId), title: "Verlauf der Abmeldungen", description: clip(blocks.join("\n\n"), 3900) }] };
+}
 var LEAVE_COMMANDS = [
   {
     name: "abmeldung",
@@ -82306,10 +82351,13 @@ Die Leitung entscheidet \u2013 du bekommst eine Direktnachricht.`
   {
     name: "leave",
     description: "Abmeldungen (Leave of Absence)",
-    subcommands: [{ name: "manage", description: "Eigene Abmeldung ansehen, starten oder beenden" }],
+    subcommands: [
+      { name: "manage", description: "Eigene Abmeldung ansehen, starten oder beenden" },
+      { name: "admin", description: "Leitung: Abmeldungen eines Mitglieds ansehen, starten oder beenden", options: [{ name: "mitglied", description: "Discord-Mitglied", type: "user", required: true }] }
+    ],
     async run(c) {
       try {
-        return await manageReply(c);
+        return c.opts._sub === "admin" ? await adminReply(c, String(c.opts.mitglied ?? "")) : await manageReply(c);
       } catch (e) {
         return mapError(e);
       }
@@ -82331,9 +82379,33 @@ async function decide2(c, id2, status, reason) {
 }
 var LEAVE_INTERACTION = {
   prefix: "leave",
-  opensModal: (args) => args[0] === "reason" || args[0] === "start",
+  opensModal: (args) => args[0] === "reason" || args[0] === "start" || args[0] === "astart",
   async run(c) {
     const [action, id2, st] = c.args;
+    if (action === "ahist" && id2) {
+      try {
+        return await adminHistory(c, id2);
+      } catch (e) {
+        return mapError(e);
+      }
+    }
+    if (action === "astart" && id2) return { modal: { id: `leave:acreate:${id2}`, title: "Abmeldung f\xFCr Mitglied starten", fields: [
+      { id: "duration", label: "Dauer", required: true, maxLength: 20, placeholder: "Format: '6h', '4d' oder '2w'" },
+      { id: "reason", label: "Grund", paragraph: true, required: true, minLength: 3, maxLength: 1e3, placeholder: "z. B. Urlaub" }
+    ] } };
+    if (action === "acreate" && id2 && /^\d{15,25}$/.test(id2)) {
+      const ms = parseDuration(c.fields?.duration ?? "");
+      if (!ms) return errorReply("Die Dauer verstehe ich nicht. Beispiele: `6h`, `4d`, `2w` oder `1w 2d` (mindestens 1 Stunde).");
+      const reason = (c.fields?.reason ?? "").trim();
+      if (reason.length < 3) return errorReply("Bitte einen Grund angeben.");
+      const now = Date.now();
+      try {
+        await c.api.asUser(c.discordId, "POST", "/leave", { startsAt: new Date(now).toISOString(), endsAt: new Date(now + ms).toISOString(), reason, forDiscordId: id2, ...c.guildId ? { guildId: c.guildId } : {} });
+        return await adminReply(c, id2);
+      } catch (e) {
+        return mapError(e);
+      }
+    }
     if (action === "start") return { modal: { id: "leave:create", title: "Abmeldung erstellen", fields: [
       { id: "duration", label: "Dauer", required: true, maxLength: 20, placeholder: "Format: '6h', '4d' oder '2w'" },
       { id: "reason", label: "Grund", paragraph: true, required: true, minLength: 3, maxLength: 1e3, placeholder: "z. B. Urlaub, Pr\xFCfungsphase" }
@@ -82362,6 +82434,7 @@ Um benachrichtigt zu werden, ob sie angenommen oder abgelehnt wird, lass bitte d
     if (action === "cancel") {
       try {
         const r = await c.api.asUser(c.discordId, "POST", `/leave/${id2}/cancel`);
+        if (r.discordId && r.discordId !== c.discordId) return okReply(`Abmeldung **${r.number}** von ${plain(r.name)} ${r.status === "ENDED" ? "beendet" : "abgesagt"}.`);
         return okReply(r.status === "ENDED" ? `Deine Abmeldung **${r.number}** ist beendet \u2013 willkommen zur\xFCck!` : `Abmeldung **${r.number}** zur\xFCckgezogen.`);
       } catch (e) {
         return mapError(e);
@@ -83574,7 +83647,7 @@ function createLive(api2, platform2, log = console.log) {
   async function render(kind2) {
     if (kind2 === "danger") {
       const s = await api2.service("GET", "/bot/danger");
-      return { embed: dangerEmbed(s), buttons: dangerButtons(s) };
+      return { embed: dangerPanel(s), buttons: dangerButtons(s) };
     }
     const t = await api2.service("GET", "/bot/team");
     return { embed: teamlistEmbed(t.members, t.rankOrder), buttons: void 0 };
@@ -84185,6 +84258,25 @@ var toRows = (buttons = []) => {
   }
   return rows;
 };
+var sep = () => new import_discord6.SeparatorBuilder().setDivider(true).setSpacing(import_discord6.SeparatorSpacingSize.Large);
+var toBox = (list, buttons, ping) => [
+  ...ping ? [new import_discord6.TextDisplayBuilder().setContent(ping)] : [],
+  ...list.map((e, i) => {
+    const c = new import_discord6.ContainerBuilder();
+    if (e.author?.name) c.addTextDisplayComponents(new import_discord6.TextDisplayBuilder().setContent(`**${e.author.name}**`));
+    c.addTextDisplayComponents(new import_discord6.TextDisplayBuilder().setContent(e.heading === "small" ? `### ${e.title}` : e.heading ? `# ${e.title}` : `**${e.title}**`));
+    if (e.description) {
+      if (e.heading === true) c.addSeparatorComponents(sep());
+      c.addTextDisplayComponents(new import_discord6.TextDisplayBuilder().setContent(e.description));
+    }
+    for (const f2 of e.fields ?? []) c.addTextDisplayComponents(new import_discord6.TextDisplayBuilder().setContent(`**${f2.name}**
+${f2.value}`));
+    const rows = i === list.length - 1 ? toRows(buttons) : [];
+    if (rows.length) c.addSeparatorComponents(sep()).addActionRowComponents(...rows);
+    if (e.stamp && !Number.isNaN(Date.parse(e.stamp))) c.addSeparatorComponents(sep()).addTextDisplayComponents(new import_discord6.TextDisplayBuilder().setContent(`<t:${Math.floor(Date.parse(e.stamp) / 1e3)}:f>`));
+    return c;
+  })
+];
 var toComponents = (buttons, select, selects = []) => componentsOf(buttons, [...select ? [select] : [], ...selects]);
 var toModal = (m) => new import_discord6.ModalBuilder().setCustomId(m.id).setTitle(m.title.slice(0, 45)).addComponents(m.fields.map((f2) => {
   const input = new import_discord6.TextInputBuilder().setCustomId(f2.id).setLabel(f2.label.slice(0, 45)).setStyle(f2.paragraph ? import_discord6.TextInputStyle.Paragraph : import_discord6.TextInputStyle.Short).setRequired(!!f2.required);
@@ -84194,7 +84286,7 @@ var toModal = (m) => new import_discord6.ModalBuilder().setCustomId(m.id).setTit
   if (f2.value) input.setValue(f2.value.slice(0, f2.maxLength ?? 4e3));
   return new import_discord6.ActionRowBuilder().addComponents(input);
 }));
-var replyPayload = (r) => ({ content: r.content ?? "", embeds: (r.embeds ?? []).map(toEmbed), components: toComponents(r.buttons, r.select, r.selects), allowedMentions: { parse: [] } });
+var replyPayload = (r) => r.embeds?.[0]?.box ? { components: [...toBox(r.embeds), ...toComponents(r.buttons, r.select, r.selects)], flags: import_discord6.MessageFlags.IsComponentsV2, allowedMentions: { parse: [] } } : { content: r.content ?? "", embeds: (r.embeds ?? []).map(toEmbed), components: toComponents(r.buttons, r.select, r.selects), allowedMentions: { parse: [] } };
 var TICKET_PREFIX = "ticket-";
 var ticketName = (userName, userId) => `${TICKET_PREFIX}${userName.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 40) || userId}`;
 var platform = {
@@ -84239,6 +84331,16 @@ var platform = {
   async postOrEdit({ channelId, messageId, embed, buttons }) {
     const ch = await client.channels.fetch(channelId);
     if (!ch?.isSendable() || !("messages" in ch)) throw new Error(`channel ${channelId} is not a text channel the bot can post in`);
+    if (embed.box) {
+      const box = { components: toBox([embed], buttons), flags: import_discord6.MessageFlags.IsComponentsV2, allowedMentions: { parse: [] } };
+      const old = messageId ? await ch.messages.fetch(messageId).catch(() => null) : null;
+      if (old?.flags.has(import_discord6.MessageFlags.IsComponentsV2)) {
+        await old.edit(box);
+        return old.id;
+      }
+      if (old) await old.delete().catch(() => void 0);
+      return (await ch.send(box)).id;
+    }
     const payload = { embeds: [toEmbed(embed)], components: toRows(buttons), allowedMentions: { parse: [] } };
     if (messageId) {
       const old = await ch.messages.fetch(messageId).catch(() => null);
@@ -84516,7 +84618,10 @@ async function handleCommand(i) {
   if (def.opensModal) {
     const reply2 = await safeRun(`command ${def.name}`, () => def.run({ ...baseCtx(i), opts }));
     if (reply2.modal) await i.showModal(toModal(reply2.modal));
-    else await i.reply({ ...replyPayload(reply2), flags: import_discord6.MessageFlags.Ephemeral });
+    else {
+      const p = replyPayload(reply2);
+      await i.reply({ ...p, flags: ("flags" in p ? p.flags ?? 0 : 0) | import_discord6.MessageFlags.Ephemeral });
+    }
     return;
   }
   await i.deferReply({ flags: import_discord6.MessageFlags.Ephemeral });
@@ -84529,7 +84634,10 @@ async function handleComponent(i) {
   if ((i.isButton() || i.isAnySelectMenu()) && hit.def.opensModal?.(hit.args)) {
     const reply2 = await safeRun(`interaction ${i.customId}`, () => hit.def.run({ ...baseCtx(i), opts: {}, args: hit.args, ...i.isAnySelectMenu() ? { values: i.values } : {} }));
     if (reply2.modal) await i.showModal(toModal(reply2.modal));
-    else await i.reply({ ...replyPayload(reply2), flags: import_discord6.MessageFlags.Ephemeral });
+    else {
+      const p = replyPayload(reply2);
+      await i.reply({ ...p, flags: ("flags" in p ? p.flags ?? 0 : 0) | import_discord6.MessageFlags.Ephemeral });
+    }
     return;
   }
   await i.deferReply({ flags: import_discord6.MessageFlags.Ephemeral });
@@ -84649,7 +84757,8 @@ function wireReady(client0) {
           if (u) list = [{ ...list[0], author: { name: `@${u.username}`, iconUrl: u.displayAvatarURL({ size: 64 }) } }, ...list.slice(1)];
         }
         const roles = opts?.pingRoleIds ?? [];
-        const msg = await ch.send({ ...roles.length ? { content: roles.map((r) => `<@&${r}>`).join(" ") } : {}, embeds: list.map(toEmbed), components: toRows(buttons), allowedMentions: { parse: [], roles } });
+        const ping = roles.length ? roles.map((r) => `<@&${r}>`).join(" ") : void 0;
+        const msg = list[0]?.box ? await ch.send({ components: toBox(list, buttons, ping), flags: import_discord6.MessageFlags.IsComponentsV2, allowedMentions: { parse: [], roles } }) : await ch.send({ ...ping ? { content: ping } : {}, embeds: list.map(toEmbed), components: toRows(buttons), allowedMentions: { parse: [], roles } });
         if (opts?.replaceKey) {
           const key4 = `last-${opts.replaceKey}-${channelId}`;
           const old = await api.service("GET", `/bot/state/${key4}`).then((r) => r.value, () => null);

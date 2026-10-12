@@ -1,6 +1,8 @@
 /** Discord-unabhängige Nachrichtenmodelle + Formatierung (einfach testbar). */
 /** `author`: kleine Zeile über dem Titel (z. B. Server-Name mit Icon oder @Benutzer mit Profilbild, wie bei Trident). */
-export interface EmbedData { title: string; description?: string; color?: number; fields?: { name: string; value: string; inline?: boolean }[]; footer?: string; thumbnail?: string; author?: { name: string; iconUrl?: string }; /** großes Bild (https:// oder attachment://datei) */ image?: string }
+export interface EmbedData { title: string; description?: string; color?: number; fields?: { name: string; value: string; inline?: boolean }[]; footer?: string; thumbnail?: string; author?: { name: string; iconUrl?: string }; /** großes Bild (https:// oder attachment://datei) */ image?: string;
+  /** Als Kasten ohne Farbstreifen senden (Discord-Komponenten statt Embed); Titel groß (`heading`) oder fett, `stamp` = Datum/Uhrzeit unten. */
+  box?: boolean; heading?: boolean | 'small'; stamp?: string }
 /** `url`: Link-Button (öffnet die Adresse, löst keine Interaktion aus). */
 export interface ButtonSpec { id: string; label: string; style: 'primary' | 'secondary' | 'success' | 'danger'; emoji?: string; url?: string }
 /** Auswahlmenü; `id` wie bei Buttons `prefix:arg`. `kind`: Text-Optionen (Standard), Discord-Benutzer oder -Rollen. */
@@ -88,9 +90,9 @@ export function renderOutbox(type: string, p: Record<string, unknown>): EmbedDat
       return { title: '📢 Ankündigung', description: clip(plain(p.body), 4000), color: COLORS.warning, footer: `von ${clip(p.author, 100)}` };
     case 'danger.changed': {
       // wie im alten Bot: „Status 1: Geringe Kriminalität.“ + Text der Stufe (Ping der eingestellten Rolle macht die Outbox)
-      return { title: clip(`${String(p.name ?? p.level)}${p.title ? `: ${String(p.title)}` : ''}`, 256), color: hexColor(p.color, COLORS.warning),
-        description: clip(`${String(p.text ?? '')}${p.reason ? `\n\n**Hinweis:** ${plain(p.reason)}` : ''}`, 4000) || undefined,
-        footer: clip(`${p.previous ? `Vorher: ${String(p.previous)} · ` : ''}Gesetzt von ${String(p.setBy ?? 'System')}`, 200) };
+      // als Kasten ohne Farbstreifen und ohne Fußzeile („Vorher … · Gesetzt von …“)
+      return { box: true, title: clip(`${String(p.name ?? p.level)}${p.title ? `: ${String(p.title)}` : ''}`, 256),
+        description: clip(`${String(p.text ?? '')}${p.reason ? `\n\n**Hinweis:** ${plain(p.reason)}` : ''}`, 4000) || undefined };
     }
     case 'duty.changed': {
       const st = String(p.status), prev = String(p.previous ?? 'OFF_DUTY');
@@ -297,6 +299,10 @@ export function dangerEmbed(s: DangerState): EmbedData {
   const when = s.at ? `\n<t:${Math.floor(new Date(s.at).getTime() / 1000)}:f>` : '';
   return { title: clip(s.panel?.title ?? 'Gefahrenstatus', 256), color: hexColor(d?.color, COLORS.danger), description: clip(`${s.panel?.text ?? ''}${current ? `\n\n${current}` : ''}${when}`, 4000),
     ...(s.setByName ? { footer: `Gesetzt von ${clip(s.setByName, 100)}` } : {}) };
+}
+/** Selbst aktualisierendes Panel wie im alten Bot: Kasten mit Titel, Text, einem Button je Stufe und Datum/Uhrzeit der letzten Änderung. */
+export function dangerPanel(s: DangerState): EmbedData {
+  return { box: true, heading: true, title: clip(s.panel?.title ?? 'Gefahrenstatus', 256), description: clip(s.panel?.text ?? '', 4000) || undefined, ...(s.at ? { stamp: s.at } : {}) };
 }
 export function dangerButtons(s: DangerState): ButtonSpec[] {
   return (s.levels ?? []).slice(0, 10).map((l) => ({ id: `danger:set:${l.key}`, label: clip(l.name, 80), emoji: s.panel?.buttonEmoji || l.emoji || undefined, style: l.buttonStyle ?? 'danger' }));

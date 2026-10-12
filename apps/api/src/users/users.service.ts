@@ -47,7 +47,8 @@ export class UsersService {
   async get(id: string) {
     const u = await this.prisma.user.findUnique({ where: { id }, select: publicSelect });
     if (!u) throw new AppError('NOT_FOUND', 'Benutzer nicht gefunden.');
-    return u;
+    const discord = await this.prisma.discordLink.findUnique({ where: { userId: id }, select: { discordId: true, linkedAt: true } });
+    return { ...u, discord };
   }
 
   async create(actor: Actor, d: { username: string; displayName: string; password: string; email?: string; roleIds?: string[] }) {
